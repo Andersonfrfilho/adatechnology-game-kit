@@ -7,8 +7,12 @@ export function globalContext(): AudioContext | null {
   return Constructor ? new Constructor() : null
 }
 
-/** Browsers start a context suspended until a click or key; call from one. */
-export function unlockContext(context: AudioContext): void {
-  // an OfflineAudioContext (no `close`) is started by `startRendering`, never resumed
-  if (context.state === 'suspended' && typeof context.close === 'function') void context.resume()
+/** A live context (one that plays to the speakers): it can be resumed and closed; an `OfflineAudioContext` renders and cannot. */
+export function isLiveContext(context: BaseAudioContext): context is AudioContext {
+  return typeof (context as Partial<AudioContext>).close === 'function' && typeof (context as Partial<AudioContext>).resume === 'function'
+}
+
+/** Browsers start a context suspended until a click or key; call from one. An offline context is started by `startRendering`, never resumed. */
+export function unlockContext(context: BaseAudioContext): void {
+  if (context.state === 'suspended' && isLiveContext(context)) void context.resume()
 }

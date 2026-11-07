@@ -46,7 +46,7 @@ const ramp = (param: AudioParam, direction: 'in' | 'out', at: number, seconds: n
 
 /** What a sample loop needs from its engine. */
 export type SampleLoopHost = {
-  ready(): AudioContext | null
+  ready(): BaseAudioContext | null
   /** The node sample voices of a bus go to (the limiter of the bus). */
   output(bus: BusId): AudioNode
   buffer(url: string): AudioBuffer | undefined
@@ -128,7 +128,7 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
   }
 
   // schedules one take from `at`; returns when the next one starts
-  const schedule = (context: AudioContext, output: AudioNode, at: number, first: boolean): number | undefined => {
+  const schedule = (context: BaseAudioContext, output: AudioNode, at: number, first: boolean): number | undefined => {
     const next = nextTake()
     if (!next) return undefined
     const { buffer, ref } = next
@@ -164,7 +164,7 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
     return end - fade
   }
 
-  const pump = (context: AudioContext, output: AudioNode, at: number, first: boolean): void => {
+  const pump = (context: BaseAudioContext, output: AudioNode, at: number, first: boolean): void => {
     if (stopped) return
     let next = schedule(context, output, at, first)
     // a late timer: catch up from the clock instead of stacking takes in the past
@@ -183,7 +183,7 @@ export function createSampleLoopHandle(sound: SampleSound, host: SampleLoopHost,
     return falloffGain(sound.falloff ?? DEFAULT_SAMPLE_FALLOFF, 1, listenerDistance(host.listener(), position, host.distance))
   }
   const fileLevel = (): number => level * (sound.gain ?? 1) * spatial()
-  const place = (context: AudioContext): void => {
+  const place = (context: BaseAudioContext): void => {
     if (panner && position && host.listener) panner.pan.setTargetAtTime(panFor(host.listener(), position), context.currentTime, VOLUME_SMOOTHING)
   }
 

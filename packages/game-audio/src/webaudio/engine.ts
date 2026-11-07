@@ -16,7 +16,7 @@ import { busPriority, createVoiceManager } from '../voices'
 import type { VoiceGroup } from '../voices'
 import { buildChain } from './chain'
 import type { MixChain } from './chain'
-import { globalContext, unlockContext } from './context'
+import { globalContext, isLiveContext, unlockContext } from './context'
 import { createEngineOcclusion } from './engine-occlusion'
 import type { OccludedVoiceInfo, OcclusionRoute } from './engine-occlusion'
 import { createLoopHandle } from './engine-loop'
@@ -134,7 +134,7 @@ export type AudioEngineOptions = {
    * lowpass per voice, and re-queries as the listener moves. Without it there is no occlusion (Q8).
    */
   readonly occlusion?: ((point: Vec3) => number) | OcclusionSetup
-  readonly createContext?: () => AudioContext | null
+  readonly createContext?: () => BaseAudioContext | null
   /** Build voices in timed slices between frames instead of inside `play` (a sound starts a few ms late; a burst never costs a frame). Off by default. */
   readonly deferredStart?: StartQueueOptions
   /** Where sample sounds get their files. */
@@ -228,7 +228,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   const loops = new Set<{ rewire(): void; stop(): void; readonly created: boolean }>()
   const named = new Map<string, () => number>()
   let mix = resolveMix(options.mix ?? DEFAULT_MIX, options.profiles)
-  let context: AudioContext | null = null
+  let context: BaseAudioContext | null = null
   let chain: MixChain | null = null
   let listener: Listener = DEFAULT_LISTENER
   let lastTime = 0
@@ -310,7 +310,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     if (watched.has(bus)) meterOf(bus)
   }
 
-  const ready = (): AudioContext | null => {
+  const ready = (): BaseAudioContext | null => {
     if (context) return context
     const created = (options.createContext ?? globalContext)()
     if (!created) return null
@@ -351,7 +351,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   const startQueue = options.deferredStart ? createStartQueue(options.deferredStart) : null
 
   const build = (plan: SoundPlan, store: NoiseStore, delay: number, requestedAt: number, fallbackOf?: string, route?: OcclusionRoute): RealizedVoice => {
-    const audio = context as AudioContext
+    const audio = context as BaseAudioContext
     const time = audio.currentTime + delay
     const realized = realize(plan, {
       context: audio,
@@ -570,7 +570,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     ready,
     output: outputFor,
     prepareNoise: () => context && prepareNoise(shared, context, mix.noise.seconds),
-    noise: () => noiseBuffer(shared, context as AudioContext, mix.noise.seconds),
+    noise: () => noiseBuffer(shared, context as BaseAudioContext, mix.noise.seconds),
     register: (loop) => void loops.add(loop),
     unregister: (loop) => void loops.delete(loop),
     listener: () => listener,
@@ -728,7 +728,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       for (const loop of [...loops]) loop.stop()
       occluders?.clear()
       active.clear()
-      void context?.close()
+      if (context && isLiveContext(context)) void context.close()
       context = null
       chain = null
       busNodes.clear()

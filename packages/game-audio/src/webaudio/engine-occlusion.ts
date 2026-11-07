@@ -28,12 +28,12 @@ export type EngineOcclusion = {
   clear(): void
 }
 
-export function createEngineOcclusion(setup: OcclusionSetup, context: () => AudioContext | null): EngineOcclusion {
+export function createEngineOcclusion(setup: OcclusionSetup, context: () => BaseAudioContext | null): EngineOcclusion {
   const tracker = createOcclusionTracker(setup)
   const nodes = new Map<number, VoiceNodes>()
   const smoothing = Math.max(0.005, setup.smoothing ?? OCCLUSION_DEFAULTS.smoothing)
 
-  const pairTo = (audio: AudioContext, destination: AudioNode, state: OcclusionState): Pair => {
+  const pairTo = (audio: BaseAudioContext, destination: AudioNode, state: OcclusionState): Pair => {
     const filter = audio.createBiquadFilter()
     filter.type = 'lowpass'
     filter.frequency.value = state.cutoff
@@ -79,7 +79,7 @@ export function createEngineOcclusion(setup: OcclusionSetup, context: () => Audi
 
   return {
     attach({ id, source, level, listener }, destination, wet) {
-      const audio = context() as AudioContext
+      const audio = context() as BaseAudioContext
       const state = tracker.add({ id, source, level, listener, now: audio.currentTime })
       const dry = pairTo(audio, destination, state)
       const wetPair = wet ? pairTo(audio, wet, state) : undefined

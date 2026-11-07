@@ -15,13 +15,13 @@ export function createNoiseStore(random: () => number): NoiseStore {
 }
 
 /** Draws the samples (once): `sampleRate × seconds` of them, as the team code sizes its buffer. */
-export function prepareNoise(store: NoiseStore, context: AudioContext, seconds: number): Float32Array {
+export function prepareNoise(store: NoiseStore, context: BaseAudioContext, seconds: number): Float32Array {
   store.samples ??= fillNoise(store.random, Math.floor(context.sampleRate * seconds))
   return store.samples
 }
 
 /** The AudioBuffer (made on the first call, which is where the team code calls its `noise()`). */
-export function noiseBuffer(store: NoiseStore, context: AudioContext, seconds: number): AudioBuffer {
+export function noiseBuffer(store: NoiseStore, context: BaseAudioContext, seconds: number): AudioBuffer {
   const samples = prepareNoise(store, context, seconds)
   store.buffer ??= bufferOf(context, [samples], context.sampleRate * seconds)
   return store.buffer
