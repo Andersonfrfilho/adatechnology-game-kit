@@ -144,7 +144,7 @@ const BREACH_GRID_CAP = 4096
 /** The most units of masonry a failed panel leaves against a pillar (a course), over the ground beam and under the bond beam (a column of units). */
 const PANEL_EDGE_PILLAR = 2
 const PANEL_EDGE_BASE = 4
-const PANEL_EDGE_BEAM = 2
+const PANEL_EDGE_BEAM = 3
 /** Face area (m²) of plaster per flake it breaks into when the units under it are knocked out, and the most flakes one blow throws. */
 const PLASTER_FLAKE_AREA = 0.25
 const MAX_PLASTER_FLAKES = 24
@@ -2509,6 +2509,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
+   * The units of `loose` (indices of the part's grid) that still fall once the courses under a bond beam are counted as held: a panel under a beam has
+   * its last course wedged against it (the "encunhamento": bricks laid at an angle or a mortar bed driven in under the beam), and the ragged strip a blast
+   * leaves there stays pressed against it. Only deeper than `PANEL_EDGE_BEAM` courses does what hangs come down.
+   */
+  const wedgedUnder = (o: ObjRT, p: PartRT, loose: number[]): number[] => {
+    if (loose.length === 0) return loose
+    const beam = (o.byPart.get(p.spec.id) ?? []).some((j) => j.bears === 'a_on_b' && j.spec.b === p.spec.id && !j.st.open && !!o.byId.get(j.spec.a)?.spec.reinforcement)
+    if (!beam) return loose
+    const [, v] = planeAxes(p.thin)
+    const grid = gridOf(p)
+    const top = p.dims[v] / 2, course = unitSpan(p)[1]
+    // a few courses of brick hang from it by their mortar too: a clump of a few kilograms on a bed of 200 cm² is a few hundred pascals of tension
+    return loose.filter((i) => grid[i]!.center[v] + grid[i]!.size[v] / 2 < top - PANEL_EDGE_BEAM * course + 1e-4)
+  }
+
+  /**
    * The masonry a failed panel leaves on its frame: the infill is laid first with its ends toothed and the pillars are cast against it, and the bed joint
    * under the bond beam and over the ground beam is mortar too. So the panel tears out along a ragged line a little inside the frame: against each pillar
    * a strip a brick or so wide (half a brick more on the courses keyed into it), under the beam a course or two, over the ground beam a few courses (the
@@ -2529,7 +2545,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const side = Math.min(cell.center[u] - faces.fromFace, faces.toFace - cell.center[u]) / unitU
       if (side < depth(course * 2, PANEL_EDGE_PILLAR) + keyed + 0.5) return true
       if ((cell.center[v] - bottom) / unitV < depth(100000 + column, PANEL_EDGE_BASE) + 1) return true
-      return (top - cell.center[v]) / unitV < depth(200000 + column, PANEL_EDGE_BEAM) + 0.5 - 1
+      // under the beam the strip is there along most of the bay, a course to three deep
+      return (top - cell.center[v]) / unitV < Math.floor(createRng(seed ^ Math.imul(200001 + column, 0x9e3779b1)).next() * (PANEL_EDGE_BEAM + 1))
     }
   }
 
@@ -2598,7 +2615,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const i of out) worn[i] = -1
     // laid units over a gap come down; cast concrete (a pillar, a beam: its units are of its own material) is one piece held by its bars, and stands
     const cast = p.spec.units?.mortar === p.spec.material
-    const loose = cast ? [] : unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))
+    const loose = cast ? [] : wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius)))
     for (const i of loose) worn[i] = -1
     const blown = out.map((i) => grid[i]!), fallen = loose.map((i) => grid[i]!)
     const volume = (cells: readonly UnitCell[]) => cells.reduce((sum, cell) => sum + cell.size[0] * cell.size[1] * cell.size[2], 0)
@@ -2654,7 +2671,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const worn = (p.rt.chips ??= {})
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
     const opened = (cell: UnitCell): boolean => !!op && !!p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius
-    const loose = unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !opened(grid[i]!))
+    const loose = wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !opened(grid[i]!)))
     if (loose.length === 0) return 0
     for (const i of loose) worn[i] = -1
     const fallen = loose.map((i) => grid[i]!)
