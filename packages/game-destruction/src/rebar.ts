@@ -3,7 +3,9 @@ import type { Vec3 } from './types'
 /** A bar as two end points. */
 export type Bar = [Vec3, Vec3]
 
-const COVER = 0.03
+/** Concrete between the face of a reinforced part and its bars (m). */
+export const REBAR_COVER = 0.03
+const COVER = REBAR_COVER
 const MAX_BARS_PER_DIRECTION = 24
 const MAX_MEMBER_BARS_PER_SIDE = 6
 const STEEL_DENSITY = 7850
