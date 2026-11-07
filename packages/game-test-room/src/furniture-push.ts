@@ -6,9 +6,13 @@ import type * as THREE_NS from 'three'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import type { HandTargets } from '@adatechnology/game-contracts'
-import { createFurniturePush } from '@adatechnology/game-player'
+import { createFurniturePush, FURNITURE_PUSH_DEFAULTS, frictionFor } from '@adatechnology/game-player'
 import type { FurniturePushBlock, FurniturePushPhase, FurniturePushRules } from '@adatechnology/game-player'
+import { carryFits, createCarry, holdCarry, moveCarry, releaseCarry, shakeRiders } from './furniture-carry'
+import type { Carry, CarryHost, RoomPushRider, RoomPushTarget } from './furniture-carry'
 import type { Player } from './player'
+
+export type { RoomPushRider, RoomPushTarget } from './furniture-carry'
 
 /** How close to the piece the player must be to lean on it, metres from the feet to its box. */
 export const PUSH_REACH = 1.1
@@ -25,23 +29,12 @@ const STANDING_EYE = 1.7
 const APPROACH_SPEED = 1.2
 /** A piece whose base is higher than this is on something, not on the floor. */
 const MAX_BASE_HEIGHT = 0.12
-const FLOOR_CLEARANCE = 0.06
-const SWEEP_SKIN = 0.015
 /** Hands: half the gap between them, the highest they go, how far under the top of the piece. */
 const HAND_SPREAD = 0.2
 const HAND_TOP = 1.35
 const HAND_UNDER_TOP = 0.05
 const LOOK_RANGE = 0.9
-const DRAG_GRAIN_METRES = 0.3
 const RING_DELAY_S = 0.1
-
-export type RoomPushTarget = {
-  readonly objectId: string
-  readonly root: THREE_NS.Object3D
-  readonly name: string
-  /** The body it already has, or null when it stands free and only becomes one when it moves. */
-  readonly piece: Piece | null
-}
 
 export type RoomPushOptions = {
   readonly THREE: typeof THREE_NS
@@ -54,7 +47,9 @@ export type RoomPushOptions = {
   pick(): RoomPushTarget | null
   massOf(objectId: string): number
   materialOf(objectId: string): string | undefined
-  /** Turns a free-standing object into a body (the first step it takes). */
+  /** The loose things resting on the top of the box of `objectId` (a table's cups): they ride with it and their mass is pushed too. */
+  riders?(objectId: string, box: { readonly min: Vec3; readonly max: Vec3 }): readonly RoomPushRider[]
+  /** Turns a free-standing object into a body (the first step it takes, and each thing riding on it). */
   makePiece(objectId: string): Piece
   dragSound(objectId: string, point: Vec3, volume: number): void
   hitSound(objectId: string, point: Vec3): void
@@ -93,12 +88,7 @@ export interface RoomPush {
   handTargets(): HandTargets | null
 }
 
-type Leaning = {
-  readonly target: RoomPushTarget
-  readonly massKg: number
-  piece: Piece | null
-  readonly min: [number, number, number]
-  readonly max: [number, number, number]
+type Leaning = Carry & {
   /** The point of the near face the hands go to, and the way into the face (unit, on the floor). */
   readonly contact: [number, number]
   readonly into: [number, number]
@@ -118,51 +108,25 @@ function contactOf(box: { min: readonly number[]; max: readonly number[] }, play
 }
 
 export function createRoomPush(options: RoomPushOptions): RoomPush {
-  const { THREE, player, world, arena, blockers } = options
-  const control = createFurniturePush(options.rules)
-  const box3 = new THREE.Box3()
+  const { THREE, player } = options
+  const rules: FurniturePushRules = { ...FURNITURE_PUSH_DEFAULTS, ...options.rules }
+  const control = createFurniturePush(rules)
+  const host: CarryHost = { ...options, rules }
   let leaning: Leaning | null = null
   let scriptedWalk: readonly [number, number] | null = null
   let dragged = 0
 
   const event = (type: RoomPushEvent['type'], lean: Leaning): void => options.onEvent({ type, objectId: lean.target.objectId, name: lean.target.name, massKg: lean.massKg })
 
-  const standsClear = (lean: Leaning, dx: number, dz: number): boolean => {
-    const minX = lean.min[0] + dx
-    const maxX = lean.max[0] + dx
-    const minZ = lean.min[2] + dz
-    const maxZ = lean.max[2] + dz
-    if (Math.max(Math.abs(minX), Math.abs(maxX)) > arena.limit || Math.max(Math.abs(minZ), Math.abs(maxZ)) > arena.limit) return false
-    for (const c of arena.colliders) {
-      // what the piece already stands in does not hold it: it can always back out
-      if (lean.max[0] > c[0] && lean.min[0] < c[2] && lean.max[2] > c[1] && lean.min[2] < c[3]) continue
-      if (maxX > c[0] && minX < c[2] && maxZ > c[1] && minZ < c[3]) return false
-    }
-    if (blockers.size === 0) return true
-    const midX = (minX + maxX) / 2
-    const midZ = (minZ + maxZ) / 2
-    for (const [x, z] of [[minX, minZ], [maxX, minZ], [minX, maxZ], [maxX, maxZ], [midX, minZ], [midX, maxZ], [minX, midZ], [maxX, midZ]] as const) {
-      for (const isBlocked of blockers) if (isBlocked(x, z, 0)) return false
-    }
-    return true
-  }
-
-  const isFree = (lean: Leaning, dx: number, dz: number): boolean => {
-    if (!standsClear(lean, dx, dz) || !player.canStand(player.x + dx, player.z + dz)) return false
-    const distance = Math.hypot(dx, dz)
-    const box = { min: [lean.min[0], lean.min[1] + FLOOR_CLEARANCE, lean.min[2]] as Vec3, max: [lean.max[0], lean.max[1], lean.max[2]] as Vec3 }
-    return world.sweepBox(box, [dx / distance, 0, dz / distance], distance + SWEEP_SKIN, { ignore: lean.target.objectId }) === null
-  }
+  const isFree = (lean: Leaning, dx: number, dz: number): boolean => player.canStand(player.x + dx, player.z + dz) && carryFits(host, lean, dx, dz)
 
   const release = (): void => {
     const lean = leaning
     if (!lean) return
     leaning = null
-    if (lean.piece) {
-      lean.piece.held = false
-      lean.piece.sleeping = false
-      lean.piece.velocity = [0, 0, 0]
-    }
+    // the legs stop it as fast as its own friction does: what rides on it may slide on
+    const velocity = control.velocity
+    releaseCarry(lean, velocity, frictionFor(lean.material, rules) * rules.gravity)
     control.release()
     player.setWalkHeld(false)
     if (!options.hasBody?.()) player.setBend(0)
@@ -178,20 +142,10 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
   }
 
   const moveWith = (lean: Leaning, dx: number, dz: number): void => {
-    lean.target.root.position.x += dx
-    lean.target.root.position.z += dz
-    lean.target.root.updateMatrixWorld(true)
+    dragged = moveCarry(host, lean, dx, dz, dragged)
     player.moveBy(dx, dz)
-    lean.min[0] += dx
-    lean.max[0] += dx
-    lean.min[2] += dz
-    lean.max[2] += dz
     lean.contact[0] += dx
     lean.contact[1] += dz
-    dragged += Math.hypot(dx, dz)
-    if (dragged < DRAG_GRAIN_METRES) return
-    dragged = 0
-    options.dragSound(lean.target.objectId, [lean.contact[0], lean.min[1], lean.contact[1]], 0.3 + 0.5 * Math.min(1, lean.massKg / 100))
   }
 
   return {
@@ -210,15 +164,12 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
     begin() {
       if (leaning) return true
       const target = options.pick()
-      if (!target || !world.has(target.objectId)) return false
-      box3.setFromObject(target.root)
-      if (box3.min.y > player.feet + MAX_BASE_HEIGHT) return false
-      const min: [number, number, number] = [box3.min.x, box3.min.y, box3.min.z]
-      const max: [number, number, number] = [box3.max.x, box3.max.y, box3.max.z]
+      if (!target || !options.world.has(target.objectId)) return false
+      const carry = createCarry(host, target)
+      const { min, max, massKg, material } = carry
+      if (min[1] > player.feet + MAX_BASE_HEIGHT) return false
       const { contact, into, distance } = contactOf({ min, max }, player)
       if (distance > PUSH_REACH) return false
-      const massKg = options.massOf(target.objectId)
-      const material = options.materialOf(target.objectId)
       const isLow = max[1] - player.feet < LOW_TOP
       // the palms lie flat on the face that takes the push (HandPose of game-contracts): on a tall piece fingers up and backs to the player, on a low one fingers ahead and backs up
       const side = new THREE.Vector3(-into[1], 0, into[0])
@@ -226,8 +177,12 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
       const up = new THREE.Vector3(0, 1, 0)
       const basis = isLow ? new THREE.Matrix4().makeBasis(way, up, side) : new THREE.Matrix4().makeBasis(up, way.clone().negate(), side)
       const palm = new THREE.Quaternion().setFromRotationMatrix(basis)
-      leaning = { target, massKg, piece: target.piece, min, max, contact, into, isLow, palm: [palm.x, palm.y, palm.z, palm.w] }
-      if (target.piece) target.piece.held = true
+      leaning = Object.assign(carry, { contact, into, isLow, palm: [palm.x, palm.y, palm.z, palm.w] as [number, number, number, number] })
+      // held from the grip on (the room's collision of the player no longer sees it), and still the support of what rests on it
+      if (target.piece) {
+        target.piece.held = true
+        target.piece.carrying = true
+      }
       control.begin(material === undefined ? { massKg } : { massKg, material })
       dragged = 0
       player.setWalkHeld(true)
@@ -248,25 +203,25 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
     step(dt) {
       const lean = leaning
       if (!lean) return
-      if (!world.has(lean.target.objectId)) {
+      if (!options.world.has(lean.target.objectId)) {
         release()
         return
       }
+      const before = control.velocity
       const gripping = control.phase === 'grip'
       if (gripping) approach(lean, dt)
       const result = control.update(dt, { walk: scriptedWalk ?? player.walkIntent, isFree: (dx, dz) => isFree(lean, dx, dz) })
       if (result.engaged) {
         // a body from here on: held, the room's collision of the player and of this sweep no longer sees it as something in the way
-        if (control.block !== 'too_heavy') {
-          lean.piece ??= options.makePiece(lean.target.objectId)
-          lean.piece.held = true
-        }
+        if (control.block !== 'too_heavy') holdCarry(host, lean)
         event(control.block === 'too_heavy' ? 'too_heavy' : 'engaged', lean)
       }
       if (result.hitObstacle) {
         options.hitSound(lean.target.objectId, [lean.contact[0], lean.min[1] + 0.3, lean.contact[1]])
         event('obstacle', lean)
       }
+      // a sudden stop (or a start faster than the friction under them) throws what rides on it off with the speed it had
+      shakeRiders(lean, result.stoppedFrom ?? before, result.acceleration)
       if (result.dx !== 0 || result.dz !== 0) moveWith(lean, result.dx, result.dz)
       options.ring(control.phase === 'grip' && control.heldSeconds >= RING_DELAY_S ? control.progress : null)
     },

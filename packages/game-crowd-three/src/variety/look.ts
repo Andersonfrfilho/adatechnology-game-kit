@@ -17,6 +17,8 @@ export const VARIETY_DEFAULTS = {
   ageSteps: 3,
   /** How much of a shove's push (0..1) tilts the body. */
   leanScale: 0.3,
+  /** How much of the full lean a body shoving a movable piece puts into it (the push pose: the body forward, the arms out). */
+  shoveLean: 0.8,
 } as const
 
 export type CrowdVarietyNumbers = { readonly [K in keyof typeof VARIETY_DEFAULTS]: number }
@@ -51,10 +53,10 @@ const accessoriesOf = (store: CrowdStore, i: number, identity: number, N: CrowdV
   return bits
 }
 
-/** Lean toward the push, in the body's own frame, from the store's lean (the push over its cap). */
+/** Lean toward the push, in the body's own frame, from the store's lean (the push over its cap) and the force it leans on a movable piece. */
 const leanOf = (store: CrowdStore, i: number, N: CrowdVarietyNumbers): { readonly leanAngle: number; readonly leanAmount: number } => {
-  const lx = store.leanX[i]!
-  const lz = store.leanZ[i]!
+  const lx = store.leanX[i]! + store.shoveX[i]! * N.shoveLean
+  const lz = store.leanZ[i]! + store.shoveZ[i]! * N.shoveLean
   const size = Math.min(1, Math.hypot(lx, lz))
   if (size < LEAN_MIN) return { leanAngle: 0, leanAmount: 0 }
   const yaw = store.renderYaw[i]!

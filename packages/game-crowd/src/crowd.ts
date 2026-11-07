@@ -18,6 +18,9 @@ import type { PhysicsStats } from './physics/context'
 import type { ThrownPool } from './physics/thrown'
 import { createRng } from './rng'
 import { AGENT_FIELDS, createStore } from './store'
+import { createMovableContacts, shoveStep } from './movables'
+import type { CrowdMovable, CrowdShove } from './movables'
+import type { CrowdUpdateContext, CrowdView, PlayerCrowdLike } from './crowd-api'
 import type { CrowdStore } from './store'
 import { BALANCE, STATE } from './types'
 import type { Corpse, CrowdBlast, CrowdDamageResult, CrowdEventMap, CrowdEventName, CrowdHit, CrowdPack, CrowdTraits, CrowdTarget, CrowdType } from './types'
@@ -32,6 +35,7 @@ export const CROWD_DEFAULTS: { readonly sources: Readonly<Record<string, string>
 }
 
 export type { Corpse } from './types'
+export type { CrowdUpdateContext, CrowdView, PlayerCrowdLike } from './crowd-api'
 /** A custom move: runs on every decision tick after the timed states and before the moves on the target; `true` means it took care of the movement. */
 export type CrowdPlugin = {
   readonly id: string
@@ -58,20 +62,6 @@ export type CrowdOptions = {
   /** Contact, pressure, balance, mounds, thrown bodies and personality: all off by default, and then the horde is the game's, bit for bit. */
   readonly physics?: CrowdPhysicsOptions
 }
-export type CrowdView = { readonly x: number; readonly z: number; readonly yaw: number; readonly far: number }
-
-export type CrowdUpdateContext = {
-  readonly target?: CrowdTarget | null
-  /** 0 day, 1 night: sight drops by 40% at night. */
-  readonly nightFactor?: number
-  /** Where the flow field converges (the target by default; the foot of a ladder when the target is on a roof). */
-  readonly flowTarget?: readonly [number, number]
-  /** Where the viewer looks (yaw: forward is `(-sin, -cos)`); the stalker wakes when the target turns its back. Default: the target's view. */
-  readonly viewYaw?: number
-  /** Centre of the relevance bands, for scenes without a player near the agents (tests, benches, cutscenes). Default: the target, or `flowTarget` without one. */
-  readonly bandCentre?: readonly [number, number]
-}
-
 export type Crowd = {
   readonly store: CrowdStore
   readonly pack: CrowdPack
@@ -121,27 +111,15 @@ export type Crowd = {
   setHunt(hunt: ((i: number, tdt: number) => boolean) | null): void
   /** The chase speed of agent `i` now (the stalker's sprint, the drowned in water; G 67343 `zChaseSpeed`). */
   chaseSpeed(i: number): number
+  /** The furniture the agents bump into and may shove (`CrowdMovable`): the host sets it when it changes, the agents stop at its faces. */
+  setMovables(list: readonly CrowdMovable[]): void
+  /** What the agents leaned on each movable in the last update, their forces added: the host moves the piece if the sum beats its friction. */
+  readonly shoves: readonly CrowdShove[]
   /** The interface `game-player` uses to push, cut and be held by the agents. */
   asPlayerCrowd(): PlayerCrowdLike
   on<K extends CrowdEventName>(event: K, listener: (event: CrowdEventMap[K]) => void): () => void
 }
 
-/** The same shape as `game-player`'s `PlayerCrowd` (structural, no dependency). */
-export type PlayerCrowdLike = {
-  count(): number
-  active(i: number): boolean
-  x(i: number): number
-  z(i: number): number
-  y(i: number): number
-  floor(i: number): number
-  chasing(i: number): boolean
-  down(i: number): boolean
-  panicWeight(i: number): number
-  hold(i: number, x: number, z: number, k: number, lookX: number, lookZ: number): void
-  stun(i: number, seconds: number, vx: number, vz: number): void
-  chase(i: number, cooldown: number): void
-  damage(i: number, hit: { region: number; amount: number; distance: number; cut: number }): void
-}
 
 const clamp = (v: number, a: number, b: number): number => (v < a ? a : v > b ? b : v)
 // one shared empty set: the update loop reads the traits of every agent every frame
@@ -165,6 +143,8 @@ export function createCrowd(options: CrowdOptions): Crowd {
   const grid = options.grid ?? createNavGrid()
   const doors = options.doors ?? createDoors(grid, { random })
   const water = options.water ?? (() => false)
+  const movables = createMovableContacts()
+  let shoves: CrowdShove[] = []
   const plugins = options.plugins ?? []
   const clock = options.flow?.clock ?? (() => (typeof performance === 'undefined' ? Date.now() : performance.now()))
   const FLOW_R = options.flow?.radius ?? N.flowRadius
@@ -1266,16 +1246,27 @@ export function createCrowd(options: CrowdOptions): Crowd {
       }
       const nx = Z.x[i]! + (Z.vx[i]! + Z.pushX[i]!) * dt
       const nz = Z.z[i]! + (Z.vz[i]! + Z.pushZ[i]!) * dt
+      const walkX = Z.dvx[i]!
+      const walkZ = Z.dvz[i]!
       let hitCell = -1
-      if (!blockedAt(i, nx, Z.z[i]!)) Z.x[i] = nx
-      else {
-        if (Z.state[i] !== STATE.AIRBORNE) Z.vx[i] = Z.pushX[i] = 0
-        hitCell = cellOf(nx, Z.z[i]!)
-      }
-      if (!blockedAt(i, Z.x[i]!, nz)) Z.z[i] = nz
-      else {
-        if (Z.state[i] !== STATE.AIRBORNE) Z.vz[i] = Z.pushZ[i] = 0
-        hitCell = cellOf(Z.x[i]!, nz)
+      const shove = movables.list.length > 0 && Z.state[i] !== STATE.AIRBORNE && movables.at(nx, nz, Z.y[i]!, N.separation * Z.build[i]!) ? shoveStep(movables, { agent: i, x: Z.x[i]!, z: Z.z[i]!, nx, nz, y: Z.y[i]!, radius: N.separation * Z.build[i]!, walkX, walkZ, forceN: N.shoveForce * Z.build[i]!, blocked: (x, z) => blockedAt(i, x, z) }) : null
+      Z.shoveX[i] = shove?.leanX ?? 0
+      Z.shoveZ[i] = shove?.leanZ ?? 0
+      if (shove) {
+        Z.x[i] = shove.x
+        Z.z[i] = shove.z
+        Z.vx[i] = Z.vz[i] = Z.pushX[i] = Z.pushZ[i] = 0
+      } else {
+        if (!blockedAt(i, nx, Z.z[i]!)) Z.x[i] = nx
+        else {
+          if (Z.state[i] !== STATE.AIRBORNE) Z.vx[i] = Z.pushX[i] = 0
+          hitCell = cellOf(nx, Z.z[i]!)
+        }
+        if (!blockedAt(i, Z.x[i]!, nz)) Z.z[i] = nz
+        else {
+          if (Z.state[i] !== STATE.AIRBORNE) Z.vz[i] = Z.pushZ[i] = 0
+          hitCell = cellOf(Z.x[i]!, nz)
+        }
       }
       if (hitCell >= 0 && Z.state[i] === STATE.CHASE && b === 0) {
         // runners and leapers jump a low obstacle (car, yard wall)
@@ -1309,7 +1300,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
       // arms: up when it perceives someone; down against a wall so the hand does not go through
       if (Z.band[i]! <= 1) {
         const s = Z.state[i]
-        let goal = s === STATE.CHASE || s === STATE.GRAB || s === STATE.PILE_STEP ? 1 : 0
+        let goal = s === STATE.CHASE || s === STATE.GRAB || s === STATE.PILE_STEP || Z.shoveX[i] !== 0 || Z.shoveZ[i] !== 0 ? 1 : 0
         if (goal && solidAt(Z.x[i]! + Math.sin(Z.renderYaw[i]!) * 0.62, Z.z[i]! + Math.cos(Z.renderYaw[i]!) * 0.62, 1.0)) goal = 0.1
         Z.arms[i]! += (goal - Z.arms[i]!) * Math.min(1, dt * (goal > Z.arms[i]! ? 3 : 5))
       }
@@ -1325,6 +1316,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
       Z.renderYaw[i]! += dy * Math.min(1, dt * (Z.state[i] === STATE.AIRBORNE ? 20 : 9))
     }
     engine.endStep()
+    shoves = movables.flush()
     if (pileColumns.length) collapsePileColumns(Z, pileColumns, FW * FW, stepRelease)
     killQFlush()
     noises.length = 0
@@ -1461,6 +1453,10 @@ export function createCrowd(options: CrowdOptions): Crowd {
       hunt = next
     },
     chaseSpeed,
+    setMovables: (list) => movables.set(list),
+    get shoves() {
+      return shoves
+    },
     asPlayerCrowd: () => ({
       count: () => Z.n,
       active: (i) => Z.band[i] === 0,

@@ -54,6 +54,7 @@
     "limpSpeed": 0.5,
     "separation": 0.31,
     "separationPush": 2.2,
+    "shoveForce": 450,
     "doorDamage": 10,
     "doorMessageDistance": 25,
     "skullMinDamage": 20,

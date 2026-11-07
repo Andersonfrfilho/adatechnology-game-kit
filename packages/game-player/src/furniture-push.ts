@@ -18,6 +18,11 @@ export interface FurniturePushRules {
   readonly gripSeconds: { readonly base: number; readonly perKg: number; readonly max: number }
   /** Metres per second: `max` with nothing on the hands, `min` at the limit of the force. */
   readonly speed: { readonly max: number; readonly min: number }
+  /**
+   * How fast the walk with the piece changes, m/s²: `max` the most a person speeds it up (the force left over the friction, over the mass, may give less), `brake` the
+   * most it slows it (stopping, turning back). Below what holds a thing on top (friction × g, about 3.4 m/s² for the softest), so a cup on a pushed table rides along.
+   */
+  readonly accel: { readonly max: number; readonly brake: number; readonly min: number }
   /** A press shorter than this is not a push (the host keeps it for a tap, such as grabbing). */
   readonly tapSeconds: number
   /** How long the effort stays after the last step that was refused, so that it does not flicker. */
@@ -31,13 +36,17 @@ export const FURNITURE_PUSH_DEFAULTS: FurniturePushRules = {
   defaultFriction: 0.45,
   gripSeconds: { base: 0.4, perKg: 0.015, max: 2.5 },
   speed: { max: 1.8, min: 0.35 },
+  accel: { max: 1.5, brake: 3, min: 0.2 },
   tapSeconds: 0.2,
   strainHoldSeconds: 0.25,
 }
 
 export type FurniturePushTarget = { readonly massKg: number; readonly material?: string }
 
-const frictionOf = (target: FurniturePushTarget, rules: FurniturePushRules): number => (target.material !== undefined ? rules.frictionByMaterial[target.material] : undefined) ?? rules.defaultFriction
+/** Static friction of a thing of `material` on what it stands on (the floor, a table top). */
+export const frictionFor = (material: string | undefined, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => (material !== undefined ? rules.frictionByMaterial[material] : undefined) ?? rules.defaultFriction
+
+const frictionOf = (target: FurniturePushTarget, rules: FurniturePushRules): number => frictionFor(target.material, rules)
 
 const loadShare = (target: FurniturePushTarget, rules: FurniturePushRules): number => (frictionOf(target, rules) * target.massKg * rules.gravity) / rules.forceN
 
@@ -51,6 +60,15 @@ export const pushSpeedFor = (target: FurniturePushTarget, rules: FurniturePushRu
   const share = loadShare(target, rules)
   return share > 1 ? 0 : rules.speed.max + (rules.speed.min - rules.speed.max) * share
 }
+
+/** How fast the walk with the piece speeds up, m/s²: the force left over its friction, over its mass, at most what a person does (`accel.max`). */
+export const pushAccelerationFor = (target: FurniturePushTarget, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => {
+  const spare = (rules.forceN - frictionOf(target, rules) * target.massKg * rules.gravity) / Math.max(1e-3, target.massKg)
+  return Math.max(rules.accel.min, Math.min(rules.accel.max, spare))
+}
+
+/** Whether a thing resting on a moving piece slides on it: the piece changes speed faster than the friction under the thing can follow (`accelMps2` > friction × g). */
+export const slipsOnTop = (accelMps2: number, friction: number, gravity = FURNITURE_PUSH_DEFAULTS.gravity): boolean => accelMps2 > friction * gravity
 
 export type FurniturePushInput = {
   /** Where the player wants to go on the floor: a unit vector, or `[0, 0]` standing. */
@@ -66,6 +84,12 @@ export type FurniturePushStep = {
   readonly engaged: boolean
   /** A step was refused now and the one before was not: the moment the piece hits something. */
   readonly hitObstacle: boolean
+  /** The velocity of the piece after this update, m/s on the floor. */
+  readonly velocity: readonly [number, number]
+  /** How fast its velocity changed in this update, m/s²: what a thing on top feels. */
+  readonly acceleration: number
+  /** The velocity it had when it hit something and stopped at once (what rests on it keeps it and slides on), or null. */
+  readonly stoppedFrom: readonly [number, number] | null
 }
 
 export interface FurniturePush {
@@ -76,12 +100,14 @@ export interface FurniturePush {
   readonly heldSeconds: number
   /** Whether the hold is still short enough to be a tap. */
   readonly isTap: boolean
+  /** The velocity of the piece now, m/s on the floor. */
+  readonly velocity: readonly [number, number]
   begin(target: FurniturePushTarget): void
   release(): void
   update(dt: number, input: FurniturePushInput): FurniturePushStep
 }
 
-const STILL: FurniturePushStep = { dx: 0, dz: 0, engaged: false, hitObstacle: false }
+const STILL: FurniturePushStep = { dx: 0, dz: 0, engaged: false, hitObstacle: false, velocity: [0, 0], acceleration: 0, stoppedFrom: null }
 
 export function createFurniturePush(overrides: Partial<FurniturePushRules> = {}): FurniturePush {
   const rules: FurniturePushRules = { ...FURNITURE_PUSH_DEFAULTS, ...overrides }
@@ -90,38 +116,62 @@ export function createFurniturePush(overrides: Partial<FurniturePushRules> = {})
   let held = 0
   let gripSeconds = 1
   let speed = 0
+  let accel = rules.accel.max
+  let vx = 0
+  let vz = 0
   let block: FurniturePushBlock = null
   let refused = 0
   let wasRefused = false
 
+  /** The velocity goes toward the walk, no faster than the push speeds it up (or the legs brake it). Answers the change, m/s². */
+  const steer = (dt: number, walk: readonly [number, number]): number => {
+    const wantX = walk[0] * speed
+    const wantZ = walk[1] * speed
+    const braking = wantX * vx + wantZ * vz < vx * vx + vz * vz
+    let dvx = wantX - vx
+    let dvz = wantZ - vz
+    const change = Math.hypot(dvx, dvz)
+    const most = (braking ? rules.accel.brake : accel) * dt
+    if (change > most) {
+      dvx *= most / change
+      dvz *= most / change
+    }
+    vx += dvx
+    vz += dvz
+    return Math.min(change, most) / dt
+  }
+
   const walkWith = (dt: number, input: FurniturePushInput): FurniturePushStep => {
     refused = Math.max(0, refused - dt)
-    if (block === 'too_heavy') return STILL
-    const [x, z] = input.walk
-    if ((x === 0 && z === 0) || dt <= 0) {
+    if (block === 'too_heavy' || dt <= 0) return STILL
+    const acceleration = steer(dt, input.walk)
+    if (Math.hypot(vx, vz) < 1e-4) {
+      vx = vz = 0
       if (refused === 0) {
         phase = 'push'
         block = null
         wasRefused = false
       }
-      return STILL
+      return { ...STILL, acceleration }
     }
-    const dx = x * speed * dt
-    const dz = z * speed * dt
+    const dx = vx * dt
+    const dz = vz * dt
     if (input.isFree(dx, dz)) {
       if (refused === 0) {
         phase = 'push'
         block = null
       }
       wasRefused = false
-      return { dx, dz, engaged: false, hitObstacle: false }
+      return { dx, dz, engaged: false, hitObstacle: false, velocity: [vx, vz], acceleration, stoppedFrom: null }
     }
+    const from: readonly [number, number] = [vx, vz]
+    vx = vz = 0
     const hitObstacle = !wasRefused
     wasRefused = true
     refused = rules.strainHoldSeconds
     phase = 'strain'
     block = 'obstacle'
-    return { dx: 0, dz: 0, engaged: false, hitObstacle }
+    return { ...STILL, hitObstacle, acceleration: Math.hypot(from[0], from[1]) / dt, stoppedFrom: hitObstacle ? from : null }
   }
 
   return {
@@ -137,6 +187,9 @@ export function createFurniturePush(overrides: Partial<FurniturePushRules> = {})
     get heldSeconds() {
       return held
     },
+    get velocity(): readonly [number, number] {
+      return [vx, vz]
+    },
     get isTap() {
       return phase === 'grip' && held < rules.tapSeconds
     },
@@ -149,9 +202,12 @@ export function createFurniturePush(overrides: Partial<FurniturePushRules> = {})
       wasRefused = false
       gripSeconds = gripSecondsFor(next.massKg, rules)
       speed = pushSpeedFor(next, rules)
+      accel = pushAccelerationFor(next, rules)
+      vx = vz = 0
     },
     release() {
       phase = 'idle'
+      vx = vz = 0
       held = 0
       block = null
     },
