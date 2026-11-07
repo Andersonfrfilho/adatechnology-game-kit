@@ -228,7 +228,8 @@
     "sources": [
       "arsenal",
       "lab",
-      "gallery"
+      "gallery",
+      "reference"
     ]
   },
   {
@@ -447,11 +448,16 @@
     "tnt": 0.045,
     "destructionLevel": 2,
     "noise": 450,
+    "armRange": [
+      10,
+      40
+    ],
     "triggers": [
       "impact"
     ],
     "sources": [
       "lab",
+      "reference",
       "derived"
     ]
   },

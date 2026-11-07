@@ -31,7 +31,8 @@ describe('launchers that go under a barrel', () => {
     expect(arsenal.weapons.get('gp_25')?.action).toMatchObject({ projectile: 'vog_25', speed: 76 })
     expect(arsenal.weapons.get('ag36')?.action).toMatchObject({ projectile: 'm79_40mm' })
     expect(arsenal.explosives.get('vog_25')).toMatchObject({ lethalRadius: arsenal.explosives.get('m79_40mm')?.lethalRadius, injuryRadius: arsenal.explosives.get('m79_40mm')?.injuryRadius, energy: arsenal.explosives.get('m79_40mm')?.energy })
-    expect(arsenal.explosives.get('vog_25')?.sources).toEqual(['lab', 'derived'])
+    expect(arsenal.explosives.get('vog_25')?.sources).toEqual(['lab', 'reference', 'derived'])
+    expect(arsenal.explosives.get('vog_25')?.armRange).toEqual([10, 40])
   })
 
   it('fit only where the real mount exists: the M203 on the M16 and the M4, the GP-25 on the AKs only (the SKS has the bayonet lug but not the GP-25 mount), the AG36 on the HK416', () => {
