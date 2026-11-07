@@ -15,7 +15,7 @@ import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { createVehiclesThree } from '../../build'
 import type { BuiltVehicle } from '../../build'
 import { defaultSoundIds } from '../types'
-import { createVehicleSound } from '../../audio/vehicle-sound'
+import { createVehicleSound, slideOfGrip } from '../../audio/vehicle-sound'
 import type { VehicleSound } from '../../audio/vehicle-sound'
 import type { VehicleSoundIds } from '../types'
 import { createCockpit } from './cockpit'
@@ -794,7 +794,19 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       steer = p.driver.state.steerAngle
       if (p.time > 9) parking = null
     }
-    if (car) engine?.update({ dt, position: [car.built.group.position.x, 0.5, car.built.group.position.z], speed, throttle: run ? 1 : (driving?.throttle ?? 0), rpm: driving ? driving.driver.state.rpm : undefined })
+    if (car) {
+      // the controls the run's procedure asked for (a brake test lets go of the throttle and stands on the brake), or the driver's
+      const semi = run?.driver.state ?? driving?.driver.state
+      const asked = run ? run.input : { throttle: driving?.throttle ?? 0, brake: driving?.brake ?? 0 }
+      engine?.update({
+        dt,
+        position: [car.built.group.position.x, 0.5, car.built.group.position.z],
+        speed,
+        throttle: asked.throttle,
+        brake: asked.brake,
+        ...(semi ? { rpm: semi.rpm, slip: Math.max(0, ...semi.slip.map(slideOfGrip)) } : {}),
+      })
+    }
     const f = frameOf(speed)
     if (f && rig.vehicle && settings.camera !== 'room') rig.vehicle.update(rig.camera!, f, dt)
     if (f && rig.vehicle) for (const m of rig.mirrors) rig.vehicle.placeMirror(m.camera, aimed(m.pose), f)

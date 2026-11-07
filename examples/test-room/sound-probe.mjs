@@ -84,16 +84,19 @@ await page.evaluate(() => {
   engine.loop = (id, ...rest) => {
     const handle = loop(id, ...rest)
     calls.push({ type: 'loop', id, wall: performance.now(), ctx: ctxTime() })
-    return {
-      set(state) {
-        calls.push({ type: 'set', id, ...state, wall: performance.now(), ctx: ctxTime() })
-        return handle.set(state)
-      },
-      stop() {
-        calls.push({ type: 'stop', id, wall: performance.now(), ctx: ctxTime() })
-        return handle.stop()
-      },
+    // the engine's own handle underneath, with its set and stop recorded: a new object with only those two loses what the handle carries,
+    // and the runs then recorded no loops and the lane never came to its end. A child of the handle, so a handle the engine shares (the
+    // silent one of an unknown id) is not changed for the others
+    const recorded = Object.create(handle)
+    recorded.set = (state) => {
+      calls.push({ type: 'set', id, ...state, wall: performance.now(), ctx: ctxTime() })
+      return handle.set(state)
     }
+    recorded.stop = () => {
+      calls.push({ type: 'stop', id, wall: performance.now(), ctx: ctxTime() })
+      return handle.stop()
+    }
+    return recorded
   }
   // the room log: the module's own lines (a crash at so many m/s), with the time they were written
   window.__frames = 0
