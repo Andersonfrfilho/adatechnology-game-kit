@@ -651,6 +651,9 @@ importers:
 
   packages/game-floorplan-residential:
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-floorplan':
         specifier: workspace:^
         version: link:../game-floorplan

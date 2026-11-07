@@ -1,5 +1,6 @@
 export { createTerrain, DEFAULT_TERRAIN_BUDGET } from './terrain'
 export { createTerrainImpl } from './impl'
+export { GROUND_LOSS_MIN_DEPTH, SLIDE_LOSS_MIN_LOWERING, VOID_MIN_DEPTH } from './ground-loss'
 export type { TerrainImplOptions } from './impl'
 export { DEFAULT_BAR_DIAMETER, DEFAULT_BAR_YIELD_JOULES, DEFAULT_BAR_YIELD_PA, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
 export { TERRAIN_PATTERNS } from './types'
