@@ -60,6 +60,13 @@ export type VehicleSound = {
 const clamp01 = (v: number): number => (v < 0 ? 0 : v > 1 ? 1 : v)
 
 /**
+ * A tyre's slide for `VehicleSoundFrame.slip`, from how much of its grip it uses (the semi driver's `state.slip`: force over what the tyre
+ * holds, 1 = saturated). A tyre pulling hard but still holding is silent; it squeals only near the limit and slides fully once saturated,
+ * so full throttle that the tyre carries is no skid, and wheelspin or a locked wheel is.
+ */
+export const slideOfGrip = (usage: number): number => clamp01((Math.abs(usage) - 0.9) / 0.1)
+
+/**
  * The sounds of one vehicle on a host's sink (`ModuleHost.audio`): the engine loops by RPM and load, the starter, the tyres skidding and rolling,
  * and crashes by speed. The loops are placed at the vehicle every frame (distance and side come from the sink). Works without a sink (silent).
  */

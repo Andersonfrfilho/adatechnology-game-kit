@@ -20,7 +20,7 @@ import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
 import { DEFAULT_TEST_WRECKS, defaultEffectIds, defaultSoundIds } from './types'
 import type { EffectsLike, VehiclesContext, VehiclesTestFleet, VehiclesTestOptions } from './types'
-import { createVehicleSound } from '../audio/vehicle-sound'
+import { createVehicleSound, slideOfGrip } from '../audio/vehicle-sound'
 import type { VehicleSound } from '../audio/vehicle-sound'
 import { VEHICLE_PRELOAD_SOUNDS, VEHICLE_SOUND_BANK } from '../audio/bank'
 
@@ -438,7 +438,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
             position: [driver.state.x, 0.5, driver.state.z],
             speed,
             throttle: input.throttle,
-            ...(semiState ? { rpm: semiState.rpm, slip: Math.max(0, ...semiState.slip.map(Math.abs)) } : { slip: braking && speed > 3 ? 0.6 : 0 }),
+            ...(semiState ? { rpm: semiState.rpm, slip: Math.max(0, ...semiState.slip.map(slideOfGrip)) } : { slip: braking && speed > 3 ? 0.6 : 0 }),
             surface: /dirt|gravel|sand|grass|mud/.test(settings.surface) ? 'dirt' : 'asphalt',
             brake: input.brake,
           })

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AudioSink, LoopHandle, SoundRequest } from '@adatechnology/game-contracts'
 import { createSoundRegistry, loopRate } from '@adatechnology/game-audio'
 import type { SampleSound } from '@adatechnology/game-audio'
-import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, createEngineBudget, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz } from '../src/audio'
+import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, createEngineBudget, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz, slideOfGrip } from '../src/audio'
 
 type LoopCall = { sound: string; volume?: number; frequency?: number; cutoff?: number }
 
@@ -143,6 +143,26 @@ describe('createVehicleSound', () => {
     expect(car.crash(30, [0, 0, 0])).toBe('heavy')
     const ids = new Set([...(VEHICLE_SOUND_BANK.sounds ?? []).map((s) => s.id), ...(VEHICLE_SOUND_BANK.loops ?? []).map((l) => l.id)])
     for (const id of ['engine_start', 'engine_stop', 'engine_fail', 'crash_light', 'crash_medium', 'crash_heavy', 'car_door_open', 'car_door_close', 'car_trunk_close', 'car_hood_close', 'horn_car', 'horn_truck', 'tire_skid_asphalt', 'tire_skid_dirt', 'tire_roll', 'brake_squeal', 'vehicle_hit_pedestrian', 'siren', 'helicopter_rotor_loop', ...CAR_ENGINE.layers.map((l) => l.sound), CAR_ENGINE.load.sound]) expect([id, ids.has(id)]).toEqual([id, true])
+  })
+})
+
+describe('the semi driver\'s grip to a slide', () => {
+  it('a tyre pulling hard but holding is silent; near the limit it starts to squeal and saturated it slides', () => {
+    expect(slideOfGrip(0)).toBe(0)
+    // full throttle that the tyre carries (grip used ~0.6-0.85) is no skid: the 3 s of wheelspin squeal on a hatch's start
+    expect(slideOfGrip(0.6)).toBe(0)
+    expect(slideOfGrip(0.85)).toBe(0)
+    expect(slideOfGrip(0.95)).toBeCloseTo(0.5, 6)
+    expect(slideOfGrip(1)).toBeCloseTo(1, 9)
+    expect(slideOfGrip(-1)).toBeCloseTo(1, 9)
+    const { sink, sets } = fakeSink()
+    const car = createVehicleSound(sink)
+    car.start([0, 0, 0])
+    car.update({ dt: 1, position: [0, 0, 0], speed: 8, throttle: 1, slip: slideOfGrip(0.8) })
+    expect(car.reading.levels['tire_skid_asphalt'] ?? 0).toBe(0)
+    car.update({ dt: 1, position: [0, 0, 0], speed: 8, throttle: 1, slip: slideOfGrip(1) })
+    expect(car.reading.levels['tire_skid_asphalt']).toBeGreaterThan(0.1)
+    void sets
   })
 })
 

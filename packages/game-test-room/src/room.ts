@@ -10,6 +10,7 @@ import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, s
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
+import { FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
@@ -56,6 +57,7 @@ import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-t
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
+import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -210,6 +212,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   // the loading indicator of the room (and of its modules, as `host.loading`): any slow job shows a spinner or a bar so that the page never looks frozen; `ui: false` keeps the state and draws nothing
   const loading = createLoading({ container: options.container, draw: options.ui !== false, working: t('loading.working') })
+  // the small corner picture a module can lend (`host.cornerImage`); `ui: false` draws nothing
+  const cornerImage = options.ui !== false ? createCornerImage({ container: options.container, labels: { open: t('corner.open'), close: t('corner.close'), source: t('corner.source') } }) : null
   const num = (n: number, digits = 1): string => {
     const s = (Math.round(n * 10 ** digits) / 10 ** digits).toFixed(digits)
     return locale.toLowerCase().startsWith('pt') ? s.replace('.', ',') : s
@@ -865,6 +869,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   })
   /** E was pressed on something that can be pushed, not by a script: letting the key go is letting the piece go. */
   let pushByKey = false
+  /** When E went down (wall clock): a press shorter than the tap of the push rules is a tap however few frames ran in it (a slow GPU). */
+  let pushKeyAt = 0
 
   // ----- doors, lids and drawers worked by hand: a tap of E on a leaf (a part an `open_*` clip of the item moves) opens or closes it
   const leafCache = new WeakMap<object, RoomLeaf[]>()
@@ -3159,7 +3165,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (code === 'KeyE' && pushByKey) {
         pushByKey = false
         // a tap on a leaf opens or closes it; a hold pushed the piece
-        if (push.end() && !doors.use()) grab()
+        const quick = (performance.now() - pushKeyAt) / 1000 < (options.push?.tapSeconds ?? FURNITURE_PUSH_DEFAULTS.tapSeconds)
+        if ((push.end() || quick) && !doors.use()) grab()
       }
       return
     }
@@ -3184,6 +3191,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyE':
         if (e.repeat) break
         // a tap grabs, a hold against something that stands on the floor pushes it
+        pushKeyAt = performance.now()
         pushByKey = !heldPiece && push.begin()
         if (!pushByKey && (heldPiece || !doors.use())) grab()
         break
@@ -4018,6 +4026,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       blockers.add(blocked)
       return () => blockers.delete(blocked)
     },
+    cornerImage(image) {
+      cornerImage?.show(image)
+    },
     onClear(listener) {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)
@@ -4634,6 +4645,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       scheduler.dispose()
       window.removeEventListener('resize', onResize)
       player.dispose()
+      cornerImage?.dispose()
       ui?.dispose()
       graphics?.dispose()
       loading.dispose()

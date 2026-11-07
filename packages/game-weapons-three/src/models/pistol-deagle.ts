@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { sharedGeometry } from './geometry-cache'
 import type { ModelKit, Parent } from './kit'
 import { heatify } from './kit'
 import type { BuiltModel, ModelOptions, ModelParts } from './types'
@@ -19,10 +20,13 @@ const SLIDE_SHARE = 0.55
 /** A flat piece cut from an outline in (x, y), with an optional hole, `depth` thick and centred on z. */
 const plate = (kit: ModelKit, parent: Parent, outline: readonly (readonly [number, number])[], hole: readonly (readonly [number, number])[] | null, depth: number, material: Material): THREE_NS.Mesh => {
   const { THREE } = kit
-  const shape = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x, y)))
-  if (hole) shape.holes.push(new THREE.Path(hole.map(([x, y]) => new THREE.Vector2(x, y))))
-  const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 1 })
-  geometry.translate(0, 0, -depth / 2)
+  const geometry = sharedGeometry(kit, `plate:${JSON.stringify([outline, hole, depth])}`, () => {
+    const shape = new THREE.Shape(outline.map(([x, y]) => new THREE.Vector2(x, y)))
+    if (hole) shape.holes.push(new THREE.Path(hole.map(([x, y]) => new THREE.Vector2(x, y))))
+    const extruded = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: 0.0008, bevelSize: 0.0008, bevelSegments: 1 })
+    extruded.translate(0, 0, -depth / 2)
+    return extruded
+  })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.castShadow = true
   mesh.receiveShadow = true
@@ -115,7 +119,7 @@ const buildGuard = (kit: ModelKit, group: THREE_NS.Group, frontStrapAt: (y: numb
 export function buildDeagle(kit: ModelKit, options: ModelOptions): BuiltModel {
   const { M, box, torus, THREE } = kit
   const length = ((options.L ?? 0) / 1000) * 0.97
-  const metal = options.steel ? M.steel : options.stain ? M.steelL : M.metal
+  const metal = options.chrome ? M.chrome : options.steel ? M.steel : options.stain ? M.steelL : M.metal
   const group = kit.group()
   const parts: ModelParts = { family: 'pistol', kick: 1.8, glow: [] }
   const slide = kit.pivot(group)

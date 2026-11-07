@@ -7,6 +7,7 @@ import { buildFittings } from './rifle-fittings'
 import { buildForend } from './rifle-forend'
 import { buildG36Lower, buildG36Receiver, buildG36Top, fillG36Magazine } from './rifle-g36'
 import { buildGrip, buildMagazine } from './rifle-controls'
+import { buildKalashnikovReceiver } from './rifle-kalashnikov'
 import { buildLeverShotgun } from './lever-shotgun'
 import { buildStock } from './rifle-stock'
 import type { RifleContext } from './rifle-context'
@@ -21,6 +22,7 @@ function buildReceiver(context: RifleContext): void {
   const receiverMaterial = o.tan ? M.tan : M.metal
   const middle = (x0 + x1) / 2
   if (o.g36) buildG36Receiver(context)
+  else if (o.kalashnikov) buildKalashnikovReceiver(context)
   else if (o.round) {
     cylinderX(group, hR * 0.36, RL, M.steel, middle, by, 0, 20)
     cylinderX(group, hR * 0.32, 0.05, M.steel, x0 - 0.01, by, 0, 18)
@@ -33,7 +35,7 @@ function buildReceiver(context: RifleContext): void {
     box(group, 0.03, 0.008, 0.012, M.dark, x0 + 0.02, hR / 2 + 0.004, 0)
     box(group, 0.012, 0.006, 0.004, M.dark, x0 + RL * 0.55, -hR * 0.15, -wR / 2 - 0.002)
   } else box(group, RL, hR, wR, receiverMaterial, middle, 0, 0)
-  if (o.ak) {
+  if (o.ak && !o.kalashnikov) {
     box(group, RL * 0.86, hR * 0.28, wR * 0.95, M.metal, middle - 0.008, hR / 2 + 0.004, 0)
     for (let i = 0; i < 3; i++) box(group, 0.004, hR * 0.3, wR * 0.97, M.dark, x0 + RL * 0.25 + i * 0.02, hR / 2 + 0.004, 0)
     box(group, RL * 0.5, 0.012, 0.003, M.metal, x0 + RL * 0.55, -hR * 0.02, wR / 2 + 0.0015, -0.05)

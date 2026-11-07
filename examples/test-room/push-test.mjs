@@ -18,7 +18,35 @@ const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${base}?scene=push&table=0`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((/** @type {{ itemId: string; }} */ s) => s.itemId === 'wardrobe'), null, { timeout: 180000 })
-await page.waitForTimeout(1500)
+/** Waits for `n` drawn frames of the room: a time in frames, not in milliseconds, so a slow GPU waits as long in the game as a fast one. */
+const frames = (/** @type {number} */ n) =>
+  page.evaluate((count) => new Promise((done) => {
+    let left = count
+    const tick = () => (--left <= 0 ? done(undefined) : requestAnimationFrame(tick))
+    requestAnimationFrame(tick)
+  }), n)
+/** True once the wait settled, false when it timed out: the frames run at whatever speed the GPU gives. */
+const held = (/** @type {Promise<unknown>} */ wait) => wait.then(() => true, () => false)
+const WAIT = { timeout: 60000, polling: 50 }
+/** Waits until piece `id` stands still from one drawn frame to the next. */
+const settled = (/** @type {string} */ id) =>
+  page.evaluate((which) => new Promise((done) => {
+    let last = NaN
+    const tick = () => {
+      const z = window.__testRoom.spawned().find((s) => s.itemId === which)?.root.position.z ?? NaN
+      if (Math.abs(z - last) < 1e-5) done(undefined)
+      else {
+        last = z
+        requestAnimationFrame(tick)
+      }
+    }
+    requestAnimationFrame(tick)
+  }), id)
+/** Waits until piece `id` goes past `z` (`sign` 1: beyond it, -1: before it). */
+const movedPast = (/** @type {string} */ id, /** @type {number} */ z, /** @type {1 | -1} */ sign) =>
+  held(page.waitForFunction(([which, limit, way]) => ((window.__testRoom.spawned().find((s) => s.itemId === which)?.root.position.z ?? NaN) - limit) * way > 0, /** @type {const} */ ([id, z, sign]), WAIT))
+const pushEnded = () => held(page.waitForFunction(() => window.__testRoom.push.state === null, null, WAIT))
+await frames(60)
 
 /** @type {string[]} */
 const failures = []
@@ -60,19 +88,19 @@ for (const mode of /** @type {const} */ (['first', 'third'])) {
   // level the view for the picture: looking down from the shoulder the body hides a low piece
   if (mode === 'third') await page.evaluate(() => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x, 1.7, z], [x, 1.3, z - 4]) })
   await page.keyboard.down('KeyW')
-  await page.waitForTimeout(2200)
+  await movedPast('nightstand', before.nightstand - 0.8, -1)
   await shot(`${mode}-pushing`)
   await page.keyboard.up('KeyW')
+  // the reading is taken once the piece stands still
+  await settled('nightstand')
   const after = await state()
   check(after.nightstand < before.nightstand - 0.3, `W pushes the nightstand (${before.nightstand.toFixed(2)} to ${after.nightstand.toFixed(2)})`)
   check(Math.abs(before.player[1] - after.player[1] - (before.nightstand - after.nightstand)) < 0.05, 'the player goes with it')
   await page.keyboard.down('KeyS')
-  await page.waitForTimeout(800)
+  check(await movedPast('nightstand', after.nightstand + 0.1, 1), 'S pulls it back')
   await page.keyboard.up('KeyS')
-  check((await state()).nightstand > after.nightstand + 0.1, 'S pulls it back')
   await page.keyboard.up('KeyE')
-  await page.waitForTimeout(400)
-  check((await state()).push === null, 'letting go of E ends it')
+  check(await pushEnded(), 'letting go of E ends it')
   await shot(`${mode}-released`)
 
   // too heavy
@@ -80,13 +108,13 @@ for (const mode of /** @type {const} */ (['first', 'third'])) {
   await look([1.6, 1.7, heavyZ + 1.2], [1.6, 0.8, heavyZ])
   await holdUntil(() => window.__testRoom.push.state?.phase === 'strain')
   await page.keyboard.down('KeyW')
-  await page.waitForTimeout(900)
+  await frames(30)
   await shot(`${mode}-too-heavy`)
   await page.keyboard.up('KeyW')
   const heavy = await state()
   check(heavy.push?.block === 'too_heavy' && heavy.bbq === heavyZ, `the grill (${Math.round(heavy.push?.massKg ?? 0)} kg) does not budge`)
   await page.keyboard.up('KeyE')
-  await page.waitForTimeout(300)
+  await pushEnded()
 
   // at the wall
   const wardrobeZ = (await state()).wardrobe
@@ -94,28 +122,29 @@ for (const mode of /** @type {const} */ (['first', 'third'])) {
   await holdUntil(() => window.__testRoom.push.state?.phase === 'push')
   await page.keyboard.down('KeyW')
   await page.waitForFunction(() => window.__testRoom.push.state?.block === 'obstacle', null, { timeout: 60000 })
-  await page.waitForTimeout(500)
+  await frames(20)
   await shot(`${mode}-blocked`)
   const blocked = await state()
-  await page.waitForTimeout(500)
+  await frames(30)
   const still = await state()
   await page.keyboard.up('KeyW')
   check(still.push?.phase === 'strain' && still.player[1] === blocked.player[1] && still.wardrobe === blocked.wardrobe, `at the wall neither the wardrobe (z ${still.wardrobe.toFixed(2)}) nor the player advance`)
   // back off the wall for the next pass
   await page.keyboard.down('KeyS')
-  await page.waitForTimeout(1500)
+  await movedPast('wardrobe', blocked.wardrobe + 0.4, 1)
   await page.keyboard.up('KeyS')
   await page.keyboard.up('KeyE')
-  await page.waitForTimeout(300)
+  await pushEnded()
 }
 
-// a tap still grabs
+// a tap is still a tap: the hand's own E opens the nightstand's drawer (a piece with a door is opened first) or grabs, it is never taken for a push
 await camera('first')
 const z = (await state()).nightstand
 await look([-1.6, 1.7, z + 1], [-1.6, 0.45, z])
+const taps = () => page.evaluate(() => ['grab', 'door_reach'].reduce((sum, type) => sum + window.__testRoom.log.entries({ type }).length, 0))
+const tapsBefore = await taps()
 await page.keyboard.press('KeyE')
-await page.waitForTimeout(200)
-check(await page.evaluate(() => window.__testRoom.log.entries({ type: 'grab' }).length > 0), 'a tap on E still grabs')
+check(await held(page.waitForFunction((n) => ['grab', 'door_reach'].reduce((sum, type) => sum + window.__testRoom.log.entries({ type }).length, 0) > n, tapsBefore, { ...WAIT, timeout: 10000 })), 'a tap on E is still a tap (opens the drawer or grabs), not a push')
 check(errors.length === 0, `no page errors ${errors.join(' | ')}`)
 await browser.close()
 console.log(failures.length ? `${failures.length} FAILED` : 'ALL OK')

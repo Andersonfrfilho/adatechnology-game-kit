@@ -5,5 +5,5 @@ export { createGearGuess, engineMix, firingHz, layerWeight, rpmShare } from './e
 export type { EngineLayerSetting, EngineMixInput } from './engine-mix'
 export { BIKE_ENGINE, CAR_ENGINE, CRASH_SPEEDS, DEFAULT_VEHICLE_SOUND_KEYS, ENGINE_PROFILES, TRUCK_ENGINE } from './profiles'
 export type { EngineLayer, EngineLoadLayer, EngineProfile, VehicleSoundKeys } from './profiles'
-export { createVehicleSound } from './vehicle-sound'
+export { createVehicleSound, slideOfGrip } from './vehicle-sound'
 export type { VehicleSound, VehicleSoundFrame, VehicleSoundOptions, VehicleSoundReading } from './vehicle-sound'

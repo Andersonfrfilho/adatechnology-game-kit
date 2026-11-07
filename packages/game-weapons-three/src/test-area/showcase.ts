@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { BenchChange, BenchSheet, ChoiceOption, DestructibleSpec, ModuleControl, ModuleHost, TestableItem, Vec3 } from '@adatechnology/game-contracts'
+import type { BenchChange, ChoiceOption, CornerImage, DestructibleSpec, ModuleControl, ModuleHost, TestableItem, Vec3 } from '@adatechnology/game-contracts'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { weaponMenu } from '@adatechnology/game-weapons'
@@ -50,12 +50,11 @@ export function showcasePedestalItem(name: string): TestableItem {
   }
 }
 
-/** The card of the weapon on the showcase: its name and the photo of the real one, with author and licence. */
-export function showcaseSheet(arsenal: Arsenal, text: ShowcaseText, weapon: string): BenchSheet {
-  const name = arsenal.name(weapon)
+/** The photo of the real weapon with its author and licence, or undefined when none is listed (the weapon is in `missing` of the references). */
+export function showcasePhoto(arsenal: Arsenal, text: ShowcaseText, weapon: string): CornerImage | undefined {
   const photo = PHOTOS[weapon]
-  if (!photo) return { kicker: text.kicker, title: name, note: text.noPhoto }
-  return { kicker: text.kicker, title: name, image: { url: photo.url, alt: fill(text.alt, { weapon: name }), credit: `${photo.author} · ${photo.license}`, page: photo.page } }
+  if (!photo) return undefined
+  return { url: photo.url, alt: fill(text.alt, { weapon: arsenal.name(weapon) }), credit: `${photo.author} · ${photo.license}`, page: photo.page }
 }
 
 export interface WeaponShowcase {
@@ -67,9 +66,9 @@ export interface WeaponShowcase {
   dispose(): void
 }
 
-/** The weapon showcase of the area: one weapon at a time over the pedestal, turning, the camera close to it and the real one's photo on the panel. */
-export function createWeaponShowcase(options: { readonly arsenal: Arsenal; readonly host: ModuleHost; readonly text: ShowcaseText }): WeaponShowcase {
-  const { arsenal, host, text } = options
+/** The weapon showcase of the area: one weapon at a time over the pedestal, turning, the camera close to it and, with `referencePhotos`, the real one's photo small in a corner of the screen (off by default). */
+export function createWeaponShowcase(options: { readonly arsenal: Arsenal; readonly host: ModuleHost; readonly text: ShowcaseText; readonly referencePhotos?: boolean }): WeaponShowcase {
+  const { arsenal, host, text, referencePhotos = false } = options
   const THREE = host.THREE as typeof THREE_NS
   const scene = host.scene as THREE_NS.Scene
   const centre: Vec3 = [SHOWCASE.at[0], SHOWCASE.height + SHOWCASE.lift, SHOWCASE.at[2]]
@@ -79,7 +78,7 @@ export function createWeaponShowcase(options: { readonly arsenal: Arsenal; reado
     if (!shown) return
     discardObject3D(shown.root)
     shown = null
-    host.bench?.sheet?.(null)
+    if (referencePhotos) host.cornerImage?.(null)
   }
   const look = (): void => host.bench?.look([centre[0] + SHOWCASE.eye[0], centre[1] + SHOWCASE.eye[1], centre[2] + SHOWCASE.eye[2]], centre)
   const show = (weapon: string): void => {
@@ -94,7 +93,7 @@ export function createWeaponShowcase(options: { readonly arsenal: Arsenal; reado
     holder.position.set(...centre)
     scene.add(holder)
     shown = { id: weapon, root: holder }
-    host.bench?.sheet?.(showcaseSheet(arsenal, text, weapon))
+    if (referencePhotos) host.cornerImage?.(showcasePhoto(arsenal, text, weapon) ?? null)
     host.log(fill(text.shown, { weapon: arsenal.name(weapon) }), { weapon, photo: weapon in PHOTOS })
     look()
   }

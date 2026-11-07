@@ -82,6 +82,8 @@ export interface Cockpit {
   readonly dashboard: VehicleDashboard | null
   /** The gas this step, 0..1 (what the engine's sound loads by). */
   readonly throttle: number
+  /** The brake pedal this step, 0..1 (what the pads' squeal follows). */
+  readonly brake: number
   /** The glovebox and the trunk (only those the vehicle has: no trunk without a lid). */
   readonly storage: VehicleStorage
   /** What reaches the glovebox and the trunk now (the driver is seated). */
@@ -147,6 +149,7 @@ export function createCockpit(o: {
   let sparkAgain = 0
   let wiresBefore = 0
   let gas = 0
+  let pedal = 0
   const systems = createVehicleSystems()
   const context = o.built.context as VehicleContext | null
   const destructible: VehicleDestructible | null = o.kit && context ? createVehicleDestructible(o.kit, context, { id: 'driven', frame: o.built.group }) : null
@@ -246,9 +249,13 @@ export function createCockpit(o: {
     get throttle() {
       return gas
     },
+    get brake() {
+      return pedal
+    },
     step(dt) {
       const input = controls.input(dt, driver)
       gas = input.throttle
+      pedal = input.brake
       if (input.start && sounds.starter) play(sounds.starter)
       const engine = driver.step(input, dt).events
       controls.after(driver, dt)

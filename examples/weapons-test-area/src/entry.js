@@ -19,7 +19,7 @@ const SITE_THUMBNAIL_BASE = '../weapon-svg/'
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const report = room.loadModule(createWeaponsTestModule({ thumbnailBase: SITE_THUMBNAIL_BASE, items: itemModels, ...options, locale: lang }))
+  const report = room.loadModule(createWeaponsTestModule({ thumbnailBase: SITE_THUMBNAIL_BASE, items: itemModels, referencePhotos: true, ...options, locale: lang }))
   // the area is heavy (hundreds of items, or a whole fleet): the room's loading indicator shows while it is laid, one frame after this returns
   if (room.openAreaAsync) void room.openAreaAsync('weapons_area')
   else room.openArea('weapons_area')
