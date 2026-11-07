@@ -1,5 +1,13 @@
 # @adatechnology/game-test-room
 
+## 0.30.1
+
+### Patch Changes
+
+- Updated dependencies [67edc92]
+  - @adatechnology/game-destruction@0.21.0
+  - @adatechnology/game-destruction-three@0.18.2
+
 ## 0.30.0
 
 ### Minor Changes

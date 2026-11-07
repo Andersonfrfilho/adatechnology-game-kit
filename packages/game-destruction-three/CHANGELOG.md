@@ -1,5 +1,12 @@
 # @adatechnology/game-destruction-three
 
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies [67edc92]
+  - @adatechnology/game-destruction@0.21.0
+
 ## 0.18.1
 
 ### Patch Changes
