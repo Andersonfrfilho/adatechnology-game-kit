@@ -400,9 +400,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         for (const c of all) (open(c) ? holes : kept).push(c)
         for (const c of kept) shown.push({ c, part, units, thick, mid })
         // the shots that broke a unit and left the rest of it: a crater in it
-        for (const k of boxes) {
-          if (holes.some((h) => k.s0 >= h.a - 1e-4 && k.s1 <= h.b + 1e-4 && k.y0 >= h.y0 - 1e-4 && k.y1 <= h.y1 + 1e-4)) continue
-          pits.push({ s: (k.s0 + k.s1) / 2, y: (k.y0 + k.y1) / 2, rs: (k.s1 - k.s0) / 2, ry: (k.y1 - k.y0) / 2 })
+        for (const box of boxes) {
+          if (holes.some((h) => box.s0 >= h.a - 1e-4 && box.s1 <= h.b + 1e-4 && box.y0 >= h.y0 - 1e-4 && box.y1 <= h.y1 + 1e-4)) continue
+          // the wall's units behind a pillar are not drawn (the pillar is cast there): what the world took of them is no crater in the pillar's concrete
+          const k = id === view.host ? besidePillars({ a: box.s0, b: box.s1, y0: box.y0, y1: box.y1 }, pillars)[0] : { a: box.s0, b: box.s1, y0: box.y0, y1: box.y1 }
+          if (!k) continue
+          pits.push({ s: (k.a + k.b) / 2, y: (k.y0 + k.y1) / 2, rs: (k.b - k.a) / 2, ry: (k.y1 - k.y0) / 2 })
         }
       }
       // the masks: what came out or was broken through goes through, the plaster breaks off around it with a ragged edge

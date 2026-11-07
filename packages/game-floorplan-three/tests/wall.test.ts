@@ -238,6 +238,34 @@ describe('wallPiece', () => {
     for (const [a, b] of [...along, ...across]) for (const p of [a, b]) expect(p[1]).toBeGreaterThan(0.8)
   })
 
+  it('draws no crater in a pillar for the bricks the world took behind it (the pillar\'s concrete stays whole beside the cut)', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    const col = piece.spec.parts.find((p: { id: string }) => p.id === 'wall_column_0_1') as { position: number[] }
+    world.explode([col.position[0]!, 1.4, 0.12], 200000, 16, 'test')
+    for (let i = 0; i < 20; i++) world.update(0.1)
+    follower.update()
+    const units = root.getObjectByName('breach:wall_0_0') as THREE.InstancedMesh
+    const core = (units.material as THREE.Material).userData.breachCore as { data: Uint8Array; w: number; h: number; start: number; len: number; y0: number; height: number }
+    // the texels of the core mask over the pillar, 2 cm inside its faces: nothing is cut there
+    const at = (x: number) => Math.floor(((x - core.start) / core.len) * core.w)
+    // the band the rocket cut out of the pillar goes through, of course; the rest of it must not
+    const band = (world.part(id, 'wall_column_0_1')!.chipped ?? []).map((c) => c.center[1] + col.position[1]!)
+    const rows: number[] = []
+    for (let j = 0; j < core.h; j++) {
+      const y = core.y0 + ((j + 0.5) / core.h) * core.height
+      if (y > Math.min(...band) - 0.1 && y < Math.max(...band) + 0.1) continue
+      let cut = 0
+      for (let i = at(col.position[0]! - 0.08); i <= at(col.position[0]! + 0.08); i++) if (core.data[j * core.w + i]! > 0) cut++
+      if (cut > 0) rows.push(j)
+    }
+    expect(rows.length).toBe(0)
+    follower.dispose()
+  })
+
   it('a second grenade somewhere else on the wall cuts a second hole, and shots still knock bricks out beside them', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })
