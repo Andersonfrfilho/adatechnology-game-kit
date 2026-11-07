@@ -273,6 +273,17 @@ describe('wallPiece', () => {
       if (cut > 0) rows.push(j)
     }
     expect(rows.length).toBe(0)
+    // the plaster over the pillar is one sheet: where the masonry beside it tore it off at both edges, the whole face is bare (no strip left in the middle)
+    const mask = (units.material as THREE.Material).userData.breachMask as typeof core
+    const am = (x: number) => Math.floor(((x - mask.start) / mask.len) * mask.w)
+    let strips = 0
+    for (let j = 0; j < mask.h; j++) {
+      const row = (i: number) => mask.data[j * mask.w + i]! > 0
+      const i0 = am(col.position[0]! - 0.095), i1 = am(col.position[0]! + 0.095)
+      if (!row(i0) || !row(i1)) continue
+      for (let i = i0; i <= i1; i++) if (!row(i)) { strips++; break }
+    }
+    expect(strips).toBe(0)
     follower.dispose()
   })
 
