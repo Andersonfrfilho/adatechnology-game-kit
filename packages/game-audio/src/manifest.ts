@@ -50,6 +50,7 @@ export type SampleDefaults = {
   readonly cutoffK?: number
   readonly group?: string
   readonly priority?: number
+  readonly choke?: { readonly voices: number; readonly fade?: number }
   readonly fallback?: string
 }
 
@@ -140,6 +141,7 @@ export function sampleBankFromManifest(manifest: SfxManifestLike, options: Sampl
       ...(numbers.cutoffK === undefined ? {} : { cutoffK: numbers.cutoffK }),
       ...(numbers.group ? { group: numbers.group } : {}),
       ...(numbers.priority === undefined ? {} : { priority: numbers.priority }),
+      ...(numbers.choke ? { choke: numbers.choke } : {}),
       ...(numbers.fallback ? { fallback: numbers.fallback } : {}),
       sources: files.map((file) => `${file.file}: ${file.source} ${file.author} ${file.license}`),
     })

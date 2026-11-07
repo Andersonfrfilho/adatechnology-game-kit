@@ -2,9 +2,9 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { createGoodsItems } from '@adatechnology/game-items-goods'
-import { exactSnapshot } from '@adatechnology/golden-tool'
+import { exactSnapshot, installPortableMath } from '@adatechnology/golden-tool'
 import * as THREE from 'three'
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildItem, buildItemLod, mergeItem, SHAPES, SHIPPED_MODELS } from '../src'
 
@@ -40,6 +40,13 @@ const recorded: Record<string, { hash: string; nodes: readonly string[] }> = (()
     return {}
   }
 })()
+
+// Math.pow changed its last bit between Node 22 and 24 (the crowbar's centripetal Catmull-Rom curve raises distances to 0.25): hash with the portable one
+let restoreMath: () => void = () => undefined
+beforeAll(() => {
+  restoreMath = installPortableMath()
+})
+afterAll(() => restoreMath())
 
 describe('the items, bit for bit', () => {
   if (process.env.UPDATE_EXACT) {

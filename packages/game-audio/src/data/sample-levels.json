@@ -1,0 +1,19 @@
+{
+  "$comment": "How loud each family of recorded sound plays against a gunshot, in dB under the shot (the converter normalizes every file to about -1 dBFS, so without these numbers a spent case lands as loud as the rifle that ejected it). A rifle is 155-165 dB SPL at the muzzle and a brass case on concrete 60-75 dB SPL at a metre: a game cannot hold 80 dB between two sounds, so the case sits 32 dB under the shot and a dropped magazine 24 dB, which keeps both audible near and below the shot after the mix. choke = how many of the family ring at once, per sound id: a full-auto burst leaves a few cases ringing, not one per round.",
+  "casing": {
+    "gainDb": -32,
+    "pitch": 0.06,
+    "cutoffK": 0.03,
+    "priority": 1,
+    "falloff": { "model": "inverse_square", "k": 0.08, "minGain": 0.003 },
+    "choke": { "voices": 3, "fade": 0.05 }
+  },
+  "magazine": {
+    "gainDb": -24,
+    "pitch": 0.06,
+    "cutoffK": 0.03,
+    "priority": 1,
+    "falloff": { "model": "inverse_square", "k": 0.08, "minGain": 0.003 },
+    "choke": { "voices": 2, "fade": 0.05 }
+  }
+}

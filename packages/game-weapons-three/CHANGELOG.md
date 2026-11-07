@@ -1,5 +1,29 @@
 # @adatechnology/game-weapons-three
 
+## 0.21.0
+
+### Minor Changes
+
+- e35ae17: The launchers under the barrel are drawn from their photos instead of one generic tube: the M203 with its ribbed barrel sleeve, receiver and loop trigger guard; the GP-25 with its short muzzle-loaded barrel, body, quadrant sight and its own raked pistol grip; the AG36 with its long housing over the barrel, ladder sight, pistol grip and loop guard. Each clamps up to the handguard of its host, and the tube still hangs from the sliding pivot the reload clip moves. The AG36 reference photo is now one of the launcher on a G36.
+
+### Patch Changes
+
+- 722990b: A cápsula e o carregador caindo deixam de tocar no nível do tiro: o banco do kit não dava ganho aos arquivos `casing_drop_*` e `mag_drop_*` (ficavam a 0 dB do tiro, os dois normalizados a -1 dBFS). Agora o nível vem de `data/sample-levels.json` (cápsula 32 dB abaixo do tiro, carregador 24 dB), com no máximo 3 cápsulas e 2 carregadores soando ao mesmo tempo por chão, e `SampleDefaults` aceita `choke`.
+- 255af48: The Kalashnikovs' banana magazine and the Desert Eagle's guard and barrel nose are built once per model kit and shared (`sharedGeometry`), like the smooth stocks: triangulating their outlines on every build put the AKs 9 to 20 times over their shapes-bench baseline. The geometry is unchanged: no golden moves.
+- Updated dependencies [722990b]
+- Updated dependencies [82f44ab]
+- Updated dependencies [c8a78e0]
+- Updated dependencies [99183cb]
+- Updated dependencies [1dea1ac]
+- Updated dependencies [65147e9]
+  - @adatechnology/game-audio@0.13.2
+  - @adatechnology/game-contracts@0.31.0
+  - @adatechnology/game-items-three@0.8.0
+  - @adatechnology/game-vfx@0.11.0
+  - @adatechnology/game-vfx-three@0.8.0
+  - @adatechnology/game-floorplan-three@0.12.1
+  - @adatechnology/game-weapons@0.10.1
+
 ## 0.20.1
 
 ### Patch Changes
