@@ -184,35 +184,3 @@ export const clumpUnits = (cells: readonly UnitCell[], thin: number, unit: reado
   }
 }
 
-/**
- * At most `cap` clumps of `cells` (part-local units of a wall): the units binned on a square grid of the wall plane, each bin the box around its units.
- * Masonry a blast throws comes out in clumps of a few units held by their mortar, not one by one.
- */
-export const clumpCells = (cells: readonly UnitCell[], thin: number, cap: number): UnitCell[] => {
-  if (cells.length <= cap) return [...cells]
-  const [u, v] = planeAxes(thin)
-  let lo0 = Infinity, lo1 = Infinity, hi0 = -Infinity, hi1 = -Infinity
-  for (const cell of cells) {
-    lo0 = Math.min(lo0, cell.center[u] - cell.size[u] / 2)
-    hi0 = Math.max(hi0, cell.center[u] + cell.size[u] / 2)
-    lo1 = Math.min(lo1, cell.center[v] - cell.size[v] / 2)
-    hi1 = Math.max(hi1, cell.center[v] + cell.size[v] / 2)
-  }
-  let side = Math.sqrt(((hi0 - lo0) * (hi1 - lo1)) / cap)
-  for (;;) {
-    const bins = new Map<string, { lo: Vec3; hi: Vec3 }>()
-    for (const cell of cells) {
-      const key = `${Math.floor((cell.center[u] - lo0) / side)}:${Math.floor((cell.center[v] - lo1) / side)}`
-      const bin = bins.get(key) ?? { lo: [Infinity, Infinity, Infinity] as Vec3, hi: [-Infinity, -Infinity, -Infinity] as Vec3 }
-      for (let k = 0; k < 3; k++) {
-        bin.lo[k] = Math.min(bin.lo[k]!, cell.center[k]! - cell.size[k]! / 2)
-        bin.hi[k] = Math.max(bin.hi[k]!, cell.center[k]! + cell.size[k]! / 2)
-      }
-      bins.set(key, bin)
-    }
-    if (bins.size <= cap) {
-      return [...bins.values()].map(({ lo, hi }) => ({ center: [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2] as Vec3, size: [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]] as Vec3 }))
-    }
-    side *= 1.25
-  }
-}
