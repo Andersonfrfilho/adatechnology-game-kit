@@ -343,6 +343,75 @@ describe('fire, heat and melt', () => {
     expect(sounds.filter((key) => key.startsWith('burn_'))).toEqual(['burn_loop', 'burn_loop', 'burn_end', 'burn_end'])
   })
 
+  /** Burn loops asked of the host and not ended, by the keys the host sees: what the audio layer counts as fires still burning. */
+  const burningNow = (sounds: string[]): number => sounds.filter((key) => key === 'burn_loop').length - sounds.filter((key) => key === 'burn_end').length
+
+  it('ends the fire loop of a part that is lost while it burns, with no burnout or extinguish event of its own', () => {
+    const { world, renderer, sounds } = setup()
+    const st = world.addObject('o1', [partState('plank', 'wood'), partState('beam', 'wood'), partState('leg', 'wood')])
+    const root = new THREE.Group()
+    const meshes = ['plank', 'beam', 'leg'].map(() => new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial()))
+    root.add(...meshes)
+    renderer.bind('o1', root, { parts: { plank: meshes[0] as THREE.Mesh, beam: meshes[1] as THREE.Mesh, leg: meshes[2] as THREE.Mesh } })
+    for (const part of st.parts) {
+      part.burning = true
+      world.emit({ type: 'ignite', object: 'o1', part: part.id, point: [0, 0.05, 0] })
+    }
+    renderer.update(1 / 60)
+    expect(burningNow(sounds)).toBe(3)
+    // a blow breaks one while it burns, the heat melts another: the world only clears their `burning`
+    st.parts[0]!.burning = false
+    st.parts[0]!.status = 'broken'
+    st.parts[1]!.burning = false
+    st.parts[1]!.status = 'melted'
+    for (let i = 0; i < 40; i++) renderer.update(1 / 60)
+    expect(burningNow(sounds)).toBe(1)
+    // and a part put out by the cold with nothing sent
+    st.parts[2]!.burning = false
+    for (let i = 0; i < 40; i++) renderer.update(1 / 60)
+    expect(burningNow(sounds)).toBe(0)
+  })
+
+  it('counts a part that catches again as one fire, not two', () => {
+    const { world, renderer, sounds } = setup()
+    const st = world.addObject('o1', [partState('plank', 'wood')])
+    const root = new THREE.Group()
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial())
+    root.add(plank)
+    renderer.bind('o1', root, { parts: { plank } })
+    st.parts[0]!.burning = true
+    world.emit({ type: 'ignite', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    world.emit({ type: 'ignite', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    // a vessel venting (primed) and then burning is also one
+    world.emit({ type: 'primed', object: 'o1', part: 'plank', point: [0, 0.05, 0], trigger: 'shot', delay: 1 })
+    renderer.update(1 / 60)
+    expect(burningNow(sounds)).toBe(1)
+    world.emit({ type: 'burnout', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    renderer.update(1 / 60)
+    expect(burningNow(sounds)).toBe(0)
+  })
+
+  it('ends the fire loops of an object that is restored and of everything on clear', () => {
+    const { world, renderer, sounds } = setup()
+    for (const id of ['a', 'b']) {
+      const st = world.addObject(id, [partState('plank', 'wood')])
+      const root = new THREE.Group()
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial())
+      root.add(plank)
+      renderer.bind(id, root, { parts: { plank } })
+      st.parts[0]!.burning = true
+      world.emit({ type: 'ignite', object: id, part: 'plank', point: [0, 0.05, 0] })
+    }
+    // a primed part of a: its fire is the effects world's, with no `fires` entry to follow
+    world.emit({ type: 'primed', object: 'a', part: 'plank', point: [0, 0.05, 0], trigger: 'shot', delay: 5 })
+    renderer.update(1 / 60)
+    expect(burningNow(sounds)).toBe(2)
+    renderer.restore('a')
+    expect(burningNow(sounds)).toBe(1)
+    renderer.clear()
+    expect(burningNow(sounds)).toBe(0)
+  })
+
   it('chars a cloned material and emits fire and smoke while burning', () => {
     const { world, renderer } = setup()
     const st = world.addObject('o1', [partState('plank', 'wood')])
