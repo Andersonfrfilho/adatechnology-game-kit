@@ -292,7 +292,7 @@ describe('wallPiece', () => {
     expect(world.part(id, 'wall_0_0')!.status).toBe('damaged')
   })
 
-  it('a wall that comes down after its holes were drawn is still drawn, whole, by the piece it becomes, where the shots still hit it', () => {
+  it('a wall that loses its footing and its bond beam comes down as bricks where it stands, not as a sheet: no piece of it, no ray stops on it', () => {
     const piece = make()
     const world = createDestruction({ seed: 7 })
     const scene = new THREE.Scene()
@@ -304,27 +304,30 @@ describe('wallPiece', () => {
     root.updateMatrixWorld(true)
     renderer.bind(id, root)
     const follower = piece.follow(root, world, id)!
-    // rifle rounds knock bricks out: the house draws the wall with its holes and takes the plain wall out of the mesh
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    // rifle rounds knock bricks out first: those are gone before the wall comes down
     for (let i = 0; i < 6; i++) world.shoot([-2 + i * 0.3, 1.6, -5], [0, 0, -1], 2100, 7.62, 'test')
     follower.update()
-    // the wall loses its footing and its bond beam (the mortar knocked off with a hammer): it comes down, a piece of its own
+    const shotOut = world.part(id, 'wall_0_0')!.chipped!.length
+    expect(shotOut).toBeGreaterThan(0)
+    // the wall loses its footing and its bond beam (the mortar knocked off with a hammer): laid brick has no strength in tension to hang as one sheet
     expect(world.disassemble(id, 'wall_0_0~ground_beam_0', 'hammer', 60)).toBe(1)
     expect(world.disassemble(id, 'plate_0_0~wall_0_0', 'hammer', 60)).toBe(1)
     for (let i = 0; i < 120; i++) { world.update(1 / 60); renderer.update(1 / 60); follower.update() }
+    expect(world.part(id, 'wall_0_0')!.status).toBe('broken')
+    const crumble = events.find((e) => e.type === 'fracture' && e.part === 'wall_0_0')
+    expect(crumble?.type === 'fracture' && crumble.style).toBe('crumble')
+    const bricks = crumble?.type === 'fracture' ? crumble.fragments.filter((f) => f.material === 'brick') : []
+    expect(bricks.length).toBeGreaterThan(40)
+    // a whole 10 m wall (some 1700 bricks) comes down in chunks of up to a score of bricks held by their mortar, never in metres of sheet
+    for (const f of bricks) expect(f.size[0] * f.size[1]).toBeLessThan(0.5)
+    // it is not drawn as a piece of its own, and nothing stops a ray where it stood
     scene.updateMatrixWorld(true)
-    // the wall itself, not its baseboard or the sidewalk drawn with it
-    let wall: THREE.Mesh | undefined
-    scene.traverse((o) => { if (o instanceof THREE.Mesh && o.name.endsWith('/wall_0_0') && o.parent?.name.startsWith('destruction-piece-')) wall = o })
-    expect(wall).toBeDefined()
-    const drawn = new THREE.Box3().setFromObject(wall!, true)
-    // whole in the frame of the piece it became (a wall with no footing tips over as it falls: its box in the world leans)
-    const own = new THREE.Box3().setFromBufferAttribute(wall!.geometry.getAttribute('position') as THREE.BufferAttribute).applyMatrix4(wall!.matrix)
-    expect(own.max.x - own.min.x).toBeGreaterThan(9.9)
-    expect(own.max.y - own.min.y).toBeGreaterThan(2.9)
-    const hit = world.raycast([0, 1.5, -8], [0, 0, -1], 10)!
-    expect(hit.part).toBe('wall_0_0')
-    expect(hit.point[1]).toBeGreaterThan(drawn.min.y)
-    expect(hit.point[1]).toBeLessThan(drawn.max.y)
+    let sheet = false
+    scene.traverse((o) => { if (o instanceof THREE.Mesh && o.name.endsWith('/wall_0_0') && o.parent?.name.startsWith('destruction-piece-')) sheet = true })
+    expect(sheet).toBe(false)
+    expect(world.raycast([0, 1.5, -8], [0, 0, -1], 10)?.part).not.toBe('wall_0_0')
     follower.dispose()
   })
 
