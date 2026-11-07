@@ -234,6 +234,8 @@ export type DestructionSound = {
 }
 
 export const DEFAULT_FIRE = { perFire: 0.08, max: 0.45 } as const
+/** A fire loop that ends fades out over this many seconds (moved on by `update`) before it is stopped. */
+export const FIRE_FADE_SECONDS = 0.4
 export const DEFAULT_CRACKLES = { base: 2, perSqrtFire: 3, max: 14, volume: 0.5 } as const
 export const DEFAULT_INDOOR_CONFINEMENT = 1.3
 
@@ -266,6 +268,13 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
   // where the fires are and what burns there: the crackles come from the points whose fuel crackles
   const fires: { readonly point: Vec3; readonly fuel: FireFuel }[] = []
   let nextCrackle = 0
+  // loops whose fire ended: silenced now, stopped when their fade is over
+  const fading: { readonly handle: AudioLoopHandle; left: number }[] = []
+
+  const fadeOut = (handle: AudioLoopHandle): void => {
+    handle.set({ volume: 0 })
+    fading.push({ handle, left: FIRE_FADE_SECONDS })
+  }
 
   const fuelFor = (detail: SoundDetail | undefined): FireFuel => detail?.fuel ?? (detail?.material !== undefined ? fuelOf[detail.material] : undefined) ?? defaultFuel
 
@@ -278,7 +287,7 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
     }
     for (const [id, handle] of loops) {
       if (count.has(id)) continue
-      handle.stop()
+      fadeOut(handle)
       loops.delete(id)
     }
     for (const [id, n] of count) {
@@ -308,8 +317,15 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
   }
 
   const reset = (): void => {
+    for (const handle of loops.values()) fadeOut(handle)
+    loops.clear()
+    fires.length = 0
+  }
+  const dispose = (): void => {
     for (const handle of loops.values()) handle.stop()
     loops.clear()
+    for (const { handle } of fading) handle.stop()
+    fading.length = 0
     fires.length = 0
   }
 
@@ -362,6 +378,13 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), intensity: Math.min(1, Math.max(0, volume)), ...(params ? { params } : {}) })
     },
     update(dt) {
+      for (let i = fading.length - 1; i >= 0; i--) {
+        const entry = fading[i] as (typeof fading)[number]
+        entry.left -= dt
+        if (entry.left > 0) continue
+        entry.handle.stop()
+        fading.splice(i, 1)
+      }
       if (!crackles || fires.length === 0 || options.burnLoop === false) return
       // only the fuels that crackle count: a gas jet or a fuel pool roars without snapping
       const weight = fires.reduce((sum, f) => sum + FIRE_CRACKLE_OF[f.fuel], 0)
@@ -389,6 +412,6 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       return by
     },
     reset,
-    dispose: reset,
+    dispose,
   }
 }

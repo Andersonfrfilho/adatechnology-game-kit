@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 import { EXPLOSIONS } from '@adatechnology/game-vfx'
 
-import { BLAST_KINDS, BLAST_KIND_OF, BLAST_SOUNDS, BLAST_SOUND_OF, BURN_LOOP, DESTRUCTION_SOUND_BANK, DESTRUCTION_SOUND_KEYS, SCENE_SOUNDS, createDestructionSound } from '../src'
+import { BLAST_KINDS, BLAST_KIND_OF, BLAST_SOUNDS, BLAST_SOUND_OF, BURN_LOOP, DESTRUCTION_SOUND_BANK, DESTRUCTION_SOUND_KEYS, FIRE_FADE_SECONDS, SCENE_SOUNDS, createDestructionSound } from '../src'
 
 // The sounds of materials breaking against the team code: the art scene's `sfx.*` and the game's `boom`, run on a fake AudioContext under the same seed.
 const golden = resolve(dirname(fileURLToPath(import.meta.url)), '../../../tools/golden/fixtures/audio')
@@ -184,9 +184,37 @@ describe('the keys of the renderer', () => {
     expect(engine.stats().loops).toBe(1)
     sound.onSound('burn_end', [1, 0, 0], 0.5)
     expect(sound.burning()).toBe(0)
+    // the roar fades out for a moment, then the loop is stopped
+    expect(engine.stats().loops).toBe(1)
+    sound.update(FIRE_FADE_SECONDS / 2)
+    expect(engine.stats().loops).toBe(1)
+    sound.update(FIRE_FADE_SECONDS)
     expect(engine.stats().loops).toBe(0)
     sound.onSound('burn_end', [1, 0, 0], 0.5)
     expect(sound.burning()).toBe(0)
+  })
+
+  it('silences the loop at once when the last fire ends, and stops every loop on reset and on dispose', () => {
+    const { recorder, engine, sound } = engineWith()
+    sound.onSound('burn_loop', [0, 0, 0], 0.5)
+    recorder.clearEntries()
+    sound.onSound('burn_end', [0, 0, 0], 0.5)
+    const levels = recorder.trace().entries.filter((entry) => entry.op === 'param' && entry.method === 'setTargetAtTime').map((entry) => entry.args![0])
+    expect(levels).toEqual([0])
+    sound.update(FIRE_FADE_SECONDS * 2)
+    expect(engine.stats().loops).toBe(0)
+    sound.onSound('burn_loop', [0, 0, 0], 0.5)
+    sound.onSound('burn_loop', [0, 0, -6], 0.5, { fuel: 'gas' })
+    expect(engine.stats().loops).toBe(2)
+    sound.reset()
+    expect(sound.burning()).toBe(0)
+    sound.update(FIRE_FADE_SECONDS * 2)
+    expect(engine.stats().loops).toBe(0)
+    sound.onSound('burn_loop', [0, 0, 0], 0.5)
+    sound.onSound('burn_loop', [0, 0, -6], 0.5, { fuel: 'gas' })
+    sound.reset()
+    sound.dispose()
+    expect(engine.stats().loops).toBe(0)
   })
 
   it('can leave the fire loop out', () => {
@@ -249,9 +277,11 @@ describe('blasts and fire', () => {
     // the vessel bursts: only the gas jet goes out, even though the pool is nearer the point
     sound.onSound('burn_end', [0, 0, -4.5], 0.5, { fuel: 'gas' })
     expect(sound.burningBy()).toEqual({ wood: 1, liquid: 1, plastic: 1 })
+    sound.update(FIRE_FADE_SECONDS * 2)
     expect(engine.stats().loops).toBe(3)
     sound.reset()
     expect(sound.burning()).toBe(0)
+    sound.update(FIRE_FADE_SECONDS * 2)
     expect(engine.stats().loops).toBe(0)
   })
 

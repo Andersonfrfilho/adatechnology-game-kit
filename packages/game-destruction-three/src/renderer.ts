@@ -336,6 +336,8 @@ class Renderer implements DestructionRenderer {
   private readonly fires = new Map<string, FireEmitter>()
   /** Primed parts burning in the effects world until they go off: their burn loop ends when they are put out. */
   private readonly primedBurning = new Set<string>()
+  /** The burn loops asked of the host and not yet ended, by part: whatever stops a part's fire ends its loop, once, with what it started with. */
+  private readonly burnSounds = new Map<string, { readonly object: string; readonly point: Vec3; readonly detail: SoundDetail | undefined }>()
   private readonly leaks: Leak[] = []
   private readonly homeTags: string[] = []
   private readonly throttles = new Map<string, number>()
@@ -1115,7 +1117,7 @@ class Renderer implements DestructionRenderer {
         this.startFire(ev)
         this.activate(ev.object, ev.part)
         this.sound('ignite', ev.point, 0.7)
-        this.sound('burn_loop', ev.point, 0.5, this.burning(ev.object, ev.part))
+        this.startBurnSound(ev.object, ev.part, ev.point, this.burning(ev.object, ev.part))
         break
       case 'primed':
         // a bullet or fire sets the part burning until its delay runs out; a blast nearby only waits for the explosion
@@ -1125,7 +1127,7 @@ class Renderer implements DestructionRenderer {
           this.activate(ev.object, ev.part)
           // the vessel is venting until it bursts: the gas leak for as long as the delay, and the flame it feeds
           this.sound('primed', ev.point, 0.7, { seconds: ev.delay })
-          this.sound('burn_loop', ev.point, 0.5, { fuel: 'gas' })
+          if (!this.burnSounds.has(`${ev.object}|${ev.part}`)) this.startBurnSound(ev.object, ev.part, ev.point, { fuel: 'gas' })
         }
         break
       case 'spall':
@@ -1147,20 +1149,20 @@ class Renderer implements DestructionRenderer {
         break
       case 'extinguish': {
         const f = this.fires.get(`${ev.object}|${ev.part}`)
-        const primed = this.primedBurning.delete(`${ev.object}|${ev.part}`)
+        this.primedBurning.delete(`${ev.object}|${ev.part}`)
         if (f) {
           this.stopFire(`${ev.object}|${ev.part}`)
           this.vfx.burst('steam', f.point, [0, 1, 0], 14, 1.2)
         }
-        if (f || primed) this.sound('burn_end', f?.point ?? this.rootPoint(ev.object), 0.5, primed ? { fuel: 'gas' } : this.burning(ev.object, ev.part))
+        this.endBurnSound(`${ev.object}|${ev.part}`)
         this.activate(ev.object, ev.part)
         this.sound('extinguish', f?.point ?? this.rootPoint(ev.object), 0.6)
         break
       }
       case 'burnout': {
         this.stopFire(`${ev.object}|${ev.part}`)
-        const primed = this.primedBurning.delete(`${ev.object}|${ev.part}`)
-        this.sound('burn_end', ev.point, 0.5, primed ? { fuel: 'gas' } : this.burning(ev.object, ev.part))
+        this.primedBurning.delete(`${ev.object}|${ev.part}`)
+        this.endBurnSound(`${ev.object}|${ev.part}`)
         this.vfx.burst('ash', ev.point, [0, 1, 0], 16, 1)
         this.vfx.burst('smoke', ev.point, [0, 1, 0], 6, 0.8, { color: SMOKE_TONES.grey })
         const pv = this.partVis(ev.object, ev.part)
@@ -1230,7 +1232,8 @@ class Renderer implements DestructionRenderer {
       }
       case 'explode':
         // the vessel that vented into its flame bursts: the gas jet ends with it
-        if (this.primedBurning.delete(`${ev.object}|${ev.part}`)) this.sound('burn_end', ev.point, 0.5, { fuel: 'gas' })
+        this.primedBurning.delete(`${ev.object}|${ev.part}`)
+        this.endBurnSound(`${ev.object}|${ev.part}`)
         this.onExplode(ev)
         break
       case 'destroyed':
@@ -2005,9 +2008,27 @@ class Renderer implements DestructionRenderer {
 
   private stopFire(key: string): void {
     const fire = this.fires.get(key)
-    if (!fire) return
-    if (fire.handle !== undefined) this.vfx.stop(fire.handle)
-    this.fires.delete(key)
+    if (fire) {
+      if (fire.handle !== undefined) this.vfx.stop(fire.handle)
+      this.fires.delete(key)
+    }
+    this.endBurnSound(key)
+  }
+
+  /** A part's fire loop starts; one already running for the part (it caught again) is ended first, so the host never counts a fire twice. */
+  private startBurnSound(object: string, part: string, point: Vec3, detail: SoundDetail | undefined): void {
+    const key = `${object}|${part}`
+    this.endBurnSound(key)
+    this.burnSounds.set(key, { object, point, detail })
+    this.sound('burn_loop', point, 0.5, detail)
+  }
+
+  /** The part's fire loop ends, with the point and the fuel it started with; nothing when it has none running. */
+  private endBurnSound(key: string): void {
+    const started = this.burnSounds.get(key)
+    if (!started) return
+    this.burnSounds.delete(key)
+    this.sound('burn_end', started.point, 0.5, started.detail)
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------
@@ -2041,6 +2062,7 @@ class Renderer implements DestructionRenderer {
       const ps = pv ? this.world.part(a.object, a.part) : null
       if (!pv || !ps) {
         this.active.delete(key)
+        this.stopFire(key)
         continue
       }
       const def = this.world.materials.get(pv.material)
@@ -2172,6 +2194,7 @@ class Renderer implements DestructionRenderer {
     for (const home of homes) this.restoreHome(home)
     for (const [key, a] of [...this.active]) if (homes.has(a.object)) this.active.delete(key)
     for (const [key, f] of [...this.fires]) if (homes.has(f.object)) this.stopFire(key)
+    for (const [key, started] of [...this.burnSounds]) if (homes.has(started.object)) this.endBurnSound(key)
     for (let i = this.leaks.length - 1; i >= 0; i--) if (homes.has(this.leaks[i].object)) this.leaks.splice(i, 1)
     for (const home of homes) {
       this.fragments.removeHome(home)
@@ -2210,6 +2233,7 @@ class Renderer implements DestructionRenderer {
     this.slices.length = 0
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)
+    for (const key of [...this.burnSounds.keys()]) this.endBurnSound(key)
     this.leaks.length = 0
     this.trickles.length = 0
     this.settlement.clear()
