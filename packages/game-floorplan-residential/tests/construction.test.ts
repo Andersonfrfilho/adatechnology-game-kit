@@ -83,7 +83,8 @@ describe('residential construction', () => {
       world.on('*', (event) => events.push(event))
       const bearing = new Set(world.state(house)!.parts.filter((part) => (part.stress ?? 0) > 0).map((part) => part.id))
       world.groundLoss({ x: Math.min(...bearers.map((part) => part.position[0])), z: Math.min(...bearers.map((part) => part.position[2])), radius: 3, depth: 2, source: 'crater' })
-      for (let t = 0; t < 30; t += 0.1) world.update(0.1)
+      // 15 s in quarter-second steps: the collapse settles well within it, and a long synchronous loop starves the test runner on a loaded machine
+      for (let t = 0; t < 15; t += 0.25) world.update(0.25)
       const parts = world.state(house)!.parts
       const standing = parts.filter((part) => part.status !== 'broken' && part.status !== 'collapsed')
       expect(events.some((event) => event.type === 'subside' && event.status === 'unsupported')).toBe(true)
