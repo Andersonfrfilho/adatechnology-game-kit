@@ -47,6 +47,7 @@ export type {
   WindState,
   PileSpec,
   GroundLoss,
+  PartSettlement,
   SoilLayer,
   SoilProfile,
   SoilState,

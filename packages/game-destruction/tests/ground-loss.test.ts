@@ -86,11 +86,23 @@ describe('ground taken away under a house', () => {
     const subsides = ofType(h.events, 'subside')
     expect(subsides.map((e) => e.part)).toEqual(expect.arrayContaining(['gb_s', 'gb_w']))
     expect(subsides.every((e) => e.status !== 'unsupported')).toBe(true)
-    const drop = h.world.part(h.id, 'gb_s')!.subsidence!
-    expect(drop).toBeGreaterThan(0.001)
-    expect(drop).toBeLessThanOrEqual(GROUND_LOSS_DEFAULTS.maxSettlement)
+    // the beam goes down most at the corner, and the wall on it follows the same profile
+    const line = h.world.part(h.id, 'gb_s')!.settlement!
+    const peak = Math.max(...line.drop)
+    expect(peak).toBeGreaterThan(0.001)
+    expect(peak).toBeLessThanOrEqual(GROUND_LOSS_DEFAULTS.maxSettlement)
+    expect(line.drop[0]).toBe(peak)
+    expect(h.world.part(h.id, 'w_s')!.settlement).toEqual(line)
     expect(h.cracked()).toContain('w_s')
     expect(h.cracked()).toContain('w_w')
+    // stair-step cracks that climb toward the corner that went down
+    const stairs = ofType(h.events, 'crack').filter((e) => e.part === 'w_s').map((e) => e.crack.stair!)
+    expect(stairs.length).toBeGreaterThan(0)
+    for (const stair of stairs) {
+      expect(stair.along[0]).toBeLessThan(0)
+      expect(stair.along[1]).toBeGreaterThan(0)
+      expect(stair.width).toBeGreaterThan(0)
+    }
     expect(ofType(h.events, 'collapse')).toEqual([])
     expect(h.standing()).toHaveLength(14)
     expect(h.floating()).toEqual([])

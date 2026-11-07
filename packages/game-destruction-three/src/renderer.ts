@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -19,6 +19,7 @@ import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
+import { SettlementView } from './settlement'
 
 let rendererCount = 0
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
@@ -35,6 +36,9 @@ const IMPACT_TAGS = ['metal', 'glass', 'wood'] as const
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
 
 const GLOW_FROM_C = 430
+/** A settlement crack is drawn at least this wide (m), so that a hairline still shows a few metres away; and in the colour of the open joint. */
+const MIN_DRAWN_CRACK_WIDTH = 0.004
+const SETTLEMENT_CRACK_COLOR = 0x2b2420
 const QUEUE_CAP = 4000
 /** Seconds the grit of a broken hard face keeps falling (least, most), how often a pinch of it at first, and how many places at once. */
 const TRICKLE_SECONDS: readonly [number, number] = [2, 5]
@@ -247,6 +251,8 @@ class Renderer implements DestructionRenderer {
   }
   private readonly unsubscribe: () => void
   private readonly visuals: Visuals
+  /** The parts the ground went down under, drawn going down (`subside`). */
+  private readonly settlement: SettlementView
   private readonly fragments: FragmentSystem
   private readonly ground: GroundSpots
   private readonly pieceSys: PieceSystem
@@ -292,6 +298,7 @@ class Renderer implements DestructionRenderer {
     this.v2 = new THREE.Vector3()
     const maxParticles = Math.max(8, Math.floor((o.maxParticles ?? 2500) * (this.low ? 0.5 : 1)))
     this.visuals = new Visuals(THREE, this.low, 600)
+    this.settlement = new SettlementView(THREE, this.visuals)
     this.ground = new GroundSpots(THREE, o.scene, this.groundAt, 48)
     if (!o.vfx) warnOnce('game-destruction-three.own-effects-world', 'game-destruction-three made an effects world of its own because the host lent none (options.vfx); pass the host effects so the effects share one budget')
     this.vfx = o.vfx ?? createVfx({ profile: this.quality, gravity: this.gravity, groundAt: this.groundAt, sprites: { capacity: maxParticles, density: this.low ? 0.6 : 1 } })
@@ -596,6 +603,7 @@ class Renderer implements DestructionRenderer {
     for (const b of this.bounds.values()) b.onFrame?.(dt)
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
+    this.settlement.update(dt)
     this.updateActive(dt)
     this.updateLeaks(dt)
     this.updateTrickles(dt)
@@ -676,6 +684,19 @@ class Renderer implements DestructionRenderer {
     node.position.set(p[0], p[1], p[2])
     node.quaternion.set(q[0], q[1], q[2], q[3])
     node.updateMatrixWorld(true)
+  }
+
+  /** The ground went down under some parts of an object: each part with a settlement (`PartState.settlement`) starts going down to it. */
+  private onSubside(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    const state = this.world.state(objectId)
+    if (!b || !state) return
+    const parts: Array<readonly [PartVis, PartSettlement | undefined]> = []
+    for (const ps of state.parts) {
+      const pv = b.parts.get(ps.id)
+      if (pv && ps.settlement) parts.push([pv, ps.settlement])
+    }
+    this.settlement.follow(b.soilNode ?? b.root, parts)
   }
 
   private syncTransforms(): void {
@@ -839,8 +860,14 @@ class Renderer implements DestructionRenderer {
       case 'debris':
         this.vfx.burst(ev.kind, ev.point, ev.normal, ev.count, ev.speed > 0 ? ev.speed : DEFAULT_SPEED[ev.kind] ?? 1, this.debrisOptions(ev.kind, ev.object, ev.part, ev.material))
         break
-      case 'fracture':
+      case 'fracture': {
+        const pv = this.partVis(ev.object, ev.part)
+        if (pv) this.settlement.forget(pv)
         this.onFracture(ev)
+        break
+      }
+      case 'subside':
+        this.onSubside(ev.object)
         break
       case 'detach':
         this.onDetach(ev)
@@ -852,6 +879,11 @@ class Renderer implements DestructionRenderer {
         // a storey coming down raises the cloud of the collapse effect; a piece of furniture (a shelf and its books) only a puff
         const root = this.bounds.get(ev.object)?.root
         const furniture = !!root && kitOriginOf(root)?.kind === 'furniture'
+        // what was still going down goes the rest of the way before it falls on its own
+        for (const part of ev.parts) {
+          const pv = this.partVis(ev.object, part)
+          if (pv) this.settlement.finish(pv)
+        }
         this.splitLoose(ev.object)
         if (!furniture || ev.mass >= COLLAPSE_CLOUD_KG) this.playEvent({ kind: 'collapse' }, this.rootPoint(ev.object))
         else this.vfx.burst('dust', this.rootPoint(ev.object), [0, 1, 0], clamp(Math.round(ev.mass / 4), 4, 24), 0.8)
@@ -1119,8 +1151,24 @@ class Renderer implements DestructionRenderer {
     const pv = b?.parts.get(ev.part)
     if (!b || !pv) return
     const def = this.world.materials.get(pv.material)
+    const stair = ev.crack.stair
+    // a stair-step crack of settlement opens the mortar joints of the wall: a dark gap drawn on its face, as wide as it opened (and wide enough to be seen)
+    if (stair && !def?.visual?.transparent) {
+      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const width = Math.max(stair.width, MIN_DRAWN_CRACK_WIDTH)
+      const normal = this.worldDir(b, ev.crack.normal)
+      const toward = this.worldDir(b, stair.along)
+      const look = { length: ev.crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
+      // the same crack on both faces of the wall (the far one seen from behind: its side runs the other way round, its path the same)
+      for (const face of [wp, wp.clone().addScaledVector(normal, -stair.through)]) {
+        const out = face === wp ? normal : normal.clone().negate()
+        const mv = this.nearestMesh(pv, face)
+        if (mv) this.visuals.addStairCrack(mv, face, out, toward, look)
+      }
+    }
     // only glass shows a crack as lines (the break runs inside a clear body); an opaque body shows its damage as chips, holes and dents, never lines drawn over it
-    if (def?.visual?.transparent) {
+    else if (def?.visual?.transparent) {
       const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
       const mv = this.nearestMesh(pv, wp)
       const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
@@ -1904,6 +1952,7 @@ class Renderer implements DestructionRenderer {
     for (const b of [...this.bounds.values()]) {
       for (const [pid, pv] of [...b.parts]) {
         if (pv.home !== home) continue
+        this.settlement.forget(pv)
         this.visuals.restorePart(pv)
         this.tagPart(pv, home)
         if (b !== homeBound && homeBound) {
@@ -1930,6 +1979,7 @@ class Renderer implements DestructionRenderer {
     for (const key of [...this.fires.keys()]) this.stopFire(key)
     this.leaks.length = 0
     this.trickles.length = 0
+    this.settlement.clear()
     for (const id of [...this.bounds.keys()]) if (this.bounds.has(id)) this.restore(id)
     // anything left of a split object whose home is gone
     for (const b of [...this.bounds.values()]) {

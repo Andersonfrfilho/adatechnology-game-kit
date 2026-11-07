@@ -5,6 +5,7 @@ import type { Decal, HostVis, MeshVis, PartVis } from './internal'
 import { clamp, createRng, lerp } from './math'
 import { shellDisplacementAt, type ShellSnapshot } from './skin-dent'
 import { pushFittedBoxes } from './fitted-boxes'
+import { stairCrackPath, stairCrackStrip } from './stair-crack'
 
 type Mesh = THREE_NS.Mesh
 
@@ -144,6 +145,9 @@ const collapseForeign = (mesh: Mesh, arr: Float32Array): void => {
 
 /** Metres along its normal a mark looks for the drawn face under it (`onFace`). */
 const DECAL_SNAP = 0.03
+/** Metres a stair-step crack sits off the face, and how narrow its far end is (share of its width). */
+const STAIR_CRACK_LIFT = 0.002
+const STAIR_CRACK_TAPER = 0.35
 
 export class Visuals {
   readonly kit: DecalKit
@@ -676,6 +680,76 @@ export class Visuals {
     this.addDecal(mv, { obj: lines, geometry: geo })
   }
 
+  /**
+   * A stair-step crack through the joints of a wall (settlement): from `worldPoint` on the face whose outward normal is `worldNormal`, climbing toward
+   * `worldToward` (the side that went down) one unit at a time, `width` metres wide at its start. A strip of triangles in the mesh's space, owned by the
+   * part's marks: it goes with them (cleared, restored, disposed).
+   */
+  addStairCrack(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, worldToward: THREE_NS.Vector3, spec: { length: number; step: readonly [number, number]; width: number; color: number; seed: number }): void {
+    const mesh = mv.mesh
+    mesh.updateWorldMatrix(true, false)
+    const n = worldNormal.clone().normalize()
+    const up = new this.THREE.Vector3(0, 1, 0).addScaledVector(n, -n.y).normalize()
+    const side = worldToward.clone().addScaledVector(n, -worldToward.dot(n)).addScaledVector(up, -worldToward.dot(up))
+    if (side.lengthSq() < 1e-8) side.crossVectors(up, n)
+    side.normalize()
+    const start = this.onFace(mesh, worldPoint, n).clone().addScaledVector(n, STAIR_CRACK_LIFT)
+    const flat = stairCrackStrip(stairCrackPath({ length: spec.length, step: spec.step, seed: spec.seed }), spec.width, STAIR_CRACK_TAPER)
+    // the strip is wound counter-clockwise from side x up; it has to face out of the wall
+    const flip = new this.THREE.Vector3().crossVectors(side, up).dot(n) < 0
+    const verts: number[] = []
+    const point = this.a
+    for (let i = 0; i < flat.length; i += 6) {
+      const order = flip ? [0, 2, 1] : [0, 1, 2]
+      for (const k of order) {
+        point.copy(start).addScaledVector(side, flat[i + k * 2]!).addScaledVector(up, flat[i + k * 2 + 1]!)
+        mesh.worldToLocal(point)
+        verts.push(point.x, point.y, point.z)
+      }
+    }
+    const geo = new this.THREE.BufferGeometry()
+    geo.setAttribute('position', new this.THREE.Float32BufferAttribute(verts, 3))
+    const strip = new this.THREE.Mesh(geo, this.kit.patchMaterial(spec.color))
+    strip.renderOrder = 2
+    this.addDecal(mv, { obj: strip, geometry: geo })
+  }
+
+  // ------------------------------------------------------------------------------------------------------------------------------------
+  // Settlement
+  // ------------------------------------------------------------------------------------------------------------------------------------
+
+  /**
+   * Moves the part's vertices and its marks down by `dropAt(world point)` metres (negative: up), where each of them is: a part that settled more at
+   * one end tilts. Writes the geometry unless `write` is false (several parts of one merged mesh are then written once by `commit`).
+   */
+  sink(mv: MeshVis, dropAt: (world: THREE_NS.Vector3) => number, write = true): boolean {
+    if (!this.ownGeometry(mv)) return false
+    const mesh = mv.mesh
+    mesh.updateWorldMatrix(true, false)
+    const scale = mesh.matrixWorld.getMaxScaleOnAxis() || 1
+    const down = this.b.set(0, -1, 0).transformDirection(this.m4.copy(mesh.matrixWorld).invert())
+    const work = (mv.host ? mv.host.work : mv.work) as Float32Array
+    const from = mv.range ? mv.range[0] * 3 : 0
+    const to = mv.range ? mv.range[1] * 3 : work.length
+    const point = this.a
+    for (let i = from; i < to; i += 3) {
+      const d = dropAt(point.set(work[i]!, work[i + 1]!, work[i + 2]!).applyMatrix4(mesh.matrixWorld)) / scale
+      work[i] += down.x * d
+      work[i + 1] += down.y * d
+      work[i + 2] += down.z * d
+    }
+    for (const decal of mv.decals) decal.obj.position.addScaledVector(down, dropAt(decal.obj.getWorldPosition(point)) / scale)
+    mv.touched = true
+    if (write) this.commit(mv)
+    return true
+  }
+
+  /** Writes what `sink` moved into the geometry. */
+  commit(mv: MeshVis): void {
+    const pos = positionAttr(mv.mesh.geometry)
+    if (pos) this.writePositions(mv, pos)
+  }
+
   // ------------------------------------------------------------------------------------------------------------------------------------
   // Char and heat glow
   // ------------------------------------------------------------------------------------------------------------------------------------
@@ -1092,6 +1166,7 @@ export class Visuals {
 
   restorePart(pv: PartVis): void {
     for (const mv of pv.meshes) this.restoreMesh(mv)
+    delete pv.settled
     pv.charApplied = 0
     pv.glowApplied = 0
     pv.meltApplied = 0

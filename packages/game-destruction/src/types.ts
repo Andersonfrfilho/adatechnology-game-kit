@@ -83,6 +83,7 @@ export type {
   TensionRebar,
   PileSpec,
   GroundLoss,
+  PartSettlement,
   SoilLayer,
   SoilProfile,
   SoilState,

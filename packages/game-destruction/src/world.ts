@@ -14,7 +14,7 @@ import {
 import type { BendGeometry } from './flexure'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
-import { DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, longestRun, resolveGroundLoss, undercutAt } from './ground-loss'
+import { DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, longestRun, BEAM_SPREAD, mergeSettlement, resolveGroundLoss, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
@@ -23,7 +23,7 @@ import type { DestructibleImpl } from './contracts'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
-  PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss,
+  PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras,
 } from './types'
@@ -148,6 +148,19 @@ const DISTORTION_GROWTH = 1.2
 /** Most cracks settlement opens in one part, and their length (m) at the cracking distortion, growing with the square root of it past that. */
 const MAX_SETTLEMENT_CRACKS = 4
 const SETTLEMENT_CRACK_LENGTH = 0.3
+/** Metres between the starts of the cracks settlement opens in one wall. */
+const SETTLEMENT_CRACK_SPACING = 0.4
+/**
+ * Metres of wall over which an angular distortion opens one crack: its width is the distortion times this (1/300 opens 1 mm, 1/30 a centimetre), kept
+ * between a hairline and 2 cm.
+ */
+const SETTLEMENT_CRACK_OPENING = 0.3
+const MIN_CRACK_WIDTH = 0.0005
+const MAX_CRACK_WIDTH = 0.02
+/** One unit of a wall whose spec draws none: a ceramic brick of 19 x 9 cm with its joint. */
+const BRICK_STEP: readonly [number, number] = [0.2, 0.1]
+/** Rings of parts that follow a settled bearer: what rests on it, and what hangs on that. */
+const SETTLEMENT_FOLLOW_DEPTH = 2
 /** Share of the stiffness of a concrete section left once it has cracked (the cracked inertia of a lightly reinforced beam, NBR 6118 17.3.2.1.1). */
 const CRACKED_STIFFNESS = 0.4
 
@@ -1541,8 +1554,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     addCrack(o, b.p, toWorld(o.st.position, o.st.rotation, local), rotateVec(o.st.rotation, [0, bridge.cantilever ? 1 : -1, 0]), bridge.depth, src)
   }
 
-  /** Masonry over a footing that settled unevenly: past `crackDistortion` it cracks (more the larger the distortion), past `damageDistortion` it is damaged. */
-  const distort = (o: ObjRT, q: PartRT, beta: number, at: Vec3, src?: string) => {
+  /**
+   * Masonry over a footing that settled unevenly: past `crackDistortion` it cracks (more the larger the distortion), past `damageDistortion` it is
+   * damaged. The cracks are the stair-step ones of differential settlement: through the mortar joints, one unit at a time, at about 45 degrees, climbing
+   * toward the side that went down (`toward`, object-local horizontal), as wide as the distortion opens them.
+   */
+  const distort = (o: ObjRT, q: PartRT, beta: number, at: Vec3, toward: Vec3, src?: string) => {
     const prior = q.rt.distortion ?? 0
     if (beta < groundCfg.crackDistortion || beta <= prior * DISTORTION_GROWTH) return
     q.rt.distortion = beta
@@ -1555,9 +1572,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     axis[q.thin] = 1
     const normal = rotateVec(quat.mul(o.st.rotation, q.q), axis)
     const length = Math.min(height * 0.6, SETTLEMENT_CRACK_LENGTH * Math.sqrt(beta / groundCfg.crackDistortion))
+    const units = q.spec.units?.size
+    const step: [number, number] = units ? [Math.max(units[0], units[2]), units[1]] : [BRICK_STEP[0], BRICK_STEP[1]]
+    const reach = Math.hypot(toward[0], toward[2]) || 1
+    const along = vec.normalize([toward[0] / reach, 1, toward[2] / reach])
+    const width = clamp(beta * SETTLEMENT_CRACK_OPENING, MIN_CRACK_WIDTH, MAX_CRACK_WIDTH)
+    const through = q.dims[q.thin]
     for (let c = 0; c < count; c++) {
-      const local: Vec3 = [clamp(at[0], box.min[0], box.max[0]), box.min[1] + height * (0.15 + 0.2 * c), clamp(at[2], box.min[2], box.max[2])]
-      addCrack(o, q, toWorld(o.st.position, o.st.rotation, local), normal, length, src)
+      // the next crack starts a little further from the settled side and a course or two higher, over the skirting
+      const back = c * SETTLEMENT_CRACK_SPACING
+      const local: Vec3 = [clamp(at[0] - (toward[0] / reach) * back, box.min[0], box.max[0]), box.min[1] + height * (0.2 + 0.12 * c), clamp(at[2] - (toward[2] / reach) * back, box.min[2], box.max[2])]
+      // on the face: the crack goes through the wall and shows on both faces (`through`)
+      const face = toLocal(q.pos, q.q, local)
+      face[q.thin] = through / 2
+      addCrack(o, q, toWorld(o.st.position, o.st.rotation, toWorld(q.pos, q.q, face)), normal, length, src, { along, step, width, through })
     }
     if (beta >= groundCfg.damageDistortion && prior < groundCfg.damageDistortion) {
       q.st.hp = Math.max(1, q.st.hp - q.st.maxHp * groundCfg.distortionDamage)
@@ -1575,18 +1603,60 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const q = o.parts[qi]
       if (isLost(q) || isTerrain(q) || o.collapsed.has(q.spec.id) || !isSlender(q.spec, q.mat)) continue
       if (restsOn(o, j, qi) !== b.i) {
-        distort(o, q, (b.p.st.subsidence ?? 0) / DISTORTION_BASE, j.pos, src)
+        // joined beside the part that went down (a wall against its pillar): it climbs toward that part
+        const side: Vec3 = [j.pos[0] - q.pos[0], 0, j.pos[2] - q.pos[2]]
+        distort(o, q, (b.p.st.subsidence ?? 0) / DISTORTION_BASE, j.pos, side, src)
         continue
       }
       const over = aabbOf(q.spec.shape, q.pos, q.q)
       const k0 = clamp(Math.floor((over.min[fp.long] - box.min[fp.long]) / fp.step), 0, drops.length - 1)
       const k1 = clamp(Math.ceil((over.max[fp.long] - box.min[fp.long]) / fp.step), k0 + 1, drops.length)
-      const { value, at } = distortionOf(drops.slice(k0, k1), fp.step)
+      const { value, at, down } = distortionOf(drops.slice(k0, k1), fp.step)
       const point: Vec3 = [(over.min[0] + over.max[0]) / 2, over.min[1], (over.min[2] + over.max[2]) / 2]
       point[fp.long] = box.min[fp.long] + (k0 + at + 0.5) * fp.step
-      distort(o, q, value, point, src)
+      const toward: Vec3 = [0, 0, 0]
+      toward[fp.long] = down
+      distort(o, q, value, point, toward, src)
     }
   }
+
+  /**
+   * The profile the bearer went down along, and the same profile on what follows it: what rests on it, and what hangs on
+   * those without bearing (a window in the wall, a baseboard), so the wall goes down with its ground beam and the window with its wall.
+   */
+  const settle = (o: ObjRT, b: Bearer, fp: Footprint) => {
+    const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
+    const from: Vec3 = [(box.min[0] + box.max[0]) / 2, box.min[1], (box.min[2] + box.max[2]) / 2]
+    const to: Vec3 = [from[0], from[1], from[2]]
+    from[fp.long] = box.min[fp.long]
+    to[fp.long] = box.max[fp.long]
+    const line: PartSettlement = { from, to, drop: settlementProfile(fp.slices.map((slice) => slice.drop), fp.step) }
+    const moved = new Set<number>([b.i])
+    let ring = [b.i]
+    for (let depth = 0; depth <= SETTLEMENT_FOLLOW_DEPTH && ring.length; depth++) {
+      const next: number[] = []
+      for (const i of ring) {
+        const p = o.parts[i]!
+        p.st.settlement = mergeSettlement(p.st.settlement, line)
+        if (i !== b.i) p.st.subsidence = Math.max(p.st.subsidence ?? 0, settlementAt(p.st.settlement, p.pos))
+        for (const j of o.byPart.get(p.spec.id) ?? []) {
+          const k = j.ia === i ? j.ib : j.ia
+          const q = o.parts[k]!
+          if (j.st.open || moved.has(k) || isLost(q) || isTerrain(q) || q.anchored) continue
+          // the structure resting on the bearer alone follows it (the wall on its ground beam); past that only what hangs without bearing (a window, a
+          // baseboard): a bond beam over a pillar and the walls rests on the others as well
+          if (q.structural && (i !== b.i || restsOn(o, j, k) !== i || !restsOnlyOn(o, k, i))) continue
+          moved.add(k)
+          next.push(k)
+        }
+      }
+      ring = next
+    }
+  }
+
+  /** Part `k` bears on part `i` and on nothing else. */
+  const restsOnlyOn = (o: ObjRT, k: number, i: number): boolean =>
+    (o.byPart.get(o.parts[k]!.spec.id) ?? []).every((j) => j.st.open || restsOn(o, j, k) < 0 || restsOn(o, j, k) === i)
 
   /** The part no longer bears on the ground: it lets go of its anchor and of the terrain it rested on. */
   const loseGround = (o: ObjRT, b: Bearer, opened: JointRT[]) => {
@@ -1631,13 +1701,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const fp = footprintOf(o, b, loss)
       if (fp.share <= 0 && fp.drop < SUBSIDE_MIN) continue
       const status = bearLoss(o, b, fp, src)
+      if (status !== 'unsupported' && bendGeometry(b.p.spec).member) {
+        // a beam bends smoothly over the slump: what stands on it (and cracks) follows that, not each handful of soil
+        const smooth = smoothProfile(fp.slices.map((slice) => slice.drop), fp.step, BEAM_SPREAD)
+        fp.slices.forEach((slice, k) => (slice.drop = smooth[k]!))
+        fp.drop = smooth.reduce((sum, v) => sum + v, 0) / Math.max(1, smooth.length)
+      }
       const before = b.p.st.subsidence ?? 0
       const drop = Math.max(before, fp.drop)
+      const peak = (): number => Math.max(0, ...(b.p.st.settlement?.drop ?? []))
+      const peakBefore = peak()
       if (status === 'unsupported') {
         loseGround(o, b, opened)
         lost = true
-      } else settled.push({ b, fp })
-      if (status === 'settled' && drop - before < SUBSIDE_MIN) continue
+      } else {
+        settled.push({ b, fp })
+        settle(o, b, fp)
+      }
+      // a long beam can go down a centimetre at one end and less than a millimetre on average: either is news
+      if (status === 'settled' && drop - before < SUBSIDE_MIN && peak() - peakBefore < SUBSIDE_MIN) continue
       b.p.st.subsidence = drop
       emit({ ...base(o, src), type: 'subside', part: b.p.spec.id, drop, share: fp.share, point: fp.deepest, status })
     }
@@ -1852,8 +1934,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return hole
   }
 
-  const addCrack = (o: ObjRT, p: PartRT, wp: Vec3, wn: Vec3, length: number, src?: string) => {
-    const crack: Crack = { point: objLocal(o, wp), normal: objLocalDir(o, wn), length: Math.min(length, Math.max(p.bound, 0.05)), rays: 5 + Math.floor(rnd() * 5) }
+  const addCrack = (o: ObjRT, p: PartRT, wp: Vec3, wn: Vec3, length: number, src?: string, stair?: Crack['stair']) => {
+    const crack: Crack = { point: objLocal(o, wp), normal: objLocalDir(o, wn), length: Math.min(length, Math.max(p.bound, 0.05)), rays: 5 + Math.floor(rnd() * 5), ...(stair ? { stair } : {}) }
     p.st.cracks.push(crack)
     if (p.st.cracks.length > 16) p.st.cracks.shift()
     markDamaged(p)
