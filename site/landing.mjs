@@ -5,6 +5,7 @@ import { EXAMPLES, FAMILIES, thumbFile } from './catalog.mjs'
  * @typedef {{ name: string, description: string, version: string }} SitePackage
  * @typedef {{ name: string, description?: string }} SiteExample
  * @typedef {(key: string) => boolean} HasThumb
+ * @typedef {(name: string) => string} HrefOf where an example opens (its folder on the site, its page on a local server)
  * @typedef {Omit<import('./catalog.mjs').FamilyEntry, 'packages'> & { members: SitePackage[] }} Family
  */
 
@@ -27,25 +28,29 @@ function thumb(key, alt, hasThumb) {
   return `<img class="thumb" src="${thumbFile(key)}" alt="${esc(alt)}" loading="lazy">`
 }
 
-/** @param {SiteExample} example @param {HasThumb} hasThumb */
-function renderExample(example, hasThumb) {
+/** @param {string} name */
+const folderHref = (name) => `${name}/`
+
+/** @param {SiteExample} example @param {HasThumb} hasThumb @param {HrefOf} hrefOf */
+function renderExample(example, hasThumb, hrefOf) {
+  const href = hrefOf(example.name)
   const meta = EXAMPLES.find((entry) => entry.name === example.name)
   const title = meta?.title ?? example.name
   const summary = meta?.summary ?? example.description
   const areas = meta?.areas ?? []
   const areaCards = areas
-    .map((area) => `<li class="area" data-search="${searchText(area.title, area.what)}"><a href="${esc(example.name)}/?area=${esc(area.id)}" title="Abrir o ambiente de teste de ${esc(area.title)}">
+    .map((area) => `<li class="area" data-search="${searchText(area.title, area.what)}"><a href="${esc(href)}?area=${esc(area.id)}" title="Abrir o ambiente de teste de ${esc(area.title)}">
           ${thumb(`${example.name}-${area.id}`, `${title}: ${area.title}`, hasThumb)}
           <strong>${esc(area.title)} <em>testar →</em></strong><span>${esc(area.what)}</span>
         </a></li>`)
     .join('')
   return `<article class="example" data-kind="exemplo" data-search="${searchText(title, example.name, summary, areas.map((a) => [a.title, a.what]))}">
-      <a class="example-hero" href="${esc(example.name)}/">
+      <a class="example-hero" href="${esc(href)}">
         ${thumb(example.name, title, hasThumb)}
         <span class="open">Abrir no navegador →</span>
       </a>
       <div class="example-body">
-        <h3><a href="${esc(example.name)}/">${esc(title)}</a> <code>${esc(example.name)}</code></h3>
+        <h3><a href="${esc(href)}">${esc(title)}</a> <code>${esc(example.name)}</code></h3>
         <p>${esc(summary)}</p>
         ${meta?.controls ? `<p class="controls">${esc(meta.controls)}</p>` : ''}
         ${areas.length ? `<p class="k">Ambientes de teste · ${areas.length} áreas · clique para abrir já montado</p><ul class="areas">${areaCards}</ul>` : ''}
@@ -82,22 +87,23 @@ function groupPackages(packages) {
   return families
 }
 
-/** @param {Family} family @param {Map<string, string>} examplesByName @param {HasThumb} hasThumb */
-function renderFamily(family, examplesByName, hasThumb) {
+/** @param {Family} family @param {Map<string, string>} examplesByName @param {{ hasThumb: HasThumb, hrefOf: HrefOf }} view */
+function renderFamily(family, examplesByName, { hasThumb, hrefOf }) {
   const seeIn = family.seeIn && examplesByName.get(family.seeIn)
+  const seeInHref = family.seeIn ? hrefOf(family.seeIn) : ''
   return `<article class="family" data-kind="pacote" data-family="${esc(family.id)}" data-search="${searchText(family.title, family.what, family.members.map((p) => [p.name, p.description]))}">
       ${thumb(family.thumb, family.title, hasThumb)}
       <div class="family-body">
         <h3>${esc(family.title)} <span class="count">${family.members.length} ${family.members.length === 1 ? 'pacote' : 'pacotes'}</span></h3>
         <p>${esc(family.what)}</p>
-        ${seeIn ? `<p class="see">Ver funcionando: <a href="${esc(family.seeIn)}/">${esc(seeIn)}</a></p>` : ''}
+        ${seeIn ? `<p class="see">Ver funcionando: <a href="${esc(seeInHref)}">${esc(seeIn)}</a></p>` : ''}
         <ul class="pkgs">${family.members.map(renderPackage).join('')}</ul>
       </div>
     </article>`
 }
 
-/** @param {{ examples: SiteExample[], packages: SitePackage[], hasThumb: HasThumb }} site */
-export function renderLanding({ examples, packages, hasThumb }) {
+/** @param {{ examples: SiteExample[], packages: SitePackage[], hasThumb: HasThumb, hrefOf?: HrefOf }} site */
+export function renderLanding({ examples, packages, hasThumb, hrefOf = folderHref }) {
   const families = groupPackages(packages)
   const examplesByName = new Map(EXAMPLES.map((entry) => [entry.name, entry.title]))
   const areaCount = examples.reduce((sum, example) => sum + (EXAMPLES.find((entry) => entry.name === example.name)?.areas.length ?? 0), 0)
@@ -184,11 +190,11 @@ export function renderLanding({ examples, packages, hasThumb }) {
 <main class="wrap">
   <section id="exemplos" aria-label="Exemplos">
     <h2>Exemplos para abrir no navegador</h2>
-    ${examples.map((example) => renderExample(example, hasThumb)).join('\n')}
+    ${examples.map((example) => renderExample(example, hasThumb, hrefOf)).join('\n')}
   </section>
   <section id="pacotes" aria-label="Pacotes">
     <h2>Pacotes por família</h2>
-    <div class="families">${families.map((family) => renderFamily(family, examplesByName, hasThumb)).join('\n')}</div>
+    <div class="families">${families.map((family) => renderFamily(family, examplesByName, { hasThumb, hrefOf })).join('\n')}</div>
   </section>
   <p class="empty hide" id="empty">Nada encontrado com esse filtro.</p>
 </main>
