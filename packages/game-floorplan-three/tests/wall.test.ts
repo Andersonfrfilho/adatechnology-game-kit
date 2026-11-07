@@ -209,6 +209,35 @@ describe('wallPiece', () => {
     for (let x = left + 0.3; x < right - 0.3; x += 0.23) expect(isGone(x, bottom + 0.0375)).toBe(false)
   })
 
+  it('a rocket on a pillar cuts it there and bares its bars and stirrups; the pillar stands on its cage and the rest of it stays cast', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    const col = piece.spec.parts.find((p: { id: string }) => p.id === 'wall_column_0_1') as { position: number[]; reinforcement: { diameter: number } }
+    // NBR 6118: a pillar's bars are 10 mm at least
+    expect(col.reinforcement.diameter).toBeGreaterThanOrEqual(0.01)
+    world.explode([col.position[0]!, 1.4, 0.12], 200000, 16, 'test')
+    for (let i = 0; i < 20; i++) world.update(0.1)
+    const pillar = world.part(id, 'wall_column_0_1')!
+    expect(pillar.status).not.toBe('broken')
+    expect(pillar.stripped ?? false).toBe(false)
+    // the concrete goes in a band around the charge, half a metre or so of a 2.8 m pillar, not from there to the top
+    const ys = (pillar.chipped ?? []).map((c) => c.center[1] + col.position[1]!)
+    expect(ys.length).toBeGreaterThan(0)
+    expect(Math.max(...ys) - Math.min(...ys)).toBeLessThan(0.8)
+    expect(Math.min(...ys)).toBeGreaterThan(0.9)
+    expect(Math.max(...ys)).toBeLessThan(1.9)
+    // the bars show there, and the stirrups around them: legs across the section (along x or z) every 15 cm
+    const bars = events.filter((e) => e.type === 'expose' && e.part === 'wall_column_0_1').flatMap((e) => (e.type === 'expose' ? e.bars : []))
+    const across = bars.filter(([a, b]) => Math.abs(a[1] - b[1]) < 1e-6 && Math.hypot(a[0] - b[0], a[2] - b[2]) > 0.05)
+    const along = bars.filter(([a, b]) => Math.abs(a[1] - b[1]) > 0.05)
+    expect(along.length).toBeGreaterThanOrEqual(4)
+    expect(new Set(across.map(([a]) => a[1].toFixed(2))).size).toBeGreaterThanOrEqual(3)
+    for (const [a, b] of [...along, ...across]) for (const p of [a, b]) expect(p[1]).toBeGreaterThan(0.8)
+  })
+
   it('a second grenade somewhere else on the wall cuts a second hole, and shots still knock bricks out beside them', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })

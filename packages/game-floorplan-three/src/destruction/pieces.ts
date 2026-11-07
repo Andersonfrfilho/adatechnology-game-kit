@@ -97,7 +97,9 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
               if (pc.role !== 'wall' && pc.role !== 'partition') {
                 const def = getAssembly((pc.assembly as string) || (pc.material === 'concrete' && ['slab', 'beam', 'column', 'stair'].includes(pc.role) ? 'reinforced_concrete' : ''));
                 // the bare cage of a pillar carries what its bars carry (a pillar under a light bond beam stands on its cage when a blast takes its concrete)
-                const cage = def && def.reinforcement ? (pc.role === 'column' && sp.shape.kind === 'box' ? { ...def.reinforcement, residualCapacity: cageResidualCapacity(sp.shape.size, def.reinforcement, sp.structure?.capacity) } : { ...def.reinforcement }) : null;
+                // a pillar's or a beam's longitudinal bars are those of the structure's cage (10 mm at least), thicker than the 8 mm mesh of a wall or slab
+                const bars = def && def.reinforcement ? (pc.role === 'column' || pc.role === 'beam' ? { ...def.reinforcement, diameter: Math.max(def.reinforcement.diameter, MEMBER_CAGE.diameter) } : def.reinforcement) : null;
+                const cage = bars ? (pc.role === 'column' && sp.shape.kind === 'box' ? { ...bars, residualCapacity: cageResidualCapacity(sp.shape.size, bars, sp.structure?.capacity) } : { ...bars }) : null;
                 const out = cage && !sp.reinforcement ? { ...sp, reinforcement: cage } : sp;
                 // a concrete beam or pillar is made of blocks a shot or a blow knocks out where it lands, showing its bars there (MEMBER_CAGE of the structure package)
                 if (out.reinforcement && !out.units && pc.material === 'concrete' && (pc.role === 'beam' || pc.role === 'column') && sp.shape.kind === 'box') {

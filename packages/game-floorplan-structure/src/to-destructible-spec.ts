@@ -102,8 +102,8 @@ const assemblySpec = (part: StructurePart, capacity: number | undefined): PartSp
   return spec
 }
 
-/** The cage of a concrete beam or pillar (four bars in a small section, an NBR 6118 minimum) and the blocks a shot or a blow knocks out of its concrete. */
-export const MEMBER_CAGE = { spacing: 0.1, diameter: 0.008, unit: 0.1 }
+/** The cage of a concrete beam or pillar (four bars in a small section; NBR 6118 18.4.2.1 takes 10 mm as the thinnest longitudinal bar of a pillar) and the blocks a shot or a blow knocks out of its concrete. */
+export const MEMBER_CAGE = { spacing: 0.1, diameter: 0.01, unit: 0.1 }
 const CAGED_ROLES: ReadonlySet<PartRole> = new Set(['beam', 'column'])
 /** Concrete cover to the bars of a member, metres (NBR 6118, class I of aggressiveness: 2.5 cm, plus the stirrup). */
 const CAGE_COVER = 0.03

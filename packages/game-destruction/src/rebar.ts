@@ -60,6 +60,49 @@ export const rebarBars = (dims: Vec3, thin: number, spacing: number): Bar[] => {
   return out
 }
 
+/** Metres between the stirrups of a long member (NBR 6118 18.4.3: at most 20 cm, 12 bar diameters or the smaller side; 15 cm is the common one). */
+export const STIRRUP_SPACING = 0.15
+
+/**
+ * The stirrups of a long member (a column, a beam): a closed rectangle around its perimeter bars every `spacing` metres along its length, each as four
+ * straight legs. They hold the bars in place and confine the core; a wall or slab has none.
+ */
+export const memberStirrups = (dims: Vec3, spacing = STIRRUP_SPACING): Bar[] => {
+  if (!isMember(dims)) return []
+  const long = dims.indexOf(Math.max(...dims))
+  const [u = 0, v = 0] = [0, 1, 2].filter((i) => i !== long)
+  // the stirrup wraps the bars: its legs run at the cover, a bar's width outside their centres
+  const hu = dims[u] / 2 - COVER, hv = dims[v] / 2 - COVER
+  const out: Bar[] = []
+  for (const s of spread(dims[long], 0.05, spacing, 200)) {
+    const corner = (x: number, y: number): Vec3 => {
+      const c: Vec3 = [0, 0, 0]
+      c[long] = s
+      c[u] = x
+      c[v] = y
+      return c
+    }
+    out.push([corner(-hu, -hv), corner(hu, -hv)], [corner(hu, -hv), corner(hu, hv)], [corner(hu, hv), corner(-hu, hv)], [corner(-hu, hv), corner(-hu, -hv)])
+  }
+  return out
+}
+
+/** The part of each straight bar (along any one axis) that lies inside a box of `size` centred on `center`, in all three axes; bars that miss it are dropped. */
+export const clipBarsToVolume = (bars: readonly Bar[], center: Vec3, size: Vec3): Bar[] => {
+  const out: Bar[] = []
+  for (const [a, b] of bars) {
+    const axis = [0, 1, 2].find((k) => a[k] !== b[k]) ?? 0
+    if ([0, 1, 2].some((k) => k !== axis && Math.abs(a[k]! - center[k]!) > size[k]! / 2 + 1e-6)) continue
+    const lo = Math.max(Math.min(a[axis], b[axis]), center[axis] - size[axis] / 2), hi = Math.min(Math.max(a[axis], b[axis]), center[axis] + size[axis] / 2)
+    if (hi - lo < 1e-6) continue
+    const p: Vec3 = [a[0], a[1], a[2]], q: Vec3 = [b[0], b[1], b[2]]
+    p[axis] = lo
+    q[axis] = hi
+    out.push([p, q])
+  }
+  return out
+}
+
 /** The part of each bar that lies inside a box of `size` centred on `center` (part axes), in the plane of axes `u` and `v`; bars that miss it are dropped. */
 export const clipBarsToBox = (bars: readonly Bar[], u: number, v: number, center: Vec3, size: Vec3): Bar[] => {
   const out: Bar[] = []
