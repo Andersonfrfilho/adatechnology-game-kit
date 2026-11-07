@@ -280,6 +280,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * The material of the units laid bare in a wall: white lit by the colour of each instance, cut through where shots broke the units (`core`, a mask
      * like the wall's), and darker on the faces seen from inside a unit (the walls of a crater).
      */
+    /** The plaster mask of the view on its units' material too (`breachMask`), beside the core mask, so what reads the view (a test) finds both. */
+    const withMask = <TMaterial extends THREE_NS.Material>(material: TMaterial, mask: WallMask): TMaterial => {
+      material.userData.breachMask = mask
+      return material
+    }
+
     function unitsMaterial(core: WallMask) {
       const material = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide })
       material.onBeforeCompile = (sh: THREE_NS.WebGLProgramParametersWithUniforms) => {
@@ -436,6 +442,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         // the hole through the unit: a little inside the crater, with a broken edge
         stamp(core, p.s - p.rs, p.s + p.rs, p.y - p.ry, p.y + p.ry, (s, y) => ellipseDistance(s, y, p.s, p.y, p.rs, p.ry) <= -0.35 * Math.min(p.rs, p.ry) * noise2(s * 1.7, y * 1.3, 0.012))
       }
+      // the plaster over a pillar is one sheet: torn off at both of its edges by the masonry that went beside it, it comes off the whole face between them
+      for (const q of pillars) {
+        const i0 = Math.max(0, Math.floor((q.a + 0.005) / mask.len * mask.w)), i1 = Math.min(mask.w - 1, Math.floor((q.b - 0.005) / mask.len * mask.w))
+        const j0 = Math.max(0, Math.floor((q.y0 - mask.y0) / mask.height * mask.h)), j1 = Math.min(mask.h - 1, Math.floor((q.y1 - mask.y0) / mask.height * mask.h))
+        for (let j = j0; j <= j1; j++) if (mask.data[j * mask.w + i0] && mask.data[j * mask.w + i1]) mask.data.fill(255, j * mask.w + i0, j * mask.w + i1 + 1)
+      }
       mask.texture.needsUpdate = true
       core.texture.needsUpdate = true
       // the units the cut lays bare: those within reach of a hole or a crater
@@ -508,7 +520,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const parts = [hostId, ...riders(hostId)].filter((id) => structure.byId.get(id) && specOf(id)?.units)
       const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
       return {
-        host: hostId, parts, items, mask, core, unitMaterial: unitsMaterial(core), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
+        host: hostId, parts, items, mask, core, unitMaterial: withMask(unitsMaterial(core), mask), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
         chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(),
       }
     }
