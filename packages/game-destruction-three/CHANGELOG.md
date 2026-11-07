@@ -1,5 +1,65 @@
 # @adatechnology/game-destruction-three
 
+## 0.21.0
+
+### Minor Changes
+
+- 304dcc8: Recorded sounds for the vehicles: 52 CC0 takes from Freesound, credited in `assets/sfx/CREDITOS.md`. Hood opening (`car_hood_open`) and closing (`car_hood_shut`, which answers `car_hood_close`), car crashes by speed (`crash_dent`, `crash_fold` and `crash_wreck` answer `crash_light`, `crash_medium` and `crash_heavy`), horns of a car, a truck and a motorcycle (`horn_car`, `horn_truck`, `horn_bike`), the air brake of a truck (`air_brake`), tyres squealing on asphalt (`tire_skid_asphalt`) and rolling on gravel (`tire_roll_gravel`), and the idle of a truck and of a motorcycle (`engine_truck_low`, `engine_bike_low`). `createVehicleSound` rolls on gravel with its own loop when the surface is `dirt` and lets the air out of a truck's brakes as it stops (`VehicleSoundOptions.airBrake`); the proving area takes the engine profile and the horn from the vehicle's group (`engineProfileOfGroup`, `hornOfGroup`). The vehicle's hood opens with `car_hood_open` in the destruction sound. Recipes of the same ids stay as the fallback while a file decodes (new ones: `car_hood_open`, `horn_bike`, `air_brake`, `tire_roll_gravel`).
+
+### Patch Changes
+
+- Updated dependencies [304dcc8]
+  - @adatechnology/game-audio@0.13.0
+
+## 0.20.0
+
+### Minor Changes
+
+- 4e8b8b8: Recorded sounds for the grenade launcher and the rocket: 33 CC0 takes from Freesound, credited in `assets/sfx/CREDITOS.md`. `launcher_40mm` (the 40 mm thunk of the M79, M32 and M203) and `rocket_launch` (an RPG-7 firing, three shots cut from one field recording, and more) are played by `WeaponAudio.launch`; the break-open reload (`barrels_open` and `barrels_close`, the hinged barrels of the M79 and of the break-action shotguns, which share the cue; `breech_open`, `grenade_load` and `breech_close`, the breech of a rocket launcher) and the rocket loading (`rocket_load`, `rocket_seat`) are the cues of the reload clips, whose hits are measured in `reload-sample-hits.json`; `explosion_rocket` is the blast of the rocket family; `rocket_motor_loop` is the motor of a rocket in flight, which the test room plays as one loop that follows the rockets in the air (`ROCKET_MOTOR`) and stops when the last one has burst. The recipes of the same ids stay as the fallback while a file decodes (the motor has a new one, `ROCKET_MOTOR_LOOP`).
+
+### Patch Changes
+
+- Updated dependencies [4e8b8b8]
+  - @adatechnology/game-audio@0.12.0
+
+## 0.19.1
+
+### Patch Changes
+
+- Updated dependencies [89f1d9d]
+  - @adatechnology/game-audio@0.11.0
+
+## 0.19.0
+
+### Minor Changes
+
+- baaa7d4: Recorded wood splinters (by blow strength), axe and blade hits on wood, metal clangs, scrapes and pings, cloth rips and cloth thumps (by strength) replace the synthesized recipes of those impacts: 44 CC0 takes from Freesound, credited in `assets/sfx/CREDITOS.md`. `splinter`, `shot_wood`, `shot_metal`, `break_wood`, `impact_soft_blunt` and `break_fabric` are keys of the impact table now, and a blow sends its strength (`intensity`) so the light, medium or heavy take plays. The recipes of the same ids stay as the fallback while a file decodes.
+
+### Patch Changes
+
+- Updated dependencies [baaa7d4]
+  - @adatechnology/game-audio@0.10.0
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies [67edc92]
+  - @adatechnology/game-destruction@0.21.0
+
+## 0.18.1
+
+### Patch Changes
+
+- Updated dependencies [c4b8218]
+- Updated dependencies [a6a6a8f]
+- Updated dependencies [49272b6]
+- Updated dependencies [5ce9f7b]
+  - @adatechnology/game-contracts@0.30.0
+  - @adatechnology/game-destruction@0.20.0
+  - @adatechnology/game-audio@0.9.4
+  - @adatechnology/game-vfx-three@0.7.6
+
 ## 0.18.0
 
 ### Minor Changes

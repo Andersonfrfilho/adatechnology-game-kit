@@ -6,7 +6,7 @@ import { cellsOutside, cellsWithin, clumpCells, marksInBox, planeAxes, unitGrid,
 import type { LocalHole, UnitCell } from './breach'
 import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
 import type { LayerRT } from './layers'
-import { bendBar, clipBarsToBox, clipBarsToDisc, rebarBars, rebarMass } from './rebar'
+import { bendBar, clipBarsToBox, clipBarsToDisc, isMember, REBAR_COVER, rebarBars, rebarMass } from './rebar'
 import {
   GRAVITY, bendGeometry, blastImpulse, isReinforced, isSlender, elasticEnergy, impulseEnergy, isFlexural, lineLoad, momentOfEnergy, resolveFlexure, resolveMasonry, sectionMoments, sectionWidth,
   spanMoment, spanOf, tensionSteel,
@@ -115,6 +115,18 @@ const PANEL_PI = 6e6
 /** Where the panel is read, as shares of its span and height from its middle, and how many of them must pass `PANEL_PI` for the panel to fail. */
 const PANEL_POINTS: readonly (readonly [number, number])[] = [[0, 0], [-0.3, 0], [0.3, 0], [0, -0.3], [0, 0.3]]
 const PANEL_POINTS_LOADED = 4
+/**
+ * Shots on a reinforced member (a pillar, a beam) wear its section at the height they hit, band by band (`MEMBER_BAND` along its length). Each round takes out
+ * a cone of concrete as deep as it goes into concrete (its `penetration.concrete`, or its energy over the material's resistance; at most the depth of the
+ * member along the shot) and `MEMBER_CRATER_CALIBRES` calibres across (never wider than deep): about 80 cm³ for a 7.62x39 rifle round, 290 cm³ for a .50,
+ * 16 cm³ for a 9 mm and 1 cm³ for a buckshot pellet. A crater deeper than the cover bares the bars that run through it, and the member is cut there
+ * past `MEMBER_CUT_LOSS`: 20 to 30 rifle rounds or 5 to 10 rounds of .50 on the same place of a 15 cm pillar; a pistol or a shotgun practically never.
+ */
+const MEMBER_BAND = 0.1
+const MEMBER_CRATER_CALIBRES = 3.4
+/** Places of bared bars a member keeps (each a crater past its cover); later craters on the same place add none. */
+const MEMBER_BARED_MAX = 24
+const MEMBER_CUT_LOSS = 0.9
 const BLAST_EDGE_WEAR = 0.6
 const RESIDUAL_CAPACITY = 0.15
 /** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
@@ -2335,6 +2347,65 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
+   * A round on a reinforced member wears its section where it lands (`MEMBER_CRATER_CALIBRES`, `MEMBER_CUT_LOSS`): returns false for any other part, which
+   * takes the shot unit by unit (`chipUnits`). Past the cover the bars show there; past the cut the band's concrete comes out, and with it what is above it on
+   * a standing member (it has nothing to stand on: the concrete above the cut falls, its bars stay), and what rested on the member no longer bears on it.
+   */
+  const wearMember = (o: ObjRT, p: PartRT, entry: Vec3, d: Vec3, E: number, caliber: number, penMm: number | undefined, src?: string): boolean => {
+    if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
+    const along = p.dims.indexOf(Math.max(...p.dims))
+    const lp = toLocal(p.pos, p.q, objLocal(o, entry))
+    const ld = rotateVec(quat.conjugate(p.q), objLocalDir(o, d))
+    // the depth of the member along the shot, and how far the round goes into its concrete
+    let depth = Infinity
+    for (let a = 0; a < 3; a++) if (a !== along && Math.abs(ld[a]) > 1e-3) depth = Math.min(depth, p.dims[a] / Math.abs(ld[a]))
+    if (!Number.isFinite(depth)) return true
+    const into = (penMm ?? E / Math.max(p.mat.penetration, 1e-6)) / 1000
+    const h = Math.min(into, depth)
+    const r = Math.min((MEMBER_CRATER_CALIBRES * caliber) / 1000, h)
+    const volume = (Math.PI / 3) * r * r * h
+    const section = p.dims.reduce((product, size, a) => (a === along ? product : product * size), 1)
+    const bands = Math.max(1, Math.round(p.dims[along] / MEMBER_BAND))
+    const band = clamp(Math.floor(((lp[along] + p.dims[along] / 2) / p.dims[along]) * bands), 0, bands - 1)
+    const height = p.dims[along] / bands
+    const worn = (p.rt.bands ??= {})
+    const before = worn[band] ?? 0
+    const after = Math.min(1, before + volume / (section * height))
+    worn[band] = after
+    markDamaged(p)
+    const bandCenter = -p.dims[along] / 2 + (band + 0.5) * height
+    // a crater deeper than the cover bares the bars that run through it
+    if (h > REBAR_COVER && after < MEMBER_CUT_LOSS) {
+      const bared = (p.rt.bared ??= [])
+      const center: Vec3 = [lp[0], lp[1], lp[2]]
+      const size: Vec3 = [p.dims[0], p.dims[1], p.dims[2]]
+      for (let a = 0; a < 3; a++) if (Math.abs(ld[a]) < 0.5) size[a] = 2 * r
+      if (bared.length < MEMBER_BARED_MAX && !bared.some((box) => box.center.every((x, a) => Math.abs(x - center[a]!) < box.size[a]! / 4))) {
+        bared.push({ center, size })
+        exposeRebar(o, p, src)
+      }
+    }
+    if (before >= MEMBER_CUT_LOSS || after < MEMBER_CUT_LOSS) return true
+    // cut through: the band goes, and on a standing member everything above it (nothing holds that concrete up but the bars)
+    const axisUp = rotateVec(p.q, [0, 0, 0].map((_, k) => (k === along ? 1 : 0)) as Vec3)
+    const standing = Math.abs(axisUp[1]) > 0.7
+    const upward = axisUp[1] >= 0 ? 1 : -1
+    const grid = gridOf(p)
+    const gone = p.rt.chips ?? {}
+    const out: number[] = []
+    for (let i = 0; i < grid.length; i++) {
+      if (gone[i] === -1) continue
+      const at = grid[i]!.center[along]
+      const inBand = Math.abs(at - bandCenter) <= height / 2 + 1e-6
+      const above = standing && (at - bandCenter) * upward > height / 2
+      if (inBand || above) out.push(i)
+    }
+    if (out.length > 0) knockOutUnits(o, p, entry, E, out, src)
+    giveAtCut(o, p, src)
+    return true
+  }
+
+  /**
    * A shot or a blow on a wall of units (`PartSpec.units`) wears the unit it lands on, and a little the ones around it within `radius`, until it gives
    * way at `chipEnergy` joules per kilogram of its mass. A blow knocks the whole unit out; a shot breaks it where it lands: a crater a few centimetres across
    * (`craterAcross`) goes through the unit, the rest of it stays in the wall, and its bits fly out of both faces (most out of the far one, along the shot). A unit whose
@@ -2500,6 +2571,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     else {
       bars = []
       for (const cell of p.st.chipped ?? []) bars.push(...clipBarsToBox(all, u, v, cell.center, cell.size))
+      for (const box of p.rt.bared ?? []) bars.push(...clipBarsToBox(all, u, v, box.center, box.size))
       const op = p.st.opening
       if (op) {
         const lc = toLocal(p.pos, p.q, op.center)
@@ -3121,7 +3193,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src)
     if (!isLost(p)) tearAt(o, p, 'ballistic', entry, penetrated ? exitPoint : undefined, d, E, caliber / 1000, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
-    chipUnits(o, p, 'ballistic', entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
+    if (!wearMember(o, p, entry, d, E, caliber, penMm, src)) chipUnits(o, p, 'ballistic', entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
     return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
   }
 

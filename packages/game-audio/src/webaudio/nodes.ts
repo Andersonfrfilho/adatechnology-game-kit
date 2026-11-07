@@ -2,7 +2,7 @@ import type { PlannedAutomation, PlannedEnvelopePoint, PlannedFilter } from '../
 
 /** Where a plan is built: the context, the bus it plays into, the reverb send (if the mix has one), the shared noise and the start time. */
 export type RealizeTarget = {
-  readonly context: AudioContext
+  readonly context: BaseAudioContext
   readonly output: AudioNode
   readonly wet?: AudioNode
   /** The noise buffer; made on the first call when the mix makes it on demand. */
@@ -43,7 +43,7 @@ export function noiseSource(target: RealizeTarget, loop: boolean): AudioBufferSo
 }
 
 /** The art scene's `bq`: type, frequency, then Q and gain when given. The frequency ramp is left to the caller. */
-export function filterNode(context: AudioContext, filter: PlannedFilter, time: number): BiquadFilterNode {
+export function filterNode(context: BaseAudioContext, filter: PlannedFilter, time: number): BiquadFilterNode {
   const node = context.createBiquadFilter()
   node.type = filter.type
   assign(node.frequency, filter.frequency, time)
@@ -52,7 +52,7 @@ export function filterNode(context: AudioContext, filter: PlannedFilter, time: n
   return node
 }
 
-export function gainNode(context: AudioContext, value: number): GainNode {
+export function gainNode(context: BaseAudioContext, value: number): GainNode {
   const node = context.createGain()
   node.gain.value = value
   return node

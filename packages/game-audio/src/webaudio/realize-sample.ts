@@ -47,7 +47,7 @@ export function realizeSample(plan: SamplePlan, target: SampleTarget): RealizedS
     const source = context.createBufferSource()
     source.buffer = buffer
     source.playbackRate.value = layer.rate
-    const gain = gainNode(context as AudioContext, layer.gain)
+    const gain = gainNode(context as BaseAudioContext, layer.gain)
     source.connect(gain)
     gain.connect(head)
     const at = target.time + layer.at

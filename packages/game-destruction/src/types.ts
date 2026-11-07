@@ -696,6 +696,10 @@ export interface PartRuntime {
   chips?: Record<number, number>
   /** Face area (m²) the craters of shots took out of each unit so far, by its index in the unit grid: the rest of a unit comes out past `CRATER_SPENT`. */
   craters?: Record<number, number>
+  /** Share of the section of a reinforced member the shots took out so far, by band along its length (`MEMBER_BAND` from its negative end). */
+  bands?: Record<number, number>
+  /** Places of a reinforced member whose cover the shots took off (part space): its bars show there although no unit came out. */
+  bared?: Array<{ center: Vec3; size: Vec3 }>
   /** Mass in kg that left the part in a breach. */
   removed?: number
   /** Damage taken by each band across a long wooden part (`splinter`), by band index from its negative end: the band that runs out breaks it there. */

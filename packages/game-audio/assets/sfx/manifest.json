@@ -8,6 +8,64 @@
   },
   "sounds": [
     {
+      "id": "air_brake",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/air_brake_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.48,
+            "seconds": 5.4,
+            "source": "https://freesound.org/people/rabbydaw/sounds/504865/",
+            "author": "rabbydaw (air brakes, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.34,
+            "seconds": 4.956,
+            "source": "https://freesound.org/people/Filmscore/sounds/823069/",
+            "author": "Filmscore (hydraulic truck brakes, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.33,
+            "seconds": 7,
+            "source": "https://freesound.org/people/buzkill/sounds/825463/",
+            "author": "buzkill (cement mixer truck air brake)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.41,
+            "seconds": 3.598,
+            "source": "https://freesound.org/people/brunoboselli/sounds/457294/",
+            "author": "brunoboselli (air pressure release, first part cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.71,
+            "seconds": 3.549,
+            "source": "https://freesound.org/people/brunoboselli/sounds/457294/",
+            "author": "brunoboselli (air pressure release, second part cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "ambience_city_day",
       "category": "ambiente",
       "layers": {
@@ -219,6 +277,72 @@
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "barrels_close_heavy",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/breech_close_heavy_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 0.674,
+            "source": "https://freesound.org/people/CeebFrack/sounds/108794/",
+            "author": "CeebFrack",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/breech_close_heavy_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.31,
+            "seconds": 0.205,
+            "source": "https://freesound.org/people/LilMati/sounds/392014/",
+            "author": "LilMati",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/breech_close_heavy_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.147,
+            "source": "https://freesound.org/people/LilMati/sounds/394627/",
+            "author": "LilMati",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "barrels_open_heavy",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/breech_open_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.955,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520042/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/breech_open_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 0.973,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520043/",
+            "author": "xFromarge1",
+            "license": "CC0"
           }
         ]
       }
@@ -746,6 +870,72 @@
       }
     },
     {
+      "id": "breech_close_heavy",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/breech_close_heavy_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 0.674,
+            "source": "https://freesound.org/people/CeebFrack/sounds/108794/",
+            "author": "CeebFrack",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/breech_close_heavy_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.31,
+            "seconds": 0.205,
+            "source": "https://freesound.org/people/LilMati/sounds/392014/",
+            "author": "LilMati",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/breech_close_heavy_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.147,
+            "source": "https://freesound.org/people/LilMati/sounds/394627/",
+            "author": "LilMati",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "breech_open",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/breech_open_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.955,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520042/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/breech_open_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 0.973,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520043/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "car_door_open",
       "category": "veiculos",
       "layers": {
@@ -795,6 +985,72 @@
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "car_hood_open",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/car_hood_open_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.96,
+            "seconds": 1.879,
+            "source": "https://freesound.org/people/nmscher/sounds/86233/",
+            "author": "nmscher (hood opening, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/car_hood_open_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 1.523,
+            "source": "https://freesound.org/people/microman502/sounds/865230/",
+            "author": "microman502 (bonnet latches, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "car_hood_shut",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/car_hood_shut_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.04,
+            "seconds": 0.938,
+            "source": "https://freesound.org/people/nmscher/sounds/86236/",
+            "author": "nmscher (hood slam, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/car_hood_shut_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 1.774,
+            "source": "https://freesound.org/people/soundman9826/sounds/410134/",
+            "author": "soundman9826 (hood closing, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/car_hood_shut_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.26,
+            "seconds": 1.581,
+            "source": "https://freesound.org/people/LPA134/sounds/329516/",
+            "author": "LPA134 (hood impact, cut)",
+            "license": "CC0"
           }
         ]
       }
@@ -1142,6 +1398,74 @@
       }
     },
     {
+      "id": "clang",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/clang_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.98,
+            "seconds": 0.679,
+            "source": "https://freesound.org/people/wilhellboy/sounds/351372/",
+            "author": "wilhellboy",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/clang_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 0.625,
+            "source": "https://freesound.org/people/AardsReal/sounds/842171/",
+            "author": "AardsReal",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/clang_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.27,
+            "seconds": 1.615,
+            "source": "https://freesound.org/people/jasonLON/sounds/125404/",
+            "author": "jasonLON",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/clang_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.2,
+            "seconds": 0.678,
+            "source": "https://freesound.org/people/Anthousai/sounds/406562/",
+            "author": "Anthousai",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/clang_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.09,
+            "seconds": 0.383,
+            "source": "https://freesound.org/people/BenjaminNelan/sounds/410364/",
+            "author": "BenjaminNelan",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/clang_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.08,
+            "seconds": 2.415,
+            "source": "https://freesound.org/people/Joao_Janz/sounds/478679/",
+            "author": "Joao_Janz",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "cloth_rustle",
       "category": "personagem",
       "layers": {
@@ -1470,6 +1794,170 @@
             "seconds": 0.32,
             "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
             "author": "rubberduck",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "crash_dent",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/crash_dent_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.905,
+            "source": "https://freesound.org/people/qubodup/sounds/332058/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.69,
+            "seconds": 0.309,
+            "source": "https://freesound.org/people/qubodup/sounds/332056/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.26,
+            "seconds": 0.576,
+            "source": "https://freesound.org/people/Feed_/sounds/545692/",
+            "author": "Feed_",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.3,
+            "seconds": 0.602,
+            "source": "https://freesound.org/people/Logicogonist/sounds/807438/",
+            "author": "Logicogonist",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.41,
+            "seconds": 0.632,
+            "source": "https://freesound.org/people/dslrguide/sounds/321482/",
+            "author": "dslrguide (metal hit, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.96,
+            "seconds": 1.6,
+            "source": "https://freesound.org/people/craigsmith/sounds/675466/",
+            "author": "craigsmith (two cars crash foley, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "crash_fold",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/crash_fold_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.27,
+            "seconds": 2.099,
+            "source": "https://freesound.org/people/CogFireStudios/sounds/420356/",
+            "author": "CogFireStudios (crash, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_fold_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.25,
+            "seconds": 1.549,
+            "source": "https://freesound.org/people/qubodup/sounds/332059/",
+            "author": "qubodup (collision with reverb, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_fold_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 2.9,
+            "source": "https://freesound.org/people/HoBoTrails/sounds/426021/",
+            "author": "HoBoTrails (car accident with squeal and crash, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_fold_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.3,
+            "seconds": 2.875,
+            "source": "https://freesound.org/people/craigsmith/sounds/675911/",
+            "author": "craigsmith (car hits two phone booths, metal and glass, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "crash_wreck",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/crash_wreck_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.6,
+            "seconds": 2.1,
+            "source": "https://freesound.org/people/magnuswaker/sounds/592388/",
+            "author": "magnuswaker (car crash with glass, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_wreck_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 4.989,
+            "source": "https://freesound.org/people/PauliusI/sounds/346299/",
+            "author": "PauliusI (car crash exterior, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_wreck_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 3.446,
+            "source": "https://freesound.org/people/CAT-FOX_ALEX/sounds/862565/",
+            "author": "CAT-FOX_ALEX (car crash impact, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_wreck_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.06,
+            "seconds": 3.3,
+            "source": "https://freesound.org/people/squareal/sounds/237375/",
+            "author": "squareal (car crash, tail cut)",
             "license": "CC0"
           }
         ]
@@ -2500,6 +2988,34 @@
       }
     },
     {
+      "id": "engine_loop_bike_idle",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/engine_loop_bike_idle_01.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.26,
+            "seconds": 12,
+            "source": "https://freesound.org/people/golovlev.sound/sounds/632219/",
+            "author": "golovlev.sound (BMW motorcycle idling, steady part cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/engine_loop_bike_idle_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.16,
+            "seconds": 6.5,
+            "source": "https://freesound.org/people/golovlev.sound/sounds/632219/",
+            "author": "golovlev.sound (BMW motorcycle idling, steady part cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "engine_loop_car_high",
       "category": "veiculos",
       "layers": {
@@ -2531,6 +3047,34 @@
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "engine_loop_truck_idle",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/engine_loop_truck_idle_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 4.1,
+            "source": "https://freesound.org/people/chungus43A/sounds/705386/",
+            "author": "chungus43A (diesel engine idling, steady part cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/engine_loop_truck_idle_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.2,
+            "seconds": 10,
+            "source": "https://freesound.org/people/itinerantmonk108/sounds/864821/",
+            "author": "itinerantmonk108 (idling truck, steady part cut)",
+            "license": "CC0"
           }
         ]
       }
@@ -2814,6 +3358,44 @@
       }
     },
     {
+      "id": "explosion_rocket",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "explosoes-fogo/explosion_rocket_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.51,
+            "seconds": 0.892,
+            "source": "https://freesound.org/people/bolkmar/sounds/455918/",
+            "author": "bolkmar",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/explosion_rocket_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.28,
+            "seconds": 0.604,
+            "source": "https://freesound.org/people/Yoshicakes77/sounds/818982/",
+            "author": "Yoshicakes77",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/explosion_rocket_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 4.477,
+            "source": "https://freesound.org/people/zapsplat.com/sounds/719426/",
+            "author": "zapsplat.com (missile explosion, tail cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "explosion_small_bang",
       "category": "explosoes-fogo",
       "layers": {
@@ -2916,6 +3498,148 @@
             "seconds": 1.376,
             "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
             "author": "rubberduck",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fabric_hit_heavy",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/fabric_hit_heavy_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 0.598,
+            "source": "https://freesound.org/people/trinitrotoluenedev/sounds/728541/",
+            "author": "trinitrotoluenedev",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_hit_heavy_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.09,
+            "seconds": 1.326,
+            "source": "https://freesound.org/people/saturdaysoundguy/sounds/388035/",
+            "author": "saturdaysoundguy",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fabric_hit_light",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/fabric_hit_light_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 0.505,
+            "source": "https://freesound.org/people/gobbe57/sounds/746684/",
+            "author": "gobbe57",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_hit_light_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 0.325,
+            "source": "https://freesound.org/people/JonasTisell/sounds/496187/",
+            "author": "JonasTisell",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fabric_hit_medium",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/fabric_hit_medium_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.95,
+            "seconds": 0.396,
+            "source": "https://freesound.org/people/KoimeMatsuchiya/sounds/872227/",
+            "author": "KoimeMatsuchiya",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_hit_medium_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 0.975,
+            "source": "https://freesound.org/people/ImadeThisAcc/sounds/582114/",
+            "author": "ImadeThisAcc",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fabric_rip",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/fabric_rip_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.21,
+            "seconds": 0.824,
+            "source": "https://freesound.org/people/CraigSnedeker/sounds/221680/",
+            "author": "CraigSnedeker",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_rip_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 0.505,
+            "source": "https://freesound.org/people/Johnny2810/sounds/507756/",
+            "author": "Johnny2810",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_rip_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.66,
+            "seconds": 1.006,
+            "source": "https://freesound.org/people/melle_teich/sounds/565970/",
+            "author": "melle_teich",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_rip_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 0.998,
+            "source": "https://freesound.org/people/MrFossy/sounds/590318/",
+            "author": "MrFossy",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/fabric_rip_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -2.23,
+            "seconds": 1.492,
+            "source": "https://freesound.org/people/mht23SD/sounds/707331/",
+            "author": "mht23SD",
             "license": "CC0"
           }
         ]
@@ -4654,62 +5378,6 @@
       }
     },
     {
-      "id": "smoke_grenade_hiss",
-      "category": "explosoes-fogo",
-      "layers": {
-        "close": [
-          {
-            "file": "explosoes-fogo/gas_leak_01.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.03,
-            "seconds": 6,
-            "source": "https://freesound.org/people/henrikcederblad/sounds/615668/",
-            "author": "henrikcederblad",
-            "license": "CC0"
-          },
-          {
-            "file": "explosoes-fogo/fire_extinguish_01.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -2.19,
-            "seconds": 2.59,
-            "source": "https://freesound.org/people/tranzfusion/sounds/642961/",
-            "author": "tranzfusion",
-            "license": "CC0"
-          }
-        ]
-      }
-    },
-    {
-      "id": "grenade_pin_pull",
-      "category": "explosoes-fogo",
-      "layers": {
-        "close": [
-          {
-            "file": "itens-portas/metal_latch_01.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -0.98,
-            "seconds": 0.261,
-            "source": "https://kenney.nl/assets/rpg-audio",
-            "author": "Kenney (kenney.nl)",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/metal_latch_02.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.09,
-            "seconds": 0.446,
-            "source": "https://kenney.nl/assets/rpg-audio",
-            "author": "Kenney (kenney.nl)",
-            "license": "CC0"
-          }
-        ]
-      }
-    },
-    {
       "id": "glass_blunt_heavy",
       "category": "impactos",
       "layers": {
@@ -5159,6 +5827,266 @@
             "source": "https://freesound.org/s/150839/",
             "author": "toxicwafflezz (\"Bullet_Impact_3\"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/gravel9.ogg`)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "grenade_load",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/grenade_load_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 0.562,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520047/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/grenade_load_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.06,
+            "seconds": 0.562,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520046/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/grenade_load_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 0.498,
+            "source": "https://freesound.org/people/CeebFrack/sounds/108793/",
+            "author": "CeebFrack",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/grenade_load_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 1.911,
+            "source": "https://freesound.org/people/barryshamir/sounds/834235/",
+            "author": "barryshamir",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "grenade_pin_pull",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "itens-portas/metal_latch_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.98,
+            "seconds": 0.261,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/metal_latch_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.09,
+            "seconds": 0.446,
+            "source": "https://kenney.nl/assets/rpg-audio",
+            "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horn_bike",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/horn_bike_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.04,
+            "seconds": 0.822,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378336/",
+            "author": "13FPanska_Mikova_Adela (Jawa motorbike horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.728,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378336/",
+            "author": "13FPanska_Mikova_Adela (Jawa motorbike horn, second honk cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.16,
+            "seconds": 0.53,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378351/",
+            "author": "13FPanska_Mikova_Adela (Simson moped horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.469,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378351/",
+            "author": "13FPanska_Mikova_Adela (Simson moped horn, second honk cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.885,
+            "source": "https://freesound.org/people/loganzsound/sounds/774253/",
+            "author": "loganzsound (motorbike horn, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horn_car",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/horn_car_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 1.3,
+            "source": "https://freesound.org/people/Iamgiorgio/sounds/371833/",
+            "author": "Iamgiorgio (cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 1.514,
+            "source": "https://freesound.org/people/danlucaz/sounds/517673/",
+            "author": "danlucaz (cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.386,
+            "source": "https://freesound.org/people/DuranBurrus/sounds/547667/",
+            "author": "DuranBurrus (cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.96,
+            "seconds": 0.49,
+            "source": "https://freesound.org/people/DeVern/sounds/349922/",
+            "author": "DeVern (one honk, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.22,
+            "seconds": 1.5,
+            "source": "https://freesound.org/people/marcelweiss/sounds/505322/",
+            "author": "marcelweiss (S63 AMG horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.1,
+            "seconds": 0.549,
+            "source": "https://freesound.org/people/AmishRob/sounds/423990/",
+            "author": "AmishRob (beep beep, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horn_truck",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/horn_truck_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 3,
+            "source": "https://freesound.org/people/kyles/sounds/637923/",
+            "author": "kyles (quick warning honk, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 1.383,
+            "source": "https://freesound.org/people/kyles/sounds/451697/",
+            "author": "kyles (school bus horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.23,
+            "seconds": 2.45,
+            "source": "https://freesound.org/people/SieuAmThanh/sounds/870205/",
+            "author": "SieuAmThanh",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 2.48,
+            "source": "https://freesound.org/people/trezz77/sounds/546528/",
+            "author": "trezz77",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.99,
+            "seconds": 1.873,
+            "source": "https://freesound.org/people/mcpable/sounds/131930/",
+            "author": "mcpable (industrial air horn, cut)",
+            "license": "CC0"
           }
         ]
       }
@@ -5894,6 +6822,84 @@
       }
     },
     {
+      "id": "launcher_40mm",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/launcher_40mm_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.03,
+            "seconds": 0.527,
+            "source": "https://freesound.org/people/qubodup/sounds/162402/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/launcher_40mm_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.1,
+            "seconds": 0.428,
+            "source": "https://freesound.org/people/LeMudCrab/sounds/163458/",
+            "author": "LeMudCrab",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/launcher_40mm_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.45,
+            "seconds": 0.254,
+            "source": "https://freesound.org/people/vabadus/sounds/151077/",
+            "author": "vabadus",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/launcher_40mm_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 0.441,
+            "source": "https://freesound.org/people/Puerta118m/sounds/471642/",
+            "author": "Puerta118m",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/launcher_40mm_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.46,
+            "seconds": 0.701,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520045/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/launcher_40mm_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.21,
+            "seconds": 0.701,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520044/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/launcher_40mm_07.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.701,
+            "source": "https://freesound.org/people/xFromarge1/sounds/520051/",
+            "author": "xFromarge1",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "lever_close_medium",
       "category": "armas",
       "layers": {
@@ -6010,6 +7016,54 @@
             "channels": 1,
             "peak": -1.14,
             "seconds": 0.624,
+            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
+            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
+            "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mag_drop_concreto",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/metal_fall_close_08.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.418,
+            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_fall_close_09.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.18,
+            "seconds": 0.427,
+            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_fall_close_10.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.1,
+            "seconds": 0.403,
+            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
+            "author": "rubberduck",
+            "license": "CC0"
+          },
+          {
+            "file": "itens-portas/item_drop_metal_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 0.669,
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
@@ -6477,6 +7531,74 @@
             "source": "https://freesound.org/s/423106/",
             "author": "OGsoundFX (\"Guns & Explosions Album - Bullet Impact 21.wav\"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone4.ogg`)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "metal_blade",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/metal_blade_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.25,
+            "seconds": 0.162,
+            "source": "https://freesound.org/people/qubodup/sounds/743259/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_blade_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.37,
+            "seconds": 0.162,
+            "source": "https://freesound.org/people/qubodup/sounds/743258/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_blade_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 0.783,
+            "source": "https://freesound.org/people/dslrguide/sounds/321485/",
+            "author": "dslrguide",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_blade_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.36,
+            "seconds": 1.17,
+            "source": "https://freesound.org/people/JohnBuhr/sounds/326868/",
+            "author": "JohnBuhr",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_blade_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.22,
+            "seconds": 0.514,
+            "source": "https://freesound.org/people/loudernoises/sounds/334169/",
+            "author": "loudernoises",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_blade_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.17,
+            "seconds": 1.633,
+            "source": "https://freesound.org/people/TheWandermiles/sounds/673329/",
+            "author": "TheWandermiles",
+            "license": "CC0"
           }
         ]
       }
@@ -7052,6 +8174,54 @@
             "seconds": 0.446,
             "source": "https://kenney.nl/assets/rpg-audio",
             "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "metal_ping",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/metal_ping_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.23,
+            "seconds": 0.413,
+            "source": "https://freesound.org/people/JarredGibb/sounds/217459/",
+            "author": "JarredGibb",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_ping_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.23,
+            "seconds": 0.252,
+            "source": "https://freesound.org/people/JarredGibb/sounds/217460/",
+            "author": "JarredGibb",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_ping_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 0.379,
+            "source": "https://freesound.org/people/JarredGibb/sounds/217461/",
+            "author": "JarredGibb",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/metal_ping_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.276,
+            "source": "https://freesound.org/people/JarredGibb/sounds/217462/",
+            "author": "JarredGibb",
             "license": "CC0"
           }
         ]
@@ -9288,6 +10458,178 @@
       }
     },
     {
+      "id": "rocket_launch",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/rocket_launch_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 2.75,
+            "source": "https://freesound.org/people/klangfabrik/sounds/249298/",
+            "author": "klangfabrik (RPG-7, first of three shots, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_launch_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.26,
+            "seconds": 3.25,
+            "source": "https://freesound.org/people/klangfabrik/sounds/249298/",
+            "author": "klangfabrik (RPG-7, second of three shots, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_launch_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 2.7,
+            "source": "https://freesound.org/people/klangfabrik/sounds/249298/",
+            "author": "klangfabrik (RPG-7, third of three shots, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_launch_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.64,
+            "seconds": 1.409,
+            "source": "https://freesound.org/people/Jarusca/sounds/521377/",
+            "author": "Jarusca",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_launch_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.45,
+            "seconds": 3.811,
+            "source": "https://freesound.org/people/qubodup/sounds/840511/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_launch_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.17,
+            "seconds": 3.2,
+            "source": "https://freesound.org/people/craigsmith/sounds/675581/",
+            "author": "craigsmith (bazooka shot, tail cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rocket_load",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/rocket_load_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.526,
+            "source": "https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725401/",
+            "author": "serøutōnin--deprivəd (RPG-7 rocket insertion, first click cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_load_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.18,
+            "seconds": 1.036,
+            "source": "https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725401/",
+            "author": "serøutōnin--deprivəd (RPG-7 rocket insertion, the slide in cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rocket_motor_loop",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "explosoes-fogo/rocket_motor_loop_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.16,
+            "seconds": 4.75,
+            "source": "https://freesound.org/people/qubodup/sounds/146770/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/rocket_motor_loop_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.31,
+            "seconds": 1.79,
+            "source": "https://freesound.org/people/Mozfoo/sounds/458377/",
+            "author": "Mozfoo",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/rocket_motor_loop_03.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.17,
+            "seconds": 7.592,
+            "source": "https://freesound.org/people/Maxx222/sounds/446764/",
+            "author": "Maxx222",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rocket_seat",
+      "category": "armas",
+      "layers": {
+        "close": [
+          {
+            "file": "armas/rocket_seat_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 0.9,
+            "source": "https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725401/",
+            "author": "serøutōnin--deprivəd (RPG-7 rocket insertion, seating clicks cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_seat_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 0.45,
+            "source": "https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725401/",
+            "author": "serøutōnin--deprivəd (RPG-7 rocket insertion, middle click cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "armas/rocket_seat_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.14,
+            "seconds": 0.741,
+            "source": "https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725401/",
+            "author": "serøutōnin--deprivəd (RPG-7 rocket insertion, final lock cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "rubble_falling",
       "category": "impactos",
       "layers": {
@@ -9808,6 +11150,34 @@
             "seconds": 0.194,
             "source": "https://opengameart.org/content/the-free-firearm-sound-library (U_4)",
             "author": "Ben Jaszczak (The Free Firearm Sound Library)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "smoke_grenade_hiss",
+      "category": "explosoes-fogo",
+      "layers": {
+        "close": [
+          {
+            "file": "explosoes-fogo/gas_leak_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.03,
+            "seconds": 6,
+            "source": "https://freesound.org/people/henrikcederblad/sounds/615668/",
+            "author": "henrikcederblad",
+            "license": "CC0"
+          },
+          {
+            "file": "explosoes-fogo/fire_extinguish_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -2.19,
+            "seconds": 2.59,
+            "source": "https://freesound.org/people/tranzfusion/sounds/642961/",
+            "author": "tranzfusion",
             "license": "CC0"
           }
         ]
@@ -10874,6 +12244,102 @@
       }
     },
     {
+      "id": "tire_roll_gravel_loop",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/tire_roll_gravel_loop_01.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.02,
+            "seconds": 9,
+            "source": "https://freesound.org/people/BenDrain/sounds/487827/",
+            "author": "BenDrain (car driving on gravel, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_roll_gravel_loop_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.07,
+            "seconds": 7.2,
+            "source": "https://freesound.org/people/BenDrain/sounds/487828/",
+            "author": "BenDrain (car driving on gravel, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_roll_gravel_loop_03.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.07,
+            "seconds": 11.5,
+            "source": "https://freesound.org/people/OBXJohn/sounds/251661/",
+            "author": "OBXJohn (tyres on a gravel road, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_roll_gravel_loop_04.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.06,
+            "seconds": 6.7,
+            "source": "https://freesound.org/people/seth-m/sounds/341069/",
+            "author": "seth-m (gravel road, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tire_skid_asphalt_loop",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 8,
+            "source": "https://freesound.org/people/audible-edge/sounds/71736/",
+            "author": "audible-edge (tyre squeal, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 8,
+            "source": "https://freesound.org/people/audible-edge/sounds/71737/",
+            "author": "audible-edge (tyre squeal, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 8,
+            "source": "https://freesound.org/people/audible-edge/sounds/71738/",
+            "author": "audible-edge (tyre squeal, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.09,
+            "seconds": 6.8,
+            "source": "https://freesound.org/people/martian/sounds/178889/",
+            "author": "martian (car skidding in a car park, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "toilet_flush",
       "category": "itens-portas",
       "layers": {
@@ -11412,6 +12878,64 @@
       }
     },
     {
+      "id": "wood_blade",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/wood_blade_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 0.17,
+            "source": "https://freesound.org/people/Evcy/sounds/583272/",
+            "author": "Evcy",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_blade_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 0.363,
+            "source": "https://freesound.org/people/birdswkaren/sounds/712103/",
+            "author": "birdswkaren",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_blade_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.08,
+            "seconds": 0.236,
+            "source": "https://freesound.org/people/MioMeg/sounds/707023/",
+            "author": "MioMeg",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_blade_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.98,
+            "seconds": 0.513,
+            "source": "https://freesound.org/people/egomassive/sounds/536736/",
+            "author": "egomassive",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_blade_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.98,
+            "seconds": 2.015,
+            "source": "https://freesound.org/people/Matislav/sounds/521452/",
+            "author": "Matislav",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "wood_blunt_heavy",
       "category": "impactos",
       "layers": {
@@ -11902,6 +13426,150 @@
       }
     },
     {
+      "id": "wood_splinter_heavy",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/wood_splinter_heavy_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 2.329,
+            "source": "https://freesound.org/people/utsuru/sounds/183450/",
+            "author": "utsuru",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_heavy_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 1.43,
+            "source": "https://freesound.org/people/DeltaCode/sounds/667652/",
+            "author": "DeltaCode",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_heavy_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 0.66,
+            "source": "https://freesound.org/people/DeltaCode/sounds/667653/",
+            "author": "DeltaCode",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_heavy_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.03,
+            "seconds": 1.135,
+            "source": "https://freesound.org/people/Veridiansunrise/sounds/177045/",
+            "author": "Veridiansunrise",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wood_splinter_light",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/wood_splinter_light_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.04,
+            "seconds": 0.162,
+            "source": "https://freesound.org/people/alegemaate/sounds/364699/",
+            "author": "alegemaate",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_light_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 0.384,
+            "source": "https://freesound.org/people/martian/sounds/251464/",
+            "author": "martian",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_light_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.17,
+            "seconds": 0.317,
+            "source": "https://freesound.org/people/qubodup/sounds/822567/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_light_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 1.001,
+            "source": "https://freesound.org/people/Glitchedtones/sounds/322416/",
+            "author": "Glitchedtones",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wood_splinter_medium",
+      "category": "impactos",
+      "layers": {
+        "close": [
+          {
+            "file": "impactos/wood_splinter_medium_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.24,
+            "seconds": 1.475,
+            "source": "https://freesound.org/people/utsuru/sounds/183451/",
+            "author": "utsuru",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_medium_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.31,
+            "seconds": 1.596,
+            "source": "https://freesound.org/people/utsuru/sounds/183453/",
+            "author": "utsuru",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_medium_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 1.38,
+            "source": "https://freesound.org/people/JappeHallunken/sounds/501302/",
+            "author": "JappeHallunken",
+            "license": "CC0"
+          },
+          {
+            "file": "impactos/wood_splinter_medium_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.14,
+            "seconds": 1.013,
+            "source": "https://freesound.org/people/CAT-FOX_ALEX/sounds/875588/",
+            "author": "CAT-FOX_ALEX",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "zombie_creature",
       "category": "personagem",
       "layers": {
@@ -12138,54 +13806,6 @@
             "channels": 1,
             "peak": -1.24,
             "seconds": 0.599,
-            "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
-            "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
-            "license": "CC-BY"
-          }
-        ]
-      }
-    },
-    {
-      "id": "mag_drop_concreto",
-      "category": "armas",
-      "layers": {
-        "close": [
-          {
-            "file": "impactos/metal_fall_close_08.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.05,
-            "seconds": 0.418,
-            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
-            "author": "rubberduck",
-            "license": "CC0"
-          },
-          {
-            "file": "impactos/metal_fall_close_09.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.18,
-            "seconds": 0.427,
-            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
-            "author": "rubberduck",
-            "license": "CC0"
-          },
-          {
-            "file": "impactos/metal_fall_close_10.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.1,
-            "seconds": 0.403,
-            "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
-            "author": "rubberduck",
-            "license": "CC0"
-          },
-          {
-            "file": "itens-portas/item_drop_metal_05.ogg",
-            "sampleRate": 48000,
-            "channels": 1,
-            "peak": -1.19,
-            "seconds": 0.669,
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"

@@ -1902,6 +1902,16 @@
         "source": "derived",
         "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
       },
+      "extras": {
+        "value": {
+          "armRange": [
+            14,
+            27
+          ]
+        },
+        "source": "reference",
+        "reason": "Espoleta M551 da granada M406: arma pelo giro entre 14 e 27 m da boca do cano; antes disso o impacto não detona (TM 9-1330-200; FM 3-22.31 cap. 1, M406 HE)."
+      },
       "tnt": {
         "value": 0.045,
         "source": "reference",
@@ -2295,6 +2305,16 @@
         "value": "fragmentation",
         "source": "derived",
         "reason": "Granada de fragmentação de 40 mm (a Galeria não tem a do GP-25)."
+      },
+      "extras": {
+        "value": {
+          "armRange": [
+            10,
+            40
+          ]
+        },
+        "source": "reference",
+        "reason": "Espoleta VMG-K da VOG-25: arma entre 10 e 40 m da boca do cano (manual do GP-25, NSD)."
       },
       "triggers": {
         "value": [

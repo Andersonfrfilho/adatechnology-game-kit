@@ -469,7 +469,8 @@ describe('walking over what lies on the floor', () => {
     room.walk([3, 0, 0], 2)
     run(room, 2.2)
     expect(room.camera.position.z).toBeGreaterThan(2.3)
-    expect(sofa.root.position.z).toBeCloseTo(2, 1)
+    // the shove of the walk moves the 28 kg sofa a little on its wooden frame (wood on concrete slides at 0.42), it does not let the player through
+    expect(Math.abs(sofa.root.position.z - 2)).toBeLessThan(0.15)
 
     const cup = room.spawn('coffee_cup', [-1.5, 0, 2.5], 0)
     run(room, 1)

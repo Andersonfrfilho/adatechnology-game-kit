@@ -67,6 +67,13 @@ describe('the recorded files of the firearms', () => {
     }
   })
 
+  it('give the launchers several takes of their own: the 40 mm thunk, the rocket leaving the tube, the break-open reload (the hinged barrels of the M79, and the breech of a rocket launcher) and the rocket loading', () => {
+    const takes = (id: string): number => armas.filter((sound) => sound.id.replace(/_(light|medium|heavy)$/, '') === id).reduce((sum, sound) => sum + (sound.layers.close?.length ?? 0), 0)
+    expect(takes('launcher_40mm')).toBeGreaterThanOrEqual(5)
+    expect(takes('rocket_launch')).toBeGreaterThanOrEqual(5)
+    for (const cue of ['barrels_open', 'barrels_close', 'breech_open', 'breech_close', 'grenade_load', 'rocket_load', 'rocket_seat']) expect(takes(cue), cue).toBeGreaterThanOrEqual(2)
+  })
+
   it('are CC0 or CC-BY, 48 kHz mono, peak near −1 dBFS, with their source', () => {
     for (const sound of armas) {
       for (const entry of Object.values(sound.layers).flat()) {
