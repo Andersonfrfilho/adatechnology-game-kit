@@ -6,7 +6,7 @@ import type { ItemModelBuilder } from './registry'
 /**
  * `MODELS["pe_cabra"]` of the Itens do Vale Cinzento showcase (`armas-itens__itens-vale-cinzento.js` L153), corrected to the shape of a real crowbar as the free photo shows it
  * (Wikimedia Commons, "Crowbar without haft.jpg"): the team's bar in the same units, its gooseneck bent tighter as on the real one, now a hexagonal steel bar instead of a round tube,
- * ending at the top in the gooseneck's flattened, forked claw and at the bottom in the flat chisel (the team's round stub). Painted red, the two working ends bare steel.
+ * ending at the top in the gooseneck's flattened, forked claw and at the bottom in the flat chisel (the team's round stub). Plain forged steel as in the photo, the two working ends ground brighter.
  * It draws in the units of the page; `data/models.json` gives the scale to metres of the item `crowbar` (75 cm).
  */
 
@@ -38,7 +38,7 @@ const shapesOf = (T: typeof THREE_NS, extrude: (points: ReadonlyArray<readonly [
 }
 
 export const crowbar: ItemModelBuilder = ({ T, mesh, bx, extrude, G, metal }) => {
-  const paint = metal(0x9b2a1f)
+  const forged = metal(0x767b7f)
   const steel = metal(0x8d9194)
   // the claw: two flattened prongs leaving the end of the gooseneck downwards, a V between them for a nail head
   const end = CURVE[CURVE.length - 1] as readonly [number, number, number]
@@ -47,5 +47,5 @@ export const crowbar: ItemModelBuilder = ({ T, mesh, bx, extrude, G, metal }) =>
   const along = (distance: number): [number, number, number] => [end[0] + Math.cos(angle) * distance, end[1] + Math.sin(angle) * distance, 0]
   const prongs = [-1, 1].map((side) => mesh(bx(0.1, 0.016, 0.022), steel, [...along(0.03)].map((value, index) => (index === 2 ? side * 0.014 : value)) as [number, number, number], [0, 0, angle]))
   const { bar, chisel } = shapesOf(T, extrude)
-  return G(mesh(bar, paint), mesh(chisel, steel), ...prongs)
+  return G(mesh(bar, forged), mesh(chisel, steel), ...prongs)
 }

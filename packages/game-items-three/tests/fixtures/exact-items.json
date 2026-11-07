@@ -301,30 +301,30 @@
   ]
  },
  "model/crowbar": {
-  "hash": "fc4ea796",
+  "hash": "3b08e0d6",
   "nodes": [
    "0 Group 6b784733",
    "0/0 Group 78e90ce9",
-   "0/0/0 Mesh bf510492",
+   "0/0/0 Mesh ee70c2ce",
    "0/0/1 Mesh 2b8f791b",
    "0/0/2 Mesh e34f7751",
    "0/0/3 Mesh d6cfa48d"
   ]
  },
  "model/crowbar:merged": {
-  "hash": "73cc8b5b",
+  "hash": "718dac7",
   "nodes": [
    "0 Group 6b784733",
-   "0/0 Mesh ae3cfed1",
+   "0/0 Mesh ced5f171",
    "0/1 Mesh eb948991"
   ]
  },
  "model/crowbar:lod": {
-  "hash": "c01ba046",
+  "hash": "c23d333a",
   "nodes": [
    "0 LOD 725a69ad",
    "0/0 Group 75ab8041",
-   "0/0/0 Mesh ff9182f8",
+   "0/0/0 Mesh f461c874",
    "0/0/1 Mesh 95ed3126",
    "0/1 Group c4f7070c",
    "0/1/0 Mesh 2f5dd312",
