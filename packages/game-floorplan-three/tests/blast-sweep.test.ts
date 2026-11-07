@@ -11,9 +11,9 @@ import { THREE, houseOf, planOf } from './helpers/houses'
  * A wall against charges and distances, read against the physics of the blast wave. Two scales of it: the peak side-on overpressure at the wall
  * (`sideOnOverpressure`, Kinney and Graham) says what the wave does to the face (under about 7 kPa nothing; from about 14 kPa plaster cracks and spalls,
  * Glasstone and Dolan table 5.139), and the scaled distance Z = R / W^(1/3) says whether a charge this close knocks the masonry out where it hits (a local
- * breach is a near-charge effect that scales with Z, about Z < 1 m/kg^(1/3) for a brick wall; past Z of 2 the short wave of a small charge cracks the face but
- * takes no brick out, since its impulse is far from what moves a panel). The long-wave thresholds of 35 kPa and over (a whole panel failing) are not reached
- * by charges of this size: they need the impulse of a big charge far away. The confined wall of the kit (pillars, bond beam, ground beam) fails where it is
+ * breach is a near-charge effect that scales with Z, about Z < 1 m/kg^(1/3) for a brick wall). Whether the infill between two pillars comes down as a panel is
+ * read on the reflected pressure and impulse over that panel (`PANEL_PI` of game-destruction): 4.8 kg of TNT 4 m off (Z 2.37) brings it down, a hand grenade a
+ * metre or more off only cracks it, and past Z 3.5 no brick comes out. The confined wall of the kit (pillars, bond beam, ground beam) fails where it is
  * hit, not as a whole: its pillars and bond beam stay unless they lose their supports.
  */
 const CHARGES = [
@@ -29,9 +29,11 @@ const RADIUS = 15
 /** Overpressure (Pa) under which nothing of the masonry moves, and over which the face shows the wave (plaster spalls and cracks). */
 const NO_MASONRY = 7_000
 const FACE_DAMAGE = 14_000
-/** Scaled distances (m/kg^(1/3)) under which a charge knocks the masonry out where it hits, and over which it takes no brick out. */
+/** Scaled distances (m/kg^(1/3)) under which a charge knocks the masonry out where it hits, and over which it takes no brick out (the infill stands, cracked). */
 const BREACH_Z = 1
-const NO_BREACH_Z = 2
+const NO_BREACH_Z = 3.5
+/** Scaled distance past which the wall as a whole (not one panel of its infill) never comes down. */
+const WALL_STANDS_Z = 2
 /** Scaled distance (m/kg^(1/3)) past which the frame (pillars, bond beam, ground beam) stands whole: 4.8 kg of TNT 4 m off (Z 2.37, 140 kPa) leaves every pillar up. */
 const FRAME_STANDS_Z = 2
 /** Closer than this scaled distance a charge may cut the member it is against, and only that one. */
@@ -96,8 +98,15 @@ describe('a confined brick wall against charges and distances, by the overpressu
         if (row.pressure < NO_MASONRY) expect(row.units, at).toBe(0)
         if (row.z < BREACH_Z) expect(row.units > 0, at).toBe(true)
         if (row.z > NO_BREACH_Z) expect(row.units, at).toBe(0)
-        // past a local breach the wall stands: a blast in the air does not reach the ground beam in the soil, nor bring a confined wall down
-        if (row.z > NO_BREACH_Z) expect(row.collapsed, at).toBe(false)
+        // a hand grenade a metre or more off only cracks the infill: its wave is too short to move a panel
+        if (row.charge === 'M67' && row.distance >= 1) expect(row.units, at).toBe(0)
+        // 4.8 kg of TNT 4 m off brings the infill between the pillars down; the frame around it stands
+        if (row.charge === 'TNT 4 MJ' && row.distance === 4) {
+          expect(row.units, at).toBeGreaterThan(100)
+          expect(row.structureLost, at).toEqual([])
+        }
+        // past a local breach the wall as a whole stands: a blast in the air does not reach the ground beam in the soil, nor bring a confined wall down
+        if (row.z > WALL_STANDS_Z) expect(row.collapsed, at).toBe(false)
         if (row.pressure > FACE_DAMAGE) expect(row.face > 0, at).toBe(true)
         // past a few metres a blast leaves the frame standing: the pillars and the bond beam on them stay, damaged where the wave takes their concrete
         if (row.z > FRAME_STANDS_Z) expect(row.structureLost, at).toEqual([])
