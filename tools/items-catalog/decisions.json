@@ -3485,23 +3485,23 @@
     },
     "crowbar": {
       "value": [
-        0.18786,
+        0.15985,
         0.75,
-        0.04828
+        0.03054
       ],
       "source": "model",
-      "reason": "Team model \"pe_cabra\": box 0.428 x 1.7087 x 0.11 (units of the page) times 0.43893, so the y axis is 0.75 m. A 30 inch crowbar.",
+      "reason": "Team model \"pe_cabra\", corrected to the photo \"Crowbar without haft.jpg\" (a 7/8 in hexagonal bar instead of the 49 mm round tube, the gooseneck bent about 130 degrees into a forked claw, the flat chisel): box 0.3559 x 1.6698 x 0.068 (units of the page) times 0.449156, so the y axis is 0.75 m. A 30 inch crowbar.",
       "material": "long",
       "modelScaleRef": {
         "teamId": "pe_cabra",
         "teamBox": [
-          0.428,
-          1.7087,
-          0.11
+          0.3559,
+          1.6698,
+          0.068
         ],
         "axis": "y",
         "meters": 0.75,
-        "scale": 0.43893
+        "scale": 0.449156
       }
     },
     "handsaw": {
