@@ -1,5 +1,12 @@
 # @adatechnology/game-contracts
 
+## 0.31.0
+
+### Minor Changes
+
+- 82f44ab: Uma cratera embaixo de uma casa tira o apoio da fundação: `GroundLoss` e o evento `subside` no contrato, `onGroundLoss` e `voidUnder` no terreno (cratera, laje que cede, areia que escorre), `world.groundLoss` na destruição (recalque com trinca da alvenaria pela distorção angular, baldrame que vence o vazio por flexão, peça que perde o apoio e cai pelo caminho de carga) e a sala ligando o terreno ao mundo.
+- 1dea1ac: Pushing furniture with what rests on it, and being shoved by a horde. The push now speeds up as a person does (`accel` in `FurniturePushRules`: the force left over the friction over the mass, at most 1.5 m/s², braking at 3 m/s²), so a cup on a pushed table rides along, and a sudden stop (the piece hits something, or the player lets go) throws what rests on it forward with the speed it had (`slipsOnTop`, `frictionFor`, `pushAccelerationFor`; each step reports `velocity`, `acceleration` and `stoppedFrom`). The agents of a crowd stop at the faces of the host's movable furniture (`crowd.setMovables`), lean their force on it with the arms out and the body forward (`numbers.shoveForce`, the look's `shoveLean`), and their forces add up (`crowd.shoves`); the host moves the piece at the speed that force gives it (`ModuleHost.movables` and `ModuleHost.shove`). The test room's table is pushable, carries what rests on its top and adds its mass to the push; a module's bodies shove what the player can push, a piece too heavy for one of them moves for three, and a shoved piece stops at the player. The crowd bench has a `furniture_shove` scene.
+
 ## 0.30.0
 
 ### Minor Changes

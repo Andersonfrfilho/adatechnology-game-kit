@@ -32,6 +32,13 @@ type SmokeSource = { readonly point: Vec3; left: number; owed: number; readonly 
 
 /** Radius of the blast a cone gives to each object inside it: the blast is the object's own, not the area around it. */
 const CONE_BLAST_RADIUS = 0.5
+/** Seconds a dud lies where it fell before the room takes it away. */
+export const DUD_LIE_SECONDS = 20
+/** Share of its speed a dud keeps, thrown back off what it hit, and the most m/s that is: the fuze did not fire, the body still stops there. */
+const DUD_REBOUND = 0.15
+const DUD_MAX_REBOUND = 2
+/** Metres a dud is put back out of the surface it hit, along the way it came, so it does not start inside it. */
+const DUD_BACKOFF = 0.03
 
 interface Projectile {
   mesh: THREE_NS.Object3D
@@ -58,6 +65,8 @@ interface Projectile {
   wire?: { from: Vec3; to: Vec3; letThrough: Set<string> }
   /** What shows where it was set down (marker and wire), taken away with it. */
   attached?: THREE_NS.Object3D[]
+  /** A dud: the round hit before it armed, so it no longer flies on its explosive; it falls off what it hit and lies there for these seconds, inert. */
+  inert?: number
 }
 
 /** What a blast did, summed over everything it reached: the share that got to the most sheltered target (0..1), the pressure multiplier, the fragment hits. */
@@ -468,9 +477,26 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       projectile.mesh.quaternion.setFromUnitVectors(projectile.axis ?? up, new THREE.Vector3(body.velocity[0], body.velocity[1], body.velocity[2]).normalize())
     } else if (!projectile.placed) projectile.mesh.rotation.x += dt * 8
     for (const event of events) {
-      if (event.type === 'dud') action('dud', translate('act.dud', { weapon: context.toolName(projectile.weapon), distance: format(body.travelled, 1) }), { data: { weapon: projectile.weapon, point: event.point } })
-      else if (event.type === 'detonate') detonate(projectile, event.detonation)
+      if (event.type === 'dud') {
+        action('dud', translate('act.dud', { weapon: context.toolName(projectile.weapon), distance: format(body.travelled, 1) }), { data: { weapon: projectile.weapon, point: event.point } })
+        lieInert(projectile, body, event.point)
+      } else if (event.type === 'detonate') detonate(projectile, event.detonation)
     }
+  }
+
+  /** A dud stays a round: it stops on what it hit, falls back off it and lies there, never to go off (`DUD_LIE_SECONDS`). */
+  const lieInert = (projectile: Projectile, body: ExplosiveBody, point: Vec3): void => {
+    const [vx, vy, vz] = body.velocity
+    const speed = Math.hypot(vx, vy, vz)
+    const back = speed > 1e-6 ? DUD_BACKOFF / speed : 0
+    projectile.pos.set(point[0] - vx * back, point[1] - vy * back, point[2] - vz * back)
+    const rebound = speed > 1e-6 ? Math.min(DUD_REBOUND * speed, DUD_MAX_REBOUND) / speed : 0
+    projectile.vel.set(-vx * rebound, -vy * rebound, -vz * rebound)
+    projectile.body = undefined
+    projectile.motor = false
+    projectile.inert = DUD_LIE_SECONDS
+    projectile.mesh.position.copy(projectile.pos)
+    projectile.mesh.userData.dud = true
   }
 
   /** Moves a bare projectile one step (gravity, bounce on the first surface or the ground); true when it bursts on impact. */
@@ -548,7 +574,14 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       if (projectile.body) {
         if (projectile.wire && !projectile.body.done) checkWire(projectile, projectile.body)
         stepBody(projectile, projectile.body, dt)
-        if (projectile.body.done || (!projectile.placed && projectile.age > 60)) remove(projectile)
+        if (projectile.body?.done || (projectile.body && !projectile.placed && projectile.age > 60)) remove(projectile)
+        continue
+      }
+      if (projectile.inert !== undefined) {
+        flyBare(projectile, dt)
+        projectile.mesh.position.copy(projectile.pos)
+        projectile.inert -= dt
+        if (projectile.inert <= 0) remove(projectile)
         continue
       }
       const isBurst = flyBare(projectile, dt)
