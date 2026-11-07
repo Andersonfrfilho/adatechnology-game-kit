@@ -301,33 +301,35 @@
   ]
  },
  "model/crowbar": {
-  "hash": "d0b5f84b",
+  "hash": "3b08e0d6",
   "nodes": [
-   "0 Group c10348d7",
-   "0/0 Group 82b658b3",
-   "0/0/0 Mesh 373e0e54",
-   "0/0/1 Mesh 4e895b2"
+   "0 Group 6b784733",
+   "0/0 Group 78e90ce9",
+   "0/0/0 Mesh ee70c2ce",
+   "0/0/1 Mesh 2b8f791b",
+   "0/0/2 Mesh e34f7751",
+   "0/0/3 Mesh d6cfa48d"
   ]
  },
  "model/crowbar:merged": {
-  "hash": "b706d667",
+  "hash": "718dac7",
   "nodes": [
-   "0 Group c10348d7",
-   "0/0 Mesh 61bab0e4",
-   "0/1 Mesh f8c8c13a"
+   "0 Group 6b784733",
+   "0/0 Mesh ced5f171",
+   "0/1 Mesh eb948991"
   ]
  },
  "model/crowbar:lod": {
-  "hash": "680235d6",
+  "hash": "c23d333a",
   "nodes": [
    "0 LOD 725a69ad",
-   "0/0 Group 793d216f",
-   "0/0/0 Mesh ec7bf3e7",
-   "0/0/1 Mesh de69466d",
+   "0/0 Group 75ab8041",
+   "0/0/0 Mesh f461c874",
+   "0/0/1 Mesh 95ed3126",
    "0/1 Group c4f7070c",
-   "0/1/0 Mesh d440f1fd",
-   "0/1/1 Mesh 9b3318e3",
-   "0/1/2 Mesh 60900dba",
+   "0/1/0 Mesh 2f5dd312",
+   "0/1/1 Mesh e69b1e64",
+   "0/1/2 Mesh 384d2184",
    "0/2 Group 55dd014c"
   ]
  },
