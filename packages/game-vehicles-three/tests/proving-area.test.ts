@@ -89,6 +89,30 @@ describe('proving ground area', () => {
     room.dispose()
   })
 
+  it('keeps the room its own view until its area opens: loading the module and picking a camera on the bench take nothing over', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const module = createProvingModule({ locale: 'en', createKit, vehicles: ['compact_hatch'], subject: (id, mass) => fleetProvingSubject(id, mass ? { mass } : {}) })
+    const views: Array<unknown | null> = []
+    const attach = module.attach!.bind(module)
+    // the host the room lends, with its main-view takeover recorded
+    module.attach = (lent) =>
+      attach(new Proxy(lent, { get: (target, key, receiver) => (key === 'setViewCamera' ? (camera: unknown | null) => (views.push(camera), target.setViewCamera?.(camera)) : Reflect.get(target, key, receiver)) }))
+    room.loadModule(module as never)
+    const bench = room.bench(PROVING_AREA_ID)!
+    bench.set('camera', 'cockpit')
+    room.update(1 / 30)
+    expect(views.filter((camera) => camera !== null)).toEqual([])
+    room.openArea(PROVING_AREA_ID)
+    room.update(1 / 30)
+    expect(views.at(-1)).not.toBeNull()
+    room.openArea('nothing_here')
+    room.update(1 / 30)
+    expect(views.at(-1)).toBeNull()
+    room.dispose()
+  })
+
   it('lends the room its vehicle camera while open, adds the mirrors as extra views, and lets everything go when another area opens', () => {
     const { room, bench } = setUp()
     room.openArea(PROVING_AREA_ID)

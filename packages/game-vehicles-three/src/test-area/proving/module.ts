@@ -374,7 +374,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
 
   // ---- cameras and mirrors --------------------------------------------------------------------------------------------------------------
   const applyCamera = (): void => {
-    if (!host?.setViewCamera) return
+    // closed, the room's view is the room's: the bench's first values (sent when the module loads) and a camera picked on the panel wait for area()
+    if (!host?.setViewCamera || !open) return
     host.setViewCamera(settings.camera === 'room' ? null : rig.camera)
     if (settings.camera !== 'room') rig.vehicle?.setMode(settings.camera as VehicleCameraMode)
   }
