@@ -4,7 +4,7 @@
 import { DISTANCE_CURVES, sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
 import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
 
-import { BLAST_SOUNDS, FIRE_FUEL_LOOPS, FIRE_LOOP, FIRE_SOUNDS, GRENADE_PIN_PULL, SMOKE_HISS_LOOP } from './blast-fire'
+import { BLAST_SOUNDS, FIRE_FUEL_LOOPS, FIRE_LOOP, FIRE_SOUNDS, GRENADE_PIN_PULL, ROCKET_MOTOR_LOOP, SMOKE_HISS_LOOP } from './blast-fire'
 
 const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars'], group?: string): SoundRecipe =>
   sceneRecipe(id, layers, line, { ...(vars ? { vars } : {}), ...(group ? { group } : {}) })
@@ -125,10 +125,12 @@ export const IMPACT_SOUNDS: readonly SoundRecipe[] = [
   impact('metal_bullet', [noise({ type: 'highpass', f: 3000, d: 0.03, vol: 0.8 }), tone({ f: [2600, 3400], f2: 1800, d: 0.14, vol: 0.28, wet: 0.35 }), tone({ f: [520, 720], f2: 480, d: 0.35, vol: 0.22, wet: 0.35 })]),
   impact('metal_blunt', [noise({ type: 'bandpass', f: 800, q: 1, d: 0.05, vol: 0.5 }), tone({ f: [150, 210], f2: 120, d: 0.6, vol: 0.5, wet: 0.4 }), tone({ f: [420, 520], f2: 400, d: 0.4, vol: 0.12 })]),
   impact('metal_blade', [noise({ type: 'bandpass', f: [3500, 4500], q: 6, a: 0.01, d: 0.18, vol: 0.45 }), tone({ f: [2200, 2800], f2: 3000, d: 0.15, vol: 0.06 })]),
+  impact('metal_ping', [noise({ type: 'highpass', f: 3500, d: 0.02, vol: 0.5 }), tone({ f: [2600, 3500], f2: 1400, d: 0.14, vol: 0.2, wet: 0.3 })]),
   impact('metal_thin', [noise({ type: 'highpass', f: 2500, d: 0.04, vol: 0.6 }), tone({ f: [900, 1300], f2: 700, d: 0.25, vol: 0.22, wet: 0.3 }), noise({ type: 'bandpass', f: 1200, q: 2, d: 0.08, vol: 0.3 })]),
   // wood (the bullet keeps the art scene's `wood_hit`)
   impact('wood_blunt', [tone({ f: [110, 150], f2: 70, d: 0.14, vol: 0.6 }), noise({ type: 'bandpass', f: 500, q: 1.2, d: 0.12, vol: 0.55, wet: 0.2 })]),
   impact('wood_blade', [noise({ type: 'bandpass', f: [1800, 2400], q: 2, a: 0.01, d: 0.12, vol: 0.5 }), ...many(3, () => noise({ type: 'bandpass', f: [2500, 4000], q: 3, d: 0.02, vol: 0.22, delay: [0.02, 0.1] }))]),
+  impact('wood_splinter', [noise({ type: 'highpass', f: 1800, d: 0.05, vol: 0.6 }), tone({ f: [380, 480], f2: 170, d: 0.08, vol: 0.3 }), ...many(4, () => noise({ type: 'bandpass', f: [2500, 4200], q: 3, d: 0.02, vol: 0.2, delay: [0.03, 0.25] }))]),
   impact('mdf_puff', [noise({ type: 'lowpass', f: 900, d: 0.08, vol: 1 }), tone({ f: [180, 230], f2: 110, d: 0.06, vol: 0.3 }), noise({ type: 'highpass', f: 3000, a: 0.01, d: 0.2, vol: 0.1 })]),
   // glass and ceramic
   impact('glass_bullet', [noise({ type: 'highpass', f: 4000, d: 0.05, vol: 0.7 }), tone({ f: [3200, 4200], f2: 2600, d: 0.2, vol: 0.14, wet: 0.3 }), ...many(4, () => tone({ f: [4000, 7000], d: 0.05, vol: 0.07, delay: [0.02, 0.2] }))]),
@@ -152,6 +154,7 @@ export const IMPACT_SOUNDS: readonly SoundRecipe[] = [
   impact('wax_hit', [noise({ type: 'lowpass', f: 800, d: 0.05, vol: 0.45 }), tone({ f: [240, 280], f2: 180, d: 0.05, vol: 0.22 })]),
   // soft things, paper, plants
   impact('soft_bullet', [noise({ type: 'lowpass', f: 450, a: 0.003, d: 0.1, vol: 1.8 }), noise({ type: 'bandpass', f: 900, q: 1, d: 0.05, vol: 0.5 })]),
+  impact('fabric_hit', [noise({ type: 'lowpass', f: 650, d: 0.14, vol: 0.5 }), tone({ f: [85, 115], f2: 50, d: 0.12, vol: 0.28 })]),
   impact('fabric_rip', [noise({ type: 'bandpass', f: [2000, 2800], q: 1.5, a: 0.02, d: 0.25, vol: 0.4 }), ...many(4, () => noise({ type: 'bandpass', f: [3000, 5000], q: 4, d: 0.02, vol: 0.14, delay: [0, 0.22] }))]),
   impact('paper_hit', [noise({ type: 'bandpass', f: 2200, q: 1, d: 0.05, vol: 0.45 })]),
   impact('paper_tear', [noise({ type: 'highpass', f: 2500, a: 0.02, d: 0.3, vol: 0.15 })]),
@@ -168,4 +171,4 @@ export const IMPACT_SOUNDS: readonly SoundRecipe[] = [
   impact('mdf_crumble', [noise({ type: 'lowpass', f: 700, d: 0.25, vol: 0.75, wet: 0.2 }), ...many(4, () => noise({ type: 'lowpass', f: 500, d: 0.05, vol: 0.32, delay: [0.05, 0.3] }))]),
 ]
 
-export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, ...IMPACT_SOUNDS, EXPLOSION_BOOM, ...BLAST_SOUNDS, ...FIRE_SOUNDS, GRENADE_PIN_PULL], loops: [BURN_LOOP, FIRE_LOOP, ...FIRE_FUEL_LOOPS, SMOKE_HISS_LOOP] }
+export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, ...IMPACT_SOUNDS, EXPLOSION_BOOM, ...BLAST_SOUNDS, ...FIRE_SOUNDS, GRENADE_PIN_PULL], loops: [BURN_LOOP, FIRE_LOOP, ...FIRE_FUEL_LOOPS, SMOKE_HISS_LOOP, ROCKET_MOTOR_LOOP] }

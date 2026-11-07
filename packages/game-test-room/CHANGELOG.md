@@ -1,5 +1,62 @@
 # @adatechnology/game-test-room
 
+## 0.31.0
+
+### Minor Changes
+
+- 89f1d9d: Sound occlusion: `createAudioEngine({ occlusion: { query } })` asks the host what lies between a sound and the ears (material and thickness, or a loss in dB), adds the transmission loss of the hits (`TRANSMISSION_LOSS`, a table of real values a game patches: 12 cm brick about 42 dB, concrete 48, drywall 33, wooden door 22, glass 27, open doorway 0, the mass law for other thicknesses) up to a configurable cap so a sound that gets around an edge never drops to silence, and plays each positioned voice through its own gain and lowpass (highs lose more). Voices are re-queried as the listener moves, at a limited rate and within a per-update budget, only while audible, and the gain and cutoff glide with `setTargetAtTime`. `occludedVoices()` reports the numbers. The old `(point) => 0..1` callback still works. The test room hands its engine a query that crosses its destruction world (`createWorldOcclusion`): the part's material, and its thickness from the way in and the way out.
+
+### Patch Changes
+
+- Updated dependencies [89f1d9d]
+  - @adatechnology/game-audio@0.11.0
+  - @adatechnology/game-destruction-three@0.19.1
+
+## 0.30.2
+
+### Patch Changes
+
+- Updated dependencies [baaa7d4]
+- Updated dependencies [694cad8]
+  - @adatechnology/game-audio@0.10.0
+  - @adatechnology/game-destruction-three@0.19.0
+  - @adatechnology/game-weapons@0.10.0
+
+## 0.30.1
+
+### Patch Changes
+
+- Updated dependencies [67edc92]
+  - @adatechnology/game-destruction@0.21.0
+  - @adatechnology/game-destruction-three@0.18.2
+
+## 0.30.0
+
+### Minor Changes
+
+- c4b8218: The photo of the real weapon is now a small thumbnail in the bottom-left corner of the weapons room, opening large (with author, licence and the Wikimedia link) on a click, instead of a big card on the bench panel. `ModuleHost.cornerImage` (contracts) and the room's corner image with lightbox (test-room) are generic; the weapons module shows the photo only with the new `referencePhotos` option (default off, so the general test room shows none). The showcase no longer sends a bench sheet.
+
+### Patch Changes
+
+- Updated dependencies [3d53e28]
+- Updated dependencies [c4b8218]
+- Updated dependencies [a6a6a8f]
+- Updated dependencies [49272b6]
+- Updated dependencies [5ce9f7b]
+- Updated dependencies [fa57abb]
+  - @adatechnology/game-terrain@0.6.0
+  - @adatechnology/game-contracts@0.30.0
+  - @adatechnology/game-destruction@0.20.0
+  - @adatechnology/game-audio@0.9.4
+  - @adatechnology/game-terrain-three@0.5.4
+  - @adatechnology/game-destruction-three@0.18.1
+  - @adatechnology/game-fluids@0.5.5
+  - @adatechnology/game-fluids-three@0.4.18
+  - @adatechnology/game-player@0.5.8
+  - @adatechnology/game-runtime@0.2.8
+  - @adatechnology/game-vfx-three@0.7.6
+  - @adatechnology/game-weapons@0.9.2
+
 ## 0.29.1
 
 ### Patch Changes

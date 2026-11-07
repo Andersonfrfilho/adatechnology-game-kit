@@ -1,5 +1,30 @@
 # @adatechnology/game-characters-three
 
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [89f1d9d]
+  - @adatechnology/game-audio@0.11.0
+
+## 0.11.3
+
+### Patch Changes
+
+- Updated dependencies [baaa7d4]
+  - @adatechnology/game-audio@0.10.0
+
+## 0.11.2
+
+### Patch Changes
+
+- 6ed8da2: A look down in first person no longer shows the shirt as a blue ring around the camera: the upper body is cut, for the first-person camera only, at a plane 6 cm behind the eyes (what a real head hides from its own eyes: the tops of the shoulders, the collar, the back). The chest, the belly and the legs still show; shadows, mirrors and the third person keep the whole body.
+- Updated dependencies [c4b8218]
+- Updated dependencies [5ce9f7b]
+  - @adatechnology/game-contracts@0.30.0
+  - @adatechnology/game-audio@0.9.4
+  - @adatechnology/game-characters@0.2.16
+
 ## 0.11.1
 
 ### Patch Changes

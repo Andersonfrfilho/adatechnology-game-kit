@@ -20,6 +20,7 @@ export const BLAST_FIRE_SAMPLES: Readonly<Record<string, BlastFireSampleDefaults
   explosion_big: blast(1),
   explosion_car: blast(1),
   explosion_flashbang: blast(1),
+  explosion_rocket: blast(1),
   molotov_break_ignite: blast(0.8),
   // the far takes are already muffled: no extra distance lowpass
   explosion_far: { bus: 'world', gain: 1, falloff: BLAST_FAR_FALLOFF, cutoffK: 0, priority: 2 },
@@ -36,6 +37,8 @@ export const BLAST_FIRE_SAMPLES: Readonly<Record<string, BlastFireSampleDefaults
   fire_loop_plastic: { bus: 'world', gain: 1, loop: { crossfade: 0.6 } },
   // a smoke canister venting: a gas hiss chained like the fire roar (the level comes from the room, by how near the burning canisters are)
   smoke_grenade_hiss: { bus: 'world', gain: 1, loop: { crossfade: 0.8 } },
+  // the motor of a rocket in flight, chained like the roar of a fire (the room sets the level by how near the rocket is)
+  rocket_motor_loop: { bus: 'world', gain: 1, loop: { crossfade: 0.5 } },
   // the ring and the spoon of a hand grenade: a small metal latch
   grenade_pin_pull: fire(0.5),
 }

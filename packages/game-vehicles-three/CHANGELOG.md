@@ -1,5 +1,42 @@
 # @adatechnology/game-vehicles-three
 
+## 0.8.6
+
+### Patch Changes
+
+- Updated dependencies [89f1d9d]
+  - @adatechnology/game-audio@0.11.0
+
+## 0.8.5
+
+### Patch Changes
+
+- Updated dependencies [baaa7d4]
+  - @adatechnology/game-audio@0.10.0
+
+## 0.8.4
+
+### Patch Changes
+
+- f3def9d: Correções da medição dos sons de veículo na sala:
+
+  - `slideOfGrip(uso)`: o `state.slip` do motorista semi é quanto da aderência o pneu usa, não quanto ele escorrega. A pista passava esse número direto e
+    a derrapagem tocava durante toda a aceleração (3 s de pneu cantando num hatch que não patina). Agora só canta perto do limite e escorrega de vez
+    saturado (roda patinando ou travada).
+  - `ProvingRun.input`: o que o procedimento do teste pede dos controles no último passo. A pista de testes tocava a frenagem de 100 a 0 com acelerador 1
+    e sem freio, então nem o chiado das pastilhas nem a derrapagem soavam; agora passa freio, acelerador, RPM e aderência do teste (e o freio do
+    cockpit, `Cockpit.brake`, ao dirigir).
+  - `sound-probe.mjs` grava `set` e `stop` sobre o próprio laço do motor de áudio, em vez de trocar por um objeto só com os dois métodos.
+
+- Updated dependencies [c4b8218]
+- Updated dependencies [5ce9f7b]
+- Updated dependencies [f3def9d]
+  - @adatechnology/game-contracts@0.30.0
+  - @adatechnology/game-audio@0.9.4
+  - @adatechnology/game-vehicles-proving@0.1.8
+  - @adatechnology/game-vehicles@0.6.8
+  - @adatechnology/game-vehicles-driving@0.2.17
+
 ## 0.8.3
 
 ### Patch Changes

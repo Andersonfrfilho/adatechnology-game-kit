@@ -12,7 +12,7 @@ describe('the module declares itself', () => {
       const declared = { controls: module.controls!(locale), layers: module.layers!(locale), metrics: module.metrics!(locale) }
       expect(checkBench(declared).problems).toEqual([])
       const items = module.items(locale)
-      expect(items.map((i) => i.id)).toEqual(['house_casa_portico', 'house_casa_inteira', 'house_casa_wood_frame', 'house_casa_tronco', 'house_barraca'])
+      expect(items.map((i) => i.id)).toEqual(['house_casa_portico', 'house_casa_inteira', 'house_casa_wood_frame', 'house_casa_tronco', 'house_barraca', 'furniture_dining_table', 'furniture_coffee_table', 'furniture_desk'])
       expect(module.area!(locale).placements).toEqual([])
       expect(module.scenarios!(locale).map((s) => s.id)).toEqual(['house_one_pillar', 'house_two_pillars', 'house_partition', 'house_window_glass', 'house_tank_leak', 'house_gas_explodes', 'floorplan_typologies'])
     }

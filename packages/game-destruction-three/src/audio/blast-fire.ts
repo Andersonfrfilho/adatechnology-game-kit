@@ -217,6 +217,17 @@ export const FIRE_LOOP: LoopRecipe = {
   sources: ['sdk: the roar under the crackles of a fire'],
 }
 
+/** A rocket in flight (RPG-7, AT4, M72): the motor's steady roar behind it, dull and wide; the fallback of the recorded loop of the same id. */
+export const ROCKET_MOTOR_LOOP: LoopRecipe = {
+  id: 'rocket_motor_loop',
+  bus: 'world',
+  order: 'chain_loop',
+  source: { kind: 'noise', loop: true },
+  filters: { mode: 'serial', bank: [{ type: 'highpass', frequency: { set: 250 }, q: 0.6 }, { type: 'lowpass', frequency: { set: 5200 }, q: 0.5 }] },
+  volume: 0,
+  sources: ['sdk: the motor of a rocket in flight (a wide hiss with a low body, steady until the warhead goes off)'],
+}
+
 /** A smoke canister burning (an M18 and the like): a steady hiss of gas through the vents, bright and without crackles; the fallback of the recorded loop of the same id. */
 export const SMOKE_HISS_LOOP: LoopRecipe = {
   id: 'smoke_grenade_hiss',

@@ -64,7 +64,7 @@ if (!playwright || !existsSync(page)) {
       const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === report.module)
       return { ok: report.ok, items: report.items, scenarios: report.scenarios, problems: report.problems, checks: checks.length, failedChecks: checks.filter((/** @type {{ type: string; }} */ e) => e.type !== 'pass').map((e) => e.text), houses: report.area.houses.length, parts: /** @type {NumericMetrics} */ (room.metrics().module).parts, bench: /** @type {RoomBench} */ (room.bench('floorplan_area')).controls().map((c) => c.id) }
     })
-    check(`[${lang}] contract report is clean: 5 specimens, 7 scenarios, every check passed`, loaded.ok && loaded.problems.length === 0 && loaded.items.length === 5 && loaded.scenarios.length === 7 && loaded.failedChecks.length === 0 && loaded.checks > 0, loaded)
+    check(`[${lang}] contract report is clean: 5 specimens and 3 tables, 7 scenarios, every check passed`, loaded.ok && loaded.problems.length === 0 && loaded.items.length === 8 && loaded.scenarios.length === 7 && loaded.failedChecks.length === 0 && loaded.checks > 0, loaded)
     check(`[${lang}] the first house stands in the room's world (one house, over 100 parts)`, loaded.houses === 1 && Number(loaded.parts) > 100, { houses: loaded.houses, parts: loaded.parts })
     // the houses are drawn with the interactables kit through the default adapter (game-floorplan-interactables), with no adapter injected by the page
     const kit = await tab.evaluate(() => {

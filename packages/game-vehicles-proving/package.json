@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vehicles-proving",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "license": "MIT",
   "description": "Vehicle proving ground without three.js: measured tests (0-100, top speed, braking, turning circle, wet braking, mud) run on the semi-simulation driver, ranges by class and design card, visual checks signed off by a person, a certificate per vehicle and the list of approved vehicles a game lets in. Land, water and air. Knows nothing about any game.",
   "keywords": [

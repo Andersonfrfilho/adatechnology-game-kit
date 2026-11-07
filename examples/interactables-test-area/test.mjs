@@ -219,7 +219,7 @@ for (const lang of languages) {
     const loaded = window.__furnitureReport.floorplan
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, scenarios: loaded?.scenarios?.length ?? 0 }
   })
-  check(`[${lang}] the floorplan module is loaded too (5 specimens, 7 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 5 && floorplan.scenarios === 7, floorplan)
+  check(`[${lang}] the floorplan module is loaded too (5 specimens and 3 tables, 7 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 8 && floorplan.scenarios === 7, floorplan)
   const effects = await page.evaluate(() => {
     const loaded = window.__furnitureReport.vfx
     const bench = /** @type {RoomBench} */ (window.__testRoom.bench('vfx'))

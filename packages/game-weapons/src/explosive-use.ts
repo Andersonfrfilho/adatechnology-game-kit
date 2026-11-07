@@ -14,8 +14,24 @@ const blastNumbers = (explosive: ExplosiveDef): Pick<Extract<Use, { kind: 'throw
   injuryRadius: explosive.injuryRadius,
 })
 
+/** The distance a launched projectile arms at: sampled from the fuze's `armRange` when it has one, else the launcher's `minArmDistance`. */
+export const sampleArmDistance = (action: LauncherAction, explosive: ExplosiveDef | null, random: () => number): number => {
+  const range = explosive?.armRange
+  if (!range) return action.minArmDistance
+  return range[0] + (range[1] - range[0]) * random()
+}
+
+export type LauncherUsesParams = {
+  readonly action: LauncherAction
+  readonly explosive: ExplosiveDef | null
+  readonly origin: Vec3
+  readonly direction: Vec3
+  /** Metres of flight before the fuze arms (default `action.minArmDistance`). */
+  readonly armDistance?: number
+}
+
 /** The rocket or grenade a launcher fires, plus the blast behind the tube when the launcher has one. */
-export const launcherUses = (action: LauncherAction, explosive: ExplosiveDef | null, origin: Vec3, direction: Vec3): Use[] => {
+export const launcherUses = ({ action, explosive, origin, direction, armDistance }: LauncherUsesParams): Use[] => {
   const velocity: Vec3 = [direction[0] * action.speed, direction[1] * action.speed, direction[2] * action.speed]
   const projectile: Use = {
     kind: 'throw',
@@ -26,7 +42,7 @@ export const launcherUses = (action: LauncherAction, explosive: ExplosiveDef | n
     origin,
     explosive: action.projectile,
     trigger: 'impact',
-    armDistance: action.minArmDistance,
+    armDistance: armDistance ?? action.minArmDistance,
     ...(explosive ? { injuryRadius: explosive.injuryRadius } : {}),
   }
   if (action.backblast <= 0) return [projectile]
