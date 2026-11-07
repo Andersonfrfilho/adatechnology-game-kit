@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
 import { mergeUserSfxManifests } from '../../packages/game-audio/scripts/sfx-merge.mjs'
+import { writeLocalIndex } from '../../site/local-index.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -228,4 +229,9 @@ if (existsSync(join(weaponSvg, 'manifest.json'))) {
 //    guard fails the build if dist holds any audio that is not one of the SDK's own files, so no deploy can carry a local file.
 const localAudio = join(root, 'tools/local-audio/local-audio.mjs')
 if (process.env.LOCAL_AUDIO !== '0' && existsSync(process.env.LOCAL_AUDIO_CONFIG ?? join(root, 'audio.local.json'))) execFileSync(process.execPath, [localAudio, 'link', join(here, 'dist')], { stdio: 'inherit' })
+
+// 7. dist/index.html: the site's landing page for a server of dist/ (the 4280), every other example's dist linked next to the room, so the
+//    root lists all the test rooms instead of a bare folder listing; the links are symlinks, which the guard below does not follow
+const index = writeLocalIndex({ root, dist: join(here, 'dist') })
+console.log(`dist/index.html: ${index.examples} examples, ${index.built} built`)
 execFileSync(process.execPath, [localAudio, 'guard', join(here, 'dist')], { stdio: 'inherit' })
