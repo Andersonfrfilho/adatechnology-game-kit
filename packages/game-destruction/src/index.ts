@@ -1,6 +1,7 @@
 export type * from './types'
 export { createDestruction, SHELTER_DEFAULTS, FRAGMENT_HIT_DEFAULTS, CONFINEMENT_DEFAULTS } from './world'
 export { explosivePart, FIRE_PRIME_C } from './chain'
+export { GROUND_LOSS_DEFAULTS, resolveGroundLoss, undercutAt } from './ground-loss'
 export type { ChainTrigger, ExplosivePartOptions, WorldExplosive } from './chain'
 export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity, fragility } from './materials'
 export { ASSEMBLIES, createAssemblies, defaultAssemblies, registerAssembly, getAssembly, assemblyPart, assemblyDepth } from './assemblies'

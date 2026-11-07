@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { EffectSink, HostEvent } from '@adatechnology/game-contracts'
+import type { EffectSink, GroundLoss, HostEvent } from '@adatechnology/game-contracts'
+import { createDestruction } from '@adatechnology/game-destruction'
 import { makeRoom } from './helpers'
 import type { TestRoom } from '../src'
 
@@ -109,6 +110,28 @@ describe('the floor', () => {
     const level = room.camera.position.y
     run(room, 0.1)
     expect(room.camera.position.y).toBeLessThanOrEqual(level)
+  })
+
+  it('tells the world the ground a crater took, and the world takes it from under what stands there at its next update', () => {
+    const world = createDestruction({ seed: 1 })
+    const losses: GroundLoss[] = []
+    const groundLoss = world.groundLoss.bind(world)
+    world.groundLoss = (loss) => {
+      losses.push(loss)
+      groundLoss(loss)
+    }
+    const pillar = world.add({
+      // hard enough that the blast leaves it standing: what takes it down is the ground
+      parts: [{ id: 'pillar', material: 'concrete', hp: 1e12, anchored: true, structure: { role: 'column' }, shape: { kind: 'box', size: [0.2, 2.5, 0.2] }, position: [0, 1.25, 0] }],
+    }, { id: 'pillar', position: [0.6, 0, -3] })
+    const room = makeRoom({ ground: { surface: 'dirt' }, world })
+    room.world.explode([0, 0.2, -3], 8_000_000, 8, 'test')
+    const crater = losses.find((loss) => loss.source === 'crater')
+    expect(crater).toBeDefined()
+    expect(Math.hypot(crater!.x, crater!.z + 3)).toBeLessThan(0.3)
+    expect(crater!.depth).toBeGreaterThan(0.5)
+    const events = world.update(0.1)
+    expect(events.some((event) => event.type === 'subside' && event.object === pillar)).toBe(true)
   })
 })
 
