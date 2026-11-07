@@ -218,6 +218,10 @@
     "tnt": 0.045,
     "destructionLevel": 2,
     "noise": 450,
+    "armRange": [
+      14,
+      27
+    ],
     "triggers": [
       "impact"
     ],

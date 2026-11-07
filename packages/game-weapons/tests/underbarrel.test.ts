@@ -83,7 +83,10 @@ describe('the M4 with an M203', () => {
     expect(result.status).toBe('ok')
     expect(result.shots).toEqual([])
     expect(result.uses).toHaveLength(1)
-    expect(result.uses[0]).toMatchObject({ kind: 'throw', explosive: 'm79_40mm', trigger: 'impact', armDistance: 10 })
+    expect(result.uses[0]).toMatchObject({ kind: 'throw', explosive: 'm79_40mm', trigger: 'impact' })
+    const armDistance = result.uses[0]?.kind === 'throw' ? (result.uses[0].armDistance ?? 0) : 0
+    expect(armDistance).toBeGreaterThanOrEqual(14)
+    expect(armDistance).toBeLessThanOrEqual(27)
     expect(state.ammo).toBe(rifleAmmo)
     expect(state.underbarrel?.ammo).toBe(0)
     state.update(1)
