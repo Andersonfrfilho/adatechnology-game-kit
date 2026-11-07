@@ -366,6 +366,16 @@ export interface HostGraphics {
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
  */
+/** A picture the host keeps small in a corner of the screen and opens large on a click (a photo of the real thing, with its author and licence). Texts are already translated. */
+export interface CornerImage {
+  readonly url: string
+  readonly alt: string
+  /** Author and licence, shown on hover and in the large view. */
+  readonly credit?: string
+  /** The page the picture comes from, linked in the large view. */
+  readonly page?: string
+}
+
 export interface ModuleHost {
   THREE: unknown
   scene: unknown
@@ -394,6 +404,8 @@ export interface ModuleHost {
    * they began, so a scenario does the same whatever ran before it. Returns the unsubscribe function. A host that never resets leaves it out.
    */
   onReset?(listener: () => void): () => void
+  /** Shows a picture small in a corner of the screen (opens large on a click), or takes it down with `null`. A host with no screen leaves it out. */
+  cornerImage?(image: CornerImage | null): void
   /** Write a line to the host's behaviour log; `type` is the kind of entry (default `module_note`), so a module can log what a filter looks for (`sound`). */
   log(text: string, data?: Record<string, unknown>, type?: string): void
   /**
