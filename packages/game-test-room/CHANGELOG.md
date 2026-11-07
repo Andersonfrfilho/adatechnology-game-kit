@@ -1,5 +1,40 @@
 # @adatechnology/game-test-room
 
+## 0.30.1
+
+### Patch Changes
+
+- Updated dependencies [67edc92]
+  - @adatechnology/game-destruction@0.21.0
+  - @adatechnology/game-destruction-three@0.18.2
+
+## 0.30.0
+
+### Minor Changes
+
+- c4b8218: The photo of the real weapon is now a small thumbnail in the bottom-left corner of the weapons room, opening large (with author, licence and the Wikimedia link) on a click, instead of a big card on the bench panel. `ModuleHost.cornerImage` (contracts) and the room's corner image with lightbox (test-room) are generic; the weapons module shows the photo only with the new `referencePhotos` option (default off, so the general test room shows none). The showcase no longer sends a bench sheet.
+
+### Patch Changes
+
+- Updated dependencies [3d53e28]
+- Updated dependencies [c4b8218]
+- Updated dependencies [a6a6a8f]
+- Updated dependencies [49272b6]
+- Updated dependencies [5ce9f7b]
+- Updated dependencies [fa57abb]
+  - @adatechnology/game-terrain@0.6.0
+  - @adatechnology/game-contracts@0.30.0
+  - @adatechnology/game-destruction@0.20.0
+  - @adatechnology/game-audio@0.9.4
+  - @adatechnology/game-terrain-three@0.5.4
+  - @adatechnology/game-destruction-three@0.18.1
+  - @adatechnology/game-fluids@0.5.5
+  - @adatechnology/game-fluids-three@0.4.18
+  - @adatechnology/game-player@0.5.8
+  - @adatechnology/game-runtime@0.2.8
+  - @adatechnology/game-vfx-three@0.7.6
+  - @adatechnology/game-weapons@0.9.2
+
 ## 0.29.1
 
 ### Patch Changes

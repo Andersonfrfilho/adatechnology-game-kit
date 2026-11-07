@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { sharedGeometry } from './geometry-cache'
 import type { ModelKit, Parent } from './kit'
 import type { RifleContext } from './rifle-context'
 import { profileSolid } from './wood-profile'
@@ -32,15 +33,18 @@ export function buildKalashnikovReceiver(context: RifleContext): void {
 /** A curved band (a ring sector) between two radii about `centre`, from `start` to `end` (radians), extruded `depth` across the weapon and centred on z. */
 const arcBand = (kit: ModelKit, parent: Parent, centre: readonly [number, number], radii: readonly [number, number], angles: readonly [number, number], depth: number, material: THREE_NS.Material): THREE_NS.Mesh => {
   const { THREE } = kit
-  const [inner, outer] = radii
-  const [start, end] = angles
-  const shape = new THREE.Shape()
-  shape.absarc(centre[0], centre[1], outer, start, end, false)
-  shape.absarc(centre[0], centre[1], inner, end, start, true)
-  shape.closePath()
-  const bevel = Math.min(0.0012, depth / 6)
-  const geometry = new THREE.ExtrudeGeometry(shape, { depth: depth - bevel * 2, curveSegments: 24, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 1 })
-  geometry.translate(0, 0, -(depth - bevel * 2) / 2)
+  const geometry = sharedGeometry(kit, `arc:${JSON.stringify([centre, radii, angles, depth])}`, () => {
+    const [inner, outer] = radii
+    const [start, end] = angles
+    const shape = new THREE.Shape()
+    shape.absarc(centre[0], centre[1], outer, start, end, false)
+    shape.absarc(centre[0], centre[1], inner, end, start, true)
+    shape.closePath()
+    const bevel = Math.min(0.0012, depth / 6)
+    const extruded = new THREE.ExtrudeGeometry(shape, { depth: depth - bevel * 2, curveSegments: 24, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 1 })
+    extruded.translate(0, 0, -(depth - bevel * 2) / 2)
+    return extruded
+  })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.castShadow = true
   mesh.receiveShadow = true
