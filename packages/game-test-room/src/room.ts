@@ -149,6 +149,8 @@ const BODY_HEIGHT = 1.75
 /** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
 const KICK_MASS = 6
 const KICK_HEIGHT = 0.6
+/** Restitution of a shoe's sole on what it kicks (rubber on a can, a bottle, a book: about 0.5): a still thing leaves at up to 1.5 times the speed of the walk. */
+const KICK_RESTITUTION = 0.5
 /** Object id of the floor in the destruction world. */
 const GROUND_ID = 'room_ground'
 const TERRAIN_CELL = 0.1
@@ -693,13 +695,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     return { floor, blocked }
   }
-  /** Light pieces at the player's feet (books, boards) are kicked along: away from the player at a little more than the walking speed. */
+  /**
+   * Light pieces at the player's feet (a can, a bottle, books, boards) are kicked along. The foot meets one as two bodies colliding, the player's mass against its own along the
+   * line from the player to it: an impulse (1 + e) m M / (m + M) times the speed they close in at (`KICK_RESTITUTION`), so a can leaves at about 1.5 times the walk and rolls on,
+   * a 5 kg box at about 1.4 times; what is already moving away faster is left alone. It does not stop the walk.
+   */
   const kickFrom = { x: 0, z: 0 }
+  const kickCentre = new THREE.Vector3()
   const kickLight = (dt: number): void => {
     const x = player.x
     const z = player.z
     // walked by the keys or by a scripted walk: the distance since the last frame
-    const speed = dt > 0 ? Math.hypot(x - kickFrom.x, z - kickFrom.z) / dt : 0
+    const vx = dt > 0 ? (x - kickFrom.x) / dt : 0
+    const vz = dt > 0 ? (z - kickFrom.z) / dt : 0
+    const speed = Math.hypot(vx, vz)
     kickFrom.x = x
     kickFrom.z = z
     if (speed < 0.2 || speed > 20) return
@@ -712,14 +721,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const cx = (s.min[0] + s.max[0]) / 2 - x
       const cz = (s.min[2] + s.max[2]) / 2 - z
       const d = Math.hypot(cx, cz) || 1
-      const v = speed * 1.2
       if (!pc) {
+        const v = speed * 1.2
         s.loose?.push((cx / d) * v, (cz / d) * v)
         continue
       }
-      if (pc.velocity[0] * cx + pc.velocity[2] * cz >= v * d) continue
-      pc.velocity = [(cx / d) * v, Math.max(pc.velocity[1], 0.6), (cz / d) * v]
-      pc.sleeping = false
+      // from the player to its centre of mass (the box found may be one of its meshes: a can's lid), and through it: the foot is as wide as the thing and meets it square
+      const centre = kickCentre.set(pc.localCenter[0], pc.localCenter[1], pc.localCenter[2]).applyQuaternion(pc.root.quaternion).add(pc.root.position)
+      const mx = centre.x - x
+      const mz = centre.z - z
+      const md = Math.hypot(mx, mz) || 1
+      const nx = mx / md
+      const nz = mz / md
+      const closing = vx * nx + vz * nz - (pc.velocity[0] * nx + pc.velocity[2] * nz)
+      if (closing <= 0) continue
+      const impulse = ((1 + KICK_RESTITUTION) * pc.mass * playerMass * closing) / (pc.mass + playerMass)
+      renderer.impulse(pc.objectId, [nx * impulse, 0, nz * impulse])
+      const entry = entries.get(pc.objectId)
+      if (entry) log.coalesce(`kick:${pc.objectId}`, { channel: 'action', type: 'kick', text: t('act.kick', { name: entry.name, speed: num(impulse / pc.mass, 1) }), objectId: pc.objectId, itemId: entry.so.itemId, data: { massKg: Math.round(pc.mass * 100) / 100, impulseNs: Math.round(impulse * 1000) / 1000 } }, 1)
     }
   }
   const player = createPlayer(THREE, {
@@ -1247,6 +1266,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!piece) continue
       const b = inTheWay(e, ax, az, PLAYER_RADIUS)
       if (!b) continue
+      // a light thing the feet step over (a can, a bottle) is not leaned on: the walk reaches it and kicks it (`kickLight`)
+      if (piece.mass < KICK_MASS && b.top - b.base < STEP_OVER) continue
       const grip = FLOOR_FRICTION * piece.mass * 9.81
       if (force <= grip) continue
       const along = piece.velocity[0] * dx + piece.velocity[2] * dz

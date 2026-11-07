@@ -16,6 +16,7 @@ export type {
   Object3D,
   Piece,
   LooseBody,
+  MakePieceOptions,
   SolidBox,
   Quality,
   Quat,
