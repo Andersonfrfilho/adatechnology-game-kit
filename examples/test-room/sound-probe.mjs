@@ -87,8 +87,9 @@ await page.evaluate(() => {
     // the engine's own handle underneath, with its set and stop recorded: a new object with only those two loses what the handle carries,
     // and the runs then recorded no loops and the lane never came to its end. A child of the handle, so a handle the engine shares (the
     // silent one of an unknown id) is not changed for the others
+    /** @type {typeof handle} */
     const recorded = Object.create(handle)
-    recorded.set = (state) => {
+    recorded.set = (/** @type {Parameters<typeof handle.set>[0]} */ state) => {
       calls.push({ type: 'set', id, ...state, wall: performance.now(), ctx: ctxTime() })
       return handle.set(state)
     }
