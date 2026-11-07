@@ -504,7 +504,12 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     groups: () => groups,
     items: (): TestableItem[] => [
       ...(engine ? specimens.map(specimenItem) : []),
-      ...furnitureItems({ types: options.furniture ?? DEFAULT_AREA_FURNITURE, ...(options.furnitureCatalog ? { catalog: options.furnitureCatalog } : {}), nameOf: (type) => text.furniture[type] ?? type }),
+      ...furnitureItems({
+        types: options.furniture ?? DEFAULT_AREA_FURNITURE,
+        ...(options.furnitureCatalog ? { catalog: options.furnitureCatalog } : {}),
+        ...(options.house?.document ? { document: options.house.document } : {}),
+        nameOf: (type) => text.furniture[type] ?? type,
+      }),
     ],
     // the houses are built by the bench; the specimens of the scenarios are spawned by them (or by hand, from the catalogue): nothing is laid here but the camera
     area: (): ModuleArea => ({ placements: [], view: { eye: [0, 7, Math.min(arenaSize - 0.7, 16)], target: [0, 1.5, 0] } }),
