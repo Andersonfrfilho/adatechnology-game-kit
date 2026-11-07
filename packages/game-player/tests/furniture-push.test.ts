@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { canPush, createFurniturePush, gripSecondsFor, pushSpeedFor } from '../src'
+import { FURNITURE_PUSH_DEFAULTS, canPush, createFurniturePush, dragMarkFor, frictionFor, gripSecondsFor, pushAccelerationFor, pushSpeedFor, slipsOnTop } from '../src'
 
 const FREE = { walk: [0, -1], isFree: () => true } as const
 
@@ -42,8 +42,34 @@ describe('furniture push', () => {
     expect(push.progress).toBeCloseTo(0.3 / gripSecondsFor(12))
     expect(push.update(0.4, FREE).engaged).toBe(true)
     expect(push.phase).toBe('push')
-    const step = push.update(0.1, FREE)
-    expect(step.dz).toBeCloseTo(-pushSpeedFor({ massKg: 12 }) * 0.1)
+    // it speeds up first, then walks at the speed of the load
+    expect(push.update(0.1, FREE).dz).toBeCloseTo(-pushAccelerationFor({ massKg: 12 }) * 0.1 * 0.1)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    expect(push.update(0.1, FREE).dz).toBeCloseTo(-pushSpeedFor({ massKg: 12 }) * 0.1)
+  })
+
+  it('speeds up no faster than a person, slower with a heavy piece, and brakes harder than it speeds up', () => {
+    expect(pushAccelerationFor({ massKg: 12 })).toBe(1.5)
+    const heavy = pushAccelerationFor({ massKg: 100, material: 'wood_hard' })
+    expect(heavy).toBeCloseTo((500 - 0.4 * 100 * 9.81) / 100)
+    expect(heavy).toBeLessThan(1.5)
+    const push = engaged(12)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    const stop = push.update(0.1, { walk: [0, 0], isFree: () => true })
+    expect(stop.acceleration).toBeCloseTo(3)
+    expect(stop.velocity[1]).toBeCloseTo(-pushSpeedFor({ massKg: 12 }) + 0.3)
+  })
+
+  it('what rests on top rides while the push speeds up, and slides when the piece stops at once', () => {
+    const cup = frictionFor('ceramic')
+    expect(slipsOnTop(pushAccelerationFor({ massKg: 12 }), cup)).toBe(false)
+    expect(slipsOnTop(3, frictionFor('glass'))).toBe(true)
+    const push = engaged(12)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    const hit = push.update(0.1, { walk: [0, -1], isFree: () => false })
+    expect(hit.hitObstacle).toBe(true)
+    expect(hit.stoppedFrom?.[1]).toBeCloseTo(-pushSpeedFor({ massKg: 12 }))
+    expect(slipsOnTop(hit.acceleration, cup)).toBe(true)
   })
 
   it('too heavy: the timer fills and it strains without a step', () => {
@@ -57,7 +83,7 @@ describe('furniture push', () => {
   it('locks at an obstacle, says so once, and frees when the way is clear', () => {
     const push = engaged(30)
     const blocked = { walk: [0, -1], isFree: () => false } as const
-    expect(push.update(0.1, blocked)).toEqual({ dx: 0, dz: 0, engaged: false, hitObstacle: true })
+    expect(push.update(0.1, blocked)).toMatchObject({ dx: 0, dz: 0, engaged: false, hitObstacle: true })
     expect(push.update(0.1, blocked).hitObstacle).toBe(false)
     expect(push.phase).toBe('strain')
     expect(push.block).toBe('obstacle')
@@ -65,6 +91,34 @@ describe('furniture push', () => {
     push.update(0.05, { walk: [0, 1], isFree: () => true })
     expect(push.phase).toBe('push')
     expect(push.block).toBe(null)
+  })
+
+  it('a row of pieces pushed one against the next adds up its frictions and its masses', () => {
+    const sofa = { massKg: 45, material: 'fabric' }
+    const chair = { massKg: 8, material: 'wood_hard' }
+    expect(canPush([sofa, chair])).toBe(true)
+    expect(pushSpeedFor([sofa, chair])).toBeLessThan(pushSpeedFor(sofa))
+    expect(pushAccelerationFor([sofa, chair])).toBeLessThanOrEqual(pushAccelerationFor(sofa))
+    // the sofa alone goes; against the 400 kg grill the row is too heavy and locks
+    expect(canPush([sofa, { massKg: 400, material: 'steel' }])).toBe(false)
+  })
+
+  it('a load that grows while pushing slows the push', () => {
+    const push = engaged(20)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    const alone = -push.update(0.1, FREE).dz
+    push.setLoad([{ massKg: 20 }, { massKg: 60 }])
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    expect(-push.update(0.1, FREE).dz).toBeLessThan(alone)
+  })
+
+  it('dragging scratches wood and tile, scuffs concrete, and leaves carpet and grass clean', () => {
+    expect(dragMarkFor('wood')).not.toBeNull()
+    expect(dragMarkFor('tile')).not.toBeNull()
+    expect(dragMarkFor('concrete')).not.toBeNull()
+    expect(dragMarkFor('carpet')).toBeNull()
+    expect(dragMarkFor('grass')).toBeNull()
+    expect(dragMarkFor('wood', { ...FURNITURE_PUSH_DEFAULTS, dragMarks: {} })).toBeNull()
   })
 
   it('takes the numbers of the game', () => {

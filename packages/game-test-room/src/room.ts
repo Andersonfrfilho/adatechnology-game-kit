@@ -11,7 +11,7 @@ import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, s
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
-import { FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
+import { dragMarkFor, FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
@@ -23,7 +23,7 @@ import { createFramePacer, createGeometryPool, createLightBudget, createMaterial
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
@@ -47,7 +47,9 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
-import type { RoomPushTarget } from './furniture-push'
+import type { RoomPushRider, RoomPushTarget } from './furniture-push'
+import type { CarryDrag } from './furniture-carry'
+import { createRoomShove } from './furniture-shove'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
@@ -802,6 +804,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** How far from straight ahead (cosine) something can be and still be what the player leans on. */
   const PUSH_AHEAD = 0.6
+  /** How far the base of a loose thing may be from the top of a pushed piece and still rest on it, metres. */
+  const RIDER_GAP = 0.06
+  /** A pushable piece whose base is higher than this stands on something: a module's bodies do not shove it. */
+  const MOVABLE_MAX_BASE = 0.12
+  /** How far in from the side of a base its feet (or its edge) scrape the floor, metres. */
+  const FOOT_INSET = 0.06
   const heaviestMaterial = (id: string): string | undefined => {
     let best: { mass: number; material: string } | undefined
     for (const p of world.state(id)?.parts ?? []) if (p.status !== 'broken' && (!best || p.mass > best.mass)) best = { mass: p.mass, material: p.material }
@@ -826,6 +834,61 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     return best ? { objectId: best.so.objectId, root: best.so.root, name: nameOf(best.so.objectId), piece: best.piece ?? null } : null
   }
+  /** The loose things whose base lies on the top of `box` (a cup on a table), not themselves pushable: they ride on the piece pushed. */
+  const ridersOn = (objectId: string, box: { readonly min: Vec3; readonly max: Vec3 }): RoomPushRider[] => {
+    const found: RoomPushRider[] = []
+    for (const e of entries.values()) {
+      const id = e.so.objectId
+      if (id === objectId || e.pushable || !e.so.root.parent) continue
+      // measured afresh: a body asleep keeps the box it had, and one carried on a pushed piece moved without waking
+      bodyBoxes.delete(id)
+      const b = bodyBox(e)
+      if (!b || Math.abs(b.base - box.max[1]) > RIDER_GAP) continue
+      const x = (b.minX + b.maxX) / 2
+      const z = (b.minZ + b.maxZ) / 2
+      if (x < box.min[0] || x > box.max[0] || z < box.min[2] || z > box.max[2]) continue
+      found.push({ objectId: id, root: e.so.root, piece: rendererPieces.get(id) ?? null, massKg: massOfObject(id), material: heaviestMaterial(id) })
+    }
+    return found
+  }
+  const makePushPiece = (objectId: string): Piece => {
+    const piece = renderer.makePiece(objectId, { mass: Math.max(0.2, massOfObject(objectId)) })
+    const e = entries.get(objectId)
+    if (e) e.piece = piece
+    rendererPieces.set(objectId, piece)
+    leaveFootprint(objectId)
+    return piece
+  }
+  const pushDragSound = (objectId: string, point: Vec3, volume: number): void => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume)
+  const pushRules = { ...FURNITURE_PUSH_DEFAULTS, ...options.push }
+  /** A liquid spilled on the top of a pushed piece goes with it (the table's top is a surface of the fluids by the table's id). */
+  const pushMoved = (objectId: string, dx: number, dz: number): void => fluids.moveSurface(objectId, [dx, 0, dz])
+  /** Dragging scratches the floor under the two sides of the base, as the floor's material marks (game-player `dragMarks`): a stretch at a time, kept by the effects' marks. */
+  const pushDragged = (_objectId: string, drag: CarryDrag): void => {
+    const cx = (drag.min[0] + drag.max[0]) / 2
+    const cz = (drag.min[2] + drag.max[2]) / 2
+    const mark = dragMarkFor(surfaceOfMaterial(terrain.columnAt(cx, cz).material), pushRules)
+    if (!mark) return
+    const nx = -drag.uz
+    const nz = drag.ux
+    const across = Math.max(0, Math.abs(nx) * (drag.max[0] - drag.min[0]) / 2 + Math.abs(nz) * (drag.max[2] - drag.min[2]) / 2 - FOOT_INSET)
+    for (const side of [-1, 1]) {
+      vfx.world.scrape({
+        x: cx - drag.ux * drag.length / 2 + nx * across * side,
+        y: terrain.heightAt(cx, cz),
+        z: cz - drag.uz * drag.length / 2 + nz * across * side,
+        length: drag.length,
+        width: mark.width,
+        rotation: Math.atan2(drag.uz, drag.ux),
+        color: mark.color,
+      })
+    }
+  }
+  const pushHitSound = (objectId: string, point: Vec3): void => {
+    const material = heaviestMaterial(objectId) ?? ''
+    const def = world.materials.get(material)
+    playSound(impactKey(def), point, 0.5, impactSoundKeys(material, def, 'blunt'))
+  }
   const push = createRoomPush({
     THREE,
     player,
@@ -844,19 +907,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     massOf: (objectId) => massOfObject(objectId),
     materialOf: heaviestMaterial,
-    makePiece: (objectId) => {
-      const piece = renderer.makePiece(objectId, { mass: Math.max(0.2, massOfObject(objectId)) })
+    riders: (objectId, box) => ridersOn(objectId, box),
+    makePiece: makePushPiece,
+    dragSound: pushDragSound,
+    moved: pushMoved,
+    dragged: pushDragged,
+    hitSound: pushHitSound,
+    chainOf: (objectId) => {
       const e = entries.get(objectId)
-      if (e) e.piece = piece
-      rendererPieces.set(objectId, piece)
-      leaveFootprint(objectId)
-      return piece
-    },
-    dragSound: (objectId, point, volume) => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume),
-    hitSound: (objectId, point) => {
-      const material = heaviestMaterial(objectId) ?? ''
-      const def = world.materials.get(material)
-      playSound(impactKey(def), point, 0.5, impactSoundKeys(material, def, 'blunt'))
+      if (!e || (!e.piece && !e.free) || !e.so.root.parent) return null
+      const b = bodyBox(e)
+      return b && b.base <= MOVABLE_MAX_BASE ? { objectId, root: e.so.root, name: nameOf(objectId), piece: e.piece ?? null } : null
     },
     onEvent: (ev) => {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
@@ -868,6 +929,46 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     ring: (value) => ui?.holdRing(value),
     hasBody: () => !!avatar?.eye,
+  })
+  /** What stands on the floor and may be pushed, as a module's bodies see it (`ModuleHost.movables`). */
+  const movableEntries = (): HostMovable[] => {
+    const list: HostMovable[] = []
+    for (const e of entries.values()) {
+      if (!e.pushable || (!e.piece && !e.free)) continue
+      const b = bodyBox(e)
+      if (b && b.base <= MOVABLE_MAX_BASE) list.push({ objectId: e.so.objectId, minX: b.minX, minZ: b.minZ, maxX: b.maxX, maxZ: b.maxZ, top: b.top })
+    }
+    return list
+  }
+  const shoves = createRoomShove({
+    THREE,
+    world,
+    arena: { limit: arenaSize, colliders: standingColliders },
+    blockers,
+    rules: pushRules,
+    massOf: (objectId) => massOfObject(objectId),
+    materialOf: heaviestMaterial,
+    riders: (objectId, box) => ridersOn(objectId, box),
+    makePiece: makePushPiece,
+    dragSound: pushDragSound,
+    moved: pushMoved,
+    dragged: pushDragged,
+    hitSound: pushHitSound,
+    targetOf: (objectId) => {
+      const e = entries.get(objectId)
+      if (!e?.pushable || (!e.piece && !e.free)) return null
+      return { objectId, root: e.so.root, name: nameOf(objectId), piece: e.piece ?? null }
+    },
+    isPushedByPlayer: (objectId) => push.state?.objectId === objectId,
+    hitsPlayer: (min, max) => {
+      const x = Math.max(min[0], Math.min(max[0], player.x)) - player.x
+      const z = Math.max(min[2], Math.min(max[2], player.z)) - player.z
+      return Math.hypot(x, z) < PLAYER_RADIUS
+    },
+    onEvent: (ev) => {
+      const vars = { name: ev.name, kg: num(ev.massKg, 0), n: ev.pushers }
+      action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10, pushers: ev.pushers } })
+    },
   })
   const seatHolder = (objectId: string): SeatHolder | null => {
     const e = entries.get(objectId)
@@ -1093,6 +1194,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (own) world.register(own, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
     else world.add(spec, { id: objectId, position, rotation: [q.x, q.y, q.z, q.w] })
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, true, false)
+    // a piece of furniture a module lays as scenery (the crowd bench's sofa) still stands free on the floor and is pushed, like the room's own shelf
+    if (item.pushable && !own) {
+      e.free = true
+      e.pushable = true
+    }
     fire('spawn', e.so)
     return e
   }
@@ -1255,7 +1361,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const pushByPlayer = (dt: number): void => {
     const [wx, wz] = player.takeWish()
     const len = Math.hypot(wx, wz)
-    if (dt <= 0 || len < 1e-6) return
+    // leaning on a piece, the steps are the push's own (`moveBy`): the body does not also bump what rides on the piece
+    if (dt <= 0 || len < 1e-6 || push.active) return
     const dx = wx / len
     const dz = wz / len
     const speed = len / dt
@@ -1265,7 +1372,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const az = player.z + dz * (Math.min(len, 0.5) + 0.03)
     for (const e of entries.values()) {
       const piece = e.piece
-      if (!piece) continue
+      if (!piece || piece.held) continue
       const b = inTheWay(e, ax, az, PLAYER_RADIUS)
       if (!b) continue
       // a light thing the feet step over (a can, a bottle) is not leaned on: the walk reaches it and kicks it (`kickLight`)
@@ -1417,6 +1524,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     seating.release()
     pushByKey = false
     push.end()
+    shoves.clear()
     releasingTogether(() => {
       clearEverythingNow()
       for (const id of [...entries.keys()]) removeEntry(id)
@@ -3580,6 +3688,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       push.end()
     }
     push.step(isPaused ? 0 : dt)
+    shoves.step(isPaused ? 0 : dt)
     doors.step(isPaused ? 0 : dt)
     if (!isPaused) kickLight(dt)
     if (!isPaused) pushByPlayer(dt)
@@ -4053,6 +4162,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     cornerImage(image) {
       cornerImage?.show(image)
     },
+    movables: movableEntries,
+    shove: (objectId, push) => shoves.shove(objectId, push),
     onClear(listener) {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)

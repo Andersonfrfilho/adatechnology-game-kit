@@ -16,7 +16,7 @@ describe('the full state of the crowd after N steps is pinned', () => {
       if (step === BLAST_STEP) scene.crowd.blast(mortarAt(scene.crowd))
     })
     expect(COMPRESS_STEPS).toBe(BLAST_STEP)
-    expect(hashCrowdState(scene.crowd)).toBe('502b3de6')
+    expect(hashCrowdState(scene.crowd)).toBe('7979b7a6')
   })
 
   it('800 agents packed against a wall with the target behind it, 300 steps', () => {
@@ -30,6 +30,6 @@ describe('the full state of the crowd after N steps is pinned', () => {
       crowd.store.state[i] = STATE.CHASE
     }
     for (let step = 0; step < 300; step++) crowd.update(1 / 60, { target, bandCentre: [0, -12] })
-    expect(hashCrowdState(crowd)).toBe('b168b822')
+    expect(hashCrowdState(crowd)).toBe('9449b822')
   })
 })

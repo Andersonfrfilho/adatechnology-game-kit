@@ -41,3 +41,24 @@ A referência de qualidade é a **latinha** (`item_canned_*` de `game-items-good
 
 | Objeto | Pacote | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | Observações |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
+## Revisão: empurrar móveis (2026-11-07)
+
+Os critérios que valem para empurrar um móvel (o jogador segurando E, ou corpos de um módulo como a horda), revisados com o que já está no SDK.
+
+| # | Critério | Como está |
+|---|---|---|
+| 1 | Material e massa | O atrito com o chão vem do material mais pesado da peça (`frictionByMaterial` do `game-player`); a massa é a do objeto **mais o que está em cima** (`createCarry`). |
+| 8 | Entre outros objetos | O que está no tampo vai junto enquanto a peça acelera menos que o atrito embaixo dele aguenta (`slipsOnTop`); numa parada brusca escorrega com a velocidade que tinha e pode cair pela borda. Peça empurrada contra outra **trava** (não empurra a outra): ver pendências. |
+| 9, 20 | Personagem esbarrando, NPCs e zumbis | Os agentes da horda param na face do móvel (`crowd.setMovables`), encostam com os braços para a frente e o corpo inclinado, e as forças se somam (`crowd.shoves`, `ModuleHost.shove`). A peça empurrada para no corpo do jogador. |
+| 10, 14 | Ser empurrado, peso | Velocidade e aceleração saem da força que sobra do atrito sobre a massa (`pushSpeedFor`, `pushAccelerationFor`). A estante cheia de 242 kg não sai com a força de uma pessoa (500 N) nem de um zumbi (450 N); sai com três. |
+| 13 | Som | Arrasto a cada 30 cm com o som do material, volume pela massa; batida no obstáculo com o som de impacto do material. Vale para jogador e horda. |
+| 15 | Queda | O que escorrega do tampo cai pela física; peça empurrada (`carrying`) continua sendo apoio do que está em cima, sem deixar nada atravessar. |
+| 19 | Desempenho | A horda testa os móveis só quando há algum na lista e só aloca no contato; a sala lista os móveis empurráveis uma vez por passo. Sem custo quando ninguém empurra. |
+
+Os quatro pontos que estavam ambíguos foram decididos pelo mundo real (2026-11-07) e estão implementados:
+
+- **Peça empurrada contra outra solta** (sofá contra cadeira): empurra a outra junto quando a força das pernas vence o atrito somado da fileira (`canPush` com várias peças, `FurniturePush.setLoad`); se não vence, trava. Até três peças em fila (`chainOf` da sala, evento `push_chained`).
+- **Marcas de arrasto no piso** (critério 18): riscos persistentes por material do piso (`dragMarks` do `game-player`): madeira e cerâmica riscam, concreto fica com marca escura, terra e areia ficam com sulco, carpete, grama, cascalho e asfalto não marcam. A marca é `scrape` do `game-vfx` (`VfxWorld.scrape`), com limite de `SCRAPE_LIMIT` (400): passando dele, a mais antiga sai.
+- **Civis** desviam dos móveis e não empurram: contornam pela face, sempre girando para o mesmo lado (`crowd.movableAt`, `bodyRadius` dos civis).
+- **Mancha de líquido no tampo** (critério 16) acompanha a mesa empurrada (`FluidWorld.moveSurface`).

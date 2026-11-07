@@ -376,6 +376,12 @@ export interface CornerImage {
   readonly page?: string
 }
 
+/** A piece on the floor a module's bodies bump into (`ModuleHost.movables`): its box on the floor plane and its top, world metres. */
+export type HostMovable = { readonly objectId: string; readonly minX: number; readonly minZ: number; readonly maxX: number; readonly maxZ: number; readonly top: number }
+
+/** What a module's bodies do to a movable piece over `dt` seconds (`ModuleHost.shove`): the sum of their forces (newtons) along `direction` (unit, on the floor) and how many push. */
+export type HostShove = { readonly direction: readonly [number, number]; readonly forceN: number; readonly pushers: number; readonly dt: number }
+
 export interface ModuleHost {
   THREE: unknown
   scene: unknown
@@ -500,6 +506,16 @@ export interface ModuleHost {
    * Absent when the host has no world: the whole blast reaches.
    */
   blastReach?(point: Vec3, target: Vec3, ignore?: readonly string[]): number
+  /**
+   * The pieces standing on the floor that a body of the module's own (an agent of a horde, an NPC) bumps into and may shove (`TestableItem.pushable`): their boxes on the
+   * floor plane, world metres, read each frame (a shoved piece moved). A host without movable furniture leaves it out.
+   */
+  movables?(): readonly HostMovable[]
+  /**
+   * Bodies of the module lean on movable `objectId` (`HostShove`): the host moves it as far as the summed force beats its friction and nothing is in the way, the way the player
+   * pushes it, carrying what rests on it. Answers the metres it moved this time (0: too heavy, or blocked). A host without movable furniture leaves it out.
+   */
+  shove?(objectId: string, push: HostShove): number
   /** The host's loading indicator: a module with a slow job of its own (building a house, laying a district) shows it through this instead of freezing the page. Absent when the host has none. */
   loading?: BusySink
 }

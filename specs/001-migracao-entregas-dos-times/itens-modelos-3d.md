@@ -144,7 +144,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Pederneira | `pederneira` | `flint_striker` | 0,08 kg | raro | 110 x 20 x 15 mm |
 | [x] | Pedra de amolar | `amolador` | `sharpening_stone` | 0,3 kg | incomum | 200 x 50 x 25 mm |
 | [x] | Pá | `pa` | `shovel` | 2,0 kg | comum | 1,1 x 0,07 x 0,22 m |
-| [x] | Pé de cabra | `pe_cabra` | `crowbar` | 1,5 kg | incomum | 188 x 750 x 48 mm |
+| [x] | Pé de cabra | `pe_cabra` | `crowbar` | 1,5 kg | incomum | 160 x 750 x 31 mm |
 | [x] | Serra de arco | `serra_arco` | `hacksaw` | 0,4 kg | incomum | 420 x 30 x 120 mm |
 | [x] | Serrote | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
 | [x] | Tesoura | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |

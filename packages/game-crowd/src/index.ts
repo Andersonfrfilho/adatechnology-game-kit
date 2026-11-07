@@ -9,6 +9,8 @@ export type { Corpse, Crowd, CrowdBand, CrowdNumbers, CrowdOptions, CrowdPlugin,
 export { DOOR_DEFAULTS, createDoors } from './doors'
 export type { Door, DoorEventMap, DoorEventName, DoorNumbers, Doors } from './doors'
 export { CELL, createNavGrid } from './grid'
+export { createMovableContacts, walksInto } from './movables'
+export type { CrowdMovable, CrowdShove, MovableContacts, MovableHit } from './movables'
 export type { NavGrid, NavGridOptions } from './grid'
 export { createRng } from './rng'
 export { AGENT_FIELDS, createStore } from './store'

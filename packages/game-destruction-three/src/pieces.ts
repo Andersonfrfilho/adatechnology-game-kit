@@ -558,7 +558,7 @@ export class PieceSystem {
   topAt(x: number, z: number, y: number, step: number, self?: string): number {
     let top = -Infinity
     for (const s of this.surfacesAt(x, z)) {
-      if (s.body.objectId === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
+      if (s.body.objectId === self || (s.body.held && !s.body.carrying) || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
       const t = boxTopAt(s, x, z)
       if (t > top && t <= y + step) top = t
     }
@@ -614,7 +614,7 @@ export class PieceSystem {
     let on: Solid | null = null
     let face = 1
     for (const s of this.surfacesAt(x, z)) {
-      if (s.body === self || s.body.held || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
+      if (s.body === self || (s.body.held && !s.body.carrying) || Math.abs(x - s.c[0]) > s.r || Math.abs(z - s.c[2]) > s.r) continue
       const t = boxTopAt(s, x, z)
       if (t > top && t <= y + step) {
         top = t

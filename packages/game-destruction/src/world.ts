@@ -4349,17 +4349,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     sweepBox(box, direction, distance, options = {}) {
       const d = vec.normalize(direction)
-      const ignored = options.ignore === undefined ? undefined : objects.get(options.ignore)
-      // an object hosted by an impl (a vehicle) is ignored by its own parts too
-      const hosted = options.ignore === undefined || ignored ? undefined : impls.get(options.ignore)
-      const ignore = ignored
-        ? new Set(ignored.parts.map((p) => `${ignored.id}\0${p.spec.id}`))
-        : hosted
-          ? new Set(hosted.impl.describe().parts.map((p) => `${hosted.impl.id}\0${p.id}`))
-          : undefined
+      const ignoredIds = options.ignore === undefined ? [] : typeof options.ignore === 'string' ? [options.ignore] : options.ignore
+      const ignore = new Set<string>()
+      for (const id of ignoredIds) {
+        const ignored = objects.get(id)
+        // an object hosted by an impl (a vehicle) is ignored by its own parts too
+        const hosted = ignored ? undefined : impls.get(id)
+        if (ignored) for (const p of ignored.parts) ignore.add(`${ignored.id}\0${p.spec.id}`)
+        else if (hosted) for (const p of hosted.impl.describe().parts) ignore.add(`${hosted.impl.id}\0${p.id}`)
+      }
       let best: RayHit | null = null
       for (const origin of sweepOrigins(box, d, options.spacing ?? 0.2)) {
-        const r = raycastInternal(origin, d, distance + SWEEP_BACK, ignore)
+        const r = raycastInternal(origin, d, distance + SWEEP_BACK, ignore.size > 0 ? ignore : undefined)
         if (!r || (best && r.distance >= best.distance)) continue
         best = { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: Math.max(0, r.distance - SWEEP_BACK) }
       }

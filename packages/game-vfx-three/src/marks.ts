@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
-import type { BloodMark, DirtMark, GroundField, Mark, MarkEvent, RockMark, ScorchMark } from '@adatechnology/game-vfx'
+import { SCRAPE_LIMIT } from '@adatechnology/game-vfx'
+import type { BloodMark, DirtMark, GroundField, Mark, MarkEvent, RockMark, ScorchMark, ScrapeMark } from '@adatechnology/game-vfx'
 import { createMarkTextures } from './canvas'
 import type { MarkTextures } from './canvas'
 import type { CanvasLike, ThreeLib } from './types'
@@ -84,9 +85,13 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
   const bloodMaterial = new THREE.MeshStandardMaterial({ color: 0x5c0a0a, roughness: 0.15, metalness: 0.1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })
   const bloodGeometry = new THREE.CircleGeometry(0.5, 9).rotateX(-Math.PI / 2)
   owned.push(bloodMaterial, bloodGeometry)
+  // the scratches of dragged furniture: a unit strip along x, each instance its own length, width, turn and colour (lighter or darker than the floor)
+  const scrapeMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6, transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 })
+  const scrapeGeometry = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)
+  owned.push(scrapeMaterial, scrapeGeometry)
   const maxGroundMarks = options.maxGroundMarks ?? DEFAULT_MAX_GROUND_MARKS
   /* the instanced meshes join the scene with the first mark of their kind, so a world that drew no marks has the same scene it always had */
-  const instanced: { blood?: THREE_NS.InstancedMesh; rock?: THREE_NS.InstancedMesh; plate?: THREE_NS.InstancedMesh; rockMaterial?: THREE_NS.MeshStandardMaterial } = {}
+  const instanced: { blood?: THREE_NS.InstancedMesh; rock?: THREE_NS.InstancedMesh; plate?: THREE_NS.InstancedMesh; scrape?: THREE_NS.InstancedMesh; rockMaterial?: THREE_NS.MeshStandardMaterial } = {}
   function rockMaterial(): THREE_NS.MeshStandardMaterial {
     if (!instanced.rockMaterial) {
       instanced.rockMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, flatShading: true })
@@ -96,6 +101,9 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
   }
   function bloodMesh(): THREE_NS.InstancedMesh {
     return (instanced.blood ??= attach(createInstanced(bloodGeometry, bloodMaterial, options.maxBlood ?? DEFAULT_MAX_BLOOD)))
+  }
+  function scrapeMesh(): THREE_NS.InstancedMesh {
+    return (instanced.scrape ??= attach(createInstanced(scrapeGeometry, scrapeMaterial, SCRAPE_LIMIT)))
   }
   function rockMesh(): THREE_NS.InstancedMesh {
     return (instanced.rock ??= attach(createInstanced(options.rockGeometry, rockMaterial(), options.maxRocks ?? DEFAULT_MAX_ROCKS), true))
@@ -112,7 +120,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
   const groundMarks: GroundDrawn[] = []
   const spareGeometries: THREE_NS.BufferGeometry[] = []
   const blood: BloodDrawn[] = []
-  const placed = { blood: 0, rock: 0, plate: 0 }
+  const placed = { blood: 0, rock: 0, plate: 0, scrape: 0 }
   const matrix = new THREE.Matrix4()
   const position = new THREE.Vector3()
   const quaternion = new THREE.Quaternion()
@@ -209,10 +217,23 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     bloodMesh().count = Math.min(placed.blood, bloodMesh().instanceMatrix.count)
   }
 
+  /** The scratches go round in the order they came, like the store keeps them: past `SCRAPE_LIMIT` the oldest slot takes the new one. */
+  function addScrape(mark: ScrapeMark): void {
+    const mesh = scrapeMesh()
+    const index = placed.scrape++ % mesh.instanceMatrix.count
+    quaternion.setFromAxisAngle(up, -mark.rotation)
+    mesh.setMatrixAt(index, matrix.compose(position.set(mark.x, mark.y, mark.z), quaternion, scale.set(mark.length, 1, mark.width)))
+    mesh.setColorAt(index, color.set(mark.color))
+    mesh.count = Math.min(placed.scrape, mesh.instanceMatrix.count)
+    mesh.instanceMatrix.needsUpdate = true
+    mesh.instanceColor!.needsUpdate = true
+  }
+
   function build(mark: Mark): void {
     if (mark.kind === 'scorch') conform(mark, scorchMaterials[mark.variant]!)
     else if (mark.kind === 'dirt') conform(mark, dirtMaterial)
     else if (mark.kind === 'rock') addRock(mark)
+    else if (mark.kind === 'scrape') addScrape(mark)
     else addBlood(mark)
   }
 
@@ -223,8 +244,8 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
     for (const geometry of spareGeometries) geometry.dispose()
     spareGeometries.length = 0
     blood.length = 0
-    placed.blood = placed.rock = placed.plate = 0
-    for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) if (mesh) mesh.count = 0
+    placed.blood = placed.rock = placed.plate = placed.scrape = 0
+    for (const mesh of [instanced.blood, instanced.rock, instanced.plate, instanced.scrape]) if (mesh) mesh.count = 0
   }
 
   return {
@@ -237,6 +258,7 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
       bloodMesh()
       rockMesh()
       plateMesh()
+      scrapeMesh()
     },
     probes() {
       probeGeometry ??= new THREE.PlaneGeometry(0.001, 0.001).rotateX(-Math.PI / 2)
@@ -255,10 +277,10 @@ export function createMarkLayer(THREE: ThreeLib, options: MarkLayerOptions): Mar
         writeBlood(index, drawn, Math.max(BLOOD_START_GROWTH, 1 - Math.pow(1 - Math.min(1, drawn.age), 2.5)))
       }
     },
-    count: () => groundMarks.length + [instanced.blood, instanced.rock, instanced.plate].filter((mesh) => mesh && mesh.count > 0).length,
+    count: () => groundMarks.length + [instanced.blood, instanced.rock, instanced.plate, instanced.scrape].filter((mesh) => mesh && mesh.count > 0).length,
     dispose() {
       clearMarks()
-      for (const mesh of [instanced.blood, instanced.rock, instanced.plate]) mesh?.dispose()
+      for (const mesh of [instanced.blood, instanced.rock, instanced.plate, instanced.scrape]) mesh?.dispose()
       probeGeometry?.dispose()
       for (const item of owned) item.dispose()
     },

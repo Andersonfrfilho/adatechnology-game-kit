@@ -40,18 +40,21 @@ const label = (index: number): string => `model_${String(index).padStart(2, '0')
 
 // The positions of a few shapes that three r160 builds a little differently than r128 are compared with a tolerance; none so far.
 const KNOWN_DEVIATIONS: ReadonlySet<string> = new Set([])
+// Owner decision (2026-11-06): the models that diverge from a photo of the real object are corrected to it, so they no longer match the page. The crowbar: a hexagonal bar of
+// 7/8 in instead of a 49 mm round tube, a tighter gooseneck ending in a forked claw and a flat chisel instead of a round stub (photo "Crowbar without haft.jpg").
+const OWNER_DEVIATIONS: ReadonlySet<string> = new Set(['crowbar'])
 
 describe('Itens do Vale Cinzento: the 24 showcase models', () => {
   const models = events.filter((event) => event.type === 'model')
 
   it('ships the models in the order of the page, with the teamId and the box the page has', () => {
     expect(models.map((event) => event.data.id)).toEqual(SHIPPED_MODELS.slice(0, models.length).map(({ entry }) => entry.teamId))
-    for (const [index, event] of models.entries()) expect(SHIPPED_MODELS[index]?.entry.teamBox, event.data.id).toEqual(event.data.box)
+    for (const [index, event] of models.entries()) if (!OWNER_DEVIATIONS.has(SHIPPED_MODELS[index]?.entry.id ?? '')) expect(SHIPPED_MODELS[index]?.entry.teamBox, event.data.id).toEqual(event.data.box)
   })
 
   for (const [index, event] of models.entries()) {
     const shipped = SHIPPED_MODELS[index]!
-    if (KNOWN_DEVIATIONS.has(shipped.entry.id)) continue
+    if (KNOWN_DEVIATIONS.has(shipped.entry.id) || OWNER_DEVIATIONS.has(shipped.entry.id)) continue
     it(`${event.data.id} (${shipped.entry.id}) is the same group node by node: shapes, colours, transforms`, () => {
       const kit = createItemKit(THREE)
       const sdk = createGoldenRecord({ name: record.name, seed: record.seed, events: record.events, scenes: { [label(index)]: asPageNode(shipped.builder(kit)) }, hashOptions: { ignoreNames: true } })
@@ -62,7 +65,7 @@ describe('Itens do Vale Cinzento: the 24 showcase models', () => {
   it('all 24 hash like the page', () => {
     const mismatches: string[] = []
     for (const [index, { entry, builder }] of SHIPPED_MODELS.slice(0, 24).entries()) {
-      if (KNOWN_DEVIATIONS.has(entry.id)) continue
+      if (KNOWN_DEVIATIONS.has(entry.id) || OWNER_DEVIATIONS.has(entry.id)) continue
       const snapshot = snapshotScene(asPageNode(builder(createItemKit(THREE))), { ignoreNames: true })
       const expected = record.scenes[label(index)]
       if (snapshot.hash !== expected?.hash || snapshot.objects !== expected.objects) mismatches.push(`${entry.id}: ${expected?.hash}/${expected?.objects} -> ${snapshot.hash}/${snapshot.objects}`)
@@ -75,6 +78,7 @@ describe('Itens do Vale Cinzento: the 24 showcase models', () => {
     expect(wear).toHaveLength(24 * 3)
     for (const { data } of wear) {
       const shipped = SHIPPED_MODELS[data.index]!
+      if (OWNER_DEVIATIONS.has(shipped.entry.id)) continue
       const kit = createItemKit(THREE)
       shipped.builder(kit)
       setWear(kit.materials, data.stage as 0 | 1 | 2)
