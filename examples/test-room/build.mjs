@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
+import { mergeUserSfxManifests } from '../../packages/game-audio/scripts/sfx-merge.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -183,6 +184,8 @@ if (sfxManifest) {
 //     link to each folder of root, so the room plays the game's files where they are.
 const userSfx = join(root, '.sfx-local')
 const userSfxRef = join(root, '.sfx-local.json')
+/** The folder of dist/sfx-local/ that `.sfx-local/` is linked to when a game's folder is linked there too. */
+const USER_SFX_LINK = '_sfx-user'
 rmSync(join(here, 'dist/sfx-local'), { recursive: true, force: true })
 const userRef = existsSync(userSfxRef) ? JSON.parse(readFileSync(userSfxRef, 'utf8')) : null
 // `.sfx-local.json` may hold only the kit's folder ("kit", "inbox"): the game's own sounds need "root" and "manifest"
@@ -191,8 +194,18 @@ if (userRef && typeof userRef.root === 'string' && typeof userRef.manifest === '
   const dir = join(here, 'dist/sfx-local')
   mkdirSync(dir, { recursive: true })
   cpSync(resolve(root, ref.manifest), join(dir, 'manifest.json'))
-  for (const name of readdirSync(resolve(root, ref.root))) symlinkSync(resolve(root, ref.root, name), join(dir, name))
+  // the game's manifest may sit in its own folder: the copy above stays, never a link over it
+  for (const name of readdirSync(resolve(root, ref.root))) if (name !== 'manifest.json') symlinkSync(resolve(root, ref.root, name), join(dir, name))
   console.log(`dist/sfx-local linked to ${ref.root} (the game's own sounds, by reference)`)
+  // the sounds `sfx:user` converted (.sfx-local/) the game's manifest does not answer join it, linked under _sfx-user/: a game's folder does not hide them
+  if (existsSync(join(userSfx, 'manifest.json'))) {
+    const userDir = join(dir, USER_SFX_LINK)
+    mkdirSync(userDir)
+    for (const name of readdirSync(userSfx)) if (name !== 'manifest.json') symlinkSync(join(userSfx, name), join(userDir, name))
+    const merged = mergeUserSfxManifests(JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')), JSON.parse(readFileSync(join(userSfx, 'manifest.json'), 'utf8')), `${USER_SFX_LINK}/`)
+    writeFileSync(join(dir, 'manifest.json'), `${JSON.stringify(merged.manifest, null, 2)}\n`)
+    console.log(`dist/sfx-local: ${merged.added.length} sounds of .sfx-local the game does not have, linked under ${USER_SFX_LINK}/`)
+  }
 } else if (existsSync(join(userSfx, 'manifest.json'))) {
   // the manifest is copied and each folder linked, never the audio copied: the guard of step 6 refuses audio in dist that is not the SDK's own
   const dir = join(here, 'dist/sfx-local')
