@@ -10,8 +10,8 @@ import { THREE, houseOf, planOf } from './helpers/houses'
 const BLAST_ENERGY = 4e6
 const BLAST_RADIUS = 6
 // sha1 of the results, events and state of that blast on this house (with its ground beams and sill beams, its wood split by how it is made on a stream of its
-// own; a reinforced member out of the cut reach keeps a floor of its hit points; the infill panel in front of the charge comes down): the solver gives the same whether it remembers the contact boxes of its parts or not
-const RECORDED_BLAST_OUTCOME = '2798619e09d47b7bb7e3edeadbdb3cd7d7be4a14'
+// own; a reinforced member out of the cut reach keeps a floor of its hit points; the infill panel in front of the charge comes down, ragged on its frame): the solver gives the same whether it remembers the contact boxes of its parts or not
+const RECORDED_BLAST_OUTCOME = 'cd669f312bd2ddfc60071c41605fd869ae986779'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })

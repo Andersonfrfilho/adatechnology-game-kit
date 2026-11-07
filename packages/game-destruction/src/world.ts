@@ -141,6 +141,10 @@ const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
+/** The most units of masonry a failed panel leaves against a pillar (a course), over the ground beam and under the bond beam (a column of units). */
+const PANEL_EDGE_PILLAR = 2
+const PANEL_EDGE_BASE = 4
+const PANEL_EDGE_BEAM = 2
 /** Face area (m²) of plaster per flake it breaks into when the units under it are knocked out, and the most flakes one blow throws. */
 const PLASTER_FLAKE_AREA = 0.25
 const MAX_PLASTER_FLAKES = 24
@@ -2499,6 +2503,31 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
+   * The masonry a failed panel leaves on its frame: the infill is laid first with its ends toothed and the pillars are cast against it, and the bed joint
+   * under the bond beam and over the ground beam is mortar too. So the panel tears out along a ragged line a little inside the frame: against each pillar
+   * a strip a brick or so wide (half a brick more on the courses keyed into it), under the beam a course or two, over the ground beam a few courses (the
+   * least loaded part of a panel bent by a blast). Each course and each column of units draws its own depth, `PANEL_EDGE_*` units at most.
+   */
+  const panelEdge = (p: PartRT, faces: { fromFace: number; toFace: number }, seed: number): ((cell: UnitCell) => boolean) => {
+    const [u, v] = planeAxes(p.thin)
+    const [unitU, unitV] = unitSpan(p)
+    const bottom = -p.dims[v] / 2, top = p.dims[v] / 2
+    const depth = (key: number, most: number): number => {
+      const r = createRng(seed ^ Math.imul(key + 1, 0x9e3779b1)).next()
+      return Math.floor(r * r * (most + 1))
+    }
+    return (cell) => {
+      const course = Math.round((cell.center[v] - bottom) / unitV - 0.5)
+      const column = Math.round((cell.center[u] - faces.fromFace) / unitU - 0.5)
+      const keyed = course % 2 === 0 ? 0.5 : 0
+      const side = Math.min(cell.center[u] - faces.fromFace, faces.toFace - cell.center[u]) / unitU
+      if (side < depth(course * 2, PANEL_EDGE_PILLAR) + keyed + 0.5) return true
+      if ((cell.center[v] - bottom) / unitV < depth(100000 + column, PANEL_EDGE_BASE) + 1) return true
+      return (top - cell.center[v]) / unitV < depth(200000 + column, PANEL_EDGE_BEAM) + 0.5 - 1
+    }
+  }
+
+  /**
    * A blast on the infill of a confined wall (`PANEL_PI`): the reflected pressure and impulse at the middle of the bay the charge faces (between the two
    * pillars around it, or the ends of the wall) decide whether that panel fails. A failed panel comes out whole into the side away from the charge; the
    * pillars and the bond beam around it are parts of their own and stay. Returns whether the panel came out.
@@ -2509,17 +2538,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const lp = toLocal(p.pos, p.q, objLocal(o, point))
     const half = p.dims[u] / 2
     // the pillars standing in this wall, as positions along it
-    const posts: number[] = []
+    const posts: { x: number; half: number }[] = []
     for (const m of o.parts) {
       if (m === p || !m.spec.reinforcement || isLost(m) || m.spec.shape.kind !== 'box') continue
       const mp = toLocal(p.pos, p.q, m.pos)
       if (Math.abs(mp[p.thin]) > p.dims[p.thin] + 0.15 || Math.abs(mp[u]) > half + 0.15 || m.dims[v] < p.dims[v] * 0.5) continue
-      posts.push(mp[u])
+      posts.push({ x: mp[u], half: m.dims[u] / 2 })
     }
-    let from = -half, to = half
-    for (const x of posts) {
-      if (x <= lp[u] && x > from) from = x
-      if (x >= lp[u] && x < to) to = x
+    let from = -half, to = half, fromFace = -half, toFace = half
+    for (const { x, half: w } of posts) {
+      if (x <= lp[u] && x > from) { from = x; fromFace = x + w }
+      if (x >= lp[u] && x < to) { to = x; toFace = x - w }
     }
     if (to - from < 0.2) return false
     // a panel fails in bending across its span: the wave has to load most of it, not one place (a grenade close to it breaks a hole there instead)
@@ -2543,10 +2572,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const grid = gridOf(p)
     const worn = (p.rt.chips ??= {})
     const out: number[] = []
+    const edge = panelEdge(p, { fromFace, toFace }, seedOf(...Array.from(`${o.id}|${p.spec.id}`, (char) => char.charCodeAt(0) / 1000), from))
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i]!
       if (worn[i] === -1) continue
-      if (cell.center[u] - cell.size[u] / 2 >= from - 1e-6 && cell.center[u] + cell.size[u] / 2 <= to + 1e-6) out.push(i)
+      if (cell.center[u] - cell.size[u] / 2 >= from - 1e-6 && cell.center[u] + cell.size[u] / 2 <= to + 1e-6 && !edge(cell)) out.push(i)
     }
     if (out.length === 0) return false
     for (const i of out) worn[i] = -1

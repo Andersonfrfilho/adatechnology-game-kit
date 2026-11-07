@@ -179,6 +179,36 @@ describe('wallPiece', () => {
     expect(mass).toBeLessThan(2600)
   })
 
+  it('a rocket that brings down a bay leaves ragged masonry on its frame: toothed against the pillars, a course or more on the ground beam', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    world.explode([0, 1.4, 0.3], 200000, 16, 'test')
+    for (let i = 0; i < 20; i++) world.update(0.1)
+    const spec = piece.spec.parts.find((p: { id: string }) => p.id === 'wall_0_0')! as { position: number[]; shape: { size: number[] } }
+    const gone = world.part(id, 'wall_0_0')!.chipped ?? []
+    // the bay between the pillars at x = -1.633 and 1.633 (20 cm wide), the wall 2.8 m high from its ground beam
+    const left = -1.633 + 0.1, right = 1.633 - 0.1
+    const courses = Math.round(spec.shape.size[1]! / 0.075)
+    const bottom = -spec.shape.size[1]! / 2
+    const isGone = (x: number, y: number) => gone.some((c) => Math.abs(c.center[0] + spec.position[0]! - x) <= c.size[0] / 2 && Math.abs(c.center[1] - y) <= c.size[1] / 2)
+    const reach: number[] = []
+    for (let r = 0; r < courses; r++) {
+      const y = bottom + (r + 0.5) * 0.075
+      // the masonry left against the left pillar on this course: how far from its face the first unit that went is
+      let x = left + 0.01
+      while (x < 0 && !isGone(x, y)) x += 0.02
+      reach.push(x - left)
+    }
+    // the bay came out
+    expect(isGone(0, 0)).toBe(true)
+    // every course keeps something against the pillar (the bricks keyed into it), and the edge is ragged, not a straight cut
+    expect(Math.min(...reach)).toBeGreaterThan(0.02)
+    expect(new Set(reach.map((d) => Math.round(d / 0.115))).size).toBeGreaterThan(2)
+    // the first course on the ground beam stays across the bay
+    for (let x = left + 0.3; x < right - 0.3; x += 0.23) expect(isGone(x, bottom + 0.0375)).toBe(false)
+  })
+
   it('a second grenade somewhere else on the wall cuts a second hole, and shots still knock bricks out beside them', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })
