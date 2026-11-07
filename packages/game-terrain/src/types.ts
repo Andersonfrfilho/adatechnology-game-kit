@@ -5,6 +5,9 @@ export type { GroundLayout, GroundZone } from '@adatechnology/game-contracts'
 /** The blows that remove ground. Fire and heat char it instead (`TerrainMaterial.fire`). */
 export type TerrainBlow = 'ballistic' | 'blunt' | 'slash' | 'explosive'
 
+/** A blow at (x, z): `energy` in joules, `direction` where it travels, `contactRadius` of a blunt tool, `caliber` (mm) of a round, which shapes its crater. */
+export type TerrainStrike = { x: number; z: number; energy: number; direction?: readonly number[]; contactRadius?: number; caliber?: number }
+
 /** What one kind of blow does to a material. */
 export interface TerrainBlowResponse {
   /** Joules it takes to remove one cubic metre. */
@@ -364,7 +367,7 @@ export interface Terrain {
   /** First point of the ground along a ray, or null. */
   raycast(origin: readonly number[], direction: readonly number[], maxDistance: number): { point: [number, number, number]; distance: number; normal: [number, number, number] } | null
   /** A blow at (x, z). `energy` in joules, `direction` where it travels (it throws the pieces back along it). */
-  strike(blow: TerrainBlow, spec: { x: number; z: number; energy: number; direction?: readonly number[]; contactRadius?: number }): TerrainBlowResult
+  strike(blow: TerrainBlow, spec: TerrainStrike): TerrainBlowResult
   /** A flame over a disc for `seconds`. */
   burn(spec: { x: number; z: number; radius: number; temperature: number; seconds: number }): void
   /** Applies a world hit (`Hit` of the destruction contract); null when it does nothing to the ground. */
