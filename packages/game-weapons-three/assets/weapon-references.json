@@ -1185,15 +1185,15 @@
    "found": "commons: GP-25 grenade launcher"
   },
   "ag36": {
-   "title": "File:AG36.png",
-   "page": "https://commons.wikimedia.org/wiki/File:AG36.png",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/a/a8/AG36.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-   "width": 350,
-   "height": 150,
-   "author": "Pjedvaj",
-   "license": "CC BY-SA 3.0",
-   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-   "found": "commons: AG36 grenade launcher"
+   "title": "File:HK G36 with AG36.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:HK_G36_with_AG36.jpg",
+   "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/HK_G36_with_AG36.jpg/960px-HK_G36_with_AG36.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "width": 1279,
+   "height": 344,
+   "author": "sonaz",
+   "license": "CC BY-SA 2.5",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+   "found": "pinned"
   },
   "flashbang": {
    "title": "File:M-84-Flash-Bang-Grenade.jpg",
@@ -1380,6 +1380,7 @@
   "taurus_g2c": "File:Taurus G2C 9mm Sn 1C014003 L DSC0277.jpg",
   "taurus_pt100": "File:TaurusPT92.jpg",
   "taurus_smt9": "File:Taurus SMT9 with IA2 crop.jpg",
-  "sledgehammer": "File:C&O Railway Heritage Center - Sledgehammer.jpg"
+  "sledgehammer": "File:C&O Railway Heritage Center - Sledgehammer.jpg",
+  "ag36": "File:HK G36 with AG36.jpg"
  }
 }
