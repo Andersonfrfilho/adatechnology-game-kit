@@ -157,9 +157,10 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
       // a truck that stops on its brakes lets the air out of its chambers once
       if (airBrake) {
         if (speed > 2) state.rolling = true
-        else if (state.rolling && speed < 0.8 && (frame.brake ?? 0) > 0.3) {
+        else if (state.rolling && speed < 0.8) {
+          // a truck that coasted to rest without the brakes has nothing to let out: a later press while parked stays silent
           state.rolling = false
-          if (heard > 0) play(keys.airBrake, frame.position, 0.8)
+          if ((frame.brake ?? 0) > 0.3 && heard > 0) play(keys.airBrake, frame.position, 0.8)
         }
       }
       // the pads squeal in the last metres of a stop on the brakes, while the tyres still grip (a skid is the tyres' sound, not the pads')

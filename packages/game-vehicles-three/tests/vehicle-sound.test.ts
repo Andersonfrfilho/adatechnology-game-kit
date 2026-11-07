@@ -345,4 +345,14 @@ describe('the sounds that depend on what drives', () => {
     expect(stop(TRUCK_ENGINE)).toEqual(['air_brake'])
     expect(stop(CAR_ENGINE)).toEqual([])
   })
+
+  it('a truck that coasts to a stop without braking stays silent when the brake is pressed later while parked', () => {
+    const { sink, played } = fakeSink()
+    const truck = createVehicleSound(sink, { profile: TRUCK_ENGINE })
+    truck.update({ dt: 1 / 30, position: [0, 0, 0], speed: 8, throttle: 0, brake: 0 })
+    truck.update({ dt: 1 / 30, position: [0, 0, 0], speed: 0.5, throttle: 0, brake: 0 })
+    truck.update({ dt: 1 / 30, position: [0, 0, 0], speed: 0, throttle: 0, brake: 0.8 })
+    truck.update({ dt: 1 / 30, position: [0, 0, 0], speed: 0, throttle: 0, brake: 0.8 })
+    expect(played.map((request) => request.sound)).not.toContain('air_brake')
+  })
 })
