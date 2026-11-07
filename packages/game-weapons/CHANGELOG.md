@@ -1,5 +1,11 @@
 # @adatechnology/game-weapons
 
+## 0.10.0
+
+### Minor Changes
+
+- 694cad8: A granada de 40 mm (M79, M203, AG36, M32) arma entre 14 e 27 m de voo, sorteado a cada disparo, como a espoleta da M406 real, e a VOG-25 do GP-25 entre 10 e 40 m: antes disso o impacto é falha. Novo campo `armRange` no explosivo.
+
 ## 0.9.2
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @adatechnology/game-test-room
 
+## 0.30.2
+
+### Patch Changes
+
+- Updated dependencies [baaa7d4]
+- Updated dependencies [694cad8]
+  - @adatechnology/game-audio@0.10.0
+  - @adatechnology/game-destruction-three@0.19.0
+  - @adatechnology/game-weapons@0.10.0
+
 ## 0.30.1
 
 ### Patch Changes

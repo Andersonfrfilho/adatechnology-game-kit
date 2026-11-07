@@ -154,7 +154,7 @@ describe('the keys of the renderer', () => {
   })
 
   it('gives a round its own sound per material, and the blow when a host drops it', () => {
-    expect(DESTRUCTION_SOUND_KEYS.art_scene.shot_metal?.sound).toBe('ping')
+    expect(DESTRUCTION_SOUND_KEYS.art_scene.shot_metal?.sound).toBe('metal_ping')
     expect(DESTRUCTION_SOUND_KEYS.art_scene.shot_glass?.sound).not.toBe(DESTRUCTION_SOUND_KEYS.art_scene.impact_glass?.sound)
     const { recorder, sound } = engineWith()
     sound.onSound('shot_wood', [0, 0, 1], 1)
