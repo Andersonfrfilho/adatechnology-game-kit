@@ -7253,6 +7253,197 @@
       },
       "source": "reference: free Wikimedia Commons photo of the real weapon (Milkor MGL, Armémuseum, CC BY 4.0), lote 1, part C",
       "reason": "The MGL is a revolver-type launcher, not a break-action: the SDK draws the large six-chamber cylinder with its swing-out frame, the short barrel with its front grip, the collimator sight on top, the pistol grip and the folding stock."
+    },
+    "svd_dragunov": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×54R",
+        "length": 1225,
+        "barrel": 620,
+        "options": {
+          "wood": 1,
+          "stock": "svd",
+          "stockLen": 0.32,
+          "mag": "box",
+          "curve": 0.09,
+          "magLen": 0.9,
+          "hg": "wood",
+          "hgFrac": 0.4,
+          "scope": 4,
+          "brake": 1,
+          "ak": 1,
+          "charge": 1,
+          "svd": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the SVD with the generic skeleton stock (two thin bars and a plate) and a thin handguard, so it read like any other rifle. The SDK draws the thumbhole stock of the photo (the comb with its cheek rest, the butt behind the hole and the bottom bar closing it at the foot of the pistol grip) and the chunky slotted wooden handguard with the gas block ahead of it."
+    },
+    "remington_700": {
+      "value": {
+        "builder": "rifle",
+        "caliber": ".308",
+        "length": 1100,
+        "barrel": 610,
+        "options": {
+          "wood": 1,
+          "stock": "sporter",
+          "mag": "internal",
+          "scope": 3,
+          "bolt": 1,
+          "round": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the bolt-action rifles with the generic one-piece stock: a straight bar ending in a tall block, an L that no rifle has. The SDK draws the sporter stock of the photo (sporter): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel."
+    },
+    "remington_700_300wm": {
+      "value": {
+        "builder": "rifle",
+        "caliber": ".308",
+        "length": 1100,
+        "barrel": 610,
+        "options": {
+          "wood": 1,
+          "stock": "sporter",
+          "mag": "internal",
+          "scope": 3,
+          "bolt": 1,
+          "round": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the bolt-action rifles with the generic one-piece stock: a straight bar ending in a tall block, an L that no rifle has. The SDK draws the sporter stock of the photo (sporter): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel."
+    },
+    "hunting_rifle_30_06": {
+      "value": {
+        "builder": "rifle",
+        "caliber": ".30-06",
+        "length": 1100,
+        "barrel": 560,
+        "options": {
+          "wood": 1,
+          "stock": "sporter",
+          "mag": "internal",
+          "scope": 3,
+          "bolt": 1,
+          "round": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the bolt-action rifles with the generic one-piece stock: a straight bar ending in a tall block, an L that no rifle has. The SDK draws the sporter stock of the photo (sporter): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel."
+    },
+    "m24_sws": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×51",
+        "length": 1092,
+        "barrel": 610,
+        "options": {
+          "olive": 1,
+          "stock": "sporter",
+          "mag": "internal",
+          "scope": 3,
+          "bolt": 1,
+          "bipod": 1,
+          "round": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the bolt-action rifles with the generic one-piece stock: a straight bar ending in a tall block, an L that no rifle has. The SDK draws the sporter stock of the photo (sporter): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel."
+    },
+    "steyr_ssg_69": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×51",
+        "length": 1140,
+        "barrel": 650,
+        "options": {
+          "olive": 1,
+          "stock": "sporter",
+          "mag": "internal",
+          "scope": 3,
+          "bolt": 1,
+          "round": 1,
+          "rel": 0.6
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the bolt-action rifles with the generic one-piece stock: a straight bar ending in a tall block, an L that no rifle has. The SDK draws the sporter stock of the photo (sporter): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel."
+    },
+    "ak_47": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×39",
+        "length": 880,
+        "barrel": 415,
+        "options": {
+          "wood": 1,
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "wood",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "ak": 1,
+          "rod": 1,
+          "bayo": 1,
+          "rpm": 600,
+          "rel": 0.4
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+    },
+    "akm": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×39",
+        "length": 880,
+        "barrel": 415,
+        "options": {
+          "wood": 1,
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "wood",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "ak": 1,
+          "rod": 1,
+          "rpm": 600,
+          "magMat": "bakelite",
+          "rel": 0.45
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+    },
+    "rpk": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "7,62×39",
+        "length": 1040,
+        "barrel": 590,
+        "options": {
+          "wood": 1,
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "wood",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "ak": 1,
+          "rod": 1,
+          "bayo": 0,
+          "rpm": 600,
+          "rel": 0.4,
+          "bipod": 1,
+          "magLen": 1.4
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
     }
   },
   "weaponTags": {
