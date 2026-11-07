@@ -3,7 +3,7 @@
 // the takes of its calibre profile (`close` near, `far` from the mid-distance microphone, crossed over by distance); a reload step plays the takes
 // of its cue in the tier of the weapon's weight (light pistols, medium rifles, heavy shotguns); a brass case landing plays the bounces of its floor
 // (Oculus Audio Pack 1, CC BY 4.0: concrete, grass, metal). Without the files the synthesized sounds play.
-import { sampleBankFromManifest } from '@adatechnology/game-audio'
+import { CASING_DEFAULTS, droppedPartDefaults, sampleBankFromManifest } from '@adatechnology/game-audio'
 import type { SampleDefaults, SampleSound, SfxManifest, SoundBank } from '@adatechnology/game-audio'
 
 import hitData from '../data/reload-sample-hits.json'
@@ -45,8 +45,8 @@ const LAUNCH_IDS: ReadonlySet<string> = new Set(['launcher_40mm', 'rocket_launch
 /** A reload step: heard at the hands, about a third of a shot's level after the converter's peak normalization. */
 export const RELOAD_SAMPLE: SampleDefaults = { bus: 'weapons', gain: 0.32, pitch: 0.05, falloff: { model: 'inverse_square', k: 0.05, minGain: 0.002 }, cutoffK: 0.02, priority: 2 }
 
-/** A brass case's bounces on a floor: quiet, heard only near. */
-export const CASING_SAMPLE: SampleDefaults = { bus: 'weapons', gain: 0.22, pitch: 0.06, falloff: { model: 'inverse_square', k: 0.08, minGain: 0.003 }, cutoffK: 0.03, priority: 1 }
+/** A brass case's bounces on a floor: far under a shot, heard only near (the numbers are game-audio's `data/sample-levels.json`). */
+export const CASING_SAMPLE: SampleDefaults = CASING_DEFAULTS
 
 /** The recorded bounces of a brass case on a floor (`casing_drop_<concreto|terra|metal>`); wood and the plastic hull of a shell stay synthesized. */
 export const casingSampleId = (sample: string): string => sample.replace(/_(pistol|rifle|shell)$/, '')
@@ -68,7 +68,7 @@ const isGunshot = (id: string): boolean => GUNSHOT_SAMPLE_IDS.includes(id)
 /** The numbers of a sound of the manifest: a gunshot, a case landing or a reload step (`armas` only). */
 export function weaponSampleDefaults(sound: { readonly id: string; readonly category: string }, overrides: WeaponSampleOptions['sounds'] = {}): SampleDefaults | undefined {
   if (sound.category !== 'armas') return undefined
-  const base = LAUNCH_IDS.has(sound.id) ? LAUNCH_SAMPLE : sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : sound.id.startsWith('casing_drop_') || sound.id.startsWith('mag_drop_') ? CASING_SAMPLE : RELOAD_SAMPLE
+  const base = LAUNCH_IDS.has(sound.id) ? LAUNCH_SAMPLE : sound.id.startsWith('suppressed_') ? SUPPRESSED_SAMPLE : isGunshot(sound.id) ? GUNSHOT_SAMPLE : droppedPartDefaults(sound.id) ?? RELOAD_SAMPLE
   return { ...base, ...overrides[sound.id] }
 }
 

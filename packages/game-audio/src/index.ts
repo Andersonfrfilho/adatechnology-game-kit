@@ -71,6 +71,7 @@ export type {
   UserSoundPicks,
   UserSoundRole,
 } from './user-samples'
+export { CASING_DEFAULTS, MAGAZINE_DROP_DEFAULTS, SAMPLE_LEVELS, droppedPartDefaults } from './sample-levels'
 export { KIT_CATEGORY_BUS, KIT_SAMPLE_ALIASES, kitSampleBank, kitSampleDefaults, loadKitSamples, pointSamples, withAliases } from './kit-samples'
 export type { KitSampleBankOptions, LoadKitSamplesOptions, PointSamplesOptions, SampleFiles } from './kit-samples'
 export { LOCAL_PACK_LICENSES, LOCAL_PACK_PREFERENCES, LocalSoundPackError, isShippableLicense, localPackSamples, parseLocalSoundPack } from './local-pack'
