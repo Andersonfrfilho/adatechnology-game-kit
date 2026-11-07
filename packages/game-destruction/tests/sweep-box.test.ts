@@ -19,6 +19,11 @@ describe('world.sweepBox', () => {
     expect(hit?.distance).toBeCloseTo(4, 1)
   })
 
+  it('ignores every object of a list (a piece and what it already pushes)', () => {
+    expect(world.sweepBox(box, [0, 0, -1], 5, { ignore: ['moving', 'wall'] })).toBeNull()
+    expect(world.sweepBox(box, [0, 0, -1], 5, { ignore: ['moving'] })?.object).toBe('wall')
+  })
+
   it('does not reach what is farther than the distance, nor what is behind', () => {
     expect(world.sweepBox(box, [0, 0, -1], 3, { ignore: 'moving' })).toBeNull()
     expect(world.sweepBox(box, [0, 0, 1], 5, { ignore: 'moving' })).toBeNull()

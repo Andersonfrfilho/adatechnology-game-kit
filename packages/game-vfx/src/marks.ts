@@ -44,7 +44,21 @@ export interface BloodMark {
   readonly rotation: number
 }
 
-export type Mark = ScorchMark | DirtMark | RockMark | BloodMark
+/** A scratch a dragged piece leaves on the floor (`VfxWorld.scrape`): a thin strip along the drag, lighter or darker than the floor. */
+export interface ScrapeMark {
+  readonly kind: 'scrape'
+  /** Middle of the strip, on the floor. */
+  readonly x: number
+  readonly y: number
+  readonly z: number
+  readonly length: number
+  readonly width: number
+  /** Turn of the strip about the vertical: 0 runs along +x. */
+  readonly rotation: number
+  readonly color: number
+}
+
+export type Mark = ScorchMark | DirtMark | RockMark | BloodMark | ScrapeMark
 
 export type MarkEvent = { readonly type: 'add'; readonly mark: Mark } | { readonly type: 'clear' }
 
@@ -53,6 +67,7 @@ export interface MarkStore {
   /** Goes up on every mark added or cleared. */
   readonly version: number
   readonly bloodCount: number
+  readonly scrapeCount: number
   /** The counter that lifts each decal a hair higher than the last (the Lab's `decalY`). */
   lift: number
   add(mark: Mark): void
@@ -62,6 +77,8 @@ export interface MarkStore {
 }
 
 const BLOOD_LIMIT = 450
+/** Scratches kept on the floor; past it the oldest goes, so dragging furniture all day costs no more than this. */
+export const SCRAPE_LIMIT = 400
 const SCORCH_VARIANTS = 3
 const RIM_COLORS = [0x2b2c2f, 0x3a3836] as const
 
@@ -69,6 +86,7 @@ export function createMarkStore(): MarkStore {
   const entries: Mark[] = []
   let version = 0
   let bloodCount = 0
+  let scrapeCount = 0
   const listeners = new Set<(event: MarkEvent) => void>()
   return {
     entries,
@@ -78,16 +96,26 @@ export function createMarkStore(): MarkStore {
     get bloodCount() {
       return bloodCount
     },
+    get scrapeCount() {
+      return scrapeCount
+    },
     lift: 0,
     add(mark) {
+      if (mark.kind === 'scrape' && scrapeCount >= SCRAPE_LIMIT) {
+        // the oldest scratch goes (the renderer reuses its slot in the same order)
+        entries.splice(entries.findIndex((m) => m.kind === 'scrape'), 1)
+        scrapeCount--
+      }
       entries.push(mark)
       if (mark.kind === 'blood') bloodCount++
+      if (mark.kind === 'scrape') scrapeCount++
       version++
       for (const listener of listeners) listener({ type: 'add', mark })
     },
     clear() {
       entries.length = 0
       bloodCount = 0
+      scrapeCount = 0
       this.lift = 0
       version++
       for (const listener of listeners) listener({ type: 'clear' })
@@ -154,4 +182,9 @@ export function addBloodSplat(store: MarkStore, ground: GroundField | undefined,
   const scaleX = spec.radius * random.between(1.6, 2.4)
   const scaleZ = spec.radius * random.between(1.2, 2)
   store.add({ kind: 'blood', x: spec.x, y, z: spec.z, scaleX, scaleZ, rotation: random.next() * 6 })
+}
+
+/** A scratch on the floor where a piece was dragged, lifted a hair over the floor like the other decals. */
+export function addScrape(store: MarkStore, spec: Omit<ScrapeMark, 'kind'>): void {
+  store.add({ kind: 'scrape', ...spec, y: spec.y + 0.002 + nextLift(store) * 0.0002 })
 }

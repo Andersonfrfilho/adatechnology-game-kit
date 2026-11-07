@@ -224,6 +224,8 @@ export interface FluidWorld {
   heat(id: string, deltaC: number): void
   addSurface(spec: SurfaceSpec): void
   removeSurface(id: string): void
+  /** Moves a surface and the stains on it by `offset` (a pushed table carries what was spilled on its top). Unknown ids are ignored. */
+  moveSurface(id: string, offset: Vec3): void
   /**
    * Add a tap: while `on` it runs a `tap` stream (cause `'tap'`) from `position` along `direction` at `rate` litres per second. The stream fills any
    * container whose opening it lands in (the same logic as a pour) and otherwise makes a stain on the surface below. Returns the tap id.

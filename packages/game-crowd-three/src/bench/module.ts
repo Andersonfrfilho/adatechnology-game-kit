@@ -310,9 +310,13 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     nightFactor: settings.night ? 1 : 0,
     ...sceneOf()?.context?.({ cx, cz }),
   })
+  /** The host's pushable furniture goes into the crowd before the step; after it, what the agents leaned on each piece goes back to the host, which moves it. */
   const stepCrowd = (dt: number): void => {
     const started = performance.now()
+    const movables = host?.movables?.() ?? []
+    world.crowd.setMovables(movables.map((m) => ({ id: m.objectId, minX: m.minX, minZ: m.minZ, maxX: m.maxX, maxZ: m.maxZ, top: m.top })))
     world.crowd.update(dt, updateContext())
+    for (const shove of world.crowd.shoves) host?.shove?.(shove.id, { direction: [shove.dirX, shove.dirZ], forceN: shove.forceN, pushers: shove.pushers, dt })
     frameStepMs += performance.now() - started
   }
   const recordPeaks = (): void => {

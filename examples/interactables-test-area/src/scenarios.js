@@ -293,12 +293,14 @@ export function buildScenarios(locale, analysisOf) {
       const playerZ = room.playerPosition[2]
       room.push.setWalk([0, -1])
       step(1)
+      // the push speeds up as a person does (at most 1.5 m/s², game-player `accel`), so a cup on a pushed table rides along: about 0.75 m in the first second
       const went = lightZ - rootOf(light).position.z
-      expect(went > 1 && went < 2, T(`O móvel andou ${n1(went)} m em 1 s, mais devagar que andar`, `The piece went ${n1(went)} m in 1 s, slower than walking`))
+      expect(went > 0.6 && went < 1.5, T(`O móvel andou ${n1(went)} m em 1 s, ganhando velocidade como quem empurra`, `The piece went ${n1(went)} m in 1 s, speeding up as a person pushing it`))
       expect(Math.abs(playerZ - room.playerPosition[2] - went) < 0.01, T('O jogador foi junto', 'The player went with it'))
+      // pulling first brakes the piece (3 m/s²) and then brings it back
       room.push.setWalk([0, 1])
-      step(0.5)
-      expect(rootOf(light).position.z > lightZ - went + 0.5, T('Puxar traz o móvel de volta', 'Pulling brings it back'))
+      step(1.5)
+      expect(rootOf(light).position.z > lightZ - went + 0.2, T('Puxar traz o móvel de volta', 'Pulling brings it back'))
       room.push.setWalk(null)
       room.push.end()
       step(0.3)

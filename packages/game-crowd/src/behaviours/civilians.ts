@@ -73,6 +73,8 @@ export type CivilianNumbers = {
   readonly doorProbe: number
   readonly steer: number
   readonly bodyHeight: number
+  /** Half the width of the body on the floor, metres: how far from a piece of furniture a civilian keeps when walking round it. */
+  readonly bodyRadius: number
   readonly patrolChance: number
   readonly childHeight: number
   readonly childBuild: number
@@ -87,6 +89,9 @@ export type CivilianNumbers = {
 }
 
 /** The game's numbers (`jogo.js` G 69960-70175). */
+/** How much of the goal must lie to one side of a piece of furniture (the cosine) for a civilian to go round that way rather than the shorter one. */
+const ROUND_TOWARD = 0.2
+
 export const CIVILIAN_DEFAULTS: CivilianNumbers = {
   hpAdult: 100,
   hpChild: 40,
@@ -115,6 +120,7 @@ export const CIVILIAN_DEFAULTS: CivilianNumbers = {
   doorProbe: 0.6,
   steer: 8,
   bodyHeight: 0.4,
+  bodyRadius: 0.3,
   patrolChance: 0.2,
   childHeight: 0.65,
   childBuild: 0.7,
@@ -344,6 +350,36 @@ export function createCivilians(crowd: Crowd, options: CivilianOptions): Civilia
   })
 
   // ----- moving (G 70125 npcMove) -----
+  const blocked = (x: number, z: number): boolean => grid.solidAt(x, z, N.bodyHeight) || crowd.movableAt(x, z, N.bodyRadius) !== null
+  /** The way round (1: counter-clockwise seen from above, -1: clockwise) a civilian took about the piece of furniture in its way, kept while it is ahead so it does not swing back and forth. */
+  const roundSides = new WeakMap<Civilian, number>()
+  /**
+   * A piece of furniture on the way to the goal `(ax, az)`: the way along it, tangent to its nearest point and always turning the same way, so the body walks
+   * round it and its corners as a person walks round a sofa instead of pressing on it. The way is toward the goal, or the shorter one when the goal is right behind.
+   * Null when nothing movable is ahead.
+   */
+  const roundFurniture = (n: Civilian, ax: number, az: number): readonly [number, number] | null => {
+    const m = crowd.movableAt(n.x + ax * N.probe, n.z + az * N.probe, N.bodyRadius)
+    if (!m) {
+      roundSides.delete(n)
+      return null
+    }
+    let ox = n.x - Math.max(m.minX, Math.min(m.maxX, n.x))
+    let oz = n.z - Math.max(m.minZ, Math.min(m.maxZ, n.z))
+    const length = Math.hypot(ox, oz) || 1
+    ox /= length
+    oz /= length
+    let side = roundSides.get(n)
+    if (side === undefined) {
+      const toward = -oz * ax + ox * az
+      // right behind it: the end of the face that is nearer along (-oz, ox)
+      const plusEnd = Math.abs(oz) >= Math.abs(ox) ? (-oz > 0 ? m.maxX - n.x : n.x - m.minX) : ox > 0 ? m.maxZ - n.z : n.z - m.minZ
+      const minusEnd = Math.abs(oz) >= Math.abs(ox) ? (-oz > 0 ? n.x - m.minX : m.maxX - n.x) : ox > 0 ? n.z - m.minZ : m.maxZ - n.z
+      side = Math.abs(toward) > ROUND_TOWARD ? Math.sign(toward) : plusEnd <= minusEnd ? 1 : -1
+      roundSides.set(n, side)
+    }
+    return [-oz * side, ox * side]
+  }
   const move = (n: Civilian, dt: number, tx: number, tz: number, sp: number): boolean => {
     const dx = tx - n.x
     const dz = tz - n.z
@@ -354,13 +390,16 @@ export function createCivilians(crowd: Crowd, options: CivilianOptions): Civilia
     }
     let ax = dx / d
     let az = dz / d
+    // a piece of furniture on the way to the goal: walked round along its face (a person does not shove a sofa)
+    const round = roundFurniture(n, ax, az)
+    if (round) [ax, az] = round
     // round a wall: tries 0, ±40°, ±80°
-    for (const a of N.whiskers) {
+    else for (const a of N.whiskers) {
       const c = Math.cos(a)
       const s = Math.sin(a)
       const bx = ax * c - az * s
       const bz = ax * s + az * c
-      if (!grid.solidAt(n.x + bx * N.probe, n.z + bz * N.probe, N.bodyHeight)) {
+      if (!blocked(n.x + bx * N.probe, n.z + bz * N.probe)) {
         ax = bx
         az = bz
         break
@@ -380,8 +419,8 @@ export function createCivilians(crowd: Crowd, options: CivilianOptions): Civilia
     n.vz = lerp(n.vz, az * sp, Math.min(1, dt * N.steer))
     const nx = n.x + n.vx * dt
     const nz = n.z + n.vz * dt
-    if (!grid.solidAt(nx, n.z, N.bodyHeight)) n.x = nx
-    if (!grid.solidAt(n.x, nz, N.bodyHeight)) n.z = nz
+    if (!blocked(nx, n.z)) n.x = nx
+    if (!blocked(n.x, nz)) n.z = nz
     n.yaw = Math.atan2(n.vx, n.vz)
     return false
   }
@@ -489,6 +528,8 @@ export function createCivilians(crowd: Crowd, options: CivilianOptions): Civilia
       n.state = 'fleeing'
       n.path = path.map(([x, z]) => [x, z])
       n.pathIndex = 0
+      // a new way out starts its own count: the time stuck on an earlier one does not skip the first point of this one
+      n.stuckTimer = 0
     },
     route(from, to) {
       return rota(casaDe(from)!, casaDe(to)!)

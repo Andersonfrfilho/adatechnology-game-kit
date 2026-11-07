@@ -8,7 +8,7 @@ export type CrowdBenchText = {
   readonly hints: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'noise' | 'hit' | 'join' | 'flee' | 'herd' | 'materialize' | 'push'>
   readonly layers: Keys<'corpses' | 'civilians' | 'animals'>
   readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message' | 'falls_pressure' | 'falls_chain' | 'falls_landing' | 'climbers' | 'mound_max' | 'thrown_peak' | 'max_overlap' | 'chain_links' | 'crowd_ms_p99' | 'detail_scale' | 'crowd_gpu_ms'>
-  readonly sceneNames: Keys<'open' | 'dense_wall' | 'chain_line'>
+  readonly sceneNames: Keys<'open' | 'dense_wall' | 'chain_line' | 'furniture_shove'>
   readonly scenarios: Keys<'relevance' | 'lod' | 'attack_pose' | 'corpse_darkens' | 'civilians_flee' | 'herd_calls' | 'vultures' | 'infection' | 'determinism'>
   readonly messages: Keys<'called' | 'burst_hit' | 'swing_knock' | 'pounce_knock' | 'migration' | 'door_broken' | 'alarm' | 'bark' | 'growl' | 'bitten' | 'turned' | 'died'>
   readonly yes: string
@@ -79,7 +79,7 @@ const EN: CrowdBenchText = {
     chain_links: 'Chain links',
     crowd_ms_p99: 'Crowd step, p99',
   },
-  sceneNames: { open: 'Open ring', dense_wall: 'Dense wall', chain_line: 'Chain line' },
+  sceneNames: { open: 'Open ring', dense_wall: 'Dense wall', chain_line: 'Chain line', furniture_shove: 'Shoving a sofa' },
   scenarios: {
     relevance: 'Relevance: 500 agents, only the near ones every frame',
     lod: 'Level of detail with 1.5 m of hysteresis',
@@ -173,7 +173,7 @@ const PT_BR: CrowdBenchText = {
     chain_links: 'Elos da cadeia',
     crowd_ms_p99: 'Passo da multidão, p99',
   },
-  sceneNames: { open: 'Anel aberto', dense_wall: 'Muro denso', chain_line: 'Rua em cadeia' },
+  sceneNames: { open: 'Anel aberto', dense_wall: 'Muro denso', chain_line: 'Rua em cadeia', furniture_shove: 'Empurrando um sofá' },
   scenarios: {
     relevance: 'Relevância: 500 agentes, só os de perto todo quadro',
     lod: 'Nível de detalhe com 1,5 m de histerese',

@@ -17,8 +17,8 @@ import type { GroundField } from './ground'
 import { createLightPool, resetLightPool, updateLights } from './lights'
 import type { LightPool } from './lights'
 import { LOD_GAME } from './lod'
-import { createMarkStore } from './marks'
-import type { MarkEvent, MarkStore } from './marks'
+import { addScrape, createMarkStore } from './marks'
+import type { MarkEvent, MarkStore, ScrapeMark } from './marks'
 import type { OrderedPool } from './pool'
 import { updateChunks } from './pools/chunk-motion'
 import { createChunkPool } from './pools/chunks'
@@ -170,6 +170,8 @@ export interface VfxWorld {
   fires(): readonly Fire[]
   /** Hears every mark the moment it is made, and when they are cleared. Returns the function that stops listening. */
   onMarks(listener: (event: MarkEvent) => void): () => void
+  /** Scratches the floor where a piece was dragged (`ScrapeMark`): it stays, the oldest going past `SCRAPE_LIMIT`. */
+  scrape(mark: Omit<ScrapeMark, 'kind'>): void
   /** Seconds the world has run since it was created or cleared. */
   time(): number
   /** The state of the shared stream (`randomMode: 'shared'`): what a golden compares after a run. */
@@ -405,6 +407,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     }),
     fires: () => core.fires.items,
     onMarks: (listener) => core.marks.subscribe(listener),
+    scrape: (mark) => addScrape(core.marks, mark),
     time: () => core.clock.time,
     randomState: () => sharedRandom.state,
     clear() {
