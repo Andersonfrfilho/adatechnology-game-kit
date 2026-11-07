@@ -112,35 +112,38 @@ describe('concrete under fire: a material answers each kind of blow its own way'
     expect(b.of('expose')).toHaveLength(0)
   })
 
-  it('a 7.62 round knocks the block it hits out and the bars inside it show', () => {
+  it('7.62 rounds on one place take its cover off within a few rounds and its bars show there, the beam still whole', () => {
     const b = beamWorld()
-    b.fire(3300, 7.62, 1)
-    expect(b.of('chip').length).toBeGreaterThanOrEqual(1)
+    b.fire(3300, 7.62, 3)
+    expect(b.of('chip')).toHaveLength(0)
     const bars = b.of('expose').at(-1)!.bars
     expect(bars.length).toBeGreaterThan(0)
-    // the bars that show are the ones inside the block that came out: no longer than it
+    // the bars that show are the ones in the band the rounds wore: no longer than it
     for (const [a, c] of bars) expect(Math.hypot(c[0] - a[0], c[1] - a[1], c[2] - a[2])).toBeLessThanOrEqual(0.1 + 1e-9)
     expect(b.world.part('b', 'beam')!.status).not.toBe('broken')
   })
 
-  it('5.56 rounds take three or so to the block; a fist takes nothing, however many', () => {
+  it('5.56 rounds wear it slowly: four take nothing out; a fist takes nothing, however many', () => {
     const b = beamWorld()
-    b.fire(1750, 5.56, 2)
+    b.fire(1750, 5.56, 4)
     expect(b.of('chip')).toHaveLength(0)
-    b.fire(1750, 5.56, 2)
-    expect(b.of('chip').length).toBeGreaterThanOrEqual(1)
     const p = beamWorld()
     for (let i = 0; i < 40; i++) p.world.hit('b', { type: 'blunt', point: [0.05, 2.95, 0.075], direction: [0, 0, -1], energy: 25, radius: 0.05 })
     expect(p.of('chip')).toHaveLength(0)
   })
 
-  it('with its section shot away at one place the beam carries what its cage does', () => {
+  it('concentrated fire on one place cuts its section there, and only there: the band of the cut comes out, the rest of the beam stays', () => {
     const b = beamWorld()
-    for (const y of [2.85, 2.95]) for (let i = 0; i < 2; i++) b.world.shoot([0.05, y, 5], [0, 0, -1], 3300, 7.62, 'test')
+    let shots = 0
+    while (b.of('chip').length === 0 && shots < 80) {
+      b.fire(3300, 7.62, 1)
+      shots++
+    }
+    expect(b.of('chip').length).toBeGreaterThanOrEqual(1)
     const st = b.world.part('b', 'beam')!
-    expect(st.chipped!.length).toBeGreaterThanOrEqual(2)
-    const rows = new Set(st.chipped!.filter((c) => Math.abs(c.center[0] - 0.05) < 0.05).map((c) => Math.round(c.center[1] * 100)))
-    expect(rows.size).toBe(2)
+    // a lying member: only the band that was shot comes out (nothing above it falls), across its whole section
+    const along = st.chipped!.map((c) => c.center[0])
+    expect(Math.max(...along) - Math.min(...along)).toBeLessThanOrEqual(0.1 + 1e-6)
   })
 })
 
