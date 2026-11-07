@@ -27,6 +27,8 @@ export interface BeamCheck {
   readonly pillars: readonly number[]
   /** The beam's moment is multiplied by this before it is compared (the world's `structure.safetyFactor`). */
   readonly loadFactor: number
+  /** The beam goes on past its start / its end as another ground beam still on the ground (one casting): that end is held. */
+  readonly continuous?: readonly [boolean, boolean]
 }
 
 export interface RunVerdict extends VoidRun {
@@ -97,6 +99,8 @@ export function mergeRuns(runs: readonly VoidRun[], check: BeamCheck): VoidRun[]
       if (soil <= 0 || (!before && !after)) continue
       // a pillar on the stretch carries what comes to it
       if (check.pillars.some((p) => p >= from - PILLAR_REACH && p <= to + PILLAR_REACH)) continue
+      // nor does ground at an end of the beam where it goes on as another ground beam
+      if ((!before && check.continuous?.[0]) || (!after && check.continuous?.[1])) continue
       const reaction = (before ? (before.end - before.start) / 2 : 0) + (after ? (after.end - after.start) / 2 : 0)
       const narrow = soil < check.depth
       const weak = reaction > (check.soilSafety - 1) * soil
@@ -126,8 +130,8 @@ export function judgeBeam(flags: readonly boolean[], step: number, check: BeamCh
   let tips = false
   for (const run of runs) {
     const span = run.end - run.start
-    const freeStart = run.start <= 1e-9 && !pillarNear(check.pillars, 0)
-    const freeEnd = run.end >= check.length - 1e-9 && !pillarNear(check.pillars, check.length)
+    const freeStart = run.start <= 1e-9 && !pillarNear(check.pillars, 0) && !check.continuous?.[0]
+    const freeEnd = run.end >= check.length - 1e-9 && !pillarNear(check.pillars, check.length) && !check.continuous?.[1]
     if (freeStart && freeEnd) {
       verdicts.push({ ...run, kind: 'cantilever', span, moment: Infinity, holds: false, cracks: true })
       tips = true
@@ -139,10 +143,12 @@ export function judgeBeam(flags: readonly boolean[], step: number, check: BeamCh
     // an overhang whose weight stands past the ground left, with no pillar at its root, takes the beam over with it
     const balanced = !cantilever || span <= ground
     const rooted = cantilever && pillarNear(check.pillars, freeStart ? run.end : run.start)
+    // the far end cast on into a beam still on the ground holds the rest down
+    const held = cantilever && !!check.continuous?.[freeStart ? 1 : 0]
     const holds = span <= reach && moment <= check.resists && (balanced || rooted)
     verdicts.push({ ...run, kind: cantilever ? 'cantilever' : 'span', span, moment, holds, cracks: moment > check.cracking })
     // one that is balanced or held at its root breaks off there instead: the overhang goes, the beam stays
-    if (cantilever && !holds && !balanced && !rooted) tips = true
+    if (cantilever && !holds && !balanced && !rooted && !held) tips = true
   }
   return { runs: verdicts, tips }
 }

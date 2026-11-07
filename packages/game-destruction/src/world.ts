@@ -1575,6 +1575,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return out
   }
 
+  /** Whether the beam goes on, past its start and past its end, as another ground beam still on the ground in line with it (cast together). */
+  const continuationOf = (o: ObjRT, b: Bearer, fp: Footprint, standing: ReadonlySet<number>): [boolean, boolean] => {
+    const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
+    const across = fp.long === 0 ? 2 : 0
+    const ends: [boolean, boolean] = [false, false]
+    for (const i of standing) {
+      const q = o.parts[i]!
+      if (i === b.i || q.spec.structure?.role !== 'foundation' || isTerrain(q)) continue
+      const c = aabbOf(q.spec.shape, q.pos, q.q)
+      const inLine = Math.abs((c.min[across] + c.max[across]) / 2 - (box.min[across] + box.max[across]) / 2) < PILLAR_SEAT && c.max[1] > box.min[1] && c.min[1] < box.max[1]
+      if (!inLine) continue
+      if (Math.abs(c.max[fp.long] - box.min[fp.long]) < PILLAR_SEAT) ends[0] = true
+      if (Math.abs(c.min[fp.long] - box.max[fp.long]) < PILLAR_SEAT) ends[1] = true
+    }
+    return ends
+  }
+
   /** What a bearer does over the voids under it: settles, bridges them, breaks over one of them (`opened`), or loses its support. */
   type Bearing = { status: 'settled' | 'bridged' | 'opened' | 'unsupported'; failed: Array<VoidRun & { free?: 'start' | 'end' }>; cracks: Array<{ at: number; top: boolean }> }
 
@@ -1588,7 +1605,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const load = lineLoad(sec.g, b.p.st.load ?? b.p.st.mass)
     const verdict = judgeBeam(fp.slices.map((slice) => slice.void), fp.step, {
       length, depth: sec.section.h, load, resists: sec.resists, cracking: sec.m.cracking, spanDepth: groundCfg.bridgeSpanDepth,
-      soilSafety: soilCfg.safety, pillars: pillarsUnder(o, b, fp, standing), loadFactor: structureSafety,
+      soilSafety: soilCfg.safety, pillars: pillarsUnder(o, b, fp, standing), loadFactor: structureSafety, continuous: continuationOf(o, b, fp, standing),
     })
     if (verdict.runs.length === 0) return { status: fp.share <= 1 - 1 / soilCfg.safety ? 'settled' : 'unsupported', failed: [], cracks: [] }
     if (verdict.tips) return { status: 'unsupported', failed: [], cracks: [] }

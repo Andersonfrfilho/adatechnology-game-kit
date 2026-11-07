@@ -275,6 +275,8 @@ describe('the structural review: load paths over a void', () => {
     // with its weight past the ground left and no pillar at its root, it takes the beam in
     expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, beam).tips).toBe(true)
     expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, { ...beam, pillars: [3.5] }).tips).toBe(false)
+    // nor when the beam goes on past its other end as a ground beam still on the ground (one casting)
+    expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, { ...beam, continuous: [true, false] }).tips).toBe(false)
   })
 
   it('voids with less ground between them than the beam is deep, or ground that cannot take the reactions, are one span', () => {
