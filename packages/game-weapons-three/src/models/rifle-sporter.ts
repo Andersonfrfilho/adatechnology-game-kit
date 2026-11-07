@@ -14,6 +14,8 @@ export function buildSporterStock(context: RifleContext, magazineX: number): voi
   const { M, box } = kit
   const forendTip = x1 + (L - x1) * (context.options.fore ?? 0.5)
   const bottom = -hR / 2
+  // the bedding rises to hold the receiver: the round action of a bolt rifle sits lower than the box of the others
+  const bedTop = context.options.round ? context.barrelY - hR * 0.36 + 0.003 : bottom + 0.012
   profileSolid(
     kit,
     group,
@@ -23,9 +25,9 @@ export function buildSporterStock(context: RifleContext, magazineX: number): voi
       [S - 0.11, -0.016, -0.084],
       [S - 0.05, -0.018, -0.114],
       [S - 0.01, -0.016, -0.09],
-      [S + 0.03, bottom + 0.012, bottom - 0.03],
-      [x1, bottom + 0.01, bottom - 0.026],
-      [x1 + 0.08, bottom + 0.016, bottom - 0.024],
+      [S + 0.03, bedTop, bottom - 0.03],
+      [x1, bedTop, bottom - 0.026],
+      [x1 + 0.08, bedTop, bottom - 0.024],
       [forendTip, bottom + 0.02, bottom - 0.012],
     ],
     0.04,
@@ -48,5 +50,8 @@ export function buildKalashnikovStock(context: RifleContext): void {
   const { M, box } = kit
   profileSolid(kit, group, [[0.008, -0.034, -0.15], [S * 0.5, -0.014, -0.1], [S + 0.004, hR * 0.2, -hR / 2 - 0.002]], 0.036, furn)
   box(group, 0.008, 0.118, 0.038, M.metal, 0.004, -0.092, 0, -0.06)
-  box(group, 0.03, 0.006, 0.006, M.metal, 0.11, -0.13, 0.02, 0.3)
+  // the sling loop on the left of the butt, a little above the belly
+  const loopX = 0.1
+  const belly = -0.15 + ((loopX - 0.008) / (S * 0.5 - 0.008)) * 0.05
+  box(group, 0.03, 0.006, 0.006, M.metal, loopX, belly + 0.032, -0.019, 0.3)
 }

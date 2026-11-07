@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { buildWeaponModelById } from '../src'
+import { strayParts } from './support/connected-parts'
 
 const sizeOf = (object: THREE.Object3D): THREE.Vector3 => new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3())
 
@@ -99,5 +100,19 @@ describe('the Kalashnikovs with the stamped receiver and the banana magazine of 
       return new THREE.Box3().setFromObject(magazine).getSize(new THREE.Vector3()).y
     }
     expect(height('rpk')).toBeGreaterThan(height('akm') + 0.04)
+  })
+})
+
+describe('the models redrawn from their photos have no part left in the air', () => {
+  const PISTOLS = ['desert_eagle_mark_xix']
+  const RIFLES = ['svd_dragunov', 'remington_700', 'remington_700_300wm', 'hunting_rifle_30_06', 'm24_sws', 'steyr_ssg_69', 'ak_47', 'akm', 'rpk', 'ak_74', 'aks_74u']
+  // gaps of the shared rifle pieces, not of these redraws: the long scopes' eyepiece and the brake's slots (details.ts, muzzle-brake.ts) and the trigger of the generic grip
+  const sharedGaps = /scope|optic|pso|acog|brake/
+
+  it.each([...PISTOLS, ...RIFLES])('%s: every visible mesh touches the rest of the model or sits inside it', (weapon) => {
+    const model = buildWeaponModelById(THREE, weapon)!
+    const skipped = new Set<THREE.Object3D>(Object.entries(model.parts.fittings ?? {}).flatMap(([key, list]) => (sharedGaps.test(key) ? list : [])))
+    if (RIFLES.includes(weapon) && model.parts.trigger) skipped.add(model.parts.trigger)
+    expect(strayParts(model.root, 0.0015, (mesh) => skipped.has(mesh))).toEqual([])
   })
 })

@@ -511,7 +511,7 @@
     "length": 943,
     "barrel": 415,
     "options": {
-      "stock": "fixed",
+      "stock": "ak",
       "mag": "curved",
       "hg": "poly",
       "hgFrac": 0.42,
@@ -522,7 +522,8 @@
       "rod": 1,
       "rpm": 650,
       "magMat": "bakelite",
-      "kalashnikov": 1
+      "kalashnikov": 1,
+      "wood": 1
     }
   },
   "ak_12": {

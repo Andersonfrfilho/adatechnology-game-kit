@@ -7473,7 +7473,7 @@
         "length": 943,
         "barrel": 415,
         "options": {
-          "stock": "fixed",
+          "stock": "ak",
           "mag": "curved",
           "hg": "poly",
           "hgFrac": 0.42,
@@ -7484,11 +7484,12 @@
           "rod": 1,
           "rpm": 650,
           "magMat": "bakelite",
-          "kalashnikov": 1
+          "kalashnikov": 1,
+          "wood": 1
         }
       },
       "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
-      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs."
+      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs. Its photo also shows the wooden furniture of the early AK-74, so it takes the wooden wedge stock (stock: 'ak') and wooden handguard (wood) too; the generic fixed stock left its sling swivel hanging in the air under the butt."
     },
     "aks_74u": {
       "value": {
