@@ -47,6 +47,8 @@ export const createBlobShadowBatch = (three: Three, { max, radius = 0.55, opacit
   })
   const mesh = new three.Mesh(geometry, material) as unknown as THREE_NS.Mesh & { count: number }
   Object.defineProperty(mesh, 'count', { get: () => geometry.instanceCount, set: (value: number) => (geometry.instanceCount = value) })
+  // the bodies are placed per instance on the GPU: the template geometry a ray would test sits at the origin, where none is drawn
+  mesh.raycast = () => undefined
   mesh.frustumCulled = false
   mesh.renderOrder = -1
   mesh.name = 'blob-shadows'

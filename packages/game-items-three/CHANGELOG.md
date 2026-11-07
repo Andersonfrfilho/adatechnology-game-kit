@@ -1,5 +1,23 @@
 # @adatechnology/game-items-three
 
+## 0.8.0
+
+### Minor Changes
+
+- c8a78e0: The crowbar model (the team's `pe_cabra`) is corrected to a photo of the real tool: a 7/8 in hexagonal bar instead of a 49 mm round tube, the gooseneck bent about 130 degrees into a forked claw, and a flat chisel at the other end, still 75 cm long. The bar and the chisel are built once per three.js and shared. The goods item's size follows the corrected model (0.160 x 0.75 x 0.031 m).
+
+### Patch Changes
+
+- Updated dependencies [82f44ab]
+- Updated dependencies [99183cb]
+- Updated dependencies [1dea1ac]
+- Updated dependencies [65147e9]
+  - @adatechnology/game-contracts@0.31.0
+  - @adatechnology/game-fluids@0.6.0
+  - @adatechnology/game-floorplan-three@0.12.1
+  - @adatechnology/game-interactables@0.2.23
+  - @adatechnology/game-items@0.2.11
+
 ## 0.7.9
 
 ### Patch Changes

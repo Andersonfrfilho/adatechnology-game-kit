@@ -1,5 +1,17 @@
 # @adatechnology/game-terrain
 
+## 0.7.0
+
+### Minor Changes
+
+- 82f44ab: Uma cratera embaixo de uma casa tira o apoio da fundação: `GroundLoss` e o evento `subside` no contrato, `onGroundLoss` e `voidUnder` no terreno (cratera, laje que cede, areia que escorre), `world.groundLoss` na destruição (recalque com trinca da alvenaria pela distorção angular, baldrame que vence o vazio por flexão, peça que perde o apoio e cai pelo caminho de carga) e a sala ligando o terreno ao mundo.
+
+### Patch Changes
+
+- Updated dependencies [82f44ab]
+- Updated dependencies [1dea1ac]
+  - @adatechnology/game-contracts@0.31.0
+
 ## 0.6.0
 
 ### Minor Changes

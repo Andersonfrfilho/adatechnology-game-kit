@@ -1,5 +1,24 @@
 # @adatechnology/game-crowd-three
 
+## 0.6.0
+
+### Minor Changes
+
+- 1dea1ac: Pushing furniture with what rests on it, and being shoved by a horde. The push now speeds up as a person does (`accel` in `FurniturePushRules`: the force left over the friction over the mass, at most 1.5 m/s², braking at 3 m/s²), so a cup on a pushed table rides along, and a sudden stop (the piece hits something, or the player lets go) throws what rests on it forward with the speed it had (`slipsOnTop`, `frictionFor`, `pushAccelerationFor`; each step reports `velocity`, `acceleration` and `stoppedFrom`). The agents of a crowd stop at the faces of the host's movable furniture (`crowd.setMovables`), lean their force on it with the arms out and the body forward (`numbers.shoveForce`, the look's `shoveLean`), and their forces add up (`crowd.shoves`); the host moves the piece at the speed that force gives it (`ModuleHost.movables` and `ModuleHost.shove`). The test room's table is pushable, carries what rests on its top and adds its mass to the push; a module's bodies shove what the player can push, a piece too heavy for one of them moves for three, and a shoved piece stops at the player. The crowd bench has a `furniture_shove` scene.
+
+### Patch Changes
+
+- Updated dependencies [722990b]
+- Updated dependencies [82f44ab]
+- Updated dependencies [99183cb]
+- Updated dependencies [1dea1ac]
+  - @adatechnology/game-audio@0.13.2
+  - @adatechnology/game-contracts@0.31.0
+  - @adatechnology/game-player@0.6.0
+  - @adatechnology/game-crowd@0.5.0
+  - @adatechnology/game-characters@0.2.17
+  - @adatechnology/game-characters-three@0.11.7
+
 ## 0.5.14
 
 ### Patch Changes
