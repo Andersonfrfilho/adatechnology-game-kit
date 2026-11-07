@@ -115,7 +115,7 @@ const buildGuard = (kit: ModelKit, group: THREE_NS.Group, frontStrapAt: (y: numb
 export function buildDeagle(kit: ModelKit, options: ModelOptions): BuiltModel {
   const { M, box, torus, THREE } = kit
   const length = ((options.L ?? 0) / 1000) * 0.97
-  const metal = options.steel ? M.steel : options.stain ? M.steelL : M.metal
+  const metal = options.chrome ? M.chrome : options.steel ? M.steel : options.stain ? M.steelL : M.metal
   const group = kit.group()
   const parts: ModelParts = { family: 'pistol', kick: 1.8, glow: [] }
   const slide = kit.pivot(group)

@@ -15,6 +15,8 @@ export interface ModelOptions {
   design?: string
   /** Metal and furniture finish. */
   steel?: number
+  /** Polished steel, as a chrome-finished pistol. */
+  chrome?: number
   stain?: number
   wood?: number
   olive?: number
@@ -52,6 +54,8 @@ export interface ModelOptions {
   g36?: number
   /** The SVD Dragunov's chunky slotted wooden handguard (with `stock: 'svd'`, its thumbhole stock). */
   svd?: number
+  /** The Kalashnikov's stamped receiver (dust cover, rear sight block, selector lever) and, with `mag: 'curved'`, its smooth banana magazine. */
+  kalashnikov?: number
   charge?: number
   rail?: number
   jacket?: number

@@ -2,6 +2,7 @@ import type * as THREE from 'three'
 import { buildBeltBox } from './attachments/belt-box'
 import { buildDrum } from './attachments/drum'
 import { buildHelicalMagazine } from './helical-magazine'
+import { buildBananaMagazine } from './rifle-kalashnikov'
 import type { RifleContext } from './rifle-context'
 
 /** Grip, trigger group and selector. Returns the x of the grip, which the magazine and the lever hang from. */
@@ -34,7 +35,9 @@ export function buildMagazine(context: RifleContext, gx: number): number {
   const magazine = kit.pivot(group, mx, -hR / 2, 0)
   parts.mag = magazine
   const finish: THREE.Material | undefined = o.magMat === 'bakelite' ? M.bakelite : o.magMat === 'poly' ? M.polyMag : o.magMat === 'smoke' ? M.smoke : undefined
-  if (o.mag === 'curved') {
+  if (o.mag === 'curved' && o.kalashnikov) {
+    parts.magDrop = buildBananaMagazine(kit, magazine, finish ?? M.metal, scale)
+  } else if (o.mag === 'curved') {
     let px = 0
     let py = 0
     const material = finish ?? M.metal

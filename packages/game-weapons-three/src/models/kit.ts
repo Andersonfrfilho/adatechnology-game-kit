@@ -17,6 +17,8 @@ const createMaterials = (THREE: Three) => {
     metal: standard(0x34373a, 0.42, 0.75),
     steel: standard(0x6c6f72, 0.32, 0.85),
     steelL: standard(0x8a8d90, 0.28, 0.9),
+    // polished steel: bright and glossy under plain lights too (the rooms have no environment map for a fully metallic surface to mirror)
+    chrome: standard(0xd4d8dc, 0.16, 0.5),
     dark: standard(0x1a1c1d, 0.55, 0.5),
     poly: standard(0x242622, 0.8, 0.05),
     olive: standard(0x4b5231, 0.8, 0.05),

@@ -15,6 +15,16 @@ describe('the Desert Eagle Mark XIX drawn from its photo', () => {
     expect(model.parts.slide && model.parts.grip && model.parts.mag && model.parts.trigger && model.parts.hammer && model.parts.muzzle && model.parts.eject).toBeTruthy()
   })
 
+  it('is finished in polished steel like the photo: the slide is bright and glossy', () => {
+    let slide: THREE.MeshStandardMaterial | undefined
+    model.parts.slide!.traverse((object) => {
+      const mesh = object as THREE.Mesh
+      if (!slide && mesh.isMesh) slide = mesh.material as THREE.MeshStandardMaterial
+    })
+    expect(slide!.color.getHSL({ h: 0, s: 0, l: 0 }).l).toBeGreaterThan(0.55)
+    expect(slide!.roughness).toBeLessThan(0.25)
+  })
+
   it('keeps the barrel block fixed ahead of a slide that only covers the rear half, the muzzle at the front', () => {
     const slide = new THREE.Box3().setFromObject(model.parts.slide!)
     const whole = new THREE.Box3().setFromObject(model.root)
@@ -66,5 +76,28 @@ describe('the Kalashnikovs with the wedge stock of their photos', () => {
     const receiver = new THREE.Box3().setFromObject(model.parts.bolt!)
     expect(stock.max.y - stock.min.y).toBeGreaterThan(0.11)
     expect(stock.min.y).toBeLessThan(receiver.min.y - 0.08)
+  })
+})
+
+describe('the Kalashnikovs with the stamped receiver and the banana magazine of their photos', () => {
+  it.each(['ak_47', 'akm', 'rpk', 'ak_74', 'aks_74u'])('%s: the magazine is one curved solid that bends forward, and the receiver stays low', (weapon) => {
+    const model = buildWeaponModelById(THREE, weapon)!
+    const meshes = model.parts.mag!.children.filter((child) => (child as THREE.Mesh).isMesh)
+    expect(meshes.length).toBeLessThan(6)
+    const box = new THREE.Box3().setFromObject(model.parts.mag!)
+    const top = model.parts.mag!.getWorldPosition(new THREE.Vector3())
+    // the foot of the magazine is well ahead of its top: the AK's forward curve
+    expect(box.max.x - top.x).toBeGreaterThan(0.05)
+    expect(top.y - box.min.y).toBeGreaterThan(0.15)
+    const receiver = new THREE.Box3().setFromObject(model.parts.bolt!)
+    expect(receiver.max.y).toBeLessThan(0.04)
+  })
+
+  it('gives the RPK the longer 40-round magazine', () => {
+    const height = (weapon: string): number => {
+      const magazine = buildWeaponModelById(THREE, weapon)!.parts.mag!
+      return new THREE.Box3().setFromObject(magazine).getSize(new THREE.Vector3()).y
+    }
+    expect(height('rpk')).toBeGreaterThan(height('akm') + 0.04)
   })
 })
