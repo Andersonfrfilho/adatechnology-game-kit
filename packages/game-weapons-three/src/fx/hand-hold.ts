@@ -213,7 +213,8 @@ export function holdOfProp(THREE: Three, group: THREE_NS.Object3D, category: str
   const left: HandAnchor | null = support
     ? { part: group, offset: support.position.clone().add(V(THREE, 0, handleSize.y / 2 + 0.002, 0)), quaternion: wrap }
     : long && head && headSize ? { part: group, offset: head.position.clone().add(V(THREE, -headSize.x * 0.15, -headSize.y / 2 - HAND_HOLD.palm, 0)), quaternion: forendFrame(THREE) } : null
-  return { right, left, leftMagazine: null, scale, grip: HAND_HOLD.closed, gripLeft: HAND_HOLD.forend }
+  // a hand on the second mark of a two-hand handle closes around it as the first one does; under a head it only holds it
+  return { right, left, leftMagazine: null, scale, grip: HAND_HOLD.closed, gripLeft: support ? HAND_HOLD.closed : HAND_HOLD.forend }
 }
 
 /** The same point of the tool for the other hand: across the tool's middle plane (its z = 0), the hand mirrored with it (a left hand is the mirror image of a right one). */

@@ -17,6 +17,8 @@ export type DrawItemWeaponParams = {
   readonly flip: boolean
   /** Where a second hand closes, metres from the `handle` along the weapon. */
   readonly support?: number
+  /** Where the hand closes: metres along the weapon from its centre and above its underside; default a third of the way back, on the floor. */
+  readonly handle?: readonly [number, number]
 }
 
 type Context = { readonly THREE: typeof THREE_NS; readonly group: THREE_NS.Group; readonly root: THREE_NS.Object3D }
@@ -68,7 +70,7 @@ function headToPositiveX(context: Context, flip: boolean): void {
 }
 
 // origin at the bottom centre, an empty `handle` at the narrow end where the hand closes
-function restOnFloor({ THREE, group, root }: Context, support: number | undefined): void {
+function restOnFloor({ THREE, group, root }: Context, support: number | undefined, at: readonly [number, number] | undefined): void {
   group.updateMatrixWorld(true)
   const laid = new THREE.Box3().setFromObject(root)
   const centre = laid.getCenter(new THREE.Vector3())
@@ -76,12 +78,12 @@ function restOnFloor({ THREE, group, root }: Context, support: number | undefine
   const length = laid.max.x - laid.min.x
   const handle = new THREE.Object3D()
   handle.name = 'handle'
-  handle.position.set(-length * 0.35, 0, 0)
+  handle.position.set(at ? at[0] : -length * 0.35, at ? at[1] : 0, 0)
   group.add(handle)
   if (support !== undefined) {
     const second = new THREE.Object3D()
     second.name = 'support'
-    second.position.set(handle.position.x + support, 0, 0)
+    second.position.set(handle.position.x + support, handle.position.y, 0)
     group.add(second)
   }
   root.traverse((node) => {
@@ -92,7 +94,7 @@ function restOnFloor({ THREE, group, root }: Context, support: number | undefine
   })
 }
 
-export function drawItemWeapon({ THREE, def, items, itemId, turn, roll, flip, support }: DrawItemWeaponParams): THREE_NS.Group {
+export function drawItemWeapon({ THREE, def, items, itemId, turn, roll, flip, support, handle }: DrawItemWeaponParams): THREE_NS.Group {
   const { root } = (items ?? DEFAULT_ITEM_MODELS).build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
   group.name = def.id
@@ -100,6 +102,6 @@ export function drawItemWeapon({ THREE, def, items, itemId, turn, roll, flip, su
   const context: Context = { THREE, group, root }
   layFlat(context, turn, roll)
   headToPositiveX(context, flip)
-  restOnFloor(context, support)
+  restOnFloor(context, support, handle)
   return group
 }

@@ -19,6 +19,8 @@ export interface WeaponItemModel {
   readonly flip?: boolean
   /** A weapon held with two hands: metres from the handle mark, along the weapon (negative toward the butt), where the second hand closes (the `support` mark). */
   readonly support?: number
+  /** Where the hand closes when the default (a third of the way back, on the floor) is wrong: metres along the weapon from its centre and metres above its underside (the brass knuckles are gripped with the rings ahead of the palm). */
+  readonly handle?: readonly [number, number]
 }
 
 // the weapons whose item has another id, or that the laying-down rule turns the wrong way
@@ -35,7 +37,7 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle; the brass knuckles lie with the ring row across the strike
   ['kabar', { flip: true }],
   ['katana', { flip: true, support: -0.11 }],
-  ['brass_knuckles', { turn: 1, roll: 1 }],
+  ['brass_knuckles', { turn: 1, roll: 1, handle: [-0.045, 0.03] }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
@@ -70,7 +72,7 @@ export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponPro
   const buildItemModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined => {
     const itemId = itemModelOf(def.id, items)
     if (!itemId) return undefined
-    return drawItemWeapon({ THREE, def, items, itemId, turn: models.get(def.id)?.turn ?? 0, roll: models.get(def.id)?.roll ?? 0, flip: models.get(def.id)?.flip === true, ...(models.get(def.id)?.support === undefined ? {} : { support: models.get(def.id)?.support as number }) })
+    return drawItemWeapon({ THREE, def, items, itemId, turn: models.get(def.id)?.turn ?? 0, roll: models.get(def.id)?.roll ?? 0, flip: models.get(def.id)?.flip === true, ...(models.get(def.id)?.support === undefined ? {} : { support: models.get(def.id)?.support as number }), ...(models.get(def.id)?.handle === undefined ? {} : { handle: models.get(def.id)?.handle as readonly [number, number] }) })
   }
   return {
     register: (weaponId, model) => void models.set(weaponId, model ?? { item: '' }),
