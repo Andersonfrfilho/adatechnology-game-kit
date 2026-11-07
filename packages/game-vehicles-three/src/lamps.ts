@@ -7,7 +7,7 @@
 import { isLightBudget, LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 
-import type { Object3D } from 'three'
+import type { Object3D, Vector3 } from 'three'
 
 import type { BuiltVehicle } from './build'
 
@@ -34,6 +34,9 @@ export const LAMP_RULES = {
   interior: { color: 0xffe2b0, intensity: 0.5, distance: 2.4, decay: 2 },
 } as const
 
+/** A lamp this close to the vehicle's axis (one headlight of a motorcycle) lights both sides of the beam. */
+const CENTRE_LAMP_X = 0.05
+
 export interface VehicleLamps {
   /** What this vehicle has: fog lamps only when the kit drew them. */
   readonly has: { head: boolean; tail: boolean; fog: boolean; indicators: boolean; beacon: boolean }
@@ -45,16 +48,16 @@ export interface VehicleLamps {
 /** A lamp's glass material: the kit's are emissive standard materials (`MATERIALS.head`, `tail`, `led`, `amber`). */
 type Glass = { clone(): Glass; dispose?(): void; emissiveIntensity?: number; color?: { r: number; g: number; b: number } }
 type Glazed = { material: Glass | Glass[] | null }
-type Lamp = { kind: string; fog?: boolean; inner: Glazed[]; halo?: Array<{ visible: boolean; scale: { x: number; y: number; set(x: number, y: number, z: number): void } }>; group?: { position?: { x: number } } }
+type Lamp = { kind: string; fog?: boolean; broken?: unknown; dark?: boolean; inner: Glazed[]; halo?: Array<{ visible: boolean; scale: { x: number; y: number; set(x: number, y: number, z: number): void } }>; group?: { position?: { x: number }; getWorldPosition?(target: Vector3): Vector3 } }
 
-export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
+export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector3: new () => Vector3 }, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
   const budget: LightBudget | null = isLightBudget(options.lights) ? options.lights : null
   const owner = options.owner ?? 'vehicle-lamps'
   // the kit's lamps, a fog lamp drawn as a headlight marked `fog`, and the decorative fog bulbs a body lists in `context.fogBulbs` (or tags `userData.lamp = 'fog'`)
   const context = built.context as { lights?: Array<Lamp & { fog?: boolean }>; fogBulbs?: Glazed[] } | null
   const lamps: Lamp[] = (context?.lights ?? [])
     .filter((l) => l && Array.isArray(l.inner))
-    .map((l) => (l.fog ? { ...l, kind: 'fog' } : l))
+    .map((l) => (l.fog ? (Object.create(l, { kind: { value: 'fog' } }) as Lamp) : l))
   const bulbs: Glazed[] = (context?.fogBulbs ?? []).filter((o) => o?.material)
   built.group.traverse((o: Object3D & Partial<Glazed>) => {
     if (o.userData?.lamp === 'fog' && o.material && !bulbs.includes(o as Glazed)) bulbs.push(o as Glazed)
@@ -105,7 +108,13 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
     const mat = m.material
     if (mat && !Array.isArray(mat) && base.has(mat) && 'emissiveIntensity' in mat) mat.emissiveIntensity = (base.get(mat) as number) * share
   }
+  /** A lamp the shots broke or put out gives no light: no glow, no halo, no beam from its side. */
+  const isOut = (l: Lamp): boolean => !!l.broken || !!l.dark
   const glow = (l: Lamp, share: number): void => {
+    if (isOut(l)) {
+      for (const h of l.halo ?? []) h.visible = false
+      return
+    }
     for (const m of l.inner) {
       if (amber.has(m)) continue
       glowMesh(m, share)
@@ -136,8 +145,13 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
   const cabin = anchor(0, H * 0.85, 0, 0, 0)
 
   const sources = new Map<string, SourceHandle[]>()
-  const beam = (id: string, on: boolean, make: () => SourceHandle[]): void => {
-    const now = sources.get(id)
+  const beam = (id: string, on: boolean, make: () => SourceHandle[], count?: number): void => {
+    let now = sources.get(id)
+    if (on && now && count !== undefined && now.length !== count) {
+      for (const s of now) s.remove()
+      sources.delete(id)
+      now = undefined
+    }
     if (on && !now && budget) sources.set(id, make())
     if (!on && now) {
       for (const s of now) s.remove()
@@ -153,6 +167,19 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
     (budget as LightBudget).addSource({ owner, kind: 'point', priority: LIGHT_PRIORITY.lamp, color: rule.color, intensity: rule.intensity, distance: rule.distance, decay: rule.decay, position: [0, 0, 0], follow: a }),
   ]
 
+  // a beam is lit by a working lamp: a side whose headlight is out stays dark, and with every lamp of a kind out its beams and lights go
+  const working = (kind: string): Lamp[] => lamps.filter((l) => l.kind === kind && !isOut(l))
+  // the side of each headlight across the vehicle (its left is +x), read once from where the lamp sits in the group
+  const across = new Map<Lamp, number>()
+  built.group.updateMatrixWorld(true)
+  for (const l of lamps) {
+    const anchorObject = (l.group ?? l.inner[0]) as { getWorldPosition?(target: Vector3): Vector3 } | undefined
+    const at = anchorObject?.getWorldPosition?.(new THREE.Vector3())
+    if (at) across.set(l, built.group.worldToLocal(at).x)
+  }
+  const beamSide = (sign: -1 | 1): boolean => !has.head || working('headlight').some((l) => (across.get(l) ?? 0) * sign > 0 || Math.abs(across.get(l) ?? 0) < CENTRE_LAMP_X)
+  const health = (): string => lamps.map((l) => (isOut(l) ? 1 : 0)).join('')
+  let healthSeen = health()
   const state: LampSwitch = { mode: 'off', fog: false, interior: false, brake: false, reverse: false, left: false, right: false }
   const apply = (): void => {
     const g = LAMP_RULES.glow
@@ -166,9 +193,14 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
     for (const b of beacons) glowMesh(b.mesh, lit === null ? g.beacon.off : lit === b.side ? g.beacon.lit : g.beacon.dark)
     // the low and the high beam are the same two spots, re-aimed: switching re-adds them with the other cone
     const beamId = state.mode === 'low' || state.mode === 'high' ? state.mode : null
-    for (const id of ['low', 'high'] as const) beam(id, beamId === id, () => spots(front, LAMP_RULES[id]))
-    beam('fog', state.fog && has.fog, () => spots(fogAnchors, LAMP_RULES.fog))
-    beam('reverse', state.reverse, () => point(rear, LAMP_RULES.reverse))
+    const sides = ([-1, 1] as const).map(beamSide)
+    for (const id of ['low', 'high'] as const) {
+      // the spots of a beam come and go with the lamps that carry them: a side that went out is taken off the lit set and the rest are added again
+      const lit = beamId === id ? front.filter((_, i) => sides[i]) : []
+      beam(id, lit.length > 0, () => spots(lit, LAMP_RULES[id]), lit.length)
+    }
+    beam('fog', state.fog && has.fog && working('fog').length > 0, () => spots(fogAnchors, LAMP_RULES.fog))
+    beam('reverse', state.reverse && (!has.tail || working('taillight').length > 0), () => point(rear, LAMP_RULES.reverse))
     beam('interior', state.interior, () => point(cabin, LAMP_RULES.interior))
   }
   apply()
@@ -179,7 +211,9 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
       return { ...state }
     },
     set(next) {
-      if (next.mode === state.mode && next.fog === state.fog && next.interior === state.interior && next.brake === state.brake && next.reverse === state.reverse && next.left === state.left && next.right === state.right && (next.beacon ?? null) === (state.beacon ?? null)) return
+      const seen = health()
+      if (seen === healthSeen && next.mode === state.mode && next.fog === state.fog && next.interior === state.interior && next.brake === state.brake && next.reverse === state.reverse && next.left === state.left && next.right === state.right && (next.beacon ?? null) === (state.beacon ?? null)) return
+      healthSeen = seen
       Object.assign(state, next)
       apply()
     },
@@ -193,6 +227,8 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D }, buil
         const original = originals.get(m)
         if (!original) return
         originals.delete(m)
+        // a bulb the shots put out wears the dark material by now: that stays
+        if (!copies.has(copy as Glass)) return
         m.material = original
         if (copy && !Array.isArray(copy)) copy.dispose?.()
       }

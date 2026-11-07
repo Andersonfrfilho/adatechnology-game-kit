@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createLightBudget } from '@adatechnology/game-render-three'
-import { createVehicleKit } from '@adatechnology/game-vehicles'
+import { createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, createVehicleLamps } from '../src'
@@ -81,3 +81,46 @@ describe('vehicle lamps', () => {
     bus.dispose()
   })
 })
+
+describe('lamps that were shot out', () => {
+  type LampView = { kind: string; broken: unknown; inner: Array<{ material: unknown }>; halo?: Array<{ visible: boolean }> }
+  const ROUNDS = 12
+  function shotCar() {
+    const built = build('midsize_sedan')
+    const scene = new THREE.Scene()
+    scene.add(built.group)
+    const budget = createLightBudget(THREE as never, scene, { spot: 4, point: 8 })
+    const destructible = createVehicleDestructible(kit, built.context!, { id: 'sedan', frame: built.group })
+    const lamps = createVehicleLamps(THREE, built, { lights: budget })
+    const lit = (kind: string) => (built.context as unknown as { lights: LampView[] }).lights.filter((l) => l.kind === kind)
+    const shootOut = (part: string): void => {
+      for (let i = 0; i < ROUNDS && destructible.state().parts.find((p) => p.id === part)?.status !== 'broken'; i++) {
+        destructible.hit({ type: 'ballistic', energy: 2100, caliber: 7.62, point: destructible.partWorldCenter(part), part, direction: [0, 0, 1] })
+      }
+    }
+    return { lamps, budget, lit, shootOut }
+  }
+
+  it('give no beam from their side, no halo and no reversing light, and stay dark when the switch changes or the lamps are put away', () => {
+    const { lamps, budget, lit, shootOut } = shotCar()
+    lamps.set({ ...OFF, mode: 'low', reverse: true, brake: true })
+    expect(budget.stats().sources).toBe(3)
+    shootOut('headlight_right')
+    lamps.set({ ...OFF, mode: 'low', reverse: true, brake: true, left: true })
+    expect(budget.stats().sources).toBe(2)
+    shootOut('headlight_left')
+    lamps.set({ ...OFF, mode: 'high', reverse: true, brake: true })
+    expect(budget.stats().sources).toBe(1)
+    expect(lit('headlight').flatMap((l) => l.halo ?? []).every((h) => !h.visible)).toBe(true)
+    shootOut('taillight_left')
+    shootOut('taillight_right')
+    lamps.set({ ...OFF, mode: 'high', reverse: true, brake: false })
+    expect(budget.stats().sources).toBe(0)
+    expect(lit('taillight').flatMap((l) => l.halo ?? []).every((h) => !h.visible)).toBe(true)
+    const dark = lit('taillight').flatMap((l) => l.inner.map((m) => m.material))
+    lamps.dispose()
+    expect(lit('taillight').flatMap((l) => l.inner.map((m) => m.material))).toEqual(dark)
+    budget.dispose()
+  })
+})
+
