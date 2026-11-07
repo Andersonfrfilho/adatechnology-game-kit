@@ -8,6 +8,64 @@
   },
   "sounds": [
     {
+      "id": "air_brake",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/air_brake_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.48,
+            "seconds": 5.4,
+            "source": "https://freesound.org/people/rabbydaw/sounds/504865/",
+            "author": "rabbydaw (air brakes, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.34,
+            "seconds": 4.956,
+            "source": "https://freesound.org/people/Filmscore/sounds/823069/",
+            "author": "Filmscore (hydraulic truck brakes, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.33,
+            "seconds": 7,
+            "source": "https://freesound.org/people/buzkill/sounds/825463/",
+            "author": "buzkill (cement mixer truck air brake)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.41,
+            "seconds": 3.598,
+            "source": "https://freesound.org/people/brunoboselli/sounds/457294/",
+            "author": "brunoboselli (air pressure release, first part cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/air_brake_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.71,
+            "seconds": 3.549,
+            "source": "https://freesound.org/people/brunoboselli/sounds/457294/",
+            "author": "brunoboselli (air pressure release, second part cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "ambience_city_day",
       "category": "ambiente",
       "layers": {
@@ -932,6 +990,72 @@
       }
     },
     {
+      "id": "car_hood_open",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/car_hood_open_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.96,
+            "seconds": 1.879,
+            "source": "https://freesound.org/people/nmscher/sounds/86233/",
+            "author": "nmscher (hood opening, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/car_hood_open_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 1.523,
+            "source": "https://freesound.org/people/microman502/sounds/865230/",
+            "author": "microman502 (bonnet latches, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "car_hood_shut",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/car_hood_shut_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.04,
+            "seconds": 0.938,
+            "source": "https://freesound.org/people/nmscher/sounds/86236/",
+            "author": "nmscher (hood slam, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/car_hood_shut_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 1.774,
+            "source": "https://freesound.org/people/soundman9826/sounds/410134/",
+            "author": "soundman9826 (hood closing, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/car_hood_shut_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.26,
+            "seconds": 1.581,
+            "source": "https://freesound.org/people/LPA134/sounds/329516/",
+            "author": "LPA134 (hood impact, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "car_trunk_shut",
       "category": "veiculos",
       "layers": {
@@ -1670,6 +1794,170 @@
             "seconds": 0.32,
             "source": "https://opengameart.org/content/cc0-audio-uploader-rubberduck",
             "author": "rubberduck",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "crash_dent",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/crash_dent_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.905,
+            "source": "https://freesound.org/people/qubodup/sounds/332058/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.69,
+            "seconds": 0.309,
+            "source": "https://freesound.org/people/qubodup/sounds/332056/",
+            "author": "qubodup",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.26,
+            "seconds": 0.576,
+            "source": "https://freesound.org/people/Feed_/sounds/545692/",
+            "author": "Feed_",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.3,
+            "seconds": 0.602,
+            "source": "https://freesound.org/people/Logicogonist/sounds/807438/",
+            "author": "Logicogonist",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.41,
+            "seconds": 0.632,
+            "source": "https://freesound.org/people/dslrguide/sounds/321482/",
+            "author": "dslrguide (metal hit, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_dent_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.96,
+            "seconds": 1.6,
+            "source": "https://freesound.org/people/craigsmith/sounds/675466/",
+            "author": "craigsmith (two cars crash foley, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "crash_fold",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/crash_fold_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.27,
+            "seconds": 2.099,
+            "source": "https://freesound.org/people/CogFireStudios/sounds/420356/",
+            "author": "CogFireStudios (crash, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_fold_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.25,
+            "seconds": 1.549,
+            "source": "https://freesound.org/people/qubodup/sounds/332059/",
+            "author": "qubodup (collision with reverb, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_fold_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 2.9,
+            "source": "https://freesound.org/people/HoBoTrails/sounds/426021/",
+            "author": "HoBoTrails (car accident with squeal and crash, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_fold_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.3,
+            "seconds": 2.875,
+            "source": "https://freesound.org/people/craigsmith/sounds/675911/",
+            "author": "craigsmith (car hits two phone booths, metal and glass, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "crash_wreck",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/crash_wreck_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.6,
+            "seconds": 2.1,
+            "source": "https://freesound.org/people/magnuswaker/sounds/592388/",
+            "author": "magnuswaker (car crash with glass, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_wreck_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 4.989,
+            "source": "https://freesound.org/people/PauliusI/sounds/346299/",
+            "author": "PauliusI (car crash exterior, tail cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_wreck_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 3.446,
+            "source": "https://freesound.org/people/CAT-FOX_ALEX/sounds/862565/",
+            "author": "CAT-FOX_ALEX (car crash impact, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/crash_wreck_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.06,
+            "seconds": 3.3,
+            "source": "https://freesound.org/people/squareal/sounds/237375/",
+            "author": "squareal (car crash, tail cut)",
             "license": "CC0"
           }
         ]
@@ -2700,6 +2988,34 @@
       }
     },
     {
+      "id": "engine_loop_bike_idle",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/engine_loop_bike_idle_01.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.26,
+            "seconds": 12,
+            "source": "https://freesound.org/people/golovlev.sound/sounds/632219/",
+            "author": "golovlev.sound (BMW motorcycle idling, steady part cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/engine_loop_bike_idle_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.16,
+            "seconds": 6.5,
+            "source": "https://freesound.org/people/golovlev.sound/sounds/632219/",
+            "author": "golovlev.sound (BMW motorcycle idling, steady part cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
       "id": "engine_loop_car_high",
       "category": "veiculos",
       "layers": {
@@ -2731,6 +3047,34 @@
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "engine_loop_truck_idle",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/engine_loop_truck_idle_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.12,
+            "seconds": 4.1,
+            "source": "https://freesound.org/people/chungus43A/sounds/705386/",
+            "author": "chungus43A (diesel engine idling, steady part cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/engine_loop_truck_idle_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.2,
+            "seconds": 10,
+            "source": "https://freesound.org/people/itinerantmonk108/sounds/864821/",
+            "author": "itinerantmonk108 (idling truck, steady part cut)",
+            "license": "CC0"
           }
         ]
       }
@@ -5558,6 +5902,190 @@
             "seconds": 0.446,
             "source": "https://kenney.nl/assets/rpg-audio",
             "author": "Kenney (kenney.nl)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horn_bike",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/horn_bike_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.04,
+            "seconds": 0.822,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378336/",
+            "author": "13FPanska_Mikova_Adela (Jawa motorbike horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.11,
+            "seconds": 0.728,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378336/",
+            "author": "13FPanska_Mikova_Adela (Jawa motorbike horn, second honk cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.16,
+            "seconds": 0.53,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378351/",
+            "author": "13FPanska_Mikova_Adela (Simson moped horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 0.469,
+            "source": "https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378351/",
+            "author": "13FPanska_Mikova_Adela (Simson moped horn, second honk cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_bike_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.885,
+            "source": "https://freesound.org/people/loganzsound/sounds/774253/",
+            "author": "loganzsound (motorbike horn, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horn_car",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/horn_car_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.07,
+            "seconds": 1.3,
+            "source": "https://freesound.org/people/Iamgiorgio/sounds/371833/",
+            "author": "Iamgiorgio (cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.02,
+            "seconds": 1.514,
+            "source": "https://freesound.org/people/danlucaz/sounds/517673/",
+            "author": "danlucaz (cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1,
+            "seconds": 0.386,
+            "source": "https://freesound.org/people/DuranBurrus/sounds/547667/",
+            "author": "DuranBurrus (cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.96,
+            "seconds": 0.49,
+            "source": "https://freesound.org/people/DeVern/sounds/349922/",
+            "author": "DeVern (one honk, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.22,
+            "seconds": 1.5,
+            "source": "https://freesound.org/people/marcelweiss/sounds/505322/",
+            "author": "marcelweiss (S63 AMG horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_car_06.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.1,
+            "seconds": 0.549,
+            "source": "https://freesound.org/people/AmishRob/sounds/423990/",
+            "author": "AmishRob (beep beep, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horn_truck",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/horn_truck_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.97,
+            "seconds": 3,
+            "source": "https://freesound.org/people/kyles/sounds/637923/",
+            "author": "kyles (quick warning honk, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 1.383,
+            "source": "https://freesound.org/people/kyles/sounds/451697/",
+            "author": "kyles (school bus horn, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.23,
+            "seconds": 2.45,
+            "source": "https://freesound.org/people/SieuAmThanh/sounds/870205/",
+            "author": "SieuAmThanh",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.05,
+            "seconds": 2.48,
+            "source": "https://freesound.org/people/trezz77/sounds/546528/",
+            "author": "trezz77",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/horn_truck_05.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -0.99,
+            "seconds": 1.873,
+            "source": "https://freesound.org/people/mcpable/sounds/131930/",
+            "author": "mcpable (industrial air horn, cut)",
             "license": "CC0"
           }
         ]
@@ -11711,6 +12239,102 @@
             "source": "https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/",
             "author": "Oculus VR, LLC (\"Oculus Audio Pack 01\", via github.com/facebookincubator/Meta-open-sound)",
             "license": "CC-BY"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tire_roll_gravel_loop",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/tire_roll_gravel_loop_01.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.02,
+            "seconds": 9,
+            "source": "https://freesound.org/people/BenDrain/sounds/487827/",
+            "author": "BenDrain (car driving on gravel, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_roll_gravel_loop_02.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.07,
+            "seconds": 7.2,
+            "source": "https://freesound.org/people/BenDrain/sounds/487828/",
+            "author": "BenDrain (car driving on gravel, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_roll_gravel_loop_03.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.07,
+            "seconds": 11.5,
+            "source": "https://freesound.org/people/OBXJohn/sounds/251661/",
+            "author": "OBXJohn (tyres on a gravel road, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_roll_gravel_loop_04.ogg",
+            "sampleRate": 48000,
+            "channels": 2,
+            "peak": -1.06,
+            "seconds": 6.7,
+            "source": "https://freesound.org/people/seth-m/sounds/341069/",
+            "author": "seth-m (gravel road, cut)",
+            "license": "CC0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tire_skid_asphalt_loop",
+      "category": "veiculos",
+      "layers": {
+        "close": [
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_01.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.01,
+            "seconds": 8,
+            "source": "https://freesound.org/people/audible-edge/sounds/71736/",
+            "author": "audible-edge (tyre squeal, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_02.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.19,
+            "seconds": 8,
+            "source": "https://freesound.org/people/audible-edge/sounds/71737/",
+            "author": "audible-edge (tyre squeal, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_03.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.13,
+            "seconds": 8,
+            "source": "https://freesound.org/people/audible-edge/sounds/71738/",
+            "author": "audible-edge (tyre squeal, cut)",
+            "license": "CC0"
+          },
+          {
+            "file": "veiculos/tire_skid_asphalt_loop_04.ogg",
+            "sampleRate": 48000,
+            "channels": 1,
+            "peak": -1.09,
+            "seconds": 6.8,
+            "source": "https://freesound.org/people/martian/sounds/178889/",
+            "author": "martian (car skidding in a car park, cut)",
+            "license": "CC0"
           }
         ]
       }
