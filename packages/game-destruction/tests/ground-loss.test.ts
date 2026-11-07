@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { createDestruction, GROUND_LOSS_DEFAULTS, undercutAt } from '../src'
+import { judgeBeam, mergeRuns, voidRuns } from '../src/foundation-span'
+import type { BeamCheck } from '../src/foundation-span'
+import { distortionOf, relativeToChord } from '../src/ground-loss'
 import type { DestructibleSpec, DestructionEvent, GroundLoss, JointSpec, PartSpec } from '../src'
 import { ofType, runFor } from './wall-helpers'
 
@@ -86,11 +89,23 @@ describe('ground taken away under a house', () => {
     const subsides = ofType(h.events, 'subside')
     expect(subsides.map((e) => e.part)).toEqual(expect.arrayContaining(['gb_s', 'gb_w']))
     expect(subsides.every((e) => e.status !== 'unsupported')).toBe(true)
-    const drop = h.world.part(h.id, 'gb_s')!.subsidence!
-    expect(drop).toBeGreaterThan(0.001)
-    expect(drop).toBeLessThanOrEqual(GROUND_LOSS_DEFAULTS.maxSettlement)
+    // the beam goes down most at the corner, and the wall on it follows the same profile
+    const line = h.world.part(h.id, 'gb_s')!.settlement!
+    const peak = Math.max(...line.drop)
+    expect(peak).toBeGreaterThan(0.001)
+    expect(peak).toBeLessThanOrEqual(GROUND_LOSS_DEFAULTS.maxSettlement)
+    expect(line.drop[0]).toBe(peak)
+    expect(h.world.part(h.id, 'w_s')!.settlement).toEqual(line)
     expect(h.cracked()).toContain('w_s')
     expect(h.cracked()).toContain('w_w')
+    // stair-step cracks that climb toward the corner that went down
+    const stairs = ofType(h.events, 'crack').filter((e) => e.part === 'w_s').map((e) => e.crack.stair!)
+    expect(stairs.length).toBeGreaterThan(0)
+    for (const stair of stairs) {
+      expect(stair.along[0]).toBeLessThan(0)
+      expect(stair.along[1]).toBeGreaterThan(0)
+      expect(stair.width).toBeGreaterThan(0)
+    }
     expect(ofType(h.events, 'collapse')).toEqual([])
     expect(h.standing()).toHaveLength(14)
     expect(h.floating()).toEqual([])
@@ -110,14 +125,18 @@ describe('ground taken away under a house', () => {
     expect(h.floating()).toEqual([])
   })
 
-  it('a big crater under a corner: the pillar and the beams over it lose their support and the corner falls, the rest stands', () => {
+  it('a big crater under a corner: the pillar there goes, the short beam tips in with its wall, the long one breaks off over the void and the masonry over it falls out; the rest stands', () => {
     const h = setUp()
     h.world.groundLoss({ x: 0, z: 0, radius: 3, depth: 2, source: 'crater' })
     runFor(h.world, 30)
-    expect(h.subsided('unsupported')).toEqual(expect.arrayContaining(['p_sw', 'gb_s', 'gb_w']))
+    expect(h.subsided('unsupported')).toEqual(expect.arrayContaining(['p_sw', 'gb_w']))
+    // 6 m beam: about 3 m overhang over the hole and as much on the ground, balanced: the overhang breaks off at the edge of the ground
+    expect(h.subsided('opened')).toEqual(['gb_s'])
+    // 4 m beam: most of it over the hole, its weight past the ground left: it tips in
     const fallen = ofType(h.events, 'collapse').flatMap((e) => e.parts)
-    expect(fallen).toEqual(expect.arrayContaining(['p_sw', 'gb_s', 'gb_w', 'w_s', 'w_w']))
-    for (const part of ['gb_n', 'gb_e', 'w_n', 'w_e', 'p_ne']) expect(h.standing()).toContain(part)
+    expect(fallen).toEqual(expect.arrayContaining(['p_sw', 'gb_w', 'w_w']))
+    expect(ofType(h.events, 'chip').map((e) => e.part)).toContain('w_s')
+    for (const part of ['gb_s', 'w_s', 'gb_n', 'gb_e', 'w_n', 'w_e', 'p_ne', 'slab']) expect(h.standing()).toContain(part)
     expect(h.floating()).toEqual([])
   })
 
@@ -134,5 +153,279 @@ describe('ground taken away under a house', () => {
     copy.load(h.world.serialize())
     expect(copy.state(h.id)!.parts.filter((p) => p.status !== 'collapsed' && p.status !== 'broken').map((p) => p.id).sort()).toEqual(h.standing().sort())
     expect(runFor(copy, 5).filter((e) => e.type === 'collapse')).toEqual([])
+  })
+})
+
+/** The probes of the structural review (S1, S2, S3): a wall on its ground beam with pillars, a short beam, a slab on grade. */
+const terrainOf = (width: number, depth: number): PartSpec => ({
+  id: 'ground', material: 'concrete', anchored: true, hp: 1e12, structure: { role: 'foundation' }, tags: ['terrain'], shape: { kind: 'box', size: [width + 12, 0.5, depth + 12] }, position: [width / 2, -0.25, depth / 2],
+})
+const rests = (a: string, b: string, kind: JointSpec['kind'] = 'mortar'): JointSpec => ({ a, b, kind, bears: 'a_on_b' })
+const probe = (spec: DestructibleSpec, loss: GroundLoss) => {
+  const world = createDestruction({ seed: 3 })
+  const id = world.add(spec)
+  const events: DestructionEvent[] = []
+  world.on('*', (event) => events.push(event))
+  world.groundLoss(loss)
+  runFor(world, 20)
+  const parts = world.state(id)!.parts
+  const standing = parts.filter((p) => p.status !== 'broken' && p.status !== 'collapsed')
+  return {
+    status: (part: string) => ofType(events, 'subside').find((e) => e.part === part)?.status,
+    fallen: ofType(events, 'collapse').flatMap((e) => e.parts),
+    chipped: ofType(events, 'chip').map((e) => e.part),
+    standing: standing.map((p) => p.id),
+    floating: standing.filter((p) => p.id !== 'ground' && !(p.stress! > 0)).map((p) => p.id),
+  }
+}
+
+/** S1: a 10 m wall on its ground beam, pillars on their own footings at 0, 2.9, 7.1 and 10 m, a bond beam on the wall and the pillars. */
+const wallOnPillars = (): DestructibleSpec => {
+  const length = 10
+  const pillars = [0, 2.9, 7.1, 10]
+  return {
+    name: 's1',
+    tags: ['structure'],
+    parts: [
+      terrainOf(length, 1),
+      { id: 'gb', material: 'concrete', anchored: true, structure: { role: 'foundation' }, shape: { kind: 'box', size: [length, 0.3, 0.15] }, position: [length / 2, -0.15, 0] },
+      { id: 'wall', material: 'brick', structure: { role: 'wall' }, shape: { kind: 'box', size: [length, 2.8, 0.15] }, position: [length / 2, 1.4, 0] },
+      ...pillars.map((x, k): PartSpec => ({ id: `p${k}`, material: 'concrete', structure: { role: 'column' }, reinforcement: { material: 'steel', spacing: 0.1, diameter: 0.01 }, shape: { kind: 'box', size: [0.15, 2.8, 0.15] }, position: [x, 1.4, 0] })),
+      { id: 'cinta', material: 'concrete', structure: { role: 'beam' }, reinforcement: { material: 'steel', spacing: 0.1, diameter: 0.01 }, shape: { kind: 'box', size: [length, 0.2, 0.15] }, position: [length / 2, 2.9, 0] },
+    ],
+    joints: [
+      rests('gb', 'ground', 'rebar'), ...pillars.map((_, k) => rests(`p${k}`, 'ground', 'rebar')), rests('wall', 'gb'), rests('cinta', 'wall'),
+      ...pillars.map((_, k) => rests('cinta', `p${k}`)), ...pillars.map((_, k): JointSpec => ({ a: 'wall', b: `p${k}`, kind: 'mortar', bears: false })),
+    ],
+  }
+}
+
+/** S2: a 3 m wall on its ground beam, nothing else. */
+const shortWall = (): DestructibleSpec => ({
+  name: 's2',
+  tags: ['structure'],
+  parts: [
+    terrainOf(3, 1),
+    { id: 'gb', material: 'concrete', anchored: true, structure: { role: 'foundation' }, shape: { kind: 'box', size: [3, 0.3, 0.15] }, position: [1.5, -0.15, 0] },
+    { id: 'wall', material: 'brick', structure: { role: 'wall' }, shape: { kind: 'box', size: [3, 2.8, 0.15] }, position: [1.5, 1.4, 0] },
+  ],
+  joints: [rests('gb', 'ground', 'rebar'), rests('wall', 'gb')],
+})
+
+/** S3: a 10 cm slab on grade, 8 x 6 m, with a 1 t block standing on its middle. */
+const slabOnGrade = (): DestructibleSpec => ({
+  name: 's3',
+  tags: ['structure'],
+  parts: [
+    terrainOf(8, 6),
+    { id: 'slab', material: 'concrete', anchored: true, structure: { role: 'slab' }, reinforcement: { material: 'steel', spacing: 0.15, diameter: 0.0063 }, shape: { kind: 'box', size: [8, 0.1, 6] }, position: [4, -0.05, 3] },
+    { id: 'box', material: 'concrete', structure: { role: 'column' }, shape: { kind: 'box', size: [0.4, 1, 0.4] }, position: [4, 0.5, 3] },
+  ],
+  joints: [rests('slab', 'ground', 'rebar'), rests('box', 'slab')],
+})
+
+describe('the structural review: load paths over a void', () => {
+  it('S1: a span too long for the beam breaks only over the void; the wall arches over it on the pillars and the rest stands', () => {
+    const r = probe(wallOnPillars(), { x: 5, z: 0, radius: 2.05, depth: 1, source: 'crater' })
+    expect(r.status('gb')).toBe('opened')
+    expect(r.fallen).toEqual([])
+    for (const part of ['gb', 'wall', 'cinta', 'p0', 'p1', 'p2', 'p3']) expect(r.standing).toContain(part)
+    // the masonry under the relieving arch over the void falls out of the wall
+    expect(r.chipped).toContain('wall')
+    expect(r.floating).toEqual([])
+  })
+
+  it('S1b: a span the beam can bridge between the ground on each side holds', () => {
+    const r = probe(wallOnPillars(), { x: 5, z: 0, radius: 1.55, depth: 1, source: 'crater' })
+    expect(r.status('gb')).toBe('bridged')
+    expect(r.fallen).toEqual([])
+  })
+
+  it('S2: a short overhang holds; past half the span limit, or with its weight past the ground left, the beam tips into the hole', () => {
+    expect(probe(shortWall(), { x: -0.3, z: 0, radius: 1.0, depth: 2, source: 'crater' }).status('gb')).toBe('bridged')
+    for (const radius of [1.5, 2.5]) {
+      const r = probe(shortWall(), { x: -0.3, z: 0, radius, depth: 2, source: 'crater' })
+      expect(r.status('gb')).toBe('unsupported')
+      expect(r.fallen).toEqual(expect.arrayContaining(['gb', 'wall']))
+    }
+  })
+
+  it('S3: a slab on grade that cannot span the hole opens over it: what stood there falls, the slab stays on the ground around; with most of its ground gone it goes', () => {
+    const middle = probe(slabOnGrade(), { x: 4, z: 3, radius: 1.5, depth: 2, source: 'crater' })
+    expect(middle.status('slab')).toBe('opened')
+    expect(middle.fallen).toEqual(['box'])
+    expect(middle.standing).toContain('slab')
+    expect(middle.floating).toEqual([])
+    const wide = probe(slabOnGrade(), { x: 4, z: 3, radius: 3.5, depth: 2, source: 'crater' })
+    expect(wide.status('slab')).toBe('unsupported')
+    expect(wide.fallen).toEqual(expect.arrayContaining(['slab', 'box']))
+  })
+
+  const beam: BeamCheck = { length: 10, depth: 0.3, load: 8000, resists: 20000, cracking: 8600, spanDepth: 10, soilSafety: 3, pillars: [], loadFactor: 1 }
+  const flags = (step: number, ...runs: Array<[number, number]>): boolean[] =>
+    Array.from({ length: Math.round(beam.length / step) }, (_, k) => runs.some(([a, b]) => (k + 0.5) * step > a && (k + 0.5) * step < b))
+
+  it('every void is judged, not only the longest: a short span holds, an overhang breaks off or tips the beam', () => {
+    const verdict = judgeBeam(flags(0.1, [3, 4], [8.2, 10]), 0.1, beam)
+    expect(verdict.runs.map((r) => r.kind)).toEqual(['span', 'cantilever'])
+    expect(verdict.runs[0]!.holds).toBe(true)
+    // 1.8 m of overhang past the 1.5 m a 30 cm beam holds, but balanced on the 7 m of ground left: it breaks off, the beam stays
+    expect(verdict.runs[1]!.holds).toBe(false)
+    expect(verdict.tips).toBe(false)
+    // with its weight past the ground left and no pillar at its root, it takes the beam in
+    expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, beam).tips).toBe(true)
+    expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, { ...beam, pillars: [3.5] }).tips).toBe(false)
+    // nor when the beam goes on past its other end as a ground beam still on the ground (one casting)
+    expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, { ...beam, continuous: [true, false] }).tips).toBe(false)
+  })
+
+  it('voids with less ground between them than the beam is deep, or ground that cannot take the reactions, are one span', () => {
+    expect(mergeRuns(voidRuns(flags(0.1, [2, 3], [3.2, 4]), 0.1), beam)).toEqual([{ start: 2, end: 4 }])
+    // 0.5 m of ground between two 2 m voids takes 2 m of reactions, past twice its own share
+    const merged = mergeRuns(voidRuns(flags(0.1, [3, 5], [5.5, 7.5]), 0.1), beam)
+    expect(merged).toHaveLength(1)
+    expect(merged[0]!.start).toBeCloseTo(3, 6)
+    expect(merged[0]!.end).toBeCloseTo(7.5, 6)
+    // and the ground at the end of the beam that cannot take the reaction of the span beside it goes with it: the span reaches the end
+    expect(mergeRuns(voidRuns(flags(0.1, [1, 3], [3.5, 5.5]), 0.1), beam)[0]!.start).toBe(0)
+    // a pillar on that ground carries them
+    expect(mergeRuns(voidRuns(flags(0.1, [3, 5], [5.5, 7.5]), 0.1), { ...beam, pillars: [5.25] })).toHaveLength(2)
+  })
+
+  it('a pillar inside a void is a support: the void is two spans', () => {
+    const verdict = judgeBeam(flags(0.1, [2, 6]), 0.1, { ...beam, pillars: [4] })
+    expect(verdict.runs.map((r) => [r.start, r.end])).toEqual([[2, 4], [4, 6]].map(([a, b]) => [expect.closeTo(a!, 6), expect.closeTo(b!, 6)]))
+    expect(verdict.runs.every((r) => r.holds)).toBe(true)
+  })
+
+  it('a wall that only turned as a whole does not crack: the chord of the panel comes off first (Burland & Wroth)', () => {
+    const tilt = Array.from({ length: 30 }, (_, k) => 0.002 * k)
+    expect(distortionOf(tilt, 0.1).value).toBeGreaterThan(1 / 300)
+    expect(distortionOf(relativeToChord(tilt), 0.1).value).toBeCloseTo(0, 9)
+    const sag = tilt.map((v, k) => v + 0.01 * Math.sin((Math.PI * k) / 29))
+    expect(distortionOf(relativeToChord(sag), 0.1).value).toBeGreaterThan(0)
+  })
+
+  it('a load-bearing wall is held to tighter limits than an infill panel', () => {
+    expect(GROUND_LOSS_DEFAULTS.crackDistortion).toBeCloseTo(1 / 300, 9)
+    expect(GROUND_LOSS_DEFAULTS.damageDistortion).toBeCloseTo(1 / 150, 9)
+    expect(GROUND_LOSS_DEFAULTS.bearingCrackDistortion).toBeCloseTo(1 / 500, 9)
+    expect(GROUND_LOSS_DEFAULTS.bearingDamageDistortion).toBeCloseTo(1 / 300, 9)
+  })
+
+  it('an overhang is weighed against the ground behind it up to the next void, not all the ground under the beam', () => {
+    const verdict = judgeBeam(flags(0.1, [0, 1.4], [2.6, 3.6]), 0.1, beam)
+    expect(verdict.runs[0]!.kind).toBe('cantilever')
+    expect(verdict.tips).toBe(true)
+  })
+})
+
+/** The wall of S1 with real units, pillars where the void may be wider, a 15 x 20 cm bond beam. */
+const wallOfUnits = (pillars: readonly number[]): DestructibleSpec => {
+  const spec = wallOnPillars()
+  const wall = spec.parts.find((p) => p.id === 'wall')!
+  wall.units = { size: [0.19, 0.09, 0.14], bond: 'running', mortar: 'mortar' }
+  spec.parts = spec.parts.map((p) => (/^p\d$/.test(p.id) ? { ...p, position: [pillars[Number(p.id[1])]!, p.position[1], p.position[2]] as [number, number, number] } : p))
+  return spec
+}
+
+/** Probe 6 of the structural review: a 10 x 4 m house of two walls on ground beams, pillars at 0, 3.5, 6.5 and 10 m, bond beams, a slab on both. */
+const twoWallHouse = (slabDepth: number, slabJoint: JointSpec['kind'] = 'mortar'): DestructibleSpec => {
+  const length = 10
+  const depth = 4
+  const pillars = [0, 3.5, 6.5, 10]
+  const line = (pre: string, z: number): PartSpec[] => [
+    { id: `${pre}gb`, material: 'concrete', anchored: true, structure: { role: 'foundation' }, shape: { kind: 'box', size: [length, 0.3, 0.15] }, position: [length / 2, -0.15, z] },
+    { id: `${pre}wall`, material: 'brick', structure: { role: 'wall' }, units: { size: [0.19, 0.09, 0.14], bond: 'running', mortar: 'mortar' }, shape: { kind: 'box', size: [length, 2.8, 0.15] }, position: [length / 2, 1.4, z] },
+    ...pillars.map((x, k): PartSpec => ({ id: `${pre}p${k}`, material: 'concrete', structure: { role: 'column' }, reinforcement: { material: 'steel', spacing: 0.1, diameter: 0.01 }, shape: { kind: 'box', size: [0.15, 2.8, 0.15] }, position: [x, 1.4, z] })),
+    { id: `${pre}cinta`, material: 'concrete', structure: { role: 'beam' }, reinforcement: { material: 'steel', spacing: 0.1, diameter: 0.01 }, shape: { kind: 'box', size: [length, 0.2, 0.15] }, position: [length / 2, 2.9, z] },
+  ]
+  const lineJoints = (pre: string): JointSpec[] => [
+    rests(`${pre}gb`, 'ground', 'rebar'), ...pillars.map((_, k) => rests(`${pre}p${k}`, 'ground', 'rebar')), rests(`${pre}wall`, `${pre}gb`), rests(`${pre}cinta`, `${pre}wall`),
+    ...pillars.map((_, k) => rests(`${pre}cinta`, `${pre}p${k}`)), ...pillars.map((_, k): JointSpec => ({ a: `${pre}wall`, b: `${pre}p${k}`, kind: 'mortar', bears: false })),
+  ]
+  return {
+    name: 'probe6',
+    tags: ['structure'],
+    parts: [
+      terrainOf(length, depth), ...line('s_', 0), ...line('n_', depth),
+      { id: 'slab', material: 'concrete', structure: { role: 'slab' }, reinforcement: { material: 'steel', spacing: 0.15, diameter: 0.008 }, shape: { kind: 'box', size: [length, slabDepth, depth] }, position: [length / 2, 3 + slabDepth / 2, depth / 2] },
+    ],
+    joints: [...lineJoints('s_'), ...lineJoints('n_'), rests('slab', 's_cinta', slabJoint), rests('slab', 'n_cinta', slabJoint)],
+  }
+}
+
+describe('the structural re-review: arches and slabs over a void', () => {
+  it('a void short enough for an arch in the wall: the units under it fall, the bond beam keeps its bearing', () => {
+    const r = probe(wallOfUnits([0, 2.9, 7.1, 10]), { x: 5, z: 0, radius: 2.05, depth: 1, source: 'crater' })
+    expect(r.chipped).toContain('wall')
+    expect(r.fallen).toEqual([])
+    expect(r.standing).toContain('cinta')
+  })
+
+  it('a void too wide for an arch in a 2.8 m wall opens it to the top: the 15 x 20 bond beam cannot span the opening and breaks over it only', () => {
+    const r = probe(wallOfUnits([0, 3.5, 6.5, 10]), { x: 5, z: 0, radius: 3.6, depth: 1.5, source: 'crater' })
+    expect(r.status('gb')).toBe('opened')
+    expect(r.status('cinta')).toBe('opened')
+    expect(r.fallen).toEqual(expect.arrayContaining(['p1', 'p2']))
+    // it keeps bearing on the pillars that stand and on the masonry left at each side
+    for (const part of ['gb', 'wall', 'p0', 'p3', 'cinta']) expect(r.standing).toContain(part)
+    expect(r.floating).toEqual([])
+  })
+
+  it('probe6: a house of two walls, a 7 m void under one: the bond beam breaks over the opening only and keeps its pillars; the slab spans the gap or tips, never on one edge', () => {
+    const world = createDestruction({ seed: 3 })
+    const id = world.add(twoWallHouse(0.1))
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+    world.groundLoss({ x: 5, z: 0, radius: 3.6, depth: 1.5, source: 'crater' })
+    runFor(world, 20)
+    const standing = world.state(id)!.parts.filter((p) => p.status !== 'broken' && p.status !== 'collapsed').map((p) => p.id)
+    expect(ofType(events, 'collapse').flatMap((e) => e.parts)).toEqual(expect.arrayContaining(['s_p1', 's_p2']))
+    for (const part of ['s_cinta', 's_p0', 's_p3', 's_wall', 'n_cinta']) expect(standing).toContain(part)
+    // the broken stretch of the bond beam hangs into the opening, its ends stay up
+    const line = world.part(id, 's_cinta')!.settlement!
+    expect(line.drop[0]).toBe(0)
+    expect(line.drop[line.drop.length - 1]).toBe(0)
+    expect(Math.max(...line.drop)).toBeGreaterThan(1)
+    // a 10 cm slab spans the 3.8 m left at the top of the opening, on the bond beam at both sides of it and on the far wall
+    expect(standing).toContain('slab')
+    // a 4 cm one cannot: it lets go of the broken bond beam and, on the far wall alone, tips off
+    const thin = createDestruction({ seed: 3 })
+    const thinId = thin.add(twoWallHouse(0.04))
+    thin.groundLoss({ x: 5, z: 0, radius: 3.6, depth: 1.5, source: 'crater' })
+    runFor(thin, 20)
+    expect(thin.part(thinId, 'slab')!.status).toBe('collapsed')
+    expect(thin.part(thinId, 'n_cinta')!.status).not.toBe('collapsed')
+  })
+
+  it('a slab that only rests (on mortar) and is left on one edge tips off; one cast with its beam (a cantilever) stays', () => {
+    for (const [kind, falls] of [['mortar', true], ['rebar', false]] as const) {
+      const world = createDestruction({ seed: 3 })
+      const id = world.add(twoWallHouse(0.1, kind))
+      world.hitPart(id, 's_cinta', { type: 'blunt', point: [5, 2.9, 0], energy: 5e7, radius: 0.1, source: 'test' })
+      for (const p of ['s_p0', 's_p1', 's_p2', 's_p3']) world.hitPart(id, p, { type: 'blunt', point: [0, 1.4, 0], energy: 5e7, radius: 0.1, source: 'test' })
+      runFor(world, 10)
+      expect(world.part(id, 's_cinta')!.status).toMatch(/broken|collapsed/)
+      expect(world.part(id, 'slab')!.status === 'collapsed').toBe(falls)
+    }
+  })
+
+  it('a slab on grade that breaks over a hole loses the disc over it: a ray over the hole does not meet the slab', () => {
+    const world = createDestruction({ seed: 3 })
+    const id = world.add(slabOnGrade())
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+    world.groundLoss({ x: 4, z: 3, radius: 1.5, depth: 2, source: 'crater' })
+    runFor(world, 5)
+    const slab = world.part(id, 'slab')!
+    expect(slab.opening?.radius).toBeGreaterThan(1)
+    expect(ofType(events, 'stage').some((e) => e.part === 'slab' && e.opening && (e.fragments?.length ?? 0) > 0)).toBe(true)
+    for (const at of [[4, 3, 2.2], [3, 3, 3], [4.8, 3, 3.5]] as const) expect(world.raycast([...at], [0, -1, 0], 10)?.part).not.toBe('slab')
+    // away from the hole the slab is still there, and it is not drawn sunk over the hole
+    expect(Math.hypot(0.5 - slab.opening!.center[0], 0.5 - slab.opening!.center[2])).toBeGreaterThan(slab.opening!.radius)
+    expect(slab.status).not.toBe('collapsed')
+    const drops = slab.settlement?.drop ?? [0]
+    expect(Math.max(...drops) - Math.min(...drops)).toBeLessThan(1e-9)
   })
 })

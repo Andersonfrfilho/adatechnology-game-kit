@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { MaterialId, Vec3 } from '@adatechnology/game-destruction'
+import type { MaterialId, PartSettlement, Vec3 } from '@adatechnology/game-destruction'
 import type { Piece } from './types'
 
 /** A decal child of a mesh (hole disc or crack star). `geometry` is set when the decal owns it. */
@@ -79,6 +79,8 @@ export interface PartVis {
   meltApplied: number
   /** `none` while the meshes are drawn; the reason they were hidden otherwise. */
   gone: 'none' | 'broken' | 'melted' | 'ashes'
+  /** The settlement drawn on the part now (object-local line), when the ground under it went down. */
+  settled?: PartSettlement
 }
 
 /** Coulomb friction coefficients of a piece's surface: what holds it still and what drags it while it slides. */
