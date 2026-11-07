@@ -14,7 +14,9 @@ import {
 import type { BendGeometry } from './flexure'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
-import { DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, longestRun, BEAM_SPREAD, mergeSettlement, resolveGroundLoss, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
+import { judgeBeam, judgePlate } from './foundation-span'
+import type { VoidRun } from './foundation-span'
+import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
@@ -163,6 +165,12 @@ const BRICK_STEP: readonly [number, number] = [0.2, 0.1]
 const SETTLEMENT_FOLLOW_DEPTH = 2
 /** Share of the stiffness of a concrete section left once it has cracked (the cracked inertia of a lightly reinforced beam, NBR 6118 17.3.2.1.1). */
 const CRACKED_STIFFNESS = 0.4
+/** Metres between a pillar's foot and the top of a ground beam for the two to be one casting (the pillar holds the beam). */
+const PILLAR_SEAT = 0.05
+/** Share of the concrete's characteristic tensile strength it takes in punching shear on the critical perimeter (no shear reinforcement). */
+const PUNCHING_SHARE = 0.5
+/** Angle from the horizontal of the sides of the masonry triangle that falls out under a relieving arch over an opening. */
+const ARCH_ANGLE = Math.PI / 3
 
 /** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
 const CUT_SLICE = 1
@@ -317,7 +325,9 @@ interface Bearer {
 interface Footprint {
   long: number
   step: number
-  slices: Array<{ void: boolean; drop: number }>
+  slices: Array<{ void: boolean; drop: number; cut: number }>
+  /** The void part of the footprint as a box in the part's long and across axes, metres from its corner (null without a void). */
+  voidBox: { long: [number, number]; across: [number, number] } | null
   /** Share of the footprint with no ground under it. */
   share: number
   /** Mean settlement, metres. */
@@ -1492,17 +1502,27 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     let sum = 0
     let worst = -1
     let deepest: Vec3 = toWorld(o.st.position, o.st.rotation, [(box.min[0] + box.max[0]) / 2, box.min[1], (box.min[2] + box.max[2]) / 2])
+    let voidBox: Footprint['voidBox'] = null
     for (let k = 0; k < n; k++) {
       let open = 0
       let drop = 0
+      let cutSum = 0
       for (let c = 0; c < m; c++) {
         const local: Vec3 = [0, box.min[1], 0]
         local[long] = box.min[long] + (k + 0.5) * step
         local[across] = box.min[across] + ((c + 0.5) * (box.max[across] - box.min[across])) / m
         const world = toWorld(o.st.position, o.st.rotation, local)
         const cut = undercutAt(loss, Math.hypot(world[0] - loss.x, world[2] - loss.z), b.embed, groundCfg.spread)
-        if (cut >= groundCfg.voidDepth) open++
+        if (cut >= groundCfg.voidDepth) {
+          open++
+          const along = local[long] - box.min[long]
+          const side = local[across] - box.min[across]
+          voidBox ??= { long: [along, along], across: [side, side] }
+          voidBox.long = [Math.min(voidBox.long[0], along - step / 2), Math.max(voidBox.long[1], along + step / 2)]
+          voidBox.across = [Math.min(voidBox.across[0], side), Math.max(voidBox.across[1], side)]
+        }
         drop += Math.min(cut, groundCfg.maxSettlement)
+        cutSum += cut
         if (cut > worst) {
           worst = cut
           deepest = world
@@ -1510,48 +1530,187 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       voids += open
       sum += drop
-      slices.push({ void: open * 2 > m, drop: drop / m })
+      slices.push({ void: open * 2 > m, drop: drop / m, cut: cutSum / m })
     }
-    return { long, step, slices, share: voids / (n * m), drop: sum / (n * m), deepest }
+    return { long, step, slices, voidBox, share: voids / (n * m), drop: sum / (n * m), deepest }
   }
 
-  /**
-   * A ground beam (or a slab, a paving stone: a strip a metre wide) over a void of its footprint: it spans it as a simply supported beam (`w L² / 8`) or,
-   * where the void reaches its end, as a cantilever (`w L² / 2`), and holds while the void is no longer than `bridgeSpanDepth` depths and the moment is
-   * within what its section holds (the steel's once cracked; plain concrete only its cracking moment). Null when the part does not bend (no tensile strength).
-   */
-  const bridgeOf = (b: Bearer, fp: Footprint, voids: { start: number; end: number }) => {
-    const p = b.p
+  /** The section of a bearer that bends over a void, with its characteristic moments (a concrete ground beam always has its bars, even when the spec draws none). */
+  const sectionOfBearer = (p: PartRT) => {
     if (p.spec.shape.kind !== 'box' || !p.mat.strength?.tensileMPa) return null
     const g = bendGeometry(p.spec)
     if (g.gravity < 0) return null
-    // a concrete ground beam always has its bars, even when the spec does not draw them
     const footing = p.spec.structure?.role === 'foundation' && g.member && !isReinforced(p.spec)
     const spec: PartSpec = footing ? { ...p.spec, structure: { ...p.spec.structure!, rebar: { ratio: groundCfg.beamRebarRatio } } } : p.spec
     const section = { b: sectionWidth(g, g.gravity), h: g.dims[g.gravity] }
-    const m = sectionMoments(p.mat, section, tensionSteel(spec, g.dims, section, flexure), flexure)
-    const span = (voids.end - voids.start) * fp.step
-    const cantilever = voids.start === 0 || voids.end === fp.slices.length
-    const w = lineLoad(g, p.st.load ?? p.st.mass)
-    const moment = (cantilever ? (w * span * span) / 2 : spanMoment(w, span)) * structureSafety
-    const whole = voids.start === 0 && voids.end === fp.slices.length
-    const holds = !whole && span <= groundCfg.bridgeSpanDepth * section.h && moment <= (p.st.cracked ? m.steel : m.ultimate)
-    const cracks = moment > m.cracking
-    // what it sags over the void: 5 w L⁴ / 384 EI between supports, w L⁴ / 8 EI as a cantilever, with the stiffness of the cracked section once cracked
-    const EI = ((p.mat.strength.elasticGPa ?? 0) * 1e9 * section.b * section.h ** 3 * (cracks || p.st.cracked ? CRACKED_STIFFNESS : 1)) / 12
-    const sag = EI > 0 ? (w * span ** 4) / (cantilever ? 8 * EI : (384 / 5) * EI) : groundCfg.maxSettlement
-    return { holds, cracks, cantilever, span, depth: section.h, sag }
+    const steel = tensionSteel(spec, g.dims, section, flexure)
+    const m = sectionMoments(p.mat, section, steel, flexure)
+    return { g, section, steel, m, resists: p.st.cracked ? m.steel : m.ultimate }
   }
 
-  /** The bridging beam cracks on its tension face: under the middle of the void, or on top at the edge of the ground for a cantilever. */
-  const crackBridge = (o: ObjRT, b: Bearer, fp: Footprint, voids: { start: number; end: number }, bridge: { cantilever: boolean; depth: number }, src?: string) => {
-    if (b.p.st.cracked) return
+  /** Where pillars still on their own footing stand along a ground beam (metres from its start along `fp.long`): cast with it, they hold it. */
+  const pillarsUnder = (o: ObjRT, b: Bearer, fp: Footprint, standing: ReadonlySet<number>): number[] => {
+    const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
+    const across = fp.long === 0 ? 2 : 0
+    const out: number[] = []
+    for (const i of standing) {
+      const q = o.parts[i]!
+      if (q.spec.structure?.role !== 'column') continue
+      const c = aabbOf(q.spec.shape, q.pos, q.q)
+      const overlaps = c.max[across] > box.min[across] && c.min[across] < box.max[across] && c.max[fp.long] > box.min[fp.long] && c.min[fp.long] < box.max[fp.long]
+      if (overlaps && Math.abs(c.min[1] - box.max[1]) < PILLAR_SEAT) out.push((c.min[fp.long] + c.max[fp.long]) / 2 - box.min[fp.long])
+    }
+    return out
+  }
+
+  /** What a bearer does over the voids under it: settles, bridges them, breaks over one of them (`opened`), or loses its support. */
+  type Bearing = { status: 'settled' | 'bridged' | 'opened' | 'unsupported'; failed: VoidRun[]; cracks: Array<{ at: number; top: boolean }> }
+
+  /**
+   * A ground beam over voids (`judgeBeam`): every void, the ground between them taking the reactions, the pillars cast with it. Over a void it bridges
+   * it goes down only as far as it sags (`5 w L⁴ / 384 EI`, `w c⁴ / 8 EI` for a cantilever, cracked stiffness once cracked); a span it cannot bridge
+   * breaks at the edges of the void and that stretch goes down into the hole (`opened`); a cantilever it cannot hold tips it in (`unsupported`).
+   */
+  const bearBeam = (o: ObjRT, b: Bearer, fp: Footprint, standing: ReadonlySet<number>, sec: NonNullable<ReturnType<typeof sectionOfBearer>>): Bearing => {
+    const length = fp.slices.length * fp.step
+    const load = lineLoad(sec.g, b.p.st.load ?? b.p.st.mass)
+    const verdict = judgeBeam(fp.slices.map((slice) => slice.void), fp.step, {
+      length, depth: sec.section.h, load, resists: sec.resists, cracking: sec.m.cracking, spanDepth: groundCfg.bridgeSpanDepth,
+      soilSafety: soilCfg.safety, pillars: pillarsUnder(o, b, fp, standing), loadFactor: structureSafety,
+    })
+    if (verdict.runs.length === 0) return { status: fp.share <= 1 - 1 / soilCfg.safety ? 'settled' : 'unsupported', failed: [], cracks: [] }
+    if (verdict.tips) return { status: 'unsupported', failed: [], cracks: [] }
+    const cracks: Bearing['cracks'] = []
+    const failed: VoidRun[] = []
+    const EI = ((b.p.mat.strength!.elasticGPa ?? 0) * 1e9 * sec.section.b * sec.section.h ** 3) / 12
+    for (const run of verdict.runs) {
+      const k0 = Math.round(run.start / fp.step)
+      const k1 = Math.round(run.end / fp.step)
+      if (!run.holds) {
+        // it breaks where the ground stops on each side, and the stretch between hangs into the hole
+        failed.push(run)
+        cracks.push({ at: run.start, top: true }, { at: run.end, top: true })
+        for (let k = k0; k < k1; k++) fp.slices[k]!.drop = Math.min(fp.slices[k]!.cut, run.span / 2)
+        continue
+      }
+      if (run.cracks) cracks.push(run.kind === 'cantilever' ? { at: run.start <= 1e-9 ? run.end : run.start, top: true } : { at: (run.start + run.end) / 2, top: false })
+      const stiffness = EI * (run.cracks || b.p.st.cracked ? CRACKED_STIFFNESS : 1)
+      const sag = stiffness > 0 ? (load * run.span ** 4) / (run.kind === 'cantilever' ? 8 * stiffness : (384 / 5) * stiffness) : groundCfg.maxSettlement
+      for (let k = k0; k < k1; k++) fp.slices[k]!.drop = Math.min(fp.slices[k]!.drop, sag)
+    }
+    return { status: failed.length ? 'opened' : 'bridged', failed, cracks }
+  }
+
+  /** Parts that stand on `p` and are over the void box of its footprint (`fp`): their weight and the side of their footprint. */
+  const standingOver = (o: ObjRT, b: Bearer, fp: Footprint): Array<{ q: PartRT; j: JointRT }> => {
+    const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
+    const vb = fp.voidBox
+    if (!vb) return []
+    const across = fp.long === 0 ? 2 : 0
+    const out: Array<{ q: PartRT; j: JointRT }> = []
+    for (const j of o.byPart.get(b.p.spec.id) ?? []) {
+      const k = j.ia === b.i ? j.ib : j.ia
+      if (j.st.open || restsOn(o, j, k) !== b.i) continue
+      const q = o.parts[k]!
+      const c = aabbOf(q.spec.shape, q.pos, q.q)
+      const along = (c.min[fp.long] + c.max[fp.long]) / 2 - box.min[fp.long]
+      const side = (c.min[across] + c.max[across]) / 2 - box.min[across]
+      if (along >= vb.long[0] && along <= vb.long[1] && side >= vb.across[0] && side <= vb.across[1]) out.push({ q, j })
+    }
+    return out
+  }
+
+  /** A slab on grade over a hole (`judgePlate`): it spans it, or breaks over it and what stood over the hole loses its support there (`opened`). */
+  const bearPlate = (o: ObjRT, b: Bearer, fp: Footprint, sec: NonNullable<ReturnType<typeof sectionOfBearer>>): Bearing => {
+    const vb = fp.voidBox
+    if (!vb) return { status: 'settled', failed: [], cracks: [] }
+    const across = Math.max(vb.long[1] - vb.long[0], vb.across[1] - vb.across[0])
+    const over = standingOver(o, b, fp)
+    const verdict = judgePlate({
+      across, load: lineLoad(sec.g, b.p.st.mass), resists: sec.resists, cracking: sec.m.cracking, effectiveDepth: sec.steel.d,
+      punching: PUNCHING_SHARE * (b.p.mat.strength!.tensileMPa ?? 0) * 1e6, loadFactor: structureSafety,
+      points: over.map(({ q }) => {
+        const c = aabbOf(q.spec.shape, q.pos, q.q)
+        return { weight: (q.st.load ?? q.st.mass) * GRAVITY, side: Math.min(c.max[0] - c.min[0], c.max[2] - c.min[2]) }
+      }),
+    })
+    // a slab that lost most of its ground goes whatever it spans
+    if (fp.share > 1 - 1 / soilCfg.safety) return { status: 'unsupported', failed: [], cracks: [] }
+    const cracks = verdict.cracks || !verdict.holds ? [{ at: vb.long[0], top: true }, { at: vb.long[1], top: true }] : []
+    return { status: verdict.holds ? 'bridged' : 'opened', failed: verdict.holds ? [] : [{ start: vb.long[0], end: vb.long[1] }], cracks }
+  }
+
+  /** How the bearer takes the loss (see `Bearing`). */
+  const bearLoss = (o: ObjRT, b: Bearer, fp: Footprint, standing: ReadonlySet<number>): Bearing => {
+    const sec = sectionOfBearer(b.p)
+    if (sec?.g.member) return bearBeam(o, b, fp, standing, sec)
+    if (sec && fp.voidBox) return bearPlate(o, b, fp, sec)
+    // what is left of the footprint carries the part while its pressure stays under what the soil gives way at (the footing's safety factor)
+    return { status: fp.share <= 1 - 1 / soilCfg.safety ? 'settled' : 'unsupported', failed: [], cracks: [] }
+  }
+
+  /** The cracks of a bearer that bends or breaks over a void: on the tension face (on top at the edge of the ground, under the middle of a span). */
+  const crackBearer = (o: ObjRT, b: Bearer, fp: Footprint, bearing: Bearing, src?: string) => {
+    if (bearing.cracks.length === 0) return
     b.p.st.cracked = true
     const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
-    const local: Vec3 = [(box.min[0] + box.max[0]) / 2, bridge.cantilever ? box.max[1] : box.min[1], (box.min[2] + box.max[2]) / 2]
-    const edge = voids.start === 0 ? voids.end : voids.start
-    local[fp.long] = box.min[fp.long] + (bridge.cantilever ? edge : (voids.start + voids.end) / 2) * fp.step
-    addCrack(o, b.p, toWorld(o.st.position, o.st.rotation, local), rotateVec(o.st.rotation, [0, bridge.cantilever ? 1 : -1, 0]), bridge.depth, src)
+    for (const crack of bearing.cracks) {
+      const local: Vec3 = [(box.min[0] + box.max[0]) / 2, crack.top ? box.max[1] : box.min[1], (box.min[2] + box.max[2]) / 2]
+      local[fp.long] = box.min[fp.long] + crack.at
+      addCrack(o, b.p, toWorld(o.st.position, o.st.rotation, local), rotateVec(o.st.rotation, [0, crack.top ? 1 : -1, 0]), box.max[1] - box.min[1], src)
+    }
+  }
+
+  /**
+   * A bearer broke over a void: what rests on it only over that stretch loses its support there (it falls); a masonry wall that runs past both edges
+   * arches over the hole, and the units under the arch (a triangle at 60 degrees on the span) fall out of it.
+   */
+  const openOver = (o: ObjRT, b: Bearer, fp: Footprint, failed: readonly VoidRun[], opened: JointRT[], src?: string): boolean => {
+    const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
+    let lost = false
+    for (const j of o.byPart.get(b.p.spec.id) ?? []) {
+      const k = j.ia === b.i ? j.ib : j.ia
+      if (j.st.open || restsOn(o, j, k) !== b.i) continue
+      const q = o.parts[k]!
+      if (isLost(q)) continue
+      const c = aabbOf(q.spec.shape, q.pos, q.q)
+      const from = c.min[fp.long] - box.min[fp.long]
+      const to = c.max[fp.long] - box.min[fp.long]
+      const run = failed.find((r) => to > r.start && from < r.end)
+      if (!run) continue
+      if (from >= run.start - fp.step && to <= run.end + fp.step) {
+        j.st.open = true
+        j.st.hp = 0
+        j.st.openedBy = 'break'
+        opened.push(j)
+        lost = true
+        continue
+      }
+      if (isSlender(q.spec, q.mat)) archOver(o, q, fp.long, [box.min[fp.long] + run.start, box.min[fp.long] + run.end], src)
+    }
+    return lost
+  }
+
+  /** The units of a wall under the relieving arch over a span (object-local, along `axis`): the triangle at 60 degrees on it falls out. */
+  const archOver = (o: ObjRT, q: PartRT, axis: number, span: [number, number], src?: string) => {
+    const grid = gridOf(q)
+    const worn = (q.rt.chips ??= {})
+    const bottom = aabbOf(q.spec.shape, q.pos, q.q).min[1]
+    const half = (span[1] - span[0]) / 2
+    const middle = (span[0] + span[1]) / 2
+    const out: number[] = []
+    grid.forEach((cell, i) => {
+      if (worn[i] === -1) return
+      const at = toWorld(q.pos, q.q, cell.center)
+      const height = at[1] - bottom
+      if (Math.abs(at[axis] - middle) <= half - height / Math.tan(ARCH_ANGLE)) out.push(i)
+    })
+    if (out.length === 0) return
+    const centre: Vec3 = [0, bottom, 0]
+    centre[axis] = middle
+    const other = axis === 0 ? 2 : 0
+    centre[other] = q.pos[other]
+    knockOutUnits(o, q, toWorld(o.st.position, o.st.rotation, centre), 0, out, src)
   }
 
   /**
@@ -1561,17 +1720,21 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    */
   const distort = (o: ObjRT, q: PartRT, beta: number, at: Vec3, toward: Vec3, src?: string) => {
     const prior = q.rt.distortion ?? 0
-    if (beta < groundCfg.crackDistortion || beta <= prior * DISTORTION_GROWTH) return
+    // a load-bearing wall (confined masonry) cracks at a smaller distortion than an infill panel of a frame
+    const bearing = q.spec.structure?.role === 'wall'
+    const crackAt = bearing ? groundCfg.bearingCrackDistortion : groundCfg.crackDistortion
+    const damageAt = bearing ? groundCfg.bearingDamageDistortion : groundCfg.damageDistortion
+    if (beta < crackAt || beta <= prior * DISTORTION_GROWTH) return
     q.rt.distortion = beta
     const box = aabbOf(q.spec.shape, q.pos, q.q)
     const height = box.max[1] - box.min[1]
     // one crack at the limit, one more each time the distortion doubles
-    const cracks = (d: number) => (d < groundCfg.crackDistortion ? 0 : Math.min(MAX_SETTLEMENT_CRACKS, 1 + Math.floor(Math.log2(d / groundCfg.crackDistortion))))
+    const cracks = (d: number) => (d < crackAt ? 0 : Math.min(MAX_SETTLEMENT_CRACKS, 1 + Math.floor(Math.log2(d / crackAt))))
     const count = Math.max(1, cracks(beta) - cracks(prior))
     const axis: Vec3 = [0, 0, 0]
     axis[q.thin] = 1
     const normal = rotateVec(quat.mul(o.st.rotation, q.q), axis)
-    const length = Math.min(height * 0.6, SETTLEMENT_CRACK_LENGTH * Math.sqrt(beta / groundCfg.crackDistortion))
+    const length = Math.min(height * 0.6, SETTLEMENT_CRACK_LENGTH * Math.sqrt(beta / crackAt))
     const units = q.spec.units?.size
     const step: [number, number] = units ? [Math.max(units[0], units[2]), units[1]] : [BRICK_STEP[0], BRICK_STEP[1]]
     const reach = Math.hypot(toward[0], toward[2]) || 1
@@ -1587,7 +1750,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       face[q.thin] = through / 2
       addCrack(o, q, toWorld(o.st.position, o.st.rotation, toWorld(q.pos, q.q, face)), normal, length, src, { along, step, width, through })
     }
-    if (beta >= groundCfg.damageDistortion && prior < groundCfg.damageDistortion) {
+    if (beta >= damageAt && prior < damageAt) {
       q.st.hp = Math.max(1, q.st.hp - q.st.maxHp * groundCfg.distortionDamage)
       markDamaged(q)
     }
@@ -1611,7 +1774,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const over = aabbOf(q.spec.shape, q.pos, q.q)
       const k0 = clamp(Math.floor((over.min[fp.long] - box.min[fp.long]) / fp.step), 0, drops.length - 1)
       const k1 = clamp(Math.ceil((over.max[fp.long] - box.min[fp.long]) / fp.step), k0 + 1, drops.length)
-      const { value, at, down } = distortionOf(drops.slice(k0, k1), fp.step)
+      const { value, at, down } = distortionOf(relativeToChord(drops.slice(k0, k1)), fp.step)
       const point: Vec3 = [(over.min[0] + over.max[0]) / 2, over.min[1], (over.min[2] + over.max[2]) / 2]
       point[fp.long] = box.min[fp.long] + (k0 + at + 0.5) * fp.step
       const toward: Vec3 = [0, 0, 0]
@@ -1631,13 +1794,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     from[fp.long] = box.min[fp.long]
     to[fp.long] = box.max[fp.long]
     const line: PartSettlement = { from, to, drop: settlementProfile(fp.slices.map((slice) => slice.drop), fp.step) }
+    // what stands on it follows the ground's slump, not a stretch of beam that broke into the hole (the wall arches over that)
+    const follows: PartSettlement = { from, to, drop: line.drop.map((v) => Math.min(v, groundCfg.maxSettlement)) }
     const moved = new Set<number>([b.i])
     let ring = [b.i]
     for (let depth = 0; depth <= SETTLEMENT_FOLLOW_DEPTH && ring.length; depth++) {
       const next: number[] = []
       for (const i of ring) {
         const p = o.parts[i]!
-        p.st.settlement = mergeSettlement(p.st.settlement, line)
+        p.st.settlement = mergeSettlement(p.st.settlement, i === b.i ? line : follows)
         if (i !== b.i) p.st.subsidence = Math.max(p.st.subsidence ?? 0, settlementAt(p.st.settlement, p.pos))
         for (const j of o.byPart.get(p.spec.id) ?? []) {
           const k = j.ia === i ? j.ib : j.ia
@@ -1673,55 +1838,47 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
-  /** How the bearer takes the loss: `settled`, a ground beam `bridged` over the void (cracking when the moment passes the concrete's), or `unsupported`. */
-  const bearLoss = (o: ObjRT, b: Bearer, fp: Footprint, src?: string): 'settled' | 'bridged' | 'unsupported' => {
-    const voids = longestRun(fp.slices.map((slice) => slice.void))
-    const bridge = voids ? bridgeOf(b, fp, voids) : null
-    if (voids && bridge && bridge.span >= bridge.depth) {
-      if (!bridge.holds) return 'unsupported'
-      if (bridge.cracks) crackBridge(o, b, fp, voids, bridge, src)
-      // over the void the beam goes down only as far as it sags: what stands on it follows the beam, not the ground
-      for (let k = voids.start; k < voids.end; k++) fp.slices[k]!.drop = Math.min(fp.slices[k]!.drop, bridge.sag)
-      fp.drop = fp.slices.reduce((sum, slice) => sum + slice.drop, 0) / fp.slices.length
-      return 'bridged'
-    }
-    // what is left of the footprint carries the part while its pressure stays under what the soil gives way at (the footing's safety factor)
-    return fp.share <= 1 - 1 / soilCfg.safety ? 'settled' : 'unsupported'
-  }
 
-  /** Ground taken away under an object: each part that bears over it settles, bridges or loses its support; the structure is solved again. */
+
+  /** Ground taken away under an object: each part that bears over it settles, bridges, breaks over the void or loses its support; the structure is solved again. */
   const undermine = (o: ObjRT, loss: GroundLoss) => {
     if (!o.hasStructure || !o.anyAnchor || o.st.soil?.status === 'toppled') return
     const src = loss.source ?? 'ground'
     const opened: JointRT[] = []
     const settled: Array<{ b: Bearer; fp: Footprint }> = []
     let lost = false
-    for (const b of bearersOf(o)) {
-      if (!nearLoss(o, b.p, loss)) continue
-      const fp = footprintOf(o, b, loss)
-      if (fp.share <= 0 && fp.drop < SUBSIDE_MIN) continue
-      const status = bearLoss(o, b, fp, src)
-      if (status !== 'unsupported' && bendGeometry(b.p.spec).member) {
+    const touched = bearersOf(o).filter((b) => nearLoss(o, b.p, loss)).map((b) => ({ b, fp: footprintOf(o, b, loss) })).filter(({ fp }) => fp.share > 0 || fp.drop >= SUBSIDE_MIN)
+    const bearers = bearersOf(o)
+    // the pillars on their own footing are judged first: those that keep it hold the ground beams cast with them
+    const pillarFirst = (b: Bearer): number => (b.p.spec.structure?.role === 'column' ? 0 : 1)
+    const order = [...touched].sort((x, y) => pillarFirst(x.b) - pillarFirst(y.b))
+    const standing = new Set(bearers.map((b) => b.i))
+    for (const { b, fp } of order) {
+      const bearing = bearLoss(o, b, fp, standing)
+      if (bearing.status === 'unsupported') standing.delete(b.i)
+      if (bearing.status !== 'unsupported' && bendGeometry(b.p.spec).member) {
         // a beam bends smoothly over the slump: what stands on it (and cracks) follows that, not each handful of soil
         const smooth = smoothProfile(fp.slices.map((slice) => slice.drop), fp.step, BEAM_SPREAD)
-        fp.slices.forEach((slice, k) => (slice.drop = smooth[k]!))
-        fp.drop = smooth.reduce((sum, v) => sum + v, 0) / Math.max(1, smooth.length)
+        fp.slices.forEach((slice, k) => (slice.drop = bearing.failed.some((r) => (k + 0.5) * fp.step > r.start && (k + 0.5) * fp.step < r.end) ? slice.drop : smooth[k]!))
+        fp.drop = fp.slices.reduce((sum, slice) => sum + slice.drop, 0) / Math.max(1, fp.slices.length)
       }
       const before = b.p.st.subsidence ?? 0
       const drop = Math.max(before, fp.drop)
       const peak = (): number => Math.max(0, ...(b.p.st.settlement?.drop ?? []))
       const peakBefore = peak()
-      if (status === 'unsupported') {
+      if (bearing.status === 'unsupported') {
         loseGround(o, b, opened)
         lost = true
       } else {
+        crackBearer(o, b, fp, bearing, src)
+        if (bearing.failed.length && openOver(o, b, fp, bearing.failed, opened, src)) lost = true
         settled.push({ b, fp })
         settle(o, b, fp)
       }
       // a long beam can go down a centimetre at one end and less than a millimetre on average: either is news
-      if (status === 'settled' && drop - before < SUBSIDE_MIN && peak() - peakBefore < SUBSIDE_MIN) continue
+      if (bearing.status === 'settled' && drop - before < SUBSIDE_MIN && peak() - peakBefore < SUBSIDE_MIN) continue
       b.p.st.subsidence = drop
-      emit({ ...base(o, src), type: 'subside', part: b.p.spec.id, drop, share: fp.share, point: fp.deepest, status })
+      emit({ ...base(o, src), type: 'subside', part: b.p.spec.id, drop, share: fp.share, point: fp.deepest, status: bearing.status })
     }
     for (const { b, fp } of settled) crackOver(o, b, fp, src)
     o.active = true

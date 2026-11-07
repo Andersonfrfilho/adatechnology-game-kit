@@ -779,10 +779,12 @@ export type DestructionEvent =
   | (EventBase & { type: 'sway'; sway: number; peak: number; drift: number; overturn: number; frequency: number; direction: Vec3; status: WindState['status'] })
   /**
    * Ground was taken away under a part that bears on it (`DestructionWorld.groundLoss`): `share` (0..1) of its footprint lost its support and it went
-   * down by `drop` metres in all (`PartState.subsidence`). `settled`: what is left of the ground carries it; `bridged`: a ground beam spans the void and
-   * holds; `unsupported`: it lost its support and what has no other load path falls (a `collapse` follows). `point` is over the void, in world space.
+   * down by `drop` metres in all (`PartState.subsidence`). `settled`: what is left of the ground carries it; `bridged`: a ground beam or a slab spans the
+   * void and holds; `opened`: it broke over the void, the stretch over it went down into the hole and what stood only there lost its support, the rest
+   * still bears on the ground; `unsupported`: it lost its support and what has no other load path falls (a `collapse` follows). `point` is over the
+   * void, in world space.
    */
-  | (EventBase & { type: 'subside'; part: string; drop: number; share: number; point: Vec3; status: 'settled' | 'bridged' | 'unsupported' })
+  | (EventBase & { type: 'subside'; part: string; drop: number; share: number; point: Vec3; status: 'settled' | 'bridged' | 'opened' | 'unsupported' })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
   /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²); `layer` -1 is a crater in the bare core (`MaterialHit.crater`). */

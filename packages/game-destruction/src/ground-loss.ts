@@ -7,6 +7,8 @@ export const GROUND_LOSS_DEFAULTS: Required<GroundLossOptions> = {
   maxSettlement: 0.05,
   crackDistortion: 1 / 300,
   damageDistortion: 1 / 150,
+  bearingCrackDistortion: 1 / 500,
+  bearingDamageDistortion: 1 / 300,
   distortionDamage: 0.3,
   bridgeSpanDepth: 10,
   beamRebarRatio: 0.004,
@@ -39,19 +41,16 @@ export const undercutAt = (loss: GroundLoss, r: number, embed: number, spread: n
   return Math.max(0, cut(reach), cut(Math.min(reach, steepest)), cut(0))
 }
 
-/** The longest run of `true` in `flags`: first index and one past the last, or null. */
-export const longestRun = (flags: readonly boolean[]): { start: number; end: number } | null => {
-  let best: { start: number; end: number } | null = null
-  let start = -1
-  for (let i = 0; i <= flags.length; i++) {
-    if (i < flags.length && flags[i]) {
-      if (start < 0) start = i
-      continue
-    }
-    if (start >= 0 && (!best || i - start > best.end - best.start)) best = { start, end: i }
-    start = -1
-  }
-  return best
+/**
+ * A settlement profile less its chord (the straight line between its two ends): what is left is how the panel bent, the deflection ratio of Burland &
+ * Wroth (1974). A panel that only turned as a whole (rigid tilt) does not crack.
+ */
+export const relativeToChord = (drops: readonly number[]): number[] => {
+  const n = drops.length
+  if (n < 2) return drops.map(() => 0)
+  const first = drops[0]!
+  const last = drops[n - 1]!
+  return drops.map((v, k) => v - (first + ((last - first) * k) / (n - 1)))
 }
 
 /**

@@ -327,14 +327,20 @@ export interface GroundLossOptions {
   /** Most a part sinks where the ground under it slumps before it hangs on what is around it, metres (default 0.05). */
   maxSettlement?: number
   /**
-   * Angular distortion (differential settlement over the distance between the points) at which the masonry over a footing cracks (default 1/300) and
-   * is damaged (default 1/150): the limits of Skempton & MacDonald (1956) and Bjerrum (1963) for walls of bricks and blocks.
+   * Angular distortion (relative deflection of the wall over a metre, its rigid tilt taken off: Burland & Wroth 1974) at which an infill panel of a frame
+   * (a `partition`) cracks (default 1/300) and is damaged (default 1/150): the panel-wall limits of Skempton & MacDonald (1956) and Bjerrum (1963).
    */
   crackDistortion?: number
   damageDistortion?: number
-  /** Share of its hit points a masonry part loses past `damageDistortion` (default 0.3; it never breaks from this alone). */
+  /**
+   * The same for a load-bearing wall (role `wall`, confined masonry), stiffer and more sensitive: it cracks at 1/500 (Bjerrum's limit where no cracking
+   * is acceptable) and is damaged at 1/300 (default).
+   */
+  bearingCrackDistortion?: number
+  bearingDamageDistortion?: number
+  /** Share of its hit points a masonry part loses past its damage distortion (default 0.3; it never breaks from this alone). */
   distortionDamage?: number
-  /** Longest void a ground beam bridges, in beam depths (default 10: NBR 6118 sizes a beam's depth at about a tenth of its span). */
+  /** Longest void a ground beam bridges between supports, in beam depths (default 10: NBR 6118 sizes a beam's depth at about a tenth of its span); a cantilever half of it. */
   bridgeSpanDepth?: number
   /** Tension steel ratio of a concrete ground beam whose spec carries no rebar (default 0.004: two 10 mm bars in a 15 x 30 cm beam). */
   beamRebarRatio?: number
