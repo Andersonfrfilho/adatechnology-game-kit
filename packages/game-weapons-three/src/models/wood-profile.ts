@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { markShared } from '@adatechnology/game-shapes-three'
 import type { ModelKit, Parent } from './kit'
 
 /** One point of a side profile: the x along the weapon and the y of the top and of the bottom edge there. */
@@ -34,11 +35,32 @@ export function profileBlock(kit: ModelKit, parent: Parent, points: readonly Pro
 
 const BEVEL = 0.0025
 
+// triangulating a spline outline is the slow part of a model: each stock is built once per kit and shared by every weapon that wears it
+const solids = new WeakMap<ModelKit, Map<string, THREE_NS.BufferGeometry>>()
+
 /**
  * A stock cut from its side profile as one smooth solid: the top and the bottom edges are splines through the points, the outline is extruded across the weapon with a
  * rounded edge, and `hole` (a closed loop of (x, y) points, also a spline) cuts a thumbhole through it. Centred on z, `width` wide in all.
  */
 export function profileSolid(kit: ModelKit, parent: Parent, points: readonly ProfilePoint[], width: number, material: THREE_NS.Material, hole?: readonly (readonly [number, number])[]): THREE_NS.Mesh {
+  const key = JSON.stringify([points, width, hole ?? null])
+  const cache = solids.get(kit) ?? new Map<string, THREE_NS.BufferGeometry>()
+  solids.set(kit, cache)
+  let geometry = cache.get(key)
+  if (!geometry) {
+    geometry = buildSolid(kit, points, width, hole)
+    markShared(geometry)
+    cache.set(key, geometry)
+  }
+  const { THREE } = kit
+  const mesh = new THREE.Mesh(geometry, material)
+  mesh.castShadow = true
+  mesh.receiveShadow = true
+  parent.add(mesh)
+  return mesh
+}
+
+function buildSolid(kit: ModelKit, points: readonly ProfilePoint[], width: number, hole?: readonly (readonly [number, number])[]): THREE_NS.BufferGeometry {
   const { THREE } = kit
   const top = points.map(([x, y]) => new THREE.Vector2(x, y))
   const bottom = [...points].reverse().map(([x, , y]) => new THREE.Vector2(x, y))
@@ -59,9 +81,5 @@ export function profileSolid(kit: ModelKit, parent: Parent, points: readonly Pro
   const depth = Math.max(0.002, width - BEVEL * 2)
   const geometry = new THREE.ExtrudeGeometry(shape, { depth, curveSegments: 16, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL, bevelSegments: 2 })
   geometry.translate(0, 0, -depth / 2)
-  const mesh = new THREE.Mesh(geometry, material)
-  mesh.castShadow = true
-  mesh.receiveShadow = true
-  parent.add(mesh)
-  return mesh
+  return geometry
 }
