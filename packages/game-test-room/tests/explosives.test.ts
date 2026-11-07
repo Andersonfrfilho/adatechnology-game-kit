@@ -91,6 +91,38 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     expect(room.log.entries({ type: 'backblast' })).toHaveLength(2)
   })
 
+  it('a dud does not vanish where it hits: it stops on what it hit, falls and lies there, and never goes off', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    equip(room, 'm72_law')
+    room.spawn('chair', [0, 0, 1])
+    room.look([0, 1.7, 5], [0, 0.4, 1])
+    room.use()
+    run(room, 1)
+    expect(room.log.entries({ type: 'dud' })).toHaveLength(1)
+    const point = room.log.entries({ type: 'dud' })[0]!.data!.point as [number, number, number]
+    const lying = (): import('three').Object3D[] => {
+      const found: import('three').Object3D[] = []
+      room.scene.traverse((object) => {
+        if (object.userData.dud === true) found.push(object)
+      })
+      return found
+    }
+    run(room, 3)
+    const [round] = lying()
+    expect(round).toBeDefined()
+    // it stayed on the side it came from, near where it hit, and came down to the floor
+    expect(round!.position.z).toBeGreaterThan(point[2] - 0.3)
+    expect(Math.hypot(round!.position.x - point[0], round!.position.z - point[2])).toBeLessThan(3)
+    expect(round!.position.y).toBeLessThan(0.3)
+    const rest = round!.position.clone()
+    run(room, 1)
+    expect(round!.position.distanceTo(rest)).toBeLessThan(0.01)
+    run(room, 40)
+    expect(explosions).toHaveLength(0)
+    expect(lying()).toHaveLength(0)
+  })
+
   it('a charge set down waits for the detonator (Y) and only reaches what is in front of its cone', () => {
     const room = makeRoom({ arsenal: remoteClaymore() })
     const explosions = explosionsOf(room)
