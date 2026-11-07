@@ -1,5 +1,5 @@
 import { createSemiSimDriver, createSurfaces, semiSpecFromStats } from '@adatechnology/game-vehicles-driving'
-import type { SemiDriver, SemiSimSpec, SurfaceRegistry } from '@adatechnology/game-vehicles-driving'
+import type { SemiDriver, SemiInput, SemiSimSpec, SurfaceRegistry } from '@adatechnology/game-vehicles-driving'
 
 import { inRange } from './ranges'
 import type { ProvingMemo, ProvingResult, ProvingSubject, ProvingTest } from './types'
@@ -18,6 +18,8 @@ export interface ProvingRun {
   /** [seconds, sample] of the run so far. */
   readonly trace: ReadonlyArray<[number, number]>
   readonly memo: ProvingMemo
+  /** What the procedure asked of the controls on the last step (all zero before the first): a host plays the brakes and the engine from it. */
+  readonly input: SemiInput
   step(dt: number): void
   /** The result so far; pending while the run has not ended. */
   result(): ProvingResult
@@ -47,8 +49,10 @@ export function startRun(test: ProvingTest, subject: ProvingSubject, options: Ru
   let done = false
   let nextSample = 0
   let carry = 0
+  let last: SemiInput = { throttle: 0, brake: 0, steer: 0, handbrake: false }
   const tick = (h: number): void => {
     const input = procedure.input(driver.state, time, memo)
+    last = input
     driver.step(input, h, world)
     time += h
     if (time >= nextSample) {
@@ -71,6 +75,9 @@ export function startRun(test: ProvingTest, subject: ProvingSubject, options: Ru
     },
     get trace() {
       return trace
+    },
+    get input() {
+      return last
     },
     step(dt) {
       carry += dt

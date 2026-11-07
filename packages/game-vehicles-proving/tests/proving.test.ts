@@ -63,6 +63,17 @@ describe('measured tests', () => {
     expect(run.done).toBe(true)
     expect(run.trace.length).toBeGreaterThan(20)
   })
+
+  it('tells what the procedure asks of the controls, so the host plays a brake test on the brakes', () => {
+    const run = startRun(tests.get('brake_100_0')!, hatch)
+    expect(run.input).toEqual({ throttle: 0, brake: 0, steer: 0, handbrake: false })
+    run.step(1)
+    expect(run.input.throttle).toBe(1)
+    expect(run.input.brake).toBe(0)
+    for (let i = 0; i < 80 && run.input.brake === 0 && !run.done; i++) run.step(0.25)
+    expect(run.input.brake).toBe(1)
+    expect(run.input.throttle).toBe(0)
+  })
 })
 
 describe('certificates and the gate', () => {
