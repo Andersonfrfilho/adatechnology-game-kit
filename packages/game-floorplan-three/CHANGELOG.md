@@ -1,5 +1,11 @@
 # @adatechnology/game-floorplan-three
 
+## 0.12.0
+
+### Minor Changes
+
+- 3f638d6: A área Casas oferece no catálogo a mesa de jantar, a mesa de centro e a escrivaninha das plantas, cada perna e tábua uma peça: o tiro quebra a perna que acerta e a mesa tomba sobre o que sobrou (opções `furniture` e `furnitureCatalog`).
+
 ## 0.11.2
 
 ### Patch Changes

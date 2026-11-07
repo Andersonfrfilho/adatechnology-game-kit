@@ -1,4 +1,4 @@
-import { isPlaced, launcherUses, throwableUse } from './explosive-use'
+import { isPlaced, launcherUses, sampleArmDistance, throwableUse } from './explosive-use'
 import { sampleFuse } from './fuse'
 import { heatPerRound } from './heat'
 import { isReloadable } from './reload'
@@ -94,7 +94,7 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     this._ammo -= 1
     this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound({ action: a, caliber: null, energy: 0, barrelMass: this.barrelMass, rules: this.rules.heat }))
     this.emit({ type: 'shot', shots: 0, rounds: 1, mode: this.mode, at: t })
-    return result('ok', { uses: launcherUses(a, this.explosive, origin, dir), recoil: [a.recoil[0], a.recoil[1]], noise: a.noise ?? 0, rounds: 1, roundTimes: [t - start] })
+    return result('ok', { uses: launcherUses({ action: a, explosive: this.explosive, origin, direction: dir, armDistance: sampleArmDistance(a, this.explosive, this.fuseRng) }), recoil: [a.recoil[0], a.recoil[1]], noise: a.noise ?? 0, rounds: 1, roundTimes: [t - start] })
   }
 
   protected fireMelee(a: Extract<WeaponAction, { kind: 'melee' }>, origin: Vec3, dir: Vec3, start: number, end: number): TriggerResult {

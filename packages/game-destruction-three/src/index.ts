@@ -16,6 +16,7 @@ export type {
   Object3D,
   Piece,
   LooseBody,
+  MakePieceOptions,
   SolidBox,
   Quality,
   Quat,
@@ -43,6 +44,7 @@ export {
   FIRE_LOOP,
   FIRE_SOUNDS,
   GRENADE_PIN_PULL,
+  ROCKET_MOTOR_LOOP,
   SMOKE_HISS_LOOP,
 } from './audio/blast-fire'
 export type { BlastKind } from './audio/blast-fire'

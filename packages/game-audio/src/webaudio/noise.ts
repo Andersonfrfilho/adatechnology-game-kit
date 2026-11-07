@@ -23,7 +23,7 @@ export function fillImpulse(random: () => number, options: { readonly channels: 
 }
 
 /** An AudioBuffer holding the samples (one channel per array). */
-export function bufferOf(context: AudioContext, channels: readonly Float32Array[], requestedLength: number): AudioBuffer {
+export function bufferOf(context: BaseAudioContext, channels: readonly Float32Array[], requestedLength: number): AudioBuffer {
   const buffer = context.createBuffer(channels.length, requestedLength, context.sampleRate)
   channels.forEach((samples, channel) => buffer.getChannelData(channel).set(samples))
   return buffer

@@ -63,6 +63,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   record.noise = arsenal?.noise ?? world?.noise
   if (extras?.fuse !== undefined) record.fuse = extras.fuse
   if (extras?.fuseRange) record.fuseRange = extras.fuseRange
+  if (extras?.armRange) record.armRange = extras.armRange
   if (extras?.fuseLength !== undefined) record.fuseLength = extras.fuseLength
   if (extras?.burnRate !== undefined) record.burnRate = extras.burnRate
   if (extras?.burnTolerance !== undefined) record.burnTolerance = extras.burnTolerance
@@ -76,20 +77,21 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   if (extras?.mass !== undefined) record.mass = extras.mass
   if (extras?.leak) record.leak = extras.leak
   if (extras?.shell) record.shell = extras.shell
-  const isReferenced = extras?.fuseRange !== undefined || extras?.burnRate !== undefined
+  const isReferenced = extras?.fuseRange !== undefined || extras?.burnRate !== undefined || extras?.armRange !== undefined
   const origins = [arsenal ? 'arsenal' : undefined, lab ? 'lab' : undefined, names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, isReferenced ? 'reference' : undefined, world || decision.copyOf ? 'derived' : undefined]
   record.sources = origins.filter((origin) => origin !== undefined)
   return record as ExplosiveRecord
 }
 
-/** Applies `copyOf`: the copy keeps its own id, name and sources, and takes every number from the explosive it copies. */
+/** Applies `copyOf`: the copy keeps its own id, name and sources (and its own fuze arming, when it has one), and takes every other number from the explosive it copies. */
 const applyCopies = (records: ExplosiveRecord[], inputs: ExplosiveInputs): ExplosiveRecord[] =>
   records.map((record) => {
     const source = inputs.decisions.explosives[record.id]?.copyOf?.value
     if (!source) return record
     const original = records.find((candidate) => candidate.id === source)
     if (!original) throw new Error(`weapons-catalog: ${record.id} copies unknown explosive ${source}`)
-    return { ...original, id: record.id, name: record.name, sources: record.sources } as ExplosiveRecord
+    const ownArming = inputs.decisions.explosives[record.id]?.extras?.value?.armRange
+    return { ...original, id: record.id, name: record.name, sources: record.sources, ...(ownArming ? { armRange: ownArming } : {}) } as ExplosiveRecord
   })
 
 export const buildExplosives = (inputs: ExplosiveInputs): ExplosiveRecord[] =>

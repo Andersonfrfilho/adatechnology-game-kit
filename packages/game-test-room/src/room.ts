@@ -3,8 +3,9 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { DESTRUCTION_SOUND_KEYS, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
@@ -150,6 +151,8 @@ const BODY_HEIGHT = 1.75
 /** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
 const KICK_MASS = 6
 const KICK_HEIGHT = 0.6
+/** Restitution of a shoe's sole on what it kicks (rubber on a can, a bottle, a book: about 0.5): a still thing leaves at up to 1.5 times the speed of the walk. */
+const KICK_RESTITUTION = 0.5
 /** Object id of the floor in the destruction world. */
 const GROUND_ID = 'room_ground'
 const TERRAIN_CELL = 0.1
@@ -331,7 +334,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
   const ownAudio = options.audio === undefined
-  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {} }))
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {}, occlusion: { query: createWorldOcclusion(world) } }))
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
   if (audio && options.samplesBaseUrl !== null) {
@@ -346,8 +349,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const preload = (): void => {
         window.removeEventListener('keydown', preload, true)
         window.removeEventListener('pointerdown', preload, true)
-        // the hand's sounds and every impact, ricochet and break: the first ricochet off a wall plays the recording, not the recipe
-        void audio.loadSamples([...HAND_RECORDED_IDS, ...impactSoundIds()]).catch(() => undefined)
+        // the hand's sounds and every sound of the room's destruction style (impacts, ricochets, breaks, the glass shatter): the first of each plays the recording
+        void audio.loadSamples([...HAND_RECORDED_IDS, ...impactSoundIds(DESTRUCTION_SOUND_KEYS.art_scene)]).catch(() => undefined)
       }
       window.addEventListener('keydown', preload, true)
       window.addEventListener('pointerdown', preload, true)
@@ -694,13 +697,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     return { floor, blocked }
   }
-  /** Light pieces at the player's feet (books, boards) are kicked along: away from the player at a little more than the walking speed. */
+  /**
+   * Light pieces at the player's feet (a can, a bottle, books, boards) are kicked along. The foot meets one as two bodies colliding, the player's mass against its own along the
+   * line from the player to it: an impulse (1 + e) m M / (m + M) times the speed they close in at (`KICK_RESTITUTION`), so a can leaves at about 1.5 times the walk and rolls on,
+   * a 5 kg box at about 1.4 times; what is already moving away faster is left alone. It does not stop the walk.
+   */
   const kickFrom = { x: 0, z: 0 }
+  const kickCentre = new THREE.Vector3()
   const kickLight = (dt: number): void => {
     const x = player.x
     const z = player.z
     // walked by the keys or by a scripted walk: the distance since the last frame
-    const speed = dt > 0 ? Math.hypot(x - kickFrom.x, z - kickFrom.z) / dt : 0
+    const vx = dt > 0 ? (x - kickFrom.x) / dt : 0
+    const vz = dt > 0 ? (z - kickFrom.z) / dt : 0
+    const speed = Math.hypot(vx, vz)
     kickFrom.x = x
     kickFrom.z = z
     if (speed < 0.2 || speed > 20) return
@@ -713,14 +723,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const cx = (s.min[0] + s.max[0]) / 2 - x
       const cz = (s.min[2] + s.max[2]) / 2 - z
       const d = Math.hypot(cx, cz) || 1
-      const v = speed * 1.2
       if (!pc) {
+        const v = speed * 1.2
         s.loose?.push((cx / d) * v, (cz / d) * v)
         continue
       }
-      if (pc.velocity[0] * cx + pc.velocity[2] * cz >= v * d) continue
-      pc.velocity = [(cx / d) * v, Math.max(pc.velocity[1], 0.6), (cz / d) * v]
-      pc.sleeping = false
+      // from the player to its centre of mass (the box found may be one of its meshes: a can's lid), and through it: the foot is as wide as the thing and meets it square
+      const centre = kickCentre.set(pc.localCenter[0], pc.localCenter[1], pc.localCenter[2]).applyQuaternion(pc.root.quaternion).add(pc.root.position)
+      const mx = centre.x - x
+      const mz = centre.z - z
+      const md = Math.hypot(mx, mz) || 1
+      const nx = mx / md
+      const nz = mz / md
+      const closing = vx * nx + vz * nz - (pc.velocity[0] * nx + pc.velocity[2] * nz)
+      if (closing <= 0) continue
+      const impulse = ((1 + KICK_RESTITUTION) * pc.mass * playerMass * closing) / (pc.mass + playerMass)
+      renderer.impulse(pc.objectId, [nx * impulse, 0, nz * impulse])
+      const entry = entries.get(pc.objectId)
+      if (entry) log.coalesce(`kick:${pc.objectId}`, { channel: 'action', type: 'kick', text: t('act.kick', { name: entry.name, speed: num(impulse / pc.mass, 1) }), objectId: pc.objectId, itemId: entry.so.itemId, data: { massKg: Math.round(pc.mass * 100) / 100, impulseNs: Math.round(impulse * 1000) / 1000 } }, 1)
     }
   }
   const player = createPlayer(THREE, {
@@ -1353,6 +1373,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!piece || piece.held) continue
       const b = inTheWay(e, ax, az, PLAYER_RADIUS)
       if (!b) continue
+      // a light thing the feet step over (a can, a bottle) is not leaned on: the walk reaches it and kicks it (`kickLight`)
+      if (piece.mass < KICK_MASS && b.top - b.base < STEP_OVER) continue
       const grip = FLOOR_FRICTION * piece.mass * 9.81
       if (force <= grip) continue
       const along = piece.velocity[0] * dx + piece.velocity[2] * dz

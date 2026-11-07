@@ -5,7 +5,8 @@ import { sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone 
 import type { Falloff, Layer, LoopRecipe, SampleAlias, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
 
 import { firingHz } from './engine-mix'
-import { CAR_ENGINE } from './profiles'
+import { BIKE_ENGINE, CAR_ENGINE, TRUCK_ENGINE } from './profiles'
+import type { EngineProfile } from './profiles'
 
 /** How a vehicle loop falls off: `1 / (1 + d² × 0.004)`, the game's one-shot curve, with the cutoff muffled by `1 + d × 0.01` (a car far away is dull). */
 export const VEHICLE_LOOP_FALLOFF: Falloff = { model: 'inverse_square', k: 0.004, cutoffK: 0.01 }
@@ -54,6 +55,7 @@ export const VEHICLE_LOOPS: readonly LoopRecipe[] = [
   noiseLoop('tire_skid_asphalt', 'bandpass', 1900, 5, 'rubber squealing on asphalt: a narrow band of noise near 2 kHz'),
   noiseLoop('tire_skid_dirt', 'lowpass', 700, 0.8, 'tyres sliding on dirt and gravel: a dull, wide hiss'),
   noiseLoop('tire_roll', 'lowpass', 400, 0.7, 'road noise of the tyres rolling, brighter with the speed'),
+  noiseLoop('tire_roll_gravel', 'bandpass', 1400, 0.6, 'tyres rolling on gravel: a wide crunching hiss, louder with the speed'),
   // a pad on a disc: a thin, nearly pure whistle near 3.4 kHz (a narrow band of noise, so it wavers as a real squeal does)
   // a siren: a square through a low-pass, its pitch swept by the vehicle every frame (wail: a slow rise and fall; yelp: a fast one)
   toneLoop('siren', 'square', 'lowpass', 2600, 0.8, 'emergency siren, the sweep driven by the vehicle'),
@@ -127,10 +129,14 @@ export const VEHICLE_SOUNDS: readonly SoundRecipe[] = [
   // the game's horn (two squares at 415 and 523 Hz, jogo L70272) heard from where the car is; a truck's air horn lower and longer
   recipe('horn_car', [tone({ wave: 'square', f: 415, d: 0.6, vol: 0.09 }), tone({ wave: 'square', f: 523, d: 0.6, vol: 0.09 })], 'car horn: the game chord, placed and panned'),
   recipe('horn_truck', [tone({ wave: 'sawtooth', f: 220, d: 1.1, vol: 0.1 }), tone({ wave: 'sawtooth', f: 277, d: 1.1, vol: 0.08 }), noise({ type: 'bandpass', f: 900, q: 2, d: 1.1, vol: 0.05 })], 'truck air horn: low reedy chord'),
+  recipe('horn_bike', [tone({ wave: 'square', f: 620, d: 0.35, vol: 0.07 }), tone({ wave: 'square', f: 780, d: 0.35, vol: 0.07 })], 'motorcycle horn: a short, thin two-note beep'),
+  // the compressed air let out of a truck's brake chambers as it stops: a hiss that dies away
+  recipe('air_brake', [noise({ type: 'highpass', f: 2200, a: 0.01, d: 1.1, vol: 0.28 }), noise({ type: 'bandpass', f: 900, q: 0.8, d: 0.35, vol: 0.2 }), tone({ f: 120, f2: 70, d: 0.12, vol: 0.2 })], 'air brakes: the chambers venting as the truck stops'),
   // a car door is a padded "tum" with a latch, not a hollow metal box (the fridge's shut_metal)
   recipe('car_door_open', [...latch(0, 0.32), noise({ f: 400, d: 0.06, vol: 0.14, delay: 0.035 })], 'car door: the handle pulled, the latch released, the seal letting go'),
   recipe('car_door_close', [tone({ f: 75, f2: 48, d: 0.16, vol: 0.75 }), noise({ f: 320, d: 0.1, vol: 0.6 }), ...latch(0.012, 0.3)], 'car door shut: a dull padded thump and the latch catching'),
   recipe('car_trunk_close', [tone({ f: 90, f2: 55, d: 0.15, vol: 0.65 }), noise({ type: 'bandpass', f: 500, q: 1, d: 0.12, vol: 0.5 }), ...latch(0.01, 0.28), noise({ type: 'bandpass', f: 1800, q: 3, d: 0.04, vol: 0.1, delay: 0.06 })], 'trunk or hatch shut: a lighter thump, the latch and a small rattle'),
+  recipe('car_hood_open', [...latch(0, 0.3), tone({ f: [180, 230], f2: 140, d: 0.3, vol: 0.04, delay: 0.06 }), noise({ type: 'bandpass', f: 700, q: 2, d: 0.25, vol: 0.12, delay: 0.05 })], 'hood released: the latch giving and the lid rising a little on its springs'),
   recipe('car_hood_close', [tone({ f: 70, f2: 40, d: 0.22, vol: 0.8 }), noise({ type: 'bandpass', f: 850, q: 1.4, d: 0.2, vol: 0.6, wet: 0.3 }), tone({ f: 900, f2: 860, d: 0.18, vol: 0.05 }), ...latch(0.015, 0.3)], 'hood slammed: a big sheet of metal ringing a little, the latch'),
 ]
 
@@ -150,6 +156,15 @@ export const CAR_START_RUN_STOP = {
   stop: { offset: 9.96, duration: 0.64 },
 } as const
 
+/** A layer of another engine profile read from its idle recording, played at the pitch it was recorded at when the engine idles. */
+const idleLayer = (id: string, file: string, rpm: number, profile: EngineProfile): SampleAlias => ({
+  id,
+  file,
+  loop: true,
+  baseFrequency: firingHz(profile, rpm),
+  falloff: VEHICLE_LOOP_FALLOFF,
+})
+
 const carLayer = (id: string, file: string, rpm: number, harmonic: number, offset?: number): SampleAlias => ({
   id,
   file,
@@ -162,9 +177,9 @@ const carLayer = (id: string, file: string, rpm: number, harmonic: number, offse
 
 /**
  * The vehicle ids answered by the recordings of the kit's manifest (files kept by the game, never in the SDK): the car engine layers by RPM, the
- * start and the stop cut out of one recording, the door and the trunk. Each recipe above stays as the fallback while the files load or where the
- * game has none. `car_door_open` is a file id of its own and needs no alias; the hood, the truck, the bike, the tyres, crashes and horns have no
- * recording yet.
+ * start and the stop cut out of one recording, the door, the trunk and the hood, the crashes, the tyres on asphalt and on gravel, and the idle of a
+ * truck and of a motorcycle. Each recipe above stays as the fallback while the files load or where the game has none. `car_door_open`, `car_hood_open`,
+ * `air_brake` and the horns (`horn_car`, `horn_truck`, `horn_bike`) are file ids of their own and need no alias.
  */
 export const VEHICLE_SAMPLE_ALIASES: readonly SampleAlias[] = [
   carLayer('engine_car_low', 'engine_loop_car_idle', CAR_RECORDED_RPM.idle, 1),
@@ -176,9 +191,20 @@ export const VEHICLE_SAMPLE_ALIASES: readonly SampleAlias[] = [
   { id: 'engine_stop', file: 'engine_start_run_stop', only: CAR_START_RUN_STOP.take, ...CAR_START_RUN_STOP.stop, falloff: VEHICLE_LOOP_FALLOFF },
   { id: 'car_door_close', file: 'car_door_shut' },
   { id: 'car_trunk_close', file: 'car_trunk_shut' },
+  { id: 'car_hood_close', file: 'car_hood_shut' },
+  // a crash by speed: a dent in the plastic, the body folding, the wreck (file ids that are not the recipes' own: `crash_light` and its kin would read as tiers of `crash`)
+  { id: 'crash_light', file: 'crash_dent' },
+  { id: 'crash_medium', file: 'crash_fold' },
+  { id: 'crash_heavy', file: 'crash_wreck' },
+  // tyres: the squeal of rubber on asphalt and the crunch of gravel, chained like the engines
+  { id: 'tire_skid_asphalt', file: 'tire_skid_asphalt_loop', loop: { crossfade: 0.6 }, falloff: VEHICLE_LOOP_FALLOFF },
+  { id: 'tire_roll_gravel', file: 'tire_roll_gravel_loop', loop: { crossfade: 0.6 }, falloff: VEHICLE_LOOP_FALLOFF },
+  // the idle of a truck and of a motorcycle, at the profile's idle RPM (the take plays at its own pitch there); the other layers stay on their recipes
+  idleLayer('engine_truck_low', 'engine_loop_truck_idle', TRUCK_ENGINE.idleRpm, TRUCK_ENGINE),
+  idleLayer('engine_bike_low', 'engine_loop_bike_idle', BIKE_ENGINE.idleRpm, BIKE_ENGINE),
 ]
 
 /** The ids a host should decode as the vehicles load (`AudioSink.preload`): every aliased recording and the door's own file id. */
-export const VEHICLE_PRELOAD_SOUNDS: readonly string[] = [...VEHICLE_SAMPLE_ALIASES.map((alias) => alias.id), 'car_door_open']
+export const VEHICLE_PRELOAD_SOUNDS: readonly string[] = [...VEHICLE_SAMPLE_ALIASES.map((alias) => alias.id), 'car_door_open', 'car_hood_open', 'horn_car', 'horn_truck', 'horn_bike', 'air_brake']
 
 export const VEHICLE_SOUND_BANK: SoundBank = { id: 'vehicles_three', sounds: VEHICLE_SOUNDS, loops: VEHICLE_LOOPS, sampleAliases: VEHICLE_SAMPLE_ALIASES }

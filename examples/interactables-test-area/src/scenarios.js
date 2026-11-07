@@ -141,7 +141,14 @@ export function buildScenarios(locale, analysisOf) {
         return q ? [q.x, q.y, q.z] : AT
       }
       let shots = 0
-      for (; shots < 30 && count(room, 'explode', id) === 0; shots++) shoot(room, step, shell, 0.8, here())
+      const pierced = () => (room.world.state(id)?.parts ?? []).some((p) => p.holes.length > 0)
+      // shot from above, down into the floor, until the shell is pierced: knocked over, a round can rolls on (far, on a hard floor) and would go off away from the stove
+      for (; shots < 30 && count(room, 'explode', id) === 0 && !pierced(); shots++) {
+        const c = world(shell, here())
+        room.look([c[0], c[1] + 0.8, c[2] + 0.05], [c[0], c[1], c[2]])
+        room.use()
+        step(0.45)
+      }
       let seconds = 0
       // a pierced can leaks gas: a flame at the hole lights it and the rest goes up
       for (; seconds < 60 && count(room, 'explode', id) === 0; seconds++) {

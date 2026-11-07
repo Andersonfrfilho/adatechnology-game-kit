@@ -26,7 +26,7 @@ export type LoopEntry = { rewire(): void; stop(): void; readonly created: boolea
 
 /** What a loop needs from its engine. */
 export type LoopHost = {
-  ready(): AudioContext | null
+  ready(): BaseAudioContext | null
   output(bus: BusId): AudioNode
   prepareNoise(): unknown
   noise(): AudioBuffer
@@ -66,7 +66,7 @@ export function createLoopHandle(recipe: LoopRecipe | undefined, host: LoopHost,
     },
   }
 
-  const create = (context: AudioContext, startVolume: number): RealizedLoop => {
+  const create = (context: BaseAudioContext, startVolume: number): RealizedLoop => {
     if (loopRecipe.source.kind === 'noise') host.prepareNoise()
     const target: RealizeTarget = { context, output: host.output(loopRecipe.bus), noise: host.noise, time: context.currentTime }
     const made = isChain ? realizeChainLoop(loopRecipe, target, startVolume) : realizeGameLoop(loopRecipe, target)

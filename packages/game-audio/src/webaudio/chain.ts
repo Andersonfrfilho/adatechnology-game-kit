@@ -26,7 +26,7 @@ export function limiterCurve(ceilingDb: number, kneeDb: number, range: number, p
  * The mixing chain in the team order (cena L1308–1311; jogo L62080): compressor to the output, master into it (or straight to the output), then the
  * convolver with an impulse drawn from `random` and the wet bus into it, back into the master.
  */
-export function buildChain(context: AudioContext, profile: MixProfile, random: () => number): MixChain {
+export function buildChain(context: BaseAudioContext, profile: MixProfile, random: () => number): MixChain {
   // the limiter is the last stage: a gain that brings `range` × full scale into the shaper's -1..1, and a curve that gives the level back, bent above the knee
   let limiter: { readonly input: GainNode; readonly shaper: WaveShaperNode } | undefined
   if (profile.limiter) {

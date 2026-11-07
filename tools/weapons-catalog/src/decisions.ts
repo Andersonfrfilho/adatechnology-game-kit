@@ -59,6 +59,8 @@ export type ExplosiveExtras = {
   readonly chain?: ExplosiveChainDecision
   readonly fuse?: number
   readonly fuseRange?: readonly [number, number]
+  /** Metres of flight before the fuze arms, sampled per shot (the M406 40 mm grenade: 14 to 27 m). */
+  readonly armRange?: readonly [number, number]
   readonly fuseLength?: number
   readonly burnRate?: number
   readonly burnTolerance?: number

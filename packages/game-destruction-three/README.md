@@ -126,6 +126,14 @@ loose meshes. An invalid range (outside the geometry or empty) throws from `bind
 
 `world.explode` emits no event of its own (only a part with `explodes` does), so a host that detonates a grenade or rocket calls `renderer.explode(point, energy, radius)` next to it to get the same flash, fire, smoke, light, sound and shove.
 
+Round pieces roll and knock each other. A piece whose drawing is round about one axis (a can, a bottle) or all three (a ball) rolls on the lowest point of each ring of its
+profile (`PieceRound.profile`: a straight can rolls straight, a tapered bottle rounds its narrow end), with I = k m r^2 about its axis: hollow walls of known thickness
+(`userData.hollow`, `userData.destructionThickness`) weigh as a thin shell (k 1), the rest of the mass as a solid (k 1/2), or `makePiece(id, { inertia })` says k. Down a slope
+of angle t it rolls at g (sin t - C_rr cos t) / (1 + k), C_rr the rolling resistance of the softer surface (`friction.ts`). Pieces meet each other when one of them is round:
+a capsule round its axis against the other's capsule or the boxes of its parts, and they trade an impulse with the restitution of their two materials (geometric mean),
+momentum kept; candidates come from a sweep and prune along x, and an update is split into steps while a round piece moves fast enough to pass through another. Against what
+is not a piece (a wall, a table's leg) a piece bounces by the restitution of the two materials (`PieceSweepHit.restitution`).
+
 Pieces report hard landings: above 3 m/s the renderer calls `world.hit(id, { type: 'blunt', energy: 0.5 m v^2, radius: 0.08, direction: [0, -1, 0], source: 'fall' })`
 (throttled to once per 0.15 s per piece; the object's transform is synced to the world first, so the hit lands on the right spot), so a dropped glass
 pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the centre of mass relative to the root origin (it moves when a part breaks off).
