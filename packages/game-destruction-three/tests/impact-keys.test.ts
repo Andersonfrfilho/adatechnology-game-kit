@@ -3,7 +3,7 @@ import { MATERIALS } from '@adatechnology/game-destruction'
 import type { MaterialDef } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
-import { DESTRUCTION_SOUND_BANK, IMPACT_SOUND_KEYS, createDestructionSound, impactFamily, impactKey, impactSoundIds, impactSoundKeys, ricochetSoundKeys } from '../src'
+import { DESTRUCTION_SOUND_BANK, DESTRUCTION_SOUND_KEYS, IMPACT_SOUND_KEYS, createDestructionSound, impactFamily, impactKey, impactSoundIds, impactSoundKeys, ricochetSoundKeys } from '../src'
 
 // Checklist 5.3: the sound of a blow on a material follows the material and the kind of blow, not only one of five families.
 const def = (id: string): MaterialDef => {
@@ -75,6 +75,9 @@ describe('ricochet by material', () => {
     for (const rule of Object.values(IMPACT_SOUND_KEYS)) expect(ids, rule.sound).toContain(rule.sound)
     expect(ids).toContain('ricochet_stone')
     expect(ids).toContain('ricochet_metal')
+    // the room preloads its whole style: the break of a pane is in it, not only the blows (the first shatter was silent while it loaded)
+    const style = impactSoundIds(DESTRUCTION_SOUND_KEYS.art_scene)
+    for (const id of ['glass_shatter', 'ricochet_stone', 'glass_bullet', 'glass_blade']) expect(style, id).toContain(id)
     expect(impactSoundIds({ a: { sound: 'x', above: { volume: 0.5, sound: 'y' }, fallback: 'z' } })).toEqual(['x', 'y', 'z'])
   })
 })
