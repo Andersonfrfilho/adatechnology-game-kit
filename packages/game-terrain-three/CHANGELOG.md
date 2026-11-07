@@ -1,5 +1,15 @@
 # @adatechnology/game-terrain-three
 
+## 0.5.4
+
+### Patch Changes
+
+- fa57abb: The ground far off shows the average of its pattern instead of its grain and joints sparkling as black dots.
+- Updated dependencies [3d53e28]
+- Updated dependencies [c4b8218]
+  - @adatechnology/game-terrain@0.6.0
+  - @adatechnology/game-contracts@0.30.0
+
 ## 0.5.3
 
 ### Patch Changes
