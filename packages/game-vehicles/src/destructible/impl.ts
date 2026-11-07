@@ -476,9 +476,11 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     // the welded body (roof, pillars, frame, side panels) bends and tears but stays: it is never knocked off the car as a piece
     // sheet metal hit by a blow crumples and stays on: it only comes off when its hinges or bolts give way (`wear`)
     const crumples = dtype === 'blunt' && CRUMPLES.has(p.def.role) && (p.def.material === 'steel' || p.def.material === 'aluminium')
-    p.hp = Math.max(WELDED.has(p.def.role) || crumples ? 1 : 0, p.hp - amount)
+    // a round punctures a tyre and lets the air out: it does not tear the rubber off the rim (only fire, a blow or miles on the flat do)
+    const punctures = dtype === 'ballistic' && p.def.role === 'tyre'
+    p.hp = Math.max(WELDED.has(p.def.role) || crumples || punctures ? 1 : 0, p.hp - amount)
     out.push(ev({ type: 'damage', part: p.def.id, amount: r2(before - p.hp), hp: r2(p.hp), damageType: dtype, ...(source ? { source } : {}) }))
-    wear(p, amount, out)
+    if (!punctures) wear(p, amount, out)
     syncZone(p)
     if (p.hp <= 0) lose(p, 'broken', out, cause)
     else if (p.def.role === 'light') vis?.crackLight(p.def, dtype === 'ballistic')

@@ -111,6 +111,12 @@ const BOUNCE_MIN_SPEED = 0.1
 const KNOCK_FLAT = 0.5
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
+/** Which pieces a step moves and which pairs it meets (`PieceSystem.update` splits only what closes in on a round piece). */
+interface StepFilter {
+  readonly moves: (b: PieceBody) => boolean
+  readonly meets: (a: PieceBody, b: PieceBody) => boolean
+}
+
 interface Solid {
   body: PieceBody
   c: Vec3
@@ -413,17 +419,31 @@ export class PieceSystem {
   }
 
   update(dt: number): void {
-    const steps = this.collisionSteps(dt)
-    for (let i = 0; i < steps; i++) this.step(dt / steps)
+    const { steps, near } = this.collisionSteps(dt)
+    if (steps === 1) {
+      this.time += dt
+      this.step(dt)
+      return
+    }
+    // only the round pieces and what closes in on them are split: the rest (a wall's bricks falling far from the can) take the update whole, so their sweep runs once
+    const start = this.time
+    this.time = start + dt
+    const far = (b: PieceBody): boolean => !near.has(b)
+    this.step(dt, { moves: far, meets: (a, b) => far(a) && far(b) })
+    for (let i = 0; i < steps; i++) {
+      this.time = start + (dt * (i + 1)) / steps
+      this.step(dt / steps, { moves: (b) => near.has(b), meets: (a, b) => near.has(a) || near.has(b) })
+    }
   }
 
   /**
    * Steps of an update: one, or more while a round piece and a piece it could meet within the update close in fast enough to pass through each other between two (closing at
    * their two speeds they cover at most the round one's radius per step: two cans at 3.6 m/s close 12 cm in a frame, a can is 7 cm across; a plank thrown at a can still counts).
-   * A round piece with nothing in reach takes one step, so its sweep against the world (the costly part) runs once.
+   * A round piece with nothing in reach takes one step, so its sweep against the world (the costly part) runs once; `near` holds the pieces of the pairs that need more.
    */
-  private collisionSteps(dt: number): number {
+  private collisionSteps(dt: number): { steps: number; near: Set<PieceBody> } {
     let need = 1
+    const near = new Set<PieceBody>()
     const p = this.p
     const speedOf = (b: PieceBody): number => (b.held ? 0 : Math.hypot(b.velocity[0], b.velocity[1], b.velocity[2]))
     for (const b of this.list) {
@@ -441,14 +461,18 @@ export class PieceSystem {
         const reach = closing * dt + rb + Math.hypot(o.halfExtents[0], o.halfExtents[1], o.halfExtents[2])
         const oc = this.centerOf(o, p)
         if (Math.abs(oc.x - cx) > reach || Math.abs(oc.y - cy) > reach || Math.abs(oc.z - cz) > reach) continue
-        need = Math.max(need, Math.ceil((closing * dt) / radius))
+        const pair = Math.ceil((closing * dt) / radius)
+        if (pair < 2) continue
+        need = Math.max(need, pair)
+        near.add(b)
+        near.add(o)
       }
     }
-    return Math.max(1, Math.min(MAX_COLLISION_STEPS, need))
+    return { steps: Math.max(1, Math.min(MAX_COLLISION_STEPS, need)), near }
   }
 
-  private step(dt: number): void {
-    this.time += dt
+  /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
+  private step(dt: number, only?: StepFilter): void {
     this.solids = this.list.map((body) => {
       const c = this.centerOf(body, new this.THREE.Vector3())
       const h = body.halfExtents
@@ -510,14 +534,14 @@ export class PieceSystem {
         b.calmAt = null
         continue
       }
-      if (b.sleeping) continue
+      if (b.sleeping || (only && !only.moves(b))) continue
       this.integrate(b, dt)
       if (b.sleeping) continue
       const v = b.velocity
       const w = b.angularVelocity
       if (Math.hypot(v[0], v[1], v[2]) > WAKE_ABOVE_SPEED || Math.hypot(w[0], w[1], w[2]) > WAKE_ABOVE_SPIN) this.wakeAbove(b)
     }
-    this.collide(dt)
+    this.collide(dt, only?.meets)
   }
 
   /** A few sleeping pieces each update (`SUPPORT_CHECKS`, in turn) look under them again: one whose table broke, or whose shelf fell over, falls. */
@@ -1086,7 +1110,7 @@ export class PieceSystem {
    * Pieces against each other. Candidates by sweep and prune along x on their bounding spheres (sorted once per step: fifty cans cost a sort and a handful of pairs, not
    * 1225); a pair with a round piece in it meets by its shapes (`shapeContact`) and exchanges an impulse, two boxes are only pushed apart (`separatePair`).
    */
-  private collide(dt: number): void {
+  private collide(dt: number, meets?: StepFilter['meets']): void {
     const n = this.list.length
     if (n < 2) return
     const centers = this.list.map((b) => {
@@ -1104,6 +1128,7 @@ export class PieceSystem {
         const a = this.list[i]
         const b = this.list[j]
         if ((a.held || a.sleeping) && (b.held || b.sleeping)) continue
+        if (meets && !meets(a, b)) continue
         const r = radii[i] + radii[j]
         const ca = centers[i]
         const cb = centers[j]
