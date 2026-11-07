@@ -2,7 +2,7 @@ import type { AudioSink, LoopHandle, Vec3 } from '@adatechnology/game-contracts'
 
 import type { EngineBudget } from './engine-budget'
 import { createGearGuess, engineMix } from './engine-mix'
-import { CAR_ENGINE, CRASH_SPEEDS, DEFAULT_VEHICLE_SOUND_KEYS } from './profiles'
+import { CAR_ENGINE, CRASH_SPEEDS, DEFAULT_VEHICLE_SOUND_KEYS, TRUCK_ENGINE } from './profiles'
 import type { EngineProfile, VehicleSoundKeys } from './profiles'
 
 /** What the vehicle is doing this frame. Without `rpm` (a driver with no engine model) the RPM is guessed from the speed through the profile's gears. */
@@ -34,6 +34,8 @@ export type VehicleSoundOptions = {
   readonly crankSeconds?: number
   /** Shared by the vehicles of a scene: only the nearest few keep their loops (`createEngineBudget`). */
   readonly budget?: EngineBudget
+  /** Lets the brake chambers out as the vehicle stops on the brakes (a truck's air brakes). Default: only for the truck profile. */
+  readonly airBrake?: boolean
 }
 
 /** What was asked of the sink, for the checks and the bench: the RPM in use and the level of each loop. */
@@ -74,6 +76,7 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
   const profile = options.profile ?? CAR_ENGINE
   const keys = { ...DEFAULT_VEHICLE_SOUND_KEYS, ...options.sounds }
   const crankSeconds = options.crankSeconds ?? 0.75
+  const airBrake = options.airBrake ?? profile.id === TRUCK_ENGINE.id
   const gears = createGearGuess(profile)
   const loops = new Map<string, LoopHandle>()
   const budget = options.budget
@@ -81,7 +84,7 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
   const self = {}
   const levels: Record<string, number> = {}
   // running: the engine turns; cranking counts down the starter; flare is the RPM the engine overshoots to as it catches
-  const state = { running: false, cranking: 0, catches: false, flare: 0, rpm: 0, sirenPhase: 0 }
+  const state = { running: false, cranking: 0, catches: false, flare: 0, rpm: 0, sirenPhase: 0, rolling: false }
 
   const loopOf = (sound: string): LoopHandle | undefined => {
     let handle = loops.get(sound)
@@ -149,7 +152,16 @@ export function createVehicleSound(audio: AudioSink | undefined, options: Vehicl
       setLoop(keys.skidAsphalt, heard * (dirt ? 0 : 0.16 * slide), frame.position, { cutoff: 1700 + 600 * slide })
       setLoop(keys.skidDirt, heard * (dirt ? 0.2 * slide : 0), frame.position, { cutoff: 500 + 500 * slide })
       // road noise grows with the speed and gets brighter
-      setLoop(keys.roll, heard * 0.06 * clamp01(speed / 25), frame.position, { cutoff: 250 + 45 * Math.min(speed, 40) })
+      setLoop(keys.roll, heard * (dirt ? 0 : 0.06 * clamp01(speed / 25)), frame.position, { cutoff: 250 + 45 * Math.min(speed, 40) })
+      setLoop(keys.rollDirt, heard * (dirt ? 0.1 * clamp01(speed / 20) : 0), frame.position, { cutoff: 700 + 60 * Math.min(speed, 30) })
+      // a truck that stops on its brakes lets the air out of its chambers once
+      if (airBrake) {
+        if (speed > 2) state.rolling = true
+        else if (state.rolling && speed < 0.8 && (frame.brake ?? 0) > 0.3) {
+          state.rolling = false
+          if (heard > 0) play(keys.airBrake, frame.position, 0.8)
+        }
+      }
       // the pads squeal in the last metres of a stop on the brakes, while the tyres still grip (a skid is the tyres' sound, not the pads')
       const squeal = clamp01(((frame.brake ?? 0) - 0.3) / 0.4) * clamp01(speed / 0.8) * clamp01((5 - speed) / 2) * (slide > 0 ? 0 : 1)
       setLoop(keys.brakeSqueal, heard * 0.05 * squeal, frame.position, { cutoff: 3200 + 400 * squeal })

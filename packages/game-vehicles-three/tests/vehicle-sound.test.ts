@@ -1,8 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { AudioSink, LoopHandle, SoundRequest } from '@adatechnology/game-contracts'
 import { createSoundRegistry, loopRate } from '@adatechnology/game-audio'
-import type { SampleSound } from '@adatechnology/game-audio'
-import { CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, createEngineBudget, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, firingHz, slideOfGrip } from '../src/audio'
+import type { SampleSound, SfxManifest } from '@adatechnology/game-audio'
+import { BIKE_ENGINE, CAR_ENGINE, CAR_RECORDED_RPM, CAR_START_RUN_STOP, CRASH_SPEEDS, TRUCK_ENGINE, createEngineBudget, VEHICLE_PRELOAD_SOUNDS, VEHICLE_SAMPLE_ALIASES, VEHICLE_SOUND_BANK, createGearGuess, createVehicleSound, engineMix, engineProfileOfGroup, firingHz, hornOfGroup, slideOfGrip } from '../src/audio'
 
 type LoopCall = { sound: string; volume?: number; frequency?: number; cutoff?: number }
 
@@ -240,11 +242,13 @@ describe('brakes, hits and many vehicles', () => {
   })
 })
 
+const RECORDED_BY_THEIR_OWN_ID = ['car_hood_open', 'horn_car', 'horn_truck', 'horn_bike', 'air_brake']
+
 describe('car recordings by reference', () => {
   // the manifest's file ids as the kit registers them (the files themselves stay in the game)
   const FILES = {
     id: 'kit_samples',
-    samples: ['engine_loop_car_idle', 'engine_loop_car_high', 'engine_start_run_stop', 'car_door_shut', 'car_trunk_shut', 'car_door_open'].map((id) => ({
+    samples: ['engine_loop_car_idle', 'engine_loop_car_high', 'engine_start_run_stop', 'car_door_shut', 'car_trunk_shut', 'car_door_open', ...RECORDED_BY_THEIR_OWN_ID, 'car_hood_shut', 'crash_dent', 'crash_fold', 'crash_wreck', 'tire_skid_asphalt_loop', 'tire_roll_gravel_loop', 'engine_loop_truck_idle', 'engine_loop_bike_idle'].map((id) => ({
       id,
       bus: 'world' as const,
       // the start/run/stop file has two takes, as in the manifest: _02 is longer and starts already running
@@ -271,6 +275,14 @@ describe('car recordings by reference', () => {
     for (const id of ['engine_start', 'engine_stop']) expect(registry.sample(id)?.close.map((ref) => ref.url), id).toEqual(['veiculos/engine_start_run_stop_01.ogg'])
     expect(registry.sample('car_door_close')?.close[0]?.url).toBe('veiculos/car_door_shut_01.ogg')
     expect(registry.sample('car_trunk_close')?.close[0]?.url).toBe('veiculos/car_trunk_shut_01.ogg')
+    expect(registry.sample('car_hood_close')?.close[0]?.url).toBe('veiculos/car_hood_shut_01.ogg')
+    for (const [id, file] of [['crash_light', 'crash_dent'], ['crash_medium', 'crash_fold'], ['crash_heavy', 'crash_wreck']] as const) expect(registry.sample(id)?.close[0]?.url, id).toBe(`veiculos/${file}_01.ogg`)
+    // the tyres chain their takes; a truck and a bike idle at the pitch their recordings have when the profile idles
+    for (const id of ['tire_skid_asphalt', 'tire_roll_gravel']) expect(registry.sample(id)?.loop, id).toEqual({ crossfade: 0.6 })
+    for (const [id, profile] of [['engine_truck_low', TRUCK_ENGINE], ['engine_bike_low', BIKE_ENGINE]] as const) {
+      expect(loopRate(registry.sample(id) as SampleSound, firingHz(profile, profile.idleRpm)), id).toBeCloseTo(1, 6)
+      expect(loopRate(registry.sample(id) as SampleSound, firingHz(profile, profile.idleRpm * 2)), id).toBeCloseTo(2, 6)
+    }
     // every recording the vehicles area decodes up front is a sample once the files are there
     for (const id of VEHICLE_PRELOAD_SOUNDS) expect(registry.sample(id), id).toBeDefined()
     // without recordings (no game folder, CI) every vehicle id is still its recipe
@@ -279,5 +291,58 @@ describe('car recordings by reference', () => {
       expect(bare.sample(alias.id)).toBeUndefined()
       expect(bare.sound(alias.id) ?? bare.loop(alias.id), alias.id).toBeDefined()
     }
+  })
+})
+
+describe('recordings of the vehicles in the kit manifest', () => {
+  const manifest = JSON.parse(readFileSync(join(__dirname, '../../game-audio/assets/sfx/manifest.json'), 'utf8')) as SfxManifest
+  const takes = (id: string): number => manifest.sounds.find((sound) => sound.id === id)?.layers.close?.length ?? 0
+
+  it('has several takes of the hood, the horns, the crashes, the air brake, the tyres and the idle of a truck and a bike', () => {
+    const wanted: Record<string, number> = { car_hood_open: 2, car_hood_shut: 3, horn_car: 5, horn_truck: 4, horn_bike: 4, air_brake: 4, crash_dent: 4, crash_fold: 4, crash_wreck: 4, tire_skid_asphalt_loop: 3, tire_roll_gravel_loop: 3, engine_loop_truck_idle: 2, engine_loop_bike_idle: 2 }
+    for (const [id, count] of Object.entries(wanted)) expect(takes(id), id).toBeGreaterThanOrEqual(count)
+  })
+
+  it('every file id the bank points at is in the manifest, and the ids that are their own recipes too', () => {
+    for (const alias of VEHICLE_SAMPLE_ALIASES) expect(takes(alias.file), alias.file).toBeGreaterThan(0)
+    for (const id of RECORDED_BY_THEIR_OWN_ID) expect(takes(id), id).toBeGreaterThan(0)
+  })
+})
+
+describe('the sounds that depend on what drives', () => {
+  it('a motorcycle has a bike engine and its horn, heavy trucks and tractors a truck engine and the air horn, every other group a car', () => {
+    expect(engineProfileOfGroup('motorcycles')).toBe(BIKE_ENGINE)
+    expect(engineProfileOfGroup('heavy')).toBe(TRUCK_ENGINE)
+    expect(engineProfileOfGroup('agricultural')).toBe(TRUCK_ENGINE)
+    expect(engineProfileOfGroup('suvs')).toBe(CAR_ENGINE)
+    expect(['motorcycles', 'heavy', 'cars'].map(hornOfGroup)).toEqual(['horn_bike', 'horn_truck', 'horn_car'])
+    const bank = new Set((VEHICLE_SOUND_BANK.sounds ?? []).map((sound) => sound.id))
+    for (const id of ['horn_bike', 'horn_truck', 'horn_car', 'car_hood_open', 'air_brake']) expect(bank.has(id), id).toBe(true)
+  })
+
+  it('on gravel the road noise is the crunch of gravel, on asphalt the tyre noise, and never both', () => {
+    const { sink, sets } = fakeSink()
+    const car = createVehicleSound(sink)
+    car.update({ dt: 1 / 30, position: [0, 0, 0], speed: 15, throttle: 0.2 })
+    expect(lastOf(sets, 'tire_roll')!.volume!).toBeGreaterThan(0.01)
+    expect(car.reading.levels['tire_roll_gravel'] ?? 0).toBe(0)
+    car.update({ dt: 1 / 30, position: [0, 0, 0], speed: 15, throttle: 0.2, surface: 'dirt' })
+    expect(car.reading.levels['tire_roll']).toBe(0)
+    expect(car.reading.levels['tire_roll_gravel']).toBeGreaterThan(0.01)
+  })
+
+  it('a truck stopping on its brakes lets the air out once; a car does not, and a truck still rolling does not', () => {
+    const stop = (profile: typeof CAR_ENGINE): string[] => {
+      const { sink, played } = fakeSink()
+      const vehicle = createVehicleSound(sink, { profile })
+      vehicle.update({ dt: 1 / 30, position: [0, 0, 0], speed: 8, throttle: 0, brake: 0.8 })
+      vehicle.update({ dt: 1 / 30, position: [0, 0, 0], speed: 1, throttle: 0, brake: 0.8 })
+      expect(played.map((request) => request.sound)).not.toContain('air_brake')
+      vehicle.update({ dt: 1 / 30, position: [0, 0, 0], speed: 0, throttle: 0, brake: 0.8 })
+      vehicle.update({ dt: 1 / 30, position: [0, 0, 0], speed: 0, throttle: 0, brake: 0.8 })
+      return played.map((request) => request.sound).filter((sound) => sound === 'air_brake')
+    }
+    expect(stop(TRUCK_ENGINE)).toEqual(['air_brake'])
+    expect(stop(CAR_ENGINE)).toEqual([])
   })
 })

@@ -316,6 +316,7 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | explosoes-fogo/fire_crackle_05.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
 | explosoes-fogo/fire_crackle_07.ogg | https://freesound.org/people/ahriik/sounds/508110/ | ahriik | CC0 |
 | explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 |
+| explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 |
 | explosoes-fogo/fire_extinguish_02.ogg | https://freesound.org/people/Iamgiorgio/sounds/371839/ | Iamgiorgio | CC0 |
 | explosoes-fogo/fire_ignite_01.ogg | https://freesound.org/people/samararaine/sounds/186374/ | samararaine | CC0 |
 | explosoes-fogo/fire_ignite_02.ogg | https://freesound.org/people/hnhnh/sounds/244926/ | hnhnh | CC0 |
@@ -340,6 +341,7 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | explosoes-fogo/fire_pop_02.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
 | explosoes-fogo/fire_pop_03.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
 | explosoes-fogo/flamethrower_loop_01.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
+| explosoes-fogo/gas_leak_01.ogg | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 |
 | explosoes-fogo/gas_leak_01.ogg | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 |
 | explosoes-fogo/molotov_break_ignite_01.ogg | https://freesound.org/people/craigsmith/sounds/675768/ | craigsmith | CC0 |
 | explosoes-fogo/molotov_break_ignite_02.ogg | https://freesound.org/people/craigsmith/sounds/483288/ | craigsmith | CC0 |
@@ -481,7 +483,10 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | impactos/metal_fall_close_06.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_07.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_08.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/metal_fall_close_08.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_09.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/metal_fall_close_09.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/metal_fall_close_10.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_10.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_thin_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/metal_thin_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -666,6 +671,7 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | itens-portas/item_drop_metal_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_drop_metal_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_drop_metal_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| itens-portas/item_drop_metal_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_drop_paper_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_pickup_coins_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/item_pickup_coins_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
@@ -694,6 +700,8 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | itens-portas/lever_pull_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/lever_pull_06.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/metal_latch_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/metal_latch_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| itens-portas/metal_latch_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/metal_latch_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/plates_hit_01.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
 | itens-portas/plates_hit_02.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
@@ -814,15 +822,15 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | personagem/footstep_generic_alt_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_generic_alt_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_generic_alt_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| personagem/footstep_grass_alt2_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_04.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | personagem/footstep_grass_alt_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_04.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_05.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
+| personagem/footstep_grass_alt2_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_04.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | personagem/footstep_grass_run_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/footstep_grass_run_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/footstep_grass_run_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -1045,13 +1053,65 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | personagem/zombie_groan_09.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/zombie_groan_10.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/zombie_groan_11.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| veiculos/air_brake_01.ogg | https://freesound.org/people/rabbydaw/sounds/504865/ | rabbydaw (air brakes, tail cut) | CC0 |
+| veiculos/air_brake_02.ogg | https://freesound.org/people/Filmscore/sounds/823069/ | Filmscore (hydraulic truck brakes, tail cut) | CC0 |
+| veiculos/air_brake_03.ogg | https://freesound.org/people/buzkill/sounds/825463/ | buzkill (cement mixer truck air brake) | CC0 |
+| veiculos/air_brake_04.ogg | https://freesound.org/people/brunoboselli/sounds/457294/ | brunoboselli (air pressure release, first part cut) | CC0 |
+| veiculos/air_brake_05.ogg | https://freesound.org/people/brunoboselli/sounds/457294/ | brunoboselli (air pressure release, second part cut) | CC0 |
 | veiculos/car_door_open_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | veiculos/car_door_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | veiculos/car_gear_shift_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| veiculos/car_hood_open_01.ogg | https://freesound.org/people/nmscher/sounds/86233/ | nmscher (hood opening, cut) | CC0 |
+| veiculos/car_hood_open_02.ogg | https://freesound.org/people/microman502/sounds/865230/ | microman502 (bonnet latches, cut) | CC0 |
+| veiculos/car_hood_shut_01.ogg | https://freesound.org/people/nmscher/sounds/86236/ | nmscher (hood slam, cut) | CC0 |
+| veiculos/car_hood_shut_02.ogg | https://freesound.org/people/soundman9826/sounds/410134/ | soundman9826 (hood closing, cut) | CC0 |
+| veiculos/car_hood_shut_03.ogg | https://freesound.org/people/LPA134/sounds/329516/ | LPA134 (hood impact, cut) | CC0 |
 | veiculos/car_trunk_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | veiculos/car_window_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | veiculos/car_window_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| veiculos/crash_dent_01.ogg | https://freesound.org/people/qubodup/sounds/332058/ | qubodup | CC0 |
+| veiculos/crash_dent_02.ogg | https://freesound.org/people/qubodup/sounds/332056/ | qubodup | CC0 |
+| veiculos/crash_dent_03.ogg | https://freesound.org/people/Feed_/sounds/545692/ | Feed_ | CC0 |
+| veiculos/crash_dent_04.ogg | https://freesound.org/people/Logicogonist/sounds/807438/ | Logicogonist | CC0 |
+| veiculos/crash_dent_05.ogg | https://freesound.org/people/dslrguide/sounds/321482/ | dslrguide (metal hit, cut) | CC0 |
+| veiculos/crash_dent_06.ogg | https://freesound.org/people/craigsmith/sounds/675466/ | craigsmith (two cars crash foley, cut) | CC0 |
+| veiculos/crash_fold_01.ogg | https://freesound.org/people/CogFireStudios/sounds/420356/ | CogFireStudios (crash, tail cut) | CC0 |
+| veiculos/crash_fold_02.ogg | https://freesound.org/people/qubodup/sounds/332059/ | qubodup (collision with reverb, tail cut) | CC0 |
+| veiculos/crash_fold_03.ogg | https://freesound.org/people/HoBoTrails/sounds/426021/ | HoBoTrails (car accident with squeal and crash, tail cut) | CC0 |
+| veiculos/crash_fold_04.ogg | https://freesound.org/people/craigsmith/sounds/675911/ | craigsmith (car hits two phone booths, metal and glass, cut) | CC0 |
+| veiculos/crash_wreck_01.ogg | https://freesound.org/people/magnuswaker/sounds/592388/ | magnuswaker (car crash with glass, tail cut) | CC0 |
+| veiculos/crash_wreck_02.ogg | https://freesound.org/people/PauliusI/sounds/346299/ | PauliusI (car crash exterior, tail cut) | CC0 |
+| veiculos/crash_wreck_03.ogg | https://freesound.org/people/CAT-FOX_ALEX/sounds/862565/ | CAT-FOX_ALEX (car crash impact, cut) | CC0 |
+| veiculos/crash_wreck_04.ogg | https://freesound.org/people/squareal/sounds/237375/ | squareal (car crash, tail cut) | CC0 |
+| veiculos/engine_loop_bike_idle_01.ogg | https://freesound.org/people/golovlev.sound/sounds/632219/ | golovlev.sound (BMW motorcycle idling, steady part cut) | CC0 |
+| veiculos/engine_loop_bike_idle_02.ogg | https://freesound.org/people/golovlev.sound/sounds/632219/ | golovlev.sound (BMW motorcycle idling, steady part cut) | CC0 |
 | veiculos/engine_loop_car_high_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | veiculos/engine_loop_car_idle_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| veiculos/engine_loop_truck_idle_01.ogg | https://freesound.org/people/chungus43A/sounds/705386/ | chungus43A (diesel engine idling, steady part cut) | CC0 |
+| veiculos/engine_loop_truck_idle_02.ogg | https://freesound.org/people/itinerantmonk108/sounds/864821/ | itinerantmonk108 (idling truck, steady part cut) | CC0 |
 | veiculos/engine_start_run_stop_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | veiculos/engine_start_run_stop_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| veiculos/horn_bike_01.ogg | https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378336/ | 13FPanska_Mikova_Adela (Jawa motorbike horn, cut) | CC0 |
+| veiculos/horn_bike_02.ogg | https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378336/ | 13FPanska_Mikova_Adela (Jawa motorbike horn, second honk cut) | CC0 |
+| veiculos/horn_bike_03.ogg | https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378351/ | 13FPanska_Mikova_Adela (Simson moped horn, cut) | CC0 |
+| veiculos/horn_bike_04.ogg | https://freesound.org/people/13FPanska_Mikova_Adela/sounds/378351/ | 13FPanska_Mikova_Adela (Simson moped horn, second honk cut) | CC0 |
+| veiculos/horn_bike_05.ogg | https://freesound.org/people/loganzsound/sounds/774253/ | loganzsound (motorbike horn, cut) | CC0 |
+| veiculos/horn_car_01.ogg | https://freesound.org/people/Iamgiorgio/sounds/371833/ | Iamgiorgio (cut) | CC0 |
+| veiculos/horn_car_02.ogg | https://freesound.org/people/danlucaz/sounds/517673/ | danlucaz (cut) | CC0 |
+| veiculos/horn_car_03.ogg | https://freesound.org/people/DuranBurrus/sounds/547667/ | DuranBurrus (cut) | CC0 |
+| veiculos/horn_car_04.ogg | https://freesound.org/people/DeVern/sounds/349922/ | DeVern (one honk, cut) | CC0 |
+| veiculos/horn_car_05.ogg | https://freesound.org/people/marcelweiss/sounds/505322/ | marcelweiss (S63 AMG horn, cut) | CC0 |
+| veiculos/horn_car_06.ogg | https://freesound.org/people/AmishRob/sounds/423990/ | AmishRob (beep beep, cut) | CC0 |
+| veiculos/horn_truck_01.ogg | https://freesound.org/people/kyles/sounds/637923/ | kyles (quick warning honk, cut) | CC0 |
+| veiculos/horn_truck_02.ogg | https://freesound.org/people/kyles/sounds/451697/ | kyles (school bus horn, cut) | CC0 |
+| veiculos/horn_truck_03.ogg | https://freesound.org/people/SieuAmThanh/sounds/870205/ | SieuAmThanh | CC0 |
+| veiculos/horn_truck_04.ogg | https://freesound.org/people/trezz77/sounds/546528/ | trezz77 | CC0 |
+| veiculos/horn_truck_05.ogg | https://freesound.org/people/mcpable/sounds/131930/ | mcpable (industrial air horn, cut) | CC0 |
+| veiculos/tire_roll_gravel_loop_01.ogg | https://freesound.org/people/BenDrain/sounds/487827/ | BenDrain (car driving on gravel, cut) | CC0 |
+| veiculos/tire_roll_gravel_loop_02.ogg | https://freesound.org/people/BenDrain/sounds/487828/ | BenDrain (car driving on gravel, cut) | CC0 |
+| veiculos/tire_roll_gravel_loop_03.ogg | https://freesound.org/people/OBXJohn/sounds/251661/ | OBXJohn (tyres on a gravel road, cut) | CC0 |
+| veiculos/tire_roll_gravel_loop_04.ogg | https://freesound.org/people/seth-m/sounds/341069/ | seth-m (gravel road, cut) | CC0 |
+| veiculos/tire_skid_asphalt_loop_01.ogg | https://freesound.org/people/audible-edge/sounds/71736/ | audible-edge (tyre squeal, cut) | CC0 |
+| veiculos/tire_skid_asphalt_loop_02.ogg | https://freesound.org/people/audible-edge/sounds/71737/ | audible-edge (tyre squeal, cut) | CC0 |
+| veiculos/tire_skid_asphalt_loop_03.ogg | https://freesound.org/people/audible-edge/sounds/71738/ | audible-edge (tyre squeal, cut) | CC0 |
+| veiculos/tire_skid_asphalt_loop_04.ogg | https://freesound.org/people/martian/sounds/178889/ | martian (car skidding in a car park, cut) | CC0 |

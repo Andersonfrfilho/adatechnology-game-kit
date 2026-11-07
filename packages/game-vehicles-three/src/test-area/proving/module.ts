@@ -20,7 +20,7 @@ import type { VehicleSound } from '../../audio/vehicle-sound'
 import type { VehicleSoundIds } from '../types'
 import { createCockpit } from './cockpit'
 import type { Cockpit } from './cockpit'
-import { VEHICLE_SOUND_BANK } from '../../audio'
+import { VEHICLE_PRELOAD_SOUNDS, VEHICLE_SOUND_BANK, engineProfileOfGroup, hornOfGroup } from '../../audio'
 import { createWheelRoll } from '../../wheel-roll'
 import type { WheelRoll } from '../../wheel-roll'
 import { createProvingCrash } from './crash'
@@ -412,7 +412,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     if (id === 'turn_circle') run.driver.place(0, TRACK.start, 0)
     rig.vehicle?.reset()
     stopEngine()
-    engine = createVehicleSound(host.audio, { sounds })
+    engine = createVehicleSound(host.audio, { sounds, profile: engineProfileOfGroup(car.subject.category) })
     engine.start([car.built.group.position.x, 0.5, car.built.group.position.z])
     host.log(fillText(text.log.start, name(settings.vehicle), text.tests[id] ?? id))
     drawBoard()
@@ -470,7 +470,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       gauge: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.gauge,
       needle: (kitFor(three) as { materials?: Record<string, unknown> }).materials?.amber,
       // the engine's own sound turns the key (starter, catch, idle by RPM)
-      sounds: { starter: '' },
+      sounds: { starter: '', horn: hornOfGroup(car.subject.category) },
       hasKey,
       weather,
       stock: (compartment) => options.stock?.(compartment, settings.vehicle) ?? [],
@@ -511,7 +511,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     rig.vehicle?.reset()
     stopEngine()
     // the engine is off until the key turns (I): the sound cranks, catches and idles by the RPM
-    engine = createVehicleSound(host.audio, { sounds })
+    engine = createVehicleSound(host.audio, { sounds, profile: engineProfileOfGroup(car.subject.category) })
     host.bench?.sheet?.({ kicker: text.name, title: fillText(text.log.drive, name(settings.vehicle)), body: `${text.cabin.keys} · ${sysText.keys} · ${sysText.bodyKeys}` })
     host.log(fillText(text.log.drive, name(settings.vehicle)))
   }
@@ -912,6 +912,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       lent.audio?.register?.(CABIN_BANK)
       lent.audio?.register?.(VEHICLE_SOUND_BANK)
       lent.audio?.register?.(RADIO_BANK)
+      // the recordings of the vehicles decode now, so the first horn, hood or engine started is already the file
+      lent.audio?.preload?.(VEHICLE_PRELOAD_SOUNDS)
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       const stopClear = lent.onClear?.(() => {

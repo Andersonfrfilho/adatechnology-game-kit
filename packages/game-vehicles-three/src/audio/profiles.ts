@@ -46,6 +46,10 @@ export type VehicleSoundKeys = {
   readonly skidAsphalt: string
   readonly skidDirt: string
   readonly roll: string
+  /** Tyres rolling on earth, gravel, sand or grass (`frame.surface` `dirt`), in place of `roll`. */
+  readonly rollDirt: string
+  /** Compressed air let out of the brake chambers as a truck stops (`VehicleSoundOptions.airBrake`). */
+  readonly airBrake: string
   /** Pads squealing on the discs as a car brakes to a stop (not a skid: the tyres still grip). */
   readonly brakeSqueal: string
   /** A body hit by the vehicle; a game points it at its own (a zombie, an animal) through `sounds` or the `hit` call. */
@@ -66,6 +70,8 @@ export const DEFAULT_VEHICLE_SOUND_KEYS: VehicleSoundKeys = {
   skidAsphalt: 'tire_skid_asphalt',
   skidDirt: 'tire_skid_dirt',
   roll: 'tire_roll',
+  rollDirt: 'tire_roll_gravel',
+  airBrake: 'air_brake',
   brakeSqueal: 'brake_squeal',
   hitBody: 'vehicle_hit_pedestrian',
   siren: 'siren',
@@ -119,3 +125,12 @@ export const BIKE_ENGINE: EngineProfile = {
 }
 
 export const ENGINE_PROFILES: Readonly<Record<string, EngineProfile>> = { car: CAR_ENGINE, truck: TRUCK_ENGINE, bike: BIKE_ENGINE }
+
+/** The fleet groups whose engine is a truck's (heavy trucks, buses, tractors) and a bike's (motorcycles); every other group is a car. */
+const TRUCK_GROUPS: ReadonlySet<string> = new Set(['heavy', 'agricultural'])
+
+/** The engine profile of a fleet group (`ProvingSubject.category`): `motorcycles` a bike, `heavy` and `agricultural` a truck, the rest a car. */
+export const engineProfileOfGroup = (group: string): EngineProfile => (group === 'motorcycles' ? BIKE_ENGINE : TRUCK_GROUPS.has(group) ? TRUCK_ENGINE : CAR_ENGINE)
+
+/** The horn of a fleet group: a motorcycle's thin beep, a truck's air horn, a car's. */
+export const hornOfGroup = (group: string): string => (group === 'motorcycles' ? 'horn_bike' : TRUCK_GROUPS.has(group) ? 'horn_truck' : 'horn_car')

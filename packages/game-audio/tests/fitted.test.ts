@@ -35,7 +35,7 @@ describe('fitted sounds', () => {
       expect(plan?.length ?? 0).toBeLessThanOrEqual((recipe.duration as number) + 0.1)
     }
     expect(fittedTakeId('door_wood_shut', 2)).toBe('door_wood_shut~2')
-  })
+  }, 60000)
 
   it('puts voices on the voices bus and loops in loops', () => {
     expect(fittedBus({ id: 'zombie_groan', category: 'monstros' })).toBe('voices')

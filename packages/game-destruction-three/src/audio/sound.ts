@@ -138,7 +138,7 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
     vehicle_door_shut: { sound: 'car_door_close', fallback: 'shut_metal' },
     vehicle_trunk_open: { sound: 'car_door_open', fallback: 'latch' },
     vehicle_trunk_shut: { sound: 'car_trunk_close', fallback: 'shut_metal' },
-    vehicle_hood_open: { sound: 'car_door_open', fallback: 'latch' },
+    vehicle_hood_open: { sound: 'car_hood_open', fallback: 'latch' },
     vehicle_hood_shut: { sound: 'car_hood_close', fallback: 'shut_metal' },
     drawer_open: { sound: 'slide' },
     drawer_close: { sound: 'slide' },
