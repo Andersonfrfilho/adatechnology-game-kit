@@ -1,3 +1,4 @@
+import type { FurnitureCatalogEntry } from '../furniture/spec.js'
 import type { DestructionWorld } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
@@ -57,6 +58,10 @@ export interface FloorplanTestOptions {
   specimens?: readonly SpecimenDef[]
   /** Half size of the room's arena (`createTestRoom({ arenaSize })`), 14 by default: where the houses are laid. */
   arenaSize?: number
+  /** Furniture of the plans offered in the area's catalogue (`furniture_<type>`), each with every leg and board a part; default `DEFAULT_AREA_FURNITURE`. */
+  furniture?: readonly string[]
+  /** Catalogue the furniture's sizes are read from (`defaultFurnitureCatalog()` of `game-kit-defaults`, or the game's own). */
+  furnitureCatalog?: readonly FurnitureCatalogEntry[]
   /** Where the specimens stand for the scenarios (the team's page: `[-5, 0, -11]`). */
   specimenAt?: readonly [number, number, number]
 }
