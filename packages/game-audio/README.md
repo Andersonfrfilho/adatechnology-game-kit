@@ -69,6 +69,34 @@ on a lazily created `AudioContext` through one of the team chains (`game` or `ar
 nothing. `channel({ seed })` gives a subject its own random stream; `createAudioSink(engine)` lends the engine as a host's `audio` (`@adatechnology/game-contracts`).
 `weapons-three` plays on it (`createWeaponAudio(volume, { engine })`) with the `weapon` build order.
 
+### Occlusion (`occlusion` option)
+
+A sound behind a wall is quieter and muffled. Give the engine a query for what lies between the sound and the ears and it does the rest:
+
+```ts
+const engine = createAudioEngine({
+  occlusion: {
+    query: (from, to) => host.thingsBetween(from, to), // [{ material: 'brick', thickness: 0.12 }, { material: 'open' }, { lossDb: 18 }]
+    materials: { moss_wall: { lossDb: 18, thickness: 0.1 } }, // patches TRANSMISSION_LOSS
+    maxLossDb: 50, interval: 0.15, budget: 3, smoothing: 0.08,
+  },
+})
+engine.play('door_slam', { position: [4, 1, -9] })
+engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
+```
+
+- **Loss.** Each hit takes `lossDb` (or the table's value for its `material`, moved by the mass law, 6 dB per doubling of `thickness`). The shipped
+  `TRANSMISSION_LOSS` holds field values: 12 cm brick 42 dB, concrete 10 cm 48, drywall 33, wooden door 22, glass 4 mm 27, `open` 0. Hits add, up to
+  `maxLossDb` (default 50): sound that gets around an edge or through a door never drops to silence. For a partial path, return the hits of the best open
+  path (an open doorway returns none).
+- **Gain and lowpass.** `gain = 10^(-dB/20)`; the lowpass closes by one decade per `cutoffDbPerDecade` (default 30), from `openCutoff` (20 kHz) down to
+  `minCutoff` (250 Hz): highs lose more, so 42 dB sounds like 800 Hz.
+- **Per voice, smooth.** A voice with a `position` plays through its own lowpass and gain, which start at the first query and glide (`setTargetAtTime`,
+  `smoothing` seconds) when it changes. `setListener` re-queries the due voices: each at most every `interval` seconds, only if the listener moved, only
+  while the voice is above `audibleLevel`, and at most `budget` queries per call.
+- Sounds without a `position`, loops and the reverb send are not occluded. The older `occlusion: (point) => 0..1` callback still works (one value when the sound plays).
+- Pure parts: `hitLossDb`, `totalLossDb`, `occlusionState`, `createOcclusionTracker`. The test room (`game-test-room`) builds the query from its destruction world.
+
 ## Shipped data
 
 | Data | What it is | Source |
