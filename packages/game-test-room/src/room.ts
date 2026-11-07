@@ -32,6 +32,7 @@ import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
+import { displacedVolume } from './displaced-volume'
 import { createExplosives } from './explosives'
 import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
@@ -3236,7 +3237,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return
     }
     const size = box.getSize(tmpV2)
-    const volume = piece.halfExtents[0] * piece.halfExtents[1] * piece.halfExtents[2] * 8
+    const volume = displacedVolume(specs.get(piece.objectId), world.state(piece.objectId), piece.halfExtents[0] * piece.halfExtents[1] * piece.halfExtents[2] * 8)
     if (!inWater.has(piece.objectId)) {
       inWater.add(piece.objectId)
       const speed = -piece.velocity[1]
