@@ -1,5 +1,11 @@
 # @adatechnology/game-characters-three
 
+## 0.11.8
+
+### Patch Changes
+
+- 61bd616: The GPU-instanced body batches (bodies, their depth prepass, impostors and blob shadows) no longer answer rays: their template geometry sits at the world origin, where no body is drawn, and a ray there (the gun's wall pull, a laser) stopped on it.
+
 ## 0.11.7
 
 ### Patch Changes

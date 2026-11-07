@@ -55,6 +55,10 @@ const DOOR_STRIP_OVER = 0.05
 /** A door's cut goes this far past the lower edge of its pane, metres. */
 const DOOR_TOP_OVER_PANE = 0.03
 const HOLE_TEXTURE_SIZE = 64
+/** How far outside a lamp's box a glowing piece still belongs to that lamp, metres. */
+const LAMP_BOX_MARGIN = 0.03
+/** A material glows when its emissive colour is brighter than this (the sum of its channels) at an intensity over zero. */
+const GLOW_MIN_EMISSIVE = 0.05
 /** Above this many joules of hit points a pane is laminated in the model (a windshield, any pane of an armoured car). */
 const LAMINATED_HP = 1000
 /** A closed hood sits this far under the fenders, and this much of the drawn gap round it closes, metres. */
@@ -1194,7 +1198,7 @@ export class VehicleVisuals implements CreaseWork {
     this.lightsOn = on
     const dark = this.I.MATERIALS.bulbBroken
     for (const L of this.c.lights) {
-      if (L.broken) continue
+      if (L.broken || L.dark) continue
       for (const h of L.halo ?? []) h.visible = on
       for (const m of L.inner ?? []) {
         if (on) {
@@ -1208,12 +1212,31 @@ export class VehicleVisuals implements CreaseWork {
   }
   /** The lens of a light is holed or cracked and stays; `pierced`: a round went through it to the bulb, and the lamp goes dark. */
   crackLight(p: PartDef, pierced: boolean): void {
+    if (pierced) this.darkenGlowIn(p)
     const z = this.zone(p)
     if (!z) return
     for (const L of z.lights) this.kit.crackLight(this.c, L, new this.THREE.Vector3(p.box.center[0] > 0 ? -1 : 1, 0, 0), pierced)
   }
+  /** Everything of the lamp that glows goes dark: the fleet draws extra bulbs, reversing and amber strips in a lamp's place that the lamp's own list does not hold. */
+  private darkenGlowIn(p: PartDef): void {
+    const dark = this.I.MATERIALS.bulbBroken
+    const [cx, cy, cz] = p.box.center
+    const [sx, sy, sz] = p.box.size
+    this.c.vehicle.updateMatrixWorld(true)
+    this.c.vehicle.traverse((o: Object3D) => {
+      const mesh = o as Obj
+      if (!mesh.isMesh || mesh.userData.glass || mesh.material === dark || Array.isArray(mesh.material)) return
+      const { emissive, emissiveIntensity } = mesh.material
+      if (!emissive || !(emissiveIntensity > 0) || emissive.r + emissive.g + emissive.b < GLOW_MIN_EMISSIVE) return
+      mesh.geometry.computeBoundingBox()
+      const mid = this.c.vehicle.worldToLocal(mesh.localToWorld(mesh.geometry.boundingBox!.getCenter(new this.THREE.Vector3())))
+      if (Math.abs(mid.x - cx) > sx / 2 + LAMP_BOX_MARGIN || Math.abs(mid.y - cy) > sy / 2 + LAMP_BOX_MARGIN || Math.abs(mid.z - cz) > sz / 2 + LAMP_BOX_MARGIN) return
+      mesh.material = dark
+    })
+  }
   /** The lens of a light breaks and its unit stays (damaged) or goes (destroyed). */
   breakLight(p: PartDef, gone: boolean): void {
+    this.darkenGlowIn(p)
     const z = this.zone(p)
     if (!z) return
     for (const L of z.lights) {
