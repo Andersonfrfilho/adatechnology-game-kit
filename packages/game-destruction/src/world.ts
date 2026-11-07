@@ -15,8 +15,10 @@ import type { BendGeometry } from './flexure'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
+import { restsOver } from './support-hull'
+import type { PlanePoint } from './support-hull'
 import type { VoidRun } from './foundation-span'
-import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
+import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, SETTLEMENT_POINTS, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
@@ -229,6 +231,8 @@ interface PartRT {
   bendLoad: number
   /** Overloaded in bending without steel that holds: when it fails it snaps in two instead of crumbling. */
   snap: boolean
+  /** A slab or roof the spec lays over supports a resting slab could not stand on (it holds by what the spec does not model): `standsOver` leaves it be. */
+  heldAsDesigned?: boolean
 }
 
 /** A crater in the unit `cell` of `p`, along its axis `a` (`b` is the other axis of the plane), from the hit at `at` (part-local). */
@@ -779,6 +783,74 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
+  /**
+   * Where `p` touches `support`, in `p`'s own axes, less the stretches where the support broke (`PartRuntime.broken`): one box, or the pieces left of it.
+   */
+  const contactsOf = (p: PartRT, support: PartRT): Array<[Vec3, Vec3]> => {
+    const box = contactBox(p, support)
+    const broken = support.rt.broken
+    if (!broken?.length) return [box]
+    let pieces: Array<[Vec3, Vec3]> = [box]
+    for (const [axis, from, to] of broken) {
+      // the stretch in p's axes: the local axis it runs along and its two ends there
+      const a: Vec3 = [p.pos[0], p.pos[1], p.pos[2]]
+      const b: Vec3 = [p.pos[0], p.pos[1], p.pos[2]]
+      a[axis] = from
+      b[axis] = to
+      const la = toLocal(p.pos, p.q, a)
+      const lb = toLocal(p.pos, p.q, b)
+      const k = [0, 1, 2].reduce((best, c) => (Math.abs(lb[c]! - la[c]!) > Math.abs(lb[best]! - la[best]!) ? c : best), 0)
+      const lo = Math.min(la[k]!, lb[k]!)
+      const hi = Math.max(la[k]!, lb[k]!)
+      pieces = pieces.flatMap(([min, max]): Array<[Vec3, Vec3]> => {
+        if (hi <= min[k]! || lo >= max[k]!) return [[min, max]]
+        const out: Array<[Vec3, Vec3]> = []
+        if (lo > min[k]!) {
+          const end: Vec3 = [max[0], max[1], max[2]]
+          end[k] = lo
+          out.push([min, end])
+        }
+        if (hi < max[k]!) {
+          const start: Vec3 = [min[0], min[1], min[2]]
+          start[k] = hi
+          out.push([start, max])
+        }
+        return out
+      })
+    }
+    return pieces
+  }
+
+  /** Joints that hold a moment: a part cast or welded to its support is fixed to it, one laid on mortar only rests. */
+  const fixedJoint = (j: JointRT): boolean => j.spec.kind === 'rebar' || j.spec.kind === 'fused' || j.spec.kind === 'weld'
+
+  /**
+   * A horizontal slab or roof that only rests on its supports stands while its centre of mass is over the area they leave it (`restsOver`); a slab left
+   * on one edge, or past the broken stretch of a bond beam, tips off. One cast with a support (a cantilever) is held by its fixity instead.
+   */
+  const standsOver = (o: ObjRT, p: PartRT, lower: readonly number[]): boolean => {
+    const role = p.spec.structure?.role
+    if ((role !== 'slab' && role !== 'roof') || p.spec.shape.kind !== 'box' || lower.length === 0) return true
+    if (Math.abs(rotateVec(p.q, [0, 0, 0].map((_, k) => (k === p.thin ? 1 : 0)) as Vec3)[1]) < 0.9) return true
+    const i = o.idx.get(p.spec.id)!
+    for (const j of o.byPart.get(p.spec.id) ?? []) {
+      if (j.st.open) continue
+      // cast to a support it holds by fixity; guyed by ropes (a tent's canvas) the ropes hold it
+      if ((fixedJoint(j) && lower.includes(restsOn(o, j, i))) || j.spec.kind === 'tie') return true
+    }
+    const corners: PlanePoint[] = []
+    for (const k of lower) {
+      for (const [lo, hi] of contactsOf(p, o.parts[k]!)) {
+        for (let c = 0; c < 4; c++) {
+          const local: Vec3 = [c & 1 ? hi[0] : lo[0], (lo[1] + hi[1]) / 2, c & 2 ? hi[2] : lo[2]]
+          const at = toWorld(p.pos, p.q, local)
+          corners.push([at[0], at[2]])
+        }
+      }
+    }
+    return restsOver([p.pos[0], p.pos[2]], corners, 0)
+  }
+
   /** Where a part rests on its supports: a place along its length (part space) over the contact of one of them. */
   const borneOn = (p: PartRT, supports: readonly PartRT[]): BorneAt | undefined => {
     if (supports.length === 0) return undefined
@@ -848,7 +920,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const key = lower.join(',')
     if (key !== p.spanKey) {
       p.spanKey = key
-      p.span = spanOf(g, lower.map((k) => contactBox(p, o.parts[k])))
+      p.span = spanOf(g, lower.flatMap((k) => contactsOf(p, o.parts[k])))
     }
     p.restMoment = 0
     if (g.gravity < 0 || p.span <= 0) return 0
@@ -922,12 +994,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.rt.hinge >= (flexure.failRotationDeg * Math.PI) / 180) hingeDrop(o, p, src)
   }
 
-  /** Span a part is left with on `supports` along its longest axis: twice the farthest any point of it is from a support (a cantilever's is twice its overhang). */
+  /**
+   * Span a part is left with on `supports`: twice the farthest any point of it is from a support (a cantilever's is twice its overhang), along its
+   * longest axis, or over both axes of its plane for a plate (`spanOf`), so a slab held along one edge has the span of its overhang across.
+   */
   const freeSpan = (p: PartRT, supports: readonly PartRT[]): number => {
     if (supports.length === 0) return Infinity
+    if (p.spec.shape.kind === 'box') {
+      const g = bendGeometry(p.spec)
+      if (!g.member) return spanOf(g, supports.flatMap((k) => contactsOf(p, k)))
+    }
     const d = p.dims
     const L = [0, 1, 2].sort((a, b) => d[b] - d[a])[0]
-    const spans = supports.map((k) => contactBox(p, k)).map(([lo, hi]) => [lo[L], hi[L]] as const)
+    const spans = supports.flatMap((k) => contactsOf(p, k)).map(([lo, hi]) => [lo[L], hi[L]] as const)
     let far = 0
     for (let i = 0; i <= 16; i++) {
       const x = (i / 16 - 0.5) * d[L]
@@ -980,7 +1059,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
         lowerOf.set(i, lower)
         const max = parts[i].spec.structure?.maxSpan
-        if (max !== undefined && !parts[i].anchored && freeSpan(parts[i], lower.map((k) => parts[k])) > max) {
+        const tooLong = max !== undefined && freeSpan(parts[i], lower.map((k) => parts[k])) > max
+        // a slab the spec itself lays over fewer supports than a resting slab needs (a porch roof on its posts and a ledger, a canvas on its poles) is
+        // held as designed; one that stood over its supports and lost them tips off
+        const standing = parts[i].heldAsDesigned || standsOver(o, parts[i], lower)
+        if (o.seeding && !standing) parts[i].heldAsDesigned = true
+        if (!parts[i].anchored && (tooLong || !(standing || parts[i].heldAsDesigned))) {
           out.add(i)
           dropped = true
         }
@@ -1734,7 +1818,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         lost = true
         continue
       }
-      if (isSlender(q.spec, q.mat)) archOver(o, q, fp.long, [box.min[fp.long] + run.start, box.min[fp.long] + run.end], run.free, src)
+      if (isSlender(q.spec, q.mat) && archOver(o, q, fp.long, [box.min[fp.long] + run.start, box.min[fp.long] + run.end], run.free, opened, src)) lost = true
     }
     return lost
   }
@@ -1743,7 +1827,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * The units of a wall under the relieving arch over a span (object-local, along `axis`): the triangle at 60 degrees on it falls out. Over an overhang
    * that broke off (`free` end) there is no arch: the wedge from the root of the overhang up at 60 degrees toward the free end falls.
    */
-  const archOver = (o: ObjRT, q: PartRT, axis: number, span: [number, number], free: 'start' | 'end' | undefined, src?: string) => {
+  const archOver = (o: ObjRT, q: PartRT, axis: number, span: [number, number], free: 'start' | 'end' | undefined, opened: JointRT[], src?: string): boolean => {
     const grid = gridOf(q)
     const worn = (q.rt.chips ??= {})
     const bottom = aabbOf(q.spec.shape, q.pos, q.q).min[1]
@@ -1758,7 +1842,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const under = free === 'start' ? at[axis] <= span[1] - reach : free === 'end' ? at[axis] >= span[0] + reach : Math.abs(at[axis] - middle) <= half - reach
       if (under) out.push(i)
     })
-    if (out.length === 0) return
+    if (out.length === 0) return false
     const centre: Vec3 = [0, bottom, 0]
     centre[axis] = middle
     const other = axis === 0 ? 2 : 0
@@ -1767,17 +1851,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // an arch needs a rise of (span / 2) tan 60 within the wall; past its height the wall opens to the top, and what rests on it spans the opening
     const height = aabbOf(q.spec.shape, q.pos, q.q).max[1] - bottom
     const corbel = height / Math.tan(ARCH_ANGLE)
-    const opening = free ? span[1] - span[0] - corbel : 2 * half - 2 * corbel
-    if (opening > 0) spanOpening(o, q, opening, !!free, src)
+    const opening: [number, number] = free === 'start' ? [span[0], span[1] - corbel] : free === 'end' ? [span[0] + corbel, span[1]] : [span[0] + corbel, span[1] - corbel]
+    return opening[1] > opening[0] && spanOpening(o, q, axis, opening, !!free, opened, src)
   }
 
   /**
    * What rests on a wall that opened to its top over a void (the bond beam, a slab) spans the opening between the masonry left on each side (or reaches
    * over it from one side, where the wall broke off at a free end): `w L² / 8` (`w L² / 2`) within the characteristic moment of its section and `L` within
-   * `bridgeSpanDepth` depths (half for an overhang). What does not hold breaks and comes down (`hingeDrop`).
+   * `bridgeSpanDepth` depths (half for an overhang). A beam that does not hold breaks over the opening only (`breakOver`) and keeps bearing on the pillars
+   * and the masonry left; a slab that rests on the wall alone comes down. Returns whether something lost its support.
    */
-  const spanOpening = (o: ObjRT, q: PartRT, opening: number, overhang: boolean, src?: string) => {
+  const spanOpening = (o: ObjRT, q: PartRT, axis: number, opening: [number, number], overhang: boolean, opened: JointRT[], src?: string): boolean => {
     const qi = o.idx.get(q.spec.id)!
+    const length = opening[1] - opening[0]
+    let lost = false
     for (const j of [...(o.byPart.get(q.spec.id) ?? [])]) {
       const ri = j.ia === qi ? j.ib : j.ia
       const r = o.parts[ri]!
@@ -1786,17 +1873,75 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       // a slab that also rests on other walls and pillars carries over the gap to them (the structure is solved again); a beam along the wall bridges it
       if (sec && !sec.g.member && !restsOnlyOn(o, ri, qi)) continue
       const load = sec ? lineLoad(sec.g, r.st.load ?? r.st.mass) : 0
-      const moment = ((load * opening * opening) / (overhang ? 2 : 8)) * structureSafety
+      const moment = ((load * length * length) / (overhang ? 2 : 8)) * structureSafety
       const reach = (overhang ? 0.5 : 1) * groundCfg.bridgeSpanDepth * (sec?.section.h ?? 0)
-      if (!sec || opening > reach || moment > sec.resists) {
-        hingeDrop(o, r, src)
+      if (sec && length <= reach && moment <= sec.resists) {
+        if (moment > sec.m.cracking && !r.st.cracked) {
+          r.st.cracked = true
+          addCrack(o, r, partXf(o, r).c, rotateVec(o.st.rotation, [0, -1, 0]), sec.section.h, src)
+        }
         continue
       }
-      if (moment > sec.m.cracking && !r.st.cracked) {
-        r.st.cracked = true
-        addCrack(o, r, partXf(o, r).c, rotateVec(o.st.rotation, [0, -1, 0]), sec.section.h, src)
+      if (sec?.g.member) {
+        if (breakOver(o, r, axis, opening, opened, src)) lost = true
+        continue
       }
+      hingeDrop(o, r, src)
+      lost = true
     }
+    return lost
+  }
+
+  /**
+   * A beam breaks over a stretch (object-local, along `axis`): hinges at its two edges, the stretch between them comes down into the opening (drawn
+   * through its settlement), and it no longer bears there (`PartRuntime.broken`); it keeps bearing on its supports outside it. What rests on it only
+   * over the stretch loses its support; a slab that spans the stretch from the rest of its supports (`q L² / 8` on a metre strip within its
+   * characteristic moment) stays, one that cannot lets go of the beam and stands or falls on what it has left (`standsOver`).
+   */
+  const breakOver = (o: ObjRT, r: PartRT, axis: number, stretch: [number, number], opened: JointRT[], src?: string): boolean => {
+    const ri = o.idx.get(r.spec.id)!
+    ;(r.rt.broken ??= []).push([axis, stretch[0], stretch[1]])
+    r.st.cracked = true
+    const box = aabbOf(r.spec.shape, r.pos, r.q)
+    for (const edge of stretch) {
+      const at: Vec3 = [(box.min[0] + box.max[0]) / 2, box.max[1], (box.min[2] + box.max[2]) / 2]
+      at[axis] = edge
+      addCrack(o, r, toWorld(o.st.position, o.st.rotation, at), rotateVec(o.st.rotation, [0, 1, 0]), box.max[1] - box.min[1], src)
+    }
+    // the broken stretch hangs from its hinges, a V that cannot go below the floor
+    const from: Vec3 = [(box.min[0] + box.max[0]) / 2, box.min[1], (box.min[2] + box.max[2]) / 2]
+    const to: Vec3 = [from[0], from[1], from[2]]
+    from[axis] = box.min[axis]
+    to[axis] = box.max[axis]
+    const count = SETTLEMENT_POINTS
+    const drop = Array.from({ length: count }, (_, k) => {
+      const x = box.min[axis] + ((box.max[axis] - box.min[axis]) * k) / (count - 1)
+      return x <= stretch[0] || x >= stretch[1] ? 0 : Math.min(x - stretch[0], stretch[1] - x, Math.max(0, box.min[1]))
+    })
+    r.st.settlement = mergeSettlement(r.st.settlement, { from, to, drop })
+    r.st.subsidence = Math.max(r.st.subsidence ?? 0, drop.reduce((sum, v) => sum + v, 0) / count)
+    const middle: Vec3 = [from[0], from[1], from[2]]
+    middle[axis] = (stretch[0] + stretch[1]) / 2
+    emit({ ...base(o, src), type: 'subside', part: r.spec.id, drop: r.st.subsidence, share: (stretch[1] - stretch[0]) / Math.max(1e-6, box.max[axis] - box.min[axis]), point: toWorld(o.st.position, o.st.rotation, middle), status: 'opened' })
+    let lost = false
+    for (const j of [...(o.byPart.get(r.spec.id) ?? [])]) {
+      const ki = j.ia === ri ? j.ib : j.ia
+      const k = o.parts[ki]!
+      if (j.st.open || isLost(k) || restsOn(o, j, ki) !== ri) continue
+      const c = aabbOf(k.spec.shape, k.pos, k.q)
+      const within = c.min[axis] >= stretch[0] - SUPPORT_TOLERANCE && c.max[axis] <= stretch[1] + SUPPORT_TOLERANCE
+      const sec = within ? null : sectionOfBearer(k)
+      const plate = sec && !sec.g.member
+      const length = stretch[1] - stretch[0]
+      const spans = plate && ((lineLoad(sec.g, k.st.load ?? k.st.mass) * length * length) / 8) * structureSafety <= sec.resists
+      if (!within && (!plate || spans)) continue
+      j.st.open = true
+      j.st.hp = 0
+      j.st.openedBy = 'break'
+      opened.push(j)
+      lost = true
+    }
+    return lost
   }
 
   /**

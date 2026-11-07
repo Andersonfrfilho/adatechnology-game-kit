@@ -710,6 +710,11 @@ export interface PartRuntime {
   hinge?: number
   /** Largest angular distortion the ground taken from under its support gave this part so far (`groundLoss`): it cracks again only past it. */
   distortion?: number
+  /**
+   * Stretches where the part broke and no longer bears what rests on it (a bond beam over the opening of a wall that lost its ground): `[axis, from,
+   * to]`, object-local metres along x (0) or z (2).
+   */
+  broken?: Array<[number, number, number]>
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
