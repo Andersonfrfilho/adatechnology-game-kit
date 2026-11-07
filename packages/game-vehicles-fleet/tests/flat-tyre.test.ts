@@ -55,3 +55,23 @@ describe('a flat tyre driven on', () => {
     expect(metresUntilTorn(d, tyre, 20, 40000)).toBe(Infinity)
   })
 })
+
+describe('a rifle round in a tyre', () => {
+  const AK = { type: 'ballistic', energy: 2100, caliber: 7.62 } as const
+  const BURST = 40
+  const TYRE_KEYS = ['midsize_sedan', 'compact_hatch', 'box_truck', 'city_bus', 'cruiser', 'tractor']
+
+  for (const key of TYRE_KEYS) {
+    it(`${key}: punctures it and lets it down, however many rounds, and never tears it off the rim`, () => {
+      const kit = makeFleetKit('en')
+      const item = buildVehicleItem(kit, key)
+      const d = createVehicleDestructible(kit, item.vehicle, { id: key, frame: item.root })
+      const tyre = d.describe().parts.find((p) => p.id.startsWith('tyre'))!.id
+      for (let round = 0; round < BURST; round++) d.hit({ ...AK, point: d.partWorldCenter(tyre), part: tyre, direction: [0, 0, 1] })
+      expect(d.status().flatTyres).toContain(tyre)
+      expect(d.state().parts.find((p) => p.id === tyre)?.status).not.toBe('broken')
+      expect(d.detachedParts()).not.toContain(tyre)
+    })
+  }
+})
+

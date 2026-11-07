@@ -2203,10 +2203,24 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
   const rayPart = (o: ObjRT, p: PartRT, origin: Vec3, d: Vec3): PartRay | null => rayPartRaw(o.st.position, o.st.rotation, p.spec, p.q, origin, d, p.pos)
 
+  /** Metres added to a part's bounding sphere before a ray is tried against it, so a ray grazing a box's corner is never culled by rounding. */
+  const PART_BOUND_SLACK = 1e-6
   const raySphereMiss = (origin: Vec3, d: Vec3, c: Vec3, r: number, maxDist: number): boolean => {
     const oc = vec.sub(origin, c)
     const b = vec.dot(oc, d)
     const cc = vec.dot(oc, oc) - r * r
+    if (cc > 0 && b > 0) return true
+    const disc = b * b - cc
+    if (disc < 0) return true
+    return -b - Math.sqrt(disc) > maxDist
+  }
+
+  /** `raySphereMiss` against a part's bounding sphere, in its object's frame, without allocating (it runs for every part an object-level ray reaches). */
+  const partSphereMiss = (o: Vec3, d: Vec3, p: PartRT, maxDist: number): boolean => {
+    const x = o[0] - p.pos[0], y = o[1] - p.pos[1], z = o[2] - p.pos[2]
+    const r = p.bound + PART_BOUND_SLACK
+    const b = x * d[0] + y * d[1] + z * d[2]
+    const cc = x * x + y * y + z * z - r * r
     if (cc > 0 && b > 0) return true
     const disc = b * b - cc
     if (disc < 0) return true
@@ -2218,8 +2232,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     let best: (RayHit & { pathLen: number }) | null = null
     for (const o of objects.values()) {
       if (raySphereMiss(origin, d, toWorld(o.st.position, o.st.rotation, o.bc), o.br, best ? Math.min(maxDist, best.distance) : maxDist)) continue
+      // the ray in the object's frame, so each part is first tried against its bounding sphere there: a house of a thousand bricks turns a handful
+      const qi = quat.conjugate(o.st.rotation)
+      const lo = rotateVec(qi, vec.sub(origin, o.st.position))
+      const ld = rotateVec(qi, d)
       for (const p of o.parts) {
         if (isLost(p) || ignore?.has(`${o.id}\0${p.spec.id}`)) continue
+        if (partSphereMiss(lo, ld, p, maxDist)) continue
         const r = rayPart(o, p, origin, d)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue
         if (p.st.opening && insideOpening(o, p, vec.madd(origin, d, r.t0))) continue

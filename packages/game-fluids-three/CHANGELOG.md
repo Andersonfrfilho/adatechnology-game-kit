@@ -1,5 +1,17 @@
 # @adatechnology/game-fluids-three
 
+## 0.4.19
+
+### Patch Changes
+
+- Updated dependencies [82f44ab]
+- Updated dependencies [99183cb]
+- Updated dependencies [1dea1ac]
+  - @adatechnology/game-contracts@0.31.0
+  - @adatechnology/game-fluids@0.6.0
+  - @adatechnology/game-vfx@0.11.0
+  - @adatechnology/game-vfx-three@0.8.0
+
 ## 0.4.18
 
 ### Patch Changes

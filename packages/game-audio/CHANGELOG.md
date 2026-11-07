@@ -1,5 +1,14 @@
 # @adatechnology/game-audio
 
+## 0.13.2
+
+### Patch Changes
+
+- 722990b: A cápsula e o carregador caindo deixam de tocar no nível do tiro: o banco do kit não dava ganho aos arquivos `casing_drop_*` e `mag_drop_*` (ficavam a 0 dB do tiro, os dois normalizados a -1 dBFS). Agora o nível vem de `data/sample-levels.json` (cápsula 32 dB abaixo do tiro, carregador 24 dB), com no máximo 3 cápsulas e 2 carregadores soando ao mesmo tempo por chão, e `SampleDefaults` aceita `choke`.
+- Updated dependencies [82f44ab]
+- Updated dependencies [1dea1ac]
+  - @adatechnology/game-contracts@0.31.0
+
 ## 0.13.1
 
 ### Patch Changes

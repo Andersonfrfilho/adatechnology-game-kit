@@ -6,6 +6,7 @@
  * manifest from where the folder is served and registers the bank on an engine. `pointSamples` lets a game play its own files for any id instead.
  */
 import { sampleBankFromManifest } from './manifest'
+import { droppedPartDefaults } from './sample-levels'
 import type { SampleDefaults, SfxManifest, SfxManifestSound } from './manifest'
 import type { BusId, SampleRef, SampleSound, SoundBank } from './recipe'
 
@@ -50,6 +51,8 @@ export const KIT_SAMPLE_ALIASES: Readonly<Record<string, string>> = {
 
 /** The numbers of a sound the files do not say: the bus of its folder, a little pitch spread. */
 export function kitSampleDefaults(sound: { readonly id: string; readonly category: string }): SampleDefaults | undefined {
+  const dropped = droppedPartDefaults(sound.id)
+  if (dropped && sound.category === 'armas') return dropped
   const bus = VOICE_IDS.test(sound.id) ? 'voices' : KIT_CATEGORY_BUS[sound.category]
   if (!bus) return undefined
   return { bus, pitch: sound.category === 'ambiente' || /_loop/.test(sound.id) ? 0 : 0.04 }
