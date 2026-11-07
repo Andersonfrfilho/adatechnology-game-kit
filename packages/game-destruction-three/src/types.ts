@@ -186,12 +186,24 @@ export interface LooseBody {
   push(velocityX: number, velocityZ: number): void
 }
 
+/** How `makePiece` makes a bound object a piece. */
+export interface MakePieceOptions {
+  /** Kg; default the mass of its parts in the world. */
+  mass?: number
+  velocity?: Vec3
+  /**
+   * k of its moment of inertia about the axis it rolls on, I = k m r^2, when it is round (a can, a bottle, a ball): 0.5 a solid cylinder, 1 a thin shell, 0.4 a solid ball.
+   * Default from its drawing: hollow walls of known thickness weigh as a shell, the rest of its mass as a solid.
+   */
+  inertia?: number
+}
+
 export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
   unbind(objectId: string): void
   /** Make a bound object a physical piece (bench items that can be thrown). */
-  makePiece(objectId: string, options?: { mass?: number; velocity?: Vec3 }): Piece
+  makePiece(objectId: string, options?: MakePieceOptions): Piece
   pieces(): Piece[]
   /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
   wakeRegion(x: number, z: number, radius: number): void

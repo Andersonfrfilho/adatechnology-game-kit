@@ -85,6 +85,8 @@ export interface PartVis {
 export interface PieceFriction {
   readonly static: number
   readonly dynamic: number
+  /** Rolling resistance coefficient of the surface, C_rr (a round thing rolling on it is held back by C_rr N); the softer of two surfaces sets it. */
+  readonly rolling?: number
 }
 
 export interface PieceBody extends Piece {
@@ -113,13 +115,35 @@ export interface PieceBody extends Piece {
   partBoxes?: Array<{ readonly center: Vec3; readonly half: Vec3 }>
   /** The friction of its surface (by its material); against another surface the two are mixed (geometric mean). Default 0.7 static, 0.6 dynamic. */
   friction?: PieceFriction
+  /** The normal of the surface a round piece last lay on: where it touches is across it from the centre. */
+  surfaceNormal?: Vec3
   /**
    * A round piece (a can, a bottle, a ball, a plate on its edge): `cylinder` round about its own `axis` (0 x, 1 y, 2 z of its frame) or a `sphere`. It touches the ground by
    * points around its rims (`contacts`), so it rolls, and the ground holds it back only by rolling resistance, not by the grip that stops a box from turning.
    */
-  /** The normal of the surface a round piece last lay on: where it touches is across it from the centre. */
-  surfaceNormal?: Vec3
-  round?: { readonly kind: 'cylinder' | 'sphere'; readonly axis: 0 | 1 | 2; readonly radius: number }
+  round?: PieceRound
+  /** k of `round.inertia` as the host gave it (`MakePieceOptions.inertia`), kept over the measure of its walls when the piece is fitted again. */
+  inertiaGiven?: number
+  /** Coefficient of restitution of its surface (by its material), mixed with the other surface's by geometric mean; default `SLAM_BOUNCE`. */
+  restitution?: number
+}
+
+/** How a round piece is round (`PieceBody.round`). */
+export interface PieceRound {
+  readonly kind: 'cylinder' | 'sphere'
+  readonly axis: 0 | 1 | 2
+  /** The largest radius (m). */
+  readonly radius: number
+  /**
+   * k of its moment of inertia about its axis, I = k m r^2: 0.5 a solid cylinder (a full can), 1 a thin shell (an empty one), 0.4 a solid ball, 2/3 a hollow one. On an incline
+   * of angle t it rolls down at g sin t / (1 + k).
+   */
+  readonly inertia: number
+  /**
+   * Its radius along its axis (a cylinder): `[at, radius]` from one end to the other, `at` from the centre of mass along the axis. A tapered bottle or a cup lying on its side touches
+   * by the lowest point of each, so it rolls round the wide end; a straight can rolls on straight. Without it, the two ends at `radius`.
+   */
+  readonly profile?: ReadonlyArray<readonly [number, number]>
 }
 
 export interface Bound {

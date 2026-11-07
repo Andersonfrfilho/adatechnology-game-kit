@@ -9,16 +9,16 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
-import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
+import type { Bound, HostVis, MeshVis, PartVis, PieceBody, PieceRound } from './internal'
 import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
-import { frictionOf } from './friction'
+import { surfaceOf } from './friction'
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
-import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
+import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
 
 let rendererCount = 0
@@ -75,7 +75,7 @@ const ROUND_SLACK = 1.12
 const RIM_POINTS = 12
 
 /** The contacts of a round piece: two rims of `RIM_POINTS` at its ends (a cylinder), or three great circles (a ball), in its frame from the centre. */
-const rimPoints = (round: NonNullable<PieceBody['round']>, half: Vec3): Vec3[] => {
+const rimPoints = (round: PieceRound, half: Vec3): Vec3[] => {
   const out: Vec3[] = []
   const circle = (axis: 0 | 1 | 2, at: number, radius: number): void => {
     const [i, j] = axis === 0 ? [1, 2] : axis === 1 ? [0, 2] : [0, 1]
@@ -90,11 +90,55 @@ const rimPoints = (round: NonNullable<PieceBody['round']>, half: Vec3): Vec3[] =
   }
   if (round.kind === 'sphere') for (const axis of [0, 1, 2] as const) circle(axis, 0, round.radius)
   else {
-    circle(round.axis, -half[round.axis], round.radius)
-    circle(round.axis, half[round.axis], round.radius)
+    // each end by its own rim: a bottle stands on its base, and on its cap only as narrow as the cap is
+    const ends = round.profile ?? []
+    circle(round.axis, -half[round.axis], ends[0]?.[1] ?? round.radius)
+    circle(round.axis, half[round.axis], ends[ends.length - 1]?.[1] ?? round.radius)
   }
   return out
 }
+/** Rings the profile of a round piece is measured in along its axis (`PieceRound.profile`): enough to tell a bottle's shoulder and neck from its body. */
+const PROFILE_RINGS = 8
+/** k of I = k m r^2 about the axis: a thin cylindrical shell, a solid cylinder, a thin spherical shell and a solid ball. */
+const SHELL_CYLINDER = 1
+const SOLID_CYLINDER = 0.5
+const SHELL_SPHERE = 2 / 3
+const SOLID_SPHERE = 0.4
+/** Kg per litre of the liquid inside a round piece when its walls are weighed by what is left (water, soda, juice: about 1). */
+const LIQUID_KG_PER_L = 1
+
+/**
+ * The radius of a round piece along its axis, from the points of its drawing (its frame, from the centre of mass): the widest point of each of `PROFILE_RINGS` rings, the end rings
+ * at the ends. Its lower hull (what a flat floor can touch it by) is kept: a ring under the line between its neighbours never touches (the neck of a bottle whose cap is as wide).
+ */
+const profileOf = (points: readonly Vec3[], axis: 0 | 1 | 2, half: number, radius: number): Array<readonly [number, number]> => {
+  const [i, j] = axis === 0 ? [1, 2] : axis === 1 ? [0, 2] : [0, 1]
+  const widest = new Array<number>(PROFILE_RINGS).fill(0)
+  for (const p of points) {
+    const ring = Math.min(PROFILE_RINGS - 1, Math.max(0, Math.floor(((p[axis] + half) / (2 * half)) * PROFILE_RINGS)))
+    widest[ring] = Math.max(widest[ring], Math.hypot(p[i], p[j]))
+  }
+  const rings: Array<readonly [number, number]> = []
+  for (let k = 0; k < PROFILE_RINGS; k++) {
+    if (widest[k] <= 0) continue
+    const at = k === 0 ? -half : k === PROFILE_RINGS - 1 ? half : -half + ((k + 0.5) / PROFILE_RINGS) * 2 * half
+    rings.push([at, Math.min(radius, widest[k])])
+  }
+  // the outer hull of (at, radius): a ring inside the line from the one before it to the one after it is not touched
+  const hull: Array<readonly [number, number]> = []
+  for (const ring of rings) {
+    while (hull.length >= 2) {
+      const [a0, r0] = hull[hull.length - 2]
+      const [a1, r1] = hull[hull.length - 1]
+      // the middle one is under the line from the first to this ring: it never reaches the floor
+      if ((r1 - r0) * (ring[0] - a0) <= (ring[1] - r0) * (a1 - a0)) hull.pop()
+      else break
+    }
+    hull.push(ring)
+  }
+  return hull
+}
+
 /** How far (m) over its support what is left of a broken object may be and still stand; where under its lowest boxes the support is looked for (shares of the box). */
 const BROKEN_GAP = 0.03
 const BROKEN_SAMPLES: ReadonlyArray<readonly [number, number]> = [[0.5, 0.5], [0.1, 0.1], [0.9, 0.1], [0.1, 0.9], [0.9, 0.9]]
@@ -348,6 +392,11 @@ class Renderer implements DestructionRenderer {
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
+      // two pieces knocked together: each sounds as its material does (a can on a can, a bottle on a table's leg)
+      onKnock: (a, b, point, speed) => {
+        this.landingSound(a.objectId, point, clamp(speed / 10, 0.2, 1))
+        this.landingSound(b.objectId, point, clamp(speed / 10, 0.2, 1))
+      },
     })
     this.unsubscribe = this.world.on('*', (ev) => {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
@@ -529,7 +578,7 @@ class Renderer implements DestructionRenderer {
     return m > 0 ? m : 5
   }
 
-  makePiece(objectId: string, options: { mass?: number; velocity?: Vec3 } = {}): Piece {
+  makePiece(objectId: string, options: MakePieceOptions = {}): Piece {
     this.staticDirty.add(objectId)
     const b = this.bounds.get(objectId)
     if (!b) throw new Error(`game-destruction-three: object "${objectId}" is not bound`)
@@ -537,12 +586,24 @@ class Renderer implements DestructionRenderer {
     const { half, center } = this.measure(b.root, this.meshesOf(b))
     const piece = this.pieceSys.create(objectId, b.root, half, center, options.mass ?? this.massOf(objectId), options.velocity)
     b.piece = piece
-    this.fitSurface(b, piece)
+    this.fitSurface(b, piece, options.inertia)
+    this.fitPartBoxes(b, piece)
     return piece
   }
 
+  /**
+   * What lands on or runs into a piece of several meshes meets its parts as drawn (`partBoxes`: a bench's slats, a table's top and legs), from the moment it is made a piece, not
+   * the box around them all: a board laid on a bench rests on its seat, a can rolls under a table between its legs. Its own contacts with the ground are left as they were.
+   */
+  private fitPartBoxes(b: Bound, body: PieceBody): void {
+    if (body.round) return
+    const contacts = body.contacts
+    this.setContacts(b, body, this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
+    body.contacts = contacts
+  }
+
   /** What the piece's surface is (the friction of the material it stands on) and whether it is round (`round`: it rolls on rings of contacts). */
-  private fitSurface(b: Bound, body: PieceBody): void {
+  private fitSurface(b: Bound, body: PieceBody, inertia?: number): void {
     // the surface it stands on is its lowest part (a sofa's feet, a can's steel), whatever most of its weight is
     const box = new this.THREE.Box3()
     let low = Infinity
@@ -557,9 +618,11 @@ class Renderer implements DestructionRenderer {
         material = this.world.part(b.id, partId)?.material ?? pv.material ?? null
       }
     }
-    const friction = material ? frictionOf(material, this.world.materials.get(material)) : undefined
-    body.friction = friction
+    const surface = material ? surfaceOf(material, this.world.materials.get(material)) : undefined
+    body.friction = surface && { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling }
+    body.restitution = surface?.restitution
     const wasRound = body.round !== undefined
+    if (inertia !== undefined) body.inertiaGiven = inertia
     const round = this.roundOf(b, body)
     body.round = round ?? undefined
     if (round) {
@@ -569,10 +632,53 @@ class Renderer implements DestructionRenderer {
   }
 
   /**
+   * k of a round piece's moment of inertia about its axis (I = k m r^2), from where its mass is. A piece that is not hollow is a solid (k 1/2 for a cylinder, 2/5 for a ball).
+   * A hollow one (`userData.hollow`) with nothing inside (no `destructionContains` liquid, no `destructionPowder`) is all wall, a thin shell (k 1, 2/3): an empty can. One with
+   * contents weighs its walls as their area times their thickness (`destructionThickness`) times density, or, without a thickness, as what is left of its mass besides the liquid
+   * (`LIQUID_KG_PER_L`), and the rest as a solid: a full 350 ml can comes to about 0.53 and rolls down a slope at g sin t / 1.53, an empty one at g sin t / 2.
+   */
+  private inertiaOf(b: Bound, body: PieceBody, kind: PieceRound['kind'], axis: 0 | 1 | 2, radius: number): number {
+    const shell = kind === 'sphere' ? SHELL_SPHERE : SHELL_CYLINDER
+    const solid = kind === 'sphere' ? SOLID_SPHERE : SOLID_CYLINDER
+    let hollow = false
+    let filled = false
+    let liters = 0
+    let thickness = 0
+    let material: string | null = null
+    for (const [partId, pv] of b.parts) {
+      if (pv.gone !== 'none') continue
+      for (const mv of pv.meshes) {
+        const ud = mv.mesh.userData as { hollow?: unknown; destructionThickness?: unknown; destructionContains?: { liters?: unknown }; destructionPowder?: unknown }
+        if (ud.hollow !== true) continue
+        hollow = true
+        if (ud.destructionPowder) filled = true
+        if (ud.destructionContains) {
+          filled = true
+          // what is left in it now (drunk or leaked), else what it was filled with
+          const left = this.world.part(b.id, partId)?.liters
+          liters += left ?? (typeof ud.destructionContains.liters === 'number' ? ud.destructionContains.liters : 0)
+        }
+        const t = typeof ud.destructionThickness === 'number' ? ud.destructionThickness : 0
+        if (t > thickness) {
+          thickness = t
+          material = this.world.part(b.id, partId)?.material ?? pv.material
+        }
+      }
+    }
+    if (!hollow) return solid
+    if (!filled) return shell
+    const density = material ? this.world.materials.get(material)?.density : undefined
+    const area = kind === 'sphere' ? 4 * Math.PI * radius * radius : 2 * Math.PI * radius * 2 * body.halfExtents[axis] + 2 * Math.PI * radius * radius
+    const walls = density && thickness > 0 ? area * thickness * density : body.mass - liters * LIQUID_KG_PER_L
+    const share = clamp(walls / body.mass, 0, 1)
+    return share * shell + (1 - share) * solid
+  }
+
+  /**
    * Whether what is drawn of the piece is round about one of its axes (a can, a bottle, a plate) or all of them (a ball): its points, in its frame from the centre of
    * mass, all lie within the circle the box's two other sides draw (a box's corners would stick out of it by sqrt 2). Null for anything else.
    */
-  private roundOf(b: Bound, body: PieceBody): PieceBody['round'] | null {
+  private roundOf(b: Bound, body: PieceBody): PieceRound | null {
     const half = body.halfExtents
     const inv = specFrameInverse(this.THREE, b.root)
     const m4 = new this.THREE.Matrix4()
@@ -601,9 +707,14 @@ class Renderer implements DestructionRenderer {
       return radius
     }
     const radii = ([0, 1, 2] as const).map(fits)
-    if (radii.every((r) => r !== null)) return { kind: 'sphere', axis: 1, radius: (half[0] + half[1] + half[2]) / 3 }
+    if (radii.every((r) => r !== null)) {
+      const radius = (half[0] + half[1] + half[2]) / 3
+      return { kind: 'sphere', axis: 1, radius, inertia: body.inertiaGiven ?? this.inertiaOf(b, body, 'sphere', 1, radius) }
+    }
     const axis = ([0, 1, 2] as const).find((k) => radii[k] !== null)
-    return axis === undefined ? null : { kind: 'cylinder', axis, radius: radii[axis] ?? 0 }
+    if (axis === undefined) return null
+    const radius = radii[axis] ?? 0
+    return { kind: 'cylinder', axis, radius, inertia: body.inertiaGiven ?? this.inertiaOf(b, body, 'cylinder', axis, radius), profile: profileOf(points, axis, half[axis], radius) }
   }
 
   pieces(): Piece[] {
@@ -632,7 +743,12 @@ class Renderer implements DestructionRenderer {
     const box = { min: [from[0] - core, from[1] - core, from[2] - core] as Vec3, max: [from[0] + core, from[1] + core, from[2] + core] as Vec3 }
     const hit = this.world.sweepBox(box, d, travel, { ignore: p.objectId, spacing: Math.max(0.05, core) })
     if (!hit) return null
-    return { object: hit.object, part: hit.part, distance: hit.distance, point: hit.point, normal: hit.normal }
+    // a round piece and another piece meet by their shapes and trade momentum (`PieceSystem.knock`), not as a piece against a wall
+    const other = this.pieceSys.get(hit.object)
+    if (other && (p.round || other.round)) return null
+    const material = this.world.part(hit.object, hit.part)?.material
+    const restitution = material === undefined ? undefined : surfaceOf(material, this.world.materials.get(material))?.restitution
+    return { object: hit.object, part: hit.part, distance: hit.distance, point: hit.point, normal: hit.normal, ...(restitution === undefined ? {} : { restitution }) }
   }
 
   /** A piece thrown into a wall: the wall takes the blow of its weight where it met it, the piece takes it too, and each sounds as its material does. */
