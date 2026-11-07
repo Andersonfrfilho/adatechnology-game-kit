@@ -1,7 +1,7 @@
 export { PLAYER_DEFAULTS, createPlayer, deriveVitals, drawWound } from './player'
 export type { Player, PlayerOptions } from './player'
 export { createRng } from './rng'
-export { FURNITURE_PUSH_DEFAULTS, canPush, createFurniturePush, gripSecondsFor, pushSpeedFor } from './furniture-push'
+export { FURNITURE_PUSH_DEFAULTS, canPush, createFurniturePush, frictionFor, gripSecondsFor, pushAccelerationFor, pushSpeedFor, slipsOnTop } from './furniture-push'
 export type { FurniturePush, FurniturePushBlock, FurniturePushInput, FurniturePushPhase, FurniturePushRules, FurniturePushStep, FurniturePushTarget } from './furniture-push'
 export { PLAYER_TEXT, playerTextOf } from './locales'
 export type { PlayerText } from './locales'

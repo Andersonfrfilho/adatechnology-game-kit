@@ -11,8 +11,8 @@ export type CrowdScenePlace = { readonly cx: number; readonly cz: number }
 export type CrowdSceneProps = {
   /** An Object3D wall of this length and height, base at the origin along x (the kit's `wallPiece`). */
   readonly wall?: (three: typeof THREE_NS, size: { readonly length: number; readonly height: number }) => THREE_NS.Object3D | undefined
-  /** Item ids of the host's catalogue: the gas cylinder, the car and the car's fuel tank. */
-  readonly items?: { readonly gasCylinder?: string; readonly car?: string; readonly carTank?: string }
+  /** Item ids of the host's catalogue: the gas cylinder, the car and the car's fuel tank, and a piece of furniture that may be pushed (a sofa). */
+  readonly items?: { readonly gasCylinder?: string; readonly car?: string; readonly carTank?: string; readonly furniture?: string }
 }
 
 /** A place for the crowd to be born in, with the walls and doors of its own. The bench applies it after the seed and before the physics and the count. */
@@ -42,6 +42,13 @@ const STREET_COLUMNS = 18
 const STREET_LENGTH = 90
 const CYLINDERS = 6
 const CYLINDER_GAP = 1.5
+const SHOVE_COLUMNS = 3
+/** The scene bears a small group whatever the count asks: the ones in front lean on the furniture, the row behind presses on them. */
+const SHOVE_GROUP = 6
+/** Where the furniture stands from the centre, and how far behind it the agents are born and in front of it the player stands. */
+const FURNITURE_AT = 0
+const SHOVERS_BEHIND = 1.4
+const PLAYER_AHEAD = 4.5
 
 const bear = (crowd: Crowd, x: number, z: number, type: number): void => {
   const i = crowd.spawn(x, z, type)
@@ -119,4 +126,23 @@ export const CHAIN_LINE: CrowdBenchScene = {
   },
 }
 
-export const BUILTIN_SCENES: Readonly<Record<string, CrowdBenchScene>> = { dense_wall: DENSE_WALL, chain_line: CHAIN_LINE }
+/** A small group of agents (`SHOVE_GROUP`) born right behind a piece of furniture that may be pushed (the host's `furniture` item), the player in front of it: they lean on it and shove it at the player. */
+export const FURNITURE_SHOVE: CrowdBenchScene = {
+  id: 'furniture_shove',
+  layout() {},
+  spawn(crowd, { first, count, type }, { cx, cz }) {
+    for (let k = first; k < Math.min(first + count, SHOVE_GROUP); k++) {
+      const row = Math.floor(k / SHOVE_COLUMNS)
+      bear(crowd, cx + ((k % SHOVE_COLUMNS) - (SHOVE_COLUMNS - 1) / 2) * COLUMN_GAP, cz + FURNITURE_AT - SHOVERS_BEHIND - row * ROW_GAP, type)
+    }
+  },
+  context: ({ cx, cz }) => ({ bandCentre: [cx, cz] }),
+  view: ({ cx, cz }) => ({ eye: [cx, 1.7, cz + PLAYER_AHEAD], target: [cx, 0.8, cz - 2] }),
+  props(host, { cx, cz }, props) {
+    const id = props.items?.furniture
+    const object = id && host.addObject ? host.addObject(id, { position: [cx, 0, cz + FURNITURE_AT] }) : null
+    return () => object?.remove()
+  },
+}
+
+export const BUILTIN_SCENES: Readonly<Record<string, CrowdBenchScene>> = { dense_wall: DENSE_WALL, chain_line: CHAIN_LINE, furniture_shove: FURNITURE_SHOVE }

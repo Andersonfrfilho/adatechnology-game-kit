@@ -90,6 +90,9 @@ export const createStore = (capacity: number) => {
     wounds: new Uint16Array(capacity),
     leanX: f32(),
     leanZ: f32(),
+    /** The way the body leans its force on a movable piece this update (unit, or 0): the push pose. */
+    shoveX: f32(),
+    shoveZ: f32(),
     thrown: new Int8Array(capacity),
     prevX: f32(),
     prevZ: f32(),
@@ -104,5 +107,5 @@ export const AGENT_FIELDS = [
   'band', 'next', 'wx', 'wz', 'crawl', 'limp', 'color', 'skin', 'alertIn', 'cooldown', 'y', 'floor', 'floorLocked', 'vy', 'abilityTimer', 'eaten', 'stuck', 'stepCell', 'burn', 'hunts', 'named', 'dvx', 'dvz',
   'steering', 'renderYaw', 'renderSpeed', 'pause', 'lod', 'variant', 'attackPose', 'arms', 'stepDir',
   'pushX', 'pushZ', 'mass', 'pressure', 'field', 'fieldPrev', 'aimX', 'aimZ', 'directShove', 'blastStep', 'balance', 'balanceTimer', 'fallCause', 'identity', 'stability', 'tripFactor', 'driveFactor', 'reaction',
-  'cadenceFactor', 'aggression', 'idle', 'gaitStyle', 'wounds', 'leanX', 'leanZ', 'thrown', 'prevX', 'prevZ', 'prevY',
+  'cadenceFactor', 'aggression', 'idle', 'gaitStyle', 'wounds', 'leanX', 'leanZ', 'shoveX', 'shoveZ', 'thrown', 'prevX', 'prevZ', 'prevY',
 ] as const satisfies readonly (keyof Arrays)[]

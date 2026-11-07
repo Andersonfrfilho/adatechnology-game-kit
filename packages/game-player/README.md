@@ -59,6 +59,7 @@ carries it too.
 ## Pushing furniture
 
 `createFurniturePush(rules?)` is the logic of pushing a heavy thing on foot: `begin({ massKg, material })`, then `update(dt, { walk, isFree })` every frame answers the step and says the `phase` (`grip` while the hold timer fills, `push`, `strain`), the `progress` of the timer and the `block` (`too_heavy`, `obstacle`). The host answers `isFree` by sweeping the volume of the piece and draws the rest. `gripSecondsFor`, `pushSpeedFor` and `canPush` give the numbers; the force of the legs, the friction by material, the times and the speeds are all in `FurniturePushRules` (`FURNITURE_PUSH_DEFAULTS`).
+The walk with the piece speeds up and brakes like a person's (`accel`: the force left over the friction, over the mass, at most `accel.max`; braking at `accel.brake`), and each step reports its `velocity`, its `acceleration` and, when it hits something and stops at once, the velocity it had (`stoppedFrom`). `slipsOnTop(acceleration, frictionFor(material))` says whether a thing resting on the piece slides on it: a cup on a table rides while the push speeds up and slides on when the table stops dead.
 
 ## Opening doors by hand
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { canPush, createFurniturePush, gripSecondsFor, pushSpeedFor } from '../src'
+import { canPush, createFurniturePush, frictionFor, gripSecondsFor, pushAccelerationFor, pushSpeedFor, slipsOnTop } from '../src'
 
 const FREE = { walk: [0, -1], isFree: () => true } as const
 
@@ -42,8 +42,34 @@ describe('furniture push', () => {
     expect(push.progress).toBeCloseTo(0.3 / gripSecondsFor(12))
     expect(push.update(0.4, FREE).engaged).toBe(true)
     expect(push.phase).toBe('push')
-    const step = push.update(0.1, FREE)
-    expect(step.dz).toBeCloseTo(-pushSpeedFor({ massKg: 12 }) * 0.1)
+    // it speeds up first, then walks at the speed of the load
+    expect(push.update(0.1, FREE).dz).toBeCloseTo(-pushAccelerationFor({ massKg: 12 }) * 0.1 * 0.1)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    expect(push.update(0.1, FREE).dz).toBeCloseTo(-pushSpeedFor({ massKg: 12 }) * 0.1)
+  })
+
+  it('speeds up no faster than a person, slower with a heavy piece, and brakes harder than it speeds up', () => {
+    expect(pushAccelerationFor({ massKg: 12 })).toBe(1.5)
+    const heavy = pushAccelerationFor({ massKg: 100, material: 'wood_hard' })
+    expect(heavy).toBeCloseTo((500 - 0.4 * 100 * 9.81) / 100)
+    expect(heavy).toBeLessThan(1.5)
+    const push = engaged(12)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    const stop = push.update(0.1, { walk: [0, 0], isFree: () => true })
+    expect(stop.acceleration).toBeCloseTo(3)
+    expect(stop.velocity[1]).toBeCloseTo(-pushSpeedFor({ massKg: 12 }) + 0.3)
+  })
+
+  it('what rests on top rides while the push speeds up, and slides when the piece stops at once', () => {
+    const cup = frictionFor('ceramic')
+    expect(slipsOnTop(pushAccelerationFor({ massKg: 12 }), cup)).toBe(false)
+    expect(slipsOnTop(3, frictionFor('glass'))).toBe(true)
+    const push = engaged(12)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    const hit = push.update(0.1, { walk: [0, -1], isFree: () => false })
+    expect(hit.hitObstacle).toBe(true)
+    expect(hit.stoppedFrom?.[1]).toBeCloseTo(-pushSpeedFor({ massKg: 12 }))
+    expect(slipsOnTop(hit.acceleration, cup)).toBe(true)
   })
 
   it('too heavy: the timer fills and it strains without a step', () => {
@@ -57,7 +83,7 @@ describe('furniture push', () => {
   it('locks at an obstacle, says so once, and frees when the way is clear', () => {
     const push = engaged(30)
     const blocked = { walk: [0, -1], isFree: () => false } as const
-    expect(push.update(0.1, blocked)).toEqual({ dx: 0, dz: 0, engaged: false, hitObstacle: true })
+    expect(push.update(0.1, blocked)).toMatchObject({ dx: 0, dz: 0, engaged: false, hitObstacle: true })
     expect(push.update(0.1, blocked).hitObstacle).toBe(false)
     expect(push.phase).toBe('strain')
     expect(push.block).toBe('obstacle')

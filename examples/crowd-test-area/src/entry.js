@@ -54,11 +54,11 @@ const town = () => {
   return model
 }
 
-/** The scenes' wall is the houses' own wall piece (the kit's `wallPiece`); the cylinders, the car and its tank are items of the room's catalogue (the weapons' world explosives, the fleet's sedan). */
+/** The scenes' wall is the houses' own wall piece (the kit's `wallPiece`); the cylinders, the car and its tank, and the sofa the agents shove, are items of the room's catalogue (the household sofa, the weapons' world explosives, the fleet's sedan). */
 /** @type {CrowdOptions['props']} */
 const SCENE_PROPS = {
   wall: (THREE, { length, height }) => wallPiece(THREE, { w: length, h: height }).build(THREE),
-  items: { gasCylinder: 'world_propane_p13', car: 'sedan', carTank: 'world_car_fuel_tank' },
+  items: { gasCylinder: 'world_propane_p13', car: 'sedan', carTank: 'world_car_fuel_tank', furniture: 'sofa' },
 }
 
 /**

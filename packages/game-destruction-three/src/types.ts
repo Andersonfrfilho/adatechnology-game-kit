@@ -151,6 +151,8 @@ export interface Piece {
   sleeping: boolean
   /** While held by a player the renderer does not integrate it. */
   held: boolean
+  /** Held but standing on the floor (a pushed table): what rests on it still rests on it, as on a piece that is not held. */
+  carrying?: boolean
 }
 
 /** Options of `DestructionRenderer.explode`. */
