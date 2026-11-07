@@ -301,11 +301,11 @@
   ]
  },
  "model/crowbar": {
-  "hash": "3b08e0d6",
+  "hash": "b439148b",
   "nodes": [
    "0 Group 6b784733",
    "0/0 Group 78e90ce9",
-   "0/0/0 Mesh ee70c2ce",
+   "0/0/0 Mesh f7785227",
    "0/0/1 Mesh 2b8f791b",
    "0/0/2 Mesh e34f7751",
    "0/0/3 Mesh d6cfa48d"
