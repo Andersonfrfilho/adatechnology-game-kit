@@ -64,7 +64,7 @@ crowd.store.x[i] // the struct of arrays: x, z, y, yaw, state, hp, missing, band
 `crowd.setMovables([{ id, minX, minZ, maxX, maxZ, top }])` lists the pieces on the floor the host lets the agents push (a sofa, a wardrobe). An agent walking into one
 stops at its face and, going into it, leans `numbers.shoveForce` newtons (by its build) on it, with the arms out and the body forward (`store.shoveX`/`shoveZ`, read by the
 look of `game-crowd-three`). The forces of the agents on the same piece add up, once per agent and update: `crowd.shoves` lists, after each `update`, the summed force, its
-direction and how many push. The host decides whether the piece moves (its mass and friction) and moves it.
+direction and how many push. The host decides whether the piece moves (its mass and friction) and moves it. Civilians do not shove: `crowd.movableAt(x, z, radius)` tells them a piece is ahead, and they walk round it along its face, always turning the same way.
 
 ## Civilians, herds, flocks and the region model
 

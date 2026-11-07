@@ -115,6 +115,8 @@ export type Crowd = {
   setMovables(list: readonly CrowdMovable[]): void
   /** What the agents leaned on each movable in the last update, their forces added: the host moves the piece if the sum beats its friction. */
   readonly shoves: readonly CrowdShove[]
+  /** The movable piece a body of `radius` at `(x, z)` stands in, or null: what walks round furniture without shoving it (civilians) asks this. */
+  movableAt(x: number, z: number, radius: number): CrowdMovable | null
   /** The interface `game-player` uses to push, cut and be held by the agents. */
   asPlayerCrowd(): PlayerCrowdLike
   on<K extends CrowdEventName>(event: K, listener: (event: CrowdEventMap[K]) => void): () => void
@@ -1454,6 +1456,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     },
     chaseSpeed,
     setMovables: (list) => movables.set(list),
+    movableAt: (x, z, radius) => movables.list[movables.at(x, z, 0, radius)?.index ?? -1] ?? null,
     get shoves() {
       return shoves
     },

@@ -58,7 +58,13 @@ export type CarryHost = {
   /** Turns a free-standing object into a body (the first step it takes, and each thing riding on it). */
   makePiece(objectId: string): Piece
   dragSound(objectId: string, point: Vec3, volume: number): void
+  /** The piece (or a thing riding on it) moved by `(dx, dz)`: what the host keeps with it (a liquid spilled on its top) goes along. */
+  moved?(objectId: string, dx: number, dz: number): void
+  /** A stretch of drag (`DRAG_GRAIN_METRES` or more) along `(ux, uz)`, the base's box where it ended: the host marks the floor under it. */
+  dragged?(objectId: string, drag: CarryDrag): void
 }
+
+export type CarryDrag = { readonly min: Vec3; readonly max: Vec3; readonly ux: number; readonly uz: number; readonly length: number }
 
 export function createCarry(host: CarryHost, target: RoomPushTarget): Carry {
   const box3 = new host.THREE.Box3().setFromObject(target.root)
@@ -106,38 +112,48 @@ export function shakeRiders(carry: Carry, before: readonly [number, number], acc
   carry.riders = kept
 }
 
-/** Whether the box of the piece fits at its place moved by `(dx, dz)`: inside the arena, out of its walls and of the modules' blockers, nothing of the world on the way. */
-export function carryFits(host: CarryHost, carry: Carry, dx: number, dz: number): boolean {
+/** What stops a piece that is not an object of the world: the edge of the arena, its walls, a module's blocker. */
+export const CARRY_WALL = Symbol('wall')
+
+/**
+ * What is in the way of the box of the piece moved by `(dx, dz)`: null when it fits, `CARRY_WALL` for the arena (its edge, its walls, the modules' blockers), or
+ * the id of the object of the world it would run into. `ignore` names the pieces that move with it (a row being pushed).
+ */
+export function carryBlocker(host: CarryHost, carry: Carry, dx: number, dz: number, ignore: readonly string[] = [carry.target.objectId]): string | typeof CARRY_WALL | null {
   const minX = carry.min[0] + dx
   const maxX = carry.max[0] + dx
   const minZ = carry.min[2] + dz
   const maxZ = carry.max[2] + dz
   const limit = host.arena.limit
-  if (Math.max(Math.abs(minX), Math.abs(maxX)) > limit || Math.max(Math.abs(minZ), Math.abs(maxZ)) > limit) return false
+  if (Math.max(Math.abs(minX), Math.abs(maxX)) > limit || Math.max(Math.abs(minZ), Math.abs(maxZ)) > limit) return CARRY_WALL
   for (const c of host.arena.colliders) {
     // what the piece already stands in does not hold it: it can always back out
     if (carry.max[0] > c[0] && carry.min[0] < c[2] && carry.max[2] > c[1] && carry.min[2] < c[3]) continue
-    if (maxX > c[0] && minX < c[2] && maxZ > c[1] && minZ < c[3]) return false
+    if (maxX > c[0] && minX < c[2] && maxZ > c[1] && minZ < c[3]) return CARRY_WALL
   }
   if (host.blockers.size > 0) {
     const midX = (minX + maxX) / 2
     const midZ = (minZ + maxZ) / 2
     for (const [x, z] of [[minX, minZ], [maxX, minZ], [minX, maxZ], [maxX, maxZ], [midX, minZ], [midX, maxZ], [minX, midZ], [maxX, midZ]] as const) {
-      for (const isBlocked of host.blockers) if (isBlocked(x, z, 0)) return false
+      for (const isBlocked of host.blockers) if (isBlocked(x, z, 0)) return CARRY_WALL
     }
   }
   const distance = Math.hypot(dx, dz)
-  if (distance < 1e-6) return true
+  if (distance < 1e-6) return null
   const box = { min: [carry.min[0], carry.min[1] + FLOOR_CLEARANCE, carry.min[2]] as Vec3, max: [carry.max[0], Math.max(carry.min[1] + FLOOR_CLEARANCE, carry.max[1] - TOP_CLEARANCE), carry.max[2]] as Vec3 }
-  return host.world.sweepBox(box, [dx / distance, 0, dz / distance], distance + SWEEP_SKIN, { ignore: carry.target.objectId }) === null
+  return host.world.sweepBox(box, [dx / distance, 0, dz / distance], distance + SWEEP_SKIN, { ignore })?.object ?? null
 }
+
+/** Whether the box of the piece fits at its place moved by `(dx, dz)`: inside the arena, out of its walls and of the modules' blockers, nothing of the world on the way. */
+export const carryFits = (host: CarryHost, carry: Carry, dx: number, dz: number): boolean => carryBlocker(host, carry, dx, dz) === null
 
 /** Moves the piece and what rides on it; a scrape on the floor every `DRAG_GRAIN_METRES`. Answers the dragged metres not yet sounded. */
 export function moveCarry(host: CarryHost, carry: Carry, dx: number, dz: number, dragged: number): number {
-  for (const root of [carry.target.root, ...carry.riders.map((r) => r.root)]) {
+  for (const { objectId, root } of [carry.target, ...carry.riders]) {
     root.position.x += dx
     root.position.z += dz
     root.updateMatrixWorld(true)
+    host.moved?.(objectId, dx, dz)
   }
   carry.min[0] += dx
   carry.max[0] += dx
@@ -146,5 +162,7 @@ export function moveCarry(host: CarryHost, carry: Carry, dx: number, dz: number,
   const total = dragged + Math.hypot(dx, dz)
   if (total < DRAG_GRAIN_METRES) return total
   host.dragSound(carry.target.objectId, [(carry.min[0] + carry.max[0]) / 2, carry.min[1], (carry.min[2] + carry.max[2]) / 2], 0.3 + 0.5 * Math.min(1, carry.massKg / 100))
+  const step = Math.hypot(dx, dz)
+  if (step > 1e-6) host.dragged?.(carry.target.objectId, { min: [...carry.min], max: [...carry.max], ux: dx / step, uz: dz / step, length: total })
   return 0
 }

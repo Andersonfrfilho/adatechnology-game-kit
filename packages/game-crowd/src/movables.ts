@@ -24,6 +24,8 @@ export interface MovableContacts {
 
 /** How far into the face the walk must point (the cosine) for the step to be a push and not a brush along the side. */
 const INTO_MIN = 0.3
+/** A body this close to the touching distance still counts as touching, not in: rounding of the steps must not hold it at a face. */
+const TOUCH = 1e-6
 
 type Sum = { x: number; z: number; agents: Map<number, readonly [number, number]> }
 
@@ -42,7 +44,8 @@ export function createMovableContacts(): MovableContacts {
     at(x, z, y, radius) {
       for (let k = 0; k < list.length; k++) {
         const m = list[k]!
-        if (y >= m.top || x < m.minX - radius || x > m.maxX + radius || z < m.minZ - radius || z > m.maxZ + radius) continue
+        // touching the face (at the radius) is not in it: the body may slide along it
+        if (y >= m.top || x <= m.minX - radius + TOUCH || x >= m.maxX + radius - TOUCH || z <= m.minZ - radius + TOUCH || z >= m.maxZ + radius - TOUCH) continue
         const cx = Math.max(m.minX, Math.min(m.maxX, x)) - x
         const cz = Math.max(m.minZ, Math.min(m.maxZ, z)) - z
         const d = Math.hypot(cx, cz)

@@ -14,7 +14,7 @@ const box = (name: string, material: string, mass: number, size: [number, number
 })
 const table = (): DestructibleSpec => box('table', 'wood_hard', 30, [1.6, TOP, 0.8])
 const item = (id: string, spec: DestructibleSpec, pushable?: true): TestRoomItem => ({ id, name: id, group: 'test', build: (T) => buildFromSpec(T, spec), spec, ...(pushable ? { pushable } : {}) })
-const CATALOG = [item('can', box('can', 'steel', 0.4, [0.07, 0.12, 0.07])), item('cabinet', box('cabinet', 'wood_hard', 242, [1, 1.8, 0.5]), true), item('crate', box('crate', 'wood_soft', 30, [1, 1.6, 0.6]), true)]
+const CATALOG = [item('can', box('can', 'steel', 0.4, [0.07, 0.12, 0.07])), item('stool', box('stool', 'wood_hard', 6, [0.6, 0.45, 0.4])), item('cabinet', box('cabinet', 'wood_hard', 242, [1, 1.8, 0.5]), true), item('crate', box('crate', 'wood_soft', 30, [1, 1.6, 0.6]), true)]
 
 type Room = ReturnType<typeof makeRoom>
 const run = (room: Room, seconds: number): void => {
@@ -154,5 +154,68 @@ describe('the bodies of a module shove furniture (ModuleHost.shove)', () => {
     room.look([0, 1.7, -4.2], [0, 1.7, -10])
     shoveFor(room, host, objectId, 450, 1, 2)
     expect(zOf(room, objectId)).toBeGreaterThan(-4.2 + 0.3 + 0.3 - 0.05)
+  })
+})
+
+describe('what a push meets and leaves behind', () => {
+  const pushCrate = (extra: Record<string, unknown>, ahead?: { itemId: string; z: number }) => {
+    const room = makeRoom({ catalog: CATALOG, scenery: { table: null, shelf: null, crate: { spec: box('crate', 'wood_soft', 30, [1, 1.6, 0.6]), position: [0, 0, -2] as [number, number, number], free: true, pushable: true }, ...extra } })
+    room.setTool('hand')
+    const met = ahead ? room.spawn(ahead.itemId, [0, 0, ahead.z], 0).objectId : null
+    run(room, 0.3)
+    room.look([0, 1.7, -1.1], [0, 1, -2])
+    expect(room.push.begin()).toBe(true)
+    run(room, 2)
+    return { room, met }
+  }
+
+  it('a crate pushed against a loose light piece shoves it along, the row slower', () => {
+    const { room, met } = pushCrate({}, { itemId: 'stool', z: -3.2 })
+    room.push.setWalk([0, -1])
+    run(room, 3)
+    expect(zOf(room, met!)).toBeLessThan(-3.6)
+    // the stool goes in front of the crate, face to face (half of each apart)
+    expect(zOf(room, met!) - zOf(room, 'crate')).toBeCloseTo(-0.5, 1)
+    expect(room.log.entries({ type: 'push_chained' }).length).toBe(1)
+  })
+
+  it('against a piece too heavy for the row it locks, and nothing moves it', () => {
+    const { room, met } = pushCrate({}, { itemId: 'cabinet', z: -3.2 })
+    room.push.setWalk([0, -1])
+    run(room, 3)
+    expect(room.push.state?.block).toBe('obstacle')
+    expect(zOf(room, met!)).toBeCloseTo(-3.2, 2)
+    expect(room.log.entries({ type: 'push_chained' }).length).toBe(0)
+  })
+
+  it('dragging scratches the floor (two strips under the sides of the base, a stretch at a time)', () => {
+    const { room } = pushCrate({})
+    const scrapes: number[] = []
+    room.vfx.onMarks((event) => {
+      if (event.type === 'add' && event.mark.kind === 'scrape') scrapes.push(event.mark.z)
+    })
+    room.push.setWalk([0, -1])
+    run(room, 2)
+    expect(scrapes.length).toBeGreaterThanOrEqual(4)
+    expect(scrapes.length % 2).toBe(0)
+  })
+
+  it('a liquid spilled on the table top goes with the table', () => {
+    const room = makeRoom({ catalog: CATALOG, scenery: { shelf: null, table: { spec: table(), position: [0, 0, TABLE_AT] as [number, number, number], free: true, pushable: true, top: { part: 'body', y: TOP } } } })
+    room.setTool('hand')
+    room.fluids.splash('water', [0.3, TOP + 0.3, TABLE_AT], 0.2)
+    run(room, 0.5)
+    const before = room.fluids.stains().find((s) => s.surface === 'table')
+    expect(before).toBeDefined()
+    room.look([0, 1.7, TABLE_AT + 0.9], [0, 0.7, TABLE_AT])
+    expect(room.push.begin()).toBe(true)
+    run(room, 2)
+    const tableBefore = zOf(room, 'table')
+    room.push.setWalk([0, -1])
+    run(room, 2)
+    const moved = zOf(room, 'table') - tableBefore
+    expect(moved).toBeLessThan(-1)
+    const after = room.fluids.stains().find((s) => s.id === before!.id)
+    expect(after!.center[2] - before!.center[2]).toBeCloseTo(moved, 2)
   })
 })

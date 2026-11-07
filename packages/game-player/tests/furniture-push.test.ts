@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { canPush, createFurniturePush, frictionFor, gripSecondsFor, pushAccelerationFor, pushSpeedFor, slipsOnTop } from '../src'
+import { FURNITURE_PUSH_DEFAULTS, canPush, createFurniturePush, dragMarkFor, frictionFor, gripSecondsFor, pushAccelerationFor, pushSpeedFor, slipsOnTop } from '../src'
 
 const FREE = { walk: [0, -1], isFree: () => true } as const
 
@@ -91,6 +91,34 @@ describe('furniture push', () => {
     push.update(0.05, { walk: [0, 1], isFree: () => true })
     expect(push.phase).toBe('push')
     expect(push.block).toBe(null)
+  })
+
+  it('a row of pieces pushed one against the next adds up its frictions and its masses', () => {
+    const sofa = { massKg: 45, material: 'fabric' }
+    const chair = { massKg: 8, material: 'wood_hard' }
+    expect(canPush([sofa, chair])).toBe(true)
+    expect(pushSpeedFor([sofa, chair])).toBeLessThan(pushSpeedFor(sofa))
+    expect(pushAccelerationFor([sofa, chair])).toBeLessThanOrEqual(pushAccelerationFor(sofa))
+    // the sofa alone goes; against the 400 kg grill the row is too heavy and locks
+    expect(canPush([sofa, { massKg: 400, material: 'steel' }])).toBe(false)
+  })
+
+  it('a load that grows while pushing slows the push', () => {
+    const push = engaged(20)
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    const alone = -push.update(0.1, FREE).dz
+    push.setLoad([{ massKg: 20 }, { massKg: 60 }])
+    for (let k = 0; k < 30; k++) push.update(0.1, FREE)
+    expect(-push.update(0.1, FREE).dz).toBeLessThan(alone)
+  })
+
+  it('dragging scratches wood and tile, scuffs concrete, and leaves carpet and grass clean', () => {
+    expect(dragMarkFor('wood')).not.toBeNull()
+    expect(dragMarkFor('tile')).not.toBeNull()
+    expect(dragMarkFor('concrete')).not.toBeNull()
+    expect(dragMarkFor('carpet')).toBeNull()
+    expect(dragMarkFor('grass')).toBeNull()
+    expect(dragMarkFor('wood', { ...FURNITURE_PUSH_DEFAULTS, dragMarks: {} })).toBeNull()
   })
 
   it('takes the numbers of the game', () => {
