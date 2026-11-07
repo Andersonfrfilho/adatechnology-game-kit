@@ -412,15 +412,28 @@ export class PieceSystem {
   }
 
   /**
-   * Steps of an update: one, or more while a round piece rolls fast enough to pass through another between two (two of them closing at its speed each cover at most its
-   * radius per step: a can is 7 cm across, two at 3.6 m/s close 12 cm in a frame).
+   * Steps of an update: one, or more while a round piece moves fast enough to pass through a piece it could meet within the update (the two closing at their speeds cover at
+   * most the round one's radius per step: two cans at 3.6 m/s close 12 cm in a frame, a can is 7 cm across). Alone in the open it takes one step, so its sweep against the
+   * world (the costly part) runs once.
    */
   private collisionSteps(dt: number): number {
     let need = 1
+    const p = this.p
     for (const b of this.list) {
       if (!b.round || b.sleeping || b.held) continue
       const speed = Math.hypot(b.velocity[0], b.velocity[1], b.velocity[2])
-      need = Math.max(need, Math.ceil((2 * speed * dt) / b.round.radius))
+      if (speed * dt < b.round.radius * 0.5) continue
+      const c = this.centerOf(b, p)
+      const cx = c.x, cy = c.y, cz = c.z
+      const rb = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
+      for (const o of this.list) {
+        if (o === b) continue
+        const other = Math.hypot(o.velocity[0], o.velocity[1], o.velocity[2])
+        const reach = (speed + other) * dt + rb + Math.hypot(o.halfExtents[0], o.halfExtents[1], o.halfExtents[2])
+        const oc = this.centerOf(o, p)
+        if (Math.abs(oc.x - cx) > reach || Math.abs(oc.y - cy) > reach || Math.abs(oc.z - cz) > reach) continue
+        need = Math.max(need, Math.ceil(((speed + other) * dt) / b.round.radius))
+      }
     }
     return Math.min(MAX_COLLISION_STEPS, need)
   }
