@@ -3,7 +3,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Fragment, SplitForm } from '@adatechnology/game-destruction'
 
 import { pushFittedBoxes } from './fitted-boxes'
-import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
+import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildRubbleGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
 import { clamp, createRng, hashString } from './math'
 import type { LooseBody } from './types'
 
@@ -43,6 +43,8 @@ export interface FragmentSystemOptions {
   life: number | FragmentLifeRule
   /** How a material comes apart (`MaterialDef.splitForm`): MDF lumps and plywood veneer get shapes of their own. Default: none. */
   formOf?: (materialId: string) => SplitForm | undefined
+  /** Whether a material crumbles (`MaterialDef.fracture` 'crumble': brick, block, concrete, plaster): its chunks are drawn broken, not as cut boxes. */
+  crumbles?: (materialId: string) => boolean
 }
 
 const BUILDERS: Record<Exclude<SharedShape, 'shard'>, (THREE: typeof THREE_NS, seed: number) => THREE_NS.BufferGeometry> = {
@@ -50,10 +52,11 @@ const BUILDERS: Record<Exclude<SharedShape, 'shard'>, (THREE: typeof THREE_NS, s
   lump: buildLumpGeometry,
   veneer: buildVeneerGeometry,
   board: buildBrokenBoardGeometry,
+  rubble: buildRubbleGeometry,
 }
 
 /** The shared shapes a fragment can take besides the box: glass shards, wood splinters, MDF lumps, plywood veneer and the torn stub of a broken board. */
-type SharedShape = 'shard' | 'sliver' | 'lump' | 'veneer' | 'board'
+type SharedShape = 'shard' | 'sliver' | 'lump' | 'veneer' | 'board' | 'rubble'
 
 /** Thickest scrap that flies as a sheet (m), its air drag (1/s) and how hard it sways (m/s²). */
 const SHEET_MAX = 0.004
@@ -180,6 +183,7 @@ export class FragmentSystem {
     if (f.shape === 'chunk' && form === 'granules') return this.sharedGeometry('lump', seed)
     if (f.shape === 'scrap' && form === 'plies') return this.sharedGeometry('veneer', seed)
     if (f.shape === 'slab' && (form === 'slivers' || form === 'plies')) return this.sharedGeometry('board', seed)
+    if (f.shape === 'chunk' && this.o.crumbles?.(f.material)) return this.sharedGeometry('rubble', seed)
     return this.box
   }
 
@@ -193,18 +197,18 @@ export class FragmentSystem {
   }
 
   /**
-   * Meshes, never put in a scene by this class, that draw every shared piece of a fragment once: the box, the six shards, the wood splinters, MDF lumps and plywood veneer, the bullet-hole disc, and the opaque and
+   * Meshes, never put in a scene by this class, that draw every shared piece of a fragment once: the box, the six shards, the wood splinters, MDF lumps, plywood veneer, broken masonry, the bullet-hole disc, and the opaque and
    * glass materials. A host draws them at load so the first blast does not upload these buffers in the middle of a frame.
    */
   warmMeshes(): THREE_NS.Mesh[] {
     const opaque = this.materialFor('warm', 0x808080, false)
     const glass = this.materialFor('warm', 0x808080, true)
     const geometries = [this.box, ...Array.from({ length: SHARD_SHAPES }, (_, index) => this.shardGeometry(index))]
-    const wood = (['sliver', 'lump', 'veneer', 'board'] as const).flatMap((shape) => Array.from({ length: FRAGMENT_SHAPE_VARIANTS }, (_, index) => this.sharedGeometry(shape, index)))
+    const shaped = (['sliver', 'lump', 'veneer', 'board', 'rubble'] as const).flatMap((shape) => Array.from({ length: FRAGMENT_SHAPE_VARIANTS }, (_, index) => this.sharedGeometry(shape, index)))
     const { geometry, material } = this.markParts()
     return [
       ...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass)]),
-      ...wood.map((shared) => new this.THREE.Mesh(shared, opaque)),
+      ...shaped.map((shared) => new this.THREE.Mesh(shared, opaque)),
       new this.THREE.Mesh(geometry, material),
     ]
   }

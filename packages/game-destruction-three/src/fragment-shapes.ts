@@ -174,3 +174,30 @@ export function buildBrokenBoardGeometry(THREE: typeof THREE_NS, seed: number): 
   }
   return faceted(THREE, positions)
 }
+
+/**
+ * A broken piece of brick, block or concrete in the unit box: a box whose corners are knocked off (each pulled in along its own axes) and whose edges are
+ * nicked, so a heap of them reads as broken masonry, not as cut blocks. The faces of the box stay nearly flat (the faces of the brick); 48 triangles.
+ */
+export function buildRubbleGeometry(THREE: typeof THREE_NS, seed: number): THREE_NS.BufferGeometry {
+  const rnd = createRng(9000 + seed)
+  const base = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2).toNonIndexed()
+  const source = base.getAttribute('position')
+  const moved = new Map<string, number[]>()
+  const positions: number[] = []
+  for (let i = 0; i < source.count; i++) {
+    const p = [source.getX(i), source.getY(i), source.getZ(i)]
+    const key = p.map((x) => x.toFixed(3)).join(',')
+    let out = moved.get(key)
+    if (!out) {
+      // 3 coordinates on the box's surface: a corner; 2: the middle of an edge; 1: the middle of a face, which stays
+      const outer = p.filter((x) => Math.abs(x) > 0.49).length
+      const bite = outer === 3 ? 0.08 + 0.3 * rnd() : outer === 2 ? 0.1 * rnd() : 0
+      out = p.map((x) => (Math.abs(x) > 0.49 ? x - Math.sign(x) * bite * (0.4 + 0.6 * rnd()) : x))
+      moved.set(key, out)
+    }
+    positions.push(out[0]!, out[1]!, out[2]!)
+  }
+  base.dispose()
+  return faceted(THREE, positions)
+}
