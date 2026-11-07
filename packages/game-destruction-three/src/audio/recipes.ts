@@ -4,7 +4,7 @@
 import { DISTANCE_CURVES, sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
 import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
 
-import { BLAST_SOUNDS, FIRE_FUEL_LOOPS, FIRE_LOOP, FIRE_SOUNDS, GRENADE_PIN_PULL, SMOKE_HISS_LOOP } from './blast-fire'
+import { BLAST_SOUNDS, FIRE_FUEL_LOOPS, FIRE_LOOP, FIRE_SOUNDS, GRENADE_PIN_PULL, ROCKET_MOTOR_LOOP, SMOKE_HISS_LOOP } from './blast-fire'
 
 const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars'], group?: string): SoundRecipe =>
   sceneRecipe(id, layers, line, { ...(vars ? { vars } : {}), ...(group ? { group } : {}) })
@@ -168,4 +168,4 @@ export const IMPACT_SOUNDS: readonly SoundRecipe[] = [
   impact('mdf_crumble', [noise({ type: 'lowpass', f: 700, d: 0.25, vol: 0.75, wet: 0.2 }), ...many(4, () => noise({ type: 'lowpass', f: 500, d: 0.05, vol: 0.32, delay: [0.05, 0.3] }))]),
 ]
 
-export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, ...IMPACT_SOUNDS, EXPLOSION_BOOM, ...BLAST_SOUNDS, ...FIRE_SOUNDS, GRENADE_PIN_PULL], loops: [BURN_LOOP, FIRE_LOOP, ...FIRE_FUEL_LOOPS, SMOKE_HISS_LOOP] }
+export const DESTRUCTION_SOUND_BANK: SoundBank = { id: 'destruction_three', sounds: [...SCENE_SOUNDS, ...DRAG_SOUNDS, ...LEAF_SOUNDS, ...IMPACT_SOUNDS, EXPLOSION_BOOM, ...BLAST_SOUNDS, ...FIRE_SOUNDS, GRENADE_PIN_PULL], loops: [BURN_LOOP, FIRE_LOOP, ...FIRE_FUEL_LOOPS, SMOKE_HISS_LOOP, ROCKET_MOTOR_LOOP] }
