@@ -434,7 +434,8 @@ describe('fifty cans', () => {
     }
     frames.sort((a, b) => a - b)
     const median = frames[frames.length >> 1] ?? 0
-    // the whole renderer update (pieces, contacts, knocks) for 50 cans; measured 1.4 ms under a load average of 30 on the dev machine; the budget leaves room for a loaded CI
-    expect(median).toBeLessThan(6)
+    // the whole renderer update (pieces, contacts, knocks) for 50 cans: 1.4 ms on the dev machine under load 30. Wall-clock budgets stay out of CI
+    // (CLAUDE.md §9: a shared runner measured 6.2 ms); the pre-push on the developer's machine keeps it
+    if (!process.env.CI) expect(median).toBeLessThan(6)
   })
 })
