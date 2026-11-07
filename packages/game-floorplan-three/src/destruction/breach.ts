@@ -386,10 +386,18 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         if (opening) discs.push({ s: along(opening.center), y: opening.center[1]!, r: opening.radius })
         for (const k of spalls) flakes.push({ s: along(k.center), y: k.center[1]!, r: k.radius })
         const boxes = chips.map((k) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1]! - k.up, y1: k.center[1]! + k.up }))
-        const gone = (c: Span) => covered(c, boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)) >= 0.9
-          || (opening && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
+        // the world's units and the drawn bricks do not share joints (its units are merged and shifted by bond): a brick goes when the world took most
+        // of it and the unit under its middle, or it is drawn hanging where the world has nothing
+        const gone = (c: Span) => {
+          const over = boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)
+          const share = covered(c, over)
+          if (share >= 0.9) return true
+          const s = (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2
+          return share >= 0.5 && over.some((k) => s >= k.s0 && s <= k.s1 && y >= k.y0 && y <= k.y1)
+        }
+        const open = (c: Span) => gone(c) || (opening !== undefined && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
         const kept: typeof all = []
-        for (const c of all) (gone(c) ? holes : kept).push(c)
+        for (const c of all) (open(c) ? holes : kept).push(c)
         for (const c of kept) shown.push({ c, part, units, thick, mid })
         // the shots that broke a unit and left the rest of it: a crater in it
         for (const k of boxes) {

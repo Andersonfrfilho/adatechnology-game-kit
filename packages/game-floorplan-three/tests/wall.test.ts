@@ -125,6 +125,36 @@ describe('wallPiece', () => {
     expect(new Set([...ends.values()].map((v) => v.toFixed(2))).size).toBeGreaterThan(3)
   })
 
+  // an AT4 (200 kJ) going off on the face of a bay: the whole bay between its pillars comes out, and every brick drawn at the cut is one the world still has
+  it.each([['the middle bay', 0], ['the right bay', 3.27], ['the left bay', -3.27]])('a rocket in %s draws no brick the world knocked out (nothing left hanging at the pillars)', (_bay, x) => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    world.explode([x, 1.4, 0.3], 200000, 16, 'test')
+    for (let i = 0; i < 20; i++) world.update(0.1)
+    follower.update()
+    const wall = world.part(id, 'wall_0_0')!
+    const at = piece.spec.parts.find((p: { id: string }) => p.id === 'wall_0_0')!.position as number[]
+    const gone = (wall.chipped ?? []).map((c) => ({ x0: at[0]! + c.center[0] - c.size[0] / 2, x1: at[0]! + c.center[0] + c.size[0] / 2, y0: at[1]! + c.center[1] - c.size[1] / 2, y1: at[1]! + c.center[1] + c.size[1] / 2 }))
+    expect(gone.length).toBeGreaterThan(0)
+    // the concrete of the pillars is drawn in the same instances; the wall part runs behind them, so only the bricks between them count
+    const pillars = piece.spec.parts.filter((p: { id: string }) => p.id.startsWith('wall_column_')).map((p: { position: number[] }) => p.position[0]!)
+    const units = root.getObjectByName('breach:wall_0_0') as THREE.InstancedMesh
+    root.updateMatrixWorld(true)
+    const m = new THREE.Matrix4(), p = new THREE.Vector3()
+    const hanging: number[][] = []
+    for (let i = 0; i < units.count; i++) {
+      units.getMatrixAt(i, m)
+      p.setFromMatrixPosition(m).applyMatrix4(units.matrixWorld)
+      if (pillars.some((c: number) => Math.abs(p.x - c) < 0.1 + 1e-4)) continue
+      if (gone.some((g) => p.x > g.x0 + 1e-4 && p.x < g.x1 - 1e-4 && p.y > g.y0 + 1e-4 && p.y < g.y1 - 1e-4)) hanging.push([+p.x.toFixed(3), +p.y.toFixed(3)])
+    }
+    expect(hanging).toEqual([])
+    follower.dispose()
+  })
+
   it('a second grenade somewhere else on the wall cuts a second hole, and shots still knock bricks out beside them', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })
