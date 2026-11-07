@@ -2,7 +2,7 @@ import { createAudioRecorder } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
 
 import { GAME_SFX_BANK, TRANSMISSION_LOSS, createAudioEngine, createOcclusionTracker, hitLossDb, occlusionState, totalLossDb } from '../src'
-import type { OcclusionHit, OcclusionQuery } from '../src'
+import type { OcclusionHit, OcclusionQuery, SoundBank, SoundRecipe } from '../src'
 
 const BRICK: OcclusionHit = { material: 'brick', thickness: 0.12 }
 
@@ -56,6 +56,20 @@ describe('transmission loss', () => {
     expect(hitLossDb({ lossDb: 12, material: 'brick' })).toBe(12)
   })
 
+  it('only an omitted thickness means the reference one: zero is no wall, and a hair is next to nothing', () => {
+    expect(hitLossDb({ material: 'brick' })).toBe(42)
+    expect(hitLossDb({ material: 'brick', thickness: 0 })).toBe(0)
+    expect(hitLossDb({ material: 'brick', thickness: -1 })).toBe(0)
+    expect(hitLossDb({ material: 'brick', thickness: 1e-9 })).toBe(0)
+  })
+
+  it('every destruction material has a transmission loss', () => {
+    for (const material of ['green_wood', 'cactus', 'flesh_fruit', 'wax', 'asphalt', 'sand', 'gravel', 'turf', 'mud', 'clay', 'snow', 'cobble', 'paver']) {
+      expect(TRANSMISSION_LOSS[material], material).toBeDefined()
+      expect(hitLossDb({ material, thickness: TRANSMISSION_LOSS[material]?.thickness as number })).toBeGreaterThan(0)
+    }
+  })
+
   it('the lowpass closes by one decade per cutoffDbPerDecade and never below the floor', () => {
     expect(occlusionState(30).cutoff).toBeCloseTo(2000, 3)
     expect(occlusionState(30, { cutoffDbPerDecade: 15, minCutoff: 100 }).cutoff).toBeCloseTo(200, 3)
@@ -72,7 +86,7 @@ describe('the occlusion tracker', () => {
     const tracker = createOcclusionTracker({ query })
     const state = tracker.add({ id: 1, source: [-5, 0, 0], level: 1, listener: [5, 0, 0], now: 0 })
     expect(queries).toBe(1)
-    expect(state.lossDb).toBeGreaterThanOrEqual(40)
+    expect(state?.lossDb).toBeGreaterThanOrEqual(40)
   })
 
   it('re-queries at the interval, not every frame, and only when the listener moved', () => {
@@ -102,7 +116,10 @@ describe('the occlusion tracker', () => {
     let queries = 0
     const query: OcclusionQuery = (from, to) => (queries++, wallAt(0)(from, to))
     const tracker = createOcclusionTracker({ query, interval: 0.1, budget: 2 })
-    for (let id = 1; id <= 6; id++) tracker.add({ id, source: [-5, 0, 0], level: 1, listener: [5, 0, 0], now: id * 0.001 })
+    for (let id = 1; id <= 6; id++) {
+      tracker.add({ id, source: [-5, 0, 0], level: 1, listener: [5, 0, 0], now: id * 0.001 })
+      tracker.update([5, 0, 0], id * 0.001)
+    }
     queries = 0
     const first = tracker.update([-3, 0, 0], 1)
     expect(queries).toBe(2)
@@ -157,20 +174,83 @@ describe('the engine with an occlusion setup', () => {
     expect(filters(recorder)).toBe(filters(plain))
   })
 
+  it('a voice with no falloff (an interface sound, the own footsteps) is not occluded, a recipe with one is', () => {
+    const pistol = createAudioEngine({ banks: [GAME_SFX_BANK] }).registry.sound('sfx_pistol') as SoundRecipe
+    const own: SoundBank = { id: 'own', sounds: [{ ...pistol, id: 'ui_tick', bus: 'ui', falloff: { model: 'none' } }] }
+    const { engine } = engineWith(() => [BRICK], { banks: [GAME_SFX_BANK, own] })
+    engine.play('ui_tick', { position: [10, 0, 0] })
+    expect(engine.occludedVoices()).toEqual([])
+    engine.play('sfx_pistol', { position: [10, 0, 0] })
+    expect(engine.occludedVoices()).toHaveLength(1)
+  })
+
+  it('the reverb send goes through the same lowpass and gain as the dry sound', () => {
+    const pistol = createAudioEngine({ banks: [GAME_SFX_BANK] }).registry.sound('sfx_pistol') as SoundRecipe
+    const wetted: SoundBank = { id: 'wetted', sounds: [{ ...pistol, id: 'wet_pistol', layers: pistol.layers.map((layer) => ({ ...layer, wet: 0.4 })) }] }
+    const withReverb = (occluded: boolean) => {
+      const recorder = createAudioRecorder()
+      const engine = createAudioEngine({ banks: [GAME_SFX_BANK, wetted], mix: 'art_scene', createContext: () => recorder.context, ...(occluded ? { occlusion: { query: () => [BRICK] } } : {}) })
+      engine.play('wet_pistol', { position: [10, 0, 0] })
+      return filters(recorder)
+    }
+    expect(withReverb(true) - withReverb(false)).toBe(2)
+  })
+
+  it('keeps the nodes of a stopped voice for a moment, so its fade is not cut, and drops them after', () => {
+    const { engine, recorder } = engineWith(() => [BRICK])
+    const disconnects = () => recorder.trace().entries.filter((entry) => entry.op === 'disconnect').length
+    const voice = engine.play('sfx_pistol', { position: [10, 0, 0] })
+    voice?.stop()
+    recorder.setTime(0.05)
+    engine.setListener({ position: [0, 0, 0], yaw: 0 })
+    expect(engine.occludedVoices()).toEqual([])
+    expect(disconnects()).toBe(0)
+    recorder.setTime(0.3)
+    engine.setListener({ position: [0, 0, 1], yaw: 0 })
+    expect(disconnects()).toBeGreaterThan(0)
+  })
+
   it('ramps a change in the loss with a target approach, never a jump, and queries within the budget as the listener moves', () => {
     let walls: OcclusionHit[] = [BRICK]
     let queries = 0
-    const { engine, recorder } = engineWith(() => (queries++, walls), { occlusion: { query: () => (queries++, walls), interval: 0, budget: 1 } })
+    const { engine, recorder } = engineWith(() => [], { occlusion: { query: () => (queries++, walls), interval: 0, budget: 2 } })
     engine.play('sfx_pistol', { position: [10, 0, 0] })
     engine.play('sfx_pistol', { position: [11, 0, 0] })
+    engine.setListener({ position: [0, 0, 0], yaw: 0 })
     queries = 0
     walls = []
     engine.setListener({ position: [1, 0, 0], yaw: 0 })
-    expect(queries).toBe(1)
-    const text = JSON.stringify(recorder.trace().entries)
-    expect(text).toContain('setTargetAtTime')
-    engine.setListener({ position: [2, 0, 0], yaw: 0 })
     expect(queries).toBe(2)
+    expect(JSON.stringify(recorder.trace().entries)).toContain('setTargetAtTime')
     expect(engine.occludedVoices().map((voice) => voice.lossDb)).toEqual([0, 0])
+  })
+})
+
+describe('the occlusion tracker, budget and copies', () => {
+  const brick = () => [BRICK]
+
+  it('a burst of new voices costs the budget, not one query each: the rest wait and are measured first at the next update', () => {
+    let queries = 0
+    const tracker = createOcclusionTracker({ query: () => (queries++, brick()), budget: 3, interval: 0.1 })
+    const states = [1, 2, 3, 4, 5, 6].map((id) => tracker.add({ id, source: [0, 0, 0], level: 1, listener: [0, 0, 5], now: 0 }))
+    expect(queries).toBe(3)
+    expect(states.map((state) => state !== undefined)).toEqual([true, true, true, false, false, false])
+    const changes = tracker.update([0, 0, 5], 0.01)
+    expect(queries).toBe(6)
+    expect(changes.map((change) => [change.id, change.immediate])).toEqual([[4, true], [5, true], [6, true]])
+    expect(tracker.state(6)?.lossDb).toBeGreaterThanOrEqual(40)
+  })
+
+  it('keeps its own copy of the positions it was given', () => {
+    const query = (_from: readonly number[], to: readonly number[]) => (to[0] === 0 ? [BRICK] : [])
+    const tracker = createOcclusionTracker({ query, interval: 0 })
+    const ears: [number, number, number] = [0, 0, 5]
+    const source: [number, number, number] = [0, 0, 0]
+    tracker.add({ id: 1, source, level: 1, listener: ears, now: 0 })
+    ears[0] = 9
+    source[0] = 9
+    const changes = tracker.update([9, 0, 5], 1)
+    expect(changes).toHaveLength(1)
+    expect(changes[0]?.state.lossDb).toBe(0)
   })
 })

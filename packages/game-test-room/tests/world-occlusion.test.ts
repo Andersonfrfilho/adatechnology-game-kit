@@ -61,3 +61,31 @@ describe('createWorldOcclusion over a plain slab', () => {
     expect(query([0, 1, 0], [0, 1, 0])).toEqual([])
   })
 })
+
+describe('createWorldOcclusion with layers side by side', () => {
+  type Layer = { readonly part: string; readonly material: string; readonly near: number; readonly far: number }
+  const layers: readonly Layer[] = [
+    { part: 'brick', material: 'brick', near: -5, far: -5.12 },
+    { part: 'glass', material: 'glass', near: -5.122, far: -5.126 },
+  ]
+  const world = {
+    raycast(origin: [number, number, number], direction: [number, number, number], maxDistance = Infinity) {
+      let best: { part: string; distance: number } | null = null
+      for (const layer of layers) {
+        const entering = direction[2] < 0 ? layer.near : layer.far
+        const distance = (entering - origin[2]) / direction[2]
+        if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
+        best = { part: layer.part, distance }
+      }
+      return best && { object: 'wall', part: best.part, point: [origin[0], origin[1], origin[2] + direction[2] * best.distance] as [number, number, number], normal: [0, 0, 1] as [number, number, number], distance: best.distance }
+    },
+    part: (_object: string, part: string) => ({ material: layers.find((layer) => layer.part === part)?.material ?? 'brick' }),
+  }
+
+  it('does not step over a thin layer right behind the one before it', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const hits = createWorldOcclusion(world)([0, 1, 0], [0, 1, -10])
+    expect(hits.map((hit) => hit.material)).toEqual(['brick', 'glass'])
+    expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
+  })
+})

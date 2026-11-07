@@ -9,7 +9,7 @@ export type OcclusionWorld = {
 export type WorldOcclusionOptions = {
   /** Most things counted on one path. Default 6. */
   readonly maxHits?: number
-  /** Metres stepped past a hit before looking for the next. Default 0.02. */
+  /** Metres stepped past a hit before looking for the next: small enough not to skip a thin layer behind it (4 mm glass). Default 0.001. */
   readonly step?: number
 }
 
@@ -22,7 +22,9 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
     const start = along(origin, direction, travelled)
     const hit = world.raycast(start, direction, length - travelled)
     if (!hit) break
-    found.push({ ...hit, distance: travelled + hit.distance })
+    const last = found.at(-1)
+    // standing just inside a part that answers with a hit of its own (an impl's surface), not a second layer
+    if (!(last && last.object === hit.object && last.part === hit.part)) found.push({ ...hit, distance: travelled + hit.distance })
     travelled += hit.distance + step
   }
   return found
@@ -34,7 +36,7 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
  */
 export function createWorldOcclusion(world: OcclusionWorld, options: WorldOcclusionOptions = {}): OcclusionQuery {
   const maxHits = options.maxHits ?? 6
-  const step = options.step ?? 0.02
+  const step = options.step ?? 0.001
   return (from, to) => {
     const dx = to[0] - from[0]
     const dy = to[1] - from[1]

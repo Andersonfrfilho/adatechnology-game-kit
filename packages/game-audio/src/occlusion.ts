@@ -3,7 +3,7 @@ import type { Vec3 } from '@adatechnology/game-contracts'
 /** One thing between the source and the listener: a material (and how thick), or a loss the host already knows. */
 export type OcclusionHit = {
   readonly material?: string
-  /** Metres along the path; scales the table's loss by the mass law (6 dB per doubling). Omit for the table's own thickness. */
+  /** Metres along the path; scales the table's loss by the mass law (6 dB per doubling). Omit (`undefined`) for the table's own thickness; 0 or less is no loss. */
   readonly thickness?: number
   /** Decibels this hit takes out, overriding the table. 0 is an open doorway. */
   readonly lossDb?: number
@@ -43,6 +43,20 @@ export const TRANSMISSION_LOSS: Readonly<Record<string, MaterialTransmission>> =
   paper: { lossDb: 1, thickness: 0.001 },
   foam: { lossDb: 4, thickness: 0.05 },
   foliage: { lossDb: 6, thickness: 0.5 },
+  // mass-law estimates from the density of each (a wall of kg/m² the brick's or the concrete's, less the porosity of the soft ones)
+  green_wood: { lossDb: 18, thickness: 0.05 },
+  cactus: { lossDb: 8, thickness: 0.2 },
+  flesh_fruit: { lossDb: 6, thickness: 0.1 },
+  wax: { lossDb: 6, thickness: 0.01 },
+  asphalt: { lossDb: 45, thickness: 0.1 },
+  sand: { lossDb: 50, thickness: 0.3 },
+  gravel: { lossDb: 48, thickness: 0.3 },
+  turf: { lossDb: 25, thickness: 0.1 },
+  mud: { lossDb: 48, thickness: 0.2 },
+  clay: { lossDb: 50, thickness: 0.2 },
+  snow: { lossDb: 30, thickness: 0.3 },
+  cobble: { lossDb: 46, thickness: 0.1 },
+  paver: { lossDb: 43, thickness: 0.06 },
 }
 
 export type OcclusionSetup = {
@@ -90,7 +104,8 @@ export function hitLossDb(hit: OcclusionHit, setup: Pick<OcclusionSetup, 'materi
   if (hit.lossDb !== undefined) return Math.max(0, hit.lossDb)
   const entry = hit.material === undefined ? undefined : (setup.materials?.[hit.material] ?? TRANSMISSION_LOSS[hit.material])
   if (!entry) return Math.max(0, setup.unknownLossDb ?? OCCLUSION_DEFAULTS.unknownLossDb)
-  if (hit.thickness === undefined || hit.thickness <= 0 || entry.thickness <= 0) return entry.lossDb
+  if (hit.thickness === undefined || entry.thickness <= 0) return entry.lossDb
+  if (hit.thickness <= 0) return 0
   return Math.max(0, entry.lossDb + MASS_LAW_DB_PER_DOUBLING * Math.log2(hit.thickness / entry.thickness))
 }
 

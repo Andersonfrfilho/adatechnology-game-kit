@@ -107,7 +107,7 @@ export { OCCLUSION_DEFAULTS, TRANSMISSION_LOSS, hitLossDb, occlusionState, total
 export type { MaterialTransmission, OcclusionHit, OcclusionQuery, OcclusionSetup, OcclusionState } from './occlusion'
 export { createOcclusionTracker } from './occlusion-tracker'
 export type { OcclusionAdd, OcclusionChange, OcclusionTracker } from './occlusion-tracker'
-export type { OccludedVoiceInfo } from './webaudio/engine-occlusion'
+export type { OccludedVoiceInfo, OcclusionRoute } from './webaudio/engine-occlusion'
 export { createAudioEngine, limiterCurve } from './webaudio/engine'
 export type { AudioChannel, AudioEngine, AudioEngineOptions, AudioStats, PlayOptions, SampleOptions, VoiceHandle, VoiceStartEvent } from './webaudio/engine'
 export { createSampleStore, fetchLoader, inlineLoader } from './webaudio/sample-store'
