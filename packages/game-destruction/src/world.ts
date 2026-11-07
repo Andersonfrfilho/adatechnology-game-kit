@@ -6,7 +6,7 @@ import { cellsOutside, cellsWithin, clumpUnits, marksInBox, planeAxes, unitGrid,
 import type { LocalHole, UnitCell } from './breach'
 import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
 import type { LayerRT } from './layers'
-import { bendBar, clipBarsToBox, clipBarsToDisc, isMember, REBAR_COVER, rebarBars, rebarMass } from './rebar'
+import { bendBar, clipBarsToBox, clipBarsToDisc, clipBarsToVolume, isMember, memberStirrups, REBAR_COVER, rebarBars, rebarMass } from './rebar'
 import {
   GRAVITY, bendGeometry, blastImpulse, isReinforced, isSlender, elasticEnergy, impulseEnergy, isFlexural, lineLoad, momentOfEnergy, resolveFlexure, resolveMasonry, sectionMoments, sectionWidth,
   spanMoment, spanOf, tensionSteel,
@@ -92,9 +92,9 @@ const BREACH_BLAST_FACTOR = 6
 const BREACH_AREA = 0.25
 /** Metres of reach per cube root of kilojoule for a blast to open a breach. */
 const BREACH_BLAST_REACH = 0.12
-/** Share of the breach reach within which a blast cuts a reinforced member through (a charge at or near contact strips it to its cage); further off it blows its concrete out block by block. */
+/** Share of the breach reach within which a blast cuts a reinforced wall through (a charge at or near contact opens a breach); further off it blows its concrete out block by block. */
 const MEMBER_CUT_REACH = 0.5
-/** Share of its hit points a blast further off than the cut reach leaves a reinforced member with: the wave loads it whole, so it weakens it only where it knocks the concrete out (`blastUnits`). */
+/** Share of its hit points a blast leaves a reinforced member with: the wave loads it whole, so it weakens it only where it knocks the concrete out (`blastUnits`). */
 const FAR_MEMBER_HP_FLOOR = 0.25
 /**
  * What a wall resists a blast with, J/m² (joules per kg that knock a unit out, times its density and thickness), for which `BREACH_BLAST_REACH` holds:
@@ -2911,6 +2911,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     const bow = clamp(((p.st.stress ?? 0) - 1) / 0.5, 0, 1)
     if (bow > 0) bars = bars.flatMap((bar, i) => bendBar(bar, p.thin, bow * BAR_BOW, i))
+    // a member's stirrups show where its concrete went, around the bars they hold
+    const stirrups = memberStirrups(p.dims)
+    if (stirrups.length > 0 && bars.length > 0) {
+      if (p.st.stripped) bars = [...bars, ...stirrups]
+      else for (const box of [...(p.st.chipped ?? []), ...(p.rt.bared ?? [])]) bars.push(...clipBarsToVolume(stirrups, box.center, box.size))
+    }
     emit({ ...base(o, src), type: 'expose', part: p.spec.id, bars: worldBars(o, p, bars) })
   }
 
@@ -3087,7 +3093,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const grid = gridOf(p)
     const worn = (p.rt.chips ??= {})
     for (const i of out) worn[i] = -1
-    const loose = unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))
+    // laid units over a gap come down; cast concrete (a pillar, a beam: its units are of its own material) is one piece held by its bars, and stands
+    const cast = p.spec.units?.mortar === p.spec.material
+    const loose = cast ? [] : unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))
     for (const i of loose) worn[i] = -1
     const blown = out.map((i) => grid[i]!), fallen = loose.map((i) => grid[i]!)
     const volume = (cells: readonly UnitCell[]) => cells.reduce((sum, cell) => sum + cell.size[0] * cell.size[1] * cell.size[2], 0)
@@ -3644,9 +3652,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
     const breachReach = BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)
-    const farMember = Boolean(p.spec.reinforcement && p.spec.units) && dist > MEMBER_CUT_REACH * breachReach
-    // a member out of the cut reach keeps its floor of hit points and is not severed at one band: the wave loads the whole of it
-    const dealt = farMember
+    // a reinforced member (a pillar, a beam) is never blown away whole: its stirrups confine the core and its bars hold it, so a blast keeps its floor of hit
+    // points and takes the concrete out only where it reaches (a charge at contact cuts a band a couple of sections tall, the bars and stirrups bared there)
+    const caged = Boolean(p.spec.reinforcement && p.spec.units)
+    // a reinforced wall out of the cut reach is not severed at one band either: it keeps its floor and loses the concrete the blast reaches
+    const member = caged && (isMember(p.dims) || dist > MEMBER_CUT_REACH * breachReach)
+    const dealt = member
       ? applyDamage(o, p, Math.min(amount, Math.max(0, p.st.hp - p.st.maxHp * FAR_MEMBER_HP_FLOOR)), 'explosive', null, null, Ein * 0.3, 40, src)
       : applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
     res.damage += dealt
@@ -3656,9 +3667,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       blastPanel(o, p, point, energy, src)
       if (!isLost(p)) blastUnits(o, p, wp, energy, dist, src)
     }
-    // a reinforced member (a pillar, a beam) is cut through only by a charge at or near contact; further off the blast takes the concrete it reaches
-    // out of it, block by block, the bars show there and the cage holds the member to what it rests on
-    else if (farMember) blastUnits(o, p, wp, energy, dist, src)
+    // the blast takes the concrete it reaches out of a member block by block; the bars show there and the cage holds the member to what it rests on
+    else if (member) blastUnits(o, p, wp, energy, dist, src)
     else if (dist <= breachReach) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
   }
