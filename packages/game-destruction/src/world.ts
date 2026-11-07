@@ -171,6 +171,8 @@ const SETTLEMENT_CRACK_SPACING = 0.4
 const SETTLEMENT_CRACK_OPENING = 0.3
 const MIN_CRACK_WIDTH = 0.0005
 const MAX_CRACK_WIDTH = 0.02
+/** Metres from a settled pillar into the wall beside it where the crack it opens starts. */
+const BESIDE_CRACK_OFFSET = 0.8
 /** One unit of a wall whose spec draws none: a ceramic brick of 19 x 9 cm with its joint. */
 const BRICK_STEP: readonly [number, number] = [0.2, 0.1]
 /** Rings of parts that follow a settled bearer: what rests on it, and what hangs on that. */
@@ -1593,7 +1595,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** What a bearer does over the voids under it: settles, bridges them, breaks over one of them (`opened`), or loses its support. */
-  type Bearing = { status: 'settled' | 'bridged' | 'opened' | 'unsupported'; failed: Array<VoidRun & { free?: 'start' | 'end' }>; cracks: Array<{ at: number; top: boolean }> }
+  type Bearing = {
+    status: 'settled' | 'bridged' | 'opened' | 'unsupported'
+    failed: Array<VoidRun & { free?: 'start' | 'end' }>
+    cracks: Array<{ at: number; top: boolean }>
+    /** A slab that broke over a hole: the disc (object-local centre, radius) that falls out of it. */
+    hole?: { center: Vec3; radius: number }
+  }
 
   /**
    * A ground beam over voids (`judgeBeam`): every void, the ground between them taking the reactions, the pillars cast with it. Over a void it bridges
@@ -1668,7 +1676,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a slab that lost most of its ground goes whatever it spans
     if (fp.share > 1 - 1 / soilCfg.safety) return { status: 'unsupported', failed: [], cracks: [] }
     const cracks = verdict.cracks || !verdict.holds ? [{ at: vb.long[0], top: true }, { at: vb.long[1], top: true }] : []
-    return { status: verdict.holds ? 'bridged' : 'opened', failed: verdict.holds ? [] : [{ start: vb.long[0], end: vb.long[1] }], cracks }
+    if (verdict.holds) return { status: 'bridged', failed: [], cracks }
+    // the disc over the hole breaks out of the slab; one as wide as the slab leaves nothing to hold
+    const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
+    const crossing = fp.long === 0 ? 2 : 0
+    const center: Vec3 = [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2]
+    center[fp.long] = box.min[fp.long] + (vb.long[0] + vb.long[1]) / 2
+    center[crossing] = box.min[crossing] + (vb.across[0] + vb.across[1]) / 2
+    const radius = Math.max(vb.long[1] - vb.long[0], vb.across[1] - vb.across[0]) / 2
+    if (2 * radius >= Math.min(box.max[0] - box.min[0], box.max[2] - box.min[2])) return { status: 'unsupported', failed: [], cracks: [] }
+    return { status: 'opened', failed: [{ start: vb.long[0], end: vb.long[1] }], cracks, hole: { center, radius } }
   }
 
   /** How the bearer takes the loss (see `Bearing`). */
@@ -1747,6 +1764,65 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const other = axis === 0 ? 2 : 0
     centre[other] = q.pos[other]
     knockOutUnits(o, q, toWorld(o.st.position, o.st.rotation, centre), 0, out, src)
+    // an arch needs a rise of (span / 2) tan 60 within the wall; past its height the wall opens to the top, and what rests on it spans the opening
+    const height = aabbOf(q.spec.shape, q.pos, q.q).max[1] - bottom
+    const corbel = height / Math.tan(ARCH_ANGLE)
+    const opening = free ? span[1] - span[0] - corbel : 2 * half - 2 * corbel
+    if (opening > 0) spanOpening(o, q, opening, !!free, src)
+  }
+
+  /**
+   * What rests on a wall that opened to its top over a void (the bond beam, a slab) spans the opening between the masonry left on each side (or reaches
+   * over it from one side, where the wall broke off at a free end): `w L² / 8` (`w L² / 2`) within the characteristic moment of its section and `L` within
+   * `bridgeSpanDepth` depths (half for an overhang). What does not hold breaks and comes down (`hingeDrop`).
+   */
+  const spanOpening = (o: ObjRT, q: PartRT, opening: number, overhang: boolean, src?: string) => {
+    const qi = o.idx.get(q.spec.id)!
+    for (const j of [...(o.byPart.get(q.spec.id) ?? [])]) {
+      const ri = j.ia === qi ? j.ib : j.ia
+      const r = o.parts[ri]!
+      if (j.st.open || isLost(r) || restsOn(o, j, ri) !== qi || !r.structural) continue
+      const sec = sectionOfBearer(r)
+      // a slab that also rests on other walls and pillars carries over the gap to them (the structure is solved again); a beam along the wall bridges it
+      if (sec && !sec.g.member && !restsOnlyOn(o, ri, qi)) continue
+      const load = sec ? lineLoad(sec.g, r.st.load ?? r.st.mass) : 0
+      const moment = ((load * opening * opening) / (overhang ? 2 : 8)) * structureSafety
+      const reach = (overhang ? 0.5 : 1) * groundCfg.bridgeSpanDepth * (sec?.section.h ?? 0)
+      if (!sec || opening > reach || moment > sec.resists) {
+        hingeDrop(o, r, src)
+        continue
+      }
+      if (moment > sec.m.cracking && !r.st.cracked) {
+        r.st.cracked = true
+        addCrack(o, r, partXf(o, r).c, rotateVec(o.st.rotation, [0, -1, 0]), sec.section.h, src)
+      }
+    }
+  }
+
+  /**
+   * A slab that broke over a hole: the disc over it comes out (as fragments that fall into the hole) and leaves an opening raycasts, shots and what
+   * stands on the slab pass through (`PartState.opening`), as a breach does in a wall.
+   */
+  const breakOut = (o: ObjRT, p: PartRT, hole: { center: Vec3; radius: number }, src?: string) => {
+    if (p.st.opening) return
+    const lc = toLocal(p.pos, p.q, hole.center)
+    lc[p.thin] = 0
+    const worldCenter = toWorld(o.st.position, o.st.rotation, toWorld(p.pos, p.q, lc))
+    const [u, v] = planeAxes(p.thin)
+    const worn = p.rt.chips
+    const cells = cellsWithin(gridOf(p).filter((_, i) => worn?.[i] !== -1), p.thin, lc, hole.radius)
+    const removed = Math.min(p.st.mass, (p.st.mass * Math.PI * hole.radius * hole.radius) / (p.dims[u] * p.dims[v]))
+    const fragments = cellFragments(o, p, cells, worldCenter, [0, -1, 0], 0.5, removed, 'g')
+    p.st.mass = Math.max(0, p.st.mass - removed)
+    p.rt.removed = (p.rt.removed ?? 0) + removed
+    p.st.opening = { center: objLocal(o, worldCenter), radius: hole.radius }
+    markDamaged(p)
+    if (p.staged) {
+      setStage(o, p, 1, {}, src)
+      setStage(o, p, 2, { opening: { center: worldCenter, radius: hole.radius }, fragments }, src)
+    } else emit({ ...base(o, src), type: 'stage', part: p.spec.id, stage: 2, opening: { center: worldCenter, radius: hole.radius }, fragments })
+    debris(o, p, p.mat.breakDebris, worldCenter, [0, 1, 0], 14, 2, src)
+    if (p.spec.reinforcement) exposeRebar(o, p, src)
   }
 
   /**
@@ -1804,7 +1880,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (restsOn(o, j, qi) !== b.i) {
         // joined beside the part that went down (a wall against its pillar): it climbs toward that part
         const side: Vec3 = [j.pos[0] - q.pos[0], 0, j.pos[2] - q.pos[2]]
-        distort(o, q, (b.p.st.subsidence ?? 0) / DISTORTION_BASE, j.pos, side, src)
+        // what it went down more than the wall did where they meet
+        const own = q.st.settlement ? settlementAt(q.st.settlement, j.pos) : 0
+        // the crack opens in the panel next to the pillar, not behind it, and climbs toward it
+        const reach = Math.hypot(side[0], side[2]) || 1
+        const from: Vec3 = [j.pos[0] - (side[0] / reach) * BESIDE_CRACK_OFFSET, j.pos[1], j.pos[2] - (side[2] / reach) * BESIDE_CRACK_OFFSET]
+        distort(o, q, Math.abs((b.p.st.subsidence ?? 0) - own) / DISTORTION_BASE, from, side, src)
         continue
       }
       const over = aabbOf(q.spec.shape, q.pos, q.q)
@@ -1892,6 +1973,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const { b, fp } of order) {
       const bearing = bearLoss(o, b, fp, standing)
       if (bearing.status === 'unsupported') standing.delete(b.i)
+      if (bearing.status !== 'unsupported' && !bendGeometry(b.p.spec).member) {
+        // a slab does not bend along one line: it goes down as a whole by what the ground it keeps slumped (the hole is cut out of it, not drawn sunk)
+        const kept = fp.slices.filter((slice) => !slice.void)
+        const flat = kept.length ? kept.reduce((sum, slice) => sum + slice.drop, 0) / kept.length : 0
+        fp.slices.forEach((slice) => (slice.drop = flat))
+        fp.drop = flat
+      }
       if (bearing.status !== 'unsupported' && bendGeometry(b.p.spec).member) {
         // a beam bends smoothly over the slump: what stands on it (and cracks) follows that, not each handful of soil
         const smooth = smoothProfile(fp.slices.map((slice) => slice.drop), fp.step, BEAM_SPREAD)
@@ -1908,6 +1996,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       } else {
         crackBearer(o, b, fp, bearing, src)
         if (bearing.failed.length && openOver(o, b, fp, bearing.failed, opened, src)) lost = true
+        if (bearing.hole) breakOut(o, b.p, bearing.hole, src)
         settled.push({ b, fp })
         settle(o, b, fp)
       }

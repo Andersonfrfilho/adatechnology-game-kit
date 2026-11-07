@@ -312,4 +312,54 @@ describe('the structural review: load paths over a void', () => {
     expect(GROUND_LOSS_DEFAULTS.bearingCrackDistortion).toBeCloseTo(1 / 500, 9)
     expect(GROUND_LOSS_DEFAULTS.bearingDamageDistortion).toBeCloseTo(1 / 300, 9)
   })
+
+  it('an overhang is weighed against the ground behind it up to the next void, not all the ground under the beam', () => {
+    const verdict = judgeBeam(flags(0.1, [0, 1.4], [2.6, 3.6]), 0.1, beam)
+    expect(verdict.runs[0]!.kind).toBe('cantilever')
+    expect(verdict.tips).toBe(true)
+  })
+})
+
+/** The wall of S1 with real units, pillars where the void may be wider, a 15 x 20 cm bond beam. */
+const wallOfUnits = (pillars: readonly number[]): DestructibleSpec => {
+  const spec = wallOnPillars()
+  const wall = spec.parts.find((p) => p.id === 'wall')!
+  wall.units = { size: [0.19, 0.09, 0.14], bond: 'running', mortar: 'mortar' }
+  spec.parts = spec.parts.map((p) => (/^p\d$/.test(p.id) ? { ...p, position: [pillars[Number(p.id[1])]!, p.position[1], p.position[2]] as [number, number, number] } : p))
+  return spec
+}
+
+describe('the structural re-review: arches and slabs over a void', () => {
+  it('a void short enough for an arch in the wall: the units under it fall, the bond beam keeps its bearing', () => {
+    const r = probe(wallOfUnits([0, 2.9, 7.1, 10]), { x: 5, z: 0, radius: 2.05, depth: 1, source: 'crater' })
+    expect(r.chipped).toContain('wall')
+    expect(r.fallen).toEqual([])
+    expect(r.standing).toContain('cinta')
+  })
+
+  it('a void too wide for an arch in a 2.8 m wall opens it to the top: the 15 x 20 bond beam cannot span the opening and comes down', () => {
+    const r = probe(wallOfUnits([0, 3.5, 6.5, 10]), { x: 5, z: 0, radius: 3.6, depth: 1.5, source: 'crater' })
+    expect(r.status('gb')).toBe('opened')
+    expect(r.fallen).toEqual(expect.arrayContaining(['cinta', 'p1', 'p2']))
+    for (const part of ['gb', 'wall', 'p0', 'p3']) expect(r.standing).toContain(part)
+    expect(r.floating).toEqual([])
+  })
+
+  it('a slab on grade that breaks over a hole loses the disc over it: a ray over the hole does not meet the slab', () => {
+    const world = createDestruction({ seed: 3 })
+    const id = world.add(slabOnGrade())
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+    world.groundLoss({ x: 4, z: 3, radius: 1.5, depth: 2, source: 'crater' })
+    runFor(world, 5)
+    const slab = world.part(id, 'slab')!
+    expect(slab.opening?.radius).toBeGreaterThan(1)
+    expect(ofType(events, 'stage').some((e) => e.part === 'slab' && e.opening && (e.fragments?.length ?? 0) > 0)).toBe(true)
+    for (const at of [[4, 3, 2.2], [3, 3, 3], [4.8, 3, 3.5]] as const) expect(world.raycast([...at], [0, -1, 0], 10)?.part).not.toBe('slab')
+    // away from the hole the slab is still there, and it is not drawn sunk over the hole
+    expect(Math.hypot(0.5 - slab.opening!.center[0], 0.5 - slab.opening!.center[2])).toBeGreaterThan(slab.opening!.radius)
+    expect(slab.status).not.toBe('collapsed')
+    const drops = slab.settlement?.drop ?? [0]
+    expect(Math.max(...drops) - Math.min(...drops)).toBeLessThan(1e-9)
+  })
 })

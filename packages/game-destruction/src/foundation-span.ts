@@ -118,14 +118,15 @@ export function mergeRuns(runs: readonly VoidRun[], check: BeamCheck): VoidRun[]
  * Each void under a ground beam, judged: between supports (ground or a pillar on each side) a simply supported span, `w L² / 8`, holding while `L` is
  * at most `spanDepth` depths and the moment is within what the section resists; reaching an end with no pillar there, a cantilever, `w c² / 2`, at most
  * half that span, and only while the ground left under the beam is at least as long as the overhang (the resultant of a uniform load stays over its
- * support) or a pillar holds its root. A cantilever that fails breaks off at its root when the beam is balanced or held there, and tips the whole beam
+ * support: the stretch of ground behind it, up to the next void) or a pillar holds its root. A cantilever that fails breaks off at its root when the beam is balanced or held there, and tips the whole beam
  * in when it is not. A void that takes the whole beam leaves nothing to hold.
  */
 export function judgeBeam(flags: readonly boolean[], step: number, check: BeamCheck): BeamVerdict {
   const merged = mergeRuns(voidRuns(flags, step), check)
   const runs = splitAtPillars(merged, check.pillars)
-  const voided = merged.reduce((sum, run) => sum + run.end - run.start, 0)
-  const ground = check.length - voided
+  // the ground behind an overhang: the stretch from its root to the next void (or the end), not every stretch under the beam
+  const behind = (run: VoidRun, fromStart: boolean): number =>
+    fromStart ? (merged.find((m) => m.start >= run.end - 1e-9)?.start ?? check.length) - run.end : run.start - ([...merged].reverse().find((m) => m.end <= run.start + 1e-9)?.end ?? 0)
   const verdicts: RunVerdict[] = []
   let tips = false
   for (const run of runs) {
@@ -141,7 +142,7 @@ export function judgeBeam(flags: readonly boolean[], step: number, check: BeamCh
     const moment = (cantilever ? (check.load * span * span) / 2 : (check.load * span * span) / 8) * check.loadFactor
     const reach = cantilever ? (check.spanDepth * check.depth) / 2 : check.spanDepth * check.depth
     // an overhang whose weight stands past the ground left, with no pillar at its root, takes the beam over with it
-    const balanced = !cantilever || span <= ground
+    const balanced = !cantilever || span <= behind(run, freeStart)
     const rooted = cantilever && pillarNear(check.pillars, freeStart ? run.end : run.start)
     // the far end cast on into a beam still on the ground holds the rest down
     const held = cantilever && !!check.continuous?.[freeStart ? 1 : 0]
