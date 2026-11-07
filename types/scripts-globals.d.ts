@@ -417,6 +417,9 @@ declare global {
     __soundCalls: { readonly type: string; readonly id?: string; readonly wall: number; readonly [field: string]: unknown }[]
     __soundRecording?: { rec: MediaRecorder; chunks: Blob[]; ctx: BaseAudioContext; startedWall: number; startedCtx: number }
     __frames: number
+    // What the casing level probe (`examples/test-room/sound-casing-levels.mjs`) records on the page
+    __blocks: { at: number; peak: number; rms: number }[]
+    __ctx: BaseAudioContext
     // What the room's end-to-end test (`examples/test-room/test.mjs`) keeps on the page
     C: TestRoomCloseUps
     __pump: TestRoomPumpRun
