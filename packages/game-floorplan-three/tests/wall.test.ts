@@ -155,6 +155,30 @@ describe('wallPiece', () => {
     follower.dispose()
   })
 
+  it('a rocket that brings down a bay throws bricks and clumps of a few with flakes of their plaster, not slabs', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    world.add(piece.spec, { id: 'target' })
+    const events: DestructionEvent[] = []
+    world.on('*', (e) => events.push(e))
+    world.explode([0, 1.4, 0.3], 200000, 16, 'test')
+    const thrown = events.flatMap((e) => (e.type === 'chip' && e.part === 'wall_0_0' ? e.fragments : []))
+    const masonry = thrown.filter((f) => f.material === 'brick'), flakes = thrown.filter((f) => f.material === 'plaster')
+    // the bay between the pillars: 3.1 m by 2.8 m, about 400 bricks
+    expect(masonry.length).toBeGreaterThan(40)
+    // a clump is a brick or a few still held by their mortar (three bricks along, three courses up at most): never a slab of the bay
+    for (const f of masonry) {
+      expect(Math.max(f.size[0], f.size[1])).toBeLessThan(0.75)
+      expect(f.size[0] * f.size[1]).toBeLessThan(0.18)
+    }
+    expect(flakes.length).toBeGreaterThan(8)
+    for (const f of flakes) expect(Math.min(...f.size)).toBeCloseTo(0.02, 3)
+    // the mass thrown is the mass of the masonry that came out (2.8 m by 3.1 m by 13 cm of brick at 1900 kg/m³ is about 2 t, less the pillar faces)
+    const mass = masonry.reduce((sum, f) => sum + f.mass, 0)
+    expect(mass).toBeGreaterThan(800)
+    expect(mass).toBeLessThan(2600)
+  })
+
   it('a second grenade somewhere else on the wall cuts a second hole, and shots still knock bricks out beside them', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })

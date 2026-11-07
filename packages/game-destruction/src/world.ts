@@ -2,7 +2,7 @@ import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
-import { cellsOutside, cellsWithin, clumpCells, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
+import { cellsOutside, cellsWithin, clumpUnits, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
 import type { LocalHole, UnitCell } from './breach'
 import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
 import type { LayerRT } from './layers'
@@ -141,6 +141,9 @@ const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
+/** Face area (m²) of plaster per flake it breaks into when the units under it are knocked out, and the most flakes one blow throws. */
+const PLASTER_FLAKE_AREA = 0.25
+const MAX_PLASTER_FLAKES = 24
 /** Joules per kilogram of a masonry unit that knock it out of its wall (a 4 kg brick: two 9 mm rounds, one rifle round). */
 const CHIP_ENERGY = 200
 /** Share of a hit's energy the units next to the one hit take, at the edge of the unit hit (falls to 0 at the hit's radius). */
@@ -461,6 +464,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   for (const m of options.materials ?? []) materials.set(m.id, m)
   const ambient = options.ambientC ?? 20
   const maxFragments = options.maxFragments ?? 24
+  /** Pieces the units a blow knocks out of a wall make: a bay of bricks comes out as bricks and clumps of a few, not as a handful of slabs. */
+  const unitClumps = maxFragments * UNIT_FRAGMENT_FACTOR
+  const fallenClumps = Math.max(2, Math.round(unitClumps / 4))
   const maxDents = options.maxDents ?? 24
   const maxHoles = options.maxHoles ?? 32
   const fireSpread = options.fireSpread ?? 0.6
@@ -2057,6 +2063,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const unitsOf = (p: PartRT) => p.spec.units ?? { size: [p.mat.fragmentSize?.[1] ?? 0.2, p.mat.fragmentSize?.[1] ?? 0.2, p.thickness] as Vec3, bond: 'stack' as const }
 
+  /** The length and height of a unit of the part's courses, as its grid lays them (merged units when the wall is too big for one cell a brick). */
+  const unitSpan = (p: PartRT): [number, number] => {
+    const [u, v] = planeAxes(p.thin)
+    const first = gridOf(p)[0]
+    const size = unitsOf(p).size
+    return first && first.size[u] > size[0] + 1e-6 ? [first.size[u], first.size[v]] : [Math.min(size[0], p.dims[u]), Math.min(size[1], p.dims[v])]
+  }
+
   const FRAGMENT_SHAPE = { shatter: 'shard', splinter: 'splinter', tear: 'scrap' } as const
 
   /**
@@ -2082,6 +2096,42 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}), ...(inner ? { inner } : {}),
       }
     })
+  }
+
+  /**
+   * The plaster on the units a blow knocked out: it does not stay on the bricks, it breaks off in flakes a few centimetres across that fly with them
+   * (one flake per `PLASTER_FLAKE_AREA` m² of face, at most `MAX_PLASTER_FLAKES`), from each face the plaster is on.
+   */
+  const plasterFlakes = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, speed: number, tag: string): Fragment[] => {
+    const layer = p.layers.find((l) => l.mat.fracture === 'crumble')
+    if (!layer || cells.length === 0) return []
+    const { c, q } = partXf(o, p)
+    const [u, v] = planeAxes(p.thin)
+    const faces = layer.def.faces === 'both' ? [1, -1] : [layer.def.faces === '+' ? 1 : -1]
+    const area = cells.reduce((sum, cell) => sum + cell.size[u] * cell.size[v], 0) * faces.length
+    const count = Math.min(MAX_PLASTER_FLAKES, Math.ceil(area / PLASTER_FLAKE_AREA))
+    const out: Fragment[] = []
+    for (let i = 0; i < count; i++) {
+      const cell = cells[Math.floor(rnd() * cells.length)]!
+      const face = faces[i % faces.length]!
+      const local: Vec3 = [cell.center[0], cell.center[1], cell.center[2]]
+      local[u] += (rnd() - 0.5) * cell.size[u]
+      local[v] += (rnd() - 0.5) * cell.size[v]
+      local[p.thin] = cell.center[p.thin] + face * (cell.size[p.thin] / 2 - layer.def.thickness / 2)
+      const size: Vec3 = [0, 0, 0]
+      size[u] = 0.04 + 0.12 * rnd()
+      size[v] = 0.03 + 0.09 * rnd()
+      size[p.thin] = layer.def.thickness
+      const cw = toWorld(c, q, local)
+      const out0 = vec.normalize(vec.sub(cw, hitW), [0, 1, 0])
+      const k = speed * (0.4 + 0.9 * rnd())
+      out.push({
+        id: `${p.spec.id}#${tag}${i}`, part: p.spec.id, material: layer.def.material, shape: 'scrap', center: cw, size, rotation: q,
+        velocity: [out0[0] * k, out0[1] * k + 0.5 * rnd(), out0[2] * k], angularVelocity: [(rnd() - 0.5) * 12, (rnd() - 0.5) * 12, (rnd() - 0.5) * 12],
+        mass: layer.mat.density * size[0] * size[1] * size[2],
+      })
+    }
+    return out
   }
 
   const worldBars = (o: ObjRT, p: PartRT, bars: ReadonlyArray<readonly [Vec3, Vec3]>): Array<[Vec3, Vec3]> => {
@@ -2517,14 +2567,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const blownMass = Math.min(p.st.mass, p.mat.density * volume(blown))
     const fallenMass = Math.min(p.st.mass - blownMass, p.mat.density * volume(fallen))
     const speed = clamp(Math.sqrt((2 * energy * 0.02) / Math.max(blownMass, 0.05)), 1, 12)
-    // what flies is clumps of units still held by their mortar, at most `maxFragments` of them (and a quarter of that for what comes down), so a blast
-    // costs a renderer about as many pieces as a fracture does
+    // what flies is bricks and clumps of a few still held by their mortar (at most `unitClumps` of them, a quarter of that for what comes down), and
+    // flakes of the plaster that was on them; never slabs of a whole bay
     const { c, q } = partXf(o, p)
     const chipped = (p.st.chipped ??= [])
     const tag = `x${chipped.length}_`
     const fragments = [
-      ...cellFragments(o, p, clumpCells(blown, p.thin, maxFragments), wp, null, speed, blownMass, tag, true),
-      ...(fallen.length > 0 ? cellFragments(o, p, clumpCells(fallen, p.thin, Math.max(2, Math.round(maxFragments / 4))), wp, null, 0.3, fallenMass, `${tag}f`, true) : []),
+      ...cellFragments(o, p, clumpUnits(blown, p.thin, unitSpan(p), unitClumps), wp, null, speed, blownMass, tag, true),
+      ...(fallen.length > 0 ? cellFragments(o, p, clumpUnits(fallen, p.thin, unitSpan(p), fallenClumps), wp, null, 0.3, fallenMass, `${tag}f`, true) : []),
+      ...plasterFlakes(o, p, blown, wp, speed, `${tag}p`),
     ]
     const cells = [...blown, ...fallen]
     const holes = localHolesOf(p)
@@ -2580,7 +2631,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     }
     const center = toWorld(c, q, [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2])
-    const fragments = cellFragments(o, p, clumpCells(fallen, p.thin, Math.max(2, Math.round(maxFragments / 4))), vec.add(center, [0, 1, 0]), null, 0.3, mass, `u${chipped.length}_`, true)
+    const fragments = cellFragments(o, p, clumpUnits(fallen, p.thin, unitSpan(p), fallenClumps), vec.add(center, [0, 1, 0]), null, 0.3, mass, `u${chipped.length}_`, true)
     const holes = localHolesOf(p)
     p.st.holes = p.st.holes.filter((_, k) => !fallen.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length > 0))
     for (const cell of fallen) chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
