@@ -2,6 +2,8 @@ import type { Hit } from '@adatechnology/game-contracts'
 import { DEFAULT_BAR_DIAMETER, DEFAULT_BAR_YIELD_JOULES, DEFAULT_BAR_YIELD_PA, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
 import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
 import { createDebrisStore } from './debris'
+import { lossOf, SLIDE_LOSS_MIN_LOWERING, tallyLowered, voidUnder } from './ground-loss'
+import type { HeightGrid, LossTally } from './ground-loss'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
 import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
@@ -167,6 +169,19 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const deformListeners = new Set<(region: TerrainRegion) => void>()
   const emitDeform = (x: number, z: number, radius: number): void => {
     for (const listener of deformListeners) listener({ x, z, radius })
+  }
+  const grid: HeightGrid = { x0, z0, cellSize, stride, columns, rows, dug }
+  /** Sand that is still sliding: what it lowered so far, told once it comes to rest. */
+  const slideTally: LossTally = new Map()
+  const emitGroundLoss = (tally: LossTally, source: string, minLowering: number): void => {
+    if (!options.onGroundLoss) return
+    const loss = lossOf(grid, tally, { source, minLowering, shape: source === 'slab' ? 'flat' : 'bowl' })
+    if (loss) options.onGroundLoss(loss)
+  }
+  /** Lowers a vertex to `depth` under the untouched surface, counting it in `tally`. */
+  const dropVertex = (index: number, depth: number, tally: LossTally): void => {
+    tallyLowered(tally, index, depth - dug[index]!)
+    dug[index] = depth
   }
 
   const chunkOfVertex = (column: number, row: number): number => Math.min(chunksZ - 1, Math.floor(row / chunkCells)) * chunksX + Math.min(chunksX - 1, Math.floor(column / chunkCells))
@@ -346,7 +361,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
   const isSoftExposed = (index: number): boolean => materials.get(stratumAtDepth(profileList[profileIndex[index]!]!, dug[index]!).stratum.material)!.reposeDegrees !== undefined
 
   /** Digs a lobed bowl into the height field, heaps the rim share around it. */
-  function stampBowl(x: number, z: number, radius: number, depth: number, rimVolume: number): void {
+  function stampBowl(x: number, z: number, radius: number, depth: number, rimVolume: number, lossSource: string | null = 'crater'): void {
     const reach = radius * RIM_REACH
     const column0 = clampIndex(Math.floor((x - reach - x0) / cellSize), columns)
     const column1 = clampIndex(Math.ceil((x + reach - x0) / cellSize), columns)
@@ -368,12 +383,15 @@ export function createTerrain(options: TerrainOptions): Terrain {
       }
     }
     const cellArea = cellSize * cellSize
+    const tally: LossTally = new Map()
     for (let row = row0; row <= row1; row++) {
       for (let column = column0; column <= column1; column++) {
         const q = shapeOf(x0 + column * cellSize, z0 + row * cellSize)
         const index = row * stride + column
         if (q < 1) {
+          const before = dug[index]!
           removeFromVertex(index, depth * (1 - q * q) * (0.92 + random() * 0.16))
+          tallyLowered(tally, index, dug[index]! - before)
           sliding.add(index)
           touchVertex(column, row)
         } else if (q < RIM_REACH && rimWeight > 0) {
@@ -386,6 +404,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     marks.removeInside(x, z, radius)
     clearDecalsInside(x, z, radius)
     emitDeform(x, z, reach)
+    if (lossSource) emitGroundLoss(tally, lossSource, 0)
   }
 
   function throwPieces(spec: { x: number; y: number; z: number; volume: number; material: TerrainMaterial; energy: number; direction?: readonly number[]; quota: number; bowlRadius: number; blow: TerrainBlow }): void {
@@ -486,6 +505,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
     let collapsed = loadBars(blow, spec.energy, x, z, profile)
     const crack = crackAround(blow, spec.energy, x, z, start.loose > 0 ? undefined : firstMaterial)
     const extra = { ...(crack ? { crack } : {}), ...(breached ? { breached } : {}), ...waterResult }
+    // a weight that lands flat (its contact as wide as the dent) presses the ground down: it packs the soil under it, it does not take it away
+    const pressed = spec.contactRadius !== undefined && spec.contactRadius >= radius
     if (radius <= 0) return { point, radius: 0, depth: 0, totalDepth: columnAt(x, z).depth, removed: [], exposed: start.material, atLimit: start.remaining <= 1e-6, rebarExposed: rebarShowing(profile, start.depth), collapsed, fine: true, ...extra }
 
     // a rigid floor cannot go down any more where it is already deep: the next blow breaks the edge of the hole, so a hole in a slab opens as it deepens
@@ -496,7 +517,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     if (fine) depositMark({ x, z, radius, depth: carved, blow, profile, cap: maxDepthOfProfile(profile) })
     else {
       const rimShare = materials.get(removed[0]!.material)!.rimShare ?? 0
-      stampBowl(x, z, radius, carved, volumeTotal * rimShare)
+      stampBowl(x, z, radius, carved, volumeTotal * rimShare, pressed ? null : 'crater')
     }
     if (firstMaterial.cracks) addDecal({ kind: 'crack', x, z, radius: Math.max(CRACK_MIN_RADIUS, radius * firstMaterial.cracks), angle: random() * 6.283, material: firstMaterial.id })
     // under water what comes off stays a cloud at the bottom, unless a blast opens the water
@@ -615,6 +636,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     const row1 = clampIndex(Math.ceil((z + reach - z0) / cellSize), rows)
     const limit = maxDepthOfProfile(profile)
     let collapsed = false
+    const tally: LossTally = new Map()
     for (let row = row0; row <= row1; row++) {
       for (let column = column0; column <= column1; column++) {
         const index = row * stride + column
@@ -624,18 +646,19 @@ export function createTerrain(options: TerrainOptions): Terrain {
         barBend[index] = barBend[index]! + (energy / yieldJoules) * (1 - q * q)
         touchVertex(column, row)
         if (barBend[index]! >= 1 && profile.drop !== undefined && dug[index]! >= limit * COLLAPSE_DEPTH_SHARE && dug[index]! < limit + profile.drop) {
-          dug[index] = limit + profile.drop
+          dropVertex(index, limit + profile.drop, tally)
           collapsed = true
         }
       }
     }
-    if (collapsed) giveWay({ x, z, reach, profile })
+    if (collapsed) giveWay({ x, z, reach, profile, tally })
+    emitGroundLoss(tally, 'slab', 0)
     return collapsed
   }
 
   /** What gave way takes down what was already bending around it, and what stood there must look again. */
-  function giveWay(spec: { x: number; z: number; reach: number; profile: TerrainProfile }): void {
-    const { x, z, reach, profile } = spec
+  function giveWay(spec: { x: number; z: number; reach: number; profile: TerrainProfile; tally: LossTally }): void {
+    const { x, z, reach, profile, tally } = spec
     emitDeform(x, z, reach)
     if (profile.drop === undefined) return
     const limit = maxDepthOfProfile(profile)
@@ -647,7 +670,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       for (let column = column0; column <= column1; column++) {
         const index = row * stride + column
         if (barBend[index]! >= COLLAPSE_SPREAD_BEND && dug[index]! < limit + profile.drop) {
-          dug[index] = limit + profile.drop
+          dropVertex(index, limit + profile.drop, tally)
           touchVertex(column, row)
         }
       }
@@ -679,6 +702,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       if (spread) touched.push({ load, ...spread })
     }
     let opened = false
+    const tally: LossTally = new Map()
     for (const [index, bend] of bends) {
       if (barBend[index]! >= bend) continue
       barBend[index] = bend
@@ -688,11 +712,12 @@ export function createTerrain(options: TerrainOptions): Terrain {
       const profile = profileList[profileIndex[index]!]!
       const limit = maxDepthOfProfile(profile)
       if (bend >= 1 && profile.drop !== undefined && dug[index]! >= limit * COLLAPSE_DEPTH_SHARE && dug[index]! < limit + profile.drop) {
-        dug[index] = limit + profile.drop
+        dropVertex(index, limit + profile.drop, tally)
         opened = true
       }
     }
-    if (opened) for (const { load, reach, profile } of touched) giveWay({ x: load.x, z: load.z, reach, profile })
+    if (opened) for (const { load, reach, profile } of touched) giveWay({ x: load.x, z: load.z, reach, profile, tally })
+    emitGroundLoss(tally, 'slab', 0)
     return opened
   }
 
@@ -866,10 +891,14 @@ export function createTerrain(options: TerrainOptions): Terrain {
         if (nextColumn < 0 || nextRow < 0 || nextColumn > columns || nextRow > rows) continue
         const excess = height - vertexHeight(nextColumn, nextRow) - slope
         if (excess <= SLIDE_EPSILON) continue
+        const before = dug[index]!
         const moved = removeFromVertex(index, excess * SLIDE_SHARE)
         if (moved <= 0) continue
+        tallyLowered(slideTally, index, dug[index]! - before)
         const next = nextRow * stride + nextColumn
+        const nextBefore = dug[next]!
         addToVertex(next, moved, isSoftExposed(next))
+        tallyLowered(slideTally, next, dug[next]! - nextBefore)
         sliding.add(index)
         sliding.add(next)
         touchVertex(column, row)
@@ -883,6 +912,10 @@ export function createTerrain(options: TerrainOptions): Terrain {
       }
     }
     if (minX <= maxX) emitDeform((minX + maxX) / 2, (minZ + maxZ) / 2, Math.hypot(maxX - minX, maxZ - minZ) / 2 + cellSize * 2)
+    if (sliding.size === 0 && slideTally.size > 0) {
+      emitGroundLoss(slideTally, 'slide', SLIDE_LOSS_MIN_LOWERING)
+      slideTally.clear()
+    }
   }
 
   /** A piece of soft ground joins the height where it stops, so that what is thrown out piles up and can be walked on. */
@@ -975,6 +1008,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     unitDamage.clear()
     debrisStore.clear()
     sliding.clear()
+    slideTally.clear()
     burning.clear()
     // the craters and clods draw from here: a reset ground digs the same as a new one
     random = createRandom(seed)
@@ -1028,6 +1062,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     burn,
     applyHit,
     bear: bearAll,
+    voidUnder: (x, z, radius) => voidUnder(grid, { x, z, radius }),
     onDeform(listener) {
       deformListeners.add(listener)
       return () => deformListeners.delete(listener)

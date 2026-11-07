@@ -1,4 +1,4 @@
-import type { GroundLayout, Hit } from '@adatechnology/game-contracts'
+import type { GroundLayout, GroundLoss, Hit } from '@adatechnology/game-contracts'
 
 export type { GroundLayout, GroundZone } from '@adatechnology/game-contracts'
 
@@ -194,6 +194,21 @@ export interface TerrainOptions {
   /** Metres per second squared. */
   readonly gravity?: number
   readonly seed?: number
+  /**
+   * Ground taken away from under the surface: a crater (`crater`), a slab that gave way into the void under it (`slab`), sand that slid off a slope
+   * (`slide`). The host hands it to what stands there (`DestructionWorld.groundLoss`), so foundations over it settle or lose their support.
+   */
+  readonly onGroundLoss?: (loss: GroundLoss) => void
+}
+
+/** What is missing under a disc of the ground (`Terrain.voidUnder`). */
+export interface TerrainVoid {
+  /** Metres under the untouched surface at the deepest vertex. */
+  readonly depth: number
+  /** Metres under the untouched surface, averaged over the disc. */
+  readonly mean: number
+  /** 0..1, the share of the disc's vertices that are void (dug at least `VOID_MIN_DEPTH`). */
+  readonly fraction: number
 }
 
 /** A fine mark: a bullet pock or a chip, smaller than a cell. It grows with the blows on it until it is dug into the height field. */
@@ -374,6 +389,8 @@ export interface Terrain {
   applyHit(hit: Hit): TerrainBlowResult | null
   /** What stands still on the ground now. Where it stands over bare bars they sag under it, and past what they hold they give way; a slab over a void then opens. True when it opened. */
   bear(loads: readonly TerrainLoad[]): boolean
+  /** How much ground is missing under the disc (x, z, radius), measured from the untouched surface. */
+  voidUnder(x: number, z: number, radius: number): TerrainVoid
   /** Height a foot stands at: the ground less what it sinks in. */
   footAt(x: number, z: number): number
   /** What is left of the walking speed here, 0..1. */

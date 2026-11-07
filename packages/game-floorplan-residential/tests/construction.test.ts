@@ -1,5 +1,7 @@
 import { engine } from '@adatechnology/game-floorplan'
-import { register as registerStructure, validateSpec, validateStructure } from '@adatechnology/game-floorplan-structure'
+import { createDestruction } from '@adatechnology/game-destruction'
+import type { DestructionEvent } from '@adatechnology/game-destruction'
+import { GROUND, register as registerStructure, toDestructibleSpec, validateSpec, validateStructure } from '@adatechnology/game-floorplan-structure'
 import type { SourceDoor, Structure } from '@adatechnology/game-floorplan-structure'
 import { describe, expect, it } from 'vitest'
 
@@ -26,4 +28,33 @@ describe('residential construction', () => {
   it('residential_tower: the frame, core and piles reach the ground with NBR 6118 sections', () => {
     expect(validateSpec(buildResidentialTower({ storeys: 20 }))).toEqual([])
   }, 180000)
+
+  /**
+   * A crater under a corner of the house (3 m in radius, 2 m deep): the ground beams, the pillars and the wall pillars over it lose their support and fall, and
+   * the load path solved again leaves nothing standing without one (no part floats, CLAUDE.md §12).
+   */
+  for (const id of HOUSES) {
+    it(`${id}: a crater under a corner leaves no unsupported part standing`, () => {
+      const plan = engine.generate(id, { seed: 1 }) as unknown as { structure: Structure; doors: SourceDoor[] }
+      expect(validateStructure(plan.structure, { doors: plan.doors })).toEqual([])
+      const spec = toDestructibleSpec(plan.structure, { wallDetail: 'coarse' })
+      // what bears on the ground: the ground beams of a house, the pillars of a building
+      const onGround = new Set((spec.joints ?? []).filter((joint) => joint.b === GROUND).map((joint) => joint.a))
+      const bearers = spec.parts.filter((part) => onGround.has(part.id))
+      expect(bearers.length).toBeGreaterThan(0)
+      const world = createDestruction({ seed: 1 })
+      const house = world.add(spec)
+      const events: DestructionEvent[] = []
+      world.on('*', (event) => events.push(event))
+      const bearing = new Set(world.state(house)!.parts.filter((part) => (part.stress ?? 0) > 0).map((part) => part.id))
+      world.groundLoss({ x: Math.min(...bearers.map((part) => part.position[0])), z: Math.min(...bearers.map((part) => part.position[2])), radius: 3, depth: 2, source: 'crater' })
+      for (let t = 0; t < 30; t += 0.1) world.update(0.1)
+      const parts = world.state(house)!.parts
+      const standing = parts.filter((part) => part.status !== 'broken' && part.status !== 'collapsed')
+      expect(events.some((event) => event.type === 'subside' && event.status === 'unsupported')).toBe(true)
+      expect(events.some((event) => event.type === 'collapse')).toBe(true)
+      expect(standing.filter((part) => bearing.has(part.id) && !((part.stress ?? 0) > 0)).map((part) => part.id)).toEqual([])
+      expect(standing.length).toBeGreaterThan(parts.length / 2)
+    })
+  }
 })

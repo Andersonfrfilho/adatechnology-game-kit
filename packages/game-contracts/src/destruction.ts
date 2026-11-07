@@ -226,6 +226,24 @@ export interface SoilProfile {
   footingWidth?: number
 }
 
+/**
+ * Ground taken away from under the world (a crater, a slab that gave way into a void, sand that slid): a disc in world space centred on `x`/`z`
+ * where the ground is up to `depth` metres below where it was. Objects whose foundations bear on that disc settle, crack or lose their support.
+ */
+export interface GroundLoss {
+  /** World metres. */
+  x: number
+  z: number
+  /** Metres (horizontal radius of the disc). */
+  radius: number
+  /** Metres below the untouched surface at the deepest point. */
+  depth: number
+  /** Cubic metres of ground taken away. */
+  removed?: number
+  /** What took it away (`crater`, `slab`, `slide`...). */
+  source?: string
+}
+
 /** Size of one masonry unit in the part's axes (`size[2]` is along the part's thinnest axis, clamped to it) and how rows are laid. */
 export interface PartUnits {
   size: Vec3
@@ -572,6 +590,8 @@ export interface PartState {
   chipped?: Array<{ center: Vec3; size: Vec3 }>
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
+  /** Metres the part went down because the ground under it was taken away (`DestructionWorld.groundLoss`): draw it that much lower. */
+  subsidence?: number
 }
 
 /** How the ground under an object is holding (`DestructibleSpec.soil`). */
@@ -735,6 +755,12 @@ export type DestructionEvent =
    * what the weight resists, or the sway of the top grew. Throttled to once per 0.5 s. `direction` is the wind's, in world space.
    */
   | (EventBase & { type: 'sway'; sway: number; peak: number; drift: number; overturn: number; frequency: number; direction: Vec3; status: WindState['status'] })
+  /**
+   * Ground was taken away under a part that bears on it (`DestructionWorld.groundLoss`): `share` (0..1) of its footprint lost its support and it went
+   * down by `drop` metres in all (`PartState.subsidence`). `settled`: what is left of the ground carries it; `bridged`: a ground beam spans the void and
+   * holds; `unsupported`: it lost its support and what has no other load path falls (a `collapse` follows). `point` is over the void, in world space.
+   */
+  | (EventBase & { type: 'subside'; part: string; drop: number; share: number; point: Vec3; status: 'settled' | 'bridged' | 'unsupported' })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
   /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²); `layer` -1 is a crater in the bare core (`MaterialHit.crater`). */

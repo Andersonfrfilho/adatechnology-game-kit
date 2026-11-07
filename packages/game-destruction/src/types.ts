@@ -30,6 +30,7 @@ import type {
   RayHit,
   HitResult,
   Hit,
+  GroundLoss,
   SoilProfile,
   StructureRole,
   ToolKind,
@@ -81,6 +82,7 @@ export type {
   Reinforcement,
   TensionRebar,
   PileSpec,
+  GroundLoss,
   SoilLayer,
   SoilProfile,
   SoilState,
@@ -310,6 +312,33 @@ export interface SoilDef {
   pile?: { tipKPa?: number; skinKPa?: number }
 }
 
+/**
+ * What ground taken away under a building does to it (`DestructionWorld.groundLoss`). Every number has a default; see `GROUND_LOSS_DEFAULTS`. The soil
+ * under a footing bears through a zone that widens downward from the edge of the footing; a hole that cuts into that zone takes away its support there.
+ */
+export interface GroundLossOptions {
+  /** Metres under the surface a part that rests on the terrain bears at: the shallow footing of a pillar or a wall of a house (default 0.5). */
+  footingDepth?: number
+  /** Horizontal metres the bearing zone of a footing widens per metre down (default 1: the 45 degree spread a hole beside it must not cut into). */
+  spread?: number
+  /** Metres of support lost under a point of a footing past which the point bears on nothing (default 0.05). */
+  voidDepth?: number
+  /** Most a part sinks where the ground under it slumps before it hangs on what is around it, metres (default 0.05). */
+  maxSettlement?: number
+  /**
+   * Angular distortion (differential settlement over the distance between the points) at which the masonry over a footing cracks (default 1/300) and
+   * is damaged (default 1/150): the limits of Skempton & MacDonald (1956) and Bjerrum (1963) for walls of bricks and blocks.
+   */
+  crackDistortion?: number
+  damageDistortion?: number
+  /** Share of its hit points a masonry part loses past `damageDistortion` (default 0.3; it never breaks from this alone). */
+  distortionDamage?: number
+  /** Longest void a ground beam bridges, in beam depths (default 10: NBR 6118 sizes a beam's depth at about a tenth of its span). */
+  bridgeSpanDepth?: number
+  /** Tension steel ratio of a concrete ground beam whose spec carries no rebar (default 0.004: two 10 mm bars in a 15 x 30 cm beam). */
+  beamRebarRatio?: number
+}
+
 /** The soil model. Every number has a real default; see `SOIL_DEFAULTS`. */
 export interface SoilOptions {
   /** Extra or overriding soil classes (merged over `SOILS` by id). */
@@ -437,6 +466,8 @@ export interface DestructionOptions {
   }
   /** The ground under objects that have `DestructibleSpec.soil` (or `soil.site`): settlement, tilt, bearing failure and piles. See `SoilOptions`. */
   soil?: SoilOptions
+  /** What a crater, a slab that gave way or sand that slid under a building does to its foundations (`DestructionWorld.groundLoss`). See `GroundLossOptions`. */
+  groundLoss?: GroundLossOptions
   /**
    * The wind of the world on every structure (default none: no wind). A lateral load that grows with height, the core and the frame that resist it, the
    * sway of the top and tuned mass dampers. See `WindOptions`.
@@ -564,6 +595,12 @@ export interface DestructionWorld {
   blastReach(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[]; readonly shelter?: ShelterOptions }): number
   /** Cost of the last `explode`: parts in range of the broad phase (`partsTested`) and those whose bounding sphere the blast reached (`partsNear`). */
   blastProbe(): { partsTested: number; partsNear: number }
+  /**
+   * Ground was taken away under the world (a crater, a slab that gave way, sand that slid; `GroundLoss` of the contracts). The terrain reports it while a
+   * blast is being resolved, so it is queued and applied at the start of the next `update`: every object whose foundations bear over the disc settles,
+   * cracks or loses its support there (`subside` events), and what is left without a load path falls (`collapse`).
+   */
+  groundLoss(loss: GroundLoss): void
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
   /**
@@ -664,6 +701,8 @@ export interface PartRuntime {
   cutAt?: number
   /** Plastic rotation in radians a reinforced beam or slab took in bending (blasts add it up; `flexure.failRotationDeg` breaks it). */
   hinge?: number
+  /** Largest angular distortion the ground taken from under its support gave this part so far (`groundLoss`): it cracks again only past it. */
+  distortion?: number
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
@@ -674,6 +713,8 @@ export interface ObjectRuntime {
   collapsed?: string[]
   /** Permanent settlement of the soil under each footing cell or pile that yielded (`DestructibleSpec.soil`), metres. */
   soil?: Record<string, number>
+  /** Parts anchored in the spec that lost the ground under them (`groundLoss`): they no longer hold. */
+  unanchored?: string[]
   /** Sway of the top and of the tuned mass damper: `[x, v, y, w, peak]` (displacement and velocity of the building, of the damper, recorded peak). */
   wind?: [number, number, number, number, number]
 }

@@ -308,7 +308,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   // the floor is the terrain: 0 was the height of a flat floor, now a hole goes under it and a heap over it; a top (a table, a counter) answers only where there is one
   const defaultGround = options.ground ?? { surface: DEFAULT_PROFILE }
-  const terrain = createTerrain({ bounds: [-arenaSize, -arenaSize, arenaSize, arenaSize], cellSize: Math.max(TERRAIN_CELL, (2 * arenaSize) / TERRAIN_MAX_CELLS), layout: defaultGround, ...(options.terrainBudget ? { budget: options.terrainBudget } : {}) })
+  const terrain = createTerrain({ bounds: [-arenaSize, -arenaSize, arenaSize, arenaSize], cellSize: Math.max(TERRAIN_CELL, (2 * arenaSize) / TERRAIN_MAX_CELLS), layout: defaultGround, ...(options.terrainBudget ? { budget: options.terrainBudget } : {}),
+    // a crater, a slab that gave way or sand that slid takes the ground from under what stands there: the world settles, cracks or drops it
+    onGroundLoss: (loss) => world.groundLoss(loss) })
   const terrainView = createTerrainRenderer(THREE, { terrain })
   arena.group.add(terrainView.group)
   const groundAt = (x: number, z: number): number => {
