@@ -76,6 +76,11 @@ export interface ExplosiveDef {
   readonly fuse?: number
   /** Seconds from arming to the blast, sampled per throw between the two ends (a flashbang: 1.0 to 2.3 s from the lever). */
   readonly fuseRange?: readonly [number, number]
+  /**
+   * Metres the projectile flies before its fuze arms, sampled per shot between the two ends (the M406 40 mm grenade: 14 to 27 m, from the spin
+   * that unlocks the rotor). Short of it an impact is a dud. Absent: the launcher's `minArmDistance`.
+   */
+  readonly armRange?: readonly [number, number]
   /** Metres of safety fuse; with `burnRate` it gives the fuse in seconds, so a longer fuse builds a delayed trap. */
   readonly fuseLength?: number
   /** Seconds the safety fuse takes to burn one metre (about 131 s/m). */

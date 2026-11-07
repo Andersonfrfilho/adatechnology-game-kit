@@ -346,7 +346,6 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | explosoes-fogo/fire_crackle_05.ogg | https://freesound.org/people/YouMightLikeThis/sounds/785057/ | YouMightLikeThis | CC0 |
 | explosoes-fogo/fire_crackle_07.ogg | https://freesound.org/people/ahriik/sounds/508110/ | ahriik | CC0 |
 | explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 |
-| explosoes-fogo/fire_extinguish_01.ogg | https://freesound.org/people/tranzfusion/sounds/642961/ | tranzfusion | CC0 |
 | explosoes-fogo/fire_extinguish_02.ogg | https://freesound.org/people/Iamgiorgio/sounds/371839/ | Iamgiorgio | CC0 |
 | explosoes-fogo/fire_ignite_01.ogg | https://freesound.org/people/samararaine/sounds/186374/ | samararaine | CC0 |
 | explosoes-fogo/fire_ignite_02.ogg | https://freesound.org/people/hnhnh/sounds/244926/ | hnhnh | CC0 |
@@ -372,13 +371,18 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | explosoes-fogo/fire_pop_03.ogg | https://freesound.org/people/AntumDeluge/sounds/188038/ | AntumDeluge | CC0 |
 | explosoes-fogo/flamethrower_loop_01.ogg | https://opengameart.org/content/superpowers-assets-sound-effects | Pixel-boy / Sparklin Labs | CC0 |
 | explosoes-fogo/gas_leak_01.ogg | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 |
-| explosoes-fogo/gas_leak_01.ogg | https://freesound.org/people/henrikcederblad/sounds/615668/ | henrikcederblad | CC0 |
 | explosoes-fogo/molotov_break_ignite_01.ogg | https://freesound.org/people/craigsmith/sounds/675768/ | craigsmith | CC0 |
 | explosoes-fogo/molotov_break_ignite_02.ogg | https://freesound.org/people/craigsmith/sounds/483288/ | craigsmith | CC0 |
 | explosoes-fogo/rocket_motor_loop_01.ogg | https://freesound.org/people/qubodup/sounds/146770/ | qubodup | CC0 |
 | explosoes-fogo/rocket_motor_loop_02.ogg | https://freesound.org/people/Mozfoo/sounds/458377/ | Mozfoo | CC0 |
 | explosoes-fogo/rocket_motor_loop_03.ogg | https://freesound.org/people/Maxx222/sounds/446764/ | Maxx222 | CC0 |
 | impactos/ceramic_hit_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
+| impactos/clang_01.ogg | https://freesound.org/people/wilhellboy/sounds/351372/ | wilhellboy | CC0 |
+| impactos/clang_02.ogg | https://freesound.org/people/AardsReal/sounds/842171/ | AardsReal | CC0 |
+| impactos/clang_03.ogg | https://freesound.org/people/jasonLON/sounds/125404/ | jasonLON | CC0 |
+| impactos/clang_04.ogg | https://freesound.org/people/Anthousai/sounds/406562/ | Anthousai | CC0 |
+| impactos/clang_05.ogg | https://freesound.org/people/BenjaminNelan/sounds/410364/ | BenjaminNelan | CC0 |
+| impactos/clang_06.ogg | https://freesound.org/people/Joao_Janz/sounds/478679/ | Joao_Janz | CC0 |
 | impactos/concrete_block_drag_close_01.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/concrete_block_drag_close_02.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/concrete_block_drag_close_03.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
@@ -401,6 +405,17 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | impactos/crumble_close_03.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/crumble_close_04.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/crumble_close_05.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/fabric_hit_heavy_01.ogg | https://freesound.org/people/trinitrotoluenedev/sounds/728541/ | trinitrotoluenedev | CC0 |
+| impactos/fabric_hit_heavy_02.ogg | https://freesound.org/people/saturdaysoundguy/sounds/388035/ | saturdaysoundguy | CC0 |
+| impactos/fabric_hit_light_01.ogg | https://freesound.org/people/gobbe57/sounds/746684/ | gobbe57 | CC0 |
+| impactos/fabric_hit_light_02.ogg | https://freesound.org/people/JonasTisell/sounds/496187/ | JonasTisell | CC0 |
+| impactos/fabric_hit_medium_01.ogg | https://freesound.org/people/KoimeMatsuchiya/sounds/872227/ | KoimeMatsuchiya | CC0 |
+| impactos/fabric_hit_medium_02.ogg | https://freesound.org/people/ImadeThisAcc/sounds/582114/ | ImadeThisAcc | CC0 |
+| impactos/fabric_rip_01.ogg | https://freesound.org/people/CraigSnedeker/sounds/221680/ | CraigSnedeker | CC0 |
+| impactos/fabric_rip_02.ogg | https://freesound.org/people/Johnny2810/sounds/507756/ | Johnny2810 | CC0 |
+| impactos/fabric_rip_03.ogg | https://freesound.org/people/melle_teich/sounds/565970/ | melle_teich | CC0 |
+| impactos/fabric_rip_04.ogg | https://freesound.org/people/MrFossy/sounds/590318/ | MrFossy | CC0 |
+| impactos/fabric_rip_05.ogg | https://freesound.org/people/mht23SD/sounds/707331/ | mht23SD | CC0 |
 | impactos/flesh_fruit_splat_close_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | impactos/flesh_fruit_splat_close_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | impactos/flesh_fruit_splat_close_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
@@ -468,6 +483,12 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | impactos/masonry_bullet_close_26.ogg | https://freesound.org/s/150837/ | toxicwafflezz ("Bullet_Impact_1"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone2.ogg`) | CC-BY |
 | impactos/masonry_bullet_close_27.ogg | https://freesound.org/s/423107/ | OGsoundFX ("Guns & Explosions Album - Bullet Impact 14.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone3.ogg`) | CC-BY |
 | impactos/masonry_bullet_close_28.ogg | https://freesound.org/s/423106/ | OGsoundFX ("Guns & Explosions Album - Bullet Impact 21.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/stone4.ogg`) | CC-BY |
+| impactos/metal_blade_01.ogg | https://freesound.org/people/qubodup/sounds/743259/ | qubodup | CC0 |
+| impactos/metal_blade_02.ogg | https://freesound.org/people/qubodup/sounds/743258/ | qubodup | CC0 |
+| impactos/metal_blade_03.ogg | https://freesound.org/people/dslrguide/sounds/321485/ | dslrguide | CC0 |
+| impactos/metal_blade_04.ogg | https://freesound.org/people/JohnBuhr/sounds/326868/ | JohnBuhr | CC0 |
+| impactos/metal_blade_05.ogg | https://freesound.org/people/loudernoises/sounds/334169/ | loudernoises | CC0 |
+| impactos/metal_blade_06.ogg | https://freesound.org/people/TheWandermiles/sounds/673329/ | TheWandermiles | CC0 |
 | impactos/metal_blunt_close_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_blunt_close_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | impactos/metal_blunt_close_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -516,11 +537,12 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | impactos/metal_fall_close_06.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_07.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_08.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| impactos/metal_fall_close_08.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| impactos/metal_fall_close_09.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_09.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
 | impactos/metal_fall_close_10.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
-| impactos/metal_fall_close_10.ogg | https://opengameart.org/content/cc0-audio-uploader-rubberduck | rubberduck | CC0 |
+| impactos/metal_ping_01.ogg | https://freesound.org/people/JarredGibb/sounds/217459/ | JarredGibb | CC0 |
+| impactos/metal_ping_02.ogg | https://freesound.org/people/JarredGibb/sounds/217460/ | JarredGibb | CC0 |
+| impactos/metal_ping_03.ogg | https://freesound.org/people/JarredGibb/sounds/217461/ | JarredGibb | CC0 |
+| impactos/metal_ping_04.ogg | https://freesound.org/people/JarredGibb/sounds/217462/ | JarredGibb | CC0 |
 | impactos/metal_thin_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/metal_thin_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/metal_thin_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -583,6 +605,11 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | impactos/soil_bullet_close_21.ogg | https://freesound.org/s/319222/ | worthahep88 ("Single Rock hit Dirt.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt1.ogg`) | CC0 |
 | impactos/soil_bullet_close_22.ogg | https://freesound.org/s/319229/ | worthahep88 ("Single Rock hit dirt 2.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt2.ogg`) | CC0 |
 | impactos/soil_bullet_close_23.ogg | https://freesound.org/s/789388/ | modusmogulus ("Bullet impact ground (subsonic) SFX"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/dirt3.ogg`) | CC0 |
+| impactos/wood_blade_01.ogg | https://freesound.org/people/Evcy/sounds/583272/ | Evcy | CC0 |
+| impactos/wood_blade_02.ogg | https://freesound.org/people/birdswkaren/sounds/712103/ | birdswkaren | CC0 |
+| impactos/wood_blade_03.ogg | https://freesound.org/people/MioMeg/sounds/707023/ | MioMeg | CC0 |
+| impactos/wood_blade_04.ogg | https://freesound.org/people/egomassive/sounds/536736/ | egomassive | CC0 |
+| impactos/wood_blade_05.ogg | https://freesound.org/people/Matislav/sounds/521452/ | Matislav | CC0 |
 | impactos/wood_blunt_heavy_close_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_blunt_heavy_close_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | impactos/wood_blunt_heavy_close_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
@@ -628,6 +655,18 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | impactos/wood_hit_close_25.ogg | https://freesound.org/s/506718/ | jackyyang09 ("Wooden Hit"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood5.ogg`) | CC0 |
 | impactos/wood_hit_close_26.ogg | https://freesound.org/s/178744/ | jorickhoofd ("Kick wood"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood6.ogg`) | CC-BY |
 | impactos/wood_hit_close_27.ogg | https://freesound.org/s/345679/ | VitaWrap ("wood hit.wav"; cut, mono, normalised in ACupOfChicory/NTM-Reimagined-Arms `bullet/hit/wood7.ogg`) | CC-BY |
+| impactos/wood_splinter_heavy_01.ogg | https://freesound.org/people/utsuru/sounds/183450/ | utsuru | CC0 |
+| impactos/wood_splinter_heavy_02.ogg | https://freesound.org/people/DeltaCode/sounds/667652/ | DeltaCode | CC0 |
+| impactos/wood_splinter_heavy_03.ogg | https://freesound.org/people/DeltaCode/sounds/667653/ | DeltaCode | CC0 |
+| impactos/wood_splinter_heavy_04.ogg | https://freesound.org/people/Veridiansunrise/sounds/177045/ | Veridiansunrise | CC0 |
+| impactos/wood_splinter_light_01.ogg | https://freesound.org/people/alegemaate/sounds/364699/ | alegemaate | CC0 |
+| impactos/wood_splinter_light_02.ogg | https://freesound.org/people/martian/sounds/251464/ | martian | CC0 |
+| impactos/wood_splinter_light_03.ogg | https://freesound.org/people/qubodup/sounds/822567/ | qubodup | CC0 |
+| impactos/wood_splinter_light_04.ogg | https://freesound.org/people/Glitchedtones/sounds/322416/ | Glitchedtones | CC0 |
+| impactos/wood_splinter_medium_01.ogg | https://freesound.org/people/utsuru/sounds/183451/ | utsuru | CC0 |
+| impactos/wood_splinter_medium_02.ogg | https://freesound.org/people/utsuru/sounds/183453/ | utsuru | CC0 |
+| impactos/wood_splinter_medium_03.ogg | https://freesound.org/people/JappeHallunken/sounds/501302/ | JappeHallunken | CC0 |
+| impactos/wood_splinter_medium_04.ogg | https://freesound.org/people/CAT-FOX_ALEX/sounds/875588/ | CAT-FOX_ALEX | CC0 |
 | itens-portas/backpack_open_shut_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/backpack_open_shut_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/backpack_open_shut_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
@@ -704,7 +743,6 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | itens-portas/item_drop_metal_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_drop_metal_04.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_drop_metal_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
-| itens-portas/item_drop_metal_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_drop_paper_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/item_pickup_coins_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/item_pickup_coins_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
@@ -733,8 +771,6 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | itens-portas/lever_pull_05.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/lever_pull_06.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | itens-portas/metal_latch_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/metal_latch_01.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
-| itens-portas/metal_latch_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/metal_latch_02.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | itens-portas/plates_hit_01.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
 | itens-portas/plates_hit_02.ogg | https://kenney.nl/assets/foley-sounds | Kenney (kenney.nl) | CC0 |
@@ -855,15 +891,15 @@ Só CC0 e CC-BY entram no SDK; quem usa um som CC-BY credita o autor abaixo. Um 
 | personagem/footstep_generic_alt_08.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_generic_alt_09.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_generic_alt_10.ogg | https://kenney.nl/assets/rpg-audio | Kenney (kenney.nl) | CC0 |
+| personagem/footstep_grass_alt2_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
+| personagem/footstep_grass_alt2_04.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | personagem/footstep_grass_alt_01.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_02.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_03.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_04.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
 | personagem/footstep_grass_alt_05.ogg | https://kenney.nl/assets/impact-sounds | Kenney (kenney.nl) | CC0 |
-| personagem/footstep_grass_alt2_01.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_02.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_03.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
-| personagem/footstep_grass_alt2_04.ogg | https://opengameart.org/content/sound-effects-pack | OwlishMedia | CC0 |
 | personagem/footstep_grass_run_01.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/footstep_grass_run_02.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
 | personagem/footstep_grass_run_03.ogg | https://developers.meta.com/vr/downloads/package/oculus-audio-pack-1/ | Oculus VR, LLC ("Oculus Audio Pack 01", via github.com/facebookincubator/Meta-open-sound) | CC-BY |
