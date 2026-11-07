@@ -72,6 +72,19 @@ const WEBGL2_MAX_VERTEX_ATTRIBS = 16
 const SLOT_HEADROOM = 2
 
 describe('body batch vertex attributes (MAX_VERTEX_ATTRIBS)', () => {
+  it('a ray finds none of its meshes: the template body sits at the origin, where no body is drawn (it would stop a laser or pull a gun back at the world origin)', () => {
+    const batch = createBodyBatch(THREE, buildInstancedBody(THREE, { segments: 5 }), { max: 2, time, depthPrepass: true })
+    batch.begin()
+    batch.end()
+    const scene = new THREE.Scene()
+    scene.add(batch.mesh, batch.prepass!)
+    scene.updateMatrixWorld(true)
+    const ray = new THREE.Raycaster(new THREE.Vector3(0, 1.0, 2), new THREE.Vector3(0, 0, -1), 0, 4)
+    expect(ray.intersectObjects(scene.children, true)).toHaveLength(0)
+    // the same template drawn as an ordinary mesh is in the way of that ray: the empty answer is the batch's, not a miss
+    expect(ray.intersectObject(new THREE.Mesh(buildInstancedBody(THREE, { segments: 5 })))).not.toHaveLength(0)
+  })
+
   it('draws as a plain Mesh over an instanced geometry, with no instance matrix', () => {
     const batch = createBodyBatch(THREE, buildInstancedBody(THREE, { segments: 5 }), { max: 2, time })
     expect((batch.mesh as unknown as THREE.InstancedMesh).isInstancedMesh).toBeUndefined()
