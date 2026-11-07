@@ -780,6 +780,13 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       for (const s of [...stains.values()]) if (s.surface === id) stains.delete(s.id)
     },
 
+    moveSurface(id, offset) {
+      const surface = surfaces.get(id)
+      if (!surface) return
+      surface.point = add(surface.point, offset)
+      for (const s of stains.values()) if (s.surface === id) s.center = add(s.center, offset)
+    },
+
     splash(liquid, point, liters, velocity, options) {
       if (!liquids.has(liquid) || !(liters > 0)) return
       const v: Vec3 = velocity ?? [0, -0.1, 0]

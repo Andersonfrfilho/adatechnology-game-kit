@@ -10,7 +10,7 @@ import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, s
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
-import { FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
+import { dragMarkFor, FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
@@ -47,6 +47,7 @@ import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
+import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
@@ -785,6 +786,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const RIDER_GAP = 0.06
   /** A pushable piece whose base is higher than this stands on something: a module's bodies do not shove it. */
   const MOVABLE_MAX_BASE = 0.12
+  /** How far in from the side of a base its feet (or its edge) scrape the floor, metres. */
+  const FOOT_INSET = 0.06
   const heaviestMaterial = (id: string): string | undefined => {
     let best: { mass: number; material: string } | undefined
     for (const p of world.state(id)?.parts ?? []) if (p.status !== 'broken' && (!best || p.mass > best.mass)) best = { mass: p.mass, material: p.material }
@@ -835,6 +838,30 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return piece
   }
   const pushDragSound = (objectId: string, point: Vec3, volume: number): void => playSound(dragSoundKey(world.materials.get(heaviestMaterial(objectId) ?? '')), point, volume)
+  const pushRules = { ...FURNITURE_PUSH_DEFAULTS, ...options.push }
+  /** A liquid spilled on the top of a pushed piece goes with it (the table's top is a surface of the fluids by the table's id). */
+  const pushMoved = (objectId: string, dx: number, dz: number): void => fluids.moveSurface(objectId, [dx, 0, dz])
+  /** Dragging scratches the floor under the two sides of the base, as the floor's material marks (game-player `dragMarks`): a stretch at a time, kept by the effects' marks. */
+  const pushDragged = (_objectId: string, drag: CarryDrag): void => {
+    const cx = (drag.min[0] + drag.max[0]) / 2
+    const cz = (drag.min[2] + drag.max[2]) / 2
+    const mark = dragMarkFor(surfaceOfMaterial(terrain.columnAt(cx, cz).material), pushRules)
+    if (!mark) return
+    const nx = -drag.uz
+    const nz = drag.ux
+    const across = Math.max(0, Math.abs(nx) * (drag.max[0] - drag.min[0]) / 2 + Math.abs(nz) * (drag.max[2] - drag.min[2]) / 2 - FOOT_INSET)
+    for (const side of [-1, 1]) {
+      vfx.world.scrape({
+        x: cx - drag.ux * drag.length / 2 + nx * across * side,
+        y: terrain.heightAt(cx, cz),
+        z: cz - drag.uz * drag.length / 2 + nz * across * side,
+        length: drag.length,
+        width: mark.width,
+        rotation: Math.atan2(drag.uz, drag.ux),
+        color: mark.color,
+      })
+    }
+  }
   const pushHitSound = (objectId: string, point: Vec3): void => {
     const material = heaviestMaterial(objectId) ?? ''
     const def = world.materials.get(material)
@@ -861,7 +888,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     riders: (objectId, box) => ridersOn(objectId, box),
     makePiece: makePushPiece,
     dragSound: pushDragSound,
+    moved: pushMoved,
+    dragged: pushDragged,
     hitSound: pushHitSound,
+    chainOf: (objectId) => {
+      const e = entries.get(objectId)
+      if (!e || (!e.piece && !e.free) || !e.so.root.parent) return null
+      const b = bodyBox(e)
+      return b && b.base <= MOVABLE_MAX_BASE ? { objectId, root: e.so.root, name: nameOf(objectId), piece: e.piece ?? null } : null
+    },
     onEvent: (ev) => {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
       action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
@@ -888,12 +923,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     world,
     arena: { limit: arenaSize, colliders: standingColliders },
     blockers,
-    rules: { ...FURNITURE_PUSH_DEFAULTS, ...options.push },
+    rules: pushRules,
     massOf: (objectId) => massOfObject(objectId),
     materialOf: heaviestMaterial,
     riders: (objectId, box) => ridersOn(objectId, box),
     makePiece: makePushPiece,
     dragSound: pushDragSound,
+    moved: pushMoved,
+    dragged: pushDragged,
     hitSound: pushHitSound,
     targetOf: (objectId) => {
       const e = entries.get(objectId)

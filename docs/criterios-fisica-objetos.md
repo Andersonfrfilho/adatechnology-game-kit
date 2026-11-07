@@ -56,9 +56,9 @@ Os critérios que valem para empurrar um móvel (o jogador segurando E, ou corpo
 | 15 | Queda | O que escorrega do tampo cai pela física; peça empurrada (`carrying`) continua sendo apoio do que está em cima, sem deixar nada atravessar. |
 | 19 | Desempenho | A horda testa os móveis só quando há algum na lista e só aloca no contato; a sala lista os móveis empurráveis uma vez por passo. Sem custo quando ninguém empurra. |
 
-Pendências e pontos ambíguos (para o dono decidir):
+Os quatro pontos que estavam ambíguos foram decididos pelo mundo real (2026-11-07) e estão implementados:
 
-- **Empurrar uma peça contra outra solta** (sofá contra uma cadeira): hoje a peça trava; no mundo real a cadeira leve iria junto. Vale fazer a peça empurrada empurrar a outra (somando a massa)?
-- **Marcas no chão de arrasto**: piso de madeira risca, cerâmica e concreto quase não. Deixar marca persistente (critério 18) por material do piso?
-- **NPCs civis** (`createCivilians`) ainda não empurram móveis; só a horda. Devem empurrar também, ou só contornar?
-- **Superfície molhada do tampo** (critério 16): a mancha de líquido derramado na mesa fica onde a mesa estava quando ela é empurrada.
+- **Peça empurrada contra outra solta** (sofá contra cadeira): empurra a outra junto quando a força das pernas vence o atrito somado da fileira (`canPush` com várias peças, `FurniturePush.setLoad`); se não vence, trava. Até três peças em fila (`chainOf` da sala, evento `push_chained`).
+- **Marcas de arrasto no piso** (critério 18): riscos persistentes por material do piso (`dragMarks` do `game-player`): madeira e cerâmica riscam, concreto fica com marca escura, terra e areia ficam com sulco, carpete, grama, cascalho e asfalto não marcam. A marca é `scrape` do `game-vfx` (`VfxWorld.scrape`), com limite de `SCRAPE_LIMIT` (400): passando dele, a mais antiga sai.
+- **Civis** desviam dos móveis e não empurram: contornam pela face, sempre girando para o mesmo lado (`crowd.movableAt`, `bodyRadius` dos civis).
+- **Mancha de líquido no tampo** (critério 16) acompanha a mesa empurrada (`FluidWorld.moveSurface`).

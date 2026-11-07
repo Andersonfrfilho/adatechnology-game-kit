@@ -52,7 +52,11 @@ const open = async (/** @type {string} */ query) => {
 await open('table=0')
 await open('table=0')
 const cans = await page.evaluate((top) => [window.__testRoom.spawn('item_canned_beans', [3.1, top, 0.1], 0).objectId, window.__testRoom.spawn('item_canned_beans', [3.9, top, -0.1], 0).objectId], TABLE_TOP)
+// water spilled on the top: the stain goes with the table
+await page.evaluate((top) => window.__testRoom.fluids.splash('water', [3.5, top + 0.3, 0.2], 0.15), TABLE_TOP)
 await frames(60)
+const stainOnTable = () => page.evaluate(() => window.__testRoom.fluids.stains().find((s) => s.surface === 'table')?.center ?? null)
+const stainStart = await stainOnTable()
 /** The way along which the table can go 1.3 m with nothing in the way (the room's scenery has a car parked by it), as [x, z]. */
 const freeWay = () =>
   page.evaluate(() => {
@@ -95,11 +99,48 @@ for (const mode of /** @type {const} */ (['first', 'third'])) {
     const y = canEnd[k]?.[1] ?? 0
     check(Math.abs(ride - moved) < 0.05 && y > TABLE_TOP - 0.05, `can ${k + 1} rode with the table (${ride.toFixed(2)} m against ${moved.toFixed(2)} m) and is still on its top (y ${y.toFixed(2)})`)
   }
+  if (mode === 'first') {
+    const stain = await stainOnTable()
+    check(stainStart !== null && stain !== null && Math.abs(along(way, stainStart, stain) - moved) < 0.02, `the water spilled on the top went with the table (${stain && stainStart ? along(way, stainStart, stain).toFixed(2) : '?'} m against ${moved.toFixed(2)} m)`)
+  }
   await page.keyboard.up('KeyE')
   await pushEnded()
 }
 
-// 2. zombies born behind a sofa shove it at the player, in each camera
+// 2. a sofa pushed against a nightstand shoves it along, and the drag scratches the concrete floor, in each camera
+for (const mode of /** @type {const} */ (['first', 'third'])) {
+  console.log(`--- sofa against a nightstand, ${mode} person`)
+  await open('table=0')
+  const [sofaId, nightstandId] = await page.evaluate(() => [window.__testRoom.spawn('sofa', [-2, 0, 6], 0).objectId, window.__testRoom.spawn('nightstand', [-2, 0, 4.6], 0).objectId])
+  await page.evaluate(() => {
+    const counted = /** @type {{ scrapes: number }} */ (/** @type {unknown} */ (window))
+    counted.scrapes = 0
+    window.__testRoom.vfx.onMarks((event) => {
+      if (event.type === 'add' && event.mark.kind === 'scrape') counted.scrapes++
+    })
+  })
+  await frames(60)
+  await camera(mode)
+  const [, , sofaZ = 0] = (await positions([sofaId]))[0] ?? []
+  const [, , nightZ = 0] = (await positions([nightstandId]))[0] ?? []
+  await look([-2, 1.7, sofaZ + 1.3], [-2, 0.6, sofaZ])
+  await page.keyboard.down('KeyE')
+  await held(page.waitForFunction(() => window.__testRoom.push.state?.phase === 'push', null, WAIT))
+  if (mode === 'third') await page.evaluate(() => { const r = window.__testRoom; const [x, , z] = r.playerPosition; r.look([x + 0.8, 1.7, z + 0.6], [x, 0.6, z - 3]) })
+  await page.keyboard.down('KeyW')
+  const shoved = await held(page.waitForFunction(([id, z]) => (window.__testRoom.world.state(id)?.position[2] ?? z) < z - 0.8, /** @type {const} */ ([nightstandId, nightZ]), WAIT))
+  await page.keyboard.up('KeyW')
+  await shot(`chain-${mode}`)
+  const chained = await page.evaluate(() => window.__testRoom.log.entries({ type: 'push_chained' }).length)
+  const scrapes = await page.evaluate(() => /** @type {{ scrapes: number }} */ (/** @type {unknown} */ (window)).scrapes)
+  const [sofaNow = [0, 0, 0], nightNow = [0, 0, 0]] = await positions([sofaId, nightstandId])
+  check(shoved && chained === 1, `the sofa shoves the nightstand along (nightstand z ${nightZ.toFixed(2)} to ${(nightNow[2] ?? 0).toFixed(2)}, sofa z ${sofaZ.toFixed(2)} to ${(sofaNow[2] ?? 0).toFixed(2)})`)
+  check(scrapes >= 2 && scrapes % 2 === 0, `the drag scratched the concrete floor (${scrapes} strips)`)
+  await page.keyboard.up('KeyE')
+  await pushEnded()
+}
+
+// 3. zombies born behind a sofa shove it at the player, in each camera
 for (const mode of /** @type {const} */ (['first', 'third'])) {
   console.log(`--- zombies, ${mode} person`)
   // the crowd area lies 45 m out (its centre), past the room's own 14 m: the arena is opened to 60 m so the sofa may move there

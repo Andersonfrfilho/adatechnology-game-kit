@@ -570,7 +570,7 @@ export interface DestructionWorld {
    * The first thing a world-axis box meets moving `distance` metres along `direction`, or null: a grid of rays leaves its leading faces, no gap wider than `spacing`
    * (default 0.2 m). `ignore` is the object that is moving. What the box already overlaps does not stop it, so it can always back out.
    */
-  sweepBox(box: { readonly min: Vec3; readonly max: Vec3 }, direction: Vec3, distance: number, options?: { readonly ignore?: string; readonly spacing?: number }): RayHit | null
+  sweepBox(box: { readonly min: Vec3; readonly max: Vec3 }, direction: Vec3, distance: number, options?: { readonly ignore?: string | readonly string[]; readonly spacing?: number }): RayHit | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
   shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, round?: number | BallisticExtras): HitResult[]
   /**

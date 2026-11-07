@@ -3,6 +3,11 @@
  * Engine-agnostic: the host says where the player wants to go and answers whether the volume of the piece can go there; this says how fast, and when it locks.
  */
 
+import type { SurfaceId } from '@adatechnology/game-contracts'
+
+/** What dragging a piece leaves on a floor: a strip of this colour and width (metres) under each side of its base. */
+export type DragMark = { readonly color: number; readonly width: number }
+
 export type FurniturePushPhase = 'idle' | 'grip' | 'push' | 'strain'
 export type FurniturePushBlock = 'too_heavy' | 'obstacle' | null
 
@@ -27,6 +32,11 @@ export interface FurniturePushRules {
   readonly tapSeconds: number
   /** How long the effort stays after the last step that was refused, so that it does not flicker. */
   readonly strainHoldSeconds: number
+  /**
+   * The scratch a dragged piece leaves, by the floor it is dragged on (`SurfaceId` of game-contracts): wood and tile scratch lighter, concrete scuffs darker,
+   * dirt and sand take a furrow; a floor left out (carpet, grass, gravel, asphalt, water) keeps no mark.
+   */
+  readonly dragMarks: Readonly<Partial<Record<SurfaceId, DragMark>>>
 }
 
 export const FURNITURE_PUSH_DEFAULTS: FurniturePushRules = {
@@ -39,6 +49,15 @@ export const FURNITURE_PUSH_DEFAULTS: FurniturePushRules = {
   accel: { max: 1.5, brake: 3, min: 0.2 },
   tapSeconds: 0.2,
   strainHoldSeconds: 0.25,
+  dragMarks: {
+    wood: { color: 0xd8c4a0, width: 0.012 },
+    tile: { color: 0x9a9a96, width: 0.01 },
+    concrete: { color: 0x45433f, width: 0.02 },
+    metal: { color: 0xd0d4d8, width: 0.008 },
+    glass: { color: 0xf2f2f2, width: 0.006 },
+    dirt: { color: 0x4a3524, width: 0.04 },
+    sand: { color: 0x8d7a5c, width: 0.05 },
+  },
 }
 
 export type FurniturePushTarget = { readonly massKg: number; readonly material?: string }
@@ -48,24 +67,33 @@ export const frictionFor = (material: string | undefined, rules: FurniturePushRu
 
 const frictionOf = (target: FurniturePushTarget, rules: FurniturePushRules): number => frictionFor(target.material, rules)
 
-const loadShare = (target: FurniturePushTarget, rules: FurniturePushRules): number => (frictionOf(target, rules) * target.massKg * rules.gravity) / rules.forceN
+/** A piece, or a row of pieces pushed one against the next (a sofa shoving a chair): their frictions on the floor add up against the legs. */
+export type FurniturePushLoad = FurniturePushTarget | readonly FurniturePushTarget[]
+
+const piecesOf = (load: FurniturePushLoad): readonly FurniturePushTarget[] => (Array.isArray(load) ? load : [load as FurniturePushTarget])
+const frictionForceOf = (load: FurniturePushLoad, rules: FurniturePushRules): number => piecesOf(load).reduce((sum, t) => sum + frictionOf(t, rules) * t.massKg * rules.gravity, 0)
+const massOf = (load: FurniturePushLoad): number => piecesOf(load).reduce((sum, t) => sum + t.massKg, 0)
+const loadShare = (load: FurniturePushLoad, rules: FurniturePushRules): number => frictionForceOf(load, rules) / rules.forceN
 
 export const gripSecondsFor = (massKg: number, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => Math.min(rules.gripSeconds.max, rules.gripSeconds.base + rules.gripSeconds.perKg * Math.max(0, massKg))
 
-/** Whether the legs overcome the friction of the piece on the floor. */
-export const canPush = (target: FurniturePushTarget, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): boolean => loadShare(target, rules) <= 1
+/** Whether the legs overcome the friction of the piece (or of the row of pieces) on the floor. */
+export const canPush = (target: FurniturePushLoad, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): boolean => loadShare(target, rules) <= 1
 
 /** Metres per second with the piece on the hands: slower the closer it is to the limit of the force, 0 past it. */
-export const pushSpeedFor = (target: FurniturePushTarget, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => {
+export const pushSpeedFor = (target: FurniturePushLoad, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => {
   const share = loadShare(target, rules)
   return share > 1 ? 0 : rules.speed.max + (rules.speed.min - rules.speed.max) * share
 }
 
 /** How fast the walk with the piece speeds up, m/s²: the force left over its friction, over its mass, at most what a person does (`accel.max`). */
-export const pushAccelerationFor = (target: FurniturePushTarget, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => {
-  const spare = (rules.forceN - frictionOf(target, rules) * target.massKg * rules.gravity) / Math.max(1e-3, target.massKg)
+export const pushAccelerationFor = (target: FurniturePushLoad, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): number => {
+  const spare = (rules.forceN - frictionForceOf(target, rules)) / Math.max(1e-3, massOf(target))
   return Math.max(rules.accel.min, Math.min(rules.accel.max, spare))
 }
+
+/** The scratch dragging leaves on `surface`, or null where the floor keeps none (carpet, grass). */
+export const dragMarkFor = (surface: SurfaceId, rules: FurniturePushRules = FURNITURE_PUSH_DEFAULTS): DragMark | null => rules.dragMarks[surface] ?? null
 
 /** Whether a thing resting on a moving piece slides on it: the piece changes speed faster than the friction under the thing can follow (`accelMps2` > friction × g). */
 export const slipsOnTop = (accelMps2: number, friction: number, gravity = FURNITURE_PUSH_DEFAULTS.gravity): boolean => accelMps2 > friction * gravity
@@ -103,6 +131,8 @@ export interface FurniturePush {
   /** The velocity of the piece now, m/s on the floor. */
   readonly velocity: readonly [number, number]
   begin(target: FurniturePushTarget): void
+  /** The load changed while pushing (the piece met another and shoves it along): the speed and the speeding up follow the whole row. */
+  setLoad(load: FurniturePushLoad): void
   release(): void
   update(dt: number, input: FurniturePushInput): FurniturePushStep
 }
@@ -204,6 +234,10 @@ export function createFurniturePush(overrides: Partial<FurniturePushRules> = {})
       speed = pushSpeedFor(next, rules)
       accel = pushAccelerationFor(next, rules)
       vx = vz = 0
+    },
+    setLoad(load) {
+      speed = pushSpeedFor(load, rules)
+      accel = pushAccelerationFor(load, rules)
     },
     release() {
       phase = 'idle'

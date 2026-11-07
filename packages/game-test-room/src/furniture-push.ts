@@ -6,9 +6,9 @@ import type * as THREE_NS from 'three'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import type { HandTargets } from '@adatechnology/game-contracts'
-import { createFurniturePush, FURNITURE_PUSH_DEFAULTS, frictionFor } from '@adatechnology/game-player'
-import type { FurniturePushBlock, FurniturePushPhase, FurniturePushRules } from '@adatechnology/game-player'
-import { carryFits, createCarry, holdCarry, moveCarry, releaseCarry, shakeRiders } from './furniture-carry'
+import { canPush, createFurniturePush, FURNITURE_PUSH_DEFAULTS, frictionFor } from '@adatechnology/game-player'
+import type { FurniturePushBlock, FurniturePushPhase, FurniturePushRules, FurniturePushTarget } from '@adatechnology/game-player'
+import { CARRY_WALL, carryBlocker, createCarry, holdCarry, moveCarry, releaseCarry, shakeRiders } from './furniture-carry'
 import type { Carry, CarryHost, RoomPushRider, RoomPushTarget } from './furniture-carry'
 import type { Player } from './player'
 
@@ -52,9 +52,13 @@ export type RoomPushOptions = {
   /** Turns a free-standing object into a body (the first step it takes, and each thing riding on it). */
   makePiece(objectId: string): Piece
   dragSound(objectId: string, point: Vec3, volume: number): void
+  moved?: CarryHost['moved']
+  dragged?: CarryHost['dragged']
   hitSound(objectId: string, point: Vec3): void
   onEvent(event: RoomPushEvent): void
   ring(value: number | null): void
+  /** The loose piece of the world `objectId` names, when one in the way may be shoved along (it stands on the floor, nothing holds it), or null. */
+  chainOf?(objectId: string): RoomPushTarget | null
   /** The room draws a body whose pose bends over a low piece: the player's own eye is not lowered (without a body the eye is the camera and bends). */
   hasBody?(): boolean
 }
@@ -62,6 +66,8 @@ export type RoomPushOptions = {
 export type RoomPushEvent =
   | { readonly type: 'grip' | 'release'; readonly objectId: string; readonly name: string; readonly massKg: number }
   | { readonly type: 'engaged' | 'too_heavy' | 'obstacle'; readonly objectId: string; readonly name: string; readonly massKg: number }
+  /** The piece met another loose one and shoves it along: `name` and `massKg` are the other's. */
+  | { readonly type: 'chained'; readonly objectId: string; readonly name: string; readonly massKg: number }
 
 export type RoomPushState = {
   readonly objectId: string
@@ -94,7 +100,12 @@ type Leaning = Carry & {
   readonly into: [number, number]
   readonly isLow: boolean
   readonly palm: [number, number, number, number]
+  /** What the piece met and shoves along, in the order it met them (a sofa against a chair): they move with it. */
+  readonly chain: Carry[]
 }
+
+/** The most pieces a push shoves along one behind the other. */
+const MAX_CHAIN = 3
 
 /** The closest point of a box (on the floor plane) to a point; the way in when the point is inside the box is the way the player faces. */
 function contactOf(box: { min: readonly number[]; max: readonly number[] }, player: Player): { contact: [number, number]; into: [number, number]; distance: number } {
@@ -118,7 +129,35 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
 
   const event = (type: RoomPushEvent['type'], lean: Leaning): void => options.onEvent({ type, objectId: lean.target.objectId, name: lean.target.name, massKg: lean.massKg })
 
-  const isFree = (lean: Leaning, dx: number, dz: number): boolean => player.canStand(player.x + dx, player.z + dz) && carryFits(host, lean, dx, dz)
+  const loadOf = (carry: Carry): FurniturePushTarget => (carry.material === undefined ? { massKg: carry.massKg } : { massKg: carry.massKg, material: carry.material })
+
+  /**
+   * Whether the piece and what it already shoves can move by `(dx, dz)`. A loose piece in the way joins the row when the legs beat the frictions of the whole row
+   * (a sofa shoves a chair; against a grill the row locks); a wall, the arena or a piece fixed in place stops it.
+   */
+  const isFree = (lean: Leaning, dx: number, dz: number): boolean => {
+    if (!player.canStand(player.x + dx, player.z + dz)) return false
+    for (;;) {
+      const row = [lean, ...lean.chain]
+      const ids = row.map((c) => c.target.objectId)
+      let blocker: string | typeof CARRY_WALL | null = null
+      for (const carry of row) {
+        blocker = carryBlocker(host, carry, dx, dz, ids)
+        if (blocker !== null) break
+      }
+      if (blocker === null) return true
+      if (blocker === CARRY_WALL || lean.chain.length >= MAX_CHAIN) return false
+      const next = options.chainOf?.(blocker)
+      if (!next) return false
+      const added = createCarry(host, next)
+      const load = [...row, added].map(loadOf)
+      if (!canPush(load, rules)) return false
+      holdCarry(host, added)
+      lean.chain.push(added)
+      control.setLoad(load)
+      options.onEvent({ type: 'chained', objectId: next.objectId, name: next.name, massKg: added.massKg })
+    }
+  }
 
   const release = (): void => {
     const lean = leaning
@@ -127,6 +166,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
     // the legs stop it as fast as its own friction does: what rides on it may slide on
     const velocity = control.velocity
     releaseCarry(lean, velocity, frictionFor(lean.material, rules) * rules.gravity)
+    for (const carry of lean.chain) releaseCarry(carry, velocity, frictionFor(carry.material, rules) * rules.gravity)
     control.release()
     player.setWalkHeld(false)
     if (!options.hasBody?.()) player.setBend(0)
@@ -143,6 +183,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
 
   const moveWith = (lean: Leaning, dx: number, dz: number): void => {
     dragged = moveCarry(host, lean, dx, dz, dragged)
+    for (const carry of lean.chain) moveCarry(host, carry, dx, dz, 0)
     player.moveBy(dx, dz)
     lean.contact[0] += dx
     lean.contact[1] += dz
@@ -177,7 +218,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
       const up = new THREE.Vector3(0, 1, 0)
       const basis = isLow ? new THREE.Matrix4().makeBasis(way, up, side) : new THREE.Matrix4().makeBasis(up, way.clone().negate(), side)
       const palm = new THREE.Quaternion().setFromRotationMatrix(basis)
-      leaning = Object.assign(carry, { contact, into, isLow, palm: [palm.x, palm.y, palm.z, palm.w] as [number, number, number, number] })
+      leaning = Object.assign(carry, { contact, into, isLow, palm: [palm.x, palm.y, palm.z, palm.w] as [number, number, number, number], chain: [] as Carry[] })
       // held from the grip on (the room's collision of the player no longer sees it), and still the support of what rests on it
       if (target.piece) {
         target.piece.held = true
@@ -221,7 +262,7 @@ export function createRoomPush(options: RoomPushOptions): RoomPush {
         event('obstacle', lean)
       }
       // a sudden stop (or a start faster than the friction under them) throws what rides on it off with the speed it had
-      shakeRiders(lean, result.stoppedFrom ?? before, result.acceleration)
+      for (const carry of [lean, ...lean.chain]) shakeRiders(carry, result.stoppedFrom ?? before, result.acceleration)
       if (result.dx !== 0 || result.dz !== 0) moveWith(lean, result.dx, result.dz)
       options.ring(control.phase === 'grip' && control.heldSeconds >= RING_DELAY_S ? control.progress : null)
     },

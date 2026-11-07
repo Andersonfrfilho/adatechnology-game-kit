@@ -1,7 +1,7 @@
 import { undeadCrowdPack } from '@adatechnology/game-characters-undead'
 import { describe, expect, it } from 'vitest'
 
-import { createCrowd, createMovableContacts, createNavGrid } from '../src'
+import { createCivilians, createCrowd, createMovableContacts, createNavGrid } from '../src'
 import type { CrowdPack, CrowdTarget } from '../src'
 
 const pack = undeadCrowdPack() as unknown as CrowdPack
@@ -54,5 +54,29 @@ describe('agents walking into a movable piece', () => {
     expect(forces.length).toBeGreaterThan(0)
     expect(forces[0]).toBeCloseTo(450 * crowd.store.build[i]!, 0)
     expect(crowd.store.shoveZ[i]).toBeLessThan(-0.9)
+  })
+})
+
+describe('civilians and movable furniture', () => {
+  it('a civilian walks round a sofa in the way: never in it, never shoving it', () => {
+    const crowd = createCrowd({ pack, seed: 1, capacity: 8, grid: createNavGrid({ size: 128 }), flow: { clock: () => 0 }, target: target(0, -40) })
+    const civilians = createCivilians(crowd, { people: [{ id: 'a', home: 'home', routine: [] }], buildings: { home: { x: -6, z: 10, w: 8, d: 10, house: true, front: 1 } }, hour: () => 3 })
+    const a = civilians.get('a')!
+    // out of the house first, onto open ground
+    civilians.flee('a', [[0, -5]])
+    for (let f = 0; f < 600 && Math.hypot(a.x, a.z + 5) > 0.5; f++) civilians.update(0.05)
+    const [x0, z0] = [a.x, a.z]
+    const sofa = { id: 'sofa', minX: x0 - 1, minZ: z0 - 3.4, maxX: x0 + 1, maxZ: z0 - 2.6, top: 0.9 }
+    crowd.setMovables([sofa])
+    civilians.flee('a', [[x0, z0 - 6]])
+    let inside = 0
+    for (let f = 0; f < 600; f++) {
+      civilians.update(0.05)
+      crowd.update(0.05)
+      if (a.x > sofa.minX && a.x < sofa.maxX && a.z > sofa.minZ && a.z < sofa.maxZ) inside++
+      expect(crowd.shoves).toEqual([])
+    }
+    expect(inside).toBe(0)
+    expect(a.z).toBeLessThan(z0 - 4)
   })
 })
