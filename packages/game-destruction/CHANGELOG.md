@@ -1,5 +1,23 @@
 # @adatechnology/game-destruction
 
+## 0.21.0
+
+### Minor Changes
+
+- 67edc92: Concentrated fire brings a reinforced member down where it is shot. Each round on a pillar or a beam takes a cone of concrete out of the band (10 cm along it) it lands on: as deep as the round goes into concrete (its `penetration.concrete`, or its energy over the material's resistance) and 3.4 calibres across. A crater deeper than the 3 cm cover bares the bars running through it. At 90 % of the band's section the member is cut there: the band comes out, on a standing member the concrete above the cut falls (its bars stay), and what rested on it no longer bears on it. On a 15 cm pillar that is 20 to 30 rifle rounds or 5 to 10 rounds of .50 on the same place; a pistol or a shotgun practically never.
+
+## 0.20.0
+
+### Minor Changes
+
+- a6a6a8f: The infill of a confined wall comes down as a panel under a blast that loads it whole: the reflected peak pressure and the reflected impulse over the bay the charge faces (between the two pillars around it) are read against a pressure-impulse curve of unreinforced brick (`(P - 70 kPa)(I - 150 Pa·s) >= 6e6`, at four of five points of the bay). 4.8 kg of TNT 4 m off brings the panel down while the pillars and the bond beam stand; a hand grenade a metre or more off, or any charge past Z 3.5, only cracks it.
+
+### Patch Changes
+
+- 49272b6: A reinforced member (pillar, beam) further from a blast than its cut reach is no longer broken by the blast's generic damage: it keeps a quarter of its hit points and is not severed at one band, and weakens only where the wave knocks its concrete out block by block. 4.8 kg of TNT 4 m off a house wall (Z 2.37, about 140 kPa) used to break three pillars; now every pillar stands, damaged, and only a charge against a pillar cuts it.
+- Updated dependencies [c4b8218]
+  - @adatechnology/game-contracts@0.30.0
+
 ## 0.19.0
 
 ### Minor Changes

@@ -7,6 +7,7 @@ import { DEFAULT_LISTENER, listenerDistance } from '../listener'
 import type { DistanceMode, Listener } from '../listener'
 import { DEFAULT_MIX, busGain, resolveMix } from '../mix'
 import type { BusSetting, MixProfile } from '../mix'
+import type { OcclusionSetup } from '../occlusion'
 import { planSound } from '../plan'
 import type { PlanInput, SoundPlan } from '../plan'
 import type { BusId, SoundBank, SoundRecipe } from '../recipe'
@@ -16,6 +17,8 @@ import type { VoiceGroup } from '../voices'
 import { buildChain } from './chain'
 import type { MixChain } from './chain'
 import { globalContext, unlockContext } from './context'
+import { createEngineOcclusion } from './engine-occlusion'
+import type { OccludedVoiceInfo, OcclusionRoute } from './engine-occlusion'
 import { createLoopHandle } from './engine-loop'
 import type { AudioLoopHandle, LoopHost } from './engine-loop'
 import { createSampleLoopHandle } from './sample-loop'
@@ -125,8 +128,12 @@ export type AudioEngineOptions = {
   readonly maxVoices?: number
   readonly groups?: Readonly<Record<string, VoiceGroup>>
   readonly distance?: DistanceMode
-  /** 0 (clear) to 1 (behind a wall) for a sound at a point; without it there is no occlusion (Q8). */
-  readonly occlusion?: (point: Vec3) => number
+  /**
+   * What stands between a sound and the ears. A function is the plain way: 0 (clear) to 1 (behind a wall) for a sound at a point, decided once when it
+   * plays. An `OcclusionSetup` queries the host for what lies on the path (material, thickness), turns the summed transmission loss into gain and a
+   * lowpass per voice, and re-queries as the listener moves. Without it there is no occlusion (Q8).
+   */
+  readonly occlusion?: ((point: Vec3) => number) | OcclusionSetup
   readonly createContext?: () => AudioContext | null
   /** Build voices in timed slices between frames instead of inside `play` (a sound starts a few ms late; a burst never costs a frame). Off by default. */
   readonly deferredStart?: StartQueueOptions
@@ -165,6 +172,8 @@ export type AudioEngine = {
   loop(id: string, options?: { readonly volume?: number }): AudioLoopHandle
   channel(options: { readonly seed?: number; readonly random?: () => number; readonly ownNoise?: boolean }): AudioChannel
   setListener(listener: Listener): void
+  /** The voices behind something now: loss in dB, linear gain and lowpass cutoff in Hz (empty without an `OcclusionSetup`). */
+  occludedVoices(): readonly OccludedVoiceInfo[]
   setBus(id: BusId, setting: BusSetting): void
   setMix(mix: string | MixProfile): void
   /** The master volume of the current chain and of any later one (0 to 1). */
@@ -250,6 +259,18 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     chokes.set(id, list)
     return list
   }
+  const occlusionSetup = typeof options.occlusion === 'object' ? options.occlusion : undefined
+  const pointOcclusion = typeof options.occlusion === 'function' ? options.occlusion : undefined
+  const occluders = occlusionSetup ? createEngineOcclusion(occlusionSetup, () => context) : null
+  // a voice with a position plays through its own lowpass and gain when the engine has an occlusion setup
+  const routed = (id: number | undefined, position: Vec3 | undefined, level: number, destination: AudioNode, wet?: AudioNode): OcclusionRoute | undefined => {
+    if (!occluders || id === undefined || !position) return undefined
+    return occluders.attach({ id, source: position, level, listener: listener.position }, destination, wet)
+  }
+  const sampleRoute = (voiceId: number, sample: SampleSound, playOptions: PlayOptions, level: number, bus: BusId): AudioNode => {
+    const at = playOptions.occlusion === undefined && sample.falloff?.model !== 'none' ? playOptions.position : undefined
+    return routed(voiceId, at, level, sampleOutput(bus))?.input ?? sampleOutput(bus)
+  }
   const watchers = new Set<(event: VoiceStartEvent) => void>()
   const announce = (event: VoiceStartEvent): void => {
     options.onVoiceStart?.(event)
@@ -312,6 +333,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     const elapsed = context.currentTime - lastTime
     lastTime = context.currentTime
     if (elapsed > 0) for (const id of voices.advance(elapsed)) active.delete(id)
+    occluders?.prune((id) => active.has(id))
   }
 
   const inputFor = (recipe: SoundRecipe, playOptions: PlayOptions, random: () => number): PlanInput => ({
@@ -323,18 +345,18 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     ...(playOptions.distance === undefined ? {} : { distance: playOptions.distance }),
     ...(playOptions.position ? { position: playOptions.position } : {}),
     ...(playOptions.params ? { params: playOptions.params } : {}),
-    ...(options.occlusion && playOptions.position && recipe.falloff?.model !== 'none' ? { occlusion: options.occlusion(playOptions.position) } : {}),
+    ...(pointOcclusion && playOptions.position && recipe.falloff?.model !== 'none' ? { occlusion: pointOcclusion(playOptions.position) } : {}),
   })
 
   const startQueue = options.deferredStart ? createStartQueue(options.deferredStart) : null
 
-  const build = (plan: SoundPlan, store: NoiseStore, delay: number, requestedAt: number, fallbackOf?: string): RealizedVoice => {
+  const build = (plan: SoundPlan, store: NoiseStore, delay: number, requestedAt: number, fallbackOf?: string, route?: OcclusionRoute): RealizedVoice => {
     const audio = context as AudioContext
     const time = audio.currentTime + delay
     const realized = realize(plan, {
       context: audio,
-      output: outputFor(plan.bus),
-      ...(chain?.wet ? { wet: chain.wet } : {}),
+      output: route?.input ?? outputFor(plan.bus),
+      ...(route?.wet ?? chain?.wet ? { wet: (route?.wet ?? chain?.wet) as AudioNode } : {}),
       noise: () => noiseBuffer(store, audio, mix.noise.seconds),
       time,
     })
@@ -355,7 +377,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   }
 
   // the voice a deferred sound is tracked by until it is built: `stop` cancels it or stops what was built
-  const deferVoice = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay: number, fallbackOf?: string): RealizedVoice => {
+  const deferVoice = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay: number, fallbackOf?: string, route?: OcclusionRoute): RealizedVoice => {
     const requestedAt = context?.currentTime ?? 0
     let built: RealizedVoice | null = null
     let cancelled = false
@@ -370,7 +392,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     }
     ;(startQueue as ReturnType<typeof createStartQueue>).push({
       run() {
-        if (!cancelled && context) built = build(plan, store, delay, requestedAt, fallbackOf)
+        if (!cancelled && context) built = build(plan, store, delay, requestedAt, fallbackOf, route)
       },
       drop() {
         if (voiceId === undefined) return
@@ -381,8 +403,9 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     return pending
   }
 
-  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0, fallbackOf?: string, urgent = false): VoiceHandle | null => {
-    const realized = startQueue && !urgent ? deferVoice(plan, store, voiceId, delay, fallbackOf) : build(plan, store, delay, context?.currentTime ?? 0, fallbackOf)
+  const start = (plan: SoundPlan, store: NoiseStore, voiceId: number | undefined, delay = 0, fallbackOf?: string, urgent = false, position?: Vec3): VoiceHandle | null => {
+    const route = routed(voiceId, position, plan.level, outputFor(plan.bus), chain?.wet)
+    const realized = startQueue && !urgent ? deferVoice(plan, store, voiceId, delay, fallbackOf, route) : build(plan, store, delay, context?.currentTime ?? 0, fallbackOf, route)
     if (voiceId === undefined) return null
     voices.setLength(voiceId, plan.length + delay)
     active.set(voiceId, realized)
@@ -436,8 +459,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     ...(playOptions.position ? { position: playOptions.position } : {}),
     ...(playOptions.occlusion !== undefined
       ? { occlusion: playOptions.occlusion }
-      : options.occlusion && playOptions.position
-        ? { occlusion: options.occlusion(playOptions.position) }
+      : pointOcclusion && playOptions.position
+        ? { occlusion: pointOcclusion(playOptions.position) }
         : {}),
   })
 
@@ -460,7 +483,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     const requestedAt = audio.currentTime
     const time = requestedAt + (playOptions.delay ?? 0)
     const chokeList = sample.choke ? choked(sample.id) : undefined
-    const realized = realizeSample(plan, { context: audio, output: sampleOutput(plan.bus), buffer: (url) => sampleStore.buffer(url), time })
+    const realized = realizeSample(plan, { context: audio, output: sampleRoute(voiceId, sample, playOptions, plan.level, plan.bus), buffer: (url) => sampleStore.buffer(url), time })
     const sampleBank = registry.bankOf(plan.id)
     announce({
       id: plan.id,
@@ -523,7 +546,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     if (voiceId === null) return null
     if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
     const plan = planSound(recipe, inputFor(recipe, playOptions, random))
-    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent) : null
+    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent, recipe.falloff?.model === 'none' ? undefined : playOptions.position) : null
   }
 
   const randomFor = (playOptions: PlayOptions): (() => number) => {
@@ -638,7 +661,9 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     },
     setListener(next) {
       listener = next
+      occluders?.update(next.position, (id) => active.has(id))
     },
+    occludedVoices: () => occluders?.voices() ?? [],
     setBus(id, setting) {
       busSettings.set(id, { ...busSettings.get(id), ...setting })
       if (!context) return
@@ -701,6 +726,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       startQueue?.clear()
       for (const id of active.keys()) voices.release(id)
       for (const loop of [...loops]) loop.stop()
+      occluders?.clear()
       active.clear()
       void context?.close()
       context = null

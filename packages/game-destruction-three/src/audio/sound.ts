@@ -37,6 +37,11 @@ export const IMPACT_SOUND_KEYS: Readonly<Record<string, SoundKeyRule>> = {
   impact_wood_ballistic: { sound: 'wood_hit' },
   impact_wood_blunt: { sound: 'wood_blunt' },
   impact_wood_slash: { sound: 'wood_blade' },
+  break_wood: { sound: 'wood_splinter' },
+  // the art scene's key for a part splintering and for a round striking steel or wood: the recordings answer them too
+  splinter: { sound: 'wood_splinter' },
+  shot_wood: { sound: 'wood_splinter' },
+  shot_metal: { sound: 'metal_ping' },
   impact_mdf_ballistic: { sound: 'mdf_puff' },
   impact_mdf_blunt: { sound: 'mdf_puff', volumeScale: 0.8 },
   impact_glass_ballistic: { sound: 'glass_bullet' },
@@ -57,6 +62,7 @@ export const IMPACT_SOUND_KEYS: Readonly<Record<string, SoundKeyRule>> = {
   impact_rubber: { sound: 'rubber_hit' },
   impact_wax: { sound: 'wax_hit' },
   impact_soft_ballistic: { sound: 'soft_bullet' },
+  impact_soft_blunt: { sound: 'fabric_hit' },
   impact_soft_slash: { sound: 'fabric_rip' },
   impact_paper: { sound: 'paper_hit' },
   impact_paper_slash: { sound: 'paper_tear' },
@@ -72,6 +78,7 @@ export const IMPACT_SOUND_KEYS: Readonly<Record<string, SoundKeyRule>> = {
   break_plastic: { sound: 'plastic_crack' },
   break_mdf: { sound: 'mdf_crumble' },
   break_soft: { sound: 'fabric_rip' },
+  break_fabric: { sound: 'fabric_rip' },
   break_paper: { sound: 'paper_tear' },
   break_plant: { sound: 'branch_cut' },
 }
@@ -352,7 +359,7 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       const wanted = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
       const sound = rule.fallback && !engine.registry.sound(wanted) ? rule.fallback : wanted
       const params = detail?.seconds === undefined ? rule.params : { ...rule.params, seconds: detail.seconds }
-      engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), ...(params ? { params } : {}) })
+      engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), intensity: Math.min(1, Math.max(0, volume)), ...(params ? { params } : {}) })
     },
     update(dt) {
       if (!crackles || fires.length === 0 || options.burnLoop === false) return

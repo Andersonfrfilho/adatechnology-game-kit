@@ -61,6 +61,7 @@ const checkExplosiveNumbers = (explosive: ExplosiveDef): string[] => {
   const problems: string[] = []
   const [low, high] = explosive.fuseRange ?? [1, 1]
   if (!(low > 0 && high >= low)) problems.push(`explosive "${explosive.id}" has a fuse range of ${low} to ${high} s`)
+  if (explosive.armRange && !(explosive.armRange[0] > 0 && explosive.armRange[1] >= explosive.armRange[0])) problems.push(`explosive "${explosive.id}" arms between ${explosive.armRange[0]} and ${explosive.armRange[1]} m`)
   if (explosive.fuseLength !== undefined && !(explosive.fuseLength > 0)) problems.push(`explosive "${explosive.id}" has a fuse length of ${explosive.fuseLength} m`)
   if (explosive.burnRate !== undefined && !(explosive.burnRate > 0)) problems.push(`explosive "${explosive.id}" has a burn rate of ${explosive.burnRate} s/m`)
   if (explosive.burnTolerance !== undefined && !(explosive.burnTolerance >= 0 && explosive.burnTolerance < 1)) problems.push(`explosive "${explosive.id}" has a burn tolerance of ${explosive.burnTolerance}`)

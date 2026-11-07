@@ -22,6 +22,8 @@ const SMOKE_PUFF_SIZE = 5
 const SMOKE_PUFF_ALPHA = 1.5
 /** The hiss of the burning canisters: the loop id, its level next to one canister, the metres at which it is half that, and the most it rises with many. */
 export const SMOKE_HISS = { loop: 'smoke_grenade_hiss', volume: 0.7, halfAt: 6, max: 1 } as const
+/** The motor of a rocket in flight: the loop id, its level next to the rocket, the metres at which it is half that, and the most it rises with many. */
+export const ROCKET_MOTOR = { loop: 'rocket_motor_loop', volume: 0.9, halfAt: 20, max: 1 } as const
 /** The pin pulled from a hand grenade as it is thrown. */
 export const GRENADE_PIN_SOUND = 'grenade_pin_pull'
 
@@ -46,6 +48,8 @@ interface Projectile {
   body?: ExplosiveBody | undefined
   /** Points along its velocity (a rocket). */
   aligned?: boolean
+  /** A rocket whose motor burns in flight (a shaped-charge warhead: RPG-7, AT4, M72), not a 40 mm grenade that only flies point first. */
+  motor?: boolean
   /** The axis of the mesh that points along its velocity (default +y). */
   axis?: THREE_NS.Vector3
   /** Set down where it was used: waits for its trigger instead of flying. */
@@ -135,6 +139,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   const meshes: THREE_NS.Object3D[] = []
   const up = new THREE.Vector3(0, 1, 0)
   let smokeHiss: AudioLoopHandle | null = null
+  let rocketMotor: AudioLoopHandle | null = null
 
   // one loop for every canister burning: its level is the canisters' sum, each fading with its distance to the camera
   const hissSmoke = (): void => {
@@ -154,6 +159,25 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     smokeHiss.set({ volume: Math.min(SMOKE_HISS.max, level) })
   }
 
+  // one loop for every rocket in flight, the same way: its level is the rockets' sum, each fading with its distance to the camera
+  const roarRockets = (): void => {
+    if (!context.audio) return
+    const flying = projectiles.filter((projectile) => projectile.motor && projectile.body && !projectile.body.done && !projectile.placed)
+    if (flying.length === 0) {
+      rocketMotor?.stop()
+      rocketMotor = null
+      return
+    }
+    const at = camera.position
+    let level = 0
+    for (const rocket of flying) {
+      const distance = Math.hypot(rocket.pos.x - at.x, rocket.pos.y - at.y, rocket.pos.z - at.z)
+      level += ROCKET_MOTOR.volume / (1 + (distance / ROCKET_MOTOR.halfAt) ** 2)
+    }
+    rocketMotor ??= context.audio.loop(ROCKET_MOTOR.loop)
+    rocketMotor.set({ volume: Math.min(ROCKET_MOTOR.max, level) })
+  }
+
   // a projectile's mesh is its own (geometry, material, the model the host built for it): freed when it leaves the scene, keeping what the scene still draws
   const drop = (objects: THREE_NS.Object3D[]): void => {
     for (const object of objects) object.removeFromParent()
@@ -164,6 +188,8 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     smokeSources.length = 0
     smokeHiss?.stop()
     smokeHiss = null
+    rocketMotor?.stop()
+    rocketMotor = null
     projectiles.length = 0
     drop(meshes)
     meshes.length = 0
@@ -220,7 +246,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       radius: use.radius,
       fire: use.fire,
       age: 0,
-      ...(use.explosive !== undefined ? { body: createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives), aligned: isRocket } : {}),
+      ...(use.explosive !== undefined ? { body: createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives), aligned: isRocket, motor: isRocket && arsenal.explosives.get(use.explosive)?.kind === 'shaped_charge' } : {}),
     })
     if (!isRocket && !isMolotov && use.explosive !== undefined) context.audio?.play(GRENADE_PIN_SOUND, { position: use.origin })
     const key = isRocket ? 'act.launch' : isMolotov ? 'act.throw.molotov' : 'act.throw.grenade'
@@ -534,6 +560,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
         remove(projectile)
       }
     }
+    roarRockets()
   }
 
   return { throwUse, placeUse, backblastUse, detonateCharges, blastAt, update, clear, smokeLeft: () => smokeSources.map((source) => source.left) }

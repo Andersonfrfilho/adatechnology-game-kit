@@ -1,5 +1,25 @@
 # @adatechnology/game-audio
 
+## 0.11.0
+
+### Minor Changes
+
+- 89f1d9d: Sound occlusion: `createAudioEngine({ occlusion: { query } })` asks the host what lies between a sound and the ears (material and thickness, or a loss in dB), adds the transmission loss of the hits (`TRANSMISSION_LOSS`, a table of real values a game patches: 12 cm brick about 42 dB, concrete 48, drywall 33, wooden door 22, glass 27, open doorway 0, the mass law for other thicknesses) up to a configurable cap so a sound that gets around an edge never drops to silence, and plays each positioned voice through its own gain and lowpass (highs lose more). Voices are re-queried as the listener moves, at a limited rate and within a per-update budget, only while audible, and the gain and cutoff glide with `setTargetAtTime`. `occludedVoices()` reports the numbers. The old `(point) => 0..1` callback still works. The test room hands its engine a query that crosses its destruction world (`createWorldOcclusion`): the part's material, and its thickness from the way in and the way out.
+
+## 0.10.0
+
+### Minor Changes
+
+- baaa7d4: Recorded wood splinters (by blow strength), axe and blade hits on wood, metal clangs, scrapes and pings, cloth rips and cloth thumps (by strength) replace the synthesized recipes of those impacts: 44 CC0 takes from Freesound, credited in `assets/sfx/CREDITOS.md`. `splinter`, `shot_wood`, `shot_metal`, `break_wood`, `impact_soft_blunt` and `break_fabric` are keys of the impact table now, and a blow sends its strength (`intensity`) so the light, medium or heavy take plays. The recipes of the same ids stay as the fallback while a file decodes.
+
+## 0.9.4
+
+### Patch Changes
+
+- 5ce9f7b: `scripts/sfx-merge.mjs`: when `.sfx-local.json` links a game's sound folder, the test room also serves the `sfx:user` sounds the game's manifest does not answer (under `sfx-local/_sfx-user/`), so the game's folder no longer hides them; the game's manifest inside its own folder is no longer linked over its copy.
+- Updated dependencies [c4b8218]
+  - @adatechnology/game-contracts@0.30.0
+
 ## 0.9.3
 
 ### Patch Changes

@@ -1,5 +1,51 @@
 # @adatechnology/game-weapons-three
 
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies [89f1d9d]
+  - @adatechnology/game-audio@0.11.0
+
+## 0.19.1
+
+### Patch Changes
+
+- Updated dependencies [baaa7d4]
+- Updated dependencies [694cad8]
+  - @adatechnology/game-audio@0.10.0
+  - @adatechnology/game-weapons@0.10.0
+
+## 0.19.0
+
+### Minor Changes
+
+- c4b8218: The photo of the real weapon is now a small thumbnail in the bottom-left corner of the weapons room, opening large (with author, licence and the Wikimedia link) on a click, instead of a big card on the bench panel. `ModuleHost.cornerImage` (contracts) and the room's corner image with lightbox (test-room) are generic; the weapons module shows the photo only with the new `referencePhotos` option (default off, so the general test room shows none). The showcase no longer sends a bench sheet.
+- ad5b433: The model kit gets a polished steel material (`chrome`): bright and glossy under plain lights, as the rooms have no environment map for a fully metallic surface to mirror. The Desert Eagle Mark XIX wears it (`chrome` option), as its reference photo shows.
+
+  The Kalashnikovs (AK-47, AKM, RPK, AK-74, AKS-74U) get the stamped receiver of their photos (`kalashnikov`: low and long, the dust cover rising to the rear sight block, the long selector lever and the trunnion rivets) and the banana magazine as one smooth curved solid with its pressed side ribs, the RPK's the longer 40-round one. The anchors (`mag`, `bolt`, `grip`) and the reload stay as they were.
+
+- bb5bf2e: Weapon models redrawn from the photo of the real weapon. The Desert Eagle Mark XIX gets a model of its own (`pistol-deagle.ts`) instead of the generic pistol: one flat-topped upper from the rear to the muzzle (the slide and the fixed barrel block in the same steel, the barrel's triangular nose on the front face, the rail on top), the large squared trigger guard as one piece of the frame, the ring hammer and the thick grip raked back 18°. The anchors (`slide`, `grip`, `mag`, `trigger`, `hammer`, `muzzle`, `eject`) are the pistol's, so the hands, the reload and the shot follow the new shape.
+
+  The SVD Dragunov gets its thumbhole stock (`stock: 'svd'`: the comb with the cheek rest, the butt behind the hole and the bottom bar closing it at the foot of the pistol grip) and its chunky slotted wooden handguard with the gas block (`svd`), in `rifle-svd.ts`; no other rifle uses either option.
+
+  The bolt-action rifles (Remington 700 and its .300 Win Mag and .30-06 hunting versions, M24 SWS, Steyr SSG 69) get the sporter stock of their photos (`stock: 'sporter'`, `rifle-sporter.ts`): the butt dropping from the comb to the toe, the wrist into the pistol-grip swell, the bedding under the receiver and the forend tapering under the barrel, instead of the straight bar on a tall block.
+
+  The AK-47, AKM and RPK get the wedge-shaped wooden stock of their photos (`stock: 'ak'`): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate. The generic 7.62×39 rifle wears the AK-47 model, so it changes with it.
+
+### Patch Changes
+
+- bae13c6: The Kalashnikovs' banana magazine and the Desert Eagle's guard and barrel nose are built once per model kit and shared (`sharedGeometry`), like the smooth stocks: triangulating their outlines on every build put the AKs 9 to 20 times over their shapes-bench baseline. The geometry is unchanged: no golden moves.
+- 5cbfe7c: The smooth stocks (`profileSolid`) are triangulated once per kit and shared by every weapon that wears them, instead of on every build.
+- Updated dependencies [c4b8218]
+- Updated dependencies [5ce9f7b]
+  - @adatechnology/game-contracts@0.30.0
+  - @adatechnology/game-audio@0.9.4
+  - @adatechnology/game-floorplan-three@0.11.1
+  - @adatechnology/game-items-three@0.7.8
+  - @adatechnology/game-vfx-three@0.7.6
+  - @adatechnology/game-weapons@0.9.2
+
 ## 0.18.1
 
 ### Patch Changes

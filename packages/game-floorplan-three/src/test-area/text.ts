@@ -15,6 +15,7 @@ export type AreaText = {
   metrics: Record<'houses' | 'parts' | 'standing' | 'broken' | 'holes' | 'draw_calls' | 'triangles' | 'lod' | 'floor' | 'doors_open' | 'target' | 'planned', string>
   sheet: { kicker: string; title: string; template: string; seed: string; state: string; floors: string; size: string; parts: string; look: string; none: string; no_engine: string }
   specimens: Record<string, string>
+  furniture: Record<string, string>
   scenarios: Record<string, string>
   steps: Record<'built' | 'no_engine' | 'entered' | 'floor' | 'no_floor' | 'door' | 'no_door' | 'strike' | 'no_aim' | 'cleared' | 'reset'
     | 'one_pillar_broke' | 'slabs_whole' | 'no_slab_fell' | 'two_slab_fell' | 'two_roof_fell' | 'partition_broke' | 'slab_stayed' | 'glass_hole' | 'glass_broke' | 'walls_whole' | 'tank_hole' | 'tank_leaked' | 'gas_exploded' | 'gas_damaged', string>
@@ -44,6 +45,7 @@ export const TEXT: Record<string, AreaText> = {
     layers: { roof: 'Roof', lot: 'Lot (ground, wall, gate)', night: 'Night (lit windows and lamps)', room_lights: 'Room lights (one lamp per lit room, stopped by the walls)' },
     metrics: { houses: 'Houses', parts: 'Parts', standing: 'Standing', broken: 'Broken', holes: 'Holes', draw_calls: 'Draw calls', triangles: 'Triangles', lod: 'Level of detail (nearest)', floor: 'Your floor', doors_open: 'Doors open', target: 'You aim at', planned: 'Planned draw calls' },
     sheet: { kicker: 'House', title: 'House of the bench', template: 'Typology', seed: 'Seed', state: 'State', floors: 'Floors', size: 'Size', parts: 'Structure parts', look: 'You aim at', none: 'nothing to use', no_engine: 'The page gave no floorplan engine' },
+    furniture: { dining_table: 'Dining table', coffee_table: 'Coffee table', desk: 'Desk' },
     specimens: {
       house_casa_portico: 'Single-storey house: frame, the walls only close',
       house_casa_inteira: 'Whole single-storey house (real structure, windows, water tank, gas bottle)',
@@ -110,6 +112,7 @@ export const TEXT: Record<string, AreaText> = {
     layers: { roof: 'Telhado', lot: 'Lote (chão, muro, portão)', night: 'Noite (janelas e lâmpadas acesas)', room_lights: 'Luz por cômodo (uma lâmpada por cômodo aceso, barrada pelas paredes)' },
     metrics: { houses: 'Casas', parts: 'Peças', standing: 'De pé', broken: 'Quebradas', holes: 'Furos', draw_calls: 'Draw calls', triangles: 'Triângulos', lod: 'Nível de detalhe (a mais perto)', floor: 'Seu andar', doors_open: 'Portas abertas', target: 'Você mira em', planned: 'Draw calls planejados' },
     sheet: { kicker: 'Casa', title: 'Casa da bancada', template: 'Tipologia', seed: 'Semente', state: 'Estado', floors: 'Andares', size: 'Tamanho', parts: 'Peças da estrutura', look: 'Você mira em', none: 'nada para usar', no_engine: 'A página não deu o motor de plantas' },
+    furniture: { dining_table: 'Mesa de jantar', coffee_table: 'Mesa de centro', desk: 'Escrivaninha' },
     specimens: {
       house_casa_portico: 'Casa térrea em pórtico (as paredes só vedam)',
       house_casa_inteira: 'Casa térrea inteira (estrutura real, janelas, caixa d\'água, botijão)',
