@@ -135,7 +135,7 @@ export interface PieceRound {
   /** The largest radius (m). */
   readonly radius: number
   /**
-   * k of its moment of inertia about its axis, I = k m r^2: 0.5 a solid cylinder (a full can), 1 a thin shell (an empty one), 0.4 a solid ball, 2/3 a hollow one. On an incline
+   * k of its moment of inertia about its axis, I = k m r^2: 0.5 a solid cylinder (a full tin), 1 a thin shell (an empty tin), 0.4 a solid ball, 2/3 a hollow one. On an incline
    * of angle t it rolls down at g sin t / (1 + k).
    */
   readonly inertia: number

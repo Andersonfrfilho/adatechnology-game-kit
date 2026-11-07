@@ -103,6 +103,8 @@ const SURFACE_CELLS_ACROSS = 24
 const cellKey = (ix: number, iz: number): number => (ix + 32768) * 65536 + (iz + 32768)
 /** Most steps an update is split into while round pieces roll fast (`collisionSteps`). */
 const MAX_COLLISION_STEPS = 8
+/** Radius (m) a round piece is taken to have at least when the update is split for it (`collisionSteps`): a degenerate one of nothing does not split it without end. */
+const MIN_ROUND_RADIUS = 0.005
 /** Two pieces closing slower than this (m/s) only stop against each other; faster, they bounce by their restitution. */
 const BOUNCE_MIN_SPEED = 0.1
 /** A contact normal at least this level (its share along the ground) puts two pieces apart along the ground only. */
@@ -193,6 +195,8 @@ export class PieceSystem {
   private readonly wideSurfaces: Solid[] = []
   /** Each piece's box of the step (`solids`), by its body. */
   private readonly solidOf = new Map<PieceBody, Solid>()
+  /** Each piece's surfaces of the step (its parts' boxes, or its box), by its body. */
+  private readonly surfacesOf = new Map<PieceBody, Solid[]>()
   private supportTurn = 0
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
@@ -272,6 +276,7 @@ export class PieceSystem {
     this.solids = []
     this.surfaces = []
     this.solidOf.clear()
+    this.surfacesOf.clear()
     this.surfaceGrid.clear()
     this.wideSurfaces.length = 0
   }
@@ -279,6 +284,7 @@ export class PieceSystem {
   /** Drops a piece from the boxes of the step (`solids`, `surfaces` and their grid). */
   private forgetSolids(body: PieceBody): void {
     this.solidOf.delete(body)
+    this.surfacesOf.delete(body)
     this.solids = this.solids.filter((s) => s.body !== body)
     this.surfaces = this.surfaces.filter((s) => s.body !== body)
     for (const [key, cell] of this.surfaceGrid) {
@@ -412,30 +418,33 @@ export class PieceSystem {
   }
 
   /**
-   * Steps of an update: one, or more while a round piece moves fast enough to pass through a piece it could meet within the update (the two closing at their speeds cover at
-   * most the round one's radius per step: two cans at 3.6 m/s close 12 cm in a frame, a can is 7 cm across). Alone in the open it takes one step, so its sweep against the
-   * world (the costly part) runs once.
+   * Steps of an update: one, or more while a round piece and a piece it could meet within the update close in fast enough to pass through each other between two (closing at
+   * their two speeds they cover at most the round one's radius per step: two cans at 3.6 m/s close 12 cm in a frame, a can is 7 cm across; a plank thrown at a can still counts).
+   * A round piece with nothing in reach takes one step, so its sweep against the world (the costly part) runs once.
    */
   private collisionSteps(dt: number): number {
     let need = 1
     const p = this.p
+    const speedOf = (b: PieceBody): number => (b.held ? 0 : Math.hypot(b.velocity[0], b.velocity[1], b.velocity[2]))
     for (const b of this.list) {
-      if (!b.round || b.sleeping || b.held) continue
-      const speed = Math.hypot(b.velocity[0], b.velocity[1], b.velocity[2])
-      if (speed * dt < b.round.radius * 0.5) continue
+      if (!b.round || b.held) continue
+      // a radius of nothing passes through nothing: one step
+      const radius = Math.max(MIN_ROUND_RADIUS, b.round.radius)
+      const speed = b.sleeping ? 0 : speedOf(b)
       const c = this.centerOf(b, p)
       const cx = c.x, cy = c.y, cz = c.z
       const rb = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
       for (const o of this.list) {
-        if (o === b) continue
-        const other = Math.hypot(o.velocity[0], o.velocity[1], o.velocity[2])
-        const reach = (speed + other) * dt + rb + Math.hypot(o.halfExtents[0], o.halfExtents[1], o.halfExtents[2])
+        if (o === b || (b.sleeping && o.sleeping)) continue
+        const closing = speed + (o.sleeping ? 0 : speedOf(o))
+        if (closing * dt < radius * 0.5) continue
+        const reach = closing * dt + rb + Math.hypot(o.halfExtents[0], o.halfExtents[1], o.halfExtents[2])
         const oc = this.centerOf(o, p)
         if (Math.abs(oc.x - cx) > reach || Math.abs(oc.y - cy) > reach || Math.abs(oc.z - cz) > reach) continue
-        need = Math.max(need, Math.ceil(((speed + other) * dt) / b.round.radius))
+        need = Math.max(need, Math.ceil((closing * dt) / radius))
       }
     }
-    return Math.min(MAX_COLLISION_STEPS, need)
+    return Math.max(1, Math.min(MAX_COLLISION_STEPS, need))
   }
 
   private step(dt: number): void {
@@ -464,6 +473,12 @@ export class PieceSystem {
     })
     this.solidOf.clear()
     for (const one of this.solids) this.solidOf.set(one.body, one)
+    this.surfacesOf.clear()
+    for (const one of this.surfaces) {
+      const list = this.surfacesOf.get(one.body)
+      if (list) list.push(one)
+      else this.surfacesOf.set(one.body, [one])
+    }
     this.surfaceGrid.clear()
     this.wideSurfaces.length = 0
     for (const one of this.surfaces) {
@@ -1094,12 +1109,14 @@ export class PieceSystem {
         const cb = centers[j]
         if (Math.abs(ca[1] - cb[1]) > r || Math.abs(ca[2] - cb[2]) > r) continue
         // one lies on the other (a book on a shelf): the corners hold them apart, a sideways push would slide it off
-        if (Math.abs(ca[1] - cb[1]) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9) continue
+        // (a round piece meets the other by their shapes, which tell lying on from beside: a can by a tall wardrobe whose middle is far above it still hits it)
+        if (!a.round && !b.round && Math.abs(ca[1] - cb[1]) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9) continue
         // or on a tilted top (a table going over): the one above is over the other's top, whatever their boxes' heights
         if (this.onTopOf(b, a, new this.THREE.Vector3(...cb)) || this.onTopOf(a, b, new this.THREE.Vector3(...ca))) continue
         if (a.round || b.round) this.knock(a, b, ca, cb)
         // two boxes, unless one leans on the other's part (a board on a bench's seat): the support holds them, not a push apart
-        else if (!this.restsOn(a, b, false) && !this.restsOn(b, a, false)) this.separatePair(a, b, ca, cb, dt)
+        // nor when no part of one is in a part of the other (a book lying in the hollow of a case on its back is inside its box, not in its boards)
+        else if (this.partsOverlap(a, b) && !this.restsOn(a, b, false) && !this.restsOn(b, a, false)) this.separatePair(a, b, ca, cb, dt)
       }
     }
   }
@@ -1214,6 +1231,19 @@ export class PieceSystem {
       a.lastHit = b.lastHit = this.time
       this.o.onKnock?.(a, b, hit.point, -closing)
     }
+  }
+
+  /** Whether a part of `a` and a part of `b` (their boxes of the step, as world-aligned boxes around them) overlap. */
+  private partsOverlap(a: PieceBody, b: PieceBody): boolean {
+    const extent = (s: Solid, k: number): number => Math.abs(s.e[k]) * s.half[0] + Math.abs(s.e[k + 4]) * s.half[1] + Math.abs(s.e[k + 8]) * s.half[2]
+    for (const pa of this.surfacesOf.get(a) ?? []) {
+      for (const pb of this.surfacesOf.get(b) ?? []) {
+        let apart = false
+        for (let k = 0; k < 3 && !apart; k++) apart = Math.abs(pa.c[k] - pb.c[k]) > extent(pa, k) + extent(pb, k)
+        if (!apart) return true
+      }
+    }
+    return false
   }
 
   /** Two boxes overlapping side by side (horizontal bounding circles): pushed apart, gently, so they do not interpenetrate forever. */

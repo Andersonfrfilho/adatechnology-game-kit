@@ -1587,10 +1587,11 @@ class Renderer implements DestructionRenderer {
       this.pieceSys.setCenter(old, center)
       old.mass = Math.max(0.05, this.massOf(objectId))
       // what came off no longer touches the ground for it: its contacts are those of what is left
+      // and what others meet it by are the boxes of what is left (`partBoxes`): nothing invisible collides
       if (old.contacts || old.round) {
         this.fitSurface(b, old)
         if (!old.round) this.setContacts(b, old, this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
-      }
+      } else if (old.partBoxes) this.fitPartBoxes(b, old)
       old.sleeping = false
     } else if (kitOriginOf(b.root)?.kind === 'furniture') {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples

@@ -328,6 +328,89 @@ describe('a can and a table that is a piece', () => {
   })
 })
 
+describe('a can and a tall loose piece', () => {
+  it('a can rolled along the floor into a 1.9 m wardrobe that is a piece bounces off it, never through it', () => {
+    const s = scene3()
+    s.world.addObject('wardrobe', [partState('body', 'wood', { mass: 60 })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1.9, 0.6))
+    mesh.position.y = 0.95
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(1, 0, 0)
+    s.scene.add(root)
+    root.updateMatrixWorld(true)
+    s.renderer.bind('wardrobe', root, { parts: { body: mesh } })
+    s.renderer.makePiece('wardrobe').sleeping = true
+    const can = addCan(s, 'can', [0, CAN_RADIUS + 0.001, 0], { velocity: [3, 0, 0] })
+    can.piece.angularVelocity[2] = -3 / CAN_RADIUS
+    let most = -Infinity
+    run(s.renderer, 1, () => {
+      most = Math.max(most, can.root.position.x)
+    })
+    // its face at x 0.5: the can's middle stops a radius short of it, and goes back
+    expect(most).toBeLessThan(0.5 - CAN_RADIUS + 0.01)
+    expect(can.root.position.x).toBeLessThan(most - 0.05)
+  })
+})
+
+describe('a fast box into a can', () => {
+  it('a book thrown low at 9 m/s into a can asleep knocks it on instead of passing through it', () => {
+    const s = scene3()
+    const can = addCan(s, 'can', [0, CAN_RADIUS + 0.001, 0])
+    run(s.renderer, 1.5)
+    expect(can.piece.sleeping).toBe(true)
+    s.world.addObject('book', [partState('body', 'paper', { mass: 0.6 })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.2, 0.15))
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(-0.4, 0.12, 0)
+    s.scene.add(root)
+    root.updateMatrixWorld(true)
+    s.renderer.bind('book', root, { parts: { body: mesh } })
+    s.renderer.makePiece('book', { velocity: [9, 0, 0] })
+    const met: Array<{ book: number; can: number; v: number }> = []
+    run(s.renderer, 0.2, () => {
+      if (met.length === 0 && can.piece.velocity[0] > 0.5) met.push({ book: root.position.x, can: can.root.position.x, v: can.piece.velocity[0] })
+    })
+    // knocked ahead when they met, the book still behind it then (not through it, as one step of 15 cm would have taken it)
+    const first = met[0]
+    expect(first).toBeDefined()
+    expect(first?.v ?? 0).toBeGreaterThan(1)
+    expect(first?.book ?? Infinity).toBeLessThan(first?.can ?? -Infinity)
+  })
+})
+
+describe('what others meet a piece by after a part comes off it', () => {
+  it('a shelf of 14 boards (part boxes, no contacts) that loses its top board is met by the 13 left, not by the one gone', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
+    const ids = Array.from({ length: 14 }, (_, i) => `board${i}`)
+    world.addObject('shelf', ids.map((id) => partState(id, 'wood', { mass: 1 })), [ids.slice(0, 13), [ids[13] ?? 'board13']])
+    const root = new THREE.Group()
+    const parts: Record<string, THREE.Mesh> = {}
+    ids.forEach((id, i) => {
+      const board = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.02, 0.3))
+      board.position.y = 0.01 + i * 0.12
+      root.add(board)
+      parts[id] = board
+    })
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('shelf', root, { parts })
+    const piece = renderer.makePiece('shelf') as PieceBody
+    expect(piece.contacts).toBeUndefined()
+    expect(piece.partBoxes).toHaveLength(14)
+    const topOf = (p: PieceBody): number => Math.max(...(p.partBoxes ?? []).map((b) => b.center[1] + b.half[1]))
+    const before = topOf(piece)
+    world.emit({ type: 'detach', object: 'shelf', joint: 'j', parts: [ids[12] ?? '', ids[13] ?? ''], by: 'break', groups: [ids.slice(0, 13), [ids[13] ?? '']] })
+    renderer.update(0)
+    expect(piece.partBoxes).toHaveLength(13)
+    // the highest box left is the 13th board's: 12 cm under where the one gone was (from the centre of mass, which moved down 6 cm)
+    expect(before - topOf(piece)).toBeCloseTo(0.12 - 0.06, 2)
+  })
+})
+
 describe('fifty cans', () => {
   it('roll and knock about on the floor in little time per frame, and none goes under the floor', () => {
     const s = scene3()
