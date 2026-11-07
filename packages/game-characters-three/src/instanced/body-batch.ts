@@ -67,6 +67,8 @@ const createPrepass = (three: Three, geometry: THREE_NS.BufferGeometry, params: 
   const mesh = new three.Mesh(geometry, material)
   mesh.frustumCulled = false
   mesh.renderOrder = PREPASS_RENDER_ORDER
+  // the bodies are placed per instance on the GPU: the template geometry a ray would test sits at the origin, where none is drawn
+  mesh.raycast = () => undefined
   return mesh
 }
 
@@ -94,6 +96,8 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
   mesh.customDepthMaterial = createBodyMaterial(three, { depth: true, time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDepthMaterial
   if (identity) mesh.customDistanceMaterial = createBodyMaterial(three, { distance: true, time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDistanceMaterial
   mesh.frustumCulled = false
+  // the bodies are placed per instance on the GPU: the template geometry a ray would test sits at the origin, where none is drawn
+  mesh.raycast = () => undefined
   mesh.castShadow = castShadow
   mesh.receiveShadow = true
   mesh.count = 0
