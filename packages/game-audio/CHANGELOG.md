@@ -1,5 +1,11 @@
 # @adatechnology/game-audio
 
+## 0.13.1
+
+### Patch Changes
+
+- 2bc0598: `createAudioEngine({ createContext })` aceita qualquer `BaseAudioContext`: um `OfflineAudioContext` entra sem cast, e o motor só retoma e fecha um contexto ao vivo (`isLiveContext`).
+
 ## 0.13.0
 
 ### Minor Changes
