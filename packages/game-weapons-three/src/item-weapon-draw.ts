@@ -23,6 +23,8 @@ export type DrawItemWeaponParams = {
 export interface WeaponGrips {
   readonly handle: number
   readonly support?: number
+  /** Where the right hand closes when a fraction of the length is not enough: metres along the weapon from its centre and above its underside (the brass knuckles gripped through their rings). */
+  readonly handleAt?: readonly [number, number]
 }
 
 /** The right hand a third of the length from the tail: a one-handed tool held by its handle. */
@@ -85,12 +87,12 @@ function restOnFloor({ THREE, group, root }: Context, grips: WeaponGrips): void 
   const length = laid.max.x - laid.min.x
   const handle = new THREE.Object3D()
   handle.name = 'handle'
-  handle.position.set(length * grips.handle, 0, 0)
+  handle.position.set(grips.handleAt ? grips.handleAt[0] : length * grips.handle, grips.handleAt ? grips.handleAt[1] : 0, 0)
   group.add(handle)
   if (grips.support !== undefined) {
     const support = new THREE.Object3D()
     support.name = 'support'
-    support.position.set(length * grips.support, 0, 0)
+    support.position.set(length * grips.support, handle.position.y, 0)
     group.add(support)
   }
   root.traverse((node) => {

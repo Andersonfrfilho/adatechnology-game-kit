@@ -282,6 +282,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     hand.hg.rotation.x = wristX
   }
 
+  /** The closure `update` gave each hand this frame, which `reach` raises for a hand that holds something. */
+  const gripNow = new Map<ThirdPersonHand, number>()
+  /** One unit of `HandTargets.grip` in the closure of a hand (the armed hand's 1.22 is a full grip). */
+  const FULL_GRIP = 1.22
+
   const eyeSocket = new THREE.Object3D()
   eyeSocket.name = 'eye'
   eyeSocket.position.set(BUILDER_EYE[0] + eyeOffset[0], BUILDER_EYE[1] + eyeOffset[1], BUILDER_EYE[2] + eyeOffset[2])
@@ -677,6 +682,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
                   ? 0.85
                   : 0.12
         const wristSwing = holdRight || state.armed || running ? 0 : -Math.min(1, gait) * Math.sin(ph - 0.6) * 0.12 * hand.side
+        gripNow.set(hand, grip)
         setHandGrip(hand, grip, wristSwing)
       })
       root.updateMatrixWorld(true)
@@ -709,9 +715,15 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if ((run && (run.clip.channels ?? 'full') !== 'body') || fall > 0) return
       root.updateMatrixWorld(true)
       armReach.apply(targets, view)
-      // the left hand on a tool's shaft closes around it as the tool asks (the stance of the body knows only the right hand's tool)
-      const left = hands.find((hand) => hand.side > 0)
-      if (targets?.slideL && targets.L && left) closeFingers(left, TRIGGER_CURL * Math.min(1, Math.max(0, targets.gripL ?? targets.grip ?? 1)))
+      // a hand a tool asks for closes around it, whatever the tool is: a knife, a sword or a bar has no firearm pose to close the fingers for it
+      for (const hand of hands) {
+        const isRight = hand.side < 0
+        const asked = isRight ? targets?.R : targets?.L
+        const grip = isRight ? targets?.grip : (targets?.gripL ?? targets?.grip)
+        if (!asked || grip === undefined) continue
+        const wanted = FULL_GRIP * grip
+        if (wanted > (gripNow.get(hand) ?? 0)) setHandGrip(hand, wanted, hand.hg.rotation.x)
+      }
       // the index finger of a hand on a trigger curls by itself (`HandTargets.fingers` for the right hand, `fingersL` for the left), the other fingers keep the grip
       for (const hand of hands) {
         const curl = hand.side < 0 ? targets?.fingers?.index : targets?.fingersL?.index

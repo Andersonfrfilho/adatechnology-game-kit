@@ -38,7 +38,7 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle (the left 11 cm behind the right); the brass knuckles lie with the ring row across the strike
   ['kabar', { flip: true }],
   ['katana', { flip: true, grips: { handle: -0.35, support: -0.46 } }],
-  ['brass_knuckles', { turn: 1, roll: 1 }],
+  ['brass_knuckles', { turn: 1, roll: 1, grips: { handle: -0.35, handleAt: [-0.045, 0.03] } }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
