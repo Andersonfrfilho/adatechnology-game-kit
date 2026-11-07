@@ -118,7 +118,7 @@ export type { RealizedVoice, RealizeTarget } from './webaudio/nodes'
 export { buildChain } from './webaudio/chain'
 export type { MixChain } from './webaudio/chain'
 export { bufferOf, fillImpulse, fillNoise } from './webaudio/noise'
-export { globalContext, unlockContext } from './webaudio/context'
+export { globalContext, isLiveContext, unlockContext } from './webaudio/context'
 export { createAudioSink } from './webaudio/sink'
 export type { EngineSink } from './webaudio/sink'
 /** @deprecated import from '@adatechnology/game-audio/testing' */

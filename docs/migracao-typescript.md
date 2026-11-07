@@ -35,7 +35,7 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
 - [x] `game-vehicles-fleet` 2.247 → 0: os kits compartilhados (`createWaterAirKit`, `createPlanesKit`) com tipo próprio, as opções de cada peça (casco, hélice, rotor, cabine, torre, guidão, chassi) como interfaces, e os testes
 - [ ] `game-vehicles` 28: os `[key: string]: any` de extensão da API pública (`api.ts` 26, `BuildContext` e `Kit` 1 cada). Trocar por `unknown` dá uns 2.600 erros na frota, que lê esses campos livres: vira um PR próprio, que declara cada campo
 - Achados tipando o `game-vehicles` (corrigidos): `zoneDamageAt` devolve `{ main, list }` e `zonePoint` recebe o lado e devolve `{ p, dir }`, mas a API pública dizia outra coisa; `locate` e `partOfSurface` recebiam o ponto como número; o giro do `fling` era tipado como número; `broken` das lanternas também vale `'gone'`
-- Achados tipando a frota (o comportamento ficou igual, para decidir à parte): o `fogLamp` dos carros extras recebe um número onde vai o ponto da superfície; `LampSpec.wrap` era tipado como booleano mas é um comprimento; `Gd.ux ? 0.5 : 0.5` dá sempre 0,5
+- Achados tipando a frota (fechados): o `fogLamp` dos carros extras recebe o ponto da superfície (`SurfHit`) em todas as chamadas; `LampSpec.wrap` é tipado como comprimento (`number`); o `Gd.ux ? 0.5 : 0.5` da viatura da PM virou `Gd.at(0.5, …)`, que é o que a conta queria: o meio da grade da porta (x = −0,32 m), onde o texto é escrito, e de onde só se lê a profundidade da lataria
 - [x] `tools/`: `vehicles-catalog`, `characters-catalog`, `compat-check` e `golden` sem `any` (os documentos falsos, o digest da frota, a frota leve e o snapshot exato com tipos estruturais)
 
 ### Fora dos pacotes, em JavaScript com JSDoc
@@ -47,6 +47,9 @@ Contratos primeiro, depois quem os outros importam, e os grandes por último, um
   `play(id, ponto)`) onde esperam um `EffectSink` (`play(pedido)`), e a fumaça, a poeira e o fogo desses carros sumiam (agora recebem `room.effects`);
   o `perf.mjs` lia `room.tool.id`, que não existe (é `def.id`), e o aviso de arma errada nunca disparava; o teste da área de móveis contava peças
   `'detached'`, que não é um status de peça
+- Achados tipando o áudio (fechados): `createAudioEngine({ createContext })` aceita qualquer `BaseAudioContext`, e o `OfflineAudioContext` do
+  `body-reel` e das medições C1–C10 entra sem cast; `unlockContext` e o `dispose` só retomam e fecham um contexto ao vivo (`isLiveContext`). O JSDoc do
+  `loadContent` das histórias já aceitava texto ou objeto
 
 ### Regras
 - [x] Regra "tudo tipado" no `CLAUDE.md` (seção 8)

@@ -90,7 +90,7 @@ async function render(options: MeasureOptions, seconds: number, act: (engine: Au
   const events: VoiceStartEvent[] = []
   const engine = createAudioEngine({
     banks: options.banks,
-    createContext: () => context as unknown as AudioContext,
+    createContext: () => context,
     samples: { loader: options.loader, autoLoad: false },
     onVoiceStart: (event) => events.push(event),
     ...(options.mix ? { mix: options.mix } : {}),

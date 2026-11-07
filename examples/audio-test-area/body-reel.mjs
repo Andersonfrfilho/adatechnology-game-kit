@@ -65,7 +65,7 @@ const render = (/** @type {number} */ seconds, /** @type {ReelEvent[]} */ timeli
       const { BODY_FOLEY_BANK, createAudioEngine } = window.reel
       const rate = 48000
       const ctx = new OfflineAudioContext(1, Math.ceil(total * rate), rate)
-      const engine = createAudioEngine({ banks: [BODY_FOLEY_BANK], createContext: () => /** @type {AudioContext} the engine draws the same graph into an offline context; its option is typed for the live one */ (/** @type {unknown} */ (ctx)), seed: 5 })
+      const engine = createAudioEngine({ banks: [BODY_FOLEY_BANK], createContext: () => ctx, seed: 5 })
       engine.setListener({ position: [0, 1.7, 0], yaw: 0 })
       for (const [at, id, volume = 1, distance = 1.5] of events) engine.play(id, { delay: at, volume, position: [0, 0, -distance] })
       const buffer = await ctx.startRendering()
