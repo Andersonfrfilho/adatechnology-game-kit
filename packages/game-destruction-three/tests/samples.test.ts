@@ -38,7 +38,11 @@ describe('recorded blasts and fire', () => {
     // a smoke canister hisses for a minute over two takes of gas, chained the same way
     expect(samples.get('smoke_grenade_hiss')!.loop).toBeTruthy()
     expect(samples.get('smoke_grenade_hiss')!.close.length).toBeGreaterThanOrEqual(2)
-    for (const [id, sample] of samples) if (![...loops, 'smoke_grenade_hiss'].includes(id)) expect(sample.loop, id).toBeUndefined()
+    // a rocket's motor roars for as long as it flies, over three takes chained
+    expect(samples.get('rocket_motor_loop')!.loop).toBeTruthy()
+    expect(samples.get('rocket_motor_loop')!.close.length).toBeGreaterThanOrEqual(3)
+    expect(samples.get('explosion_rocket')!.close.length).toBeGreaterThanOrEqual(3)
+    for (const [id, sample] of samples) if (![...loops, 'smoke_grenade_hiss', 'rocket_motor_loop'].includes(id)) expect(sample.loop, id).toBeUndefined()
   })
 
   it('a blast fades with distance like its recipe, and only blasts and fire are taken from the manifest', () => {
