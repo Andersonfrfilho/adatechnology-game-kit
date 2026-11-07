@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { buildWeaponModelById } from '../src'
+import { strayParts } from './support/connected-parts'
 
 const sizeOf = (object: THREE.Object3D): THREE.Vector3 => new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3())
 
@@ -13,6 +14,16 @@ describe('the Desert Eagle Mark XIX drawn from its photo', () => {
     expect(size.y).toBeGreaterThan(0.13)
     expect(size.y).toBeLessThan(0.17)
     expect(model.parts.slide && model.parts.grip && model.parts.mag && model.parts.trigger && model.parts.hammer && model.parts.muzzle && model.parts.eject).toBeTruthy()
+  })
+
+  it('is finished in polished steel like the photo: the slide is bright and glossy', () => {
+    let slide: THREE.MeshStandardMaterial | undefined
+    model.parts.slide!.traverse((object) => {
+      const mesh = object as THREE.Mesh
+      if (!slide && mesh.isMesh) slide = mesh.material as THREE.MeshStandardMaterial
+    })
+    expect(slide!.color.getHSL({ h: 0, s: 0, l: 0 }).l).toBeGreaterThan(0.55)
+    expect(slide!.roughness).toBeLessThan(0.25)
   })
 
   it('keeps the barrel block fixed ahead of a slide that only covers the rear half, the muzzle at the front', () => {
@@ -66,5 +77,42 @@ describe('the Kalashnikovs with the wedge stock of their photos', () => {
     const receiver = new THREE.Box3().setFromObject(model.parts.bolt!)
     expect(stock.max.y - stock.min.y).toBeGreaterThan(0.11)
     expect(stock.min.y).toBeLessThan(receiver.min.y - 0.08)
+  })
+})
+
+describe('the Kalashnikovs with the stamped receiver and the banana magazine of their photos', () => {
+  it.each(['ak_47', 'akm', 'rpk', 'ak_74', 'aks_74u'])('%s: the magazine is one curved solid that bends forward, and the receiver stays low', (weapon) => {
+    const model = buildWeaponModelById(THREE, weapon)!
+    const meshes = model.parts.mag!.children.filter((child) => (child as THREE.Mesh).isMesh)
+    expect(meshes.length).toBeLessThan(6)
+    const box = new THREE.Box3().setFromObject(model.parts.mag!)
+    const top = model.parts.mag!.getWorldPosition(new THREE.Vector3())
+    // the foot of the magazine is well ahead of its top: the AK's forward curve
+    expect(box.max.x - top.x).toBeGreaterThan(0.05)
+    expect(top.y - box.min.y).toBeGreaterThan(0.15)
+    const receiver = new THREE.Box3().setFromObject(model.parts.bolt!)
+    expect(receiver.max.y).toBeLessThan(0.04)
+  })
+
+  it('gives the RPK the longer 40-round magazine', () => {
+    const height = (weapon: string): number => {
+      const magazine = buildWeaponModelById(THREE, weapon)!.parts.mag!
+      return new THREE.Box3().setFromObject(magazine).getSize(new THREE.Vector3()).y
+    }
+    expect(height('rpk')).toBeGreaterThan(height('akm') + 0.04)
+  })
+})
+
+describe('the models redrawn from their photos have no part left in the air', () => {
+  const PISTOLS = ['desert_eagle_mark_xix']
+  const RIFLES = ['svd_dragunov', 'remington_700', 'remington_700_300wm', 'hunting_rifle_30_06', 'm24_sws', 'steyr_ssg_69', 'ak_47', 'akm', 'rpk', 'ak_74', 'aks_74u']
+  // gaps of the shared rifle pieces, not of these redraws: the long scopes' eyepiece and the brake's slots (details.ts, muzzle-brake.ts) and the trigger of the generic grip
+  const sharedGaps = /scope|optic|pso|acog|brake/
+
+  it.each([...PISTOLS, ...RIFLES])('%s: every visible mesh touches the rest of the model or sits inside it', (weapon) => {
+    const model = buildWeaponModelById(THREE, weapon)!
+    const skipped = new Set<THREE.Object3D>(Object.entries(model.parts.fittings ?? {}).flatMap(([key, list]) => (sharedGaps.test(key) ? list : [])))
+    if (RIFLES.includes(weapon) && model.parts.trigger) skipped.add(model.parts.trigger)
+    expect(strayParts(model.root, 0.0015, (mesh) => skipped.has(mesh))).toEqual([])
   })
 })

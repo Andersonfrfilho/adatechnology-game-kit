@@ -7389,11 +7389,12 @@
           "rod": 1,
           "bayo": 1,
           "rpm": 600,
-          "rel": 0.4
+          "rel": 0.4,
+          "kalashnikov": 1
         }
       },
       "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
-      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs."
     },
     "akm": {
       "value": {
@@ -7413,11 +7414,12 @@
           "rod": 1,
           "rpm": 600,
           "magMat": "bakelite",
-          "rel": 0.45
+          "rel": 0.45,
+          "kalashnikov": 1
         }
       },
       "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
-      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs."
     },
     "rpk": {
       "value": {
@@ -7439,11 +7441,80 @@
           "rpm": 600,
           "rel": 0.4,
           "bipod": 1,
-          "magLen": 1.4
+          "magLen": 1.4,
+          "kalashnikov": 1
         }
       },
       "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
-      "reason": "The gallery drew the wooden stock of the Kalashnikovs as a thin straight bar with a block at the end. The SDK draws the wedge of the photo (stock: 'ak'): the comb falling a little and the belly falling a lot from the receiver to the steel buttplate."
+      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs."
+    },
+    "desert_eagle_mark_xix": {
+      "value": {
+        "builder": "pistol",
+        "caliber": ".50 AE",
+        "length": 270,
+        "barrel": 152,
+        "options": {
+          "st": "deagle",
+          "h": 0.04,
+          "gl": 0.125,
+          "deagle": 1,
+          "rel": 1.8,
+          "chrome": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The reference photo shows the Mark XIX in polished chrome; the gallery gave it the dark steel of the other pistols. The SDK draws it in the kit's polished steel (chrome), bright under plain lights as in the photo."
+    },
+    "ak_74": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,45×39",
+        "length": 943,
+        "barrel": 415,
+        "options": {
+          "stock": "ak",
+          "mag": "curved",
+          "hg": "poly",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "brake": 1,
+          "ak": 1,
+          "rod": 1,
+          "rpm": 650,
+          "magMat": "bakelite",
+          "kalashnikov": 1,
+          "wood": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs. Its photo also shows the wooden furniture of the early AK-74, so it takes the wooden wedge stock (stock: 'ak') and wooden handguard (wood) too; the generic fixed stock left its sling swivel hanging in the air under the butt."
+    },
+    "aks_74u": {
+      "value": {
+        "builder": "rifle",
+        "caliber": "5,45×39",
+        "length": 730,
+        "barrel": 206,
+        "options": {
+          "stock": "fold",
+          "mag": "curved",
+          "hg": "poly",
+          "hgFrac": 0.42,
+          "gas": 1,
+          "charge": 1,
+          "brake": 1,
+          "ak": 1,
+          "rod": 1,
+          "rpm": 700,
+          "magMat": "bakelite",
+          "stockLen": 0.22,
+          "kalashnikov": 1
+        }
+      },
+      "source": "reference: the free Commons photo pinned in packages/game-weapons-three/assets/weapon-references.json",
+      "reason": "The gallery drew the Kalashnikovs on the generic receiver (a tall box with a slab on top) with a magazine of three straight segments. The SDK draws the stamped receiver of the photos (kalashnikov): low and long, the dust cover rising to the rear sight block, the selector lever and the trunnion rivets, and the banana magazine as one smooth curved solid with its side ribs."
     }
   },
   "weaponTags": {
