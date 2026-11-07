@@ -114,7 +114,8 @@ export function mergeRuns(runs: readonly VoidRun[], check: BeamCheck): VoidRun[]
  * Each void under a ground beam, judged: between supports (ground or a pillar on each side) a simply supported span, `w L² / 8`, holding while `L` is
  * at most `spanDepth` depths and the moment is within what the section resists; reaching an end with no pillar there, a cantilever, `w c² / 2`, at most
  * half that span, and only while the ground left under the beam is at least as long as the overhang (the resultant of a uniform load stays over its
- * support). A void that takes the whole beam leaves nothing to hold.
+ * support) or a pillar holds its root. A cantilever that fails breaks off at its root when the beam is balanced or held there, and tips the whole beam
+ * in when it is not. A void that takes the whole beam leaves nothing to hold.
  */
 export function judgeBeam(flags: readonly boolean[], step: number, check: BeamCheck): BeamVerdict {
   const merged = mergeRuns(voidRuns(flags, step), check)
@@ -135,10 +136,13 @@ export function judgeBeam(flags: readonly boolean[], step: number, check: BeamCh
     const cantilever = freeStart || freeEnd
     const moment = (cantilever ? (check.load * span * span) / 2 : (check.load * span * span) / 8) * check.loadFactor
     const reach = cantilever ? (check.spanDepth * check.depth) / 2 : check.spanDepth * check.depth
+    // an overhang whose weight stands past the ground left, with no pillar at its root, takes the beam over with it
     const balanced = !cantilever || span <= ground
-    const holds = span <= reach && moment <= check.resists && balanced
+    const rooted = cantilever && pillarNear(check.pillars, freeStart ? run.end : run.start)
+    const holds = span <= reach && moment <= check.resists && (balanced || rooted)
     verdicts.push({ ...run, kind: cantilever ? 'cantilever' : 'span', span, moment, holds, cracks: moment > check.cracking })
-    if (cantilever && !holds) tips = true
+    // one that is balanced or held at its root breaks off there instead: the overhang goes, the beam stays
+    if (cantilever && !holds && !balanced && !rooted) tips = true
   }
   return { runs: verdicts, tips }
 }

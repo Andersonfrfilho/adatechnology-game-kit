@@ -1576,7 +1576,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** What a bearer does over the voids under it: settles, bridges them, breaks over one of them (`opened`), or loses its support. */
-  type Bearing = { status: 'settled' | 'bridged' | 'opened' | 'unsupported'; failed: VoidRun[]; cracks: Array<{ at: number; top: boolean }> }
+  type Bearing = { status: 'settled' | 'bridged' | 'opened' | 'unsupported'; failed: Array<VoidRun & { free?: 'start' | 'end' }>; cracks: Array<{ at: number; top: boolean }> }
 
   /**
    * A ground beam over voids (`judgeBeam`): every void, the ground between them taking the reactions, the pillars cast with it. Over a void it bridges
@@ -1600,8 +1600,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const k1 = Math.round(run.end / fp.step)
       if (!run.holds) {
         // it breaks where the ground stops on each side, and the stretch between hangs into the hole
-        failed.push(run)
-        cracks.push({ at: run.start, top: true }, { at: run.end, top: true })
+        const free = run.kind !== 'cantilever' ? undefined : run.start <= 1e-9 ? 'start' : 'end'
+        failed.push({ start: run.start, end: run.end, ...(free ? { free } : {}) })
+        if (free !== 'start') cracks.push({ at: run.start, top: true })
+        if (free !== 'end') cracks.push({ at: run.end, top: true })
         for (let k = k0; k < k1; k++) fp.slices[k]!.drop = Math.min(fp.slices[k]!.cut, run.span / 2)
         continue
       }
@@ -1677,7 +1679,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * A bearer broke over a void: what rests on it only over that stretch loses its support there (it falls); a masonry wall that runs past both edges
    * arches over the hole, and the units under the arch (a triangle at 60 degrees on the span) fall out of it.
    */
-  const openOver = (o: ObjRT, b: Bearer, fp: Footprint, failed: readonly VoidRun[], opened: JointRT[], src?: string): boolean => {
+  const openOver = (o: ObjRT, b: Bearer, fp: Footprint, failed: Bearing['failed'], opened: JointRT[], src?: string): boolean => {
     const box = aabbOf(b.p.spec.shape, b.p.pos, b.p.q)
     let lost = false
     for (const j of o.byPart.get(b.p.spec.id) ?? []) {
@@ -1698,13 +1700,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         lost = true
         continue
       }
-      if (isSlender(q.spec, q.mat)) archOver(o, q, fp.long, [box.min[fp.long] + run.start, box.min[fp.long] + run.end], src)
+      if (isSlender(q.spec, q.mat)) archOver(o, q, fp.long, [box.min[fp.long] + run.start, box.min[fp.long] + run.end], run.free, src)
     }
     return lost
   }
 
-  /** The units of a wall under the relieving arch over a span (object-local, along `axis`): the triangle at 60 degrees on it falls out. */
-  const archOver = (o: ObjRT, q: PartRT, axis: number, span: [number, number], src?: string) => {
+  /**
+   * The units of a wall under the relieving arch over a span (object-local, along `axis`): the triangle at 60 degrees on it falls out. Over an overhang
+   * that broke off (`free` end) there is no arch: the wedge from the root of the overhang up at 60 degrees toward the free end falls.
+   */
+  const archOver = (o: ObjRT, q: PartRT, axis: number, span: [number, number], free: 'start' | 'end' | undefined, src?: string) => {
     const grid = gridOf(q)
     const worn = (q.rt.chips ??= {})
     const bottom = aabbOf(q.spec.shape, q.pos, q.q).min[1]
@@ -1715,7 +1720,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (worn[i] === -1) return
       const at = toWorld(q.pos, q.q, cell.center)
       const height = at[1] - bottom
-      if (Math.abs(at[axis] - middle) <= half - height / Math.tan(ARCH_ANGLE)) out.push(i)
+      const reach = height / Math.tan(ARCH_ANGLE)
+      const under = free === 'start' ? at[axis] <= span[1] - reach : free === 'end' ? at[axis] >= span[0] + reach : Math.abs(at[axis] - middle) <= half - reach
+      if (under) out.push(i)
     })
     if (out.length === 0) return
     const centre: Vec3 = [0, bottom, 0]

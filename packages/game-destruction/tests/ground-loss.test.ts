@@ -125,14 +125,18 @@ describe('ground taken away under a house', () => {
     expect(h.floating()).toEqual([])
   })
 
-  it('a big crater under a corner: the pillar and the beams over it lose their support and the corner falls, the rest stands', () => {
+  it('a big crater under a corner: the pillar there goes, the short beam tips in with its wall, the long one breaks off over the void and the masonry over it falls out; the rest stands', () => {
     const h = setUp()
     h.world.groundLoss({ x: 0, z: 0, radius: 3, depth: 2, source: 'crater' })
     runFor(h.world, 30)
-    expect(h.subsided('unsupported')).toEqual(expect.arrayContaining(['p_sw', 'gb_s', 'gb_w']))
+    expect(h.subsided('unsupported')).toEqual(expect.arrayContaining(['p_sw', 'gb_w']))
+    // 6 m beam: about 3 m overhang over the hole and as much on the ground, balanced: the overhang breaks off at the edge of the ground
+    expect(h.subsided('opened')).toEqual(['gb_s'])
+    // 4 m beam: most of it over the hole, its weight past the ground left: it tips in
     const fallen = ofType(h.events, 'collapse').flatMap((e) => e.parts)
-    expect(fallen).toEqual(expect.arrayContaining(['p_sw', 'gb_s', 'gb_w', 'w_s', 'w_w']))
-    for (const part of ['gb_n', 'gb_e', 'w_n', 'w_e', 'p_ne']) expect(h.standing()).toContain(part)
+    expect(fallen).toEqual(expect.arrayContaining(['p_sw', 'gb_w', 'w_w']))
+    expect(ofType(h.events, 'chip').map((e) => e.part)).toContain('w_s')
+    for (const part of ['gb_s', 'w_s', 'gb_n', 'gb_e', 'w_n', 'w_e', 'p_ne', 'slab']) expect(h.standing()).toContain(part)
     expect(h.floating()).toEqual([])
   })
 
@@ -261,11 +265,16 @@ describe('the structural review: load paths over a void', () => {
   const flags = (step: number, ...runs: Array<[number, number]>): boolean[] =>
     Array.from({ length: Math.round(beam.length / step) }, (_, k) => runs.some(([a, b]) => (k + 0.5) * step > a && (k + 0.5) * step < b))
 
-  it('every void is judged, not only the longest: a short span that holds and an overhang that does not tip the beam', () => {
+  it('every void is judged, not only the longest: a short span holds, an overhang breaks off or tips the beam', () => {
     const verdict = judgeBeam(flags(0.1, [3, 4], [8.2, 10]), 0.1, beam)
     expect(verdict.runs.map((r) => r.kind)).toEqual(['span', 'cantilever'])
     expect(verdict.runs[0]!.holds).toBe(true)
-    expect(verdict.tips).toBe(true)
+    // 1.8 m of overhang past the 1.5 m a 30 cm beam holds, but balanced on the 7 m of ground left: it breaks off, the beam stays
+    expect(verdict.runs[1]!.holds).toBe(false)
+    expect(verdict.tips).toBe(false)
+    // with its weight past the ground left and no pillar at its root, it takes the beam in
+    expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, beam).tips).toBe(true)
+    expect(judgeBeam(flags(0.1, [1, 2], [3.5, 10]), 0.1, { ...beam, pillars: [3.5] }).tips).toBe(false)
   })
 
   it('voids with less ground between them than the beam is deep, or ground that cannot take the reactions, are one span', () => {
