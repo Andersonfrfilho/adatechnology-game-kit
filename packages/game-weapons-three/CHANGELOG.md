@@ -1,5 +1,12 @@
 # @adatechnology/game-weapons-three
 
+## 0.19.2
+
+### Patch Changes
+
+- Updated dependencies [89f1d9d]
+  - @adatechnology/game-audio@0.11.0
+
 ## 0.19.1
 
 ### Patch Changes
