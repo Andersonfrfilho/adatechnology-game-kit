@@ -51,6 +51,8 @@ export interface WeaponsTestModuleOptions {
   items?: ItemModels
   /** The weapon item model overrides to draw with (`createWeaponProps(...)`); default the shared set behind `registerWeaponItemModel`. */
   props?: WeaponProps
+  /** Shows the photo of the real weapon on the showcase, small in a corner of the screen, opening large on a click (default false: only the weapons room page turns it on). */
+  referencePhotos?: boolean
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_beretta_92fs`). */
@@ -474,7 +476,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       fx = created
       const camera = lent.camera as THREE_NS.Camera
       const accessories = createAccessoryBench({ arsenal, host: lent, text: accessoryText })
-      const showcase = createWeaponShowcase({ arsenal, host: lent, text: showcaseText })
+      const showcase = createWeaponShowcase({ arsenal, host: lent, text: showcaseText, referencePhotos: options.referencePhotos === true })
       const offBench = lent.bench?.onChange((change: BenchChange) => {
         if (accessories.handleChange(change) || showcase.handleChange(change)) return
         if (change.kind === 'layer') {

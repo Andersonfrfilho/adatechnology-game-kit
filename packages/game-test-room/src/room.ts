@@ -56,6 +56,7 @@ import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-t
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
+import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -210,6 +211,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   // the loading indicator of the room (and of its modules, as `host.loading`): any slow job shows a spinner or a bar so that the page never looks frozen; `ui: false` keeps the state and draws nothing
   const loading = createLoading({ container: options.container, draw: options.ui !== false, working: t('loading.working') })
+  // the small corner picture a module can lend (`host.cornerImage`); `ui: false` draws nothing
+  const cornerImage = options.ui !== false ? createCornerImage({ container: options.container, labels: { open: t('corner.open'), close: t('corner.close'), source: t('corner.source') } }) : null
   const num = (n: number, digits = 1): string => {
     const s = (Math.round(n * 10 ** digits) / 10 ** digits).toFixed(digits)
     return locale.toLowerCase().startsWith('pt') ? s.replace('.', ',') : s
@@ -4018,6 +4021,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       blockers.add(blocked)
       return () => blockers.delete(blocked)
     },
+    cornerImage(image) {
+      cornerImage?.show(image)
+    },
     onClear(listener) {
       clearListeners.add(listener)
       return () => clearListeners.delete(listener)
@@ -4634,6 +4640,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       scheduler.dispose()
       window.removeEventListener('resize', onResize)
       player.dispose()
+      cornerImage?.dispose()
       ui?.dispose()
       graphics?.dispose()
       loading.dispose()
