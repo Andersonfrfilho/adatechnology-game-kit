@@ -179,7 +179,7 @@ describe('wallPiece', () => {
     expect(mass).toBeLessThan(2600)
   })
 
-  it('a rocket that brings down a bay leaves ragged masonry on its frame: toothed against the pillars, a course or more on the ground beam', () => {
+  it('a rocket that brings down a bay leaves ragged masonry on its frame: toothed against the pillars, a course or more on the ground beam, a strip under the bond beam', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })
     const id = world.add(piece.spec, { id: 'target' })
@@ -207,6 +207,16 @@ describe('wallPiece', () => {
     expect(new Set(reach.map((d) => Math.round(d / 0.115))).size).toBeGreaterThan(2)
     // the first course on the ground beam stays across the bay
     for (let x = left + 0.3; x < right - 0.3; x += 0.23) expect(isGone(x, bottom + 0.0375)).toBe(false)
+    // under the bond beam a ragged strip stays wedged against it (encunhamento): the top course is there over part of the bay, a course to three deep
+    const hanging: number[] = []
+    for (let x = left + 0.3; x < right - 0.3; x += 0.23) {
+      let depth = 0
+      while (depth < 4 && !isGone(x, -bottom - (depth + 0.5) * 0.075)) depth++
+      hanging.push(depth)
+    }
+    expect(hanging.filter((d) => d > 0).length).toBeGreaterThan(hanging.length / 3)
+    expect(new Set(hanging).size).toBeGreaterThan(2)
+    expect(Math.max(...hanging)).toBeLessThanOrEqual(3)
   })
 
   it('a rocket on a pillar cuts it there and bares its bars and stirrups; the pillar stands on its cage and the rest of it stays cast', () => {

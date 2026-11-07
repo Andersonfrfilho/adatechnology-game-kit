@@ -100,9 +100,9 @@ describe('a confined brick wall against charges and distances, by the overpressu
         if (row.z > NO_BREACH_Z) expect(row.units, at).toBe(0)
         // a hand grenade a metre or more off only cracks the infill: its wave is too short to move a panel
         if (row.charge === 'M67' && row.distance >= 1) expect(row.units, at).toBe(0)
-        // 4.8 kg of TNT 4 m off brings the infill between the pillars down; the frame around it stands
+        // 4.8 kg of TNT 4 m off brings the infill between the pillars down (less the ragged strips it leaves on its frame); the frame around it stands
         if (row.charge === 'TNT 4 MJ' && row.distance === 4) {
-          expect(row.units, at).toBeGreaterThan(100)
+          expect(row.units, at).toBeGreaterThan(80)
           expect(row.structureLost, at).toEqual([])
         }
         // past a local breach the wall as a whole stands: a blast in the air does not reach the ground beam in the soil, nor bring a confined wall down
