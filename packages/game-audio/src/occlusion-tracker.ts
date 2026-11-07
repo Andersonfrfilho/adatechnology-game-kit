@@ -3,8 +3,7 @@ import type { Vec3 } from '@adatechnology/game-contracts'
 import { OCCLUSION_DEFAULTS, occlusionState, totalLossDb } from './occlusion'
 import type { OcclusionSetup, OcclusionState } from './occlusion'
 
-/** `immediate`: the first state of a voice that waited for the budget, to be applied at once, not glided to. */
-export type OcclusionChange = { readonly id: number; readonly state: OcclusionState; readonly immediate: boolean }
+export type OcclusionChange = { readonly id: number; readonly state: OcclusionState }
 
 export type OcclusionAdd = {
   readonly id: number
@@ -17,10 +16,11 @@ export type OcclusionAdd = {
 
 export type OcclusionTracker = {
   /**
-   * Queries now and returns the state the voice starts with, unless this update window has spent its `budget` already: then the voice is pending
-   * (returns `undefined`) and the next `update` measures it first.
+   * Queries now and returns the state the voice starts with. Once this update window has spent its `budget`, the voice starts with a guess instead (the
+   * state of the nearest measured voice within `NEIGHBOUR_RADIUS`, else the last result for that source position, else unoccluded) and the next `update`
+   * measures it first and glides to the answer.
    */
-  add(voice: OcclusionAdd): OcclusionState | undefined
+  add(voice: OcclusionAdd): OcclusionState
   remove(id: number): void
   has(id: number): boolean
   state(id: number): OcclusionState | undefined
@@ -29,34 +29,57 @@ export type OcclusionTracker = {
   readonly size: number
 }
 
-type Entry = { readonly source: Vec3; readonly level: number; state: OcclusionState | undefined; checkedAt: number; checkedFrom: Vec3; served: number }
+type Entry = { readonly source: Vec3; readonly level: number; state: OcclusionState; pending: boolean; checkedAt: number; checkedFrom: Vec3; served: number }
 
+/** Metres within which a measured voice stands in for a new one the budget had no room to measure. */
+export const NEIGHBOUR_RADIUS = 2
+const REMEMBERED = 64
 const MOVED = 0.05
 const CHANGED_DB = 0.5
 
 const distance = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
 const copy = (point: Vec3): Vec3 => [point[0], point[1], point[2]]
+const keyOf = (point: Vec3): string => point.map((value) => Math.round(value * 4)).join(',')
 
 export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker {
   const entries = new Map<number, Entry>()
   let served = 0
   let spent = 0
+  const remembered = new Map<string, OcclusionState>()
   const interval = setup.interval ?? OCCLUSION_DEFAULTS.interval
   const budget = Math.max(1, setup.budget ?? OCCLUSION_DEFAULTS.budget)
   const audibleLevel = setup.audibleLevel ?? OCCLUSION_DEFAULTS.audibleLevel
-  const measure = (source: Vec3, listener: Vec3): OcclusionState => occlusionState(totalLossDb(setup.query(source, listener), setup), setup)
+  const measure = (source: Vec3, listener: Vec3): OcclusionState => {
+    const state = occlusionState(totalLossDb(setup.query(source, listener), setup), setup)
+    const key = keyOf(source)
+    remembered.delete(key)
+    remembered.set(key, state)
+    if (remembered.size > REMEMBERED) remembered.delete(remembered.keys().next().value as string)
+    return state
+  }
+  const guess = (source: Vec3): OcclusionState => {
+    let nearest: Entry | undefined
+    let nearestDistance = NEIGHBOUR_RADIUS
+    for (const voice of entries.values()) {
+      if (voice.pending) continue
+      const apart = distance(voice.source, source)
+      if (apart <= nearestDistance) [nearest, nearestDistance] = [voice, apart]
+    }
+    return nearest?.state ?? remembered.get(keyOf(source)) ?? occlusionState(0, setup)
+  }
 
   return {
     add({ id, source, level, listener, now }) {
       const from = copy(source)
       const at = copy(listener)
       if (spent >= budget) {
-        entries.set(id, { source: from, level, state: undefined, checkedAt: now, checkedFrom: at, served: served++ })
-        return undefined
+        const provisional = guess(from)
+        entries.set(id, { source: from, level, state: provisional, pending: true, checkedAt: now, checkedFrom: at, served: served++ })
+        return provisional
       }
       spent++
       const state = measure(from, at)
-      entries.set(id, { source: from, level, state, checkedAt: now, checkedFrom: at, served: served++ })
+      entries.set(id, { source: from, level, state, pending: false, checkedAt: now, checkedFrom: at, served: served++ })
       return state
     },
     remove: (id) => void entries.delete(id),
@@ -68,18 +91,21 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
       const changes: OcclusionChange[] = []
       let queries = 0
       for (const [id, voice] of entries) {
-        if (voice.state || queries >= budget) continue
+        if (!voice.pending || queries >= budget) continue
         queries++
-        voice.state = measure(voice.source, at)
+        const state = measure(voice.source, at)
+        voice.pending = false
         voice.checkedAt = now
         voice.checkedFrom = at
         voice.served = served++
-        changes.push({ id, state: voice.state, immediate: true })
+        if (Math.abs(state.lossDb - voice.state.lossDb) < CHANGED_DB) continue
+        voice.state = state
+        changes.push({ id, state })
       }
       const due: [number, Entry][] = []
       for (const entry of entries) {
         const [, voice] = entry
-        if (!voice.state || now - voice.checkedAt < interval || voice.level < audibleLevel) continue
+        if (voice.pending || now - voice.checkedAt < interval || voice.level < audibleLevel) continue
         due.push(entry)
       }
       due.sort((a, b) => a[1].checkedAt - b[1].checkedAt || a[1].served - b[1].served)
@@ -94,9 +120,9 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
         voice.checkedAt = now
         voice.checkedFrom = at
         voice.served = served++
-        if (!voice.state || Math.abs(state.lossDb - voice.state.lossDb) < CHANGED_DB) continue
+        if (Math.abs(state.lossDb - voice.state.lossDb) < CHANGED_DB) continue
         voice.state = state
-        changes.push({ id, state, immediate: false })
+        changes.push({ id, state })
       }
       return changes
     },

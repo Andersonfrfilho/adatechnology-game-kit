@@ -94,8 +94,8 @@ engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
 - **Per voice, smooth.** A voice with a `position` plays through its own lowpass and gain, which start at the first query and glide (`setTargetAtTime`,
   `smoothing` seconds) when it changes. `setListener` re-queries the due voices: each at most every `interval` seconds, only if the listener moved, only
   while the voice is above `audibleLevel`, and at most `budget` queries per call.
-- The first query of a new voice counts against the same `budget`: a burst past it starts the extra voices shut and measures them first at the next
-  `setListener`. A stopped or ended voice keeps its nodes for 0.1 s so a fade is not cut. The reverb send goes through the same lowpass and gain.
+- The first query of a new voice counts against the same `budget`: a burst past it starts the extra voices at a guess (the nearest measured voice within 2 m, else
+  the last result for that spot, else clear) and measures them first at the next `setListener`, gliding to the answer. A stopped or ended voice keeps its nodes for 0.1 s so a fade is not cut. The reverb send goes through the same lowpass and gain.
   A recipe with `falloff.model: 'none'` (interface, own steps) is never occluded.
 - Sounds without a `position` and loops are not occluded. The older `occlusion: (point) => 0..1` callback still works (one value when the sound plays).
 - Pure parts: `hitLossDb`, `totalLossDb`, `occlusionState`, `createOcclusionTracker`. The test room (`game-test-room`) builds the query from its destruction world.

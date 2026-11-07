@@ -174,6 +174,17 @@ describe('the engine with an occlusion setup', () => {
     expect(filters(recorder)).toBe(filters(plain))
   })
 
+  it('a burst of six gunshots behind a wall all start with the wall in front of them, none shut', () => {
+    const { engine } = engineWith(() => [BRICK], { occlusion: { query: () => [BRICK], budget: 2 } })
+    for (let shot = 0; shot < 6; shot++) engine.play('sfx_pistol', { position: [10 + shot * 0.1, 0, 0] })
+    const voices = engine.occludedVoices()
+    expect(voices).toHaveLength(6)
+    for (const voice of voices) {
+      expect(voice.gain).toBeGreaterThan(0)
+      expect(voice.lossDb).toBeGreaterThanOrEqual(40)
+    }
+  })
+
   it('a voice with no falloff (an interface sound, the own footsteps) is not occluded, a recipe with one is', () => {
     const pistol = createAudioEngine({ banks: [GAME_SFX_BANK] }).registry.sound('sfx_pistol') as SoundRecipe
     const own: SoundBank = { id: 'own', sounds: [{ ...pistol, id: 'ui_tick', bus: 'ui', falloff: { model: 'none' } }] }
@@ -229,16 +240,38 @@ describe('the engine with an occlusion setup', () => {
 describe('the occlusion tracker, budget and copies', () => {
   const brick = () => [BRICK]
 
-  it('a burst of new voices costs the budget, not one query each: the rest wait and are measured first at the next update', () => {
+  it('a burst of new voices costs the budget, and the ones past it start with the wall already in front of them, never shut', () => {
     let queries = 0
     const tracker = createOcclusionTracker({ query: () => (queries++, brick()), budget: 3, interval: 0.1 })
-    const states = [1, 2, 3, 4, 5, 6].map((id) => tracker.add({ id, source: [0, 0, 0], level: 1, listener: [0, 0, 5], now: 0 }))
+    const states = [1, 2, 3, 4, 5, 6].map((id) => tracker.add({ id, source: [0.1 * id, 0, 0], level: 1, listener: [0, 0, 5], now: 0 }))
     expect(queries).toBe(3)
-    expect(states.map((state) => state !== undefined)).toEqual([true, true, true, false, false, false])
-    const changes = tracker.update([0, 0, 5], 0.01)
+    for (const state of states) {
+      expect(state.gain).toBeGreaterThan(0)
+      expect(state.lossDb).toBeGreaterThanOrEqual(40)
+    }
+    expect(tracker.update([0, 0, 5], 0.01)).toEqual([])
     expect(queries).toBe(6)
-    expect(changes.map((change) => [change.id, change.immediate])).toEqual([[4, true], [5, true], [6, true]])
-    expect(tracker.state(6)?.lossDb).toBeGreaterThanOrEqual(40)
+  })
+
+  it('a guess is the nearest measured voice, else the last result for that spot, else unoccluded; the measure then glides to the truth', () => {
+    const open = new Set<number>()
+    const query: OcclusionQuery = (from) => (open.has(Math.round(from[0])) ? [] : [BRICK])
+    const tracker = createOcclusionTracker({ query, budget: 1, interval: 0.1 })
+    tracker.add({ id: 1, source: [0, 0, 0], level: 1, listener: [0, 0, 5], now: 0 })
+    const near = tracker.add({ id: 2, source: [1, 0, 0], level: 1, listener: [0, 0, 5], now: 0 })
+    expect(near.lossDb).toBeGreaterThanOrEqual(40)
+    const far = tracker.add({ id: 3, source: [30, 0, 0], level: 1, listener: [0, 0, 5], now: 0 })
+    expect(far.lossDb).toBe(0)
+    open.add(1)
+    const changes = tracker.update([0, 0, 5], 0.01)
+    expect(changes.map((change) => change.id)).toEqual([2])
+    expect(changes[0]?.state.lossDb).toBe(0)
+    tracker.update([0, 0, 5], 0.02)
+    expect(tracker.state(3)?.lossDb).toBeGreaterThanOrEqual(40)
+    tracker.remove(3)
+    tracker.update([0, 0, 5], 0.03)
+    tracker.add({ id: 5, source: [60, 0, 0], level: 1, listener: [0, 0, 5], now: 0.03 })
+    expect(tracker.add({ id: 6, source: [30, 0, 0], level: 1, listener: [0, 0, 5], now: 0.03 }).lossDb).toBeGreaterThanOrEqual(40)
   })
 
   it('keeps its own copy of the positions it was given', () => {

@@ -17,7 +17,7 @@ const RELEASE_GRACE = 0.1
 export type EngineOcclusion = {
   /**
    * A lowpass into a gain into `destination` (and the same into `wet`, so the reverb send is as quiet and as dull as the dry sound): what the voice plays
-   * into. It starts at the state the query gave, with no ramp; a voice that waited for the budget starts shut until the next `update` measures it.
+   * into. It starts at the state the query gave, with no ramp; a voice past the budget starts at a guess (see `OcclusionTracker.add`) and glides to its measure at the next `update`.
    */
   attach(voice: { readonly id: number; readonly source: Vec3; readonly level: number; readonly listener: Vec3 }, destination: AudioNode, wet?: AudioNode): OcclusionRoute
   /** Drops the voices `alive` no longer holds (their nodes stay a moment), re-queries the due voices within the budget and ramps the ones that changed. */
@@ -33,31 +33,27 @@ export function createEngineOcclusion(setup: OcclusionSetup, context: () => Audi
   const nodes = new Map<number, VoiceNodes>()
   const smoothing = Math.max(0.005, setup.smoothing ?? OCCLUSION_DEFAULTS.smoothing)
 
-  const pairTo = (audio: AudioContext, destination: AudioNode, state: OcclusionState | undefined): Pair => {
+  const pairTo = (audio: AudioContext, destination: AudioNode, state: OcclusionState): Pair => {
     const filter = audio.createBiquadFilter()
     filter.type = 'lowpass'
-    filter.frequency.value = state?.cutoff ?? OCCLUSION_DEFAULTS.openCutoff
+    filter.frequency.value = state.cutoff
     const gain = audio.createGain()
-    gain.gain.value = state?.gain ?? 0
+    gain.gain.value = state.gain
     filter.connect(gain)
     gain.connect(destination)
     return { filter, gain }
   }
 
   // a target approach, not a jump: three time constants settle 95 % of the move in `smoothing` seconds
-  const move = (param: AudioParam, value: number, now: number, immediate: boolean): void => {
+  const move = (param: AudioParam, value: number, now: number): void => {
     param.cancelScheduledValues(now)
-    if (immediate) {
-      param.setValueAtTime(value, now)
-      return
-    }
     param.setValueAtTime(param.value, now)
     param.setTargetAtTime(value, now, smoothing / 3)
   }
 
-  const apply = (pair: Pair, state: OcclusionState, now: number, immediate: boolean): void => {
-    move(pair.gain.gain, state.gain, now, immediate)
-    move(pair.filter.frequency, state.cutoff, now, immediate)
+  const apply = (pair: Pair, state: OcclusionState, now: number): void => {
+    move(pair.gain.gain, state.gain, now)
+    move(pair.filter.frequency, state.cutoff, now)
   }
 
   const drop = (id: number): void => {
@@ -95,11 +91,11 @@ export function createEngineOcclusion(setup: OcclusionSetup, context: () => Audi
       if (!audio) return
       prune(alive)
       const now = audio.currentTime
-      for (const { id, state, immediate } of tracker.update(listener, now)) {
+      for (const { id, state } of tracker.update(listener, now)) {
         const voice = nodes.get(id)
         if (!voice) continue
-        apply(voice.dry, state, now, immediate)
-        if (voice.wet) apply(voice.wet, state, now, immediate)
+        apply(voice.dry, state, now)
+        if (voice.wet) apply(voice.wet, state, now)
       }
     },
     prune,
