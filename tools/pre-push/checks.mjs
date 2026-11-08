@@ -11,7 +11,7 @@
 // Each step prints how long it took, and every run adds a line to ~/.cache/adatechnology-game-kit/pre-push/times.ndjson.
 //   PRE_PUSH_ALL=1          typecheck and test every package
 //   PRE_PUSH_DEPENDENTS=1   also the packages that depend on the changed ones
-//   PRE_PUSH_JOBS=n         packages tested at once (default: a quarter of the threads)
+//   PRE_PUSH_JOBS=n         packages tested at once (default: 2; 1 under 8 threads)
 //   PRE_PUSH_NO_CACHE=1     build, typecheck and test again even when the cache has them
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
