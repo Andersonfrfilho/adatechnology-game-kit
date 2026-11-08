@@ -1,10 +1,12 @@
-import type { DestructibleImpl, DestructibleSpec, DestructionEvent, Hit, ObjectState } from '@adatechnology/game-contracts'
+import type { DestructibleImpl, DestructibleSpec, DestructionEvent, Hit, ObjectState, SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
 import type { Terrain, TerrainBlowResult } from './types'
 
 const PART_ID = 'ground'
 const PART_DEPTH = 3
 const RAY_BACKOFF = 1
 const GROUND_HP = 1e12
+/** Most metres the ground rises above its flat level (a heap of what a crater threw out): a ray higher than this cannot meet it. */
+const HEAP_REACH = 3
 
 export interface TerrainImplOptions {
   readonly id: string
@@ -15,7 +17,8 @@ export interface TerrainImplOptions {
 
 /**
  * The ground as an object of the destruction world (`DestructionWorld.register`): shots, blows, blasts and flames reach it through the world's own raycast and blast like anything else.
- * The collision part is a flat box; a ray that enters it goes on to the real surface, so a round fired into a crater lands on its floor.
+ * The collision part is a flat box that only says where to look: the world's raycast asks `surfaceRay`, which follows the ground as it is now (craters, heaps),
+ * so a round fired into a crater meets its floor, not the flat top of the box over it.
  */
 export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions): DestructibleImpl {
   const { id } = options
@@ -67,10 +70,24 @@ export function createTerrainImpl(terrain: Terrain, options: TerrainImplOptions)
     const onGround = terrain.raycast(from, hit.direction, RAY_BACKOFF + PART_DEPTH)
     return onGround ? { ...hit, point: onGround.point } : hit
   }
+  /** The ground as it is now along the ray, marched only where the ray is within the depth of the ground and the height of a heap. */
+  const surfaceRay = (ray: SurfaceRay): SurfaceRayHit | null => {
+    if (ray.ignored?.(PART_ID)) return null
+    const [ox, oy, oz] = ray.origin
+    const [dx, dy, dz] = ray.direction
+    const enter = dy < 0 ? Math.max(0, (oy - HEAP_REACH) / -dy) : oy <= HEAP_REACH ? 0 : Infinity
+    const leave = dy < 0 ? (oy + PART_DEPTH) / -dy : Math.hypot(x1 - x0, z1 - z0) + Math.hypot(ox - (x0 + x1) / 2, oz - (z0 + z1) / 2)
+    const far = Math.min(ray.maxDistance, leave)
+    if (!(enter <= far)) return null
+    const hit = terrain.raycast([ox + dx * enter, oy + dy * enter, oz + dz * enter], ray.direction, far - enter)
+    if (!hit) return null
+    return { part: PART_ID, point: hit.point, normal: hit.normal, distance: enter + hit.distance, pathLen: PART_DEPTH }
+  }
   return {
     id,
     ...(options.name ? { name: options.name } : {}),
     describe: spec,
+    surfaceRay,
     hit(hit): DestructionEvent[] {
       const landed = resolve(hit)
       const result = terrain.applyHit(landed)
