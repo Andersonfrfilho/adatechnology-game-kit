@@ -6,6 +6,8 @@ const FRAME = 1 / 60
 const ORIGIN: Vec3 = [0, 1.5, 0]
 const AIM: Vec3 = [0, 0, -1]
 const arsenal = createArsenal({ rules: { faults: false, startSafe: false } })
+/** A game that keeps the real safety of the fuze: an impact before the arming distance does not go off. */
+const dudArsenal = createArsenal({ rules: { faults: false, startSafe: false, explosives: { unarmedImpact: 'dud' } } })
 
 const GROUND: SurfaceProbe = (from, to) => {
   if (to[1] > 0) return null
@@ -57,8 +59,18 @@ describe('rocket launcher (Arsenal §13: arming distance 10 m, backblast 5 m, a 
     expect(use.kind === 'throw' && use.velocity).toEqual([0, 0, -117])
   })
 
-  it('does not explode before the arming distance: it hits the wall and is a dud', () => {
+  it('goes off on a wall closer than the arming distance by default: a launched round never lies there live', () => {
     const body = bodyOf(useOf('at4'))
+    const events = run(body, wallAt(-6))
+    expect(events.map((event) => event.type)).toEqual(['impact', 'detonate'])
+    expect(events[0]).toMatchObject({ type: 'impact', armed: false })
+    expect(detonationOf(events)?.point[2]).toBeCloseTo(-6, 6)
+    expect(body.done).toBe(true)
+  })
+
+  it('with unarmedImpact dud the fuze keeps its safety: it hits the wall and is a dud', () => {
+    const body = dudArsenal.explosiveBody(useOf('at4'))
+    if (!body) throw new Error('no body')
     const events = run(body, wallAt(-6))
     expect(events.map((event) => event.type)).toEqual(['impact', 'dud'])
     expect(body.dud).toBe(true)
@@ -87,9 +99,12 @@ describe('rocket launcher (Arsenal §13: arming distance 10 m, backblast 5 m, a 
     expect(detonation?.point[2]).toBeCloseTo(-117 * (detonation?.at ?? 0), 0)
   })
 
-  it('is a dud when the ground is closer than the arming distance, armed when farther', () => {
-    const low = bodyOf(arsenal.create('rpg_7').trigger(ORIGIN, [0, -1, 0], 0, false).uses[0] as Use)
+  it('with unarmedImpact dud it is a dud when the ground is closer than the arming distance, armed when farther', () => {
+    const low = dudArsenal.explosiveBody(arsenal.create('rpg_7').trigger(ORIGIN, [0, -1, 0], 0, false).uses[0] as Use)
+    if (!low) throw new Error('no body')
     expect(run(low, GROUND).some((event) => event.type === 'dud')).toBe(true)
+    const near = bodyOf(arsenal.create('rpg_7').trigger(ORIGIN, [0, -1, 0], 0, false).uses[0] as Use)
+    expect(detonationOf(run(near, GROUND))?.point[1]).toBeCloseTo(0, 6)
     const high = bodyOf({ ...useOf('rpg_7'), origin: [0, 40, 0] } as Use)
     expect(detonationOf(run(high, GROUND))?.point[1]).toBeCloseTo(0, 6)
   })
