@@ -530,7 +530,8 @@ describe('how long what breaks off stays on screen (debris)', () => {
     for (let i = 0; i < 12 && room.world.part(pane.objectId, 'pane')?.status !== 'broken'; i++) {
       room.world.hitPart(pane.objectId, 'pane', { type: 'ballistic', point: [0, 1.05, -4.0], direction: [0, 0, -1], energy: 500, caliber: 9 })
     }
-    room.update(1 / 60)
+    // the renderer throws a burst over a few frames when it is short of time (a slow CI machine): wait for the first ones
+    for (let i = 0; i < 30 && seen.length === 0; i++) room.update(1 / 60)
     expect(seen.length).toBeGreaterThan(0)
     expect(seen.every((id) => id === pane.objectId)).toBe(true)
     for (let i = 0; i < 120; i++) room.update(1 / 60)
