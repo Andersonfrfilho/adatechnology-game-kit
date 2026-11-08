@@ -120,9 +120,9 @@ test('git output: ls-files ids and the paths status lists, renames on both sides
   assert.deepEqual(parseStatus(' M packages/a/x.ts\u0000?? new.ts\u0000R  to.ts\u0000from.ts\u0000 D gone.ts\u0000'), ['packages/a/x.ts', 'new.ts', 'to.ts', 'from.ts', 'gone.ts'])
 })
 
-test('test jobs: a quarter of the threads, at least one, or what PRE_PUSH_JOBS asks', () => {
-  assert.equal(testJobs(16, undefined), 4)
-  assert.equal(testJobs(2, undefined), 1)
-  assert.equal(testJobs(16, '2'), 2)
-  assert.equal(testJobs(16, 'x'), 4)
+test('test jobs: two at once (one on a small machine), or what PRE_PUSH_JOBS asks', () => {
+  assert.equal(testJobs(24, undefined), 2)
+  assert.equal(testJobs(4, undefined), 1)
+  assert.equal(testJobs(24, '1'), 1)
+  assert.equal(testJobs(24, 'x'), 2)
 })

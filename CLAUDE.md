@@ -131,17 +131,18 @@ Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em tod
 - **Aviso na tela**: a sala mostra geometrias, texturas e heap no painel da bancada e, quando a memória sobe a cada limpeza (quatro seguidas na mesma
   área, acima do orçamento), põe uma faixa vermelha sob a ferramenta e um evento `memory_leak` no registro. Faixa vermelha na sala é vazamento a corrigir.
 
-## 9. Testes de GPU e navegador: só no pre-push, nunca no CI — **OBRIGATÓRIO**
+## 9. Testes de GPU e navegador: só na rodada diária, nunca no CI nem no push — **OBRIGATÓRIO**
 
 Decidido pelo dono em 2026-11-03. Testes que dependem de GPU/renderização (orçamentos de quadro, `perf.mjs`, e os testes que abrem a sala de teste
-no navegador) **não rodam na pipeline de CI**. Eles rodam no pre-push, na máquina local com GPU, comparando com a main medida na mesma máquina. O CI
+no navegador) **não rodam na pipeline de CI**. Eles rodam na rodada diária da main, na máquina local com GPU, comparando com a main medida na mesma máquina. O CI
 fica só com build, typecheck, lint e testes que não precisam de GPU.
 
-- No pre-push (`.githooks/pre-push`): `tools/gpu/browser-checks.mjs`, só com as suítes das áreas que a branch muda (`examples/*-test-area` com o seu
-  `test.mjs`). `PRE_PUSH_BROWSER=0` pula uma vez, de propósito.
+- **O pre-push não roda nenhuma suíte de GPU ou de navegador** (dono, 2026-11-08: os pushes ficavam 20 min ou mais na fila da GPU). Elas rodam só
+  na rodada diária da madrugada, na main (abaixo). Para rodar as de uma branch na mão: `node tools/gpu/browser-checks.mjs` (o que está abaixo
+  sobre a seleção de suítes vale para esse comando).
 - **O pre-push tem fila** (dono, 2026-11-08: quatro pushes ao mesmo tempo levavam 20 a 40 min cada). A metade de CPU (`tools/pre-push/checks.mjs`:
   build com cache por conteúdo compartilhado entre os worktrees, lint dos arquivos alterados, typecheck e testes só dos pacotes alterados, em
-  paralelo) roda sob `cpu.lock`, e as suítes de navegador sob `gpu.lock` (a mesma trava da rodada diária), ambas em `~/.cache/adatechnology-game-kit`.
+  paralelo) roda sob `cpu.lock`, em `~/.cache/adatechnology-game-kit`.
   Os dependentes dos pacotes alterados ficam para o CI, que roda tudo no PR. Detalhes e variáveis no `CONTRIBUTING.md` (Git hooks).
 - **Rodada diária na main** (dono, 2026-11-06: com várias sessões na mesma trava de GPU, a bateria inteira em cada push deixava os pushes horas na fila).
   As suítes que abrem a sala inteira (`test-room`, `scene.mjs` e `cost.mjs` do `tools/kit-audit`, `examples/test-room/leak.mjs`) e o
@@ -156,7 +157,7 @@ fica só com build, typecheck, lint e testes que não precisam de GPU.
 - **Só no carregador** (dono, 2026-11-06: nenhum push fica bloqueado). `tools/gpu/power.mjs` lê `/sys/class/power_supply`: no carregador (Mains ou
   USB-C online, ou desktop sem bateria) os dois rodam; na bateria são pulados com aviso (`pre-push: ... skipped: on battery ...`) e o push segue.
   Bateria de dispositivo (mouse, fone) não conta; sem a pasta (fora do Linux) roda. `PRE_PUSH_ON_BATTERY=1` roda mesmo na bateria.
-- **O pre-push roda só as suítes de navegador do que a branch muda** (dono, 2026-11-04: a bateria inteira levava 60-90 min e, com várias sessões na
+- **O `browser-checks.mjs` roda só as suítes de navegador do que a branch muda** (dono, 2026-11-04: a bateria inteira levava 60-90 min e, com várias sessões na
   mesma trava de GPU, bloqueava a noite). `tools/gpu/select-suites.mjs` lê o diff contra a `origin/main` e imprime que suítes vão rodar e por quê:
   - cada `examples/<área>` roda quando muda a própria pasta ou um pacote que a página carrega (o `package.json` e os `@adatechnology/*` importados em
     `src/` e nos `.mjs`), direto ou pelas dependências desses pacotes; a sala (`test-room`), `scene.mjs`, `cost.mjs` e `leak.mjs` abrem a sala com
@@ -172,7 +173,7 @@ fica só com build, typecheck, lint e testes que não precisam de GPU.
   - Área nova entra em `AREAS` do `select-suites.mjs`; pacote novo é achado sozinho pelo `package.json` e pelos imports das páginas.
 - Teste novo que abre página, usa Playwright, WebGL ou mede quadro entra no `browser-checks.mjs` ou no `perf.mjs`, **nunca** num job do
   `.github/workflows/ci.yml`. Revisão que vê Playwright/Chromium no CI barra.
-- Falha de teste de navegador no pre-push não se resolve tirando o teste: corrige a causa, como qualquer teste.
+- Falha de teste de navegador (na rodada diária ou na mão) não se resolve tirando o teste: corrige a causa, como qualquer teste.
 
 ## 10. Tudo tipado — **OBRIGATÓRIO**
 

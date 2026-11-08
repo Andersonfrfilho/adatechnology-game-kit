@@ -1,5 +1,19 @@
 # @adatechnology/game-audio
 
+## 0.13.5
+
+### Patch Changes
+
+- Updated dependencies [779f9f4]
+  - @adatechnology/game-contracts@0.34.0
+
+## 0.13.4
+
+### Patch Changes
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+
 ## 0.13.3
 
 ### Patch Changes

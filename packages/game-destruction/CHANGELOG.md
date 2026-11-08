@@ -1,5 +1,24 @@
 # @adatechnology/game-destruction
 
+## 0.24.0
+
+### Minor Changes
+
+- 5984ae4: O pilar de concreto lasca aos poucos onde os tiros pegam. Cada tiro que passa do cobrimento soma no bloco de concreto em que bateu; com uns seis tiros de fuzil no mesmo lugar o bloco se solta ali e os vergalhões aparecem, e o resto do concreto continua preso na ferragem. O núcleo atrás do bloco que saiu continua recebendo os tiros até o corte. Quando o pilar é cortado, sai só a faixa do corte: o concreto de cima fica na ferragem, preso na cinta, em vez de sumir de uma vez e deixar só a gaiola. Bala de pistola e chumbo de espingarda só marcam o cobrimento.
+- 779f9f4: Os tijolos que saem inteiros de uma parede caem na cor do tijolo, e não mais como placas laranja. Os blocos de uma parede de unidades assentadas se soltam pelas juntas, então a face deles é a do próprio tijolo, não o miolo quebrado. O fragmento ganhou `unit` e o material ganhou `visual.unitColor` (no tijolo, o mesmo vermelho dos tijolos que a parede mostra), e o renderizador usa essa cor. O concreto moldado continua com a cor do miolo.
+
+### Patch Changes
+
+- Updated dependencies [779f9f4]
+  - @adatechnology/game-contracts@0.34.0
+
+## 0.23.2
+
+### Patch Changes
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+
 ## 0.23.1
 
 ### Patch Changes
