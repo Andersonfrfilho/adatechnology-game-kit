@@ -15,7 +15,8 @@ export function installHouseWindows(K: Kernel, shared: Shared): void {
       let ya = j.y0, yb = j.y1; if (cut) { if (ya >= 1.2) continue; yb = Math.min(yb, 1.2); }
       const wref = R.walls.find(w => w.floor === f && w.axis === j.axis && Math.abs((alongU ? w.v0 : w.u0) - L) < EPS), th = wref ? wref.thickness || 0.15 : 0.15, t = 0.05, tt = th + 0.02;
       const bar = (u0: number, y_0: number, u1: number, y_1: number, mat: string, color: Hex, tw = tt): void => alongU ? bx(mat, u0, y0 + y_0, L - tw / 2, u1, y0 + y_1, L + tw / 2, color) : bx(mat, L - tw / 2, y0 + y_0, u0, L + tw / 2, y0 + y_1, u1, color);
-      cursor.pc = pieceRecord('window_frame:' + j.id, 'aluminium', null, { floor: f });
+      const frame = pieceRecord('window_frame:' + j.id, 'aluminium', null, { floor: f });
+      cursor.pc = frame;
       bar(a, ya, a + t, yb, 'metal', fr); bar(b - t, ya, b, yb, 'metal', fr); bar(a, ya, b, ya + t, 'metal', fr); bar(a, yb - t, b, yb, 'metal', fr);
       if (j.width > 0.9) bar((a + b) / 2 - 0.015, ya, (a + b) / 2 + 0.015, yb, 'metal', fr, 0.04);
       bar(a + t, ya + (yb - ya) * 0.58, b - t, ya + (yb - ya) * 0.58 + 0.025, 'metal', fr, 0.04);
@@ -24,11 +25,14 @@ export function installHouseWindows(K: Kernel, shared: Shared): void {
       const am = (sd: number): HouseRoom | null => roomAt(f, alongU ? j.at : L + sd * 0.4, alongU ? L + sd * 0.4 : j.at);
       const outside = !am(1) ? 1 : !am(-1) ? -1 : 0;
       if (outside) {
+        // the sill and the grille are fixed into the frame's opening: they go where the window goes (with the wall that falls), never left in the air
+        cursor.pc = frame;
         const off = outside * (th / 2 + 0.03); // sill
         if (alongU) bx('plaster', a - 0.05, y0 + ya - 0.04, L + (outside > 0 ? th / 2 : -th / 2 - 0.08), b + 0.05, y0 + ya, L + (outside > 0 ? th / 2 + 0.08 : -th / 2), pe_); else bx('plaster', L + (outside > 0 ? th / 2 : -th / 2 - 0.08), y0 + ya - 0.04, a - 0.05, L + (outside > 0 ? th / 2 + 0.08 : -th / 2), y0 + ya, b + 0.05, pe_);
         if (R.facade.grilles && !cut) { const g = C.gate != null ? C.gate : 0x2a2a2e, go = outside * (th / 2 + 0.07), n = Math.max(3, Math.round(j.width / 0.12));
           for (let k = 0; k <= n; k++) { const u = a + 0.03 + k * (j.width - 0.06) / n; if (alongU) bx('metal', u - 0.008, y0 + ya - 0.03, L + go - 0.008, u + 0.008, y0 + yb + 0.03, L + go + 0.008, g); else bx('metal', L + go - 0.008, y0 + ya - 0.03, u - 0.008, L + go + 0.008, y0 + yb + 0.03, u + 0.008, g); }
           for (const y of [ya - 0.03, (ya + yb) / 2, yb + 0.02]) { if (alongU) bx('metal', a, y0 + y, L + go - 0.012, b, y0 + y + 0.025, L + go + 0.012, g); else bx('metal', L + go - 0.012, y0 + y, a, L + go + 0.012, y0 + y + 0.025, b, g); } }
+        cursor.pc = null;
       }
       if (j.boards && !boardItems.has(j.id) && !cut) { // fallback: the viewer's own boards
         const inside = -(outside || -1), off = inside * (th / 2 + 0.04), n = Math.max(3, Math.round((yb - ya) / 0.16));
