@@ -1,10 +1,11 @@
+import { carriedPoint } from './carrier'
+import type { Carried, Quaternion } from './carrier'
 import type { MeshSpawn, MeshShape, Vec3Tuple } from './types'
 
 const CAPACITY = 400
 const IDENTITY: Quaternion = [0, 0, 0, 1]
 
-/** A unit quaternion `[x, y, z, w]`. */
-export type Quaternion = readonly [number, number, number, number]
+export type { Quaternion } from './carrier'
 
 /** One solid particle as the pool keeps it; a renderer draws it from these fields and never changes them. */
 export interface MeshParticle {
@@ -22,7 +23,7 @@ export interface MeshParticle {
   x: number
   y: number
   z: number
-  readonly frame: Quaternion
+  frame: Quaternion
   readonly at: Vec3Tuple
   rx: number
   ry: number
@@ -41,6 +42,10 @@ export interface MeshParticle {
   readonly ramp: readonly [number, number] | undefined
   readonly fade: boolean
   readonly startOpacity: number
+  /** A piece of a group that rides on the effect's carrier (a muzzle flash on the gun in the hands): its own roll in the group, and how far it moved from its place on the carrier. */
+  readonly carried: Carried | undefined
+  readonly roll: Quaternion | undefined
+  readonly drift: [number, number, number]
 }
 
 function multiply(a: Quaternion, b: Quaternion): Quaternion {
@@ -66,7 +71,7 @@ export class MeshPool {
     return this.particles.length
   }
 
-  spawn(options: MeshSpawn, frame: Quaternion = IDENTITY): MeshParticle {
+  spawn(options: MeshSpawn, frame: Quaternion = IDENTITY, carried?: Carried): MeshParticle {
     const velocity = options.v ?? [0, 0, 0]
     const world = options.wv ?? [0, 0, 0]
     const particle: MeshParticle = {
@@ -83,6 +88,9 @@ export class MeshPool {
       y: options.p[1],
       z: options.p[2],
       frame: options.roll ? multiply(frame, aboutX(options.roll)) : frame,
+      roll: options.roll ? aboutX(options.roll) : undefined,
+      carried,
+      drift: [0, 0, 0],
       at: options.at ?? [0, 0, 0],
       rx: options.rot?.[0] ?? 0,
       ry: options.rot?.[1] ?? 0,
@@ -124,9 +132,12 @@ export class MeshPool {
         particle.vy *= keep
         particle.vz *= keep
       }
-      particle.x += particle.vx * dt
-      particle.y += particle.vy * dt
-      particle.z += particle.vz * dt
+      if (particle.carried) this.ride(particle, dt)
+      else {
+        particle.x += particle.vx * dt
+        particle.y += particle.vy * dt
+        particle.z += particle.vz * dt
+      }
       particle.rx += particle.spin[0] * dt
       particle.ry += particle.spin[1] * dt
       particle.rz += particle.spin[2] * dt
@@ -137,5 +148,32 @@ export class MeshPool {
 
   clear(): void {
     this.particles.length = 0
+  }
+
+  /** Puts every carried piece where its carrier is now (after the frame moved the thing it belongs to). */
+  follow(): void {
+    for (const particle of this.particles) if (particle.carried) this.place(particle)
+  }
+
+  /** A carried piece: how far its own velocity took it, then its place on the carrier. */
+  private ride(particle: MeshParticle, dt: number): void {
+    const drift = particle.drift
+    drift[0] += particle.vx * dt
+    drift[1] += particle.vy * dt
+    drift[2] += particle.vz * dt
+    this.place(particle)
+  }
+
+  /** A carried piece's place on the carrier now plus its drift, turned with the carrier. */
+  private place(particle: MeshParticle): void {
+    const carried = particle.carried
+    if (!carried) return
+    const drift = particle.drift
+    const [x, y, z] = carriedPoint(carried)
+    particle.x = x + drift[0]
+    particle.y = y + drift[1]
+    particle.z = z + drift[2]
+    const turn = carried.carrier.orientation
+    if (turn) particle.frame = particle.roll ? multiply(turn, particle.roll) : turn
   }
 }

@@ -81,7 +81,7 @@ export type { HandPose, HandTargetSource, HandTargets, MuzzlePose, MuzzleSource,
 export { FIRST_PERSON_LAYER } from './hands'
 export { TWIST_LIFT, twistStroke } from './twist'
 export type { TwistOptions, TwistStroke } from './twist'
-export type { EffectHandle, EffectRequest, EffectSink, Enclosure, EnclosureBox } from './effects'
+export type { EffectHandle, EffectPose, EffectRequest, EffectSink, Enclosure, EnclosureBox } from './effects'
 export type { WarmUpProbes } from './warm-up'
 export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'

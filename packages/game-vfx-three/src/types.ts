@@ -104,6 +104,11 @@ export interface VfxRenderer extends EffectSink {
   readonly root: THREE_NS.Group
   /** Steps the world, then redraws everything from it. Call once per frame (a shared world is stepped here, nowhere else). */
   update(dt: number): void
+  /**
+   * Puts what rides on a thing (a muzzle flash played with `track`) where the thing is now and redraws it: call it after the frame moved the things (the gun posed, the
+   * view turned) and before drawing. A host that does not call it draws those effects where the thing was when `update` ran.
+   */
+  present(): void
   /** Meshes that use the materials of the solid particles, to render once so that the first effect does not build their shader programs in the middle of a frame. */
   warmUpProbes(): WarmUpProbes
   /** Shakes the camera for the render that follows (the Lab's L1092) and answers the function that puts it back. */

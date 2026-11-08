@@ -4,6 +4,7 @@ import type { AnimationEventSpec } from '@adatechnology/game-contracts'
 import { muzzleSmokeOf } from '@adatechnology/game-weapons'
 import { buildCasing, buildRound } from '../models/cartridge'
 import { FLASH_BY_CASE } from './effects'
+import type { MuzzleTrack } from './effects'
 import { toWorld, worldPositionOf } from './session'
 import type { FxWorld, Session } from './session'
 
@@ -122,17 +123,21 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     } else ejectFromPort(false)
   }
 
+  // the flash stays on the muzzle while it burns, as long as the gun is in the hands
+  const trackOf = (mark: THREE_NS.Object3D): MuzzleTrack => () => (root.parent ? { position: positionOf(mark), orientation: root.getWorldQuaternion(new THREE.Quaternion()) } : null)
+
   return (event) => {
     const data = event.data ?? {}
     switch (event.type) {
       case 'muzzle_flash':
         if (data.at === 'ugl') {
-          if (parts.uglMuzzle && world.layers.muzzleFlash) world.afterPose(() => parts.uglMuzzle && effects.muzzleFlash(positionOf(parts.uglMuzzle), root.getWorldQuaternion(new THREE.Quaternion()), UGL_FLASH))
+          const ugl = parts.uglMuzzle
+          if (ugl && world.layers.muzzleFlash) world.afterPose(() => effects.muzzleFlash(positionOf(ugl), root.getWorldQuaternion(new THREE.Quaternion()), UGL_FLASH, undefined, trackOf(ugl)))
         } else if (parts.muzzle && world.layers.muzzleFlash && (session.def.action.kind === 'firearm' || session.def.action.kind === 'launcher')) {
           const profile = muzzleSmokeOf({ caliber: session.caliber, weapon: session.def, suppressed: session.suppressed })
           const size = session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType]
           const muzzle = parts.muzzle
-          world.afterPose(() => effects.muzzleFlash(positionOf(muzzle), root.getWorldQuaternion(new THREE.Quaternion()), size, profile))
+          world.afterPose(() => effects.muzzleFlash(positionOf(muzzle), root.getWorldQuaternion(new THREE.Quaternion()), size, profile, trackOf(muzzle)))
         }
         break
       case 'eject_casing':
