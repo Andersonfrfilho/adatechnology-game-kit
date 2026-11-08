@@ -130,3 +130,20 @@ describe('concentrated fire on a pillar', () => {
     })
   }
 })
+
+describe('a 40 mm grenade on the corner of a pillar', () => {
+  it('takes its cover off there and bares its corner bar and stirrups; the pillar stands, its concrete elsewhere stays', () => {
+    const s = setup()
+    // 45 g of TNT (a 40 mm HE grenade) going off a few centimetres off the pillar's corner, at chest height
+    s.world.explode([s.x + 0.1, 1.3, s.z + 0.13], 102400, 4, 'test')
+    for (let i = 0; i < 10; i++) s.world.update(0.1)
+    const pillar = s.world.part(s.id, PILLAR)!
+    const chipped = pillar.chipped ?? []
+    expect(chipped.length).toBeGreaterThan(0)
+    expect(s.events.some((e) => e.type === 'expose' && e.part === PILLAR)).toBe(true)
+    expect(['intact', 'damaged']).toContain(pillar.status)
+    // only around the blast: part space, the pillar's length is its y
+    const local = 1.3 - (s.bottom + s.top) / 2
+    for (const c of chipped) expect(Math.abs(c.center[1] - local)).toBeLessThanOrEqual(0.5)
+  })
+})
