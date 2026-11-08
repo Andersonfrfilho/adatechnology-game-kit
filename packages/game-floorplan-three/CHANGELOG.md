@@ -1,5 +1,21 @@
 # @adatechnology/game-floorplan-three
 
+## 0.13.0
+
+### Minor Changes
+
+- f3c98a9: O corpo passa pelo buraco que o tiro ou a explosão abriu na parede. O `follow` da parede das casas (`wallPiece`) ganhou `blocks(x, z, raio, y0, y1)`, que diz se a parede, como está desenhada agora, segura um corpo naquele ponto: onde os tijolos saíram, o corpo passa; os pilares e o resto da parede seguram. Vale também para a parte da parede que se soltou e ficou em pé como peça (`owns` diz quais objetos do mundo ela responde). A sala de teste usa isso para o jogador: a parede de alvo deixou de ser um muro que fecha a arena de ponta a ponta (só os lados dela continuam fechados) e não é mais medida pela caixa inteira quando o seu `follow` responde por ela.
+
+### Patch Changes
+
+- 21b2d48: No corte de um pilar ou de uma viga, ficam pedaços de concreto presos nos vergalhões. Onde os blocos de concreto saíram, o desenho deixa pedras quebradas de concreto (formas irregulares, cada uma virada de um jeito) agarradas às barras dos cantos e assentadas nas faces da quebra acima e abaixo, mais ou menos em cada bloco (sempre os mesmos para o mesmo lugar), em vez da gaiola limpa.
+- 5984ae4: O pilar de concreto lasca aos poucos onde os tiros pegam. Cada tiro que passa do cobrimento soma no bloco de concreto em que bateu; com uns seis tiros de fuzil no mesmo lugar o bloco se solta ali e os vergalhões aparecem, e o resto do concreto continua preso na ferragem. O núcleo atrás do bloco que saiu continua recebendo os tiros até o corte. Quando o pilar é cortado, sai só a faixa do corte: o concreto de cima fica na ferragem, preso na cinta, em vez de sumir de uma vez e deixar só a gaiola. Bala de pistola e chumbo de espingarda só marcam o cobrimento.
+- Updated dependencies [5984ae4]
+- Updated dependencies [779f9f4]
+  - @adatechnology/game-destruction@0.24.0
+  - @adatechnology/game-contracts@0.34.0
+  - @adatechnology/game-floorplan-structure@2.2.2
+
 ## 0.12.5
 
 ### Patch Changes

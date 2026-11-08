@@ -1,5 +1,28 @@
 # @adatechnology/game-test-room
 
+## 0.34.0
+
+### Minor Changes
+
+- f3c98a9: O corpo passa pelo buraco que o tiro ou a explosão abriu na parede. O `follow` da parede das casas (`wallPiece`) ganhou `blocks(x, z, raio, y0, y1)`, que diz se a parede, como está desenhada agora, segura um corpo naquele ponto: onde os tijolos saíram, o corpo passa; os pilares e o resto da parede seguram. Vale também para a parte da parede que se soltou e ficou em pé como peça (`owns` diz quais objetos do mundo ela responde). A sala de teste usa isso para o jogador: a parede de alvo deixou de ser um muro que fecha a arena de ponta a ponta (só os lados dela continuam fechados) e não é mais medida pela caixa inteira quando o seu `follow` responde por ela.
+
+### Patch Changes
+
+- Updated dependencies [5984ae4]
+- Updated dependencies [779f9f4]
+  - @adatechnology/game-destruction@0.24.0
+  - @adatechnology/game-contracts@0.34.0
+  - @adatechnology/game-destruction-three@0.24.0
+  - @adatechnology/game-terrain@0.7.4
+  - @adatechnology/game-audio@0.13.5
+  - @adatechnology/game-fluids@0.6.3
+  - @adatechnology/game-fluids-three@0.4.22
+  - @adatechnology/game-player@0.6.3
+  - @adatechnology/game-runtime@0.2.12
+  - @adatechnology/game-terrain-three@0.5.8
+  - @adatechnology/game-vfx-three@0.9.1
+  - @adatechnology/game-weapons@0.11.2
+
 ## 0.33.3
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @adatechnology/game-stories
 
+## 0.3.12
+
+### Patch Changes
+
+- Updated dependencies [779f9f4]
+  - @adatechnology/game-contracts@0.34.0
+  - @adatechnology/game-characters@0.2.20
+
 ## 0.3.11
 
 ### Patch Changes
