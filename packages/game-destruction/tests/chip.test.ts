@@ -115,7 +115,8 @@ describe('concrete under fire: a material answers each kind of blow its own way'
   it('7.62 rounds on one place take its cover off within a few rounds and its bars show there, the beam still whole', () => {
     const b = beamWorld()
     b.fire(3300, 7.62, 3)
-    expect(b.of('chip')).toHaveLength(0)
+    // at most the block of concrete the rounds wore breaks off there, one block
+    expect(b.of('chip').every((e) => (e.units?.length ?? 1) === 1)).toBe(true)
     const bars = b.of('expose').at(-1)!.bars
     expect(bars.length).toBeGreaterThan(0)
     // the bars that show are the ones in the band the rounds wore: no longer than it

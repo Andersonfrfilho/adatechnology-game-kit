@@ -121,16 +121,14 @@ const PANEL_POINTS_LOADED = 4
  * Shots on a reinforced member (a pillar, a beam) wear its section at the height they hit, band by band (`MEMBER_BAND` along its length). Each round takes out
  * a cone of concrete as deep as it goes into concrete (its `penetration.concrete`, or its energy over the material's resistance; at most the depth of the
  * member along the shot) and `MEMBER_CRATER_CALIBRES` calibres across (never wider than deep): about 80 cm³ for a 7.62x39 rifle round, 290 cm³ for a .50,
- * 16 cm³ for a 9 mm and 1 cm³ for a buckshot pellet. A crater deeper than the cover bares the bars that run through it, and the member is cut there
+ * 16 cm³ for a 9 mm and 1 cm³ for a buckshot pellet. Craters past the cover add up in the block they land in until it breaks off and bares its bars (`MEMBER_UNIT_LOSS`), and the member is cut there
  * past `MEMBER_CUT_LOSS`: 20 to 30 rifle rounds or 5 to 10 rounds of .50 on the same place of a 15 cm pillar; a pistol or a shotgun practically never.
  */
 const MEMBER_BAND = 0.1
 const MEMBER_CRATER_CALIBRES = 3.4
-/** Places of bared bars a member keeps (each a crater past its cover); later craters on the same place add none. */
-const MEMBER_BARED_MAX = 24
 const MEMBER_CUT_LOSS = 0.9
-/** Share of a unit of a reinforced member (a block of its concrete between the bars) the craters in it take before it breaks off: about six rifle rounds in one place. */
-const MEMBER_UNIT_LOSS = 0.25
+/** Share of a unit of a reinforced member (a block of its concrete between the bars) the craters in it take before it breaks off: about three rifle rounds in one place. */
+const MEMBER_UNIT_LOSS = 0.12
 const BLAST_EDGE_WEAR = 0.6
 const RESIDUAL_CAPACITY = 0.15
 /** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
@@ -2738,6 +2736,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * takes the shot unit by unit (`chipUnits`). Past the cover the bars show there; the block of concrete the craters wear breaks off (`MEMBER_UNIT_LOSS`); past
    * the cut the band's concrete comes out (what is above stays on its bars), and what rested on the member no longer bears on it.
    */
+  /** A member whose shots `wearMember` takes where they land (a pillar, a beam, cast with its bars): its hit points do not decide its concrete. */
+  const wornLocally = (p: PartRT): boolean => !!p.spec.reinforcement && !!p.spec.units && p.spec.units.mortar === p.spec.material && isMember(p.dims) && p.spec.shape.kind === 'box'
+
   const wearMember = (o: ObjRT, p: PartRT, entry: Vec3, d: Vec3, E: number, caliber: number, penMm: number | undefined, src?: string): boolean => {
     if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
     const along = p.dims.indexOf(Math.max(...p.dims))
@@ -2761,17 +2762,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     worn[band] = after
     markDamaged(p)
     const bandCenter = -p.dims[along] / 2 + (band + 0.5) * height
-    // a crater deeper than the cover bares the bars that run through it
-    if (h > REBAR_COVER && after < MEMBER_CUT_LOSS) {
-      const bared = (p.rt.bared ??= [])
-      const center: Vec3 = [lp[0], lp[1], lp[2]]
-      const size: Vec3 = [p.dims[0], p.dims[1], p.dims[2]]
-      for (let a = 0; a < 3; a++) if (Math.abs(ld[a]) < 0.5) size[a] = 2 * r
-      if (bared.length < MEMBER_BARED_MAX && !bared.some((box) => box.center.every((x, a) => Math.abs(x - center[a]!) < box.size[a]! / 4))) {
-        bared.push({ center, size })
-        exposeRebar(o, p, src)
-      }
-    }
+    // the bars show where a block of the concrete broke off (`knockOutUnits` bares them), not under a crater: the concrete over them is still there
     const grid = gridOf(p)
     const gone = (p.rt.chips ??= {})
     if (before >= MEMBER_CUT_LOSS || after < MEMBER_CUT_LOSS) {
@@ -3472,6 +3463,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a bullet or a blast sets a chained part off after its delay instead of tearing it apart on the spot
     if (chained && p.st.hp <= 0 && p.rt.chainDue === undefined) p.st.hp = Math.min(prev, 1)
     if (p.st.hp <= 0 && p.mat.fracture === 'none' && !p.spec.explodes) p.st.hp = Math.min(prev, 1)
+    // rounds on a reinforced member take its concrete where they land (`wearMember`), block by block, and cut it there: they never strip it whole
+    if (p.st.hp <= 0 && type === 'ballistic' && wornLocally(p)) p.st.hp = Math.min(prev, 1)
     const done = prev - p.st.hp
     if (done > 0) emit({ ...base(o, src), type: 'damage', part: p.spec.id, amount: done, hp: Math.max(0, p.st.hp), damageType: type })
     if (p.st.hp <= 0) failPart(o, p, origin, dir, fragEnergy, cap, src)
