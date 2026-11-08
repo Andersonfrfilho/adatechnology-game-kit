@@ -698,6 +698,8 @@ export interface PartRuntime {
   craters?: Record<number, number>
   /** Share of the section of a reinforced member the shots took out so far, by band along its length (`MEMBER_BAND` from its negative end). */
   bands?: Record<number, number>
+  /** Concrete each unit of a reinforced member lost to craters (m³), by unit index: past `MEMBER_UNIT_LOSS` of it, that piece comes out. */
+  cellWear?: Record<number, number>
   /** Places of a reinforced member whose cover the shots took off (part space): its bars show there although no unit came out. */
   bared?: Array<{ center: Vec3; size: Vec3 }>
   /** Mass in kg that left the part in a breach. */
