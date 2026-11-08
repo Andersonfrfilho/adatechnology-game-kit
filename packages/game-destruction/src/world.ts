@@ -2533,7 +2533,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * (a bullet loosens the mortar bed under it, not the whole bed of a ten-metre wall), so a row of shots does not bring a wall down. A blow breaks at
    * most that stretch: however hard, it takes no more than its share of the joint's strength, so the bed of a wall gives way once blows broke it all along.
    */
-  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number) => {
+  /** Trim fixed on a part (a baseboard, a paving slab): it carries nothing. */
+  const isTrim = (p: PartRT): boolean => (p.spec.structure?.role ?? 'none') === 'none'
+
+  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
     const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
     if (split && mine.length) amount /= mine.length
@@ -2543,6 +2546,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       // or a saw cuts it (or the part itself giving way)
       if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
+      // a blast shakes loose the trim fixed on a part (a baseboard, a paving slab: no structure of its own) only near it, not along the whole wall
+      if (blast && (isTrim(o.parts[j.ia]) || isTrim(o.parts[j.ib])) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
       j.st.hp -= span === undefined ? amount : Math.min(amount, j.st.maxHp) * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
       if (j.st.hp <= 0) {
         j.st.hp = 0
@@ -3720,8 +3725,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         checkIgnite(o, p, src)
       }
     }
-    // a blast loosens a long joint (the mortar bed of a wall) over the stretch it breaks, not all along it
-    wearJoints(o, p, Ein * 0.5, undefined, 0, src, false, 2 * BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000))
+    // a blast loosens a long joint (the mortar bed of a wall) over the stretch it breaks, not all along it; the trim on the part only within that stretch
+    // (a grenade at a pillar's foot does not shake loose the baseboards and the paving at the other end of the wall)
+    const stretch = 2 * BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)
+    wearJoints(o, p, Ein * 0.5, undefined, 0, src, false, stretch, { point, reach: stretch })
     const amount = Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1)
     if (blastFrontSpeed > 0 && dist > 0 && mat.tags?.includes('glass')) {
       frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
