@@ -1,5 +1,27 @@
 # @adatechnology/game-destruction
 
+## 0.23.0
+
+### Minor Changes
+
+- 4e2d44b: O recalque e as trincas aparecem na tela: `PartState.settlement` (perfil de recalque ao longo da peça, seguido pela parede da baldrame e pelo que pende dela) e `Crack.stair` (trinca em escada pelas juntas, subindo para o lado que desceu, largura pela distorção). O renderizador desce e inclina a peça aos poucos pelo perfil e desenha a trinca em escada nas duas faces da parede como marca da peça.
+
+### Patch Changes
+
+- 71c2c92: O pano de alvenaria que uma explosão derruba sai rasgado, não em retângulo. A alvenaria confinada é levantada antes dos pilares, com as pontas dentadas, e os pilares são concretados contra ela; embaixo da cinta e em cima do baldrame a junta também é de argamassa. Por isso sobra alvenaria no quadro: junto a cada pilar, uma faixa de um tijolo ou mais (meio tijolo a mais nas fiadas amarradas), de profundidade diferente a cada fiada; sobre o baldrame, de uma a cinco fiadas; sob a cinta, às vezes uma ou duas. O que sobra sem apoio cai, como antes.
+- b7e0d7c: O vão de alvenaria que uma explosão derruba sai em tijolos e torrões de poucos tijolos, não em placas. Os pedaços eram juntados em no máximo 24 caixas por golpe (6 para o que cai), e um vão de 3 m virava placas de 0,6 a 1,2 m. Agora `clumpUnits` junta só tijolos inteiros, uma fiada e um tijolo de cada vez, até 96 torrões por golpe (24 para o que cai). O reboco que estava sobre eles sai em lascas de 2 cm de espessura das faces rebocadas. No desenho, o pedaço de material que esfarela (tijolo, bloco, concreto, reboco) tem cantos e arestas quebrados (`buildRubbleGeometry`), em vez de uma caixa cortada.
+- cb9cc2e: Embaixo da cinta o pano derrubado deixa uma faixa rasgada de tijolos, não uma borda reta. A última fiada de uma parede sob cinta é encunhada contra ela (tijolos inclinados ou argamassa batida), e um torrão de poucos quilos preso por 200 cm² de argamassa tem só centenas de pascais de tração. Por isso o que sobra ali, de uma a três fiadas na maior parte do vão, fica preso à cinta (`wedgedUnder`). Mais fundo do que isso, o que fica pendurado cai, como antes.
+- 76e5d44: Parede de alvenaria que perde o apoio (baldrame que caiu numa cratera, junta arrancada, peça que a sustentava destruída) desmorona em tijolos e torrões no lugar, e não cai mais como uma placa rígida inteira. A argamassa não tem resistência à tração para segurar a parede como uma folha só. No colapso, cada parede de tijolo assentado (sem armadura, não moldada) vira uma fratura `crumble`, com os tijolos que restavam nela em torrões de poucos tijolos (`clumpUnits`) e as lascas do reboco. Pilares, vigas, lajes e o resto continuam caindo inteiros, como antes.
+
+  A cobertura de telhas (material que estilhaça, assentada solta nas ripas) que perde o apoio também se desfaz em punhados de telhas ao cair (até 160 pedaços), em vez de descer como uma tampa rígida.
+
+- 8585829: Foguete encostado num pilar corta o pilar ali, não some com ele inteiro. Antes, uma carga a menos de 35 cm de um pilar zerava os pontos de vida dele: o concreto fraturava em toda a altura, o pilar virava só a gaiola e a gaiola caía. Agora o pilar (peça longa armada) sempre guarda seu piso de pontos de vida e perde o concreto só onde a explosão alcança: uns 50 cm para um foguete de 200 kJ. A ferragem aparece ali. O concreto moldado (pilar, viga, parede de concreto) não desaba bloco a bloco sobre o vão, como a alvenaria: é uma peça só, presa pelos ferros.
+
+  Os pilares e as vigas ganham estribos (`memberStirrups`, a cada 15 cm, NBR 6118 18.4.3), que aparecem junto com as barras onde o concreto saiu e na gaiola de uma peça descascada. A bitola das barras de pilar e viga passa de 8 para 10 mm (`MEMBER_CAGE.diameter`, mínimo da NBR 6118 18.4.2.1).
+
+- Updated dependencies [4e2d44b]
+  - @adatechnology/game-contracts@0.32.0
+
 ## 0.22.1
 
 ### Patch Changes

@@ -1,5 +1,26 @@
 # @adatechnology/game-destruction-three
 
+## 0.23.0
+
+### Minor Changes
+
+- 4e2d44b: O recalque e as trincas aparecem na tela: `PartState.settlement` (perfil de recalque ao longo da peça, seguido pela parede da baldrame e pelo que pende dela) e `Crack.stair` (trinca em escada pelas juntas, subindo para o lado que desceu, largura pela distorção). O renderizador desce e inclina a peça aos poucos pelo perfil e desenha a trinca em escada nas duas faces da parede como marca da peça.
+
+### Patch Changes
+
+- b7e0d7c: O vão de alvenaria que uma explosão derruba sai em tijolos e torrões de poucos tijolos, não em placas. Os pedaços eram juntados em no máximo 24 caixas por golpe (6 para o que cai), e um vão de 3 m virava placas de 0,6 a 1,2 m. Agora `clumpUnits` junta só tijolos inteiros, uma fiada e um tijolo de cada vez, até 96 torrões por golpe (24 para o que cai). O reboco que estava sobre eles sai em lascas de 2 cm de espessura das faces rebocadas. No desenho, o pedaço de material que esfarela (tijolo, bloco, concreto, reboco) tem cantos e arestas quebrados (`buildRubbleGeometry`), em vez de uma caixa cortada.
+- abaa78d: O som do fogo para quando o fogo acaba. O renderizador passa a parear cada `burn_loop` com um único `burn_end` por peça (`startBurnSound` e `endBurnSound`): a parte que quebra, derrete ou perde o fogo sem evento de `burnout` ou `extinguish`, o objeto restaurado, o `clear` e a parte que acende de novo deixavam o ronco do fogo tocando para sempre. O ronco agora some em `FIRE_FADE_SECONDS` (fade curto, andado pelo `update`) em vez de cortar no seco, e `reset` e `dispose` param todo o laço.
+- Updated dependencies [71c2c92]
+- Updated dependencies [b7e0d7c]
+- Updated dependencies [cb9cc2e]
+- Updated dependencies [76e5d44]
+- Updated dependencies [8585829]
+- Updated dependencies [4e2d44b]
+  - @adatechnology/game-destruction@0.23.0
+  - @adatechnology/game-contracts@0.32.0
+  - @adatechnology/game-audio@0.13.3
+  - @adatechnology/game-vfx-three@0.8.1
+
 ## 0.22.1
 
 ### Patch Changes

@@ -1,5 +1,29 @@
 # @adatechnology/game-test-room
 
+## 0.33.1
+
+### Patch Changes
+
+- Updated dependencies [71c2c92]
+- Updated dependencies [b7e0d7c]
+- Updated dependencies [cb9cc2e]
+- Updated dependencies [abaa78d]
+- Updated dependencies [76e5d44]
+- Updated dependencies [8585829]
+- Updated dependencies [4e2d44b]
+  - @adatechnology/game-destruction@0.23.0
+  - @adatechnology/game-destruction-three@0.23.0
+  - @adatechnology/game-contracts@0.32.0
+  - @adatechnology/game-terrain@0.7.1
+  - @adatechnology/game-audio@0.13.3
+  - @adatechnology/game-fluids@0.6.1
+  - @adatechnology/game-fluids-three@0.4.20
+  - @adatechnology/game-player@0.6.1
+  - @adatechnology/game-runtime@0.2.10
+  - @adatechnology/game-terrain-three@0.5.6
+  - @adatechnology/game-vfx-three@0.8.1
+  - @adatechnology/game-weapons@0.10.2
+
 ## 0.33.0
 
 ### Minor Changes

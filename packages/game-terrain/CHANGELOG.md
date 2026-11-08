@@ -1,5 +1,12 @@
 # @adatechnology/game-terrain
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [4e2d44b]
+  - @adatechnology/game-contracts@0.32.0
+
 ## 0.7.0
 
 ### Minor Changes

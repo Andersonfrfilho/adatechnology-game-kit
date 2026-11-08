@@ -1,5 +1,26 @@
 # @adatechnology/game-floorplan-three
 
+## 0.12.2
+
+### Patch Changes
+
+- 8585829: Foguete encostado num pilar corta o pilar ali, não some com ele inteiro. Antes, uma carga a menos de 35 cm de um pilar zerava os pontos de vida dele: o concreto fraturava em toda a altura, o pilar virava só a gaiola e a gaiola caía. Agora o pilar (peça longa armada) sempre guarda seu piso de pontos de vida e perde o concreto só onde a explosão alcança: uns 50 cm para um foguete de 200 kJ. A ferragem aparece ali. O concreto moldado (pilar, viga, parede de concreto) não desaba bloco a bloco sobre o vão, como a alvenaria: é uma peça só, presa pelos ferros.
+
+  Os pilares e as vigas ganham estribos (`memberStirrups`, a cada 15 cm, NBR 6118 18.4.3), que aparecem junto com as barras onde o concreto saiu e na gaiola de uma peça descascada. A bitola das barras de pilar e viga passa de 8 para 10 mm (`MEMBER_CAGE.diameter`, mínimo da NBR 6118 18.4.2.1).
+
+- 52b5701: O concreto de um pilar ao lado de um corte não aparece mais cheio de furos pretos. Os tijolos que o mundo tirou atrás do pilar (a parede passa por trás dele) viravam crateras desenhadas no concreto do pilar; agora a cratera fica só do lado da parede, cortada na face do pilar.
+- 472516c: O pilar ao lado de um corte não aparece mais rachado ao meio. O reboco arrancado pelos dois lados do pilar deixava uma faixa fina de reboco no meio da face, desenhada como um rasgo comprido. Agora o reboco sobre o pilar sai como uma folha só quando a alvenaria o arranca nas duas bordas, e o concreto inteiro aparece embaixo. O material das unidades da brecha passa a levar também a máscara do reboco (`breachMask`), ao lado da do núcleo.
+- e66c9ca: A parede não desenha mais tijolo pendurado onde a explosão levou a alvenaria. As unidades do mundo e os tijolos desenhados não têm as mesmas juntas (o mundo junta tijolos e desloca as fiadas pela amarração), e o desenho só apagava um tijolo coberto em 90% pelo buraco. Num foguete que derruba o vão entre dois pilares, isso deixava uma coluna de tijolos quebrados em fiadas alternadas junto a um dos pilares, sem nada embaixo. Agora o tijolo sai quando o mundo levou a maior parte dele e a unidade sob o seu meio.
+- Updated dependencies [71c2c92]
+- Updated dependencies [b7e0d7c]
+- Updated dependencies [cb9cc2e]
+- Updated dependencies [76e5d44]
+- Updated dependencies [8585829]
+- Updated dependencies [4e2d44b]
+  - @adatechnology/game-destruction@0.23.0
+  - @adatechnology/game-floorplan-structure@2.1.8
+  - @adatechnology/game-contracts@0.32.0
+
 ## 0.12.1
 
 ### Patch Changes
