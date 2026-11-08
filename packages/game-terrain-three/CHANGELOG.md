@@ -1,5 +1,13 @@
 # @adatechnology/game-terrain-three
 
+## 0.5.7
+
+### Patch Changes
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+  - @adatechnology/game-terrain@0.7.3
+
 ## 0.5.6
 
 ### Patch Changes

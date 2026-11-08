@@ -1,5 +1,12 @@
 # @adatechnology/game-destruction
 
+## 0.23.2
+
+### Patch Changes
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+
 ## 0.23.1
 
 ### Patch Changes

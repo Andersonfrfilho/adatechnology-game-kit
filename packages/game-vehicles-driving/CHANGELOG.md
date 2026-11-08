@@ -1,5 +1,12 @@
 # @adatechnology/game-vehicles-driving
 
+## 0.2.20
+
+### Patch Changes
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+
 ## 0.2.19
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @adatechnology/game-shapes
 
+## 0.2.11
+
+### Patch Changes
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+
 ## 0.2.10
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-runtime",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "license": "MIT",
   "description": "The owner of the frame: a phased scheduler (input, fixed simulation, late simulation, present, render, idle) with a fixed step, and one time budget shared by every deferred queue. No three.js, no DOM required.",
   "keywords": [
