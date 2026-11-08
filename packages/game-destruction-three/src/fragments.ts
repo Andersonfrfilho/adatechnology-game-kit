@@ -353,6 +353,8 @@ export class FragmentSystem {
   private rouse(f: Live): void {
     f.asleep = false
     f.rest = 0
+    // what it lay on may be gone: the floor is measured again where it lies
+    f.floor = null
     f.mesh.matrixAutoUpdate = true
   }
 
@@ -401,6 +403,8 @@ export class FragmentSystem {
       if (!f.asleep || f.dying) continue
       const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
       const ext = Math.abs(e[1]) * f.half.x + Math.abs(e[5]) * f.half.y + Math.abs(e[9]) * f.half.z
+      // measured afresh: the floor kept from its landing is the top it landed on, which may have broken or been carried off since
+      f.floor = null
       if (f.mesh.position.y - ext > this.floorUnder(f) + SUPPORT_GAP) this.rouse(f)
     }
   }

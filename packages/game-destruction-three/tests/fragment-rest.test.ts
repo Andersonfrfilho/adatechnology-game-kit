@@ -22,3 +22,20 @@ describe('a fragment at rest', () => {
     expect(mesh.matrixAutoUpdate).toBe(true)
   })
 })
+
+describe('a fragment asleep on a top that is gone', () => {
+  it('looks under itself again and falls to the floor, not stay where the top was', () => {
+    const scene = new THREE.Scene()
+    let top = 0.8
+    const options = { scene, gravity: 9.8, groundAt: () => 0, surfaceAt: (_x: number, y: number) => (y >= top ? Math.max(top, 0) : 0), life: 0 } as unknown as FragmentSystemOptions
+    const system = new FragmentSystem(THREE, options)
+    const material = system.materialFor('wood', 0x808080, false)
+    const mesh = system.spawn({ ...fragment, center: [0, 0.9, 0] } as never, material, 'home', 10)!
+    for (let frame = 0; frame < 120; frame++) system.update(1 / 60)
+    expect(mesh.matrixAutoUpdate).toBe(false)
+    expect(mesh.position.y).toBeCloseTo(0.85, 2)
+    top = -Infinity
+    for (let frame = 0; frame < 120; frame++) system.update(1 / 60)
+    expect(mesh.position.y).toBeCloseTo(0.05, 2)
+  })
+})
