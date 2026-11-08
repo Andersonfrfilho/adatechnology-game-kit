@@ -54,8 +54,12 @@ const COVER = 0.015
 const LUMP_BAR_INSET = 0.035
 const LUMPS_PER_BAR = 2
 const LUMP_CHANCE = 0.6
-const LUMP_MIN = 0.03
-const LUMP_MAX = 0.065
+const LUMP_MIN = 0.025
+const LUMP_MAX = 0.05
+/** The broken stones on the faces of the break above and under a block that came out: how many on each face and their size (m). */
+const EDGE_LUMPS = 3
+const EDGE_LUMP_MIN = 0.04
+const EDGE_LUMP_MAX = 0.08
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
 const MAX_FLAKES = 64
 
@@ -158,6 +162,23 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     const dropped: WallView[] = []
     let lod = 0
     const unitGeometry = new THREE.BoxGeometry(1, 1, 1)
+    let lumpShape: THREE_NS.BufferGeometry | null = null
+    /** A broken stone of unit size: an icosahedron with its corners pushed in and out, flat-shaded so its facets read as fractures. */
+    const lumpGeometry = (): THREE_NS.BufferGeometry => {
+      if (lumpShape) return lumpShape
+      const g = new THREE.IcosahedronGeometry(0.62, 0).toNonIndexed()
+      const at = g.getAttribute('position')
+      const moved = new Map<string, number>()
+      for (let i = 0; i < at.count; i++) {
+        const key = `${at.getX(i).toFixed(3)},${at.getY(i).toFixed(3)},${at.getZ(i).toFixed(3)}`
+        let k = moved.get(key)
+        if (k === undefined) { const x = Math.sin(moved.size * 12.9898 + 4.1) * 43758.5453; k = 0.7 + 0.45 * (x - Math.floor(x)); moved.set(key, k) }
+        at.setXYZ(i, at.getX(i) * k, at.getY(i) * k * 0.85, at.getZ(i) * k)
+      }
+      g.computeVertexNormals()
+      lumpShape = g
+      return g
+    }
     const tmp = { m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(), c: new THREE.Color() }
 
     /** A world point in the house's own space (the space of the structure's parts). */
@@ -488,8 +509,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           at(len - 0.012, h - 0.012, thick - 2 * COVER, tone(base, 0.8 + 0.35 * n))
         }
       }
-      list.push(...stuckLumps(castGone, mask, view.bounds))
-      if (view.units) { view.units.removeFromParent(); view.units.dispose() }
+      const lumps = stuckLumps(castGone, mask, view.bounds)
+      if (view.units) dropUnits(view.units)
       const units = new THREE.InstancedMesh(unitGeometry, view.unitMaterial, Math.max(1, list.length))
       units.name = 'breach:' + view.host
       list.forEach((u, i) => {
@@ -503,6 +524,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       units.castShadow = true
       units.receiveShadow = true
       units.visible = lod === 0
+      if (lumps.length > 0) units.add(lumpMesh(lumps, view.unitMaterial))
       house.add(units)
       view.units = units
       view.gone = holes.length
@@ -547,6 +569,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const grey = fragmentMaterial('concrete').color.getHex()
       for (const { c, part, thick, mid } of gone) {
         const p0 = (mask.alongU ? part.aabb[0]! : part.aabb[1]!) - mask.start, p1 = (mask.alongU ? part.aabb[2]! : part.aabb[3]!) - mask.start
+        // the faces of the break above and under the block are not flat: broken stones sit on them, half in the concrete
+        for (const [edge, k0] of [[c.y0, 0], [c.y1, 4]] as const) {
+          for (let k = k0; k < k0 + EDGE_LUMPS; k++) {
+            const r = (n: number) => { const x = Math.sin(c.a * 63.1 + edge * 29.7 + mid * 17.3 + k * 5.3 + n * 2.9) * 43758.5453; return x - Math.floor(x) }
+            const size = EDGE_LUMP_MIN + (EDGE_LUMP_MAX - EDGE_LUMP_MIN) * r(1)
+            const centre = mask.start + c.a + (0.1 + 0.8 * r(2)) * (c.b - c.a), d = mid + (r(3) - 0.5) * (thick - 2 * LUMP_BAR_INSET)
+            const unit = clipToBox({ x: mask.alongU ? centre : d, y: edge, z: mask.alongU ? d : centre, sx: size, sy: size * (0.6 + 0.5 * r(4)), sz: size, colour: tmp.c.setHex(grey).multiplyScalar(0.85 + 0.2 * r(5)).getHex() }, bounds)
+            if (unit) out.push(unit)
+          }
+        }
         const bars = [p0 + LUMP_BAR_INSET, p1 - LUMP_BAR_INSET].filter((s) => s >= c.a - 1e-6 && s <= c.b + 1e-6)
         for (const s of bars) {
           for (const side of [-1, 1]) {
@@ -564,6 +596,29 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         }
       }
       return out
+    }
+
+    /** Takes the units a view drew out of the house, with the lumps drawn on them. */
+    function dropUnits(units: THREE_NS.InstancedMesh): void {
+      for (const child of [...units.children]) if (child instanceof THREE.InstancedMesh) child.dispose()
+      units.removeFromParent()
+      units.dispose()
+    }
+
+    /** The lumps of concrete stuck on a member's bars: broken stones, each turned its own way (deterministic by place), not boxes. */
+    function lumpMesh(lumps: readonly UnitBox[], material: THREE_NS.Material): THREE_NS.InstancedMesh {
+      const mesh = new THREE.InstancedMesh(lumpGeometry(), material, lumps.length)
+      mesh.name = 'breach-lumps'
+      lumps.forEach((u, i) => {
+        const r = (n: number) => { const x = Math.sin(u.x * 71.3 + u.y * 37.9 + u.z * 53.1 + n * 9.7) * 43758.5453; return x - Math.floor(x) }
+        tmp.q.setFromEuler(new THREE.Euler(r(1) * Math.PI, r(2) * Math.PI, r(3) * Math.PI))
+        tmp.m.compose(tmp.p.set(u.x, u.y, u.z), tmp.q, tmp.s.set(u.sx, u.sy, u.sz))
+        mesh.setMatrixAt(i, tmp.m)
+        mesh.setColorAt(i, tmp.c.setHex(u.colour))
+      })
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      return mesh
     }
 
     /** Moves the wall's range to the masked shells (once): from then on the wall is drawn cut where its units went. */
@@ -646,7 +701,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     function dispose(view: WallView) {
       dirty.delete(view)
-      if (view.units) { view.units.removeFromParent(); view.units.dispose() }
+      if (view.units) dropUnits(view.units)
       view.unitMaterial.dispose()
       for (const m of view.shells) { m.removeFromParent(); m.geometry.dispose(); m.material.dispose() }
       view.mask.texture.dispose(); view.core.texture.dispose()

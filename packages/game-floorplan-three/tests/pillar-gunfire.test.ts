@@ -164,7 +164,9 @@ describe('the cut of a pillar, drawn', () => {
     follower.update()
     const gone = world.part(id, PILLAR)!.chipped!
     expect(gone.length).toBeGreaterThan(0)
-    const units = root.getObjectByName('breach:wall_0_0') as THREE.InstancedMesh
+    // broken stones, not boxes: a mesh of their own on the units the breach draws
+    const units = root.getObjectByName('breach:wall_0_0')!.getObjectByName('breach-lumps') as THREE.InstancedMesh
+    expect(units.geometry.type).not.toBe('BoxGeometry')
     root.updateMatrixWorld(true)
     const m = new THREE.Matrix4(), p = new THREE.Vector3(), s = new THREE.Vector3(), q = new THREE.Quaternion()
     let lumps = 0
