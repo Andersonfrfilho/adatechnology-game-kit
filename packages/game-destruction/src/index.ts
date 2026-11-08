@@ -29,3 +29,5 @@ export {
   solveWallFrame, stepSway, tBeamInertia, tensionCapacity, turbulenceIntensity, windClass, windPressure,
 } from './wind'
 export type { Gust, ResolvedWind, SwayState, SwaySystem, WallFrameSolution, WindAnalysis, WindCase, WindPartInput } from './wind'
+export { DEBRIS_EVENTS, DEBRIS_FAMILIES, FAMILY_COLORS, WOOD_ONLY_COLORS, debrisColor, debrisFamily, debrisLook, dustColor, fragmentTone } from './debris-look'
+export type { DebrisEvent, DebrisFamily, DebrisLook, DebrisLookOptions, DebrisMark, FragmentFace, ImpactRecipe } from './debris-look'

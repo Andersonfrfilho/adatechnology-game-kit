@@ -10,13 +10,16 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartVis, PieceBody, PieceRound } from './internal'
-import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
+import { clamp, createRng, hashNumbers, hashString } from './math'
 import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { surfaceOf } from './friction'
 import { kitOriginOf } from '@adatechnology/game-contracts'
+import { debrisColor, debrisLook, fragmentTone } from '@adatechnology/game-destruction'
+import { familyPlay, HitPoints } from './debris-events'
+import type { FamilyPlay } from './debris-events'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
@@ -34,7 +37,6 @@ const STEEL_DENSITY = 7850
 const CHIP_DECAL_EDGE = 0.05
 /** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
 const WOOD_RIM = 1.5
-const IMPACT_TAGS = ['metal', 'glass', 'wood'] as const
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
 
@@ -255,11 +257,9 @@ function fractureKey(def: MaterialDef | undefined, style: string): string {
   }
 }
 
-function fallbackColor(id: string, def: MaterialDef | undefined): number {
-  if (def?.tags?.includes('metal')) return 0x8a8f96
-  if (def?.visual?.transparent) return 0x9fd0e0
-  const h = hashString(id)
-  return mixHex(0x6b5a48, 0x9a9488, (h % 100) / 100)
+/** Colour of a material when the part gives none: its inside, a unit of it, or its family's (never wood brown on stone). */
+function fallbackColor(def: MaterialDef | undefined): number {
+  return debrisColor(def)
 }
 
 function materialsOf(m: THREE_NS.Material | THREE_NS.Material[]): THREE_NS.Material[] {
@@ -338,6 +338,7 @@ class Renderer implements DestructionRenderer {
   private readonly ground: GroundSpots
   private readonly pieceSys: PieceSystem
   private readonly cages: RebarCages
+  private readonly hitPoints = new HitPoints()
   private readonly active = new Map<string, { object: string; part: string }>()
   private readonly fires = new Map<string, FireEmitter>()
   /** Primed parts burning in the effects world until they go off: their burn loop ends when they are put out. */
@@ -558,6 +559,7 @@ class Renderer implements DestructionRenderer {
     this.restore(objectId)
     this.pieceSys.remove(objectId)
     this.bounds.delete(objectId)
+    this.hitPoints.forget(objectId)
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------
@@ -1060,6 +1062,7 @@ class Renderer implements DestructionRenderer {
 
   private apply(ev: DestructionEvent): void {
     this.staticDirty.add(ev.object)
+    this.hitPoints.note(ev, this.time)
     if (ev.type === 'fracture' || ev.type === 'detach' || ev.type === 'collapse' || ev.type === 'burnout' || ev.type === 'destroyed') this.broken.add(ev.object)
     switch (ev.type) {
       case 'damage':
@@ -1110,7 +1113,7 @@ class Renderer implements DestructionRenderer {
           if (pv) this.settlement.finish(pv)
         }
         this.splitLoose(ev.object)
-        if (!furniture || ev.mass >= COLLAPSE_CLOUD_KG) this.playEvent({ kind: 'collapse' }, this.rootPoint(ev.object))
+        if (!furniture || ev.mass >= COLLAPSE_CLOUD_KG) this.playEvent({ kind: 'collapse' }, this.rootPoint(ev.object), this.partPlay(ev.object, ev.parts[0] ?? ''))
         else this.vfx.burst('dust', this.rootPoint(ev.object), [0, 1, 0], clamp(Math.round(ev.mass / 4), 4, 24), 0.8)
         break
       }
@@ -1153,7 +1156,7 @@ class Renderer implements DestructionRenderer {
         else this.dropCage(ev.object, ev.part)
         if (ev.bars.length > 0) {
           const [a, b] = ev.bars[0] as [Vec3, Vec3]
-          this.playEvent({ kind: 'expose' }, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2])
+          this.playEvent({ kind: 'expose' }, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], this.partPlay(ev.object, ev.part))
         }
         break
       case 'extinguish': {
@@ -1194,7 +1197,7 @@ class Renderer implements DestructionRenderer {
         const b = this.bounds.get(ev.object)
         const pv = b?.parts.get(ev.part)
         const def = this.world.materials.get(ev.material)
-        const color = (pv && this.partColor(pv, def)) ?? fallbackColor(ev.material, def)
+        const color = (pv && this.partColor(pv, def)) ?? fallbackColor(def)
         let tag = this.homeTags.indexOf(ev.object) + 1
         if (tag === 0) tag = this.homeTags.push(ev.object)
         this.vfx.spawn('drips', ev.point, [(this.rng() - 0.5) * 0.1, -0.1, (this.rng() - 0.5) * 0.1], { color, tag, owner: this.owner })
@@ -1289,7 +1292,7 @@ class Renderer implements DestructionRenderer {
       const tint = this.visuals.vertexTint(mv)
       return tint ? c.clone().multiply(tint).getHex() : c.getHex()
     }
-    return def ? fallbackColor(def.id, def) : null
+    return def ? fallbackColor(def) : null
   }
 
   private debrisOptions(kind: DebrisKind, objectId: string, partId: string, material?: string): { color?: number } | undefined {
@@ -1350,23 +1353,24 @@ class Renderer implements DestructionRenderer {
     if (!b || !pv) return
     const def = this.world.materials.get(pv.material)
     const n = this.worldDir(b, ev.hole.normal)
+    const look = debrisLook(def, 'shot')
     const draw = (point: Vec3, normal: THREE_NS.Vector3): void => {
       const wp = new this.THREE.Vector3(point[0], point[1], point[2])
       const mv = this.nearestMesh(pv, wp)
       if (!mv) return
-      if (def?.visual?.transparent) {
+      if (look.mark === 'star_crack') {
         const seed = hashNumbers(ev.time, point[0], point[1], point[2])
         this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, ev.hole.diameter * 5), 0xe8f4ff, seed)
       } else {
         // wood tears its fibres around the hole: a ragged rim of fresh wood under it
-        const fresh = def?.penetrationClass === 'wood' ? def.visual?.innerColor : undefined
+        const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
         if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, ev.hole.diameter * WOOD_RIM), fresh)
         this.visuals.addHole(mv, wp, normal, ev.hole.diameter)
       }
     }
     draw(ev.worldPoint, n)
     if (ev.hole.through && ev.exitPoint) draw(ev.exitPoint, n.clone().negate())
-    if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
+    if (look.sparks) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
     if (ev.powder) {
       // what the part holds loose (flakes, flour) puffs out: a little back out of the entry, most out of the exit along the shot
       const puff = { color: ev.powder.color, size: 0.6, life: 1.6, alpha: 1.3 }
@@ -1417,20 +1421,22 @@ class Renderer implements DestructionRenderer {
     return new this.THREE.Vector3(axis === 'x' ? side : 0, axis === 'y' ? side : 0, axis === 'z' ? side : 0)
   }
 
-  /** The material an impact effect is chosen by: the tags of the material (`metal`, `glass`, `wood`), else stone and the like are `concrete`. */
-  private impactMaterial(def: MaterialDef | undefined): string {
-    for (const tag of IMPACT_TAGS) if (def?.tags?.includes(tag)) return tag
-    return 'concrete'
-  }
-
   /**
    * Plays the effect the event map names for a destruction event (`data/event-effects.json` of `game-vfx`, or `RendererOptions.eventEffects`) at a point.
-   * Answers whether one played, so the caller can leave out the burst it replaces.
+   * `play` gives the family of the material (the map's `{material}`) and the colours of its debris and dust. Answers whether one played, so the caller can
+   * leave out the burst it replaces.
    */
-  private playEvent(event: GameEvent, point: Vec3): boolean {
-    const id = effectForEvent(event, this.o.eventEffects ?? EVENT_EFFECTS_MAP)
+  private playEvent(event: GameEvent, point: Vec3, play?: FamilyPlay): boolean {
+    const id = effectForEvent(play && event.material === undefined ? { ...event, material: play.material } : event, this.o.eventEffects ?? EVENT_EFFECTS_MAP)
     if (!id) return false
-    return this.vfx.play(id, point, { seed: hashNumbers(point[0], point[1], point[2], this.time) }) !== null
+    return this.vfx.play(id, point, { seed: hashNumbers(point[0], point[1], point[2], this.time), ...(play ? { values: play.values } : {}) }) !== null
+  }
+
+  /** The family and colours of a part's material, for the effects of the event map. */
+  private partPlay(objectId: string, partId: string): FamilyPlay {
+    const pv = this.partVis(objectId, partId)
+    const def = pv ? this.world.materials.get(pv.material) : undefined
+    return familyPlay(def, pv ? (this.partColor(pv, def) ?? undefined) : undefined)
   }
 
   /** A coat came off: a patch in the colour of the core under it, below the bullet holes and cracks. */
@@ -1443,13 +1449,15 @@ class Renderer implements DestructionRenderer {
     const def = this.world.materials.get(pv.material)
     const normal = this.faceNormal(mv, wp)
     const core = def?.visual?.innerColor
-    // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips
-    if (core !== undefined) this.vfx.burst('chips', ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: core })
-    else this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
+    const look = debrisLook(def, 'spall', { partColor: this.partColor(pv, def) ?? undefined })
+    // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips, and a
+    // material with no impact recipe of its own (plastic, fabric, soil) throws its own debris in its colour, not the concrete impact
+    if (core !== undefined || look.impact === undefined) this.vfx.burst(look.debris, ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: look.color })
+    else this.playEvent({ kind: 'spall', material: look.impact }, ev.point)
     if (core !== undefined) this.trickleFrom(ev.point, [normal.x, normal.y, normal.z], core, mv)
     // a drawing that shows the coat coming off itself (the house renderer cuts its plaster and draws the bricks under it) takes no flat patch
     if ((mv.mesh.userData.drawnSpalls as string[] | undefined)?.includes(ev.part)) return
-    this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(pv.material, def))
+    this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(def))
   }
 
   /**
@@ -1497,17 +1505,18 @@ class Renderer implements DestructionRenderer {
    * (cutting the wall's faces) is not drawn yet: it needs the per-vertex binding of the house renderer.
    */
   private onStage(ev: Ev<'stage'>): void {
-    const played = this.playEvent({ kind: 'stage', stage: ev.stage }, ev.opening?.center ?? this.rootPoint(ev.object))
-    if (!ev.fragments || !ev.opening) return
     const pv = this.partVis(ev.object, ev.part)
     const def = pv ? this.world.materials.get(pv.material) : undefined
-    const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(pv?.material ?? '', def)
+    const at = ev.opening?.center ?? this.hitPoints.of(ev.object, ev.part, this.time) ?? this.rootPoint(ev.object)
+    const played = this.playEvent({ kind: 'stage', stage: ev.stage }, at, this.partPlay(ev.object, ev.part))
+    if (!ev.fragments || !ev.opening) return
+    const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(def)
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
     const step = this.low ? 2 : 1
     for (let i = 0; i < ev.fragments.length; i += step) {
       const fr = ev.fragments[i] as Fragment
       const fdef = this.world.materials.get(fr.material)
-      this.fragments.spawn(fr, this.fragments.materialFor(fr.material, fdef === def || !fdef ? color : fallbackColor(fr.material, fdef), false), ev.object, maxAlive)
+      this.fragments.spawn(fr, this.fragments.materialFor(fr.material, fdef === def || !fdef ? color : fallbackColor(fdef), false), ev.object, maxAlive)
     }
     if (!played) this.vfx.burst('dust', ev.opening.center, [0, 1, 0], 14, 1.2, { color })
     this.impactSound(pv?.material ?? '', ev.opening.center, 0.8, ev.blow)
@@ -1521,12 +1530,12 @@ class Renderer implements DestructionRenderer {
   private onChip(ev: Ev<'chip'>): void {
     const pv = this.partVis(ev.object, ev.part)
     const def = pv ? this.world.materials.get(pv.material) : undefined
-    const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(pv?.material ?? '', def)
+    const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(def)
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
     for (const fr of ev.fragments) {
       const fdef = this.world.materials.get(fr.material)
       // the inside of the material (fresh wood) when the piece came from it, else the part's colour
-      const tone = fr.unit && fdef?.visual?.unitColor !== undefined ? fdef.visual.unitColor : fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
+      const tone = fragmentTone(fdef, fr, fdef === def ? color : fallbackColor(fdef))
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
     // a unit knocked out of masonry or concrete leaves a broken edge that goes on crumbling
@@ -1555,7 +1564,7 @@ class Renderer implements DestructionRenderer {
     const pv = b?.parts.get(ev.part)
     const matId = pv?.material || (ev.fragments[0]?.material ?? '')
     const def = this.world.materials.get(matId)
-    let color = fallbackColor(matId, def)
+    let color = fallbackColor(def)
     let opacity = 0.5
     const transparent = def?.visual?.transparent === true
     if (pv) {
@@ -1569,23 +1578,26 @@ class Renderer implements DestructionRenderer {
     this.loosenIfFootless(ev.object)
     const up: Vec3 = [0, 1, 0]
     const sizeK = clamp(ev.fragments.length / 10, 0.5, 2)
+    // what flies off is of the material that broke, in its colour: grey chips of concrete, orange of brick, splinters and pale dust of wood
+    const look = debrisLook(def, 'fracture', { style: ev.style, partColor: color })
+    const dust = look.dust !== undefined ? { color: look.dust } : undefined
     switch (ev.style) {
       case 'shatter':
         this.vfx.burst('shards', ev.point, up, 18 * sizeK, 3)
         break
       case 'crumble':
-        this.vfx.burst('dust', ev.point, up, 16 * sizeK, 1.2, { color: pv ? (this.partColor(pv, def) ?? undefined) : undefined })
-        this.vfx.burst('chips', ev.point, up, 6, 3)
+        this.vfx.burst('dust', ev.point, up, 16 * sizeK, 1.2, dust)
+        this.vfx.burst(look.family === 'glass' ? 'shards' : 'chips', ev.point, up, 6, 3, { color: look.color })
         break
       case 'splinter':
-        this.vfx.burst('splinters', ev.point, up, 14 * sizeK, 3)
-        this.vfx.burst('dust', ev.point, up, 5, 0.8, { color: 0xb59a74 })
+        this.vfx.burst('splinters', ev.point, up, 14 * sizeK, 3, { color: look.color })
+        this.vfx.burst('dust', ev.point, up, 5, 0.8, dust)
         break
       case 'tear':
-        this.vfx.burst('fibers', ev.point, up, 12 * sizeK, 1.6, { color: def?.visual?.innerColor ?? color })
+        this.vfx.burst('fibers', ev.point, up, 12 * sizeK, 1.6, { color: look.color })
         break
       case 'snap':
-        this.vfx.burst('chips', ev.point, up, 8 * sizeK, 3)
+        this.vfx.burst('chips', ev.point, up, 8 * sizeK, 3, { color: look.color })
         break
       default:
         this.vfx.burst('sparks', ev.point, up, 10, 4)
@@ -1604,7 +1616,7 @@ class Renderer implements DestructionRenderer {
       }
       const fr = ev.fragments[i]
       const fdef = this.world.materials.get(fr.material)
-      const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === look.def || !fdef ? look.color : fallbackColor(fr.material, fdef)
+      const tone = fragmentTone(fdef, fr, fdef === look.def || !fdef ? look.color : fallbackColor(fdef))
       const mat = this.fragments.materialFor(fr.material, tone, look.transparent || fdef?.visual?.transparent === true, look.opacity)
       this.fragments.spawn(fr, mat, ev.object, maxAlive)
     }
@@ -2177,7 +2189,7 @@ class Renderer implements DestructionRenderer {
     const s = bb.getSize(new this.THREE.Vector3())
     const footprint = Math.sqrt(Math.max(s.x * s.z, 1e-4))
     if (reason === 'melted') {
-      this.ground.add('puddle', c.x, c.z, clamp(footprint * 0.55, 0.05, 1), this.partColor(pv, def) ?? fallbackColor(pv.material, def), objectId)
+      this.ground.add('puddle', c.x, c.z, clamp(footprint * 0.55, 0.05, 1), this.partColor(pv, def) ?? fallbackColor(def), objectId)
     } else {
       this.ground.add('ash', c.x, c.z, clamp(footprint * 0.35, 0.04, 0.5), 0x1d1a18, objectId)
       this.vfx.burst('ash', [c.x, bb.max.y, c.z], [0, 1, 0], 10, 0.8)

@@ -9,6 +9,8 @@ export type { ExplosionOptions, FireOptions, VfxOptions, VfxPoolsView, VfxWorld 
 export { EXPLOSIONS, EXPLOSION_ALIASES, patchExplosions } from './catalog'
 export { GAME_EFFECTS, WORKSHOP_EFFECTS, patchEffects } from './effects/catalog'
 export { EVENT_EFFECTS } from './effects/events'
+export { DEBRIS_COLOR_VARIABLE, DEBRIS_EFFECT_FAMILIES, DUST_COLOR_VARIABLE, MATERIAL_EVENT_EFFECTS } from './effects/material-events'
+export type { DebrisEffectFamily } from './effects/material-events'
 export { VIEWMODEL_EFFECTS } from './effects/weapons/viewmodel'
 export { EVENT_EFFECTS_MAP, effectForEvent } from './effects/event-map'
 export type { GameEvent } from './effects/event-map'

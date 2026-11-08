@@ -69,8 +69,12 @@ flash stays on the muzzle the view turns), and the smoke it throws stays in the 
 `vfx.burst(kind, point, normal, count, speed?)` and `vfx.spawn(kind, point, velocity)` are the **sprite kinds** that destruction, fluids and weapons share
 (debris, sparks, ash, steam, drips, leaks...: `data/sprite-kinds.json`, `patchSpriteKinds`), with `onLand(owner, ...)` to hear where a drop touched the ground.
 
-`effectForEvent(event)` maps the destruction events to effects (`data/event-effects.json`): `spall` plays `impact_<material>`, the stages `stage_crack`,
-`breach_dust` and `collapse_dust`, `expose` `rebar_expose`, a fracture of glass `glass_burst`; `muzzle_*` and `casing_*` are the weapon slices. `GAME_EFFECTS`
+`effectForEvent(event)` maps the destruction events to effects (`data/event-effects.json`): `spall` plays `impact_<material>`, the stages
+`stage_crack_<family>`, `breach_dust_<family>` and `collapse_dust_<family>` (and a collapse `collapse_dust_<family>`), `expose` `rebar_expose` (concrete
+chips and rust), a fracture of glass `glass_burst`; `muzzle_*` and `casing_*` are the weapon slices. The family is the `material` of the event
+(`DEBRIS_EFFECT_FAMILIES`: `wood` splinters, `masonry` chips and dust, `glass` shards, `metal` sparks and no dust, `soft` flakes, `soil` clods and dust), and
+the host draws them in the colour of the material that broke by passing `values: { debrisColor, dustColor }` to `play`. A stage with no family plays nothing.
+`GAME_EFFECTS`
 is the recipes plus these, what a world plays by default. Texts of every recipe (name, cost, when, look, budget, network) are in `locales` (`en`, `pt-BR`).
 
 ## Vehicle effects
