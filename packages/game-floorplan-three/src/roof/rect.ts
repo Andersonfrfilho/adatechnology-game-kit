@@ -8,7 +8,7 @@ export function installRoofRect(K: Kernel, shared: Shared): void {
   function roofRect(type: string, X0: number, Z0: number, X1: number, Z1: number, yb: number, roofColor: Hex, gable: boolean, F: unknown, touchesU = [0, 0, 0, 0]): void {
     const C = shared.ctx.colors, o = type === 'fiber_cement' ? 0.3 : 0.45, x0 = X0 - (touchesU[0] ? 0 : o), x1 = X1 + (touchesU[2] ? 0 : o), z0 = Z0 - (touchesU[1] ? 0 : o), z1 = Z1 + (touchesU[3] ? 0 : o), dx = x1 - x0, dz = z1 - z0, xm = (x0 + x1) / 2, zm = (z0 + z1) / 2;
     const mat = type === 'fiber_cement' ? 'fiber_cement' : 'tile', tp = type === 'fiber_cement' ? 0.2 : 0.5, alongX = dx >= dz, up = [0, 1, 0];
-    const Q = (pts: number[][]): void => { let cx = 0, cz = 0; for (const p of pts) { cx += p[0]; cz += p[2]; } cursor.pc = pieceOfPane(cx / pts.length, cz / pts.length); return tileRelief(mat, pts, roofColor, type); };
+    const Q = (pts: number[][]): void => K.paneTiles(mat, pts, roofColor, type);
     cursor.pc = pieceOfPane(xm, zm);
     // closes the eave: masonry band over the wall (no gap up to the roof), eave soffit and fascia at the edge
     { const wt = 0.075, yc = yb - 0.2, cf = C.facade != null ? C.facade : 0xd8d0c0, fas = (R_STYLE() === 'budget') ? 0x6e4e34 : sh(roofColor, 0.55), sof = 0xe6e2d8, tz = 0.035;

@@ -144,6 +144,22 @@ function panesOf(unit: RoofUnit, geometry: GableGeometry): Rect[] {
     : [[u0 - eave, v0 - eave, midU, v1 + eave], [midU, v0 - eave, u1 + eave, v1 + eave]]
 }
 
+/** A pane cut into bays between consecutive trusses (the eave overhang goes with the end bays), so a blast breaks only the bays it reaches. */
+function baysOf(pane: Rect, unit: RoofUnit, geometry: GableGeometry): Rect[] {
+  const { axis, length } = geometry
+  const count = Math.max(2, Math.ceil(length / TRUSS_PITCH) + 1)
+  const start = axis === 'u' ? unit.box[0] : unit.box[1]
+  const lo = axis === 'u' ? pane[0] : pane[1]
+  const hi = axis === 'u' ? pane[2] : pane[3]
+  const bays: Rect[] = []
+  for (let k = 0; k < count - 1; k++) {
+    const a = k === 0 ? lo : start + (k * length) / (count - 1)
+    const b = k === count - 2 ? hi : start + ((k + 1) * length) / (count - 1)
+    bays.push(axis === 'u' ? [a, pane[1], b, pane[3]] : [pane[0], a, pane[2], b])
+  }
+  return bays
+}
+
 function coarseFrames(context: BuildContext, unit: RoofUnit, carriers: StructurePart[], geometry: GableGeometry): Frames {
   const trusses = addTrusses(context, unit, carriers, geometry)
   context.roof.trusses += trusses.length
@@ -155,13 +171,18 @@ function addGableRoof(context: BuildContext, unit: RoofUnit, carriers: Structure
   const geometry = geometryOf(context, unit)
   const frames: Frames = context.rafterRoof ? addRafters(context, unit, carriers, geometry) : coarseFrames(context, unit, carriers, geometry)
   const panes: RoofPane[] = []
-  panesOf(unit, geometry).forEach((aabb, k) => {
+  const options = { floor: unit.floor, fill: construction.roof.covering === 'colonial' ? 0.12 : 0.05, ...(construction.roof.pitch === undefined ? {} : { pitch: construction.roof.pitch }) }
+  panesOf(unit, geometry).forEach((paneBox, k) => {
     const name = unit.annex ? 'annex' : k === 0 ? 'a' : 'b'
-    const options = { floor: unit.floor, fill: construction.roof.covering === 'colonial' ? 0.12 : 0.05, ...(construction.roof.pitch === undefined ? {} : { pitch: construction.roof.pitch }) }
-    const pane = builder.add({ id: `roof${unit.suffix}_${name}`, role: 'roof', material: construction.roof.material, aabb, y0: geometry.eaveY, y1: geometry.eaveY + geometry.rise + 0.05 }, options)
     const carried = unit.annex || !context.rafterRoof ? frames.all : k === 0 ? frames.sideA : frames.sideB
-    for (const frame of carried) builder.rest(pane, frame, covering)
-    panes.push({ id: pane.id, aabb: pane.aabb, y0: pane.y0, y1: pane.y1 })
+    const bays = unit.annex || !context.roofBays ? [paneBox] : baysOf(paneBox, unit, geometry)
+    bays.forEach((aabb, bay) => {
+      const id = bays.length === 1 ? `roof${unit.suffix}_${name}` : `roof${unit.suffix}_${name}_${bay}`
+      const pane = builder.add({ id, role: 'roof', material: construction.roof.material, aabb, y0: geometry.eaveY, y1: geometry.eaveY + geometry.rise + 0.05 }, options)
+      const under = bays.length === 1 ? carried : carried.filter((frame) => touches(aabb, frame.aabb, 0.05))
+      for (const frame of under) builder.rest(pane, frame, covering)
+      panes.push({ id: pane.id, aabb: pane.aabb, y0: pane.y0, y1: pane.y1 })
+    })
   })
   if (!unit.annex) {
     const roof = context.roof
