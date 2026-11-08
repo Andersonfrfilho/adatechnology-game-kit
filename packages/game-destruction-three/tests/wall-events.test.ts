@@ -233,6 +233,22 @@ describe('chip', () => {
   })
 })
 
+describe('chip of a wall of laid units', () => {
+  it('throws the bricks that came out whole in the brick colour, and a broken piece of brick in the colour of its inside', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    world.addObject('o1', [partState('wall', 'brick')])
+    const colours = (): number[] => (scene.children.filter((c) => c.name === 'fragment') as THREE.Mesh[]).map((m) => (m.material as THREE.MeshLambertMaterial).color.getHex())
+    world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0', { material: 'brick', unit: true })] })
+    renderer.update(0.016)
+    expect(colours()).toEqual([0xa8553a])
+    world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c1', { material: 'brick', inner: true })] })
+    renderer.update(0.016)
+    expect(colours()).toContain(0xb8693f)
+  })
+})
+
 describe('chip and the impact marks of the effects', () => {
   it('takes away the bullet marks the impact effect left on the unit that came out', () => {
     const scene = new THREE.Scene()

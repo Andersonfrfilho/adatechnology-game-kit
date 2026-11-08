@@ -186,6 +186,8 @@ describe('wallPiece', () => {
     const masonry = thrown.filter((f) => f.material === 'brick'), flakes = thrown.filter((f) => f.material === 'plaster')
     // the bay between the pillars: 3.1 m by 2.8 m, about 400 bricks
     expect(masonry.length).toBeGreaterThan(40)
+    // whole bricks come off at their joints: drawn in the brick's colour, not the orange of a broken inside
+    expect(masonry.every((f) => f.unit === true && !f.inner)).toBe(true)
     // a clump is a brick or a few still held by their mortar (three bricks along, three courses up at most): never a slab of the bay
     for (const f of masonry) {
       expect(Math.max(f.size[0], f.size[1])).toBeLessThan(0.75)

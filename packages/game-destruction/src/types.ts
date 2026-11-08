@@ -210,6 +210,8 @@ export interface MaterialDef {
     transparent?: boolean
     /** Colour of the inside, for the inner fragments and the hit debris (the pages of a book under its cover); default the colour of the part. */
     innerColor?: number
+    /** Colour of a whole unit of it (a fired brick), for the units a wall of laid units loses whole at its joints; default the colour of the part. */
+    unitColor?: number
   }
   /** Free tags, e.g. `metal`, `organic`, `conductive`. */
   tags?: string[]

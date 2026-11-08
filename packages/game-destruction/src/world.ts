@@ -2628,6 +2628,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const faceArea = (cell: UnitCell) => cell.size[u] * cell.size[v]
     const total = cells.reduce((sum, cell) => sum + faceArea(cell), 0) || 1
     const shape = p.spec.units ? 'chunk' : FRAGMENT_SHAPE[p.mat.fracture as keyof typeof FRAGMENT_SHAPE] ?? 'chunk'
+    // laid units come out whole at their joints: their faces are the units' own, not a broken inside (cast concrete is broken through)
+    const laid = !!p.spec.units && p.spec.units.mortar !== p.spec.material
     return cells.map((cell, i) => {
       const cw = toWorld(c, q, cell.center)
       const out = vec.normalize(vec.sub(cw, hitW), [0, 1, 0])
@@ -2637,7 +2639,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return {
         id: `${p.spec.id}#${tag}${i}`, part: p.spec.id, material: p.spec.material, shape, center: cw, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q,
         velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k], angularVelocity: [(rnd() - 0.5) * 8, (rnd() - 0.5) * 8, (rnd() - 0.5) * 8],
-        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}), ...(inner ? { inner } : {}),
+        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}), ...(inner && laid ? { unit: true } : inner ? { inner } : {}),
       }
     })
   }

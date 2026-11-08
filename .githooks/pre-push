@@ -7,6 +7,8 @@
 # budgets (tools/gpu/perf-gate.mjs) run in the daily run on main instead (tools/gpu/nightly-gpu.mjs, CONTRIBUTING.md).
 # The GPU step runs on the charger only: on battery they are skipped with a message and the push goes on (tools/gpu/power.mjs; PRE_PUSH_ON_BATTERY=1 runs them).
 set -e
+# git writes the refs it pushes to this hook's stdin: read them all now, or a step that closes stdin makes git die of SIGPIPE (exit 141) after the checks passed, and the push never leaves
+cat > /dev/null
 git fetch -q origin main 2>/dev/null || true
 base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 

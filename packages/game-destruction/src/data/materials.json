@@ -468,7 +468,7 @@
   "ricochetDeg": 10,
   "hitDebris": "chips",
   "breakDebris": "dust",
-  "visual": { "innerColor": 12085567 },
+  "visual": { "innerColor": 12085567, "unitColor": 11031866 },
   "thermal": {
    "conductivity": 0.15,
    "heatCapacity": 2.5

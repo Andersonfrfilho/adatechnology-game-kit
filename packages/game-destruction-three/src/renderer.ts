@@ -1499,7 +1499,7 @@ class Renderer implements DestructionRenderer {
     for (const fr of ev.fragments) {
       const fdef = this.world.materials.get(fr.material)
       // the inside of the material (fresh wood) when the piece came from it, else the part's colour
-      const tone = fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
+      const tone = fr.unit && fdef?.visual?.unitColor !== undefined ? fdef.visual.unitColor : fr.inner && fdef?.visual?.innerColor !== undefined ? fdef.visual.innerColor : fdef === def ? color : fallbackColor(fr.material, fdef)
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
     // a unit knocked out of masonry or concrete leaves a broken edge that goes on crumbling
