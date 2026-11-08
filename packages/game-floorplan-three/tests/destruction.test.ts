@@ -68,7 +68,7 @@ describe('registration in the world', () => {
     const { d } = setup()
     const slab = d.spec!.parts.find((p) => p.id === 'slab_1_p0')
     expect(slab!.reinforcement).toBeTruthy()
-    expect(d.spec!.parts.find((p) => p.id === 'roof_a' || p.material === 'ceramic')?.reinforcement).toBeUndefined()
+    expect(d.spec!.parts.find((p) => p.id === 'roof_a_0' || p.material === 'ceramic')?.reinforcement).toBeUndefined()
   })
 
   it('registers the house once and the world knows every part', () => {

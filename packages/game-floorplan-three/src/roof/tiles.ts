@@ -6,13 +6,13 @@ export function installRoofTiles(K: Kernel, shared: Shared): void {
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   const R_STYLE = (): string => (shared.ctx.r && shared.ctx.r.style) || 'budget';
   // ===== R56: tile relief. colonial = curved rows (cap and channel); fibre cement = waves. Each plane is a strip extruded in the fall direction, with profile normals and a colour alternating per row; everything goes into the roof mesh =====
-  function tileRelief(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string): void {
+  function tileRelief(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string, origin?: readonly number[]): void {
     const n = pts.length; if (n < 3) return;
     const [a, b, c] = pts; let nx = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), ny = (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]), nz = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
     const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
     const nh = Math.hypot(nx, nz); let dx: number, dy: number, dz: number; if (nh < 1e-4) { dx = 0; dy = 0; dz = 1; } else { dx = nx / nh; dy = -nh / ny; dz = nz / nh; const dl = Math.hypot(dx, dy, dz); dx /= dl; dy /= dl; dz /= dl; }
     let ex = ny * dz - nz * dy, ey = nz * dx - nx * dz, ez = nx * dy - ny * dx; const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el; // e1 along the eave
-    const o = pts[0], S: number[] = [], T: number[] = []; for (const p of pts) { const rx = p[0] - o[0], ry = p[1] - o[1], rz = p[2] - o[2]; S.push(rx * ex + ry * ey + rz * ez); T.push(rx * dx + ry * dy + rz * dz); }
+    const o = origin ?? pts[0], S: number[] = [], T: number[] = []; for (const p of pts) { const rx = p[0] - o[0], ry = p[1] - o[1], rz = p[2] - o[2]; S.push(rx * ex + ry * ey + rz * ez); T.push(rx * dx + ry * dy + rz * dz); }
     const colonial = type !== 'fiber_cement', P = colonial ? 0.2 : 0.177, A = colonial ? 0.032 : 0.0255, seg = shared.quality === 'game' ? (colonial ? 4 : 4) : (colonial ? 8 : 6), h = P / seg;
     const smin = Math.min(...S), smax = Math.max(...S); if (smax - smin < 1e-4) return;
     const xs = new Set(S.map(v => +v.toFixed(5))); for (let k = Math.ceil(smin / h); k * h < smax; k++) xs.add(+(k * h).toFixed(5)); xs.add(+smax.toFixed(5));
@@ -35,6 +35,10 @@ export function installRoofTiles(K: Kernel, shared: Shared): void {
   }
   // ridge and hips: cap pieces along a line (colonial: clay half-round with rings; fibre cement: six-sided angular cap)
   function ridge(a: readonly number[], b: readonly number[], type: string, roofColor: Hex): void {
+    const cuts = K.cfg.destruction ? baysAlong(a, b) : []; if (cuts.length) { let from = a; for (const f of [...cuts, 1]) { const to = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]; ridgeCap(from, to, type, roofColor); from = to; } return; }
+    ridgeCap(a, b, type, roofColor);
+  }
+  function ridgeCap(a: readonly number[], b: readonly number[], type: string, roofColor: Hex): void {
     cursor.pc = pieceOfPane((a[0] + b[0]) / 2, (a[2] + b[2]) / 2);
     const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], Ln = Math.hypot(dx, dy, dz); if (Ln < 0.05) return;
     const colonial = type !== 'fiber_cement', r = colonial ? 0.085 : 0.075, c = sh(roofColor, colonial ? 0.82 : 0.9), lift = (colonial ? 0.05 : 0.035);
@@ -49,6 +53,46 @@ export function installRoofTiles(K: Kernel, shared: Shared): void {
     for (const a of shared.ctx.panes) { const b = a.aabb; if (!b) continue; const dx = x < b[0] ? b[0] - x : x > b[2] ? x - b[2] : 0, dz = z < b[1] ? b[1] - z : z > b[3] ? z - b[3] : 0, d = Math.hypot(dx, dz) * 1000 + (b[2] - b[0]) * (b[3] - b[1]) * 1e-3; if (d < md) { md = d; m = a; } }
     return m ? structurePiece(m.id) : null;
   }
-  const defined: KernelRoofTiles = { R_STYLE, tileRelief, ridge, pieceOfPane };
+  // a roof plane drawn per bay of the plan's panes, so a broken bay takes only its own tiles; the tile rows keep the plane's origin
+  function paneTiles(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string): void {
+    const panes = panesUnder(pts), whole = centroidPiece(pts);
+    if (panes.length < 2 || !whole || !K.cfg.destruction) { cursor.pc = whole; tileRelief(mat, pts, color, type); return; } // nothing breaks apart: one plane, as the team drew it
+    for (const r of panes) { const part = clipToRect(pts, r); if (part.length < 3 || planArea(part) < 1e-4) continue; cursor.pc = centroidPiece(part); tileRelief(mat, part, color, type, pts[0]); }
+  }
+  function centroidPiece(pts: readonly (readonly number[])[]): PieceRecord | null { let cx = 0, cz = 0; for (const p of pts) { cx += p[0]; cz += p[2]; } return pieceOfPane(cx / pts.length, cz / pts.length); }
+  // the panes the plane overlaps, the outermost ones open towards the outside (the drawn eave may reach past the plan's)
+  function panesUnder(pts: readonly (readonly number[])[]): number[][] {
+    if (shared.ctx.noPiece || !shared.ctx.panes.length) return [];
+    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity; for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[2]); z1 = Math.max(z1, p[2]); }
+    const boxes = shared.ctx.panes.map((a) => a.aabb).filter((b): b is number[] => !!b && b[0] < x1 - 1e-4 && b[2] > x0 + 1e-4 && b[1] < z1 - 1e-4 && b[3] > z0 + 1e-4);
+    if (boxes.length < 2) return boxes;
+    const lo = [Math.min(...boxes.map((b) => b[0])), Math.min(...boxes.map((b) => b[1]))], hi = [Math.max(...boxes.map((b) => b[2])), Math.max(...boxes.map((b) => b[3]))];
+    return boxes.map((b) => [b[0] <= lo[0] + 1e-6 ? -Infinity : b[0], b[1] <= lo[1] + 1e-6 ? -Infinity : b[1], b[2] >= hi[0] - 1e-6 ? Infinity : b[2], b[3] >= hi[1] - 1e-6 ? Infinity : b[3]]);
+  }
+  // where a ridge line crosses the bay boundaries, as fractions of it
+  function baysAlong(a: readonly number[], b: readonly number[]): number[] {
+    const rects = panesUnder([a, b, [b[0] + 1e-3, b[1], b[2] + 1e-3], [a[0] - 1e-3, a[1], a[2] - 1e-3]]);
+    const alongX = Math.abs(b[0] - a[0]) >= Math.abs(b[2] - a[2]), i = alongX ? 0 : 2, k = alongX ? 0 : 1, span = b[i] - a[i];
+    if (Math.abs(span) < 1e-6) return [];
+    const cuts = new Set<number>(); for (const r of rects) for (const v of [r[k], r[k + 2]]) { const f = (v - a[i]) / span; if (Number.isFinite(f) && f > 0.01 && f < 0.99) cuts.add(+f.toFixed(4)); }
+    return [...cuts].sort((p, q) => p - q);
+  }
+  function clipToRect(pts: readonly (readonly number[])[], r: readonly number[]): number[][] {
+    let poly: number[][] = pts.map((p) => [p[0], p[1], p[2]]);
+    const edges: [number, number, number][] = [[0, r[0], 1], [0, r[2], -1], [2, r[1], 1], [2, r[3], -1]];
+    for (const [axis, at, sign] of edges) {
+      if (!Number.isFinite(at)) continue;
+      const out: number[][] = [];
+      for (let i = 0; i < poly.length; i++) {
+        const p = poly[i], q = poly[(i + 1) % poly.length], dp = (p[axis] - at) * sign, dq = (q[axis] - at) * sign;
+        if (dp >= 0) out.push(p);
+        if ((dp >= 0) !== (dq >= 0)) { const t = dp / (dp - dq); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, p[2] + (q[2] - p[2]) * t]); }
+      }
+      poly = out; if (poly.length < 3) return [];
+    }
+    return poly;
+  }
+  function planArea(pts: readonly (readonly number[])[]): number { let a = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[2] - q[0] * p[2]; } return Math.abs(a) / 2; }
+  const defined: KernelRoofTiles = { R_STYLE, tileRelief, paneTiles, ridge, pieceOfPane };
   Object.assign(K, defined);
 }
