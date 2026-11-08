@@ -52,12 +52,12 @@ const SPALL_MIN = 0.025, SPALL_RAGGED = 0.045
 const COVER = 0.015
 /** The lumps of concrete left on a member's bars where its blocks broke off: how far in from its faces the bars run, how many a block can leave on each bar, the chance of each and their size (m). */
 const LUMP_BAR_INSET = 0.035
-const LUMPS_PER_BAR = 2
-const LUMP_CHANCE = 0.6
+const LUMPS_PER_BAR = 1
+const LUMP_CHANCE = 0.5
 const LUMP_MIN = 0.025
 const LUMP_MAX = 0.05
 /** The broken stones on the faces of the break above and under a block that came out: how many on each face and their size (m). */
-const EDGE_LUMPS = 3
+const EDGE_LUMPS = 2
 const EDGE_LUMP_MIN = 0.04
 const EDGE_LUMP_MAX = 0.08
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
@@ -580,6 +580,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         // the faces of the break: not flat, broken stones sit on them half in the concrete
         const faces: Array<[number, number]> = lying ? [[c.a, 1], [c.b, 2]] : [[c.y0, 1], [c.y1, 2]]
         for (const [face, f] of faces) {
+          // a face against another block that came out is no face: nothing to sit on there
+          const open = gone.some((g) => g.part === part && g.c !== c && (lying ? Math.abs((f === 1 ? g.c.b : g.c.a) - face) < 1e-4 && g.c.y1 > c.y0 + 1e-4 && g.c.y0 < c.y1 - 1e-4 : Math.abs((f === 1 ? g.c.y1 : g.c.y0) - face) < 1e-4 && g.c.b > c.a + 1e-4 && g.c.a < c.b - 1e-4))
+          if (open) continue
           for (let k = 0; k < EDGE_LUMPS; k++) {
             const r = random(c.a * 63.1 + c.y0 * 29.7 + mid * 17.3 + f * 11.1 + k * 5.3)
             const size = EDGE_LUMP_MIN + (EDGE_LUMP_MAX - EDGE_LUMP_MIN) * r(1)

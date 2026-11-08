@@ -182,3 +182,26 @@ describe('the cut of a pillar, drawn', () => {
     follower.dispose()
   })
 })
+
+describe('a burst sprayed over a pillar', () => {
+  it('takes its concrete block by block where the rounds land and never strips it whole into a bare cage', () => {
+    const s = setup()
+    // a hundred rifle rounds climbing up the pillar from chest height, as a burst does
+    for (let k = 0; k < 100; k++) {
+      const y = 1.2 + (k % 25) * 0.04, x = s.x + ((k * 7) % 5 - 2) * 0.03
+      s.world.shoot([x, y, s.z + 5], [0, 0, -1], ROUNDS.rifle.energy, ROUNDS.rifle.caliber, 'test', { penetration: ROUNDS.rifle.penetration })
+    }
+    s.world.update(1 / 30)
+    const pillar = s.world.part(s.id, PILLAR)!
+    expect(s.events.some((e) => e.type === 'fracture' && e.part === PILLAR)).toBe(false)
+    expect(pillar.status).not.toBe('broken')
+    const gone = pillar.chipped ?? []
+    expect(gone.length).toBeGreaterThan(0)
+    // only where the rounds went: between 1.2 and 2.2 m up, nothing at its foot or under the bond beam
+    const local = (h: number) => h - (s.bottom + s.top) / 2
+    for (const c of gone) {
+      expect(c.center[1]).toBeGreaterThan(local(1.1))
+      expect(c.center[1]).toBeLessThan(local(2.3))
+    }
+  })
+})
