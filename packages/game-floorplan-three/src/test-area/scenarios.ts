@@ -51,7 +51,8 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
   const stopListening = (): void => {
     for (const off of listening.splice(0)) off?.()
   }
-  const collapsed = (list: DestructionEvent[]): string[] => list.flatMap((e) => (e.type === 'collapse' ? e.parts.map((p) => (p as unknown as { id?: string }).id || p) : [])) /* parts are ids; an object with an id is read by it, as before */
+  // what came down: a group that collapsed, or masonry and tiles that lost their support and crumbled where they stood (they never fall as one sheet)
+  const collapsed = (list: DestructionEvent[]): string[] => list.flatMap((e) => (e.type === 'collapse' ? e.parts.map((p) => (p as unknown as { id?: string }).id || p) : e.type === 'fracture' && e.style === 'crumble' ? [e.part] : [])) /* parts are ids; an object with an id is read by it, as before */
   /** Standing: not broken, and not stripped to its rebar cage (reinforced concrete that fractured stays as a cage, stage 3). */
   const whole = (room: AreaRoom, oid: string, pid: string): boolean => {
     const p = room.world.part(oid, pid)

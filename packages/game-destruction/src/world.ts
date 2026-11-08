@@ -147,6 +147,8 @@ const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
 /** How fast (m/s) the bricks of a wall that lost its support leave it: they come down where they stand, not thrown. */
 const MASONRY_CRUMBLE_SPEED = 0.6
+/** The pieces a fallen roof of tiles breaks into: a roof of 70 m² comes down as handfuls of a few tiles, not as plates. */
+const TILE_CLUMPS = 160
 /** The most units of masonry a failed panel leaves against a pillar (a course), over the ground beam and under the bond beam (a column of units). */
 const PANEL_EDGE_PILLAR = 2
 const PANEL_EDGE_BASE = 4
@@ -1547,9 +1549,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   /** A wall of units laid in mortar (brick, block), not reinforced and not cast: it holds by bearing only. */
   const isLaidMasonry = (p: PartRT): boolean => !!p.spec.units && p.spec.units.mortar !== p.spec.material && !p.spec.reinforcement && !p.st.stripped
 
+  /** A roof cover of brittle tiles (clay, concrete tiles: a material that shatters) laid loose on its battens: it comes apart as it falls, it never lands as one sheet. */
+  const isTiledCover = (p: PartRT): boolean => p.spec.structure?.role === 'roof' && p.mat.fracture === 'shatter' && !p.spec.reinforcement && !p.spec.units
+
   /**
-   * A wall of laid units that lost every support: mortar holds next to nothing in tension, so it does not fall as one sheet. Every unit still in it
-   * comes down where it stands as bricks and clumps of a few (`clumpUnits`), with the flakes of its plaster, and the part is gone (`partLost`).
+   * A wall of laid units (or a roof of loose tiles) that lost every support: mortar holds next to nothing in tension, so it does not fall as one sheet.
+   * Every unit still in it comes down where it stands as bricks (tiles) and clumps of a few (`clumpUnits`), with the flakes of its plaster, and the part
+   * is gone (`partLost`).
    */
   const crumbleMasonry = (o: ObjRT, p: PartRT, src?: string) => {
     if (isLost(p)) return
@@ -1560,7 +1566,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const cells = grid.filter((cell, i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius))
     const { c } = partXf(o, p)
     const fragments = cells.length > 0 ? [
-      ...cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true),
+      ...cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), isTiledCover(p) ? TILE_CLUMPS : unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true),
       ...plasterFlakes(o, p, cells, vec.add(c, [0, 1, 0]), MASONRY_CRUMBLE_SPEED, 'mp_'),
     ] : []
     p.st.status = 'broken'
@@ -1582,8 +1588,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const ps = g.map((id) => o.byId.get(id)!).filter((p) => !isLost(p) && !o.collapsed.has(p.spec.id))
         if (ps.length === 0 || g.some((id) => o.byId.get(id)!.anchored) || !ps.some((p) => p.structural)) continue
         // laid masonry has no tensile strength to fall as a slab: what lost its support comes down as bricks and clumps of a few, not a rigid sheet
-        const whole = ps.filter((p) => !isLaidMasonry(p))
-        crumbling.push(...ps.filter(isLaidMasonry))
+        const whole = ps.filter((p) => !isLaidMasonry(p) && !isTiledCover(p))
+        crumbling.push(...ps.filter((p) => isLaidMasonry(p) || isTiledCover(p)))
         for (const p of whole) {
           o.collapsed.add(p.spec.id)
           p.st.status = 'collapsed'
