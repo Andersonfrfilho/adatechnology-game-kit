@@ -6,8 +6,9 @@ import { makeFleetKit } from './helpers/kit'
 const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_front', 'lid', 'fender_front_left', 'bumper_rear', 'door_rear_left']
 /* digest of the geometry of the sedan after those panels were torn off and the smoothing finished, taken before the cut and the decals used the box of the panel.
    Retaken when the lamps began to break by their lens (polycarbonate headlights and acrylic taillights come apart in fewer, larger pieces, and a broken
-   lens keeps its jagged edge in the bezel): the panels and the body are the same, only the lamps the tear breaks differ. */
-const GOLDEN_DIGEST = '798:2827258869'
+   lens keeps its jagged edge in the bezel): the panels and the body are the same, only the lamps the tear breaks differ. Retaken again when the lamps drawn
+   outside the lamp units (the running lamps of the bumper, the fog bulbs) became lamps of their own: the blasts break them too, and their lens pieces fly. */
+const GOLDEN_DIGEST = '826:2140178730'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261

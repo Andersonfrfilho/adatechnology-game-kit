@@ -8,7 +8,7 @@
 import type { BufferGeometry, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from '../three-types'
 
 import type { BuildContext, KitShared, SceneNode, Three } from '../types'
-import type { DamageZone, VehicleContext, VehicleKit } from '../api'
+import type { DamageZone, VehicleContext, VehicleKit, VehicleLamp } from '../api'
 import type { ZoneBox } from '../zone-core'
 import type { PartDef, VehicleModel } from './model'
 import { raycastIndexed, warmTriIndex } from '../tri-index'
@@ -59,6 +59,11 @@ const HOLE_TEXTURE_SIZE = 64
 const LAMP_BOX_MARGIN = 0.03
 /** A material glows when its emissive colour is brighter than this (the sum of its channels) at an intensity over zero. */
 const GLOW_MIN_EMISSIVE = 0.05
+/** A lamp's mirror chrome (its reflector bowl, the bezel of a projector): this metallic, this smooth and this bright. Lit by the scene it reads as a lit lamp. */
+const MIRROR_MIN_METALNESS = 0.8
+const MIRROR_MAX_ROUGHNESS = 0.35
+// linear colour, as three.js holds it (#b8bcbf, the kit chrome, is about 0.48)
+const MIRROR_MIN_LIGHTNESS = 0.4
 /** Above this many joules of hit points a pane is laminated in the model (a windshield, any pane of an armoured car). */
 const LAMINATED_HP = 1000
 /** A closed hood sits this far under the fenders, and this much of the drawn gap round it closes, metres. */
@@ -167,6 +172,15 @@ function holeMaterial(kit: VehicleKit, material: string): Material {
   return made
 }
 
+function isGlowing(material: { emissive?: { r: number; g: number; b: number }; emissiveIntensity?: number }): boolean {
+  const { emissive, emissiveIntensity } = material
+  return !!emissive && (emissiveIntensity ?? 0) > 0 && emissive.r + emissive.g + emissive.b >= GLOW_MIN_EMISSIVE
+}
+function isMirrorChrome(material: { metalness?: number; roughness?: number; color?: { r: number; g: number; b: number } }): boolean {
+  const { metalness, roughness, color } = material
+  return (metalness ?? 0) >= MIRROR_MIN_METALNESS && (roughness ?? 1) <= MIRROR_MAX_ROUGHNESS && !!color && (color.r + color.g + color.b) / 3 >= MIRROR_MIN_LIGHTNESS
+}
+
 export class VehicleVisuals implements CreaseWork {
   readonly kit: VehicleKit
   readonly c: VehicleContext
@@ -263,7 +277,9 @@ export class VehicleVisuals implements CreaseWork {
       case 'bumper':
         return z ? (z.owned as Obj[]).filter((o) => o.parent) : []
       case 'light':
-        return z ? z.lights.map((L) => L.group).filter((g) => g && g.parent) : []
+        return this.lampsOf(p)
+          .map((L) => L.group)
+          .filter((g) => g && g.parent)
       case 'rim':
         return z ? (z.wheels as Obj[]).filter((o) => o.parent) : []
       case 'tyre': {
@@ -1197,7 +1213,7 @@ export class VehicleVisuals implements CreaseWork {
     if (on === this.lightsOn) return
     this.lightsOn = on
     const dark = this.I.MATERIALS.bulbBroken
-    for (const L of this.c.lights) {
+    for (const L of [...this.c.lights, ...(this.c.strayLamps ?? [])]) {
       if (L.broken || L.dark) continue
       for (const h of L.halo ?? []) h.visible = on
       for (const m of L.inner ?? []) {
@@ -1213,33 +1229,35 @@ export class VehicleVisuals implements CreaseWork {
   /** The lens of a light is holed or cracked and stays; `pierced`: a round went through it to the bulb, and the lamp goes dark. */
   crackLight(p: PartDef, pierced: boolean): void {
     if (pierced) this.darkenGlowIn(p)
-    const z = this.zone(p)
-    if (!z) return
-    for (const L of z.lights) this.kit.crackLight(this.c, L, new this.THREE.Vector3(p.box.center[0] > 0 ? -1 : 1, 0, 0), pierced)
+    for (const L of this.lampsOf(p)) this.kit.crackLight(this.c, L, new this.THREE.Vector3(p.box.center[0] > 0 ? -1 : 1, 0, 0), pierced)
+  }
+  /** The lamps of a light part: the ones its zone holds, or its own when no zone claims it (a fog lamp, a lit strip in the bumper). */
+  private lampsOf(p: PartDef): VehicleLamp[] {
+    return p.lamps ?? this.zone(p)?.lights ?? []
   }
   /** Everything of the lamp that glows goes dark: the fleet draws extra bulbs, reversing and amber strips in a lamp's place that the lamp's own list does not hold. */
   private darkenGlowIn(p: PartDef): void {
     const dark = this.I.MATERIALS.bulbBroken
+    // without its bulb the lamp is a dark hollow: its mirror chrome, lit by the scene as brightly as by the bulb, goes dull as well
+    const dull = this.I.MATERIALS.broken
     const [cx, cy, cz] = p.box.center
     const [sx, sy, sz] = p.box.size
     this.c.vehicle.updateMatrixWorld(true)
     this.c.vehicle.traverse((o: Object3D) => {
       const mesh = o as Obj
-      if (!mesh.isMesh || mesh.userData.glass || mesh.material === dark || Array.isArray(mesh.material)) return
-      const { emissive, emissiveIntensity } = mesh.material
-      if (!emissive || !(emissiveIntensity > 0) || emissive.r + emissive.g + emissive.b < GLOW_MIN_EMISSIVE) return
+      if (!mesh.isMesh || mesh.userData.glass || mesh.userData.decal || mesh.material === dark || mesh.material === dull || Array.isArray(mesh.material)) return
+      const glows = isGlowing(mesh.material)
+      if (!glows && !isMirrorChrome(mesh.material)) return
       mesh.geometry.computeBoundingBox()
       const mid = this.c.vehicle.worldToLocal(mesh.localToWorld(mesh.geometry.boundingBox!.getCenter(new this.THREE.Vector3())))
       if (Math.abs(mid.x - cx) > sx / 2 + LAMP_BOX_MARGIN || Math.abs(mid.y - cy) > sy / 2 + LAMP_BOX_MARGIN || Math.abs(mid.z - cz) > sz / 2 + LAMP_BOX_MARGIN) return
-      mesh.material = dark
+      mesh.material = glows ? dark : dull
     })
   }
   /** The lens of a light breaks and its unit stays (damaged) or goes (destroyed). */
   breakLight(p: PartDef, gone: boolean): void {
     this.darkenGlowIn(p)
-    const z = this.zone(p)
-    if (!z) return
-    for (const L of z.lights) {
+    for (const L of this.lampsOf(p)) {
       L.lensMaterial = p.material
       this.kit.breakLight(this.c, L, new this.THREE.Vector3(p.box.center[0] > 0 ? -1 : 1, 0, 0))
       if (gone) {
@@ -1436,8 +1454,7 @@ export class VehicleVisuals implements CreaseWork {
           moved = true
         }
         if (p.role === 'light') {
-          const z = this.zone(p)
-          for (const L of z?.lights ?? []) {
+          for (const L of this.lampsOf(p)) {
             L.broken = L.broken || true
             for (const h of L.halo ?? []) h.visible = false
           }
