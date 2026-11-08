@@ -129,6 +129,8 @@ const MEMBER_CRATER_CALIBRES = 3.4
 const MEMBER_CUT_LOSS = 0.9
 /** Share of a unit of a reinforced member (a block of its concrete between the bars) the craters in it take before it breaks off: about three rifle rounds in one place. */
 const MEMBER_UNIT_LOSS = 0.12
+/** Share of a long joint's length blasts must have broken before it gives way: below it the wall stands on the rest of its bed. */
+const JOINT_OPEN_SHARE = 0.6
 const BLAST_EDGE_WEAR = 0.6
 const RESIDUAL_CAPACITY = 0.15
 /** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
@@ -2533,6 +2535,33 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * (a bullet loosens the mortar bed under it, not the whole bed of a ten-metre wall), so a row of shots does not bring a wall down. A blow breaks at
    * most that stretch: however hard, it takes no more than its share of the joint's strength, so the bed of a wall gives way once blows broke it all along.
    */
+  /** A joint of a part laid on its foundation (a wall on its ground beam): the bed the whole wall stands on. */
+  const onFoundation = (o: ObjRT, j: JointRT): boolean => o.parts[j.ia].spec.structure?.role === 'foundation' || o.parts[j.ib].spec.structure?.role === 'foundation'
+
+  /** The stretches of each long joint blasts have broken, along its length (the mortar bed of a wall): a blast breaks its own stretch, not the whole bed. */
+  const wornStretches = new WeakMap<JointRT, Array<[number, number]>>()
+  /**
+   * Share of the joint's length the blasts have broken, with the one at `point`: the `span` around where each fell along the joint. Three grenades at three
+   * pillars of a wall break three stretches of its bed, not the bed.
+   */
+  const wornShare = (o: ObjRT, j: JointRT, point: Vec3, span: number): number => {
+    const A = partWorldAabb(o, o.parts[j.ia]), B = partWorldAabb(o, o.parts[j.ib])
+    const lo = [0, 1, 2].map((k) => Math.max(A.min[k]!, B.min[k]!)), hi = [0, 1, 2].map((k) => Math.min(A.max[k]!, B.max[k]!))
+    const axis = [0, 1, 2].reduce((best, k) => (hi[k]! - lo[k]! > hi[best]! - lo[best]! ? k : best), 0)
+    const length = hi[axis]! - lo[axis]!
+    if (length <= span) return 1
+    const at = clamp(point[axis]!, lo[axis]!, hi[axis]!)
+    const from = Math.max(lo[axis]!, at - span / 2), to = Math.min(hi[axis]!, at + span / 2)
+    const worn = [...(wornStretches.get(j) ?? []), [from, to] as [number, number]].sort((x, y) => x[0] - y[0])
+    wornStretches.set(j, worn)
+    let covered = 0, end = -Infinity
+    for (const [a, b] of worn) {
+      covered += Math.max(0, b - Math.max(a, end))
+      end = Math.max(end, b)
+    }
+    return covered / length
+  }
+
   /** Trim fixed on a part (a baseboard, a paving slab): it carries nothing. */
   const isTrim = (p: PartRT): boolean => (p.spec.structure?.role ?? 'none') === 'none'
 
@@ -2549,6 +2578,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       // a blast shakes loose the trim fixed on a part (a baseboard, a paving slab: no structure of its own) only near it, not along the whole wall
       if (blast && (isTrim(o.parts[j.ia]) || isTrim(o.parts[j.ib])) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
       j.st.hp -= span === undefined ? amount : Math.min(amount, j.st.maxHp) * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
+      // the bed of a wall on its foundation holds while most of its length is whole: blasts at a few places along it break those stretches, not the bed
+      if (j.st.hp <= 0 && blast && span !== undefined && onFoundation(o, j) && wornShare(o, j, blast.point, span) < JOINT_OPEN_SHARE) j.st.hp = Math.min(j.st.maxHp, 1)
       if (j.st.hp <= 0) {
         j.st.hp = 0
         j.st.open = true
