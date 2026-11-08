@@ -567,30 +567,40 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     function stuckLumps(gone: readonly { c: Span; part: HouseStructurePart; thick: number; mid: number }[], mask: WallMask, bounds: number[]): UnitBox[] {
       const out: UnitBox[] = []
       const grey = fragmentMaterial('concrete').color.getHex()
+      const stone = (s: number, y: number, d: number, size: [number, number, number], r: (n: number) => number): void => {
+        const centre = mask.start + s
+        const unit = clipToBox({ x: mask.alongU ? centre : d, y, z: mask.alongU ? d : centre, sx: mask.alongU ? size[0] : size[2], sy: size[1], sz: mask.alongU ? size[2] : size[0], colour: tmp.c.setHex(grey).multiplyScalar(0.85 + 0.2 * r(7)).getHex() }, bounds)
+        if (unit) out.push(unit)
+      }
       for (const { c, part, thick, mid } of gone) {
         const p0 = (mask.alongU ? part.aabb[0]! : part.aabb[1]!) - mask.start, p1 = (mask.alongU ? part.aabb[2]! : part.aabb[3]!) - mask.start
-        // the faces of the break above and under the block are not flat: broken stones sit on them, half in the concrete
-        for (const [edge, k0] of [[c.y0, 0], [c.y1, 4]] as const) {
-          for (let k = k0; k < k0 + EDGE_LUMPS; k++) {
-            const r = (n: number) => { const x = Math.sin(c.a * 63.1 + edge * 29.7 + mid * 17.3 + k * 5.3 + n * 2.9) * 43758.5453; return x - Math.floor(x) }
+        // a beam (a bond beam, a lintel) runs along the wall: its bars run along it at its bottom and top; a pillar's stand at its two sides
+        const lying = p1 - p0 > part.y1 - part.y0
+        const random = (seed: number) => (n: number) => { const x = Math.sin(seed + n * 3.3) * 43758.5453; return x - Math.floor(x) }
+        // the faces of the break: not flat, broken stones sit on them half in the concrete
+        const faces: Array<[number, number]> = lying ? [[c.a, 1], [c.b, 2]] : [[c.y0, 1], [c.y1, 2]]
+        for (const [face, f] of faces) {
+          for (let k = 0; k < EDGE_LUMPS; k++) {
+            const r = random(c.a * 63.1 + c.y0 * 29.7 + mid * 17.3 + f * 11.1 + k * 5.3)
             const size = EDGE_LUMP_MIN + (EDGE_LUMP_MAX - EDGE_LUMP_MIN) * r(1)
-            const centre = mask.start + c.a + (0.1 + 0.8 * r(2)) * (c.b - c.a), d = mid + (r(3) - 0.5) * (thick - 2 * LUMP_BAR_INSET)
-            const unit = clipToBox({ x: mask.alongU ? centre : d, y: edge, z: mask.alongU ? d : centre, sx: size, sy: size * (0.6 + 0.5 * r(4)), sz: size, colour: tmp.c.setHex(grey).multiplyScalar(0.85 + 0.2 * r(5)).getHex() }, bounds)
-            if (unit) out.push(unit)
+            const d = mid + (r(3) - 0.5) * (thick - 2 * LUMP_BAR_INSET)
+            const s = lying ? face : c.a + (0.1 + 0.8 * r(2)) * (c.b - c.a)
+            const y = lying ? c.y0 + (0.1 + 0.8 * r(2)) * (c.y1 - c.y0) : face
+            stone(s, y, d, [size, size * (0.6 + 0.5 * r(4)), size], r)
           }
         }
-        const bars = [p0 + LUMP_BAR_INSET, p1 - LUMP_BAR_INSET].filter((s) => s >= c.a - 1e-6 && s <= c.b + 1e-6)
-        for (const s of bars) {
+        // and lumps of it on the bars that ran through the block
+        const bars = lying ? [part.y0 + LUMP_BAR_INSET, part.y1 - LUMP_BAR_INSET].filter((y) => y >= c.y0 - 1e-6 && y <= c.y1 + 1e-6) : [p0 + LUMP_BAR_INSET, p1 - LUMP_BAR_INSET].filter((s) => s >= c.a - 1e-6 && s <= c.b + 1e-6)
+        for (const bar of bars) {
           for (const side of [-1, 1]) {
             const d = mid + side * (thick / 2 - LUMP_BAR_INSET)
             for (let k = 0; k < LUMPS_PER_BAR; k++) {
-              const r = (n: number) => { const x = Math.sin(s * 91.7 + d * 47.3 + c.y0 * 113.1 + k * 7.9 + n * 3.3) * 43758.5453; return x - Math.floor(x) }
+              const r = random(bar * 91.7 + d * 47.3 + c.y0 * 113.1 + c.a * 19.9 + k * 7.9)
               if (r(1) > LUMP_CHANCE) continue
-              const y = c.y0 + (0.15 + 0.7 * r(2)) * (c.y1 - c.y0)
-              const sa = LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(3), sy = LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(4), sd = LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(5)
-              const centre = mask.start + s + (r(6) - 0.5) * 0.02
-              const unit = clipToBox({ x: mask.alongU ? centre : d, y, z: mask.alongU ? d : centre, sx: mask.alongU ? sa : sd, sy, sz: mask.alongU ? sd : sa, colour: tmp.c.setHex(grey).multiplyScalar(0.85 + 0.2 * r(7)).getHex() }, bounds)
-              if (unit) out.push(unit)
+              const at = 0.15 + 0.7 * r(2), jitter = (r(6) - 0.5) * 0.02
+              const s = lying ? c.a + at * (c.b - c.a) : bar + jitter
+              const y = lying ? bar + jitter : c.y0 + at * (c.y1 - c.y0)
+              stone(s, y, d, [LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(3), LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(4), LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(5)], r)
             }
           }
         }

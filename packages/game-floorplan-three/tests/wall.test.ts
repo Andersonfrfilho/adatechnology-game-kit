@@ -175,6 +175,23 @@ describe('wallPiece', () => {
     follower.dispose()
   })
 
+  it('a 40 mm grenade opens a hole a body climbs through: a leg over the sill, the shoulders, the head stooped', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    // the room's body climbing through: a leg over a sill of 0.5 m (half of its 0.3 m radius), hips and shoulders (75%), the head stooped to 1.6 m (45%)
+    const slices = [[0.5, 1.0, 0.15], [1.0, 1.5, 0.225], [1.5, 1.6, 0.135]] as const
+    const body = (x: number): boolean => slices.some(([y0, y1, r]) => follower.blocks(x, 0, r, y0, y1))
+    world.explode([0, 1.0, 0.3], 102400, 4, 'test')
+    for (let i = 0; i < 20; i++) world.update(0.1)
+    follower.update()
+    expect(body(0)).toBe(false)
+    expect(body(1.2)).toBe(true)
+    follower.dispose()
+  })
+
   it('a rocket that brings down a bay throws bricks and clumps of a few with flakes of their plaster, not slabs', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })

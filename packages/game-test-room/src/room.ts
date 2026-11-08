@@ -149,6 +149,11 @@ const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
 const STEP_UP = 0.45
 /** Height of the walking body (m): what starts above it is walked under. */
 const BODY_HEIGHT = 1.75
+/**
+ * The body going through a hole, by heights over the feet (m) and the share of the player's radius each takes: a leg lifted over a sill of half a metre,
+ * hips and shoulders, the head stooped to 1.6 m (a man climbs through a breach 0.8 m wide and 1.3 m tall, not only a doorway).
+ */
+const BODY_SLICES: ReadonlyArray<readonly [number, number, number]> = [[0.5, 1.0, 0.5], [1.0, 1.5, 0.75], [1.5, 1.6, 0.45]]
 /** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
 const KICK_MASS = 6
 const KICK_HEIGHT = 0.6
@@ -668,7 +673,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return false
   }
   blockers.add((x, z, radius) => {
-    for (const e of entries.values()) if (e.follower?.blocks?.(x, z, radius, player.feet + STEP_UP, player.feet + BODY_HEIGHT)) return true
+    // a body is not a cylinder: it goes through a hole by its legs, its shoulders and its head, each as wide as it is
+    for (const e of entries.values()) {
+      const blocks = e.follower?.blocks
+      if (!blocks) continue
+      for (const [from, to, share] of BODY_SLICES) if (blocks(x, z, radius * share, player.feet + from, player.feet + to)) return true
+    }
     return false
   })
   // the footprints that still hold: the player and the push read this same list
