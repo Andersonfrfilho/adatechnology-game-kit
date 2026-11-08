@@ -315,14 +315,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const topHolds = (t: ArenaTop, x: number, z: number): boolean => (t.boards ? t.boards.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && partStands(t.id, b.part)) : topOk(t))
   // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object stands where it was laid (a piece holds them by its own box)
   const restingTops: Array<{ objectId: string; minX: number; maxX: number; minZ: number; maxZ: number; top: number }> = []
-  /** Counts the frames (`updateInput`): what is measured once a frame is kept under it. */
-  let frameStamp = 0
+  /** Counts the steps of the simulation (scripted ones too): the drawn boxes of the holders are measured once a step. */
+  let simulationStamp = 0
   // the drawn boxes of each holder, measured once a frame: what the blast took off it no longer holds anything (no collider without geometry)
   const holderBoxes = new Map<string, { stamp: number; boxes: Array<[number, number, number, number, number, number]> }>()
   const holderTopAt = (c: (typeof restingTops)[number], x: number, z: number): number => {
     let known = holderBoxes.get(c.objectId)
-    if (!known || known.stamp !== frameStamp) {
-      known = { stamp: frameStamp, boxes: renderer.shownBoxes(c.objectId) }
+    if (!known || known.stamp !== simulationStamp) {
+      known = { stamp: simulationStamp, boxes: renderer.shownBoxes(c.objectId) }
       holderBoxes.set(c.objectId, known)
     }
     let top = 0
@@ -1389,6 +1389,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   interface BodyBox { minX: number; maxX: number; minZ: number; maxZ: number; base: number; top: number; stamp: number; parts: ReadonlyArray<readonly [number, number, number, number, number, number]> }
   const bodyBoxes = new Map<string, BodyBox>()
   const bodyBounds = new THREE.Box3()
+  let frameStamp = 0
   /** World box of an object the player can bump into, kept until the object moves (a piece that is awake is measured again each frame). */
   const bodyBox = (e: Entry): BodyBox | null => {
     const id = e.so.objectId
@@ -3806,6 +3807,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       fluids.update(dt)
     }
     syncLiters()
+    simulationStamp++
     renderer.update(dt)
     destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
