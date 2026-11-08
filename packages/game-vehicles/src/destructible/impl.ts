@@ -1073,6 +1073,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     if (meshParts) return meshParts
     meshParts = new Map()
     for (const d of model.parts) {
+      // a lamp no zone claims is found by its own lit pieces: the box of the bumper around it is larger and would take the round
+      for (const L of d.lamps ?? []) for (const m of [...L.lens, ...L.inner]) meshParts.set(m, d.id)
       if (d.role !== 'glass') continue
       const z = kit.zonesOf(c).find((q) => q.id === d.zoneId)
       for (const g of z?.glass ?? d.panes ?? []) meshParts.set(g, d.id)

@@ -7,6 +7,7 @@ import type { GlassQuad } from './glass'
 import type { ZoneDef } from './zone-derive'
 import type { FlyingPiece, RollState, VehicleEmitter, VehicleLamp, VehiclePart, VehicleSpin } from './api'
 import type { Kit } from './types'
+import type { StrayLamp } from './stray-lamps'
 import type { ZoneBoxInput } from './zone-core'
 import { clamp, rng } from './util'
 
@@ -49,6 +50,7 @@ export function installContext(kit: Kit) {
     declare wheels: Object3D[]
     declare parts: VehiclePart[]
     declare lights: VehicleLamp[]
+    declare strayLamps: StrayLamp[] | undefined
     declare spin: VehicleSpin[]
     declare emitters: VehicleEmitter[]
     declare log: unknown[]

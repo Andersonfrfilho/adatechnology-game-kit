@@ -9,8 +9,9 @@ import type { Matrix4, Mesh, Object3D } from '../three-types'
 
 import type { BuildContext } from '../types'
 import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-contracts'
-import type { DamageZone, HeadlightLens, VehicleContext, VehicleKit } from '../api'
+import type { DamageZone, HeadlightLens, VehicleContext, VehicleKit, VehicleLamp } from '../api'
 import { clamp, strHash } from '../util'
+import { strayLampsOf } from '../stray-lamps'
 import type { ArmourLevel } from './armour'
 
 /** What a part is, which decides its material, its joint and what happens when it comes off. */
@@ -62,6 +63,8 @@ export interface PartDef {
   zoneId?: string
   /** The panes of a glass part no damage zone claims. */
   panes?: Mesh[]
+  /** The lamps of a light part no damage zone claims (a fog lamp, a lit strip in a bumper: `c.strayLamps`). */
+  lamps?: VehicleLamp[]
   /** Fluid held, in litres. */
   contains?: { fluid: string; liters: number; pressurized?: boolean }
   explodes?: { energy: number; radius: number; atC: number; /** The named explosion of game-vfx it plays (its fireball and its sound). */ effect?: string }
@@ -130,6 +133,8 @@ const HITCH_CHANCE: Record<Kind, number> = { car: 30, truck: 60, bus: 0, tractor
 /** A glass headlight lens shatters at about the energy of a pistol round, joules; polycarbonate or acrylic takes some three before it comes apart. */
 const GLASS_LENS_HP = 320
 const PLASTIC_LENS_HP = 900
+/** The margin around a lamp no zone claims, as a light zone gets around its lamps. */
+const STRAY_LAMP_MARGIN = 0.03
 const STEEL_KG_M2 = 7
 const ALU_KG_M2 = 3.2
 
@@ -222,6 +227,20 @@ const floorPan = (b: LocalBox): LocalBox => ({
 
 /** Builds the part and joint model of a built vehicle. */
 /** A pane's box in the vehicle's space. */
+/** The box of a lamp no zone claims: its lit pieces and lens, with the margin a light zone gets. */
+function strayLampBox(c: BuildContext, lamp: VehicleLamp, inverse: Matrix4): LocalBox {
+  const lo = [Infinity, Infinity, Infinity]
+  const hi = [-Infinity, -Infinity, -Infinity]
+  for (const mesh of [...lamp.lens, ...lamp.inner] as Mesh[]) {
+    const b = paneBox(c, mesh, inverse)
+    for (let i = 0; i < 3; i++) {
+      lo[i] = Math.min(lo[i]!, b.center[i]! - b.size[i]! / 2)
+      hi[i] = Math.max(hi[i]!, b.center[i]! + b.size[i]! / 2)
+    }
+  }
+  return { center: [0, 1, 2].map((i) => (lo[i]! + hi[i]!) / 2) as Vec3, size: [0, 1, 2].map((i) => hi[i]! - lo[i]! + 2 * STRAY_LAMP_MARGIN) as Vec3 }
+}
+
 function paneBox(c: BuildContext, pane: Mesh, inverse: Matrix4): LocalBox {
   pane.geometry.computeBoundingBox()
   const box = pane.geometry.boundingBox!.clone().applyMatrix4(pane.matrixWorld)
@@ -395,6 +414,17 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     const bb = paneBox(c, pane, inverse)
     const laminated = G?.type === 'laminated' || !!armoured
     add({ id: `pane_${G?.key ?? 'glass'}`, role: 'glass', name: String(G?.label ?? G?.key ?? 'glass'), material: 'glass', box: bb, mass: 10 * areaOf(bb.size), hp: armoured ? armoured.glassHp : laminated ? 4000 : 450, panes: [pane], visual: false, tags: ['glass'] })
+  }
+
+  // a lamp the zones do not claim (a fog lamp, a lit strip in the bumper) is still a lamp: it takes the round as a light part of its own and goes dark
+  for (const lamp of strayLampsOf(c, kit.THREE)) {
+    const front = lamp.kind !== 'taillight'
+    const lens: HeadlightLens | 'acrylic' = front ? (spec.headlightLens ?? 'polycarbonate') : 'acrylic'
+    const glassLens = lens === 'glass'
+    const box = strayLampBox(c, lamp, inverse)
+    const what = lamp.fog ? 'fog_light' : front ? 'lamp_front' : 'lamp_rear'
+    const name = lamp.side === 'center' ? t(`mechanics.${what}_center`) : t(`mechanics.${what}`, { side: t(`sides.${lamp.side}`), sideM: t(`sides.${lamp.side}M`) })
+    add({ id: lamp.side === 'center' ? what : `${what}_${lamp.side}`, role: 'light', name, material: glassLens ? 'glass' : 'plastic', box, mass: 0.4 + 4 * areaOf(box.size), hp: glassLens ? GLASS_LENS_HP : PLASTIC_LENS_HP, lamps: [lamp], visual: true, tags: ['light', `lens_${lens}`, ...(lamp.fog ? ['fog'] : [])] })
   }
 
   // the hub is a synthetic frame part when the vehicle has no underbody or chassis zone

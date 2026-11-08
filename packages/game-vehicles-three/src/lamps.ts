@@ -7,7 +7,9 @@
 import { isLightBudget, LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 
-import type { Object3D, Vector3 } from 'three'
+import { strayLampsOf } from '@adatechnology/game-vehicles'
+import type { VehicleContext } from '@adatechnology/game-vehicles'
+import type { Box3, Object3D, Vector3 } from 'three'
 
 import type { BuiltVehicle } from './build'
 
@@ -48,21 +50,20 @@ export interface VehicleLamps {
 /** A lamp's glass material: the kit's are emissive standard materials (`MATERIALS.head`, `tail`, `led`, `amber`). */
 type Glass = { clone(): Glass; dispose?(): void; emissiveIntensity?: number; color?: { r: number; g: number; b: number } }
 type Glazed = { material: Glass | Glass[] | null }
-type Lamp = { kind: string; fog?: boolean; broken?: unknown; dark?: boolean; inner: Glazed[]; halo?: Array<{ visible: boolean; scale: { x: number; y: number; set(x: number, y: number, z: number): void } }>; group?: { position?: { x: number }; getWorldPosition?(target: Vector3): Vector3 } }
+type Lamp = { kind: string; fog?: boolean; aux?: boolean; broken?: unknown; dark?: boolean; inner: Glazed[]; halo?: Array<{ visible: boolean; scale: { x: number; y: number; set(x: number, y: number, z: number): void } }>; group?: { position?: { x: number }; getWorldPosition?(target: Vector3): Vector3 } }
 
-export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector3: new () => Vector3 }, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
+export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector3: new () => Vector3; Box3: new () => Box3 }, built: BuiltVehicle, options: { lights?: unknown; owner?: string } = {}): VehicleLamps {
   const budget: LightBudget | null = isLightBudget(options.lights) ? options.lights : null
   const owner = options.owner ?? 'vehicle-lamps'
-  // the kit's lamps, a fog lamp drawn as a headlight marked `fog`, and the decorative fog bulbs a body lists in `context.fogBulbs` (or tags `userData.lamp = 'fog'`)
-  const context = built.context as { lights?: Array<Lamp & { fog?: boolean }>; fogBulbs?: Glazed[] } | null
+  // the kit's lamps, a fog lamp drawn as a headlight marked `fog`, and the lamps the body drew outside them (`strayLampsOf`: each fog bulb, each lit
+  // strip of a bumper), every one its own lamp so a shot puts out only the one it hit. A stray lamp that is not a fog lamp (`aux`, a running lamp)
+  // keeps the glow it was drawn with until it is put out. Kept as views of the kit's lamps: `broken` and `dark` are read from the kit's own object.
+  const context = built.context as (VehicleContext & { lights?: Lamp[] }) | null
+  const view = (l: Lamp, kind: string): Lamp => (l.kind === kind ? l : (Object.create(l, { kind: { value: kind } }) as Lamp))
   const lamps: Lamp[] = (context?.lights ?? [])
     .filter((l) => l && Array.isArray(l.inner))
-    .map((l) => (l.fog ? (Object.create(l, { kind: { value: 'fog' } }) as Lamp) : l))
-  const bulbs: Glazed[] = (context?.fogBulbs ?? []).filter((o) => o?.material)
-  built.group.traverse((o: Object3D & Partial<Glazed>) => {
-    if (o.userData?.lamp === 'fog' && o.material && !bulbs.includes(o as Glazed)) bulbs.push(o as Glazed)
-  })
-  if (bulbs.length) lamps.push({ kind: 'fog', inner: bulbs })
+    .map((l) => (l.fog ? view(l, 'fog') : l))
+  for (const l of (context ? strayLampsOf(context, THREE) : []) as unknown as Lamp[]) lamps.push(view(l, l.fog ? 'fog' : 'aux'))
   const beacons: Array<{ mesh: Glazed; side: 0 | 1 }> = []
   built.group.traverse((o: Object3D & Partial<Glazed>) => {
     if (o.userData?.lamp === 'beacon' && o.material) beacons.push({ mesh: o as Glazed, side: o.userData.beaconSide === 1 ? 1 : 0 })
@@ -93,6 +94,7 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
   const amber = new Set<Glazed>()
   const sideOf = new Map<Glazed, 'left' | 'right'>()
   for (const l of lamps) {
+    if (l.kind === 'aux') continue
     const x = l.group?.position?.x ?? 0
     for (const m of l.inner) {
       const mat = Array.isArray(m.material) ? null : m.material
@@ -177,7 +179,8 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
     const at = anchorObject?.getWorldPosition?.(new THREE.Vector3())
     if (at) across.set(l, built.group.worldToLocal(at).x)
   }
-  const beamSide = (sign: -1 | 1): boolean => !has.head || working('headlight').some((l) => (across.get(l) ?? 0) * sign > 0 || Math.abs(across.get(l) ?? 0) < CENTRE_LAMP_X)
+  const litOn = (kind: string, sign: -1 | 1): boolean => working(kind).some((l) => (across.get(l) ?? 0) * sign > 0 || Math.abs(across.get(l) ?? 0) < CENTRE_LAMP_X)
+  const beamSide = (sign: -1 | 1): boolean => !has.head || litOn('headlight', sign)
   const health = (): string => lamps.map((l) => (isOut(l) ? 1 : 0)).join('')
   let healthSeen = health()
   const state: LampSwitch = { mode: 'off', fog: false, interior: false, brake: false, reverse: false, left: false, right: false }
@@ -199,7 +202,9 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
       const lit = beamId === id ? front.filter((_, i) => sides[i]) : []
       beam(id, lit.length > 0, () => spots(lit, LAMP_RULES[id]), lit.length)
     }
-    beam('fog', state.fog && has.fog && working('fog').length > 0, () => spots(fogAnchors, LAMP_RULES.fog))
+    // each fog spot is carried by the fog lamps of its side: one shot out puts out its side, both put out the beam
+    const fogLit = state.fog && has.fog ? fogAnchors.filter((_, i) => litOn('fog', i === 0 ? -1 : 1)) : []
+    beam('fog', fogLit.length > 0, () => spots(fogLit, LAMP_RULES.fog), fogLit.length)
     beam('reverse', state.reverse && (!has.tail || working('taillight').length > 0), () => point(rear, LAMP_RULES.reverse))
     beam('interior', state.interior, () => point(cabin, LAMP_RULES.interior))
   }

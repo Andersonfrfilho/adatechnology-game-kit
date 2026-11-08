@@ -204,6 +204,12 @@
     "pillar_c": "{Side} C pillar",
     "engine": "Engine",
     "radiator": "Radiator",
-    "fuel_tank": "Fuel tank"
+    "fuel_tank": "Fuel tank",
+    "fog_light": "{Side} fog light",
+    "fog_light_center": "Fog light",
+    "lamp_front": "{Side} front lamp",
+    "lamp_front_center": "Front lamp",
+    "lamp_rear": "{Side} rear lamp",
+    "lamp_rear_center": "Rear lamp"
   }
 }

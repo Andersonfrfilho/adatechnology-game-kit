@@ -25,6 +25,8 @@ type LampMesh = Mesh
 type CrackedLamp = {
   lens: LampMesh[]
   inner: LampMesh[]
+  /** The chrome bowl behind the bulb, when the body registered it. */
+  reflector?: LampMesh[]
   halo?: Array<{ visible: boolean }>
   group: Object3D | null
   tint: string
@@ -382,12 +384,17 @@ export function installGlassDamage(kit: Kit) {
   kit.breakLight = breakLight
   /* A cracked polycarbonate or acrylic lens turns hazy white along its cracks (crazing): the crack texture on a lens dense enough to show it. */
   const crazedCache = new Map<Material, Material>()
-  const CRAZED_OPACITY = 0.6
+  const CRAZED_OPACITY = 0.5
+  /* crazing scatters the light that crosses it: the lens is a milky grey, matt, not a smooth pane that mirrors the sky white (which read as a lamp still lit) */
+  const CRAZED_TINT = 0.6
+  const CRAZED_ROUGHNESS = 0.6
   function crazed(material: Material): Material {
     const known = crazedCache.get(material)
     if (known) return known
-    const m = I.crackLens(material).clone()
+    const m = I.crackLens(material).clone() as MeshStandardMaterial
     m.opacity = Math.max(m.opacity ?? 1, CRAZED_OPACITY)
+    m.color?.multiplyScalar(CRAZED_TINT)
+    m.roughness = Math.max(m.roughness ?? 0, CRAZED_ROUGHNESS)
     m.transparent = true
     m.userData.shared = true
     crazedCache.set(material, m)
@@ -407,6 +414,8 @@ export function installGlassDamage(kit: Kit) {
     L.dark = true
     for (const m of L.inner) m.material = MATERIALS.bulbBroken
     for (const h of L.halo ?? []) h.visible = false
+    // the round went through the bowl as well: its chrome, unlit, no longer shines like a working lamp
+    for (const m of L.reflector ?? []) m.material = MATERIALS.broken
   }
   kit.crackLight = crackLight
 

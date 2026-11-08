@@ -793,7 +793,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         off: 0.003,
         nv: 4,
       })
-      skin(c, Gd, o.refl || REFL, { u0: pu, u1: 1 - pu, yb: yb, yt: yt, off: 0.006, nv: 4 })
+      const reflector = skin(c, Gd, o.refl || REFL, { u0: pu, u1: 1 - pu, yb: yb, yt: yt, off: 0.006, nv: 4 })
       ;(o.proj || []).forEach(function (q: number[]) {
         const r = sh(q[0]),
           y = (r[0] + r[1]) / 2 + (q[1] || 0),
@@ -827,7 +827,8 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       lens.push(ln)
       if (!inner.length) inner.push(ln)
       const cs = Gd.at(0.5, (rg[0] + rg[1]) / 2).p
-      regLight(c, 'headlight', o.label || (sd > 0 ? trl('labels.right_headlight') : trl('labels.left_headlight')), inner, lens, cs)
+      // the reflector shows when the lens is gone: a lamp put out has it dark, its chrome no longer lit
+      Object.assign(regLight(c, 'headlight', o.label || (sd > 0 ? trl('labels.right_headlight') : trl('labels.left_headlight')), inner, lens, cs), { reflector: [reflector] })
       return Gd
     }
     /* taillight: o = { z0, wrap, shape(u), main (area material), hi: [...], rev: [...], amber: [...] } */

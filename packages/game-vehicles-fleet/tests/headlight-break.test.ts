@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
 import type { VehicleContext } from '@adatechnology/game-vehicles'
@@ -72,3 +73,59 @@ describe('a headlight hit', () => {
     expect(L.inner.some((m) => m.material !== plastic.bulbBroken)).toBe(true)
   })
 })
+
+/**
+ * A headlight a round put out reads as a dead lamp, not a lit one. The kit draws its lamps lit; with the bulb dark, what is left in the unit must not keep the look:
+ * the chrome reflector lit by the scene and a cracked lens turned a smooth near-white pane read as a lamp still shining (owner, 2026-11-08).
+ */
+const LOOKS_LIT = { mirrorMetalness: 0.8, mirrorRoughness: 0.35, mirrorLightness: 0.4, glossyLensRoughness: 0.3, glossyLensOpacity: 0.5, glossyLensLightness: 0.6 }
+type Look = THREE.MeshStandardMaterial
+
+function looksLit(m: Look): string | null {
+  const lightness = m.color ? (m.color.r + m.color.g + m.color.b) / 3 : 0
+  if (m.emissive && m.emissiveIntensity > 0 && m.emissive.r + m.emissive.g + m.emissive.b >= 0.05) return 'glows'
+  if ((m.metalness ?? 0) >= LOOKS_LIT.mirrorMetalness && (m.roughness ?? 1) <= LOOKS_LIT.mirrorRoughness && lightness >= LOOKS_LIT.mirrorLightness) return 'mirror chrome'
+  if (m.transparent && m.opacity >= LOOKS_LIT.glossyLensOpacity && (m.roughness ?? 1) < LOOKS_LIT.glossyLensRoughness && lightness >= LOOKS_LIT.glossyLensLightness) return 'bright glossy lens'
+  return null
+}
+
+describe('a headlight put out by one pistol round', () => {
+  for (const key of ['midsize_sedan', 'compact_hatch', 'fastback_sedan', 'midsize_suv', 'beetle']) {
+    it(`${key}: nothing left in the unit looks lit`, () => {
+      const kit = makeFleetKit('en')
+      const item = buildVehicleItem(kit, key)
+      const d = createVehicleDestructible(kit, item.vehicle, { id: key, frame: item.root })
+      item.root.updateMatrixWorld(true)
+      const vehicle = (item.vehicle as VehicleContext).vehicle as THREE.Object3D
+      for (const side of ['left', 'right']) {
+        const id = `headlight_${side}`
+        const part = d.describe().parts.find((p) => p.id === id)!
+        if (part.shape.kind !== 'box') throw new Error(`${id} is not a box`)
+        const size = part.shape.size
+        const at = d.partWorldCenter!(id)
+        const centre = vehicle.worldToLocal(new THREE.Vector3(...at))
+        // from 3 m ahead of the car and a little above, as a player aims at the lamp
+        const forward = new THREE.Vector3(1, 0, 0).transformDirection(vehicle.matrixWorld)
+        const from = new THREE.Vector3(...at).addScaledVector(forward, 3).add(new THREE.Vector3(0, 0.2, 0))
+        const towards = new THREE.Vector3(...at).sub(from).normalize()
+        const hit = d.surfaceRay!({ origin: from.toArray(), direction: towards.toArray(), maxDistance: 10 })
+        expect(hit?.part, `${key} ${id}`).toBe(id)
+        d.hit({ ...PISTOL, point: hit!.point, part: id, normal: hit!.normal, direction: towards.toArray() })
+        const lit: string[] = []
+        vehicle.updateMatrixWorld(true)
+        vehicle.traverse((o) => {
+          const mesh = o as THREE.Mesh<THREE.BufferGeometry, Look>
+          if (!mesh.isMesh || Array.isArray(mesh.material) || mesh.userData.decal) return
+          for (let up: THREE.Object3D | null = mesh; up; up = up.parent) if (!up.visible) return
+          mesh.geometry.computeBoundingBox()
+          const mid = vehicle.worldToLocal(mesh.localToWorld(mesh.geometry.boundingBox!.getCenter(new THREE.Vector3())))
+          if (![mid.x - centre.x, mid.y - centre.y, mid.z - centre.z].every((v, i) => Math.abs(v) <= size[i]! / 2)) return
+          const why = looksLit(mesh.material)
+          if (why) lit.push(`${why} #${mesh.material.color?.getHexString()}`)
+        })
+        expect(lit, `${key} ${id}`).toEqual([])
+      }
+    })
+  }
+})
+

@@ -10,6 +10,7 @@ import type { BuildContext } from './types'
 import type { ParticleEffects } from './routed-particles'
 import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 import type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
+import type { StrayLamp } from './stray-lamps'
 
 /** A three.js `Vector3`, `Object3D`, `Mesh`, ... of the host's `THREE`. */
 export type ThreeObject = any
@@ -210,6 +211,8 @@ export interface DamageZone {
   owned: ThreeObject[]
   /** The lamps, panes and wheels the zone holds. */
   lights: VehicleLamp[]
+  /** The lamps drawn outside the kit's lamp units (fog bulbs, lit strips in a bumper), each breakable on its own (`stray-lamps.ts`). */
+  strayLamps?: StrayLamp[]
   glass: ThreeObject[]
   wheels: ThreeObject[]
   tags: string[]

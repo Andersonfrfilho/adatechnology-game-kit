@@ -204,6 +204,12 @@
     "pillar_c": "Coluna C {sideM}",
     "engine": "Motor",
     "radiator": "Radiador",
-    "fuel_tank": "Tanque de combustível"
+    "fuel_tank": "Tanque de combustível",
+    "fog_light": "Farol de neblina {sideM}",
+    "fog_light_center": "Farol de neblina",
+    "lamp_front": "Luz dianteira {side}",
+    "lamp_front_center": "Luz dianteira",
+    "lamp_rear": "Luz traseira {side}",
+    "lamp_rear_center": "Luz traseira"
   }
 }
