@@ -83,3 +83,24 @@ export type {
   VfxSideRequest,
   VfxStats,
 } from './types'
+export { createWaterEffects } from './water/effects'
+export type { WaterEffects, WaterEffectsOptions, WaterEffectsStats } from './water/effects'
+export { planWaterBlast, planWaterShot, resolveWaterBlast } from './water/plan'
+export { WATER_BLASTS, WATER_BLAST_KINDS, WATER_SHOT_BY_CALIBER, WATER_SHOT_PROFILES, patchWaterShotProfiles, resolveWaterShotProfile, waterShotClassOf } from './water/profiles'
+export type { WaterRound } from './water/profiles'
+export { WATER_LIMITS } from './water/records'
+export type { WaterBubble, WaterColumn, WaterDrop, WaterFoam, WaterMist, WaterRing, WaterWave } from './water/records'
+export type {
+  WaterBlastCharge,
+  WaterBlastKind,
+  WaterBlastKindId,
+  WaterBlastParams,
+  WaterBlastPlan,
+  WaterEffectsLimits,
+  WaterShotClass,
+  WaterShotParams,
+  WaterShotPlan,
+  WaterShotProfile,
+  WaterVec3,
+  WaterWaveSample,
+} from './water/types'

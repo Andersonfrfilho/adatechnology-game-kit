@@ -497,6 +497,8 @@ export interface TestRoom {
   /** The blast options the room's explosions use now, and a way to change them (each key replaces the old one; `undefined` clears it). */
   blast(): BlastOptions
   setBlast(options: BlastOptions): void
+  /** Sets the explosive `explosive` (an id of the arsenal: `m67`, `c4`, `m79_40mm`...) off at `point` at once, as the tool in hand would; false for an unknown explosive. */
+  blastAt(explosive: string, point: Vec3): boolean
   /** Stop the simulation (time, physics, animations, tools, walks): the UI, the camera and the log stay live. `step` and `update` do nothing until `resume`. Scenarios run unpaused. */
   pause(): void
   resume(): void

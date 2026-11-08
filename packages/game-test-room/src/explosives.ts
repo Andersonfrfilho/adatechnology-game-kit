@@ -122,6 +122,12 @@ export type ExplosivesContext = {
   readonly projectileModel?: ((query: ProjectileQuery) => ProjectileModel | null | undefined) | undefined
   /** The room's sound engine: a burning canister hisses (`SMOKE_HISS`), a hand grenade's pin clicks when it is thrown. Without it they are silent. */
   readonly audio?: Pick<AudioEngine, 'loop' | 'play'> | null
+  /** A charge that goes off in or over water: the host draws what the water does and says whether it went off under it (then there is no fireball and no fire). */
+  readonly water?: (detonation: Detonation) => { readonly underwater: boolean } | null
+  /** The water surface at (x, z), or null where there is none: a round with an impact fuze goes off on it, a thrown charge splashes in and sinks. */
+  readonly waterLevelAt?: (x: number, z: number) => number | null
+  /** A thrown charge falls into the water at `point` with `velocity`. */
+  readonly splash?: (point: Vec3, velocity: Vec3) => void
 }
 
 export type Explosives = {
@@ -353,6 +359,24 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     return best ? { point: best.point, normal: best.normal, ground: best.ground } : null
   }
 
+  /** Where the step from `from` to `to` goes down through the water surface, or null. */
+  const waterCrossing = (from: Vec3, to: Vec3): Vec3 | null => {
+    if (!context.waterLevelAt || to[1] >= from[1]) return null
+    const level = context.waterLevelAt(to[0], to[2])
+    if (level === null || from[1] < level || to[1] > level) return null
+    const share = (from[1] - level) / (from[1] - to[1])
+    const point: Vec3 = [from[0] + (to[0] - from[0]) * share, level, from[2] + (to[2] - from[2]) * share]
+    return context.waterLevelAt(point[0], point[2]) === null ? null : point
+  }
+  // an impact fuze (a rocket, a 40 mm grenade) goes off on the water as on anything hard it meets
+  const impactProbe: SurfaceProbe = (from, to) => {
+    const hit = surfaceProbe(from, to)
+    const water = waterCrossing(from, to)
+    if (!water) return hit
+    if (hit && Math.hypot(hit.point[0] - from[0], hit.point[1] - from[1], hit.point[2] - from[2]) < Math.hypot(water[0] - from[0], water[1] - from[1], water[2] - from[2])) return hit
+    return { point: water, normal: [0, 1, 0], ground: true }
+  }
+
   /** The point of the object's box (its center, its corners, the closest to the charge) that takes the most of the blast, or undefined when none is inside the cone. */
   const mostExposedPoint = (box: THREE_NS.Box3, detonation: Detonation): Vec3 | undefined => {
     const { min, max } = box
@@ -402,9 +426,11 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', context.blast())
     const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : results.length
     if (!detonation.cone) told(results)
+    // under the water the water takes the blast: a column and a dome of white water, no fireball
+    const isUnderwater = detonation.energy > 0 && context.water?.(detonation)?.underwater === true
     if (detonation.energy > 0) {
-      const isPlayed = context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
-      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed, report: results, effect: detonation.explosive })
+      const isPlayed = !isUnderwater && context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
+      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed && !isUnderwater, report: results, effect: detonation.explosive })
     }
     if (detonation.stunSeconds !== undefined) renderer.emit('flash', detonation.point, [0, 1, 0], 1, 1)
     const onPlayer = blastEffect(detonation, toArray(camera.position))
@@ -425,7 +451,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       lethalRadius: detonation.lethalRadius,
       ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}),
     })
-    if (detonation.fire) context.startFire(projectile.weapon, detonation.point, detonation.fire, detonation.cause === 'impact')
+    if (detonation.fire && !isUnderwater) context.startFire(projectile.weapon, detonation.point, detonation.fire, detonation.cause === 'impact')
   }
 
   /** A projectile with no `ExplosiveBody` (a use that names no explosive) blasts a sphere of its own radius, with the same effects as any other. */
@@ -469,7 +495,12 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   const stepBody = (projectile: Projectile, body: ExplosiveBody, dt: number): void => {
-    const events = body.step(dt, surfaceProbe)
+    const from: Vec3 = [body.position[0], body.position[1], body.position[2]]
+    const isImpactFuzed = body.isTriggeredBy('impact')
+    const events = body.step(dt, isImpactFuzed ? impactProbe : surfaceProbe)
+    // anything else thrown in falls through the surface with a splash and sinks
+    const entry = isImpactFuzed ? null : waterCrossing(from, body.position)
+    if (entry) context.splash?.(entry, body.velocity)
     projectile.pos.set(body.position[0], body.position[1], body.position[2])
     projectile.mesh.position.copy(projectile.pos)
     if (projectile.aligned && body.velocity[0] ** 2 + body.velocity[1] ** 2 + body.velocity[2] ** 2 > 1e-6) {

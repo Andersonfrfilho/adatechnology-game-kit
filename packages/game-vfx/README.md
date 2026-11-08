@@ -79,6 +79,27 @@ is the recipes plus these, what a world plays by default. Texts of every recipe 
 `vehicle_leak` is the page's pool and drips without the fire and the explosion (`FUEL_LEAK_ONLY`: the same `decal` and `emit` steps); `vehicle_leak_ignited` is the whole sequence (the spark, the fire running along
 the pool to the tank and the blast at 7.2 s), played when the leak catches fire.
 
+## Water: rounds and blasts on water
+
+`createWaterEffects({ levelAt, limits, seed })` draws what a round or a charge does to water, renderer-free (`createWaterEffectsLayer` of game-vfx-three draws it).
+
+- `shot({ point, direction, profile, speed, depth })`: the splash of a class of round where it meets the surface. The classes are data
+  (`WATER_SHOT_PROFILES`, `patchWaterShotProfiles`): `rimfire`, `pistol`, `magnum`, `rifle` (5.56, 7.62x39: a tall thin spout, many fast drops),
+  `battle_rifle`, `sniper` (.338, .50: a tall wide column, a wide ring), `buckshot` (a small spout and a lot of shallow foam per pellet), `birdshot`,
+  `slug`, `arrow`, `fragment` and `object` (a thrown thing falling in). `WATER_SHOT_BY_CALIBER` gives the class of every calibre of `game-weapons`;
+  `waterShotClassOf` classes an unknown round by mass and speed. A round below `ricochetBelowDeg` skips off (`plan.ricochet`: the new direction and
+  the share of speed kept) with a low spout leaning its way; a steeper one throws a column, a crown of drops, rings and foam, and leaves a trail of
+  bubbles that stops where it is spent (`slowing`: metres to lose 1/e of its speed) or at the bed.
+- `blast({ point, level, depth, explosive | tnt, kind })`: a charge by Hopkinson scaling (lengths go with the cube root of the TNT): the tallest column
+  a little under the surface, a lower one and the fireball at the surface, a dome of white water and a boil of bubbles deep under (`plan.underwater`:
+  no fireball), only the shock ring and spray high over it (`airburst`); a shallow pool cannot throw a full column. Every blast sends a fast shock
+  ring, three wave crests, a rain of drops that falls back and rings where it lands, mist and a slick of foam; a fragmentation charge at the surface
+  peppers the water around. `WATER_BLASTS` (TNT and kind of each explosive of `game-weapons`) and `WATER_BLAST_KINDS` (`brisance`, column width,
+  fragments, mist) are the data.
+- `waveAt(x, z)`: the height and the push (m/s) of the waves there, for what floats and for a body standing in the water.
+- Every record has a life and every pool a limit (`WATER_LIMITS`, `limits`); far from the camera (`setCamera`, `LOD_GAME`) fewer drops and bubbles
+  are made. `levelAt` keeps rings, foam and waves inside the water (they stop at the shore) and rings only the drops that fall back on water.
+
 ## Closed spaces (a shut car keeps the smoke out)
 
 `world.enclose(id, { center, halfSize, orientation, openings, leak })` declares a closed space: a turned box the smoke, dust, steam and gas do not
