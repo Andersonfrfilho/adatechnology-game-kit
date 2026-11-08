@@ -205,6 +205,20 @@ describe('wallPiece', () => {
     for (const id of loose) expect(Math.abs(x(id) - -1.6)).toBeLessThan(2)
   })
 
+  it('40 mm grenades at the feet of three of its pillars break the bed of the wall where they go off, not all of it: the wall stands', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const opened: string[] = []
+    world.on('*', (e) => { if (e.type === 'detach' && e.parts.includes('wall_0_0') && e.parts.includes('ground_beam_0')) opened.push(e.type) })
+    for (const x of [-4.9, -1.63, 1.63]) {
+      for (let k = 0; k < 2; k++) world.explode([x + 0.1, 0.3, 0.15], 102400, 4, 'test')
+      for (let i = 0; i < 20; i++) world.update(0.1)
+    }
+    expect(opened).toEqual([])
+    expect(world.part(id, 'wall_0_0')!.status).not.toBe('broken')
+  })
+
   it('a rocket that brings down a bay throws bricks and clumps of a few with flakes of their plaster, not slabs', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })
