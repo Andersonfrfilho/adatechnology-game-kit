@@ -1,6 +1,7 @@
 import { lehmer } from '../random'
 import type { RandomStream } from '../random'
 import type { Follow } from '../types'
+import type { Carrier } from '../workshop/carrier'
 import type { Placement, WorkshopEngine } from '../workshop/engine'
 import type { Vec3Tuple } from '../workshop/types'
 import type { Behavior } from './behavior'
@@ -14,6 +15,9 @@ const DEFAULT_HEADING: Vec3Tuple = [0, 0, -1]
 const DEFAULT_MAX_INSTANCES = 48
 /** A recipe with no end of its own (`loop: 0`: a campfire, a fire in a building) plays this long unless it is stopped. */
 const ENDLESS_SECONDS = 60
+
+/** Where the thing an effect belongs to is now (a muzzle), asked every frame the effect lives; `null` leaves the effect where it was last put. */
+export type EffectTrack = () => { readonly point: Vec3Tuple; readonly orientation?: readonly [number, number, number, number] } | null
 
 export interface PlayOptions {
   /** Which way the effect points in the world (the muzzle's barrel, the spray of a jet). */
@@ -30,6 +34,11 @@ export interface PlayOptions {
   readonly values?: Readonly<Record<string, number>>
   /** Moves with a thing: the effect sits at its position plus the point it was played at. */
   readonly follow?: Follow
+  /**
+   * Rides on the thing it belongs to while it lives (the muzzle of a gun in the hands, which the view turns and the kick moves): the effect's grouped pieces (the
+   * flash's cones) and its lights keep their place on it, and what it throws free (smoke) is thrown from where the thing is and stays in the world.
+   */
+  readonly track?: EffectTrack
   /** Stops after this many seconds (default: the recipe's loop). */
   readonly seconds?: number
 }
@@ -52,6 +61,8 @@ export interface EffectPlayer {
   stop(handle: number): void
   /** Runs the timers and ticks of every live effect (the engine's pools are aged by its owner). */
   update(dt: number): void
+  /** Moves the carrier of every tracked effect to where its thing is now (after the frame moved it); the engine's `follow` then puts the carried pieces there. True when one is live. */
+  retrack(): boolean
   clear(): void
   readonly active: number
   has(id: string): boolean
@@ -68,6 +79,8 @@ interface Playing {
   readonly yaw: number
   readonly orientation: readonly [number, number, number, number] | undefined
   readonly seconds: number
+  readonly track: EffectTrack | undefined
+  readonly carrier: Carrier | undefined
 }
 
 const positionOf = (follow: Follow): Vec3Tuple => {
@@ -121,8 +134,18 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
   }
 
   function placementOf(entry: Playing): Placement {
+    const carrier = entry.carrier
+    if (carrier) return { origin: carrier.origin, anchor: entry.anchor, yaw: entry.yaw, carrier, ...(carrier.orientation ? { orientation: carrier.orientation } : {}) }
     const origin = entry.follow ? [entry.origin[0] + positionOf(entry.follow)[0], entry.origin[1] + positionOf(entry.follow)[1], entry.origin[2] + positionOf(entry.follow)[2]] as const : entry.origin
     return { origin, anchor: entry.anchor, yaw: entry.yaw, ...(entry.orientation ? { orientation: entry.orientation } : {}) }
+  }
+
+  /** A tracked effect's carrier goes where the thing is now; once the thing is gone (`null`) it stays. */
+  function moveCarrier(entry: Playing): void {
+    const pose = entry.track?.()
+    if (!pose || !entry.carrier) return
+    entry.carrier.origin = [pose.point[0], pose.point[1], pose.point[2]]
+    if (pose.orientation) entry.carrier.orientation = pose.orientation
   }
 
   /** Runs `action` drawing from the effect's own stream, if it has one. */
@@ -153,6 +176,8 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
         yaw: yawOf(heading, playOptions.direction),
         orientation: playOptions.orientation,
         seconds: playOptions.seconds ?? (def.loop && def.loop > 0 ? def.loop : ENDLESS_SECONDS),
+        track: playOptions.track,
+        carrier: playOptions.track ? { origin: point, orientation: playOptions.orientation } : undefined,
       }
       playing.push(entry)
       drawing(entry, () =>
@@ -173,10 +198,20 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
       for (let index = playing.length - 1; index >= 0; index--) {
         const entry = playing[index]!
         const instance = entry.instance
+        moveCarrier(entry)
         instance.setup = { ...instance.setup, placement: placementOf(entry) }
         drawing(entry, () => instance.step(dt))
         if (instance.time >= entry.seconds) playing.splice(index, 1)
       }
+    },
+    retrack() {
+      let tracked = false
+      for (const entry of playing) {
+        if (!entry.carrier) continue
+        moveCarrier(entry)
+        tracked = true
+      }
+      return tracked
     },
     clear() {
       playing.length = 0

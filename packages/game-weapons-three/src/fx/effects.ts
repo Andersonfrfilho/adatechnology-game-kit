@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { EffectSink, Vec3 } from '@adatechnology/game-contracts'
+import type { EffectPose, EffectSink, Vec3 } from '@adatechnology/game-contracts'
 import { MUZZLE_SMOKE } from '@adatechnology/game-weapons'
 import type { MuzzleSmokeProfile } from '@adatechnology/game-weapons'
 
@@ -9,9 +9,15 @@ export const FLASH_BY_CASE = { shell: 1.6, big: 2.6, tiny: 0.5, pistol: 0.8, rif
 /** The ids of the recipes of `@adatechnology/game-vfx` the weapon in the hands asks the host's effect sink for (`VIEWMODEL_EFFECTS`). */
 export const VIEWMODEL_EFFECT_IDS = { flash: 'viewmodel_muzzle_flash', smoke: 'weapon_smoke_puff', backblast: 'launcher_backblast', flameJet: 'flame_jet' } as const
 
+/** Where the muzzle is now and how the barrel is turned (x along it), asked every frame the flash lives; null once the gun is gone. */
+export type MuzzleTrack = () => { readonly position: THREE_NS.Vector3; readonly orientation: THREE_NS.Quaternion } | null
+
 export interface Effects {
-  /** The muzzle flash at `position` pointing along the barrel (x) of `orientation`, with the smoke profile of the shot. */
-  muzzleFlash(position: THREE_NS.Vector3, orientation: THREE_NS.Quaternion, size: number, profile?: MuzzleSmokeProfile): void
+  /**
+   * The muzzle flash at `position` pointing along the barrel (x) of `orientation`, with the smoke profile of the shot. With `track` the flash and its light stay on the
+   * muzzle while they live (the view turns and the kick moves the gun after the shot); the smoke leaves from it and stays in the air.
+   */
+  muzzleFlash(position: THREE_NS.Vector3, orientation: THREE_NS.Quaternion, size: number, profile?: MuzzleSmokeProfile, track?: MuzzleTrack): void
   /** A puff that rises, grows and fades: the gallery's `smoke(position, velocity, size, life, opacity)`, with `size` its radius. */
   smoke(position: THREE_NS.Vector3, velocity: THREE_NS.Vector3, size: number, life: number, opacity: number): void
   /** A rocket leaving the tube: smoke and fire thrown back from `rear`, away from the barrel (x) of `orientation`. */
@@ -33,9 +39,13 @@ export function createEffects(THREE: typeof THREE_NS, sink: EffectSink | undefin
   const seed = (): number => 1 + Math.floor(random() * 0x7ffffffe)
   const barrel = (orientation: THREE_NS.Quaternion): Vec3 => vec(new THREE.Vector3(1, 0, 0).applyQuaternion(orientation))
   return {
-    muzzleFlash(position, orientation, size, profile = MUZZLE_SMOKE.smokeless) {
+    muzzleFlash(position, orientation, size, profile = MUZZLE_SMOKE.smokeless, track) {
       if (profile.puffs <= 0 && profile.flash <= 0) return
-      sink?.play({ effect: VIEWMODEL_EFFECT_IDS.flash, point: vec(position), direction: barrel(orientation), orientation: quaternion(orientation), seed: seed(), values: { size, ...profile } })
+      const follow = track ? (): EffectPose | null => {
+        const pose = track()
+        return pose ? { point: vec(pose.position), orientation: quaternion(pose.orientation) } : null
+      } : undefined
+      sink?.play({ effect: VIEWMODEL_EFFECT_IDS.flash, point: vec(position), direction: barrel(orientation), orientation: quaternion(orientation), seed: seed(), values: { size, ...profile }, ...(follow ? { track: follow } : {}) })
     },
     smoke(position, velocity, size, life, opacity) {
       sink?.play({ effect: VIEWMODEL_EFFECT_IDS.smoke, point: vec(position), seed: seed(), values: { vx: velocity.x, vy: velocity.y, vz: velocity.z, radius: size, life, opacity } })

@@ -78,11 +78,11 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
     const panels = idsStarting(spec, 'slab_1_p')
     const one = breakParts(spec, pillars.slice(0, 1))
     expect(panels.every((id) => one.stands(id))).toBe(true)
-    expect(one.stands('roof_a') && one.stands('roof_b')).toBe(true)
+    expect(idsStarting(spec, 'roof_').every((id) => one.stands(id))).toBe(true)
     const two = breakParts(spec, pillarsOfOneWall(spec, pillars, idsStarting(spec, 'wall_column_0_')))
     expect(panels.some((id) => !two.stands(id))).toBe(true)
     const all = breakParts(spec, pillars.concat(idsStarting(spec, 'wall_column_0_')))
-    expect(all.stands('roof_a') && all.stands('roof_b')).toBe(false)
+    expect(idsStarting(spec, 'roof_').every((id) => all.stands(id))).toBe(false)
   })
 
   it('a commercial building is a frame by default: the pillars carry it', () => {
@@ -91,8 +91,10 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
     const spec = toDestructibleSpec(result.structure)
     const pillars = idsStarting(spec, 'column_0_')
     expect(pillars.length).toBeGreaterThan(2)
-    expect(breakParts(spec, pillars.slice(0, 1)).stands('roof_a')).toBe(true)
-    expect(breakParts(spec, pillars.concat(idsStarting(spec, 'wall_column_0_'))).stands('roof_a')).toBe(false)
+    const oneDown = breakParts(spec, pillars.slice(0, 1))
+    expect(idsStarting(spec, 'roof_a_').every((id) => oneDown.stands(id))).toBe(true)
+    const allDown = breakParts(spec, pillars.concat(idsStarting(spec, 'wall_column_0_')))
+    expect(idsStarting(spec, 'roof_a_').every((id) => allDown.stands(id))).toBe(false)
   })
 
   it('the rebar of the concrete parts is declared by the construction (steel)', () => {
@@ -108,15 +110,18 @@ describe('wood frame house: the roof section falls with the wall it rests on', (
     const fallen = breakParts(spec, ['wall_0_0'])
     expect(fallen.stands('wall_0_0')).toBe(false)
     expect(fallen.stands('plate_0_0')).toBe(false)
-    expect(fallen.stands('roof_a')).toBe(false)
-    expect(fallen.stands('roof_b')).toBe(true)
+    const sideA = idsStarting(spec, 'roof_a_')
+    // only the end bays stay, held by the corner rafter on the gable wall
+    expect(sideA.filter((id) => fallen.stands(id)).length).toBeLessThanOrEqual(2)
+    expect(sideA.filter((id) => !fallen.stands(id)).length).toBeGreaterThan(2)
+    expect(idsStarting(spec, 'roof_b_').every((id) => fallen.stands(id))).toBe(true)
     expect(fallen.stands('wall_0_1')).toBe(true)
   })
 
   it('the load path is declared: roof panes on rafters, rafters on the plates, plates on the walls, walls on the foundation', () => {
     const structure = buildStructure(rectangularHouse({ width: 8, depth: 6, construction: woodFrameConstruction() }))
     const supportsOf = (id: string) => structure.supports.filter((s) => s.part === id).map((s) => s.on)
-    expect(supportsOf('roof_a').every((id) => id.startsWith('rafter_a_'))).toBe(true)
+    expect(supportsOf('roof_a_0').every((id) => id.startsWith('rafter_a_'))).toBe(true)
     expect(supportsOf('rafter_a_3')).toContain('plate_0_0')
     expect(supportsOf('plate_0_0')).toEqual(['wall_0_0'])
     expect(supportsOf('wall_0_0')).toEqual(['foundation_raft'])

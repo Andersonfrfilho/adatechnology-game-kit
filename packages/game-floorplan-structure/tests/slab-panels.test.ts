@@ -98,7 +98,7 @@ describe('progressive collapse only where real', () => {
     expect(panels.length).toBeGreaterThan(2)
     const one = breakParts(spec, columns.slice(0, 1))
     expect(panels.every((id) => one.stands(id))).toBe(true)
-    expect(one.stands('roof_a') && one.stands('roof_b')).toBe(true)
+    expect(idsStarting(spec, 'roof_').every((id) => one.stands(id))).toBe(true)
     const two = breakParts(spec, pillarsOfOneWall(spec, columns, idsStarting(spec, 'wall_column_0_')))
     const down = panels.filter((id) => !two.stands(id))
     expect(down.length).toBeGreaterThan(0)

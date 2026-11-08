@@ -84,6 +84,15 @@ export interface WeaponRules {
     readonly placeFuseFrom: number
     /** The wire of a charge set down with the `wire` trigger that does not name one. */
     readonly tripwire: Required<ExplosiveTripwire>
+    /**
+     * What an impact fuze does when the round hits before it flew its arming distance: `detonate` (default: a launched round always goes off where
+     * it lands, however close) or `dud` (the real safety of the fuze: it does not go off and the host decides what the inert round does).
+     */
+    readonly unarmedImpact: 'detonate' | 'dud'
+    /** m/s: a launched impact-fuzed round blocked or stopped below this speed has come to rest on something and goes off; it never lies there live. */
+    readonly restSpeed: number
+    /** Seconds of flight after which a launched impact-fuzed round that hit nothing goes off by itself (the fuze's self-destruct). */
+    readonly selfDestructSeconds: number
   }
   /** Putting accessories on and taking them off. */
   readonly attachments: {

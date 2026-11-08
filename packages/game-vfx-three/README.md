@@ -29,6 +29,8 @@ vfx.play({ effect: 'm67', point: [0, 0.1, 0], seed: 7 }) // EffectSink: a handle
 
 // every frame: steps the world, redraws, then render with the shake around it
 vfx.update(dt)
+// ...the frame moves the things (the gun posed, the view turned); a flash played with `track` is put on this frame's muzzle
+vfx.present()
 const restore = vfx.applyCamera()
 gl.render(scene, camera)
 restore()

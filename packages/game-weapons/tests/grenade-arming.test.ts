@@ -16,6 +16,8 @@ const wallAt =
   }
 
 const arsenal = createArsenal({ rules: { faults: false, startSafe: false } })
+/** A game that keeps the real safety of the fuze: short of the arming distance an impact does not go off. */
+const dudArsenal = createArsenal({ rules: { faults: false, startSafe: false, explosives: { unarmedImpact: 'dud' } } })
 
 /** The arming distances of `count` shots of one launcher, each reloaded. */
 const armDistances = (weaponId: string, count: number): number[] => {
@@ -31,8 +33,8 @@ const armDistances = (weaponId: string, count: number): number[] => {
   return distances
 }
 
-const flyAt = (use: Use, wallZ: number): ExplosiveEvent[] => {
-  const body = arsenal.explosiveBody(use)
+const flyAt = (use: Use, wallZ: number, from = arsenal): ExplosiveEvent[] => {
+  const body = from.explosiveBody(use)
   if (!body) throw new Error('no explosive body')
   const events: ExplosiveEvent[] = []
   for (let t = 0; t < 5 && !body.done; t += FRAME) events.push(...body.step(FRAME, wallAt(wallZ)))
@@ -53,10 +55,17 @@ describe('40 mm grenade fuze (M406: arms 14 to 27 m from the muzzle, by the spin
     expect(Math.max(...spread) - Math.min(...spread)).toBeGreaterThan(6)
   })
 
-  it('is a dud on a wall 12 m away, whatever the shot sampled', () => {
+  it('with unarmedImpact dud it is a dud on a wall 12 m away, whatever the shot sampled', () => {
     for (const armDistance of [14, 20, 27]) {
       const use = { ...arsenal.create('m79').trigger(ORIGIN, AIM, 0, false).uses[0], armDistance } as Use
-      expect(flyAt(use, -12).map((event) => event.type)).toEqual(['impact', 'dud'])
+      expect(flyAt(use, -12, dudArsenal).map((event) => event.type)).toEqual(['impact', 'dud'])
+    }
+  })
+
+  it('by default it goes off on a wall 12 m away too, short of its arming distance', () => {
+    for (const armDistance of [14, 20, 27]) {
+      const use = { ...arsenal.create('m79').trigger(ORIGIN, AIM, 0, false).uses[0], armDistance } as Use
+      expect(flyAt(use, -12).map((event) => event.type)).toEqual(['impact', 'detonate'])
     }
   })
 
@@ -70,7 +79,7 @@ describe('40 mm grenade fuze (M406: arms 14 to 27 m from the muzzle, by the spin
   it('between 14 and 27 m it depends on the shot: armed past its own distance, a dud short of it', () => {
     const use = arsenal.create('m79').trigger(ORIGIN, AIM, 0, false).uses[0] as Use
     expect(flyAt({ ...use, armDistance: 16 } as Use, -20).at(-1)?.type).toBe('detonate')
-    expect(flyAt({ ...use, armDistance: 25 } as Use, -20).at(-1)?.type).toBe('dud')
+    expect(flyAt({ ...use, armDistance: 25 } as Use, -20, dudArsenal).at(-1)?.type).toBe('dud')
   })
 
   it('leaves the rockets at their launcher distance (10 m)', () => {

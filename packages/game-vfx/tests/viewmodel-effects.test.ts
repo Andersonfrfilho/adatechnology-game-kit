@@ -244,3 +244,40 @@ describe('the effects of the weapon in the hands', () => {
     expect(smokes).toBeLessThan(11)
   })
 })
+
+describe('a flash that rides on the muzzle (`track`)', () => {
+  it('keeps its cones, its core and its light on the muzzle as it moves and turns, and leaves the smoke in the air', () => {
+    const vfx = world()
+    let muzzle: [number, number, number] = [1, 1.5, -2]
+    let turn: Quaternion = LEVEL
+    expect(vfx.play('viewmodel_muzzle_flash', muzzle, { orientation: turn, seed: 3, values: { size: 1.2 }, track: () => ({ point: muzzle, orientation: turn }) })).not.toBeNull()
+    const flash = particles(vfx).filter((piece) => piece.additive)
+    const smoke = particles(vfx).filter((piece) => !piece.additive)
+    const placed = flash.map((piece) => [piece.x - muzzle[0], piece.y - muzzle[1], piece.z - muzzle[2]] as const)
+    const smokeStart = smoke.map((puff) => [puff.x, puff.y, puff.z] as const)
+    // the view turns and the kick lifts the gun: two frames later the muzzle is 30 cm away and turned
+    muzzle = [1.25, 1.62, -2.1]
+    turn = AIMED
+    for (let frame = 0; frame < 2; frame++) vfx.update(1 / 60)
+    flash.forEach((piece, index) => near([piece.x, piece.y, piece.z], turned(AIMED, placed[index]!).map((value, axis) => value + muzzle[axis]!), 6))
+    for (const piece of flash.filter((part) => !part.roll)) near(piece.frame, AIMED, 9)
+    const light = vfx.workshop().lights.lights.find((source) => source.intensity > 0)!
+    near([light.x, light.y, light.z], muzzle, 9)
+    // the smoke was thrown from where the muzzle was, and drifts in the air on its own
+    smoke.forEach((puff, index) => expect(Math.hypot(puff.x - smokeStart[index]![0], puff.y - smokeStart[index]![1], puff.z - smokeStart[index]![2])).toBeLessThan(0.05))
+  })
+
+  it('stays where it was last put once the muzzle is gone', () => {
+    const vfx = world()
+    let pose: { point: [number, number, number]; orientation: Quaternion } | null = { point: [0, 1, 0], orientation: LEVEL }
+    vfx.play('viewmodel_muzzle_flash', [0, 1, 0], { orientation: LEVEL, seed: 3, track: () => pose })
+    const core = particles(vfx).find((piece) => piece.shape === 'sphere' && piece.additive)!
+    pose = { point: [0.5, 1, 0], orientation: LEVEL }
+    vfx.update(1 / 60)
+    const lastPut = [core.x, core.y, core.z]
+    expect(lastPut[0]).toBeCloseTo(0.5, 9)
+    pose = null
+    vfx.update(1 / 60)
+    near([core.x, core.y, core.z], lastPut, 9)
+  })
+})

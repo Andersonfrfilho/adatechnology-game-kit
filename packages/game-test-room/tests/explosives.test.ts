@@ -31,6 +31,9 @@ const hostEventsOf = (room: TestRoom, type: HostEvent['type']): HostEvent[] => {
 /** The Claymore as a charge for the remote detonator, to try the cone of the blast without the wire. */
 const remoteClaymore = (): ReturnType<typeof createArsenal> => createArsenal({ patch: { explosives: { claymore: { triggers: ['remote'] } } }, seed: 1 })
 
+/** A game that keeps the real safety of the fuze: an impact before the arming distance does not go off. */
+const dudArsenal = (): ReturnType<typeof createArsenal> => createArsenal({ rules: { explosives: { unarmedImpact: 'dud' } }, seed: 1 })
+
 const equip = (room: TestRoom, weapon: string): void => {
   room.setTool(weapon)
   run(room, 0.5)
@@ -71,8 +74,20 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     expect(room.log.entries({ type: 'explode' })).toHaveLength(1)
   })
 
-  it('a rocket that hits before its arming distance is a dud, and one that flies far enough explodes on impact', () => {
+  it('a rocket that hits before its arming distance still goes off where it hits (it never lies there live)', () => {
     const room = makeRoom()
+    const explosions = explosionsOf(room)
+    equip(room, 'm72_law')
+    room.spawn('chair', [0, 0, 1])
+    room.look([0, 1.7, 5], [0, 0.4, 1])
+    room.use()
+    run(room, 1)
+    expect(room.log.entries({ type: 'dud' })).toHaveLength(0)
+    expect(explosions).toMatchObject([{ cause: 'impact' }])
+  })
+
+  it('with the fuze safety on (unarmedImpact dud), a rocket that hits before its arming distance is a dud, and one that flies far enough explodes on impact', () => {
+    const room = makeRoom({ arsenal: dudArsenal() })
     const explosions = explosionsOf(room)
     equip(room, 'm72_law')
     room.look([0, 1.7, 5], [0, 1.7, 0])
@@ -92,7 +107,7 @@ describe('explosives of the room go through the rule of game-weapons', () => {
   })
 
   it('a dud does not vanish where it hits: it stops on what it hit, falls and lies there, and never goes off', () => {
-    const room = makeRoom()
+    const room = makeRoom({ arsenal: dudArsenal() })
     const explosions = explosionsOf(room)
     equip(room, 'm72_law')
     room.spawn('chair', [0, 0, 1])

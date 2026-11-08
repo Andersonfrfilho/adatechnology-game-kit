@@ -37,6 +37,9 @@ jobs:
       # which browser suites the pre-push runs for a diff (tools/gpu/select-suites.mjs): pure Node, no page and no GPU
       - run: pnpm --filter @adatechnology/gpu-tools test
 
+      # what the pre-push checks and caches for a diff (tools/pre-push/plan.mjs): pure Node, no build
+      - run: pnpm --filter @adatechnology/pre-push-tool test
+
   # The workspace is built once here and every job that needs it downloads the dist folders (workspace packages resolve each other through
   # dist), instead of each job spending two minutes on its own `pnpm build`.
   build:

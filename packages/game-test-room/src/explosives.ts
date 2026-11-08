@@ -3,7 +3,7 @@ import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import type { BlastOptions, DestructionWorld, HitResult, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
-import { ExplosiveBody, backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
+import { ExplosiveBody, backblastEffect, blastEffect, createExplosiveBody, sweepGround, tripwireSegment } from '@adatechnology/game-weapons'
 import type { Arsenal, Detonation, SurfaceProbe, Use } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
@@ -39,6 +39,8 @@ const DUD_REBOUND = 0.15
 const DUD_MAX_REBOUND = 2
 /** Metres a dud is put back out of the surface it hit, along the way it came, so it does not start inside it. */
 const DUD_BACKOFF = 0.03
+/** Metres above the ground a flying round counts as touching it (about its radius). */
+const GROUND_CLEARANCE = 0.045
 
 interface Projectile {
   mesh: THREE_NS.Object3D
@@ -345,12 +347,9 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     const direction: Vec3 = [dx / length, dy / length, dz / length]
     const ray = context.withoutHeld(() => world.raycast(from, direction, length + 0.03))
     let best: { point: Vec3; normal: Vec3; ground: boolean; at: number } | null = ray && ray.distance <= length + 0.03 ? { point: ray.point, normal: ray.normal, ground: ray.normal[1] > 0.7, at: ray.distance } : null
-    const floor = context.groundAt(to[0], to[2]) + 0.045
-    if (to[1] < floor) {
-      const point: Vec3 = [to[0], floor, to[2]]
-      const at = Math.hypot(point[0] - from[0], point[1] - from[1], point[2] - from[2])
-      if (!best || at < best.at) best = { point, normal: [0, 1, 0], ground: true, at }
-    }
+    // the ground is read along the whole step, not only at its end: a fast round crossing a lot, a heap or a crater rim meets it
+    const ground = sweepGround(from, to, context.groundAt, { clearance: GROUND_CLEARANCE })
+    if (ground && (!best || ground.distance < best.at)) best = { point: ground.point, normal: ground.normal, ground: true, at: ground.distance }
     return best ? { point: best.point, normal: best.normal, ground: best.ground } : null
   }
 

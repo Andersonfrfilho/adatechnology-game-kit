@@ -128,6 +128,11 @@ export interface VfxWorld {
    * (`workshop()`); `null` when the id is unknown. Returns a handle for `stop`.
    */
   play(id: string, point: Vec3Like, options?: PlayOptions): number | null
+  /**
+   * Puts what rides on a thing (an effect played with `track`: a muzzle flash) where the thing is now. `update` does it as it steps; call this too after the frame moved
+   * the things (the gun posed, the view turned) and before drawing, so the flash is drawn on the muzzle of this frame and not of the last. True when something rides.
+   */
+  follow(): boolean
   /** The Workshop's pools (sprites, streaks, debris, decals, rings, lights, screen): what the renderer draws for `play`. Made on first use. */
   workshop(): WorkshopEngine
   /** The Workshop engine if something already made it (`play`, `workshop()`); never creates it. */
@@ -296,6 +301,12 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       if (!(id in effects)) return null
       const seed = playOptions.seed ?? (randomMode === 'shared' ? undefined : Math.imul(++handles.events, AUTO_SEED) + (options.seed ?? 0))
       return effectPlayer().play(id, [point[0], point[1], point[2]], { ...playOptions, ...(seed !== undefined ? { seed } : {}) })
+    },
+    follow() {
+      if (!engine || !player?.retrack()) return false
+      engine.meshes.follow()
+      engine.lights.follow()
+      return true
     },
     burst: (kind, point, normal, count, speed, spriteOptions) => spriteSystem.burst(kind, point, normal, count, speed, spriteOptions),
     spawn: (kind, point, velocity, spriteOptions) => spriteSystem.spawn(kind, point, velocity, spriteOptions),

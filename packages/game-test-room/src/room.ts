@@ -3701,6 +3701,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
       }
     }
+    // the gun is posed and the view turned for this frame: a flash that rides on a muzzle is drawn on this frame's muzzle
+    vfx.present()
     flush()
   }
 
