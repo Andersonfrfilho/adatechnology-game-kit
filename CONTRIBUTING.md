@@ -65,6 +65,8 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
   - GPU (`tools/gpu/browser-checks.mjs`, `gpu.lock`, the lock of the daily run): the browser suites of the example areas the branch changes, on the
     charger only.
   - `PRE_PUSH_NO_LOCK=1` runs without waiting for the other pushes.
+  - git opens the connection to GitHub before the hook runs, and a long hook lets it drop (`error 141`). Run `pnpm verify:push` first: the same
+    checks with no push, recorded for the commit; `git push` of that same tree on the same `origin/main` then skips the checks and just sends.
 - Either hook can be skipped once with `--no-verify`.
 
 ### GPU daily run

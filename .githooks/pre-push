@@ -29,5 +29,17 @@ locked() {
   return "$status"
 }
 
+# git opens the connection to GitHub before this hook runs, and a long wait here (the queue, the browser suites) lets it drop ("error 141"). So
+# the checks can run before the push: `pnpm verify:push` runs this same script with no push, and records the commit it passed for; the push of
+# that same tree, on the same origin/main, then skips straight to sending.
+tree=$(git rev-parse 'HEAD^{tree}')
+base=$(git merge-base HEAD origin/main 2>/dev/null || echo none)
+stamp="$locks/pre-push/verified/$tree-$base"
+if [ -z "$PRE_PUSH_ALL" ] && [ -z "$(git status --porcelain --untracked-files=no)" ] && [ -f "$stamp" ]; then
+  echo "pre-push: this commit already passed pnpm verify:push on the same origin/main, pushing"
+  exit 0
+fi
+
 locked cpu.lock node tools/pre-push/checks.mjs
 locked gpu.lock node tools/gpu/browser-checks.mjs
+mkdir -p "$(dirname "$stamp")" && touch "$stamp"
