@@ -1,3 +1,5 @@
+import { carriedPoint } from './carrier'
+import type { Carried } from './carrier'
 import type { Vec3Tuple, WorkshopContext } from './types'
 
 const RING_CAPACITY = 120
@@ -64,6 +66,8 @@ export interface FlashLight {
   intensity: number
   /** Holds `peak` until `duration` is over. */
   steady: boolean
+  /** Rides on the effect's carrier while it burns (a muzzle flash on the gun in the hands). */
+  carried?: Carried | undefined
 }
 
 export interface FireLightSlot {
@@ -88,10 +92,10 @@ export class FlashLightPool {
     return this.lights.filter((light) => light.intensity > 0).length
   }
 
-  flash(point: Vec3Tuple, color: number, intensity: number, duration: number, distance?: number, force?: boolean | 'boom', steady?: boolean): void {
+  flash(point: Vec3Tuple, color: number, intensity: number, duration: number, distance?: number, force?: boolean | 'boom', steady?: boolean): FlashLight | undefined {
     const { level } = this.context.quality
-    if (level >= 1 && !force) return
-    if (level >= 2 && force !== 'boom') return
+    if (level >= 1 && !force) return undefined
+    if (level >= 2 && force !== 'boom') return undefined
     const light = this.lights[this.next++ % LIGHT_CAPACITY]!
     light.x = point[0]
     light.y = point[1]
@@ -103,11 +107,18 @@ export class FlashLightPool {
     light.t = 0
     light.steady = steady === true
     light.intensity = intensity
+    light.carried = undefined
+    return light
   }
 
   clear(): void {
     for (const light of this.lights) light.intensity = 0
     for (const light of this.fire) light.intensity = 0
+  }
+
+  /** Puts every carried light that burns where its carrier is now. */
+  follow(): void {
+    for (const light of this.lights) if (light.intensity > 0 && light.carried) [light.x, light.y, light.z] = carriedPoint(light.carried)
   }
 
   update(dt: number): void {
@@ -116,6 +127,7 @@ export class FlashLightPool {
       light.t += dt
       const age = light.t / light.duration
       light.intensity = age >= 1 ? 0 : light.steady ? light.peak : light.peak * (1 - age) * (1 - age)
+      if (light.carried) [light.x, light.y, light.z] = carriedPoint(light.carried)
     }
   }
 }

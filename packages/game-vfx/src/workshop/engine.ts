@@ -3,6 +3,7 @@ import { PROFILES } from '../budget'
 import type { RandomStream } from '../random'
 import { createScreenState, resetScreenState, updateScreen } from '../screen'
 import type { ScreenState, VfxProfile } from '../types'
+import type { Carrier } from './carrier'
 import { DebrisPool } from './debris'
 import { DecalPool } from './decals'
 import { RainField } from './rain'
@@ -51,6 +52,8 @@ export interface Placement {
   readonly anchor: Vec3Tuple
   readonly yaw: number
   readonly orientation?: Quaternion
+  /** The live pose the effect rides on while it lives (`origin` and `orientation` move with it): its grouped pieces and its lights follow it. */
+  readonly carrier?: Carrier
 }
 
 /** The vector turned by the unit quaternion (three.js's `applyQuaternion`). */
@@ -144,6 +147,16 @@ export class WorkshopEngine {
     return [origin[0] + cos * x + sin * z, origin[1] + point[1] - anchor[1], origin[2] - sin * x + cos * z]
   }
 
+  /** A point of the recipe's space from the anchor, turned by the placement's yaw when it has no orientation (the carrier turns the rest). */
+  private local(point: Vec3Tuple): Vec3Tuple {
+    const placement = this.placement
+    if (!placement) return point
+    const offset: Vec3Tuple = [point[0] - placement.anchor[0], point[1] - placement.anchor[1], point[2] - placement.anchor[2]]
+    if (placement.carrier?.orientation) return offset
+    const turned = this.place(point)
+    return [turned[0] - placement.origin[0], turned[1] - placement.origin[1], turned[2] - placement.origin[2]]
+  }
+
   /** A direction or velocity of the recipe's space in the world. */
   turn(vector: Vec3Tuple): Vec3Tuple {
     const placement = this.placement
@@ -189,7 +202,8 @@ export class WorkshopEngine {
     this.context.trace?.('mesh', [options])
     // a piece of a group (`at`, `roll`) is turned with the placement; a free one (smoke, a flame) keeps its own turn in the world
     const grouped = recipe.at !== undefined || recipe.roll !== undefined
-    return this.meshes.spawn(options, placement && grouped ? (placement.orientation ?? ([0, Math.sin(placement.yaw / 2), 0, Math.cos(placement.yaw / 2)] as const)) : undefined)
+    const carried = placement?.carrier && grouped ? { carrier: placement.carrier, local: this.local(recipe.p) } : undefined
+    return this.meshes.spawn(options, placement && grouped ? (placement.orientation ?? ([0, Math.sin(placement.yaw / 2), 0, Math.cos(placement.yaw / 2)] as const)) : undefined, carried)
   }
 
   debrisPiece(recipe: DebrisSpawn): void {
@@ -217,9 +231,11 @@ export class WorkshopEngine {
 
   /** `steady` (a seventh number): the light holds its intensity for its duration and goes out, where the Workshop's fades with the square of its age. */
   flash(recipe: readonly [Vec3Tuple, number, number, number, number?, (boolean | 'boom')?, boolean?]): void {
-    const args = this.placement ? ([this.place(recipe[0]), recipe[1], recipe[2], recipe[3], recipe[4], recipe[5], recipe[6]] as const) : recipe
+    const placement = this.placement
+    const args = placement ? ([this.place(recipe[0]), recipe[1], recipe[2], recipe[3], recipe[4], recipe[5], recipe[6]] as const) : recipe
     this.context.trace?.('flash', args.slice(0, 6))
-    this.lights.flash(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
+    const light = this.lights.flash(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
+    if (light && placement?.carrier) light.carried = { carrier: placement.carrier, local: this.local(recipe[0]) }
   }
 
   /** `fireLight` (W400): sways with the clock and flickers with one draw. */
