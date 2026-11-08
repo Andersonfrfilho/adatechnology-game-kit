@@ -1,5 +1,27 @@
 # @adatechnology/game-test-room
 
+## 0.35.0
+
+### Minor Changes
+
+- 91bbed8: Water splashes by weapon and by charge: `createWaterEffects` (game-vfx) with a profile per class of round (pistol, rifle, battle rifle, sniper, buckshot, slug...) and per explosive (TNT and kind), ricochet off grazing shots, trails of bubbles, columns, domes, shock rings, waves that push what floats, rain of drops, mist and foam, all with lives and pool limits; `createWaterEffectsLayer` (game-vfx-three) draws them instanced. A `pond` ground 1.4 m deep (game-terrain) in the ground area; impact-fuzed rounds go off on the water and thrown charges sink (`ExplosiveBody.isTriggeredBy`); the test room splashes every shot where it crosses water, skips grazing ones off it, draws blasts under or over water (no fireball under it) and adds `blastAt(explosive, point)`.
+
+### Patch Changes
+
+- 175efec: Nothing stays in the air after a blast: a holder of an area (shelf, counter, stand) holds what lay on it only where it is still drawn, and asleep fragments look at the floor under them again.
+- Updated dependencies [175efec]
+- Updated dependencies [f99694c]
+- Updated dependencies [29abbc1]
+- Updated dependencies [91bbed8]
+  - @adatechnology/game-destruction-three@0.24.2
+  - @adatechnology/game-destruction@0.25.0
+  - @adatechnology/game-vfx@0.13.0
+  - @adatechnology/game-vfx-three@0.10.0
+  - @adatechnology/game-terrain@0.8.0
+  - @adatechnology/game-terrain-three@0.6.0
+  - @adatechnology/game-weapons@0.12.0
+  - @adatechnology/game-fluids-three@0.4.23
+
 ## 0.34.1
 
 ### Patch Changes

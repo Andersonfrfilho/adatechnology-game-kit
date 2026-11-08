@@ -1,5 +1,15 @@
 # @adatechnology/game-destruction
 
+## 0.25.0
+
+### Minor Changes
+
+- f99694c: Tiro em pilar ou viga de concreto armado só tira concreto onde bate. A vida do pilar não decide mais o concreto: os tiros desgastam o bloco onde batem e nunca o deixam virar uma gaiola limpa de uma vez. Cerca de três tiros de fuzil no mesmo lugar soltam um bloco ali (antes eram seis), e a ferragem só aparece onde o concreto saiu, e não mais por baixo de uma cratera rasa, onde aparecia solta sobre a superfície. As pedras presas nas barras ficaram mais espaçadas, e só se apoiam numa face de concreto que ainda existe.
+
+### Patch Changes
+
+- 29abbc1: Uma explosão só solta o acabamento preso numa parte (rodapé, placa de calçada: o que não carrega nada) perto dela. Antes, uma granada no pé de um pilar soltava todos os rodapés e placas ao longo dos 10 m da parede, porque a explosão gastava todas as juntas da parede pelo que chegava ao ponto mais perto. As juntas estruturais continuam como antes.
+
 ## 0.24.0
 
 ### Minor Changes

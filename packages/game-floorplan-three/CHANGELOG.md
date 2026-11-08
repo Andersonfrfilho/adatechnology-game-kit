@@ -1,5 +1,15 @@
 # @adatechnology/game-floorplan-three
 
+## 0.13.2
+
+### Patch Changes
+
+- f99694c: Tiro em pilar ou viga de concreto armado só tira concreto onde bate. A vida do pilar não decide mais o concreto: os tiros desgastam o bloco onde batem e nunca o deixam virar uma gaiola limpa de uma vez. Cerca de três tiros de fuzil no mesmo lugar soltam um bloco ali (antes eram seis), e a ferragem só aparece onde o concreto saiu, e não mais por baixo de uma cratera rasa, onde aparecia solta sobre a superfície. As pedras presas nas barras ficaram mais espaçadas, e só se apoiam numa face de concreto que ainda existe.
+- Updated dependencies [f99694c]
+- Updated dependencies [29abbc1]
+  - @adatechnology/game-destruction@0.25.0
+  - @adatechnology/game-floorplan-structure@2.2.3
+
 ## 0.13.1
 
 ### Patch Changes

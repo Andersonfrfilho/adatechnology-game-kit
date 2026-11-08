@@ -1,5 +1,17 @@
 # @adatechnology/game-destruction-three
 
+## 0.24.2
+
+### Patch Changes
+
+- 175efec: Nothing stays in the air after a blast: a holder of an area (shelf, counter, stand) holds what lay on it only where it is still drawn, and asleep fragments look at the floor under them again.
+- Updated dependencies [f99694c]
+- Updated dependencies [29abbc1]
+- Updated dependencies [91bbed8]
+  - @adatechnology/game-destruction@0.25.0
+  - @adatechnology/game-vfx@0.13.0
+  - @adatechnology/game-vfx-three@0.10.0
+
 ## 0.24.1
 
 ### Patch Changes

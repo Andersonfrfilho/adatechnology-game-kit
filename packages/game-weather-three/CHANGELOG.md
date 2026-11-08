@@ -1,5 +1,12 @@
 # @adatechnology/game-weather-three
 
+## 0.5.15
+
+### Patch Changes
+
+- Updated dependencies [91bbed8]
+  - @adatechnology/game-vfx@0.13.0
+
 ## 0.5.14
 
 ### Patch Changes
