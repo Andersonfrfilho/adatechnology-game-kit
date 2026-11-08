@@ -154,16 +154,42 @@ describe('fracture', () => {
     expect(renderer.stats().fragments).toBe(0)
   })
 
+  it('lands rubble on what is still built under it (a slab), not only on the terrain', () => {
+    const { scene, world, renderer } = setup()
+    // a slab whose top is at 2.8 m over x in [-2, 2]: the world casts rays down onto it
+    ;(world as unknown as { raycast: (o: number[], d: number[], max: number) => unknown }).raycast = (o, _d, max) =>
+      Math.abs(o[0]!) <= 2 && o[1]! > 2.8 && o[1]! - 2.8 <= max ? { object: 'house', part: 'slab', point: [o[0], 2.8, o[2]], normal: [0, 1, 0], distance: o[1]! - 2.8 } : null
+    world.addObject('o1', [partState('top', 'ceramic')])
+    world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'crumble', fragments: [frag('tile', { center: [0, 4, 0], velocity: [0, 0, 0], size: [0.3, 0.25, 0.018] }), frag('out', { center: [3, 4, 0], velocity: [0, 0, 0], size: [0.3, 0.25, 0.018] })], point: [0, 4, 0] })
+    for (let i = 0; i < 240; i++) renderer.update(1 / 60)
+    const ys: number[] = []
+    scene.traverse((o) => { if (o.name === 'fragment') ys.push(o.position.y) })
+    ys.sort((a, b) => a - b)
+    // the tile over the slab rests on it; the one past its edge falls to the ground
+    expect(ys[0]).toBeLessThan(0.3)
+    expect(ys[1]).toBeGreaterThan(2.79)
+    expect(ys[1]).toBeLessThan(3)
+  })
+
   it('respects maxFragments and fades fragments after fragmentLife', () => {
     const { world, renderer } = setup({ maxFragments: 5, fragmentLife: 1 })
     world.addObject('o1', [partState('top', 'glass')])
-    const fragments = Array.from({ length: 12 }, (_, i) => frag(`f${i}`, { velocity: [0, 0, 0] }))
+    // small shards: a big piece is debris that stays whatever the rule (it has a body), so the fading is measured on chips
+    const fragments = Array.from({ length: 12 }, (_, i) => frag(`f${i}`, { velocity: [0, 0, 0], size: [0.06, 0.04, 0.004] }))
     world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'shatter', fragments, point: [0, 1, 0] })
     renderer.update(0.016)
     for (let i = 0; i < 60; i++) renderer.update(1 / 60) // shrink-away of the 7 over budget
     expect(renderer.stats().fragments).toBeLessThanOrEqual(5)
     for (let i = 0; i < 400; i++) renderer.update(1 / 60)
     expect(renderer.stats().fragments).toBe(0)
+  })
+
+  it('keeps a big shard (a slab of roof tile, a pane of glass) as debris with a body, past the fragment life', () => {
+    const { world, renderer } = setup({ fragmentLife: 1 })
+    world.addObject('o1', [partState('top', 'glass')])
+    world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'shatter', fragments: [frag('slab', { velocity: [0, 0, 0], size: [0.3, 0.25, 0.012] })], point: [0, 1, 0] })
+    for (let i = 0; i < 600; i++) renderer.update(1 / 60)
+    expect(renderer.stats().fragments).toBe(1)
   })
 
   it('gives each fragment its own resting time by a rule: big chunks stay as rubble, chips go', () => {

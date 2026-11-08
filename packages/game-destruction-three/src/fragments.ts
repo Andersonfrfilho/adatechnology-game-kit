@@ -9,6 +9,8 @@ import type { LooseBody } from './types'
 
 interface Live {
   mesh: THREE_NS.Mesh
+  /** The surface under the fragment (ground or what is built), and where it was measured: measured again once the fragment moves off that spot. */
+  floor: { x: number; z: number; y: number } | null
   home: string
   vel: THREE_NS.Vector3
   ang: THREE_NS.Vector3
@@ -43,6 +45,11 @@ export interface FragmentSystemOptions {
   life: number | FragmentLifeRule
   /** How a material comes apart (`MaterialDef.splitForm`): MDF lumps and plywood veneer get shapes of their own. Default: none. */
   formOf?: (materialId: string) => SplitForm | undefined
+  /**
+   * The top of whatever is under (x, z) below height y: the ground, or a slab, a wall, a piece of furniture a piece of rubble lands on. Default: the
+   * ground (`groundAt`).
+   */
+  surfaceAt?: (x: number, y: number, z: number) => number
   /** Whether a material crumbles (`MaterialDef.fracture` 'crumble': brick, block, concrete, plaster): its chunks are drawn broken, not as cut boxes. */
   crumbles?: (materialId: string) => boolean
 }
@@ -58,6 +65,8 @@ const BUILDERS: Record<Exclude<SharedShape, 'shard'>, (THREE: typeof THREE_NS, s
 /** The shared shapes a fragment can take besides the box: glass shards, wood splinters, MDF lumps, plywood veneer and the torn stub of a broken board. */
 type SharedShape = 'shard' | 'sliver' | 'lump' | 'veneer' | 'board' | 'rubble'
 
+/** How far (m) a fragment moves before what is under it is measured again. */
+const FLOOR_REMEASURE = 0.5
 /** Thickest scrap that flies as a sheet (m), its air drag (1/s) and how hard it sways (m/s²). */
 const SHEET_MAX = 0.004
 const SHEET_AIR = 2.5
@@ -274,6 +283,7 @@ export class FragmentSystem {
     this.o.scene.add(mesh)
     const live: Live = {
       mesh,
+      floor: null,
       home,
       vel: new this.THREE.Vector3(f.velocity[0], f.velocity[1], f.velocity[2]),
       ang: new this.THREE.Vector3(f.angularVelocity[0], f.angularVelocity[1], f.angularVelocity[2]),
@@ -290,7 +300,8 @@ export class FragmentSystem {
       born: this.tick,
       life: lasting ? 0 : Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
     }
-    if (lasting || (f.shape !== 'shard' && isBig(f.size))) {
+    // a big piece stays where it fell, whatever its shape: a slab of a roof tile is debris as much as a chunk of brick is
+    if (lasting || isBig(f.size)) {
       live.body = {
         mass: f.mass,
         push: (x, z) => {
@@ -390,8 +401,19 @@ export class FragmentSystem {
       if (!f.asleep || f.dying) continue
       const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
       const ext = Math.abs(e[1]) * f.half.x + Math.abs(e[5]) * f.half.y + Math.abs(e[9]) * f.half.z
-      if (f.mesh.position.y - ext > this.o.groundAt(f.mesh.position.x, f.mesh.position.z) + SUPPORT_GAP) this.rouse(f)
+      if (f.mesh.position.y - ext > this.floorUnder(f) + SUPPORT_GAP) this.rouse(f)
     }
+  }
+
+  /** What a fragment lands on: measured where it is, and again only once it moved `FLOOR_REMEASURE` m off that spot (a ray down is not free). */
+  private floorUnder(f: Live): number {
+    const p = f.mesh.position
+    if (!this.o.surfaceAt) return this.o.groundAt(p.x, p.z)
+    const at = f.floor
+    if (!at || Math.abs(at.x - p.x) > FLOOR_REMEASURE || Math.abs(at.z - p.z) > FLOOR_REMEASURE || p.y < at.y - FLOOR_REMEASURE) {
+      f.floor = { x: p.x, z: p.z, y: this.o.surfaceAt(p.x, p.y, p.z) }
+    }
+    return f.floor!.y
   }
 
   private step(f: Live, dt: number, g: number): void {
@@ -409,7 +431,7 @@ export class FragmentSystem {
     const h = f.half
     const sc = f.dying ? f.fade : 1
     const ext = (Math.abs(e[1]) * h.x + Math.abs(e[5]) * h.y + Math.abs(e[9]) * h.z) * sc
-    const gy = this.o.groundAt(mesh.position.x, mesh.position.z)
+    const gy = this.floorUnder(f)
     let contact = false
     if (mesh.position.y - ext < gy) {
       contact = true
