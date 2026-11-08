@@ -157,13 +157,22 @@ describe('fracture', () => {
   it('respects maxFragments and fades fragments after fragmentLife', () => {
     const { world, renderer } = setup({ maxFragments: 5, fragmentLife: 1 })
     world.addObject('o1', [partState('top', 'glass')])
-    const fragments = Array.from({ length: 12 }, (_, i) => frag(`f${i}`, { velocity: [0, 0, 0] }))
+    // small shards: a big piece is debris that stays whatever the rule (it has a body), so the fading is measured on chips
+    const fragments = Array.from({ length: 12 }, (_, i) => frag(`f${i}`, { velocity: [0, 0, 0], size: [0.06, 0.04, 0.004] }))
     world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'shatter', fragments, point: [0, 1, 0] })
     renderer.update(0.016)
     for (let i = 0; i < 60; i++) renderer.update(1 / 60) // shrink-away of the 7 over budget
     expect(renderer.stats().fragments).toBeLessThanOrEqual(5)
     for (let i = 0; i < 400; i++) renderer.update(1 / 60)
     expect(renderer.stats().fragments).toBe(0)
+  })
+
+  it('keeps a big shard (a slab of roof tile, a pane of glass) as debris with a body, past the fragment life', () => {
+    const { world, renderer } = setup({ fragmentLife: 1 })
+    world.addObject('o1', [partState('top', 'glass')])
+    world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'shatter', fragments: [frag('slab', { velocity: [0, 0, 0], size: [0.3, 0.25, 0.012] })], point: [0, 1, 0] })
+    for (let i = 0; i < 600; i++) renderer.update(1 / 60)
+    expect(renderer.stats().fragments).toBe(1)
   })
 
   it('gives each fragment its own resting time by a rule: big chunks stay as rubble, chips go', () => {

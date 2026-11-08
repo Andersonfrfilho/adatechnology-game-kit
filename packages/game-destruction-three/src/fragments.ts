@@ -290,7 +290,8 @@ export class FragmentSystem {
       born: this.tick,
       life: lasting ? 0 : Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
     }
-    if (lasting || (f.shape !== 'shard' && isBig(f.size))) {
+    // a big piece stays where it fell, whatever its shape: a slab of a roof tile is debris as much as a chunk of brick is
+    if (lasting || isBig(f.size)) {
       live.body = {
         mass: f.mass,
         push: (x, z) => {

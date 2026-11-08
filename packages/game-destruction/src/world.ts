@@ -149,6 +149,8 @@ const BREACH_GRID_CAP = 4096
 const MASONRY_CRUMBLE_SPEED = 0.6
 /** The pieces a fallen roof of tiles breaks into: a roof of 70 m² comes down as handfuls of a few tiles, not as plates. */
 const TILE_CLUMPS = 160
+/** Thickness (m) of a clay or concrete roof tile. */
+const TILE_THICKNESS = 0.018
 /** The most units of masonry a failed panel leaves against a pillar (a course), over the ground beam and under the bond beam (a column of units). */
 const PANEL_EDGE_PILLAR = 2
 const PANEL_EDGE_BASE = 4
@@ -1565,10 +1567,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
     const cells = grid.filter((cell, i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius))
     const { c } = partXf(o, p)
-    const fragments = cells.length > 0 ? [
-      ...cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), isTiledCover(p) ? TILE_CLUMPS : unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true),
-      ...plasterFlakes(o, p, cells, vec.add(c, [0, 1, 0]), MASONRY_CRUMBLE_SPEED, 'mp_'),
-    ] : []
+    const tiles = isTiledCover(p)
+    const pieces = cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), tiles ? TILE_CLUMPS : unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true)
+    // a roof's part is the box around its slope: its tiles are thin plates, not posts as tall as the rise
+    const fragments = cells.length === 0 ? [] : tiles
+      ? pieces.map((f): Fragment => ({ ...f, shape: 'shard', size: f.size.map((x, k) => (k === p.thin ? Math.min(x, TILE_THICKNESS) : x)) as Vec3 }))
+      : [...pieces, ...plasterFlakes(o, p, cells, vec.add(c, [0, 1, 0]), MASONRY_CRUMBLE_SPEED, 'mp_')]
     p.st.status = 'broken'
     p.st.hp = 0
     p.st.mass = 0
@@ -3334,6 +3338,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     if (!force && giveAtCut(o, p, src)) return
+    // a roof of loose tiles breaks into the tiles it is laid of, a handful at a time, not into a few plates of the whole pane
+    if (!force && isTiledCover(p)) {
+      crumbleMasonry(o, p, src)
+      return
+    }
     const ex = p.spec.explodes
     const style = force ?? (p.snap ? 'snap' : p.mat.fracture === 'none' ? 'snap' : p.mat.fracture)
     const { c, q } = partXf(o, p)

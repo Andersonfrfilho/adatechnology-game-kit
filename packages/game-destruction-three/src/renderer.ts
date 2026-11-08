@@ -1267,7 +1267,9 @@ class Renderer implements DestructionRenderer {
 
   /** Current colour of the part's first mesh (char included), or null. */
   private partColor(pv: PartVis, def: MaterialDef | undefined): number | null {
-    const mv = pv.meshes[0]
+    // the colour of what most of the part is drawn with (a roof's tiles, not the strip of plaster drawn with it first)
+    const size = (m: MeshVis): number => (m.range ? m.range[1] - m.range[0] : (m.mesh.geometry.getAttribute('position')?.count ?? 0))
+    const mv = pv.meshes.reduce<MeshVis | undefined>((best, m) => (!best || size(m) > size(best) ? m : best), undefined)
     if (!mv) return null
     const mat = materialsOf(mv.mesh.material)[0] as THREE_NS.MeshStandardMaterial | undefined
     const c = mat?.color
