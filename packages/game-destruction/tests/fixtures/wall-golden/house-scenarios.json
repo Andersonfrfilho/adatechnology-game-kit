@@ -871,23 +871,48 @@
    }
   },
   {
+   "type": "fracture",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "wall_back",
+    "style": "crumble",
+    "fragments": {
+     "count": 115,
+     "mass": 2586.6206,
+     "marks": 0,
+     "first": {
+      "center": [
+       -1.8475,
+       0.2125,
+       -1.8
+      ],
+      "size": [
+       0.805,
+       0.225,
+       0.13
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "wall_back",
+    "kind": "dust",
+    "count": 20
+   }
+  },
+  {
    "type": "stage",
    "data": {
     "scenario": "two_pillars",
     "time": 0,
     "part": "wall_back",
     "stage": 3
-   }
-  },
-  {
-   "type": "collapse",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 0,
-    "parts": [
-     "wall_back"
-    ],
-    "mass": 2583
    }
   },
   {
@@ -4817,13 +4842,13 @@
      "marks": 0,
      "first": {
       "center": [
-       -2.4,
-       0.0928,
+       -2.4713,
+       0.1159,
        1.8
       ],
       "size": [
-       0.3,
-       0.1856,
+       0.1575,
+       0.2318,
        0.3
       ]
      }
@@ -4906,12 +4931,12 @@
      "first": {
       "center": [
        2.4,
-       0.0533,
+       0.0613,
        1.8
       ],
       "size": [
        0.3,
-       0.1066,
+       0.1227,
        0.3
       ]
      }
@@ -4987,11 +5012,11 @@
     "time": 8.3,
     "part": "f_c2",
     "at": [
-     -2.518,
-     -0.25,
-     2.2
+     -2.3723,
+     0,
+     1.8799
     ],
-    "rays": 5,
+    "rays": 7,
     "length": 0.1668
    }
   },
@@ -5044,9 +5069,9 @@
     "time": 8.3,
     "part": "f_c3",
     "at": [
-     2.1661,
-     0,
-     1.7888
+     2.7075,
+     -0.0947,
+     1.4
     ],
     "rays": 9,
     "length": 0.1668
@@ -5211,11 +5236,11 @@
     "time": 8.9,
     "part": "f_c2",
     "at": [
-     -2.1292,
-     -0.3,
-     1.6791
+     -2,
+     -0.2163,
+     1.4432
     ],
-    "rays": 7,
+    "rays": 9,
     "length": 0.1668
    }
   },
@@ -5268,11 +5293,11 @@
     "time": 8.9,
     "part": "f_c3",
     "at": [
-     2.5294,
+     2.6385,
      0,
-     1.7179
+     1.926
     ],
-    "rays": 7,
+    "rays": 5,
     "length": 0.1668
    }
   },
@@ -5435,9 +5460,9 @@
     "time": 9.5,
     "part": "f_c2",
     "at": [
-     -2.5996,
+     -2.3559,
      -0.3,
-     2.1149
+     2.0559
     ],
     "rays": 7,
     "length": 0.1668
@@ -5492,11 +5517,11 @@
     "time": 9.5,
     "part": "f_c3",
     "at": [
-     2.4808,
-     0,
-     1.7946
+     2.3342,
+     -0.3,
+     1.8979
     ],
-    "rays": 5,
+    "rays": 8,
     "length": 0.1668
    }
   },
@@ -5735,23 +5760,48 @@
    }
   },
   {
+   "type": "fracture",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "wall_front",
+    "style": "crumble",
+    "fragments": {
+     "count": 115,
+     "mass": 2586.3723,
+     "marks": 0,
+     "first": {
+      "center": [
+       -1.8475,
+       0.2125,
+       1.8
+      ],
+      "size": [
+       0.805,
+       0.225,
+       0.13
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "wall_front",
+    "kind": "dust",
+    "count": 20
+   }
+  },
+  {
    "type": "stage",
    "data": {
     "scenario": "two_pillars",
     "time": 9.8,
     "part": "wall_front",
     "stage": 3
-   }
-  },
-  {
-   "type": "collapse",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "parts": [
-     "wall_front"
-    ],
-    "mass": 2583
    }
   },
   {
