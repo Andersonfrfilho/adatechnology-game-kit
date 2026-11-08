@@ -62,6 +62,10 @@ const STATIC_REFRESH = 0.5
  */
 const STATIC_REFRESH_SLICE_MS = 1
 /** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
+/** Rays down `surfaceAt` casts at most, the distance under which a hit is the part it starts inside, and how far below such a hit it looks again (m). */
+const SURFACE_RAYS = 4
+const SURFACE_INSIDE = 0.005
+const SURFACE_STEP = 0.15
 const STATIC_SPAN = 3
 /** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
 const FEET_BAND = 0.03
@@ -392,6 +396,8 @@ class Renderer implements DestructionRenderer {
       life: o.fragmentLife ?? 12,
       formOf: (id) => this.world.materials.get(id)?.splitForm,
       crumbles: (id) => this.world.materials.get(id)?.fracture === 'crumble',
+      // rubble lands on what is still built (a slab, a wall's top, a floor), not only on the terrain under it
+      surfaceAt: (x, y, z) => this.surfaceAt(x, y, z),
     })
     this.cages = new RebarCages(THREE, o.scene)
     this.pieceSys = new PieceSystem(THREE, {
@@ -1837,6 +1843,22 @@ class Renderer implements DestructionRenderer {
       if (kind) return kind
     }
     return ''
+  }
+
+  /** The top of the ground or of a standing part of the world under (x, z), below height y: a ray straight down through the destruction world. */
+  private surfaceAt(x: number, y: number, z: number): number {
+    const ground = this.groundAt(x, z)
+    // a world that casts no rays (a stand-in in a test) has only the ground to land on
+    if (y <= ground || typeof this.world.raycast !== 'function') return ground
+    // a piece of rubble spawned inside a part (the top course of a wall under its bond beam) sees that part first, at no distance: look under it
+    let from = y
+    for (let k = 0; k < SURFACE_RAYS && from > ground; k++) {
+      const hit = this.world.raycast([x, from, z], [0, -1, 0], from - ground)
+      if (!hit) return ground
+      if (hit.distance > SURFACE_INSIDE) return Math.max(ground, hit.point[1])
+      from -= SURFACE_STEP
+    }
+    return ground
   }
 
   /** `staticTopAt` without the boxes of `objectId` itself. */

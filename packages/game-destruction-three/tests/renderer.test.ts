@@ -154,6 +154,23 @@ describe('fracture', () => {
     expect(renderer.stats().fragments).toBe(0)
   })
 
+  it('lands rubble on what is still built under it (a slab), not only on the terrain', () => {
+    const { scene, world, renderer } = setup()
+    // a slab whose top is at 2.8 m over x in [-2, 2]: the world casts rays down onto it
+    ;(world as unknown as { raycast: (o: number[], d: number[], max: number) => unknown }).raycast = (o, _d, max) =>
+      Math.abs(o[0]!) <= 2 && o[1]! > 2.8 && o[1]! - 2.8 <= max ? { object: 'house', part: 'slab', point: [o[0], 2.8, o[2]], normal: [0, 1, 0], distance: o[1]! - 2.8 } : null
+    world.addObject('o1', [partState('top', 'ceramic')])
+    world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'crumble', fragments: [frag('tile', { center: [0, 4, 0], velocity: [0, 0, 0], size: [0.3, 0.25, 0.018] }), frag('out', { center: [3, 4, 0], velocity: [0, 0, 0], size: [0.3, 0.25, 0.018] })], point: [0, 4, 0] })
+    for (let i = 0; i < 240; i++) renderer.update(1 / 60)
+    const ys: number[] = []
+    scene.traverse((o) => { if (o.name === 'fragment') ys.push(o.position.y) })
+    ys.sort((a, b) => a - b)
+    // the tile over the slab rests on it; the one past its edge falls to the ground
+    expect(ys[0]).toBeLessThan(0.3)
+    expect(ys[1]).toBeGreaterThan(2.79)
+    expect(ys[1]).toBeLessThan(3)
+  })
+
   it('respects maxFragments and fades fragments after fragmentLife', () => {
     const { world, renderer } = setup({ maxFragments: 5, fragmentLife: 1 })
     world.addObject('o1', [partState('top', 'glass')])
