@@ -53,8 +53,8 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 `pnpm install` points git at `.githooks/` (the `prepare` script), so the checks run before anything reaches CI:
 
 - `pre-commit`: eslint on the staged JS/TS files (a second or two).
-- `pre-push`: two halves, each under a lock in `~/.cache/adatechnology-game-kit` shared by every worktree, so pushes from several sessions queue
-  instead of sharing the cores (one push opens its pages while the next one builds):
+- `pre-push`: under a lock in `~/.cache/adatechnology-game-kit` shared by every worktree, so pushes from several sessions queue
+  instead of sharing the cores:
   - CPU (`tools/pre-push/checks.mjs`, `cpu.lock`): the build of every package, but a package whose files and dependencies are the same as a build
     already made in any worktree is copied from a cache by content (`~/.cache/adatechnology-game-kit/pre-push/build`), so only what changed is built,
     in parallel; eslint on the changed files (everything when the lint rules change); typecheck and tests of the packages the branch changed since
@@ -62,8 +62,7 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
     and tests every package on the pull request, and the merge waits for it. `PRE_PUSH_DEPENDENTS=1` also checks the packages that depend on the
     changed ones, `PRE_PUSH_ALL=1` every package, `PRE_PUSH_JOBS=n` sets how many packages test at once, `PRE_PUSH_NO_CACHE=1` ignores the cache.
     Each run prints the time of each step and adds a line to `~/.cache/adatechnology-game-kit/pre-push/times.ndjson`.
-  - GPU (`tools/gpu/browser-checks.mjs`, `gpu.lock`, the lock of the daily run): the browser suites of the example areas the branch changes, on the
-    charger only.
+  - No browser or GPU suite: they run in the daily run on `main` (below); `node tools/gpu/browser-checks.mjs` runs a branch's by hand.
   - `PRE_PUSH_NO_LOCK=1` runs without waiting for the other pushes.
   - git opens the connection to GitHub before the hook runs, and a long hook lets it drop (`error 141`). Run `pnpm verify:push` first: the same
     checks with no push, recorded for the commit; `git push` of that same tree on the same `origin/main` then skips the checks and just sends.
