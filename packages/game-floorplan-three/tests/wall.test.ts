@@ -192,6 +192,19 @@ describe('wallPiece', () => {
     follower.dispose()
   })
 
+  it('a 40 mm grenade at a pillar\'s foot shakes loose only the baseboards and paving near it, not along the whole wall', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    world.add(piece.spec, { id: 'target' })
+    const loose: string[] = []
+    world.on('*', (e) => { if (e.type === 'detach') loose.push(...e.parts.filter((id) => id.startsWith('baseboard:') || id.startsWith('sidewalk:'))) })
+    world.explode([-1.6, 0.3, 0.15], 102400, 4, 'test')
+    for (let i = 0; i < 10; i++) world.update(0.1)
+    expect(loose.length).toBeGreaterThan(0)
+    const x = (id: string) => (piece.spec.parts.find((p: { id: string }) => p.id === id)!.position as number[])[0]!
+    for (const id of loose) expect(Math.abs(x(id) - -1.6)).toBeLessThan(2)
+  })
+
   it('a rocket that brings down a bay throws bricks and clumps of a few with flakes of their plaster, not slabs', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })
