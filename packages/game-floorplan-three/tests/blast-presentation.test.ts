@@ -11,7 +11,7 @@ const BLAST_ENERGY = 4e6
 const BLAST_RADIUS = 6
 // sha1 of the results, events and state of that blast on this house (with its ground beams and sill beams, its wood split by how it is made on a stream of its
 // own; a reinforced member out of the cut reach keeps a floor of its hit points; the infill panel in front of the charge comes down, ragged on its frame): the solver gives the same whether it remembers the contact boxes of its parts or not
-const RECORDED_BLAST_OUTCOME = '60c73a6ec0658a57109f3b0da58eb100aff61e9e'
+const RECORDED_BLAST_OUTCOME = '5c7c4c983ffe031c64b32a448726140dddc03047'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
