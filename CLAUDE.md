@@ -139,6 +139,10 @@ fica só com build, typecheck, lint e testes que não precisam de GPU.
 
 - No pre-push (`.githooks/pre-push`): `tools/gpu/browser-checks.mjs`, só com as suítes das áreas que a branch muda (`examples/*-test-area` com o seu
   `test.mjs`). `PRE_PUSH_BROWSER=0` pula uma vez, de propósito.
+- **O pre-push tem fila** (dono, 2026-11-08: quatro pushes ao mesmo tempo levavam 20 a 40 min cada). A metade de CPU (`tools/pre-push/checks.mjs`:
+  build com cache por conteúdo compartilhado entre os worktrees, lint dos arquivos alterados, typecheck e testes só dos pacotes alterados, em
+  paralelo) roda sob `cpu.lock`, e as suítes de navegador sob `gpu.lock` (a mesma trava da rodada diária), ambas em `~/.cache/adatechnology-game-kit`.
+  Os dependentes dos pacotes alterados ficam para o CI, que roda tudo no PR. Detalhes e variáveis no `CONTRIBUTING.md` (Git hooks).
 - **Rodada diária na main** (dono, 2026-11-06: com várias sessões na mesma trava de GPU, a bateria inteira em cada push deixava os pushes horas na fila).
   As suítes que abrem a sala inteira (`test-room`, `scene.mjs` e `cost.mjs` do `tools/kit-audit`, `examples/test-room/leak.mjs`) e o
   `tools/gpu/perf-gate.mjs` (`examples/test-room/perf.mjs`) saíram do push e rodam uma vez por dia, às 04:30, por `tools/gpu/nightly-gpu.mjs`: num worktree

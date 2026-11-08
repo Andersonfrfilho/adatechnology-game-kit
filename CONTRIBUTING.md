@@ -53,9 +53,18 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 `pnpm install` points git at `.githooks/` (the `prepare` script), so the checks run before anything reaches CI:
 
 - `pre-commit`: eslint on the staged JS/TS files (a second or two).
-- `pre-push`: `pnpm build`, `pnpm -r typecheck`, `pnpm lint`, then the tests of the packages the branch changed since `origin/main` and of the
-  packages that depend on them, one package at a time as CI runs them. `PRE_PUSH_ALL=1 git push` tests every package. Then the browser suites of the
-  example areas the branch changes (`tools/gpu/browser-checks.mjs`), on the charger only.
+- `pre-push`: two halves, each under a lock in `~/.cache/adatechnology-game-kit` shared by every worktree, so pushes from several sessions queue
+  instead of sharing the cores (one push opens its pages while the next one builds):
+  - CPU (`tools/pre-push/checks.mjs`, `cpu.lock`): the build of every package, but a package whose files and dependencies are the same as a build
+    already made in any worktree is copied from a cache by content (`~/.cache/adatechnology-game-kit/pre-push/build`), so only what changed is built,
+    in parallel; eslint on the changed files (everything when the lint rules change); typecheck and tests of the packages the branch changed since
+    `origin/main`, several at once. A typecheck or test run that already passed with the same files is not run again. CI builds, typechecks, lints
+    and tests every package on the pull request, and the merge waits for it. `PRE_PUSH_DEPENDENTS=1` also checks the packages that depend on the
+    changed ones, `PRE_PUSH_ALL=1` every package, `PRE_PUSH_JOBS=n` sets how many packages test at once, `PRE_PUSH_NO_CACHE=1` ignores the cache.
+    Each run prints the time of each step and adds a line to `~/.cache/adatechnology-game-kit/pre-push/times.ndjson`.
+  - GPU (`tools/gpu/browser-checks.mjs`, `gpu.lock`, the lock of the daily run): the browser suites of the example areas the branch changes, on the
+    charger only.
+  - `PRE_PUSH_NO_LOCK=1` runs without waiting for the other pushes.
 - Either hook can be skipped once with `--no-verify`.
 
 ### GPU daily run

@@ -1,37 +1,33 @@
 #!/bin/sh
-# Runs what CI runs, before the push leaves the machine: build, typecheck and lint of the whole workspace, then the tests of the packages this
-# branch changed and of the packages that depend on them. Tests run one package at a time, as CI does (in parallel the long golden loops miss
-# vitest's 5 s timeout). Skip once with `git push --no-verify`; `PRE_PUSH_ALL=1 git push` tests every package. Last, the checks that open pages in a
-# browser run here and not on CI (CLAUDE.md, "Testes de GPU e navegador"): only the suites whose pages the branch changes, printed with the reason
-# (tools/gpu/browser-checks.mjs and select-suites.mjs; PRE_PUSH_BROWSER=0 skips). The room-wide suites (test-room, scene, cost, leak) and the frame
-# budgets (tools/gpu/perf-gate.mjs) run in the daily run on main instead (tools/gpu/nightly-gpu.mjs, CONTRIBUTING.md).
-# The GPU step runs on the charger only: on battery they are skipped with a message and the push goes on (tools/gpu/power.mjs; PRE_PUSH_ON_BATTERY=1 runs them).
+# Checks a push on this machine before it leaves, in two halves, each under a lock shared by every worktree of this repository, so several sessions
+# pushing at once queue instead of sharing the cores (four pushes at once took 20 to 40 min each; one at a time each takes a few):
+#   1. CPU (tools/pre-push/checks.mjs, lock cpu.lock): build with a cache by content shared by every worktree (a package equal to one already built
+#      anywhere is copied, not built), lint of the changed files, and typecheck and tests of the packages the branch changed, in parallel. CI builds,
+#      typechecks, lints and tests every package on the pull request, and the merge waits for it.
+#   2. GPU (tools/gpu/browser-checks.mjs, lock gpu.lock, the one the daily run takes): the browser suites of the example areas the branch changes, on
+#      the charger only (CLAUDE.md, "Testes de GPU e navegador"). While one push is here, the next one is already in its CPU half.
+# Skip once with `git push --no-verify`. PRE_PUSH_ALL=1 checks every package and every area; PRE_PUSH_DEPENDENTS=1 also typechecks and tests the
+# packages that depend on the changed ones; PRE_PUSH_BROWSER=0 skips the browser suites; PRE_PUSH_NO_LOCK=1 does not queue.
 set -e
 git fetch -q origin main 2>/dev/null || true
-base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
 
-echo "pre-push: build"; pnpm -s build > /dev/null
-echo "pre-push: typecheck"; pnpm -s -r typecheck > /dev/null
-echo "pre-push: lint"; pnpm -s lint
+locks="${XDG_CACHE_HOME:-$HOME/.cache}/adatechnology-game-kit"
+mkdir -p "$locks"
 
-if [ -n "$PRE_PUSH_ALL" ] || [ -z "$base" ]; then
-  echo "pre-push: tests of every package"
-  pnpm -r --workspace-concurrency=1 run test
-else
-  # The workspace folders touched since the base (pnpm's own `[ref]` filter finds nothing inside a git worktree, so list them here).
-  dirs=$(git diff --name-only "$base" HEAD | grep -E '^(packages|tools|examples)/[^/]+/' | cut -d/ -f1-2 | sort -u)
-  filters=""
-  for dir in $dirs; do [ -f "$dir/package.json" ] && filters="$filters --filter ...{./$dir}"; done
-  # only folders without a package (tools/kit-audit): with no filter, `pnpm run test` is the root script, every package
-  if [ -z "$filters" ]; then
-    echo "pre-push: no package changed"
-  else
-    echo "pre-push: tests of the packages changed since $(git rev-parse --short "$base") and their dependents"
-    # shellcheck disable=SC2086
-    pnpm $filters --workspace-concurrency=1 run test
+# Runs a command holding a lock; when another push holds it, says so and waits. Without flock (not Linux) it just runs.
+locked() {
+  lock="$locks/$1"; shift
+  if [ -n "$PRE_PUSH_NO_LOCK" ] || ! command -v flock > /dev/null 2>&1; then "$@"; return; fi
+  status=0
+  flock -n -E 75 "$lock" "$@" || status=$?
+  if [ "$status" -eq 75 ]; then
+    echo "pre-push: waiting for another push to finish its $(basename "$lock" .lock) checks..."
+    waited=$(date +%s)
+    status=0
+    flock "$lock" sh -c 'echo "pre-push: got the lock after $(( $(date +%s) - $0 ))s"; exec "$@"' "$waited" "$@" || status=$?
   fi
-fi
+  return "$status"
+}
 
-# CI opens no page and has no GPU: the pages of what the branch changes are checked here; the suites that open the whole room and the frame
-# budgets run once a day on main (tools/gpu/nightly-gpu.mjs), so a push waits only for the areas it touches
-node tools/gpu/browser-checks.mjs
+locked cpu.lock node tools/pre-push/checks.mjs
+locked gpu.lock node tools/gpu/browser-checks.mjs
