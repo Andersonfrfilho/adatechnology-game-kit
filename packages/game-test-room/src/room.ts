@@ -124,6 +124,9 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
+/** Metres a holder's drawn box may fall short of a point and still hold it (the rim of a top), and how far under its declared top it may end and still be the top (a broken stand's base is not). */
+const HOLDER_EDGE = 0.02
+const HOLDER_TOP_DROP = 0.06
 /** The effect ids of the explosives of the arsenal (the profiles of `game-vfx`) the room draws at load. */
 // the left hand's tool (a tool in each hand): its blows wait on a key of their own and its random streams start from a seed of their own
 const LEFT_HAND_KEY = '#L'
@@ -312,10 +315,38 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const topHolds = (t: ArenaTop, x: number, z: number): boolean => (t.boards ? t.boards.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && partStands(t.id, b.part)) : topOk(t))
   // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object stands where it was laid (a piece holds them by its own box)
   const restingTops: Array<{ objectId: string; minX: number; maxX: number; minZ: number; maxZ: number; top: number }> = []
+  /** Counts the steps of the simulation (scripted ones too): the drawn boxes of the holders are measured once a step. */
+  let simulationStamp = 0
+  // the drawn boxes of each holder, measured once a frame: what the blast took off it no longer holds anything (no collider without geometry)
+  const holderBoxes = new Map<string, { stamp: number; boxes: Array<[number, number, number, number, number, number]> }>()
+  const holderTopAt = (c: (typeof restingTops)[number], x: number, z: number): number => {
+    let known = holderBoxes.get(c.objectId)
+    if (!known || known.stamp !== simulationStamp) {
+      known = { stamp: simulationStamp, boxes: renderer.shownBoxes(c.objectId) }
+      holderBoxes.set(c.objectId, known)
+    }
+    let top = 0
+    for (const b of known.boxes) {
+      if (x < b[0] - HOLDER_EDGE || x > b[3] + HOLDER_EDGE || z < b[2] - HOLDER_EDGE || z > b[5] + HOLDER_EDGE || b[4] < c.top - HOLDER_TOP_DROP) continue
+      top = Math.max(top, Math.min(c.top, b[4]))
+    }
+    return top
+  }
   const restingTopAt = (x: number, z: number): number => {
     let top = 0
-    for (const c of restingTops) if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ && world.has(c.objectId) && !renderer.piece(c.objectId)) top = Math.max(top, c.top)
+    for (const c of restingTops) {
+      if (x <= c.minX || x >= c.maxX || z <= c.minZ || z >= c.maxZ || c.top <= top || !world.has(c.objectId) || renderer.piece(c.objectId)) continue
+      top = Math.max(top, holderTopAt(c, x, z))
+    }
     return top
+  }
+  /** What lay on a holder that an event touched looks under itself again at once, instead of waiting for its turn: the top it lay on may be gone. */
+  const wakeOnHolder = (objectId: string): void => {
+    for (const c of restingTops) {
+      if (c.objectId !== objectId) continue
+      holderBoxes.delete(objectId)
+      renderer.wakeRegion((c.minX + c.maxX) / 2, (c.minZ + c.maxZ) / 2, Math.hypot(c.maxX - c.minX, c.maxZ - c.minZ) / 2 + HOLDER_EDGE)
+    }
   }
   const sceneryTopAt = (x: number, z: number): number => {
     let top = 0
@@ -661,6 +692,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pending = []
     narrator.events(batch)
     for (const ev of batch) {
+      if (ev.object) wakeOnHolder(ev.object)
       if (ev.type === 'leak') puncture(ev)
       else if (ev.type === 'ignite') igniteNear(ev.point, 0.9)
       else if (ev.type === 'explode') {
@@ -3775,6 +3807,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       fluids.update(dt)
     }
     syncLiters()
+    simulationStamp++
     renderer.update(dt)
     destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
