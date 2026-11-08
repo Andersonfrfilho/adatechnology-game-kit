@@ -39,14 +39,17 @@ const setup = (section?: number) => {
   return { world, id, x, y, z, bottom: y - size[1]! / 2, top: y + size[1]! / 2, events }
 }
 
-/** Rounds fired at one place until the pillar is cut there (its first chip), or `max`: how many it took, or null when it stood. */
+/** The pillar was cut through: what rested on it (the bond beam) came off it. */
+const isCut = (s: ReturnType<typeof setup>): boolean => s.events.some((e) => e.type === 'detach' && e.parts.includes(PILLAR))
+
+/** Rounds fired at one place until the pillar is cut there, or `max`: how many it took, or null when it stood. */
 const fireUntilCut = (round: Round, height: (s: ReturnType<typeof setup>) => number, max: number, perShot = 1, section?: number) => {
   const s = setup(section)
   const at = height(s)
   for (let k = 1; k <= max; k++) {
     for (let n = 0; n < perShot; n++) s.world.shoot([s.x, at, s.z + 5], [0, 0, -1], round.energy, round.caliber, 'test', { penetration: round.penetration })
     s.world.update(1 / 30)
-    if (s.events.some((e) => e.type === 'chip' && e.part === PILLAR)) return { shots: k, s, at }
+    if (isCut(s)) return { shots: k, s, at }
   }
   return { shots: null, s, at }
 }
@@ -79,7 +82,22 @@ describe('concentrated fire on a pillar', () => {
     for (let k = 0; k < 8; k++) s.world.shoot([s.x, middle(s), s.z + 5], [0, 0, -1], ROUNDS.rifle.energy, ROUNDS.rifle.caliber, 'test', { penetration: ROUNDS.rifle.penetration })
     s.world.update(1 / 30)
     expect(s.events.some((e) => e.type === 'expose' && e.part === PILLAR)).toBe(true)
-    expect(s.events.some((e) => e.type === 'chip' && e.part === PILLAR)).toBe(false)
+    expect(isCut(s)).toBe(false)
+  })
+
+  it('breaks off the concrete where the rounds land, a block at a time, and keeps the rest on its bars', () => {
+    const s = setup()
+    const at = middle(s)
+    for (let k = 0; k < 12; k++) s.world.shoot([s.x, at, s.z + 5], [0, 0, -1], ROUNDS.rifle.energy, ROUNDS.rifle.caliber, 'test', { penetration: ROUNDS.rifle.penetration })
+    s.world.update(1 / 30)
+    const chips = s.events.filter((e) => e.type === 'chip' && e.part === PILLAR)
+    expect(chips.length).toBeGreaterThan(0)
+    expect(isCut(s)).toBe(false)
+    // the blocks that came out are where the rounds landed: within a block of the aim, never the length of the pillar
+    const pillar = s.world.part(s.id, PILLAR)!
+    const local = at - (s.bottom + s.top) / 2
+    for (const c of pillar.chipped ?? []) expect(Math.abs(c.center[1] - local)).toBeLessThanOrEqual(0.1 + 1e-6)
+    expect((pillar.chipped ?? []).length).toBeLessThan(4)
   })
 
   it('a pistol or a shotgun practically never cuts it', () => {
@@ -92,23 +110,75 @@ describe('concentrated fire on a pillar', () => {
     ['in the middle', middle, true],
     ['at its foot', (s: ReturnType<typeof setup>) => s.bottom + 0.15, false],
   ] as const) {
-    it(`cut ${name}: what is under the cut stands, the concrete above it falls and the bond beam rests on the rest of the wall`, () => {
+    it(`cut ${name}: the concrete under and above the cut stays on its bars, only the cut is open, and the bond beam rests on the rest of the wall`, () => {
       const { shots, s, at } = fireUntilCut(ROUNDS.fifty, height, 30)
       expect(shots).not.toBeNull()
       for (let t = 0; t < 3; t += 1 / 30) s.world.update(1 / 30)
       const pillar = s.world.part(s.id, PILLAR)!
       const chipped = pillar.chipped ?? []
-      // part space: the pillar's length is its y; nothing of its concrete is left above the cut (it would hang in the air)
+      // part space: the pillar's length is its y; what came out is the cut and the blocks the rounds broke off there, the concrete above and under it
+      // stays, bonded to its bars (above it is cast with the bond beam: it hangs from it on the bars, it does not drop off)
       const local = at - (s.bottom + s.top) / 2
       const lowestGone = Math.min(...chipped.map((c) => c.center[1] - c.size[1] / 2))
       const highestGone = Math.max(...chipped.map((c) => c.center[1] + c.size[1] / 2))
-      expect(lowestGone).toBeLessThanOrEqual(local + 0.06)
-      expect(highestGone).toBeGreaterThanOrEqual((s.top - s.bottom) / 2 - 1e-3)
-      // the concrete under the cut is still there, unless the cut was at the foot (there is little to keep)
+      expect(lowestGone).toBeGreaterThanOrEqual(local - 0.16)
+      expect(highestGone).toBeLessThanOrEqual(local + 0.16)
       if (below) expect(lowestGone).toBeGreaterThan(-(s.top - s.bottom) / 2 + 0.2)
       // the bond beam stays up on the wall and the other pillars: nothing above the cut floats, and it does not fall either
       const beam = s.world.part(s.id, BEAM)!
       expect(['intact', 'damaged']).toContain(beam.status)
     })
   }
+})
+
+describe('a 40 mm grenade on the corner of a pillar', () => {
+  it('takes its cover off there and bares its corner bar and stirrups; the pillar stands, its concrete elsewhere stays', () => {
+    const s = setup()
+    // 45 g of TNT (a 40 mm HE grenade) going off a few centimetres off the pillar's corner, at chest height
+    s.world.explode([s.x + 0.1, 1.3, s.z + 0.13], 102400, 4, 'test')
+    for (let i = 0; i < 10; i++) s.world.update(0.1)
+    const pillar = s.world.part(s.id, PILLAR)!
+    const chipped = pillar.chipped ?? []
+    expect(chipped.length).toBeGreaterThan(0)
+    expect(s.events.some((e) => e.type === 'expose' && e.part === PILLAR)).toBe(true)
+    expect(['intact', 'damaged']).toContain(pillar.status)
+    // only around the blast: part space, the pillar's length is its y
+    const local = 1.3 - (s.bottom + s.top) / 2
+    for (const c of chipped) expect(Math.abs(c.center[1] - local)).toBeLessThanOrEqual(0.5)
+  })
+})
+
+describe('the cut of a pillar, drawn', () => {
+  it('leaves lumps of concrete stuck on the bars where its blocks broke off, not the bare cage', () => {
+    const piece = wallPiece(THREE, { w: 10, h: 3, house: { document: fakeDocument } })
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'w' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    const part = piece.spec.parts.find((p: { id: string }) => p.id === PILLAR)!
+    const [x, y, z] = part.position as Vec3
+    const half = (part.shape as { size: number[] }).size.map((v) => v / 2)
+    for (let k = 0; k < 80 && !world.part(id, PILLAR)!.chipped?.length; k++) world.shoot([x, y, z + 5], [0, 0, -1], ROUNDS.fifty.energy, ROUNDS.fifty.caliber, 'test', { penetration: ROUNDS.fifty.penetration })
+    for (let k = 0; k < 10; k++) world.shoot([x, y, z + 5], [0, 0, -1], ROUNDS.fifty.energy, ROUNDS.fifty.caliber, 'test', { penetration: ROUNDS.fifty.penetration })
+    world.update(1 / 30)
+    follower.update()
+    const gone = world.part(id, PILLAR)!.chipped!
+    expect(gone.length).toBeGreaterThan(0)
+    // broken stones, not boxes: a mesh of their own on the units the breach draws
+    const units = root.getObjectByName('breach:wall_0_0')!.getObjectByName('breach-lumps') as THREE.InstancedMesh
+    expect(units.geometry.type).not.toBe('BoxGeometry')
+    root.updateMatrixWorld(true)
+    const m = new THREE.Matrix4(), p = new THREE.Vector3(), s = new THREE.Vector3(), q = new THREE.Quaternion()
+    let lumps = 0
+    for (let i = 0; i < units.count; i++) {
+      units.getMatrixAt(i, m)
+      m.decompose(p, q, s)
+      p.applyMatrix4(units.matrixWorld)
+      // small pieces inside the pillar where its blocks are gone
+      const inGone = gone.some((c) => Math.abs(p.y - (y + c.center[1])) <= c.size[1] / 2 && Math.abs(p.x - (x + c.center[0])) <= c.size[0] / 2)
+      if (inGone && Math.abs(p.x - x) <= half[0]! && Math.abs(p.z - z) <= half[2]! && Math.max(s.x, s.y, s.z) <= 0.07) lumps++
+    }
+    expect(lumps).toBeGreaterThan(0)
+    follower.dispose()
+  })
 })

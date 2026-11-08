@@ -71,6 +71,7 @@ import type {
   RoomMetricId,
   ScenarioContext,
   ScenarioReport,
+  SceneryFollower,
   SpawnedObject,
   TestRoom,
   TestRoomItem,
@@ -84,7 +85,7 @@ type Vars = Record<string, string | number>
 interface Entry {
   so: SpawnedObject
   /** What draws the object's own damage on it (`SceneryObject.follow`). */
-  follower?: { restore?(): void; dispose?(): void; update?(): void } | null
+  follower?: SceneryFollower | null
   item?: TestRoomItem
   name: string
   arena: boolean
@@ -657,6 +658,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const c = arena.colliders[i]
     return arena.colliderIds[i] !== null && c[2] - c[0] <= SOLID_SPAN && c[3] - c[1] <= SOLID_SPAN
   }
+  /** Scenery whose follower says where its drawing stops a body (a wall with a breach): the player walks by that, not by its footprint. */
+  const followedBody = (id: string | null): SceneryFollower | null => {
+    const follower = id === null ? null : entries.get(id)?.follower
+    return follower?.blocks ? follower : null
+  }
+  const followerOwns = (objectId: string): boolean => {
+    for (const e of entries.values()) if (e.follower?.owns?.(objectId)) return true
+    return false
+  }
+  blockers.add((x, z, radius) => {
+    for (const e of entries.values()) if (e.follower?.blocks?.(x, z, radius, player.feet + STEP_UP, player.feet + BODY_HEIGHT)) return true
+    return false
+  })
   // the footprints that still hold: the player and the push read this same list
   const standingColliders: Array<[number, number, number, number]> = []
   const standingIds: Array<string | null> = []
@@ -668,7 +682,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     standingIds.length = 0
     footprintsWithBody.clear()
     arena.colliders.forEach((collider, i) => {
-      if (drawnScenery(i)) return
+      if (drawnScenery(i) || followedBody(arena.colliderIds[i] ?? null)) return
       standingColliders.push(collider)
       standingIds.push(arena.colliderIds[i] ?? null)
     })
@@ -691,6 +705,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let blocked = false
     for (const s of renderer.solidsNear(x, z, radius)) {
       if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS) continue
+      // a wall whose follower says where it stops a body (its breach, the piece of it that came loose and stands) is not measured by its whole box
+      if (followerOwns(s.objectId)) continue
       const dx = Math.max(s.min[0] - x, 0, x - s.max[0])
       const dz = Math.max(s.min[2] - z, 0, z - s.max[2])
       if (dx * dx + dz * dz > radius * radius) continue
@@ -1151,6 +1167,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
   addArena()
+  // the followers are known now: what they draw stops the player, not the footprint
+  standFootprints()
 
   /**
    * The object of an item, with its root at scale 1: a builder that sizes its model by the scale of the root (the showcase models of game-items-three do, page units to metres) is wrapped

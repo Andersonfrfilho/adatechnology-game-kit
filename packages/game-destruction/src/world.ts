@@ -129,6 +129,8 @@ const MEMBER_CRATER_CALIBRES = 3.4
 /** Places of bared bars a member keeps (each a crater past its cover); later craters on the same place add none. */
 const MEMBER_BARED_MAX = 24
 const MEMBER_CUT_LOSS = 0.9
+/** Share of a unit of a reinforced member (a block of its concrete between the bars) the craters in it take before it breaks off: about six rifle rounds in one place. */
+const MEMBER_UNIT_LOSS = 0.25
 const BLAST_EDGE_WEAR = 0.6
 const RESIDUAL_CAPACITY = 0.15
 /** Long wooden parts break where they are hit: band length along the part (m) and how much longer than wide a part must be. */
@@ -2630,6 +2632,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const faceArea = (cell: UnitCell) => cell.size[u] * cell.size[v]
     const total = cells.reduce((sum, cell) => sum + faceArea(cell), 0) || 1
     const shape = p.spec.units ? 'chunk' : FRAGMENT_SHAPE[p.mat.fracture as keyof typeof FRAGMENT_SHAPE] ?? 'chunk'
+    // laid units come out whole at their joints: their faces are the units' own, not a broken inside (cast concrete is broken through)
+    const laid = !!p.spec.units && p.spec.units.mortar !== p.spec.material
     return cells.map((cell, i) => {
       const cw = toWorld(c, q, cell.center)
       const out = vec.normalize(vec.sub(cw, hitW), [0, 1, 0])
@@ -2639,7 +2643,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return {
         id: `${p.spec.id}#${tag}${i}`, part: p.spec.id, material: p.spec.material, shape, center: cw, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q,
         velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k], angularVelocity: [(rnd() - 0.5) * 8, (rnd() - 0.5) * 8, (rnd() - 0.5) * 8],
-        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}), ...(inner ? { inner } : {}),
+        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}), ...(inner && laid ? { unit: true } : inner ? { inner } : {}),
       }
     })
   }
@@ -2719,13 +2723,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (!cells?.length) return false
     const [u, v] = planeAxes(p.thin)
     const lp = toLocal(p.pos, p.q, objectPoint)
+    // a block of a member's concrete that broke off is its cover: the core between the bars is still behind it, and takes the rounds until the cut there
+    if (p.spec.reinforcement && isMember(p.dims) && !p.st.stripped) {
+      const along = p.dims.indexOf(Math.max(...p.dims))
+      const bands = Math.max(1, Math.round(p.dims[along] / MEMBER_BAND))
+      const band = clamp(Math.floor(((lp[along] + p.dims[along] / 2) / p.dims[along]) * bands), 0, bands - 1)
+      if ((p.rt.bands?.[band] ?? 0) < MEMBER_CUT_LOSS) return false
+    }
     return cells.some((c) => Math.abs(lp[u] - c.center[u]) <= c.size[u] / 2 && Math.abs(lp[v] - c.center[v]) <= c.size[v] / 2)
   }
 
   /**
    * A round on a reinforced member wears its section where it lands (`MEMBER_CRATER_CALIBRES`, `MEMBER_CUT_LOSS`): returns false for any other part, which
-   * takes the shot unit by unit (`chipUnits`). Past the cover the bars show there; past the cut the band's concrete comes out, and with it what is above it on
-   * a standing member (it has nothing to stand on: the concrete above the cut falls, its bars stay), and what rested on the member no longer bears on it.
+   * takes the shot unit by unit (`chipUnits`). Past the cover the bars show there; the block of concrete the craters wear breaks off (`MEMBER_UNIT_LOSS`); past
+   * the cut the band's concrete comes out (what is above stays on its bars), and what rested on the member no longer bears on it.
    */
   const wearMember = (o: ObjRT, p: PartRT, entry: Vec3, d: Vec3, E: number, caliber: number, penMm: number | undefined, src?: string): boolean => {
     if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
@@ -2761,20 +2772,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         exposeRebar(o, p, src)
       }
     }
-    if (before >= MEMBER_CUT_LOSS || after < MEMBER_CUT_LOSS) return true
-    // cut through: the band goes, and on a standing member everything above it (nothing holds that concrete up but the bars)
-    const axisUp = rotateVec(p.q, [0, 0, 0].map((_, k) => (k === along ? 1 : 0)) as Vec3)
-    const standing = Math.abs(axisUp[1]) > 0.7
-    const upward = axisUp[1] >= 0 ? 1 : -1
     const grid = gridOf(p)
-    const gone = p.rt.chips ?? {}
+    const gone = (p.rt.chips ??= {})
+    if (before >= MEMBER_CUT_LOSS || after < MEMBER_CUT_LOSS) {
+      // the craters past the cover add up in the block of concrete they land in: past `MEMBER_UNIT_LOSS` it breaks off there, the bars and the blocks
+      // around it stay (a pellet or a pistol round only pits the cover)
+      if (h <= REBAR_COVER) return true
+      const [u, v] = planeAxes(p.thin)
+      const hit = grid.findIndex((cell, i) => gone[i] !== -1 && Math.abs(lp[u] - cell.center[u]) <= cell.size[u] / 2 && Math.abs(lp[v] - cell.center[v]) <= cell.size[v] / 2)
+      if (hit < 0) return true
+      const wear = (p.rt.cellWear ??= {})
+      const cell = grid[hit]!
+      wear[hit] = (wear[hit] ?? 0) + volume
+      if (wear[hit]! >= MEMBER_UNIT_LOSS * cell.size[0] * cell.size[1] * cell.size[2]) knockOutUnits(o, p, entry, E, [hit], src)
+      return true
+    }
+    // cut through: the band's concrete goes; above it the concrete stays on its bars (they hold it, cast with the bond beam on them), only the cut is open
     const out: number[] = []
     for (let i = 0; i < grid.length; i++) {
       if (gone[i] === -1) continue
-      const at = grid[i]!.center[along]
-      const inBand = Math.abs(at - bandCenter) <= height / 2 + 1e-6
-      const above = standing && (at - bandCenter) * upward > height / 2
-      if (inBand || above) out.push(i)
+      if (Math.abs(grid[i]!.center[along] - bandCenter) <= height / 2 + 1e-6) out.push(i)
     }
     if (out.length > 0) knockOutUnits(o, p, entry, E, out, src)
     giveAtCut(o, p, src)

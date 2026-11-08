@@ -8,6 +8,7 @@ import { create } from './create.js'
 import type * as THREE from 'three'
 import type { DestructibleSpec } from '@adatechnology/game-contracts'
 import type { DestructionWorld } from '@adatechnology/game-destruction'
+import type { HouseFollow } from './destruction/types.js'
 import type { HouseRecord, Three } from './kernel-types.js'
 import type { House, HouseRendererOptions } from './types.js'
 
@@ -37,9 +38,9 @@ export interface WallPiece {
    * Once a drawing from `build` is in a destruction world as `objectId` (with this `spec`), the house renderer follows its events and draws on it what
    * a generic destruction renderer cannot: the bricks that shots and blows knock out (`chip`) and the opening of a breach, as gaps in the wall's
    * courses. `restore` puts the wall back (after `world.reset`), `dispose` stops following. `update` paints the damage of the events since the last call, once
-   * per wall (call it every frame; without it the damage is painted 100 ms after the event).
+   * per wall (call it every frame; without it the damage is painted 100 ms after the event). `blocks` says whether the wall, as drawn now, stops a body.
    */
-  follow(root: THREE.Object3D, world: DestructionWorld, objectId: string): { restore(): void; dispose(): void; update(): void } | null
+  follow(root: THREE.Object3D, world: DestructionWorld, objectId: string): HouseFollow | null
   /**
    * The wall drawn with one brick shot out of it, for a host to draw once at load (`WarmUpProbes`): the breach's materials (the shell around the hole and
    * the bricks laid bare, instanced, lit and in the shadows) get their shader programs then, not at the first shot or blast of play. `dispose` frees its

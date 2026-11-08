@@ -82,6 +82,7 @@ export interface BreachView {
   release(): void
   deferredQueue(): DeferredQueue
   has(partId: string): boolean
+  standing(partId: string): { spans: readonly { a: number; b: number; y0: number; y1: number }[]; alongU: boolean; start: number } | null
   statistics(): { walls: number; gone: number; craters: number; flakes: number; units: number }
 }
 
@@ -90,6 +91,13 @@ export interface HouseFollow {
   restore(): void
   dispose(): void
   update(): void
+  /**
+   * Whether the wall stops a body standing at the world point (x, z) with `radius`, from height `y0` to `y1` (world): what is drawn there now, so a body
+   * walks through a breach and over the units left below `y0`, also in a piece of it that came loose and stands.
+   */
+  blocks(x: number, z: number, radius: number, y0: number, y1: number): boolean
+  /** Whether the world object `objectId` is this wall or a piece that came loose of it: what `blocks` answers for, in place of its box. */
+  owns(objectId: string): boolean
 }
 
 /** `house.destruction`: the adapter of the house to the destruction world (`cfg.destruction`). */

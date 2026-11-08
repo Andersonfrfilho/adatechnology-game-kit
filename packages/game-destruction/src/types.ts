@@ -210,6 +210,8 @@ export interface MaterialDef {
     transparent?: boolean
     /** Colour of the inside, for the inner fragments and the hit debris (the pages of a book under its cover); default the colour of the part. */
     innerColor?: number
+    /** Colour of a whole unit of it (a fired brick), for the units a wall of laid units loses whole at its joints; default the colour of the part. */
+    unitColor?: number
   }
   /** Free tags, e.g. `metal`, `organic`, `conductive`. */
   tags?: string[]
@@ -698,6 +700,8 @@ export interface PartRuntime {
   craters?: Record<number, number>
   /** Share of the section of a reinforced member the shots took out so far, by band along its length (`MEMBER_BAND` from its negative end). */
   bands?: Record<number, number>
+  /** Concrete each unit of a reinforced member lost to craters (m³), by unit index: past `MEMBER_UNIT_LOSS` of it, that piece comes out. */
+  cellWear?: Record<number, number>
   /** Places of a reinforced member whose cover the shots took off (part space): its bars show there although no unit came out. */
   bared?: Array<{ center: Vec3; size: Vec3 }>
   /** Mass in kg that left the part in a breach. */

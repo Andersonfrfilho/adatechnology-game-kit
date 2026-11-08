@@ -725,6 +725,8 @@ export interface Fragment {
   marks?: readonly FragmentMark[]
   /** Cut from inside the part (a page of a book, not its cover): the renderer draws it in the material's inner colour. */
   inner?: boolean
+  /** Whole units of a wall of laid units, come off at their joints (bricks, not a broken face): the renderer draws them in the unit's colour. */
+  unit?: boolean
 }
 
 export interface FragmentMark {

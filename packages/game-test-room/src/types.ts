@@ -100,6 +100,16 @@ export interface TestRoomItem {
  * One piece of destructible scenery of the arena (the target wall, the table, the shelf, or any piece the host adds): a spec, where it stands and how it is drawn.
  * Keyed by arena object id in `TestRoomOptions.scenery`.
  */
+/** What draws a scenery object's own damage on it (`SceneryObject.follow`). */
+export interface SceneryFollower {
+  restore?(): void
+  dispose?(): void
+  update?(): void
+  blocks?(x: number, z: number, radius: number, y0: number, y1: number): boolean
+  /** Whether the world object `objectId` (the object, or a piece that came loose of it) is answered for by `blocks` instead of by its drawn boxes. */
+  owns?(objectId: string): boolean
+}
+
 export interface SceneryObject {
   /** What the destruction world is given. */
   spec: DestructibleSpec
@@ -118,8 +128,10 @@ export interface SceneryObject {
    * Lets the drawing follow the object in the destruction world, for what the room's destruction renderer cannot draw on it (a house wall redraws its
    * courses without the bricks that shots knock out). Called once the object is in the world as `objectId`; the room calls `restore` when it resets the
    * object and `dispose` when it removes it. `update` (optional) is called every frame, after the renderer's: where the follower paints what it deferred.
+   * `blocks` (optional) says whether what it draws now stops a body at the world point (x, z) between heights `y0` and `y1`: the player then walks by it (through
+   * a breach in a wall, over the bricks left low) instead of by the object's footprint.
    */
-  follow?: (root: THREE_NS.Object3D, world: DestructionWorld, objectId: string) => { restore?(): void; dispose?(): void; update?(): void } | null | void
+  follow?: (root: THREE_NS.Object3D, world: DestructionWorld, objectId: string) => SceneryFollower | null | void
   /**
    * Throwaway meshes of what the object draws later on demand (the breach of a wall: its shell and its bare bricks), drawn once at load so their shader programs are
    * built then and not at the first shot or blast of play (`WarmUpProbes` of game-contracts).
