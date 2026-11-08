@@ -1,5 +1,14 @@
 # @adatechnology/game-weapons-three
 
+## 0.21.6
+
+### Patch Changes
+
+- Updated dependencies [9dc3676]
+  - @adatechnology/game-vfx@0.14.0
+  - @adatechnology/game-floorplan-three@0.13.3
+  - @adatechnology/game-vfx-three@0.10.1
+
 ## 0.21.5
 
 ### Patch Changes

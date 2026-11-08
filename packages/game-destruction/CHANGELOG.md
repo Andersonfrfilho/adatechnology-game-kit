@@ -1,5 +1,15 @@
 # @adatechnology/game-destruction
 
+## 0.26.0
+
+### Minor Changes
+
+- 9dc3676: O que cada material solta em tiro e explosão vem do material: `debrisLook`, `debrisFamily`, `debrisColor`, `dustColor` e `fragmentTone` (game-destruction) dizem, para cada material e evento (tiro, spall, estágios 1 a 3, ferragem exposta, fratura, explosão, colapso), o tipo de detrito, a cor, a poeira e a marca. Os efeitos de estágio e colapso do game-vfx passam a ser por família (`stage_crack_<família>`, `breach_dust_<família>`, `collapse_dust_<família>`, com `debrisColor`/`dustColor` em `values`), e `rebar_expose` solta lascas e pó de concreto com ferrugem em vez de lascas de madeira. O renderer passa a família e a cor da peça a esses efeitos, lança o estágio 1 do ponto do tiro (não da raiz do objeto) e pinta os detritos de fratura na cor do material. Antes, um tiro de AK na viga de concreto soltava lascas marrons de madeira.
+
+### Patch Changes
+
+- dd8f202: A base de uma parede sobre a fundação quebra por trecho. Cada explosão quebra a argamassa do trecho em que bate, e a junta da parede com a viga baldrame só se solta quando a maior parte do comprimento já estiver quebrada (60%). Antes, três granadas no pé de três pilares somavam o desgaste e soltavam a base inteira dos 10 m, e a parede toda esfarelava de uma vez.
+
 ## 0.25.0
 
 ### Minor Changes

@@ -1,5 +1,17 @@
 # @adatechnology/game-test-room
 
+## 0.35.1
+
+### Patch Changes
+
+- Updated dependencies [dd8f202]
+- Updated dependencies [9dc3676]
+  - @adatechnology/game-destruction@0.26.0
+  - @adatechnology/game-vfx@0.14.0
+  - @adatechnology/game-destruction-three@0.24.3
+  - @adatechnology/game-fluids-three@0.4.24
+  - @adatechnology/game-vfx-three@0.10.1
+
 ## 0.35.0
 
 ### Minor Changes
