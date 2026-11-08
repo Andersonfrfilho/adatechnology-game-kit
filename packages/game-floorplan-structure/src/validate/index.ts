@@ -41,5 +41,7 @@ export function countViolations(violations: readonly StructuralViolation[]): Par
   return out
 }
 
+export { slabsOffSupport } from './resting-slabs'
+export type { RestingState, SlabsOffSupportOptions } from './resting-slabs'
 export { BEAM_DEPTH_RATIO, MAX_LINTEL_ON_MASONRY, MAX_PILLAR_SPACING, MIN_BEAM_WIDTH, MIN_PILLAR_AREA, MIN_PILLAR_SIDE, STRUCTURAL_VIOLATION } from './codes'
 export type { StructuralViolation, StructuralViolationCode } from './codes'
