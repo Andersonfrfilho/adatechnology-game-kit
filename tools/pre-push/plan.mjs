@@ -203,11 +203,15 @@ export const parseStatus = (text) => {
   return paths
 }
 
-/** How many packages test at once: a quarter of the threads, so vitest's own workers have room. @param {number} cpus @param {string | undefined} env */
+/**
+ * How many packages test at once: two, or one on a machine of fewer than eight threads. Each vitest already starts a worker per thread, and on the
+ * 24-thread notebook six at once made the heavy *-three suites miss vitest's timeouts (items, weapons and vehicles), while two passed faster than one.
+ * @param {number} cpus @param {string | undefined} env
+ */
 export const testJobs = (cpus, env) => {
   const asked = Number(env)
   if (Number.isInteger(asked) && asked > 0) return asked
-  return Math.max(1, Math.floor(cpus / 4))
+  return cpus >= 8 ? 2 : 1
 }
 
 /** @param {number} ms */

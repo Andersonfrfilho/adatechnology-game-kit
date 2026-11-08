@@ -1,5 +1,57 @@
 # @adatechnology/game-test-room
 
+## 0.34.0
+
+### Minor Changes
+
+- f3c98a9: O corpo passa pelo buraco que o tiro ou a explosão abriu na parede. O `follow` da parede das casas (`wallPiece`) ganhou `blocks(x, z, raio, y0, y1)`, que diz se a parede, como está desenhada agora, segura um corpo naquele ponto: onde os tijolos saíram, o corpo passa; os pilares e o resto da parede seguram. Vale também para a parte da parede que se soltou e ficou em pé como peça (`owns` diz quais objetos do mundo ela responde). A sala de teste usa isso para o jogador: a parede de alvo deixou de ser um muro que fecha a arena de ponta a ponta (só os lados dela continuam fechados) e não é mais medida pela caixa inteira quando o seu `follow` responde por ela.
+
+### Patch Changes
+
+- Updated dependencies [5984ae4]
+- Updated dependencies [779f9f4]
+  - @adatechnology/game-destruction@0.24.0
+  - @adatechnology/game-contracts@0.34.0
+  - @adatechnology/game-destruction-three@0.24.0
+  - @adatechnology/game-terrain@0.7.4
+  - @adatechnology/game-audio@0.13.5
+  - @adatechnology/game-fluids@0.6.3
+  - @adatechnology/game-fluids-three@0.4.22
+  - @adatechnology/game-player@0.6.3
+  - @adatechnology/game-runtime@0.2.12
+  - @adatechnology/game-terrain-three@0.5.8
+  - @adatechnology/game-vfx-three@0.9.1
+  - @adatechnology/game-weapons@0.11.2
+
+## 0.33.3
+
+### Patch Changes
+
+- 08b9519: The muzzle flash stays on the muzzle while it burns. It was played into the world at the muzzle and stayed there, while the gun follows the view: turning the view at 2 rad/s, in the three frames the flash lives it slid 50 to 95 px back over the gun (onto the receiver and the trigger of a rifle, off the side of a pistol), more with a faster turn or the kick of a heavy round.
+
+  - `EffectRequest.track` (`game-contracts`, with `EffectPose`): the live pose of the thing an effect belongs to, asked every frame while the effect lives.
+  - `game-vfx`: an effect played with `track` rides on it. Its grouped pieces (the flash's cones and core) and its light keep their place on the thing; the smoke it throws leaves from the thing and stays in the air. `VfxWorld.follow()` moves them to where the thing is now, and `PlayOptions.track` carries the pose.
+  - `game-vfx-three`: `VfxRenderer.present()` puts what rides on a thing where it is after the frame moved it, before drawing; a host that does not call it draws those effects one frame late.
+  - `game-weapons-three`: the flash of the gun in the hands (and of its grenade launcher) tracks the muzzle mark, seen through the first-person lens.
+  - `game-test-room`: calls `vfx.present()` once the modules have posed the gun.
+
+  `muzzle-mark.test.ts` checks that every firearm with a model has its `muzzle` mark at the front of its barrel. `muzzle-screen.test.ts` now also measures the smoke and a shot while the view sweeps, in both views, and fails when a firearm has no muzzle mark.
+
+- Updated dependencies [08b9519]
+  - @adatechnology/game-contracts@0.33.0
+  - @adatechnology/game-vfx@0.12.0
+  - @adatechnology/game-vfx-three@0.9.0
+  - @adatechnology/game-audio@0.13.4
+  - @adatechnology/game-destruction@0.23.2
+  - @adatechnology/game-destruction-three@0.23.2
+  - @adatechnology/game-fluids@0.6.2
+  - @adatechnology/game-fluids-three@0.4.21
+  - @adatechnology/game-player@0.6.2
+  - @adatechnology/game-runtime@0.2.11
+  - @adatechnology/game-terrain@0.7.3
+  - @adatechnology/game-terrain-three@0.5.7
+  - @adatechnology/game-weapons@0.11.1
+
 ## 0.33.2
 
 ### Patch Changes

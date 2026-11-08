@@ -21,6 +21,8 @@ import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
 import { SettlementView } from './settlement'
+import { anchorOnMesh, anchorWorld } from './emitter-anchor'
+import type { EmitterAnchor } from './emitter-anchor'
 
 let rendererCount = 0
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
@@ -305,7 +307,7 @@ class Renderer implements DestructionRenderer {
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
   /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
-  private readonly trickles: Array<{ point: Vec3; normal: Vec3; color: number | undefined; left: number; total: number; next: number }> = []
+  private readonly trickles: Array<{ point: Vec3; normal: Vec3; anchor: EmitterAnchor | null; color: number | undefined; left: number; total: number; next: number }> = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -826,11 +828,12 @@ class Renderer implements DestructionRenderer {
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.settlement.update(dt)
+    this.pieceSys.update(dt)
+    this.fragments.update(dt)
+    // what goes on at a part (fire, leaks, trickling grit) reads where the part is after the bodies moved this frame, not a frame behind
     this.updateActive(dt)
     this.updateLeaks(dt)
     this.updateTrickles(dt)
-    this.pieceSys.update(dt)
-    this.fragments.update(dt)
     this.ground.update(dt)
     this.ownVfx?.update(dt)
     this.syncTransforms()
@@ -1247,9 +1250,12 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  /** Where the object's root is now, in the world: a body that tipped or fell is there, not where it was bound. */
   private rootPoint(objectId: string): Vec3 {
     const b = this.bounds.get(objectId)
-    return b ? [b.root.position.x, b.root.position.y, b.root.position.z] : [0, 0, 0]
+    if (!b) return [0, 0, 0]
+    const p = b.root.getWorldPosition(new this.THREE.Vector3())
+    return [p.x, p.y, p.z]
   }
 
   private sound(key: string, point: Vec3, volume: number, detail?: SoundDetail): void {
@@ -1440,17 +1446,21 @@ class Renderer implements DestructionRenderer {
     // masonry crumbles in the colour of what is under the coat (brick orange, concrete grey); the generic impact would throw dark grey chips
     if (core !== undefined) this.vfx.burst('chips', ev.point, [normal.x, normal.y, normal.z], 5, 2.5, { color: core })
     else this.playEvent({ kind: 'spall', material: this.impactMaterial(def) }, ev.point)
-    if (core !== undefined) this.trickleFrom(ev.point, [normal.x, normal.y, normal.z], core)
+    if (core !== undefined) this.trickleFrom(ev.point, [normal.x, normal.y, normal.z], core, mv)
     // a drawing that shows the coat coming off itself (the house renderer cuts its plaster and draws the bricks under it) takes no flat patch
     if ((mv.mesh.userData.drawnSpalls as string[] | undefined)?.includes(ev.part)) return
     this.visuals.addSpall(mv, wp, normal, Math.sqrt(ev.area / Math.PI), core ?? fallbackColor(pv.material, def))
   }
 
-  /** Grit and dust go on falling from where a blow broke a hard face (masonry, concrete) for `TRICKLE_SECONDS`, a pinch at a time and less and less. */
-  private trickleFrom(point: Vec3, normal: Vec3, color: number | undefined): void {
+  /**
+   * Grit and dust go on falling from where a blow broke a hard face (masonry, concrete, wood) for `TRICKLE_SECONDS`, a pinch at a time and less and
+   * less. The place is held on the mesh it broke on (`mv`), so it falls with the object when it tips or a piece of it comes away.
+   */
+  private trickleFrom(point: Vec3, normal: Vec3, color: number | undefined, mv: MeshVis | null): void {
     if (this.trickles.length >= TRICKLE_MAX) this.trickles.shift()
     const total = TRICKLE_SECONDS[0] + (TRICKLE_SECONDS[1] - TRICKLE_SECONDS[0]) * this.rng()
-    this.trickles.push({ point: [point[0], point[1], point[2]], normal, color, left: total, total, next: TRICKLE_EVERY })
+    const anchor = mv ? anchorOnMesh(this.THREE, mv, point, normal) : null
+    this.trickles.push({ point: [point[0], point[1], point[2]], normal, anchor, color, left: total, total, next: TRICKLE_EVERY })
   }
 
   private updateTrickles(dt: number): void {
@@ -1463,6 +1473,15 @@ class Renderer implements DestructionRenderer {
         continue
       }
       if (t.next > 0) continue
+      if (t.anchor) {
+        // nothing left to crumble from: the part broke into fragments or is gone
+        if (!anchorWorld(t.anchor, this.visuals.shown(t.anchor.mv), this.v1, this.v2)) {
+          this.trickles.splice(i, 1)
+          continue
+        }
+        t.point = [this.v1.x, this.v1.y, this.v1.z]
+        t.normal = [this.v2.x, this.v2.y, this.v2.z]
+      }
       // falling off the face, slower as the loose grit runs out
       const share = t.left / t.total
       t.next = TRICKLE_EVERY / Math.max(share, 0.25)
@@ -1511,7 +1530,9 @@ class Renderer implements DestructionRenderer {
       this.fragments.spawn(fr as Fragment, this.fragments.materialFor(fr.material, tone, false), ev.object, maxAlive)
     }
     // a unit knocked out of masonry or concrete leaves a broken edge that goes on crumbling
-    if (def?.visual?.innerColor !== undefined || pv?.material === 'concrete' || pv?.material === 'brick') this.trickleFrom(ev.center, [0, 0, 0], color)
+    if (def?.visual?.innerColor !== undefined || pv?.material === 'concrete' || pv?.material === 'brick') {
+      this.trickleFrom(ev.center, [0, 0, 0], color, pv ? this.nearestMesh(pv, new this.THREE.Vector3(ev.center[0], ev.center[1], ev.center[2])) : null)
+    }
     // what a blow tore off a face leaves the hole it made where it is
     if (ev.torn) {
       this.impactSound(pv?.material ?? '', ev.center, 0.5, ev.blow)
@@ -1615,6 +1636,42 @@ class Renderer implements DestructionRenderer {
     })
   }
 
+  /**
+   * What goes on at a part (its fire, its leak, its burn sound, its heat) moves with the part to the object a split made of it: it goes on where the
+   * part is, as it falls, not where the object stood, and does not end because the part has a new id.
+   */
+  private followSplit(from: Bound, to: Bound): void {
+    for (const part of to.parts.keys()) {
+      const was = `${from.id}|${part}`
+      const now = `${to.id}|${part}`
+      const fire = this.fires.get(was)
+      if (fire) {
+        this.fires.delete(was)
+        fire.object = to.id
+        this.fires.set(now, fire)
+      }
+      const sound = this.burnSounds.get(was)
+      if (sound) {
+        this.burnSounds.delete(was)
+        this.burnSounds.set(now, { ...sound, object: to.id })
+      }
+      if (this.active.delete(was)) this.active.set(now, { object: to.id, part })
+    }
+    from.root.updateWorldMatrix(true, false)
+    to.root.updateWorldMatrix(true, false)
+    const into = new this.THREE.Matrix4().copy(to.root.matrixWorld).invert()
+    for (const leak of this.leaks) {
+      if (leak.object !== from.id || !to.parts.has(leak.part)) continue
+      leak.object = to.id
+      const point = leak.localPoint ? this.v1.set(...leak.localPoint).applyMatrix4(from.root.matrixWorld) : this.v1.set(...leak.point)
+      const direction = leak.localDirection ? this.v2.set(...leak.localDirection).transformDirection(from.root.matrixWorld) : this.v2.set(...leak.direction)
+      point.applyMatrix4(into)
+      direction.transformDirection(into)
+      leak.localPoint = [point.x, point.y, point.z]
+      leak.localDirection = [direction.x, direction.y, direction.z]
+    }
+  }
+
   /** Turn every loose group of the object (a detach, a collapse) into a piece of its own. */
   private splitLoose(objectId: string): void {
     if (!this.autoSplit) return
@@ -1693,6 +1750,7 @@ class Renderer implements DestructionRenderer {
     }
     this.bounds.set(newId, nb)
     for (const pv of nb.parts.values()) this.tagPart(pv, newId)
+    this.followSplit(from, nb)
     const meshes = this.meshesOf(nb)
     if (meshes.length === 0) return
     const { half, center } = this.measure(group, meshes)
