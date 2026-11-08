@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
-import { buildFromSpec } from '../src'
+import { brickWallSpec, buildFromSpec } from '../src'
 import type { ModuleHost, TestableModule } from '@adatechnology/game-contracts'
 import { makeRoom as makeBareRoom } from './helpers'
 import type { TestRoomOptions } from '../src'
@@ -97,3 +97,28 @@ describe('scenery of the arena', () => {
   })
 })
 
+
+describe('the target wall stops the player by what its follower draws', () => {
+  const walkThrough = (follow?: NonNullable<TestRoomOptions['scenery']>[string] extends infer T ? (T extends { follow?: infer F } ? F : never) : never) => {
+    const { room } = roomWithGround({ scenery: { table: null, shelf: null, target_wall: { spec: brickWallSpec(), position: [0, 0, -6], ...(follow ? { follow } : {}) } } })
+    room.look([0, 1.6, -3], [0, 1.6, -9])
+    room.walk([0, 1.6, -9], 4)
+    for (let i = 0; i < 300; i++) room.update(1 / 60)
+    return room.camera.position.z
+  }
+
+  it('without a follower the wall is its footprint and the player stops at it', () => {
+    expect(walkThrough()).toBeGreaterThan(-5.8)
+  })
+
+  it('a breach the follower draws lets the player walk through it, and beside it the wall still stops the player', () => {
+    // a hole 1.2 m wide in the middle of the wall: the rest of it blocks
+    const blocks = (x: number, z: number, radius: number): boolean => Math.abs(z + 6) < 0.1 + radius && Math.abs(x) > 0.6 - radius
+    expect(walkThrough(() => ({ blocks, owns: (id: string) => id === 'target_wall' }))).toBeLessThan(-7)
+    const { room } = roomWithGround({ scenery: { table: null, shelf: null, target_wall: { spec: brickWallSpec(), position: [0, 0, -6], follow: () => ({ blocks }) } } })
+    room.look([2, 1.6, -3], [2, 1.6, -9])
+    room.walk([2, 1.6, -9], 4)
+    for (let i = 0; i < 300; i++) room.update(1 / 60)
+    expect(room.camera.position.z).toBeGreaterThan(-5.8)
+  })
+})

@@ -155,6 +155,26 @@ describe('wallPiece', () => {
     follower.dispose()
   })
 
+  it('a body walks through the hole a rocket opened in a bay, over the bricks left low, and the pillars and the rest of the wall still stop it', () => {
+    const piece = make()
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'target' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    // a standing body: from a step (0.45 m) over the floor up to the head
+    const body = (x: number): boolean => follower.blocks(x, 0, 0.3, 0.45, 1.75)
+    expect(body(0)).toBe(true)
+    world.explode([0, 1.4, 0.3], 200000, 16, 'test')
+    for (let i = 0; i < 20; i++) world.update(0.1)
+    follower.update()
+    expect(body(0)).toBe(false)
+    const pillars = piece.spec.parts.filter((p: { id: string }) => p.id.startsWith('wall_column_')).map((p: { position: number[] }) => p.position[0]!)
+    for (const x of pillars) if (world.part(id, piece.spec.parts.find((p: { position: number[] }) => p.position[0] === x)!.id)?.status === 'intact') expect(body(x)).toBe(true)
+    // the far end of the wall, out of the rocket's reach, still stops it
+    expect(body(4.6)).toBe(true)
+    follower.dispose()
+  })
+
   it('a rocket that brings down a bay throws bricks and clumps of a few with flakes of their plaster, not slabs', () => {
     const piece = make()
     const world = createDestruction({ seed: 1 })

@@ -120,7 +120,42 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
             // a host that never calls `update` still gets the damage painted
             if (!fallback && typeof setTimeout === 'function') fallback = setTimeout(() => { fallback = null; breach.flush(Infinity); }, FOLLOW_FLUSH_FALLBACK_MS);
           });
-          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); breach.release(); }, update: () => { breach.flush(); } };
+          // a part that came loose goes on in a world object of its own (a piece), in the same space as the spec: it is found once and remembered
+          const holders = new Map<string, string>();
+          const holderOf = (pid: string): string | null => {
+            const known = holders.get(pid) ?? id;
+            if (world.part(known, pid)) return known;
+            for (const other of world.ids()) if (world.part(other, pid)) { holders.set(pid, other); return other; }
+            return null;
+          };
+          const at = new THREE.Vector3(), turn = new THREE.Quaternion();
+          /** The world point in the space of the spec as `objectId` holds it now (where it stood, or where its piece has gone). */
+          const inSpec = (objectId: string, x: number, y: number, z: number): THREE_NS.Vector3 | null => {
+            const o = world.state(objectId);
+            if (!o) return null;
+            const r = o.rotation;
+            return at.set(x - o.position[0], y - o.position[1], z - o.position[2]).applyQuaternion(turn.set(r[0], r[1], r[2], r[3]).invert());
+          };
+          const blocks = (x: number, z: number, radius: number, y0: number, y1: number): boolean => {
+            for (const part of structure.parts) {
+              const holder = holderOf(part.id), state = holder ? world.part(holder, part.id) : null;
+              // what crumbled or broke is drawn (and bumped into) as rubble by the destruction renderer
+              if (!holder || !state || (state.status !== 'intact' && state.status !== 'damaged' && state.status !== 'collapsed')) continue;
+              const low = inSpec(holder, x, y0, z);
+              if (!low) continue;
+              const ly0 = low.y, high = inSpec(holder, x, y1, z)!, ly1 = high.y, lx = high.x, lz = high.z;
+              if (part.y1 <= Math.min(ly0, ly1) || part.y0 >= Math.max(ly0, ly1)) continue;
+              const [u0, v0, u1, v1] = part.aabb, du = Math.max(u0 - lx, 0, lx - u1), dv = Math.max(v0 - lz, 0, lz - v1);
+              if (du * du + dv * dv >= radius * radius) continue;
+              const left = breach.standing(part.id);
+              if (!left) return true;
+              const s0 = (left.alongU ? lx : lz) - left.start;
+              if (left.spans.some(c => c.b > s0 - radius && c.a < s0 + radius && c.y1 > Math.min(ly0, ly1) && c.y0 < Math.max(ly0, ly1))) return true;
+            }
+            return false;
+          };
+          const owns = (objectId: string): boolean => objectId === id || [...holders.values()].includes(objectId);
+          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); breach.release(); }, update: () => { breach.flush(); }, blocks, owns };
         };
         D.piece = (id: string) => (D.active ? D.world.part(D.id, id) : null);
         D.state = () => (D.active ? D.world.state(D.id) : null);

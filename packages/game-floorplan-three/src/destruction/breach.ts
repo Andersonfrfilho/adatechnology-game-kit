@@ -98,6 +98,8 @@ interface WallView {
   openings: Map<string, Disc>
   flakes: number
   fallen: Set<string>
+  /** The units of each part still drawn at the last paint, along the wall from its start: what a body bumps into. */
+  kept: Map<string, Span[]>
 }
 
 /** The part of `unit` inside `box` (house space, `[minX, minY, minZ, maxX, maxY, maxZ]`), or null when nothing of it is. */
@@ -386,7 +388,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
         const own = cells(part, units, mask)
         const all = id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own
-        if (view.fallen.has(id)) { holes.push(...all); continue }
+        if (view.fallen.has(id)) { holes.push(...all); view.kept.set(id, []); continue }
         const thick = mask.alongU ? part.aabb[3]! - part.aabb[1]! : part.aabb[2]! - part.aabb[0]!
         const mid = mask.alongU ? (part.aabb[1]! + part.aabb[3]!) / 2 : (part.aabb[0]! + part.aabb[2]!) / 2
         if (opening) discs.push({ s: along(opening.center), y: opening.center[1]!, r: opening.radius })
@@ -404,6 +406,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const open = (c: Span) => gone(c) || (opening !== undefined && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
         const kept: typeof all = []
         for (const c of all) (open(c) ? holes : kept).push(c)
+        view.kept.set(id, kept)
         for (const c of kept) shown.push({ c, part, units, thick, mid })
         // the shots that broke a unit and left the rest of it: a crater in it
         for (const box of boxes) {
@@ -521,7 +524,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
       return {
         host: hostId, parts, items, mask, core, unitMaterial: withMask(unitsMaterial(core), mask), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
-        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(),
+        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(), kept: new Map<string, Span[]>(),
       }
     }
 
@@ -612,6 +615,15 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     return {
+      /**
+       * What still stands of the units of `partId` once its wall is cut, as drawn: spans along the wall from `start` (in the house's space, along u when
+       * `alongU`) and up. Null while the wall is whole (all of the part stands).
+       */
+      standing(partId: string): { spans: readonly Span[]; alongU: boolean; start: number } | null {
+        const hostId = hostOf(partId), view = hostId ? views.get(hostId) : undefined
+        const spans = view?.saved ? view.kept.get(partId) : undefined
+        return view && spans ? { spans, alongU: view.mask.alongU, start: view.mask.start } : null
+      },
       /** Handles a `stage` event of the house's object. Returns true when the wall was cut. */
       stage(event: Extract<DestructionEvent, { type: 'stage' }>): boolean { return event.stage === 2 && !!event.opening ? draw(event.part, { opening: event.opening }) : false },
       /**

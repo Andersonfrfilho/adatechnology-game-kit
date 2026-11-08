@@ -241,7 +241,14 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     const b = specBounds(THREE, o.spec, o.position, o.rotationY, { minHeight: 0.1 })
     if (!b) continue
     colliderIds.push(o.id)
-    colliders.push(o.id === WALL_ID ? [-size, b.minZ - 1, size, b.maxZ + 0.1] : [b.minX, b.minZ, b.maxX, b.maxZ])
+    colliders.push([b.minX, b.minZ, b.maxX, b.maxZ])
+    if (o.id !== WALL_ID) continue
+    // beside the wall, to the arena's sides: what closes the arena behind it (through a breach in the wall the player does go behind it)
+    for (const side of [[-size, b.minX], [b.maxX, size]] as const) {
+      if (side[1] - side[0] <= 0) continue
+      colliderIds.push(null)
+      colliders.push([side[0], b.minZ - 1, side[1], b.maxZ + 0.1])
+    }
   }
 
   // the tap: the host's model standing on the table top, or (by default) a post with an arm and a spout beside the table
