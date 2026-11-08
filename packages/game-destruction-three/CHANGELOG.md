@@ -1,5 +1,14 @@
 # @adatechnology/game-destruction-three
 
+## 0.23.1
+
+### Patch Changes
+
+- d9cec5c: Entulho para em cima do que ainda está construído, não só no terreno. Telhas que quebram caem sobre a laje e só escorregam para o chão as que passam da beirada; tijolos de uma parede que desmorona param no peitoril ou no que estiver embaixo. Cada caco mede o que tem embaixo com um raio para baixo no mundo de destruição (`surfaceAt`), uma vez onde cai e de novo só depois de andar meio metro.
+- f1abc28: As telhas de barro de um telhado quebrado ficam no chão. A explosão que quebra uma água do telhado a desfaz em punhados de poucas telhas (até 160 pedaços, placas de 1,8 cm de espessura), e não mais em 24 placas do tamanho da água. Pedaço grande de qualquer forma, inclusive caco chato de telha ou de vidro, ganha corpo e fica no chão como entulho, em vez de sumir depois de 12 s. A cor do pedaço vem do que a peça mais tem desenhado (as telhas do telhado), não da primeira malha dela (a faixa de reboco).
+- Updated dependencies [f1abc28]
+  - @adatechnology/game-destruction@0.23.1
+
 ## 0.23.0
 
 ### Minor Changes
