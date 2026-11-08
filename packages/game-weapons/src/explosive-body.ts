@@ -124,6 +124,11 @@ export class ExplosiveBody {
     return this.fuseLeft
   }
 
+  /** Whether this trigger sets it off (`impact` for a rocket or a 40 mm grenade, `timer` for a hand grenade). */
+  isTriggeredBy(trigger: ExplosiveTrigger): boolean {
+    return this.triggers.has(trigger)
+  }
+
   step(dt: number, probe?: SurfaceProbe): ExplosiveEvent[] {
     const events: ExplosiveEvent[] = []
     if (this.isDone) return events

@@ -20,6 +20,10 @@ The three.js renderer of [`@adatechnology/game-vfx`](../game-vfx). It draws a `V
   It plays through `host.effects`, or into a renderer of its own when the host lends none.
 - Lights use the raw colours of the Lab and are multiplied by `lightScale` (default `Math.PI`: r155+ lights are physical, the Lab's r128 ones were not).
 
+- **Water**: `createWaterEffectsLayer(THREE, effects)` draws a `WaterEffects` of game-vfx with four instanced meshes (one draw call each): the rings, shock
+  rings, wave crests and foam on the surface, the drops, bubbles and mist as sprites facing the camera, and the columns (a ragged open cone that leans
+  and flares) and the domes of thrown water. Add `layer.group` to the scene, call `sync()` after `effects.update(dt)`, `dispose()` frees it all.
+
 ```ts
 import * as THREE from 'three'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'

@@ -103,7 +103,8 @@ describe('every launcher in the ground area goes off on every lot (it never stop
     it(`${weapon}: one round at each lot, from where the player arrives`, () => {
       const { room, fireAt } = openGroundArea(weapon)
       for (const { surface, target } of lotTargets()) {
-        const aim: Vec3 = [target[0], room.terrain.heightAt(target[0], target[2]), target[2]]
+        // the player aims at what is seen there: the water of a pond, not its bed
+        const aim: Vec3 = [target[0], room.terrain.waterAt(target[0], target[2])?.level ?? room.terrain.heightAt(target[0], target[2]), target[2]]
         const blast = fireAt(EYE, aim)
         expect(blast, `${weapon} on ${surface}`).toMatchObject({ type: 'explosion', cause: 'impact' })
         const [x, y, z] = blast!.point
@@ -133,7 +134,16 @@ describe('every launcher in the ground area goes off on every lot (it never stop
         const flat = room.terrain.heightAt(spot[0], spot[2])
         const first = fireAt(from, spot)
         expect(first, `${weapon} on ${surface}`).toMatchObject({ type: 'explosion', cause: 'impact' })
-        const [cx, , cz] = first!.point
+        const [cx, cy, cz] = first!.point
+        // an impact fuze goes off on the water: there is no crater to fire into, and the second round goes off on the water again
+        const water = room.terrain.waterAt(cx, cz)
+        if (water) {
+          expect(cy, `${weapon} on the water of ${surface}`).toBeCloseTo(water.level, 1)
+          const again = fireAt(eyeAt(cx + 0.3, cz + 3), [cx, water.level, cz])
+          expect(again!.point[1], `${weapon} on the water of ${surface}`).toBeCloseTo(water.level, 1)
+          expect(roundsLeft(room)).toBe(0)
+          continue
+        }
         const dug = room.terrain.heightAt(cx, cz)
         if (DIGGABLE.includes(surface)) expect(dug, `${weapon} digs ${surface}`).toBeLessThan(flat - 0.02)
         const before = groundNow(room, [cx, 0, cz])

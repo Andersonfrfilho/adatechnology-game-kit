@@ -8,17 +8,17 @@ import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { DESTRUCTION_SOUND_KEYS, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
-import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
+import type { GaitId, Hit, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
-import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
+import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { SPRITE_KINDS, createVfx, patchSpriteKinds } from '@adatechnology/game-vfx'
-import { createVfxRenderer } from '@adatechnology/game-vfx-three'
+import { SPRITE_KINDS, WATER_SHOT_BY_CALIBER, createVfx, createWaterEffects, patchSpriteKinds, waterShotClassOf } from '@adatechnology/game-vfx'
+import { createVfxRenderer, createWaterEffectsLayer } from '@adatechnology/game-vfx-three'
 import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, spriteProbes } from '@adatechnology/game-render-three'
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
@@ -165,6 +165,16 @@ const TERRAIN_CELL = 0.1
 const GROUND_SPLASH_MAX_LITRES = 3
 /** Metres per second a body has to hit the water at for a splash. */
 const WATER_ENTRY_SPEED = 1.5
+/** The recorded splash a round or a blast on water plays. */
+const WATER_SPLASH_SOUND = 'water_splash'
+/** Per second, the share of the speed of the water a wave crest moves that a floating body takes. */
+const WAVE_GRIP = 3
+/** Below this push (m/s) a wave leaves a floater asleep. */
+const WAVE_WAKE = 0.03
+/** Metres a round is followed for the water it meets, and where its tracer ends when it hits nothing. */
+const SHOT_REACH = 40
+/** Metres between the points of a round's path read for water. */
+const WATER_TRACE_STEP = 0.25
 /** Seconds between two looks at what stands still on the ground. */
 const LOAD_EVERY = 0.2
 /** Metres over the ground a body can be and still stand on it. */
@@ -396,6 +406,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       cratersAt: (x, z) => terrain.material(terrain.columnAt(x, z).material).reposeDegrees !== undefined,
     }),
   })
+  // what rounds and blasts do to water: a splash by calibre and by charge, rings and foam that stop at the shore, waves that push what floats
+  const water = createWaterEffects({ levelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null })
+  const waterView = createWaterEffectsLayer(THREE, water)
+  scene.add(waterView.group)
   const renderer = createDestructionRenderer(THREE, {
     scene,
     world,
@@ -453,16 +467,34 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   })
 
   // the ground is an object of the world: shots, blows, blasts and flames reach it like anything else
-  const showGroundBlow = (result: TerrainBlowResult): void => {
+  /** A charge goes off in or over water: what the water does, and whether it went off under it. */
+  const blastWater = (detonation: Detonation): { readonly underwater: boolean } | null => {
+    const here = terrain.waterAt(detonation.point[0], detonation.point[2])
+    if (!here) return null
+    const kind = arsenal.explosives.get(detonation.explosive)?.kind
+    const plan = water.blast({ point: detonation.point, level: here.level, depth: here.depth, explosive: detonation.explosive, ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}), ...(kind ? { kind } : {}) })
+    const surface: Vec3 = [detonation.point[0], here.level, detonation.point[2]]
+    audio?.play(WATER_SPLASH_SOUND, { position: surface, volume: 1, intensity: 1 })
+    // the rain of the column falls back a second later
+    if (plan.columnHeight > 1) audio?.play(WATER_SPLASH_SOUND, { position: surface, volume: 0.5, intensity: 0.4, delay: Math.sqrt((2 * plan.columnHeight) / GRAVITY_EARTH) * 1.6 })
+    const where = plan.underwater ? 'under' : plan.burstDepth < -0.3 ? 'over' : 'surface'
+    action('water_blast', t('act.water_blast', { explosive: detonation.explosive, where: t(`water.${where}`), height: num(plan.columnHeight, 1), ring: num(plan.shockRadius, 1) }), {
+      data: { explosive: detonation.explosive, tnt: plan.tnt, where, underwater: plan.underwater, columnHeight: plan.columnHeight, domeRadius: plan.domeRadius, shockRadius: plan.shockRadius, waveAmplitude: plan.waveAmplitude, point: detonation.point },
+    })
+    return { underwater: plan.underwater }
+  }
+  const showGroundBlow = (result: TerrainBlowResult, hit?: Hit): void => {
     const material = terrain.material(result.removed[0]?.material ?? result.exposed)
     const def = world.materials.get(material.id)
     const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
     renderer.emit(material.debris === 'clods' ? 'dust' : material.debris === 'blocks' ? 'chips' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
     if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
     const litres = Math.min(GROUND_SPLASH_MAX_LITRES, 0.1 + result.radius * 2)
-    // water on water leaves no stain: a burst of drops and the rings the terrain already drew
-    if (result.water) renderer.emit('foam', [result.point[0], result.water.level + 0.05, result.point[2]], [0, 1, 0], Math.max(6, size * 2), 2 + result.radius * 4)
-    else if (material.splash) fluids.splash(material.splash, [result.point[0], result.point[1] + 0.05, result.point[2]], litres, [0, 1.5 + result.radius * 3, 0])
+    // water on water leaves no stain: the terrain drew its rings
+    if (result.water) {
+      // a round splashed where it crossed the surface (`fireShots`) and a charge where it went off (`blastWater`): a blow or a body only stirs it
+      if (hit?.type !== 'ballistic' && hit?.type !== 'explosive') renderer.emit('foam', [result.point[0], result.water.level + 0.05, result.point[2]], [0, 1, 0], Math.max(6, size * 2), 2 + result.radius * 4)
+    } else if (material.splash) fluids.splash(material.splash, [result.point[0], result.point[1] + 0.05, result.point[2]], litres, [0, 1.5 + result.radius * 3, 0])
     playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius), impactSoundKeys(material.id, def))
   }
   terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
@@ -1516,6 +1548,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     renderer.clear()
     vfx.world.clear()
+    water.clear()
     fluids.clearStains([0, 0, 0], 1e4)
     fluidView.clear()
     film.clear()
@@ -2261,6 +2294,63 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  /** Where a round from `origin` along `direction` goes down through standing water within `reach` metres, or null (it starts under water, or never meets any). */
+  const waterEntryOf = (origin: Vec3, direction: Vec3, reach: number): { readonly point: Vec3; readonly distance: number } | null => {
+    if (direction[1] >= 0) return null
+    const under = (distance: number): boolean => {
+      const y = origin[1] + direction[1] * distance
+      const here = terrain.waterAt(origin[0] + direction[0] * distance, origin[2] + direction[2] * distance)
+      return here !== null && y < here.level
+    }
+    if (under(0)) return null
+    for (let distance = WATER_TRACE_STEP; distance <= reach; distance += WATER_TRACE_STEP) {
+      if (!under(distance)) continue
+      let dry = distance - WATER_TRACE_STEP
+      let wet = distance
+      for (let halving = 0; halving < 8; halving++) {
+        const middle = (dry + wet) / 2
+        if (under(middle)) wet = middle
+        else dry = middle
+      }
+      const x = origin[0] + direction[0] * wet
+      const z = origin[2] + direction[2] * wet
+      return { point: [x, terrain.waterAt(x, z)?.level ?? origin[1] + direction[1] * wet, z], distance: wet }
+    }
+    return null
+  }
+
+  /**
+   * A round that meets water on its way: the splash of its calibre at the surface, at its angle and speed. Below the angle a round skips off, it leaves
+   * the water and flies on from there with what speed it kept; otherwise it goes in and on to what is under (the bed takes what the water left of it).
+   */
+  const shootThroughWater = (s: Shot, entry: { readonly point: Vec3; readonly distance: number }): { results: ReturnType<typeof world.shoot>; from: Vec3; direction: Vec3 } => {
+    const left = s.energy > 0 ? Math.max(0, s.energyAt(entry.distance) / s.energy) : 1
+    const speed = s.speed * Math.sqrt(left)
+    const profile = WATER_SHOT_BY_CALIBER[s.caliberId] ?? waterShotClassOf({ grams: s.mass ?? 8, speed, diameter: s.caliber, pellet: s.pellet > 0 || s.ammo === 'buck' })
+    const depth = terrain.waterAt(entry.point[0], entry.point[2])?.depth ?? 1
+    const plan = water.shot({ point: entry.point, direction: s.direction, profile, depth, speed })
+    audio?.play(WATER_SPLASH_SOUND, { position: entry.point, volume: Math.min(1, 0.15 + plan.columnHeight * 0.4), intensity: Math.min(1, plan.columnHeight / 2.2) })
+    // one line per trigger pull: the first pellet of a load speaks for the rest
+    if (s.pellet === 0) {
+      action('water_splash', t('act.water_splash', { profile, height: num(plan.columnHeight, 2), angle: num(plan.angleDeg, 0), ricochet: plan.ricochet ? t('act.water_ricochet') : '' }), {
+        data: { weapon: s.weapon, caliber: s.caliberId, profile, columnHeight: plan.columnHeight, ringRadius: plan.ringRadius, angleDeg: plan.angleDeg, ricochet: plan.ricochet !== null, trailLength: plan.trailLength, drops: plan.drops, point: entry.point },
+      })
+    }
+    if (!plan.ricochet) return { results: world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player', shotExtras(s)), from: s.origin, direction: s.direction }
+    const share = plan.ricochet.speedShare
+    const out = plan.ricochet.direction as Vec3
+    const from: Vec3 = [entry.point[0] + out[0] * 0.02, entry.point[1] + out[1] * 0.02, entry.point[2] + out[2] * 0.02]
+    return { results: world.shoot(from, out, s.energyAt(entry.distance) * share * share, s.caliber, 'player', shotExtras(s, entry.distance)), from, direction: out }
+  }
+
+  /** One round through the world: the water it meets first, then what it hits. */
+  const traceShot = (s: Shot): { results: ReturnType<typeof world.shoot>; from: Vec3; direction: Vec3; entry: Vec3 | null } => {
+    const entry = waterEntryOf(s.origin, s.direction, SHOT_REACH)
+    const before = entry ? world.raycast(s.origin, s.direction, entry.distance) : null
+    if (!entry || (before && before.distance < entry.distance - 0.01)) return { results: world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player', shotExtras(s)), from: s.origin, direction: s.direction, entry: null }
+    return { ...shootThroughWater(s, entry), entry: entry.point }
+  }
+
   const fireShots = (shots: Shot[], recoil: [number, number], id = toolId, hand: ToolHand = 'R'): void => {
     if (shots.length === 0) return
     const w = toolName(id)
@@ -2277,9 +2367,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     withoutHeld(() => {
       for (const s of shots) {
         energy = Math.max(energy, s.energy)
-        const results = world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player', shotExtras(s))
+        const traced = traceShot(s)
+        const results = traced.results
         const r0 = results.find((r) => r.part && r.point)
-        let end: Vec3 = [s.origin[0] + s.direction[0] * 40, s.origin[1] + s.direction[1] * 40, s.origin[2] + s.direction[2] * 40]
+        let end: Vec3 = [traced.from[0] + traced.direction[0] * SHOT_REACH, traced.from[1] + traced.direction[1] * SHOT_REACH, traced.from[2] + traced.direction[2] * SHOT_REACH]
         if (r0?.point && r0.part) {
           hits++
           end = r0.point
@@ -2290,7 +2381,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           for (let k = 0; k < 3; k++) push.impulse[k] += blow.impulse[k]!
           pushes.set(r0.object, push)
         }
-        if (shots.length <= 3 || rnd() < 0.34) tracer(m, end)
+        const skipped = traced.entry && traced.from !== s.origin ? traced.entry : null
+        if (shots.length <= 3 || rnd() < 0.34) {
+          tracer(m, skipped ?? end)
+          if (skipped) tracer(skipped, end)
+        }
       }
     })
     shoveFree(pushes)
@@ -2610,6 +2705,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     say,
     projectileModel: options.projectileModel,
     audio,
+    water: blastWater,
+    waterLevelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null,
+    splash: (point, velocity) => {
+      const speed = Math.hypot(velocity[0], velocity[1], velocity[2])
+      if (speed < 1e-3) return
+      water.shot({ point, direction: [velocity[0] / speed, velocity[1] / speed, velocity[2] / speed], profile: 'object', speed, depth: terrain.waterAt(point[0], point[2])?.depth ?? 1 })
+      audio?.play(WATER_SPLASH_SOUND, { position: point, volume: 0.5, intensity: 0.3 })
+    },
   })
 
   // ----- the trigger
@@ -3274,12 +3377,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     }
     const lift = waterLift({ mass: piece.mass, volume, submerged: (here.level - box.min.y) / Math.max(1e-3, size.y) })
+    // the crest of a blast's wave carries what floats with it
+    const wave = lift.floats ? water.waveAt(centre.x, centre.z) : null
+    const isRocked = wave !== null && Math.hypot(wave.push[0], wave.push[1]) > WAVE_WAKE
     // a floater already at its line stays asleep; one held under by what lay on it, or that fell in, wakes
-    if (piece.sleeping && !(lift.floats && lift.acceleration > 9.81 * 1.1)) return
+    if (piece.sleeping && !isRocked && !(lift.floats && lift.acceleration > 9.81 * 1.1)) return
     piece.sleeping = false
     const keep = Math.exp(-lift.drag * dt)
-    piece.velocity = [piece.velocity[0] * keep, (piece.velocity[1] + lift.acceleration * dt) * keep, piece.velocity[2] * keep]
+    const carry = isRocked ? Math.min(1, WAVE_GRIP * dt) : 0
+    const pushX = wave?.push[0] ?? 0
+    const pushZ = wave?.push[1] ?? 0
+    piece.velocity = [(piece.velocity[0] + (pushX - piece.velocity[0]) * carry) * keep, (piece.velocity[1] + lift.acceleration * dt) * keep, (piece.velocity[2] + (pushZ - piece.velocity[2]) * carry) * keep]
     piece.angularVelocity = [piece.angularVelocity[0] * keep, piece.angularVelocity[1] * keep, piece.angularVelocity[2] * keep]
+  }
+  /** A player standing in water is carried by the crest of a blast's wave. */
+  const rockPlayer = (dt: number): void => {
+    const here = terrain.waterAt(player.position[0], player.position[2])
+    if (!here || player.position[1] >= here.level) return
+    const wave = water.waveAt(player.position[0], player.position[2])
+    if (Math.hypot(wave.push[0], wave.push[1]) <= WAVE_WAKE) return
+    player.moveBy(wave.push[0] * dt, wave.push[1] * dt)
   }
   const updateWater = (dt: number): void => {
     for (const e of entries.values()) if (e.piece) floatPiece(e.piece, dt)
@@ -3664,8 +3781,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     terrainView.sync(camera.position)
     showGroundFire(dt)
     vfx.update(dt)
+    water.setCamera([camera.position.x, camera.position.y, camera.position.z])
+    water.update(dt)
+    waterView.sync()
     updateImpacts()
     updateWater(dt)
+    rockPlayer(dt)
     updateLoads(dt)
     if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     fluidView.update(dt)
@@ -4681,6 +4802,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     setBlast: (next) => {
       blastOptions = { ...blastOptions, ...next }
     },
+    blastAt: (explosive, point) => explosives.blastAt(toolId, explosive, point),
     pause() {
       scheduler.pause()
     },
@@ -4816,6 +4938,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       loading.dispose()
       renderer.dispose()
       vfx.dispose()
+      waterView.dispose()
       lights.dispose()
       pools.materials.dispose()
       pools.geometries.dispose()

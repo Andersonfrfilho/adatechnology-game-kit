@@ -5,8 +5,8 @@ import { locale as localeTable } from './locale'
 
 type ThreeLib = typeof THREE_NS
 
-/** The lots of the area, side by side in two rows, one of each ground: natural ones in the back row, built ones in front. */
-export const TERRAIN_STRIPS = ['lawn', 'dirt', 'sand', 'mud', 'dry_clay', 'gravel_bed', 'snow', 'shallow_water', 'bedrock', 'road', 'cobblestone', 'paver_floor', 'stone_paving', 'concrete_slab', 'suspended_slab', 'tile_floor', 'wood_floor'] as const
+/** The lots of the area, side by side in two rows, one of each ground: the soft and wet ones in the back row, rock and the built ones in front. */
+export const TERRAIN_STRIPS = ['lawn', 'dirt', 'sand', 'mud', 'dry_clay', 'gravel_bed', 'snow', 'shallow_water', 'pond', 'bedrock', 'road', 'cobblestone', 'paver_floor', 'stone_paving', 'concrete_slab', 'suspended_slab', 'tile_floor', 'wood_floor'] as const
 const LOT_WIDTH = 3
 const LOT_DEPTH = 3.8
 const LOTS_PER_ROW = 9
