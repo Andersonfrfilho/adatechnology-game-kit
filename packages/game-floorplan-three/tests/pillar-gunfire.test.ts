@@ -147,3 +147,36 @@ describe('a 40 mm grenade on the corner of a pillar', () => {
     for (const c of chipped) expect(Math.abs(c.center[1] - local)).toBeLessThanOrEqual(0.5)
   })
 })
+
+describe('the cut of a pillar, drawn', () => {
+  it('leaves lumps of concrete stuck on the bars where its blocks broke off, not the bare cage', () => {
+    const piece = wallPiece(THREE, { w: 10, h: 3, house: { document: fakeDocument } })
+    const world = createDestruction({ seed: 1 })
+    const id = world.add(piece.spec, { id: 'w' })
+    const root = piece.build(THREE)
+    const follower = piece.follow(root, world, id)!
+    const part = piece.spec.parts.find((p: { id: string }) => p.id === PILLAR)!
+    const [x, y, z] = part.position as Vec3
+    const half = (part.shape as { size: number[] }).size.map((v) => v / 2)
+    for (let k = 0; k < 80 && !world.part(id, PILLAR)!.chipped?.length; k++) world.shoot([x, y, z + 5], [0, 0, -1], ROUNDS.fifty.energy, ROUNDS.fifty.caliber, 'test', { penetration: ROUNDS.fifty.penetration })
+    for (let k = 0; k < 10; k++) world.shoot([x, y, z + 5], [0, 0, -1], ROUNDS.fifty.energy, ROUNDS.fifty.caliber, 'test', { penetration: ROUNDS.fifty.penetration })
+    world.update(1 / 30)
+    follower.update()
+    const gone = world.part(id, PILLAR)!.chipped!
+    expect(gone.length).toBeGreaterThan(0)
+    const units = root.getObjectByName('breach:wall_0_0') as THREE.InstancedMesh
+    root.updateMatrixWorld(true)
+    const m = new THREE.Matrix4(), p = new THREE.Vector3(), s = new THREE.Vector3(), q = new THREE.Quaternion()
+    let lumps = 0
+    for (let i = 0; i < units.count; i++) {
+      units.getMatrixAt(i, m)
+      m.decompose(p, q, s)
+      p.applyMatrix4(units.matrixWorld)
+      // small pieces inside the pillar where its blocks are gone
+      const inGone = gone.some((c) => Math.abs(p.y - (y + c.center[1])) <= c.size[1] / 2 && Math.abs(p.x - (x + c.center[0])) <= c.size[0] / 2)
+      if (inGone && Math.abs(p.x - x) <= half[0]! && Math.abs(p.z - z) <= half[2]! && Math.max(s.x, s.y, s.z) <= 0.07) lumps++
+    }
+    expect(lumps).toBeGreaterThan(0)
+    follower.dispose()
+  })
+})

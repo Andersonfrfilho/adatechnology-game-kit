@@ -50,6 +50,12 @@ const MASK_TEXEL = 0.02
 const SPALL_MIN = 0.025, SPALL_RAGGED = 0.045
 /** Depth of the plaster over the units: what is seen inside the edge of a hole is the units this far behind the face. */
 const COVER = 0.015
+/** The lumps of concrete left on a member's bars where its blocks broke off: how far in from its faces the bars run, how many a block can leave on each bar, the chance of each and their size (m). */
+const LUMP_BAR_INSET = 0.035
+const LUMPS_PER_BAR = 2
+const LUMP_CHANCE = 0.6
+const LUMP_MIN = 0.03
+const LUMP_MAX = 0.065
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
 const MAX_FLAKES = 64
 
@@ -382,6 +388,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       // where the plaster (or the cover) came off and the unit under it stayed: a patch of the face, ragged at the edge
       const flakes: { s: number; y: number; r: number }[] = []
       const shown: { c: Span; part: HouseStructurePart; units: PartUnits; thick: number; mid: number }[] = []
+      // the blocks of a cast member (a pillar, a beam) that broke off: lumps of their concrete stay stuck on the bars that ran through them
+      const castGone: { c: Span; part: HouseStructurePart; thick: number; mid: number }[] = []
       const pillars = pillarSpans(view)
       for (const id of view.parts) {
         const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
@@ -407,6 +415,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const kept: typeof all = []
         for (const c of all) (open(c) ? holes : kept).push(c)
         view.kept.set(id, kept)
+        if (units.mortar === part.material) for (const c of all) if (!kept.includes(c)) castGone.push({ c, part, thick, mid })
         for (const c of kept) shown.push({ c, part, units, thick, mid })
         // the shots that broke a unit and left the rest of it: a crater in it
         for (const box of boxes) {
@@ -479,6 +488,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           at(len - 0.012, h - 0.012, thick - 2 * COVER, tone(base, 0.8 + 0.35 * n))
         }
       }
+      list.push(...stuckLumps(castGone, mask, view.bounds))
       if (view.units) { view.units.removeFromParent(); view.units.dispose() }
       const units = new THREE.InstancedMesh(unitGeometry, view.unitMaterial, Math.max(1, list.length))
       units.name = 'breach:' + view.host
@@ -526,6 +536,34 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         host: hostId, parts, items, mask, core, unitMaterial: withMask(unitsMaterial(core), mask), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
         chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(), kept: new Map<string, Span[]>(),
       }
+    }
+
+    /**
+     * Lumps of concrete left on the bars where blocks of a cast member broke off: concrete is bonded to its steel, so what a cut or a crater takes out
+     * leaves broken pieces around the bars that ran through it (at the member's corners, under the cover), more or fewer by the block. Deterministic by place.
+     */
+    function stuckLumps(gone: readonly { c: Span; part: HouseStructurePart; thick: number; mid: number }[], mask: WallMask, bounds: number[]): UnitBox[] {
+      const out: UnitBox[] = []
+      const grey = fragmentMaterial('concrete').color.getHex()
+      for (const { c, part, thick, mid } of gone) {
+        const p0 = (mask.alongU ? part.aabb[0]! : part.aabb[1]!) - mask.start, p1 = (mask.alongU ? part.aabb[2]! : part.aabb[3]!) - mask.start
+        const bars = [p0 + LUMP_BAR_INSET, p1 - LUMP_BAR_INSET].filter((s) => s >= c.a - 1e-6 && s <= c.b + 1e-6)
+        for (const s of bars) {
+          for (const side of [-1, 1]) {
+            const d = mid + side * (thick / 2 - LUMP_BAR_INSET)
+            for (let k = 0; k < LUMPS_PER_BAR; k++) {
+              const r = (n: number) => { const x = Math.sin(s * 91.7 + d * 47.3 + c.y0 * 113.1 + k * 7.9 + n * 3.3) * 43758.5453; return x - Math.floor(x) }
+              if (r(1) > LUMP_CHANCE) continue
+              const y = c.y0 + (0.15 + 0.7 * r(2)) * (c.y1 - c.y0)
+              const sa = LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(3), sy = LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(4), sd = LUMP_MIN + (LUMP_MAX - LUMP_MIN) * r(5)
+              const centre = mask.start + s + (r(6) - 0.5) * 0.02
+              const unit = clipToBox({ x: mask.alongU ? centre : d, y, z: mask.alongU ? d : centre, sx: mask.alongU ? sa : sd, sy, sz: mask.alongU ? sd : sa, colour: tmp.c.setHex(grey).multiplyScalar(0.85 + 0.2 * r(7)).getHex() }, bounds)
+              if (unit) out.push(unit)
+            }
+          }
+        }
+      }
+      return out
     }
 
     /** Moves the wall's range to the masked shells (once): from then on the wall is drawn cut where its units went. */
