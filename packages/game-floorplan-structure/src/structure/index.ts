@@ -45,7 +45,7 @@ export function buildStructure(source: StructureSource, options: StructureOption
   const extras = options.extras ?? built.extras ?? {}
   if (construction.system === 'canvas') return buildCanvasStructure(construction, extras)
   const tank = options.tank !== undefined ? options.tank : (source.waterTank ?? null)
-  const context = createContext(source, construction, extras, tank, { porchRoofOnPostsOnly: options.porchRoofOnPostsOnly ?? refined, rafterRoof: options.rafterRoof ?? refined, wallPillarSpacing: wallPillarSpacingOf(options), visorSections: options.visorSections === true })
+  const context = createContext(source, construction, extras, tank, { porchRoofOnPostsOnly: options.porchRoofOnPostsOnly ?? refined, rafterRoof: options.rafterRoof ?? refined, roofBays: options.roofBays ?? refined, wallPillarSpacing: wallPillarSpacingOf(options), visorSections: options.visorSections === true })
   addFoundation(context)
   if (options.groundBeams !== false) addGroundBeams(context)
   buildFloors(context)

@@ -59,9 +59,15 @@ const isBearing = (part: StructurePart): boolean => part.role === 'column' || pa
 
 /**
  * Capacity of each loaded part, as a designer would size it: a pillar or bearing wall uses `safety` of it at rest and stays under `redundancy` when
- * any other pillar or bearing wall is lost (the house holds one loss and falls with two); every other part uses `safetyOthers`.
+ * any other pillar or bearing wall is lost (the house holds one loss and falls with two); every other part uses `safetyOthers`, and a rafter or roof bay
+ * also stays under `redundancy` after that loss (the bays' load moves to the rafter beside the lost pillar).
  * `sizeStructure` of game-destruction gives the same numbers except for beams of a framed building (it holds them under `redundancy` too).
  */
+/** A roof bay or the rafter under it: its load moves to the neighbour when a pillar below is lost (whole trusses keep the team's sizing). */
+function isRoofFrame(part: StructurePart): boolean {
+  return part.role === 'roof' || part.id.startsWith('rafter')
+}
+
 export function sizeCapacities(parts: readonly StructurePart[], supports: readonly Support[], options: SizingOptions): Map<string, number> {
   const loads = loadsAtRest(parts, supports)
   const worst = new Map<string, number>()
@@ -75,7 +81,8 @@ export function sizeCapacities(parts: readonly StructurePart[], supports: readon
   for (const part of parts) {
     const load = loads.get(part.id)
     if (load === undefined || part.role === 'none') continue
-    const factor = isBearing(part) ? Math.max(1 / options.safety, (worst.get(part.id) ?? 1) / options.redundancy) : 1 / options.safetyOthers
+    const afterLoss = (worst.get(part.id) ?? 1) / options.redundancy
+    const factor = isBearing(part) ? Math.max(1 / options.safety, afterLoss) : isRoofFrame(part) ? Math.max(1 / options.safetyOthers, afterLoss) : 1 / options.safetyOthers
     capacities.set(part.id, Math.max(1, load * factor))
   }
   return capacities

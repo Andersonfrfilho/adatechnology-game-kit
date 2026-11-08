@@ -157,6 +157,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
         ...(request.seed !== undefined ? { seed: request.seed } : {}),
         ...(request.param !== undefined ? { param: request.param } : {}),
         ...(request.values ? { values: request.values } : {}),
+        ...(request.track ? { track: request.track } : {}),
       })
     },
     stop: (handle) => world.stop(handle),
@@ -184,6 +185,11 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       marks.update(dt)
       syncAll()
       overlay?.update(screenNow())
+    },
+    present() {
+      if (!world.follow()) return
+      lights.sync()
+      workshopLayers?.sync()
     },
     warmUpProbes() {
       releaseAnchors()

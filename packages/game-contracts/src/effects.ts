@@ -20,6 +20,18 @@ export interface EffectRequest {
   readonly orientation?: readonly [number, number, number, number]
   /** Named numbers the effect reads (a size, a length of time, a rate): which ones belong to the effect, and an effect that does not read one ignores it. */
   readonly values?: Readonly<Record<string, number>>
+  /**
+   * Where the thing the effect belongs to is now, asked every frame while the effect lives (the muzzle of a gun in the hands, which the view turns and the kick
+   * moves after the shot): what the effect draws in the thing's own axes (a muzzle flash) and its light stay on it; what it throws free (smoke) stays in the
+   * world. `null` leaves the effect where it was last put. A host that cannot move a live effect leaves it at `point`.
+   */
+  readonly track?: () => EffectPose | null
+}
+
+/** A place and a turn in the world: `orientation` as a unit quaternion `[x, y, z, w]`, the same axes as {@link EffectRequest.orientation}. */
+export interface EffectPose {
+  readonly point: Vec3
+  readonly orientation?: readonly [number, number, number, number]
 }
 
 /** A box in the frame of an {@link Enclosure}: `center` is the offset from the enclosure's centre along its own axes, `halfSize` half the size along each. */

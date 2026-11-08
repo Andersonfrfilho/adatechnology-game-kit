@@ -3,6 +3,9 @@ import type { ExplosiveDef, ExplosiveId, ExplosiveTrigger, Use, Vec3, WeaponRule
 import { distance, dot, length } from './vec'
 
 const EPS = 1e-9
+/** Steps in a row a launched round must stay still (moving under 5% of `restSpeed`) to count as at rest: one is not enough, a round shot straight up stops for an instant at the top. */
+const STILL_STEPS = 2
+const STILL_SHARE = 0.05
 
 /** Everything a host needs to apply a blast: where, how big, in which direction, and what else it does. */
 export interface Detonation {
@@ -29,7 +32,7 @@ export interface Detonation {
 export type ExplosiveEvent =
   | { type: 'armed'; at: number; distance: number }
   | { type: 'impact'; at: number; point: Vec3; armed: boolean }
-  /** Hit something before it was armed: it does not explode. */
+  /** Hit something before it was armed and `rules.explosives.unarmedImpact` is `dud`: it does not explode. */
   | { type: 'dud'; at: number; point: Vec3 }
   | { type: 'detonate'; at: number; detonation: Detonation }
 
@@ -82,6 +85,9 @@ export class ExplosiveBody {
   private isArmed: boolean
   private isDone = false
   private isDud = false
+  /** Fired with a speed and an impact fuze (a rocket, a 40 mm grenade): it must end in a blast, never lie live on what it hit. */
+  private readonly isLaunched: boolean
+  private stillSteps = 0
 
   constructor(init: ExplosiveBodyInit) {
     this.explosive = init.explosive
@@ -93,6 +99,7 @@ export class ExplosiveBody {
     this.isArmed = this.armDistance <= 0
     this.fuseLeft = this.triggers.has('timer') ? init.fuse : undefined
     this.rules = init.rules
+    this.isLaunched = this.triggers.has('impact') && this.moves()
   }
 
   get age(): number {
@@ -124,6 +131,10 @@ export class ExplosiveBody {
     const slice = this.fuseLeft === undefined ? seconds : Math.min(seconds, this.fuseLeft)
     this.fly(slice, probe, events)
     if (this.isDone) return events
+    if (this.isLaunched && this.isSpent()) {
+      events.push(this.detonate(this.clock >= this.rules.selfDestructSeconds ? 'timer' : 'impact'))
+      return events
+    }
     if (this.fuseLeft !== undefined) {
       this.fuseLeft -= slice
       if (this.fuseLeft <= EPS) events.push(this.detonate('timer'))
@@ -142,11 +153,18 @@ export class ExplosiveBody {
     return length(this.velocity) > EPS
   }
 
+  /** A launched round that came to rest (stopped, or still for `STILL_STEPS` steps) or flew past its self-destruct time. */
+  private isSpent(): boolean {
+    if (this.clock >= this.rules.selfDestructSeconds) return true
+    return !this.moves() || this.stillSteps >= STILL_STEPS
+  }
+
   private fly(seconds: number, probe: SurfaceProbe | undefined, events: ExplosiveEvent[]): void {
     if (seconds <= 0 || !this.moves()) {
       this.clock += Math.max(0, seconds)
       return
     }
+    const start = this.position
     this.velocity = [this.velocity[0], this.velocity[1] - this.rules.gravity * seconds, this.velocity[2]]
     const next: Vec3 = [this.position[0] + this.velocity[0] * seconds, this.position[1] + this.velocity[1] * seconds, this.position[2] + this.velocity[2] * seconds]
     const hit = probe?.(this.position, next) ?? null
@@ -158,6 +176,7 @@ export class ExplosiveBody {
     const hitAt = this.clock + (hit && planned > EPS ? seconds * Math.min(1, moved / planned) : seconds)
     this.clock += seconds
     if (length(this.velocity) > EPS) this.facing = normalize(this.velocity)
+    this.stillSteps = distance(start, this.position) < this.rules.restSpeed * STILL_SHARE * seconds ? this.stillSteps + 1 : 0
     this.checkArmed(events)
     if (hit) this.onImpact(hit, hitAt, events)
   }
@@ -171,7 +190,7 @@ export class ExplosiveBody {
   private onImpact(hit: NonNullable<ReturnType<SurfaceProbe>>, at: number, events: ExplosiveEvent[]): void {
     events.push({ type: 'impact', at, point: hit.point, armed: this.isArmed })
     if (this.triggers.has('impact')) {
-      if (this.isArmed) events.push(this.detonate('impact', at))
+      if (this.isArmed || this.rules.unarmedImpact !== 'dud') events.push(this.detonate('impact', at))
       else {
         this.isDone = true
         this.isDud = true

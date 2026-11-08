@@ -280,6 +280,8 @@ export interface StructureOptions {
   porchRoofOnPostsOnly?: boolean
   /** Gable roofs as rafters of each side and a ridge beam (a side falls with the wall it rests on) instead of whole trusses. Default: when the detail is not `coarse`. */
   rafterRoof?: boolean
+  /** Each roof pane cut into bays between consecutive trusses, so a blast or a fallen truss takes only the bays it reaches. Default: when the detail is not `coarse`. */
+  roofBays?: boolean
   wallDetail?: WallDetail
   /** `false`: no roof (a free-standing wall, a garden wall). Default `true`. */
   roof?: boolean

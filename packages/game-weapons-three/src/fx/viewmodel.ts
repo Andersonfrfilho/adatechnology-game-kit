@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, FIRST_PERSON_LAYER, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
-import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, ToolHand, HandPose } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, ToolHand, HandPose } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -204,12 +204,19 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
         play: (request) => {
           if (!lens || !request.point) return worldSink.play(request)
           const at = toWorldLens(camera, lensPoint.set(...request.point), worldFovOf(), lens.fov)
-          return worldSink.play({ ...request, point: [at.x, at.y, at.z] })
+          const track = request.track
+          return worldSink.play({ ...request, point: [at.x, at.y, at.z], ...(track ? { track: () => seenThroughLens(track()) } : {}) })
         },
         stop: (handle) => worldSink.stop(handle),
       }
     : undefined
   const effects = createEffects(THREE, lensSink, random)
+  /** A pose of the gun as drawn through its lens, where the world sees it (a tracked flash follows the muzzle the eye sees); as it is out of first person. */
+  function seenThroughLens(pose: EffectPose | null): EffectPose | null {
+    if (!pose || !lens) return pose
+    const at = toWorldLens(camera, trackPoint.set(...pose.point), worldFovOf(), lens.fov)
+    return { ...pose, point: [at.x, at.y, at.z] }
+  }
   const hand = new THREE.Group()
   hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
@@ -393,6 +400,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let lens: { readonly kind: ViewHoldKind; readonly fov: number } | null = null
   let lensLayer = -1
   const lensPoint = new THREE.Vector3()
+  const trackPoint = new THREE.Vector3()
   const worldFovOf = (): number => (camera as THREE_NS.PerspectiveCamera).fov ?? 72
   const setLens = (kind: ViewHoldKind | null): void => {
     const fov = kind ? VIEW_HOLD[kind].fov : null

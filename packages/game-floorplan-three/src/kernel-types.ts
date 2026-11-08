@@ -724,7 +724,9 @@ export interface RoofRect {
 export interface KernelRoofTiles {
   R_STYLE(): string
   /** Tile relief on a roof plane (colonial rows or fibre cement waves). */
-  tileRelief(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string): void
+  tileRelief(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string, origin?: readonly number[]): void
+  /** Tile relief on a roof plane, one piece per bay of the plan's panes it covers. */
+  paneTiles(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string): void
   /** Ridge or hip cap along a line. */
   ridge(a: readonly number[], b: readonly number[], type: string, roofColor: Hex): void
   /** The structure piece of the roof plane under the point (or the nearest). */
