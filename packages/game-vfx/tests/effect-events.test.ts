@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
-import { createVfx, effectForEvent, EVENT_EFFECTS, GAME_EFFECTS, locales, VIEWMODEL_EFFECTS, WORKSHOP_EFFECTS } from '../src'
+import { createVfx, DEBRIS_EFFECT_FAMILIES, effectForEvent, EVENT_EFFECTS, GAME_EFFECTS, locales, VIEWMODEL_EFFECTS, WORKSHOP_EFFECTS } from '../src'
 
 describe('event effects', () => {
   it('picks the effect of each Phase 2 event', () => {
     expect(effectForEvent({ kind: 'spall', material: 'concrete' })).toBe('impact_concrete')
     expect(effectForEvent({ kind: 'spall' })).toBeUndefined()
-    expect(effectForEvent({ kind: 'stage', stage: 1 })).toBe('stage_crack')
-    expect(effectForEvent({ kind: 'stage', stage: 2 })).toBe('breach_dust')
-    expect(effectForEvent({ kind: 'stage', stage: 3 })).toBe('collapse_dust')
+    expect(effectForEvent({ kind: 'stage', stage: 1, material: 'masonry' })).toBe('stage_crack_masonry')
+    expect(effectForEvent({ kind: 'stage', stage: 1, material: 'wood' })).toBe('stage_crack_wood')
+    expect(effectForEvent({ kind: 'stage', stage: 2, material: 'glass' })).toBe('breach_dust_glass')
+    expect(effectForEvent({ kind: 'stage', stage: 3, material: 'metal' })).toBe('collapse_dust_metal')
+    // a stage with no family plays nothing (the renderer raises its own dust): never the wood splinters of a door
+    expect(effectForEvent({ kind: 'stage', stage: 1 })).toBeUndefined()
     expect(effectForEvent({ kind: 'expose' })).toBe('rebar_expose')
-    expect(effectForEvent({ kind: 'collapse' })).toBe('collapse_dust')
+    expect(effectForEvent({ kind: 'collapse', material: 'soil' })).toBe('collapse_dust_soil')
     expect(effectForEvent({ kind: 'explode' })).toBe('explosion')
     expect(effectForEvent({ kind: 'fracture', material: 'glass' })).toBe('glass_burst')
     expect(effectForEvent({ kind: 'fracture', material: 'wood' })).toBeUndefined()
@@ -20,7 +23,8 @@ describe('event effects', () => {
   it('has a recipe, or an explosion of the catalogue, for every effect the map names', () => {
     const world = createVfx()
     const names = [...EVENT_EFFECTS.map((effect) => effect.id), 'explosion']
-    for (const id of ['impact_concrete', 'impact_metal', 'impact_wood', 'impact_glass', 'impact_flesh', 'impact_water', 'stage_crack', 'breach_dust', 'collapse_dust', 'rebar_expose', 'glass_burst']) {
+    const families = DEBRIS_EFFECT_FAMILIES.flatMap((family) => [`stage_crack_${family}`, `breach_dust_${family}`, `collapse_dust_${family}`])
+    for (const id of ['impact_concrete', 'impact_metal', 'impact_wood', 'impact_glass', 'impact_flesh', 'impact_water', ...families, 'rebar_expose', 'glass_burst']) {
       expect(names).toContain(id)
       expect(world.effectIds()).toContain(id)
     }
