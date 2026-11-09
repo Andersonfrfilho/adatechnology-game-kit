@@ -434,6 +434,18 @@ export interface WindOptions extends WindExposure {
 // World
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 
+/** Cost of one `sweepBox`, ray by ray (`DestructionWorld.sweepProbe`). */
+export interface SweepProbe {
+  /** Objects and hosted bodies each ray looked at (one per ray and object). */
+  readonly objectVisits: number
+  /** Parts each ray looked at, before their bounding sphere (one per ray and part). */
+  readonly partVisits: number
+  /** Parts each ray was tried against shape by shape (`rayShape`). */
+  readonly shapeTests: number
+  /** Objects and hosted bodies at least one part of which was tried shape by shape, in the order first tried. */
+  readonly shapeTested: readonly string[]
+}
+
 export interface DestructionOptions {
   /** Extra or overriding materials (merged over `MATERIALS` by id). */
   materials?: MaterialDef[]
@@ -454,6 +466,12 @@ export interface DestructionOptions {
    * order, and go off in the next updates, so a long chain spreads over steps by count and not by the speed of the machine.
    */
   chainLinksPerUpdate?: number
+  /**
+   * Broad phase of the rays (default true): `sweepBox` first keeps only the objects and parts whose bounds the box can reach on its way, and every ray skips a
+   * hosted body (a vehicle) whose box around all its parts it misses, before trying any of its parts or its `surfaceRay`. The hit is the same either way;
+   * false tries every object and every hosted part for every ray, the reference the broad phase is measured against.
+   */
+  broadPhase?: boolean
   /** Distance at which a burning part heats parts of other objects, in metres (default 0.6). */
   fireSpread?: number
   /**
@@ -604,6 +622,8 @@ export interface DestructionWorld {
   blastReach(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[]; readonly shelter?: ShelterOptions }): number
   /** Cost of the last `explode`: parts in range of the broad phase (`partsTested`) and those whose bounding sphere the blast reached (`partsNear`). */
   blastProbe(): { partsTested: number; partsNear: number }
+  /** Cost of the last `sweepBox` (`SweepProbe`). */
+  sweepProbe(): SweepProbe
   /**
    * Ground was taken away under the world (a crater, a slab that gave way, sand that slid; `GroundLoss` of the contracts). The terrain reports it while a
    * blast is being resolved, so it is queued and applied at the start of the next `update`: every object whose foundations bear over the disc settles,

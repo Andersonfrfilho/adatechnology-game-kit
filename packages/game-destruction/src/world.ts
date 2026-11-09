@@ -24,12 +24,14 @@ import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase,
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
 import type { DestructibleImpl } from './contracts'
+import { boundsInFrame, boundsTouch, rayMissesBounds, sphereTouchesBounds, SWEEP_BROAD_SLACK, sweptBounds } from './sweep-broad-phase'
+import type { SweepBounds } from './sweep-broad-phase'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
-  BallisticExtras,
+  BallisticExtras, SweepProbe,
 } from './types'
 import { bodyImpulse, DEFAULT_BLAST_IMPULSE, ignitionChance, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
 
@@ -397,6 +399,8 @@ interface ImplRT {
   rotation: Quat
   /** Part pose overrides set by `setPartPose` (object-local). */
   poses: Map<string, { pos: Vec3; q: Quat }>
+  /** Bumped by every `setPartPose`, so the bounds cached for the body (`implBoundsOf`) know a part moved. */
+  posesVersion: number
 }
 
 interface Blast {
@@ -524,6 +528,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const chipEnergy = options.breach?.chipEnergy ?? CHIP_ENERGY
+  const broadPhase = options.broadPhase ?? true
   const chainLinkCap = options.chainLinksPerUpdate !== undefined && options.chainLinksPerUpdate >= 1 ? Math.floor(options.chainLinksPerUpdate) : Infinity
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
@@ -2287,20 +2292,117 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return -b - Math.sqrt(disc) > maxDist
   }
 
-  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}): (RayHit & { pathLen: number }) | null => {
+  /** The bounding sphere's centre of each object in the world, kept until the object moves or its parts do (compared by value, so no move is missed). */
+  const worldCentres = new WeakMap<ObjRT, { readonly key: number[]; readonly centre: Vec3 }>()
+  const worldCentreOf = (o: ObjRT): Vec3 => {
+    const p = o.st.position, q = o.st.rotation, c = o.bc
+    const known = worldCentres.get(o)
+    if (known) {
+      const k = known.key
+      if (k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === c[0] && k[8] === c[1] && k[9] === c[2]) return known.centre
+    }
+    const centre = toWorld(p, q, c)
+    worldCentres.set(o, { key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], c[0], c[1], c[2]], centre })
+    return centre
+  }
+
+  /** The world box of a part of a hosted body, as `rayPartRaw` places it (its pose override, else the spec's position and rotation). */
+  const implPartBox = (im: ImplRT, ps: PartSpec): SweepBounds => {
+    const ov = im.poses.get(ps.id)
+    return aabbOf(ps.shape, toWorld(im.position, im.rotation, ov?.pos ?? ps.position), quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0]))))
+  }
+
+  /**
+   * The world box around every part of a hosted body (a vehicle), grown by `SWEEP_BROAD_SLACK`: a ray that misses it misses every part box, so it never
+   * reaches the body's `surfaceRay`. Kept until the body moves, a part is posed (`posesVersion`) or `describe()` gives another spec (the contract hands back
+   * the same object until something changes it).
+   */
+  const implBounds = new WeakMap<ImplRT, { readonly spec: DestructibleSpec; readonly key: number[]; readonly bounds: SweepBounds }>()
+  const implBoundsOf = (im: ImplRT): SweepBounds => {
+    const spec = im.impl.describe()
+    const p = im.position, q = im.rotation
+    const known = implBounds.get(im)
+    if (known && known.spec === spec) {
+      const k = known.key
+      if (k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === im.posesVersion) return known.bounds
+    }
+    const min: Vec3 = [Infinity, Infinity, Infinity]
+    const max: Vec3 = [-Infinity, -Infinity, -Infinity]
+    for (const ps of spec.parts) {
+      const box = implPartBox(im, ps)
+      for (let k = 0; k < 3; k++) {
+        min[k] = Math.min(min[k], box.min[k] - SWEEP_BROAD_SLACK)
+        max[k] = Math.max(max[k], box.max[k] + SWEEP_BROAD_SLACK)
+      }
+    }
+    const bounds: SweepBounds = { min, max }
+    implBounds.set(im, { spec, key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], im.posesVersion], bounds })
+    return bounds
+  }
+
+  /** What the rays of one sweep can reach (`sweepScope`): objects and hosted bodies in the world's order, each with the parts it keeps in that order. */
+  interface RayScope {
+    readonly objects: readonly ObjRT[]
+    readonly parts: ReadonlyMap<ObjRT, readonly PartRT[]>
+    readonly impls: readonly ImplRT[]
+    readonly implParts: ReadonlyMap<ImplRT, readonly PartSpec[]>
+  }
+
+  /**
+   * The broad phase of `sweepBox`: the objects whose bounding sphere, and the parts whose bounding sphere (in the object's frame) or box (a hosted body's)
+   * reach the bounds of every ray of the sweep. A ray only meets a part inside those bounds, so what is left out could never be the hit; the order of the
+   * world is kept, so ties fall as before. Null when the bounds are not finite: then every object is tried.
+   */
+  const sweepScope = (origins: readonly Vec3[], d: Vec3, length: number, ignore: ReadonlySet<string>): RayScope | null => {
+    const bounds = sweptBounds(origins, d, length)
+    if (!bounds) return null
+    const scoped: ObjRT[] = []
+    const parts = new Map<ObjRT, PartRT[]>()
+    for (const o of objects.values()) {
+      if (!sphereTouchesBounds(bounds, worldCentreOf(o), o.br + SWEEP_BROAD_SLACK)) continue
+      const local = boundsInFrame(bounds, o.st.position, o.st.rotation)
+      const near = o.parts.filter((p) => !isLost(p) && !ignore.has(`${o.id}\0${p.spec.id}`) && sphereTouchesBounds(local, p.pos, p.bound + PART_BOUND_SLACK + SWEEP_BROAD_SLACK))
+      if (near.length === 0) continue
+      scoped.push(o)
+      parts.set(o, near)
+    }
+    const scopedImpls: ImplRT[] = []
+    const implParts = new Map<ImplRT, PartSpec[]>()
+    for (const im of impls.values()) {
+      if (!boundsTouch(bounds, implBoundsOf(im))) continue
+      const near = im.impl.describe().parts.filter((ps) => !ignore.has(`${im.impl.id}\0${ps.id}`) && boundsTouch(bounds, implPartBox(im, ps)))
+      if (near.length === 0) continue
+      scopedImpls.push(im)
+      implParts.set(im, near)
+    }
+    return { objects: scoped, parts, impls: scopedImpls, implParts }
+  }
+
+  /** Counts of the `sweepBox` running now (`sweepProbe`); null outside one, so no other ray pays for them. */
+  let sweepCounts: { objectVisits: number; partVisits: number; shapeTests: number; shapeTested: Set<string> } | null = null
+  let lastSweep: SweepProbe = { objectVisits: 0, partVisits: 0, shapeTests: 0, shapeTested: [] }
+
+  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     const minRadius = skip.minObjectRadius ?? 0
     let best: (RayHit & { pathLen: number }) | null = null
-    for (const o of objects.values()) {
+    const counts = sweepCounts
+    for (const o of scope ? scope.objects : objects.values()) {
+      if (counts) counts.objectVisits++
       if ((skip.skipLoose && o.loose) || o.br < minRadius) continue
-      if (raySphereMiss(origin, d, toWorld(o.st.position, o.st.rotation, o.bc), o.br, best ? Math.min(maxDist, best.distance) : maxDist)) continue
+      if (raySphereMiss(origin, d, worldCentreOf(o), o.br, best ? Math.min(maxDist, best.distance) : maxDist)) continue
       // the ray in the object's frame, so each part is first tried against its bounding sphere there: a house of a thousand bricks turns a handful
       const qi = quat.conjugate(o.st.rotation)
       const lo = rotateVec(qi, vec.sub(origin, o.st.position))
       const ld = rotateVec(qi, d)
-      for (const p of o.parts) {
+      for (const p of scope?.parts.get(o) ?? o.parts) {
+        if (counts) counts.partVisits++
         if (isLost(p) || ignore?.has(`${o.id}\0${p.spec.id}`)) continue
         if (partSphereMiss(lo, ld, p, maxDist)) continue
+        if (counts) {
+          counts.shapeTests++
+          counts.shapeTested.add(o.id)
+        }
         const r = rayPart(o, p, origin, d)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue
         // the hole a blow opened and the opening of a frame are in the object's frame: the ray's point goes there first
@@ -2310,10 +2412,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (!best || r.t0 < best.distance) best = { object: o.id, part: p.spec.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
     }
-    for (const im of worldOnly ? [] : impls.values()) {
+    for (const im of worldOnly ? [] : scope ? scope.impls : impls.values()) {
+      if (counts) counts.objectVisits++
+      // a ray that misses the box around the whole body meets none of its parts (and never pays for its surface): the sweep's scope already culled it
+      if (!scope && broadPhase && rayMissesBounds(origin, d, maxDist, implBoundsOf(im))) continue
       let boxHit: (RayHit & { pathLen: number }) | null = null
-      for (const ps of im.impl.describe().parts) {
+      for (const ps of scope?.implParts.get(im) ?? im.impl.describe().parts) {
+        if (counts) counts.partVisits++
         if (ignore?.has(`${im.impl.id}\0${ps.id}`)) continue
+        if (counts) {
+          counts.shapeTests++
+          counts.shapeTested.add(im.impl.id)
+        }
         const ov = im.poses.get(ps.id)
         const r = rayPartRaw(im.position, im.rotation, ps, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])), origin, d, ov?.pos)
         if (!r || r.t1 < 0 || r.t0 > maxDist) continue
@@ -4596,7 +4706,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     register(impl, opts: AddOptions = {}) {
       const id = opts.id ?? impl.id
       if (taken(id)) throw new Error(`object "${id}" already exists`)
-      impls.set(id, { impl, position: opts.position ?? [0, 0, 0], rotation: opts.rotation ?? [0, 0, 0, 1], poses: new Map() })
+      impls.set(id, { impl, position: opts.position ?? [0, 0, 0], rotation: opts.rotation ?? [0, 0, 0, 1], poses: new Map(), posesVersion: 0 })
       return id
     },
     setPartPose(objectId, partId, position, rotation) {
@@ -4605,6 +4715,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (im) {
         im.impl.setPartPose?.(partId, position, rotation)
         im.poses.set(partId, { pos: [position[0], position[1], position[2]], q })
+        im.posesVersion++
         return
       }
       const o = getObj(objectId)
@@ -4752,12 +4863,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         else if (hosted) for (const p of hosted.impl.describe().parts) ignore.add(`${hosted.impl.id}\0${p.id}`)
       }
       let best: RayHit | null = null
-      for (const origin of sweepOrigins(box, d, options.spacing ?? 0.2)) {
-        const r = raycastInternal(origin, d, distance + SWEEP_BACK, ignore.size > 0 ? ignore : undefined)
-        if (!r || (best && r.distance >= best.distance)) continue
-        best = { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: Math.max(0, r.distance - SWEEP_BACK) }
+      const origins = sweepOrigins(box, d, options.spacing ?? 0.2)
+      const length = distance + SWEEP_BACK
+      const scope = broadPhase ? (sweepScope(origins, d, length, ignore) ?? undefined) : undefined
+      const counts = { objectVisits: 0, partVisits: 0, shapeTests: 0, shapeTested: new Set<string>() }
+      sweepCounts = counts
+      try {
+        for (const origin of origins) {
+          const r = raycastInternal(origin, d, length, ignore.size > 0 ? ignore : undefined, false, false, {}, scope)
+          if (!r || (best && r.distance >= best.distance)) continue
+          best = { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: Math.max(0, r.distance - SWEEP_BACK) }
+        }
+      } finally {
+        sweepCounts = null
+        lastSweep = { objectVisits: counts.objectVisits, partVisits: counts.partVisits, shapeTests: counts.shapeTests, shapeTested: [...counts.shapeTested] }
       }
       return best
+    },
+    sweepProbe() {
+      return lastSweep
     },
     shoot(origin, direction, energy, caliber, source, round) {
       const extras: BallisticExtras = typeof round === 'number' ? { piercing: round } : round ?? {}
