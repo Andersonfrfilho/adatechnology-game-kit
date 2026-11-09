@@ -146,6 +146,17 @@ describe('damage stages and breach', () => {
     expect(w.world.shoot([1, 1.8, 3], [0, 0, -1], 400, 9).map((r) => r.object)).toEqual([w.objectId])
   })
 
+  it('a wall placed away from the origin (a house in the room) lets rays and the blast through its opening too', () => {
+    const world = createDestruction({ seed: 7 })
+    const at: Vec3 = [10, 0, 8]
+    const objectId = world.add({ parts: [assemblyPart('brick_wall_plastered', { id: 'wall', width: 2, height: 2, position: [0, 1, 0] })] }, { position: at })
+    for (let i = 0; i < 200 && (world.part(objectId, 'wall')!.stage ?? 0) < 2; i++) world.hit(objectId, { type: 'blunt', point: [10, 1, 8.065], direction: [0, 0, -1], ...SLEDGEHAMMER })
+    expect(world.part(objectId, 'wall')!.stage).toBe(2)
+    const target = world.add({ parts: [{ id: 'target', material: 'wood_soft', shape: { kind: 'box', size: [1, 1, 0.05] }, position: [10, 1, 7] }] })
+    expect(world.raycast([10, 1, 11], [0, 0, -1])?.object).toBe(target)
+    expect(world.raycast([11, 1.8, 11], [0, 0, -1])?.part).toBe('wall')
+  })
+
   it('a blow as wide as the part cuts it instead of opening it (a narrow pilaster)', () => {
     const world = createDestruction({ seed: 3 })
     const id = world.add({ parts: [assemblyPart('brick_wall_plastered', { id: 'p', width: 0.4, height: 2.5, position: [0, 1.25, 0] })] })

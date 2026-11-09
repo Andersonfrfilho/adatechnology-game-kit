@@ -51,7 +51,10 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   const arenaSize = options.arenaSize ?? 14
 
   const known = new Set((engine?.listTemplates() ?? []).map((t) => t.id))
-  const groups: TemplateGroup[] = (options.groups ?? [{ id: 'all', templates: [...known] }]).map((g) => ({ ...g, templates: g.templates.filter((id) => known.has(id)) })).filter((g) => g.templates.length > 0)
+  const listed = (options.groups ?? [{ id: 'all', templates: [...known] }]).map((g) => ({ ...g, templates: g.templates.filter((id) => known.has(id)) }))
+  // a template the engine has that no group lists (a pack registered after the groups were written) still gets on the bench
+  const unlisted = [...known].filter((id) => !listed.some((g) => g.templates.includes(id)))
+  const groups: TemplateGroup[] = [...listed, ...(unlisted.length ? [{ id: 'other', name: { en: 'Other', 'pt-BR': 'Outros' }, templates: unlisted }] : [])].filter((g) => g.templates.length > 0)
   const states = (options.states ?? engine?.listStates() ?? ['normal']).filter((id) => typeof id === 'string')
   const groupName = (g: TemplateGroup): string => g.name?.[locale] ?? g.name?.en ?? g.id
   const templateName = (id: string): string => (engine?.translate ? engine.translate('templates', id, locale) : id)
@@ -62,7 +65,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   const settings = {
     group: groupOf(firstTemplate)?.id ?? groups[0]?.id ?? 'all',
     template: firstTemplate,
-    state: states.includes('normal') ? 'normal' : (states[0] ?? 'normal'),
+    state: options.state && states.includes(options.state) ? options.state : states.includes('normal') ? 'normal' : (states[0] ?? 'normal'),
     seed: options.seed ?? 1,
     quality: 'game',
     lod: 'auto',
@@ -391,7 +394,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       case 'package': {
         settings.group = String(value)
         const group = groups.find((g) => g.id === settings.group)
-        if (group) {
+        // the bench sets every control on open: a template already in the group (the one the address asked for) stays
+        if (group && !group.templates.includes(settings.template)) {
           settings.template = group.templates[0] as string
           host?.bench?.patch('template', { options: group.templates.map((id) => ({ id, name: templateName(id) })), value: settings.template })
         }

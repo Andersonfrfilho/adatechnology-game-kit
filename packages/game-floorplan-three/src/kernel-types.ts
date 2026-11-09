@@ -45,6 +45,17 @@ export interface UvRect {
 }
 
 /** A destruction piece being drawn: the meshes record where it starts so a hit finds it again. */
+/** An opening a piece leaves open, in plan coordinates: along the wall from `a` to `b` (u for a wall along u, v otherwise), heights `y0` to `y1` (absolute). */
+export interface PieceAperture {
+  alongU: boolean
+  a: number
+  b: number
+  y0: number
+  y1: number
+  /** Bars across it, spaced along the wall from `a`. */
+  bars?: { spacing: number; width: number }
+}
+
 export interface PieceRecord {
   id: string
   mat: string

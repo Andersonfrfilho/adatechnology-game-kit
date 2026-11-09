@@ -2298,7 +2298,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (partSphereMiss(lo, ld, p, maxDist)) continue
         const r = rayPart(o, p, origin, d)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue
-        if (p.st.opening && insideOpening(o, p, vec.madd(origin, d, r.t0))) continue
+        // the hole a blow opened and the opening of a frame are in the object's frame: the ray's point goes there first
+        if (p.st.opening && insideOpening(o, p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
+        if (p.spec.apertures && throughAperture(p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
         if (p.st.chipped && insideChip(p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
         if (!best || r.t0 < best.distance) best = { object: o.id, part: p.spec.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
@@ -2634,6 +2636,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const lp = toLocal(p.pos, p.q, objectPoint)
     const lc = toLocal(p.pos, p.q, op.center)
     return Math.hypot(lp[u] - lc[u], lp[v] - lc[v]) <= op.radius
+  }
+
+  /** The point (object frame) is in the open part of one of the part's `apertures`: a ray that enters there passes, unless it lands on a bar. */
+  const throughAperture = (p: PartRT, objectPoint: Vec3): boolean => {
+    const [u, v] = planeAxes(p.thin)
+    const lp = toLocal(p.pos, p.q, objectPoint)
+    return (p.spec.apertures ?? []).some((ap) => {
+      const du = lp[u] - (ap.offset?.[0] ?? 0)
+      const dv = lp[v] - (ap.offset?.[1] ?? 0)
+      if (Math.abs(du) > ap.size[0] / 2 || Math.abs(dv) > ap.size[1] / 2) return false
+      if (!ap.bars || ap.bars.spacing <= 0) return true
+      const along = ap.bars.axis === 0 ? du + ap.size[0] / 2 : dv + ap.size[1] / 2
+      return Math.abs(along - Math.round(along / ap.bars.spacing) * ap.bars.spacing) > ap.bars.width / 2
+    })
   }
 
   /** Square metres of wall a blow removes: the volume its damage takes out, over the thickness it crosses. */
@@ -3940,7 +3956,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           const path = Math.min(r.t1, L) - t0
           if (path < shelter.minPath) continue
           const mid = vec.madd(point, d, t0 + path / 2)
-          const opening = p.st.opening && insideOpening(o, p, mid)
+          const opening = p.st.opening && insideOpening(o, p, objLocal(o, mid))
           if (opening && was & FLAG_OPEN) continue
           if (p.st.stripped && was & FLAG_OPEN) continue
           const resistance = p.mat.hpPerKg * p.mat.density * path * (p.mat.damageScale?.shelter ?? 1)
