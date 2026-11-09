@@ -109,6 +109,8 @@ const MIN_ROUND_RADIUS = 0.005
 const BOUNCE_MIN_SPEED = 0.1
 /** A contact normal at least this level (its share along the ground) puts two pieces apart along the ground only. */
 const KNOCK_FLAT = 0.5
+/** Fastest (m/s) two overlapping boxes are put apart (`separatePair`): a deep overlap opens over a few frames instead of in a jump. */
+const SEPARATE_SPEED = 1.5
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
 /** Which pieces a step moves and which pairs it meets (`PieceSystem.update` splits only what closes in on a round piece). */
@@ -1108,7 +1110,7 @@ export class PieceSystem {
 
   /**
    * Pieces against each other. Candidates by sweep and prune along x on their bounding spheres (sorted once per step: fifty cans cost a sort and a handful of pairs, not
-   * 1225); a pair with a round piece in it meets by its shapes (`shapeContact`) and exchanges an impulse, two boxes are only pushed apart (`separatePair`).
+   * 1225); a pair with a round piece in it meets by its shapes (`shapeContact`) and exchanges an impulse, two boxes are put apart by their separating axes (`separatePair`).
    */
   private collide(dt: number, meets?: StepFilter['meets']): void {
     const n = this.list.length
@@ -1271,33 +1273,38 @@ export class PieceSystem {
     return false
   }
 
-  /** Two boxes overlapping side by side (horizontal bounding circles): pushed apart, gently, so they do not interpenetrate forever. */
+  /**
+   * Two boxes overlapping: put apart along the axis their parts overlap least on (`shapeContact`, by their separating axes), by that depth less `SLOP`, gently (at most
+   * `SEPARATE_SPEED` m/s), split by their inverse masses; the speed with which they close in along it stops. Side by side (a normal at least `KNOCK_FLAT` level) they go apart
+   * along the ground only, as in `knock`; one over the other, only the upper rises. A held or sleeping piece is not moved.
+   */
   private separatePair(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number): void {
-    const fixedA = a.held || a.sleeping
-    const fixedB = b.held || b.sleeping
-    const maxMove = 1.5 * dt
-    const rh = (Math.max(a.halfExtents[0], a.halfExtents[2]) + Math.max(b.halfExtents[0], b.halfExtents[2])) * 0.8
-    let dx = cb[0] - ca[0]
-    let dz = cb[2] - ca[2]
-    let d = Math.hypot(dx, dz)
-    if (d >= rh) return
-    if (d < 1e-5) {
-      dx = 1
-      dz = 0
-      d = 1
+    const hit = shapeContact(this.contactShape(a, ca), this.contactShape(b, cb))
+    if (!hit) return
+    const n = hit.normal
+    let ima = a.held || a.sleeping ? 0 : 1 / a.mass
+    let imb = b.held || b.sleeping ? 0 : 1 / b.mass
+    const flat = Math.hypot(n[0], n[2])
+    const side = flat > KNOCK_FLAT
+    // one over the other, the lower is held by what it stands on: only the upper rises, and a held or sleeping upper presses nothing down
+    if (!side) {
+      if (n[1] > 0) imb = 0
+      else ima = 0
     }
-    const push = Math.min(maxMove, (rh - d) * 0.5)
-    const wa = fixedA ? 0 : fixedB ? 1 : b.mass / (a.mass + b.mass)
-    const wb = fixedB ? 0 : fixedA ? 1 : a.mass / (a.mass + b.mass)
-    const ux = dx / (d || 1)
-    const uz = dz / (d || 1)
-    if (!fixedA) {
-      a.root.position.x -= ux * push * 2 * wa
-      a.root.position.z -= uz * push * 2 * wa
-    }
-    if (!fixedB) {
-      b.root.position.x += ux * push * 2 * wb
-      b.root.position.z += uz * push * 2 * wb
+    if (ima + imb === 0) return
+    const out: Vec3 = side ? [n[0] / flat, 0, n[2] / flat] : n
+    const move = Math.min(SEPARATE_SPEED * dt, Math.max(0, hit.depth - SLOP) / (side ? flat : 1)) / (ima + imb)
+    const va = a.velocity
+    const vb = b.velocity
+    const closing = (va[0] - vb[0]) * n[0] + (va[1] - vb[1]) * n[1] + (va[2] - vb[2]) * n[2]
+    const stop = closing < 0 ? -closing / (ima + imb) : 0
+    for (const [body, share, sign] of [[a, ima, 1], [b, imb, -1]] as const) {
+      if (share === 0) continue
+      body.root.position.x += out[0] * move * share * sign
+      body.root.position.y += out[1] * move * share * sign
+      body.root.position.z += out[2] * move * share * sign
+      for (let i = 0; i < 3; i++) body.velocity[i] += n[i] * stop * share * sign
     }
   }
+
 }

@@ -109,7 +109,58 @@ const capsuleBox = (from: Vec3, to: Vec3, radius: number, box: { c: Vec3; e: Arr
   return { point: p, normal: [sign * e[axis * 4], sign * e[axis * 4 + 1], sign * e[axis * 4 + 2]], depth: radius + box.half[axis] - Math.abs(l[axis]) }
 }
 
-/** Where shape `a` meets shape `b` (the normal from `b` to `a`), the deepest of their boxes; null when they do not touch. Two box shapes are not answered here. */
+type Box = { readonly c: Vec3; readonly e: ArrayLike<number>; readonly half: Vec3 }
+
+/** An edge axis (the cross of an edge of each box) wins over a face axis only when it overlaps this much less: two faces flat on each other stay face to face. */
+const EDGE_BIAS = 0.95
+/** A cross of two edges shorter than this is two parallel edges: their axis is a face axis already tried. */
+const PARALLEL_EDGES = 1e-6
+
+/** Axis `k` of a box (a column of its rotation). */
+const axisOf = (e: ArrayLike<number>, k: number): Vec3 => [e[k * 4], e[k * 4 + 1], e[k * 4 + 2]]
+
+/** How far a box reaches from its centre along the unit `l`. */
+const reachAlong = (box: Box, l: Vec3): number =>
+  box.half[0] * Math.abs(dot(axisOf(box.e, 0), l)) + box.half[1] * Math.abs(dot(axisOf(box.e, 1), l)) + box.half[2] * Math.abs(dot(axisOf(box.e, 2), l))
+
+/**
+ * Two boxes by their separating axes (Ericson, Real-Time Collision Detection 4.4.1): the 3 face axes of each and the 9 crosses of their edges. Apart on any axis, they do
+ * not touch; else they meet along the axis they overlap least on, by that overlap, the normal from `b` to `a`, at the middle of the overlap between their centres.
+ */
+const boxBox = (a: Box, b: Box): ShapeContact | null => {
+  const d = sub(a.c, b.c)
+  let normal: Vec3 = [0, 1, 0]
+  let depth = Infinity
+  let faceDepth = Infinity
+  const tryAxis = (l: Vec3, face: boolean): boolean => {
+    const centres = dot(d, l)
+    const overlap = reachAlong(a, l) + reachAlong(b, l) - Math.abs(centres)
+    if (overlap < 0) return false
+    if (face ? overlap < depth : overlap < depth && overlap < faceDepth * EDGE_BIAS) {
+      depth = overlap
+      if (face) faceDepth = overlap
+      normal = centres < 0 ? [-l[0], -l[1], -l[2]] : l
+    }
+    return true
+  }
+  for (let k = 0; k < 3; k++) if (!tryAxis(axisOf(a.e, k), true) || !tryAxis(axisOf(b.e, k), true)) return null
+  for (let i = 0; i < 3; i++) {
+    const u = axisOf(a.e, i)
+    for (let j = 0; j < 3; j++) {
+      const v = axisOf(b.e, j)
+      const l: Vec3 = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]
+      const len = Math.hypot(l[0], l[1], l[2])
+      if (len < PARALLEL_EDGES) continue
+      if (!tryAxis([l[0] / len, l[1] / len, l[2] / len], false)) return null
+    }
+  }
+  // the middle of the overlap along the normal, on the line between the centres
+  const mid: Vec3 = [(a.c[0] + b.c[0]) / 2, (a.c[1] + b.c[1]) / 2, (a.c[2] + b.c[2]) / 2]
+  const middle = (dot(a.c, normal) - reachAlong(a, normal) + dot(b.c, normal) + reachAlong(b, normal)) / 2
+  return { point: along(mid, normal, middle - dot(mid, normal)), normal, depth }
+}
+
+/** Where shape `a` meets shape `b` (the normal from `b` to `a`), the deepest of their boxes; null when they do not touch. */
 export function shapeContact(a: ContactShape, b: ContactShape): ShapeContact | null {
   if (a.kind === 'capsule' && b.kind === 'capsule') {
     const [pa, pb] = nearestOfSegments(a.from, a.to, b.from, b.to)
@@ -132,6 +183,16 @@ export function shapeContact(a: ContactShape, b: ContactShape): ShapeContact | n
   if (a.kind === 'boxes' && b.kind === 'capsule') {
     const hit = shapeContact(b, a)
     return hit && { point: hit.point, normal: [-hit.normal[0], -hit.normal[1], -hit.normal[2]], depth: hit.depth }
+  }
+  if (a.kind === 'boxes' && b.kind === 'boxes') {
+    let best: ShapeContact | null = null
+    for (const boxA of a.boxes) {
+      for (const boxB of b.boxes) {
+        const hit = boxBox(boxA, boxB)
+        if (hit && (!best || hit.depth > best.depth)) best = hit
+      }
+    }
+    return best
   }
   return null
 }
