@@ -51,9 +51,10 @@ export interface FloorplanTestOptions {
   renderer?: DestructionRenderer
   /** Passed to the house renderer: `fleet`, `reflector`, `interactives`, `vegetation`, `props`, `textures`... */
   house?: Partial<HouseRendererOptions>
-  /** Template and seed the bench starts with. */
+  /** Template, seed and state the bench starts with (`floorplanAreaParams` reads them from the page address). */
   template?: string
   seed?: number
+  state?: string
   /** Specimens of the structural scenarios; default the five of the team's house area, those whose template the engine has. */
   specimens?: readonly SpecimenDef[]
   /** Half size of the room's arena (`createTestRoom({ arenaSize })`), 14 by default: where the houses are laid. */

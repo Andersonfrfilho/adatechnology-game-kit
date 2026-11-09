@@ -2,6 +2,7 @@ import { checkBench, checkSpec } from '@adatechnology/game-contracts'
 import type { DestructibleSpec } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 
+import { floorplanAreaParams } from '../src/testing'
 import { fakeRoom } from './helpers/area-room'
 import { THREE } from './helpers/houses'
 
@@ -38,9 +39,28 @@ describe('the module declares itself', () => {
 
   it('lists only the templates the engine has, by package', () => {
     const { module } = fakeRoom({ groups: [{ id: 'residential', templates: ['townhouse', 'no_such_template'] }, { id: 'commercial', templates: ['market'] }, { id: 'ghost', templates: ['zzz'] }] })
-    expect(module.groups().map((g) => [g.id, g.templates])).toEqual([['residential', ['townhouse']], ['commercial', ['market']]])
+    const groups = module.groups()
+    expect(groups.slice(0, 2).map((g) => [g.id, g.templates])).toEqual([['residential', ['townhouse']], ['commercial', ['market']]])
     const control = module.controls!('en').find((c) => c.id === 'package') as unknown as { options: { id: string }[] }
-    expect(control.options.map((o) => o.id)).toEqual(['residential', 'commercial'])
+    expect(control.options.map((o) => o.id)).toEqual(['residential', 'commercial', 'other'])
+  })
+
+  it('puts every template the engine has and no group lists in an "other" group, so no registered plan is missing from the bench', () => {
+    const { module } = fakeRoom({ groups: [{ id: 'residential', templates: ['townhouse'] }] })
+    const listed = module.groups().flatMap((g) => g.templates)
+    const other = module.groups().find((g) => g.id === 'other')!
+    expect(other.templates).toContain('mansion')
+    expect(other.templates).toContain('triage_tent')
+    expect(other.templates).not.toContain('townhouse')
+    expect(new Set(listed).size).toBe(listed.length)
+  })
+
+  it('opens on the template, seed and state of the address', () => {
+    expect(floorplanAreaParams('?area=floorplan_area&template=mansion&seed=4&state=abandoned')).toEqual({ template: 'mansion', seed: 4, state: 'abandoned' })
+    expect(floorplanAreaParams('?template=../x&seed=0&state=')).toEqual({})
+    const { module } = fakeRoom({ ...floorplanAreaParams('?template=mansion&seed=4&state=abandoned') })
+    const values = Object.fromEntries(module.controls!('en').map((c) => [c.id, (c as { default?: unknown }).default]))
+    expect([values.template, values.seed, values.state]).toEqual(['mansion', 4, 'abandoned'])
   })
 })
 
