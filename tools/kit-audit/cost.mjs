@@ -19,7 +19,19 @@ const args = process.argv.slice(2)
 const optionOf = (/** @type {string} */ name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null)
 const only = optionOf('--area')
 const jsonPath = optionOf('--json')
-const { chromium } = require('playwright')
+// the workspace has playwright-core (in pnpm's store, reached through NODE_PATH), not playwright: try both, as examples/test-room/leak.mjs does
+/** @returns {typeof import('playwright')} */
+function loadPlaywright() {
+  for (const id of ['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright']) {
+    try {
+      return require(id)
+    } catch {
+      /* try the next one */
+    }
+  }
+  throw new Error('playwright not found (set NODE_PATH or install it)')
+}
+const { chromium } = loadPlaywright()
 
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const tab = await browser.newPage({ viewport: { width: 640, height: 400 } })
