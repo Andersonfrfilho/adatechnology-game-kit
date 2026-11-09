@@ -2255,14 +2255,18 @@ class Renderer implements DestructionRenderer {
     bb.makeEmpty()
     const tmp = new this.THREE.Box3()
     for (const mv of pv.meshes) if (this.visuals.shown(mv)) bb.union(this.visuals.worldBox(mv, tmp))
-    if (!bb.isEmpty()) {
-      const c = bb.getCenter(this.v1)
-      f.follow.x = c.x
-      f.follow.y = bb.min.y
-      f.follow.z = c.z
+    if (bb.isEmpty()) {
+      // nothing of the part is drawn (a roof rafter has no mesh, or the part broke or burnt away): no flame may hang where it was
+      if (f.handle !== undefined) this.vfx.stop(f.handle)
+      delete f.handle
+      return
     }
+    const c = bb.getCenter(this.v1)
+    f.follow.x = c.x
+    f.follow.y = bb.min.y
+    f.follow.z = c.z
     if (f.handle !== undefined) return
-    const size = bb.isEmpty() ? this.v2.set(0.2, 0.2, 0.2) : bb.getSize(this.v2)
+    const size = bb.getSize(this.v2)
     const radius = clamp(Math.max(size.x, size.z) * 0.5, 0.12, 1.2)
     const smokeColor = SMOKE_TONES[def?.thermal.smoke ?? 'grey']
     f.handle = this.vfx.fire({ point: [f.follow.x, f.follow.y, f.follow.z], radius, life: FIRE_CEILING_SECONDS, follow: f.follow, source: f.object, ...(smokeColor !== undefined ? { smokeColor } : {}) })

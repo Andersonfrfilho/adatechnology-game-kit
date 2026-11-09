@@ -146,4 +146,33 @@ describe('lasting emitters follow the body they broke on', () => {
     expect(follow.y).toBeCloseTo(box.min.y, 2)
     expect(follow.y).toBeLessThan(0.3)
   })
+
+  it('a burning part with nothing drawn (a roof rafter has no mesh of its own) shows no flame where its spec puts it', () => {
+    const ctx = setup()
+    ctx.world.addObject('roof', [partState('cover', 'wood', { mass: 40 }), partState('rafter', 'wood', { mass: 12, burning: true })])
+    const cover = new THREE.Mesh(new THREE.BoxGeometry(4, 0.05, 4))
+    cover.position.y = 6
+    const root = new THREE.Group()
+    root.add(cover)
+    ctx.scene.add(root)
+    root.updateMatrixWorld(true)
+    ctx.renderer.bind('roof', root, { parts: { cover } })
+
+    ctx.world.emit({ type: 'ignite', object: 'roof', part: 'rafter', point: [0, 6.5, 0] })
+    for (let i = 0; i < 60; i++) ctx.renderer.update(1 / 60)
+    expect(ctx.vfx.fires()).toHaveLength(0)
+  })
+
+  it('the flame of a part goes out when the part stops being drawn (broken into fragments, burnt away)', () => {
+    const ctx = setup()
+    const { side } = cabinet(ctx)
+    ctx.world.state('cabinet')!.parts[0]!.burning = true
+    ctx.world.emit({ type: 'ignite', object: 'cabinet', part: 'side', point: [0, 0.9, 0] })
+    for (let i = 0; i < 10; i++) ctx.renderer.update(1 / 60)
+    expect(ctx.vfx.fires()).toHaveLength(1)
+
+    side.visible = false
+    for (let i = 0; i < 10; i++) ctx.renderer.update(1 / 60)
+    expect(ctx.vfx.fires()).toHaveLength(0)
+  })
 })
