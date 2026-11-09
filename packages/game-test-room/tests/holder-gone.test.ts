@@ -41,13 +41,16 @@ const benchModule = (): TestableModule<ScenarioContext> => ({
   attach: () => () => undefined,
 })
 
+/** No frame budget on wall time: every event and every slice of its drawing run in the frame it comes in, so a busy machine does not leave the bench's top for a later frame. */
+const EVERY_EVENT_IN_ITS_FRAME = { frameBudgetMs: Infinity, debris: { eventBudgetMs: Infinity } } as const
+
 const run = (room: TestRoom, seconds: number): void => {
   for (let t = 0; t < seconds; t += 1 / 60) room.update(1 / 60)
 }
 const bottom = (o: SpawnedObject): number => new THREE.Box3().setFromObject(o.root).min.y
 
 const openBench = (): { room: TestRoom; bench: SpawnedObject; sticks: SpawnedObject[] } => {
-  const room = makeRoom()
+  const room = makeRoom(EVERY_EVENT_IN_ITS_FRAME)
   room.loadModule(benchModule())
   const placed = room.openArea('holder_module')
   run(room, 1)
@@ -84,7 +87,7 @@ describe('what lay on a holder of the area falls when the holder is gone', () =>
 
 describe('what is thrown falls and rests', () => {
   it('a thing let go in the air falls to the floor and stays there', () => {
-    const room = makeRoom()
+    const room = makeRoom(EVERY_EVENT_IN_ITS_FRAME)
     room.loadModule(benchModule())
     const stick = room.spawn('stick_a', [3, 2.5, -3])
     run(room, 3)
