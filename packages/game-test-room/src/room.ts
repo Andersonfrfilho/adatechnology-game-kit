@@ -4407,6 +4407,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   warmup.register(probeOf('destruction', renderer))
   warmup.register(probeOf('vfx', vfx))
   warmup.register(probeOf('fluids', fluidView))
+  // the running film of fuel and blood: its probes keep the film's programs linked while its grids come and go (each spill frees its grid)
+  warmup.register(probeOf('film', film))
   warmup.register(spriteProbes(THREE))
   // a textured caster on each side: the depth program of a textured wall that first enters the sun's box in play is linked here
   warmup.register(shadowCasterProbes(THREE))
