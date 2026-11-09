@@ -26,6 +26,12 @@ export interface PieceSystemOptions {
   onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   /** Two pieces knocked into each other faster than `SLAM_MIN_SPEED` m/s (throttled per pair): for the sound. */
   onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
+  /**
+   * Most pieces simulated at once (not asleep, not held). Over it, the oldest pieces that have come to rest (on the ground, slower than the speeds a piece sleeps under, and
+   * one held up at an angle only once it kept its tilt for `STEADY_SECONDS`) sleep where they lie; nothing is moved. With a limit, one held up at an angle that kept its tilt
+   * sleeps under it too. Default: no limit.
+   */
+  maxAwake?: number
 }
 
 /** What a moving piece ran into (`PieceSystemOptions.sweep`). */
@@ -58,6 +64,9 @@ const ROLLING_RESISTANCE = 0.015
 /** A round piece whose axis leans more than 45 degrees from upright lies on its side (the share of the world's down across its axis). */
 const ROUND_LYING = Math.SQRT1_2
 const SLEEP_AFTER = 0.5
+/** A piece on the ground slower than this (m/s) and turning slower than this (rad/s) is still: it sleeps after `SLEEP_AFTER`, or at once over `maxAwake`. */
+const STILL_SPEED = 0.12
+const STILL_SPIN = 0.45
 /**
  * A piece on the ground that neither moves farther than `CALM_DRIFT` (m) nor turns more than `CALM_TURN` (rad) in `CALM_SLEEP_AFTER` seconds sleeps, however
  * its speed flickers: a book propped on another, or trembling where its corners rest on two pieces, stays in place; a fall or a slide leaves the window sooner.
@@ -65,6 +74,12 @@ const SLEEP_AFTER = 0.5
 const CALM_DRIFT = 0.01
 const CALM_TURN = 0.05
 const CALM_SLEEP_AFTER = 1.5
+/**
+ * A piece held up at an angle (on its edge, leant on something) that turns less than `STEADY_TURN` (rad) in `STEADY_SECONDS` keeps its tilt: over `maxAwake` it may sleep. One
+ * going over turns past it sooner: the topple alone (`TOPPLE`) turns even a low piece 0.17 rad in that time.
+ */
+const STEADY_TURN = 0.1
+const STEADY_SECONDS = 1.5
 const HARD_LANDING = 3
 /** Contact tolerance in metres: corners this close to the ground count as touching, which keeps the contact set (and a resting box) stable. */
 const SLOP = 0.002
@@ -174,6 +189,9 @@ const pairFriction = (a: PieceFriction | undefined, b: PieceFriction | null): Pi
 
 /** The coefficient of restitution of two surfaces against each other: the geometric mean of each one's. */
 const pairRestitution = (a: number | undefined, b: number | undefined): number => Math.sqrt((a ?? SLAM_BOUNCE) * (b ?? SLAM_BOUNCE))
+
+/** The angle (rad) between the rotation `a` and `q`. */
+const turnBetween = (a: readonly [number, number, number, number], q: THREE_NS.Quaternion): number => 2 * Math.acos(Math.min(1, Math.abs(a[0] * q.x + a[1] * q.y + a[2] * q.z + a[3] * q.w)))
 
 /**
  * Light rigid-body physics for loose pieces: gravity, the 8 corners of the local box against the ground with an impulse (restitution, friction,
@@ -542,6 +560,7 @@ export class PieceSystem {
       if (Math.hypot(v[0], v[1], v[2]) > WAKE_ABOVE_SPEED || Math.hypot(w[0], w[1], w[2]) > WAKE_ABOVE_SPIN) this.wakeAbove(b)
     }
     this.collide(dt, only?.meets)
+    this.keepBudget()
   }
 
   /** A few sleeping pieces each update (`SUPPORT_CHECKS`, in turn) look under them again: one whose table broke, or whose shelf fell over, falls. */
@@ -550,10 +569,14 @@ export class PieceSystem {
     for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
       this.supportTurn = (this.supportTurn + 1) % n
       const b = this.list[this.supportTurn]
-      if (!b.sleeping || b.held || this.supported(b, false) || this.supported(b, true)) continue
+      if (!b.sleeping || b.held) continue
+      // one put to sleep by the budget needs every point it went to sleep on: a board leaning on a step whose step is gone comes down, though its foot is still on the floor
+      const rest = b.restPoints
+      if (rest && rest.length > 0 ? rest.every((point) => this.supportsPoint(b, point)) : this.supported(b, false) || this.supported(b, true)) continue
       b.sleeping = false
       b.still = 0
       b.calmAt = null
+      b.restPoints = undefined
     }
   }
 
@@ -1015,21 +1038,89 @@ export class PieceSystem {
       this.o.onHardLanding(b, landPoint, landing)
     }
 
-    const still = touched && !unstable && Math.hypot(v[0], v[1], v[2]) < 0.12 && Math.hypot(w[0], w[1], w[2]) < 0.45
+    const still = touched && !unstable && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
     if (still) b.still += dt
     else b.still = 0
-    if (b.still >= SLEEP_AFTER || this.staysInPlace(b, touched && !b.tipping, pos, q, dt)) {
-      b.sleeping = true
-      b.calmAt = null
-      v[0] = v[1] = v[2] = 0
-      w[0] = w[1] = w[2] = 0
+    b.balancing = unstable
+    this.keepsTilt(b, q, dt)
+    if (b.still >= SLEEP_AFTER || this.staysInPlace(b, touched && !b.tipping, pos, q, dt)) this.sleep(b)
+  }
+
+  /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
+  private sleep(b: PieceBody): void {
+    b.restPoints = undefined
+    b.sleeping = true
+    b.calmAt = null
+    b.steady = null
+    b.velocity[0] = b.velocity[1] = b.velocity[2] = 0
+    b.angularVelocity[0] = b.angularVelocity[1] = b.angularVelocity[2] = 0
+  }
+
+  /** How long the piece has kept its tilt (within `STEADY_TURN`): one going over leaves it within a moment, one held up at an angle keeps it. */
+  private keepsTilt(b: PieceBody, q: THREE_NS.Quaternion, dt: number): void {
+    const at = b.steady
+    if (at && turnBetween(at.quaternion, q) <= STEADY_TURN) {
+      at.seconds += dt
+      return
     }
+    b.steady = { quaternion: [q.x, q.y, q.z, q.w], seconds: 0 }
+  }
+
+  /**
+   * Over `maxAwake` pieces awake, the oldest that have come to rest sleep where they lie: on the ground, slower than `STILL_SPEED` and `STILL_SPIN`, not falling over (`tip`),
+   * and one held up at an angle (a board leaning on a seat) only once it kept its tilt for `STEADY_SECONDS`; that one sleeps then under the budget too, since nothing else puts
+   * it to sleep. It keeps the points it lies on (`restPoints`) and wakes when any of them loses its support (`wakeUnsupported`): put to sleep sooner than it would have slept by
+   * itself, it answers to every point that holds it.
+   */
+  private keepBudget(): void {
+    const most = this.o.maxAwake
+    if (most === undefined || !Number.isFinite(most)) return
+    let awake = 0
+    for (const b of this.list) {
+      if (b.sleeping || b.held) continue
+      // one held up at an angle never sleeps by itself (`still`), though it has come to rest: with a budget it does, whatever the count
+      if (b.balancing && this.hasComeToRest(b)) this.sleepByBudget(b)
+      else awake++
+    }
+    for (const b of this.list) {
+      if (awake <= most) return
+      if (b.sleeping || b.held || !this.hasComeToRest(b)) continue
+      this.sleepByBudget(b)
+      awake--
+    }
+  }
+
+  /** Sleeps sooner than it would by itself, so it answers to every point it lies on (`restPoints`). */
+  private sleepByBudget(b: PieceBody): void {
+    this.sleep(b)
+    b.restPoints = this.restPointsOf(b)
+  }
+
+  private hasComeToRest(b: PieceBody): boolean {
+    const v = b.velocity
+    const w = b.angularVelocity
+    if (!b.onGround || b.tipping || Math.hypot(v[0], v[1], v[2]) >= STILL_SPEED || Math.hypot(w[0], w[1], w[2]) >= STILL_SPIN) return false
+    return !b.balancing || (b.steady?.seconds ?? 0) >= STEADY_SECONDS
+  }
+
+  /** The corners of `b` (its own frame, or its own `contacts`) that have the ground, a piece or a fixed top within `SUPPORT_GAP` under them now; the points along its edges when no corner has. */
+  private restPointsOf(b: PieceBody): Vec3[] {
+    const corners = this.samples(b, false).filter((point) => this.supportsPoint(b, point))
+    return corners.length > 0 ? corners : this.samples(b, true).filter((point) => this.supportsPoint(b, point))
+  }
+
+  /** Whether the point of `b` (its own frame) has the ground, a piece or a fixed top within `SUPPORT_GAP` under it. */
+  private supportsPoint(b: PieceBody, [sx, sy, sz]: Vec3): boolean {
+    const c = this.centerOf(b, this.p)
+    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
+    const y = c.y + e[1] * sx + e[5] * sy + e[9] * sz
+    return this.supportAt(b, c.x + e[0] * sx + e[4] * sy + e[8] * sz, y, c.z + e[2] * sx + e[6] * sy + e[10] * sz, STEP) >= y - SUPPORT_GAP
   }
 
   /** Whether the piece has kept to the same spot on the ground for `CALM_SLEEP_AFTER` (see `CALM_DRIFT`). */
   private staysInPlace(b: PieceBody, touched: boolean, center: Vec3, q: THREE_NS.Quaternion, dt: number): boolean {
     const at = b.calmAt
-    const turned = at ? 2 * Math.acos(Math.min(1, Math.abs(at.quaternion[0] * q.x + at.quaternion[1] * q.y + at.quaternion[2] * q.z + at.quaternion[3] * q.w))) : Infinity
+    const turned = at ? turnBetween(at.quaternion, q) : Infinity
     if (!touched || !at || Math.hypot(center[0] - at.center[0], center[1] - at.center[1], center[2] - at.center[2]) > CALM_DRIFT || turned > CALM_TURN) {
       b.calmAt = touched ? { center: [center[0], center[1], center[2]], quaternion: [q.x, q.y, q.z, q.w] } : null
       b.calm = 0

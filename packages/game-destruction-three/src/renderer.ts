@@ -24,11 +24,16 @@ import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
 import { SettlementView } from './settlement'
+import { SettledBatches } from './settled-batches'
+import type { SettledBatchStats } from './settled-batches'
 import { anchorOnMesh, anchorWorld } from './emitter-anchor'
 import { stampSource } from './vfx-source'
 import type { EmitterAnchor } from './emitter-anchor'
 
 let rendererCount = 0
+/** Most loose pieces and fragments simulated at once a game loop can start from (`RendererOptions.maxAwakePieces`, `maxAwakeFragments`; the default is no limit). */
+export const SUGGESTED_MAX_AWAKE_PIECES = 24
+export const SUGGESTED_MAX_AWAKE_FRAGMENTS = 64
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
 const COLLAPSE_CLOUD_KG = 1000
 /** Colour of bare rebar (the cages' material) and of a bar that came down; the steel of a bar weighs this much per cubic metre when the catalogue has no steel. */
@@ -339,6 +344,8 @@ class Renderer implements DestructionRenderer {
   private readonly ground: GroundSpots
   private readonly pieceSys: PieceSystem
   private readonly cages: RebarCages
+  /** The debris at rest drawn in batches. */
+  private readonly settledBatches: SettledBatches
   private readonly hitPoints = new HitPoints()
   private readonly active = new Map<string, { object: string; part: string }>()
   private readonly fires = new Map<string, FireEmitter>()
@@ -404,13 +411,16 @@ class Renderer implements DestructionRenderer {
       crumbles: (id) => this.world.materials.get(id)?.fracture === 'crumble',
       // rubble lands on what is still built (a slab, a wall's top, a floor), not only on the terrain under it
       surfaceAt: (x, y, z) => this.surfaceAt(x, y, z),
+      maxAwake: o.maxAwakeFragments ?? Infinity,
     })
     this.cages = new RebarCages(THREE, o.scene)
+    this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
       groundAt: this.groundAt,
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       gravity: this.gravity,
       scene: o.scene,
+      maxAwake: o.maxAwakePieces ?? Infinity,
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
@@ -842,6 +852,34 @@ class Renderer implements DestructionRenderer {
     this.ground.update(dt)
     this.ownVfx?.update(dt)
     this.syncTransforms()
+    this.settledBatches.update(dt, () => this.restingDebris())
+  }
+
+  /** An event of the object (a blow, fire, char): its meshes leave the batches before it is drawn (`SettledBatches.release`). */
+  private releaseBatched(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (b) this.settledBatches.release(this.meshesOf(b).map((mv) => mv.mesh))
+  }
+
+  /**
+   * The meshes of the debris at rest: the fragments asleep (without marks on them) and the meshes of their own of the pieces asleep, but for an object with a part burning,
+   * hot or still charring (`active`): its colours change in place.
+   */
+  private restingDebris(): Mesh[] {
+    const meshes = new Set(this.fragments.restingMeshes())
+    const changing = new Set<string>()
+    for (const a of this.active.values()) changing.add(a.object)
+    for (const piece of this.pieceSys.list) {
+      const b = piece.sleeping && !piece.held && !changing.has(piece.objectId) ? this.bounds.get(piece.objectId) : undefined
+      if (!b) continue
+      // a part drawn by a range of a mesh it shares with others (a house) is left in that mesh
+      for (const mv of this.meshesOf(b)) if ((!mv.host || mv.loose) && !mv.hidden && this.visuals.shown(mv)) meshes.add(mv.mesh)
+    }
+    return [...meshes]
+  }
+
+  settledBatchStats(): SettledBatchStats {
+    return this.settledBatches.stats()
   }
 
   deferredQueue(): DeferredQueue {
@@ -1076,6 +1114,7 @@ class Renderer implements DestructionRenderer {
 
   private applyEvent(ev: DestructionEvent): void {
     this.staticDirty.add(ev.object)
+    this.releaseBatched(ev.object)
     this.hitPoints.note(ev, this.time)
     if (ev.type === 'fracture' || ev.type === 'detach' || ev.type === 'collapse' || ev.type === 'burnout' || ev.type === 'destroyed') this.broken.add(ev.object)
     switch (ev.type) {
@@ -2388,6 +2427,8 @@ class Renderer implements DestructionRenderer {
   }
 
   clear(): void {
+    // the meshes go back to their own draw before they are restored or removed
+    this.settledBatches.clear()
     // what was bound is gone: the next read measures what is left, all of it
     this.staticAll = true
     this.queue.length = 0

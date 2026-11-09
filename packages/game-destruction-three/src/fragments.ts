@@ -18,6 +18,8 @@ interface Live {
   baseScale: THREE_NS.Vector3
   still: number
   asleep: boolean
+  /** It touched what is under it in its last step. */
+  contact: boolean
   /** Seconds at rest. */
   rest: number
   /** 1 while alive; counts down to 0 while shrinking away. */
@@ -52,6 +54,11 @@ export interface FragmentSystemOptions {
   surfaceAt?: (x: number, y: number, z: number) => number
   /** Whether a material crumbles (`MaterialDef.fracture` 'crumble': brick, block, concrete, plaster): its chunks are drawn broken, not as cut boxes. */
   crumbles?: (materialId: string) => boolean
+  /**
+   * Most fragments moving at once. Over it, the oldest that lie on what is under them and are as slow as one that settles (`isSlow`) are put to sleep where they lie at once,
+   * instead of after `SETTLE_SECONDS`. Default: no limit.
+   */
+  maxAwake?: number
 }
 
 const BUILDERS: Record<Exclude<SharedShape, 'shard'>, (THREE: typeof THREE_NS, seed: number) => THREE_NS.BufferGeometry> = {
@@ -83,6 +90,12 @@ const SUPPORT_GAP = 0.02
 
 /** How many shard shapes there are; a fragment takes one by the hash of its id. */
 const SHARD_SHAPES = 6
+
+/** Seconds a fragment stays slow on what is under it before it sleeps. */
+const SETTLE_SECONDS = 0.4
+
+/** As slow as a fragment that settles: under about 0.11 m/s and 0.45 rad/s. */
+const isSlow = (f: Live): boolean => f.vel.lengthSq() < 0.012 && f.ang.lengthSq() < 0.2
 
 const isBig = (size: readonly number[]): boolean => {
   const [, middle, longest] = [...size].sort((a, b) => a - b)
@@ -127,6 +140,11 @@ export class FragmentSystem {
   /** Meshes of every live fragment (tests and picking). */
   meshes(): THREE_NS.Mesh[] {
     return this.list.map((f) => f.mesh)
+  }
+
+  /** Meshes of the fragments asleep in the scene, without marks on them (a mark is a mesh of its own on the fragment). */
+  restingMeshes(): THREE_NS.Mesh[] {
+    return this.list.filter((f) => f.asleep && !f.dying && f.mesh.children.length === 0 && f.mesh.parent === this.o.scene).map((f) => f.mesh)
   }
 
   /** One shared material per source material id + colour (+ transparency). */
@@ -292,6 +310,7 @@ export class FragmentSystem {
       baseScale: sc,
       still: 0,
       asleep: false,
+      contact: false,
       rest: 0,
       fade: 1,
       dying: false,
@@ -392,6 +411,30 @@ export class FragmentSystem {
       }
       this.step(f, dt, g)
     }
+    this.keepBudget()
+  }
+
+  /** Over `maxAwake` fragments moving, the oldest at rest on what is under them sleep where they lie (`FragmentSystemOptions.maxAwake`). */
+  private keepBudget(): void {
+    const most = this.o.maxAwake
+    if (most === undefined || !Number.isFinite(most)) return
+    let awake = 0
+    for (const f of this.list) if (!f.asleep && !f.dying) awake++
+    for (const f of this.list) {
+      if (awake <= most) return
+      if (f.asleep || f.dying || !f.contact || !isSlow(f)) continue
+      this.sleep(f)
+      awake--
+    }
+  }
+
+  /** The fragment stops where it lies, and its matrix is no longer recomputed every frame. */
+  private sleep(f: Live): void {
+    f.asleep = true
+    f.mesh.updateMatrix()
+    f.mesh.matrixAutoUpdate = false
+    f.vel.set(0, 0, 0)
+    f.ang.set(0, 0, 0)
   }
 
   /** A few fragments asleep each update (`SUPPORT_CHECKS`, in turn) look at the ground under them again: one left over air falls. */
@@ -460,16 +503,10 @@ export class FragmentSystem {
       if (f.air > 0) this.flutter(f, dt)
     }
     if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
-    const slow = f.vel.lengthSq() < 0.012 && f.ang.lengthSq() < 0.2
-    if (contact && slow) {
+    f.contact = contact
+    if (contact && isSlow(f)) {
       f.still += dt
-      if (f.still > 0.4) {
-        f.asleep = true
-        f.mesh.updateMatrix()
-        f.mesh.matrixAutoUpdate = false
-        f.vel.set(0, 0, 0)
-        f.ang.set(0, 0, 0)
-      }
+      if (f.still > SETTLE_SECONDS) this.sleep(f)
     } else {
       f.still = 0
     }
