@@ -94,7 +94,8 @@ engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
 - **Per voice, smooth.** A voice with a `position` plays through its own lowpass and gain, which start at the first query and glide (`setTargetAtTime`,
   `smoothing` seconds) when it changes. `setListener` re-queries the due voices: each at most every `interval` seconds, only if the listener moved, only
   while the voice is above `audibleLevel`, and at most `budget` queries per call.
-- The first query of a new voice counts against the same `budget` and against `budgetMs` (default 1 ms of queries per frame, timed by `clock`): a burst
+- The first query of a new voice counts against the same `budget` and against `budgetMs` (default 1 ms of queries per frame, timed by `clock`); it runs
+  on `play` only when the running cost of a query fits in what the frame has left, so a slow one (a vehicle on the path) never runs there. A burst
   past either starts the extra voices at a guess (the nearest measured voice within 2 m, else the last result for that spot, else clear) without querying,
   and the next `setListener`s measure them first, oldest first, within the same budgets (at least one per call), gliding to the exact measure. A stopped or ended voice keeps its nodes for 0.1 s so a fade is not cut. The reverb send goes through the same lowpass and gain.
   A recipe with `falloff.model: 'none'` (interface, own steps) is never occluded.

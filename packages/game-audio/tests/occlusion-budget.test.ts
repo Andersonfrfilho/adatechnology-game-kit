@@ -64,15 +64,16 @@ describe('the occlusion tracker, time budget', () => {
     const tracker = createOcclusionTracker({ ...timed.setup, budget: 10, budgetMs: 1, interval: 10 })
     tracker.update(LISTENER, 0)
     SOURCES.forEach((source, index) => tracker.add({ id: index + 1, source: [...source], level: 1, listener: LISTENER, now: 0 }))
-    // 0.4 ms each: three fit before the clock passes 1 ms (0.4, 0.8, then 1.2 stops it)
-    expect(timed.calls()).toBe(3)
+    // 0.4 ms each: add queries only while one more fits in the 1 ms (0.4, 0.8; a third would end at 1.2)
+    expect(timed.calls()).toBe(2)
     const measured: number[] = []
     for (let frame = 1; frame <= 3; frame++) {
       const before = timed.calls()
       tracker.update(LISTENER, frame * 0.016)
       measured.push(timed.calls() - before)
     }
-    expect(measured).toEqual([3, 0, 0])
+    // update queries while the frame has time left (0, 0.4, 0.8 ms spent before each), then the last one the next frame
+    expect(measured).toEqual([3, 1, 0])
     const slow = timedQuery(5, layered)
     const heavy = createOcclusionTracker({ ...slow.setup, budget: 10, budgetMs: 1, interval: 10 })
     heavy.add({ id: 1, source: [-6, 0, 0], level: 1, listener: LISTENER, now: 0 })
@@ -103,6 +104,48 @@ describe('the occlusion tracker, time budget', () => {
     })
     // the voices do not all share one loss, so matching states is not a coincidence of one answer
     expect(synchronous.state(2)?.lossDb).not.toBe(synchronous.state(1)?.lossDb)
+  })
+
+  it('a slow query makes the next add wait for update; cheap ones bring add back to measuring at once, and every voice ends at its measure', () => {
+    let cost = 0.05
+    let time = 0
+    let calls = 0
+    const query: OcclusionQuery = (from, to) => {
+      calls++
+      time += cost
+      return layered(from, to)
+    }
+    const tracker = createOcclusionTracker({ query, clock: () => time, budget: 100, budgetMs: 1, interval: 10 })
+    const synchronous = createOcclusionTracker({ query: layered, budget: 100, budgetMs: Infinity, interval: 10 })
+    let id = 0
+    const play = (source: [number, number, number], frame: number): boolean => {
+      id++
+      const before = calls
+      tracker.add({ id, source, level: 1, listener: LISTENER, now: frame * 0.016 })
+      synchronous.add({ id, source, level: 1, listener: LISTENER, now: frame * 0.016 })
+      return calls > before
+    }
+    // the first query of the session always runs, and cheap ones stay synchronous
+    expect(play([-6, 0, 0], 0)).toBe(true)
+    expect(play([4, 0, 0], 0)).toBe(true)
+    // a vehicle on the path: 300 ms, measured at once because nothing said it would be slow
+    cost = 300
+    tracker.update(LISTENER, 0.016)
+    expect(play([-12, 0, 3], 1)).toBe(true)
+    // the next frame has its whole millisecond, but a query has been costing far more: the voice waits for update
+    cost = 0.05
+    tracker.update(LISTENER, 0.032)
+    expect(play([15, 0, 0], 2)).toBe(false)
+    expect(play([8, 0, -4], 2)).toBe(false)
+    // update still measures, at least one a frame; the cheap answers bring the running cost back under the budget
+    let frame = 3
+    for (; frame < 40; frame++) {
+      tracker.update(LISTENER, frame * 0.016)
+      if (play([-3, 0, 9 + frame], frame)) break
+    }
+    expect(frame).toBeLessThan(40)
+    for (let more = 0; more < 5; more++) tracker.update(LISTENER, (frame + 1 + more) * 0.016)
+    for (let voice = 1; voice <= id; voice++) expect(tracker.state(voice), `voice ${voice}`).toEqual(synchronous.state(voice))
   })
 
   it('a guess within half a decibel of the measure still takes the measure', () => {

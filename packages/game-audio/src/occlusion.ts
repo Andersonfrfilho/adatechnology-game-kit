@@ -78,8 +78,8 @@ export type OcclusionSetup = {
   /** Most queries per `update`, and most new voices measured on `add` between two updates (the frame budget). Default 3. */
   readonly budget?: number
   /**
-   * Milliseconds the queries may take between two `update`s (one frame), on top of `budget`. A new voice is measured on `add` only while the frame has
-   * time left; past it, the voice starts at a guess and an `update` measures it. Each `update` measures at least one waiting voice, so every voice is
+   * Milliseconds the queries may take between two `update`s (one frame), on top of `budget`. A new voice is measured on `add` only when the running cost
+   * of a query (half the last one plus half what came before) fits in the time the frame has left; otherwise it starts at a guess and an `update` measures it. Each `update` measures at least one waiting voice, so every voice is
    * measured even when one query costs more than the whole budget. Default 1.
    */
   readonly budgetMs?: number
