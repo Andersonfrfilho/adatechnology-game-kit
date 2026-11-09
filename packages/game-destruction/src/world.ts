@@ -26,7 +26,7 @@ import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rota
 import type { DestructibleImpl } from './contracts'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
-  DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
+  DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras,
@@ -308,6 +308,8 @@ interface ObjRT {
   soil?: SoilRT
   /** The wind on the object (`DestructionOptions.wind`), when the world has wind and the object is a structure. */
   wind?: WindRT
+  /** A piece `splitGroup` cut from another object (`RaycastOptions.skipLoose`). */
+  loose: boolean
 }
 
 interface WindRT {
@@ -377,6 +379,7 @@ interface Carry {
   soil?: SoilState
   soilSets?: Record<string, number>
   wind?: [number, number, number, number, number]
+  loose?: boolean
 }
 
 
@@ -619,7 +622,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const st: ObjectState = { id, position: [pos[0], pos[1], pos[2]], rotation: [rot[0], rot[1], rot[2], rot[3]], parts: [], joints: [], groups: [], destroyed: false }
     if (spec.name !== undefined) st.name = spec.name
     const o: ObjRT = {
-      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unanchored: new Set(carry?.unanchored ?? []), unsup: [], anyAnchor: false, order: ++orderCounter,
+      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unanchored: new Set(carry?.unanchored ?? []), unsup: [], anyAnchor: false, order: ++orderCounter, loose: carry?.loose ?? false,
       base: { pos: [pos[0], pos[1], pos[2]], rot: [rot[0], rot[1], rot[2], rot[3]] },
     }
     for (const ps of spec.parts) {
@@ -2284,10 +2287,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return -b - Math.sqrt(disc) > maxDist
   }
 
-  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false): (RayHit & { pathLen: number }) | null => {
+  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
+    const minRadius = skip.minObjectRadius ?? 0
     let best: (RayHit & { pathLen: number }) | null = null
     for (const o of objects.values()) {
+      if ((skip.skipLoose && o.loose) || o.br < minRadius) continue
       if (raySphereMiss(origin, d, toWorld(o.st.position, o.st.rotation, o.bc), o.br, best ? Math.min(maxDist, best.distance) : maxDist)) continue
       // the ray in the object's frame, so each part is first tried against its bounding sphere there: a house of a thousand bricks turns a handful
       const qi = quat.conjugate(o.st.rotation)
@@ -4655,7 +4660,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const inNew = (pid: string) => moved.has(pid)
       const inOld = (pid: string) => !moved.has(pid)
       const pos = o.st.position, rot = o.st.rotation
-      const fresh = build(sub(inNew), nid, pos, rot, carryFor(inNew, (a, b) => inNew(a) && inNew(b)))
+      const fresh = build(sub(inNew), nid, pos, rot, { ...carryFor(inNew, (a, b) => inNew(a) && inNew(b)), loose: true })
       const restCarry = carryFor(inOld, (a, b) => !(inNew(a) && inNew(b)))
       if (o.st.soil) restCarry.soil = o.st.soil
       if (o.soil?.sets.size) restCarry.soilSets = Object.fromEntries(o.soil.sets)
@@ -4729,8 +4734,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (!(loss.radius > 0) || !(loss.depth > 0) || !Number.isFinite(loss.x) || !Number.isFinite(loss.z)) return
       pendingLosses.push({ ...loss })
     },
-    raycast(origin, direction, maxDistance = Infinity) {
-      const r = raycastInternal(origin, direction, maxDistance, undefined, false, true)
+    raycast(origin, direction, maxDistance = Infinity, options) {
+      const r = raycastInternal(origin, direction, maxDistance, undefined, false, true, options)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
     },
     sweepBox(box, direction, distance, options = {}) {
@@ -4981,7 +4986,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         rng: rng.state(),
         counter,
         objects: [...objects.values()].map((o) => {
-          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
+          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.loose ? { loose: true } : {}), ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
           for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
           for (const j of o.joints) runtime.joints[j.spec.id] = j.step
           return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
@@ -5007,6 +5012,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           collapsed: e.runtime?.collapsed,
           ...(e.runtime?.unanchored ? { unanchored: e.runtime.unanchored } : {}),
           ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
+          ...(e.runtime?.loose ? { loose: true } : {}),
         }
         let pos = state.position, rot = state.rotation
         if (state.soil) {
