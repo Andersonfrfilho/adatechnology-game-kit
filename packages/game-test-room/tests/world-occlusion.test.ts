@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { AudioEngineOptions } from '@adatechnology/game-audio'
+import { createDestruction } from '@adatechnology/game-destruction'
+import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import { makeRoom } from './helpers'
 
 const captured: AudioEngineOptions[] = []
@@ -87,5 +89,46 @@ describe('createWorldOcclusion with layers side by side', () => {
     const hits = createWorldOcclusion(world)([0, 1, 0], [0, 1, -10])
     expect(hits.map((hit) => hit.material)).toEqual(['brick', 'glass'])
     expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
+  })
+})
+
+describe('createWorldOcclusion over a destruction world after a blast', () => {
+  const wallSpec = (): DestructibleSpec => ({ name: 'wall', parts: [{ id: 'bricks', material: 'brick', shape: { kind: 'box', size: [4, 2.6, 0.12] }, position: [0, 0, 0] }] })
+  const brickSpec = (): DestructibleSpec => ({ name: 'brick', parts: [{ id: 'unit', material: 'brick', shape: { kind: 'box', size: [0.19, 0.09, 0.057] }, position: [0, 0, 0] }] })
+  const boards = (): DestructibleSpec => ({
+    name: 'boards',
+    parts: [
+      { id: 'front', material: 'wood_hard', shape: { kind: 'box', size: [1.2, 1, 0.04] }, position: [0, 0, 0.3] },
+      { id: 'back', material: 'wood_hard', shape: { kind: 'box', size: [1.2, 1, 0.04] }, position: [0, 0, -0.3] },
+    ],
+    joints: [{ id: 'clip', a: 'front', b: 'back', kind: 'clip' }],
+  })
+  const SOURCE: [number, number, number] = [0, 1.2, -8]
+  const EAR: [number, number, number] = [0, 1.2, 8]
+
+  it('counts the wall with the same loss as before, and neither the debris nor the loose piece lying on the path', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { totalLossDb } = await import('@adatechnology/game-audio')
+    const bare = createDestruction()
+    bare.add(wallSpec(), { position: [0, 1.3, 0] })
+    const before = createWorldOcclusion(bare)(SOURCE, EAR)
+    expect(before.map((hit) => hit.material)).toEqual(['brick'])
+
+    const after = createDestruction()
+    after.add(wallSpec(), { position: [0, 1.3, 0] })
+    const bricks = [0, 1, 2, 3, 4].map((index) => after.add(brickSpec(), { position: [0, 1.2, -6 + index] }))
+    const whole = after.add(boards(), { position: [0, 1.2, 4] })
+    after.disassemble(whole, 'clip', 'hand', 10)
+    const group = after.state(whole)?.groups.findIndex((names) => names.includes('back')) ?? -1
+    const loose = after.splitGroup(whole, group)
+    // the raw rays meet the bricks and the loose board first
+    expect(bricks).toContain(after.raycast(SOURCE, [0, 0, 1])?.object)
+    expect(after.raycast([0, 1.2, 3.5], [0, 0, 1])?.object).toBe(loose)
+
+    const through = createWorldOcclusion(after)(SOURCE, EAR)
+    // the board left standing still occludes; the bricks on the floor and the loose board do not
+    expect(through.map((hit) => hit.material)).toEqual(['brick', 'wood_hard'])
+    expect(through[0]).toEqual(before[0])
+    expect(totalLossDb(through.slice(0, 1))).toBe(totalLossDb(before))
   })
 })

@@ -1,4 +1,6 @@
-export { impactKey, shotKey, dragSoundKey, createDestructionRenderer } from './renderer'
+export { impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
+export { SETTLED_BATCH_DEFAULTS, SETTLED_BATCH_ORIGIN } from './settled-batches'
+export type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
 export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'
@@ -30,7 +32,7 @@ export type {
 export { BURN_LOOP, DESTRUCTION_SOUND_BANK, DRAG_SOUNDS, EXPLOSION_BOOM, IMPACT_SOUNDS, SCENE_SOUNDS } from './audio/recipes'
 export { IMPACT_FAMILY_TAGS, breakSoundKeys, impactFamily, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 export type { ImpactFamily, ImpactKeys } from './audio/impact-keys'
-export { DEFAULT_CRACKLES, DEFAULT_FIRE, DEFAULT_INDOOR_CONFINEMENT, FIRE_FADE_SECONDS, DESTRUCTION_SOUND_KEYS, IMPACT_SOUND_KEYS, createDestructionSound, impactSoundIds } from './audio/sound'
+export { DEFAULT_CRACKLES, DEFAULT_FIRE, DEFAULT_INDOOR_CONFINEMENT, FIRE_FADE_SECONDS, DESTRUCTION_SOUND_KEYS, IMPACT_SOUND_KEYS, blastSoundIds, createDestructionSound, impactSoundIds } from './audio/sound'
 export {
   BIG_BLAST_RADIUS,
   BLAST_FALLOFF,

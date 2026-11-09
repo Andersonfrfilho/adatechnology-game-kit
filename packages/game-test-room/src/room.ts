@@ -5,7 +5,7 @@ import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } f
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { DESTRUCTION_SOUND_KEYS, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { DESTRUCTION_SOUND_KEYS, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, Hit, SurfaceId } from '@adatechnology/game-contracts'
@@ -17,9 +17,9 @@ import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } fro
 import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { SPRITE_KINDS, WATER_SHOT_BY_CALIBER, createVfx, createWaterEffects, patchSpriteKinds, waterShotClassOf } from '@adatechnology/game-vfx'
+import { SPRITE_KINDS, WATER_SHOT_BY_CALIBER, createVfx, createWaterEffects, explosionEffectIds, patchSpriteKinds, waterShotClassOf } from '@adatechnology/game-vfx'
 import { createVfxRenderer, createWaterEffectsLayer } from '@adatechnology/game-vfx-three'
-import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, spriteProbes } from '@adatechnology/game-render-three'
+import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, shadowCasterProbes, spriteProbes } from '@adatechnology/game-render-three'
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
@@ -133,7 +133,6 @@ const LEFT_HAND_KEY = '#L'
 const OFF_HAND_SEED = 11
 // how the picker's button names its key: the one left of 1 shows as the quote it prints on a Brazilian (ABNT2) keyboard
 const TOOL_MENU_KEY_LABELS: Readonly<Record<string, string>> = { Backquote: "'" }
-const EXPLOSIVE_EFFECT_IDS = ['m67', 'molotov', 'pipe_bomb', 'm79_40mm', 'm72_66mm', 'at4_84mm', 'dynamite', 'c4', 'claymore'] as const
 /** The fog the scene may be in while the room runs: none, the weather's linear fog and its exponential one (the weather module comes in after the load). */
 /** The most loose bodies (casings, magazines) the room lets its modules keep alive at once: the cap the weapons viewmodel had on its own. */
 const DEFAULT_PARTICLE_LIMIT = 900
@@ -400,6 +399,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         window.removeEventListener('pointerdown', preload, true)
         // the hand's sounds and every sound of the room's destruction style (impacts, ricochets, breaks, the glass shatter): the first of each plays the recording
         void audio.loadSamples([...HAND_RECORDED_IDS, ...impactSoundIds(DESTRUCTION_SOUND_KEYS.art_scene)]).catch(() => undefined)
+        // every explosion's boom, fire, debris and splash, decoded now: the first blast plays its recordings with no decode in its frames
+        void audio.preload([...blastSoundIds(), WATER_SPLASH_SOUND]).catch(() => undefined)
       }
       window.addEventListener('keydown', preload, true)
       window.addEventListener('pointerdown', preload, true)
@@ -451,6 +452,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
     eventBudgetMs: options.debris?.eventBudgetMs ?? 8,
+    // the debris at rest is drawn in batches (its collision unchanged); the awake budget stays off unless asked for
+    ...(options.debris?.maxAwakePieces !== undefined ? { maxAwakePieces: options.debris.maxAwakePieces } : {}),
+    ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
+    ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
@@ -494,6 +499,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
       }
       if (best) splitOf.set(piece.objectId, best)
+    },
+    // a module let an object go for good (a house replaced) and the renderer took its pieces out of the world: the room forgets them too
+    onReleased: (pieceIds) => {
+      const gone = new Set(pieceIds)
+      for (const id of gone) {
+        rendererPieces.delete(id)
+        splitOf.delete(id)
+        bodyBoxes.delete(id)
+        inWater.delete(id)
+        prevVy.delete(id)
+      }
+      let kept = 0
+      for (const piece of loose) if (!gone.has(piece.objectId)) loose[kept++] = piece
+      loose.length = kept
     },
   })
 
@@ -4406,7 +4425,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   warmup.register(probeOf('destruction', renderer))
   warmup.register(probeOf('vfx', vfx))
   warmup.register(probeOf('fluids', fluidView))
+  // the running film of fuel and blood: its probes keep the film's programs linked while its grids come and go (each spill frees its grid)
+  warmup.register(probeOf('film', film))
   warmup.register(spriteProbes(THREE))
+  // a textured caster on each side: the depth program of a textured wall that first enters the sun's box in play is linked here
+  warmup.register(shadowCasterProbes(THREE))
   for (const object of arena.objects) {
     const probes = object.warmUpProbes
     if (probes) warmup.register(probeOf(`scenery:${object.id}`, { warmUpProbes: () => probes(THREE) }))
@@ -4430,7 +4453,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
   const catalogIds = vfx.catalog?.() ?? []
-  for (const id of [...EXPLOSIVE_EFFECT_IDS, ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1)]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
+  // every explosion of the effects catalogue (the world's P13, barrel and car tank, the rockets...): a new explosive is warmed without a list here
+  for (const id of [...explosionEffectIds(), ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1)]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
   let warmedUp = false
   const warmUp = (): void => {
     warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES, materials: pools.materials.registeredMaterials?.() ?? [] })

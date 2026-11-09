@@ -24,10 +24,16 @@ import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
 import { SettlementView } from './settlement'
+import { SettledBatches } from './settled-batches'
+import type { SettledBatchStats } from './settled-batches'
 import { anchorOnMesh, anchorWorld } from './emitter-anchor'
+import { stampSource } from './vfx-source'
 import type { EmitterAnchor } from './emitter-anchor'
 
 let rendererCount = 0
+/** Most loose pieces and fragments simulated at once a game loop can start from (`RendererOptions.maxAwakePieces`, `maxAwakeFragments`; the default is no limit). */
+export const SUGGESTED_MAX_AWAKE_PIECES = 24
+export const SUGGESTED_MAX_AWAKE_FRAGMENTS = 64
 /** Mass (kg) a collapse of furniture must bring down to raise the collapse effect's cloud; less (a shelf with its books) raises a puff of dust. */
 const COLLAPSE_CLOUD_KG = 1000
 /** Colour of bare rebar (the cages' material) and of a bar that came down; the steel of a bar weighs this much per cubic metre when the catalogue has no steel. */
@@ -307,7 +313,7 @@ class Renderer implements DestructionRenderer {
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
   /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
-  private readonly trickles: Array<{ point: Vec3; normal: Vec3; anchor: EmitterAnchor | null; color: number | undefined; left: number; total: number; next: number }> = []
+  private readonly trickles: Array<{ point: Vec3; normal: Vec3; anchor: EmitterAnchor | null; color: number | undefined; left: number; total: number; next: number; source: string | undefined }> = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -338,6 +344,8 @@ class Renderer implements DestructionRenderer {
   private readonly ground: GroundSpots
   private readonly pieceSys: PieceSystem
   private readonly cages: RebarCages
+  /** The debris at rest drawn in batches. */
+  private readonly settledBatches: SettledBatches
   private readonly hitPoints = new HitPoints()
   private readonly active = new Map<string, { object: string; part: string }>()
   private readonly fires = new Map<string, FireEmitter>()
@@ -350,6 +358,8 @@ class Renderer implements DestructionRenderer {
   private readonly throttles = new Map<string, number>()
   private rng = createRng(RNG_SEED)
   private readonly vfx: VfxWorld
+  /** The object whose event is being applied: what the effects world is given while it is set is that object's (`stampSource`). */
+  private emitting: string | undefined
   /** Names this renderer to the world's drips, so a shared world tells each renderer where its own landed. */
   private readonly owner = `destruction-${++rendererCount}`
   private readonly stopLanding: () => void
@@ -385,7 +395,7 @@ class Renderer implements DestructionRenderer {
     this.settlement = new SettlementView(THREE, this.visuals)
     this.ground = new GroundSpots(THREE, o.scene, this.groundAt, 48)
     if (!o.vfx) warnOnce('game-destruction-three.own-effects-world', 'game-destruction-three made an effects world of its own because the host lent none (options.vfx); pass the host effects so the effects share one budget')
-    this.vfx = o.vfx ?? createVfx({ profile: this.quality, gravity: this.gravity, groundAt: this.groundAt, sprites: { capacity: maxParticles, density: this.low ? 0.6 : 1 } })
+    this.vfx = stampSource(o.vfx ?? createVfx({ profile: this.quality, gravity: this.gravity, groundAt: this.groundAt, sprites: { capacity: maxParticles, density: this.low ? 0.6 : 1 } }), () => this.emitting)
     this.ownVfx = o.vfx ? undefined : createVfxRenderer(THREE, { scene: o.scene, camera: o.camera ?? new THREE.PerspectiveCamera(), vfx: this.vfx, pointScale: o.pointScale ?? 700 })
     this.stopLanding = this.vfx.onLand(this.owner, (x, _y, z, color, tag) => {
       const home = this.homeTags[tag - 1] ?? ''
@@ -401,13 +411,16 @@ class Renderer implements DestructionRenderer {
       crumbles: (id) => this.world.materials.get(id)?.fracture === 'crumble',
       // rubble lands on what is still built (a slab, a wall's top, a floor), not only on the terrain under it
       surfaceAt: (x, y, z) => this.surfaceAt(x, y, z),
+      maxAwake: o.maxAwakeFragments ?? Infinity,
     })
     this.cages = new RebarCages(THREE, o.scene)
+    this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
       groundAt: this.groundAt,
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       gravity: this.gravity,
       scene: o.scene,
+      maxAwake: o.maxAwakePieces ?? Infinity,
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
@@ -839,6 +852,34 @@ class Renderer implements DestructionRenderer {
     this.ground.update(dt)
     this.ownVfx?.update(dt)
     this.syncTransforms()
+    this.settledBatches.update(dt, () => this.restingDebris())
+  }
+
+  /** An event of the object (a blow, fire, char): its meshes leave the batches before it is drawn (`SettledBatches.release`). */
+  private releaseBatched(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (b) this.settledBatches.release(this.meshesOf(b).map((mv) => mv.mesh))
+  }
+
+  /**
+   * The meshes of the debris at rest: the fragments asleep (without marks on them) and the meshes of their own of the pieces asleep, but for an object with a part burning,
+   * hot or still charring (`active`): its colours change in place.
+   */
+  private restingDebris(): Mesh[] {
+    const meshes = new Set(this.fragments.restingMeshes())
+    const changing = new Set<string>()
+    for (const a of this.active.values()) changing.add(a.object)
+    for (const piece of this.pieceSys.list) {
+      const b = piece.sleeping && !piece.held && !changing.has(piece.objectId) ? this.bounds.get(piece.objectId) : undefined
+      if (!b) continue
+      // a part drawn by a range of a mesh it shares with others (a house) is left in that mesh
+      for (const mv of this.meshesOf(b)) if ((!mv.host || mv.loose) && !mv.hidden && this.visuals.shown(mv)) meshes.add(mv.mesh)
+    }
+    return [...meshes]
+  }
+
+  settledBatchStats(): SettledBatchStats {
+    return this.settledBatches.stats()
   }
 
   deferredQueue(): DeferredQueue {
@@ -1061,7 +1102,19 @@ class Renderer implements DestructionRenderer {
   }
 
   private apply(ev: DestructionEvent): void {
+    const outer = this.emitting
+    // an event of no object (a blast set off in the air) makes effects of no one
+    this.emitting = ev.object || undefined
+    try {
+      this.applyEvent(ev)
+    } finally {
+      this.emitting = outer
+    }
+  }
+
+  private applyEvent(ev: DestructionEvent): void {
     this.staticDirty.add(ev.object)
+    this.releaseBatched(ev.object)
     this.hitPoints.note(ev, this.time)
     if (ev.type === 'fracture' || ev.type === 'detach' || ev.type === 'collapse' || ev.type === 'burnout' || ev.type === 'destroyed') this.broken.add(ev.object)
     switch (ev.type) {
@@ -1469,7 +1522,7 @@ class Renderer implements DestructionRenderer {
     if (this.trickles.length >= TRICKLE_MAX) this.trickles.shift()
     const total = TRICKLE_SECONDS[0] + (TRICKLE_SECONDS[1] - TRICKLE_SECONDS[0]) * this.rng()
     const anchor = mv ? anchorOnMesh(this.THREE, mv, point, normal) : null
-    this.trickles.push({ point: [point[0], point[1], point[2]], normal, anchor, color, left: total, total, next: TRICKLE_EVERY })
+    this.trickles.push({ point: [point[0], point[1], point[2]], normal, anchor, color, left: total, total, next: TRICKLE_EVERY, source: this.emitting ?? mv?.home })
   }
 
   private updateTrickles(dt: number): void {
@@ -1495,7 +1548,7 @@ class Renderer implements DestructionRenderer {
       const share = t.left / t.total
       t.next = TRICKLE_EVERY / Math.max(share, 0.25)
       const out: Vec3 = [t.normal[0] * 0.2, -1, t.normal[2] * 0.2]
-      const options = t.color !== undefined ? { color: t.color } : undefined
+      const options = { ...(t.color !== undefined ? { color: t.color } : {}), ...(t.source !== undefined ? { source: t.source } : {}) }
       this.vfx.burst('chips', t.point, out, this.low ? 1 : 2, 0.3, options)
       if (this.rng() < 0.5) this.vfx.burst('dust', t.point, out, 1, 0.2, options)
     }
@@ -2193,7 +2246,7 @@ class Renderer implements DestructionRenderer {
       this.ground.add('puddle', c.x, c.z, clamp(footprint * 0.55, 0.05, 1), this.partColor(pv, def) ?? fallbackColor(def), objectId)
     } else {
       this.ground.add('ash', c.x, c.z, clamp(footprint * 0.35, 0.04, 0.5), 0x1d1a18, objectId)
-      this.vfx.burst('ash', [c.x, bb.max.y, c.z], [0, 1, 0], 10, 0.8)
+      this.vfx.burst('ash', [c.x, bb.max.y, c.z], [0, 1, 0], 10, 0.8, { source: objectId })
     }
   }
 
@@ -2202,17 +2255,21 @@ class Renderer implements DestructionRenderer {
     bb.makeEmpty()
     const tmp = new this.THREE.Box3()
     for (const mv of pv.meshes) if (this.visuals.shown(mv)) bb.union(this.visuals.worldBox(mv, tmp))
-    if (!bb.isEmpty()) {
-      const c = bb.getCenter(this.v1)
-      f.follow.x = c.x
-      f.follow.y = bb.min.y
-      f.follow.z = c.z
+    if (bb.isEmpty()) {
+      // nothing of the part is drawn (a roof rafter has no mesh, or the part broke or burnt away): no flame may hang where it was
+      if (f.handle !== undefined) this.vfx.stop(f.handle)
+      delete f.handle
+      return
     }
+    const c = bb.getCenter(this.v1)
+    f.follow.x = c.x
+    f.follow.y = bb.min.y
+    f.follow.z = c.z
     if (f.handle !== undefined) return
-    const size = bb.isEmpty() ? this.v2.set(0.2, 0.2, 0.2) : bb.getSize(this.v2)
+    const size = bb.getSize(this.v2)
     const radius = clamp(Math.max(size.x, size.z) * 0.5, 0.12, 1.2)
     const smokeColor = SMOKE_TONES[def?.thermal.smoke ?? 'grey']
-    f.handle = this.vfx.fire({ point: [f.follow.x, f.follow.y, f.follow.z], radius, life: FIRE_CEILING_SECONDS, follow: f.follow, ...(smokeColor !== undefined ? { smokeColor } : {}) })
+    f.handle = this.vfx.fire({ point: [f.follow.x, f.follow.y, f.follow.z], radius, life: FIRE_CEILING_SECONDS, follow: f.follow, source: f.object, ...(smokeColor !== undefined ? { smokeColor } : {}) })
   }
 
   private updateLeaks(dt: number): void {
@@ -2258,8 +2315,8 @@ class Renderer implements DestructionRenderer {
       while (l.acc >= 1) {
         l.acc -= 1
         const vel: Vec3 = [(dir[0] / dl) * sp + (this.rng() - 0.5) * 0.25, (dir[1] / dl) * sp + (this.rng() - 0.5) * 0.25, (dir[2] / dl) * sp + (this.rng() - 0.5) * 0.25]
-        if (l.fluid === 'gas') this.vfx.spawn('steam', pt, vel, { color, size: 0.5, alpha: 0.5 })
-        else this.vfx.spawn('drips', pt, vel, { color, tag: this.rng() < 0.03 ? this.tagOf(l.object) : 0, owner: this.owner })
+        if (l.fluid === 'gas') this.vfx.spawn('steam', pt, vel, { color, size: 0.5, alpha: 0.5, source: l.object })
+        else this.vfx.spawn('drips', pt, vel, { color, tag: this.rng() < 0.03 ? this.tagOf(l.object) : 0, owner: this.owner, source: l.object })
       }
     }
   }
@@ -2298,6 +2355,58 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  release(objectId: string): string[] {
+    const removed = this.releasePieces(objectId)
+    this.unbind(objectId)
+    return removed
+  }
+
+  releasePieces(objectId: string): string[] {
+    const family = this.familyOf(objectId)
+    const pieces = [...family].filter((id) => id !== objectId)
+    const ofFamily = (key: string): boolean => [...family].some((id) => key.startsWith(`${id}|`))
+    // an event still waiting would bring an effect of theirs back after they left
+    for (let i = this.queue.length - 1; i >= 0; i--) if (family.has(this.queue[i]!.object)) this.queue.splice(i, 1)
+    for (const [key, a] of [...this.active]) if (family.has(a.object)) this.active.delete(key)
+    for (const [key, f] of [...this.fires]) if (family.has(f.object)) this.stopFire(key)
+    for (const [key, started] of [...this.burnSounds]) if (family.has(started.object)) this.endBurnSound(key)
+    for (const key of [...this.primedBurning]) if (ofFamily(key)) this.primedBurning.delete(key)
+    for (let i = this.leaks.length - 1; i >= 0; i--) if (family.has(this.leaks[i]!.object)) this.leaks.splice(i, 1)
+    for (let i = this.trickles.length - 1; i >= 0; i--) if (family.has(this.trickles[i]!.source ?? '')) this.trickles.splice(i, 1)
+    for (const id of family) {
+      this.fragments.removeHome(id)
+      this.ground.removeHome(id)
+      this.cages.removeObject(id)
+      this.vfx.clearSource(id)
+    }
+    // the parts of the pieces go back to the object's binding (their meshes to where they were drawn, the ones made for them disposed)
+    this.restore(objectId)
+    for (const id of pieces) {
+      this.pieceSys.remove(id)
+      this.bounds.delete(id)
+      this.hitPoints.forget(id)
+      this.broken.delete(id)
+      this.staticDirty.add(id)
+      if (this.world.has(id)) this.world.remove(id)
+    }
+    if (pieces.length > 0) this.o.onReleased?.(pieces)
+    return pieces
+  }
+
+  /** The object and every piece split from it (a piece holds parts whose home is the object, also a piece of a piece). */
+  private familyOf(objectId: string): Set<string> {
+    const family = new Set([objectId])
+    for (const b of this.bounds.values()) {
+      if (!b.isSplit) continue
+      for (const pv of b.parts.values()) {
+        if (pv.home !== objectId) continue
+        family.add(b.id)
+        break
+      }
+    }
+    return family
+  }
+
   private restoreHome(home: string): void {
     const homeBound = this.bounds.get(home)
     for (const b of [...this.bounds.values()]) {
@@ -2322,6 +2431,8 @@ class Renderer implements DestructionRenderer {
   }
 
   clear(): void {
+    // the meshes go back to their own draw before they are restored or removed
+    this.settledBatches.clear()
     // what was bound is gone: the next read measures what is left, all of it
     this.staticAll = true
     this.queue.length = 0

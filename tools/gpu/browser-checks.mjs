@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // @ts-check
 // The checks that open pages in a browser, before a push (.githooks/pre-push), on this machine. CI does not run them (CLAUDE.md, "Testes de GPU e
-// navegador"): software GL on a CI runner has no real frame times and draws differently from the GPU the game runs on. In order, stopping at the first
-// failure: the test room and every example area (examples/<area>/test.mjs), where every drawn piece comes from and what it costs
+// navegador"): software GL on a CI runner has no real frame times and draws differently from the GPU the game runs on. In order, going on after a failure
+// (the pre-push no longer calls this file; it lists every failing step at the end, BROWSER_CHECKS_FAIL_FAST=1 stops at the first): the test room and every example area (examples/<area>/test.mjs), where every drawn piece comes from and what it costs
 // (tools/kit-audit/scene.mjs and cost.mjs), and the memory cycles of the room (examples/test-room/leak.mjs). Only the suites whose pages the branch changes
 // run (tools/gpu/select-suites.mjs, from the diff against origin/main); the list and the reason are printed first.
 //   node tools/gpu/browser-checks.mjs
@@ -10,6 +10,7 @@
 //   on battery they skip with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs them anyway
 //   PRE_PUSH_BROWSER=all        every suite, whatever the branch changed (also PRE_PUSH_ALL=1)
 //   BROWSER_CHECKS=areas,scene,leak   only these groups (default: all three)
+//   BROWSER_CHECKS_FAIL_FAST=1  stop at the first failing step instead of running the rest
 //   GPU_SCOPE=nightly           also the suites that open the whole room (test-room, scene, cost, leak); a push leaves them to tools/gpu/nightly-gpu.mjs
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readdirSync } from 'node:fs'
@@ -19,6 +20,7 @@ import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
 import { readWorkspace, selectSuites, splitForPush, SUITES } from './select-suites.mjs'
+import { runSteps, summaryLine } from './suite-runner.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
@@ -54,14 +56,12 @@ const hasPlaywright = ['playwright', 'playwright-core'].some((id) => {
 })
 const groups = new Set((process.env.BROWSER_CHECKS ?? 'areas,scene,leak').split(',').map((group) => group.trim()))
 
-/** @param {string} label @param {string[]} args @param {Record<string, string>} [env] */
-const run = (label, args, env = {}) => {
-  console.log(`pre-push: ${label}`)
-  const result = spawnSync(process.execPath, args, { cwd: root, stdio: 'inherit', env: { ...process.env, NODE_PATH: nodePath, ...env } })
-  if (result.status !== 0) {
-    console.error(`pre-push: ${label} failed (skip once with PRE_PUSH_BROWSER=0 git push)`)
-    process.exit(result.status ?? 1)
-  }
+/** @param {import('./suite-runner.mjs').Step} step @returns {number} */
+const exec = (step) => {
+  console.log(`pre-push: ${step.label}`)
+  const result = spawnSync(process.execPath, step.args, { cwd: root, stdio: 'inherit', env: { ...process.env, NODE_PATH: nodePath, ...step.env } })
+  if (result.status !== 0) console.error(`pre-push: ${step.label} failed`)
+  return result.status ?? 1
 }
 
 /** The files the branch changed since it left origin/main, or null when there is no base to compare with. @returns {string[] | null} */
@@ -91,10 +91,18 @@ if (!hasPlaywright) skip('playwright not found (set NODE_PATH)')
 
 const areas = SUITES.filter((suite) => suite.group === 'areas' && chosen.has(suite.id)).map((suite) => suite.id)
 // every page is built over the test room's page, and scene, cost and leak open it
-run('build test-room', ['examples/test-room/build.mjs'])
-for (const area of areas) if (area !== 'test-room') run(`build ${area}`, [`examples/${area}/build.mjs`])
-for (const area of areas) run(`open ${area}`, [`examples/${area}/test.mjs`], { EXAMPLE_PART: '' })
-if (chosen.has('scene')) run('where every drawn piece comes from', ['tools/kit-audit/scene.mjs', '--check'])
-if (chosen.has('cost')) run('what every piece costs to draw', ['tools/kit-audit/cost.mjs', '--check'])
-if (chosen.has('leak')) run('nothing stays in memory across cycles', ['examples/test-room/leak.mjs'], { LEAK_PHASE: '' })
+/** @type {import('./suite-runner.mjs').Step[]} */
+const steps = [{ label: 'build test-room', args: ['examples/test-room/build.mjs'], fatal: true }]
+for (const area of areas) if (area !== 'test-room') steps.push({ label: `build ${area}`, args: [`examples/${area}/build.mjs`] })
+for (const area of areas) steps.push({ label: `open ${area}`, args: [`examples/${area}/test.mjs`], env: { EXAMPLE_PART: '' }, needs: `build ${area}` })
+if (chosen.has('scene')) steps.push({ label: 'where every drawn piece comes from', args: ['tools/kit-audit/scene.mjs', '--check'] })
+if (chosen.has('cost')) steps.push({ label: 'what every piece costs to draw', args: ['tools/kit-audit/cost.mjs', '--check'] })
+if (chosen.has('leak')) steps.push({ label: 'nothing stays in memory across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: '' } })
+const { outcomes, failed, exitCode } = runSteps({ steps, exec, failFast: Boolean(process.env.BROWSER_CHECKS_FAIL_FAST) })
+console.log('browser-checks: summary')
+for (const outcome of outcomes) console.log(summaryLine(outcome))
+if (failed.length) {
+  console.error(`browser-checks: ${failed.length} failed: ${failed.map((outcome) => `${outcome.label} (exit ${outcome.code})`).join('; ')}`)
+  process.exit(exitCode)
+}
 console.log('pre-push: browser checks passed')

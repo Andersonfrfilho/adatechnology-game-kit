@@ -630,8 +630,8 @@ export interface DestructionWorld {
    * cracks or loses its support there (`subside` events), and what is left without a load path falls (`collapse`).
    */
   groundLoss(loss: GroundLoss): void
-  /** Raycast against every part shape (world space). */
-  raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
+  /** Raycast against every part shape (world space). `options` leaves out what a query has no use for (loose pieces, small objects) before testing it. */
+  raycast(origin: Vec3, direction: Vec3, maxDistance?: number, options?: RaycastOptions): RayHit | null
   /**
    * The first thing a world-axis box meets moving `distance` metres along `direction`, or null: a grid of rays leaves its leading faces, no gap wider than `spacing`
    * (default 0.2 m). `ignore` is the object that is moving. What the box already overlaps does not stop it, so it can always back out.
@@ -742,7 +742,17 @@ export interface PartRuntime {
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
+/** What a `DestructionWorld.raycast` leaves out before testing it, so the ray never reads its shapes. Nothing by default. */
+export interface RaycastOptions {
+  /** Leaves out the loose pieces: the objects `splitGroup` made of what came off, whatever their size. A part that fell but is still part of its object (`collapsed`) still counts. */
+  readonly skipLoose?: boolean
+  /** Leaves out every object whose bounding sphere has a smaller radius (metres). The parts of a larger object always count. Registered impls are never left out. */
+  readonly minObjectRadius?: number
+}
+
 export interface ObjectRuntime {
+  /** The object is a piece `splitGroup` cut from another (see `RaycastOptions.skipLoose`). */
+  loose?: boolean
   parts: Record<string, PartRuntime>
   joints: Record<string, number>
   /** Parts of groups that already reported a `collapse`. */

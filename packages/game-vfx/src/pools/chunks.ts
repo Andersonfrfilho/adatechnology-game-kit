@@ -31,6 +31,8 @@ export interface Chunk {
   glow: Glow | null
   rng: RandomStream
   outColor: [number, number, number]
+  /** The thing it was made for: `VfxWorld.clearSource` takes it away when that thing leaves. */
+  source: string | undefined
 }
 
 export type ChunkInit = Partial<Pick<Chunk, 'x' | 'y' | 'z' | 'vx' | 'vy' | 'vz' | 'sx' | 'sy' | 'sz' | 'color' | 'plate' | 'hot' | 'blood'>>
@@ -54,7 +56,7 @@ export function createChunkPool(capacity: number, placeholder: RandomStream): Or
     capacity,
     () => ({
       x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, rx: 0, ry: 0, rz: 0, ax: 0, ay: 0, az: 0, sx: 0.2, sy: 0.2, sz: 0.2, color: DEFAULT_COLOR, plate: false, hot: false, rest: false,
-      blood: false, splat: false, t: 0, trail: 0, glow: null, rng: placeholder, outColor: [0, 0, 0],
+      blood: false, splat: false, t: 0, trail: 0, glow: null, rng: placeholder, outColor: [0, 0, 0], source: undefined,
     }),
     freezeFollowingGlow,
   )

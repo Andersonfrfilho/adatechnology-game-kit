@@ -44,6 +44,11 @@ export interface WarmupOptions {
    * (`registeredMaterials()`), so every program the pools were told about is drawn before play, not only linked. Never disposed or anchored here.
    */
   readonly materials?: readonly Material[]
+  /**
+   * Which shadow casters the first draw puts in the shadow maps. `all` (default): every caster of the scene, culling off for that draw, so that each
+   * depth and distance program a caster needs links at load wherever the shadow cameras are. `visible`: only those inside a shadow camera now.
+   */
+  readonly shadowCasters?: 'all' | 'visible'
 }
 
 export interface WarmupReport {

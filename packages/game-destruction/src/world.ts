@@ -28,7 +28,7 @@ import { boundsInFrame, boundsTouch, rayMissesBounds, sphereTouchesBounds, SWEEP
 import type { SweepBounds } from './sweep-broad-phase'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
-  DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
+  DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras, SweepProbe,
@@ -310,6 +310,8 @@ interface ObjRT {
   soil?: SoilRT
   /** The wind on the object (`DestructionOptions.wind`), when the world has wind and the object is a structure. */
   wind?: WindRT
+  /** A piece `splitGroup` cut from another object (`RaycastOptions.skipLoose`). */
+  loose: boolean
 }
 
 interface WindRT {
@@ -379,6 +381,7 @@ interface Carry {
   soil?: SoilState
   soilSets?: Record<string, number>
   wind?: [number, number, number, number, number]
+  loose?: boolean
 }
 
 
@@ -624,7 +627,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const st: ObjectState = { id, position: [pos[0], pos[1], pos[2]], rotation: [rot[0], rot[1], rot[2], rot[3]], parts: [], joints: [], groups: [], destroyed: false }
     if (spec.name !== undefined) st.name = spec.name
     const o: ObjRT = {
-      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unanchored: new Set(carry?.unanchored ?? []), unsup: [], anyAnchor: false, order: ++orderCounter,
+      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unanchored: new Set(carry?.unanchored ?? []), unsup: [], anyAnchor: false, order: ++orderCounter, loose: carry?.loose ?? false,
       base: { pos: [pos[0], pos[1], pos[2]], rot: [rot[0], rot[1], rot[2], rot[3]] },
     }
     for (const ps of spec.parts) {
@@ -2379,12 +2382,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let sweepCounts: { objectVisits: number; partVisits: number; shapeTests: number; shapeTested: Set<string> } | null = null
   let lastSweep: SweepProbe = { objectVisits: 0, partVisits: 0, shapeTests: 0, shapeTested: [] }
 
-  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
+  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
+    const minRadius = skip.minObjectRadius ?? 0
     let best: (RayHit & { pathLen: number }) | null = null
     const counts = sweepCounts
     for (const o of scope ? scope.objects : objects.values()) {
       if (counts) counts.objectVisits++
+      if ((skip.skipLoose && o.loose) || o.br < minRadius) continue
       if (raySphereMiss(origin, d, worldCentreOf(o), o.br, best ? Math.min(maxDist, best.distance) : maxDist)) continue
       // the ray in the object's frame, so each part is first tried against its bounding sphere there: a house of a thousand bricks turns a handful
       const qi = quat.conjugate(o.st.rotation)
@@ -2674,8 +2679,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return covered / length
   }
 
-  /** Trim fixed on a part (a baseboard, a paving slab): it carries nothing. */
+  /** A part that carries nothing (`structure.role` absent or `none`): trim, or any part of a loose thing. */
   const isTrim = (p: PartRT): boolean => (p.spec.structure?.role ?? 'none') === 'none'
+  /** A joint that fixes trim on a part that carries (a baseboard on a wall, a paving slab on the ground): the seams of a loose thing (a can's welds) are not one. */
+  const fixesTrim = (o: ObjRT, j: JointRT): boolean => isTrim(o.parts[j.ia]) !== isTrim(o.parts[j.ib])
 
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
@@ -2688,7 +2695,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       // a blast shakes loose the trim fixed on a part (a baseboard, a paving slab: no structure of its own) only near it, not along the whole wall
-      if (blast && (isTrim(o.parts[j.ia]) || isTrim(o.parts[j.ib])) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
+      if (blast && fixesTrim(o, j) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
       j.st.hp -= span === undefined ? amount : Math.min(amount, j.st.maxHp) * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
       // the bed of a wall on its foundation holds while most of its length is whole: blasts at a few places along it break those stretches, not the bed
       if (j.st.hp <= 0 && blast && span !== undefined && onFoundation(o, j) && wornShare(o, j, blast.point, span) < JOINT_OPEN_SHARE) j.st.hp = Math.min(j.st.maxHp, 1)
@@ -4766,7 +4773,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const inNew = (pid: string) => moved.has(pid)
       const inOld = (pid: string) => !moved.has(pid)
       const pos = o.st.position, rot = o.st.rotation
-      const fresh = build(sub(inNew), nid, pos, rot, carryFor(inNew, (a, b) => inNew(a) && inNew(b)))
+      const fresh = build(sub(inNew), nid, pos, rot, { ...carryFor(inNew, (a, b) => inNew(a) && inNew(b)), loose: true })
       const restCarry = carryFor(inOld, (a, b) => !(inNew(a) && inNew(b)))
       if (o.st.soil) restCarry.soil = o.st.soil
       if (o.soil?.sets.size) restCarry.soilSets = Object.fromEntries(o.soil.sets)
@@ -4840,8 +4847,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (!(loss.radius > 0) || !(loss.depth > 0) || !Number.isFinite(loss.x) || !Number.isFinite(loss.z)) return
       pendingLosses.push({ ...loss })
     },
-    raycast(origin, direction, maxDistance = Infinity) {
-      const r = raycastInternal(origin, direction, maxDistance, undefined, false, true)
+    raycast(origin, direction, maxDistance = Infinity, options) {
+      const r = raycastInternal(origin, direction, maxDistance, undefined, false, true, options)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
     },
     sweepBox(box, direction, distance, options = {}) {
@@ -4863,7 +4870,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       sweepCounts = counts
       try {
         for (const origin of origins) {
-          const r = raycastInternal(origin, d, length, ignore.size > 0 ? ignore : undefined, false, false, scope)
+          const r = raycastInternal(origin, d, length, ignore.size > 0 ? ignore : undefined, false, false, {}, scope)
           if (!r || (best && r.distance >= best.distance)) continue
           best = { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: Math.max(0, r.distance - SWEEP_BACK) }
         }
@@ -5105,7 +5112,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         rng: rng.state(),
         counter,
         objects: [...objects.values()].map((o) => {
-          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
+          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.loose ? { loose: true } : {}), ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
           for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
           for (const j of o.joints) runtime.joints[j.spec.id] = j.step
           return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
@@ -5131,6 +5138,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           collapsed: e.runtime?.collapsed,
           ...(e.runtime?.unanchored ? { unanchored: e.runtime.unanchored } : {}),
           ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
+          ...(e.runtime?.loose ? { loose: true } : {}),
         }
         let pos = state.position, rot = state.rotation
         if (state.soil) {

@@ -1,7 +1,7 @@
 import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import * as THREE from 'three'
 import { createDestruction } from '@adatechnology/game-destruction'
-import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
+import { SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES, createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import { furnitureSpec } from '../src'
@@ -50,5 +50,26 @@ describe('a toppled bookcase spills its books', () => {
     }
 
     expect(renderer.pieces().filter((piece) => !piece.sleeping).map((piece) => piece.objectId)).toEqual([])
+  })
+
+  it('with the budget of the test room the books and the case come to rest too, each where it lies, drawn in batches', () => {
+    const made = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument })
+    const scene = new THREE.Scene()
+    const world = createDestruction()
+    const renderer = createDestructionRenderer(THREE, { scene, world, maxAwakePieces: SUGGESTED_MAX_AWAKE_PIECES, maxAwakeFragments: SUGGESTED_MAX_AWAKE_FRAGMENTS, settledBatches: {} })
+    const id = world.add(made.spec, { id: 'bookcase' })
+    const root = made.build(THREE)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind(id, root)
+    renderer.makePiece(id, { mass: 242 })
+    renderer.impulse(id, [0, 0, 160], [0, 1.8, 0])
+    for (let t = 0; t < 12; t += 1 / 60) {
+      world.update(1 / 60)
+      renderer.update(1 / 60)
+    }
+
+    expect(renderer.pieces().filter((piece) => !piece.sleeping).map((piece) => piece.objectId)).toEqual([])
+    expect(renderer.settledBatchStats?.().batched).toBeGreaterThan(0)
   })
 })

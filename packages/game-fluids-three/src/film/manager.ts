@@ -1,9 +1,14 @@
 import type * as THREE_NS from 'three'
 import { FILM_PROFILES, filmProfileOf, layoutFromSurfaces } from '@adatechnology/game-fluids'
 import type { FilmLayout, FilmProfile, FilmRandom, FluidWorld, LiquidId, StainTint, SurfaceSpec, Vec3 } from '@adatechnology/game-fluids'
+import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { ThreeLib } from '../types'
+import { createFilmDrops } from './drops'
+import type { FilmDrops } from './drops'
 import { FilmGrid } from './grid'
 import type { CellRect } from './grid'
+import { createFilmMaterial } from './material'
+import type { FilmMaterial } from './material'
 
 /** What the manager keeps from the page's budget text: up to 6 grids, only within 30 m, about 0.3 ms of simulation each (W711, W text "a mais de 30 m não anima"). */
 const DEFAULT_MAX_GRIDS = 6
@@ -159,6 +164,8 @@ export class FilmManager {
   private bakedCount = 0
   private last: FilmStats = { grids: 0, drops: 0, wetCells: 0, simMs: 0, starved: 0, baked: 0, uploadedTexels: 0 }
   private empties = new Map<FilmGrid, number>()
+  /** A film material and a set of drops of the manager's own, drawn by the host's warm-up and kept until `dispose`: see `warmUpProbes`. */
+  private keeper: { readonly material: FilmMaterial; readonly drops: FilmDrops; readonly texture: THREE_NS.DataTexture } | null = null
 
   constructor(
     private readonly THREE: ThreeLib,
@@ -283,14 +290,53 @@ export class FilmManager {
     }
   }
 
+  /**
+   * A film strip, the drops and the bead, drawn by the host once at load (its warm-up). Every grid makes its own film material (its texture, size
+   * and liquid are uniforms of it) and frees it with the grid: with nothing else using the film program, three freed it with the last grid and linked
+   * it again for the next one, in play (each blast that spills fuel). These probes use materials the manager keeps until `dispose`, so the film's
+   * programs, once linked here, stay linked while grids come and go.
+   */
+  warmUpProbes(): WarmUpProbes {
+    const { THREE } = this
+    const keeper = (this.keeper ??= this.createKeeper())
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.001, 0, 0, 0, 0.001, 0]), 3))
+    const strip = new THREE.Mesh(geometry, keeper.material.material)
+    strip.frustumCulled = false
+    const group = new THREE.Group()
+    group.add(strip, keeper.drops.drops, keeper.drops.bead)
+    return {
+      group,
+      dispose() {
+        group.clear()
+        geometry.dispose()
+      },
+    }
+  }
+
   dispose(): void {
     this.clear()
+    if (this.keeper) {
+      this.keeper.material.dispose()
+      this.keeper.drops.dispose()
+      this.keeper.texture.dispose()
+      this.keeper = null
+    }
     for (const texture of this.staging.values()) texture.dispose()
     this.staging.clear()
     this.options.scene.remove(this.group)
   }
 
   // ---- internals ----
+
+  private createKeeper(): { readonly material: FilmMaterial; readonly drops: FilmDrops; readonly texture: THREE_NS.DataTexture } {
+    const { THREE } = this
+    const texture = new THREE.DataTexture(new Uint8Array(4), 1, 1, THREE.RGBAFormat)
+    texture.needsUpdate = true
+    const profile = Object.values(this.profiles)[0] ?? FILM_PROFILES[0]
+    if (!profile) throw new Error('film: no profile to warm the film with')
+    return { material: createFilmMaterial(THREE, texture, 1, 1), drops: createFilmDrops(THREE, 1, profile), texture }
+  }
 
   private columns(): number {
     return Math.round((this.options.gridMetres ?? DEFAULT_GRID_METRES) / (this.options.cellSize ?? DEFAULT_CELL))

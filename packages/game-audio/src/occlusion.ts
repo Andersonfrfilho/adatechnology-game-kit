@@ -75,8 +75,16 @@ export type OcclusionSetup = {
   readonly cutoffDbPerDecade?: number
   /** Seconds between two queries of the same voice. Default 0.15. */
   readonly interval?: number
-  /** Most queries per `update` (the frame budget). Default 3. */
+  /** Most queries per `update`, and most new voices measured on `add` between two updates (the frame budget). Default 3. */
   readonly budget?: number
+  /**
+   * Milliseconds the queries may take between two `update`s (one frame), on top of `budget`. A new voice is measured on `add` only when the running cost
+   * of a query (half the last one plus half what came before) fits in the time the frame has left; otherwise it starts at a guess and an `update` measures it. Each `update` measures at least one waiting voice, so every voice is
+   * measured even when one query costs more than the whole budget. Default 1.
+   */
+  readonly budgetMs?: number
+  /** The clock (milliseconds) `budgetMs` is timed with. Default `performance.now`. */
+  readonly clock?: () => number
   /** Seconds a change takes to settle (no clicks). Default 0.08. */
   readonly smoothing?: number
   /** A voice whose level behind the wall falls below this is not queried again. Default 0.002. */
@@ -93,6 +101,7 @@ export const OCCLUSION_DEFAULTS = {
   cutoffDbPerDecade: 30,
   interval: 0.15,
   budget: 3,
+  budgetMs: 1,
   smoothing: 0.08,
   audibleLevel: 0.002,
 } as const

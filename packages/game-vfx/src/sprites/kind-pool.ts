@@ -26,10 +26,18 @@ export interface SpriteSpawnOptions {
   tag?: number
   /** Who hears the landing (see `VfxWorld.onLand`). */
   owner?: string
+  /** The thing the sprite was made for (a world object's id): `VfxWorld.clearSource` takes its sprites away when that thing leaves. */
+  source?: string
   /** Height the sprite stops or lands at, instead of the ground's under it (a splash on a table top). */
   floor?: number
   /** Multiplier on the kind's upward acceleration (slow steam). */
   rise?: number
+}
+
+/** The sources the pools of one system share: a name keeps its number until `SpriteKindSystem.clearSource` forgets it, and a number is never given twice. */
+export interface SpriteSources {
+  readonly ids: Map<string, number>
+  next: number
 }
 
 export interface KindPoolHost {
@@ -76,6 +84,7 @@ export class SpriteKindPool {
   private readonly alphaMul: Float32Array
   private readonly tag: Int32Array
   private readonly owner: Int32Array
+  private readonly source: Int32Array
   private readonly colorHex: Int32Array
   private readonly rgbStart: Float32Array
   private readonly rgbEnd: Float32Array
@@ -87,6 +96,7 @@ export class SpriteKindPool {
     readonly capacity: number,
     private readonly defs: readonly SpriteKindDef[],
     private readonly owners: string[],
+    private readonly sources: SpriteSources = { ids: new Map(), next: 0 },
   ) {
     const n = Math.max(1, capacity)
     this.position = new Float32Array(n * 3)
@@ -103,6 +113,7 @@ export class SpriteKindPool {
     this.alphaMul = new Float32Array(n)
     this.tag = new Int32Array(n)
     this.owner = new Int32Array(n)
+    this.source = new Int32Array(n)
     this.colorHex = new Int32Array(n)
     this.rgbStart = new Float32Array(n * 3)
     this.rgbEnd = new Float32Array(n * 3)
@@ -130,6 +141,7 @@ export class SpriteKindPool {
     this.alphaMul[i] = options?.alpha ?? 1
     this.tag[i] = options?.tag ?? 0
     this.owner[i] = options?.owner === undefined ? -1 : this.ownerIndex(options.owner)
+    this.source[i] = options?.source === undefined ? -1 : this.sourceIndex(options.source)
     this.colorHex[i] = options?.color ?? -1
     this.rgbStart.set(rgb(options?.color ?? def.c0), i * 3)
     this.rgbEnd.set(rgb(options?.color ?? def.c1), i * 3)
@@ -144,6 +156,28 @@ export class SpriteKindPool {
     let index = this.owners.indexOf(name)
     if (index < 0) index = this.owners.push(name) - 1
     return index
+  }
+
+  private sourceIndex(name: string): number {
+    let index = this.sources.ids.get(name)
+    if (index === undefined) {
+      index = this.sources.next++
+      this.sources.ids.set(name, index)
+    }
+    return index
+  }
+
+  /** Kills the live sprites made for `source`; returns how many went. */
+  clearSource(source: string): number {
+    const index = this.sources.ids.get(source)
+    if (index === undefined) return 0
+    let killed = 0
+    for (let i = 0; i < this.high; i++) {
+      if (!this.alive[i] || this.source[i] !== index) continue
+      this.kill(i)
+      killed++
+    }
+    return killed
   }
 
   private kill(i: number): void {

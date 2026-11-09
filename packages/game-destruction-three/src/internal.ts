@@ -99,6 +99,12 @@ export interface PieceBody extends Piece {
   /** Where the piece was when it last started to stay in place on the ground (centre and rotation), and for how many seconds since: see `CALM_SLEEP_AFTER`. */
   calmAt: { center: Vec3; quaternion: [number, number, number, number] } | null
   calm: number
+  /** Its support in the last step was narrower than its centre of mass needs (on an edge, or held up at an angle): it does not sleep by `still`. */
+  balancing?: boolean
+  /** Its rotation when it last started to keep its tilt (within `STEADY_TURN`), and for how many seconds since; null after it sleeps. */
+  steady?: { quaternion: [number, number, number, number]; seconds: number } | null
+  /** Put to sleep by the budget (`PieceSystemOptions.maxAwake`): the points (its frame) it lay on, every one of which must keep its support, or it wakes (`wakeUnsupported`). */
+  restPoints?: Vec3[]
   /** Time of the last hard-landing report. */
   lastHit: number
   onGround: boolean

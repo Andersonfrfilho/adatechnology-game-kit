@@ -2,9 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
-import { EXPLOSIVES_AREA_ID, EXPLOSIVES_TEXT, createExplosivesTestModule, createWeaponsTestModule, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from '../src'
+import { EXPLOSIVES_AREA_ID, EXPLOSIVES_TEXT, createExplosivesTestModule, createWeaponsTestModule, createWorldExplosiveShells, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from '../src'
 import { itemModels } from '@adatechnology/game-items-three'
 import { createArsenal } from '@adatechnology/game-weapons'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 
 vi.setConfig({ testTimeout: 60_000 })
 
@@ -69,6 +70,41 @@ describe('world P13', () => {
     root.traverse((node) => { if ((node as THREE.Mesh).isMesh && node.userData.destructionPart === 'tank') mapped++ })
     expect(mapped).toBeGreaterThan(0)
     expect(worldExplosiveShell(THREE, 'propane_p13', itemModels)).toBeDefined()
+  })
+
+  it('builds the worn shell once: every copy shares its geometries and materials, a discarded copy frees none of them, dispose frees them', () => {
+    const shells = createWorldExplosiveShells(THREE, 'propane_p13', itemModels)
+    const resources = (root: THREE.Object3D): Array<THREE.BufferGeometry | THREE.Material> => {
+      const found: Array<THREE.BufferGeometry | THREE.Material> = []
+      root.traverse((node) => {
+        const mesh = node as THREE.Mesh
+        if (mesh.isMesh) found.push(mesh.geometry, mesh.material as THREE.Material)
+      })
+      return found
+    }
+    const first = shells.next()!
+    const second = shells.next()!
+    expect(second).not.toBe(first)
+    const shared = resources(first)
+    expect(shared.length).toBeGreaterThan(0)
+    expect(resources(second)).toEqual(shared)
+    for (let i = 0; i < shared.length; i++) expect(resources(second)[i]).toBe(shared[i])
+    // the look of a shell built on its own: the same worn colour
+    const alone = resources(worldExplosiveShell(THREE, 'propane_p13', itemModels)!).filter((r): r is THREE.MeshStandardMaterial => (r as THREE.MeshStandardMaterial).isMeshStandardMaterial)
+    const copied = shared.filter((r): r is THREE.MeshStandardMaterial => (r as THREE.MeshStandardMaterial).isMeshStandardMaterial)
+    expect(copied.map((m) => m.color.getHex())).toEqual(alone.map((m) => m.color.getHex()))
+    const disposed = shared.map((r) => vi.spyOn(r, 'dispose'))
+    // a copy that carries a resource of its own (a mark) still frees that one
+    const own = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial())
+    const ownDisposed = [vi.spyOn(own.geometry, 'dispose'), vi.spyOn(own.material, 'dispose')]
+    first.add(own)
+    discardObject3D(first)
+    for (const spy of ownDisposed) expect(spy).toHaveBeenCalled()
+    for (const spy of disposed) expect(spy).not.toHaveBeenCalled()
+    expect(resources(shells.next()!)[0]).toBe(shared[0])
+    shells.dispose()
+    for (const spy of disposed) expect(spy).toHaveBeenCalled()
+    expect(createWorldExplosiveShells(THREE, 'fuel_barrel', itemModels).next()).toBeUndefined()
   })
 
   it('scales the blast with the multiplier', () => {

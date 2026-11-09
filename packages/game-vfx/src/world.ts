@@ -85,6 +85,8 @@ export interface ExplosionOptions {
   readonly scale?: number
   /** Seconds from now until it goes off (a chain). */
   readonly delay?: number
+  /** The thing that went off (a world object's id): what the blast throws goes with `clearSource`. */
+  readonly source?: string
 }
 
 export interface FireOptions {
@@ -103,6 +105,8 @@ export interface FireOptions {
   readonly follow?: Follow
   readonly offset?: Vec3Like
   readonly seed?: number
+  /** The thing that burns (a world object's id): `clearSource` puts the fire out and takes away the flames, smoke and embers it gave off. */
+  readonly source?: string
 }
 
 /** The pools as the renderer reads them: live records, oldest first. */
@@ -157,6 +161,11 @@ export interface VfxWorld {
   /** The closed spaces declared now. */
   enclosures(): Enclosures
   stop(handle: number): void
+  /**
+   * The thing `source` names left the world for good: its fires go out, and every flame, smoke puff, ember and sprite made for it
+   * (`FireOptions.source`, `SpriteSpawnOptions.source`) goes at once instead of living out its life. Returns how many records went.
+   */
+  clearSource(source: string): number
   setLayer(layer: VfxLayer, on: boolean): void
   layer(layer: VfxLayer): boolean
   setCamera(position: Vec3Like): void
@@ -266,6 +275,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     ...(options.marklessAt ? { marklessAt: options.marklessAt } : {}),
     ...(options.cratersAt ? { cratersAt: options.cratersAt } : {}),
     emit: (request) => options.onRequest?.(request),
+    source: undefined,
   }
 
   function definitionOf(id: string): ExplosionDef | undefined {
@@ -278,8 +288,14 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     return streamFor(seed ?? Math.imul(handles.events, AUTO_SEED) + (options.seed ?? 0))
   }
 
-  function detonate(def: ExplosionDef, point: Vec3Like, call: { direction: MutableVec3 | undefined; random: RandomStream; handle: number }): void {
-    composeExplosion(core, def, { x: point[0], y: point[1], z: point[2], direction: call.direction, random: call.random, handle: call.handle })
+  function detonate(def: ExplosionDef, point: Vec3Like, call: { direction: MutableVec3 | undefined; random: RandomStream; handle: number; source: string | undefined }): void {
+    const outer = core.source
+    core.source = call.source
+    try {
+      composeExplosion(core, def, { x: point[0], y: point[1], z: point[2], direction: call.direction, random: call.random, handle: call.handle })
+    } finally {
+      core.source = outer
+    }
   }
 
   let engine: WorkshopEngine | undefined
@@ -322,8 +338,9 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       const handle = ++handles.next
       const direction = explosionOptions.direction && { x: explosionOptions.direction[0], y: explosionOptions.direction[1], z: explosionOptions.direction[2] }
       const random = streamOf(explosionOptions.seed)
-      if (explosionOptions.delay) core.schedule.at(core.clock.time + explosionOptions.delay, () => detonate(def, point, { direction, random, handle }))
-      else detonate(def, point, { direction, random, handle })
+      const source = explosionOptions.source
+      if (explosionOptions.delay) core.schedule.at(core.clock.time + explosionOptions.delay, () => detonate(def, point, { direction, random, handle, source }))
+      else detonate(def, point, { direction, random, handle, source })
       return handle
     },
     fire(fireOptions) {
@@ -357,6 +374,15 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       player?.stop(handle)
       const fires = core.fires
       for (let index = fires.items.length - 1; index >= 0; index--) if (fires.items[index]!.handle === handle) fires.removeAt(index)
+    },
+    clearSource(source) {
+      const keep = (record: { source: string | undefined }, gone: string): boolean => record.source !== gone
+      const drop = <T extends { source: string | undefined }>(pool: OrderedPool<T>): number => {
+        const before = pool.count
+        pool.compact(keep, source)
+        return before - pool.count
+      }
+      return drop(core.fires) + drop(core.puffs) + drop(core.sparks) + drop(core.chunks) + drop(core.glows) + spriteSystem.clearSource(source)
     },
     setLayer(layer, on) {
       layers[layer] = on

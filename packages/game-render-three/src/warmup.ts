@@ -181,11 +181,33 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
     }
   }
 
-  function drawStates(renderer: WarmupRenderer, scene: Scene, camera: Camera, states: readonly FogState[], target: WarmupOptions['target']): void {
-    for (const state of states) {
+  function drawStates(renderer: WarmupRenderer, scene: Scene, camera: Camera, states: readonly FogState[], options: WarmupOptions): void {
+    states.forEach((state, index) => {
       setFog(scene, state)
-      draw(renderer, scene, camera, target)
-    }
+      // the depth and distance programs carry no fog: every caster once, in the first state, is enough
+      const restoreCasters = index === 0 && options.shadowCasters !== 'visible' ? drawEveryCaster(scene) : (): void => undefined
+      try {
+        draw(renderer, scene, camera, options.target)
+      } finally {
+        restoreCasters()
+      }
+    })
+  }
+
+  /**
+   * Turns off frustum culling of every shadow caster and returns the undo: three r160 links a caster's depth (or distance) program only when the
+   * shadow pass draws it, and that pass culls by the light's shadow camera. A caster outside it at load (the sun's box follows the player) would
+   * link its program the first time it enters the box, in play.
+   */
+  function drawEveryCaster(scene: Scene): () => void {
+    const culled: Object3D[] = []
+    scene.traverse((object) => {
+      if (object.castShadow && object.frustumCulled) {
+        object.frustumCulled = false
+        culled.push(object)
+      }
+    })
+    return () => culled.forEach((object) => (object.frustumCulled = true))
   }
 
   /** Makes every instanced batch draw at least once: three skips an empty instanced batch, and a driver finishes a program's state on its first real draw (a 200 ms stall). Returns the undo. */
@@ -227,7 +249,7 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
       try {
         addProbes(scene, built)
         restoreDraws = forceDraws(scene)
-        drawStates(renderer, scene, camera, states, target)
+        drawStates(renderer, scene, camera, states, options)
         scene.fog = originalFog
         for (const effect of effects) playEffect(renderer, scene, camera, effect, target)
         for (const texture of textures) renderer.initTexture(texture)
