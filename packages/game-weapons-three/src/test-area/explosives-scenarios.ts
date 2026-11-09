@@ -4,6 +4,8 @@ import { EXPLOSIVES_AREA_ID } from './explosives-bench'
 import type { ExplosivesBench, ExplosivesRoom } from './explosives-bench'
 import { explosivesTextOf, fillText } from './explosives-text'
 import { WORLD_EXPLOSIVE_PREFIX } from '../world-explosives'
+import { tornBodyShift } from './torn-body'
+import type { PartPlace } from './torn-body'
 
 /** The members of the test room's `ScenarioContext` these scenarios use (structural: this package does not depend on the room). */
 interface ScenarioContext {
@@ -114,6 +116,16 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         origin.set(body.objectId, body.from)
       }
       const partsBefore = new Map(placed.map((body) => [body.objectId, partsOf(body.objectId)] as const))
+      // where each part of a heavy piece of furniture is drawn and what it weighs, keyed by the part's live state (it goes with the part into the piece a tear makes of it):
+      // a torn table is measured by where all its pieces went, not by the one piece that kept its id
+      const partPlaces = (objectId: string, keep: (part: object) => boolean = () => true): Array<[object, PartPlace]> =>
+        (room.world.state(objectId)?.parts ?? []).filter(keep).map((part): [object, PartPlace] => [part, { mass: part.mass, boxes: room.renderer.shownBoxes?.(objectId, part.id) ?? [] }])
+      const heavyBefore = new Map(placed.filter((body) => HEAVY_ITEMS.includes(body.kind)).map((body) => [body.objectId, new Map(partPlaces(body.objectId))] as const))
+      const heavyShift = (objectId: string): number | undefined => {
+        const before = heavyBefore.get(objectId)
+        if (!before) return undefined
+        return tornBodyShift(before, new Map(room.world.ids().flatMap((id) => partPlaces(id, (part) => before.has(part)))))
+      }
       expect(placed.length > 0, fillText(text.push_found, { n: placed.length, kinds: [...new Set(placed.map((body) => body.kind))].join(', ') }), { placed: placed.map((body) => body.itemId) })
       // the share of the blast that got to each body through what stood between; the blast and the body itself left out
       // where the blast is measured on each body: the middle of what is drawn of it, as the renderer shoves it (a bottle lying on the floor is low, under a stove's top), the chest of a person
@@ -202,9 +214,13 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const most = (speed * speed) / (2 * GROUND_FRICTION) + PERSON_SLACK
         expect(row.outward <= most, fillText(text.push_person_wave, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: Math.max(0, row.outward).toFixed(2), most: most.toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, speed, most } })
       }
-      // a torn table is still moved by the blast, whichever way its root went among its pieces
+      // a torn table is still moved by the blast: its centre of mass, wherever its pieces went. The table stands on the open floor (DEFAULT_EXPLOSIVES_SCENE): on the
+      // paving along the wall it rode the slabs the blast shook loose, and since #281 the slabs beyond the stretch a blast breaks stay put, as they should
       const table = rows.find((row) => HEAVY_ITEMS.includes(row.kind) && row.distance < blast.radius * 0.85)
-      if (table) expect(table.moved >= MOVED, fillText(text.push_heavy, { what: things[table.itemId] ?? table.itemId, moved: table.moved.toFixed(2) }), { table })
+      if (table) {
+        const moved = heavyShift(table.objectId) ?? table.moved
+        expect(moved >= MOVED, fillText(text.push_heavy, { what: things[table.itemId] ?? table.itemId, moved: moved.toFixed(2) }), { table, moved, rootMoved: table.moved })
+      }
     },
   }
 }

@@ -2569,8 +2569,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return covered / length
   }
 
-  /** Trim fixed on a part (a baseboard, a paving slab): it carries nothing. */
+  /** A part that carries nothing (`structure.role` absent or `none`): trim, or any part of a loose thing. */
   const isTrim = (p: PartRT): boolean => (p.spec.structure?.role ?? 'none') === 'none'
+  /** A joint that fixes trim on a part that carries (a baseboard on a wall, a paving slab on the ground): the seams of a loose thing (a can's welds) are not one. */
+  const fixesTrim = (o: ObjRT, j: JointRT): boolean => isTrim(o.parts[j.ia]) !== isTrim(o.parts[j.ib])
 
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
@@ -2583,7 +2585,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       // a blast shakes loose the trim fixed on a part (a baseboard, a paving slab: no structure of its own) only near it, not along the whole wall
-      if (blast && (isTrim(o.parts[j.ia]) || isTrim(o.parts[j.ib])) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
+      if (blast && fixesTrim(o, j) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
       j.st.hp -= span === undefined ? amount : Math.min(amount, j.st.maxHp) * Math.min(1, span / Math.max(jointLength(o, j), 1e-6))
       // the bed of a wall on its foundation holds while most of its length is whole: blasts at a few places along it break those stretches, not the bed
       if (j.st.hp <= 0 && blast && span !== undefined && onFoundation(o, j) && wornShare(o, j, blast.point, span) < JOINT_OPEN_SHARE) j.st.hp = Math.min(j.st.maxHp, 1)
