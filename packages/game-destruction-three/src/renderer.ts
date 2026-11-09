@@ -1303,7 +1303,8 @@ class Renderer implements DestructionRenderer {
     if ((kind === 'dust' || kind === 'chips') && def?.visual?.innerColor !== undefined) return { color: def.visual.innerColor }
     if (kind === 'fibers' || kind === 'leaves') {
       if (def?.visual?.innerColor !== undefined) return { color: def.visual.innerColor }
-      const c = pv ? this.visuals.baseColorHex(pv.meshes[0] ?? ({} as never)) : -1
+      // a part drawn by its host (a house piece) has no mesh of its own here: the burst keeps its default colour
+      const c = pv && pv.meshes[0] ? this.visuals.baseColorHex(pv.meshes[0]) : -1
       return c >= 0 ? { color: c } : undefined
     }
     if (kind === 'dust' || kind === 'chips') {
