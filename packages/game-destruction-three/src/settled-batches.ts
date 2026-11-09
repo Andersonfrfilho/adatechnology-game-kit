@@ -1,4 +1,6 @@
 import type * as THREE_NS from 'three'
+import { kitOriginOf, markKitOrigin } from '@adatechnology/game-contracts'
+import type { KitOrigin } from '@adatechnology/game-contracts'
 import { BATCHED_LAYER, createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 
@@ -66,6 +68,26 @@ export const materialKey = (material: THREE_NS.Material): string => {
     settings.push(`${key}=${text}`)
   }
   return settings.join('|')
+}
+
+/** Where the batches come from when their meshes do not all come from one piece of the kit. */
+export const SETTLED_BATCH_ORIGIN: KitOrigin = { owner: 'game-destruction-three', kind: 'debris' }
+
+/** The origin every one of `meshes` has (owner, kind and id alike), or null when they differ or one has none. */
+const commonOrigin = (meshes: readonly THREE_NS.Mesh[]): KitOrigin | null => {
+  const first = kitOriginOf(meshes[0])
+  if (!first) return null
+  for (const mesh of meshes) {
+    const origin = kitOriginOf(mesh)
+    if (!origin || origin.owner !== first.owner || origin.kind !== first.kind || origin.id !== first.id) return null
+  }
+  return first
+}
+
+/** A batch draws as the pieces it batches: their origin when they share one, the debris' otherwise (the group). */
+const markBatch = (batch: THREE_NS.Mesh, meshes: readonly THREE_NS.Mesh[]): void => {
+  const origin = commonOrigin(meshes)
+  if (origin) markKitOrigin(batch, origin)
 }
 
 /** Whether a debris mesh at rest can be drawn by a batch: one opaque material, its own camera layer, not too big. */
@@ -140,8 +162,9 @@ export class SettledBatches {
     this.batcher?.dispose()
     const take = new Set(meshes)
     this.members = take
-    this.batcher = createStaticBatcher(this.THREE, this.scene, { include: (mesh) => take.has(mesh), budgetMs: this.options.budgetMs, materialKey })
+    this.batcher = createStaticBatcher(this.THREE, this.scene, { include: (mesh) => take.has(mesh), budgetMs: this.options.budgetMs, materialKey, onBatch: markBatch })
     this.batcher.group.name = 'settled-debris-batches'
+    markKitOrigin(this.batcher.group, SETTLED_BATCH_ORIGIN)
     this.sinceMade = 0
   }
 }

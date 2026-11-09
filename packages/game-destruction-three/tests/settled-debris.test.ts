@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { kitOriginOf, markKitOrigin } from '@adatechnology/game-contracts'
 import { BATCHED_LAYER } from '@adatechnology/game-render-three'
 import { describe, expect, it } from 'vitest'
 
@@ -218,6 +219,21 @@ describe('the debris at rest drawn in batches', () => {
     for (let index = 0; index < 8; index++) box(`plank_${index}`, [index * 0.6, 0.3, 0], index % 2 === 0 ? materials[0]!.clone() : materials[1]!.clone())
     run(2)
     expect(draws() - own).toBe(2)
+  })
+
+  it('marks every batch with where it comes from: the kit piece its meshes share, the debris otherwise', () => {
+    const { scene, materials, box, run } = rendererScene()
+    // two chairs of the furniture catalogue and two crates of nothing in particular, all of one material
+    for (const index of [0, 1]) markKitOrigin(box(`chair_${index}`, [index * 0.6, 0.3, 0]).parent!, { owner: 'game-floorplan-three', kind: 'furniture', id: 'chair' })
+    for (const index of [2, 3]) box(`crate_${index}`, [index * 0.6, 0.3, 0], materials[1])
+    run(2)
+    const group = scene.getObjectByName('settled-debris-batches')!
+    expect(kitOriginOf(group)).toEqual({ owner: 'game-destruction-three', kind: 'debris' })
+    const batches = group.children as THREE.Mesh[]
+    expect(batches).toHaveLength(2)
+    const chairs = batches.find((batch) => batch.material === materials[0])!
+    expect(kitOriginOf(chairs)).toEqual({ owner: 'game-floorplan-three', kind: 'furniture', id: 'chair' })
+    expect(kitOriginOf(batches.find((batch) => batch.material === materials[1])!)).toEqual({ owner: 'game-destruction-three', kind: 'debris' })
   })
 
   it('keeps every piece: batching only draws them, and gives them their own draws back and disposes the batches when cleared', () => {

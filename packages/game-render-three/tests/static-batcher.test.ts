@@ -53,6 +53,16 @@ describe('createStaticBatcher', () => {
     expect((batcher.group.children[0] as THREE.Mesh).material).toBe(wood)
   })
 
+  it('tells the host each batch it makes and the meshes it draws', () => {
+    const { root, parts, panes } = car()
+    const made: Array<[THREE.Mesh, readonly THREE.Mesh[]]> = []
+    const batcher = createStaticBatcher(THREE, root, { onBatch: (batch, meshes) => made.push([batch, meshes]) })
+    expect(made.map(([batch]) => batch)).toEqual(batcher.group.children)
+    expect(made.map(([, meshes]) => meshes.length).sort()).toEqual([2, 3])
+    expect(made.find(([, meshes]) => meshes.includes(parts[0]!))![1]).toEqual(parts)
+    expect(made.find(([, meshes]) => meshes.includes(panes[0]!))![1]).toEqual(panes)
+  })
+
   it('gives a mesh its own draw back when it moves, is dented or is hidden, and leaves the others batched', () => {
     const { root, parts, panes } = car()
     const batcher = createStaticBatcher(THREE, root)

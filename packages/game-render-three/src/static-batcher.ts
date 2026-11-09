@@ -22,6 +22,8 @@ export type StaticBatcherOptions = {
    * first one's material, so a key must be the same only for materials that draw the same (copies of one material with equal settings).
    */
   readonly materialKey?: (material: Material) => string
+  /** Called with each batch as it is made and the meshes it draws (to mark where it comes from, for one). */
+  readonly onBatch?: (batch: Mesh, meshes: readonly Mesh[]) => void
 }
 
 export type StaticBatcherStats = { readonly batches: number; readonly batched: number; readonly released: number }
@@ -109,7 +111,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     while (pending.length > 0) {
       const meshes = pending.shift() as Mesh[]
       // a mesh that changed while it waited is left to draw on its own
-      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, { meshes, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow }))
+      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, { meshes, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, onBatch: options.onBatch }))
       if (performance.now() >= deadline) return
     }
   }
@@ -194,7 +196,13 @@ function copyAttribute(name: string, attribute: BufferAttribute, target: Float32
   }
 }
 
-type MergeGroupParams = { readonly meshes: readonly Mesh[]; readonly inverse: Matrix4; readonly group: Object3D; readonly follow: boolean }
+type MergeGroupParams = {
+  readonly meshes: readonly Mesh[]
+  readonly inverse: Matrix4
+  readonly group: Object3D
+  readonly follow: boolean
+  readonly onBatch: StaticBatcherOptions['onBatch']
+}
 
 /** A skinned batch whose bone `n` is mesh `n` itself (no inverse, no bind offset): every vertex lands where its own mesh puts it. */
 function skinnedBatch(THREE: ThreeLib, merged: BufferGeometry, material: Material, meshes: readonly Mesh[]): Mesh {
@@ -218,7 +226,7 @@ function skinnedBatch(THREE: ThreeLib, merged: BufferGeometry, material: Materia
   return mesh
 }
 
-function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, follow }: MergeGroupParams): Source[] {
+function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, follow, onBatch }: MergeGroupParams): Source[] {
   const identity = new THREE.Matrix4()
   const inverse = follow ? identity : rootInverse
   const first = meshes[0] as Mesh
@@ -255,6 +263,7 @@ function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, foll
   merged.computeBoundingBox()
   merged.computeBoundingSphere()
   group.add(mesh)
+  onBatch?.(mesh, meshes)
   const batch: Batch = { mesh, live: pieces.length, index: indexAttribute as unknown as Batch['index'] }
   const sources: Source[] = []
   let vertexOffset = 0
