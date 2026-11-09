@@ -31,12 +31,14 @@ export interface ExplosivesRoom {
     vent(objectId: string, partId: string, opening?: { point?: Vec3; normal?: Vec3; diameter?: number }): boolean
     seal(objectId: string, partId: string): number
     part(objectId: string, partId: string): PartView | null
-    state(objectId: string): { readonly parts: readonly (PartView & { readonly id: string; readonly hp: number; readonly maxHp: number })[] } | null
+    state(objectId: string): { readonly parts: readonly (PartView & { readonly id: string; readonly hp: number; readonly maxHp: number; readonly mass: number })[] } | null
     /** The share of a blast at `point` that reaches `target` through the cover between them (game-destruction `blastReach`). */
     blastReach?(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[] }): number
   }
   readonly renderer: {
     impulse(objectId: string, impulse: Vec3, point?: Vec3): void
+    /** World boxes of what is drawn of an object, or of one of its parts (game-destruction-three `shownBoxes`). */
+    shownBoxes?(objectId: string, partId?: string): ReadonlyArray<readonly [number, number, number, number, number, number]>
     /** World boxes of what is drawn around (x, z) (game-destruction-three `solidsNear`). */
     solidsNear?(x: number, z: number, radius: number): ReadonlyArray<{ readonly objectId: string; readonly min: Vec3; readonly max: Vec3 }>
   }
