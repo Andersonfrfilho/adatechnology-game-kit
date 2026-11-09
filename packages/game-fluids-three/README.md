@@ -102,6 +102,8 @@ where it dried thick); it is drawn transparent, so the host's own surface shows 
 2 x 2 m (160 x 160 cells), only within 30 m, simulated inside a millisecond budget and uploaded by the dirty rectangle (`gpu`: pass the `WebGLRenderer` so
 `copyTextureToTexture` can be used). A grid that is out of range, still for 20 s or squeezed out by a newer one is **baked** into the stain decals of the
 fluid world (`fluids.splash` with the film's colours) and freed.
+`warmUpProbes()` gives the host's warm-up a film strip, drops and bead drawn with materials the manager keeps until `dispose`: the film's programs link
+at load and stay linked while grids are made and freed (without it, the last grid freed takes the program with it and the next spill links it again).
 
 ```ts
 const film = createFilmManager(THREE, { scene, camera, random: createFilmLcg(1), fluids, gpu: renderer })

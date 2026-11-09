@@ -12,7 +12,10 @@ numbers fixed after boot.
   `scene.environment`, `toneMapping`, `outputColorSpace`, `shadowMap.type` and camera `far` against the neutral fog.
 - `createProgramWarmup()`: `register(probe)`, `registerEffect`, `registerTexture`, `warmUp(renderer, scene, camera, { lights, fogStates, target })`
   links every program once, uploads buffers, seals the budget; probe materials go to `anchors` and are never disposed (a program is freed
-  when its last material is disposed). `linkedSince(renderer)` counts `linkProgram` calls after the warmup: it must stay 0.
+  when its last material is disposed). `linkedSince(renderer)` counts `linkProgram` calls after the warmup: it must stay 0. The first draw puts
+  every shadow caster of the scene in the shadow maps, culling off (`shadowCasters: 'visible'` keeps the culling): three links a depth or distance
+  program only in the shadow pass, never in `compile`. `shadowCasterProbes(THREE)` adds lit casters with and without a map on each side, for the
+  casters that appear only in play.
 - `createFog(THREE, scene, { stable: true })`: `clear()` leaves a neutral linear fog (near 6.0e4, far 6.4e4) instead of `null`.
 - `createGeometryPool()` / `createMaterialPool()`: keys, use counts, `retain`/`register`, `own` for per-frame materials, `trim` at load
   points, and a development warning when a pooled resource is disposed directly.

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { EXPLOSIONS, EXPLOSION_ALIASES, createVfx, estimateCost, patchExplosions } from '../src'
+import { EXPLOSIONS, EXPLOSION_ALIASES, createVfx, estimateCost, explosionEffectIds, patchExplosions } from '../src'
 import type { ExplosionDef } from '../src'
 
 const SHEET_NUMBERS: Readonly<Record<string, number>> = {
@@ -84,5 +84,21 @@ describe('the catalogue of the Lab', () => {
     const vfx = createVfx({ explosions: patched, profile: 'low' })
     expect(vfx.explosion('c4', [0, 0, 0])).toBeNull()
     expect(vfx.explosion('mine', [0, 0, 0])).not.toBeNull()
+  })
+})
+
+describe('explosionEffectIds', () => {
+  it('lists every profile of the catalogue, the world explosives and the rockets included, and every alias plays one of them', () => {
+    const ids = explosionEffectIds()
+    for (const id of ['propane_p13', 'fuel_barrel', 'car_fuel_tank', 'pg7v', 'm67', 'claymore']) expect(ids).toContain(id)
+    expect(new Set(ids)).toEqual(new Set(Object.keys(EXPLOSIONS)))
+    for (const target of Object.values(EXPLOSION_ALIASES)) expect(ids).toContain(target)
+  })
+
+  it('follows a patched catalogue: an added explosive is warmed, a removed one is not', () => {
+    const patched = patchExplosions(EXPLOSIONS, { mine: { ...(EXPLOSIONS.m67 as ExplosionDef), id: 'mine' }, c4: null })
+    const ids = explosionEffectIds(patched)
+    expect(ids).toContain('mine')
+    expect(ids).not.toContain('c4')
   })
 })

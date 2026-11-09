@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { markShared } from '@adatechnology/game-shapes-three'
 import type { DestructibleSpec, PartShape, PartSpec, TestableItem, Vec3 } from '@adatechnology/game-contracts'
 import type { ExplosiveDef } from '@adatechnology/game-weapons'
 import { DEFAULT_ITEM_MODELS } from './item-models'
@@ -116,6 +117,38 @@ export const worldExplosiveShell = (THREE: typeof THREE_NS, defId: string, items
   })
   model.name = `${WORLD_EXPLOSIVE_PREFIX}${defId}_shell`
   return model
+}
+
+/** The worn shell of one world explosive, built once: what each blast flies is a copy of it. */
+export interface WorldExplosiveShells {
+  /** A new copy of the shell (undefined for the explosives that have no model of the team). It shares the geometries and materials of the one model, marked shared: `discardObject3D` of a copy frees none of them. */
+  next(): THREE_NS.Group | undefined
+  /** Frees the geometries and materials of the model (when the bench or the game that flies the shells goes away). */
+  dispose(): void
+}
+
+/**
+ * Builds the worn shell of `defId` once (`worldExplosiveShell`) and hands out copies: a blast flies a copy instead of building the model and new
+ * materials, which cost a frame on every blast. The copies look the same (the same materials) and leave the scene with `discardObject3D` as before.
+ */
+export const createWorldExplosiveShells = (THREE: typeof THREE_NS, defId: string, items?: ItemModels): WorldExplosiveShells => {
+  const model = worldExplosiveShell(THREE, defId, items)
+  const geometries = new Set<THREE_NS.BufferGeometry>()
+  const materials = new Set<THREE_NS.Material>()
+  model?.traverse((node) => {
+    const mesh = node as THREE_NS.Mesh
+    if (!mesh.isMesh) return
+    geometries.add(mesh.geometry)
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) materials.add(material)
+  })
+  markShared<object>(...geometries, ...materials)
+  return {
+    next: () => model?.clone(),
+    dispose() {
+      for (const geometry of geometries) geometry.dispose()
+      for (const material of materials) material.dispose()
+    },
+  }
 }
 
 /** An explosive of the arsenal standing in the world: it goes off by a bullet, fire or another blast, after the delay its `chain` gives. */

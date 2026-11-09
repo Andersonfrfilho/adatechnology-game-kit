@@ -157,6 +157,11 @@ export type AudioEngine = {
    * here that has no files yet (its manifest not registered) loads as soon as a bank that resolves it registers.
    */
   loadSamples(ids?: readonly string[]): Promise<SampleLoadReport>
+  /**
+   * Decodes now the files of these sounds, so that their first play is the recording with no decode in the frame: a sample id loads its takes, a set id
+   * the takes of each variant that is a sample. A file already decoded (or loading) is not decoded again. Creates the context, as `loadSamples`.
+   */
+  preload(ids: readonly string[]): Promise<SampleLoadReport>
   /** `ready` when every file of the sound is decoded. */
   sampleStatus(id: string): SampleStatus
   /** The tail sample sounds play from now on. */
@@ -596,6 +601,22 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       for (const id of ids ?? []) if (!registry.sample(id)) wanted.add(id)
       const chosen = (ids ?? registry.sampleIds()).map((id) => registry.sample(id)).filter((sample): sample is SampleSound => sample !== undefined)
       return loadSounds(chosen)
+    },
+    preload(ids) {
+      const chosen = new Map<string, SampleSound>()
+      const seen = new Set<string>()
+      const visit = (id: string): void => {
+        if (seen.has(id)) return
+        seen.add(id)
+        const sample = registry.sample(id)
+        const set = registry.set(id)
+        if (sample) chosen.set(sample.id, sample)
+        else if (set) for (const variant of set.variants) visit(variant)
+        // no files yet (the manifest still on its way): they load when a bank that resolves the id registers
+        else wanted.add(id)
+      }
+      for (const id of ids) visit(id)
+      return loadSounds([...chosen.values()])
     },
     sampleStatus(id) {
       const sample = registry.sample(id)

@@ -6,7 +6,8 @@ import type { ExplosiveDef } from '@adatechnology/game-weapons'
 import type { ItemModels } from '../item-models'
 import { fillText } from './explosives-text'
 import type { ExplosivesText } from './explosives-text'
-import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveShell, worldExplosiveValve } from '../world-explosives'
+import { WORLD_EXPLOSIVE_PREFIX, createWorldExplosiveShells, worldExplosiveValve } from '../world-explosives'
+import type { WorldExplosiveShells } from '../world-explosives'
 
 /** Id of the explosives module (`?area=explosives_area` opens it). */
 export const EXPLOSIVES_AREA_ID = 'explosives_area'
@@ -189,6 +190,8 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   const vessels = new Map<string, Vessel>()
   const wallParts = new Set<string>()
   const shells: Shell[] = []
+  // the worn model is built once, when the bench is lent a host: each blast flies a copy that shares its geometries and materials
+  let shellModel: WorldExplosiveShells | null = null
   const T = (): typeof THREE_NS => host?.THREE as typeof THREE_NS
   const now = (): number => room?.world.time ?? 0
   const say = (message: string, data: Record<string, unknown> = {}): void => host?.log(message, { source: EXPLOSIVES_AREA_ID, ...data })
@@ -315,7 +318,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   const launchShell = (vessel: Vessel, point: Vec3): void => {
     const config = def.shell
     if (!config || !host) return
-    const mesh = worldExplosiveShell(T(), def.id, options.items)
+    const mesh = shellModel?.next()
     if (!mesh) return
     mesh.position.set(point[0], Math.max(point[1], 0.3), point[2])
     ;(host.scene as THREE_NS.Scene).add(mesh)
@@ -688,6 +691,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
     ],
     attach(lent: ModuleHost): () => void {
       host = lent
+      if (def.shell) shellModel = createWorldExplosiveShells(T(), def.id, options.items)
       const offs: Array<() => void> = []
       if (room) {
         offs.push(room.world.on('*', onEvent))
@@ -718,6 +722,8 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
         for (const vessel of vessels.values()) clearRings(vessel)
         vessels.clear()
         clearShells()
+        shellModel?.dispose()
+        shellModel = null
         host = null
       }
     },

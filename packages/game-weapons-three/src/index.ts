@@ -17,7 +17,8 @@ export type { ExplosivesRoom, ExplosivesScene, ExplosivesTestModuleOptions } fro
 export { EXPLOSIVES_TEXT, explosivesTextOf } from './testing'
 /** @deprecated import from '@adatechnology/game-weapons-three/testing' */
 export type { ExplosivesText } from './testing'
-export { P13_VALVE_MESH, WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from './world-explosives'
+export { P13_VALVE_MESH, WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, createWorldExplosiveShells, worldExplosiveItem, worldExplosiveShell, worldExplosiveValve } from './world-explosives'
+export type { WorldExplosiveShells } from './world-explosives'
 export type { WorldExplosiveOptions } from './world-explosives'
 export type { ItemModelRequest, ItemModels } from './item-models'
 export { projectileModel } from './projectile-model'
