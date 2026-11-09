@@ -232,4 +232,24 @@ describe('sweepBox broad phase', () => {
     expect(moved).toEqual(brute.world.raycast([-6, 1, -6], [-1, 0, 0], 20))
     expect(broad.sedan.surfaceCalls).toBeGreaterThan(calls)
   })
+
+  it('keeps leaving out what a raycast asks to skip, with the broad phase as without it', () => {
+    for (const seed of [3, 17]) {
+      const broad = buildScene(seed, true)
+      const brute = buildScene(seed, false)
+      const random = seeded(seed * 7)
+      let hits = 0
+      for (let index = 0; index < 400; index++) {
+        const origin: Vec3 = [between(random, -10, 10), between(random, 0, 2.5), between(random, -10, 10)]
+        const direction: Vec3 = [between(random, -1, 1), between(random, -0.6, 0.6), between(random, -1, 1)]
+        const options = { minObjectRadius: index % 2 === 0 ? 0.3 : 0, skipLoose: index % 3 === 0 }
+        const expected = brute.world.raycast(origin, direction, 12, options)
+        expect(broad.world.raycast(origin, direction, 12, options)).toEqual(expected)
+        // a piece is smaller than 0.3 m: asked to skip small objects, the ray never stops on one
+        if (options.minObjectRadius > 0 && expected) expect(expected.object.startsWith('piece')).toBe(false)
+        if (expected) hits++
+      }
+      expect(hits).toBeGreaterThan(25)
+    }
+  })
 })
