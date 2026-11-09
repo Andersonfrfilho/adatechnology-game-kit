@@ -17,7 +17,8 @@ const RELEASE_GRACE = 0.1
 export type EngineOcclusion = {
   /**
    * A lowpass into a gain into `destination` (and the same into `wet`, so the reverb send is as quiet and as dull as the dry sound): what the voice plays
-   * into. It starts at the state the query gave, with no ramp; a voice past the budget starts at a guess (see `OcclusionTracker.add`) and glides to its measure at the next `update`.
+   * into. It starts at the state the query gave, with no ramp; a voice past the frame's budget (`budget`, `budgetMs`) is not queried here: it starts at a
+   * guess (see `OcclusionTracker.add`) and glides to its measure at a following `update`.
    */
   attach(voice: { readonly id: number; readonly source: Vec3; readonly level: number; readonly listener: Vec3 }, destination: AudioNode, wet?: AudioNode): OcclusionRoute
   /** Drops the voices `alive` no longer holds (their nodes stay a moment), re-queries the due voices within the budget and ramps the ones that changed. */

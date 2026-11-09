@@ -16,15 +16,18 @@ export type OcclusionAdd = {
 
 export type OcclusionTracker = {
   /**
-   * Queries now and returns the state the voice starts with. Once this update window has spent its `budget`, the voice starts with a guess instead (the
-   * state of the nearest measured voice within `NEIGHBOUR_RADIUS`, else the last result for that source position, else unoccluded) and the next `update`
-   * measures it first and glides to the answer.
+   * Queries now and returns the state the voice starts with. Once this update window has spent its `budget` or its `budgetMs`, the voice starts with a
+   * guess instead (the state of the nearest measured voice within `NEIGHBOUR_RADIUS`, else the last result for that source position, else unoccluded)
+   * without querying, and the next `update`s measure it first and glide to the answer.
    */
   add(voice: OcclusionAdd): OcclusionState
   remove(id: number): void
   has(id: number): boolean
   state(id: number): OcclusionState | undefined
-  /** Measures the pending voices, then re-queries the ones that are due, the stalest first, at most `budget` queries in all; returns the ones whose state moved. */
+  /**
+   * Opens a new window, measures the pending voices (oldest first), then re-queries the ones that are due, the stalest first, at most `budget` queries in
+   * all and while `budgetMs` lasts (the first query always runs); returns the ones whose state moved. A pending voice takes its measure exactly.
+   */
   update(listener: Vec3, now: number): readonly OcclusionChange[]
   readonly size: number
 }
@@ -45,12 +48,17 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
   const entries = new Map<number, Entry>()
   let served = 0
   let spent = 0
+  let spentMs = 0
   const remembered = new Map<string, OcclusionState>()
   const interval = setup.interval ?? OCCLUSION_DEFAULTS.interval
   const budget = Math.max(1, setup.budget ?? OCCLUSION_DEFAULTS.budget)
   const audibleLevel = setup.audibleLevel ?? OCCLUSION_DEFAULTS.audibleLevel
+  const budgetMs = setup.budgetMs ?? OCCLUSION_DEFAULTS.budgetMs
+  const clock = setup.clock ?? (() => performance.now())
   const measure = (source: Vec3, listener: Vec3): OcclusionState => {
+    const started = clock()
     const state = occlusionState(totalLossDb(setup.query(source, listener), setup), setup)
+    spentMs += clock() - started
     const key = keyOf(source)
     remembered.delete(key)
     remembered.set(key, state)
@@ -72,7 +80,7 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
     add({ id, source, level, listener, now }) {
       const from = copy(source)
       const at = copy(listener)
-      if (spent >= budget) {
+      if (spent >= budget || spentMs >= budgetMs) {
         const provisional = guess(from)
         entries.set(id, { source: from, level, state: provisional, pending: true, checkedAt: now, checkedFrom: at, served: served++ })
         return provisional
@@ -87,18 +95,22 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
     state: (id) => entries.get(id)?.state,
     update(listener, now) {
       spent = 0
+      spentMs = 0
       const at = copy(listener)
       const changes: OcclusionChange[] = []
       let queries = 0
+      const canQuery = (): boolean => queries < budget && (queries === 0 || spentMs < budgetMs)
       for (const [id, voice] of entries) {
-        if (!voice.pending || queries >= budget) continue
+        if (!voice.pending) continue
+        if (!canQuery()) break
         queries++
         const state = measure(voice.source, at)
         voice.pending = false
         voice.checkedAt = now
         voice.checkedFrom = at
         voice.served = served++
-        if (Math.abs(state.lossDb - voice.state.lossDb) < CHANGED_DB) continue
+        // the exact measure, not the guess within `CHANGED_DB`: a voice measured late ends where one measured on `add` would be
+        if (state.lossDb === voice.state.lossDb) continue
         voice.state = state
         changes.push({ id, state })
       }
@@ -114,7 +126,7 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
           voice.checkedAt = now
           continue
         }
-        if (queries >= budget) break
+        if (!canQuery()) break
         queries++
         const state = measure(voice.source, at)
         voice.checkedAt = now
