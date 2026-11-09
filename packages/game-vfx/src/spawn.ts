@@ -15,6 +15,7 @@ const HOT_GLOW_COLOR = [1, 0.45, 0.12] as const
 export function addPuff(core: VfxCore, random: RandomStream, init: PuffInit): Puff {
   core.spawned.puffs++
   const puff = spawnPuff(core.puffs, random, init)
+  puff.source = init.source ?? core.source
   core.trace?.puff?.(puff)
   return puff
 }
@@ -22,18 +23,21 @@ export function addPuff(core: VfxCore, random: RandomStream, init: PuffInit): Pu
 export function addSpark(core: VfxCore, init: SparkInit): Spark {
   core.spawned.sparks++
   const spark = spawnSpark(core.sparks, init)
+  spark.source = init.source ?? core.source
   core.trace?.spark?.(spark)
   return spark
 }
 
 export function addGlow(core: VfxCore, init: GlowInit): Glow {
   const glow = spawnGlow(core.glows, init)
+  glow.source = init.source ?? core.source
   core.trace?.glow?.(glow)
   return glow
 }
 
 export function addChunk(core: VfxCore, random: RandomStream, init: ChunkInit): Chunk {
   const chunk = spawnChunk(core.chunks, random, init)
+  chunk.source = core.source
   core.spawned.chunks++
   if (chunk.hot && core.layers.shrapnel) {
     chunk.glow = addGlow(core, { follow: chunk, s: 0.35 + chunk.sx, i: 2.2, life: random.between(1, 2.2), color: HOT_GLOW_COLOR, curve: 1.5 })

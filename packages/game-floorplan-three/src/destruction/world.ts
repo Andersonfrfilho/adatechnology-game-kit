@@ -101,7 +101,8 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf(), onFrame: () => breach.flush() });
           off = D.world.on('*', handleEvent); D.active = true; return D;
         };
-        D.deactivate = () => { if (off) off(); off = null; D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; breach.release(); };
+        // the pieces that came off it and every effect of them go with the house, not left burning and colliding where it stood
+        D.deactivate = () => { if (off) off(); off = null; if (R && D.id && D.active) R.release?.(D.id); D.restore(); if (R && D.id && D.active) R.unbind(D.id); if (D.active && D.world.has(D.id)) D.world.remove(D.id); D.active = false; breach.release(); };
         // follow: an object some other code added to the world with this house's spec (a free-standing wall in a test room) is drawn by its renderer; the house
         // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
         D.follow = (world: DestructionWorld, id: string, spec: NonNullable<HouseDestruction['spec']>) => {
@@ -159,7 +160,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         };
         D.piece = (id: string) => (D.active ? D.world.part(D.id, id) : null);
         D.state = () => (D.active ? D.world.state(D.id) : null);
-        D.reset = () => { if (D.active) D.world.reset(D.id); D.restore(); };
+        D.reset = () => { if (D.active) { R?.releasePieces?.(D.id); D.world.reset(D.id); } D.restore(); };
         // hit: the legacy `damage` becomes a hit in the core (amount/hpMax of the damageable = fraction of the piece's hp). A shot with a point on the piece goes in as ballistic; with no hit, as blunt.
         D.strike = (pid: string, point: { x: number; y: number; z: number } | null | undefined, type: string | undefined, amount: number | null | undefined, d?: { hpMax?: number } | null) => {
           if (!D.world || !structure.byId.has(pid)) return null; D.activate(); if (!D.active) return null; const ps = D.world.part(D.id, pid); if (!ps || ps.status === 'broken') return null;

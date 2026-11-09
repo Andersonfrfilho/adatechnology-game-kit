@@ -496,6 +496,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
       if (best) splitOf.set(piece.objectId, best)
     },
+    // a module let an object go for good (a house replaced) and the renderer took its pieces out of the world: the room forgets them too
+    onReleased: (pieceIds) => {
+      const gone = new Set(pieceIds)
+      for (const id of gone) {
+        rendererPieces.delete(id)
+        splitOf.delete(id)
+        bodyBoxes.delete(id)
+        inWater.delete(id)
+        prevVy.delete(id)
+      }
+      let kept = 0
+      for (const piece of loose) if (!gone.has(piece.objectId)) loose[kept++] = piece
+      loose.length = kept
+    },
   })
 
   // the ground is an object of the world: shots, blows, blasts and flames reach it like anything else

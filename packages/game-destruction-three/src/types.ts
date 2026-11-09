@@ -65,6 +65,8 @@ export interface RendererOptions {
   autoSplit?: boolean
   /** Called when a loose piece is created (the bench registers it as grabbable). */
   onPiece?: (piece: Piece) => void
+  /** Called by `release` with the ids of the pieces it took out of the world, so a host that kept them (`onPiece`) forgets them. */
+  onReleased?: (pieceIds: readonly string[]) => void
   /**
    * The numbers of the shove a blast gives to the pieces (`BlastShoveOptions` of game-contracts: how much of the energy becomes speed, the fastest throw, the lift, the falloff).
    * The defaults give the pieces the speed the blast always gave them, with the cap lowered to 20 m/s.
@@ -204,6 +206,14 @@ export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
   unbind(objectId: string): void
+  /**
+   * The object leaves for good (a house replaced, a module cleared): every piece that split from it leaves the world, and every effect of it and of
+   * its pieces (fires, burn sounds, leaks, events still waiting, fragments, ground marks, bare bars, sprites, flames and smoke) goes at once; then it is
+   * unbound. The object itself stays in the world for whoever added it to remove. Returns the ids of the pieces removed (also told to `onReleased`).
+   */
+  release(objectId: string): string[]
+  /** What split from the object leaves the world with all its effects, as `release` does, and the object keeps its binding (a reset). Returns the ids removed. */
+  releasePieces(objectId: string): string[]
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: MakePieceOptions): Piece
   pieces(): Piece[]

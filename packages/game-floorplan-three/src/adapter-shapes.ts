@@ -57,6 +57,10 @@ export interface HouseDestructionRenderer {
   bind(objectId: string, root: THREE_NS.Object3D, options?: { parts?: Record<string, BoundMeshes | BoundMeshes[]>; onFrame?: (dt: number) => void }): void
   unbind(objectId: string): void
   restore(objectId: string): void
+  /** The object leaves for good: its pieces leave the world and every effect of it and of them goes at once, then it is unbound. */
+  release?(objectId: string): string[]
+  /** What split from the object leaves the world with its effects; the object stays bound (a reset). */
+  releasePieces?(objectId: string): string[]
 }
 
 /** The species pack the game hands the house's vegetation (`game-vegetation-species`): a plant spec by species id. */
