@@ -26,7 +26,7 @@ export { NEUTRAL_FOG_FAR, NEUTRAL_FOG_NEAR, createFog, isNeutralFog } from './fo
 export type { FogController, FogOptions } from './fog'
 
 export { createProgramWarmup } from './warmup'
-export { spriteProbes } from './probes'
+export { shadowCasterProbes, spriteProbes } from './probes'
 export type { EffectWarmup, ProgramWarmup, WarmupContext, WarmupOptions, WarmupProbe, WarmupReport, WarmupRenderer } from './warmup-types'
 export { programKeysOf } from './program-key'
 export type { PropertiesReader } from './program-key'
