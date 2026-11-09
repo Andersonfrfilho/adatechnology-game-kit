@@ -1,5 +1,5 @@
 import { SpriteKindPool, spriteRandom } from './kind-pool'
-import type { SpriteSpawnOptions } from './kind-pool'
+import type { SpriteSources, SpriteSpawnOptions } from './kind-pool'
 import { SPRITE_KINDS } from './kinds'
 import type { SpriteKind, SpriteKindDef } from './kinds'
 import type { Confiner } from '../enclosures'
@@ -33,6 +33,7 @@ export class SpriteKindSystem {
   private readonly defs: readonly SpriteKindDef[]
   private readonly index = new Map<string, number>()
   private readonly owners: string[] = []
+  private readonly sources: SpriteSources = { ids: new Map(), next: 0 }
   private readonly listeners = new Map<string, LandListener>()
 
   constructor(private readonly options: SpriteKindSystemOptions) {
@@ -41,8 +42,8 @@ export class SpriteKindSystem {
     this.defs = this.ids.map((id) => kinds[id]!)
     this.ids.forEach((id, at) => this.index.set(id, at))
     const additiveCapacity = Math.floor(options.capacity * 0.4)
-    this.additive = new SpriteKindPool(additiveCapacity, this.defs, this.owners)
-    this.normal = new SpriteKindPool(options.capacity - additiveCapacity, this.defs, this.owners)
+    this.additive = new SpriteKindPool(additiveCapacity, this.defs, this.owners, this.sources)
+    this.normal = new SpriteKindPool(options.capacity - additiveCapacity, this.defs, this.owners, this.sources)
     this.random = spriteRandom(options.seed)
   }
 
@@ -126,8 +127,17 @@ export class SpriteKindSystem {
     if (this.normal.live > 0 || this.normal.drawCount > 0) this.normal.update(dt, host)
   }
 
+  /** Kills the live sprites made for `source` (`SpriteSpawnOptions.source`); returns how many went. */
+  clearSource(source: string): number {
+    const killed = this.additive.clearSource(source) + this.normal.clearSource(source)
+    // nothing of it is alive any more: the name is forgotten, and one made for it later gets a new number
+    this.sources.ids.delete(source)
+    return killed
+  }
+
   clear(): void {
     this.additive.clear()
     this.normal.clear()
+    this.sources.ids.clear()
   }
 }

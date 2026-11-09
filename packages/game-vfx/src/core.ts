@@ -51,4 +51,6 @@ export interface VfxCore {
   /** Ground a blast opens a dirt crater in (`VfxOptions.cratersAt`). */
   cratersAt?: (x: number, z: number) => boolean
   emit(request: VfxSideRequest): void
+  /** The thing what is spawned now is made for (`ExplosionOptions.source` while it goes off): the records take it unless they name their own. */
+  source: string | undefined
 }

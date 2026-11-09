@@ -3,7 +3,7 @@
 // canvases still alive after a forced GC, the event listeners on window, document and the canvas, the intervals still running, and the JS heap
 // (the total of a heap snapshot, so garbage does not count).
 //   node leak.mjs                       every phase
-//   LEAK_PHASE=explosions|glass|areas|more|world|hands   one phase (CI runs them in parallel)
+//   LEAK_PHASE=explosions|glass|areas|more|world|hands|floorplan   one phase (CI runs them in parallel)
 //   LEAK_SCENARIOS=a;b                  with LEAK_PHASE, only these scenarios
 //   LEAK_ROUNDS=3                       measured cycles
 //   LEAK_WARMUP=2                       warm-up cycles before the first count
@@ -17,7 +17,7 @@ import { execFileSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
-/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take */
+/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean; floorplans?: string[] }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take, the houses the floorplan bench switches through */
 /** @type {Record<string, LeakPhase>} */
 const PHASES = {
   // the blasts: the chain of P13 bottles, a grenade among bodies, the gas of a house, a gas bottle under the barbecue
@@ -32,6 +32,8 @@ const PHASES = {
   world: { areas: ['Clima', 'Jogador', 'Histórias', 'Móveis e objetos'] },
   // the hands: one weapon of each kind taken, fired and put away, in first and third person
   hands: { hands: true },
+  // the floorplan bench switching houses, each one blown up and set on fire before the next replaces it: nothing of a replaced house stays
+  floorplan: { floorplans: ['single_storey_a', 'mansion', 'townhouse'] },
 }
 // What a cycle may leave behind, per measured cycle (above it the room keeps something it removed). Measured after the fixes of 2026-11-02:
 // buffers +0 to +70, textures 0, canvases 0, heap under 0.5 MB.
@@ -150,6 +152,20 @@ for (const [name, phase] of Object.entries(PHASES)) {
           }
         }
         room.setCameraMode('first')
+      }
+      if (p.floorplans) {
+        await room.openAreaAsync('Casas')
+        const bench = room.bench('floorplan_area')
+        for (const template of p.floorplans) {
+          bench.set('template', template)
+          await bench.act('build')
+          // the house the bench just built (its world id is house3d:<n>, the highest n the newest)
+          const house = room.world.ids().filter((id) => id.startsWith('house3d:')).sort((a, b) => Number(a.split(':')[1]) - Number(b.split(':')[1])).pop()
+          const centre = (house && room.world.state(house)?.position) ?? [0, 0, 0]
+          room.world.explode([centre[0], 1, centre[2]], 345600, 18)
+          for (const id of room.world.ids()) room.world.hit(id, { type: 'fire', point: [centre[0], 0.3, centre[2]], temperature: 900, radius: 4, duration: 3 })
+          for (let i = 0; i < 90; i++) room.update(1 / 30)
+        }
       }
       for (const group of p.areas ?? []) {
         await room.openAreaAsync(group)

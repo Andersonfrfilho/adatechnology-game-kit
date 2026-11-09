@@ -17,6 +17,8 @@ export interface Spark {
   g: number
   bounce: number
   age: number
+  /** The thing it was made for (a burning part's object): `VfxWorld.clearSource` takes it away when that thing leaves. */
+  source: string | undefined
 }
 
 export type SparkInit = Partial<Omit<Spark, 't' | 'age'>>
@@ -25,7 +27,7 @@ const GROUND_LIFT = 0.02
 const BOUNCE_SLIDE = 0.55
 
 export function createSparkPool(capacity: number): OrderedPool<Spark> {
-  return new OrderedPool<Spark>(capacity, () => ({ x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, life: 0.8, w: 0.04, st: 0.035, kind: 0, drag: 0.6, g: 9.8, bounce: 0.35, age: 0 }))
+  return new OrderedPool<Spark>(capacity, () => ({ x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, t: 0, life: 0.8, w: 0.04, st: 0.035, kind: 0, drag: 0.6, g: 9.8, bounce: 0.35, age: 0, source: undefined }))
 }
 
 export function spawnSpark(pool: OrderedPool<Spark>, init: SparkInit): Spark {
@@ -45,6 +47,7 @@ export function spawnSpark(pool: OrderedPool<Spark>, init: SparkInit): Spark {
   spark.g = init.g ?? 9.8
   spark.bounce = init.bounce ?? 0.35
   spark.age = 0
+  spark.source = init.source
   return spark
 }
 

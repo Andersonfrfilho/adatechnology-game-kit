@@ -31,6 +31,8 @@ export interface Glow {
   outZ: number
   outSize: number
   outIntensity: number
+  /** The thing it was made for: `VfxWorld.clearSource` takes it away when that thing leaves. */
+  source: string | undefined
 }
 
 export type GlowInit = Partial<Omit<Glow, 't' | 'outX' | 'outY' | 'outZ' | 'outSize' | 'outIntensity'>>
@@ -40,7 +42,7 @@ const DEFAULT_COLOR: Rgb = [1, 0.6, 0.25]
 export function createGlowPool(capacity: number): OrderedPool<Glow> {
   return new OrderedPool<Glow>(capacity, () => ({
     x: 0, y: 0, z: 0, s: 1, s1: null, i: 1, t: 0, life: 0.3, color: DEFAULT_COLOR, curve: 2, flick: false, follow: null, fx: 0, fy: 0, fz: 0,
-    outX: 0, outY: 0, outZ: 0, outSize: 0, outIntensity: 0,
+    outX: 0, outY: 0, outZ: 0, outSize: 0, outIntensity: 0, source: undefined,
   }))
 }
 
@@ -61,6 +63,7 @@ export function spawnGlow(pool: OrderedPool<Glow>, init: GlowInit): Glow {
   glow.fx = init.fx ?? 0
   glow.fy = init.fy ?? 0
   glow.fz = init.fz ?? 0
+  glow.source = init.source
   return glow
 }
 

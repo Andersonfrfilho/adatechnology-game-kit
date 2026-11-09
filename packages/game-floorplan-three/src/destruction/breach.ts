@@ -811,8 +811,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         dropped.length = 0
       },
       flush,
-      /** Takes this house's painting out of the renderer's queue (the house goes away); `claim` puts it back. */
-      release(): void { paintQueues.delete(queue) },
+      /** Takes this house's painting out of the renderer's queue (the house goes away) and frees the unit shapes on the GPU; `claim` puts it back (three.js uploads the shapes again when drawn). */
+      release(): void { paintQueues.delete(queue); unitGeometry.dispose(); lumpShape?.dispose() },
       /** The painting of this house alone. */
       deferredQueue: (): DeferredQueue => queue,
       /** The wall has damage drawn. */
