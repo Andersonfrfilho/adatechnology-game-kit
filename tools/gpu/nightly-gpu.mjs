@@ -9,6 +9,7 @@
 //   NIGHTLY_REF=<ref>                           measure another ref (default origin/main)
 //   NIGHTLY_REPORTS=<dir>                       where the dated folders go (default ~/Documents/personal/adatechnology-game-kit-shots/nightly)
 //   NIGHTLY_MAX_LOAD=2  NIGHTLY_WAIT_MIN=240    the 1-minute load it waits below, and for how long at most
+//   NIGHTLY_STALE_PUSH_MIN=90                   a `git push` older than this, or only waiting on a lock, or running while nobody holds gpu.lock, does not hold the run back
 import { execFileSync, spawnSync } from 'node:child_process'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, homedir, loadavg } from 'node:os'
@@ -16,6 +17,8 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
+import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
+import { parseSummaryLines } from './suite-runner.mjs'
 
 /** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string }} NightlyState */
 /** @typedef {{ name: string, ok: boolean, log: string, seconds: number }} StepResult */
@@ -28,6 +31,7 @@ const reportsRoot = process.env.NIGHTLY_REPORTS ?? join(homedir(), 'Documents/pe
 const ref = process.env.NIGHTLY_REF ?? 'origin/main'
 const MAX_LOAD = Number(process.env.NIGHTLY_MAX_LOAD ?? Math.max(2, cpus().length / 4))
 const WAIT_MINUTES = Number(process.env.NIGHTLY_WAIT_MIN ?? 240)
+const STALE_PUSH_MINUTES = Number(process.env.NIGHTLY_STALE_PUSH_MIN ?? 90)
 const POLL_MS = 60_000
 const GPU_LOCK = join(cacheDir, 'gpu.lock')
 
@@ -61,18 +65,20 @@ const notify = (title, body) => {
 
 const sleep = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
 
-/** Whether some session is pushing: a push waiting on the GPU lock keeps the load low, so the load alone would let the daily run take the lock first. */
-const pushing = () => spawnSync('pgrep', ['-f', 'git push'], { encoding: 'utf8' }).status === 0
+/** The pushes that hold the run back (a push waiting on a lock keeps the load low, so the load alone would let the run take the lock first), and the ones it ignores, with why. */
+const pushes = () => judgePushes({ procs: readProcesses(), staleMinutes: STALE_PUSH_MINUTES, gpuLockFree: gpuLockIsFree(GPU_LOCK) })
 
 /** Waits for the charger, no push in flight and a quiet machine, so the frame times compare with the last run; gives up after WAIT_MINUTES. */
 async function waitUntilIdle() {
   const deadline = Date.now() + WAIT_MINUTES * 60_000
+  const noted = new Set()
   for (;;) {
     const battery = batterySkipReason({})
     const load = loadavg()[0] ?? 0
-    const push = pushing()
-    if (!battery && !push && load < MAX_LOAD) return null
-    if (Date.now() > deadline) return battery ?? (push ? `a push was still running after ${WAIT_MINUTES} min` : `load ${load.toFixed(2)} stayed over ${MAX_LOAD} for ${WAIT_MINUTES} min`)
+    const { blocking, ignored } = pushes()
+    for (const push of ignored) if (!noted.has(push.pid)) (noted.add(push.pid), note(`ignoring git push ${push.pid}: ${push.reason}`))
+    if (!battery && !blocking.length && load < MAX_LOAD) return null
+    if (Date.now() > deadline) return battery ?? (blocking.length ? `an active push (${blocking.map((push) => `${push.pid}: ${push.reason}`).join('; ')}) was still running after ${WAIT_MINUTES} min` : `load ${load.toFixed(2)} stayed over ${MAX_LOAD} for ${WAIT_MINUTES} min`)
     await sleep(POLL_MS)
   }
 }
@@ -86,6 +92,7 @@ function run(step) {
   const seconds = Math.round((Date.now() - started) / 1000)
   const ok = result.status === 0
   note(`- ${step.name}: ${ok ? 'ok' : `FAILED (exit ${result.status ?? result.signal})`} in ${seconds} s (${log})`)
+  if (step.name === 'browser-checks') for (const suite of parseSummaryLines(result.stdout ?? '')) note(`  - ${suite.label}: ${suite.result}`)
   return { name: step.name, ok, log, seconds }
 }
 
