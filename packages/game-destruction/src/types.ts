@@ -724,7 +724,7 @@ export interface PartRuntime {
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
 /** What a `DestructionWorld.raycast` leaves out before testing it, so the ray never reads its shapes. Nothing by default. */
 export interface RaycastOptions {
-  /** Leaves out the loose pieces: the objects `splitGroup` made of what came off (whatever their size) and the parts that fell with their group (`collapsed`). */
+  /** Leaves out the loose pieces: the objects `splitGroup` made of what came off, whatever their size. A part that fell but is still part of its object (`collapsed`) still counts. */
   readonly skipLoose?: boolean
   /** Leaves out every object whose bounding sphere has a smaller radius (metres). The parts of a larger object always count. Registered impls are never left out. */
   readonly minObjectRadius?: number

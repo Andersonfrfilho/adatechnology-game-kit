@@ -2300,7 +2300,6 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const ld = rotateVec(qi, d)
       for (const p of o.parts) {
         if (isLost(p) || ignore?.has(`${o.id}\0${p.spec.id}`)) continue
-        if (skip.skipLoose && p.st.status === 'collapsed') continue
         if (partSphereMiss(lo, ld, p, maxDist)) continue
         const r = rayPart(o, p, origin, d)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue

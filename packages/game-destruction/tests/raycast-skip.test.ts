@@ -15,6 +15,25 @@ const boards = (): DestructibleSpec => ({
 
 const can = (): DestructibleSpec => ({ name: 'can', parts: [{ id: 'body', material: 'aluminium', shape: { kind: 'box', size: [0.066, 0.12, 0.066] }, position: [0, 0, 0] }] })
 
+/** Two weak columns under a slab with a brick wall on it: knock the columns out and the slab and the wall fall with their group (`collapsed`). */
+const fallenWall = (): DestructibleSpec => ({
+  parts: [
+    { id: 'f0', material: 'concrete', shape: { kind: 'box', size: [0.8, 0.3, 0.8] }, position: [-1, -0.15, 0], structure: { role: 'foundation' } },
+    { id: 'f1', material: 'concrete', shape: { kind: 'box', size: [0.8, 0.3, 0.8] }, position: [1, -0.15, 0], structure: { role: 'foundation' } },
+    { id: 'c0', material: 'concrete', shape: { kind: 'box', size: [0.3, 3, 0.3] }, position: [-1, 1.5, 0], structure: { role: 'column', capacity: 4000 }, hp: 5 },
+    { id: 'c1', material: 'concrete', shape: { kind: 'box', size: [0.3, 3, 0.3] }, position: [1, 1.5, 0], structure: { role: 'column', capacity: 4000 }, hp: 5 },
+    { id: 'slab', material: 'concrete', shape: { kind: 'box', size: [3, 0.2, 2] }, position: [0, 3.1, 0], structure: { role: 'slab' } },
+    { id: 'wall', material: 'brick', shape: { kind: 'box', size: [1, 2, 0.2] }, position: [0, 4.2, 0], structure: { role: 'wall' } },
+  ],
+  joints: [
+    { a: 'c0', b: 'f0', kind: 'rebar', bears: 'a_on_b' },
+    { a: 'c1', b: 'f1', kind: 'rebar', bears: 'a_on_b' },
+    { a: 'slab', b: 'c0', kind: 'rebar', bears: 'a_on_b' },
+    { a: 'slab', b: 'c1', kind: 'rebar', bears: 'a_on_b' },
+    { a: 'wall', b: 'slab', kind: 'mortar', bears: 'a_on_b' },
+  ],
+})
+
 const DOWN_Z: Vec3 = [0, 0, -1]
 
 function splitBoards(world: DestructionWorld, at: Vec3): { readonly whole: string; readonly loose: string } {
@@ -37,6 +56,17 @@ describe('world.raycast options', () => {
     const { whole } = splitBoards(world, [0, 1, 0])
     expect(world.raycast([0, 1, 5], DOWN_Z, Infinity, { skipLoose: true })?.object).toBe(whole)
     expect(world.raycast([0, 1, 0], DOWN_Z, Infinity, { skipLoose: true })).toBeNull()
+  })
+
+  it('skipLoose still sees a part that fell but was not split off its object (a fallen wall chunk)', () => {
+    const world = createDestruction()
+    const id = world.add(fallenWall())
+    for (const column of ['c0', 'c1']) world.hit(id, { type: 'blunt', point: [column === 'c0' ? -0.85 : 1.15, 1.5, 0], direction: [-1, 0, 0], energy: 5000, radius: 0.05 })
+    for (let step = 0; step < 40; step++) world.update(0.25)
+    expect(world.part(id, 'wall')?.status).toBe('collapsed')
+    const plain = world.raycast([0, 4.2, 5], DOWN_Z)
+    expect(plain?.part).toBe('wall')
+    expect(world.raycast([0, 4.2, 5], DOWN_Z, Infinity, { skipLoose: true })).toEqual(plain)
   })
 
   it('a loose piece stays loose through a save and a load', () => {

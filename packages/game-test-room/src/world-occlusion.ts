@@ -13,8 +13,8 @@ export type WorldOcclusionOptions = {
   /** Metres stepped past a hit before looking for the next: small enough not to skip a thin layer behind it (4 mm glass). Default 0.001. */
   readonly step?: number
   /**
-   * Objects with a smaller bounding radius (metres) are not looked at. Default `OCCLUDER_MIN_RADIUS`. Loose pieces (what `splitGroup` cut off, parts that
-   * fell with their group) are never looked at: debris on the floor or in the air does not stand between a sound and the ear long enough to matter.
+   * Objects with a smaller bounding radius (metres) are not looked at. Default `OCCLUDER_MIN_RADIUS`. Loose pieces (what `splitGroup` cut off) are never
+   * looked at: debris on the floor or in the air does not stand between a sound and the ear long enough to matter. A fallen chunk still part of its object counts.
    */
   readonly minObjectRadius?: number
 }
