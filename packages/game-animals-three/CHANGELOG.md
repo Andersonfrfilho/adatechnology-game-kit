@@ -1,5 +1,13 @@
 # @adatechnology/game-animals-three
 
+## 0.4.20
+
+### Patch Changes
+
+- Updated dependencies [b0b031b]
+  - @adatechnology/game-contracts@0.35.0
+  - @adatechnology/game-audio@0.13.6
+
 ## 0.4.19
 
 ### Patch Changes

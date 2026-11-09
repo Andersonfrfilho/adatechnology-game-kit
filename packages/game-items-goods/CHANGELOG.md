@@ -1,5 +1,13 @@
 # @adatechnology/game-items-goods
 
+## 0.3.15
+
+### Patch Changes
+
+- Updated dependencies [b0b031b]
+  - @adatechnology/game-contracts@0.35.0
+  - @adatechnology/game-items@0.2.15
+
 ## 0.3.14
 
 ### Patch Changes
