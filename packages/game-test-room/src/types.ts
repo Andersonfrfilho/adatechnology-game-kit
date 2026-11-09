@@ -337,9 +337,9 @@ export interface TestRoomOptions {
     eventBudgetMs?: number
     /** The most loose bodies (ejected casings, dropped magazines) modules may keep alive at once, lent as `ModuleHost.particleLimit` (default 900). */
     particleLimit?: number
-    /** Loose pieces simulated at once (`RendererOptions.maxAwakePieces` of game-destruction-three; default `SUGGESTED_MAX_AWAKE_PIECES`, 24; `Infinity` for no limit). */
+    /** Loose pieces simulated at once (`RendererOptions.maxAwakePieces` of game-destruction-three; default no limit; `SUGGESTED_MAX_AWAKE_PIECES` is 24). */
     maxAwakePieces?: number
-    /** Fragments moving at once (`RendererOptions.maxAwakeFragments`; default `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64; `Infinity` for no limit). */
+    /** Fragments moving at once (`RendererOptions.maxAwakeFragments`; default no limit; `SUGGESTED_MAX_AWAKE_FRAGMENTS` is 64). */
     maxAwakeFragments?: number
     /** How the debris at rest is drawn in batches (`RendererOptions.settledBatches`; default on with its defaults); `false` draws every debris mesh on its own. */
     settledBatches?: SettledBatchOptions | false

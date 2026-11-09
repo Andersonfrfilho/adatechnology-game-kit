@@ -161,7 +161,8 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
   `settledBatches` the debris asleep is drawn in batches, one draw per material (made with `createStaticBatcher` of `@adatechnology/game-render-three` from 16 meshes outside a
   batch, at most once a second; copies of one material with equal settings share a batch): its collision is the piece's, unchanged, and a piece that is woken, hit, dented,
   hidden or touched by any event of its object draws on its own again at once. Transparent debris (glass), the meshes of an object burning or charring and meshes over 4000
-  vertices draw on their own. `settledBatchStats()` reports the batches. The test room turns both on (`SUGGESTED_MAX_AWAKE_PIECES`, `SUGGESTED_MAX_AWAKE_FRAGMENTS`).
+  vertices draw on their own. `settledBatchStats()` reports the batches. The test room turns the batches on; its awake budget stays off unless
+  `debris.maxAwakePieces` / `maxAwakeFragments` are given (`SUGGESTED_MAX_AWAKE_PIECES`, `SUGGESTED_MAX_AWAKE_FRAGMENTS`).
 
 ## API
 

@@ -5,7 +5,7 @@ import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } f
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { DESTRUCTION_SOUND_KEYS, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { DESTRUCTION_SOUND_KEYS, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, Hit, SurfaceId } from '@adatechnology/game-contracts'
@@ -451,9 +451,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
     eventBudgetMs: options.debris?.eventBudgetMs ?? 8,
-    // what has come to rest stops being simulated past the budget and is drawn in batches (its collision unchanged)
-    maxAwakePieces: options.debris?.maxAwakePieces ?? SUGGESTED_MAX_AWAKE_PIECES,
-    maxAwakeFragments: options.debris?.maxAwakeFragments ?? SUGGESTED_MAX_AWAKE_FRAGMENTS,
+    // the debris at rest is drawn in batches (its collision unchanged); the awake budget stays off unless asked for
+    ...(options.debris?.maxAwakePieces !== undefined ? { maxAwakePieces: options.debris.maxAwakePieces } : {}),
+    ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
     ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
