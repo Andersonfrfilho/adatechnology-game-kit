@@ -32,6 +32,7 @@ export type {
   JointState,
   MaterialId,
   ObjectState,
+  PartAperture,
   PartShape,
   PartSpec,
   PartBreach,

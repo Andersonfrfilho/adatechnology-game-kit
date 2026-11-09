@@ -7,6 +7,7 @@ import { resolveSlabPanels } from './slab-panels'
 import type { SlabPanelOptions } from './slab-panels'
 import { applySlabPanels, beamDepthFor, deepenBondBeams } from './slab-panels'
 import { applyPanels, applyUnits } from './wall-detail'
+import { withWindowApertures } from './wall-apertures'
 import type { FoundationType, PartRole, PlanStructure, StructurePart, WallDetail } from './types'
 
 export interface DestructibleSpecOptions {
@@ -33,6 +34,8 @@ export interface DestructibleSpecOptions {
   sized?: boolean
   /** Metres the anchored terrain slab reaches beyond the parts (default 6). */
   terrainMargin?: number
+  /** In the `coarse` detail, the window gaps of each wall as its `apertures` (default true; false only to reproduce the Visor de casas 3D spec, which has none). */
+  windowApertures?: boolean
   /**
    * Declares the tension steel of the concrete beams, slabs, roofs and stairs of a construction with rebar (`structure.rebar.ratio`), so the destruction
    * world bends them (`structure.flexure` of game-destruction): `true` for the default ratios (`REBAR_RATIOS`), or ratios per role. When the spec is
@@ -187,7 +190,9 @@ export function toDestructibleSpec(structure: PlanStructure, options: Destructib
   const infill = new Set(portico && slabOptions ? kept.filter((part) => part.role === 'wall').map((part) => part.id) : [])
   const beams = new Set(parts.filter((part) => part.role === 'beam' && (part.beamKind === 'bond_beam' || part.slab !== undefined)).map((part) => part.id))
   const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false || (beams.has(s.part) && infill.has(s.on)) ? false : 'a_on_b' }))
-  const spec: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'] }
+  const built: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'] }
+  // one part per wall: the window gaps are apertures of it (the finer details cut the wall around them)
+  const spec = detail === 'coarse' && options.windowApertures !== false ? withWindowApertures(built, structure.openings) : built
   return onSoil(withRebar(spec, structure, options, portico, slabOptions !== undefined), structure, options)
 }
 

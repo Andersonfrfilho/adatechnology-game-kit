@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- port of the team's closure: dead locals and shapes stay as delivered */
 import { assemblyPart, getAssembly } from '@adatechnology/game-destruction';
-import { DENSITY, MEMBER_CAGE, cageResidualCapacity, toDestructibleSpec } from '@adatechnology/game-floorplan-structure';
+import { DENSITY, MEMBER_CAGE, cageResidualCapacity, toDestructibleSpec, withWindowApertures } from '@adatechnology/game-floorplan-structure';
 import type * as THREE_NS from 'three';
-import type { DestructibleSpecOptions, StructurePart, Support } from '@adatechnology/game-floorplan-structure';
-import type { HouseRecord, Kernel, PieceRecord, Shared } from '../kernel-types.js';
+import type { DestructibleSpecOptions, Opening, StructurePart, Support } from '@adatechnology/game-floorplan-structure';
+import type { PartAperture, PartSpec } from '@adatechnology/game-contracts';
+import type { HouseRecord, Kernel, PieceAperture, PieceRecord, Shared } from '../kernel-types.js';
 import type { HouseStructure, HouseStructurePart, HouseSupport, StructureMeshItem } from './types.js';
 import { panelViewOf } from './panels.js';
 
@@ -34,6 +35,17 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
         }
         for (const def of shared.inter.defs.values()) { if (!def.outer) continue; if (/^gate/.test(def.kind)) tagObject(def.name, [def.outer], 'steel', null, { mass: 80, tags: ['gate'] }); else if (def.kind === 'swing' || def.kind === 'drawer') tagObject(def.name, [def.outer], 'mdf', null, { mass: 6 }); }
       }
+  /** The opening a piece declares in plan coordinates (the glass of a frame, the bay of a grille) as the `aperture` of its part, about the part's centre. */
+  function apertureOf(sp: PartSpec, ap: PieceAperture | undefined): PartAperture | null {
+    if (!ap || sp.shape.kind !== 'box') return null;
+    const size = sp.shape.size, depth = ap.alongU ? 2 : 0;
+    // the part is thinnest across the window, or the world would read the opening on another face
+    if (size[depth] > Math.min(size[ap.alongU ? 0 : 2], size[1])) return null;
+    const out: PartAperture = { size: [ap.b - ap.a, ap.y1 - ap.y0], offset: [(ap.a + ap.b) / 2 - sp.position[ap.alongU ? 0 : 2], (ap.y0 + ap.y1) / 2 - sp.position[1]] };
+    if (ap.bars) out.bars = { axis: 0, spacing: ap.bars.spacing, width: ap.bars.width };
+    return out;
+  }
+
   function assembleStructure(r0: HouseRecord, root: THREE_NS.Group): HouseStructure {
         const E0 = r0.structure || { parts: [], supports: [], levels: [], elevation: 0 }, meshes = new Map<string, StructureMeshItem[]>(), add = (id: string, it: StructureMeshItem) => { let l = meshes.get(id); if (!l) meshes.set(id, l = []); l.push(it); };
         root.updateMatrixWorld(true);
@@ -52,7 +64,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
           const p: HouseStructurePart = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill as number : 0.15)), meshes: meshes.get(id)!.length, extra: true } as HouseStructurePart;
-          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units']) if (pc[k] != null) p[k] = pc[k];
+          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture']) if (pc[k] != null) p[k] = pc[k];
           parts.push(p); byId.set(id, p);
         }
         const inside = (p: HouseStructurePart, q: HouseStructurePart, m: number) => { const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2, cy = (p.y0 + p.y1) / 2; return cx >= q.aabb[0] - m && cx <= q.aabb[2] + m && cz >= q.aabb[1] - m && cz <= q.aabb[3] + m && cy >= q.y0 - m && cy <= q.y1 + m; };
@@ -89,6 +101,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
             spec.parts = spec.parts.map(sp => {
               const pc0 = byId.get(sp.id); if (!pc0) return sp;
               const extra: Record<string, unknown> = {}; for (const k of ['contains', 'explodes', 'thickness', 'fill', 'tags']) if (pc0[k] != null && (sp as unknown as Record<string, unknown>)[k] == null) extra[k] = pc0[k];
+              const aperture = apertureOf(sp, pc0.aperture as PieceAperture | undefined); if (aperture) extra.apertures = [aperture];
               return Object.keys(extra).length ? { ...sp, ...extra } : sp;
             });
             spec.parts = spec.parts.map(sp => {
@@ -113,7 +126,9 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
                 return assemblyPart(pc.assembly, { id: pc.id, width: alongU ? u1 - u0 : v1 - v0, height: pc.y1 - pc.y0, position: sp.position, ...(alongU ? {} : { rotation: [0, Math.PI / 2, 0] }), ...(sp.structure ? { structure: sp.structure } : {}), extra: { mass: sp.mass } });
               } catch (e) { return sp; } // an assembly the registry does not know stays a plain box
             });
-            return spec;
+            // a wall drawn with its assembly is turned along v: its window gaps are put again in its own frame
+            const walls = new Set(((E0 as { openings?: Opening[] }).openings ?? []).map(op => op.wall));
+            return withWindowApertures({ ...spec, parts: spec.parts.map(sp => (walls.has(sp.id) && sp.apertures ? (({ apertures: _gone, ...rest }) => rest)(sp) : sp)) }, (E0 as { openings?: Opening[] }).openings ?? []);
           },
         };
         return structure;

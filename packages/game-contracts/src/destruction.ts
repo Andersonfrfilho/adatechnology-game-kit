@@ -57,6 +57,16 @@ export interface ExplosionChain {
   shotDamageFraction?: number
 }
 
+/** An opening of a wall, a frame or a grille (`PartSpec.apertures`). */
+export interface PartAperture {
+  /** Width and height of the opening along the part's two plane axes. */
+  size: [number, number]
+  /** Centre of the opening from the part's centre, along the same axes (default `[0, 0]`). */
+  offset?: [number, number]
+  /** Bars across the opening, spaced along plane axis `axis` (0 or 1) from its edge, every `spacing` metres, `width` metres thick. */
+  bars?: { axis: 0 | 1; spacing: number; width: number }
+}
+
 export interface PartSpec {
   /** Unique inside the object. */
   id: string
@@ -76,6 +86,12 @@ export interface PartSpec {
   hp?: number
   /** Axis of the grain for `splinter` materials, in local space (default the longest axis). */
   grain?: 'x' | 'y' | 'z'
+  /**
+   * Openings through the part's thinnest axis (the window gaps of a wall, the glass area of a window frame, the bay of a grille): a ray that enters the
+   * part inside one goes on, unless it meets one of its `bars`. In the part's two plane axes (x and y for a part thin along z, z and y for one thin along
+   * x, x and z for one thin along y), metres, centred on the part's centre plus `offset`. Without them the whole box is solid.
+   */
+  apertures?: PartAperture[]
   /** Fluid inside the part; punctures make it leak (a `leak` event per hole, the level drops in `update`). */
   contains?: {
     fluid: FluidKind
