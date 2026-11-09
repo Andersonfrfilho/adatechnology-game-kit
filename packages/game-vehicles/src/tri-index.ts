@@ -224,10 +224,17 @@ function raycastMesh(THREE: Three, raycaster: Raycaster, mesh: Mesh, out: Indexe
   if (geo.boundingSphere === null) geo.computeBoundingSphere()
   s.sphere.copy(geo.boundingSphere!).applyMatrix4(mesh.matrixWorld)
   if (!raycaster.ray.intersectsSphere(s.sphere)) return
-  const ti = rayIndexOf(geo)
-  if (!ti) return
   s.inverse.copy(mesh.matrixWorld).invert()
   s.local.copy(raycaster.ray).applyMatrix4(s.inverse)
+  intersectTriangles(THREE, raycaster, mesh, out)
+}
+
+/** The triangles of `mesh` the ray in mesh space (`scratch.local`) crosses, read through the index, in the order and with the test of three.js. */
+function intersectTriangles(THREE: Three, raycaster: Raycaster, mesh: Mesh, out: IndexedHit[]): void {
+  const geo = mesh.geometry
+  const s = scratchOf(THREE)
+  const ti = rayIndexOf(geo)
+  if (!ti) return
   const material = mesh.material as Material
   const back = material.side === THREE.BackSide
   const cull = material.side === THREE.FrontSide
@@ -277,6 +284,50 @@ function collect(THREE: Three, raycaster: Raycaster, object: Object3D, recursive
     else object.raycast(raycaster, out as unknown as Intersection[])
   }
   if (recursive) for (const child of object.children) collect(THREE, raycaster, child, true, out)
+}
+
+/**
+ * The early outs of `Mesh.raycast` of three.js r160, the same tests on the same numbers: the bounding sphere (stale or not) within near..far,
+ * then the bounding box when the geometry has one. A box left over from before a dent rejects a ray in three.js, so it rejects it here too.
+ */
+function passesThreePrologue(THREE: Three, raycaster: Raycaster, mesh: Mesh): boolean {
+  const geo = mesh.geometry
+  const s = scratchOf(THREE)
+  if (geo.boundingSphere === null) geo.computeBoundingSphere()
+  s.sphere.copy(geo.boundingSphere!).applyMatrix4(mesh.matrixWorld)
+  s.local.copy(raycaster.ray).recast(raycaster.near)
+  if (!s.sphere.containsPoint(s.local.origin)) {
+    if (s.local.intersectSphere(s.sphere, s.point) === null) return false
+    if (s.local.origin.distanceToSquared(s.point) > (raycaster.far - raycaster.near) ** 2) return false
+  }
+  s.inverse.copy(mesh.matrixWorld).invert()
+  s.local.copy(raycaster.ray).applyMatrix4(s.inverse)
+  return geo.boundingBox === null || s.local.intersectsBox(geo.boundingBox)
+}
+
+/** The draw range walks whole triangles from a triangle boundary (three.js steps by 3 from `start`, the index walks triangles). */
+function alignedRange(mesh: Mesh): boolean {
+  const geo = mesh.geometry
+  const count = geo.index ? geo.index.count : geo.attributes.position.count
+  const first = Math.max(0, geo.drawRange.start)
+  const last = Math.min(count, geo.drawRange.start + geo.drawRange.count)
+  return first % 3 === 0 && (last <= first || (last - first) % 3 === 0)
+}
+
+/**
+ * `raycaster.intersectObjects(objects, false)` of three.js r160, hit for hit (same point, distance, face, object and order), for a list of
+ * meshes: the same early outs as `Mesh.raycast` (`passesThreePrologue`) and then the triangles through the index. What the index does not
+ * cover (skinned, morphed, several materials, a raycast of its own, a draw range off a triangle boundary) goes through its own `raycast`.
+ */
+export function raycastMeshesLikeThree(THREE: Three, raycaster: Raycaster, objects: readonly Object3D[]): IndexedHit[] {
+  const out: IndexedHit[] = []
+  for (const object of objects) {
+    if (!object.layers.test(raycaster.layers)) continue
+    if (!indexable(THREE, object) || !alignedRange(object as Mesh)) object.raycast(raycaster, out as unknown as Intersection[])
+    else if (passesThreePrologue(THREE, raycaster, object as Mesh)) intersectTriangles(THREE, raycaster, object as Mesh, out)
+  }
+  out.sort((x, y) => x.distance - y.distance)
+  return out
 }
 
 /**

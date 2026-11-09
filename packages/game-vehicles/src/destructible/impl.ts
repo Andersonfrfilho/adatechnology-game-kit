@@ -32,6 +32,7 @@ import { buildVehicleModel, kindOf, type JointDef, type PartDef, type PartRole, 
 import type { CreaseQueue } from './crease-queue'
 import { VehicleVisuals } from './visual'
 import { createVehicleClips } from './clips'
+import { raycastMeshesLikeThree } from '../tri-index'
 
 export interface VehicleDestructibleOptions {
   /** Object id the host gives (`DestructibleImpl.id`). Default: the vehicle key. */
@@ -64,6 +65,11 @@ export interface VehicleDestructibleOptions {
    * nobody registered the queue with a budget, each vehicle smooths in its own `update` (2.5 ms a frame), as always.
    */
   creaseQueue?: CreaseQueue
+  /**
+   * `surfaceRay` tests every triangle through `Raycaster.intersectObjects` of three.js instead of the triangle index. The hits are the same
+   * (tests/surface-ray-exact of the fleet compares the two); this is the reference path for those tests, slower by far on a heavy model.
+   */
+  bruteForceRays?: boolean
 }
 
 /** What the vehicle can do now, from the state of its hidden mechanics. */
@@ -1108,13 +1114,15 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     for (const child of o.children) collectSurfaces(child)
   }
   const surfaceRay = (ray: SurfaceRay): SurfaceRayHit | null => {
-    sync()
+    // a ray reads only the drawn vehicle: its effects (sparks, shards, debris; hundreds of meshes after a blast) are left to the renderer
+    c.vehicle.updateWorldMatrix(true, true)
     surfaceRays.set(new V3(ray.origin[0], ray.origin[1], ray.origin[2]), new V3(ray.direction[0], ray.direction[1], ray.direction[2]))
     surfaceRays.far = ray.maxDistance
     surfaceMeshes.length = 0
     // the vehicle's own node is not checked for visibility (the LOD hides the full model above it; hit tests still read it)
     for (const child of c.vehicle.children) collectSurfaces(child)
-    for (const h of surfaceRays.intersectObjects(surfaceMeshes, false)) {
+    const hits = options.bruteForceRays ? surfaceRays.intersectObjects(surfaceMeshes, false) : raycastMeshesLikeThree(THREE, surfaceRays, surfaceMeshes)
+    for (const h of hits) {
       if (!h.face || !isDrawnSurface(h.object)) continue
       const p = partOfSurface(h.object, c.vehicle.worldToLocal(h.point.clone()))
       if (!p || p.lost || ray.ignored?.(p.def.id)) continue

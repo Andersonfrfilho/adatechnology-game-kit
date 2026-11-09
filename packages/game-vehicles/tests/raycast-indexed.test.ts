@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
-import { raycastIndexed } from '../src/tri-index'
+import { raycastIndexed, raycastMeshesLikeThree } from '../src/tri-index'
 
 /** A small deterministic generator: the same rays on every run. */
 function rng(seed: number): () => number {
@@ -77,5 +77,37 @@ describe('raycast through the triangle index', () => {
     mesh.updateMatrixWorld(true)
     const ray = new THREE.Raycaster(new THREE.Vector3(0, 0, 3), new THREE.Vector3(0, 0, -1))
     expect(raycastIndexed(THREE, ray, [mesh]).map(pick)).toEqual(ray.intersectObjects([mesh]).map(pick))
+  })
+
+  it('answers like Mesh.raycast of three.js even where three.js keeps an old bound (a box from before a dent) or walks an odd draw range', () => {
+    const root = scene()
+    const meshes: THREE.Mesh[] = []
+    root.traverse((o) => (o as THREE.Mesh).isMesh && meshes.push(o as THREE.Mesh))
+    // bounds taken, then the vertices move: three.js still rejects by the old box and sphere
+    const dented = meshes[0]!.geometry
+    dented.computeBoundingBox()
+    dented.computeBoundingSphere()
+    const pos = dented.attributes.position!
+    for (let i = 0; i < pos.count; i += 7) pos.setXYZ(i, pos.getX(i) * 1.6, pos.getY(i) * 1.6, pos.getZ(i) * 1.6)
+    pos.needsUpdate = true
+    const odd = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 12).toNonIndexed(), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+    odd.geometry.setDrawRange(4, 301)
+    odd.position.set(1.2, 0.4, 0.9)
+    odd.updateMatrixWorld(true)
+    const all: THREE.Object3D[] = [...meshes, odd]
+    const ray = new THREE.Raycaster()
+    const next = rng(19)
+    let hits = 0
+    for (let i = 0; i < 600; i++) {
+      const origin = new THREE.Vector3(next() * 8 - 4, next() * 8 - 4, next() * 8 - 4)
+      const towards = new THREE.Vector3(next() * 3 - 1.5, next() * 3 - 1.5, next() * 3 - 1.5)
+      ray.set(origin, towards.sub(origin).normalize())
+      ray.near = i % 5 === 0 ? 0.5 : 0
+      ray.far = i % 3 === 0 ? 3 : 12
+      const got = raycastMeshesLikeThree(THREE, ray, all)
+      expect(got.map(pick)).toEqual(ray.intersectObjects(all, false).map(pick))
+      hits += got.length
+    }
+    expect(hits).toBeGreaterThan(200)
   })
 })
