@@ -6,13 +6,14 @@ import { register as registerResidential } from '@adatechnology/game-floorplan-r
 import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import { countViolations, register as registerStructure, slabsOffSupport, toDestructibleSpec, validateSpec, validateStructure } from '@adatechnology/game-floorplan-structure'
 import type { SourceDoor, Structure } from '@adatechnology/game-floorplan-structure'
-import { MATERIALS, getAssembly } from '@adatechnology/game-destruction'
+import { MATERIALS, createDestruction, getAssembly } from '@adatechnology/game-destruction'
 import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { describe, expect, it } from 'vitest'
 
 import { furnitureSpec } from '../src'
 import { THREE } from './helpers/houses'
 import { fakeDocument } from './helpers/fake-document'
+import { AT_REST_FAILING } from './helpers/at-rest-failing'
 import { UNMODELLED_ITEM_TYPES } from './helpers/unmodelled-items'
 
 // Every pack of the kit in the engine, as the houses area of the room loads them (examples/floorplan-test-area/src/entry.js).
@@ -101,6 +102,48 @@ describe('every plan of the kit, every state, seed and option', () => {
       }, 600000)
     }
   }
+})
+
+/** What breaks in the destruction world with nothing hitting it: the building as built, left alone for `seconds` (a crack, a break or a fall is a load it cannot carry). */
+function brokenAtRest(structure: Structure, seconds = 2): string[] {
+  const world = createDestruction({ seed: 1 })
+  world.add(toDestructibleSpec(structure, { wallDetail: 'coarse' }))
+  const broken = new Set<string>()
+  world.on('*', (event) => {
+    if (['crack', 'damage', 'break', 'collapse', 'fracture'].includes(event.type) && 'part' in event && typeof event.part === 'string') broken.add(event.part)
+  })
+  for (let t = 0; t < seconds; t += 0.1) world.update(0.1)
+  return [...broken].sort()
+}
+
+/** The defaults and each number of storeys a template declares, on seed 1: where the load of a storey lands on what is under it. */
+function storeyVariantsOf(template: TemplateInfo): Options[] {
+  if (isTower(template)) return []
+  const floors = (template.options.floors ?? (template.floorRange ? [...new Set(template.floorRange)] : [])) as readonly unknown[]
+  return [{}, ...floors.map((value) => ({ floors: value }))]
+}
+
+describe('every plan stands on its own: left alone, nothing cracks, breaks or falls', () => {
+  const failing: string[] = []
+  for (const template of TEMPLATES) {
+    for (const options of storeyVariantsOf(template)) {
+      const key = `${template.id} ${JSON.stringify(options)}`
+      it(key, () => {
+        const broken = brokenAtRest(generate(template.id, { seed: 1, ...options }).structure)
+        if (AT_REST_FAILING.has(key)) {
+          failing.push(key)
+          // a counted failure (helpers/at-rest-failing.ts): once it stands, it leaves the list
+          expect(broken.length, `${key} stands now: take it out of AT_REST_FAILING`).toBeGreaterThan(0)
+          return
+        }
+        expect(broken).toEqual([])
+      }, 120000)
+    }
+  }
+
+  it('every counted failure is a plan this test runs', () => {
+    expect([...AT_REST_FAILING].filter((key) => !failing.includes(key))).toEqual([])
+  })
 })
 
 /** Every item type any plan places, in every state, with the plan item it was first seen as. */
