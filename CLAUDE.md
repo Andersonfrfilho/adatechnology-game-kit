@@ -154,6 +154,7 @@ fica só com build, typecheck, lint e testes que não precisam de GPU.
   `sh tools/gpu/systemd/install-nightly.sh` (liga o timer do systemd do usuário), `... off` e `... now` (ou `node tools/gpu/nightly-gpu.mjs`), sempre a
   partir do checkout principal. Uma branch que precisa da bateria inteira antes do merge roda `GPU_SCOPE=nightly PRE_PUSH_BROWSER=all node
   tools/gpu/browser-checks.mjs` e `node tools/gpu/perf-gate.mjs` na mão.
+  A `git push` só segura a rodada se for recente (`NIGHTLY_STALE_PUSH_MIN`, 90 min), não estiver só esperando uma trava e `gpu.lock` estiver ocupada (`tools/gpu/push-guard.mjs`); o motivo de cada push ignorado vai no `summary.md`. O `browser-checks.mjs` segue depois de uma falha e lista todas no fim (`BROWSER_CHECKS_FAIL_FAST=1` para parar na primeira).
 - **Só no carregador** (dono, 2026-11-06: nenhum push fica bloqueado). `tools/gpu/power.mjs` lê `/sys/class/power_supply`: no carregador (Mains ou
   USB-C online, ou desktop sem bateria) os dois rodam; na bateria são pulados com aviso (`pre-push: ... skipped: on battery ...`) e o push segue.
   Bateria de dispositivo (mouse, fone) não conta; sem a pasta (fora do Linux) roda. `PRE_PUSH_ON_BATTERY=1` roda mesmo na bateria.
