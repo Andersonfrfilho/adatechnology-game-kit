@@ -37,6 +37,22 @@ describe('createStaticBatcher', () => {
     expect(panes.every((pane) => !drawn(pane))).toBe(true)
   })
 
+  it('batches copies of one material together when a material key says they draw the same, and keeps the others apart', () => {
+    const root = new THREE.Group()
+    const wood = new THREE.MeshLambertMaterial({ color: 0x8a6a4a })
+    const copies = [wood, wood.clone(), wood.clone()]
+    const other = new THREE.MeshLambertMaterial({ color: 0x777777 })
+    for (const [at, material] of [...copies, other].entries()) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material)
+      mesh.position.set(at * 2, 0, 0)
+      root.add(mesh)
+    }
+    expect(createStaticBatcher(THREE, root.clone()).stats()).toEqual({ batches: 0, batched: 0, released: 0 })
+    const batcher = createStaticBatcher(THREE, root, { materialKey: (material) => `${material.type}:${(material as THREE.MeshLambertMaterial).color.getHex()}` })
+    expect(batcher.stats()).toEqual({ batches: 1, batched: 3, released: 0 })
+    expect((batcher.group.children[0] as THREE.Mesh).material).toBe(wood)
+  })
+
   it('gives a mesh its own draw back when it moves, is dented or is hidden, and leaves the others batched', () => {
     const { root, parts, panes } = car()
     const batcher = createStaticBatcher(THREE, root)

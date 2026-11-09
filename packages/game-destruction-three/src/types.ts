@@ -12,6 +12,7 @@ import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 import type { FragmentLifeRule } from './fragments'
+import type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -45,6 +46,20 @@ export interface RendererOptions {
   quality?: Quality
   /** Upper bound of live fragment meshes (default 160; oldest fade first). */
   maxFragments?: number
+  /**
+   * Most loose pieces simulated at once (default no limit; a game loop starts from `SUGGESTED_MAX_AWAKE_PIECES`, 24). Over it the oldest pieces that have come to rest (on the
+   * ground, slower than a piece that sleeps, and one held up at an angle once it kept its tilt for 1.5 s) sleep where they lie at once; nothing is moved. With a limit, one held
+   * up at an angle that kept its tilt sleeps under it too (by itself it never does). One put to sleep so wakes as any other (hit, knocked) and when any point it lay on loses its
+   * support.
+   */
+  maxAwakePieces?: number
+  /** Most fragments moving at once (default no limit; `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64): over it the oldest at rest on what is under them sleep where they lie. */
+  maxAwakeFragments?: number
+  /**
+   * Draw the debris at rest in batches, a draw per material (`SettledBatchOptions`; `{}` for the defaults). Omitted, every debris mesh draws on its own, as before. Only the
+   * drawing changes: the collision is each piece's own.
+   */
+  settledBatches?: SettledBatchOptions
   /**
    * Milliseconds of one `update` spent applying queued world events (default `Infinity`: every event is drawn
    * in the `update` that receives it, so what a caller reads right after is final). A game loop sets a finite budget (the test room uses 8): what is left waits for the
@@ -249,6 +264,8 @@ export interface DestructionRenderer {
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
+  /** The draws of the batches of the debris at rest and how many debris meshes they draw (`RendererOptions.settledBatches`). */
+  settledBatchStats?(): SettledBatchStats
   /** Meshes that use the materials of the hole, patch and crack decals, to render once so that the first hit does not build their shader programs in the middle of a frame. */
   warmUpProbes(): WarmUpProbes
   /** Bars of exposed rebar drawn now (`expose` events; one instanced mesh per part). */

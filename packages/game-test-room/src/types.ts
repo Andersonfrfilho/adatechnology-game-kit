@@ -16,7 +16,7 @@ import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-playe
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, FragmentLifeRule, Quality, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, FragmentLifeRule, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
@@ -337,6 +337,12 @@ export interface TestRoomOptions {
     eventBudgetMs?: number
     /** The most loose bodies (ejected casings, dropped magazines) modules may keep alive at once, lent as `ModuleHost.particleLimit` (default 900). */
     particleLimit?: number
+    /** Loose pieces simulated at once (`RendererOptions.maxAwakePieces` of game-destruction-three; default `SUGGESTED_MAX_AWAKE_PIECES`, 24; `Infinity` for no limit). */
+    maxAwakePieces?: number
+    /** Fragments moving at once (`RendererOptions.maxAwakeFragments`; default `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64; `Infinity` for no limit). */
+    maxAwakeFragments?: number
+    /** How the debris at rest is drawn in batches (`RendererOptions.settledBatches`; default on with its defaults); `false` draws every debris mesh on its own. */
+    settledBatches?: SettledBatchOptions | false
   }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions

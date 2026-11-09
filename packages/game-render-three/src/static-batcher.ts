@@ -17,6 +17,11 @@ export type StaticBatcherOptions = {
    * wherever it goes, and only a new geometry, material, dent or hiding gives it its own draw back.
    */
   readonly followMeshes?: boolean
+  /**
+   * What tells materials apart for batching (default each material by itself, its `uuid`). Meshes whose materials give the same key are drawn in one batch with the
+   * first one's material, so a key must be the same only for materials that draw the same (copies of one material with equal settings).
+   */
+  readonly materialKey?: (material: Material) => string
 }
 
 export type StaticBatcherStats = { readonly batches: number; readonly batched: number; readonly released: number }
@@ -69,11 +74,13 @@ const isBatchable = (mesh: Mesh): boolean => {
   return geometry.attributes.position !== undefined && Object.keys(geometry.morphAttributes).length === 0
 }
 
-const signatureOf = (mesh: Mesh): string => {
+const signatureOf = (mesh: Mesh, materialKey: (material: Material) => string): string => {
   const { attributes } = mesh.geometry
   const present = ATTRIBUTES.filter((name) => attributes[name] !== undefined).map((name) => `${name}${attributes[name]!.itemSize}`)
-  return `${(mesh.material as Material).uuid}|${present.join(',')}|${mesh.castShadow ? 1 : 0}${mesh.receiveShadow ? 1 : 0}`
+  return `${materialKey(mesh.material as Material)}|${present.join(',')}|${mesh.castShadow ? 1 : 0}${mesh.receiveShadow ? 1 : 0}`
 }
+
+const uuidOf = (material: Material): string => material.uuid
 
 const sameMatrix = (a: Matrix4, b: Matrix4): boolean => a.elements.every((value, index) => Math.abs(value - (b.elements[index] as number)) < MATRIX_EPSILON)
 
@@ -91,7 +98,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   root.traverse((object) => {
     const mesh = object as Mesh
     if (!mesh.isMesh || !isShown(mesh, root) || !isBatchable(mesh) || !include(mesh)) return
-    const key = signatureOf(mesh)
+    const key = signatureOf(mesh, options.materialKey ?? uuidOf)
     groups.set(key, [...(groups.get(key) ?? []), mesh])
   })
   const group = new THREE.Group()
