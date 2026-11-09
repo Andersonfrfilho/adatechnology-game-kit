@@ -25,13 +25,14 @@ export interface ExplosivesScene {
   readonly eye: Vec3
 }
 
-/** The kitchen corner of the default scene: fridge, cabinet, the cylinder and the stove side by side against the wall, a table 2 m away. */
+/** The kitchen corner of the default scene: fridge, cabinet, the cylinder and the stove side by side against the wall, a table about 3 m out on the open floor. */
 export const DEFAULT_EXPLOSIVES_SCENE: ExplosivesScene = {
   furniture: [
     { item: 'fridge', at: [-1.65, 0, -10.55] },
     { item: 'kitchen_cabinet_base', at: [-0.78, 0, -10.6] },
     { item: 'stove', at: [0.72, 0, -10.58] },
-    { item: 'camp_table', at: [2.4, 0, -10.2] },
+    // on open floor in the blast's sight, off the paving along the wall: the slabs a blast leaves fixed beyond the stretch it breaks (since #281) held the table's legs out of its reach
+    { item: 'camp_table', at: [1.82, 0, -8.52], rotationY: Math.PI / 2 },
   ],
   cylinder: [0.02, 0, -10.66],
   zombie: { item: 'zombie_walker', at: [-1.6, 0, -8.1] },

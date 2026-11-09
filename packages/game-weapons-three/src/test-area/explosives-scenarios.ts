@@ -214,7 +214,8 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const most = (speed * speed) / (2 * GROUND_FRICTION) + PERSON_SLACK
         expect(row.outward <= most, fillText(text.push_person_wave, { who: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), moved: Math.max(0, row.outward).toFixed(2), most: most.toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, speed, most } })
       }
-      // a torn table is still moved by the blast: its centre of mass, wherever its pieces went
+      // a torn table is still moved by the blast: its centre of mass, wherever its pieces went. The table stands on the open floor (DEFAULT_EXPLOSIVES_SCENE): on the
+      // paving along the wall it rode the slabs the blast shook loose, and since #281 the slabs beyond the stretch a blast breaks stay put, as they should
       const table = rows.find((row) => HEAVY_ITEMS.includes(row.kind) && row.distance < blast.radius * 0.85)
       if (table) {
         const moved = heavyShift(table.objectId) ?? table.moved
