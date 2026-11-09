@@ -29,14 +29,16 @@ export interface Fire {
   color: Rgb
   rng: RandomStream
   handle: number
+  /** The thing that burns (`FireOptions.source`): the fire and what it gave off go with `VfxWorld.clearSource`. */
+  source: string | undefined
 }
 
-export type FireInit = Partial<Pick<Fire, 'x' | 'y' | 'z' | 'r' | 'grow' | 'life' | 'rate' | 'smoke' | 'follow' | 'fx' | 'fy' | 'fz' | 'color'>> & { startRadius?: number }
+export type FireInit = Partial<Pick<Fire, 'x' | 'y' | 'z' | 'r' | 'grow' | 'life' | 'rate' | 'smoke' | 'follow' | 'fx' | 'fy' | 'fz' | 'color' | 'source'>> & { startRadius?: number }
 
 export function createFirePool(capacity: number, placeholder: RandomStream): OrderedPool<Fire> {
   return new OrderedPool<Fire>(capacity, () => ({
     x: 0, y: 0, z: 0, r: 0.6, r0: 0.6, grow: 0, life: 6, t: 0, rate: 22, acc: 0, smoke: 0.6, smokeAcc: 0, fade: 1, follow: null, fx: 0, fy: 0, fz: 0, color: SMOKE_COLORS.black,
-    rng: placeholder, handle: 0,
+    rng: placeholder, handle: 0, source: undefined,
   }))
 }
 
@@ -62,6 +64,7 @@ export function spawnFire(pool: OrderedPool<Fire>, random: RandomStream, init: F
   fire.color = init.color ?? SMOKE_COLORS.black
   fire.rng = random
   fire.handle = handle
+  fire.source = init.source
   return fire
 }
 
@@ -87,7 +90,7 @@ function emitFlames(core: VfxCore, fire: Fire, radius: number, dt: number): void
       vx: random.between(-0.2, 0.2), vy: random.between(0.6, 1.4), vz: random.between(-0.2, 0.2),
       s0: 0.1, s1: random.between(0.28, 0.46) * (0.8 + Math.min(radius, 3) * 0.22), sg: -0.08,
       life: random.between(0.45, 0.85), h0: random.between(1, 1.25), hl: random.between(0.35, 0.6),
-      drag: 1.5, buoy: 3.2, color: fire.color, kind: 0, wind: 0.4,
+      drag: 1.5, buoy: 3.2, color: fire.color, kind: 0, wind: 0.4, source: fire.source,
     })
   }
 }
@@ -100,7 +103,7 @@ function emitSmoke(core: VfxCore, fire: Fire, radius: number, dt: number): void 
     addPuff(core, random, {
       x: fire.x + random.between(-radius, radius) * 0.5, y: fire.y + 0.6 + radius * 0.3, z: fire.z + random.between(-radius, radius) * 0.5,
       vy: random.between(0.8, 1.5), s0: 0.25, s1: 0.6 + Math.min(radius, 2) * 0.3, sg: 0.3, life: random.between(4, 6.5),
-      h0: 0.25, hl: 0.25, drag: 0.6, buoy: 0.55, color: fire.color, kind: 0,
+      h0: 0.25, hl: 0.25, drag: 0.6, buoy: 0.55, color: fire.color, kind: 0, source: fire.source,
     })
   }
 }
@@ -111,7 +114,7 @@ function emitEmber(core: VfxCore, fire: Fire, radius: number, dt: number): void 
   addSpark(core, {
     x: fire.x + random.between(-radius, radius) * 0.6, y: fire.y + 0.4, z: fire.z + random.between(-radius, radius) * 0.6,
     vx: random.between(-0.4, 0.4), vy: random.between(1.5, 3.2), vz: random.between(-0.4, 0.4),
-    life: random.between(0.8, 1.6), w: 0.025, st: 0.02, kind: 4, g: -0.6, drag: 1.2,
+    life: random.between(0.8, 1.6), w: 0.025, st: 0.02, kind: 4, g: -0.6, drag: 1.2, source: fire.source,
   })
 }
 

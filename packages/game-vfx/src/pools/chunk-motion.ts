@@ -38,10 +38,10 @@ function leaveTrail(core: VfxCore, chunk: Chunk, dt: number): void {
   const random = chunk.rng
   addSpark(core, {
     x: chunk.x, y: chunk.y, z: chunk.z, vx: chunk.vx * 0.15, vy: chunk.vy * 0.15, vz: chunk.vz * 0.15,
-    life: random.between(0.25, 0.45), w: 0.05 + chunk.sx * 0.2, st: 0.05, kind: 0, g: 0, drag: 1,
+    life: random.between(0.25, 0.45), w: 0.05 + chunk.sx * 0.2, st: 0.05, kind: 0, g: 0, drag: 1, source: chunk.source,
   })
   if (random.next() < 0.25) {
-    addPuff(core, random, { x: chunk.x, y: chunk.y, z: chunk.z, s0: 0.04, s1: 0.14 + chunk.sx * 0.3, sg: 0.15, life: random.between(1, 1.6), drag: 2, buoy: 0.6, color: SMOKE_COLORS.grey, kind: 0 })
+    addPuff(core, random, { x: chunk.x, y: chunk.y, z: chunk.z, s0: 0.04, s1: 0.14 + chunk.sx * 0.3, sg: 0.15, life: random.between(1, 1.6), drag: 2, buoy: 0.6, color: SMOKE_COLORS.grey, kind: 0, source: chunk.source })
   }
 }
 

@@ -53,6 +53,8 @@ export interface Puff {
   age: number
   heat: number
   size: number
+  /** The thing it was made for (a burning part's object): `VfxWorld.clearSource` takes it away when that thing leaves. */
+  source: string | undefined
 }
 
 export type PuffInit = Partial<Omit<Puff, 'seed' | 'age' | 'heat' | 'size' | 't' | 'rng'>>
@@ -71,7 +73,7 @@ export function createPuffPool(capacity: number): OrderedPool<Puff> {
   const placeholder: RandomStream = { next: () => 0, between: (min) => min, direction: (out) => out, state: 0 }
   return new OrderedPool<Puff>(capacity, () => ({
     x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, s0: 0.2, s1: 1, sg: 0.1, gk: 6, life: 3, t: 0, h0: 0, hl: 0.4, drag: 3, buoy: 0.5, grav: 0, kind: 0, seed: 0, wind: 1,
-    color: SMOKE_COLORS.grey, ring: null, ph: 0, th: 0, rng: placeholder, age: 0, heat: 0, size: 0,
+    color: SMOKE_COLORS.grey, ring: null, ph: 0, th: 0, rng: placeholder, age: 0, heat: 0, size: 0, source: undefined,
   }))
 }
 
@@ -106,6 +108,7 @@ export function spawnPuff(pool: OrderedPool<Puff>, random: RandomStream, init: P
   puff.age = 0
   puff.heat = 0
   puff.size = 0
+  puff.source = init.source
   return puff
 }
 
