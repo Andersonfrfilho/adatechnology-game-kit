@@ -21,3 +21,11 @@ export function patchExplosions(base: Readonly<Record<string, ExplosionDef>>, ch
   }
   return result
 }
+
+/**
+ * Every explosion a catalogue can play, by id (each profile once; an alias plays its profile): what a host warms at load, so that no explosive's first
+ * blast links its programs or uploads its buffers in play. Derived from the catalogue, so an explosive added to it is warmed with no list to update.
+ */
+export function explosionEffectIds(explosions: Readonly<Record<string, ExplosionDef>> = EXPLOSIONS): string[] {
+  return Object.keys(explosions)
+}

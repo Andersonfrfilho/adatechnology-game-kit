@@ -186,6 +186,19 @@ export const DESTRUCTION_SOUND_KEYS: Readonly<Record<DestructionSoundStyle, Read
   },
 }
 
+/** The rumble of a blast past `blastFarDistance`, and the tail a confined one adds. */
+const BLAST_FAR_SOUND = 'explosion_far'
+const BLAST_INDOOR_TAIL_SOUND = 'explosion_indoor_tail'
+
+/**
+ * Every sound an explosion and what it leaves can play: the boom of each blast family, the far rumble and the indoor tail, the fire loops and
+ * crackles, and each blow, break and fall on a material (`impactSoundIds` of `rules`). A game preloads them (`AudioEngine.preload`) so that no
+ * first blast decodes its recordings in play; derived from the tables, so a new family or material rule is covered with no list to update.
+ */
+export const blastSoundIds = (rules: Readonly<Record<string, SoundKeyRule>> = DESTRUCTION_SOUND_KEYS.art_scene): string[] => [
+  ...new Set([...Object.values(BLAST_SOUND_OF), BLAST_FAR_SOUND, BLAST_INDOOR_TAIL_SOUND, ...Object.values(FIRE_LOOP_OF), 'fire_crackle', 'fire_pop', ...impactSoundIds(rules)]),
+]
+
 export type DestructionSoundOptions = {
   /** Which team answers the keys (default `art_scene`, the kit mix). `game` falls back to the art scene for the keys the game has no sound for. */
   readonly style?: DestructionSoundStyle
@@ -335,7 +348,7 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
     const sound = BLAST_SOUND_OF[kind]
     const distance = engine.plan(sound, { position: point, seed: 1 })?.distance ?? 0
     // a molotov is a fire, not a blast: it never turns into the far rumble
-    return kind !== 'molotov' && distance > farDistance ? 'explosion_far' : sound
+    return kind !== 'molotov' && distance > farDistance ? BLAST_FAR_SOUND : sound
   }
 
   return {
@@ -353,7 +366,7 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       if (key === 'explode' && blastByKind) {
         const sound = blastSound(point, volume, detail)
         engine.play(sound, { position: point, volume })
-        if (sound !== 'explosion_far' && sound !== 'molotov_break_ignite' && (detail?.confinement ?? 1) >= indoorFrom) engine.play('explosion_indoor_tail', { position: point, volume })
+        if (sound !== BLAST_FAR_SOUND && sound !== 'molotov_break_ignite' && (detail?.confinement ?? 1) >= indoorFrom) engine.play(BLAST_INDOOR_TAIL_SOUND, { position: point, volume })
         return
       }
       // the most specific key that has a rule (material and blow, material, family and blow, family), else the key itself (a `shot_` key with no rule
