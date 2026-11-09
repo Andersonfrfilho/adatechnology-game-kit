@@ -1,4 +1,6 @@
-export { impactKey, shotKey, dragSoundKey, createDestructionRenderer } from './renderer'
+export { impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
+export { SETTLED_BATCH_DEFAULTS, SETTLED_BATCH_ORIGIN } from './settled-batches'
+export type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
 export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'

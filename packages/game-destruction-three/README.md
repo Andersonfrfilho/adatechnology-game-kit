@@ -145,6 +145,8 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 | Particles (`maxParticles`) | 2500 | 1250 |
 | Particle burst counts | 100 % | 60 % |
 | Fragment meshes (`maxFragments`) | 160 | 80, and every second fragment of an event is skipped |
+| Loose pieces simulated at once (`maxAwakePieces`) | no limit (suggested 24) | no limit (suggested 24) |
+| Fragments moving at once (`maxAwakeFragments`) | no limit (suggested 64) | no limit (suggested 64) |
 | Vertex dents / melt noise on meshes over 20k vertices | yes | skipped |
 
 - Particles are two fixed-size ring buffers (additive 40 %, normal 60 %), one draw call each; dead particles cost a loop iteration, nothing else.
@@ -153,6 +155,14 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 - Heat, char and melt are only read for "active" parts (hot, burning, melting) plus a scan of all parts every 0.4 s.
 - The explosion light is created on the first explosion (one light in the scene afterwards, intensity 0 at rest) so plan for the one-time shader recompile.
 - Melt assumes upright meshes (it scales the mesh along its own Y).
+- Debris at rest can cost no simulation and few draws; both are opt-in, so a host that sets nothing simulates and draws exactly as before. Over `maxAwakePieces`
+  (`maxAwakeFragments`) the oldest that have come to rest (on the ground, slower than a piece that sleeps; one held up at an angle once it kept its tilt for 1.5 s) sleep where
+  they lie, nothing moved. A piece put to sleep so keeps the points it lies on and wakes when any of them loses its support, so nothing is left in the air. With
+  `settledBatches` the debris asleep is drawn in batches, one draw per material (made with `createStaticBatcher` of `@adatechnology/game-render-three` from 16 meshes outside a
+  batch, at most once a second; copies of one material with equal settings share a batch): its collision is the piece's, unchanged, and a piece that is woken, hit, dented,
+  hidden or touched by any event of its object draws on its own again at once. Transparent debris (glass), the meshes of an object burning or charring and meshes over 4000
+  vertices draw on their own. `settledBatchStats()` reports the batches. The test room turns the batches on; its awake budget stays off unless
+  `debris.maxAwakePieces` / `maxAwakeFragments` are given (`SUGGESTED_MAX_AWAKE_PIECES`, `SUGGESTED_MAX_AWAKE_FRAGMENTS`).
 
 ## API
 
@@ -162,7 +172,7 @@ specFromObject3D(THREE, root, options?: SpecFromObjectOptions): { spec, parts }
 heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~500, orange ~800, yellow ~1100, white from 1400
 ```
 
-`RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `fragmentLife`, `groundAt`, `gravity`, `autoSplit`, `onPiece`, `onSound`,
+`RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxAwakePieces`, `maxAwakeFragments`, `settledBatches`, `maxParticles`, `fragmentLife`, `groundAt`, `gravity`, `autoSplit`, `onPiece`, `onSound`,
 `vfx` (shared effects world), `camera` (of the own world, when `vfx` is not given), `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
 
 How long debris stays: `fragmentLife` is the seconds a resting fragment stays before it shrinks away (default 12, `0` = forever), or a `FragmentLifeRule`
