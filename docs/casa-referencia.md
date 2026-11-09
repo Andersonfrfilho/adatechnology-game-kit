@@ -42,3 +42,18 @@ sala real no navegador com GPU (Intel ARL, ANGLE/OpenGL), primeira e terceira pe
    põe a carga só no apoio mais próximo do chão. É a mesma área do trabalho de "dividir a carga da cinta com a alvenaria". Revertido.
 2. **Desempenho depois de explosões** (critério 19).
 3. Faca na alvenaria, alumínio derretendo cedo, poeira em blocos, subir a escada andando, som, empurrar móveis, NPCs.
+
+## Rodada curta em cada planta (camada 3)
+
+A bancada da área de casas lista todas as plantas registradas (planta sem grupo vai para "Outros"; teste em `test-area.test.ts`). Em cada uma, na sala
+real e na mesma página, uma depois da outra: construir, tiro de 5,56 na fachada, granada no canto, 6 s de simulação e um print
+(`casa-referencia/plantas/<planta>.png`, números em `plantas/rodada.json`). As torres (20 a 60 andares) ficaram de fora: 78 s para construir na sala;
+os pacotes delas conferem a estrutura.
+
+- 28 plantas, nenhuma falha do invariante "nada flutuando" depois da granada. Colapsos e quebras em todas, conforme o tamanho.
+- Formato: as casas térreas e sobrados perdem o canto e o telhado sobre ele; os prédios comerciais de vão grande (mercado, escola, posto, igreja,
+  metalúrgica) perdem trechos do telhado em balanço; a A-frame e a cabana de troncos perdem mais peças (58 colapsos) por serem de madeira.
+- **Trocar de planta acumula custo** (pendência): a cada troca a simulação fica mais lenta (5 → 16 ms por quadro em quatro trocas da mesma casa,
+  geometrias 290 → 485, cerca de 3.000 partículas no ar), e na rodada inteira 6 s de simulação depois da granada passaram de 2 s para 50-93 s nas
+  últimas plantas. O que a granada deixou (destroços, partículas, fogo) continua no mundo depois que a casa é trocada.
+- Corrigido: "failed to apply debris" (fibras e pó de peça desenhada pela casa) no `game-destruction-three`.
