@@ -1,6 +1,9 @@
 import type * as THREE_NS from 'three'
 import type { Structure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { HouseRecord, Rect, Three } from '../kernel-types.js'
+import { renderBlueprintDataUrl } from './blueprint-canvas.js'
+
+export { renderBlueprintDataUrl }
 
 function addBoxMesh(
   THREE: Three,
@@ -11,50 +14,51 @@ function addBoxMesh(
   x1: number,
   y1: number,
   z1: number,
-  material: THREE_NS.Material,
+  mat: THREE_NS.Material,
 ): void {
   const sx = x1 - x0
   const sy = y1 - y0
   const sz = z1 - z0
   if (sx < 1e-4 || sy < 1e-4 || sz < 1e-4) return
-  const geo = new THREE.BoxGeometry(sx, sy, sz)
-  const mesh = new THREE.Mesh(geo, material)
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat)
   mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2)
+  mesh.castShadow = false
   mesh.receiveShadow = true
   parent.add(mesh)
 }
 
 function addBatterBoards(
   THREE: Three,
-  group: THREE_NS.Group,
-  x0: number,
-  z0: number,
-  x1: number,
-  z1: number,
+  parent: THREE_NS.Group,
+  bx0: number,
+  bz0: number,
+  bx1: number,
+  bz1: number,
   woodMat: THREE_NS.Material,
-  lineMat: THREE_NS.Material,
+  wireMat: THREE_NS.Material,
 ): void {
-  const off = 0.65
-  const L = 0.9
-  const corners: readonly [number, number, number, number][] = [
-    [x0 - off, z0 - off, 1, 1],
-    [x1 + off, z0 - off, -1, 1],
-    [x0 - off, z1 + off, 1, -1],
-    [x1 + off, z1 + off, -1, -1],
-  ]
-  for (const [cx, cz, dx, dz] of corners) {
-    addBoxMesh(THREE, group, cx - 0.03, 0, cz - 0.03, cx + 0.03, 0.55, cz + 0.03, woodMat)
-    const ex = cx + dx * L
-    const ez = cz + dz * L
-    addBoxMesh(THREE, group, ex - 0.03, 0, cz - 0.03, ex + 0.03, 0.55, cz + 0.03, woodMat)
-    addBoxMesh(THREE, group, cx - 0.03, 0, ez - 0.03, cx + 0.03, 0.55, ez + 0.03, woodMat)
-    addBoxMesh(THREE, group, Math.min(cx, ex), 0.38, cz - 0.015, Math.max(cx, ex), 0.48, cz + 0.015, woodMat)
-    addBoxMesh(THREE, group, cx - 0.015, 0.38, Math.min(cz, ez), cx + 0.015, 0.48, Math.max(cz, ez), woodMat)
+  const d = 0.8
+  const y = 0.22
+  const x0 = bx0 - d
+  const z0 = bz0 - d
+  const x1 = bx1 + d
+  const z1 = bz1 + d
+  for (const [px, pz] of [
+    [x0, z0],
+    [x1, z0],
+    [x0, z1],
+    [x1, z1],
+  ]) {
+    addBoxMesh(THREE, parent, px - 0.04, 0, pz - 0.04, px + 0.04, 0.45, pz + 0.04, woodMat)
   }
-  addBoxMesh(THREE, group, x0 - off, 0.43, z0, x1 + off, 0.436, z0 + 0.006, lineMat)
-  addBoxMesh(THREE, group, x0 - off, 0.43, z1, x1 + off, 0.436, z1 + 0.006, lineMat)
-  addBoxMesh(THREE, group, x0, 0.43, z0 - off, x0 + 0.006, 0.436, z1 + off, lineMat)
-  addBoxMesh(THREE, group, x1, 0.43, z0 - off, x1 + 0.006, 0.436, z1 + off, lineMat)
+  addBoxMesh(THREE, parent, x0, y, z0 - 0.015, x1, y + 0.08, z0 + 0.015, woodMat)
+  addBoxMesh(THREE, parent, x0, y, z1 - 0.015, x1, y + 0.08, z1 + 0.015, woodMat)
+  addBoxMesh(THREE, parent, x0 - 0.015, y, z0, x0 + 0.015, y + 0.08, z1, woodMat)
+  addBoxMesh(THREE, parent, x1 - 0.015, y, z0, x1 + 0.015, y + 0.08, z1, woodMat)
+  addBoxMesh(THREE, parent, bx0, 0.28, z0, bx0 + 0.005, 0.284, z1, wireMat)
+  addBoxMesh(THREE, parent, bx1, 0.28, z0, bx1 + 0.005, 0.284, z1, wireMat)
+  addBoxMesh(THREE, parent, x0, 0.28, bz0, x1, 0.284, bz0 + 0.005, wireMat)
+  addBoxMesh(THREE, parent, x0, 0.28, bz1, x1, 0.284, bz1 + 0.005, wireMat)
 }
 
 function makeRoomSign(
@@ -71,11 +75,11 @@ function makeRoomSign(
   c.height = 96
   const g = c.getContext('2d')
   if (!g) return null
-  g.fillStyle = 'rgba(18, 38, 64, 0.88)'
-  g.fillRect(4, 4, 248, 88)
-  g.strokeStyle = '#68c4ff'
-  g.lineWidth = 3
-  g.strokeRect(4, 4, 248, 88)
+  g.fillStyle = 'rgba(12, 31, 56, 0.82)'
+  g.fillRect(0, 0, 256, 96)
+  g.strokeStyle = '#38bdf8'
+  g.lineWidth = 4
+  g.strokeRect(2, 2, 252, 92)
   g.fillStyle = '#ffffff'
   g.font = 'bold 26px sans-serif'
   g.textAlign = 'center'
@@ -89,6 +93,27 @@ function makeRoomSign(
   mesh.rotation.x = -Math.PI / 2
   mesh.position.set(x, 0.045, z)
   return mesh
+}
+
+function cutSegments(
+  a: number,
+  b: number,
+  holes: ReadonlyArray<readonly [number, number]>,
+): Array<[number, number]> {
+  let segs: Array<[number, number]> = [[a, b]]
+  for (const [h0, h1] of holes) {
+    const next: Array<[number, number]> = []
+    for (const [s0, s1] of segs) {
+      if (h1 <= s0 || h0 >= s1) {
+        next.push([s0, s1])
+      } else {
+        if (h0 > s0 + 0.03) next.push([s0, h0])
+        if (h1 < s1 - 0.03) next.push([h1, s1])
+      }
+    }
+    segs = next
+  }
+  return segs
 }
 
 export function buildBlueprintStage(
@@ -134,6 +159,7 @@ export function buildBlueprintStage(
     }
   }
 
+  // Draw chalk wall lines leaving doorway openings open
   for (const w of plan.walls) {
     if (w.floor !== 0) continue
     const alongU = w.axis === 'u'
@@ -141,16 +167,39 @@ export function buildBlueprintStage(
     const a = Math.min(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1)
     const b = Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1)
     const L = alongU ? w.v0 : w.u0
-    if (alongU) addBoxMesh(THREE, group, a, 0.008, L - th / 2, b, 0.028, L + th / 2, chalkMat)
-    else addBoxMesh(THREE, group, L - th / 2, 0.008, a, L + th / 2, 0.028, b, chalkMat)
+
+    const doorsOnWall = (plan.doors || []).filter((d) => {
+      if (d.floor !== 0 || d.axis !== w.axis) return false
+      const dPos = d.pos != null ? d.pos : alongU ? d.v : d.u
+      const dAt = d.at != null ? d.at : alongU ? d.u : d.v
+      return Math.abs(dPos - L) < 0.25 && dAt >= a - 0.1 && dAt <= b + 0.1
+    })
+    const holes = doorsOnWall.map((d) => {
+      const dAt = d.at != null ? d.at : alongU ? d.u : d.v
+      const hw = (d.width || 0.8) / 2
+      return [dAt - hw, dAt + hw] as const
+    })
+    const wallSegs = cutSegments(a, b, holes)
+    for (const [s0, s1] of wallSegs) {
+      if (alongU) addBoxMesh(THREE, group, s0, 0.008, L - th / 2, s1, 0.028, L + th / 2, chalkMat)
+      else addBoxMesh(THREE, group, L - th / 2, 0.008, s0, L + th / 2, 0.028, s1, chalkMat)
+    }
   }
 
+  // Draw open door indicator: flat threshold line + open door leaf swung against the wall
   for (const d of plan.doors) {
     if (d.floor !== 0) continue
     const alongU = d.axis === 'u'
-    const hw = d.width / 2
-    if (alongU) addBoxMesh(THREE, group, d.at - hw, 0.01, d.pos - 0.1, d.at + hw, 0.034, d.pos + 0.1, doorMat)
-    else addBoxMesh(THREE, group, d.pos - 0.1, 0.01, d.at - hw, d.pos + 0.1, 0.034, d.at + hw, doorMat)
+    const at = d.at != null ? d.at : alongU ? d.u : d.v
+    const pos = d.pos != null ? d.pos : alongU ? d.v : d.u
+    const w = d.width || 0.8
+    const hw = w / 2
+    // Thin floor threshold line
+    if (alongU) addBoxMesh(THREE, group, at - hw, 0.005, pos - 0.04, at + hw, 0.012, pos + 0.04, doorMat)
+    else addBoxMesh(THREE, group, pos - 0.04, 0.005, at - hw, pos + 0.04, 0.012, at + hw, doorMat)
+    // Open door leaf at 90° resting against the perpendicular wall (leaves the doorway completely open)
+    if (alongU) addBoxMesh(THREE, group, at - hw, 0.01, pos, at - hw + 0.035, 0.035, pos + w, doorMat)
+    else addBoxMesh(THREE, group, pos, 0.01, at - hw, pos + w, 0.035, at - hw + 0.035, doorMat)
   }
 
   const parts: readonly StructurePart[] = (plan.structure as Structure | undefined)?.parts ?? []
@@ -165,78 +214,4 @@ export function buildBlueprintStage(
     addBatterBoards(THREE, group, bx0, bz0, bx1, bz1, woodMat, cyanMat)
   }
   return group
-}
-
-export function renderBlueprintDataUrl(
-  doc: Document | null,
-  plan: HouseRecord,
-  rectsOf: (room: HouseRecord['rooms'][number]) => readonly Rect[],
-  stageLabel: string,
-): string | null {
-  if (!doc) return null
-  const c = doc.createElement('canvas')
-  c.width = 420
-  c.height = 420
-  const g = c.getContext('2d')
-  if (!g) return null
-  g.fillStyle = '#0c1f38'
-  g.fillRect(0, 0, c.width, c.height)
-  const lot = plan.lot?.rect ?? [-1, -1, (plan.w || 10) + 1, (plan.d || 8) + 1]
-  const pad = 34
-  const spanU = Math.max(4, lot[2] - lot[0])
-  const spanV = Math.max(4, lot[3] - lot[1])
-  const scale = Math.min((c.width - pad * 2) / spanU, (c.height - pad * 2 - 36) / spanV)
-  const ox = (c.width - spanU * scale) / 2 - lot[0] * scale
-  const oz = 44 + (c.height - 44 - pad - spanV * scale) / 2 - lot[1] * scale
-  const X = (u: number): number => ox + u * scale
-  const Z = (v: number): number => oz + v * scale
-
-  g.strokeStyle = 'rgba(120, 190, 255, 0.25)'
-  g.lineWidth = 1
-  g.strokeRect(X(lot[0]), Z(lot[1]), (lot[2] - lot[0]) * scale, (lot[3] - lot[1]) * scale)
-
-  for (const room of plan.rooms) {
-    if (room.floor !== 0 || room.type === 'void') continue
-    for (const [u0, v0, u1, v1] of rectsOf(room)) {
-      g.fillStyle = 'rgba(56, 189, 248, 0.14)'
-      g.fillRect(X(u0), Z(v0), (u1 - u0) * scale, (v1 - v0) * scale)
-      g.strokeStyle = '#7dd3fc'
-      g.lineWidth = 1.5
-      g.strokeRect(X(u0), Z(v0), (u1 - u0) * scale, (v1 - v0) * scale)
-    }
-    const r0 = rectsOf(room)[0]
-    if (r0) {
-      g.fillStyle = '#f8fafc'
-      g.font = 'bold 11px sans-serif'
-      g.textAlign = 'center'
-      g.fillText(String(room.name || room.type).slice(0, 14), X((r0[0] + r0[2]) / 2), Z((r0[1] + r0[3]) / 2) + 4)
-    }
-  }
-
-  g.strokeStyle = '#ffffff'
-  g.lineWidth = 3
-  for (const w of plan.walls) {
-    if (w.floor !== 0) continue
-    g.beginPath()
-    g.moveTo(X(w.u0), Z(w.v0))
-    g.lineTo(X(w.u1), Z(w.v1))
-    g.stroke()
-  }
-
-  const parts: readonly StructurePart[] = (plan.structure as Structure | undefined)?.parts ?? []
-  g.fillStyle = '#ef4444'
-  for (const p of parts) {
-    if (p.floor !== 0 || p.role !== 'column') continue
-    const [u0, v0, u1, v1] = p.aabb
-    g.fillRect(X(u0) - 2, Z(v0) - 2, Math.max(4, (u1 - u0) * scale), Math.max(4, (v1 - v0) * scale))
-  }
-
-  g.fillStyle = '#e2e8f0'
-  g.font = 'bold 13px sans-serif'
-  g.textAlign = 'left'
-  g.fillText(`${plan.name || plan.template} · ${stageLabel}`, 12, 22)
-  g.fillStyle = '#94a3b8'
-  g.font = '11px monospace'
-  g.fillText(`Planta 2D (${(plan.w || 0).toFixed(1)}m × ${(plan.d || 0).toFixed(1)}m) · Pilares em vermelho`, 12, 408)
-  return c.toDataURL('image/png')
 }
