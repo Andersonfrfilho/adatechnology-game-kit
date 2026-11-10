@@ -148,6 +148,10 @@ export interface BuildOptions {
   baseboard?: 'tiles' | 'band'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
+  /** Builds the step-by-step construction stage groups (`0..8`) for inspecting the house from foundation to completion. */
+  constructionStages?: boolean
+  /** Initial construction level (`0..8`) when `constructionStages` is enabled. */
+  constructionLevel?: number
 }
 
 /** Something the player can use, as the house publishes it: where it is, how far it reaches, its prompt and how to use it. */
@@ -249,6 +253,9 @@ export interface House {
   destruction: HouseDestruction
   update(dt: number, time?: number, focus?: HousePoint): void
   show(options?: { floor?: number; cut?: boolean; lot?: boolean }): void
+  /** Sets the visible construction stage (`0..8`) when built with `constructionStages: true`. */
+  setConstructionLevel?(level: number, options?: { waterLayer?: boolean; roofLayer?: boolean; lotLayer?: boolean }): number
+  readonly constructionLevel?: number
   target(eye: Eye, options?: HouseTargetOptions): InteractionTarget | null
   interact(eye: Eye, options?: HouseTargetOptions): boolean
   /** The message the house shows now (a locked door...), or null. */

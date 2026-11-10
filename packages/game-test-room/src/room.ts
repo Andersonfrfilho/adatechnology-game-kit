@@ -4278,6 +4278,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
+    setGround: (layout) => terrain.setLayout(layout),
     effects: vfx,
     particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,

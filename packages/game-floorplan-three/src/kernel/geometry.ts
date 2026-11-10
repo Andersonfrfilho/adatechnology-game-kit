@@ -29,7 +29,7 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
   const WITH_MAP: Record<string, number> = { roughcast: 1, block: 1 };
   class Accumulator implements AccumulatorShape {
     cv: number; ci: number; p: Float32Array; n: Float32Array; c: Float32Array; u: Float32Array; i: Uint32Array; nv: number; ni: number
-    lim: AccumulatorShape['lim']; cur: PieceRecord | null; piece0: PieceRecord | null; mat = ''; group = ''
+    lim: AccumulatorShape['lim']; cur: PieceRecord | null; piece0: PieceRecord | null; mat = ''; group = ''; stage = ''
     constructor() { this.cv = 2048; this.ci = 3072; this.p = new Float32Array(this.cv * 3); this.n = new Float32Array(this.cv * 3); this.c = new Float32Array(this.cv * 3); this.u = new Float32Array(this.cv * 2); this.i = new Uint32Array(this.ci); this.nv = 0; this.ni = 0; this.lim = []; this.cur = null; this.piece0 = null; }
     ensure(nv: number, ni: number): void {
       if (this.nv + nv > this.cv) { while (this.nv + nv > this.cv) this.cv *= 2; const cp = (A: Float32Array, k: number): Float32Array => { const B = new Float32Array(this.cv * k); B.set(A); return B; }; this.p = cp(this.p, 3); this.n = cp(this.n, 3); this.c = cp(this.c, 3); this.u = cp(this.u, 2); }
@@ -47,7 +47,7 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
   // ry rotates the part's frame about Y (opens axes stay in the part's local frame; use g.translateOnAxis / rotateOnAxis)
   function part(type: string, pos: readonly number[], fn: () => void, meta: PartMeta = {}, parent?: string | null, ry = 0): string {
     const gA = cursor.group, oA = cursor.org, rA = cursor.ry, pieceA = cursor.pc, name = 'part:' + (meta.id || type) + ':' + (shared.partCount++);
-    PARTS.push({ name, parent: parent || gA, pos: pos.slice(), type, meta, ry });
+    PARTS.push({ name, parent: parent || gA, pos: pos.slice(), type, meta, ry, ...(cursor.stage ? { stage: cursor.stage } : {}) });
     cursor.group = name; cursor.org = pos; cursor.ry = ry; cursor.pc = null; try { fn(); } finally { cursor.group = gA; cursor.org = oA; cursor.ry = rA; cursor.pc = pieceA; }
     return name;
   }
@@ -68,8 +68,8 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
   const structurePiece = (id: string): PieceRecord | null => { const e = shared.ctx.structureIndex && shared.ctx.structureIndex[id]; return e ? pieceRecord(id, e.material, e.role, { floor: e.floor }) : null; };
    // plan structure piece (res.structure) by id
   function accFor(mat: string): AccumulatorShape {
-    const pc = cursor.pc || null, k = cursor.group + '|' + mat + (cursor.separate && pc ? '|' + pc.id : ''); let a = cursor.accs.get(k);
-    if (!a) { a = new Accumulator(); a.mat = mat; a.group = cursor.group; a.piece0 = cursor.separate ? pc : null; cursor.accs.set(k, a); }
+    const pc = cursor.pc || null, st = cursor.stage ? '|stage:' + cursor.stage : '', k = cursor.group + '|' + mat + st + (cursor.separate && pc ? '|' + pc.id : ''); let a = cursor.accs.get(k);
+    if (!a) { a = new Accumulator(); a.mat = mat; a.group = cursor.group; a.stage = cursor.stage || ''; a.piece0 = cursor.separate ? pc : null; cursor.accs.set(k, a); }
     if (a.cur !== pc) { a.cur = pc; a.lim.push({ pc, v: a.nv, i: a.ni }); }
     return a;
   }

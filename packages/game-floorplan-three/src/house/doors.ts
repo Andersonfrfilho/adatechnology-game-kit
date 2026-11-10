@@ -25,7 +25,7 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       const wref = R.walls.find(w => w.floor === f && w.axis === p.axis && Math.abs((alongU ? w.v0 : w.u0) - L) < EPS), th = wref ? wref.thickness || 0.15 : 0.15, wallHeight = wref ? wref.h : 3;
       const PMAT = (R.style === 'budget' || R.style === 'commercial') ? 'doorPaint' : 'doorWood'; // leaf texture: painted or wood grain, by style
       const dH = Math.min(p.model === 'steel' ? 2.3 : 2.1, wallHeight - 0.15), visH = cut ? Math.min(dH, 1.2) : dH, [lL, lH] = doorLineSides(p);
-      if (!cut && wallHeight > dH + 1e-3) { const wv = nearestWall(f, p.axis, L, p.at); cursor.pc = wv ? pieceOf(wv) : null; wallBox(alongU, L, a, b, y0 + dH, y0 + effectiveHeight(f, wallHeight), th, lL.color, lH.color, lL.mat, lH.mat); cursor.pc = null; }
+      if (!cut && wallHeight > dH + 1e-3) { const st0 = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'finishes'; const wv = nearestWall(f, p.axis, L, p.at); cursor.pc = wv ? pieceOf(wv) : null; wallBox(alongU, L, a, b, y0 + dH, y0 + effectiveHeight(f, wallHeight), th, lL.color, lH.color, lL.mat, lH.mat); cursor.pc = null; cursor.stage = st0; }
       const fb = (u0: number, y_0: number, u1: number, y_1: number, tt = th + 0.02, color = frame): void => alongU ? bx('wood', u0, y0 + y_0, L - tt / 2, u1, y0 + y_1, L + tt / 2, color) : bx('wood', L - tt / 2, y0 + y_0, u0, L + tt / 2, y0 + y_1, u1, color);
       const jw = 0.05; cursor.pc = pieceRecord('jamb:' + p.id, 'wood_hard', null, { floor: f }); fb(a, 0, a + jw, visH); fb(b - jw, 0, b, visH); if (!cut) fb(a, dH - jw, b, dH); cursor.pc = null;
       // opening direction: room side p.opensTo

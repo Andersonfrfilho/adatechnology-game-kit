@@ -45,12 +45,14 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       if (w.id) { const face = sideL.exterior ? sideL : sideH; looks.set(w.id, { mat: face.mat, color: face.color, top: y0 + hh }); }
       colliders.push({ type: 'wall', piece: w.id, f, x0: alongU ? s0 : L - th / 2, z0: alongU ? L - th / 2 : s0, x1: alongU ? s1 : L + th / 2, z1: alongU ? L + th / 2 : s1 });
       if (w.type === 'railing') { // guardrail: glass between two rails and posts
+        const st0 = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'openings';
         const c0 = shared.ctx.colors.metal != null ? shared.ctx.colors.metal : 0x8a8e92;
         const sx = alongU ? 1 : 0, sz = alongU ? 0 : 1, len = s1 - s0, n = Math.max(1, Math.round(len / 1.4));
         const cx_ = alongU ? (s0 + s1) / 2 : L, cz_ = alongU ? L : (s0 + s1) / 2;
         boxC('glass', cx_, y0 + 0.55, cz_, alongU ? len : 0.02, 0.85, alongU ? 0.02 : len, 0xffffff);
         boxC('metal', cx_, y0 + 1.08, cz_, alongU ? len : 0.05, 0.05, alongU ? 0.05 : len, c0); boxC('metal', cx_, y0 + 0.1, cz_, alongU ? len : 0.05, 0.04, alongU ? 0.05 : len, c0);
         for (let k = 0; k <= n; k++) { const t = s0 + len * k / n; boxC('metal', alongU ? t : L, y0 + 0.55, alongU ? L : t, 0.05, 1.1, 0.05, c0); }
+        cursor.stage = st0;
         continue;
       }
       const seg = (a: number, b: number, ya: number, yb: number): void => {

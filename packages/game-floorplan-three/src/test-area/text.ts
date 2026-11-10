@@ -1,8 +1,8 @@
 export type AreaText = {
   group: string
   name: string
-  controls: Record<'package' | 'template' | 'state' | 'seed' | 'quality' | 'lod' | 'houses' | 'budget' | 'floor_view' | 'hit', string>
-  hints: Record<'template' | 'houses' | 'budget' | 'lod' | 'floor_view' | 'hit', string>
+  controls: Record<'package' | 'template' | 'state' | 'seed' | 'construction_level' | 'quality' | 'lod' | 'houses' | 'budget' | 'floor_view' | 'hit', string>
+  hints: Record<'template' | 'construction_level' | 'houses' | 'budget' | 'lod' | 'floor_view' | 'hit', string>
   actions: Record<'build' | 'enter' | 'up' | 'down' | 'door' | 'strike' | 'reset' | 'clear', string>
   options: {
     quality: Record<string, string>
@@ -11,13 +11,13 @@ export type AreaText = {
     hit: Record<string, string>
     state: Record<string, string>
   }
-  layers: Record<'roof' | 'lot' | 'night' | 'room_lights', string>
-  metrics: Record<'houses' | 'parts' | 'standing' | 'broken' | 'holes' | 'draw_calls' | 'triangles' | 'lod' | 'floor' | 'doors_open' | 'target' | 'planned', string>
-  sheet: { kicker: string; title: string; template: string; seed: string; state: string; floors: string; size: string; parts: string; look: string; none: string; no_engine: string }
+  layers: Record<'roof' | 'lot' | 'water' | 'night' | 'room_lights', string>
+  metrics: Record<'construction_stage' | 'houses' | 'parts' | 'standing' | 'broken' | 'holes' | 'draw_calls' | 'triangles' | 'lod' | 'floor' | 'doors_open' | 'target' | 'planned', string>
+  sheet: { kicker: string; title: string; stage: string; template: string; seed: string; state: string; floors: string; size: string; parts: string; look: string; none: string; no_engine: string }
   specimens: Record<string, string>
   furniture: Record<string, string>
   scenarios: Record<string, string>
-  steps: Record<'built' | 'no_engine' | 'entered' | 'floor' | 'no_floor' | 'door' | 'no_door' | 'strike' | 'no_aim' | 'cleared' | 'reset'
+  steps: Record<'built' | 'stage_changed' | 'no_engine' | 'entered' | 'floor' | 'no_floor' | 'door' | 'no_door' | 'strike' | 'no_aim' | 'cleared' | 'reset'
     | 'one_pillar_broke' | 'slabs_whole' | 'no_slab_fell' | 'two_slab_fell' | 'two_roof_fell' | 'partition_broke' | 'slab_stayed' | 'glass_hole' | 'glass_broke' | 'walls_whole' | 'tank_hole' | 'tank_leaked' | 'gas_exploded' | 'gas_damaged', string>
 }
 
@@ -25,9 +25,10 @@ export const TEXT: Record<string, AreaText> = {
   en: {
     group: 'Houses',
     name: 'Houses and buildings area',
-    controls: { package: 'Package', template: 'Typology', state: 'State', seed: 'Seed', quality: 'Quality', lod: 'Level of detail', houses: 'Houses in the row', budget: 'Draw-call budget', floor_view: 'Floors shown', hit: 'Hit' },
+    controls: { package: 'Package', template: 'Typology', state: 'State', seed: 'Seed', construction_level: 'Construction level (0..8)', quality: 'Quality', lod: 'Level of detail', houses: 'Houses in the row', budget: 'Draw-call budget', floor_view: 'Floors shown', hit: 'Hit' },
     hints: {
       template: 'Builds the house with game-floorplan-three from the plan the engine draws for this typology and seed',
+      construction_level: '0 Blueprint -> 1 Foundation -> 2 Frame -> 3 Bare masonry -> 4 Utilities -> 5 Plaster & floors -> 6 Doors & windows -> 7 Roof -> 8 Complete house',
       houses: 'More than one: a row with neighbours of the next seeds; the planner shares the budget by distance (planLod)',
       budget: 'Draw calls the row may spend: the nearest houses stay complete, the far ones lose their interior or hide',
       lod: 'Auto follows the distance to the eye; 0 complete, 1 without the small pieces, 2 hidden',
@@ -42,9 +43,9 @@ export const TEXT: Record<string, AreaText> = {
       hit: { burst_9mm: '9 mm burst', burst_762: '7.62 burst', sledge: 'Sledgehammer', c4: 'C4', rpg: 'RPG warhead' },
       state: { normal: 'Normal', fortified: 'Fortified', abandoned: 'Abandoned' },
     },
-    layers: { roof: 'Roof', lot: 'Lot (ground, wall, gate)', night: 'Night (lit windows and lamps)', room_lights: 'Room lights (one lamp per lit room, stopped by the walls)' },
-    metrics: { houses: 'Houses', parts: 'Parts', standing: 'Standing', broken: 'Broken', holes: 'Holes', draw_calls: 'Draw calls', triangles: 'Triangles', lod: 'Level of detail (nearest)', floor: 'Your floor', doors_open: 'Doors open', target: 'You aim at', planned: 'Planned draw calls' },
-    sheet: { kicker: 'House', title: 'House of the bench', template: 'Typology', seed: 'Seed', state: 'State', floors: 'Floors', size: 'Size', parts: 'Structure parts', look: 'You aim at', none: 'nothing to use', no_engine: 'The page gave no floorplan engine' },
+    layers: { roof: 'Roof', lot: 'Lot (ground, wall, gate)', water: 'Plumbing & conduits in walls', night: 'Night (lit windows and lamps)', room_lights: 'Room lights (one lamp per lit room, stopped by the walls)' },
+    metrics: { construction_stage: 'Construction stage', houses: 'Houses', parts: 'Parts', standing: 'Standing', broken: 'Broken', holes: 'Holes', draw_calls: 'Draw calls', triangles: 'Triangles', lod: 'Level of detail (nearest)', floor: 'Your floor', doors_open: 'Doors open', target: 'You aim at', planned: 'Planned draw calls' },
+    sheet: { kicker: 'House', title: 'House of the bench', stage: 'Stage', template: 'Typology', seed: 'Seed', state: 'State', floors: 'Floors', size: 'Size', parts: 'Structure parts', look: 'You aim at', none: 'nothing to use', no_engine: 'The page gave no floorplan engine' },
     furniture: { dining_table: 'Dining table', coffee_table: 'Coffee table', desk: 'Desk' },
     specimens: {
       house_casa_portico: 'Single-storey house: frame, the walls only close',
@@ -63,6 +64,7 @@ export const TEXT: Record<string, AreaText> = {
     },
     steps: {
       built: 'House {template} (seed {seed}, {state}) built: {parts} parts, {floors} floors',
+      stage_changed: 'Construction level {level}: {title} — {description}',
       no_engine: 'No floorplan engine was given to the module',
       entered: 'Inside the house, floor {floor}',
       floor: 'Floor {floor}',
@@ -92,9 +94,10 @@ export const TEXT: Record<string, AreaText> = {
   'pt-BR': {
     group: 'Casas',
     name: 'Área de casas e prédios',
-    controls: { package: 'Pacote', template: 'Tipologia', state: 'Estado', seed: 'Semente', quality: 'Qualidade', lod: 'Nível de detalhe', houses: 'Casas na fileira', budget: 'Orçamento de draw calls', floor_view: 'Andares à mostra', hit: 'Golpe' },
+    controls: { package: 'Pacote', template: 'Tipologia', state: 'Estado', seed: 'Semente', construction_level: 'Nível da construção (0..8)', quality: 'Qualidade', lod: 'Nível de detalhe', houses: 'Casas na fileira', budget: 'Orçamento de draw calls', floor_view: 'Andares à mostra', hit: 'Golpe' },
     hints: {
       template: 'Constrói a casa com o game-floorplan-three a partir da planta que o motor desenha para esta tipologia e semente',
+      construction_level: '0 Planta e gabarito -> 1 Fundação e baldrame -> 2 Estrutura -> 3 Alvenaria no osso -> 4 Instalações -> 5 Reboco e pisos -> 6 Esquadrias -> 7 Telhado -> 8 Casa completa',
       houses: 'Mais de uma: fileira com vizinhas das próximas sementes; o planejador reparte o orçamento pela distância (planLod)',
       budget: 'Draw calls que a fileira pode gastar: as casas mais perto ficam completas, as de longe perdem o interior ou somem',
       lod: 'Auto segue a distância até o olho; 0 completo, 1 sem as peças pequenas, 2 escondida',
@@ -109,9 +112,9 @@ export const TEXT: Record<string, AreaText> = {
       hit: { burst_9mm: 'Rajada de 9 mm', burst_762: 'Rajada de 7,62', sledge: 'Marreta', c4: 'C4', rpg: 'Ogiva de RPG' },
       state: { normal: 'Normal', fortified: 'Fortificada', abandoned: 'Abandonada' },
     },
-    layers: { roof: 'Telhado', lot: 'Lote (chão, muro, portão)', night: 'Noite (janelas e lâmpadas acesas)', room_lights: 'Luz por cômodo (uma lâmpada por cômodo aceso, barrada pelas paredes)' },
-    metrics: { houses: 'Casas', parts: 'Peças', standing: 'De pé', broken: 'Quebradas', holes: 'Furos', draw_calls: 'Draw calls', triangles: 'Triângulos', lod: 'Nível de detalhe (a mais perto)', floor: 'Seu andar', doors_open: 'Portas abertas', target: 'Você mira em', planned: 'Draw calls planejados' },
-    sheet: { kicker: 'Casa', title: 'Casa da bancada', template: 'Tipologia', seed: 'Semente', state: 'Estado', floors: 'Andares', size: 'Tamanho', parts: 'Peças da estrutura', look: 'Você mira em', none: 'nada para usar', no_engine: 'A página não deu o motor de plantas' },
+    layers: { roof: 'Telhado', lot: 'Lote (chão, muro, portão)', water: 'Encanamento e eletrodutos nas paredes', night: 'Noite (janelas e lâmpadas acesas)', room_lights: 'Luz por cômodo (uma lâmpada por cômodo aceso, barrada pelas paredes)' },
+    metrics: { construction_stage: 'Etapa da obra', houses: 'Casas', parts: 'Peças', standing: 'De pé', broken: 'Quebradas', holes: 'Furos', draw_calls: 'Draw calls', triangles: 'Triângulos', lod: 'Nível de detalhe (a mais perto)', floor: 'Seu andar', doors_open: 'Portas abertas', target: 'Você mira em', planned: 'Draw calls planejados' },
+    sheet: { kicker: 'Casa', title: 'Casa da bancada', stage: 'Etapa da obra', template: 'Tipologia', seed: 'Semente', state: 'Estado', floors: 'Andares', size: 'Tamanho', parts: 'Peças da estrutura', look: 'Você mira em', none: 'nada para usar', no_engine: 'A página não deu o motor de plantas' },
     furniture: { dining_table: 'Mesa de jantar', coffee_table: 'Mesa de centro', desk: 'Escrivaninha' },
     specimens: {
       house_casa_portico: 'Casa térrea em pórtico (as paredes só vedam)',
@@ -130,6 +133,7 @@ export const TEXT: Record<string, AreaText> = {
     },
     steps: {
       built: 'Casa {template} (semente {seed}, {state}) construída: {parts} peças, {floors} andares',
+      stage_changed: 'Nível da construção {level}: {title} — {description}',
       no_engine: 'O módulo não recebeu o motor de plantas',
       entered: 'Dentro da casa, andar {floor}',
       floor: 'Andar {floor}',

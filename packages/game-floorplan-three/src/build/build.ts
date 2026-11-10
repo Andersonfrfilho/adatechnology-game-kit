@@ -3,6 +3,10 @@ import { markKitOrigin } from '@adatechnology/game-contracts';
 import { isMesh } from '@adatechnology/game-shapes-three';
 
 import { panelViewOf } from '../destruction/panels.js';
+import { applyConstructionLevel, CONSTRUCTION_LEVEL_MAX } from '../construction-stages/apply-level.js';
+import { buildBlueprintStage } from '../construction-stages/blueprint.js';
+import { buildInstallationsStage } from '../construction-stages/installations-stage.js';
+import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
 
 import type * as THREE_NS from 'three';
 import type { Structure } from '@adatechnology/game-floorplan-structure';
@@ -36,28 +40,41 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
         shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { quality: 'high', lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
-        terrain();
-        if (r.lot) { if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
-        walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length; doors(); windows(); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
+        const cs = !!(opts.constructionStages || opts.constructionLevel != null);
+        shared.ctx.constructionStages = cs;
+        const st = (s: string | undefined): void => { cursor.stage = cs ? s : undefined; };
+        st(undefined); terrain();
+        if (r.lot) { st('perimeter'); if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
+        st('finishes'); walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length;
+        st('openings'); doors(); windows();
+        st('finishes'); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
         const water = createWater(r, h.state);
         shared.ctx.iv = null; h.IV = null;
+        st('furniture');
         if (IVK) { try { h.IV = shared.ctx.iv = ivBuild(h, water); } catch (e) { console.warn('interactables', e); shared.ctx.iv = h.IV = null; } } // interactables kit: plans, draws and wires (see 75)
-        const noModel = houseItems(); placeSwitches(); waterPipes(); electricalStructure();
-        roofs(); solar();
+        st('furniture'); const noModel = houseItems();
+        st('installations'); placeSwitches(); waterPipes(); electricalStructure();
+        st('roof'); roofs(); solar();
+        st(undefined);
         if (shared.ctx.showBuilding) building();
         for (const c of r.rooms) { if (c.type === 'void') continue; const [a, b, c2, d] = rectsOf(c)[0] as Rect; shared.ctx.labels.push({ pos: new THREE.Vector3((a + c2) / 2, Y0(c.floor) + 1.1, (b + d) / 2), text: c.name as string, group: 'f' + c.floor, type: 'room', floor: c.floor }); }
         const mirrorsCopy = MIRRORS.map((E, i) => Object.assign({ i }, E)), gs = closeScene(shared.mats);
         for (const fo of shared.ctx.leaves) { // door leaves: loose groups with the origin at the hinge, inside the floor group
           const parent = gs['f' + fo.floor] || (gs['f' + fo.floor] = new THREE.Group()); fo.gs = [];
-          for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.fromArray(gd.pos); parent.add(g); fo.gs.push(g); }
+          for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.fromArray(gd.pos); if (cs) g.userData.constructionStage = 'openings'; parent.add(g); fo.gs.push(g); }
           applyLeaf(fo);
         }
         if (shared.ctx.iv) ivAssemble(shared.ctx.iv, gs);
         assembleInteractive(gs); linkDoorLeaves(); mailboxInteractive();
+        if (cs) {
+          for (const def of shared.inter.defs.values()) { if (def.outer && !def.outer.userData.constructionStage) def.outer.userData.constructionStage = /^gate/.test(def.kind) ? 'perimeter' : 'furniture'; }
+          for (const g of Object.values(gs)) for (const c of g.children) if (!c.userData.constructionStage) c.userData.constructionStage = 'furniture';
+        }
         const root = markKitOrigin(new THREE.Group(), { owner: 'game-floorplan-three', kind: 'structure', id: r.template }), house = new THREE.Group(); root.name = 'house3d'; root.add(house); shared.mirrors.house = house;
         if (shared.ctx.apartment) { const units = (r.building as ApartmentBuilding).units, u = units[Math.min(shared.ctx.pu, units.length - 1)] as ApartmentBuilding['units'][number]; house.position.set(u.u, shared.ctx.showBuilding ? 0 : -(r.floors[0] as { y0: number }).y0, u.v); house.rotation.y = u.ry; shared.ctx.unitRy = u.ry; }
         house.updateMatrixWorld(true); shared.ctx.unitInverse = house.matrixWorld.clone().invert();
         for (const [k, g] of Object.entries(gs)) { g.name = k; (k === 'floor' || k === 'building' ? root : house).add(g); }
+        let currentConstructionLevel = CONSTRUCTION_LEVEL_MAX;
         h.groups = gs; h.root = root; h.house = house; h.houseGroup = house;
         shared.ctx.noModel = noModel;
         shared.ctx.lights = LIGHTS.filter(l => l.type !== 'lantern' && l.type !== 'candles' || shared.ctx.night).map((l): LightRequest => ({ ...l })); // real lights requested by the builders (at night)
@@ -134,6 +151,16 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         // ---- destruction: tags the loose groups, describes the structure and prepares the world adapter (cfg.destruction) ----
         markGroups(r, root, parts);
         const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
+        if (cs) {
+          const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
+          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined);
+          const instGroup = buildInstallationsStage(THREE, r);
+          for (const sg of [bp, stGroups.foundation, stGroups.frame, stGroups.masonry, instGroup, stGroups.roofFraming]) {
+            gs[sg.name] = sg;
+            house.add(sg);
+          }
+          currentConstructionLevel = applyConstructionLevel(house, opts.constructionLevel ?? CONSTRUCTION_LEVEL_MAX);
+        }
         // legacy damage: `house.damage(id, point, type, amount)` still subtracts the damageable's hp (the game reads `hp`) and calls cfg.onDamage, and now also
         // becomes a hit in the core when there is a world (cfg.destruction): the piece really breaks, hides its mesh and drops what it carries. Once fractured, hp is zeroed.
         const strikePiece = (id: string, point: Point | null | undefined, type: string | undefined, amount: number | undefined, d: Damageable | { hpMax: number }, before: number): void => {
@@ -175,6 +202,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           show(options?: { floor?: number; cut?: boolean; lot?: boolean }) { // visibility per floor: {floor: -1 all, cut: bool, lot: bool}
             enter(h); const o = options || {}; const rr = shared.ctx.r, nA = rr.floors.length, a = o.floor == null ? -1 : o.floor, sel = a >= nA ? -1 : a, cut = !!o.cut;
             for (const [k, g] of Object.entries(gs)) {
+              if (k.startsWith('stage:')) continue;
               let v = true;
               if (k[0] === 'f') v = sel < 0 || +k.slice(1) <= sel;
               else if (k[0] === 't') v = !cut && (sel < 0 || +k.slice(1) < sel);
@@ -183,7 +211,17 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
               else if (k === 'lot') v = o.lot == null ? true : !!o.lot;
               g.visible = v;
             }
+            if (cs && currentConstructionLevel < CONSTRUCTION_LEVEL_MAX) {
+              applyConstructionLevel(house, currentConstructionLevel, { roofLayer: !cut && sel < 0, lotLayer: o.lot !== false });
+            }
           },
+          setConstructionLevel(level: number, stageOpts?: { waterLayer?: boolean; roofLayer?: boolean; lotLayer?: boolean }) {
+            enter(h);
+            currentConstructionLevel = applyConstructionLevel(house, level, stageOpts);
+            invalidateShadow();
+            return currentConstructionLevel;
+          },
+          get constructionLevel() { return currentConstructionLevel; },
           target(o: Eye, opt?: TargetOptions) { enter(h); return targetOf(o, opt); },
           interact(o: Eye, opt?: TargetOptions) { enter(h); const a = targetOf(o, opt); if (!a) return false; return actOn(a.target && a.target.pub ? a.target.pub as HouseInteractable : { id: a.target && a.target.id || a.text, type: a.target && a.target.kit ? a.target.type as string : 'door', label: a.text, ref: a.target, _action: a.action, floor: 0, pos: [], radius: 0 } as HouseInteractable, a); },
           message() { return shared.inter.msg && performance.now() < shared.inter.msg.until ? shared.inter.msg.text : null; },

@@ -87,6 +87,7 @@ export interface Accumulator {
   piece0: PieceRecord | null
   mat: string
   group: string
+  stage?: string
   ensure(nv: number, ni: number): void
 }
 
@@ -99,6 +100,7 @@ export interface Cursor {
   ry: number
   pc?: PieceRecord | null
   separate?: boolean
+  stage?: string
 }
 
 /** How a moving part opens: `swing`/`toggle` turn about `axis` by `angle`, `slide` moves `dist`, `scale` scales by `k`. */
@@ -127,6 +129,7 @@ export interface PartRecord {
   type: string
   meta: PartMeta
   ry: number
+  stage?: string
 }
 
 /** A real mirror to assemble at the end of the build (`furniture/fixtures` writes it, `mirrors.ts` assembles it). */

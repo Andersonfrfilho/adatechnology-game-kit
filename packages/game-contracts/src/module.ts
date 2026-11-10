@@ -391,6 +391,8 @@ export interface ModuleHost {
   groundAt(x: number, z: number): number
   /** Material id of the floor at (x, z) (`concrete`, `soil`, `wood_hard`...): what a dropped case or a footstep lands on. Optional; undefined where the host does not know. */
   surfaceAt?(x: number, z: number): string | undefined
+  /** Replaces the floor layout of the host's terrain (zones of grass, road, paving, water...) when a module changes its lot or area. */
+  setGround?(layout: GroundLayout): void
   tool(): HostTool
   /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
   player(): PlayerState

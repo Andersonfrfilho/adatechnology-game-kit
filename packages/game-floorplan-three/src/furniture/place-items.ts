@@ -24,10 +24,13 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       if (shared.ctx.veg && vegItem(m, M, exterior ? 'lot' : 'f' + f)) continue;
       if (shared.ctx.iv && shared.ctx.iv.replace.has(m.id)) { registerCollision(m, M); continue; } // the interactables kit draws this furniture (the collision is still a single one)
       const ent = T[m.type];
-      if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); continue; }
-      try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); }
+      const st0 = cursor.stage;
+      if (shared.ctx.constructionStages && (m.type === 'cooking_gas_cylinder' || m.type === 'gas_cylinder' || m.type === 'water_tank')) cursor.stage = 'installations';
+      if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); cursor.stage = st0; continue; }
+      try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
     }
-    try { waterTankOfHouse(api); } catch (e) { console.warn('water tank', e); }
+    const stTank = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations';
+    try { waterTankOfHouse(api); } catch (e) { console.warn('water tank', e); } finally { cursor.stage = stTank; }
     try { decorLights(api); } catch (e) { console.warn('decorLights', e); }
     return noModel;
   }

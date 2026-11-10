@@ -36,7 +36,12 @@ const packages = [
   'game-interactables-three',
   'game-items',
   'game-items-goods',
+  'game-items-three',
   'game-props3d',
+  'game-vegetation',
+  'game-vegetation-species',
+  'game-weapons',
+  'game-weapons-three',
 ]
 for (const p of packages) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
@@ -54,6 +59,8 @@ const result = await esbuild.build({
   legalComments: 'none',
   alias: {
     ...Object.fromEntries(packages.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    '@adatechnology/game-vegetation/three': join(pkg('game-vegetation'), 'dist/three.js'),
+    '@adatechnology/game-weapons-three/testing': join(pkg('game-weapons-three'), 'dist/testing.js'),
     '@adatechnology/game-floorplan-three/testing': join(pkg('game-floorplan-three'), 'dist/testing.js'),
   },
 })

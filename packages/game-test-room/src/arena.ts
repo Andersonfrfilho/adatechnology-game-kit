@@ -186,34 +186,36 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   const playerStart: Vec3 = [0, 1.7, 5]
 
   // distance ruler along the left of the lane: a tick every metre (taller every 5 m) and a label every 5 m
-  const pts: number[] = []
-  const rx = -1.6
-  for (let z = Math.round(playerStart[2]); z >= wallZ; z--) {
-    const d = playerStart[2] - z
-    const len = d % 5 === 0 ? 0.5 : 0.2
-    pts.push(rx, 0.01, z, rx + len, 0.01, z)
-  }
-  pts.push(rx, 0.01, playerStart[2], rx, 0.01, wallZ)
-  const rg = new THREE.BufferGeometry()
-  rg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
-  group.add(new THREE.LineSegments(rg, new THREE.LineBasicMaterial({ color: 0xffd23f })))
-  for (let d = 5; playerStart[2] - d >= wallZ; d += 5) {
-    try {
-      const canvas = document.createElement('canvas')
-      canvas.width = 128
-      canvas.height = 64
-      const ctx = canvas.getContext('2d')
-      if (!ctx) break
-      ctx.fillStyle = '#ffd23f'
-      ctx.font = 'bold 44px sans-serif'
-      ctx.textAlign = 'center'
-      ctx.fillText(`${d} m`, 64, 48)
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthWrite: false }))
-      sprite.scale.set(1.2, 0.6, 1)
-      sprite.position.set(rx - 0.8, 0.45, playerStart[2] - d)
-      group.add(sprite)
-    } catch {
-      break
+  if (wallObject) {
+    const pts: number[] = []
+    const rx = -1.6
+    for (let z = Math.round(playerStart[2]); z >= wallZ; z--) {
+      const d = playerStart[2] - z
+      const len = d % 5 === 0 ? 0.5 : 0.2
+      pts.push(rx, 0.01, z, rx + len, 0.01, z)
+    }
+    pts.push(rx, 0.01, playerStart[2], rx, 0.01, wallZ)
+    const rg = new THREE.BufferGeometry()
+    rg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    group.add(new THREE.LineSegments(rg, new THREE.LineBasicMaterial({ color: 0xffd23f })))
+    for (let d = 5; playerStart[2] - d >= wallZ; d += 5) {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = 128
+        canvas.height = 64
+        const ctx = canvas.getContext('2d')
+        if (!ctx) break
+        ctx.fillStyle = '#ffd23f'
+        ctx.font = 'bold 44px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText(`${d} m`, 64, 48)
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthWrite: false }))
+        sprite.scale.set(1.2, 0.6, 1)
+        sprite.position.set(rx - 0.8, 0.45, playerStart[2] - d)
+        group.add(sprite)
+      } catch {
+        break
+      }
     }
   }
 
