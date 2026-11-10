@@ -236,8 +236,13 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
     if (tankPos[1] > yHeader + 0.02) {
       addPipeSegment(THREE, group, tankPos, [tankPos[0], yHeader, tankPos[2]], 0.025, coldWaterMat)
     }
-    // Header pipe from tank position to wall entrance
-    addPipeSegment(THREE, group, [tankPos[0], yHeader, tankPos[2]], [tankWall[0], yHeader, tankWall[1]], 0.02, coldWaterMat)
+    // Header pipe from tank position to wall entrance (strictly orthogonal 90° bends)
+    if (Math.abs(tankPos[0] - tankWall[0]) > 1e-3) {
+      addPipeSegment(THREE, group, [tankPos[0], yHeader, tankPos[2]], [tankWall[0], yHeader, tankPos[2]], 0.02, coldWaterMat)
+    }
+    if (Math.abs(tankPos[2] - tankWall[1]) > 1e-3) {
+      addPipeSegment(THREE, group, [tankWall[0], yHeader, tankPos[2]], [tankWall[0], yHeader, tankWall[1]], 0.02, coldWaterMat)
+    }
 
     const sewerMainX = tankPos[0]
     let minV = Infinity

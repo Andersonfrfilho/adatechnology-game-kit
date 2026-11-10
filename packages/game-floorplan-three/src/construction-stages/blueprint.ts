@@ -125,6 +125,7 @@ export function buildBlueprintStage(
 ): THREE_NS.Group {
   const group = new THREE.Group()
   group.name = 'stage:0:blueprint'
+  const dirtMat = new THREE.MeshStandardMaterial({ color: 0x8a7250, roughness: 0.96 })
   const chalkMat = new THREE.MeshStandardMaterial({ color: 0xf2f4f8, roughness: 0.9 })
   const cyanMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.6 })
   const pillarMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.6 })
@@ -225,12 +226,14 @@ export function buildBlueprintStage(
   }
 
   if (Number.isFinite(bx0) && Number.isFinite(bx1)) {
+    addBoxMesh(THREE, group, bx0 - 0.15, -0.06, bz0 - 0.15, bx1 + 0.15, 0.002, bz1 + 0.15, dirtMat)
     addBatterBoards(THREE, group, bx0, bz0, bx1, bz1, woodMat, cyanMat)
   }
   for (const ob of (plan.outbuildings || []).filter(Boolean)) {
     const [ou0, ov0, ou1, ov1] = ob.aabb
     const th = ob.thickness || 0.15
     const hw = th / 2
+    addBoxMesh(THREE, group, ou0 - 0.15, -0.06, ov0 - 0.15, ou1 + 0.15, 0.002, ov1 + 0.15, dirtMat)
     addBatterBoards(THREE, group, ou0, ov0, ou1, ov1, woodMat, cyanMat)
 
     // Structural concrete column / beam markers (pillarMat - red boxes) at the 4 corners

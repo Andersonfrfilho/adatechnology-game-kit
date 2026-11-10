@@ -139,7 +139,7 @@ function processOutbuilding(
   const th = e.thickness || 0.15
 
   // 0. Compacted dirt excavation bed under outbuilding
-  addStageBox(THREE, groups.foundation, a0 - 0.05, -0.06, b0 - 0.05, a1 + 0.05, 0.001, b1 + 0.05, mats.dirt!, `${e.id}_dirt_bed`)
+  addStageBox(THREE, groups.foundation, a0 - 0.05, -0.06, b0 - 0.05, a1 + 0.05, 0.004, b1 + 0.05, mats.dirt!, `${e.id}_dirt_bed`)
 
   // 1. Foundation: ground slab + baldrame under walls
   addStageBox(THREE, groups.foundation, a0 + th, -0.08, b0 + th, a1 - th, 0.02, b1 - th, mats.slab0!, `${e.id}_slab`)
@@ -346,7 +346,7 @@ export function buildStructuralStageGroups(
     }
   }
   if (Number.isFinite(minU) && Number.isFinite(maxU)) {
-    addStageBox(THREE, groups.foundation, minU - 0.05, -0.06, minV - 0.05, maxU + 0.05, 0.001, maxV + 0.05, mats.dirt!, 'foundation_dirt_bed')
+    addStageBox(THREE, groups.foundation, minU - 0.05, -0.06, minV - 0.05, maxU + 0.05, 0.004, maxV + 0.05, mats.dirt!, 'foundation_dirt_bed')
   }
 
   for (const p of detailed.parts) {
