@@ -458,6 +458,10 @@ export interface TestRoom {
   use(hold?: number): UseStatus
   /** Where the player's feet are. */
   readonly playerPosition: Vec3
+  /** Whether the player is in free flight / noclip mode (bypasses gravity and colliders). */
+  readonly flying: boolean
+  toggleFly(): boolean
+  setFly(enabled: boolean): void
   /** The knock of a blast on the player while it lasts (thrown, down, getting up), or null on its feet. */
   readonly playerKnock: Readonly<Knock> | null
   /** Grab what the camera looks at (or drop what is held). */

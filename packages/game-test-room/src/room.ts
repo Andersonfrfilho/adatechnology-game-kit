@@ -3568,6 +3568,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyN':
         setStrikeCombo(!comboOn)
         break
+      case 'KeyM':
+        if (e.repeat) break
+        {
+          const on = player.toggleFly()
+          say(
+            locale === 'pt-BR'
+              ? (on ? 'Modo Livre (Voo/Noclip): ATIVO [WASD: voar · Espaço: subir · C: descer · Shift: acelerar]' : 'Modo Livre: DESATIVADO')
+              : (on ? 'Free Fly Mode (Noclip): ON [WASD: fly · Space: up · C: down · Shift: boost]' : 'Free Fly Mode: OFF')
+          )
+        }
+        break
       case 'KeyH': {
         const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
         if (w) equip(w)
@@ -4957,6 +4968,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     get playerPosition() {
       return player.position
+    },
+    get flying() {
+      return player.flying
+    },
+    toggleFly() {
+      return player.toggleFly()
+    },
+    setFly(enabled) {
+      player.setFly(enabled)
     },
     get playerKnock() {
       return player.knocked

@@ -81,6 +81,10 @@ export interface Player {
   readonly running: boolean
   /** The feet are on the floor (not in a jump or a fall). */
   readonly grounded: boolean
+  /** Whether the player is in free flight / noclip mode (bypasses gravity and colliders). */
+  readonly flying: boolean
+  toggleFly(): boolean
+  setFly(enabled: boolean): void
   /** Whether the player is crouched (a crouch key tapped or held): the eye sinks and the walk slows. */
   readonly crouching: boolean
   /** Held keys, by `KeyboardEvent.code`. */
@@ -220,6 +224,24 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let stunPhase = 0
   /** Which way the view rolls when the body falls: toward the side the shove came from. */
   let rollSide = 1
+  let flying = false
+  let flyY = 0
+  const toggleFly = (): boolean => {
+    flying = !flying
+    if (flying) {
+      flyY = floorLevel + y
+      vy = 0
+    } else {
+      floorLevel = floorHere()
+      y = Math.max(0, flyY - floorLevel)
+      vy = 0
+    }
+    return flying
+  }
+  const setFly = (enabled: boolean): void => {
+    if (flying === enabled) return
+    toggleFly()
+  }
   const apply = (): void => {
     const lying = knocked?.lying ?? 0
     // a fall eases in: the eye goes down to the floor and the view turns up to the sky, a little onto one side (on its back, thrown away from the blast)
@@ -231,7 +253,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     euler.set(pitch + ((knockedForward ? LYING_PITCH_FACE_DOWN : LYING_PITCH) - pitch) * fallen + swayPitch, yaw, LYING_ROLL * rollSide * fallen + swayRoll, 'YXZ')
     cam.quaternion.setFromEuler(euler)
     const standing = eye - CROUCH_DROP * crouch - bend
-    cam.position.set(px.x, floorLevel + y + standing + (LYING_EYE - standing) * fallen, px.z)
+    const posY = flying ? flyY + standing : floorLevel + y + standing + (LYING_EYE - standing) * fallen
+    cam.position.set(px.x, posY, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
@@ -253,6 +276,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const move = (dx: number, dz: number): void => {
     wish.x += dx
     wish.z += dz
+    if (flying) {
+      px.x += dx
+      px.z += dz
+      return
+    }
     // caught in something (a piece fell on the spot, a piece settling touches the body) the player walks out of it, and never deeper; right inside, every way is out
     const radius = clearRadius()
     const free = (x: number, z: number): boolean => (radius === null ? !outside(x, z) : !blocked(x, z, radius))
@@ -496,10 +524,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return px.z
     },
     get feet() {
-      return floorLevel + y
+      return flying ? flyY : floorLevel + y
     },
     get position() {
-      return [px.x, floorLevel + y, px.z] as Vec3
+      return [px.x, flying ? flyY : floorLevel + y, px.z] as Vec3
     },
     get speed() {
       return walked
@@ -508,8 +536,13 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return running
     },
     get grounded() {
-      return y <= floorUnder + 1e-3 && vy <= 0
+      return !flying && y <= floorUnder + 1e-3 && vy <= 0
     },
+    get flying() {
+      return flying
+    },
+    toggleFly,
+    setFly,
     get crouching() {
       return isCrouched()
     },
@@ -563,6 +596,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const fromX = px.x
       const fromZ = px.z
+      if (flying) {
+        const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
+        const speed = run ? 14 : 5
+        const [walkX, walkZ] = walkKeys()
+        let vert = 0
+        if (keys.has('Space')) vert += 1
+        if (keys.has('KeyC') || keys.has('ControlLeft') || keys.has('ControlRight')) vert -= 1
+        if (walkX || walkZ) move(walkX * speed * dt, walkZ * speed * dt)
+        if (vert !== 0) flyY += vert * speed * dt
+        walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
+        running = run && (walked > 0 || vert !== 0)
+        vy = 0
+        apply()
+        return
+      }
       const speed = (crouched ? CROUCH_WALK : run ? RUN : WALK) * (o.speedAt?.(px.x, px.z) ?? 1)
       const [walkX, walkZ] = walkKeys()
       if ((walkX || walkZ || keys.has('Space')) && eye !== EYE) eye = EYE
@@ -604,6 +652,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       floorLevel = floorHere()
       eye = position[1] - floorLevel
       y = 0
+      flyY = position[1]
       vy = 0
       yaw = yw
       pitch = pt
@@ -619,6 +668,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       floorLevel = floorHere()
       eye = position[1] - floorLevel
       y = 0
+      flyY = position[1]
       vy = 0
       const dx = target[0] - position[0]
       const dy = target[1] - position[1]
