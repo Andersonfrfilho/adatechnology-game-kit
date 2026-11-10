@@ -153,7 +153,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
         if (cs) {
           const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
-          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined);
+          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[]);
           const instGroup = buildInstallationsStage(THREE, r);
           for (const sg of [bp, stGroups.foundation, stGroups.frame, stGroups.masonry, instGroup, stGroups.roofFraming]) {
             gs[sg.name] = sg;

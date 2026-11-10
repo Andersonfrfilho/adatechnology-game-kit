@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
-import type { PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
+import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel } from './masonry-stage.js'
 import { addRafter, addRidgeBeam } from './roof-framing-stage.js'
@@ -123,9 +123,91 @@ function processPart(
   }
 }
 
+function processOutbuilding(
+  THREE: Three,
+  groups: StructuralStageGroups,
+  e: Outbuilding,
+  mats: Record<string, THREE_NS.Material>,
+): void {
+  const [a0, b0, a1, b1] = e.aabb
+  const ceiling = e.ceiling || 2.6
+  const th = e.thickness || 0.15
+
+  // 1. Foundation: ground slab + baldrame under walls
+  addStageBox(THREE, groups.foundation, a0 + th, -0.08, b0 + th, a1 - th, 0.02, b1 - th, mats.slab0!, `${e.id}_slab`)
+  for (let i = 0; i < e.walls.length; i++) {
+    const w = e.walls[i]!
+    const alongU = w.axis === 'u'
+    if (alongU) {
+      addStageBox(THREE, groups.foundation, w.u0, -0.25, w.v0 - th / 2, w.u1, 0.08, w.v0 + th / 2, mats.baldrame!, `${e.id}_baldrame_${i}`)
+    } else {
+      addStageBox(THREE, groups.foundation, w.u0 - th / 2, -0.25, w.v0, w.u0 + th / 2, 0.08, w.v1, mats.baldrame!, `${e.id}_baldrame_${i}`)
+    }
+  }
+
+  // 2. Frame: columns at corners + door lintels + top tie beam
+  const corners: Array<[number, number]> = [
+    [a0, b0],
+    [a1, b0],
+    [a0, b1],
+    [a1, b1],
+  ]
+  const colHalf = th / 2
+  for (let k = 0; k < corners.length; k++) {
+    const [cx, cz] = corners[k]!
+    addRebarCage(THREE, groups.foundation, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, 0, 0.42, mats.rebar!)
+    addStageBox(THREE, groups.frame, cx - colHalf, 0, cz - colHalf, cx + colHalf, ceiling, cz + colHalf, mats.concrete!, `${e.id}_col_${k}`)
+    addRebarCage(THREE, groups.frame, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, ceiling, 0.22, mats.rebar!)
+  }
+
+  for (const d of e.doors || []) {
+    const alongU = d.axis === 'u'
+    const hw = (d.width || 0.85) / 2
+    const dAt = d.at != null ? d.at : alongU ? d.u : d.v
+    const dPos = d.pos != null ? d.pos : alongU ? d.v : d.u
+    if (alongU) {
+      addStageBox(THREE, groups.frame, dAt - hw - 0.15, 2.1, dPos - th / 2, dAt + hw + 0.15, 2.3, dPos + th / 2, mats.lintel!, `${d.id}_lintel`)
+    } else {
+      addStageBox(THREE, groups.frame, dPos - th / 2, 2.1, dAt - hw - 0.15, dPos + th / 2, 2.3, dAt + hw + 0.15, mats.lintel!, `${d.id}_lintel`)
+    }
+  }
+
+  for (let i = 0; i < e.walls.length; i++) {
+    const w = e.walls[i]!
+    const alongU = w.axis === 'u'
+    if (alongU) {
+      addStageBox(THREE, groups.frame, w.u0, ceiling - 0.18, w.v0 - th / 2, w.u1, ceiling, w.v0 + th / 2, mats.beam!, `${e.id}_beam_${i}`)
+    } else {
+      addStageBox(THREE, groups.frame, w.u0 - th / 2, ceiling - 0.18, w.v0, w.u0 + th / 2, ceiling, w.v1, mats.beam!, `${e.id}_beam_${i}`)
+    }
+  }
+
+  // 3. Masonry: brick wall panels (door gap is already cut in e.walls)
+  for (let i = 0; i < e.walls.length; i++) {
+    const w = e.walls[i]!
+    const mockPart: StructurePart = {
+      id: `${e.id}_wall_${i}`,
+      role: 'wall',
+      material: 'brick',
+      aabb: w.axis === 'u'
+        ? [w.u0, w.v0 - th / 2, w.u1, w.v0 + th / 2]
+        : [w.u0 - th / 2, w.v0, w.u0 + th / 2, w.v1],
+      y0: 0,
+      y1: ceiling - 0.18,
+      floor: 0,
+      mass: 500,
+    }
+    buildMasonryPanel(THREE, groups.masonry, mockPart, mats)
+  }
+
+  // Roof framing for outbuilding
+  addStageBox(THREE, groups.roofFraming, a0 - 0.15, ceiling, b0 - 0.15, a1 + 0.15, ceiling + 0.12, b1 + 0.15, mats.wood!, `${e.id}_roof`)
+}
+
 export function buildStructuralStageGroups(
   THREE: Three,
   rawStructure: PlanStructure | undefined,
+  outbuildings?: readonly Outbuilding[],
 ): StructuralStageGroups {
   const foundation = new THREE.Group()
   foundation.name = 'stage:1:foundation'
@@ -155,6 +237,12 @@ export function buildStructuralStageGroups(
 
   for (const p of detailed.parts) {
     processPart(THREE, groups, p, mats)
+  }
+
+  if (outbuildings) {
+    for (const ob of outbuildings) {
+      processOutbuilding(THREE, groups, ob, mats)
+    }
   }
 
   return groups
