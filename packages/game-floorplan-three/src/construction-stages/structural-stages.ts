@@ -85,12 +85,16 @@ function processPart(
     return
   }
   if (p.role === 'column') {
+    // Synthetic slab support pillars placed in room centers by slab subdivision must not be drawn
+    if (p.id.startsWith('pillar_')) return
     const colMat = p.material === 'wood_soft' || p.material === 'wood_hard' ? mats.wood! : p.material === 'steel' ? mats.sheet! : mats.concrete!
     addStageBox(THREE, groups.frame, u0 - 0.008, p.y0, v0 - 0.008, u1 + 0.008, p.y1, v1 + 0.008, colMat, p.id)
-    if (p.floor === 0 && p.material === 'concrete') {
-      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, Math.max(0, p.y0), 0.42, mats.rebar!)
+    // Starter rebar in foundation (Level 1) only for ground columns (y0 <= 0.1), not roof/tank columns
+    if (p.floor === 0 && p.material === 'concrete' && p.y0 <= 0.1 && !p.id.startsWith('tank_')) {
+      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
     }
-    if (p.material === 'concrete') {
+    // Top rebar extensions in frame (Level 2) only for ground-supported columns, not elevated tank columns
+    if (p.material === 'concrete' && !p.id.startsWith('tank_')) {
       addRebarCage(THREE, groups.frame, u0, v0, u1, v1, p.y1, 0.26, mats.rebar!)
     }
     return
