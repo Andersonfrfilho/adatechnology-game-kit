@@ -41,6 +41,23 @@ export const GROUPS = [
   { id: 'post_apocalyptic', name: { en: 'Post-apocalyptic', 'pt-BR': 'Pós-apocalíptico' }, templates: ['triage_tent'] },
 ]
 
+export const TEST_ROOM_FURNITURE = [
+  'dining_table',
+  'coffee_table',
+  'desk',
+  'sofa_3seat',
+  'fridge',
+  'stove_4burner',
+  'tv',
+  'floor_lamp',
+  'double_bed',
+  'toilet',
+  'washbasin',
+  'shower',
+  'mirror',
+  'washing_machine',
+]
+
 /**
  * The module for the room's locale (`?lang=en` or pt-BR); options replace or extend anything.
  * @param {Partial<Parameters<typeof createFloorplanTestModule>[0]>} [options]
@@ -51,6 +68,7 @@ export function createModule(options = {}) {
   return createFloorplanTestModule({
     engine,
     groups: GROUPS,
+    furniture: options.furniture ?? TEST_ROOM_FURNITURE,
     ...options,
     house: {
       interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree },

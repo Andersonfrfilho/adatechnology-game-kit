@@ -94,10 +94,22 @@ export function buildMasonryPanel(
   const joint = 0.012
   const unitMat = isBlock ? mats.block! : mats.brick!
   const coreTh = Math.max(0.09, th - 0.028)
+  const unitLen = isBlock ? 0.39 : 0.24
+  const vJoint = 0.012
+  // Core mortar backing provides grey mortar visible in all vertical and horizontal joints
   put(a0, part.y0, a1, part.y1, coreTh * 0.86, mats.mortar!)
-  for (let y = part.y0; y < part.y1 - 1e-3; y += courseH) {
+  let rowIdx = 0
+  for (let y = part.y0; y < part.y1 - 1e-3; y += courseH, rowIdx++) {
     const ya = y + joint / 2
     const yb = Math.min(part.y1 - joint / 2, y + courseH - joint / 2)
-    if (yb > ya) put(a0 + 0.004, ya, a1 - 0.004, yb, coreTh, unitMat)
+    if (yb <= ya) continue
+    const rowOffset = (rowIdx % 2) * ((unitLen + vJoint) / 2)
+    for (let s = a0 - rowOffset; s < a1; s += unitLen + vJoint) {
+      const b0 = Math.max(a0 + 0.003, s + vJoint / 2)
+      const b1 = Math.min(a1 - 0.003, s + unitLen + vJoint / 2)
+      if (b1 - b0 > 0.025) {
+        put(b0, ya, b1, yb, coreTh, unitMat)
+      }
+    }
   }
 }
