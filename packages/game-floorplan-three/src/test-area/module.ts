@@ -172,9 +172,23 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
 
   const updateGround = (): void => {
     if (!host?.setGround) return
-    const lot = host.bench?.layer('lot') ?? false
-    if (!lot || placed.length === 0) {
+    if (placed.length === 0) {
       host.setGround({ surface: 'lawn' })
+      return
+    }
+    const lot = host.bench?.layer('lot') ?? false
+    if (!lot) {
+      host.setGround({
+        surface: 'lawn',
+        zones: placed.map((p) => {
+          const ox = p.house.group.position.x
+          const oz = p.house.group.position.z
+          return {
+            rect: [ox - p.width, oz - p.depth, ox, oz],
+            surface: 'dirt',
+          }
+        }),
+      })
       return
     }
     host.setGround(

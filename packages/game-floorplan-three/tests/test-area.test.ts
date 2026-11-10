@@ -242,6 +242,9 @@ describe('houses in the room', () => {
     expect(house.groups['stage:0:blueprint']?.visible).toBe(true)
     expect(house.groups['stage:1:foundation']?.visible).toBe(true)
     expect(house.groups['stage:2:frame']?.visible).toBe(false)
+    const foundationGroup = house.groups['stage:1:foundation']!
+    const dirtBed = foundationGroup.children.find((c) => c.userData.structurePartId === 'foundation_dirt_bed')
+    expect(dirtBed).toBeDefined()
 
     r.set('construction_level', 2)
     expect(stageMetric()).toContain('2 ·')
@@ -249,6 +252,9 @@ describe('houses in the room', () => {
     expect(house.groups['stage:1:foundation']?.visible).toBe(true)
     expect(house.groups['stage:2:frame']?.visible).toBe(true)
     expect(house.groups['stage:3:masonry']?.visible).toBe(false)
+    const frameGroup = house.groups['stage:2:frame']!
+    const intCols = frameGroup.children.filter((c) => String(c.userData.structurePartId || '').startsWith('interior_column_'))
+    expect(intCols.length).toBeGreaterThan(0)
 
     r.set('construction_level', 3)
     expect(stageMetric()).toContain('3 ·')

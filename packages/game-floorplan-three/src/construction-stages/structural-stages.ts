@@ -37,6 +37,7 @@ function addRebarCage(
 
 function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
   return {
+    dirt: new THREE.MeshStandardMaterial({ color: 0x8a7250, roughness: 0.96 }),
     footing: new THREE.MeshStandardMaterial({ color: 0x7a766e, roughness: 0.92 }),
     baldrame: new THREE.MeshStandardMaterial({ color: 0x5c5852, roughness: 0.88 }),
     slab0: new THREE.MeshStandardMaterial({ color: 0xa6a298, roughness: 0.86 }),
@@ -137,6 +138,9 @@ function processOutbuilding(
   const ceiling = e.ceiling || 2.6
   const th = e.thickness || 0.15
 
+  // 0. Compacted dirt excavation bed under outbuilding
+  addStageBox(THREE, groups.foundation, a0 - 0.05, -0.06, b0 - 0.05, a1 + 0.05, 0.001, b1 + 0.05, mats.dirt!, `${e.id}_dirt_bed`)
+
   // 1. Foundation: ground slab + baldrame under walls
   addStageBox(THREE, groups.foundation, a0 + th, -0.08, b0 + th, a1 - th, 0.02, b1 - th, mats.slab0!, `${e.id}_slab`)
   for (let i = 0; i < e.walls.length; i++) {
@@ -208,6 +212,98 @@ function processOutbuilding(
   addStageBox(THREE, groups.roofFraming, a0 - 0.15, ceiling, b0 - 0.15, a1 + 0.15, ceiling + 0.12, b1 + 0.15, mats.wood!, `${e.id}_roof`)
 }
 
+export interface InteriorColumnLocation {
+  readonly u: number
+  readonly v: number
+  readonly floor: number
+}
+
+export function findInteriorColumnLocations(rawStructure: PlanStructure): readonly InteriorColumnLocation[] {
+  const parts = rawStructure.parts || []
+  const TOL = 0.12
+  const MERGE_DIST = 0.55
+  const SPACING = 4.0
+
+  // Existing column center points (corners and exterior wall columns)
+  const existing = parts
+    .filter((p) => p.role === 'column' && !p.id.startsWith('tank_') && !p.id.startsWith('pillar_'))
+    .map((p) => [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2] as const)
+
+  const isTaken = (u: number, v: number): boolean => existing.some(([eu, ev]) => Math.hypot(eu - u, ev - v) < MERGE_DIST)
+
+  // Walls and partitions
+  const wallParts = parts.filter((p) => p.role === 'wall' || p.role === 'partition')
+  const wallLines = wallParts.map((p) => {
+    const alongU = p.aabb[2] - p.aabb[0] >= p.aabb[3] - p.aabb[1]
+    return {
+      part: p,
+      alongU,
+      line: alongU ? (p.aabb[1] + p.aabb[3]) / 2 : (p.aabb[0] + p.aabb[2]) / 2,
+      from: alongU ? p.aabb[0] : p.aabb[1],
+      to: alongU ? p.aabb[2] : p.aabb[3],
+      floor: p.floor ?? 0,
+      isPartition: p.role === 'partition',
+    }
+  })
+
+  const candidates: Array<{ u: number; v: number; floor: number }> = []
+
+  for (let i = 0; i < wallLines.length; i++) {
+    const w1 = wallLines[i]!
+    for (let j = i + 1; j < wallLines.length; j++) {
+      const w2 = wallLines[j]!
+      if (w1.floor !== w2.floor || w1.alongU === w2.alongU) continue
+      const wu = w1.alongU ? w1 : w2
+      const wv = w1.alongU ? w2 : w1
+
+      const u = wv.line
+      const v = wu.line
+
+      if (u >= wu.from - TOL && u <= wu.to + TOL && v >= wv.from - TOL && v <= wv.to + TOL) {
+        if (wu.isPartition || wv.isPartition) {
+          candidates.push({ u, v, floor: wu.floor })
+        }
+      }
+    }
+  }
+
+  const columns: Array<{ u: number; v: number; floor: number }> = []
+  for (const c of candidates) {
+    if (!isTaken(c.u, c.v) && !columns.some((col) => col.floor === c.floor && Math.hypot(col.u - c.u, col.v - c.v) < MERGE_DIST)) {
+      columns.push(c)
+    }
+  }
+
+  // Check long spans on partitions
+  for (const w of wallLines.filter((w) => w.isPartition)) {
+    const len = w.to - w.from
+    if (len > SPACING) {
+      const alongPoints = [...existing.map(([u, v]) => ({ u, v, floor: w.floor })), ...columns]
+        .filter((c) => c.floor === w.floor && Math.abs((w.alongU ? c.v : c.u) - w.line) < 0.25)
+        .map((c) => (w.alongU ? c.u : c.v))
+        .filter((a) => a >= w.from - 0.25 && a <= w.to + 0.25)
+        .sort((a, b) => a - b)
+
+      for (let k = 1; k < alongPoints.length; k++) {
+        const gap = alongPoints[k]! - alongPoints[k - 1]!
+        if (gap > SPACING) {
+          const divs = Math.ceil(gap / SPACING)
+          for (let d = 1; d < divs; d++) {
+            const pt = alongPoints[k - 1]! + (gap * d) / divs
+            const u = w.alongU ? pt : w.line
+            const v = w.alongU ? w.line : pt
+            if (!isTaken(u, v) && !columns.some((col) => col.floor === w.floor && Math.hypot(col.u - u, col.v - v) < MERGE_DIST)) {
+              columns.push({ u, v, floor: w.floor })
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return columns
+}
+
 export function buildStructuralStageGroups(
   THREE: Three,
   rawStructure: PlanStructure | undefined,
@@ -239,8 +335,43 @@ export function buildStructuralStageGroups(
   const detailed = slabOptions ? deepenBondBeams(walled, rawStructure, slabOptions) : walled
   const groups: StructuralStageGroups = { foundation, frame, masonry, roofFraming }
 
+  // 1. Excavated dirt ground bed under the house footprint
+  let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity
+  for (const p of rawStructure.parts) {
+    if (p.floor === 0 || p.y0 <= 0.1) {
+      minU = Math.min(minU, p.aabb[0])
+      minV = Math.min(minV, p.aabb[1])
+      maxU = Math.max(maxU, p.aabb[2])
+      maxV = Math.max(maxV, p.aabb[3])
+    }
+  }
+  if (Number.isFinite(minU) && Number.isFinite(maxU)) {
+    addStageBox(THREE, groups.foundation, minU - 0.05, -0.06, minV - 0.05, maxU + 0.05, 0.001, maxV + 0.05, mats.dirt!, 'foundation_dirt_bed')
+  }
+
   for (const p of detailed.parts) {
     processPart(THREE, groups, p, mats)
+  }
+
+  // 2. Interior columns at interior wall junctions and spans
+  const interiorCols = findInteriorColumnLocations(rawStructure)
+  const colHalf = 0.09
+  for (let k = 0; k < interiorCols.length; k++) {
+    const c = interiorCols[k]!
+    const u0 = c.u - colHalf
+    const v0 = c.v - colHalf
+    const u1 = c.u + colHalf
+    const v1 = c.v + colHalf
+    const y0 = rawStructure.levels[c.floor] ?? c.floor * 2.8
+    const y1 = (rawStructure.levels[c.floor + 1] ?? y0 + 2.8) - 0.2
+
+    // Starter rebar in foundation (Level 1)
+    if (c.floor === 0) {
+      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
+    }
+    // Concrete column and top rebar extension in frame (Level 2)
+    addStageBox(THREE, groups.frame, u0 - 0.008, y0, v0 - 0.008, u1 + 0.008, y1, v1 + 0.008, mats.concrete!, `interior_column_${c.floor}_${k}`)
+    addRebarCage(THREE, groups.frame, u0, v0, u1, v1, y1, 0.26, mats.rebar!)
   }
 
   if (outbuildings) {
