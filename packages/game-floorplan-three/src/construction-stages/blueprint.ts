@@ -139,11 +139,13 @@ export function buildBlueprintStage(
     if (room.floor !== 0 || room.type === 'void') continue
     const rs = rectsOf(room)
     for (const [u0, v0, u1, v1] of rs) {
-      bx0 = Math.min(bx0, u0)
-      bz0 = Math.min(bz0, v0)
-      bx1 = Math.max(bx1, u1)
-      bz1 = Math.max(bz1, v1)
-      addBoxMesh(THREE, group, u0 + 0.08, 0.005, v0 + 0.08, u1 - 0.08, 0.014, v1 - 0.08, cyanMat)
+      if (!room.outbuilding) {
+        bx0 = Math.min(bx0, u0)
+        bz0 = Math.min(bz0, v0)
+        bx1 = Math.max(bx1, u1)
+        bz1 = Math.max(bz1, v1)
+      }
+      addBoxMesh(THREE, group, u0, 0.003, v0, u1, 0.010, v1, cyanMat)
     }
     const r0 = rs[0]
     if (r0) {
@@ -181,8 +183,8 @@ export function buildBlueprintStage(
     })
     const wallSegs = cutSegments(a, b, holes)
     for (const [s0, s1] of wallSegs) {
-      if (alongU) addBoxMesh(THREE, group, s0, 0.008, L - th / 2, s1, 0.028, L + th / 2, chalkMat)
-      else addBoxMesh(THREE, group, L - th / 2, 0.008, s0, L + th / 2, 0.028, s1, chalkMat)
+      if (alongU) addBoxMesh(THREE, group, s0, 0.006, L - th / 2, s1, 0.026, L + th / 2, chalkMat)
+      else addBoxMesh(THREE, group, L - th / 2, 0.006, s0, L + th / 2, 0.026, s1, chalkMat)
     }
   }
 
@@ -194,12 +196,13 @@ export function buildBlueprintStage(
     const pos = d.pos != null ? d.pos : alongU ? d.v : d.u
     const w = d.width || 0.8
     const hw = w / 2
-    // Thin floor threshold line
-    if (alongU) addBoxMesh(THREE, group, at - hw, 0.005, pos - 0.04, at + hw, 0.012, pos + 0.04, doorMat)
-    else addBoxMesh(THREE, group, pos - 0.04, 0.005, at - hw, pos + 0.04, 0.012, at + hw, doorMat)
+    const th = 0.15
+    // Threshold line covering the full thickness of the wall
+    if (alongU) addBoxMesh(THREE, group, at - hw, 0.005, pos - th / 2, at + hw, 0.015, pos + th / 2, doorMat)
+    else addBoxMesh(THREE, group, pos - th / 2, 0.005, at - hw, pos + th / 2, 0.015, at + hw, doorMat)
     // Open door leaf at 90° resting against the perpendicular wall (leaves the doorway completely open)
-    if (alongU) addBoxMesh(THREE, group, at - hw, 0.01, pos, at - hw + 0.035, 0.035, pos + w, doorMat)
-    else addBoxMesh(THREE, group, pos, 0.01, at - hw, pos + w, 0.035, at - hw + 0.035, doorMat)
+    if (alongU) addBoxMesh(THREE, group, at - hw, 0.010, pos, at - hw + 0.035, 0.032, pos + w, doorMat)
+    else addBoxMesh(THREE, group, pos, 0.010, at - hw, pos + w, 0.032, at - hw + 0.035, doorMat)
   }
 
   const parts: readonly StructurePart[] = (plan.structure as Structure | undefined)?.parts ?? []
@@ -212,6 +215,10 @@ export function buildBlueprintStage(
 
   if (Number.isFinite(bx0) && Number.isFinite(bx1)) {
     addBatterBoards(THREE, group, bx0, bz0, bx1, bz1, woodMat, cyanMat)
+  }
+  for (const ob of (plan.outbuildings || []).filter(Boolean)) {
+    const [ou0, ov0, ou1, ov1] = ob.aabb
+    addBatterBoards(THREE, group, ou0, ov0, ou1, ov1, woodMat, cyanMat)
   }
   return group
 }

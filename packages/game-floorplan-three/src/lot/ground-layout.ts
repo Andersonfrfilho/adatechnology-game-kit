@@ -100,8 +100,14 @@ function zonesOfSinglePlan(plan: HousePlan, ox: number, oz: number, flipped: boo
       zones.push({ rect: transformRect(r, ox, oz, flipped), surface })
     }
   }
-  // Keep turf under the house footprint so terrain cracks (+4 mm) never poke through indoor floors at y = 0.
-  zones.push({ rect: transformRect([0, 0, w, d], ox, oz, flipped), surface: 'lawn' })
+  // Dirt/earth soil under the house footprint and outbuildings so it renders as construction ground, not lawn.
+  zones.push({ rect: transformRect([0, 0, w, d], ox, oz, flipped), surface: 'dirt' })
+  const outbuildings = ((rec.outbuildings || []) as readonly { aabb?: readonly [number, number, number, number] }[])
+  for (const ob of outbuildings) {
+    if (ob?.aabb) {
+      zones.push({ rect: transformRect(ob.aabb, ox, oz, flipped), surface: 'dirt' })
+    }
+  }
   return zones
 }
 
