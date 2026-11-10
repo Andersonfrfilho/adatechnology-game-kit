@@ -178,28 +178,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     }
     const lot = host.bench?.layer('lot') ?? false
     if (!lot) {
-      const zones: Array<{ rect: readonly [number, number, number, number]; surface: string }> = []
-      for (const p of placed) {
-        const ox = p.house.group.position.x
-        const oz = p.house.group.position.z
-        zones.push({
-          rect: [ox - p.width, oz - p.depth, ox, oz],
-          surface: 'dirt',
-        })
-        const obs = (p.plan as { outbuildings?: readonly { aabb?: readonly [number, number, number, number] }[] }).outbuildings ?? []
-        for (const ob of obs) {
-          if (ob?.aabb) {
-            zones.push({
-              rect: [ox - ob.aabb[2], oz - ob.aabb[3], ox - ob.aabb[0], oz - ob.aabb[1]],
-              surface: 'dirt',
-            })
-          }
-        }
-      }
-      host.setGround({
-        surface: 'lawn',
-        zones,
-      })
+      // In house construction testing, ground is construction earth (dirt), not lawn
+      host.setGround({ surface: 'dirt' })
       return
     }
     host.setGround(

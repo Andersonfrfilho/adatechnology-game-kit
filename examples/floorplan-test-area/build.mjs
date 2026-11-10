@@ -72,12 +72,75 @@ console.log(`dist/floorplan-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/base/test-room.html')
 if (existsSync(roomHtml)) {
   const safe = (/** @type {string} */ s) => s.replace(/<\/(script)/gi, '<\\/$1')
-  const page = readFileSync(roomHtml, 'utf8')
+  let page = readFileSync(roomHtml, 'utf8')
+
+  const overlay = `<div id="boot" class="tr-loading tr-loading-solid tr-loading-fixed" role="status" aria-live="polite">
+  <div class="tr-loading-card">
+    <div class="tr-loading-title">
+      <span class="tr-loading-spin"></span>
+      <span class="tr-loading-label">Carregando a sala de casas…</span>
+    </div>
+    <div class="tr-loading-bar tr-loading-indeterminate"><i></i></div>
+    <div class="tr-loading-step">Iniciando…</div>
+  </div>
+</div>
+<script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){var b=document.getElementById('boot');if(b){b.querySelector('.tr-loading-label').textContent='Loading the houses room…';b.querySelector('.tr-loading-step').textContent='Starting…';}}})()</script>`
+
+  // Inject overlay into <body>
+  const bodyIdx = page.indexOf('<body>')
+  if (bodyIdx >= 0) {
+    page = page.slice(0, bodyIdx + 6) + '\n' + overlay + '\n' + page.slice(bodyIdx + 6)
+  }
+
+  // Turn synchronous room bundle script into inert text script so the loading screen paints immediately
+  page = page.replace('<script>(()=>{', '<script type="text/plain" id="room-bundle">(()=>{')
+
+  const bootScript = `<script type="text/plain" id="floorplan-bundle">${safe(bundle)}</script>
+<script>
+(function () {
+  var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt';
+  var paint = function () {
+    return new Promise(function (resolve) {
+      var done = false;
+      var finish = function () { if (!done) { done = true; resolve(); } };
+      requestAnimationFrame(function () { setTimeout(finish, 0); });
+      setTimeout(finish, 100);
+    });
+  };
+  var run = function (id) {
+    var script = document.createElement('script');
+    script.textContent = document.getElementById(id).textContent;
+    document.body.appendChild(script);
+  };
+  var shown = document.getElementById('boot');
+  paint().then(paint).then(function () {
+    run('room-bundle');
+    var step = document.querySelector('.tr-loading-step');
+    if (step) step.textContent = lang === 'en' ? 'Building houses…' : 'Construindo as casas…';
+    return paint();
+  }).then(function () {
+    run('floorplan-bundle');
+    window.__floorplanReport = FloorplanArea.loadInto(window.__testRoom);
+    return paint();
+  }).then(function () {
+    if (shown) {
+      shown.classList.add('tr-loading-hidden');
+      setTimeout(function () { shown.remove(); }, 250);
+    }
+  }).catch(function (error) {
+    var step = document.querySelector('.tr-loading-step');
+    if (step) {
+      step.textContent = (lang === 'en' ? 'Loading failed: ' : 'Falha ao carregar: ') + (error && error.message ? error.message : error);
+      step.style.color = '#ff8a80';
+    }
+    console.error(error);
+  });
+})();
+</script>`
+
   const at = page.lastIndexOf('</body>')
   if (at < 0) throw new Error('the room page has no </body>')
-  // the room page sets window.__testRoom synchronously; our script runs right after it, loads the module into that room, opens its area and builds the first house
-  const boot = `window.__floorplanReport = FloorplanArea.loadInto(window.__testRoom)`
-  const html = `${page.slice(0, at)}<script>${safe(bundle)}\n${boot}</script>\n${page.slice(at)}`
+  const html = `${page.slice(0, at)}${bootScript}\n${page.slice(at)}`
   writeFileSync(join(here, 'dist/sala-casas.html'), html)
   console.log(`dist/sala-casas.html ${(html.length / 1024).toFixed(0)} KB`)
 } else {

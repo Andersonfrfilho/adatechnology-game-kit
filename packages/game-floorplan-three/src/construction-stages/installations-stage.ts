@@ -42,18 +42,18 @@ function addExcavatedTrench(
   const minZ = Math.min(a[1], b[1])
   const maxZ = Math.max(a[1], b[1])
 
-  const bermW = 0.08
-  const bermH = 0.05
-  const troughH = 0.08
+  const bermW = 0.12
+  const bermH = 0.08
+  const troughH = 0.20
 
   if (isAlongX) {
     const len = Math.max(0.06, maxX - minX)
     const midX = (minX + maxX) / 2
     const midZ = a[1]
 
-    // 1. Recessed dark bottom trough below ground level
+    // 1. Deep recessed dark bottom trough below ground level
     const trough = new THREE.Mesh(new THREE.BoxGeometry(len, troughH, trenchWidth), troughMat)
-    trough.position.set(midX, -0.07, midZ)
+    trough.position.set(midX, -0.10, midZ)
     trough.receiveShadow = true
     parent.add(trough)
 
@@ -75,9 +75,9 @@ function addExcavatedTrench(
     const midX = a[0]
     const midZ = (minZ + maxZ) / 2
 
-    // 1. Recessed dark bottom trough below ground level
+    // 1. Deep recessed dark bottom trough below ground level
     const trough = new THREE.Mesh(new THREE.BoxGeometry(trenchWidth, troughH, len), troughMat)
-    trough.position.set(midX, -0.07, midZ)
+    trough.position.set(midX, -0.10, midZ)
     trough.receiveShadow = true
     parent.add(trough)
 
@@ -106,10 +106,10 @@ function addExcavatedPit(
   troughMat: THREE_NS.Material,
   moundMat: THREE_NS.Material,
 ): void {
-  const bermW = 0.07
-  const bermH = 0.05
-  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.08, size), troughMat)
-  bottom.position.set(x, -0.07, z)
+  const bermW = 0.10
+  const bermH = 0.08
+  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.20, size), troughMat)
+  bottom.position.set(x, -0.10, z)
   parent.add(bottom)
 
   const collarN = new THREE.Mesh(new THREE.BoxGeometry(size + bermW * 2, bermH, bermW), moundMat)
@@ -136,7 +136,7 @@ function nearestWallPoint(
   let bestPoint: [number, number] = [u, v]
   const targetFloor = floor < 0 ? 0 : floor
   for (const w of walls) {
-    if (w.floor !== targetFloor) continue
+    if ((w.floor ?? 0) !== targetFloor) continue
     const dx = w.u1 - w.u0
     const dz = w.v1 - w.v0
     const lenSq = dx * dx + dz * dz
@@ -155,23 +155,172 @@ function nearestWallPoint(
   return bestPoint
 }
 
-function routeAlongWalls(
+function buildWallGraph(
   walls: readonly HouseWall[],
+  extraPoints: ReadonlyArray<readonly [number, number]>,
+): {
+  nodes: Array<[number, number]>
+  adj: Map<number, Array<{ to: number; dist: number }>>
+  nodeKey: (u: number, v: number) => string
+} {
+  const horiz: Array<{ v: number; u0: number; u1: number }> = []
+  const vert: Array<{ u: number; v0: number; v1: number }> = []
+  for (const w of walls) {
+    if ((w.floor ?? 0) !== 0) continue
+    if (w.axis === 'u') {
+      horiz.push({ v: w.v0, u0: Math.min(w.u0, w.u1), u1: Math.max(w.u0, w.u1) })
+    } else {
+      vert.push({ u: w.u0, v0: Math.min(w.v0, w.v1), v1: Math.max(w.v0, w.v1) })
+    }
+  }
+
+  function mergeSpans(spans: Array<[number, number]>): Array<[number, number]> {
+    const sorted = spans.slice().sort((a, b) => a[0] - b[0])
+    const res: Array<[number, number]> = []
+    for (const [s0, s1] of sorted) {
+      if (!res.length) {
+        res.push([s0, s1])
+        continue
+      }
+      const last = res[res.length - 1]!
+      if (s0 <= last[1] + 1.6) {
+        last[1] = Math.max(last[1], s1)
+      } else {
+        res.push([s0, s1])
+      }
+    }
+    return res
+  }
+
+  const hLines = new Map<number, Array<[number, number]>>()
+  for (const h of horiz) {
+    const vKey = Math.round(h.v * 100) / 100
+    if (!hLines.has(vKey)) hLines.set(vKey, [])
+    hLines.get(vKey)!.push([h.u0, h.u1])
+  }
+  const mergedH: Array<{ v: number; u0: number; u1: number }> = []
+  for (const [v, spans] of hLines.entries()) {
+    for (const [u0, u1] of mergeSpans(spans)) {
+      mergedH.push({ v, u0, u1 })
+    }
+  }
+
+  const vLines = new Map<number, Array<[number, number]>>()
+  for (const v of vert) {
+    const uKey = Math.round(v.u * 100) / 100
+    if (!vLines.has(uKey)) vLines.set(uKey, [])
+    vLines.get(uKey)!.push([v.v0, v.v1])
+  }
+  const mergedV: Array<{ u: number; v0: number; v1: number }> = []
+  for (const [u, spans] of vLines.entries()) {
+    for (const [v0, v1] of mergeSpans(spans)) {
+      mergedV.push({ u, v0, v1 })
+    }
+  }
+
+  const nodes: Array<[number, number]> = []
+  const nodeKey = (u: number, v: number): string => `${(Math.round(u * 100) / 100).toFixed(2)},${(Math.round(v * 100) / 100).toFixed(2)}`
+  const addNode = (u: number, v: number): void => {
+    const k = nodeKey(u, v)
+    if (!nodes.some((n) => nodeKey(n[0], n[1]) === k)) nodes.push([u, v])
+  }
+
+  for (const pt of extraPoints) addNode(pt[0], pt[1])
+  for (const h of mergedH) {
+    addNode(h.u0, h.v)
+    addNode(h.u1, h.v)
+    for (const v of mergedV) {
+      if (v.u >= h.u0 - 0.15 && v.u <= h.u1 + 0.15 && h.v >= v.v0 - 0.15 && h.v <= v.v1 + 0.15) {
+        addNode(v.u, h.v)
+      }
+    }
+  }
+  for (const v of mergedV) {
+    addNode(v.u, v.v0)
+    addNode(v.u, v.v1)
+  }
+
+  const adj = new Map<number, Array<{ to: number; dist: number }>>()
+  for (let i = 0; i < nodes.length; i++) adj.set(i, [])
+
+  const canConnect = (pA: readonly [number, number], pB: readonly [number, number]): boolean => {
+    const dU = Math.abs(pA[0] - pB[0])
+    const dV = Math.abs(pA[1] - pB[1])
+    const TOL = 0.2
+    if (dV < TOL) {
+      const v = (pA[1] + pB[1]) / 2
+      const minU = Math.min(pA[0], pB[0])
+      const maxU = Math.max(pA[0], pB[0])
+      return mergedH.some((h) => Math.abs(h.v - v) < TOL && minU >= h.u0 - TOL && maxU <= h.u1 + TOL)
+    }
+    if (dU < TOL) {
+      const u = (pA[0] + pB[0]) / 2
+      const minV = Math.min(pA[1], pB[1])
+      const maxV = Math.max(pA[1], pB[1])
+      return mergedV.some((w) => Math.abs(w.u - u) < TOL && minV >= w.v0 - TOL && maxV <= w.v1 + TOL)
+    }
+    return false
+  }
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (canConnect(nodes[i]!, nodes[j]!)) {
+        const dist = Math.hypot(nodes[i]![0] - nodes[j]![0], nodes[i]![1] - nodes[j]![1])
+        adj.get(i)!.push({ to: j, dist })
+        adj.get(j)!.push({ to: i, dist })
+      }
+    }
+  }
+
+  return { nodes, adj, nodeKey }
+}
+
+function routeAlongWalls(
+  graph: ReturnType<typeof buildWallGraph>,
   from: readonly [number, number],
   to: readonly [number, number],
 ): readonly [number, number][] {
-  if (Math.hypot(from[0] - to[0], from[1] - to[1]) < 1e-3) return [from]
-  // Intermediate corners
-  const c1: [number, number] = [to[0], from[1]]
-  const c2: [number, number] = [from[0], to[1]]
-  const p1 = nearestWallPoint(walls, c1[0], c1[1], 0)
-  const p2 = nearestWallPoint(walls, c2[0], c2[1], 0)
-  const d1 = Math.hypot(c1[0] - p1[0], c1[1] - p1[1])
-  const d2 = Math.hypot(c2[0] - p2[0], c2[1] - p2[1])
-  if (d1 <= d2) {
-    return [from, c1, to]
+  const sIdx = graph.nodes.findIndex((n) => graph.nodeKey(n[0], n[1]) === graph.nodeKey(from[0], from[1]))
+  const eIdx = graph.nodes.findIndex((n) => graph.nodeKey(n[0], n[1]) === graph.nodeKey(to[0], to[1]))
+  if (sIdx < 0 || eIdx < 0) return [from, to]
+
+  const dist = new Map<number, number>()
+  const prev = new Map<number, number>()
+  const visited = new Set<number>()
+  for (let i = 0; i < graph.nodes.length; i++) dist.set(i, Infinity)
+  dist.set(sIdx, 0)
+
+  while (visited.size < graph.nodes.length) {
+    let u = -1
+    let bestD = Infinity
+    for (let i = 0; i < graph.nodes.length; i++) {
+      if (!visited.has(i) && dist.get(i)! < bestD) {
+        bestD = dist.get(i)!
+        u = i
+      }
+    }
+    if (u < 0 || bestD === Infinity) break
+    if (u === eIdx) break
+    visited.add(u)
+
+    for (const edge of graph.adj.get(u)!) {
+      if (visited.has(edge.to)) continue
+      const alt = dist.get(u)! + edge.dist
+      if (alt < dist.get(edge.to)!) {
+        dist.set(edge.to, alt)
+        prev.set(edge.to, u)
+      }
+    }
   }
-  return [from, c2, to]
+
+  const path: Array<[number, number]> = []
+  let curr: number | undefined = eIdx
+  while (curr != null) {
+    path.push(graph.nodes[curr]!)
+    curr = prev.get(curr)
+  }
+  path.reverse()
+  return path.length > 0 && graph.nodeKey(path[0]![0], path[0]![1]) === graph.nodeKey(from[0], from[1]) ? path : [from, to]
 }
 
 function addInspectionChamber(
@@ -228,16 +377,25 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
 
     const ceiling0 = plan.floors[0]?.ceiling ?? 2.8
     // Attic header plane sits strictly ABOVE the ceiling slab (in the attic space)
-    const yHeader = floorY0(0) + ceiling0 + 0.22
+    const yHeader = floorY0(0) + ceiling0 + 0.18
 
     // Nearest wall to water tank where distribution header enters the wall system
     const tankWall = nearestWallPoint(plan.walls, tankPos[0], tankPos[2], 0)
 
-    // Tank vertical downpipe to header plane, then connects directly to nearest wall
-    if (tankPos[1] > yHeader + 0.02) {
-      addPipeSegment(THREE, group, tankPos, [tankPos[0], yHeader, tankPos[2]], 0.025, coldWaterMat)
+    // Build wall graph with tankWall and all fixture wall points
+    const fixtureWallPoints: Array<[number, number]> = []
+    for (const pt of plumbing.points) {
+      const targetFloor = pt.floor < 0 ? 0 : pt.floor
+      fixtureWallPoints.push(nearestWallPoint(plan.walls, pt.u, pt.v, targetFloor))
     }
-    // Header pipe from tank position to wall entrance (strictly orthogonal 90° bends)
+    const wallGraph = buildWallGraph(plan.walls, [tankWall, ...fixtureWallPoints])
+
+    // Tank vertical downpipe to header plane (strictly stays inside attic space)
+    const tankBottomY = tk && Number.isFinite(tk.y) ? tk.y : yHeader + 1.2
+    if (tankBottomY > yHeader + 0.02) {
+      addPipeSegment(THREE, group, [tankPos[0], tankBottomY, tankPos[2]], [tankPos[0], yHeader, tankPos[2]], 0.025, coldWaterMat)
+    }
+    // Header pipe from tank position to nearest wall (orthogonal in attic)
     if (Math.abs(tankPos[0] - tankWall[0]) > 1e-3) {
       addPipeSegment(THREE, group, [tankPos[0], yHeader, tankPos[2]], [tankWall[0], yHeader, tankPos[2]], 0.02, coldWaterMat)
     }
@@ -248,20 +406,20 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
     const sewerMainX = tankPos[0]
     let minV = Infinity
     for (const pt of plumbing.points) {
-      const y0 = floorY0(pt.floor)
-      const [wU, wV] = nearestWallPoint(plan.walls, pt.u, pt.v, pt.floor)
+      const targetFloor = pt.floor < 0 ? 0 : pt.floor
+      const y0 = floorY0(targetFloor)
+      const [wU, wV] = nearestWallPoint(plan.walls, pt.u, pt.v, targetFloor)
 
       // 1. Cold water line:
-      // Routes along the wall network in the attic (above the ceiling slab)
-      const wallPath = routeAlongWalls(plan.walls, tankWall, [wU, wV])
+      // Routes strictly along the wall network in the attic (above the ceiling slab)
+      const wallPath = routeAlongWalls(wallGraph, tankWall, [wU, wV])
       for (let i = 0; i + 1 < wallPath.length; i++) {
         const pA = wallPath[i]!
         const pB = wallPath[i + 1]!
         addPipeSegment(THREE, group, [pA[0], yHeader, pA[1]], [pB[0], yHeader, pB[1]], 0.015, coldWaterMat)
       }
       // Vertical distribution column drops inside the wall core down to the tap/fixture height
-      const wallCeilY = floorY0(pt.floor) + (plan.floors[pt.floor]?.ceiling ?? ceiling0)
-      addPipeSegment(THREE, group, [wU, wallCeilY, wV], [wU, y0 + pt.y, wV], 0.015, coldWaterMat)
+      addPipeSegment(THREE, group, [wU, yHeader, wV], [wU, y0 + pt.y, wV], 0.015, coldWaterMat)
 
       // Short horizontal stub from wall core to fixture terminal (clamped to wall thickness, never floating across room/yard)
       const dist = Math.hypot(pt.u - wU, pt.v - wV)
@@ -277,21 +435,21 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
 
       // 2. Sewer & Drainage:
       if (pt.kind === 'toilet' || pt.kind === 'sink' || pt.kind === 'shower' || pt.kind === 'laundry_tub' || pt.kind === 'washing_machine') {
-        const drainR = pt.kind === 'toilet' ? 0.05 : 0.025
-        const ySewer = -0.06
-        // Fixture vertical drain down into the ground pit
+        const drainR = pt.kind === 'toilet' ? 0.045 : 0.025
+        const ySewer = -0.14
+        // Fixture vertical drain down into the deep ground pit
         addPipeSegment(THREE, group, [pt.u, y0 + Math.max(0.12, pt.y * 0.45), pt.v], [pt.u, ySewer, pt.v], drainR, sewerMat)
         // Excavated pit at the base of fixture drop
-        addExcavatedPit(THREE, group, pt.u, pt.v, 0.28, troughMat, moundMat)
-        // Underground pipe nestled in trench to main collector
+        addExcavatedPit(THREE, group, pt.u, pt.v, 0.32, troughMat, moundMat)
+        // Underground pipe nestled deep in trench to main collector
         addPipeSegment(THREE, group, [pt.u, ySewer, pt.v], [sewerMainX, ySewer, pt.v], drainR, sewerMat)
         // Excavated ground trench with raised dirt mounds along the pipe run
-        addExcavatedTrench(THREE, group, [pt.u, pt.v], [sewerMainX, pt.v], Math.max(0.24, drainR * 4), troughMat, moundMat)
+        addExcavatedTrench(THREE, group, [pt.u, pt.v], [sewerMainX, pt.v], Math.max(0.28, drainR * 5), troughMat, moundMat)
 
         // Traps & inspection chambers
         if (pt.kind === 'sink') {
           // Grease trap (caixa de gordura) outside kitchen
-          addInspectionChamber(THREE, group, (pt.u + sewerMainX) / 2, 0, pt.v, 0.40, 0.16, concreteMat, box4x2Mat, moundMat)
+          addInspectionChamber(THREE, group, (pt.u + sewerMainX) / 2, -0.05, pt.v, 0.42, 0.22, concreteMat, box4x2Mat, moundMat)
         } else if (pt.kind === 'shower') {
           // Siphon floor drain (caixa sifonada) in bathroom
           const sifonada = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 12), sewerMat)
@@ -304,12 +462,12 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
 
     if (Number.isFinite(minV)) {
       const frontV = (plan.lot?.rect?.[1] ?? -1.5) + 0.6
-      const ySewer = -0.06
+      const ySewer = -0.14
       // Main underground collector running forward to street alignment inside the trench
       addPipeSegment(THREE, group, [sewerMainX, ySewer, minV], [sewerMainX, ySewer, frontV], 0.05, sewerMat)
-      addExcavatedTrench(THREE, group, [sewerMainX, minV], [sewerMainX, frontV], 0.32, troughMat, moundMat)
+      addExcavatedTrench(THREE, group, [sewerMainX, minV], [sewerMainX, frontV], 0.36, troughMat, moundMat)
       // Building inspection chamber (caixa de inspeção predial) on the front lot
-      addInspectionChamber(THREE, group, sewerMainX, 0, frontV, 0.52, 0.20, concreteMat, box4x2Mat, moundMat)
+      addInspectionChamber(THREE, group, sewerMainX, -0.05, frontV, 0.52, 0.25, concreteMat, box4x2Mat, moundMat)
     }
   }
 

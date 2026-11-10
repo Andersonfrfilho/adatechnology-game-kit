@@ -147,7 +147,7 @@ export function buildBlueprintStage(
         bx1 = Math.max(bx1, u1)
         bz1 = Math.max(bz1, v1)
       }
-      addBoxMesh(THREE, group, u0, 0.003, v0, u1, 0.010, v1, cyanMat)
+      addBoxMesh(THREE, group, u0, 0.006, v0, u1, 0.012, v1, cyanMat)
     }
     const r0 = rs[0]
     if (r0) {
@@ -226,14 +226,14 @@ export function buildBlueprintStage(
   }
 
   if (Number.isFinite(bx0) && Number.isFinite(bx1)) {
-    addBoxMesh(THREE, group, bx0 - 0.15, -0.06, bz0 - 0.15, bx1 + 0.15, 0.002, bz1 + 0.15, dirtMat)
+    addBoxMesh(THREE, group, bx0 - 0.25, -0.06, bz0 - 0.25, bx1 + 0.25, 0.005, bz1 + 0.25, dirtMat)
     addBatterBoards(THREE, group, bx0, bz0, bx1, bz1, woodMat, cyanMat)
   }
   for (const ob of (plan.outbuildings || []).filter(Boolean)) {
     const [ou0, ov0, ou1, ov1] = ob.aabb
     const th = ob.thickness || 0.15
     const hw = th / 2
-    addBoxMesh(THREE, group, ou0 - 0.15, -0.06, ov0 - 0.15, ou1 + 0.15, 0.002, ov1 + 0.15, dirtMat)
+    addBoxMesh(THREE, group, ou0 - 0.25, -0.06, ov0 - 0.25, ou1 + 0.25, 0.005, ov1 + 0.25, dirtMat)
     addBatterBoards(THREE, group, ou0, ov0, ou1, ov1, woodMat, cyanMat)
 
     // Structural concrete column / beam markers (pillarMat - red boxes) at the 4 corners
@@ -244,7 +244,20 @@ export function buildBlueprintStage(
       [ou1 - hw, ov1 - hw],
     ]
     for (const [cx, cz] of corners) {
-      addBoxMesh(THREE, group, cx - hw - 0.02, 0.01, cz - hw - 0.02, cx + hw + 0.02, 0.042, cz + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, cx - hw - 0.02, 0.008, cz - hw - 0.02, cx + hw + 0.02, 0.045, cz + hw + 0.02, pillarMat)
+    }
+
+    // Concrete grade beam line markers (baldrame / vigas de concreto) under outbuilding walls
+    for (const w of ob.walls || []) {
+      const alongU = w.axis === 'u'
+      const a = Math.min(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1)
+      const b = Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1)
+      const L = alongU ? w.v0 : w.u0
+      if (alongU) {
+        addBoxMesh(THREE, group, a, 0.007, L - hw, b, 0.024, L + hw, chalkMat)
+      } else {
+        addBoxMesh(THREE, group, L - hw, 0.007, a, L + hw, 0.024, b, chalkMat)
+      }
     }
 
     // Structural concrete markers at door jambs
@@ -256,20 +269,20 @@ export function buildBlueprintStage(
       for (const offset of [-dhw, dhw]) {
         const jx = alongU ? dAt + offset : dPos
         const jz = alongU ? dPos : dAt + offset
-        addBoxMesh(THREE, group, jx - hw - 0.01, 0.01, jz - hw - 0.01, jx + hw + 0.01, 0.042, jz + hw + 0.01, pillarMat)
+        addBoxMesh(THREE, group, jx - hw - 0.01, 0.008, jz - hw - 0.01, jx + hw + 0.01, 0.045, jz + hw + 0.01, pillarMat)
       }
     }
 
     // Intermediate wall tie columns if span > 3.2m
     if (ou1 - ou0 > 3.2) {
       const midU = (ou0 + ou1) / 2
-      addBoxMesh(THREE, group, midU - hw - 0.02, 0.01, ov0 - 0.02, midU + hw + 0.02, 0.042, ov0 + th + 0.02, pillarMat)
-      addBoxMesh(THREE, group, midU - hw - 0.02, 0.01, ov1 - th - 0.02, midU + hw + 0.02, 0.042, ov1 + 0.02, pillarMat)
+      addBoxMesh(THREE, group, midU - hw - 0.02, 0.008, ov0 - 0.02, midU + hw + 0.02, 0.045, ov0 + th + 0.02, pillarMat)
+      addBoxMesh(THREE, group, midU - hw - 0.02, 0.008, ov1 - th - 0.02, midU + hw + 0.02, 0.045, ov1 + 0.02, pillarMat)
     }
     if (ov1 - ov0 > 3.2) {
       const midV = (ov0 + ov1) / 2
-      addBoxMesh(THREE, group, ou0 - 0.02, 0.01, midV - hw - 0.02, ou0 + th + 0.02, 0.042, midV + hw + 0.02, pillarMat)
-      addBoxMesh(THREE, group, ou1 - th - 0.02, 0.01, midV - hw - 0.02, ou1 + 0.02, 0.042, midV + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, ou0 - 0.02, 0.008, midV - hw - 0.02, ou0 + th + 0.02, 0.045, midV + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, ou1 - th - 0.02, 0.008, midV - hw - 0.02, ou1 + 0.02, 0.045, midV + hw + 0.02, pillarMat)
     }
   }
   return group
