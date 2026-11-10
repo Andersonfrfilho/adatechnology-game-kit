@@ -57,7 +57,13 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
   // floor drain with grate: metal frame, dark bottom and bars
   function drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void { // px,pz,c: foot of the downpipe and colour of the pipe leading to the drain (optional); stays in the ground floor group (shows even with the roof cut)
     const g0 = cursor.group; cursor.group = 'f0';
-    if (px != null && pz != null && c != null) boxC('plain', (px + x) / 2, 0.075, (pz + z) / 2, Math.abs(x - px) + 0.05, 0.05, Math.abs(z - pz) + 0.05, sh(c, 0.85));
+    if (px != null && pz != null && c != null) {
+      const dx = x - px, dz = z - pz, len = Math.hypot(dx, dz);
+      if (len > 1e-3) {
+        // Slender 45° angled downspout shoe directly discharging into the grate (no giant square block)
+        boxC('plain', (px + x) / 2, 0.055, (pz + z) / 2, 0.08, 0.06, len + 0.04, sh(c, 0.85), Math.atan2(dx, dz));
+      }
+    }
     const t = 0.045; bx('plain', x - 0.12, 0, z - 0.12, x + 0.12, t - 0.006, z + 0.12, 0xb9b5ac); bx('metal', x - 0.11, t, z - 0.11, x + 0.11, t + 0.012, z + 0.11, 0x5a5d61); bx('plain', x - 0.085, t + 0.012, z - 0.085, x + 0.085, t + 0.014, z + 0.085, 0x16171a);
     for (let k = -3; k <= 3; k++) { bx('metal', x + k * 0.025 - 0.006, t + 0.012, z - 0.085, x + k * 0.025 + 0.006, t + 0.02, z + 0.085, 0x8a8e92); }
     bx('metal', x - 0.085, t + 0.012, z - 0.006, x + 0.085, t + 0.02, z + 0.006, 0x8a8e92);

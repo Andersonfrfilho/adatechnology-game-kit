@@ -33,7 +33,9 @@ export function installHouseWindows(K: Kernel, shared: Shared): void {
         // the sill and the grille are fixed into the frame's opening: they go where the window goes (with the wall that falls), never left in the air
         cursor.pc = frame;
         const off = outside * (th / 2 + 0.03); // sill
-        if (alongU) bx('plaster', a - 0.05, y0 + ya - 0.04, L + (outside > 0 ? th / 2 : -th / 2 - 0.08), b + 0.05, y0 + ya, L + (outside > 0 ? th / 2 + 0.08 : -th / 2), pe_); else bx('plaster', L + (outside > 0 ? th / 2 : -th / 2 - 0.08), y0 + ya - 0.04, a - 0.05, L + (outside > 0 ? th / 2 + 0.08 : -th / 2), y0 + ya, b + 0.05, pe_);
+        // Stone window sill with projecting drip edge (pingadeira), preventing coplanar z-fighting with the wall below
+        if (alongU) bx('plaster', a - 0.05, y0 + ya - 0.02, L + (outside > 0 ? th / 2 - 0.01 : -th / 2 - 0.08), b + 0.05, y0 + ya + 0.02, L + (outside > 0 ? th / 2 + 0.08 : -th / 2 + 0.01), pe_);
+        else bx('plaster', L + (outside > 0 ? th / 2 - 0.01 : -th / 2 - 0.08), y0 + ya - 0.02, a - 0.05, L + (outside > 0 ? th / 2 + 0.08 : -th / 2 + 0.01), y0 + ya + 0.02, b + 0.05, pe_);
         if (R.facade.grilles && !cut) { const g = C.gate != null ? C.gate : 0x2a2a2e, go = outside * (th / 2 + 0.07), n = Math.max(3, Math.round(j.width / 0.12)), spacing = (j.width - 0.06) / n;
           // the grille is steel bars of its own (a piece apart from the frame): a shot between two bars goes on to the glass, one on a bar hits the bar
           cursor.pc = pieceRecord('window_grille:' + j.id, 'steel', null, { floor: f, mass: STEEL_KG_PER_M3 * ((n + 1) * (yb - ya + 0.06) * GRILLE_BAR * GRILLE_BAR + 3 * j.width * 0.025 * 0.024), aperture: { alongU, a: a + 0.03, b: a + 0.03 + n * spacing, y0: y0 + ya - 0.03, y1: y0 + yb + 0.03, bars: { spacing, width: GRILLE_BAR } } });

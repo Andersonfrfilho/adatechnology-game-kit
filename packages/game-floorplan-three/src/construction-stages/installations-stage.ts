@@ -44,16 +44,15 @@ function addExcavatedTrench(
 
   const bermW = 0.12
   const bermH = 0.08
-  const troughH = 0.20
 
   if (isAlongX) {
     const len = Math.max(0.06, maxX - minX)
     const midX = (minX + maxX) / 2
     const midZ = a[1]
 
-    // 1. Deep recessed dark bottom trough below ground level
-    const trough = new THREE.Mesh(new THREE.BoxGeometry(len, troughH, trenchWidth), troughMat)
-    trough.position.set(midX, -0.10, midZ)
+    // 1. Excavated channel bed (dark damp ditch bottom, cleanly above ground y=0 to eliminate z-fighting)
+    const trough = new THREE.Mesh(new THREE.BoxGeometry(len, 0.012, trenchWidth), troughMat)
+    trough.position.set(midX, 0.006, midZ)
     trough.receiveShadow = true
     parent.add(trough)
 
@@ -75,9 +74,9 @@ function addExcavatedTrench(
     const midX = a[0]
     const midZ = (minZ + maxZ) / 2
 
-    // 1. Deep recessed dark bottom trough below ground level
-    const trough = new THREE.Mesh(new THREE.BoxGeometry(trenchWidth, troughH, len), troughMat)
-    trough.position.set(midX, -0.10, midZ)
+    // 1. Excavated channel bed (dark damp ditch bottom, cleanly above ground y=0 to eliminate z-fighting)
+    const trough = new THREE.Mesh(new THREE.BoxGeometry(trenchWidth, 0.012, len), troughMat)
+    trough.position.set(midX, 0.006, midZ)
     trough.receiveShadow = true
     parent.add(trough)
 
@@ -108,8 +107,8 @@ function addExcavatedPit(
 ): void {
   const bermW = 0.10
   const bermH = 0.08
-  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.20, size), troughMat)
-  bottom.position.set(x, -0.10, z)
+  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.012, size), troughMat)
+  bottom.position.set(x, 0.006, z)
   parent.add(bottom)
 
   const collarN = new THREE.Mesh(new THREE.BoxGeometry(size + bermW * 2, bermH, bermW), moundMat)
@@ -436,12 +435,12 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
       // 2. Sewer & Drainage:
       if (pt.kind === 'toilet' || pt.kind === 'sink' || pt.kind === 'shower' || pt.kind === 'laundry_tub' || pt.kind === 'washing_machine') {
         const drainR = pt.kind === 'toilet' ? 0.045 : 0.025
-        const ySewer = -0.14
-        // Fixture vertical drain down into the deep ground pit
+        const ySewer = 0.04
+        // Fixture vertical drain down into the ground trench
         addPipeSegment(THREE, group, [pt.u, y0 + Math.max(0.12, pt.y * 0.45), pt.v], [pt.u, ySewer, pt.v], drainR, sewerMat)
         // Excavated pit at the base of fixture drop
         addExcavatedPit(THREE, group, pt.u, pt.v, 0.32, troughMat, moundMat)
-        // Underground pipe nestled deep in trench to main collector
+        // Underground pipe nestled visibly inside the trench to main collector
         addPipeSegment(THREE, group, [pt.u, ySewer, pt.v], [sewerMainX, ySewer, pt.v], drainR, sewerMat)
         // Excavated ground trench with raised dirt mounds along the pipe run
         addExcavatedTrench(THREE, group, [pt.u, pt.v], [sewerMainX, pt.v], Math.max(0.28, drainR * 5), troughMat, moundMat)
@@ -449,7 +448,7 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
         // Traps & inspection chambers
         if (pt.kind === 'sink') {
           // Grease trap (caixa de gordura) outside kitchen
-          addInspectionChamber(THREE, group, (pt.u + sewerMainX) / 2, -0.05, pt.v, 0.42, 0.22, concreteMat, box4x2Mat, moundMat)
+          addInspectionChamber(THREE, group, (pt.u + sewerMainX) / 2, 0.01, pt.v, 0.42, 0.18, concreteMat, box4x2Mat, moundMat)
         } else if (pt.kind === 'shower') {
           // Siphon floor drain (caixa sifonada) in bathroom
           const sifonada = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 12), sewerMat)
@@ -462,12 +461,12 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
 
     if (Number.isFinite(minV)) {
       const frontV = (plan.lot?.rect?.[1] ?? -1.5) + 0.6
-      const ySewer = -0.14
+      const ySewer = 0.04
       // Main underground collector running forward to street alignment inside the trench
       addPipeSegment(THREE, group, [sewerMainX, ySewer, minV], [sewerMainX, ySewer, frontV], 0.05, sewerMat)
       addExcavatedTrench(THREE, group, [sewerMainX, minV], [sewerMainX, frontV], 0.36, troughMat, moundMat)
       // Building inspection chamber (caixa de inspeção predial) on the front lot
-      addInspectionChamber(THREE, group, sewerMainX, -0.05, frontV, 0.52, 0.25, concreteMat, box4x2Mat, moundMat)
+      addInspectionChamber(THREE, group, sewerMainX, 0.01, frontV, 0.52, 0.20, concreteMat, box4x2Mat, moundMat)
     }
   }
 

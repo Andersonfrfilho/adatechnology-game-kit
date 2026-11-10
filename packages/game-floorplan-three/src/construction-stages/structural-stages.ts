@@ -76,6 +76,7 @@ function processPart(
   groups: StructuralStageGroups,
   p: StructurePart,
   mats: Record<string, THREE_NS.Material>,
+  totalFloors = 1,
 ): void {
   const [u0, v0, u1, v1] = p.aabb
   const isGroundSlab = p.role === 'slab' && p.floor === 0 && !p.id.includes('top') && p.y0 < 0.3
@@ -99,8 +100,9 @@ function processPart(
     if (p.floor === 0 && p.material === 'concrete' && p.y0 <= 0.1) {
       addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
     }
-    // Top rebar extensions in frame (Level 2) only for ground-supported columns, not elevated columns
-    if (p.material === 'concrete' && p.y0 <= 0.1) {
+    // Top rebar extensions in frame (Level 2) only for ground-supported columns if there is an upper floor
+    const hasUpperFloor = totalFloors > (p.floor ?? 0) + 1
+    if (hasUpperFloor && p.material === 'concrete' && p.y0 <= 0.1) {
       addRebarCage(THREE, groups.frame, u0, v0, u1, v1, p.y1, 0.26, mats.rebar!)
     }
     return
@@ -116,7 +118,14 @@ function processPart(
   if (p.role === 'beam') {
     const isLintel = /lintel|sillbeam|sill_beam/.test(p.id)
     const bMat = p.material === 'wood_soft' || p.material === 'wood_hard' ? mats.wood! : isLintel ? mats.lintel! : mats.beam!
-    addStageBox(THREE, groups.frame, u0 - 0.005, p.y0, v0 - 0.005, u1 + 0.005, p.y1, v1 + 0.005, bMat, p.id)
+    let y0 = p.y0
+    const y1 = p.y1
+    // Residential slab panel beams must have uniform structural height (max 24cm drop below slab)
+    // so they match the perimeter bond beams and do not drop awkwardly into room centers
+    if (p.id.includes('_b') && p.material === 'concrete') {
+      y0 = Math.max(y0, y1 - 0.24)
+    }
+    addStageBox(THREE, groups.frame, u0 - 0.005, y0, v0 - 0.005, u1 + 0.005, y1, v1 + 0.005, bMat, p.id)
     return
   }
   if (p.role === 'slab') {
@@ -148,8 +157,8 @@ function processOutbuilding(
   // 0. Compacted dirt excavation bed under outbuilding
   addStageBox(THREE, groups.foundation, a0 - 0.05, -0.06, b0 - 0.05, a1 + 0.05, 0.004, b1 + 0.05, mats.dirt!, `${e.id}_dirt_bed`)
 
-  // 1. Foundation: ground slab + baldrame under walls
-  addStageBox(THREE, groups.foundation, a0 + th, -0.08, b0 + th, a1 - th, 0.02, b1 - th, mats.slab0!, `${e.id}_slab`)
+  // 1. Foundation: baldrame grade beams under walls + compacted dirt interior (matches main house)
+  addStageBox(THREE, groups.foundation, a0 + th, -0.06, b0 + th, a1 - th, 0.004, b1 - th, mats.dirt!, `${e.id}_interior_dirt`)
   for (let i = 0; i < e.walls.length; i++) {
     const w = e.walls[i]!
     const alongU = w.axis === 'u'
@@ -160,7 +169,7 @@ function processOutbuilding(
     }
   }
 
-  // 2. Frame: columns at corners + door lintels + top tie beam
+  // 2. Frame: columns at corners + door lintels + continuous top bond beams
   const corners: Array<[number, number]> = [
     [a0, b0],
     [a1, b0],
@@ -172,28 +181,26 @@ function processOutbuilding(
     const [cx, cz] = corners[k]!
     addRebarCage(THREE, groups.foundation, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, 0, 0.42, mats.rebar!)
     addStageBox(THREE, groups.frame, cx - colHalf, 0, cz - colHalf, cx + colHalf, ceiling, cz + colHalf, mats.concrete!, `${e.id}_col_${k}`)
-    addRebarCage(THREE, groups.frame, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, ceiling, 0.22, mats.rebar!)
   }
 
+  // Continuous perimeter top tie beams (viga cinta de respaldo superior) - runs unbroken along all 4 walls
+  const beamY0 = ceiling - 0.20
+  addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b0 - th / 2, a1 + th / 2, ceiling, b0 + th / 2, mats.beam!, `${e.id}_topbeam_north`)
+  addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b1 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_south`)
+  addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b0 - th / 2, a0 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_west`)
+  addStageBox(THREE, groups.frame, a1 - th / 2, beamY0, b0 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_east`)
+
+  // Door lintel (verga de concreto armado): sits directly over the door opening and ties into the top tie beam
   for (const d of e.doors || []) {
     const alongU = d.axis === 'u'
     const hw = (d.width || 0.85) / 2
     const dAt = d.at != null ? d.at : alongU ? d.u : d.v
     const dPos = d.pos != null ? d.pos : alongU ? d.v : d.u
+    const lintelTop = Math.max(2.35, beamY0)
     if (alongU) {
-      addStageBox(THREE, groups.frame, dAt - hw - 0.15, 2.1, dPos - th / 2, dAt + hw + 0.15, 2.3, dPos + th / 2, mats.lintel!, `${d.id}_lintel`)
+      addStageBox(THREE, groups.frame, dAt - hw - 0.20, 2.1, dPos - th / 2, dAt + hw + 0.20, lintelTop, dPos + th / 2, mats.lintel!, `${d.id}_lintel`)
     } else {
-      addStageBox(THREE, groups.frame, dPos - th / 2, 2.1, dAt - hw - 0.15, dPos + th / 2, 2.3, dAt + hw + 0.15, mats.lintel!, `${d.id}_lintel`)
-    }
-  }
-
-  for (let i = 0; i < e.walls.length; i++) {
-    const w = e.walls[i]!
-    const alongU = w.axis === 'u'
-    if (alongU) {
-      addStageBox(THREE, groups.frame, w.u0, ceiling - 0.18, w.v0 - th / 2, w.u1, ceiling, w.v0 + th / 2, mats.beam!, `${e.id}_beam_${i}`)
-    } else {
-      addStageBox(THREE, groups.frame, w.u0 - th / 2, ceiling - 0.18, w.v0, w.u0 + th / 2, ceiling, w.v1, mats.beam!, `${e.id}_beam_${i}`)
+      addStageBox(THREE, groups.frame, dPos - th / 2, 2.1, dAt - hw - 0.20, dPos + th / 2, lintelTop, dAt + hw + 0.20, mats.lintel!, `${d.id}_lintel`)
     }
   }
 
@@ -356,8 +363,10 @@ export function buildStructuralStageGroups(
     addStageBox(THREE, groups.foundation, minU - 0.05, -0.06, minV - 0.05, maxU + 0.05, 0.004, maxV + 0.05, mats.dirt!, 'foundation_dirt_bed')
   }
 
+  const totalFloors = rawStructure?.floors ?? (rawStructure?.levels ? Math.max(1, rawStructure.levels.length - 1) : 1)
+
   for (const p of detailed.parts) {
-    processPart(THREE, groups, p, mats)
+    processPart(THREE, groups, p, mats, totalFloors)
   }
 
   // 2. Interior columns at interior wall junctions and spans
@@ -376,9 +385,11 @@ export function buildStructuralStageGroups(
     if (c.floor === 0) {
       addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
     }
-    // Concrete column and top rebar extension in frame (Level 2)
+    // Concrete column and top rebar extension in frame (Level 2) only if there is an upper floor
     addStageBox(THREE, groups.frame, u0 - 0.008, y0, v0 - 0.008, u1 + 0.008, y1, v1 + 0.008, mats.concrete!, `interior_column_${c.floor}_${k}`)
-    addRebarCage(THREE, groups.frame, u0, v0, u1, v1, y1, 0.26, mats.rebar!)
+    if (totalFloors > c.floor + 1) {
+      addRebarCage(THREE, groups.frame, u0, v0, u1, v1, y1, 0.26, mats.rebar!)
+    }
   }
 
   if (outbuildings) {

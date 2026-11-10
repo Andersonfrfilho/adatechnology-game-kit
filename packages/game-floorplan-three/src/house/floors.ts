@@ -50,7 +50,9 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       for (const c of R.rooms.filter(c => c.floor === f)) {
         if (c.type === 'void' || c.outbuilding || (c.type === 'elevator' && f > 0)) continue;
         const col = floorColor(c), parent = f > 0 ? ['slab_' + f + '_' + c.type, 'slab_' + f + '_' + c.id, 'slab_' + f].find(hasSlab) : null;
-        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.04, r[1], r[2], y0, r[3], col); }
+        const floorTop = f === 0 ? y0 + 0.012 : y0;
+        const floorBottom = f === 0 ? y0 - 0.03 : y0 - 0.04;
+        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], floorBottom, r[1], r[2], floorTop, r[3], col); }
       }
       if (f > 0) { // slab under the floor
         const rs = R.rooms.filter(c => c.floor === f && c.type !== 'void' && c.type !== 'elevator').flatMap(rectsOf); 

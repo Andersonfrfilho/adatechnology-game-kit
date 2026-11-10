@@ -124,7 +124,7 @@ export interface ApplyConstructionLevelOptions {
 function stageVisible(stage: string, level: number, opts: ApplyConstructionLevelOptions): boolean {
   switch (stage) {
     case 'installations':
-      return level === 4 || (level >= 4 && opts.waterLayer === true)
+      return level >= 4
     case 'finishes':
       return level >= 5
     case 'openings':
@@ -181,7 +181,7 @@ export function applyConstructionLevel(
       continue
     }
     if (name === 'attic_tank') {
-      child.visible = level === 4 || (level >= 5 && !roofOn)
+      child.visible = level >= 4
       continue
     }
     if (/^t\d+$/.test(name)) {

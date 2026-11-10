@@ -42,7 +42,32 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
       const pts = tr.points.map(xyz), d = tr.diameter || 0.025;
       if (tr.exposed === 'wall') { // inside the wall: hidden part (vanishes until the wall breaks)
         const pt = H.points.find(p => p.run === tr.id), com: HouseRoom | undefined = tr.to != null ? shared.ctx.roomById[tr.to] : undefined, g = groupOf(com || (pt && { floor: pt.floor }));
-        part('wall_pipe', [0, 0, 0], () => { for (let i = 0; i + 1 < pts.length; i++) pipe(pts[i], pts[i + 1], d, PIPE_COLOR); for (const p of pts) cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); }, { id: 'pipe:' + tr.id, hidden: true, run: tr.id, to: tr.to, from: tr.from }, g === 'lot' ? 'f0' : g);
+        const rec = shared.ctx.r as HouseRecord;
+        const topCeil = rec.floors[nA - 1]?.ceiling ?? 2.8;
+        const yAttic = topCeil + 0.08;
+        // Snap room distribution point to the nearest wall core to prevent floating across room or yard
+        const last = pts[pts.length - 1];
+        let wallX = last ? last[0] : pts[0] ? pts[0][0] : 0;
+        let wallZ = last ? last[2] : pts[0] ? pts[0][2] : 0;
+        let bestDist = Infinity;
+        for (const w of rec.walls || []) {
+          const dx = w.u1 - w.u0, dz = w.v1 - w.v0, lenSq = dx * dx + dz * dz;
+          if (lenSq < 1e-6) continue;
+          const t = Math.max(0, Math.min(1, ((wallX - w.u0) * dx + (wallZ - w.v0) * dz) / lenSq));
+          const px = w.u0 + t * dx, pz = w.v0 + t * dz;
+          const dist = Math.hypot(wallX - px, wallZ - pz);
+          if (dist < bestDist) { bestDist = dist; wallX = px; wallZ = pz; }
+        }
+        const safePts: number[][] = pts.length >= 2 ? [
+          [pts[0][0], Math.max(pts[0][1], yAttic), pts[0][2]],
+          [pts[0][0], yAttic, wallZ],
+          [wallX, yAttic, wallZ],
+          [wallX, last ? last[1] : 0.6, wallZ],
+        ] : pts;
+        part('wall_pipe', [0, 0, 0], () => {
+          for (let i = 0; i + 1 < safePts.length; i++) pipe(safePts[i], safePts[i + 1], d, PIPE_COLOR);
+          for (const p of safePts) cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR);
+        }, { id: 'pipe:' + tr.id, hidden: true, run: tr.id, to: tr.to, from: tr.from, constructionStage: 'installations' }, g === 'lot' ? 'f0' : g);
         continue;
       }
       let g: string;
