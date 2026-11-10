@@ -46,7 +46,13 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
         continue;
       }
       let g: string;
-      if (tr.exposed === 'tank_outlet') g = (shared.ctx.waterTankPos && shared.ctx.waterTankPos.group) || 'f0';
+      if (tr.exposed === 'tank_outlet') {
+        g = (shared.ctx.waterTankPos && shared.ctx.waterTankPos.group) || 'f0';
+        const topCeil = (shared.ctx.r as HouseRecord).floors[nA - 1]?.ceiling ?? 2.8;
+        if (pts.length >= 2 && pts[1][1] < topCeil) {
+          pts[1][1] = topCeil + 0.05;
+        }
+      }
       else { const pt = H.points.find(p => p.id === tr.to); g = groupOf(pt); }
       cursor.group = g; cursor.pc = pieceRecord('pipe:' + tr.id, 'plastic', null, { tags: ['pipe'] });
       for (let i = 0; i + 1 < pts.length; i++) pipe(pts[i], pts[i + 1], d, PIPE_COLOR);

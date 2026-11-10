@@ -199,7 +199,7 @@ export function applyConstructionLevel(
       const ud = obj.userData
       if (!ud) return
       if (ud.part === 'wall_pipe') {
-        obj.visible = level === 4 || (level >= 4 && waterOn)
+        obj.visible = waterOn
         return
       }
       if (typeof ud.constructionStage === 'string') {
