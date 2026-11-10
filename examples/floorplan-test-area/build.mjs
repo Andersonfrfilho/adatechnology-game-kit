@@ -76,12 +76,17 @@ if (existsSync(roomHtml)) {
 
   const overlay = `<div id="boot" class="tr-loading tr-loading-solid tr-loading-fixed" role="status" aria-live="polite">
   <div class="tr-loading-card">
-    <div class="tr-loading-title">
+    <div class="tr-loading-title" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 18px;">
       <span class="tr-loading-spin"></span>
       <span class="tr-loading-label">Carregando a sala de casas…</span>
     </div>
-    <div class="tr-loading-bar tr-loading-indeterminate"><i></i></div>
-    <div class="tr-loading-step">Iniciando…</div>
+    <div class="tr-loading-bar" style="height: 10px; border-radius: 5px; background: #232730; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4); overflow: hidden; position: relative;">
+      <i style="width: 0%; height: 100%; border-radius: 5px; background: linear-gradient(90deg, #ffb300, #ffd23f); box-shadow: 0 0 10px rgba(255,210,63,0.35); transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: block;"></i>
+    </div>
+    <div class="tr-loading-info" style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 14px; line-height: 1.4;">
+      <span class="tr-loading-step" style="color: #a0a8b8; text-align: left; min-height: 1.4em;">Iniciando…</span>
+      <span class="tr-loading-pct" style="color: #ffd23f; font-weight: 700; font-feature-settings: 'tnum'; min-width: 48px; text-align: right; font-size: 15px; letter-spacing: 0.5px;">0%</span>
+    </div>
   </div>
 </div>
 <script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){var b=document.getElementById('boot');if(b){b.querySelector('.tr-loading-label').textContent='Loading the houses room…';b.querySelector('.tr-loading-step').textContent='Starting…';}}})()</script>`
@@ -99,12 +104,38 @@ if (existsSync(roomHtml)) {
 <script>
 (function () {
   var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt';
-  var paint = function () {
+  var curPct = 0;
+  var paint = function (delay) {
     return new Promise(function (resolve) {
       var done = false;
       var finish = function () { if (!done) { done = true; resolve(); } };
-      requestAnimationFrame(function () { setTimeout(finish, 0); });
-      setTimeout(finish, 100);
+      requestAnimationFrame(function () { setTimeout(finish, delay || 0); });
+      setTimeout(finish, (delay || 0) + 120);
+    });
+  };
+  var setProgress = function (target, ptText, enText, holdMs) {
+    var bar = document.querySelector('#boot .tr-loading-bar i');
+    var pctNode = document.querySelector('#boot .tr-loading-pct');
+    var stepNode = document.querySelector('#boot .tr-loading-step');
+    if (stepNode) stepNode.textContent = lang === 'en' ? enText : ptText;
+    return new Promise(function (resolve) {
+      var step = function () {
+        if (curPct < target) {
+          curPct = Math.min(target, curPct + Math.max(1, Math.ceil((target - curPct) * 0.35)));
+          if (bar) bar.style.width = curPct + '%';
+          if (pctNode) pctNode.textContent = curPct + '%';
+          if (curPct < target) {
+            requestAnimationFrame(step);
+            return;
+          }
+        } else {
+          curPct = target;
+          if (bar) bar.style.width = curPct + '%';
+          if (pctNode) pctNode.textContent = curPct + '%';
+        }
+        setTimeout(resolve, holdMs || 30);
+      };
+      requestAnimationFrame(step);
     });
   };
   var run = function (id) {
@@ -113,15 +144,20 @@ if (existsSync(roomHtml)) {
     document.body.appendChild(script);
   };
   var shown = document.getElementById('boot');
-  paint().then(paint).then(function () {
+
+  paint(30).then(function () {
+    return setProgress(15, 'Carregando motor 3D e ambiente…', 'Loading 3D engine and arena…', 40);
+  }).then(function () {
     run('room-bundle');
-    var step = document.querySelector('.tr-loading-step');
-    if (step) step.textContent = lang === 'en' ? 'Building houses…' : 'Construindo as casas…';
-    return paint();
+    return setProgress(45, 'Compilando catálogo e módulos de arquitetura…', 'Compiling floorplan modules…', 40);
   }).then(function () {
     run('floorplan-bundle');
+    return setProgress(75, 'Construindo plantas e estruturas…', 'Building houses and structures…', 40);
+  }).then(function () {
     window.__floorplanReport = FloorplanArea.loadInto(window.__testRoom);
-    return paint();
+    return setProgress(95, 'Finalizando iluminação e física…', 'Finalizing lighting and physics…', 40);
+  }).then(function () {
+    return setProgress(100, 'Pronto!', 'Ready!', 120);
   }).then(function () {
     if (shown) {
       shown.classList.add('tr-loading-hidden');
