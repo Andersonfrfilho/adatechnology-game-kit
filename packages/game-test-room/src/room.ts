@@ -806,6 +806,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (s.max[1] <= feet + STEP_UP) floor = Math.max(floor, s.max[1])
       else if (s.min[1] < feet + BODY_HEIGHT) blocked = true
     }
+    if (floor === -Infinity && world && Number.isFinite(feet)) {
+      const downRay = world.raycast([x, feet + STEP_UP, z], [0, -1, 0], STEP_UP + 2.5, { skipLoose: true })
+      if (downRay && downRay.point && downRay.point[1] <= feet + STEP_UP) {
+        floor = Math.max(floor, downRay.point[1])
+      }
+    }
     return { floor, blocked }
   }
   /**

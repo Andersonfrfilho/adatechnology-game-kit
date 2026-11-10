@@ -271,6 +271,7 @@ describe('houses in the room', () => {
     expect(house.groups['stage:2:frame']?.visible).toBe(false)
     expect(house.groups['stage:3:masonry']?.visible).toBe(false)
     expect(house.groups['stage:4:installations']?.visible).toBe(false)
+
     r.layer('water', true)
     expect(house.groups['stage:4:installations']?.visible).toBe(true)
     r.layer('water', false)

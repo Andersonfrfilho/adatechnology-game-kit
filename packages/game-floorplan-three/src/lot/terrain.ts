@@ -14,9 +14,9 @@ export function installLotTerrain(K: Kernel, shared: Shared): void {
     if (lt) {
       const [u0, v0, u1, v1] = lt.rect;
       bx('sidewalk', u0, -0.09, v0, u1, -0.03, v1, 0xdedad2); // lot base (the floor zones come on top)
-      bx('dirt', 0, -0.05, 0, R.w, 0.001, R.d, 0x8a7250); // dirt/earth footprint under the house
+      bx('dirt', 0, -0.05, 0, R.w, -0.005, R.d, 0x8a7250); // dirt/earth footprint under the house
       for (const ob of (R.outbuildings || [])) {
-        if (ob?.aabb) bx('dirt', ob.aabb[0], -0.05, ob.aabb[1], ob.aabb[2], 0.001, ob.aabb[3], 0x8a7250);
+        if (ob?.aabb) bx('dirt', ob.aabb[0], -0.05, ob.aabb[1], ob.aabb[2], -0.005, ob.aabb[3], 0x8a7250);
       }
       bx('asphalt', u0 - 40, -0.09, v0 - 9, u1 + 40, -0.03, v0 - 1.8, 0x8d9096); // street
       bx('sidewalk', u0 - 40, -0.06, v0 - 1.8, u1 + 40, 0.02, v0, 0xe4e0d6); // sidewalk

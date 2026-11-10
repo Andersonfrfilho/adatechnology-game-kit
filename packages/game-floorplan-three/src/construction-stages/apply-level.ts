@@ -124,7 +124,7 @@ export interface ApplyConstructionLevelOptions {
 function stageVisible(stage: string, level: number, opts: ApplyConstructionLevelOptions): boolean {
   switch (stage) {
     case 'installations':
-      return level >= 4
+      return level === 4 || (level >= 4 && opts.waterLayer === true)
     case 'finishes':
       return level >= 5
     case 'openings':

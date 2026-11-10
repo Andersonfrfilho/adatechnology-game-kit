@@ -43,28 +43,28 @@ function addExcavatedTrench(
   const maxZ = Math.max(a[1], b[1])
 
   const bermW = 0.08
-  const bermH = 0.045
-  const troughH = 0.02
+  const bermH = 0.05
+  const troughH = 0.08
 
   if (isAlongX) {
     const len = Math.max(0.06, maxX - minX)
     const midX = (minX + maxX) / 2
     const midZ = a[1]
 
-    // 1. Recessed dark bottom trough
+    // 1. Recessed dark bottom trough below ground level
     const trough = new THREE.Mesh(new THREE.BoxGeometry(len, troughH, trenchWidth), troughMat)
-    trough.position.set(midX, -0.005, midZ)
+    trough.position.set(midX, -0.07, midZ)
     trough.receiveShadow = true
     parent.add(trough)
 
-    // 2. Left side mound of excavated dirt
+    // 2. Left side mound of excavated dirt along trench rim
     const leftMound = new THREE.Mesh(new THREE.BoxGeometry(len + bermW, bermH, bermW), moundMat)
     leftMound.position.set(midX, bermH / 2, midZ - trenchWidth / 2 - bermW / 2)
     leftMound.castShadow = true
     leftMound.receiveShadow = true
     parent.add(leftMound)
 
-    // 3. Right side mound of excavated dirt
+    // 3. Right side mound of excavated dirt along trench rim
     const rightMound = new THREE.Mesh(new THREE.BoxGeometry(len + bermW, bermH, bermW), moundMat)
     rightMound.position.set(midX, bermH / 2, midZ + trenchWidth / 2 + bermW / 2)
     rightMound.castShadow = true
@@ -75,20 +75,20 @@ function addExcavatedTrench(
     const midX = a[0]
     const midZ = (minZ + maxZ) / 2
 
-    // 1. Recessed dark bottom trough
+    // 1. Recessed dark bottom trough below ground level
     const trough = new THREE.Mesh(new THREE.BoxGeometry(trenchWidth, troughH, len), troughMat)
-    trough.position.set(midX, -0.005, midZ)
+    trough.position.set(midX, -0.07, midZ)
     trough.receiveShadow = true
     parent.add(trough)
 
-    // 2. Left side mound of excavated dirt
+    // 2. Left side mound of excavated dirt along trench rim
     const leftMound = new THREE.Mesh(new THREE.BoxGeometry(bermW, bermH, len + bermW), moundMat)
     leftMound.position.set(midX - trenchWidth / 2 - bermW / 2, bermH / 2, midZ)
     leftMound.castShadow = true
     leftMound.receiveShadow = true
     parent.add(leftMound)
 
-    // 3. Right side mound of excavated dirt
+    // 3. Right side mound of excavated dirt along trench rim
     const rightMound = new THREE.Mesh(new THREE.BoxGeometry(bermW, bermH, len + bermW), moundMat)
     rightMound.position.set(midX + trenchWidth / 2 + bermW / 2, bermH / 2, midZ)
     rightMound.castShadow = true
@@ -107,9 +107,9 @@ function addExcavatedPit(
   moundMat: THREE_NS.Material,
 ): void {
   const bermW = 0.07
-  const bermH = 0.04
-  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.02, size), troughMat)
-  bottom.position.set(x, -0.005, z)
+  const bermH = 0.05
+  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.08, size), troughMat)
+  bottom.position.set(x, -0.07, z)
   parent.add(bottom)
 
   const collarN = new THREE.Mesh(new THREE.BoxGeometry(size + bermW * 2, bermH, bermW), moundMat)
@@ -227,7 +227,8 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
       : [defaultTankX, floorY0(plan.floors.length - 1) + 2.8, defaultTankZ]
 
     const ceiling0 = plan.floors[0]?.ceiling ?? 2.8
-    const yHeader = floorY0(0) + ceiling0 + 0.02
+    // Attic header plane sits strictly ABOVE the ceiling slab (in the attic space)
+    const yHeader = floorY0(0) + ceiling0 + 0.22
 
     // Nearest wall to water tank where distribution header enters the wall system
     const tankWall = nearestWallPoint(plan.walls, tankPos[0], tankPos[2], 0)
@@ -251,7 +252,7 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
       const [wU, wV] = nearestWallPoint(plan.walls, pt.u, pt.v, pt.floor)
 
       // 1. Cold water line:
-      // Routes along the wall network at yHeader (inside top beam/attic plane), making 90-degree turns
+      // Routes along the wall network in the attic (above the ceiling slab)
       const wallPath = routeAlongWalls(plan.walls, tankWall, [wU, wV])
       for (let i = 0; i + 1 < wallPath.length; i++) {
         const pA = wallPath[i]!
@@ -259,19 +260,25 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
         addPipeSegment(THREE, group, [pA[0], yHeader, pA[1]], [pB[0], yHeader, pB[1]], 0.015, coldWaterMat)
       }
       // Vertical distribution column drops inside the wall core down to the tap/fixture height
-      addPipeSegment(THREE, group, [wU, yHeader, wV], [wU, y0 + pt.y, wV], 0.015, coldWaterMat)
-      // Short horizontal stub from wall to fixture terminal
-      addPipeSegment(THREE, group, [wU, y0 + pt.y, wV], [pt.u, y0 + pt.y, pt.v], 0.015, coldWaterMat)
+      const wallCeilY = floorY0(pt.floor) + (plan.floors[pt.floor]?.ceiling ?? ceiling0)
+      addPipeSegment(THREE, group, [wU, wallCeilY, wV], [wU, y0 + pt.y, wV], 0.015, coldWaterMat)
+
+      // Short horizontal stub from wall core to fixture terminal (clamped to wall thickness, never floating across room/yard)
+      const dist = Math.hypot(pt.u - wU, pt.v - wV)
+      const stubLen = Math.min(0.08, dist)
+      const stubU = dist > 1e-4 ? wU + ((pt.u - wU) / dist) * stubLen : wU
+      const stubV = dist > 1e-4 ? wV + ((pt.v - wV) / dist) * stubLen : wV
+      addPipeSegment(THREE, group, [wU, y0 + pt.y, wV], [stubU, y0 + pt.y, stubV], 0.015, coldWaterMat)
       // Brass tap fitting at fixture
       const jointGeo = new THREE.SphereGeometry(0.025, 8, 8)
       const fitting = new THREE.Mesh(jointGeo, brassMat)
-      fitting.position.set(pt.u, y0 + pt.y, pt.v)
+      fitting.position.set(stubU, y0 + pt.y, stubV)
       group.add(fitting)
 
       // 2. Sewer & Drainage:
       if (pt.kind === 'toilet' || pt.kind === 'sink' || pt.kind === 'shower' || pt.kind === 'laundry_tub' || pt.kind === 'washing_machine') {
         const drainR = pt.kind === 'toilet' ? 0.05 : 0.025
-        const ySewer = 0.015
+        const ySewer = -0.06
         // Fixture vertical drain down into the ground pit
         addPipeSegment(THREE, group, [pt.u, y0 + Math.max(0.12, pt.y * 0.45), pt.v], [pt.u, ySewer, pt.v], drainR, sewerMat)
         // Excavated pit at the base of fixture drop
@@ -297,7 +304,7 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_
 
     if (Number.isFinite(minV)) {
       const frontV = (plan.lot?.rect?.[1] ?? -1.5) + 0.6
-      const ySewer = 0.015
+      const ySewer = -0.06
       // Main underground collector running forward to street alignment inside the trench
       addPipeSegment(THREE, group, [sewerMainX, ySewer, minV], [sewerMainX, ySewer, frontV], 0.05, sewerMat)
       addExcavatedTrench(THREE, group, [sewerMainX, minV], [sewerMainX, frontV], 0.32, troughMat, moundMat)

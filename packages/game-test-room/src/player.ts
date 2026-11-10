@@ -234,6 +234,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     } else {
       floorLevel = floorHere()
       y = Math.max(0, flyY - floorLevel)
+      const foot = o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, flyY)
+      if (foot && Number.isFinite(foot.floor) && foot.floor > floorLevel) {
+        y = Math.max(y, foot.floor - floorLevel)
+      }
       vy = 0
     }
     return flying
@@ -623,7 +627,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         return
       }
       // the floor under the feet: a step up is taken at once, a drop is a fall
-      const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
+      const currentFeet = floorLevel + y
+      const solidFoot = o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, currentFeet)
+      const solidFloor = solidFoot && Number.isFinite(solidFoot.floor) ? solidFoot.floor - floorLevel : -Infinity
+      const floor = Math.max(0, solidFloor)
       floorUnder = floor
       if (y < floor && vy <= 0) y = floor
       if (y <= floor && keys.has('Space') && !walkHeld) {

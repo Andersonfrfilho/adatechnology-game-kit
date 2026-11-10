@@ -123,8 +123,10 @@ function processPart(
     return
   }
   if (p.role === 'roof') {
-    const rMat = p.material === 'steel' ? mats.sheet! : mats.wood!
-    addStageBox(THREE, groups.roofFraming, u0, p.y0, v0, u1, p.y1, v1, rMat, p.id)
+    // The abstract bounding volume for roof pitch must not be drawn as a solid box;
+    // real rafters and ridge beams are already drawn by addRafter and addRidgeBeam above,
+    // and the roof tiles and gutters are drawn by the roof stage.
+    return
   }
 }
 
