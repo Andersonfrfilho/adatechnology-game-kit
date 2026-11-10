@@ -218,7 +218,45 @@ export function buildBlueprintStage(
   }
   for (const ob of (plan.outbuildings || []).filter(Boolean)) {
     const [ou0, ov0, ou1, ov1] = ob.aabb
+    const th = ob.thickness || 0.15
+    const hw = th / 2
     addBatterBoards(THREE, group, ou0, ov0, ou1, ov1, woodMat, cyanMat)
+
+    // Structural concrete column / beam markers (pillarMat - red boxes) at the 4 corners
+    const corners: Array<[number, number]> = [
+      [ou0 + hw, ov0 + hw],
+      [ou1 - hw, ov0 + hw],
+      [ou0 + hw, ov1 - hw],
+      [ou1 - hw, ov1 - hw],
+    ]
+    for (const [cx, cz] of corners) {
+      addBoxMesh(THREE, group, cx - hw - 0.02, 0.01, cz - hw - 0.02, cx + hw + 0.02, 0.042, cz + hw + 0.02, pillarMat)
+    }
+
+    // Structural concrete markers at door jambs
+    for (const d of ob.doors || []) {
+      const alongU = d.axis === 'u'
+      const dhw = (d.width || 0.85) / 2
+      const dAt = d.at != null ? d.at : alongU ? d.u : d.v
+      const dPos = d.pos != null ? d.pos : alongU ? d.v : d.u
+      for (const offset of [-dhw, dhw]) {
+        const jx = alongU ? dAt + offset : dPos
+        const jz = alongU ? dPos : dAt + offset
+        addBoxMesh(THREE, group, jx - hw - 0.01, 0.01, jz - hw - 0.01, jx + hw + 0.01, 0.042, jz + hw + 0.01, pillarMat)
+      }
+    }
+
+    // Intermediate wall tie columns if span > 3.2m
+    if (ou1 - ou0 > 3.2) {
+      const midU = (ou0 + ou1) / 2
+      addBoxMesh(THREE, group, midU - hw - 0.02, 0.01, ov0 - 0.02, midU + hw + 0.02, 0.042, ov0 + th + 0.02, pillarMat)
+      addBoxMesh(THREE, group, midU - hw - 0.02, 0.01, ov1 - th - 0.02, midU + hw + 0.02, 0.042, ov1 + 0.02, pillarMat)
+    }
+    if (ov1 - ov0 > 3.2) {
+      const midV = (ov0 + ov1) / 2
+      addBoxMesh(THREE, group, ou0 - 0.02, 0.01, midV - hw - 0.02, ou0 + th + 0.02, 0.042, midV + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, ou1 - th - 0.02, 0.01, midV - hw - 0.02, ou1 + 0.02, 0.042, midV + hw + 0.02, pillarMat)
+    }
   }
   return group
 }
