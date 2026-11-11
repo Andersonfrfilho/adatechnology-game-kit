@@ -156,14 +156,15 @@ for (const [name, phase] of Object.entries(PHASES)) {
       if (p.floorplans) {
         await room.openAreaAsync('Casas')
         const bench = room.bench('floorplan_area')
+        if (!bench) throw new Error('leak: the houses area has no floorplan_area bench')
         for (const template of p.floorplans) {
           bench.set('template', template)
           await bench.act('build')
           // the house the bench just built (its world id is house3d:<n>, the highest n the newest)
           const house = room.world.ids().filter((id) => id.startsWith('house3d:')).sort((a, b) => Number(a.split(':')[1]) - Number(b.split(':')[1])).pop()
-          const centre = (house && room.world.state(house)?.position) ?? [0, 0, 0]
-          room.world.explode([centre[0], 1, centre[2]], 345600, 18)
-          for (const id of room.world.ids()) room.world.hit(id, { type: 'fire', point: [centre[0], 0.3, centre[2]], temperature: 900, radius: 4, duration: 3 })
+          const [x = 0, , z = 0] = (house ? room.world.state(house)?.position : undefined) ?? [0, 0, 0]
+          room.world.explode([x, 1, z], 345600, 18)
+          for (const id of room.world.ids()) room.world.hit(id, { type: 'fire', point: [x, 0.3, z], temperature: 900, radius: 4, duration: 3 })
           for (let i = 0; i < 90; i++) room.update(1 / 30)
         }
       }
