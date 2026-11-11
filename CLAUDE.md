@@ -8,7 +8,7 @@ qual). As regras valem inteiras: o resumo não tira nada do texto completo.
 
 | § | Regra | Em uma frase | Texto completo |
 |---|---|---|---|
-| 1 | **SDK primeiro** | Procure no SDK (`packages/*`, README e skill de cada pacote), depois nas entregas dos times; porte a entrega igual, nunca "parecido"; só crie o que não existe, e crie no pacote dono antes de usar no jogo. Cada peça vem do SDK dono, importada; parede sempre `wallPiece` (como as casas). | [01](specs/regras/01-sdk-primeiro.md) |
+| 1 | **SDK primeiro** | Procure no SDK (`packages/*`, README e skill da área), depois nas entregas dos times; porte a entrega igual, nunca "parecido"; só crie o que não existe, e crie no pacote dono antes de usar no jogo. Cada peça vem do SDK dono, importada; parede sempre `wallPiece` (como as casas). | [01](specs/regras/01-sdk-primeiro.md) |
 | 2 | **Motor genérico** | Núcleo não conhece o ZombiAdA; conteúdo reaproveitável em pacote de conteúdo (`-fleet`, `-residential`...), conteúdo de um jogo no repositório do jogo; teste do GTA; mundo normal primeiro; tudo configurável; three.js só em `*-three`. | [02](specs/regras/02-motor-generico.md) |
 | 3 | **SDKs se compõem** | Um SDK usa os outros (a casa usa destruição, móveis, itens, vegetação); o jogo só junta. | [03](specs/regras/03-sdks-se-compoem.md) |
 | 4 | **Testes: contrato genérico** | `game-test-room` e `game-contracts` só têm contratos; o específico vai no pacote da lib e num `examples/<lib>-test-area` (`?area=`). | [04](specs/regras/04-testes-contratos.md) |
@@ -25,8 +25,8 @@ Seções citadas no código como `CLAUDE.md §N` ou pelo título ("Memória", "T
 
 ## Mapa do SDK (quem faz o quê)
 
-Cada pacote tem `README.md` e uma skill em `.claude/skills/<pacote>/`; o mapa completo e a composição estão na skill `game-kit`. Dono de cada tipo
-de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin`, `kit_audit`; skill `kit-origem`).
+Cada pacote tem `README.md` e uma referência na skill da sua área (`.claude/skills/kit-<área>/references/<pacote>.md`); a composição está na skill `game-kit`. Dono de cada tipo
+de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin`, `kit_audit`; skill `game-kit`, seção "De onde vem cada peça").
 
 | Domínio | Pacotes |
 |---|---|

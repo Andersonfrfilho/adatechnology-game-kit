@@ -22,7 +22,7 @@ Quem é dono de quê (`tools/kit-audit/rules.json`):
 | Armas e explosivos | `game-weapons`, `game-weapons-three` | arsenal e modelos (`projectileModel`) |
 
 Para saber quem é dono de uma peça, ou de onde veio um trecho de código, use o MCP `game-kit` (`kit_owner`, `kit_origin`, `kit_audit`)
-ou a skill `kit-origem`.
+ou a skill `game-kit` (seção "De onde vem cada peça").
 
 ## O que está fora hoje
 

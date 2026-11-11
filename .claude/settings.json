@@ -15,7 +15,31 @@
       "mcp__github__get_commit",
       "mcp__github__issue_read",
       "mcp__github__list_issues",
-      "mcp__github__search_code"
+      "mcp__github__search_code",
+      "Bash(pnpm build)",
+      "Bash(pnpm run build)",
+      "Bash(pnpm test)",
+      "Bash(pnpm run test)",
+      "Bash(pnpm --filter * build)",
+      "Bash(pnpm --filter * test)",
+      "Bash(pnpm --filter * typecheck)",
+      "Bash(pnpm check:*)",
+      "Bash(pnpm test:check-area)",
+      "Bash(pnpm typecheck:scripts)",
+      "Bash(pnpm verify:push)",
+      "Bash(node --test *)",
+      "Bash(node tools/check-area/check-area.mjs *)",
+      "Bash(node tools/kit-audit/audit.mjs *)",
+      "Bash(node tools/gpu/select-suites.mjs *)",
+      "Bash(npx vitest run *)",
+      "Bash(rg *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "mcp__game-kit__kit_owner",
+      "mcp__game-kit__kit_origin",
+      "mcp__game-kit__kit_audit"
     ]
   }
 }
