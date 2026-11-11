@@ -74,14 +74,18 @@ interface Candidate {
 }
 
 const round = (x: number): number => Math.round(x * 100) / 100
+/** Least share of a line a wall must cover for a forced cut to follow it rather than cut across the middle. */
+const PARTIAL_WALL = 0.25
 
-/** The cut of `rect`: along `dir` at `at`, or none when it is already a panel. */
+/**
+ * The cut of `rect`: along `dir` at `at`, or none when it is already a panel. A panel spans its short side one way between the beams of its long
+ * edges, so only a rectangle whose both sides pass `maxSpan` has to be cut; it is cut along a wall when one crosses it (where the beam hides in the
+ * wall and its pillars can stand), and in the middle only where no wall does.
+ */
 function choose(rect: Rect, lines: readonly WallLine[], options: SlabPanelOptions): { dir: 'u' | 'v'; at: number } | null {
   const [u0, v0, u1, v1] = rect
   const width = u1 - u0
   const depth = v1 - v0
-  const tooWide = width > options.maxSpan + EPS
-  const tooDeep = depth > options.maxSpan + EPS
   const candidates: Candidate[] = []
   for (const at of positions(lines, 'v', options.lineTolerance)) {
     if (at < u0 + options.minPanel - EPS || at > u1 - options.minPanel + EPS) continue
@@ -92,17 +96,20 @@ function choose(rect: Rect, lines: readonly WallLine[], options: SlabPanelOption
     candidates.push({ dir: 'u', at, coverage: coverage(lines, 'u', at, u0, u1, options), skew: Math.abs(at - (v0 + v1) / 2) / (depth / 2) })
   }
   const boundary = candidates.filter((c) => c.coverage >= options.lineCoverage)
-  if (tooWide || tooDeep) {
-    // cut across the longer side when both are too long
-    const across: 'u' | 'v' = tooWide && (!tooDeep || width >= depth) ? 'v' : 'u'
-    const pool = boundary.filter((c) => c.dir === across)
+  // a side within the tolerance of a wall line of `maxSpan` spans it (the panel is measured between the walls' centre lines)
+  if (Math.min(width, depth) > options.maxSpan + options.lineTolerance) {
+    // across the longer side (either way on a square) along the line a wall hides best (a partial wall still hides the beam where it stands); across the
+    // middle only where none does
+    const longer: 'u' | 'v' = width >= depth ? 'v' : 'u'
+    const square = Math.abs(width - depth) <= options.lineTolerance
+    const pool = candidates.filter((c) => c.coverage >= PARTIAL_WALL && (square || c.dir === longer))
     if (pool.length) {
-      const best = pool.reduce((a, b) => (b.skew - 0.25 * b.coverage < a.skew - 0.25 * a.coverage ? b : a))
+      const best = pool.reduce((a, b) => (b.coverage - 0.25 * b.skew > a.coverage - 0.25 * a.skew ? b : a))
       return { dir: best.dir, at: round(best.at) }
     }
-    const length = across === 'v' ? width : depth
-    const origin = across === 'v' ? u0 : v0
-    return { dir: across, at: round(origin + length / Math.ceil(length / options.maxSpan - EPS)) }
+    const length = longer === 'v' ? width : depth
+    const origin = longer === 'v' ? u0 : v0
+    return { dir: longer, at: round(origin + length / 2) }
   }
   if (!boundary.length) return null
   const best = boundary.reduce((a, b) => (b.coverage - 0.25 * b.skew > a.coverage - 0.25 * a.skew ? b : a))

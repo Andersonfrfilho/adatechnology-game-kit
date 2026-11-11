@@ -146,6 +146,11 @@ export interface BuildOptions {
    * `SIDEWALK_SLABS`). `'band'`: one strip of each per face, as the Visor de casas 3D drew them (still destructible, as a whole).
    */
   baseboard?: 'tiles' | 'band'
+  /**
+   * `'clear'` (default): the gutter hangs a little off the fascia and the downpipes stand off the corner, clear of the wall and of each other. `'visor'`:
+   * tight on the fascia and the corner, as the Visor de casas 3D drew them (their faces then touch the fascia's and the wall's).
+   */
+  gutters?: 'clear' | 'visor'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
   /** Builds the step-by-step construction stage groups (`0..8`) for inspecting the house from foundation to completion. */

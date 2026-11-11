@@ -24,7 +24,7 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     const G: GutterConfig = shared.ctx.gutter, o = type === 'fiber_cement' ? 0.3 : 0.45, x0 = X0 - (touchesU[0] ? 0 : o), x1 = X1 + (touchesU[2] ? 0 : o), z0 = Z0 - (touchesU[1] ? 0 : o), z1 = Z1 + (touchesU[3] ? 0 : o), c = G.color, y = yb - 0.05;
     const run = (ax: 'x' | 'z', a: number, b: number, p: number, outside: number, breaks: boolean): void => { // box gutter (bottom + outer flange) along the axis ax; out = -1/+1 direction outwards
       // the gutter hangs on the fascia's outer face (the fascia is 3.5 cm thick, set on the eave's edge): its back never on the fascia's own planes
-      if (shared.ctx.constructionStages) p += outside * GUTTER_OFF_FASCIA;
+      if (!shared.ctx.visorGutters) p += outside * GUTTER_OFF_FASCIA;
       const seg = (u0: number, u1: number, tilt: number): void => {
         const L = u1 - u0, m = (u0 + u1) / 2, dy = tilt ? -Math.abs(tilt) * L * 0.5 : 0;
         if (ax === 'x') { boxC('plain', m, y + dy, p + outside * 0.05, L, 0.03, 0.1, c, 0, 0, tilt); boxC('plain', m, y + 0.03 + dy, p + outside * 0.1, L, 0.09, 0.02, c, 0, 0, tilt); }
@@ -45,7 +45,7 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     const cover = new Set<number>(), order = G.rnd() < 0.5 ? [0, 1, 2, 3] : [2, 3, 0, 1];
     const downpipe = (cx: number, cz: number, sx: number, sz: number, run: number): boolean => {
       // built by construction stage the corner pillar stands 2.5 cm out of the walls: the downpipe runs down clear of it, not inside its faces
-      const off = shared.ctx.constructionStages ? DOWNPIPE_OFF_CORNER : 0.06, px = cx + sx * off, pz = cz + sz * off; if (!freeAt(px, pz, sx, sz)) return false;
+      const off = shared.ctx.visorGutters ? 0.06 : DOWNPIPE_OFF_CORNER, px = cx + sx * off, pz = cz + sz * off; if (!freeAt(px, pz, sx, sz)) return false;
       const floats = G.bad && G.ncond === 1, yt = yb - 0.1, ybx = floats ? 0.7 : 0.04; G.ncond = (G.ncond ?? 0) + 1; // abandoned: a downpipe ends loose, above the ground
       if (run >= 2) boxC('plain', (sides[run][4] + px) / 2, yt, pz, Math.abs(sides[run][4] - px), 0.07, 0.07, c); // gutter elbow (running in z) to the wall
       else boxC('plain', px, yt, (sides[run][4] + pz) / 2, 0.07, 0.07, Math.abs(sides[run][4] - pz), c); // gutter running in x

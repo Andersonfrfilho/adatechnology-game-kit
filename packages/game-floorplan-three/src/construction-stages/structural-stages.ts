@@ -96,14 +96,21 @@ function foundationSolid(p: StructurePart): Solid & { readonly kind: 'baldrame' 
  * Slabs reach the outer faces of the bond beams they rest on, and every beam or pillar under a slab stops just inside it: a beam and the slab over it
  * never share a face on one plane (their tops on one plane were the flickering bands of the ceiling), nor leave a seam for light to leak through.
  */
-function seatSlabs(slabs: Solid[], carriers: Solid[]): void {
+function seatSlabs(slabs: Solid[], carriers: Solid[], beams: readonly Solid[]): void {
   const floors = [...new Set(slabs.map((s) => s.floor))]
   for (const f of floors) {
     const own = slabs.filter((s) => s.floor === f)
     const bounds = [Math.min(...own.map((s) => s.aabb[0])), Math.min(...own.map((s) => s.aabb[1])), Math.max(...own.map((s) => s.aabb[2])), Math.max(...own.map((s) => s.aabb[3]))]
     const under = carriers.filter((c) => c.floor === f && own.some((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05 && c.y1 <= s.y1 + EPS))
     if (!under.length) continue
-    const reach = [Math.min(...under.map((c) => c.aabb[0])), Math.min(...under.map((c) => c.aabb[1])), Math.max(...under.map((c) => c.aabb[2])), Math.max(...under.map((c) => c.aabb[3]))]
+    // the edge is cast against the bond beam's face, flush with the wall: a pillar deeper than the wall stands out under it, the slab does not follow it
+    // (a side is reached by the beams that run along it: the end of a crossing bond beam reaches past the wall's bricks)
+    const along = (alongU: boolean): Solid[] => {
+      const own = under.filter((c) => beams.includes(c) && c.aabb[2] - c.aabb[0] >= c.aabb[3] - c.aabb[1] === alongU)
+      return own.length ? own : under
+    }
+    const [acrossU, acrossV] = [along(false), along(true)]
+    const reach = [Math.min(...acrossU.map((c) => c.aabb[0])), Math.min(...acrossV.map((c) => c.aabb[1])), Math.max(...acrossU.map((c) => c.aabb[2])), Math.max(...acrossV.map((c) => c.aabb[3]))]
     for (const s of own) {
       for (const k of [0, 1] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! < s.aabb[k] + SLAB_LIP && s.aabb[k] - reach[k]! < 0.3) s.aabb[k] = reach[k]! - SLAB_LIP
       for (const k of [2, 3] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! > s.aabb[k] - SLAB_LIP && reach[k]! - s.aabb[k] < 0.3) s.aabb[k] = reach[k]! + SLAB_LIP
@@ -318,7 +325,7 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   if (!rawStructure) return groups
 
   const mats = createStageMaterials(THREE)
-  const parts = detailedParts(rawStructure).filter((p) => !p.id.startsWith('pillar_') && p.role !== 'roof' && !/^(rafter_|ridge)/.test(p.id))
+  const parts = detailedParts(rawStructure).filter((p) => p.role !== 'roof' && !/^(rafter_|ridge)/.test(p.id))
   const openings: { id: string; aabb: readonly number[]; y0: number; y1: number }[] = []
   for (const e of outbuildings ?? []) {
     const ob = outbuildingParts(e)
@@ -348,7 +355,7 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   const slabs = parts.filter((p) => p.role === 'slab' && !isFoundation(p)).map(solidOf)
   const beamParts = parts.filter((p) => p.role === 'beam' && !isFoundation(p))
   const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf).map(toCoreWidth)
-  seatSlabs(slabs.filter((s) => !s.id.startsWith('tank_')), [...beams, ...columns.filter((c) => !c.tank)])
+  seatSlabs(slabs.filter((s) => !s.id.startsWith('tank_')), [...beams, ...columns.filter((c) => !c.tank)], beams)
 
   for (const c of columns) {
     const mat = c.material === 'wood_soft' || c.material === 'wood_hard' ? mats.wood! : c.material === 'steel' ? mats.sheet! : mats.concrete!

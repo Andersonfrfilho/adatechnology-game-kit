@@ -178,6 +178,8 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   sc.near = 1
   sc.far = 40
   sun.shadow.bias = -0.0006
+  // a texel of the map is 3 cm: a face nearly along the sun shades itself in stripes (acne) without pushing the lookup out along its normal
+  sun.shadow.normalBias = 0.03
   group.add(sun)
 
   const sceneryObjects = resolveScenery(scenery)

@@ -18,6 +18,8 @@ const UP = 0.15
 /** A beam needs a support this close to each of its ends. */
 const END_REACH = 0.35
 const EPS = 1e-6
+/** Wall left between a pillar and the end of the wall it stands in, metres. */
+const JAMB_CLEAR = 0.02
 
 type Interval = [number, number]
 
@@ -40,36 +42,26 @@ function merged(intervals: readonly Interval[]): Interval[] {
  * (two supports `g` apart give `g`; a beam hanging `e` past its last support gives `2e`). `at` is where a new support helps the most.
  */
 export function beamSpan(length: number, supports: readonly Interval[]): { span: number; at: number; lo: number; hi: number } {
+  const gaps = gapsOf(length, supports)
+  if (!gaps.length) return { span: 0, at: length / 2, lo: 0, hi: length }
+  return gaps.reduce((a, b) => (b.span > a.span ? b : a))
+}
+
+/** Every stretch of the beam that no support holds, with the span it makes (a hanging end counts twice its length) and its middle (`at`). */
+function gapsOf(length: number, supports: readonly Interval[]): Array<{ span: number; at: number; lo: number; hi: number }> {
   const held = merged(supports.map(([a, b]): Interval => [Math.max(0, a), Math.min(length, b)]).filter(([a, b]) => b > a))
-  if (!held.length) return { span: Infinity, at: length / 2, lo: 0, hi: length }
-  let span = 0
-  let at = length / 2
-  let lo = 0
-  let hi = length
+  if (!held.length) return [{ span: Infinity, at: length / 2, lo: 0, hi: length }]
+  const out: Array<{ span: number; at: number; lo: number; hi: number }> = []
   const lead = held[0]![0]
-  if (2 * lead > span) {
-    span = 2 * lead
-    at = 0
-    lo = 0
-    hi = lead
-  }
+  if (lead > 0) out.push({ span: 2 * lead, at: 0, lo: 0, hi: lead })
   const trail = length - held[held.length - 1]![1]
-  if (2 * trail > span) {
-    span = 2 * trail
-    at = length
-    lo = length - trail
-    hi = length
-  }
+  if (trail > 0) out.push({ span: 2 * trail, at: length, lo: length - trail, hi: length })
   for (let k = 1; k < held.length; k++) {
-    const gap = held[k]![0] - held[k - 1]![1]
-    if (gap > span) {
-      span = gap
-      at = (held[k]![0] + held[k - 1]![1]) / 2
-      lo = held[k - 1]![1]
-      hi = held[k]![0]
-    }
+    const lo = held[k - 1]![1]
+    const hi = held[k]![0]
+    if (hi > lo) out.push({ span: hi - lo, at: (lo + hi) / 2, lo, hi })
   }
-  return { span, at, lo, hi }
+  return out
 }
 
 /** A beam as a line in the plan: it runs along `dir` at the coordinate `at` of the other axis, from `from` to `to`. */
@@ -172,18 +164,18 @@ function heldBy(line: Line, width: number, props: readonly Prop[]): { intervals:
 
 /**
  * Finds where a beam (or bond beam) needs pillars so that it never goes more than `maxSpan` without a support (and, for a beam, so that each end is
- * held). `spots` collects the pillars, which then hold the beams after it; `dist` is how far from the ground a pillar is.
+ * held). `spots` collects the pillars, which then hold the beams after it; `dist` is how far from the ground a pillar is. A pillar between the ends stands
+ * only inside `allowed` (the stretches of the beam a wall hides, openings left out): where no wall can take one the beam spans the gap and is made deeper.
  */
 function pillarsFor(
-  line: Line, width: number, props: readonly Prop[], spots: Array<Spot & { dist: number }>, dist: number, options: SlabPanelOptions, ends: boolean, ground: readonly Rect[] = [],
+  line: Line, width: number, props: readonly Prop[], spots: Array<Spot & { dist: number }>,
+  context: { dist: number; options: SlabPanelOptions; ends: boolean; allowed: readonly Interval[]; snap: (spot: Spot) => Spot },
 ): Interval[] {
+  const { options, ends, allowed } = context
   const length = line.to - line.from
   const side = options.columnSide
   const all = (): Prop[] => [...props, ...spots.map((spot) => ({ box: boxOfSpot(spot, side), dist: spot.dist }))]
-  // a pillar of a storey above the first stands on a beam or a bond beam of the slab under it, not on the middle of a panel
-  const allowed = merged(ground.map((box) => holds(line, 0.02, box)).filter((x): x is Interval => x !== undefined))
-  const place = (at: number, lo: number, hi: number): number => {
-    if (!allowed.length) return at
+  const place = (at: number, lo: number, hi: number): number | undefined => {
     let best: number | undefined
     let gap = Infinity
     for (const [a, b] of allowed) {
@@ -196,30 +188,76 @@ function pillarsFor(
         best = clamped
       }
     }
-    return best ?? at
+    return best
   }
   let held = heldBy(line, width, all()).intervals
   for (let guard = 0; guard < 64; guard++) {
     let at: number | undefined
-    let lo = 0
-    let hi = length
-    if (ends && !held.some(([a]) => a <= END_REACH)) at = 0
-    else if (ends && !held.some(([, b]) => b >= length - END_REACH)) at = length
+    // an end is held by a pillar in the wall within reach of it (beside a window there, not in it), or at the end itself where no wall is
+    if (ends && !held.some(([a]) => a <= END_REACH)) at = place(0, -0.2, END_REACH + 0.2) ?? 0
+    else if (ends && !held.some(([, b]) => b >= length - END_REACH)) at = place(length, length - END_REACH - 0.2, length + 0.2) ?? length
     else {
-      const found = beamSpan(length, held)
-      if (found.span <= options.maxSpan + 1e-3) break
-      at = found.at
-      lo = found.lo
-      hi = found.hi
+      const wide = gapsOf(length, held).filter((g) => g.span > options.maxSpan + 1e-3).sort((a, b) => b.span - a.span)
+      for (const g of wide) {
+        at = place(g.at, g.lo, g.hi)
+        if (at !== undefined) break
+      }
+      if (at === undefined) break
     }
-    const [u, v] = pointOf(line, at === 0 || at === length ? at : place(at, lo, hi))
-    const spot = { u: round2(u), v: round2(v), dist }
+    const [u, v] = pointOf(line, at)
+    const spot = { ...context.snap({ u: round2(u), v: round2(v) }), dist: context.dist }
     if (spots.some((other) => Math.hypot(other.u - spot.u, other.v - spot.v) < 0.15)) break
     spots.push(spot)
     held = heldBy(line, width, all()).intervals
   }
   return held
 }
+
+/** The stretches of `line` (from its start) that a wall of `floor` hides, with the openings of the walls left out: where a pillar of that storey can stand. */
+function wallStretches(context: Context, line: Line, floor: number, top: number): Interval[] {
+  const out: Interval[] = []
+  for (const wall of context.parts) {
+    if ((wall.role !== 'wall' && wall.role !== 'partition') || wall.floor !== floor || wall.y1 < top - 1 || wall.y0 > top) continue
+    const padded = holds(line, 0.02, wall.aabb)
+    if (!padded) continue
+    // `holds` pads the wall by the plan tolerance: a pillar stands in the wall itself, never in the doorway past its end
+    // (and a little of the wall is left past the pillar at a jamb: their ends on one plane)
+    const along: Interval = [padded[0] + (padded[0] > 0 ? PLAN_TOLERANCE + JAMB_CLEAR : 0), padded[1] - (padded[1] < line.to - line.from ? PLAN_TOLERANCE + JAMB_CLEAR : 0)]
+    if (along[1] <= along[0]) continue
+    const alongU = wall.aabb[2] - wall.aabb[0] >= wall.aabb[3] - wall.aabb[1]
+    const openings = context.structure.openings.filter((o) => o.wall === wall.id)
+    if ((line.dir === 'u') === alongU) {
+      // the wall runs with the beam: all of it but its openings
+      let pieces: Interval[] = [along]
+      for (const o of openings) {
+        const a = o.from - line.from - JAMB_CLEAR
+        const b = o.to - line.from + JAMB_CLEAR
+        pieces = pieces.flatMap(([x, y]): Interval[] => (b <= x || a >= y ? [[x, y]] : ([[x, a], [b, y]] as Interval[]).filter(([p, q]) => q > p)))
+      }
+      out.push(...pieces)
+    } else if (!openings.some((o) => line.at > o.from - 0.1 && line.at < o.to + 0.1)) out.push(along)
+  }
+  return merged(out)
+}
+
+/**
+ * `spot` on the centre line of the walls of `floor` it stands in (at a junction, of both): a pillar off it shares a face with the wall's beam. Outside any
+ * wall it stays as it is.
+ */
+function snapToWall(context: Context, floor: number, spot: Spot): Spot {
+  let { u, v } = spot
+  for (const w of context.parts) {
+    if ((w.role !== 'wall' && w.role !== 'partition') || w.floor !== floor) continue
+    if (spot.u < w.aabb[0] - PLAN_TOLERANCE || spot.u > w.aabb[2] + PLAN_TOLERANCE || spot.v < w.aabb[1] - PLAN_TOLERANCE || spot.v > w.aabb[3] + PLAN_TOLERANCE) continue
+    if (w.aabb[2] - w.aabb[0] >= w.aabb[3] - w.aabb[1]) v = round2((w.aabb[1] + w.aabb[3]) / 2)
+    else u = round2((w.aabb[0] + w.aabb[2]) / 2)
+  }
+  return { u, v }
+}
+
+/** The parts of `a` that are also in `b`. */
+const intersect = (a: readonly Interval[], b: readonly Interval[]): Interval[] =>
+  a.flatMap(([x, y]) => b.map(([p, q]): Interval => [Math.max(x, p), Math.min(y, q)])).filter(([x, y]) => y > x)
 
 const make = (draft: Omit<StructurePart, 'mass'>): StructurePart => {
   const [u0, v0, u1, v1] = draft.aabb
@@ -273,10 +311,14 @@ function groundOf(context: Context, below: string): Rect[] {
   return context.parts.filter((q) => q.role === 'beam' && (q.slab === below || (q.beamKind === 'bond_beam' && Math.abs(q.y1 - level) < 0.4))).map((q) => q.aabb)
 }
 
-/** Thickness of the panels of a slab: the shortest side of the widest of them over `thicknessRatio`, not under the minimum of the use. */
+/** Thickness of the panels of a slab: what the most demanding of them asks (its short side over the ratio of how it spans), not under the minimum of the use. */
 function thicknessOf(leaves: readonly Rect[], roof: boolean, options: SlabPanelOptions): number {
-  const shortest = Math.max(...leaves.map((leaf) => Math.min(leaf[2] - leaf[0], leaf[3] - leaf[1])))
-  return Math.max(roof ? options.roofMinThickness : options.floorMinThickness, ceilTo(shortest / options.thicknessRatio, 0.01))
+  const asked = Math.max(...leaves.map((leaf) => {
+    const short = Math.min(leaf[2] - leaf[0], leaf[3] - leaf[1])
+    const long = Math.max(leaf[2] - leaf[0], leaf[3] - leaf[1])
+    return short / (long >= 2 * short ? options.oneWayThicknessRatio : options.thicknessRatio)
+  }))
+  return Math.max(roof ? options.roofMinThickness : options.floorMinThickness, ceilTo(asked, 0.01))
 }
 
 const restThickness = (slab: StructurePart, thickness: number, roof: boolean): void => {
@@ -336,8 +378,10 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
     for (const [from, to] of runsOf(cut, leaves)) {
       const line: Line = { dir: cut.dir === 'v' ? 'v' : 'u', at: cut.at, from, to }
       if (covered(line)) continue
-      const held = pillarsFor(line, context.wallThickness, props, spots, near, options, true, ground)
-      const span = Math.min(beamSpan(to - from, held).span, options.maxSpan)
+      const walled = wallStretches(context, line, storey.floor, top)
+      const allowed = storey.below ? intersect(walled, merged(ground.map((box) => holds(line, 0.02, box)).filter((x): x is Interval => x !== undefined))) : walled
+      const held = pillarsFor(line, context.wallThickness, props, spots, { dist: near, options, ends: true, allowed, snap: (spot) => snapToWall(context, storey.floor, spot) })
+      const span = beamSpan(to - from, held).span
       const depth = beamDepthFor(span, options)
       const width = Math.max(context.wallThickness, round2(depth / options.beamWidthRatio))
       const aabb: Rect = line.dir === 'u' ? [from, cut.at - width / 2, to, cut.at + width / 2] : [cut.at - width / 2, from, cut.at + width / 2, to]
@@ -408,10 +452,10 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
   const storey = { floor, below: floor >= 1 ? `slab_${floor}` : undefined, bottom: context.structure.levels[floor] ?? 0 }
   const spots: Array<Spot & { dist: number }> = []
   const near = props.length ? Math.min(...props.map((p) => p.dist)) : pillarDist(context, dist, storey)
-  const held = pillarsFor(line, width, props, spots, near, options, false)
+  const held = pillarsFor(line, width, props, spots, { dist: near, options, ends: false, allowed: wallStretches(context, line, floor, plate.y0), snap: (spot) => snapToWall(context, floor, spot) })
   const span = beamSpan(line.to - line.from, held).span
-  if (span > 1.5) {
-    const depth = Math.max(plate.y1 - plate.y0, beamDepthFor(Math.min(span, options.maxSpan), options))
+  if (span > 1.5 && Number.isFinite(span)) {
+    const depth = Math.max(plate.y1 - plate.y0, beamDepthFor(span, options))
     plate.y0 = round2(plate.y1 - depth)
     plate.mass = Math.max(1, Math.round((plate.aabb[2] - plate.aabb[0]) * (plate.aabb[3] - plate.aabb[1]) * depth * densityOf(plate.material)))
   }
@@ -446,7 +490,7 @@ export function applySlabPanels(input: PartsAndSupports, structure: PlanStructur
       continue
     }
     const slab = job.part
-    const boxes = walls.filter((w) => (w.y0 >= slab.y1 - 0.1 && w.y0 <= slab.y1 + 0.4) || (w.y1 >= slab.y0 - 0.4 && w.y1 <= slab.y0 + 0.1 && w.y0 < slab.y0)).map((w) => w.aabb)
+    const boxes = walls.filter((w) => (w.y0 >= slab.y1 - 0.1 && w.y0 <= slab.y1 + 0.4) || (w.y1 >= slab.y0 - 0.4 && w.y1 <= slab.y1 + 0.1 && w.y0 < slab.y0)).map((w) => w.aabb)
     cutSlab(context, slab, boxes)
   }
   if (structure.construction.foundation.type === 'building') anchorBalconies(context)
