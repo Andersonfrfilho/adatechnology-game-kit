@@ -130,7 +130,7 @@ it onto the core bake would change bytes (see the T9 design, §7.3).
 
 `dist/index.js` (ESM, three.js and the other packages external), `dist/index.d.ts`, and `dist/index.global.js` exposing `GameFloorplanThree` (three.js is the page's own `THREE`).
 
-See `.claude/skills/game-floorplan-three/SKILL.md` for the API and `MIGRATION.md` for the Portuguese names the Visor de casas 3D used.
+See `.claude/skills/kit-casas/references/game-floorplan-three.md` for the API and `MIGRATION.md` for the Portuguese names the Visor de casas 3D used.
 
 ## Em português
 
