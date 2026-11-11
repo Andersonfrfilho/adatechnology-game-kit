@@ -1,0 +1,24 @@
+# Left out of searches (ripgrep, and the Grep and Glob tools of coding agents, read this file), but kept in git: big generated or archived files that
+# fill a search with noise and spend the model's context. To search them on purpose, name the folder: `rg <term> specs/001-migracao-entregas-dos-times/sources`
+# (a folder given by name is searched), or `rg --no-ignore`. Build output (dist/, examples/test-room/base) is already out by .gitignore.
+
+# the teams' deliveries as they came (minified bundles and pages of several MB): read when porting a delivery (CLAUDE.md section 1)
+specs/001-migracao-entregas-dos-times/sources/
+specs/001-migracao-entregas-dos-times/artefatos/
+# the visual test report (a 20 MB html, prints and results)
+specs/003-teste-visual/
+# prints, thumbnails and logs written by the page tests
+**/shots/
+site/thumbs/
+# recorded goldens and big data tables the tests compare with
+**/tests/fixtures/team-golden/
+packages/game-weapons-three/tests/fixtures/audio-trace.json
+tools/golden/fixtures/audio/
+packages/game-audio/src/data/fitted-sfx.json
+packages/game-items-three/preview-lot-b.svg
+# images and sounds are never searched as text
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.ogg

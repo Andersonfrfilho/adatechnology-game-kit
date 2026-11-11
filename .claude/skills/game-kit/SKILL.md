@@ -6,7 +6,7 @@ description: Use quando for criar ou mudar qualquer coisa de jogo no adatechnolo
 # AdA Technology Game Kit — mapa dos SDKs
 
 O kit é a base de **todo jogo**, não só do ZombiAdA. Cada pacote faz uma coisa; os pacotes **se compõem** (um usa os outros para
-formar itens e elementos do mapa) e o jogo só junta o que já vem pronto. Regras completas: `CLAUDE.md` da raiz.
+formar itens e elementos do mapa) e o jogo só junta o que já vem pronto. Regras: resumo no `CLAUDE.md` da raiz, texto completo em `specs/regras/`.
 
 **Teste do GTA:** o kit serve a um jogo de zumbi e serviria igual a um GTA. O que é só de zumbi (horda, triagem, barricada, infecção) fica
 em pacote à parte, estado ou conteúdo do jogo, nunca no núcleo.
