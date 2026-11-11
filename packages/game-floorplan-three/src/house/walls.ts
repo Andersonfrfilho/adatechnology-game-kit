@@ -74,6 +74,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
   }
   // the pillars of confined masonry that stand in the walls: along them, at the corners and at the jambs of the wide doors
   const PILLAR_IN_WALL = /^(wall_column_|column_\d|jamb_column_)/;
+  const PILLAR_PROUD = 0.004;
   /** The wall a pillar stands in (its centre in the wall's plan box, on its storey). */
   const wallOf = (pillar: StructurePart, parts: readonly StructurePart[]): StructurePart | undefined => {
     const u = (pillar.aabb[0] + pillar.aabb[2]) / 2, v = (pillar.aabb[1] + pillar.aabb[3]) / 2;
@@ -89,7 +90,13 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       const look = host && looks.get(host.id);
       if (!host || !look) continue;
       cursor.group = 'f' + e.floor; cursor.pc = structurePiece(host.id);
-      bx(look.mat, e.aabb[0], e.y0, e.aabb[1], e.aabb[2], Math.min(e.y1, look.top), e.aabb[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
+      // a pillar at a jamb has its face on the plane of the wall's end there: 4 mm proud into the opening, so the two never fight for the same pixels
+      // (at the wall's own ends it stays as it is: nothing stands out of the wall)
+      const alongU = host.aabb[2] - host.aabb[0] >= host.aabb[3] - host.aabb[1], k0 = alongU ? 0 : 1, k1 = alongU ? 2 : 3, box = [...e.aabb];
+      const end = (alongU ? host.aabb[3] - host.aabb[1] : host.aabb[2] - host.aabb[0]) / 2 + 0.05; // the structure's wall reaches past its drawn ends by half its thickness
+      if (e.aabb[k0] > host.aabb[k0] + end) box[k0] = e.aabb[k0] - PILLAR_PROUD;
+      if (e.aabb[k1] < host.aabb[k1] - end) box[k1] = e.aabb[k1] + PILLAR_PROUD;
+      bx(look.mat, box[0], e.y0, box[1], box[2], Math.min(e.y1, look.top), box[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
     }
     cursor.pc = null;
   }

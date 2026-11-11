@@ -5,7 +5,7 @@ import type { Circuit } from '@adatechnology/game-floorplan-structure';
 import type { ElectricalInfo, Hex, HouseRecord, HouseRoom, Kernel, KernelUtilitiesElectrical, Shared } from '../kernel-types.js';
 
 export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
-  const { _Y, _q, _v3, bx, cursor, cylBase, pieceRecord, put } = K;
+  const { _Y, _q, _v3, bx, cursor, cylBase, part, pieceRecord, put } = K;
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // ===== R50: electrical structure (res.electrical): pole, service drop and meter, breaker panel, exposed conduits. Outlets and switches belong to the furniture team: here only their positions are registered (house.electrical) =====
   function electricalStructure(): void {
@@ -57,7 +57,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
     // exposed conduits (only the exposed ones), L-shaped in the horizontal plane and plumb going down/up
     const colorD = 0xe6e2d6, circ: Record<string, Circuit> = {}; for (const c of E.circuits || []) circ[c.id] = c;
     for (const t of E.conduits || []) {
-      if (!t.exposed) continue; if (KV && KV.conduits.indexOf(t.id) >= 0) { info.conduits.push(t.id); continue; } const c = circ[t.circuit], com: HouseRoom | undefined = c && shared.ctx.roomById[c.room]; cursor.group = 'f' + Math.max(0, Math.min(nA - 1, com ? com.floor : 0)); const d = t.diameter || 0.02, P = t.points.map(p => [p[0], p[2], p[1]]), seg: number[][][] = [];
+      if (!t.exposed) { if (shared.ctx.constructionStages) embeddedConduit(t, circ, nA); continue; } if (KV && KV.conduits.indexOf(t.id) >= 0) { info.conduits.push(t.id); continue; } const c = circ[t.circuit], com: HouseRoom | undefined = c && shared.ctx.roomById[c.room]; cursor.group = 'f' + Math.max(0, Math.min(nA - 1, com ? com.floor : 0)); const d = t.diameter || 0.02, P = t.points.map(p => [p[0], p[2], p[1]]), seg: number[][][] = [];
       for (let i = 0; i + 1 < P.length; i++) { const a = P[i], b = P[i + 1]; if (Math.abs(a[1] - b[1]) < 1e-3 && Math.abs(a[0] - b[0]) > 0.02 && Math.abs(a[2] - b[2]) > 0.02) { const m = [b[0], a[1], a[2]]; seg.push([a, m], [m, b]); } else seg.push([a, b]); }
       cursor.pc = pieceRecord('conduit:' + t.id, 'plastic', null, { tags: ['conduit'] });
       for (const [a, b] of seg) pipe2(a, b, d, colorD); for (const p of P) cylBase('plain', p[0], p[1] - d * 0.9, p[2], d * 0.62, d * 1.8, sh(colorD, 0.85));
@@ -67,6 +67,11 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
     for (const t of E.outlets || []) info.outlets.push({ id: t.id, pos: [t.u, t.y, t.v], normal: [t.frontU || 0, 0, t.frontV || 0], room: t.room, floor: t.floor, type: t.type, voltage: t.voltage });
     for (const t of E.switches || []) info.switches.push({ id: t.id, pos: [t.u, t.y, t.v], normal: [t.frontU || 0, 0, t.frontV || 0], room: t.room, floor: t.floor, controls: t.controls });
     shared.ctx.electricalInfo = info;
+  }
+  // the conduit cut into the masonry (construction stages): a part hidden in the finished house, shown in the rough-in stage and where its wall breaks
+  function embeddedConduit(t: NonNullable<NonNullable<HouseRecord['utilities']>['electrical']>['conduits'][number], circ: Record<string, Circuit>, nA: number): void {
+    const c = circ[t.circuit], com: HouseRoom | undefined = c && shared.ctx.roomById[c.room], d = t.diameter || 0.02, P = t.points.map(p => [p[0], p[2], p[1]]);
+    part('wall_conduit', [0, 0, 0], () => { for (let i = 0; i + 1 < P.length; i++) pipe2(P[i], P[i + 1], d, 0xeab308); }, { id: 'conduit:' + t.id, hidden: true, circuit: t.circuit, points: t.points }, 'f' + Math.max(0, Math.min(nA - 1, com ? com.floor : 0)));
   }
   function pipe2(a: readonly number[], b: readonly number[], diameter: number, color: Hex): void { const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-3) return; _q.setFromUnitVectors(_Y, _v3.set(dx / L, dy / L, dz / L)); put('plain', 'cyl', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, _q, diameter, L, diameter, color); }
   const defined: KernelUtilitiesElectrical = { electricalStructure, pipe2 };

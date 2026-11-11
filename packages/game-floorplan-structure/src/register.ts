@@ -85,7 +85,7 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
   engine.registerResultExtension(
     'waterTank',
     (context) => {
-      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'], ...(context.options.visorSections === true ? { pillarSide: VISOR_TANK_PILLAR_SIDE } : {}) } // templates declare their own tank hooks
+      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'], ...(context.options.visorSections === true ? { pillarSide: VISOR_TANK_PILLAR_SIDE, underRoof: false } : {}) } // templates declare their own tank hooks
       return planWaterTank(context.result as never, context.rng, tank)
     },
     { after: ['construction'], seedKey: 'caixa' },

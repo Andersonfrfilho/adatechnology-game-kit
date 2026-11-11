@@ -6,10 +6,13 @@ import { panelViewOf } from '../destruction/panels.js';
 import { applyConstructionLevel, CONSTRUCTION_LEVEL_MAX } from '../construction-stages/apply-level.js';
 import { buildBlueprintStage } from '../construction-stages/blueprint.js';
 import { buildInstallationsStage } from '../construction-stages/installations-stage.js';
+import { routeConduits, routingPlanOf } from '../construction-stages/installation-routes.js';
+import type { RoutableElectrical } from '../construction-stages/installation-routes.js';
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
+import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
 
 import type * as THREE_NS from 'three';
-import type { Structure } from '@adatechnology/game-floorplan-structure';
+import type { Outbuilding, Structure } from '@adatechnology/game-floorplan-structure';
 import type { ApartmentBuilding, BoxCollider, DoorLeaf, Eye, HouseInstance, HouseRecord, InteractionTarget, InteractivePiece, Kernel, KernelBuildBuild, KitTargetOptions, LightRequest, Rect, Shared } from '../kernel-types.js';
 import type { BuildOptions, Damageable, House, HouseFurnitureCollider, HouseInteractable, HousePart, HousePoint, HouseTargetOptions } from '../types.js';
 
@@ -22,11 +25,21 @@ type BuildContextPanes = Shared['ctx']['panes'];
 /** Options of the house's target and interact. */
 type TargetOptions = HouseTargetOptions;
 
+/** The house built by construction stage lays its conduits as an electrician does (see construction-stages/installation-routes); the plan stays as generated. */
+function withLaidConduits(r: HouseRecord, stages: boolean): HouseRecord {
+  const E = r.utilities?.electrical;
+  if (!stages || !E || !E.conduits?.length) return r;
+  const lamps = new Map<string, { u: number; v: number; y: number }>();
+  for (const it of r.items) if (it.type === 'ceiling_light') lamps.set(it.id, { u: it.x, v: it.z, y: (r.floors[Math.max(0, it.floor)]?.y0 ?? 0) + (it.y ?? 2.7) });
+  const conduits = routeConduits(routingPlanOf(r), E as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
+  return { ...r, utilities: { ...r.utilities, electrical: { ...E, conduits } } };
+}
+
 export function installBuildBuild(K: Kernel, shared: Shared): void {
   const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
   function build(r0: HouseRecord, options?: BuildOptions): House {
         const opts: BuildOptions = options || {};
-        const r = applyOutbuildings(r0); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
+        const r = withLaidConduits(applyOutbuildings(r0), !!(opts.constructionStages || opts.constructionLevel != null)); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
         const t0 = performance.now();
         const h: HouseInstance = { ctx: { mv: props, types: TYPES } as HouseInstance['ctx'], inter: newInteractiveState(), state: opts.state || newState(), mirrors: newMirrorState(), quality: opts.quality === 'game' || opts.quality === 'high' ? opts.quality : (cfg.quality === 'game' ? 'game' : 'high'), lodCurrent: 0, lodMin: 0 } as Omit<HouseInstance, 'houseGroup'> as HouseInstance; /* the groups come at the end of the build */
         enter(h);
@@ -155,7 +168,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
           const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[]);
           const instGroup = buildInstallationsStage(THREE, r);
-          for (const sg of [bp, stGroups.foundation, stGroups.frame, stGroups.masonry, instGroup, stGroups.roofFraming]) {
+          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || []);
+          for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, roofFraming]) {
             gs[sg.name] = sg;
             house.add(sg);
           }

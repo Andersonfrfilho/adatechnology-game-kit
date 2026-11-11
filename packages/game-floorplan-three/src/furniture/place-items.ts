@@ -43,9 +43,13 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     cursor.group = slab ? 'f' + f : 'attic_tank';
     if (lc) { // tank slab: pillars + small slab that rises out of the sloped roof (tank above the ridge)
       const P = cd.platform as TankPlatform, [x0, z0, x1, z1] = P.aabb, e = P.thickness, color = shared.ctx.colors.slab != null ? shared.ctx.colors.slab : 0xb9b5ac;
+      // the platform is structure: in the construction stages it shows with the finished house (the frame stage draws it before), the tank itself with the installations
+      const stTank = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'finishes';
+      // the pillars start inside the ceiling (0.2 m over the ceiling height): their foot is never a face on the ceiling's underside
+      const foot = P.baseY + (shared.ctx.constructionStages ? 0.05 : 0);
       cursor.pc = structurePiece('tank_slab'); boxC('plain', (x0 + x1) / 2, P.topY - e / 2, (z0 + z1) / 2, x1 - x0, e, z1 - z0, color, 0, 0, 0);
-      P.pillars.forEach((p: { u: number; v: number; side: number }, k: number) => { cursor.pc = structurePiece('tank_column_' + k); boxC('plain', p.u, (P.baseY + P.topY - e) / 2, p.v, p.side, P.topY - e - P.baseY, p.side, color, 0, 0, 0); });
-      cursor.pc = null;
+      P.pillars.forEach((p: { u: number; v: number; side: number }, k: number) => { cursor.pc = structurePiece('tank_column_' + k); boxC('plain', p.u, (foot + P.topY - e) / 2, p.v, p.side, P.topY - e - foot, p.side, color, 0, 0, 0); });
+      cursor.pc = null; cursor.stage = stTank;
     }
     if (!slab) { // R44: attic variant (group cxd, only with the roof cut): concrete platform on four feet that go down to the floor of the storey, so the tank does not float in the cut view
       const color = shared.ctx.colors.slab != null ? shared.ctx.colors.slab : 0xb9b5ac, yp = Y0(f), hw = cd.w / 2 + 0.1, hd = cd.d / 2 + 0.1;

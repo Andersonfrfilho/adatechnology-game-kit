@@ -276,14 +276,15 @@ describe('houses in the room', () => {
     expect(house.groups['stage:4:installations']?.visible).toBe(true)
     r.layer('water', false)
 
+    // the timber frame goes up at 7, before the tiles; the tiles come at 8 and the frame stays under them
     r.set('construction_level', 7)
     expect(stageMetric()).toContain('7 ·')
     expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
-    expect(house.groups['roof']?.visible).toBe(true)
+    expect(house.groups['roof']?.visible).toBe(false)
 
     r.set('construction_level', 8)
     expect(stageMetric()).toContain('8 ·')
-    expect(house.groups['stage:7:roof_framing']?.visible).toBe(false)
+    expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
     expect(house.groups['roof']?.visible).toBe(true)
   })
 

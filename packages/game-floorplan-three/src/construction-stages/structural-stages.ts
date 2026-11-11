@@ -2,37 +2,42 @@ import type * as THREE_NS from 'three'
 import { applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
-import { addStageBox, buildMasonryPanel } from './masonry-stage.js'
-import { addRafter, addRidgeBeam } from './roof-framing-stage.js'
+import { addStageBox, buildMasonryPanel, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
+import { cutOf, wallLineOf } from './wall-plane.js'
+import type { WallRect } from './wall-plane.js'
 
 export interface StructuralStageGroups {
   readonly foundation: THREE_NS.Group
+  /** The pillars' starter bars out of the footings: seen while the foundation is open, inside the pillars once they are cast. */
+  readonly starterBars: THREE_NS.Group
   readonly frame: THREE_NS.Group
   readonly masonry: THREE_NS.Group
   readonly roofFraming: THREE_NS.Group
 }
 
-function addRebarCage(
-  THREE: Three,
-  parent: THREE_NS.Group,
-  u0: number,
-  v0: number,
-  u1: number,
-  v1: number,
-  yBase: number,
-  height: number,
-  rebarMat: THREE_NS.Material,
-): void {
-  const inset = Math.min(0.025, (u1 - u0) * 0.22, (v1 - v0) * 0.22)
+/** A solid of the frame as it is drawn: plan box and heights, after it was fitted to the others (a beam stops under the slab it carries). */
+interface Solid {
+  readonly id: string
+  aabb: [number, number, number, number]
+  y0: number
+  y1: number
+  readonly floor: number
+}
+
+/** Top of the ground beams and footings: the masonry starts on it. */
+const FOUNDATION_TOP = 0.08
+const EPS = 1e-4
+/** How far a beam or a pillar reaches into the slab cast on it. */
+const SLAB_BITE = 0.04
+const PANEL_LAP = 0.01
+
+function addRebarCage(THREE: Three, parent: THREE_NS.Group, box: readonly [number, number, number, number], yBase: number, height: number, rebarMat: THREE_NS.Material): void {
+  const [u0, v0, u1, v1] = box
+  // the bars sit inside the ground beams too (a pillar is wider than the beam under it): no bar face on a beam face
+  const inset = Math.min(0.045, (u1 - u0) * 0.25, (v1 - v0) * 0.25)
   const r = 0.006
-  for (const x of [u0 + inset, u1 - inset]) {
-    for (const z of [v0 + inset, v1 - inset]) {
-      addStageBox(THREE, parent, x - r, yBase, z - r, x + r, yBase + height, z + r, rebarMat)
-    }
-  }
-  for (let y = yBase + 0.08; y < yBase + height - 0.03; y += 0.14) {
-    addStageBox(THREE, parent, u0 + inset, y, v0 + inset, u1 - inset, y + 0.006, v1 - inset, rebarMat)
-  }
+  for (const x of [u0 + inset, u1 - inset]) for (const z of [v0 + inset, v1 - inset]) addStageBox(THREE, parent, x - r, yBase, z - r, x + r, yBase + height, z + r, rebarMat)
+  for (let y = yBase + 0.08; y < yBase + height - 0.03; y += 0.14) addStageBox(THREE, parent, u0 + inset, y, v0 + inset, u1 - inset, y + 0.006, v1 - inset, rebarMat)
 }
 
 function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
@@ -41,8 +46,8 @@ function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
     footing: new THREE.MeshStandardMaterial({ color: 0x7a766e, roughness: 0.92 }),
     baldrame: new THREE.MeshStandardMaterial({ color: 0x5c5852, roughness: 0.88 }),
     slab0: new THREE.MeshStandardMaterial({ color: 0xa6a298, roughness: 0.86 }),
+    // pillars, beams and slabs are cast in one concrete: where they meet, they are one surface
     concrete: new THREE.MeshStandardMaterial({ color: 0x9c9890, roughness: 0.82 }),
-    beam: new THREE.MeshStandardMaterial({ color: 0x8e8a82, roughness: 0.82 }),
     lintel: new THREE.MeshStandardMaterial({ color: 0x848078, roughness: 0.8 }),
     rebar: new THREE.MeshStandardMaterial({ color: 0x523a28, roughness: 0.55, metalness: 0.65 }),
     brick: new THREE.MeshStandardMaterial({ color: 0xb85a3a, roughness: 0.88 }),
@@ -55,175 +60,117 @@ function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
   }
 }
 
-function processFoundation(
-  THREE: Three,
-  parent: THREE_NS.Group,
-  p: StructurePart,
-  mats: Record<string, THREE_NS.Material>,
-): void {
+const overlapArea = (a: readonly number[], b: readonly number[]): number =>
+  Math.max(0, Math.min(a[2]!, b[2]!) - Math.max(a[0]!, b[0]!)) * Math.max(0, Math.min(a[3]!, b[3]!) - Math.max(a[1]!, b[1]!))
+
+const solidOf = (p: StructurePart): Solid => ({ id: p.id, aabb: [...p.aabb] as Solid['aabb'], y0: p.y0, y1: p.y1, floor: p.floor ?? 0 })
+
+const isLintel = (id: string): boolean => /lintel|sillbeam|sill_beam/.test(id)
+const isGroundBeam = (p: StructurePart): boolean => p.beamKind === 'ground_beam' || /^(ground_beam_|base_beam_)/.test(p.id)
+const isFoundation = (p: StructurePart): boolean =>
+  isGroundBeam(p) || (p.role === 'slab' && p.floor === 0 && !p.id.includes('top') && p.y0 < 0.3) || /^(footing_pier_|joist_|foundation_raft)/.test(p.id)
+
+/** The concrete of a foundation part as it is drawn (ground beams and footings stand to `FOUNDATION_TOP`, the ground slab a little over the ground). */
+function foundationSolid(p: StructurePart): Solid & { readonly kind: 'baldrame' | 'footing' | 'slab0' } {
   const [u0, v0, u1, v1] = p.aabb
-  if (p.id.startsWith('ground_beam_') || p.id.startsWith('base_beam_')) {
-    addStageBox(THREE, parent, u0, Math.min(p.y0, -0.25), v0, u1, Math.max(p.y1, 0.08), v1, mats.baldrame!, p.id)
-  } else if (p.id.startsWith('footing_pier_')) {
-    addStageBox(THREE, parent, u0 - 0.06, Math.min(p.y0, -0.45), v0 - 0.06, u1 + 0.06, Math.max(p.y1, 0.03), v1 + 0.06, mats.footing!, p.id)
-  } else {
-    addStageBox(THREE, parent, u0, -0.08, v0, u1, 0.02, v1, mats.slab0!, p.id)
+  if (isGroundBeam(p)) return { id: p.id, aabb: [u0, v0, u1, v1], y0: Math.min(p.y0, -0.25), y1: Math.max(p.y1, FOUNDATION_TOP), floor: 0, kind: 'baldrame' }
+  if (p.id.startsWith('footing_pier_')) return { id: p.id, aabb: [u0 - 0.06, v0 - 0.06, u1 + 0.06, v1 + 0.06], y0: Math.min(p.y0, -0.45), y1: Math.max(p.y1, 0.03), floor: 0, kind: 'footing' }
+  return { id: p.id, aabb: [u0, v0, u1, v1], y0: -0.08, y1: 0.02, floor: 0, kind: 'slab0' }
+}
+
+/**
+ * Slabs reach the outer faces of the bond beams they rest on, and every beam or pillar under a slab stops just inside it: a beam and the slab over it
+ * never share a face on one plane (their tops on one plane were the flickering bands of the ceiling), nor leave a seam for light to leak through.
+ */
+function seatSlabs(slabs: Solid[], carriers: Solid[]): void {
+  const floors = [...new Set(slabs.map((s) => s.floor))]
+  for (const f of floors) {
+    const own = slabs.filter((s) => s.floor === f)
+    const bounds = [Math.min(...own.map((s) => s.aabb[0])), Math.min(...own.map((s) => s.aabb[1])), Math.max(...own.map((s) => s.aabb[2])), Math.max(...own.map((s) => s.aabb[3]))]
+    const under = carriers.filter((c) => c.floor === f && own.some((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05))
+    if (!under.length) continue
+    const reach = [Math.min(...under.map((c) => c.aabb[0])), Math.min(...under.map((c) => c.aabb[1])), Math.max(...under.map((c) => c.aabb[2])), Math.max(...under.map((c) => c.aabb[3]))]
+    for (const s of own) {
+      for (const k of [0, 1] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! < s.aabb[k] && s.aabb[k] - reach[k]! < 0.3) s.aabb[k] = reach[k]!
+      for (const k of [2, 3] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! > s.aabb[k] && reach[k]! - s.aabb[k] < 0.3) s.aabb[k] = reach[k]!
+    }
+    // the panels of one slab overlap a little where they meet (one concrete): no seam between them for the sun's shadow to leak through
+    for (const s of own) {
+      for (const k of [0, 1] as const) if (s.aabb[k] > bounds[k]! + EPS) s.aabb[k] -= PANEL_LAP
+      for (const k of [2, 3] as const) if (s.aabb[k] < bounds[k]! - EPS) s.aabb[k] += PANEL_LAP
+    }
+  }
+  for (const c of carriers) {
+    const over = slabs.filter((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - EPS && c.y0 < s.y0 - EPS)
+    // cast together: the beam runs a little into the slab (one concrete, one colour), so no seam is left for the sun's shadow to leak light through
+    if (over.length) c.y1 = Math.min(...over.map((s) => s.y0 + Math.min(SLAB_BITE, (s.y1 - s.y0) / 2)))
   }
 }
 
-function processPart(
-  THREE: Three,
-  groups: StructuralStageGroups,
-  p: StructurePart,
-  mats: Record<string, THREE_NS.Material>,
-  totalFloors = 1,
-): void {
-  const [u0, v0, u1, v1] = p.aabb
-  const isGroundSlab = p.role === 'slab' && p.floor === 0 && !p.id.includes('top') && p.y0 < 0.3
-  const isFoundation = p.role === 'foundation' || isGroundSlab || /^(ground_beam_|footing_pier_|base_beam_|joist_|foundation_raft)/.test(p.id)
-
-  if (isFoundation) {
-    processFoundation(THREE, groups.foundation, p, mats)
-    return
+/**
+ * A lintel or sill beam as it is cast: not inside a deeper bond beam that already spans the opening (it is dropped), shortened to the faces of the pillars
+ * at its ends (its end on a pillar's face flickered), and under the beam above it.
+ */
+function fitLintel(l: Solid, beams: readonly Solid[], columns: readonly Solid[]): Solid | null {
+  const wall = wallLineOf(l.aabb)
+  for (const b of beams) {
+    if (overlapArea(l.aabb, b.aabb) < EPS || b.y1 <= l.y0 + EPS || b.y0 >= l.y1 - EPS) continue
+    if (b.y0 <= l.y0 + EPS) return null
+    l.y1 = Math.min(l.y1, b.y0)
   }
-  if (p.role === 'column') {
-    // Synthetic slab support pillars placed in room centers by slab subdivision must not be drawn
-    if (p.id.startsWith('pillar_')) return
-    // Water tank support columns inside the attic are drawn in frame stage without rebar extensions
-    if (p.id.startsWith('tank_')) {
-      addStageBox(THREE, groups.frame, u0, p.y0, v0, u1, p.y1, v1, mats.concrete!, p.id)
-      return
-    }
-    const colMat = p.material === 'wood_soft' || p.material === 'wood_hard' ? mats.wood! : p.material === 'steel' ? mats.sheet! : mats.concrete!
-    addStageBox(THREE, groups.frame, u0 - 0.008, p.y0, v0 - 0.008, u1 + 0.008, p.y1, v1 + 0.008, colMat, p.id)
-    // Starter rebar in foundation (Level 1) only for ground columns (y0 <= 0.1), not roof/tank columns
-    if (p.floor === 0 && p.material === 'concrete' && p.y0 <= 0.1) {
-      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
-    }
-    // Top rebar extensions in frame (Level 2) only for ground-supported columns if there is an upper floor
-    const hasUpperFloor = totalFloors > (p.floor ?? 0) + 1
-    if (hasUpperFloor && p.material === 'concrete' && p.y0 <= 0.1) {
-      addRebarCage(THREE, groups.frame, u0, v0, u1, v1, p.y1, 0.26, mats.rebar!)
-    }
-    return
+  let a0 = wall.a0, a1 = wall.a1
+  const mid = (a0 + a1) / 2
+  for (const c of columns) {
+    const cut = cutOf(wall, c.aabb, c.y0, c.y1)
+    if (!cut || cut.y1 <= l.y0 || cut.y0 >= l.y1) continue
+    if (cut.a1 <= mid) a0 = Math.max(a0, cut.a1)
+    else if (cut.a0 >= mid) a1 = Math.min(a1, cut.a0)
   }
-  if (p.id.startsWith('rafter_')) {
-    addRafter(THREE, groups.roofFraming, p, mats.wood!)
-    return
-  }
-  if (p.id.startsWith('ridge')) {
-    addRidgeBeam(THREE, groups.roofFraming, p, mats.wood!)
-    return
-  }
-  if (p.role === 'beam') {
-    const isLintel = /lintel|sillbeam|sill_beam/.test(p.id)
-    const bMat = p.material === 'wood_soft' || p.material === 'wood_hard' ? mats.wood! : isLintel ? mats.lintel! : mats.beam!
-    let y0 = p.y0
-    const y1 = p.y1
-    // Residential slab panel beams must have uniform structural height (max 24cm drop below slab)
-    // so they match the perimeter bond beams and do not drop awkwardly into room centers
-    if (p.id.includes('_b') && p.material === 'concrete') {
-      y0 = Math.max(y0, y1 - 0.24)
-    }
-    addStageBox(THREE, groups.frame, u0 - 0.005, y0, v0 - 0.005, u1 + 0.005, y1, v1 + 0.005, bMat, p.id)
-    return
-  }
-  if (p.role === 'slab') {
-    addStageBox(THREE, groups.frame, u0, p.y0, v0, u1, p.y1, v1, mats.concrete!, p.id)
-    return
-  }
-  if (p.role === 'wall' || p.role === 'partition') {
-    buildMasonryPanel(THREE, groups.masonry, p, mats)
-    return
-  }
-  if (p.role === 'roof') {
-    // The abstract bounding volume for roof pitch must not be drawn as a solid box;
-    // real rafters and ridge beams are already drawn by addRafter and addRidgeBeam above,
-    // and the roof tiles and gutters are drawn by the roof stage.
-    return
-  }
+  if (a1 - a0 < 0.05 || l.y1 - l.y0 < 0.02) return null
+  l.aabb = wall.alongU ? [a0, l.aabb[1], a1, l.aabb[3]] : [l.aabb[0], a0, l.aabb[2], a1]
+  return l
 }
 
-function processOutbuilding(
-  THREE: Three,
-  groups: StructuralStageGroups,
-  e: Outbuilding,
-  mats: Record<string, THREE_NS.Material>,
-): void {
+/** The outbuilding's structure in the terms of the house's: footings, ground beams, corner pillars, bond beams, the slab over them, lintels, sills and walls. */
+function outbuildingParts(e: Outbuilding): { parts: StructurePart[]; openings: { readonly id: string; readonly aabb: readonly number[]; readonly y0: number; readonly y1: number }[] } {
   const [a0, b0, a1, b1] = e.aabb
   const ceiling = e.ceiling || 2.6
   const th = e.thickness || 0.15
-
-  // 0. Compacted dirt excavation bed under outbuilding
-  addStageBox(THREE, groups.foundation, a0 - 0.05, -0.06, b0 - 0.05, a1 + 0.05, 0.004, b1 + 0.05, mats.dirt!, `${e.id}_dirt_bed`)
-
-  // 1. Foundation: baldrame grade beams under walls + compacted dirt interior (matches main house)
-  addStageBox(THREE, groups.foundation, a0 + th, -0.06, b0 + th, a1 - th, 0.004, b1 - th, mats.dirt!, `${e.id}_interior_dirt`)
-  for (let i = 0; i < e.walls.length; i++) {
-    const w = e.walls[i]!
-    const alongU = w.axis === 'u'
-    if (alongU) {
-      addStageBox(THREE, groups.foundation, w.u0, -0.25, w.v0 - th / 2, w.u1, 0.08, w.v0 + th / 2, mats.baldrame!, `${e.id}_baldrame_${i}`)
-    } else {
-      addStageBox(THREE, groups.foundation, w.u0 - th / 2, -0.25, w.v0, w.u0 + th / 2, 0.08, w.v1, mats.baldrame!, `${e.id}_baldrame_${i}`)
-    }
-  }
-
-  // 2. Frame: columns at corners + door lintels + continuous top bond beams
-  const corners: Array<[number, number]> = [
-    [a0, b0],
-    [a1, b0],
-    [a0, b1],
-    [a1, b1],
+  const h = th / 2
+  const part = (id: string, role: StructurePart['role'], aabb: readonly number[], y0: number, y1: number, material = 'concrete', extra: Partial<StructurePart> = {}): StructurePart =>
+    ({ id: `${e.id}_${id}`, role, material, aabb: aabb as StructurePart['aabb'], y0, y1, floor: 0, mass: 0, ...extra }) as StructurePart
+  const parts: StructurePart[] = []
+  const sides: readonly [string, readonly number[]][] = [
+    ['north', [a0 - h, b0 - h, a1 + h, b0 + h]],
+    ['south', [a0 - h, b1 - h, a1 + h, b1 + h]],
+    ['west', [a0 - h, b0 - h, a0 + h, b1 + h]],
+    ['east', [a1 - h, b0 - h, a1 + h, b1 + h]],
   ]
-  const colHalf = th / 2
-  for (let k = 0; k < corners.length; k++) {
-    const [cx, cz] = corners[k]!
-    addRebarCage(THREE, groups.foundation, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, 0, 0.42, mats.rebar!)
-    addStageBox(THREE, groups.frame, cx - colHalf, 0, cz - colHalf, cx + colHalf, ceiling, cz + colHalf, mats.concrete!, `${e.id}_col_${k}`)
+  for (const [side, box] of sides) {
+    parts.push(part(`ground_beam_${side}`, 'beam', box, -0.25, FOUNDATION_TOP, 'concrete', { beamKind: 'ground_beam' }))
+    parts.push(part(`bond_beam_${side}`, 'beam', box, ceiling - 0.2, ceiling, 'concrete', { beamKind: 'bond_beam' }))
   }
-
-  // Continuous perimeter top tie beams (viga cinta de respaldo superior) - runs unbroken along all 4 walls
-  const beamY0 = ceiling - 0.20
-  addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b0 - th / 2, a1 + th / 2, ceiling, b0 + th / 2, mats.beam!, `${e.id}_topbeam_north`)
-  addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b1 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_south`)
-  addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b0 - th / 2, a0 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_west`)
-  addStageBox(THREE, groups.frame, a1 - th / 2, beamY0, b0 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_east`)
-
-  // Door lintel (verga de concreto armado): sits directly over the door opening and ties into the top tie beam
-  for (const d of e.doors || []) {
-    const alongU = d.axis === 'u'
-    const hw = (d.width || 0.85) / 2
-    const dAt = d.at != null ? d.at : alongU ? d.u : d.v
-    const dPos = d.pos != null ? d.pos : alongU ? d.v : d.u
-    const lintelTop = Math.max(2.35, beamY0)
-    if (alongU) {
-      addStageBox(THREE, groups.frame, dAt - hw - 0.20, 2.1, dPos - th / 2, dAt + hw + 0.20, lintelTop, dPos + th / 2, mats.lintel!, `${d.id}_lintel`)
-    } else {
-      addStageBox(THREE, groups.frame, dPos - th / 2, 2.1, dAt - hw - 0.20, dPos + th / 2, lintelTop, dAt + hw + 0.20, mats.lintel!, `${d.id}_lintel`)
-    }
+  const corners: readonly (readonly [number, number])[] = [[a0, b0], [a1, b0], [a0, b1], [a1, b1]]
+  corners.forEach(([u, v], k) => parts.push(part(`column_${k}`, 'column', [u - 0.1, v - 0.1, u + 0.1, v + 0.1], 0, ceiling)))
+  parts.push(part('slab', 'slab', [a0 - h, b0 - h, a1 + h, b1 + h], ceiling - 0.1, ceiling))
+  const openings: { id: string; aabb: number[]; y0: number; y1: number }[] = []
+  const opening = (o: Outbuilding['doors'][number], y0: number, y1: number, sill: boolean): void => {
+    const alongU = o.axis === 'u'
+    const at = o.at ?? (alongU ? o.u : o.v)
+    const pos = o.pos ?? (alongU ? o.v : o.u)
+    const w = o.width || 0.85
+    const span = (reach: number): number[] => (alongU ? [at - w / 2 - reach, pos - h, at + w / 2 + reach, pos + h] : [pos - h, at - w / 2 - reach, pos + h, at + w / 2 + reach])
+    openings.push({ id: o.id, aabb: span(0), y0, y1 })
+    parts.push(part(`${o.id}_lintel`, 'beam', span(0.2), y1, y1 + 0.25))
+    if (sill) parts.push(part(`${o.id}_sillbeam`, 'beam', span(0.2), y0 - 0.1, y0))
   }
-
-  // 3. Masonry: brick wall panels (door gap is already cut in e.walls)
-  for (let i = 0; i < e.walls.length; i++) {
-    const w = e.walls[i]!
-    const mockPart: StructurePart = {
-      id: `${e.id}_wall_${i}`,
-      role: 'wall',
-      material: 'brick',
-      aabb: w.axis === 'u'
-        ? [w.u0, w.v0 - th / 2, w.u1, w.v0 + th / 2]
-        : [w.u0 - th / 2, w.v0, w.u0 + th / 2, w.v1],
-      y0: 0,
-      y1: ceiling - 0.18,
-      floor: 0,
-      mass: 500,
-    }
-    buildMasonryPanel(THREE, groups.masonry, mockPart, mats)
-  }
-
-  // Roof framing for outbuilding
-  addStageBox(THREE, groups.roofFraming, a0 - 0.15, ceiling, b0 - 0.15, a1 + 0.15, ceiling + 0.12, b1 + 0.15, mats.wood!, `${e.id}_roof`)
+  for (const d of e.doors || []) opening(d, 0, d.height ?? 2.1, false)
+  for (const w of e.windows || []) opening(w, w.y0 ?? 1, w.y1 ?? 2, true)
+  e.walls.forEach((w, i) => {
+    const aabb = w.axis === 'u' ? [w.u0, w.v0 - h, w.u1, w.v0 + h] : [w.u0 - h, w.v0, w.u0 + h, w.v1]
+    parts.push(part(`wall_${i}`, 'wall', aabb, 0, ceiling, 'brick'))
+  })
+  return { parts, openings }
 }
 
 export interface InteriorColumnLocation {
@@ -237,92 +184,68 @@ export function findInteriorColumnLocations(rawStructure: PlanStructure): readon
   const TOL = 0.12
   const MERGE_DIST = 0.55
   const SPACING = 4.0
-
-  // Existing column center points (corners and exterior wall columns)
   const existing = parts
     .filter((p) => p.role === 'column' && !p.id.startsWith('tank_') && !p.id.startsWith('pillar_'))
     .map((p) => [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2] as const)
-
   const isTaken = (u: number, v: number): boolean => existing.some(([eu, ev]) => Math.hypot(eu - u, ev - v) < MERGE_DIST)
-
-  // Walls and partitions
-  const wallParts = parts.filter((p) => p.role === 'wall' || p.role === 'partition')
-  const wallLines = wallParts.map((p) => {
-    const alongU = p.aabb[2] - p.aabb[0] >= p.aabb[3] - p.aabb[1]
-    return {
-      part: p,
-      alongU,
-      line: alongU ? (p.aabb[1] + p.aabb[3]) / 2 : (p.aabb[0] + p.aabb[2]) / 2,
-      from: alongU ? p.aabb[0] : p.aabb[1],
-      to: alongU ? p.aabb[2] : p.aabb[3],
-      floor: p.floor ?? 0,
-      isPartition: p.role === 'partition',
-    }
-  })
-
-  const candidates: Array<{ u: number; v: number; floor: number }> = []
-
-  for (let i = 0; i < wallLines.length; i++) {
-    const w1 = wallLines[i]!
-    for (let j = i + 1; j < wallLines.length; j++) {
-      const w2 = wallLines[j]!
-      if (w1.floor !== w2.floor || w1.alongU === w2.alongU) continue
-      const wu = w1.alongU ? w1 : w2
-      const wv = w1.alongU ? w2 : w1
-
-      const u = wv.line
-      const v = wu.line
-
-      if (u >= wu.from - TOL && u <= wu.to + TOL && v >= wv.from - TOL && v <= wv.to + TOL) {
-        if (wu.isPartition || wv.isPartition) {
-          candidates.push({ u, v, floor: wu.floor })
-        }
+  const wallLines = parts
+    .filter((p) => p.role === 'wall' || p.role === 'partition')
+    .map((p) => {
+      const alongU = p.aabb[2] - p.aabb[0] >= p.aabb[3] - p.aabb[1]
+      return {
+        alongU,
+        line: alongU ? (p.aabb[1] + p.aabb[3]) / 2 : (p.aabb[0] + p.aabb[2]) / 2,
+        from: alongU ? p.aabb[0] : p.aabb[1],
+        to: alongU ? p.aabb[2] : p.aabb[3],
+        floor: p.floor ?? 0,
+        isPartition: p.role === 'partition',
       }
-    }
-  }
-
+    })
   const columns: Array<{ u: number; v: number; floor: number }> = []
-  for (const c of candidates) {
-    if (!isTaken(c.u, c.v) && !columns.some((col) => col.floor === c.floor && Math.hypot(col.u - c.u, col.v - c.v) < MERGE_DIST)) {
-      columns.push(c)
+  const free = (u: number, v: number, floor: number): boolean => !isTaken(u, v) && !columns.some((col) => col.floor === floor && Math.hypot(col.u - u, col.v - v) < MERGE_DIST)
+  for (let i = 0; i < wallLines.length; i++) {
+    for (let j = i + 1; j < wallLines.length; j++) {
+      const w1 = wallLines[i]!, w2 = wallLines[j]!
+      if (w1.floor !== w2.floor || w1.alongU === w2.alongU || !(w1.isPartition || w2.isPartition)) continue
+      const wu = w1.alongU ? w1 : w2, wv = w1.alongU ? w2 : w1
+      const u = wv.line, v = wu.line
+      if (u >= wu.from - TOL && u <= wu.to + TOL && v >= wv.from - TOL && v <= wv.to + TOL && free(u, v, wu.floor)) columns.push({ u, v, floor: wu.floor })
     }
   }
-
-  // Check long spans on partitions
-  for (const w of wallLines.filter((w) => w.isPartition)) {
-    const len = w.to - w.from
-    if (len > SPACING) {
-      const alongPoints = [...existing.map(([u, v]) => ({ u, v, floor: w.floor })), ...columns]
-        .filter((c) => c.floor === w.floor && Math.abs((w.alongU ? c.v : c.u) - w.line) < 0.25)
-        .map((c) => (w.alongU ? c.u : c.v))
-        .filter((a) => a >= w.from - 0.25 && a <= w.to + 0.25)
-        .sort((a, b) => a - b)
-
-      for (let k = 1; k < alongPoints.length; k++) {
-        const gap = alongPoints[k]! - alongPoints[k - 1]!
-        if (gap > SPACING) {
-          const divs = Math.ceil(gap / SPACING)
-          for (let d = 1; d < divs; d++) {
-            const pt = alongPoints[k - 1]! + (gap * d) / divs
-            const u = w.alongU ? pt : w.line
-            const v = w.alongU ? w.line : pt
-            if (!isTaken(u, v) && !columns.some((col) => col.floor === w.floor && Math.hypot(col.u - u, col.v - v) < MERGE_DIST)) {
-              columns.push({ u, v, floor: w.floor })
-            }
-          }
-        }
+  for (const w of wallLines.filter((x) => x.isPartition && x.to - x.from > SPACING)) {
+    const along = [...existing.map(([u, v]) => ({ u, v, floor: w.floor })), ...columns]
+      .filter((c) => c.floor === w.floor && Math.abs((w.alongU ? c.v : c.u) - w.line) < 0.25)
+      .map((c) => (w.alongU ? c.u : c.v))
+      .filter((a) => a >= w.from - 0.25 && a <= w.to + 0.25)
+      .sort((a, b) => a - b)
+    for (let k = 1; k < along.length; k++) {
+      const gap = along[k]! - along[k - 1]!
+      if (gap <= SPACING) continue
+      const divs = Math.ceil(gap / SPACING)
+      for (let d = 1; d < divs; d++) {
+        const pt = along[k - 1]! + (gap * d) / divs
+        const u = w.alongU ? pt : w.line, v = w.alongU ? w.line : pt
+        if (free(u, v, w.floor)) columns.push({ u, v, floor: w.floor })
       }
     }
   }
-
   return columns
 }
 
-export function buildStructuralStageGroups(
-  THREE: Three,
-  rawStructure: PlanStructure | undefined,
-  outbuildings?: readonly Outbuilding[],
-): StructuralStageGroups {
+/** The structure the stages draw: the plan's structure in panels (slab panels on beams, walls cut at their pillars and openings), with the outbuildings. */
+function detailedParts(rawStructure: PlanStructure): StructurePart[] {
+  const resolved = resolveSlabPanels(true)
+  const slabOptions = resolved && rawStructure.levels.length <= resolved.maxStoreys ? resolved : undefined
+  const slabbed = slabOptions ? applySlabPanels({ parts: rawStructure.parts, supports: rawStructure.supports }, rawStructure, slabOptions) : { parts: rawStructure.parts, supports: rawStructure.supports }
+  const walled = applyPanels(slabbed, rawStructure, 'panels', slabOptions && rawStructure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined)
+  return (slabOptions ? deepenBondBeams(walled, rawStructure, slabOptions) : walled).parts
+}
+
+/**
+ * The bare structure by construction stage: the foundation (footings, ground beams, starter bars), the frame (pillars, bond beams, slabs) and the masonry
+ * (walls, lintels and sills, laid between the frame's members). Every solid is fitted to the ones it touches so that no two of them draw a face on the same plane.
+ */
+export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStructure | undefined, outbuildings?: readonly Outbuilding[]): StructuralStageGroups {
   const foundation = new THREE.Group()
   foundation.name = 'stage:1:foundation'
   const frame = new THREE.Group()
@@ -331,72 +254,77 @@ export function buildStructuralStageGroups(
   masonry.name = 'stage:3:masonry'
   const roofFraming = new THREE.Group()
   roofFraming.name = 'stage:7:roof_framing'
-
-  if (!rawStructure) return { foundation, frame, masonry, roofFraming }
+  const starterBars = new THREE.Group()
+  starterBars.name = 'stage:1:starter_bars'
+  const groups: StructuralStageGroups = { foundation, starterBars, frame, masonry, roofFraming }
+  if (!rawStructure) return groups
 
   const mats = createStageMaterials(THREE)
-  const resolved = resolveSlabPanels(true)
-  const slabOptions = resolved && rawStructure.levels.length <= resolved.maxStoreys ? resolved : undefined
-  const slabbed = slabOptions
-    ? applySlabPanels({ parts: rawStructure.parts, supports: rawStructure.supports }, rawStructure, slabOptions)
-    : { parts: rawStructure.parts, supports: rawStructure.supports }
-  const walled = applyPanels(
-    slabbed,
-    rawStructure,
-    'panels',
-    slabOptions && rawStructure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined,
-  )
-  const detailed = slabOptions ? deepenBondBeams(walled, rawStructure, slabOptions) : walled
-  const groups: StructuralStageGroups = { foundation, frame, masonry, roofFraming }
-
-  // 1. Excavated dirt ground bed under the house footprint
-  let minU = Infinity, minV = Infinity, maxU = -Infinity, maxV = -Infinity
-  for (const p of rawStructure.parts) {
-    if (p.floor === 0 || p.y0 <= 0.1) {
-      minU = Math.min(minU, p.aabb[0])
-      minV = Math.min(minV, p.aabb[1])
-      maxU = Math.max(maxU, p.aabb[2])
-      maxV = Math.max(maxV, p.aabb[3])
-    }
-  }
-  if (Number.isFinite(minU) && Number.isFinite(maxU)) {
-    addStageBox(THREE, groups.foundation, minU - 0.05, -0.06, minV - 0.05, maxU + 0.05, 0.004, maxV + 0.05, mats.dirt!, 'foundation_dirt_bed')
+  const totalFloors = Math.max(1, rawStructure.levels.length - 1)
+  const parts = detailedParts(rawStructure).filter((p) => !p.id.startsWith('pillar_') && p.role !== 'roof' && !/^(rafter_|ridge)/.test(p.id))
+  const openings: { id: string; aabb: readonly number[]; y0: number; y1: number }[] = []
+  for (const e of outbuildings ?? []) {
+    const ob = outbuildingParts(e)
+    parts.push(...ob.parts)
+    openings.push(...ob.openings)
   }
 
-  const totalFloors = rawStructure?.floors ?? (rawStructure?.levels ? Math.max(1, rawStructure.levels.length - 1) : 1)
-
-  for (const p of detailed.parts) {
-    processPart(THREE, groups, p, mats, totalFloors)
+  // the excavated, compacted bed under every footprint
+  const footprint = rawStructure.parts.filter((p) => p.floor === 0 || p.y0 <= 0.1)
+  if (footprint.length) {
+    addStageBox(THREE, foundation, Math.min(...footprint.map((p) => p.aabb[0])) - 0.05, -0.06, Math.min(...footprint.map((p) => p.aabb[1])) - 0.05, Math.max(...footprint.map((p) => p.aabb[2])) + 0.05, 0.006, Math.max(...footprint.map((p) => p.aabb[3])) + 0.05, mats.dirt!, 'foundation_dirt_bed')
   }
+  for (const e of outbuildings ?? []) addStageBox(THREE, foundation, e.aabb[0] - 0.15, -0.06, e.aabb[1] - 0.15, e.aabb[2] + 0.15, 0.006, e.aabb[3] + 0.15, mats.dirt!, `${e.id}_dirt_bed`)
 
-  // 2. Interior columns at interior wall junctions and spans
-  const interiorCols = findInteriorColumnLocations(rawStructure)
-  const colHalf = 0.09
-  for (let k = 0; k < interiorCols.length; k++) {
-    const c = interiorCols[k]!
-    const u0 = c.u - colHalf
-    const v0 = c.v - colHalf
-    const u1 = c.u + colHalf
-    const v1 = c.v + colHalf
+  const foundations = parts.filter(isFoundation).map(foundationSolid)
+  for (const s of foundations) addStageBox(THREE, foundation, s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3], mats[s.kind]!, s.id)
+
+  const columnParts = parts.filter((p) => p.role === 'column')
+  const columns: (Solid & { readonly tank: boolean; readonly material: string })[] = columnParts.map((p) => ({ ...solidOf(p), tank: p.id.startsWith('tank_'), material: p.material }))
+  const interior = findInteriorColumnLocations(rawStructure)
+  interior.forEach((c, k) => {
     const y0 = rawStructure.levels[c.floor] ?? c.floor * 2.8
-    const y1 = (rawStructure.levels[c.floor + 1] ?? y0 + 2.8) - 0.2
+    columns.push({ id: `interior_column_${c.floor}_${k}`, aabb: [c.u - 0.098, c.v - 0.098, c.u + 0.098, c.v + 0.098], y0, y1: rawStructure.levels[c.floor + 1] ?? y0 + 2.8, floor: c.floor, tank: false, material: 'concrete' })
+  })
+  const slabs = parts.filter((p) => p.role === 'slab' && !isFoundation(p)).map(solidOf)
+  const beamParts = parts.filter((p) => p.role === 'beam' && !isFoundation(p))
+  const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf)
+  seatSlabs(slabs.filter((s) => !s.id.startsWith('tank_')), [...beams, ...columns.filter((c) => !c.tank)])
 
-    // Starter rebar in foundation (Level 1)
-    if (c.floor === 0) {
-      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
-    }
-    // Concrete column and top rebar extension in frame (Level 2) only if there is an upper floor
-    addStageBox(THREE, groups.frame, u0 - 0.008, y0, v0 - 0.008, u1 + 0.008, y1, v1 + 0.008, mats.concrete!, `interior_column_${c.floor}_${k}`)
-    if (totalFloors > c.floor + 1) {
-      addRebarCage(THREE, groups.frame, u0, v0, u1, v1, y1, 0.26, mats.rebar!)
-    }
+  for (const c of columns) {
+    const mat = c.material === 'wood_soft' || c.material === 'wood_hard' ? mats.wood! : c.material === 'steel' ? mats.sheet! : mats.concrete!
+    addStageBox(THREE, frame, c.aabb[0], c.y0, c.aabb[1], c.aabb[2], c.y1, c.aabb[3], mat, c.id)
+    if (c.tank || c.y0 > 0.1 || c.material !== 'concrete') continue
+    if (c.floor === 0) addRebarCage(THREE, starterBars, c.aabb, 0, 0.42, mats.rebar!)
+    if (totalFloors > c.floor + 1) addRebarCage(THREE, frame, c.aabb, c.y1, 0.26, mats.rebar!)
   }
-
-  if (outbuildings) {
-    for (const ob of outbuildings) {
-      processOutbuilding(THREE, groups, ob, mats)
-    }
+  for (const b of beams) {
+    const p = beamParts.find((x) => x.id === b.id)
+    addStageBox(THREE, frame, b.aabb[0], b.y0, b.aabb[1], b.aabb[2], b.y1, b.aabb[3], p && (p.material === 'wood_soft' || p.material === 'wood_hard') ? mats.wood! : mats.concrete!, b.id)
   }
+  for (const s of slabs) addStageBox(THREE, frame, s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3], mats.concrete!, s.id)
 
+  // lintels and sills are cast with the masonry they bear on, never hanging in the frame
+  const lintels = beamParts.filter((p) => isLintel(p.id)).map(solidOf).map((l) => fitLintel(l, beams, columns)).filter((l): l is Solid => l !== null)
+  for (const l of lintels) addStageBox(THREE, masonry, l.aabb[0], l.y0, l.aabb[1], l.aabb[2], l.y1, l.aabb[3], mats.lintel!, l.id)
+
+  const batches = createMasonryBatches()
+  const laid: Solid[] = []
+  const solids: readonly Solid[] = [...foundations, ...columns, ...beams, ...slabs, ...lintels]
+  for (const p of parts.filter((x) => x.role === 'wall' || x.role === 'partition')) {
+    const wall = wallLineOf(p.aabb)
+    const cuts: WallRect[] = []
+    for (const s of [...solids, ...laid]) {
+      const cut = cutOf(wall, s.aabb, s.y0, s.y1)
+      if (cut) cuts.push(cut)
+    }
+    for (const o of openings) {
+      const cut = cutOf(wall, o.aabb, o.y0, o.y1)
+      if (cut) cuts.push(cut)
+    }
+    buildMasonryPanel(batches, p, cuts, (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0)
+    laid.push(solidOf(p))
+  }
+  for (const mesh of masonryMeshes(THREE, batches, mats, 'masonry')) masonry.add(mesh)
   return groups
 }

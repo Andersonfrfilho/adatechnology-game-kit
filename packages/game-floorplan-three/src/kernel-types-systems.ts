@@ -625,6 +625,8 @@ export interface VegetationInfo {
 
 /** What one build of a house knows while it draws (`shared.ctx`): the record, its tables and what each module collected. */
 export interface BuildContext {
+  /** The house is built with its construction stages (`BuildOptions.constructionStages`): the builders tag what they draw with the stage it belongs to. */
+  constructionStages?: boolean
   mv: Props3d
   types: TypeTable
   r: HouseRecord

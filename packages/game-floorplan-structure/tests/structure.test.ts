@@ -130,13 +130,27 @@ describe('construction systems', () => {
 describe('water tank', () => {
   const house = () => ({ ...rectangularHouse({ width: 8, depth: 6 }), lot: {}, w: 8, d: 6 })
 
+  const wide = () => ({ ...rectangularHouse({ width: 12, depth: 10 }), lot: {}, w: 12, d: 10 })
+
   it('goes on the slab of a flat roof, on a platform over a pitched roof, or in the attic', () => {
     const slab = planWaterTank({ ...house(), facade: { roof: 'slab' } }, () => 0.5)!
-    const platform = planWaterTank(house(), () => 0.5)!
+    const platform = planWaterTank(wide(), () => 0.5)!
     const attic = planWaterTank(house(), () => 0.05)!
     expect([slab.place, platform.place, attic.place]).toEqual(['slab', 'raised_slab', 'attic'])
     expect(platform.platform!.pillars).toHaveLength(4)
     expect(platform.y).toBe(platform.platform!.topY)
+  })
+
+  it('keeps the tank and its lid under the tiles: the platform rises only as far as the roof lets it, and a roof too low for one keeps the tank in the attic', () => {
+    // the renderer's tiled roof: eave 0.2 m over the ceiling, 0.45 m overhang, rising 0.5 m per metre from every eave of the hipped cover
+    const roofOver = (s: ReturnType<typeof wide>, u: number, v: number): number => s.floors[0]!.ceiling + 0.2 + 0.5 * (Math.min(u, s.w - u, v, s.d - v) + 0.45)
+    for (const source of [wide(), house()]) {
+      const tank = planWaterTank(source, () => 0.5)!
+      const base = tank.place === 'raised_slab' ? tank.platform!.topY : tank.y + 0.2
+      for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) expect(base + tank.h + 0.12, `${source.w} x ${source.d}`).toBeLessThan(roofOver(source, tank.u + (a * tank.w) / 2, tank.v + (b * tank.d) / 2) - 0.15)
+    }
+    expect(planWaterTank(wide(), () => 0.5)!.place).toBe('raised_slab')
+    expect(planWaterTank(house(), () => 0.5)!.place).toBe('attic')
   })
 
   it('is a part that carries nothing, resting on what holds it', () => {

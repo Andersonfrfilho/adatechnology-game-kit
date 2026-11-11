@@ -1,511 +1,273 @@
 import type * as THREE_NS from 'three'
-import type { HouseRecord, HouseWall, Three } from '../kernel-types.js'
 
-function addPipeSegment(
-  THREE: Three,
-  parent: THREE_NS.Group,
-  a: readonly [number, number, number],
-  b: readonly [number, number, number],
-  radius: number,
-  mat: THREE_NS.Material,
-): void {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const dz = b[2] - a[2]
-  const len = Math.hypot(dx, dy, dz)
-  if (len < 1e-3) return
-  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, len, 10), mat)
-  mesh.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2)
+import type { HouseRecord, Three } from '../kernel-types.js'
+import { BoxBatch } from './box-batch.js'
+import { BURIED_Y, houseFootprint, routingPlanOf } from './installation-routes.js'
+import type { RoutePoint } from './installation-routes.js'
+
+/** What drains into the sewer, and the bore of its pipe (metres). */
+const DRAIN_BORE: Readonly<Record<string, number>> = { flush: 0.1, shower: 0.05, tap: 0.05, tub: 0.05, machine: 0.05 }
+/** Fall of a sewer run, metres per metre (NBR 8160: 1 % for 100 mm and up, 2 % under it). */
+const FALL = { main: 0.01, branch: 0.02 } as const
+const TRENCH = { width: 0.4, bed: 0.03, berm: { width: 0.12, height: 0.065 } } as const
+/** The excavation's opening is drawn this little over the ground and over the compacted bed under the house. */
+const OPENING_Y = 0.045
+/** The excavation draws after every opaque thing (it opens what was drawn over it), its pipes and boxes after the excavation. */
+// the hole and what is in it draw in the transparent pass, after the ground's own transparent layers (its marks and decals paint over the ground there): the
+// opening first, then the earth faces, then the pipes and boxes in it
+const ORDER = { opening: 900, earth: 901, inside: 902 } as const
+/** The capped end of a fixture's drain waits just under the ground, in its pit, for the floor and the fixture. */
+const RISER_TOP = -0.02
+
+type Rect = readonly [number, number, number, number]
+
+interface SewerPiece {
+  readonly points: readonly RoutePoint[]
+  readonly bore: number
+}
+
+/**
+ * The opening of an excavation: drawn after everything opaque and after the ground's own layers, where nothing nearer covers it, it marks its pixels in the
+ * stencil. The hole's earth faces then draw only on those pixels, whatever the ground's depth there, and leave their own depth for the pipes in the hole.
+ */
+function openingMaterial(THREE: Three): THREE_NS.Material {
+  return new THREE.MeshBasicMaterial({
+    colorWrite: false,
+    depthWrite: false,
+    depthTest: true,
+    transparent: true,
+    stencilWrite: true,
+    stencilRef: 1,
+    stencilFunc: THREE.AlwaysStencilFunc,
+    stencilZPass: THREE.ReplaceStencilOp,
+    stencilFail: THREE.KeepStencilOp,
+    stencilZFail: THREE.KeepStencilOp,
+  })
+}
+
+/** The earth faces of the hole: only where the opening marked the stencil, over the ground's depth (each pixel of an open box sees one of its inner faces). */
+function earthMaterial(THREE: Three, color: number): THREE_NS.Material {
+  return new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.98,
+    transparent: true,
+    depthWrite: true,
+    depthFunc: THREE.AlwaysDepth,
+    stencilWrite: true,
+    stencilRef: 1,
+    stencilFunc: THREE.EqualStencilFunc,
+    stencilZPass: THREE.KeepStencilOp,
+    stencilFail: THREE.KeepStencilOp,
+    stencilZFail: THREE.KeepStencilOp,
+  })
+}
+
+/** The stretches of a rectangle's edge that no other rectangle covers: where the excavation has a wall. */
+function openEdges(rect: Rect, others: readonly Rect[], solids: readonly Rect[] = []): { readonly a: RoutePoint; readonly b: RoutePoint; readonly out: readonly [number, number] }[] {
+  const [x0, z0, x1, z1] = rect
+  const edges: { fixed: number; alongX: boolean; from: number; to: number; out: [number, number] }[] = [
+    { fixed: z0, alongX: true, from: x0, to: x1, out: [0, -1] },
+    { fixed: z1, alongX: true, from: x0, to: x1, out: [0, 1] },
+    { fixed: x0, alongX: false, from: z0, to: z1, out: [-1, 0] },
+    { fixed: x1, alongX: false, from: z0, to: z1, out: [1, 0] },
+  ]
+  const result: { a: RoutePoint; b: RoutePoint; out: [number, number] }[] = []
+  for (const e of edges) {
+    let spans: [number, number][] = [[e.from, e.to]]
+    for (const o of others) {
+      const across0 = e.alongX ? o[1] : o[0], across1 = e.alongX ? o[3] : o[2]
+      // the other opening covers this edge only where the edge runs inside it (its face is then open ground on both sides)
+      if (e.fixed <= across0 + 1e-6 || e.fixed >= across1 - 1e-6) continue
+      const c0 = e.alongX ? o[0] : o[1], c1 = e.alongX ? o[2] : o[3]
+      spans = spans.flatMap(([s0, s1]): [number, number][] => {
+        if (c1 <= s0 || c0 >= s1) return [[s0, s1]]
+        return ([[s0, Math.max(s0, c0)], [Math.min(s1, c1), s1]] as [number, number][]).filter(([a, b]) => b - a > 1e-4)
+      })
+    }
+    // where a buried beam or footing runs along the edge, its own face is the hole's wall there
+    for (const o of solids) {
+      const across0 = e.alongX ? o[1] : o[0], across1 = e.alongX ? o[3] : o[2]
+      if (e.fixed < across0 - 0.02 || e.fixed > across1 + 0.02) continue
+      const c0 = e.alongX ? o[0] : o[1], c1 = e.alongX ? o[2] : o[3]
+      spans = spans.flatMap(([s0, s1]): [number, number][] => (c1 <= s0 || c0 >= s1 ? [[s0, s1]] : ([[s0, Math.max(s0, c0)], [Math.min(s1, c1), s1]] as [number, number][]).filter(([a, b]) => b - a > 1e-4)))
+    }
+    for (const [s0, s1] of spans) {
+      result.push(e.alongX ? { a: [s0, 0, e.fixed], b: [s1, 0, e.fixed], out: e.out } : { a: [e.fixed, 0, s0], b: [e.fixed, 0, s1], out: e.out })
+    }
+  }
+  return result
+}
+
+/**
+ * An excavation as one open hole in the ground: the union of its rectangles, each drawn as its opening (the depth mask), its floor and the walls of the union's
+ * outline, with the dug earth heaped along the rim.
+ */
+function addExcavation(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trench[], mats: { readonly earth: THREE_NS.Material; readonly heap: THREE_NS.Material }, site: { readonly solids: readonly Rect[]; readonly footprint: Rect }): void {
+  const opening = new BoxBatch(), earth = new BoxBatch(), heap = new BoxBatch()
+  const rects = trenches.map((t) => t.rect)
+  trenches.forEach(({ rect: r, bed }, i) => {
+    opening.add([r[0], OPENING_Y - 0.001, r[1], r[2], OPENING_Y, r[3]])
+    earth.addQuad([[r[0], bed(r[0], r[1]), r[1]], [r[2], bed(r[2], r[1]), r[1]], [r[2], bed(r[2], r[3]), r[3]], [r[0], bed(r[0], r[3]), r[3]]], [0, 1, 0])
+    const others = rects.filter((_, k) => k !== i)
+    for (const e of openEdges(r, others, site.solids)) {
+      const [ox, oz] = e.out
+      // the hole's wall, looking into the hole
+      earth.addQuad([[e.a[0], bed(e.a[0], e.a[2]), e.a[2]], [e.b[0], bed(e.b[0], e.b[2]), e.b[2]], [e.b[0], 0, e.b[2]], [e.a[0], 0, e.a[2]]], [-ox, 0, -oz])
+      const x0 = Math.min(e.a[0], e.b[0]), x1 = Math.max(e.a[0], e.b[0]), z0 = Math.min(e.a[2], e.b[2]), z1 = Math.max(e.a[2], e.b[2])
+      const w = TRENCH.berm.width, h = TRENCH.berm.height
+      // the dug earth is heaped along the rim in the yard; inside the house the frame stands where it would go
+      const [fx0, fz0, fx1, fz1] = site.footprint
+      const inHouse = x1 > fx0 - 0.4 && x0 < fx1 + 0.4 && z1 > fz0 - 0.4 && z0 < fz1 + 0.4
+      if (!inHouse) heap.add(ox ? [ox > 0 ? x1 : x0 - w, 0, z0, ox > 0 ? x1 + w : x0, h, z1] : [x0, 0, oz > 0 ? z1 : z0 - w, x1, h, oz > 0 ? z1 + w : z0])
+    }
+  })
+  const mask = opening.mesh(THREE, openingMaterial(THREE), 'excavation:opening')
+  if (mask) {
+    mask.renderOrder = ORDER.opening
+    mask.castShadow = false
+    mask.receiveShadow = false
+    parent.add(mask)
+  }
+  const faces = earth.mesh(THREE, mats.earth, 'excavation:earth')
+  if (faces) {
+    faces.renderOrder = ORDER.earth
+    faces.castShadow = false
+    parent.add(faces)
+  }
+  const mound = heap.mesh(THREE, mats.heap, 'excavation:heap')
+  if (mound) parent.add(mound)
+}
+
+/** A pipe: a cylinder per straight stretch, a fitting at each bend (an elbow's socket) so the stretches meet. */
+function addPipe(THREE: Three, parent: THREE_NS.Group, points: readonly RoutePoint[], radius: number, material: THREE_NS.Material, renderOrder: number): void {
   const up = new THREE.Vector3(0, 1, 0)
-  const dir = new THREE.Vector3(dx / len, dy / len, dz / len)
-  mesh.quaternion.setFromUnitVectors(up, dir)
-  mesh.castShadow = true
-  mesh.receiveShadow = true
-  parent.add(mesh)
-}
-
-function addExcavatedTrench(
-  THREE: Three,
-  parent: THREE_NS.Group,
-  a: readonly [number, number],
-  b: readonly [number, number],
-  trenchWidth: number,
-  troughMat: THREE_NS.Material,
-  moundMat: THREE_NS.Material,
-): void {
-  const dx = b[0] - a[0]
-  const dz = b[1] - a[1]
-  const isAlongX = Math.abs(dx) >= Math.abs(dz)
-
-  const minX = Math.min(a[0], b[0])
-  const maxX = Math.max(a[0], b[0])
-  const minZ = Math.min(a[1], b[1])
-  const maxZ = Math.max(a[1], b[1])
-
-  const bermW = 0.12
-  const bermH = 0.08
-
-  if (isAlongX) {
-    const len = Math.max(0.06, maxX - minX)
-    const midX = (minX + maxX) / 2
-    const midZ = a[1]
-
-    // 1. Excavated channel bed (dark damp ditch bottom, cleanly above ground y=0 to eliminate z-fighting)
-    const trough = new THREE.Mesh(new THREE.BoxGeometry(len, 0.012, trenchWidth), troughMat)
-    trough.position.set(midX, 0.006, midZ)
-    trough.receiveShadow = true
-    parent.add(trough)
-
-    // 2. Left side mound of excavated dirt along trench rim
-    const leftMound = new THREE.Mesh(new THREE.BoxGeometry(len + bermW, bermH, bermW), moundMat)
-    leftMound.position.set(midX, bermH / 2, midZ - trenchWidth / 2 - bermW / 2)
-    leftMound.castShadow = true
-    leftMound.receiveShadow = true
-    parent.add(leftMound)
-
-    // 3. Right side mound of excavated dirt along trench rim
-    const rightMound = new THREE.Mesh(new THREE.BoxGeometry(len + bermW, bermH, bermW), moundMat)
-    rightMound.position.set(midX, bermH / 2, midZ + trenchWidth / 2 + bermW / 2)
-    rightMound.castShadow = true
-    rightMound.receiveShadow = true
-    parent.add(rightMound)
-  } else {
-    const len = Math.max(0.06, maxZ - minZ)
-    const midX = a[0]
-    const midZ = (minZ + maxZ) / 2
-
-    // 1. Excavated channel bed (dark damp ditch bottom, cleanly above ground y=0 to eliminate z-fighting)
-    const trough = new THREE.Mesh(new THREE.BoxGeometry(trenchWidth, 0.012, len), troughMat)
-    trough.position.set(midX, 0.006, midZ)
-    trough.receiveShadow = true
-    parent.add(trough)
-
-    // 2. Left side mound of excavated dirt along trench rim
-    const leftMound = new THREE.Mesh(new THREE.BoxGeometry(bermW, bermH, len + bermW), moundMat)
-    leftMound.position.set(midX - trenchWidth / 2 - bermW / 2, bermH / 2, midZ)
-    leftMound.castShadow = true
-    leftMound.receiveShadow = true
-    parent.add(leftMound)
-
-    // 3. Right side mound of excavated dirt along trench rim
-    const rightMound = new THREE.Mesh(new THREE.BoxGeometry(bermW, bermH, len + bermW), moundMat)
-    rightMound.position.set(midX + trenchWidth / 2 + bermW / 2, bermH / 2, midZ)
-    rightMound.castShadow = true
-    rightMound.receiveShadow = true
-    parent.add(rightMound)
+  for (let i = 0; i + 1 < points.length; i++) {
+    const a = points[i]!, b = points[i + 1]!
+    const dir = new THREE.Vector3(b[0] - a[0], b[1] - a[1], b[2] - a[2])
+    const len = dir.length()
+    if (len < 1e-3) continue
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, len, 12), material)
+    mesh.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2)
+    mesh.quaternion.setFromUnitVectors(up, dir.normalize())
+    mesh.renderOrder = renderOrder
+    parent.add(mesh)
+  }
+  for (let i = 1; i + 1 < points.length; i++) {
+    const p = points[i]!
+    const elbow = new THREE.Mesh(new THREE.SphereGeometry(radius * 1.25, 12, 8), material)
+    elbow.position.set(p[0], p[1], p[2])
+    elbow.renderOrder = renderOrder
+    parent.add(elbow)
   }
 }
 
-function addExcavatedPit(
-  THREE: Three,
-  parent: THREE_NS.Group,
-  x: number,
-  z: number,
-  size: number,
-  troughMat: THREE_NS.Material,
-  moundMat: THREE_NS.Material,
-): void {
-  const bermW = 0.10
-  const bermH = 0.08
-  const bottom = new THREE.Mesh(new THREE.BoxGeometry(size, 0.012, size), troughMat)
-  bottom.position.set(x, 0.006, z)
-  parent.add(bottom)
-
-  const collarN = new THREE.Mesh(new THREE.BoxGeometry(size + bermW * 2, bermH, bermW), moundMat)
-  collarN.position.set(x, bermH / 2, z - size / 2 - bermW / 2)
-  parent.add(collarN)
-  const collarS = new THREE.Mesh(new THREE.BoxGeometry(size + bermW * 2, bermH, bermW), moundMat)
-  collarS.position.set(x, bermH / 2, z + size / 2 + bermW / 2)
-  parent.add(collarS)
-  const collarW = new THREE.Mesh(new THREE.BoxGeometry(bermW, bermH, size), moundMat)
-  collarW.position.set(x - size / 2 - bermW / 2, bermH / 2, z)
-  parent.add(collarW)
-  const collarE = new THREE.Mesh(new THREE.BoxGeometry(bermW, bermH, size), moundMat)
-  collarE.position.set(x + size / 2 + bermW / 2, bermH / 2, z)
-  parent.add(collarE)
+/** A sewer box (inspection, grease or floor drain) sunk in the ground, open, its rim just under the ground. */
+function addSunkBox(THREE: Three, parent: THREE_NS.Group, u: number, v: number, size: number, bottom: number, mats: { readonly concrete: THREE_NS.Material }): void {
+  const body = new BoxBatch()
+  const wall = 0.05
+  const top = -0.01
+  body.add([u - size / 2, bottom, v - size / 2, u + size / 2, bottom + wall, v + size / 2])
+  body.add([u - size / 2, bottom, v - size / 2, u - size / 2 + wall, top, v + size / 2])
+  body.add([u + size / 2 - wall, bottom, v - size / 2, u + size / 2, top, v + size / 2])
+  body.add([u - size / 2 + wall, bottom, v - size / 2, u + size / 2 - wall, top, v - size / 2 + wall])
+  body.add([u - size / 2 + wall, bottom, v + size / 2 - wall, u + size / 2 - wall, top, v + size / 2])
+  const mesh = body.mesh(THREE, mats.concrete, 'sewer:box')
+  if (mesh) {
+    mesh.renderOrder = ORDER.inside
+    parent.add(mesh)
+  }
 }
 
-function nearestWallPoint(
-  walls: readonly HouseWall[],
-  u: number,
-  v: number,
-  floor: number,
-): [number, number] {
-  let bestDist = Infinity
-  let bestPoint: [number, number] = [u, v]
-  const targetFloor = floor < 0 ? 0 : floor
-  for (const w of walls) {
-    if ((w.floor ?? 0) !== targetFloor) continue
-    const dx = w.u1 - w.u0
-    const dz = w.v1 - w.v0
-    const lenSq = dx * dx + dz * dz
-    let t = 0
-    if (lenSq > 1e-6) {
-      t = Math.max(0, Math.min(1, ((u - w.u0) * dx + (v - w.v0) * dz) / lenSq))
-    }
-    const pu = w.u0 + t * dx
-    const pv = w.v0 + t * dz
-    const d = Math.hypot(u - pu, v - pv)
-    if (d < bestDist) {
-      bestDist = d
-      bestPoint = [pu, pv]
-    }
-  }
-  return bestPoint
+interface Drain {
+  readonly u: number
+  readonly v: number
+  readonly bore: number
+  readonly kind: string
 }
 
-function buildWallGraph(
-  walls: readonly HouseWall[],
-  extraPoints: ReadonlyArray<readonly [number, number]>,
-): {
-  nodes: Array<[number, number]>
-  adj: Map<number, Array<{ to: number; dist: number }>>
-  nodeKey: (u: number, v: number) => string
-} {
-  const horiz: Array<{ v: number; u0: number; u1: number }> = []
-  const vert: Array<{ u: number; v0: number; v1: number }> = []
-  for (const w of walls) {
-    if ((w.floor ?? 0) !== 0) continue
-    if (w.axis === 'u') {
-      horiz.push({ v: w.v0, u0: Math.min(w.u0, w.u1), u1: Math.max(w.u0, w.u1) })
-    } else {
-      vert.push({ u: w.u0, v0: Math.min(w.v0, w.v1), v1: Math.max(w.v0, w.v1) })
-    }
-  }
-
-  function mergeSpans(spans: Array<[number, number]>): Array<[number, number]> {
-    const sorted = spans.slice().sort((a, b) => a[0] - b[0])
-    const res: Array<[number, number]> = []
-    for (const [s0, s1] of sorted) {
-      if (!res.length) {
-        res.push([s0, s1])
-        continue
-      }
-      const last = res[res.length - 1]!
-      if (s0 <= last[1] + 1.6) {
-        last[1] = Math.max(last[1], s1)
-      } else {
-        res.push([s0, s1])
-      }
-    }
-    return res
-  }
-
-  const hLines = new Map<number, Array<[number, number]>>()
-  for (const h of horiz) {
-    const vKey = Math.round(h.v * 100) / 100
-    if (!hLines.has(vKey)) hLines.set(vKey, [])
-    hLines.get(vKey)!.push([h.u0, h.u1])
-  }
-  const mergedH: Array<{ v: number; u0: number; u1: number }> = []
-  for (const [v, spans] of hLines.entries()) {
-    for (const [u0, u1] of mergeSpans(spans)) {
-      mergedH.push({ v, u0, u1 })
-    }
-  }
-
-  const vLines = new Map<number, Array<[number, number]>>()
-  for (const v of vert) {
-    const uKey = Math.round(v.u * 100) / 100
-    if (!vLines.has(uKey)) vLines.set(uKey, [])
-    vLines.get(uKey)!.push([v.v0, v.v1])
-  }
-  const mergedV: Array<{ u: number; v0: number; v1: number }> = []
-  for (const [u, spans] of vLines.entries()) {
-    for (const [v0, v1] of mergeSpans(spans)) {
-      mergedV.push({ u, v0, v1 })
-    }
-  }
-
-  const nodes: Array<[number, number]> = []
-  const nodeKey = (u: number, v: number): string => `${(Math.round(u * 100) / 100).toFixed(2)},${(Math.round(v * 100) / 100).toFixed(2)}`
-  const addNode = (u: number, v: number): void => {
-    const k = nodeKey(u, v)
-    if (!nodes.some((n) => nodeKey(n[0], n[1]) === k)) nodes.push([u, v])
-  }
-
-  for (const pt of extraPoints) addNode(pt[0], pt[1])
-  for (const h of mergedH) {
-    addNode(h.u0, h.v)
-    addNode(h.u1, h.v)
-    for (const v of mergedV) {
-      if (v.u >= h.u0 - 0.15 && v.u <= h.u1 + 0.15 && h.v >= v.v0 - 0.15 && h.v <= v.v1 + 0.15) {
-        addNode(v.u, h.v)
-      }
-    }
-  }
-  for (const v of mergedV) {
-    addNode(v.u, v.v0)
-    addNode(v.u, v.v1)
-  }
-
-  const adj = new Map<number, Array<{ to: number; dist: number }>>()
-  for (let i = 0; i < nodes.length; i++) adj.set(i, [])
-
-  const canConnect = (pA: readonly [number, number], pB: readonly [number, number]): boolean => {
-    const dU = Math.abs(pA[0] - pB[0])
-    const dV = Math.abs(pA[1] - pB[1])
-    const TOL = 0.2
-    if (dV < TOL) {
-      const v = (pA[1] + pB[1]) / 2
-      const minU = Math.min(pA[0], pB[0])
-      const maxU = Math.max(pA[0], pB[0])
-      return mergedH.some((h) => Math.abs(h.v - v) < TOL && minU >= h.u0 - TOL && maxU <= h.u1 + TOL)
-    }
-    if (dU < TOL) {
-      const u = (pA[0] + pB[0]) / 2
-      const minV = Math.min(pA[1], pB[1])
-      const maxV = Math.max(pA[1], pB[1])
-      return mergedV.some((w) => Math.abs(w.u - u) < TOL && minV >= w.v0 - TOL && maxV <= w.v1 + TOL)
-    }
-    return false
-  }
-
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      if (canConnect(nodes[i]!, nodes[j]!)) {
-        const dist = Math.hypot(nodes[i]![0] - nodes[j]![0], nodes[i]![1] - nodes[j]![1])
-        adj.get(i)!.push({ to: j, dist })
-        adj.get(j)!.push({ to: i, dist })
-      }
-    }
-  }
-
-  return { nodes, adj, nodeKey }
+/** The sewer runs of the plan's drains: each fixture down into the ground, a branch with its fall to the collector, the collector to the street. */
+/** A stretch of trench: its plan rectangle and its bed, which falls with the pipe laid on it (from `high` at one end of its length to `low` at the other). */
+interface Trench {
+  readonly rect: Rect
+  readonly bed: (x: number, z: number) => number
 }
 
-function routeAlongWalls(
-  graph: ReturnType<typeof buildWallGraph>,
-  from: readonly [number, number],
-  to: readonly [number, number],
-): readonly [number, number][] {
-  const sIdx = graph.nodes.findIndex((n) => graph.nodeKey(n[0], n[1]) === graph.nodeKey(from[0], from[1]))
-  const eIdx = graph.nodes.findIndex((n) => graph.nodeKey(n[0], n[1]) === graph.nodeKey(to[0], to[1]))
-  if (sIdx < 0 || eIdx < 0) return [from, to]
-
-  const dist = new Map<number, number>()
-  const prev = new Map<number, number>()
-  const visited = new Set<number>()
-  for (let i = 0; i < graph.nodes.length; i++) dist.set(i, Infinity)
-  dist.set(sIdx, 0)
-
-  while (visited.size < graph.nodes.length) {
-    let u = -1
-    let bestD = Infinity
-    for (let i = 0; i < graph.nodes.length; i++) {
-      if (!visited.has(i) && dist.get(i)! < bestD) {
-        bestD = dist.get(i)!
-        u = i
-      }
-    }
-    if (u < 0 || bestD === Infinity) break
-    if (u === eIdx) break
-    visited.add(u)
-
-    for (const edge of graph.adj.get(u)!) {
-      if (visited.has(edge.to)) continue
-      const alt = dist.get(u)! + edge.dist
-      if (alt < dist.get(edge.to)!) {
-        dist.set(edge.to, alt)
-        prev.set(edge.to, u)
-      }
-    }
+/** A trench along a straight run from (a) to (b), its bed `under` the run's line (the pipe lies on it). */
+function trenchAlong(a: RoutePoint, b: RoutePoint, halfWidth: number, under: number): Trench {
+  const rect: Rect = [Math.min(a[0], b[0]) - halfWidth, Math.min(a[2], b[2]) - halfWidth, Math.max(a[0], b[0]) + halfWidth, Math.max(a[2], b[2]) + halfWidth]
+  const alongX = Math.abs(b[0] - a[0]) >= Math.abs(b[2] - a[2])
+  const from = alongX ? a[0] : a[2], to = alongX ? b[0] : b[2]
+  const bed = (x: number, z: number): number => {
+    const t = Math.abs(to - from) < 1e-6 ? 0 : Math.max(0, Math.min(1, ((alongX ? x : z) - from) / (to - from)))
+    return a[1] + (b[1] - a[1]) * t - under
   }
-
-  const path: Array<[number, number]> = []
-  let curr: number | undefined = eIdx
-  while (curr != null) {
-    path.push(graph.nodes[curr]!)
-    curr = prev.get(curr)
-  }
-  path.reverse()
-  return path.length > 0 && graph.nodeKey(path[0]![0], path[0]![1]) === graph.nodeKey(from[0], from[1]) ? path : [from, to]
+  return { rect, bed }
 }
 
-function addInspectionChamber(
-  THREE: Three,
-  parent: THREE_NS.Group,
-  x: number,
-  y: number,
-  z: number,
-  size: number,
-  height: number,
-  concreteMat: THREE_NS.Material,
-  lidMat: THREE_NS.Material,
-  moundMat: THREE_NS.Material,
-): void {
-  const body = new THREE.Mesh(new THREE.BoxGeometry(size, height, size), concreteMat)
-  body.position.set(x, y + height / 2, z)
-  parent.add(body)
-  const lid = new THREE.Mesh(new THREE.BoxGeometry(size + 0.04, 0.03, size + 0.04), lidMat)
-  lid.position.set(x, y + height + 0.015, z)
-  parent.add(lid)
-  // Collar of excavated dirt around the chamber
-  const bermW = 0.08
-  const collar = new THREE.Mesh(new THREE.BoxGeometry(size + bermW * 2, 0.04, size + bermW * 2), moundMat)
-  collar.position.set(x, 0.02, z)
-  parent.add(collar)
+/** The sewer runs of the plan's drains: each fixture down into the ground, a branch with its fall to the collector, the collector to the street. */
+function sewerLayout(plan: HouseRecord, drains: readonly Drain[]): { pieces: SewerPiece[]; trenches: Trench[]; boxes: { u: number; v: number; size: number; bottom: number }[] } {
+  const footprint = houseFootprint(routingPlanOf(plan))
+  const main = drains.find((d) => d.kind === 'flush') ?? drains[0]!
+  const collectorU = main.u
+  const frontV = Math.min(footprint[1] - 1.2, (plan.lot?.rect?.[1] ?? footprint[1] - 1.8) + 0.6)
+  const pieces: SewerPiece[] = []
+  const trenches: Trench[] = []
+  const boxes: { u: number; v: number; size: number; bottom: number }[] = []
+  const w = TRENCH.width / 2
+  const start = BURIED_Y + 0.1
+  let deepest = start
+  let farV = -Infinity
+  for (const d of drains) {
+    const length = Math.abs(d.u - collectorU)
+    const end = start - FALL.branch * length
+    deepest = Math.min(deepest, end)
+    const branch: RoutePoint[] = [[d.u, RISER_TOP, d.v], [d.u, start, d.v], [collectorU, end, d.v]]
+    pieces.push({ points: branch, bore: d.bore })
+    trenches.push(trenchAlong(branch[1]!, branch[2]!, w, d.bore / 2 + TRENCH.bed))
+    if (d.kind === 'shower' || d.kind === 'tap') boxes.push({ u: d.u, v: d.v, size: 0.25, bottom: start - 0.12 })
+    farV = Math.max(farV, d.v)
+  }
+  const collectorTop = deepest - 0.02
+  const collectorEnd = collectorTop - FALL.main * (farV - frontV)
+  const collector: RoutePoint[] = [[collectorU, collectorTop, farV], [collectorU, collectorEnd, frontV]]
+  pieces.push({ points: collector, bore: 0.1 })
+  trenches.push(trenchAlong(collector[0]!, collector[1]!, w, 0.05 + TRENCH.bed))
+  const collectorAt = (v: number): number => collectorTop + ((collectorEnd - collectorTop) * (farV - v)) / (farV - frontV)
+  // the building's inspection box where the collector leaves the house, the street's at the front of the lot
+  for (const v of [footprint[1] - 0.6, frontV]) boxes.push({ u: collectorU, v, size: 0.6, bottom: collectorAt(v) - 0.12 })
+  for (const b of boxes) {
+    const h = b.size / 2 + 0.05
+    trenches.push({ rect: [b.u - h, b.v - h, b.u + h, b.v + h], bed: () => b.bottom - 0.02 })
+  }
+  return { pieces, trenches, boxes }
 }
 
+/**
+ * The rough-in stage the finished house does not draw: the sewer, laid in its open trenches under the ground (the water and the conduits are the house's own
+ * runs, cut into the bare masonry at this stage and embedded later; see `installation-routes`).
+ */
 export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_NS.Group {
   const group = new THREE.Group()
   group.name = 'stage:4:installations'
-
-  const coldWaterMat = new THREE.MeshStandardMaterial({ color: 0x9e5b32, roughness: 0.55 })
-  const brassMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.4, metalness: 0.7 })
-  const sewerMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.65 })
-  const troughMat = new THREE.MeshStandardMaterial({ color: 0x24160c, roughness: 0.98 })
-  const moundMat = new THREE.MeshStandardMaterial({ color: 0x4a321e, roughness: 0.95 })
-  const concreteMat = new THREE.MeshStandardMaterial({ color: 0x7c7f82, roughness: 0.9 })
-  const conduitMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.6 })
-  const box4x2Mat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.75 })
-
-  const floorY0 = (f: number): number => {
-    const fl = plan.floors.find((x) => x.index === f)
-    return fl ? fl.y0 : f * 2.9
-  }
-
   const plumbing = plan.utilities?.plumbing
-  if (plumbing) {
-    const tk = plan.waterTank
-    const defaultTankX = (plan.w || 8) / 2
-    const defaultTankZ = (plan.d || 6) / 2
-    const tankPos: [number, number, number] = tk && Number.isFinite(tk.u) && Number.isFinite(tk.y) && Number.isFinite(tk.v)
-      ? [tk.u, tk.y + 0.15, tk.v]
-      : [defaultTankX, floorY0(plan.floors.length - 1) + 2.8, defaultTankZ]
-
-    const ceiling0 = plan.floors[0]?.ceiling ?? 2.8
-    // Attic header plane sits strictly ABOVE the ceiling slab (in the attic space)
-    const yHeader = floorY0(0) + ceiling0 + 0.18
-
-    // Nearest wall to water tank where distribution header enters the wall system
-    const tankWall = nearestWallPoint(plan.walls, tankPos[0], tankPos[2], 0)
-
-    // Build wall graph with tankWall and all fixture wall points
-    const fixtureWallPoints: Array<[number, number]> = []
-    for (const pt of plumbing.points) {
-      const targetFloor = pt.floor < 0 ? 0 : pt.floor
-      fixtureWallPoints.push(nearestWallPoint(plan.walls, pt.u, pt.v, targetFloor))
-    }
-    const wallGraph = buildWallGraph(plan.walls, [tankWall, ...fixtureWallPoints])
-
-    // Tank vertical downpipe to header plane (strictly stays inside attic space)
-    const tankBottomY = tk && Number.isFinite(tk.y) ? tk.y : yHeader + 1.2
-    if (tankBottomY > yHeader + 0.02) {
-      addPipeSegment(THREE, group, [tankPos[0], tankBottomY, tankPos[2]], [tankPos[0], yHeader, tankPos[2]], 0.025, coldWaterMat)
-    }
-    // Header pipe from tank position to nearest wall (orthogonal in attic)
-    if (Math.abs(tankPos[0] - tankWall[0]) > 1e-3) {
-      addPipeSegment(THREE, group, [tankPos[0], yHeader, tankPos[2]], [tankWall[0], yHeader, tankPos[2]], 0.02, coldWaterMat)
-    }
-    if (Math.abs(tankPos[2] - tankWall[1]) > 1e-3) {
-      addPipeSegment(THREE, group, [tankWall[0], yHeader, tankPos[2]], [tankWall[0], yHeader, tankWall[1]], 0.02, coldWaterMat)
-    }
-
-    const sewerMainX = tankPos[0]
-    let minV = Infinity
-    for (const pt of plumbing.points) {
-      const targetFloor = pt.floor < 0 ? 0 : pt.floor
-      const y0 = floorY0(targetFloor)
-      const [wU, wV] = nearestWallPoint(plan.walls, pt.u, pt.v, targetFloor)
-
-      // 1. Cold water line:
-      // Routes strictly along the wall network in the attic (above the ceiling slab)
-      const wallPath = routeAlongWalls(wallGraph, tankWall, [wU, wV])
-      for (let i = 0; i + 1 < wallPath.length; i++) {
-        const pA = wallPath[i]!
-        const pB = wallPath[i + 1]!
-        addPipeSegment(THREE, group, [pA[0], yHeader, pA[1]], [pB[0], yHeader, pB[1]], 0.015, coldWaterMat)
-      }
-      // Vertical distribution column drops inside the wall core down to the tap/fixture height
-      addPipeSegment(THREE, group, [wU, yHeader, wV], [wU, y0 + pt.y, wV], 0.015, coldWaterMat)
-
-      // Short horizontal stub from wall core to fixture terminal (clamped to wall thickness, never floating across room/yard)
-      const dist = Math.hypot(pt.u - wU, pt.v - wV)
-      const stubLen = Math.min(0.08, dist)
-      const stubU = dist > 1e-4 ? wU + ((pt.u - wU) / dist) * stubLen : wU
-      const stubV = dist > 1e-4 ? wV + ((pt.v - wV) / dist) * stubLen : wV
-      addPipeSegment(THREE, group, [wU, y0 + pt.y, wV], [stubU, y0 + pt.y, stubV], 0.015, coldWaterMat)
-      // Brass tap fitting at fixture
-      const jointGeo = new THREE.SphereGeometry(0.025, 8, 8)
-      const fitting = new THREE.Mesh(jointGeo, brassMat)
-      fitting.position.set(stubU, y0 + pt.y, stubV)
-      group.add(fitting)
-
-      // 2. Sewer & Drainage:
-      if (pt.kind === 'toilet' || pt.kind === 'sink' || pt.kind === 'shower' || pt.kind === 'laundry_tub' || pt.kind === 'washing_machine') {
-        const drainR = pt.kind === 'toilet' ? 0.045 : 0.025
-        const ySewer = 0.04
-        // Fixture vertical drain down into the ground trench
-        addPipeSegment(THREE, group, [pt.u, y0 + Math.max(0.12, pt.y * 0.45), pt.v], [pt.u, ySewer, pt.v], drainR, sewerMat)
-        // Excavated pit at the base of fixture drop
-        addExcavatedPit(THREE, group, pt.u, pt.v, 0.32, troughMat, moundMat)
-        // Underground pipe nestled visibly inside the trench to main collector
-        addPipeSegment(THREE, group, [pt.u, ySewer, pt.v], [sewerMainX, ySewer, pt.v], drainR, sewerMat)
-        // Excavated ground trench with raised dirt mounds along the pipe run
-        addExcavatedTrench(THREE, group, [pt.u, pt.v], [sewerMainX, pt.v], Math.max(0.28, drainR * 5), troughMat, moundMat)
-
-        // Traps & inspection chambers
-        if (pt.kind === 'sink') {
-          // Grease trap (caixa de gordura) outside kitchen
-          addInspectionChamber(THREE, group, (pt.u + sewerMainX) / 2, 0.01, pt.v, 0.42, 0.18, concreteMat, box4x2Mat, moundMat)
-        } else if (pt.kind === 'shower') {
-          // Siphon floor drain (caixa sifonada) in bathroom
-          const sifonada = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 12), sewerMat)
-          sifonada.position.set(pt.u, 0.04, pt.v)
-          group.add(sifonada)
-        }
-        minV = Math.min(minV, pt.v)
-      }
-    }
-
-    if (Number.isFinite(minV)) {
-      const frontV = (plan.lot?.rect?.[1] ?? -1.5) + 0.6
-      const ySewer = 0.04
-      // Main underground collector running forward to street alignment inside the trench
-      addPipeSegment(THREE, group, [sewerMainX, ySewer, minV], [sewerMainX, ySewer, frontV], 0.05, sewerMat)
-      addExcavatedTrench(THREE, group, [sewerMainX, minV], [sewerMainX, frontV], 0.36, troughMat, moundMat)
-      // Building inspection chamber (caixa de inspeção predial) on the front lot
-      addInspectionChamber(THREE, group, sewerMainX, 0.01, frontV, 0.52, 0.20, concreteMat, box4x2Mat, moundMat)
-    }
+  const drains: Drain[] = (plumbing?.points ?? [])
+    .filter((p) => DRAIN_BORE[p.kind] !== undefined)
+    .map((p) => ({ u: p.u, v: p.v, bore: DRAIN_BORE[p.kind]!, kind: p.kind }))
+  if (!drains.length) return group
+  // `transparent` only to draw in the hole's pass (see ORDER): fully opaque, writing depth
+  const inHole = { transparent: true, opacity: 1, depthWrite: true } as const
+  const mats = {
+    pipe: new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.65, ...inHole }),
+    earth: earthMaterial(THREE, 0x3a2716),
+    heap: new THREE.MeshStandardMaterial({ color: 0x5a3e24, roughness: 0.95 }),
+    concrete: new THREE.MeshStandardMaterial({ color: 0x7c7f82, roughness: 0.9, ...inHole }),
   }
-
-  const elec = plan.utilities?.electrical
-  if (elec && elec.panel) {
-    const Q = elec.panel
-    const pOrigin: [number, number, number] = [Q.u, Q.y, Q.v]
-    const boxGeo = new THREE.BoxGeometry(0.08, 0.12, 0.05)
-    const ceiling0 = plan.floors[0]?.ceiling ?? 2.8
-
-    // Breaker panel
-    const panelMesh = new THREE.Mesh(new THREE.BoxGeometry(Q.w ?? 0.3, Q.h ?? 0.4, 0.08), box4x2Mat)
-    panelMesh.position.set(Q.u, Q.y, Q.v)
-    group.add(panelMesh)
-
-    for (const sw of elec.switches ?? []) {
-      const y0 = floorY0(sw.floor || 0)
-      const yCeil = y0 + ceiling0 + 0.02
-      // Conduit from panel up wall to ceiling, across ceiling along wall, then down wall to switch
-      addPipeSegment(THREE, group, [pOrigin[0], pOrigin[1] + 0.2, pOrigin[2]], [pOrigin[0], yCeil, pOrigin[2]], 0.011, conduitMat)
-      addPipeSegment(THREE, group, [pOrigin[0], yCeil, pOrigin[2]], [sw.u, yCeil, pOrigin[2]], 0.011, conduitMat)
-      addPipeSegment(THREE, group, [sw.u, yCeil, pOrigin[2]], [sw.u, yCeil, sw.v], 0.011, conduitMat)
-      addPipeSegment(THREE, group, [sw.u, yCeil, sw.v], [sw.u, sw.y, sw.v], 0.011, conduitMat)
-      const b = new THREE.Mesh(boxGeo, box4x2Mat)
-      b.position.set(sw.u, sw.y, sw.v)
-      group.add(b)
-    }
-    for (const out of elec.outlets ?? []) {
-      const y0 = floorY0(out.floor || 0)
-      const yCeil = y0 + ceiling0 + 0.02
-      addPipeSegment(THREE, group, [pOrigin[0], pOrigin[1] + 0.2, pOrigin[2]], [pOrigin[0], yCeil, pOrigin[2]], 0.011, conduitMat)
-      addPipeSegment(THREE, group, [pOrigin[0], yCeil, pOrigin[2]], [out.u, yCeil, pOrigin[2]], 0.011, conduitMat)
-      addPipeSegment(THREE, group, [out.u, yCeil, pOrigin[2]], [out.u, yCeil, out.v], 0.011, conduitMat)
-      addPipeSegment(THREE, group, [out.u, yCeil, out.v], [out.u, out.y, out.v], 0.011, conduitMat)
-      const b = new THREE.Mesh(boxGeo, box4x2Mat)
-      b.position.set(out.u, out.y, out.v)
-      group.add(b)
-    }
-  }
-
+  const layout = sewerLayout(plan, drains)
+  const parts = (plan as { structure?: { parts?: readonly { id: string; beamKind?: string; aabb: readonly number[] }[] } }).structure?.parts ?? []
+  const solids = parts.filter((p) => p.beamKind === 'ground_beam' || /^(ground_beam_|footing_pier_)/.test(p.id)).map((p) => p.aabb as unknown as Rect)
+  addExcavation(THREE, group, layout.trenches, mats, { solids, footprint: houseFootprint(routingPlanOf(plan)) as Rect })
+  for (const piece of layout.pieces) addPipe(THREE, group, piece.points, piece.bore / 2, mats.pipe, ORDER.inside)
+  for (const b of layout.boxes) addSunkBox(THREE, group, b.u, b.v, b.size, b.bottom, mats)
+  group.userData.sewer = { pieces: layout.pieces, trenches: layout.trenches.map((t) => t.rect), boxes: layout.boxes }
   return group
 }

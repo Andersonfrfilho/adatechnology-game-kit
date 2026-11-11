@@ -209,7 +209,7 @@ export function buildBlueprintStage(
 
   const parts: readonly StructurePart[] = (plan.structure as Structure | undefined)?.parts ?? []
   for (const p of parts) {
-    if (p.floor !== 0 || (p.role !== 'column' && p.role !== 'foundation')) continue
+    if (p.floor !== 0) continue
     if (!/^(column_|wall_column_|jamb_column_|footing_pier_)/.test(p.id)) continue
     const [u0, v0, u1, v1] = p.aabb
     addBoxMesh(THREE, group, u0 - 0.02, 0.01, v0 - 0.02, u1 + 0.02, 0.042, v1 + 0.02, pillarMat)
