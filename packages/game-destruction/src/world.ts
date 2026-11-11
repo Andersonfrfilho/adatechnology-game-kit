@@ -2885,7 +2885,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const [u, v] = planeAxes(p.thin)
     const lp = toLocal(p.pos, p.q, objectPoint)
     // a block of a member's concrete that broke off is its cover: the core between the bars is still behind it, and takes the rounds until the cut there
-    if (p.spec.reinforcement && isMember(p.dims) && !p.st.stripped) {
+    if (p.spec.reinforcement && isMember(p.dims, p.spec.structure?.role) && !p.st.stripped) {
       const along = p.dims.indexOf(Math.max(...p.dims))
       const bands = Math.max(1, Math.round(p.dims[along] / MEMBER_BAND))
       const band = clamp(Math.floor(((lp[along] + p.dims[along] / 2) / p.dims[along]) * bands), 0, bands - 1)
@@ -2900,10 +2900,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * the cut the band's concrete comes out (what is above stays on its bars), and what rested on the member no longer bears on it.
    */
   /** A member whose shots `wearMember` takes where they land (a pillar, a beam, cast with its bars): its hit points do not decide its concrete. */
-  const wornLocally = (p: PartRT): boolean => !!p.spec.reinforcement && !!p.spec.units && p.spec.units.mortar === p.spec.material && isMember(p.dims) && p.spec.shape.kind === 'box'
+  const wornLocally = (p: PartRT): boolean => !!p.spec.reinforcement && !!p.spec.units && p.spec.units.mortar === p.spec.material && isMember(p.dims, p.spec.structure?.role) && p.spec.shape.kind === 'box'
 
   const wearMember = (o: ObjRT, p: PartRT, entry: Vec3, d: Vec3, E: number, caliber: number, penMm: number | undefined, src?: string): boolean => {
-    if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
+    if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims, p.spec.structure?.role) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
     const along = p.dims.indexOf(Math.max(...p.dims))
     const lp = toLocal(p.pos, p.q, objLocal(o, entry))
     const ld = rotateVec(quat.conjugate(p.q), objLocalDir(o, d))
@@ -3112,7 +3112,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const r = p.spec.reinforcement
     if (!r) return
     const [u, v] = planeAxes(p.thin)
-    const all = rebarBars(p.dims, p.thin, r.spacing)
+    const all = rebarBars(p.dims, p.thin, r.spacing, p.spec.structure?.role)
     let bars: Array<[Vec3, Vec3]>
     if (p.st.stripped) bars = all
     else {
@@ -3128,7 +3128,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const bow = clamp(((p.st.stress ?? 0) - 1) / 0.5, 0, 1)
     if (bow > 0) bars = bars.flatMap((bar, i) => bendBar(bar, p.thin, bow * BAR_BOW, i))
     // a member's stirrups show where its concrete went, around the bars they hold
-    const stirrups = memberStirrups(p.dims)
+    const stirrups = memberStirrups(p.dims, undefined, p.spec.structure?.role)
     if (stirrups.length > 0 && bars.length > 0) {
       if (p.st.stripped) bars = [...bars, ...stirrups]
       else for (const box of [...(p.st.chipped ?? []), ...(p.rt.bared ?? [])]) bars.push(...clipBarsToVolume(stirrups, box.center, box.size))
@@ -3441,7 +3441,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** The concrete of a reinforced part is gone: the part stays as its rebar cage, with the capacity the reinforcement leaves it. */
   const stripPart = (o: ObjRT, p: PartRT, reinforcement: NonNullable<PartSpec['reinforcement']>, src?: string) => {
-    const bars = rebarBars(p.dims, p.thin, reinforcement.spacing)
+    const bars = rebarBars(p.dims, p.thin, reinforcement.spacing, p.spec.structure?.role)
     p.st.stripped = true
     p.st.hp = p.st.maxHp
     p.st.mass = rebarMass(bars, reinforcement.diameter, materials.get(reinforcement.material)?.density)
@@ -3898,7 +3898,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // points and takes the concrete out only where it reaches (a charge at contact cuts a band a couple of sections tall, the bars and stirrups bared there)
     const caged = Boolean(p.spec.reinforcement && p.spec.units)
     // a reinforced wall out of the cut reach is not severed at one band either: it keeps its floor and loses the concrete the blast reaches
-    const member = caged && (isMember(p.dims) || dist > MEMBER_CUT_REACH * breachReach)
+    const member = caged && (isMember(p.dims, p.spec.structure?.role) || dist > MEMBER_CUT_REACH * breachReach)
     const dealt = member
       ? applyDamage(o, p, Math.min(amount, Math.max(0, p.st.hp - p.st.maxHp * FAR_MEMBER_HP_FLOOR)), 'explosive', null, null, Ein * 0.3, 40, src)
       : applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
