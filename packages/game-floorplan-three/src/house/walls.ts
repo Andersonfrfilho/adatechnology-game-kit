@@ -30,7 +30,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
     return m;
   }
   function walls(): void {
-    interface Corner { n: number; axes: Set<string>; f: number; pu: number; pv: number; th: number; hh: number; y0: number; color: WallSide }
+    interface Corner { n: number; axes: Set<string>; f: number; pu: number; pv: number; th: number; hh: number; y0: number; color: WallSide; exterior: boolean; away: [number, number] }
     const R: HouseRecord = shared.ctx.r, cut = shared.ctx.cut, nA = R.floors.length, vMin = Math.min(...R.walls.map(w => (w.axis === 'u' ? w.v0 : Math.min(w.v0, w.v1))));
     const corners = new Map<string, Corner>();
     const looks = new Map<string, WallLook>();
@@ -66,10 +66,24 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       if (cut) { // thin cover to see the plan
         const t = 0.03; if (alongU) bx('plaster', s0, y0 + hh, L - th / 2, s1, y0 + hh + t, L + th / 2, 0xeeeae2); else bx('plaster', L - th / 2, y0 + hh, s0, L + th / 2, y0 + hh + t, s1, 0xeeeae2);
       }
-      if (w.exterior) for (const [pu, pv] of alongU ? [[s0, L], [s1, L]] as const : [[L, s0], [L, s1]] as const) { const k = f + ':' + pu.toFixed(2) + ':' + pv.toFixed(2); const e = corners.get(k) || { n: 0, axes: new Set(), f, pu, pv, th, hh, y0, color: sideL.exterior ? sideL : sideH }; e.n++; e.axes.add(w.axis); e.hh = Math.min(e.hh, hh); corners.set(k, e); }
+      // every wall end, interior ones too: where two walls end at one point at a right angle (an L) their boxes stop at each other's axis and leave the
+      // square of the corner open; it is filled below
+      for (const [pu, pv, dir] of alongU ? [[s0, L, 1], [s1, L, -1]] as const : [[L, s0, 1], [L, s1, -1]] as const) {
+        const k = f + ':' + pu.toFixed(2) + ':' + pv.toFixed(2); const e = corners.get(k) || { n: 0, axes: new Set(), f, pu, pv, th, hh, y0, color: sideL.exterior ? sideL : sideH, exterior: true, away: [0, 0] };
+        e.n++; e.axes.add(w.axis); e.hh = Math.min(e.hh, hh); e.exterior = e.exterior && !!w.exterior; e.th = Math.max(e.th, th);
+        // the way out of the corner along this wall, reversed: the square's outer faces look away from both walls
+        if (alongU) e.away[0] = -dir; else e.away[1] = -dir;
+        corners.set(k, e);
+      }
     }
     cursor.pc = null;
-    for (const e of corners.values()) if (e.axes.size === 2 && e.n === 2) { cursor.group = 'f' + e.f; bx(e.color.mat, e.pu - e.th / 2, e.y0, e.pv - e.th / 2, e.pu + e.th / 2, e.y0 + e.hh, e.pv + e.th / 2, e.color.color); }
+    for (const e of corners.values()) {
+      if (e.axes.size !== 2 || e.n !== 2 || (shared.ctx.visorCorners && !e.exterior)) continue;
+      // an inner corner takes the finish of the room its outer faces look into (the room diagonally across from both walls)
+      const room = e.exterior ? null : K.roomAt(e.f, e.pu + e.away[0] * e.th, e.pv + e.away[1] * e.th);
+      const look = room ? sideOf(room.id, false) : e.color;
+      cursor.group = 'f' + e.f; bx(look.mat, e.pu - e.th / 2, e.y0, e.pv - e.th / 2, e.pu + e.th / 2, e.y0 + e.hh, e.pv + e.th / 2, look.color);
+    }
     if (shared.ctx.showPillars) wallPillars(looks);
   }
   // the pillars of confined masonry that stand in the walls: along them, at the corners and at the jambs of the wide doors

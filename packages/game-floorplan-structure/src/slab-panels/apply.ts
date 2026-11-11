@@ -9,7 +9,7 @@ import type { PartsAndSupports } from '../wall-detail/apply'
 import { layoutPanels, linesOf, runsOf, shareInside } from './layout'
 import type { Cut } from './layout'
 import { getMasonryUnit, pillarSectionOf } from '../masonry-units'
-import { depthToCarry, effectiveSpan, sectionDepthAt } from '../validate/load-path'
+import { depthToCarry, depthToHold, effectiveSpan, sectionDepthAt } from '../validate/load-path'
 import { carriesShare } from '@adatechnology/game-load-path'
 import { pillarBox } from '../structure/context'
 import type { PillarSection } from '../structure/context'
@@ -482,8 +482,8 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
     for (const { beam, host } of framings) {
       const section = sectionDepthAt(host, beam.aabb, context.parts)
       // (a lintel already cast under it there: the two are the section, and growing the bond beam down would run into the lintel)
-      if (section >= beam.y1 - beam.y0 - EPS || section > host.y1 - host.y0 + EPS) continue
-      deepen(host, beam.y1 - beam.y0)
+      if (section >= depthToHold(host, beam) - EPS || section > host.y1 - host.y0 + EPS) continue
+      deepen(host, depthToHold(host, beam))
       changed = true
     }
   }

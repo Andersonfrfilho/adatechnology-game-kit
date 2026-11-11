@@ -8,8 +8,9 @@ export function installRoofTiles(K: Kernel, shared: Shared): void {
   // ===== R56: tile relief. colonial = curved rows (cap and channel); fibre cement = waves. Each plane is a strip extruded in the fall direction, with profile normals and a colour alternating per row; everything goes into the roof mesh =====
   function tileRelief(mat: string, pts: readonly (readonly number[])[], color: Hex, type: string, origin?: readonly number[]): void {
     const n = pts.length; if (n < 3) return;
-    const [a, b, c] = pts; let nx = (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), ny = (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]), nz = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
-    const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    // the plane's normal from the whole polygon (Newell): a polygon clipped to a bay can start with three points on one line, whose cross product is nothing
+    let nx = 0, ny = 0, nz = 0; for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n]; nx += (p[1] - q[1]) * (p[2] + q[2]); ny += (p[2] - q[2]) * (p[0] + q[0]); nz += (p[0] - q[0]) * (p[1] + q[1]); }
+    const nl = Math.hypot(nx, ny, nz); if (nl < 1e-9) return; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
     const nh = Math.hypot(nx, nz); let dx: number, dy: number, dz: number; if (nh < 1e-4) { dx = 0; dy = 0; dz = 1; } else { dx = nx / nh; dy = -nh / ny; dz = nz / nh; const dl = Math.hypot(dx, dy, dz); dx /= dl; dy /= dl; dz /= dl; }
     let ex = ny * dz - nz * dy, ey = nz * dx - nx * dz, ez = nx * dy - ny * dx; const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el; // e1 along the eave
     const o = origin ?? pts[0], S: number[] = [], T: number[] = []; for (const p of pts) { const rx = p[0] - o[0], ry = p[1] - o[1], rz = p[2] - o[2]; S.push(rx * ex + ry * ey + rz * ez); T.push(rx * dx + ry * dy + rz * dz); }

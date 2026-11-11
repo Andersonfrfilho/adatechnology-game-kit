@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { checkConstructionStages } from '../src'
+import { PUBLIC_SIDEWALK, checkConstructionStages } from '../src'
 import { coplanarOverlaps } from '../src/construction-stages/coplanar'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
@@ -96,6 +96,54 @@ describe('construction stages of single_storey_a', () => {
       // a box's lid is flush with the ground (under a centimetre over it); everything else is under it
       expect(boxOf(o).max.y, o.name || o.type).toBeLessThanOrEqual(o.name === 'sewer:lid' ? 0.01 : 0.0001)
     })
+  })
+
+  it('sets each sewer box in a pit of its own: dug round it to its floor, and no trench floor or wall of earth crosses it', () => {
+    const stage = group('stage:4:installations')
+    const sewer = stage.userData.sewer as { trenches: number[][]; boxes: { u: number; v: number; size: number; bottom: number }[] }
+    let earth: THREE.Mesh | undefined
+    stage.traverse((o) => { if (o.name === 'excavation:earth') earth = o as THREE.Mesh })
+    const position = earth!.geometry.getAttribute('position')
+    for (const b of sewer.boxes) {
+      const half = b.size / 2
+      // the dug ground covers the box with room round it
+      expect(sewer.trenches.some((r) => r[0]! <= b.u - half - 0.1 && r[2]! >= b.u + half + 0.1 && r[1]! <= b.v - half - 0.1 && r[3]! >= b.v + half + 0.1), `box at ${b.u},${b.v}`).toBe(true)
+      // nothing of the earth (a floor, a wall) is inside the box's footprint above its floor
+      const index = earth!.geometry.getIndex()!
+      for (let k = 0; k < index.count; k += 3) {
+        const pts = [0, 1, 2].map((j) => new THREE.Vector3().fromBufferAttribute(position, index.getX(k + j)))
+        const c = pts.reduce((sum, p) => sum.add(p), new THREE.Vector3()).divideScalar(3)
+        const inside = c.x > b.u - half + 0.01 && c.x < b.u + half - 0.01 && c.z > b.v - half + 0.01 && c.z < b.v + half - 0.01
+        expect(inside && c.y > b.bottom + 0.01, `earth at ${c.toArray().map((v) => v.toFixed(2))} inside the box at ${b.u},${b.v}`).toBe(false)
+      }
+    }
+  })
+
+  it('takes the rain of the roof apart from the sewer (NBR 10844): from the sand box under each downpipe, falling to the kerb under the public sidewalk', () => {
+    const stage = group('stage:4:installations')
+    const rain = stage.userData.rain as { pieces: { points: number[][]; bore: number }[]; boxes: { u: number; v: number; size: number }[] }
+    const sewer = stage.userData.sewer as { pieces: { points: number[][]; bore: number }[] }
+    const gutters = house.gutters as unknown as { downpipes: { drain: number[] | null }[] }
+    const drained = gutters.downpipes.filter((d) => d.drain).length
+    expect(drained).toBeGreaterThan(0)
+    expect(rain.boxes.length).toBe(drained)
+    expect(stage.children.some((c) => c.name === 'rain_drains' && c.children.length >= drained)).toBe(true)
+    const plan = planOf('single_storey_a', 1) as unknown as { lot: { rect: number[] } }
+    const kerb = plan.lot.rect[1]! - PUBLIC_SIDEWALK
+    for (const piece of rain.pieces) {
+      const [a, b] = [piece.points[0]!, piece.points[piece.points.length - 1]!]
+      expect(rain.boxes.some((x) => Math.hypot(x.u - a[0]!, x.v - a[2]!) < 1e-6)).toBe(true)
+      expect(b[2]).toBeCloseTo(kerb, 6)
+      // it falls all the way, at 0.5 % the least
+      expect((a[1]! - b[1]!) / Math.hypot(b[0]! - a[0]!, b[2]! - a[2]!)).toBeGreaterThanOrEqual(0.005)
+      // and never meets the sewer: no point of a sewer pipe on the rain pipe's line
+      for (const s of sewer.pieces) for (const p of s.points) {
+        const t = Math.max(0, Math.min(1, ((p[0]! - a[0]!) * (b[0]! - a[0]!) + (p[2]! - a[2]!) * (b[2]! - a[2]!)) / ((b[0]! - a[0]!) ** 2 + (b[2]! - a[2]!) ** 2 || 1)))
+        const y = a[1]! + (b[1]! - a[1]!) * t
+        const near = Math.hypot(p[0]! - (a[0]! + (b[0]! - a[0]!) * t), p[2]! - (a[2]! + (b[2]! - a[2]!) * t)) < 0.05 && Math.abs(p[1]! - y) < 0.05
+        expect(near, `rain pipe meets sewer at ${p}`).toBe(false)
+      }
+    }
   })
 
   it('lays each pipe and conduit once, in the same place at every level, inside walls or over the ceiling slab, and shows it cut into the masonry only in the rough-in', () => {

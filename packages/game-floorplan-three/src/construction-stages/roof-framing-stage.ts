@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 
 import type { RoofRect, Three } from '../kernel-types.js'
+import { EAVE } from '../roof/eave.js'
 import { BoxBatch } from './box-batch.js'
 
 /** The timber of a tiled roof, top faces measured down from the tile plane (the clay tiles wave 3.2 cm around it). */
@@ -150,7 +151,10 @@ export function buildRoofFramingStage(THREE: Three, roofRects: readonly RoofRect
       addPost(timber, x, z, slabTop, ridgeY - ridgeTop - TIMBER.purlin.height)
     }
     if (!rr.gable) {
-      const e = EDGE * 1.5, h = rr.yb + rr.tp * e
+      // the hip starts where its underside clears the soffit (it is deeper than the rafters): its end is cut inside the eave box, never out past the fascia
+      // (set back e from both eaves, on the hip line, the tiles are e * tp over the eave)
+      const clear = (TIMBER.hip.top + TIMBER.hip.height - EAVE.soffitTop) / Math.max(rr.tp, 1e-3)
+      const e = Math.max(EDGE * 1.5, clear), h = rr.yb + rr.tp * e
       const corners: readonly Vec[] = [[x0 + e, h, z0 + e], [x1 - e, h, z0 + e], [x0 + e, h, z1 - e], [x1 - e, h, z1 - e]]
       for (const c of corners) {
         const end = Math.hypot(c[0] - ends[0][0], c[2] - ends[0][2]) <= Math.hypot(c[0] - ends[1][0], c[2] - ends[1][2]) ? ends[0] : ends[1]

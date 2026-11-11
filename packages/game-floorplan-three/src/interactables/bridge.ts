@@ -108,8 +108,10 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const out = mesh.finish(spec);
     for (const l of out.lights) l.removeFromParent(); // the house decides the real lights (per-room lighting)
     const group = ivGroup(ent), g0 = cursor.group, stage0 = cursor.stage, root = new THREE.Group(); root.name = 'iv:' + ent.id;
-    const isInst = type === 'electrical_panel' || type === 'power_meter' || type === 'service_entrance' || type === 'wall_switch' || type === 'wall_outlet' || type === 'gas_bottle';
-    const ivStage = shared.ctx.constructionStages ? (isInst ? 'installations' : 'furniture') : undefined;
+    // the panel, meter and entrance come with the rough-in; the plates of switches and sockets close their boxes once the walls are rendered and painted
+    const isInst = type === 'electrical_panel' || type === 'power_meter' || type === 'service_entrance' || type === 'gas_bottle';
+    const isPlate = type === 'wall_switch' || type === 'wall_socket';
+    const ivStage = shared.ctx.constructionStages ? (isInst ? 'installations' : isPlate ? 'finishes' : 'furniture') : undefined;
     if (ivStage) root.userData.constructionStage = ivStage;
     root.position.set(ix, ent.floorY, iz); root.rotation.y = iry; root.userData.iv = ent.id;
     const screen = spec.devices && spec.devices.some(d => d.kind === 'screen');

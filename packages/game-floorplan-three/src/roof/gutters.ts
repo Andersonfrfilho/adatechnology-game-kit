@@ -6,9 +6,18 @@ const paletteMeta = (colors: Record<string, unknown>): { state?: string } | unde
 
 const GUTTER_OFF_FASCIA = 0.04;
 const DOWNPIPE_OFF_CORNER = 0.15;
+/**
+ * The gutter and downpipe as they are sold and hung (NBR 10844): a half-round gutter of 125 mm hung on the fascia by brackets every 60 cm, a round downpipe of
+ * 80 mm (70 mm the least) bent twice at 45 degrees from the gutter's outlet back to the wall, held by clamps, and ending in a 45 degree shoe over the sand box
+ * (caixa de areia) set in the sidewalk, which takes the rain to the street's gutter by a pipe of its own, never into the sewer.
+ */
+const GUTTER = { radius: 0.0625, wall: 0.004, slats: 12, bracketEvery: 0.6 } as const;
+const DOWNPIPE = { radius: 0.04, clampEvery: 1.5, shoeOver: 0.12 } as const;
+/** The sand box under each downpipe: its outer side and its grate, metres; its centre this far out of the downpipe, so it lies inside the 60 cm sidewalk. */
+export const SAND_BOX = { side: 0.4, grate: 0.34, offset: 0.24, depth: 0.4 } as const;
 
 export function installRoofGutters(K: Kernel, shared: Shared): void {
-  const { boxC, bx, cursor, roomAt } = K;
+  const { boxC, bx, cursor, cylBase, roomAt } = K;
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
   // ===== gutters and downpipes (deterministic by seed): luxury/high/mid ~60%, budget/commercial ~30% =====
   function gutterConfig(): GutterConfig {
@@ -30,7 +39,22 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
         if (ax === 'x') { boxC('plain', m, y + dy, p + outside * 0.05, L, 0.03, 0.1, c, 0, 0, tilt); boxC('plain', m, y + 0.03 + dy, p + outside * 0.1, L, 0.09, 0.02, c, 0, 0, tilt); }
         else { boxC('plain', p + outside * 0.05, y + dy, m, 0.1, 0.03, L, c, tilt, 0, 0); boxC('plain', p + outside * 0.1, y + 0.03 + dy, m, 0.02, 0.09, L, c, tilt, 0, 0); }
       };
+      if (!shared.ctx.visorGutters && !breaks) { halfRound(ax, a - 0.1, b + 0.1, p, outside); return; }
       if (!breaks) seg(a - 0.1, b + 0.1, 0); else { const L = b - a; seg(a - 0.1, a + L * 0.45, 0); seg(a + L * 0.45, a + L * 0.72, 0.22); } // fallen stretch and stretch that vanished
+    };
+    // the half-round gutter: slats round its half circle (back against the fascia, open to the sky), the rolled lip on its outer edge, its brackets
+    const halfRound = (ax: 'x' | 'z', a: number, b: number, p: number, outside: number): void => {
+      const R = GUTTER.radius, yc = y + R, pc = p + outside * R, L = b - a, m = (a + b) / 2, width = 2 * R * Math.sin(Math.PI / (2 * GUTTER.slats)) + 0.002;
+      for (let k = 0; k < GUTTER.slats; k++) {
+        const th = -Math.PI / 2 + (Math.PI * (k + 0.5)) / GUTTER.slats, across = pc + outside * Math.sin(th) * R, up = yc - Math.cos(th) * R;
+        if (ax === 'x') boxC('plain', m, up, across, L, GUTTER.wall, width, c, -outside * th, 0, 0); else boxC('plain', across, up, m, width, GUTTER.wall, L, c, 0, 0, outside * th);
+      }
+      if (ax === 'x') boxC('plain', m, yc + 0.006, pc + outside * R, L, 0.014, 0.014, sh(c, 0.92)); else boxC('plain', pc + outside * R, yc + 0.006, m, 0.014, 0.014, L, sh(c, 0.92));
+      for (let t = a + 0.25; t < b - 0.1; t += GUTTER.bracketEvery) {
+        // the bracket: a strap on the fascia, round under the gutter to its lip
+        if (ax === 'x') { boxC('metal', t, yc + 0.01, p + outside * 0.003, 0.025, 0.05, 0.006, sh(c, 0.7)); boxC('metal', t, yc - R - 0.004, pc, 0.025, 0.006, 2 * R, sh(c, 0.7)); }
+        else { boxC('metal', p + outside * 0.003, yc + 0.01, t, 0.006, 0.05, 0.025, sh(c, 0.7)); boxC('metal', pc, yc - R - 0.004, t, 2 * R, 0.006, 0.025, sh(c, 0.7)); }
+      }
     };
     const sides: Side[] = [[!touchesU[1], 'x', x0, x1, z0, -1], [!touchesU[3], 'x', x0, x1, z1, 1], [!touchesU[0], 'z', z0, z1, x0, -1], [!touchesU[2], 'z', z0, z1, x1, 1]];
     const larger = sides.reduce((m, l, i) => (l[0] && (l[3] - l[2]) > (sides[m][3] - sides[m][2]) ? i : m), 0);
@@ -47,6 +71,7 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
       // built by construction stage the corner pillar stands 2.5 cm out of the walls: the downpipe runs down clear of it, not inside its faces
       const off = shared.ctx.visorGutters ? 0.06 : DOWNPIPE_OFF_CORNER, px = cx + sx * off, pz = cz + sz * off; if (!freeAt(px, pz, sx, sz)) return false;
       const floats = G.bad && G.ncond === 1, yt = yb - 0.1, ybx = floats ? 0.7 : 0.04; G.ncond = (G.ncond ?? 0) + 1; // abandoned: a downpipe ends loose, above the ground
+      if (!shared.ctx.visorGutters && !floats) return roundDownpipe(px, pz, sx, sz, run, yt);
       if (run >= 2) boxC('plain', (sides[run][4] + px) / 2, yt, pz, Math.abs(sides[run][4] - px), 0.07, 0.07, c); // gutter elbow (running in z) to the wall
       else boxC('plain', px, yt, (sides[run][4] + pz) / 2, 0.07, 0.07, Math.abs(sides[run][4] - pz), c); // gutter running in x
       boxC('plain', px, (ybx + yt) / 2, pz, 0.08, yt - ybx, 0.08, c);
@@ -56,9 +81,40 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
       if (!floats) { drain(rx, rz, px, pz, c); INF.drains.push({ x: rx, z: rz }); } // pipe flush with the floor to the drain
       return true;
     };
+    // the round downpipe: from the gutter's outlet down and back to the wall in two 45 degree bends, down the wall in its clamps, out in a 45 degree shoe over
+    // the sand box (the box takes it to the street's gutter by a pipe of its own: `drains`)
+    const roundDownpipe = (px: number, pz: number, sx: number, sz: number, run: number, yt: number): boolean => {
+      const side = sides[run], alongX = run < 2, outlet = side[4] + side[5] * (GUTTER_OFF_FASCIA + GUTTER.radius), r = DOWNPIPE.radius;
+      const ox = alongX ? px : outlet, oz = alongX ? outlet : pz, out = Math.hypot(ox - px, oz - pz);
+      const yOut = y - 0.02, yWall = yOut - 0.06 - out;
+      const bx_ = px + sx * SAND_BOX.offset, bz_ = pz + sz * SAND_BOX.offset, shoe = Math.hypot(bx_ - px, bz_ - pz) * 0.5, yFoot = DOWNPIPE.shoeOver + shoe;
+      const path: number[][] = [[ox, yOut, oz], [ox, yOut - 0.06, oz], [px, yWall, pz], [px, yFoot, pz], [px + (bx_ - px) * 0.5, DOWNPIPE.shoeOver, pz + (bz_ - pz) * 0.5]];
+      for (let i = 0; i + 1 < path.length; i++) tube(path[i], path[i + 1], r, c);
+      for (let i = 1; i + 1 < path.length; i++) cylBase('plain', path[i][0], path[i][1] - r * 1.2, path[i][2], r * 1.15, r * 2.4, sh(c, 0.94)); // the bends' sockets
+      for (let yy = yWall - 0.3; yy > yFoot + 0.3; yy -= DOWNPIPE.clampEvery) cylBase('metal', px, yy - 0.015, pz, r * 1.25, 0.03, sh(c, 0.7)); // clamps
+      INF.downpipes.push({ f, x: px, z: pz, y0: DOWNPIPE.shoeOver, y1: yt, drain: [bx_, bz_] });
+      sandBox(bx_, bz_); INF.drains.push({ x: bx_, z: bz_ });
+      return true;
+    };
     for (const k of order) { const [cx, cz, sx, sz, adj] = corners[k]; if (!adj.every(r => freeRun[r])) continue; if (adj.every(r => cover.has(r))) continue; if (downpipe(cx, cz, sx, sz, adj[1])) adj.forEach(r => cover.add(r)); }
     sides.forEach((l, i) => { if (!l[0] || cover.has(i)) return; // run without a downpipe (corner blocked by the upper storey): one drop at the free end
       for (const [cx, cz, sx, sz, adj] of corners) if (adj.includes(i) && (i >= 2 ? true : true)) { const tx = i >= 2 ? cx : cx + (sx > 0 ? -0.25 : 0.25), tz = i >= 2 ? cz + (sz > 0 ? -0.25 : 0.25) : cz; if (downpipe(tx, tz, i >= 2 ? sx : 0, i >= 2 ? 0 : sz, i)) { cover.add(i); break; } } });
+  }
+  // a pipe from a to b (a cylinder along it)
+  function tube(a: readonly number[], b: readonly number[], r: number, color: Hex): void {
+    const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-3) return;
+    K._q.setFromUnitVectors(K._Y, K._v3.set(dx / L, dy / L, dz / L));
+    K.put('plain', 'cyl', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, K._q, r * 2, L, r * 2, color);
+  }
+  // the sand box (caixa de areia) set flush in the sidewalk: its concrete rim, the dark of its pit and the cast grate over it
+  function sandBox(x: number, z: number): void {
+    const g0 = cursor.group; cursor.group = 'f0';
+    const h = SAND_BOX.side / 2, gh = SAND_BOX.grate / 2, top = 0.046;
+    bx('plain', x - h, 0, z - h, x + h, top, z + h, 0xb9b5ac);
+    bx('plain', x - gh, top - 0.002, z - gh, x + gh, top, z + gh, 0x16171a);
+    for (let k = -6; k <= 6; k++) bx('metal', x + k * (gh / 6.5) - 0.006, top, z - gh, x + k * (gh / 6.5) + 0.006, top + 0.008, z + gh, 0x6a6e72);
+    bx('metal', x - gh, top, z - gh, x + gh, top + 0.01, z - gh + 0.015, 0x5a5d61); bx('metal', x - gh, top, z + gh - 0.015, x + gh, top + 0.01, z + gh, 0x5a5d61);
+    cursor.group = g0;
   }
   // floor drain with grate: metal frame, dark bottom and bars
   function drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void { // px,pz,c: foot of the downpipe and colour of the pipe leading to the drain (optional); stays in the ground floor group (shows even with the roof cut)

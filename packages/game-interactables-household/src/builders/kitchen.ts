@@ -3,6 +3,9 @@ import type { Ctx } from '../ctx'
 import { HANDLE, dropDoor, hingedDoor, shell } from '../parts'
 import { mix, round3, shade } from '../util'
 
+/** The gap a stove leaves to the wall behind it, metres: its gas hose runs in it, never through the wall. */
+export const STOVE_WALL_GAP = 0.04
+
 const STEEL = 0xb4b8bc
 const CHROME = 0xd2d6da
 
@@ -111,10 +114,11 @@ export function stove(c: Ctx): void {
   c.add('burners', { id: 'oven', pos: [0, 0.13, -0.05], part: 'knob_oven', fuel: 'auto', rate: rate * 2 })
   c.add('emitters', { id: 'oven_flame', kind: 'flame', pos: [0, 0.13, -0.05], dir: [0, 1, 0], source: 'oven', size: 0.1 })
   c.interact('use_oven', [ok, 0.81, zf + HANDLE], { do: 'toggle_burner', burner: 'oven' }, 'prompt.stove_oven', 0.9)
-  // gas hose from the inlet at the back to the connection point behind the stove
+  // gas hose from the inlet at the back down to the valve on the wall behind the stove, inside the gap the stove leaves to the wall (the house that
+  // places the stove runs it on to its cylinder: `connections.cylinderAt`)
   c.add('wires', {
     id: 'gas_hose', kind: 'cable', radius: 0.008,
-    points: [[round3(hw - 0.08), 0.18, -hd], [round3(hw - 0.08), 0.12, round3(-hd - 0.12)], [round3(hw - 0.1), 0.06, round3(-hd - 0.3)], [round3(hw - 0.2), 0.03, round3(-hd - 0.5)]],
+    points: [[round3(hw - 0.08), 0.18, -hd], [round3(hw - 0.08), 0.1, round3(-hd - STOVE_WALL_GAP)], [round3(hw - 0.14), 0.04, round3(-hd - STOVE_WALL_GAP)]],
   })
   c.add('damage', { target: 'oven_door', kind: 'glass', hp: 30 })
 }

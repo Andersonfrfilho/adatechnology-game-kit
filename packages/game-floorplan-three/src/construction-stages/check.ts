@@ -251,7 +251,7 @@ export function checkConstructionStages(T: Three, h: StagedHouseView, options: {
   set(CONSTRUCTION_LEVEL_MAX)
   const hidden: string[] = []
   h.group.traverse((o) => {
-    if (o.userData.hidden === true && o.userData.part !== 'wall_pipe' && o.userData.part !== 'wall_conduit' && shown(o)) hidden.push(String(o.userData.part))
+    if (o.userData.hidden === true && o.userData.part !== 'wall_pipe' && o.userData.part !== 'wall_conduit' && o.userData.part !== 'electrical_box' && shown(o)) hidden.push(String(o.userData.part))
   })
   for (const part of hidden) out.push({ code: STAGE_PROBLEM.HIDDEN_SHOWN, level: CONSTRUCTION_LEVEL_MAX, detail: part })
   checkRoof(T, h, plan, set, out)

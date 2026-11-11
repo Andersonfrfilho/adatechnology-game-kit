@@ -103,12 +103,19 @@ export function concreteViolations(structure: Pick<Structure, 'parts' | 'support
     for (const { on } of bearings) {
       // (a bond beam on its wall is held all along by the masonry under it: only one that spans takes the beam as a point load)
       if (on.role !== 'beam' || on.material !== 'concrete' || on.y1 < part.y1 - 0.01 || castOn > 0 || (on.beamKind === 'bond_beam' && !spansAt(on, part, byId, supports))) continue
-      if (sectionDepthAt(on, part.aabb, structure.parts) < part.y1 - part.y0 - 0.01)
-        out.push({ code: STRUCTURAL_VIOLATION.BEAM_ON_SHALLOWER_BEAM, part: part.id, message: `${part.id} (${(part.y1 - part.y0).toFixed(2)} m deep) rests on ${on.id}, only ${(on.y1 - on.y0).toFixed(2)} m deep` })
+      if (sectionDepthAt(on, part.aabb, structure.parts) < depthToHold(on, part) - 0.01)
+        out.push({ code: STRUCTURAL_VIOLATION.BEAM_ON_SHALLOWER_BEAM, part: part.id, message: `${part.id} (bottom at ${part.y0.toFixed(2)} m) rests on ${on.id}, whose section ends at ${(on.y1 - sectionDepthAt(on, part.aabb, structure.parts)).toFixed(2)} m` })
     }
   }
   return out
 }
+
+/**
+ * How deep the section of `host` has to reach under its top to take `beam` framed into it (NBR 6118 18.3.7, indirect support): down to the bottom of
+ * `beam`, so the supported beam never hangs under the one that carries it. A bond beam level with the slab's top takes a beam cast under the slab: it
+ * reaches past the beam's own depth by the slab.
+ */
+export const depthToHold = (host: StructurePart, beam: StructurePart): number => host.y1 - beam.y0
 
 /**
  * Depth of the concrete section `beam` makes over the plan box `at`: its own and that of the beams cast under it there (a bond beam over an opening and the

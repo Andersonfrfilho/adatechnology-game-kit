@@ -2,6 +2,8 @@ import type * as THREE_NS from 'three'
 
 import type { HouseRecord, Three } from '../kernel-types.js'
 import { BoxBatch } from './box-batch.js'
+import { PUBLIC_SIDEWALK } from '../lot/terrain.js'
+import { SAND_BOX } from '../roof/gutters.js'
 import { BURIED_Y, houseFootprint, routingPlanOf } from './installation-routes.js'
 import type { RoutePoint } from './installation-routes.js'
 
@@ -10,6 +12,14 @@ const DRAIN_BORE: Readonly<Record<string, number>> = { flush: 0.1, shower: 0.05,
 /** Fall of a sewer run, metres per metre (NBR 8160: 1 % for 100 mm and up, 2 % under it). */
 const FALL = { main: 0.01, branch: 0.02 } as const
 const TRENCH = { width: 0.4, bed: 0.03, berm: { width: 0.12, height: 0.065 } } as const
+/** A heap of dug earth on the ground: its top and its sides, no face under it (it lies on the ground, and a face there would share the ground's plane). */
+function addHeap(batch: BoxBatch, [x0, z0, x1, z1]: Rect, h: number): void {
+  batch.addQuad([[x0, h, z0], [x0, h, z1], [x1, h, z1], [x1, h, z0]], [0, 1, 0])
+  batch.addQuad([[x0, 0, z0], [x1, 0, z0], [x1, h, z0], [x0, h, z0]], [0, 0, -1])
+  batch.addQuad([[x1, 0, z1], [x0, 0, z1], [x0, h, z1], [x1, h, z1]], [0, 0, 1])
+  batch.addQuad([[x0, 0, z1], [x0, 0, z0], [x0, h, z0], [x0, h, z1]], [-1, 0, 0])
+  batch.addQuad([[x1, 0, z0], [x1, 0, z1], [x1, h, z1], [x1, h, z0]], [1, 0, 0])
+}
 /** The excavation's opening is drawn this little over the ground and over the compacted bed under the house. */
 const OPENING_Y = 0.045
 /** The excavation draws after every opaque thing (it opens what was drawn over it), its pipes and boxes after the excavation. */
@@ -107,9 +117,11 @@ function openEdges(rect: Rect, others: readonly Rect[], solids: readonly Rect[] 
 function addExcavation(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trench[], mats: { readonly earth: THREE_NS.Material; readonly heap: THREE_NS.Material }, site: { readonly solids: readonly Rect[]; readonly footprint: Rect }): void {
   const opening = new BoxBatch(), earth = new BoxBatch(), heap = new BoxBatch()
   const rects = trenches.map((t) => t.rect)
-  trenches.forEach(({ rect: r, bed }, i) => {
+  const pits = trenches.filter((t) => t.pit).map((t) => t.rect)
+  trenches.forEach(({ rect: r, bed, pit }, i) => {
     opening.add([r[0], OPENING_Y - 0.001, r[1], r[2], OPENING_Y, r[3]])
-    earth.addQuad([[r[0], bed(r[0], r[1]), r[1]], [r[2], bed(r[2], r[1]), r[1]], [r[2], bed(r[2], r[3]), r[3]], [r[0], bed(r[0], r[3]), r[3]]], [0, 1, 0])
+    // a trench's floor stops at the pits it reaches: the box's pit goes deeper, and a floor across it would cut through the box
+    for (const f of pit ? [r] : rectMinus(r, pits)) earth.addQuad([[f[0], bed(f[0], f[1]), f[1]], [f[2], bed(f[2], f[1]), f[1]], [f[2], bed(f[2], f[3]), f[3]], [f[0], bed(f[0], f[3]), f[3]]], [0, 1, 0])
     const others = rects.filter((_, k) => k !== i)
     for (const e of openEdges(r, others, site.solids)) {
       const [ox, oz] = e.out
@@ -120,7 +132,7 @@ function addExcavation(THREE: Three, parent: THREE_NS.Group, trenches: readonly 
       // the dug earth is heaped along the rim in the yard; inside the house the frame stands where it would go
       const [fx0, fz0, fx1, fz1] = site.footprint
       const inHouse = x1 > fx0 - 0.4 && x0 < fx1 + 0.4 && z1 > fz0 - 0.4 && z0 < fz1 + 0.4
-      if (!inHouse) heap.add(ox ? [ox > 0 ? x1 : x0 - w, 0, z0, ox > 0 ? x1 + w : x0, h, z1] : [x0, 0, oz > 0 ? z1 : z0 - w, x1, h, oz > 0 ? z1 + w : z0])
+      if (!inHouse) addHeap(heap, ox ? [ox > 0 ? x1 : x0 - w, z0, ox > 0 ? x1 + w : x0, z1] : [x0, oz > 0 ? z1 : z0 - w, x1, oz > 0 ? z1 + w : z0], h)
     }
   })
   const mask = opening.mesh(THREE, openingMaterial(THREE), 'excavation:opening')
@@ -167,7 +179,7 @@ function addPipe(THREE: Three, parent: THREE_NS.Group, points: readonly RoutePoi
  * A sewer box (inspection, grease or floor drain) set in the ground: its walls down to its floor, its concrete lid on top, flush with the ground (9 mm over, clear of the compacted bed under the house at 6 mm,
  * it, never on its plane). The trench reaches its sides; nothing is dug round it.
  */
-function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: { u: number; v: number; size: number; bottom: number }, mats: { readonly concrete: THREE_NS.Material; readonly lid: THREE_NS.Material }): void {
+function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: SunkBox, mats: { readonly concrete: THREE_NS.Material; readonly lid: THREE_NS.Material }): void {
   const { u, v, size, bottom } = box
   const body = new BoxBatch()
   const wall = 0.05
@@ -182,6 +194,7 @@ function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: { u: number; v: n
     mesh.renderOrder = ORDER.inside
     parent.add(mesh)
   }
+  if (box.lid === false) return
   const lid = new BoxBatch()
   lid.add([u - size / 2, top, v - size / 2, u + size / 2, LID_TOP, v + size / 2])
   const cover = lid.mesh(THREE, mats.lid, 'sewer:lid')
@@ -204,6 +217,29 @@ interface Drain {
 interface Trench {
   readonly rect: Rect
   readonly bed: (x: number, z: number) => number
+  /** A box's pit: the trenches that reach it have no floor of their own in it. */
+  readonly pit?: true
+}
+
+/** Working room dug round a sewer box on each side, metres: the box stands in its own pit, its walls clear of the earth until the backfill. */
+const PIT_MARGIN = 0.15
+
+/** `r` less the rectangles `holes` (each cut leaves up to four pieces). */
+function rectMinus(r: Rect, holes: readonly Rect[]): Rect[] {
+  let pieces: Rect[] = [r]
+  for (const h of holes) {
+    pieces = pieces.flatMap((p): Rect[] => {
+      if (h[0] >= p[2] || h[2] <= p[0] || h[1] >= p[3] || h[3] <= p[1]) return [p]
+      const out: Rect[] = []
+      if (h[0] > p[0]) out.push([p[0], p[1], h[0], p[3]])
+      if (h[2] < p[2]) out.push([h[2], p[1], p[2], p[3]])
+      const x0 = Math.max(p[0], h[0]), x1 = Math.min(p[2], h[2])
+      if (h[1] > p[1]) out.push([x0, p[1], x1, h[1]])
+      if (h[3] < p[3]) out.push([x0, h[3], x1, p[3]])
+      return out
+    })
+  }
+  return pieces
 }
 
 /** A trench along a straight run from (a) to (b), its bed `under` the run's line (the pipe lies on it). */
@@ -218,15 +254,57 @@ function trenchAlong(a: RoutePoint, b: RoutePoint, halfWidth: number, under: num
   return { rect, bed }
 }
 
+/** A box set in the ground: its centre, side, floor; a yard box stays after the backfill; a sand box is open (its grate is set with the sidewalk). */
+interface SunkBox {
+  readonly u: number
+  readonly v: number
+  readonly size: number
+  readonly bottom: number
+  readonly yard: boolean
+  readonly lid?: false
+}
+
+/** Each box is set in a pit of its own, dug to its floor: its walls stand clear in it, never through the trench's earth. */
+const pitOf = (b: SunkBox): Trench => {
+  const half = b.size / 2 + PIT_MARGIN
+  return { rect: [b.u - half, b.v - half, b.u + half, b.v + half], bed: () => b.bottom, pit: true }
+}
+
+/** A sand box at the foot of a downpipe (the gutters drew it): where it is in plan. */
+export interface RainDrain {
+  readonly x: number
+  readonly z: number
+}
+
+/** The rainwater pipe (NBR 10844): its fall (0.5 % the least), how deep it leaves the sand box, its bore. */
+const RAIN = { fall: 0.01, cover: 0.3, bore: 0.1 } as const
+
+/**
+ * The rainwater of the roof, never in the sewer (NBR 10844 and the sewer's operator): from each sand box a pipe of its own falls to the front of the lot and on
+ * under the public sidewalk to the kerb, where it lets out into the street's gutter.
+ */
+function rainLayout(plan: HouseRecord, drains: readonly RainDrain[]): { pieces: SewerPiece[]; trenches: Trench[]; boxes: SunkBox[] } {
+  const footprint = houseFootprint(routingPlanOf(plan))
+  const kerb = (plan.lot?.rect?.[1] ?? footprint[1] - 1.5) - PUBLIC_SIDEWALK
+  const pieces: SewerPiece[] = [], trenches: Trench[] = [], boxes: SunkBox[] = []
+  for (const d of drains) {
+    const run: RoutePoint[] = [[d.x, -RAIN.cover, d.z], [d.x, -RAIN.cover - RAIN.fall * Math.max(0, d.z - kerb), kerb]]
+    pieces.push({ points: run, bore: RAIN.bore })
+    trenches.push(trenchAlong(run[0]!, run[1]!, TRENCH.width / 2, RAIN.bore / 2 + TRENCH.bed))
+    boxes.push({ u: d.x, v: d.z, size: SAND_BOX.side, bottom: -SAND_BOX.depth, yard: false, lid: false })
+  }
+  return { pieces, trenches, boxes }
+}
+
 /** The sewer runs of the plan's drains: each fixture down into the ground, a branch with its fall to the collector, the collector to the street. */
-function sewerLayout(plan: HouseRecord, drains: readonly Drain[]): { pieces: SewerPiece[]; trenches: Trench[]; boxes: { u: number; v: number; size: number; bottom: number; yard: boolean }[] } {
+function sewerLayout(plan: HouseRecord, drains: readonly Drain[]): { pieces: SewerPiece[]; trenches: Trench[]; boxes: SunkBox[] } {
   const footprint = houseFootprint(routingPlanOf(plan))
   const main = drains.find((d) => d.kind === 'flush') ?? drains[0]!
   const collectorU = main.u
   const frontV = Math.min(footprint[1] - 1.2, (plan.lot?.rect?.[1] ?? footprint[1] - 1.8) + 0.6)
   const pieces: SewerPiece[] = []
   const trenches: Trench[] = []
-  const boxes: { u: number; v: number; size: number; bottom: number; yard: boolean }[] = []
+  const boxes: SunkBox[] = []
   const w = TRENCH.width / 2
   const start = BURIED_Y + 0.1
   let deepest = start
@@ -256,33 +334,42 @@ function sewerLayout(plan: HouseRecord, drains: readonly Drain[]): { pieces: Sew
  * The rough-in stage the finished house does not draw: the sewer, laid in its open trenches under the ground (the water and the conduits are the house's own
  * runs, cut into the bare masonry at this stage and embedded later; see `installation-routes`).
  */
-export function buildInstallationsStage(THREE: Three, plan: HouseRecord): THREE_NS.Group {
+export function buildInstallationsStage(THREE: Three, plan: HouseRecord, rain: readonly RainDrain[] = []): THREE_NS.Group {
   const group = new THREE.Group()
   group.name = 'stage:4:installations'
   const plumbing = plan.utilities?.plumbing
   const drains: Drain[] = (plumbing?.points ?? [])
     .filter((p) => DRAIN_BORE[p.kind] !== undefined)
     .map((p) => ({ u: p.u, v: p.v, bore: DRAIN_BORE[p.kind]!, kind: p.kind }))
-  if (!drains.length) return group
+  if (!drains.length && !rain.length) return group
   // `transparent` only to draw in the hole's pass (see ORDER): fully opaque, writing depth
   const inHole = { transparent: true, opacity: 1, depthWrite: true } as const
   const mats = {
     pipe: new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.65, ...inHole }),
+    rain: new THREE.MeshStandardMaterial({ color: 0xc8ccd0, roughness: 0.6, ...inHole }),
     earth: earthMaterial(THREE, 0x3a2716),
     heap: new THREE.MeshStandardMaterial({ color: 0x5a3e24, roughness: 0.95 }),
     concrete: new THREE.MeshStandardMaterial({ color: 0x7c7f82, roughness: 0.9, ...inHole }),
     lid: new THREE.MeshStandardMaterial({ color: 0x8d8f91, roughness: 0.92, ...inHole }),
   }
-  const layout = sewerLayout(plan, drains)
+  const layout = drains.length ? sewerLayout(plan, drains) : { pieces: [], trenches: [], boxes: [] }
+  const rainwater = rainLayout(plan, rain)
+  const boxes = [...layout.boxes, ...rainwater.boxes]
   const parts = (plan as { structure?: { parts?: readonly { id: string; beamKind?: string; aabb: readonly number[] }[] } }).structure?.parts ?? []
   const solids = parts.filter((p) => p.beamKind === 'ground_beam' || /^(ground_beam_|footing_pier_)/.test(p.id)).map((p) => p.aabb as unknown as Rect)
-  addExcavation(THREE, group, layout.trenches, mats, { solids, footprint: houseFootprint(routingPlanOf(plan)) as Rect })
+  addExcavation(THREE, group, [...layout.trenches, ...rainwater.trenches, ...boxes.map(pitOf)], mats, { solids, footprint: houseFootprint(routingPlanOf(plan)) as Rect })
   for (const piece of layout.pieces) addPipe(THREE, group, piece.points, piece.bore / 2, mats.pipe, ORDER.inside)
+  // the rainwater runs apart from the sewer, in a group of its own
+  const rainGroup = new THREE.Group()
+  rainGroup.name = 'rain_drains'
+  for (const piece of rainwater.pieces) addPipe(THREE, rainGroup, piece.points, piece.bore / 2, mats.rain, ORDER.inside)
+  group.add(rainGroup)
   // the yard's inspection boxes stay once the trench is filled: their lids flush with the ground, from the rough-in to the finished house
   const yard = new THREE.Group()
   yard.name = 'stage:4:sewer_boxes'
   group.userData.yardBoxes = yard
-  for (const b of layout.boxes) addSunkBox(THREE, b.yard ? yard : group, b, mats)
-  group.userData.sewer = { pieces: layout.pieces, trenches: layout.trenches.map((t) => t.rect), boxes: layout.boxes }
+  for (const b of boxes) addSunkBox(THREE, b.yard ? yard : group, b, mats)
+  group.userData.sewer = { pieces: layout.pieces, trenches: [...layout.trenches, ...layout.boxes.map(pitOf)].map((t) => t.rect), boxes: layout.boxes }
+  group.userData.rain = { pieces: rainwater.pieces, trenches: [...rainwater.trenches, ...rainwater.boxes.map(pitOf)].map((t) => t.rect), boxes: rainwater.boxes }
   return group
 }

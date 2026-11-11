@@ -97,9 +97,11 @@ function foundationSolid(p: StructurePart): Solid & { readonly kind: 'baldrame' 
  * never share a face on one plane (their tops on one plane were the flickering bands of the ceiling), nor leave a seam for light to leak through.
  */
 function seatSlabs(slabs: Solid[], carriers: Solid[], beams: readonly Solid[]): void {
-  const floors = [...new Set(slabs.map((s) => s.floor))]
-  for (const f of floors) {
-    const own = slabs.filter((s) => s.floor === f)
+  // each slab with its own panels: another slab on the floor (an outbuilding's) never stands for its edge
+  const slabOf = (s: Solid): string => `${s.floor}:${s.id.replace(/_p\d+$/, '')}`
+  for (const key of new Set(slabs.map(slabOf))) {
+    const own = slabs.filter((s) => slabOf(s) === key)
+    const f = own[0]!.floor
     const bounds = [Math.min(...own.map((s) => s.aabb[0])), Math.min(...own.map((s) => s.aabb[1])), Math.max(...own.map((s) => s.aabb[2])), Math.max(...own.map((s) => s.aabb[3]))]
     const under = carriers.filter((c) => c.floor === f && own.some((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05 && c.y1 <= s.y1 + EPS))
     if (!under.length) continue

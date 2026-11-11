@@ -140,8 +140,8 @@ function stageVisible(stage: string, level: number, opts: ApplyConstructionLevel
   }
 }
 
-/** The runs cut into the masonry: shown in the rough-in stage, embedded (hidden) once the walls are plastered, unless the water layer asks for the pipes. */
-const EMBEDDED = new Set(['wall_pipe', 'wall_conduit'])
+/** The runs cut into the masonry and the boxes they end in: shown in the rough-in stage, embedded (hidden) once the walls are plastered, unless the water layer asks for the pipes. */
+const EMBEDDED = new Set(['wall_pipe', 'wall_conduit', 'electrical_box'])
 
 /** Which of the house's own groups and stage groups show at a level. Null: the group is not a stage's, its children decide. */
 function groupVisible(name: string, level: number, opts: ApplyConstructionLevelOptions): boolean | null {

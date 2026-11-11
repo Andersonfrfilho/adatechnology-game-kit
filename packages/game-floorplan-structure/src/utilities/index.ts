@@ -6,9 +6,10 @@ import type { EnergyConfig, Electrical } from './electrical'
 import { planElectrical } from './electrical'
 import { planGas } from './gas'
 import type { Gas } from './gas'
+import { outbuildingCeilingLight, withOutbuildingRooms } from './outbuildings'
 import { planPlumbing } from './plumbing'
 import type { Rng } from './shared'
-import type { Plumbing, Solar } from './types'
+import type { Outbuilding, Plumbing, Solar } from './types'
 import { planSolar } from './solar'
 
 export interface Utilities {
@@ -23,6 +24,8 @@ export interface UtilitiesContext {
   items: ResultItem[]
   stateItems: ResultItem[]
   tank: WaterTank | null
+  /** The outbuildings of the lot: each is wired as a room of the house. */
+  outbuildings?: readonly Outbuilding[]
   energy?: EnergyConfig
   /** Seeded stream by name: `gas`, `electrical`, `solar`. */
   rngFor(key: string): Rng
@@ -32,7 +35,9 @@ export interface UtilitiesContext {
 export function planUtilities(context: UtilitiesContext): Utilities {
   const { plan, items, stateItems, tank, energy, rngFor } = context
   const gas = planGas({ plan, items, stateItems, rng: rngFor('gas') })
-  const electrical = planElectrical({ plan, items, rng: rngFor('eletrica'), ...(energy ? { energy } : {}) })
+  // the outbuildings are wired as rooms of the house, their ceiling lights with them
+  const outbuildings = context.outbuildings ?? []
+  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), ...(energy ? { energy } : {}) })
   const solar = planSolar({ plan, rng: rngFor('solar'), ...(energy ? { energy } : {}) })
   const plumbing = planPlumbing({ plan, items, tank })
   return { gas, electrical, solar, plumbing }

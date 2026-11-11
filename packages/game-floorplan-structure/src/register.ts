@@ -11,6 +11,7 @@ import { contentOf } from './utilities/content'
 import { planContents, planUtilities } from './utilities'
 import { addOutbuildingPaths, planOutbuildings } from './utilities/outbuildings'
 import type { EnergyConfig } from './utilities/electrical'
+import type { Outbuilding } from './utilities/types'
 import type { TankPlanOptions } from './water-tank'
 import { VISOR_TANK_PILLAR_SIDE, planWaterTank } from './water-tank'
 import { structureLayer } from './viewer-layer'
@@ -111,9 +112,10 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
   engine.registerItem(COOKING_CYLINDER)
   engine.registerResultExtension('contents', (context) => planContents({ items: context.result.items, state: context.result.state, place: context.plan.tpl.place ?? 'house', ...(typeof context.options.day === 'number' ? { day: context.options.day } : {}), ...(typeof context.options.region === 'string' ? { region: context.options.region } : {}), rngFor: (key) => engine.createRng(context.seed, key), findsFor: (query) => { const answered = engine.findsAnswer(query); return answered ?? contentOf({ container: query.container, state: query.state, rng: query.rng, footprint: query.footprint ?? 0.5 }) } }))
   engine.registerResultExtension('outbuildings', (context) => {
-    const outbuildings = planOutbuildings({ plan: context.plan, items: context.result.items, catalog: engine.catalog, rngFor: (key) => engine.createRng(context.seed, key) })
+    const outbuildings = planOutbuildings({ plan: context.plan, items: context.result.items, catalog: engine.catalog, rngFor: (key) => engine.createRng(context.seed, key), visor: context.options.visorSections === true })
     if (context.result.lot) addOutbuildingPaths(context.result.lot, outbuildings, context.result.items)
     return outbuildings
   }, { after: ['contents'] })
-  engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
+  engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), // (the Visor's golden leaves the outbuilding unwired)
+    outbuildings: context.options.visorSections === true ? [] : ((context.result.outbuildings as Outbuilding[] | undefined) ?? []), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
 }

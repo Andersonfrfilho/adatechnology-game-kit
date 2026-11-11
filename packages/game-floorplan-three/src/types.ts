@@ -151,6 +151,16 @@ export interface BuildOptions {
    * tight on the fascia and the corner, as the Visor de casas 3D drew them (their faces then touch the fascia's and the wall's).
    */
   gutters?: 'clear' | 'visor'
+  /**
+   * `'soffit'` (default): the eave as it is built, its soffit right under the rafters' tails and the fascia closing it (`EAVE`). `'visor'`: the soffit tight under
+   * the eave line, as the Visor de casas 3D drew it.
+   */
+  eave?: 'soffit' | 'visor'
+  /**
+   * `'closed'` (default): where two walls meet in an L, inner walls too, the square of the corner is filled. `'visor'`: only where two outer walls meet, as the
+   * Visor de casas 3D drew them (an inner L keeps a notch of half a wall at its outer corner).
+   */
+  wallCorners?: 'closed' | 'visor'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
   /** Builds the step-by-step construction stage groups (`0..8`) for inspecting the house from foundation to completion. */

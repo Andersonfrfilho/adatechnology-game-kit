@@ -4,6 +4,13 @@ import type { Circuit } from '@adatechnology/game-floorplan-structure';
 
 import type { ElectricalInfo, Hex, HouseRecord, HouseRoom, Kernel, KernelUtilitiesElectrical, Shared } from '../kernel-types.js';
 
+/** A 4x2 wall box (NBR 5410 rough-in): along the wall, high and deep, metres. */
+const BOX_4X2 = [0.055, 0.1, 0.05] as const;
+/** An octagonal ceiling box: across and deep, metres. */
+const OCTAGONAL_BOX = [0.1, 0.05] as const;
+/** The PVC of the boxes, as the conduits. */
+const BOX_COLOR = 0xeab308;
+
 export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
   const { _Y, _q, _v3, bx, cursor, cylBase, part, pieceRecord, put } = K;
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
@@ -64,6 +71,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       cursor.pc = null;
       info.conduits.push(t.id);
     }
+    if (shared.ctx.constructionStages) roughInBoxes(E, R, nA);
     for (const t of E.outlets || []) info.outlets.push({ id: t.id, pos: [t.u, t.y, t.v], normal: [t.frontU || 0, 0, t.frontV || 0], room: t.room, floor: t.floor, type: t.type, voltage: t.voltage });
     for (const t of E.switches || []) info.switches.push({ id: t.id, pos: [t.u, t.y, t.v], normal: [t.frontU || 0, 0, t.frontV || 0], room: t.room, floor: t.floor, controls: t.controls });
     shared.ctx.electricalInfo = info;
@@ -72,6 +80,23 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
   function embeddedConduit(t: NonNullable<NonNullable<HouseRecord['utilities']>['electrical']>['conduits'][number], circ: Record<string, Circuit>, nA: number): void {
     const c = circ[t.circuit], com: HouseRoom | undefined = c && shared.ctx.roomById[c.room], d = t.diameter || 0.02, P = t.points.map(p => [p[0], p[2], p[1]]);
     part('wall_conduit', [0, 0, 0], () => { for (let i = 0; i + 1 < P.length; i++) pipe2(P[i], P[i + 1], d, 0xeab308); }, { id: 'conduit:' + t.id, hidden: true, circuit: t.circuit, points: t.points }, 'f' + Math.max(0, Math.min(nA - 1, com ? com.floor : 0)));
+  }
+  // the boxes the conduits end in (rough-in, NBR 5410): a 4x2 box cut into the masonry behind each switch and outlet, its face where the render will be,
+  // and an octagonal box cast in the ceiling slab over each light point; hidden once the walls are plastered, as the conduits
+  function roughInBoxes(E: NonNullable<NonNullable<HouseRecord['utilities']>['electrical']>, R: HouseRecord, nA: number): void {
+    const floorY = (f: number): number => R.floors[Math.max(0, Math.min(nA - 1, f))]?.y0 ?? 0, group = (f: number): string => 'f' + Math.max(0, Math.min(nA - 1, f));
+    for (const t of [...(E.switches || []), ...(E.outlets || [])]) {
+      const nu = t.frontU || 0, nv = t.frontV || 0, y = floorY(t.floor) + t.y, alongU = Math.abs(nv) >= Math.abs(nu);
+      // the face on the wall's face, the box into the wall
+      const [u0, u1] = alongU ? [t.u - BOX_4X2[0] / 2, t.u + BOX_4X2[0] / 2] : nu > 0 ? [t.u - BOX_4X2[2], t.u] : [t.u, t.u + BOX_4X2[2]];
+      const [v0, v1] = !alongU ? [t.v - BOX_4X2[0] / 2, t.v + BOX_4X2[0] / 2] : nv > 0 ? [t.v - BOX_4X2[2], t.v] : [t.v, t.v + BOX_4X2[2]];
+      part('electrical_box', [0, 0, 0], () => bx('plain', u0, y - BOX_4X2[1] / 2, v0, u1, y + BOX_4X2[1] / 2, v1, BOX_COLOR), { id: 'box:' + t.id, hidden: true }, group(t.floor));
+    }
+    for (const it of R.items) {
+      if (it.type !== 'ceiling_light') continue;
+      const f = Math.max(0, it.floor ?? 0), ceiling = floorY(f) + (R.floors[f]?.ceiling ?? 2.6);
+      part('electrical_box', [0, 0, 0], () => cylBase('plain', it.x, ceiling - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR), { id: 'box:' + it.id, hidden: true }, group(f));
+    }
   }
   function pipe2(a: readonly number[], b: readonly number[], diameter: number, color: Hex): void { const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-3) return; _q.setFromUnitVectors(_Y, _v3.set(dx / L, dy / L, dz / L)); put('plain', 'cyl', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, _q, diameter, L, diameter, color); }
   const defined: KernelUtilitiesElectrical = { electricalStructure, pipe2 };
