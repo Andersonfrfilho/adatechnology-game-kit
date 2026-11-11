@@ -44,11 +44,15 @@ describe('porch: its own posts carry its roof, and only its roof', () => {
     expect(structure.supports.filter((s) => s.part === 'porch_floor_porch').every((s) => s.on.startsWith('porch_footing_') || s.on === 'foundation_raft')).toBe(true)
   })
 
-  it('in the coarse detail (as the Visor de casas 3D) the porch roof is also carried by the house wall, so it stays', () => {
+  it('in the coarse detail the porch roof also rests on the house wall: it shares its load with it, and without its posts it comes down off the ledger', () => {
     const structure = buildStructure(rectangularHouse({ width: 8, depth: 6, porch: 1.8 }), { wallDetail: 'coarse' })
     const spec = toDestructibleSpec(structure, { wallDetail: 'coarse' })
+    expect(spec.joints!.some((j) => j.a === 'porch_roof_porch' && j.b.startsWith('wall_'))).toBe(true)
     const fallen = breakParts(spec, idsStarting(spec, 'porch_post_'))
-    expect(fallen.stands('porch_roof_porch')).toBe(true)
+    expect(fallen.stands('porch_roof_porch')).toBe(false)
+    // the Visor de casas 3D sized and held it by the support nearest the ground: there it stays on the wall
+    const visor = breakParts(toDestructibleSpec(structure, { wallDetail: 'coarse', loadSharing: 'nearest' }), idsStarting(spec, 'porch_post_'))
+    expect(visor.stands('porch_roof_porch')).toBe(true)
   })
 })
 

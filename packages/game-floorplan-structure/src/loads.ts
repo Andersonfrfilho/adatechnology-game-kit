@@ -1,49 +1,36 @@
+import { distributeLoads, solveSupports } from '@adatechnology/game-load-path'
+import type { LoadSharing, SupportEdge } from '@adatechnology/game-load-path'
+
 import { GROUND } from './types'
 import type { StructurePart, Support } from './types'
 
+
 /**
- * Load each part carries at rest, by the rules of the Visor de casas 3D (which the destruction world shares): load only goes down to supports closer to
- * the ground, shared equally, and a partition wall carries nothing, so what rests only on partitions has no load. `without` leaves one part out (as if it
- * had failed). Parts that are not structural (the tank) are not loaded.
+ * Load each part carries at rest by the load path rule of `game-load-path` (the destruction world uses the same one): with `all` every support a part
+ * rests on carries its share, with `nearest` only those closest to the ground; a partition wall carries nothing, so what rests only on partitions has no
+ * load. `without` leaves one part out (as if it had failed). Parts that are not structural (the tank) are not loaded.
  */
-export function loadsAtRest(parts: readonly StructurePart[], supports: readonly Support[], without?: string): Map<string, number> {
-  const byId = new Map(parts.filter((part) => part.id !== without).map((part) => [part.id, part]))
-  const resting = new Map<string, string[]>()
-  const carrying = new Map<string, string[]>()
-  const push = (map: Map<string, string[]>, key: string, value: string): void => {
-    const list = map.get(key)
-    if (list) list.push(value)
-    else map.set(key, [value])
-  }
+export function loadsAtRest(parts: readonly StructurePart[], supports: readonly Support[], without?: string, sharing: LoadSharing = 'all'): Map<string, number> {
+  const kept = parts.filter((part) => part.id !== without && part.id !== GROUND)
+  const ids = [GROUND, ...kept.map((part) => part.id)]
+  const index = new Map(ids.map((id, k) => [id, k]))
+  const edges: SupportEdge[][] = ids.map(() => [])
   for (const support of supports) {
     if (support.bears === false) continue
-    if (!byId.has(support.part) || (support.on !== GROUND && !byId.has(support.on))) continue
-    push(resting, support.part, support.on)
-    push(carrying, support.on, support.part)
+    const part = index.get(support.part)
+    const on = index.get(support.on)
+    if (part === undefined || on === undefined) continue
+    edges[part]!.push({ on, directed: true })
   }
-  const partition = (id: string): boolean => byId.get(id)?.role === 'partition'
-  const structural = (id: string): boolean => byId.has(id) && byId.get(id)!.role !== 'none'
-  const distance = new Map<string, number>([[GROUND, 0]])
-  const queue = [GROUND]
-  for (let head = 0; head < queue.length; head++) {
-    const current = queue[head]!
-    if (current !== GROUND && partition(current)) continue
-    for (const above of carrying.get(current) ?? []) {
-      if (distance.has(above) || !structural(above)) continue
-      distance.set(above, distance.get(current)! + 1)
-      queue.push(above)
-    }
-  }
-  const incoming = new Map<string, number>()
-  const loads = new Map<string, number>()
-  for (let head = queue.length - 1; head >= 1; head--) {
-    const id = queue[head]!
-    const total = (byId.get(id)!.mass || 1) + (incoming.get(id) ?? 0)
-    loads.set(id, total)
-    const below = (resting.get(id) ?? []).filter((other) => distance.has(other) && distance.get(other)! < distance.get(id)! && !(other !== GROUND && partition(other)))
-    for (const other of below) incoming.set(other, (incoming.get(other) ?? 0) + total / below.length)
-  }
-  return loads
+  const partOf = (k: number): StructurePart | undefined => (k === 0 ? undefined : kept[k - 1])
+  const solution = solveSupports({
+    size: ids.length, sharing, anchored: (k) => k === 0, active: (k) => k === 0 || partOf(k)!.role !== 'none', partition: (k) => partOf(k)?.role === 'partition',
+    supportsOf: (k) => edges[k]!,
+  })
+  const loads = distributeLoads(solution, (k) => (k === 0 ? 0 : partOf(k)!.mass || 1))
+  const out = new Map<string, number>()
+  for (const k of solution.reached) if (k !== 0) out.set(ids[k]!, loads[k]!)
+  return out
 }
 
 export interface SizingOptions {
@@ -53,6 +40,8 @@ export interface SizingOptions {
   redundancy: number
   /** Fraction of capacity every other structural part uses at rest. */
   safetyOthers: number
+  /** Default `all`. */
+  sharing?: LoadSharing
 }
 
 const isBearing = (part: StructurePart): boolean => part.role === 'column' || part.role === 'wall'
@@ -69,10 +58,10 @@ function isRoofFrame(part: StructurePart): boolean {
 }
 
 export function sizeCapacities(parts: readonly StructurePart[], supports: readonly Support[], options: SizingOptions): Map<string, number> {
-  const loads = loadsAtRest(parts, supports)
+  const loads = loadsAtRest(parts, supports, undefined, options.sharing)
   const worst = new Map<string, number>()
   for (const part of parts.filter(isBearing)) {
-    for (const [id, load] of loadsAtRest(parts, supports, part.id)) {
+    for (const [id, load] of loadsAtRest(parts, supports, part.id, options.sharing)) {
       const before = loads.get(id)
       if (before && load / before > (worst.get(id) ?? 1)) worst.set(id, load / before)
     }

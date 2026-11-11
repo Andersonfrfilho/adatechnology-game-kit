@@ -1,3 +1,5 @@
+import { distributeLoads, solveSupports } from '@adatechnology/game-load-path'
+import type { SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
@@ -1043,47 +1045,42 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return 2 * far
   }
 
-  /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
+  /** A joint the spec lays one way: one end rests on the other. */
+  const directed = (j: JointRT): boolean => j.bears === 'a_on_b' || j.bears === 'b_on_a'
+
+  /**
+   * Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. What carries what, the order
+   * the load goes down and how it is shared are the load path rule of `game-load-path` (the structure that sized the building uses the same one).
+   */
   const solveStructure = (o: ObjRT) => {
     o.maxStress = 0
     if (!o.hasStructure) return
     const parts = o.parts
     const n = parts.length
-    const dist = new Array<number>(n).fill(-1)
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
     const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
+    // what each part rests on through its bearing joints that hold
+    const edges: SupportEdge[][] = parts.map((p, i) => {
+      const out: SupportEdge[] = []
+      for (const j of o.byPart.get(p.spec.id)!) {
+        if (j.st.open || !j.bears) continue
+        const k = restsOn(o, j, i)
+        if (k >= 0) out.push({ on: k, directed: directed(j) })
+      }
+      return out
+    })
     // a part whose supports leave it a longer span than it holds (`structure.maxSpan`) is out, and so is what stood on it only through it
     const out = new Set<number>()
-    let queue: number[] = []
-    let lowerOf = new Map<number, number[]>()
+    const graph: SupportGraph = {
+      size: n, sharing: o.spec.loadSharing ?? 'nearest', anchored: (i) => parts[i].anchored, active: (i) => ok(i) && !out.has(i), partition: isPartition,
+      supportsOf: (i) => edges[i],
+    }
+    let solution = solveSupports(graph)
+    const lowerOf = (i: number): readonly number[] => solution.carriers.get(i) ?? []
     for (;;) {
-      dist.fill(-1)
-      queue = []
-      for (let i = 0; i < n; i++) if (ok(i) && !out.has(i) && parts[i].anchored) {
-        dist[i] = 0
-        queue.push(i)
-      }
-      for (let h = 0; h < queue.length; h++) {
-        const s = queue[h]
-        if (isPartition(s)) continue
-        for (const j of o.byPart.get(parts[s].spec.id)!) {
-          if (j.st.open || !j.bears) continue
-          const r = j.ia === s ? j.ib : j.ia
-          if (dist[r] >= 0 || !ok(r) || out.has(r) || restsOn(o, j, r) !== s) continue
-          dist[r] = dist[s] + 1
-          queue.push(r)
-        }
-      }
-      lowerOf = new Map<number, number[]>()
       let dropped = false
-      for (const i of queue) {
-        const lower: number[] = []
-        for (const j of o.byPart.get(parts[i].spec.id)!) {
-          if (j.st.open || !j.bears) continue
-          const k = restsOn(o, j, i)
-          if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
-        }
-        lowerOf.set(i, lower)
+      for (const i of solution.reached) {
+        const lower = lowerOf(i)
         const max = parts[i].spec.structure?.maxSpan
         const tooLong = max !== undefined && freeSpan(parts[i], lower.map((k) => parts[k])) > max
         // a slab the spec itself lays over fewer supports than a resting slab needs (a porch roof on its posts and a ledger, a canvas on its poles) is
@@ -1096,29 +1093,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
       if (!dropped) break
+      solution = solveSupports(graph)
     }
-    const incoming = new Array<number>(n).fill(0)
+    const dist = solution.distance
     // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
     // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
     // and bends that one only if it is away from its own supports
     const bending = new Array<number>(n).fill(0)
     const through: Array<Array<{ at: Vec3; mass: number; over: number }>> = parts.map(() => [])
     const pass = (k: number, at: Vec3, mass: number) => {
-      const over = overSupportAt(o, parts[k], at, lowerOf.get(k) ?? [])
+      const over = overSupportAt(o, parts[k], at, lowerOf(k))
       if (over < 0) bending[k] += mass
       else through[k].push({ at, mass, over })
     }
-    for (let h = queue.length - 1; h >= 0; h--) {
-      const i = queue[h]
-      const total = parts[i].st.mass + incoming[i]
-      parts[i].st.load = total
-      const lower = lowerOf.get(i)!
-      for (const k of lower) incoming[k] += total / lower.length
-      if (lower.length === 0) continue
-      const bulk = parts[i].bend ? parts[i].st.mass + bending[i] : total
-      for (const k of lower) if (parts[k].bend) pass(k, contactCentre(parts[k], parts[i]), bulk / lower.length)
-      if (parts[i].bend) for (const item of through[i]) if (parts[item.over]?.bend) pass(item.over, item.at, item.mass)
-    }
+    distributeLoads(solution, (i) => parts[i].st.mass, {
+      settled: (i, load) => {
+        parts[i].st.load = load
+        if (parts[i].bend && lowerOf(i).length) for (const item of through[i]) if (parts[item.over]?.bend) pass(item.over, item.at, item.mass)
+      },
+      share: (i, k) => {
+        if (!parts[k].bend) return
+        const bulk = parts[i].bend ? parts[i].st.mass + bending[i] : parts[i].st.load!
+        pass(k, contactCentre(parts[k], parts[i]), bulk / lowerOf(i).length)
+      },
+    })
     for (let i = 0; i < n; i++) {
       const p = parts[i]
       o.unsup[i] = false
@@ -1130,10 +1128,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.unsup[i] = o.anyAnchor && !isLost(p) && !p.orphan
         continue
       }
-      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p, borneOn(p, (lowerOf.get(i) ?? []).map((k) => parts[k])), throughOf(p)))
+      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p, borneOn(p, lowerOf(i).map((k) => parts[k])), throughOf(p)))
       if (p.bend) {
         p.bendLoad = p.st.mass + bending[i]
-        const bent = restFlexure(o, p, lowerOf.get(i) ?? [])
+        const bent = restFlexure(o, p, lowerOf(i))
         p.st.flexure = bent
         p.snap = bent > 1 && !p.st.stripped && !sectionOf(p, p.bend.gravity).reinforced
         // a beam or slab carries its load in bending: the load the solver routes through it is not a compression it takes, unless a designer gave

@@ -2,6 +2,7 @@ import type { DestructibleSpec, JointSpec, MaterialId, PartSpec, PileSpec, SoilP
 import { GRAVITY, MATERIALS, SOILS, assemblyPart, partMass, pileLength, profileOf, sizeRebar } from '@adatechnology/game-destruction'
 import type { SoilDef } from '@adatechnology/game-destruction'
 import { sizeCapacities } from './loads'
+import type { LoadSharing } from '@adatechnology/game-load-path'
 import { GROUND } from './types'
 import { resolveSlabPanels } from './slab-panels'
 import type { SlabPanelOptions } from './slab-panels'
@@ -32,6 +33,8 @@ export interface DestructibleSpecOptions {
   filter?: (part: StructurePart) => boolean
   /** `false` keeps the capacity of the material instead of sizing it from the load. */
   sized?: boolean
+  /** How the sizing shares a part's load among its supports (default `all`; `nearest` as the Visor de casas 3D sized its houses). */
+  loadSharing?: LoadSharing
   /** Metres the anchored terrain slab reaches beyond the parts (default 6). */
   terrainMargin?: number
   /** In the `coarse` detail, the window gaps of each wall as its `apertures` (default true; false only to reproduce the Visor de casas 3D spec, which has none). */
@@ -172,7 +175,7 @@ export function toDestructibleSpec(structure: PlanStructure, options: Destructib
   const slabbed = slabOptions ? applySlabPanels({ parts: roled, supports: filtered }, structure, slabOptions) : { parts: roled, supports: filtered }
   const walled = applyPanels(slabbed, structure, detail, slabOptions && structure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined)
   const panels = slabOptions && detail !== 'coarse' ? deepenBondBeams(walled, structure, slabOptions) : walled
-  const sizing = { safety, redundancy, safetyOthers }
+  const sizing = { safety, redundancy, safetyOthers, sharing: options.loadSharing ?? 'all' }
   // a ground beam is foundation, as the anchored world sees it: what stands on it is as near the ground as what stands on the soil
   const foundation = new Set(panels.parts.filter((part) => part.beamKind === 'ground_beam').map((part) => part.id))
   const onFoundation = foundation.size ? panels.supports.filter((s) => !foundation.has(s.part)).map((s) => (foundation.has(s.on) ? { ...s, on: GROUND } : s)) : panels.supports
@@ -190,7 +193,7 @@ export function toDestructibleSpec(structure: PlanStructure, options: Destructib
   const infill = new Set(portico && slabOptions ? kept.filter((part) => part.role === 'wall').map((part) => part.id) : [])
   const beams = new Set(parts.filter((part) => part.role === 'beam' && (part.beamKind === 'bond_beam' || part.slab !== undefined)).map((part) => part.id))
   const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false || (beams.has(s.part) && infill.has(s.on)) ? false : 'a_on_b' }))
-  const built: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'] }
+  const built: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'], loadSharing: options.loadSharing ?? 'all' }
   // one part per wall: the window gaps are apertures of it (the finer details cut the wall around them)
   const spec = detail === 'coarse' && options.windowApertures !== false ? withWindowApertures(built, structure.openings) : built
   return onSoil(withRebar(spec, structure, options, portico, slabOptions !== undefined), structure, options)

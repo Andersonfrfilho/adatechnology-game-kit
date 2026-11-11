@@ -24,6 +24,8 @@ export const STRUCTURAL_VIOLATION = {
   FLOATING_PART: 'FLOATING_PART',
   /** A concrete beam longer than a lintel that rests on masonry alone (no pillar, beam or slab carries it). */
   BEAM_ON_WEAK_MASONRY: 'BEAM_ON_WEAK_MASONRY',
+  /** A beam resting on a beam shallower than itself (NBR 6118 18.3.7: the main beam of an indirect support is at least as deep as the beam it carries). */
+  BEAM_ON_SHALLOWER_BEAM: 'BEAM_ON_SHALLOWER_BEAM',
   /** A concrete pillar or beam below the NBR 6118 minimum section, or a beam between point supports shallower than a tenth of its span. */
   CONCRETE_BELOW_MIN_SECTION: 'CONCRETE_BELOW_MIN_SECTION',
   /** A concrete pillar or beam with no steel (the construction has no rebar). */

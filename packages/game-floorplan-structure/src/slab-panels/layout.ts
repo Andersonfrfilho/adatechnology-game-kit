@@ -97,7 +97,9 @@ function choose(rect: Rect, lines: readonly WallLine[], options: SlabPanelOption
   }
   const boundary = candidates.filter((c) => c.coverage >= options.lineCoverage)
   // a side within the tolerance of a wall line of `maxSpan` spans it (the panel is measured between the walls' centre lines)
-  if (Math.min(width, depth) > options.maxSpan + options.lineTolerance) {
+  // a panel whose sides are close spans both ways on its four edges (laje armada em cruz) up to `twoWayMaxSpan`; one twice as long as wide spans one way
+  const twoWay = Math.max(width, depth) < 2 * Math.min(width, depth) && Math.max(width, depth) <= options.twoWayMaxSpan + options.lineTolerance
+  if (Math.min(width, depth) > options.maxSpan + options.lineTolerance && !twoWay) {
     // across the longer side (either way on a square) along the line a wall hides best (a partial wall still hides the beam where it stands); across the
     // middle only where none does
     const longer: 'u' | 'v' = width >= depth ? 'v' : 'u'

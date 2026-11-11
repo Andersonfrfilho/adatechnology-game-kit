@@ -16,9 +16,11 @@ export interface SlabPanelOptions {
   lineTolerance: number
   /** A panel with less than this share of its area inside the footprint of the slab is left out (default 0.5). */
   footprintShare: number
-  /** Thickness of a panel that spans both ways is its short side over this (default 40: `h = L/40`). */
+  /** Longest side of a panel that spans both ways (sides under 2:1, laje armada em cruz on its four edges), metres (default 6.5). */
+  twoWayMaxSpan: number
+  /** Thickness of a panel that spans both ways is its short side over this (default 35: `h = L/35`, a panel simply supported on its edges). */
   thicknessRatio: number
-  /** Thickness of a panel that spans one way (sides 2:1 or longer) is its short side over this (default 30: the deflection of NBR 6118 13.3 asks more of it). */
+  /** Thickness of a panel that spans one way (sides 2:1 or longer) is its short side over this (default 25: simply supported, the deflection of NBR 6118 13.3 asks more of it). */
   oneWayThicknessRatio: number
   /** Thinnest floor slab, metres (default 0.10). */
   floorMinThickness: number
@@ -42,7 +44,7 @@ export interface SlabPanelOptions {
 }
 
 export const SLAB_PANEL_DEFAULTS: Readonly<SlabPanelOptions> = {
-  maxSpan: 5, minPanel: 1.5, lineCoverage: 0.6, doorGap: 1.3, lineTolerance: 0.2, footprintShare: 0.5, thicknessRatio: 40, oneWayThicknessRatio: 30, floorMinThickness: 0.1, roofMinThickness: 0.08,
+  maxSpan: 5, minPanel: 1.5, lineCoverage: 0.6, doorGap: 1.3, lineTolerance: 0.2, footprintShare: 0.5, twoWayMaxSpan: 6.5, thicknessRatio: 35, oneWayThicknessRatio: 25, floorMinThickness: 0.1, roofMinThickness: 0.08,
   beamDepthRatio: 10, beamMinDepth: 0.25, beamStep: 0.05, beamWidthRatio: 3, columnSide: 0.2, maxStoreys: 8,
 }
 

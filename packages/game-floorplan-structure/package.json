@@ -44,7 +44,8 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
-    "@adatechnology/game-destruction": "workspace:^"
+    "@adatechnology/game-destruction": "workspace:^",
+    "@adatechnology/game-load-path": "workspace:^"
   },
   "peerDependencies": {
     "@adatechnology/game-floorplan": "workspace:^"

@@ -4,6 +4,7 @@ import { applyPanels } from '../wall-detail'
 import type { SourceDoor, PlanStructure, WallDetail } from '../types'
 import { STRUCTURAL_VIOLATION } from './codes'
 import type { StructuralViolation } from './codes'
+import { applySlabPanels, resolveSlabPanels } from '../slab-panels'
 import { concreteViolations, loadPathViolations } from './load-path'
 import { isMasonryWall, masonryViolations } from './masonry'
 import { openingViolations } from './openings'
@@ -24,7 +25,9 @@ export interface ValidateStructureOptions {
 export function validateStructure(structure: PlanStructure, options: ValidateStructureOptions = {}): StructuralViolation[] {
   const detail = options.wallDetail ?? 'panels'
   const built = applyPanels({ parts: structure.parts, supports: structure.supports }, structure, detail)
-  const out = [...loadPathViolations(structure), ...concreteViolations({ ...built, construction: structure.construction }, isMasonryWall)]
+  // the concrete as the house is built: the slabs cut into panels on their beams and the pillars those need
+  const framed = applySlabPanels(built, structure, resolveSlabPanels(true)!)
+  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, isMasonryWall)]
   if (structure.construction.system !== 'masonry') return out
   return [...out, ...masonryViolations(structure), ...openingViolations(structure, built.parts, options.doors ?? [])]
 }

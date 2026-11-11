@@ -124,7 +124,8 @@ function seatSlabs(slabs: Solid[], carriers: Solid[], beams: readonly Solid[]): 
   for (const c of carriers) {
     const over = slabs.filter((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05 && c.y1 <= s.y1 + EPS && c.y0 < s.y0 - EPS)
     // cast together: the beam runs a little into the slab (one concrete, one colour), so no seam is left for the sun's shadow to leak light through
-    if (over.length) c.y1 = Math.min(...over.map((s) => s.y0 + Math.min(SLAB_BITE, (s.y1 - s.y0) / 2)))
+    // (into every slab it carries: one thinner than the others over it has its bottom higher)
+    if (over.length) c.y1 = Math.max(...over.map((s) => s.y0 + Math.min(SLAB_BITE, (s.y1 - s.y0) / 2)))
   }
 }
 

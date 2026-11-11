@@ -331,6 +331,12 @@ export interface DestructibleSpec {
    * this object. `false` keeps the object out of the wind. Without the world's `wind` it does nothing.
    */
   wind?: WindExposure | false
+  /**
+   * How the load of a part goes down to what it rests on. `nearest` (default): only to its supports closest to the ground. `all`: to every support its
+   * joints lay it on (`bears: 'a_on_b'`), at any distance from the ground: a beam on the beam it frames into (NBR 6118 18.3.7), a slab on all four of its
+   * edges (a two-way slab).
+   */
+  loadSharing?: 'nearest' | 'all'
 }
 
 /** What belongs to the place and the shape of one building in the wind (`DestructibleSpec.wind`; the world's `wind` has the same fields as defaults). */
