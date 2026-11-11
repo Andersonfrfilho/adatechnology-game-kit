@@ -1,4 +1,5 @@
 import { MIN_PILLAR_AREA, MIN_PILLAR_SIDE } from '../validate/codes'
+import { getMasonryUnit } from './catalog'
 import { MASONRY_USE } from './types'
 import type { MasonrySystem, MasonryUnit } from './types'
 
@@ -31,3 +32,21 @@ export const pillarLoadFactor = (side: number): number => (side >= NBR_FULL_PILL
 /** Whether `unit` can build a house of `system` (a structural wall needs a unit graded for it). */
 export const unitServes = (unit: MasonryUnit, system: MasonrySystem): boolean =>
   unit.uses.includes(system === 'structural' ? MASONRY_USE.STRUCTURAL : MASONRY_USE.SEALING)
+
+/** How a masonry wall is laid: the height of a course and the length of a unit, each with its mortar joint. */
+export interface Coursing {
+  readonly courseHeight: number
+  readonly unitLength: number
+}
+
+/**
+ * The courses a wall of `unitId` (a unit of the catalog) is laid in, else those of its assembly's units (`size` of `game-destruction`, the wall the world
+ * breaks): what the wall the world breaks into units and the wall the renderer draws are laid with.
+ */
+export function coursingOf(unitId: string | undefined, assemblyUnits: { readonly size: readonly number[] } | undefined): Coursing | undefined {
+  if (unitId !== undefined) {
+    const unit = getMasonryUnit(unitId)
+    return { courseHeight: round2(unit.height + MORTAR_JOINT), unitLength: round2(unit.length + MORTAR_JOINT) }
+  }
+  return assemblyUnits ? { courseHeight: assemblyUnits.size[1]!, unitLength: assemblyUnits.size[0]! } : undefined
+}

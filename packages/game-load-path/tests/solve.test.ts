@@ -61,3 +61,18 @@ describe('the load path: what carries what', () => {
     expect(load('p')).toBe(2)
   })
 })
+
+describe('sizing from the loads', () => {
+  it('a part uses its safety share at rest, and one that must hold a loss stays under the redundancy after the worst one', async () => {
+    const { capacitiesByLoad } = await import('../src')
+    const base = new Map([['p1', 10], ['p2', 10], ['beam', 5]])
+    const lostP1 = new Map([['p2', 20], ['beam', 5]])
+    const capacities = capacitiesByLoad({
+      parts: ['p1', 'p2', 'beam'], loadOf: (part) => base.get(part), losses: [(part) => lostP1.get(part)], safety: (part) => (part === 'beam' ? 0.45 : 0.65), redundancy: 0.97,
+      redundant: (part) => part !== 'beam',
+    })
+    expect(capacities.get('p1')).toBeCloseTo(10 / 0.65)
+    expect(capacities.get('p2')).toBeCloseTo(20 / 0.97)
+    expect(capacities.get('beam')).toBeCloseTo(5 / 0.45)
+  })
+})

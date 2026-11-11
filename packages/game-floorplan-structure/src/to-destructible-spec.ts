@@ -4,7 +4,7 @@ import type { SoilDef } from '@adatechnology/game-destruction'
 import { sizeCapacities } from './loads'
 import type { LoadSharing } from '@adatechnology/game-load-path'
 import { GROUND } from './types'
-import { resolveSlabPanels } from './slab-panels'
+import { HOUSE_SHARING, resolveSlabPanels } from './slab-panels'
 import type { SlabPanelOptions } from './slab-panels'
 import { applySlabPanels, beamDepthFor, deepenBondBeams } from './slab-panels'
 import { applyPanels, applyUnits } from './wall-detail'
@@ -193,7 +193,7 @@ export function toDestructibleSpec(structure: PlanStructure, options: Destructib
   const infill = new Set(portico && slabOptions ? kept.filter((part) => part.role === 'wall').map((part) => part.id) : [])
   const beams = new Set(parts.filter((part) => part.role === 'beam' && (part.beamKind === 'bond_beam' || part.slab !== undefined)).map((part) => part.id))
   const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false || (beams.has(s.part) && infill.has(s.on)) ? false : 'a_on_b' }))
-  const built: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'], loadSharing: options.loadSharing ?? 'all' }
+  const built: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'], loadSharing: options.loadSharing ?? HOUSE_SHARING }
   // one part per wall: the window gaps are apertures of it (the finer details cut the wall around them)
   const spec = detail === 'coarse' && options.windowApertures !== false ? withWindowApertures(built, structure.openings) : built
   return onSoil(withRebar(spec, structure, options, portico, slabOptions !== undefined), structure, options)

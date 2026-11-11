@@ -1,5 +1,5 @@
-import { distributeLoads, solveSupports } from '@adatechnology/game-load-path'
-import type { SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
+import { SUPPORT_TOLERANCE, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
+import type { PlanePoint, SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
@@ -17,8 +17,6 @@ import type { BendGeometry } from './flexure'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
-import { restsOver } from './support-hull'
-import type { PlanePoint } from './support-hull'
 import type { VoidRun } from './foundation-span'
 import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, SETTLEMENT_POINTS, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
@@ -146,8 +144,6 @@ const SEVER_BALLISTIC = 2
 const TEAR_JOULES = 150
 /** Running number of the torn pieces (their ids). */
 let tears = 0
-/** Metres two parts may be apart and still rest on each other, for the span of a beam or a slab. */
-const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096

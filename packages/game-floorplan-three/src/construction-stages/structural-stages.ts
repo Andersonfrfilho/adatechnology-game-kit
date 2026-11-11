@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, getMasonryUnit, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
+import { PLASTER_PER_FACE, applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
@@ -66,7 +66,7 @@ const overlapArea = (a: readonly number[], b: readonly number[]): number =>
   Math.max(0, Math.min(a[2]!, b[2]!) - Math.max(a[0]!, b[0]!)) * Math.max(0, Math.min(a[3]!, b[3]!) - Math.max(a[1]!, b[1]!))
 
 /** Plaster each side of a bare wall: the bricks, and the bond beams and lintels cast in the wall's line, are this much narrower than the finished wall. */
-const PLASTER = 0.014
+const PLASTER = PLASTER_PER_FACE
 
 /** A beam cast in a wall's line (a bond beam, a lintel, a slab's beam over a partition) as wide as the wall's bricks: the plaster covers both later. */
 function toCoreWidth(b: Solid): Solid {
@@ -239,64 +239,6 @@ function wallRuns(walls: readonly StructurePart[]): { part: StructurePart; gaps:
   return runs
 }
 
-export interface InteriorColumnLocation {
-  readonly u: number
-  readonly v: number
-  readonly floor: number
-}
-
-export function findInteriorColumnLocations(rawStructure: PlanStructure): readonly InteriorColumnLocation[] {
-  const parts = rawStructure.parts || []
-  const TOL = 0.12
-  const MERGE_DIST = 0.55
-  const SPACING = 4.0
-  const existing = parts
-    .filter((p) => p.role === 'column' && !p.id.startsWith('tank_') && !p.id.startsWith('pillar_'))
-    .map((p) => [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2] as const)
-  const isTaken = (u: number, v: number): boolean => existing.some(([eu, ev]) => Math.hypot(eu - u, ev - v) < MERGE_DIST)
-  const wallLines = parts
-    .filter((p) => p.role === 'wall' || p.role === 'partition')
-    .map((p) => {
-      const alongU = p.aabb[2] - p.aabb[0] >= p.aabb[3] - p.aabb[1]
-      return {
-        alongU,
-        line: alongU ? (p.aabb[1] + p.aabb[3]) / 2 : (p.aabb[0] + p.aabb[2]) / 2,
-        from: alongU ? p.aabb[0] : p.aabb[1],
-        to: alongU ? p.aabb[2] : p.aabb[3],
-        floor: p.floor ?? 0,
-        isPartition: p.role === 'partition',
-      }
-    })
-  const columns: Array<{ u: number; v: number; floor: number }> = []
-  const free = (u: number, v: number, floor: number): boolean => !isTaken(u, v) && !columns.some((col) => col.floor === floor && Math.hypot(col.u - u, col.v - v) < MERGE_DIST)
-  for (let i = 0; i < wallLines.length; i++) {
-    for (let j = i + 1; j < wallLines.length; j++) {
-      const w1 = wallLines[i]!, w2 = wallLines[j]!
-      if (w1.floor !== w2.floor || w1.alongU === w2.alongU || !(w1.isPartition || w2.isPartition)) continue
-      const wu = w1.alongU ? w1 : w2, wv = w1.alongU ? w2 : w1
-      const u = wv.line, v = wu.line
-      if (u >= wu.from - TOL && u <= wu.to + TOL && v >= wv.from - TOL && v <= wv.to + TOL && free(u, v, wu.floor)) columns.push({ u, v, floor: wu.floor })
-    }
-  }
-  for (const w of wallLines.filter((x) => x.isPartition && x.to - x.from > SPACING)) {
-    const along = [...existing.map(([u, v]) => ({ u, v, floor: w.floor })), ...columns]
-      .filter((c) => c.floor === w.floor && Math.abs((w.alongU ? c.v : c.u) - w.line) < 0.25)
-      .map((c) => (w.alongU ? c.u : c.v))
-      .filter((a) => a >= w.from - 0.25 && a <= w.to + 0.25)
-      .sort((a, b) => a - b)
-    for (let k = 1; k < along.length; k++) {
-      const gap = along[k]! - along[k - 1]!
-      if (gap <= SPACING) continue
-      const divs = Math.ceil(gap / SPACING)
-      for (let d = 1; d < divs; d++) {
-        const pt = along[k - 1]! + (gap * d) / divs
-        const u = w.alongU ? pt : w.line, v = w.alongU ? w.line : pt
-        if (free(u, v, w.floor)) columns.push({ u, v, floor: w.floor })
-      }
-    }
-  }
-  return columns
-}
 
 /** The structure the stages draw: the plan's structure in panels (slab panels on beams, walls cut at their pillars and openings), with the outbuildings. */
 function detailedParts(rawStructure: PlanStructure): StructurePart[] {
@@ -347,12 +289,6 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
 
   const columnParts = parts.filter((p) => p.role === 'column' && !isFoundation(p))
   const columns: (Solid & { readonly tank: boolean; readonly material: string })[] = columnParts.map((p) => ({ ...solidOf(p), tank: p.id.startsWith('tank_'), material: p.material }))
-  // pillars at the partitions' junctions belong to confined masonry: a timber, steel or improvised house has none
-  const interior = rawStructure.construction.frame.rebar ? findInteriorColumnLocations(rawStructure) : []
-  interior.forEach((c, k) => {
-    const y0 = rawStructure.levels[c.floor] ?? c.floor * 2.8
-    columns.push({ id: `interior_column_${c.floor}_${k}`, aabb: [c.u - 0.098, c.v - 0.098, c.u + 0.098, c.v + 0.098], y0, y1: rawStructure.levels[c.floor + 1] ?? y0 + 2.8, floor: c.floor, tank: false, material: 'concrete' })
-  })
   const slabs = parts.filter((p) => p.role === 'slab' && !isFoundation(p)).map(solidOf)
   const beamParts = parts.filter((p) => p.role === 'beam' && !isFoundation(p))
   const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf).map(toCoreWidth)
@@ -376,7 +312,6 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
 
   const batches = createMasonryBatches()
   const unitId = rawStructure.construction.walls.unit
-  const unit = typeof unitId === 'string' ? getMasonryUnit(unitId) : undefined
   const laid: Solid[] = []
   const solids: readonly Solid[] = [...foundations, ...columns, ...beams, ...slabs, ...lintels]
   for (const run of wallRuns(parts.filter((x) => x.role === 'wall' || x.role === 'partition'))) {
@@ -394,7 +329,7 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
       const cut = cutOf(wall, o.aabb, o.y0, o.y1)
       if (cut) cuts.push(cut)
     }
-    buildMasonryPanel(batches, p, cuts, (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, unit)
+    buildMasonryPanel(batches, p, cuts, (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, typeof unitId === 'string' ? unitId : undefined)
     laid.push(solidOf(p))
   }
   for (const mesh of masonryMeshes(THREE, batches, mats, 'masonry')) masonry.add(mesh)

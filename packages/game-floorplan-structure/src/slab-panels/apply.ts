@@ -10,6 +10,7 @@ import { layoutPanels, linesOf, runsOf, shareInside } from './layout'
 import type { Cut } from './layout'
 import { getMasonryUnit, pillarSectionOf } from '../masonry-units'
 import { depthToCarry, effectiveSpan, sectionDepthAt } from '../validate/load-path'
+import { carriesShare } from '@adatechnology/game-load-path'
 import { pillarBox } from '../structure/context'
 import type { PillarSection } from '../structure/context'
 import type { SlabPanelOptions } from './options'
@@ -22,6 +23,8 @@ const UP = 0.15
 /** A beam needs a support this close to each of its ends. */
 const END_REACH = 0.35
 const EPS = 1e-6
+/** How a house shares its loads (its spec says the same: `toDestructibleSpec`). */
+export const HOUSE_SHARING = 'all' as const
 /** Metres of a beam's end another beam holds where it frames into it. */
 const BEARING = 0.15
 /** Wall left between a pillar and the end of the wall it stands in, metres. */
@@ -165,8 +168,10 @@ function propsUnder(context: Context, dist: ReadonlyMap<string, number>, y0: num
 
 /** What holds the beam: of the props that touch it only the ones nearest to the ground do (the world rests a part on those). */
 function heldBy(line: Line, width: number, props: readonly Prop[]): { intervals: Interval[]; used: Prop[] } {
-  // every one it rests on carries its share (the house's spec shares the load among all its supports: `loadSharing: 'all'`)
-  const used = props.map((prop) => ({ prop, interval: holds(line, width, prop.box) })).filter((x): x is { prop: Prop; interval: Interval } => x.interval !== undefined)
+  // which of what it touches carries it is the load path rule (`carriesShare` of game-load-path, as the house's spec shares it: `loadSharing: 'all'`)
+  const touching = props.map((prop) => ({ prop, interval: holds(line, width, prop.box) })).filter((x): x is { prop: Prop; interval: Interval } => x.interval !== undefined)
+  const own = touching.length ? Math.min(...touching.map((x) => x.prop.dist)) + 1 : 0
+  const used = touching.filter((x) => carriesShare(HOUSE_SHARING, { directed: true }, x.prop.dist, own))
   return { intervals: used.map((x) => x.interval), used: used.map((x) => x.prop) }
 }
 

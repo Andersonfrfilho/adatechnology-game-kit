@@ -253,8 +253,10 @@ describe('houses in the room', () => {
     expect(house.groups['stage:2:frame']?.visible).toBe(true)
     expect(house.groups['stage:3:masonry']?.visible).toBe(false)
     const frameGroup = house.groups['stage:2:frame']!
-    const intCols = frameGroup.children.filter((c) => String(c.userData.structurePartId || '').startsWith('interior_column_'))
-    expect(intCols.length).toBeGreaterThan(0)
+    // the frame draws the structure's own pillars (the slab's among them), none the renderer makes up
+    const ids = frameGroup.children.map((c) => String(c.userData.structurePartId || ''))
+    expect(ids.some((id) => id.startsWith('pillar_'))).toBe(true)
+    expect(ids.some((id) => id.startsWith('interior_column_'))).toBe(false)
 
     r.set('construction_level', 3)
     expect(stageMetric()).toContain('3 ·')

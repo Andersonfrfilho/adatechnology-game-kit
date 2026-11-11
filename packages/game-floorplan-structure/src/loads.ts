@@ -1,4 +1,4 @@
-import { distributeLoads, solveSupports } from '@adatechnology/game-load-path'
+import { capacitiesByLoad, distributeLoads, solveSupports } from '@adatechnology/game-load-path'
 import type { LoadSharing, SupportEdge } from '@adatechnology/game-load-path'
 
 import { GROUND } from './types'
@@ -59,20 +59,13 @@ function isRoofFrame(part: StructurePart): boolean {
 
 export function sizeCapacities(parts: readonly StructurePart[], supports: readonly Support[], options: SizingOptions): Map<string, number> {
   const loads = loadsAtRest(parts, supports, undefined, options.sharing)
-  const worst = new Map<string, number>()
-  for (const part of parts.filter(isBearing)) {
-    for (const [id, load] of loadsAtRest(parts, supports, part.id, options.sharing)) {
-      const before = loads.get(id)
-      if (before && load / before > (worst.get(id) ?? 1)) worst.set(id, load / before)
-    }
-  }
-  const capacities = new Map<string, number>()
-  for (const part of parts) {
-    const load = loads.get(part.id)
-    if (load === undefined || part.role === 'none') continue
-    const afterLoss = (worst.get(part.id) ?? 1) / options.redundancy
-    const factor = isBearing(part) ? Math.max(1 / options.safety, afterLoss) : isRoofFrame(part) ? Math.max(1 / options.safetyOthers, afterLoss) : 1 / options.safetyOthers
-    capacities.set(part.id, Math.max(1, load * factor))
-  }
-  return capacities
+  const losses = parts.filter(isBearing).map((lost) => {
+    const after = loadsAtRest(parts, supports, lost.id, options.sharing)
+    return (part: StructurePart): number | undefined => after.get(part.id)
+  })
+  const sized = capacitiesByLoad({
+    parts: parts.filter((part) => part.role !== 'none'), loadOf: (part) => loads.get(part.id), losses, minimum: 1, redundancy: options.redundancy,
+    safety: (part) => (isBearing(part) ? options.safety : options.safetyOthers), redundant: (part) => isBearing(part) || isRoofFrame(part),
+  })
+  return new Map([...sized].map(([part, capacity]) => [part.id, capacity]))
 }

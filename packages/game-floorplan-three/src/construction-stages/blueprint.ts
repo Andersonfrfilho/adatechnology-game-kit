@@ -1,8 +1,7 @@
 import type * as THREE_NS from 'three'
-import type { PlanStructure, Structure, StructurePart } from '@adatechnology/game-floorplan-structure'
+import type { Structure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { HouseRecord, Rect, Three } from '../kernel-types.js'
 import { renderBlueprintDataUrl } from './blueprint-canvas.js'
-import { findInteriorColumnLocations } from './structural-stages.js'
 
 export { renderBlueprintDataUrl }
 
@@ -213,16 +212,6 @@ export function buildBlueprintStage(
     if (!/^(column_|wall_column_|jamb_column_|footing_pier_)/.test(p.id)) continue
     const [u0, v0, u1, v1] = p.aabb
     addBoxMesh(THREE, group, u0 - 0.02, 0.01, v0 - 0.02, u1 + 0.02, 0.042, v1 + 0.02, pillarMat)
-  }
-
-  if (plan.structure) {
-    const intCols = findInteriorColumnLocations(plan.structure as unknown as PlanStructure)
-    const half = 0.09
-    for (const c of intCols) {
-      if (c.floor === 0) {
-        addBoxMesh(THREE, group, c.u - half - 0.02, 0.01, c.v - half - 0.02, c.u + half + 0.02, 0.042, c.v + half + 0.02, pillarMat)
-      }
-    }
   }
 
   if (Number.isFinite(bx0) && Number.isFinite(bx1)) {
