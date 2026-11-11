@@ -44,37 +44,31 @@ export function addRafter(
   const yEave = p.y0 - 0.04
   const yRidge = p.y1 - 0.06
 
-  const idxMatch = p.id.match(/\d+$/)
-  const rafterIdx = idxMatch ? parseInt(idxMatch[0], 10) : 0
-  const isEndRafter = rafterIdx === 0 || p.id.includes('_10')
-
   if (spanV >= spanU) {
     const cx = (u0 + u1) / 2
     const zEave = isSideA ? v0 : v1
     const zRidge = isSideA ? v1 : v0
     // Wall bearing point: inside the house envelope (not sticking out into the gutter/facade)
-    const zWall = isSideA ? v0 + overhang + 0.08 : v1 - overhang - 0.08
+    const zWall = isSideA ? v0 + overhang : v1 - overhang
 
     // Inclined rafter running under the roof slope
     addInclinedTimber(THREE, parent, [cx, yEave, zEave], [cx, yRidge, zRidge], radius, mat, p.id)
-    // Horizontal truss tie beam and king post only on interior trusses (never on exterior gable walls)
-    if (!isEndRafter && rafterIdx % 2 === 0) {
-      addInclinedTimber(THREE, parent, [cx, p.y0 - 0.02, zWall], [cx, p.y0 - 0.02, zRidge], 0.03, mat)
-      addInclinedTimber(THREE, parent, [cx, p.y0 - 0.02, zRidge], [cx, yRidge, zRidge], 0.03, mat)
-    }
+    // Horizontal truss tie beam resting safely on the wall bearing (never protruding through facade)
+    addInclinedTimber(THREE, parent, [cx, p.y0 - 0.02, zWall], [cx, p.y0 - 0.02, zRidge], 0.03, mat)
+    // King post (pontalete vertical) from tie beam to ridge
+    addInclinedTimber(THREE, parent, [cx, p.y0 - 0.02, zRidge], [cx, yRidge, zRidge], 0.03, mat)
   } else {
     const cz = (v0 + v1) / 2
     const xEave = isSideA ? u0 : u1
     const xRidge = isSideA ? u1 : u0
-    const xWall = isSideA ? u0 + overhang + 0.08 : u1 - overhang - 0.08
+    const xWall = isSideA ? u0 + overhang : u1 - overhang
 
     // Inclined rafter running under the roof slope
     addInclinedTimber(THREE, parent, [xEave, yEave, cz], [xRidge, yRidge, cz], radius, mat, p.id)
-    // Horizontal truss tie beam and king post only on interior trusses
-    if (!isEndRafter && rafterIdx % 2 === 0) {
-      addInclinedTimber(THREE, parent, [xWall, p.y0 - 0.02, cz], [xRidge, p.y0 - 0.02, cz], 0.03, mat)
-      addInclinedTimber(THREE, parent, [xRidge, p.y0 - 0.02, cz], [xRidge, yRidge, cz], 0.03, mat)
-    }
+    // Horizontal truss tie beam resting safely on the wall bearing
+    addInclinedTimber(THREE, parent, [xWall, p.y0 - 0.02, cz], [xRidge, p.y0 - 0.02, cz], 0.03, mat)
+    // King post (pontalete vertical) from tie beam to ridge
+    addInclinedTimber(THREE, parent, [xRidge, p.y0 - 0.02, cz], [xRidge, yRidge, cz], 0.03, mat)
   }
 }
 

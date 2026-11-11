@@ -50,8 +50,8 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       for (const c of R.rooms.filter(c => c.floor === f)) {
         if (c.type === 'void' || c.outbuilding || (c.type === 'elevator' && f > 0)) continue;
         const col = floorColor(c), parent = f > 0 ? ['slab_' + f + '_' + c.type, 'slab_' + f + '_' + c.id, 'slab_' + f].find(hasSlab) : null;
-        const floorTop = shared.ctx.constructionStages && f === 0 ? y0 + 0.012 : y0;
-        const floorBottom = shared.ctx.constructionStages && f === 0 ? y0 - 0.03 : y0 - 0.04;
+        const floorTop = f === 0 ? y0 + 0.012 : y0;
+        const floorBottom = f === 0 ? y0 - 0.03 : y0 - 0.04;
         for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], floorBottom, r[1], r[2], floorTop, r[3], col); }
       }
       if (f > 0) { // slab under the floor
@@ -61,14 +61,7 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       // ceiling of the rooms with nothing above
       cursor.group = 't' + f; const ceilingOf = hasSlab('slab_' + (f + 1)) ? 'slab_' + (f + 1) : (f === nA - 1 ? ['slab_ceiling', 'slab_top'].find(hasSlab) : null);
       const above = R.rooms.filter(c => c.floor === f + 1).flatMap(rectsOf);
-      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) {
-        const outb = shared.ctx.constructionStages && c.outbuilding ? R.outbuildings?.find((e) => e.id === c.id) : undefined;
-        const roomRects = outb ? [outb.aabb] : rectsOf(c);
-        for (const rc of subRects(roomRects, above)) for (const [pc, r] of tilesOf(ceilingOf, rc)) {
-          cursor.pc = pc;
-          bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2);
-        }
-      }
+      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(rectsOf(c), above)) for (const [pc, r] of tilesOf(ceilingOf, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); }
       cursor.pc = null;
     }
   }

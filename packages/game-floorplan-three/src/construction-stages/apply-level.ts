@@ -169,11 +169,11 @@ export function applyConstructionLevel(
       continue
     }
     if (name === 'stage:4:installations') {
-      child.visible = level === 4 || (level > 4 && waterOn)
+      child.visible = level === 4 || (level >= 4 && waterOn)
       continue
     }
     if (name === 'stage:7:roof_framing') {
-      child.visible = level === 7 || (level > 7 && !roofOn)
+      child.visible = (level === 7 && roofOn) || (level >= 7 && !roofOn)
       continue
     }
     if (name === 'roof') {
@@ -181,7 +181,7 @@ export function applyConstructionLevel(
       continue
     }
     if (name === 'attic_tank') {
-      child.visible = level >= 4 && (!roofOn || level < 7)
+      child.visible = level >= 4
       continue
     }
     if (/^t\d+$/.test(name)) {
@@ -199,7 +199,7 @@ export function applyConstructionLevel(
       const ud = obj.userData
       if (!ud) return
       if (ud.part === 'wall_pipe') {
-        obj.visible = false
+        obj.visible = waterOn
         return
       }
       if (typeof ud.constructionStage === 'string') {

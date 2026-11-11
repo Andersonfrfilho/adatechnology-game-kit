@@ -30,7 +30,7 @@ function addRebarCage(
       addStageBox(THREE, parent, x - r, yBase, z - r, x + r, yBase + height, z + r, rebarMat)
     }
   }
-  for (let y = yBase + 0.10; y < yBase + height - 0.04; y += 0.16) {
+  for (let y = yBase + 0.08; y < yBase + height - 0.03; y += 0.14) {
     addStageBox(THREE, parent, u0 + inset, y, v0 + inset, u1 - inset, y + 0.006, v1 - inset, rebarMat)
   }
 }
@@ -77,7 +77,6 @@ function processPart(
   p: StructurePart,
   mats: Record<string, THREE_NS.Material>,
   totalFloors = 1,
-  allParts: readonly StructurePart[] = [],
 ): void {
   const [u0, v0, u1, v1] = p.aabb
   const isGroundSlab = p.role === 'slab' && p.floor === 0 && !p.id.includes('top') && p.y0 < 0.3
@@ -99,7 +98,7 @@ function processPart(
     addStageBox(THREE, groups.frame, u0 - 0.008, p.y0, v0 - 0.008, u1 + 0.008, p.y1, v1 + 0.008, colMat, p.id)
     // Starter rebar in foundation (Level 1) only for ground columns (y0 <= 0.1), not roof/tank columns
     if (p.floor === 0 && p.material === 'concrete' && p.y0 <= 0.1) {
-      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.70, mats.rebar!)
+      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
     }
     // Top rebar extensions in frame (Level 2) only for ground-supported columns if there is an upper floor
     const hasUpperFloor = totalFloors > (p.floor ?? 0) + 1
@@ -117,39 +116,20 @@ function processPart(
     return
   }
   if (p.role === 'beam') {
-    // Synthetic slab panel beams placed across room spans by slab subdivision float in mid-air
-    // when interior columns are not present; skip them so only real structural bond beams and lintels remain
-    if (p.id.startsWith('slab_') || p.id.includes('_b')) {
-      return
-    }
     const isLintel = /lintel|sillbeam|sill_beam/.test(p.id)
-    if (isLintel) {
-      // If a perimeter tie beam / bond beam already spans this opening at or above lintel height,
-      // skip duplicate lintel to avoid coplanar z-fighting and shadow acne
-      const overlapsBondBeam = allParts.some(
-        (b) =>
-          b.role === 'beam' &&
-          !/lintel|sillbeam|sill_beam/.test(b.id) &&
-          (b.floor ?? 0) === (p.floor ?? 0) &&
-          Math.max(u0, b.aabb[0]) < Math.min(u1, b.aabb[2]) - 0.05 &&
-          Math.max(v0, b.aabb[1]) < Math.min(v1, b.aabb[3]) - 0.05 &&
-          p.y0 >= b.y0 - 0.05,
-      )
-      if (overlapsBondBeam) return
-    }
     const bMat = p.material === 'wood_soft' || p.material === 'wood_hard' ? mats.wood! : isLintel ? mats.lintel! : mats.beam!
-    const y0 = p.y0
+    let y0 = p.y0
     const y1 = p.y1
+    // Residential slab panel beams must have uniform structural height (max 24cm drop below slab)
+    // so they match the perimeter bond beams and do not drop awkwardly into room centers
+    if (p.id.includes('_b') && p.material === 'concrete') {
+      y0 = Math.max(y0, y1 - 0.24)
+    }
     addStageBox(THREE, groups.frame, u0 - 0.005, y0, v0 - 0.005, u1 + 0.005, y1, v1 + 0.005, bMat, p.id)
     return
   }
   if (p.role === 'slab') {
-    // If it's a roof/ceiling slab, expand slightly by 0.08m to cover the perimeter bond beam tops
-    if (p.id.includes('ceiling') || p.id.includes('top')) {
-      addStageBox(THREE, groups.frame, u0 - 0.08, p.y0, v0 - 0.08, u1 + 0.08, p.y1, v1 + 0.08, mats.concrete!, p.id)
-    } else {
-      addStageBox(THREE, groups.frame, u0, p.y0, v0, u1, p.y1, v1, mats.concrete!, p.id)
-    }
+    addStageBox(THREE, groups.frame, u0, p.y0, v0, u1, p.y1, v1, mats.concrete!, p.id)
     return
   }
   if (p.role === 'wall' || p.role === 'partition') {
@@ -199,7 +179,7 @@ function processOutbuilding(
   const colHalf = th / 2
   for (let k = 0; k < corners.length; k++) {
     const [cx, cz] = corners[k]!
-    addRebarCage(THREE, groups.foundation, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, 0, 0.70, mats.rebar!)
+    addRebarCage(THREE, groups.foundation, cx - colHalf, cz - colHalf, cx + colHalf, cz + colHalf, 0, 0.42, mats.rebar!)
     addStageBox(THREE, groups.frame, cx - colHalf, 0, cz - colHalf, cx + colHalf, ceiling, cz + colHalf, mats.concrete!, `${e.id}_col_${k}`)
   }
 
@@ -209,9 +189,6 @@ function processOutbuilding(
   addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b1 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_south`)
   addStageBox(THREE, groups.frame, a0 - th / 2, beamY0, b0 - th / 2, a0 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_west`)
   addStageBox(THREE, groups.frame, a1 - th / 2, beamY0, b0 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.beam!, `${e.id}_topbeam_east`)
-
-  // Concrete ceiling slab over the edicula
-  addStageBox(THREE, groups.frame, a0 - th / 2, ceiling - 0.12, b0 - th / 2, a1 + th / 2, ceiling, b1 + th / 2, mats.concrete!, `${e.id}_slab`)
 
   // Door lintel (verga de concreto armado): sits directly over the door opening and ties into the top tie beam
   for (const d of e.doors || []) {
@@ -389,7 +366,7 @@ export function buildStructuralStageGroups(
   const totalFloors = rawStructure?.floors ?? (rawStructure?.levels ? Math.max(1, rawStructure.levels.length - 1) : 1)
 
   for (const p of detailed.parts) {
-    processPart(THREE, groups, p, mats, totalFloors, detailed.parts)
+    processPart(THREE, groups, p, mats, totalFloors)
   }
 
   // 2. Interior columns at interior wall junctions and spans
@@ -406,7 +383,7 @@ export function buildStructuralStageGroups(
 
     // Starter rebar in foundation (Level 1)
     if (c.floor === 0) {
-      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.70, mats.rebar!)
+      addRebarCage(THREE, groups.foundation, u0, v0, u1, v1, 0, 0.42, mats.rebar!)
     }
     // Concrete column and top rebar extension in frame (Level 2) only if there is an upper floor
     addStageBox(THREE, groups.frame, u0 - 0.008, y0, v0 - 0.008, u1 + 0.008, y1, v1 + 0.008, mats.concrete!, `interior_column_${c.floor}_${k}`)
