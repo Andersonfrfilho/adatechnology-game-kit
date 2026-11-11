@@ -4,6 +4,8 @@ import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-s
 
 import type { Flight, HouseRecord, HouseRoom, Kernel, KernelHouseFloors, PieceRecord, Rect, Shared, Tile } from '../kernel-types.js';
 
+const FLOOR_OVER_GROUND = 0.012;
+
 export function installHouseFloors(K: Kernel, shared: Shared): void {
   const { rectsOf, EPS, OPEN_AREA, Y0, bx, cursor, floorColor, stairFootprint, structurePiece, subRects } = K;
   function flights(): Flight[] { // each flight between floors only once (the SDK repeats the item at departure and arrival)
@@ -50,7 +52,9 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       for (const c of R.rooms.filter(c => c.floor === f)) {
         if (c.type === 'void' || c.outbuilding || (c.type === 'elevator' && f > 0)) continue;
         const col = floorColor(c), parent = f > 0 ? ['slab_' + f + '_' + c.type, 'slab_' + f + '_' + c.id, 'slab_' + f].find(hasSlab) : null;
-        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.04, r[1], r[2], y0, r[3], col); }
+        // built by construction stage, the ground floor's finish stands 1.2 cm over the ground the house sits on, never on its plane
+        const lift = shared.ctx.constructionStages && f === 0 ? FLOOR_OVER_GROUND : 0;
+        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.04, r[1], r[2], y0 + lift, r[3], col); }
       }
       if (f > 0) { // slab under the floor
         const rs = R.rooms.filter(c => c.floor === f && c.type !== 'void' && c.type !== 'elevator').flatMap(rectsOf); 
@@ -68,8 +72,8 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
   function coveredRects(c: HouseRoom): readonly Rect[] {
     if (!shared.ctx.constructionStages) return rectsOf(c);
     const e = c.outbuilding ? ((shared.ctx.outbuildingList || []) as Outbuilding[]).find((o) => o.id === c.id) : undefined;
-    if (e) { const h = (e.thickness || 0.15) / 2; return [[e.aabb[0] - h, e.aabb[1] - h, e.aabb[2] + h, e.aabb[3] + h]]; }
-    const h = 0.075; return rectsOf(c).map((r) => [r[0] - h, r[1] - h, r[2] + h, r[3] + h]);
+    if (e) { const h = (e.thickness || 0.15) / 2 - 0.005; return [[e.aabb[0] - h, e.aabb[1] - h, e.aabb[2] + h, e.aabb[3] + h]]; }
+    const h = 0.07; return rectsOf(c).map((r) => [r[0] - h, r[1] - h, r[2] + h, r[3] + h]); // to 5 mm inside the walls' outer faces: never on the eave band's plane
   }
   Object.assign(K, { flights, floorsAndSlabs, tilesOf, panelAt });
 }

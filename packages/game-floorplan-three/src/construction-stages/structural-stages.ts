@@ -3,7 +3,7 @@ import { applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSla
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
-import { cutOf, wallLineOf } from './wall-plane.js'
+import { cutOf, subtractRects, wallLineOf } from './wall-plane.js'
 import type { WallRect } from './wall-plane.js'
 
 export interface StructuralStageGroups {
@@ -64,6 +64,18 @@ function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
 
 const overlapArea = (a: readonly number[], b: readonly number[]): number =>
   Math.max(0, Math.min(a[2]!, b[2]!) - Math.max(a[0]!, b[0]!)) * Math.max(0, Math.min(a[3]!, b[3]!) - Math.max(a[1]!, b[1]!))
+
+/** Plaster each side of a bare wall: the bricks, and the bond beams and lintels cast in the wall's line, are this much narrower than the finished wall. */
+const PLASTER = 0.014
+
+/** A beam cast in a wall's line (a bond beam, a lintel, a slab's beam over a partition) as wide as the wall's bricks: the plaster covers both later. */
+function toCoreWidth(b: Solid): Solid {
+  const alongU = b.aabb[2] - b.aabb[0] >= b.aabb[3] - b.aabb[1]
+  const width = alongU ? b.aabb[3] - b.aabb[1] : b.aabb[2] - b.aabb[0]
+  if (width > 0.25 || width - 2 * PLASTER < 0.1) return b
+  b.aabb = alongU ? [b.aabb[0], b.aabb[1] + PLASTER, b.aabb[2], b.aabb[3] - PLASTER] : [b.aabb[0] + PLASTER, b.aabb[1], b.aabb[2] - PLASTER, b.aabb[3]]
+  return b
+}
 
 const solidOf = (p: StructurePart): Solid => ({ id: p.id, aabb: [...p.aabb] as Solid['aabb'], y0: p.y0, y1: p.y1, floor: p.floor ?? 0 })
 
@@ -173,6 +185,50 @@ function outbuildingParts(e: Outbuilding): { parts: StructurePart[]; openings: {
     parts.push(part(`wall_${i}`, 'wall', aabb, 0, ceiling, 'brick'))
   })
   return { parts, openings }
+}
+
+/**
+ * The masonry of one wall line laid as one: its collinear parts (piers, sills, spandrels, the panels between pillars) of the same storey, build and thickness
+ * joined into one part over their whole stretch, with the openings they leave between them as gaps. Laid part by part, every part boundary was a straight
+ * seam through the courses; laid as one, the courses run whole and are only cut round what stands in them.
+ */
+function wallRuns(walls: readonly StructurePart[]): { part: StructurePart; gaps: WallRect[] }[] {
+  const key = (p: StructurePart): string => {
+    const w = wallLineOf(p.aabb)
+    return [p.floor ?? 0, w.alongU ? 'u' : 'v', w.line.toFixed(2), w.thickness.toFixed(2), p.assembly ?? '', p.material].join('|')
+  }
+  const byLine = new Map<string, StructurePart[]>()
+  for (const p of walls) {
+    const k = key(p)
+    const list = byLine.get(k)
+    if (list) list.push(p)
+    else byLine.set(k, [p])
+  }
+  const runs: { part: StructurePart; gaps: WallRect[] }[] = []
+  for (const list of byLine.values()) {
+    const sorted = [...list].sort((a, b) => wallLineOf(a.aabb).a0 - wallLineOf(b.aabb).a0)
+    let group: StructurePart[] = []
+    let end = -Infinity
+    const flush = (): void => {
+      if (!group.length) return
+      const lines = group.map((g) => wallLineOf(g.aabb))
+      const a0 = Math.min(...lines.map((l) => l.a0)), a1 = Math.max(...lines.map((l) => l.a1))
+      const y0 = Math.min(...group.map((g) => g.y0)), y1 = Math.max(...group.map((g) => g.y1))
+      const first = group[0]!, w = lines[0]!
+      const aabb = (w.alongU ? [a0, first.aabb[1], a1, first.aabb[3]] : [first.aabb[0], a0, first.aabb[2], a1]) as StructurePart['aabb']
+      const gaps = subtractRects({ a0, a1, y0, y1 }, group.map((g, k) => ({ a0: lines[k]!.a0, a1: lines[k]!.a1, y0: g.y0, y1: g.y1 })))
+      runs.push({ part: { ...first, id: group.map((g) => g.id).join('+'), aabb, y0, y1 }, gaps })
+      group = []
+    }
+    for (const p of sorted) {
+      const l = wallLineOf(p.aabb)
+      if (group.length && l.a0 > end + 0.02) flush()
+      group.push(p)
+      end = Math.max(end, l.a1)
+    }
+    flush()
+  }
+  return runs
 }
 
 export interface InteriorColumnLocation {
@@ -291,7 +347,7 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   })
   const slabs = parts.filter((p) => p.role === 'slab' && !isFoundation(p)).map(solidOf)
   const beamParts = parts.filter((p) => p.role === 'beam' && !isFoundation(p))
-  const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf)
+  const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf).map(toCoreWidth)
   seatSlabs(slabs.filter((s) => !s.id.startsWith('tank_')), [...beams, ...columns.filter((c) => !c.tank)])
 
   for (const c of columns) {
@@ -307,15 +363,17 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   for (const s of slabs) addStageBox(THREE, frame, s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3], mats.concrete!, s.id)
 
   // lintels and sills are cast with the masonry they bear on, never hanging in the frame
-  const lintels = beamParts.filter((p) => isLintel(p.id)).map(solidOf).map((l) => fitLintel(l, beams, columns)).filter((l): l is Solid => l !== null)
+  const lintels = beamParts.filter((p) => isLintel(p.id)).map(solidOf).map(toCoreWidth).map((l) => fitLintel(l, beams, columns)).filter((l): l is Solid => l !== null)
   for (const l of lintels) addStageBox(THREE, masonry, l.aabb[0], l.y0, l.aabb[1], l.aabb[2], l.y1, l.aabb[3], mats.lintel!, l.id)
 
   const batches = createMasonryBatches()
   const laid: Solid[] = []
   const solids: readonly Solid[] = [...foundations, ...columns, ...beams, ...slabs, ...lintels]
-  for (const p of parts.filter((x) => x.role === 'wall' || x.role === 'partition')) {
+  for (const run of wallRuns(parts.filter((x) => x.role === 'wall' || x.role === 'partition'))) {
+    const p = run.part
     const wall = wallLineOf(p.aabb)
-    const cuts: WallRect[] = []
+    // what the run's parts leave open inside it (the windows and doors between its piers, sills and spandrels) stays open
+    const cuts: WallRect[] = [...run.gaps]
     for (const s of [...solids, ...laid]) {
       // a pillar seated into a slab still owns its whole storey in the wall: no unit is laid over its head
       const top = columns.includes(s as (typeof columns)[number]) ? s.y1 + 0.3 : s.y1

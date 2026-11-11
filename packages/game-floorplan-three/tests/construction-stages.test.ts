@@ -93,7 +93,8 @@ describe('construction stages of single_storey_a', () => {
     for (const b of sewer.boxes) expect(b.bottom).toBeLessThan(-0.3)
     group('stage:4:installations').traverse((o) => {
       if (!(o as THREE.Mesh).isMesh || o.name === 'excavation:heap' || o.name === 'excavation:opening') return
-      expect(boxOf(o).max.y, o.name || o.type).toBeLessThanOrEqual(0.0001)
+      // a box's lid is flush with the ground (under a centimetre over it); everything else is under it
+      expect(boxOf(o).max.y, o.name || o.type).toBeLessThanOrEqual(o.name === 'sewer:lid' ? 0.01 : 0.0001)
     })
   })
 

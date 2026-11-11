@@ -9,6 +9,8 @@ interface Triangle {
   readonly points: readonly THREE.Vector3[]
   readonly normal: THREE.Vector3
   readonly offset: number
+  /** The triangle's vertex colour (merged meshes paint each box its own colour), or -1. */
+  readonly color: number
 }
 
 /** What a pair of meshes overlap on one plane: the area (m²) and one spot of it. */
@@ -41,7 +43,10 @@ function trianglesOf(T: Three, root: THREE.Object3D, keep: (mesh: THREE.Mesh) =>
       const normal = new T.Vector3().subVectors(points[1]!, points[0]!).cross(new T.Vector3().subVectors(points[2]!, points[0]!))
       if (normal.length() < 2e-5) continue
       normal.normalize()
-      out.push({ mesh, material, points, normal, offset: normal.dot(points[0]!) })
+      const colors = mesh.geometry.getAttribute('color')
+      const v0 = index ? index.getX(i) : i
+      const color = colors ? Math.round(colors.getX(v0) * 255) * 65536 + Math.round(colors.getY(v0) * 255) * 256 + Math.round(colors.getZ(v0) * 255) : -1
+      out.push({ mesh, material, points, normal, offset: normal.dot(points[0]!), color })
     }
   })
   return out
@@ -95,7 +100,8 @@ export function coplanarOverlaps(T: Three, root: THREE.Object3D, options: { read
     for (let i = 0; i < list.length; i++) {
       for (let j = i + 1; j < all.length; j++) {
         const a = all[i]!, b = all[j]!
-        if (a.mesh === b.mesh || a.material === b.material) continue
+        // one material and one colour draws the same whichever wins: only a different colour (of another material, or another box of a merged mesh) flickers
+        if ((a.mesh === b.mesh || a.material === b.material) && a.color === b.color) continue
         let polygon = flat[i]!
         const c = flat[j]!
         for (let e = 0; e < 3 && polygon.length; e++) polygon = clip(polygon, c[e]!, c[(e + 1) % 3]!)

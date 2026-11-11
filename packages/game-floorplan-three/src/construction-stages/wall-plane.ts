@@ -19,10 +19,12 @@ export function subtractRects(base: WallRect, holes: readonly WallRect[]): WallR
         next.push(r)
         continue
       }
-      if (y0 - r.y0 > EPS) next.push({ a0: r.a0, a1: r.a1, y0: r.y0, y1: y0 })
-      if (r.y1 - y1 > EPS) next.push({ a0: r.a0, a1: r.a1, y0: y1, y1: r.y1 })
-      if (a0 - r.a0 > EPS) next.push({ a0: r.a0, a1: a0, y0, y1 })
-      if (r.a1 - a1 > EPS) next.push({ a0: a1, a1: r.a1, y0, y1 })
+      // the sides keep the piece's whole height and only the hole's own stretch is split above and below it: a wall cut round a lintel keeps its
+      // courses whole on both sides, with no seam running across it at the lintel's heights
+      if (a0 - r.a0 > EPS) next.push({ a0: r.a0, a1: a0, y0: r.y0, y1: r.y1 })
+      if (r.a1 - a1 > EPS) next.push({ a0: a1, a1: r.a1, y0: r.y0, y1: r.y1 })
+      if (y0 - r.y0 > EPS) next.push({ a0, a1, y0: r.y0, y1: y0 })
+      if (r.y1 - y1 > EPS) next.push({ a0, a1, y0: y1, y1: r.y1 })
     }
     pieces = next
   }

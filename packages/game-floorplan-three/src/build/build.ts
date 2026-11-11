@@ -25,14 +25,16 @@ type BuildContextPanes = Shared['ctx']['panes'];
 /** Options of the house's target and interact. */
 type TargetOptions = HouseTargetOptions;
 
-/** The house built by construction stage lays its conduits as an electrician does (see construction-stages/installation-routes); the plan stays as generated. */
+/** The house built by construction stage lays its conduits as an electrician does, embedded (see construction-stages/installation-routes); the plan stays as generated. */
 function withLaidConduits(r: HouseRecord, stages: boolean): HouseRecord {
   const E = r.utilities?.electrical;
   if (!stages || !E || !E.conduits?.length) return r;
   const lamps = new Map<string, { u: number; v: number; y: number }>();
   for (const it of r.items) if (it.type === 'ceiling_light') lamps.set(it.id, { u: it.x, v: it.z, y: (r.floors[Math.max(0, it.floor)]?.y0 ?? 0) + (it.y ?? 2.7) });
-  const conduits = routeConduits(routingPlanOf(r), E as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
-  return { ...r, utilities: { ...r.utilities, electrical: { ...E, conduits } } };
+  // in the construction stages every conduit is laid as the water is: cut into the bare masonry in the rough-in, embedded once the walls are plastered
+  const embedded = { ...E, conduits: E.conduits.map((c) => ({ ...c, exposed: false })) };
+  const conduits = routeConduits(routingPlanOf(r), embedded as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
+  return { ...r, utilities: { ...r.utilities, electrical: { ...E, exposed: false, conduits } } };
 }
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
@@ -169,7 +171,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[]);
           const instGroup = buildInstallationsStage(THREE, r);
           const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || []);
-          for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, roofFraming]) {
+          const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
+          for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
             gs[sg.name] = sg;
             house.add(sg);
           }

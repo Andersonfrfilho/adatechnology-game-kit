@@ -58,6 +58,10 @@ interface Coursing {
 
 const MORTAR_INSET = 0.004
 const UNIT_CLEARANCE = 0.005
+/** The least of a unit laid on its own at a piece's end (a quarter brick): a shorter one goes with its neighbour. */
+const MIN_PIECE = 0.06
+/** The least stretch of wall worth laying at all. */
+const MIN_SPAN = 0.02
 // the mortar bed stands a hair over what the wall rests on (a slab, a beam): its faces never lie on a pillar's foot or head
 const MORTAR_LIFT = 0.009
 
@@ -66,19 +70,24 @@ function layUnits(rect: WallRect, coursing: Coursing, put: (a0: number, y0: numb
   const first = Math.floor((rect.y0 - courseBase) / courseH + 1e-6)
   for (let row = first; courseBase + row * courseH < rect.y1 - 1e-6; row++) {
     const ya = Math.max(rect.y0 + UNIT_CLEARANCE, courseBase + row * courseH + joint / 2)
-    // a unit cut by the piece's top keeps a joint's width under it: its face never lies on the mortar's
     const yb = Math.min(rect.y1 - UNIT_CLEARANCE, courseBase + (row + 1) * courseH - joint / 2)
     if (yb - ya < 0.01) continue
     const offset = (((row % 2) + 2) % 2) * ((unitLen + joint) / 2)
     const pitch = unitLen + joint
+    const units: [number, number][] = []
     for (let k = Math.floor((rect.a0 + offset) / pitch) - 1; k * pitch - offset < rect.a1; k++) {
       const s = k * pitch - offset
-      // a unit that would leave a sliver of joint at the piece's end runs to the end: unit faces lie flush with it or a full joint away, never on the mortar's
-      const n0 = s + joint / 2, n1 = s + pitch - joint / 2
-      const b0 = n0 - rect.a0 < joint ? rect.a0 : n0
-      const b1 = rect.a1 - n1 < joint ? rect.a1 : n1
-      if (b1 - b0 > 0.02) put(b0, ya, b1, yb)
+      const b0 = Math.max(rect.a0, s + joint / 2), b1 = Math.min(rect.a1, s + pitch - joint / 2)
+      if (b1 - b0 > 1e-4) units.push([b0, b1])
     }
+    if (!units.length) continue
+    // the units at the piece's ends butt against what cuts it (a pillar, a jamb): the first and last run to it in every course, with no open joint
+    // beside it, and a sliver of a unit is laid as part of its neighbour, never as a gap
+    units[0]![0] = rect.a0
+    units[units.length - 1]![1] = rect.a1
+    if (units.length > 1 && units[0]![1] - units[0]![0] < MIN_PIECE) units.splice(0, 2, [rect.a0, units[1]![1]])
+    if (units.length > 1 && units[units.length - 1]![1] - units[units.length - 1]![0] < MIN_PIECE) units.splice(units.length - 2, 2, [units[units.length - 2]![0], rect.a1])
+    for (const [b0, b1] of units) put(b0, ya, b1, yb)
   }
 }
 
@@ -89,7 +98,8 @@ function layUnits(rect: WallRect, coursing: Coursing, put: (a0: number, y0: numb
 export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, cuts: readonly WallRect[], courseBase: number): void {
   const wall = wallLineOf(part.aabb)
   const th = wall.thickness
-  const pieces = subtractRects({ a0: wall.a0, a1: wall.a1, y0: part.y0, y1: part.y1 }, cuts)
+  // a sliver left between two cuts (a door's end a few millimetres from a pillar) is no masonry: the pillar's face closes it
+  const pieces = subtractRects({ a0: wall.a0, a1: wall.a1, y0: part.y0, y1: part.y1 }, cuts).filter((r) => r.a1 - r.a0 >= MIN_SPAN && r.y1 - r.y0 >= MIN_SPAN)
   const box = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number): void =>
     batch.add(wall.alongU ? [a0, y0, wall.line - t / 2, a1, y1, wall.line + t / 2] : [wall.line - t / 2, y0, a0, wall.line + t / 2, y1, a1])
 
@@ -123,6 +133,7 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   }
 
   const isBlock = part.assembly === 'concrete_block_wall' || part.material === 'concrete'
+  // the bricks of a bare wall: the finished wall less its plaster each side (1.4 cm), the width of the bond beam and lintels cast in it
   const coreTh = Math.max(0.09, th - 0.028)
   const coursing: Coursing = { courseH: isBlock ? 0.2 : 0.14, unitLen: isBlock ? 0.39 : 0.24, joint: 0.012, courseBase }
   const unit = isBlock ? batches.block : batches.brick

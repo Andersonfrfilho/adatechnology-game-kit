@@ -30,8 +30,10 @@ export const STAGE_PROBLEM = {
   PILLAR_UNSUPPORTED: 'pillar_unsupported',
   /** A beam or pillar under a slab does not reach into it. */
   SLAB_UNSEATED: 'slab_unseated',
-  /** A sewer pipe or box stands over the ground. */
+  /** A sewer pipe or box stands over the ground (a box's lid only flush with it). */
   SEWER_ABOVE_GROUND: 'sewer_above_ground',
+  /** A face of the house lies on the ground's plane, facing up: it flickers with the ground under it. */
+  ON_GROUND_PLANE: 'on_ground_plane',
   /** An embedded pipe or conduit moves, doubles or shows out of the rough-in stage. */
   NETWORK_CHANGES: 'network_changes',
   /** A run crosses a room in the air (not inside a wall, not over the ceiling slab). */
@@ -110,12 +112,43 @@ function checkFrame(T: Three, h: StagedHouseView, out: StageProblem[]): void {
   }
 }
 
+/** A box's lid: flush with the ground, at most this much over it. */
+const LID_FLUSH = 0.01
+
 function checkSewer(T: Three, h: StagedHouseView, out: StageProblem[]): void {
-  h.groups['stage:4:installations']?.traverse((o) => {
-    if (!(o as THREE_NS.Mesh).isMesh || o.name === 'excavation:heap' || o.name === 'excavation:opening') return
-    const top = new T.Box3().setFromObject(o).max.y
-    if (top > 1e-4) out.push({ code: STAGE_PROBLEM.SEWER_ABOVE_GROUND, level: 4, detail: `${o.name || o.type} top ${top.toFixed(3)}` })
+  for (const name of ['stage:4:installations', 'stage:4:sewer_boxes']) {
+    h.groups[name]?.traverse((o) => {
+      if (!(o as THREE_NS.Mesh).isMesh || o.name === 'excavation:heap' || o.name === 'excavation:opening') return
+      const top = new T.Box3().setFromObject(o).max.y
+      if (top > (o.name === 'sewer:lid' ? LID_FLUSH : 1e-4)) out.push({ code: STAGE_PROBLEM.SEWER_ABOVE_GROUND, level: 4, detail: `${o.name || o.type} top ${top.toFixed(3)}` })
+    })
+  }
+}
+
+/** Faces of the house that lie on the ground's plane (y 0) facing up, where the ground the house stands on would fight them. */
+function checkGroundPlane(h: StagedHouseView, level: number, out: StageProblem[]): void {
+  const at = new Map<string, number>()
+  h.house.updateMatrixWorld(true)
+  h.house.traverse((o) => {
+    const mesh = o as THREE_NS.Mesh
+    if (!mesh.isMesh || !shown(mesh) || /^excavation:/.test(mesh.name)) return
+    const material = mesh.material as THREE_NS.Material
+    if (Array.isArray(material) || material.colorWrite === false) return
+    const position = mesh.geometry.getAttribute('position'), normal = mesh.geometry.getAttribute('normal'), index = mesh.geometry.getIndex()
+    if (!normal) return
+    const count = index ? index.count : position.count
+    const e = mesh.matrixWorld.elements
+    for (let i = 0; i < count; i += 3) {
+      let flat = true
+      for (let k = 0; k < 3 && flat; k++) {
+        const v = index ? index.getX(i + k) : i + k
+        const y = e[1]! * position.getX(v) + e[5]! * position.getY(v) + e[9]! * position.getZ(v) + e[13]!
+        if (Math.abs(y) > 0.0015 || normal.getY(v) < 0.99) flat = false
+      }
+      if (flat) at.set(mesh.name || mesh.type, (at.get(mesh.name || mesh.type) ?? 0) + 1)
+    }
   })
+  for (const [name, n] of at) out.push({ code: STAGE_PROBLEM.ON_GROUND_PLANE, level, detail: `${name}: ${n} triangles at y 0` })
 }
 
 function checkNetwork(T: Three, h: StagedHouseView, plan: Plan, set: (level: number) => void, out: StageProblem[]): void {
@@ -210,6 +243,10 @@ export function checkConstructionStages(T: Three, h: StagedHouseView, options: {
   }
   checkFrame(T, h, out)
   checkSewer(T, h, out)
+  for (const level of [4, 5, 8]) {
+    set(level)
+    checkGroundPlane(h, level, out)
+  }
   checkNetwork(T, h, plan, set, out)
   set(CONSTRUCTION_LEVEL_MAX)
   const hidden: string[] = []

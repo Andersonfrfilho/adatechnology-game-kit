@@ -152,6 +152,7 @@ function groupVisible(name: string, level: number, opts: ApplyConstructionLevelO
   if (name === 'stage:2:frame') return level >= 2 && level <= 4
   if (name === 'stage:3:masonry') return level >= 3 && level <= 4
   if (name === 'stage:4:installations') return level === 4 || (level >= 4 && opts.waterLayer === true)
+  if (name === 'stage:4:sewer_boxes') return level >= 4
   // the timber frame goes up before the tiles and stays under them
   if (name === 'stage:7:roof_framing') return level >= 7 && roofOn
   if (name === 'roof') return level >= 8 && roofOn
