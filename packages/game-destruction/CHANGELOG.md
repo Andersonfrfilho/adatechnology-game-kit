@@ -1,5 +1,21 @@
 # @adatechnology/game-destruction
 
+## 0.28.0
+
+### Minor Changes
+
+- d5850bb: Oclusão de áudio sem travar o quadro da primeira explosão.
+
+  - `OcclusionSetup.budgetMs` (padrão 1 ms, em `OCCLUSION_DEFAULTS`) e `clock`: uma voz nova só é medida no `add`/`attach` quando o custo corrente de uma consulta (média móvel: metade da última, metade do que veio antes) cabe no tempo que resta ao quadro, então uma consulta cara (veículo no caminho) nunca roda ali; passou do orçamento, começa pela estimativa (voz medida vizinha, último resultado do ponto ou sem oclusão) sem consultar, e os `update` seguintes medem as que esperam dentro do orçamento (ao menos uma por quadro) e deslizam até a medida. A voz medida depois fica no valor exato da medida, igual à medida na hora.
+  - `DestructionWorld.raycast(origin, direction, maxDistance?, options?)` com `RaycastOptions`: `skipLoose` deixa de fora as peças que o `splitGroup` cortou (também depois de `serialize`/`load`); a parte que caiu mas ainda é do objeto (`collapsed`) continua contando; `minObjectRadius` deixa de fora objetos pequenos. Sem opções, nada muda.
+  - `createWorldOcclusion` da sala passa a ignorar peças soltas e objetos com raio menor que `OCCLUDER_MIN_RADIUS` (0,25 m, abaixo do comprimento de onda de 0,69 m da banda de 500 Hz da tabela de perda): parede, piso, porta e móvel em pé continuam ocluindo com a mesma perda.
+
+- fec8942: `sweepBox` (a varredura que para o destroço na parede) ganhou uma fase ampla: antes dos raios, separa só os objetos e as peças cujos limites a caixa alcança no caminho (a esfera de cada objeto e de cada peça, a caixa de cada peça de um corpo hospedado), e os raios só testam esses. O acerto é o mesmo de antes em toda consulta (mesmo objeto, peça, ponto, normal e distância), conferido contra a força bruta em 1.500 varreduras aleatórias; o custo cai cerca de 14 vezes numa cena de 2.400 tijolos e 400 destroços. O centro da esfera de cada objeto no mundo fica guardado até o objeto ou uma peça dele se mexer, e `raycast` também o usa. Todo raio (`raycast`, `shoot`, `sweepBox`) pula um corpo hospedado (um carro) quando não cruza a caixa em volta de todas as peças dele, guardada até o corpo se mover, uma peça ser posta em outra pose ou `describe()` mudar: nem testa as peças, nem pergunta a superfície (`surfaceRay`). `DestructionOptions.broadPhase: false` volta a testar tudo (a referência); `world.sweepProbe()` diz o custo da última varredura.
+
+### Patch Changes
+
+- 1849ae6: Uma explosão volta a rasgar as costuras de um item solto (a solda de uma lata) como antes: só o acabamento preso numa parte que carrega (rodapé na parede, placa de calçada no chão) é que solta apenas perto dela. Desde o #281 toda junta entre partes sem estrutura contava como acabamento, e uma lata a 2,5 m de um P13 ficava inteira.
+
 ## 0.27.0
 
 ### Minor Changes

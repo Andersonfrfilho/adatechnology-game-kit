@@ -1,5 +1,18 @@
 # @adatechnology/game-vehicles-three
 
+## 0.9.8
+
+### Patch Changes
+
+- Updated dependencies [f4cf94f]
+- Updated dependencies [33d2474]
+- Updated dependencies [71b5bef]
+- Updated dependencies [d5850bb]
+- Updated dependencies [d5564f5]
+  - @adatechnology/game-render-three@0.3.0
+  - @adatechnology/game-audio@0.14.0
+  - @adatechnology/game-vehicles@0.6.16
+
 ## 0.9.7
 
 ### Patch Changes

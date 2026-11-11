@@ -1,5 +1,22 @@
 # @adatechnology/game-audio
 
+## 0.14.0
+
+### Minor Changes
+
+- f4cf94f: A primeira explosão não liga programa nem decodifica som no meio do jogo.
+
+  - `createProgramWarmup`: no primeiro desenho do aquecimento, todo objeto que projeta sombra entra nos mapas de sombra (sem o recorte pela câmera da sombra; `shadowCasters: 'visible'` volta ao de antes). O three r160 só liga o programa de profundidade de um objeto quando a passada de sombra o desenha, e o `compile` nunca faz isso: a parede texturizada da calçada da casa, fora da caixa do sol na carga, ligava o programa `USE_MAP ... DEPTH_PACKING 3201` quando entrava na caixa, no meio do jogo.
+  - `shadowCasterProbes(THREE)`: sondas que projetam sombra com material iluminado, com e sem textura, nos três lados; a sala registra.
+  - `explosionEffectIds(explosions?)` do `game-vfx`: toda explosão do catálogo de efeitos. A sala aquece todas (antes, uma lista à mão de nove, sem o P13, o barril, o tanque do carro e os foguetes).
+  - `AudioEngine.preload(ids)`: decodifica agora os arquivos desses sons (e das variantes de um conjunto), uma vez só. `blastSoundIds()` do `game-destruction-three`: o estrondo de cada família, o eco distante, a cauda em lugar fechado, o fogo e os destroços por material. A sala pré-carrega esses e o `water_splash` na primeira tecla ou clique.
+
+- d5850bb: Oclusão de áudio sem travar o quadro da primeira explosão.
+
+  - `OcclusionSetup.budgetMs` (padrão 1 ms, em `OCCLUSION_DEFAULTS`) e `clock`: uma voz nova só é medida no `add`/`attach` quando o custo corrente de uma consulta (média móvel: metade da última, metade do que veio antes) cabe no tempo que resta ao quadro, então uma consulta cara (veículo no caminho) nunca roda ali; passou do orçamento, começa pela estimativa (voz medida vizinha, último resultado do ponto ou sem oclusão) sem consultar, e os `update` seguintes medem as que esperam dentro do orçamento (ao menos uma por quadro) e deslizam até a medida. A voz medida depois fica no valor exato da medida, igual à medida na hora.
+  - `DestructionWorld.raycast(origin, direction, maxDistance?, options?)` com `RaycastOptions`: `skipLoose` deixa de fora as peças que o `splitGroup` cortou (também depois de `serialize`/`load`); a parte que caiu mas ainda é do objeto (`collapsed`) continua contando; `minObjectRadius` deixa de fora objetos pequenos. Sem opções, nada muda.
+  - `createWorldOcclusion` da sala passa a ignorar peças soltas e objetos com raio menor que `OCCLUDER_MIN_RADIUS` (0,25 m, abaixo do comprimento de onda de 0,69 m da banda de 500 Hz da tabela de perda): parede, piso, porta e móvel em pé continuam ocluindo com a mesma perda.
+
 ## 0.13.6
 
 ### Patch Changes

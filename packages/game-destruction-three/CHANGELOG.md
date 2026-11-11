@@ -1,5 +1,41 @@
 # @adatechnology/game-destruction-three
 
+## 0.25.0
+
+### Minor Changes
+
+- f4cf94f: A primeira explosão não liga programa nem decodifica som no meio do jogo.
+
+  - `createProgramWarmup`: no primeiro desenho do aquecimento, todo objeto que projeta sombra entra nos mapas de sombra (sem o recorte pela câmera da sombra; `shadowCasters: 'visible'` volta ao de antes). O three r160 só liga o programa de profundidade de um objeto quando a passada de sombra o desenha, e o `compile` nunca faz isso: a parede texturizada da calçada da casa, fora da caixa do sol na carga, ligava o programa `USE_MAP ... DEPTH_PACKING 3201` quando entrava na caixa, no meio do jogo.
+  - `shadowCasterProbes(THREE)`: sondas que projetam sombra com material iluminado, com e sem textura, nos três lados; a sala registra.
+  - `explosionEffectIds(explosions?)` do `game-vfx`: toda explosão do catálogo de efeitos. A sala aquece todas (antes, uma lista à mão de nove, sem o P13, o barril, o tanque do carro e os foguetes).
+  - `AudioEngine.preload(ids)`: decodifica agora os arquivos desses sons (e das variantes de um conjunto), uma vez só. `blastSoundIds()` do `game-destruction-three`: o estrondo de cada família, o eco distante, a cauda em lugar fechado, o fogo e os destroços por material. A sala pré-carrega esses e o `water_splash` na primeira tecla ou clique.
+
+- 0e0d121: Trocar a planta na bancada de casas não deixa mais nada da casa anterior no mundo. Os pedaços que se soltaram dela continuavam no mundo da destruição (invisíveis, colidindo e queimando), com o fogo, os fragmentos, as marcas no chão e as partículas que eram deles; a sala os guardava na lista de peças soltas.
+
+  - `game-vfx`: `FireOptions.source`, `ExplosionOptions.source` e `SpriteSpawnOptions.source` dizem para quem um efeito foi feito, e `VfxWorld.clearSource(source)` tira de uma vez o fogo, as chamas, a fumaça, as brasas, o que a explosão jogou e os sprites dele.
+  - `game-destruction-three`: os efeitos que o renderer faz para um objeto levam o id dele; `release(objectId)` tira do mundo os pedaços que se soltaram do objeto e todos os efeitos dele e dos pedaços (fogo, som do fogo, vazamentos, eventos na fila, fragmentos, marcas, ferragem, partículas), e desfaz a ligação; `releasePieces(objectId)` faz o mesmo mantendo a ligação (reset). `onReleased` avisa o host dos pedaços que saíram.
+  - `game-floorplan-three`: a casa descartada (`dispose`, troca de planta, `clear`) chama `release`, e o `reset` chama `releasePieces`; a vista de rombo libera as formas dos tijolos ao sair.
+  - `game-test-room`: a sala esquece os pedaços que o renderer soltou.
+
+- 33d2474: Destroço parado pode custar pouco (opcional: sem as opções nada muda). Orçamento de corpos acordados: acima de `maxAwakePieces` peças soltas (sugerido `SUGGESTED_MAX_AWAKE_PIECES`, 24), as mais antigas que já pararam (no chão, mais lentas que o limite de repouso, e a que está escorada só depois de manter a inclinação por 1,5 s) dormem onde estão, sem teletransporte; acima de `maxAwakeFragments` (sugerido 64) o mesmo vale para os fragmentos. A peça posta para dormir pelo orçamento guarda os pontos em que se apoiava e acorda quando qualquer um deles perde o apoio: a tábua escorada num degrau que sumiu cai, mesmo com o pé ainda no chão. Com `settledBatches` o destroço em repouso é desenhado em lote, um desenho por material (`createStaticBatcher` do `game-render-three`, que ganhou `materialKey` para juntar cópias iguais de um material): a colisão continua a de cada peça, e a peça atingida, acordada, amassada, escondida ou com qualquer evento volta a ser desenhada sozinha na hora. `settledBatchStats()` diz quantos lotes e quantas malhas. A sala de teste liga o desenho em lote; o orçamento fica desligado nela até decisão do dono (`debris.maxAwakePieces`/`maxAwakeFragments` ligam).
+
+### Patch Changes
+
+- c2897e4: A burning part's flame is shown only while something of the part is drawn. A part with no mesh of its own (the rafters and ridge of a gable roof, which the house does not draw) or one that broke or burnt away no longer leaves its fire hanging in the air at its spec position; the fire comes back if the part is drawn again. Which parts ignite, fire spread, burn rates and durations are unchanged.
+- Updated dependencies [f4cf94f]
+- Updated dependencies [0e0d121]
+- Updated dependencies [1849ae6]
+- Updated dependencies [33d2474]
+- Updated dependencies [71b5bef]
+- Updated dependencies [d5850bb]
+- Updated dependencies [fec8942]
+  - @adatechnology/game-render-three@0.3.0
+  - @adatechnology/game-vfx@0.15.0
+  - @adatechnology/game-audio@0.14.0
+  - @adatechnology/game-destruction@0.28.0
+  - @adatechnology/game-vfx-three@0.10.3
+
 ## 0.24.4
 
 ### Patch Changes

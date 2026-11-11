@@ -1,5 +1,0 @@
----
-'@adatechnology/game-destruction': minor
----
-
-`sweepBox` (a varredura que para o destroço na parede) ganhou uma fase ampla: antes dos raios, separa só os objetos e as peças cujos limites a caixa alcança no caminho (a esfera de cada objeto e de cada peça, a caixa de cada peça de um corpo hospedado), e os raios só testam esses. O acerto é o mesmo de antes em toda consulta (mesmo objeto, peça, ponto, normal e distância), conferido contra a força bruta em 1.500 varreduras aleatórias; o custo cai cerca de 14 vezes numa cena de 2.400 tijolos e 400 destroços. O centro da esfera de cada objeto no mundo fica guardado até o objeto ou uma peça dele se mexer, e `raycast` também o usa. Todo raio (`raycast`, `shoot`, `sweepBox`) pula um corpo hospedado (um carro) quando não cruza a caixa em volta de todas as peças dele, guardada até o corpo se mover, uma peça ser posta em outra pose ou `describe()` mudar: nem testa as peças, nem pergunta a superfície (`surfaceRay`). `DestructionOptions.broadPhase: false` volta a testar tudo (a referência); `world.sweepProbe()` diz o custo da última varredura.

@@ -1,5 +1,48 @@
 # @adatechnology/game-test-room
 
+## 0.35.3
+
+### Patch Changes
+
+- f4cf94f: A primeira explosão não liga programa nem decodifica som no meio do jogo.
+
+  - `createProgramWarmup`: no primeiro desenho do aquecimento, todo objeto que projeta sombra entra nos mapas de sombra (sem o recorte pela câmera da sombra; `shadowCasters: 'visible'` volta ao de antes). O three r160 só liga o programa de profundidade de um objeto quando a passada de sombra o desenha, e o `compile` nunca faz isso: a parede texturizada da calçada da casa, fora da caixa do sol na carga, ligava o programa `USE_MAP ... DEPTH_PACKING 3201` quando entrava na caixa, no meio do jogo.
+  - `shadowCasterProbes(THREE)`: sondas que projetam sombra com material iluminado, com e sem textura, nos três lados; a sala registra.
+  - `explosionEffectIds(explosions?)` do `game-vfx`: toda explosão do catálogo de efeitos. A sala aquece todas (antes, uma lista à mão de nove, sem o P13, o barril, o tanque do carro e os foguetes).
+  - `AudioEngine.preload(ids)`: decodifica agora os arquivos desses sons (e das variantes de um conjunto), uma vez só. `blastSoundIds()` do `game-destruction-three`: o estrondo de cada família, o eco distante, a cauda em lugar fechado, o fogo e os destroços por material. A sala pré-carrega esses e o `water_splash` na primeira tecla ou clique.
+
+- 0e0d121: Trocar a planta na bancada de casas não deixa mais nada da casa anterior no mundo. Os pedaços que se soltaram dela continuavam no mundo da destruição (invisíveis, colidindo e queimando), com o fogo, os fragmentos, as marcas no chão e as partículas que eram deles; a sala os guardava na lista de peças soltas.
+
+  - `game-vfx`: `FireOptions.source`, `ExplosionOptions.source` e `SpriteSpawnOptions.source` dizem para quem um efeito foi feito, e `VfxWorld.clearSource(source)` tira de uma vez o fogo, as chamas, a fumaça, as brasas, o que a explosão jogou e os sprites dele.
+  - `game-destruction-three`: os efeitos que o renderer faz para um objeto levam o id dele; `release(objectId)` tira do mundo os pedaços que se soltaram do objeto e todos os efeitos dele e dos pedaços (fogo, som do fogo, vazamentos, eventos na fila, fragmentos, marcas, ferragem, partículas), e desfaz a ligação; `releasePieces(objectId)` faz o mesmo mantendo a ligação (reset). `onReleased` avisa o host dos pedaços que saíram.
+  - `game-floorplan-three`: a casa descartada (`dispose`, troca de planta, `clear`) chama `release`, e o `reset` chama `releasePieces`; a vista de rombo libera as formas dos tijolos ao sair.
+  - `game-test-room`: a sala esquece os pedaços que o renderer soltou.
+
+- 33d2474: Destroço parado pode custar pouco (opcional: sem as opções nada muda). Orçamento de corpos acordados: acima de `maxAwakePieces` peças soltas (sugerido `SUGGESTED_MAX_AWAKE_PIECES`, 24), as mais antigas que já pararam (no chão, mais lentas que o limite de repouso, e a que está escorada só depois de manter a inclinação por 1,5 s) dormem onde estão, sem teletransporte; acima de `maxAwakeFragments` (sugerido 64) o mesmo vale para os fragmentos. A peça posta para dormir pelo orçamento guarda os pontos em que se apoiava e acorda quando qualquer um deles perde o apoio: a tábua escorada num degrau que sumiu cai, mesmo com o pé ainda no chão. Com `settledBatches` o destroço em repouso é desenhado em lote, um desenho por material (`createStaticBatcher` do `game-render-three`, que ganhou `materialKey` para juntar cópias iguais de um material): a colisão continua a de cada peça, e a peça atingida, acordada, amassada, escondida ou com qualquer evento volta a ser desenhada sozinha na hora. `settledBatchStats()` diz quantos lotes e quantas malhas. A sala de teste liga o desenho em lote; o orçamento fica desligado nela até decisão do dono (`debris.maxAwakePieces`/`maxAwakeFragments` ligam).
+- 71b5bef: - `shadowCasterProbes`: cada sonda vem depois de uma sonda instanciada (e vice-versa). Na passada de sombra o three r160 desenha todos os objetos com um material de profundidade compartilhado e só escolhe o programa de novo quando o objeto troca entre comum e instanciado; seis sondas comuns em fila ficavam todas com o programa da primeira, e o `USE_MAP` da parede texturizada ligava no jogo, quando ela era desenhada logo depois dos destroços (instanciados) de uma explosão.
+  - `FilmManager.warmUpProbes()`: o filme de combustível e sangue tem sondas para o aquecimento, com materiais que o gerenciador guarda até o `dispose`. Cada grade do filme liberava o próprio material, e o programa ia junto com a última; a próxima explosão que derramava combustível ligava de novo. A sala registra as sondas.
+- d5850bb: Oclusão de áudio sem travar o quadro da primeira explosão.
+
+  - `OcclusionSetup.budgetMs` (padrão 1 ms, em `OCCLUSION_DEFAULTS`) e `clock`: uma voz nova só é medida no `add`/`attach` quando o custo corrente de uma consulta (média móvel: metade da última, metade do que veio antes) cabe no tempo que resta ao quadro, então uma consulta cara (veículo no caminho) nunca roda ali; passou do orçamento, começa pela estimativa (voz medida vizinha, último resultado do ponto ou sem oclusão) sem consultar, e os `update` seguintes medem as que esperam dentro do orçamento (ao menos uma por quadro) e deslizam até a medida. A voz medida depois fica no valor exato da medida, igual à medida na hora.
+  - `DestructionWorld.raycast(origin, direction, maxDistance?, options?)` com `RaycastOptions`: `skipLoose` deixa de fora as peças que o `splitGroup` cortou (também depois de `serialize`/`load`); a parte que caiu mas ainda é do objeto (`collapsed`) continua contando; `minObjectRadius` deixa de fora objetos pequenos. Sem opções, nada muda.
+  - `createWorldOcclusion` da sala passa a ignorar peças soltas e objetos com raio menor que `OCCLUDER_MIN_RADIUS` (0,25 m, abaixo do comprimento de onda de 0,69 m da banda de 500 Hz da tabela de perda): parede, piso, porta e móvel em pé continuam ocluindo com a mesma perda.
+
+- Updated dependencies [f4cf94f]
+- Updated dependencies [0e0d121]
+- Updated dependencies [1849ae6]
+- Updated dependencies [33d2474]
+- Updated dependencies [71b5bef]
+- Updated dependencies [c2897e4]
+- Updated dependencies [d5850bb]
+- Updated dependencies [fec8942]
+  - @adatechnology/game-render-three@0.3.0
+  - @adatechnology/game-vfx@0.15.0
+  - @adatechnology/game-audio@0.14.0
+  - @adatechnology/game-destruction-three@0.25.0
+  - @adatechnology/game-destruction@0.28.0
+  - @adatechnology/game-fluids-three@0.5.0
+  - @adatechnology/game-vfx-three@0.10.3
+
 ## 0.35.2
 
 ### Patch Changes

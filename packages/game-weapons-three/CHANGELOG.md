@@ -1,5 +1,26 @@
 # @adatechnology/game-weapons-three
 
+## 0.22.0
+
+### Minor Changes
+
+- d51063e: A casca do P13 que voa na explosão é montada uma vez: `createWorldExplosiveShells(THREE, defId, items)` devolve cópias que dividem as geometrias e os materiais do modelo gasto (marcados como compartilhados; `discardObject3D` de uma cópia não libera nenhum deles, `dispose()` libera). A bancada de explosivos monta o modelo ao receber a sala e voa uma cópia em cada explosão, em vez de montar o modelo e materiais novos a cada uma.
+
+### Patch Changes
+
+- 5df2bca: A mesa da área de explosivos fica no chão livre, à vista do P13, fora da calçada junto à parede. Desde o #281 as placas além do trecho que a explosão quebra ficam presas; em cima delas, a mesa só andava porque a calçada inteira se soltava.
+- 2344fd6: O cenário de empurrão do P13 mede a mesa rasgada pelo centro de massa de todas as suas peças (onde cada parte está desenhada, pelo peso dela), não pela peça que ficou com o id do objeto. O mínimo continua 0,15 m.
+- Updated dependencies [f4cf94f]
+- Updated dependencies [0e0d121]
+- Updated dependencies [33d2474]
+- Updated dependencies [71b5bef]
+- Updated dependencies [d5850bb]
+  - @adatechnology/game-render-three@0.3.0
+  - @adatechnology/game-vfx@0.15.0
+  - @adatechnology/game-audio@0.14.0
+  - @adatechnology/game-floorplan-three@0.14.1
+  - @adatechnology/game-vfx-three@0.10.3
+
 ## 0.21.7
 
 ### Patch Changes

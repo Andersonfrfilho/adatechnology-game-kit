@@ -1,5 +1,19 @@
 # @adatechnology/game-fluids-three
 
+## 0.5.0
+
+### Minor Changes
+
+- 71b5bef: - `shadowCasterProbes`: cada sonda vem depois de uma sonda instanciada (e vice-versa). Na passada de sombra o three r160 desenha todos os objetos com um material de profundidade compartilhado e só escolhe o programa de novo quando o objeto troca entre comum e instanciado; seis sondas comuns em fila ficavam todas com o programa da primeira, e o `USE_MAP` da parede texturizada ligava no jogo, quando ela era desenhada logo depois dos destroços (instanciados) de uma explosão.
+  - `FilmManager.warmUpProbes()`: o filme de combustível e sangue tem sondas para o aquecimento, com materiais que o gerenciador guarda até o `dispose`. Cada grade do filme liberava o próprio material, e o programa ia junto com a última; a próxima explosão que derramava combustível ligava de novo. A sala registra as sondas.
+
+### Patch Changes
+
+- Updated dependencies [f4cf94f]
+- Updated dependencies [0e0d121]
+  - @adatechnology/game-vfx@0.15.0
+  - @adatechnology/game-vfx-three@0.10.3
+
 ## 0.4.25
 
 ### Patch Changes

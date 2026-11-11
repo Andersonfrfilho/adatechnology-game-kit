@@ -1,5 +1,23 @@
 # @adatechnology/game-render-three
 
+## 0.3.0
+
+### Minor Changes
+
+- f4cf94f: A primeira explosão não liga programa nem decodifica som no meio do jogo.
+
+  - `createProgramWarmup`: no primeiro desenho do aquecimento, todo objeto que projeta sombra entra nos mapas de sombra (sem o recorte pela câmera da sombra; `shadowCasters: 'visible'` volta ao de antes). O three r160 só liga o programa de profundidade de um objeto quando a passada de sombra o desenha, e o `compile` nunca faz isso: a parede texturizada da calçada da casa, fora da caixa do sol na carga, ligava o programa `USE_MAP ... DEPTH_PACKING 3201` quando entrava na caixa, no meio do jogo.
+  - `shadowCasterProbes(THREE)`: sondas que projetam sombra com material iluminado, com e sem textura, nos três lados; a sala registra.
+  - `explosionEffectIds(explosions?)` do `game-vfx`: toda explosão do catálogo de efeitos. A sala aquece todas (antes, uma lista à mão de nove, sem o P13, o barril, o tanque do carro e os foguetes).
+  - `AudioEngine.preload(ids)`: decodifica agora os arquivos desses sons (e das variantes de um conjunto), uma vez só. `blastSoundIds()` do `game-destruction-three`: o estrondo de cada família, o eco distante, a cauda em lugar fechado, o fogo e os destroços por material. A sala pré-carrega esses e o `water_splash` na primeira tecla ou clique.
+
+- 33d2474: Destroço parado pode custar pouco (opcional: sem as opções nada muda). Orçamento de corpos acordados: acima de `maxAwakePieces` peças soltas (sugerido `SUGGESTED_MAX_AWAKE_PIECES`, 24), as mais antigas que já pararam (no chão, mais lentas que o limite de repouso, e a que está escorada só depois de manter a inclinação por 1,5 s) dormem onde estão, sem teletransporte; acima de `maxAwakeFragments` (sugerido 64) o mesmo vale para os fragmentos. A peça posta para dormir pelo orçamento guarda os pontos em que se apoiava e acorda quando qualquer um deles perde o apoio: a tábua escorada num degrau que sumiu cai, mesmo com o pé ainda no chão. Com `settledBatches` o destroço em repouso é desenhado em lote, um desenho por material (`createStaticBatcher` do `game-render-three`, que ganhou `materialKey` para juntar cópias iguais de um material): a colisão continua a de cada peça, e a peça atingida, acordada, amassada, escondida ou com qualquer evento volta a ser desenhada sozinha na hora. `settledBatchStats()` diz quantos lotes e quantas malhas. A sala de teste liga o desenho em lote; o orçamento fica desligado nela até decisão do dono (`debris.maxAwakePieces`/`maxAwakeFragments` ligam).
+
+### Patch Changes
+
+- 71b5bef: - `shadowCasterProbes`: cada sonda vem depois de uma sonda instanciada (e vice-versa). Na passada de sombra o three r160 desenha todos os objetos com um material de profundidade compartilhado e só escolhe o programa de novo quando o objeto troca entre comum e instanciado; seis sondas comuns em fila ficavam todas com o programa da primeira, e o `USE_MAP` da parede texturizada ligava no jogo, quando ela era desenhada logo depois dos destroços (instanciados) de uma explosão.
+  - `FilmManager.warmUpProbes()`: o filme de combustível e sangue tem sondas para o aquecimento, com materiais que o gerenciador guarda até o `dispose`. Cada grade do filme liberava o próprio material, e o programa ia junto com a última; a próxima explosão que derramava combustível ligava de novo. A sala registra as sondas.
+
 ## 0.2.0
 
 ### Minor Changes

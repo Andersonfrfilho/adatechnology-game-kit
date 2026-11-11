@@ -1,5 +1,14 @@
 # @adatechnology/game-interactables-three
 
+## 0.2.15
+
+### Patch Changes
+
+- Updated dependencies [f4cf94f]
+- Updated dependencies [33d2474]
+- Updated dependencies [71b5bef]
+  - @adatechnology/game-render-three@0.3.0
+
 ## 0.2.14
 
 ### Patch Changes

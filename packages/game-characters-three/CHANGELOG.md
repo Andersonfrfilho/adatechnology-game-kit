@@ -1,5 +1,16 @@
 # @adatechnology/game-characters-three
 
+## 0.11.13
+
+### Patch Changes
+
+- Updated dependencies [f4cf94f]
+- Updated dependencies [33d2474]
+- Updated dependencies [71b5bef]
+- Updated dependencies [d5850bb]
+  - @adatechnology/game-render-three@0.3.0
+  - @adatechnology/game-audio@0.14.0
+
 ## 0.11.12
 
 ### Patch Changes
