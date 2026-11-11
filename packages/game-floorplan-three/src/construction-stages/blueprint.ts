@@ -198,7 +198,7 @@ export function buildBlueprintStage(
     const pos = d.pos != null ? d.pos : alongU ? d.v : d.u
     const w = d.width || 0.8
     const hw = w / 2
-    const th = 0.15
+    const th = plan.walls.find((w) => w.floor === d.floor && w.axis === d.axis && Math.abs((alongU ? w.v0 : w.u0) - pos) < 0.05)?.thickness || 0.15
     // Threshold line covering the full thickness of the wall
     if (alongU) addBoxMesh(THREE, group, at - hw, 0.005, pos - th / 2, at + hw, 0.015, pos + th / 2, doorMat)
     else addBoxMesh(THREE, group, pos - th / 2, 0.005, at - hw, pos + th / 2, 0.015, at + hw, doorMat)

@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import { getAssembly } from '@adatechnology/game-destruction'
-import type { StructurePart } from '@adatechnology/game-floorplan-structure'
+import { MORTAR_JOINT } from '@adatechnology/game-floorplan-structure'
+import type { MasonryUnit, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { BoxBatch } from './box-batch.js'
 import { subtractRects, wallLineOf } from './wall-plane.js'
@@ -95,7 +96,7 @@ function layUnits(rect: WallRect, coursing: Coursing, put: (a0: number, y0: numb
  * The bare wall of a structural part, laid unit by unit into the batches, in the pieces that are left once its pillars, beams, lintels, foundation and the walls
  * laid before it are taken out (`cuts`, in the wall's plane): the masonry fills the frame, it never runs through it.
  */
-export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, cuts: readonly WallRect[], courseBase: number): void {
+export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, cuts: readonly WallRect[], courseBase: number, laid?: MasonryUnit): void {
   const wall = wallLineOf(part.aabb)
   const th = wall.thickness
   // a sliver left between two cuts (a door's end a few millimetres from a pillar) is no masonry: the pillar's face closes it
@@ -135,7 +136,10 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   const isBlock = part.assembly === 'concrete_block_wall' || part.material === 'concrete'
   // the bricks of a bare wall: the finished wall less its plaster each side (1.4 cm), the width of the bond beam and lintels cast in it
   const coreTh = Math.max(0.09, th - 0.028)
-  const coursing: Coursing = { courseH: isBlock ? 0.2 : 0.14, unitLen: isBlock ? 0.39 : 0.24, joint: 0.012, courseBase }
+  // the units the walls are laid of (`MASONRY_UNITS`), a course and a unit with their mortar joint; a wall with no unit keeps the brick or block it looks like
+  const coursing: Coursing = laid
+    ? { courseH: laid.height + MORTAR_JOINT, unitLen: laid.length + MORTAR_JOINT, joint: 0.012, courseBase }
+    : { courseH: isBlock ? 0.2 : 0.14, unitLen: isBlock ? 0.39 : 0.24, joint: 0.012, courseBase }
   const unit = isBlock ? batches.block : batches.brick
   for (const r of pieces) {
     // the mortar behind the units shows in every joint; it is thinner than the units, so no face of it lies on theirs

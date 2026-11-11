@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
+import { applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, getMasonryUnit, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
@@ -374,6 +374,8 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   for (const l of lintels) addStageBox(THREE, masonry, l.aabb[0], l.y0, l.aabb[1], l.aabb[2], l.y1, l.aabb[3], mats.lintel!, l.id)
 
   const batches = createMasonryBatches()
+  const unitId = rawStructure.construction.walls.unit
+  const unit = typeof unitId === 'string' ? getMasonryUnit(unitId) : undefined
   const laid: Solid[] = []
   const solids: readonly Solid[] = [...foundations, ...columns, ...beams, ...slabs, ...lintels]
   for (const run of wallRuns(parts.filter((x) => x.role === 'wall' || x.role === 'partition'))) {
@@ -391,7 +393,7 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
       const cut = cutOf(wall, o.aabb, o.y0, o.y1)
       if (cut) cuts.push(cut)
     }
-    buildMasonryPanel(batches, p, cuts, (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0)
+    buildMasonryPanel(batches, p, cuts, (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, unit)
     laid.push(solidOf(p))
   }
   for (const mesh of masonryMeshes(THREE, batches, mats, 'masonry')) masonry.add(mesh)

@@ -7,6 +7,7 @@ import { STREAM } from './legacy-seeds'
 import { translate } from './locale'
 import { buildPlan, floorsOf } from './plan'
 import { hexString, palette } from './palette'
+import { withWallThickness, wallThicknessFor } from './wall-thickness'
 import { registries } from './registry'
 import { createRng, hashString } from './rng'
 import { resolveSlots } from './slots'
@@ -38,7 +39,11 @@ const cleanSlot = (s: Slot): RecordedSlot => {
 /** Recorded slots (resolved positions) of every storey and of the lot. */
 export function slots(template: string | TemplateDef, options?: FloorplanOptions): RecordedSlot[] {
   const tpl = templateOf(template)
-  const o = options || {}
+  const o = resolveOptions(tpl, options || {})
+  return withWallThickness(wallThicknessFor(tpl, o), () => slotsWith(tpl, o))
+}
+
+function slotsWith(tpl: TemplateDef, o: FloorplanOptions): RecordedSlot[] {
   const plan = buildPlan(tpl, o.w, o.d, o)
   const locale = o.locale || 'en'
   return resolveSlots(plan)
@@ -90,7 +95,14 @@ const loc = (key: string | undefined, locale: string, ns: 'labels' | 'facadeColo
 /** Generates a plan: building, lot, seeded item fill, decor, house state and palette. */
 export function generate(template: string | TemplateDef, options?: FloorplanOptions): FloorplanResult {
   const tpl = templateOf(template)
-  const o = options || {}
+  const o = resolveOptions(tpl, options || {})
+  return withWallThickness(wallThicknessFor(tpl, o), () => generateWith(tpl, o))
+}
+
+/** The options of every resolver registered (`registerOptionResolver`), applied in order. */
+const resolveOptions = (tpl: TemplateDef, options: FloorplanOptions): FloorplanOptions => registries().OPTION_RESOLVERS.reduce((op, r) => r.resolve(tpl, op), options)
+
+function generateWith(tpl: TemplateDef, o: FloorplanOptions): FloorplanResult {
   const seed = o.seed == null ? 1 : o.seed
   const locale = o.locale || 'en'
   let op: FloorplanOptions = Object.assign({}, o, { seed })

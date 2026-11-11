@@ -1,6 +1,7 @@
-import type { FloorplanEngine, FloorplanResult, ResultExtensionContext } from '@adatechnology/game-floorplan'
+import type { FloorplanEngine, FloorplanOptions, FloorplanResult, ResultExtensionContext, TemplateDef } from '@adatechnology/game-floorplan'
 
 import { constructionFor } from './construction'
+import { MASONRY_SYSTEM, getMasonryUnit, wallThicknessOf } from './masonry-units'
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
 import type { ConstructionBuild } from './registry'
@@ -44,6 +45,19 @@ const cacheOf = (result: object): Cache => {
   return cache
 }
 
+/**
+ * The masonry unit of a plan (`options.masonryUnit`, else the template's) and the thickness of its walls that follows from it, before the walls are laid out.
+ * A house of another system, or the Visor de casas 3D reproduction, keeps the engine's walls.
+ */
+function resolveMasonryUnit(template: TemplateDef, options: FloorplanOptions): FloorplanOptions {
+  if (options.visorSections === true) return options
+  const unit = (options.masonryUnit as string | undefined) ?? template.masonryUnit
+  const system = (options.construction as string | undefined) ?? template.construction
+  if (unit === undefined || (system !== undefined && system !== 'masonry')) return options
+  if (options.masonrySystem === MASONRY_SYSTEM.STRUCTURAL) throw new Error('Structural masonry (NBR 16868) is declared but not built yet: see the README of game-floorplan-structure')
+  return { ...options, masonryUnit: unit, wallThickness: options.wallThickness ?? wallThicknessOf(getMasonryUnit(unit)) }
+}
+
 function constructionExtension(context: ResultExtensionContext): unknown {
   const build = constructionFor({ result: context.result as never, seed: context.seed, template: context.plan.tpl as never, options: context.options })
   CACHE.set(context.result, { build })
@@ -80,6 +94,7 @@ function energyOf(context: ResultExtensionContext): EnergyConfig | undefined {
 export function register(engine: FloorplanEngine, options: StructurePackOptions = {}): void {
   engine.registerLocale('en', enLocale)
   engine.registerLocale('pt-BR', ptBrLocale)
+  engine.registerOptionResolver('masonryUnit', resolveMasonryUnit)
   engine.registerResultExtension('construction', constructionExtension)
   engine.registerResultExtension('structureExtras', (context) => cacheOf(context.result).build.extras ?? {}, { after: ['construction'] })
   engine.registerResultExtension(

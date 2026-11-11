@@ -1,10 +1,13 @@
-import { EPS, MARGIN, TOL, WALL_THICKNESS } from './constants'
+import { EPS, TOL } from './constants'
+import { roomMargin, wallMargin, wallThickness } from './wall-thickness'
 import type { PlacedItem, PlanWall, Rect, Room, RoomDef, Vec2 } from './types'
 
 export const r2 = (x: number): number => Math.round(x * 100) / 100
 export const clamp = (x: number, a: number, b: number): number => Math.max(a, Math.min(b, x))
 export const overlaps = (a: Rect, b: Rect, e = EPS): boolean => a[0] < b[2] - e && a[2] > b[0] + e && a[1] < b[3] - e && a[3] > b[1] + e
-export const inner = (p: Rect): Rect => [p[0] + MARGIN, p[1] + MARGIN, p[2] - MARGIN, p[3] - MARGIN]
+export const inner = (p: Rect): Rect => insetBy(p, wallMargin())
+/** `p` less `margin` on every side. */
+export const insetBy = (p: Rect, margin: number): Rect => [p[0] + margin, p[1] + margin, p[2] - margin, p[3] - margin]
 export const eq = (a: number, b: number): boolean => Math.abs(a - b) < TOL
 export const inflate = (r: Rect, e: number): Rect => [r[0] - e, r[1] - e, r[2] + e, r[3] + e]
 export const areaOf = (r: Rect): number => (r[2] - r[0]) * (r[3] - r[1])
@@ -92,7 +95,7 @@ export function openingZones(u: number, v: number, axis: 'u' | 'v', width: numbe
   const h = width / 2
   return axis === 'u' ? [[u - h, v - depth, u + h, v], [u - h, v, u + h, v + depth]] : [[u - depth, v - h, u, v + h], [u, v - h, u + depth, v + h]]
 }
-export const openingDepth = (width: number, leaf: number): number => Math.max(0.9, leaf) + MARGIN
+export const openingDepth = (width: number, leaf: number): number => Math.max(0.9, leaf) + wallMargin()
 
 /** Points 0.55 m on each side of an opening. */
 export function entryPoints(ab: { axis: 'u' | 'v'; u: number; v: number }): Vec2[] {
@@ -124,7 +127,7 @@ export function normalizeRoom(c: Partial<RoomDef> & { id: string; type: string; 
  * (more than 0.3 m), a strip that reaches the shared edge. The inset stays at the ends of the stretch, where a real wall or corner stands.
  */
 export function usableParts(room: Room, extra?: number): Rect[] {
-  const m = MARGIN + (extra || 0)
+  const m = roomMargin(room) + (extra || 0)
   const out: Rect[] = []
   for (const p of room.parts) {
     out.push([p[0] + m, p[1] + m, p[2] - m, p[3] - m])
@@ -232,7 +235,7 @@ export function buildWalls(rooms: Room[], doors: WallBuildDoor[], openPairs: [st
           v0: g.axis === 'u' ? g.pos : x,
           u1: g.axis === 'u' ? y : g.pos,
           v1: g.axis === 'u' ? g.pos : y,
-          thickness: WALL_THICKNESS,
+          thickness: wallThickness(),
           sides: [s.A, s.B],
           exterior: s.A === 'outside' || s.B === 'outside',
           type: railing ? 'railing' : 'wall',

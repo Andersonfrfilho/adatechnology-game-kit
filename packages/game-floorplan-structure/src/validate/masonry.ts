@@ -100,8 +100,9 @@ function bondBeamViolations(context: WallContext, structure: Pick<Structure, 'pa
   if (!beams.length) return [{ code: STRUCTURAL_VIOLATION.MISSING_BOND_BEAM, part: wall.part.id, message: `${wall.part.id} has no bond beam on top` }]
   const out: StructuralViolation[] = []
   for (const pillar of pillars) {
-    const [u, v] = centre(pillar)
-    const over = beams.filter((b) => u >= b.aabb[0] - TOLERANCE && u <= b.aabb[2] + TOLERANCE && v >= b.aabb[1] - TOLERANCE && v <= b.aabb[3] + TOLERANCE)
+    // the beam is over the pillar where their plan boxes overlap (a long pillar at a wall's end carries the beam over part of its length)
+    const [p0, q0, p1, q1] = pillar.aabb
+    const over = beams.filter((b) => Math.min(p1, b.aabb[2]) - Math.max(p0, b.aabb[0]) > TOLERANCE && Math.min(q1, b.aabb[3]) - Math.max(q0, b.aabb[1]) > TOLERANCE)
     const carries = over.some((b) => pillar.y1 >= b.y0 - TOLERANCE && structure.supports.some((s) => s.part === b.id && s.on === pillar.id && s.bears !== false))
     if (!carries) out.push({ code: STRUCTURAL_VIOLATION.PILLAR_DOES_NOT_REACH_BOND_BEAM, part: pillar.id, message: `${pillar.id} stops at ${pillar.y1} m and does not carry the bond beam of ${wall.part.id}` })
   }

@@ -1,4 +1,5 @@
-import { MARGIN, EPS } from './constants'
+import { EPS } from './constants'
+import { wallMargin } from './wall-thickness'
 import {
   areaOf,
   clamp,
@@ -24,7 +25,9 @@ import type { PlaceOnFloorOptions, PlacedItem, Plan, PlacementContext, Placement
 
 /** Geometry and grid helpers shared with decor passes and state plugins. */
 export const placementKit: PlacementKit = {
-  MARGIN,
+  get MARGIN() {
+    return wallMargin()
+  },
   EPS,
   r2,
   clamp,

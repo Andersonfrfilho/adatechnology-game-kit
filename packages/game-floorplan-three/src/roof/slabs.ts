@@ -18,7 +18,7 @@ export function installRoofSlabs(K: Kernel, shared: Shared): void {
       const ex0 = free(j, i - 1) ? o : 0, ex1 = free(j, i + 1) ? o : 0, ez0 = free(j - 1, i) ? o : 0, ez1 = free(j + 1, i) ? o : 0;
       bx('plaster', x0 - ex0, yb, z0 - ez0, x1 + ex1, yb + 0.03, z1 + ez1, slab);
       const side = (ok: boolean, ax0: number, az0: number, ax1: number, az1: number): void => { if (!ok) return; bx('plaster', ax0, yb, az0, ax1, yb + pr, az1, c); bx('plaster', ax0 - (ax1 - ax0 < 0.5 ? 0.03 : 0), yb + pr, az0 - (az1 - az0 < 0.5 ? 0.03 : 0), ax1 + (ax1 - ax0 < 0.5 ? 0.03 : 0), yb + pr + 0.04, az1 + (az1 - az0 < 0.5 ? 0.03 : 0), cap); };
-      { const wt = 0.075, yc = yb - 0.2; // band: covers the 20 cm gap between the top of the wall and the slab at the outer edges
+      { const wt = (shared.ctx.r.walls.find((w) => w.exterior)?.thickness || 0.15) / 2, yc = yb - 0.2; // band: covers the 20 cm gap between the top of the wall and the slab at the outer edges
         if (free(j, i - 1)) bx('plaster', x0 - wt, yc, z0 - (free(j - 1, i) ? wt : 0), x0, yb, z1 + (free(j + 1, i) ? wt : 0), c);
         if (free(j, i + 1)) bx('plaster', x1, yc, z0 - (free(j - 1, i) ? wt : 0), x1 + wt, yb, z1 + (free(j + 1, i) ? wt : 0), c);
         if (free(j - 1, i)) bx('plaster', x0, yc, z0 - wt, x1, yb, z0, c);

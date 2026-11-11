@@ -45,8 +45,11 @@ export interface StructuralViolation {
 
 /** Most metres a masonry wall runs between two pillars (confined masonry: 3 to 4 m; `WALL_PILLAR_SPACING` is 4). */
 export const MAX_PILLAR_SPACING = 4
-/** NBR 6118 13.2.3: no side of a pillar under 19 cm, and at least 360 cm² of section. */
-export const MIN_PILLAR_SIDE = 0.19
+/**
+ * NBR 6118 13.2.3: no side of a pillar under 14 cm (from 14 to 19 cm its loads take the factor γn, `pillarLoadFactor`), and at least 360 cm² of section: a
+ * 14 cm pillar is at least 26 cm long.
+ */
+export const MIN_PILLAR_SIDE = 0.14
 export const MIN_PILLAR_AREA = 0.036
 /** NBR 6118 13.2.2: a beam at least 12 cm wide. */
 export const MIN_BEAM_WIDTH = 0.12

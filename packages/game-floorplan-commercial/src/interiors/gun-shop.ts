@@ -8,7 +8,7 @@ const RANGE_LANES = 4
 const RANGE_WIDTH = 8
 
 const template: TemplateDef = {
-  id: 'gun_shop', use: 'commercial', place: 'gun_shop', construction: 'masonry', partyWalls: ['left', 'right'], style: 'commercial',
+  id: 'gun_shop', use: 'commercial', place: 'gun_shop', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: ['left', 'right'], style: 'commercial',
   limits: { w: [20, 24], d: [9, 12] }, defaults: { w: 20, d: 9 },
   lot: (w) => buildingLot({ backyard: 4.0, cargoU: w - 4, doorTarget: { a: 'sales_floor', side: 'front' } }),
   facade: { steelDoor: true },

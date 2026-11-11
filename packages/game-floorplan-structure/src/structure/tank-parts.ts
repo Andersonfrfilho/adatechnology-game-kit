@@ -1,6 +1,7 @@
 import { GROUND } from '../types'
 import type { Rect, StructurePart, WaterTank } from '../types'
 import { touches } from '../geometry'
+import { pillarBox } from './context'
 import type { BuildContext } from './context'
 
 const TANK_FILL = 0.08
@@ -84,7 +85,8 @@ function supportBeams(context: BuildContext, slab: StructurePart, lines: { reado
       }
       // a timber wall carries it on its top plate and studs
       if (context.isTimber) continue
-      const at: Rect = chosen.along ? [end - 0.1, b.at - 0.1, end + 0.1, b.at + 0.1] : [b.at - 0.1, end - 0.1, b.at + 0.1, end + 0.1]
+      // in the wall the beam ends on: its long side along that wall
+      const at: Rect = chosen.along ? pillarBox(context.pillar, end, b.at, false) : pillarBox(context.pillar, b.at, end, true)
       const pillar = builder.add({ id: `tank_beam_pillar_${k}_${end === b.a0 ? 0 : 1}`, role: 'column', material: construction.frame.pillars, aabb: at, y0: storeyFloor, y1: slab.y1 - depth }, { floor: top })
       const base = builder.parts.find((p) => p.id !== pillar.id && (p.role === 'slab' || p.role === 'beam') && Math.abs(p.y1 - storeyFloor) < 0.06 && touches(p.aabb, at, 0.01))
       builder.rest(pillar, storeyFloor <= 0.05 ? GROUND : base ?? wall, 'rebar')

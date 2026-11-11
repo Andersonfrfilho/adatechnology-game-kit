@@ -11,7 +11,7 @@ export function installRoofRect(K: Kernel, shared: Shared): void {
     const Q = (pts: number[][]): void => K.paneTiles(mat, pts, roofColor, type);
     cursor.pc = pieceOfPane(xm, zm);
     // closes the eave: masonry band over the wall (no gap up to the roof), eave soffit and fascia at the edge
-    { const wt = 0.075, yc = yb - 0.2, cf = C.facade != null ? C.facade : 0xd8d0c0, fas = (R_STYLE() === 'budget') ? 0x6e4e34 : sh(roofColor, 0.55), sof = 0xe6e2d8, tz = 0.035;
+    { const wt = (shared.ctx.r.walls.find((w) => w.exterior)?.thickness || 0.15) / 2, yc = yb - 0.2, cf = C.facade != null ? C.facade : 0xd8d0c0, fas = (R_STYLE() === 'budget') ? 0x6e4e34 : sh(roofColor, 0.55), sof = 0xe6e2d8, tz = 0.035;
       const gx = gable && alongX, gz = gable && !alongX; // gable end (no horizontal fascia)
       if (!touchesU[0]) { bx('plaster', X0 - wt, yc, Z0 - (touchesU[1] ? 0 : wt), X0, yb, Z1 + (touchesU[3] ? 0 : wt), cf); bx('plain', x0, yb - 0.025, z0, X0 - wt, yb, z1, sof); if (!gx) bx('plain', x0 - tz, yb - 0.13, z0 - tz, x0, yb + 0.03, z1 + tz, fas); }
       if (!touchesU[2]) { bx('plaster', X1, yc, Z0 - (touchesU[1] ? 0 : wt), X1 + wt, yb, Z1 + (touchesU[3] ? 0 : wt), cf); bx('plain', X1 + wt, yb - 0.025, z0, x1, yb, z1, sof); if (!gx) bx('plain', x1, yb - 0.13, z0 - tz, x1 + tz, yb + 0.03, z1 + tz, fas); }

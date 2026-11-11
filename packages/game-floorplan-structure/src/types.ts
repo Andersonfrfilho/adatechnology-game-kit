@@ -1,4 +1,5 @@
 import type { JointKind, MaterialId, StructureRole } from '@adatechnology/game-contracts'
+import type { MasonrySystem } from './masonry-units'
 
 /** Axis-aligned rectangle `[u0, v0, u1, v1]` in the plan (metres). */
 export type Rect = [number, number, number, number]
@@ -118,6 +119,10 @@ export interface WallMaterials {
   /** Wall assembly of `game-destruction` (default by system, and by finish in masonry). */
   assembly?: string
   thickness: number
+  /** The masonry unit the walls are laid of (`MASONRY_UNITS`): their thickness, the pillars, bond beams and lintels follow from it. */
+  unit?: string
+  /** How the masonry stands (default `confined`). */
+  masonrySystem?: MasonrySystem
   studs?: string
   /** Materials drawn per wall by a hash of its legacy key (the improvised shack). */
   mixed?: MaterialId[]

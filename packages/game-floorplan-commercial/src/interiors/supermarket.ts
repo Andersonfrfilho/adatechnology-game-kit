@@ -4,7 +4,7 @@ import { buildingLot } from './lot'
 import type { FindsHint, InteriorModule } from './types'
 
 const template: TemplateDef = {
-  id: 'supermarket', use: 'commercial', place: 'supermarket', construction: 'masonry', partyWalls: ['left', 'right'], style: 'commercial',
+  id: 'supermarket', use: 'commercial', place: 'supermarket', construction: 'masonry', masonryUnit: 'ceramic_block_14', partyWalls: ['left', 'right'], style: 'commercial',
   limits: { w: [18, 24], d: [13, 18] }, defaults: { w: 18, d: 13 },
   lot: (w) => buildingLot({ cargoU: w - 3.5, doorTarget: { a: 'checkouts', side: 'front' } }),
   facade: { steelDoor: true },

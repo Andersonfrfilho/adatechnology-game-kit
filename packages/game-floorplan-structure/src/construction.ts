@@ -32,10 +32,11 @@ export function tentsOf(source: StructureSource): Tent[] {
 export function constructionFor(context: PlanContext): ConstructionBuild {
   const forced = context.options?.construction
   const named = typeof forced === 'string' ? forced : (context.template?.construction as string | undefined)
-  if (named === undefined) return { construction: masonryConstruction(context.result) }
+  const unit = context.options?.masonryUnit as string | undefined
+  if (named === undefined) return { construction: masonryConstruction(context.result, unit) }
   const registered = CONSTRUCTIONS.get(named)
   if (registered) return registered(context)
-  const preset = constructionOfSystem(named, context.result)
+  const preset = named === 'masonry' ? masonryConstruction(context.result, unit) : constructionOfSystem(named, context.result)
   if (preset) return { construction: preset, ...(named === 'canvas' ? { extras: { tents: tentsOf(context.result) } } : {}) }
   throw new Error(`Unknown construction "${named}": register it with registerConstruction`)
 }

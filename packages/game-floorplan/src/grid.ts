@@ -1,4 +1,3 @@
-import { MARGIN } from './constants'
 import { entryPoints, eq, inRect, inner, sharedEdge, usableParts } from './geometry'
 import { openingsOfFloor } from './queries'
 import type { Plan, Rect, Room, WalkGrid } from './types'
@@ -10,6 +9,7 @@ function wallBodies(plan: Plan, floor: number): Rect[] {
   const cache = (plan.wallBodies = plan.wallBodies || {})
   if (cache[floor]) return cache[floor]
   const doors = plan.doors.filter((p) => p.floor === floor)
+  const MARGIN = plan.wallThickness / 2
   return (cache[floor] = plan.walls
     .filter((p) => p.floor === floor && (p.type === 'wall' || p.type === 'railing'))
     .map((p) => {

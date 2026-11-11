@@ -16,7 +16,7 @@ const OFFICE_WIDTH = 8.5
 const OFFICE_DEPTH = 3
 
 const template: TemplateDef = {
-  id: 'metalworks', use: 'industrial', place: 'metalworks', construction: 'masonry', partyWalls: [], style: 'commercial',
+  id: 'metalworks', use: 'industrial', place: 'metalworks', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: [], style: 'commercial',
   limits: { w: [30, 36], d: [20, 24] }, defaults: { w: 30, d: 20 },
   lot: (w) => buildingLot({ backyard: 8, cargoU: w - 6, doorTarget: { a: 'reception', side: 'front' }, libraries: { backyard: 'backyard_service' } }),
   facade: { steelDoor: true },

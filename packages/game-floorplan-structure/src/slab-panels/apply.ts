@@ -8,6 +8,9 @@ import type { Rect, PlanStructure, StructurePart, Support } from '../types'
 import type { PartsAndSupports } from '../wall-detail/apply'
 import { layoutPanels, linesOf, runsOf, shareInside } from './layout'
 import type { Cut } from './layout'
+import { getMasonryUnit, pillarSectionOf } from '../masonry-units'
+import { pillarBox } from '../structure/context'
+import type { PillarSection } from '../structure/context'
 import type { SlabPanelOptions } from './options'
 
 const SLAB_ID = /^slab_(\d+|top.*|ceiling|base)$/
@@ -94,6 +97,8 @@ interface Prop {
 interface Spot {
   u: number
   v: number
+  /** The pillar's long side runs along u (in a wall along u), else along v. */
+  alongU?: boolean
 }
 
 interface Context {
@@ -108,11 +113,13 @@ interface Context {
   panelsOf: Map<string, StructurePart[]>
   pillars: number
   groundBase: string
+  /** Section of the pillars it adds: the walls' masonry unit's, else `columnSide` square. */
+  section: PillarSection
   /** The distances of the last call to `distancesOf`, kept while no part or support is added (a tower asks for them once per bond beam and per slab). */
   distCache?: { parts: number; supports: number; map: Map<string, number> }
 }
 
-const boxOfSpot = (spot: Spot, side: number): Rect => [spot.u - side / 2, spot.v - side / 2, spot.u + side / 2, spot.v + side / 2]
+const boxOfSpot = (spot: Spot, section: PillarSection): Rect => pillarBox(section, spot.u, spot.v, spot.alongU ?? true)
 
 /** Steps from the ground of every part, the way the destruction world counts them: through the supports that carry, and not through a partition. */
 function distancesOf(context: Context): Map<string, number> {
@@ -169,12 +176,12 @@ function heldBy(line: Line, width: number, props: readonly Prop[]): { intervals:
  */
 function pillarsFor(
   line: Line, width: number, props: readonly Prop[], spots: Array<Spot & { dist: number }>,
-  context: { dist: number; options: SlabPanelOptions; ends: boolean; allowed: readonly Interval[]; snap: (spot: Spot) => Spot },
+  context: { dist: number; options: SlabPanelOptions; section: PillarSection; ends: boolean; allowed: readonly Interval[]; snap: (spot: Spot) => Spot },
 ): Interval[] {
   const { options, ends, allowed } = context
   const length = line.to - line.from
-  const side = options.columnSide
-  const all = (): Prop[] => [...props, ...spots.map((spot) => ({ box: boxOfSpot(spot, side), dist: spot.dist }))]
+  const side = context.section.along
+  const all = (): Prop[] => [...props, ...spots.map((spot) => ({ box: boxOfSpot(spot, context.section), dist: spot.dist }))]
   const place = (at: number, lo: number, hi: number): number | undefined => {
     let best: number | undefined
     let gap = Infinity
@@ -205,7 +212,7 @@ function pillarsFor(
       if (at === undefined) break
     }
     const [u, v] = pointOf(line, at)
-    const spot = { ...context.snap({ u: round2(u), v: round2(v) }), dist: context.dist }
+    const spot = { ...context.snap({ u: round2(u), v: round2(v), alongU: line.dir === 'u' }), dist: context.dist }
     if (spots.some((other) => Math.hypot(other.u - spot.u, other.v - spot.v) < 0.15)) break
     spots.push(spot)
     held = heldBy(line, width, all()).intervals
@@ -237,7 +244,15 @@ function wallStretches(context: Context, line: Line, floor: number, top: number)
       out.push(...pieces)
     } else if (!openings.some((o) => line.at > o.from - 0.1 && line.at < o.to + 0.1)) out.push(along)
   }
-  return merged(out)
+  // a wall of another storey that rises into this one (the top of a lower wall under a terrace) takes its place: no pillar stands in it
+  const bottom = context.structure.levels[floor] ?? 0
+  const half = context.section.along / 2
+  const taken = context.parts
+    .filter((w) => (w.role === 'wall' || w.role === 'partition') && w.floor !== floor && w.y1 > bottom + 0.05 && w.y0 < top - 0.05)
+    .map((w) => holds(line, 0.02, w.aabb))
+    .filter((x): x is Interval => x !== undefined)
+    .map(([a, b]): Interval => [a - half, b + half])
+  return taken.reduce((pieces, [a, b]) => pieces.flatMap(([x, y]): Interval[] => (b <= x || a >= y ? [[x, y]] : ([[x, a], [b, y]] as Interval[]).filter(([p, q]) => q > p))), merged(out))
 }
 
 /**
@@ -245,14 +260,21 @@ function wallStretches(context: Context, line: Line, floor: number, top: number)
  * wall it stays as it is.
  */
 function snapToWall(context: Context, floor: number, spot: Spot): Spot {
-  let { u, v } = spot
+  let { u, v, alongU } = spot
   for (const w of context.parts) {
     if ((w.role !== 'wall' && w.role !== 'partition') || w.floor !== floor) continue
     if (spot.u < w.aabb[0] - PLAN_TOLERANCE || spot.u > w.aabb[2] + PLAN_TOLERANCE || spot.v < w.aabb[1] - PLAN_TOLERANCE || spot.v > w.aabb[3] + PLAN_TOLERANCE) continue
-    if (w.aabb[2] - w.aabb[0] >= w.aabb[3] - w.aabb[1]) v = round2((w.aabb[1] + w.aabb[3]) / 2)
+    alongU = w.aabb[2] - w.aabb[0] >= w.aabb[3] - w.aabb[1]
+    if (alongU) v = round2((w.aabb[1] + w.aabb[3]) / 2)
     else u = round2((w.aabb[0] + w.aabb[2]) / 2)
   }
-  return { u, v }
+  return { u, v, alongU }
+}
+
+/** The section of the pillars a slab adds: the one the walls' masonry unit casts (`pillarSectionOf`), else `columnSide` square. */
+function sectionOf(structure: PlanStructure, options: SlabPanelOptions): PillarSection {
+  const unit = structure.construction.walls.unit
+  return typeof unit === 'string' ? pillarSectionOf(getMasonryUnit(unit)) : { across: options.columnSide, along: options.columnSide }
 }
 
 /** The parts of `a` that are also in `b`. */
@@ -281,7 +303,7 @@ function panelsUnder(context: Context, slab: string, box: Rect): StructurePart[]
 /** The pillar at `spot` from `bottom` to `top`, on the ground or on the slab of the storey below. */
 function addPillar(context: Context, spot: Spot, bottom: number, top: number, floor: number, below: string | undefined, slab: string): StructurePart {
   const pillar = make({
-    id: `pillar_${floor}_${context.pillars++}`, role: 'column', material: context.pillarMaterial, floor, slab, aabb: boxOfSpot(spot, context.options.columnSide), y0: bottom, y1: top,
+    id: `pillar_${floor}_${context.pillars++}`, role: 'column', material: context.pillarMaterial, floor, slab, aabb: boxOfSpot(spot, context.section), y0: bottom, y1: top,
   })
   context.parts.push(pillar)
   if (below && context.panelsOf.has(below)) for (const panel of panelsUnder(context, below, pillar.aabb)) rest(context, panel, pillar, 'rebar')
@@ -380,7 +402,7 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
       if (covered(line)) continue
       const walled = wallStretches(context, line, storey.floor, top)
       const allowed = storey.below ? intersect(walled, merged(ground.map((box) => holds(line, 0.02, box)).filter((x): x is Interval => x !== undefined))) : walled
-      const held = pillarsFor(line, context.wallThickness, props, spots, { dist: near, options, ends: true, allowed, snap: (spot) => snapToWall(context, storey.floor, spot) })
+      const held = pillarsFor(line, context.wallThickness, props, spots, { dist: near, options, section: context.section, ends: true, allowed, snap: (spot) => snapToWall(context, storey.floor, spot) })
       const span = beamSpan(to - from, held).span
       const depth = beamDepthFor(span, options)
       const width = Math.max(context.wallThickness, round2(depth / options.beamWidthRatio))
@@ -452,7 +474,7 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
   const storey = { floor, below: floor >= 1 ? `slab_${floor}` : undefined, bottom: context.structure.levels[floor] ?? 0 }
   const spots: Array<Spot & { dist: number }> = []
   const near = props.length ? Math.min(...props.map((p) => p.dist)) : pillarDist(context, dist, storey)
-  const held = pillarsFor(line, width, props, spots, { dist: near, options, ends: false, allowed: wallStretches(context, line, floor, plate.y0), snap: (spot) => snapToWall(context, floor, spot) })
+  const held = pillarsFor(line, width, props, spots, { dist: near, options, section: context.section, ends: false, allowed: wallStretches(context, line, floor, plate.y0), snap: (spot) => snapToWall(context, floor, spot) })
   const span = beamSpan(line.to - line.from, held).span
   if (span > 1.5 && Number.isFinite(span)) {
     const depth = Math.max(plate.y1 - plate.y0, beamDepthFor(span, options))
@@ -480,7 +502,7 @@ export function applySlabPanels(input: PartsAndSupports, structure: PlanStructur
   const firstColumn = input.supports.find((s) => /^(column_0_|building_column_)/.test(s.part) && !/^(column_0_|building_column_)/.test(s.on))
   const context: Context = {
     structure, options, beamMaterial: frame.beams, pillarMaterial: frame.pillars, joint: system.joints.slab, wallThickness: (structure.construction.walls.thickness as number | undefined) ?? 0.15,
-    parts, supports: input.supports.slice(), panelsOf: new Map(), pillars: 0, groundBase: firstColumn?.on ?? GROUND,
+    parts, supports: input.supports.slice(), panelsOf: new Map(), pillars: 0, groundBase: firstColumn?.on ?? GROUND, section: sectionOf(structure, options),
   }
   const walls = parts.filter((p) => /^wall_/.test(p.id) && (p.role === 'wall' || p.role === 'partition'))
   const jobs = [...bonds.map((part) => ({ part, bond: true })), ...slabs.map((part) => ({ part, bond: false }))].sort((a, b) => a.part.y0 - b.part.y0 || Number(b.bond) - Number(a.bond))

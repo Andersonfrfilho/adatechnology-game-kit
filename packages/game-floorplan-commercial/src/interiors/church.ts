@@ -12,7 +12,7 @@ const PEW_COLUMNS = 2
 const PEW_AISLE_OFFSET = 2.6
 
 const template: TemplateDef = {
-  id: 'church', use: 'institutional', place: 'church', construction: 'masonry', partyWalls: [], style: 'commercial',
+  id: 'church', use: 'institutional', place: 'church', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: [], style: 'commercial',
   limits: { w: [12, 14], d: [20, 24] }, defaults: { w: 12, d: 20 },
   lot: () => buildingLot({ frontSetback: 4, marginLeft: 4, marginRight: 1, pedestrian: { u: 6 }, backyard: 3, doorTarget: { a: 'parish_hall', side: 'front' }, libraries: { garden: 'garden' }, extraZones: [{ id: 'bell_tower', type: 'bell_tower', label: 'bell_tower', parts: [[-4, 17, -1, 20]], library: 'bell_tower' }] }),
   facade: {},
