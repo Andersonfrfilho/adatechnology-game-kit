@@ -56,8 +56,26 @@ export function addDoorLintels(context: BuildContext): void {
     const jambs = (context.pillars.get(door.floor) ?? []).filter((pillar) => pillar.material === 'concrete' && overlapsInPlan(pillar.aabb, box) && pillar.y1 >= y0)
     if (construction.system === 'masonry' && hi - lo > WIDE_DOOR) jambs.push(...addJambPillars(context, { door, beside, from, to, cross }, jambs))
     for (const pillar of jambs) builder.rest(lintel, pillar, 'rebar')
-    for (const plate of context.plates.get(door.floor) ?? []) if (overlapsInPlan(plate.aabb, box)) builder.rest(plate, lintel, system.joints.beam)
+    // the masonry over the door, from the lintel to the bond beam (encunhamento), laid as the wall beside it: the bond beam bears on it, it on the lintel
+    const host = context.wallParts.get(beside[0]!.id)
+    const top = Math.max(...beside.map((w) => context.wallParts.get(w.id)?.y1 ?? 0))
+    const header = host && !context.visorSections && top - (y0 + depth) > MIN_HEADER ? addDoorHeader(context, { door, host, lintel, top, box: door.axis === 'u' ? [from, cross - half, to, cross + half] : [cross - half, from, cross + half, to] }) : null
+    for (const plate of context.plates.get(door.floor) ?? []) if (overlapsInPlan(plate.aabb, box)) builder.rest(plate, header ?? lintel, header ? context.system.joints.wall : system.joints.beam)
   }
+}
+
+/** Least height (metres) left between a door's lintel and the bond beam that gets masonry of its own; under it the bond beam takes the lintel. */
+const MIN_HEADER = 0.04
+
+/** The masonry over a door, between its lintel and the top of the wall beside it: the same build as that wall, on the lintel. */
+function addDoorHeader(context: BuildContext, over: { door: SourceDoor; host: StructurePart; lintel: StructurePart; top: number; box: Rect }): StructurePart {
+  const { door, host, lintel, top, box } = over
+  const header = context.builder.add(
+    { id: `wall_${door.floor}_over_${door.id}`, role: host.role, material: host.material, aabb: box, y0: lintel.y1, y1: top },
+    { floor: door.floor, ...(host.assembly ? { assembly: host.assembly } : {}), ...(host.exterior ? { exterior: host.exterior } : {}) },
+  )
+  context.builder.rest(header, lintel, context.system.joints.wall)
+  return header
 }
 
 /** A lintel longer than this (metres) does not rest on masonry alone: it gets a concrete pillar at each jamb that has none (`MAX_LINTEL_ON_MASONRY` of the validator). */

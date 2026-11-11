@@ -184,6 +184,11 @@ export function applyConstructionLevel(
       if (obj === child) return
       const ud = obj.userData
       if (!ud) return
+      // the lamp holder hangs from its box from the rough-in until the fitting goes up; its bare bulb once the walls are rendered
+      if (ud.part === 'lamp_holder' || ud.part === 'lamp_bulb') {
+        obj.visible = level >= (ud.part === 'lamp_bulb' ? 5 : 4) && level <= 7
+        return
+      }
       if (typeof ud.part === 'string' && EMBEDDED.has(ud.part)) {
         obj.visible = level === 4 || (ud.part === 'wall_pipe' && waterOn && level >= 4)
         return

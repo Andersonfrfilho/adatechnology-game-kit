@@ -25,10 +25,12 @@ export function installRoofRect(K: Kernel, shared: Shared): void {
     { const roofRects: RoofRect[] = shared.ctx.roofRects, rr = roofRects[roofRects.length - 1]; if (rr && !rr.yb) Object.assign(rr, { yb, tp, gable: !!gable, alongX, exterior: [x0, z0, x1, z1], rm }); } // R57: roof-plane geometry to rest the solar panels on
     if (gable) {
       const yr = yb + (alongX ? dz : dx) / 2 * tp;
+      // the gable's face reaches down to the soffit, closing the verge (the Visor's stopped at the eave line, over an open slot)
+      const gableFoot = shared.ctx.visorEave ? yb : yb - EAVE.soffitTop - EAVE.soffitThickness;
       if (alongX) { Q([[x0, yb, z0], [x1, yb, z0], [x1, yr, zm], [x0, yr, zm]]); Q([[x0, yb, z1], [x1, yb, z1], [x1, yr, zm], [x0, yr, zm]]); ridge([x0, yr, zm], [x1, yr, zm], type, roofColor);
-        for (const xe of [x0, x1]) polyFace('plaster', [[xe, yb, z0], [xe, yb, z1], [xe, yr - 0.02, zm]], C.facade, [xe < xm ? -1 : 1, 0, 0]); }
+        for (const xe of [x0, x1]) polyFace('plaster', gableFoot < yb ? [[xe, gableFoot, z0], [xe, gableFoot, z1], [xe, yb, z1], [xe, yr - 0.02, zm], [xe, yb, z0]] : [[xe, yb, z0], [xe, yb, z1], [xe, yr - 0.02, zm]], C.facade, [xe < xm ? -1 : 1, 0, 0]); }
       else { Q([[x0, yb, z0], [x0, yb, z1], [xm, yr, z1], [xm, yr, z0]]); Q([[x1, yb, z0], [x1, yb, z1], [xm, yr, z1], [xm, yr, z0]]); ridge([xm, yr, z0], [xm, yr, z1], type, roofColor);
-        for (const ze of [z0, z1]) polyFace('plaster', [[x0, yb, ze], [x1, yb, ze], [xm, yr - 0.02, ze]], C.facade, [0, 0, ze < zm ? -1 : 1]); }
+        for (const ze of [z0, z1]) polyFace('plaster', gableFoot < yb ? [[x0, gableFoot, ze], [x1, gableFoot, ze], [x1, yb, ze], [xm, yr - 0.02, ze], [x0, yb, ze]] : [[x0, yb, ze], [x1, yb, ze], [xm, yr - 0.02, ze]], C.facade, [0, 0, ze < zm ? -1 : 1]); }
     } else { // hipped
       const yr = yb + rm * tp;
       if (alongX) { const r0 = x0 + rm, r1 = x1 - rm; Q([[x0, yb, z0], [x1, yb, z0], [r1, yr, zm], [r0, yr, zm]]); Q([[x0, yb, z1], [x1, yb, z1], [r1, yr, zm], [r0, yr, zm]]); Q([[x0, yb, z0], [x0, yb, z1], [r0, yr, zm]]); Q([[x1, yb, z0], [x1, yb, z1], [r1, yr, zm]]); if (r1 > r0) ridge([r0, yr, zm], [r1, yr, zm], type, roofColor); for (const [px, pz, rx] of [[x0, z0, r0], [x0, z1, r0], [x1, z0, r1], [x1, z1, r1]]) ridge([px, yb, pz], [rx, yr, zm], type, roofColor); }

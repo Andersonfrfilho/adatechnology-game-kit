@@ -42,14 +42,14 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
         for (let i = q.i0; i <= q.i1; i++) { if (U(q.j0 - 1, i)) touchesU[1] = 1; if (U(q.j1 + 1, i)) touchesU[3] = 1; }
         roofRects.push({ f, r: [x0, z0, x1, z1], touchesU });
         const ybq = pe(x0, z0, x1, z1); roofRect(type, x0, z0, x1, z1, ybq, roofColor, gable && single, F, touchesU); cursor.pc = null;
-        if (G.on) gutter(type, f, x0, z0, x1, z1, ybq, touchesU);
+        if (G.on) gutter(type, f, x0, z0, x1, z1, ybq, touchesU, gable && single);
       }
     }
     for (const e of (shared.ctx.outbuildingList || []) as Outbuilding[]) { // R43: outbuilding cover (same type of roof as the house)
       const [x0, z0, x1, z1] = e.aabb, yb = Y0(0) + (e.ceiling || 2.6) + 0.2; roofRects.push({ f: 0, r: [x0, z0, x1, z1], outbuilding: e.id });
       if (type === 'slab') { const c = C.facade != null ? C.facade : 0xd8d0c0; bx('plaster', x0 - 0.08, yb, z0 - 0.08, x1 + 0.08, yb + 0.03, z1 + 0.08, sh(C.ceiling != null ? C.ceiling : 0xb8b4ac, 0.85)); for (const [a, b, c2, d] of [[x0 - 0.08, z0 - 0.08, x1 + 0.08, z0 - 0.04], [x0 - 0.08, z1 + 0.04, x1 + 0.08, z1 + 0.08], [x0 - 0.08, z0 - 0.08, x0 - 0.04, z1 + 0.08], [x1 + 0.04, z0 - 0.08, x1 + 0.08, z1 + 0.08]]) bx('plaster', a, yb, b, c2, yb + 0.4, d, c); continue; }
       shared.ctx.noPiece = true; roofRect(type, x0, z0, x1, z1, yb, roofColor, true, F, [0, 0, 0, 0]); cursor.pc = null; shared.ctx.noPiece = false;
-      if (G.on) gutter(type, 0, x0, z0, x1, z1, yb, [0, 0, 0, 0]);
+      if (G.on) gutter(type, 0, x0, z0, x1, z1, yb, [0, 0, 0, 0], true);
     }
     tankCastle(type, roofColor);
   }

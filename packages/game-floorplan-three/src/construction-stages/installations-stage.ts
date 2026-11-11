@@ -40,12 +40,15 @@ interface SewerPiece {
 
 /**
  * The opening of an excavation: drawn after everything opaque and after the ground's own layers, where nothing nearer covers it, it marks its pixels in the
- * stencil. The hole's earth faces then draw only on those pixels, whatever the ground's depth there, and leave their own depth for the pipes in the hole.
+ * stencil and clears their depth to the far plane, so the ground is gone there. The hole's earth faces, pipes and boxes then draw only on those pixels and
+ * against each other's depth: the near wall of a trench hides what is behind it (another trench's box under the ground), as a hole in the ground does.
  */
 function openingMaterial(THREE: Three): THREE_NS.Material {
-  return new THREE.MeshBasicMaterial({
+  return new THREE.ShaderMaterial({
+    vertexShader: 'void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'void main() { gl_FragDepth = 1.0; }',
     colorWrite: false,
-    depthWrite: false,
+    depthWrite: true,
     depthTest: true,
     transparent: true,
     stencilWrite: true,
@@ -64,7 +67,6 @@ function earthMaterial(THREE: Three, color: number): THREE_NS.Material {
     roughness: 0.98,
     transparent: true,
     depthWrite: true,
-    depthFunc: THREE.AlwaysDepth,
     stencilWrite: true,
     stencilRef: 1,
     stencilFunc: THREE.EqualStencilFunc,
@@ -114,7 +116,7 @@ function openEdges(rect: Rect, others: readonly Rect[], solids: readonly Rect[] 
  * An excavation as one open hole in the ground: the union of its rectangles, each drawn as its opening (the depth mask), its floor and the walls of the union's
  * outline, with the dug earth heaped along the rim.
  */
-function addExcavation(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trench[], mats: { readonly earth: THREE_NS.Material; readonly heap: THREE_NS.Material }, site: { readonly solids: readonly Rect[]; readonly footprint: Rect }): void {
+function addExcavation(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trench[], mats: { readonly earth: THREE_NS.Material; readonly heap: THREE_NS.Material }, site: { readonly solids: readonly Rect[]; readonly footprint: Rect; readonly buildings: readonly Rect[] }): void {
   const opening = new BoxBatch(), earth = new BoxBatch(), heap = new BoxBatch()
   const rects = trenches.map((t) => t.rect)
   const pits = trenches.filter((t) => t.pit).map((t) => t.rect)
@@ -129,10 +131,10 @@ function addExcavation(THREE: Three, parent: THREE_NS.Group, trenches: readonly 
       earth.addQuad([[e.a[0], bed(e.a[0], e.a[2]), e.a[2]], [e.b[0], bed(e.b[0], e.b[2]), e.b[2]], [e.b[0], 0, e.b[2]], [e.a[0], 0, e.a[2]]], [-ox, 0, -oz])
       const x0 = Math.min(e.a[0], e.b[0]), x1 = Math.max(e.a[0], e.b[0]), z0 = Math.min(e.a[2], e.b[2]), z1 = Math.max(e.a[2], e.b[2])
       const w = TRENCH.berm.width, h = TRENCH.berm.height
-      // the dug earth is heaped along the rim in the yard; inside the house the frame stands where it would go
-      const [fx0, fz0, fx1, fz1] = site.footprint
-      const inHouse = x1 > fx0 - 0.4 && x0 < fx1 + 0.4 && z1 > fz0 - 0.4 && z0 < fz1 + 0.4
-      if (!inHouse) addHeap(heap, ox ? [ox > 0 ? x1 : x0 - w, z0, ox > 0 ? x1 + w : x0, z1] : [x0, oz > 0 ? z1 : z0 - w, x1, oz > 0 ? z1 + w : z0], h)
+      // the dug earth is heaped along the rim in the yard; never where a building stands (the house, an outbuilding): its frame and foundation are there
+      const heapAt: Rect = ox ? [ox > 0 ? x1 : x0 - w, z0, ox > 0 ? x1 + w : x0, z1] : [x0, oz > 0 ? z1 : z0 - w, x1, oz > 0 ? z1 + w : z0]
+      const onBuilding = [site.footprint, ...site.buildings].some(([bx0, bz0, bx1, bz1]) => heapAt[2] > bx0 - 0.4 && heapAt[0] < bx1 + 0.4 && heapAt[3] > bz0 - 0.4 && heapAt[1] < bz1 + 0.4)
+      if (!onBuilding) addHeap(heap, ox ? [ox > 0 ? x1 : x0 - w, z0, ox > 0 ? x1 + w : x0, z1] : [x0, oz > 0 ? z1 : z0 - w, x1, oz > 0 ? z1 + w : z0], h)
     }
   })
   const mask = opening.mesh(THREE, openingMaterial(THREE), 'excavation:opening')
@@ -357,7 +359,7 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord, rain: r
   const boxes = [...layout.boxes, ...rainwater.boxes]
   const parts = (plan as { structure?: { parts?: readonly { id: string; beamKind?: string; aabb: readonly number[] }[] } }).structure?.parts ?? []
   const solids = parts.filter((p) => p.beamKind === 'ground_beam' || /^(ground_beam_|footing_pier_)/.test(p.id)).map((p) => p.aabb as unknown as Rect)
-  addExcavation(THREE, group, [...layout.trenches, ...rainwater.trenches, ...boxes.map(pitOf)], mats, { solids, footprint: houseFootprint(routingPlanOf(plan)) as Rect })
+  addExcavation(THREE, group, [...layout.trenches, ...rainwater.trenches, ...boxes.map(pitOf)], mats, { solids, footprint: houseFootprint(routingPlanOf(plan)) as Rect, buildings: (plan.outbuildings ?? []).map((o) => o.aabb as unknown as Rect) })
   for (const piece of layout.pieces) addPipe(THREE, group, piece.points, piece.bore / 2, mats.pipe, ORDER.inside)
   // the rainwater runs apart from the sewer, in a group of its own
   const rainGroup = new THREE.Group()

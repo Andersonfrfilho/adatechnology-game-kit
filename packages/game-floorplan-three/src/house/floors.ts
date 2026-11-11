@@ -6,6 +6,11 @@ import type { Flight, HouseRecord, HouseRoom, Kernel, KernelHouseFloors, PieceRe
 
 const FLOOR_OVER_GROUND = 0.012;
 
+/** The render and paint under a ceiling slab, metres; the rest of the slab is concrete. */
+const CEILING_PAINT = 0.015
+/** Bare concrete of a slab's top. */
+const SLAB_CONCRETE = 0x8f8e8a
+
 export function installHouseFloors(K: Kernel, shared: Shared): void {
   const { rectsOf, EPS, OPEN_AREA, Y0, bx, cursor, floorColor, stairFootprint, structurePiece, subRects } = K;
   function flights(): Flight[] { // each flight between floors only once (the SDK repeats the item at departure and arrival)
@@ -63,7 +68,12 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       // ceiling of the rooms with nothing above
       cursor.group = 't' + f; const ceilingOf = hasSlab('slab_' + (f + 1)) ? 'slab_' + (f + 1) : (f === nA - 1 ? ['slab_ceiling', 'slab_top'].find(hasSlab) : null);
       const above = R.rooms.filter(c => c.floor === f + 1).flatMap(rectsOf);
-      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(coveredRects(c), above)) for (const [pc, r] of tilesOf(ceilingOf, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); }
+      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(coveredRects(c), above)) for (const [pc, r] of tilesOf(ceilingOf, rc)) {
+        // the slab is concrete, bare on top under the roof; only its underside is rendered and painted (the room's ceiling)
+        cursor.pc = pc;
+        if (shared.ctx.visorCeilings) { bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); continue; }
+        bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + CEILING_PAINT, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', r[0], y0 + c.ceiling + CEILING_PAINT, r[1], r[2], y0 + c.ceiling + 0.2, r[3], SLAB_CONCRETE);
+      }
       cursor.pc = null;
     }
   }

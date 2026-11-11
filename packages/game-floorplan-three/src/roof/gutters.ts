@@ -13,6 +13,8 @@ const DOWNPIPE_OFF_CORNER = 0.15;
  */
 const GUTTER = { radius: 0.0625, wall: 0.004, slats: 12, bracketEvery: 0.6 } as const;
 const DOWNPIPE = { radius: 0.04, clampEvery: 1.5, shoeOver: 0.12 } as const;
+/** The outlet's centre past the corner gutter's edge, metres. */
+const OUTLET_FROM_CORNER = 0.1;
 /** The sand box under each downpipe: its outer side and its grate, metres; its centre this far out of the downpipe, so it lies inside the 60 cm sidewalk. */
 export const SAND_BOX = { side: 0.4, grate: 0.34, offset: 0.24, depth: 0.4 } as const;
 
@@ -27,11 +29,11 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     const draw = rnd() < p, light = rnd() < 0.6; void draw; const on = true; // R55: every house has a gutter on every falling eave
     return { on, rnd, color: high ? 0x3a3d42 : (light ? 0xeceff1 : 0xa5abb0), bad: paletteMeta(shared.ctx.colors)?.state === 'abandoned' || R.state === 'abandoned', fallback: false };
   }
-  function gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[]): void {
+  function gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[], gable = false): void {
     type Side = [boolean, 'x' | 'z', number, number, number, number];
     type Corner = [number, number, number, number, number[]];
     const G: GutterConfig = shared.ctx.gutter, o = type === 'fiber_cement' ? 0.3 : 0.45, x0 = X0 - (touchesU[0] ? 0 : o), x1 = X1 + (touchesU[2] ? 0 : o), z0 = Z0 - (touchesU[1] ? 0 : o), z1 = Z1 + (touchesU[3] ? 0 : o), c = G.color, y = yb - 0.05;
-    const run = (ax: 'x' | 'z', a: number, b: number, p: number, outside: number, breaks: boolean): void => { // box gutter (bottom + outer flange) along the axis ax; out = -1/+1 direction outwards
+    const run = (ax: 'x' | 'z', a: number, b: number, p: number, outside: number, breaks: boolean, meets: readonly [boolean, boolean] = [false, false]): void => { // box gutter (bottom + outer flange) along the axis ax; out = -1/+1 direction outwards
       // the gutter hangs on the fascia's outer face (the fascia is 3.5 cm thick, set on the eave's edge): its back never on the fascia's own planes
       if (!shared.ctx.visorGutters) p += outside * GUTTER_OFF_FASCIA;
       const seg = (u0: number, u1: number, tilt: number): void => {
@@ -39,12 +41,18 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
         if (ax === 'x') { boxC('plain', m, y + dy, p + outside * 0.05, L, 0.03, 0.1, c, 0, 0, tilt); boxC('plain', m, y + 0.03 + dy, p + outside * 0.1, L, 0.09, 0.02, c, 0, 0, tilt); }
         else { boxC('plain', p + outside * 0.05, y + dy, m, 0.1, 0.03, L, c, tilt, 0, 0); boxC('plain', p + outside * 0.1, y + 0.03 + dy, m, 0.02, 0.09, L, c, tilt, 0, 0); }
       };
-      if (!shared.ctx.visorGutters && !breaks) { halfRound(ax, a - 0.1, b + 0.1, p, outside); return; }
+      if (!shared.ctx.visorGutters && !breaks) { halfRound(ax, a, b, p, outside, meets); return; }
       if (!breaks) seg(a - 0.1, b + 0.1, 0); else { const L = b - a; seg(a - 0.1, a + L * 0.45, 0); seg(a + L * 0.45, a + L * 0.72, 0.22); } // fallen stretch and stretch that vanished
     };
     // the half-round gutter: slats round its half circle (back against the fascia, open to the sky), the rolled lip on its outer edge, its brackets
-    const halfRound = (ax: 'x' | 'z', a: number, b: number, p: number, outside: number): void => {
+    const halfRound = (ax: 'x' | 'z', a0: number, b0: number, p: number, outside: number, meets: readonly [boolean, boolean]): void => {
+      // to a corner it runs on to the other gutter's axis and a radius past it, so the two close the corner as a corner piece does; a free end is capped
+      const reach = GUTTER_OFF_FASCIA + 2 * GUTTER.radius + GUTTER.wall, a = a0 - (meets[0] ? reach : 0.02), b = b0 + (meets[1] ? reach : 0.02);
       const R = GUTTER.radius, yc = y + R, pc = p + outside * R, L = b - a, m = (a + b) / 2, width = 2 * R * Math.sin(Math.PI / (2 * GUTTER.slats)) + 0.002;
+      for (const [end, open] of [[a, meets[0]], [b, meets[1]]] as const) {
+        if (open) continue;
+        if (ax === 'x') boxC('plain', end, yc - R / 2, pc, GUTTER.wall, R + 0.008, 2 * R, sh(c, 0.94)); else boxC('plain', pc, yc - R / 2, end, 2 * R, R + 0.008, GUTTER.wall, sh(c, 0.94));
+      }
       for (let k = 0; k < GUTTER.slats; k++) {
         const th = -Math.PI / 2 + (Math.PI * (k + 0.5)) / GUTTER.slats, across = pc + outside * Math.sin(th) * R, up = yc - Math.cos(th) * R;
         if (ax === 'x') boxC('plain', m, up, across, L, GUTTER.wall, width, c, -outside * th, 0, 0); else boxC('plain', across, up, m, width, GUTTER.wall, L, c, 0, 0, outside * th);
@@ -56,14 +64,18 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
         else { boxC('metal', p + outside * 0.003, yc + 0.01, t, 0.006, 0.05, 0.025, sh(c, 0.7)); boxC('metal', pc, yc - R - 0.004, t, 2 * R, 0.006, 0.025, sh(c, 0.7)); }
       }
     };
-    const sides: Side[] = [[!touchesU[1], 'x', x0, x1, z0, -1], [!touchesU[3], 'x', x0, x1, z1, 1], [!touchesU[0], 'z', z0, z1, x0, -1], [!touchesU[2], 'z', z0, z1, x1, 1]];
+    // no gutter on a gable end: the tiles drain to the eaves (the Visor's ran one on every side)
+    const alongX = x1 - x0 >= z1 - z0, gableX = gable && alongX && !shared.ctx.visorGutters, gableZ = gable && !alongX && !shared.ctx.visorGutters;
+    const sides: Side[] = [[!touchesU[1] && !gableZ, 'x', x0, x1, z0, -1], [!touchesU[3] && !gableZ, 'x', x0, x1, z1, 1], [!touchesU[0] && !gableX, 'z', z0, z1, x0, -1], [!touchesU[2] && !gableX, 'z', z0, z1, x1, 1]];
     const larger = sides.reduce((m, l, i) => (l[0] && (l[3] - l[2]) > (sides[m][3] - sides[m][2]) ? i : m), 0);
-    sides.forEach((l, i) => { if (l[0]) run(l[1], l[2], l[3], l[4], l[5], G.bad && !G.fallback && i === larger && (G.fallback = true)); });
+    // which gutter meets each end of a run (x runs meet the x0 and x1 sides at their ends, z runs the z0 and z1 sides)
+    const meetsOf = (i: number): [boolean, boolean] => (i < 2 ? [sides[2][0], sides[3][0]] : [sides[0][0], sides[1][0]]);
+    sides.forEach((l, i) => { if (l[0]) run(l[1], l[2], l[3], l[4], l[5], G.bad && !G.fallback && i === larger && (G.fallback = true), meetsOf(i)); });
     // R55: gutter on every falling eave (free side); downpipes at the building corners run down flush with the wall to a floor drain with a grate, so every gutter has drainage
     const INF = shared.ctx.gutterInfo || (shared.ctx.gutterInfo = { gutters: [], downpipes: [], drains: [] });
     sides.forEach((l, i) => { if (l[0]) INF.gutters.push({ f, side: ['z0', 'z1', 'x0', 'x1'][i], axis: l[1], a: l[2], b: l[3], p: l[4], y }); });
     const freeAt = (px: number, pz: number, sx: number, sz: number): boolean => { for (let kf = 0; kf < f; kf++) for (const [dx, dz] of [[0, 0], [sx * 0.5, 0], [0, sz * 0.5], [sx * 0.5, sz * 0.5], [-sx * 0.3, 0], [0, -sz * 0.3]]) if (roomAt(kf, px + dx, pz + dz)) return false; return true; };
-    const freeRun = [!touchesU[1], !touchesU[3], !touchesU[0], !touchesU[2]]; // z0, z1, x0, x1
+    const freeRun = sides.map((l) => l[0]); // z0, z1, x0, x1: the runs there are (none against the upper storey or on a gable end)
     // corner: [X, Z, sx, sz, adjacent runs (side indices)]
     const corners: Corner[] = [[X0, Z0, -1, -1, [0, 2]], [X1, Z1, 1, 1, [1, 3]], [X1, Z0, 1, -1, [0, 3]], [X0, Z1, -1, 1, [1, 2]]];
     const cover = new Set<number>(), order = G.rnd() < 0.5 ? [0, 1, 2, 3] : [2, 3, 0, 1];
@@ -85,7 +97,11 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     // the sand box (the box takes it to the street's gutter by a pipe of its own: `drains`)
     const roundDownpipe = (px: number, pz: number, sx: number, sz: number, run: number, yt: number): boolean => {
       const side = sides[run], alongX = run < 2, outlet = side[4] + side[5] * (GUTTER_OFF_FASCIA + GUTTER.radius), r = DOWNPIPE.radius;
-      const ox = alongX ? px : outlet, oz = alongX ? outlet : pz, out = Math.hypot(ox - px, oz - pz);
+      // the outlet (bocal) in the gutter next to the corner: past the other gutter's axis by a radius and its own width, towards the run
+      const across = sides[alongX ? (sx < 0 ? 2 : 3) : (sz < 0 ? 0 : 1)];
+      // (a drop at a free end, with no corner beside it, has its outlet over it)
+      const corner = across[4] + across[5] * (GUTTER_OFF_FASCIA + GUTTER.radius), inward = -(alongX ? sx : sz), at = inward ? corner + inward * (GUTTER.radius + OUTLET_FROM_CORNER) : alongX ? px : pz;
+      const ox = alongX ? at : outlet, oz = alongX ? outlet : at, out = Math.hypot(ox - px, oz - pz);
       const yOut = y - 0.02, yWall = yOut - 0.06 - out;
       const bx_ = px + sx * SAND_BOX.offset, bz_ = pz + sz * SAND_BOX.offset, shoe = Math.hypot(bx_ - px, bz_ - pz) * 0.5, yFoot = DOWNPIPE.shoeOver + shoe;
       const path: number[][] = [[ox, yOut, oz], [ox, yOut - 0.06, oz], [px, yWall, pz], [px, yFoot, pz], [px + (bx_ - px) * 0.5, DOWNPIPE.shoeOver, pz + (bz_ - pz) * 0.5]];

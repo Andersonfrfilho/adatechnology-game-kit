@@ -146,6 +146,56 @@ describe('construction stages of single_storey_a', () => {
     }
   })
 
+  it('stands the outbuilding\'s corner pillars in its walls: none out of the slab\'s edge, which is flush with the bond beams\' faces', () => {
+    const frame = group('stage:2:frame')
+    const boxes = new Map<string, THREE.Box3>()
+    frame.children.forEach((c) => { if (/outbuilding_(column|slab|bond_beam)/.test(partOf(c))) boxes.set(partOf(c), boxOf(c)) })
+    const slab = [...boxes].find(([id]) => /outbuilding_slab/.test(id))?.[1]
+    expect(slab).toBeDefined()
+    const beams = [...boxes].filter(([id]) => /bond_beam/.test(id)).map(([, b]) => b)
+    const outer = beams.reduce((u, b) => u.union(b), new THREE.Box3())
+    // the slab's edge on the bond beams' outer faces (within its lip of half a centimetre)
+    for (const k of ['x', 'z'] as const) {
+      expect(Math.abs(slab!.min[k] - outer.min[k])).toBeLessThan(0.006)
+      expect(Math.abs(slab!.max[k] - outer.max[k])).toBeLessThan(0.006)
+    }
+    const columns = [...boxes].filter(([id]) => /column/.test(id))
+    expect(columns.length).toBe(4)
+    for (const [id, b] of columns) for (const k of ['x', 'z'] as const) {
+      expect(b.min[k], id).toBeGreaterThanOrEqual(slab!.min[k] - 1e-6)
+      expect(b.max[k], id).toBeLessThanOrEqual(slab!.max[k] + 1e-6)
+    }
+  })
+
+  it('hangs a lamp holder at every ceiling light from the rough-in to the fitting, its bare bulb once the walls are rendered', () => {
+    const holders: THREE.Object3D[] = [], bulbs: THREE.Object3D[] = []
+    house.group.traverse((o) => { if (o.userData.part === 'lamp_holder') holders.push(o); if (o.userData.part === 'lamp_bulb') bulbs.push(o) })
+    // one holder part per storey, naming the lights it hangs at: every ceiling light of the plan (the outbuilding's too) has one
+    const lights = (planOf('single_storey_a', 1) as unknown as { items: { id: string; type: string }[] }).items.filter((i) => i.type === 'ceiling_light').map((i) => i.id)
+    const hung = new Set(holders.flatMap((h) => (h.userData.lights as string[] | undefined) ?? []))
+    expect(lights.length).toBeGreaterThan(0)
+    for (const id of lights) expect(hung.has(id), id).toBe(true)
+    expect(bulbs.length).toBe(holders.length)
+    for (const level of [3, 4, 5, 6, 7, 8]) {
+      house.setConstructionLevel(level)
+      expect(holders.every(visibleIn), `holders at ${level}`).toBe(level >= 4 && level <= 7)
+      expect(bulbs.every(visibleIn), `bulbs at ${level}`).toBe(level >= 5 && level <= 7)
+    }
+  })
+
+  it('opens the trenches as holes: the mouth clears the ground\'s depth, and what is in the holes hides behind their own walls (no trench seen through another)', () => {
+    const stage = group('stage:4:installations')
+    let opening: THREE.Mesh | undefined, earth: THREE.Mesh | undefined
+    stage.traverse((o) => { if (o.name === 'excavation:opening') opening = o as THREE.Mesh; if (o.name === 'excavation:earth') earth = o as THREE.Mesh })
+    const mouth = opening!.material as THREE.ShaderMaterial
+    expect(mouth.depthWrite).toBe(true)
+    expect(mouth.fragmentShader).toMatch(/gl_FragDepth\s*=\s*1\.0/)
+    const walls = earth!.material as THREE.Material
+    // the earth tests depth like anything else (it drew over everything in the mouth before, the far trench over the near one)
+    expect(walls.depthFunc).toBe(THREE.LessEqualDepth)
+    expect(walls.depthTest).toBe(true)
+  })
+
   it('lays each pipe and conduit once, in the same place at every level, inside walls or over the ceiling slab, and shows it cut into the masonry only in the rough-in', () => {
     const runs: THREE.Object3D[] = []
     house.group.traverse((o) => {

@@ -8,6 +8,8 @@ import type { ElectricalInfo, Hex, HouseRecord, HouseRoom, Kernel, KernelUtiliti
 const BOX_4X2 = [0.055, 0.1, 0.05] as const;
 /** An octagonal ceiling box: across and deep, metres. */
 const OCTAGONAL_BOX = [0.1, 0.05] as const;
+/** A lamp holder hung from a ceiling box: how far under the ceiling, its size, and its bare bulb (metres). */
+const LAMP_HOLDER = { drop: 0.12, height: 0.05, radius: 0.018, bulb: 0.07 } as const;
 /** The PVC of the boxes, as the conduits. */
 const BOX_COLOR = 0xeab308;
 
@@ -84,18 +86,27 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
   // the boxes the conduits end in (rough-in, NBR 5410): a 4x2 box cut into the masonry behind each switch and outlet, its face where the render will be,
   // and an octagonal box cast in the ceiling slab over each light point; hidden once the walls are plastered, as the conduits
   function roughInBoxes(E: NonNullable<NonNullable<HouseRecord['utilities']>['electrical']>, R: HouseRecord, nA: number): void {
-    const floorY = (f: number): number => R.floors[Math.max(0, Math.min(nA - 1, f))]?.y0 ?? 0, group = (f: number): string => 'f' + Math.max(0, Math.min(nA - 1, f));
-    for (const t of [...(E.switches || []), ...(E.outlets || [])]) {
-      const nu = t.frontU || 0, nv = t.frontV || 0, y = floorY(t.floor) + t.y, alongU = Math.abs(nv) >= Math.abs(nu);
-      // the face on the wall's face, the box into the wall
-      const [u0, u1] = alongU ? [t.u - BOX_4X2[0] / 2, t.u + BOX_4X2[0] / 2] : nu > 0 ? [t.u - BOX_4X2[2], t.u] : [t.u, t.u + BOX_4X2[2]];
-      const [v0, v1] = !alongU ? [t.v - BOX_4X2[0] / 2, t.v + BOX_4X2[0] / 2] : nv > 0 ? [t.v - BOX_4X2[2], t.v] : [t.v, t.v + BOX_4X2[2]];
-      part('electrical_box', [0, 0, 0], () => bx('plain', u0, y - BOX_4X2[1] / 2, v0, u1, y + BOX_4X2[1] / 2, v1, BOX_COLOR), { id: 'box:' + t.id, hidden: true }, group(t.floor));
-    }
-    for (const it of R.items) {
-      if (it.type !== 'ceiling_light') continue;
-      const f = Math.max(0, it.floor ?? 0), ceiling = floorY(f) + (R.floors[f]?.ceiling ?? 2.6);
-      part('electrical_box', [0, 0, 0], () => cylBase('plain', it.x, ceiling - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR), { id: 'box:' + it.id, hidden: true }, group(f));
+    const floorY = (f: number): number => R.floors[Math.max(0, Math.min(nA - 1, f))]?.y0 ?? 0, clamp = (f: number): number => Math.max(0, Math.min(nA - 1, f));
+    // one part of each kind per storey (one draw each): every box, holder and bulb of the storey in it
+    for (let f = 0; f < nA; f++) {
+      const wallBoxes = [...(E.switches || []), ...(E.outlets || [])].filter((t) => clamp(t.floor) === f);
+      const lights = R.items.filter((it) => it.type === 'ceiling_light' && clamp(it.floor ?? 0) === f);
+      if (!wallBoxes.length && !lights.length) continue;
+      const ceiling = floorY(f) + (R.floors[f]?.ceiling ?? 2.6), holder = ceiling - LAMP_HOLDER.drop, ids = lights.map((it) => it.id);
+      part('electrical_box', [0, 0, 0], () => {
+        for (const t of wallBoxes) {
+          const nu = t.frontU || 0, nv = t.frontV || 0, y = floorY(t.floor) + t.y, alongU = Math.abs(nv) >= Math.abs(nu);
+          // the face on the wall's face, the box into the wall
+          const [u0, u1] = alongU ? [t.u - BOX_4X2[0] / 2, t.u + BOX_4X2[0] / 2] : nu > 0 ? [t.u - BOX_4X2[2], t.u] : [t.u, t.u + BOX_4X2[2]];
+          const [v0, v1] = !alongU ? [t.v - BOX_4X2[0] / 2, t.v + BOX_4X2[0] / 2] : nv > 0 ? [t.v - BOX_4X2[2], t.v] : [t.v, t.v + BOX_4X2[2]];
+          bx('plain', u0, y - BOX_4X2[1] / 2, v0, u1, y + BOX_4X2[1] / 2, v1, BOX_COLOR);
+        }
+        for (const it of lights) cylBase('plain', it.x, ceiling - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR);
+      }, { id: 'boxes:f' + f, hidden: true }, 'f' + f);
+      if (!lights.length) continue;
+      // the lamp holder on its wires under each box, from the rough-in until the fitting goes up (a bare bulb in it once the walls are rendered)
+      part('lamp_holder', [0, 0, 0], () => { for (const it of lights) { cylBase('plain', it.x, holder + LAMP_HOLDER.height, it.z, 0.003, LAMP_HOLDER.drop - LAMP_HOLDER.height - 0.005, 0x1c1c1e); cylBase('plain', it.x, holder, it.z, LAMP_HOLDER.radius, LAMP_HOLDER.height, 0xe8e4da); } }, { id: 'holders:f' + f, lights: ids }, 'f' + f);
+      part('lamp_bulb', [0, 0, 0], () => { for (const it of lights) cylBase('plain', it.x, holder - LAMP_HOLDER.bulb, it.z, LAMP_HOLDER.radius * 1.5, LAMP_HOLDER.bulb, 0xfff6e0); }, { id: 'bulbs:f' + f, lights: ids }, 'f' + f);
     }
   }
   function pipe2(a: readonly number[], b: readonly number[], diameter: number, color: Hex): void { const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-3) return; _q.setFromUnitVectors(_Y, _v3.set(dx / L, dy / L, dz / L)); put('plain', 'cyl', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, _q, diameter, L, diameter, color); }

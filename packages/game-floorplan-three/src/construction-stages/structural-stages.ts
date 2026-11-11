@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { PLASTER_PER_FACE, applyPanels, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
+import { PLASTER_PER_FACE, applyPanels, pillarSectionForWidth, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
@@ -24,6 +24,8 @@ interface Solid {
   readonly floor: number
 }
 
+/** How far an outbuilding's ground beam reaches past each face of its wall, metres. */
+const GROUND_BEAM_LIP = 0.025
 /** Top of the ground beams and footings: the masonry starts on it. */
 const FOUNDATION_TOP = 0.08
 const EPS = 1e-4
@@ -171,11 +173,19 @@ function outbuildingParts(e: Outbuilding): { parts: StructurePart[]; openings: {
     ['east', [a1 - h, b0 - h, a1 + h, b1 + h]],
   ]
   for (const [side, box] of sides) {
-    parts.push(part(`ground_beam_${side}`, 'beam', box, -0.25, FOUNDATION_TOP, 'concrete', { beamKind: 'ground_beam' }))
+    // the ground beam is wider than the wall it carries (the render and the pillars' faces stand on it, never on its edge)
+    const footing = [box[0]! - GROUND_BEAM_LIP, box[1]! - GROUND_BEAM_LIP, box[2]! + GROUND_BEAM_LIP, box[3]! + GROUND_BEAM_LIP]
+    parts.push(part(`ground_beam_${side}`, 'beam', footing, -0.25, FOUNDATION_TOP, 'concrete', { beamKind: 'ground_beam' }))
     parts.push(part(`bond_beam_${side}`, 'beam', box, ceiling - 0.2, ceiling, 'concrete', { beamKind: 'bond_beam' }))
   }
-  const corners: readonly (readonly [number, number])[] = [[a0, b0], [a1, b0], [a0, b1], [a1, b1]]
-  corners.forEach(([u, v], k) => parts.push(part(`column_${k}`, 'column', [u - 0.1, v - 0.1, u + 0.1, v + 0.1], 0, ceiling)))
+  // the corner pillars of NBR 6118 (360 cm², 14 cm the least side) in its walls' core, flush with the outer corner and running in along the wall, as the
+  // house's: never out of the walls' faces nor of the slab's edge
+  const section = pillarSectionForWidth(th - 2 * PLASTER_PER_FACE)
+  const corners: readonly (readonly [number, number, number])[] = [[a0, b0, 1], [a1, b0, -1], [a0, b1, 1], [a1, b1, -1]]
+  corners.forEach(([u, v, inward], k) => {
+    const outer = u - inward * h, [s0, s1] = inward > 0 ? [outer, outer + section.along] : [outer - section.along, outer]
+    parts.push(part(`column_${k}`, 'column', [s0, v - section.across / 2, s1, v + section.across / 2], 0, ceiling))
+  })
   parts.push(part('slab', 'slab', [a0 - h, b0 - h, a1 + h, b1 + h], ceiling - 0.1, ceiling))
   const openings: { id: string; aabb: number[]; y0: number; y1: number }[] = []
   const opening = (o: Outbuilding['doors'][number], y0: number, y1: number, sill: boolean): void => {

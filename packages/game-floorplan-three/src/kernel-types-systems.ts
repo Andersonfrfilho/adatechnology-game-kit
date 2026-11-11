@@ -654,6 +654,8 @@ export interface BuildContext {
   visorEave: boolean
   /** `BuildOptions.wallCorners === 'visor'`. */
   visorCorners: boolean
+  /** `BuildOptions.ceilings === 'visor'`. */
+  visorCeilings: boolean
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

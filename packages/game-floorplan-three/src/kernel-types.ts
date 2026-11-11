@@ -776,7 +776,7 @@ export interface RoofGrid {
 /** What `roof/gutters` puts on the kernel. */
 export interface KernelRoofGutters {
   gutterConfig(): GutterConfig
-  gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[]): void
+  gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[], gable?: boolean): void
   /** Floor drain with a grate; with `px`, `pz`, the pipe from the downpipe's foot. */
   drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void
 }

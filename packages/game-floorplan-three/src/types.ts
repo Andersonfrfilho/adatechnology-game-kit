@@ -161,6 +161,11 @@ export interface BuildOptions {
    * Visor de casas 3D drew them (an inner L keeps a notch of half a wall at its outer corner).
    */
   wallCorners?: 'closed' | 'visor'
+  /**
+   * `'concrete'` (default): a ceiling slab is concrete, bare on top under the roof, painted only under it. `'visor'`: one box in the ceiling's paint, top too, as
+   * the Visor de casas 3D drew it.
+   */
+  ceilings?: 'concrete' | 'visor'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
   /** Builds the step-by-step construction stage groups (`0..8`) for inspecting the house from foundation to completion. */

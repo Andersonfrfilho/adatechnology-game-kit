@@ -22,7 +22,12 @@ export const wallThicknessOf = (unit: MasonryUnit): number => round2(unit.width 
  * NBR 6118); along the wall, what the 360 cm² of area asks, in steps of 5 cm (a 14 cm block gives 14 x 30, a 19 cm one 19 x 20).
  */
 export function pillarSectionOf(unit: MasonryUnit): { readonly across: number; readonly along: number } {
-  const across = Math.max(unit.width, MIN_PILLAR_SIDE)
+  return pillarSectionForWidth(unit.width)
+}
+
+/** The section of a confined-masonry pillar in a wall whose units are `width` wide (the rule of `pillarSectionOf`, for a wall known by its core only). */
+export function pillarSectionForWidth(width: number): { readonly across: number; readonly along: number } {
+  const across = Math.max(width, MIN_PILLAR_SIDE)
   return { across, along: round2(Math.max(across, ceilTo(MIN_PILLAR_AREA / across, SECTION_STEP))) }
 }
 

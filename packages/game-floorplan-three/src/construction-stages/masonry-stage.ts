@@ -63,6 +63,8 @@ const UNIT_CLEARANCE = 0.005
 const MIN_PIECE = 0.06
 /** The least stretch of wall worth laying at all. */
 const MIN_SPAN = 0.02
+/** How far a mortar fill stays off the faces round it, metres. */
+const SLIVER_CLEAR = 0.0005
 // the mortar bed stands a hair over what the wall rests on (a slab, a beam): its faces never lie on a pillar's foot or head
 const MORTAR_LIFT = 0.009
 
@@ -99,8 +101,11 @@ function layUnits(rect: WallRect, coursing: Coursing, put: (a0: number, y0: numb
 export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, cuts: readonly WallRect[], courseBase: number, unitId?: string): void {
   const wall = wallLineOf(part.aabb)
   const th = wall.thickness
-  // a sliver left between two cuts (a door's end a few millimetres from a pillar) is no masonry: the pillar's face closes it
-  const pieces = subtractRects({ a0: wall.a0, a1: wall.a1, y0: part.y0, y1: part.y1 }, cuts).filter((r) => r.a1 - r.a0 >= MIN_SPAN && r.y1 - r.y0 >= MIN_SPAN)
+  const all = subtractRects({ a0: wall.a0, a1: wall.a1, y0: part.y0, y1: part.y1 }, cuts).filter((r) => r.y1 - r.y0 >= MIN_SPAN)
+  const pieces = all.filter((r) => r.a1 - r.a0 >= MIN_SPAN)
+  // a sliver left between two cuts (the masonry's end a centimetre or two from a pillar) takes no unit: it is filled with mortar to the pillar's face, never left
+  // open from the floor to the beam (it stops a hair short of the faces round it, so it shares no plane with the concrete)
+  const slivers = all.filter((r) => r.a1 - r.a0 < MIN_SPAN && r.a1 - r.a0 > 2 * SLIVER_CLEAR)
   const box = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number): void =>
     batch.add(wall.alongU ? [a0, y0, wall.line - t / 2, a1, y1, wall.line + t / 2] : [wall.line - t / 2, y0, a0, wall.line + t / 2, y1, a1])
 
@@ -134,6 +139,7 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   }
 
   const isBlock = part.assembly === 'concrete_block_wall' || part.material === 'concrete'
+  for (const r of slivers) box(batches.mortar, r.a0 + SLIVER_CLEAR, r.y0 + SLIVER_CLEAR, r.a1 - SLIVER_CLEAR, r.y1 - SLIVER_CLEAR, Math.max(0.09, th - 2 * PLASTER_PER_FACE) * 0.98)
   // the bricks of a bare wall: the finished wall less its render each side (`PLASTER_PER_FACE`), the width of the bond beam and lintels cast in it
   const coreTh = Math.max(0.09, th - 2 * PLASTER_PER_FACE)
   // laid as the structure lays it (`coursingOf`: the unit of the catalog, else the units of the wall's assembly the world breaks it into)

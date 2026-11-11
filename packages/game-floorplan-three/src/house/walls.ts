@@ -3,6 +3,7 @@
 import type { StructurePart } from '@adatechnology/game-floorplan-structure';
 
 import type { BoxCollider, Hex, HouseRecord, HouseWall, Kernel, KernelHouseWalls, PieceRecord, Shared, WallLook, WallSide } from '../kernel-types.js';
+import { doorHeightOf, doorsInWall } from './helpers.js';
 
 export function installHouseWalls(K: Kernel, shared: Shared): void {
   const { EPS, Y0, boxC, bx, cursor, effectiveHeight, pieceRecord, structurePiece, wallColor } = K;
@@ -59,9 +60,13 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
         wallBox(alongU, L, a, b, y0 + ya, y0 + yb, th, sideL.color, sideH.color, sideL.mat, sideH.mat);
         // (R46: the external baseboard and protective sidewalk are drawn by baseboardAndSidewalk(), which closes the corners)
       };
-      const win = R.windows.filter(j => j.floor === f && j.axis === w.axis && Math.abs(j.pos - L) < EPS && j.at + j.width / 2 > s0 + EPS && j.at - j.width / 2 < s1 - EPS).sort((p, q) => p.at - q.at);
+      // the openings cut in the wall: its windows, and the doors of a wall that runs whole across them (the part over a door is the wall's own, no seam)
+      const win = [
+        ...R.windows.filter(j => j.floor === f && j.axis === w.axis && Math.abs(j.pos - L) < EPS && j.at + j.width / 2 > s0 + EPS && j.at - j.width / 2 < s1 - EPS),
+        ...doorsInWall(R.doors, w, L, s0, s1).map(d => ({ at: d.at, width: d.width, y0: 0, y1: doorHeightOf(d, h) })),
+      ].sort((p, q) => p.at - q.at);
       let cur = s0;
-      for (const j of win) { const a = Math.max(s0, j.at - j.width / 2), b = Math.min(s1, j.at + j.width / 2); seg(cur, a, 0, hh); seg(a, b, 0, Math.min(j.y0, hh)); if (j.y1 < hh) seg(a, b, j.y1, hh); cur = b; }
+      for (const j of win) { const a = Math.max(s0, j.at - j.width / 2), b = Math.min(s1, j.at + j.width / 2); seg(cur, a, 0, hh); if (j.y0 > 0) seg(a, b, 0, Math.min(j.y0, hh)); if (j.y1 < hh) seg(a, b, j.y1, hh); cur = b; }
       seg(cur, s1, 0, hh);
       if (cut) { // thin cover to see the plan
         const t = 0.03; if (alongU) bx('plaster', s0, y0 + hh, L - th / 2, s1, y0 + hh + t, L + th / 2, 0xeeeae2); else bx('plaster', L - th / 2, y0 + hh, s0, L + th / 2, y0 + hh + t, s1, 0xeeeae2);

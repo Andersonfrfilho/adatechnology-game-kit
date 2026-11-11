@@ -28,6 +28,13 @@ export const lineOf = (part: StructurePart): WallLine => {
 }
 
 /** A wall laid in bricks or blocks with mortar (not a concrete wall, not timber). */
+/**
+ * Masonry laid on a lintel, between it and the bond beam (over a door, the encunhamento): confined by the walls at its sides and the bond beam on it, it is no
+ * free wall and has no pillars of its own.
+ */
+export const isOverOpening = (part: StructurePart, structure: Pick<Structure, 'supports'>): boolean =>
+  structure.supports.some((s) => s.part === part.id && s.on.startsWith('lintel_'))
+
 export function isMasonryWall(part: StructurePart): boolean {
   if (!part.id.startsWith('wall_') || !part.assembly || (part.role !== 'wall' && part.role !== 'partition')) return false
   const units = getAssembly(part.assembly)?.units
@@ -132,7 +139,7 @@ export function masonryViolations(structure: Pick<Structure, 'parts' | 'supports
     out.push(...assemblyViolations(part, structure.construction.walls.finish))
     if (part.floor === 0 && structure.supports.some((s) => s.part === part.id && s.on === GROUND))
       out.push({ code: STRUCTURAL_VIOLATION.MISSING_GROUND_BEAM, part: part.id, message: `${part.id} stands on the soil with no ground beam under it` })
-    if (!part.exterior) continue
+    if (!part.exterior || isOverOpening(part, structure)) continue
     const wall = lineOf(part)
     // a pillar of the next wall on the line, standing just past this one's end, confines this end too
     const pillars = columns.filter((c) => c.floor === part.floor && onLine(wall, centre(c), AT_POINT) && Math.min(c.y1, part.y1) - Math.max(c.y0, part.y0) > 0.5)
