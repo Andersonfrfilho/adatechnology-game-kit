@@ -51,6 +51,20 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
       shared.ctx.noPiece = true; roofRect(type, x0, z0, x1, z1, yb, roofColor, true, F, [0, 0, 0, 0]); cursor.pc = null; shared.ctx.noPiece = false;
       if (G.on) gutter(type, 0, x0, z0, x1, z1, yb, [0, 0, 0, 0]);
     }
+    tankCastle(type, roofColor);
+  }
+  // the water tank's castle (res.waterTank.castle): where the house's roof is too low for the tank, four plastered walls rise from the ceiling slab round it
+  // to their bond beam and carry a hipped roof of their own, of the house's tiles (its timber comes with the construction stages' roof framing)
+  function tankCastle(type: string, roofColor: number): void {
+    const T = (shared.ctx.r as HouseRecord).waterTank, c = T && T.castle; if (!c || type === 'slab') return;
+    const C = shared.ctx.colors, f = Math.max(0, T.floor), y0 = Y0(f) + (shared.ctx.r as HouseRecord).floors[f].ceiling + 0.2, h = c.thickness / 2, [u0, v0, u1, v1] = c.aabb, color = C.facade != null ? C.facade : 0xd8d0c0;
+    // its walls belong to the storey under it (they stand before the roof goes on); its roof to the roof
+    const st0 = cursor.stage, g0 = cursor.group; if (shared.ctx.constructionStages) cursor.stage = 'finishes';
+    cursor.pc = null; cursor.group = 'f' + f;
+    for (const [a, b, c2, d] of [[u0 - h, v0 - h, u1 + h, v0 + h], [u0 - h, v1 - h, u1 + h, v1 + h], [u0 - h, v0 + h, u0 + h, v1 - h], [u1 - h, v0 + h, u1 + h, v1 - h]]) bx('roughcast', a, y0, b, c2, c.eaveY, d, color);
+    cursor.stage = st0; cursor.group = g0;
+    shared.ctx.roofRects.push({ f, r: [u0 - h, v0 - h, u1 + h, v1 + h], touchesU: [0, 0, 0, 0] });
+    roofRect(type, u0 - h, v0 - h, u1 + h, v1 + h, c.eaveY, roofColor, false, (shared.ctx.r as HouseRecord).facade, [0, 0, 0, 0]); cursor.pc = null;
   }
   const defined: KernelRoofRoofs = { roofs };
   Object.assign(K, defined);

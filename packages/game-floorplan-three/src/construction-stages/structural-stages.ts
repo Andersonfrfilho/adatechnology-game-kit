@@ -30,6 +30,8 @@ const EPS = 1e-4
 /** How far a beam or a pillar reaches into the slab cast on it. */
 const SLAB_BITE = 0.04
 const PANEL_LAP = 0.01
+/** The slab's edge stands this far out of the outer faces of what carries it: never on their plane. */
+const SLAB_LIP = 0.005
 
 function addRebarCage(THREE: Three, parent: THREE_NS.Group, box: readonly [number, number, number, number], yBase: number, height: number, rebarMat: THREE_NS.Material): void {
   const [u0, v0, u1, v1] = box
@@ -87,12 +89,12 @@ function seatSlabs(slabs: Solid[], carriers: Solid[]): void {
   for (const f of floors) {
     const own = slabs.filter((s) => s.floor === f)
     const bounds = [Math.min(...own.map((s) => s.aabb[0])), Math.min(...own.map((s) => s.aabb[1])), Math.max(...own.map((s) => s.aabb[2])), Math.max(...own.map((s) => s.aabb[3]))]
-    const under = carriers.filter((c) => c.floor === f && own.some((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05))
+    const under = carriers.filter((c) => c.floor === f && own.some((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05 && c.y1 <= s.y1 + EPS))
     if (!under.length) continue
     const reach = [Math.min(...under.map((c) => c.aabb[0])), Math.min(...under.map((c) => c.aabb[1])), Math.max(...under.map((c) => c.aabb[2])), Math.max(...under.map((c) => c.aabb[3]))]
     for (const s of own) {
-      for (const k of [0, 1] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! < s.aabb[k] && s.aabb[k] - reach[k]! < 0.3) s.aabb[k] = reach[k]!
-      for (const k of [2, 3] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! > s.aabb[k] && reach[k]! - s.aabb[k] < 0.3) s.aabb[k] = reach[k]!
+      for (const k of [0, 1] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! < s.aabb[k] + SLAB_LIP && s.aabb[k] - reach[k]! < 0.3) s.aabb[k] = reach[k]! - SLAB_LIP
+      for (const k of [2, 3] as const) if (Math.abs(s.aabb[k] - bounds[k]!) < EPS && reach[k]! > s.aabb[k] - SLAB_LIP && reach[k]! - s.aabb[k] < 0.3) s.aabb[k] = reach[k]! + SLAB_LIP
     }
     // the panels of one slab overlap a little where they meet (one concrete): no seam between them for the sun's shadow to leak through
     for (const s of own) {
@@ -101,7 +103,7 @@ function seatSlabs(slabs: Solid[], carriers: Solid[]): void {
     }
   }
   for (const c of carriers) {
-    const over = slabs.filter((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - EPS && c.y0 < s.y0 - EPS)
+    const over = slabs.filter((s) => overlapArea(c.aabb, s.aabb) > EPS && c.y1 > s.y0 - 0.05 && c.y1 <= s.y1 + EPS && c.y0 < s.y0 - EPS)
     // cast together: the beam runs a little into the slab (one concrete, one colour), so no seam is left for the sun's shadow to leak light through
     if (over.length) c.y1 = Math.min(...over.map((s) => s.y0 + Math.min(SLAB_BITE, (s.y1 - s.y0) / 2)))
   }
@@ -260,7 +262,6 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   if (!rawStructure) return groups
 
   const mats = createStageMaterials(THREE)
-  const totalFloors = Math.max(1, rawStructure.levels.length - 1)
   const parts = detailedParts(rawStructure).filter((p) => !p.id.startsWith('pillar_') && p.role !== 'roof' && !/^(rafter_|ridge)/.test(p.id))
   const openings: { id: string; aabb: readonly number[]; y0: number; y1: number }[] = []
   for (const e of outbuildings ?? []) {
@@ -276,12 +277,14 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   }
   for (const e of outbuildings ?? []) addStageBox(THREE, foundation, e.aabb[0] - 0.15, -0.06, e.aabb[1] - 0.15, e.aabb[2] + 0.15, 0.006, e.aabb[3] + 0.15, mats.dirt!, `${e.id}_dirt_bed`)
 
-  const foundations = parts.filter(isFoundation).map(foundationSolid)
+  const seen = new Set<string>()
+  const foundations = parts.filter(isFoundation).filter((p) => !seen.has(p.id) && !!seen.add(p.id)).map(foundationSolid)
   for (const s of foundations) addStageBox(THREE, foundation, s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3], mats[s.kind]!, s.id)
 
-  const columnParts = parts.filter((p) => p.role === 'column')
+  const columnParts = parts.filter((p) => p.role === 'column' && !isFoundation(p))
   const columns: (Solid & { readonly tank: boolean; readonly material: string })[] = columnParts.map((p) => ({ ...solidOf(p), tank: p.id.startsWith('tank_'), material: p.material }))
-  const interior = findInteriorColumnLocations(rawStructure)
+  // pillars at the partitions' junctions belong to confined masonry: a timber, steel or improvised house has none
+  const interior = rawStructure.construction.frame.rebar ? findInteriorColumnLocations(rawStructure) : []
   interior.forEach((c, k) => {
     const y0 = rawStructure.levels[c.floor] ?? c.floor * 2.8
     columns.push({ id: `interior_column_${c.floor}_${k}`, aabb: [c.u - 0.098, c.v - 0.098, c.u + 0.098, c.v + 0.098], y0, y1: rawStructure.levels[c.floor + 1] ?? y0 + 2.8, floor: c.floor, tank: false, material: 'concrete' })
@@ -296,7 +299,6 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
     addStageBox(THREE, frame, c.aabb[0], c.y0, c.aabb[1], c.aabb[2], c.y1, c.aabb[3], mat, c.id)
     if (c.tank || c.y0 > 0.1 || c.material !== 'concrete') continue
     if (c.floor === 0) addRebarCage(THREE, starterBars, c.aabb, 0, 0.42, mats.rebar!)
-    if (totalFloors > c.floor + 1) addRebarCage(THREE, frame, c.aabb, c.y1, 0.26, mats.rebar!)
   }
   for (const b of beams) {
     const p = beamParts.find((x) => x.id === b.id)
@@ -315,7 +317,9 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
     const wall = wallLineOf(p.aabb)
     const cuts: WallRect[] = []
     for (const s of [...solids, ...laid]) {
-      const cut = cutOf(wall, s.aabb, s.y0, s.y1)
+      // a pillar seated into a slab still owns its whole storey in the wall: no unit is laid over its head
+      const top = columns.includes(s as (typeof columns)[number]) ? s.y1 + 0.3 : s.y1
+      const cut = cutOf(wall, s.aabb, s.y0, top)
       if (cut) cuts.push(cut)
     }
     for (const o of openings) {

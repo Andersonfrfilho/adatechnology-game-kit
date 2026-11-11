@@ -58,6 +58,8 @@ interface Coursing {
 
 const MORTAR_INSET = 0.004
 const UNIT_CLEARANCE = 0.005
+// the mortar bed stands a hair over what the wall rests on (a slab, a beam): its faces never lie on a pillar's foot or head
+const MORTAR_LIFT = 0.009
 
 function layUnits(rect: WallRect, coursing: Coursing, put: (a0: number, y0: number, a1: number, y1: number) => void): void {
   const { courseH, unitLen, joint, courseBase } = coursing
@@ -127,7 +129,7 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   for (const r of pieces) {
     // the mortar behind the units shows in every joint; it is thinner than the units, so no face of it lies on theirs
     // inset from the piece's edges too: the units are cut flush with a jamb or a pillar, the mortar stays a little behind them
-    box(batches.mortar, r.a0 + MORTAR_INSET, r.y0, r.a1 - MORTAR_INSET, r.y1, coreTh * 0.86)
+    box(batches.mortar, r.a0 + MORTAR_INSET, r.y0 + MORTAR_LIFT, r.a1 - MORTAR_INSET, r.y1 - MORTAR_LIFT, coreTh * 0.86)
     layUnits(r, coursing, (a0, y0, a1, y1) => box(unit, a0, y0, a1, y1, coreTh))
   }
 }

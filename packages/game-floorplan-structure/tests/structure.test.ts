@@ -141,16 +141,45 @@ describe('water tank', () => {
     expect(platform.y).toBe(platform.platform!.topY)
   })
 
-  it('keeps the tank and its lid under the tiles: the platform rises only as far as the roof lets it, and a roof too low for one keeps the tank in the attic', () => {
-    // the renderer's tiled roof: eave 0.2 m over the ceiling, 0.45 m overhang, rising 0.5 m per metre from every eave of the hipped cover
-    const roofOver = (s: ReturnType<typeof wide>, u: number, v: number): number => s.floors[0]!.ceiling + 0.2 + 0.5 * (Math.min(u, s.w - u, v, s.d - v) + 0.45)
-    for (const source of [wide(), house()]) {
+  it('keeps the tank and its lid under the tiles: the platform rises only as far as the roof lets it; under a roof too low, a castle of its own', () => {
+    // the renderer's roofs: eave 0.2 m over the ceiling; tiles rise 0.5 m per metre from a 0.45 m overhang, fibre cement 0.2 from 0.3
+    const roofOver = (s: ReturnType<typeof wide>, u: number, v: number): number => {
+      const fibre = s.facade.roof === 'fiber_cement'
+      return s.floors[0]!.ceiling + 0.2 + (fibre ? 0.2 : 0.5) * (Math.min(u, s.w - u, v, s.d - v) + (fibre ? 0.3 : 0.45))
+    }
+    const low = () => ({ ...rectangularHouse({ width: 6, depth: 5, roof: 'fiber_cement' }), lot: {}, w: 6, d: 5, facade: { roof: 'fiber_cement' } })
+    for (const source of [wide(), house(), low()]) {
       const tank = planWaterTank(source, () => 0.5)!
       const base = tank.place === 'raised_slab' ? tank.platform!.topY : tank.y + 0.2
-      for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) expect(base + tank.h + 0.12, `${source.w} x ${source.d}`).toBeLessThan(roofOver(source, tank.u + (a * tank.w) / 2, tank.v + (b * tank.d) / 2) - 0.15)
+      const lid = base + tank.h + 0.12
+      if (tank.castle) {
+        expect(tank.castle.eaveY - lid, `${source.w} x ${source.d}: the castle's eave over the lid`).toBeGreaterThanOrEqual(0.35)
+        continue
+      }
+      for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) expect(lid, `${source.w} x ${source.d}`).toBeLessThan(roofOver(source, tank.u + (a * tank.w) / 2, tank.v + (b * tank.d) / 2) - 0.15)
     }
     expect(planWaterTank(wide(), () => 0.5)!.place).toBe('raised_slab')
-    expect(planWaterTank(house(), () => 0.5)!.place).toBe('attic')
+    expect(planWaterTank(low(), () => 0.5)!.castle).toBeDefined()
+  })
+
+  it('stands the tank on beams under the slab, never on the middle of a panel, and its castle on a whole confined-masonry frame', () => {
+    const low = { ...rectangularHouse({ width: 6, depth: 5, roof: 'fiber_cement' }), lot: {}, w: 6, d: 5, facade: { roof: 'fiber_cement' } }
+    for (const source of [wide(), low]) {
+      const tank = planWaterTank(source, () => 0.5)!
+      const structure = buildStructure({ ...source, waterTank: tank })
+      const on = (id: string): string[] => structure.supports.filter((x) => x.part === id).map((x) => x.on)
+      const beams = structure.parts.filter((p) => p.id.startsWith('tank_beam_'))
+      expect(beams).toHaveLength(2)
+      for (const beam of beams) expect(on(beam.id).filter((x) => /^wall_/.test(x)), beam.id).toHaveLength(2)
+      for (const pillar of structure.parts.filter((p) => p.id.startsWith('tank_column_'))) expect(on(pillar.id).some((x) => x.startsWith('tank_beam_')), pillar.id).toBe(true)
+      expect(ungrounded(structure)).toEqual([])
+      if (!tank.castle) continue
+      for (const side of ['north', 'south', 'west', 'east']) {
+        expect(structure.parts.some((p) => p.id === `castle_wall_${side}` && p.role === 'wall'), side).toBe(true)
+        expect(on(`castle_bond_beam_${side}`).length, side).toBeGreaterThan(0)
+      }
+      expect(on('castle_roof')).toHaveLength(4)
+    }
   })
 
   it('is a part that carries nothing, resting on what holds it', () => {

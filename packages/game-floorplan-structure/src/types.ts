@@ -184,6 +184,21 @@ export interface TankPlatform {
   ladder: boolean
 }
 
+/**
+ * The tank's own raised roof (castelo da caixa d'água) where the house's roof is too low for it: four confined-masonry walls on the platform's pillars, a
+ * bond beam on them at `eaveY` and a roof of its own over them, the lid 35 cm under the tiles.
+ */
+export interface TankCastle {
+  /** The castle's wall lines (the pillars' centres): [u0, v0, u1, v1]. */
+  aabb: Rect
+  /** Where its walls start: the top of the ceiling slab. */
+  baseY: number
+  /** The top of its bond beam, where its roof's eave sits. */
+  eaveY: number
+  /** Wall thickness. */
+  thickness: number
+}
+
 export interface WaterTank {
   id: 'water_tank'
   kind: 'water_tank'
@@ -201,6 +216,8 @@ export interface WaterTank {
   material?: MaterialId
   aabb: Rect
   platform?: TankPlatform
+  /** The tank's raised roof where the house's roof is too low for it. */
+  castle?: TankCastle
   /** Trestle tank (a stand of its own: rural water). */
   stand?: { pillars: { u: number; v: number; side: number }[]; material: MaterialId; height: number; baseJoint?: JointKind; joint?: JointKind; tie?: JointKind; braces?: boolean }
 }

@@ -5,6 +5,7 @@ import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, M
 import { create } from '../create.js'
 import { CONSTRUCTION_LEVEL_MAX, clampConstructionLevel, constructionLevelInfo } from '../construction-stages/apply-level.js'
 import { renderBlueprintDataUrl } from '../construction-stages/blueprint.js'
+import { checkConstructionStages } from '../construction-stages/check.js'
 import { groundLayoutOfPlans } from '../lot/ground-layout.js'
 import { planLod, rectsOf } from '../statics.js'
 import { createHouseScenarios, SPECIMEN_AT } from './scenarios.js'
@@ -571,6 +572,28 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     },
   }
 
+  // the construction tests of the stages (the CI's, construction-stages.test.ts) on every typology the page registered: level by level, faces that would
+  // flicker, lintels in the frame, pillars without a footing, beams short of their slab, sewer over the ground, the pipes laid twice or across a room,
+  // what is hidden shown, the roof's timber or the water tank out of the tiles, the tank on the middle of a slab panel, a castle without its walls or roof
+  const stagesScenario: ModuleScenario<AreaContext> = {
+    id: 'floorplan_construction_stages',
+    name: locale === 'en' ? 'every typology, level by level from 0 to 8, passes the construction tests of its stages' : 'toda tipologia, nível a nível de 0 a 8, passa nos testes de construção das etapas',
+    run({ expect }) {
+      const templates = engine?.listTemplates() ?? []
+      for (const group of groups) {
+        for (const id of group.templates) {
+          const range = templates.find((t) => t.id === id)?.floorRange
+          if (range && range[0] >= TALL_STOREYS) continue // a tower is checked by its own scenario: its stages are the house's, storey after storey
+          const plan = (engine as NonNullable<typeof engine>).generate(id, { seed: 1 })
+          const house = create(THREE ?? (host?.THREE as Three), { locale, ...options.house, destruction: undefined, destructionRenderer: undefined, interactives: undefined, vegetation: undefined, fleet: null }).build(plan, { quality: 'game', terrain: false, noPerimeter: true, constructionStages: true, constructionLevel: CONSTRUCTION_LEVEL_MAX })
+          const problems = checkConstructionStages(THREE ?? (host?.THREE as Three), house)
+          expect(problems.length === 0, `${groupName(group)}: ${templateName(id)}${problems.length ? ` — ${problems.length}: ${problems.slice(0, 3).map((p) => `${p.code} @${p.level} ${p.detail}`).join('; ')}` : ''}`)
+          house.dispose()
+        }
+      }
+    },
+  }
+
   return {
     id: FLOORPLAN_AREA_ID,
     name: text.name,
@@ -641,7 +664,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       { id: 'target', name: text.metrics.target, read: () => aimText || text.sheet.none },
       { id: 'planned', name: text.metrics.planned, read: () => planned },
     ],
-    scenarios: (): Array<ModuleScenario<AreaContext>> => [...scenarios, typologyScenario],
+    scenarios: (): Array<ModuleScenario<AreaContext>> => [...scenarios, typologyScenario, stagesScenario],
     attach(lent) {
       host = lent
       THREE = lent.THREE as Three

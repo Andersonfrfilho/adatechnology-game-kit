@@ -5,7 +5,7 @@ import { BoxBatch } from './box-batch.js'
 
 /** The timber of a tiled roof, top faces measured down from the tile plane (the clay tiles wave 3.2 cm around it). */
 const TIMBER = {
-  batten: { top: 0.045, width: 0.05, height: 0.02, spacing: 0.35 },
+  batten: { top: 0.04, width: 0.05, height: 0.012, spacing: 0.35 },
   rafter: { top: 0.065, width: 0.05, height: 0.06, spacing: 0.5 },
   purlin: { top: 0.125, width: 0.06, height: 0.12 },
   hip: { top: 0.065, width: 0.06, height: 0.14 },
@@ -84,8 +84,10 @@ function spanAt(slope: Slope, s: number): readonly [number, number] {
 /** Slope's timber: battens across the rafters under the tiles, rafters from the eave to the ridge or the hip, purlins and the wall plate under them, posts on the slab. */
 function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly battens: BoxBatch }, slabTop: number): void {
   const { batten, rafter, purlin } = TIMBER
-  for (let s = batten.spacing / 2; s < slope.run - 0.05; s += batten.spacing) {
-    const [a, b] = spanAt(slope, s)
+  for (let s = batten.spacing / 2; s < slope.run - 0.12; s += batten.spacing) {
+    const [a0, b0] = spanAt(slope, s)
+    // a batten stops a little short of the ends of the purlins and the plate, so their end faces never meet
+    const a = a0 + 0.015, b = b0 - 0.015
     if (b - a > 0.05) addTimber(batches.battens, down(slope.point(s, a), batten.top), down(slope.point(s, b), batten.top), batten.width, batten.height)
   }
   const t0 = slope.t0 + EDGE, t1 = slope.t1 - EDGE
@@ -157,7 +159,7 @@ export function buildRoofFramingStage(THREE: Three, roofRects: readonly RoofRect
     }
   }
   const wood = material ?? new THREE.MeshStandardMaterial({ color: 0xa87e4c, roughness: 0.82 })
-  const lath = new THREE.MeshStandardMaterial({ color: 0xb8925e, roughness: 0.85 })
-  for (const mesh of [timber.mesh(THREE, wood, 'roof_framing:timber'), battens.mesh(THREE, lath, 'roof_framing:battens')]) if (mesh) group.add(mesh)
+  // one wood for every piece: where the covers of two roof rectangles meet at a valley their timbers cross, and the same wood shows the same whichever is drawn
+  for (const mesh of [timber.mesh(THREE, wood, 'roof_framing:timber'), battens.mesh(THREE, wood, 'roof_framing:battens')]) if (mesh) group.add(mesh)
   return group
 }

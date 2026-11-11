@@ -63,6 +63,11 @@ const PLATFORM_THICKNESS = 0.12
 const MIN_PLATFORM_RISE = 0.3
 /** An attic tank stands on the ceiling, which the renderer draws 0.2 m thick over the slab's height. */
 const ATTIC_TANK_BASE = 0.2
+/** The renderer draws a 12 cm lid over the tank's body. */
+const TANK_LID = 0.12
+/** How far the castle's wall lines stand out of the tank's sides, and the depth of its roof's timber under the tiles. */
+const CASTLE_REACH = 0.3
+const CASTLE_FRAME = 0.12
 
 const OPEN_ROOMS = ['void', 'balcony', 'terrace', 'porch', 'veranda']
 const ROOF_OVERHANG = { tile: 0.45, fiberCement: 0.3 } as const
@@ -124,9 +129,10 @@ function underRoofSpot(source: StructureSource, covers: readonly Rect[], rect: R
   return best
 }
 
-function raisedPlatform(source: StructureSource, spot: { u: number; v: number; baseY: number; maxRise?: number }, side: number): NonNullable<WaterTank['platform']> {
+function raisedPlatform(source: StructureSource, spot: { u: number; v: number; baseY: number; maxRise?: number }, side: number, castleReach?: number): NonNullable<WaterTank['platform']> {
   const { u, v, baseY } = spot
-  const margin = 0.12
+  // under a castle the platform spans between the castle's corner pillars
+  const margin = castleReach === undefined ? 0.12 : castleReach + side / 2 - 0.02
   const edge = Math.max(0, Math.min(u, source.w - u, v, source.d - v))
   const wanted = clamp(edge * 0.35 + 0.7, 1.1, 2.4)
   const rise = round2(spot.maxRise === undefined ? wanted : clamp(Math.min(wanted, spot.maxRise), MIN_PLATFORM_RISE, 2.4))
@@ -135,6 +141,17 @@ function raisedPlatform(source: StructureSource, spot: { u: number; v: number; b
   const pillars = ([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).map(([a, b]) => ({ u: round2(u + a * reach), v: round2(v + b * reach), side }))
   const half = TANK_SIDE / 2 + margin
   return { aabb: [u - half, v - half, u + half, v + half].map(round2) as Rect, baseY, height: rise, thickness, topY: round2(baseY + rise + thickness), pillars, ladder: true }
+}
+
+/** The tank on a timber trestle 1 m out of the house's nearest side to the room it serves, its body over the eave so the water reaches every tap. */
+function trestleBeside(source: StructureSource, tank: WaterTank, room: Rect, eaveY: number): WaterTank {
+  const cu = (room[0] + room[2]) / 2, cv = (room[1] + room[3]) / 2
+  const sides: readonly [number, number, number][] = [[cu, -1 - TANK_SIDE / 2, cv], [cu, source.d + 1 + TANK_SIDE / 2, source.d - cv], [-1 - TANK_SIDE / 2, cv, cu], [source.w + 1 + TANK_SIDE / 2, cv, source.w - cu]]
+  const [u, v] = sides.reduce((best, s) => (s[2] < best[2] ? s : best))
+  const height = round2(eaveY + 0.6)
+  const reach = TANK_SIDE / 2 - 0.05
+  const pillars = ([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).map(([a, b]) => ({ u: round2(u + a * reach), v: round2(v + b * reach), side: 0.1 }))
+  return { ...tank, place: 'trestle', floor: 0, room: 'yard', u: round2(u), v: round2(v), y: height, aabb: [u - TANK_SIDE / 2, v - TANK_SIDE / 2, u + TANK_SIDE / 2, v + TANK_SIDE / 2].map(round2) as Rect, stand: { pillars, material: 'wood_hard', height, braces: true } }
 }
 
 /**
@@ -147,7 +164,8 @@ export function planWaterTank(source: StructureSource, rng: Rng, options: TankPl
   const floor = source.floors.length - 1
   const level = source.floors[floor]!
   const capacity = capacityOf(source, { ...DEFAULT_CAPACITIES, ...options.capacities })
-  const height = capacity >= 2000 ? 1.4 : capacity === 1000 ? 1.0 : 0.85
+  // the body of a polyethylene tank (the renderer adds its 12 cm lid): 500 L stands 0.73 m in all, 1000 L 0.91 m; the Visor drew them taller
+  const height = options.underRoof === false ? (capacity >= 2000 ? 1.4 : capacity === 1000 ? 1.0 : 0.85) : capacity >= 2000 ? 1.2 : capacity === 1000 ? 0.79 : 0.61
   const place = options.location ? options.location(source, rng) : source.facade.roof === 'slab' ? 'slab' : rng() < ATTIC_CHANCE ? 'attic' : 'raised_slab'
   const reference = (source.facade.slab as { waterTank?: { u: number; v: number } } | undefined)?.waterTank
   const spots = spotsByWeight(source, floor, reference)
@@ -166,15 +184,26 @@ export function planWaterTank(source: StructureSource, rng: Rng, options: TankPl
   const u = fitted ? fitted.at.u : clamp(target[0]!, spot.rect[0] + TANK_SIDE / 2, spot.rect[2] - TANK_SIDE / 2)
   const v = fitted ? fitted.at.v : clamp(target[1]!, spot.rect[1] + TANK_SIDE / 2, spot.rect[3] - TANK_SIDE / 2)
   // a roof too low for any platform (a low fibre-cement roof) keeps the tank on the ceiling slab, in the attic
-  const where = spot.roomType === 'terrace' ? 'slab' : fitted && place === 'raised_slab' && fitted.at.maxRise < MIN_PLATFORM_RISE ? 'attic' : place
+  // too low for a platform: the attic if the tank fits there, else a castle (a raised roof of its own) over a platform of the least rise
+  // a castle is confined masonry: only a house of reinforced concrete and masonry raises one (a timber or improvised house keeps the tank in its attic)
+  const masonry = source.construction ? !!source.construction.frame.rebar : true
+  const castle = masonry && !!fitted && fitted.at.maxRise < ATTIC_TANK_BASE - PLATFORM_THICKNESS
+  const where = spot.roomType === 'terrace' ? 'slab' : castle ? 'raised_slab' : fitted && place === 'raised_slab' && fitted.at.maxRise < MIN_PLATFORM_RISE ? 'attic' : place
   const slabY = round2(spot.roomType === 'terrace' ? level.y0 : level.y0 + level.ceiling)
   const tank: WaterTank = {
     id: 'water_tank', kind: 'water_tank', itemType: 'water_tank', place: where, floor, room: spot.roomId, u: round2(u), v: round2(v), y: slabY, w: TANK_SIDE, d: TANK_SIDE, h: height,
     capacity, aabb: [u - TANK_SIDE / 2, v - TANK_SIDE / 2, u + TANK_SIDE / 2, v + TANK_SIDE / 2].map(round2) as Rect,
   }
+  // a timber, improvised or canvas house whose roof cannot hold the tank stands it on a timber trestle in the yard, beside the room it serves
+  if (!masonry && fitted && fitted.at.maxRise < ATTIC_TANK_BASE - PLATFORM_THICKNESS) return trestleBeside(source, tank, spot.rect, level.y0 + level.ceiling)
   if (where === 'raised_slab') {
-    tank.platform = raisedPlatform(source, { u, v, baseY: slabY, ...(fitted ? { maxRise: fitted.at.maxRise } : {}) }, options.pillarSide ?? TANK_PILLAR_SIDE)
+    tank.platform = raisedPlatform(source, { u, v, baseY: slabY, ...(fitted ? { maxRise: castle ? MIN_PLATFORM_RISE : fitted.at.maxRise } : {}) }, options.pillarSide ?? TANK_PILLAR_SIDE, castle ? CASTLE_REACH : undefined)
     tank.y = tank.platform.topY
+    if (castle) {
+      const side = options.pillarSide ?? TANK_PILLAR_SIDE
+      const reach = TANK_SIDE / 2 + CASTLE_REACH
+      tank.castle = { aabb: [u - reach, v - reach, u + reach, v + reach].map(round2) as Rect, baseY: slabY, eaveY: round2(tank.y + height + TANK_LID + TANK_ROOF_CLEARANCE + CASTLE_FRAME), thickness: Math.min(side, 0.15) }
+    }
   }
   return tank
 }

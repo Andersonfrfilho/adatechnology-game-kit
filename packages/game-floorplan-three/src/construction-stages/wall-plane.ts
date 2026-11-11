@@ -44,12 +44,15 @@ export function wallLineOf(aabb: readonly number[]): WallLine & { readonly a0: n
 }
 
 /**
- * The part of a solid (plan box and heights) that stands in the wall, as a rectangle of the wall's plane, or null when it does not cross the wall's middle
- * line (a solid beside the wall leaves its bricks alone).
+ * The part of a solid (plan box and heights) that stands in the wall, as a rectangle of the wall's plane, or null when it takes too little of the wall's
+ * thickness (a solid beside the wall leaves its bricks alone).
  */
 export function cutOf(wall: WallLine, aabb: readonly number[], y0: number, y1: number): WallRect | null {
   const [u0, v0, u1, v1] = aabb as [number, number, number, number]
   const across0 = wall.alongU ? v0 : u0, across1 = wall.alongU ? v1 : u1
-  if (wall.line < across0 - EPS || wall.line > across1 + EPS) return null
+  // a solid that takes a good part of the wall's thickness (a pillar set a little off the wall's line) owns that stretch of it
+  const half = wall.thickness / 2
+  const covered = Math.min(across1, wall.line + half) - Math.max(across0, wall.line - half)
+  if (covered < Math.min(wall.thickness * 0.3, across1 - across0) - EPS) return null
   return wall.alongU ? { a0: u0, a1: u1, y0, y1 } : { a0: v0, a1: v1, y0, y1 }
 }

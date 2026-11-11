@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { coplanarOverlaps } from './helpers/coplanar'
+import { checkConstructionStages } from '../src'
+import { coplanarOverlaps } from '../src/construction-stages/coplanar'
 import { THREE, houseOf, planOf } from './helpers/houses'
 
 type StagedHouse = ReturnType<typeof houseOf>['house'] & { setConstructionLevel(level: number, options?: { waterLayer?: boolean; roofLayer?: boolean; lotLayer?: boolean }): number }
@@ -23,7 +24,7 @@ describe('construction stages of single_storey_a', () => {
   it('draws no two faces of different materials on the same plane, at any level, in the bare structure or against the house', () => {
     for (const level of [1, 2, 3, 4, 5, 6, 7, 8]) {
       house.setConstructionLevel(level, { roofLayer: true, lotLayer: false })
-      const overlaps = coplanarOverlaps(house.group, {
+      const overlaps = coplanarOverlaps(THREE, house.group, {
         keep: (mesh) => {
           for (let p: THREE.Object3D | null = mesh; p; p = p.parent) if (STAGE_GROUPS.includes(p.name)) return true
           return false
@@ -188,6 +189,21 @@ describe('the water tank of a house with a pitched roof', () => {
           // a platform leaves a hand over the lid; an attic tank under a low fibre-cement roof only stays under it (the platform did not fit)
           expect(hit!.point.y, `roof over the tank's corner ${a},${b}`).toBeGreaterThan(top + (tank.place === 'attic' ? 0 : 0.15))
         }
+      })
+    }
+  }
+})
+
+/** The same construction tests on every typology of the packs, a few seeds each (the test room's scenario runs them on what the page registered). */
+describe('construction stages of every typology', () => {
+  const TEMPLATES = ['single_storey_a', 'townhouse', 'budget_slab_house', 'budget_semi_detached', 'mid_modern_single_storey', 'mid_modern_townhouse', 'high_end_contemporary', 'mansion', 'apartment_basic', 'apartment_modern', 'market', 'pharmacy']
+  for (const template of TEMPLATES) {
+    for (const seed of [1, 2, 3]) {
+      it(`${template} #${seed}`, () => {
+        const house = staged(template, seed)
+        const problems = checkConstructionStages(THREE, house)
+        expect(problems.map((p) => `${p.code} @${p.level}: ${p.detail}`).slice(0, 12)).toEqual([])
+        house.dispose()
       })
     }
   }

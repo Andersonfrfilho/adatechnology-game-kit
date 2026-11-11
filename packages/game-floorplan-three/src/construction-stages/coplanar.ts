@@ -1,4 +1,6 @@
-import * as THREE from 'three'
+import type * as THREE from 'three'
+
+import type { Three } from '../kernel-types.js'
 
 /** A visible triangle of the scene, in the world, with the mesh and the material it belongs to. */
 interface Triangle {
@@ -23,7 +25,7 @@ const isVisible = (o: THREE.Object3D): boolean => {
   return true
 }
 
-function trianglesOf(root: THREE.Object3D, keep: (mesh: THREE.Mesh) => boolean): Triangle[] {
+function trianglesOf(T: Three, root: THREE.Object3D, keep: (mesh: THREE.Mesh) => boolean): Triangle[] {
   root.updateMatrixWorld(true)
   const out: Triangle[] = []
   root.traverse((o) => {
@@ -35,8 +37,8 @@ function trianglesOf(root: THREE.Object3D, keep: (mesh: THREE.Mesh) => boolean):
     const index = mesh.geometry.getIndex()
     const count = index ? index.count : position.count
     for (let i = 0; i + 2 < count; i += 3) {
-      const points = [0, 1, 2].map((k) => new THREE.Vector3().fromBufferAttribute(position, index ? index.getX(i + k) : i + k).applyMatrix4(mesh.matrixWorld))
-      const normal = new THREE.Vector3().subVectors(points[1]!, points[0]!).cross(new THREE.Vector3().subVectors(points[2]!, points[0]!))
+      const points = [0, 1, 2].map((k) => new T.Vector3().fromBufferAttribute(position, index ? index.getX(i + k) : i + k).applyMatrix4(mesh.matrixWorld))
+      const normal = new T.Vector3().subVectors(points[1]!, points[0]!).cross(new T.Vector3().subVectors(points[2]!, points[0]!))
       if (normal.length() < 2e-5) continue
       normal.normalize()
       out.push({ mesh, material, points, normal, offset: normal.dot(points[0]!) })
@@ -66,9 +68,9 @@ const signedArea = (p: number[][]): number => p.reduce((sum, a, i) => sum + a[0]
  * The faces of different materials that lie on one plane, facing the same way, and overlap: what the depth buffer cannot sort and the screen shows flickering
  * (z-fighting). Faces of one material on one plane draw the same colour whichever wins, and are left out. `tolerance`: how close two planes count as one.
  */
-export function coplanarOverlaps(root: THREE.Object3D, options: { readonly tolerance?: number; readonly keep?: (mesh: THREE.Mesh) => boolean; readonly minArea?: number } = {}): CoplanarOverlap[] {
+export function coplanarOverlaps(T: Three, root: THREE.Object3D, options: { readonly tolerance?: number; readonly keep?: (mesh: THREE.Mesh) => boolean; readonly minArea?: number } = {}): CoplanarOverlap[] {
   const tolerance = options.tolerance ?? 0.0015
-  const triangles = trianglesOf(root, options.keep ?? (() => true))
+  const triangles = trianglesOf(T, root, options.keep ?? (() => true))
   const buckets = new Map<string, Triangle[]>()
   const keyOf = (t: Triangle, dk = 0): string => `${t.normal.toArray().map((x) => Math.round(x * 200)).join(',')}|${Math.round(t.offset / tolerance) + dk}`
   for (const t of triangles) {
@@ -84,7 +86,7 @@ export function coplanarOverlaps(root: THREE.Object3D, options: { readonly toler
     const all = list.concat(near)
     if (all.length < 2) continue
     const n = list[0]!.normal
-    const u = new THREE.Vector3(Math.abs(n.x) > 0.9 ? 0 : 1, Math.abs(n.x) > 0.9 ? 1 : 0, 0).cross(n).normalize()
+    const u = new T.Vector3(Math.abs(n.x) > 0.9 ? 0 : 1, Math.abs(n.x) > 0.9 ? 1 : 0, 0).cross(n).normalize()
     const w = n.clone().cross(u)
     const flat = all.map((t) => {
       const p = t.points.map((q) => [q.dot(u), q.dot(w)])

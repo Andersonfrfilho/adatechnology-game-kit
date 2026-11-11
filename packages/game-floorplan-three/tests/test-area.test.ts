@@ -15,7 +15,7 @@ describe('the module declares itself', () => {
       const items = module.items(locale)
       expect(items.map((i) => i.id)).toEqual(['house_casa_portico', 'house_casa_inteira', 'house_casa_wood_frame', 'house_casa_tronco', 'house_barraca', 'furniture_dining_table', 'furniture_coffee_table', 'furniture_desk'])
       expect(module.area!(locale).placements).toEqual([])
-      expect(module.scenarios!(locale).map((s) => s.id)).toEqual(['house_one_pillar', 'house_two_pillars', 'house_partition', 'house_window_glass', 'house_tank_leak', 'house_gas_explodes', 'floorplan_typologies'])
+      expect(module.scenarios!(locale).map((s) => s.id)).toEqual(['house_one_pillar', 'house_two_pillars', 'house_partition', 'house_window_glass', 'house_tank_leak', 'house_gas_explodes', 'floorplan_typologies', 'floorplan_construction_stages'])
     }
     expect(fakeRoom({ locale: 'pt-BR' }).module.name).toBe('Área de casas e prédios')
   })
@@ -286,6 +286,15 @@ describe('houses in the room', () => {
     expect(stageMetric()).toContain('8 ·')
     expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
     expect(house.groups['roof']?.visible).toBe(true)
+  })
+
+  it('every typology passes the construction tests of its stages, in the room\'s scenario', async () => {
+    const r = fakeRoom()
+    const scenario = r.module.scenarios!('en').find((s) => s.id === 'floorplan_construction_stages')!
+    const checks: Array<[boolean, string]> = []
+    await scenario.run({ room: r.room, step: r.step, expect: (ok, label) => checks.push([ok, label]) })
+    expect(checks.length).toBeGreaterThanOrEqual(10)
+    expect(checks.filter(([ok]) => !ok).map(([, label]) => label)).toEqual([])
   })
 
   it('every typology of the engine builds', async () => {

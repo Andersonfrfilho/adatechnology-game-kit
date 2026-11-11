@@ -234,7 +234,7 @@ function sewerLayout(plan: HouseRecord, drains: readonly Drain[]): { pieces: Sew
   trenches.push(trenchAlong(collector[0]!, collector[1]!, w, 0.05 + TRENCH.bed))
   const collectorAt = (v: number): number => collectorTop + ((collectorEnd - collectorTop) * (farV - v)) / (farV - frontV)
   // the building's inspection box where the collector leaves the house, the street's at the front of the lot
-  for (const v of [footprint[1] - 0.6, frontV]) boxes.push({ u: collectorU, v, size: 0.6, bottom: collectorAt(v) - 0.12 })
+  for (const v of [footprint[1] - 0.75, frontV]) boxes.push({ u: collectorU, v, size: 0.6, bottom: collectorAt(v) - 0.12 })
   for (const b of boxes) {
     const h = b.size / 2 + 0.05
     trenches.push({ rect: [b.u - h, b.v - h, b.u + h, b.v + h], bed: () => b.bottom - 0.02 })
