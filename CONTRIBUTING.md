@@ -48,6 +48,11 @@ Before you push:
 pnpm build && pnpm test && pnpm typecheck && pnpm lint
 ```
 
+One test area end to end (the build of what its page loads, the unit tests of those packages, then the page in Chromium, which writes the prints to
+`examples/<folder>/shots/`): `pnpm check:<area>`, e.g. `pnpm check:floorplan`. `pnpm check:area --list` lists the areas; `--no-browser` and
+`--no-unit` leave a step out, `--room` builds the test room page again. It opens a browser, so it is run by hand on the machine with the GPU, never
+on CI or in the pre-push (`tools/check-area/`).
+
 ### Git hooks
 
 `pnpm install` points git at `.githooks/` (the `prepare` script), so the checks run before anything reaches CI:

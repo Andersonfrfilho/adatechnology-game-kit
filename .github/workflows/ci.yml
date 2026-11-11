@@ -40,6 +40,9 @@ jobs:
       # what the pre-push checks and caches for a diff (tools/pre-push/plan.mjs): pure Node, no build
       - run: pnpm --filter @adatechnology/pre-push-tool test
 
+      # what `pnpm check:<area>` runs for each test area (tools/check-area/plan.mjs), and that every area has its script: pure Node, no build, no page
+      - run: pnpm test:check-area
+
   # The workspace is built once here and every job that needs it downloads the dist folders (workspace packages resolve each other through
   # dist), instead of each job spending two minutes on its own `pnpm build`.
   build:
