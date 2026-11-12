@@ -1,0 +1,13 @@
+{
+  "game-floorplan-three": "pending: houses, walls and their furniture get the guard on top of the single_storey_a rounds (fix/single-storey-a-round8), which rework the same builders",
+  "game-vehicles": "sample prototypes of the engine's own tests; the real fleet is guarded in game-vehicles-fleet and game-vehicles-three",
+  "game-shapes-three": "the guard itself (coincidentFacesOf); it draws no catalog",
+  "game-render-three": "lights and shaders, no pieces",
+  "game-graphics-three": "post-processing and quality presets, no pieces",
+  "game-terrain-three": "terrain chunks are one height field per chunk: no two surfaces share a plane",
+  "game-destruction-three": "renders holes, cracks and debris at run time; decals use polygonOffset, fragments are random rubble",
+  "game-vfx-three": "sprites, particles and flashes, transparent and without depth write",
+  "game-weather-three": "rain, fog and sky layers, transparent and without depth write",
+  "game-fluids-three": "liquid films and stains, drawn with polygonOffset over their surface",
+  "game-crowd-three": "instanced bodies of game-characters-three, which is guarded"
+}

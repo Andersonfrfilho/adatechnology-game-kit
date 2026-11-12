@@ -1,11 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-
 import { exactSnapshot } from '@adatechnology/golden-tool'
 import { afterEach, describe, expect, it } from 'vitest'
-
-import { fleetGroups } from '../src'
-import { makeFleetKit } from './helpers/kit'
+import { cases } from './catalog-cases'
 
 /**
  * Every bit of the 69 vehicles of the fleet, intact and damaged, and of a crash scenario on one per group: recorded on the old path (three's
@@ -14,22 +11,6 @@ import { makeFleetKit } from './helpers/kit'
 const FIXTURE = join(process.cwd(), 'tests/fixtures/exact-fleet.json')
 const TITLE = 'the fleet, bit for bit'
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
-
-type Root = { traverse(f: (o: unknown) => void): void }
-const kit = makeFleetKit('pt-BR')
-const cases: Array<[string, () => Root]> = []
-for (const keys of Object.values(fleetGroups)) {
-  for (const key of keys) for (const state of ['intact', 'damaged'] as const) cases.push([`${key}/${state}`, () => kit.build(key, state).root])
-  const first = keys[0] as string
-  cases.push([
-    `${first}/front_crash`,
-    () => {
-      const c = kit.build(first, 'intact')
-      kit.applyZones(c, kit.zoneScenario(c, 'front_crash'))
-      return c.root
-    },
-  ])
-}
 
 const recorded: Record<string, { hash: string; objects: number }> = (() => {
   try {

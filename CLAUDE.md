@@ -20,6 +20,7 @@ qual). As regras valem inteiras: o resumo não tira nada do texto completo.
 | 10 | **Tudo tipado** | TypeScript `strict`, sem `any`, sem `@ts-nocheck`/`@ts-ignore`; o legado contado só diminui. | [10](specs/regras/10-tudo-tipado.md) |
 | 11 | **Construção** | Estrutura real (alvenaria confinada, NBR 6118, caminho de carga até o chão); agente `engenheiro-estrutural` e testes de construção do SDK antes do PR. | [11](specs/regras/11-construcao.md) e [T10](specs/001-migracao-entregas-dos-times/design/T10-estrutura-real.md) |
 | 12 | **Objetos quebrados** | Nada quebrado fica no ar; nada invisível colide; teste de catálogo no CI. | [12](specs/regras/12-objetos-quebrados.md) |
+| 13 | **Sem z-fighting** | Nenhuma face no mesmo plano, virada para o mesmo lado e sobreposta: oco é casca, detalhe sai ou entra 2 mm; todo pacote que desenha peças passa o catálogo inteiro por `coincidentFacesOf` (`tests/z-fighting.test.ts`); peça nova tem zero, a dívida antiga só diminui. | [13](specs/regras/13-sem-z-fighting.md) |
 
 Seções citadas no código como `CLAUDE.md §N` ou pelo título ("Memória", "Testes de GPU e navegador") são as desta tabela.
 
