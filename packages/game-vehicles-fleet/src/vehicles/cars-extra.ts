@@ -3240,7 +3240,7 @@ export function installCarsExtra(fx: FleetContext): void {
           ;[0.62, 0.48, -0.48, -0.62].forEach(function (z) {
             const s = dg.at(dg.uz(z), 0.25)
             c.cylinder(0.045, 0.045, 0.1, EXH, s.p.x - 0.02, 0.25, z, 'x')
-            c.cylinder(0.036, 0.036, 0.102, MT.dark, s.p.x - 0.02, 0.25, z, 'x')
+            c.cylinder(0.036, 0.036, 0.106, MT.dark, s.p.x - 0.02, 0.25, z, 'x')
           })
           /* short spoiler */
           const lip = K.grid(-1, 0, { z1: 0.7, y0: 0.88, y1: 0.97, du: 0.03, dv: 0.02 })

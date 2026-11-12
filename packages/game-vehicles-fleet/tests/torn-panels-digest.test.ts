@@ -7,8 +7,9 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
 /* digest of the geometry of the sedan after those panels were torn off and the smoothing finished, taken before the cut and the decals used the box of the panel.
    Retaken when the lamps began to break by their lens (polycarbonate headlights and acrylic taillights come apart in fewer, larger pieces, and a broken
    lens keeps its jagged edge in the bezel): the panels and the body are the same, only the lamps the tear breaks differ. Retaken again when the lamps drawn
-   outside the lamp units (the running lamps of the bumper, the fog bulbs) became lamps of their own: the blasts break them too, and their lens pieces fly. */
-const GOLDEN_DIGEST = '826:2140178730'
+   outside the lamp units (the running lamps of the bumper, the fog bulbs) became lamps of their own: the blasts break them too, and their lens pieces fly.
+   Retaken when the spokes of a wheel stopped sharing planes (CLAUDE.md §13): the same 826 meshes and panels, only the thickness of the spokes moved. */
+const GOLDEN_DIGEST = '826:3101677847'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261

@@ -385,7 +385,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-3.9, 1.44, 0], c: 0.3, t: 0.1 },
+              { p: [-3.9, 1.44, s * 0.002], c: 0.3, t: 0.1 },
               { p: [-3.95, 1.44, s * 0.42], c: 0.22, t: 0.09 },
             ],
             { up: 'y', n: 8 },
@@ -646,7 +646,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         },
         lbl('chin_windows'),
         'tempered',
-        { pos: new V3(2.3, 0.88, 0) },
+        { pos: new V3(2.3, 0.88, 0), k: 0.988 },
       )
       ;[1, -1].forEach(function (s) {
         EA.fuseGlass(
@@ -750,7 +750,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         tipCol: '#e6e4dd',
         phase: 0.25,
       })
-      c.roundBox(0.5, 0.12, 0.16, 0.05, MT.steel, 0, 2.8, 0)
+      c.roundBox(0.5, 0.12, 0.16, 0.05, MT.steel, 0, 2.797, 0)
       /* long tail cone, stabilizer with end plates, fins, skid and tail rotor on the left */
       const bm = boom(
         c,
@@ -785,7 +785,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-4.05, 1.68, 0], c: 0.42, t: 0.12, cam: -0.04 },
+              { p: [-4.05, 1.68, s * 0.002], c: 0.42, t: 0.12, cam: -0.04 },
               { p: [-4.1, 1.68, s * 0.99], c: 0.38, t: 0.11, cam: -0.04 },
             ],
             { up: 'y', n: 8 },
@@ -1059,7 +1059,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         },
         lbl('chin_windows'),
         'tempered',
-        { pos: new V3(3.05, 0.95, 0) },
+        { pos: new V3(3.05, 0.95, 0), k: 0.988 },
       )
       ;[1, -1].forEach(function (s) {
         EA.fuseGlass(c, ST, EA.sideKeepP(fdP, 0.6, s), s > 0 ? lbl('co_pilot_door_window') : lbl('pilot_door_window'), 'tempered', {
@@ -1230,7 +1230,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-5.75, 2.1, 0], c: 0.62, t: 0.12, cam: -0.03 },
+              { p: [-5.75, 2.1, s * 0.002], c: 0.62, t: 0.12, cam: -0.03 },
               { p: [-5.85, 2.1, s * 1.05], c: 0.52, t: 0.11, cam: -0.03 },
             ],
             { up: 'y', n: 8 },
@@ -1674,7 +1674,7 @@ export function installHelicoptersExtra(fx: FleetContext): void {
           EA.colorize(
             EA.foilGeo(
               [
-                { p: [-8.3, 2.75, 0], c: 1.0, t: 0.1 },
+                { p: [-8.3, 2.75, s * 0.002], c: 1.0, t: 0.1 },
                 { p: [-8.5, 2.75, s * 1.85], c: 0.7, t: 0.09 },
               ],
               { up: 'y', n: 8 },

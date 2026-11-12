@@ -48,6 +48,11 @@ interface GoldenVehicle {
 }
 const entries = Object.entries(golden.vehicles as unknown as Record<string, GoldenVehicle>)
 
+// Owner decision (2026-11-12, CLAUDE.md §13): a part drawn flush with another z-fights, so it now sits 1-3 mm off it or stops where the other begins (the spokes of a wheel, one behind the other).
+// The triangles, draw calls, size, damageable boxes and the vertex and index count of every class stay the page's; only the positions of the flush parts moved, so the vertex hash differs.
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['hatch', 'seda', 'picape', 'suv', 'van', 'leopardo', 'moto', 'trator', 'lancha', 'heli'])
+const withoutHash = (classes: Record<string, unknown>): Record<string, unknown> => Object.fromEntries(Object.entries(classes).map(([cls, value]) => [cls, { ...(value as object), hash: undefined }]))
+
 describe('team golden: Frota Leve, light and high quality', () => {
   it.each(entries)('%s has the same triangles, draw calls, size and colour as the page', (name, want) => {
     const [pageKey, quality] = name.split(':') as [string, 'lite' | 'high']
@@ -68,7 +73,8 @@ describe('team golden: Frota Leve, light and high quality', () => {
       if (m.isMesh) got[m.name] = { vertices: m.geometry.attributes.position.count, indices: m.geometry.index!.count, hash: fnv(m.geometry.attributes.position.array) }
     })
     const expected = Object.fromEntries(Object.entries(want.classes).map(([cls, value]) => [CLASS_NAMES[cls], value]))
-    expect(got).toEqual(expected)
+    if (Z_FIGHTING_FIXES.has(name.split(':')[0] as string)) expect(withoutHash(got)).toEqual(withoutHash(expected))
+    else expect(got).toEqual(expected)
     built.dispose()
   })
 
