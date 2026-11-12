@@ -6,12 +6,16 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../..')
+/** @type {Record<string, string>} */
 const exempt = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'exempt.json'), 'utf8'))
 const packages = readdirSync(join(ROOT, 'packages'))
 
+/** @param {string} name */
 const drawsPieces = (name) => name.endsWith('-three') || existsSync(join(ROOT, 'packages', name, 'tests/exact-golden.test.ts'))
+/** @param {string} name */
 const guarded = (name) => ['tests/catalog-cases.ts', 'tests/z-fighting.test.ts'].every((f) => existsSync(join(ROOT, 'packages', name, f)))
 
+/** @type {string[]} */
 const problems = []
 for (const name of packages.filter(drawsPieces)) {
   if (guarded(name) && exempt[name]) problems.push(`${name}: has the z-fighting guard, drop it from tools/z-fighting/exempt.json`)
