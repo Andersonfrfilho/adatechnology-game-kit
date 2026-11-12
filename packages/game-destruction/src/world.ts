@@ -18,6 +18,7 @@ import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilA
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
 import type { VoidRun } from './foundation-span'
+import { BEND_MIN, BEND_MAX, plasticBend, snapRatio } from './bending'
 import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, SETTLEMENT_POINTS, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
@@ -3803,6 +3804,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
   }
 
+  /**
+   * What a heavy blunt blow does to the part as a whole, not only where it lands (`bending.ts`, by `MaterialDef.bending`): a thin ductile plate bends for good
+   * (`PartState.bend`, a `damage`-free state change); a long wooden piece that is flexed past the moment its section holds snaps across at the blow.
+   * Returns the hit points that finish the part off when it snaps, else 0.
+   */
+  const bendOrSnap = (o: ObjRT, p: PartRT, E: number, point: Vec3, d: Vec3): number => {
+    if (E <= 0 || !p.mat.bending) return 0
+    const { c, q } = partXf(o, p)
+    const local = rotateVec([-q[0], -q[1], -q[2], q[3]], d)
+    const angle = plasticBend(p.dims, p.thickness, p.mat.bending, E, local)
+    if (angle >= BEND_MIN) p.st.bend = Math.min(BEND_MAX, (p.st.bend ?? 0) + angle)
+    const axis = severAxis(p)
+    if (axis < 0 || snapRatio(p.dims, p.mat.bending, E, local, SEVER_ASPECT) < 1) return 0
+    p.rt.cutAt = clamp(toLocal(c, q, point)[axis], -p.dims[axis] / 2, p.dims[axis] / 2)
+    return Math.max(0, p.st.hp)
+  }
+
   const melee = (o: ObjRT, p: PartRT, kind: 'blunt' | 'slash', E: number, point: Vec3, n: Vec3, d: Vec3, contactR: number, src?: string): number => {
     const mat = p.mat
     const thrMm = mat.penetration * p.thickness * 1000
@@ -3840,7 +3858,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     } else wearJoints(o, p, E * 0.3, point, 0.06, src)
     if (kind === 'blunt' && E > 0 && p.layers.length > 0) spallOuter(o, p, point, faceOf(o, p, n), n, Math.max(contactR, 0.05), src)
     const scale = mat.damageScale?.[kind] ?? 1
-    const done = applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
+    const snapped = kind === 'blunt' ? bendOrSnap(o, p, E, point, d) : 0
+    const done = applyDamage(o, p, Math.max(snapped, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1)), kind, point, d, E * 0.1, 12, src)
     addBreach(o, p, point, breachAreaOf(p, done, false), E, d, src)
     // a blow that did not open the wall wears the units it lands on
     if (kind === 'blunt') chipUnits(o, p, 'blunt', point, E, d, Math.max(contactR, 0.03), src)

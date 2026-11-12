@@ -1106,6 +1106,9 @@ importers:
         specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods

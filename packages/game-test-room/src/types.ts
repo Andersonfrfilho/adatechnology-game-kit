@@ -28,6 +28,7 @@ import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
+import type { ToolCondition } from './shovel'
 import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
@@ -436,6 +437,11 @@ export interface TestRoom {
   readonly effects: EffectSink
   /** Equip a weapon or tool of the loadout (or any arsenal id). */
   setTool(weaponId: string): void
+  /**
+   * What damage did to the tool with this arsenal id (`toolConditionOf` reads it from the destruction state of its object); undefined gives it back whole. A tool
+   * with a snapped handle cannot be swung or dug with (the room says why), and a bent blade takes a smaller bite of earth.
+   */
+  setToolCondition(weaponId: string, condition: ToolCondition | undefined): void
   readonly tool: WeaponState
   /**
    * Puts one of a weapon in the left hand beside the tool in hand (a pistol in each hand: the left mouse button fires the right one, the right button the left one, and neither aims).

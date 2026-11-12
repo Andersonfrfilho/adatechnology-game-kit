@@ -636,6 +636,8 @@ export interface PartState {
    * and bends it where one end went down more. A part that rests on a settled one (the wall on its ground beam) follows it with the same line.
    */
   settlement?: PartSettlement
+  /** Radians a thin ductile plate (a pressed steel blade) was bent for good by heavy blunt blows (`MaterialDef.bending`); only present once it bent. */
+  bend?: number
 }
 
 /** How the ground under an object is holding (`DestructibleSpec.soil`). */

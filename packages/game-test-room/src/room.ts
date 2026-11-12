@@ -58,8 +58,8 @@ import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
-import { SHOVEL, digsWith, shovelful } from './shovel'
-import type { ShovelMode } from './shovel'
+import { SHOVEL, biteShareOf, digsWith, shovelful } from './shovel'
+import type { ShovelMode, ToolCondition } from './shovel'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
@@ -2594,7 +2594,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     say(t(on ? 'act.combo.on' : 'act.combo.off', { name }))
   }
   /** `side` is a blow of the left hand's tool (a tool in each hand): that hand strikes, and the blow waits on a key of its own. */
+  /** What damage did to the tools in hand, by arsenal id (`setToolCondition`): a snapped handle cannot swing or dig, a bent blade takes a smaller bite. */
+  const toolConditions = new Map<string, ToolCondition>()
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId, side?: { readonly hand: 'left'; readonly key: string }): void => {
+    if (toolConditions.get(id)?.handleBroken) {
+      action('tool_broken', t('act.tool.handle_broken', { weapon: toolName(id) }), { data: { weapon: id } })
+      say(t('act.tool.handle_broken', { weapon: toolName(id) }))
+      return
+    }
     // a shovel aimed down at the ground near the feet digs (or throws earth back) instead of striking
     if (!side && digsWith(arsenal.weapons.get(id)) && u.direction[1] < SHOVEL.downward) {
       // the aim may start behind the shoulder (third person): what counts is how far the ground it meets is from the feet
@@ -2673,17 +2680,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const seconds = avatar?.strike?.('shovel_dig') ?? null
     emitHost({ type: 'motion', weapon: id, motion: shovelMode, duration: SHOVEL.seconds })
     const mode = shovelMode
-    strikes.push({ key: id, remaining: seconds ?? SHOVEL.seconds / 2, land: () => landShovelful(id, mode, point, direction) })
+    const share = biteShareOf(toolConditions.get(id)?.bend ?? 0)
+    strikes.push({ key: id, remaining: seconds ?? SHOVEL.seconds / 2, land: () => landShovelful(id, mode, point, direction, share) })
   }
-  const landShovelful = (id: string, mode: ShovelMode, point: Vec3, direction: Vec3): void => {
-    const done = shovelful(terrain, mode, point, direction)
+  const landShovelful = (id: string, mode: ShovelMode, point: Vec3, direction: Vec3, share: number): void => {
+    const done = shovelful(terrain, mode, point, direction, share)
     const name = (material: string): string => S.text[`material.${material}`] ?? dStrings.materialNames[material] ?? material
     if (done.kind === 'dug') {
       const soil = world.materials.get(done.material)
       renderer.emit('dust', done.dump, [0, 1, 0], 10, 1.4)
       renderer.emit('chips', done.dump, [0, 1, 0], 6, 2)
       playSound(impactKey(soil), done.dump, 0.45, impactSoundKeys(done.material, soil))
-      action('dig', t('act.dig.dug', { weapon: toolName(id), litres: num(done.volume * 1000, 0), material: name(done.material) }), { data: { weapon: id, volumeM3: done.volume, material: done.material } })
+      action('dig', t('act.dig.dug', { weapon: toolName(id), litres: num(done.volume * 1000, 0), material: name(done.material) }), { data: { weapon: id, volumeM3: done.volume, material: done.material, biteShare: share } })
     } else if (done.kind === 'refused') {
       // the blade bounces off: sparks off rock and concrete, a knock on the rest; the blow wears the blade as a strike would
       const def = world.materials.get(done.material)
@@ -4854,6 +4862,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     clear,
     resetAll,
     setTool,
+    setToolCondition(weaponId, condition) {
+      if (condition) toolConditions.set(weaponId, condition)
+      else toolConditions.delete(weaponId)
+    },
     setOffTool,
     get offTool() {
       return offTool

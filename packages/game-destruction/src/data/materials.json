@@ -28,7 +28,12 @@
       "metal",
       "conductive"
     ],
-    "compressive": 2000000
+    "compressive": 2000000,
+    "bending": {
+      "yieldMPa": 250,
+      "elasticGPa": 200,
+      "absorbed": 0.2
+    }
   },
   {
     "id": "cast_iron",
@@ -214,6 +219,11 @@
         "tear": "splinters",
         "tearJoules": 150
       }
+    },
+    "bending": {
+      "ruptureMPa": 100,
+      "elasticGPa": 12,
+      "absorbed": 0.3
     }
   },
   {

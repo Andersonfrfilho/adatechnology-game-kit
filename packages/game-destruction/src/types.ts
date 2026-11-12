@@ -149,6 +149,20 @@ export interface MaterialHit {
   crater?: boolean
 }
 
+/**
+ * Real bending strengths of a material, for blows on single parts (`bending.ts`). `yieldMPa`: yield strength of a ductile plate (mild steel 250); a blow
+ * past the elastic limit bends a thin plate for good (`PartState.bend`). `ruptureMPa`: modulus of rupture of a wood (hardwood 100); a long piece snaps
+ * across when the blow flexes it past the moment its section holds.
+ */
+export interface MaterialBending {
+  yieldMPa?: number
+  ruptureMPa?: number
+  /** Modulus of elasticity in GPa (steel 200, ash 12). */
+  elasticGPa?: number
+  /** Share of a blow's energy that flexes the part; the rest moves it (steel 0.2: a heavy plate on a pivot, wood 0.4). */
+  absorbed?: number
+}
+
 export interface MaterialDef {
   id: MaterialId
   /** Density in kg/m³ (used when a part has no `mass`). */
@@ -191,6 +205,8 @@ export interface MaterialDef {
    * is not a punch). See `MaterialHit`.
    */
   hits?: Partial<Record<DamageType, MaterialHit>>
+  /** How a thin plate of the material bends for good, or a long piece of it snaps, under a heavy blow. See `MaterialBending`. */
+  bending?: MaterialBending
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
   damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */

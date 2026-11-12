@@ -1,0 +1,14 @@
+{
+  "shovel": {
+    "meshes": { "wood": "handle", "metal": "blade" },
+    "spec": {
+      "name": "shovel",
+      "parts": [
+        { "id": "handle", "material": "wood_hard", "shape": { "kind": "box", "size": [0.9, 0.035, 0.035] }, "position": [-0.101, 0.053, 0], "mass": 0.9, "grain": "x", "tags": ["handle"] },
+        { "id": "blade", "material": "steel", "shape": { "kind": "box", "size": [0.301, 0.012, 0.22] }, "position": [0.4005, 0.006, 0], "mass": 1.1, "thickness": 0.002, "tags": ["blade"] }
+      ],
+      "joints": [{ "id": "rivets", "a": "handle", "b": "blade", "kind": "bolt", "strength": 400 }],
+      "tags": ["item", "tool"]
+    }
+  }
+}

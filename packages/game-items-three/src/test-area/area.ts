@@ -12,6 +12,7 @@ import type { ShelfPlan } from '../area-layout'
 import { buildItem } from '../build-item'
 import type { DrawableItem } from '../build-item'
 import { itemContents, SHELL_PART_ID } from '../destruction'
+import { itemMakeup, makeupSpec } from '../makeup'
 import { itemOpening, openItem, setOpeningContents, turnItem } from '../opening'
 import type { ContentsSubject } from '../destruction'
 import { checkBudget, countDrawCalls, countTriangles, ITEM_BUDGETS } from '../budgets'
@@ -368,12 +369,19 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     return { ...eaten, seal }
   }
 
+  const makeupSpecOf = (model: string | undefined): Pick<TestableItem, 'spec'> => {
+    const spec = model === undefined || !itemMakeup(model) ? undefined : makeupSpec(model)
+    return spec ? { spec: () => structuredClone(spec) } : {}
+  }
+
   const itemOf = (def: ItemDef): TestableItem => ({
     id: `${ITEM_PREFIX}${def.id}`,
     name: nameOf(def),
     movable: true,
     thumbnail: itemThumbnailSvg(drawable(def)),
     ...sealOf(def, fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight })),
+    // an item with a make-up (a shovel: ash handle riveted to a steel blade) is that spec, not the parts guessed from its meshes
+    ...makeupSpecOf(def.model),
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T

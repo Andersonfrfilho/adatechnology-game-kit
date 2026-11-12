@@ -1,4 +1,5 @@
 import type { Vec3 } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, ObjectState } from '@adatechnology/game-destruction'
 import type { Terrain } from '@adatechnology/game-terrain'
 
 /**
@@ -68,22 +69,44 @@ export function deepestNear(terrain: Terrain, around: Vec3): Vec3 {
   return best
 }
 
-/** One shovelful at `point`, aimed along `direction`: digs (the bite as deep as the ground lets it) or fills from the nearest heap. */
-export function shovelful(terrain: Terrain, mode: ShovelMode, point: Vec3, direction: Vec3): Shovelful {
+/** One shovelful at `point`, aimed along `direction` (`share` of a full bite, `biteShareOf` of a bent blade): digs (the bite as deep as the ground lets it) or fills from the nearest heap. */
+export function shovelful(terrain: Terrain, mode: ShovelMode, point: Vec3, direction: Vec3, share = 1): Shovelful {
+  const scale = Math.sqrt(share)
+  const size: [number, number] = [SHOVEL.size[0] * scale, SHOVEL.size[1] * scale]
   if (mode === 'fill') {
     const heap = nearestHeap(terrain, point)
     if (!heap) return { kind: 'no_heap', point }
     // the earth goes into the hole one aims at: its deepest point near the aim (the aim may meet its near rim)
     const hole = deepestNear(terrain, point)
-    const volume = terrain.fill({ x: hole[0], z: hole[2], size: SHOVEL.size, from: { x: heap[0], z: heap[2], radius: SHOVEL.heapRadius }, volume: SHOVEL.size[0] * SHOVEL.size[1] * SHOVEL.bite })
+    const volume = terrain.fill({ x: hole[0], z: hole[2], size, from: { x: heap[0], z: heap[2], radius: SHOVEL.heapRadius }, volume: size[0] * size[1] * SHOVEL.bite })
     return volume > 0 ? { kind: 'filled', volume, from: heap, point: hole } : { kind: 'no_heap', point }
   }
   // the harder the ground, the shallower the bite a shovelful takes
   const met = terrain.material(terrain.columnAt(point[0], point[2]).material)
   const depth = SHOVEL.bite / Math.max(1, met.dig?.effort ?? 1)
   const dump = dumpOf(terrain, point, direction)
-  const result = terrain.dig({ x: point[0], z: point[2], size: SHOVEL.size, depth, dump: { x: dump[0], z: dump[2] } })
+  const result = terrain.dig({ x: point[0], z: point[2], size, depth, dump: { x: dump[0], z: dump[2] } })
   if (result.refused) return { kind: 'refused', material: result.refused, point }
   if (result.closes) return { kind: 'closed', material: result.material, point }
   return { kind: 'dug', volume: result.volume, material: result.material, dump }
+}
+
+/** What damage did to a tool in hand: its handle snapped (no swing, no dig) and how far its blade is bent (radians, `PartState.bend`). */
+export interface ToolCondition {
+  readonly handleBroken: boolean
+  readonly bend: number
+}
+
+/** Smallest share of a full bite a folded blade still takes. */
+export const MIN_BITE_SHARE = 0.25
+
+/** Share of a full bite a blade bent by `bend` radians takes: it scoops with the part of its face that still faces the ground, `cos(bend)`. */
+export const biteShareOf = (bend: number): number => Math.min(1, Math.max(MIN_BITE_SHARE, Math.cos(Math.max(0, bend))))
+
+const lost = (status: string): boolean => status === 'broken' || status === 'ash' || status === 'melted'
+
+/** The condition of a tool from its destruction object: the parts the spec tags `handle` and `blade`. A tool without a handle part is never handle-broken. */
+export function toolConditionOf(spec: DestructibleSpec, state: ObjectState): ToolCondition {
+  const tagged = (tag: string) => state.parts.filter((part) => spec.parts.find((candidate) => candidate.id === part.id)?.tags?.includes(tag))
+  return { handleBroken: tagged('handle').some((part) => lost(part.status)), bend: Math.max(0, ...tagged('blade').map((part) => part.bend ?? 0)) }
 }

@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import type { DestructibleSpec, Vec3 } from '@adatechnology/game-contracts'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
+import { itemMakeup, makeupSpec, tagMakeupParts } from '@adatechnology/game-items-three'
 import { mergeByMaterial } from '@adatechnology/game-shapes-three'
 
 import type { ItemModels } from './item-models'
@@ -37,6 +38,8 @@ export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'i
     group.add(mesh)
   }
   group.remove(model.root)
+  // a weapon whose item model has a make-up (a shovel) is the parts of that make-up, not one body
+  if (itemMakeup(def.id)) tagMakeupParts(group, def.id)
   const size = box.getSize(new THREE.Vector3())
   group.userData.footprint = [size.x, size.y, size.z]
   return group
@@ -60,8 +63,10 @@ export function buildTripodMountedProp(THREE: typeof THREE_NS, def: Pick<WeaponD
   )
 }
 
-/** The destruction spec of a modeled prop: one steel box of its measures, with the real mass of the weapon. */
-export function modeledPropSpec(root: unknown, def: Pick<WeaponDef, 'mass'>, name: string): DestructibleSpec {
+/** The destruction spec of a modeled prop: the make-up of its item model when it has one (`itemMakeup`), else one steel box of its measures, with the real mass of the weapon. */
+export function modeledPropSpec(root: unknown, def: Pick<WeaponDef, 'mass'> & Partial<Pick<WeaponDef, 'id'>>, name: string): DestructibleSpec {
+  const makeup = def.id === undefined ? undefined : makeupSpec(def.id, ['weapon'])
+  if (makeup) return { ...makeup, name }
   const footprint = ((root as THREE_NS.Object3D).userData.footprint ?? [0.3, 0.1, 0.1]) as Vec3
   const size: Vec3 = [Math.max(0.02, footprint[0]), Math.max(0.02, footprint[1]), Math.max(0.02, footprint[2])]
   return { name, parts: [{ id: MODEL_BODY, material: 'steel', shape: { kind: 'box', size }, position: [0, size[1] / 2, 0], mass: def.mass }], joints: [], tags: ['weapon'] }
