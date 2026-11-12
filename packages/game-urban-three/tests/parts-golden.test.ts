@@ -16,6 +16,7 @@ const events = golden.events as unknown as Event[]
 const round = (list: readonly (readonly unknown[])[]): unknown[][] => list.map((entry) => entry.map((value) => (typeof value === 'number' ? Math.round(value * 1e4) / 1e4 : value)))
 
 /** The 34 cases of the capture (tools/golden/captures/urban-parts.js), each on a fresh builder with the page's rng(7) and a light budget of 99. */
+// The team's page draws every part where its builder puts it; `standOut: false` keeps this port identical to it (the 2 mm of CLAUDE.md §13 are checked by exact-golden and z-fighting).
 const kit = createUrban()
 const pole = (id: string, b: UrbanBuilder, o: Parameters<ReturnType<typeof kit.poles.get>['build']>[1]): void => kit.poles.get(id).build(b, o)
 const CASES: Record<string, (b: UrbanBuilder) => void> = {
@@ -109,7 +110,7 @@ const itemRows = (items: readonly { x: number; y: number; z: number; width: numb
 const windowRows = (windows: readonly { x: number; y: number; z: number; ry: number; width: number; height: number }[]) => windows.map((w) => [w.x, w.y, w.z, w.ry, w.width, w.height])
 
 describe('the urban parts against the Galeria do Vale Cinzento', () => {
-  const urban = createUrbanThree(THREE, { document: fakeDocument })
+  const urban = createUrbanThree(THREE, { document: fakeDocument, standOut: false })
 
   it('covers every case the capture recorded', () => {
     expect(Object.keys(CASES).sort()).toEqual(Object.keys(golden.scenes).sort())
@@ -141,7 +142,7 @@ describe('the urban parts against the Galeria do Vale Cinzento', () => {
 })
 
 describe('animation and cleanup', () => {
-  const urban = createUrbanThree(THREE, { document: fakeDocument })
+  const urban = createUrbanThree(THREE, { document: fakeDocument, standOut: false })
 
   it('a flickering lamp dips its light on the beats of the page formula', () => {
     const builder = kit.builder({ budget: 99 })

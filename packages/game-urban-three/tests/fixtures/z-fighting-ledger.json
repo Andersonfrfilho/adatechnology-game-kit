@@ -1,15 +1,1 @@
-{
-  "helpers": 44,
-  "item/downtown": 59,
-  "item/military": 32,
-  "item/mountain_resort": 175,
-  "item/rural": 39,
-  "item/stilt_village": 25,
-  "item/street_grid": 189,
-  "item/suburb": 8,
-  "item/working_class": 145,
-  "part/street_grid": 122,
-  "part/watchtower_plain": 16,
-  "part/watchtower_searchlight": 16,
-  "patterns": 432
-}
+{}

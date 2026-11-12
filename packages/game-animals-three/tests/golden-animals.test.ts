@@ -56,6 +56,10 @@ const stateOf = (rig: AnimalRig): Record<string, unknown> => ({
   triangles: rig.triangles,
 })
 
+// Owner decision (2026-11-12, CLAUDE.md §13): the horse's mane boxes shared their side planes and the snake's segments sat stacked at one point, and flickered;
+// the mane boxes are 4 mm apart in width and the snake rests laid straight, so these two no longer hash like the page. Their node counts are still checked.
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['horse', 'lancehead'])
+
 describe('G-animals: the 13 species against the Bichos do Vale page', () => {
   it('has the dog node by node, with position, rotation, scale, geometry and colour', () => {
     const { rigs } = buildPage()
@@ -89,7 +93,8 @@ describe('G-animals: the 13 species against the Bichos do Vale page', () => {
     const bySpecies = (list: { type: string; data: Record<string, unknown> }[]): typeof list => [...list].sort((a, b) => String(a.data.species).localeCompare(String(b.data.species)))
     expect(bySpecies(events)).toEqual(bySpecies(fixture.events))
     const expected = Object.fromEntries(Object.entries(fixture.scenes).map(([label, scene]) => [label, { objects: scene.objects, hash: scene.hash }]))
-    expect(hashes).toEqual(expected)
+    const kept = (label: string, scene: { objects: number; hash: string }): { objects: number; hash?: string } => (Z_FIGHTING_FIXES.has(label.replace(/_[a-z]+$/, '')) ? { objects: scene.objects } : scene)
+    expect(Object.fromEntries(Object.entries(hashes).map(([label, scene]) => [label, kept(label, scene)]))).toEqual(Object.fromEntries(Object.entries(expected).map(([label, scene]) => [label, kept(label, scene)])))
   })
 })
 

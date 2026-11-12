@@ -8,6 +8,7 @@ import type { ShapeBatch, ShapePoint } from '@adatechnology/game-shapes'
 import type { HouseholdApi, MaterialKey, Quality, ThreeLib, ThreeNS } from './types'
 import { MATERIAL_KEYS } from './types'
 import { mergeParts } from './merge'
+import { standOutCoincidentBoxes } from './stand-out'
 import { rememberRest } from './pose'
 
 export type MaterialMap = Partial<Record<MaterialKey, ThreeNS.Material>>
@@ -26,6 +27,8 @@ export interface MeshApiOptions {
    * volumes (clothes on a line) into one mesh per material (see `mergeParts`). Needs the spec in `finish`. Default: on in `game` quality.
    */
   mergeParts?: boolean
+  /** Move the pieces that share a plane with another apart by 2 mm (CLAUDE.md §13, `standOutCoincidentBoxes`). Default true; `false` bakes the builders' numbers as drawn. */
+  standOut?: boolean
   /** Idle flutter of merged cloth. Default 0.04. */
   swayAmplitude?: number
   /**
@@ -185,7 +188,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
       const materialFor = finishOptions?.materialFor ?? options.materialFor
       if (finished) throw new Error('createMeshApi: finish() was already called')
       finished = true
-      const buffers = generate(recorder.schema(), {
+      const buffers = generate(options.standOut === false ? recorder.schema() : standOutCoincidentBoxes(recorder.schema()), {
         colors: colorSpaceOf(THREE),
         materials: MATERIAL_KEYS,
         fallbackMaterial: 'plain',

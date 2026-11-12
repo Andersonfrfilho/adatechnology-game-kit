@@ -19,6 +19,7 @@ export const buildSnake = (THREE: Three, rig: AnimalRig): AnimalRig => {
     const radius = 0.012 + 0.03 * Math.sin(Math.min(1, t * 1.15) * Math.PI) * (t < 0.1 ? 0.75 + t * 2.5 : 1) + (t < 0.05 ? 0.012 : 0)
     const material = index % 4 === 1 || index % 4 === 2 ? secondary : primary
     const group = new THREE.Group()
+    group.position.z = -index * SEGMENT_LENGTH // laid straight at rest: stacked at one point the equal spheres of the thickest part fight
     rig.trunk.add(group)
     const sphere = tools.ball(group, radius, material, 0, radius, 0, 1, 0.78, 1.5)
     sphere.userData.joint = index % 3 === 0 ? 1 : 0
