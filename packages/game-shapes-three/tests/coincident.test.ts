@@ -36,6 +36,18 @@ describe('coincidentFacesOf', () => {
     expect(coincidentFacesOf(tiles).length).toBeGreaterThan(0)
   })
 
+  it('ignores triangles past the draw range, which the GPU never draws', () => {
+    const plane = new THREE.PlaneGeometry(1, 1)
+    const doubled = new THREE.BufferGeometry()
+    doubled.setAttribute('position', plane.getAttribute('position'))
+    const index = Array.from(plane.index!.array)
+    doubled.setIndex([...index, ...index])
+    const mesh = new THREE.Mesh(doubled, new THREE.MeshStandardMaterial())
+    expect(coincidentFacesOf(mesh).length).toBeGreaterThan(0)
+    doubled.setDrawRange(0, index.length)
+    expect(coincidentFacesOf(mesh)).toEqual([])
+  })
+
   it('skips hidden meshes and polygon-offset decals unless asked', () => {
     const root = new THREE.Group()
     const hidden = block('core', [1, 1, 1], [0, 0, 0])
