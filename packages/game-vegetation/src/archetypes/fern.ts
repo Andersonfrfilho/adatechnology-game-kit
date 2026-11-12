@@ -56,7 +56,7 @@ export function generateFern(spec: FernSpec, ctx: Ctx): ArchResult {
       const col1 = jitter(c1, rng, 0.01, 0.06, 0.04)
       for (const s of [-1, 1]) {
         const dir = norm(add(add(mul(side, s * 0.95), mul(d, 0.6)), [0, -0.28, 0]))
-        kite(ctx.foliage, p, dir, [0, 1, 0], len, len * 0.5, col0, col1, 0.3 + 0.6 * t, 0.4 + 0.6 * t)
+        kite(ctx.foliage, p, dir, [0, 1, 0], len, len * 0.5, col0, col1, 0.3 + 0.6 * t, 0.4 + 0.6 * t, 0.35, ((k % 4) - 1.5) * 0.03)
       }
     }
   }

@@ -84,12 +84,18 @@ export function leaf(b: MeshBuilder, base: Vec3, dir: Vec3, up: Vec3, length: nu
 
 
 /** Cheap leaflet / pinna: 2 triangles with a slight fold. */
-export function kite(b: MeshBuilder, base: Vec3, dir: Vec3, up: Vec3, length: number, width: number, c0: Vec3, c1: Vec3, sway0: number, sway1: number, lift = 0.35): void {
+export function kite(b: MeshBuilder, base: Vec3, dir: Vec3, up: Vec3, length: number, width: number, c0: Vec3, c1: Vec3, sway0: number, sway1: number, lift = 0.35, roll = 0): void {
   const d = norm(dir)
   let right = cross(d, up)
   if (dot(right, right) < 1e-6) right = cross(d, [1, 0, 0])
   right = norm(right)
-  const n2 = norm(cross(right, d))
+  let n2 = norm(cross(right, d))
+  if (roll !== 0) {
+    const cr = Math.cos(roll)
+    const sr = Math.sin(roll)
+    right = add(mul(right, cr), mul(n2, sr))
+    n2 = norm(cross(right, d))
+  }
   const m = add(base, mul(d, length * 0.4))
   const hw = width * 0.5
   const L = add(add(m, mul(right, -hw)), mul(n2, hw * lift))

@@ -10,6 +10,8 @@ import { blossom } from '../geometry/flower'
 import { leaf } from '../geometry/leaf'
 import { tube } from '../geometry/tube'
 import { drawTreeWood, splitCrown } from './pieces'
+
+const GOLDEN_ANGLE = 2.399963
 import { inSeason, leafAmount, leafTint } from './shared'
 import { generateDeadTree } from './dead-tree'
 import { styleSkeleton, styledCrown, willowTree, type StyleGroup } from './tree-styles'
@@ -210,7 +212,7 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
         const out: Vec3 = [Math.cos(ang), r2.range(-0.3, 0.5), Math.sin(ang)]
         const center = add(pos, mul(norm(out), rad + fr * 0.4))
         const rr = fr * r2.range(0.8, 1.2)
-        ctx.fruitItem(() => octa(ctx.fruit, center, [rr, rr, rr], (h) => shade(c, 0.75 + h * 0.6), 0))
+        ctx.fruitItem(() => octa(ctx.fruit, center, [rr, rr, rr], (h) => shade(c, 0.75 + h * 0.6), 0, i * GOLDEN_ANGLE))
       }
     } else {
       for (let i = 0; i < count; i++) {
@@ -225,7 +227,7 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
         const centre: Vec3 = [top[0], top[1] - drop - s * 0.6, top[2]]
         ctx.fruitItem(() => {
           tube(ctx.wood, [top, [top[0], top[1] - drop * 0.8, top[2]]], { sides: 3, radii: [0.008, 0.008], color: () => [0.3, 0.4, 0.2], sway: () => 0.5, end: 'none' })
-          if (s < 0.06) octa(ctx.fruit, centre, [s * 0.85, s * 1.2, s * 0.85], (h) => shade(c, 0.7 + h * 0.45), 0.4)
+          if (s < 0.06) octa(ctx.fruit, centre, [s * 0.85, s * 1.2, s * 0.85], (h) => shade(c, 0.7 + h * 0.45), 0.4, i * GOLDEN_ANGLE)
           else icoShell(ctx.fruit, { center: centre, radii: [s * 0.85, s * 1.2, s * 0.85], detail: 0, rng: r2, noise: 0.04, color: (v) => shade(c, 0.7 + v.h * 0.45), sway: () => 0.4 })
         })
       }

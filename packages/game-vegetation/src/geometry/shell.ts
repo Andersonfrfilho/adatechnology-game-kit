@@ -189,10 +189,12 @@ export function mergeAnchors<T extends { p: Vec3; r: number }>(items: T[], k: nu
 }
 
 /** Tiny faceted blob (8 triangles) for small fruit / buds. */
-export function octa(b: MeshBuilder, center: Vec3, radii: Vec3, color: (h: number) => Vec3, sway: number): void {
+export function octa(b: MeshBuilder, center: Vec3, radii: Vec3, color: (h: number) => Vec3, sway: number, yaw = 0): void {
+  const cy = Math.cos(yaw)
+  const sy = Math.sin(yaw)
   const pts: Vec3[] = [
     [radii[0], 0, 0], [0, 0, radii[2]], [-radii[0], 0, 0], [0, 0, -radii[2]],
-  ].map((p) => add(center, [p[0], p[1] + 0.0, p[2]] as Vec3))
+  ].map((p) => add(center, [p[0] * cy + p[2] * sy, p[1] + 0.0, p[2] * cy - p[0] * sy] as Vec3))
   const top: Vec3 = add(center, [0, radii[1], 0])
   const bot: Vec3 = add(center, [0, -radii[1], 0])
   for (let i = 0; i < 4; i++) {
