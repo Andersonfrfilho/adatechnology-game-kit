@@ -77,17 +77,32 @@ function batchesOfMesh(mesh: THREE_NS.Mesh, label: string): CoincidentBatch[] {
   return batches
 }
 
-/** The triangles of every drawn mesh under `root`, in world space, ready for `coincidentFaces`. */
-export function coincidentBatchesOf(root: THREE_NS.Object3D, options: Pick<CoincidentFacesOfOptions, 'includeHidden'> = {}): CoincidentBatch[] {
+export interface MeshBatches {
+  readonly batches: CoincidentBatch[]
+  /** The mesh each batch came from, at the same index. */
+  readonly meshes: THREE_NS.Mesh[]
+}
+
+/** The triangles of every drawn mesh under `root`, in world space, with the mesh of each batch. */
+export function meshBatchesOf(root: THREE_NS.Object3D, options: Pick<CoincidentFacesOfOptions, 'includeHidden'> = {}): MeshBatches {
   root.updateMatrixWorld(true)
   const batches: CoincidentBatch[] = []
+  const meshes: THREE_NS.Mesh[] = []
   root.traverse((node) => {
     if (!isMesh(node) || (node as THREE_NS.Object3D & { isSprite?: boolean }).isSprite) return
     if (!options.includeHidden && !isDrawn(node, root)) return
     if (isOffsetDecal(node)) return
-    batches.push(...batchesOfMesh(node, labelOf(node, root)))
+    for (const batch of batchesOfMesh(node, labelOf(node, root))) {
+      batches.push(batch)
+      meshes.push(node)
+    }
   })
-  return batches
+  return { batches, meshes }
+}
+
+/** The triangles of every drawn mesh under `root`, in world space, ready for `coincidentFaces`. */
+export function coincidentBatchesOf(root: THREE_NS.Object3D, options: Pick<CoincidentFacesOfOptions, 'includeHidden'> = {}): CoincidentBatch[] {
+  return meshBatchesOf(root, options).batches
 }
 
 /**

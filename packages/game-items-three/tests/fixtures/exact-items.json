@@ -21,7 +21,7 @@
   ]
  },
  "model/canned_beans:lod": {
-  "hash": "5cde2f75",
+  "hash": "513cc1ce",
   "nodes": [
    "0 LOD e0e649c2",
    "0/0 Group 7251689d",
@@ -29,9 +29,9 @@
    "0/0/1 Mesh fa80dc73",
    "0/0/2 Mesh 97b24a81",
    "0/1 Group f203a881",
-   "0/1/0 Mesh 7c132400",
-   "0/1/1 Mesh 2166591c",
-   "0/1/2 Mesh f01dd7dc",
+   "0/1/0 Mesh 1134539b",
+   "0/1/1 Mesh 7d46f47a",
+   "0/1/2 Mesh 57c7f4da",
    "0/2 Group 55dd014c"
   ]
  },
@@ -57,7 +57,7 @@
   ]
  },
  "model/water_bottle:lod": {
-  "hash": "fa66ec28",
+  "hash": "1e778530",
   "nodes": [
    "0 LOD cba1241d",
    "0/0 Group c07ce4c6",
@@ -66,9 +66,9 @@
    "0/0/2 Mesh 98aea1ea",
    "0/0/3 Mesh fcffb333",
    "0/1 Group 9fac2b44",
-   "0/1/0 Mesh 5698020b",
+   "0/1/0 Mesh d8a8b7fc",
    "0/1/1 Mesh f009d724",
-   "0/1/2 Mesh ee25703",
+   "0/1/2 Mesh ce4a24ac",
    "0/2 Group 55dd014c"
   ]
  },
@@ -94,7 +94,7 @@
   ]
  },
  "model/rice:lod": {
-  "hash": "9e6cb59e",
+  "hash": "d8327f28",
   "nodes": [
    "0 LOD bbf681aa",
    "0/0 Group f20f8660",
@@ -103,7 +103,7 @@
    "0/0/2 Mesh 67a872ea",
    "0/0/3 Mesh e3197b16",
    "0/1 Group 5cbcade9",
-   "0/1/0 Mesh 609a509c",
+   "0/1/0 Mesh dc5722ee",
    "0/1/1 Mesh 597516f8",
    "0/1/2 Mesh 8138291b",
    "0/2 Group 55dd014c"
@@ -131,7 +131,7 @@
   ]
  },
  "model/military_ration:lod": {
-  "hash": "70dcd423",
+  "hash": "fc099815",
   "nodes": [
    "0 LOD 9f85848",
    "0/0 Group b5abe743",
@@ -140,7 +140,7 @@
    "0/0/2 Mesh ab2fa9f6",
    "0/0/3 Mesh 84fdfa84",
    "0/1 Group 5543bb",
-   "0/1/0 Mesh c54e335e",
+   "0/1/0 Mesh 7473a4f4",
    "0/1/1 Mesh d96c755a",
    "0/1/2 Mesh ea6828bf",
    "0/2 Group 55dd014c"
@@ -168,7 +168,7 @@
   ]
  },
  "model/cachaca:lod": {
-  "hash": "2a39610a",
+  "hash": "d52b37b0",
   "nodes": [
    "0 LOD 7d62bde3",
    "0/0 Group a5496253",
@@ -177,9 +177,9 @@
    "0/0/2 Mesh 36ff45ba",
    "0/0/3 Mesh be59cd19",
    "0/1 Group ad3421e",
-   "0/1/0 Mesh 67f930c8",
-   "0/1/1 Mesh 67c33c96",
-   "0/1/2 Mesh 381616fd",
+   "0/1/0 Mesh 2140191c",
+   "0/1/1 Mesh bd3cec55",
+   "0/1/2 Mesh 9ef5a016",
    "0/2 Group 55dd014c"
   ]
  },
@@ -206,7 +206,7 @@
   ]
  },
  "model/first_aid_kit:lod": {
-  "hash": "621cb92c",
+  "hash": "5d05e880",
   "nodes": [
    "0 LOD ec63863d",
    "0/0 Group d48dde99",
@@ -215,9 +215,9 @@
    "0/0/2 Mesh ee198d63",
    "0/0/3 Mesh e3327a29",
    "0/1 Group 67af2c4",
-   "0/1/0 Mesh 1c846404",
-   "0/1/1 Mesh 45ff20a7",
-   "0/1/2 Mesh 9e1c1651",
+   "0/1/0 Mesh 7fc40d96",
+   "0/1/1 Mesh c88d58f1",
+   "0/1/2 Mesh eea31c21",
    "0/2 Group 55dd014c"
   ]
  },
@@ -241,16 +241,16 @@
   ]
  },
  "model/bandage:lod": {
-  "hash": "2d4abb62",
+  "hash": "eee11a5f",
   "nodes": [
    "0 LOD 96cd0e1f",
    "0/0 Group 7c5c5ce",
    "0/0/0 Mesh 73014c94",
    "0/0/1 Mesh fc4bd540",
    "0/1 Group e171407a",
-   "0/1/0 Mesh 9dd0e69",
+   "0/1/0 Mesh 2e79ffaf",
    "0/1/1 Mesh 1667ec1b",
-   "0/1/2 Mesh d4b2dc2b",
+   "0/1/2 Mesh 33110f80",
    "0/2 Group 55dd014c"
   ]
  },
@@ -282,7 +282,7 @@
   ]
  },
  "model/amoxicillin:lod": {
-  "hash": "fcbc6a99",
+  "hash": "4f67ff9b",
   "nodes": [
    "0 LOD 533fe718",
    "0/0 Group f345eacb",
@@ -294,7 +294,7 @@
    "0/0/5 Mesh e9fbdec0",
    "0/0/6 Mesh b30a38ac",
    "0/1 Group fc224eeb",
-   "0/1/0 Mesh 18a108ed",
+   "0/1/0 Mesh 70015807",
    "0/1/1 Mesh 63e24fc4",
    "0/1/2 Mesh b073c388",
    "0/2 Group 55dd014c"
@@ -320,16 +320,16 @@
   ]
  },
  "model/crowbar:lod": {
-  "hash": "c23d333a",
+  "hash": "f93c2a90",
   "nodes": [
    "0 LOD 725a69ad",
    "0/0 Group 75ab8041",
    "0/0/0 Mesh f461c874",
    "0/0/1 Mesh 95ed3126",
    "0/1 Group c4f7070c",
-   "0/1/0 Mesh 2f5dd312",
+   "0/1/0 Mesh d42a2f52",
    "0/1/1 Mesh e69b1e64",
-   "0/1/2 Mesh 384d2184",
+   "0/1/2 Mesh f28a9fda",
    "0/2 Group 55dd014c"
   ]
  },
@@ -359,7 +359,7 @@
   ]
  },
  "model/hammer:lod": {
-  "hash": "34c099b2",
+  "hash": "a9519d05",
   "nodes": [
    "0 LOD a79f7d1b",
    "0/0 Group 5662cd50",
@@ -370,7 +370,7 @@
    "0/0/4 Mesh 5bfa3a72",
    "0/0/5 Mesh 8a154e24",
    "0/1 Group 3f98a4f6",
-   "0/1/0 Mesh ead57e3d",
+   "0/1/0 Mesh 62abc8be",
    "0/1/1 Mesh c8c80909",
    "0/1/2 Mesh 936a2e60",
    "0/2 Group 55dd014c"
@@ -398,7 +398,7 @@
   ]
  },
  "model/machete:lod": {
-  "hash": "c946edee",
+  "hash": "43c8368b",
   "nodes": [
    "0 LOD 4795cb4",
    "0/0 Group 4a55f964",
@@ -407,9 +407,9 @@
    "0/0/2 Mesh 24b49721",
    "0/0/3 Mesh 2e1a1486",
    "0/1 Group 8c5aa777",
-   "0/1/0 Mesh fe916439",
+   "0/1/0 Mesh 200947a4",
    "0/1/1 Mesh a6fcf2b2",
-   "0/1/2 Mesh d2fb6ac7",
+   "0/1/2 Mesh a17a6ad9",
    "0/2 Group 55dd014c"
   ]
  },
@@ -435,7 +435,7 @@
   ]
  },
  "model/axe:lod": {
-  "hash": "e2de30a",
+  "hash": "5182b121",
   "nodes": [
    "0 LOD 7336c0c9",
    "0/0 Group ceec1025",
@@ -444,9 +444,9 @@
    "0/0/2 Mesh 7d0c4d45",
    "0/0/3 Mesh c3731881",
    "0/1 Group 48fc9690",
-   "0/1/0 Mesh 9ee60419",
+   "0/1/0 Mesh e1e8a15c",
    "0/1/1 Mesh 72a865e0",
-   "0/1/2 Mesh 6edec890",
+   "0/1/2 Mesh 5ec844ce",
    "0/2 Group 55dd014c"
   ]
  },
@@ -476,16 +476,16 @@
   ]
  },
  "model/nail_bat:lod": {
-  "hash": "d61ef30a",
+  "hash": "c0a590cf",
   "nodes": [
    "0 LOD c83b28c9",
    "0/0 Group 3ca56d60",
    "0/0/0 Mesh 20e71393",
    "0/0/1 Mesh 594860e3",
    "0/1 Group cd52b5d0",
-   "0/1/0 Mesh 5db3c61c",
+   "0/1/0 Mesh e2b30d35",
    "0/1/1 Mesh 928f88aa",
-   "0/1/2 Mesh bacd6b83",
+   "0/1/2 Mesh 71b41233",
    "0/2 Group 55dd014c"
   ]
  },
@@ -515,7 +515,7 @@
   ]
  },
  "model/hiking_backpack_40l:lod": {
-  "hash": "e31b8a2a",
+  "hash": "640f264",
   "nodes": [
    "0 LOD 371abda9",
    "0/0 Group ed5e0632",
@@ -525,9 +525,9 @@
    "0/0/3 Mesh f121c30d",
    "0/0/4 Mesh 1b985ad",
    "0/1 Group c290e7b0",
-   "0/1/0 Mesh e392390d",
+   "0/1/0 Mesh 9544ef2",
    "0/1/1 Mesh 980655a8",
-   "0/1/2 Mesh bc4cb9de",
+   "0/1/2 Mesh 969033d7",
    "0/2 Group 55dd014c"
   ]
  },
@@ -559,7 +559,7 @@
   ]
  },
  "model/flashlight:lod": {
-  "hash": "c5b68f2d",
+  "hash": "4c9e91a1",
   "nodes": [
    "0 LOD 1615941b",
    "0/0 Group a21e41cc",
@@ -571,9 +571,9 @@
    "0/0/5 Mesh 1936bae7",
    "0/0/6 Mesh 10734b26",
    "0/1 Group 81096456",
-   "0/1/0 Mesh b25441f7",
-   "0/1/1 Mesh edc6a776",
-   "0/1/2 Mesh b1092b77",
+   "0/1/0 Mesh 1f172b8",
+   "0/1/1 Mesh dd8eb402",
+   "0/1/2 Mesh b80dd20",
    "0/2 Group 55dd014c"
   ]
  },
@@ -605,7 +605,7 @@
   ]
  },
  "model/portable_radio:lod": {
-  "hash": "b85770c1",
+  "hash": "f4c35817",
   "nodes": [
    "0 LOD 523d3010",
    "0/0 Group 17f1adbe",
@@ -617,8 +617,8 @@
    "0/0/5 Mesh 6d9e333e",
    "0/0/6 Mesh 3014d5d",
    "0/1 Group a2df023",
-   "0/1/0 Mesh e18a5456",
-   "0/1/1 Mesh 4eb2779e",
+   "0/1/0 Mesh 6af6cd0e",
+   "0/1/1 Mesh a2cf5cbc",
    "0/1/2 Mesh a8a2a1f8",
    "0/2 Group 55dd014c"
   ]
@@ -644,7 +644,7 @@
   ]
  },
  "model/house_key:lod": {
-  "hash": "2cfbc4d1",
+  "hash": "1f11c8b1",
   "nodes": [
    "0 LOD 93a5462d",
    "0/0 Group 6be0106e",
@@ -652,7 +652,7 @@
    "0/0/1 Mesh ba8da24c",
    "0/0/2 Mesh f9dcf3ef",
    "0/1 Group 944cf8f4",
-   "0/1/0 Mesh fc8480ad",
+   "0/1/0 Mesh 95376945",
    "0/1/1 Mesh b0fe56e8",
    "0/1/2 Mesh f02f49c3",
    "0/2 Group 55dd014c"
@@ -684,7 +684,7 @@
   ]
  },
  "model/survivor_diary:lod": {
-  "hash": "a9749102",
+  "hash": "28e5dc12",
   "nodes": [
    "0 LOD fbf8bf6f",
    "0/0 Group 52c4222b",
@@ -695,9 +695,9 @@
    "0/0/4 Mesh 4e3ea814",
    "0/0/5 Mesh 11f5e61a",
    "0/1 Group 15210c8a",
-   "0/1/0 Mesh f5bd7385",
-   "0/1/1 Mesh 4fece5bc",
-   "0/1/2 Mesh 17b1f55e",
+   "0/1/0 Mesh f30768c",
+   "0/1/1 Mesh 2bde40f9",
+   "0/1/2 Mesh 32e39464",
    "0/2 Group 55dd014c"
   ]
  },
@@ -723,7 +723,7 @@
   ]
  },
  "model/motorcycle_helmet:lod": {
-  "hash": "13b8ebeb",
+  "hash": "789e85a5",
   "nodes": [
    "0 LOD 75b746bc",
    "0/0 Group 46dd6f55",
@@ -732,9 +732,9 @@
    "0/0/2 Mesh bbeccc1",
    "0/0/3 Mesh 325bebdd",
    "0/1 Group 34c4dcff",
-   "0/1/0 Mesh b4b0959d",
+   "0/1/0 Mesh f3ab83cb",
    "0/1/1 Mesh c1778977",
-   "0/1/2 Mesh c7d80552",
+   "0/1/2 Mesh 33462daa",
    "0/2 Group 55dd014c"
   ]
  },
@@ -764,7 +764,7 @@
   ]
  },
  "model/lpg_cylinder_13kg:lod": {
-  "hash": "92b4312c",
+  "hash": "366f4779",
   "nodes": [
    "0 LOD aadd6028",
    "0/0 Group 6ccf3293",
@@ -775,9 +775,9 @@
    "0/0/4 Mesh 715e24a",
    "0/0/5 Mesh 17e9fc0f",
    "0/1 Group b57db8fb",
-   "0/1/0 Mesh b2e06acf",
+   "0/1/0 Mesh 920f977e",
    "0/1/1 Mesh ba0d0e69",
-   "0/1/2 Mesh a78c8c9e",
+   "0/1/2 Mesh c5a6e076",
    "0/2 Group 55dd014c"
   ]
  },
@@ -805,7 +805,7 @@
   ]
  },
  "model/fuel_jerrycan:lod": {
-  "hash": "a075824b",
+  "hash": "48f825ba",
   "nodes": [
    "0 LOD 6fa9e1e4",
    "0/0 Group ddcaaccf",
@@ -815,7 +815,7 @@
    "0/0/3 Mesh 68dd8051",
    "0/0/4 Mesh d06ce34a",
    "0/1 Group d5adfba7",
-   "0/1/0 Mesh 9761e559",
+   "0/1/0 Mesh 895c82f4",
    "0/1/1 Mesh ef165644",
    "0/1/2 Mesh 99f499ef",
    "0/2 Group 55dd014c"
@@ -847,7 +847,7 @@
   ]
  },
  "model/walkie_talkies:lod": {
-  "hash": "a0a29dcf",
+  "hash": "6b89eff5",
   "nodes": [
    "0 LOD ee90be3a",
    "0/0 Group 28ae0997",
@@ -858,9 +858,9 @@
    "0/0/4 Mesh fa9eb39",
    "0/0/5 Mesh cc9f7d0f",
    "0/1 Group 8789f759",
-   "0/1/0 Mesh b039e36e",
+   "0/1/0 Mesh f111c93e",
    "0/1/1 Mesh a7ce3f48",
-   "0/1/2 Mesh e9174c0b",
+   "0/1/2 Mesh 2f066c45",
    "0/2 Group 55dd014c"
   ]
  },
@@ -890,7 +890,7 @@
   ]
  },
  "model/batteries:lod": {
-  "hash": "bc8c2e55",
+  "hash": "7ddb1bfc",
   "nodes": [
    "0 LOD 8af984f6",
    "0/0 Group 7bce104f",
@@ -901,7 +901,7 @@
    "0/0/4 Mesh d7a77f9e",
    "0/0/5 Mesh 8767847a",
    "0/1 Group 1ba92915",
-   "0/1/0 Mesh 41e7fbf4",
+   "0/1/0 Mesh 9b9033e1",
    "0/1/1 Mesh 4328e8c4",
    "0/1/2 Mesh d1e4343",
    "0/2 Group 55dd014c"
@@ -931,7 +931,7 @@
   ]
  },
  "model/wooden_plank:lod": {
-  "hash": "67143452",
+  "hash": "abbd66f",
   "nodes": [
    "0 LOD 6d56a9e",
    "0/0 Group b5f0fb4b",
@@ -940,9 +940,9 @@
    "0/0/2 Mesh 195c9719",
    "0/0/3 Mesh 97d17b5c",
    "0/1 Group c2767ac9",
-   "0/1/0 Mesh ac733190",
-   "0/1/1 Mesh b52227e3",
-   "0/1/2 Mesh 8566b5ad",
+   "0/1/0 Mesh b94dfe60",
+   "0/1/1 Mesh 36ecb760",
+   "0/1/2 Mesh 6500c9c5",
    "0/2 Group 55dd014c"
   ]
  },
@@ -972,7 +972,7 @@
   ]
  },
  "model/sugar:lod": {
-  "hash": "5789137e",
+  "hash": "2dc8b3df",
   "nodes": [
    "0 LOD 38f8967f",
    "0/0 Group 8af2814e",
@@ -983,9 +983,9 @@
    "0/0/4 Mesh afa43bae",
    "0/0/5 Mesh e0ba8c22",
    "0/1 Group 1cf64bba",
-   "0/1/0 Mesh c2b05fc8",
+   "0/1/0 Mesh 3fdd9344",
    "0/1/1 Mesh cbb81359",
-   "0/1/2 Mesh bd1e38f6",
+   "0/1/2 Mesh 3fa236bb",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1016,7 +1016,7 @@
   ]
  },
  "model/chocolate_bar:lod": {
-  "hash": "2f6af072",
+  "hash": "65c43e3f",
   "nodes": [
    "0 LOD 6accf259",
    "0/0 Group b72e1eb9",
@@ -1025,9 +1025,9 @@
    "0/0/2 Mesh fd2a6a3a",
    "0/0/3 Mesh 38f81a7f",
    "0/1 Group 18454760",
-   "0/1/0 Mesh 7078f60c",
-   "0/1/1 Mesh 723df29b",
-   "0/1/2 Mesh c318c91e",
+   "0/1/0 Mesh 189f653",
+   "0/1/1 Mesh e2d9ede",
+   "0/1/2 Mesh 2976503b",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1055,7 +1055,7 @@
   ]
  },
  "model/potatoes:lod": {
-  "hash": "1d8710cf",
+  "hash": "97654cd8",
   "nodes": [
    "0 LOD 44392e0c",
    "0/0 Group 34d2e8d1",
@@ -1064,9 +1064,9 @@
    "0/0/2 Mesh e22b5c9a",
    "0/0/3 Mesh ca6cb5b7",
    "0/1 Group d884030f",
-   "0/1/0 Mesh 183daa11",
+   "0/1/0 Mesh d951aed3",
    "0/1/1 Mesh 3b9a8a4d",
-   "0/1/2 Mesh e1cf120a",
+   "0/1/2 Mesh 5d420303",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1098,7 +1098,7 @@
   ]
  },
  "model/biscuits:lod": {
-  "hash": "7d4e82ed",
+  "hash": "14f766a2",
   "nodes": [
    "0 LOD 39cc2675",
    "0/0 Group 66f4d149",
@@ -1108,7 +1108,7 @@
    "0/0/3 Mesh 624cf459",
    "0/0/4 Mesh 6cf6f662",
    "0/1 Group 1529691c",
-   "0/1/0 Mesh 32cca16e",
+   "0/1/0 Mesh 43fa2911",
    "0/1/1 Mesh 9abe3a42",
    "0/1/2 Mesh b76b5fc5",
    "0/2 Group 55dd014c"
@@ -1138,7 +1138,7 @@
   ]
  },
  "model/coffee:lod": {
-  "hash": "62646098",
+  "hash": "fa95bab3",
   "nodes": [
    "0 LOD f107af0d",
    "0/0 Group 5cacb64c",
@@ -1148,9 +1148,9 @@
    "0/0/3 Mesh a3a4e77",
    "0/0/4 Mesh b6c9eb0f",
    "0/1 Group b9570cb4",
-   "0/1/0 Mesh 11830aa6",
+   "0/1/0 Mesh 207d20b9",
    "0/1/1 Mesh 9553d7e8",
-   "0/1/2 Mesh 3d31bf04",
+   "0/1/2 Mesh 448955e8",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1184,7 +1184,7 @@
   ]
  },
  "model/raw_beef:lod": {
-  "hash": "423af29b",
+  "hash": "e1c47408",
   "nodes": [
    "0 LOD ca2add8a",
    "0/0 Group 2e4998bc",
@@ -1197,7 +1197,7 @@
    "0/0/6 Mesh a5a58c97",
    "0/0/7 Mesh d4db66e3",
    "0/1 Group fe46609",
-   "0/1/0 Mesh 557fbce",
+   "0/1/0 Mesh 1bb75d1b",
    "0/1/1 Mesh 7fc34859",
    "0/1/2 Mesh a6734ae5",
    "0/2 Group 55dd014c"
@@ -1229,7 +1229,7 @@
   ]
  },
  "model/game_meat:lod": {
-  "hash": "29a3aa3e",
+  "hash": "40bba693",
   "nodes": [
    "0 LOD 53efc3b1",
    "0/0 Group 77efca9b",
@@ -1239,7 +1239,7 @@
    "0/0/3 Mesh 3b806f51",
    "0/0/4 Mesh ec4cc8ed",
    "0/1 Group 77242058",
-   "0/1/0 Mesh 40eb8dce",
+   "0/1/0 Mesh 4eff9b6f",
    "0/1/1 Mesh c6ff4a38",
    "0/1/2 Mesh e28b48f7",
    "0/2 Group 55dd014c"
@@ -1270,7 +1270,7 @@
   ]
  },
  "model/jerked_beef:lod": {
-  "hash": "7f693a03",
+  "hash": "29e6d01c",
   "nodes": [
    "0 LOD f63c7e33",
    "0/0 Group f0ed503",
@@ -1279,9 +1279,9 @@
    "0/0/2 Mesh 8fa8610d",
    "0/0/3 Mesh dcc69b71",
    "0/1 Group 5f5dc0ae",
-   "0/1/0 Mesh 36cd7ee4",
+   "0/1/0 Mesh 6df74a37",
    "0/1/1 Mesh ad9bc47c",
-   "0/1/2 Mesh c7bb104c",
+   "0/1/2 Mesh 932d43bc",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1313,7 +1313,7 @@
   ]
  },
  "model/home_preserves:lod": {
-  "hash": "bb313c16",
+  "hash": "95fc358b",
   "nodes": [
    "0 LOD d04a2a9a",
    "0/0 Group e62c973f",
@@ -1325,9 +1325,9 @@
    "0/0/5 Mesh 84f1a0b4",
    "0/0/6 Mesh 9101de54",
    "0/1 Group fdc4a599",
-   "0/1/0 Mesh c8ef87d1",
-   "0/1/1 Mesh ccf7ffed",
-   "0/1/2 Mesh 5aca77df",
+   "0/1/0 Mesh f221b2da",
+   "0/1/1 Mesh 85dbfe51",
+   "0/1/2 Mesh 6135848d",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1362,7 +1362,7 @@
   ]
  },
  "model/eggs:lod": {
-  "hash": "f2f3f304",
+  "hash": "b6acfb7a",
   "nodes": [
    "0 LOD 19d84827",
    "0/0 Group b3d28fff",
@@ -1374,9 +1374,9 @@
    "0/0/5 Mesh 9be66777",
    "0/0/6 Mesh f7c90035",
    "0/1 Group 17038942",
-   "0/1/0 Mesh 710c0c8",
-   "0/1/1 Mesh 1ef984aa",
-   "0/1/2 Mesh 45e508dc",
+   "0/1/0 Mesh 2b1088d3",
+   "0/1/1 Mesh 463a83d9",
+   "0/1/2 Mesh 89714afc",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1406,7 +1406,7 @@
   ]
  },
  "model/cassava_flour:lod": {
-  "hash": "660f1792",
+  "hash": "fdfe1399",
   "nodes": [
    "0 LOD 74b7cc38",
    "0/0 Group 2cc7ad71",
@@ -1417,7 +1417,7 @@
    "0/0/4 Mesh 3ab9428d",
    "0/0/5 Mesh 4b41d897",
    "0/1 Group 737548eb",
-   "0/1/0 Mesh 7fc0f10c",
+   "0/1/0 Mesh 7ac3e0cf",
    "0/1/1 Mesh 7dd6eab",
    "0/1/2 Mesh 905ff0b7",
    "0/2 Group 55dd014c"
@@ -1449,7 +1449,7 @@
   ]
  },
  "model/beans:lod": {
-  "hash": "e856add9",
+  "hash": "50cfccfc",
   "nodes": [
    "0 LOD 49792180",
    "0/0 Group 77fd26b8",
@@ -1459,9 +1459,9 @@
    "0/0/3 Mesh bb6ccd2b",
    "0/0/4 Mesh 768ffd7a",
    "0/1 Group 4f7eeb3",
-   "0/1/0 Mesh 65a08005",
+   "0/1/0 Mesh e646b641",
    "0/1/1 Mesh fa882c56",
-   "0/1/2 Mesh 513a0073",
+   "0/1/2 Mesh 1e9b17ae",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1495,7 +1495,7 @@
   ]
  },
  "model/frozen_chicken:lod": {
-  "hash": "6bebfe5d",
+  "hash": "7e9e6698",
   "nodes": [
    "0 LOD 36bd73d3",
    "0/0 Group f501f8d3",
@@ -1506,9 +1506,9 @@
    "0/0/4 Mesh c6560434",
    "0/0/5 Mesh 5cc19d1a",
    "0/1 Group 6cf114ce",
-   "0/1/0 Mesh b9ca0acc",
+   "0/1/0 Mesh 44b65e7c",
    "0/1/1 Mesh a9a06a07",
-   "0/1/2 Mesh 465ea3ff",
+   "0/1/2 Mesh a7458002",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1534,7 +1534,7 @@
   ]
  },
  "model/orange:lod": {
-  "hash": "1d7417dd",
+  "hash": "b3731640",
   "nodes": [
    "0 LOD d1e9dbab",
    "0/0 Group a4d32e9a",
@@ -1543,9 +1543,9 @@
    "0/0/2 Mesh 9b0de637",
    "0/0/3 Mesh 67e5b28c",
    "0/1 Group aef54286",
-   "0/1/0 Mesh 99f75bda",
+   "0/1/0 Mesh b958d011",
    "0/1/1 Mesh 4a640525",
-   "0/1/2 Mesh df35d00a",
+   "0/1/2 Mesh 1d48f39e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1577,7 +1577,7 @@
   ]
  },
  "model/condensed_milk:lod": {
-  "hash": "8cf8563e",
+  "hash": "21c617da",
   "nodes": [
    "0 LOD 7bdd327a",
    "0/0 Group f98a7130",
@@ -1589,9 +1589,9 @@
    "0/0/5 Mesh d4c9efd1",
    "0/0/6 Mesh ddad1da1",
    "0/1 Group fb1a4959",
-   "0/1/0 Mesh 4fea3276",
+   "0/1/0 Mesh 62c046f8",
    "0/1/1 Mesh a00eb16b",
-   "0/1/2 Mesh e8231655",
+   "0/1/2 Mesh 3d8bf43b",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1623,7 +1623,7 @@
   ]
  },
  "model/pasta:lod": {
-  "hash": "b53d5aae",
+  "hash": "54f3e07b",
   "nodes": [
    "0 LOD 6209c3b4",
    "0/0 Group 57402aff",
@@ -1633,7 +1633,7 @@
    "0/0/3 Mesh 4bf37a37",
    "0/0/4 Mesh 39ed4a9f",
    "0/1 Group c6c41337",
-   "0/1/0 Mesh d576661a",
+   "0/1/0 Mesh 7d8b0cff",
    "0/1/1 Mesh 6e92cab3",
    "0/1/2 Mesh fbbbba72",
    "0/2 Group 55dd014c"
@@ -1665,7 +1665,7 @@
   ]
  },
  "model/instant_noodles:lod": {
-  "hash": "c85fa044",
+  "hash": "7407fb1d",
   "nodes": [
    "0 LOD cadfec7f",
    "0/0 Group c4016546",
@@ -1676,9 +1676,9 @@
    "0/0/4 Mesh 77c066b2",
    "0/0/5 Mesh d096f762",
    "0/1 Group c4c5c77a",
-   "0/1/0 Mesh dfef214e",
-   "0/1/1 Mesh d58f235d",
-   "0/1/2 Mesh d7408d12",
+   "0/1/0 Mesh ec3507a3",
+   "0/1/1 Mesh 3cd19ea1",
+   "0/1/2 Mesh ad572c5a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1707,7 +1707,7 @@
   ]
  },
  "model/cassava_root:lod": {
-  "hash": "655448d0",
+  "hash": "478ed60",
   "nodes": [
    "0 LOD 6549f352",
    "0/0 Group 74631674",
@@ -1717,9 +1717,9 @@
    "0/0/3 Mesh b9ff3829",
    "0/0/4 Mesh 59e3de8b",
    "0/1 Group 16be1411",
-   "0/1/0 Mesh ce72a268",
-   "0/1/1 Mesh c533c7e1",
-   "0/1/2 Mesh cff976f0",
+   "0/1/0 Mesh b7bf60c7",
+   "0/1/1 Mesh 1c109ad2",
+   "0/1/2 Mesh e0693320",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1751,7 +1751,7 @@
   ]
  },
  "model/canned_corn_and_peas:lod": {
-  "hash": "d53251c4",
+  "hash": "c921a5f5",
   "nodes": [
    "0 LOD f64db57d",
    "0/0 Group 8e33816f",
@@ -1763,9 +1763,9 @@
    "0/0/5 Mesh 4f9e3db2",
    "0/0/6 Mesh 9fdd9a44",
    "0/1 Group a7328864",
-   "0/1/0 Mesh 34c81f2e",
+   "0/1/0 Mesh ac89903e",
    "0/1/1 Mesh d3cdc740",
-   "0/1/2 Mesh 9255be42",
+   "0/1/2 Mesh b64075ef",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1794,7 +1794,7 @@
   ]
  },
  "model/mortadella:lod": {
-  "hash": "41034676",
+  "hash": "3ea55944",
   "nodes": [
    "0 LOD 9b3f937e",
    "0/0 Group d2b3099c",
@@ -1803,7 +1803,7 @@
    "0/0/2 Mesh 753f5a7",
    "0/0/3 Mesh 73f4484b",
    "0/1 Group cf0fee9d",
-   "0/1/0 Mesh cbd3bdac",
+   "0/1/0 Mesh 44a1909a",
    "0/1/1 Mesh 52eb6eaf",
    "0/1/2 Mesh f0edb8d4",
    "0/2 Group 55dd014c"
@@ -1833,7 +1833,7 @@
   ]
  },
  "model/fresh_fish:lod": {
-  "hash": "1594f0af",
+  "hash": "f57d41a6",
   "nodes": [
    "0 LOD 83d103d4",
    "0/0 Group 5368941d",
@@ -1843,7 +1843,7 @@
    "0/0/3 Mesh 721f3779",
    "0/0/4 Mesh 3b528a08",
    "0/1 Group a0e46257",
-   "0/1/0 Mesh 8ed2bfcf",
+   "0/1/0 Mesh 1212356a",
    "0/1/1 Mesh f75479e8",
    "0/1/2 Mesh 4ca2818c",
    "0/2 Group 55dd014c"
@@ -1871,7 +1871,7 @@
   ]
  },
  "model/salted_fish:lod": {
-  "hash": "c7e5d37c",
+  "hash": "ae4a6988",
   "nodes": [
    "0 LOD a4939a1",
    "0/0 Group 483dd413",
@@ -1879,9 +1879,9 @@
    "0/0/1 Mesh 19319c48",
    "0/0/2 Mesh 731fa806",
    "0/1 Group 4dd2988",
-   "0/1/0 Mesh cf21dff8",
-   "0/1/1 Mesh 7618a5b0",
-   "0/1/2 Mesh 8294511d",
+   "0/1/0 Mesh 89a2b204",
+   "0/1/1 Mesh 4c94d91e",
+   "0/1/2 Mesh 6c510d83",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1918,7 +1918,7 @@
   ]
  },
  "model/banana_bunch:lod": {
-  "hash": "7dba2893",
+  "hash": "d3a9213a",
   "nodes": [
    "0 LOD 3c3a4c6d",
    "0/0 Group 56ea6bae",
@@ -1926,9 +1926,9 @@
    "0/0/1 Mesh 4c819a3e",
    "0/0/2 Mesh fd657878",
    "0/1 Group caea5f94",
-   "0/1/0 Mesh aea33676",
-   "0/1/1 Mesh 8f64599b",
-   "0/1/2 Mesh ac516258",
+   "0/1/0 Mesh 4da52006",
+   "0/1/1 Mesh c871078a",
+   "0/1/2 Mesh 90084a4e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1960,7 +1960,7 @@
   ]
  },
  "model/honey_jar:lod": {
-  "hash": "14dd479a",
+  "hash": "a80e304c",
   "nodes": [
    "0 LOD 3aba284a",
    "0/0 Group db9ff143",
@@ -1972,9 +1972,9 @@
    "0/0/5 Mesh 332f8731",
    "0/0/6 Mesh 7f9f93c6",
    "0/1 Group e76958e9",
-   "0/1/0 Mesh 9979f9a1",
+   "0/1/0 Mesh ad668f98",
    "0/1/1 Mesh 961c34f",
-   "0/1/2 Mesh 9a423bfb",
+   "0/1/2 Mesh 2e0985d8",
    "0/2 Group 55dd014c"
   ]
  },
@@ -1998,16 +1998,16 @@
   ]
  },
  "model/bread:lod": {
-  "hash": "757d3bb3",
+  "hash": "20d58b68",
   "nodes": [
    "0 LOD 7132853",
    "0/0 Group 3d6ea7b5",
    "0/0/0 Mesh 3b23ae36",
    "0/0/1 Mesh 8b49e041",
    "0/1 Group a7d9622e",
-   "0/1/0 Mesh 6fa4ed76",
+   "0/1/0 Mesh 217e579d",
    "0/1/1 Mesh 6ad5554d",
-   "0/1/2 Mesh c199dc73",
+   "0/1/2 Mesh ea97cea5",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2033,7 +2033,7 @@
   ]
  },
  "model/cheese:lod": {
-  "hash": "4697b72c",
+  "hash": "50f4b54c",
   "nodes": [
    "0 LOD 4219c52a",
    "0/0 Group 409613c1",
@@ -2041,9 +2041,9 @@
    "0/0/1 Mesh 290bee0b",
    "0/0/2 Mesh d442e3b4",
    "0/1 Group c7a8f269",
-   "0/1/0 Mesh 9467c679",
+   "0/1/0 Mesh 8ba272db",
    "0/1/1 Mesh a46851c6",
-   "0/1/2 Mesh ad3ea9aa",
+   "0/1/2 Mesh f1313fd4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2073,7 +2073,7 @@
   ]
  },
  "model/rapadura:lod": {
-  "hash": "bdeec4ec",
+  "hash": "e76b73b",
   "nodes": [
    "0 LOD 1e3973e5",
    "0/0 Group 2f28467",
@@ -2084,9 +2084,9 @@
    "0/0/4 Mesh 8dbb01b2",
    "0/0/5 Mesh 525ab036",
    "0/1 Group 76979e4c",
-   "0/1/0 Mesh 5f98f44f",
+   "0/1/0 Mesh db634f0e",
    "0/1/1 Mesh f7ca251a",
-   "0/1/2 Mesh f73184b2",
+   "0/1/2 Mesh 3ea4dc64",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2120,7 +2120,7 @@
   ]
  },
  "model/dog_food:lod": {
-  "hash": "f8f4d6ac",
+  "hash": "22bf1bb3",
   "nodes": [
    "0 LOD 78328b5c",
    "0/0 Group 90388eb1",
@@ -2131,7 +2131,7 @@
    "0/0/4 Mesh 2eb0dd3a",
    "0/0/5 Mesh da14c75",
    "0/1 Group 48b856ff",
-   "0/1/0 Mesh 3b368fae",
+   "0/1/0 Mesh b1d60fe5",
    "0/1/1 Mesh 5e32966",
    "0/1/2 Mesh 2b5a9566",
    "0/2 Group 55dd014c"
@@ -2163,7 +2163,7 @@
   ]
  },
  "model/salt:lod": {
-  "hash": "f72d8c",
+  "hash": "ebde8ce3",
   "nodes": [
    "0 LOD 56306aad",
    "0/0 Group 42efb45d",
@@ -2174,9 +2174,9 @@
    "0/0/4 Mesh cc626f07",
    "0/0/5 Mesh 294b85f5",
    "0/1 Group f5a3b8d4",
-   "0/1/0 Mesh 4fff74e3",
-   "0/1/1 Mesh 9779d89f",
-   "0/1/2 Mesh d0d58a36",
+   "0/1/0 Mesh 65fc8f30",
+   "0/1/1 Mesh ba27a6ef",
+   "0/1/2 Mesh 7543af9c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2206,7 +2206,7 @@
   ]
  },
  "model/snack_chips:lod": {
-  "hash": "3fd6e01c",
+  "hash": "3e13ed2c",
   "nodes": [
    "0 LOD 4f1401d3",
    "0/0 Group 12828716",
@@ -2217,9 +2217,9 @@
    "0/0/4 Mesh 86ee023a",
    "0/0/5 Mesh 737b8245",
    "0/1 Group a0318a8e",
-   "0/1/0 Mesh 69bb3775",
+   "0/1/0 Mesh fa8f6ed1",
    "0/1/1 Mesh 6e95e1f3",
-   "0/1/2 Mesh f52c9438",
+   "0/1/2 Mesh 637d4f26",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2253,7 +2253,7 @@
   ]
  },
  "model/canned_sausages:lod": {
-  "hash": "e6a4d50d",
+  "hash": "b008abf2",
   "nodes": [
    "0 LOD 3516b057",
    "0/0 Group dd4438f7",
@@ -2266,9 +2266,9 @@
    "0/0/6 Mesh 2c7b096f",
    "0/0/7 Mesh 2b949b5f",
    "0/1 Group b8873c52",
-   "0/1/0 Mesh bef85b5b",
+   "0/1/0 Mesh 45c1fe2b",
    "0/1/1 Mesh 49b507cb",
-   "0/1/2 Mesh 2314dff2",
+   "0/1/2 Mesh 33252e19",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2298,7 +2298,7 @@
   ]
  },
  "model/canned_sardines:lod": {
-  "hash": "4bce681f",
+  "hash": "8780cf9c",
   "nodes": [
    "0 LOD bacf59e4",
    "0/0 Group 2bbf4f2c",
@@ -2309,9 +2309,9 @@
    "0/0/4 Mesh a69d4354",
    "0/0/5 Mesh e20a1406",
    "0/1 Group 31cf6fc7",
-   "0/1/0 Mesh 75d719d9",
+   "0/1/0 Mesh 2af110e0",
    "0/1/1 Mesh 26934ff9",
-   "0/1/2 Mesh 10c9488e",
+   "0/1/2 Mesh b9655620",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2341,7 +2341,7 @@
   ]
  },
  "model/cooking_oil:lod": {
-  "hash": "ee01254f",
+  "hash": "e0f9f3bc",
   "nodes": [
    "0 LOD cb370890",
    "0/0 Group 83a1db54",
@@ -2352,7 +2352,7 @@
    "0/0/4 Mesh 9d5caa69",
    "0/0/5 Mesh 5aa133c6",
    "0/1 Group 20e60c83",
-   "0/1/0 Mesh 813bacd7",
+   "0/1/0 Mesh 544a0994",
    "0/1/1 Mesh 29e04543",
    "0/1/2 Mesh 191a4adb",
    "0/2 Group 55dd014c"
@@ -2384,7 +2384,7 @@
   ]
  },
  "model/beer_can:lod": {
-  "hash": "f6fae091",
+  "hash": "f6522cd6",
   "nodes": [
    "0 LOD a1a0732c",
    "0/0 Group 9ce3b541",
@@ -2394,9 +2394,9 @@
    "0/0/3 Mesh a1ddc60c",
    "0/0/4 Mesh 33f7a970",
    "0/1 Group d7d69f2f",
-   "0/1/0 Mesh 16224faa",
+   "0/1/0 Mesh d05c3a89",
    "0/1/1 Mesh b2992830",
-   "0/1/2 Mesh b9a9ea4d",
+   "0/1/2 Mesh a1168f4d",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2428,7 +2428,7 @@
   ]
  },
  "model/energy_drink:lod": {
-  "hash": "78ec0f6",
+  "hash": "50bf0e58",
   "nodes": [
    "0 LOD a154262e",
    "0/0 Group 784c2043",
@@ -2439,9 +2439,9 @@
    "0/0/4 Mesh 827f5c5f",
    "0/0/5 Mesh aaf3620c",
    "0/1 Group eac02f8d",
-   "0/1/0 Mesh 6387a0ee",
+   "0/1/0 Mesh 112af846",
    "0/1/1 Mesh 6ef7f0af",
-   "0/1/2 Mesh 7896a9c",
+   "0/1/2 Mesh c3facd6",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2473,7 +2473,7 @@
   ]
  },
  "model/water_jug_5l:lod": {
-  "hash": "4274c300",
+  "hash": "a253e260",
   "nodes": [
    "0 LOD 2f2d098f",
    "0/0 Group eafd964",
@@ -2483,7 +2483,7 @@
    "0/0/3 Mesh 2297908a",
    "0/0/4 Mesh e5f9a3df",
    "0/1 Group eca7a42a",
-   "0/1/0 Mesh da7b956a",
+   "0/1/0 Mesh 70d3d13a",
    "0/1/1 Mesh 28ff15a7",
    "0/1/2 Mesh 4de5d848",
    "0/2 Group 55dd014c"
@@ -2513,7 +2513,7 @@
   ]
  },
  "model/sports_drink:lod": {
-  "hash": "85004cf5",
+  "hash": "f2543e01",
   "nodes": [
    "0 LOD 6ed149ef",
    "0/0 Group f1ca07c2",
@@ -2523,7 +2523,7 @@
    "0/0/3 Mesh c6bd0006",
    "0/0/4 Mesh 25590394",
    "0/1 Group d462f10a",
-   "0/1/0 Mesh 8bcf27dc",
+   "0/1/0 Mesh b97ddffc",
    "0/1/1 Mesh e208d5e6",
    "0/1/2 Mesh a098c9be",
    "0/2 Group 55dd014c"
@@ -2556,7 +2556,7 @@
   ]
  },
  "model/milk_carton:lod": {
-  "hash": "79c564c9",
+  "hash": "c72624ca",
   "nodes": [
    "0 LOD 6100964",
    "0/0 Group 9717bafe",
@@ -2567,9 +2567,9 @@
    "0/0/4 Mesh 6502a325",
    "0/0/5 Mesh 1fe2452f",
    "0/1 Group badb54a7",
-   "0/1/0 Mesh 70236ef5",
+   "0/1/0 Mesh 11b6723f",
    "0/1/1 Mesh 8fbbcde1",
-   "0/1/2 Mesh 650bcaac",
+   "0/1/2 Mesh ba37d369",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2597,7 +2597,7 @@
   ]
  },
  "model/soda_can:lod": {
-  "hash": "aecf2f86",
+  "hash": "a02ccfb1",
   "nodes": [
    "0 LOD 78da73c5",
    "0/0 Group 22300560",
@@ -2606,9 +2606,9 @@
    "0/0/2 Mesh f3f5e0be",
    "0/0/3 Mesh c00ac6a6",
    "0/1 Group 539cab6c",
-   "0/1/0 Mesh 1c10a8a1",
+   "0/1/0 Mesh 57b21532",
    "0/1/1 Mesh c6252669",
-   "0/1/2 Mesh 50cd78fa",
+   "0/1/2 Mesh 383a1dfa",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2638,7 +2638,7 @@
   ]
  },
  "model/juice_box:lod": {
-  "hash": "d73ad73a",
+  "hash": "34c1020d",
   "nodes": [
    "0 LOD 30472ce7",
    "0/0 Group bebdeae5",
@@ -2649,9 +2649,9 @@
    "0/0/4 Mesh c3238a0d",
    "0/0/5 Mesh b6192edc",
    "0/1 Group e74040a2",
-   "0/1/0 Mesh b190b27",
+   "0/1/0 Mesh 3c4f5ee6",
    "0/1/1 Mesh b484a928",
-   "0/1/2 Mesh 69974c5c",
+   "0/1/2 Mesh 827475c6",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2681,7 +2681,7 @@
   ]
  },
  "model/communion_wine:lod": {
-  "hash": "7c99f4ed",
+  "hash": "a95d5394",
   "nodes": [
    "0 LOD 1b651cb6",
    "0/0 Group a9f1d87b",
@@ -2692,9 +2692,9 @@
    "0/0/4 Mesh aa789849",
    "0/0/5 Mesh e4345f61",
    "0/1 Group a7be4dd5",
-   "0/1/0 Mesh 648e265a",
+   "0/1/0 Mesh e1e5da67",
    "0/1/1 Mesh 5747483d",
-   "0/1/2 Mesh b9ce94ed",
+   "0/1/2 Mesh 8e2eebd",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2724,7 +2724,7 @@
   ]
  },
  "model/coconut_water:lod": {
-  "hash": "d49b9402",
+  "hash": "83c4df46",
   "nodes": [
    "0 LOD c278d658",
    "0/0 Group 4599b9e0",
@@ -2735,9 +2735,9 @@
    "0/0/4 Mesh 34be067f",
    "0/0/5 Mesh 3c91cd65",
    "0/1 Group 7e12878b",
-   "0/1/0 Mesh 56bc2260",
+   "0/1/0 Mesh deae2b4f",
    "0/1/1 Mesh d7191ab5",
-   "0/1/2 Mesh de16c01a",
+   "0/1/2 Mesh b4d69895",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2765,7 +2765,7 @@
   ]
  },
  "model/dirty_water:lod": {
-  "hash": "78681c99",
+  "hash": "bc058155",
   "nodes": [
    "0 LOD d342528d",
    "0/0 Group 7d18093a",
@@ -2775,7 +2775,7 @@
    "0/0/3 Mesh bb95c738",
    "0/0/4 Mesh 419c0a09",
    "0/1 Group ce404234",
-   "0/1/0 Mesh 8bcf27dc",
+   "0/1/0 Mesh b97ddffc",
    "0/1/1 Mesh e208d5e6",
    "0/1/2 Mesh a098c9be",
    "0/2 Group 55dd014c"
@@ -2806,7 +2806,7 @@
   ]
  },
  "model/painkillers:lod": {
-  "hash": "8c81f68d",
+  "hash": "8f78aca",
   "nodes": [
    "0 LOD 1d1d2f99",
    "0/0 Group e43d68cd",
@@ -2814,9 +2814,9 @@
    "0/0/1 Mesh 7ded0546",
    "0/0/2 Mesh d65af965",
    "0/1 Group 2fee32e0",
-   "0/1/0 Mesh 4ebdabe7",
+   "0/1/0 Mesh db8e211e",
    "0/1/1 Mesh 27748f9f",
-   "0/1/2 Mesh b434e818",
+   "0/1/2 Mesh 6877c1ac",
    "0/2 Group 55dd014c"
   ]
  },
@@ -2844,7 +2844,7 @@
   ]
  },
  "model/tramadol:lod": {
-  "hash": "4ba1094e",
+  "hash": "b36953db",
   "nodes": [
    "0 LOD f9b13da3",
    "0/0 Group 2c9e31a6",
@@ -2854,7 +2854,7 @@
    "0/0/3 Mesh 96f265e9",
    "0/0/4 Mesh 73187a96",
    "0/1 Group 1a0991be",
-   "0/1/0 Mesh 2a4baeca",
+   "0/1/0 Mesh faf6b1a7",
    "0/1/1 Mesh ee5ecb17",
    "0/1/2 Mesh d18f3f61",
    "0/2 Group 55dd014c"
@@ -2884,7 +2884,7 @@
   ]
  },
  "model/ibuprofen:lod": {
-  "hash": "3fa2bec",
+  "hash": "244d34dd",
   "nodes": [
    "0 LOD 2026b62b",
    "0/0 Group 9896f104",
@@ -2894,7 +2894,7 @@
    "0/0/3 Mesh 1cad485c",
    "0/0/4 Mesh 3db4fb7e",
    "0/1 Group dafce566",
-   "0/1/0 Mesh 2a4baeca",
+   "0/1/0 Mesh faf6b1a7",
    "0/1/1 Mesh ee5ecb17",
    "0/1/2 Mesh d18f3f61",
    "0/2 Group 55dd014c"
@@ -2924,7 +2924,7 @@
   ]
  },
  "model/antihistamine:lod": {
-  "hash": "5ff109e",
+  "hash": "46e1faeb",
   "nodes": [
    "0 LOD 309ee965",
    "0/0 Group afa85886",
@@ -2934,7 +2934,7 @@
    "0/0/3 Mesh b69532fa",
    "0/0/4 Mesh 819e23e8",
    "0/1 Group b73be28c",
-   "0/1/0 Mesh 1a096bd6",
+   "0/1/0 Mesh 8b00f65f",
    "0/1/1 Mesh 9281b167",
    "0/1/2 Mesh e1e343c6",
    "0/2 Group 55dd014c"
@@ -2980,7 +2980,7 @@
   ]
  },
  "model/ceftriaxone:lod": {
-  "hash": "dd19e26a",
+  "hash": "5729bb1b",
   "nodes": [
    "0 LOD be0f0977",
    "0/0 Group c44f0cb1",
@@ -2998,7 +2998,7 @@
    "0/0/11 Mesh e1a5633e",
    "0/0/12 Mesh 47686c35",
    "0/1 Group dc065832",
-   "0/1/0 Mesh aa868465",
+   "0/1/0 Mesh c6ff8940",
    "0/1/1 Mesh 42524d08",
    "0/1/2 Mesh b20d42e5",
    "0/2 Group 55dd014c"
@@ -3028,7 +3028,7 @@
   ]
  },
  "model/clonazepam:lod": {
-  "hash": "a4d361bd",
+  "hash": "17bbf883",
   "nodes": [
    "0 LOD a722c9af",
    "0/0 Group 75746326",
@@ -3038,7 +3038,7 @@
    "0/0/3 Mesh 8534f6a9",
    "0/0/4 Mesh ba1f2f5e",
    "0/1 Group a2d7b16a",
-   "0/1/0 Mesh 717f7ee7",
+   "0/1/0 Mesh fa241d5d",
    "0/1/1 Mesh 2513dc20",
    "0/1/2 Mesh 947ac328",
    "0/2 Group 55dd014c"
@@ -3068,7 +3068,7 @@
   ]
  },
  "model/activated_charcoal:lod": {
-  "hash": "7ed91bbe",
+  "hash": "fd6c6e9e",
   "nodes": [
    "0 LOD b4c53014",
    "0/0 Group aca271e2",
@@ -3077,9 +3077,9 @@
    "0/0/2 Mesh 99a559e3",
    "0/0/3 Mesh 3c5a313d",
    "0/1 Group 7227a0b7",
-   "0/1/0 Mesh a446203b",
+   "0/1/0 Mesh 289244e4",
    "0/1/1 Mesh 25376b82",
-   "0/1/2 Mesh b72ca0b4",
+   "0/1/2 Mesh 3428a14f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3107,7 +3107,7 @@
   ]
  },
  "model/adhesive_bandages:lod": {
-  "hash": "e9717fe3",
+  "hash": "cb29ffff",
   "nodes": [
    "0 LOD 4a512b08",
    "0/0 Group c8904b44",
@@ -3117,7 +3117,7 @@
    "0/0/3 Mesh f25daddb",
    "0/0/4 Mesh 8e07f986",
    "0/1 Group dbfdc83b",
-   "0/1/0 Mesh 5101db24",
+   "0/1/0 Mesh ba567ae8",
    "0/1/1 Mesh 7d5eba2e",
    "0/1/2 Mesh b59b365f",
    "0/2 Group 55dd014c"
@@ -3145,7 +3145,7 @@
   ]
  },
  "model/medical_tape:lod": {
-  "hash": "92a1f3bb",
+  "hash": "6e718ec9",
   "nodes": [
    "0 LOD e75b0a19",
    "0/0 Group 6eb59409",
@@ -3154,9 +3154,9 @@
    "0/0/2 Mesh d25573ef",
    "0/0/3 Mesh eae5e99a",
    "0/1 Group 6fb93f80",
-   "0/1/0 Mesh 4f026fc0",
+   "0/1/0 Mesh df6f4917",
    "0/1/1 Mesh b83018ba",
-   "0/1/2 Mesh 51576b6e",
+   "0/1/2 Mesh 7d1f6747",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3186,7 +3186,7 @@
   ]
  },
  "model/sterile_gauze:lod": {
-  "hash": "5488d00",
+  "hash": "eba71a02",
   "nodes": [
    "0 LOD c522e6aa",
    "0/0 Group dd899654",
@@ -3197,9 +3197,9 @@
    "0/0/4 Mesh 2d11e542",
    "0/0/5 Mesh e9b80bf9",
    "0/1 Group 31003a9",
-   "0/1/0 Mesh f6a93724",
+   "0/1/0 Mesh acf5ff99",
    "0/1/1 Mesh 2183cc8e",
-   "0/1/2 Mesh cb5c7a25",
+   "0/1/2 Mesh a2dd66f2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3227,7 +3227,7 @@
   ]
  },
  "model/povidone_iodine:lod": {
-  "hash": "ca243917",
+  "hash": "e31d4e9b",
   "nodes": [
    "0 LOD dbee9918",
    "0/0 Group 17ab9912",
@@ -3237,9 +3237,9 @@
    "0/0/3 Mesh ffa4c027",
    "0/0/4 Mesh 3d031137",
    "0/1 Group d84e252b",
-   "0/1/0 Mesh 38004f2a",
+   "0/1/0 Mesh 7c3ddea2",
    "0/1/1 Mesh d831c798",
-   "0/1/2 Mesh 16f19418",
+   "0/1/2 Mesh b1b88188",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3269,7 +3269,7 @@
   ]
  },
  "model/suture_kit:lod": {
-  "hash": "3c0ecbf9",
+  "hash": "5ff2ba59",
   "nodes": [
    "0 LOD e9357f12",
    "0/0 Group 8341a89f",
@@ -3280,7 +3280,7 @@
    "0/0/4 Mesh 94df19a6",
    "0/0/5 Mesh 7b55d331",
    "0/1 Group fb7cf3b1",
-   "0/1/0 Mesh 74c1b484",
+   "0/1/0 Mesh 41818c7c",
    "0/1/1 Mesh 76c26191",
    "0/1/2 Mesh 36e479f3",
    "0/2 Group 55dd014c"
@@ -3311,7 +3311,7 @@
   ]
  },
  "model/exam_gloves:lod": {
-  "hash": "b10629e7",
+  "hash": "3a1ba222",
   "nodes": [
    "0 LOD e73293b3",
    "0/0 Group d770ba7f",
@@ -3319,9 +3319,9 @@
    "0/0/1 Mesh 6f48e865",
    "0/0/2 Mesh a60a6aee",
    "0/1 Group d8c31aae",
-   "0/1/0 Mesh 73cbb427",
+   "0/1/0 Mesh f5e513d5",
    "0/1/1 Mesh 211a21d7",
-   "0/1/2 Mesh 53e5c6ae",
+   "0/1/2 Mesh 83473d39",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3350,7 +3350,7 @@
   ]
  },
  "model/n95_mask:lod": {
-  "hash": "6e791553",
+  "hash": "de3e45b0",
   "nodes": [
    "0 LOD 160b9062",
    "0/0 Group 6ba2caf5",
@@ -3359,9 +3359,9 @@
    "0/0/2 Mesh b5b885b3",
    "0/0/3 Mesh 867273d4",
    "0/1 Group 17a5ae21",
-   "0/1/0 Mesh f8353163",
+   "0/1/0 Mesh 5fe5a73a",
    "0/1/1 Mesh 1c246c93",
-   "0/1/2 Mesh 97b868a7",
+   "0/1/2 Mesh f8a90e5",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3389,7 +3389,7 @@
   ]
  },
  "model/multivitamin:lod": {
-  "hash": "530b6267",
+  "hash": "ffab98e6",
   "nodes": [
    "0 LOD fc21447e",
    "0/0 Group 167e5758",
@@ -3399,9 +3399,9 @@
    "0/0/3 Mesh adfb0969",
    "0/0/4 Mesh 4db4aeef",
    "0/1 Group 5c8c23dd",
-   "0/1/0 Mesh ca16f9d4",
+   "0/1/0 Mesh 8190bf6e",
    "0/1/1 Mesh 67d5da39",
-   "0/1/2 Mesh f04ac681",
+   "0/1/2 Mesh a5929b6e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3431,7 +3431,7 @@
   ]
  },
  "model/maintenance_medication:lod": {
-  "hash": "17403c86",
+  "hash": "be9d1999",
   "nodes": [
    "0 LOD 2c84fb38",
    "0/0 Group 1f132486",
@@ -3442,9 +3442,9 @@
    "0/0/4 Mesh a14e8e26",
    "0/0/5 Mesh bbb9846",
    "0/1 Group f5f3792b",
-   "0/1/0 Mesh bafd34c8",
+   "0/1/0 Mesh 98dd6094",
    "0/1/1 Mesh c0aec53b",
-   "0/1/2 Mesh 72cfe1b6",
+   "0/1/2 Mesh 15ad5cf5",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3475,7 +3475,7 @@
   ]
  },
  "model/rehydration_salts:lod": {
-  "hash": "95e16ef0",
+  "hash": "7ea5b141",
   "nodes": [
    "0 LOD 116f06a4",
    "0/0 Group ff100c30",
@@ -3486,9 +3486,9 @@
    "0/0/4 Mesh 3478f8c3",
    "0/0/5 Mesh 631701c",
    "0/1 Group 1e247507",
-   "0/1/0 Mesh a1fafb1c",
+   "0/1/0 Mesh 799c8825",
    "0/1/1 Mesh d26ed778",
-   "0/1/2 Mesh 10b9864",
+   "0/1/2 Mesh 3c102e56",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3526,7 +3526,7 @@
   ]
  },
  "model/syringe:lod": {
-  "hash": "3b2ff864",
+  "hash": "304e23a5",
   "nodes": [
    "0 LOD 7912c1fe",
    "0/0 Group b18c6bf2",
@@ -3541,9 +3541,9 @@
    "0/0/8 Mesh 6410fee1",
    "0/0/9 Mesh d1ec6576",
    "0/1 Group 80c631d",
-   "0/1/0 Mesh d775fe5f",
+   "0/1/0 Mesh bf15996d",
    "0/1/1 Mesh 55920c61",
-   "0/1/2 Mesh e50bad05",
+   "0/1/2 Mesh b46c0a7a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3581,7 +3581,7 @@
   ]
  },
  "model/antivenom:lod": {
-  "hash": "4e235ffd",
+  "hash": "cce3badd",
   "nodes": [
    "0 LOD f8e1824e",
    "0/0 Group f2469a98",
@@ -3596,9 +3596,9 @@
    "0/0/8 Mesh ce5904fc",
    "0/0/9 Mesh 2e6da34b",
    "0/1 Group daad4ecd",
-   "0/1/0 Mesh f31f587",
+   "0/1/0 Mesh cb0d052e",
    "0/1/1 Mesh 52d71b97",
-   "0/1/2 Mesh 80364e21",
+   "0/1/2 Mesh fbd63bc4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3630,7 +3630,7 @@
   ]
  },
  "model/saline_iv_bag:lod": {
-  "hash": "a9dbad09",
+  "hash": "b430d653",
   "nodes": [
    "0 LOD 97be319a",
    "0/0 Group d7d6bb96",
@@ -3642,7 +3642,7 @@
    "0/0/5 Mesh b4d16185",
    "0/0/6 Mesh 233f17d4",
    "0/1 Group 5a4a5999",
-   "0/1/0 Mesh 2ce9e151",
+   "0/1/0 Mesh 29225f83",
    "0/1/1 Mesh b56f2fa6",
    "0/1/2 Mesh 7201038b",
    "0/2 Group 55dd014c"
@@ -3670,7 +3670,7 @@
   ]
  },
  "model/splint:lod": {
-  "hash": "efbe13d5",
+  "hash": "75827a1b",
   "nodes": [
    "0 LOD af94a747",
    "0/0 Group 9ece4829",
@@ -3679,9 +3679,9 @@
    "0/0/2 Mesh 6cbda88b",
    "0/0/3 Mesh 961417e7",
    "0/1 Group eb7e43a2",
-   "0/1/0 Mesh b6750554",
+   "0/1/0 Mesh 367dd518",
    "0/1/1 Mesh bb03d4d8",
-   "0/1/2 Mesh 4ed898e8",
+   "0/1/2 Mesh 4a880862",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3709,7 +3709,7 @@
   ]
  },
  "model/thermometer:lod": {
-  "hash": "23b6368a",
+  "hash": "ca8b2f7f",
   "nodes": [
    "0 LOD 56f7d3d",
    "0/0 Group 524422a9",
@@ -3719,9 +3719,9 @@
    "0/0/3 Mesh 92ab8af3",
    "0/0/4 Mesh 87ce50eb",
    "0/1 Group 3f9517c4",
-   "0/1/0 Mesh 4cac3eb0",
+   "0/1/0 Mesh 71a05d88",
    "0/1/1 Mesh f0b97b32",
-   "0/1/2 Mesh 10eabb27",
+   "0/1/2 Mesh e9f329e2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3749,7 +3749,7 @@
   ]
  },
  "model/alcohol_70:lod": {
-  "hash": "56364867",
+  "hash": "c7466b82",
   "nodes": [
    "0 LOD 41381081",
    "0/0 Group 4ba57b3b",
@@ -3759,9 +3759,9 @@
    "0/0/3 Mesh 90911b1d",
    "0/0/4 Mesh 996b4d4e",
    "0/1 Group c2fcca8",
-   "0/1/0 Mesh 9d88e91e",
+   "0/1/0 Mesh 715d93d9",
    "0/1/1 Mesh 8d244a00",
-   "0/1/2 Mesh 67bbb66f",
+   "0/1/2 Mesh 1619e85d",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3789,7 +3789,7 @@
   ]
  },
  "model/can_opener:lod": {
-  "hash": "d6291b83",
+  "hash": "a291b40e",
   "nodes": [
    "0 LOD 256611f9",
    "0/0 Group 614217b5",
@@ -3797,9 +3797,9 @@
    "0/0/1 Mesh 40e29077",
    "0/0/2 Mesh 9601b129",
    "0/1 Group b2dd53e0",
-   "0/1/0 Mesh da255d14",
+   "0/1/0 Mesh 2cac1dba",
    "0/1/1 Mesh 966627a4",
-   "0/1/2 Mesh 3974b02f",
+   "0/1/2 Mesh fd5a9762",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3828,7 +3828,7 @@
   ]
  },
  "model/pliers:lod": {
-  "hash": "1aa0979e",
+  "hash": "9e20b960",
   "nodes": [
    "0 LOD 1e97f1d2",
    "0/0 Group 2da4335e",
@@ -3836,9 +3836,9 @@
    "0/0/1 Mesh b91675b6",
    "0/0/2 Mesh a3959fb7",
    "0/1 Group 89283971",
-   "0/1/0 Mesh 966ebb0",
-   "0/1/1 Mesh 3371eb44",
-   "0/1/2 Mesh b07b387b",
+   "0/1/0 Mesh 90039bc6",
+   "0/1/1 Mesh bec0a00",
+   "0/1/2 Mesh 4bc24d",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3870,7 +3870,7 @@
   ]
  },
  "model/bolt_cutters:lod": {
-  "hash": "496ef819",
+  "hash": "fd1c709c",
   "nodes": [
    "0 LOD acd2d0fd",
    "0/0 Group 869f1b1",
@@ -3880,7 +3880,7 @@
    "0/0/3 Mesh 64032eff",
    "0/0/4 Mesh 658311e3",
    "0/1 Group 2c90393c",
-   "0/1/0 Mesh 5b6d2c07",
+   "0/1/0 Mesh e190bd2",
    "0/1/1 Mesh 577b4cd9",
    "0/1/2 Mesh 36417c80",
    "0/2 Group 55dd014c"
@@ -3910,7 +3910,7 @@
   ]
  },
  "model/bucket:lod": {
-  "hash": "8d9a853e",
+  "hash": "9344b7b1",
   "nodes": [
    "0 LOD d8817b13",
    "0/0 Group 9e4f091f",
@@ -3919,9 +3919,9 @@
    "0/0/2 Mesh 3e1fb8e5",
    "0/0/3 Mesh a0582e25",
    "0/1 Group a9bf6aae",
-   "0/1/0 Mesh db82591a",
+   "0/1/0 Mesh 71baa740",
    "0/1/1 Mesh 115fe189",
-   "0/1/2 Mesh a0bae001",
+   "0/1/2 Mesh 1faddc70",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3953,7 +3953,7 @@
   ]
  },
  "model/binoculars:lod": {
-  "hash": "b697efb6",
+  "hash": "7e5e101d",
   "nodes": [
    "0 LOD e553fc4f",
    "0/0 Group 84f78c7f",
@@ -3962,9 +3962,9 @@
    "0/0/2 Mesh 196db94d",
    "0/0/3 Mesh 6bc51810",
    "0/1 Group 962a13ea",
-   "0/1/0 Mesh ac6352c6",
+   "0/1/0 Mesh 71513f55",
    "0/1/1 Mesh 76b2d963",
-   "0/1/2 Mesh 1d45fe5a",
+   "0/1/2 Mesh 6dc64ed2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -3996,7 +3996,7 @@
   ]
  },
  "model/matches:lod": {
-  "hash": "ee9fff01",
+  "hash": "20252215",
   "nodes": [
    "0 LOD 8b87b34e",
    "0/0 Group cce0af84",
@@ -4006,9 +4006,9 @@
    "0/0/3 Mesh 7be34362",
    "0/0/4 Mesh 58e84833",
    "0/1 Group e8743acd",
-   "0/1/0 Mesh 95bc58d8",
+   "0/1/0 Mesh cb1c2402",
    "0/1/1 Mesh fcf10060",
-   "0/1/2 Mesh 77961b9f",
+   "0/1/2 Mesh d9a86cc7",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4036,7 +4036,7 @@
   ]
  },
  "model/pocket_knife:lod": {
-  "hash": "39f44dad",
+  "hash": "a1a5872f",
   "nodes": [
    "0 LOD a7a2ac09",
    "0/0 Group 32bd32a5",
@@ -4045,9 +4045,9 @@
    "0/0/2 Mesh cb8d9a11",
    "0/0/3 Mesh 1c77785d",
    "0/1 Group 97af13b0",
-   "0/1/0 Mesh 339b16ee",
+   "0/1/0 Mesh 9f0bf49c",
    "0/1/1 Mesh b19fa1e7",
-   "0/1/2 Mesh 54df6e95",
+   "0/1/2 Mesh a613dd05",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4077,7 +4077,7 @@
   ]
  },
  "model/screwdriver:lod": {
-  "hash": "80ebdda5",
+  "hash": "c344ce91",
   "nodes": [
    "0 LOD b73c0733",
    "0/0 Group bf74d0b9",
@@ -4087,9 +4087,9 @@
    "0/0/3 Mesh e8cff1b3",
    "0/0/4 Mesh 5ac73fb5",
    "0/1 Group 5984deee",
-   "0/1/0 Mesh a8defd9b",
+   "0/1/0 Mesh 303b6c12",
    "0/1/1 Mesh 7009439d",
-   "0/1/2 Mesh 79947c62",
+   "0/1/2 Mesh afe056f7",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4116,7 +4116,7 @@
   ]
  },
  "model/adjustable_wrench:lod": {
-  "hash": "a78e4bde",
+  "hash": "741cf647",
   "nodes": [
    "0 LOD 7953478e",
    "0/0 Group 2bfd4c54",
@@ -4124,9 +4124,9 @@
    "0/0/1 Mesh 345d9d18",
    "0/0/2 Mesh 94b7d43f",
    "0/1 Group 781a8e0d",
-   "0/1/0 Mesh bf1bc59b",
+   "0/1/0 Mesh f03818b7",
    "0/1/1 Mesh ca9a766c",
-   "0/1/2 Mesh c73ee123",
+   "0/1/2 Mesh 5a438b5a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4154,7 +4154,7 @@
   ]
  },
  "model/hoe:lod": {
-  "hash": "a8c57260",
+  "hash": "3c19ef00",
   "nodes": [
    "0 LOD e8ad1009",
    "0/0 Group 97db7cbf",
@@ -4163,7 +4163,7 @@
    "0/0/2 Mesh 51dc493d",
    "0/0/3 Mesh a11467dd",
    "0/1 Group 15c6d430",
-   "0/1/0 Mesh 80daa894",
+   "0/1/0 Mesh d206c2f4",
    "0/1/1 Mesh f32ab423",
    "0/1/2 Mesh bbf3cd7c",
    "0/2 Group 55dd014c"
@@ -4200,7 +4200,7 @@
   ]
  },
  "model/fire_extinguisher:lod": {
-  "hash": "16bdbf5b",
+  "hash": "ba3a8d00",
   "nodes": [
    "0 LOD 406f99e3",
    "0/0 Group 8110455a",
@@ -4211,7 +4211,7 @@
    "0/0/4 Mesh 9aec2b18",
    "0/0/5 Mesh 176f37a2",
    "0/1 Group b6ca36be",
-   "0/1/0 Mesh 5bf132ef",
+   "0/1/0 Mesh e9690afa",
    "0/1/1 Mesh 2ce2f1f4",
    "0/1/2 Mesh 9e577a71",
    "0/2 Group 55dd014c"
@@ -4237,7 +4237,7 @@
   ]
  },
  "model/duct_tape:lod": {
-  "hash": "d602dc1d",
+  "hash": "db5e2dc9",
   "nodes": [
    "0 LOD b141795a",
    "0/0 Group 1b250bbc",
@@ -4245,7 +4245,7 @@
    "0/0/1 Mesh 7edc985a",
    "0/0/2 Mesh 26ea7b1a",
    "0/1 Group a83ec939",
-   "0/1/0 Mesh d38d9aff",
+   "0/1/0 Mesh f2ae10df",
    "0/1/1 Mesh 4fadaf9c",
    "0/1/2 Mesh 7cee55dc",
    "0/2 Group 55dd014c"
@@ -4282,7 +4282,7 @@
   ]
  },
  "model/camp_stove:lod": {
-  "hash": "3e46f617",
+  "hash": "3410c326",
   "nodes": [
    "0 LOD 6df04534",
    "0/0 Group e0940ffc",
@@ -4292,9 +4292,9 @@
    "0/0/3 Mesh 2a8c078e",
    "0/0/4 Mesh 262a231f",
    "0/1 Group 8b53457",
-   "0/1/0 Mesh 9e7a2d3a",
+   "0/1/0 Mesh d41b7fd3",
    "0/1/1 Mesh b8efadc0",
-   "0/1/2 Mesh c4914cb0",
+   "0/1/2 Mesh 5595c51c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4322,7 +4322,7 @@
   ]
  },
  "model/lighter:lod": {
-  "hash": "ad08d164",
+  "hash": "d6eaa668",
   "nodes": [
    "0 LOD a0fb849c",
    "0/0 Group aa9a43f6",
@@ -4332,7 +4332,7 @@
    "0/0/3 Mesh fff582c4",
    "0/0/4 Mesh fbfa2ec9",
    "0/1 Group 662c987f",
-   "0/1/0 Mesh c5ca692c",
+   "0/1/0 Mesh f147c940",
    "0/1/1 Mesh 5b7adcc8",
    "0/1/2 Mesh 964992cb",
    "0/2 Group 55dd014c"
@@ -4362,7 +4362,7 @@
   ]
  },
  "model/lockpick_kit:lod": {
-  "hash": "480b052d",
+  "hash": "a036cc2c",
   "nodes": [
    "0 LOD d81bd682",
    "0/0 Group fa219a82",
@@ -4371,9 +4371,9 @@
    "0/0/2 Mesh 53b214c4",
    "0/0/3 Mesh 51c73873",
    "0/1 Group 824580a1",
-   "0/1/0 Mesh 706d7bcc",
-   "0/1/1 Mesh b7b1d4a3",
-   "0/1/2 Mesh 344de08b",
+   "0/1/0 Mesh 338ee586",
+   "0/1/1 Mesh 3bf4a9ee",
+   "0/1/2 Mesh 66b305b3",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4409,7 +4409,7 @@
   ]
  },
  "model/sewing_kit:lod": {
-  "hash": "27de1c7d",
+  "hash": "be57ffba",
   "nodes": [
    "0 LOD bee97f05",
    "0/0 Group e2f58f7d",
@@ -4423,7 +4423,7 @@
    "0/0/7 Mesh e271ddfe",
    "0/0/8 Mesh 46508fea",
    "0/1 Group 5dfed8ec",
-   "0/1/0 Mesh 1dafa0e2",
+   "0/1/0 Mesh 34bf54ab",
    "0/1/1 Mesh 1c5fabbb",
    "0/1/2 Mesh f5364ca5",
    "0/2 Group 55dd014c"
@@ -4461,7 +4461,7 @@
   ]
  },
  "model/car_jack:lod": {
-  "hash": "f837db26",
+  "hash": "7118baba",
   "nodes": [
    "0 LOD 58eb8c1d",
    "0/0 Group c707ddcd",
@@ -4470,9 +4470,9 @@
    "0/0/2 Mesh 815b5578",
    "0/0/3 Mesh c39b703f",
    "0/1 Group d4248a44",
-   "0/1/0 Mesh 777b3da1",
+   "0/1/0 Mesh fa4c2b28",
    "0/1/1 Mesh 2c49dba3",
-   "0/1/2 Mesh bee9b62c",
+   "0/1/2 Mesh ad2f5745",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4506,7 +4506,7 @@
   ]
  },
  "model/mechanic_toolbox:lod": {
-  "hash": "47b15506",
+  "hash": "605e2776",
   "nodes": [
    "0 LOD 71755c2f",
    "0/0 Group a801af8e",
@@ -4518,9 +4518,9 @@
    "0/0/5 Mesh 88d7ccac",
    "0/0/6 Mesh f0c471b1",
    "0/1 Group 746b0b4a",
-   "0/1/0 Mesh fa4e7144",
+   "0/1/0 Mesh 20847bc",
    "0/1/1 Mesh 972a3ebc",
-   "0/1/2 Mesh 7562a84e",
+   "0/1/2 Mesh 31fba3c6",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4553,7 +4553,7 @@
   ]
  },
  "model/gas_torch:lod": {
-  "hash": "725311be",
+  "hash": "871e84f6",
   "nodes": [
    "0 LOD 43a1a4ad",
    "0/0 Group 4c1e1d71",
@@ -4565,9 +4565,9 @@
    "0/0/5 Mesh 18b74d94",
    "0/0/6 Mesh 80a6ad9c",
    "0/1 Group ae2f6374",
-   "0/1/0 Mesh 45e114de",
-   "0/1/1 Mesh d9c5fa31",
-   "0/1/2 Mesh 357c2174",
+   "0/1/0 Mesh 66bda662",
+   "0/1/1 Mesh df30bb84",
+   "0/1/2 Mesh 248183",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4602,7 +4602,7 @@
   ]
  },
  "model/inverter_welder:lod": {
-  "hash": "4f96b953",
+  "hash": "6ea970f0",
   "nodes": [
    "0 LOD 4bb39f80",
    "0/0 Group 7b5e2b06",
@@ -4614,9 +4614,9 @@
    "0/0/5 Mesh 86a26279",
    "0/0/6 Mesh 658cbe9c",
    "0/1 Group 4675da73",
-   "0/1/0 Mesh f3a5fe46",
+   "0/1/0 Mesh a2be6dd4",
    "0/1/1 Mesh ca044a3f",
-   "0/1/2 Mesh 8e92544b",
+   "0/1/2 Mesh 72a6548e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4647,7 +4647,7 @@
   ]
  },
  "model/pot:lod": {
-  "hash": "440680ce",
+  "hash": "7fcf0303",
   "nodes": [
    "0 LOD 79774580",
    "0/0 Group 33a770de",
@@ -4658,9 +4658,9 @@
    "0/0/4 Mesh 61dda443",
    "0/0/5 Mesh 420832c8",
    "0/1 Group 62186693",
-   "0/1/0 Mesh 45a7e61a",
+   "0/1/0 Mesh a70a4709",
    "0/1/1 Mesh 8e8213ee",
-   "0/1/2 Mesh dd86179d",
+   "0/1/2 Mesh 7c33ce0f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4691,7 +4691,7 @@
   ]
  },
  "model/cordless_drill:lod": {
-  "hash": "82742de0",
+  "hash": "2d5290dd",
   "nodes": [
    "0 LOD 45a69d68",
    "0/0 Group c6e21268",
@@ -4701,9 +4701,9 @@
    "0/0/3 Mesh 43a2130a",
    "0/0/4 Mesh a2db1d7f",
    "0/1 Group 2ac0841b",
-   "0/1/0 Mesh 7d533a2d",
+   "0/1/0 Mesh 158e1bb2",
    "0/1/1 Mesh e32153a8",
-   "0/1/2 Mesh d75b1d1f",
+   "0/1/2 Mesh e7869525",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4731,7 +4731,7 @@
   ]
  },
  "model/flint_striker:lod": {
-  "hash": "19cc5e8a",
+  "hash": "e9f77102",
   "nodes": [
    "0 LOD 54f89165",
    "0/0 Group b1f4acbb",
@@ -4741,9 +4741,9 @@
    "0/0/3 Mesh 35a086d2",
    "0/0/4 Mesh f2f4a2e1",
    "0/1 Group a7d1ff6c",
-   "0/1/0 Mesh 7b71c790",
+   "0/1/0 Mesh 8b9d17c0",
    "0/1/1 Mesh 6b306b30",
-   "0/1/2 Mesh 351ea39b",
+   "0/1/2 Mesh f64c002b",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4771,7 +4771,7 @@
   ]
  },
  "model/sharpening_stone:lod": {
-  "hash": "ae8aa511",
+  "hash": "30ce30ba",
   "nodes": [
    "0 LOD 73fedd38",
    "0/0 Group e1bc2b70",
@@ -4781,7 +4781,7 @@
    "0/0/3 Mesh 5ee1e93",
    "0/0/4 Mesh 509cf967",
    "0/1 Group 62f2434b",
-   "0/1/0 Mesh a42c85d3",
+   "0/1/0 Mesh 95fa2688",
    "0/1/1 Mesh 4be28e7",
    "0/1/2 Mesh 2474daa6",
    "0/2 Group 55dd014c"
@@ -4811,7 +4811,7 @@
   ]
  },
  "model/shovel:lod": {
-  "hash": "b7cec5aa",
+  "hash": "25ffdd29",
   "nodes": [
    "0 LOD e5f77d18",
    "0/0 Group b05a8f79",
@@ -4820,9 +4820,9 @@
    "0/0/2 Mesh 6dcc207f",
    "0/0/3 Mesh b395e02a",
    "0/1 Group c70f5b3",
-   "0/1/0 Mesh 7a0cc01",
-   "0/1/1 Mesh 47e3f6a9",
-   "0/1/2 Mesh 339bbb18",
+   "0/1/0 Mesh 8de4c1a1",
+   "0/1/1 Mesh 59750698",
+   "0/1/2 Mesh 752d35e0",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4850,7 +4850,7 @@
   ]
  },
  "model/hacksaw:lod": {
-  "hash": "674620b3",
+  "hash": "2a5c45f7",
   "nodes": [
    "0 LOD 13263cfb",
    "0/0 Group 2581f1b9",
@@ -4859,9 +4859,9 @@
    "0/0/2 Mesh 868c26c5",
    "0/0/3 Mesh b0d7f217",
    "0/1 Group cac5b816",
-   "0/1/0 Mesh c44e6a29",
-   "0/1/1 Mesh 15754f88",
-   "0/1/2 Mesh 91687fd6",
+   "0/1/0 Mesh f16492f7",
+   "0/1/1 Mesh db75a0a2",
+   "0/1/2 Mesh eee64234",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4886,14 +4886,14 @@
   ]
  },
  "model/handsaw:lod": {
-  "hash": "5f57412d",
+  "hash": "7918e767",
   "nodes": [
    "0 LOD e8ca4527",
    "0/0 Group 9b221989",
    "0/0/0 Mesh 9a81e9de",
    "0/0/1 Mesh 3706be48",
    "0/1 Group dbbcdf02",
-   "0/1/0 Mesh 65999104",
+   "0/1/0 Mesh eaa67daa",
    "0/1/1 Mesh 2b56c6ca",
    "0/1/2 Mesh 89e5601d",
    "0/2 Group 55dd014c"
@@ -4925,7 +4925,7 @@
   ]
  },
  "model/scissors:lod": {
-  "hash": "1e851f07",
+  "hash": "7467c7f1",
   "nodes": [
    "0 LOD 3ca685cc",
    "0/0 Group 580746ec",
@@ -4933,9 +4933,9 @@
    "0/0/1 Mesh 9a893ab7",
    "0/0/2 Mesh c6f59082",
    "0/1 Group c533c6af",
-   "0/1/0 Mesh 3e97d2de",
+   "0/1/0 Mesh 141a776d",
    "0/1/1 Mesh 150e8bac",
-   "0/1/2 Mesh eaa4196a",
+   "0/1/2 Mesh 553e8e97",
    "0/2 Group 55dd014c"
   ]
  },
@@ -4969,7 +4969,7 @@
   ]
  },
  "model/recurve_bow:lod": {
-  "hash": "7c3b1a13",
+  "hash": "a49c509f",
   "nodes": [
    "0 LOD f0d00d34",
    "0/0 Group 3e3c1b6",
@@ -4978,9 +4978,9 @@
    "0/0/2 Mesh 53ebf3f7",
    "0/0/3 Mesh 44aeee58",
    "0/1 Group b0876d57",
-   "0/1/0 Mesh 99580d0a",
+   "0/1/0 Mesh 212a5ed4",
    "0/1/1 Mesh 54cbc997",
-   "0/1/2 Mesh c2d900d8",
+   "0/1/2 Mesh d4a19bf2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5013,7 +5013,7 @@
   ]
  },
  "model/crossbow:lod": {
-  "hash": "6ede4f8a",
+  "hash": "2f57c956",
   "nodes": [
    "0 LOD 13322845",
    "0/0 Group ca1abbe3",
@@ -5024,9 +5024,9 @@
    "0/0/4 Mesh 8f844c4f",
    "0/0/5 Mesh 5e44cac3",
    "0/1 Group 46a4aba4",
-   "0/1/0 Mesh 1e41b8a",
+   "0/1/0 Mesh 35ba1654",
    "0/1/1 Mesh c747339b",
-   "0/1/2 Mesh c3e98c52",
+   "0/1/2 Mesh 53c1a688",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5055,7 +5055,7 @@
   ]
  },
  "model/iron_pipe:lod": {
-  "hash": "310b1f67",
+  "hash": "ea43bf46",
   "nodes": [
    "0 LOD e7eb53b8",
    "0/0 Group 8790da5f",
@@ -5064,7 +5064,7 @@
    "0/0/2 Mesh 87d33bca",
    "0/0/3 Mesh 5a5122da",
    "0/1 Group 22792033",
-   "0/1/0 Mesh 6b11f6ed",
+   "0/1/0 Mesh 5f74d4e4",
    "0/1/1 Mesh 6f75cd9b",
    "0/1/2 Mesh 688c2ba6",
    "0/2 Group 55dd014c"
@@ -5099,7 +5099,7 @@
   ]
  },
  "model/meat_cleaver:lod": {
-  "hash": "b28fb1c",
+  "hash": "d2b57c34",
   "nodes": [
    "0 LOD 657dcd3f",
    "0/0 Group ef219b83",
@@ -5111,9 +5111,9 @@
    "0/0/5 Mesh 5bc5ea5e",
    "0/0/6 Mesh d0d10210",
    "0/1 Group 4d2a68ba",
-   "0/1/0 Mesh 40cc5be0",
-   "0/1/1 Mesh 66f803d6",
-   "0/1/2 Mesh 3c862209",
+   "0/1/0 Mesh 609248dc",
+   "0/1/1 Mesh 700fa88d",
+   "0/1/2 Mesh 4a70065c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5142,7 +5142,7 @@
   ]
  },
  "model/slingshot:lod": {
-  "hash": "8a1f3903",
+  "hash": "2da8ed59",
   "nodes": [
    "0 LOD d025a5ae",
    "0/0 Group 71e34fef",
@@ -5151,9 +5151,9 @@
    "0/0/2 Mesh d98f699d",
    "0/0/3 Mesh 494eabb9",
    "0/1 Group 176d430d",
-   "0/1/0 Mesh 7608367a",
+   "0/1/0 Mesh 53c09872",
    "0/1/1 Mesh f20ea495",
-   "0/1/2 Mesh 4afab51f",
+   "0/1/2 Mesh 3fbeffeb",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5182,7 +5182,7 @@
   ]
  },
  "model/knife:lod": {
-  "hash": "68e71329",
+  "hash": "da985fa",
   "nodes": [
    "0 LOD 979dcc66",
    "0/0 Group 32538126",
@@ -5192,9 +5192,9 @@
    "0/0/3 Mesh bb999f9d",
    "0/0/4 Mesh 758abff1",
    "0/1 Group 9dff4d85",
-   "0/1/0 Mesh d40b18f1",
-   "0/1/1 Mesh feac6c5",
-   "0/1/2 Mesh 8741e9ea",
+   "0/1/0 Mesh 4f1b9115",
+   "0/1/1 Mesh 1b9d7777",
+   "0/1/2 Mesh e2e3d423",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5224,7 +5224,7 @@
   ]
  },
  "model/tactical_knife:lod": {
-  "hash": "7d40036",
+  "hash": "87e1b33f",
   "nodes": [
    "0 LOD 956a290c",
    "0/0 Group a0832c51",
@@ -5234,9 +5234,9 @@
    "0/0/3 Mesh 20099a61",
    "0/0/4 Mesh 6e5ade23",
    "0/1 Group 9136acaf",
-   "0/1/0 Mesh e56473cc",
-   "0/1/1 Mesh 239cfcbe",
-   "0/1/2 Mesh 1d321979",
+   "0/1/0 Mesh 4c79ffd9",
+   "0/1/1 Mesh c83b1967",
+   "0/1/2 Mesh 71e1dbe6",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5267,7 +5267,7 @@
   ]
  },
  "model/arrows_and_bolts:lod": {
-  "hash": "cc1ac578",
+  "hash": "22c2baa8",
   "nodes": [
    "0 LOD cb96545c",
    "0/0 Group 9696507e",
@@ -5278,9 +5278,9 @@
    "0/0/4 Mesh 42f4197f",
    "0/0/5 Mesh 3de3791f",
    "0/1 Group 911fbf3f",
-   "0/1/0 Mesh cf343d39",
+   "0/1/0 Mesh b0a7feba",
    "0/1/1 Mesh ed9ba109",
-   "0/1/2 Mesh 99913035",
+   "0/1/2 Mesh 8ba7400e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5311,7 +5311,7 @@
   ]
  },
  "model/sickle:lod": {
-  "hash": "ac76b75c",
+  "hash": "80f09b4d",
   "nodes": [
    "0 LOD 51e2b47a",
    "0/0 Group 2d11653",
@@ -5320,7 +5320,7 @@
    "0/0/2 Mesh 37197494",
    "0/0/3 Mesh 9fc80d64",
    "0/1 Group af696b79",
-   "0/1/0 Mesh 3d618c0d",
+   "0/1/0 Mesh d0a87a8e",
    "0/1/1 Mesh 217f37c0",
    "0/1/2 Mesh 50303489",
    "0/2 Group 55dd014c"
@@ -5348,7 +5348,7 @@
   ]
  },
  "model/cast_iron_skillet:lod": {
-  "hash": "ae5ab3ea",
+  "hash": "64a8af76",
   "nodes": [
    "0 LOD 752ded6e",
    "0/0 Group f33f849a",
@@ -5356,7 +5356,7 @@
    "0/0/1 Mesh a2ee52c9",
    "0/0/2 Mesh 30698abb",
    "0/1 Group e4cf154d",
-   "0/1/0 Mesh df483d03",
+   "0/1/0 Mesh 12696f2f",
    "0/1/1 Mesh a2527d24",
    "0/1/2 Mesh 4ad59d6e",
    "0/2 Group 55dd014c"
@@ -5387,7 +5387,7 @@
   ]
  },
  "model/improvised_spear:lod": {
-  "hash": "2ef4d274",
+  "hash": "fa787a6",
   "nodes": [
    "0 LOD d06786db",
    "0/0 Group 21abec73",
@@ -5397,7 +5397,7 @@
    "0/0/3 Mesh 56222114",
    "0/0/4 Mesh 678f3e97",
    "0/1 Group 9d154b8a",
-   "0/1/0 Mesh fbaf0b69",
+   "0/1/0 Mesh 46d24a13",
    "0/1/1 Mesh f85da07e",
    "0/1/2 Mesh 851a8462",
    "0/2 Group 55dd014c"
@@ -5428,7 +5428,7 @@
   ]
  },
  "model/hatchet:lod": {
-  "hash": "74ca294b",
+  "hash": "4b4e6669",
   "nodes": [
    "0 LOD 221bae6c",
    "0/0 Group 44f8d1f1",
@@ -5438,7 +5438,7 @@
    "0/0/3 Mesh bf2815e7",
    "0/0/4 Mesh e96f0ee0",
    "0/1 Group df51818f",
-   "0/1/0 Mesh 3cdeba17",
+   "0/1/0 Mesh 58412d35",
    "0/1/1 Mesh 96c12b61",
    "0/1/2 Mesh 354de10d",
    "0/2 Group 55dd014c"
@@ -5470,7 +5470,7 @@
   ]
  },
  "model/sledgehammer:lod": {
-  "hash": "dc5d0c95",
+  "hash": "5ca1641b",
   "nodes": [
    "0 LOD e9e73701",
    "0/0 Group 60bdafa9",
@@ -5481,9 +5481,9 @@
    "0/0/4 Mesh b46b1416",
    "0/0/5 Mesh 990b145f",
    "0/1 Group 1f7f05a8",
-   "0/1/0 Mesh 470f161e",
+   "0/1/0 Mesh d6d4afd1",
    "0/1/1 Mesh 89454593",
-   "0/1/2 Mesh c539c4ae",
+   "0/1/2 Mesh 6f5eb847",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5516,7 +5516,7 @@
   ]
  },
  "model/chainsaw:lod": {
-  "hash": "f6231d6f",
+  "hash": "a7214f26",
   "nodes": [
    "0 LOD 725f60ff",
    "0/0 Group f50968f7",
@@ -5526,7 +5526,7 @@
    "0/0/3 Mesh 195a6c20",
    "0/0/4 Mesh 29147222",
    "0/1 Group 4f416fa",
-   "0/1/0 Mesh 83aaa6f6",
+   "0/1/0 Mesh a8b05a97",
    "0/1/1 Mesh 3de370da",
    "0/1/2 Mesh a98eb8a4",
    "0/2 Group 55dd014c"
@@ -5562,7 +5562,7 @@
   ]
  },
  "model/pickaxe:lod": {
-  "hash": "6c178232",
+  "hash": "807b2a42",
   "nodes": [
    "0 LOD e6d70b8",
    "0/0 Group 65b63bae",
@@ -5574,9 +5574,9 @@
    "0/0/5 Mesh 4b95621d",
    "0/0/6 Mesh 66598a7",
    "0/1 Group fd79e8f3",
-   "0/1/0 Mesh 45120ef7",
+   "0/1/0 Mesh 9b077a2c",
    "0/1/1 Mesh ce2fd46c",
-   "0/1/2 Mesh 8dcf36da",
+   "0/1/2 Mesh 29d23805",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5601,7 +5601,7 @@
   ]
  },
  "model/baseball_bat:lod": {
-  "hash": "84a23874",
+  "hash": "bd7431c3",
   "nodes": [
    "0 LOD 13751771",
    "0/0 Group 5e72977",
@@ -5609,9 +5609,9 @@
    "0/0/1 Mesh 8341d9de",
    "0/0/2 Mesh 8658e6f2",
    "0/1 Group 7065f778",
-   "0/1/0 Mesh ae03fce7",
-   "0/1/1 Mesh e45b3857",
-   "0/1/2 Mesh c125f4de",
+   "0/1/0 Mesh af4c2807",
+   "0/1/1 Mesh 779a1c0",
+   "0/1/2 Mesh b0f55c64",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5644,7 +5644,7 @@
   ]
  },
  "model/police_baton:lod": {
-  "hash": "56ccdf64",
+  "hash": "837789bc",
   "nodes": [
    "0 LOD 71b61934",
    "0/0 Group c5fef5c6",
@@ -5656,9 +5656,9 @@
    "0/0/5 Mesh 9776a5c6",
    "0/0/6 Mesh 6e53c8b4",
    "0/1 Group b1a0dc57",
-   "0/1/0 Mesh 6880f1b",
+   "0/1/0 Mesh 43698983",
    "0/1/1 Mesh c14bbca6",
-   "0/1/2 Mesh 9e9b0382",
+   "0/1/2 Mesh 7b093ed2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5684,7 +5684,7 @@
   ]
  },
  "model/wire_roll:lod": {
-  "hash": "dcd48b79",
+  "hash": "e67a5062",
   "nodes": [
    "0 LOD 34a48b36",
    "0/0 Group b0e54d0",
@@ -5693,7 +5693,7 @@
    "0/0/2 Mesh 3fbf5932",
    "0/0/3 Mesh 9ed2cda",
    "0/1 Group e1dce55",
-   "0/1/0 Mesh cc203c14",
+   "0/1/0 Mesh a4b166e3",
    "0/1/1 Mesh 41adec0e",
    "0/1/2 Mesh 59e31e80",
    "0/2 Group 55dd014c"
@@ -5727,7 +5727,7 @@
   ]
  },
  "model/barbed_wire:lod": {
-  "hash": "a4b99af",
+  "hash": "b41547f9",
   "nodes": [
    "0 LOD eb2a66d1",
    "0/0 Group 91d2223f",
@@ -5737,9 +5737,9 @@
    "0/0/3 Mesh 75dd57a5",
    "0/0/4 Mesh bd46167",
    "0/1 Group 93c2378",
-   "0/1/0 Mesh 80ca7337",
+   "0/1/0 Mesh 43ec23",
    "0/1/1 Mesh 794af70f",
-   "0/1/2 Mesh 4d93e9ac",
+   "0/1/2 Mesh 76584dd2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5764,14 +5764,14 @@
   ]
  },
  "model/glass_shards:lod": {
-  "hash": "a5fbf5e7",
+  "hash": "ce8a65c6",
   "nodes": [
    "0 LOD ad9e8bd9",
    "0/0 Group 95d9dfc9",
    "0/0/0 Mesh 684eb59f",
    "0/0/1 Mesh f661e532",
    "0/1 Group 739712a0",
-   "0/1/0 Mesh aacae262",
+   "0/1/0 Mesh ef6bb633",
    "0/1/1 Mesh e9d04b30",
    "0/1/2 Mesh d0e3e09a",
    "0/2 Group 55dd014c"
@@ -5805,7 +5805,7 @@
   ]
  },
  "model/sheet_metal:lod": {
-  "hash": "32f90d47",
+  "hash": "7e19f0fd",
   "nodes": [
    "0 LOD b05ab310",
    "0/0 Group 36108d58",
@@ -5814,9 +5814,9 @@
    "0/0/2 Mesh c5fbe207",
    "0/0/3 Mesh a3263b23",
    "0/1 Group 3a09e66b",
-   "0/1/0 Mesh b45c3dd9",
+   "0/1/0 Mesh a41b50d8",
    "0/1/1 Mesh 83ff8e1b",
-   "0/1/2 Mesh b290e05f",
+   "0/1/2 Mesh 71a4e7c8",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5846,7 +5846,7 @@
   ]
  },
  "model/cement_bag:lod": {
-  "hash": "2b22c0d2",
+  "hash": "8f7827f4",
   "nodes": [
    "0 LOD 813d7d8a",
    "0/0 Group dcaae3f8",
@@ -5857,9 +5857,9 @@
    "0/0/4 Mesh 34901b2d",
    "0/0/5 Mesh a4d33e9d",
    "0/1 Group 786c9c29",
-   "0/1/0 Mesh 477e14bf",
+   "0/1/0 Mesh 20072395",
    "0/1/1 Mesh 1ced51b1",
-   "0/1/2 Mesh f6d5567a",
+   "0/1/2 Mesh 8ac7322e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5894,7 +5894,7 @@
   ]
  },
  "model/epoxy_glue:lod": {
-  "hash": "af7ee3d4",
+  "hash": "9cf433f5",
   "nodes": [
    "0 LOD ba5fd4dc",
    "0/0 Group 4921a0ee",
@@ -5907,7 +5907,7 @@
    "0/0/6 Mesh 1e582189",
    "0/0/7 Mesh c87407f8",
    "0/1 Group 18adc3f",
-   "0/1/0 Mesh 737af505",
+   "0/1/0 Mesh b19aa02a",
    "0/1/1 Mesh 863c69a2",
    "0/1/2 Mesh 5cbbb3e6",
    "0/2 Group 55dd014c"
@@ -5953,7 +5953,7 @@
   ]
  },
  "model/electronic_components:lod": {
-  "hash": "2f12edad",
+  "hash": "c3431adb",
   "nodes": [
    "0 LOD e5907f3c",
    "0/0 Group 2c49d6a8",
@@ -5967,9 +5967,9 @@
    "0/0/7 Mesh 49bcd20b",
    "0/0/8 Mesh b3a40817",
    "0/1 Group 3bf2f51f",
-   "0/1/0 Mesh 4dc8d00b",
+   "0/1/0 Mesh 8f976ca1",
    "0/1/1 Mesh 16805a34",
-   "0/1/2 Mesh a27c879e",
+   "0/1/2 Mesh f5c5b35e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -5998,7 +5998,7 @@
   ]
  },
  "model/rope:lod": {
-  "hash": "9c756a84",
+  "hash": "c0d47883",
   "nodes": [
    "0 LOD 5030df65",
    "0/0 Group 23b7157d",
@@ -6007,7 +6007,7 @@
    "0/0/2 Mesh dd1736fc",
    "0/0/3 Mesh 807bbfa6",
    "0/1 Group 7511cb0c",
-   "0/1/0 Mesh 737e1fc7",
+   "0/1/0 Mesh ff2c294c",
    "0/1/1 Mesh 31c79ea3",
    "0/1/2 Mesh 1832d1bc",
    "0/2 Group 55dd014c"
@@ -6035,7 +6035,7 @@
   ]
  },
  "model/copper_wire:lod": {
-  "hash": "6bc65809",
+  "hash": "1de438c5",
   "nodes": [
    "0 LOD 22ff2b94",
    "0/0 Group ee3a2796",
@@ -6044,9 +6044,9 @@
    "0/0/2 Mesh b39be47d",
    "0/0/3 Mesh e2cfb7c8",
    "0/1 Group 80a5ad37",
-   "0/1/0 Mesh 1fd16494",
-   "0/1/1 Mesh 86a9300c",
-   "0/1/2 Mesh f0646e88",
+   "0/1/0 Mesh 6f7759f0",
+   "0/1/1 Mesh 79447f5c",
+   "0/1/2 Mesh 3e4d08a4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6072,7 +6072,7 @@
   ]
  },
  "model/pet_bottle:lod": {
-  "hash": "e01d6f92",
+  "hash": "18e8c6ba",
   "nodes": [
    "0 LOD b2095ddf",
    "0/0 Group 77fc7dc0",
@@ -6081,7 +6081,7 @@
    "0/0/2 Mesh 5193aa64",
    "0/0/3 Mesh 67576e22",
    "0/1 Group 39443aba",
-   "0/1/0 Mesh 11c9da9f",
+   "0/1/0 Mesh 97153b0b",
    "0/1/1 Mesh 405f9147",
    "0/1/2 Mesh 75a1579c",
    "0/2 Group 55dd014c"
@@ -6109,7 +6109,7 @@
   ]
  },
  "model/glass_bottle:lod": {
-  "hash": "f54228c6",
+  "hash": "642d0cb",
   "nodes": [
    "0 LOD c618600a",
    "0/0 Group a126a5b0",
@@ -6118,7 +6118,7 @@
    "0/0/2 Mesh e059e78a",
    "0/0/3 Mesh 85f29b3",
    "0/1 Group 8949d189",
-   "0/1/0 Mesh a309fab6",
+   "0/1/0 Mesh 1170c367",
    "0/1/1 Mesh e3d8e839",
    "0/1/2 Mesh ac6ca032",
    "0/2 Group 55dd014c"
@@ -6146,7 +6146,7 @@
   ]
  },
  "model/empty_can:lod": {
-  "hash": "8d7dd44a",
+  "hash": "7bd18fb5",
   "nodes": [
    "0 LOD cb701be1",
    "0/0 Group ede7a7c1",
@@ -6155,9 +6155,9 @@
    "0/0/2 Mesh 1f053c95",
    "0/0/3 Mesh 18f50019",
    "0/1 Group 3bb3cc88",
-   "0/1/0 Mesh 1c10a8a1",
+   "0/1/0 Mesh 57b21532",
    "0/1/1 Mesh c6252669",
-   "0/1/2 Mesh 50cd78fa",
+   "0/1/2 Mesh 383a1dfa",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6193,7 +6193,7 @@
   ]
  },
  "model/firewood:lod": {
-  "hash": "c4ae1fe2",
+  "hash": "310fe4cf",
   "nodes": [
    "0 LOD 8a4371a2",
    "0/0 Group d96f3ec8",
@@ -6207,9 +6207,9 @@
    "0/0/7 Mesh 24f49d0a",
    "0/0/8 Mesh 589d513c",
    "0/1 Group 36720ce1",
-   "0/1/0 Mesh 9f9bc630",
+   "0/1/0 Mesh c2244d1a",
    "0/1/1 Mesh abcd0208",
-   "0/1/2 Mesh c388f97b",
+   "0/1/2 Mesh b7a3e3b8",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6244,7 +6244,7 @@
   ]
  },
  "model/tarp:lod": {
-  "hash": "3998052c",
+  "hash": "f2460a4e",
   "nodes": [
    "0 LOD f307a61e",
    "0/0 Group bed0dbd3",
@@ -6256,9 +6256,9 @@
    "0/0/5 Mesh 5e3cdb2f",
    "0/0/6 Mesh 3844dff3",
    "0/1 Group 44dd9d",
-   "0/1/0 Mesh c20adf38",
+   "0/1/0 Mesh 808de241",
    "0/1/1 Mesh 5365988d",
-   "0/1/2 Mesh c722a66",
+   "0/1/2 Mesh 8a6c291d",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6289,7 +6289,7 @@
   ]
  },
  "model/screws:lod": {
-  "hash": "c0ff79a",
+  "hash": "46af919",
   "nodes": [
    "0 LOD c8d74fa6",
    "0/0 Group e4bb80f0",
@@ -6299,7 +6299,7 @@
    "0/0/3 Mesh 76d716de",
    "0/0/4 Mesh 24ac62f9",
    "0/1 Group 41803be5",
-   "0/1/0 Mesh 864ec06e",
+   "0/1/0 Mesh 6ca1dd51",
    "0/1/1 Mesh 3dee04e6",
    "0/1/2 Mesh d9f6d8d9",
    "0/2 Group 55dd014c"
@@ -6332,13 +6332,13 @@
   ]
  },
  "model/nails:lod": {
-  "hash": "7883698d",
+  "hash": "d0863bb",
   "nodes": [
    "0 LOD 260778b6",
    "0/0 Group 44035b3e",
    "0/0/0 Mesh 42458cc2",
    "0/1 Group 3fefef5",
-   "0/1/0 Mesh 82bb6f71",
+   "0/1/0 Mesh dfae68d7",
    "0/1/1 Mesh 8e378f75",
    "0/1/2 Mesh 6e851035",
    "0/2 Group 55dd014c"
@@ -6368,7 +6368,7 @@
   ]
  },
  "model/raffia_sack:lod": {
-  "hash": "70f1afcd",
+  "hash": "1477b5d0",
   "nodes": [
    "0 LOD 673fda9f",
    "0/0 Group d087a9f9",
@@ -6378,9 +6378,9 @@
    "0/0/3 Mesh b6f347df",
    "0/0/4 Mesh 22440c4b",
    "0/1 Group c256105a",
-   "0/1/0 Mesh 506f8f2b",
+   "0/1/0 Mesh b8dac37",
    "0/1/1 Mesh c2a6a324",
-   "0/1/2 Mesh aaadb2bb",
+   "0/1/2 Mesh a64a9346",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6410,7 +6410,7 @@
   ]
  },
  "model/scrap_metal:lod": {
-  "hash": "8e19a452",
+  "hash": "c389e864",
   "nodes": [
    "0 LOD e9a65ee6",
    "0/0 Group 17e2383c",
@@ -6421,7 +6421,7 @@
    "0/0/4 Mesh e7e9f4c7",
    "0/0/5 Mesh 29ef05fe",
    "0/1 Group 4276b065",
-   "0/1/0 Mesh b99999aa",
+   "0/1/0 Mesh d4a47a30",
    "0/1/1 Mesh bab4c3ef",
    "0/1/2 Mesh d8a2f10f",
    "0/2 Group 55dd014c"
@@ -6449,7 +6449,7 @@
   ]
  },
  "model/bricks:lod": {
-  "hash": "fc0f85b4",
+  "hash": "703c2947",
   "nodes": [
    "0 LOD ee3bcb07",
    "0/0 Group c4007778",
@@ -6458,7 +6458,7 @@
    "0/0/2 Mesh a5fce280",
    "0/0/3 Mesh f62a0c14",
    "0/1 Group 9115ba02",
-   "0/1/0 Mesh be4b615d",
+   "0/1/0 Mesh 74f04a6",
    "0/1/1 Mesh f08beb3c",
    "0/1/2 Mesh 9af9e279",
    "0/2 Group 55dd014c"
@@ -6489,7 +6489,7 @@
   ]
  },
  "model/rag:lod": {
-  "hash": "bca3c96",
+  "hash": "608a9dad",
   "nodes": [
    "0 LOD 8d96db3b",
    "0/0 Group 9adb0b19",
@@ -6499,9 +6499,9 @@
    "0/0/3 Mesh 881782af",
    "0/0/4 Mesh ed97e6e6",
    "0/1 Group 90298536",
-   "0/1/0 Mesh c2bb64c7",
+   "0/1/0 Mesh 3e0d95da",
    "0/1/1 Mesh 8e194550",
-   "0/1/2 Mesh 9d6ca6f",
+   "0/1/2 Mesh 5f96ad01",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6527,7 +6527,7 @@
   ]
  },
  "model/rebar:lod": {
-  "hash": "dd51b81d",
+  "hash": "6efb389e",
   "nodes": [
    "0 LOD 481d7313",
    "0/0 Group c34b80f5",
@@ -6536,9 +6536,9 @@
    "0/0/2 Mesh e4afb340",
    "0/0/3 Mesh e42ad495",
    "0/1 Group 5c27aa82",
-   "0/1/0 Mesh 7cca90a2",
+   "0/1/0 Mesh 6b88cdc4",
    "0/1/1 Mesh b4720b37",
-   "0/1/2 Mesh ac417a4f",
+   "0/1/2 Mesh a0ee1e7e",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6567,7 +6567,7 @@
   ]
  },
  "model/lubricant_spray:lod": {
-  "hash": "716cc53e",
+  "hash": "ac075ef4",
   "nodes": [
    "0 LOD f90d9dc3",
    "0/0 Group 7b525301",
@@ -6577,9 +6577,9 @@
    "0/0/3 Mesh 606a950c",
    "0/0/4 Mesh 1180f4e",
    "0/1 Group 66b9243e",
-   "0/1/0 Mesh 595842ed",
+   "0/1/0 Mesh 5eb283fd",
    "0/1/1 Mesh afef5e2c",
-   "0/1/2 Mesh 6ab52a95",
+   "0/1/2 Mesh e204016f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6614,7 +6614,7 @@
   ]
  },
  "model/army_camouflage_uniform:lod": {
-  "hash": "6ebad16",
+  "hash": "29d865b7",
   "nodes": [
    "0 LOD a415e012",
    "0/0 Group 670e2648",
@@ -6622,9 +6622,9 @@
    "0/0/1 Mesh f22d40e5",
    "0/0/2 Mesh f74b2ce2",
    "0/1 Group 7adb3d11",
-   "0/1/0 Mesh ce0cd98",
+   "0/1/0 Mesh 4bad694b",
    "0/1/1 Mesh e34bf320",
-   "0/1/2 Mesh 336c3afd",
+   "0/1/2 Mesh 4f59c1fb",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6651,7 +6651,7 @@
   ]
  },
  "model/backpack:lod": {
-  "hash": "284ca1a3",
+  "hash": "cb0d35e",
   "nodes": [
    "0 LOD c539a45b",
    "0/0 Group c16a8965",
@@ -6659,9 +6659,9 @@
    "0/0/1 Mesh c3dc2691",
    "0/0/2 Mesh 7255820a",
    "0/1 Group 2b9399f6",
-   "0/1/0 Mesh c2249e3e",
+   "0/1/0 Mesh 4f65cdd2",
    "0/1/1 Mesh 52d136a3",
-   "0/1/2 Mesh 26dd4990",
+   "0/1/2 Mesh 3f088773",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6694,7 +6694,7 @@
   ]
  },
  "model/ballistic_vest:lod": {
-  "hash": "fc26e5c1",
+  "hash": "778a1972",
   "nodes": [
    "0 LOD 66093c33",
    "0/0 Group 5ea23335",
@@ -6703,9 +6703,9 @@
    "0/0/2 Mesh 84141518",
    "0/0/3 Mesh 2ae2a0ae",
    "0/1 Group c1d1e68e",
-   "0/1/0 Mesh ba7094e8",
-   "0/1/1 Mesh 4a7b0eee",
-   "0/1/2 Mesh cd69ea88",
+   "0/1/0 Mesh 5e56a5d3",
+   "0/1/1 Mesh e5eb68b9",
+   "0/1/2 Mesh 4a4d3075",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6731,7 +6731,7 @@
   ]
  },
  "model/battery_9v:lod": {
-  "hash": "999d6a55",
+  "hash": "a7adff5b",
   "nodes": [
    "0 LOD 1aaa5566",
    "0/0 Group 723b32a",
@@ -6740,7 +6740,7 @@
    "0/0/2 Mesh ebcea975",
    "0/0/3 Mesh 6aabf274",
    "0/1 Group ad0c9085",
-   "0/1/0 Mesh 98096f6d",
+   "0/1/0 Mesh 98d38637",
    "0/1/1 Mesh 39986dbb",
    "0/1/2 Mesh 121b6098",
    "0/2 Group 55dd014c"
@@ -6770,7 +6770,7 @@
   ]
  },
  "model/bean_seeds:lod": {
-  "hash": "83097930",
+  "hash": "32879747",
   "nodes": [
    "0 LOD aee4a83c",
    "0/0 Group 2a07b528",
@@ -6780,9 +6780,9 @@
    "0/0/3 Mesh f6fd350e",
    "0/0/4 Mesh 87bb714e",
    "0/1 Group 68bf225f",
-   "0/1/0 Mesh 656d388d",
+   "0/1/0 Mesh 8c626590",
    "0/1/1 Mesh d6081bc1",
-   "0/1/2 Mesh e5527ac1",
+   "0/1/2 Mesh 3d7cd3c3",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6816,7 +6816,7 @@
   ]
  },
  "model/beekeeper_suit:lod": {
-  "hash": "58f8cc75",
+  "hash": "4b9e9829",
   "nodes": [
    "0 LOD ac79d40f",
    "0/0 Group 89319f61",
@@ -6826,9 +6826,9 @@
    "0/0/3 Mesh d67b72f7",
    "0/0/4 Mesh 317f5a25",
    "0/1 Group 2683160a",
-   "0/1/0 Mesh 247a82cc",
+   "0/1/0 Mesh 481d8d52",
    "0/1/1 Mesh d7863ec4",
-   "0/1/2 Mesh 884e20b",
+   "0/1/2 Mesh 1ec5c7a5",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6852,7 +6852,7 @@
   ]
  },
  "model/candles:lod": {
-  "hash": "29488321",
+  "hash": "f4f6675f",
   "nodes": [
    "0 LOD 1a13a50b",
    "0/0 Group 4cd7334f",
@@ -6860,9 +6860,9 @@
    "0/0/1 Mesh 5bad44c7",
    "0/0/2 Mesh f7bbec30",
    "0/1 Group 89a10646",
-   "0/1/0 Mesh 352ad912",
+   "0/1/0 Mesh 3b29c569",
    "0/1/1 Mesh 17b93847",
-   "0/1/2 Mesh b986b049",
+   "0/1/2 Mesh 6cda137c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6889,7 +6889,7 @@
   ]
  },
  "model/car_alarm_remote:lod": {
-  "hash": "4cedd6eb",
+  "hash": "e072012",
   "nodes": [
    "0 LOD dd8a9e6c",
    "0/0 Group 86d436e4",
@@ -6898,9 +6898,9 @@
    "0/0/2 Mesh 33982192",
    "0/0/3 Mesh 8e6a773c",
    "0/1 Group 577645af",
-   "0/1/0 Mesh f919a5e8",
-   "0/1/1 Mesh 9dc10aa6",
-   "0/1/2 Mesh a6a8063c",
+   "0/1/0 Mesh 4c6cabbf",
+   "0/1/1 Mesh 12b1c2b6",
+   "0/1/2 Mesh b528e0da",
    "0/2 Group 55dd014c"
   ]
  },
@@ -6929,7 +6929,7 @@
   ]
  },
  "model/car_battery_12v:lod": {
-  "hash": "5aa1e7c9",
+  "hash": "d68b7a1f",
   "nodes": [
    "0 LOD 2300e749",
    "0/0 Group f551902d",
@@ -6939,7 +6939,7 @@
    "0/0/3 Mesh 44920e53",
    "0/0/4 Mesh 6eaae47d",
    "0/1 Group 2f0ff7b0",
-   "0/1/0 Mesh a671a2a7",
+   "0/1/0 Mesh 1b9be7e5",
    "0/1/1 Mesh d6158386",
    "0/1/2 Mesh 19aec641",
    "0/2 Group 55dd014c"
@@ -6972,7 +6972,7 @@
   ]
  },
  "model/car_key:lod": {
-  "hash": "93e1b6b1",
+  "hash": "a61f91d",
   "nodes": [
    "0 LOD 10499f07",
    "0/0 Group fcb3e7df",
@@ -6981,7 +6981,7 @@
    "0/0/2 Mesh c5db5b8e",
    "0/0/3 Mesh ef267ce2",
    "0/1 Group 6e45f42",
-   "0/1/0 Mesh cc5c2294",
+   "0/1/0 Mesh 93130598",
    "0/1/1 Mesh 9def68f0",
    "0/1/2 Mesh 7d3261c8",
    "0/2 Group 55dd014c"
@@ -7006,16 +7006,16 @@
   ]
  },
  "model/cash:lod": {
-  "hash": "5854a85c",
+  "hash": "981a905f",
   "nodes": [
    "0 LOD 7295b58",
    "0/0 Group d75380d0",
    "0/0/0 Mesh b1db3d93",
    "0/0/1 Mesh c50ba498",
    "0/1 Group 7c44d84b",
-   "0/1/0 Mesh 7b9ec0d8",
+   "0/1/0 Mesh 74470fbf",
    "0/1/1 Mesh 26de2360",
-   "0/1/2 Mesh 5d8d2a68",
+   "0/1/2 Mesh ff1b2014",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7042,15 +7042,15 @@
   ]
  },
  "model/cassava_cuttings:lod": {
-  "hash": "740926ea",
+  "hash": "4fb75aaf",
   "nodes": [
    "0 LOD b1f16395",
    "0/0 Group 39604e3b",
    "0/0/0 Mesh 90b47ea",
    "0/1 Group ea070474",
-   "0/1/0 Mesh 59d46e1",
+   "0/1/0 Mesh 5dfd3698",
    "0/1/1 Mesh 3b520fea",
-   "0/1/2 Mesh 649c6dca",
+   "0/1/2 Mesh c84cf5d2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7086,7 +7086,7 @@
   ]
  },
  "model/cb_radio:lod": {
-  "hash": "9718039c",
+  "hash": "308df2f5",
   "nodes": [
    "0 LOD f18d5332",
    "0/0 Group 3cdd1606",
@@ -7100,7 +7100,7 @@
    "0/0/7 Mesh e79fcbf4",
    "0/0/8 Mesh cb95d0c",
    "0/1 Group 6d82e1b1",
-   "0/1/0 Mesh 7a3c300d",
+   "0/1/0 Mesh caf85000",
    "0/1/1 Mesh 34eda173",
    "0/1/2 Mesh 3c57361f",
    "0/2 Group 55dd014c"
@@ -7134,15 +7134,15 @@
   ]
  },
  "model/cell_key:lod": {
-  "hash": "d99146c3",
+  "hash": "656b9e17",
   "nodes": [
    "0 LOD ec64e7fd",
    "0/0 Group 851a765b",
    "0/0/0 Mesh 19594495",
    "0/1 Group ca339664",
-   "0/1/0 Mesh 58d0ee82",
-   "0/1/1 Mesh fa705286",
-   "0/1/2 Mesh 6e09bab1",
+   "0/1/0 Mesh df9926e5",
+   "0/1/1 Mesh 4affba3f",
+   "0/1/2 Mesh f4d598e1",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7167,16 +7167,16 @@
   ]
  },
  "model/charcoal_bag:lod": {
-  "hash": "2c10c9d8",
+  "hash": "2983da55",
   "nodes": [
    "0 LOD b9517487",
    "0/0 Group 5b151519",
    "0/0/0 Mesh 4564d508",
    "0/0/1 Mesh 75f6040d",
    "0/1 Group 2dcf0182",
-   "0/1/0 Mesh e98bf54",
+   "0/1/0 Mesh a178b0a4",
    "0/1/1 Mesh f70b602",
-   "0/1/2 Mesh 6f76f5cb",
+   "0/1/2 Mesh 871b772a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7200,7 +7200,7 @@
   ]
  },
  "model/cigarettes:lod": {
-  "hash": "5d3e40f7",
+  "hash": "9e01f5e7",
   "nodes": [
    "0 LOD 215675ae",
    "0/0 Group fd133ce2",
@@ -7208,9 +7208,9 @@
    "0/0/1 Mesh ebc51cbc",
    "0/0/2 Mesh ce73286d",
    "0/1 Group 9fc47e0d",
-   "0/1/0 Mesh b0c89bfe",
+   "0/1/0 Mesh 62ff6ba",
    "0/1/1 Mesh c27bf2a8",
-   "0/1/2 Mesh da6ed571",
+   "0/1/2 Mesh 3ae5efad",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7236,7 +7236,7 @@
   ]
  },
  "model/city_map:lod": {
-  "hash": "ea139a9c",
+  "hash": "2a8d51a9",
   "nodes": [
    "0 LOD cefdf5af",
    "0/0 Group d8977669",
@@ -7245,9 +7245,9 @@
    "0/0/2 Mesh cefea6a2",
    "0/0/3 Mesh 997e00d2",
    "0/1 Group 67ba24aa",
-   "0/1/0 Mesh e8ece916",
+   "0/1/0 Mesh 9420042",
    "0/1/1 Mesh c6bd5901",
-   "0/1/2 Mesh be505a6b",
+   "0/1/2 Mesh c5314a18",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7282,7 +7282,7 @@
   ]
  },
  "model/combat_boots:lod": {
-  "hash": "9134af64",
+  "hash": "3bcde10f",
   "nodes": [
    "0 LOD c73256f3",
    "0/0 Group bed8dfe9",
@@ -7290,9 +7290,9 @@
    "0/0/1 Mesh f156cbad",
    "0/0/2 Mesh 5458e231",
    "0/1 Group 1c11058e",
-   "0/1/0 Mesh ff331d1",
+   "0/1/0 Mesh 56568c7c",
    "0/1/1 Mesh 52052a35",
-   "0/1/2 Mesh e3f26e9a",
+   "0/1/2 Mesh bc1d1522",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7317,14 +7317,14 @@
   ]
  },
  "model/cooler_box:lod": {
-  "hash": "c4da3760",
+  "hash": "fae1205d",
   "nodes": [
    "0 LOD cc6a8d75",
    "0/0 Group 3177387b",
    "0/0/0 Mesh fd2e60ce",
    "0/0/1 Mesh f6112669",
    "0/1 Group b560bdfc",
-   "0/1/0 Mesh 84701ba3",
+   "0/1/0 Mesh 2cb1e34a",
    "0/1/1 Mesh 9d185478",
    "0/1/2 Mesh 59529d92",
    "0/2 Group 55dd014c"
@@ -7354,7 +7354,7 @@
   ]
  },
  "model/corn_seeds:lod": {
-  "hash": "b99c5a1e",
+  "hash": "a5a2b7ed",
   "nodes": [
    "0 LOD 264602c4",
    "0/0 Group fb17eaec",
@@ -7364,9 +7364,9 @@
    "0/0/3 Mesh 3fa41bfb",
    "0/0/4 Mesh 6cb80c3b",
    "0/1 Group d2d5f8c7",
-   "0/1/0 Mesh 656d388d",
+   "0/1/0 Mesh 8c626590",
    "0/1/1 Mesh d6081bc1",
-   "0/1/2 Mesh e5527ac1",
+   "0/1/2 Mesh 3d7cd3c3",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7393,7 +7393,7 @@
   ]
  },
  "model/crossbody_bag:lod": {
-  "hash": "f8a42546",
+  "hash": "f78f27bf",
   "nodes": [
    "0 LOD 58eaae36",
    "0/0 Group 8c982a8",
@@ -7401,9 +7401,9 @@
    "0/0/1 Mesh 5646cf1c",
    "0/0/2 Mesh 8a2d13c5",
    "0/1 Group 9bbdb7b5",
-   "0/1/0 Mesh f98e8aea",
+   "0/1/0 Mesh 89744dfc",
    "0/1/1 Mesh 13bf853e",
-   "0/1/2 Mesh cb4e4f79",
+   "0/1/2 Mesh 9a69a48a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7431,7 +7431,7 @@
   ]
  },
  "model/delivery_bag:lod": {
-  "hash": "e86e334a",
+  "hash": "8d73d15c",
   "nodes": [
    "0 LOD 6fb5452",
    "0/0 Group f5f4b22a",
@@ -7439,9 +7439,9 @@
    "0/0/1 Mesh d684fa1",
    "0/0/2 Mesh b2d8c9d7",
    "0/1 Group 2d9efb91",
-   "0/1/0 Mesh ba0c957a",
-   "0/1/1 Mesh 3e35692f",
-   "0/1/2 Mesh dc057ed3",
+   "0/1/0 Mesh 5402698d",
+   "0/1/1 Mesh 783f8379",
+   "0/1/2 Mesh 4fc6d0c4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7476,7 +7476,7 @@
   ]
  },
  "model/denim_jacket:lod": {
-  "hash": "e03ea164",
+  "hash": "fb2999e8",
   "nodes": [
    "0 LOD 10ec299",
    "0/0 Group 43d7e58b",
@@ -7485,7 +7485,7 @@
    "0/0/2 Mesh 15109153",
    "0/0/3 Mesh 36fbf504",
    "0/1 Group 627e4d60",
-   "0/1/0 Mesh 3472947a",
+   "0/1/0 Mesh e35a40ee",
    "0/1/1 Mesh ab8a16e9",
    "0/1/2 Mesh 9e0379f0",
    "0/2 Group 55dd014c"
@@ -7513,7 +7513,7 @@
   ]
  },
  "model/diesel:lod": {
-  "hash": "a6098582",
+  "hash": "bb67f600",
   "nodes": [
    "0 LOD bde272fb",
    "0/0 Group 55072ae1",
@@ -7521,7 +7521,7 @@
    "0/0/1 Mesh dd97a73b",
    "0/0/2 Mesh 9b1e9ae4",
    "0/1 Group 8c37b796",
-   "0/1/0 Mesh fec8c1c6",
+   "0/1/0 Mesh 99dba1d0",
    "0/1/1 Mesh a754fa0d",
    "0/1/2 Mesh eda9b907",
    "0/2 Group 55dd014c"
@@ -7555,7 +7555,7 @@
   ]
  },
  "model/diy_magazine:lod": {
-  "hash": "881fa43",
+  "hash": "7cac4db7",
   "nodes": [
    "0 LOD c78ab7ee",
    "0/0 Group 1d88c792",
@@ -7567,9 +7567,9 @@
    "0/0/5 Mesh f1178dd2",
    "0/0/6 Mesh 908c1f43",
    "0/1 Group c67046ad",
-   "0/1/0 Mesh e4f75b46",
+   "0/1/0 Mesh 3cb090ed",
    "0/1/1 Mesh 27539b25",
-   "0/1/2 Mesh 5c2f2f8a",
+   "0/1/2 Mesh 46007461",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7593,16 +7593,16 @@
   ]
  },
  "model/dog_tag:lod": {
-  "hash": "73840621",
+  "hash": "88beacad",
   "nodes": [
    "0 LOD f6aa9436",
    "0/0 Group 308d6588",
    "0/0/0 Mesh 860aab0b",
    "0/0/1 Mesh 8308d82a",
    "0/1 Group ce1d8d15",
-   "0/1/0 Mesh f42b7cf6",
+   "0/1/0 Mesh 8eb06769",
    "0/1/1 Mesh e9511481",
-   "0/1/2 Mesh 1ab2e7c0",
+   "0/1/2 Mesh fe0863f1",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7641,7 +7641,7 @@
   ]
  },
  "model/electric_fence_energizer:lod": {
-  "hash": "e5fa74ee",
+  "hash": "645eb001",
   "nodes": [
    "0 LOD 220d2b90",
    "0/0 Group 6eda3128",
@@ -7656,9 +7656,9 @@
    "0/0/8 Mesh 6495d8e1",
    "0/0/9 Mesh 42ffd25d",
    "0/1 Group ac5bda23",
-   "0/1/0 Mesh a27f2a06",
+   "0/1/0 Mesh a186eb3a",
    "0/1/1 Mesh 32314e11",
-   "0/1/2 Mesh 107ef6a3",
+   "0/1/2 Mesh ce479a20",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7684,7 +7684,7 @@
   ]
  },
  "model/extension_cord:lod": {
-  "hash": "77d4fa82",
+  "hash": "f3151a39",
   "nodes": [
    "0 LOD c03045d7",
    "0/0 Group 8c347ba9",
@@ -7692,7 +7692,7 @@
    "0/0/1 Mesh 5fd0d2ec",
    "0/0/2 Mesh 7ef213c5",
    "0/1 Group 80a119b2",
-   "0/1/0 Mesh 833b10ca",
+   "0/1/0 Mesh 68d73c59",
    "0/1/1 Mesh ea854890",
    "0/1/2 Mesh 287148ea",
    "0/2 Group 55dd014c"
@@ -7720,7 +7720,7 @@
   ]
  },
  "model/fanny_pack:lod": {
-  "hash": "3d310d12",
+  "hash": "ac142f5e",
   "nodes": [
    "0 LOD 794bf4e9",
    "0/0 Group d7b02c07",
@@ -7728,9 +7728,9 @@
    "0/0/1 Mesh 1176e7f",
    "0/0/2 Mesh e97e9764",
    "0/1 Group cb1cb890",
-   "0/1/0 Mesh edd8cd68",
+   "0/1/0 Mesh 3aec3265",
    "0/1/1 Mesh 9126eca7",
-   "0/1/2 Mesh bda4a81f",
+   "0/1/2 Mesh 892fdcaa",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7758,7 +7758,7 @@
   ]
  },
  "model/farmers_almanac:lod": {
-  "hash": "9e2d2e82",
+  "hash": "d0aa4377",
   "nodes": [
    "0 LOD 69152665",
    "0/0 Group ea9462d9",
@@ -7767,9 +7767,9 @@
    "0/0/2 Mesh 5c95aed",
    "0/0/3 Mesh d32f08e",
    "0/1 Group 5233536c",
-   "0/1/0 Mesh 1902aef",
-   "0/1/1 Mesh ca8e547e",
-   "0/1/2 Mesh 81a73219",
+   "0/1/0 Mesh ac579d4a",
+   "0/1/1 Mesh 30c7d1b3",
+   "0/1/2 Mesh 971ab926",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7796,7 +7796,7 @@
   ]
  },
  "model/fertilizer_bag:lod": {
-  "hash": "df01e7f4",
+  "hash": "d3b968e7",
   "nodes": [
    "0 LOD c726a64",
    "0/0 Group 6a98cec4",
@@ -7805,9 +7805,9 @@
    "0/0/2 Mesh a4928c10",
    "0/0/3 Mesh 5544f288",
    "0/1 Group af3e0807",
-   "0/1/0 Mesh 62749267",
-   "0/1/1 Mesh 8c28a1f6",
-   "0/1/2 Mesh ea9d0944",
+   "0/1/0 Mesh 8194c3ec",
+   "0/1/1 Mesh 336d19d1",
+   "0/1/2 Mesh 31e92b5",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7845,7 +7845,7 @@
   ]
  },
  "model/firefighter_suit:lod": {
-  "hash": "3eabdff2",
+  "hash": "af9f07f6",
   "nodes": [
    "0 LOD ca58abec",
    "0/0 Group 7b4befc0",
@@ -7853,9 +7853,9 @@
    "0/0/1 Mesh 7cd4da69",
    "0/0/2 Mesh c1a591c6",
    "0/1 Group 4afeef4f",
-   "0/1/0 Mesh 4297b308",
+   "0/1/0 Mesh 96cab2de",
    "0/1/1 Mesh 6b3d8787",
-   "0/1/2 Mesh 2a19a276",
+   "0/1/2 Mesh 9bbaf1c8",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7896,15 +7896,15 @@
   ]
  },
  "model/fishing_net:lod": {
-  "hash": "2b14d9c0",
+  "hash": "1198f178",
   "nodes": [
    "0 LOD 2f495f43",
    "0/0 Group a05c5edf",
    "0/0/0 Mesh 50cc75fa",
    "0/1 Group 5687ba1e",
-   "0/1/0 Mesh 9ca8ee2e",
+   "0/1/0 Mesh ffb8959d",
    "0/1/1 Mesh 6ab20600",
-   "0/1/2 Mesh 94106bcf",
+   "0/1/2 Mesh 35da21e4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7938,7 +7938,7 @@
   ]
  },
  "model/fishing_rod:lod": {
-  "hash": "c34cbece",
+  "hash": "13efc316",
   "nodes": [
    "0 LOD 13496b29",
    "0/0 Group 382611d1",
@@ -7951,9 +7951,9 @@
    "0/0/6 Mesh 5c5dabbd",
    "0/0/7 Mesh aea69aba",
    "0/1 Group 5fcce970",
-   "0/1/0 Mesh 1eed18d6",
+   "0/1/0 Mesh f7343e6d",
    "0/1/1 Mesh ed6e9e87",
-   "0/1/2 Mesh 53447b7d",
+   "0/1/2 Mesh 5b2aa412",
    "0/2 Group 55dd014c"
   ]
  },
@@ -7981,7 +7981,7 @@
   ]
  },
  "model/fishing_tackle_box:lod": {
-  "hash": "a3d25e66",
+  "hash": "f5ba01f9",
   "nodes": [
    "0 LOD 58999dc0",
    "0/0 Group 76b6d6a0",
@@ -7991,9 +7991,9 @@
    "0/0/3 Mesh 7402e404",
    "0/0/4 Mesh bc2ac57",
    "0/1 Group 38d66913",
-   "0/1/0 Mesh 5cee3d55",
+   "0/1/0 Mesh bd839cec",
    "0/1/1 Mesh c139bb79",
-   "0/1/2 Mesh 1a51ea7a",
+   "0/1/2 Mesh 4d15461a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8025,16 +8025,16 @@
   ]
  },
  "model/flip_flops:lod": {
-  "hash": "f911c861",
+  "hash": "f2265f09",
   "nodes": [
    "0 LOD 6645b0f3",
    "0/0 Group 90c2c629",
    "0/0/0 Mesh db8e13a",
    "0/0/1 Mesh 5f174ff0",
    "0/1 Group 8ec6e08e",
-   "0/1/0 Mesh 4bba1c6d",
-   "0/1/1 Mesh 647e5068",
-   "0/1/2 Mesh d49e97e2",
+   "0/1/0 Mesh c4f5d8f2",
+   "0/1/1 Mesh 54b0b9ed",
+   "0/1/2 Mesh 59b224f4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8072,7 +8072,7 @@
   ]
  },
  "model/folding_solar_panel:lod": {
-  "hash": "bee15e83",
+  "hash": "260095b3",
   "nodes": [
    "0 LOD ddb90bc7",
    "0/0 Group 45baec8f",
@@ -8087,9 +8087,9 @@
    "0/0/8 Mesh b2ec9fd",
    "0/0/9 Mesh a71c8831",
    "0/1 Group d98ec382",
-   "0/1/0 Mesh 91f29d1e",
+   "0/1/0 Mesh 26036756",
    "0/1/1 Mesh 1fdffe35",
-   "0/1/2 Mesh b9750cc3",
+   "0/1/2 Mesh a87a659f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8114,7 +8114,7 @@
   ]
  },
  "model/gas_cartridge:lod": {
-  "hash": "d7de1a4a",
+  "hash": "3ff069af",
   "nodes": [
    "0 LOD 38cbe7dc",
    "0/0 Group 76c0abb6",
@@ -8122,9 +8122,9 @@
    "0/0/1 Mesh da5dc511",
    "0/0/2 Mesh d0c63f00",
    "0/1 Group 86b7609f",
-   "0/1/0 Mesh 1225f453",
+   "0/1/0 Mesh 40f425a8",
    "0/1/1 Mesh 32243798",
-   "0/1/2 Mesh 7b1a1345",
+   "0/1/2 Mesh 5255c45f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8150,7 +8150,7 @@
   ]
  },
  "model/gasoline:lod": {
-  "hash": "9d76ea20",
+  "hash": "5e4cb4be",
   "nodes": [
    "0 LOD 2f1d5d8d",
    "0/0 Group 97e1f8eb",
@@ -8158,7 +8158,7 @@
    "0/0/1 Mesh 7834ba3c",
    "0/0/2 Mesh ebd952d0",
    "0/1 Group a3c697d4",
-   "0/1/0 Mesh fec8c1c6",
+   "0/1/0 Mesh 99dba1d0",
    "0/1/1 Mesh a754fa0d",
    "0/1/2 Mesh eda9b907",
    "0/2 Group 55dd014c"
@@ -8196,7 +8196,7 @@
   ]
  },
  "model/generator_key:lod": {
-  "hash": "8895f92e",
+  "hash": "abadb739",
   "nodes": [
    "0 LOD a75dbd12",
    "0/0 Group 468a4c44",
@@ -8204,9 +8204,9 @@
    "0/0/1 Mesh 417240de",
    "0/0/2 Mesh 7abea77e",
    "0/1 Group 1eaba591",
-   "0/1/0 Mesh a8888f30",
-   "0/1/1 Mesh 57c7c490",
-   "0/1/2 Mesh 51359d31",
+   "0/1/0 Mesh a03c4630",
+   "0/1/1 Mesh 658e37b4",
+   "0/1/2 Mesh 3a918dd2",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8231,16 +8231,16 @@
   ]
  },
  "model/hard_hat:lod": {
-  "hash": "e49bdc13",
+  "hash": "1c0c5dff",
   "nodes": [
    "0 LOD c1dfc8d4",
    "0/0 Group f4a87b9c",
    "0/0/0 Mesh cca5d05c",
    "0/0/1 Mesh 3cf2bf65",
    "0/1 Group 636d19f7",
-   "0/1/0 Mesh 6e4649cb",
+   "0/1/0 Mesh c0d812d3",
    "0/1/1 Mesh 2f72f6a4",
-   "0/1/2 Mesh f6c4078c",
+   "0/1/2 Mesh f144d5c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8268,7 +8268,7 @@
   ]
  },
  "model/headlamp:lod": {
-  "hash": "88dca59",
+  "hash": "bd163b40",
   "nodes": [
    "0 LOD 743e0b8d",
    "0/0 Group a30758af",
@@ -8276,7 +8276,7 @@
    "0/0/1 Mesh 27776812",
    "0/0/2 Mesh 8f5a571c",
    "0/1 Group fec22554",
-   "0/1/0 Mesh 73b6476c",
+   "0/1/0 Mesh c413c25",
    "0/1/1 Mesh 1a4e3072",
    "0/1/2 Mesh ca18eea6",
    "0/2 Group 55dd014c"
@@ -8309,7 +8309,7 @@
   ]
  },
  "model/hoodie:lod": {
-  "hash": "56ead50f",
+  "hash": "bd2ae3fc",
   "nodes": [
    "0 LOD 46f69661",
    "0/0 Group 4cbe3d5f",
@@ -8317,7 +8317,7 @@
    "0/0/1 Mesh 8e0c7858",
    "0/0/2 Mesh da23eb7e",
    "0/1 Group 4b30aee8",
-   "0/1/0 Mesh bc46c99a",
+   "0/1/0 Mesh a50afb71",
    "0/1/1 Mesh 91c7c933",
    "0/1/2 Mesh 2b6797a8",
    "0/2 Group 55dd014c"
@@ -8375,7 +8375,7 @@
   ]
  },
  "model/janitor_keys:lod": {
-  "hash": "e1d2bfb6",
+  "hash": "442b18f1",
   "nodes": [
    "0 LOD 2e1ec173",
    "0/0 Group afb02429",
@@ -8383,9 +8383,9 @@
    "0/0/1 Mesh 54539282",
    "0/0/2 Mesh 8263d3cd",
    "0/1 Group 83eaf4ee",
-   "0/1/0 Mesh baf2ebb9",
+   "0/1/0 Mesh 9b6906ad",
    "0/1/1 Mesh c7ac35ab",
-   "0/1/2 Mesh 1b5010a4",
+   "0/1/2 Mesh aee01c3f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8414,7 +8414,7 @@
   ]
  },
  "model/jeans:lod": {
-  "hash": "8f208842",
+  "hash": "77dff277",
   "nodes": [
    "0 LOD 4beb0ca8",
    "0/0 Group b906d09e",
@@ -8423,7 +8423,7 @@
    "0/0/2 Mesh afd09b08",
    "0/0/3 Mesh 7f1db3d8",
    "0/1 Group e9cfd73b",
-   "0/1/0 Mesh 91f127ef",
+   "0/1/0 Mesh ff5e7cf4",
    "0/1/1 Mesh 4ae7f945",
    "0/1/2 Mesh 4cc97b0a",
    "0/2 Group 55dd014c"
@@ -8453,7 +8453,7 @@
   ]
  },
  "model/kale_and_lettuce_seeds:lod": {
-  "hash": "df08e4ac",
+  "hash": "eeb87d56",
   "nodes": [
    "0 LOD 3e70dfba",
    "0/0 Group 28677312",
@@ -8463,9 +8463,9 @@
    "0/0/3 Mesh d6422e1c",
    "0/0/4 Mesh ec8fd26e",
    "0/1 Group ff12ee59",
-   "0/1/0 Mesh 148f0504",
-   "0/1/1 Mesh 5b11a008",
-   "0/1/2 Mesh a3fb9547",
+   "0/1/0 Mesh df2ff793",
+   "0/1/1 Mesh 892d78d2",
+   "0/1/2 Mesh f042e234",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8491,7 +8491,7 @@
   ]
  },
  "model/kerosene:lod": {
-  "hash": "677ad51a",
+  "hash": "35b51c08",
   "nodes": [
    "0 LOD fed11f8b",
    "0/0 Group 43b9e21",
@@ -8499,7 +8499,7 @@
    "0/0/1 Mesh b175f0f6",
    "0/0/2 Mesh 2c6b5a12",
    "0/1 Group 63dba706",
-   "0/1/0 Mesh fec8c1c6",
+   "0/1/0 Mesh 99dba1d0",
    "0/1/1 Mesh a754fa0d",
    "0/1/2 Mesh eda9b907",
    "0/2 Group 55dd014c"
@@ -8527,7 +8527,7 @@
   ]
  },
  "model/laptop:lod": {
-  "hash": "7e284e27",
+  "hash": "80a5ebbf",
   "nodes": [
    "0 LOD 25da3001",
    "0/0 Group cc75be3",
@@ -8536,9 +8536,9 @@
    "0/0/2 Mesh 685419f0",
    "0/0/3 Mesh 13419638",
    "0/1 Group ae643e68",
-   "0/1/0 Mesh 8a3e7068",
+   "0/1/0 Mesh 2897d289",
    "0/1/1 Mesh a06927af",
-   "0/1/2 Mesh 30843b2e",
+   "0/1/2 Mesh 86136aeb",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8573,7 +8573,7 @@
   ]
  },
  "model/leather_motorcycle_jacket:lod": {
-  "hash": "8c877237",
+  "hash": "79a03125",
   "nodes": [
    "0 LOD 429da13",
    "0/0 Group 69ee836b",
@@ -8582,9 +8582,9 @@
    "0/0/2 Mesh 4b38050f",
    "0/0/3 Mesh 8698b3d7",
    "0/1 Group bcc5320e",
-   "0/1/0 Mesh ee53ba1a",
+   "0/1/0 Mesh 7c87316e",
    "0/1/1 Mesh f67a16b",
-   "0/1/2 Mesh c0a8796a",
+   "0/1/2 Mesh 6fb14340",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8614,7 +8614,7 @@
   ]
  },
  "model/leather_motorcycle_pants:lod": {
-  "hash": "eeff6be0",
+  "hash": "becd3fcc",
   "nodes": [
    "0 LOD afd23e47",
    "0/0 Group a556a2ed",
@@ -8622,9 +8622,9 @@
    "0/0/1 Mesh f6a4a8a3",
    "0/0/2 Mesh e4b1f209",
    "0/1 Group efa29902",
-   "0/1/0 Mesh 89072567",
+   "0/1/0 Mesh 78a560cc",
    "0/1/1 Mesh d2bc6f2",
-   "0/1/2 Mesh c1cfcdc0",
+   "0/1/2 Mesh e8c5e587",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8652,16 +8652,16 @@
   ]
  },
  "model/leather_work_gloves:lod": {
-  "hash": "846e6309",
+  "hash": "de2f4a4a",
   "nodes": [
    "0 LOD ec3dd153",
    "0/0 Group 6f6315bb",
    "0/0/0 Mesh 77457cc7",
    "0/0/1 Mesh 2f736958",
    "0/1 Group 4d8a844e",
-   "0/1/0 Mesh 4045156a",
-   "0/1/1 Mesh f742df5c",
-   "0/1/2 Mesh beb024e6",
+   "0/1/0 Mesh dc72ac04",
+   "0/1/1 Mesh efdc3269",
+   "0/1/2 Mesh 87407e6c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8690,7 +8690,7 @@
   ]
  },
  "model/led_camp_lantern:lod": {
-  "hash": "dbefb688",
+  "hash": "fead8cdd",
   "nodes": [
    "0 LOD eb6a931",
    "0/0 Group c757ba67",
@@ -8700,9 +8700,9 @@
    "0/0/3 Mesh 85b96954",
    "0/0/4 Mesh fad51fe5",
    "0/1 Group 818ad318",
-   "0/1/0 Mesh 7d1dbca6",
+   "0/1/0 Mesh bf7bfc8e",
    "0/1/1 Mesh 6f004aa7",
-   "0/1/2 Mesh cc18c805",
+   "0/1/2 Mesh 677c1cc4",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8741,7 +8741,7 @@
   ]
  },
  "model/magazine_arm_guard:lod": {
-  "hash": "aed0900",
+  "hash": "c41ba8d6",
   "nodes": [
    "0 LOD 8bfc45ee",
    "0/0 Group 4da6f8b2",
@@ -8752,7 +8752,7 @@
    "0/0/4 Mesh 51e11c76",
    "0/0/5 Mesh 8ecfef82",
    "0/1 Group 347412cd",
-   "0/1/0 Mesh e044b91f",
+   "0/1/0 Mesh 7eadc9c9",
    "0/1/1 Mesh ca87f372",
    "0/1/2 Mesh 692f67b9",
    "0/2 Group 55dd014c"
@@ -8784,7 +8784,7 @@
   ]
  },
  "model/magazines_and_comics:lod": {
-  "hash": "1eb566b2",
+  "hash": "e2f1e4bc",
   "nodes": [
    "0 LOD bd22a359",
    "0/0 Group b3e3e59f",
@@ -8795,7 +8795,7 @@
    "0/0/4 Mesh 638b3bdb",
    "0/0/5 Mesh 540df695",
    "0/1 Group 2bb6f540",
-   "0/1/0 Mesh b3729db7",
+   "0/1/0 Mesh b6f42fd5",
    "0/1/1 Mesh 151edc5d",
    "0/1/2 Mesh db16a795",
    "0/2 Group 55dd014c"
@@ -8832,13 +8832,13 @@
   ]
  },
  "model/master_key:lod": {
-  "hash": "d743e645",
+  "hash": "c311d832",
   "nodes": [
    "0 LOD 59e421b3",
    "0/0 Group 267227ed",
    "0/0/0 Mesh 5909cf4a",
    "0/1 Group 9fadbdae",
-   "0/1/0 Mesh b2332c78",
+   "0/1/0 Mesh 23cc453f",
    "0/1/1 Mesh 9d467c88",
    "0/1/2 Mesh 37735300",
    "0/2 Group 55dd014c"
@@ -8874,7 +8874,7 @@
   ]
  },
  "model/mechanic_coveralls:lod": {
-  "hash": "a1bddaee",
+  "hash": "7f74b526",
   "nodes": [
    "0 LOD d178cfc7",
    "0/0 Group 42af8579",
@@ -8882,9 +8882,9 @@
    "0/0/1 Mesh 60975978",
    "0/0/2 Mesh a4971630",
    "0/1 Group 905d81c2",
-   "0/1/0 Mesh 89072567",
+   "0/1/0 Mesh 78a560cc",
    "0/1/1 Mesh d2bc6f2",
-   "0/1/2 Mesh c1cfcdc0",
+   "0/1/2 Mesh e8c5e587",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8914,7 +8914,7 @@
   ]
  },
  "model/military_backpack:lod": {
-  "hash": "4019b9b1",
+  "hash": "c6f9782a",
   "nodes": [
    "0 LOD 12e4ddd7",
    "0/0 Group 29f48d1b",
@@ -8923,9 +8923,9 @@
    "0/0/2 Mesh 4c79c3d6",
    "0/0/3 Mesh e687a35c",
    "0/1 Group 17753a1e",
-   "0/1/0 Mesh d7668afc",
-   "0/1/1 Mesh fa79bcc5",
-   "0/1/2 Mesh 7d97f08d",
+   "0/1/0 Mesh 8cd3045b",
+   "0/1/1 Mesh 77ed09d2",
+   "0/1/2 Mesh a075f704",
    "0/2 Group 55dd014c"
   ]
  },
@@ -8966,7 +8966,7 @@
   ]
  },
  "model/military_radio:lod": {
-  "hash": "c7295ba0",
+  "hash": "b868ebcf",
   "nodes": [
    "0 LOD 25d89424",
    "0/0 Group e07f4ed4",
@@ -8982,9 +8982,9 @@
    "0/0/9 Mesh 24d4e18a",
    "0/0/10 Mesh ac0cdead",
    "0/1 Group 1c435087",
-   "0/1/0 Mesh 5d45fd22",
+   "0/1/0 Mesh 9babe14c",
    "0/1/1 Mesh 94fd03d0",
-   "0/1/2 Mesh bade4750",
+   "0/1/2 Mesh 9c10bcf9",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9010,7 +9010,7 @@
   ]
  },
  "model/mobile_phone:lod": {
-  "hash": "8cf31266",
+  "hash": "d663c9f8",
   "nodes": [
    "0 LOD aa6d3606",
    "0/0 Group 9ddae45e",
@@ -9019,9 +9019,9 @@
    "0/0/2 Mesh 47a387d8",
    "0/0/3 Mesh c4885c89",
    "0/1 Group 6d3a445",
-   "0/1/0 Mesh 4ad59ebc",
-   "0/1/1 Mesh 595461dd",
-   "0/1/2 Mesh a1bfd602",
+   "0/1/0 Mesh a5e9ee5",
+   "0/1/1 Mesh c17d2451",
+   "0/1/2 Mesh 2089b29b",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9047,7 +9047,7 @@
   ]
  },
  "model/motor_oil:lod": {
-  "hash": "2ef7813e",
+  "hash": "179ef335",
   "nodes": [
    "0 LOD 7b3a91e3",
    "0/0 Group 93feafa3",
@@ -9055,7 +9055,7 @@
    "0/0/1 Mesh f009e8fa",
    "0/0/2 Mesh d75a0547",
    "0/1 Group 9991b17e",
-   "0/1/0 Mesh 1d673422",
+   "0/1/0 Mesh 4862daed",
    "0/1/1 Mesh 14d0ee6",
    "0/1/2 Mesh c5645534",
    "0/2 Group 55dd014c"
@@ -9089,7 +9089,7 @@
   ]
  },
  "model/night_vision_goggles:lod": {
-  "hash": "3d6bafea",
+  "hash": "f0dbcdb1",
   "nodes": [
    "0 LOD 2191c909",
    "0/0 Group 4a43e3cf",
@@ -9099,9 +9099,9 @@
    "0/0/3 Mesh a12ae174",
    "0/0/4 Mesh 60636fc9",
    "0/1 Group dc2b9e10",
-   "0/1/0 Mesh d4253228",
+   "0/1/0 Mesh 87d54c8d",
    "0/1/1 Mesh 18d9ab4e",
-   "0/1/2 Mesh 46c48bf0",
+   "0/1/2 Mesh cc5b2ba",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9123,16 +9123,16 @@
   ]
  },
  "model/note:lod": {
-  "hash": "72a875dd",
+  "hash": "62aff18d",
   "nodes": [
    "0 LOD 9a0d478d",
    "0/0 Group 86039c53",
    "0/0/0 Mesh 3436662d",
    "0/0/1 Mesh 46a0487d",
    "0/1 Group a5b7bd4",
-   "0/1/0 Mesh 8c792a10",
+   "0/1/0 Mesh 6de7dfc3",
    "0/1/1 Mesh 415cb463",
-   "0/1/2 Mesh 1bb2180e",
+   "0/1/2 Mesh 4cb9b939",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9164,7 +9164,7 @@
   ]
  },
  "model/padded_coat:lod": {
-  "hash": "899219d2",
+  "hash": "13b27b48",
   "nodes": [
    "0 LOD 5e5ba575",
    "0/0 Group 5d9a610d",
@@ -9172,9 +9172,9 @@
    "0/0/1 Mesh 8ed5d3d5",
    "0/0/2 Mesh cb9b7b02",
    "0/1 Group 1c9b6f5c",
-   "0/1/0 Mesh c956d786",
+   "0/1/0 Mesh 388fa383",
    "0/1/1 Mesh c9dda405",
-   "0/1/2 Mesh 4a57b69b",
+   "0/1/2 Mesh b83d073a",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9206,7 +9206,7 @@
   ]
  },
  "model/padlock_key:lod": {
-  "hash": "641eff05",
+  "hash": "9d11e5f4",
   "nodes": [
    "0 LOD a0af2217",
    "0/0 Group d12f86ab",
@@ -9214,7 +9214,7 @@
    "0/0/1 Mesh 4de9fbff",
    "0/0/2 Mesh bebccb08",
    "0/1 Group 51a459d2",
-   "0/1/0 Mesh 1fd2f874",
+   "0/1/0 Mesh 9d3367a1",
    "0/1/1 Mesh 5d72c6ad",
    "0/1/2 Mesh b6d460a9",
    "0/2 Group 55dd014c"
@@ -9238,16 +9238,16 @@
   ]
  },
  "model/photo:lod": {
-  "hash": "dc3bbf5c",
+  "hash": "2a0621ce",
   "nodes": [
    "0 LOD 1c374161",
    "0/0 Group 8cd7678d",
    "0/0/0 Mesh aae520cd",
    "0/0/1 Mesh fef8b864",
    "0/1 Group 7d288b88",
-   "0/1/0 Mesh e324cc60",
+   "0/1/0 Mesh 27f41002",
    "0/1/1 Mesh d27c7f1b",
-   "0/1/2 Mesh eb837a60",
+   "0/1/2 Mesh e4ea5f74",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9294,7 +9294,7 @@
   ]
  },
  "model/portable_generator:lod": {
-  "hash": "c603e43f",
+  "hash": "6dcca622",
   "nodes": [
    "0 LOD b9d20996",
    "0/0 Group 7c2e37c6",
@@ -9308,9 +9308,9 @@
    "0/0/7 Mesh 77c4f169",
    "0/0/8 Mesh c3104c13",
    "0/1 Group efcfcd35",
-   "0/1/0 Mesh c290feb1",
-   "0/1/1 Mesh 947b9be0",
-   "0/1/2 Mesh cc82958b",
+   "0/1/0 Mesh 10a368f5",
+   "0/1/1 Mesh d2ae69d6",
+   "0/1/2 Mesh 8628a8f8",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9338,7 +9338,7 @@
   ]
  },
  "model/power_bank:lod": {
-  "hash": "2562cbe8",
+  "hash": "d6cbbd9f",
   "nodes": [
    "0 LOD cde0e101",
    "0/0 Group 608b205f",
@@ -9347,9 +9347,9 @@
    "0/0/2 Mesh 8c808124",
    "0/0/3 Mesh 9eef4921",
    "0/1 Group e50764c8",
-   "0/1/0 Mesh 47f027a8",
-   "0/1/1 Mesh 837a3abf",
-   "0/1/2 Mesh e6aeeec2",
+   "0/1/0 Mesh 4b982969",
+   "0/1/1 Mesh 27cd5202",
+   "0/1/2 Mesh 498d4275",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9377,7 +9377,7 @@
   ]
  },
  "model/pumpkin_seeds:lod": {
-  "hash": "94b7b206",
+  "hash": "611d114",
   "nodes": [
    "0 LOD cbcadf72",
    "0/0 Group 9d28a960",
@@ -9387,9 +9387,9 @@
    "0/0/3 Mesh bd344ec5",
    "0/0/4 Mesh 10a3e557",
    "0/1 Group 1e5e36d1",
-   "0/1/0 Mesh 148f0504",
-   "0/1/1 Mesh 5b11a008",
-   "0/1/2 Mesh a3fb9547",
+   "0/1/0 Mesh df2ff793",
+   "0/1/1 Mesh 892d78d2",
+   "0/1/2 Mesh f042e234",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9420,7 +9420,7 @@
   ]
  },
  "model/raincoat:lod": {
-  "hash": "fcefc694",
+  "hash": "c703dfd5",
   "nodes": [
    "0 LOD 341edc5a",
    "0/0 Group bf9aa762",
@@ -9429,9 +9429,9 @@
    "0/0/2 Mesh ad7061",
    "0/0/3 Mesh b9fa4230",
    "0/1 Group 4e007c39",
-   "0/1/0 Mesh b2a3413a",
+   "0/1/0 Mesh 7bc8f909",
    "0/1/1 Mesh 34c0980d",
-   "0/1/2 Mesh 7d5a4e6c",
+   "0/1/2 Mesh a1b1cefc",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9457,7 +9457,7 @@
   ]
  },
  "model/road_map:lod": {
-  "hash": "5c108df4",
+  "hash": "45f68ea1",
   "nodes": [
    "0 LOD 6032c984",
    "0/0 Group 7b377c50",
@@ -9466,9 +9466,9 @@
    "0/0/2 Mesh 64dd08ff",
    "0/0/3 Mesh aa8f6a7d",
    "0/1 Group 32740167",
-   "0/1/0 Mesh e8ece916",
+   "0/1/0 Mesh 9420042",
    "0/1/1 Mesh c6bd5901",
-   "0/1/2 Mesh be505a6b",
+   "0/1/2 Mesh c5314a18",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9499,16 +9499,16 @@
   ]
  },
  "model/rolling_suitcase:lod": {
-  "hash": "354dda06",
+  "hash": "f9283869",
   "nodes": [
    "0 LOD 92118524",
    "0/0 Group 7c9c0f98",
    "0/0/0 Mesh eaa28621",
    "0/0/1 Mesh 5fe3b486",
    "0/1 Group 5ca300a7",
-   "0/1/0 Mesh 1b817646",
-   "0/1/1 Mesh 1305912b",
-   "0/1/2 Mesh d9c61525",
+   "0/1/0 Mesh 7ce048cb",
+   "0/1/1 Mesh 9b5f836",
+   "0/1/2 Mesh 7273ce4c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9541,7 +9541,7 @@
   ]
  },
  "model/rubber_boots:lod": {
-  "hash": "9d659a87",
+  "hash": "3e4e14a4",
   "nodes": [
    "0 LOD c7f1819d",
    "0/0 Group ab69f173",
@@ -9549,7 +9549,7 @@
    "0/0/1 Mesh fb38a363",
    "0/0/2 Mesh 3b84f549",
    "0/1 Group a5630bc4",
-   "0/1/0 Mesh 331a0964",
+   "0/1/0 Mesh 8bad8973",
    "0/1/1 Mesh d9ab16dd",
    "0/1/2 Mesh 90dab62c",
    "0/2 Group 55dd014c"
@@ -9586,15 +9586,15 @@
   ]
  },
  "model/safe_key:lod": {
-  "hash": "bb31f328",
+  "hash": "62903484",
   "nodes": [
    "0 LOD 11ff0de2",
    "0/0 Group a2ad1f96",
    "0/0/0 Mesh 59403b7a",
    "0/1 Group ea5227c1",
-   "0/1/0 Mesh 17c59844",
+   "0/1/0 Mesh 4f7ebbb1",
    "0/1/1 Mesh d61e1540",
-   "0/1/2 Mesh 3d5df4fa",
+   "0/1/2 Mesh 344c159f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9623,7 +9623,7 @@
   ]
  },
  "model/safety_goggles:lod": {
-  "hash": "4f81c995",
+  "hash": "7ff3dc4b",
   "nodes": [
    "0 LOD 67c3867a",
    "0/0 Group c1c73c2e",
@@ -9631,7 +9631,7 @@
    "0/0/1 Mesh 644a35a1",
    "0/0/2 Mesh 34b6693a",
    "0/1 Group c4d772b9",
-   "0/1/0 Mesh 49d43801",
+   "0/1/0 Mesh dfd9c49b",
    "0/1/1 Mesh 2ab18ae9",
    "0/1/2 Mesh a27abef6",
    "0/2 Group 55dd014c"
@@ -9677,7 +9677,7 @@
   ]
  },
  "model/sheet_metal_forearm_guard:lod": {
-  "hash": "896d59f9",
+  "hash": "4453e535",
   "nodes": [
    "0 LOD a79469ab",
    "0/0 Group f9c2c30f",
@@ -9685,9 +9685,9 @@
    "0/0/1 Mesh ac583322",
    "0/0/2 Mesh e28b0e84",
    "0/1 Group fd77c8c6",
-   "0/1/0 Mesh 82a143c0",
+   "0/1/0 Mesh 77bef21d",
    "0/1/1 Mesh 4cfc6d9f",
-   "0/1/2 Mesh 83b67143",
+   "0/1/2 Mesh b70cd514",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9711,16 +9711,16 @@
   ]
  },
  "model/shopping_bag:lod": {
-  "hash": "fd3432cc",
+  "hash": "60a18c26",
   "nodes": [
    "0 LOD 5fb266c6",
    "0/0 Group f7843142",
    "0/0/0 Mesh 12577657",
    "0/0/1 Mesh 90d39105",
    "0/1 Group 8664a6c5",
-   "0/1/0 Mesh 2ea84483",
+   "0/1/0 Mesh fb107253",
    "0/1/1 Mesh a27330c",
-   "0/1/2 Mesh a920a91e",
+   "0/1/2 Mesh 3d9060c0",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9770,16 +9770,16 @@
   ]
  },
  "model/shopping_cart:lod": {
-  "hash": "c78ec458",
+  "hash": "44ddb7c4",
   "nodes": [
    "0 LOD 8b6b89a8",
    "0/0 Group 871e5ece",
    "0/0/0 Mesh f35d7ca4",
    "0/0/1 Mesh d6668b30",
    "0/1 Group 3ff39a23",
-   "0/1/0 Mesh 71548f46",
+   "0/1/0 Mesh 91d611ba",
    "0/1/1 Mesh 2da34571",
-   "0/1/2 Mesh 375f61b4",
+   "0/1/2 Mesh f272075c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9808,7 +9808,7 @@
   ]
  },
  "model/skill_book:lod": {
-  "hash": "150ae610",
+  "hash": "e7f48c68",
   "nodes": [
    "0 LOD 5f51ef54",
    "0/0 Group c2a9bf6c",
@@ -9816,7 +9816,7 @@
    "0/0/1 Mesh bfef4b32",
    "0/0/2 Mesh da948ef6",
    "0/1 Group 2caf30d7",
-   "0/1/0 Mesh ac145398",
+   "0/1/0 Mesh f32f8470",
    "0/1/1 Mesh ed8363ec",
    "0/1/2 Mesh 343bfbbb",
    "0/2 Group 55dd014c"
@@ -9844,7 +9844,7 @@
   ]
  },
  "model/snare_trap:lod": {
-  "hash": "47157168",
+  "hash": "4b75544a",
   "nodes": [
    "0 LOD d330af4e",
    "0/0 Group 7836a176",
@@ -9853,9 +9853,9 @@
    "0/0/2 Mesh 6d1ec831",
    "0/0/3 Mesh d83d019b",
    "0/1 Group 56781bad",
-   "0/1/0 Mesh 771a3c74",
-   "0/1/1 Mesh d128a7ab",
-   "0/1/2 Mesh 1abfba8a",
+   "0/1/0 Mesh 63358b88",
+   "0/1/1 Mesh 9ab00899",
+   "0/1/2 Mesh 3e05f4c",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9888,7 +9888,7 @@
   ]
  },
  "model/sneakers:lod": {
-  "hash": "e3283a2",
+  "hash": "3a8503b7",
   "nodes": [
    "0 LOD 3f5d2931",
    "0/0 Group a6908973",
@@ -9897,9 +9897,9 @@
    "0/0/2 Mesh 56d48ffd",
    "0/0/3 Mesh 8df9a1d",
    "0/1 Group 1c64da58",
-   "0/1/0 Mesh 31fd5b67",
+   "0/1/0 Mesh 70f0559a",
    "0/1/1 Mesh a8600c4c",
-   "0/1/2 Mesh b96d52f8",
+   "0/1/2 Mesh a773fecc",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9929,7 +9929,7 @@
   ]
  },
  "model/tactical_vest:lod": {
-  "hash": "59d9bc93",
+  "hash": "9d60497b",
   "nodes": [
    "0 LOD 76012cc9",
    "0/0 Group 32e62c89",
@@ -9937,9 +9937,9 @@
    "0/0/1 Mesh b1ef8607",
    "0/0/2 Mesh d9ea7e8c",
    "0/1 Group 78a53fb0",
-   "0/1/0 Mesh a27d63f3",
+   "0/1/0 Mesh afbe12ed",
    "0/1/1 Mesh 18db43c7",
-   "0/1/2 Mesh 1fe6ae75",
+   "0/1/2 Mesh a91c325f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -9968,7 +9968,7 @@
   ]
  },
  "model/technical_manual:lod": {
-  "hash": "6d980683",
+  "hash": "a59d46b2",
   "nodes": [
    "0 LOD 7562bd57",
    "0/0 Group d58e6f7d",
@@ -9977,9 +9977,9 @@
    "0/0/2 Mesh fcee8a6a",
    "0/0/3 Mesh daa92de2",
    "0/1 Group 46f79ab2",
-   "0/1/0 Mesh 1afc88e0",
+   "0/1/0 Mesh a5551f1d",
    "0/1/1 Mesh 1b34b3f5",
-   "0/1/2 Mesh a89d29d9",
+   "0/1/2 Mesh 9310625d",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10009,7 +10009,7 @@
   ]
  },
  "model/tool_belt:lod": {
-  "hash": "c62d8bc3",
+  "hash": "fc81ed49",
   "nodes": [
    "0 LOD f4a38d6b",
    "0/0 Group 811293f7",
@@ -10017,9 +10017,9 @@
    "0/0/1 Mesh ce6a3559",
    "0/0/2 Mesh 70bc7b1b",
    "0/1 Group 9c116aa6",
-   "0/1/0 Mesh 50398544",
+   "0/1/0 Mesh 6fdf8ab5",
    "0/1/1 Mesh cc5f1149",
-   "0/1/2 Mesh a2d3590a",
+   "0/1/2 Mesh 3de62a79",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10042,15 +10042,15 @@
   ]
  },
  "model/trash_bag:lod": {
-  "hash": "184d0c88",
+  "hash": "1bae0e5b",
   "nodes": [
    "0 LOD b7f3309c",
    "0/0 Group 1b388c4a",
    "0/0/0 Mesh 6348dec6",
    "0/1 Group cfa8ecbf",
-   "0/1/0 Mesh c5fc22c3",
+   "0/1/0 Mesh 72320dd9",
    "0/1/1 Mesh 6f8923ff",
-   "0/1/2 Mesh 6e2aab50",
+   "0/1/2 Mesh 1e5f999f",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10079,7 +10079,7 @@
   ]
  },
  "model/trekking_backpack_70l:lod": {
-  "hash": "95a85c21",
+  "hash": "13dc39f4",
   "nodes": [
    "0 LOD d4e009f7",
    "0/0 Group 4972c103",
@@ -10087,9 +10087,9 @@
    "0/0/1 Mesh 549fb831",
    "0/0/2 Mesh d449381e",
    "0/1 Group 40e922fe",
-   "0/1/0 Mesh deaaecd6",
+   "0/1/0 Mesh c20f8bc7",
    "0/1/1 Mesh 209c55ba",
-   "0/1/2 Mesh 8a32cdfe",
+   "0/1/2 Mesh 6ba0b8da",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10117,7 +10117,7 @@
   ]
  },
  "model/tshirt:lod": {
-  "hash": "14f66817",
+  "hash": "927ef31d",
   "nodes": [
    "0 LOD c7bccd",
    "0/0 Group 23b9034b",
@@ -10125,9 +10125,9 @@
    "0/0/1 Mesh bba616cc",
    "0/0/2 Mesh c2ca2bd5",
    "0/1 Group 68a518b4",
-   "0/1/0 Mesh cc7ffffb",
+   "0/1/0 Mesh dca98293",
    "0/1/1 Mesh 346cbbb8",
-   "0/1/2 Mesh 22079885",
+   "0/1/2 Mesh 9663e077",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10154,14 +10154,14 @@
   ]
  },
  "model/watering_can:lod": {
-  "hash": "1bcb888",
+  "hash": "bdf52dd",
   "nodes": [
    "0 LOD c4543815",
    "0/0 Group 366780b",
    "0/0/0 Mesh 71a599c6",
    "0/0/1 Mesh 3a685ca2",
    "0/1 Group a36ee4fc",
-   "0/1/0 Mesh f6ab518e",
+   "0/1/0 Mesh 46ef048f",
    "0/1/1 Mesh 4ae49646",
    "0/1/2 Mesh 74911ac",
    "0/2 Group 55dd014c"
@@ -10200,7 +10200,7 @@
   ]
  },
  "model/wheelbarrow:lod": {
-  "hash": "27d5ae8e",
+  "hash": "48e6d29a",
   "nodes": [
    "0 LOD 4a55d511",
    "0/0 Group bc0a5609",
@@ -10210,9 +10210,9 @@
    "0/0/3 Mesh 7f4da725",
    "0/0/4 Mesh 1fc4f3d8",
    "0/1 Group dabcf698",
-   "0/1/0 Mesh a509093a",
-   "0/1/1 Mesh 704f0c50",
-   "0/1/2 Mesh e6f67f75",
+   "0/1/0 Mesh 861cbc6c",
+   "0/1/1 Mesh af07cdb9",
+   "0/1/2 Mesh 99e3fcbc",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10249,7 +10249,7 @@
   ]
  },
  "model/windup_alarm_clock:lod": {
-  "hash": "eb1f18a7",
+  "hash": "3eb9f61e",
   "nodes": [
    "0 LOD e3cc9881",
    "0/0 Group 2b4084b7",
@@ -10260,116 +10260,116 @@
    "0/0/4 Mesh f2b89585",
    "0/0/5 Mesh 2c6e30e1",
    "0/1 Group d13e07c8",
-   "0/1/0 Mesh ff273b95",
+   "0/1/0 Mesh dd34a7bc",
    "0/1/1 Mesh c13f6a50",
    "0/1/2 Mesh f8c2c75f",
    "0/2 Group 55dd014c"
   ]
  },
  "shape/can": {
-  "hash": "4f408b22",
+  "hash": "4d2dd367",
   "nodes": [
    "0 Group 6c156413",
    "0/0 Group aefc5004",
    "0/0/0 Group 1a790acc",
-   "0/0/0/0 Mesh 342e077b",
+   "0/0/0/0 Mesh 74937772",
    "0/0/0/1 Mesh 4b218d78",
    "0/0/0/2 Mesh fe0edbc4",
    "0/0/0/3 Mesh ca846b3a"
   ]
  },
  "shape/can:half": {
-  "hash": "905fd90",
+  "hash": "c7d95e0b",
   "nodes": [
    "0 Group 6c156413",
    "0/0 Group c84b491a",
    "0/0/0 Group 1a790acc",
-   "0/0/0/0 Mesh 76d141b1",
+   "0/0/0/0 Mesh c59c06fa",
    "0/0/0/1 Mesh a6699a72",
    "0/0/0/2 Mesh 929814e0",
    "0/0/0/3 Mesh e10c045e"
   ]
  },
  "shape/can:lod": {
-  "hash": "af32575f",
+  "hash": "98fcfd45",
   "nodes": [
    "0 LOD e91a0674",
    "0/0 Group 4b26538e",
-   "0/0/0 Mesh 69bb4795",
+   "0/0/0 Mesh 95449a43",
    "0/0/1 Mesh 79b5be39",
    "0/1 Group 412faf97",
-   "0/1/0 Mesh cee99b57",
+   "0/1/0 Mesh ea1c7c0b",
    "0/1/1 Mesh 5217b092",
    "0/2 Group 55dd014c"
   ]
  },
  "shape/bag": {
-  "hash": "f7dcfaeb",
+  "hash": "3a7751a8",
   "nodes": [
    "0 Group 7bf9803f",
    "0/0 Group 27f98c15",
-   "0/0/0 Mesh b6648f3a",
+   "0/0/0 Mesh b3252873",
    "0/0/1 Mesh e47a54ff",
    "0/0/2 Mesh e8ae44f2"
   ]
  },
  "shape/bag:half": {
-  "hash": "f7dcfaeb",
+  "hash": "3a7751a8",
   "nodes": [
    "0 Group 7bf9803f",
    "0/0 Group 27f98c15",
-   "0/0/0 Mesh b6648f3a",
+   "0/0/0 Mesh b3252873",
    "0/0/1 Mesh e47a54ff",
    "0/0/2 Mesh e8ae44f2"
   ]
  },
  "shape/bag:lod": {
-  "hash": "1f92c070",
+  "hash": "e3011a8",
   "nodes": [
    "0 LOD 4027130",
    "0/0 Group 383eacd2",
-   "0/0/0 Mesh 4f084495",
+   "0/0/0 Mesh 6c7a8683",
    "0/0/1 Mesh 6fcee0be",
    "0/0/2 Mesh ac4b0d98",
    "0/1 Group f265c503",
-   "0/1/0 Mesh 8d10320d",
+   "0/1/0 Mesh d26406b7",
    "0/1/1 Mesh f686b560",
    "0/1/2 Mesh cb778f20",
    "0/2 Group 55dd014c"
   ]
  },
  "shape/box": {
-  "hash": "9b34125e",
+  "hash": "d7f1c082",
   "nodes": [
    "0 Group cce3c378",
-   "0/0 Group 48d74b41",
-   "0/0/0 Mesh e10a0411",
+   "0/0 Group 5e1e01be",
+   "0/0/0 Mesh 17473fdc",
    "0/0/1 Mesh e214fc57",
    "0/0/2 Mesh bae159b1"
   ]
  },
  "shape/box:half": {
-  "hash": "9b34125e",
+  "hash": "d7f1c082",
   "nodes": [
    "0 Group cce3c378",
-   "0/0 Group 48d74b41",
-   "0/0/0 Mesh e10a0411",
+   "0/0 Group 5e1e01be",
+   "0/0/0 Mesh 17473fdc",
    "0/0/1 Mesh e214fc57",
    "0/0/2 Mesh bae159b1"
   ]
  },
  "shape/box:lod": {
-  "hash": "58577363",
+  "hash": "a01a0529",
   "nodes": [
    "0 LOD cf1105e5",
    "0/0 Group 335631c5",
-   "0/0/0 Mesh 55645309",
-   "0/0/1 Mesh 874ba10b",
-   "0/0/2 Mesh 848f764e",
+   "0/0/0 Mesh 70e11c74",
+   "0/0/1 Mesh fa246a81",
+   "0/0/2 Mesh 8d369c36",
    "0/1 Group 4d2c060c",
-   "0/1/0 Mesh 3841848d",
-   "0/1/1 Mesh 7edb9ca7",
-   "0/1/2 Mesh f1c80d66",
+   "0/1/0 Mesh 8bb66110",
+   "0/1/1 Mesh 9bd9f7cf",
+   "0/1/2 Mesh f4031792",
    "0/2 Group 55dd014c"
   ]
  },
@@ -10921,74 +10921,74 @@
   ]
  },
  "shape/book": {
-  "hash": "6c24bfdd",
+  "hash": "86d27de1",
   "nodes": [
    "0 Group 3c06ba60",
-   "0/0 Group d8def46c",
-   "0/0/0 Mesh 4fb592af",
-   "0/0/1 Mesh cb1e37e7",
+   "0/0 Group 341b33c6",
+   "0/0/0 Mesh 9b9b7061",
+   "0/0/1 Mesh 439d52f3",
    "0/0/2 Mesh f9cbd392",
    "0/0/3 Mesh d17452a6"
   ]
  },
  "shape/book:half": {
-  "hash": "6c24bfdd",
+  "hash": "86d27de1",
   "nodes": [
    "0 Group 3c06ba60",
-   "0/0 Group d8def46c",
-   "0/0/0 Mesh 4fb592af",
-   "0/0/1 Mesh cb1e37e7",
+   "0/0 Group 341b33c6",
+   "0/0/0 Mesh 9b9b7061",
+   "0/0/1 Mesh 439d52f3",
    "0/0/2 Mesh f9cbd392",
    "0/0/3 Mesh d17452a6"
   ]
  },
  "shape/book:lod": {
-  "hash": "bfdf34af",
+  "hash": "fba238d",
   "nodes": [
    "0 LOD cf4989dd",
    "0/0 Group 5f560097",
-   "0/0/0 Mesh 38e49f04",
+   "0/0/0 Mesh fbe3e2bf",
    "0/0/1 Mesh 83291bf6",
    "0/0/2 Mesh 2f09fa53",
    "0/1 Group 1aa8b44",
-   "0/1/0 Mesh 7a00814",
+   "0/1/0 Mesh 758f33f",
    "0/1/1 Mesh bbe1c0cc",
    "0/1/2 Mesh 8d1f5ee7",
    "0/2 Group 55dd014c"
   ]
  },
  "shape/key": {
-  "hash": "14a9a59a",
+  "hash": "439c05ed",
   "nodes": [
    "0 Group 5ebf08a6",
    "0/0 Group c7c7141e",
    "0/0/0 Mesh 7f6e84ea",
    "0/0/1 Mesh 54560216",
-   "0/0/2 Mesh 768fd7bc",
-   "0/0/3 Mesh d1cea58b"
+   "0/0/2 Mesh 1c85bd42",
+   "0/0/3 Mesh 75a7a206"
   ]
  },
  "shape/key:half": {
-  "hash": "46ba26ed",
+  "hash": "3e2ce7fa",
   "nodes": [
    "0 Group 5ebf08a6",
    "0/0 Group f9197b92",
    "0/0/0 Mesh 85ef3e05",
    "0/0/1 Mesh 54560216",
-   "0/0/2 Mesh 768fd7bc",
-   "0/0/3 Mesh d1cea58b"
+   "0/0/2 Mesh 1c85bd42",
+   "0/0/3 Mesh 75a7a206"
   ]
  },
  "shape/key:lod": {
-  "hash": "dd053936",
+  "hash": "abfad6ad",
   "nodes": [
    "0 LOD 7703d5bf",
    "0/0 Group 7c053393",
    "0/0/0 Mesh ad2e64e3",
-   "0/0/1 Mesh c4f21f64",
+   "0/0/1 Mesh aee3de86",
    "0/1 Group 4b3637ba",
    "0/1/0 Mesh 514c0439",
-   "0/1/1 Mesh a66a4dc9",
+   "0/1/1 Mesh c4200614",
    "0/2 Group 55dd014c"
   ]
  },

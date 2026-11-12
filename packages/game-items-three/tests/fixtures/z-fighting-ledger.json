@@ -448,20 +448,5 @@
   "model/water_jug_5l:merged": 26,
   "model/wheelbarrow": 12,
   "model/wheelbarrow:lod": 12,
-  "model/wheelbarrow:merged": 12,
-  "shape/bag": 8,
-  "shape/bag:half": 8,
-  "shape/bag:lod": 8,
-  "shape/book": 16,
-  "shape/book:half": 16,
-  "shape/book:lod": 16,
-  "shape/box": 22,
-  "shape/box:half": 22,
-  "shape/box:lod": 22,
-  "shape/can": 56,
-  "shape/can:half": 28,
-  "shape/can:lod": 56,
-  "shape/key": 4,
-  "shape/key:half": 4,
-  "shape/key:lod": 4
+  "model/wheelbarrow:merged": 12
 }
