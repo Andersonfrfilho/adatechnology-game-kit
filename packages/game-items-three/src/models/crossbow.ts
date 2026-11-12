@@ -9,7 +9,7 @@ export const crossbow: ItemModelBuilder = ({ mesh, bx, G, wood, metal, cloth }) 
   const prod = metal(0x2f3236)
   const stringMaterial = cloth(0xe3ddc8)
   return G(
-    mesh(bx(7, 0.5, 0.5), stock, [0, -0.35, 0]),
+    mesh(bx(6.7, 0.45, 0.45), stock, [0.15, -0.325, 0]),
     mesh(bx(1.4, 0.9, 0.5), stock, [-2.8, -0.15, 0]),
     mesh(bx(5.4, 0.16, 0.3), wood(0x5d3d22), [0.3, -0.02, 0]),
     mesh(bx(0.8, 0.7, 0.6), metal(0x3a3d40), [2.9, 0, 0]),

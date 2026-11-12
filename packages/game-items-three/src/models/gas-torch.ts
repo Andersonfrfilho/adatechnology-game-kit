@@ -8,7 +8,7 @@ export const gasTorch: ItemModelBuilder = ({ mesh, cyl, G, metal, plastic }) => 
   const brass = metal(0xa88a3c)
   const alongX = [0, 0, Math.PI / 2] as const
   return G(
-    mesh(cyl(5, 5, 22, 12), metal(0xe3b82a), [0, -10, 0]),
+    mesh(cyl(5, 5, 21.8, 12), metal(0xe3b82a), [0, -9.9, 0]),
     mesh(cyl(7.5, 7.5, 1.5, 16), metal(0x3c3f43), [0, -20.25, 0]),
     mesh(cyl(2.2, 5, 2.5, 12), metal(0xe3b82a), [0, 2.25, 0]),
     mesh(cyl(2.4, 2.4, 3, 8), brass, [0, 5, 0]),

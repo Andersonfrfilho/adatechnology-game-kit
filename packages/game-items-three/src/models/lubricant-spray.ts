@@ -5,7 +5,7 @@ import type { ItemModelBuilder } from './registry'
  * It draws in the units of the builder; `data/models.json` gives the scale to metres of the item `lubricant_spray`.
  */
 export const lubricantSpray: ItemModelBuilder = ({ mesh, lathe, cyl, bx, G, metal, plastic, paper }) => {
-  const body = lathe([[0, -0.85], [0.22, -0.85], [0.25, -0.8], [0.25, 0.35], [0.2, 0.55], [0.12, 0.65]], 12)
+  const body = lathe([[0, -0.85], [0.2, -0.85], [0.23, -0.8], [0.23, 0.35], [0.2, 0.55], [0.12, 0.65]], 12)
   const black = plastic(0x1b1c1d)
   return G(
     mesh(body, metal(0xb4b8bb)),

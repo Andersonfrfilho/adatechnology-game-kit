@@ -1,32 +1,32 @@
 {
  "model/canned_beans": {
-  "hash": "dad5fb69",
+  "hash": "1e2d0e1e",
   "nodes": [
    "0 Group 44df815",
    "0/0 Group feaed2ed",
-   "0/0/0 Mesh 887306a7",
-   "0/0/1 Mesh 49b131fa",
+   "0/0/0 Mesh aaf0f611",
+   "0/0/1 Mesh d355c953",
    "0/0/2 Mesh d506b178",
    "0/0/3 Mesh 70b1249e",
    "0/0/4 Mesh 961feb16"
   ]
  },
  "model/canned_beans:merged": {
-  "hash": "58a07f25",
+  "hash": "ff97f641",
   "nodes": [
    "0 Group 44df815",
-   "0/0 Mesh c772204b",
-   "0/1 Mesh 62b5775d",
+   "0/0 Mesh aaadb1d9",
+   "0/1 Mesh bd8e9cf",
    "0/2 Mesh 3eddbe07"
   ]
  },
  "model/canned_beans:lod": {
-  "hash": "513cc1ce",
+  "hash": "b25884ea",
   "nodes": [
    "0 LOD e0e649c2",
    "0/0 Group 7251689d",
-   "0/0/0 Mesh 90369b9e",
-   "0/0/1 Mesh fa80dc73",
+   "0/0/0 Mesh 7dd67bc8",
+   "0/0/1 Mesh 1b70751d",
    "0/0/2 Mesh 97b24a81",
    "0/1 Group f203a881",
    "0/1/0 Mesh 1134539b",
@@ -36,34 +36,34 @@
   ]
  },
  "model/water_bottle": {
-  "hash": "9247b6ad",
+  "hash": "a686c747",
   "nodes": [
    "0 Group 447aefc2",
    "0/0 Group f6893837",
-   "0/0/0 Mesh b1ade163",
+   "0/0/0 Mesh d522441b",
    "0/0/1 Mesh 7c68b624",
-   "0/0/2 Mesh bd19cabe",
+   "0/0/2 Mesh 6c11c71c",
    "0/0/3 Mesh 212a45f4"
   ]
  },
  "model/water_bottle:merged": {
-  "hash": "5c65f269",
+  "hash": "7c1a4fc7",
   "nodes": [
    "0 Group 447aefc2",
-   "0/0 Mesh b9f98b75",
+   "0/0 Mesh 6b2066f6",
    "0/1 Mesh 88a9a53e",
-   "0/2 Mesh 98574e8c",
+   "0/2 Mesh b2db26f1",
    "0/3 Mesh 3537b2c0"
   ]
  },
  "model/water_bottle:lod": {
-  "hash": "1e778530",
+  "hash": "4b422e32",
   "nodes": [
    "0 LOD cba1241d",
    "0/0 Group c07ce4c6",
-   "0/0/0 Mesh b9235756",
+   "0/0/0 Mesh 27ff544d",
    "0/0/1 Mesh a3632764",
-   "0/0/2 Mesh 98aea1ea",
+   "0/0/2 Mesh c28ecc35",
    "0/0/3 Mesh fcffb333",
    "0/1 Group 9fac2b44",
    "0/1/0 Mesh d8a8b7fc",
@@ -147,34 +147,34 @@
   ]
  },
  "model/cachaca": {
-  "hash": "c6c77360",
+  "hash": "f3004d1",
   "nodes": [
    "0 Group fe911d61",
    "0/0 Group af924b15",
-   "0/0/0 Mesh 8616b7a4",
+   "0/0/0 Mesh 22950bf1",
    "0/0/1 Mesh 260581ba",
-   "0/0/2 Mesh a655c9c7",
+   "0/0/2 Mesh c010dce5",
    "0/0/3 Mesh db358d56"
   ]
  },
  "model/cachaca:merged": {
-  "hash": "4c83c965",
+  "hash": "966076ea",
   "nodes": [
    "0 Group fe911d61",
-   "0/0 Mesh 87ad3cfe",
+   "0/0 Mesh be8240a3",
    "0/1 Mesh ff9fed3f",
-   "0/2 Mesh ac383f77",
+   "0/2 Mesh fa694e29",
    "0/3 Mesh 8fc8240e"
   ]
  },
  "model/cachaca:lod": {
-  "hash": "d52b37b0",
+  "hash": "e9b4e293",
   "nodes": [
    "0 LOD 7d62bde3",
    "0/0 Group a5496253",
-   "0/0/0 Mesh f163361c",
+   "0/0/0 Mesh b1bd27c1",
    "0/0/1 Mesh d85a5076",
-   "0/0/2 Mesh 36ff45ba",
+   "0/0/2 Mesh 15997c44",
    "0/0/3 Mesh be59cd19",
    "0/1 Group ad3421e",
    "0/1/0 Mesh 2140191c",
@@ -184,35 +184,35 @@
   ]
  },
  "model/first_aid_kit": {
-  "hash": "7d35a27c",
+  "hash": "ea6bf487",
   "nodes": [
    "0 Group 88a79bf",
    "0/0 Group 182a2576",
    "0/0/0 Mesh 134e6b43",
    "0/0/1 Mesh 7a283537",
    "0/0/2 Mesh b425b4b9",
-   "0/0/3 Mesh 5705876b",
+   "0/0/3 Mesh b43ef022",
    "0/0/4 Mesh a4240dc9"
   ]
  },
  "model/first_aid_kit:merged": {
-  "hash": "20936584",
+  "hash": "1022b0eb",
   "nodes": [
    "0 Group 88a79bf",
    "0/0 Mesh ccbf3755",
    "0/1 Mesh 7e85f8c3",
-   "0/2 Mesh adb2f751",
+   "0/2 Mesh 60da07b8",
    "0/3 Mesh 610b83f0"
   ]
  },
  "model/first_aid_kit:lod": {
-  "hash": "5d05e880",
+  "hash": "dcf3a77b",
   "nodes": [
    "0 LOD ec63863d",
    "0/0 Group d48dde99",
    "0/0/0 Mesh 59215fd8",
    "0/0/1 Mesh 9ea138dc",
-   "0/0/2 Mesh ee198d63",
+   "0/0/2 Mesh c60194a2",
    "0/0/3 Mesh e3327a29",
    "0/1 Group 67af2c4",
    "0/1/0 Mesh 7fc40d96",
@@ -255,11 +255,11 @@
   ]
  },
  "model/amoxicillin": {
-  "hash": "2b2ada14",
+  "hash": "d75c97b6",
   "nodes": [
    "0 Group 2c86aadb",
    "0/0 Group a91834c2",
-   "0/0/0 Mesh ca848994",
+   "0/0/0 Mesh 9f1cc3fa",
    "0/0/1 Mesh cfc3912b",
    "0/0/2 Mesh f75d8fb6",
    "0/0/3 Mesh 2323412b",
@@ -269,10 +269,10 @@
   ]
  },
  "model/amoxicillin:merged": {
-  "hash": "8acc1e14",
+  "hash": "3b2a713d",
   "nodes": [
    "0 Group 2c86aadb",
-   "0/0 Mesh 5b1b6df6",
+   "0/0 Mesh c247d733",
    "0/1 Mesh b4677850",
    "0/2 Mesh e704c24a",
    "0/3 Mesh 8d005e18",
@@ -282,11 +282,11 @@
   ]
  },
  "model/amoxicillin:lod": {
-  "hash": "4f67ff9b",
+  "hash": "fb3de07a",
   "nodes": [
    "0 LOD 533fe718",
    "0/0 Group f345eacb",
-   "0/0/0 Mesh 86fb3aef",
+   "0/0/0 Mesh fa56519a",
    "0/0/1 Mesh ca26ffd8",
    "0/0/2 Mesh 4eb09626",
    "0/0/3 Mesh 5b469b43",
@@ -414,35 +414,35 @@
   ]
  },
  "model/axe": {
-  "hash": "d22d555e",
+  "hash": "612262d9",
   "nodes": [
    "0 Group 92ff7113",
    "0/0 Group b1bfb24b",
    "0/0/0 Mesh 4a876c72",
    "0/0/1 Mesh 77c579a4",
    "0/0/2 Mesh b0278ce4",
-   "0/0/3 Mesh 3943e3cd"
+   "0/0/3 Mesh bd338482"
   ]
  },
  "model/axe:merged": {
-  "hash": "1438d2cf",
+  "hash": "52050b23",
   "nodes": [
    "0 Group 92ff7113",
    "0/0 Mesh b42589a0",
    "0/1 Mesh 3902fac9",
    "0/2 Mesh 91131223",
-   "0/3 Mesh 2fef36c"
+   "0/3 Mesh 28262504"
   ]
  },
  "model/axe:lod": {
-  "hash": "5182b121",
+  "hash": "ddd3a501",
   "nodes": [
    "0 LOD 7336c0c9",
    "0/0 Group ceec1025",
    "0/0/0 Mesh 7dc895bc",
    "0/0/1 Mesh df319739",
    "0/0/2 Mesh 7d0c4d45",
-   "0/0/3 Mesh c3731881",
+   "0/0/3 Mesh 923dc895",
    "0/1 Group 48fc9690",
    "0/1/0 Mesh e1e8a15c",
    "0/1/1 Mesh 72a865e0",
@@ -659,41 +659,41 @@
   ]
  },
  "model/survivor_diary": {
-  "hash": "d2063c85",
+  "hash": "ccee830b",
   "nodes": [
    "0 Group f478f9df",
    "0/0 Group 2597a753",
    "0/0/0 Mesh 9f127860",
    "0/0/1 Mesh 3aaca357",
    "0/0/2 Mesh 58eeca29",
-   "0/0/3 Mesh 4ddc6242",
+   "0/0/3 Mesh f90f7549",
    "0/0/4 Mesh 2c7b2ff2",
-   "0/0/5 Mesh be5ba812"
+   "0/0/5 Mesh 31a51b1d"
   ]
  },
  "model/survivor_diary:merged": {
-  "hash": "f2a73d7f",
+  "hash": "641f8124",
   "nodes": [
    "0 Group f478f9df",
    "0/0 Mesh f23c04e7",
    "0/1 Mesh be0c1162",
    "0/2 Mesh 8f6d5032",
-   "0/3 Mesh 2552bcfd",
+   "0/3 Mesh 3625d24f",
    "0/4 Mesh e0c6b599",
-   "0/5 Mesh 9f970145"
+   "0/5 Mesh ca1bbad0"
   ]
  },
  "model/survivor_diary:lod": {
-  "hash": "28e5dc12",
+  "hash": "319f90d",
   "nodes": [
    "0 LOD fbf8bf6f",
    "0/0 Group 52c4222b",
    "0/0/0 Mesh df76ef3a",
    "0/0/1 Mesh c65f83b3",
    "0/0/2 Mesh 1c7fee1b",
-   "0/0/3 Mesh 79d65621",
+   "0/0/3 Mesh 1666f8f",
    "0/0/4 Mesh 4e3ea814",
-   "0/0/5 Mesh 11f5e61a",
+   "0/0/5 Mesh 1ae3439",
    "0/1 Group 15210c8a",
    "0/1/0 Mesh f30768c",
    "0/1/1 Mesh 2bde40f9",
@@ -782,35 +782,35 @@
   ]
  },
  "model/fuel_jerrycan": {
-  "hash": "af4c4a5f",
+  "hash": "7ca8da9b",
   "nodes": [
    "0 Group e847f035",
    "0/0 Group dadf8d10",
    "0/0/0 Mesh 47d99936",
-   "0/0/1 Mesh d7a3b616",
+   "0/0/1 Mesh 158d81e2",
    "0/0/2 Mesh f285f6d1",
    "0/0/3 Mesh bc6f15b8",
    "0/0/4 Mesh eea3be1f"
   ]
  },
  "model/fuel_jerrycan:merged": {
-  "hash": "c85ee999",
+  "hash": "905b80f0",
   "nodes": [
    "0 Group e847f035",
    "0/0 Mesh 787af5bc",
-   "0/1 Mesh f5e471b4",
+   "0/1 Mesh ce47d443",
    "0/2 Mesh e020648a",
    "0/3 Mesh 5e903852",
    "0/4 Mesh 1d590c2d"
   ]
  },
  "model/fuel_jerrycan:lod": {
-  "hash": "48f825ba",
+  "hash": "d9955c75",
   "nodes": [
    "0 LOD 6fa9e1e4",
    "0/0 Group ddcaaccf",
    "0/0/0 Mesh f1042b03",
-   "0/0/1 Mesh 1c779225",
+   "0/0/1 Mesh b74b12d0",
    "0/0/2 Mesh eb45433d",
    "0/0/3 Mesh 68dd8051",
    "0/0/4 Mesh d06ce34a",
@@ -947,41 +947,41 @@
   ]
  },
  "model/sugar": {
-  "hash": "8d049be1",
+  "hash": "f87c56d7",
   "nodes": [
    "0 Group 1222eff4",
-   "0/0 Group 5d17a248",
-   "0/0/0 Mesh 41d48fa5",
+   "0/0 Group 48ff8a3b",
+   "0/0/0 Mesh 5b7665da",
    "0/0/1 Mesh 3eb5fc81",
-   "0/0/2 Mesh 2f8e5753",
-   "0/0/3 Mesh fecd7860",
-   "0/0/4 Mesh d45836a6",
-   "0/0/5 Mesh e1da567b"
+   "0/0/2 Mesh c28bd899",
+   "0/0/3 Mesh 239d2290",
+   "0/0/4 Mesh d9bf6e81",
+   "0/0/5 Mesh 94d85228"
   ]
  },
  "model/sugar:merged": {
-  "hash": "6ddcc8cc",
+  "hash": "da2b4ad2",
   "nodes": [
    "0 Group 1222eff4",
-   "0/0 Mesh 53a54c7f",
+   "0/0 Mesh 7b76e2f8",
    "0/1 Mesh 779889ab",
-   "0/2 Mesh d2bf0238",
-   "0/3 Mesh bc165378",
-   "0/4 Mesh f9d98826",
-   "0/5 Mesh bb6428e2"
+   "0/2 Mesh a7733f8",
+   "0/3 Mesh e369170c",
+   "0/4 Mesh 51e29a15",
+   "0/5 Mesh 605b2a"
   ]
  },
  "model/sugar:lod": {
-  "hash": "2dc8b3df",
+  "hash": "91511199",
   "nodes": [
    "0 LOD 38f8967f",
    "0/0 Group 8af2814e",
-   "0/0/0 Mesh a10bef0b",
+   "0/0/0 Mesh 70c7a5ba",
    "0/0/1 Mesh 30d6f5a7",
-   "0/0/2 Mesh 6e13429",
-   "0/0/3 Mesh 70425a97",
-   "0/0/4 Mesh afa43bae",
-   "0/0/5 Mesh e0ba8c22",
+   "0/0/2 Mesh ee99a657",
+   "0/0/3 Mesh 9a90fa97",
+   "0/0/4 Mesh 2d68c95d",
+   "0/0/5 Mesh d8695c72",
    "0/1 Group 1cf64bba",
    "0/1/0 Mesh 3fdd9344",
    "0/1/1 Mesh cbb81359",
@@ -990,40 +990,40 @@
   ]
  },
  "model/chocolate_bar": {
-  "hash": "31248e2b",
+  "hash": "9a5b1d9f",
   "nodes": [
    "0 Group 1fcf6383",
-   "0/0 Group 6c94dce9",
-   "0/0/0 Mesh 3442d557",
+   "0/0 Group 3f603b87",
+   "0/0/0 Mesh 71812a37",
    "0/0/1 Mesh 60976929",
    "0/0/2 Mesh b1d3b9b",
    "0/0/3 Mesh 1fabff3f",
    "0/0/4 Mesh 685aea1b",
    "0/0/5 Mesh 23aef594",
    "0/0/6 Mesh a4bb3802",
-   "0/0/7 Mesh 9ebe7a89",
-   "0/0/8 Mesh d95158db"
+   "0/0/7 Mesh 47121f3e",
+   "0/0/8 Mesh 121aae52"
   ]
  },
  "model/chocolate_bar:merged": {
-  "hash": "4475e3cf",
+  "hash": "cb6e5fbc",
   "nodes": [
    "0 Group 1fcf6383",
-   "0/0 Mesh 93a5b1f5",
-   "0/1 Mesh ada6379a",
-   "0/2 Mesh 798ae5",
-   "0/3 Mesh 6607efee"
+   "0/0 Mesh 5aa45bc4",
+   "0/1 Mesh 6b7b222d",
+   "0/2 Mesh 6baff81f",
+   "0/3 Mesh 7d13ed07"
   ]
  },
  "model/chocolate_bar:lod": {
-  "hash": "65c43e3f",
+  "hash": "ed91c650",
   "nodes": [
    "0 LOD 6accf259",
    "0/0 Group b72e1eb9",
-   "0/0/0 Mesh f54b1794",
-   "0/0/1 Mesh 23839ee8",
-   "0/0/2 Mesh fd2a6a3a",
-   "0/0/3 Mesh 38f81a7f",
+   "0/0/0 Mesh fa461d",
+   "0/0/1 Mesh 7e21f03f",
+   "0/0/2 Mesh c3341520",
+   "0/0/3 Mesh d44b38a2",
    "0/1 Group 18454760",
    "0/1/0 Mesh 189f653",
    "0/1/1 Mesh e2d9ede",
@@ -1071,11 +1071,11 @@
   ]
  },
  "model/biscuits": {
-  "hash": "f7e03994",
+  "hash": "3fa3ef57",
   "nodes": [
    "0 Group de68f4d3",
    "0/0 Group 32085d71",
-   "0/0/0 Mesh 67445fcd",
+   "0/0/0 Mesh 6d252ada",
    "0/0/1 Mesh a8d6ec2",
    "0/0/2 Mesh f652e53d",
    "0/0/3 Mesh 8339c09b",
@@ -1087,10 +1087,10 @@
   ]
  },
  "model/biscuits:merged": {
-  "hash": "c703e8ad",
+  "hash": "abcc03c9",
   "nodes": [
    "0 Group de68f4d3",
-   "0/0 Mesh 91616727",
+   "0/0 Mesh a46463df",
    "0/1 Mesh 2bba771b",
    "0/2 Mesh 34a8c285",
    "0/3 Mesh 1a1bc74b",
@@ -1098,11 +1098,11 @@
   ]
  },
  "model/biscuits:lod": {
-  "hash": "14f766a2",
+  "hash": "935c4056",
   "nodes": [
    "0 LOD 39cc2675",
    "0/0 Group 66f4d149",
-   "0/0/0 Mesh 6b795004",
+   "0/0/0 Mesh ed6d3990",
    "0/0/1 Mesh 527d0f31",
    "0/0/2 Mesh 6c1aa663",
    "0/0/3 Mesh 624cf459",
@@ -1155,44 +1155,44 @@
   ]
  },
  "model/raw_beef": {
-  "hash": "6759ed62",
+  "hash": "7a375e5a",
   "nodes": [
    "0 Group 427a0536",
    "0/0 Group c59f3ca6",
    "0/0/0 Mesh 6ee6784f",
-   "0/0/1 Mesh 5bcb00cc",
-   "0/0/2 Mesh 8f95bcd7",
-   "0/0/3 Mesh c35a562e",
-   "0/0/4 Mesh 8007e3ab",
+   "0/0/1 Mesh 601674e2",
+   "0/0/2 Mesh efe8ae15",
+   "0/0/3 Mesh e907f4fd",
+   "0/0/4 Mesh b1ab9a2c",
    "0/0/5 Mesh 1d62f120",
    "0/0/6 Mesh 813c657e",
    "0/0/7 Mesh 9fcdd6ee"
   ]
  },
  "model/raw_beef:merged": {
-  "hash": "28141357",
+  "hash": "aaaa1d24",
   "nodes": [
    "0 Group 427a0536",
    "0/0 Mesh b179209e",
-   "0/1 Mesh 41501f53",
-   "0/2 Mesh 48411e5d",
-   "0/3 Mesh 6a71e167",
-   "0/4 Mesh 4edafe50",
+   "0/1 Mesh 75b4c047",
+   "0/2 Mesh e6e06c92",
+   "0/3 Mesh e4757f7b",
+   "0/4 Mesh e43cbc0",
    "0/5 Mesh 9e867e46",
    "0/6 Mesh 1e0d7050",
    "0/7 Mesh e4bca5ca"
   ]
  },
  "model/raw_beef:lod": {
-  "hash": "e1c47408",
+  "hash": "9cb3c879",
   "nodes": [
    "0 LOD ca2add8a",
    "0/0 Group 2e4998bc",
    "0/0/0 Mesh ab78609f",
-   "0/0/1 Mesh ed30ba5e",
-   "0/0/2 Mesh e6bc7f8",
-   "0/0/3 Mesh 872a7c8a",
-   "0/0/4 Mesh b52bc7a1",
+   "0/0/1 Mesh ccf7602",
+   "0/0/2 Mesh 3736513f",
+   "0/0/3 Mesh ef213218",
+   "0/0/4 Mesh d01f60dd",
    "0/0/5 Mesh 5e64d4a8",
    "0/0/6 Mesh a5a58c97",
    "0/0/7 Mesh d4db66e3",
@@ -1246,36 +1246,36 @@
   ]
  },
  "model/jerked_beef": {
-  "hash": "715015ca",
+  "hash": "e4893ff6",
   "nodes": [
    "0 Group f0bd1bb5",
    "0/0 Group daf2db6",
    "0/0/0 Mesh 7e083b4b",
-   "0/0/1 Mesh 765a3922",
+   "0/0/1 Mesh 764543d",
    "0/0/2 Mesh 721dfb62",
-   "0/0/3 Mesh 2b67882a",
+   "0/0/3 Mesh 8c8e3bf3",
    "0/0/4 Mesh 72058ad7",
    "0/0/5 Mesh b17d8363",
    "0/0/6 Mesh 8fc4862"
   ]
  },
  "model/jerked_beef:merged": {
-  "hash": "69276594",
+  "hash": "b1c87f83",
   "nodes": [
    "0 Group f0bd1bb5",
    "0/0 Mesh 10115f",
-   "0/1 Mesh 7aa854b1",
+   "0/1 Mesh 35bf58ea",
    "0/2 Mesh e59688c",
    "0/3 Mesh a2b7866d"
   ]
  },
  "model/jerked_beef:lod": {
-  "hash": "29e6d01c",
+  "hash": "5e52e2eb",
   "nodes": [
    "0 LOD f63c7e33",
    "0/0 Group f0ed503",
    "0/0/0 Mesh c045168",
-   "0/0/1 Mesh 4006bc7f",
+   "0/0/1 Mesh 7524e150",
    "0/0/2 Mesh 8fa8610d",
    "0/0/3 Mesh dcc69b71",
    "0/1 Group 5f5dc0ae",
@@ -1286,13 +1286,13 @@
   ]
  },
  "model/home_preserves": {
-  "hash": "706f8259",
+  "hash": "7872fa6c",
   "nodes": [
    "0 Group a23cb793",
    "0/0 Group ffc3f3c9",
-   "0/0/0 Mesh 43f0e0ab",
+   "0/0/0 Mesh 7ec74a92",
    "0/0/1 Mesh c1d700c4",
-   "0/0/2 Mesh 72dbd293",
+   "0/0/2 Mesh 7862c5b7",
    "0/0/3 Mesh 76d3c4c5",
    "0/0/4 Mesh 6675743f",
    "0/0/5 Mesh fe710e20",
@@ -1300,12 +1300,12 @@
   ]
  },
  "model/home_preserves:merged": {
-  "hash": "275a9851",
+  "hash": "ae3bbf6e",
   "nodes": [
    "0 Group a23cb793",
-   "0/0 Mesh c12dfce8",
+   "0/0 Mesh 72e3ffcb",
    "0/1 Mesh 690d653d",
-   "0/2 Mesh 422fbf14",
+   "0/2 Mesh 2aa6c60a",
    "0/3 Mesh ffa39e2",
    "0/4 Mesh a0f6fc7a",
    "0/5 Mesh c140e476",
@@ -1313,13 +1313,13 @@
   ]
  },
  "model/home_preserves:lod": {
-  "hash": "95fc358b",
+  "hash": "3307da",
   "nodes": [
    "0 LOD d04a2a9a",
    "0/0 Group e62c973f",
-   "0/0/0 Mesh 914df064",
+   "0/0/0 Mesh 72f584ab",
    "0/0/1 Mesh b1ba6695",
-   "0/0/2 Mesh 884d3b48",
+   "0/0/2 Mesh 851d8c1a",
    "0/0/3 Mesh f1539e9c",
    "0/0/4 Mesh bedbd93f",
    "0/0/5 Mesh 84f1a0b4",
@@ -1332,7 +1332,7 @@
   ]
  },
  "model/eggs": {
-  "hash": "93587dea",
+  "hash": "19d3ac9d",
   "nodes": [
    "0 Group dac3488d",
    "0/0 Group 3ff8c5bc",
@@ -1345,14 +1345,14 @@
    "0/0/6 Mesh b2e45c93",
    "0/0/7 Mesh a95c73d4",
    "0/0/8 Mesh 5552981a",
-   "0/0/9 Mesh d24f8712"
+   "0/0/9 Mesh c12d8bc5"
   ]
  },
  "model/eggs:merged": {
-  "hash": "8a1bb05",
+  "hash": "18df266a",
   "nodes": [
    "0 Group dac3488d",
-   "0/0 Mesh 48157f81",
+   "0/0 Mesh 82ce5e2",
    "0/1 Mesh d2295269",
    "0/2 Mesh 1b09559b",
    "0/3 Mesh 7b428a28",
@@ -1362,11 +1362,11 @@
   ]
  },
  "model/eggs:lod": {
-  "hash": "b6acfb7a",
+  "hash": "a4c1822b",
   "nodes": [
    "0 LOD 19d84827",
    "0/0 Group b3d28fff",
-   "0/0/0 Mesh ff2bbccc",
+   "0/0/0 Mesh bcffb227",
    "0/0/1 Mesh 782df9ef",
    "0/0/2 Mesh d39bf904",
    "0/0/3 Mesh 99e5c5f6",
@@ -1381,38 +1381,38 @@
   ]
  },
  "model/cassava_flour": {
-  "hash": "9ecb20d5",
+  "hash": "725497ab",
   "nodes": [
    "0 Group f97d91bf",
    "0/0 Group e3e9cab8",
    "0/0/0 Mesh 4bd29295",
-   "0/0/1 Mesh 457dd2ef",
-   "0/0/2 Mesh 375a3266",
+   "0/0/1 Mesh d5b0f47a",
+   "0/0/2 Mesh 52fdaca9",
    "0/0/3 Mesh aa3b0638",
    "0/0/4 Mesh 14ff22de",
    "0/0/5 Mesh 7dee1e49"
   ]
  },
  "model/cassava_flour:merged": {
-  "hash": "c284e438",
+  "hash": "e793b980",
   "nodes": [
    "0 Group f97d91bf",
    "0/0 Mesh f759ddc2",
-   "0/1 Mesh 6de1e2f6",
-   "0/2 Mesh 73a1fa55",
+   "0/1 Mesh 3d9a6601",
+   "0/2 Mesh a94f9d2",
    "0/3 Mesh fcef489",
    "0/4 Mesh b4981f75",
    "0/5 Mesh b8bb43a0"
   ]
  },
  "model/cassava_flour:lod": {
-  "hash": "fdfe1399",
+  "hash": "cecfcc87",
   "nodes": [
    "0 LOD 74b7cc38",
    "0/0 Group 2cc7ad71",
    "0/0/0 Mesh 3c328d5d",
-   "0/0/1 Mesh 8960a4d4",
-   "0/0/2 Mesh 92d7a51e",
+   "0/0/1 Mesh 8f1e9d21",
+   "0/0/2 Mesh 8afa307d",
    "0/0/3 Mesh 94ef2625",
    "0/0/4 Mesh 3ab9428d",
    "0/0/5 Mesh 4b41d897",
@@ -1424,13 +1424,13 @@
   ]
  },
  "model/beans": {
-  "hash": "a08ea8e7",
+  "hash": "8db60f8f",
   "nodes": [
    "0 Group 79647464",
    "0/0 Group b0312d10",
    "0/0/0 Mesh 9a2948c0",
-   "0/0/1 Mesh f492868c",
-   "0/0/2 Mesh fb47467c",
+   "0/0/1 Mesh c80b14be",
+   "0/0/2 Mesh 79e3229a",
    "0/0/3 Mesh 846deece",
    "0/0/4 Mesh 98793ef8",
    "0/0/5 Mesh f7ce019f",
@@ -1438,24 +1438,24 @@
   ]
  },
  "model/beans:merged": {
-  "hash": "f255de2e",
+  "hash": "51abc9b",
   "nodes": [
    "0 Group 79647464",
    "0/0 Mesh 571417bf",
-   "0/1 Mesh ffcbac02",
-   "0/2 Mesh 4f00ad3c",
+   "0/1 Mesh 9658b7de",
+   "0/2 Mesh 7080066d",
    "0/3 Mesh ab9a3817",
    "0/4 Mesh 9a776279"
   ]
  },
  "model/beans:lod": {
-  "hash": "50cfccfc",
+  "hash": "cc9d9f99",
   "nodes": [
    "0 LOD 49792180",
    "0/0 Group 77fd26b8",
    "0/0/0 Mesh 33a9f7e4",
-   "0/0/1 Mesh e52cbea1",
-   "0/0/2 Mesh 2868251b",
+   "0/0/1 Mesh 7f62237d",
+   "0/0/2 Mesh ebcf3e2a",
    "0/0/3 Mesh bb6ccd2b",
    "0/0/4 Mesh 768ffd7a",
    "0/1 Group 4f7eeb3",
@@ -1466,7 +1466,7 @@
   ]
  },
  "model/frozen_chicken": {
-  "hash": "8b1fcbfc",
+  "hash": "a53d356",
   "nodes": [
    "0 Group b419bda1",
    "0/0 Group 35617fa",
@@ -1479,11 +1479,11 @@
    "0/0/6 Mesh 2bd7c539",
    "0/0/7 Mesh ac11209f",
    "0/0/8 Mesh 302a311",
-   "0/0/9 Mesh 61a69097"
+   "0/0/9 Mesh c7c7c055"
   ]
  },
  "model/frozen_chicken:merged": {
-  "hash": "62bb68e0",
+  "hash": "88dfa5a5",
   "nodes": [
    "0 Group b419bda1",
    "0/0 Mesh 333a8b1a",
@@ -1491,11 +1491,11 @@
    "0/2 Mesh 6ea7454b",
    "0/3 Mesh 86cc9d9a",
    "0/4 Mesh 999a2750",
-   "0/5 Mesh af3626b9"
+   "0/5 Mesh d2be7354"
   ]
  },
  "model/frozen_chicken:lod": {
-  "hash": "7e9e6698",
+  "hash": "46e8e5b",
   "nodes": [
    "0 LOD 36bd73d3",
    "0/0 Group f501f8d3",
@@ -1504,7 +1504,7 @@
    "0/0/2 Mesh 8387857d",
    "0/0/3 Mesh bd464ddc",
    "0/0/4 Mesh c6560434",
-   "0/0/5 Mesh 5cc19d1a",
+   "0/0/5 Mesh 2f43b7cf",
    "0/1 Group 6cf114ce",
    "0/1/0 Mesh 44b65e7c",
    "0/1/1 Mesh a9a06a07",
@@ -1550,41 +1550,41 @@
   ]
  },
  "model/condensed_milk": {
-  "hash": "8a50b72d",
+  "hash": "65819bd1",
   "nodes": [
    "0 Group 443e5c00",
    "0/0 Group be81c2d2",
-   "0/0/0 Mesh c94b8a26",
+   "0/0/0 Mesh b42bc009",
    "0/0/1 Mesh 88bbe536",
    "0/0/2 Mesh 7ed3fba3",
-   "0/0/3 Mesh 5e2a09c4",
+   "0/0/3 Mesh 2edc9a59",
    "0/0/4 Mesh bc2a4236",
    "0/0/5 Mesh 7e0ad585",
    "0/0/6 Mesh cb60bde5"
   ]
  },
  "model/condensed_milk:merged": {
-  "hash": "ccd012df",
+  "hash": "fb57ac2b",
   "nodes": [
    "0 Group 443e5c00",
-   "0/0 Mesh 1f954d95",
+   "0/0 Mesh 2e5257d0",
    "0/1 Mesh 3d23ed7f",
    "0/2 Mesh 9388e5ff",
-   "0/3 Mesh b036024d",
+   "0/3 Mesh f08c36be",
    "0/4 Mesh fbf71f48",
    "0/5 Mesh 8b343f4e",
    "0/6 Mesh 744d5414"
   ]
  },
  "model/condensed_milk:lod": {
-  "hash": "21c617da",
+  "hash": "bbc850ae",
   "nodes": [
    "0 LOD 7bdd327a",
    "0/0 Group f98a7130",
-   "0/0/0 Mesh a2396c4b",
+   "0/0/0 Mesh aaad2176",
    "0/0/1 Mesh 94dcf4fa",
    "0/0/2 Mesh 56395d9e",
-   "0/0/3 Mesh 34bf1ae4",
+   "0/0/3 Mesh 8b56a6fb",
    "0/0/4 Mesh 69910385",
    "0/0/5 Mesh d4c9efd1",
    "0/0/6 Mesh ddad1da1",
@@ -1596,40 +1596,40 @@
   ]
  },
  "model/pasta": {
-  "hash": "3b3f1cc4",
+  "hash": "23949953",
   "nodes": [
    "0 Group fa6c36bd",
    "0/0 Group 2190da8b",
-   "0/0/0 Mesh 16745592",
+   "0/0/0 Mesh 9a255d27",
    "0/0/1 Mesh 758234a5",
-   "0/0/2 Mesh cb74edb0",
-   "0/0/3 Mesh 8e2ef44c",
-   "0/0/4 Mesh 34fd1af7",
-   "0/0/5 Mesh 89c7aa93",
-   "0/0/6 Mesh 4ebd3d03",
+   "0/0/2 Mesh 5c7fc384",
+   "0/0/3 Mesh 6fc60700",
+   "0/0/4 Mesh b501fced",
+   "0/0/5 Mesh d05d3359",
+   "0/0/6 Mesh 773d5b49",
    "0/0/7 Mesh c0cfd166",
    "0/0/8 Mesh af775102"
   ]
  },
  "model/pasta:merged": {
-  "hash": "fdfcbe22",
+  "hash": "195d1e3d",
   "nodes": [
    "0 Group fa6c36bd",
-   "0/0 Mesh f74a876b",
+   "0/0 Mesh 6a999d2d",
    "0/1 Mesh 6608c2e7",
-   "0/2 Mesh c2564ac4",
+   "0/2 Mesh 2d69cf5d",
    "0/3 Mesh 207ef54a",
    "0/4 Mesh e4cfa6ea"
   ]
  },
  "model/pasta:lod": {
-  "hash": "54f3e07b",
+  "hash": "7c9d5dbc",
   "nodes": [
    "0 LOD 6209c3b4",
    "0/0 Group 57402aff",
-   "0/0/0 Mesh c9d7ff34",
+   "0/0/0 Mesh 46ad3276",
    "0/0/1 Mesh 4194ce18",
-   "0/0/2 Mesh 3c693b50",
+   "0/0/2 Mesh c03f3e9d",
    "0/0/3 Mesh 4bf37a37",
    "0/0/4 Mesh 39ed4a9f",
    "0/1 Group c6c41337",
@@ -1640,40 +1640,40 @@
   ]
  },
  "model/instant_noodles": {
-  "hash": "da074e55",
+  "hash": "b5416bb0",
   "nodes": [
    "0 Group 693d7678",
-   "0/0 Group 9152bb4",
+   "0/0 Group 4c368353",
    "0/0/0 Mesh 3fd1e1a5",
    "0/0/1 Mesh de9dee55",
    "0/0/2 Mesh d78ac038",
-   "0/0/3 Mesh 87c1ced0",
-   "0/0/4 Mesh 77c49fee",
+   "0/0/3 Mesh b86a873d",
+   "0/0/4 Mesh 38985c3f",
    "0/0/5 Mesh f60e4a26"
   ]
  },
  "model/instant_noodles:merged": {
-  "hash": "9e9456b1",
+  "hash": "d41558cc",
   "nodes": [
    "0 Group 693d7678",
    "0/0 Mesh e2d5a07e",
    "0/1 Mesh a66f7207",
    "0/2 Mesh b4162a7c",
-   "0/3 Mesh 933ea1bd",
-   "0/4 Mesh b592f5cf",
+   "0/3 Mesh 1f3785f3",
+   "0/4 Mesh 9b2f7a3a",
    "0/5 Mesh f31c722a"
   ]
  },
  "model/instant_noodles:lod": {
-  "hash": "7407fb1d",
+  "hash": "2ed62d2e",
   "nodes": [
    "0 LOD cadfec7f",
    "0/0 Group c4016546",
    "0/0/0 Mesh 33831815",
    "0/0/1 Mesh d70a983c",
    "0/0/2 Mesh f9e4a18b",
-   "0/0/3 Mesh ef2d4b8c",
-   "0/0/4 Mesh 77c066b2",
+   "0/0/3 Mesh a79bef06",
+   "0/0/4 Mesh 2ff9afaf",
    "0/0/5 Mesh d096f762",
    "0/1 Group c4c5c77a",
    "0/1/0 Mesh ec3507a3",
@@ -1724,44 +1724,44 @@
   ]
  },
  "model/canned_corn_and_peas": {
-  "hash": "bb97382f",
+  "hash": "b86bc4e4",
   "nodes": [
    "0 Group 5ea969b7",
    "0/0 Group 16fb51b4",
-   "0/0/0 Mesh 3e9b77b5",
+   "0/0/0 Mesh ad6ef0e2",
    "0/0/1 Mesh 98ede7ab",
    "0/0/2 Mesh d7e8ac06",
-   "0/0/3 Mesh 1f9a5291",
+   "0/0/3 Mesh c8121b9d",
    "0/0/4 Mesh 63d6ae28",
-   "0/0/5 Mesh 66e6c369",
-   "0/0/6 Mesh 5c1e8d8e"
+   "0/0/5 Mesh d2fd980",
+   "0/0/6 Mesh 84aa5b73"
   ]
  },
  "model/canned_corn_and_peas:merged": {
-  "hash": "2a4fc387",
+  "hash": "72b625fa",
   "nodes": [
    "0 Group 5ea969b7",
-   "0/0 Mesh 971d47fb",
+   "0/0 Mesh a88b037c",
    "0/1 Mesh 3fb279f8",
    "0/2 Mesh 7388e247",
-   "0/3 Mesh b6024d8c",
+   "0/3 Mesh 814113f0",
    "0/4 Mesh 8f5b54e8",
-   "0/5 Mesh 610bd026",
-   "0/6 Mesh 6d8926e1"
+   "0/5 Mesh 9312969e",
+   "0/6 Mesh 88cc4d11"
   ]
  },
  "model/canned_corn_and_peas:lod": {
-  "hash": "c921a5f5",
+  "hash": "a5413446",
   "nodes": [
    "0 LOD f64db57d",
    "0/0 Group 8e33816f",
-   "0/0/0 Mesh dba68b35",
+   "0/0/0 Mesh c00f3ed2",
    "0/0/1 Mesh 3628e189",
    "0/0/2 Mesh 768a37ae",
-   "0/0/3 Mesh 3066e57d",
+   "0/0/3 Mesh a7bafd21",
    "0/0/4 Mesh 866ae68a",
-   "0/0/5 Mesh 4f9e3db2",
-   "0/0/6 Mesh 9fdd9a44",
+   "0/0/5 Mesh 239f8030",
+   "0/0/6 Mesh be1a5530",
    "0/1 Group a7328864",
    "0/1/0 Mesh ac89903e",
    "0/1/1 Mesh d3cdc740",
@@ -1933,13 +1933,13 @@
   ]
  },
  "model/honey_jar": {
-  "hash": "80bde78b",
+  "hash": "a6b0cdde",
   "nodes": [
    "0 Group 144cf6d",
-   "0/0 Group 4f9fdc6a",
-   "0/0/0 Mesh 7017ba6f",
-   "0/0/1 Mesh e3fe4e76",
-   "0/0/2 Mesh 659d7d02",
+   "0/0 Group 31d6c2c6",
+   "0/0/0 Mesh 9e0f74f7",
+   "0/0/1 Mesh 7ec8318e",
+   "0/0/2 Mesh 29440293",
    "0/0/3 Mesh e4c05c4c",
    "0/0/4 Mesh 246d2b2d",
    "0/0/5 Mesh bf10ddb3",
@@ -1947,30 +1947,30 @@
   ]
  },
  "model/honey_jar:merged": {
-  "hash": "5e881e3f",
+  "hash": "61c62b72",
   "nodes": [
    "0 Group 144cf6d",
-   "0/0 Mesh 64261888",
-   "0/1 Mesh d20f8ab7",
-   "0/2 Mesh 81a34536",
+   "0/0 Mesh f82e2522",
+   "0/1 Mesh 4bb534d7",
+   "0/2 Mesh 5396c20c",
    "0/3 Mesh 4e0ed91d",
-   "0/4 Mesh e0cdd546",
+   "0/4 Mesh 74293ba9",
    "0/5 Mesh e7ced0b2",
-   "0/6 Mesh fd8c6819"
+   "0/6 Mesh a947a875"
   ]
  },
  "model/honey_jar:lod": {
-  "hash": "a80e304c",
+  "hash": "f5094bb7",
   "nodes": [
    "0 LOD 3aba284a",
    "0/0 Group db9ff143",
-   "0/0/0 Mesh 3dba0a1b",
-   "0/0/1 Mesh d7cc44d",
-   "0/0/2 Mesh a7ead86d",
+   "0/0/0 Mesh b984ea67",
+   "0/0/1 Mesh b298e8af",
+   "0/0/2 Mesh 6be0d7a7",
    "0/0/3 Mesh df6a0836",
-   "0/0/4 Mesh d8577ff0",
+   "0/0/4 Mesh de325543",
    "0/0/5 Mesh 332f8731",
-   "0/0/6 Mesh 7f9f93c6",
+   "0/0/6 Mesh 75da054e",
    "0/1 Group e76958e9",
    "0/1/0 Mesh ad668f98",
    "0/1/1 Mesh 961c34f",
@@ -2048,40 +2048,40 @@
   ]
  },
  "model/rapadura": {
-  "hash": "ddbff818",
+  "hash": "1167e10d",
   "nodes": [
    "0 Group a692972b",
    "0/0 Group eb899a1c",
-   "0/0/0 Mesh a807d7c5",
-   "0/0/1 Mesh a068919c",
-   "0/0/2 Mesh 570ac83f",
-   "0/0/3 Mesh 6c32c01b",
-   "0/0/4 Mesh 133ec45e",
+   "0/0/0 Mesh 85da6eb8",
+   "0/0/1 Mesh e2cc9989",
+   "0/0/2 Mesh 86c9d4a",
+   "0/0/3 Mesh 3b269e9a",
+   "0/0/4 Mesh d6cc2d89",
    "0/0/5 Mesh 6881b71"
   ]
  },
  "model/rapadura:merged": {
-  "hash": "f5b08c57",
+  "hash": "862f5afc",
   "nodes": [
    "0 Group a692972b",
-   "0/0 Mesh 5d25a696",
-   "0/1 Mesh 602b6ef1",
-   "0/2 Mesh 8caf29eb",
-   "0/3 Mesh 75dfdd85",
-   "0/4 Mesh 70329085",
+   "0/0 Mesh ec20636f",
+   "0/1 Mesh d59fdeb7",
+   "0/2 Mesh f86eb151",
+   "0/3 Mesh 358a0456",
+   "0/4 Mesh e577c8f4",
    "0/5 Mesh 3a9d8ce"
   ]
  },
  "model/rapadura:lod": {
-  "hash": "e76b73b",
+  "hash": "40ee2e3a",
   "nodes": [
    "0 LOD 1e3973e5",
    "0/0 Group 2f28467",
-   "0/0/0 Mesh a135f549",
-   "0/0/1 Mesh abed56fd",
-   "0/0/2 Mesh f9e3036e",
-   "0/0/3 Mesh c4f041d1",
-   "0/0/4 Mesh 8dbb01b2",
+   "0/0/0 Mesh 622f7b3c",
+   "0/0/1 Mesh c1ccc273",
+   "0/0/2 Mesh aae5628",
+   "0/0/3 Mesh cd00eeca",
+   "0/0/4 Mesh 418d05ab",
    "0/0/5 Mesh 525ab036",
    "0/1 Group 76979e4c",
    "0/1/0 Mesh db634f0e",
@@ -2091,45 +2091,45 @@
   ]
  },
  "model/dog_food": {
-  "hash": "3cbb1c51",
+  "hash": "8da41f8c",
   "nodes": [
    "0 Group 35dbe7c1",
-   "0/0 Group e60c9d6d",
-   "0/0/0 Mesh 52eba750",
-   "0/0/1 Mesh 6077a69b",
-   "0/0/2 Mesh 9b521758",
-   "0/0/3 Mesh 73565f6e",
-   "0/0/4 Mesh 122ab649",
-   "0/0/5 Mesh 7c1dbda1",
-   "0/0/6 Mesh 3a514d72",
-   "0/0/7 Mesh 76306898",
-   "0/0/8 Mesh 77f0e895",
-   "0/0/9 Mesh dc35f7f0"
+   "0/0 Group 5051f5f4",
+   "0/0/0 Mesh b5adeb55",
+   "0/0/1 Mesh 5f15fc55",
+   "0/0/2 Mesh 4a37296b",
+   "0/0/3 Mesh 444c5178",
+   "0/0/4 Mesh 6fb82460",
+   "0/0/5 Mesh b031b20a",
+   "0/0/6 Mesh a7c4449b",
+   "0/0/7 Mesh e8362e3d",
+   "0/0/8 Mesh 68e44cde",
+   "0/0/9 Mesh d22dcead"
   ]
  },
  "model/dog_food:merged": {
-  "hash": "ba189138",
+  "hash": "c753e7ce",
   "nodes": [
    "0 Group 35dbe7c1",
-   "0/0 Mesh 19a4c234",
-   "0/1 Mesh d859bdee",
-   "0/2 Mesh efd1c636",
-   "0/3 Mesh 791069d6",
-   "0/4 Mesh f3dbae88",
-   "0/5 Mesh c3764801"
+   "0/0 Mesh 66b21045",
+   "0/1 Mesh ed52618d",
+   "0/2 Mesh 702eacba",
+   "0/3 Mesh 1494419d",
+   "0/4 Mesh 1c09062d",
+   "0/5 Mesh d2c4388b"
   ]
  },
  "model/dog_food:lod": {
-  "hash": "22bf1bb3",
+  "hash": "6c575069",
   "nodes": [
    "0 LOD 78328b5c",
    "0/0 Group 90388eb1",
-   "0/0/0 Mesh 7b4b38a2",
-   "0/0/1 Mesh 847a9c63",
-   "0/0/2 Mesh 5529c216",
-   "0/0/3 Mesh d9de21e8",
-   "0/0/4 Mesh 2eb0dd3a",
-   "0/0/5 Mesh da14c75",
+   "0/0/0 Mesh b8b85bf3",
+   "0/0/1 Mesh bd4a0a0c",
+   "0/0/2 Mesh 42a5b642",
+   "0/0/3 Mesh e6e960a3",
+   "0/0/4 Mesh 70bb6853",
+   "0/0/5 Mesh 48ff5583",
    "0/1 Group 48b856ff",
    "0/1/0 Mesh b1d60fe5",
    "0/1/1 Mesh 5e32966",
@@ -2138,39 +2138,39 @@
   ]
  },
  "model/salt": {
-  "hash": "2cdd865d",
+  "hash": "a3f1339d",
   "nodes": [
    "0 Group cd59d27d",
    "0/0 Group 8597b80a",
-   "0/0/0 Mesh a4898e5c",
-   "0/0/1 Mesh bda01b3",
+   "0/0/0 Mesh 1127e1f0",
+   "0/0/1 Mesh 2ec52347",
    "0/0/2 Mesh 87ea111f",
-   "0/0/3 Mesh c1416298",
+   "0/0/3 Mesh d5160c06",
    "0/0/4 Mesh ca42050a",
    "0/0/5 Mesh 37cf45f3"
   ]
  },
  "model/salt:merged": {
-  "hash": "1f0fcd9f",
+  "hash": "ac930478",
   "nodes": [
    "0 Group cd59d27d",
-   "0/0 Mesh 9bba33ab",
-   "0/1 Mesh a151ae49",
+   "0/0 Mesh 8761e2c1",
+   "0/1 Mesh 54a2acbd",
    "0/2 Mesh cb9b6a0",
-   "0/3 Mesh ce114e13",
+   "0/3 Mesh 10ae00de",
    "0/4 Mesh 70d01516",
    "0/5 Mesh c317699"
   ]
  },
  "model/salt:lod": {
-  "hash": "ebde8ce3",
+  "hash": "99cc2388",
   "nodes": [
    "0 LOD 56306aad",
    "0/0 Group 42efb45d",
-   "0/0/0 Mesh e4e1ac0e",
-   "0/0/1 Mesh 3137a1c7",
+   "0/0/0 Mesh 552d3ec",
+   "0/0/1 Mesh 16290233",
    "0/0/2 Mesh f04c7fe9",
-   "0/0/3 Mesh caf977b6",
+   "0/0/3 Mesh 676c13ff",
    "0/0/4 Mesh cc626f07",
    "0/0/5 Mesh 294b85f5",
    "0/1 Group f5a3b8d4",
@@ -2224,47 +2224,47 @@
   ]
  },
  "model/canned_sausages": {
-  "hash": "f553b81",
+  "hash": "32769d44",
   "nodes": [
    "0 Group 902501c1",
    "0/0 Group 628caf83",
-   "0/0/0 Mesh 3e9b77b5",
+   "0/0/0 Mesh ad6ef0e2",
    "0/0/1 Mesh 98ede7ab",
    "0/0/2 Mesh d7e8ac06",
-   "0/0/3 Mesh 10db8505",
+   "0/0/3 Mesh 98e8d211",
    "0/0/4 Mesh 95a69d5c",
    "0/0/5 Mesh e663ab13",
-   "0/0/6 Mesh d72c0854",
-   "0/0/7 Mesh 23e10cbc"
+   "0/0/6 Mesh a0f803b3",
+   "0/0/7 Mesh 6649bf57"
   ]
  },
  "model/canned_sausages:merged": {
-  "hash": "1460a8f9",
+  "hash": "9715f44f",
   "nodes": [
    "0 Group 902501c1",
-   "0/0 Mesh 971d47fb",
+   "0/0 Mesh a88b037c",
    "0/1 Mesh 3fb279f8",
    "0/2 Mesh 7388e247",
-   "0/3 Mesh e0956dbc",
+   "0/3 Mesh 4c9dd8e0",
    "0/4 Mesh fcec354b",
    "0/5 Mesh a3ba5368",
-   "0/6 Mesh 5711352c",
-   "0/7 Mesh e923aa0d"
+   "0/6 Mesh b7971444",
+   "0/7 Mesh 1add07dc"
   ]
  },
  "model/canned_sausages:lod": {
-  "hash": "b008abf2",
+  "hash": "77508e48",
   "nodes": [
    "0 LOD 3516b057",
    "0/0 Group dd4438f7",
-   "0/0/0 Mesh dba68b35",
+   "0/0/0 Mesh c00f3ed2",
    "0/0/1 Mesh 3628e189",
    "0/0/2 Mesh 768a37ae",
-   "0/0/3 Mesh 8e190cfa",
+   "0/0/3 Mesh 151fe42e",
    "0/0/4 Mesh c3bdccf7",
    "0/0/5 Mesh fb5eacc6",
-   "0/0/6 Mesh 2c7b096f",
-   "0/0/7 Mesh 2b949b5f",
+   "0/0/6 Mesh cea00e83",
+   "0/0/7 Mesh 3a7005be",
    "0/1 Group b8873c52",
    "0/1/0 Mesh 45c1fe2b",
    "0/1/1 Mesh 49b507cb",
@@ -2273,40 +2273,40 @@
   ]
  },
  "model/canned_sardines": {
-  "hash": "2ae1c491",
+  "hash": "faaa348b",
   "nodes": [
    "0 Group d6a2fdc0",
    "0/0 Group 4ff7f475",
-   "0/0/0 Mesh 13ee6fdb",
-   "0/0/1 Mesh d7910b49",
-   "0/0/2 Mesh b3efdb61",
+   "0/0/0 Mesh 8c97e4e1",
+   "0/0/1 Mesh 9cdb3a7a",
+   "0/0/2 Mesh d7ca5834",
    "0/0/3 Mesh 4984584d",
-   "0/0/4 Mesh d8a2840f",
+   "0/0/4 Mesh a9980061",
    "0/0/5 Mesh f0a505c8"
   ]
  },
  "model/canned_sardines:merged": {
-  "hash": "d0c376db",
+  "hash": "e1db86e1",
   "nodes": [
    "0 Group d6a2fdc0",
-   "0/0 Mesh 7159b721",
-   "0/1 Mesh 47b1dc30",
-   "0/2 Mesh 90d5033a",
+   "0/0 Mesh b7ff20e2",
+   "0/1 Mesh d728f089",
+   "0/2 Mesh 38e31090",
    "0/3 Mesh ea64bf2c",
-   "0/4 Mesh 338b7695",
+   "0/4 Mesh b05efe91",
    "0/5 Mesh 32d7eecb"
   ]
  },
  "model/canned_sardines:lod": {
-  "hash": "8780cf9c",
+  "hash": "faf44098",
   "nodes": [
    "0 LOD bacf59e4",
    "0/0 Group 2bbf4f2c",
-   "0/0/0 Mesh 8fd3ca3f",
-   "0/0/1 Mesh 9b786c1f",
-   "0/0/2 Mesh b5f8932f",
+   "0/0/0 Mesh cac6d118",
+   "0/0/1 Mesh 2a9554c2",
+   "0/0/2 Mesh 8aba124d",
    "0/0/3 Mesh 2be9e31f",
-   "0/0/4 Mesh a69d4354",
+   "0/0/4 Mesh 586f2f6",
    "0/0/5 Mesh e20a1406",
    "0/1 Group 31cf6fc7",
    "0/1/0 Mesh 2af110e0",
@@ -2316,40 +2316,40 @@
   ]
  },
  "model/cooking_oil": {
-  "hash": "92b7d0a0",
+  "hash": "9b5b7a62",
   "nodes": [
    "0 Group b52a3902",
    "0/0 Group 758f65ed",
-   "0/0/0 Mesh c03f188b",
-   "0/0/1 Mesh 4e6b2c37",
+   "0/0/0 Mesh 5cf86418",
+   "0/0/1 Mesh d2724858",
    "0/0/2 Mesh 8abd3209",
    "0/0/3 Mesh a8628186",
-   "0/0/4 Mesh 319f6c3e",
+   "0/0/4 Mesh affd055a",
    "0/0/5 Mesh 4c50fdc1"
   ]
  },
  "model/cooking_oil:merged": {
-  "hash": "413f811d",
+  "hash": "9ba7bd57",
   "nodes": [
    "0 Group b52a3902",
-   "0/0 Mesh 39148aa2",
-   "0/1 Mesh a9e8a903",
+   "0/0 Mesh 2c41d702",
+   "0/1 Mesh 658647dd",
    "0/2 Mesh fe96dbd8",
    "0/3 Mesh 93fd1f5a",
-   "0/4 Mesh 3f728a3b",
+   "0/4 Mesh 302bf847",
    "0/5 Mesh 914ed207"
   ]
  },
  "model/cooking_oil:lod": {
-  "hash": "e0f9f3bc",
+  "hash": "ea9867e",
   "nodes": [
    "0 LOD cb370890",
    "0/0 Group 83a1db54",
-   "0/0/0 Mesh 5d03ce58",
-   "0/0/1 Mesh 517bed3d",
+   "0/0/0 Mesh 44986390",
+   "0/0/1 Mesh 590e080b",
    "0/0/2 Mesh 3abb413e",
    "0/0/3 Mesh dbbdf457",
-   "0/0/4 Mesh 9d5caa69",
+   "0/0/4 Mesh 4f9da8a9",
    "0/0/5 Mesh 5aa133c6",
    "0/1 Group 20e60c83",
    "0/1/0 Mesh 544a0994",
@@ -2359,24 +2359,24 @@
   ]
  },
  "model/beer_can": {
-  "hash": "15e9e30c",
+  "hash": "51f3f50",
   "nodes": [
    "0 Group 96364835",
    "0/0 Group fcfe3c02",
-   "0/0/0 Mesh a040630c",
-   "0/0/1 Mesh 716ff037",
+   "0/0/0 Mesh c7ac78fe",
+   "0/0/1 Mesh 3d2a00a0",
    "0/0/2 Mesh 58c1c8e4",
    "0/0/3 Mesh ce00678b",
-   "0/0/4 Mesh 16b076aa",
+   "0/0/4 Mesh 2c877b7f",
    "0/0/5 Mesh 4aedfa23",
    "0/0/6 Mesh 5dd98a0c"
   ]
  },
  "model/beer_can:merged": {
-  "hash": "9dfa54f6",
+  "hash": "c60c72cf",
   "nodes": [
    "0 Group 96364835",
-   "0/0 Mesh 6febb464",
+   "0/0 Mesh 93c98aed",
    "0/1 Mesh 1710f404",
    "0/2 Mesh f92c5e8c",
    "0/3 Mesh b140687b",
@@ -2384,11 +2384,11 @@
   ]
  },
  "model/beer_can:lod": {
-  "hash": "f6522cd6",
+  "hash": "1f1c0e9",
   "nodes": [
    "0 LOD a1a0732c",
    "0/0 Group 9ce3b541",
-   "0/0/0 Mesh f2294662",
+   "0/0/0 Mesh 80e07103",
    "0/0/1 Mesh 9d33475f",
    "0/0/2 Mesh 9261eee6",
    "0/0/3 Mesh a1ddc60c",
@@ -2401,25 +2401,25 @@
   ]
  },
  "model/energy_drink": {
-  "hash": "419315a6",
+  "hash": "8d885de0",
   "nodes": [
    "0 Group 98af8e27",
    "0/0 Group f36b193d",
-   "0/0/0 Mesh 255596e0",
-   "0/0/1 Mesh 51e89c2b",
+   "0/0/0 Mesh b395cb27",
+   "0/0/1 Mesh 5200d1fb",
    "0/0/2 Mesh 5c8ac990",
    "0/0/3 Mesh d269a6f4",
    "0/0/4 Mesh 852ae025",
-   "0/0/5 Mesh 77c8635",
+   "0/0/5 Mesh 2b218dda",
    "0/0/6 Mesh 7b648788",
    "0/0/7 Mesh 6bff6956"
   ]
  },
  "model/energy_drink:merged": {
-  "hash": "3f10c9a6",
+  "hash": "5aa87d7a",
   "nodes": [
    "0 Group 98af8e27",
-   "0/0 Mesh 91a49bdc",
+   "0/0 Mesh 47289a84",
    "0/1 Mesh cc28545",
    "0/2 Mesh 62c860dc",
    "0/3 Mesh 5944dcb0",
@@ -2428,11 +2428,11 @@
   ]
  },
  "model/energy_drink:lod": {
-  "hash": "50bf0e58",
+  "hash": "9fbdc5f0",
   "nodes": [
    "0 LOD a154262e",
    "0/0 Group 784c2043",
-   "0/0/0 Mesh d1e4f67f",
+   "0/0/0 Mesh ad92ce4f",
    "0/0/1 Mesh 717011c3",
    "0/0/2 Mesh e6fb8eab",
    "0/0/3 Mesh cfd05c07",
@@ -2446,42 +2446,42 @@
   ]
  },
  "model/water_jug_5l": {
-  "hash": "732466fc",
+  "hash": "327a5e91",
   "nodes": [
    "0 Group fad210f4",
-   "0/0 Group d530cfb0",
-   "0/0/0 Mesh 6ecfacd4",
+   "0/0 Group fff9eac1",
+   "0/0/0 Mesh 6a582ef7",
    "0/0/1 Mesh 45dc8d8e",
    "0/0/2 Mesh b2308b73",
    "0/0/3 Mesh 936023b3",
-   "0/0/4 Mesh 7a0ec35e",
+   "0/0/4 Mesh d1bee98f",
    "0/0/5 Mesh 13b511e7",
    "0/0/6 Mesh 55af6721",
-   "0/0/7 Mesh 14b4d44c",
-   "0/0/8 Mesh e14f5da4"
+   "0/0/7 Mesh 5e36acf4",
+   "0/0/8 Mesh 1d11e05a"
   ]
  },
  "model/water_jug_5l:merged": {
-  "hash": "831a97f7",
+  "hash": "c76245a5",
   "nodes": [
    "0 Group fad210f4",
-   "0/0 Mesh 33c508c9",
-   "0/1 Mesh 55498c49",
-   "0/2 Mesh 761bcb2f",
-   "0/3 Mesh 4b7b7895",
-   "0/4 Mesh 2d8d2030"
+   "0/0 Mesh 24719a21",
+   "0/1 Mesh c48078f7",
+   "0/2 Mesh aa15f2e7",
+   "0/3 Mesh 60277fa9",
+   "0/4 Mesh 6cef4fc4"
   ]
  },
  "model/water_jug_5l:lod": {
-  "hash": "a253e260",
+  "hash": "8ea3056a",
   "nodes": [
    "0 LOD 2f2d098f",
    "0/0 Group eafd964",
-   "0/0/0 Mesh b9f3df12",
-   "0/0/1 Mesh 528028fa",
-   "0/0/2 Mesh 3d14dd90",
-   "0/0/3 Mesh 2297908a",
-   "0/0/4 Mesh e5f9a3df",
+   "0/0/0 Mesh 3c1ecc76",
+   "0/0/1 Mesh b029e2c4",
+   "0/0/2 Mesh dee31bd8",
+   "0/0/3 Mesh f45cb4d2",
+   "0/0/4 Mesh d1e2e123",
    "0/1 Group eca7a42a",
    "0/1/0 Mesh 70d3d13a",
    "0/1/1 Mesh 28ff15a7",
@@ -2490,11 +2490,11 @@
   ]
  },
  "model/sports_drink": {
-  "hash": "4d4476b5",
+  "hash": "769fd3eb",
   "nodes": [
    "0 Group ca484a62",
    "0/0 Group 255a8b8d",
-   "0/0/0 Mesh 6fec852e",
+   "0/0/0 Mesh d09e9130",
    "0/0/1 Mesh c6c5c33e",
    "0/0/2 Mesh 1c6de362",
    "0/0/3 Mesh aac13a88",
@@ -2502,10 +2502,10 @@
   ]
  },
  "model/sports_drink:merged": {
-  "hash": "fed60dd6",
+  "hash": "3d8fc110",
   "nodes": [
    "0 Group ca484a62",
-   "0/0 Mesh 1cca7ac3",
+   "0/0 Mesh d44ea34d",
    "0/1 Mesh 13febdaf",
    "0/2 Mesh 22e2eb0e",
    "0/3 Mesh 9c24613",
@@ -2513,11 +2513,11 @@
   ]
  },
  "model/sports_drink:lod": {
-  "hash": "f2543e01",
+  "hash": "d26ee307",
   "nodes": [
    "0 LOD 6ed149ef",
    "0/0 Group f1ca07c2",
-   "0/0/0 Mesh 10ec8212",
+   "0/0/0 Mesh 6ead5aa8",
    "0/0/1 Mesh 639c4292",
    "0/0/2 Mesh 393ab9a1",
    "0/0/3 Mesh c6bd0006",
@@ -2530,41 +2530,41 @@
   ]
  },
  "model/milk_carton": {
-  "hash": "8485328d",
+  "hash": "ff614432",
   "nodes": [
    "0 Group 1646f232",
    "0/0 Group 9cd64e7d",
-   "0/0/0 Mesh 8595a467",
-   "0/0/1 Mesh 5c6ac811",
-   "0/0/2 Mesh e944cfc6",
-   "0/0/3 Mesh 2f54d2a5",
-   "0/0/4 Mesh ad077a34",
-   "0/0/5 Mesh ef89b7ad",
+   "0/0/0 Mesh 4a16d23a",
+   "0/0/1 Mesh 1951e753",
+   "0/0/2 Mesh d56b88de",
+   "0/0/3 Mesh d109e9c5",
+   "0/0/4 Mesh e163ddd9",
+   "0/0/5 Mesh f7e76a96",
    "0/0/6 Mesh d0ec4ae4"
   ]
  },
  "model/milk_carton:merged": {
-  "hash": "15fbf39c",
+  "hash": "91e7b2cc",
   "nodes": [
    "0 Group 1646f232",
-   "0/0 Mesh 38bd55ff",
-   "0/1 Mesh e909ee1",
-   "0/2 Mesh a1f1c3e0",
-   "0/3 Mesh 5a373074",
-   "0/4 Mesh 6be03826",
+   "0/0 Mesh ca9207b7",
+   "0/1 Mesh 13a290f1",
+   "0/2 Mesh c9eee4c1",
+   "0/3 Mesh d8bcc267",
+   "0/4 Mesh 48a423e",
    "0/5 Mesh ebd8d802"
   ]
  },
  "model/milk_carton:lod": {
-  "hash": "c72624ca",
+  "hash": "8371c18a",
   "nodes": [
    "0 LOD 6100964",
    "0/0 Group 9717bafe",
-   "0/0/0 Mesh df780434",
-   "0/0/1 Mesh 8aaa30ae",
-   "0/0/2 Mesh 50a72d13",
-   "0/0/3 Mesh aabf4887",
-   "0/0/4 Mesh 6502a325",
+   "0/0/0 Mesh 76604c9c",
+   "0/0/1 Mesh e6aaf05e",
+   "0/0/2 Mesh 7953e978",
+   "0/0/3 Mesh 5598c444",
+   "0/0/4 Mesh aedcfff3",
    "0/0/5 Mesh 1fe2452f",
    "0/1 Group badb54a7",
    "0/1/0 Mesh 11b6723f",
@@ -2574,34 +2574,34 @@
   ]
  },
  "model/soda_can": {
-  "hash": "2ebc897",
+  "hash": "ac54190b",
   "nodes": [
    "0 Group 9907291c",
    "0/0 Group cde7497d",
-   "0/0/0 Mesh 1e3559d2",
-   "0/0/1 Mesh d837a081",
+   "0/0/0 Mesh a2fb3048",
+   "0/0/1 Mesh a09a28ee",
    "0/0/2 Mesh dd47d026",
-   "0/0/3 Mesh 1e1c5ce7",
+   "0/0/3 Mesh cd876814",
    "0/0/4 Mesh 558a8801",
    "0/0/5 Mesh f74fa084"
   ]
  },
  "model/soda_can:merged": {
-  "hash": "35d57c2d",
+  "hash": "d60a33ed",
   "nodes": [
    "0 Group 9907291c",
-   "0/0 Mesh c07fabfa",
+   "0/0 Mesh fa8788ee",
    "0/1 Mesh 9169475d",
    "0/2 Mesh f14b3f0d",
    "0/3 Mesh fa79285d"
   ]
  },
  "model/soda_can:lod": {
-  "hash": "a02ccfb1",
+  "hash": "49d59b81",
   "nodes": [
    "0 LOD 78da73c5",
    "0/0 Group 22300560",
-   "0/0/0 Mesh 1f49c67a",
+   "0/0/0 Mesh c7c8dd2e",
    "0/0/1 Mesh e18899dd",
    "0/0/2 Mesh f3f5e0be",
    "0/0/3 Mesh c00ac6a6",
@@ -2613,39 +2613,39 @@
   ]
  },
  "model/juice_box": {
-  "hash": "de7fc46f",
+  "hash": "affd6b54",
   "nodes": [
    "0 Group 838039d7",
-   "0/0 Group 6acc5599",
-   "0/0/0 Mesh 337d0fc7",
+   "0/0 Group 534cd542",
+   "0/0/0 Mesh c3c43cb",
    "0/0/1 Mesh 8bcfbae1",
-   "0/0/2 Mesh 6a448681",
-   "0/0/3 Mesh 45bfa278",
+   "0/0/2 Mesh 6c04429a",
+   "0/0/3 Mesh e3d440a5",
    "0/0/4 Mesh 37f7e1bc",
    "0/0/5 Mesh fe942b1b"
   ]
  },
  "model/juice_box:merged": {
-  "hash": "5f93ef14",
+  "hash": "636eed95",
   "nodes": [
    "0 Group 838039d7",
-   "0/0 Mesh 3997f471",
+   "0/0 Mesh d5d4c78b",
    "0/1 Mesh 98f2f761",
-   "0/2 Mesh ebea15b4",
-   "0/3 Mesh 7488c4a3",
+   "0/2 Mesh 5758e02a",
+   "0/3 Mesh d89422d6",
    "0/4 Mesh 6036b77e",
    "0/5 Mesh d060e128"
   ]
  },
  "model/juice_box:lod": {
-  "hash": "34c1020d",
+  "hash": "d0947bd2",
   "nodes": [
    "0 LOD 30472ce7",
    "0/0 Group bebdeae5",
-   "0/0/0 Mesh ed5c9786",
+   "0/0/0 Mesh 5c9bd3c8",
    "0/0/1 Mesh dbc519e4",
-   "0/0/2 Mesh 2d739cd6",
-   "0/0/3 Mesh 17c2861a",
+   "0/0/2 Mesh c0c56c70",
+   "0/0/3 Mesh fae95d1f",
    "0/0/4 Mesh c3238a0d",
    "0/0/5 Mesh b6192edc",
    "0/1 Group e74040a2",
@@ -2656,12 +2656,12 @@
   ]
  },
  "model/communion_wine": {
-  "hash": "795d5a3f",
+  "hash": "b568fc90",
   "nodes": [
    "0 Group c42dd207",
    "0/0 Group e6e69a9c",
-   "0/0/0 Mesh 3a0d4e93",
-   "0/0/1 Mesh 71c481c2",
+   "0/0/0 Mesh 72c20ca2",
+   "0/0/1 Mesh b71ddea6",
    "0/0/2 Mesh ca95e332",
    "0/0/3 Mesh 4b0586f0",
    "0/0/4 Mesh e228c0a0",
@@ -2669,11 +2669,11 @@
   ]
  },
  "model/communion_wine:merged": {
-  "hash": "d9cad6b",
+  "hash": "8565e534",
   "nodes": [
    "0 Group c42dd207",
-   "0/0 Mesh 62d7a53e",
-   "0/1 Mesh 9423f77f",
+   "0/0 Mesh 2050ae0f",
+   "0/1 Mesh df84f1ab",
    "0/2 Mesh 1c0a144",
    "0/3 Mesh 16428435",
    "0/4 Mesh f8bfda8c",
@@ -2681,12 +2681,12 @@
   ]
  },
  "model/communion_wine:lod": {
-  "hash": "a95d5394",
+  "hash": "818eadd",
   "nodes": [
    "0 LOD 1b651cb6",
    "0/0 Group a9f1d87b",
-   "0/0/0 Mesh 4b57fda9",
-   "0/0/1 Mesh 2ee13221",
+   "0/0/0 Mesh ea0023fe",
+   "0/0/1 Mesh fd3f6e51",
    "0/0/2 Mesh edb9529f",
    "0/0/3 Mesh 203ecd4c",
    "0/0/4 Mesh aa789849",
@@ -2699,11 +2699,11 @@
   ]
  },
  "model/coconut_water": {
-  "hash": "c0e5155",
+  "hash": "d48f9aba",
   "nodes": [
    "0 Group 33b16df4",
    "0/0 Group 67822565",
-   "0/0/0 Mesh df606086",
+   "0/0/0 Mesh 7a022a81",
    "0/0/1 Mesh 9fa556dc",
    "0/0/2 Mesh 40f19174",
    "0/0/3 Mesh e37caeb2",
@@ -2712,10 +2712,10 @@
   ]
  },
  "model/coconut_water:merged": {
-  "hash": "c7bbce93",
+  "hash": "b9b731f0",
   "nodes": [
    "0 Group 33b16df4",
-   "0/0 Mesh 27030393",
+   "0/0 Mesh 366184ba",
    "0/1 Mesh 34eedd51",
    "0/2 Mesh a1df8b86",
    "0/3 Mesh fea8c624",
@@ -2724,11 +2724,11 @@
   ]
  },
  "model/coconut_water:lod": {
-  "hash": "83c4df46",
+  "hash": "88e04e31",
   "nodes": [
    "0 LOD c278d658",
    "0/0 Group 4599b9e0",
-   "0/0/0 Mesh 3ee318b3",
+   "0/0/0 Mesh b977cc22",
    "0/0/1 Mesh f43dbdd9",
    "0/0/2 Mesh b3452f3a",
    "0/0/3 Mesh 64574fe8",
@@ -2742,36 +2742,36 @@
   ]
  },
  "model/dirty_water": {
-  "hash": "d5b9bc94",
+  "hash": "22e77317",
   "nodes": [
    "0 Group 911dad3c",
    "0/0 Group cbb75842",
-   "0/0/0 Mesh 2400b3ab",
-   "0/0/1 Mesh f39162b8",
-   "0/0/2 Mesh c812c686",
+   "0/0/0 Mesh 7519f1cf",
+   "0/0/1 Mesh 4e715e46",
+   "0/0/2 Mesh 1874927f",
    "0/0/3 Mesh 32587c68",
    "0/0/4 Mesh 8b1963f5"
   ]
  },
  "model/dirty_water:merged": {
-  "hash": "5897fc2d",
+  "hash": "a55ab19a",
   "nodes": [
    "0 Group 911dad3c",
-   "0/0 Mesh 212718ce",
-   "0/1 Mesh 20854f0c",
-   "0/2 Mesh 434d8b08",
+   "0/0 Mesh 5056f85b",
+   "0/1 Mesh eb7e8d4d",
+   "0/2 Mesh dbf514e7",
    "0/3 Mesh 28b7184a",
    "0/4 Mesh 1e83c016"
   ]
  },
  "model/dirty_water:lod": {
-  "hash": "bc058155",
+  "hash": "42eedb20",
   "nodes": [
    "0 LOD d342528d",
    "0/0 Group 7d18093a",
-   "0/0/0 Mesh 4d10ba45",
-   "0/0/1 Mesh 7c86eb4b",
-   "0/0/2 Mesh 9d9611e6",
+   "0/0/0 Mesh c66db79e",
+   "0/0/1 Mesh 37af0c70",
+   "0/0/2 Mesh cc41cf39",
    "0/0/3 Mesh bb95c738",
    "0/0/4 Mesh 419c0a09",
    "0/1 Group ce404234",
@@ -2782,12 +2782,12 @@
   ]
  },
  "model/painkillers": {
-  "hash": "f96db571",
+  "hash": "972d7beb",
   "nodes": [
    "0 Group 6f738b43",
-   "0/0 Group 9794a57",
-   "0/0/0 Mesh a7de8d6e",
-   "0/0/1 Mesh 44ba8ee",
+   "0/0 Group 3eaf7af9",
+   "0/0/0 Mesh bd6aeef3",
+   "0/0/1 Mesh ef598485",
    "0/0/2 Mesh b0ce7af2",
    "0/0/3 Mesh 85cee82e",
    "0/0/4 Mesh 79650bba",
@@ -2797,22 +2797,22 @@
   ]
  },
  "model/painkillers:merged": {
-  "hash": "a2214ec5",
+  "hash": "61fa3eba",
   "nodes": [
    "0 Group 6f738b43",
-   "0/0 Mesh d0b4f62b",
-   "0/1 Mesh 42b55316",
-   "0/2 Mesh 8d81f4c2"
+   "0/0 Mesh 18e3f9ba",
+   "0/1 Mesh 4848b9de",
+   "0/2 Mesh 1a1a37be"
   ]
  },
  "model/painkillers:lod": {
-  "hash": "8f78aca",
+  "hash": "e4a4f9db",
   "nodes": [
    "0 LOD 1d1d2f99",
    "0/0 Group e43d68cd",
-   "0/0/0 Mesh cc8eace1",
-   "0/0/1 Mesh 7ded0546",
-   "0/0/2 Mesh d65af965",
+   "0/0/0 Mesh da0e9300",
+   "0/0/1 Mesh ffeecb86",
+   "0/0/2 Mesh e7c525f1",
    "0/1 Group 2fee32e0",
    "0/1/0 Mesh db8e211e",
    "0/1/1 Mesh 27748f9f",
@@ -2821,38 +2821,38 @@
   ]
  },
  "model/tramadol": {
-  "hash": "4b4c9b6f",
+  "hash": "83e709b6",
   "nodes": [
    "0 Group e783776",
-   "0/0 Group 7bf70078",
-   "0/0/0 Mesh 83a5ec3e",
-   "0/0/1 Mesh 66755667",
-   "0/0/2 Mesh dfa6f834",
-   "0/0/3 Mesh c9604df1",
-   "0/0/4 Mesh bca2be61"
+   "0/0 Group e137695d",
+   "0/0/0 Mesh 64e95d93",
+   "0/0/1 Mesh b6b52772",
+   "0/0/2 Mesh 6f821ccb",
+   "0/0/3 Mesh 44535bb6",
+   "0/0/4 Mesh ed848bd7"
   ]
  },
  "model/tramadol:merged": {
-  "hash": "9fa4e8c3",
+  "hash": "144552fb",
   "nodes": [
    "0 Group e783776",
-   "0/0 Mesh 14640430",
-   "0/1 Mesh 7873b081",
-   "0/2 Mesh 96baad4",
-   "0/3 Mesh d13a38d1",
-   "0/4 Mesh 2123f668"
+   "0/0 Mesh f056580a",
+   "0/1 Mesh 745e5874",
+   "0/2 Mesh 1736c3ad",
+   "0/3 Mesh d0e74e40",
+   "0/4 Mesh f53fd175"
   ]
  },
  "model/tramadol:lod": {
-  "hash": "b36953db",
+  "hash": "c4e7a88b",
   "nodes": [
    "0 LOD f9b13da3",
    "0/0 Group 2c9e31a6",
-   "0/0/0 Mesh 6d80fd78",
-   "0/0/1 Mesh 63dccd09",
-   "0/0/2 Mesh da4c4068",
-   "0/0/3 Mesh 96f265e9",
-   "0/0/4 Mesh 73187a96",
+   "0/0/0 Mesh 86f8c426",
+   "0/0/1 Mesh 37d8a69c",
+   "0/0/2 Mesh 62a8b025",
+   "0/0/3 Mesh 7e8b4a08",
+   "0/0/4 Mesh 18216147",
    "0/1 Group 1a0991be",
    "0/1/0 Mesh faf6b1a7",
    "0/1/1 Mesh ee5ecb17",
@@ -2861,38 +2861,38 @@
   ]
  },
  "model/ibuprofen": {
-  "hash": "5d57f5f7",
+  "hash": "943b8f68",
   "nodes": [
    "0 Group cfe448c6",
-   "0/0 Group f534715c",
-   "0/0/0 Mesh 262df041",
-   "0/0/1 Mesh 8f017bc9",
-   "0/0/2 Mesh 3af39e17",
-   "0/0/3 Mesh 6bbd6875",
-   "0/0/4 Mesh c3cb68fb"
+   "0/0 Group 39fe76c4",
+   "0/0/0 Mesh 9b4f3ea4",
+   "0/0/1 Mesh ec1b1d5c",
+   "0/0/2 Mesh bc1069f5",
+   "0/0/3 Mesh 6e5dc7d3",
+   "0/0/4 Mesh 702e3a98"
   ]
  },
  "model/ibuprofen:merged": {
-  "hash": "b08f5db4",
+  "hash": "472a1ba1",
   "nodes": [
    "0 Group cfe448c6",
-   "0/0 Mesh c860a8ff",
-   "0/1 Mesh 247fc97b",
-   "0/2 Mesh 43ea818f",
-   "0/3 Mesh 81f9f133",
-   "0/4 Mesh 15d361b7"
+   "0/0 Mesh 322847fc",
+   "0/1 Mesh 6c59a4f7",
+   "0/2 Mesh cea04ae5",
+   "0/3 Mesh 8bd804d1",
+   "0/4 Mesh 7f724383"
   ]
  },
  "model/ibuprofen:lod": {
-  "hash": "244d34dd",
+  "hash": "94036ff4",
   "nodes": [
    "0 LOD 2026b62b",
    "0/0 Group 9896f104",
-   "0/0/0 Mesh bfff7b2f",
-   "0/0/1 Mesh ec8d8919",
-   "0/0/2 Mesh de88bc",
-   "0/0/3 Mesh 1cad485c",
-   "0/0/4 Mesh 3db4fb7e",
+   "0/0/0 Mesh d598f20c",
+   "0/0/1 Mesh 8c587839",
+   "0/0/2 Mesh 5d57e652",
+   "0/0/3 Mesh 432df9c6",
+   "0/0/4 Mesh a3eed6ca",
    "0/1 Group dafce566",
    "0/1/0 Mesh faf6b1a7",
    "0/1/1 Mesh ee5ecb17",
@@ -2901,38 +2901,38 @@
   ]
  },
  "model/antihistamine": {
-  "hash": "9f292fa8",
+  "hash": "7b165d9f",
   "nodes": [
    "0 Group a4c6e28c",
-   "0/0 Group fd2d0911",
-   "0/0/0 Mesh 7555dd77",
-   "0/0/1 Mesh b4e448e6",
-   "0/0/2 Mesh 89972f6",
-   "0/0/3 Mesh 31634a07",
-   "0/0/4 Mesh 2ec99b93"
+   "0/0 Group 1aa54930",
+   "0/0/0 Mesh 68bf3457",
+   "0/0/1 Mesh dfc93ee1",
+   "0/0/2 Mesh 669cfff8",
+   "0/0/3 Mesh a99757ee",
+   "0/0/4 Mesh 6fcda2ad"
   ]
  },
  "model/antihistamine:merged": {
-  "hash": "49e33635",
+  "hash": "d637d7b5",
   "nodes": [
    "0 Group a4c6e28c",
-   "0/0 Mesh 7dd5ddce",
-   "0/1 Mesh 50de90a8",
-   "0/2 Mesh 731aff03",
-   "0/3 Mesh 70324c8f",
-   "0/4 Mesh 370a5f10"
+   "0/0 Mesh f1c78e45",
+   "0/1 Mesh 2ad5dfc8",
+   "0/2 Mesh a0bd5d35",
+   "0/3 Mesh 4a46be88",
+   "0/4 Mesh ae256914"
   ]
  },
  "model/antihistamine:lod": {
-  "hash": "46e1faeb",
+  "hash": "9d2fa3f7",
   "nodes": [
    "0 LOD 309ee965",
    "0/0 Group afa85886",
-   "0/0/0 Mesh 7cf86f7b",
-   "0/0/1 Mesh 1e1a4b9b",
-   "0/0/2 Mesh 67eac4a7",
-   "0/0/3 Mesh b69532fa",
-   "0/0/4 Mesh 819e23e8",
+   "0/0/0 Mesh 3733254",
+   "0/0/1 Mesh 2a8e2c97",
+   "0/0/2 Mesh e84e1a5d",
+   "0/0/3 Mesh 1d075a75",
+   "0/0/4 Mesh 1c9e2e40",
    "0/1 Group b73be28c",
    "0/1/0 Mesh 8b00f65f",
    "0/1/1 Mesh 9281b167",
@@ -3005,38 +3005,38 @@
   ]
  },
  "model/clonazepam": {
-  "hash": "71b91c7b",
+  "hash": "5e3fe121",
   "nodes": [
    "0 Group 3cf5a3c2",
-   "0/0 Group 7727a718",
-   "0/0/0 Mesh 4d5e07ff",
-   "0/0/1 Mesh ceaee1ee",
-   "0/0/2 Mesh b998eda7",
-   "0/0/3 Mesh 3d2acee0",
-   "0/0/4 Mesh 7a845499"
+   "0/0 Group 13bd4fcf",
+   "0/0/0 Mesh d1144bf3",
+   "0/0/1 Mesh ef1597cf",
+   "0/0/2 Mesh 6e29822d",
+   "0/0/3 Mesh a2afba06",
+   "0/0/4 Mesh d4d1a2a3"
   ]
  },
  "model/clonazepam:merged": {
-  "hash": "8f8b076f",
+  "hash": "1adae159",
   "nodes": [
    "0 Group 3cf5a3c2",
-   "0/0 Mesh 81fb5b1",
-   "0/1 Mesh 4abb259f",
-   "0/2 Mesh a92184f3",
-   "0/3 Mesh fc3ac96d",
-   "0/4 Mesh 4b924408"
+   "0/0 Mesh c34e5c13",
+   "0/1 Mesh 969975e1",
+   "0/2 Mesh e099a997",
+   "0/3 Mesh 1a099e57",
+   "0/4 Mesh 47054c8"
   ]
  },
  "model/clonazepam:lod": {
-  "hash": "17bbf883",
+  "hash": "478a0c15",
   "nodes": [
    "0 LOD a722c9af",
    "0/0 Group 75746326",
-   "0/0/0 Mesh 8c678a1b",
-   "0/0/1 Mesh 1f6bfb93",
-   "0/0/2 Mesh b4cfbff",
-   "0/0/3 Mesh 8534f6a9",
-   "0/0/4 Mesh ba1f2f5e",
+   "0/0/0 Mesh 57c8139",
+   "0/0/1 Mesh 21123d29",
+   "0/0/2 Mesh 2fa5ce53",
+   "0/0/3 Mesh 17a9381b",
+   "0/0/4 Mesh d43edade",
    "0/1 Group a2d7b16a",
    "0/1/0 Mesh fa241d5d",
    "0/1/1 Mesh 2513dc20",
@@ -3045,37 +3045,37 @@
   ]
  },
  "model/activated_charcoal": {
-  "hash": "3c14e5f4",
+  "hash": "e9a1a3aa",
   "nodes": [
    "0 Group ab4ac8ee",
-   "0/0 Group 351d0c88",
-   "0/0/0 Mesh f2a95fc7",
+   "0/0 Group e7799aa",
+   "0/0/0 Mesh bb2dbc66",
    "0/0/1 Mesh a422f7fb",
    "0/0/2 Mesh 4779a1c7",
    "0/0/3 Mesh ba17d501",
-   "0/0/4 Mesh 212b4a94",
-   "0/0/5 Mesh c8ff3c5f"
+   "0/0/4 Mesh 10f27bf6",
+   "0/0/5 Mesh 9305ab1a"
   ]
  },
  "model/activated_charcoal:merged": {
-  "hash": "12a0e330",
+  "hash": "46ddde7a",
   "nodes": [
    "0 Group ab4ac8ee",
-   "0/0 Mesh ffacb068",
-   "0/1 Mesh e66659ea",
-   "0/2 Mesh 9fcd56cd",
-   "0/3 Mesh 67e7f9cb"
+   "0/0 Mesh 2867ddc5",
+   "0/1 Mesh 21f367f4",
+   "0/2 Mesh f3410ae1",
+   "0/3 Mesh 5804cad6"
   ]
  },
  "model/activated_charcoal:lod": {
-  "hash": "fd6c6e9e",
+  "hash": "b1328680",
   "nodes": [
    "0 LOD b4c53014",
    "0/0 Group aca271e2",
-   "0/0/0 Mesh 2b64642d",
-   "0/0/1 Mesh 6d422e9d",
-   "0/0/2 Mesh 99a559e3",
-   "0/0/3 Mesh 3c5a313d",
+   "0/0/0 Mesh 6c98d104",
+   "0/0/1 Mesh 67b83a5b",
+   "0/0/2 Mesh bf8a75e3",
+   "0/0/3 Mesh 6c96eca4",
    "0/1 Group 7227a0b7",
    "0/1/0 Mesh 289244e4",
    "0/1/1 Mesh 25376b82",
@@ -3084,38 +3084,38 @@
   ]
  },
  "model/adhesive_bandages": {
-  "hash": "1ccee284",
+  "hash": "1b6b296b",
   "nodes": [
    "0 Group d7e1ead6",
-   "0/0 Group d9e76111",
-   "0/0/0 Mesh c35a934d",
-   "0/0/1 Mesh e9f574d4",
-   "0/0/2 Mesh 6eaba4dc",
-   "0/0/3 Mesh ccb736",
-   "0/0/4 Mesh 11e65d94"
+   "0/0 Group c7098fe9",
+   "0/0/0 Mesh ece2a081",
+   "0/0/1 Mesh f18777b1",
+   "0/0/2 Mesh d005e5b5",
+   "0/0/3 Mesh 99d27996",
+   "0/0/4 Mesh 7f15514d"
   ]
  },
  "model/adhesive_bandages:merged": {
-  "hash": "c67a80cb",
+  "hash": "b4d63451",
   "nodes": [
    "0 Group d7e1ead6",
-   "0/0 Mesh b67ec8e1",
-   "0/1 Mesh 3fb9e6b7",
-   "0/2 Mesh cdb5c58d",
-   "0/3 Mesh 9738cc43",
-   "0/4 Mesh b4e69246"
+   "0/0 Mesh ab90636c",
+   "0/1 Mesh 84a2ca97",
+   "0/2 Mesh 3cb496bc",
+   "0/3 Mesh d168c860",
+   "0/4 Mesh 1246c209"
   ]
  },
  "model/adhesive_bandages:lod": {
-  "hash": "cb29ffff",
+  "hash": "57d9eb79",
   "nodes": [
    "0 LOD 4a512b08",
    "0/0 Group c8904b44",
-   "0/0/0 Mesh 4ff9861a",
-   "0/0/1 Mesh 677b9f91",
-   "0/0/2 Mesh e0720ff0",
-   "0/0/3 Mesh f25daddb",
-   "0/0/4 Mesh 8e07f986",
+   "0/0/0 Mesh 70c9127f",
+   "0/0/1 Mesh 67e774a9",
+   "0/0/2 Mesh 49fbc6c1",
+   "0/0/3 Mesh 55f94d60",
+   "0/0/4 Mesh ba288161",
    "0/1 Group dbfdc83b",
    "0/1/0 Mesh ba567ae8",
    "0/1/1 Mesh 7d5eba2e",
@@ -3161,41 +3161,41 @@
   ]
  },
  "model/sterile_gauze": {
-  "hash": "10b4d8ee",
+  "hash": "a2a13a77",
   "nodes": [
    "0 Group 9f74e1de",
-   "0/0 Group de6ed613",
-   "0/0/0 Mesh 16296f86",
-   "0/0/1 Mesh ad21abd0",
-   "0/0/2 Mesh b108d0ad",
-   "0/0/3 Mesh feaceb2d",
-   "0/0/4 Mesh fdf96373",
-   "0/0/5 Mesh 148cfd19"
+   "0/0 Group 5403a6f1",
+   "0/0/0 Mesh ca13ad7c",
+   "0/0/1 Mesh 53a8791",
+   "0/0/2 Mesh 510121ac",
+   "0/0/3 Mesh e220e4ec",
+   "0/0/4 Mesh 1f468987",
+   "0/0/5 Mesh 9c034a41"
   ]
  },
  "model/sterile_gauze:merged": {
-  "hash": "41f68743",
+  "hash": "946553bb",
   "nodes": [
    "0 Group 9f74e1de",
-   "0/0 Mesh 42c9c300",
-   "0/1 Mesh 164a0cda",
-   "0/2 Mesh eb334376",
-   "0/3 Mesh e6576b3c",
-   "0/4 Mesh 762f8e2a",
-   "0/5 Mesh a9fb5f01"
+   "0/0 Mesh 11b90717",
+   "0/1 Mesh 64685273",
+   "0/2 Mesh e0359bb",
+   "0/3 Mesh 27dc9eea",
+   "0/4 Mesh a07688bb",
+   "0/5 Mesh ba2d32eb"
   ]
  },
  "model/sterile_gauze:lod": {
-  "hash": "eba71a02",
+  "hash": "26306b1c",
   "nodes": [
    "0 LOD c522e6aa",
    "0/0 Group dd899654",
-   "0/0/0 Mesh 3e85e363",
-   "0/0/1 Mesh b1b00775",
-   "0/0/2 Mesh d029bab3",
-   "0/0/3 Mesh d43be5e6",
-   "0/0/4 Mesh 2d11e542",
-   "0/0/5 Mesh e9b80bf9",
+   "0/0/0 Mesh ead9d01c",
+   "0/0/1 Mesh c49c9abe",
+   "0/0/2 Mesh 3f833d8a",
+   "0/0/3 Mesh e309908",
+   "0/0/4 Mesh 57314ab3",
+   "0/0/5 Mesh 4e114e0f",
    "0/1 Group 31003a9",
    "0/1/0 Mesh acf5ff99",
    "0/1/1 Mesh 2183cc8e",
@@ -3204,36 +3204,36 @@
   ]
  },
  "model/povidone_iodine": {
-  "hash": "cfbf46e7",
+  "hash": "90913f16",
   "nodes": [
    "0 Group 5c8f98c8",
    "0/0 Group b8203160",
-   "0/0/0 Mesh 8d7e5695",
+   "0/0/0 Mesh 5edd4202",
    "0/0/1 Mesh 247186a4",
-   "0/0/2 Mesh c443855b",
+   "0/0/2 Mesh 665782c7",
    "0/0/3 Mesh 1656eb15",
    "0/0/4 Mesh 61a58b6a"
   ]
  },
  "model/povidone_iodine:merged": {
-  "hash": "ea5622b8",
+  "hash": "1eb65a39",
   "nodes": [
    "0 Group 5c8f98c8",
-   "0/0 Mesh 6002144a",
+   "0/0 Mesh 90a41b00",
    "0/1 Mesh c831a49c",
-   "0/2 Mesh 8b7ff798",
+   "0/2 Mesh 4fcc506d",
    "0/3 Mesh 749adc65",
    "0/4 Mesh 8125f00"
   ]
  },
  "model/povidone_iodine:lod": {
-  "hash": "e31d4e9b",
+  "hash": "ac4e78fa",
   "nodes": [
    "0 LOD dbee9918",
    "0/0 Group 17ab9912",
-   "0/0/0 Mesh 18a59f6c",
+   "0/0/0 Mesh 17f0edc2",
    "0/0/1 Mesh 679d2ed8",
-   "0/0/2 Mesh 9eda7f9d",
+   "0/0/2 Mesh 92cd073c",
    "0/0/3 Mesh ffa4c027",
    "0/0/4 Mesh 3d031137",
    "0/1 Group d84e252b",
@@ -3244,41 +3244,41 @@
   ]
  },
  "model/suture_kit": {
-  "hash": "8aff1617",
+  "hash": "b14267d8",
   "nodes": [
    "0 Group f3ad96ff",
-   "0/0 Group 5b17059c",
-   "0/0/0 Mesh 53ab3aeb",
-   "0/0/1 Mesh eabbbb88",
+   "0/0 Group de2e2e8f",
+   "0/0/0 Mesh 5da1e55b",
+   "0/0/1 Mesh de9409d8",
    "0/0/2 Mesh 55d37016",
-   "0/0/3 Mesh dec22a2a",
+   "0/0/3 Mesh efb22e0a",
    "0/0/4 Mesh 7f1b19bb",
-   "0/0/5 Mesh 9786211d"
+   "0/0/5 Mesh 6d748253"
   ]
  },
  "model/suture_kit:merged": {
-  "hash": "e4e73ce7",
+  "hash": "3505887c",
   "nodes": [
    "0 Group f3ad96ff",
-   "0/0 Mesh f5417f6b",
-   "0/1 Mesh c4b792a",
-   "0/2 Mesh 9772802a",
-   "0/3 Mesh 6a5906b6",
-   "0/4 Mesh 703030b2",
-   "0/5 Mesh a57ba8c3"
+   "0/0 Mesh 8bc78daa",
+   "0/1 Mesh fc7f0fd9",
+   "0/2 Mesh cd00e7a",
+   "0/3 Mesh 9e8631d3",
+   "0/4 Mesh 2acbbe55",
+   "0/5 Mesh 3d6cecd2"
   ]
  },
  "model/suture_kit:lod": {
-  "hash": "5ff2ba59",
+  "hash": "c82e59c",
   "nodes": [
    "0 LOD e9357f12",
    "0/0 Group 8341a89f",
-   "0/0/0 Mesh f3748865",
-   "0/0/1 Mesh 20b114c6",
-   "0/0/2 Mesh 67270a21",
-   "0/0/3 Mesh 2b784720",
-   "0/0/4 Mesh 94df19a6",
-   "0/0/5 Mesh 7b55d331",
+   "0/0/0 Mesh b39ba310",
+   "0/0/1 Mesh bc0882e1",
+   "0/0/2 Mesh 62ae5445",
+   "0/0/3 Mesh edc91005",
+   "0/0/4 Mesh e9cf41cd",
+   "0/0/5 Mesh 766de888",
    "0/1 Group fb7cf3b1",
    "0/1/0 Mesh 41818c7c",
    "0/1/1 Mesh 76c26191",
@@ -3287,37 +3287,37 @@
   ]
  },
  "model/exam_gloves": {
-  "hash": "fc9ab034",
+  "hash": "204f8cbc",
   "nodes": [
    "0 Group 174eab0b",
-   "0/0 Group f5bc91ae",
-   "0/0/0 Mesh 401b57ff",
+   "0/0 Group a335548f",
+   "0/0/0 Mesh 481da142",
    "0/0/1 Mesh e0e3f3cd",
    "0/0/2 Mesh 287928f2",
    "0/0/3 Mesh 63979e4",
    "0/0/4 Mesh 70fa5cf4",
    "0/0/5 Mesh bbf80e1e",
    "0/0/6 Mesh f287f608",
-   "0/0/7 Mesh 86cb8336"
+   "0/0/7 Mesh 3a5f365c"
   ]
  },
  "model/exam_gloves:merged": {
-  "hash": "bce7a83f",
+  "hash": "6d667442",
   "nodes": [
    "0 Group 174eab0b",
-   "0/0 Mesh 87ec56f9",
+   "0/0 Mesh 9289c866",
    "0/1 Mesh 8922d2d2",
-   "0/2 Mesh 28fa30c"
+   "0/2 Mesh 2617f8f0"
   ]
  },
  "model/exam_gloves:lod": {
-  "hash": "3a1ba222",
+  "hash": "797e7b71",
   "nodes": [
    "0 LOD e73293b3",
    "0/0 Group d770ba7f",
-   "0/0/0 Mesh d8d6893",
+   "0/0/0 Mesh 3ce6636e",
    "0/0/1 Mesh 6f48e865",
-   "0/0/2 Mesh a60a6aee",
+   "0/0/2 Mesh ed518f2",
    "0/1 Group d8c31aae",
    "0/1/0 Mesh f5e513d5",
    "0/1/1 Mesh 211a21d7",
@@ -3366,11 +3366,11 @@
   ]
  },
  "model/multivitamin": {
-  "hash": "36cb5504",
+  "hash": "35ac2a6",
   "nodes": [
    "0 Group 6ae0779a",
    "0/0 Group 394b4dda",
-   "0/0/0 Mesh aed0322c",
+   "0/0/0 Mesh 89876ac2",
    "0/0/1 Mesh afc33fc3",
    "0/0/2 Mesh 6d4edd10",
    "0/0/3 Mesh afe54a2b",
@@ -3378,10 +3378,10 @@
   ]
  },
  "model/multivitamin:merged": {
-  "hash": "27f4ea0a",
+  "hash": "6a30b058",
   "nodes": [
    "0 Group 6ae0779a",
-   "0/0 Mesh 9734304d",
+   "0/0 Mesh 63968959",
    "0/1 Mesh ff645500",
    "0/2 Mesh 7705a2d6",
    "0/3 Mesh 90b8e420",
@@ -3389,11 +3389,11 @@
   ]
  },
  "model/multivitamin:lod": {
-  "hash": "ffab98e6",
+  "hash": "583c08cc",
   "nodes": [
    "0 LOD fc21447e",
    "0/0 Group 167e5758",
-   "0/0/0 Mesh 9189223e",
+   "0/0/0 Mesh cd3c4d5c",
    "0/0/1 Mesh 62718671",
    "0/0/2 Mesh 832b1580",
    "0/0/3 Mesh adfb0969",
@@ -3406,11 +3406,11 @@
   ]
  },
  "model/maintenance_medication": {
-  "hash": "8dedb081",
+  "hash": "d896d009",
   "nodes": [
    "0 Group a2c57584",
    "0/0 Group 10dac81e",
-   "0/0/0 Mesh 41d0f3d2",
+   "0/0/0 Mesh fec69202",
    "0/0/1 Mesh b5bf9a57",
    "0/0/2 Mesh 901258f1",
    "0/0/3 Mesh ceb55ec",
@@ -3419,10 +3419,10 @@
   ]
  },
  "model/maintenance_medication:merged": {
-  "hash": "664826e4",
+  "hash": "f0f46917",
   "nodes": [
    "0 Group a2c57584",
-   "0/0 Mesh 317761d6",
+   "0/0 Mesh 778a3f3b",
    "0/1 Mesh 8d0bed9",
    "0/2 Mesh da475836",
    "0/3 Mesh aa17ebc5",
@@ -3431,11 +3431,11 @@
   ]
  },
  "model/maintenance_medication:lod": {
-  "hash": "be9d1999",
+  "hash": "929d5012",
   "nodes": [
    "0 LOD 2c84fb38",
    "0/0 Group 1f132486",
-   "0/0/0 Mesh e603254e",
+   "0/0/0 Mesh 3eeeb83b",
    "0/0/1 Mesh b5a97333",
    "0/0/2 Mesh 9f9b6fc2",
    "0/0/3 Mesh ad3ce077",
@@ -3449,42 +3449,42 @@
   ]
  },
  "model/rehydration_salts": {
-  "hash": "3c1c409d",
+  "hash": "2758f170",
   "nodes": [
    "0 Group d42185fa",
-   "0/0 Group 59d141f8",
-   "0/0/0 Mesh 25712164",
-   "0/0/1 Mesh 6ce8316b",
-   "0/0/2 Mesh 461f8a7b",
-   "0/0/3 Mesh c4531cc1",
-   "0/0/4 Mesh 5dd2bcca",
-   "0/0/5 Mesh f532f82e",
-   "0/0/6 Mesh 95de25de"
+   "0/0 Group cd898719",
+   "0/0/0 Mesh 858e5c28",
+   "0/0/1 Mesh 80828163",
+   "0/0/2 Mesh edbecf4e",
+   "0/0/3 Mesh a87cbdc3",
+   "0/0/4 Mesh 5c37be3c",
+   "0/0/5 Mesh 107f2836",
+   "0/0/6 Mesh c7ae3489"
   ]
  },
  "model/rehydration_salts:merged": {
-  "hash": "a7d9f829",
+  "hash": "dae4c0d8",
   "nodes": [
    "0 Group d42185fa",
-   "0/0 Mesh bbe2e1d6",
-   "0/1 Mesh 37985654",
-   "0/2 Mesh 80d656e9",
-   "0/3 Mesh 1f477061",
-   "0/4 Mesh 426163bb",
-   "0/5 Mesh cc3667b0"
+   "0/0 Mesh 27257b52",
+   "0/1 Mesh a85bd5ee",
+   "0/2 Mesh e66edef",
+   "0/3 Mesh 73ada3c0",
+   "0/4 Mesh 5ea4ec95",
+   "0/5 Mesh 26fb96e4"
   ]
  },
  "model/rehydration_salts:lod": {
-  "hash": "7ea5b141",
+  "hash": "a3975f54",
   "nodes": [
    "0 LOD 116f06a4",
    "0/0 Group ff100c30",
-   "0/0/0 Mesh e334a80a",
-   "0/0/1 Mesh 54291612",
-   "0/0/2 Mesh 4ae6271c",
-   "0/0/3 Mesh c13e96b8",
-   "0/0/4 Mesh 3478f8c3",
-   "0/0/5 Mesh 631701c",
+   "0/0/0 Mesh 68cd225a",
+   "0/0/1 Mesh 527bea4",
+   "0/0/2 Mesh 4ae25db8",
+   "0/0/3 Mesh 580e345d",
+   "0/0/4 Mesh 9712ed09",
+   "0/0/5 Mesh 7e2a9a80",
    "0/1 Group 1e247507",
    "0/1/0 Mesh 799c8825",
    "0/1/1 Mesh d26ed778",
@@ -3548,53 +3548,53 @@
   ]
  },
  "model/antivenom": {
-  "hash": "aa4ec65d",
+  "hash": "2a50347e",
   "nodes": [
    "0 Group 574fbc76",
    "0/0 Group bed47428",
-   "0/0/0 Mesh c0a8377f",
-   "0/0/1 Mesh a1341d66",
+   "0/0/0 Mesh abdd483a",
+   "0/0/1 Mesh 41dbd62b",
    "0/0/2 Mesh 16396341",
    "0/0/3 Mesh 975f2d4",
    "0/0/4 Mesh 8e3ec669",
    "0/0/5 Mesh 7d4f0a8",
    "0/0/6 Mesh adb70d27",
-   "0/0/7 Mesh fea7b09b",
-   "0/0/8 Mesh 9faa63b8",
-   "0/0/9 Mesh f688dfbb"
+   "0/0/7 Mesh 6b5c9e53",
+   "0/0/8 Mesh b74565de",
+   "0/0/9 Mesh 35c1e20c"
   ]
  },
  "model/antivenom:merged": {
-  "hash": "7c6ad477",
+  "hash": "5d919e41",
   "nodes": [
    "0 Group 574fbc76",
-   "0/0 Mesh bf81fed3",
-   "0/1 Mesh 73aaf97d",
+   "0/0 Mesh f59e4d0",
+   "0/1 Mesh d46fbd5b",
    "0/2 Mesh efa4849d",
    "0/3 Mesh 7752ea49",
    "0/4 Mesh 9eae8fa2",
    "0/5 Mesh f3baa31a",
    "0/6 Mesh 66e9431c",
-   "0/7 Mesh 2252c20e",
-   "0/8 Mesh 975b0af6",
-   "0/9 Mesh edf82c2d"
+   "0/7 Mesh 5df1c5f0",
+   "0/8 Mesh 73c0366c",
+   "0/9 Mesh f86aec24"
   ]
  },
  "model/antivenom:lod": {
-  "hash": "cce3badd",
+  "hash": "a62312eb",
   "nodes": [
    "0 LOD f8e1824e",
    "0/0 Group f2469a98",
-   "0/0/0 Mesh 2cf62d39",
-   "0/0/1 Mesh 2edbf4f1",
+   "0/0/0 Mesh 74360366",
+   "0/0/1 Mesh 3af5ec9b",
    "0/0/2 Mesh d034740b",
    "0/0/3 Mesh 8fca1f37",
    "0/0/4 Mesh dd39eb08",
    "0/0/5 Mesh 387abf2d",
    "0/0/6 Mesh 6f3708c7",
-   "0/0/7 Mesh 8243a6a4",
-   "0/0/8 Mesh ce5904fc",
-   "0/0/9 Mesh 2e6da34b",
+   "0/0/7 Mesh f7eb532e",
+   "0/0/8 Mesh 3e568912",
+   "0/0/9 Mesh ebfe3fb6",
    "0/1 Group daad4ecd",
    "0/1/0 Mesh cb0d052e",
    "0/1/1 Mesh 52d71b97",
@@ -3603,44 +3603,44 @@
   ]
  },
  "model/saline_iv_bag": {
-  "hash": "ef4c7637",
+  "hash": "d22d6dd2",
   "nodes": [
    "0 Group d13ef24e",
-   "0/0 Group 4c0f8e3d",
-   "0/0/0 Mesh 605d14d9",
+   "0/0 Group 97c3ee43",
+   "0/0/0 Mesh c233c0a4",
    "0/0/1 Mesh d698c689",
-   "0/0/2 Mesh 8da67941",
-   "0/0/3 Mesh aebde4b1",
-   "0/0/4 Mesh 6468df9d",
+   "0/0/2 Mesh 807b44b9",
+   "0/0/3 Mesh 2444eace",
+   "0/0/4 Mesh d90e9df8",
    "0/0/5 Mesh 61c80d07",
    "0/0/6 Mesh 31e09a94"
   ]
  },
  "model/saline_iv_bag:merged": {
-  "hash": "861c7855",
+  "hash": "3a024690",
   "nodes": [
    "0 Group d13ef24e",
-   "0/0 Mesh 67a6c681",
-   "0/1 Mesh a9fedbf4",
-   "0/2 Mesh 828c8554",
-   "0/3 Mesh f26eec03",
-   "0/4 Mesh 908c0a80",
-   "0/5 Mesh d623463c",
-   "0/6 Mesh 359aebe8"
+   "0/0 Mesh 74d0d6cb",
+   "0/1 Mesh 69b18c11",
+   "0/2 Mesh f713921e",
+   "0/3 Mesh 3f3a1508",
+   "0/4 Mesh bce65728",
+   "0/5 Mesh db7a33bc",
+   "0/6 Mesh 2dde4b8d"
   ]
  },
  "model/saline_iv_bag:lod": {
-  "hash": "b430d653",
+  "hash": "20c71374",
   "nodes": [
    "0 LOD 97be319a",
    "0/0 Group d7d6bb96",
-   "0/0/0 Mesh 8e408ae2",
-   "0/0/1 Mesh 6ca30fba",
-   "0/0/2 Mesh c1cb4e81",
-   "0/0/3 Mesh 514b8da6",
-   "0/0/4 Mesh 56a52477",
-   "0/0/5 Mesh b4d16185",
-   "0/0/6 Mesh 233f17d4",
+   "0/0/0 Mesh e79291c4",
+   "0/0/1 Mesh 5d4eba39",
+   "0/0/2 Mesh 92a0f9ef",
+   "0/0/3 Mesh 643db4d7",
+   "0/0/4 Mesh 1ecb0e7f",
+   "0/0/5 Mesh 8a692239",
+   "0/0/6 Mesh b921f2f1",
    "0/1 Group 5a4a5999",
    "0/1/0 Mesh 29225f83",
    "0/1/1 Mesh b56f2fa6",
@@ -3649,35 +3649,35 @@
   ]
  },
  "model/splint": {
-  "hash": "72d7f7a3",
+  "hash": "6cfd5c0f",
   "nodes": [
    "0 Group d16b1c9",
-   "0/0 Group 9e99fae2",
-   "0/0/0 Mesh cc87a849",
-   "0/0/1 Mesh 98175cf3",
-   "0/0/2 Mesh 3724f8bf",
-   "0/0/3 Mesh 3a4eb7ba"
+   "0/0 Group ac686593",
+   "0/0/0 Mesh 93851a53",
+   "0/0/1 Mesh 237a444",
+   "0/0/2 Mesh 8caaa477",
+   "0/0/3 Mesh 5b0e1e46"
   ]
  },
  "model/splint:merged": {
-  "hash": "87b5e901",
+  "hash": "620f5c13",
   "nodes": [
    "0 Group d16b1c9",
-   "0/0 Mesh c6aeb5ec",
-   "0/1 Mesh c16da1c",
-   "0/2 Mesh f54b4e73",
-   "0/3 Mesh 70bcd95b"
+   "0/0 Mesh f49e06cd",
+   "0/1 Mesh e937bf01",
+   "0/2 Mesh 505332d4",
+   "0/3 Mesh 77504d24"
   ]
  },
  "model/splint:lod": {
-  "hash": "75827a1b",
+  "hash": "f0848f39",
   "nodes": [
    "0 LOD af94a747",
    "0/0 Group 9ece4829",
-   "0/0/0 Mesh 5d2bff57",
-   "0/0/1 Mesh b5f03be8",
-   "0/0/2 Mesh 6cbda88b",
-   "0/0/3 Mesh 961417e7",
+   "0/0/0 Mesh d8412d62",
+   "0/0/1 Mesh c926bce3",
+   "0/0/2 Mesh f6c8981c",
+   "0/0/3 Mesh e162ad1c",
    "0/1 Group eb7e43a2",
    "0/1/0 Mesh 367dd518",
    "0/1/1 Mesh bb03d4d8",
@@ -3686,38 +3686,38 @@
   ]
  },
  "model/thermometer": {
-  "hash": "4e1614a6",
+  "hash": "cf8d6a32",
   "nodes": [
    "0 Group c4dc784f",
-   "0/0 Group 9c8466cb",
-   "0/0/0 Mesh 15f1fb19",
-   "0/0/1 Mesh 420bc00f",
-   "0/0/2 Mesh 9de86b56",
+   "0/0 Group db3b5b36",
+   "0/0/0 Mesh 1414d191",
+   "0/0/1 Mesh db401665",
+   "0/0/2 Mesh f82e63f5",
    "0/0/3 Mesh a57cf3ae",
    "0/0/4 Mesh a692a7a"
   ]
  },
  "model/thermometer:merged": {
-  "hash": "807c1cd3",
+  "hash": "c2a1e0ab",
   "nodes": [
    "0 Group c4dc784f",
-   "0/0 Mesh 56946bd0",
-   "0/1 Mesh 44b172b4",
-   "0/2 Mesh 88e7669a",
-   "0/3 Mesh d2bbb2fd",
-   "0/4 Mesh 127dc56e"
+   "0/0 Mesh f72e1b9",
+   "0/1 Mesh cba7f788",
+   "0/2 Mesh cb641f12",
+   "0/3 Mesh 413d2a41",
+   "0/4 Mesh 86418793"
   ]
  },
  "model/thermometer:lod": {
-  "hash": "ca8b2f7f",
+  "hash": "d8dea3c3",
   "nodes": [
    "0 LOD 56f7d3d",
    "0/0 Group 524422a9",
-   "0/0/0 Mesh c437adb6",
-   "0/0/1 Mesh 1b824b96",
-   "0/0/2 Mesh a617cc86",
-   "0/0/3 Mesh 92ab8af3",
-   "0/0/4 Mesh 87ce50eb",
+   "0/0/0 Mesh eb917aef",
+   "0/0/1 Mesh 8423c922",
+   "0/0/2 Mesh 175673e2",
+   "0/0/3 Mesh 91da00b3",
+   "0/0/4 Mesh 79274076",
    "0/1 Group 3f9517c4",
    "0/1/0 Mesh 71a05d88",
    "0/1/1 Mesh f0b97b32",
@@ -3726,35 +3726,35 @@
   ]
  },
  "model/alcohol_70": {
-  "hash": "c97be0ed",
+  "hash": "c2252c19",
   "nodes": [
    "0 Group 1a93b0ef",
    "0/0 Group 86815afe",
-   "0/0/0 Mesh 835de3e9",
-   "0/0/1 Mesh 1463b800",
+   "0/0/0 Mesh fee1f9e9",
+   "0/0/1 Mesh 71b8db50",
    "0/0/2 Mesh 604adaf8",
    "0/0/3 Mesh 99892dc4",
    "0/0/4 Mesh 7fce2403"
   ]
  },
  "model/alcohol_70:merged": {
-  "hash": "7d614f20",
+  "hash": "3bf6edaa",
   "nodes": [
    "0 Group 1a93b0ef",
-   "0/0 Mesh 61b23338",
-   "0/1 Mesh fd66a76d",
+   "0/0 Mesh 20377c8b",
+   "0/1 Mesh 56fae936",
    "0/2 Mesh 9147c2bf",
    "0/3 Mesh 7360d82f",
    "0/4 Mesh 722d60f9"
   ]
  },
  "model/alcohol_70:lod": {
-  "hash": "c7466b82",
+  "hash": "6e14c0f8",
   "nodes": [
    "0 LOD 41381081",
    "0/0 Group 4ba57b3b",
-   "0/0/0 Mesh a883cb30",
-   "0/0/1 Mesh 4d6e8fbb",
+   "0/0/0 Mesh 9d11cac3",
+   "0/0/1 Mesh 15f13834",
    "0/0/2 Mesh 90aa9f1b",
    "0/0/3 Mesh 90911b1d",
    "0/0/4 Mesh 996b4d4e",
@@ -3766,13 +3766,13 @@
   ]
  },
  "model/can_opener": {
-  "hash": "c754dc8",
+  "hash": "6a09022f",
   "nodes": [
    "0 Group 66be3c21",
    "0/0 Group 7d7e3604",
-   "0/0/0 Mesh a8ee073c",
+   "0/0/0 Mesh 964208e0",
    "0/0/1 Mesh c997a93f",
-   "0/0/2 Mesh 522ca776",
+   "0/0/2 Mesh 3997e1ad",
    "0/0/3 Mesh d8136c72",
    "0/0/4 Mesh a5d31994",
    "0/0/5 Mesh 8d9531b3",
@@ -3780,20 +3780,20 @@
   ]
  },
  "model/can_opener:merged": {
-  "hash": "59407d50",
+  "hash": "c3c74822",
   "nodes": [
    "0 Group 66be3c21",
-   "0/0 Mesh 78e498e2",
+   "0/0 Mesh 21ea30cc",
    "0/1 Mesh 104401f4",
    "0/2 Mesh f1c172c"
   ]
  },
  "model/can_opener:lod": {
-  "hash": "a291b40e",
+  "hash": "2f7895fc",
   "nodes": [
    "0 LOD 256611f9",
    "0/0 Group 614217b5",
-   "0/0/0 Mesh 372d61ed",
+   "0/0/0 Mesh 9f9eefd3",
    "0/0/1 Mesh 40e29077",
    "0/0/2 Mesh 9601b129",
    "0/1 Group b2dd53e0",
@@ -3887,37 +3887,37 @@
   ]
  },
  "model/bucket": {
-  "hash": "90c80252",
+  "hash": "3e2ff87b",
   "nodes": [
    "0 Group f647a307",
    "0/0 Group 9227bffb",
-   "0/0/0 Mesh 86d05359",
+   "0/0/0 Mesh dd6b7e82",
    "0/0/1 Mesh ecab8118",
    "0/0/2 Mesh f99a96cc",
-   "0/0/3 Mesh cebc7756",
-   "0/0/4 Mesh b517369e",
-   "0/0/5 Mesh 772c4544"
+   "0/0/3 Mesh fa798dae",
+   "0/0/4 Mesh 13d28f06",
+   "0/0/5 Mesh 2de857b4"
   ]
  },
  "model/bucket:merged": {
-  "hash": "a3a98716",
+  "hash": "ac09a0f6",
   "nodes": [
    "0 Group f647a307",
-   "0/0 Mesh 3ddf1aa",
+   "0/0 Mesh 4e0761db",
    "0/1 Mesh 5ba77b84",
    "0/2 Mesh 966ff5d8",
-   "0/3 Mesh 96fcc41d"
+   "0/3 Mesh 50153118"
   ]
  },
  "model/bucket:lod": {
-  "hash": "9344b7b1",
+  "hash": "b2ddcbe7",
   "nodes": [
    "0 LOD d8817b13",
    "0/0 Group 9e4f091f",
-   "0/0/0 Mesh c51bdfe1",
+   "0/0/0 Mesh 149bdc7e",
    "0/0/1 Mesh 773b3a75",
    "0/0/2 Mesh 3e1fb8e5",
-   "0/0/3 Mesh a0582e25",
+   "0/0/3 Mesh d470ddbc",
    "0/1 Group a9bf6aae",
    "0/1/0 Mesh 71baa740",
    "0/1/1 Mesh 115fe189",
@@ -3926,40 +3926,40 @@
   ]
  },
  "model/binoculars": {
-  "hash": "b0b9f43d",
+  "hash": "a32dfd09",
   "nodes": [
    "0 Group cb8ed1fb",
    "0/0 Group fdcd36bb",
    "0/0/0 Mesh 612bf972",
    "0/0/1 Mesh 26859b6a",
-   "0/0/2 Mesh 46082de7",
-   "0/0/3 Mesh fadf3ed",
+   "0/0/2 Mesh 9e7281a",
+   "0/0/3 Mesh 4722e238",
    "0/0/4 Mesh 76c486b3",
    "0/0/5 Mesh 9f9d4e8f",
-   "0/0/6 Mesh 8fd9b01c",
-   "0/0/7 Mesh 126a8af2",
+   "0/0/6 Mesh 69ddb053",
+   "0/0/7 Mesh f8155e25",
    "0/0/8 Mesh d5c31d66",
    "0/0/9 Mesh a80652b2"
   ]
  },
  "model/binoculars:merged": {
-  "hash": "170709c6",
+  "hash": "60946b98",
   "nodes": [
    "0 Group cb8ed1fb",
-   "0/0 Mesh 6479d512",
+   "0/0 Mesh 735634be",
    "0/1 Mesh e8b86189",
-   "0/2 Mesh 6e940c73",
+   "0/2 Mesh de57809d",
    "0/3 Mesh 640757db"
   ]
  },
  "model/binoculars:lod": {
-  "hash": "7e5e101d",
+  "hash": "16011b25",
   "nodes": [
    "0 LOD e553fc4f",
    "0/0 Group 84f78c7f",
-   "0/0/0 Mesh 7db97de6",
+   "0/0/0 Mesh 445fd4cc",
    "0/0/1 Mesh 68769b62",
-   "0/0/2 Mesh 196db94d",
+   "0/0/2 Mesh 22e3d79b",
    "0/0/3 Mesh 6bc51810",
    "0/1 Group 962a13ea",
    "0/1/0 Mesh 71513f55",
@@ -3969,42 +3969,42 @@
   ]
  },
  "model/matches": {
-  "hash": "dda1c822",
+  "hash": "ba1c4464",
   "nodes": [
    "0 Group e0995a42",
-   "0/0 Group 4890711a",
-   "0/0/0 Mesh 9110f23c",
-   "0/0/1 Mesh 12955707",
-   "0/0/2 Mesh e8b10ec3",
-   "0/0/3 Mesh bb07402a",
-   "0/0/4 Mesh 206c793a",
-   "0/0/5 Mesh 7ac75bb1",
-   "0/0/6 Mesh 3a6be61",
-   "0/0/7 Mesh e2f9714f",
-   "0/0/8 Mesh a9e62743"
+   "0/0 Group 7db07353",
+   "0/0/0 Mesh f4411b26",
+   "0/0/1 Mesh 4c5f50ab",
+   "0/0/2 Mesh 2c8501f4",
+   "0/0/3 Mesh 81debc20",
+   "0/0/4 Mesh 9b56f6ae",
+   "0/0/5 Mesh 7ff4d7f5",
+   "0/0/6 Mesh af090843",
+   "0/0/7 Mesh 4282df6f",
+   "0/0/8 Mesh c42f5799"
   ]
  },
  "model/matches:merged": {
-  "hash": "4111b7b0",
+  "hash": "ec13d008",
   "nodes": [
    "0 Group e0995a42",
-   "0/0 Mesh 6fc704f5",
-   "0/1 Mesh e17a280c",
-   "0/2 Mesh e3b9047a",
-   "0/3 Mesh 1810ac8a",
-   "0/4 Mesh dfb2fd48"
+   "0/0 Mesh 63325f96",
+   "0/1 Mesh 658d31b4",
+   "0/2 Mesh 39f30c6b",
+   "0/3 Mesh 681796c0",
+   "0/4 Mesh 837114bc"
   ]
  },
  "model/matches:lod": {
-  "hash": "20252215",
+  "hash": "c529466d",
   "nodes": [
    "0 LOD 8b87b34e",
    "0/0 Group cce0af84",
-   "0/0/0 Mesh a29e9da0",
-   "0/0/1 Mesh c95aa7aa",
-   "0/0/2 Mesh 945350b5",
-   "0/0/3 Mesh 7be34362",
-   "0/0/4 Mesh 58e84833",
+   "0/0/0 Mesh db678397",
+   "0/0/1 Mesh ada0e7da",
+   "0/0/2 Mesh 9c746d4",
+   "0/0/3 Mesh 56ce5b50",
+   "0/0/4 Mesh c2bddb5b",
    "0/1 Group e8743acd",
    "0/1/0 Mesh cb1c2402",
    "0/1/1 Mesh fcf10060",
@@ -4013,35 +4013,35 @@
   ]
  },
  "model/pocket_knife": {
-  "hash": "f9148d90",
+  "hash": "50603fa4",
   "nodes": [
    "0 Group 441a5c09",
    "0/0 Group ae21b484",
-   "0/0/0 Mesh def8bd53",
-   "0/0/1 Mesh 32f72369",
-   "0/0/2 Mesh 57cdab1c",
+   "0/0/0 Mesh d83fae03",
+   "0/0/1 Mesh 9f096e03",
+   "0/0/2 Mesh 6c9b7b00",
    "0/0/3 Mesh 39dce754",
    "0/0/4 Mesh c78d07ad",
    "0/0/5 Mesh 349993f3"
   ]
  },
  "model/pocket_knife:merged": {
-  "hash": "b519bc15",
+  "hash": "7ab847d3",
   "nodes": [
    "0 Group 441a5c09",
-   "0/0 Mesh 409b3a5c",
-   "0/1 Mesh 55419fbf",
+   "0/0 Mesh c18e4366",
+   "0/1 Mesh 204247",
    "0/2 Mesh 434cad98",
    "0/3 Mesh 28a61a8d"
   ]
  },
  "model/pocket_knife:lod": {
-  "hash": "a1a5872f",
+  "hash": "48f5cd41",
   "nodes": [
    "0 LOD a7a2ac09",
    "0/0 Group 32bd32a5",
-   "0/0/0 Mesh ff28a50a",
-   "0/0/1 Mesh 286baf7b",
+   "0/0/0 Mesh 69f7aadc",
+   "0/0/1 Mesh b5fc270b",
    "0/0/2 Mesh cb8d9a11",
    "0/0/3 Mesh 1c77785d",
    "0/1 Group 97af13b0",
@@ -4131,36 +4131,36 @@
   ]
  },
  "model/hoe": {
-  "hash": "784db9e4",
+  "hash": "ade89d04",
   "nodes": [
    "0 Group 659936b9",
-   "0/0 Group 942b8979",
+   "0/0 Group b6ae1c5a",
    "0/0/0 Mesh a30223f",
    "0/0/1 Mesh c9e9a4a1",
-   "0/0/2 Mesh eb9fa8bf",
+   "0/0/2 Mesh 53c2aa05",
    "0/0/3 Mesh 36ed8a23",
-   "0/0/4 Mesh e487a58",
+   "0/0/4 Mesh a01dd99f",
    "0/0/5 Mesh 6f6f6ebf"
   ]
  },
  "model/hoe:merged": {
-  "hash": "e04b5e70",
+  "hash": "a1c073a1",
   "nodes": [
    "0 Group 659936b9",
    "0/0 Mesh 97a185df",
-   "0/1 Mesh e2e0e574",
-   "0/2 Mesh 7602ad4b",
+   "0/1 Mesh bc305cd0",
+   "0/2 Mesh fc21b434",
    "0/3 Mesh 35c2cf81"
   ]
  },
  "model/hoe:lod": {
-  "hash": "3c19ef00",
+  "hash": "56486a93",
   "nodes": [
    "0 LOD e8ad1009",
    "0/0 Group 97db7cbf",
    "0/0/0 Mesh 5dfb825f",
-   "0/0/1 Mesh c6264a86",
-   "0/0/2 Mesh 51dc493d",
+   "0/0/1 Mesh 75cfafb6",
+   "0/0/2 Mesh c27a49e2",
    "0/0/3 Mesh a11467dd",
    "0/1 Group 15c6d430",
    "0/1/0 Mesh d206c2f4",
@@ -4170,14 +4170,14 @@
   ]
  },
  "model/fire_extinguisher": {
-  "hash": "9381d647",
+  "hash": "3d4f036d",
   "nodes": [
    "0 Group 6e119070",
    "0/0 Group 509d395a",
-   "0/0/0 Mesh f871354b",
+   "0/0/0 Mesh 7a80efb6",
    "0/0/1 Mesh 8413e627",
    "0/0/2 Mesh 69ca8341",
-   "0/0/3 Mesh 8a820875",
+   "0/0/3 Mesh aae2c424",
    "0/0/4 Mesh dcb80068",
    "0/0/5 Mesh b6f4bc27",
    "0/0/6 Mesh 6892c51c",
@@ -4188,10 +4188,10 @@
   ]
  },
  "model/fire_extinguisher:merged": {
-  "hash": "e70e734f",
+  "hash": "ed480409",
   "nodes": [
    "0 Group 6e119070",
-   "0/0 Mesh 414d227b",
+   "0/0 Mesh 7a9fc1b1",
    "0/1 Mesh 73155c6a",
    "0/2 Mesh cfcedb75",
    "0/3 Mesh 4a147f74",
@@ -4200,11 +4200,11 @@
   ]
  },
  "model/fire_extinguisher:lod": {
-  "hash": "ba3a8d00",
+  "hash": "fc010a06",
   "nodes": [
    "0 LOD 406f99e3",
    "0/0 Group 8110455a",
-   "0/0/0 Mesh c496cb40",
+   "0/0/0 Mesh b79459ca",
    "0/0/1 Mesh cbe3a99e",
    "0/0/2 Mesh bac48287",
    "0/0/3 Mesh 77723573",
@@ -4299,11 +4299,11 @@
   ]
  },
  "model/lighter": {
-  "hash": "a56afe4f",
+  "hash": "2006a019",
   "nodes": [
    "0 Group fe92bf6c",
    "0/0 Group 482ff41f",
-   "0/0/0 Mesh c96c7443",
+   "0/0/0 Mesh 568b971",
    "0/0/1 Mesh 81da5b1d",
    "0/0/2 Mesh 2005b324",
    "0/0/3 Mesh ae759bb1",
@@ -4311,10 +4311,10 @@
   ]
  },
  "model/lighter:merged": {
-  "hash": "988b958f",
+  "hash": "c5040873",
   "nodes": [
    "0 Group fe92bf6c",
-   "0/0 Mesh 3cbee3f8",
+   "0/0 Mesh 45e70000",
    "0/1 Mesh 1f60cf9e",
    "0/2 Mesh fbfb2da1",
    "0/3 Mesh fbb6ee8b",
@@ -4322,11 +4322,11 @@
   ]
  },
  "model/lighter:lod": {
-  "hash": "d6eaa668",
+  "hash": "13e303dc",
   "nodes": [
    "0 LOD a0fb849c",
    "0/0 Group aa9a43f6",
-   "0/0/0 Mesh 5a72f6cf",
+   "0/0/0 Mesh 98d7afa7",
    "0/0/1 Mesh 1675b236",
    "0/0/2 Mesh 96ffb0a5",
    "0/0/3 Mesh fff582c4",
@@ -4339,11 +4339,11 @@
   ]
  },
  "model/lockpick_kit": {
-  "hash": "d9314",
+  "hash": "e1d410e1",
   "nodes": [
    "0 Group 52e27596",
-   "0/0 Group 6e35fcbf",
-   "0/0/0 Mesh af40a6b8",
+   "0/0 Group 8ae4b8b3",
+   "0/0/0 Mesh a7372dff",
    "0/0/1 Mesh cee64293",
    "0/0/2 Mesh bb68fe7a",
    "0/0/3 Mesh bee1270d",
@@ -4352,24 +4352,24 @@
   ]
  },
  "model/lockpick_kit:merged": {
-  "hash": "b2e2c65b",
+  "hash": "8989d69d",
   "nodes": [
    "0 Group 52e27596",
-   "0/0 Mesh ea859733",
+   "0/0 Mesh da534525",
    "0/1 Mesh 3a02ca49",
-   "0/2 Mesh 5d18d277",
-   "0/3 Mesh b65c82e"
+   "0/2 Mesh 6a0ff31c",
+   "0/3 Mesh b973a575"
   ]
  },
  "model/lockpick_kit:lod": {
-  "hash": "a036cc2c",
+  "hash": "c5e449fa",
   "nodes": [
    "0 LOD d81bd682",
    "0/0 Group fa219a82",
-   "0/0/0 Mesh 70bed46b",
+   "0/0/0 Mesh 140df159",
    "0/0/1 Mesh b97afbac",
-   "0/0/2 Mesh 53b214c4",
-   "0/0/3 Mesh 51c73873",
+   "0/0/2 Mesh ea2cc3ab",
+   "0/0/3 Mesh 56ab074",
    "0/1 Group 824580a1",
    "0/1/0 Mesh 338ee586",
    "0/1/1 Mesh 3bf4a9ee",
@@ -4378,12 +4378,12 @@
   ]
  },
  "model/sewing_kit": {
-  "hash": "21147541",
+  "hash": "ff8d6ef9",
   "nodes": [
    "0 Group 2870512d",
-   "0/0 Group adee86ae",
-   "0/0/0 Mesh 441dcc7d",
-   "0/0/1 Mesh f7e0631b",
+   "0/0 Group 56938834",
+   "0/0/0 Mesh 1261b2b0",
+   "0/0/1 Mesh 97fe3d76",
    "0/0/2 Mesh 8c275a36",
    "0/0/3 Mesh f95376f3",
    "0/0/4 Mesh 573ebe1d",
@@ -4394,34 +4394,34 @@
   ]
  },
  "model/sewing_kit:merged": {
-  "hash": "daf85878",
+  "hash": "37b3eae6",
   "nodes": [
    "0 Group 2870512d",
-   "0/0 Mesh a213b1f3",
-   "0/1 Mesh 7371ce94",
+   "0/0 Mesh e0e909d2",
+   "0/1 Mesh 85162043",
    "0/2 Mesh b8eccb2c",
-   "0/3 Mesh b3bcb6a4",
-   "0/4 Mesh f476b4a",
-   "0/5 Mesh e3ad8d4b",
-   "0/6 Mesh cac431ba",
-   "0/7 Mesh 8f4887ed",
-   "0/8 Mesh cfa73e2f"
+   "0/3 Mesh d829391c",
+   "0/4 Mesh f347341e",
+   "0/5 Mesh 573b31cc",
+   "0/6 Mesh 5e9575e5",
+   "0/7 Mesh 4d7b48d8",
+   "0/8 Mesh ede86fb4"
   ]
  },
  "model/sewing_kit:lod": {
-  "hash": "be57ffba",
+  "hash": "13d69788",
   "nodes": [
    "0 LOD bee97f05",
    "0/0 Group e2f58f7d",
-   "0/0/0 Mesh 65565e3c",
-   "0/0/1 Mesh 9e55be80",
+   "0/0/0 Mesh a1e2cdb1",
+   "0/0/1 Mesh 6a4c8eed",
    "0/0/2 Mesh b7267e3a",
-   "0/0/3 Mesh 79b6b544",
-   "0/0/4 Mesh d04233ed",
-   "0/0/5 Mesh 359f01e6",
-   "0/0/6 Mesh f6b37fd7",
-   "0/0/7 Mesh e271ddfe",
-   "0/0/8 Mesh 46508fea",
+   "0/0/3 Mesh 2ed32b8",
+   "0/0/4 Mesh e00f81e3",
+   "0/0/5 Mesh 515b37ad",
+   "0/0/6 Mesh 5b40b7a0",
+   "0/0/7 Mesh 944e201b",
+   "0/0/8 Mesh 94ebea49",
    "0/1 Group 5dfed8ec",
    "0/1/0 Mesh 34bf54ab",
    "0/1/1 Mesh 1c5fabbb",
@@ -4477,46 +4477,46 @@
   ]
  },
  "model/mechanic_toolbox": {
-  "hash": "5007277c",
+  "hash": "c36d1623",
   "nodes": [
    "0 Group 3813fe4a",
-   "0/0 Group 13e5f1ee",
-   "0/0/0 Mesh 2f8e047b",
+   "0/0 Group 9080538f",
+   "0/0/0 Mesh 78afafe4",
    "0/0/1 Mesh f7ef1640",
-   "0/0/2 Mesh 16062aa2",
+   "0/0/2 Mesh 5ebf731",
    "0/0/3 Mesh ea525588",
    "0/0/4 Mesh 482558e",
    "0/0/5 Mesh 777a2735",
    "0/0/6 Mesh f43a9676",
-   "0/0/7 Mesh 833272eb",
-   "0/0/8 Mesh 1ee7429d"
+   "0/0/7 Mesh 7e0db275",
+   "0/0/8 Mesh be5ecb0b"
   ]
  },
  "model/mechanic_toolbox:merged": {
-  "hash": "1a9803c3",
+  "hash": "a174b3fa",
   "nodes": [
    "0 Group 3813fe4a",
-   "0/0 Mesh b94ca635",
-   "0/1 Mesh bfa396f3",
-   "0/2 Mesh 8f159a19",
+   "0/0 Mesh 6a7cd203",
+   "0/1 Mesh 405ea63e",
+   "0/2 Mesh 8af1776",
    "0/3 Mesh a50e8146",
    "0/4 Mesh 4c2f5f0d",
    "0/5 Mesh 9f459cc8",
-   "0/6 Mesh e0c989e2"
+   "0/6 Mesh e819e089"
   ]
  },
  "model/mechanic_toolbox:lod": {
-  "hash": "605e2776",
+  "hash": "2a0b9161",
   "nodes": [
    "0 LOD 71755c2f",
    "0/0 Group a801af8e",
-   "0/0/0 Mesh 4725ffec",
-   "0/0/1 Mesh e011e8cd",
-   "0/0/2 Mesh 987b7ab",
+   "0/0/0 Mesh 7ff3151e",
+   "0/0/1 Mesh 55343a84",
+   "0/0/2 Mesh d7e9cd04",
    "0/0/3 Mesh dedaa01e",
    "0/0/4 Mesh 4103daa9",
    "0/0/5 Mesh 88d7ccac",
-   "0/0/6 Mesh f0c471b1",
+   "0/0/6 Mesh 75a5cade",
    "0/1 Group 746b0b4a",
    "0/1/0 Mesh 20847bc",
    "0/1/1 Mesh 972a3ebc",
@@ -4525,11 +4525,11 @@
   ]
  },
  "model/gas_torch": {
-  "hash": "6677084",
+  "hash": "9fa8357f",
   "nodes": [
    "0 Group fd30e86b",
    "0/0 Group 70b5db42",
-   "0/0/0 Mesh d83a1fe",
+   "0/0/0 Mesh bd75886d",
    "0/0/1 Mesh 98a02465",
    "0/0/2 Mesh ef536e9f",
    "0/0/3 Mesh 43eac713",
@@ -4540,10 +4540,10 @@
   ]
  },
  "model/gas_torch:merged": {
-  "hash": "d116075a",
+  "hash": "e34141f8",
   "nodes": [
    "0 Group fd30e86b",
-   "0/0 Mesh 7b89acfb",
+   "0/0 Mesh fdff6c55",
    "0/1 Mesh f0aedfc5",
    "0/2 Mesh bbf4175c",
    "0/3 Mesh 6fce9524",
@@ -4553,11 +4553,11 @@
   ]
  },
  "model/gas_torch:lod": {
-  "hash": "871e84f6",
+  "hash": "abe0785e",
   "nodes": [
    "0 LOD 43a1a4ad",
    "0/0 Group 4c1e1d71",
-   "0/0/0 Mesh ee20da5a",
+   "0/0/0 Mesh 26c4d362",
    "0/0/1 Mesh dfcf01f6",
    "0/0/2 Mesh f1fe2a5",
    "0/0/3 Mesh e576e53",
@@ -4572,12 +4572,12 @@
   ]
  },
  "model/inverter_welder": {
-  "hash": "ce73f594",
+  "hash": "59e40433",
   "nodes": [
    "0 Group 5eb4c00c",
-   "0/0 Group efcec7b8",
-   "0/0/0 Mesh f741a104",
-   "0/0/1 Mesh a1380a48",
+   "0/0 Group b9926be9",
+   "0/0/0 Mesh 9fbff4d",
+   "0/0/1 Mesh e986e7e7",
    "0/0/2 Mesh e50e892e",
    "0/0/3 Mesh a272ac6c",
    "0/0/4 Mesh ff704c3b",
@@ -4589,12 +4589,12 @@
   ]
  },
  "model/inverter_welder:merged": {
-  "hash": "5ca65a1f",
+  "hash": "67f35a85",
   "nodes": [
    "0 Group 5eb4c00c",
-   "0/0 Mesh 9b4c9316",
-   "0/1 Mesh c5a77ff",
-   "0/2 Mesh 8f2252b2",
+   "0/0 Mesh 38f4d3b8",
+   "0/1 Mesh 920666de",
+   "0/2 Mesh cc4de20d",
    "0/3 Mesh 25e93852",
    "0/4 Mesh 73e16d81",
    "0/5 Mesh 3e7e85c4",
@@ -4602,13 +4602,13 @@
   ]
  },
  "model/inverter_welder:lod": {
-  "hash": "6ea970f0",
+  "hash": "8ae2bd6e",
   "nodes": [
    "0 LOD 4bb39f80",
    "0/0 Group 7b5e2b06",
-   "0/0/0 Mesh 22df751f",
-   "0/0/1 Mesh 26df06a3",
-   "0/0/2 Mesh 6f06b555",
+   "0/0/0 Mesh d52b14c9",
+   "0/0/1 Mesh ea8bf4a",
+   "0/0/2 Mesh c699765a",
    "0/0/3 Mesh 4c6c19ba",
    "0/0/4 Mesh e9caa465",
    "0/0/5 Mesh 86a26279",
@@ -4621,11 +4621,11 @@
   ]
  },
  "model/pot": {
-  "hash": "a9b2ef21",
+  "hash": "f72716c5",
   "nodes": [
    "0 Group c00b3660",
-   "0/0 Group 3185366d",
-   "0/0/0 Mesh 6318d7b1",
+   "0/0 Group 90b38fc9",
+   "0/0/0 Mesh 3b8afc41",
    "0/0/1 Mesh 5f7b9357",
    "0/0/2 Mesh cab47902",
    "0/0/3 Mesh 2c664219",
@@ -4635,10 +4635,10 @@
   ]
  },
  "model/pot:merged": {
-  "hash": "5256d437",
+  "hash": "315cee20",
   "nodes": [
    "0 Group c00b3660",
-   "0/0 Mesh 9dd828fd",
+   "0/0 Mesh 51f92c40",
    "0/1 Mesh a696662",
    "0/2 Mesh 58645cbf",
    "0/3 Mesh 92f5c22c",
@@ -4647,11 +4647,11 @@
   ]
  },
  "model/pot:lod": {
-  "hash": "7fcf0303",
+  "hash": "c5f999c4",
   "nodes": [
    "0 LOD 79774580",
    "0/0 Group 33a770de",
-   "0/0/0 Mesh 6d04f2a4",
+   "0/0/0 Mesh eaa53301",
    "0/0/1 Mesh a123dbaa",
    "0/0/2 Mesh 5a2e7cc7",
    "0/0/3 Mesh 95f7c3b4",
@@ -4788,36 +4788,36 @@
   ]
  },
  "model/shovel": {
-  "hash": "ec919324",
+  "hash": "ff22fb19",
   "nodes": [
    "0 Group b00a509d",
    "0/0 Group 7e6cc6d4",
    "0/0/0 Mesh ec9b7641",
    "0/0/1 Mesh 9c882eb4",
-   "0/0/2 Mesh 2ef0132e",
-   "0/0/3 Mesh ba2ce0c7",
-   "0/0/4 Mesh 39579624",
+   "0/0/2 Mesh 95009513",
+   "0/0/3 Mesh 45810584",
+   "0/0/4 Mesh ccb6300b",
    "0/0/5 Mesh caea9cea"
   ]
  },
  "model/shovel:merged": {
-  "hash": "958163ea",
+  "hash": "ece9f63c",
   "nodes": [
    "0 Group b00a509d",
    "0/0 Mesh 915254d0",
    "0/1 Mesh 9174228",
-   "0/2 Mesh 8970220d",
+   "0/2 Mesh 6381f8df",
    "0/3 Mesh 37a649e0"
   ]
  },
  "model/shovel:lod": {
-  "hash": "25ffdd29",
+  "hash": "2486c43b",
   "nodes": [
    "0 LOD e5f77d18",
    "0/0 Group b05a8f79",
    "0/0/0 Mesh 6b27a2ec",
    "0/0/1 Mesh 9c08e09f",
-   "0/0/2 Mesh 6dcc207f",
+   "0/0/2 Mesh 7a738971",
    "0/0/3 Mesh b395e02a",
    "0/1 Group c70f5b3",
    "0/1/0 Mesh 8de4c1a1",
@@ -4827,35 +4827,35 @@
   ]
  },
  "model/hacksaw": {
-  "hash": "fd2ce91a",
+  "hash": "f46ab154",
   "nodes": [
    "0 Group 1e8e97f7",
    "0/0 Group 6c9ee0a8",
    "0/0/0 Mesh 1efff835",
    "0/0/1 Mesh 348d68c9",
    "0/0/2 Mesh 598dfcb3",
-   "0/0/3 Mesh 85baf4bc",
+   "0/0/3 Mesh a73d168e",
    "0/0/4 Mesh aa403e59",
    "0/0/5 Mesh 6ef27f10"
   ]
  },
  "model/hacksaw:merged": {
-  "hash": "adb34e2f",
+  "hash": "584fc9fc",
   "nodes": [
    "0 Group 1e8e97f7",
    "0/0 Mesh dd0f517c",
-   "0/1 Mesh 311676b",
+   "0/1 Mesh 9747c014",
    "0/2 Mesh c2a1cbcb",
    "0/3 Mesh c11244f4"
   ]
  },
  "model/hacksaw:lod": {
-  "hash": "2a5c45f7",
+  "hash": "30db89ea",
   "nodes": [
    "0 LOD 13263cfb",
    "0/0 Group 2581f1b9",
    "0/0/0 Mesh dd5683af",
-   "0/0/1 Mesh 787ff5fd",
+   "0/0/1 Mesh 779582ba",
    "0/0/2 Mesh 868c26c5",
    "0/0/3 Mesh b0d7f217",
    "0/1 Group cac5b816",
@@ -4866,31 +4866,31 @@
   ]
  },
  "model/handsaw": {
-  "hash": "88b2b992",
+  "hash": "50513236",
   "nodes": [
    "0 Group 1292f90b",
    "0/0 Group 1ddda630",
-   "0/0/0 Mesh 6662d46f",
-   "0/0/1 Mesh ab4c91c3",
+   "0/0/0 Mesh 4aabc44b",
+   "0/0/1 Mesh e1f9f4f7",
    "0/0/2 Mesh 438dd107",
    "0/0/3 Mesh d52c6c3c",
    "0/0/4 Mesh 61fd9f6c"
   ]
  },
  "model/handsaw:merged": {
-  "hash": "f494a8a2",
+  "hash": "a0003d31",
   "nodes": [
    "0 Group 1292f90b",
-   "0/0 Mesh 37ab9c64",
+   "0/0 Mesh bd5464f7",
    "0/1 Mesh 7e6f4539"
   ]
  },
  "model/handsaw:lod": {
-  "hash": "7918e767",
+  "hash": "a3e06618",
   "nodes": [
    "0 LOD e8ca4527",
    "0/0 Group 9b221989",
-   "0/0/0 Mesh 9a81e9de",
+   "0/0/0 Mesh 9b865e1d",
    "0/0/1 Mesh 3706be48",
    "0/1 Group dbbcdf02",
    "0/1/0 Mesh eaa67daa",
@@ -4985,11 +4985,11 @@
   ]
  },
  "model/crossbow": {
-  "hash": "378d58e5",
+  "hash": "855da908",
   "nodes": [
    "0 Group 70967a95",
-   "0/0 Group fc780d5b",
-   "0/0/0 Mesh e0115385",
+   "0/0 Group d7238de8",
+   "0/0/0 Mesh c86e053",
    "0/0/1 Mesh 81f25d3b",
    "0/0/2 Mesh 8b9328b9",
    "0/0/3 Mesh 241db39c",
@@ -5001,28 +5001,28 @@
   ]
  },
  "model/crossbow:merged": {
-  "hash": "f3746ad6",
+  "hash": "13d57ee3",
   "nodes": [
    "0 Group 70967a95",
-   "0/0 Mesh 49f858b8",
-   "0/1 Mesh 9b969127",
+   "0/0 Mesh 822e7423",
+   "0/1 Mesh d2031322",
    "0/2 Mesh 47e2b339",
    "0/3 Mesh b9ecec6e",
-   "0/4 Mesh ff616c5",
-   "0/5 Mesh 5dba3734"
+   "0/4 Mesh 7a4a54b9",
+   "0/5 Mesh 313fd12d"
   ]
  },
  "model/crossbow:lod": {
-  "hash": "2f57c956",
+  "hash": "52870c57",
   "nodes": [
    "0 LOD 13322845",
    "0/0 Group ca1abbe3",
-   "0/0/0 Mesh f1218800",
-   "0/0/1 Mesh e1e52ee",
+   "0/0/0 Mesh e69f14d7",
+   "0/0/1 Mesh f0dc813f",
    "0/0/2 Mesh b6b0f781",
    "0/0/3 Mesh 1b16bd20",
-   "0/0/4 Mesh 8f844c4f",
-   "0/0/5 Mesh 5e44cac3",
+   "0/0/4 Mesh 76a70d43",
+   "0/0/5 Mesh 6cf44232",
    "0/1 Group 46a4aba4",
    "0/1/0 Mesh 35ba1654",
    "0/1/1 Mesh c747339b",
@@ -5031,11 +5031,11 @@
   ]
  },
  "model/iron_pipe": {
-  "hash": "248b342b",
+  "hash": "3ae15f5b",
   "nodes": [
    "0 Group c04df3ed",
    "0/0 Group cd6b795d",
-   "0/0/0 Mesh be34d6bb",
+   "0/0/0 Mesh e5aff54b",
    "0/0/1 Mesh 72ccf50",
    "0/0/2 Mesh 16b7d60c",
    "0/0/3 Mesh 9fbc432b",
@@ -5045,21 +5045,21 @@
   ]
  },
  "model/iron_pipe:merged": {
-  "hash": "fda29ce6",
+  "hash": "d13ad0d",
   "nodes": [
    "0 Group c04df3ed",
-   "0/0 Mesh 2bd295a0",
+   "0/0 Mesh 5ebf5b39",
    "0/1 Mesh 34051a9d",
    "0/2 Mesh ba4f530f",
    "0/3 Mesh 3e04c54b"
   ]
  },
  "model/iron_pipe:lod": {
-  "hash": "ea43bf46",
+  "hash": "8b8d17b5",
   "nodes": [
    "0 LOD e7eb53b8",
    "0/0 Group 8790da5f",
-   "0/0/0 Mesh 5e40dc78",
+   "0/0/0 Mesh e7d6ef45",
    "0/0/1 Mesh b0593ff",
    "0/0/2 Mesh 87d33bca",
    "0/0/3 Mesh 5a5122da",
@@ -5071,44 +5071,44 @@
   ]
  },
  "model/meat_cleaver": {
-  "hash": "ca380087",
+  "hash": "c741f775",
   "nodes": [
    "0 Group a14c172d",
-   "0/0 Group 3711acc",
-   "0/0/0 Mesh d742726",
+   "0/0 Group ac85304",
+   "0/0/0 Mesh b02285d9",
    "0/0/1 Mesh 4e2347f9",
    "0/0/2 Mesh d32564c8",
    "0/0/3 Mesh da277060",
    "0/0/4 Mesh 61c5b178",
-   "0/0/5 Mesh 29d3fe0b",
+   "0/0/5 Mesh ef79c32e",
    "0/0/6 Mesh fddea92e",
    "0/0/7 Mesh f40ef7f1"
   ]
  },
  "model/meat_cleaver:merged": {
-  "hash": "6e7d0e17",
+  "hash": "c18e2e2b",
   "nodes": [
    "0 Group a14c172d",
-   "0/0 Mesh c727b6a1",
+   "0/0 Mesh 86447992",
    "0/1 Mesh becae430",
    "0/2 Mesh fb4f959d",
-   "0/3 Mesh 284de67e",
+   "0/3 Mesh ef054843",
    "0/4 Mesh 1ca49584",
-   "0/5 Mesh c1887a51",
+   "0/5 Mesh 942f9009",
    "0/6 Mesh 516debb4"
   ]
  },
  "model/meat_cleaver:lod": {
-  "hash": "d2b57c34",
+  "hash": "891d4c50",
   "nodes": [
    "0 LOD 657dcd3f",
    "0/0 Group ef219b83",
-   "0/0/0 Mesh e77fc7e3",
+   "0/0/0 Mesh ef150f04",
    "0/0/1 Mesh 47968684",
    "0/0/2 Mesh 28d5f1b3",
-   "0/0/3 Mesh 8c165b53",
+   "0/0/3 Mesh 958a9c6a",
    "0/0/4 Mesh f56b05f",
-   "0/0/5 Mesh 5bc5ea5e",
+   "0/0/5 Mesh 6c3adda2",
    "0/0/6 Mesh d0d10210",
    "0/1 Group 4d2a68ba",
    "0/1/0 Mesh 609248dc",
@@ -5285,13 +5285,13 @@
   ]
  },
  "model/sickle": {
-  "hash": "85809e66",
+  "hash": "c8e22563",
   "nodes": [
    "0 Group 4068818b",
    "0/0 Group e6163623",
-   "0/0/0 Mesh e512e088",
+   "0/0/0 Mesh 7b7a75e1",
    "0/0/1 Mesh ef194704",
-   "0/0/2 Mesh 94515cdc",
+   "0/0/2 Mesh 7dd8be70",
    "0/0/3 Mesh 6f5e0cd2",
    "0/0/4 Mesh 445e10e1",
    "0/0/5 Mesh 492a754b",
@@ -5301,23 +5301,23 @@
   ]
  },
  "model/sickle:merged": {
-  "hash": "69aac540",
+  "hash": "467ed2f7",
   "nodes": [
    "0 Group 4068818b",
-   "0/0 Mesh 164f4363",
+   "0/0 Mesh a108b0a2",
    "0/1 Mesh dfffe83f",
-   "0/2 Mesh f4702bd3",
+   "0/2 Mesh 31fee9d3",
    "0/3 Mesh 3a3150cc"
   ]
  },
  "model/sickle:lod": {
-  "hash": "80f09b4d",
+  "hash": "29d3d06e",
   "nodes": [
    "0 LOD 51e2b47a",
    "0/0 Group 2d11653",
-   "0/0/0 Mesh 1896c740",
+   "0/0/0 Mesh 7bc3345",
    "0/0/1 Mesh 11f91fa8",
-   "0/0/2 Mesh 37197494",
+   "0/0/2 Mesh f5ef3438",
    "0/0/3 Mesh 9fc80d64",
    "0/1 Group af696b79",
    "0/1/0 Mesh d0a87a8e",
@@ -5327,33 +5327,33 @@
   ]
  },
  "model/cast_iron_skillet": {
-  "hash": "3c131158",
+  "hash": "8deb92da",
   "nodes": [
    "0 Group 213af19a",
    "0/0 Group e03309c4",
    "0/0/0 Mesh bb7566e",
-   "0/0/1 Mesh f503154c",
+   "0/0/1 Mesh 16177a5c",
    "0/0/2 Mesh f8a44c97",
    "0/0/3 Mesh be2dce74",
    "0/0/4 Mesh 1f91b655"
   ]
  },
  "model/cast_iron_skillet:merged": {
-  "hash": "314f0d2a",
+  "hash": "bfd41336",
   "nodes": [
    "0 Group 213af19a",
    "0/0 Mesh 4f8d08e",
-   "0/1 Mesh 7d1ca620",
+   "0/1 Mesh 164103c4",
    "0/2 Mesh d7c3144f"
   ]
  },
  "model/cast_iron_skillet:lod": {
-  "hash": "64a8af76",
+  "hash": "503af660",
   "nodes": [
    "0 LOD 752ded6e",
    "0/0 Group f33f849a",
    "0/0/0 Mesh 308d73cd",
-   "0/0/1 Mesh a2ee52c9",
+   "0/0/1 Mesh 91f0e483",
    "0/0/2 Mesh 30698abb",
    "0/1 Group e4cf154d",
    "0/1/0 Mesh 12696f2f",
@@ -5404,39 +5404,39 @@
   ]
  },
  "model/hatchet": {
-  "hash": "256794ee",
+  "hash": "1a4ee282",
   "nodes": [
    "0 Group 16e04efb",
-   "0/0 Group 5553fd3c",
+   "0/0 Group 2eafe5c6",
    "0/0/0 Mesh c2c3b177",
    "0/0/1 Mesh 2e3d7697",
    "0/0/2 Mesh 21fcab82",
    "0/0/3 Mesh c4adc48f",
-   "0/0/4 Mesh b8265cec",
-   "0/0/5 Mesh d244f5c9"
+   "0/0/4 Mesh 875a1264",
+   "0/0/5 Mesh ad4a9aa1"
   ]
  },
  "model/hatchet:merged": {
-  "hash": "6c1b8abe",
+  "hash": "cfdfb532",
   "nodes": [
    "0 Group 16e04efb",
-   "0/0 Mesh 57e0a7c7",
-   "0/1 Mesh 69a3f951",
-   "0/2 Mesh 1609d37a",
-   "0/3 Mesh 4dcdfd29",
-   "0/4 Mesh da3a1721"
+   "0/0 Mesh 5caa40e0",
+   "0/1 Mesh 6ac3765a",
+   "0/2 Mesh 169d987a",
+   "0/3 Mesh fc6adca8",
+   "0/4 Mesh f6f9f04e"
   ]
  },
  "model/hatchet:lod": {
-  "hash": "4b4e6669",
+  "hash": "6e741561",
   "nodes": [
    "0 LOD 221bae6c",
    "0/0 Group 44f8d1f1",
-   "0/0/0 Mesh 41d7d150",
-   "0/0/1 Mesh b529563c",
-   "0/0/2 Mesh a6885002",
-   "0/0/3 Mesh bf2815e7",
-   "0/0/4 Mesh e96f0ee0",
+   "0/0/0 Mesh ff576b8f",
+   "0/0/1 Mesh 550df69f",
+   "0/0/2 Mesh d3127f7a",
+   "0/0/3 Mesh 1cc0a670",
+   "0/0/4 Mesh 69caea7",
    "0/1 Group df51818f",
    "0/1/0 Mesh 58412d35",
    "0/1/1 Mesh 96c12b61",
@@ -5445,38 +5445,38 @@
   ]
  },
  "model/sledgehammer": {
-  "hash": "e2dbfb50",
+  "hash": "542511",
   "nodes": [
    "0 Group 9cac80f7",
    "0/0 Group 2d4f62af",
-   "0/0/0 Mesh b11b957c",
-   "0/0/1 Mesh 71bbc678",
-   "0/0/2 Mesh c6b95330",
+   "0/0/0 Mesh 7aee61d0",
+   "0/0/1 Mesh 5e963b16",
+   "0/0/2 Mesh 7735bcd5",
    "0/0/3 Mesh 15d34b72",
    "0/0/4 Mesh ef829848",
    "0/0/5 Mesh e315c757"
   ]
  },
  "model/sledgehammer:merged": {
-  "hash": "5cdd125f",
+  "hash": "ba6c6e89",
   "nodes": [
    "0 Group 9cac80f7",
-   "0/0 Mesh 2feab803",
-   "0/1 Mesh e03583b3",
-   "0/2 Mesh 247df668",
+   "0/0 Mesh 8c009b92",
+   "0/1 Mesh c21593be",
+   "0/2 Mesh a171e1d0",
    "0/3 Mesh 83f0bc89",
    "0/4 Mesh 66878ee",
    "0/5 Mesh d4a44cef"
   ]
  },
  "model/sledgehammer:lod": {
-  "hash": "5ca1641b",
+  "hash": "39f1d08d",
   "nodes": [
    "0 LOD e9e73701",
    "0/0 Group 60bdafa9",
-   "0/0/0 Mesh 2f89cea0",
-   "0/0/1 Mesh 526d4112",
-   "0/0/2 Mesh e028d369",
+   "0/0/0 Mesh cd7eacf1",
+   "0/0/1 Mesh bc3967a7",
+   "0/0/2 Mesh 21509989",
    "0/0/3 Mesh 3be23e66",
    "0/0/4 Mesh b46b1416",
    "0/0/5 Mesh 990b145f",
@@ -5488,7 +5488,7 @@
   ]
  },
  "model/chainsaw": {
-  "hash": "3d9fcceb",
+  "hash": "5cee40d1",
   "nodes": [
    "0 Group a60dbbcd",
    "0/0 Group 57a068ca",
@@ -5500,30 +5500,30 @@
    "0/0/5 Mesh a70e20dc",
    "0/0/6 Mesh 3180b2a2",
    "0/0/7 Mesh b260bd77",
-   "0/0/8 Mesh f9097b68",
+   "0/0/8 Mesh b9ca36fa",
    "0/0/9 Mesh 9771ee14"
   ]
  },
  "model/chainsaw:merged": {
-  "hash": "3a5a290b",
+  "hash": "6e245668",
   "nodes": [
    "0 Group a60dbbcd",
    "0/0 Mesh bfd5d291",
    "0/1 Mesh 7eef44bc",
    "0/2 Mesh fcd559db",
-   "0/3 Mesh a349f2",
+   "0/3 Mesh f049769b",
    "0/4 Mesh 50e2466b"
   ]
  },
  "model/chainsaw:lod": {
-  "hash": "a7214f26",
+  "hash": "273f11bd",
   "nodes": [
    "0 LOD 725f60ff",
    "0/0 Group f50968f7",
    "0/0/0 Mesh 602225fd",
    "0/0/1 Mesh 707003b7",
    "0/0/2 Mesh 74330090",
-   "0/0/3 Mesh 195a6c20",
+   "0/0/3 Mesh 6cf89ef5",
    "0/0/4 Mesh 29147222",
    "0/1 Group 4f416fa",
    "0/1/0 Mesh a8b05a97",
@@ -5533,12 +5533,12 @@
   ]
  },
  "model/pickaxe": {
-  "hash": "2220f5db",
+  "hash": "7be78220",
   "nodes": [
    "0 Group 1e8ecb0c",
-   "0/0 Group 30de6e4f",
-   "0/0/0 Mesh 5a0a08ee",
-   "0/0/1 Mesh ff1a38e0",
+   "0/0 Group b5c37d6a",
+   "0/0/0 Mesh d20fec92",
+   "0/0/1 Mesh 477ee216",
    "0/0/2 Mesh ea60cf8",
    "0/0/3 Mesh da55c253",
    "0/0/4 Mesh ee81f39f",
@@ -5549,30 +5549,30 @@
   ]
  },
  "model/pickaxe:merged": {
-  "hash": "90b56a97",
+  "hash": "8ae06c54",
   "nodes": [
    "0 Group 1e8ecb0c",
-   "0/0 Mesh 5a55de4c",
-   "0/1 Mesh 907932c1",
+   "0/0 Mesh ffb12dbe",
+   "0/1 Mesh cef6303e",
    "0/2 Mesh b504c734",
-   "0/3 Mesh c25becb2",
-   "0/4 Mesh 79754c09",
-   "0/5 Mesh 160c3219",
-   "0/6 Mesh fa2a821b"
+   "0/3 Mesh ef37c9ca",
+   "0/4 Mesh a0753e40",
+   "0/5 Mesh 8ab2c77d",
+   "0/6 Mesh 5f9e4cf6"
   ]
  },
  "model/pickaxe:lod": {
-  "hash": "807b2a42",
+  "hash": "4791ecc7",
   "nodes": [
    "0 LOD e6d70b8",
    "0/0 Group 65b63bae",
-   "0/0/0 Mesh b4677541",
-   "0/0/1 Mesh 34fc24c3",
+   "0/0/0 Mesh a7965433",
+   "0/0/1 Mesh 13a395fe",
    "0/0/2 Mesh 290645a5",
-   "0/0/3 Mesh 745439b5",
-   "0/0/4 Mesh 5c182e21",
-   "0/0/5 Mesh 4b95621d",
-   "0/0/6 Mesh 66598a7",
+   "0/0/3 Mesh db170d4d",
+   "0/0/4 Mesh 47a517bc",
+   "0/0/5 Mesh 5e175b85",
+   "0/0/6 Mesh ff5c27e",
    "0/1 Group fd79e8f3",
    "0/1/0 Mesh 9b077a2c",
    "0/1/1 Mesh ce2fd46c",
@@ -5616,45 +5616,45 @@
   ]
  },
  "model/police_baton": {
-  "hash": "8c5ec22d",
+  "hash": "1953d467",
   "nodes": [
    "0 Group 49f98720",
    "0/0 Group 8113575b",
-   "0/0/0 Mesh 2695281c",
+   "0/0/0 Mesh a91faea9",
    "0/0/1 Mesh 5f7219cb",
    "0/0/2 Mesh 5f81d0c6",
    "0/0/3 Mesh a41df259",
    "0/0/4 Mesh f17d3826",
-   "0/0/5 Mesh d428ce8a",
-   "0/0/6 Mesh 3cb6c517",
-   "0/0/7 Mesh c01cd4de"
+   "0/0/5 Mesh 1b3c4d77",
+   "0/0/6 Mesh d25a1b4e",
+   "0/0/7 Mesh 79229c67"
   ]
  },
  "model/police_baton:merged": {
-  "hash": "48e8c845",
+  "hash": "e2c8c3f8",
   "nodes": [
    "0 Group 49f98720",
-   "0/0 Mesh fbc4fdea",
+   "0/0 Mesh 63cd991e",
    "0/1 Mesh cbbea7d3",
    "0/2 Mesh 20f0e89e",
    "0/3 Mesh 4e36f205",
-   "0/4 Mesh 6d6f200",
-   "0/5 Mesh cd2582f1",
-   "0/6 Mesh c0d1c013"
+   "0/4 Mesh e6771581",
+   "0/5 Mesh 2d0baa5a",
+   "0/6 Mesh f0d57bf8"
   ]
  },
  "model/police_baton:lod": {
-  "hash": "837789bc",
+  "hash": "fa53fd9f",
   "nodes": [
    "0 LOD 71b61934",
    "0/0 Group c5fef5c6",
-   "0/0/0 Mesh dd5da23b",
+   "0/0/0 Mesh d5cf6c1f",
    "0/0/1 Mesh 1e80405b",
    "0/0/2 Mesh 5d7d4262",
    "0/0/3 Mesh 830330fc",
-   "0/0/4 Mesh ccb01601",
-   "0/0/5 Mesh 9776a5c6",
-   "0/0/6 Mesh 6e53c8b4",
+   "0/0/4 Mesh 33a671aa",
+   "0/0/5 Mesh b3b595",
+   "0/0/6 Mesh 50862f0b",
    "0/1 Group b1a0dc57",
    "0/1/0 Mesh 43698983",
    "0/1/1 Mesh c14bbca6",
@@ -5744,32 +5744,32 @@
   ]
  },
  "model/glass_shards": {
-  "hash": "e462700d",
+  "hash": "b33bfe50",
   "nodes": [
    "0 Group 3482f455",
    "0/0 Group bc9eb4f6",
    "0/0/0 Mesh f25f5f9f",
-   "0/0/1 Mesh da170615",
+   "0/0/1 Mesh b7c46cc",
    "0/0/2 Mesh 83ed3224",
    "0/0/3 Mesh 3289050b",
    "0/0/4 Mesh 4c39c0ed"
   ]
  },
  "model/glass_shards:merged": {
-  "hash": "8e1523bf",
+  "hash": "48f329c5",
   "nodes": [
    "0 Group 3482f455",
    "0/0 Mesh a7d44c0a",
-   "0/1 Mesh 9366df7e"
+   "0/1 Mesh 58895f20"
   ]
  },
  "model/glass_shards:lod": {
-  "hash": "ce8a65c6",
+  "hash": "98d0e7b4",
   "nodes": [
    "0 LOD ad9e8bd9",
    "0/0 Group 95d9dfc9",
    "0/0/0 Mesh 684eb59f",
-   "0/0/1 Mesh f661e532",
+   "0/0/1 Mesh b86754ec",
    "0/1 Group 739712a0",
    "0/1/0 Mesh ef6bb633",
    "0/1/1 Mesh e9d04b30",
@@ -5821,41 +5821,41 @@
   ]
  },
  "model/cement_bag": {
-  "hash": "9e828f59",
+  "hash": "ba6a0b82",
   "nodes": [
    "0 Group 261ed990",
-   "0/0 Group 7ba1c6e0",
-   "0/0/0 Mesh dce2b62b",
-   "0/0/1 Mesh 5bee5a11",
-   "0/0/2 Mesh f3ead8d3",
-   "0/0/3 Mesh 549a4594",
-   "0/0/4 Mesh b6eba016",
-   "0/0/5 Mesh 69fc25a5"
+   "0/0 Group 3800f898",
+   "0/0/0 Mesh 1d086197",
+   "0/0/1 Mesh 120790b5",
+   "0/0/2 Mesh c53e0c12",
+   "0/0/3 Mesh cddc650c",
+   "0/0/4 Mesh d8621498",
+   "0/0/5 Mesh b981bc0f"
   ]
  },
  "model/cement_bag:merged": {
-  "hash": "5977ceb1",
+  "hash": "55fd9427",
   "nodes": [
    "0 Group 261ed990",
-   "0/0 Mesh 9e57514e",
-   "0/1 Mesh abf08627",
-   "0/2 Mesh 7f8b579a",
-   "0/3 Mesh dd4f112c",
-   "0/4 Mesh 9b06668a",
-   "0/5 Mesh 277eda8a"
+   "0/0 Mesh 349ab955",
+   "0/1 Mesh f3f780a6",
+   "0/2 Mesh a6092b0d",
+   "0/3 Mesh fbab8822",
+   "0/4 Mesh 2e508c04",
+   "0/5 Mesh 1a88b211"
   ]
  },
  "model/cement_bag:lod": {
-  "hash": "8f7827f4",
+  "hash": "37099b86",
   "nodes": [
    "0 LOD 813d7d8a",
    "0/0 Group dcaae3f8",
-   "0/0/0 Mesh 7befee75",
-   "0/0/1 Mesh f1f9828b",
-   "0/0/2 Mesh df36b2b",
-   "0/0/3 Mesh 6ad360d0",
-   "0/0/4 Mesh 34901b2d",
-   "0/0/5 Mesh a4d33e9d",
+   "0/0/0 Mesh 26b77bf6",
+   "0/0/1 Mesh b0a9aae",
+   "0/0/2 Mesh b066a38c",
+   "0/0/3 Mesh 4c6f695a",
+   "0/0/4 Mesh d5d563ff",
+   "0/0/5 Mesh 453c18e2",
    "0/1 Group 786c9c29",
    "0/1/0 Mesh 20072395",
    "0/1/1 Mesh 1ced51b1",
@@ -5914,14 +5914,14 @@
   ]
  },
  "model/electronic_components": {
-  "hash": "1a681726",
+  "hash": "3b7da152",
   "nodes": [
    "0 Group 9ca23e08",
    "0/0 Group df6c8649",
    "0/0/0 Mesh 1a9d747f",
-   "0/0/1 Mesh 68775c83",
+   "0/0/1 Mesh 420fe2bd",
    "0/0/2 Mesh 754ed381",
-   "0/0/3 Mesh 5d1f297e",
+   "0/0/3 Mesh 9cb66f0c",
    "0/0/4 Mesh 77c59bc2",
    "0/0/5 Mesh f326f2ac",
    "0/0/6 Mesh 9884e575",
@@ -5938,11 +5938,11 @@
   ]
  },
  "model/electronic_components:merged": {
-  "hash": "1f03c2eb",
+  "hash": "3f0d4939",
   "nodes": [
    "0 Group 9ca23e08",
    "0/0 Mesh a2fca007",
-   "0/1 Mesh f9cef72f",
+   "0/1 Mesh 9f936b25",
    "0/2 Mesh fabbf352",
    "0/3 Mesh cd037426",
    "0/4 Mesh b8be2865",
@@ -5953,12 +5953,12 @@
   ]
  },
  "model/electronic_components:lod": {
-  "hash": "c3431adb",
+  "hash": "7f860fb5",
   "nodes": [
    "0 LOD e5907f3c",
    "0/0 Group 2c49d6a8",
    "0/0/0 Mesh 7b0fbdab",
-   "0/0/1 Mesh b481e5c1",
+   "0/0/1 Mesh 1d300467",
    "0/0/2 Mesh 6469d00c",
    "0/0/3 Mesh 39cde86f",
    "0/0/4 Mesh 7d1b0d26",
@@ -6051,32 +6051,32 @@
   ]
  },
  "model/pet_bottle": {
-  "hash": "b398ae8d",
+  "hash": "526be743",
   "nodes": [
    "0 Group 109be6ce",
    "0/0 Group 1f8d9864",
-   "0/0/0 Mesh d9d3402a",
+   "0/0/0 Mesh dce677e0",
    "0/0/1 Mesh 5b642044",
    "0/0/2 Mesh b7622767",
    "0/0/3 Mesh f2220451"
   ]
  },
  "model/pet_bottle:merged": {
-  "hash": "b609d1ec",
+  "hash": "b3fc1d82",
   "nodes": [
    "0 Group 109be6ce",
-   "0/0 Mesh a9720877",
+   "0/0 Mesh 87a50519",
    "0/1 Mesh 8b0ead8a",
    "0/2 Mesh 8ba8ff3b",
    "0/3 Mesh 6c7918b6"
   ]
  },
  "model/pet_bottle:lod": {
-  "hash": "18e8c6ba",
+  "hash": "80d98ff8",
   "nodes": [
    "0 LOD b2095ddf",
    "0/0 Group 77fc7dc0",
-   "0/0/0 Mesh 37cdb5b3",
+   "0/0/0 Mesh 45eab645",
    "0/0/1 Mesh 47e654f8",
    "0/0/2 Mesh 5193aa64",
    "0/0/3 Mesh 67576e22",
@@ -6088,32 +6088,32 @@
   ]
  },
  "model/glass_bottle": {
-  "hash": "82f001e1",
+  "hash": "f1f6e300",
   "nodes": [
    "0 Group 147bf0ce",
    "0/0 Group e6c1b357",
-   "0/0/0 Mesh 70d1087f",
+   "0/0/0 Mesh f7b5682c",
    "0/0/1 Mesh 83c208e2",
    "0/0/2 Mesh 9d69208b",
    "0/0/3 Mesh 306cc179"
   ]
  },
  "model/glass_bottle:merged": {
-  "hash": "1d4b9fa9",
+  "hash": "2c42d241",
   "nodes": [
    "0 Group 147bf0ce",
-   "0/0 Mesh 4596d5c9",
+   "0/0 Mesh 57e6de07",
    "0/1 Mesh f604ce10",
    "0/2 Mesh 95bdf97d",
    "0/3 Mesh d12a711f"
   ]
  },
  "model/glass_bottle:lod": {
-  "hash": "642d0cb",
+  "hash": "94cb7b87",
   "nodes": [
    "0 LOD c618600a",
    "0/0 Group a126a5b0",
-   "0/0/0 Mesh dc3594a6",
+   "0/0/0 Mesh 14572b5e",
    "0/0/1 Mesh 6c66ca3f",
    "0/0/2 Mesh e059e78a",
    "0/0/3 Mesh 85f29b3",
@@ -6125,32 +6125,32 @@
   ]
  },
  "model/empty_can": {
-  "hash": "1cda3502",
+  "hash": "ea60e811",
   "nodes": [
    "0 Group a4646a6f",
    "0/0 Group 58fdad5d",
-   "0/0/0 Mesh fde3360b",
+   "0/0/0 Mesh 4398be08",
    "0/0/1 Mesh 861eb407",
    "0/0/2 Mesh 8056f153",
    "0/0/3 Mesh af0dba7a"
   ]
  },
  "model/empty_can:merged": {
-  "hash": "d5d9d5db",
+  "hash": "a16f063",
   "nodes": [
    "0 Group a4646a6f",
-   "0/0 Mesh c42c954",
+   "0/0 Mesh e411712c",
    "0/1 Mesh ca296aa5",
    "0/2 Mesh d556c086",
    "0/3 Mesh 44aa256f"
   ]
  },
  "model/empty_can:lod": {
-  "hash": "7bd18fb5",
+  "hash": "d32d0d97",
   "nodes": [
    "0 LOD cb701be1",
    "0/0 Group ede7a7c1",
-   "0/0/0 Mesh a3f7acf4",
+   "0/0/0 Mesh ed3e9d1a",
    "0/0/1 Mesh 698ed62c",
    "0/0/2 Mesh 1f053c95",
    "0/0/3 Mesh 18f50019",
@@ -6162,50 +6162,50 @@
   ]
  },
  "model/firewood": {
-  "hash": "ab855391",
+  "hash": "91ff338e",
   "nodes": [
    "0 Group d3f6ff36",
    "0/0 Group 15d87c63",
-   "0/0/0 Mesh fa44f378",
-   "0/0/1 Mesh bafad49e",
-   "0/0/2 Mesh 6d599a2b",
-   "0/0/3 Mesh 9972f588",
-   "0/0/4 Mesh e3bb6403",
-   "0/0/5 Mesh c4f39870",
-   "0/0/6 Mesh e6be8543",
-   "0/0/7 Mesh 2bf1931f",
-   "0/0/8 Mesh 4f5afa1a"
+   "0/0/0 Mesh 7437e09a",
+   "0/0/1 Mesh bbbe7b9",
+   "0/0/2 Mesh 8d719310",
+   "0/0/3 Mesh 2ce32142",
+   "0/0/4 Mesh d5a78214",
+   "0/0/5 Mesh 17786307",
+   "0/0/6 Mesh 76a5f454",
+   "0/0/7 Mesh 75076482",
+   "0/0/8 Mesh 3f439657"
   ]
  },
  "model/firewood:merged": {
-  "hash": "60b9065a",
+  "hash": "e5fdf935",
   "nodes": [
    "0 Group d3f6ff36",
-   "0/0 Mesh 12acc416",
-   "0/1 Mesh 5445b755",
-   "0/2 Mesh 11c40902",
-   "0/3 Mesh ac2170cb",
-   "0/4 Mesh bbb4b794",
-   "0/5 Mesh 1a17d90d",
-   "0/6 Mesh a9f5cab2",
-   "0/7 Mesh 3cea44db",
-   "0/8 Mesh b49029a9"
+   "0/0 Mesh 57116d7f",
+   "0/1 Mesh 9c00a2f2",
+   "0/2 Mesh 83b327b5",
+   "0/3 Mesh 6418dc99",
+   "0/4 Mesh 828ed795",
+   "0/5 Mesh 83dd8286",
+   "0/6 Mesh 9a9a5bea",
+   "0/7 Mesh 5f933f7c",
+   "0/8 Mesh ac2a2eb6"
   ]
  },
  "model/firewood:lod": {
-  "hash": "310fe4cf",
+  "hash": "f1a34810",
   "nodes": [
    "0 LOD 8a4371a2",
    "0/0 Group d96f3ec8",
-   "0/0/0 Mesh db5f139e",
-   "0/0/1 Mesh e517bbe4",
-   "0/0/2 Mesh 327b874d",
-   "0/0/3 Mesh 3908bb98",
-   "0/0/4 Mesh 97638ea5",
-   "0/0/5 Mesh 77351da4",
-   "0/0/6 Mesh bd12cf3b",
-   "0/0/7 Mesh 24f49d0a",
-   "0/0/8 Mesh 589d513c",
+   "0/0/0 Mesh 506f107f",
+   "0/0/1 Mesh 1f5b764b",
+   "0/0/2 Mesh bac21a4",
+   "0/0/3 Mesh 6c74f216",
+   "0/0/4 Mesh 3a0ab9dc",
+   "0/0/5 Mesh 150b2647",
+   "0/0/6 Mesh c164a79b",
+   "0/0/7 Mesh fc2f4081",
+   "0/0/8 Mesh a658692f",
    "0/1 Group 36720ce1",
    "0/1/0 Mesh c2244d1a",
    "0/1/1 Mesh abcd0208",
@@ -6214,47 +6214,47 @@
   ]
  },
  "model/tarp": {
-  "hash": "cc6d62df",
+  "hash": "161bda1b",
   "nodes": [
    "0 Group a7d57cd3",
    "0/0 Group b047ca91",
-   "0/0/0 Mesh 88beccdc",
+   "0/0/0 Mesh 2f93615c",
    "0/0/1 Mesh 8024eb9",
    "0/0/2 Mesh faa034e1",
-   "0/0/3 Mesh ed4b0448",
+   "0/0/3 Mesh ff7fa930",
    "0/0/4 Mesh 4430df18",
    "0/0/5 Mesh c0e55df0",
-   "0/0/6 Mesh 936762a5",
-   "0/0/7 Mesh 9a054094",
-   "0/0/8 Mesh cde9f46c",
-   "0/0/9 Mesh 4f3be065"
+   "0/0/6 Mesh fe2deed8",
+   "0/0/7 Mesh 8d3a6b51",
+   "0/0/8 Mesh c1d4fcc3",
+   "0/0/9 Mesh b9755936"
   ]
  },
  "model/tarp:merged": {
-  "hash": "86d2c787",
+  "hash": "5996a600",
   "nodes": [
    "0 Group a7d57cd3",
-   "0/0 Mesh 95cee15a",
-   "0/1 Mesh ceee0e2f",
+   "0/0 Mesh 77b70890",
+   "0/1 Mesh 8783114c",
    "0/2 Mesh 655f5991",
-   "0/3 Mesh ff9c890",
-   "0/4 Mesh 64ec15f1",
-   "0/5 Mesh 4f32f77f",
-   "0/6 Mesh da9e04df"
+   "0/3 Mesh 65f899be",
+   "0/4 Mesh 24afb74e",
+   "0/5 Mesh 41db88fb",
+   "0/6 Mesh 2a232d18"
   ]
  },
  "model/tarp:lod": {
-  "hash": "f2460a4e",
+  "hash": "12df3263",
   "nodes": [
    "0 LOD f307a61e",
    "0/0 Group bed0dbd3",
-   "0/0/0 Mesh ba90f319",
-   "0/0/1 Mesh 9bd44dff",
+   "0/0/0 Mesh f2854c0f",
+   "0/0/1 Mesh 4f80070",
    "0/0/2 Mesh 82dd1281",
-   "0/0/3 Mesh 84f5b8b0",
-   "0/0/4 Mesh fa707e19",
-   "0/0/5 Mesh 5e3cdb2f",
-   "0/0/6 Mesh 3844dff3",
+   "0/0/3 Mesh 7a4b6a56",
+   "0/0/4 Mesh 1be83f7e",
+   "0/0/5 Mesh 2c98b333",
+   "0/0/6 Mesh ddf4f274",
    "0/1 Group 44dd9d",
    "0/1/0 Mesh 808de241",
    "0/1/1 Mesh 5365988d",
@@ -6345,11 +6345,11 @@
   ]
  },
  "model/raffia_sack": {
-  "hash": "88f2b627",
+  "hash": "85d8b60e",
   "nodes": [
    "0 Group 6a1053cd",
    "0/0 Group 56562693",
-   "0/0/0 Mesh 11c3bc41",
+   "0/0/0 Mesh c9377e8",
    "0/0/1 Mesh ce1e298c",
    "0/0/2 Mesh 67a305d1",
    "0/0/3 Mesh 52a7b7cb",
@@ -6357,10 +6357,10 @@
   ]
  },
  "model/raffia_sack:merged": {
-  "hash": "25f44570",
+  "hash": "463b2c09",
   "nodes": [
    "0 Group 6a1053cd",
-   "0/0 Mesh 988ee2fb",
+   "0/0 Mesh bc04c674",
    "0/1 Mesh 8ae565c1",
    "0/2 Mesh bf612dca",
    "0/3 Mesh 31814fb",
@@ -6368,11 +6368,11 @@
   ]
  },
  "model/raffia_sack:lod": {
-  "hash": "1477b5d0",
+  "hash": "c5efc715",
   "nodes": [
    "0 LOD 673fda9f",
    "0/0 Group d087a9f9",
-   "0/0/0 Mesh 31f5f775",
+   "0/0/0 Mesh 1c42e0d6",
    "0/0/1 Mesh 6496181b",
    "0/0/2 Mesh 47788ab2",
    "0/0/3 Mesh b6f347df",
@@ -6465,39 +6465,39 @@
   ]
  },
  "model/rag": {
-  "hash": "7749547f",
+  "hash": "9473eb63",
   "nodes": [
    "0 Group 52dcf6bf",
    "0/0 Group bae7b82b",
    "0/0/0 Mesh f34510d1",
    "0/0/1 Mesh 361b5b4d",
-   "0/0/2 Mesh 78d1d690",
+   "0/0/2 Mesh 9e2d2a43",
    "0/0/3 Mesh effb7876",
    "0/0/4 Mesh 3aaffc3e",
-   "0/0/5 Mesh b0ef9f50"
+   "0/0/5 Mesh e9403a51"
   ]
  },
  "model/rag:merged": {
-  "hash": "3371cb04",
+  "hash": "8395cf50",
   "nodes": [
    "0 Group 52dcf6bf",
    "0/0 Mesh 63111316",
    "0/1 Mesh b14062f4",
-   "0/2 Mesh 510814e6",
+   "0/2 Mesh f995f18b",
    "0/3 Mesh 705de280",
-   "0/4 Mesh a0c1e916"
+   "0/4 Mesh 20c3fafb"
   ]
  },
  "model/rag:lod": {
-  "hash": "608a9dad",
+  "hash": "5f2f0039",
   "nodes": [
    "0 LOD 8d96db3b",
    "0/0 Group 9adb0b19",
    "0/0/0 Mesh 31329fb6",
    "0/0/1 Mesh 81a3f59d",
-   "0/0/2 Mesh 34cbe10f",
+   "0/0/2 Mesh f61edb7a",
    "0/0/3 Mesh 881782af",
-   "0/0/4 Mesh ed97e6e6",
+   "0/0/4 Mesh 92b36f39",
    "0/1 Group 90298536",
    "0/1/0 Mesh 3e0d95da",
    "0/1/1 Mesh 8e194550",
@@ -6543,11 +6543,11 @@
   ]
  },
  "model/lubricant_spray": {
-  "hash": "fb693c3e",
+  "hash": "7190ef8b",
   "nodes": [
    "0 Group bbd2d4c1",
    "0/0 Group 6a2b2ae6",
-   "0/0/0 Mesh d4537b39",
+   "0/0/0 Mesh b26924dc",
    "0/0/1 Mesh 20525060",
    "0/0/2 Mesh 162d700e",
    "0/0/3 Mesh 412719a",
@@ -6556,10 +6556,10 @@
   ]
  },
  "model/lubricant_spray:merged": {
-  "hash": "2939fa27",
+  "hash": "a02637a6",
   "nodes": [
    "0 Group bbd2d4c1",
-   "0/0 Mesh 46c1f90",
+   "0/0 Mesh 8195cfd1",
    "0/1 Mesh 9d253d9b",
    "0/2 Mesh 93b170af",
    "0/3 Mesh 28ccf8c5",
@@ -6567,11 +6567,11 @@
   ]
  },
  "model/lubricant_spray:lod": {
-  "hash": "ac075ef4",
+  "hash": "2426506b",
   "nodes": [
    "0 LOD f90d9dc3",
    "0/0 Group 7b525301",
-   "0/0/0 Mesh 33a40470",
+   "0/0/0 Mesh f70dfd93",
    "0/0/1 Mesh 223c0b27",
    "0/0/2 Mesh ada24788",
    "0/0/3 Mesh 606a950c",
@@ -6584,43 +6584,43 @@
   ]
  },
  "model/army_camouflage_uniform": {
-  "hash": "4739628e",
+  "hash": "2bd30579",
   "nodes": [
    "0 Group 6963e868",
-   "0/0 Group be6e87c2",
+   "0/0 Group c2f909ef",
    "0/0/0 Mesh 4f6a56ea",
    "0/0/1 Mesh 92badeac",
    "0/0/2 Mesh 6cd5a2a",
-   "0/0/3 Mesh 4fc978fc",
-   "0/0/4 Mesh 52f60126",
+   "0/0/3 Mesh 5745254",
+   "0/0/4 Mesh e6467186",
    "0/0/5 Mesh 7f171994",
    "0/0/6 Mesh 69946d7a",
-   "0/0/7 Mesh 6d0d3203",
-   "0/0/8 Mesh 6f8c7fc5",
-   "0/0/9 Mesh 6b9dc7a6",
-   "0/0/10 Mesh c76b3761",
-   "0/0/11 Mesh cb3d5bb2",
-   "0/0/12 Mesh 92b46516",
-   "0/0/13 Mesh b25686cc"
+   "0/0/7 Mesh 3d919972",
+   "0/0/8 Mesh a2d47e68",
+   "0/0/9 Mesh a2fe851",
+   "0/0/10 Mesh 68b55085",
+   "0/0/11 Mesh de5d8c6c",
+   "0/0/12 Mesh 119bd064",
+   "0/0/13 Mesh 1f38b059"
   ]
  },
  "model/army_camouflage_uniform:merged": {
-  "hash": "8b3aa6c5",
+  "hash": "e6d57f02",
   "nodes": [
    "0 Group 6963e868",
-   "0/0 Mesh 2c5cbd78",
-   "0/1 Mesh 16283a46",
-   "0/2 Mesh 9c3fb88"
+   "0/0 Mesh 84dd8c70",
+   "0/1 Mesh 8d61909c",
+   "0/2 Mesh 1efdd719"
   ]
  },
  "model/army_camouflage_uniform:lod": {
-  "hash": "29d865b7",
+  "hash": "af459a04",
   "nodes": [
    "0 LOD a415e012",
    "0/0 Group 670e2648",
-   "0/0/0 Mesh 8ed21bb2",
-   "0/0/1 Mesh f22d40e5",
-   "0/0/2 Mesh f74b2ce2",
+   "0/0/0 Mesh 90134c52",
+   "0/0/1 Mesh eeb30303",
+   "0/0/2 Mesh e295acd7",
    "0/1 Group 7adb3d11",
    "0/1/0 Mesh 4bad694b",
    "0/1/1 Mesh e34bf320",
@@ -6710,33 +6710,33 @@
   ]
  },
  "model/battery_9v": {
-  "hash": "77a771e8",
+  "hash": "acc3413",
   "nodes": [
    "0 Group 58761a4",
    "0/0 Group 9394f441",
-   "0/0/0 Mesh 8379798",
-   "0/0/1 Mesh 2c39e3e5",
+   "0/0/0 Mesh 9fdb6c79",
+   "0/0/1 Mesh 6fb405f9",
    "0/0/2 Mesh dbd70fd",
    "0/0/3 Mesh 3beb0e62"
   ]
  },
  "model/battery_9v:merged": {
-  "hash": "f88991cd",
+  "hash": "3c6c1b31",
   "nodes": [
    "0 Group 58761a4",
-   "0/0 Mesh b02c67a",
-   "0/1 Mesh 43060360",
+   "0/0 Mesh 36c4a853",
+   "0/1 Mesh 7b171751",
    "0/2 Mesh 6101ea94",
    "0/3 Mesh c3efadc5"
   ]
  },
  "model/battery_9v:lod": {
-  "hash": "a7adff5b",
+  "hash": "f44dd433",
   "nodes": [
    "0 LOD 1aaa5566",
    "0/0 Group 723b32a",
-   "0/0/0 Mesh 288c6eea",
-   "0/0/1 Mesh a063d97f",
+   "0/0/0 Mesh 6e2b9df9",
+   "0/0/1 Mesh 5b5e4592",
    "0/0/2 Mesh ebcea975",
    "0/0/3 Mesh 6aabf274",
    "0/1 Group ad0c9085",
@@ -6747,38 +6747,38 @@
   ]
  },
  "model/bean_seeds": {
-  "hash": "a88887bf",
+  "hash": "e7c1d057",
   "nodes": [
    "0 Group 4b85603e",
-   "0/0 Group 73773aa2",
-   "0/0/0 Mesh 1a9b4e6d",
-   "0/0/1 Mesh 360001f1",
+   "0/0 Group 2387dc6f",
+   "0/0/0 Mesh f62eb3ce",
+   "0/0/1 Mesh 20c6995",
    "0/0/2 Mesh 6114462c",
    "0/0/3 Mesh 14f63c38",
    "0/0/4 Mesh b09d41e7"
   ]
  },
  "model/bean_seeds:merged": {
-  "hash": "82bc17f6",
+  "hash": "6535f0b3",
   "nodes": [
    "0 Group 4b85603e",
-   "0/0 Mesh e31b413d",
-   "0/1 Mesh 4bf6d4d9",
+   "0/0 Mesh b0128f34",
+   "0/1 Mesh 9d5e301d",
    "0/2 Mesh 6c1e7add",
-   "0/3 Mesh fb7bc66a",
-   "0/4 Mesh af1606fc"
+   "0/3 Mesh 4dc13cf6",
+   "0/4 Mesh c3c01bae"
   ]
  },
  "model/bean_seeds:lod": {
-  "hash": "32879747",
+  "hash": "e8d7cf8",
   "nodes": [
    "0 LOD aee4a83c",
    "0/0 Group 2a07b528",
-   "0/0/0 Mesh 2b7c3ad8",
-   "0/0/1 Mesh 7feed030",
+   "0/0/0 Mesh 29771e99",
+   "0/0/1 Mesh 8b43f5a8",
    "0/0/2 Mesh fecc690b",
-   "0/0/3 Mesh f6fd350e",
-   "0/0/4 Mesh 87bb714e",
+   "0/0/3 Mesh 9576b3f8",
+   "0/0/4 Mesh 717ac78c",
    "0/1 Group 68bf225f",
    "0/1/0 Mesh 8c626590",
    "0/1/1 Mesh d6081bc1",
@@ -6787,44 +6787,44 @@
   ]
  },
  "model/beekeeper_suit": {
-  "hash": "16898b57",
+  "hash": "24d3751b",
   "nodes": [
    "0 Group 920ef593",
-   "0/0 Group c628ebf2",
-   "0/0/0 Mesh fbacd542",
-   "0/0/1 Mesh f07f00f5",
-   "0/0/2 Mesh 71a11667",
+   "0/0 Group 4ffa8907",
+   "0/0/0 Mesh f858315b",
+   "0/0/1 Mesh df6592b6",
+   "0/0/2 Mesh e1dd4bf8",
    "0/0/3 Mesh 95abdf",
    "0/0/4 Mesh ff12069d",
-   "0/0/5 Mesh c05e79d1",
-   "0/0/6 Mesh 7278918",
-   "0/0/7 Mesh 45e13766",
+   "0/0/5 Mesh 2af2e91e",
+   "0/0/6 Mesh dd1045ae",
+   "0/0/7 Mesh 595e223b",
    "0/0/8 Mesh b708f2f3",
    "0/0/9 Mesh a86d2a",
-   "0/0/10 Mesh 248d65e0"
+   "0/0/10 Mesh ba69f12"
   ]
  },
  "model/beekeeper_suit:merged": {
-  "hash": "71712454",
+  "hash": "7a2521a2",
   "nodes": [
    "0 Group 920ef593",
-   "0/0 Mesh 2fa17c0e",
-   "0/1 Mesh 7929371c",
-   "0/2 Mesh ac601f47",
-   "0/3 Mesh 3b27407a",
-   "0/4 Mesh a9caf5c5"
+   "0/0 Mesh 83b11ac5",
+   "0/1 Mesh 186c441d",
+   "0/2 Mesh 4719e61c",
+   "0/3 Mesh 5e392777",
+   "0/4 Mesh 6a2ba96b"
   ]
  },
  "model/beekeeper_suit:lod": {
-  "hash": "4b9e9829",
+  "hash": "bef093eb",
   "nodes": [
    "0 LOD ac79d40f",
    "0/0 Group 89319f61",
-   "0/0/0 Mesh d9f42897",
-   "0/0/1 Mesh 923d106",
-   "0/0/2 Mesh ed1fc046",
-   "0/0/3 Mesh d67b72f7",
-   "0/0/4 Mesh 317f5a25",
+   "0/0/0 Mesh 9cc9285c",
+   "0/0/1 Mesh f2dbb5ff",
+   "0/0/2 Mesh f4ced4a5",
+   "0/0/3 Mesh 53844bae",
+   "0/0/4 Mesh 829d3077",
    "0/1 Group 2683160a",
    "0/1/0 Mesh 481d8d52",
    "0/1/1 Mesh d7863ec4",
@@ -6833,31 +6833,31 @@
   ]
  },
  "model/candles": {
-  "hash": "5591beb7",
+  "hash": "d0485a74",
   "nodes": [
    "0 Group 9e90b167",
    "0/0 Group 4d86599a",
    "0/0/0 Mesh 21e256c0",
-   "0/0/1 Mesh 1a2b27fb",
+   "0/0/1 Mesh bb9048b0",
    "0/0/2 Mesh dc7048cb"
   ]
  },
  "model/candles:merged": {
-  "hash": "1f1cfca2",
+  "hash": "706df1f5",
   "nodes": [
    "0 Group 9e90b167",
    "0/0 Mesh c864739f",
-   "0/1 Mesh 8cd3a17f",
+   "0/1 Mesh 60c077da",
    "0/2 Mesh b5ce79a8"
   ]
  },
  "model/candles:lod": {
-  "hash": "f4f6675f",
+  "hash": "8e483a5a",
   "nodes": [
    "0 LOD 1a13a50b",
    "0/0 Group 4cd7334f",
    "0/0/0 Mesh 799567d7",
-   "0/0/1 Mesh 5bad44c7",
+   "0/0/1 Mesh acfbc28a",
    "0/0/2 Mesh f7bbec30",
    "0/1 Group 89a10646",
    "0/1/0 Mesh 3b29c569",
@@ -7147,31 +7147,31 @@
   ]
  },
  "model/charcoal_bag": {
-  "hash": "5928d665",
+  "hash": "43df35d1",
   "nodes": [
    "0 Group a322c84b",
    "0/0 Group bff67d91",
    "0/0/0 Mesh d7f68a08",
    "0/0/1 Mesh e933051a",
    "0/0/2 Mesh 75adc164",
-   "0/0/3 Mesh a1fb5f16",
+   "0/0/3 Mesh 3a7812ee",
    "0/0/4 Mesh d4f89575"
   ]
  },
  "model/charcoal_bag:merged": {
-  "hash": "7130d9e2",
+  "hash": "e141c60b",
   "nodes": [
    "0 Group a322c84b",
-   "0/0 Mesh e7793b52",
+   "0/0 Mesh 31c1da41",
    "0/1 Mesh cf61aa95"
   ]
  },
  "model/charcoal_bag:lod": {
-  "hash": "2983da55",
+  "hash": "bd88d74a",
   "nodes": [
    "0 LOD b9517487",
    "0/0 Group 5b151519",
-   "0/0/0 Mesh 4564d508",
+   "0/0/0 Mesh 53a3a47b",
    "0/0/1 Mesh 75f6040d",
    "0/1 Group 2dcf0182",
    "0/1/0 Mesh a178b0a4",
@@ -7252,42 +7252,42 @@
   ]
  },
  "model/combat_boots": {
-  "hash": "8df85bdd",
+  "hash": "3ff40a2b",
   "nodes": [
    "0 Group f0fd27df",
    "0/0 Group 30a978c9",
    "0/0/0 Mesh eb9fe0c5",
    "0/0/1 Mesh c743972f",
-   "0/0/2 Mesh 7d3db913",
-   "0/0/3 Mesh 1680c8b2",
-   "0/0/4 Mesh e6a495ec",
+   "0/0/2 Mesh 7a81b6a6",
+   "0/0/3 Mesh bd73accf",
+   "0/0/4 Mesh ad8dcad0",
    "0/0/5 Mesh ba2ef2a9",
    "0/0/6 Mesh 3c55f73c",
    "0/0/7 Mesh 6f1660c5",
    "0/0/8 Mesh 6146662f",
-   "0/0/9 Mesh 1340f2f1",
-   "0/0/10 Mesh eff6d3b5",
-   "0/0/11 Mesh 65fa26db",
+   "0/0/9 Mesh 9b1f8af6",
+   "0/0/10 Mesh 42d5572e",
+   "0/0/11 Mesh f9e7a16d",
    "0/0/12 Mesh f2021dc0",
    "0/0/13 Mesh 5472a229"
   ]
  },
  "model/combat_boots:merged": {
-  "hash": "15c9546a",
+  "hash": "2cd448e0",
   "nodes": [
    "0 Group f0fd27df",
    "0/0 Mesh 6ce1c3fe",
-   "0/1 Mesh fe88b473",
+   "0/1 Mesh bc3d13a9",
    "0/2 Mesh 867c2f7d"
   ]
  },
  "model/combat_boots:lod": {
-  "hash": "3bcde10f",
+  "hash": "3ecd9ed",
   "nodes": [
    "0 LOD c73256f3",
    "0/0 Group bed8dfe9",
    "0/0/0 Mesh 149c1447",
-   "0/0/1 Mesh f156cbad",
+   "0/0/1 Mesh 58fca173",
    "0/0/2 Mesh 5458e231",
    "0/1 Group 1c11058e",
    "0/1/0 Mesh 56568c7c",
@@ -7297,32 +7297,32 @@
   ]
  },
  "model/cooler_box": {
-  "hash": "80f609e4",
+  "hash": "943e6c62",
   "nodes": [
    "0 Group 1fd8528d",
-   "0/0 Group 862d8e2b",
-   "0/0/0 Mesh 400d7a53",
-   "0/0/1 Mesh efe7f937",
+   "0/0 Group 8d448c88",
+   "0/0/0 Mesh 1719b28c",
+   "0/0/1 Mesh ad51670b",
    "0/0/2 Mesh 6fbcada6",
-   "0/0/3 Mesh 2d9dcda1",
-   "0/0/4 Mesh cf697a5f"
+   "0/0/3 Mesh 541e3d37",
+   "0/0/4 Mesh 3c1976f5"
   ]
  },
  "model/cooler_box:merged": {
-  "hash": "8484231a",
+  "hash": "4f92e0c1",
   "nodes": [
    "0 Group 1fd8528d",
-   "0/0 Mesh c3228465",
-   "0/1 Mesh d6e36952"
+   "0/0 Mesh 903fbc86",
+   "0/1 Mesh c7055e90"
   ]
  },
  "model/cooler_box:lod": {
-  "hash": "fae1205d",
+  "hash": "c06b7c80",
   "nodes": [
    "0 LOD cc6a8d75",
    "0/0 Group 3177387b",
-   "0/0/0 Mesh fd2e60ce",
-   "0/0/1 Mesh f6112669",
+   "0/0/0 Mesh c38edded",
+   "0/0/1 Mesh a8d3f6ef",
    "0/1 Group b560bdfc",
    "0/1/0 Mesh 2cb1e34a",
    "0/1/1 Mesh 9d185478",
@@ -7331,38 +7331,38 @@
   ]
  },
  "model/corn_seeds": {
-  "hash": "7994edc6",
+  "hash": "94e77730",
   "nodes": [
    "0 Group 62d6b596",
-   "0/0 Group bd840a29",
-   "0/0/0 Mesh 1a9b4e6d",
-   "0/0/1 Mesh 360001f1",
+   "0/0 Group 7c2fb4dc",
+   "0/0/0 Mesh f62eb3ce",
+   "0/0/1 Mesh 20c6995",
    "0/0/2 Mesh 6114462c",
    "0/0/3 Mesh ba557399",
    "0/0/4 Mesh 2025ae7e"
   ]
  },
  "model/corn_seeds:merged": {
-  "hash": "f5b20fc0",
+  "hash": "b7420e1d",
   "nodes": [
    "0 Group 62d6b596",
-   "0/0 Mesh e31b413d",
-   "0/1 Mesh 4bf6d4d9",
+   "0/0 Mesh b0128f34",
+   "0/1 Mesh 9d5e301d",
    "0/2 Mesh 6c1e7add",
-   "0/3 Mesh 8fde4c7f",
-   "0/4 Mesh 5df4badd"
+   "0/3 Mesh ccd10ab",
+   "0/4 Mesh fa7c9b23"
   ]
  },
  "model/corn_seeds:lod": {
-  "hash": "a5a2b7ed",
+  "hash": "9089252",
   "nodes": [
    "0 LOD 264602c4",
    "0/0 Group fb17eaec",
-   "0/0/0 Mesh 2b7c3ad8",
-   "0/0/1 Mesh 7feed030",
+   "0/0/0 Mesh 29771e99",
+   "0/0/1 Mesh 8b43f5a8",
    "0/0/2 Mesh fecc690b",
-   "0/0/3 Mesh 3fa41bfb",
-   "0/0/4 Mesh 6cb80c3b",
+   "0/0/3 Mesh 42e80505",
+   "0/0/4 Mesh 26dc8911",
    "0/1 Group d2d5f8c7",
    "0/1/0 Mesh 8c626590",
    "0/1/1 Mesh d6081bc1",
@@ -7371,35 +7371,35 @@
   ]
  },
  "model/crossbody_bag": {
-  "hash": "d79ccd8a",
+  "hash": "e208c274",
   "nodes": [
    "0 Group 8d76f62c",
-   "0/0 Group 3e8aaf36",
+   "0/0 Group 25f88cbd",
    "0/0/0 Mesh ad4053b4",
-   "0/0/1 Mesh 855780a8",
-   "0/0/2 Mesh 4e212c21",
+   "0/0/1 Mesh 8fbd5d8c",
+   "0/0/2 Mesh a8a4e151",
    "0/0/3 Mesh 5c1c9601",
    "0/0/4 Mesh 655e7323",
-   "0/0/5 Mesh 84803e9c"
+   "0/0/5 Mesh 1fbb6c8b"
   ]
  },
  "model/crossbody_bag:merged": {
-  "hash": "7abe7e0f",
+  "hash": "9d4cfc4a",
   "nodes": [
    "0 Group 8d76f62c",
    "0/0 Mesh 97be93af",
-   "0/1 Mesh 38e8c6fa",
-   "0/2 Mesh 50401871"
+   "0/1 Mesh 569dff73",
+   "0/2 Mesh 3775e7c7"
   ]
  },
  "model/crossbody_bag:lod": {
-  "hash": "f78f27bf",
+  "hash": "58a85aa2",
   "nodes": [
    "0 LOD 58eaae36",
    "0/0 Group 8c982a8",
    "0/0/0 Mesh 1e04cd1a",
-   "0/0/1 Mesh 5646cf1c",
-   "0/0/2 Mesh 8a2d13c5",
+   "0/0/1 Mesh dde76efd",
+   "0/0/2 Mesh 2334c2d3",
    "0/1 Group 9bbdb7b5",
    "0/1/0 Mesh 89744dfc",
    "0/1/1 Mesh 13bf853e",
@@ -7408,11 +7408,11 @@
   ]
  },
  "model/delivery_bag": {
-  "hash": "230843ec",
+  "hash": "e97e2dad",
   "nodes": [
    "0 Group e13de970",
    "0/0 Group 5df90b63",
-   "0/0/0 Mesh 641fea31",
+   "0/0/0 Mesh 20f9b168",
    "0/0/1 Mesh b28c960c",
    "0/0/2 Mesh 3d7291c8",
    "0/0/3 Mesh 5362f6e9",
@@ -7422,20 +7422,20 @@
   ]
  },
  "model/delivery_bag:merged": {
-  "hash": "fed817e4",
+  "hash": "1138545e",
   "nodes": [
    "0 Group e13de970",
-   "0/0 Mesh 183141d2",
+   "0/0 Mesh e5a6f780",
    "0/1 Mesh 170dc02d",
    "0/2 Mesh b8ef7030"
   ]
  },
  "model/delivery_bag:lod": {
-  "hash": "8d73d15c",
+  "hash": "1712b772",
   "nodes": [
    "0 LOD 6fb5452",
    "0/0 Group f5f4b22a",
-   "0/0/0 Mesh 96706d08",
+   "0/0/0 Mesh 6539b9f6",
    "0/0/1 Mesh d684fa1",
    "0/0/2 Mesh b2d8c9d7",
    "0/1 Group 2d9efb91",
@@ -7446,10 +7446,10 @@
   ]
  },
  "model/denim_jacket": {
-  "hash": "ff3ce745",
+  "hash": "fba2cfdd",
   "nodes": [
    "0 Group a3e8f799",
-   "0/0 Group 8fb4d6f0",
+   "0/0 Group dad75a1f",
    "0/0/0 Mesh 342bcdb",
    "0/0/1 Mesh 39089d05",
    "0/0/2 Mesh 24effa97",
@@ -7457,33 +7457,33 @@
    "0/0/4 Mesh ac02733a",
    "0/0/5 Mesh bb09bd8c",
    "0/0/6 Mesh a40a91ce",
-   "0/0/7 Mesh 2eef969c",
+   "0/0/7 Mesh 74b2d67b",
    "0/0/8 Mesh 23258454",
    "0/0/9 Mesh f53f7866",
-   "0/0/10 Mesh cb380bc6",
-   "0/0/11 Mesh badeff1",
-   "0/0/12 Mesh a883ce40"
+   "0/0/10 Mesh bc9da784",
+   "0/0/11 Mesh 22a2a2ef",
+   "0/0/12 Mesh 558fc966"
   ]
  },
  "model/denim_jacket:merged": {
-  "hash": "adaa3f2c",
+  "hash": "4c53b3d5",
   "nodes": [
    "0 Group a3e8f799",
-   "0/0 Mesh ef56f714",
-   "0/1 Mesh 9a5d7e0d",
-   "0/2 Mesh 6133e4c4",
-   "0/3 Mesh f9aa30e6"
+   "0/0 Mesh 393fe092",
+   "0/1 Mesh 20b7546",
+   "0/2 Mesh 3b91cdb9",
+   "0/3 Mesh aba1400b"
   ]
  },
  "model/denim_jacket:lod": {
-  "hash": "fb2999e8",
+  "hash": "34697ab3",
   "nodes": [
    "0 LOD 10ec299",
    "0/0 Group 43d7e58b",
-   "0/0/0 Mesh 67ed2c5d",
-   "0/0/1 Mesh e4b9605b",
-   "0/0/2 Mesh 15109153",
-   "0/0/3 Mesh 36fbf504",
+   "0/0/0 Mesh 32485e47",
+   "0/0/1 Mesh df73787e",
+   "0/0/2 Mesh 2da78c8a",
+   "0/0/3 Mesh eb451795",
    "0/1 Group 627e4d60",
    "0/1/0 Mesh e35a40ee",
    "0/1/1 Mesh ab8a16e9",
@@ -7492,32 +7492,32 @@
   ]
  },
  "model/diesel": {
-  "hash": "683af365",
+  "hash": "de97ea6d",
   "nodes": [
    "0 Group ed88517f",
    "0/0 Group 30355f8d",
-   "0/0/0 Mesh a1ea892f",
+   "0/0/0 Mesh 5f1f0363",
    "0/0/1 Mesh be12bd0d",
-   "0/0/2 Mesh c6d99da5",
+   "0/0/2 Mesh 21dcdd41",
    "0/0/3 Mesh a88fa7ff",
    "0/0/4 Mesh 2ad9b61f"
   ]
  },
  "model/diesel:merged": {
-  "hash": "78771059",
+  "hash": "cfc240bc",
   "nodes": [
    "0 Group ed88517f",
-   "0/0 Mesh 19a7f1b2",
+   "0/0 Mesh dadf9789",
    "0/1 Mesh 6e8fff00",
    "0/2 Mesh c2b0cd63"
   ]
  },
  "model/diesel:lod": {
-  "hash": "bb67f600",
+  "hash": "b504d123",
   "nodes": [
    "0 LOD bde272fb",
    "0/0 Group 55072ae1",
-   "0/0/0 Mesh 594c0fa8",
+   "0/0/0 Mesh 1b94a4f7",
    "0/0/1 Mesh dd97a73b",
    "0/0/2 Mesh 9b1e9ae4",
    "0/1 Group 8c37b796",
@@ -7528,44 +7528,44 @@
   ]
  },
  "model/diy_magazine": {
-  "hash": "3499382c",
+  "hash": "ae325b46",
   "nodes": [
    "0 Group b782dc34",
-   "0/0 Group cf9b1dbf",
-   "0/0/0 Mesh 5e47933f",
-   "0/0/1 Mesh 4df5eea7",
-   "0/0/2 Mesh 96bbd912",
-   "0/0/3 Mesh af6d0d2",
-   "0/0/4 Mesh 1751e1ae",
-   "0/0/5 Mesh 87828a7f",
-   "0/0/6 Mesh fa9c691c"
+   "0/0 Group 4ef9cc4b",
+   "0/0/0 Mesh cccde98d",
+   "0/0/1 Mesh deaea738",
+   "0/0/2 Mesh 3f78193f",
+   "0/0/3 Mesh 3bb45262",
+   "0/0/4 Mesh 3aa86c9c",
+   "0/0/5 Mesh c206a63b",
+   "0/0/6 Mesh 81c68e68"
   ]
  },
  "model/diy_magazine:merged": {
-  "hash": "b96ce14f",
+  "hash": "3cf7cb9f",
   "nodes": [
    "0 Group b782dc34",
-   "0/0 Mesh 39801b39",
-   "0/1 Mesh 3717cf18",
-   "0/2 Mesh 4dc6991e",
-   "0/3 Mesh 86ac2bbe",
-   "0/4 Mesh 7b361361",
-   "0/5 Mesh a0ce9ace",
-   "0/6 Mesh 954e0aac"
+   "0/0 Mesh 266fe0a",
+   "0/1 Mesh 29ff84b8",
+   "0/2 Mesh 43beb592",
+   "0/3 Mesh 637fab9f",
+   "0/4 Mesh 23b385ba",
+   "0/5 Mesh 75b92fc0",
+   "0/6 Mesh fd4580a1"
   ]
  },
  "model/diy_magazine:lod": {
-  "hash": "7cac4db7",
+  "hash": "191ff32f",
   "nodes": [
    "0 LOD c78ab7ee",
    "0/0 Group 1d88c792",
-   "0/0/0 Mesh 51be8b9",
-   "0/0/1 Mesh 7351e732",
-   "0/0/2 Mesh 5e043a92",
-   "0/0/3 Mesh 2d701b6f",
-   "0/0/4 Mesh 343370d9",
-   "0/0/5 Mesh f1178dd2",
-   "0/0/6 Mesh 908c1f43",
+   "0/0/0 Mesh d08892a2",
+   "0/0/1 Mesh 1f2623ca",
+   "0/0/2 Mesh 8e0dfd54",
+   "0/0/3 Mesh ea8add26",
+   "0/0/4 Mesh c4e34216",
+   "0/0/5 Mesh 4de8a090",
+   "0/0/6 Mesh 843c378a",
    "0/1 Group c67046ad",
    "0/1/0 Mesh 3cb090ed",
    "0/1/1 Mesh 27539b25",
@@ -7607,13 +7607,13 @@
   ]
  },
  "model/electric_fence_energizer": {
-  "hash": "7351c915",
+  "hash": "9ab306c6",
   "nodes": [
    "0 Group 3e8ddfba",
-   "0/0 Group 6e4a032",
+   "0/0 Group 67e39bf7",
    "0/0/0 Mesh d98a9780",
-   "0/0/1 Mesh 9d96f3a5",
-   "0/0/2 Mesh ea23900",
+   "0/0/1 Mesh 180c39f3",
+   "0/0/2 Mesh 79733a20",
    "0/0/3 Mesh edb67dde",
    "0/0/4 Mesh 838b0922",
    "0/0/5 Mesh 338863dd",
@@ -7625,36 +7625,36 @@
   ]
  },
  "model/electric_fence_energizer:merged": {
-  "hash": "997e6b46",
+  "hash": "abb2bcf1",
   "nodes": [
    "0 Group 3e8ddfba",
-   "0/0 Mesh ec591fe6",
-   "0/1 Mesh 5171446c",
-   "0/2 Mesh a3c96e7d",
-   "0/3 Mesh 17a4b623",
-   "0/4 Mesh 280f7730",
-   "0/5 Mesh 32bd7f91",
-   "0/6 Mesh 36ea3d1d",
-   "0/7 Mesh 4f4057e4",
-   "0/8 Mesh 465f4368",
-   "0/9 Mesh 6d229446"
+   "0/0 Mesh d54dcb31",
+   "0/1 Mesh c6b7c52d",
+   "0/2 Mesh 2b281425",
+   "0/3 Mesh 88641cba",
+   "0/4 Mesh 6072a673",
+   "0/5 Mesh 3a67196c",
+   "0/6 Mesh cb41fc9b",
+   "0/7 Mesh b4628503",
+   "0/8 Mesh a863874f",
+   "0/9 Mesh 3b462062"
   ]
  },
  "model/electric_fence_energizer:lod": {
-  "hash": "645eb001",
+  "hash": "c58d8dee",
   "nodes": [
    "0 LOD 220d2b90",
    "0/0 Group 6eda3128",
-   "0/0/0 Mesh f63bab35",
-   "0/0/1 Mesh 4871974b",
-   "0/0/2 Mesh fd16337f",
-   "0/0/3 Mesh 87760c8a",
-   "0/0/4 Mesh aa931d75",
-   "0/0/5 Mesh f1513670",
-   "0/0/6 Mesh 76e7fefc",
-   "0/0/7 Mesh 131876c3",
-   "0/0/8 Mesh 6495d8e1",
-   "0/0/9 Mesh 42ffd25d",
+   "0/0/0 Mesh e089b16",
+   "0/0/1 Mesh cca9956a",
+   "0/0/2 Mesh 68237741",
+   "0/0/3 Mesh 9a402797",
+   "0/0/4 Mesh e67c47ce",
+   "0/0/5 Mesh 6305ee1d",
+   "0/0/6 Mesh 28c49e6c",
+   "0/0/7 Mesh 2bb58e60",
+   "0/0/8 Mesh 9c3043e8",
+   "0/0/9 Mesh 446abdd1",
    "0/1 Group ac5bda23",
    "0/1/0 Mesh a186eb3a",
    "0/1/1 Mesh 32314e11",
@@ -7735,37 +7735,37 @@
   ]
  },
  "model/farmers_almanac": {
-  "hash": "650da2d2",
+  "hash": "b744d4be",
   "nodes": [
    "0 Group e96853cd",
-   "0/0 Group 4d30ad2a",
-   "0/0/0 Mesh 3e946a74",
-   "0/0/1 Mesh 9b13fe0a",
-   "0/0/2 Mesh cb9e5b2e",
-   "0/0/3 Mesh cd7418fe",
-   "0/0/4 Mesh 7a7cc004",
-   "0/0/5 Mesh b12a7d32"
+   "0/0 Group 99ecbbf0",
+   "0/0/0 Mesh ec07a631",
+   "0/0/1 Mesh 773787e8",
+   "0/0/2 Mesh eb1905e0",
+   "0/0/3 Mesh 6edfee84",
+   "0/0/4 Mesh 3c318e5a",
+   "0/0/5 Mesh 69cc41bf"
   ]
  },
  "model/farmers_almanac:merged": {
-  "hash": "405369d4",
+  "hash": "92f6416e",
   "nodes": [
    "0 Group e96853cd",
-   "0/0 Mesh cc8fbc92",
-   "0/1 Mesh 76518479",
-   "0/2 Mesh 82783239",
-   "0/3 Mesh 377d8825"
+   "0/0 Mesh e4a8b26c",
+   "0/1 Mesh a49a27c5",
+   "0/2 Mesh 76c22a1",
+   "0/3 Mesh 5787bee7"
   ]
  },
  "model/farmers_almanac:lod": {
-  "hash": "d0aa4377",
+  "hash": "d34ce8c7",
   "nodes": [
    "0 LOD 69152665",
    "0/0 Group ea9462d9",
-   "0/0/0 Mesh 2b53bc52",
-   "0/0/1 Mesh 4acdabc5",
-   "0/0/2 Mesh 5c95aed",
-   "0/0/3 Mesh d32f08e",
+   "0/0/0 Mesh fa22fe80",
+   "0/0/1 Mesh bbda4283",
+   "0/0/2 Mesh 222280d",
+   "0/0/3 Mesh 7f370e1c",
    "0/1 Group 5233536c",
    "0/1/0 Mesh ac579d4a",
    "0/1/1 Mesh 30c7d1b3",
@@ -7774,11 +7774,11 @@
   ]
  },
  "model/fertilizer_bag": {
-  "hash": "18e6a73d",
+  "hash": "283e8034",
   "nodes": [
    "0 Group 100e7b1e",
    "0/0 Group 35512643",
-   "0/0/0 Mesh bcc662c1",
+   "0/0/0 Mesh aab725d2",
    "0/0/1 Mesh f47277f4",
    "0/0/2 Mesh f9a0b069",
    "0/0/3 Mesh 94a61706",
@@ -7786,21 +7786,21 @@
   ]
  },
  "model/fertilizer_bag:merged": {
-  "hash": "6f5d0220",
+  "hash": "ced49566",
   "nodes": [
    "0 Group 100e7b1e",
-   "0/0 Mesh fa4f3b67",
+   "0/0 Mesh dd27864d",
    "0/1 Mesh 9351a7c3",
    "0/2 Mesh d9ecdc78",
    "0/3 Mesh 54638072"
   ]
  },
  "model/fertilizer_bag:lod": {
-  "hash": "d3b968e7",
+  "hash": "1b4b87a9",
   "nodes": [
    "0 LOD c726a64",
    "0/0 Group 6a98cec4",
-   "0/0/0 Mesh 9fa4cf05",
+   "0/0/0 Mesh 3d45a99b",
    "0/0/1 Mesh 1051621f",
    "0/0/2 Mesh a4928c10",
    "0/0/3 Mesh 5544f288",
@@ -7812,46 +7812,46 @@
   ]
  },
  "model/firefighter_suit": {
-  "hash": "cb808960",
+  "hash": "c7c2cffe",
   "nodes": [
    "0 Group 4f2d7bf6",
    "0/0 Group a1574fcb",
    "0/0/0 Mesh 91e002a2",
    "0/0/1 Mesh 6b70205c",
-   "0/0/2 Mesh 4867be22",
-   "0/0/3 Mesh 86e20808",
-   "0/0/4 Mesh 191948b8",
-   "0/0/5 Mesh 5b5c1132",
+   "0/0/2 Mesh 34123048",
+   "0/0/3 Mesh 2bac34e2",
+   "0/0/4 Mesh bfb9e3ea",
+   "0/0/5 Mesh 83507970",
    "0/0/6 Mesh e9f6abec",
-   "0/0/7 Mesh 3e8ff6b9",
-   "0/0/8 Mesh bb80ffbf",
-   "0/0/9 Mesh 74dac076",
-   "0/0/10 Mesh 436ba115",
-   "0/0/11 Mesh d7c8b76f",
-   "0/0/12 Mesh 2c1ceaf1",
-   "0/0/13 Mesh 569faa6a",
-   "0/0/14 Mesh 6812272a",
-   "0/0/15 Mesh c998721d",
-   "0/0/16 Mesh b6645d89"
+   "0/0/7 Mesh b50bc4d8",
+   "0/0/8 Mesh 50aa4dc6",
+   "0/0/9 Mesh c9dcea34",
+   "0/0/10 Mesh e1fdc937",
+   "0/0/11 Mesh cab76ef0",
+   "0/0/12 Mesh 7902c1b0",
+   "0/0/13 Mesh 7d803212",
+   "0/0/14 Mesh a9f6d652",
+   "0/0/15 Mesh ec6d9b38",
+   "0/0/16 Mesh 1f112744"
   ]
  },
  "model/firefighter_suit:merged": {
-  "hash": "d87bfe83",
+  "hash": "43c23762",
   "nodes": [
    "0 Group 4f2d7bf6",
-   "0/0 Mesh e2c338e3",
-   "0/1 Mesh bc30ceef",
-   "0/2 Mesh 8cd27662"
+   "0/0 Mesh 8125f027",
+   "0/1 Mesh 5aaba9a2",
+   "0/2 Mesh e31574a0"
   ]
  },
  "model/firefighter_suit:lod": {
-  "hash": "af9f07f6",
+  "hash": "27e5bee1",
   "nodes": [
    "0 LOD ca58abec",
    "0/0 Group 7b4befc0",
-   "0/0/0 Mesh 939d061a",
-   "0/0/1 Mesh 7cd4da69",
-   "0/0/2 Mesh c1a591c6",
+   "0/0/0 Mesh af221d2",
+   "0/0/1 Mesh f56934f4",
+   "0/0/2 Mesh e8025a8",
    "0/1 Group 4afeef4f",
    "0/1/0 Mesh 96cab2de",
    "0/1/1 Mesh 6b3d8787",
@@ -7958,38 +7958,38 @@
   ]
  },
  "model/fishing_tackle_box": {
-  "hash": "7563fafa",
+  "hash": "55c033d6",
   "nodes": [
    "0 Group bc4d760a",
-   "0/0 Group e41e0c35",
-   "0/0/0 Mesh fdf7a5a4",
-   "0/0/1 Mesh e645151b",
+   "0/0 Group 83391a55",
+   "0/0/0 Mesh cf515019",
+   "0/0/1 Mesh b1071dc0",
    "0/0/2 Mesh 84131555",
    "0/0/3 Mesh 9383cbbc",
    "0/0/4 Mesh 6080875b"
   ]
  },
  "model/fishing_tackle_box:merged": {
-  "hash": "7817566a",
+  "hash": "e217e54e",
   "nodes": [
    "0 Group bc4d760a",
-   "0/0 Mesh efe1b657",
-   "0/1 Mesh 20cb164a",
+   "0/0 Mesh bf90373b",
+   "0/1 Mesh 2442f6a3",
    "0/2 Mesh 5e66d6af",
-   "0/3 Mesh 7951859f",
-   "0/4 Mesh bdcbca88"
+   "0/3 Mesh 3326afa4",
+   "0/4 Mesh 1f4f5c1e"
   ]
  },
  "model/fishing_tackle_box:lod": {
-  "hash": "f5ba01f9",
+  "hash": "34802121",
   "nodes": [
    "0 LOD 58999dc0",
    "0/0 Group 76b6d6a0",
-   "0/0/0 Mesh 4df0a153",
-   "0/0/1 Mesh e61aceb",
+   "0/0/0 Mesh f7e2a14b",
+   "0/0/1 Mesh 13cd9ae6",
    "0/0/2 Mesh 89757797",
-   "0/0/3 Mesh 7402e404",
-   "0/0/4 Mesh bc2ac57",
+   "0/0/3 Mesh e7ef5dd3",
+   "0/0/4 Mesh e5174af1",
    "0/1 Group 38d66913",
    "0/1/0 Mesh bd839cec",
    "0/1/1 Mesh c139bb79",
@@ -7998,38 +7998,38 @@
   ]
  },
  "model/flip_flops": {
-  "hash": "129c65f",
+  "hash": "556f2d5b",
   "nodes": [
    "0 Group e76b3937",
    "0/0 Group e38fd6d5",
    "0/0/0 Mesh 2385f09f",
-   "0/0/1 Mesh 42633dcb",
-   "0/0/2 Mesh f8377265",
+   "0/0/1 Mesh 5aaa2406",
+   "0/0/2 Mesh 942428ab",
    "0/0/3 Mesh e87c87c2",
    "0/0/4 Mesh 721d57aa",
    "0/0/5 Mesh 4de41184",
    "0/0/6 Mesh e40471be",
-   "0/0/7 Mesh 5d9e8ddc",
-   "0/0/8 Mesh fb245e40",
+   "0/0/7 Mesh 7378d26f",
+   "0/0/8 Mesh e6998d48",
    "0/0/9 Mesh d23dc3d",
    "0/0/10 Mesh 59be5f56",
    "0/0/11 Mesh 1f1b40fc"
   ]
  },
  "model/flip_flops:merged": {
-  "hash": "b7e114c3",
+  "hash": "8a7656d5",
   "nodes": [
    "0 Group e76b3937",
-   "0/0 Mesh 95a1fb25",
+   "0/0 Mesh 73c76feb",
    "0/1 Mesh 256ff1f9"
   ]
  },
  "model/flip_flops:lod": {
-  "hash": "f2265f09",
+  "hash": "990f6f1f",
   "nodes": [
    "0 LOD 6645b0f3",
    "0/0 Group 90c2c629",
-   "0/0/0 Mesh db8e13a",
+   "0/0/0 Mesh f6dcb7a0",
    "0/0/1 Mesh 5f174ff0",
    "0/1 Group 8ec6e08e",
    "0/1/0 Mesh c4f5d8f2",
@@ -8039,16 +8039,16 @@
   ]
  },
  "model/folding_solar_panel": {
-  "hash": "d1a9bd4",
+  "hash": "1faf5590",
   "nodes": [
    "0 Group 9c9f639b",
-   "0/0 Group e3a5ce83",
+   "0/0 Group c5c2d6e",
    "0/0/0 Mesh 2736ba84",
-   "0/0/1 Mesh 914183a4",
+   "0/0/1 Mesh 20406f13",
    "0/0/2 Mesh c3cda614",
-   "0/0/3 Mesh 12f1db70",
-   "0/0/4 Mesh db39a8d5",
-   "0/0/5 Mesh 6e02aa8c",
+   "0/0/3 Mesh f83e9116",
+   "0/0/4 Mesh d29ae9b7",
+   "0/0/5 Mesh 8665ad8a",
    "0/0/6 Mesh adc547f2",
    "0/0/7 Mesh 79e79a33",
    "0/0/8 Mesh 6ac9bc98",
@@ -8056,15 +8056,15 @@
   ]
  },
  "model/folding_solar_panel:merged": {
-  "hash": "f16bfa42",
+  "hash": "50a3fbbb",
   "nodes": [
    "0 Group 9c9f639b",
    "0/0 Mesh eee9b5eb",
-   "0/1 Mesh 52ddadbd",
+   "0/1 Mesh fb352177",
    "0/2 Mesh b7136e5b",
-   "0/3 Mesh 53366d70",
-   "0/4 Mesh c8d3a2de",
-   "0/5 Mesh 339e0fb",
+   "0/3 Mesh 47f29a86",
+   "0/4 Mesh b06d41cc",
+   "0/5 Mesh 78910508",
    "0/6 Mesh 1b3e8ae5",
    "0/7 Mesh 6e80b86c",
    "0/8 Mesh 58c5ae46",
@@ -8072,16 +8072,16 @@
   ]
  },
  "model/folding_solar_panel:lod": {
-  "hash": "260095b3",
+  "hash": "abf5fdd2",
   "nodes": [
    "0 LOD ddb90bc7",
    "0/0 Group 45baec8f",
    "0/0/0 Mesh 18e7d4ed",
-   "0/0/1 Mesh cbcab914",
+   "0/0/1 Mesh 6070ae02",
    "0/0/2 Mesh 9febc16",
-   "0/0/3 Mesh 7ffc0bb2",
-   "0/0/4 Mesh 98b12bb0",
-   "0/0/5 Mesh c1a91fe1",
+   "0/0/3 Mesh cff22f32",
+   "0/0/4 Mesh 5d99d072",
+   "0/0/5 Mesh 4b49573e",
    "0/0/6 Mesh b072b97e",
    "0/0/7 Mesh 4a32456b",
    "0/0/8 Mesh b2ec9fd",
@@ -8094,31 +8094,31 @@
   ]
  },
  "model/gas_cartridge": {
-  "hash": "f449ed4d",
+  "hash": "c00a1cd5",
   "nodes": [
    "0 Group 2159a596",
    "0/0 Group de905e61",
-   "0/0/0 Mesh c1810cf",
+   "0/0/0 Mesh ff003ba6",
    "0/0/1 Mesh 3491d622",
-   "0/0/2 Mesh 5d720c4b",
+   "0/0/2 Mesh 8b03f4a8",
    "0/0/3 Mesh 1ff00d41"
   ]
  },
  "model/gas_cartridge:merged": {
-  "hash": "d94bcb33",
+  "hash": "771fcab",
   "nodes": [
    "0 Group 2159a596",
-   "0/0 Mesh bab99985",
+   "0/0 Mesh dbedae29",
    "0/1 Mesh 8c572204",
    "0/2 Mesh e2e059c1"
   ]
  },
  "model/gas_cartridge:lod": {
-  "hash": "3ff069af",
+  "hash": "3c2ee157",
   "nodes": [
    "0 LOD 38cbe7dc",
    "0/0 Group 76c0abb6",
-   "0/0/0 Mesh 6835cf19",
+   "0/0/0 Mesh 27083c1",
    "0/0/1 Mesh da5dc511",
    "0/0/2 Mesh d0c63f00",
    "0/1 Group 86b7609f",
@@ -8129,32 +8129,32 @@
   ]
  },
  "model/gasoline": {
-  "hash": "8f5e90d2",
+  "hash": "1109b000",
   "nodes": [
    "0 Group 96a842dd",
    "0/0 Group 7c368273",
-   "0/0/0 Mesh 73daf28e",
+   "0/0/0 Mesh 9b8e885",
    "0/0/1 Mesh beb5f2f1",
-   "0/0/2 Mesh 84305218",
+   "0/0/2 Mesh 1f474a15",
    "0/0/3 Mesh a1ca995e",
    "0/0/4 Mesh 81770d6d"
   ]
  },
  "model/gasoline:merged": {
-  "hash": "97b26d9e",
+  "hash": "a41fad2a",
   "nodes": [
    "0 Group 96a842dd",
-   "0/0 Mesh b69c4da7",
+   "0/0 Mesh eb4a845b",
    "0/1 Mesh f705b138",
    "0/2 Mesh a48ec0f1"
   ]
  },
  "model/gasoline:lod": {
-  "hash": "5e4cb4be",
+  "hash": "edc5c98a",
   "nodes": [
    "0 LOD 2f1d5d8d",
    "0/0 Group 97e1f8eb",
-   "0/0/0 Mesh 8af7b14d",
+   "0/0/0 Mesh 1c8f18d",
    "0/0/1 Mesh 7834ba3c",
    "0/0/2 Mesh ebd952d0",
    "0/1 Group a3c697d4",
@@ -8211,32 +8211,32 @@
   ]
  },
  "model/hard_hat": {
-  "hash": "102e0bc7",
+  "hash": "21ca2c26",
   "nodes": [
    "0 Group 88490bfe",
    "0/0 Group 7e1deb69",
-   "0/0/0 Mesh f910b815",
+   "0/0/0 Mesh 114a1cac",
    "0/0/1 Mesh 4024a464",
-   "0/0/2 Mesh f34140b3",
+   "0/0/2 Mesh d2a93883",
    "0/0/3 Mesh 9a241af",
-   "0/0/4 Mesh 6d537ec1"
+   "0/0/4 Mesh 6575ee4f"
   ]
  },
  "model/hard_hat:merged": {
-  "hash": "c6aa39c7",
+  "hash": "1752f632",
   "nodes": [
    "0 Group 88490bfe",
-   "0/0 Mesh 5efb7766",
-   "0/1 Mesh 5292ac19"
+   "0/0 Mesh ccefa56d",
+   "0/1 Mesh f2ef9f7d"
   ]
  },
  "model/hard_hat:lod": {
-  "hash": "1c0c5dff",
+  "hash": "944dbe20",
   "nodes": [
    "0 LOD c1dfc8d4",
    "0/0 Group f4a87b9c",
-   "0/0/0 Mesh cca5d05c",
-   "0/0/1 Mesh 3cf2bf65",
+   "0/0/0 Mesh 403b82e7",
+   "0/0/1 Mesh 6f0454bd",
    "0/1 Group 636d19f7",
    "0/1/0 Mesh c0d812d3",
    "0/1/1 Mesh 2f72f6a4",
@@ -8283,16 +8283,16 @@
   ]
  },
  "model/hoodie": {
-  "hash": "cdb899e3",
+  "hash": "89dd091f",
   "nodes": [
    "0 Group 467b8039",
-   "0/0 Group 36b41acf",
-   "0/0/0 Mesh 7f503b22",
+   "0/0 Group 32addb09",
+   "0/0/0 Mesh f30470b6",
    "0/0/1 Mesh 26af0649",
    "0/0/2 Mesh e1c3dfcb",
    "0/0/3 Mesh 50b0f0b3",
    "0/0/4 Mesh 426b233d",
-   "0/0/5 Mesh 6df2eaf0",
+   "0/0/5 Mesh 859a8d88",
    "0/0/6 Mesh f7768d18",
    "0/0/7 Mesh 5f6af68",
    "0/0/8 Mesh 6cf045e4",
@@ -8300,22 +8300,22 @@
   ]
  },
  "model/hoodie:merged": {
-  "hash": "b2fd5df2",
+  "hash": "74a7a0bd",
   "nodes": [
    "0 Group 467b8039",
-   "0/0 Mesh 2704592e",
-   "0/1 Mesh 87dc9194",
-   "0/2 Mesh 55cde54a"
+   "0/0 Mesh 28a273bc",
+   "0/1 Mesh 9788714f",
+   "0/2 Mesh bde15562"
   ]
  },
  "model/hoodie:lod": {
-  "hash": "bd2ae3fc",
+  "hash": "43f17cf5",
   "nodes": [
    "0 LOD 46f69661",
    "0/0 Group 4cbe3d5f",
-   "0/0/0 Mesh 24301e8f",
-   "0/0/1 Mesh 8e0c7858",
-   "0/0/2 Mesh da23eb7e",
+   "0/0/0 Mesh c1dc5da1",
+   "0/0/1 Mesh 7065cdb7",
+   "0/0/2 Mesh f3869a26",
    "0/1 Group 4b30aee8",
    "0/1/0 Mesh a50afb71",
    "0/1/1 Mesh 91c7c933",
@@ -8430,38 +8430,38 @@
   ]
  },
  "model/kale_and_lettuce_seeds": {
-  "hash": "69142c79",
+  "hash": "acecd0cd",
   "nodes": [
    "0 Group efd2c7f0",
-   "0/0 Group 11aa1dca",
-   "0/0/0 Mesh f0c92732",
-   "0/0/1 Mesh e4bf3eb8",
+   "0/0 Group 7ebfb002",
+   "0/0/0 Mesh 1a1e078a",
+   "0/0/1 Mesh 9eadbdba",
    "0/0/2 Mesh fa084e80",
-   "0/0/3 Mesh 4e1bca6c",
-   "0/0/4 Mesh ec1379a7"
+   "0/0/3 Mesh c4b93bbf",
+   "0/0/4 Mesh ac1fa94"
   ]
  },
  "model/kale_and_lettuce_seeds:merged": {
-  "hash": "747dcae2",
+  "hash": "119a814c",
   "nodes": [
    "0 Group efd2c7f0",
-   "0/0 Mesh bc5225a0",
-   "0/1 Mesh 64617883",
-   "0/2 Mesh 96ddb710",
-   "0/3 Mesh 1b5cdc54",
-   "0/4 Mesh 6fc4a812"
+   "0/0 Mesh fab2398b",
+   "0/1 Mesh 7520404b",
+   "0/2 Mesh 11e5fa3c",
+   "0/3 Mesh 53a75226",
+   "0/4 Mesh 7c7ee42f"
   ]
  },
  "model/kale_and_lettuce_seeds:lod": {
-  "hash": "eeb87d56",
+  "hash": "deeb2d20",
   "nodes": [
    "0 LOD 3e70dfba",
    "0/0 Group 28677312",
-   "0/0/0 Mesh 1e15536b",
-   "0/0/1 Mesh 4832dda",
-   "0/0/2 Mesh 3d2e19aa",
-   "0/0/3 Mesh d6422e1c",
-   "0/0/4 Mesh ec8fd26e",
+   "0/0/0 Mesh cd3fd6a2",
+   "0/0/1 Mesh 12e3f962",
+   "0/0/2 Mesh 349a4f02",
+   "0/0/3 Mesh e7a466b2",
+   "0/0/4 Mesh d9c88b03",
    "0/1 Group ff12ee59",
    "0/1/0 Mesh df2ff793",
    "0/1/1 Mesh 892d78d2",
@@ -8470,32 +8470,32 @@
   ]
  },
  "model/kerosene": {
-  "hash": "67f0089d",
+  "hash": "5f7a0479",
   "nodes": [
    "0 Group 191f0447",
    "0/0 Group 338b0f9c",
-   "0/0/0 Mesh 73daf28e",
+   "0/0/0 Mesh 9b8e885",
    "0/0/1 Mesh 1c98c67",
-   "0/0/2 Mesh 84305218",
+   "0/0/2 Mesh 1f474a15",
    "0/0/3 Mesh a1ca995e",
    "0/0/4 Mesh c1d3afeb"
   ]
  },
  "model/kerosene:merged": {
-  "hash": "d56869bc",
+  "hash": "e2ad08f4",
   "nodes": [
    "0 Group 191f0447",
-   "0/0 Mesh b69c4da7",
+   "0/0 Mesh eb4a845b",
    "0/1 Mesh d46b62be",
    "0/2 Mesh e7a25a67"
   ]
  },
  "model/kerosene:lod": {
-  "hash": "35b51c08",
+  "hash": "bc0dfe9c",
   "nodes": [
    "0 LOD fed11f8b",
    "0/0 Group 43b9e21",
-   "0/0/0 Mesh 8af7b14d",
+   "0/0/0 Mesh 1c8f18d",
    "0/0/1 Mesh b175f0f6",
    "0/0/2 Mesh 2c6b5a12",
    "0/1 Group 63dba706",
@@ -8506,35 +8506,35 @@
   ]
  },
  "model/laptop": {
-  "hash": "2adfd748",
+  "hash": "6b8a83c0",
   "nodes": [
    "0 Group c8f74c91",
    "0/0 Group 74e240fd",
    "0/0/0 Mesh fe2675ee",
-   "0/0/1 Mesh a37e19a5",
+   "0/0/1 Mesh 7d4c1213",
    "0/0/2 Mesh 36daded0",
-   "0/0/3 Mesh 1ca0cc44"
+   "0/0/3 Mesh 83bc512"
   ]
  },
  "model/laptop:merged": {
-  "hash": "1a4c06b1",
+  "hash": "d21260d8",
   "nodes": [
    "0 Group c8f74c91",
    "0/0 Mesh b4d7d455",
-   "0/1 Mesh c5108177",
+   "0/1 Mesh d631cd17",
    "0/2 Mesh 8ef50061",
-   "0/3 Mesh 97802fef"
+   "0/3 Mesh 8d4342c6"
   ]
  },
  "model/laptop:lod": {
-  "hash": "80a5ebbf",
+  "hash": "4dea0c14",
   "nodes": [
    "0 LOD 25da3001",
    "0/0 Group cc75be3",
    "0/0/0 Mesh 438e6e54",
-   "0/0/1 Mesh 44e80c26",
+   "0/0/1 Mesh 345f1f42",
    "0/0/2 Mesh 685419f0",
-   "0/0/3 Mesh 13419638",
+   "0/0/3 Mesh 65ca0a51",
    "0/1 Group ae643e68",
    "0/1/0 Mesh 2897d289",
    "0/1/1 Mesh a06927af",
@@ -8543,44 +8543,44 @@
   ]
  },
  "model/leather_motorcycle_jacket": {
-  "hash": "759dc146",
+  "hash": "f2e96da2",
   "nodes": [
    "0 Group 5afbd43f",
-   "0/0 Group b1e7505e",
+   "0/0 Group 763f89f0",
    "0/0/0 Mesh fc94ee2",
    "0/0/1 Mesh 17194ae2",
    "0/0/2 Mesh 9419373c",
-   "0/0/3 Mesh c32670da",
-   "0/0/4 Mesh 77ca67e4",
-   "0/0/5 Mesh 2557e0c7",
-   "0/0/6 Mesh 18cb1389",
+   "0/0/3 Mesh 75417575",
+   "0/0/4 Mesh d137b2bf",
+   "0/0/5 Mesh 7a6c60c3",
+   "0/0/6 Mesh cc087631",
    "0/0/7 Mesh f81f1191",
    "0/0/8 Mesh 3db0ca1f",
-   "0/0/9 Mesh 39638737",
+   "0/0/9 Mesh c102b348",
    "0/0/10 Mesh 3f7a163f",
    "0/0/11 Mesh 5b85747",
-   "0/0/12 Mesh 582dc5d6"
+   "0/0/12 Mesh 8e236751"
   ]
  },
  "model/leather_motorcycle_jacket:merged": {
-  "hash": "91794727",
+  "hash": "5b15c2c8",
   "nodes": [
    "0 Group 5afbd43f",
-   "0/0 Mesh b0230aed",
-   "0/1 Mesh 6ac025ab",
-   "0/2 Mesh 94d82e",
-   "0/3 Mesh 96d81228"
+   "0/0 Mesh 6860b1c",
+   "0/1 Mesh 74b0e3b5",
+   "0/2 Mesh 9db8cda5",
+   "0/3 Mesh 45a8a907"
   ]
  },
  "model/leather_motorcycle_jacket:lod": {
-  "hash": "79a03125",
+  "hash": "c117973a",
   "nodes": [
    "0 LOD 429da13",
    "0/0 Group 69ee836b",
-   "0/0/0 Mesh 6f14786e",
-   "0/0/1 Mesh c49ea4f8",
-   "0/0/2 Mesh 4b38050f",
-   "0/0/3 Mesh 8698b3d7",
+   "0/0/0 Mesh 4d2b665b",
+   "0/0/1 Mesh 24a05442",
+   "0/0/2 Mesh 4c158ec4",
+   "0/0/3 Mesh 63de7064",
    "0/1 Group bcc5320e",
    "0/1/0 Mesh 7c87316e",
    "0/1/1 Mesh f67a16b",
@@ -8589,7 +8589,7 @@
   ]
  },
  "model/leather_motorcycle_pants": {
-  "hash": "5e0950ab",
+  "hash": "87820143",
   "nodes": [
    "0 Group c9bee19b",
    "0/0 Group 41783888",
@@ -8599,27 +8599,27 @@
    "0/0/3 Mesh 1b1137fc",
    "0/0/4 Mesh 1936eab4",
    "0/0/5 Mesh 4ef2b4f7",
-   "0/0/6 Mesh 9d2c01f7",
-   "0/0/7 Mesh 910466b3",
+   "0/0/6 Mesh 3f70a559",
+   "0/0/7 Mesh 3b1a9731",
    "0/0/8 Mesh 434b54a8"
   ]
  },
  "model/leather_motorcycle_pants:merged": {
-  "hash": "c2ea9361",
+  "hash": "4f9728fb",
   "nodes": [
    "0 Group c9bee19b",
    "0/0 Mesh faadeaed",
-   "0/1 Mesh 4e4a2114",
+   "0/1 Mesh a09fab9e",
    "0/2 Mesh d5b8ba40"
   ]
  },
  "model/leather_motorcycle_pants:lod": {
-  "hash": "becd3fcc",
+  "hash": "d9600896",
   "nodes": [
    "0 LOD afd23e47",
    "0/0 Group a556a2ed",
    "0/0/0 Mesh a6d480ec",
-   "0/0/1 Mesh f6a4a8a3",
+   "0/0/1 Mesh 48c67e19",
    "0/0/2 Mesh e4b1f209",
    "0/1 Group efa29902",
    "0/1/0 Mesh 78a560cc",
@@ -8629,35 +8629,35 @@
   ]
  },
  "model/leather_work_gloves": {
-  "hash": "cebe6334",
+  "hash": "f012fddb",
   "nodes": [
    "0 Group a77592c7",
-   "0/0 Group 1a292f7c",
+   "0/0 Group 7bacafeb",
    "0/0/0 Mesh 1d24e456",
    "0/0/1 Mesh c4d25059",
    "0/0/2 Mesh 6066a73",
    "0/0/3 Mesh 1e543b35",
    "0/0/4 Mesh 6c80f27a",
    "0/0/5 Mesh 5eaf673c",
-   "0/0/6 Mesh 98bd773c",
-   "0/0/7 Mesh e56524e3"
+   "0/0/6 Mesh 43f76dc1",
+   "0/0/7 Mesh 8d22b56a"
   ]
  },
  "model/leather_work_gloves:merged": {
-  "hash": "c49f1eb",
+  "hash": "8569baf0",
   "nodes": [
    "0 Group a77592c7",
-   "0/0 Mesh a3419add",
-   "0/1 Mesh fdb22c29"
+   "0/0 Mesh 7a61e676",
+   "0/1 Mesh 93b44637"
   ]
  },
  "model/leather_work_gloves:lod": {
-  "hash": "de2f4a4a",
+  "hash": "97b63465",
   "nodes": [
    "0 LOD ec3dd153",
    "0/0 Group 6f6315bb",
-   "0/0/0 Mesh 77457cc7",
-   "0/0/1 Mesh 2f736958",
+   "0/0/0 Mesh 8fe76284",
+   "0/0/1 Mesh 18d4d446",
    "0/1 Group 4d8a844e",
    "0/1/0 Mesh dc72ac04",
    "0/1/1 Mesh efdc3269",
@@ -8759,41 +8759,41 @@
   ]
  },
  "model/magazines_and_comics": {
-  "hash": "341e6818",
+  "hash": "61e4b1c0",
   "nodes": [
    "0 Group be1c841",
-   "0/0 Group 320142f0",
-   "0/0/0 Mesh b51e602f",
-   "0/0/1 Mesh ace56854",
-   "0/0/2 Mesh fda46cbf",
-   "0/0/3 Mesh 6d4cfc38",
-   "0/0/4 Mesh 925ca4d7",
-   "0/0/5 Mesh 46282ad"
+   "0/0 Group ebaeb2f5",
+   "0/0/0 Mesh 17da5852",
+   "0/0/1 Mesh b43b3f06",
+   "0/0/2 Mesh 856cf3fc",
+   "0/0/3 Mesh a448faa2",
+   "0/0/4 Mesh 5c9b63e7",
+   "0/0/5 Mesh 43b667b0"
   ]
  },
  "model/magazines_and_comics:merged": {
-  "hash": "822e2b4a",
+  "hash": "a0227889",
   "nodes": [
    "0 Group be1c841",
-   "0/0 Mesh c6fadf6f",
-   "0/1 Mesh 3724c113",
-   "0/2 Mesh 401226d",
-   "0/3 Mesh 1931f55f",
-   "0/4 Mesh 73e27ea5",
-   "0/5 Mesh bf73c410"
+   "0/0 Mesh 697df4b3",
+   "0/1 Mesh be80d139",
+   "0/2 Mesh 2adf5c76",
+   "0/3 Mesh 1d6479c4",
+   "0/4 Mesh 56417a29",
+   "0/5 Mesh 9536caf5"
   ]
  },
  "model/magazines_and_comics:lod": {
-  "hash": "e2f1e4bc",
+  "hash": "f1b4a0c3",
   "nodes": [
    "0 LOD bd22a359",
    "0/0 Group b3e3e59f",
-   "0/0/0 Mesh a0596bb3",
-   "0/0/1 Mesh 25490a0",
-   "0/0/2 Mesh fe365916",
-   "0/0/3 Mesh 2855c5a2",
-   "0/0/4 Mesh 638b3bdb",
-   "0/0/5 Mesh 540df695",
+   "0/0/0 Mesh be380103",
+   "0/0/1 Mesh 53ece3aa",
+   "0/0/2 Mesh c6b9ae99",
+   "0/0/3 Mesh dd3e372f",
+   "0/0/4 Mesh 4fabe21f",
+   "0/0/5 Mesh d89041d4",
    "0/1 Group 2bb6f540",
    "0/1/0 Mesh b6f42fd5",
    "0/1/1 Mesh 151edc5d",
@@ -8845,42 +8845,42 @@
   ]
  },
  "model/mechanic_coveralls": {
-  "hash": "c0d63e87",
+  "hash": "b65c9863",
   "nodes": [
    "0 Group 7521ad13",
-   "0/0 Group f7534f83",
-   "0/0/0 Mesh 7b8103d",
-   "0/0/1 Mesh cd27162",
-   "0/0/2 Mesh 5234db54",
+   "0/0 Group 9ecff6d8",
+   "0/0/0 Mesh c6a747b1",
+   "0/0/1 Mesh f6dd6818",
+   "0/0/2 Mesh cfc7da12",
    "0/0/3 Mesh af888032",
    "0/0/4 Mesh 94955c60",
-   "0/0/5 Mesh 82fa46d7",
-   "0/0/6 Mesh d0a48d61",
-   "0/0/7 Mesh 840c6ab2",
-   "0/0/8 Mesh 97651a09",
-   "0/0/9 Mesh 933bd6c9",
-   "0/0/10 Mesh 63b78b2c",
-   "0/0/11 Mesh fa5fad9a",
-   "0/0/12 Mesh d4adfbb8"
+   "0/0/5 Mesh aba97bb3",
+   "0/0/6 Mesh 452e3a1",
+   "0/0/7 Mesh 147722a0",
+   "0/0/8 Mesh bc497194",
+   "0/0/9 Mesh a6649bfb",
+   "0/0/10 Mesh 7717c33e",
+   "0/0/11 Mesh e667b87c",
+   "0/0/12 Mesh 29f305c6"
   ]
  },
  "model/mechanic_coveralls:merged": {
-  "hash": "d168808c",
+  "hash": "f65e0453",
   "nodes": [
    "0 Group 7521ad13",
-   "0/0 Mesh d81f0ab4",
-   "0/1 Mesh f1c6c1c7",
-   "0/2 Mesh e63dc195"
+   "0/0 Mesh c2e6fa91",
+   "0/1 Mesh abe7e261",
+   "0/2 Mesh 704aca55"
   ]
  },
  "model/mechanic_coveralls:lod": {
-  "hash": "7f74b526",
+  "hash": "91e024eb",
   "nodes": [
    "0 LOD d178cfc7",
    "0/0 Group 42af8579",
-   "0/0/0 Mesh 4f647d2e",
-   "0/0/1 Mesh 60975978",
-   "0/0/2 Mesh a4971630",
+   "0/0/0 Mesh e587fd43",
+   "0/0/1 Mesh de3bd75e",
+   "0/0/2 Mesh 2fe3d79c",
    "0/1 Group 905d81c2",
    "0/1/0 Mesh 78a560cc",
    "0/1/1 Mesh d2bc6f2",
@@ -8989,34 +8989,34 @@
   ]
  },
  "model/mobile_phone": {
-  "hash": "9b61338b",
+  "hash": "b466d5de",
   "nodes": [
    "0 Group 22b076cc",
    "0/0 Group c40f227",
-   "0/0/0 Mesh 9e3b5f7e",
-   "0/0/1 Mesh dce3a5fc",
-   "0/0/2 Mesh 445e3e8f",
+   "0/0/0 Mesh 865db7d5",
+   "0/0/1 Mesh 8c3d6430",
+   "0/0/2 Mesh 92d6a095",
    "0/0/3 Mesh 7b1507f0"
   ]
  },
  "model/mobile_phone:merged": {
-  "hash": "f7c85ed1",
+  "hash": "3fe2ea4",
   "nodes": [
    "0 Group 22b076cc",
-   "0/0 Mesh f450fd16",
-   "0/1 Mesh fbb0af0f",
-   "0/2 Mesh e7043e2f",
+   "0/0 Mesh 51d38d19",
+   "0/1 Mesh e1fcdef",
+   "0/2 Mesh 2ccd314f",
    "0/3 Mesh 66a9c27d"
   ]
  },
  "model/mobile_phone:lod": {
-  "hash": "d663c9f8",
+  "hash": "6c634d17",
   "nodes": [
    "0 LOD aa6d3606",
    "0/0 Group 9ddae45e",
-   "0/0/0 Mesh 42141b67",
-   "0/0/1 Mesh c24b37d6",
-   "0/0/2 Mesh 47a387d8",
+   "0/0/0 Mesh cdce8404",
+   "0/0/1 Mesh bea69802",
+   "0/0/2 Mesh b75e1e1c",
    "0/0/3 Mesh c4885c89",
    "0/1 Group 6d3a445",
    "0/1/0 Mesh a5e9ee5",
@@ -9062,40 +9062,40 @@
   ]
  },
  "model/night_vision_goggles": {
-  "hash": "7f79c1b4",
+  "hash": "4f83811e",
   "nodes": [
    "0 Group 90e54011",
-   "0/0 Group b771540f",
+   "0/0 Group 1116393b",
    "0/0/0 Mesh 32251a92",
    "0/0/1 Mesh f6a82a2e",
    "0/0/2 Mesh e9d2b87b",
-   "0/0/3 Mesh 1214dd91",
-   "0/0/4 Mesh 418a7ae5",
+   "0/0/3 Mesh b078b828",
+   "0/0/4 Mesh 98e540ac",
    "0/0/5 Mesh 50bb3212",
-   "0/0/6 Mesh 25883d09",
-   "0/0/7 Mesh 7bbed4a9",
+   "0/0/6 Mesh dc3ae760",
+   "0/0/7 Mesh bed866e8",
    "0/0/8 Mesh 93ffd863"
   ]
  },
  "model/night_vision_goggles:merged": {
-  "hash": "b667dd08",
+  "hash": "94c2922b",
   "nodes": [
    "0 Group 90e54011",
-   "0/0 Mesh 2d71239a",
+   "0/0 Mesh f863c1aa",
    "0/1 Mesh 63c86a43",
-   "0/2 Mesh e16c7aa0",
+   "0/2 Mesh 63f5c0fb",
    "0/3 Mesh 6f073e79",
    "0/4 Mesh 955a9d28"
   ]
  },
  "model/night_vision_goggles:lod": {
-  "hash": "f0dbcdb1",
+  "hash": "4a3771a4",
   "nodes": [
    "0 LOD 2191c909",
    "0/0 Group 4a43e3cf",
-   "0/0/0 Mesh d03f8b31",
+   "0/0/0 Mesh be5cdaf1",
    "0/0/1 Mesh 288e686e",
-   "0/0/2 Mesh a5ea6143",
+   "0/0/2 Mesh 6586c7a8",
    "0/0/3 Mesh a12ae174",
    "0/0/4 Mesh 60636fc9",
    "0/1 Group dc2b9e10",
@@ -9106,29 +9106,29 @@
   ]
  },
  "model/note": {
-  "hash": "f1381436",
+  "hash": "836dffe2",
   "nodes": [
    "0 Group d00c04c5",
-   "0/0 Group 58ab0158",
-   "0/0/0 Mesh 208550e1",
-   "0/0/1 Mesh fff5f119"
+   "0/0 Group 9d40abc",
+   "0/0/0 Mesh 9ee74063",
+   "0/0/1 Mesh b8c0c5d3"
   ]
  },
  "model/note:merged": {
-  "hash": "91090f6f",
+  "hash": "aa4a37d",
   "nodes": [
    "0 Group d00c04c5",
-   "0/0 Mesh 8fda8585",
-   "0/1 Mesh de7a68ff"
+   "0/0 Mesh c66d046a",
+   "0/1 Mesh d851918"
   ]
  },
  "model/note:lod": {
-  "hash": "62aff18d",
+  "hash": "9e50afa5",
   "nodes": [
    "0 LOD 9a0d478d",
    "0/0 Group 86039c53",
-   "0/0/0 Mesh 3436662d",
-   "0/0/1 Mesh 46a0487d",
+   "0/0/0 Mesh d46744a0",
+   "0/0/1 Mesh a1746aea",
    "0/1 Group a5b7bd4",
    "0/1/0 Mesh 6de7dfc3",
    "0/1/1 Mesh 415cb463",
@@ -9137,17 +9137,17 @@
   ]
  },
  "model/padded_coat": {
-  "hash": "792847cb",
+  "hash": "9f65958b",
   "nodes": [
    "0 Group 941acebd",
-   "0/0 Group f073f0e4",
+   "0/0 Group e902f4fb",
    "0/0/0 Mesh 4d53634d",
    "0/0/1 Mesh 7129b84d",
    "0/0/2 Mesh 19694933",
-   "0/0/3 Mesh b80c8200",
-   "0/0/4 Mesh de84b936",
-   "0/0/5 Mesh 50bf4afc",
-   "0/0/6 Mesh 6c5efc88",
+   "0/0/3 Mesh 688298c3",
+   "0/0/4 Mesh 8b06cff5",
+   "0/0/5 Mesh 9775e01b",
+   "0/0/6 Mesh 9124be0",
    "0/0/7 Mesh a509cbea",
    "0/0/8 Mesh a4393036",
    "0/0/9 Mesh a3bbb60e",
@@ -9155,22 +9155,22 @@
   ]
  },
  "model/padded_coat:merged": {
-  "hash": "feb14475",
+  "hash": "104cf80e",
   "nodes": [
    "0 Group 941acebd",
-   "0/0 Mesh 916db287",
-   "0/1 Mesh 9c71bced",
-   "0/2 Mesh cdd92f8f"
+   "0/0 Mesh dae3e386",
+   "0/1 Mesh 17866313",
+   "0/2 Mesh a23e6bc7"
   ]
  },
  "model/padded_coat:lod": {
-  "hash": "13b27b48",
+  "hash": "25110435",
   "nodes": [
    "0 LOD 5e5ba575",
    "0/0 Group 5d9a610d",
-   "0/0/0 Mesh 8fe0af32",
-   "0/0/1 Mesh 8ed5d3d5",
-   "0/0/2 Mesh cb9b7b02",
+   "0/0/0 Mesh ccea809f",
+   "0/0/1 Mesh 48d3f98b",
+   "0/0/2 Mesh d31a9bde",
    "0/1 Group 1c9b6f5c",
    "0/1/0 Mesh 388fa383",
    "0/1/1 Mesh c9dda405",
@@ -9179,12 +9179,12 @@
   ]
  },
  "model/padlock_key": {
-  "hash": "b5557fb5",
+  "hash": "7e74717f",
   "nodes": [
    "0 Group 6afe40b",
    "0/0 Group c0f97d56",
-   "0/0/0 Mesh 10e4ebde",
-   "0/0/1 Mesh 37e51cc6",
+   "0/0/0 Mesh d4baee98",
+   "0/0/1 Mesh b0a0d736",
    "0/0/2 Mesh 2785e470",
    "0/0/3 Mesh e15ded18",
    "0/0/4 Mesh 1aeb77c2",
@@ -9197,20 +9197,20 @@
   ]
  },
  "model/padlock_key:merged": {
-  "hash": "1d9b9cde",
+  "hash": "5bcf1e6a",
   "nodes": [
    "0 Group 6afe40b",
-   "0/0 Mesh 2ddd648a",
+   "0/0 Mesh c4a1462a",
    "0/1 Mesh dfee1d2f",
    "0/2 Mesh 8e9fc31"
   ]
  },
  "model/padlock_key:lod": {
-  "hash": "9d11e5f4",
+  "hash": "21c95020",
   "nodes": [
    "0 LOD a0af2217",
    "0/0 Group d12f86ab",
-   "0/0/0 Mesh 37aed36b",
+   "0/0/0 Mesh 978a50ef",
    "0/0/1 Mesh 4de9fbff",
    "0/0/2 Mesh bebccb08",
    "0/1 Group 51a459d2",
@@ -9221,29 +9221,29 @@
   ]
  },
  "model/photo": {
-  "hash": "e0d7e2a8",
+  "hash": "943ac9a8",
   "nodes": [
    "0 Group c504f669",
    "0/0 Group c12cdebf",
    "0/0/0 Mesh 7d44884f",
-   "0/0/1 Mesh be9bdd7c"
+   "0/0/1 Mesh 95232304"
   ]
  },
  "model/photo:merged": {
-  "hash": "edc62176",
+  "hash": "f259e33a",
   "nodes": [
    "0 Group c504f669",
    "0/0 Mesh b8a5148f",
-   "0/1 Mesh e6e5d9d4"
+   "0/1 Mesh 3738f634"
   ]
  },
  "model/photo:lod": {
-  "hash": "2a0621ce",
+  "hash": "35fbc5e6",
   "nodes": [
    "0 LOD 1c374161",
    "0/0 Group 8cd7678d",
    "0/0/0 Mesh aae520cd",
-   "0/0/1 Mesh fef8b864",
+   "0/0/1 Mesh 334ef34c",
    "0/1 Group 7d288b88",
    "0/1/0 Mesh 27f41002",
    "0/1/1 Mesh d27c7f1b",
@@ -9252,18 +9252,18 @@
   ]
  },
  "model/portable_generator": {
-  "hash": "db444748",
+  "hash": "d7d67424",
   "nodes": [
    "0 Group 7e0df534",
-   "0/0 Group ca773d98",
+   "0/0 Group a857928e",
    "0/0/0 Mesh b7caa950",
    "0/0/1 Mesh d0639c34",
-   "0/0/2 Mesh c5e1d52e",
-   "0/0/3 Mesh 4cea589a",
+   "0/0/2 Mesh a356b2bf",
+   "0/0/3 Mesh 6d217c13",
    "0/0/4 Mesh 8a491158",
    "0/0/5 Mesh 855a535c",
-   "0/0/6 Mesh 496834c6",
-   "0/0/7 Mesh 1d87589a",
+   "0/0/6 Mesh ac5e43f7",
+   "0/0/7 Mesh d4487c13",
    "0/0/8 Mesh 1784d242",
    "0/0/9 Mesh 6d42f4bd",
    "0/0/10 Mesh 40e3a3f3",
@@ -9272,21 +9272,21 @@
    "0/0/13 Mesh 7d6f6826",
    "0/0/14 Mesh 41b4a5b",
    "0/0/15 Mesh 13eed760",
-   "0/0/16 Mesh 4c34d222",
-   "0/0/17 Mesh 3c1acb96",
-   "0/0/18 Mesh 3770522f",
-   "0/0/19 Mesh d63d8387"
+   "0/0/16 Mesh 2861b0e3",
+   "0/0/17 Mesh 736ecf07",
+   "0/0/18 Mesh a98ba606",
+   "0/0/19 Mesh fc9419fe"
   ]
  },
  "model/portable_generator:merged": {
-  "hash": "84f96f29",
+  "hash": "285db8aa",
   "nodes": [
    "0 Group 7e0df534",
-   "0/0 Mesh 8deaa182",
+   "0/0 Mesh 10ba3986",
    "0/1 Mesh eccb0b",
-   "0/2 Mesh dbabcb5f",
+   "0/2 Mesh f29a5c41",
    "0/3 Mesh af21520a",
-   "0/4 Mesh 61928046",
+   "0/4 Mesh 4a81ed69",
    "0/5 Mesh e73c19cf",
    "0/6 Mesh 2ad442d9",
    "0/7 Mesh afa50794",
@@ -9294,15 +9294,15 @@
   ]
  },
  "model/portable_generator:lod": {
-  "hash": "6dcca622",
+  "hash": "c39dce37",
   "nodes": [
    "0 LOD b9d20996",
    "0/0 Group 7c2e37c6",
-   "0/0/0 Mesh 9cf9dac9",
+   "0/0/0 Mesh a4ec6b1",
    "0/0/1 Mesh 3672ece2",
-   "0/0/2 Mesh 44de7ad0",
+   "0/0/2 Mesh a53e97a6",
    "0/0/3 Mesh f3cd36fc",
-   "0/0/4 Mesh 103e7497",
+   "0/0/4 Mesh bee85cfc",
    "0/0/5 Mesh 88bbd13f",
    "0/0/6 Mesh 8c9fd330",
    "0/0/7 Mesh 77c4f169",
@@ -9315,37 +9315,37 @@
   ]
  },
  "model/power_bank": {
-  "hash": "4b7884b6",
+  "hash": "94b41ad8",
   "nodes": [
    "0 Group 486f5a71",
-   "0/0 Group 6e73f1db",
-   "0/0/0 Mesh f48d6ece",
-   "0/0/1 Mesh 5586e390",
-   "0/0/2 Mesh 2567029b",
-   "0/0/3 Mesh 6628e5ed",
-   "0/0/4 Mesh 21fa2176",
-   "0/0/5 Mesh d2f4263f"
+   "0/0 Group c0f9814d",
+   "0/0/0 Mesh 3d8cd409",
+   "0/0/1 Mesh a7cd2aeb",
+   "0/0/2 Mesh 6b448129",
+   "0/0/3 Mesh 4dee7d85",
+   "0/0/4 Mesh b786c4e",
+   "0/0/5 Mesh 90a80e17"
   ]
  },
  "model/power_bank:merged": {
-  "hash": "e78ad1b0",
+  "hash": "1acee8ef",
   "nodes": [
    "0 Group 486f5a71",
-   "0/0 Mesh aea26643",
-   "0/1 Mesh d69e2f01",
-   "0/2 Mesh 9d3ba6dc",
-   "0/3 Mesh c30b0abf"
+   "0/0 Mesh b1b53550",
+   "0/1 Mesh 342222bb",
+   "0/2 Mesh be9eb23f",
+   "0/3 Mesh d35d5626"
   ]
  },
  "model/power_bank:lod": {
-  "hash": "d6cbbd9f",
+  "hash": "2712bd88",
   "nodes": [
    "0 LOD cde0e101",
    "0/0 Group 608b205f",
-   "0/0/0 Mesh ada871c7",
-   "0/0/1 Mesh e16a9a51",
-   "0/0/2 Mesh 8c808124",
-   "0/0/3 Mesh 9eef4921",
+   "0/0/0 Mesh f585c12c",
+   "0/0/1 Mesh 2b7ddce5",
+   "0/0/2 Mesh d8a0ff4b",
+   "0/0/3 Mesh f1c2293a",
    "0/1 Group e50764c8",
    "0/1/0 Mesh 4b982969",
    "0/1/1 Mesh 27cd5202",
@@ -9354,38 +9354,38 @@
   ]
  },
  "model/pumpkin_seeds": {
-  "hash": "87a6138d",
+  "hash": "7716c155",
   "nodes": [
    "0 Group e2317aa8",
    "0/0 Group 38536a7c",
    "0/0/0 Mesh f0c92732",
-   "0/0/1 Mesh e4bf3eb8",
-   "0/0/2 Mesh fa084e80",
-   "0/0/3 Mesh 13a8f8bf",
-   "0/0/4 Mesh a5efc328"
+   "0/0/1 Mesh bddb64f1",
+   "0/0/2 Mesh 1ad9e437",
+   "0/0/3 Mesh 7fc4eaff",
+   "0/0/4 Mesh 90ba0230"
   ]
  },
  "model/pumpkin_seeds:merged": {
-  "hash": "1297f9a0",
+  "hash": "4b707606",
   "nodes": [
    "0 Group e2317aa8",
    "0/0 Mesh bc5225a0",
-   "0/1 Mesh 64617883",
-   "0/2 Mesh 96ddb710",
-   "0/3 Mesh 86655f97",
-   "0/4 Mesh 9aeea66d"
+   "0/1 Mesh f59a6845",
+   "0/2 Mesh 1bc14937",
+   "0/3 Mesh 4055138",
+   "0/4 Mesh 356ffadb"
   ]
  },
  "model/pumpkin_seeds:lod": {
-  "hash": "611d114",
+  "hash": "694290ca",
   "nodes": [
    "0 LOD cbcadf72",
    "0/0 Group 9d28a960",
    "0/0/0 Mesh 1e15536b",
-   "0/0/1 Mesh 4832dda",
-   "0/0/2 Mesh 3d2e19aa",
-   "0/0/3 Mesh bd344ec5",
-   "0/0/4 Mesh 10a3e557",
+   "0/0/1 Mesh 80e6e648",
+   "0/0/2 Mesh b3d810fd",
+   "0/0/3 Mesh 6104569a",
+   "0/0/4 Mesh 1cb9f6f1",
    "0/1 Group 1e5e36d1",
    "0/1/0 Mesh df2ff793",
    "0/1/1 Mesh 892d78d2",
@@ -9394,7 +9394,7 @@
   ]
  },
  "model/raincoat": {
-  "hash": "190fa7c4",
+  "hash": "edb650c8",
   "nodes": [
    "0 Group 267d8218",
    "0/0 Group f5449b22",
@@ -9404,28 +9404,28 @@
    "0/0/3 Mesh d21b279e",
    "0/0/4 Mesh 40b625e8",
    "0/0/5 Mesh c9db4fbe",
-   "0/0/6 Mesh 3999260b",
+   "0/0/6 Mesh 3a1dfb87",
    "0/0/7 Mesh 939aaec0",
    "0/0/8 Mesh c8dd1992"
   ]
  },
  "model/raincoat:merged": {
-  "hash": "c30f1ca4",
+  "hash": "108bab0b",
   "nodes": [
    "0 Group 267d8218",
    "0/0 Mesh 337397bd",
-   "0/1 Mesh 524a15b4",
+   "0/1 Mesh 1f65eb1f",
    "0/2 Mesh 83c1ecf0",
    "0/3 Mesh 4ca19a31"
   ]
  },
  "model/raincoat:lod": {
-  "hash": "c703dfd5",
+  "hash": "5339e32",
   "nodes": [
    "0 LOD 341edc5a",
    "0/0 Group bf9aa762",
    "0/0/0 Mesh 15ec0d55",
-   "0/0/1 Mesh de8d9a10",
+   "0/0/1 Mesh d8f2fd4b",
    "0/0/2 Mesh ad7061",
    "0/0/3 Mesh b9fa4230",
    "0/1 Group 4e007c39",
@@ -9473,11 +9473,11 @@
   ]
  },
  "model/rolling_suitcase": {
-  "hash": "c4de08fd",
+  "hash": "47ef25a9",
   "nodes": [
    "0 Group 517a40ae",
    "0/0 Group 604be8d6",
-   "0/0/0 Mesh e9c661f1",
+   "0/0/0 Mesh 619e6d5d",
    "0/0/1 Mesh ebf404d7",
    "0/0/2 Mesh 9136d659",
    "0/0/3 Mesh 8a69d218",
@@ -9491,19 +9491,19 @@
   ]
  },
  "model/rolling_suitcase:merged": {
-  "hash": "7c838e12",
+  "hash": "d8b5f1e",
   "nodes": [
    "0 Group 517a40ae",
-   "0/0 Mesh d656cf53",
+   "0/0 Mesh aaa6c203",
    "0/1 Mesh 5849878f"
   ]
  },
  "model/rolling_suitcase:lod": {
-  "hash": "f9283869",
+  "hash": "5d4e9305",
   "nodes": [
    "0 LOD 92118524",
    "0/0 Group 7c9c0f98",
-   "0/0/0 Mesh eaa28621",
+   "0/0/0 Mesh b5651aed",
    "0/0/1 Mesh 5fe3b486",
    "0/1 Group 5ca300a7",
    "0/1/0 Mesh 7ce048cb",
@@ -9513,40 +9513,40 @@
   ]
  },
  "model/rubber_boots": {
-  "hash": "705770ab",
+  "hash": "20eddc03",
   "nodes": [
    "0 Group 9b27f695",
    "0/0 Group 47870723",
    "0/0/0 Mesh a201e4db",
    "0/0/1 Mesh 90824a88",
    "0/0/2 Mesh ec28961c",
-   "0/0/3 Mesh 530d04c1",
-   "0/0/4 Mesh b3462de2",
+   "0/0/3 Mesh 4e1a17b2",
+   "0/0/4 Mesh 870126b7",
    "0/0/5 Mesh 439fda6b",
    "0/0/6 Mesh d007c7ee",
    "0/0/7 Mesh 322aca27",
    "0/0/8 Mesh c804e9a3",
-   "0/0/9 Mesh dc081a0a",
-   "0/0/10 Mesh 96621d0a",
+   "0/0/9 Mesh 925cfcf1",
+   "0/0/10 Mesh 71600557",
    "0/0/11 Mesh f13da507"
   ]
  },
  "model/rubber_boots:merged": {
-  "hash": "815e9c7b",
+  "hash": "8e296111",
   "nodes": [
    "0 Group 9b27f695",
    "0/0 Mesh b095059",
-   "0/1 Mesh fc54528e",
+   "0/1 Mesh 20b0b6c0",
    "0/2 Mesh 5dd6baba"
   ]
  },
  "model/rubber_boots:lod": {
-  "hash": "3e4e14a4",
+  "hash": "f5c728fe",
   "nodes": [
    "0 LOD c7f1819d",
    "0/0 Group ab69f173",
    "0/0/0 Mesh 8387a139",
-   "0/0/1 Mesh fb38a363",
+   "0/0/1 Mesh 3741ee1",
    "0/0/2 Mesh 3b84f549",
    "0/1 Group a5630bc4",
    "0/1/0 Mesh 8bad8973",
@@ -9638,52 +9638,52 @@
   ]
  },
  "model/sheet_metal_forearm_guard": {
-  "hash": "c5b3d2d4",
+  "hash": "a0b0e508",
   "nodes": [
    "0 Group 8b1d368f",
-   "0/0 Group 4fd10720",
-   "0/0/0 Mesh d0b953c3",
-   "0/0/1 Mesh fed20fc2",
-   "0/0/2 Mesh 7c3dbc80",
-   "0/0/3 Mesh 9c62642a",
-   "0/0/4 Mesh d163ce37",
-   "0/0/5 Mesh 6a48cead",
-   "0/0/6 Mesh b0a4ecfb",
-   "0/0/7 Mesh 82b5532c",
-   "0/0/8 Mesh 332e990a",
-   "0/0/9 Mesh 507257c6",
-   "0/0/10 Mesh 4c1a31ed",
-   "0/0/11 Mesh e7fb85d5",
-   "0/0/12 Mesh a961e88e",
-   "0/0/13 Mesh 8b03fd4b",
-   "0/0/14 Mesh 8349c18b",
-   "0/0/15 Mesh efb477ec",
-   "0/0/16 Mesh 5602a7bf",
-   "0/0/17 Mesh 24126423",
-   "0/0/18 Mesh 6033635a",
-   "0/0/19 Mesh 781225d",
-   "0/0/20 Mesh e4b0f6ae",
+   "0/0 Group ddf8998d",
+   "0/0/0 Mesh cd663df7",
+   "0/0/1 Mesh 335d2bb9",
+   "0/0/2 Mesh e3682ed3",
+   "0/0/3 Mesh 7a44e77",
+   "0/0/4 Mesh 70458ab0",
+   "0/0/5 Mesh 7eeda046",
+   "0/0/6 Mesh ff4f4b87",
+   "0/0/7 Mesh a4091cd0",
+   "0/0/8 Mesh ce71e40e",
+   "0/0/9 Mesh bd4b3c31",
+   "0/0/10 Mesh 27f4169e",
+   "0/0/11 Mesh 2385876",
+   "0/0/12 Mesh e580b904",
+   "0/0/13 Mesh 5873441b",
+   "0/0/14 Mesh fd124d5b",
+   "0/0/15 Mesh 923ccbdf",
+   "0/0/16 Mesh 54220c84",
+   "0/0/17 Mesh 45e5f400",
+   "0/0/18 Mesh 38a04dd8",
+   "0/0/19 Mesh 4897a882",
+   "0/0/20 Mesh 3f678675",
    "0/0/21 Mesh 9cb8e681",
    "0/0/22 Mesh b87649d5"
   ]
  },
  "model/sheet_metal_forearm_guard:merged": {
-  "hash": "a958883",
+  "hash": "17557453",
   "nodes": [
    "0 Group 8b1d368f",
-   "0/0 Mesh 90d3dde6",
-   "0/1 Mesh 53b5fc1e",
-   "0/2 Mesh 8a428317"
+   "0/0 Mesh 9e54501f",
+   "0/1 Mesh 6b1f1f10",
+   "0/2 Mesh a06d72e0"
   ]
  },
  "model/sheet_metal_forearm_guard:lod": {
-  "hash": "4453e535",
+  "hash": "8c1f237",
   "nodes": [
    "0 LOD a79469ab",
    "0/0 Group f9c2c30f",
-   "0/0/0 Mesh a440b3f2",
-   "0/0/1 Mesh ac583322",
-   "0/0/2 Mesh e28b0e84",
+   "0/0/0 Mesh 5df5cb77",
+   "0/0/1 Mesh 4704e742",
+   "0/0/2 Mesh 94bad6f3",
    "0/1 Group fd77c8c6",
    "0/1/0 Mesh 77bef21d",
    "0/1/1 Mesh 4cfc6d9f",
@@ -9725,7 +9725,7 @@
   ]
  },
  "model/shopping_cart": {
-  "hash": "6a9e3550",
+  "hash": "d7ede67c",
   "nodes": [
    "0 Group 39c10ae2",
    "0/0 Group 60fa3c74",
@@ -9734,47 +9734,47 @@
    "0/0/2 Mesh 534fc998",
    "0/0/3 Mesh b167cd80",
    "0/0/4 Mesh 466a1d9a",
-   "0/0/5 Mesh ffc23f79",
+   "0/0/5 Mesh afd3aa7b",
    "0/0/6 Mesh eab90f05",
    "0/0/7 Mesh 918a29df",
-   "0/0/8 Mesh d49e76f4",
-   "0/0/9 Mesh 2e94d9aa",
+   "0/0/8 Mesh f35a4245",
+   "0/0/9 Mesh dd9e5a03",
    "0/0/10 Mesh 6e8d7fd9",
    "0/0/11 Mesh 478dc732",
    "0/0/12 Mesh 2fd5d1ee",
    "0/0/13 Mesh 6fe3bc2c",
    "0/0/14 Mesh 89e64600",
-   "0/0/15 Mesh 2d282d19",
+   "0/0/15 Mesh b197f81b",
    "0/0/16 Mesh 4763fcc3",
    "0/0/17 Mesh a449b",
-   "0/0/18 Mesh 929a246e",
-   "0/0/19 Mesh 89e2e9ca",
+   "0/0/18 Mesh 9e4636c7",
+   "0/0/19 Mesh df3fc523",
    "0/0/20 Mesh 2d7a91d9",
    "0/0/21 Mesh 1a4bd870",
    "0/0/22 Mesh a2d24b0a",
    "0/0/23 Mesh b22c383e",
    "0/0/24 Mesh 96dc226d",
    "0/0/25 Mesh 26661931",
-   "0/0/26 Mesh c9dbd742",
-   "0/0/27 Mesh 23d8b34",
+   "0/0/26 Mesh a55d9aa8",
+   "0/0/27 Mesh 878a3da",
    "0/0/28 Mesh e81abde5",
    "0/0/29 Mesh 495513bf"
   ]
  },
  "model/shopping_cart:merged": {
-  "hash": "47732448",
+  "hash": "814e3fae",
   "nodes": [
    "0 Group 39c10ae2",
-   "0/0 Mesh 833fa0a3",
+   "0/0 Mesh fde60143",
    "0/1 Mesh 1a12cedb"
   ]
  },
  "model/shopping_cart:lod": {
-  "hash": "44ddb7c4",
+  "hash": "716c701a",
   "nodes": [
    "0 LOD 8b6b89a8",
    "0/0 Group 871e5ece",
-   "0/0/0 Mesh f35d7ca4",
+   "0/0/0 Mesh aeaf869e",
    "0/0/1 Mesh d6668b30",
    "0/1 Group 3ff39a23",
    "0/1/0 Mesh 91d611ba",
@@ -9784,37 +9784,37 @@
   ]
  },
  "model/skill_book": {
-  "hash": "2ef4fc92",
+  "hash": "b5d03518",
   "nodes": [
    "0 Group 1ffe436e",
-   "0/0 Group cb03de26",
+   "0/0 Group a678e1d1",
    "0/0/0 Mesh 48bbc0bd",
-   "0/0/1 Mesh 95642454",
-   "0/0/2 Mesh ac05c9da",
+   "0/0/1 Mesh 4abb59d7",
+   "0/0/2 Mesh 72d4f757",
    "0/0/3 Mesh afd7d4a3",
-   "0/0/4 Mesh 2471490d",
-   "0/0/5 Mesh 2ee6668f",
-   "0/0/6 Mesh abe0df7",
-   "0/0/7 Mesh d2c0b0a8"
+   "0/0/4 Mesh 38838d5e",
+   "0/0/5 Mesh 61bc0a76",
+   "0/0/6 Mesh 998b3a51",
+   "0/0/7 Mesh 1be3413"
   ]
  },
  "model/skill_book:merged": {
-  "hash": "2b85ab1e",
+  "hash": "c2066df6",
   "nodes": [
    "0 Group 1ffe436e",
-   "0/0 Mesh 427964cf",
-   "0/1 Mesh d0590c11",
-   "0/2 Mesh 60e4d71"
+   "0/0 Mesh 2a0d1c7a",
+   "0/1 Mesh 9ffeae0f",
+   "0/2 Mesh 6a017b66"
   ]
  },
  "model/skill_book:lod": {
-  "hash": "e7f48c68",
+  "hash": "6ff828",
   "nodes": [
    "0 LOD 5f51ef54",
    "0/0 Group c2a9bf6c",
-   "0/0/0 Mesh 60e12551",
-   "0/0/1 Mesh bfef4b32",
-   "0/0/2 Mesh da948ef6",
+   "0/0/0 Mesh 8ae1b59a",
+   "0/0/1 Mesh d6e84afc",
+   "0/0/2 Mesh c62027dd",
    "0/1 Group 2caf30d7",
    "0/1/0 Mesh f32f8470",
    "0/1/1 Mesh ed8363ec",
@@ -9860,41 +9860,41 @@
   ]
  },
  "model/sneakers": {
-  "hash": "c4e9800e",
+  "hash": "b482b9ef",
   "nodes": [
    "0 Group 7f749421",
    "0/0 Group 191817ee",
    "0/0/0 Mesh 2a3e78db",
-   "0/0/1 Mesh 351a6c64",
+   "0/0/1 Mesh 6dd63d00",
    "0/0/2 Mesh 7a034fc1",
-   "0/0/3 Mesh 964babab",
-   "0/0/4 Mesh 6e4cea53",
+   "0/0/3 Mesh d6477298",
+   "0/0/4 Mesh f1d3a34d",
    "0/0/5 Mesh cc41698c",
-   "0/0/6 Mesh 5c914026",
-   "0/0/7 Mesh 36d37b36",
+   "0/0/6 Mesh 7073bdcc",
+   "0/0/7 Mesh 85d2563c",
    "0/0/8 Mesh 43351488",
    "0/0/9 Mesh 73ec7986",
    "0/0/10 Mesh fb47b32d"
   ]
  },
  "model/sneakers:merged": {
-  "hash": "e19ff047",
+  "hash": "1af215f0",
   "nodes": [
    "0 Group 7f749421",
-   "0/0 Mesh c2d6995",
-   "0/1 Mesh 8b15d4d6",
-   "0/2 Mesh f5fc60bf",
+   "0/0 Mesh 5644bcff",
+   "0/1 Mesh 5932474f",
+   "0/2 Mesh 1bf9b08b",
    "0/3 Mesh 2b6f078e"
   ]
  },
  "model/sneakers:lod": {
-  "hash": "3a8503b7",
+  "hash": "9c74d4ba",
   "nodes": [
    "0 LOD 3f5d2931",
    "0/0 Group a6908973",
-   "0/0/0 Mesh 1dc3d4de",
-   "0/0/1 Mesh 581ed445",
-   "0/0/2 Mesh 56d48ffd",
+   "0/0/0 Mesh c99a602c",
+   "0/0/1 Mesh 8e4b6558",
+   "0/0/2 Mesh f520fba5",
    "0/0/3 Mesh 8df9a1d",
    "0/1 Group 1c64da58",
    "0/1/0 Mesh 70f0559a",
@@ -9944,38 +9944,38 @@
   ]
  },
  "model/technical_manual": {
-  "hash": "1286eb14",
+  "hash": "6f3efea5",
   "nodes": [
    "0 Group 2ceda6f3",
-   "0/0 Group de6f4daf",
-   "0/0/0 Mesh 5efabd03",
-   "0/0/1 Mesh a93b1214",
-   "0/0/2 Mesh fc1fecd2",
-   "0/0/3 Mesh 266bd178",
-   "0/0/4 Mesh b7eb1559",
-   "0/0/5 Mesh f50637ca",
-   "0/0/6 Mesh 79b0ec9e"
+   "0/0 Group 251aa8ff",
+   "0/0/0 Mesh 72da0709",
+   "0/0/1 Mesh 5cdb7386",
+   "0/0/2 Mesh b31964d4",
+   "0/0/3 Mesh 9d210b8f",
+   "0/0/4 Mesh c6ae602f",
+   "0/0/5 Mesh fda8b026",
+   "0/0/6 Mesh c7977650"
   ]
  },
  "model/technical_manual:merged": {
-  "hash": "821ff25c",
+  "hash": "c924e477",
   "nodes": [
    "0 Group 2ceda6f3",
-   "0/0 Mesh f3bd123d",
-   "0/1 Mesh 2b1a93a1",
-   "0/2 Mesh 4c1fed96",
-   "0/3 Mesh ba9e9bed"
+   "0/0 Mesh b791f3d4",
+   "0/1 Mesh dcb157de",
+   "0/2 Mesh beb48375",
+   "0/3 Mesh d7c33eef"
   ]
  },
  "model/technical_manual:lod": {
-  "hash": "a59d46b2",
+  "hash": "5ad5b45b",
   "nodes": [
    "0 LOD 7562bd57",
    "0/0 Group d58e6f7d",
-   "0/0/0 Mesh ba341699",
-   "0/0/1 Mesh 67ae5af0",
-   "0/0/2 Mesh fcee8a6a",
-   "0/0/3 Mesh daa92de2",
+   "0/0/0 Mesh cd2367cc",
+   "0/0/1 Mesh dd50f95f",
+   "0/0/2 Mesh 85065a2d",
+   "0/0/3 Mesh c7bf99fc",
    "0/1 Group 46f79ab2",
    "0/1/0 Mesh a5551f1d",
    "0/1/1 Mesh 1b34b3f5",
@@ -9984,14 +9984,14 @@
   ]
  },
  "model/tool_belt": {
-  "hash": "9916137",
+  "hash": "ee517dcc",
   "nodes": [
    "0 Group fd95587",
-   "0/0 Group f0fc64ad",
-   "0/0/0 Mesh 8c27d20f",
+   "0/0 Group 2f74a4bf",
+   "0/0/0 Mesh ab5ba2c2",
    "0/0/1 Mesh c4c9f0d3",
-   "0/0/2 Mesh 91b7f8de",
-   "0/0/3 Mesh ddb95654",
+   "0/0/2 Mesh 4d36e1b3",
+   "0/0/3 Mesh e8a0a115",
    "0/0/4 Mesh 7849f61b",
    "0/0/5 Mesh c293ffae",
    "0/0/6 Mesh 405f7ef8",
@@ -10000,22 +10000,22 @@
   ]
  },
  "model/tool_belt:merged": {
-  "hash": "8af83002",
+  "hash": "84e9b705",
   "nodes": [
    "0 Group fd95587",
-   "0/0 Mesh 6bf34192",
-   "0/1 Mesh a48ee79d",
-   "0/2 Mesh 30fbe613"
+   "0/0 Mesh 439bec48",
+   "0/1 Mesh d4c7f26f",
+   "0/2 Mesh 1a3a2e84"
   ]
  },
  "model/tool_belt:lod": {
-  "hash": "fc81ed49",
+  "hash": "29c8fed2",
   "nodes": [
    "0 LOD f4a38d6b",
    "0/0 Group 811293f7",
-   "0/0/0 Mesh cf71214f",
-   "0/0/1 Mesh ce6a3559",
-   "0/0/2 Mesh 70bc7b1b",
+   "0/0/0 Mesh 165a9fc9",
+   "0/0/1 Mesh 54290f33",
+   "0/0/2 Mesh 5300a83c",
    "0/1 Group 9c116aa6",
    "0/1/0 Mesh 6fdf8ab5",
    "0/1/1 Mesh cc5f1149",
@@ -10024,29 +10024,29 @@
   ]
  },
  "model/trash_bag": {
-  "hash": "66a97794",
+  "hash": "14ae7873",
   "nodes": [
    "0 Group 5678586e",
-   "0/0 Group 1fdd501a",
+   "0/0 Group 5523a7ec",
    "0/0/0 Mesh fd274e9",
    "0/0/1 Mesh a0ad7426",
    "0/0/2 Mesh fece13d7",
-   "0/0/3 Mesh 875c66b3"
+   "0/0/3 Mesh 4cb7a95a"
   ]
  },
  "model/trash_bag:merged": {
-  "hash": "1206d02a",
+  "hash": "585128f8",
   "nodes": [
    "0 Group 5678586e",
-   "0/0 Mesh dcf6b0e3"
+   "0/0 Mesh d75404bb"
   ]
  },
  "model/trash_bag:lod": {
-  "hash": "1bae0e5b",
+  "hash": "578a9c2d",
   "nodes": [
    "0 LOD b7f3309c",
    "0/0 Group 1b388c4a",
-   "0/0/0 Mesh 6348dec6",
+   "0/0/0 Mesh 7d038eec",
    "0/1 Group cfa8ecbf",
    "0/1/0 Mesh 72320dd9",
    "0/1/1 Mesh 6f8923ff",
@@ -10055,37 +10055,37 @@
   ]
  },
  "model/trekking_backpack_70l": {
-  "hash": "b2b63bb5",
+  "hash": "af9c266e",
   "nodes": [
    "0 Group 792496ff",
-   "0/0 Group 48ab1bc5",
+   "0/0 Group ce83a146",
    "0/0/0 Mesh 8acb63cd",
    "0/0/1 Mesh 4f74352c",
    "0/0/2 Mesh 526a2db2",
-   "0/0/3 Mesh 30d94771",
+   "0/0/3 Mesh 3f84b75d",
    "0/0/4 Mesh c1553e59",
    "0/0/5 Mesh 5eff292b",
-   "0/0/6 Mesh 5dca020a",
-   "0/0/7 Mesh 77847c1c"
+   "0/0/6 Mesh f64d5fe3",
+   "0/0/7 Mesh b7fd2145"
   ]
  },
  "model/trekking_backpack_70l:merged": {
-  "hash": "ae4fddaa",
+  "hash": "4f30732c",
   "nodes": [
    "0 Group 792496ff",
-   "0/0 Mesh 192a201f",
-   "0/1 Mesh 157c120a",
-   "0/2 Mesh 9c232bcf"
+   "0/0 Mesh 86e81db2",
+   "0/1 Mesh 35386d05",
+   "0/2 Mesh 7336be59"
   ]
  },
  "model/trekking_backpack_70l:lod": {
-  "hash": "13dc39f4",
+  "hash": "e33a00b2",
   "nodes": [
    "0 LOD d4e009f7",
    "0/0 Group 4972c103",
-   "0/0/0 Mesh e7c75803",
-   "0/0/1 Mesh 549fb831",
-   "0/0/2 Mesh d449381e",
+   "0/0/0 Mesh c2b7e2d6",
+   "0/0/1 Mesh f7ed6042",
+   "0/0/2 Mesh 9f9a5c40",
    "0/1 Group 40e922fe",
    "0/1/0 Mesh c20f8bc7",
    "0/1/1 Mesh 209c55ba",
@@ -10094,36 +10094,36 @@
   ]
  },
  "model/tshirt": {
-  "hash": "aef452e5",
+  "hash": "83172212",
   "nodes": [
    "0 Group 7f5e955",
-   "0/0 Group 87418aa3",
-   "0/0/0 Mesh 9d66e19f",
+   "0/0 Group 9122907d",
+   "0/0/0 Mesh 6d2e0250",
    "0/0/1 Mesh f7ee2ad0",
    "0/0/2 Mesh 69d2f22",
    "0/0/3 Mesh 9d15cb01",
    "0/0/4 Mesh 7311345b",
-   "0/0/5 Mesh 18952739",
-   "0/0/6 Mesh 4b39b8a3"
+   "0/0/5 Mesh 1f258771",
+   "0/0/6 Mesh f92ab3d5"
   ]
  },
  "model/tshirt:merged": {
-  "hash": "3ed67e51",
+  "hash": "8076a48e",
   "nodes": [
    "0 Group 7f5e955",
-   "0/0 Mesh cc104b3e",
-   "0/1 Mesh f0dd2445",
-   "0/2 Mesh 96dbf668"
+   "0/0 Mesh 6ad07537",
+   "0/1 Mesh 18c2e749",
+   "0/2 Mesh b9ce5b4c"
   ]
  },
  "model/tshirt:lod": {
-  "hash": "927ef31d",
+  "hash": "ed89208",
   "nodes": [
    "0 LOD c7bccd",
    "0/0 Group 23b9034b",
-   "0/0/0 Mesh a2f65627",
-   "0/0/1 Mesh bba616cc",
-   "0/0/2 Mesh c2ca2bd5",
+   "0/0/0 Mesh a81f7ebe",
+   "0/0/1 Mesh 52d968a6",
+   "0/0/2 Mesh 5db6b089",
    "0/1 Group 68a518b4",
    "0/1/0 Mesh dca98293",
    "0/1/1 Mesh 346cbbb8",
@@ -10168,7 +10168,7 @@
   ]
  },
  "model/wheelbarrow": {
-  "hash": "84929988",
+  "hash": "d0a54a06",
   "nodes": [
    "0 Group 67edaf61",
    "0/0 Group a3aca498",
@@ -10177,8 +10177,8 @@
    "0/0/2 Mesh b8e3ebeb",
    "0/0/3 Mesh 47ce7026",
    "0/0/4 Mesh 4c1db915",
-   "0/0/5 Mesh 50b85ebf",
-   "0/0/6 Mesh acc73aa9",
+   "0/0/5 Mesh b237aa40",
+   "0/0/6 Mesh ba3f11ea",
    "0/0/7 Mesh a1fbc484",
    "0/0/8 Mesh f73f0285",
    "0/0/9 Mesh 31f4a0e9",
@@ -10189,23 +10189,23 @@
   ]
  },
  "model/wheelbarrow:merged": {
-  "hash": "f3409f49",
+  "hash": "ca7e195c",
   "nodes": [
    "0 Group 67edaf61",
    "0/0 Mesh 10cbcc1e",
-   "0/1 Mesh bc2ffa51",
+   "0/1 Mesh 6e0bcee2",
    "0/2 Mesh 261c85b5",
    "0/3 Mesh 6f281d9",
    "0/4 Mesh 3e384ee"
   ]
  },
  "model/wheelbarrow:lod": {
-  "hash": "48e6d29a",
+  "hash": "3ecb7d4f",
   "nodes": [
    "0 LOD 4a55d511",
    "0/0 Group bc0a5609",
    "0/0/0 Mesh eb4d28b9",
-   "0/0/1 Mesh c4cc8411",
+   "0/0/1 Mesh 10f8723a",
    "0/0/2 Mesh f0b93f6d",
    "0/0/3 Mesh 7f4da725",
    "0/0/4 Mesh 1fc4f3d8",

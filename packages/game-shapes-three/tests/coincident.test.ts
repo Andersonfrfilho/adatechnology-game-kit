@@ -81,3 +81,15 @@ describe('standOutCoincident', () => {
   })
 })
 
+
+describe('coincidentFacesOf and the depth buffer', () => {
+  it('lets two layers that write no depth overlap, but not a layer that tests depth over a solid face', () => {
+    const smoke = (): THREE.Material => new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })
+    const puffs = new THREE.Group()
+    puffs.add(block('puff_a', [1, 1, 0.01], [0, 0, 0], smoke()), block('puff_b', [1, 1, 0.01], [0.3, 0, 0], smoke()))
+    expect(coincidentFacesOf(puffs)).toEqual([])
+    const scorch = new THREE.Group()
+    scorch.add(block('ground', [4, 0.1, 4], [0, -0.05, 0]), block('scorch', [1, 0.1, 1], [0, -0.05, 0], smoke()))
+    expect(coincidentFacesOf(scorch).length).toBeGreaterThan(0)
+  })
+})

@@ -8,8 +8,8 @@ export const inverterWelder: ItemModelBuilder = ({ mesh, bx, cyl, G, M, metal, p
   const front = [Math.PI / 2, 0, 0] as const
   const dark = plastic(0x1f2022)
   return G(
-    mesh(bx(30, 19, 12.8), metal(0xc2561c), [0, -1.5, 0]),
-    mesh(bx(27, 15, 0.15), dark, [0, -1.5, 6.375]),
+    mesh(bx(30, 19, 12.6), metal(0xc2561c), [0, -1.5, -0.1]),
+    mesh(bx(27, 15, 0.15), dark, [0, -1.5, 6.275]),
     mesh(bx(1.8, 2, 1.8), dark, [-8, 9, 0]),
     mesh(bx(1.8, 2, 1.8), dark, [8, 9, 0]),
     mesh(bx(18, 1, 1.8), dark, [0, 10.5, 0]),

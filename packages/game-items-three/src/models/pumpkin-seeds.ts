@@ -9,8 +9,8 @@ export const pumpkinSeeds: ItemModelBuilder = ({ mesh, bx, G, paper }) => {
   const depth = 0.015
   const group = G()
   group.add(mesh(bx(width, height, depth * 0.5), paper(0xe8dfc8)))
-  group.add(mesh(bx(width * 0.9, height * 0.85, depth * 0.9), paper(0xefe7d3), [0, -height * 0.03, 0]))
-  group.add(mesh(bx(width, height * 0.08, depth * 0.3), paper(0xcfc4a8), [0, height * 0.46, 0]))
-  ;[1, -1].forEach((side) => group.add(mesh(bx(width * 0.7, height * 0.4, depth * 0.1), paper(0xd9822b), [0, -height * 0.05, side * depth * 0.45])))
+  group.add(mesh(bx(width * 0.9, height * 0.85, depth * 0.667), paper(0xefe7d3), [0, -height * 0.03, 0]))
+  group.add(mesh(bx(width * 0.95, height * 0.08, depth * 0.3), paper(0xcfc4a8), [0, height * 0.445, 0]))
+  ;[1, -1].forEach((side) => group.add(mesh(bx(width * 0.7, height * 0.4, depth * 0.3), paper(0xd9822b), [0, -height * 0.05, side * depth * 0.35])))
   return group
 }

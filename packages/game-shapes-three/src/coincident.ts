@@ -110,5 +110,12 @@ export function coincidentBatchesOf(root: THREE_NS.Object3D, options: Pick<Coinc
  * piece that comes back with a lining flush to its body fails the test instead of flickering on screen.
  */
 export function coincidentFacesOf(root: THREE_NS.Object3D, options: CoincidentFacesOfOptions = {}): CoincidentFaceHit[] {
-  return coincidentFaces(coincidentBatchesOf(root, options), options)
+  const { batches, meshes } = meshBatchesOf(root, options)
+  return coincidentFaces(batches, options).filter((hit) => writesDepth(meshes[hit.batchA]!) || writesDepth(meshes[hit.batchB]!))
+}
+
+/** Two layers that both leave the depth buffer alone (smoke, glow, sparks) are blended in order: they never fight for a pixel. */
+function writesDepth(mesh: THREE_NS.Mesh): boolean {
+  const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE_NS.Material[]
+  return materials.some((m) => m.depthWrite !== false && m.depthTest !== false)
 }

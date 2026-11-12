@@ -9,8 +9,8 @@ export const sheetMetalForearmGuard: ItemModelBuilder = ({ mesh, bx, G, metal, c
   const rivet = metal(0xb5b8bb)
   const parts = []
   const count = 7
-  const radiusZ = 0.0555
-  const radiusY = 0.092
+  const radiusZ = 0.0524
+  const radiusY = 0.0955
   const phiMax = 1.3
   for (let index = 0; index < count; index++) {
     const phi = -phiMax + (2 * phiMax * index) / (count - 1)
@@ -20,7 +20,7 @@ export const sheetMetalForearmGuard: ItemModelBuilder = ({ mesh, bx, G, metal, c
     const angle = Math.atan2(radiusY * Math.sin(phi), radiusZ * Math.cos(phi))
     const length = (speed * (2 * phiMax)) / (count - 1) * 1.1
     parts.push(mesh(bx(0.3, 0.006, length), sheet, [0, y, z], [angle, 0, 0]))
-    for (const x of [-0.09, 0.09]) parts.push(mesh(bx(0.03, 0.006, length), strap, [x, y + 0.006, z], [angle, 0, 0]))
+    for (const x of [-0.09, 0.09]) parts.push(mesh(bx(0.03, 0.006, length), strap, [x, y + 0.003 * Math.cos(angle), z + 0.003 * Math.sin(angle)], [angle, 0, 0]))
   }
   parts.push(mesh(bx(0.012, 0.012, 0.012), rivet, [0.09, 0.0985, 0]), mesh(bx(0.012, 0.012, 0.012), rivet, [-0.09, 0.0985, 0]))
   return G(...parts)
