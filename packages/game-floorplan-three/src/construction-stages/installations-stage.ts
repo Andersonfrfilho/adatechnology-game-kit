@@ -12,16 +12,61 @@ import type { RoutePoint } from './installation-routes.js'
 const DRAIN_BORE: Readonly<Record<string, number>> = { flush: 0.1, shower: 0.05, tap: 0.05, tub: 0.05, machine: 0.05 }
 /** Fall of a sewer run, metres per metre (NBR 8160: 1 % for 100 mm and up, 2 % under it). */
 const FALL = { main: 0.01, branch: 0.02 } as const
-const TRENCH = { width: 0.4, bed: 0.03, berm: { width: 0.12, height: 0.065 } } as const
+const TRENCH = { width: 0.4, bed: 0.03, berm: { width: 0.45, height: 0.2, crest: 0.12 } } as const
 /** How far the spoil heaps stand off a trench's edge, metres: past the ground's cell the trench wall slopes in (`game-terrain` digs by its cells). */
 const SPOIL_CLEAR = 0.12
-/** A heap of dug earth on the ground: its top and its sides, no face under it (it lies on the ground, and a face there would share the ground's plane). */
+
+/** How long one shovelful's hump of a heap runs, metres, and how much its height varies from one to the next. */
+const HUMP = { length: 0.7, vary: 0.25, overlap: 0.25 } as const
+
+/** A heap laid as the shovel leaves it: humps one after another along it, each its own height (the same every time for the same place), overlapping a little. */
+function addHumps(batch: BoxBatch, rect: Rect): void {
+  const alongX = rect[2] - rect[0] >= rect[3] - rect[1]
+  const from = alongX ? rect[0] : rect[1], to = alongX ? rect[2] : rect[3]
+  const count = Math.max(1, Math.round((to - from) / HUMP.length)), step = (to - from) / count
+  for (let k = 0; k < count; k++) {
+    const a = Math.max(from, from + k * step - (k > 0 ? HUMP.overlap / 2 : 0)), b = Math.min(to, from + (k + 1) * step + (k < count - 1 ? HUMP.overlap / 2 : 0))
+    // a height of its own from where it lies: a hash of its place, not a random draw
+    const seed = Math.sin((rect[0] + rect[1]) * 12.9898 + (from + k * step) * 78.233) * 43758.5453
+    const h = TRENCH.berm.height * (1 + HUMP.vary * (2 * (seed - Math.floor(seed)) - 1))
+    addHeap(batch, alongX ? [a, rect[1], b, rect[3]] : [rect[0], a, rect[2], b], h)
+  }
+}
+
+/** A face of four corners, wound and lit as it faces (its normal from its corners). */
+function addFacet(batch: BoxBatch, corners: readonly (readonly [number, number, number])[]): void {
+  const [a, b, , d] = corners as [readonly [number, number, number], readonly [number, number, number], readonly [number, number, number], readonly [number, number, number]]
+  const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [d[0] - a[0], d[1] - a[1], d[2] - a[2]]
+  const n = [e1[1]! * e2[2]! - e1[2]! * e2[1]!, e1[2]! * e2[0]! - e1[0]! * e2[2]!, e1[0]! * e2[1]! - e1[1]! * e2[0]!]
+  const length = Math.hypot(n[0]!, n[1]!, n[2]!) || 1
+  batch.addQuad(corners, [n[0]! / length, n[1]! / length, n[2]! / length])
+}
+
+/** How many facets a mound has along and across. */
+const MOUND_GRID = { along: 8, across: 5 } as const
+
+/**
+ * A mound of dug earth: highest along its middle, falling off to the ground at its edges and ends as loose earth does (a bell across and along); no face
+ * under it (it lies on the ground, and a face there would share the ground's plane).
+ */
 function addHeap(batch: BoxBatch, [x0, z0, x1, z1]: Rect, h: number): void {
-  batch.addQuad([[x0, h, z0], [x0, h, z1], [x1, h, z1], [x1, h, z0]], [0, 1, 0])
-  batch.addQuad([[x0, 0, z0], [x1, 0, z0], [x1, h, z0], [x0, h, z0]], [0, 0, -1])
-  batch.addQuad([[x1, 0, z1], [x0, 0, z1], [x0, h, z1], [x1, h, z1]], [0, 0, 1])
-  batch.addQuad([[x0, 0, z1], [x0, 0, z0], [x0, h, z0], [x0, h, z1]], [-1, 0, 0])
-  batch.addQuad([[x1, 0, z0], [x1, 0, z1], [x1, h, z1], [x1, h, z0]], [1, 0, 0])
+  const alongX = x1 - x0 >= z1 - z0
+  const length = alongX ? x1 - x0 : z1 - z0, width = alongX ? z1 - z0 : x1 - x0
+  const at = (s: number, t: number): [number, number, number] => {
+    const y = h * Math.pow(Math.max(0, Math.sin((Math.PI * s) / length)), 0.6) * Math.pow(Math.max(0, Math.sin((Math.PI * t) / width)), 0.8)
+    return alongX ? [x0 + s, y, z0 + t] : [x0 + t, y, z0 + s]
+  }
+  const { along, across } = MOUND_GRID
+  for (let i = 0; i < along; i++) {
+    for (let j = 0; j < across; j++) {
+      const s0 = (length * i) / along, s1 = (length * (i + 1)) / along, t0 = (width * j) / across, t1 = (width * (j + 1)) / across
+      const quad = [at(s0, t0), at(s1, t0), at(s1, t1), at(s0, t1)]
+      // wound to look up and out of the mound
+      const e1 = [quad[1]![0] - quad[0]![0], quad[1]![1] - quad[0]![1], quad[1]![2] - quad[0]![2]], e2 = [quad[3]![0] - quad[0]![0], quad[3]![1] - quad[0]![1], quad[3]![2] - quad[0]![2]]
+      const up = e1[2]! * e2[0]! - e1[0]! * e2[2]!
+      addFacet(batch, up >= 0 ? quad : [quad[0]!, quad[3]!, quad[2]!, quad[1]!])
+    }
+  }
 }
 /** The capped end of a fixture's drain waits just under the ground, in its pit, for the floor and the fixture. */
 const RISER_TOP = -0.02
@@ -87,7 +132,10 @@ function addSpoil(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trenc
       // past the cell the ground's wall slopes in, never where a building stands (the house, an outbuilding): its frame and foundation are there
       const heapAt: Rect = ox ? [ox > 0 ? x1 + SPOIL_CLEAR : x0 - SPOIL_CLEAR - w, z0, ox > 0 ? x1 + SPOIL_CLEAR + w : x0 - SPOIL_CLEAR, z1] : [x0, oz > 0 ? z1 + SPOIL_CLEAR : z0 - SPOIL_CLEAR - w, x1, oz > 0 ? z1 + SPOIL_CLEAR + w : z0 - SPOIL_CLEAR]
       const onBuilding = [site.footprint, ...site.buildings].some(([bx0, bz0, bx1, bz1]) => heapAt[2] > bx0 - 0.4 && heapAt[0] < bx1 + 0.4 && heapAt[3] > bz0 - 0.4 && heapAt[1] < bz1 + 0.4)
-      if (!onBuilding) addHeap(heap, heapAt, TRENCH.berm.height)
+      // never over a hole: the pieces of the heap off every trench and pit (with the slope of its edge) are heaped, a sliver of one is not
+      if (!onBuilding) for (const piece of rectMinus(heapAt, rects.map((t) => [t[0] - SPOIL_CLEAR, t[1] - SPOIL_CLEAR, t[2] + SPOIL_CLEAR, t[3] + SPOIL_CLEAR] as Rect))) {
+        if (Math.min(piece[2] - piece[0], piece[3] - piece[1]) >= TRENCH.berm.crest * 2) addHumps(heap, piece)
+      }
     }
   })
   const mound = heap.mesh(THREE, material, 'excavation:heap')
@@ -165,6 +213,24 @@ interface Trench {
 
 /** Working room dug round a sewer box on each side, metres: the box stands in its own pit, its walls clear of the earth until the backfill. */
 const PIT_MARGIN = 0.15
+
+/** `r` less the rectangles `holes` (each cut leaves up to four pieces). */
+function rectMinus(r: Rect, holes: readonly Rect[]): Rect[] {
+  let pieces: Rect[] = [r]
+  for (const h of holes) {
+    pieces = pieces.flatMap((p): Rect[] => {
+      if (h[0] >= p[2] || h[2] <= p[0] || h[1] >= p[3] || h[3] <= p[1]) return [p]
+      const out: Rect[] = []
+      if (h[0] > p[0]) out.push([p[0], p[1], h[0], p[3]])
+      if (h[2] < p[2]) out.push([h[2], p[1], p[2], p[3]])
+      const x0 = Math.max(p[0], h[0]), x1 = Math.min(p[2], h[2])
+      if (h[1] > p[1]) out.push([x0, p[1], x1, h[1]])
+      if (h[3] < p[3]) out.push([x0, h[3], x1, p[3]])
+      return out
+    })
+  }
+  return pieces
+}
 
 /** A trench along a straight run from (a) to (b), its bed `under` the run's line (the pipe lies on it). */
 function trenchAlong(a: RoutePoint, b: RoutePoint, halfWidth: number, under: number): Trench {
@@ -322,7 +388,8 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord, rain: r
   const mats = {
     pipe: new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.65 }),
     rain: new THREE.MeshStandardMaterial({ color: 0xc8ccd0, roughness: 0.6 }),
-    heap: new THREE.MeshStandardMaterial({ color: 0x5a3e24, roughness: 0.95 }),
+    // loose earth, the colour of the soil the trench is dug in, a shade lighter (dry, broken up)
+    heap: new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: 1 }),
     concrete: new THREE.MeshStandardMaterial({ color: 0x7c7f82, roughness: 0.9 }),
     lid: new THREE.MeshStandardMaterial({ color: 0x8d8f91, roughness: 0.92 }),
   }

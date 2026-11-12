@@ -92,6 +92,28 @@ describe('the trenches and pits of the rough-in are real holes in the terrain (g
     expect(ys.length).toBeGreaterThan(0)
   })
 
+  it('the dug earth is heaped beside the holes, never over one: mounds that fall off to the ground, no plumb face', () => {
+    let heap: THREE.Mesh | undefined
+    stage.traverse((o) => { if (o.name === 'excavation:heap') heap = o as THREE.Mesh })
+    expect(heap).toBeDefined()
+    heap!.updateWorldMatrix(true, false)
+    const position = heap!.geometry.getAttribute('position')
+    const over: string[] = []
+    let top = 0
+    for (let i = 0; i < position.count; i++) {
+      const p = new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(heap!.matrixWorld)
+      top = Math.max(top, p.y)
+      if (dug.some((e) => p.x > e.rect[0] + 1e-3 && p.x < e.rect[2] - 1e-3 && p.z > e.rect[1] + 1e-3 && p.z < e.rect[3] - 1e-3)) over.push(p.toArray().map((v) => v.toFixed(2)).join(','))
+    }
+    expect(over).toEqual([])
+    expect(top).toBeGreaterThan(0.1)
+    // no face of it stands plumb: every side slopes (a box would show vertical faces)
+    const normal = heap!.geometry.getAttribute('normal')
+    let plumb = 0
+    for (let i = 0; i < normal.count; i++) if (Math.abs(normal.getY(i)) < 1e-3) plumb++
+    expect(plumb).toBe(0)
+  })
+
   it('after the backfill the trenches are closed: no excavation from level 5, and the ray meets the ground again', () => {
     house.setConstructionLevel(5)
     expect(house.excavations()).toEqual([])
