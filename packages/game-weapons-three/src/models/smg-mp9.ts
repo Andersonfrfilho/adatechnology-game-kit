@@ -19,16 +19,16 @@ function buildReceiver(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const { M, box } = kit
   const body = RECEIVER_END - RECEIVER_START
   box(group, body, RECEIVER_HEIGHT, RECEIVER_WIDTH, M.poly, RECEIVER_START + body / 2, 0, 0)
-  box(group, 0.06, 0.062, 0.04, M.poly, 0.232, 0.005, 0)
+  box(group, 0.06, 0.0635, 0.04, M.poly, 0.232, 0.00425, 0)
   box(group, 0.03, 0.014, 0.032, M.dark, 0.222, TOP + 0.017, 0)
   box(group, 0.014, 0.012, 0.012, M.dark, 0.272, TOP + 0.012, 0, -0.5)
   rail(kit, group, 0.275, 0.175, TOP + 0.0025, 0, 0.022)
   for (const side of [-1, 1]) for (let i = 0; i < 5; i++) box(group, 0.12 - i * 0.012, 0.0025, 0.002, M.dark, 0.4 - i * 0.006, 0.014 - i * 0.0075, side * (RECEIVER_WIDTH / 2 + 0.0005))
-  box(group, 0.04, 0.016, 0.004, M.hole, 0.335, 0.006, RECEIVER_WIDTH / 2 + 0.0004)
+  box(group, 0.04, 0.016, 0.004, M.hole, 0.335, 0.006, RECEIVER_WIDTH / 2 - 0.0008)
   const bolt = kit.pivot(group)
   parts.bolt = bolt
   parts.stroke = 0.05
-  box(bolt, 0.036, 0.012, 0.006, M.steelL, 0.335, 0.006, RECEIVER_WIDTH / 2 - 0.0005)
+  box(bolt, 0.036, 0.012, 0.008, M.steelL, 0.335, 0.006, RECEIVER_WIDTH / 2 - 0.0016)
 }
 
 /** The muzzle: a thick flash hider on the barrel, which carries the heat glow. */

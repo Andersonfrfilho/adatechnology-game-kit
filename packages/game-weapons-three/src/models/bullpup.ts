@@ -26,7 +26,7 @@ export function buildBullpup(kit: ModelKit, options: ModelOptions): BuiltModel {
   const bodyLength = Math.max(0.32, L - barrel * 0.72)
   const body = options.shot ? M.poly : M.olive
   const parts: ModelParts = { family: options.shot ? 'pump' : 'rifle', stroke: 0.06, glow: [] }
-  box(group, bodyLength, 0.075, 0.042, body, bodyLength / 2, 0, 0)
+  box(group, bodyLength - 0.002, 0.075, 0.042, body, bodyLength / 2 + 0.001, 0, 0)
   box(group, bodyLength * 0.9, 0.02, 0.044, M.dark, bodyLength * 0.5, -0.02, 0)
   box(group, 0.032, 0.13, 0.044, M.rubber, 0.016, -0.025, 0)
   const gx = bodyLength * 0.8
@@ -38,13 +38,13 @@ export function buildBullpup(kit: ModelKit, options: ModelOptions): BuiltModel {
   parts.trigger = box(group, 0.004, 0.016, 0.004, M.dark, gx + 0.02, -0.05, 0, 0.15)
   heatify(parts.glow, cylinderX(group, options.shot ? 0.0105 : 0.0085, barrel, M.metal, L - barrel / 2, 0.012, 0, 16))
   cylinderX(group, 0.006, 0.004, M.hole, L + 0.001, 0.012, 0, 12)
-  box(group, 0.05, 0.024, 0.004, M.hole, bodyLength * 0.25, 0.005, 0.0212)
+  box(group, 0.05, 0.024, 0.002, M.hole, bodyLength * 0.25, 0.005, 0.0212)
   const bolt = kit.pivot(group)
   parts.bolt = bolt
-  box(bolt, 0.044, 0.02, 0.006, M.steelL, bodyLength * 0.25, 0.005, 0.02)
+  box(bolt, 0.044, 0.02, 0.006, M.steelL, bodyLength * 0.25, 0.005, 0.0212)
   if (options.shot) {
-    cylinderX(group, 0.012, bodyLength * 0.75, M.metal, bodyLength * 0.55, -0.025, 0.014, 14)
-    cylinderX(group, 0.012, bodyLength * 0.75, M.metal, bodyLength * 0.55, -0.025, -0.014, 14)
+    cylinderX(group, 0.012, bodyLength * 0.75, M.metal, bodyLength * 0.55, -0.0235, 0.014, 14)
+    cylinderX(group, 0.012, bodyLength * 0.75, M.metal, bodyLength * 0.55, -0.0235, -0.014, 14)
     const pump = kit.pivot(group)
     parts.pump = pump
     box(pump, 0.15, 0.045, 0.052, M.poly, bodyLength + 0.06, -0.015, 0)

@@ -69,7 +69,7 @@ function buildMagazine(kit: ModelKit, group: Parent, parts: ModelParts, options:
   }
   box(magazine, 0.05, 0.03, 0.04, M.metal, 0, -0.008, 0)
   cylinderX(magazine, 0.08, 0.046, M.metal, 0, -0.085, 0, 28)
-  cylinderX(magazine, 0.07, 0.048, M.dark, 0, -0.085, 0, 24)
+  cylinderX(magazine, 0.07, 0.052, M.dark, 0, -0.085, 0, 24)
   cylinderX(magazine, 0.022, 0.05, M.steel, 0, -0.085, 0, 14)
   for (const angle of [0, 1.05, 2.1, 3.15, 4.2, 5.25]) box(magazine, 0.048, 0.012, 0.006, M.metal, 0, -0.085 + Math.cos(angle) * 0.052, Math.sin(angle) * 0.052, 0, 0, angle)
   parts.magDrop = 0.2

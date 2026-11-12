@@ -72,7 +72,7 @@ function buildFrame(kit: ModelKit, group: THREE.Group, parts: ModelParts, option
   const magazine = kit.pivot(grip)
   parts.mag = magazine
   parts.magDrop = gripLength * 1.15
-  box(magazine, 0.022, gripLength * 0.94, w * 0.72, M.dark, 0.003, -0.004, 0)
+  box(magazine, style.grip === 'wood' || style.grip === 'star' ? 0.018 : 0.022, gripLength * 0.94, w * 0.72, M.dark, 0.003, -0.004, 0)
   if (style.grip === 'chunky') box(magazine, 0.04, 0.01, gripWidth * 1.02, M.poly, 0.003, -gripLength / 2 - 0.004, 0)
   else if (style.flush || style.grip === 'wood') box(magazine, 0.028, 0.004, w * 0.9, M.steel, 0.003, -gripLength / 2 - 0.001, 0)
   else box(magazine, 0.031, 0.006, gripWidth * 1.02, M.dark, 0.003, -gripLength / 2 - 0.002, 0)

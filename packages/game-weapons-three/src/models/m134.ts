@@ -45,7 +45,7 @@ function buildHousing(kit: ModelKit, parts: ModelParts, group: BuiltModel['group
   box(group, 0.012, 0.05, 0.045, M.dark, 0.31, 0.13, 0)
   for (const side of [-1, 1]) {
     box(group, 0.03, 0.03, 0.1, M.poly, 0.06, -0.01, side * 0.14)
-    cylinderZ(group, 0.016, 0.07, M.poly, 0.06, -0.01, side * 0.2, 14)
+    cylinderZ(group, 0.0175, 0.07, M.poly, 0.06, -0.01, side * 0.2, 14)
   }
   parts.trigger = box(group, 0.012, 0.02, 0.016, M.dark, 0.1, 0.085, 0.14, 0.3)
   // carried at the hip: the right hand on the right spade grip, the left on the carry handle on top

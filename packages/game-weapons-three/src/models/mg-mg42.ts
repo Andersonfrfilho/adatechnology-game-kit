@@ -17,7 +17,7 @@ const FEED_X = 0.42
 function buildStock(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const { M, box } = kit
   box(group, 0.25, 0.075, 0.05, M.poly, 0.125, -0.014, 0, -0.05)
-  box(group, 0.05, 0.13, 0.052, M.poly, 0.025, -0.03, 0)
+  box(group, 0.048, 0.13, 0.052, M.poly, 0.026, -0.03, 0)
   box(group, 0.012, 0.12, 0.054, M.rubber, 0.006, -0.03, 0)
   const grip = kit.pivot(group, GRIP_X, -0.085, 0)
   grip.rotation.z = -0.3
