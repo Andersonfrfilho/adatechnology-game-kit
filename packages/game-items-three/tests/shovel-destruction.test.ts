@@ -61,7 +61,7 @@ describe('a shot into the handle', () => {
     const handle = world.part(id, 'handle')!
     expect(handle.holes[0]!.through).toBe(true)
     expect(handle.status).not.toBe('broken')
-    expect(world.state(id).joints.every((joint) => !joint.open)).toBe(true)
+    expect(world.state(id)!.joints.every((joint) => !joint.open)).toBe(true)
   })
 })
 
