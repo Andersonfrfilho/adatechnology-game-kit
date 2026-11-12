@@ -1,5 +1,14 @@
 # @adatechnology/game-weapons-three
 
+## 0.22.1
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+  - @adatechnology/game-floorplan-three@0.14.2
+  - @adatechnology/game-items-three@0.8.5
+
 ## 0.22.0
 
 ### Minor Changes

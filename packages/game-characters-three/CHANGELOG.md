@@ -1,5 +1,12 @@
 # @adatechnology/game-characters-three
 
+## 0.11.14
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+
 ## 0.11.13
 
 ### Patch Changes

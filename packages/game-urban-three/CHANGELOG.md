@@ -1,5 +1,12 @@
 # @adatechnology/game-urban-three
 
+## 0.3.16
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+
 ## 0.3.15
 
 ### Patch Changes

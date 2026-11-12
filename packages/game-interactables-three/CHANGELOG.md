@@ -1,5 +1,14 @@
 # @adatechnology/game-interactables-three
 
+## 0.2.16
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes@0.3.0
+  - @adatechnology/game-shapes-three@0.4.0
+  - @adatechnology/game-props3d@0.3.4
+
 ## 0.2.15
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @adatechnology/game-crowd-three
 
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+  - @adatechnology/game-characters-three@0.11.14
+
 ## 0.6.5
 
 ### Patch Changes

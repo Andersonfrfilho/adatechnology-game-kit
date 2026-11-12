@@ -1,5 +1,13 @@
 # @adatechnology/game-vehicles-three
 
+## 0.9.9
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+  - @adatechnology/game-vehicles@0.6.17
+
 ## 0.9.8
 
 ### Patch Changes

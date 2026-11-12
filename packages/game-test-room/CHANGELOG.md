@@ -1,5 +1,12 @@
 # @adatechnology/game-test-room
 
+## 0.35.4
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+
 ## 0.35.3
 
 ### Patch Changes

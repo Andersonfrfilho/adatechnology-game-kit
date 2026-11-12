@@ -1,5 +1,13 @@
 # @adatechnology/game-items-three
 
+## 0.8.5
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+  - @adatechnology/game-floorplan-three@0.14.2
+
 ## 0.8.4
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @adatechnology/game-vegetation-three
 
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+
 ## 0.3.13
 
 ### Patch Changes

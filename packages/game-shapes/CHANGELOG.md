@@ -1,5 +1,11 @@
 # @adatechnology/game-shapes
 
+## 0.3.0
+
+### Minor Changes
+
+- 6b829c7: z-fighting guard: `coincidentFaces` (game-shapes) finds triangles on the same plane, facing the same way, that overlap; `coincidentFacesOf(root)` (game-shapes-three) runs it on any three.js object in world space (instances, only what is drawn, the nearest LOD level, decals with polygonOffset skipped) and names the two meshes of each hit.
+
 ## 0.2.13
 
 ### Patch Changes

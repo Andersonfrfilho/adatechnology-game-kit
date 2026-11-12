@@ -1,5 +1,13 @@
 # @adatechnology/game-animals-three
 
+## 0.4.22
+
+### Patch Changes
+
+- Updated dependencies [6b829c7]
+  - @adatechnology/game-shapes-three@0.4.0
+  - @adatechnology/game-props3d@0.3.4
+
 ## 0.4.21
 
 ### Patch Changes
