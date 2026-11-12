@@ -13,6 +13,10 @@ export const HAND_HOLD = {
   palm: 0.011,
   /** How far up the grip the web of the hand sits from its middle. */
   gripUp: 0.006,
+  /** A two-handed tool's shaft, for the left hand to slide along: from this share of the way from the right grip to the left one (a hand's width off the right hand)... */
+  slideFrom: 0.35,
+  /** ...to this share, past the left grip toward the head. */
+  slideTo: 1.8,
   /** How far down the grip the supporting hand of a pistol sits from the middle. */
   supportDown: 0.036,
   /** Where along the handguard (0 the receiver, 1 the end of the forend) the supporting hand closes. */
@@ -55,6 +59,8 @@ export interface Hold {
   scale: number
   grip: number
   gripLeft: number
+  /** The shaft of a two-handed tool the left hand may slide along when its grip is out of reach (`HandTargets.slideL`), in the space of `part`. */
+  slideLeft?: { readonly part: THREE_NS.Object3D; readonly from: THREE_NS.Vector3; readonly to: THREE_NS.Vector3 } | null
   /** What the hands do to the parts the clips move (`handWorkOf`); empty until the viewmodel adds it. */
   works?: readonly HandWork[]
 }
@@ -101,7 +107,13 @@ export const targetsOf = (THREE: Three, hold: Hold, rootQuaternion: THREE_NS.Qua
     if (work.hand === 'R') right = right ? blendPose(THREE, right, pose, k) : pose
     else left = left ? blendPose(THREE, left, pose, k) : pose
   })
-  return { R: right, L: left, grip: hold.grip, gripL: hold.gripLeft, scale: hold.scale }
+  const targets: HandTargets = { R: right, L: left, grip: hold.grip, gripL: hold.gripLeft, scale: hold.scale }
+  if (hold.slideLeft && left) {
+    const from = hold.slideLeft.part.localToWorld(hold.slideLeft.from.clone())
+    const to = hold.slideLeft.part.localToWorld(hold.slideLeft.to.clone())
+    targets.slideL = { from: [from.x, from.y, from.z], to: [to.x, to.y, to.z] }
+  }
+  return targets
 }
 
 const V = (THREE: Three, x: number, y: number, z: number): THREE_NS.Vector3 => new THREE.Vector3(x, y, z)
@@ -213,7 +225,12 @@ export function holdOfProp(THREE: Three, group: THREE_NS.Object3D, category: str
   const left: HandAnchor | null = support
     ? { part: group, offset: support.position.clone().add(V(THREE, 0, handleSize.y / 2 + 0.002, 0)), quaternion: wrap }
     : long && head && headSize ? { part: group, offset: head.position.clone().add(V(THREE, -headSize.x * 0.15, -headSize.y / 2 - HAND_HOLD.palm, 0)), quaternion: forendFrame(THREE) } : null
-  return { right, left, leftMagazine: null, scale, grip: HAND_HOLD.closed, gripLeft: HAND_HOLD.forend }
+  // a two-handed tool's shaft runs from a hand's width ahead of the right hand, past the left grip, toward the head
+  const slideLeft = support && left
+    ? { part: group, from: right.offset.clone().lerp(left.offset, HAND_HOLD.slideFrom), to: right.offset.clone().lerp(left.offset, HAND_HOLD.slideTo) }
+    : null
+  // a hand on a shaft closes around it like the other one; under a long gun's barrel it only cradles it
+  return { right, left, leftMagazine: null, scale, grip: HAND_HOLD.closed, gripLeft: support ? HAND_HOLD.closed : HAND_HOLD.forend, slideLeft }
 }
 
 /** The same point of the tool for the other hand: across the tool's middle plane (its z = 0), the hand mirrored with it (a left hand is the mirror image of a right one). */
@@ -229,6 +246,6 @@ export const mirrorAnchor = (anchor: HandAnchor): HandAnchor => {
  */
 export const oneHandHold = (hold: Hold, hand: 'R' | 'L'): Hold => {
   const works = hold.works?.filter((work) => work.hand === 'R')
-  if (hand === 'R') return { ...hold, left: null, leftMagazine: null, ...(works ? { works } : {}) }
-  return { ...hold, right: null, left: hold.right ? mirrorAnchor(hold.right) : null, leftMagazine: null, gripLeft: hold.grip, works: [] }
+  if (hand === 'R') return { ...hold, left: null, leftMagazine: null, slideLeft: null, ...(works ? { works } : {}) }
+  return { ...hold, right: null, left: hold.right ? mirrorAnchor(hold.right) : null, leftMagazine: null, slideLeft: null, gripLeft: hold.grip, works: [] }
 }

@@ -11,7 +11,7 @@ import type { THREE_NS } from '../three'
 /** What `@adatechnology/game-test-room` calls a `RoomAvatar`, restated here so this package does not depend on the room. */
 export type RoomAvatarLike = {
   root: THREE_NS.Object3D
-  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; fallForward?: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null }): void
+  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; fallForward?: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null; clipRate?: number }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /** Where the body's eyes are after its pose (`RoomAvatar.eye`): the room draws the body in both views and puts the first-person camera there. */
@@ -122,7 +122,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     eye: (out) => avatar.eye(out),
     setView: (mode, camera, options) => avatar.setView(mode, camera, options),
     update: (dt, state) => {
-      stepGuard(dt, state)
+      stepGuard(dt * (state.clipRate ?? 1), state)
       updateFeet(state)
       avatar.update(dt, {
         speed: state.speed,
@@ -137,6 +137,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
         ...(state.seat !== undefined ? { seat: state.seat } : {}),
         ...(state.door !== undefined ? { door: state.door } : {}),
         ...(state.fallForward !== undefined ? { fallForward: state.fallForward } : {}),
+        ...(state.clipRate !== undefined ? { clipRate: state.clipRate } : {}),
       })
       readFeet()
     },

@@ -120,6 +120,11 @@ export type AvatarUpdate = {
    * `height` is the hand over the feet, metres (a fridge handle, a car door, a low drawer).
    */
   door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
+  /**
+   * How fast a clip plays against `dt`: the world's time scale when the body walks in real time but the world is slowed (a strike and the tool it swings stay on one clock, so a
+   * shovelful's body and blade move together in slow motion). Default 1.
+   */
+  clipRate?: number
 }
 
 export type PlayPoseOptions = {
@@ -266,11 +271,14 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     hands.push({ side, hg, fingers: built.fingers as THREE_NS.Object3D[], th: built.th as THREE_NS.Object3D | null })
   })
   const armReach = createArmReach(THREE, rig, { R: hands.find((hand) => hand.side < 0)!.hg, L: hands.find((hand) => hand.side > 0)!.hg })
-  const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
+  const closeFingers = (hand: ThirdPersonHand, grip: number): void => {
     hand.fingers.forEach((finger, j) => {
       finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
     })
     if (hand.th) hand.th.rotation.z = -hand.side * (0.32 + grip * 0.25)
+  }
+  const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
+    closeFingers(hand, grip)
     hand.hg.rotation.x = wristX
   }
 
@@ -641,8 +649,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       }
       if (seat?.pose === 'lie') layBody(seat.hip)
       else placeBody(fall, state.fallForward)
-      stepClip(dt, down, Boolean(state.crouch || seat))
-      const cascadeDt = run && !run.clip.loop ? dt * clipCascade : dt
+      const clipDt = dt * (state.clipRate ?? 1)
+      stepClip(clipDt, down, Boolean(state.crouch || seat))
+      const cascadeDt = run && !run.clip.loop ? clipDt * clipCascade : dt
       const targetWithoutBob = rig.fig.position.y - bob
       if (smooth) animator.cascade(rig, cascadeDt)
       hipWithoutBob = smooth && hipWithoutBob !== null ? stepCascade(hipWithoutBob, targetWithoutBob, cascadeDt, 'hip') : targetWithoutBob
@@ -700,6 +709,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if ((run && (run.clip.channels ?? 'full') !== 'body') || fall > 0) return
       root.updateMatrixWorld(true)
       armReach.apply(targets, view)
+      // the left hand on a tool's shaft closes around it as the tool asks (the stance of the body knows only the right hand's tool)
+      const left = hands.find((hand) => hand.side > 0)
+      if (targets?.slideL && targets.L && left) closeFingers(left, TRIGGER_CURL * Math.min(1, Math.max(0, targets.gripL ?? targets.grip ?? 1)))
       // the index finger of a hand on a trigger curls by itself (`HandTargets.fingers` for the right hand, `fingersL` for the left), the other fingers keep the grip
       for (const hand of hands) {
         const curl = hand.side < 0 ? targets?.fingers?.index : targets?.fingersL?.index

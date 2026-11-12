@@ -1888,6 +1888,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         : null
     avatar.root.position.set(x, player.feet, z)
     avatar.root.rotation.set(0, player.yaw + Math.PI, 0) // the body's front is +z (the three.js way, as the catalogue items), the view looks down -z at yaw 0
+    avatarState.clipRate = scheduler.timeScale
     avatar.update(dt, avatarState)
     avatar.root.updateMatrixWorld(true)
     placeEye()

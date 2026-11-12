@@ -1206,11 +1206,11 @@
           "t": 1.05,
           "pose": {
             "lean": 0.2,
-            "twist": 0.55,
+            "twist": -0.55,
             "side": 0.08,
             "drop": -0.08,
             "headX": 0.3,
-            "headY": -0.35,
+            "headY": 0.35,
             "headZ": 0,
             "legL": 0.1,
             "kneeL": 0.25,
