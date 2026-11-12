@@ -10,6 +10,7 @@ import { openExcavations } from '../construction-stages/excavations.js';
 import { routeConduits, routingPlanOf } from '../construction-stages/installation-routes.js';
 import type { RoutableElectrical } from '../construction-stages/installation-routes.js';
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
+import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
 import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
 
 import type * as THREE_NS from 'three';
@@ -31,12 +32,34 @@ function withLaidConduits(r: HouseRecord, stages: boolean): HouseRecord {
   const E = r.utilities?.electrical;
   if (!stages || !E || !E.conduits?.length) return r;
   const lamps = new Map<string, { u: number; v: number; y: number }>();
-  for (const it of r.items) if (it.type === 'ceiling_light') lamps.set(it.id, { u: it.x, v: it.z, y: (r.floors[Math.max(0, it.floor)]?.y0 ?? 0) + (it.y ?? 2.7) });
+  // a light's run ends at its box, set in its room's ceiling (an outbuilding's is lower than the storey's)
+  const roomCeiling = (it: { room?: string | null; floor: number }): number | undefined => r.rooms.find((c) => c.id === it.room)?.ceiling ?? r.floors[Math.max(0, it.floor)]?.ceiling;
+  for (const it of r.items) if (it.type === 'ceiling_light') lamps.set(it.id, { u: it.x, v: it.z, y: (r.floors[Math.max(0, it.floor)]?.y0 ?? 0) + (roomCeiling(it) ?? it.y ?? 2.7) });
   // in the construction stages every conduit is laid as the water is: cut into the bare masonry in the rough-in, embedded once the walls are plastered
   const embedded = { ...E, conduits: E.conduits.map((c) => ({ ...c, exposed: false })) };
   // a feed to a building in the yard keeps clear of the sewer laid in the same yard
   const conduits = routeConduits({ ...routingPlanOf(r), buried: buriedSewerOf(r) }, embedded as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
   return { ...r, utilities: { ...r.utilities, electrical: { ...E, exposed: false, conduits } } };
+}
+
+/** Radius of the runs in the walls when the part does not say: a 20 mm conduit, a 25 mm water pipe. */
+const RUN_RADIUS = { wall_conduit: 0.01, wall_pipe: 0.0125 } as const
+
+/** The stretches of the conduits and the water pipes laid in the house that go plumb up or down (inside a wall), in plan: where its masonry gets a chase. */
+function embeddedRunsOf(house: THREE_NS.Object3D): EmbeddedRun[] {
+  const out: EmbeddedRun[] = []
+  house.traverse((o) => {
+    const part = o.userData.part as string | undefined
+    if (part !== 'wall_conduit' && part !== 'wall_pipe') return
+    // a conduit keeps its plan points [u, v, y]; a pipe its routes in the house's frame [u, y, v]
+    const routes = part === 'wall_conduit' ? [((o.userData.points ?? []) as number[][]).map((p) => [p[0]!, p[2]!, p[1]!])] : ((o.userData.routes ?? []) as number[][][])
+    for (const route of routes) for (let i = 0; i + 1 < route.length; i++) {
+      const a = route[i]!, b = route[i + 1]!
+      if (Math.hypot(a[0]! - b[0]!, a[2]! - b[2]!) > 1e-3 || Math.abs(a[1]! - b[1]!) < 0.05) continue
+      out.push({ u: a[0]!, v: a[2]!, y0: Math.min(a[1]!, b[1]!), y1: Math.max(a[1]!, b[1]!), radius: RUN_RADIUS[part] });
+    }
+  });
+  return out;
 }
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
@@ -170,7 +193,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
         if (cs) {
           const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
-          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[]);
+          // the masonry is laid with the chases of the runs that go up and down inside it
+          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], embeddedRunsOf(house));
           const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? []);
           const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || []);
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer

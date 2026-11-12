@@ -282,10 +282,11 @@ export function routeToTerminal(plan: RoutingPlan, from: readonly [number, numbe
 export function routeToCeiling(plan: RoutingPlan, from: readonly [number, number], u: number, v: number, ceilingY: number): Route {
   const attic = atticFloor(plan) + ATTIC_LIFT.conduit
   if (inside(houseFootprint(plan), u, v, 0.4)) return [...atticPath(from, [u, v], attic, 'v'), [u, ceilingY, v]]
-  const feed = feedTo(plan, { u, v }, ceilingY, {})
+  // up its building's wall into the slab over the ceiling, across in it, and down to the box in the ceiling
+  const feed = feedTo(plan, { u, v }, ceilingY + IN_SLAB, {})
   if (!feed) return []
   const top = feed.route[feed.route.length - 1]!
-  return [...atticPath(from, [feed.exit.u, feed.exit.v], attic, 'v'), ...feed.route, ...atticPath([top[0], top[2]], [u, v], ceilingY, 'v').slice(1)]
+  return [...atticPath(from, [feed.exit.u, feed.exit.v], attic, 'v'), ...feed.route, ...atticPath([top[0], top[2]], [u, v], ceilingY + IN_SLAB, 'v').slice(1), [u, ceilingY, v]]
 }
 
 /** A run inside a building of the yard, from its ceiling at `start` (u, v, ceiling height) to a terminal on its walls: in its ceiling slab, down inside the wall. */
@@ -294,8 +295,11 @@ function routeInOutbuilding(plan: RoutingPlan, start: readonly [number, number, 
   const drop = walls.length ? wallDrop(plan, 0, target.u, target.v, { walls }) : null
   if (!drop) return []
   const storey = plan.floors[Math.max(0, target.floor)]
-  return [...atticPath([start[0], start[1]], [drop.u, drop.v], start[2], 'v'), [drop.u, (storey ? storey.y0 : 0) + target.y, drop.v]]
+  return [[start[0], start[2], start[1]], ...atticPath([start[0], start[1]], [drop.u, drop.v], start[2] + IN_SLAB, 'v'), [drop.u, (storey ? storey.y0 : 0) + target.y, drop.v]]
 }
+
+/** How far over a ceiling a run goes across inside the slab cast on it (a building of the yard has no attic: its runs are cast in its roof slab), metres. */
+const IN_SLAB = 0.08
 
 /** Total length of a route, metres. */
 export const routeLength = (route: Route): number => route.reduce((sum, p, i) => (i ? sum + Math.hypot(p[0] - route[i - 1]![0], p[1] - route[i - 1]![1], p[2] - route[i - 1]![2]) : 0), 0)

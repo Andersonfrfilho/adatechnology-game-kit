@@ -140,7 +140,10 @@ function stageVisible(stage: string, level: number, opts: ApplyConstructionLevel
   }
 }
 
-/** The runs cut into the masonry and the boxes they end in: shown in the rough-in stage, embedded (hidden) once the walls are plastered, unless the water layer asks for the pipes. */
+/**
+ * The runs cut into the masonry and the boxes they end in: laid in the rough-in stage and there from then on, in their chases under the render (the render covers
+ * them, nothing hides them by level): a wall broken open shows them where they run.
+ */
 const EMBEDDED = new Set(['wall_pipe', 'wall_conduit', 'electrical_box'])
 
 /** Which of the house's own groups and stage groups show at a level. Null: the group is not a stage's, its children decide. */
@@ -167,7 +170,6 @@ export function applyConstructionLevel(
   opts: ApplyConstructionLevelOptions = {},
 ): number {
   const level = clampConstructionLevel(rawLevel)
-  const waterOn = opts.waterLayer === true
   const lotOn = opts.lotLayer !== false
 
   for (const child of houseGroup.children) {
@@ -190,7 +192,7 @@ export function applyConstructionLevel(
         return
       }
       if (typeof ud.part === 'string' && EMBEDDED.has(ud.part)) {
-        obj.visible = level === 4 || (ud.part === 'wall_pipe' && waterOn && level >= 4)
+        obj.visible = level >= 4
         return
       }
       if (typeof ud.constructionStage !== 'string') return

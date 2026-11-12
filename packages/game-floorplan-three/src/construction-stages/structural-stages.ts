@@ -3,6 +3,7 @@ import { PLASTER_PER_FACE, applyPanels, pillarSectionForWidth, applySlabPanels, 
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel, coreWidthOf, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
+import type { Chase } from './masonry-stage.js'
 import { cutOf, subtractRects, wallLineOf } from './wall-plane.js'
 import type { WallRect } from './wall-plane.js'
 
@@ -114,6 +115,33 @@ function alignToWall(solid: Solid, walls: readonly StructurePart[], columns: rea
   const width = coreWidthOf(wall.thickness, unitId), line = coreLineOf(wall, host, columns, width)
   const aabb: Solid['aabb'] = wall.alongU ? [solid.aabb[0], line - width / 2, solid.aabb[2], line + width / 2] : [line - width / 2, solid.aabb[1], line + width / 2, solid.aabb[3]]
   return { ...solid, aabb }
+}
+
+/** A stretch of a run (a conduit, a pipe) going up or down inside a wall, in plan: where it stands, from where to where, its radius. */
+export interface EmbeddedRun {
+  readonly u: number
+  readonly v: number
+  readonly y0: number
+  readonly y1: number
+  readonly radius: number
+}
+
+/** What a chase leaves round the run in it, metres: the run never touches the brick. */
+const CHASE_CLEAR = 0.003
+
+/** The chases a wall gets for the runs inside its core: on the face each run is nearer, as deep as it reaches into the units. */
+function chasesIn(wall: ReturnType<typeof wallLineOf>, core: { readonly line: number; readonly width: number; readonly y0: number; readonly y1: number }, runs: readonly EmbeddedRun[]): Chase[] {
+  const out: Chase[] = []
+  for (const r of runs) {
+    const along = wall.alongU ? r.u : r.v, across = (wall.alongU ? r.v : r.u) - core.line
+    if (along < wall.a0 || along > wall.a1 || r.y1 <= core.y0 || r.y0 >= core.y1) continue
+    // a run outside the wall's thickness is not in it; one wholly in the render does not reach the units
+    if (Math.abs(across) > wall.thickness / 2) continue
+    const back = Math.max(0, Math.abs(across) - r.radius - CHASE_CLEAR)
+    if (back >= core.width / 2) continue
+    out.push({ a0: along - r.radius - CHASE_CLEAR, a1: along + r.radius + CHASE_CLEAR, y0: Math.max(core.y0, r.y0), y1: Math.min(core.y1, r.y1), side: across >= 0 ? 1 : -1, back })
+  }
+  return out
 }
 
 const isLintel = (id: string): boolean => /lintel|sillbeam|sill_beam/.test(id)
@@ -309,7 +337,7 @@ function detailedParts(rawStructure: PlanStructure): StructurePart[] {
  * The bare structure by construction stage: the foundation (footings, ground beams, starter bars), the frame (pillars, bond beams, slabs) and the masonry
  * (walls, lintels and sills, laid between the frame's members). Every solid is fitted to the ones it touches so that no two of them draw a face on the same plane.
  */
-export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStructure | undefined, outbuildings?: readonly Outbuilding[]): StructuralStageGroups {
+export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStructure | undefined, outbuildings?: readonly Outbuilding[], runs: readonly EmbeddedRun[] = []): StructuralStageGroups {
   const foundation = new THREE.Group()
   foundation.name = 'stage:1:foundation'
   const frame = new THREE.Group()
@@ -396,7 +424,7 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
     }
     const coreWidth = coreWidthOf(wall.thickness, unit)
     const coreLine = coreLineOf(wall, p, columns, coreWidth)
-    const filled = buildMasonryPanel(batches, p, { cuts, courseBase: (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, unitId: unit, coreLine })
+    const filled = buildMasonryPanel(batches, p, { cuts, courseBase: (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, unitId: unit, coreLine, chases: chasesIn(wall, { line: coreLine, width: coreWidth, y0: p.y0, y1: p.y1 }, runs) })
     // a wall already laid stands in the next one's way by its bricks as laid (its core, less what a pillar took of it), not by its box or the render it gets
     // later: the next wall's units butt against them
     const half = coreWidth / 2

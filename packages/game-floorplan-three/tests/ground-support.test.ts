@@ -21,7 +21,7 @@ function houseOnGround() {
     }
   }
   /** Parts the ground's loss reached: settled, cracked over a void, lost their support or fell. */
-  const reached = (): string[] => [...new Set(events.filter((e) => e.type === 'subside' || e.type === 'collapse' || e.type === 'fall').map((e) => String((e as { part?: string }).part ?? '')))]
+  const reached = (): string[] => [...new Set(events.filter((e) => e.type === 'subside' || e.type === 'collapse').map((e) => String((e as { part?: string }).part ?? '')))]
   return { house, world, terrain, events, settle, reached }
 }
 

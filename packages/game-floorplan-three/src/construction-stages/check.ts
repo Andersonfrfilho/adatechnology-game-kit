@@ -34,7 +34,7 @@ export const STAGE_PROBLEM = {
   SEWER_ABOVE_GROUND: 'sewer_above_ground',
   /** A face of the house lies on the ground's plane, facing up: it flickers with the ground under it. */
   ON_GROUND_PLANE: 'on_ground_plane',
-  /** An embedded pipe or conduit moves, doubles or shows out of the rough-in stage. */
+  /** An embedded pipe or conduit moves, doubles or is gone after the rough-in stage. */
   NETWORK_CHANGES: 'network_changes',
   /** A run crosses a room in the air (not inside a wall, not over the ceiling slab). */
   NETWORK_IN_AIR: 'network_in_air',
@@ -165,7 +165,8 @@ function checkNetwork(T: Three, h: StagedHouseView, plan: Plan, set: (level: num
   for (const level of [5, 8]) {
     set(level)
     if (snapshot() !== at4) out.push({ code: STAGE_PROBLEM.NETWORK_CHANGES, level, detail: 'the runs moved' })
-    for (const o of runs) if (shown(o)) out.push({ code: STAGE_PROBLEM.NETWORK_CHANGES, level, detail: `${String(o.userData.id)} shows out of the plaster` })
+    // under the render the run is still there, where it runs: the render covers it, nothing hides it (a wall broken open shows it)
+    for (const o of runs) if (!shown(o)) out.push({ code: STAGE_PROBLEM.NETWORK_CHANGES, level, detail: `${String(o.userData.id)} gone once the walls are rendered` })
   }
   const walls = plan.walls ?? []
   const top = plan.floors?.length ? plan.floors[plan.floors.length - 1]! : undefined

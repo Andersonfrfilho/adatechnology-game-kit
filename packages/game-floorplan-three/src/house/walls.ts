@@ -99,6 +99,11 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
     const u = (pillar.aabb[0] + pillar.aabb[2]) / 2, v = (pillar.aabb[1] + pillar.aabb[3]) / 2;
     return parts.find((q) => (q.role === 'wall' || q.role === 'partition') && q.assembly !== undefined && q.floor === pillar.floor && u >= q.aabb[0] - 1e-3 && u <= q.aabb[2] + 1e-3 && v >= q.aabb[1] - 1e-3 && v <= q.aabb[3] + 1e-3);
   };
+  /** The along coordinates of the edges of the doors and windows in the wall on `line` (axis `axis`) of a storey. */
+  function openingEdges(floor: number, axis: 'u' | 'v', line: number): number[] {
+    const R: HouseRecord = shared.ctx.r;
+    return [...R.doors, ...R.windows].filter((o) => o.floor === floor && o.axis === axis && Math.abs(o.pos - line) < 0.1).flatMap((o) => [o.at - o.width / 2, o.at + o.width / 2]);
+  }
   // the concrete pillars in the walls: plastered, a shade off the facade, out of the wall's faces by what they are deeper than it; drawn as part of the wall
   // they stand in, so the breach of the wall cuts their plaster with its own and shows their concrete and bars where it is gone
   function wallPillars(looks: ReadonlyMap<string, WallLook>): void {
@@ -113,8 +118,11 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       // (at the wall's own ends it stays as it is: nothing stands out of the wall)
       const alongU = host.aabb[2] - host.aabb[0] >= host.aabb[3] - host.aabb[1], k0 = alongU ? 0 : 1, k1 = alongU ? 2 : 3, box = [...e.aabb];
       const end = (alongU ? host.aabb[3] - host.aabb[1] : host.aabb[2] - host.aabb[0]) / 2 + 0.05; // the structure's wall reaches past its drawn ends by half its thickness
-      if (e.aabb[k0] > host.aabb[k0] + end) box[k0] = e.aabb[k0] - PILLAR_PROUD;
-      if (e.aabb[k1] < host.aabb[k1] - end) box[k1] = e.aabb[k1] + PILLAR_PROUD;
+      // ... except at a door or a window, where the structure's wall stops at the jamb itself: an end of the pillar on an opening's edge is at a jamb
+      const line = alongU ? (host.aabb[1] + host.aabb[3]) / 2 : (host.aabb[0] + host.aabb[2]) / 2;
+      const atJamb = (at: number): boolean => openingEdges(e.floor ?? 0, alongU ? 'u' : 'v', line).some((edge) => Math.abs(edge - at) < 0.02);
+      if (e.aabb[k0] > host.aabb[k0] + end || atJamb(e.aabb[k0])) box[k0] = e.aabb[k0] - PILLAR_PROUD;
+      if (e.aabb[k1] < host.aabb[k1] - end || atJamb(e.aabb[k1])) box[k1] = e.aabb[k1] + PILLAR_PROUD;
       bx(look.mat, box[0], e.y0, box[1], box[2], Math.min(e.y1, look.top), box[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
     }
     cursor.pc = null;

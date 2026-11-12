@@ -30,10 +30,11 @@ describe('the outer baseboard', () => {
     for (const tile of tiles) {
       expect(tile.material).toBe('ceramic')
       expect(tile.shape.size![0]).toBeCloseTo(10 / 17 - BASEBOARD_TILES.joint, 2)
-      expect(tile.shape.size![1]).toBeCloseTo(0.35, 2)
-      // 0.59 x 0.35 m x 12 mm of ceramic at 2300 kg/m³
-      expect(tile.mass).toBeGreaterThan(5.4)
-      expect(tile.mass).toBeLessThan(6.1)
+      // the band stands on the 4.5 cm of the sidewalk, up to 35 cm over the ground
+      expect(tile.shape.size![1]).toBeCloseTo(0.305, 2)
+      // 0.59 x 0.305 m x 12 mm of ceramic at 2300 kg/m³
+      expect(tile.mass).toBeGreaterThan(4.7)
+      expect(tile.mass).toBeLessThan(5.3)
     }
     const glued = piece.spec.joints!.filter((j: { a: string }) => j.a.startsWith('baseboard:'))
     expect(glued.length).toBe(34)

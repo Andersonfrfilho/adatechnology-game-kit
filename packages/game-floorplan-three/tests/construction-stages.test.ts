@@ -162,7 +162,7 @@ describe('construction stages of single_storey_a', () => {
     }
   })
 
-  it('lays each pipe and conduit once, in the same place at every level, inside walls or over the ceiling slab, and shows it cut into the masonry only in the rough-in', () => {
+  it('lays each pipe and conduit once, in the same place at every level, inside walls or over the ceiling slab, and keeps it there under the render', () => {
     const runs: THREE.Object3D[] = []
     house.group.traverse((o) => {
       if ((o.userData.part === 'wall_pipe' || o.userData.part === 'wall_conduit') && o.userData.pivot === true) runs.push(o)
@@ -176,7 +176,8 @@ describe('construction stages of single_storey_a', () => {
     for (const level of [5, 6, 7, 8]) {
       house.setConstructionLevel(level)
       expect(snapshot(), `level ${level}`).toEqual(at4)
-      for (const o of runs) expect(visibleIn(o), `${o.userData.id} hidden in the plaster at level ${level}`).toBe(false)
+      // the render covers it; nothing hides it by level (a wall broken open shows it where it runs)
+      for (const o of runs) expect(visibleIn(o), `${o.userData.id} still there at level ${level}`).toBe(true)
     }
     // the stage group adds only the sewer: no water pipe nor conduit of its own
     expect(group('stage:4:installations').children.filter((c) => /water|conduit/.test(c.name))).toEqual([])
@@ -199,7 +200,8 @@ describe('construction stages of single_storey_a', () => {
     house.setConstructionLevel(8)
     const shown: string[] = []
     house.group.traverse((o) => {
-      if (o.userData.hidden === true && o.userData.part !== 'wall_pipe' && visibleIn(o)) shown.push(String(o.userData.part))
+      // the runs and boxes in the walls are hidden in a house built without stages, never in the stages: they stay under the render
+      if (o.userData.hidden === true && !['wall_pipe', 'wall_conduit', 'electrical_box'].includes(String(o.userData.part)) && visibleIn(o)) shown.push(String(o.userData.part))
     })
     expect(shown).toEqual([])
   })

@@ -41,14 +41,34 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
       else if (top === 'railing') { const gc = C.gate != null ? C.gate : 0x2a2a2e, n = Math.max(2, Math.round(len / 0.14)); for (let k = 0; k <= n; k++) { const u = a + k * len / n; B('metal', u - 0.012, ym, u + 0.012, ym + 0.3, 0.025, gc); B('metal', u - 0.02, ym + 0.3, u + 0.02, ym + 0.38, 0.03, gc); } B('metal', a, ym + 0.08, b, ym + 0.11, 0.03, gc); }
     }
   }
+  /** How far the house's protective sidewalk reaches out of its walls' faces, metres (`baseboardAndSidewalk`). */
+  const HOUSE_SIDEWALK = 0.6;
+  /**
+   * A path's rectangle stopped where the house's own sidewalk starts: the path comes up to the sidewalk, which runs on round the house and across the door,
+   * and the two never lie in the same ground.
+   */
+  function clearOfHouseSidewalk(rect: readonly number[]): [number, number, number, number] {
+    const R: HouseRecord = shared.ctx.r;
+    const walls = R.walls.filter((w) => w.floor === 0 && w.type === 'wall' && w.exterior);
+    let [u0, v0, u1, v1] = rect as [number, number, number, number];
+    if (!walls.length) return [u0, v0, u1, v1];
+    const th = Math.max(...walls.map((w) => w.thickness || 0.15)) / 2 + HOUSE_SIDEWALK;
+    const box = [Math.min(...walls.map((w) => Math.min(w.u0, w.u1))) - th, Math.min(...walls.map((w) => Math.min(w.v0, w.v1))) - th, Math.max(...walls.map((w) => Math.max(w.u0, w.u1))) + th, Math.max(...walls.map((w) => Math.max(w.v0, w.v1))) + th];
+    if (u1 <= box[0]! || u0 >= box[2]! || v1 <= box[1]! || v0 >= box[3]!) return [u0, v0, u1, v1];
+    // cut on the side the path comes from: the longer side of the rectangle runs towards the house
+    if (v1 - v0 >= u1 - u0) { if (v0 < box[1]!) v1 = Math.min(v1, box[1]!); else v0 = Math.max(v0, box[3]!); }
+    else { if (u0 < box[0]!) u1 = Math.min(u1, box[0]!); else u0 = Math.max(u0, box[2]!); }
+    return [u0, v0, u1, v1];
+  }
   // SDK paths (lot.paths): paving from the gate to the door; comes over the zone floors (lawn 0.02, ceramic 0.035)
   function paths(): void {
     const lt = (shared.ctx.r as HouseRecord).lot; if (!lt || !lt.paths) return; cursor.group = 'lot';
     for (const c of lt.paths) {
       if (c.type === 'vehicle' && c.id !== 'cargo_path') continue; // the garage space already comes paved by the zone
       const color = c.type === 'pedestrian' ? 0xcfcac0 : 0xb4b0a8;
-      for (const [u0, v0, u1, v1] of c.rects) {
-        bx('sidewalk', u0, 0.0, v0, u1, 0.05, v1, color);
+      for (const rect of c.rects) {
+        const [u0, v0, u1, v1] = shared.ctx.baseboardBand ? rect : clearOfHouseSidewalk(rect);
+        if (u1 - u0 > 1e-3 && v1 - v0 > 1e-3) bx('sidewalk', u0, 0.0, v0, u1, 0.05, v1, color);
       }
     }
   }

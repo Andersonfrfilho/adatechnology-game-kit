@@ -5,6 +5,8 @@ import type { Circuit } from '@adatechnology/game-floorplan-structure';
 import type { ElectricalInfo, Hex, HouseRecord, HouseRoom, Kernel, KernelUtilitiesElectrical, Shared } from '../kernel-types.js';
 
 /** A 4x2 wall box (NBR 5410 rough-in): along the wall, high and deep, metres. */
+/** How far behind the wall's face a box's face stands, metres: under the render. */
+const BOX_RECESS = 0.004;
 const BOX_4X2 = [0.055, 0.1, 0.05] as const;
 /** An octagonal ceiling box: across and deep, metres. */
 const OCTAGONAL_BOX = [0.1, 0.05] as const;
@@ -92,21 +94,23 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       const wallBoxes = [...(E.switches || []), ...(E.outlets || [])].filter((t) => clamp(t.floor) === f);
       const lights = R.items.filter((it) => it.type === 'ceiling_light' && clamp(it.floor ?? 0) === f);
       if (!wallBoxes.length && !lights.length) continue;
-      const ceiling = floorY(f) + (R.floors[f]?.ceiling ?? 2.6), holder = ceiling - LAMP_HOLDER.drop, ids = lights.map((it) => it.id);
+      // each light's box is set in its own room's ceiling (an outbuilding's is lower than the storey's)
+      const ceilingOf = (it: { readonly room?: string | null }): number => floorY(f) + (shared.ctx.roomById[it.room ?? '']?.ceiling ?? R.floors[f]?.ceiling ?? 2.6), ids = lights.map((it) => it.id);
       part('electrical_box', [0, 0, 0], () => {
         for (const t of wallBoxes) {
           const nu = t.frontU || 0, nv = t.frontV || 0, y = floorY(t.floor) + t.y, alongU = Math.abs(nv) >= Math.abs(nu);
-          // the face on the wall's face, the box into the wall
-          const [u0, u1] = alongU ? [t.u - BOX_4X2[0] / 2, t.u + BOX_4X2[0] / 2] : nu > 0 ? [t.u - BOX_4X2[2], t.u] : [t.u, t.u + BOX_4X2[2]];
-          const [v0, v1] = !alongU ? [t.v - BOX_4X2[0] / 2, t.v + BOX_4X2[0] / 2] : nv > 0 ? [t.v - BOX_4X2[2], t.v] : [t.v, t.v + BOX_4X2[2]];
+          // the box into the wall, its face a little behind the wall's face: the render closes over it to the plate (it shows where the wall is broken)
+          const iu = -nu * BOX_RECESS, iv = -nv * BOX_RECESS;
+          const [u0, u1] = alongU ? [t.u - BOX_4X2[0] / 2, t.u + BOX_4X2[0] / 2] : nu > 0 ? [t.u - BOX_4X2[2] + iu, t.u + iu] : [t.u + iu, t.u + BOX_4X2[2] + iu];
+          const [v0, v1] = !alongU ? [t.v - BOX_4X2[0] / 2, t.v + BOX_4X2[0] / 2] : nv > 0 ? [t.v - BOX_4X2[2] + iv, t.v + iv] : [t.v + iv, t.v + BOX_4X2[2] + iv];
           bx('plain', u0, y - BOX_4X2[1] / 2, v0, u1, y + BOX_4X2[1] / 2, v1, BOX_COLOR);
         }
-        for (const it of lights) cylBase('plain', it.x, ceiling - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR);
+        for (const it of lights) cylBase('plain', it.x, ceilingOf(it) - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR);
       }, { id: 'boxes:f' + f, hidden: true }, 'f' + f);
       if (!lights.length) continue;
       // the lamp holder on its wires under each box, from the rough-in until the fitting goes up (a bare bulb in it once the walls are rendered)
-      part('lamp_holder', [0, 0, 0], () => { for (const it of lights) { cylBase('plain', it.x, holder + LAMP_HOLDER.height, it.z, 0.003, LAMP_HOLDER.drop - LAMP_HOLDER.height - 0.005, 0x1c1c1e); cylBase('plain', it.x, holder, it.z, LAMP_HOLDER.radius, LAMP_HOLDER.height, 0xe8e4da); } }, { id: 'holders:f' + f, lights: ids }, 'f' + f);
-      part('lamp_bulb', [0, 0, 0], () => { for (const it of lights) cylBase('plain', it.x, holder - LAMP_HOLDER.bulb, it.z, LAMP_HOLDER.radius * 1.5, LAMP_HOLDER.bulb, 0xfff6e0); }, { id: 'bulbs:f' + f, lights: ids }, 'f' + f);
+      part('lamp_holder', [0, 0, 0], () => { for (const it of lights) { const holder = ceilingOf(it) - LAMP_HOLDER.drop; cylBase('plain', it.x, holder + LAMP_HOLDER.height, it.z, 0.003, LAMP_HOLDER.drop - LAMP_HOLDER.height - 0.005, 0x1c1c1e); cylBase('plain', it.x, holder, it.z, LAMP_HOLDER.radius, LAMP_HOLDER.height, 0xe8e4da); } }, { id: 'holders:f' + f, lights: ids }, 'f' + f);
+      part('lamp_bulb', [0, 0, 0], () => { for (const it of lights) cylBase('plain', it.x, ceilingOf(it) - LAMP_HOLDER.drop - LAMP_HOLDER.bulb, it.z, LAMP_HOLDER.radius * 1.5, LAMP_HOLDER.bulb, 0xfff6e0); }, { id: 'bulbs:f' + f, lights: ids }, 'f' + f);
     }
   }
   function pipe2(a: readonly number[], b: readonly number[], diameter: number, color: Hex): void { const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-3) return; _q.setFromUnitVectors(_Y, _v3.set(dx / L, dy / L, dz / L)); put('plain', 'cyl', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, _q, diameter, L, diameter, color); }
