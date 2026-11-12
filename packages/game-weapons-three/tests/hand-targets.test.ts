@@ -62,6 +62,17 @@ describe('hand targets of the weapon in the hands', () => {
     expect(distance(targets.R, targets.L)).toBeLessThan(0.7)
   })
 
+  it('a shovel is held in both hands: the right on the grip at the end of the shaft, the left down the shaft', () => {
+    const { room, last } = roomWithRecorder()
+    equip(room, 'shovel')
+    const targets = last()!.targets!
+    expect(targets.R).not.toBeNull()
+    expect(targets.L).not.toBeNull()
+    // 27 % of a 1.1 m shovel apart: some 30 cm between the hands, as one holds a shovel close to dig
+    expect(distance(targets.R, targets.L)).toBeGreaterThan(0.22)
+    expect(distance(targets.R, targets.L)).toBeLessThan(0.4)
+  })
+
   it('a pump gun puts the left hand on the pump and it moves with the pump', () => {
     const { room, last } = roomWithRecorder()
     equip(room, 'remington_870')

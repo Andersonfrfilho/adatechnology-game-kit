@@ -16,7 +16,7 @@ describe('shipped catalog', () => {
     expect(CALIBERS).toHaveLength(34)
     expect(EXPLOSIVES).toHaveLength(20)
     expect(WEAPONS.filter((def) => def.sources?.includes('gallery'))).toHaveLength(79)
-    expect(ARCHETYPE_IDS).toHaveLength(42)
+    expect(ARCHETYPE_IDS).toHaveLength(43)
   })
 
   it('has unique snake_case ids everywhere', () => {

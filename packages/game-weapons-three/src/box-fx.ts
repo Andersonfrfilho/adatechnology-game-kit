@@ -15,6 +15,8 @@ import { BODY_HOLD, createEyeFrame, placeOnBody, placeStowed } from './fx/body-h
 import { placeInView, toWorldLens, VIEW_HOLD } from './fx/view-hold'
 import { holdOfProp, oneHandHold, targetsOf } from './fx/hand-hold'
 import type { Hold } from './fx/hand-hold'
+import { TOOL_MOTIONS, sampleToolMotion } from './fx/tool-motion'
+import type { ToolMotion } from './fx/tool-motion'
 import type { ItemModels } from './item-models'
 import { BODY_ACTIONS } from './props'
 import { buildWeaponModel } from './weapon-item-model'
@@ -145,6 +147,18 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   let def: WeaponDef | null = null
   let hold: Hold | null = null
   let kick = 0
+  // the motion the tool is making (a shovel's shovelful), and how far through it
+  let motion: { readonly clip: ToolMotion; elapsed: number; readonly duration: number } | null = null
+  /**
+   * Puts the tool where its motion has it now, from where it is held: the offset in `frame` (the view in first person; the body's own yaw frame in third,
+   * so down is down whatever the camera looks at), the turn about the grip.
+   */
+  const applyMotion = (frame: THREE_NS.Quaternion): void => {
+    if (!motion) return
+    const at = sampleToolMotion(motion.clip, motion.elapsed / motion.duration)
+    hand.position.add(v.set(at.offset[0], at.offset[1], at.offset[2]).applyQuaternion(frame))
+    hand.quaternion.multiply(q.setFromEuler(new THREE.Euler(at.turn[0], at.turn[1], at.turn[2])))
+  }
   let dip = 0
   let reloading = false
   const v = new THREE.Vector3()
@@ -157,6 +171,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   let rear = 0
   let lengthMetres = 0
   const q = new THREE.Quaternion()
+  const bodyFrame = new THREE.Quaternion()
   const q2 = new THREE.Quaternion()
   const pointForward = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
   // the front end of the prop in its own space (x along it)
@@ -339,8 +354,15 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     handle(event, tool) {
       if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
       const weapon = arsenal.weapons.get(event.weapon)
-      if (event.type === 'tool') equip(event.weapon)
+      if (event.type === 'tool') {
+        equip(event.weapon)
+        motion = null
+      }
       if (!weapon) return
+      if (event.type === 'motion') {
+        const clip = TOOL_MOTIONS.get(event.weapon)?.get(event.motion)
+        if (clip && event.duration > 0) motion = { clip, elapsed: 0, duration: event.duration }
+      }
       if (event.type === 'shot') onShot(weapon)
       else if (event.type === 'empty') audio?.click()
       else if (event.type === 'reload' && event.phase === 'start') onReloadStart(weapon, tool)
@@ -349,6 +371,10 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     },
     update(dt) {
       kick *= Math.exp(-dt * 14)
+      if (motion) {
+        motion.elapsed += dt
+        if (motion.elapsed >= motion.duration) motion = null
+      }
       dip += ((reloading ? 1 : 0) - dip) * Math.min(1, dt * 8)
       if (inHand && model && options.firstPerson?.()) {
         setLens(true)
@@ -357,6 +383,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
         const kind = isOneHand() && def?.action.kind === 'firearm' ? 'dual' : 'tool'
         placeInView({ THREE, hand, holder: model, camera, right: heldAnchor(held), box: restBox, kind, aim: 0, offset: noMotion, ...(side === 'L' ? { mirror: true } : {}) })
         hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
+        applyMotion(camera.quaternion)
         hand.updateMatrixWorld(true)
       } else if (inHand && model) {
         if (inLens) setLens(false)
@@ -369,6 +396,8 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
         hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
         q.setFromEuler(new THREE.Euler(0.14 * kick - 0.25 * dip, 0, 0.6 * dip))
         hand.quaternion.multiply(q)
+        const body = (options.bodyHold?.() ?? eyeFrame()).quaternion
+        applyMotion(bodyFrame.set(body[0], body[1], body[2], body[3]))
       }
       stow(dt)
       for (const body of [...bodies]) {

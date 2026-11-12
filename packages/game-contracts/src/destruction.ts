@@ -885,4 +885,6 @@ export interface RayHit {
   point: Vec3
   normal: Vec3
   distance: number
+  /** The part hit is the ground an object stands on (tagged `terrain`, as the soil under a house): a tool that works the ground (a shovel) works it there. */
+  terrain?: true
 }

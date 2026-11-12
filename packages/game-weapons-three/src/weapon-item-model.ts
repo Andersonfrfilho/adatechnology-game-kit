@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import type { WeaponDef } from '@adatechnology/game-weapons'
 
 import { drawItemWeapon } from './item-weapon-draw'
+import type { WeaponGrips } from './item-weapon-draw'
 import { DEFAULT_ITEM_MODELS } from './item-models'
 import type { ItemModels } from './item-models'
 import { buildExplosiveModel, hasExplosiveModel } from './models/explosives'
@@ -16,6 +17,8 @@ export interface WeaponItemModel {
   readonly turn?: number
   /** Turn it end for end after the head is found (the head is the narrow end: a knife's blade, a screwdriver's tip, an extinguisher's nozzle). */
   readonly flip?: boolean
+  /** Where the hands close on a long tool (both hands on a shovel's shaft); one hand on its handle when absent. */
+  readonly grips?: WeaponGrips
 }
 
 // the weapons whose item has another id, or that the laying-down rule turns the wrong way
@@ -29,6 +32,8 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   ['screwdriver', { flip: true }],
   // the Itens do Vale Cinzento hammer is a claw hammer: the head and the two-pronged claw
   ['claw_hammer', { item: 'hammer' }],
+  // a shovel is held in both hands: the right on the grip at the end of the shaft, the left 30 cm down the shaft (within the arm's reach from the hold)
+  ['shovel', { grips: { handle: -0.46, support: -0.19 } }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */
@@ -69,7 +74,8 @@ export const weaponPropsOver = (models: Map<string, WeaponItemModel>): WeaponPro
   const buildItemModel = (THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, items?: ItemModels): THREE_NS.Group | undefined => {
     const itemId = itemModelOf(def.id, items)
     if (!itemId) return undefined
-    return drawItemWeapon({ THREE, def, items, itemId, turn: models.get(def.id)?.turn ?? 0, flip: models.get(def.id)?.flip === true })
+    const model = models.get(def.id)
+    return drawItemWeapon({ THREE, def, items, itemId, turn: model?.turn ?? 0, flip: model?.flip === true, grips: model?.grips })
   }
   return {
     register: (weaponId, model) => void models.set(weaponId, model ?? { item: '' }),

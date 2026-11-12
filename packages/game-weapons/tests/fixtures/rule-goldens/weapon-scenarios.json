@@ -216,6 +216,11 @@
 {"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
 {"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
 ]},
+{"id":"shovel","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
 {"id":"baseball_bat","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
 {"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},

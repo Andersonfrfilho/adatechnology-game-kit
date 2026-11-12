@@ -158,7 +158,8 @@ export type PlayerAvatar = {
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /**
    * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
-   * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   * blade slides toward a hand out of reach. Null, a strike playing (but one of `body` channels, which leaves the arms to the tool) or the body going down leave
+   * the arms as `update` posed them. Call it after the tool is placed and the root moved.
    * `view` (given on each call, as the camera moves) is for the body seen from its own eyes: the elbows keep their bend and the hands stay out of walls; without it nothing changes.
    */
   reach(targets: HandTargets | null, view?: ReachView | null): void
@@ -695,7 +696,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     hand: (side) => sockets[side],
     shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
     reach(targets, view) {
-      if (run || fall > 0) return
+      // a clip that drives the arms (a punch) keeps them; one that leaves them (`body`: a shovel's dig) lets the hands stay on the tool
+      if ((run && (run.clip.channels ?? 'full') !== 'body') || fall > 0) return
       root.updateMatrixWorld(true)
       armReach.apply(targets, view)
       // the index finger of a hand on a trigger curls by itself (`HandTargets.fingers` for the right hand, `fingersL` for the left), the other fingers keep the grip

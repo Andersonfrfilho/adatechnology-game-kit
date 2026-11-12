@@ -170,6 +170,7 @@ O kit mostra estas armas com o prop genérico da categoria (`props.ts`), não co
 - Crossbow (`crossbow`): crossbow, firearm
 - Hammer (`hammer`): melee_blunt, melee
 - Sledgehammer (`sledgehammer`): melee_blunt, melee
+- Shovel (`shovel`): melee_blunt, melee
 - Baseball bat (`baseball_bat`): melee_blunt, melee
 - Crowbar (`crowbar`): melee_blunt, melee
 - Machete (`machete`): melee_blade, melee

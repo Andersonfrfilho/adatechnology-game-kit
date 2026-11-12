@@ -58,6 +58,8 @@ import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
+import { SHOVEL, digsWith, shovelful } from './shovel'
+import type { ShovelMode } from './shovel'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
@@ -2592,6 +2594,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   /** `side` is a blow of the left hand's tool (a tool in each hand): that hand strikes, and the blow waits on a key of its own. */
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId, side?: { readonly hand: 'left'; readonly key: string }): void => {
+    // a shovel aimed down at the ground near the feet digs (or throws earth back) instead of striking
+    if (!side && digsWith(arsenal.weapons.get(id)) && u.direction[1] < SHOVEL.downward) {
+      // the aim may start behind the shoulder (third person): what counts is how far the ground it meets is from the feet
+      const r = rayWorld(u.origin, u.direction, SHOVEL.aimReach)
+      const [px, feet, pz] = player.position
+      // the room's ground, or the ground an object stands on (the soil under a house, part of its spec)
+      if (r && (r.object === GROUND_ID || r.terrain) && Math.hypot(r.point[0] - px, r.point[2] - pz) <= SHOVEL.reachFromFeet && r.point[1] > feet - SHOVEL.reachDown) {
+        startShovelful(id, r.point as Vec3, u.direction as Vec3)
+        return
+      }
+    }
+    // a tool with motions of its own (a shovel's swing) moves through it while the body swings
+    if (!side && digsWith(arsenal.weapons.get(id))) emitHost({ type: 'motion', weapon: id, motion: 'swing', duration: SHOVEL.swingSeconds })
     const stepIndex = comboOn && combo?.tools.includes(id) && combo.steps.length > 0 ? (simTime - comboAt > combo.reset ? 0 : comboNext) : null
     const step = stepIndex === null ? undefined : combo!.steps[stepIndex]
     const clip = step ? step.clip : strikeClips[id]
@@ -2645,6 +2660,43 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const landed = strikes.filter((strike) => strike.remaining <= 0)
     strikes = strikes.filter((strike) => strike.remaining > 0)
     for (const strike of landed) strike.land()
+  }
+
+  /** What the shovel does where it is aimed now (`cycleToolMode` turns it over): dig, or throw earth back from the heap. */
+  let shovelMode: ShovelMode = 'dig'
+  /**
+   * A shovelful: the body digs (`shovel_dig` on the avatar, in both views) and the tool moves through its motion; when the blade bites (the clip's impact) the
+   * ground gives what it gives: earth thrown aside, a hole closing (mud), or the blade bouncing off what it cannot dig.
+   */
+  const startShovelful = (id: string, point: Vec3, direction: Vec3): void => {
+    const seconds = avatar?.strike?.('shovel_dig') ?? null
+    emitHost({ type: 'motion', weapon: id, motion: shovelMode, duration: SHOVEL.seconds })
+    const mode = shovelMode
+    strikes.push({ key: id, remaining: seconds ?? SHOVEL.seconds / 2, land: () => landShovelful(id, mode, point, direction) })
+  }
+  const landShovelful = (id: string, mode: ShovelMode, point: Vec3, direction: Vec3): void => {
+    const done = shovelful(terrain, mode, point, direction)
+    const name = (material: string): string => S.text[`material.${material}`] ?? dStrings.materialNames[material] ?? material
+    if (done.kind === 'dug') {
+      const soil = world.materials.get(done.material)
+      renderer.emit('dust', done.dump, [0, 1, 0], 10, 1.4)
+      renderer.emit('chips', done.dump, [0, 1, 0], 6, 2)
+      playSound(impactKey(soil), done.dump, 0.45, impactSoundKeys(done.material, soil))
+      action('dig', t('act.dig.dug', { weapon: toolName(id), litres: num(done.volume * 1000, 0), material: name(done.material) }), { data: { weapon: id, volumeM3: done.volume, material: done.material } })
+    } else if (done.kind === 'refused') {
+      // the blade bounces off: sparks off rock and concrete, a knock on the rest; the blow wears the blade as a strike would
+      const def = world.materials.get(done.material)
+      renderer.emit(done.material === 'stone' || done.material === 'concrete' ? 'sparks' : 'chips', done.point, [0, 1, 0], 4, 3)
+      playSound(impactKey(def), done.point, 0.7, impactSoundKeys(done.material, def, 'blunt'))
+      action('dig', t('act.dig.refused', { weapon: toolName(id), material: name(done.material) }), { data: { weapon: id, refused: done.material } })
+      say(t('act.dig.refused', { weapon: toolName(id), material: name(done.material) }))
+    } else if (done.kind === 'closed') {
+      renderer.emit('dust', done.point, [0, 1, 0], 4, 0.8)
+      say(t('act.dig.closed', { weapon: toolName(id), material: name(done.material) }))
+    } else if (done.kind === 'filled') {
+      renderer.emit('dust', done.point, [0, 1, 0], 8, 1)
+      action('dig', t('act.dig.filled', { weapon: toolName(id), litres: num(done.volume * 1000, 0) }), { data: { weapon: id, filledM3: done.volume } })
+    } else say(t('act.dig.no_heap', { weapon: toolName(id) }))
   }
 
   const toolWork = (u: Extract<Use, { kind: 'tool' }>, dt: number): void => {
@@ -3650,6 +3702,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return t(leaf.locked ? 'hud.door_hint_locked' : leaf.open ? 'hud.door_hint_close' : 'hud.door_hint_open')
   }
 
+  const diggableKey = (dig: { readonly closes?: boolean } | undefined): string => (!dig ? 'ground.diggable.no' : dig.closes ? 'ground.diggable.closes' : 'ground.diggable.yes')
   /** The floor under the aim: the profile and the layer there, read from the terrain at the point the ray reached (the floor of a crater, not the flat top). */
   const groundInspect = (r: RayHit): InspectInfo => {
     const onFloor = terrain.raycast(aimO, aimD, r.distance + 3)
@@ -3661,7 +3714,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       objectId: GROUND_ID,
       part: column.profile,
       material: materialName,
-      status: '',
+      // whether a shovel goes in here: the ground's own data (game-terrain's `dig`), mud lifting and closing behind the blade
+      status: t(diggableKey(terrain.material(column.material).dig)),
       hp: 0,
       maxHp: 0,
       temperature: 0,
@@ -4241,6 +4295,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const hand = commandHand()
     const slot = toolOf(hand)
     if (!slot) return
+    // a shovel has no fire modes: its mode is what it does where it is aimed, dig or fill
+    if (digsWith(arsenal.weapons.get(slot.id))) {
+      shovelMode = shovelMode === 'dig' ? 'fill' : 'dig'
+      say(t(`act.dig.mode.${shovelMode}`, { weapon: toolName(slot.id) }))
+      return
+    }
     slot.state.cycleMode()
     flushEvents(slot.id, slot.state, undefined, hand)
     if (offTool) say(`${toolName(slot.id)} (${t(hand === 'L' ? 'hand.left' : 'hand.right')}): ${slot.state.mode}`)

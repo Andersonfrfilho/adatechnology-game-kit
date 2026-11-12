@@ -204,6 +204,11 @@ export type HostEvent =
   | { type: 'safety'; weapon: string; on: boolean; hand?: ToolHand }
   /** The action works between shots (a pump, a bolt); `duration` is the seconds of the cycle, on `start`. */
   | { type: 'cycle'; weapon: string; phase: 'start' | 'end'; duration?: number; hand?: ToolHand }
+  /**
+   * The tool in hand makes one of its motions (a shovel's `dig` or `swing`, an axe's chop): the module that draws it moves it through it for `duration`
+   * seconds, the hands on it following, in the first-person view and on the body alike.
+   */
+  | { type: 'motion'; weapon: string; motion: string; duration: number; hand?: ToolHand }
   /** A step of a longer phase (a reload's magazine out, magazine in, charge), at the moment the rule reaches it. */
   | { type: 'stage'; weapon: string; stage: string; hand?: ToolHand }
   /** One more round went into the tool while it loads round by round. */

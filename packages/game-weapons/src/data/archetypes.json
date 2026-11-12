@@ -566,6 +566,26 @@
     ]
   },
   {
+    "id": "shovel",
+    "name": "Shovel",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 160,
+      "radius": 0.12,
+      "reach": 1.25,
+      "rpm": 35,
+      "noise": 5
+    },
+    "mass": 2.0,
+    "tags": [
+      "heavy",
+      "two_handed",
+      "digs"
+    ]
+  },
+  {
     "id": "baseball_bat",
     "name": "Baseball bat",
     "category": "melee_blunt",

@@ -4843,7 +4843,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     raycast(origin, direction, maxDistance = Infinity, options) {
       const r = raycastInternal(origin, direction, maxDistance, undefined, false, true, options)
-      return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
+      if (!r) return null
+      const terrain = objects.get(r.object)?.parts.find((p) => p.spec.id === r.part)?.spec.tags?.includes('terrain') === true
+      return { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance, ...(terrain ? { terrain: true as const } : {}) }
     },
     sweepBox(box, direction, distance, options = {}) {
       const d = vec.normalize(direction)
