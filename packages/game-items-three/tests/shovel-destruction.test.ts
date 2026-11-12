@@ -55,6 +55,14 @@ describe('a shot into the handle', () => {
     expect(results[0]).toMatchObject({ part: 'handle', penetrated: true })
     expect(results[0]!.exitEnergy).toBeLessThan(50)
   })
+
+  it('a pistol round through the ash leaves a hole, not a handle in pieces: the handle stands and the rivets hold', () => {
+    const { world, id } = shootDown(HANDLE_X, 500, 9)
+    const handle = world.part(id, 'handle')!
+    expect(handle.holes[0]!.through).toBe(true)
+    expect(handle.status).not.toBe('broken')
+    expect(world.state(id).joints.every((joint) => !joint.open)).toBe(true)
+  })
 })
 
 describe('a shot into the blade', () => {
