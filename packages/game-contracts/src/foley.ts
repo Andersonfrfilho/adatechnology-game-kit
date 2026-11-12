@@ -135,6 +135,7 @@ export const MATERIAL_SURFACES: Readonly<Record<string, SurfaceId>> = {
   soil: 'dirt',
   mud: 'dirt',
   clay: 'dirt',
+  laterite: 'gravel',
   wax: 'dirt',
   flesh_fruit: 'dirt',
   turf: 'grass',

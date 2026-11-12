@@ -45,6 +45,16 @@ describe('the ground under the house is its support: a crater under a footing re
     }
   })
 
+  it('a hole dug by shovel under the corner footing takes its ground: the structure there feels it', () => {
+    const { house, terrain, settle, reached } = houseOnGround()
+    const pillar = house.structure.byId.get('column_0_0')!
+    const x = (pillar.aabb[0] + pillar.aabb[2]) / 2, z = (pillar.aabb[1] + pillar.aabb[3]) / 2
+    // shovelfuls right under the corner, down past the footing's depth, the earth thrown aside
+    for (let k = 0; k < 6; k++) for (const [dx, dz] of [[0, 0], [-0.3, 0], [0, -0.3], [-0.3, -0.3]] as const) terrain.dig({ x: x + dx, z: z + dz, dump: { x: x - 1.5, z: z - 1.5 } })
+    settle()
+    expect(reached().length).toBeGreaterThan(0)
+  })
+
   it('a crater in the yard far from every footing reaches nothing', () => {
     const { terrain, settle, reached } = houseOnGround()
     terrain.strike('explosive', { x: -12, z: -12, energy: 3e6 })

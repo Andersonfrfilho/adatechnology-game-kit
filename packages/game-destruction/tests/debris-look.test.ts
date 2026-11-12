@@ -14,7 +14,7 @@ const EXPECTED_FAMILY: Readonly<Record<string, DebrisFamily>> = {
   glass: 'glass', tempered_glass: 'glass',
   ceramic: 'masonry', concrete: 'masonry', brick: 'masonry', plaster: 'masonry', stone: 'masonry', asphalt: 'masonry', mortar: 'masonry', cobble: 'masonry', paver: 'masonry',
   plastic: 'soft', rubber: 'soft', fabric: 'soft', foam: 'soft', leather: 'soft', paper: 'soft', foliage: 'soft', cactus: 'soft', flesh_fruit: 'soft', wax: 'soft',
-  soil: 'soil', sand: 'soil', gravel: 'soil', turf: 'soil', mud: 'soil', clay: 'soil', snow: 'soil',
+  soil: 'soil', sand: 'soil', gravel: 'soil', turf: 'soil', mud: 'soil', clay: 'soil', laterite: 'soil', snow: 'soil',
 }
 
 /** What each family may throw on a hit and when it breaks. */

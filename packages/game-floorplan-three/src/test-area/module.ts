@@ -182,8 +182,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     const dug = excavations.length ? { excavations } : {}
     const lot = host.bench?.layer('lot') ?? false
     if (!lot) {
-      // In house construction testing, ground is construction earth (dirt), not lawn
-      host.setGround({ surface: 'dirt', ...dug })
+      // a building site's ground: its topsoil, the clay under it, rock deep down (game-terrain's yard)
+      host.setGround({ surface: 'yard', ...dug })
       return
     }
     host.setGround({
