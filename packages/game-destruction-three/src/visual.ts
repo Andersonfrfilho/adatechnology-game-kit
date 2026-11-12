@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Dent } from '@adatechnology/game-destruction'
+import { BEND_SMOOTH_RADIUS, bendPositions } from './bend'
 import { heatColor } from './heat'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
 import { clamp, createRng, lerp } from './math'
@@ -481,6 +482,29 @@ export class Visuals {
       }
       if (touched) this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
     }
+  }
+
+  /**
+   * Bend the mesh of a plate by `angle` about the line through `worldPoint` along `worldAxis`, turning what lies towards `worldSide` (see `bendPositions`).
+   * Works on the same `work` positions as the dents, so a bend keeps the dents the plate already has. Returns false when the mesh could not be edited.
+   */
+  applyBend(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldAxis: THREE_NS.Vector3, worldSide: THREE_NS.Vector3, angle: number): boolean {
+    const mesh = mv.mesh
+    if (this.lowQuality && this.vertexCount(mv) > 20000) return false
+    mesh.updateWorldMatrix(true, false)
+    if (!this.ownGeometry(mv)) return false
+    const scale = mesh.matrixWorld.getMaxScaleOnAxis() || 1
+    const toLocal = this.m4.copy(mesh.matrixWorld).invert()
+    const point = mesh.worldToLocal(this.a.copy(worldPoint))
+    const axis = this.b.copy(worldAxis).transformDirection(toLocal)
+    const side = this.t.copy(worldSide).transformDirection(toLocal)
+    const work = (mv.host ? mv.host.work : mv.work) as Float32Array
+    const from = mv.range ? mv.range[0] * 3 : 0
+    const to = mv.range ? mv.range[1] * 3 : work.length
+    bendPositions(work, from, to, [point.x, point.y, point.z], [axis.x, axis.y, axis.z], [side.x, side.y, side.z], angle, BEND_SMOOTH_RADIUS / scale)
+    mv.touched = true
+    this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
+    return true
   }
 
   /** Copy `work` (dents) into the geometry, adding the melt sag when the mesh is melting. */

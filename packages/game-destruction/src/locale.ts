@@ -34,7 +34,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     },
     damageTypes: { ballistic: 'ballistic', blunt: 'blunt', slash: 'slash', explosive: 'explosive', fire: 'fire', heat: 'heat' },
     eventLabels: {
-      damage: 'damage', dent: 'dent', hole: 'hole', crack: 'crack', ricochet: 'ricochet', debris: 'debris', fracture: 'broke', detach: 'came loose',
+      damage: 'damage', dent: 'dent', bend: 'bent', hole: 'hole', crack: 'crack', ricochet: 'ricochet', debris: 'debris', fracture: 'broke', detach: 'came loose',
       disassemble_progress: 'taking apart', ignite: 'caught fire', extinguish: 'put out', burnout: 'burned to ash', melt: 'melting', drip: 'dripping',
       leak: 'leak', explode: 'exploded', primed: 'about to explode', stress: 'overload', collapse: 'collapsed', settle: 'ground gave way', subside: 'ground lost under the footing', sway: 'sway', spall: 'plaster came off', stage: 'damage stage', chip: 'brick knocked out', expose: 'rebar bare', body: 'body', blast: 'blast', fragment_hit: 'fragment hit', destroyed: 'destroyed',
     },
@@ -58,7 +58,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     },
     damageTypes: { ballistic: 'tiro', blunt: 'impacto', slash: 'corte', explosive: 'explosão', fire: 'fogo', heat: 'calor' },
     eventLabels: {
-      damage: 'dano', dent: 'amassado', hole: 'furo', crack: 'trinca', ricochet: 'ricochete', debris: 'estilhaços', fracture: 'quebrou', detach: 'soltou',
+      damage: 'dano', dent: 'amassado', bend: 'entortou', hole: 'furo', crack: 'trinca', ricochet: 'ricochete', debris: 'estilhaços', fracture: 'quebrou', detach: 'soltou',
       disassemble_progress: 'desmontando', ignite: 'pegou fogo', extinguish: 'apagou', burnout: 'virou cinza', melt: 'derretendo', drip: 'pingando',
       leak: 'vazamento', explode: 'explodiu', primed: 'prestes a explodir', stress: 'sobrecarga', collapse: 'desabou', settle: 'recalque do solo', subside: 'solo perdido sob a fundação', sway: 'balanço', spall: 'reboco soltou', stage: 'estágio de dano', chip: 'tijolo arrancado', expose: 'vergalhão à mostra', body: 'corpo', blast: 'explosão', fragment_hit: 'estilhaço atingiu', destroyed: 'destruído',
     },

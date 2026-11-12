@@ -638,6 +638,18 @@ export interface PartState {
   settlement?: PartSettlement
   /** Radians a thin ductile plate (a pressed steel blade) was bent for good by heavy blunt blows (`MaterialDef.bending`); only present once it bent. */
   bend?: number
+  /** Where the last blow folded the plate (`bend` set): drawn by rotating the part beyond that line, so a bent plate keeps its hinge in the state. */
+  bendHinge?: BendHinge
+}
+
+/** The line a thin plate folds about and the way its free end goes, in local space of the part's object. */
+export interface BendHinge {
+  /** A point on the hinge line. */
+  point: Vec3
+  /** Unit direction of the hinge line (the rotation axis: from the free end towards the way it goes, `side` × the way it goes). */
+  axis: Vec3
+  /** Unit direction from the hinge towards the end that folds over (the shorter side of the blow). */
+  side: Vec3
 }
 
 /** How the ground under an object is holding (`DestructibleSpec.soil`). */
@@ -773,6 +785,8 @@ interface EventBase {
 export type DestructionEvent =
   | (EventBase & { type: 'damage'; part: string; amount: number; hp: number; damageType: DamageType })
   | (EventBase & { type: 'dent'; part: string; dent: Dent; worldPoint: Vec3 })
+  /** A thin ductile plate bent by `angle` more radians about `hinge` (`PartState.bend` holds the total). */
+  | (EventBase & { type: 'bend'; part: string; hinge: BendHinge; angle: number; worldPoint: Vec3 })
   /** `powder`: the part's loose dry contents (`PartSpec.powder`), which puff out of the hole. */
   | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number }; /** Joules the round still carries out of the part, when the part knows. */ energyLeft?: number })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })

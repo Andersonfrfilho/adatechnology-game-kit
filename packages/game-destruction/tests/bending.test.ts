@@ -121,3 +121,23 @@ describe('a long wooden part snaps in bending', () => {
     expect(pine.part(pineId, 'handle')!.hp).toBeGreaterThan(0)
   })
 })
+
+describe('the hinge a bent plate keeps', () => {
+  it('lies across the blade at the blow, folds the nearer end and goes the way the blow went', () => {
+    const w = createDestruction({ seed: 1 })
+    const events: Array<{ angle: number }> = []
+    w.on('bend', (event) => {
+      if (event.type === 'bend') events.push(event)
+    })
+    const id = w.add(plate())
+    w.hitPart(id, 'blade', blow(130, [0.1, 0.006, 0]))
+    const hinge = w.part(id, 'blade')!.bendHinge!
+    // the blade is 0.3 m long on x, struck 0.1 m from its middle: the hinge is there, the +x end (0.05 m away) folds over, downwards
+    expect(hinge.point[0]).toBeCloseTo(0.1, 6)
+    expect(hinge.side).toEqual([1, 0, 0])
+    // rotating the free end (+x) about the axis turns it towards -y: axis = side x way = (1,0,0) x (0,-1,0) = (0,0,-1)
+    expect(hinge.axis[2]).toBe(-1)
+    expect(events).toHaveLength(1)
+    expect(events[0]!.angle).toBeCloseTo(w.part(id, 'blade')!.bend!, 9)
+  })
+})

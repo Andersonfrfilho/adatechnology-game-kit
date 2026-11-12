@@ -1,4 +1,4 @@
-import type { MaterialBending, Vec3 } from './types'
+import type { BendHinge, MaterialBending, Vec3 } from './types'
 
 /** Metres: a ductile part this thin (or thinner) bends as a plate; thicker ones dent instead. */
 export const BEND_PLATE_MAX_THICKNESS = 0.01
@@ -67,4 +67,21 @@ export function snapRatio(dims: Vec3, bending: MaterialBending | undefined, ener
   const ruptureMoment = (bending.ruptureMPa * 1e6 * width * depth * depth) / 6
   const moment = momentOfStrainEnergy(energy * across * shareOf(bending), dims[long], stiffnessOf(bending, width, depth))
   return moment / ruptureMoment
+}
+
+const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+/**
+ * The line a plate folds about under a blow, in the part's own axes: across the plate's width at the blow point, folding the nearer end (the shorter side) over
+ * in the direction the blow goes. `point` is the blow point and `direction` its direction, both in part axes.
+ */
+export function plateHinge(dims: Vec3, point: Vec3, direction: Vec3): BendHinge {
+  const [long, , thin] = order(dims)
+  const hinge: Vec3 = [0, 0, 0]
+  hinge[long] = Math.max(-dims[long] / 2, Math.min(dims[long] / 2, point[long]))
+  const side: Vec3 = [0, 0, 0]
+  side[long] = point[long] >= 0 ? 1 : -1
+  const way: Vec3 = [0, 0, 0]
+  way[thin] = direction[thin] >= 0 ? 1 : -1
+  return { point: hinge, axis: cross(side, way), side }
 }

@@ -1124,6 +1124,9 @@ class Renderer implements DestructionRenderer {
       case 'dent':
         this.onDent(ev)
         break
+      case 'bend':
+        this.onBend(ev)
+        break
       case 'hole':
         this.onHole(ev)
         break
@@ -1385,6 +1388,18 @@ class Renderer implements DestructionRenderer {
   private worldDir(b: Bound, v: Vec3): THREE_NS.Vector3 {
     b.root.updateWorldMatrix(true, false)
     return new this.THREE.Vector3(v[0], v[1], v[2]).applyQuaternion(b.root.getWorldQuaternion(this.tmpQ)).normalize()
+  }
+
+  /** A plate bent: every mesh of the part turns about the hinge line together (a shovel's blade pieces), on top of the dents they already have. */
+  private onBend(ev: Ev<'bend'>): void {
+    const b = this.bounds.get(ev.object)
+    const pv = b?.parts.get(ev.part)
+    if (!b || !pv) return
+    b.root.updateWorldMatrix(true, false)
+    const point = new this.THREE.Vector3(ev.hinge.point[0], ev.hinge.point[1], ev.hinge.point[2]).applyMatrix4(b.root.matrixWorld)
+    const axis = this.worldDir(b, ev.hinge.axis)
+    const side = this.worldDir(b, ev.hinge.side)
+    for (const mv of pv.meshes) if (this.visuals.shown(mv)) this.visuals.applyBend(mv, point, axis, side, ev.angle)
   }
 
   private onDent(ev: Ev<'dent'>): void {

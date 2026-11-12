@@ -18,7 +18,7 @@ import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilA
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
 import type { VoidRun } from './foundation-span'
-import { BEND_MIN, BEND_MAX, plasticBend, snapRatio } from './bending'
+import { BEND_MIN, BEND_MAX, plasticBend, plateHinge, snapRatio } from './bending'
 import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, SETTLEMENT_POINTS, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
@@ -3814,7 +3814,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const { c, q } = partXf(o, p)
     const local = rotateVec([-q[0], -q[1], -q[2], q[3]], d)
     const angle = plasticBend(p.dims, p.thickness, p.mat.bending, E, local)
-    if (angle >= BEND_MIN) p.st.bend = Math.min(BEND_MAX, (p.st.bend ?? 0) + angle)
+    if (angle >= BEND_MIN) {
+      const before = p.st.bend ?? 0
+      p.st.bend = Math.min(BEND_MAX, before + angle)
+      const hinge = plateHinge(p.dims, toLocal(c, q, point), local)
+      const toObject = (v: Vec3): Vec3 => rotateVec(p.q, v)
+      p.st.bendHinge = { point: vec.add(p.pos, toObject(hinge.point)), axis: toObject(hinge.axis), side: toObject(hinge.side) }
+      emit({ ...base(o), type: 'bend', part: p.spec.id, hinge: p.st.bendHinge, angle: p.st.bend - before, worldPoint: point })
+    }
     const axis = severAxis(p)
     if (axis < 0 || snapRatio(p.dims, p.mat.bending, E, local, SEVER_ASPECT) < 1) return 0
     p.rt.cutAt = clamp(toLocal(c, q, point)[axis], -p.dims[axis] / 2, p.dims[axis] / 2)

@@ -8,6 +8,7 @@ export type {
   DamageStage,
   DamageType,
   DebrisKind,
+  BendHinge,
   Dent,
   DestructibleSpec,
   BlastOptions,

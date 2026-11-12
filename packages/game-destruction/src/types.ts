@@ -43,6 +43,7 @@ export type {
   BallisticExtras,
   HitIgnition,
   ChainDelay,
+  BendHinge,
   Crack,
   DamageStage,
   DamageType,
