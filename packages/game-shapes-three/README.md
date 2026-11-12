@@ -41,6 +41,7 @@ const geometry = toGeometry(THREE, buildPrimitive({ kind: 'torus', radius: 0.3, 
 | `releaseObject3D(roots, { keep })` | Frees the GPU side of trees taken out of the scene for good: geometries, materials, textures (maps and shader uniforms) and skeletons, except what a tree in `keep` (the scene) still uses or what is marked `userData.shared`. Returns how many it freed |
 | `discardObject3D(objects, { keep })` | `removeFromParent()` plus `releaseObject3D` for one object or a list (one walk of the scene), keeping what the rest of its scene draws: the one call for something that leaves the game |
 | `isMesh(object)` | Type guard for a mesh (or a skinned or instanced one) met while walking a tree with `traverse` |
+| `coincidentFacesOf(root, { eps, minArea, includeHidden })` | Faces under `root` that z-fight: triangles on the same plane (within 1 mm), facing the same way, that overlap more than 1 cm². Walks every drawn mesh in world space (instances too; decals with `polygonOffset` are skipped) and names both meshes in each hit. Every package's catalog test runs it on each piece (see `CLAUDE.md` §13) |
 | `markShared(...resources)` | Marks a palette, kit or catalog resource as shared on purpose, so the release never frees it; same as `userData.shared = true` without touching the resource (digests and goldens stay) |
 
 ## Português

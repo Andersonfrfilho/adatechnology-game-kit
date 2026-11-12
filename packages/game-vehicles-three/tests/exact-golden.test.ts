@@ -1,15 +1,8 @@
-import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-
-import { createVehicleKit } from '@adatechnology/game-vehicles'
-import { fleetGroups, installFleet } from '@adatechnology/game-vehicles-fleet'
 import { exactSnapshot } from '@adatechnology/golden-tool'
-import * as THREE from 'three'
 import { afterEach, describe, expect, it } from 'vitest'
-
-import { createVehiclesThree } from '../src'
-import { fakeDocument } from './fake-dom'
+import { cases } from './catalog-cases'
 
 /**
  * Every bit of the 69 vehicles in light mode (the six fused meshes) and of one per group at full detail in the game frame: recorded on the old
@@ -18,16 +11,6 @@ import { fakeDocument } from './fake-dom'
 const FIXTURE = join(process.cwd(), 'tests/fixtures/exact-vehicles-three.json')
 const TITLE = 'the vehicles in the game frame, bit for bit'
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
-
-type Root = { traverse(f: (o: unknown) => void): void }
-const kit = createVehicleKit({ THREE, document: fakeDocument, locale: 'pt-BR' })
-installFleet(kit)
-const vehicles = createVehiclesThree(THREE, { kit, fleet: defaultVehicleFleet() })
-const cases: Array<[string, () => Root]> = []
-for (const keys of Object.values(fleetGroups)) {
-  for (const key of keys) cases.push([`${key}/lite`, () => vehicles.build(key, { quality: 'lite', seed: 7 }).group])
-  cases.push([`${keys[0]}/high`, () => vehicles.build(keys[0] as string, { quality: 'high', seed: 7 }).group])
-}
 
 const recorded: Record<string, { hash: string; objects: number }> = (() => {
   try {

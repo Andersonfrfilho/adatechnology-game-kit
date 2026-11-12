@@ -31,6 +31,9 @@ jobs:
       # outside its SDK fails here; the known ones are listed in docs/pecas-fora-do-sdk.md (tools/kit-audit/README.md)
       - run: node tools/kit-audit/audit.mjs --check
 
+      # every package that draws pieces walks its catalog through the z-fighting guard (CLAUDE.md §13, tools/z-fighting/coverage.mjs)
+      - run: node tools/z-fighting/coverage.mjs
+
       # a local sound pack (tools/local-audio) never enters git: no local config, no local-audio folder, and no audio but the kit's own sounds (the manifest's CC0 and CC-BY files in packages/game-audio/assets/sfx)
       - run: node tools/local-audio/local-audio.mjs guard-git
 
