@@ -3132,6 +3132,7 @@
       "kind": "uses",
       "amount": 400
     },
+    "weapon": "shovel",
     "finds": {
       "places": [
         "farm",

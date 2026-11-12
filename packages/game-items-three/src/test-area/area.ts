@@ -382,6 +382,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     ...sealOf(def, fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight })),
     // an item with a make-up (a shovel: ash handle riveted to a steel blade) is that spec, not the parts guessed from its meshes
     ...makeupSpecOf(def.model),
+    // an item that is also a tool of the arsenal (a shovel) is picked up as that tool
+    ...(def.weapon ? { weapon: def.weapon } : {}),
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T

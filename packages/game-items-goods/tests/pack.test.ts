@@ -81,11 +81,11 @@ describe('melee items and the arsenal', () => {
   const arsenal = createArsenal()
   const melee = GOODS_ITEMS.filter((item) => item.category === 'melee')
 
-  it('resolves every `weapon` in the arsenal, and only melee items carry one', () => {
+  it('resolves every `weapon` in the arsenal, and only melee items and the shovel (a tool that digs in hand) carry one', () => {
     const withWeapon = GOODS_ITEMS.filter((item) => item.weapon !== undefined)
-    expect(withWeapon).toHaveLength(18)
+    expect(withWeapon).toHaveLength(19)
     for (const item of withWeapon) {
-      expect(item.category, item.id).toBe('melee')
+      expect(item.category === 'melee' || item.id === 'shovel', item.id).toBe(true)
       expect(arsenal.weapons.has(item.weapon ?? ''), `${item.id}: ${item.weapon}`).toBe(true)
     }
   })

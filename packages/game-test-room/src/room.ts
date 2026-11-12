@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
-import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createWorldOcclusion } from './world-occlusion'
@@ -58,7 +58,7 @@ import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
-import { SHOVEL, biteShareOf, digsWith, shovelful } from './shovel'
+import { SHOVEL, biteShareOf, digsWith, shovelful, toolConditionOf } from './shovel'
 import type { ShovelMode, ToolCondition } from './shovel'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
@@ -587,6 +587,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
+  let carriedTool: { readonly weaponId: string; readonly itemId: string; readonly name: string; readonly saved: NonNullable<ReturnType<DestructionWorld['serializeObject']>> } | null = null
   const toolSettings: { condition?: string; ammoQuality?: string } = {}
   let fuseLength: number | undefined
   const SETTING_IDS = { condition: 'condition', ammoQuality: 'ammo_quality', fuseLength: 'fuse_length' } as const
@@ -898,7 +899,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           offFirst = true
           return
         }
-        if (heldEntry) throwHeld()
+        if (heldEntry || carriedTool) throwHeld()
         else grab()
       },
       secondaryUp: () => {
@@ -1590,6 +1591,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const clearEverything = (): void => releasingTogether(clearEverythingNow)
   const clearEverythingNow = (): void => {
     if (heldEntry || heldPiece) releaseHeld()
+    carriedTool = null
     useItemPlayer = null
     playing.length = 0
     explosives.clear()
@@ -3037,6 +3039,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
+    if (carriedTool && carriedTool.weaponId !== id) putDownTool()
     dropOffTool()
     releaseTrigger()
     toolId = id
@@ -3101,8 +3104,51 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     grab()
     return 'ok'
   }
+  /**
+   * A tool of the arsenal picked up from the world (an item with a `weapon`): the object left the world with all its damage, the tool is in hand with the condition that damage
+   * gives it, and dropping or throwing it puts the same object back, damage and all.
+   */
+  const pickUpTool = (objectId: string, entry: Entry, weaponId: string): void => {
+    const saved = world.serializeObject(objectId)
+    if (!saved || !entry.item) return
+    if (carriedTool) putDownTool()
+    toolConditions.set(weaponId, toolConditionOf(saved.spec, saved.state))
+    carriedTool = { weaponId, itemId: entry.item.id, name: entry.name, saved }
+    removeEntry(objectId)
+    equip(weaponId)
+    action('pickup_tool', t('act.pickup_tool', { name: entry.name, weapon: toolName(weaponId) }), { itemId: entry.item.id, data: { weapon: weaponId, ...toolConditions.get(weaponId) } })
+  }
+  /** The tool picked up goes back into the world as the object it was (dropped at the feet, or thrown along the aim at `speed`), with the damage it had. */
+  const putDownTool = (speed = 0): void => {
+    const tool = carriedTool
+    if (!tool) return
+    carriedTool = null
+    toolConditions.delete(tool.weaponId)
+    aim()
+    const thrown = speed > 0
+    const x = thrown ? aimO[0] + aimD[0] * 0.5 : player.x - Math.sin(player.yaw) * 0.7
+    const z = thrown ? aimO[2] + aimD[2] * 0.5 : player.z - Math.cos(player.yaw) * 0.7
+    const y = thrown ? aimO[1] - 0.3 + aimD[1] * 0.5 : groundAt(x, z)
+    const { objectId } = spawn(tool.itemId, [x, y, z], player.yaw)
+    const pose = world.state(objectId)!
+    const position: Vec3 = [pose.position[0], pose.position[1], pose.position[2]]
+    const rotation: Quat = [pose.rotation[0], pose.rotation[1], pose.rotation[2], pose.rotation[3]]
+    world.loadObject(tool.saved, objectId)
+    world.setTransform(objectId, position, rotation)
+    const piece = rendererPieces.get(objectId)
+    if (thrown && piece) {
+      piece.velocity = [0, 0, 0]
+      renderer.impulse(objectId, [aimD[0] * speed * piece.mass, (aimD[1] * speed + 1.2) * piece.mass, aimD[2] * speed * piece.mass])
+      action('throw', t('act.throw', { name: tool.name, speed: num(speed, 1) }), { objectId, itemId: tool.itemId, data: { speedMs: speed, massKg: piece.mass } })
+    } else action('drop', t('act.drop', { name: tool.name }), { objectId, itemId: tool.itemId })
+  }
   const grab = (): boolean => {
     if (push.active) return false
+    if (!heldPiece && carriedTool) {
+      putDownTool()
+      fire('grab', { held: false })
+      return true
+    }
     if (heldPiece) {
       const name = heldName
       releaseHeld()
@@ -3125,6 +3171,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (kg > maxCarry) {
       say(t('hud.too_heavy', { name: nameOf(r.object), kg: num(kg, 0) }))
       return false
+    }
+    const toolWeapon = entryOf(r.object)?.item?.weapon
+    const toolEntry = entries.get(r.object)
+    if (toolWeapon && toolEntry && arsenal.weapons.has(toolWeapon)) {
+      pickUpTool(r.object, toolEntry, toolWeapon)
+      fire('grab', { held: true, objectId: r.object })
+      return true
     }
     heldPiece = piece
     heldEntry = entries.get(r.object) ?? null
@@ -3150,6 +3203,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const throwHeld = (speed = 9): boolean => {
+    if (!heldPiece && carriedTool) {
+      putDownTool(speed)
+      return true
+    }
     if (!heldPiece) return false
     const piece = heldPiece
     const name = heldName
