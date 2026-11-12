@@ -250,13 +250,18 @@ function pillarsFor(
 /** The stretches of `line` (from its start) that a wall of `floor` hides, with the openings of the walls left out: where a pillar of that storey can stand. */
 function wallStretches(context: Context, line: Line, floor: number, top: number): Interval[] {
   const out: Interval[] = []
+  const floorLevel = context.structure.levels[floor] ?? 0
   for (const wall of context.parts) {
     if ((wall.role !== 'wall' && wall.role !== 'partition') || wall.floor !== floor || wall.y1 < top - 1 || wall.y0 > top) continue
+    // a pillar comes down to the floor in the wall it stands in: the wall over a door (from the head of the door up) is no place for one
+    if (wall.y0 > floorLevel + 0.05) continue
     const padded = holds(line, 0.02, wall.aabb)
     if (!padded) continue
     // `holds` pads the wall by the plan tolerance: a pillar stands in the wall itself, never in the doorway past its end
     // (and a little of the wall is left past the pillar at a jamb: their ends on one plane)
-    const along: Interval = [padded[0] + (padded[0] > 0 ? PLAN_TOLERANCE + JAMB_CLEAR : 0), padded[1] - (padded[1] < line.to - line.from ? PLAN_TOLERANCE + JAMB_CLEAR : 0)]
+    // the interval is of the pillar's centre: at a jamb it stays half the pillar's length in, so the whole pillar is in the wall
+    const reach = context.section.along / 2
+    const along: Interval = [padded[0] + (padded[0] > 0 ? PLAN_TOLERANCE + JAMB_CLEAR + reach : 0), padded[1] - (padded[1] < line.to - line.from ? PLAN_TOLERANCE + JAMB_CLEAR + reach : 0)]
     if (along[1] <= along[0]) continue
     const alongU = wall.aabb[2] - wall.aabb[0] >= wall.aabb[3] - wall.aabb[1]
     const openings = context.structure.openings.filter((o) => o.wall === wall.id)
@@ -264,8 +269,8 @@ function wallStretches(context: Context, line: Line, floor: number, top: number)
       // the wall runs with the beam: all of it but its openings
       let pieces: Interval[] = [along]
       for (const o of openings) {
-        const a = o.from - line.from - JAMB_CLEAR
-        const b = o.to - line.from + JAMB_CLEAR
+        const a = o.from - line.from - JAMB_CLEAR - reach
+        const b = o.to - line.from + JAMB_CLEAR + reach
         pieces = pieces.flatMap(([x, y]): Interval[] => (b <= x || a >= y ? [[x, y]] : ([[x, a], [b, y]] as Interval[]).filter(([p, q]) => q > p)))
       }
       out.push(...pieces)

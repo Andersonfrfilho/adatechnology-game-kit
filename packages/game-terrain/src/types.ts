@@ -1,6 +1,6 @@
 import type { GroundLayout, GroundLoss, Hit } from '@adatechnology/game-contracts'
 
-export type { GroundLayout, GroundZone } from '@adatechnology/game-contracts'
+export type { GroundExcavation, GroundLayout, GroundZone } from '@adatechnology/game-contracts'
 
 /** The blows that remove ground. Fire and heat char it instead (`TerrainMaterial.fire`). */
 export type TerrainBlow = 'ballistic' | 'blunt' | 'slash' | 'explosive'

@@ -92,31 +92,10 @@ describe('construction stages of single_storey_a', () => {
     expect(sewer.pieces.length).toBeGreaterThan(3)
     for (const b of sewer.boxes) expect(b.bottom).toBeLessThan(-0.3)
     group('stage:4:installations').traverse((o) => {
-      if (!(o as THREE.Mesh).isMesh || o.name === 'excavation:heap' || o.name === 'excavation:opening') return
+      if (!(o as THREE.Mesh).isMesh || o.name === 'excavation:heap') return
       // a box's lid is flush with the ground (under a centimetre over it); everything else is under it
       expect(boxOf(o).max.y, o.name || o.type).toBeLessThanOrEqual(o.name === 'sewer:lid' ? 0.01 : 0.0001)
     })
-  })
-
-  it('sets each sewer box in a pit of its own: dug round it to its floor, and no trench floor or wall of earth crosses it', () => {
-    const stage = group('stage:4:installations')
-    const sewer = stage.userData.sewer as { trenches: number[][]; boxes: { u: number; v: number; size: number; bottom: number }[] }
-    let earth: THREE.Mesh | undefined
-    stage.traverse((o) => { if (o.name === 'excavation:earth') earth = o as THREE.Mesh })
-    const position = earth!.geometry.getAttribute('position')
-    for (const b of sewer.boxes) {
-      const half = b.size / 2
-      // the dug ground covers the box with room round it
-      expect(sewer.trenches.some((r) => r[0]! <= b.u - half - 0.1 && r[2]! >= b.u + half + 0.1 && r[1]! <= b.v - half - 0.1 && r[3]! >= b.v + half + 0.1), `box at ${b.u},${b.v}`).toBe(true)
-      // nothing of the earth (a floor, a wall) is inside the box's footprint above its floor
-      const index = earth!.geometry.getIndex()!
-      for (let k = 0; k < index.count; k += 3) {
-        const pts = [0, 1, 2].map((j) => new THREE.Vector3().fromBufferAttribute(position, index.getX(k + j)))
-        const c = pts.reduce((sum, p) => sum.add(p), new THREE.Vector3()).divideScalar(3)
-        const inside = c.x > b.u - half + 0.01 && c.x < b.u + half - 0.01 && c.z > b.v - half + 0.01 && c.z < b.v + half - 0.01
-        expect(inside && c.y > b.bottom + 0.01, `earth at ${c.toArray().map((v) => v.toFixed(2))} inside the box at ${b.u},${b.v}`).toBe(false)
-      }
-    }
   })
 
   it('takes the rain of the roof apart from the sewer (NBR 10844): from the sand box under each downpipe, falling to the kerb under the public sidewalk', () => {
@@ -181,19 +160,6 @@ describe('construction stages of single_storey_a', () => {
       expect(holders.every(visibleIn), `holders at ${level}`).toBe(level >= 4 && level <= 7)
       expect(bulbs.every(visibleIn), `bulbs at ${level}`).toBe(level >= 5 && level <= 7)
     }
-  })
-
-  it('opens the trenches as holes: the mouth clears the ground\'s depth, and what is in the holes hides behind their own walls (no trench seen through another)', () => {
-    const stage = group('stage:4:installations')
-    let opening: THREE.Mesh | undefined, earth: THREE.Mesh | undefined
-    stage.traverse((o) => { if (o.name === 'excavation:opening') opening = o as THREE.Mesh; if (o.name === 'excavation:earth') earth = o as THREE.Mesh })
-    const mouth = opening!.material as THREE.ShaderMaterial
-    expect(mouth.depthWrite).toBe(true)
-    expect(mouth.fragmentShader).toMatch(/gl_FragDepth\s*=\s*1\.0/)
-    const walls = earth!.material as THREE.Material
-    // the earth tests depth like anything else (it drew over everything in the mouth before, the far trench over the near one)
-    expect(walls.depthFunc).toBe(THREE.LessEqualDepth)
-    expect(walls.depthTest).toBe(true)
   })
 
   it('lays each pipe and conduit once, in the same place at every level, inside walls or over the ceiling slab, and shows it cut into the masonry only in the rough-in', () => {

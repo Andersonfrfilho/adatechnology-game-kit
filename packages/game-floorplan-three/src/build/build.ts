@@ -5,7 +5,8 @@ import { isMesh } from '@adatechnology/game-shapes-three';
 import { panelViewOf } from '../destruction/panels.js';
 import { applyConstructionLevel, CONSTRUCTION_LEVEL_MAX } from '../construction-stages/apply-level.js';
 import { buildBlueprintStage } from '../construction-stages/blueprint.js';
-import { buildInstallationsStage } from '../construction-stages/installations-stage.js';
+import { buildInstallationsStage, buriedSewerOf } from '../construction-stages/installations-stage.js';
+import { openExcavations } from '../construction-stages/excavations.js';
 import { routeConduits, routingPlanOf } from '../construction-stages/installation-routes.js';
 import type { RoutableElectrical } from '../construction-stages/installation-routes.js';
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
@@ -33,7 +34,8 @@ function withLaidConduits(r: HouseRecord, stages: boolean): HouseRecord {
   for (const it of r.items) if (it.type === 'ceiling_light') lamps.set(it.id, { u: it.x, v: it.z, y: (r.floors[Math.max(0, it.floor)]?.y0 ?? 0) + (it.y ?? 2.7) });
   // in the construction stages every conduit is laid as the water is: cut into the bare masonry in the rough-in, embedded once the walls are plastered
   const embedded = { ...E, conduits: E.conduits.map((c) => ({ ...c, exposed: false })) };
-  const conduits = routeConduits(routingPlanOf(r), embedded as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
+  // a feed to a building in the yard keeps clear of the sewer laid in the same yard
+  const conduits = routeConduits({ ...routingPlanOf(r), buried: buriedSewerOf(r) }, embedded as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
   return { ...r, utilities: { ...r.utilities, electrical: { ...E, exposed: false, conduits } } };
 }
 
@@ -239,6 +241,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
             return currentConstructionLevel;
           },
           get constructionLevel() { return currentConstructionLevel; },
+          excavations() { return cs ? openExcavations(THREE, house) : []; },
           target(o: Eye, opt?: TargetOptions) { enter(h); return targetOf(o, opt); },
           interact(o: Eye, opt?: TargetOptions) { enter(h); const a = targetOf(o, opt); if (!a) return false; return actOn(a.target && a.target.pub ? a.target.pub as HouseInteractable : { id: a.target && a.target.id || a.text, type: a.target && a.target.kit ? a.target.type as string : 'door', label: a.text, ref: a.target, _action: a.action, floor: 0, pos: [], radius: 0 } as HouseInteractable, a); },
           message() { return shared.inter.msg && performance.now() < shared.inter.msg.until ? shared.inter.msg.text : null; },

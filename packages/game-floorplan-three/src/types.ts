@@ -1,5 +1,5 @@
 import type * as THREE from 'three'
-import type { DeferredQueue } from '@adatechnology/game-contracts'
+import type { DeferredQueue, GroundExcavation } from '@adatechnology/game-contracts'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
@@ -276,6 +276,8 @@ export interface House {
   /** Sets the visible construction stage (`0..8`) when built with `constructionStages: true`. */
   setConstructionLevel?(level: number, options?: { waterLayer?: boolean; roofLayer?: boolean; lotLayer?: boolean }): number
   readonly constructionLevel?: number
+  /** The trenches and pits open at the construction level, in world coordinates, for the host's terrain to dig (`GroundLayout.excavations`); none when built without stages. */
+  excavations?(): GroundExcavation[]
   target(eye: Eye, options?: HouseTargetOptions): InteractionTarget | null
   interact(eye: Eye, options?: HouseTargetOptions): boolean
   /** The message the house shows now (a locked door...), or null. */

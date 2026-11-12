@@ -86,7 +86,17 @@ function supportBeams(context: BuildContext, slab: StructurePart, lines: { reado
       // a timber wall carries it on its top plate and studs
       if (context.isTimber) continue
       // in the wall the beam ends on: its long side along that wall
-      const at: Rect = chosen.along ? pillarBox(context.pillar, end, b.at, false) : pillarBox(context.pillar, b.at, end, true)
+      // and wholly in that wall: beside a door it moves along the wall, off the doorway
+      const half = context.pillar.along / 2
+      const [w0, w1] = chosen.along ? [wall.aabb[1], wall.aabb[3]] : [wall.aabb[0], wall.aabb[2]]
+      let centre = w1 - w0 >= 2 * half ? Math.min(Math.max(b.at, w0 + half), w1 - half) : b.at
+      for (const door of context.source.doors) {
+        if (door.floor !== top || door.axis !== (chosen.along ? 'v' : 'u') || Math.abs((chosen.along ? door.u : door.v) - end) > 0.2) continue
+        const d0 = (chosen.along ? door.v : door.u) - door.width / 2, d1 = d0 + door.width
+        if (centre + half <= d0 || centre - half >= d1) continue
+        centre = centre < (d0 + d1) / 2 ? d0 - half : d1 + half
+      }
+      const at: Rect = chosen.along ? pillarBox(context.pillar, end, centre, false) : pillarBox(context.pillar, centre, end, true)
       const pillar = builder.add({ id: `tank_beam_pillar_${k}_${end === b.a0 ? 0 : 1}`, role: 'column', material: construction.frame.pillars, aabb: at, y0: storeyFloor, y1: slab.y1 - depth }, { floor: top })
       const base = builder.parts.find((p) => p.id !== pillar.id && (p.role === 'slab' || p.role === 'beam') && Math.abs(p.y1 - storeyFloor) < 0.06 && touches(p.aabb, at, 0.01))
       builder.rest(pillar, storeyFloor <= 0.05 ? GROUND : base ?? wall, 'rebar')

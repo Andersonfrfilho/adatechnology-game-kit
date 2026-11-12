@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { getAssembly } from '@adatechnology/game-destruction'
-import { PLASTER_PER_FACE, coursingOf } from '@adatechnology/game-floorplan-structure'
+import { PLASTER_PER_FACE, coursingOf, getMasonryUnit } from '@adatechnology/game-floorplan-structure'
 import type { StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { BoxBatch } from './box-batch.js'
@@ -63,6 +63,10 @@ const UNIT_CLEARANCE = 0.005
 const MIN_PIECE = 0.06
 /** The least stretch of wall worth laying at all. */
 const MIN_SPAN = 0.02
+/** How far past its own end a wall's masonry runs on to the face of what stands there (a pillar, a wall), metres. */
+const BUTT_REACH = 0.03
+/** How deep the render that wraps a wall's end over the corner pillar reaches into the wall's box, metres (no masonry in it). */
+const END_RENDER = 0.02
 /** How far a mortar fill stays off the faces round it, metres. */
 const SLIVER_CLEAR = 0.0005
 // the mortar bed stands a hair over what the wall rests on (a slab, a beam): its faces never lie on a pillar's foot or head
@@ -95,17 +99,58 @@ function layUnits(rect: WallRect, coursing: Coursing, put: (a0: number, y0: numb
 }
 
 /**
+ * How wide a wall's bricks or blocks are across it: the unit of the catalog the wall is laid with, never wider than the wall less its render each side. A wall
+ * drawn thicker than its units (an 18 cm wall of 14 cm blocks) takes the difference in render, not in fatter bricks.
+ */
+export function coreWidthOf(thickness: number, unitId?: string): number {
+  const room = Math.max(0.09, thickness - 2 * PLASTER_PER_FACE)
+  return unitId === undefined ? room : Math.min(room, getMasonryUnit(unitId).width)
+}
+
+/** Where and how one wall part is laid: what cuts it, the courses' base, the unit, and the centre line of its core when it is not the box's own. */
+export interface MasonryLayout {
+  /** What the wall's pillars, beams, lintels, foundation and the walls laid before it take out of it, in its plane. */
+  readonly cuts: readonly WallRect[]
+  readonly courseBase: number
+  readonly unitId?: string | undefined
+  /**
+   * The centre line of the bricks across the wall: the line of the pillars standing in it (they are cast in the units' form). The structure keeps boxes to the
+   * centimetre, so a 17 cm wall's box stands 5 mm off that line.
+   */
+  readonly coreLine?: number | undefined
+}
+
+/**
  * The bare wall of a structural part, laid unit by unit into the batches, in the pieces that are left once its pillars, beams, lintels, foundation and the walls
  * laid before it are taken out (`cuts`, in the wall's plane): the masonry fills the frame, it never runs through it.
  */
-export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, cuts: readonly WallRect[], courseBase: number, unitId?: string): void {
-  const wall = wallLineOf(part.aabb)
+/**
+ * Lays one wall part and returns the stretches it filled (its pieces and the slivers filled with mortar, in the wall's plane): what the next walls butt against,
+ * the bricks as they are laid rather than the wall's box (a pillar may have taken part of it).
+ */
+export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, layout: MasonryLayout): readonly WallRect[] {
+  const { cuts, courseBase, unitId } = layout
+  const wall = { ...wallLineOf(part.aabb), ...(layout.coreLine === undefined ? {} : { line: layout.coreLine }) }
   const th = wall.thickness
-  const all = subtractRects({ a0: wall.a0, a1: wall.a1, y0: part.y0, y1: part.y1 }, cuts).filter((r) => r.y1 - r.y0 >= MIN_SPAN)
+  // the masonry runs on to what stands at its ends (a pillar a little narrower than the crossing wall, a wall already laid): each end reaches the face of a cut
+  // up to `BUTT_REACH` past it; where nothing stands there, the wall keeps its own end
+  const all = subtractRects({ a0: wall.a0 - BUTT_REACH, a1: wall.a1 + BUTT_REACH, y0: part.y0, y1: part.y1 }, cuts)
+    .map((r) => ({ ...r, a0: r.a0 <= wall.a0 - BUTT_REACH + 1e-6 ? wall.a0 : r.a0, a1: r.a1 >= wall.a1 + BUTT_REACH - 1e-6 ? wall.a1 : r.a1 }))
+    .filter((r) => r.a1 > r.a0 && r.y1 - r.y0 >= MIN_SPAN)
   const pieces = all.filter((r) => r.a1 - r.a0 >= MIN_SPAN)
-  // a sliver left between two cuts (the masonry's end a centimetre or two from a pillar) takes no unit: it is filled with mortar to the pillar's face, never left
-  // open from the floor to the beam (it stops a hair short of the faces round it, so it shares no plane with the concrete)
-  const slivers = all.filter((r) => r.a1 - r.a0 < MIN_SPAN && r.a1 - r.a0 > 2 * SLIVER_CLEAR)
+  // a sliver beside a piece of the same courses (the subtraction cuts the free stretch where a lower cut ends, a ground beam's end) is that piece's: its units run
+  // on over it to the pillar; a sliver with no piece beside it (between two cuts) is filled with mortar to their faces, never left open from the floor to the beam
+  // (the fill stops a hair short of the faces round it, so it shares no plane with the concrete)
+  // a sliver at the wall's very end lies past the pillar's outer face, in the render that wraps the corner: no masonry there
+  const atEnd = (r: WallRect): boolean => r.a1 <= wall.a0 + END_RENDER || r.a0 >= wall.a1 - END_RENDER
+  const slivers = all.filter((r) => r.a1 - r.a0 < MIN_SPAN && r.a1 - r.a0 > 2 * SLIVER_CLEAR && !atEnd(r)).filter((s) => {
+    const beside = pieces.find((p) => (Math.abs(p.a0 - s.a1) < 1e-6 || Math.abs(p.a1 - s.a0) < 1e-6) && p.y0 >= s.y0 - 1e-6 && p.y1 <= s.y1 + 1e-6)
+    if (!beside) return true
+    if (Math.abs(beside.a0 - s.a1) < 1e-6) beside.a0 = s.a0
+    else beside.a1 = s.a1
+    return false
+  })
+  const laidRects: readonly WallRect[] = [...pieces, ...slivers]
   const box = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number): void =>
     batch.add(wall.alongU ? [a0, y0, wall.line - t / 2, a1, y1, wall.line + t / 2] : [wall.line - t / 2, y0, a0, wall.line + t / 2, y1, a1])
 
@@ -122,26 +167,27 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
         box(batches.wood, s, r.y0 + 0.045, s + studW, r.y1 - 0.045, th * 0.9)
       }
     }
-    return
+    return laidRects
   }
   if (part.assembly === 'log_wall') {
     const logD = 0.16
     for (const r of pieces) for (let y = r.y0; y < r.y1 - 1e-3; y += logD) box(batches.log, r.a0, y + 0.004, r.a1, Math.min(r.y1, y + logD - 0.004), th * 0.96)
-    return
+    return laidRects
   }
   if (part.assembly === 'sheet_metal_shack' || part.material === 'steel') {
     for (const r of pieces) box(batches.sheet, r.a0, r.y0, r.a1, r.y1, Math.min(th, 0.025))
-    return
+    return laidRects
   }
   if (part.assembly === 'drywall' || part.material === 'gypsum') {
     for (const r of pieces) box(batches.drywall, r.a0, r.y0, r.a1, r.y1, th * 0.85)
-    return
+    return laidRects
   }
 
   const isBlock = part.assembly === 'concrete_block_wall' || part.material === 'concrete'
-  for (const r of slivers) box(batches.mortar, r.a0 + SLIVER_CLEAR, r.y0 + SLIVER_CLEAR, r.a1 - SLIVER_CLEAR, r.y1 - SLIVER_CLEAR, Math.max(0.09, th - 2 * PLASTER_PER_FACE) * 0.98)
-  // the bricks of a bare wall: the finished wall less its render each side (`PLASTER_PER_FACE`), the width of the bond beam and lintels cast in it
-  const coreTh = Math.max(0.09, th - 2 * PLASTER_PER_FACE)
+  // the bricks of a bare wall: the units of the catalog, within the finished wall less its render each side (`coreWidthOf`), the width of the bond beam and
+  // lintels cast in it
+  const coreTh = coreWidthOf(th, unitId)
+  for (const r of slivers) box(batches.mortar, r.a0 + SLIVER_CLEAR, r.y0 + SLIVER_CLEAR, r.a1 - SLIVER_CLEAR, r.y1 - SLIVER_CLEAR, coreTh * 0.98)
   // laid as the structure lays it (`coursingOf`: the unit of the catalog, else the units of the wall's assembly the world breaks it into)
   const laid = coursingOf(unitId, getAssembly(part.assembly ?? (isBlock ? 'concrete_block_wall' : 'brick_wall_plastered'))?.units)!
   const coursing: Coursing = { courseH: laid.courseHeight, unitLen: laid.unitLength, joint: 0.012, courseBase }
@@ -152,4 +198,5 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
     box(batches.mortar, r.a0 + MORTAR_INSET, r.y0 + MORTAR_LIFT, r.a1 - MORTAR_INSET, r.y1 - MORTAR_LIFT, coreTh * 0.86)
     layUnits(r, coursing, (a0, y0, a1, y1) => box(unit, a0, y0, a1, y1, coreTh))
   }
+  return laidRects
 }

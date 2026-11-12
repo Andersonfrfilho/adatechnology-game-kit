@@ -6,7 +6,7 @@ import { lossOf, SLIDE_LOSS_MIN_LOWERING, tallyLowered, voidUnder } from './grou
 import type { HeightGrid, LossTally } from './ground-loss'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
-import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
+import type { GroundExcavation, GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
 
 export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   markAreaSize: 2,
@@ -232,6 +232,33 @@ export function createTerrain(options: TerrainOptions): Terrain {
         }
         mixed[chunk] = isMixed
         dirty.add(chunk)
+      }
+    }
+    for (const excavation of layout.excavations ?? []) excavate(excavation)
+  }
+
+  /**
+   * Digs a construction's trench or pit: every vertex over the rectangle (the cell it starts in to the one it ends in, so the full depth spans the whole
+   * rectangle and the wall slopes in the cell outside it) down to its depth, never less deep than it already was. A planned dig is no ground loss.
+   */
+  function excavate(excavation: GroundExcavation): void {
+    const [ex0, ez0, ex1, ez1] = excavation.rect
+    const column0 = clampIndex(Math.floor((ex0 - x0) / cellSize + 1e-6), columns)
+    const column1 = clampIndex(Math.ceil((ex1 - x0) / cellSize - 1e-6), columns)
+    const row0 = clampIndex(Math.floor((ez0 - z0) / cellSize + 1e-6), rows)
+    const row1 = clampIndex(Math.ceil((ez1 - z0) / cellSize - 1e-6), rows)
+    const alongX = (excavation.along ?? (ex1 - ex0 >= ez1 - ez0 ? 'x' : 'z')) === 'x'
+    const from = alongX ? ex0 : ez0, length = Math.max(1e-6, alongX ? ex1 - ex0 : ez1 - ez0)
+    const far = excavation.toDepth ?? excavation.depth
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const index = row * stride + column
+        const at = alongX ? x0 + column * cellSize : z0 + row * cellSize
+        const t = Math.max(0, Math.min(1, (at - from) / length))
+        const depth = excavation.depth + (far - excavation.depth) * t
+        if (depth <= dug[index]!) continue
+        dug[index] = depth
+        touchVertex(column, row)
       }
     }
   }

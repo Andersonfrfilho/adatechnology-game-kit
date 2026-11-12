@@ -177,21 +177,25 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       host.setGround({ surface: 'lawn' })
       return
     }
+    // the trenches and pits open at this construction level are dug in the room's ground itself: real holes, closed again by the backfill
+    const excavations = placed.flatMap((p) => p.house.excavations?.() ?? [])
+    const dug = excavations.length ? { excavations } : {}
     const lot = host.bench?.layer('lot') ?? false
     if (!lot) {
       // In house construction testing, ground is construction earth (dirt), not lawn
-      host.setGround({ surface: 'dirt' })
+      host.setGround({ surface: 'dirt', ...dug })
       return
     }
-    host.setGround(
-      groundLayoutOfPlans(
+    host.setGround({
+      ...groundLayoutOfPlans(
         placed.map((p) => ({
           plan: p.plan,
           offset: [p.house.group.position.x, p.house.group.position.z],
           flipped: true,
         })),
       ),
-    )
+      ...dug,
+    })
   }
 
   const showAll = (): void => {

@@ -142,11 +142,24 @@ export interface GroundZone {
   readonly label?: string
 }
 
+/**
+ * Ground dug away on purpose (a trench, a footing's pit, a box's pit): a real hole in the floor, to `depth` metres under the untouched surface. A trench whose
+ * bed falls along it gives `toDepth` at the far end of its `along` axis (`depth` at the near one, the rectangle's least coordinate).
+ */
+export interface GroundExcavation {
+  readonly rect: readonly [number, number, number, number]
+  readonly depth: number
+  readonly toDepth?: number
+  readonly along?: 'x' | 'z'
+}
+
 /** What the floor is made of. `surface` is a ground profile id (`lawn`, `road`, `concrete_slab`, `tile_floor`...); a host that does not know it uses its default. */
 export interface GroundLayout {
   readonly surface: string
   /** Later zones over earlier ones. */
   readonly zones?: readonly GroundZone[]
+  /** What is dug in the ground (a construction's open trenches and pits): the host's terrain opens them, and closes them when a later layout leaves them out. */
+  readonly excavations?: readonly GroundExcavation[]
 }
 
 /** How the host sets the module's area up: what goes where, and where the camera starts. */

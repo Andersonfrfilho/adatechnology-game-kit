@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import { PLASTER_PER_FACE, applyPanels, pillarSectionForWidth, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
-import { addStageBox, buildMasonryPanel, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
+import { addStageBox, buildMasonryPanel, coreWidthOf, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
 import { cutOf, subtractRects, wallLineOf } from './wall-plane.js'
 import type { WallRect } from './wall-plane.js'
 
@@ -71,6 +71,12 @@ const overlapArea = (a: readonly number[], b: readonly number[]): number =>
 const PLASTER = PLASTER_PER_FACE
 
 /** A beam cast in a wall's line (a bond beam, a lintel, a slab's beam over a partition) as wide as the wall's bricks: the plaster covers both later. */
+/** A solid as narrow as a wall's core (`toCoreWidth` took the render off it): it is cast in the wall. */
+function isCastInWall(b: Solid): boolean {
+  const width = Math.min(b.aabb[2] - b.aabb[0], b.aabb[3] - b.aabb[1])
+  return width <= 0.25 - 2 * PLASTER
+}
+
 function toCoreWidth(b: Solid): Solid {
   const alongU = b.aabb[2] - b.aabb[0] >= b.aabb[3] - b.aabb[1]
   const width = alongU ? b.aabb[3] - b.aabb[1] : b.aabb[2] - b.aabb[0]
@@ -80,6 +86,35 @@ function toCoreWidth(b: Solid): Solid {
 }
 
 const solidOf = (p: StructurePart): Solid => ({ id: p.id, aabb: [...p.aabb] as Solid['aabb'], y0: p.y0, y1: p.y1, floor: p.floor ?? 0 })
+
+/**
+ * The centre line of a wall's bricks across it: the line of a pillar standing in the wall as wide as its core (the pillar is cast in the units' form, so the
+ * units line up with it), else the box's own centre. The structure keeps boxes to the centimetre: a 17 cm wall's box stands 5 mm off its pillars' line.
+ */
+function coreLineOf(wall: ReturnType<typeof wallLineOf>, part: StructurePart, columns: readonly Solid[], core: number): number {
+  for (const c of columns) {
+    if (c.floor !== (part.floor ?? 0)) continue
+    const [across0, across1, along0, along1] = wall.alongU ? [c.aabb[1], c.aabb[3], c.aabb[0], c.aabb[2]] : [c.aabb[0], c.aabb[2], c.aabb[1], c.aabb[3]]
+    const standsIn = across0 >= wall.line - wall.thickness / 2 - 1e-3 && across1 <= wall.line + wall.thickness / 2 + 1e-3 && along1 > wall.a0 && along0 < wall.a1
+    if (standsIn && Math.abs(across1 - across0 - core) <= 0.006) return (across0 + across1) / 2
+  }
+  return wall.line
+}
+
+/** A wall laid in bricks or blocks (not a timber frame, a log wall, a sheet or drywall). */
+const isMasonry = (p: StructurePart): boolean => !/^wood|^log|sheet|drywall|steel|zinc|fabric/.test(p.material) && !/wood|log|drywall|sheet/.test(p.assembly ?? '')
+
+/** A lintel or sill cast in a wall, across it as the wall's bricks are (`coreLineOf`, `coreWidthOf`): it is cast in the units' form, flush with them. */
+function alignToWall(solid: Solid, walls: readonly StructurePart[], columns: readonly Solid[], unitId: string | undefined): Solid {
+  const alongU = solid.aabb[2] - solid.aabb[0] >= solid.aabb[3] - solid.aabb[1]
+  const host = walls.find((w) => (w.floor ?? 0) === solid.floor && wallLineOf(w.aabb).alongU === alongU && overlapArea(w.aabb, solid.aabb) > 0 && solid.y0 < w.y1 + 0.3 && solid.y1 > w.y0)
+  // only masonry is laid in units that a lintel is cast flush with; a timber, log or sheet wall keeps the lintel as the structure has it
+  if (!host || !isMasonry(host)) return solid
+  const wall = wallLineOf(host.aabb)
+  const width = coreWidthOf(wall.thickness, unitId), line = coreLineOf(wall, host, columns, width)
+  const aabb: Solid['aabb'] = wall.alongU ? [solid.aabb[0], line - width / 2, solid.aabb[2], line + width / 2] : [line - width / 2, solid.aabb[1], line + width / 2, solid.aabb[3]]
+  return { ...solid, aabb }
+}
 
 const isLintel = (id: string): boolean => /lintel|sillbeam|sill_beam/.test(id)
 const isGroundBeam = (p: StructurePart): boolean => p.beamKind === 'ground_beam' || /^(ground_beam_|base_beam_)/.test(p.id)
@@ -137,7 +172,7 @@ function seatSlabs(slabs: Solid[], carriers: Solid[], beams: readonly Solid[]): 
  * A lintel or sill beam as it is cast: not inside a deeper bond beam that already spans the opening (it is dropped), shortened to the faces of the pillars
  * at its ends (its end on a pillar's face flickered), and under the beam above it.
  */
-function fitLintel(l: Solid, beams: readonly Solid[], columns: readonly Solid[]): Solid | null {
+function fitLintel(l: Solid, beams: readonly Solid[], columns: readonly Solid[], crossing: readonly Solid[] = []): Solid | null {
   const wall = wallLineOf(l.aabb)
   for (const b of beams) {
     if (overlapArea(l.aabb, b.aabb) < EPS || b.y1 <= l.y0 + EPS || b.y0 >= l.y1 - EPS) continue
@@ -151,6 +186,15 @@ function fitLintel(l: Solid, beams: readonly Solid[], columns: readonly Solid[])
     if (!cut || cut.y1 <= l.y0 || cut.y0 >= l.y1) continue
     if (cut.a1 <= mid) a0 = Math.max(a0, cut.a1)
     else if (cut.a0 >= mid) a1 = Math.min(a1, cut.a0)
+  }
+  // a wall crossing the lintel's end keeps its bricks: the lintel bears up to the face of its core, never into it
+  for (const c of crossing) {
+    if (c.y1 <= l.y0 + EPS || c.y0 >= l.y1 - EPS) continue
+    const [c0, c1] = wall.alongU ? [c.aabb[0], c.aabb[2]] : [c.aabb[1], c.aabb[3]]
+    const [d0, d1] = wall.alongU ? [c.aabb[1], c.aabb[3]] : [c.aabb[0], c.aabb[2]]
+    if (d1 <= wall.line - wall.thickness / 2 + EPS || d0 >= wall.line + wall.thickness / 2 - EPS) continue
+    if (c1 > a0 && c0 <= a0 + EPS) a0 = Math.max(a0, c1)
+    else if (c0 < a1 && c1 >= a1 - EPS) a1 = Math.min(a1, c0)
   }
   if (a1 - a0 < 0.05 || l.y1 - l.y0 < 0.02) return null
   l.aabb = wall.alongU ? [a0, l.aabb[1], a1, l.aabb[3]] : [l.aabb[0], a0, l.aabb[2], a1]
@@ -303,7 +347,12 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   const columns: (Solid & { readonly tank: boolean; readonly material: string })[] = columnParts.map((p) => ({ ...solidOf(p), tank: p.id.startsWith('tank_'), material: p.material }))
   const slabs = parts.filter((p) => p.role === 'slab' && !isFoundation(p)).map(solidOf)
   const beamParts = parts.filter((p) => p.role === 'beam' && !isFoundation(p))
-  const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf).map(toCoreWidth)
+  const unitId = rawStructure.construction.walls.unit
+  const unit = typeof unitId === 'string' ? unitId : undefined
+  const wallParts = parts.filter((x) => x.role === 'wall' || x.role === 'partition')
+  // a beam cast in a wall (a bond beam, the beam over an opening) is cast in its units' form: as wide as them and on their line
+  const inWall = (b: Solid): Solid => (isCastInWall(b) ? alignToWall(b, wallParts, columns, unit) : b)
+  const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf).map(toCoreWidth).map(inWall)
   seatSlabs(slabs.filter((s) => !s.id.startsWith('tank_')), [...beams, ...columns.filter((c) => !c.tank)], beams)
 
   for (const c of columns) {
@@ -319,14 +368,18 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   for (const s of slabs) addStageBox(THREE, frame, s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3], mats.concrete!, s.id)
 
   // lintels and sills are cast with the masonry they bear on, never hanging in the frame
-  const lintels = beamParts.filter((p) => isLintel(p.id)).map(solidOf).map(toCoreWidth).map((l) => fitLintel(l, beams, columns)).filter((l): l is Solid => l !== null)
+  // the cores of the walls (their bricks as they are laid across them): where a lintel's end meets a crossing wall
+  const wallCores: Solid[] = wallParts.filter(isMasonry).map((w) => {
+    const line = wallLineOf(w.aabb), width = coreWidthOf(line.thickness, unit), centre = coreLineOf(line, w, columns, width)
+    return { ...solidOf(w), aabb: line.alongU ? [w.aabb[0], centre - width / 2, w.aabb[2], centre + width / 2] : [centre - width / 2, w.aabb[1], centre + width / 2, w.aabb[3]] }
+  })
+  const lintels = beamParts.filter((p) => isLintel(p.id)).map(solidOf).map(toCoreWidth).map(inWall).map((l) => fitLintel(l, beams, columns, wallCores.filter((w) => wallLineOf(w.aabb).alongU !== wallLineOf(l.aabb).alongU))).filter((l): l is Solid => l !== null)
   for (const l of lintels) addStageBox(THREE, masonry, l.aabb[0], l.y0, l.aabb[1], l.aabb[2], l.y1, l.aabb[3], mats.lintel!, l.id)
 
   const batches = createMasonryBatches()
-  const unitId = rawStructure.construction.walls.unit
   const laid: Solid[] = []
   const solids: readonly Solid[] = [...foundations, ...columns, ...beams, ...slabs, ...lintels]
-  for (const run of wallRuns(parts.filter((x) => x.role === 'wall' || x.role === 'partition'))) {
+  for (const run of wallRuns(wallParts)) {
     const p = run.part
     const wall = wallLineOf(p.aabb)
     // what the run's parts leave open inside it (the windows and doors between its piers, sills and spandrels) stays open
@@ -341,8 +394,13 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
       const cut = cutOf(wall, o.aabb, o.y0, o.y1)
       if (cut) cuts.push(cut)
     }
-    buildMasonryPanel(batches, p, cuts, (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, typeof unitId === 'string' ? unitId : undefined)
-    laid.push(solidOf(p))
+    const coreWidth = coreWidthOf(wall.thickness, unit)
+    const coreLine = coreLineOf(wall, p, columns, coreWidth)
+    const filled = buildMasonryPanel(batches, p, { cuts, courseBase: (p.floor ?? 0) === 0 ? FOUNDATION_TOP : p.y0, unitId: unit, coreLine })
+    // a wall already laid stands in the next one's way by its bricks as laid (its core, less what a pillar took of it), not by its box or the render it gets
+    // later: the next wall's units butt against them
+    const half = coreWidth / 2
+    for (const r of filled) laid.push({ id: p.id, aabb: wall.alongU ? [r.a0, coreLine - half, r.a1, coreLine + half] : [coreLine - half, r.a0, coreLine + half, r.a1], y0: r.y0, y1: r.y1, floor: p.floor ?? 0 })
   }
   for (const mesh of masonryMeshes(THREE, batches, mats, 'masonry')) masonry.add(mesh)
   return groups

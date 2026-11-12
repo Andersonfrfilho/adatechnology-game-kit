@@ -791,6 +791,9 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-terrain':
+        specifier: workspace:^
+        version: link:../game-terrain
       '@adatechnology/game-vegetation':
         specifier: workspace:^
         version: link:../game-vegetation

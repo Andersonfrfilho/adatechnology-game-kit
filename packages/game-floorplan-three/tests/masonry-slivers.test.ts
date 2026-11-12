@@ -11,7 +11,7 @@ describe('masonry between two cuts: a sliver too narrow for a unit is filled wit
     // a pillar to 1.2 m along the wall, another from 1.215 m: 1.5 cm of wall between them
     const cuts = [{ a0: 0.9, a1: 1.2, y0: 0, y1: 2.6 }, { a0: 1.215, a1: 1.515, y0: 0, y1: 2.6 }]
     const batches = createMasonryBatches()
-    buildMasonryPanel(batches, wall, cuts, 0)
+    buildMasonryPanel(batches, wall, { cuts, courseBase: 0 })
     const mortar = batches.mortar.mesh(THREE, new THREE.MeshBasicMaterial(), 'mortar')
     expect(mortar).not.toBeNull()
     const position = mortar!.geometry.getAttribute('position')
