@@ -2027,6 +2027,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /** Height of the hip above the feet (m): where a kick leaves from; and how far (rad) below the look it goes, so a level look kicks at the height of a chair seat. */
+  /** The striking body (m above the feet): the shoulder standing and crouched, how low it gets bending down (hips) and crouching down, how far under the target it comes, and how far the eye looks for it. */
+  const MELEE_BODY = { downward: -0.3, shoulderStanding: 1.4, shoulderCrouched: 0.95, bentStanding: 0.7, bentCrouched: 0.4, armDrop: 0.4, lookRange: 6 } as const
   const KICK_HIP = 0.9
   const KICK_DROP = 0.35
   /**
@@ -2542,9 +2544,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     return best ? { ...u, origin: best.origin, direction } : u
   }
+  /**
+   * A blow reaches from the body, not from the eye: aimed down, the striker bends (at the hips, or crouches further) to the spot the eye looks at, and the reach is measured
+   * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not.
+   */
+  const bodyReach = (use: Extract<Use, { kind: 'melee' }>): Extract<Use, { kind: 'melee' }> => {
+    if (use.direction[1] > MELEE_BODY.downward) return use
+    const seen = rayWorld(use.origin, use.direction, MELEE_BODY.lookRange)
+    if (!seen) return use
+    const crouched = player.crouching
+    const shoulder = player.feet + (crouched ? MELEE_BODY.shoulderCrouched : MELEE_BODY.shoulderStanding)
+    const lowest = player.feet + (crouched ? MELEE_BODY.bentCrouched : MELEE_BODY.bentStanding)
+    const height = Math.max(lowest, Math.min(shoulder, seen.point[1] + MELEE_BODY.armDrop))
+    const origin: Vec3 = [player.x, height, player.z]
+    const dx = seen.point[0] - origin[0], dy = seen.point[1] - origin[1], dz = seen.point[2] - origin[2]
+    const length = Math.hypot(dx, dy, dz)
+    if (length < 1e-6) return use
+    return { ...use, origin, direction: [dx / length, dy / length, dz / length] }
+  }
   const meleeUse = (use: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
     const w = toolName(id)
-    const u = id === 'kick' ? footRay(use) : use
+    const u = id === 'kick' ? footRay(use) : bodyReach(use)
     const r = rayWorld(u.origin, u.direction, u.reach)
     if (!r) {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
