@@ -4712,6 +4712,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return r.value
   }
 
+  /** One object as `serialize` writes it, and as `loadObject` takes it back. */
+  const serializeObject = (o: ObjRT): DestructionSnapshot['objects'][number] => {
+    const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.loose ? { loose: true } : {}), ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
+    for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
+    for (const j of o.joints) runtime.joints[j.spec.id] = j.step
+    return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
+  }
+  const buildFromEntry = (e: DestructionSnapshot['objects'][number], id: string): ObjRT => {
+    const state = clone(e.state)
+    const carry: Carry = {
+      parts: new Map(
+        state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? clone(e.runtime.parts[st.id]) : { ...freshRuntime(), prevTemp: st.temperature } }]),
+      ),
+      joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
+      collapsed: e.runtime?.collapsed,
+      ...(e.runtime?.unanchored ? { unanchored: e.runtime.unanchored } : {}),
+      ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
+      ...(e.runtime?.loose ? { loose: true } : {}),
+    }
+    let pos = state.position, rot = state.rotation
+    if (state.soil) {
+      // the saved pose has the settlement on top of the host's: take it off to get the host's back
+      carry.soil = state.soil
+      if (e.runtime?.soil) carry.soilSets = e.runtime.soil
+      rot = quat.normalize(quat.mul(state.rotation, quat.conjugate(state.soil.offset.rotation)))
+      pos = vec.sub(state.position, rotateVec(rot, state.soil.offset.position))
+    }
+    return build(clone(e.spec), id, pos, rot, carry)
+  }
+
   const world: DestructionWorld = {
     materials,
     get time() {
@@ -5133,16 +5163,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         time,
         rng: rng.state(),
         counter,
-        objects: [...objects.values()].map((o) => {
-          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.loose ? { loose: true } : {}), ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
-          for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
-          for (const j of o.joints) runtime.joints[j.spec.id] = j.step
-          return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
-        }),
+        objects: [...objects.values()].map(serializeObject),
         ...(impls.size
           ? { impls: [...impls.values()].map((im) => ({ id: im.impl.id, position: [...im.position] as Vec3, rotation: [...im.rotation] as Quat, data: im.impl.serialize?.() })) }
           : {}),
       }
+    },
+    serializeObject: (id) => {
+      const o = objects.get(id)
+      return o ? serializeObject(o) : null
+    },
+    loadObject(entry, id = entry.id) {
+      objects.set(id, buildFromEntry(entry, id))
     },
     load(snap) {
       if (snap.version !== 1) throw new Error(`unsupported snapshot version ${String(snap.version)}`)
@@ -5150,28 +5182,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       time = snap.time
       rng.set(snap.rng)
       counter = snap.counter ?? 0
-      for (const e of snap.objects) {
-        const state = clone(e.state)
-        const carry: Carry = {
-          parts: new Map(
-            state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? clone(e.runtime.parts[st.id]) : { ...freshRuntime(), prevTemp: st.temperature } }]),
-          ),
-          joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
-          collapsed: e.runtime?.collapsed,
-          ...(e.runtime?.unanchored ? { unanchored: e.runtime.unanchored } : {}),
-          ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
-          ...(e.runtime?.loose ? { loose: true } : {}),
-        }
-        let pos = state.position, rot = state.rotation
-        if (state.soil) {
-          // the saved pose has the settlement on top of the host's: take it off to get the host's back
-          carry.soil = state.soil
-          if (e.runtime?.soil) carry.soilSets = e.runtime.soil
-          rot = quat.normalize(quat.mul(state.rotation, quat.conjugate(state.soil.offset.rotation)))
-          pos = vec.sub(state.position, rotateVec(rot, state.soil.offset.position))
-        }
-        objects.set(e.id, build(clone(e.spec), e.id, pos, rot, carry))
-      }
+      for (const e of snap.objects) objects.set(e.id, buildFromEntry(e, e.id))
       for (const e of snap.impls ?? []) {
         const im = impls.get(e.id)
         if (!im) continue

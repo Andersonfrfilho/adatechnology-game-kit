@@ -687,6 +687,10 @@ export interface DestructionWorld {
   /** Plain JSON of every object (spec + state + transform) and the rng state. */
   serialize(): DestructionSnapshot
   load(snapshot: DestructionSnapshot): void
+  /** One object as `serialize` writes it (spec, state with its damage, runtime), or null for an unknown id: the object can be taken out of the world and put back later with `loadObject`. */
+  serializeObject(id: string): DestructionSnapshot['objects'][number] | null
+  /** Puts an object back from `serializeObject` with all its damage (under `id`, default the one it had; an object with that id is replaced). Its transform is the saved one: `setTransform` moves it. */
+  loadObject(entry: DestructionSnapshot['objects'][number], id?: string): void
   /**
    * Fill or empty a container part (`PartSpec.contains`); `liters` is clamped to `[0, contains.liters]` of its spec. Used by fluid simulations
    * that drain or refill the part. Does nothing when the part has no `contains`.
