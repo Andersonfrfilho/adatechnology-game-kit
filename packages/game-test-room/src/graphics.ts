@@ -9,6 +9,9 @@ import type { GpuFrameTimer, GraphicsView } from '@adatechnology/game-graphics-t
 
 const QUIET_FRAMES = 10
 
+/** Half the side of the sun's shadow box under the `near` shadow level, metres: wide enough that the shadows of what the player walks up to are already there. */
+const NEAR_SHADOW_EXTENT = 12
+
 /** The room's graphics settings (`TestRoomOptions.graphics`). */
 export interface RoomGraphicsOptions {
   /** Where the player's choice is kept (default `localStorage`; null keeps it in memory). */
@@ -55,15 +58,22 @@ export function createRoomGraphics(o: {
   readonly ui: boolean
   readonly options: RoomGraphicsOptions
 }): RoomGraphics {
-  const view = createGraphicsView({ renderer: o.gl, camera: o.camera, sun: o.sun })
+  const view = createGraphicsView({ renderer: o.gl, camera: o.camera, sun: o.sun, nearExtent: NEAR_SHADOW_EXTENT })
   const seconds = o.options.calibrationSeconds ?? 3
+  // a change of the resolution scale resizes the canvas, which clears it: made after the frame was drawn it would show a black frame, so once the room is drawing it waits for the next frame's start
+  let held: Parameters<GraphicsView['apply']>[0] | null = null
+  let drawing = false
+  const applyOrHold = (e: Parameters<GraphicsView['apply']>[0]): void => {
+    if (drawing) held = e
+    else view.apply(e)
+  }
   const controller = createGraphicsController({
     store: { ...(o.options.storage !== undefined ? { storage: o.options.storage } : {}), ...(o.options.key ? { key: o.options.key } : {}) },
     gpu: gpuName(o.gl),
     benchmark: seconds > 0 ? { durationS: seconds } : false,
     // the room measures its own frames once it is up, not the loading of its content
     calibrate: 'manual',
-    apply: (e) => view.apply(e),
+    apply: (e) => applyOrHold(e),
   })
   const timer: GpuFrameTimer = createGpuFrameTimer(o.gl)
   const screen = o.ui ? createGraphicsScreen({ container: o.container, controller, locale: o.locale }) : null
@@ -109,6 +119,11 @@ export function createRoomGraphics(o: {
       started = performance.now()
     },
     beforeRender(camera) {
+      drawing = true
+      if (held) {
+        view.apply(held)
+        held = null
+      }
       view.hold()
       view.follow(camera.position.x, camera.position.z)
       timer.begin()
