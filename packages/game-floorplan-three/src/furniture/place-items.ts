@@ -29,8 +29,10 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       const st0 = cursor.stage;
       if (shared.ctx.constructionStages && (m.type === 'cooking_gas_cylinder' || m.type === 'gas_cylinder' || m.type === 'water_tank')) cursor.stage = 'installations';
       if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); cursor.stage = st0; continue; }
+      shared.ctx.restOn = exterior || shared.ctx.visorScene ? undefined : base; // what stands on a storey's floor has its bottom shut by it
       try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
     }
+    shared.ctx.restOn = undefined;
     const stTank = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations';
     try { waterTankOfHouse(api); } catch (e) { console.warn('water tank', e); } finally { cursor.stage = stTank; }
     try { decorLights(api); } catch (e) { console.warn('decorLights', e); }

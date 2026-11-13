@@ -10,7 +10,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
   const FURNITURE: Record<string, FurnitureBuilder> = {
     sofa(M, A) {
       const { b: lb } = kk(M, A), c = M.color != null ? M.color : paletteColor(M, 'fabric_main', 0x62778c), cd = sh(c, 0.8), w = M.w, d = M.d, ac = paletteColor(M, 'fabric_accent', 0x8a8070), wood = sh(paletteColor(M, 'wood', 0x4a3a2a), 0.6);
-      lb('wood', 0, 0, 0, w, 0.12, d - 0.05, wood);
+      lb('wood', 0, apart() ? 0.04 : 0, 0, w, apart() ? 0.08 : 0.12, d - 0.05, wood); // (the base on its feet)
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) lb('wood', sx * (w / 2 - 0.08), 0, sz * (d / 2 - 0.1), 0.05, 0.1, 0.05, sh(wood, 0.7));
       lb('fabric', 0, 0.1, 0.02, w - 0.3, 0.22, d - 0.08, cd);
       const n = w > 2.5 ? 4 : w > 1.8 ? 3 : 2;
@@ -44,7 +44,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     shelf(M, A, o: BuilderOptions = {}) { // bookcase with shelves and books; o.iron = metal frame
       const { b: lb } = kk(M, A), w = M.w, d = M.d, h = M.h, rnd = rngOf(M), iron = !!o.iron, wood = iron ? 0x6e7276 : paletteColor(M, 'wood', 0x5a4030), ns = Math.max(3, Math.round(h / 0.4));
       for (const s of [-1, 1]) lb(iron ? 'metal' : 'wood', s * (w / 2 - 0.02), 0, 0, 0.04, h, d, wood);
-      if (!iron && !o.open) lb('wood', 0, 0, -d / 2 + 0.01, w, h, 0.02, sh(wood, 0.8));
+      if (!iron && !o.open) lb('wood', 0, 0, -d / 2 + 0.01, apart() ? w - 0.08 : w, h, 0.02, sh(wood, 0.8)); // (the back between the sides)
       for (let k = 0; k < ns; k++) {
         const y = 0.05 + k * (h - 0.08) / (ns - 1); lb(iron ? 'metal' : 'wood', 0, y, 0, w - 0.04, 0.03, d, wood);
         if (k === ns - 1) continue;
@@ -66,7 +66,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     bed(M, A, o: BuilderOptions = {}) {
       const { b: lb } = kk(M, A), w = M.w, d = M.d, c = M.color != null && o.useColor ? M.color : paletteColor(M, 'fabric_accent', 0x7a3a3a), wood = paletteColor(M, 'wood', 0x8a6444), sheet = paletteColor(M, 'fabric_main', 0xe0dcd0);
       if (apart()) lb('wood', 0, 0, 0.01, w, 0.3, d - 0.1, wood); else lb('wood', 0, 0, 0, w, 0.3, d, wood); // the frame runs between the head and the foot boards
-      lb('wood', 0, 0, -d / 2 + 0.03, w + 0.06, 1.05, 0.06, sh(wood, 0.85)); lb('wood', 0, 0, d / 2 - 0.02, w, 0.42, 0.04, sh(wood, 0.85));
+      lb('wood', 0, 0, -d / 2 + 0.03, w + 0.06, apart() ? 1.04 : 1.05, 0.06, sh(wood, 0.85)); lb('wood', 0, 0, d / 2 - 0.02, w, 0.42, 0.04, sh(wood, 0.85)); // (the head board a hair under a window's 1.05 m sill)
       lb('fabric', 0, 0.3, 0, w - 0.06, 0.2, d - 0.1, sh(sheet, 1.25));
       lb('fabric', 0, 0.5, 0.25, w - 0.02, 0.05, d * 0.62, c, 0, 0.02); lb('fabric', 0.1, 0.55, 0.0, w * 0.6, 0.06, 0.4, sh(c, 0.8), 0.2);
       const np = w > 1.3 ? 2 : 1; for (let s = 0; s < np; s++) lb('fabric', (np === 1 ? 0 : (s ? 1 : -1) * w * 0.23), 0.5, -d / 2 + 0.3, w * (np === 1 ? 0.6 : 0.4), 0.12, 0.34, 0xf0eee6, (s ? 1 : -1) * 0.08);

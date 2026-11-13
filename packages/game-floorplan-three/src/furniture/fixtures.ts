@@ -45,7 +45,7 @@ export function installFurnitureFixtures(K: Kernel, shared: Shared): void {
   FURNITURE.mirror = function (M, A) {
     const w = M.w || 0.6, d = M.d || 0.03, h = M.h || 1.2, y = M.y || 0.9, K = kit2(M, A, 0), cm = M.color != null ? M.color : ((M.palette && M.palette.metal != null) ? M.palette.metal : 0x3a3a3c);
     K.b('plain', 0, y, 0, w, h, d, cm); // frame and back
-    K.b('plain', 0, y + 0.012, d / 2 - 0.001, w - 0.045, h - 0.024, 0.004, 0x9aa4a8); // glass blanked until the reflection loads
+    K.b('plain', 0, y + 0.012, d / 2 + (shared.ctx.visorScene ? -0.001 : 0.001), w - 0.045, h - 0.024, 0.004, 0x9aa4a8); // glass blanked until the reflection loads (its face 3 mm over the frame's)
     const [px, py, pz] = K.W(0, y + h / 2, d / 2 + 0.006);
     MIRRORS.push({ x: px, y: py, z: pz, ry: M.ry, w: w - 0.06, h: h - 0.06, room: M.room, floor: M.floor, parent: cursor.group });
   };

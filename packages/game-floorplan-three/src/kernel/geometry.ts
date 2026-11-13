@@ -101,7 +101,7 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
       const t0 = b + (G.i ? G.i[k] : k), t1 = b + (G.i ? G.i[k + 1] : k + 1), t2 = b + (G.i ? G.i[k + 2] : k + 2);
       // the bottom of a box (or a post) that rests on the ground or stands in it is shut by the ground: it is not drawn (it would lie on the bottom of every other
       // thing standing there, on one plane, the same way); the Visor's scene keeps every face as the team drew it
-      if (!shared.ctx.visorScene && A.n[t0 * 3 + 1] < -0.99 && Math.max(A.p[t0 * 3 + 1], A.p[t1 * 3 + 1], A.p[t2 * 3 + 1]) + y0 <= GROUND_SHUT) continue;
+      if (!shared.ctx.visorScene && A.n[t0 * 3 + 1] < -0.99) { const top = Math.max(A.p[t0 * 3 + 1], A.p[t1 * 3 + 1], A.p[t2 * 3 + 1]) + y0, rest = shared.ctx.restOn; if (top <= GROUND_SHUT || (rest !== undefined && Math.abs(top - rest) <= GROUND_SHUT)) continue; }
       A.i[A.ni + ni] = t0; A.i[A.ni + ni + 1] = t1; A.i[A.ni + ni + 2] = t2; ni += 3;
     }
     A.nv += G.nv; A.ni += ni;
