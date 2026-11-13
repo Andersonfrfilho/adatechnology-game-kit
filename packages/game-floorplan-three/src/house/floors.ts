@@ -32,9 +32,11 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
     const inner: [number, number, number, number] = [outer[0] + PLASTER_PER_FACE, outer[1] + PLASTER_PER_FACE, outer[2] - PLASTER_PER_FACE, outer[3] - PLASTER_PER_FACE];
     cursor.pc = slab ? structurePiece(slab) : null;
     // the concrete over the walls, round the room's ceiling
-    for (const r of subRects([inner], rectsOf(room))) bx('plain', r[0], yb, r[1], r[2], yt, r[3], SLAB_CONCRETE);
+    // (round what the room's ceiling already covers: the two never fill the same space)
+    const covered = coveredRects(room);
+    for (const r of subRects([inner], covered)) { bx('plain', r[0], yb, r[1], r[2], yt, r[3], SLAB_CONCRETE); shared.ctx.occupied.push([r[0], yb, r[1], r[2], yt, r[3]]); }
     // its edge's render: a band of the facade's finish on each side, from the wall's top to the slab's
-    for (const r of subRects([outer], [inner])) bx(face.mat, r[0], yb, r[1], r[2], yt, r[3], face.color);
+    for (const r of subRects(subRects([outer], [inner]), covered)) { bx(face.mat, r[0], yb, r[1], r[2], yt, r[3], face.color); shared.ctx.occupied.push([r[0], yb, r[1], r[2], yt, r[3]]); }
   }
   function flights(): Flight[] { // each flight between floors only once (the SDK repeats the item at departure and arrival)
     if (shared.ctx._flights && shared.ctx._flights.r === shared.ctx.r) return shared.ctx._flights.l;
@@ -97,12 +99,12 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
         cursor.pc = pc;
         if (shared.ctx.visorCeilings) { bx('plaster', tile[0], y0 + c.ceiling, tile[1], tile[2], y0 + c.ceiling + 0.2, tile[3], C.ceiling != null ? C.ceiling : 0xeeeae2); continue; }
         // the strips of its edge that face the outside are rendered like the walls: nothing of the tile stands in them
-        for (const r of subRects([tile], edges)) { bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + CEILING_PAINT, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', r[0], y0 + c.ceiling + CEILING_PAINT, r[1], r[2], y0 + c.ceiling + 0.2, r[3], SLAB_CONCRETE); }
+        for (const r of subRects([tile], edges)) { bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + CEILING_PAINT, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', r[0], y0 + c.ceiling + CEILING_PAINT, r[1], r[2], y0 + c.ceiling + 0.2, r[3], SLAB_CONCRETE); shared.ctx.occupied.push([r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3]]); }
       }
       if (edges.length) {
         const face = K.sideOf('outside', false), yb = y0 + (R.rooms.find(c => c.floor === f && !c.outbuilding)?.ceiling ?? 0);
         cursor.pc = ceilingOf ? structurePiece(ceilingOf) : null;
-        for (const r of edges) bx(face.mat, r[0], yb, r[1], r[2], yb + 0.2, r[3], face.color);
+        for (const r of edges) { bx(face.mat, r[0], yb, r[1], r[2], yb + 0.2, r[3], face.color); shared.ctx.occupied.push([r[0], yb, r[1], r[2], yb + 0.2, r[3]]); }
       }
       if (!shared.ctx.visorCeilings) for (const c of R.rooms.filter((x) => x.floor === f && x.outbuilding)) outbuildingSlabEdge(c, y0, ceilingOf);
       cursor.pc = null;

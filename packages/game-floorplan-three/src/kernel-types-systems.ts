@@ -1,4 +1,5 @@
 /** The kernel's types of the house's systems and state: materials, mirrors, cars, vegetation, interaction, room lights, the interactables kit and the build. */
+import type { Aabb } from './house/solids.js';
 import type * as THREE_NS from 'three'
 import type { ResultGate } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
@@ -658,6 +659,8 @@ export interface BuildContext {
   visorCeilings: boolean
   /** The scene of the Visor de casas 3D (its gutters, eave, corners and ceilings at once): what reproduces the team's golden draws as the team did. */
   visorScene: boolean
+  /** Boxes of the ceilings' slabs, by their builder (outside the Visor's scene): a later box of another builder is laid round them, never through them. */
+  occupied: Aabb[]
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number
