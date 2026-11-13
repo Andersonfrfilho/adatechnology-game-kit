@@ -141,4 +141,11 @@ describe('inventory', () => {
     inventory.take({ itemId: 'rock' })
     expect(inventory.hold({ itemId: 'shovel' })).toEqual({ ok: false, reason: 'too_heavy' })
   })
+
+  it('refuses a take that is longer than the inside of the bag, but holds it in hand', () => {
+    const inventory = makeInventory({ bag: { slots: 6, capacityKg: 20, capacityLitres: 30, inside: [0.5, 0.3, 0.2] } })
+    expect(inventory.take({ itemId: 'shovel' })).toEqual({ ok: false, reason: 'too_long' })
+    expect(inventory.hold({ itemId: 'shovel' }).ok).toBe(true)
+    expect(inventory.store()).toEqual({ ok: false, reason: 'too_long' })
+  })
 })

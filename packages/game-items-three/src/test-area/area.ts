@@ -384,6 +384,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     ...makeupSpecOf(def.model),
     // an item that is also a tool of the arsenal (a shovel) is picked up as that tool
     ...(def.weapon ? { weapon: def.weapon } : {}),
+    physical: { weightKg: def.weight, size: def.size, ...(def.volume === undefined ? {} : { litres: def.volume }) },
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T

@@ -46,16 +46,27 @@ export interface BagOption {
   capacityKg: number
   /** Volume the bag holds, litres; without it only slots and weight limit the bag. */
   capacityLitres?: number
+  /** Inside length, width and height, metres; without it the shape of the item is not checked. */
+  inside?: readonly [number, number, number]
 }
 
 /** The bag a bag item gives: its `carry.capacityKg` is the slot count the team's game reads from `cap`; the weight limit is the character's; the volume is the bag's real litres. */
 export const bagOption = (bag: ItemDef | undefined, characterMaxKg: number, rules: ItemRules = DEFAULT_RULES): BagOption => ({
   slots: bag?.carry ? Math.round(bag.carry.capacityKg) : rules.inventory.defaultSlots,
   capacityKg: characterMaxKg,
+  inside: (bag ? rules.inventory.bagInside[bag.id] : undefined) ?? rules.inventory.defaultInside,
   capacityLitres: (bag ? (rules.inventory.bagLitres[bag.id] ?? bag.volume) : undefined) ?? rules.inventory.defaultLitres,
 })
 
-export type TakeResult = 'ok' | 'bag_full' | 'too_heavy' | 'too_bulky'
+/** Whether a box of `size` goes into a space of `inside` turned any way: its dimensions, longest first, each within the space's. */
+export const fitsInside = (size: readonly number[], inside: readonly number[]): boolean => {
+  const byLength = (a: number, b: number): number => b - a
+  const sorted = [...size].sort(byLength)
+  const room = [...inside].sort(byLength)
+  return sorted.every((length, index) => length <= (room[index] ?? 0) + 1e-9)
+}
+
+export type TakeResult = 'ok' | 'bag_full' | 'too_heavy' | 'too_long' | 'too_bulky'
 
 /** What is being added: `count` units, taking `slotsNeeded` new slots, weighing `weightFactor` of their full weight (`1 - weightReduction` inside a bag). */
 export interface TakeOptions {
@@ -64,11 +75,12 @@ export interface TakeOptions {
   weightFactor?: number
 }
 
-/** Whether `item` can go into the bag now: first the slots, then the weight, then the volume (when the bag has one). */
+/** Whether `item` can go into the bag now: first the slots, then the weight, then the shape against the inside dimensions, then the volume (when the bag has them). */
 export const canTake = (item: ItemDef, bag: BagOption, used: { slots: number; loadKg: number; litres?: number }, options: TakeOptions = {}): TakeResult => {
   const { count = 1, slotsNeeded = 1, weightFactor = 1 } = options
   if (used.slots + slotsNeeded > bag.slots) return 'bag_full'
   if (used.loadKg + item.weight * count * weightFactor > bag.capacityKg) return 'too_heavy'
+  if (bag.inside !== undefined && !fitsInside(item.size, bag.inside)) return 'too_long'
   if (bag.capacityLitres !== undefined && (used.litres ?? 0) + itemLitres(item) * count > bag.capacityLitres) return 'too_bulky'
   return 'ok'
 }

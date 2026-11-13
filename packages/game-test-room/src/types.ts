@@ -81,6 +81,8 @@ export interface TestRoomItem {
   seal?: ModuleItemSeal
   /** The item is also a weapon the player can equip from the catalogue (e.g. a crowbar, a knife, a pistol on the table). */
   weapon?: string
+  /** Its catalog weight, size and volume: the bag weighs and fits it by these, not by the bounding box of the drawn object. */
+  physical?: { weightKg: number; size: Vec3; litres?: number }
   /**
    * The item's own destruction (a `DestructibleImpl` of a game module). The room registers it in the world (`world.register`) instead of
    * building a default object from `spec`; `id` is the object id the room gives it and `DestructibleImpl.id` must be that id. Impl items are not movable.
@@ -300,7 +302,7 @@ export interface TestRoomOptions {
   /** The weapon picker: every weapon of the arsenal by group (firearms, melee, explosives, tools) and category, a click equips it and adds it to the hotbar. `keys` open it (default `['Backquote']`, the key left of 1); `false`: no picker. */
   toolMenu?: false | { keys?: string[] }
   /** The bag (I opens its list, P puts what is aimed at into it, O stores the hand): a 30 L backpack of 20 slots by default, weight limit `maxCarryKg`. `false`: no bag keys and no list. */
-  inventory?: false | { litres?: number; slots?: number }
+  inventory?: false | { litres?: number; slots?: number; inside?: readonly [number, number, number] }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists', 'brass_knuckles']`); the shove and the kick are not. */

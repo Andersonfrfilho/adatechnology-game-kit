@@ -94,7 +94,7 @@ export const createInventory = (options: InventoryOptions): Inventory => {
       const item = items.get(itemId)
       if (!item) return { ok: false, reason: 'unknown_item' }
       if (held) return { ok: false, reason: 'hand_full' }
-      const verdict = canTake(item, { ...bag, capacityLitres: undefined }, { slots: 0, loadKg: totals().kg }, { slotsNeeded: 0 })
+      const verdict = canTake(item, { ...bag, capacityLitres: undefined, inside: undefined }, { slots: 0, loadKg: totals().kg }, { slotsNeeded: 0 })
       if (verdict !== 'ok') return { ok: false, reason: verdict }
       held = state === undefined ? { itemId, count: 1 } : copyStack({ itemId, count: 1, state })
       return { ok: true, held: copyStack(held) }
@@ -114,7 +114,7 @@ export const createInventory = (options: InventoryOptions): Inventory => {
       const item = items.get(slot.itemId)
       if (!item) return { ok: false, reason: 'unknown_item' }
       const now = totals()
-      const verdict = canTake(item, { ...bag, capacityLitres: undefined }, { slots: 0, loadKg: now.kg - slotKg(slot), litres: 0 }, { count: slot.count, slotsNeeded: 0 })
+      const verdict = canTake(item, { ...bag, capacityLitres: undefined, inside: undefined }, { slots: 0, loadKg: now.kg - slotKg(slot), litres: 0 }, { count: slot.count, slotsNeeded: 0 })
       if (verdict !== 'ok') return { ok: false, reason: verdict }
       slotList.splice(index, 1)
       held = { itemId: slot.itemId, count: slot.count, ...(slot.state ? { state: slot.state } : {}) }

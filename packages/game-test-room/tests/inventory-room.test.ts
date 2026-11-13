@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
+import { describeCondition } from '../src'
 import type { RoomAvatar, TestRoomItem } from '../src'
 import { buildFromSpec } from '../src/build-from-spec'
 import { demoItems } from './fixtures/demo-items'
@@ -18,7 +19,7 @@ const SHOVEL_SPEC = (): DestructibleSpec => ({
   ],
 })
 /** A shovel as the goods row makes it: an item that is also the `shovel` of the arsenal. */
-const shovelItem: TestRoomItem = { id: 'item_shovel', name: 'Shovel', group: 'Items', build: (T: typeof THREE_NS) => buildFromSpec(T, SHOVEL_SPEC()), spec: SHOVEL_SPEC, movable: true, weapon: 'shovel' }
+const shovelItem: TestRoomItem = { id: 'item_shovel', name: 'Shovel', group: 'Items', build: (T: typeof THREE_NS) => buildFromSpec(T, SHOVEL_SPEC()), spec: SHOVEL_SPEC, movable: true, weapon: 'shovel', physical: { weightKg: 2, size: [1.1, 0.07, 0.22] } }
 
 const digger = (): RoomAvatar => {
   const hand = new THREE.Object3D()
@@ -27,7 +28,7 @@ const digger = (): RoomAvatar => {
 
 /** The room on dirt with a shovel lying 1.2 m ahead of the player (its blade in front of the eye), damaged by `damage` before it is picked up. */
 function withShovel(damage: (room: Room, objectId: string) => void): { room: Room; objectId: string; look: (ahead: number) => void; wait: (seconds: number, ahead?: number) => void } {
-  const room = makeRoom({ catalog: demoItems('en', [shovelItem]) })
+  const room = makeRoom({ catalog: demoItems('en', [shovelItem]), inventory: { inside: [1.5, 0.6, 0.6] } })
   room.setAvatar(digger())
   room.terrain.setLayout({ surface: 'dirt' })
   const objectId = room.spawn('item_shovel', [-0.5, 0, -1.2], 0).objectId
@@ -118,7 +119,7 @@ describe('the bag in the test room', () => {
   })
 
   it('refuses by volume when the bag is too small', () => {
-    const room = makeRoom({ catalog: demoItems('en', [shovelItem]), inventory: { litres: 1 } })
+    const room = makeRoom({ catalog: demoItems('en', [shovelItem]), inventory: { litres: 1, inside: [2, 2, 2] } })
     room.setAvatar(digger())
     room.spawn('item_shovel', [-0.5, 0, -1.2], 0)
     room.update(0.4)
@@ -142,5 +143,38 @@ describe('the bag in the test room', () => {
     expect(room.inventory().rows).toHaveLength(0)
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyI' }))
     expect(panel.classList.contains('open')).toBe(false)
+  })
+
+  it('measures the item by its catalog entry: 17 L for the shovel, 2 kg, not the box of the drawn object', () => {
+    const { room } = withShovel(() => undefined)
+    room.pickToBag()
+    const [row] = room.inventory().rows
+    expect(row!.litres).toBeCloseTo(1.1 * 0.07 * 0.22 * 1000, 1)
+    expect(row!.kg).toBe(2)
+  })
+
+  it('a 1.1 m shovel does not fit a backpack: too_long, said in the language of the room, and it can still be held', () => {
+    const room = makeRoom({ catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR' })
+    room.setAvatar(digger())
+    room.spawn('item_shovel', [-0.5, 0, -1.2], 0)
+    room.update(0.4)
+    room.look([0, 1.7, 0], [0, room.terrain.heightAt(0, -1.2), -1.2])
+    room.update(0.5)
+    expect(room.pickToBag()).toEqual({ ok: false, reason: 'too_long' })
+    expect(room.log.entries({ type: 'inventory_refused' })[0]!.text).toContain('comprida demais para a mochila (1,1 m; cabe até 0,5 m)')
+    expect(room.grab()).toBe(true)
+    expect(room.inventory().held?.name).toBe('Shovel')
+    expect(room.storeHeld()).toEqual({ ok: false, reason: 'too_long' })
+  })
+
+  it('says dents, bend, char and the snapped handle in words', () => {
+    const t = (key: string, vars?: Record<string, string | number>): string => `${key}${vars ? JSON.stringify(vars) : ''}`
+    const part = { id: 'p', holes: [], cracks: [], dents: [{ depth: 0.004 }, { depth: 0.012 }], char: 0.8, bend: 0.4 }
+    const state = { destruction: { state: { parts: [part] } }, condition: { handleBroken: true, bend: 0.4 } } as unknown as Parameters<typeof describeCondition>[0]
+    const text = describeCondition(state, t)
+    expect(text).toContain('inv.handle_broken')
+    expect(text).toContain('inv.blade_bent{"deg":23}')
+    expect(text).toContain('inv.dented{"mm":12}')
+    expect(text).toContain('inv.charred')
   })
 })

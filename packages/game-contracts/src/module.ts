@@ -92,6 +92,8 @@ export interface TestableItem {
   seal?: ModuleItemSeal
   /** The item is also a weapon the player can equip: an id of the arsenal in use. */
   weapon?: string
+  /** What the item is in the catalog (weight, size, volume), for a bag to weigh and fit it; without it the host measures the built object. */
+  physical?: { weightKg: number; size: readonly [number, number, number]; litres?: number }
   /** Use animations this item brings (a pistol `reload` moves `mag`; a car door `open` rotates `door_l`). */
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */

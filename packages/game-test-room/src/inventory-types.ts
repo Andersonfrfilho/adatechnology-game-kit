@@ -35,6 +35,8 @@ export interface BagSubject {
   readonly weapon?: string
   readonly kg: number
   readonly size: Vec3
+  /** Catalog volume, litres, when it has one; else the size box. */
+  readonly litres?: number
   readonly state: ItemState
 }
 

@@ -77,6 +77,10 @@ export interface ItemRules {
     defaultLitres: number
     /** Real capacity of each bag item, litres, by item id: a bounding box says little about a soft bag. */
     bagLitres: Readonly<Record<string, number>>
+    /** Inside length, width and height of the default bag, metres: an item longer than this does not go in whatever the litres. */
+    defaultInside: readonly [number, number, number]
+    /** Inside dimensions of each bag item, metres, by item id. */
+    bagInside: Readonly<Record<string, readonly [number, number, number]>>
     /** Running speed and breath multiplier while carrying more than `carry.encumbered` of the maximum. */
     encumberedRunFactor: number
   }

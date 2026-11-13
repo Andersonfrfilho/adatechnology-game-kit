@@ -40,7 +40,7 @@ export interface InventorySlot extends ItemStack {
   readonly slotId: number
 }
 
-export type InventoryFailure = 'unknown_item' | 'bad_count' | 'bag_full' | 'too_heavy' | 'too_bulky' | 'not_found' | 'hand_full' | 'hand_empty'
+export type InventoryFailure = 'unknown_item' | 'bad_count' | 'bag_full' | 'too_heavy' | 'too_long' | 'too_bulky' | 'not_found' | 'hand_full' | 'hand_empty'
 
 export type InventoryResult<TSuccess extends object = object> = ({ readonly ok: true } & TSuccess) | { readonly ok: false; readonly reason: InventoryFailure }
 
