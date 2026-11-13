@@ -90,8 +90,8 @@ window.__joltBoot = () => /[?&]solver=own(&|$)/.test(location.search) ? Promise.
   const alive = []
   window.__PIECE_PHYSICS__ = () => {
     if (alive.length >= 3) alive.shift().dispose()
-    const push = new URLSearchParams(location.search).get('pushout')
-    const world = engine.createWorld({ fixedStep: 1 / 120, sleepAfter: 0.5, sleepSpeed: 0.08, penetrationSlop: 0.002, maxBodies: 8192, ...(push ? { maxPushOut: Number(push) } : {}) })
+    const q = new URLSearchParams(location.search)
+    const world = engine.createWorld({ fixedStep: 1 / 120, velocityIterations: Number(q.get('iterations') ?? 20), sleepAfter: 0.5, sleepSpeed: 0.08, penetrationSlop: 0.002, maxPushOut: Number(q.get('pushout') ?? 0.002), maxBodies: 8192 })
     alive.push(world)
     window.__joltWorld = world
     return world
