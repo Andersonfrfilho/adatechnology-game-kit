@@ -56,6 +56,7 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     // the SDK gives y at the top of the floor slab; the viewer draws the ceiling (0.2 m) and the cover slab (0.03 m) above the ceiling height
     const base = lc ? (cd.platform as TankPlatform).topY : cd.y + (shared.ctx.r.rooms.some((c: { id: string; type: string }) => c.id === cd.room && c.type === 'terrace') ? 0 : 0.2 + (slab ? 0.03 : 0));
     cursor.group = slab ? 'f' + f : 'attic_tank';
+    const platformLift = !slab && !shared.ctx.visorScene ? 0.12 : 0;
     if (lc) { // tank slab: pillars + small slab that rises out of the sloped roof (tank above the ridge)
       const P = cd.platform as TankPlatform, [x0, z0, x1, z1] = P.aabb, e = P.thickness, color = shared.ctx.colors.slab != null ? shared.ctx.colors.slab : 0xb9b5ac;
       // the platform is structure: in the construction stages it shows with the finished house (the frame stage draws it before), the tank itself with the installations
@@ -68,11 +69,13 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     }
     if (!slab) { // R44: attic variant (group cxd, only with the roof cut): concrete platform on four feet that go down to the floor of the storey, so the tank does not float in the cut view
       const color = shared.ctx.colors.slab != null ? shared.ctx.colors.slab : 0xb9b5ac, yp = Y0(f), hw = cd.w / 2 + 0.1, hd = cd.d / 2 + 0.1;
-      boxC('plain', cd.u, base - 0.06, cd.v, hw * 2, 0.12, hd * 2, color);
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) boxC('plain', cd.u + sx * (hw - 0.07), (yp + base - 0.12) / 2, cd.v + sz * (hd - 0.07), 0.1, base - 0.12 - yp, 0.1, color);
+      // (outside the Visor's scene the platform stands on the ceiling's slab, never in it: its top lay on the slab's)
+      const top = base + platformLift;
+      boxC('plain', cd.u, top - 0.06, cd.v, hw * 2, 0.12, hd * 2, color);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) boxC('plain', cd.u + sx * (hw - 0.07), (yp + base - 0.12) / 2, cd.v + sz * (hd - 0.07), 0.1, base - 0.12 - yp, 0.1, color); // (its feet stop inside the slab)
     }
-    const M: Mount = { x: cd.u, z: cd.v, ry: 0, w: cd.w, d: cd.d, h: cd.h + 0.12, y: 0, base, floor: f, colors: shared.ctx.colors, seed: 'water_tank', room: cd.room, onSlab: true, ceiling: 2.9 };
-    shared.ctx.waterTankPos = { x: cd.u, z: cd.v, y: base, group: cursor.group };
+    const M: Mount = { x: cd.u, z: cd.v, ry: 0, w: cd.w, d: cd.d, h: cd.h + 0.12, y: 0, base: base + platformLift, floor: f, colors: shared.ctx.colors, seed: 'water_tank', room: cd.room, onSlab: true, ceiling: 2.9 };
+    shared.ctx.waterTankPos = { x: cd.u, z: cd.v, y: base + platformLift, group: cursor.group };
     shared.ctx.types.water_tank.f(M, api);
   }
   // a tank on a timber trestle in the yard (res.waterTank.stand): four posts from the ground, cross braces on two sides, two bearers under the tank

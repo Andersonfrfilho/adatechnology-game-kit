@@ -45,7 +45,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       }
       cursor.pc = null;
       if (en.descent && en.descent.length > 1 && !(KV && KV.serviceEntrance)) { // drop: steel conduit from the head to the meter box
-        const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2], 0x8a8e92); bx('metal', d0[0] - 0.05, d0[2] - 0.03, d0[1] - 0.05, d0[0] + 0.05, d0[2] + 0.08, d0[1] + 0.05, 0x7a7e84);
+        const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hx = shared.ctx.visorScene ? 0 : 0.003; /* (the head 3 mm along the facade outside the Visor's scene: its side lay on a pillar's face) */ bx('metal', d0[0] - 0.05 + hx, d0[2] - 0.03, d0[1] - 0.05, d0[0] + 0.05 + hx, d0[2] + 0.08, d0[1] + 0.05, 0x7a7e84);
       }
       const M = en.meter;
       if (M) { // meter box with window and seal, on the face of the pillar/facade turned to the street (with the kit: power_meter)
@@ -63,7 +63,9 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
     if (Q) { // breaker panel flush/surface-mounted on the wall, light door with a row of breakers (with the kit: electrical_panel)
       const g0 = cursor.group, noDrawing = !!(KV && (KV as { picture?: unknown }).picture); /* the plan has no `picture`: kept as delivered */
       cursor.group = 'f' + Math.max(0, Math.min(nA - 1, Q.floor || 0)); const frontU = Q.frontU || 0, frontV = Q.frontV || 0, w = Q.w || 0.3, h = Q.h || 0.4, hw = w / 2, d = 0.05;
+      const qy = shared.ctx.visorScene ? 0 : 0.003; // (outside the Visor's scene 3 mm over the plan's height, the conduits into it: its top lay on a brick course's)
       const bq = (a0: number, y0_: number, a1: number, y1_: number, o0: number, o1: number, mat: string, color: Hex): void => { // a = along the wall (u if the wall is on the u axis), o = out of the wall (into the room)
+        y0_ += qy; y1_ += qy;
         if (frontV) bx(mat, Q.u + a0, Q.y + y0_, Q.v + (frontV > 0 ? o0 : -o1), Q.u + a1, Q.y + y1_, Q.v + (frontV > 0 ? o1 : -o0), color); else bx(mat, Q.u + (frontU > 0 ? o0 : -o1), Q.y + y0_, Q.v + a0, Q.u + (frontU > 0 ? o1 : -o0), Q.y + y1_, Q.v + a1, color);
       };
       if (!noDrawing) { bq(-hw, -h / 2, hw, h / 2, -0.015, 0.06, 'plain', 0xcfd2d6); bq(-hw + 0.02, -h / 2 + 0.02, hw - 0.02, h / 2 - 0.02, 0.06, 0.072, 'plain', 0xe6e8ea); bq(hw - 0.05, -0.03, hw - 0.035, 0.03, 0.072, 0.082, 'metal', 0x6a6e72);

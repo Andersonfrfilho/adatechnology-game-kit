@@ -26,7 +26,9 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
       if (s.type === 'wall') { B('plaster', a, 0, b, h, th, color); B('plaster', a, h, b, h + 0.05, th + 0.06, sh(color, 1.15)); }
       else if (s.type === 'fence') {
         const np = Math.max(2, Math.round(len / 2.4) + 1);
-        for (let k = 0; k < np; k++) { const u = a + k * len / (np - 1); B('wood', u - 0.04, 0, u + 0.04, h, 0.08, 0x6a5a48); }
+        // (outside the Visor's scene the end posts stand 2 mm inside the run, never into the gate's pillar nor on the rails' ends, and every post 3 mm over the top rail)
+        const V = shared.ctx.visorScene;
+        for (let k = 0; k < np; k++) { const u = V ? a + k * len / (np - 1) : Math.min(Math.max(a + k * len / (np - 1), a + 0.042), b - 0.042); B('wood', u - 0.04, 0, u + 0.04, V ? h : h + 0.003, 0.08, 0x6a5a48); }
         B('screen', a, 0.1, b, h - 0.05, 0.01, 0xb8bcc0); B('metal', a, h - 0.05, b, h, 0.03, 0x8a8e92); B('metal', a, 0.08, b, 0.12, 0.03, 0x8a8e92);
       } else { // iron grille on a low wall
         const gc = C.gate != null ? C.gate : 0x2a2a2e, mh = 0.5;
