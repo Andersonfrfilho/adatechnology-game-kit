@@ -20,7 +20,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
   let solids: WallSolid[] | null = null;
   const lay = (rank: number, mat: string, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: Hex): void => {
     // a box laid after the walls (the wall over a door) keeps round them, outside the Visor's scene
-    if (!solids) { for (const b of shared.ctx.visorScene ? [[x0, y0, z0, x1, y1, z1] as const] : outsideBoxes([x0, y0, z0, x1, y1, z1], shared.ctx.occupied)) bx(mat, b[0], b[1], b[2], b[3], b[4], b[5], color); return; }
+    if (!solids) { for (const b of shared.ctx.visorScene ? [[x0, y0, z0, x1, y1, z1] as const] : outsideBoxes([x0, y0, z0, x1, y1, z1], shared.ctx.occupied)) { bx(mat, b[0], b[1], b[2], b[3], b[4], b[5], color); if (!shared.ctx.visorScene) shared.ctx.occupied.push(b); } return; }
     if (x1 - x0 < 1e-4 || y1 - y0 < 1e-4 || z1 - z0 < 1e-4) return;
     solids.push({ rank, mat, color, group: cursor.group, pc: cursor.pc ?? null, stage: cursor.stage, box: [x0, y0, z0, x1, y1, z1] });
   };
@@ -38,7 +38,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       if (s.rank < 0) continue; // drawn by its own builder
       cursor.group = s.group; cursor.pc = s.pc; cursor.stage = s.stage;
       bx(s.mat, s.box[0], s.box[1], s.box[2], s.box[3], s.box[4], s.box[5], s.color);
-      if (s.rank < 3) shared.ctx.occupied.push(s.box); // the slabs laid later keep round the walls
+      shared.ctx.occupied.push(s.box); // the slabs and lintels laid later keep round the walls and the railings
     }
     cursor.group = g0; cursor.pc = pc0; cursor.stage = st0;
   }
@@ -84,11 +84,12 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
         const c0 = shared.ctx.colors.metal != null ? shared.ctx.colors.metal : 0x8a8e92;
         const sx = alongU ? 1 : 0, sz = alongU ? 0 : 1, len = s1 - s0, n = Math.max(1, Math.round(len / 1.4));
         const cx_ = alongU ? (s0 + s1) / 2 : L, cz_ = alongU ? L : (s0 + s1) / 2;
-        // (outside the Visor's scene laid with the walls, after them: where a railing runs into a wall the wall keeps the space)
+        // (outside the Visor's scene laid with the walls, after them: where a railing runs into a wall the wall keeps the space; its end posts stand
+        // inside its run, never out into the door or the wall it meets)
         const rail = (mat: string, cx: number, cy: number, cz: number, sx: number, sy: number, sz: number, color: Hex): void => { if (solids) lay(3, mat, cx - sx / 2, cy - sy / 2, cz - sz / 2, cx + sx / 2, cy + sy / 2, cz + sz / 2, color); else boxC(mat, cx, cy, cz, sx, sy, sz, color); };
         rail('glass', cx_, y0 + 0.55, cz_, alongU ? len : 0.02, 0.85, alongU ? 0.02 : len, 0xffffff);
         rail('metal', cx_, y0 + 1.08, cz_, alongU ? len : 0.05, 0.05, alongU ? 0.05 : len, c0); rail('metal', cx_, y0 + 0.1, cz_, alongU ? len : 0.05, 0.04, alongU ? 0.05 : len, c0);
-        for (let k = 0; k <= n; k++) { const t = s0 + len * k / n; rail('metal', alongU ? t : L, y0 + 0.55, alongU ? L : t, 0.05, 1.1, 0.05, c0); }
+        for (let k = 0; k <= n; k++) { const t = solids ? Math.min(Math.max(s0 + len * k / n, s0 + 0.025), s1 - 0.025) : s0 + len * k / n; rail('metal', alongU ? t : L, y0 + 0.55, alongU ? L : t, 0.05, 1.1, 0.05, c0); }
         cursor.stage = st0;
         continue;
       }

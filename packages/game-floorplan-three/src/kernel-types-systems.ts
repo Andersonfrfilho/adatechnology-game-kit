@@ -663,8 +663,12 @@ export interface BuildContext {
   occupied: Aabb[]
   /** The boxes of the lot's walls (outside the Visor's scene): the house's sidewalk and baseboard are laid round where one meets the house. */
   lotWalls: Aabb[]
+  /** The boxes of the storeys' floor finishes and slabs (outside the Visor's scene): the furniture and the flights standing on them keep out of them. */
+  floorFinishes: Aabb[]
   /** The floor the piece being drawn stands on (a storey's furniture, outside the Visor's scene): a face looking down on its plane is shut by it, as by the ground. */
   restOn?: number | undefined
+  /** The boxes a piece being drawn keeps out of (a storey's furniture among the walls, outside the Visor's scene): what of a box stands in them is not drawn. */
+  keepOut?: readonly Aabb[] | undefined
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

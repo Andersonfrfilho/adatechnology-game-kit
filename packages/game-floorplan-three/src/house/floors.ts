@@ -5,6 +5,7 @@ import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-s
 
 import type { Flight, HouseRecord, HouseRoom, Kernel, KernelHouseFloors, PieceRecord, Rect, Shared, Tile } from '../kernel-types.js';
 import { outsideBoxes } from './solids.js';
+import type { Aabb } from './solids.js';
 
 /** How far the ground floor's finish stands over the ground in the construction stages, metres. */
 export const FLOOR_OVER_GROUND = 0.012;
@@ -88,11 +89,16 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
         // built by construction stage, the ground floor's finish stands 1.2 cm over the ground the house sits on, never on its plane
         const lift = shared.ctx.constructionStages && f === 0 ? FLOOR_OVER_GROUND : 0;
         const under = shared.ctx.constructionStages && f === 0 && !shared.ctx.visorScene ? FLOOR_UNDER_GROUND : 0.04;
-        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - under, r[1], r[2], y0 + lift, r[3], col); }
+        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) {
+          cursor.pc = pc;
+          // an upper storey's finish keeps round the walls of the storey under it (they stand up to its top): no end of one on a wall's end
+          const tile: Aabb = [r[0], y0 - under, r[1], r[2], y0 + lift, r[3]];
+          for (const b of f > 0 && !shared.ctx.visorScene ? outsideBoxes(tile, shared.ctx.occupied) : [tile]) { bx('plaster', b[0], b[1], b[2], b[3], b[4], b[5], col); if (!shared.ctx.visorScene) shared.ctx.floorFinishes.push(b); }
+        }
       }
       if (f > 0) { // slab under the floor
         const rs = R.rooms.filter(c => c.floor === f && c.type !== 'void' && c.type !== 'elevator').flatMap(rectsOf); 
-        for (const rc of subRects(rs, bur)) for (const [pc, r] of tilesOf('slab_' + f, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.24, r[1], r[2], y0 - 0.04, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); }
+        for (const rc of subRects(rs, bur)) for (const [pc, r] of tilesOf('slab_' + f, rc)) { cursor.pc = pc; for (const b of shared.ctx.visorScene ? [[r[0], y0 - 0.24, r[1], r[2], y0 - 0.04, r[3]] as const] : outsideBoxes([r[0], y0 - 0.24, r[1], r[2], y0 - 0.04, r[3]], shared.ctx.occupied)) { bx('plaster', b[0], b[1], b[2], b[3], b[4], b[5], C.ceiling != null ? C.ceiling : 0xeeeae2); if (!shared.ctx.visorScene) shared.ctx.floorFinishes.push(b); } }
       }
       // ceiling of the rooms with nothing above
       cursor.group = 't' + f; const ceilingOf = hasSlab('slab_' + (f + 1)) ? 'slab_' + (f + 1) : (f === nA - 1 ? ['slab_ceiling', 'slab_top'].find(hasSlab) : null);
