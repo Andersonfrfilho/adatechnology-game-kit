@@ -292,18 +292,14 @@ export class EnginePieces {
     const wx = x1 - x0
     const wz = z1 - z0
     b.balancing = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
-    if (!b.balancing) {
-      b.steady = null
-      return
-    }
-    // held up at an angle by something (leant on a wall, on another piece): once it has kept its tilt for `STEADY_SECONDS` the push stops and it may sleep
+    // held up at an angle by something (leant on a wall, on another piece): once it has kept its tilt for `STEADY_SECONDS` the push stops and it may sleep. The
+    // tilt is timed whether or not this update's contact points read as balancing: they come and go between the engine's steps at rest, and a timer started
+    // again on each flicker kept a leaning plate pushed, and awake, for good
     const was = b.steady
     if (!was || Math.abs(was.quaternion[0] * q.x + was.quaternion[1] * q.y + was.quaternion[2] * q.z + was.quaternion[3] * q.w) < Math.cos(STEADY_TURN / 2)) {
       b.steady = { quaternion: [q.x, q.y, q.z, q.w], seconds: 0 }
-    } else {
-      was.seconds += dt
-      if (was.seconds >= STEADY_SECONDS) return
-    }
+    } else was.seconds += dt
+    if (!b.balancing || (b.steady?.seconds ?? 0) >= STEADY_SECONDS) return
     const dirX = x0 + x1 > 0 ? -1 : 1
     const dirZ = z0 + z1 > 0 ? -1 : 1
     const k = TOPPLE * Math.min(height, 1) * dt
