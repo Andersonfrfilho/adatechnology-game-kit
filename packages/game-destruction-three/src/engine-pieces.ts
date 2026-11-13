@@ -6,7 +6,7 @@ import { buildGroundTile, sameGround } from './engine-ground'
 import type { GroundTile } from './engine-ground'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
-import type { PieceBody } from './internal'
+import type { PartBox, PieceBody } from './internal'
 import type { PieceSweepHit } from './pieces'
 
 export type { StaticSolid } from './engine-statics'
@@ -50,6 +50,8 @@ const STEADY_SECONDS = 1.5
 /** How far (m) a new piece may reach into the ground and be left to the engine's contact (over its slop, under a thin plate's half), and how far above it one lifted is put. */
 const SINK = 0.005
 const LIFT_MARGIN = 0.001
+/** How many times a piece made inside fixed things is moved out of the deepest one (it may be inside two). */
+const OUT_TRIES = 4
 
 interface Link {
   readonly id: BodyId
@@ -104,8 +106,11 @@ export class EnginePieces {
   private readonly pose = new Float64Array(7)
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
+  private readonly outAxis = new Float64Array(3)
   private readonly v: THREE_NS.Vector3
   private readonly u: THREE_NS.Vector3
+  private readonly w: THREE_NS.Vector3
+  private readonly turn3: THREE_NS.Quaternion
 
   constructor(
     THREE: typeof THREE_NS,
@@ -114,6 +119,8 @@ export class EnginePieces {
   ) {
     this.v = new THREE.Vector3()
     this.u = new THREE.Vector3()
+    this.w = new THREE.Vector3()
+    this.turn3 = new THREE.Quaternion()
     this.statics = new EngineStatics(world, GROUND)
   }
 
@@ -153,8 +160,9 @@ export class EnginePieces {
     const present = new Set(list)
     for (const b of [...this.links.keys()]) if (!present.has(b)) this.remove(b)
     this.groundTurn(list)
-    for (const b of list) this.sync(b, dt)
+    // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
+    for (const b of list) this.sync(b, dt)
     this.layGround(list)
     this.keepApart(apart)
     const before = new Map<PieceBody, { c: Vec3; vy: number }>()
@@ -196,7 +204,7 @@ export class EnginePieces {
       return { kind: 'compound', children: [{ shape: { kind: 'cylinder', halfHeight: b.halfExtents[round.axis], radius: round.radius }, position: [0, 0, 0], rotation }] }
     }
     if (b.partBoxes && b.partBoxes.length > 0) {
-      return { kind: 'compound', children: b.partBoxes.map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, tag: i })) }
+      return { kind: 'compound', children: b.partBoxes.map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
     }
     return { kind: 'box', half: b.halfExtents }
   }
@@ -226,9 +234,15 @@ export class EnginePieces {
       return this.liftFor(b, under)
     }
     // the part boxes sit about the centre of mass, as the body's compound does
-    const boxes = b.partBoxes && b.partBoxes.length > 0 ? b.partBoxes : [{ center: [0, 0, 0] as Vec3, half: b.halfExtents }]
+    const boxes: readonly PartBox[] = b.partBoxes && b.partBoxes.length > 0 ? b.partBoxes : [{ center: [0, 0, 0], half: b.halfExtents }]
+    const corner = this.w
     for (const box of boxes) {
-      for (let k = 0; k < 8; k++) at(box.center[0] + (k & 1 ? 1 : -1) * box.half[0], box.center[1] + (k & 2 ? 1 : -1) * box.half[1], box.center[2] + (k & 4 ? 1 : -1) * box.half[2])
+      const r = box.rotation
+      for (let k = 0; k < 8; k++) {
+        corner.set((k & 1 ? 1 : -1) * box.half[0], (k & 2 ? 1 : -1) * box.half[1], (k & 4 ? 1 : -1) * box.half[2])
+        if (r) corner.applyQuaternion(this.turn3.set(r[0], r[1], r[2], r[3]))
+        at(box.center[0] + corner.x, box.center[1] + corner.y, box.center[2] + corner.z)
+      }
     }
     return this.liftFor(b, under)
   }
@@ -306,6 +320,7 @@ export class EnginePieces {
       this.links.set(b, link)
       this.byUser.set(user, b)
       this.byObject.set(b.objectId, b)
+      this.outOfStatics(b, link)
       return
     }
     // by value: the renderer hands new arrays for the same boxes when it measures a piece again, and a new shape wakes the body; the same objects as last time
@@ -332,7 +347,10 @@ export class EnginePieces {
     // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved
     const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
     const moved = far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
-    if (moved) this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
+    if (moved) {
+      this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
+      this.outOfStatics(b, link)
+    }
     // `tip` is the kit solver's push for a piece whose feet are thinner than its box; here the engine stands it on its parts as drawn, so it goes over by itself
     b.tipping = null
     if (!b.round && b.onGround && !b.sleeping) this.topple(b, dt)
@@ -346,6 +364,34 @@ export class EnginePieces {
       this.world.wake(link.id)
       this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
     } else if (pushed) this.world.wake(link.id)
+  }
+
+  /**
+   * A piece made or put by the kit or the host (not moved by the engine) inside a fixed thing goes out of it at once, the shortest way, as one made in the ground is
+   * lifted (`underGround`). Left to the engine it is pushed out a little each step (`maxPushOut`), which reads as the piece rising by itself: a roof sheet made 1 m
+   * into a shelf rose 0.83-0.94 m over the room's 11 s. Only past a contact's sink (`SINK`): resting on a shelf it is not moved.
+   */
+  private outOfStatics(b: PieceBody, link: Link): void {
+    if (!this.world.penetration) return
+    const axis = this.outAxis
+    for (let i = 0; i < OUT_TRIES; i++) {
+      const depth = this.world.penetration(link.id, axis)
+      if (depth <= SINK) return
+      const d = depth + LIFT_MARGIN
+      this.world.readPose(link.id, this.pose, 0)
+      const p = this.pose
+      p[0] += axis[0] * d
+      p[1] += axis[1] * d
+      p[2] += axis[2] * d
+      this.world.setPose(link.id, [p[0], p[1], p[2]], [p[3], p[4], p[5], p[6]], !b.sleeping)
+      b.root.position.x += axis[0] * d
+      b.root.position.y += axis[1] * d
+      b.root.position.z += axis[2] * d
+      b.root.updateMatrixWorld(true)
+      link.pos[0] = p[0]
+      link.pos[1] = p[1]
+      link.pos[2] = p[2]
+    }
   }
 
   private shapeFrom(b: PieceBody): unknown[] {

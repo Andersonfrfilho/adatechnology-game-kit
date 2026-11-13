@@ -2,6 +2,34 @@ import type * as THREE_NS from 'three'
 import type { MaterialId, PartSettlement, Vec3 } from '@adatechnology/game-destruction'
 import type { Piece } from './types'
 
+/** A box of a part of a piece: centre and half sizes in the piece's frame from its centre of mass, and how it is turned in that frame (none: square to it). */
+export interface PartBox {
+  readonly center: Vec3
+  readonly half: Vec3
+  readonly rotation?: readonly [number, number, number, number]
+}
+
+const rows = (r: readonly [number, number, number, number]): number[] => {
+  const [x, y, z, w] = r
+  return [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), 2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), 2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)]
+}
+
+/** Whether a part box is turned askew in its piece's frame: a quarter or half turn leaves it square, only its sizes swapped. */
+export const isTurned = (box: PartBox): boolean => box.rotation !== undefined && rows(box.rotation).some((v) => Math.abs(v) > 1e-6 && Math.abs(Math.abs(v) - 1) > 1e-6)
+
+/**
+ * The square box around a part box (its frame): what the kit's own solver, which knows only boxes square to the piece, meets in its place. A part not turned is itself.
+ */
+export const squareBoxOf = (box: PartBox): { readonly center: Vec3; readonly half: Vec3 } => {
+  const r = box.rotation
+  if (!r) return { center: box.center, half: box.half }
+  // the rows of the rotation, by absolute value, times the half sizes (a quarter turn swaps them)
+  const m = rows(r)
+  const h = box.half
+  const half: Vec3 = [0, 1, 2].map((i) => Math.abs(m[i * 3]) * h[0] + Math.abs(m[i * 3 + 1]) * h[1] + Math.abs(m[i * 3 + 2]) * h[2]) as Vec3
+  return { center: box.center, half }
+}
+
 /** A decal child of a mesh (hole disc or crack star). `geometry` is set when the decal owns it. */
 export interface Decal {
   obj: THREE_NS.Object3D
@@ -126,8 +154,11 @@ export interface PieceBody extends Piece {
    * stands on that leg's foot, so it goes over, and lands on the edge of the top.
    */
   contacts?: Vec3[]
-  /** The boxes of its parts (its frame, from the centre of mass), what other pieces land on instead of its box: a shelf's boards, a table's top and legs. */
-  partBoxes?: Array<{ readonly center: Vec3; readonly half: Vec3 }>
+  /**
+   * The boxes of its parts (its frame, from the centre of mass), turned as drawn (`rotation`, in its frame; none is square to it), what other pieces land on instead of
+   * its box: a shelf's boards, a table's top and legs, a roof sheet lying askew.
+   */
+  partBoxes?: PartBox[]
   /** The friction of its surface (by its material); against another surface the two are mixed (geometric mean). Default 0.7 static, 0.6 dynamic. */
   friction?: PieceFriction
   /** The normal of the surface a round piece last lay on: where it touches is across it from the centre. */

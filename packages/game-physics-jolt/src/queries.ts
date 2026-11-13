@@ -115,3 +115,33 @@ export const sphereCastAll = (w: JoltWorld, c: Cast & { readonly radius: number 
   }
   return out.length
 }
+
+/** The deepest overlap of a body with the fixed bodies where it stands, and the way out of it (`PhysicsWorld.penetration`). */
+export const penetration = (w: JoltWorld, id: BodyId, out: Float64Array): number => {
+  const J = w.J
+  const e = w.entry(id)
+  w.v2.Set(1, 1, 1)
+  const c = w.collideCollector
+  c.Reset()
+  w.r1.Set(0, 0, 0)
+  const self = new J.IgnoreSingleBodyFilter(e.id)
+  w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, STATIC_ONLY), self, w.shapeFilter)
+  J.destroy(self)
+  let depth = 0
+  const hits = c.mHits
+  for (let i = 0; i < hits.size(); i++) {
+    const h = hits.at(i)
+    if (h.mPenetrationDepth <= depth) continue
+    const a = h.mPenetrationAxis
+    const l = Math.hypot(a.GetX(), a.GetY(), a.GetZ())
+    if (l < 1e-9) continue
+    depth = h.mPenetrationDepth
+    // the axis moves the fixed body out of the query's shape: the query's body goes the other way
+    out[0] = -a.GetX() / l
+    out[1] = -a.GetY() / l
+    out[2] = -a.GetZ() / l
+  }
+  return depth
+}
+
+const STATIC_ONLY: QueryFilter = { layers: ['static'] }

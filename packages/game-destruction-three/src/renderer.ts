@@ -9,7 +9,9 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
-import type { Bound, HostVis, MeshVis, PartVis, PieceBody, PieceRound } from './internal'
+import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
+import { isTurned } from './internal'
+import { fitOrientedBoxes } from './oriented-boxes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
 import { PieceSystem } from './pieces'
@@ -2110,20 +2112,45 @@ class Renderer implements DestructionRenderer {
     const lb = new this.THREE.Box3()
     const [cx, cy, cz] = body.localCenter
     const points: Vec3[] = []
-    const boxes: Array<{ center: Vec3; half: Vec3 }> = []
+    const boxes: PartBox[] = []
     for (const mv of meshes) {
       mv.mesh.updateWorldMatrix(true, false)
       this.visuals.localBox(mv, lb)
       if (lb.isEmpty()) continue
-      lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld))
+      m4.multiplyMatrices(inv, mv.mesh.matrixWorld)
+      this.partBoxesOf(mv, { lb, m4, from: [cx, cy, cz] }, boxes)
+      lb.applyMatrix4(m4)
       for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
-      boxes.push({
-        center: [(lb.min.x + lb.max.x) / 2 - cx, (lb.min.y + lb.max.y) / 2 - cy, (lb.min.z + lb.max.z) / 2 - cz],
-        half: [Math.max(0.005, (lb.max.x - lb.min.x) / 2), Math.max(0.005, (lb.max.y - lb.min.y) / 2), Math.max(0.005, (lb.max.z - lb.min.z) / 2)],
-      })
     }
     body.contacts = points.length > 0 && meshes.length <= CONTACT_MESHES ? points : undefined
-    body.partBoxes = boxes.length > 1 ? boxes : undefined
+    // one box turned as drawn (a roof sheet lying askew) is kept too: the box of the piece would be the air around it
+    body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
+  }
+
+  /**
+   * The boxes of one mesh in the piece's frame, from its centre of mass, turned as the mesh is drawn: a plain mesh is its geometry's box in its own space, turned by its
+   * place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
+   * of those vertices in the merged mesh's space is the box around a tilted sheet, mostly air.
+   */
+  private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
+    const [cx, cy, cz] = at.from
+    if (mv.range) {
+      const pts: number[] = []
+      this.visuals.rangePoints(mv, at.m4, pts)
+      for (const box of fitOrientedBoxes(pts)) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })
+      return
+    }
+    const pos = new this.THREE.Vector3()
+    const quat = new this.THREE.Quaternion()
+    const scale = new this.THREE.Vector3()
+    at.m4.decompose(pos, quat, scale)
+    const c = at.lb.getCenter(new this.THREE.Vector3()).applyMatrix4(at.m4)
+    const size = at.lb.getSize(new this.THREE.Vector3())
+    out.push({
+      center: [c.x - cx, c.y - cy, c.z - cz],
+      half: [Math.max(0.005, Math.abs(size.x * scale.x) / 2), Math.max(0.005, Math.abs(size.y * scale.y) / 2), Math.max(0.005, Math.abs(size.z * scale.z) / 2)],
+      rotation: [quat.x, quat.y, quat.z, quat.w],
+    })
   }
 
   /**

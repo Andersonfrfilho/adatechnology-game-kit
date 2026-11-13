@@ -30,7 +30,7 @@ import { Contacts, makeListener } from './contacts'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
-import { overlapSphere, rayAll, rayFirst, sphereCastAll } from './queries'
+import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { createVehicle, driveVehicle, removeVehicle, vehicleBody, wheelContacts } from './vehicles'
@@ -568,6 +568,10 @@ export class JoltWorld implements PhysicsWorld {
 
   overlapSphere(center: Vec3, radius: number, out: BodyId[], filter?: QueryFilter): number {
     return overlapSphere(this, { center, radius }, out, filter)
+  }
+
+  penetration(id: BodyId, out: Float64Array): number {
+    return penetration(this, id, out)
   }
 
   sphereCastAll(from: Vec3, direction: Vec3, length: number, radius: number, out: RayHit[], filter?: QueryFilter): number {

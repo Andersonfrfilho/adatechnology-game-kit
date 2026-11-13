@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { PieceBody, PieceFriction } from './internal'
+import { squareBoxOf } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
@@ -624,7 +625,7 @@ export class PieceSystem {
       const parts = whole.body.partBoxes
       if (!parts) return [whole]
       const e = whole.e
-      return parts.map(({ center, half }) => ({
+      return parts.map(squareBoxOf).map(({ center, half }) => ({
         body: whole.body,
         c: [
           whole.c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2],
@@ -1394,7 +1395,7 @@ export class PieceSystem {
     const parts = b.partBoxes ?? [{ center: [0, 0, 0] as Vec3, half: b.halfExtents }]
     return {
       kind: 'boxes',
-      boxes: parts.map(({ center, half }) => ({
+      boxes: parts.map(squareBoxOf).map(({ center, half }) => ({
         c: [c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2], c[1] + e[1] * center[0] + e[5] * center[1] + e[9] * center[2], c[2] + e[2] * center[0] + e[6] * center[1] + e[10] * center[2]] as Vec3,
         e,
         half,
