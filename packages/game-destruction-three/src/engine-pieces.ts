@@ -4,15 +4,12 @@ import type { BodyId, Material, PhysicsWorld, Quat, Rolling, ShapeDesc } from '@
 
 import { buildGroundTile, sameGround } from './engine-ground'
 import type { GroundTile } from './engine-ground'
+import { EngineStatics } from './engine-statics'
+import type { StaticSolid } from './engine-statics'
 import type { PieceBody } from './internal'
 import type { PieceSweepHit } from './pieces'
 
-/** A fixed box of what does not move, as it is drawn: centre, half sizes and rotation (world). */
-export interface StaticSolid {
-  readonly center: Vec3
-  readonly half: Vec3
-  readonly rotation: Quat
-}
+export type { StaticSolid } from './engine-statics'
 
 export interface EnginePieceOptions {
   readonly groundAt: (x: number, z: number) => number
@@ -100,7 +97,8 @@ export class EnginePieces {
    */
   fellThrough = 0
   private readonly tiles = new Map<string, Tile>()
-  private readonly statics = new Map<string, { solids: readonly StaticSolid[]; id: BodyId | null }>()
+  /** The host's fixed things (`staticSolids`) as static bodies. */
+  readonly statics: EngineStatics
   private ignored = new Set<string>()
   private readonly knocks = new Map<string, number>()
   private readonly pose = new Float64Array(7)
@@ -116,6 +114,7 @@ export class EnginePieces {
   ) {
     this.v = new THREE.Vector3()
     this.u = new THREE.Vector3()
+    this.statics = new EngineStatics(world, GROUND)
   }
 
   remove(b: PieceBody): void {
@@ -134,7 +133,6 @@ export class EnginePieces {
       if (t.steps !== null) this.world.removeBody(t.steps)
     }
     this.tiles.clear()
-    for (const s of this.statics.values()) if (s.id !== null) this.world.removeBody(s.id)
     this.statics.clear()
     this.ignored.clear()
   }
@@ -480,40 +478,10 @@ export class EnginePieces {
     return { kind: 'compound', children }
   }
 
-  /** The host's fixed boxes, one static body per object, made again when the object's boxes changed; what lay on a removed one wakes. */
+  /** The host's fixed boxes, one static body per object (`EngineStatics`). */
   private layStatics(): void {
     const now = this.o.staticSolids?.()
-    if (!now) return
-    for (const [id, s] of this.statics) {
-      if (now.get(id) === s.solids) continue
-      if (s.id !== null) {
-        this.wakeAround(s.solids)
-        this.world.removeBody(s.id)
-      }
-      this.statics.delete(id)
-    }
-    for (const [id, solids] of now) {
-      if (this.statics.has(id)) continue
-      const kept = solids.filter((s) => s.half[0] > 0 && s.half[1] > 0 && s.half[2] > 0)
-      const body =
-        kept.length === 0
-          ? null
-          : this.world.createBody({
-              shape: { kind: 'compound', children: kept.map((s, i) => ({ shape: { kind: 'box', half: s.half }, position: s.center, rotation: s.rotation, tag: i })) },
-              motion: 'static',
-              position: [0, 0, 0],
-              material: GROUND,
-              user: 0,
-            })
-      this.statics.set(id, { solids, id: body })
-    }
-  }
-
-  private wakeAround(solids: readonly StaticSolid[]): void {
-    for (const s of solids) {
-      const r = Math.hypot(s.half[0], s.half[1], s.half[2]) + 0.05
-      this.world.wakeInBox([s.center[0] - r, s.center[1] - r, s.center[2] - r], [s.center[0] + r, s.center[1] + r, s.center[2] + r])
-    }
+    if (now) this.statics.lay(now)
   }
 
   private keepApart(apart: ReadonlySet<string>): void {
@@ -623,7 +591,7 @@ export class EnginePieces {
     const n = hit.normal
     const into = -(v[0] * n[0] + v[1] * n[1] + v[2] * n[2])
     if (into <= 0) return false
-    const engineHas = this.byObject.has(hit.object) || (this.statics.get(hit.object)?.id ?? null) !== null
+    const engineHas = this.byObject.has(hit.object) || this.statics.has(hit.object)
     if (!engineHas) {
       const k = Math.min(1, hit.distance / travel)
       // below the engine's restitution threshold the speed into it is only taken away: reflected, a door pressed into a parked car (which the engine does not
