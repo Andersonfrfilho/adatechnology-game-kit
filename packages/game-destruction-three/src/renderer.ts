@@ -304,6 +304,8 @@ class Renderer implements DestructionRenderer {
   private readonly staticBoxes = new Map<string, number[]>()
   /** `staticSolids` per object, with the `staticBoxes` list they were measured with. */
   private readonly solidCache = new Map<string, { from: number[]; solids: StaticSolid[] }>()
+  /** What `staticSolids` hands back, refilled each call. */
+  private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
@@ -1005,8 +1007,18 @@ class Renderer implements DestructionRenderer {
     const lq = b.lastQuat
     const moved = !last || !lq || Math.abs(p.x - last[0]) + Math.abs(p.y - last[1]) + Math.abs(p.z - last[2]) > 1e-5 || Math.abs(q.x - lq[0]) + Math.abs(q.y - lq[1]) + Math.abs(q.z - lq[2]) + Math.abs(q.w - lq[3]) > 1e-6
     if (!moved) return
-    b.lastPos = [p.x, p.y, p.z]
-    b.lastQuat = [q.x, q.y, q.z, q.w]
+    if (last && lq) {
+      last[0] = p.x
+      last[1] = p.y
+      last[2] = p.z
+      lq[0] = q.x
+      lq[1] = q.y
+      lq[2] = q.z
+      lq[3] = q.w
+    } else {
+      b.lastPos = [p.x, p.y, p.z]
+      b.lastQuat = [q.x, q.y, q.z, q.w]
+    }
     if (this.world.has(b.id)) this.world.setTransform(b.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w])
   }
 
@@ -1039,12 +1051,10 @@ class Renderer implements DestructionRenderer {
    */
   private staticSolids(): Map<string, readonly StaticSolid[]> {
     const now = this.staticNow()
-    for (const id of [...this.solidCache.keys()]) if (!now.has(id)) this.solidCache.delete(id)
-    const out = new Map<string, readonly StaticSolid[]>()
-    const box = new this.THREE.Box3()
-    const pos = new this.THREE.Vector3()
-    const quat = new this.THREE.Quaternion()
-    const scale = new this.THREE.Vector3()
+    for (const id of this.solidCache.keys()) if (!now.has(id)) this.solidCache.delete(id)
+    // asked every update: the map and the scratch are kept, the lists are the cached ones
+    const out = this.solidsOut
+    out.clear()
     for (const [id, boxes] of now) {
       // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
       const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
@@ -1059,26 +1069,35 @@ class Renderer implements DestructionRenderer {
         out.set(id, cached.solids)
         continue
       }
-      const solids: StaticSolid[] = []
-      const b = this.bounds.get(id)
-      if (b && boxes.length > 0) {
-        for (const mv of this.meshesOf(b)) {
-          if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
-          this.visuals.worldBox(mv, box)
-          if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
-          this.visuals.localBox(mv, box)
-          if (box.isEmpty()) continue
-          mv.mesh.updateWorldMatrix(true, false)
-          mv.mesh.matrixWorld.decompose(pos, quat, scale)
-          const c = box.getCenter(new this.THREE.Vector3()).multiply(scale).applyQuaternion(quat).add(pos)
-          const size = box.getSize(new this.THREE.Vector3()).multiply(scale)
-          solids.push({ center: [c.x, c.y, c.z], half: [Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], rotation: [quat.x, quat.y, quat.z, quat.w] })
-        }
-      }
+      const solids = this.measureSolids(id, boxes)
       this.solidCache.set(id, { from: boxes, solids })
       out.set(id, solids)
     }
     return out
+  }
+
+  /** The drawn boxes of one fixed object, turned as drawn (`staticSolids`), measured again. */
+  private measureSolids(id: string, boxes: readonly number[]): StaticSolid[] {
+    const box = new this.THREE.Box3()
+    const pos = new this.THREE.Vector3()
+    const quat = new this.THREE.Quaternion()
+    const scale = new this.THREE.Vector3()
+    const solids: StaticSolid[] = []
+    const b = this.bounds.get(id)
+    if (!b || boxes.length === 0) return solids
+    for (const mv of this.meshesOf(b)) {
+      if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
+      this.visuals.worldBox(mv, box)
+      if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
+      this.visuals.localBox(mv, box)
+      if (box.isEmpty()) continue
+      mv.mesh.updateWorldMatrix(true, false)
+      mv.mesh.matrixWorld.decompose(pos, quat, scale)
+      const c = box.getCenter(new this.THREE.Vector3()).multiply(scale).applyQuaternion(quat).add(pos)
+      const size = box.getSize(new this.THREE.Vector3()).multiply(scale)
+      solids.push({ center: [c.x, c.y, c.z], half: [Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], rotation: [quat.x, quat.y, quat.z, quat.w] })
+    }
+    return solids
   }
 
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */

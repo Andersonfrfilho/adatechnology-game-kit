@@ -1,4 +1,5 @@
 import { appendFileSync } from 'node:fs'
+import { PerformanceObserver } from 'node:perf_hooks'
 
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
@@ -14,7 +15,7 @@ const stats = (xs: number[]): { median: number; p90: number; p99: number } => {
 
 // spike bench: BENCH=1 to run (node timing, not a gate)
 describe.runIf(process.env.BENCH === '1')('debris cost', () => {
-  it('160 pieces at rest + 40 moving: ms per renderer.update', { timeout: 120000 }, () => {
+  it('160 pieces at rest + 40 moving: ms per renderer.update', { timeout: 120000 }, async () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
@@ -40,6 +41,12 @@ describe.runIf(process.env.BENCH === '1')('debris cost', () => {
     }
     for (let i = 0; i < 180; i++) renderer.update(1 / 60)
     const times: number[] = []
+    // the collector's pauses in the measured updates (minor and major), by duration
+    const pauses: number[] = []
+    const gc = new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) pauses.push(e.duration)
+    })
+    gc.observe({ entryTypes: ['gc'] })
     for (let i = 0; i < 200; i++) {
       // the 40 are kicked about so they never settle
       if (i % 20 === 0) for (let k = 160; k < 200; k++) renderer.impulse(ids[k], [(rnd() - 0.5) * 20, 10 + rnd() * 10, (rnd() - 0.5) * 20])
@@ -47,8 +54,10 @@ describe.runIf(process.env.BENCH === '1')('debris cost', () => {
       renderer.update(1 / 60)
       times.push(performance.now() - t0)
     }
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    gc.disconnect()
     const sleeping = ids.slice(0, 160).filter((id) => renderer.piece(id)?.sleeping).length
-    const line = JSON.stringify({ name: 'debris-160-40', solver: process.env.PIECE_SOLVER ?? 'jolt', sleepingOf160: sleeping, update: stats(times) })
+    const line = JSON.stringify({ name: 'debris-160-40', solver: process.env.PIECE_SOLVER ?? 'jolt', sleepingOf160: sleeping, update: stats(times), gc: { pauses: pauses.length, over1ms: pauses.filter((d) => d > 1).length, max: Math.round(Math.max(0, ...pauses) * 1000) / 1000 } })
     console.log(line)
     if (process.env.SPIKE_OUT) appendFileSync(process.env.SPIKE_OUT, `${line}\n`)
     expect(times.length).toBe(200)

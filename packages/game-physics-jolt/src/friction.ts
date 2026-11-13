@@ -21,6 +21,24 @@ export const touch = (w: JoltWorld, key: number, other: number, by: number): voi
   }
 }
 
+/** The foot `updateFriction` is looking at: its world, its speed, and the fastest it slips against a partner so far. */
+const foot = { world: null as JoltWorld | null, vx: 0, vy: 0, vz: 0, slip: 0 }
+
+/** The foot's speed against one partner, at the foot (a fixed body has none); skipped once it already slips. */
+const slipAgainst = (_count: number, other: number): void => {
+  const w = foot.world
+  if (!w || foot.slip > w.slipSpeed) return
+  const o = w.bodies.get(other)
+  if (!o) return
+  if (o.invMass === 0 && o.layer === 'static') {
+    foot.slip = Math.max(foot.slip, Math.sqrt(foot.vx * foot.vx + foot.vy * foot.vy + foot.vz * foot.vz))
+    return
+  }
+  const u = w.bi.GetPointVelocity(o.id, w.r1)
+  const dx = foot.vx - u.GetX(), dy = foot.vy - u.GetY(), dz = foot.vz - u.GetZ()
+  foot.slip = Math.max(foot.slip, Math.sqrt(dx * dx + dy * dy + dz * dz))
+}
+
 /**
  * Coulomb by body (spec 008 D1.1, owner's B6 decision), after each `step`: an awake dynamic body whose foot (the point under its centre of mass at the bottom of
  * its bounds) moves against what it touches faster than `slipSpeed` slides, and holds its material's dynamic coefficient; slower, it sticks, and holds the
@@ -41,23 +59,20 @@ export const updateFriction = (w: JoltWorld): void => {
     const c = e.body.GetCenterOfMassPosition()
     w.r1.Set(c.GetX(), e.body.GetWorldSpaceBounds().mMin.GetY(), c.GetZ())
     const v = w.bi.GetPointVelocity(e.id, w.r1)
-    const vx = v.GetX(), vy = v.GetY(), vz = v.GetZ()
-    let slip = 0
-    for (const other of mine.keys()) {
-      const o = w.bodies.get(other)
-      if (!o) continue
-      if (o.invMass === 0 && o.layer === 'static') slip = Math.max(slip, Math.hypot(vx, vy, vz))
-      else {
-        const u = w.bi.GetPointVelocity(o.id, w.r1)
-        slip = Math.max(slip, Math.hypot(vx - u.GetX(), vy - u.GetY(), vz - u.GetZ()))
-      }
-      if (slip > w.slipSpeed) break
-    }
-    const sliding = slip > w.slipSpeed
+    foot.world = w
+    foot.vx = v.GetX()
+    foot.vy = v.GetY()
+    foot.vz = v.GetZ()
+    foot.slip = 0
+    // a callback made once: a for-of over the partners made an iterator per awake body per step
+    mine.forEach(slipAgainst)
+    const sliding = foot.slip > w.slipSpeed
     if (sliding === e.sliding) continue
     e.sliding = sliding
     w.bi.SetFriction(e.id, sliding ? e.material.frictionDynamic : e.material.frictionStatic)
   }
+  // the scratch lets go of the world: a disposed world is not kept by it
+  foot.world = null
 }
 
 /**

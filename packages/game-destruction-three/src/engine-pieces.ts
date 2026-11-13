@@ -25,6 +25,9 @@ export interface EnginePieceOptions {
 /** Side of a tile of ground (m); how far around an awake piece tiles are laid (m). */
 const TILE = 2
 const TILE_MARGIN = 0.5
+/** A tile's key: its column and row from `TILE_KEY_ORIGIN`, in one number (no text made per tile per update). */
+const TILE_KEY = 65536
+const TILE_KEY_ORIGIN = 32768
 const MU_STATIC = 0.7
 const MU_DYNAMIC = 0.6
 const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0 }
@@ -50,6 +53,8 @@ const STEADY_SECONDS = 1.5
 /** How far (m) a new piece may reach into the ground and be left to the engine's contact (over its slop, under a thin plate's half), and how far above it one lifted is put. */
 const SINK = 0.005
 const LIFT_MARGIN = 0.001
+/** Two numbers of a pose further apart than this differ (the centre comes back through the root: equal within rounding is the same). */
+const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
 /** How many times a piece made inside fixed things is moved out of the deepest one (it may be inside two). */
 const OUT_TRIES = 4
 
@@ -67,6 +72,12 @@ interface Link {
   readonly ang: number[]
   held: boolean
   sleeping: boolean
+  /** The update it was last handed in (`update`): one not handed any more is removed. */
+  seen: number
+  /** Its centre and vertical speed before the step, when it was awake (`readBack`). */
+  readonly before: Vec3
+  beforeVy: number
+  stepped: boolean
 }
 
 interface Tile {
@@ -92,21 +103,24 @@ export class EnginePieces {
   /** The pieces by object id: what the sweep meets that the engine already has (`sweepOn`). */
   private readonly byObject = new Map<string, PieceBody>()
   private nextUser = 1
+  private updates = 0
   private turn = 0
   /**
    * Pieces found wholly under the ground after a step (through a one-sided ground triangle: the engine has no solid below it) and put back on it: the invariant
    * of §12 (nothing goes under the floor), counted so a test or the room log can fail on it. A net, not a cure: none in a healthy run.
    */
   fellThrough = 0
-  private readonly tiles = new Map<string, Tile>()
+  private readonly tiles = new Map<number, Tile>()
   /** The host's fixed things (`staticSolids`) as static bodies. */
   readonly statics: EngineStatics
-  private ignored = new Set<string>()
+  private readonly ignored = new Set<string>()
   private readonly knocks = new Map<string, number>()
   private readonly pose = new Float64Array(7)
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
   private readonly outAxis = new Float64Array(3)
+  /** The centre `readBack` reads into (the sweep may move it). */
+  private readonly readPos: Vec3 = [0, 0, 0]
   private readonly v: THREE_NS.Vector3
   private readonly u: THREE_NS.Vector3
   private readonly w: THREE_NS.Vector3
@@ -122,6 +136,11 @@ export class EnginePieces {
     this.w = new THREE.Vector3()
     this.turn3 = new THREE.Quaternion()
     this.statics = new EngineStatics(world, GROUND)
+  }
+
+  /** A piece not handed in this update goes (`update`; a callback made once, so the walk makes no entry per piece). */
+  private readonly removeUnseen = (link: Link, b: PieceBody): void => {
+    if (link.seen !== this.updates) this.remove(b)
   }
 
   remove(b: PieceBody): void {
@@ -147,7 +166,8 @@ export class EnginePieces {
   /** The ground under the disc changed: its tiles are laid again before the next step, and what lies there wakes. */
   groundChanged(x: number, z: number, radius: number): void {
     for (const [key, tile] of this.tiles) {
-      const [ix, iz] = key.split(',').map(Number)
+      const ix = Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN
+      const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
       const nx = Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE))
       const nz = Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE))
       if (Math.hypot(nx - x, nz - z) <= radius) tile.dirty = true
@@ -157,22 +177,32 @@ export class EnginePieces {
   /** One update: the pairs in `apart` (by object id, `a\0b`) do not meet in the engine; the kit puts them apart along the ground. */
   update(list: readonly PieceBody[], dt: number, time: number, apart: ReadonlySet<string>): void {
     if (dt <= 0) return
-    const present = new Set(list)
-    for (const b of [...this.links.keys()]) if (!present.has(b)) this.remove(b)
+    // nothing here is made anew per piece per update (the collector's pauses were the worst frames: gate 0 B5)
+    const n = ++this.updates
+    for (const b of list) {
+      const link = this.links.get(b)
+      if (link) link.seen = n
+    }
+    this.links.forEach(this.removeUnseen)
     this.groundTurn(list)
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
     for (const b of list) this.sync(b, dt)
     this.layGround(list)
     this.keepApart(apart)
-    const before = new Map<PieceBody, { c: Vec3; vy: number }>()
     for (const b of list) {
-      if (b.held || b.sleeping) continue
+      const link = this.links.get(b)
+      if (!link) continue
+      link.stepped = !b.held && !b.sleeping
+      if (!link.stepped) continue
       const c = this.centre(b)
-      before.set(b, { c: [c.x, c.y, c.z], vy: b.velocity[1] })
+      link.before[0] = c.x
+      link.before[1] = c.y
+      link.before[2] = c.z
+      link.beforeVy = b.velocity[1]
     }
     this.world.step(dt)
-    for (const b of list) this.readBack(b, dt, time, before.get(b))
+    for (const b of list) this.readBack(b, dt, time)
     this.knock(time)
   }
 
@@ -316,7 +346,10 @@ export class EnginePieces {
         linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
         angularVelocity: [b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2]],
       })
-      link = { id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
+      link = {
+        id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity],
+        held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false,
+      }
       this.links.set(b, link)
       this.byUser.set(user, b)
       this.byObject.set(b.objectId, b)
@@ -325,17 +358,7 @@ export class EnginePieces {
     }
     // by value: the renderer hands new arrays for the same boxes when it measures a piece again, and a new shape wakes the body; the same objects as last time
     // are the same shape, and are not turned into text again (it was a sixth of an update with 200 pieces)
-    const from = this.shapeFrom(b)
-    const shapeKey = from.some((x, i) => x !== link.shapeFrom[i]) ? this.shapeKey(b) : link.shapeKey
-    link.shapeFrom = from
-    if (shapeKey.some((s, i) => s !== link.shapeKey[i])) {
-      link.shapeKey = shapeKey
-      // the piece's mass and moments go with its new shape: left to the engine, they would be the new shape's volume at 1000 kg/m^3
-      const inertia = this.inertiaOf(b)
-      this.world.setShape(link.id, this.shapeOf(b), inertia ? { mass: b.mass, inertia } : { mass: b.mass })
-      this.world.setMaterial(link.id, this.material(b))
-      this.world.setRolling(link.id, this.rollingOf(b))
-    }
+    if (!this.sameFrom(b, link.shapeFrom)) this.reshape(b, link)
     if (b.held !== link.held) {
       link.held = b.held
       this.world.setMotion(link.id, b.held ? 'kinematic' : 'dynamic')
@@ -345,7 +368,6 @@ export class EnginePieces {
       return
     }
     // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved
-    const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
     const moved = far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
     if (moved) {
       this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
@@ -392,6 +414,31 @@ export class EnginePieces {
       link.pos[1] = p[1]
       link.pos[2] = p[2]
     }
+  }
+
+  /**
+   * Its shape, mass, friction or bounce changed (by value: the renderer hands new arrays for the same boxes when it measures a piece again, and a new shape wakes the
+   * body; the same objects as last time are the same shape, and are not turned into text again: it was a sixth of an update with 200 pieces).
+   */
+  private reshape(b: PieceBody, link: Link): void {
+    const from = this.shapeFrom(b)
+    link.shapeFrom = from
+    const shapeKey = this.shapeKey(b)
+    if (!shapeKey.some((x, i) => x !== link.shapeKey[i])) return
+    link.shapeKey = shapeKey
+    // the piece's mass and moments go with its new shape: left to the engine, they would be the new shape's volume at 1000 kg/m^3
+    const inertia = this.inertiaOf(b)
+    this.world.setShape(link.id, this.shapeOf(b), inertia ? { mass: b.mass, inertia } : { mass: b.mass })
+    this.world.setMaterial(link.id, this.material(b))
+    this.world.setRolling(link.id, this.rollingOf(b))
+  }
+
+  /** Whether the objects its shape is made from are the ones it was made from (by reference, as `shapeFrom` lists them). */
+  private sameFrom(b: PieceBody, from: readonly unknown[]): boolean {
+    return (
+      from[0] === b.halfExtents && from[1] === b.partBoxes && from[2] === b.round && from[3] === b.mass && from[4] === b.localCenter[0] && from[5] === b.localCenter[1] &&
+      from[6] === b.localCenter[2] && from[7] === b.friction && from[8] === b.restitution
+    )
   }
 
   private shapeFrom(b: PieceBody): unknown[] {
@@ -471,10 +518,11 @@ export class EnginePieces {
     for (const b of list) {
       if (b.sleeping) continue
       const c = this.centre(b)
-      const r = Math.hypot(...b.halfExtents) + TILE_MARGIN
+      const h = b.halfExtents
+      const r = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2]) + TILE_MARGIN
       for (let ix = Math.floor((c.x - r) / TILE); ix <= Math.floor((c.x + r) / TILE); ix++) {
         for (let iz = Math.floor((c.z - r) / TILE); iz <= Math.floor((c.z + r) / TILE); iz++) {
-          const key = `${ix},${iz}`
+          const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
           const tile = this.tiles.get(key)
           if (tile && !tile.dirty) continue
           this.layTile(key, ix, iz, tile)
@@ -487,7 +535,7 @@ export class EnginePieces {
    * A tile of ground, made or brought up to date on the same bodies: the height field is swapped in place (`setShape` keeps the body's id, so the engine still
    * warm-starts the contacts of what lies on it), the slab moved, the step boxes made again only when they changed. Unchanged ground is left alone.
    */
-  private layTile(key: string, ix: number, iz: number, tile: Tile | undefined): void {
+  private layTile(key: number, ix: number, iz: number, tile: Tile | undefined): void {
     const t = buildGroundTile(this.o.groundAt, ix * TILE, iz * TILE, TILE)
     if (tile && sameGround(tile.samples, t.samples)) {
       tile.dirty = false
@@ -531,29 +579,30 @@ export class EnginePieces {
   }
 
   private keepApart(apart: ReadonlySet<string>): void {
-    const ids = new Map<string, BodyId>()
-    for (const [b, link] of this.links) ids.set(b.objectId, link.id)
-    const pair = (key: string): [BodyId, BodyId] | null => {
-      const [a, b] = key.split('\u0000')
-      const x = ids.get(a)
-      const y = ids.get(b)
-      return x !== undefined && y !== undefined ? [x, y] : null
-    }
     for (const key of this.ignored) {
       if (apart.has(key)) continue
-      const p = pair(key)
-      if (p) this.world.ignorePair(p[0], p[1], false)
+      this.ignored.delete(key)
+      this.ignore(key, false)
     }
     for (const key of apart) {
       if (this.ignored.has(key)) continue
-      const p = pair(key)
-      if (p) this.world.ignorePair(p[0], p[1], true)
+      this.ignored.add(key)
+      this.ignore(key, true)
     }
-    this.ignored = new Set(apart)
+  }
+
+  /** The engine leaves the pair (`a\0b` by object id) alone, or meets it again. */
+  private ignore(key: string, ignore: boolean): void {
+    const cut = key.indexOf('\u0000')
+    const a = this.byObject.get(key.slice(0, cut))
+    const b = this.byObject.get(key.slice(cut + 1))
+    const x = a && this.links.get(a)
+    const y = b && this.links.get(b)
+    if (x && y) this.world.ignorePair(x.id, y.id, ignore)
   }
 
   /** Writes the body back to the piece, then the kit's rules: the sweep against walls, hard landings, `still` for the budget. */
-  private readBack(b: PieceBody, dt: number, time: number, before: { c: Vec3; vy: number } | undefined): void {
+  private readBack(b: PieceBody, dt: number, time: number): void {
     const link = this.links.get(b)
     if (!link || b.held) return
     // asleep on both sides since the last update: the engine has not moved it, there is nothing to read
@@ -563,7 +612,10 @@ export class EnginePieces {
     }
     this.world.readPose(link.id, this.pose, 0)
     this.world.readVelocity(link.id, this.velocity, 0)
-    const pos: Vec3 = [this.pose[0], this.pose[1], this.pose[2]]
+    const pos = this.readPos
+    pos[0] = this.pose[0]
+    pos[1] = this.pose[1]
+    pos[2] = this.pose[2]
     const v = b.velocity
     const w = b.angularVelocity
     for (let i = 0; i < 3; i++) {
@@ -581,10 +633,10 @@ export class EnginePieces {
       v[1] = Math.max(0, v[1])
       moved = true
     }
-    if (before && !b.sleeping) {
-      if (this.o.sweep) moved = this.sweepOn(b, before.c, pos, time)
-      const impact = -before.vy
-      if (b.onGround && impact > HARD_LANDING && v[1] > before.vy + impact * 0.5 && time - b.lastHit > 0.15) {
+    if (link.stepped && !b.sleeping) {
+      if (this.o.sweep) moved = this.sweepOn(b, link.before, pos, time)
+      const impact = -link.beforeVy
+      if (b.onGround && impact > HARD_LANDING && v[1] > link.beforeVy + impact * 0.5 && time - b.lastHit > 0.15) {
         b.lastHit = time
         this.o.onHardLanding(b, [pos[0], pos[1] - Math.min(...b.halfExtents), pos[2]], impact)
       }
