@@ -11255,6 +11255,11 @@
       "value": "brass_knuckles",
       "source": "T3.1i",
       "reason": "The goods melee item and the arsenal weapon it is (lote 1, part C)."
+    },
+    "shovel": {
+      "value": "shovel",
+      "source": "owner 2026-11-12",
+      "reason": "The garden shovel (a tool) is also the arsenal weapon `shovel`: picked up from the world it is the shovel in hand that digs, fills and swings, with the damage the object had (owner decision on the shovel's 21 criteria)."
     }
   },
   "meleeWithoutWeapon": {
