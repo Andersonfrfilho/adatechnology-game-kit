@@ -2,6 +2,7 @@
 import type { HouseRecord, HouseWall, Kernel, KernelHouseBaseboard, Shared } from '../kernel-types.js';
 import { doorsInWall } from './helpers.js';
 import { FLOOR_OVER_GROUND } from './floors.js';
+import { outsideBoxes } from './solids.js';
 
 /**
  * The outer baseboard is a band of glazed ceramic tiles (cerâmica esmaltada, 8 mm, on 4 mm of tile adhesive: 12 mm out of the plaster), the usual barrado of a
@@ -45,7 +46,8 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
         const ea = junction(A, A.a, sd) > 0 ? A.th / 2 + k : junction(A, A.a, sd) < 0 ? -A.th / 2 : 0, eb = junction(A, A.b, sd) > 0 ? A.th / 2 + k : junction(A, A.b, sd) < 0 ? -A.th / 2 : 0;
         const s0 = A.a - ea, s1 = A.b + eb, f0 = A.L + sd * (A.th / 2 + o0), f1 = A.L + sd * (A.th / 2 + o1), lo = Math.min(f0, f1), hi = Math.max(f0, f1);
         if (s1 - s0 < 1e-3) return;
-        const box = (a: number, b: number): void => { if (A.au) bx(mat, a, y1, lo, b, y2, hi, c); else bx(mat, lo, y1, a, hi, y2, b, c); };
+        // (outside the Visor's scene laid round the lot's walls that meet the house: they stand on the ground through it)
+        const box = (a: number, b: number): void => { for (const p of outsideBoxes(A.au ? [a, y1, lo, b, y2, hi] : [lo, y1, a, hi, y2, b], shared.ctx.visorScene ? [] : shared.ctx.lotWalls)) bx(mat, p[0], p[1], p[2], p[3], p[4], p[5], c); };
         const tag = laid === BASEBOARD_TILES ? 'baseboard' : 'sidewalk';
         const tile = (id: string, a: number, b: number): void => { cursor.pc = pieceRecord(id, laid.material, null, { floor: 0, mass: Math.round((b - a) * (y2 - y1) * (hi - lo) * laid.density * 100) / 100, tags: [tag] }); box(a, b); };
         // the baseboard stops at a door cut in a wall that runs whole across it (the sidewalk runs on, under the threshold)

@@ -661,6 +661,10 @@ export interface BuildContext {
   visorScene: boolean
   /** Boxes of the ceilings' slabs, by their builder (outside the Visor's scene): a later box of another builder is laid round them, never through them. */
   occupied: Aabb[]
+  /** The boxes of the lot's walls (outside the Visor's scene): the house's sidewalk and baseboard are laid round where one meets the house. */
+  lotWalls: Aabb[]
+  /** The floor the piece being drawn stands on (a storey's furniture, outside the Visor's scene): a face looking down on its plane is shut by it, as by the ground. */
+  restOn?: number | undefined
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

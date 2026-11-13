@@ -47,9 +47,11 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         bx('metal', r0, h + 0.02, zc - 0.05, r1, h + 0.09, zc + 0.05, 0x5a5a5e);
         for (const x of [r0 + 0.05, r1 - 0.05, dirx > 0 ? b + 0.1 : a - 0.1]) bx('metal', x - 0.025, 0, zc - 0.04, x + 0.025, h + 0.09, zc + 0.04, 0x5a5a5e);
         // leaf (captured by gatesInteractive: part 'ix:gate:<id>' with pose by type 'sliding_gate')
-        blade(x0, 0.08, x1, h, zc); bx('metal', x0, 0.04, zc - 0.03, x1, 0.08, zc + 0.03, sh(gc, 0.8)); bx('metal', x0, h - 0.07, zc - 0.03, x1, h, zc + 0.03, sh(gc, 0.8));
+        // (outside the Visor's scene the leaf rides over the rail's groove, its top bar caps the blade short of its ends, the casters reach the leaf)
+        const V = shared.ctx.visorScene, cap = V ? 0 : 0.005;
+        blade(x0, 0.08, x1, h, zc); bx('metal', x0, V ? 0.04 : 0.052, zc - 0.03, x1, 0.08, zc + 0.03, sh(gc, 0.8)); bx('metal', x0 + cap, h - 0.07, zc - 0.03, x1 - cap, h + cap, zc + 0.03, sh(gc, 0.8));
         for (let x = x0 + 0.04; x < x1 - 0.04; x += 0.06) bx('metal', x, 0.08, zc + sd * 0.03, x + 0.03, 0.12, zc + sd * 0.045, 0x8a8a8e); // rack
-        for (const x of [x0 + 0.2, x1 - 0.2]) cylBase('metal', x, 0.0, zc, 0.03, 0.05, 0x2a2a2c); // casters
+        for (const x of [x0 + 0.2, x1 - 0.2]) cylBase('metal', x, 0.0, zc, 0.03, V ? 0.05 : 0.052, 0x2a2a2c); // casters
         if (auto) { const mx = dirx > 0 ? b + 0.45 : a - 0.45; bx('plain', mx - 0.22, 0, zc - sd * 0.0 + sd * 0.1, mx + 0.22, 0.34, zc + sd * 0.45, 0xdcdcd8); bx('plain', mx - 0.2, 0.34, zc + sd * 0.12, mx + 0.2, 0.37, zc + sd * 0.43, 0x2a2a2c); cylBase('metal', mx, 0.05, zc + sd * 0.07, 0.035, 0.05, 0xb0b4b8); bx('emissive', mx + 0.1, 0.28, zc + sd * 0.452, mx + 0.14, 0.31, zc + sd * 0.455, 0x62e07a); }
       }
       if (!g.open || ped) shared.ctx.colliders.push({ type: 'gate', f: -1, x0: a, z0: v - 0.1, x1: b, z1: v + 0.1 });
