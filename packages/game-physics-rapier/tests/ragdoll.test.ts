@@ -36,7 +36,6 @@ describe('case 2: ragdoll of the game-characters rig', () => {
         if (!w.isSleeping(b)) all = false
       }
       const e = jointErrors(w, r)
-      if (process.env.RAGDOLL_TRACE && e.overLimit > 0.3) console.log("trace", f, e.worst)
       maxDrift = Math.max(maxDrift, e.drift)
       maxOver = Math.max(maxOver, e.overLimit)
       if (all && asleepAt < 0) asleepAt = f / 60
