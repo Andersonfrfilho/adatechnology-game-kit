@@ -61,4 +61,21 @@ describe('a piece collides as it is drawn, not as the box around it', () => {
     expect(highest - 1.1).toBeLessThan(0.01)
     expect(root.position.y).toBeCloseTo(1.1, 2)
   })
+
+  it('a piece made wedged between two fixed things (a door between its frame and a car parked against the wall) is out of both after the update it is made', () => {
+    // two blocks 16 cm apart; a 20 cm box between them is 2 cm into each, so out of one the shortest way is into the other
+    const solids: StaticSolid[] = [
+      { center: [-0.58, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] },
+      { center: [0.58, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] },
+    ]
+    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map([['wall', solids]]) })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.5, 0)
+    const piece = system.create('door', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
+    system.update(1 / 60)
+    const out = new Float64Array(3)
+    const engine = (system as unknown as { engine: { world: { penetration(id: number, out: Float64Array): number }; links: Map<unknown, { id: number }> } }).engine
+    expect(engine.world.penetration(engine.links.get(piece)!.id, out)).toBeLessThan(0.006)
+  })
 })
+

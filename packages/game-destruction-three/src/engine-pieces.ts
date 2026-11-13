@@ -55,8 +55,10 @@ const SINK = 0.005
 const LIFT_MARGIN = 0.001
 /** Two numbers of a pose further apart than this differ (the centre comes back through the root: equal within rounding is the same). */
 const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
-/** How many times a piece made inside fixed things is moved out of the deepest one (it may be inside two). */
-const OUT_TRIES = 4
+/** How many times a piece made inside fixed things is moved out of the deepest one (it may be inside two, or wedged between them). */
+const OUT_TRIES = 8
+/** The first step (m) a wedged piece is lifted by (`outOfStatics`). */
+const WEDGE_LIFT = 0.1
 
 interface Link {
   readonly id: BodyId
@@ -396,10 +398,24 @@ export class EnginePieces {
   private outOfStatics(b: PieceBody, link: Link): void {
     if (!this.world.penetration) return
     const axis = this.outAxis
+    let px = 0, py = 0, pz = 0
+    let wedged = false
+    let lifts = 0
     for (let i = 0; i < OUT_TRIES; i++) {
       const depth = this.world.penetration(link.id, axis)
       if (depth <= SINK) return
-      const d = depth + LIFT_MARGIN
+      // out of one the shortest way put it back into the other (a door made between its frame and a car parked against the wall): it goes up out of both
+      wedged ||= i > 0 && axis[0] * px + axis[1] * py + axis[2] * pz < -0.5
+      px = axis[0]
+      py = axis[1]
+      pz = axis[2]
+      if (wedged) {
+        axis[0] = 0
+        axis[1] = 1
+        axis[2] = 0
+      }
+      // up out of a wedge, the depth across tells nothing of how high the two reach: a step that doubles each try, at most twice as high as it had to go
+      const d = wedged ? depth + WEDGE_LIFT * 2 ** lifts++ : depth + LIFT_MARGIN
       this.world.readPose(link.id, this.pose, 0)
       const p = this.pose
       p[0] += axis[0] * d
