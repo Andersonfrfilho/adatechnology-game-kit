@@ -33,7 +33,8 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       // (outside the Visor's scene the frame is noted with the walls: the floors and slabs laid later keep round it)
       const fb = (u0: number, y_0: number, u1: number, y_1: number, tt = th + 0.02, color = frame): void => { const b: Aabb = alongU ? [u0, y0 + y_0, L - tt / 2, u1, y0 + y_1, L + tt / 2] : [L - tt / 2, y0 + y_0, u0, L + tt / 2, y0 + y_1, u1]; bx('wood', b[0], b[1], b[2], b[3], b[4], b[5], color); if (!shared.ctx.visorScene) shared.ctx.occupied.push(b); };
       // the jambs reach 2 mm into the wall's ends, so their outer faces never lie on the ends of the threshold and the sidewalk under the doorway
-      const jw = 0.05, jin = shared.ctx.visorScene ? 0 : 0.002; cursor.pc = pieceRecord('jamb:' + p.id, 'wood_hard', null, { floor: f }); fb(a - jin, 0, a + jw, visH); fb(b - jw, 0, b + jin, visH); if (!cut) fb(a, dH - jw, b, dH); cursor.pc = null;
+      // (outside the Visor's scene an upper storey's jambs stand 2 mm over its floor: their feet lay on the plane of the walls' feet beside them)
+      const jw = 0.05, jin = shared.ctx.visorScene ? 0 : 0.002, jy = !shared.ctx.visorScene && f > 0 ? 0.002 : 0; cursor.pc = pieceRecord('jamb:' + p.id, 'wood_hard', null, { floor: f }); fb(a - jin, jy, a + jw, visH); fb(b - jw, jy, b + jin, visH); if (!cut) fb(a, dH - jw, b, dH); cursor.pc = null;
       // opening direction: room side p.opensTo
       const sample = (sd: number): ReturnType<Kernel['roomAt']> => roomAt(f, alongU ? p.at : L + sd * 0.5, alongU ? L + sd * 0.5 : p.at);
       let sw = 1; { const cH = sample(1), cL = sample(-1); if (cL && cL.id === p.opensTo) sw = -1; else if (cH && cH.id === p.opensTo) sw = 1; }

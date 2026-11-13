@@ -31,10 +31,12 @@ export class BoxBatch {
     return this.indices.length / 36
   }
 
-  add(box: StageBox): void {
+  /** `openBottom`: the box stands on something that hides its foot (a post on the slab): its bottom face is not laid (it lay on the bottoms of whatever else stands there). */
+  add(box: StageBox, openBottom = false): void {
     const [x0, y0, z0, x1, y1, z1] = box
     if (x1 - x0 < 1e-4 || y1 - y0 < 1e-4 || z1 - z0 < 1e-4) return
     for (const [normal, corners] of FACES) {
+      if (openBottom && normal[1] < 0) continue
       const base = this.positions.length / 3
       for (const [cx, cy, cz] of corners) {
         this.positions.push(cx ? x1 : x0, cy ? y1 : y0, cz ? z1 : z0)

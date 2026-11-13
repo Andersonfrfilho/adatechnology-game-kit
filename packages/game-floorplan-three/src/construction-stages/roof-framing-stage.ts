@@ -35,7 +35,7 @@ function addTimber(batch: BoxBatch, top0: Vec, top1: Vec, width: number, height:
 /** A plumb post from `y0` to `y1` at (x, z). */
 function addPost(batch: BoxBatch, x: number, z: number, y0: number, y1: number): void {
   const h = TIMBER.post.side / 2
-  if (y1 - y0 > 0.02) batch.add([x - h, y0, z - h, x + h, y1, z + h])
+  if (y1 - y0 > 0.02) batch.add([x - h, y0, z - h, x + h, y1, z + h], true) // (its foot on the slab, hidden there)
 }
 
 /**
