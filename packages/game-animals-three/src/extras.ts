@@ -39,7 +39,7 @@ const cow: QuadrupedExtra = ({ THREE, tools }, k) => {
 }
 
 const horse: QuadrupedExtra = ({ THREE, rig, tools }, k) => {
-  for (let index = 0; index < 9; index++) addMesh(THREE, k.neck, new THREE.BoxGeometry(0.035, 0.16, 0.08), k.dark, 0, 0.06 + index * 0.065, -0.12 + index * 0.004, -0.25, 0, 0) // mane
+  for (let index = 0; index < 9; index++) addMesh(THREE, k.neck, new THREE.BoxGeometry(0.035 + (index % 3) * 0.004, 0.16, 0.08), k.dark, 0, 0.06 + index * 0.065, -0.12 + index * 0.004, -0.25, 0, 0) // mane
   addMesh(THREE, k.head, new THREE.BoxGeometry(0.03, 0.12, 0.06), k.dark, 0, k.hd.r * 1.05, k.hd.r * 0.3, 0.6, 0, 0) // forelock
   const last = rig.tail[rig.tail.length - 1] as THREE_NS.Group
   tools.ball(last, 0.08, k.dark, 0, -0.42, 0, 0.7, 4.5, 0.7) // tail hair

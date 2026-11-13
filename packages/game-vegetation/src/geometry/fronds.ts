@@ -78,7 +78,7 @@ export function pinnateFrond(b: MeshBuilder, o: PinnateOptions): Vec3 {
     const cc1 = jitter(o.c1, o.rng, 0.008, 0.05, 0.03)
     for (const s of [-1, 1]) {
       const dir = norm(add(add(mul(sideV, s * 0.85), mul(d, 0.6)), [0, -hang, 0]))
-      kite(b, p, dir, [0, 1, 0], len, len * lw * (o.lod === 0 ? 1 : 2.3), mix(cc0, cc1, 0.1), cc1, sw, Math.min(1, sw + 0.1))
+      kite(b, p, dir, [0, 1, 0], len, len * lw * (o.lod === 0 ? 1 : 2.3), mix(cc0, cc1, 0.1), cc1, sw, Math.min(1, sw + 0.1), 0.35, ((k % 10) - 4.5) * 0.014)
     }
   }
   return pts[segs]

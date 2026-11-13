@@ -16,7 +16,7 @@ export const buildSuppressor: AttachmentModelBuilder = ({ kit, attachment, fitte
   cylinderX(group, radius, length, isImprovised ? M.rust : M.dark, middle, 0, 0, 18)
   if (isImprovised) {
     for (const along of [0.2, 0.8]) cylinderX(group, radius * 1.04, 0.012, M.tape, middle - length / 2 + length * along, 0, 0, 18)
-    cylinderX(group, radius * 0.7, 0.008, M.rustD, middle + length / 2 - 0.004, 0, 0, 14)
+    cylinderX(group, radius * 0.7, 0.008, M.rustD, middle + length / 2 - 0.0025, 0, 0, 14)
   } else {
     for (let i = 0; i < BAFFLES; i++) cylinderX(group, radius * 1.03, 0.004, M.metal, middle - length / 2 + (length * (i + 0.5)) / BAFFLES, 0, 0, 18)
     cylinderX(group, radius * 0.9, 0.006, M.steel, middle - length / 2 + 0.003, 0, 0, 18)

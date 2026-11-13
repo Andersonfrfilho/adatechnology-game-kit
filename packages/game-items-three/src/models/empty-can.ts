@@ -5,7 +5,7 @@ import type { ItemModelBuilder } from './registry'
  * It draws in the units of the builder; `data/models.json` gives the scale to metres of the item `empty_can`.
  */
 export const emptyCan: ItemModelBuilder = ({ mesh, lathe, cyl, bx, G, metal, paper }) => {
-  const body = lathe([[0, -0.6], [0.27, -0.6], [0.3, -0.55], [0.33, -0.45], [0.33, 0.42], [0.29, 0.55], [0.285, 0.6]], 12)
+  const body = lathe([[0, -0.6], [0.245, -0.6], [0.275, -0.55], [0.305, -0.45], [0.305, 0.42], [0.29, 0.55], [0.285, 0.6]], 12)
   return G(
     mesh(body, metal(0xc9ccd0)),
     mesh(cyl(0.332, 0.332, 0.5, 12), paper(0xb5342a), [0, -0.05, 0]),

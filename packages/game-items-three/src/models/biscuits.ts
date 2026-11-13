@@ -8,7 +8,7 @@ export const biscuits: ItemModelBuilder = ({ mesh, bx, cyl, G, paper, food }) =>
   const biscuit = food(0xc98f4e)
   const cream = food(0xe6d2a2)
   return G(
-    mesh(bx(2.0, 0.24, 1.0), paper(0x2f5d8c), [0, -0.13, 0]),
+    mesh(bx(1.9, 0.215, 0.95), paper(0x2f5d8c), [0, -0.1175, 0]),
     mesh(bx(0.1, 0.3, 1.0), paper(0x244a70), [-0.95, -0.1, 0]),
     mesh(bx(0.1, 0.3, 1.0), paper(0x244a70), [0.95, -0.1, 0]),
     mesh(cyl(0.38, 0.38, 0.1, 12), biscuit, [-0.45, 0.04, 0]),

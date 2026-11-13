@@ -67,6 +67,9 @@ export interface CoincidentFaceHit {
   /** Near mode: `coplanar` (same facing) or `opposed` (back to back, double-sided), with the gap in metres. */
   readonly kind?: 'coplanar' | 'opposed'
   readonly separation?: number
+  /** Index in the input of the batch of each triangle. */
+  readonly batchA: number
+  readonly batchB: number
 }
 
 interface Face {
@@ -74,6 +77,7 @@ interface Face {
   readonly n: Vec3
   readonly offset: number
   readonly label: string
+  readonly batch: number
   readonly box: readonly [number, number, number, number, number, number]
 }
 
@@ -113,7 +117,7 @@ function bucketFaces(batches: readonly CoincidentBatch[], eps: number): Map<stri
       const offset = n[0] * triangle[0][0] + n[1] * triangle[0][1] + n[2] * triangle[0][2]
       const key = `${directionKey(n)}|${Math.floor(offset / eps)}`
       const list = buckets.get(key) ?? []
-      list.push({ triangle, n, offset, label, box: boxOf(triangle) })
+      list.push({ triangle, n, offset, label, batch: index, box: boxOf(triangle) })
       buckets.set(key, list)
     }
   })
@@ -125,7 +129,7 @@ function overlapHit(a: Face, b: Face, minArea: number): CoincidentFaceHit | unde
   const overlap = overlapOfTriangles(projectTriangle(a.triangle, drop), projectTriangle(b.triangle, drop))
   if (!overlap || overlap.area < minArea) return undefined
   const point = unprojectPoint(overlap.center, drop, a)
-  return { normal: a.n, offset: a.offset, area: overlap.area, point, labelA: a.label, labelB: b.label }
+  return { normal: a.n, offset: a.offset, area: overlap.area, point, labelA: a.label, labelB: b.label, batchA: a.batch, batchB: b.batch }
 }
 
 /**

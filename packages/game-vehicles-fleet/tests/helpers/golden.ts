@@ -35,6 +35,16 @@ const FLAGS: Record<string, string[]> = {
   burnt: ['burnt'],
 }
 
+// Owner decision (2026-11-12, CLAUDE.md §13): a part drawn flush with another z-fights, so it now sits 1-3 mm off it or stops where the other begins; the spokes of a wheel are each a little thinner than the one before.
+// The parts, their materials, the zones and the size of each vehicle stay the original's; only the sizes and positions of the flush parts moved, so the vertex hash differs.
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['adventure_bike', 'ambulance', 'amphibian_turboprop', 'apc_6x6', 'armored_car_6x6', 'armored_truck', 'attack_helicopter', 'battle_tank', 'box_truck', 'cargo_van', 'commuter_motorcycle', 'compact_hatch', 'compact_pickup', 'compact_suv', 'crop_duster', 'crossover_pickup', 'cruiser', 'delivery_bike', 'electric_hatch', 'family_hatch', 'fastback_sedan', 'fishing_boat', 'highway_police_bike', 'highway_police_sedan', 'hybrid_suv', 'jet_ski', 'large_suv', 'light_attack_turboprop', 'light_jet', 'midsize_pickup', 'midsize_sedan', 'midsize_suv', 'monster_truck', 'naked_bike', 'piston_helicopter', 'police_helicopter', 'police_sedan', 'quad_bike', 'regional_turboprop', 'rescue_dinghy', 'rescue_helicopter', 'rideshare_hatch', 'river_skiff', 'sailboat', 'single_engine_plane', 'speedboat', 'sport_bike', 'step_through_scooter', 'tandem_trainer', 'tanker_truck', 'tractor', 'trail_bike', 'trainer_helicopter', 'troop_truck', 'turbine_helicopter', 'turbo_hatch', 'v8_coupe'])
+
+/** The look of a vehicle against the original: bit for bit, except for the vehicles whose flush parts moved, which keep the object and particle counts. */
+function expectLook(actual: Digest, want: Digest, key: string, label?: string): void {
+  if (Z_FIGHTING_FIXES.has(key)) expect({ objects: actual.objects, counts: actual.counts }, label).toEqual({ objects: want.objects, counts: want.counts })
+  else expect(actual, label).toEqual({ objects: want.objects, hash: want.hash, counts: want.counts })
+}
+
 const kits: Record<string, VehicleKit> = {}
 function kitFor(locale: string): VehicleKit {
   return (kits[locale] ||= makeFleetKit(locale))
@@ -59,7 +69,7 @@ export function describeGolden(group: FleetGroupId, slice?: { part: number; of: 
 
         for (const state of ['intact', 'damaged', 'modified'] as const) {
           it(`renders the ${state} state exactly like the original`, () => {
-            expect(digest(kitFor('pt-BR').build(key, state))).toEqual(g[state])
+            expectLook(digest(kitFor('pt-BR').build(key, state)), g[state], key)
           })
         }
 
@@ -87,14 +97,14 @@ export function describeGolden(group: FleetGroupId, slice?: { part: number; of: 
             ).toEqual(FLAGS[id])
             kit.applyZones(c, res)
             expect(kit.zoneOverall(c), `${id} overall`).toMatchObject(want.overall)
-            expect(digest(c), id).toEqual({ objects: want.objects, hash: want.hash, counts: want.counts })
+            expectLook(digest(c), want, key, id)
           })
         }
 
         it('looks the same in English and leaks no locale key', () => {
           const kit = kitFor('en')
           const c = kit.build(key, 'intact')
-          expect(digest(c)).toEqual(g.intact)
+          expectLook(digest(c), g.intact, key)
           expect(c.zones.map((z) => legacyZoneId(z))).toEqual(g.zones.map((z) => z[0]))
           expect(c.parts.map((p) => p.kind)).toEqual(g.parts.map((p) => p[0]))
           expect(c.zones).toHaveLength(g.zones.length)
@@ -109,7 +119,7 @@ export function describeGolden(group: FleetGroupId, slice?: { part: number; of: 
         })
 
         it('looks the same in English when damaged', () => {
-          expect(digest(kitFor('en').build(key, 'damaged'))).toEqual(g.damaged)
+          expectLook(digest(kitFor('en').build(key, 'damaged')), g.damaged, key)
         })
       })
     }

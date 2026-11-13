@@ -10,9 +10,9 @@ export const jerkedBeef: ItemModelBuilder = ({ mesh, bx, cyl, G, food, wood }) =
   const fat = food(0xb98a6a)
   return G(
     mesh(bx(2.5, 0.08, 0.4), dark, [0, -0.085, -0.55]),
-    mesh(bx(2.2, 0.08, 0.4), mid, [0.1, 0.08, -0.18]),
+    mesh(bx(2.2, 0.05, 0.4), mid, [0.1, 0.08, -0.18]),
     mesh(bx(2.4, 0.08, 0.4), dark, [-0.05, -0.085, 0.2]),
-    mesh(bx(2.1, 0.08, 0.4), mid, [0.15, 0.085, 0.55]),
+    mesh(bx(2.1, 0.05, 0.4), mid, [0.15, 0.08, 0.55]),
     mesh(bx(1.1, 0.012, 0.06), fat, [0.2, 0.12, -0.18]),
     mesh(bx(0.9, 0.012, 0.06), fat, [-0.3, 0.12, 0.55]),
     mesh(cyl(0.04, 0.04, 1.5, 6), wood(0x9b7a4a), [-0.95, 0.085, 0], [Math.PI / 2, 0, 0]),

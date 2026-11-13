@@ -200,7 +200,8 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
     if(a.fingers){const gr=(a.hold||a.grip?1.25:.4)*(z?.5:1);a.fingers.forEach((f,j)=>f.rotation.z=-a.s*gr*(j%2?1.1:.9));if(a.th)a.th.rotation.z=-a.s*(.45+gr*.25);a.hg.rotation.x=reduce?0:-W*Math.sin(ph-.6)*.15*a.s}});
   if(c.dog&&!reduce&&t){const d=c.dog.userData as DogRig;d.tail.rotation.y=Math.sin(t*9)*.5;d.dlegs.forEach(l=>{l.lg.rotation.x=W*Math.sin(t*7+l.ph)*.45})}
 }
-  function zombify(c: PersonCharacter,cat?: string){c.skinM.color.copy(c.base).lerp(ZSKIN2,1);c.eyeM.color.set(EYE[cat||"lento"] ?? EYE.lento!);c.zb.forEach(b=>b.visible=true);c.mouth.visible=true;c.bags.material.opacity=.9}
+  // the shown mouth sits 2 mm lower and a little shorter: drawn as the page drew it, its top lies on the lip or moustache above it and flickers (CLAUDE.md §13)
+  function zombify(c: PersonCharacter,cat?: string){c.skinM.color.copy(c.base).lerp(ZSKIN2,1);c.eyeM.color.set(EYE[cat||"lento"] ?? EYE.lento!);c.zb.forEach(b=>b.visible=true);c.mouth.visible=true;c.mouth.position.y=1.688;c.mouth.scale.y=.95;c.bags.material.opacity=.9}
   function buildPerson(p: PersonGroupSpec,zed: boolean){
   const root=new THREE.Group(),chars: PersonCharacter[]=[];
   if(p.b){const c=build(p.b,0);chars.push(c);root.add(c.root);if(zed&&!p.kid)zombify(c,p.zcat);c.z=!!(zed&&!p.kid)}

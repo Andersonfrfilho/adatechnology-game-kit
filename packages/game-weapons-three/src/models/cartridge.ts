@@ -28,7 +28,7 @@ export function buildCartridge(kit: ModelKit, dims: CartridgeDims, shape: Cartri
   const caseLength = dims.caseLength
   if (shape === 'shell') {
     cylinderY(group, radius, caseLength * 0.8, M.shell, 0, caseLength * 0.6, 0, 14)
-    cylinderY(group, radius * 1.03, caseLength * 0.22, M.brass, 0, caseLength * 0.11, 0, 14)
+    cylinderY(group, radius * 1.03, caseLength * 0.22 - 1.2, M.brass, 0, caseLength * 0.11 + 0.6, 0, 14)
     cylinderY(group, radius * 1.08, 1.2, M.brass, 0, 0.6, 0, 14)
     return group
   }
@@ -39,7 +39,8 @@ export function buildCartridge(kit: ModelKit, dims: CartridgeDims, shape: Cartri
     const shoulder = caseLength * 0.08
     const neck = caseLength - bodyHeight - shoulder
     const neckRadius = bulletRadius + 0.35
-    cylinderY(group, radius, bodyHeight, M.brass, 0, bodyHeight / 2, 0, 14)
+    const rimInset = shape === 'rr' ? 0.6 : 0
+    cylinderY(group, radius, bodyHeight - rimInset, M.brass, 0, bodyHeight / 2 + rimInset / 2, 0, 14)
     cylinderY(group, neckRadius, shoulder, M.brass, 0, bodyHeight + shoulder / 2, 0, 14, radius)
     cylinderY(group, neckRadius, neck, M.brass, 0, bodyHeight + shoulder + neck / 2, 0, 14)
     cylinderY(group, bulletRadius, extra * 0.3, M.copper, 0, caseLength + extra * 0.15, 0, 14)
@@ -47,7 +48,8 @@ export function buildCartridge(kit: ModelKit, dims: CartridgeDims, shape: Cartri
     return group
   }
   const bullet = shape === 'rim' || shape === 'rimp' ? M.lead : M.copper
-  cylinderY(group, radius, caseLength, M.brass, 0, caseLength / 2, 0, 14)
+  const rimInset = shape === 'p' ? 0 : 0.6
+  cylinderY(group, radius, caseLength - rimInset, M.brass, 0, caseLength / 2 + rimInset / 2, 0, 14)
   cylinderY(group, bulletRadius, extra * 0.45, bullet, 0, caseLength + extra * 0.225, 0, 14)
   cylinderY(group, bulletRadius, extra * 0.55, bullet, 0, caseLength + extra * 0.45 + extra * 0.275, 0, 14, bulletRadius * 0.45)
   return group

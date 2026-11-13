@@ -49,7 +49,7 @@ export const FACE_FEATURES = [
   },
   {
     ids: ['mirror'],
-    apply: ({ Bx, Hd, add, cmat }: FaceContext) => {add(Hd,Bx(.27,.012,.015),cmat(0x1a1a1a),0,1.84,.175);for(const s of[-1,1]){add(Hd,Bx(.095,.06,.014),cmat(0xc8ccd0,{metalness:.95,roughness:.12}),s*.06,1.817,.179);add(Hd,Bx(.012,.012,.17),cmat(0x1a1a1a),s*.15,1.83,.09);};},
+    apply: ({ Bx, Hd, add, cmat }: FaceContext) => {add(Hd,Bx(.27,.012,.015),cmat(0x1a1a1a),0,1.84,.175);for(const s of[-1,1]){add(Hd,Bx(.095,.054,.014),cmat(0xc8ccd0,{metalness:.95,roughness:.12}),s*.06,1.817,.179);add(Hd,Bx(.012,.012,.17),cmat(0x1a1a1a),s*.15,1.83,.09);};},
   },
   {
     ids: ['labgoggles'],

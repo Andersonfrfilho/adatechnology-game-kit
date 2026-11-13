@@ -43,6 +43,9 @@ const KNOWN_DEVIATIONS: ReadonlySet<string> = new Set([])
 // Owner decision (2026-11-06): the models that diverge from a photo of the real object are corrected to it, so they no longer match the page. The crowbar: a hexagonal bar of
 // 7/8 in instead of a 49 mm round tube, a tighter gooseneck ending in a forked claw and a flat chisel instead of a round stub (photo "Crowbar without haft.jpg").
 const OWNER_DEVIATIONS: ReadonlySet<string> = new Set(['crowbar'])
+// Owner decision (2026-11-12, CLAUDE.md §13): a label, band, lid or rim drawn flush with its body z-fights, so it now sits 2 mm off it. The box,
+// the parts, their order and their materials stay the team's; only the sizes and positions of the flush parts moved, so the node-by-node hash differs.
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['canned_beans', 'water_bottle', 'cachaca', 'first_aid_kit', 'amoxicillin', 'axe', 'survivor_diary', 'fuel_jerrycan'])
 
 describe('Itens do Vale Cinzento: the 24 showcase models', () => {
   const models = events.filter((event) => event.type === 'model')
@@ -54,7 +57,7 @@ describe('Itens do Vale Cinzento: the 24 showcase models', () => {
 
   for (const [index, event] of models.entries()) {
     const shipped = SHIPPED_MODELS[index]!
-    if (KNOWN_DEVIATIONS.has(shipped.entry.id) || OWNER_DEVIATIONS.has(shipped.entry.id)) continue
+    if (KNOWN_DEVIATIONS.has(shipped.entry.id) || OWNER_DEVIATIONS.has(shipped.entry.id) || Z_FIGHTING_FIXES.has(shipped.entry.id)) continue
     it(`${event.data.id} (${shipped.entry.id}) is the same group node by node: shapes, colours, transforms`, () => {
       const kit = createItemKit(THREE)
       const sdk = createGoldenRecord({ name: record.name, seed: record.seed, events: record.events, scenes: { [label(index)]: asPageNode(shipped.builder(kit)) }, hashOptions: { ignoreNames: true } })
@@ -65,7 +68,7 @@ describe('Itens do Vale Cinzento: the 24 showcase models', () => {
   it('all 24 hash like the page', () => {
     const mismatches: string[] = []
     for (const [index, { entry, builder }] of SHIPPED_MODELS.slice(0, 24).entries()) {
-      if (KNOWN_DEVIATIONS.has(entry.id) || OWNER_DEVIATIONS.has(entry.id)) continue
+      if (KNOWN_DEVIATIONS.has(entry.id) || OWNER_DEVIATIONS.has(entry.id) || Z_FIGHTING_FIXES.has(entry.id)) continue
       const snapshot = snapshotScene(asPageNode(builder(createItemKit(THREE))), { ignoreNames: true })
       const expected = record.scenes[label(index)]
       if (snapshot.hash !== expected?.hash || snapshot.objects !== expected.objects) mismatches.push(`${entry.id}: ${expected?.hash}/${expected?.objects} -> ${snapshot.hash}/${snapshot.objects}`)

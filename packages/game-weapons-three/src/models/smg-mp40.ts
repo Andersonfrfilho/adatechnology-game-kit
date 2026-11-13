@@ -26,7 +26,7 @@ function buildReceiver(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const bolt = kit.pivot(group)
   parts.bolt = bolt
   parts.stroke = 0.08
-  box(bolt, 0.044, 0.01, 0.006, M.steelL, 0.33, 0.012, 0.0172)
+  box(bolt, 0.044, 0.01, 0.006, M.steelL, 0.33, 0.012, 0.0192)
   box(bolt, 0.012, 0.012, 0.016, M.metal, 0.4, 0.002, TUBE_RADIUS + 0.008)
   kit.sphere(bolt, 0.007, M.metal, 0.4, 0.002, TUBE_RADIUS + 0.02, 1)
 }
@@ -69,7 +69,7 @@ function buildMagazine(kit: ModelKit, group: Parent, parts: ModelParts): void {
   parts.mag = magazine
   parts.magDrop = 0.19
   box(magazine, 0.036, 0.19, 0.022, M.metal, 0, -0.095, 0)
-  for (const x of [-0.007, 0.007]) box(magazine, 0.003, 0.15, 0.0235, M.dark, x, -0.12, 0)
+  for (const x of [-0.007, 0.007]) box(magazine, 0.003, 0.15, 0.0264, M.dark, x, -0.12, 0)
   box(magazine, 0.04, 0.008, 0.026, M.dark, 0, -0.19, 0)
 }
 

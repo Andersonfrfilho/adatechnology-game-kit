@@ -16,7 +16,7 @@ export const chainsaw: ItemModelBuilder = ({ mesh, bx, cyl, G, metal, plastic })
     mesh(bx(0.2, 0.45, 2.3), dark, [-0.1, 0.45, 0]),
     mesh(cyl(0.38, 0.38, 0.12, 8), dark, [-1.2, 0.26, 0]),
     mesh(bx(0.8, 0.5, 0.3), metal(0x6f7377), [-1.5, -0.35, 0.9]),
-    mesh(bx(2.2, 0.46, 0.14), metal(0xa9adb0), [1.0, -0.45, 0]),
+    mesh(bx(1.95, 0.46, 0.14), metal(0xa9adb0), [1.125, -0.45, 0]),
     mesh(bx(2.35, 0.6, 0.2), metal(0x2a2c2e), [1.075, -0.45, 0]),
   )
 }

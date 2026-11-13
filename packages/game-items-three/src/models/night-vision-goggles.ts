@@ -13,8 +13,8 @@ export const nightVisionGoggles: ItemModelBuilder = ({ M, mesh, cyl, bx, G, meta
     mesh(bx(0.04, 0.016, 0.05), metal(0x2a2c2e), [0, 0.092, -0.005]),
   )
   for (const x of [-0.039, 0.039]) {
-    group.add(mesh(cyl(0.036, 0.036, 0.05, 12), shell, [x, 0.05, 0.03], [quarter, 0, 0]))
-    group.add(mesh(cyl(0.028, 0.028, 0.002, 10), lens, [x, 0.05, 0.054], [quarter, 0, 0]))
+    group.add(mesh(cyl(0.036, 0.036, 0.046, 12), shell, [x, 0.05, 0.028], [quarter, 0, 0]))
+    group.add(mesh(cyl(0.028, 0.028, 0.006, 10), lens, [x, 0.05, 0.052], [quarter, 0, 0]))
     group.add(mesh(cyl(0.03, 0.03, 0.03, 10), plastic(0x15171a), [x, 0.05, -0.04], [quarter, 0, 0]))
   }
   return group

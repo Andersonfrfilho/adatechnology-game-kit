@@ -14,7 +14,7 @@ export const leatherWorkGloves: ItemModelBuilder = ({ mesh, bx, G, cloth }) => {
     finger(0.03, 0.095, -0.013),
     finger(0.03, 0.09, 0.013),
     finger(0.03, 0.075, 0.039),
-    mesh(bx(0.05, 0.02, 0.026), leather, [-0.01, 0.01, 0.036], [0, -0.5, 0]),
-    mesh(bx(0.03, 0.024, 0.1), cuff, [-0.0575, 0.012, 0]),
+    mesh(bx(0.05, 0.018, 0.026), leather, [-0.01, 0.011, 0.036], [0, -0.5, 0]),
+    mesh(bx(0.03, 0.024, 0.104), cuff, [-0.0575, 0.014, 0]),
   )
 }

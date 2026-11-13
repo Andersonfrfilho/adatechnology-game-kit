@@ -52,13 +52,13 @@ function buildReceiver(context: RifleContext): void {
   const bolt = kit.pivot(group)
   parts.bolt = bolt
   parts.stroke = Math.min(0.1, RL * 0.32)
-  box(bolt, 0.044, hR * 0.26, 0.006, M.steelL, ejectX, ejectY, wR / 2 - 0.0012)
+  box(bolt, 0.044, hR * 0.26, 0.008, M.steelL, ejectX, ejectY, wR / 2 - 0.0004)
   if (o.charge) {
     box(bolt, 0.012, 0.01, 0.03, M.metal, ejectX + 0.04, ejectY + 0.004, wR / 2 + 0.012)
     sphere(bolt, 0.0065, M.metal, ejectX + 0.04, ejectY + 0.004, wR / 2 + 0.028, 1)
   }
   if (o.ar) box(group, 0.012, 0.016, 0.006, receiverMaterial, ejectX - 0.03, ejectY + 0.004, wR / 2 + 0.004)
-  if (o.rail && !o.g36) rail(kit, group, x0 - 0.005, RL + 0.07, hR / 2 + (o.ar ? 0 : 0.003), 0, wR * 0.68)
+  if (o.rail && !o.g36) rail(kit, group, x0 - 0.005, RL + (o.hg === 'rail' ? 0.005 : 0.07), hR / 2 + (o.ar ? 0 : 0.003), 0, wR * 0.68)
 }
 
 /** Barrel with its jacket, gas tube and muzzle device. */

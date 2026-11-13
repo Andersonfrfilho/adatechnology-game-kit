@@ -33,7 +33,7 @@ function addControls(look: BullpupLook, spec: { gripX: number; gripY: number; gr
   const bolt = kit.pivot(group)
   parts.bolt = bolt
   box(group, 0.07, 0.02, 0.004, M.hole, spec.ejectX, 0.004, 0.0235)
-  box(bolt, 0.05, 0.014, 0.006, M.steelL, spec.ejectX, 0.004, 0.0235)
+  box(bolt, 0.05, 0.014, 0.008, M.steelL, spec.ejectX, 0.004, 0.0235)
   parts.eject = kit.mark(group, spec.ejectX, 0.004, 0.03)
 }
 
@@ -56,13 +56,13 @@ function addBarrel(look: BullpupLook, from: number, hiderLength: number, hiderRa
 export function buildFamasLook(look: BullpupLook): void {
   const { kit, group } = look
   const { M, box, cylinderX } = kit
-  box(group, 0.19, 0.135, 0.05, M.poly, 0.095, -0.0275, 0)
-  box(group, 0.014, 0.14, 0.05, M.rubber, 0.007, -0.027, 0)
+  box(group, 0.188, 0.135, 0.05, M.poly, 0.096, -0.0275, 0)
+  box(group, 0.014, 0.146, 0.054, M.rubber, 0.007, -0.027, 0)
   box(group, 0.455, 0.078, 0.046, M.poly, 0.4075, 0, 0)
-  box(group, 0.2, 0.012, 0.048, M.dark, 0.1, 0.044, 0)
-  box(group, 0.348, 0.025, 0.032, M.poly, 0.457, 0.0805, 0)
-  box(group, 0.035, 0.056, 0.032, M.poly, 0.3005, 0.064, 0)
-  box(group, 0.035, 0.056, 0.032, M.poly, 0.6135, 0.064, 0)
+  box(group, 0.198, 0.012, 0.048, M.dark, 0.101, 0.044, 0)
+  box(group, 0.352, 0.025, 0.036, M.poly, 0.457, 0.0805, 0)
+  box(group, 0.035, 0.0535, 0.032, M.poly, 0.3005, 0.06275, 0)
+  box(group, 0.035, 0.0535, 0.032, M.poly, 0.6135, 0.06275, 0)
   cylinderX(group, 0.004, 0.3, M.steel, 0.46, 0.052, 0, 8)
   box(group, 0.012, 0.014, 0.012, M.steel, 0.4, 0.052, 0.011)
   box(group, 0.016, 0.02, 0.01, M.dark, 0.6, 0.05, 0)
@@ -82,7 +82,7 @@ export function buildFamasLook(look: BullpupLook): void {
 export function buildTavorLook(look: BullpupLook): void {
   const { kit, group } = look
   const { M, box, cylinderX } = kit
-  box(group, 0.2, 0.123, 0.054, M.olive, 0.1, -0.0085, 0)
+  box(group, 0.198, 0.123, 0.046, M.olive, 0.101, -0.0085, 0)
   box(group, 0.19, 0.03, 0.052, M.olive, 0.1, -0.078, 0, 0.16)
   box(group, 0.018, 0.14, 0.054, M.rubber, 0.009, -0.02, 0)
   box(group, 0.22, 0.098, 0.052, M.olive, 0.31, 0.004, 0)
@@ -113,12 +113,12 @@ export function buildSa80Look(look: BullpupLook): void {
   box(group, 0.39, 0.08, 0.046, M.metal, 0.215, -0.01, 0)
   rail(kit, group, 0.2, 0.21, 0.036, 0, 0.03)
   box(group, 0.014, 0.03, 0.01, M.steelL, 0.235, 0.05, 0.02)
-  box(group, 0.075, 0.025, 0.004, M.steel, 0.13, 0.0, 0.0235)
+  box(group, 0.075, 0.025, 0.003, M.steel, 0.13, 0.0, -0.0245)
   box(group, 0.238, 0.077, 0.052, M.tan, 0.529, -0.0075, 0)
   rail(kit, group, 0.41, 0.238, 0.036, 0, 0.03)
   rail(kit, group, 0.43, 0.2, -0.0465, 0, 0.03, Math.PI)
   for (const side of [1, -1]) for (let i = 0; i < 5; i++) cylinderZ(group, 0.0065, 0.004, M.hole, 0.44 + i * 0.04, 0.012, side * 0.0262, 12)
-  box(group, 0.03, 0.02, 0.02, M.dark, 0.6, 0.044, 0)
+  box(group, 0.03, 0.02, 0.02, M.dark, 0.6, 0.046, 0)
   box(group, 0.1, 0.03, 0.034, M.dark, 0.32, 0.05, 0)
   cylinderX(group, 0.022, 0.15, M.dark, 0.32, 0.088, 0, 20)
   cylinderX(group, 0.028, 0.05, M.dark, 0.405, 0.088, 0, 20)

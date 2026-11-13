@@ -50,8 +50,8 @@ function buildM72(kit: ModelKit, group: THREE.Group, parts: ModelParts): void {
   parts.kick = 1.1
   parts.disposable = true
   heatify(parts.glow, cylinderX(group, 0.0365, 0.6, M.olive, 0.58, 0, 0, 20))
-  cylinderX(group, 0.032, 0.32, M.olive, 0.16, 0, 0, 20)
-  cylinderX(group, 0.039, 0.03, M.rubber, 0.866, 0, 0, 20)
+  cylinderX(group, 0.032, 0.315, M.olive, 0.1625, 0, 0, 20)
+  cylinderX(group, 0.039, 0.03, M.rubber, 0.8668, 0, 0, 20)
   cylinderX(group, 0.035, 0.025, M.rubber, 0.012, 0, 0, 20)
   cylinderX(group, 0.037, 0.015, M.yellow, 0.8, 0, 0, 20)
   cylinderX(group, 0.037, 0.012, M.dark, 0.3, 0, 0, 20)
@@ -95,7 +95,7 @@ function buildAt4(kit: ModelKit, group: THREE.Group, parts: ModelParts): void {
 function buildCarlGustaf(kit: ModelKit, group: THREE.Group, parts: ModelParts): void {
   const { M, box, cylinderX } = kit
   parts.kick = 1.4
-  heatify(parts.glow, cylinderX(group, 0.045, 0.72, M.dark, 0.59, 0, 0, 24))
+  heatify(parts.glow, cylinderX(group, 0.045, 0.718, M.dark, 0.589, 0, 0, 24))
   cylinderX(group, 0.05, 0.04, M.rubber, 0.93, 0, 0, 24)
   const breech = kit.pivot(group, 0.21, 0, 0.05)
   parts.breech = [breech]

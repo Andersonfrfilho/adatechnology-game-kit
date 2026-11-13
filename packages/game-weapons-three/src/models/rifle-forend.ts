@@ -27,12 +27,12 @@ export function buildForend(context: RifleContext): void {
       rail(kit, group, x1, handguardLength, by + hh / 2, 0, wR * 0.66)
       rail(kit, group, x1 + 0.01, handguardLength - 0.02, by - 0.002, wR * 0.54, wR * 0.4, PI / 2)
       rail(kit, group, x1 + 0.01, handguardLength - 0.02, by - 0.002, -wR * 0.54, wR * 0.4, -PI / 2)
-      rail(kit, group, x1 + 0.01, handguardLength - 0.02, by - hh / 2, 0, wR * 0.6, PI)
+      rail(kit, group, x1 + 0.01, handguardLength - 0.02, by - hh / 2 - 0.004, 0, wR * 0.6, PI)
     } else {
       const material = o.hg === 'wood' ? M.wood : furn
       if (o.ak) {
         box(group, handguardLength, hh * 0.55, wR * 1.08, material, hx, by - hh * 0.22, 0)
-        box(group, handguardLength * 0.75, hh * 0.35, wR * 0.7, material, hx - handguardLength * 0.1, by + r * 2.2, 0)
+        box(group, handguardLength * 0.75, hh * 0.35, wR * 0.7 + 0.004, material, hx - handguardLength * 0.1, by + r * 2.2, 0)
       } else {
         box(group, handguardLength, hh, wR * 1.08, material, hx, by - 0.002, 0)
         vents(kit, group, x1 + 0.01, handguardLength - 0.02, by + hh * 0.15, wR * 0.54 + 0.001, Math.round(handguardLength / 0.025), hh * 0.3)

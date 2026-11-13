@@ -10,7 +10,7 @@ import { profileSolid } from './wood-profile'
  */
 export function buildSvdStock(context: RifleContext): void {
   const { kit, group, furniture: furn, stockLength: S } = context
-  const width = 0.034
+  const width = 0.038
   // one solid from the butt to the foot of the grip, the thumbhole cut through it
   profileSolid(
     kit,

@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { GAME_DEPTH_PRECISION, coincidentFacesOf } from '../src'
+import { GAME_DEPTH_PRECISION, coincidentFacesOf, standOutCoincident } from '../src'
 
 function block(name: string, size: readonly [number, number, number], at: readonly [number, number, number], material: THREE.Material = new THREE.MeshStandardMaterial()): THREE.Mesh {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), material)
@@ -36,6 +36,18 @@ describe('coincidentFacesOf', () => {
     expect(coincidentFacesOf(tiles).length).toBeGreaterThan(0)
   })
 
+  it('ignores triangles past the draw range, which the GPU never draws', () => {
+    const plane = new THREE.PlaneGeometry(1, 1)
+    const doubled = new THREE.BufferGeometry()
+    doubled.setAttribute('position', plane.getAttribute('position'))
+    const index = Array.from(plane.index!.array)
+    doubled.setIndex([...index, ...index])
+    const mesh = new THREE.Mesh(doubled, new THREE.MeshStandardMaterial())
+    expect(coincidentFacesOf(mesh).length).toBeGreaterThan(0)
+    doubled.setDrawRange(0, index.length)
+    expect(coincidentFacesOf(mesh)).toEqual([])
+  })
+
   it('skips hidden meshes and polygon-offset decals unless asked', () => {
     const root = new THREE.Group()
     const hidden = block('core', [1, 1, 1], [0, 0, 0])
@@ -56,12 +68,41 @@ describe('coincidentFacesOf on a LOD', () => {
   })
 })
 
-describe('transparent films without depth write', () => {
-  it('are skipped like decals', () => {
+describe('standOutCoincident', () => {
+  it('grows the smaller piece 2 mm past the body and leaves no fight', () => {
     const root = new THREE.Group()
-    const film = block('water', [1, 1, 1], [0, 0, 0], new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }))
-    root.add(block('ground', [1, 1, 1], [0, 0, 0]), film)
+    root.scale.setScalar(0.25)
+    const body = block('body', [1.6, 2.4, 0.8], [0, 0, 0])
+    const label = block('label', [1.2, 0.8, 0.8], [0, 0.3, 0])
+    root.add(body, label)
+    const report = standOutCoincident(root)
+    expect(report).toEqual({ grown: 1, left: 0 })
+    expect(body.scale.toArray()).toEqual([1, 1, 1])
+    const front = new THREE.Box3().setFromObject(label).max.z
+    expect(front).toBeCloseTo(0.25 * 0.4 + 0.002, 6)
+    expect(new THREE.Box3().setFromObject(label).getCenter(new THREE.Vector3()).y).toBeCloseTo(0.25 * 0.3, 6)
+  })
+
+  it('grows a cylinder label radially past a can of the same radius', () => {
+    const root = new THREE.Group()
+    const can = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.11, 16), new THREE.MeshStandardMaterial())
+    const label = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.06, 16), new THREE.MeshStandardMaterial())
+    root.add(can, label)
+    expect(standOutCoincident(root).left).toBe(0)
     expect(coincidentFacesOf(root)).toEqual([])
+  })
+})
+
+
+describe('coincidentFacesOf and the depth buffer', () => {
+  it('lets two layers that write no depth overlap, but not a layer that tests depth over a solid face', () => {
+    const smoke = (): THREE.Material => new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })
+    const puffs = new THREE.Group()
+    puffs.add(block('puff_a', [1, 1, 0.01], [0, 0, 0], smoke()), block('puff_b', [1, 1, 0.01], [0.3, 0, 0], smoke()))
+    expect(coincidentFacesOf(puffs)).toEqual([])
+    const scorch = new THREE.Group()
+    scorch.add(block('ground', [4, 0.1, 4], [0, -0.05, 0]), block('scorch', [1, 0.1, 1], [0, -0.05, 0], smoke()))
+    expect(coincidentFacesOf(scorch).length).toBeGreaterThan(0)
   })
 })
 

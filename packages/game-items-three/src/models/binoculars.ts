@@ -11,8 +11,8 @@ export const binoculars: ItemModelBuilder = ({ mesh, bx, cyl, G, M, plastic, met
   const barrel = (x: number) => [
     mesh(cyl(3.8, 3.8, 8, 12), shell, [x, -0.5, 0]),
     mesh(cyl(3, 3, 3.5, 12), trim, [x, -5.75, 0]),
-    mesh(cyl(6, 4.6, 4, 12), shell, [x, 5.5, 0], [0, 0, 0], [0.8, 1, 1]),
-    mesh(cyl(5.4, 5.4, 0.2, 8), lens, [x, 7.4, 0], [0, 0, 0], [0.8, 1, 1]),
+    mesh(cyl(6, 4.6, 3.7, 12), shell, [x + Math.sign(x) * 0.6, 5.35, 0], [0, 0, 0], [0.7, 1, 1]),
+    mesh(cyl(5.4, 5.4, 0.5, 8), lens, [x + Math.sign(x) * 0.6, 7.25, 0], [0, 0, 0], [0.7, 1, 1]),
   ]
   return G(...barrel(-4.2), ...barrel(4.2), mesh(bx(2.4, 6, 3), trim), mesh(cyl(1.3, 1.3, 3, 8), metal(0x3c3f43), [0, 0.5, 0]))
 }

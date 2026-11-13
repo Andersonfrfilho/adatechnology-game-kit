@@ -60,7 +60,7 @@ describe('createMeshApi', () => {
   })
 
   it('keeps parts as separate groups with the origin at the pivot', () => {
-    const { api, finish } = createMeshApi(THREE)
+    const { api, finish } = createMeshApi(THREE, { standOut: false })
     api.box(M, 'plain', 0, 0, 0, 2, 1, 1, 0xffffff, 0, 0, 0)
     api.part('door', [1, 0, 0.5], Math.PI / 2, () => {
       api.box(M, 'wood', 0, 0, 0, 0.1, 2, 1, 0x884422, 0, 0, 0)

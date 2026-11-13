@@ -80,7 +80,7 @@ function buildScenery(THREE: Three): THREE_NS.Group {
   g.add(yard)
   box(30, 0.04, 4.6, mats.asphalt, 6, 0.0, -4.6) // street
   box(30, 0.1, 2.2, mats.concrete, 6, 0.04, -1.1) // sidewalk
-  box(1.6, 0.03, 6.6, mats.concrete, 6, 0.02, 3.2) // path to the door
+  box(1.6, 0.03, 6.52, mats.concrete, 6, 0.02, 3.16) // path to the door: it ends at the door's front face, not inside it
   const hw = HOUSE.x1 - HOUSE.x0
   const hd = HOUSE.z1 - HOUSE.z0
   const hcx = (HOUSE.x0 + HOUSE.x1) / 2
@@ -96,11 +96,12 @@ function buildScenery(THREE: Three): THREE_NS.Group {
   box(1.6, 1.1, 0.08, mats.glass, 3.8, 1.5, HOUSE.z0 - 0.04)
   box(1.6, 1.1, 0.08, mats.glass, 8.2, 1.5, HOUSE.z0 - 0.04)
   // walls
-  box(5, 1.4, 0.2, mats.wall, 2.5, 0.7, 0)
-  box(5, 1.4, 0.2, mats.wall, 9.5, 0.7, 0)
-  box(0.2, 1.8, LOT.D, mats.wall, 0, 0.9, 10)
-  box(0.2, 1.8, LOT.D, mats.wall, LOT.W, 0.9, 10)
-  box(LOT.W, 1.8, 0.2, mats.wall, 6, 0.9, LOT.D)
+  // the walls butt against each other's inner faces, none overlaps another
+  box(4.9, 1.4, 0.2, mats.wall, 2.55, 0.7, 0)
+  box(4.9, 1.4, 0.2, mats.wall, 9.45, 0.7, 0)
+  box(0.2, 1.8, LOT.D + 0.2, mats.wall, 0, 0.9, 10)
+  box(0.2, 1.8, LOT.D + 0.2, mats.wall, LOT.W, 0.9, 10)
+  box(LOT.W - 0.2, 1.8, 0.2, mats.wall, 6, 0.9, LOT.D)
   return g
 }
 

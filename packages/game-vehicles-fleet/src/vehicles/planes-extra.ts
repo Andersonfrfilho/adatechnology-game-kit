@@ -138,9 +138,20 @@ export function createPlanesKit(kit: VehicleKit) {
       return [s[0], cy - hh, cy + hh, s[3] * k, s[4], s[5]]
     })
   }
+  /* the skin is a little shorter at both ends than the fuselage it hugs, so the end caps are not in the same plane and the aircraft keeps its length */
+  function stretchSt(st: readonly (readonly number[])[]): number[][] {
+    const out = st.map(function (q) {
+      return q.slice()
+    })
+    const last = out.length - 1
+    const dir = out[last]![0]! >= out[0]![0]! ? 1 : -1
+    out[0]![0] = out[0]![0]! + dir * 0.003
+    out[last]![0] = out[last]![0]! - dir * 0.003
+    return out
+  }
   function fSkin(c: VehicleContext, EA: WaterAirKit, st: number[][], keep: CutTest, mat: Material, o?: SkinOptions) {
     o = o || {}
-    const m = c.add(EA.fuseGeo(scaleSt(st, o.k || 1.004), { smooth: o.smooth || 48, seg: o.seg || 30 }), mat, 0, 0, 0, o.parent)
+    const m = c.add(EA.fuseGeo(stretchSt(scaleSt(st, o.k || EA.nextSkinScale(c))), { smooth: o.smooth || 48, seg: o.seg || 30 }), mat, 0, 0, 0, o.parent)
     m.castShadow = false
     cutSub(m, [keep], o.sub || 0.06, o.pre)
     c.deform.push(m)
@@ -148,7 +159,7 @@ export function createPlanesKit(kit: VehicleKit) {
   }
   function fGlass(c: VehicleContext, EA: WaterAirKit, st: number[][], keep: CutTest, label: LabelArgument, type: string, o?: SkinOptions & { mat?: Material; pos?: Vector3 }) {
     o = o || {}
-    const m = new THREE.Mesh(EA.fuseGeo(scaleSt(st, o.k || 0.988), { smooth: o.smooth || 48, seg: o.seg || 30 }), o.mat || MT.glass)
+    const m = new THREE.Mesh(EA.fuseGeo(scaleSt(st, o.k || EA.nextPaneScale(c)), { smooth: o.smooth || 48, seg: o.seg || 30 }), o.mat || MT.glass)
     ;(o.parent || c.vehicle).add(m)
     cutSub(m, [keep], o.sub || 0.07, o.pre)
     return kit.asGlass(c, m, label, type || 'tempered', o.pos ? { pos: o.pos } : {})
@@ -368,7 +379,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           return Math.min(boltW(x) - Math.abs(y - bolt(x)), x + 3.2, 2.93 - x, Math.abs(z) - 0.12)
         }),
         black,
-        { parent: grp, sub: 0.05, pre: EA.keepT([-3.3, 3.0, -0.35, 0.2, 0.1]) },
+        { parent: grp, sub: 0.05, k: 1.013, pre: EA.keepT([-3.3, 3.0, -0.35, 0.2, 0.1]) },
       )
       /* split door on the right side (gap) and cowling seams */
       const doorR = EA.polySdf([
@@ -439,7 +450,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         }
         const g = EA.foilGeo(
           [
-            { p: [1.46, dh(0), 0], c: 1.6, t: 0.12, cam: 0.025, noCap: true },
+            { p: [1.46, dh(0), s * 0.002], c: 1.6, t: 0.12, cam: 0.025, noCap: true },
             { p: [1.46, dh(2.6), s * 2.6], c: 1.6, t: 0.12, cam: 0.025 },
             { p: [1.46, dh(4.9), s * 4.9], c: 1.6, t: 0.12, cam: 0.025 },
             { p: [1.43, dh(5.18), s * 5.18], c: 1.5, t: 0.11, cam: 0.02 },
@@ -503,7 +514,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-2.78, 0.1, 0], c: 0.78, t: 0.07 },
+              { p: [-2.78, 0.1, s * 0.002], c: 0.78, t: 0.07 },
               { p: [-2.85, 0.1, s * 1.1], c: 0.74, t: 0.07 },
               { p: [-2.95, 0.1, s * 1.36], c: 0.6, t: 0.06 },
               { p: [-3.1, 0.1, s * 1.46], c: 0.32, t: 0.05 },
@@ -787,7 +798,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA.sideKeepP(ckP, 0.5, s),
           s > 0 ? lbl('right_flight_deck_window') : lbl('left_flight_deck_window'),
           'tempered',
-          { pos: new V3(5.4, 2.25, s * 0.8) },
+          { pos: new V3(5.4, 2.25, s * 0.8), k: 1.0085 },
         )
         fGlass(
           c,
@@ -849,7 +860,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const w = c.add(
           EA.foilGeo(
             [
-              { p: [1.52, dh(0), 0], c: 2.38, t: 0.15, cam: 0.02 },
+              { p: [1.52, dh(0), s * 0.002], c: 2.38, t: 0.15, cam: 0.02 },
               { p: [1.52, dh(0.86), s * 0.86], c: 2.38, t: 0.15, cam: 0.02 },
               { p: [1.42, dh(2.47), s * 2.47], c: 2.25, t: 0.145, cam: 0.02 },
               { p: [0.98, dh(7.42), s * 7.42], c: 1.4, t: 0.12, cam: 0.02 },
@@ -989,7 +1000,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-5.95, 2.3, 0], c: 1.55, t: 0.1 },
+              { p: [-5.95, 2.3, s * 0.002], c: 1.55, t: 0.1 },
               { p: [-6.62, 2.3 + 3.2 * 0.176, s * 3.2], c: 0.86, t: 0.09 },
             ],
             { up: 'y', n: 10 },
@@ -1285,7 +1296,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const w = c.add(
           EA.foilGeo(
             [
-              { p: [1.56, dh(0), 0], c: 1.98, t: 0.15, cam: 0.025, noCap: true },
+              { p: [1.56, dh(0), s * 0.002], c: 1.98, t: 0.15, cam: 0.025, noCap: true },
               { p: [1.56, dh(3.6), s * 3.6], c: 1.98, t: 0.15, cam: 0.025 },
               { p: [1.38, dh(7.7), s * 7.7], c: 1.3, t: 0.12, cam: 0.02 },
               { p: [1.32, dh(7.94), s * 7.94], c: 1.1, t: 0.06, cam: 0.01 },
@@ -1435,7 +1446,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-4.8, 3.08, 0], c: 1.55, t: 0.1 },
+              { p: [-4.8, 3.08, s * 0.002], c: 1.55, t: 0.1 },
               { p: [-5.15, 3.08, s * 3.1], c: 1.0, t: 0.09 },
             ],
             { up: 'y', n: 10 },
@@ -1660,7 +1671,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           EA.sideKeepP(ckP, 0.5, s),
           s > 0 ? lbl('right_flight_deck_side_window') : lbl('left_flight_deck_side_window'),
           'tempered',
-          { pos: new V3(3.6, 2.0, s * 0.78) },
+          { pos: new V3(3.6, 2.0, s * 0.78), k: 1.0085 },
         )
         fGlass(
           c,
@@ -1689,7 +1700,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           return Math.min(0.008 - Math.abs(EA.polySdf(rrect(2.62, 3.25, 0.72, 2.22, 0.12))(x, y)), -z - 0.5)
         }),
         MT.dark,
-        { k: 1.003 },
+        { k: 1.0065 },
       )
       void dF
       EA.fuseSkin(
@@ -1699,7 +1710,7 @@ export function installPlanesExtra(fx: FleetContext): void {
           return Math.min(0.035 - Math.abs(x - 3.88 - (y - 1.75) * 0.5), y - 1.7, 2.42 - y)
         }),
         blk,
-        { k: 1.004 },
+        { k: 1.0065 },
       )
       c.rod(new V3(5.0, 1.74, 0), new V3(4.05, 2.4, 0), 0.02, blk)
       /* interior: cockpit with three screens, club cabin (4 seats facing each other) and a side seat */
@@ -1742,7 +1753,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const w = c.add(
           EA.foilGeo(
             [
-              { p: [1.0, dh(0), 0], c: 2.45, t: 0.14, cam: 0.02 },
+              { p: [1.0, dh(0), s * 0.002], c: 2.45, t: 0.14, cam: 0.02 },
               { p: [0.95, dh(0.85), s * 0.85], c: 2.42, t: 0.14, cam: 0.02 },
               { p: [0.55, dh(2.4), s * 2.4], c: 1.9, t: 0.13, cam: 0.02 },
               { p: [-0.32, dh(5.75), s * 5.75], c: 1.08, t: 0.11, cam: 0.02 },
@@ -1831,7 +1842,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       const finB = c.add(
         EA.foilGeo(
           [
-            { p: [-3.89, 2.25, 0], c: 2.22, t: 0.115 },
+            { p: [-3.89, 2.253, 0], c: 2.22, t: 0.115 },
             { p: [-5.34, 4.185, 0], c: 1.17, t: 0.105 },
           ],
           { up: 'z', n: 10 },
@@ -1854,7 +1865,7 @@ export function installPlanesExtra(fx: FleetContext): void {
         const hs = c.add(
           EA.foilGeo(
             [
-              { p: [-5.3, 4.2, 0], c: 1.18, t: 0.1 },
+              { p: [-5.3, 4.2, s * 0.002], c: 1.18, t: 0.1 },
               { p: [-5.9, 4.24, s * 2.55], c: 0.62, t: 0.09 },
             ],
             { up: 'y', n: 10 },
@@ -2142,7 +2153,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       ;[1, -1].forEach(function (s) {
         const g = EA.foilGeo(
           [
-            { p: [1.52, dh(0), 0], c: 2.35, t: 0.15, cam: 0.02 },
+            { p: [1.52, dh(0), s * 0.002], c: 2.35, t: 0.15, cam: 0.02 },
             { p: [1.5, dh(0.48), s * 0.48], c: 2.32, t: 0.15, cam: 0.02 },
             { p: [0.78, dh(5.4), s * 5.4], c: 1.2, t: 0.12, cam: 0.02 },
             { p: [0.74, dh(5.57), s * 5.57], c: 1.1, t: 0.07, cam: 0.01 },
@@ -2255,7 +2266,7 @@ export function installPlanesExtra(fx: FleetContext): void {
       ;[1, -1].forEach(function (s) {
         const g = EA.foilGeo(
           [
-            { p: [-4.3, 1.72, 0], c: 1.3, t: 0.1 },
+            { p: [-4.3, 1.72, s * 0.002], c: 1.3, t: 0.1 },
             { p: [-4.72, 1.76, s * 2.2], c: 0.75, t: 0.09 },
           ],
           { up: 'y', n: 10 },

@@ -11,7 +11,7 @@
 "part/road_z":{"hash":"bcce3a4a","objects":3},
 "part/walk":{"hash":"1dfc0dc8","objects":2},
 "part/ground":{"hash":"8149ef33","objects":2},
-"part/street_grid":{"hash":"9fc356b7","objects":28},
+"part/street_grid":{"hash":"ceb59cf5","objects":28},
 "part/block_default":{"hash":"2a7fcb33","objects":14},
 "part/block_three_by_three":{"hash":"dd8f8d76","objects":14},
 "part/building_alone":{"hash":"fdf9f070","objects":12},
@@ -33,7 +33,7 @@
 "item/pole_cast_iron":{"hash":"1cbce30d","objects":5},
 "item/pole_wood_crossarm":{"hash":"17b8cf7b","objects":5},
 "item/pole_flood_tower":{"hash":"e5dd7cca","objects":10},
-"item/street_grid":{"hash":"f07e71c1","objects":45},
+"item/street_grid":{"hash":"a9dcc70f","objects":45},
 "item/terrain_patch":{"hash":"6376a133","objects":3},
 "item/downtown":{"hash":"eb5f6505","objects":48},
 "item/suburb":{"hash":"4d592d44","objects":110},
@@ -45,4 +45,4 @@
 "item/stilt_village":{"hash":"cb9a8463","objects":71},
 "item/military":{"hash":"a41c5e5f","objects":45},
 "item/rural":{"hash":"93c43240","objects":59},
-"helpers":{"hash":"f1387a57","objects":7}}
+"helpers":{"hash":"50008e55","objects":7}}

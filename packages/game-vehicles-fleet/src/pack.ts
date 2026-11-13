@@ -7,6 +7,7 @@ import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
 import { createScenarios } from './scenarios'
 import type { FleetScenarioId } from './scenarios'
+import { separateSpokes } from './spokes'
 import { installBoatsExtra } from './vehicles/boats-extra'
 import { installCarsExtra } from './vehicles/cars-extra'
 import { installHeavy } from './vehicles/heavy'
@@ -84,7 +85,10 @@ function createContext(kit: VehicleKit, options: FleetOptions): FleetContext {
     hasSunroof: (key: string): boolean => !!options.sunroofs?.includes(key as FleetVehicleId),
     register(spec: VehicleSpec, build) {
       if (!groups.has(spec.group as string) || (only && !only.has(spec.key)) || skip.has(spec.key)) return
-      kit.register({ ...spec, seedKey: legacyVehicleSeeds[spec.key] }, build)
+      kit.register({ ...spec, seedKey: legacyVehicleSeeds[spec.key] }, (context, vehicleKit) => {
+        build(context, vehicleKit)
+        separateSpokes(context)
+      })
     },
   }
 }

@@ -11,6 +11,7 @@ interface NearFace {
   readonly doubleSided: boolean
   readonly box: readonly [number, number, number, number, number, number]
   readonly batch: CoincidentBatch
+  readonly batchIndex: number
   /** The triangle's three vertex indices in its batch. */
   readonly corners: readonly [number, number, number]
 }
@@ -39,7 +40,7 @@ function facesOf(batches: readonly CoincidentBatch[]): NearFace[] {
       const n = normalOf(triangle)
       if (n[0] === 0 && n[1] === 0 && n[2] === 0) continue
       const offset = n[0] * triangle[0][0] + n[1] * triangle[0][1] + n[2] * triangle[0][2]
-      faces.push({ triangle, n, offset, label, doubleSided: batch.doubleSided === true, box: boxOf(triangle), batch, corners })
+      faces.push({ triangle, n, offset, label, doubleSided: batch.doubleSided === true, box: boxOf(triangle), batch, batchIndex: index, corners })
     }
   })
   return faces
@@ -90,7 +91,7 @@ function nearHit(a: NearFace, b: NearFace, eps: number, minArea: number): Coinci
   const separation = Math.abs(b.n[0] * point[0] + b.n[1] * point[1] + b.n[2] * point[2] - b.offset)
   if (separation >= eps) return undefined
   if (facing > 0 && drawAlike(a, b, point)) return undefined
-  return { normal: a.n, offset: a.offset, area: overlap.area, point, labelA: a.label, labelB: b.label, kind: facing > 0 ? 'coplanar' : 'opposed', separation }
+  return { normal: a.n, offset: a.offset, area: overlap.area, point, labelA: a.label, labelB: b.label, batchA: a.batchIndex, batchB: b.batchIndex, kind: facing > 0 ? 'coplanar' : 'opposed', separation }
 }
 
 const CELL = 2 // metres

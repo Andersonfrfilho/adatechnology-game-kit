@@ -7,7 +7,7 @@ export const deliveryBag: ItemModelBuilder = ({ mesh, bx, G, cloth, plastic }) =
   const shell = cloth(0x8f3b2a)
   const trim = cloth(0x2b2b2d)
   return G(
-    mesh(bx(0.48, 0.38, 0.4), shell, [0, 0.19, -0.01]),
+    mesh(bx(0.48, 0.376, 0.396), shell, [0, 0.19, -0.01]),
     mesh(bx(0.48, 0.04, 0.4), trim, [0, 0.4, -0.01]),
     mesh(bx(0.36, 0.2, 0.02), trim, [0, 0.14, 0.2]),
     mesh(bx(0.24, 0.03, 0.06), trim, [0, 0.435, -0.01]),

@@ -6,10 +6,10 @@ import type { ItemModelBuilder } from './registry'
  */
 export const sodaCan: ItemModelBuilder = ({ mesh, cyl, bx, G, metal, paper }) => {
   const shell = metal(0xb8262b)
-  const foot = mesh(cyl(0.33, 0.29, 0.12, 16), shell, [0, -0.54, 0])
-  const body = mesh(cyl(0.33, 0.33, 0.88, 16), shell, [0, -0.04, 0])
+  const foot = mesh(cyl(0.31, 0.29, 0.12, 16), shell, [0, -0.54, 0])
+  const body = mesh(cyl(0.31, 0.31, 0.88, 16), shell, [0, -0.04, 0])
   const wave = mesh(cyl(0.332, 0.332, 0.22, 16), paper(0xf4f1ea), [0, 0.02, 0])
-  const neck = mesh(cyl(0.27, 0.33, 0.12, 16), shell, [0, 0.46, 0])
+  const neck = mesh(cyl(0.27, 0.31, 0.12, 16), shell, [0, 0.46, 0])
   const lid = mesh(cyl(0.285, 0.285, 0.08, 16), metal(0xb0b8bf), [0, 0.552, 0])
   const tab = mesh(bx(0.1, 0.008, 0.18), metal(0x8d949a), [0, 0.596, 0.04])
   return G(foot, body, wave, neck, lid, tab)

@@ -11,8 +11,8 @@ export function buildG36Receiver(context: RifleContext): void {
   const { M, box, cylinderZ } = kit
   const middle = (x0 + x1) / 2
   box(group, RL, hR, wR, M.poly, middle, 0, 0)
-  box(group, 0.022, hR * 1.02, wR * 1.1, M.poly, x0 + 0.011, 0, 0)
-  box(group, RL * 0.55, 0.008, wR * 0.6, M.dark, x1 - RL * 0.32, hR / 2 - 0.003, 0)
+  box(group, 0.024, hR * 1.05, wR * 1.1, M.poly, x0 + 0.01, 0, 0)
+  box(group, RL * 0.55, 0.008, wR * 0.6, M.dark, x1 - RL * 0.32, hR / 2 - 0.001, 0)
   box(group, RL * 0.92, 0.003, wR + 0.002, M.dark, middle, -hR * 0.18, 0)
   for (const fraction of [0.12, 0.42, 0.7]) cylinderZ(group, 0.004, wR + 0.004, M.metal, x0 + RL * fraction, -hR * 0.3, 0, 10)
 }
@@ -40,7 +40,7 @@ export function buildG36Stock(context: RifleContext): void {
   const top = hR / 2 - bar / 2
   const buttBottom = -hR / 2 - 0.06
   const buttHeight = top - buttBottom + bar
-  box(group, 0.026, buttHeight, width, M.poly, 0.013, (top + buttBottom) / 2, 0)
+  box(group, 0.0275, buttHeight + 0.005, width + 0.005, M.poly, 0.01225, (top + buttBottom) / 2, 0)
   buttpad(kit, group, 0.003, (top + buttBottom) / 2, buttHeight, width)
   box(group, S, bar, width, M.poly, S / 2, top, 0)
   const run = S - 0.026

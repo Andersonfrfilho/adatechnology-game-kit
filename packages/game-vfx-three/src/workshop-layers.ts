@@ -121,6 +121,9 @@ function rainLayer(THREE: ThreeLib, rain: WorkshopEngine['rain']): Drawn {
   }
 }
 
+const REST_LAYER = 0.002
+const REST_LAYERS = 4
+
 function debrisLayer(THREE: ThreeLib, pool: WorkshopEngine['debris']): Drawn {
   const geometry = new THREE.BoxGeometry(1, 1, 1)
   const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45, metalness: 0.25, flatShading: true })
@@ -151,7 +154,9 @@ function debrisLayer(THREE: ThreeLib, pool: WorkshopEngine['debris']): Drawn {
         const shrink = Math.min(1, piece.life / FADE_SECONDS)
         euler.set(piece.rx, piece.ry, piece.rz)
         quaternion.setFromEuler(euler)
-        matrix.compose(position.set(piece.x, piece.y, piece.z), quaternion, scale.set(piece.sx * shrink, piece.sy * shrink, piece.sz * shrink))
+        // a settled piece is drawn up to 6 mm higher by its slot, so two flat shards lying on each other never share a plane (CLAUDE.md §13)
+        const lift = piece.rest ? (index % REST_LAYERS) * REST_LAYER : 0
+        matrix.compose(position.set(piece.x, piece.y + lift, piece.z), quaternion, scale.set(piece.sx * shrink, piece.sy * shrink, piece.sz * shrink))
         mesh.setMatrixAt(index, matrix)
         mesh.setColorAt(index, colour.setHex(piece.color))
       }

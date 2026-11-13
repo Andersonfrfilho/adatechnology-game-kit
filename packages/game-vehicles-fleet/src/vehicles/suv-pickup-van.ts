@@ -337,7 +337,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
     const fl = c.roundBox(L, 0.035, 2 * hw, 0.01, LINER, cx, o.floor, 0)
     for (let k = 0; k < 7; k++) c.roundBox(L - 0.04, 0.018, 0.04, 0.008, LINER, cx, o.floor + 0.025, -hw * 0.8 + (k * hw * 1.6) / 6)
     ;[1, -1].forEach(function (s) {
-      c.roundBox(L, h, 0.025, 0.01, LINER, cx, o.floor + h / 2, s * (hw + 0.012))
+      c.roundBox(L - 0.008, h, 0.025, 0.01, LINER, cx, o.floor + h / 2, s * (hw + 0.012))
     })
     c.roundBox(0.025, h, 2 * hw, 0.01, LINER, o.x0 + 0.012, o.floor + h / 2, 0)
     c.roundBox(0.03, h + 0.05, 2 * hw + 0.02, 0.01, c.paint(c.meta.color), o.x1 - 0.015, o.floor + (h + 0.05) / 2, 0)
@@ -1399,10 +1399,10 @@ export function installSuvPickupVan(fx: FleetContext): void {
             gw = 1.08,
             tz = 0.8
           c.roundBox(0.05, gh, gw, 0.04, MT.chrome, gx, gy, 0, { taper: { sz: tz } })
-          c.roundBox(0.056, gh - 0.1, gw - 0.16, 0.02, GLOSS, gx + 0.002, gy, 0, { taper: { sz: tz - 0.02 } })
+          c.roundBox(0.058, gh - 0.1, gw - 0.16, 0.02, GLOSS, gx + 0.002, gy, 0, { taper: { sz: tz - 0.02 } })
           ;[0.13, 0.045, -0.04, -0.125].forEach(function (dy) {
             const k = (dy + gh / 2 - 0.05) / (gh - 0.1)
-            c.roundBox(0.06, 0.022, (gw - 0.2) * (1 + (tz - 1) * k), 0.008, MT.chrome, gx + 0.004, gy + dy, 0)
+            c.roundBox(0.066, 0.022, (gw - 0.2) * (1 + (tz - 1) * k), 0.008, MT.chrome, gx + 0.004, gy + dy, 0)
           })
           c.roundBox(0.04, 0.04, 1.32, 0.015, MT.chrome, fX(s, 1.04) - 0.03, 1.04, 0)
           kit.emblem(c, fX(s, 0.9) + 0.03, 0.9, 0, 0.06)
@@ -1794,9 +1794,9 @@ export function installSuvPickupVan(fx: FleetContext): void {
             gw = 1.14,
             gh = 0.52
           c.roundBox(0.05, gh, gw, 0.04, MT.chrome, gx, gy, 0, { taper: { sz: 0.84 } })
-          c.roundBox(0.056, gh - 0.12, gw - 0.16, 0.02, GLOSS, gx + 0.002, gy - 0.01, 0, { taper: { sz: 0.82 } })
+          c.roundBox(0.058, gh - 0.12, gw - 0.16, 0.02, GLOSS, gx + 0.002, gy - 0.01, 0, { taper: { sz: 0.82 } })
           ;[0.12, -0.02, -0.14].forEach(function (dy) {
-            c.roundBox(0.06, 0.03, (gw - 0.22) * (1 - (dy + 0.2) * 0.4), 0.01, MT.housing, gx + 0.004, gy + dy, 0)
+            c.roundBox(0.066, 0.03, (gw - 0.22) * (1 - (dy + 0.2) * 0.4), 0.01, MT.housing, gx + 0.004, gy + dy, 0)
           })
           c.roundBox(0.04, 0.05, 1.3, 0.02, MT.chrome, fX(s, 1.04) - 0.03, 1.04, 0)
           kit.emblem(c, gx + 0.035, gy + 0.06, 0, 0.06)
@@ -2013,7 +2013,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
           }
           for (let sk = 0; sk < 6; sk++) {
             const sa = (sk / 6) * PI * 2,
-              hole = new THREE.Mesh(new THREE.CylinderGeometry(rr * 0.13, rr * 0.13, 0.034, 14), MT.hole)
+              hole = new THREE.Mesh(new THREE.CylinderGeometry(rr * 0.13, rr * 0.13, 0.03, 14), MT.hole)
             hole.rotation.x = PI / 2
             hole.position.set(Math.cos(sa) * rr * 0.58, Math.sin(sa) * rr * 0.58, fz + zs * 0.002)
             wg.add(hole)
@@ -2043,7 +2043,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         c.rod(new V3(0.6, 2.8, sd * 0.78), new V3(-0.25, 2.8, sd * 0.78), 0.035, red)
       })
       c.rod(new V3(0.6, 2.8, -0.78), new V3(0.6, 2.8, 0.78), 0.035, red)
-      c.rod(new V3(-0.25, 2.8, -0.78), new V3(-0.25, 2.8, 0.78), 0.035, red)
+      c.rod(new V3(-0.25, 2.8, -0.78), new V3(-0.25, 2.8, 0.78), 0.032, red)
       c.rod(new V3(-0.25, 2.3, -0.8), new V3(-0.25, 2.8, 0.78), 0.03, red)
       const roofItems = [c.roundBox(0.16, 0.05, 1.3, 0.02, MT.trim, 0.42, m.top! + 0.08, 0)]
       ;[-0.48, -0.16, 0.16, 0.48].forEach(function (z) {
@@ -2680,8 +2680,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
             const zz = sd * (kit.halfAt(W, m.tumble, 1.75) + 0.012),
               zt = sd * (kit.halfAt(W, m.tumble, 2.22) + 0.012)
             c.text('RESGATE', 1.2, 0.3, sd > 0 ? -1.5 : -0.85, 2.22, zt, sd > 0 ? '+z' : '-z', { fg: red })
-            ;[0, PI / 3, -PI / 3].forEach(function (a) {
-              c.roundBox(0.09, 0.36, 0.01, 0.01, blu, -2.25, 1.75, zz, { rot: [0, 0, a] })
+            ;[0, PI / 3, -PI / 3].forEach(function (a, i) {
+              c.roundBox(0.09, 0.36, 0.01, 0.01, blu, -2.25, 1.75, zz + sd * i * 0.0025, { rot: [0, 0, a] })
             })
           })
           /* mirrored AMBULANCE on the hood, in the plane of the hood, to be read in the mirror of whoever is ahead */

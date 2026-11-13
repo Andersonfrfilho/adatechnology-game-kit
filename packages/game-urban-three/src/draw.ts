@@ -2,7 +2,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 import type { ItemBox, LightPart, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
-import { shapeGeometries } from '@adatechnology/game-shapes-three'
+import { shapeGeometries, standOutCoincident } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
 import { createPrism, createRoundedBox } from './rounded-box'
@@ -22,6 +22,7 @@ const LIT_WINDOW = 0xffb45e
 const DARK_WINDOW = { color: 0x0d1217, roughness: 0.3, metalness: 0.5 }
 const SIGN_FONT = '700 56px "Arial Narrow", Arial, sans-serif'
 const SIGN_CANVAS = { width: 512, height: 128 }
+const PLANE_LAYER_GAP = 0.002
 
 export type UrbanThreeOptions = {
   /** Where canvases come from (the page's `document`). Needed only for signs and labels. */
@@ -33,6 +34,8 @@ export type UrbanThreeOptions = {
    * light of the scene. `DrawnUrban.lights` then lists the sources. Without it the lights are created here (deprecated, removed in the next major).
    */
   lights?: LightBudget
+  /** Move the parts that share a plane with another apart by 2 mm (CLAUDE.md §13, `standOutCoincident`). Flat pieces at one height are layered 2 mm apart unless this is `false`; the full mesh pass (`standOutCoincident`) runs only when it is `true`, since it costs more than the draw. */
+  standOut?: boolean
 }
 
 /** What a drawn scene gives back: the group to add to a scene, the per-frame animation and the cleanup. */
@@ -286,7 +289,24 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
   }
 
-  const instancedItems = (list: readonly ItemBox[]): THREE_NS.InstancedMesh => {
+  /** Upright boxes whose tops lie on one height and overlap (road marks crossing) are layered 2 mm apart in list order: the later one rises (CLAUDE.md §13). */
+  const layerItems = (list: readonly ItemBox[]): ItemBox[] => {
+    const placed: Array<{ top: number; x0: number; x1: number; z0: number; z1: number }> = []
+    return list.map((entry) => {
+      const quarterTurn = Math.abs(Math.sin(entry.ry * 2)) < 1e-6
+      if (entry.rx || entry.rz || !quarterTurn) return entry
+      const turned = Math.abs(Math.cos(entry.ry)) < 0.5
+      const [halfX, halfZ] = turned ? [entry.depth / 2, entry.width / 2] : [entry.width / 2, entry.depth / 2]
+      const rect = { x0: entry.x - halfX, x1: entry.x + halfX, z0: entry.z - halfZ, z1: entry.z + halfZ }
+      let lift = 0
+      while (placed.some((other) => Math.abs(other.top - (entry.y + entry.height + lift)) < PLANE_LAYER_GAP / 2 && other.x0 < rect.x1 && rect.x0 < other.x1 && other.z0 < rect.z1 && rect.z0 < other.z1)) lift += PLANE_LAYER_GAP
+      placed.push({ top: entry.y + entry.height + lift, ...rect })
+      return lift ? { ...entry, y: entry.y + lift } : entry
+    })
+  }
+
+  const instancedItems = (items: readonly ItemBox[]): THREE_NS.InstancedMesh => {
+    const list = options.standOut === false ? items : layerItems(items)
     const mesh = new THREE.InstancedMesh(roundedBox(1, 1, 1, ITEM_ROUNDNESS), standard(0xffffff), list.length)
     const matrix = new THREE.Matrix4()
     const quaternion = new THREE.Quaternion()
@@ -322,17 +342,45 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     return mesh
   }
 
+  /** Planes lying on the same height and overlapping are layered 2 mm apart in the order they are drawn: the later one lies on top (CLAUDE.md §13). */
+  const layerPlanes = (parts: readonly UrbanPart[]): ((part: UrbanPart, made: Obj[]) => void) => {
+    const placed: Array<{ y: number; x0: number; x1: number; z0: number; z1: number }> = []
+    return (part, made) => {
+      if (part.shape !== 'plane') return
+      const origin = { x: part.x, y: part.y, z: part.z }
+      for (let parent = part.parent; parent >= 0; parent = parts[parent]!.parent) {
+        const group = parts[parent]!
+        if (group.shape !== 'group' || group.ry) return
+        origin.x += group.x
+        origin.y += group.y
+        origin.z += group.z
+      }
+      const rect = { x0: origin.x - part.width / 2, x1: origin.x + part.width / 2, z0: origin.z - part.depth / 2, z1: origin.z + part.depth / 2 }
+      let lift = 0
+      while (placed.some((other) => Math.abs(other.y - (origin.y + lift)) < PLANE_LAYER_GAP / 2 && other.x0 < rect.x1 && rect.x0 < other.x1 && other.z0 < rect.z1 && rect.z0 < other.z1)) lift += PLANE_LAYER_GAP
+      placed.push({ y: origin.y + lift, ...rect })
+      made[0]!.position.y += lift
+    }
+  }
+
   /** Draws a scene: its parts in order, then the instanced boxes, the lit windows and the dark windows. */
   function draw(scene: UrbanScene, drawOptions: DrawOptions = {}): DrawnUrban {
     const root = markKitOrigin(drawOptions.root ?? new THREE.Group(), { owner: 'game-urban-three', kind: 'urban' })
     const animators: ((t: number) => void)[] = []
     const lights: DrawnLight[] = []
     const objects: Obj[][] = []
+    const layer = options.standOut === false ? () => undefined : layerPlanes(scene.parts)
     for (const part of scene.parts) {
       const made = drawPart(part, animators, lights)
+      layer(part, made)
       objects.push(made)
       const parent = part.parent < 0 ? root : (objects[part.parent] as Obj[])[0]
       parent.add(...made)
+    }
+    // a second pass moves the piece that the first one pushed onto another's plane (two trunks both sunk 2 mm)
+    if (options.standOut === true) {
+      let passes = 0
+      while (passes++ < 3 && standOutCoincident(root).left > 0);
     }
     if (scene.items.length) root.add(instancedItems(scene.items))
     if (scene.windows.lit.length) root.add(instancedWindows(scene.windows.lit, glowing(LIT_WINDOW)))

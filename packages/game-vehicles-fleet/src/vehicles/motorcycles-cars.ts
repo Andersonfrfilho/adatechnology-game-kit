@@ -3793,9 +3793,9 @@ export function installMotorcyclesCars(fx: FleetContext): void {
         ],
         col,
       )
-      lamp(c, { style: 'rect', x: 0.57, y: 0.91, z: 0, w: 0.2, h: 0.11, d: 0.08, side: 1, label: trl('labels.headlight') })
+      lamp(c, { style: 'rect', x: 0.575, y: 0.91, z: 0, w: 0.2, h: 0.11, d: 0.08, side: 1, label: trl('labels.headlight') })
       c.roundBox(0.1, 0.07, 0.18, 0.02, blk, 0.36, 1.04, 0, { rot: [0, 0, 0.4] })
-      c.roundBox(0.02, 0.05, 0.15, 0.01, MT.gauge, 0.39, 1.06, 0, { rot: [0, 0, 0.4] })
+      c.roundBox(0.02, 0.05, 0.15, 0.01, MT.gauge, 0.39, 1.064, 0, { rot: [0, 0, 0.4] })
       handlebar(c, 0.36, 1.03, 0.37, { rise: 0.04, back: 0.06, mat: MT.chrome, stalk: 0.19 })
       ;[1, -1].forEach(function (s) {
         blinker(c, 0.48, 0.9, s * 0.17, true)
@@ -4016,7 +4016,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       body(
         c,
         [
-          [0.44, 1.13, 0.85, 0.24, 2.6],
+          [0.435, 1.13, 0.85, 0.24, 2.6],
           [0.55, 1.11, 0.87, 0.24, 2.6],
           [0.6, 1.05, 0.91, 0.16, 2.4],
         ],
@@ -4206,7 +4206,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
     body(
       c,
       [
-        [0.62, 1.32, 0.98, 0.3, 2.6],
+        [0.615, 1.32, 0.98, 0.3, 2.6],
         [0.72, 1.28, 1.0, 0.3, 2.6],
         [0.78, 1.2, 1.02, 0.22, 2.4],
       ],

@@ -11,8 +11,8 @@ export const rubberBoots: ItemModelBuilder = ({ mesh, bx, cyl, G, plastic }) => 
     mesh(bx(0.3, 0.025, 0.105), sole, [0, 0.0125, z]),
     mesh(bx(0.07, 0.03, 0.105), sole, [-0.115, 0.04, z]),
     mesh(bx(0.2, 0.06, 0.1), rubber, [0.04, 0.055, z]),
-    mesh(cyl(0.05, 0.05, 0.06, 8), rubber, [0.1, 0.055, z]),
-    mesh(cyl(0.05, 0.052, 0.325, 10), rubber, [-0.085, 0.1875, z]),
+    mesh(cyl(0.046, 0.046, 0.06, 8), rubber, [0.1, 0.06, z]),
+    mesh(cyl(0.048, 0.0495, 0.3175, 10), rubber, [-0.085, 0.18625, z]),
     mesh(cyl(0.054, 0.054, 0.015, 10), rim, [-0.085, 0.3425, z]),
   ]
   return G(...boot(-0.0575), ...boot(0.0575))

@@ -37,7 +37,7 @@ function buildCylinder(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const half = CYLINDER_LENGTH / 2
   cylinderX(cylinder, CYLINDER_RADIUS, CYLINDER_LENGTH, M.metal, 0, 0, 0, 36)
   cylinderX(cylinder, CYLINDER_RADIUS + 0.007, 0.012, M.metal, half - 0.004, 0, 0, 36)
-  cylinderX(cylinder, CYLINDER_RADIUS + 0.004, 0.01, M.dark, -half + 0.005, 0, 0, 36)
+  cylinderX(cylinder, CYLINDER_RADIUS + 0.004, 0.012, M.dark, -half + 0.002, 0, 0, 36)
   cylinderX(cylinder, 0.012, CYLINDER_LENGTH + 0.016, M.steel, -0.004, 0, 0, 16)
   parts.chambers = []
   for (let i = 0; i < CHAMBERS; i++) {
@@ -60,7 +60,7 @@ function buildFrame(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const { M, box, cylinderX } = kit
   box(group, 0.13, 0.092, 0.03, M.metal, 0.305, -0.016, 0)
   box(group, 0.07, 0.03, 0.044, M.dark, 0.28, 0.034, 0)
-  box(group, 0.17, 0.03, 0.04, M.metal, 0.413, 0.04, 0)
+  box(group, 0.17, 0.027, 0.04, M.metal, 0.413, 0.0415, 0)
   for (let i = 0; i < 7; i++) box(group, 0.008, 0.006, 0.042, M.dark, 0.34 + i * 0.022, 0.056, 0)
   cylinderX(group, 0.011, 0.14, M.steel, 0.392, 0.042, 0, 14)
   box(group, 0.07, 0.044, 0.038, M.dark, 0.405, 0.085, 0)
@@ -86,7 +86,7 @@ function buildGrips(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const foreGrip = kit.pivot(group, FORE_GRIP_X, -0.075, 0)
   parts.foreGrip = foreGrip
   box(foreGrip, 0.03, 0.1, 0.028, M.poly, 0, 0, 0)
-  for (let i = 0; i < 3; i++) box(foreGrip, 0.032, 0.004, 0.03, M.dark, 0, -0.025 - i * 0.012, 0)
+  for (let i = 0; i < 3; i++) box(foreGrip, 0.032, 0.004, 0.03, M.dark, 0, -0.025 - i * 0.01, 0)
   cylinderY(group, 0.017, 0.016, M.metal, FORE_GRIP_X, -0.03, 0, 14)
 }
 
@@ -95,7 +95,7 @@ function buildStock(kit: ModelKit, group: Parent): void {
   const { M, box } = kit
   const run = HINGE_X - 0.012
   box(group, run, 0.014, 0.028, M.metal, 0.012 + run / 2, 0.062, 0, -0.153)
-  box(group, 0.014, 0.12, 0.06, M.metal, 0.007, 0.062, 0)
+  box(group, 0.014, 0.12, 0.06, M.metal, 0.0085, 0.062, 0)
   box(group, 0.006, 0.1, 0.05, M.rubber, 0.002, 0.062, 0)
   box(group, 0.03, 0.034, 0.036, M.dark, HINGE_X - 0.015, HINGE_Y, 0)
 }
