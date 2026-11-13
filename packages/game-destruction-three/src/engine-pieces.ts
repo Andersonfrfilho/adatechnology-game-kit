@@ -86,6 +86,8 @@ interface Tile {
 export class EnginePieces {
   private readonly links = new Map<PieceBody, Link>()
   private readonly byUser = new Map<number, PieceBody>()
+  /** The pieces by object id: what the sweep meets that the engine already has (`sweepOn`). */
+  private readonly byObject = new Map<string, PieceBody>()
   private nextUser = 1
   private turn = 0
   /**
@@ -117,6 +119,7 @@ export class EnginePieces {
     if (!link) return
     this.world.removeBody(link.id)
     this.byUser.delete(link.user)
+    if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
   }
 
@@ -290,7 +293,9 @@ export class EnginePieces {
         // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)
         angularDamping: 0,
         linearDamping: 0,
-        continuous: Math.min(...b.halfExtents) < 0.05,
+        // swept (Jolt's linear cast) so nothing the engine has is passed through, now that the kit's sweep no longer sets a piece back from it (`sweepOn`); the
+        // engine casts only a body that moves more than most of its own thickness in a step, so one at rest costs nothing more
+        continuous: true,
         rolling: this.rollingOf(b),
         sleeping: b.sleeping,
         user,
@@ -300,6 +305,7 @@ export class EnginePieces {
       link = { id, groundAtSleep: NaN, user, shapeKey, pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
       this.links.set(b, link)
       this.byUser.set(user, b)
+      this.byObject.set(b.objectId, b)
       return
     }
     if (shapeKey.some((s, i) => s !== link.shapeKey[i])) {
@@ -577,7 +583,12 @@ export class EnginePieces {
     link.sleeping = b.sleeping
   }
 
-  /** Stops a piece that ran into a wall on its way (`sweep`): back to where it met it, the speed into it reflected, as the kit's solver does. */
+  /**
+   * A piece that ran into a wall on its way (`sweep`). Into what the engine has as a body (a fixed thing's drawn boxes, another piece) the engine already met it, so
+   * the sweep only tells the blow (`onSlam`): setting it back there as well put a door sliding down a table edge back up every update, for good, and threw pieces
+   * off a wall the engine was already holding them against. Into what the engine does not have (a wall left out of `staticSolids`), the kit's rule as before:
+   * back to where it met it, the speed into it reflected.
+   */
   private sweepOn(b: PieceBody, start: Vec3, pos: Vec3, time: number): boolean {
     const travel = Math.hypot(pos[0] - start[0], pos[1] - start[1], pos[2] - start[2])
     if (travel < 1e-3) return false
@@ -587,18 +598,21 @@ export class EnginePieces {
     const n = hit.normal
     const into = -(v[0] * n[0] + v[1] * n[1] + v[2] * n[2])
     if (into <= 0) return false
-    const k = Math.min(1, hit.distance / travel)
-    const bounce = Math.sqrt((b.restitution ?? SLAM_BOUNCE) * (hit.restitution ?? SLAM_BOUNCE))
-    for (let i = 0; i < 3; i++) {
-      pos[i] = start[i] + (pos[i] - start[i]) * k
-      v[i] += (1 + bounce) * into * n[i]
+    const engineHas = this.byObject.has(hit.object) || (this.statics.get(hit.object)?.id ?? null) !== null
+    if (!engineHas) {
+      const k = Math.min(1, hit.distance / travel)
+      const bounce = Math.sqrt((b.restitution ?? SLAM_BOUNCE) * (hit.restitution ?? SLAM_BOUNCE))
+      for (let i = 0; i < 3; i++) {
+        pos[i] = start[i] + (pos[i] - start[i]) * k
+        v[i] += (1 + bounce) * into * n[i]
+      }
+      for (let i = 0; i < 3; i++) b.angularVelocity[i] *= 0.5
     }
-    for (let i = 0; i < 3; i++) b.angularVelocity[i] *= 0.5
     if (into >= SLAM_MIN_SPEED && time - b.lastHit > 0.15) {
       b.lastHit = time
       this.o.onSlam?.(b, hit, into)
     }
-    return true
+    return !engineHas
   }
 
   /** Two pieces that hit each other hard enough sound (`onKnock`), from the engine's contact rows, once per pair per `KNOCK_EVERY`. */
