@@ -33,6 +33,8 @@ export interface StructurePart {
   beamKind?: 'plate' | 'bond_beam' | 'ground_beam'
   /** An exterior wall (it carries the bond beam and the pillars of confined masonry). */
   exterior?: true
+  /** The beam a partition was cut under (its top course wedged under that beam's soffit): the wall is drawn up to its `y1`, not to the storey's height. */
+  soffit?: string
   steps?: number
   door?: string
   /** Slab that is the roof (flat roof). */
@@ -108,6 +110,8 @@ export interface Structure {
   construction: Construction
   /** A reinforced concrete frame carries the building (apartments, commercial buildings, three storeys or more); the walls are infill. */
   framed: boolean
+  /** Allowable pressure on the soil its isolated footings were sized for, kPa (`StructureOptions.soilPressure`; absent: `ALLOWABLE_SOIL_PRESSURE`). */
+  soilPressure?: number
 }
 
 /** The structure as a `generate` result carries it: the roof goes out apart, in `result.roof`. */
@@ -316,6 +320,8 @@ export interface StructureOptions {
    * most every `spacing` metres, default `WALL_PILLAR_SPACING`). `false`: only the corner pillars. Default `true`.
    */
   wallPillars?: boolean | { spacing?: number }
+  /** Allowable pressure on the soil, kPa, that the isolated footings of the pillars are sized for (A ≥ 1.05 N_k / σ_adm). Default `ALLOWABLE_SOIL_PRESSURE` (200). */
+  soilPressure?: number
   /** A reinforced concrete ground beam (viga baldrame) under each ground-floor wall of a masonry house on strip footings (`GROUND_BEAM_DEPTH` deep). Default `true`. */
   groundBeams?: boolean
   /** The sections the Visor de casas 3D drew below the NBR 6118 minimum (16 cm balcony pillars), for the team's golden only. Default `false`. */

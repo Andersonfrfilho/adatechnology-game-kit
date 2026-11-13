@@ -13,19 +13,28 @@ registerStructure(engine)
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8]
 /** The tower is a spec built straight from its layout (`buildResidentialTower`), checked below. */
 const HOUSES = residentialTemplateIds.filter((id) => id !== 'residential_tower')
-/** Each house on its defaults and on every option of its template that changes how it is built (storeys, the lift, the tier of the flat). */
+interface TemplateInfo {
+  readonly id: string
+  readonly floorRange: readonly [number, number] | null
+  readonly options: Readonly<Record<string, readonly unknown[]>>
+}
+const TEMPLATES = (engine.listTemplates() as unknown as readonly TemplateInfo[]).filter((template) => HOUSES.includes(template.id))
+/**
+ * Each house on its defaults and on every option its template declares (one value at a time) and both ends of its storeys, as the house renderer's sweep
+ * does, plus the options the templates read without declaring them (the lift, the tier of the flat, storeys drawn at random): everything that changes how it
+ * is built.
+ */
 const VARIANTS: [string, Record<string, unknown>][] = [
-  ...HOUSES.map((id): [string, Record<string, unknown>] => [id, {}]),
-  ['high_end_contemporary', { floors: 1 }],
+  ...TEMPLATES.flatMap((template): [string, Record<string, unknown>][] => [
+    [template.id, {}],
+    ...Object.entries(template.options).flatMap(([key, values]) => values.map((value): [string, Record<string, unknown>] => [template.id, { [key]: value }])),
+    ...(template.floorRange && !('floors' in template.options) ? [...new Set(template.floorRange)].map((floors): [string, Record<string, unknown>] => [template.id, { floors }]) : []),
+  ]),
   ['high_end_contemporary', { floors: 3 }],
-  ['mansion', { floors: 1 }],
-  ['mansion', { floors: 2 }],
   ['mansion', { elevator: true }],
-  ['budget_slab_house', { floors: 2 }],
-  ['budget_slab_house', { floors: 3 }],
   ['budget_slab_house', { randomFloors: true }],
   ['apartment_modern', { tier: 'high' }],
-]
+].filter(([id, options], k, all) => all.findIndex(([other, more]) => other === id && JSON.stringify(more) === JSON.stringify(options)) === k)
 
 /** Construction tests (CLAUDE.md §11): every residential typology is a structure a structural engineer signs, the validator of the SDK finds nothing. */
 describe('residential construction', () => {

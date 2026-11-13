@@ -1,7 +1,7 @@
 import type { JointKind } from '@adatechnology/game-contracts'
 
 import { densityOf } from '../density'
-import { footingDraft, onStripFooting } from '../footing'
+import { footingDraft, onStripFooting, sizeFootings } from '../footing'
 import { round2, touches } from '../geometry'
 import { CONSTRUCTION_SYSTEMS } from '../registry'
 import { GROUND } from '../types'
@@ -340,6 +340,9 @@ function panelsUnder(context: Context, slab: string, box: Rect): StructurePart[]
   return touching.length ? touching : panels.slice().sort((a, b) => distance(a.aabb, box) - distance(b.aabb, box)).slice(0, 1)
 }
 
+/** A pillar whose foot is this near the ground stands on the soil (one of a unit high on its building does not), metres. */
+const ON_SOIL = 0.3
+
 /** The pillar at `spot` from `bottom` to `top`, on the ground or on the slab of the storey below. */
 function addPillar(context: Context, spot: Spot, bottom: number, top: number, floor: number, below: string | undefined, slab: string): StructurePart {
   const pillar = make({
@@ -347,12 +350,17 @@ function addPillar(context: Context, spot: Spot, bottom: number, top: number, fl
   })
   context.parts.push(pillar)
   if (below && context.panelsOf.has(below)) for (const panel of panelsUnder(context, below, pillar.aabb)) rest(context, panel, pillar, 'rebar')
-  else if (context.groundBase === GROUND && !onStripFooting(pillar.aabb, context)) {
+  else if (context.groundBase === GROUND && pillar.y0 <= ON_SOIL && !onStripFooting(pillar.aabb, context)) {
     // on the soil away from the strip footings of the walls: on a footing of its own
     const footing = make({ ...footingDraft(pillar), role: 'column', material: 'concrete', floor: 0 })
     context.parts.push(footing)
     rest(context, GROUND, footing, 'resting')
     rest(context, footing, pillar, 'rebar')
+  } else if (context.groundBase === GROUND && pillar.y0 > ON_SOIL) {
+    // high over the ground (a unit on its building): on the slab its foot stands on, the unit's base
+    const base = context.parts.filter((p) => p.role === 'slab' && Math.abs(p.y1 - pillar.y0) < 0.06 && touches(p.aabb, pillar.aabb, 0.02))
+    for (const slab of base) rest(context, slab, pillar, 'rebar')
+    if (!base.length) rest(context, GROUND, pillar, 'rebar')
   } else rest(context, context.groundBase, pillar, 'rebar')
   return pillar
 }
@@ -601,7 +609,7 @@ export function applySlabPanels(input: PartsAndSupports, structure: PlanStructur
   const firstColumn = input.supports.find((s) => /^(column_0_|building_column_)/.test(s.part) && !/^(column_0_|building_column_)/.test(s.on))
   const context: Context = {
     structure, options, beamMaterial: frame.beams, pillarMaterial: frame.pillars, joint: system.joints.slab, wallThickness: (structure.construction.walls.thickness as number | undefined) ?? 0.15,
-    parts, supports: input.supports.slice(), panelsOf: new Map(), pillars: 0, groundBase: firstColumn?.on ?? GROUND, section: sectionOf(structure, options),
+    parts, supports: input.supports.slice(), panelsOf: new Map(), pillars: 0, groundBase: firstColumn === undefined || firstColumn.on.startsWith('footing_pier_') ? GROUND : firstColumn.on, section: sectionOf(structure, options),
   }
   const walls = parts.filter((p) => /^wall_/.test(p.id) && (p.role === 'wall' || p.role === 'partition'))
   const jobs = [...bonds.map((part) => ({ part, bond: true })), ...slabs.map((part) => ({ part, bond: false }))].sort((a, b) => a.part.y0 - b.part.y0 || Number(b.bond) - Number(a.bond))
@@ -622,6 +630,9 @@ export function applySlabPanels(input: PartsAndSupports, structure: PlanStructur
     if (depth > beam.y1 - beam.y0 + EPS) deepen(beam, depth)
   }
   holdHungBeams(context)
+  // the footings of its own pillars on the soil, by the loads the framed slabs bring down (those of the structure come sized with it)
+  const own = new Set(context.parts.filter((p) => p.id.startsWith('footing_pier_pillar_')).map((p) => p.id))
+  if (own.size) sizeFootings(context, { only: own, ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })
   return { parts: context.parts, supports: context.supports }
 }
 

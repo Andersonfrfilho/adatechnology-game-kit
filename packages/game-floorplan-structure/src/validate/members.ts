@@ -1,4 +1,6 @@
-import { onStripFooting } from '../footing'
+import { ALLOWABLE_SOIL_PRESSURE, footingColumnOf, footingLoad, onStripFooting } from '../footing'
+import { loadsAtRest } from '../loads'
+import { eaveOverhang, MAX_ROOF_OVERHANG } from '../roof-overhang'
 import { GROUND } from '../types'
 import type { Structure, StructurePart, Support } from '../types'
 import { isMasonryWall } from './masonry'
@@ -113,10 +115,68 @@ function overlapViolations(structure: Pick<Structure, 'parts' | 'supports'>): St
   return out
 }
 
+/** Each isolated footing of a pillar (`footingDraft`) on the soil within the allowable pressure: 1.05 N_k / A ≤ σ_adm, N_k what the columns on it bring down. */
+function soilPressureViolations(structure: Pick<Structure, 'parts' | 'supports'>, allowable: number): StructuralViolation[] {
+  const onSoil = new Set(structure.supports.filter((s) => s.on === GROUND && s.bears !== false).map((s) => s.part))
+  const footings = structure.parts.filter((p) => onSoil.has(p.id) && footingColumnOf(p, structure.supports) !== undefined)
+  if (!footings.length) return []
+  const loads = loadsAtRest(structure.parts, structure.supports)
+  const out: StructuralViolation[] = []
+  for (const footing of footings) {
+    const columns = structure.supports.filter((s) => s.on === footing.id && s.bears !== false).map((s) => s.part)
+    const load = columns.reduce((sum, column) => sum + footingLoad(loads, column), 0)
+    const pressure = load / ((footing.aabb[2] - footing.aabb[0]) * (footing.aabb[3] - footing.aabb[1]))
+    if (pressure > allowable + 0.5)
+      out.push({ code: STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED, part: footing.id, message: `${footing.id} presses ${pressure.toFixed(0)} kPa on the soil under ${load.toFixed(0)} kN: the soil takes ${allowable} kPa` })
+  }
+  return out
+}
+
+/** A pillar standing on infill masonry (a wall of confined masonry, with no bond beam or pillar under it): the bricks take no point load. */
+function bearingViolations(structure: Pick<Structure, 'parts' | 'supports'>, isInfill: (part: StructurePart) => boolean): StructuralViolation[] {
+  const byId = new Map(structure.parts.map((part) => [part.id, part]))
+  return structure.parts
+    .filter(isConcreteColumn)
+    .flatMap((column) =>
+      structure.supports
+        .filter((s) => s.part === column.id && s.bears !== false)
+        .map((s) => byId.get(s.on))
+        .filter((on): on is StructurePart => on !== undefined && isInfill(on))
+        .map((on) => ({ code: STRUCTURAL_VIOLATION.PILLAR_ON_INFILL, part: column.id, message: `${column.id} stands on ${on.id}, infill masonry: a pillar bears on a beam, a pillar or the foundation` })),
+    )
+}
+
+/** A rafter or truss running more than `MAX_ROOF_OVERHANG` past the last thing joined to it (what it rests on, the ridge resting on it): a timber cantilever. */
+function overhangViolations(structure: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
+  const byId = new Map(structure.parts.map((part) => [part.id, part]))
+  const out: StructuralViolation[] = []
+  for (const member of structure.parts.filter((p) => p.role === 'beam' && /^(rafter|truss)/.test(p.id))) {
+    const holds = structure.supports
+      .filter((s) => s.bears !== false && (s.part === member.id || s.on === member.id))
+      .map((s) => byId.get(s.part === member.id ? s.on : s.part))
+      .filter((p): p is StructurePart => p !== undefined && p.role !== 'roof')
+    if (!holds.length) continue
+    const past = eaveOverhang(member, holds.map((h) => h.aabb))
+    if (past > MAX_ROOF_OVERHANG + EPSILON)
+      out.push({ code: STRUCTURAL_VIOLATION.ROOF_OVERHANG_TOO_LONG, part: member.id, message: `${member.id} runs ${past.toFixed(2)} m past the last thing that holds it (at most ${MAX_ROOF_OVERHANG} m)` })
+  }
+  return out
+}
+
+/** What the member checks read besides the structure: which parts are infill masonry, and the soil's allowable pressure (kPa). */
+export interface MemberCheckOptions {
+  readonly isInfill: (part: StructurePart) => boolean
+  readonly soilPressure?: number
+}
+
 /**
- * The members as members: free pillars braced within NBR 6118 slenderness and standing on a foundation, beams on two supports (`framed`: the house with its
- * slabs cut into panels on their beams), and no beam between pillars built through a member of its line (`built`, before the slabs are framed).
+ * The members as members: free pillars braced within NBR 6118 slenderness, standing on a foundation within the soil's pressure and never on infill, beams on
+ * two supports, roof members with no long overhang (`framed`: the house with its slabs cut into panels on their beams), and no beam between pillars built
+ * through a member of its line (`built`, before the slabs are framed).
  */
-export function memberViolations(framed: Pick<Structure, 'parts' | 'supports'>, built: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
-  return [...slendernessViolations(framed), ...foundationViolations(framed), ...singleSupportViolations(framed), ...overlapViolations(built)]
+export function memberViolations(framed: Pick<Structure, 'parts' | 'supports'>, built: Pick<Structure, 'parts' | 'supports'>, options: MemberCheckOptions): StructuralViolation[] {
+  return [
+    ...slendernessViolations(framed), ...foundationViolations(framed), ...soilPressureViolations(framed, options.soilPressure ?? ALLOWABLE_SOIL_PRESSURE),
+    ...bearingViolations(framed, options.isInfill), ...singleSupportViolations(framed), ...overhangViolations(framed), ...overlapViolations(built),
+  ]
 }

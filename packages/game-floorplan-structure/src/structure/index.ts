@@ -8,7 +8,7 @@ import { addGroundBeams } from './ground-beams'
 import { addPlatesAndPillars } from './plates'
 import { addPorches } from './porch'
 import { addPorchRoofs } from './porch-roof'
-import { addRoof } from './roof'
+import { addRoof, strutRoofToSlabs } from './roof'
 import { addStairs } from './stairs'
 import { addDoorLintels, findOpenings } from './openings'
 import { addExteriorSteps } from './steps'
@@ -18,6 +18,11 @@ import { addWalls } from './walls'
 import { WALL_PILLAR_SPACING } from './wall-pillars'
 import { addBearingCores } from '../beam-bearings'
 import { resolveConstruction } from '../construction'
+import { sizeFootings } from '../footing'
+import { loadsAtRest } from '../loads'
+import { applySlabPanels } from '../slab-panels/apply'
+import { resolveSlabPanels } from '../slab-panels/options'
+import { applyPanels } from '../wall-detail'
 import type { Structure, StructureOptions, StructureSource } from '../types'
 
 function buildFloors(context: BuildContext): void {
@@ -27,6 +32,18 @@ function buildFloors(context: BuildContext): void {
     addPorches(context, floor)
     addUpperFloor(context, floor)
   }
+}
+
+/**
+ * The footings again by the loads of the house as it is built and validated: its walls in panels and its slabs framed on beams (`applySlabPanels`), which
+ * bring the slabs down onto the pillars otherwise than a whole slab does. A footing only grows.
+ */
+function sizeFootingsByFrame(structure: Structure): void {
+  if (!structure.parts.some((part) => part.id.startsWith('footing_pier_'))) return
+  const panels = resolveSlabPanels(true)
+  if (!panels) return
+  const framed = applySlabPanels(applyPanels({ parts: structure.parts, supports: structure.supports }, structure, 'panels'), structure, panels)
+  sizeFootings(structure, { loads: loadsAtRest(framed.parts, framed.supports), ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })
 }
 
 const wallPillarSpacingOf = (options: StructureOptions): number => {
@@ -59,9 +76,16 @@ export function buildStructure(source: StructureSource, options: StructureOption
   addWaterTank(context)
   addChimney(context)
   addWell(context)
+  // (the Visor de casas 3D, reproduced for the team's golden, has no footings of its own)
+  if (!context.visorSections) {
+    strutRoofToSlabs(context)
+    sizeFootings(context.builder, options.soilPressure === undefined ? {} : { soilPressure: options.soilPressure })
+  }
   const levels = source.floors.map((_, floor) => context.level(floor))
   const framed = construction.system === 'masonry' && (context.isUnit || source.style === 'commercial' || context.floorCount >= 3)
   const structure: Structure = { parts: context.builder.parts, supports: context.builder.supports, levels, elevation: context.elevation, roof: context.roof, construction, framed, openings: findOpenings(context) }
+  if (options.soilPressure !== undefined) structure.soilPressure = options.soilPressure
+  if (!context.visorSections) sizeFootingsByFrame(structure)
   if (context.structural) addBearingCores(structure)
   return structure
 }

@@ -83,3 +83,59 @@ describe('eave pillars of a three-storey house', () => {
     expect(codesOf(result, structure)).toContain(STRUCTURAL_VIOLATION.OVERLAPPING_PARTS)
   })
 })
+
+describe('footings sized by their load, posts on what carries, roofs held at their eaves', () => {
+  it('each isolated footing takes 1.05 N_k at no more than 200 kPa, a rigid footing h ≥ (B - b) / 3, and a smaller one is reported', () => {
+    for (const [template, options, least] of [['apartment_basic', {}, 1.35], ['apartment_modern', { tier: 'high' }, 1.7], ['high_end_contemporary', { floors: 3 }, 0.8]] as const) {
+      const result = generate(template, options)
+      const { parts, supports } = result.structure
+      const footings = parts.filter((p) => p.id.startsWith('footing_pier_') && supports.some((s) => s.on === p.id && s.part === p.id.slice('footing_pier_'.length)))
+      expect(footings.length, template).toBeGreaterThan(0)
+      for (const footing of footings) {
+        const side = footing.aabb[2] - footing.aabb[0]
+        expect(side, footing.id).toBeGreaterThanOrEqual(least)
+        const column = parts.find((p) => p.id === footing.id.slice('footing_pier_'.length))!
+        expect(footing.y1 - footing.y0, footing.id).toBeGreaterThanOrEqual((side - Math.min(column.aabb[2] - column.aabb[0], column.aabb[3] - column.aabb[1])) / 3 - 1e-6)
+      }
+      expect(codesOf(result), template).toEqual([])
+      // the old 0.60 m pad under the same load (the eave posts' footings are sized by the larger of the loads of the whole and the framed slabs: under the
+      // framed slabs' 41-46 kN a 0.60 m pad would hold)
+      if (template === 'high_end_contemporary') continue
+      const small = { ...result.structure, parts: parts.map((p) => (footings.includes(p) ? { ...p, aabb: [p.aabb[0], p.aabb[1], p.aabb[0] + 0.6, p.aabb[1] + 0.6] as typeof p.aabb } : p)) }
+      expect(validateStructure(small, { doors: result.doors }).map((v) => v.code), template).toContain(STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED)
+    }
+  })
+
+  it('a weaker soil (100 kPa) asks for wider footings', () => {
+    const firm = generate('apartment_basic')
+    const soft = engine.generate('apartment_basic', { seed: 1, soilPressure: 100 }) as StructuredResult
+    const sideOf = (r: StructuredResult): number => { const f = r.structure.parts.find((p) => p.id === 'footing_pier_building_column_0')!; return f.aabb[2] - f.aabb[0] }
+    expect(sideOf(soft)).toBeGreaterThan(sideOf(firm) * 1.3)
+    expect(codesOf(soft)).toEqual([])
+    expect(validateStructure(firm.structure, { doors: firm.doors, soilPressure: 100 }).map((v) => v.code)).toContain(STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED)
+  })
+
+  it('no eave post stands on infill masonry, and one put there is reported', () => {
+    const result = generate('high_end_contemporary', { floors: 3 })
+    const { parts, supports } = result.structure
+    const byId = new Map(parts.map((p) => [p.id, p]))
+    const posts = parts.filter((p) => /^eave_beam_\d+_\d+_post_\d+$/.test(p.id))
+    for (const post of posts) for (const s of supports.filter((x) => x.part === post.id)) expect(byId.get(s.on)?.role, `${post.id} on ${s.on}`).not.toBe('wall')
+    const wall = parts.find((p) => p.id === 'wall_0_47')!
+    const post = posts[0]!
+    const moved = { ...result.structure, supports: supports.map((s) => (s.part === post.id && s.on !== GROUND && byId.get(s.on)?.role !== 'slab' ? { ...s, on: wall.id } : s)) }
+    expect(codesOf(result, moved)).toContain(STRUCTURAL_VIOLATION.PILLAR_ON_INFILL)
+  })
+
+  it('rafters running metres past their plate over a ceiling slab bear on it through struts, and one left as a cantilever is reported', () => {
+    for (const options of [{}, { floors: 3 }]) {
+      const result = generate('high_end_contemporary', options)
+      const { parts, supports } = result.structure
+      const strutted = supports.filter((s) => /^rafter/.test(s.part) && parts.find((p) => p.id === s.on)?.role === 'slab')
+      expect(strutted.length, JSON.stringify(options)).toBeGreaterThan(0)
+      expect(codesOf(result)).toEqual([])
+      const loose = { ...result.structure, supports: supports.filter((s) => !strutted.includes(s)) }
+      expect(codesOf(result, loose)).toContain(STRUCTURAL_VIOLATION.ROOF_OVERHANG_TOO_LONG)
+    }
+  })
+})

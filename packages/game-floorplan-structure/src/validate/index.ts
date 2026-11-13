@@ -20,6 +20,8 @@ export interface ValidateStructureOptions {
   doors?: readonly SourceDoor[]
   /** The rooms of the plan (`result.rooms`): structural masonry loads each floor slab with the live load of NBR 6120 for their use (without them, 2 kN/m²). */
   rooms?: readonly LoadedRoom[]
+  /** Allowable pressure on the soil, kPa, for the isolated footings (default: the structure's `soilPressure`, else `ALLOWABLE_SOIL_PRESSURE`). */
+  soilPressure?: number
 }
 
 /**
@@ -34,7 +36,7 @@ export function validateStructure(structure: PlanStructure, options: ValidateStr
   const framed = applySlabPanels(built, structure, resolveSlabPanels(true)!)
   // a beam on structural masonry rests on the structure itself, not on infill
   const weak = structure.construction.walls.masonrySystem === 'structural' ? (): boolean => false : isMasonryWall
-  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak), ...memberViolations(framed, built)]
+  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak), ...memberViolations(framed, built, { isInfill: weak, soilPressure: options.soilPressure ?? structure.soilPressure })]
   if (structure.construction.system !== 'masonry') return out
   if (structure.construction.walls.masonrySystem === 'structural')
     return [...out, ...structuralMasonryViolations(structure, { framed, rooms: options.rooms ?? [] }), ...openingViolations(structure, built.parts, options.doors ?? [])]

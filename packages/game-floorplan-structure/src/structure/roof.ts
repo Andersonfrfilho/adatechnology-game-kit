@@ -5,6 +5,7 @@ import { ROOF_COVERINGS } from '../registry'
 import type { Rect, RoofPane, StructurePart } from '../types'
 import type { BuildContext } from './context'
 import { OPEN_ROOM_TYPES } from './context'
+import { eaveOverhang, MAX_ROOF_OVERHANG } from '../roof-overhang'
 import { addEaveSupports } from './eave-supports'
 import { coveringMass, rafterMass, roofMassOption, slopedArea, trussMass } from './roof-weight'
 
@@ -84,6 +85,28 @@ function addTrusses(context: BuildContext, unit: RoofUnit, carriers: StructurePa
   // a truss with nothing in reach: an eave beam on each side carries it, where the walls stop
   if (bare.length) for (const line of eaveLines(unit, axis)) addEaveSupports(context, { members: bare, axis, line, floor: unit.floor, eaveY, carriers, joint: system.joints.truss })
   return trusses
+}
+
+/** How far under the eave a slab may lie and still take the roof on struts (pontaletes) standing on it, metres. */
+const STRUT_REACH = 1
+
+/**
+ * A rafter or truss that runs on more than `MAX_ROOF_OVERHANG` past what holds it (its plates, the ridge on it) over a slab (the ceiling slab of a storey under
+ * a bigger roof) bears on the slab through struts (pontaletes): the slab carries the roof there, as in a house, instead of a timber cantilever of metres. Run
+ * once every slab is built (the ceiling slab comes with the water tank).
+ */
+export function strutRoofToSlabs(context: BuildContext): void {
+  const { builder } = context
+  const byId = new Map(builder.parts.map((part) => [part.id, part]))
+  for (const member of builder.parts.filter((p) => p.role === 'beam' && /^(rafter|truss)/.test(p.id))) {
+    const holds = builder.supports
+      .filter((s) => s.part === member.id || s.on === member.id)
+      .map((s) => byId.get(s.part === member.id ? s.on : s.part))
+      .filter((p): p is StructurePart => p !== undefined && p.role !== 'roof')
+    if (!holds.length || eaveOverhang(member, holds.map((h) => h.aabb)) <= MAX_ROOF_OVERHANG) continue
+    const slabs = builder.parts.filter((p) => p.role === 'slab' && p.y1 <= member.y0 + BEARING_CONTACT && p.y1 >= member.y0 - STRUT_REACH && touches(member.aabb, p.aabb, -BEARING_CONTACT))
+    for (const slab of slabs) builder.rest(member, slab, 'nail')
+  }
 }
 
 interface GableGeometry {

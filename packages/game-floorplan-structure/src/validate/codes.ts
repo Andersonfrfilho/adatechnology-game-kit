@@ -71,6 +71,12 @@ export const STRUCTURAL_VIOLATION = {
   PILLAR_WITHOUT_FOUNDATION: 'PILLAR_WITHOUT_FOUNDATION',
   /** A beam held at a single point (a mechanism): it needs two supports or a bearing along half its length. */
   BEAM_SINGLE_SUPPORT: 'BEAM_SINGLE_SUPPORT',
+  /** An isolated footing that presses the soil past its allowable pressure: 1.05 N_k / A > σ_adm (NBR 6122). */
+  SOIL_PRESSURE_EXCEEDED: 'SOIL_PRESSURE_EXCEEDED',
+  /** A concrete pillar standing on infill masonry (a wall of confined masonry): it bears on a beam, a pillar or the foundation. */
+  PILLAR_ON_INFILL: 'PILLAR_ON_INFILL',
+  /** A rafter or truss that runs more than `MAX_ROOF_OVERHANG` past the last thing that holds it: a timber cantilever. */
+  ROOF_OVERHANG_TOO_LONG: 'ROOF_OVERHANG_TOO_LONG',
   /** Two structural parts, not joined to each other, that occupy the same volume beyond a joint. */
   OVERLAPPING_PARTS: 'OVERLAPPING_PARTS',
 } as const

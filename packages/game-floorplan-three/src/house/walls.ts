@@ -40,7 +40,10 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       const f = w.floor, colliders: BoxCollider[] = shared.ctx.colliders; cursor.group = 'f' + f; cursor.pc = pieceOf(w);
       const y0 = Y0(f), pitch = f + 1 < nA ? Y0(f + 1) - y0 : Infinity, th = w.thickness || 0.15, alongU = w.axis === 'u';
       const h = effectiveHeight(f, w.h);
-      const hh = cut ? Math.min(h, 1.2) : h, L = alongU ? w.v0 : w.u0, s0 = Math.min(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1), s1 = Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1);
+      // a partition the structure cut under a beam (an eave beam over it) stops at the beam's soffit, as the structure has it
+      const soffit = w.id ? (shared.ctx.structureIndex as Record<string, StructurePart | undefined>)[w.id] : undefined;
+      const top = soffit?.soffit !== undefined ? Math.min(h, soffit.y1 - y0) : h;
+      const hh = cut ? Math.min(top, 1.2) : top, L = alongU ? w.v0 : w.u0, s0 = Math.min(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1), s1 = Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1);
       const front = alongU && Math.abs(L - vMin) < 0.05;
       const sideL = sideOf(w.sides[0], front), sideH = sideOf(w.sides[1], front);
       if (w.id) { const face = sideL.exterior ? sideL : sideH; looks.set(w.id, { mat: face.mat, color: face.color, top: y0 + hh }); }
@@ -94,13 +97,16 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
   }
   // where the roof runs past the walls (a terrace, a balcony, a wide doorway) the structure laid an eave beam on pillars of its own: plastered concrete in the
   // facade's finish, or timber, drawn as pieces of their own so the destruction breaks them as it does the walls' pillars
+  const SOFFIT_RECESS = 0.01;
   function eaveFrames(): void {
     const facade = sideOf('outside', true);
     for (const e of Object.values<StructurePart>(shared.ctx.structureIndex)) {
       if (!e.id.startsWith('eave_beam_')) continue;
       const timber = e.material === 'wood_soft' || e.material === 'wood_hard';
       cursor.group = 'f' + e.floor; cursor.pc = structurePiece(e.id);
-      bx(timber ? 'wood' : facade.mat, e.aabb[0], e.y0, e.aabb[1], e.aabb[2], e.y1, e.aabb[3], timber ? 0x8a6a48 : sh(facade.color, 0.95));
+      // a pillar standing in a partition cut under the beam ends 1 cm into the wall's top, never on or near its plane (the two top faces would fight)
+      const inCutWall = e.role === 'column' && Object.values<StructurePart>(shared.ctx.structureIndex).some((w) => w.soffit !== undefined && Math.abs(w.y1 - e.y1) < 1e-3 && e.aabb[0] >= w.aabb[0] - 1e-3 && e.aabb[2] <= w.aabb[2] + 1e-3 && e.aabb[1] >= w.aabb[1] - 1e-3 && e.aabb[3] <= w.aabb[3] + 1e-3);
+      bx(timber ? 'wood' : facade.mat, e.aabb[0], e.y0, e.aabb[1], e.aabb[2], inCutWall ? e.y1 - SOFFIT_RECESS : e.y1, e.aabb[3], timber ? 0x8a6a48 : sh(facade.color, 0.95));
     }
     cursor.pc = null;
   }

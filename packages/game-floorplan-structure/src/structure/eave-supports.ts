@@ -47,8 +47,9 @@ const crossesLine = (part: StructurePart, axis: 'u' | 'v', line: number): boolea
 
 /** Whether a post over `box` from `y0` to `y1` runs through nothing already built (a wall, a lintel, a slab, a doorway's frame). */
 function isClear(context: BuildContext, box: Rect, span: { y0: number; y1: number; except?: StructurePart }): boolean {
-  // (a partition, a terrace's railing, gives way to the pillar: it closes, it carries nothing; a slab is pierced by it, as by any column)
-  return !context.builder.parts.some((p) => p !== span.except && p.role !== 'roof' && p.role !== 'none' && p.role !== 'partition' && p.role !== 'slab' && Math.min(p.y1, span.y1) - Math.max(p.y0, span.y0) > TOLERANCE && touches(p.aabb, box, -TOLERANCE))
+  // (a partition, a terrace's railing, gives way to the pillar: it closes, it carries nothing; a slab is pierced by it, as by any column; so does the infill
+  // of confined masonry, the pillar cast in it as the pillars of its walls are)
+  return !context.builder.parts.some((p) => p !== span.except && p.role !== 'roof' && p.role !== 'none' && p.role !== 'partition' && p.role !== 'slab' && !isInfill(context, p) && Math.min(p.y1, span.y1) - Math.max(p.y0, span.y0) > TOLERANCE && touches(p.aabb, box, -TOLERANCE))
 }
 
 /** Whether a door of the storey opens across `box` (a post there would stand in the doorway). */
@@ -62,8 +63,19 @@ function inDoorway(context: BuildContext, box: Rect, floor: number): boolean {
 }
 
 /**
+ * What a post may stand on in a storey below: a bond beam, a pillar, a concrete beam, or a wall of structural masonry (the wall is the structure there).
+ * The infill of confined masonry carries no point load: a post over it goes on down to what carries.
+ */
+const bearsPost = (context: BuildContext, part: StructurePart): boolean =>
+  part.beamKind === 'bond_beam' || part.role === 'column' || (part.role === 'beam' && part.material === 'concrete' && part.beamKind !== 'ground_beam') || (part.role === 'wall' && (context.structural || context.visorSections))
+
+/** A wall of confined masonry (infill between the pillars and beams): it carries no post, and a post runs down through it (the Visor's posts stand on it). */
+const isInfill = (context: BuildContext, part: StructurePart): boolean =>
+  !context.visorSections && !context.structural && context.construction.system === 'masonry' && part.role === 'wall' && part.id.startsWith('wall_') && !part.id.includes('_over_')
+
+/**
  * What a post at the eave stands on: on the ground floor the foundation under it (the raft, a footing) or the ground; above, the bond beam, wall or pillar
- * of the storey below whose top is the storey's floor; nothing there (an opening, a slab panel below), none. The post must also run through nothing built.
+ * of the storey below whose top is the storey's floor (`bearsPost`); nothing there (an opening, a slab panel below), none. The post must also run through nothing built.
  */
 function postBase(context: BuildContext, box: Rect, at: { floor: number; top: number }): { on: StructurePart | typeof GROUND; y0: number } | undefined {
   const { floor, top } = at
@@ -78,9 +90,11 @@ function postBase(context: BuildContext, box: Rect, at: { floor: number; top: nu
   for (let storey = floor - 1; storey >= 0; storey--) {
     const level = context.level(storey + 1)
     const below = context.builder.parts
-      .filter((p) => p.floor === storey && (p.beamKind === 'bond_beam' || p.role === 'wall' || p.role === 'column') && p.y1 >= level - 0.06 && p.y1 <= level + 0.3 && touches(p.aabb, box, -0.05))
+      .filter((p) => p.floor === storey && bearsPost(context, p) && p.y1 >= level - 0.06 && p.y1 <= level + 0.3 && touches(p.aabb, box, -0.05))
       .sort((a, b) => b.y1 - a.y1)[0]
     if (below) return isClear(context, box, { y0: below.y1, y1: top }) ? { on: below, y0: below.y1 } : undefined
+    // (on down through this storey: never through its doorways)
+    if (inDoorway(context, box, storey)) return undefined
   }
   return postBase(context, box, { floor: 0, top })
 }
@@ -113,7 +127,18 @@ function trimPartitionsUnder(context: BuildContext, beam: StructurePart, axis: '
     if (!alongWall || !touches(wall.aabb, beam.aabb, -TOLERANCE)) continue
     wall.mass = Math.max(1, Math.round((wall.mass * (beam.y0 - wall.y0)) / (wall.y1 - wall.y0)))
     wall.y1 = beam.y0
+    wall.soffit = beam.id
   }
+}
+
+/** The concrete pillar under the `end` (0 low, 1 high, along `axis`) of `plate`, within half a metre of it: what a beam continuing the plate frames into. */
+function endPillar(context: BuildContext, plate: StructurePart, at: { axis: 'u' | 'v'; end: 0 | 1 }): StructurePart | undefined {
+  const tip = alongOf(plate, at.axis)[at.end]
+  return context.builder.supports
+    .filter((s) => s.part === plate.id)
+    .map((s) => context.builder.find(s.on))
+    .filter((p): p is StructurePart => p?.role === 'column' && p.material === 'concrete' && Math.abs(alongOf(p, at.axis)[at.end] - tip) <= 0.5)
+    .sort((a, b) => Math.abs(alongOf(a, at.axis)[at.end] - tip) - Math.abs(alongOf(b, at.axis)[at.end] - tip))[0]
 }
 
 /** A station near `at` (within `range`, nearest first) where a post can stand. */
@@ -168,6 +193,11 @@ export function addEaveSupports(context: BuildContext, eave: BareEave): Structur
     // (past a plate's end by more than its wall's pillar reach, so it is no pillar of that wall)
     const firstPost = stationNear(context, lo, { ...place, range: left ? [0.65, 0.8] : [0.15, 0.3, 0.5, 0.75, 1, 1.25, 1.5] })
     const lastPost = stationNear(context, hi, { ...place, range: right ? [-0.65, -0.8] : [-0.15, -0.3, -0.5, -0.75, -1, -1.25, -1.5] })
+    // with no pillar of its own by a plate's end, a concrete beam frames into the pillar under that end, never onto the shallower plate
+    const leftPillar = !timber && left && firstPost === undefined ? endPillar(context, left, { axis, end: 1 }) : undefined
+    const rightPillar = !timber && right && lastPost === undefined ? endPillar(context, right, { axis, end: 0 }) : undefined
+    if (leftPillar) lo = alongOf(leftPillar, axis)[1]
+    if (rightPillar) hi = alongOf(rightPillar, axis)[0]
     const from = firstPost ?? lo
     const to = lastPost ?? hi
     const spans = Math.max(1, Math.ceil((to - from) / EAVE_SUPPORT_SPACING - 1e-6))
@@ -185,8 +215,8 @@ export function addEaveSupports(context: BuildContext, eave: BareEave): Structur
     const aabb: Rect = axis === 'u' ? [lo, line - half, hi, line + half] : [line - half, lo, line + half, hi]
     const beam = builder.add({ id, role: 'beam', material, aabb, y0: eaveY - depth, y1: eaveY }, { floor, ...(timber ? {} : { assembly: 'reinforced_concrete' }) })
     created.push(beam)
-    if (left && firstPost === undefined) builder.rest(beam, left, timber ? 'nail' : 'rebar')
-    if (right && lastPost === undefined) builder.rest(beam, right, timber ? 'nail' : 'rebar')
+    if (left && firstPost === undefined) builder.rest(beam, leftPillar ?? left, timber ? 'nail' : 'rebar')
+    if (right && lastPost === undefined) builder.rest(beam, rightPillar ?? right, timber ? 'nail' : 'rebar')
     stations.forEach((at, n) => {
       const box = postBox(context, { axis, line, at })
       // (found clear up to 25 cm under the eave: clear under a deeper beam too)
