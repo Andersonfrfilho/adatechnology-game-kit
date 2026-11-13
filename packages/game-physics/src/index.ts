@@ -236,7 +236,8 @@ export interface PhysicsWorld {
   removeBody(id: BodyId): void
   /** Many at once (a blast breaking a wall): one broadphase insert. */
   createBodies(descs: readonly BodyDesc[]): BodyId[]
-  setShape(id: BodyId, shape: ShapeDesc): void
+  /** A new shape on the same body; a dynamic one keeps the kit's mass (`mass`, else the one it was made with), its inertia from the new shape (or `mass.inertia`). */
+  setShape(id: BodyId, shape: ShapeDesc, mass?: { readonly mass: number; readonly inertia?: Vec3 }): void
   /** Writes x, y, z then x, y, z, w into `out` at `offset`. */
   readPose(id: BodyId, out: Float32Array | Float64Array, offset: number): void
   readVelocity(id: BodyId, out: Float32Array | Float64Array, offset: number): void

@@ -65,7 +65,9 @@ interface BodyEntry {
   readonly user: number
   readonly layer: Layer
   material: Material
-  readonly invMass: number
+  invMass: number
+  /** The mass and moments the kit gave it (dynamic only): kept when its shape changes (`setShape`). */
+  kitMass: { readonly mass: number; readonly inertia?: Vec3 } | null
   /** Its friction now (`updateFriction`): the material's dynamic coefficient while it slides on what it touches, the static one otherwise. */
   sliding: boolean
 }
@@ -436,6 +438,7 @@ export class JoltWorld implements PhysicsWorld {
       layer: desc.layer ?? (desc.motion === 'static' ? 'static' : 'debris'),
       material: desc.material ?? DEFAULT_MATERIAL,
       invMass: mp,
+      kitMass: desc.motion === 'dynamic' && desc.mass !== undefined ? { mass: desc.mass, ...(desc.inertia ? { inertia: desc.inertia } : {}) } : null,
       sliding: false,
     }
     this.bodies.set(key, entry)
@@ -495,12 +498,51 @@ export class JoltWorld implements PhysicsWorld {
     this.rollers.delete(id)
   }
 
-  setShape(id: BodyId, shape: ShapeDesc): void {
+  /**
+   * A new shape on the same body (what touches it keeps its cached contacts to warm start from). A dynamic body keeps the kit's mass (`mass`, else the one it
+   * was made with), with its inertia from the new shape scaled to that mass (or the moments given), through the same small-inertia guard as `createBody`:
+   * left to Jolt, the mass is the new shape's volume times 1000 kg/m^3 and a small piece's inertia becomes a 1 m sphere's.
+   */
+  setShape(id: BodyId, shape: ShapeDesc, mass?: { readonly mass: number; readonly inertia?: Vec3 }): void {
     const e = this.entry(id)
     const made = this.makeShape(shape)
-    // a static body has no mass to update; the body keeps its id, so what touches it keeps its cached contacts to warm start from
-    this.bi.SetShape(e.id, made, e.body.IsDynamic(), this.J.EActivation_Activate)
+    const dynamic = e.body.IsDynamic()
+    if (mass && dynamic) e.kitMass = mass
+    const kit = dynamic ? e.kitMass : null
+    this.bi.SetShape(e.id, made, dynamic && !kit, this.J.EActivation_Activate)
+    if (kit) this.putMass(e, made, kit)
     made.Release()
+  }
+
+  /** The kit's mass and moments on a body, with its new shape: made `INERTIA_SCALE` times too large for Jolt, then the true values put back (`unscaleInertia`). */
+  private putMass(e: BodyEntry, shape: JoltNS.Shape, kit: { readonly mass: number; readonly inertia?: Vec3 }): void {
+    const J = this.J
+    const mp = e.body.GetMotionProperties()
+    const props = new J.MassProperties()
+    if (kit.inertia) {
+      props.mMass = kit.mass * INERTIA_SCALE
+      this.v2.Set(kit.inertia[0] * INERTIA_SCALE, kit.inertia[1] * INERTIA_SCALE, kit.inertia[2] * INERTIA_SCALE)
+      props.mInertia = J.Mat44.prototype.sScaleVec3(this.v2)
+    } else {
+      const own = shape.GetMassProperties()
+      props.mMass = own.mMass
+      props.mInertia = own.mInertia
+      props.ScaleToMass(kit.mass * INERTIA_SCALE)
+    }
+    mp.SetMassProperties(J.EAllowedDOFs_All, props)
+    J.destroy(props)
+    const d = mp.GetInverseInertiaDiagonal()
+    this.v2.Set(d.GetX() * INERTIA_SCALE, d.GetY() * INERTIA_SCALE, d.GetZ() * INERTIA_SCALE)
+    mp.SetInverseInertia(this.v2, mp.GetInertiaRotation())
+    mp.SetInverseMass(1 / kit.mass)
+    e.invMass = 1 / kit.mass
+  }
+
+  /** A dynamic body's mass and its moments about its own axes (kg m^2), as Jolt holds them: for checks. */
+  massProperties(id: BodyId): { mass: number; inertia: Vec3 } {
+    const mp = this.entry(id).body.GetMotionProperties()
+    const m = mp.GetLocalSpaceInverseInertia()
+    return { mass: 1 / mp.GetInverseMass(), inertia: [1 / m.GetAxisX().GetX(), 1 / m.GetAxisY().GetY(), 1 / m.GetAxisZ().GetZ()] }
   }
 
   private entry(id: BodyId): BodyEntry {
@@ -974,7 +1016,7 @@ export class JoltWorld implements PhysicsWorld {
     const bodies: BodyId[] = desc.parts.map((part, i) => {
       const body = lock.TryGetBody(ragdoll.GetBodyID(i))
       const key = body.GetID().GetIndexAndSequenceNumber()
-      const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), sliding: false }
+      const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, sliding: false }
       this.bodies.set(key, entry)
       this.byPointer.set(J.getPointer(body), entry)
       if (part.body.rolling) this.rollers.set(key, part.body.rolling)

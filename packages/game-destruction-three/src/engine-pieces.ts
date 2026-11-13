@@ -312,7 +312,9 @@ export class EnginePieces {
     }
     if (shapeKey.some((s, i) => s !== link.shapeKey[i])) {
       link.shapeKey = shapeKey
-      this.world.setShape(link.id, this.shapeOf(b))
+      // the piece's mass and moments go with its new shape: left to the engine, they would be the new shape's volume at 1000 kg/m^3
+      const inertia = this.inertiaOf(b)
+      this.world.setShape(link.id, this.shapeOf(b), inertia ? { mass: b.mass, inertia } : { mass: b.mass })
       this.world.setMaterial(link.id, this.material(b))
       this.world.setRolling(link.id, this.rollingOf(b))
     }
