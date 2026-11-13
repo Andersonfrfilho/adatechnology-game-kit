@@ -39,6 +39,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       cursor.group = s.group; cursor.pc = s.pc; cursor.stage = s.stage;
       bx(s.mat, s.box[0], s.box[1], s.box[2], s.box[3], s.box[4], s.box[5], s.color);
       shared.ctx.occupied.push(s.box); // the slabs and lintels laid later keep round the walls and the railings
+      if (s.rank === 3) shared.ctx.railBoxes?.push(s.box);
     }
     cursor.group = g0; cursor.pc = pc0; cursor.stage = st0;
   }

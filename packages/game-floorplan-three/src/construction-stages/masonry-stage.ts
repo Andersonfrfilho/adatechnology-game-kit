@@ -133,6 +133,8 @@ export interface Chase {
   readonly y1: number
   readonly side: 1 | -1
   readonly back: number
+  /** The chase of a box set in the wall (not of a run going up or down it). */
+  readonly box?: boolean
 }
 
 /**
@@ -209,11 +211,16 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
         if (q1 - q0 < 1e-4) continue
         const over = here.filter((c) => q0 >= c.y0 - 1e-6 && q1 <= c.y1 + 1e-6)
         if (!over.length) { box(batch, p0, q0, p1, q1, t); continue }
-        const deep = over.reduce((m, c) => (c.back < m.back ? c : m))
+        // each face is cut by the deepest chase on it (a box set in one face and the run going up the other face both cut the unit)
         // the chase's bottom never on the plane of the mortar behind the units: near it, the cut goes on past it
-        const back = Math.abs(deep.back - mortar) < CHASE_CLEAR_OF_MORTAR ? mortar - CHASE_CLEAR_OF_MORTAR : deep.back
-        const depth = t / 2 - (back - inset) // the mortar a little deeper than the units: its bottom never on theirs
-        box(batch, p0, q0, p1, q1, t - depth, -deep.side * depth / 2)
+        const depthOn = (side: number): number => {
+          const on = over.filter((c) => c.side === side)
+          if (!on.length) return 0
+          const least = Math.min(...on.map((c) => c.back)), back = Math.abs(least - mortar) < CHASE_CLEAR_OF_MORTAR ? mortar - CHASE_CLEAR_OF_MORTAR : least
+          return t / 2 - (back - inset) // the mortar a little deeper than the units: its bottom never on theirs
+        }
+        const low = depthOn(-1), high = depthOn(1)
+        box(batch, p0, q0, p1, q1, t - low - high, (low - high) / 2)
       }
     }
   }
@@ -228,7 +235,10 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
       const n = Math.max(1, Math.round((r.a1 - r.a0) / spacing))
       for (let i = 0; i <= n; i++) {
         const s = r.a0 + ((r.a1 - r.a0 - studW) * i) / n
-        box(batches.wood, s, r.y0 + 0.045, s + studW, r.y1 - 0.045, th * 0.9)
+        // a stud that would stand in the cut of a box set in the wall is moved out of it, beside the box (the box is nailed to it)
+        // (to the side the stud is nearer, unless that takes it past the piece's end)
+        const at = (layout.chases ?? []).filter((c) => c.box && c.a1 > s && c.a0 < s + studW).reduce((x, c) => ((x + studW / 2 <= (c.a0 + c.a1) / 2 && c.a0 - studW >= r.a0) || c.a1 + studW > r.a1 ? c.a0 - studW : c.a1), s)
+        box(batches.wood, at, r.y0 + 0.045, at + studW, r.y1 - 0.045, th * 0.9)
       }
     }
     return laidRects

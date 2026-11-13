@@ -663,8 +663,22 @@ export interface BuildContext {
   occupied: Aabb[]
   /** The boxes of the lot's walls (outside the Visor's scene): the house's sidewalk and baseboard are laid round where one meets the house. */
   lotWalls: Aabb[]
+  /** How far along its wall each box of a switch or an outlet was moved off a wall's end ([du, dv], outside the Visor's scene): its chase in the masonry moves with it. */
+  wallBoxShifts?: Map<object, readonly [number, number]>
+  /** The boxes of the eaves laid so far (soffits, fascias and bands of the roof's covers, outside the Visor's eave): a later cover's eave keeps out of them. */
+  eaveBoxes?: Aabb[] | undefined
+  /** The boxes of the railings laid with the walls (outside the Visor's scene): the baseboard on the wall a railing runs into is laid round its rails. */
+  railBoxes?: Aabb[]
   /** The boxes of the storeys' floor finishes and slabs (outside the Visor's scene): the furniture and the flights standing on them keep out of them. */
   floorFinishes: Aabb[]
+  /** While set (the block of an apartment drawn with construction stages, outside the Visor's scene): every plain box drawn is kept here, as laid. */
+  blockBoxes?: Aabb[] | undefined
+  /** The boxes the apartment's block laid (`blockBoxes` once it is drawn). */
+  blockLaid?: Aabb[] | undefined
+  /** The sidewalk's slabs laid round the house (outside the Visor's scene): what a sewer box's lid set in the paving keeps its sides off. */
+  paving?: Aabb[]
+  /** The baseboard's tiles laid on the outer walls (outside the Visor's scene): a window's sill at the foot of the wall keeps out of them. */
+  baseboards?: Aabb[]
   /** The floor the piece being drawn stands on (a storey's furniture, outside the Visor's scene): a face looking down on its plane is shut by it, as by the ground. */
   restOn?: number | undefined
   /** The plane a unit stands on in its block (its ground floor over the street) (outside the Visor's scene): a face looking down on it is shut by the slab under it, as by the ground. */

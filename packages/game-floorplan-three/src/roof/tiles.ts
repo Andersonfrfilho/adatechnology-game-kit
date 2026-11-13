@@ -13,7 +13,10 @@ export function installRoofTiles(K: Kernel, shared: Shared): void {
     const nl = Math.hypot(nx, ny, nz); if (nl < 1e-9) return; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
     const nh = Math.hypot(nx, nz); let dx: number, dy: number, dz: number; if (nh < 1e-4) { dx = 0; dy = 0; dz = 1; } else { dx = nx / nh; dy = -nh / ny; dz = nz / nh; const dl = Math.hypot(dx, dy, dz); dx /= dl; dy /= dl; dz /= dl; }
     let ex = ny * dz - nz * dy, ey = nz * dx - nx * dz, ez = nx * dy - ny * dx; const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el; // e1 along the eave
-    const o = origin ?? pts[0], S: number[] = [], T: number[] = []; for (const p of pts) { const rx = p[0] - o[0], ry = p[1] - o[1], rz = p[2] - o[2]; S.push(rx * ex + ry * ey + rz * ez); T.push(rx * dx + ry * dy + rz * dz); }
+    // outside the Visor's scene every plane measures its rows from the one point of its plane nearest the world's origin: two covers of one roof whose slopes lie
+    // in one plane (overlapping rectangles rising from the same eave) lay the same rows, the same relief and the same colours, so neither shows through the other
+    const aligned = !shared.ctx.visorScene, along = nx * pts[0][0] + ny * pts[0][1] + nz * pts[0][2];
+    const o = aligned ? [nx * along, ny * along, nz * along] : origin ?? pts[0], S: number[] = [], T: number[] = []; for (const p of pts) { const rx = p[0] - o[0], ry = p[1] - o[1], rz = p[2] - o[2]; S.push(rx * ex + ry * ey + rz * ez); T.push(rx * dx + ry * dy + rz * dz); }
     const colonial = type !== 'fiber_cement', P = colonial ? 0.2 : 0.177, A = colonial ? 0.032 : 0.0255, seg = shared.quality === 'game' ? (colonial ? 4 : 4) : (colonial ? 8 : 6), h = P / seg;
     const smin = Math.min(...S), smax = Math.max(...S); if (smax - smin < 1e-4) return;
     const xs = new Set(S.map(v => +v.toFixed(5))); for (let k = Math.ceil(smin / h); k * h < smax; k++) xs.add(+(k * h).toFixed(5)); xs.add(+smax.toFixed(5));
@@ -21,9 +24,21 @@ export function installRoofTiles(K: Kernel, shared: Shared): void {
     for (const sv of L) { let lo = Infinity, hi = -Infinity; for (let i = 0; i < n; i++) { const j = (i + 1) % n, s0 = S[i], s1 = S[j]; if (Math.abs(s1 - s0) < 1e-7) { if (Math.abs(sv - s0) < 1e-5) { lo = Math.min(lo, T[i], T[j]); hi = Math.max(hi, T[i], T[j]); } } else if (sv >= Math.min(s0, s1) - 1e-6 && sv <= Math.max(s0, s1) + 1e-6) { const t = T[i] + (T[j] - T[i]) * (sv - s0) / (s1 - s0); lo = Math.min(lo, t); hi = Math.max(hi, t); } } col.push(lo <= hi ? [lo, hi] : null); }
     const AC = accFor(mat), m = L.length, [cr, cg, cb] = rgbOf(color), O = cursor.org; AC.ensure(m * 2, (m - 1) * 6);
     const base = AC.nv, w2 = 2 * Math.PI / P;
-    for (let j = 0; j < m; j++) {
-      const sv = L[j], ph = sv * w2, hh = A + A * Math.sin(ph), dh = A * w2 * Math.cos(ph), ql = Math.hypot(dh, 1), qx = (nx - dh * ex) / ql, qy = (ny - dh * ey) / ql, qz = (nz - dh * ez) / ql;
+    const profile = (sv: number): readonly [number, number, number, number, number] => {
+      const ph = sv * w2, hh = A + A * Math.sin(ph), dh = A * w2 * Math.cos(ph), ql = Math.hypot(dh, 1);
       const per = Math.floor(sv / P), rr = _h2(per * 7 + 3, 11), fil = colonial ? 0.9 + 0.2 * (0.5 + 0.5 * Math.sin(ph + 1.5708)) : 0.95 + 0.1 * (0.5 + 0.5 * Math.sin(ph + 1.5708)), v = 1.5 * fil * (0.94 + 0.1 * rr); // the relief darkens the average lighting: compensate
+      return [hh, (nx - dh * ex) / ql, (ny - dh * ey) / ql, (nz - dh * ez) / ql, v];
+    };
+    // (aligned, a column off the rows' grid, at a corner of the polygon, takes the relief between the grid's columns on each side of it: the surface is the
+    // same whichever polygon of the plane lays it)
+    const at = (sv: number): readonly [number, number, number, number, number] => {
+      const k = sv / h, k0 = Math.floor(k + 1e-6);
+      if (!aligned || k - k0 < 1e-6) return profile(sv);
+      const a = profile(k0 * h), b = profile((k0 + 1) * h), f = k - k0;
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f, a[4] + (b[4] - a[4]) * f];
+    };
+    for (let j = 0; j < m; j++) {
+      const sv = L[j], [hh, qx, qy, qz, v] = at(sv);
       const cj = col[j] || col[j - 1] || col[j + 1] || [0, 0];
       for (let k = 0; k < 2; k++) {
         const t = cj[k], oo = base + j * 2 + k, px = o[0] + sv * ex + t * dx + nx * hh, py = o[1] + sv * ey + t * dy + ny * hh, pz = o[2] + sv * ez + t * dz + nz * hh;

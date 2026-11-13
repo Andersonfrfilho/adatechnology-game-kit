@@ -12,7 +12,9 @@ import type { RoutableElectrical } from '../construction-stages/installation-rou
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
 import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
 import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
+import { gutterKeepOut } from '../roof/gutters.js';
 import { WALL_BOX, wallBehindOf, wallBoxExtent } from '../utilities/wall-box.js';
+import type { Aabb } from '../house/solids.js';
 
 import type * as THREE_NS from 'three';
 import type { Outbuilding, Structure } from '@adatechnology/game-floorplan-structure';
@@ -63,6 +65,20 @@ function embeddedRunsOf(house: THREE_NS.Object3D): EmbeddedRun[] {
   return out;
 }
 
+/** The water tank's box in the house's frame (what the roof's timber is cut around: a tank in the attic stands between the purlins, never pierced by them). */
+function atticKeepOut(THREE: Kernel['THREE'], house: THREE_NS.Object3D, parts: readonly HousePart[]): Aabb[] {
+  house.updateMatrixWorld(true);
+  const toHouse = new THREE.Matrix4().copy(house.matrixWorld).invert();
+  const out: Aabb[] = [];
+  const groups: THREE_NS.Object3D[] = parts.filter((p) => p.type === 'water_tank' && p.group).map((p) => p.group as THREE_NS.Object3D);
+  house.traverse((o) => { if (o.name === 'attic_tank') groups.push(o); }); // (and the platform it stands on)
+  for (const group of groups) {
+    const box = new THREE.Box3().setFromObject(group).applyMatrix4(toHouse);
+    if (!box.isEmpty()) out.push([box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z]);
+  }
+  return out;
+}
+
 /** What a box's chase leaves round it, metres: no face of the box within a millimetre of a brick's or the mortar's. */
 const BOX_CHASE_CLEAR = 0.003
 
@@ -70,13 +86,14 @@ const BOX_CHASE_CLEAR = 0.003
  * The 4x2 boxes of the switches and outlets as runs for the masonry: each is cut into the wall in a chase as wide as the box (its half width as the run's
  * radius) and as high, a few millimetres round it, so no unit's end or mortar fill ends on a side of the box.
  */
-function wallBoxRunsOf(r: HouseRecord): EmbeddedRun[] {
+function wallBoxRunsOf(r: HouseRecord, shifts: ReadonlyMap<object, readonly [number, number]> = new Map()): EmbeddedRun[] {
   const E = r.utilities?.electrical;
   if (!E) return [];
-  return [...(E.switches || []), ...(E.outlets || [])].map((t) => {
+  return [...(E.switches || []), ...(E.outlets || [])].map((t): EmbeddedRun => {
     const point = { u: t.u, v: t.v, y: t.y, frontU: t.frontU || 0, frontV: t.frontV || 0 }, box = wallBoxExtent(point, wallBehindOf(r.walls, { ...point, floor: t.floor }));
     const y0 = r.floors[Math.max(0, Math.min(r.floors.length - 1, t.floor))]?.y0 ?? 0;
-    return { u: (box.u0 + box.u1) / 2, v: (box.v0 + box.v1) / 2, y0: y0 + box.y0 - BOX_CHASE_CLEAR, y1: y0 + box.y1 + BOX_CHASE_CLEAR, radius: WALL_BOX.along / 2 };
+    const [du, dv] = shifts.get(t) ?? [0, 0];
+    return { u: (box.u0 + box.u1) / 2 + du, v: (box.v0 + box.v1) / 2 + dv, y0: y0 + box.y0 - BOX_CHASE_CLEAR, y1: y0 + box.y1 + BOX_CHASE_CLEAR, radius: WALL_BOX.along / 2, box: true };
   }).concat(E.panel ? [panelRunOf(E.panel)] : []);
 }
 
@@ -102,7 +119,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.r = r; shared.ctx.colors = r.colors as unknown as Record<string, number>; shared.ctx.cut = !!opts.cut; shared.ctx.night = !!opts.night; shared.ctx.labels = []; shared.ctx.colliders = []; shared.ctx.stairs = []; shared.ctx.noTerrain = opts.terrain === false;
         shared.ctx.roomById = {}; for (const c of r.rooms) shared.ctx.roomById[c.id] = c;
         shared.ctx.pieces = new Map(); shared.ctx.pieceObjects = new Map(); shared.ctx.structureIndex = {}; for (const e of (r0.structure as Structure | undefined)?.parts || []) shared.ctx.structureIndex[e.id] = e; { const view = shared.ctx.panelView = panelViewOf(r0.structure as Structure | undefined, !!cfg.destruction); shared.ctx.panelsOf = new Map(); for (const id of view.replaced) delete shared.ctx.structureIndex[id]; for (const e of view.panels) { shared.ctx.structureIndex[e.id] = e; const l = shared.ctx.panelsOf.get(e.slab as string); if (l) l.push(e); else shared.ctx.panelsOf.set(e.slab as string, [e]); } } shared.ctx.panes = (r0.roof as { panes?: BuildContextPanes } | undefined)?.panes || []; shared.ctx.noPiece = false;
-        cursor.separate = opts.pieces === 'meshes'; cursor.pc = null; shared.ctx.showPillars = opts.pillars !== 'hidden'; shared.ctx.baseboardBand = opts.baseboard === 'band'; shared.ctx.visorGutters = opts.gutters === 'visor'; shared.ctx.visorEave = opts.eave === 'visor'; shared.ctx.visorCorners = opts.wallCorners === 'visor'; shared.ctx.visorCeilings = opts.ceilings === 'visor'; shared.ctx.visorScene = shared.ctx.visorGutters && shared.ctx.visorEave && shared.ctx.visorCorners && shared.ctx.visorCeilings; shared.ctx.occupied = []; shared.ctx.floorFinishes = []; shared.ctx.unitGround = undefined; shared.ctx.lotWalls = [];
+        cursor.separate = opts.pieces === 'meshes'; cursor.pc = null; shared.ctx.showPillars = opts.pillars !== 'hidden'; shared.ctx.baseboardBand = opts.baseboard === 'band'; shared.ctx.visorGutters = opts.gutters === 'visor'; shared.ctx.visorEave = opts.eave === 'visor'; shared.ctx.visorCorners = opts.wallCorners === 'visor'; shared.ctx.visorCeilings = opts.ceilings === 'visor'; shared.ctx.visorScene = shared.ctx.visorGutters && shared.ctx.visorEave && shared.ctx.visorCorners && shared.ctx.visorCeilings; shared.ctx.occupied = []; shared.ctx.floorFinishes = []; shared.ctx.paving = []; shared.ctx.baseboards = []; shared.ctx.blockLaid = undefined; shared.ctx.unitGround = undefined; shared.ctx.lotWalls = []; shared.ctx.wallBoxShifts = new Map(); shared.ctx.railBoxes = [];
         shared.ctx.apartment = r.template === 'apartment_modern'; shared.ctx.pa = Math.max(3, Math.min(20, pr.floors != null ? pr.floors : 5)); shared.ctx.pf = Math.max(1, Math.min(shared.ctx.pa, pr.floor != null ? pr.floor : 3)); shared.ctx.pu = Math.max(0, pr.unit != null ? pr.unit : 0);
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
@@ -222,9 +239,10 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         if (cs) {
           const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
           // the masonry is laid with the chases of the runs that go up and down inside it
-          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r)]);
-          const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? []);
-          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, shared.ctx.occupied); // (its rafters clear of the faces of the slabs' edges they pass)
+          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r, shared.ctx.wallBoxShifts)], shared.ctx.blockLaid ?? []);
+          const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? [], shared.ctx.paving ?? []);
+          // (its rafters clear of the faces of the slabs' edges they pass, its timbers cut around the water tank standing in the attic and the gutters hung on the eaves)
+          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, shared.ctx.occupied, [...atticKeepOut(THREE, house, Object.values(parts)), ...gutterKeepOut(shared.ctx.gutterInfo?.gutters ?? [])]);
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
           for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
             gs[sg.name] = sg;

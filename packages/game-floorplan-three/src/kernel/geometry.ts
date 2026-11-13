@@ -120,6 +120,7 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
   }
   function put(mat: string, geo: string, px: number, py: number, pz: number, q: THREE_NS.Quaternion, sx: number, sy: number, sz: number, color: Hex, uvr?: UvRect | null): void {
     if ((shared.ctx.keepOut || shared.ctx.itemBoxes) && geo === 'box' && !uvr && keptOut(mat, px, py, pz, q, sx, sy, sz, color)) return;
+    if (shared.ctx.blockBoxes && geo === 'box' && mat !== 'emissive' && mat !== 'glass' && Math.abs(q.x) + Math.abs(q.y) + Math.abs(q.z) < 1e-9) shared.ctx.blockBoxes.push([px - sx / 2, py - sy / 2, pz - sz / 2, px + sx / 2, py + sy / 2, pz + sz / 2]);
     { const O = cursor.org, RY = cursor.ry; if (RY) { const c = Math.cos(RY), s = Math.sin(RY), dx = px - O[0], dz = pz - O[2]; px = dx * c - dz * s; pz = dx * s + dz * c; py -= O[1]; _qa.setFromAxisAngle(_Y, -RY); _qb.copy(_qa).multiply(q); q = _qb; } else { px -= O[0]; py -= O[1]; pz -= O[2]; } }
     const A = accFor(mat), G = GEO[geo]; A.ensure(G.nv, G.i ? G.i.length : G.nv);
     const x = q.x, y = q.y, z = q.z, w = q.w, x2 = x + x, y2 = y + y, z2 = z + z;

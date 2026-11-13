@@ -66,7 +66,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     bed(M, A, o: BuilderOptions = {}) {
       const { b: lb } = kk(M, A), w = M.w, d = M.d, c = M.color != null && o.useColor ? M.color : paletteColor(M, 'fabric_accent', 0x7a3a3a), wood = paletteColor(M, 'wood', 0x8a6444), sheet = paletteColor(M, 'fabric_main', 0xe0dcd0);
       if (apart()) lb('wood', 0, 0, 0.01, w, 0.3, d - 0.1, wood); else lb('wood', 0, 0, 0, w, 0.3, d, wood); // the frame runs between the head and the foot boards
-      lb('wood', 0, 0, -d / 2 + 0.03, w + 0.06, apart() ? 1.04 : 1.05, 0.06, sh(wood, 0.85)); lb('wood', 0, 0, d / 2 - 0.02, w, 0.42, 0.04, sh(wood, 0.85)); // (the head board a hair under a window's 1.05 m sill)
+      lb('wood', 0, 0, -d / 2 + 0.03, apart() ? w : w + 0.06, apart() ? 1.04 : 1.05, 0.06, sh(wood, 0.85)); lb('wood', 0, 0, d / 2 - 0.02, w, 0.42, 0.04, sh(wood, 0.85)); // (the head board a hair under a window's 1.05 m sill, and no wider than the bed: the wardrobe beside it stood in its ends)
       lb('fabric', 0, 0.3, 0, w - 0.06, 0.2, d - 0.1, sh(sheet, 1.25));
       lb('fabric', 0, 0.5, 0.25, w - 0.02, 0.05, d * 0.62, c, 0, 0.02); lb('fabric', 0.1, 0.55, 0.0, w * 0.6, 0.06, 0.4, sh(c, 0.8), 0.2);
       const np = w > 1.3 ? 2 : 1; for (let s = 0; s < np; s++) lb('fabric', (np === 1 ? 0 : (s ? 1 : -1) * w * 0.23), 0.5, -d / 2 + 0.3, w * (np === 1 ? 0.6 : 0.4), 0.12, 0.34, 0xf0eee6, (s ? 1 : -1) * 0.08);

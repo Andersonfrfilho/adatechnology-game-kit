@@ -2,7 +2,10 @@
 import type { TankPlatform, WaterTank } from '@adatechnology/game-floorplan-structure';
 import { FLOOR_OVER_GROUND } from '../house/floors.js';
 import type { Aabb } from '../house/solids.js';
-import type { FurnitureApi, Hex, HouseItem, Kernel, KernelFurniturePlaceItems, Mount, Shared } from '../kernel-types.js';
+import type { FurnitureApi, Hex, HouseItem, Kernel, KernelFurniturePlaceItems, Mount, Rect, Shared } from '../kernel-types.js';
+
+/** How far over an earlier ground cover a later one that overlaps it is laid, metres. */
+const COVER_STEP = 0.003;
 
 export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
   const { THREE, Y0, _col, boxC, colorOf, cursor, decorLights, makeApi, structurePiece, OPEN_AREA, rectsOf } = K;
@@ -15,9 +18,12 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     const list: HouseItem[] = R.items.concat(R.stateItems.filter((e: HouseItem) => e.w != null && e.d != null && e.type !== 'razor_wire' && e.type !== 'barbed_wire'));
     const rect = (poly: number[][]): boolean => { let a = 0; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) a += poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1]; const xs = poly.map(p => p[0]), zs = poly.map(p => p[1]); return Math.abs(a) / 2 > 0.98 * (Math.max(...xs) - Math.min(...xs)) * (Math.max(...zs) - Math.min(...zs)); };
     const keepOut = shared.ctx.occupied.concat(shared.ctx.floorFinishes);
-    // outside the Visor's scene the curtains hang last, over what the storey's furniture drew (`drawn`): a bed or a sideboard under a window stood in their pleats
+    // outside the Visor's scene the curtains and the blinds hang last, over what the storey's furniture drew (`drawn`): a bed or a sideboard under a window stood in
+    // their pleats, its top in a blind's cords
     const drawn = new Map<string, Aabb[][]>(); // (each item's own list, filled as it is drawn)
-    const ordered = shared.ctx.visorScene ? list : list.filter((m) => m.type !== 'curtain').concat(list.filter((m) => m.type === 'curtain'));
+    const hangs = (m: HouseItem): boolean => m.type === 'curtain' || m.type === 'blinds';
+    const ordered = shared.ctx.visorScene ? list : list.filter((m) => !hangs(m)).concat(list.filter(hangs));
+    const covers: Rect[] = [];
     for (const m of ordered) {
       if (m.type === 'stairs') continue;
       const exterior = m.outdoor || m.floor < 0, f = exterior ? -1 : Math.min(m.floor, R.floors.length - 1);
@@ -31,6 +37,12 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       if (m.category === 'ground_cover' && m.polygon) {
         const xs = m.polygon.map((p: number[]) => p[0]), zs = m.polygon.map((p: number[]) => p[1]); M.x = (Math.min(...xs) + Math.max(...xs)) / 2; M.z = (Math.min(...zs) + Math.max(...zs)) / 2; M.w = Math.max(...xs) - Math.min(...xs); M.d = Math.max(...zs) - Math.min(...zs); M.ry = 0;
         if (!rect(m.polygon)) M.poly = m.polygon.map((p: number[]) => [p[0] - M.x, p[1] - M.z]);
+      }
+      if (m.category === 'ground_cover' && !shared.ctx.visorScene) {
+        // a cover laid where an earlier one already lies (two zones of the lot overlapping) is a pad on it, 3 mm up: never on its plane
+        const own: Rect = [M.x - M.w / 2, M.z - M.d / 2, M.x + M.w / 2, M.z + M.d / 2], under = covers.filter((c) => c[0] < own[2] - 1e-6 && c[2] > own[0] + 1e-6 && c[1] < own[3] - 1e-6 && c[3] > own[1] + 1e-6).length;
+        M.base += COVER_STEP * under;
+        covers.push(own);
       }
       if (shared.ctx.veg && vegItem(m, M, exterior ? 'lot' : 'f' + f)) continue;
       // the outdoor shelter of a gas cylinder (NBR 13523) and its copper line are the house's, whoever draws the cylinder in it
@@ -46,7 +58,8 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       shared.ctx.keepOut = shared.ctx.visorScene ? undefined : exterior ? shared.ctx.occupied : keepOut;
       shared.ctx.itemBoxes = shared.ctx.visorScene ? undefined : []; shared.ctx.itemGroup = cursor.group;
       if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); cursor.stage = st0; continue; }
-      if (m.type === 'curtain' && !shared.ctx.visorScene && !hemOver(M, (drawn.get(cursor.group) ?? []).flat())) { cursor.stage = st0; continue; }
+      if (hangs(m) && !shared.ctx.visorScene && !hemOver(M, (drawn.get(cursor.group) ?? []).flat())) { cursor.stage = st0; continue; }
+      if (!hangs(m) && !shared.ctx.visorScene && (M.y ?? 0) > 0) standOnTop(M, (drawn.get(cursor.group) ?? []).flat());
       const mine = shared.ctx.itemBoxes;
       if (mine) drawn.set(cursor.group, (drawn.get(cursor.group) ?? []).concat([mine]));
       try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
@@ -71,6 +84,15 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     const type = R.facade.roof, pitch = type === 'slab' ? 0 : type === 'fiber_cement' ? 0.2 : 0.5;
     const roofTop = Y0(f - 1) + (below.ceiling || 2.6) + 0.2 + (type === 'slab' ? 0.03 : 0) + pitch * ((m.d || 0) + 0.05) + ROOF_CLEAR;
     if (M.base + (M.y || 0) < roofTop) M.y = roofTop - M.base;
+  }
+  /** How far over the height an item is set at (on a table, a shelf) the top of what is drawn there may be and still be what it stands on (a tablecloth), metres. */
+  const SET_ON_REACH = 0.01;
+  /** An item set on a piece of furniture stands on what is drawn there: a tablecloth on the table lifts it by its thickness, never leaves its foot in it. */
+  function standOnTop(M: Mount, boxes: readonly Aabb[]): void {
+    const r = Math.max(M.w || 0.2, M.d || 0.2) / 2, at = M.base + (M.y ?? 0);
+    let top = at;
+    for (const b of boxes) if (b[0] < M.x + r && b[3] > M.x - r && b[2] < M.z + r && b[5] > M.z - r && b[4] > top + 1e-6 && b[4] <= at + SET_ON_REACH && b[1] < at + 1e-6) top = b[4];
+    M.y = (M.y ?? 0) + (top - at);
   }
   /** Metres the hem of a curtain keeps over the furniture standing in its fall, and the least drop left for it to hang. */
   const HEM_CLEAR = 0.01, MIN_DROP = 0.4;

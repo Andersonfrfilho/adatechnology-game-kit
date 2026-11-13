@@ -133,6 +133,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
           const point = { u: t.u, v: t.v, y: t.y, frontU: t.frontU || 0, frontV: t.frontV || 0 }, box = wallBoxExtent(point, wallBehindOf(R.walls, { ...point, floor: t.floor })), y = floorY(t.floor);
           const shift = shared.ctx.visorScene ? 0 : clearOfWallEnds(Math.abs(point.frontV) >= Math.abs(point.frontU), [box.u0, y + box.y0, box.v0, box.u1, y + box.y1, box.v1]);
           if (Math.abs(point.frontV) >= Math.abs(point.frontU)) bx('plain', box.u0 + shift, y + box.y0, box.v0, box.u1 + shift, y + box.y1, box.v1, BOX_COLOR); else bx('plain', box.u0, y + box.y0, box.v0 + shift, box.u1, y + box.y1, box.v1 + shift, BOX_COLOR);
+          if (shift) shared.ctx.wallBoxShifts?.set(t, Math.abs(point.frontV) >= Math.abs(point.frontU) ? [shift, 0] : [0, shift]); // (its chase in the masonry goes with it)
         }
         for (const it of lights) cylBase('plain', it.x, ceilingOf(it) - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR);
       }, { id: 'boxes:f' + f, hidden: true }, 'f' + f);

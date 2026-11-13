@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import type { GroundExcavation } from '@adatechnology/game-contracts'
 
 import type { HouseRecord, Three } from '../kernel-types.js'
+import type { Aabb } from '../house/solids.js'
 import { BoxBatch } from './box-batch.js'
 import { PUBLIC_SIDEWALK } from '../lot/terrain.js'
 import { SAND_BOX } from '../roof/gutters.js'
@@ -182,11 +183,27 @@ function addPipe(THREE: Three, parent: THREE_NS.Group, points: readonly RoutePoi
   }
 }
 
+/** Metres a lid's side keeps from the plane of a sidewalk slab's joint it lies in, and the step it is drawn in by to get there. */
+const LID_JOINT_CLEAR = 0.002, LID_JOINT_STEP = 0.003
+
+/** A lid's box drawn in, a few millimetres, on each side that would lie on the plane of a face of a sidewalk slab it is set in (`paving`): never on a joint's plane. */
+function clearOfPaving(lid: Aabb, paving: readonly Aabb[]): Aabb {
+  const out: [number, number, number, number, number, number] = [...lid]
+  for (const slab of paving) {
+    if (slab[0] > lid[3] || slab[3] < lid[0] || slab[1] > lid[4] || slab[4] < lid[1] || slab[2] > lid[5] || slab[5] < lid[2]) continue
+    for (const axis of [0, 2] as const) for (const face of [slab[axis], slab[axis + 3]]) {
+      if (Math.abs(out[axis]! - face) < LID_JOINT_CLEAR) out[axis] = face + LID_JOINT_STEP
+      if (Math.abs(out[axis + 3]! - face) < LID_JOINT_CLEAR) out[axis + 3] = face - LID_JOINT_STEP
+    }
+  }
+  return out
+}
+
 /**
  * A sewer box (inspection, grease or floor drain) set in the ground: its walls down to its floor, its concrete lid on top, flush with the ground (9 mm over, clear of the compacted bed under the house at 6 mm,
  * it, never on its plane). The trench reaches its sides; nothing is dug round it.
  */
-function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: SunkBox, mats: { readonly concrete: THREE_NS.Material; readonly lid: THREE_NS.Material }): void {
+function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: SunkBox, mats: { readonly concrete: THREE_NS.Material; readonly lid: THREE_NS.Material }, paving: readonly Aabb[] = []): void {
   const { u, v, size, bottom } = box
   const body = new BoxBatch()
   const wall = 0.05
@@ -200,7 +217,7 @@ function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: SunkBox, mats: { 
   if (mesh) parent.add(mesh)
   if (box.lid === false) return
   const lid = new BoxBatch()
-  lid.add([u - size / 2, top, v - size / 2, u + size / 2, LID_TOP, v + size / 2])
+  lid.add(clearOfPaving([u - size / 2, top, v - size / 2, u + size / 2, LID_TOP, v + size / 2], paving))
   const cover = lid.mesh(THREE, mats.lid, 'sewer:lid')
   if (cover) parent.add(cover)
 }
@@ -389,7 +406,7 @@ function addWarningTape(THREE: Three, parent: THREE_NS.Group, runs: readonly { r
  * The rough-in stage the finished house does not draw: the sewer, laid in its open trenches under the ground (the water and the conduits are the house's own
  * runs, cut into the bare masonry at this stage and embedded later; see `installation-routes`).
  */
-export function buildInstallationsStage(THREE: Three, plan: HouseRecord, rain: readonly RainDrain[] = []): THREE_NS.Group {
+export function buildInstallationsStage(THREE: Three, plan: HouseRecord, rain: readonly RainDrain[] = [], paving: readonly Aabb[] = []): THREE_NS.Group {
   const group = new THREE.Group()
   group.name = 'stage:4:installations'
   const drains = drainsOf(plan)
@@ -424,7 +441,7 @@ export function buildInstallationsStage(THREE: Three, plan: HouseRecord, rain: r
   const yard = new THREE.Group()
   yard.name = 'stage:4:sewer_boxes'
   group.userData.yardBoxes = yard
-  for (const b of boxes) addSunkBox(THREE, b.yard ? yard : group, b, mats)
+  for (const b of boxes) addSunkBox(THREE, b.yard ? yard : group, b, mats, paving)
   group.userData.sewer = { pieces: layout.pieces, trenches: [...layout.trenches, ...layout.boxes.map(pitOf)].map((t) => t.rect), boxes: layout.boxes }
   group.userData.feeds = { runs: feeds.runs, trenches: [...feeds.trenches, ...feeds.boxes.map(pitOf)].map((t) => t.rect), boxes: feeds.boxes }
   group.userData.rain = { pieces: rainwater.pieces, trenches: [...rainwater.trenches, ...rainwater.boxes.map(pitOf)].map((t) => t.rect), boxes: rainwater.boxes }

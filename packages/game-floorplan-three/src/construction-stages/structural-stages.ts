@@ -2,6 +2,8 @@ import type * as THREE_NS from 'three'
 import { PLASTER_PER_FACE, applyPanels, pillarSectionForWidth, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels, slabThicknessFor } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
+import { outsideBoxes } from '../house/solids.js'
+import type { Aabb } from '../house/solids.js'
 import { addStageBox, buildMasonryPanel, coreWidthOf, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
 import type { Chase } from './masonry-stage.js'
 import { cutOf, subtractRects, wallLineOf } from './wall-plane.js'
@@ -126,6 +128,8 @@ export interface EmbeddedRun {
   readonly radius: number
   /** A box set in the wall reaches this far in from (u, v), a point of its face: its radius is then its half width along the wall. */
   readonly depth?: number
+  /** It is the box of a switch or an outlet (a timber frame's stud beside it is notched for it; a run goes between the studs). */
+  readonly box?: boolean
 }
 
 /** What a chase leaves round the run in it, metres: the run never touches the brick. */
@@ -140,9 +144,10 @@ function chasesIn(wall: ReturnType<typeof wallLineOf>, core: { readonly line: nu
     if (along + r.radius + CHASE_CLEAR < wall.a0 || along - r.radius - CHASE_CLEAR > wall.a1 || r.y1 <= core.y0 || r.y0 >= core.y1) continue
     // a run outside the wall's thickness is not in it; one wholly in the render does not reach the units
     if (Math.abs(across) > wall.thickness / 2 + 1e-6) continue
-    const back = Math.max(0, Math.abs(across) - (r.depth ?? r.radius) - CHASE_CLEAR)
+    // (a run that reaches past the wall's centre line, a box set deep, has its chase's bottom past it: a negative distance, the cut goes on through the centre)
+    const back = Math.abs(across) - (r.depth ?? r.radius) - CHASE_CLEAR
     // (whether it reaches the units is told where they are laid, by their own width: a log is wider than a brick core)
-    out.push({ a0: along - r.radius - CHASE_CLEAR, a1: along + r.radius + CHASE_CLEAR, y0: Math.max(core.y0, r.y0), y1: Math.min(core.y1, r.y1), side: across >= 0 ? 1 : -1, back })
+    out.push({ a0: along - r.radius - CHASE_CLEAR, a1: along + r.radius + CHASE_CLEAR, y0: Math.max(core.y0, r.y0), y1: Math.min(core.y1, r.y1), side: across >= 0 ? 1 : -1, back, ...(r.box ? { box: true } : {}) })
   }
   return out
 }
@@ -342,7 +347,12 @@ function detailedParts(rawStructure: PlanStructure): StructurePart[] {
  * The bare structure by construction stage: the foundation (footings, ground beams, starter bars), the frame (pillars, bond beams, slabs) and the masonry
  * (walls, lintels and sills, laid between the frame's members). Every solid is fitted to the ones it touches so that no two of them draw a face on the same plane.
  */
-export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStructure | undefined, outbuildings?: readonly Outbuilding[], runs: readonly EmbeddedRun[] = []): StructuralStageGroups {
+/** A piece of the frame, less what the apartment's block (`block`, the boxes it laid) already has there: the unit's frame stops where the block's own slabs carry on. */
+function addFrameBox(THREE: Three, parent: THREE_NS.Group, box: Aabb, mat: THREE_NS.Material, id: string, block: readonly Aabb[]): void {
+  for (const b of block.length ? outsideBoxes(box, block) : [box]) addStageBox(THREE, parent, b[0], b[1], b[2], b[3], b[4], b[5], mat, id)
+}
+
+export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStructure | undefined, outbuildings?: readonly Outbuilding[], runs: readonly EmbeddedRun[] = [], block: readonly Aabb[] = []): StructuralStageGroups {
   const foundation = new THREE.Group()
   foundation.name = 'stage:1:foundation'
   const frame = new THREE.Group()
@@ -357,7 +367,8 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   if (!rawStructure) return groups
 
   const mats = createStageMaterials(THREE)
-  const parts = detailedParts(rawStructure).filter((p) => p.role !== 'roof' && !/^(rafter_|ridge)/.test(p.id))
+  // (the yard tank's timber trestle is put up with the tank, by the installations: the frame never draws its posts and bearers a second time)
+  const parts = detailedParts(rawStructure).filter((p) => p.role !== 'roof' && !/^(rafter_|ridge|trestle_)/.test(p.id))
   const openings: { id: string; aabb: readonly number[]; y0: number; y1: number }[] = []
   for (const e of outbuildings ?? []) {
     const ob = outbuildingParts(e)
@@ -390,15 +401,15 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
 
   for (const c of columns) {
     const mat = c.material === 'wood_soft' || c.material === 'wood_hard' ? mats.wood! : c.material === 'steel' ? mats.sheet! : mats.concrete!
-    addStageBox(THREE, frame, c.aabb[0], c.y0, c.aabb[1], c.aabb[2], c.y1, c.aabb[3], mat, c.id)
+    addFrameBox(THREE, frame, [c.aabb[0], c.y0, c.aabb[1], c.aabb[2], c.y1, c.aabb[3]], mat, c.id, block)
     if (c.tank || c.y0 > 0.1 || c.material !== 'concrete') continue
     if (c.floor === 0) addRebarCage(THREE, starterBars, c.aabb, 0, 0.42, mats.rebar!)
   }
   for (const b of beams) {
     const p = beamParts.find((x) => x.id === b.id)
-    addStageBox(THREE, frame, b.aabb[0], b.y0, b.aabb[1], b.aabb[2], b.y1, b.aabb[3], p && (p.material === 'wood_soft' || p.material === 'wood_hard') ? mats.wood! : mats.concrete!, b.id)
+    addFrameBox(THREE, frame, [b.aabb[0], b.y0, b.aabb[1], b.aabb[2], b.y1, b.aabb[3]], p && (p.material === 'wood_soft' || p.material === 'wood_hard') ? mats.wood! : mats.concrete!, b.id, block)
   }
-  for (const s of slabs) addStageBox(THREE, frame, s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3], mats.concrete!, s.id)
+  for (const s of slabs) addFrameBox(THREE, frame, [s.aabb[0], s.y0, s.aabb[1], s.aabb[2], s.y1, s.aabb[3]], mats.concrete!, s.id, block)
 
   // lintels and sills are cast with the masonry they bear on, never hanging in the frame
   // the cores of the walls (their bricks as they are laid across them): where a lintel's end meets a crossing wall

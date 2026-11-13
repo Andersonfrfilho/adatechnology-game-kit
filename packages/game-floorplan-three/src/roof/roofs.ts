@@ -12,7 +12,7 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
   const slabs = (...a: Parameters<Kernel['slabs']>): ReturnType<Kernel['slabs']> => K.slabs(...a);
   function roofs(): void {
     const R: HouseRecord = shared.ctx.r, F = R.facade, C = shared.ctx.colors, nA = R.floors.length, type = F.roof; cursor.group = 'roof';
-    const roofRects: RoofRect[] = shared.ctx.roofRects = [];
+    const roofRects: RoofRect[] = shared.ctx.roofRects = []; shared.ctx.eaveBoxes = undefined;
     const G: GutterConfig = shared.ctx.gutter = gutterConfig(); G.ncond = 0; G.nbuz = 0; G.bz = new Set(); shared.ctx.gutterInfo = { gutters: [], downpipes: [], drains: [] };
     const roofColor = C.roof != null ? C.roof : 0xa8543a, gable = (Number(R.seed) | 0) % 2 === 0;
     for (let f = 0; f < nA; f++) {
