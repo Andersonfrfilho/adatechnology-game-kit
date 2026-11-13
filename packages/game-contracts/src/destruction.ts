@@ -436,6 +436,39 @@ export interface BlastOptions {
   fragmentHits?: boolean | FragmentHitOptions
   /** A number is the multiplier itself (a room volume the host knows, skips the rays); `true` or options estimate it with rays. */
   confinement?: boolean | number | ConfinementOptions
+  /** The charge (its TNT equivalent and its case): the wave is read from the first, the fragments thrown from the second. */
+  charge?: BlastCharge
+}
+
+/**
+ * The metal case of a charge that breaks into fragments (a grenade body, a pipe). The destruction world throws them: their number and masses follow Mott's distribution of the case
+ * mass, their first speed Gurney's formula for the charge and case masses, and they fly as projectiles through the same path as a gun round.
+ */
+export interface BlastCasing {
+  /** Kilograms of the case that breaks up. */
+  readonly mass: number
+  /** Material id of the case (a fragment's density and its hardness against what it hits are those of steel unless the world has another material by this id). */
+  readonly material: string
+  /** How many fragments the case breaks into (the Mott scale is `mass / (2 * fragments)`). */
+  readonly fragments: number
+  /** Kilograms of the explosive in the case (the charge `C` of Gurney's `M / C`). */
+  readonly chargeMass: number
+  /** Gurney velocity `sqrt(2E)` of the explosive in m/s (Composition B 2700, TNT 2440, C4 2680). */
+  readonly gurneyVelocity: number
+  /** `sphere` (default: a grenade, `v = sqrt(2E) / sqrt(M/C + 3/5)`) or `cylinder` (a pipe, `M/C + 1/2`). */
+  readonly geometry?: 'sphere' | 'cylinder'
+}
+
+/** The charge behind a blast, when the host knows it: its TNT equivalent for the blast wave, and its case for the fragments. */
+export interface BlastCharge {
+  /** Kilograms of TNT equivalent. Without it the charge is the blast `energy` by `0.24 kg / 200 kJ` (the arsenal's scale). */
+  readonly tnt?: number
+  /** Case that throws fragments. Without it the blast is the wave alone. */
+  readonly casing?: BlastCasing
+  /** Most fragment rays cast in one blast (default 256): a grenade breaks into hundreds of pieces, only the ones that can reach something are cast. */
+  readonly maxRays?: number
+  /** Objects the fragments pass through (the explosive's own body). */
+  readonly ignore?: readonly string[]
 }
 
 /** What a blast did to one target (`HitResult.blast`). */

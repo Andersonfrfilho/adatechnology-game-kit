@@ -53,6 +53,8 @@ export type {
   DestructibleSpec,
   DestructionEvent,
   DestructionEventType,
+  BlastCasing,
+  BlastCharge,
   BlastOptions,
   BlastReport,
   ConfinementOptions,
@@ -232,6 +234,11 @@ export interface MaterialDef {
   }
   /** Free tags, e.g. `metal`, `organic`, `conductive`. */
   tags?: string[]
+  /**
+   * Stress in MPa at which a plate of the material fails under a blast: the yield stress of a ductile material (steel 250), the flexural strength of a brittle one (annealed glass 45,
+   * masonry 0.4). With it the wave work on a part is turned into the share of the part it breaks (`failureWork`); without it the part takes the work at `DMG_PER_J`.
+   */
+  failureMPa?: number
   /**
    * Load a structural part of this material carries per square metre of cross-section, in kg (game-tuned: concrete 444 000, brick 40 000,
    * softwood 100 000, steel 2 000 000). Default 20 000. See `PartSpec.structure`.

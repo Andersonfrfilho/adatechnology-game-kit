@@ -11,6 +11,8 @@ export type {
   BendHinge,
   Dent,
   DestructibleSpec,
+  BlastCasing,
+  BlastCharge,
   BlastOptions,
   BlastReport,
   ConfinementOptions,

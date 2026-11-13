@@ -33,7 +33,8 @@
       "yieldMPa": 250,
       "elasticGPa": 200,
       "absorbed": 0.2
-    }
+    },
+    "failureMPa": 250
   },
   {
     "id": "cast_iron",
@@ -68,7 +69,8 @@
       "metal",
       "conductive"
     ],
-    "compressive": 1500000
+    "compressive": 1500000,
+    "failureMPa": 150
   },
   {
     "id": "aluminium",
@@ -98,7 +100,8 @@
       "metal",
       "conductive"
     ],
-    "compressive": 800000
+    "compressive": 800000,
+    "failureMPa": 90
   },
   {
     "id": "copper",
@@ -128,7 +131,8 @@
       "metal",
       "conductive"
     ],
-    "compressive": 1000000
+    "compressive": 1000000,
+    "failureMPa": 70
   },
   {
     "id": "wood_soft",
@@ -174,7 +178,8 @@
         "tear": "splinters",
         "tearJoules": 60
       }
-    }
+    },
+    "failureMPa": 40
   },
   {
     "id": "wood_hard",
@@ -224,7 +229,8 @@
       "ruptureMPa": 100,
       "elasticGPa": 12,
       "absorbed": 0.3
-    }
+    },
+    "failureMPa": 80
   },
   {
     "id": "plywood",
@@ -272,7 +278,8 @@
         "tear": "splinters",
         "tearJoules": 80
       }
-    }
+    },
+    "failureMPa": 40
   },
   {
     "id": "mdf",
@@ -318,7 +325,8 @@
         "tear": "lumps",
         "tearJoules": 20
       }
-    }
+    },
+    "failureMPa": 25
   },
   {
     "id": "glass",
@@ -353,7 +361,8 @@
       "glass",
       "brittle"
     ],
-    "compressive": 100000
+    "compressive": 100000,
+    "failureMPa": 45
   },
   {
     "id": "tempered_glass",
@@ -387,7 +396,8 @@
     "compressive": 200000,
     "damageScale": {
       "shelter": 3
-    }
+    },
+    "failureMPa": 120
   },
   {
     "id": "ceramic",
@@ -414,7 +424,8 @@
       "ceramic",
       "brittle"
     ],
-    "compressive": 150000
+    "compressive": 150000,
+    "failureMPa": 40
   },
   {
     "id": "concrete",
@@ -462,7 +473,8 @@
       "compressiveMPa": 25,
       "tensileMPa": 2.56,
       "elasticGPa": 28
-    }
+    },
+    "failureMPa": 3
   },
   {
     "id": "brick",
@@ -497,7 +509,8 @@
       "compressiveMPa": 2.35,
       "tensileMPa": 0.1,
       "elasticGPa": 2.35
-    }
+    },
+    "failureMPa": 0.4
   },
   {
     "id": "plaster",
@@ -525,7 +538,8 @@
       "masonry",
       "brittle"
     ],
-    "compressive": 8000
+    "compressive": 8000,
+    "failureMPa": 1.5
   },
   {
     "id": "stone",
@@ -554,7 +568,8 @@
       "masonry",
       "brittle"
     ],
-    "compressive": 300000
+    "compressive": 300000,
+    "failureMPa": 12
   },
   {
     "id": "plastic",
@@ -587,7 +602,8 @@
       "plastic",
       "flammable"
     ],
-    "compressive": 40000
+    "compressive": 40000,
+    "failureMPa": 40
   },
   {
     "id": "rubber",
@@ -618,7 +634,8 @@
       "rubber",
       "flammable"
     ],
-    "compressive": 20000
+    "compressive": 20000,
+    "failureMPa": 15
   },
   {
     "id": "fabric",
@@ -654,7 +671,8 @@
       "organic",
       "flammable"
     ],
-    "compressive": 500
+    "compressive": 500,
+    "failureMPa": 20
   },
   {
     "id": "foam",
@@ -724,7 +742,8 @@
       "organic",
       "flammable"
     ],
-    "compressive": 2000
+    "compressive": 2000,
+    "failureMPa": 25
   },
   {
     "id": "paper",
@@ -1082,7 +1101,8 @@
       "masonry",
       "brittle"
     ],
-    "compressive": 100000
+    "compressive": 100000,
+    "failureMPa": 1
   },
   {
     "id": "mud",
@@ -1201,7 +1221,8 @@
       "masonry",
       "brittle"
     ],
-    "compressive": 300000
+    "compressive": 300000,
+    "failureMPa": 12
   },
   {
     "id": "paver",
@@ -1227,6 +1248,7 @@
       "masonry",
       "brittle"
     ],
-    "compressive": 350000
+    "compressive": 350000,
+    "failureMPa": 3
   }
 ]

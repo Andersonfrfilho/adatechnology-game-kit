@@ -460,7 +460,8 @@ describe('fire and heat', () => {
     const bottle = w.add({
       parts: [{ id: 'bottle', material: 'steel', shape: { kind: 'cylinder', radius: 0.1, height: 0.5 }, position: [0, 0, 0], thickness: 0.003, explodes: { energy: 200000, radius: 6, atC: 300 }, contains: { fluid: 'gas', liters: 20, pressurized: true } }],
     })
-    const board = w.add(plate('plywood', 0.5, 0.5, 0.01), { position: [1.5, 0, 0] })
+    // 0.24 kg of TNT: a 1 cm plywood panel facing it takes 300 J of the wave at 1.5 m (two thirds of the 450 J that break it) and all of it at 1 m
+    const board = w.add(plate('plywood', 0.5, 0.5, 0.01), { position: [0, 0, 1] })
     const wall = w.add(plate('concrete', 1, 1, 0.2), { position: [-3, 0, 0] })
     w.hit(bottle, { type: 'fire', point: [0, 0, 0], temperature: 1000, radius: 1, duration: 2 })
     expect(w.part(bottle, 'bottle')!.temperature).toBeGreaterThan(300)
@@ -476,7 +477,8 @@ describe('fire and heat', () => {
 
   it('an explosion hurts chairs, dents steel and ignites cloth', () => {
     const w = createDestruction()
-    const c = w.add(chair(), { position: [2, 0, 0] })
+    // 0.12 kg of TNT: a chair is only pushed at 2 m and at 0.5 m; at 0.3 m (Z = 0.6) the wave is some 10 MPa and the two legs nearest the charge, 4 cm sticks that hold 1.3 MPa across 40 cm, break. The 2 mm steel sheet at 2 m takes about 90 J: a dent and not a hole
+    const c = w.add(chair(), { position: [0.3, 0, 0] })
     const door = w.add(plate('steel', 1, 1, 0.002), { position: [0, 0, 2] })
     const cloth = w.add(plate('fabric', 1, 1, 0.002, 'plate', { hp: 1000 }), { position: [0, 2, 0] })
     const res = w.explode([0, 0, 0], 100000, 5)

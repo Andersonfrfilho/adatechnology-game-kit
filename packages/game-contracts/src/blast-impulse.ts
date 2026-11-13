@@ -21,17 +21,17 @@ export interface BlastImpulseOptions {
 
 export const DEFAULT_BLAST_IMPULSE: Readonly<Required<BlastImpulseOptions>> = { bodyArea: 0.7, lift: 0.15, minSpeed: 0.3, tntPerJoule: 0.24 / 200000 }
 
-/** Closest distance (m) the fit is read at: inside it the charge is in contact and the body is torn apart anyway. */
+/** Closest distance (m) the fit is read at by default: inside it the charge is in contact and the body is torn apart anyway (a caller that loads a part next to the charge passes a smaller `nearest`). */
 const NEAREST = 0.3
 
 /**
  * Side-on (incident) specific impulse of the wave, in Pa·s, at `distance` metres from `tnt` kg of TNT in free air: Kinney and Graham, "Explosive Shocks in Air" (1985),
  * `I/W^(1/3) = 0.067 sqrt(1 + (Z/0.23)^4) / (Z^2 (1 + (Z/1.55)^3)^(1/3))` bar·ms per kg^(1/3), with the scaled distance `Z = R / W^(1/3)`.
  */
-export function sideOnImpulse(tnt: number, distance: number): number {
+export function sideOnImpulse(tnt: number, distance: number, nearest = NEAREST): number {
   if (!(tnt > 0)) return 0
   const w3 = Math.cbrt(tnt)
-  const z = Math.max(distance, NEAREST) / w3
+  const z = Math.max(distance, nearest) / w3
   const scaled = (0.067 * Math.sqrt(1 + (z / 0.23) ** 4)) / (z * z * Math.cbrt(1 + (z / 1.55) ** 3))
   return scaled * w3 * 100 // bar·ms to Pa·s
 }
@@ -45,9 +45,9 @@ const ATMOSPHERE = 101325
  * What a wall takes from a blast is read against it: about 7 kPa cracks plaster and breaks windows, 14 to 20 kPa knocks parts of a brick wall out, 35 kPa and over brings an
  * unreinforced brick wall down (Glasstone and Dolan, "The Effects of Nuclear Weapons", 1977, table 5.139; UFC 3-340-02).
  */
-export function sideOnOverpressure(tnt: number, distance: number): number {
+export function sideOnOverpressure(tnt: number, distance: number, nearest = NEAREST): number {
   if (!(tnt > 0)) return 0
-  const z = Math.max(distance, NEAREST) / Math.cbrt(tnt)
+  const z = Math.max(distance, nearest) / Math.cbrt(tnt)
   const ratio = (808 * (1 + (z / 4.5) ** 2)) / (Math.sqrt(1 + (z / 0.048) ** 2) * Math.sqrt(1 + (z / 0.32) ** 2) * Math.sqrt(1 + (z / 1.35) ** 2))
   return ratio * ATMOSPHERE
 }
