@@ -669,6 +669,10 @@ export interface BuildContext {
   restOn?: number | undefined
   /** The boxes a piece being drawn keeps out of (a storey's furniture among the walls, outside the Visor's scene): what of a box stands in them is not drawn. */
   keepOut?: readonly Aabb[] | undefined
+  /** The square boxes of the piece being drawn so far (a storey's furniture, outside the Visor's scene): a face of a later one lying against one is not drawn. */
+  itemBoxes?: Aabb[] | undefined
+  /** The group the piece being drawn stands in: only its boxes there are noted (a moving part shows its faces once moved). */
+  itemGroup?: string | undefined
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

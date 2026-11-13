@@ -39,9 +39,10 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       // a plan's 3.14 or -1.57 turns it square to the walls (it stood a tenth of a degree off them, its back crossing their faces)
       if (!shared.ctx.visorScene) { const quarter = Math.round(M.ry / (Math.PI / 2)); if (Math.abs(M.ry - quarter * Math.PI / 2) < 0.01) M.ry = quarter * Math.PI / 2; }
       shared.ctx.keepOut = exterior || shared.ctx.visorScene ? undefined : keepOut; // ... and keeps out of the walls and of its floor
+      shared.ctx.itemBoxes = shared.ctx.visorScene ? undefined : []; shared.ctx.itemGroup = cursor.group;
       try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
     }
-    shared.ctx.restOn = undefined; shared.ctx.keepOut = undefined;
+    shared.ctx.restOn = undefined; shared.ctx.keepOut = undefined; shared.ctx.itemBoxes = undefined;
     const stTank = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations';
     try { waterTankOfHouse(api); } catch (e) { console.warn('water tank', e); } finally { cursor.stage = stTank; }
     try { decorLights(api); } catch (e) { console.warn('decorLights', e); }

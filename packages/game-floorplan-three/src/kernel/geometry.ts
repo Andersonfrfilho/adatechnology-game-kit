@@ -81,7 +81,8 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
   const rgbOf = (h: Hex): Vec3 => { _col.setHex(h); return [_col.r, _col.g, _col.b]; };
   // puts a geometry (box, cyl...) with position, quaternion, scale, colour; uvr = atlas cell
   // a box of a piece laid among the walls (a storey's furniture, outside the Visor's scene) keeps out of them: what of it stands in a wall or a floor is not
-  // drawn, nor a face of it lying against one (hidden there), so its faces never lie in theirs, nor on the plane of a wall's end or render beside it
+  // drawn, nor a face of it lying against one (hidden there), so its faces never lie in theirs, nor on the plane of a wall's end or render beside it;
+  // a face lying against a box of the same piece drawn before it (a seat on its base) is hidden there too, and not drawn
   const _qi = new THREE.Quaternion();
   let shutFaces = 0; // faces of the box being put that are not drawn (bits in BoxGeometry's order: +x, -x, +y, -y, +z, -z)
   const shutBy = (b: Aabb, near: readonly Aabb[]): number => {
@@ -97,24 +98,26 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
     return mask;
   };
   function keptOut(mat: string, px: number, py: number, pz: number, q: THREE_NS.Quaternion, sx: number, sy: number, sz: number, color: Hex): boolean {
-    const taken = shared.ctx.keepOut;
-    if (!taken || Math.abs(q.x) > 1e-6 || Math.abs(q.z) > 1e-6) return false;
+    const taken = shared.ctx.keepOut ?? [], mine = cursor.group === shared.ctx.itemGroup ? shared.ctx.itemBoxes : undefined; // (a moving part shows its faces once moved)
+    if (Math.abs(q.x) > 1e-6 || Math.abs(q.z) > 1e-6) return false;
     const turn = 4 * Math.atan2(q.y, q.w) / Math.PI, quarter = Math.round(turn);
     if (Math.abs(turn - quarter) > 1e-4) return false;
     const hx = (quarter % 2 ? sz : sx) / 2, hy = sy / 2, hz = (quarter % 2 ? sx : sz) / 2;
     const box: Aabb = [px - hx, py - hy, pz - hz, px + hx, py + hy, pz + hz];
-    const near = taken.filter((t) => t[0] <= box[3] + 1e-6 && t[3] >= box[0] - 1e-6 && t[1] <= box[4] + 1e-6 && t[4] >= box[1] - 1e-6 && t[2] <= box[5] + 1e-6 && t[5] >= box[2] - 1e-6);
-    if (!near.length) return false;
-    const pieces = outsideBoxes(box, near).map((b) => ({ b, shut: shutBy(b, near) }));
+    const touching = (t: Aabb): boolean => t[0] <= box[3] + 1e-6 && t[3] >= box[0] - 1e-6 && t[1] <= box[4] + 1e-6 && t[4] >= box[1] - 1e-6 && t[2] <= box[5] + 1e-6 && t[5] >= box[2] - 1e-6;
+    const near = taken.filter(touching), before = mine ? mine.filter(touching) : [];
+    const pieces = (near.length ? outsideBoxes(box, near) : [box]).map((b) => ({ b, shut: shutBy(b, near) | shutBy(b, before) }));
+    if (mine) for (const { b } of pieces) mine.push(b);
     if (pieces.length === 1 && pieces[0]!.b === box && !pieces[0]!.shut) return false;
-    shared.ctx.keepOut = undefined;
+    const all = shared.ctx.itemBoxes;
+    shared.ctx.keepOut = undefined; shared.ctx.itemBoxes = undefined;
     try {
       for (const { b, shut } of pieces) { shutFaces = shut; put(mat, 'box', (b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2, _qi, b[3] - b[0], b[4] - b[1], b[5] - b[2], color); }
-    } finally { shared.ctx.keepOut = taken; shutFaces = 0; }
+    } finally { shared.ctx.keepOut = taken.length ? taken : undefined; shared.ctx.itemBoxes = all; shutFaces = 0; }
     return true;
   }
   function put(mat: string, geo: string, px: number, py: number, pz: number, q: THREE_NS.Quaternion, sx: number, sy: number, sz: number, color: Hex, uvr?: UvRect | null): void {
-    if (shared.ctx.keepOut && geo === 'box' && !uvr && keptOut(mat, px, py, pz, q, sx, sy, sz, color)) return;
+    if ((shared.ctx.keepOut || shared.ctx.itemBoxes) && geo === 'box' && !uvr && keptOut(mat, px, py, pz, q, sx, sy, sz, color)) return;
     { const O = cursor.org, RY = cursor.ry; if (RY) { const c = Math.cos(RY), s = Math.sin(RY), dx = px - O[0], dz = pz - O[2]; px = dx * c - dz * s; pz = dx * s + dz * c; py -= O[1]; _qa.setFromAxisAngle(_Y, -RY); _qb.copy(_qa).multiply(q); q = _qb; } else { px -= O[0]; py -= O[1]; pz -= O[2]; } }
     const A = accFor(mat), G = GEO[geo]; A.ensure(G.nv, G.i ? G.i.length : G.nv);
     const x = q.x, y = q.y, z = q.z, w = q.w, x2 = x + x, y2 = y + y, z2 = z + z;
