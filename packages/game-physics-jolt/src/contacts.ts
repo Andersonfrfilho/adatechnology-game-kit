@@ -1,0 +1,151 @@
+import type JoltNS from 'jolt-physics/wasm-compat'
+
+import type { BodyId, ContactBuffer } from '@adatechnology/game-physics'
+
+import { POINTS_PER_BODY, ROW_CAPACITY } from './constants'
+import type { BodyEntry } from './entries'
+import type { JoltWorld } from './world'
+
+export class Contacts implements ContactBuffer {
+  count = 0
+  readonly a = new Int32Array(ROW_CAPACITY)
+  readonly b = new Int32Array(ROW_CAPACITY)
+  readonly userA = new Int32Array(ROW_CAPACITY)
+  readonly userB = new Int32Array(ROW_CAPACITY)
+  readonly tagA = new Int32Array(ROW_CAPACITY)
+  readonly tagB = new Int32Array(ROW_CAPACITY)
+  readonly point = new Float32Array(ROW_CAPACITY * 3)
+  readonly normal = new Float32Array(ROW_CAPACITY * 3)
+  readonly approach = new Float32Array(ROW_CAPACITY)
+  readonly impulse = new Float32Array(ROW_CAPACITY)
+}
+
+/** The speed (m/s) a body's point at (px, py, pz) moves along (nx, ny, nz): 0 for a fixed body. */
+const speedAlong = (e: BodyEntry, p: readonly [number, number, number], n: readonly [number, number, number]): number => {
+  if (e.invMass === 0 && e.layer === 'static') return 0
+  const body = e.body
+  const v = body.GetLinearVelocity()
+  const w = body.GetAngularVelocity()
+  const wx = w.GetX(), wy = w.GetY(), wz = w.GetZ()
+  const c = body.GetCenterOfMassPosition()
+  const rx = p[0] - c.GetX()
+  const ry = p[1] - c.GetY()
+  const rz = p[2] - c.GetZ()
+  return (v.GetX() + wy * rz - wz * ry) * n[0] + (v.GetY() + wz * rx - wx * rz) * n[1] + (v.GetZ() + wx * ry - wy * rx) * n[2]
+}
+
+/** Scratch for one contact's first point and normal: reused, so a contact makes no garbage. */
+const P: [number, number, number] = [0, 0, 0]
+const N: [number, number, number] = [0, 0, 0]
+
+/** A new contact's restitution, mixed as the kit mixes it, and its row in `contacts` if it closed faster than `reportSpeed`. */
+const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings): void => {
+  const { e1, e2 } = pair
+  if (cs.mIsSensor) {
+    w.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.key as BodyId, other: e2.key as BodyId, entered: true } : { sensor: e2.key as BodyId, other: e1.key as BodyId, entered: true })
+    return
+  }
+  cs.mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
+  if (w.contacts.count >= w.maxContacts) return
+  const n = m.mWorldSpaceNormal
+  N[0] = n.GetX()
+  N[1] = n.GetY()
+  N[2] = n.GetZ()
+  // the relative velocity of the first contact point, body 1 minus body 2 (the normal points from 1 to 2)
+  const p = m.GetWorldSpaceContactPointOn1(0)
+  P[0] = p.GetX()
+  P[1] = p.GetY()
+  P[2] = p.GetZ()
+  const along = speedAlong(e1, P, N) - speedAlong(e2, P, N)
+  if (along < w.reportSpeed) return
+  const c = w.contacts
+  const i = c.count++
+  c.a[i] = e1.key
+  c.b[i] = e2.key
+  c.userA[i] = e1.user
+  c.userB[i] = e2.user
+  c.tagA[i] = e1.body.GetShape().GetSubShapeUserData(m.mSubShapeID1)
+  c.tagB[i] = e2.body.GetShape().GetSubShapeUserData(m.mSubShapeID2)
+  for (let k = 0; k < 3; k++) {
+    c.point[i * 3 + k] = P[k]
+    c.normal[i * 3 + k] = N[k]
+  }
+  c.approach[i] = along
+  // the impulse that stops the closing speed along the normal, by the two masses (rotation ignored): what our damage reads as the blow
+  const invMass = e1.invMass + e2.invMass
+  c.impulse[i] = invMass > 0 ? ((1 + cs.mCombinedRestitution) * along) / invMass : 0
+}
+
+const recordPoints = (w: JoltWorld, key: number, m: JoltNS.ContactManifold, onFirst: boolean): void => {
+  const p = w.points.get(key)
+  if (!p) return
+  if (p.step !== w.stepCount) {
+    p.step = w.stepCount
+    p.n = 0
+  }
+  const count = m.mRelativeContactPointsOn1.size()
+  for (let i = 0; i < count && p.n < POINTS_PER_BODY; i++) {
+    const at = onFirst ? m.GetWorldSpaceContactPointOn1(i) : m.GetWorldSpaceContactPointOn2(i)
+    p.xyz[p.n * 3] = at.GetX()
+    p.xyz[p.n * 3 + 1] = at.GetY()
+    p.xyz[p.n * 3 + 2] = at.GetZ()
+    p.n++
+  }
+}
+
+const recordPair = (w: JoltWorld, k1: number, k2: number, m: JoltNS.ContactManifold): void => {
+  recordPoints(w, k1, m, true)
+  recordPoints(w, k2, m, false)
+}
+
+/**
+ * One JS listener for the whole world. A new contact: who touches whom (`touching`, and the partners `updateFriction` reads), restitution mixed as the kit
+ * mixes it (geometric mean; Jolt's default takes the larger), and a row in `contacts` if it closed faster than `reportSpeed`. A kept contact only records its
+ * points for a body asked about (`contactPoints`): friction is the bodies' own (`updateFriction`), mixed by Jolt, so no rule runs per contact per step
+ * (gate 0 B6: that rule was a third of the frame a wall woke in).
+ */
+export const makeListener = (w: JoltWorld): JoltNS.ContactListenerJS => {
+  const J = w.J
+  const listener = new J.ContactListenerJS()
+  // the bodies come as heap addresses: entries are found by them, so a contact asks Jolt only for what it must (one call across the wasm boundary costs as
+  // much as the rest of the rule; a wall waking at once makes thousands of contacts in one step)
+  const pair = { e1: null as unknown as BodyEntry, e2: null as unknown as BodyEntry }
+  listener.OnContactValidate = (body1: number, body2: number) => {
+    if (w.ignored.size === 0) return J.ValidateResult_AcceptAllContactsForThisBodyPair
+    const e1 = w.byPointer.get(body1)
+    const e2 = w.byPointer.get(body2)
+    if (!e1 || !e2) return J.ValidateResult_AcceptAllContactsForThisBodyPair
+    return w.ignored.has(w.pairKey(e1.key, e2.key)) ? J.ValidateResult_RejectAllContactsForThisBodyPair : J.ValidateResult_AcceptAllContactsForThisBodyPair
+  }
+  listener.OnContactAdded = (body1: number, body2: number, manifold: number, settings: number) => {
+    const e1 = w.byPointer.get(body1)
+    const e2 = w.byPointer.get(body2)
+    if (!e1 || !e2) return
+    w.touch(e1.key, e2.key, 1)
+    w.touch(e2.key, e1.key, 1)
+    const m = J.wrapPointer(manifold, J.ContactManifold)
+    if (w.points.size > 0) recordPair(w, e1.key, e2.key, m)
+    pair.e1 = e1
+    pair.e2 = e2
+    added(w, pair, m, J.wrapPointer(settings, J.ContactSettings))
+  }
+  listener.OnContactPersisted = (body1: number, body2: number, manifold: number) => {
+    if (w.points.size === 0) return
+    const e1 = w.byPointer.get(body1)
+    const e2 = w.byPointer.get(body2)
+    if (!e1 || !e2 || (!w.points.has(e1.key) && !w.points.has(e2.key))) return
+    recordPair(w, e1.key, e2.key, J.wrapPointer(manifold, J.ContactManifold))
+  }
+  listener.OnContactRemoved = (subPair: number) => {
+    const p = J.wrapPointer(subPair, J.SubShapeIDPair)
+    const k1 = p.GetBody1ID().GetIndexAndSequenceNumber()
+    const k2 = p.GetBody2ID().GetIndexAndSequenceNumber()
+    w.touch(k1, k2, -1)
+    w.touch(k2, k1, -1)
+    const e1 = w.bodies.get(k1)
+    const e2 = w.bodies.get(k2)
+    if (e1?.layer === 'sensor') w.sensorEvents.push({ sensor: k1 as BodyId, other: k2 as BodyId, entered: false })
+    else if (e2?.layer === 'sensor') w.sensorEvents.push({ sensor: k2 as BodyId, other: k1 as BodyId, entered: false })
+  }
+  return listener
+}
