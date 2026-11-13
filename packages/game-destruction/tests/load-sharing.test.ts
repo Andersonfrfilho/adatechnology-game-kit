@@ -43,3 +43,22 @@ describe('load sharing: the world carries a part on the supports the load path r
     expect(load('p1')).toBeCloseTo(mass('p1') + mass('secondary'), 3)
   })
 })
+
+describe('load sharing survives a split', () => {
+  it("splitting a loose piece off a frame laid with 'all' keeps 'all': the main beam still takes half of the secondary, the pillar does not take it whole", () => {
+    const world = createDestruction({ seed: 1 })
+    const spec = frame('all')
+    // a loose piece with no joint (a door leaf standing in its frame): its own group, split off as a piece of its own
+    spec.parts.push({ id: 'loose', material: 'wood_hard', shape: { kind: 'box', size: [0.8, 2, 0.04] }, position: [0, 1, 3] })
+    const id = world.add(spec, { id: 'frame' })
+    expect(world.state(id)!.groups.length).toBe(2)
+    const loose = world.state(id)!.groups.findIndex((group) => group.includes('loose'))
+    world.splitGroup(id, loose)
+    // the rest is built again and solved: with 'nearest' (the field lost before) p1 took the whole secondary beam and main none of it
+    const parts = world.state(id)!.parts
+    const load = (part: string): number => parts.find((p) => p.id === part)!.load!
+    const mass = (part: string): number => parts.find((p) => p.id === part)!.mass
+    expect(load('main')).toBeCloseTo(mass('main') + mass('secondary') / 2, 3)
+    expect(load('p1')).toBeCloseTo(mass('p1') + mass('secondary') / 2, 3)
+  })
+})

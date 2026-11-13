@@ -3895,7 +3895,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const mat = p.mat
     const side = Math.hypot(lp[0], lp[1], lp[2])
     const toward: Vec3 = side > 1e-6 ? [lp[0] / side, lp[1] / side, lp[2] / side] : [0, 1, 0]
-    const wave = waveWork({ tnt: energy * blastTntPerJoule, distance: dist, reach, area: projectedArea(p.spec.shape, toward), mass: p.st.mass, thickness: p.thickness })
+    // a solid part whose box holds less material than the box (a sloped rafter or a roof bay given as the box of its slope, a lattice) shows the wave only its solid
+    // share of that box: a 181 kg rafter in a 0.08 x 3.18 x 5.7 m box is 0.36 m3 of wood in 1.45 m3, a quarter of the 18 m2 the box shows. A shell (a part with a
+    // `thickness`: a tin, a pane, a tank) is hollow on purpose and shows its whole face
+    const solid = p.spec.thickness === undefined ? Math.min(1, p.st.mass / Math.max(mat.density * partVolume(p.spec.shape), 1e-9)) : 1
+    const wave = waveWork({ tnt: energy * blastTntPerJoule, distance: dist, reach, area: projectedArea(p.spec.shape, toward) * solid, mass: p.st.mass, thickness: p.thickness })
     let Ein = wave.energy + wave.shock
     // the share of the part the wave breaks: its work over the work the part's strength takes to fail (`failureWork`); a material with no strength data takes it at DMG_PER_J
     let share: number | undefined
@@ -4978,10 +4982,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         collapsed: [...o.collapsed].filter(keep),
       })
       const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
-        const s: DestructibleSpec = { parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
-        if (o.spec.name !== undefined) s.name = o.spec.name
+        // every other field of the spec goes with both halves: the load sharing above all (a house sized for `all` that is solved as `nearest` after its first split
+        // piece puts twice the load on the columns by the doors and crushes them), and the wind exposure
+        const s: DestructibleSpec = { ...o.spec, parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
         if (o.spec.tags) s.tags = [...o.spec.tags]
-        if (o.spec.soil !== undefined) s.soil = o.spec.soil
         // the part and joint specs are never written after `add`, so the halves share them instead of deep-copying a whole house twice
         return s
       }

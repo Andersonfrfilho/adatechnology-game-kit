@@ -80,6 +80,8 @@ const SHEET_AIR = 2.5
 const SHEET_SWAY = 3
 /** A fragment at least this long (m) and this wide is a piece of the thing (half a board), not a splinter; a shard of glass never is. */
 const BIG_LENGTH = 0.2
+/** Dynamic friction of debris sliding on a floor (wood, brick, concrete or glass on concrete, tile or soil: 0.4 to 0.6). */
+const DEBRIS_FRICTION = 0.5
 const BIG_WIDTH = 0.03
 /** The seed of the fragments' random stream (their spin and sway); `reset` takes it back here. */
 const FRAGMENT_SEED = 0x51ed270b
@@ -493,9 +495,12 @@ export class FragmentSystem {
         f.ang.z += (this.rng() - 0.5) * 2
       } else {
         f.vel.y = 0
-        const fr = Math.exp(-7 * dt)
-        f.vel.x *= fr
-        f.vel.z *= fr
+        // Coulomb friction on the floor: the sliding speed falls by mu g each second, so a piece leaving at v slides v^2 / (2 mu g), as a body of the piece system
+        // does (a snapped shovel handle thrown at 7.5 m/s comes to rest 5.7 m away, near the blade, not a metre from where it broke)
+        const sliding = Math.hypot(f.vel.x, f.vel.z)
+        const kept = sliding > 0 ? Math.max(0, sliding - DEBRIS_FRICTION * g * dt) / sliding : 0
+        f.vel.x *= kept
+        f.vel.z *= kept
         f.ang.multiplyScalar(Math.exp(-6 * dt))
       }
     } else {
