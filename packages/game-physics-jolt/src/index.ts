@@ -60,6 +60,8 @@ const NUM_BP = 4
 interface BodyEntry {
   readonly body: JoltNS.Body
   readonly id: JoltNS.BodyID
+  /** Its `BodyId` (index and sequence), kept so the contact listener never asks Jolt for it. */
+  readonly key: number
   readonly user: number
   readonly layer: Layer
   material: Material
@@ -129,6 +131,8 @@ export class JoltWorld implements PhysicsWorld {
   private readonly system: JoltNS.PhysicsSystem
   private readonly bi: JoltNS.BodyInterface
   private readonly bodies = new Map<number, BodyEntry>()
+  /** The same entries by the body's address in the wasm heap: what the contact listener is handed. */
+  private readonly byPointer = new Map<number, BodyEntry>()
   private readonly joints = new Map<number, JointEntry>()
   private readonly vehicles = new Map<number, VehicleEntry>()
   private readonly ragdolls = new Map<number, RagdollEntry>()
@@ -415,14 +419,17 @@ export class JoltWorld implements PhysicsWorld {
     const key = id.GetIndexAndSequenceNumber()
     if (desc.rolling && desc.motion === 'dynamic') this.rollers.set(key, desc.rolling)
     const mp = desc.motion === 'dynamic' ? body.GetMotionProperties().GetInverseMass() : 0
-    this.bodies.set(key, {
+    const entry: BodyEntry = {
       body,
       id: new this.J.BodyID(key),
+      key,
       user: desc.user,
       layer: desc.layer ?? (desc.motion === 'static' ? 'static' : 'debris'),
       material: desc.material ?? DEFAULT_MATERIAL,
       invMass: mp,
-    })
+    }
+    this.bodies.set(key, entry)
+    this.byPointer.set(this.J.getPointer(body), entry)
     return key as BodyId
   }
 
@@ -467,6 +474,7 @@ export class JoltWorld implements PhysicsWorld {
   removeBody(id: BodyId): void {
     const e = this.bodies.get(id)
     if (!e) return
+    this.byPointer.delete(this.J.getPointer(e.body))
     this.bi.RemoveBody(e.id)
     this.bi.DestroyBody(e.id)
     this.J.destroy(e.id)
@@ -673,17 +681,18 @@ export class JoltWorld implements PhysicsWorld {
   private makeListener(): JoltNS.ContactListenerJS {
     const J = this.J
     const listener = new J.ContactListenerJS()
-    const bodyOf = (ptr: number): JoltNS.Body => J.wrapPointer(ptr, J.Body)
-    const coulomb = (b1: JoltNS.Body, b2: JoltNS.Body, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings, report: boolean): void => {
-      const e1 = this.bodies.get(b1.GetID().GetIndexAndSequenceNumber())
-      const e2 = this.bodies.get(b2.GetID().GetIndexAndSequenceNumber())
+    // the bodies come as heap addresses: entries are found by them, so a contact asks Jolt only for what it must (one call across the wasm boundary costs as
+    // much as the rest of the rule; a wall waking at once makes thousands of contacts in one step)
+    const coulomb = (p1: number, p2: number, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings, report: boolean): void => {
+      const e1 = this.byPointer.get(p1)
+      const e2 = this.byPointer.get(p2)
       if (!e1 || !e2) return
       if (this.points.size > 0) {
-        this.recordPoints(e1.body.GetID().GetIndexAndSequenceNumber(), m, true)
-        this.recordPoints(e2.body.GetID().GetIndexAndSequenceNumber(), m, false)
+        this.recordPoints(e1.key, m, true)
+        this.recordPoints(e2.key, m, false)
       }
       if (cs.mIsSensor) {
-        if (report) this.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.body.GetID().GetIndexAndSequenceNumber() as BodyId, other: e2.body.GetID().GetIndexAndSequenceNumber() as BodyId, entered: true } : { sensor: e2.body.GetID().GetIndexAndSequenceNumber() as BodyId, other: e1.body.GetID().GetIndexAndSequenceNumber() as BodyId, entered: true })
+        if (report) this.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.key as BodyId, other: e2.key as BodyId, entered: true } : { sensor: e2.key as BodyId, other: e1.key as BodyId, entered: true })
         return
       }
       const n = m.mWorldSpaceNormal
@@ -698,17 +707,21 @@ export class JoltWorld implements PhysicsWorld {
       let rvx = 0
       let rvy = 0
       let rvz = 0
-      for (const [body, sign] of [[b1, 1], [b2, -1]] as const) {
-        if (body.IsStatic()) continue
+      for (const [e, sign] of [[e1, 1], [e2, -1]] as const) {
+        // a static or kinematic-free body: no speed (static bodies have no inverse mass in the entry)
+        if (e.invMass === 0 && e.layer === 'static') continue
+        const body = e.body
         const v = body.GetLinearVelocity()
+        const vx = v.GetX(), vy = v.GetY(), vz = v.GetZ()
         const w = body.GetAngularVelocity()
+        const wx = w.GetX(), wy = w.GetY(), wz = w.GetZ()
         const c = body.GetCenterOfMassPosition()
         const rx = px - c.GetX()
         const ry = py - c.GetY()
         const rz = pz - c.GetZ()
-        rvx += sign * (v.GetX() + w.GetY() * rz - w.GetZ() * ry)
-        rvy += sign * (v.GetY() + w.GetZ() * rx - w.GetX() * rz)
-        rvz += sign * (v.GetZ() + w.GetX() * ry - w.GetY() * rx)
+        rvx += sign * (vx + wy * rz - wz * ry)
+        rvy += sign * (vy + wz * rx - wx * rz)
+        rvz += sign * (vz + wx * ry - wy * rx)
       }
       const along = rvx * nx + rvy * ny + rvz * nz
       const tx = rvx - along * nx
@@ -724,8 +737,8 @@ export class JoltWorld implements PhysicsWorld {
       if (!report || along < this.reportSpeed || this.contacts.count >= this.maxContacts) return
       const c = this.contacts
       const i = c.count++
-      c.a[i] = e1.body.GetID().GetIndexAndSequenceNumber()
-      c.b[i] = e2.body.GetID().GetIndexAndSequenceNumber()
+      c.a[i] = e1.key
+      c.b[i] = e2.key
       c.userA[i] = e1.user
       c.userB[i] = e2.user
       c.tagA[i] = e1.body.GetShape().GetSubShapeUserData(m.mSubShapeID1)
@@ -743,21 +756,24 @@ export class JoltWorld implements PhysicsWorld {
     }
     listener.OnContactValidate = (body1: number, body2: number) => {
       if (this.ignored.size === 0) return J.ValidateResult_AcceptAllContactsForThisBodyPair
-      const k = this.pairKey(bodyOf(body1).GetID().GetIndexAndSequenceNumber(), bodyOf(body2).GetID().GetIndexAndSequenceNumber())
-      return this.ignored.has(k) ? J.ValidateResult_RejectAllContactsForThisBodyPair : J.ValidateResult_AcceptAllContactsForThisBodyPair
+      const e1 = this.byPointer.get(body1)
+      const e2 = this.byPointer.get(body2)
+      if (!e1 || !e2) return J.ValidateResult_AcceptAllContactsForThisBodyPair
+      return this.ignored.has(this.pairKey(e1.key, e2.key)) ? J.ValidateResult_RejectAllContactsForThisBodyPair : J.ValidateResult_AcceptAllContactsForThisBodyPair
     }
-    const touch = (key: number, by: number): void => {
+    const touch = (key: number | undefined, by: number): void => {
+      if (key === undefined) return
       const n = (this.touches.get(key) ?? 0) + by
       if (n > 0) this.touches.set(key, n)
       else this.touches.delete(key)
     }
     listener.OnContactAdded = (body1: number, body2: number, manifold: number, settings: number) => {
-      touch(bodyOf(body1).GetID().GetIndexAndSequenceNumber(), 1)
-      touch(bodyOf(body2).GetID().GetIndexAndSequenceNumber(), 1)
-      coulomb(bodyOf(body1), bodyOf(body2), J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), true)
+      touch(this.byPointer.get(body1)?.key, 1)
+      touch(this.byPointer.get(body2)?.key, 1)
+      coulomb(body1, body2, J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), true)
     }
     listener.OnContactPersisted = (body1: number, body2: number, manifold: number, settings: number) => {
-      coulomb(bodyOf(body1), bodyOf(body2), J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), false)
+      coulomb(body1, body2, J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), false)
     }
     listener.OnContactRemoved = (pair: number) => {
       const p = J.wrapPointer(pair, J.SubShapeIDPair)
@@ -900,7 +916,9 @@ export class JoltWorld implements PhysicsWorld {
     const bodies: BodyId[] = desc.parts.map((part, i) => {
       const body = lock.TryGetBody(ragdoll.GetBodyID(i))
       const key = body.GetID().GetIndexAndSequenceNumber()
-      this.bodies.set(key, { body, id: new J.BodyID(key), user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass() })
+      const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass() }
+      this.bodies.set(key, entry)
+      this.byPointer.set(J.getPointer(body), entry)
       if (part.body.rolling) this.rollers.set(key, part.body.rolling)
       return key as BodyId
     })
@@ -921,7 +939,10 @@ export class JoltWorld implements PhysicsWorld {
     for (const j of e.joints) this.joints.delete(j)
     for (const b of e.bodies) {
       const entry = this.bodies.get(b)
-      if (entry) this.J.destroy(entry.id)
+      if (entry) {
+        this.byPointer.delete(this.J.getPointer(entry.body))
+        this.J.destroy(entry.id)
+      }
       this.bodies.delete(b)
       this.touches.delete(b)
       this.points.delete(b)
