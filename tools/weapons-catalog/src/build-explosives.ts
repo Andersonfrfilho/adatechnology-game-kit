@@ -59,6 +59,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   if (extras?.cone && lab?.cone) record.cone = { halfAngleDeg: Math.round((lab.cone.half * 180) / Math.PI), length: lab.cone.len }
   record.energy = decision.energy?.value ?? hopkinsonEnergy(lethalRadius, inputs.decisions.energyScale.value)
   if (decision.tnt) record.tnt = decision.tnt.value
+  if (decision.casing) record.casing = decision.casing.value
   record.destructionLevel = arsenal?.destructionLevel ?? world?.destructionLevel
   record.noise = arsenal?.noise ?? world?.noise
   if (extras?.fuse !== undefined) record.fuse = extras.fuse
@@ -91,7 +92,8 @@ const applyCopies = (records: ExplosiveRecord[], inputs: ExplosiveInputs): Explo
     const original = records.find((candidate) => candidate.id === source)
     if (!original) throw new Error(`weapons-catalog: ${record.id} copies unknown explosive ${source}`)
     const ownArming = inputs.decisions.explosives[record.id]?.extras?.value?.armRange
-    return { ...original, id: record.id, name: record.name, sources: record.sources, ...(ownArming ? { armRange: ownArming } : {}) } as ExplosiveRecord
+    const ownCasing = inputs.decisions.explosives[record.id]?.casing?.value
+    return { ...original, id: record.id, name: record.name, sources: record.sources, ...(ownArming ? { armRange: ownArming } : {}), ...(ownCasing ? { casing: ownCasing } : {}) } as ExplosiveRecord
   })
 
 export const buildExplosives = (inputs: ExplosiveInputs): ExplosiveRecord[] =>
