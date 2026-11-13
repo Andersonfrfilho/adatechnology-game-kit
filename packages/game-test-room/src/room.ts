@@ -2033,8 +2033,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /** Height of the hip above the feet (m): where a kick leaves from; and how far (rad) below the look it goes, so a level look kicks at the height of a chair seat. */
-  /** The striking body (m above the feet): the shoulder standing and crouched, how low it gets bending down (hips) and crouching down, how far under the target it comes, and how far the eye looks for it. */
-  const MELEE_BODY = { downward: -0.3, shoulderStanding: 1.4, shoulderCrouched: 0.95, bentStanding: 0.7, bentCrouched: 0.4, armDrop: 0.4, lookRange: 6 } as const
+  /** The striking body (m above the feet): the shoulder standing and crouched, how low it gets bending down (hips) and crouching down, how far under the target it comes, how far the eye looks for it, and the highest a standing body's eye gets. */
+  const MELEE_BODY = { downward: -0.3, shoulderStanding: 1.4, shoulderCrouched: 0.95, bentStanding: 0.7, bentCrouched: 0.4, armDrop: 0.4, lookRange: 6, eyeHighest: 1.9 } as const
   const KICK_HIP = 0.9
   const KICK_DROP = 0.35
   /**
@@ -2582,7 +2582,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not.
    */
   const bodyReach = (use: Extract<Use, { kind: 'melee' }>): Extract<Use, { kind: 'melee' }> => {
-    if (use.direction[1] > MELEE_BODY.downward) return use
+    // an eye placed higher than a standing body's (a scripted view over a tall plant) has no body under it to bend: the blow leaves from the eye
+    if (use.direction[1] > MELEE_BODY.downward || use.origin[1] - player.feet > MELEE_BODY.eyeHighest) return use
     const seen = rayWorld(use.origin, use.direction, MELEE_BODY.lookRange)
     if (!seen) return use
     const crouched = player.crouching
