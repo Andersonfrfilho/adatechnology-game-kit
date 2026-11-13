@@ -1,6 +1,8 @@
 export type * from './types'
 export { createDestruction, SHELTER_DEFAULTS, FRAGMENT_HIT_DEFAULTS, CONFINEMENT_DEFAULTS } from './world'
 export { explosivePart, FIRE_PRIME_C } from './chain'
+export { casingFlight, failureWork, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, reflectedLoad, waveWork } from './blast-wave'
+export type { FailureInput, FailureWork, WaveLoad, WaveWork, WaveWorkInput } from './blast-wave'
 export { GROUND_LOSS_DEFAULTS, resolveGroundLoss, settlementAt, undercutAt } from './ground-loss'
 export type { ChainTrigger, ExplosivePartOptions, WorldExplosive } from './chain'
 export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity, fragility } from './materials'
