@@ -34,7 +34,7 @@ export type UrbanThreeOptions = {
    * light of the scene. `DrawnUrban.lights` then lists the sources. Without it the lights are created here (deprecated, removed in the next major).
    */
   lights?: LightBudget
-  /** Move the parts that share a plane with another apart by 2 mm (CLAUDE.md §13, `standOutCoincident`). Default true; `false` draws the scene's numbers as they are. */
+  /** Move the parts that share a plane with another apart by 2 mm (CLAUDE.md §13, `standOutCoincident`). Flat pieces at one height are layered 2 mm apart unless this is `false`; the full mesh pass (`standOutCoincident`) runs only when it is `true`, since it costs more than the draw. */
   standOut?: boolean
 }
 
@@ -378,7 +378,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
       parent.add(...made)
     }
     // a second pass moves the piece that the first one pushed onto another's plane (two trunks both sunk 2 mm)
-    if (options.standOut !== false) {
+    if (options.standOut === true) {
       let passes = 0
       while (passes++ < 3 && standOutCoincident(root).left > 0);
     }

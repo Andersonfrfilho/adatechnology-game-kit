@@ -27,7 +27,7 @@ export interface MeshApiOptions {
    * volumes (clothes on a line) into one mesh per material (see `mergeParts`). Needs the spec in `finish`. Default: on in `game` quality.
    */
   mergeParts?: boolean
-  /** Move the pieces that share a plane with another apart by 2 mm (CLAUDE.md §13, `standOutCoincidentBoxes`). Default true; `false` bakes the builders' numbers as drawn. */
+  /** Move the pieces that share a plane with another apart by 2 mm (CLAUDE.md §13, `standOutCoincidentBoxes`). Off by default: it costs about as much as the build itself (shapes-bench); the builders draw their own gaps. */
   standOut?: boolean
   /** Idle flutter of merged cloth. Default 0.04. */
   swayAmplitude?: number
@@ -188,7 +188,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
       const materialFor = finishOptions?.materialFor ?? options.materialFor
       if (finished) throw new Error('createMeshApi: finish() was already called')
       finished = true
-      const buffers = generate(options.standOut === false ? recorder.schema() : standOutCoincidentBoxes(recorder.schema()), {
+      const buffers = generate(options.standOut === true ? standOutCoincidentBoxes(recorder.schema()) : recorder.schema(), {
         colors: colorSpaceOf(THREE),
         materials: MATERIAL_KEYS,
         fallbackMaterial: 'plain',

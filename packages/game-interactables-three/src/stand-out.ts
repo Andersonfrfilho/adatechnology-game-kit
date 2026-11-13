@@ -154,9 +154,28 @@ function planeBasis(normal: Vector): [Vector, Vector] {
   return [u, cross(normal, u)]
 }
 
+/** How far the face reaches from the piece's centre along world axis `k`, over its two in-plane axes. */
+function faceReach(face: Face, k: number): number {
+  const { piece, axis } = face
+  let reach = 0
+  for (let other = 0; other < 3; other++) if (other !== axis) reach += Math.abs(piece.axes[other]![k]!) * piece.half[other]!
+  return reach
+}
+
+/** Whether the world boxes of two faces touch: a cheap test before clipping them. */
+function facesNear(a: Face, b: Face, slack = SAME_PLANE): boolean {
+  for (let k = 0; k < 3; k++) {
+    const centreA = a.piece.center[k]! + a.normal[k]! * a.piece.half[a.axis]!
+    const centreB = b.piece.center[k]! + b.normal[k]! * b.piece.half[b.axis]!
+    if (Math.abs(centreA - centreB) > faceReach(a, k) + faceReach(b, k) + slack) return false
+  }
+  return true
+}
+
 function fight(a: Face, b: Face): boolean {
   if (Math.abs(a.offset - b.offset) > SAME_PLANE) return false
   if ([0, 1, 2].some((k) => Math.abs(a.normal[k]! - b.normal[k]!) > SAME_DIRECTION)) return false
+  if (!facesNear(a, b)) return false
   const [u, v] = planeBasis(a.normal)
   return overlapArea(cornersOf(a, u, v), cornersOf(b, u, v)) > MIN_OVERLAP_AREA
 }
@@ -176,13 +195,43 @@ function moveFace(face: Face, amount: number): void {
   for (let k = 0; k < 3; k++) position[k] = position[k]! + inParent[k]!
 }
 
+/** Faces looking the same way, grouped by their rounded normal: only faces in one group can share a plane. */
+type FaceGroups = Map<number, Face[]>
+
+const DIRECTION_SPAN = 2048
+const directionKey = (normal: Vector): number =>
+  ((Math.round(normal[0] / SAME_DIRECTION) + DIRECTION_SPAN / 2) * DIRECTION_SPAN + Math.round(normal[1] / SAME_DIRECTION) + DIRECTION_SPAN / 2) * DIRECTION_SPAN +
+  Math.round(normal[2] / SAME_DIRECTION) + DIRECTION_SPAN / 2
+
+function groupFaces(pieces: readonly Piece[]): FaceGroups {
+  const groups: FaceGroups = new Map()
+  for (const piece of pieces) {
+    for (const face of facesOf(piece)) {
+      const key = directionKey(face.normal)
+      const group = groups.get(key)
+      if (group) group.push(face)
+      else groups.set(key, [face])
+    }
+  }
+  return groups
+}
+
+/** The same face as it is now: a piece moved earlier in the round has its face somewhere else. */
+const liveFace = (face: Face): Face => faceOf(face.piece, face.axis, face.sign)
+
 /** Moves the face by the first of 2 mm in, 2 mm out, 4 mm in, 4 mm out (out first for a thin piece) that lands on no other piece's face. */
-function clearFace(face: Face, pieces: readonly Piece[]): void {
+function clearFace(face: Face, groups: FaceGroups): void {
   const { piece, axis, sign } = face
   const thick = piece.half[axis]! * 2 >= MIN_THICKNESS_TO_SINK
   const steps = piece.isPlane ? [GAP, 2 * GAP, 3 * GAP] : [GAP, -GAP, 2 * GAP, -2 * GAP].map((step) => (thick ? -step : step))
   const fits = (step: number): boolean => piece.isPlane || piece.half[axis]! * 2 + step >= 2 * GAP
-  const clear = (): boolean => pieces.every((other) => other === piece || !facesOf(other).some((candidate) => fight(faceOf(piece, axis, sign), candidate)))
+  // only faces within the farthest step of this one, and near it, can be met: the rest of the group is skipped once
+  const reach = 2 * GAP * 3 + 2 * SAME_PLANE
+  const neighbours = (groups.get(directionKey(face.normal)) ?? []).filter((candidate) => candidate.piece !== piece && Math.abs(candidate.offset - face.offset) <= reach && facesNear(face, candidate, reach))
+  const clear = (): boolean => {
+    const moved = faceOf(piece, axis, sign)
+    return neighbours.every((candidate) => !fight(moved, liveFace(candidate)))
+  }
   let applied = 0
   for (const step of steps.filter(fits)) {
     moveFace(face, step - applied)
@@ -211,14 +260,33 @@ function separateRadii(a: Piece, b: Piece): boolean {
 
 const volumeOf = (piece: Piece): number => piece.half[0] * piece.half[1] * piece.half[2]
 
-/** The first pair of faces of the two pieces that fight, if any. */
-function firstFight(a: Piece, b: Piece): [Face, Face] | undefined {
-  const facesB = facesOf(b)
-  for (const faceA of facesOf(a)) {
-    const faceB = facesB.find((candidate) => fight(faceA, candidate))
-    if (faceB) return [faceA, faceB]
+/** Calls `visit` with each pair of faces of different pieces on one plane (by offset), within each direction group: a sweep over the sorted offsets. */
+function forEachPlaneMate(groups: FaceGroups, visit: (a: Face, b: Face) => void): void {
+  for (const group of groups.values()) {
+    if (group.length < 2) continue
+    group.sort((a, b) => a.offset - b.offset)
+    for (let i = 0; i < group.length; i++) {
+      const a = group[i]!
+      for (let j = i + 1; j < group.length && group[j]!.offset - a.offset <= 2 * SAME_PLANE; j++) {
+        if (group[j]!.piece !== a.piece) visit(a, group[j]!)
+      }
+    }
   }
-  return undefined
+}
+
+function separateAllRadii(cylinders: readonly Piece[], moved: Set<Piece>): void {
+  for (let i = 0; i < cylinders.length; i++) {
+    for (let j = i + 1; j < cylinders.length; j++) {
+      const a = cylinders[i]!
+      const b = cylinders[j]!
+      const reach = Math.max(a.half[0], a.half[1]) + Math.max(b.half[0], b.half[1]) + 0.01
+      if (Math.abs(a.center[0] - b.center[0]) > reach || Math.abs(a.center[1] - b.center[1]) > reach || Math.abs(a.center[2] - b.center[2]) > reach) continue
+      if (separateRadii(a, b)) {
+        moved.add(a)
+        moved.add(b)
+      }
+    }
+  }
 }
 
 /**
@@ -229,23 +297,24 @@ function firstFight(a: Piece, b: Piece): [Face, Face] | undefined {
 export function standOutCoincidentBoxes(schema: ShapeSchema): ShapeSchema {
   const pieces: Piece[] = []
   collect((schema.root as { children?: readonly ShapeNode[] }).children ?? [], [0, 0, 0], IDENTITY, pieces)
-  const reach = pieces.map((piece) => Math.hypot(...piece.half))
+  const cylinders = pieces.filter((piece) => piece.isCylinder)
+  // after the first round only a piece that just moved can meet a new face: pairs of two still pieces were already settled
+  let movedLast: Set<Piece> | undefined
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    let moved = false
-    for (let i = 0; i < pieces.length; i++) {
-      for (let j = i + 1; j < pieces.length; j++) {
-        const a = pieces[i]!
-        const b = pieces[j]!
-        if (Math.hypot(a.center[0] - b.center[0], a.center[1] - b.center[1], a.center[2] - b.center[2]) > reach[i]! + reach[j]! + 0.01) continue
-        if (separateRadii(a, b)) moved = true
-        const found = firstFight(a, b)
-        if (!found) continue
-        const mover = volumeOf(a) < volumeOf(b) ? found[0] : found[1]
-        clearFace(mover, pieces)
-        moved = true
-      }
-    }
-    if (!moved) break
+    const movedNow = new Set<Piece>()
+    separateAllRadii(cylinders, movedNow)
+    const groups = groupFaces(pieces)
+    forEachPlaneMate(groups, (first, second) => {
+      if (movedLast && !movedLast.has(first.piece) && !movedLast.has(second.piece)) return
+      const a = liveFace(first)
+      const b = liveFace(second)
+      if (!fight(a, b)) return
+      const mover = volumeOf(a.piece) < volumeOf(b.piece) ? a : b
+      clearFace(mover, groups)
+      movedNow.add(mover.piece)
+    })
+    if (!movedNow.size) break
+    movedLast = movedNow
   }
   return schema
 }
