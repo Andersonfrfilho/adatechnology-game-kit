@@ -96,5 +96,8 @@ function shockWork(input: WaveWorkInput): number {
   const z = Math.max(input.distance, 0) / cube
   const radius = Math.cbrt((3 * input.tnt) / (4 * Math.PI * 1600))
   const share = Math.min(0.5, input.area / (4 * Math.PI * (input.distance + radius) ** 2))
-  return SHOCK_COUPLING * input.tnt * TNT_JOULES * (1 + (z / SHOCK_SCALED) ** 2) ** -2 * share * Math.min(1, Math.max(0, input.reach)) ** 2
+  // products, not `**` past 2: V8 gives `x ** -2` a different last bit on Node 22 and 24, and the goldens must agree on both
+  const falloff = 1 + (z / SHOCK_SCALED) * (z / SHOCK_SCALED)
+  const reach = Math.min(1, Math.max(0, input.reach))
+  return (SHOCK_COUPLING * input.tnt * TNT_JOULES * share * reach * reach) / (falloff * falloff)
 }

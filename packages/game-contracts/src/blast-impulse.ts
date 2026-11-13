@@ -32,7 +32,10 @@ export function sideOnImpulse(tnt: number, distance: number, nearest = NEAREST):
   if (!(tnt > 0)) return 0
   const w3 = Math.cbrt(tnt)
   const z = Math.max(distance, nearest) / w3
-  const scaled = (0.067 * Math.sqrt(1 + (z / 0.23) ** 4)) / (z * z * Math.cbrt(1 + (z / 1.55) ** 3))
+  // products, not `**` past 2: V8 gives `x ** 3` a different last bit on Node 22 and 24, and the goldens must agree on both
+  const near = (z / 0.23) * (z / 0.23)
+  const far = z / 1.55
+  const scaled = (0.067 * Math.sqrt(1 + near * near)) / (z * z * Math.cbrt(1 + far * far * far))
   return scaled * w3 * 100 // bar·ms to Pa·s
 }
 

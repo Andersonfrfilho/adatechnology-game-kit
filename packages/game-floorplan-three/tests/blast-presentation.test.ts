@@ -18,8 +18,9 @@ const BLAST_RADIUS = 6
 // Recorded again when the furniture, flights, frames and floors came to keep out of the walls (no two faces on one plane): the charge still fractures
 // wall_0_0 in front of it; only the parts' boxes the blast meets changed
 // Recorded again when the wave began to load only the solid share of a part's box (a sloped rafter or roof bay) and the doors and jambs to be held in their walls,
-// and once more when its heat became the fireball's: the charge still brings wall_0_0 down (39 parts broken, 7 collapsed), nothing catches fire
-const RECORDED_BLAST_OUTCOME = 'ddaf449aaa20507c93f90a131b3788dc13f84508'
+// and once more when its heat became the fireball's: the charge still brings wall_0_0 down (39 parts broken, 7 collapsed), nothing catches fire.
+// Recorded again when the contact shock and the side-on impulse took products instead of `**` past 2, so Node 22 and 24 give the same last bits
+const RECORDED_BLAST_OUTCOME = '9c88042ffe952a969239f118f332c7c95cf9ce6a'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
