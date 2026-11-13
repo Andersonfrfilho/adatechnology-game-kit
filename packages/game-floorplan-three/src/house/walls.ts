@@ -3,16 +3,42 @@
 import type { StructurePart } from '@adatechnology/game-floorplan-structure';
 
 import type { BoxCollider, Hex, HouseRecord, HouseWall, Kernel, KernelHouseWalls, PieceRecord, Shared, WallLook, WallSide } from '../kernel-types.js';
+import { FLOOR_OVER_GROUND } from './floors.js';
 import { doorHeightOf, doorsInWall } from './helpers.js';
+import { exclusiveBoxes } from './solids.js';
+import type { Aabb } from './solids.js';
+
+/** A box of the walls held back to be laid with the others: pillars first, then the corners, then the walls, each cut by what came before. */
+interface WallSolid { readonly rank: number; readonly mat: string; readonly color: Hex; readonly group: string; readonly pc: PieceRecord | null; readonly stage: string | undefined; readonly box: Aabb }
 
 export function installHouseWalls(K: Kernel, shared: Shared): void {
   const { EPS, Y0, boxC, bx, cursor, effectiveHeight, pieceRecord, structurePiece, wallColor } = K;
   // `sh` is installed after this module: read it when called
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
+  // while walls() runs outside the Visor's scene its boxes are held here, so where two of them would fill the same space (an L, a T, the square of a corner,
+  // a pillar in its wall) only one does, and no two faces lie on one plane the same way round
+  let solids: WallSolid[] | null = null;
+  const lay = (rank: number, mat: string, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: Hex): void => {
+    if (!solids) { bx(mat, x0, y0, z0, x1, y1, z1, color); return; }
+    if (x1 - x0 < 1e-4 || y1 - y0 < 1e-4 || z1 - z0 < 1e-4) return;
+    solids.push({ rank, mat, color, group: cursor.group, pc: cursor.pc ?? null, stage: cursor.stage, box: [x0, y0, z0, x1, y1, z1] });
+  };
   function wallBox(alongU: boolean, L: number, a: number, b: number, ya: number, yb: number, th: number, cL: Hex, cH: Hex, mL: string, mH: string): void {
     if (yb - ya < 1e-4 || b - a < 1e-4) return;
-    if (alongU) { bx(mL, a, ya, L - th / 2, b, yb, L, cL); bx(mH, a, ya, L, b, yb, L + th / 2, cH); }
-    else { bx(mL, L - th / 2, ya, a, L, yb, b, cL); bx(mH, L, ya, a, L + th / 2, yb, b, cH); }
+    if (alongU) { lay(2, mL, a, ya, L - th / 2, b, yb, L, cL); lay(2, mH, a, ya, L, b, yb, L + th / 2, cH); }
+    else { lay(2, mL, L - th / 2, ya, a, L, yb, b, cL); lay(2, mH, L, ya, a, L + th / 2, yb, b, cH); }
+  }
+  function laySolids(): void {
+    const held = solids;
+    solids = null;
+    if (!held) return;
+    const g0 = cursor.group, pc0 = cursor.pc, st0 = cursor.stage;
+    for (const s of exclusiveBoxes([...held].sort((p, q) => p.rank - q.rank))) {
+      if (s.rank < 0) continue; // drawn by its own builder
+      cursor.group = s.group; cursor.pc = s.pc; cursor.stage = s.stage;
+      bx(s.mat, s.box[0], s.box[1], s.box[2], s.box[3], s.box[4], s.box[5], s.color);
+    }
+    cursor.group = g0; cursor.pc = pc0; cursor.stage = st0;
   }
   // colour and material of each side of a wall: sides = [lower-coordinate side, higher side]
   function sideOf(id: string, frontLine: boolean): WallSide {
@@ -35,6 +61,12 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
     const R: HouseRecord = shared.ctx.r, cut = shared.ctx.cut, nA = R.floors.length, vMin = Math.min(...R.walls.map(w => (w.axis === 'u' ? w.v0 : Math.min(w.v0, w.v1))));
     const corners = new Map<string, Corner>();
     const looks = new Map<string, WallLook>();
+    solids = shared.ctx.visorScene ? null : [];
+    // built by construction stage, the ground floor's finish stands 1.2 cm over the ground (floorsAndSlabs): the walls stand on it where it runs under them
+    if (solids && shared.ctx.constructionStages) for (const c of R.rooms) {
+      if (c.floor !== 0 || c.type === 'void' || c.outbuilding) continue;
+      for (const r of K.rectsOf(c)) solids.push({ rank: -1, mat: '', color: 0, group: '', pc: null, stage: undefined, box: [r[0], Y0(0) - 0.04, r[1], r[2], Y0(0) + FLOOR_OVER_GROUND, r[3]] });
+    }
     // (CTX.colliders is zeroed on rebuild: here only the walls are added, after the lot wall and gates)
     for (const w of R.walls) {
       const f = w.floor, colliders: BoxCollider[] = shared.ctx.colliders; cursor.group = 'f' + f; cursor.pc = pieceOf(w);
@@ -87,9 +119,10 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       // an inner corner takes the finish of the room its outer faces look into (the room diagonally across from both walls)
       const room = e.exterior ? null : K.roomAt(e.f, e.pu + e.away[0] * e.th, e.pv + e.away[1] * e.th);
       const look = room ? sideOf(room.id, false) : e.color;
-      cursor.group = 'f' + e.f; bx(look.mat, e.pu - e.th / 2, e.y0, e.pv - e.th / 2, e.pu + e.th / 2, e.y0 + e.hh, e.pv + e.th / 2, look.color);
+      cursor.group = 'f' + e.f; lay(1, look.mat, e.pu - e.th / 2, e.y0, e.pv - e.th / 2, e.pu + e.th / 2, e.y0 + e.hh, e.pv + e.th / 2, look.color);
     }
     if (shared.ctx.showPillars) wallPillars(looks);
+    laySolids();
   }
   // the pillars of confined masonry that stand in the walls: along them, at the corners and at the jambs of the wide doors
   const PILLAR_IN_WALL = /^(wall_column_|column_\d|jamb_column_)/;
@@ -123,7 +156,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       const atJamb = (at: number): boolean => openingEdges(e.floor ?? 0, alongU ? 'u' : 'v', line).some((edge) => Math.abs(edge - at) < 0.02);
       if (e.aabb[k0] > host.aabb[k0] + end || atJamb(e.aabb[k0])) box[k0] = e.aabb[k0] - PILLAR_PROUD;
       if (e.aabb[k1] < host.aabb[k1] - end || atJamb(e.aabb[k1])) box[k1] = e.aabb[k1] + PILLAR_PROUD;
-      bx(look.mat, box[0], e.y0, box[1], box[2], Math.min(e.y1, look.top), box[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
+      lay(0, look.mat, box[0], e.y0, box[1], box[2], Math.min(e.y1, look.top), box[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
     }
     cursor.pc = null;
   }
