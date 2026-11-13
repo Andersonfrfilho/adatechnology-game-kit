@@ -34,6 +34,10 @@ export interface BowlResult {
   /** C4: seconds after the last wake until every piece slept (-1: not within 3 s). */
   readonly c4AsleepAfter: number
   readonly maxUp: number
+  /** Lowest centre of any piece at the end (m): under -0.5 one went through the ground. */
+  readonly lowest: number
+  /** Pieces the engine let through the ground and the kit's net put back (`EnginePieces.fellThrough`); 0 on the kit's own solver. */
+  readonly fellThrough: number
   readonly hash: string
   readonly ms: number
 }
@@ -115,5 +119,7 @@ export const bowl = (seed: number, dt: number): BowlResult => {
   }
   const hash = createHash('sha256')
   for (const p of pieces) hash.update(`${p.root.position.toArray().join(',')};${p.root.quaternion.toArray().join(',')};`)
-  return { c1Excess, c2Gain, c3Lift: Math.max(0, ...lift.values()), c4AsleepAfter: asleep, maxUp, hash: hash.digest('hex').slice(0, 16), ms: performance.now() - started }
+  const lowest = Math.min(...pieces.map((p) => centreY(p, v)))
+  const fellThrough = (renderer as unknown as { pieceSys: { engine: { fellThrough: number } | null } }).pieceSys.engine?.fellThrough ?? 0
+  return { c1Excess, c2Gain, c3Lift: Math.max(0, ...lift.values()), c4AsleepAfter: asleep, maxUp, lowest, fellThrough, hash: hash.digest('hex').slice(0, 16), ms: performance.now() - started }
 }

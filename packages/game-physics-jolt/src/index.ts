@@ -202,6 +202,7 @@ export class JoltWorld implements PhysicsWorld {
     if (desc.velocityIterations !== undefined) ps.mNumVelocitySteps = desc.velocityIterations
     if (desc.positionIterations !== undefined) ps.mNumPositionSteps = desc.positionIterations
     if (desc.penetrationSlop !== undefined) ps.mPenetrationSlop = desc.penetrationSlop
+    if (desc.maxPushOut !== undefined) ps.mMaxPenetrationDistance = desc.maxPushOut
     this.system.SetPhysicsSettings(ps)
     this.v2 = new J.Vec3(0, 0, 0)
     this.r1 = new J.RVec3(0, 0, 0)

@@ -38,6 +38,9 @@ const SLAM_MIN_SPEED = 2
 const SLAM_BOUNCE = 0.2
 const SLAM_FLOOR_NORMAL = 0.7
 const KNOCK_EVERY = 0.15
+/** Sleeping pieces whose ground is looked at again each update, and how far (m) it must have dropped for one to wake. */
+const GROUND_CHECKS = 16
+const GROUND_DROP = 0.02
 /** The kit's balancing rule: a support narrower than this share of the height of the centre of mass is a balancing act, and the push (rad/s^2 per metre) that ends it. */
 const NARROW = 0.3
 const TOPPLE = 3
@@ -47,6 +50,8 @@ const STEADY_SECONDS = 1.5
 
 interface Link {
   readonly id: BodyId
+  /** The ground under its centre when it went to sleep: the engine does not see `groundAt` change, the kit looks (`groundTurn`). */
+  groundAtSleep: number
   readonly user: number
   shapeKey: readonly unknown[]
   readonly pos: number[]
@@ -72,6 +77,12 @@ export class EnginePieces {
   private readonly links = new Map<PieceBody, Link>()
   private readonly byUser = new Map<number, PieceBody>()
   private nextUser = 1
+  private turn = 0
+  /**
+   * Pieces found wholly under the ground after a step (through a one-sided ground triangle: the engine has no solid below it) and put back on it: the invariant
+   * of §12 (nothing goes under the floor), counted so a test or the room log can fail on it. A net, not a cure: none in a healthy run.
+   */
+  fellThrough = 0
   private readonly tiles = new Map<string, Tile>()
   private readonly statics = new Map<string, { solids: readonly StaticSolid[]; id: BodyId | null }>()
   private ignored = new Set<string>()
@@ -121,6 +132,7 @@ export class EnginePieces {
     if (dt <= 0) return
     const present = new Set(list)
     for (const b of [...this.links.keys()]) if (!present.has(b)) this.remove(b)
+    this.groundTurn(list)
     for (const b of list) this.sync(b, dt)
     this.layStatics()
     this.layGround(list)
@@ -134,6 +146,25 @@ export class EnginePieces {
     this.world.step(dt)
     for (const b of list) this.readBack(b, dt, time, before.get(b))
     this.knock(time)
+  }
+
+  /**
+   * A few sleeping pieces each update (`GROUND_CHECKS`, in turn) look at the ground under them again: dug or slid away since they slept (and nobody called
+   * `wakeRegion`), they wake and the ground there is laid again. Their other supports are the engine's: it wakes what lay on a body that moves.
+   */
+  private groundTurn(list: readonly PieceBody[]): void {
+    const n = list.length
+    for (let k = 0; k < Math.min(GROUND_CHECKS, n); k++) {
+      this.turn = (this.turn + 1) % n
+      const b = list[this.turn]
+      const link = this.links.get(b)
+      if (!link || !b.sleeping || b.held || Number.isNaN(link.groundAtSleep)) continue
+      const c = this.centre(b)
+      if (this.o.groundAt(c.x, c.z) >= link.groundAtSleep - GROUND_DROP) continue
+      b.sleeping = false
+      b.still = 0
+      this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
+    }
   }
 
   private shapeOf(b: PieceBody): ShapeDesc {
@@ -199,7 +230,7 @@ export class EnginePieces {
         linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
         angularVelocity: [b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2]],
       })
-      link = { id, user, shapeKey, pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
+      link = { id, groundAtSleep: NaN, user, shapeKey, pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
       this.links.set(b, link)
       this.byUser.set(user, b)
       return
@@ -403,6 +434,14 @@ export class EnginePieces {
     if (!b.sleeping) b.onGround = this.world.touching(link.id)
     let moved = false
     let slowed = false
+    const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
+    const floor = this.o.groundAt(pos[0], pos[2])
+    if (pos[1] + reach < floor - 0.05) {
+      this.fellThrough++
+      pos[1] = floor + reach
+      v[1] = Math.max(0, v[1])
+      moved = true
+    }
     if (before && !b.sleeping) {
       if (this.o.sweep) moved = this.sweepOn(b, before.c, pos, time)
       const impact = -before.vy
@@ -437,6 +476,10 @@ export class EnginePieces {
     for (let i = 0; i < 3; i++) {
       link.vel[i] = v[i]
       link.ang[i] = w[i]
+    }
+    if (b.sleeping && !link.sleeping) {
+      const c = this.centre(b)
+      link.groundAtSleep = this.o.groundAt(c.x, c.z)
     }
     link.sleeping = b.sleeping
   }

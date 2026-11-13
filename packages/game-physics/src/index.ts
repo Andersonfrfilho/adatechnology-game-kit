@@ -186,6 +186,8 @@ export interface WorldDesc {
   readonly positionIterations?: number
   /** How deep (m) two bodies may sink into each other before they are pushed apart: what a resting box sinks into the floor. */
   readonly penetrationSlop?: number
+  /** Most (m) the position solver moves two bodies apart per iteration: how fast what was made inside something comes out of it (a launch is that speed at most). */
+  readonly maxPushOut?: number
   /** Coulomb static/dynamic friction per contact (§12): a contact slower than this (m/s) along the surface holds with the static coefficient. */
   readonly slipSpeed?: number
   /** Report only contacts that closed faster than this (m/s), and at most `maxContacts` per step. */

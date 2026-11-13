@@ -528,8 +528,9 @@ export class PieceSystem {
     if (this.engine) {
       this.time += dt
       this.measure()
-      // what slept on a support that is gone (a top that broke, ground dug under it) wakes: the kit's rule, the engine does not see our ground change
-      this.wakeUnsupported()
+      // what the budget put to sleep (the engine did not) wakes when a point it lay on loses its support: the kit's rule. What the engine put to sleep it wakes
+      // itself when what holds it moves; a fixed thing removed or the ground changed wakes what was there (`EnginePieces`)
+      this.wakeUnsupported(true)
       this.engine.update(this.list, dt, this.time, this.apartDeep(dt))
       this.measure()
       this.keepBudget()
@@ -667,12 +668,12 @@ export class PieceSystem {
   }
 
   /** A few sleeping pieces each update (`SUPPORT_CHECKS`, in turn) look under them again: one whose table broke, or whose shelf fell over, falls. */
-  private wakeUnsupported(): void {
+  private wakeUnsupported(onlyBudget = false): void {
     const n = this.list.length
     for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
       this.supportTurn = (this.supportTurn + 1) % n
       const b = this.list[this.supportTurn]
-      if (!b.sleeping || b.held) continue
+      if (!b.sleeping || b.held || (onlyBudget && !b.restPoints?.length)) continue
       // one put to sleep by the budget needs every point it went to sleep on: a board leaning on a step whose step is gone comes down, though its foot is still on the floor
       const rest = b.restPoints
       if (rest && rest.length > 0 ? rest.every((point) => this.supportsPoint(b, point)) : this.supported(b, false) || this.supported(b, true)) continue

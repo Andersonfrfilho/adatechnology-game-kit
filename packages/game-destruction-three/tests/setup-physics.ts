@@ -9,12 +9,14 @@ if (process.env.PIECE_SOLVER !== 'own') {
   ;(globalThis as { __PIECE_PHYSICS__?: () => PhysicsWorld }).__PIECE_PHYSICS__ = () => {
     if (alive.length >= 4) alive.shift()?.dispose()
     const world = engine.createWorld({
-      // the robustness sweep (C6) turns these: JOLT_STEP (Hz), JOLT_ITERATIONS (velocity), JOLT_SLOP (m)
+      // the robustness sweep (C6) turns these: JOLT_STEP (Hz), JOLT_ITERATIONS (velocity), JOLT_SLOP (m), JOLT_PUSHOUT (m per position iteration)
       fixedStep: 1 / Number(process.env.JOLT_STEP ?? 120),
-      velocityIterations: Number(process.env.JOLT_ITERATIONS ?? 10),
+      velocityIterations: Number(process.env.JOLT_ITERATIONS ?? 20),
+      positionIterations: Number(process.env.JOLT_POSITION_ITERATIONS ?? 2),
       sleepAfter: 0.5,
       sleepSpeed: 0.08,
       penetrationSlop: Number(process.env.JOLT_SLOP ?? 0.002),
+      maxPushOut: Number(process.env.JOLT_PUSHOUT ?? 0.002),
       maxBodies: 4096,
     })
     alive.push(world)

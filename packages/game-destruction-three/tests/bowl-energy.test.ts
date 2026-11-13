@@ -16,6 +16,8 @@ describe('deepening bowl, energy criteria (DECISION-fable §2)', () => {
       expect.soft(r.c2Gain, 'C2').toBeLessThanOrEqual(0.035)
       expect.soft(r.c3Lift, 'C3').toBeLessThanOrEqual(0.035)
       expect.soft(r.c4AsleepAfter, 'C4').toBeGreaterThan(0)
+      expect.soft(r.lowest, 'nothing under the ground').toBeGreaterThan(-0.5)
+      expect.soft(r.fellThrough, 'nothing let through the ground').toBe(0)
     })
   }
 })
