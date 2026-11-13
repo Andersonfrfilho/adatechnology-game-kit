@@ -47,7 +47,7 @@ describe('real numbers of the bending model', () => {
 
 describe('a thin ductile plate takes a plastic bend', () => {
   it('under a heavy blunt blow, kept in the part state and growing with each blow up to a fold', () => {
-    const w = createDestruction({ seed: 1 })
+    const w = createDestruction({ seed: 1, groundHeight: -Infinity })
     const id = w.add(plate())
     w.hitPart(id, 'blade', blow(25, [0, 0.006, 0]))
     expect(w.part(id, 'blade')!.bend).toBeUndefined()
@@ -62,10 +62,10 @@ describe('a thin ductile plate takes a plastic bend', () => {
   })
 
   it('survives a save and a load', () => {
-    const a = createDestruction({ seed: 1 })
+    const a = createDestruction({ seed: 1, groundHeight: -Infinity })
     const id = a.add(plate(), { id: 'p' })
     a.hitPart(id, 'blade', blow(400, [0, 0.006, 0]))
-    const b = createDestruction({ seed: 1 })
+    const b = createDestruction({ seed: 1, groundHeight: -Infinity })
     b.load(a.serialize())
     expect(b.part('p', 'blade')!.bend).toBe(a.part('p', 'blade')!.bend)
   })
@@ -84,7 +84,7 @@ describe('a thin ductile plate takes a plastic bend', () => {
 
 describe('a long wooden part snaps in bending', () => {
   it('when a blow flexes it past the moment its section holds: two stubs, cut at the blow', () => {
-    const w = createDestruction({ seed: 1 })
+    const w = createDestruction({ seed: 1, groundHeight: -Infinity })
     const id = w.add(stick())
     const events = w.hitPart(id, 'handle', blow(300, [-0.2, 0.0175, 0])).events
     expect(w.part(id, 'handle')!.status).toBe('broken')
@@ -95,7 +95,7 @@ describe('a long wooden part snaps in bending', () => {
 
   it('not under a punch or a kick, which the same handle takes with a dent in its hit points only', () => {
     for (const energy of [25, 130]) {
-      const w = createDestruction({ seed: 1 })
+      const w = createDestruction({ seed: 1, groundHeight: -Infinity })
       const id = w.add(stick())
       w.hitPart(id, 'handle', blow(energy, [-0.2, 0.0175, 0]))
       expect(w.part(id, 'handle')!.status).not.toBe('broken')
@@ -103,18 +103,18 @@ describe('a long wooden part snaps in bending', () => {
   })
 
   it('a thicker handle takes more: 5 cm of the same wood holds a blow that snaps 3.5 cm', () => {
-    const w = createDestruction({ seed: 1 })
+    const w = createDestruction({ seed: 1, groundHeight: -Infinity })
     const id = w.add({ parts: [{ id: 'handle', material: 'wood_hard', shape: { kind: 'box', size: [0.9, 0.05, 0.05] }, position: [0, 0, 0], mass: 1.7, grain: 'x' }] })
     w.hitPart(id, 'handle', blow(300, [-0.2, 0.025, 0]))
     expect(w.part(id, 'handle')!.status).not.toBe('broken')
   })
 
   it('a blow along the grain, or on a material with no rupture strength, does not snap it', () => {
-    const along = createDestruction({ seed: 1 })
+    const along = createDestruction({ seed: 1, groundHeight: -Infinity })
     const alongId = along.add(stick())
     along.hitPart(alongId, 'handle', blow(300, [0.45, 0, 0], [-1, 0, 0]))
     expect(along.part(alongId, 'handle')!.status).not.toBe('broken')
-    const pine = createDestruction({ seed: 1 })
+    const pine = createDestruction({ seed: 1, groundHeight: -Infinity })
     const pineId = pine.add(stick('wood_soft'))
     pine.hitPart(pineId, 'handle', blow(300, [-0.2, 0.0175, 0]))
     // soft wood is cut by its band of hit points as before, the bending model leaves it alone
@@ -124,7 +124,7 @@ describe('a long wooden part snaps in bending', () => {
 
 describe('the hinge a bent plate keeps', () => {
   it('lies across the blade at the blow, folds the nearer end and goes the way the blow went', () => {
-    const w = createDestruction({ seed: 1 })
+    const w = createDestruction({ seed: 1, groundHeight: -Infinity })
     const events: Array<{ angle: number }> = []
     w.on('bend', (event) => {
       if (event.type === 'bend') events.push(event)
@@ -139,5 +139,23 @@ describe('the hinge a bent plate keeps', () => {
     expect(hinge.axis[2]).toBe(-1)
     expect(events).toHaveLength(1)
     expect(events[0]!.angle).toBeCloseTo(w.part(id, 'blade')!.bend!, 9)
+  })
+})
+
+describe('a plate does not fold into the floor it lies on', () => {
+  it('a blow from above on a blade lying on the floor dents it and does not bend it; lifted off the floor, or struck from below, it bends', () => {
+    const lying = createDestruction({ seed: 1 })
+    const lyingId = lying.add(plate(), { position: [0, 0.006, 0] })
+    lying.hitPart(lyingId, 'blade', blow(300, [0.1, 0.012, 0]))
+    expect(lying.part(lyingId, 'blade')!.bend).toBeUndefined()
+    expect(lying.part(lyingId, 'blade')!.dents.length).toBeGreaterThan(0)
+    const held = createDestruction({ seed: 1 })
+    const heldId = held.add(plate(), { position: [0, 1, 0] })
+    held.hitPart(heldId, 'blade', blow(300, [0.1, 1.012, 0]))
+    expect(held.part(heldId, 'blade')!.bend).toBeGreaterThan(0.3)
+    const below = createDestruction({ seed: 1 })
+    const belowId = below.add(plate(), { position: [0, 0.006, 0] })
+    below.hitPart(belowId, 'blade', blow(300, [0.1, 0, 0], [0, 1, 0]))
+    expect(below.part(belowId, 'blade')!.bend).toBeGreaterThan(0.3)
   })
 })

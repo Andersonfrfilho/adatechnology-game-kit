@@ -141,7 +141,7 @@ describe('the condition of a tool from its destruction object', () => {
   const spec = { parts: [{ id: 'h', material: 'wood_hard', shape: { kind: 'box' as const, size: [0.9, 0.035, 0.035] as [number, number, number] }, position: [0, 0, 0] as [number, number, number], tags: ['handle'] }, { id: 'b', material: 'steel', shape: { kind: 'box' as const, size: [0.3, 0.012, 0.22] as [number, number, number] }, position: [0.5, 0, 0] as [number, number, number], thickness: 0.002, tags: ['blade'] }] }
 
   it('reads a snapped handle and a bent blade from the parts tagged handle and blade', () => {
-    const w = createDestruction({ seed: 1 })
+    const w = createDestruction({ seed: 1, groundHeight: -Infinity })
     const id = w.add(spec)
     expect(toolConditionOf(spec, w.state(id)!)).toEqual({ handleBroken: false, bend: 0 })
     w.hitPart(id, 'b', { type: 'blunt', point: [0.5, 0.006, 0], direction: [0, -1, 0], energy: 130, radius: 0.05 })

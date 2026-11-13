@@ -474,6 +474,11 @@ export interface DestructionOptions {
   onEvent?: (event: DestructionEvent) => void
   /** Maximum fragments in one `fracture` event (default 24). The renderer can draw fewer. */
   maxFragments?: number
+  /**
+   * World height in metres of the floor that loose things lie on (default 0; `-Infinity` for none): a plate that lies on it is not bent by a blow that drives it
+   * into the floor, which dents it instead (`pressedAgainstFloor`).
+   */
+  groundHeight?: number
   /** Maximum dents kept per part; older nearby dents merge (default 24). */
   maxDents?: number
   /** Maximum holes kept per part (default 32). */

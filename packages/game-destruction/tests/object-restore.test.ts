@@ -11,7 +11,7 @@ const spec: DestructibleSpec = {
 
 describe('an object taken out of the world and put back', () => {
   it('keeps the damage it had, under a new id too', () => {
-    const world = createDestruction({ seed: 1 })
+    const world = createDestruction({ seed: 1, groundHeight: -Infinity })
     const id = world.add(spec)
     world.hitPart(id, 'blade', { type: 'blunt', point: [0.5, 0.006, 0], direction: [0, -1, 0], energy: 130, radius: 0.05 })
     world.hitPart(id, 'handle', { type: 'blunt', point: [-0.2, 0.0175, 0], direction: [0, -1, 0], energy: 300, radius: 0.05 })

@@ -18,7 +18,7 @@ import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilA
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
 import type { VoidRun } from './foundation-span'
-import { BEND_MIN, BEND_MAX, plasticBend, plateHinge, snapRatio } from './bending'
+import { BEND_MIN, BEND_MAX, plasticBend, plateHinge, pressedAgainstFloor, snapRatio } from './bending'
 import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, SETTLEMENT_POINTS, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
@@ -3813,7 +3813,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (E <= 0 || !p.mat.bending) return 0
     const { c, q } = partXf(o, p)
     const local = rotateVec([-q[0], -q[1], -q[2], q[3]], d)
-    const angle = plasticBend(p.dims, p.thickness, p.mat.bending, E, local)
+    const corner = (n: number): Vec3 => [(n & 1 ? 1 : -1) * p.dims[0] / 2, (n & 2 ? 1 : -1) * p.dims[1] / 2, (n & 4 ? 1 : -1) * p.dims[2] / 2]
+    const lowestY = Math.min(...[0, 1, 2, 3, 4, 5, 6, 7].map((n) => toWorld(c, q, corner(n))[1]))
+    const angle = pressedAgainstFloor(lowestY, options.groundHeight ?? 0, d) ? 0 : plasticBend(p.dims, p.thickness, p.mat.bending, E, local)
     if (angle >= BEND_MIN) {
       const before = p.st.bend ?? 0
       p.st.bend = Math.min(BEND_MAX, before + angle)

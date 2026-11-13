@@ -85,3 +85,17 @@ export function plateHinge(dims: Vec3, point: Vec3, direction: Vec3): BendHinge 
   way[thin] = direction[thin] >= 0 ? 1 : -1
   return { point: hinge, axis: cross(side, way), side }
 }
+
+/** Metres: a part whose underside is within this of the floor lies on it. */
+export const FLOOR_CONTACT = 0.01
+/** A blow drives a part into the floor when this much of its direction (0..1) points down. */
+export const FLOOR_PRESS = 0.3
+
+/**
+ * Whether a blow pushes a part into the floor it lies on: its lowest point `lowestY` is at the floor (`groundHeight`) and the blow's world `direction` goes down.
+ * A plate cannot fold into what supports it, so such a blow dents it instead of bending it.
+ */
+export const pressedAgainstFloor = (lowestY: number, groundHeight: number, direction: Vec3): boolean => {
+  const length = Math.hypot(direction[0], direction[1], direction[2])
+  return length > 0 && lowestY <= groundHeight + FLOOR_CONTACT && -direction[1] / length >= FLOOR_PRESS
+}

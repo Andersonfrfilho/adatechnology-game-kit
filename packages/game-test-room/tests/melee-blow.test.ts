@@ -37,12 +37,13 @@ function swingAtBlade(): { room: ReturnType<typeof makeRoom>; objectId: string; 
 }
 
 describe('a sledgehammer blow onto a shovel lying on the floor', () => {
-  it('bends the blade for good: the blow of the room reaches the bend model like any other blunt hit', () => {
+  it('dents the blade and does not fold it into the floor it lies on: the blow of the room reaches the bend model like any other blunt hit', () => {
     const { room, objectId, swing, seconds } = swingAtBlade()
     swing()
     seconds(1.5)
     expect(room.log.entries({ type: 'melee' }).length).toBeGreaterThan(0)
-    expect(room.world.part(objectId, 'blade')?.bend ?? 0).toBeGreaterThan(0.02)
+    expect(room.world.part(objectId, 'blade')?.bend ?? 0).toBe(0)
+    expect(room.world.part(objectId, 'blade')?.dents.length).toBeGreaterThan(0)
   })
 
   it('presses the shovel into the floor: it does not leave it, at most it slides a little', () => {
