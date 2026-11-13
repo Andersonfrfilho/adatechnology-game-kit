@@ -78,6 +78,13 @@ interface VehicleEntry {
   readonly tester: JoltNS.VehicleCollisionTester
 }
 
+export interface JoltCharacter {
+  update(dt: number, vx: number, vz: number): void
+  position(out: Float64Array): void
+  supported(): boolean
+  dispose(): void
+}
+
 const ROW_CAPACITY = 4096
 const POINTS_PER_BODY = 16
 
@@ -906,6 +913,54 @@ export class JoltWorld implements PhysicsWorld {
     let n = 0
     for (let i = 0; i < 4; i++) if (v.constraint.GetWheel(i).HasContact()) n++
     return n
+  }
+
+  /**
+   * A walking capsule (Jolt's `CharacterVirtual`, spike: not yet in the contract): not a body, it moves by sweeps against the world, steps up stairs and sticks
+   * to the floor going down (`ExtendedUpdate`), and pushes dynamic bodies with up to `strength` N. `update` takes the wanted horizontal speed; gravity is its own.
+   */
+  createCharacter(at: Vec3, radius: number, halfHeight: number, mass: number, strength: number): JoltCharacter {
+    const J = this.J
+    const settings = new J.CharacterVirtualSettings()
+    const shape = this.makeShape({ kind: 'capsule', halfHeight, radius })
+    settings.mShape = shape
+    settings.mMass = mass
+    settings.mMaxStrength = strength
+    settings.mMaxSlopeAngle = (45 * Math.PI) / 180
+    // the capsule's foot at the position
+    settings.mShapeOffset.Set(0, halfHeight + radius, 0)
+    this.r1.Set(at[0], at[1], at[2])
+    this.q1.Set(0, 0, 0, 1)
+    const character = new J.CharacterVirtual(settings, this.r1, this.q1, this.system)
+    J.destroy(settings)
+    shape.Release()
+    const update = new J.ExtendedUpdateSettings()
+    update.mWalkStairsStepUp.Set(0, 0.4, 0)
+    update.mStickToFloorStepDown.Set(0, -0.5, 0)
+    const velocity = new J.Vec3(0, 0, 0)
+    const gravity = new J.Vec3(0, -9.81, 0)
+    let fall = 0
+    return {
+      update: (dt: number, vx: number, vz: number) => {
+        fall = character.IsSupported() ? 0 : fall - 9.81 * dt
+        velocity.Set(vx, fall, vz)
+        character.SetLinearVelocity(velocity)
+        character.ExtendedUpdate(dt, gravity, update, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.iface.GetTempAllocator())
+      },
+      position: (out: Float64Array) => {
+        const p = character.GetPosition()
+        out[0] = p.GetX()
+        out[1] = p.GetY()
+        out[2] = p.GetZ()
+      },
+      supported: () => character.IsSupported(),
+      dispose: () => {
+        J.destroy(update)
+        J.destroy(velocity)
+        J.destroy(gravity)
+        J.destroy(character)
+      },
+    }
   }
 
   // Queries -----------------------------------------------------------------------------------------------------------------------------
