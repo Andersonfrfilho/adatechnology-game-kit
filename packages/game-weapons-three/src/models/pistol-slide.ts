@@ -18,13 +18,13 @@ export function buildSlide(kit: ModelKit, slide: THREE.Group, parts: ModelParts,
     box(slide, L * 0.45, slideHeight, slideWidth, metal, L * 0.225, 0, 0)
     box(slide, L * 0.55, slideHeight * 0.62, slideWidth, metal, L * 0.72, -slideHeight * 0.19, 0)
   } else box(slide, L, slideHeight, slideWidth, metal, L / 2, 0, 0)
-  if (style.slope) box(slide, L * 0.25, slideHeight * 0.5, slideWidth * 0.98, metal, L * 0.86, slideHeight * 0.35, 0, -0.22)
+  if (style.slope) box(slide, L * 0.25, slideHeight * 0.5, slideWidth * 0.9, metal, L * 0.86, slideHeight * 0.35, 0, -0.22)
   kit.roundness = null
   for (let i = 0; i < (style.flush ? 9 : 7); i++) box(slide, 0.0022, slideHeight * 0.72, slideWidth + 0.0014, M.dark, 0.007 + i * 0.0052, -0.002, 0, 0)
   if (style.frontSer) for (let i = 0; i < 5; i++) box(slide, 0.0022, slideHeight * 0.6, slideWidth + 0.0014, M.dark, L * 0.76 + i * 0.0052, -0.003, 0)
   if (style.port) {
     box(slide, L * style.port, 0.004, slideWidth * 0.55, M.hole, L * 0.6, slideHeight / 2 - 0.001, slideWidth * 0.12)
-    box(slide, L * style.port * 0.85, 0.003, slideWidth * 0.4, M.steelL, L * 0.6, slideHeight / 2 - 0.0004, slideWidth * 0.1)
+    box(slide, L * style.port * 0.85, 0.003, slideWidth * 0.4, M.steelL, L * 0.6, slideHeight / 2 + 0.0015, slideWidth * 0.1)
     box(slide, 0.012, 0.004, 0.002, M.dark, L * 0.55, slideHeight * 0.15, slideWidth / 2 + 0.0008)
   }
   if (style.open) {

@@ -34,7 +34,7 @@ function buildAction(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const bolt = kit.pivot(group)
   parts.bolt = bolt
   parts.stroke = 0.07
-  box(bolt, 0.044, 0.01, 0.006, M.steelL, 0.42, 0.004, 0.0175)
+  box(bolt, 0.044, 0.01, 0.006, M.steelL, 0.42, 0.004, 0.0191)
   const handle = kit.pivot(group, BOLT_X, 0, 0)
   parts.boltHandle = handle
   parts.boltHandleRest = handle.position.x

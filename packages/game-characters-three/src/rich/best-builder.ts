@@ -169,7 +169,7 @@ export const createBestBuilder = (host: Three, { types, random = Math.random }: 
     const legs: BestLegRig[]=[];
     ([[-1,P.legL,P.kneeL],[1,P.legR,P.kneeR]] as const).forEach(([s,r,kr])=>{
       const g=new THREE.Group();g.position.set(s*(fem?.115:.105),.9,0);fig.add(g);
-      add(g,cylDown(P.bloat?.13:fem?.11:.105,P.bloat?.095:.078,.42),pantsM);
+      add(g,cylDown(P.bloat?.13:fem?.11:.105,P.bloat?.095:.078,.42),pantsM,0,P.bloat&&s>0?-.003:0,0);
       const kn=new THREE.Group();kn.position.y=-.42;g.add(kn);
       ball(kn,.078,pantsM);
       const lost=P.noLegs||cut.legs;
@@ -192,7 +192,7 @@ export const createBestBuilder = (host: Three, { types, random = Math.random }: 
       const pus: ReadonlyArray<readonly [number, number]>=[[.12,1.0],[-.17,.92],[.02,.86],[-.06,1.12],[.2,.88],[-.22,1.05]];
       drip(U,.05,.8,.3,"bile",1.6);pus.forEach(([x,y],k)=>{const zz=.1+Math.sqrt(Math.max(.01,.34*.34-x*x/1.25-(y-1.06)**2))*1.08;const r=.022+(k%3)*.01;
         add(U,SPH(r,10,8),basic(z.eye),x,y,zz).userData.eye=1;const g=glow(z.eye,r*5,.55);g.position.set(x,y,zz+.02);U.add(g)});
-      add(U,CYL(.09,.1,.12,16),sickM,0,1.62,0);
+      add(U,CYL(.09,.1,.124,16),sickM,0,1.62,0);
       frontZ=.38;
     }else add(U,torsoGeo(1,1,fem),topM);
     if(P.char){const emb: ReadonlyArray<readonly [number, number, number]>=[[.1,1.2,.17],[-.12,1.35,.17],[.02,1.02,.16],[-.15,1.08,.15],[.16,1.42,.15],[0,1.5,-.15],[.12,1.1,-.16]];

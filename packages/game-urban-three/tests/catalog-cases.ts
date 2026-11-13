@@ -59,8 +59,16 @@ export const cases: Array<[string, () => Root]> = []
     `helpers`,
     () => {
       const group = new THREE.Group()
-      for (const [w, h, d, r] of [[1, 1, 1, 0], [2, 0.5, 1, 0.1], [0.4, 1.2, 0.3, 0.05]]) group.add(new THREE.Mesh(createRoundedBox(THREE, w, h, d, r)))
-      for (const [w, h, d] of [[1, 1, 1], [6, 2.5, 8], [0.3, 0.2, 2]]) group.add(new THREE.Mesh(createPrism(THREE, w, h, d)))
+      // side by side: the helpers are shapes to draw, not a piece, and stacked at one point they would overlap each other
+      let shelf = 0
+      const place = (mesh: InstanceType<typeof THREE.Mesh>, width: number): void => {
+        shelf += width / 2 + 1
+        mesh.position.x = shelf
+        shelf += width / 2
+        group.add(mesh)
+      }
+      for (const [w, h, d, r] of [[1, 1, 1, 0], [2, 0.5, 1, 0.1], [0.4, 1.2, 0.3, 0.05]]) place(new THREE.Mesh(createRoundedBox(THREE, w, h, d, r)), w)
+      for (const [w, h, d] of [[1, 1, 1], [6, 2.5, 8], [0.3, 0.2, 2]]) place(new THREE.Mesh(createPrism(THREE, w, h, d)), w)
       return group
     },
   ])

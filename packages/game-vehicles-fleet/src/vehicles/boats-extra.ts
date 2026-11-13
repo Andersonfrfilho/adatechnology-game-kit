@@ -501,12 +501,12 @@ export function installBoatsExtra(fx: FleetContext): void {
       cs.castShadow = false
       ;[1, -1].forEach(function (s) {
         c.roundBox(2.6, 0.06, 0.42, 0.02, teak, -2.45, 0.86, s * 0.82)
-        c.roundBox(2.6, 0.38, 0.06, 0.02, white, -2.45, 0.67, s * 0.6)
+        c.roundBox(2.6, 0.376, 0.06, 0.02, white, -2.45, 0.671, s * 0.6)
         c.roundBox(2.8, 0.22, 0.05, 0.02, white, -2.4, 1.02, s * (H.sheerAt(-2.4).z - 0.32))
         c.cylinder(0.06, 0.07, 0.11, MT.chrome, -1.6, 1.15, s * 1.06)
         c.cylinder(0.035, 0.035, 0.02, MT.chrome, -1.6, 1.21, s * 1.06)
       })
-      c.roundBox(0.3, 0.38, 1.2, 0.03, white, -3.75, 0.67, 0)
+      c.roundBox(0.3, 0.376, 1.2, 0.03, white, -3.75, 0.671, 0)
       c.seatTops.push({ x: -2.6, y: 0.9, z: 0.82, w: 0.42, l: 2.4 }, { x: -2.6, y: 0.9, z: -0.82, w: 0.42, l: 2.4 })
       /* cabin (low housing), long windows, companionway with steps, foredeck hatch */
       const trST = [
@@ -947,9 +947,9 @@ export function installBoatsExtra(fx: FleetContext): void {
       })
       c.roundBox(1.6, 0.03, 0.1, 0.01, MT.wood, 0.3, 0.05, 0.38, { rot: [0.2, 0, 0] })
       c.roundBox(1.6, 0.03, 0.1, 0.01, MT.wood, 0.3, 0.06, 0.28, { rot: [0.2, 0, 0] })
-      c.roundBox(0.36, 0.24, 0.26, 0.03, CM('#ffffff', { roughness: 0.5 }), 1.25, 0.14, 0.15)
+      c.roundBox(0.36, 0.24, 0.26, 0.03, CM('#ffffff', { roughness: 0.5 }), 1.25, 0.142, 0.15)
       c.roundBox(0.1, 0.03, 0.02, 0.005, CM('#d01c1c'), 1.25, 0.2, 0.282)
-      c.roundBox(0.03, 0.1, 0.02, 0.005, CM('#d01c1c'), 1.25, 0.2, 0.282)
+      c.roundBox(0.03, 0.1, 0.02, 0.005, CM('#d01c1c'), 1.25, 0.2, 0.284)
       const buoy = c.add(new THREE.TorusGeometry(0.24, 0.06, 10, 24), CM('#f0f0ea', { roughness: 0.6 }), 1.1, 0.1, -0.2)
       buoy.rotation.x = PI / 2
       /* 40 hp tiller outboard; lights: two-colour at the bow, white all-round on the stern pole, blue rescue beacon */
@@ -1101,7 +1101,7 @@ export function installBoatsExtra(fx: FleetContext): void {
           return Math.min(0.06 - y, x - x0 - 0.04)
         }),
         CM('#1d2023', { roughness: 0.6 }),
-        { sz: 1.004, dy: 0.003 },
+        { sz: 1.004, dy: 0.003, ends: false },
       )
       EA.sheerTube(c, H, x0 + 0.02, 6.2, 0.07, blk, { dy: -0.1, dz: 0.02 })
       const deck = c.add(EA.deckGeo(H, x0 + 0.02, 6.32, { n: 40, m: 10, crown: 0.05 }), deckC)

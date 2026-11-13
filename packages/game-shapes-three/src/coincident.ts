@@ -60,11 +60,22 @@ function worldPositions(position: THREE_NS.BufferAttribute | THREE_NS.Interleave
   return out
 }
 
+// only what the GPU draws: a geometry that reuses bigger buffers keeps stale triangles past its draw range
+function drawnIndices(geometry: THREE_NS.BufferGeometry): ArrayLike<number> | undefined {
+  const { start, count } = geometry.drawRange
+  const index = geometry.index?.array
+  const total = index ? index.length : geometry.getAttribute('position').count
+  const end = Math.min(total, start + (Number.isFinite(count) ? count : total))
+  if (index) return start === 0 && end === index.length ? index : Array.from(index).slice(start, end)
+  if (start === 0 && end === total) return undefined
+  return Array.from({ length: end - start }, (_, i) => start + i)
+}
+
 function batchesOfMesh(mesh: THREE_NS.Mesh, label: string): CoincidentBatch[] {
   const geometry = mesh.geometry as THREE_NS.BufferGeometry | undefined
   const position = geometry?.getAttribute('position')
   if (!geometry || !position) return []
-  const indices = geometry.index?.array
+  const indices = drawnIndices(geometry)
   const instanced = mesh as THREE_NS.InstancedMesh
   if (!instanced.isInstancedMesh) return [{ positions: worldPositions(position, mesh.matrixWorld), ...(indices ? { indices } : {}), label }]
   const batches: CoincidentBatch[] = []
@@ -77,17 +88,32 @@ function batchesOfMesh(mesh: THREE_NS.Mesh, label: string): CoincidentBatch[] {
   return batches
 }
 
-/** The triangles of every drawn mesh under `root`, in world space, ready for `coincidentFaces`. */
-export function coincidentBatchesOf(root: THREE_NS.Object3D, options: Pick<CoincidentFacesOfOptions, 'includeHidden'> = {}): CoincidentBatch[] {
+export interface MeshBatches {
+  readonly batches: CoincidentBatch[]
+  /** The mesh each batch came from, at the same index. */
+  readonly meshes: THREE_NS.Mesh[]
+}
+
+/** The triangles of every drawn mesh under `root`, in world space, with the mesh of each batch. */
+export function meshBatchesOf(root: THREE_NS.Object3D, options: Pick<CoincidentFacesOfOptions, 'includeHidden'> = {}): MeshBatches {
   root.updateMatrixWorld(true)
   const batches: CoincidentBatch[] = []
+  const meshes: THREE_NS.Mesh[] = []
   root.traverse((node) => {
     if (!isMesh(node) || (node as THREE_NS.Object3D & { isSprite?: boolean }).isSprite) return
     if (!options.includeHidden && !isDrawn(node, root)) return
     if (isOffsetDecal(node)) return
-    batches.push(...batchesOfMesh(node, labelOf(node, root)))
+    for (const batch of batchesOfMesh(node, labelOf(node, root))) {
+      batches.push(batch)
+      meshes.push(node)
+    }
   })
-  return batches
+  return { batches, meshes }
+}
+
+/** The triangles of every drawn mesh under `root`, in world space, ready for `coincidentFaces`. */
+export function coincidentBatchesOf(root: THREE_NS.Object3D, options: Pick<CoincidentFacesOfOptions, 'includeHidden'> = {}): CoincidentBatch[] {
+  return meshBatchesOf(root, options).batches
 }
 
 /**
@@ -95,5 +121,12 @@ export function coincidentBatchesOf(root: THREE_NS.Object3D, options: Pick<Coinc
  * piece that comes back with a lining flush to its body fails the test instead of flickering on screen.
  */
 export function coincidentFacesOf(root: THREE_NS.Object3D, options: CoincidentFacesOfOptions = {}): CoincidentFaceHit[] {
-  return coincidentFaces(coincidentBatchesOf(root, options), options)
+  const { batches, meshes } = meshBatchesOf(root, options)
+  return coincidentFaces(batches, options).filter((hit) => writesDepth(meshes[hit.batchA]!) || writesDepth(meshes[hit.batchB]!))
+}
+
+/** Two layers that both leave the depth buffer alone (smoke, glow, sparks) are blended in order: they never fight for a pixel. */
+function writesDepth(mesh: THREE_NS.Mesh): boolean {
+  const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE_NS.Material[]
+  return materials.some((m) => m.depthWrite !== false && m.depthTest !== false)
 }

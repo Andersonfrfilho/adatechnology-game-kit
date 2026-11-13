@@ -29,6 +29,9 @@ export function shade(color: number, factor: number): number {
   return (channel(16) << 16) | (channel(8) << 8) | channel(0)
 }
 
+/** How far the body sits inside a label, band, rim or spine, in metres, so the item keeps its size: closer, the two faces z-fight (CLAUDE.md §13). */
+const PROUD = 0.002
+
 /** Segments of a round part at a level of detail: never below 5. */
 const seg = (c: ShapeContext, n: number): number => Math.max(5, Math.round(n * c.detail))
 
@@ -64,7 +67,8 @@ const across = (c: ShapeContext, group: THREE_NS.Group): THREE_NS.Group => {
 const can: Drawer = (c) => {
   const { k, h } = c
   const body = k.metal(0x8d9096)
-  return across(c, k.G(k.mesh(k.cyl(0.5, 0.5, h * 0.94, seg(c, 14)), body), k.mesh(k.cyl(0.5, 0.5, h * 0.5, seg(c, 14)), k.food(c.color), [0, 0, 0], [0, 0, 0], [1.0, 1, 1.0]), k.mesh(k.cyl(0.5, 0.5, h * 0.03, seg(c, 14)), body, [0, h * 0.485, 0]), k.mesh(k.cyl(0.5, 0.5, h * 0.03, seg(c, 14)), body, [0, -h * 0.485, 0])))
+  const r = 0.5 - PROUD / Math.min(c.w, c.d) // the group is stretched to w × d: the body sits PROUD inside the label and the rims
+  return across(c, k.G(k.mesh(k.cyl(r, r, h * 0.94, seg(c, 14)), body), k.mesh(k.cyl(0.5, 0.5, h * 0.5, seg(c, 14)), k.food(c.color)), k.mesh(k.cyl(0.5, 0.5, h * 0.03, seg(c, 14)), body, [0, h * 0.485, 0]), k.mesh(k.cyl(0.5, 0.5, h * 0.03, seg(c, 14)), body, [0, -h * 0.485, 0])))
 }
 
 const bottle: Drawer = (c) => {
@@ -81,12 +85,12 @@ const jar: Drawer = (c) => {
 
 const bag: Drawer = (c) => {
   const { k, w, h, d } = c
-  return k.G(k.mesh(k.bx(w, h * 0.88, d), k.paper(c.color), [0, -h * 0.06, 0]), k.mesh(k.bx(w * 1.0, h * 0.12, d * 0.5), k.paper(shade(c.color, 0.85)), [0, h * 0.44, 0]), k.mesh(k.bx(w * 0.7, h * 0.3, d * 1.0), k.paper(shade(c.color, 1.2)), [0, 0, 0]))
+  return k.G(k.mesh(k.bx(w, h * 0.88, d - 2 * PROUD), k.paper(c.color), [0, -h * 0.06, 0]), k.mesh(k.bx(w * 1.0, h * 0.12, d * 0.5), k.paper(shade(c.color, 0.85)), [0, h * 0.44, 0]), k.mesh(k.bx(w * 0.7, h * 0.3, d), k.paper(shade(c.color, 1.2)), [0, 0, 0]))
 }
 
 const box: Drawer = (c) => {
   const { k, w, h, d } = c
-  return k.G(k.mesh(k.bx(w, h, d), k.paper(c.color)), k.mesh(k.bx(w, h * 0.12, d), k.paper(shade(c.color, 0.8)), [0, h * 0.44, 0]), k.mesh(k.bx(w * 0.62, h * 0.4, d), k.paper(shade(c.color, 1.25)), [0, -h * 0.02, 0]))
+  return k.G(k.mesh(k.bx(w - 2 * PROUD, h - PROUD, d - 2 * PROUD), k.paper(c.color), [0, -PROUD / 2, 0]), k.mesh(k.bx(w, h * 0.12, d), k.paper(shade(c.color, 0.8)), [0, h * 0.44, 0]), k.mesh(k.bx(w * 0.62, h * 0.4, d), k.paper(shade(c.color, 1.25)), [0, -h * 0.02, 0]))
 }
 
 const cloth: Drawer = (c) => {
@@ -195,7 +199,8 @@ const tank: Drawer = (c) => {
 const book: Drawer = (c) => {
   const { k, w, h, d } = c
   const cover = k.paper(c.color)
-  return k.G(k.mesh(k.bx(w, h, d * 0.14), cover, [0, 0, d * 0.43]), k.mesh(k.bx(w, h, d * 0.14), cover, [0, 0, -d * 0.43]), k.mesh(k.bx(w * 0.94, h * 0.96, d * 0.72), k.paper(0xe9e1cc), [w * 0.02, 0, 0]), k.mesh(k.bx(w * 0.08, h, d), k.paper(shade(c.color, 0.8)), [-w * 0.46, 0, 0]))
+  // the covers sit PROUD inside the spine on every side they share with it
+  return k.G(k.mesh(k.bx(w - PROUD, h - 2 * PROUD, d * 0.14), cover, [PROUD / 2, 0, d * 0.43 - PROUD]), k.mesh(k.bx(w - PROUD, h - 2 * PROUD, d * 0.14), cover, [PROUD / 2, 0, -d * 0.43 + PROUD]), k.mesh(k.bx(w * 0.94, h * 0.96, d * 0.72), k.paper(0xe9e1cc), [w * 0.02, 0, 0]), k.mesh(k.bx(w * 0.08, h, d), k.paper(shade(c.color, 0.8)), [-w * 0.46, 0, 0]))
 }
 
 const key: Drawer = alongLong((c, L, a, b) => {
@@ -203,7 +208,7 @@ const key: Drawer = alongLong((c, L, a, b) => {
   const metal = k.metal(0xb8913a)
   const ring = a * 0.5
   const tube = Math.min(b * 0.4, ring * 0.2)
-  return k.G(k.mesh(new c.k.T.TorusGeometry(ring * 0.8, tube, 5, seg(c, 10)), k.metal(0x9a9da0), [-L / 2 + ring * 0.8 + tube, 0, 0]), k.mesh(k.bx(L * 0.62, a * 0.28, b), metal, [L * 0.12, 0, 0]), k.mesh(k.bx(L * 0.08, a * 0.22, b), metal, [L * 0.36, -a * 0.2, 0]), k.mesh(k.bx(L * 0.06, a * 0.22, b), metal, [L * 0.2, -a * 0.2, 0]))
+  return k.G(k.mesh(new c.k.T.TorusGeometry(ring * 0.8, tube, 5, seg(c, 10)), k.metal(0x9a9da0), [-L / 2 + ring * 0.8 + tube, 0, 0]), k.mesh(k.bx(L * 0.62, a * 0.28, b), metal, [L * 0.12, 0, 0]), k.mesh(k.bx(L * 0.08, a * 0.17, b), metal, [L * 0.36, -a * 0.225, 0]), k.mesh(k.bx(L * 0.06, a * 0.17, b), metal, [L * 0.2, -a * 0.225, 0]))
 })
 
 const battery: Drawer = alongLong((c, L, a, b) => {

@@ -20,6 +20,6 @@ export const frozenChicken: ItemModelBuilder = ({ T, mesh, bx, cyl, G, plastic, 
     ...leg(-0.45),
     mesh(small, skin, [-0.55, 0.05, 0.62], [0, 0, 0], [0.8, 0.3, 0.35]),
     mesh(small, skin, [-0.55, 0.05, -0.62], [0, 0, 0], [0.8, 0.3, 0.35]),
-    mesh(bx(2.6, 0.14, 0.05), plastic(0x7fa7c4), [0, 0.43, 0.8]),
+    mesh(bx(2.6, 0.14, 0.05), plastic(0x7fa7c4), [0, 0.41, 0.8]),
   )
 }

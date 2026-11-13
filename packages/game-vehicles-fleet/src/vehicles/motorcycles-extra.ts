@@ -290,8 +290,8 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     return b
   }
   function plateMoto(c: VehicleContext, x: number, y: number, txt?: string) {
-    c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.012, y, 0)
-    c.text(txt || kit.config.plate.slice(0, 5), 0.2, 0.135, x, y, 0, '-x', {
+    c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.009, y, 0)
+    c.text(txt || kit.config.plate.slice(0, 5), 0.2, 0.135, x - 0.003, y, 0, '-x', {
       w: 300,
       h: 220,
       bg: '#f2f2ee',
@@ -431,7 +431,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       for (let q = 0; q < 12; q++) {
         const a2 = (q / 12) * PI * 2,
           sl = new THREE.Mesh(G.roundedBox(rimR * 0.42, 0.016, 0.006, 0.005), o.slot || CM('#1c1e21', { metalness: 0.5, roughness: 0.4 }))
-        sl.position.set(Math.cos(a2) * rimR * 0.62, Math.sin(a2) * rimR * 0.62, s * (hw * 0.72 + 0.006))
+        sl.position.set(Math.cos(a2) * rimR * 0.62, Math.sin(a2) * rimR * 0.62, s * (hw * 0.72 + 0.0105))
         sl.rotation.z = a2
         g.add(sl)
       }
@@ -554,7 +554,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       body(
         c,
         [
-          [0.34, 0.36, 0.29, 0.28, 2.6],
+          [0.335, 0.36, 0.29, 0.28, 2.6],
           [0.46, 0.38, 0.31, 0.46, 3],
           [0.6, 0.41, 0.34, 0.5, 3],
           [0.74, 0.43, 0.37, 0.46, 2.8],
@@ -997,7 +997,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       body(
         c,
         [
-          [0.42, 1.05, 0.82, 0.26, 2.6],
+          [0.415, 1.05, 0.82, 0.26, 2.6],
           [0.52, 1.03, 0.83, 0.28, 2.6],
           [0.59, 0.99, 0.85, 0.22, 2.4],
           [0.62, 0.95, 0.87, 0.1, 2.2],
@@ -1018,7 +1018,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       })
       c.roundBox(0.015, 0.1, 0.2, 0.02, SMOKEG, 0.55, 1.035, 0, { rot: [0, 0, 0.55] })
       c.roundBox(0.07, 0.03, 0.16, 0.01, CM('#121518', { roughness: 0.25, metalness: 0.3 }), 0.44, 1.07, 0, { rot: [0, 0, 0.5] })
-      c.roundBox(0.04, 0.032, 0.1, 0.006, MT.gauge, 0.45, 1.075, 0, { rot: [0, 0, 0.5] })
+      c.roundBox(0.04, 0.032, 0.1, 0.006, MT.gauge, 0.45, 1.078, 0, { rot: [0, 0, 0.5] })
       ;[1, -1].forEach(function (s) {
         blinker(c, 0.5, 0.92, s * 0.16, true)
       })
@@ -1499,7 +1499,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       })
       c.cylinder(0.12, 0.12, 0.07, CH, 0.2, 0.56, 0.17, 'z')
       c.cylinder(0.1, 0.1, 0.012, CM('#9ea3a7', { metalness: 0.55, roughness: 0.35 }), 0.2, 0.56, 0.21, 'z')
-      c.text('114', 0.1, 0.04, 0.2, 0.56, 0.217, '+z', { fg: '#1b1c1f', size: 0.85 })
+      c.text('114', 0.1, 0.04, 0.2, 0.56, 0.219, '+z', { fg: '#1b1c1f', size: 0.85 })
       /* primary cover (left), belt (right) */
       c.sphere(0.17, CH, -0.06, 0.32, -0.17, 1.35, 0.85, 0.28)
       c.cylinder(0.07, 0.07, 0.02, CH, -0.02, 0.3, -0.215, 'z')
@@ -1926,12 +1926,12 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
         col,
       )
       c.roundBox(0.1, 0.07, 0.18, 0.02, blk, 0.36, 1.04, 0, { rot: [0, 0, 0.4] })
-      c.roundBox(0.02, 0.05, 0.15, 0.01, MT.gauge, 0.39, 1.06, 0, { rot: [0, 0, 0.4] })
+      c.roundBox(0.02, 0.05, 0.15, 0.01, MT.gauge, 0.39, 1.064, 0, { rot: [0, 0, 0.4] })
       ;[1, -1].forEach(function (s) {
         blinker(c, 0.48, 0.9, s * 0.17, true)
       })
       Z.fairing = grab(c, n0)
-      lamp(c, { style: 'rect', x: 0.57, y: 0.91, z: 0, w: 0.2, h: 0.11, d: 0.08, side: 1, label: trl('labels.headlight') })
+      lamp(c, { style: 'rect', x: 0.575, y: 0.91, z: 0, w: 0.2, h: 0.11, d: 0.08, side: 1, label: trl('labels.headlight') })
       n0 = c.vehicle.children.length
       handlebar(c, 0.36, 1.02, 0.36, { rise: 0.03, back: 0.06, mat: MT.chrome, stalk: 0.19 })
       Z.handlebar = grab(c, n0)

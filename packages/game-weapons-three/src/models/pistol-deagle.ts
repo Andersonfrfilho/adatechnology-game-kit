@@ -44,7 +44,7 @@ const buildUpper = (kit: ModelKit, group: THREE_NS.Group, slide: THREE_NS.Group,
   const barrel = heatify(parts.glow ?? [], box(group, barrelLength, SLIDE_HEIGHT, WIDTH, metal, slideLength + barrelLength / 2, 0, 0))
   barrel.name = 'barrel'
   kit.roundness = null
-  box(group, 0.0012, SLIDE_HEIGHT * 0.9, WIDTH + 0.0004, M.dark, slideLength, 0, 0)
+  box(group, 0.0024, SLIDE_HEIGHT * 0.9, WIDTH + 0.0004, M.dark, slideLength, 0, 0)
   for (let i = 0; i < 9; i++) box(slide, 0.0022, SLIDE_HEIGHT * 0.66, WIDTH + 0.0012, M.dark, 0.008 + i * 0.0048, -0.003, 0)
   box(slide, length * 0.08, 0.003, WIDTH * 0.5, M.hole, length * 0.42, SLIDE_HEIGHT / 2, WIDTH * 0.12)
   box(slide, 0.007, 0.006, 0.014, M.dark, 0.008, SLIDE_HEIGHT / 2 + 0.003, 0)
@@ -81,8 +81,8 @@ const buildGrip = (kit: ModelKit, group: THREE_NS.Group, parts: ModelParts, meta
   const magazine = kit.pivot(grip)
   parts.mag = magazine
   parts.magDrop = length * 1.15
-  box(magazine, depth * 0.62, length * 0.94, width * 0.66, M.dark, 0.002, -0.004, 0)
-  box(magazine, depth * 0.98, 0.006, width * 0.9, metal, 0, -length / 2 + 0.003, 0)
+  box(magazine, depth * 0.62, length * 0.88, width * 0.66, M.dark, 0.002, -0.004, 0)
+  box(magazine, depth * 0.9, 0.006, width * 0.9, metal, 0, -length / 2 + 0.0018, 0)
   const frontTopX = centerX + (depth / 2) * cos - (length / 2) * sin
   const frontTopY = centerY + (depth / 2) * sin + (length / 2) * cos
   return (y) => frontTopX + (frontTopY - y) * Math.tan(angle)
@@ -105,8 +105,8 @@ const buildGuard = (kit: ModelKit, group: THREE_NS.Group, frontStrapAt: (y: numb
     [front + 0.002, top],
   ]
   const hole: Array<[number, number]> = [
-    [backTop + bar + 0.002, top - 0.002],
-    [front - bar + 0.001, top - 0.002],
+    [backTop + bar + 0.002, top - 0.0045],
+    [front - bar + 0.001, top - 0.0045],
     [front - bar, bottom + bar + corner * 0.6],
     [front - bar - corner * 0.6, bottom + bar],
     [backBottom + bar + 0.004, bottom + bar],

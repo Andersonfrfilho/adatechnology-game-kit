@@ -1155,7 +1155,7 @@ export function installMilitary(fx: FleetContext): void {
     const floor = c.roundBox(L, 0.1, W, 0.02, wood, cx, y0, 0, { def: true })
     c.roundBox(L - 0.1, 0.14, 0.2, 0.02, MT.trim, cx, y0 - 0.12, 0.45)
     c.roundBox(L - 0.1, 0.14, 0.2, 0.02, MT.trim, cx, y0 - 0.12, -0.45)
-    for (let xs = x1 + 0.2; xs < x0; xs += 0.55) c.roundBox(0.08, 0.1, W - 0.05, 0.02, MT.trim, xs, y0 - 0.1, 0)
+    for (let xs = x1 + 0.2; xs < x0; xs += 0.55) c.roundBox(0.08, 0.1, W - 0.05, 0.02, MT.trim, xs, y0 - 0.102, 0)
     const sides = []
     ;[1, -1].forEach(function (s) {
       const sd = c.roundBox(L, sideH, 0.06, 0.02, wood, cx, y0 + sideH / 2 + 0.05, s * (W / 2 - 0.03), { def: true })
@@ -1166,7 +1166,7 @@ export function installMilitary(fx: FleetContext): void {
         c.roundBox(L, 0.03, 0.015, 0.006, CM('#3a3c2e', { roughness: 0.9 }), cx, y0 + 0.05 + sideH * t * 2, s * (W / 2 + 0.002))
       })
     })
-    c.roundBox(0.06, sideH, W, 0.02, wood, x0 - 0.03, y0 + sideH / 2 + 0.05, 0, { def: true })
+    c.roundBox(0.06, sideH, W, 0.02, wood, x0 - 0.028, y0 + sideH / 2 + 0.05, 0, { def: true })
     /* tailgate down */
     const tg = c.roundBox(0.06, sideH * 0.7, W - 0.1, 0.02, wood, x1 - 0.02, y0 - sideH * 0.3, 0)
     tg.rotation.z = 0.08
@@ -1624,7 +1624,7 @@ export function installMilitary(fx: FleetContext): void {
         top: roofY + 0.03,
         k: 0.28,
         holes: holes,
-        archInner: W / 2 - ww - 0.1,
+        archInner: W / 2 - ww - 0.098,
         sub: 0.18,
         bev: 0.025,
       })
@@ -2005,7 +2005,6 @@ export function installMilitary(fx: FleetContext): void {
         [F - 0.04, 1.02, 0.06],
         [F, 0.9, 0.05],
         [2.05, 0.46, 0.06],
-        [-1.4, 0.44, 0.04],
       ]
       const arches = axles.map(function (x) {
         return [x, wr, wr + 0.09]
@@ -2095,8 +2094,8 @@ export function installMilitary(fx: FleetContext): void {
         c.roundBox(1.6, 0.16, 0.12, 0.04, OLIVE_STEEL, (axles[1] + axles[2]) / 2, wr, s * (W / 2 - ww - 0.1))
         c.cylinder(0.12, 0.12, 0.2, OLIVE_STEEL, (axles[1] + axles[2]) / 2, wr, s * (W / 2 - ww - 0.1), 'z')
         /* fenders and stowage boxes over the wheels */
-        c.roundBox(1.0, 0.05, 0.32, 0.02, paintMat(c, col), axles[0], 1.12, s * (W / 2 - 0.16), { def: true })
-        c.roundBox(2.35, 0.05, 0.32, 0.02, paintMat(c, col), (axles[1] + axles[2]) / 2, 1.12, s * (W / 2 - 0.16), { def: true })
+        c.roundBox(1.0, 0.05, 0.32, 0.02, paintMat(c, col), axles[0], 1.12, s * (W / 2 - 0.158), { def: true })
+        c.roundBox(2.35, 0.05, 0.32, 0.02, paintMat(c, col), (axles[1] + axles[2]) / 2, 1.12, s * (W / 2 - 0.158), { def: true })
         c.roundBox(1.2, 0.26, 0.28, 0.03, paintMat(c, OLIVE2), -1.45, 1.28, s * (W / 2 - 0.17))
         /* recesses for cans in the bogie stowage */
         ;[-0.95, -1.95].forEach(function (x) {
@@ -2285,7 +2284,7 @@ export function installMilitary(fx: FleetContext): void {
       m.bullet = true
       /* lower hull between the tracks */
       const low = c.roundBox(6.6, 0.62, 2.0, 0.08, paintMat(c, col), -0.1, 0.78, 0, { def: true, sub: 0.3 })
-      c.roundBox(0.55, 0.62, 2.0, 0.06, paintMat(c, col), 3.1, 0.8, 0, { def: true, rot: [0, 0, -0.95] })
+      c.roundBox(0.55, 0.62, 2.004, 0.06, paintMat(c, col), 3.1, 0.8, 0, { def: true, rot: [0, 0, -0.95] })
       /* upper hull (covers the tracks) */
       const items = [
         [R, 1.05, 0.04],
@@ -2336,7 +2335,7 @@ export function installMilitary(fx: FleetContext): void {
           (ex0 + ex1) / 2,
         )
         scale(c, nB, bcen, 1.45)
-        c.roundBox(ex1 - ex0 - 0.1, 0.02, 2.1, 0.01, BAY_LIGHT, bcen.x, 0.95, 0)
+        c.roundBox(ex1 - ex0 - 0.1, 0.012, 2.1, 0.01, BAY_LIGHT, bcen.x, 0.957, 0)
         ;[1, -1].forEach(function (sd) {
           c.roundBox(ex1 - ex0 - 0.1, 0.55, 0.02, 0.01, BAY_LIGHT, bcen.x, 1.25, sd * 1.08)
         })
@@ -2365,13 +2364,13 @@ export function installMilitary(fx: FleetContext): void {
         c.roundBox(0.55, 0.42, 0.03, 0.01, MT.rubber, 2.95, 0.86, s * (W / 2 + 0.05))
         c.part('armor', s > 0 ? trl('labels.right_skirt') : trl('labels.left_skirt'), sk, new V3(-0.2, 0.86, (s * W) / 2), 1.2)
         c.roundBox(0.5, 0.03, 0.6, 0.01, paintMat(c, col), F - 0.25, 1.08, s * tz, { rot: [0, 0, -0.35] })
-        c.roundBox(0.03, 0.5, 0.55, 0.01, MT.rubber, R + 0.02, 0.85, s * tz)
+        c.roundBox(0.03, 0.5, 0.55, 0.01, MT.rubber, R + 0.015, 0.85, s * tz)
         star(c, 0.6, 1.3, s * (H.half(1.3) + 0.01), 0.17, s > 0 ? '+z' : '-z', { ring: true })
         c.text(trl('texts.army'), 1.0, 0.16, -1.5, 1.3, s * (H.half(1.3) + 0.01), s > 0 ? '+z' : '-z', { fg: '#dcdace', size: 0.7 })
         /* headlights on the glacis with a guard, taillights */
         guardedHeadlight(c, 2.95, gl(2.95) + 0.16, s * 1.3, s, { style: 'round' })
         c.roundBox(0.1, 0.16, 0.08, 0.02, OLIVE_STEEL, 2.9, gl(2.9) + 0.04, s * 1.3)
-        c.roundBox(0.1, 0.18, 0.3, 0.03, OLIVE_STEEL, R - 0.04, 1.35, s * 1.25)
+        c.roundBox(0.1, 0.18, 0.3, 0.03, OLIVE_STEEL, R - 0.037, 1.35, s * 1.25)
         kit.taillight(c, { style: 'round2', x: R - 0.08, y: 1.35, z: s * 1.25, w: 0.2, h: 0.09, d: 0.05, side: s })
         c.tube(
           [
@@ -2418,7 +2417,7 @@ export function installMilitary(fx: FleetContext): void {
         )
       /* driver: hatch and periscopes */
       hatch(c, 2.05, roofY - 0.1, -0.78, 0.28, 0, OLIVE_STEEL, { yaw: 0 })
-      kit.seat(c, 1.95, 0.62, -0.78, { w: 0.44, h: 0.34, back: 0.5, lean: 0.5, mat: CM('#2f3226', { roughness: 0.9 }) })
+      kit.seat(c, 1.95, 0.62, -0.76, { w: 0.44, h: 0.34, back: 0.5, lean: 0.5, mat: CM('#2f3226', { roughness: 0.9 }) })
       ;[-0.95, -0.78, -0.61].forEach(function (z, i) {
         periscope(c, 2.3, roofY - 0.08, z, 0.14, i === 1 ? lbl('driver_periscope') : null)
       })
@@ -2569,18 +2568,18 @@ export function installMilitary(fx: FleetContext): void {
       rI = 0.27,
       yI = 0.66,
       rr = 0.075
-    function wheel(x: number, y: number, rad: number, opt: { tires?: boolean; teeth?: boolean; spokes?: boolean }) {
+    function wheel(x: number, y: number, rad: number, opt: { tires?: boolean; teeth?: boolean; spokes?: boolean; width?: number; tireAt?: number }) {
       const g = new THREE.Group()
       g.position.set(x, y, z)
       c.vehicle.add(g)
-      const wmsh = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, w * 0.8, 24), wm)
+      const wmsh = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, w * (opt.width ?? 0.8), 24), wm)
       wmsh.rotation.x = PI / 2
       wmsh.castShadow = true
       g.add(wmsh)
       if (opt.tires)
         [-1, 1].forEach(function (q) {
           const t = new THREE.Mesh(new THREE.TorusGeometry(rad - 0.035, 0.035, 6, 24), MT.rubber)
-          t.position.z = q * w * 0.22
+          t.position.z = q * w * (opt.tireAt ?? 0.22)
           g.add(t)
         })
       const hb = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.32, rad * 0.32, w * 0.86, 10), MT.steel)
@@ -2598,21 +2597,21 @@ export function installMilitary(fx: FleetContext): void {
         for (let k = 0; k < 6; k++) {
           const b = new THREE.Mesh(G.roundedBox(rad * 1.5, 0.05, 0.04, 0.01), wm)
           b.rotation.z = (k / 6) * PI
-          b.position.z = (z > 0 ? 1 : -1) * w * 0.42
+          b.position.z = (z > 0 ? 1 : -1) * (w * 0.42 + k * 0.003)
           g.add(b)
         }
       c.spin.push({ o: g, axis: 'z', v: 0, track: true })
       return g
     }
     for (let i = 0; i < n; i++) wheel(xs + i * sp, r + th, r, { tires: true })
-    wheel(x0, yS, rS, { teeth: true })
-    wheel(x1, yI, rI, { spokes: true, tires: true })
+    wheel(x0, yS, rS, { teeth: true, width: 0.76 })
+    wheel(x1, yI, rI, { spokes: true, tires: true, width: 0.76, tireAt: 0.2 })
     const topY = function (x: number) {
       return yS + rS + th / 2 + ((yI + rI - yS - rS) * (x - x0)) / (x1 - x0)
     }
     for (let q = 0; q < 4; q++) {
       const xr = x0 + (x1 - x0) * (0.2 + q * 0.2)
-      wheel(xr, topY(xr) - rr - th / 2 - 0.01, rr, {})
+      wheel(xr, topY(xr) - rr - th / 2 - 0.01, rr, { width: 0.7 })
     }
     const path = [],
       segs = 12
@@ -2643,7 +2642,7 @@ export function installMilitary(fx: FleetContext): void {
         p = curve.getPointAt(t),
         tg = curve.getTangentAt(t),
         ang = Math.atan2(tg.y, tg.x)
-      const lg = G.roundedBox(0.13, th, w, 0.015)
+      const lg = G.roundedBox(0.13, th, w - (l % 2) * 0.004, 0.015)
       lg.applyMatrix4(new THREE.Matrix4().makeRotationZ(ang).setPosition(p.x, p.y, 0))
       links.push(lg)
       const gh2 = G.roundedBox(0.05, 0.05, 0.05, 0.01)

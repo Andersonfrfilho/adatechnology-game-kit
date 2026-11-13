@@ -100,11 +100,17 @@ export function fleshyLeaf(b: MeshBuilder, base: Vec3, dir: Vec3, up: Vec3, leng
     for (let k = 0; k < count; k++) {
       const t0 = 0.12 + (0.7 * k) / count
       const t1 = t0 + 0.05
+      const edgeAt = (t: number, sd: number): Vec3 => {
+        const f = Math.min(R - 1, Math.floor(t * R))
+        const a = sd < 0 ? rows[f].L : rows[f].R
+        const z = sd < 0 ? rows[f + 1].L : rows[f + 1].R
+        return add(mul(a, 1 - (t * R - f)), mul(z, t * R - f))
+      }
       const i0 = Math.min(R, Math.round(t0 * R))
       const i1 = Math.min(R, Math.max(i0 + 1, Math.round(t1 * R)))
       for (const sd of [-1, 1]) {
-        const e0 = sd < 0 ? rows[i0].L : rows[i0].R
-        const e1 = sd < 0 ? rows[i1].L : rows[i1].R
+        const e0 = edgeAt(t0, sd)
+        const e1 = edgeAt(t1, sd)
         const out = mul(right, sd * width * size)
         const tip = add(add(mul(add(e0, e1), 0.5), out), mul(d, length * 0.02))
         b.flatTri(e0, tip, e1, color, shade(color, 1.3), color, rows[i0].s, rows[i0].s, rows[i1].s, add(out, n2))

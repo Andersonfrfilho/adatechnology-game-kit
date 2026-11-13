@@ -14,14 +14,14 @@ const MAG_X = 0.435
 function buildStock(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const { M, box } = kit
   box(group, 0.012, 0.115, 0.038, M.rubber, 0.006, -0.066, 0)
-  box(group, 0.05, 0.12, 0.036, M.beech, 0.035, -0.066, 0)
-  box(group, 0.27, 0.036, 0.036, M.beech, 0.16, -0.026, 0, 0.05)
-  box(group, 0.29, 0.032, 0.036, M.beech, 0.175, -0.108, 0, 0.01)
-  box(group, 0.034, 0.1, 0.034, M.beech, 0.195, -0.066, 0)
+  box(group, 0.05, 0.12, 0.034, M.beech, 0.035, -0.066, 0)
+  box(group, 0.27, 0.036, 0.042, M.beech, 0.16, -0.026, 0, 0.05)
+  box(group, 0.29, 0.032, 0.038, M.beech, 0.175, -0.108, 0, 0.01)
+  box(group, 0.034, 0.1, 0.030, M.beech, 0.195, -0.066, 0)
   const grip = kit.pivot(group, GRIP_X, -0.07, 0)
   grip.rotation.z = -0.25
   parts.grip = grip
-  box(grip, 0.052, 0.12, 0.036, M.beech, 0, 0, 0)
+  box(grip, 0.052, 0.12, 0.042, M.beech, 0, 0, 0)
 }
 
 /** The AK-like receiver with its dust cover, the cocking handle and ejection port on the right, the selector flap, the trigger group and the 10-round box magazine. */
@@ -34,7 +34,7 @@ function buildReceiver(kit: ModelKit, group: Parent, parts: ModelParts): void {
   const bolt = kit.pivot(group)
   parts.bolt = bolt
   parts.stroke = 0.06
-  box(bolt, 0.044, 0.012, 0.006, M.steelL, 0.41, 0.012, 0.0212)
+  box(bolt, 0.044, 0.012, 0.006, M.steelL, 0.41, 0.012, 0.0228)
   box(bolt, 0.012, 0.012, 0.02, M.metal, 0.42, 0.016, 0.03)
   kit.sphere(bolt, 0.0065, M.metal, 0.42, 0.016, 0.042, 1)
   box(group, 0.12, 0.012, 0.003, M.metal, 0.38, -0.022, 0.0205, -0.05)

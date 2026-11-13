@@ -33,6 +33,40 @@ interface Live {
   born: number
   /** Seconds it stays at rest before it fades (0 = forever). */
   life: number
+  /** Its box in the world while it rests, for what lands on it (`pileUnder`); dropped when it wakes. */
+  box?: RestingBox | undefined
+}
+
+interface RestingBox {
+  readonly x: number
+  readonly z: number
+  readonly reachX: number
+  readonly reachZ: number
+  readonly top: number
+}
+
+/** The rotation of a unit quaternion as a column-major 4×4 array, like `Matrix4.elements`. */
+function rotationOf(q: THREE_NS.Quaternion): readonly number[] {
+  const { x, y, z, w } = q
+  return [
+    1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w), 0,
+    2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w), 0,
+    2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y), 0,
+  ]
+}
+
+/** The world box of a resting fragment: its centre, how far it reaches along x and z, and its top. */
+function restingBox(f: Live): RestingBox {
+  const e = rotationOf(f.mesh.quaternion)
+  const { x, y, z } = f.half
+  const p = f.mesh.position
+  return {
+    x: p.x,
+    z: p.z,
+    reachX: Math.abs(e[0]) * x + Math.abs(e[4]) * y + Math.abs(e[8]) * z,
+    reachZ: Math.abs(e[2]) * x + Math.abs(e[6]) * y + Math.abs(e[10]) * z,
+    top: p.y + Math.abs(e[1]) * x + Math.abs(e[5]) * y + Math.abs(e[9]) * z,
+  }
 }
 
 /** What a fragment's resting time can depend on: the fragment (its material, size, shape) and the id of the object it came from. */
@@ -87,6 +121,8 @@ const FRAGMENT_SEED = 0x51ed270b
 /** Fragments asleep whose ground is looked at again each update, in turn, and how far (m) over it one may lie before it falls: the table it lay on broke. */
 const SUPPORT_CHECKS = 32
 const SUPPORT_GAP = 0.02
+/** How far (m) above a falling fragment's bottom a resting top may be and still be what it lands on: a step it slides up onto rather than sinks into. */
+const PILE_STEP = 0.01
 
 /** How many shard shapes there are; a fragment takes one by the hash of its id. */
 const SHARD_SHAPES = 6
@@ -371,6 +407,7 @@ export class FragmentSystem {
   /** A fragment that came to rest stops having its matrix recomputed on every frame; whatever moves it again calls this first. */
   private rouse(f: Live): void {
     f.asleep = false
+    f.box = undefined
     f.rest = 0
     // what it lay on may be gone: the floor is measured again where it lies
     f.floor = null
@@ -431,6 +468,7 @@ export class FragmentSystem {
   /** The fragment stops where it lies, and its matrix is no longer recomputed every frame. */
   private sleep(f: Live): void {
     f.asleep = true
+    f.box = undefined
     f.mesh.updateMatrix()
     f.mesh.matrixAutoUpdate = false
     f.vel.set(0, 0, 0)
@@ -448,7 +486,8 @@ export class FragmentSystem {
       const ext = Math.abs(e[1]) * f.half.x + Math.abs(e[5]) * f.half.y + Math.abs(e[9]) * f.half.z
       // measured afresh: the floor kept from its landing is the top it landed on, which may have broken or been carried off since
       f.floor = null
-      if (f.mesh.position.y - ext > this.floorUnder(f) + SUPPORT_GAP) this.rouse(f)
+      const bottom = f.mesh.position.y - ext
+      if (bottom > Math.max(this.floorUnder(f), this.pileUnder(f, bottom)) + SUPPORT_GAP) this.rouse(f)
     }
   }
 
@@ -478,7 +517,7 @@ export class FragmentSystem {
     const h = f.half
     const sc = f.dying ? f.fade : 1
     const ext = (Math.abs(e[1]) * h.x + Math.abs(e[5]) * h.y + Math.abs(e[9]) * h.z) * sc
-    const gy = this.floorUnder(f)
+    const gy = Math.max(this.floorUnder(f), this.pileUnder(f, mesh.position.y - ext + Math.max(0, -f.vel.y) * dt))
     let contact = false
     if (mesh.position.y - ext < gy) {
       contact = true
@@ -510,6 +549,26 @@ export class FragmentSystem {
     } else {
       f.still = 0
     }
+  }
+
+  /**
+   * The top of the debris lying under a falling fragment: a piece lands on the pile, not through it, so two flat pieces never end up inside each other. Only pieces
+   * below it count (a resting one keeps its box), those whose top is at or below where the faller's bottom was a step ago plus a small step.
+   */
+  private pileUnder(f: Live, bottom: number): number {
+    const p = f.mesh.position
+    const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
+    const reachX = Math.abs(e[0]) * f.half.x + Math.abs(e[4]) * f.half.y + Math.abs(e[8]) * f.half.z
+    const reachZ = Math.abs(e[2]) * f.half.x + Math.abs(e[6]) * f.half.y + Math.abs(e[10]) * f.half.z
+    let top = Number.NEGATIVE_INFINITY
+    for (const other of this.list) {
+      if (other === f || other.dying) continue
+      const box = other.asleep ? (other.box ??= restingBox(other)) : restingBox(other)
+      if (box.top > bottom + PILE_STEP || box.top <= top) continue
+      if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
+      top = box.top
+    }
+    return top
   }
 
   /** A sheet in the air: drag slows it to a slow fall, and it sways and turns over as it goes. */

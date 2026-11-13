@@ -1,6 +1,6 @@
 import type { Condition, GenerateOptions, Lod, PartKind, PieceGeometry, PieceKind, PlantMesh, PlantPiece, PlantSpec, Season, Vec3 } from './types'
 import { materialKeyForPart, type MaterialKey } from './destruction'
-import { Rng, toSeed } from './rng'
+import { Rng, hashMix, toSeed } from './rng'
 import { MeshBuilder } from './geometry/builder'
 import type { ArchResult, Ctx, PieceMeta } from './ctx'
 import { generateBroadleafTree } from './archetypes/broadleaf-tree'
@@ -46,6 +46,11 @@ export function archetypes(): string[] {
 }
 
 /** Build a plant. Deterministic: same spec + seed + lod + condition + season => identical arrays. */
+/** Sunken leaf vertices rest 1-5 mm above the ground, varying with position, so drooping cards flattened onto it do not share one plane. */
+function groundLiftAt(x: number, z: number): number {
+  return 0.001 + 0.004 * (hashMix(Math.round(x * 1e4) >>> 0, Math.round(z * 1e4) >>> 0) / 4294967296)
+}
+
 export function generate(spec: PlantSpec, opts: GenerateOptions = {}): PlantMesh {
   const gen = GENERATORS[spec.archetype]
   if (!gen) throw new Error(`game-vegetation: unknown archetype "${(spec as { archetype: string }).archetype}"`)
@@ -124,7 +129,7 @@ export function generate(spec: PlantSpec, opts: GenerateOptions = {}): PlantMesh
         pos[i + 1] *= scale
         pos[i + 2] *= scale
       }
-      if (pos[i + 1] < 0) pos[i + 1] = 0
+      if (pos[i + 1] < 0) pos[i + 1] = key === 'foliage' ? groundLiftAt(pos[i], pos[i + 2]) : 0
       const r = Math.hypot(pos[i], pos[i + 2])
       if (r > radius) radius = r
       if (pos[i + 1] > height) height = pos[i + 1]

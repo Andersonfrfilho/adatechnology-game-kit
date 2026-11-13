@@ -6,7 +6,7 @@ import type { ItemModelBuilder } from './registry'
 export const fertilizerBag: ItemModelBuilder = ({ mesh, bx, G, cloth, paper }) => {
   const sack = cloth(0xb5a47a)
   const group = G()
-  group.add(mesh(bx(0.45, 0.11, 0.3), sack, [0, 0.055, 0]))
+  group.add(mesh(bx(0.414, 0.106, 0.296), sack, [0, 0.055, 0]))
   group.add(mesh(bx(0.4, 0.01, 0.26), sack, [0, 0.115, 0]))
   group.add(mesh(bx(0.018, 0.11, 0.3), cloth(0x8f8161), [-0.216, 0.055, 0]))
   group.add(mesh(bx(0.018, 0.11, 0.3), cloth(0x8f8161), [0.216, 0.055, 0]))

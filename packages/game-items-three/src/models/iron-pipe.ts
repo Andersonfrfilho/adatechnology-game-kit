@@ -10,7 +10,7 @@ export const ironPipe: ItemModelBuilder = ({ mesh, cyl, G, metal }) => {
   const collar = metal(0x4a4e53)
   const bore = metal(0x1c1d1f)
   return G(
-    mesh(cyl(0.155, 0.155, 7.4, 8), metal(0x5b6066), [0, 0, 0], [0, 0, R]),
+    mesh(cyl(0.14, 0.14, 7.4, 8), metal(0x5b6066), [0, 0, 0], [0, 0, R]),
     mesh(cyl(0.177, 0.177, 0.6, 8), collar, [3.7, 0, 0], [0, 0, R]),
     mesh(cyl(0.177, 0.177, 0.6, 8), collar, [-3.7, 0, 0], [0, 0, R]),
     mesh(cyl(0.165, 0.165, 0.35, 8), rust, [-1.1, 0, 0], [0, 0, R]),

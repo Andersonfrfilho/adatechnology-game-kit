@@ -11,9 +11,9 @@ export const electronicComponents: ItemModelBuilder = ({ mesh, bx, cyl, G, plast
   const silver = metal(0xb4b8bb)
   return G(
     mesh(bx(1.0, 0.04, 0.8), plastic(0x2c6b3a), [0, -0.08, 0]),
-    mesh(bx(0.22, 0.06, 0.14), chip, [-0.1, -0.03, -0.1]),
+    mesh(bx(0.22, 0.06, 0.14), chip, [-0.1, -0.01, -0.1]),
     mesh(bx(0.2, 0.02, 0.19), silver, [-0.1, -0.05, -0.1]),
-    mesh(bx(0.3, 0.06, 0.18), chip, [0.2, -0.03, 0.2]),
+    mesh(bx(0.3, 0.06, 0.18), chip, [0.2, -0.01, 0.2]),
     mesh(bx(0.28, 0.02, 0.27), silver, [0.2, -0.05, 0.2]),
     mesh(cyl(0.05, 0.05, 0.16, 8), plastic(0x2f4f8f), [0.35, 0.02, -0.25]),
     mesh(cyl(0.04, 0.04, 0.14, 8), plastic(0x8f3a2f), [0.2, 0.01, -0.3]),

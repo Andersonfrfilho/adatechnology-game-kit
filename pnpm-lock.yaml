@@ -479,6 +479,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vfx-three
     devDependencies:
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -850,6 +853,12 @@ importers:
         specifier: workspace:^
         version: link:../game-vfx-three
     devDependencies:
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
+      '@adatechnology/golden-tool':
+        specifier: workspace:^
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1364,6 +1373,12 @@ importers:
         specifier: workspace:^
         version: link:../game-terrain
     devDependencies:
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
+      '@adatechnology/golden-tool':
+        specifier: workspace:^
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1839,6 +1854,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vfx
     devDependencies:
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:^
+        version: link:../game-shapes-three
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden

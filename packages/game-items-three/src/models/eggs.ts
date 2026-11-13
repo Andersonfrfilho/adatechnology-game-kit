@@ -13,6 +13,6 @@ export const eggs: ItemModelBuilder = ({ T, mesh, bx, G, paper, food }) => {
     ...eggs,
     mesh(bx(0.05, 0.18, 1.0), carton, [-0.4, -0.06, 0]),
     mesh(bx(0.05, 0.18, 1.0), carton, [0.4, -0.06, 0]),
-    mesh(bx(2.5, 0.12, 0.04), carton, [0, -0.1, 0.48]),
+    mesh(bx(2.45, 0.12, 0.04), carton, [0, -0.1, 0.455]),
   )
 }

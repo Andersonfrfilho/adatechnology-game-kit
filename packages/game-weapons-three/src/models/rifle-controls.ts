@@ -84,7 +84,7 @@ export function buildMagazine(context: RifleContext, gx: number): number {
     buildBeltBox(kit, belt)
     const cover = kit.pivot(group, x0 + 0.01, hR / 2, 0)
     parts.cover = cover
-    box(cover, RL - 0.03, 0.014, wR * 1.05, M.metal, (RL - 0.03) / 2, 0.007, 0)
+    box(cover, RL - 0.03, 0.014, wR * 1.1, M.metal, (RL - 0.03) / 2, 0.005, 0)
     box(cover, 0.02, 0.012, wR * 0.6, M.dark, RL - 0.04, 0.016, 0)
   }
   return mx

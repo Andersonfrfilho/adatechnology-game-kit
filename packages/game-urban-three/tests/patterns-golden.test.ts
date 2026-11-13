@@ -57,7 +57,7 @@ describe('the sample sheet of neighbourhood patterns against the Galeria do Vale
   const b = kit.builder({ seed: 7 })
   const sheet = kit.neighbourhoods.composeSampleSheet(b, { ground: { color: 0x1e2124, size: 500 } })
   const scene = b.scene()
-  const drawn = createUrbanThree(THREE, { document: fakeDocument }).draw(scene)
+  const drawn = createUrbanThree(THREE, { document: fakeDocument, standOut: false }).draw(scene)
 
   it('draws the same scene: every object, geometry, material and transform', () => {
     const expected = golden.scenes.sample_sheet

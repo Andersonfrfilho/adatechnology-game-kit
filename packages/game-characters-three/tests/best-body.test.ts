@@ -18,6 +18,10 @@ const createBuilder = () => createBestBuilder(THREE, { types: cards, random: () 
 type Scene = { objects: number; hash: string }
 type BakeEvent = { type: string; data: { type: string; variant: number; decay: number; seed: number; lod: number; vertices: number; scale: number; bulk: number; indices: number; index: string } & Record<string, number | string> }
 
+// Owner decision (2026-11-12, CLAUDE.md §13): the bloated body's legs overlapped at the hips and its neck sat flush with the head, and flickered; one leg
+// sits 3 mm lower and the neck is 4 mm taller, so the bloater no longer hashes like the page. Its node and vertex counts are still checked.
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['bloater'])
+
 describe('G-body: the Bestiário v17 builder', () => {
   const restore = installPortableMath()
   const best = createBuilder()
@@ -32,7 +36,8 @@ describe('G-body: the Bestiário v17 builder', () => {
       const root = best.build({ type: names.get(id!)!.name, decay: Number(decayPart), seed: Number(seedPart) })
       const snapshot = snapshotScene(root)
       checked++
-      if (snapshot.hash !== expected.hash || snapshot.objects !== expected.objects) mismatches.push(`${label}: ${expected.hash}/${expected.objects} -> ${snapshot.hash}/${snapshot.objects}`)
+      const hashMoved = Z_FIGHTING_FIXES.has(id!) ? false : snapshot.hash !== expected.hash
+      if (hashMoved || snapshot.objects !== expected.objects) mismatches.push(`${label}: ${expected.hash}/${expected.objects} -> ${snapshot.hash}/${snapshot.objects}`)
     }
     restore()
     expect(checked).toBe(780)
@@ -58,7 +63,8 @@ describe('G-body: bakeBody of the ZVAR variants', () => {
       const baked = bakeBody(THREE, builders, { type: names.get(data.type)!.name, decay: data.decay, seed: data.seed }, data.lod)
       const actual = { vertices: baked.verts, scale: baked.s, bulk: baked.bulk, indices: baked.geo.index!.count, index: fnvOfArray(baked.geo.index!.array) } as Record<string, number | string>
       for (const name of ['position', 'normal', 'vcol', 'bone', 'pivot', 'ppivot']) actual[name] = fnvOfArray(baked.geo.attributes[name]!.array)
-      for (const key of Object.keys(actual)) if (actual[key] !== data[key]) mismatches.push(`${data.type} v${data.variant} lod ${data.lod}: ${key} ${data[key]} -> ${actual[key]}`)
+      const kept = Z_FIGHTING_FIXES.has(data.type) ? ['vertices', 'indices', 'index'] : Object.keys(actual)
+      for (const key of kept) if (actual[key] !== data[key]) mismatches.push(`${data.type} v${data.variant} lod ${data.lod}: ${key} ${data[key]} -> ${actual[key]}`)
     }
     expect(mismatches.slice(0, 10)).toEqual([])
   })

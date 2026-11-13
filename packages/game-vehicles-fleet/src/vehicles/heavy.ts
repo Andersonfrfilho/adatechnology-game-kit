@@ -445,7 +445,7 @@ export function installHeavy(fx: FleetContext): void {
           side: s,
           noPart: true,
         })
-        c.roundBox(0.03, 0.12, 0.42, 0.02, MT.dark, bx + 0.125, by - bh * 0.3, s * 0.35)
+        c.roundBox(0.03, 0.12, 0.42, 0.02, MT.dark, bx + 0.119, by - bh * 0.3, s * 0.35)
       })
     }
     c.roundBox(0.06, 0.06, 0.12, 0.02, MT.steel, bx + 0.13, by - bh * 0.35, 0)
@@ -566,7 +566,7 @@ export function installHeavy(fx: FleetContext): void {
           -(W - 0.2) / 2 + ((k + 0.5) * (W - 0.2)) / 8,
         )
       ;[1, -1].forEach(function (s) {
-        c.roundBox(0.06, 0.32, 0.06, 0.01, MT.trim, rear + 0.12, ry - 0.2, s * 0.43)
+        c.roundBox(0.06, 0.32, 0.06, 0.01, MT.trim, rear + 0.118, ry - 0.2, s * 0.43)
       })
       m.rearBumper = bar
       c.part('bumper', trl('labels.rear_bumper'), bar, new V3(rear, 0.52, 0), 1.0)
@@ -1803,7 +1803,7 @@ export function installHeavy(fx: FleetContext): void {
         })
         const vg = c.roundBox(0.32, 0.2, 0.03, 0.03, MT.armorGlass, 1.3, 2.45, zs)
         kit.asGlass(c, vg, s > 0 ? lbl('right_armored_viewport') : lbl('left_armored_viewport'), 'laminated')
-        c.roundBox(0.4, 0.28, 0.02, 0.03, plate, 1.3, 2.45, zs - s * 0.004)
+        c.roundBox(0.4, 0.28, 0.02, 0.03, plate, 1.3, 2.45, zs - s * 0.008)
         for (let x = rear + 0.2; x < bx0; x += 0.3) {
           c.sphere(0.018, MT.steel, x, 1.2, zs)
           c.sphere(0.018, MT.steel, x, 2.98, zs)
@@ -1944,7 +1944,7 @@ export function installHeavy(fx: FleetContext): void {
         hy = 1.48
       ;[1, -1].forEach(function (s) {
         c.roundBox(hx1 - hx0, 0.38, 0.035, 0.02, paint, (hx0 + hx1) / 2, 1.22, s * 0.36, { def: true })
-        for (let j = 0; j < 5; j++) c.roundBox(0.22, 0.025, 0.012, 0.008, MT.dark, 0.75 + j * 0.16, 1.24, s * 0.38)
+        for (let j = 0; j < 5; j++) c.roundBox(0.22, 0.025, 0.012, 0.008, MT.dark, 0.75 + j * 0.16, 1.24, s * (0.38 + (j % 2) * 0.003))
         c.roundBox(1.0, 0.03, 0.02, 0.01, CM('#e9e6dd'), 0.55, 1.36, s * 0.38)
         c.text('275', 0.3, 0.14, 0.32, 1.2, s * 0.384, s > 0 ? '+z' : '-z', { fg: '#f2efe6' })
       })
