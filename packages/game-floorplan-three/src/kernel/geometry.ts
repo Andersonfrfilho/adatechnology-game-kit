@@ -85,15 +85,17 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
   // a face lying against a box of the same piece drawn before it (a seat on its base) is hidden there too, and not drawn
   const _qi = new THREE.Quaternion();
   let shutFaces = 0; // faces of the box being put that are not drawn (bits in BoxGeometry's order: +x, -x, +y, -y, +z, -z)
+  // the faces of `b` lying against the boxes of `near` all over (one box or several side by side)
   const shutBy = (b: Aabb, near: readonly Aabb[]): number => {
     let mask = 0;
-    for (let a = 0; a < 3; a++) {
-      const o1 = (a + 1) % 3, o2 = (a + 2) % 3;
+    for (let a = 0; a < 3; a++) for (const hi of [true, false]) {
+      const p = hi ? b[a + 3] : b[a], face = [...b], against: Aabb[] = [];
+      face[a] = p - 1e-5; face[a + 3] = p + 1e-5;
       for (const t of near) {
-        if (t[o1] > b[o1] + 1e-6 || t[o1 + 3] < b[o1 + 3] - 1e-6 || t[o2] > b[o2] + 1e-6 || t[o2 + 3] < b[o2 + 3] - 1e-6) continue;
-        if (Math.abs(t[a] - b[a + 3]) < 1e-6) mask |= 1 << (2 * a);
-        if (Math.abs(t[a + 3] - b[a]) < 1e-6) mask |= 1 << (2 * a + 1);
+        if (Math.abs((hi ? t[a] : t[a + 3]) - p) > 1e-6) continue;
+        const reach = [...t]; reach[a] = p - 1; reach[a + 3] = p + 1; against.push(reach as unknown as Aabb);
       }
+      if (against.length && !outsideBoxes(face as unknown as Aabb, against).length) mask |= 1 << (2 * a + (hi ? 0 : 1));
     }
     return mask;
   };
