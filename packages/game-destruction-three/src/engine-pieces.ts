@@ -48,6 +48,9 @@ const TOPPLE = 3
 /** Corners this close (m) to the lowest one are what it stands on. */
 const STEADY_TURN = 0.1
 const STEADY_SECONDS = 1.5
+/** How far (m) a new piece may reach into the ground and be left to the engine's contact (over its slop, under a thin plate's half), and how far above it one lifted is put. */
+const SINK = 0.005
+const LIFT_MARGIN = 0.001
 
 interface Link {
   readonly id: BodyId
@@ -98,6 +101,7 @@ export class EnginePieces {
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
   private readonly v: THREE_NS.Vector3
+  private readonly u: THREE_NS.Vector3
 
   constructor(
     THREE: typeof THREE_NS,
@@ -105,6 +109,7 @@ export class EnginePieces {
     private readonly o: EnginePieceOptions,
   ) {
     this.v = new THREE.Vector3()
+    this.u = new THREE.Vector3()
   }
 
   remove(b: PieceBody): void {
@@ -191,6 +196,46 @@ export class EnginePieces {
     return { kind: 'box', half: b.halfExtents }
   }
 
+  /**
+   * How far (m) a new piece reaches under the ground: its part boxes' corners (a round piece: the lowest points of its rim) below `groundAt`. The ground is a surface
+   * to the engine, and a piece made through it is caught by its sides and pushed down, not out; so it is lifted out once, when its body is made, never later.
+   */
+  private underGround(b: PieceBody): number {
+    // from the root's own position and turn: its world matrix may not be up to date yet when the piece is new
+    const c = this.centre(b)
+    const cx = c.x, cy = c.y, cz = c.z
+    const q = b.root.quaternion
+    const p = this.u
+    let under = 0
+    const at = (x: number, y: number, z: number, below = 0): void => {
+      p.set(x, y, z).applyQuaternion(q)
+      under = Math.max(under, this.o.groundAt(cx + p.x, cz + p.z) - (cy + p.y - below))
+    }
+    const round = b.round
+    if (round) {
+      const axis: Vec3 = [round.axis === 0 ? 1 : 0, round.axis === 1 ? 1 : 0, round.axis === 2 ? 1 : 0]
+      const tilt = p.set(axis[0], axis[1], axis[2]).applyQuaternion(q).y
+      const reach = round.kind === 'sphere' ? round.radius : round.radius * Math.sqrt(Math.max(0, 1 - tilt * tilt))
+      const h = round.kind === 'sphere' ? 0 : b.halfExtents[round.axis]
+      for (const s of [-1, 1]) at(axis[0] * h * s, axis[1] * h * s, axis[2] * h * s, reach)
+      return this.liftFor(b, under)
+    }
+    // the part boxes sit about the centre of mass, as the body's compound does
+    const boxes = b.partBoxes && b.partBoxes.length > 0 ? b.partBoxes : [{ center: [0, 0, 0] as Vec3, half: b.halfExtents }]
+    for (const box of boxes) {
+      for (let k = 0; k < 8; k++) at(box.center[0] + (k & 1 ? 1 : -1) * box.half[0], box.center[1] + (k & 2 ? 1 : -1) * box.half[1], box.center[2] + (k & 4 ? 1 : -1) * box.half[2])
+    }
+    return this.liftFor(b, under)
+  }
+
+  /**
+   * Made through the ground by more than a contact's sink and less than its own size: lifted onto it. Deeper than its largest half size it is not lying in the
+   * ground but under something `groundAt` folds into it (a box on the floor half under a table top), and it is left where it is.
+   */
+  private liftFor(b: PieceBody, under: number): number {
+    return under > SINK && under <= Math.max(...b.halfExtents) ? under + LIFT_MARGIN : 0
+  }
+
   /** A round piece turns about its axis by its own k (a full can, an empty one); about the others, and for a box, the engine's from the shape. */
   private inertiaOf(b: PieceBody): Vec3 | undefined {
     const round = b.round
@@ -217,10 +262,16 @@ export class EnginePieces {
   private sync(b: PieceBody, dt: number): void {
     // by value: the renderer hands new arrays for the same boxes, and a new shape wakes the body
     const shapeKey = [JSON.stringify(b.halfExtents), JSON.stringify(b.partBoxes), JSON.stringify(b.round), b.mass, b.localCenter[0], b.localCenter[1], b.localCenter[2], JSON.stringify(b.friction), b.restitution]
-    const c = this.centre(b)
+    let c = this.centre(b)
     const q = b.root.quaternion
     let link = this.links.get(b)
     if (!link) {
+      const under = this.underGround(b)
+      if (under > 0) {
+        b.root.position.y += under
+        b.root.updateMatrixWorld(true)
+        c = this.centre(b)
+      }
       const user = this.nextUser++
       const id = this.world.createBody({
         shape: this.shapeOf(b),
