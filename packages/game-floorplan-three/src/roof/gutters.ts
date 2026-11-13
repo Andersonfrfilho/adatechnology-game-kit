@@ -12,6 +12,12 @@ const DOWNPIPE_OFF_CORNER = 0.15;
  * (caixa de areia) set in the sidewalk, which takes the rain to the street's gutter by a pipe of its own, never into the sewer.
  */
 const GUTTER = { radius: 0.0625, wall: 0.004, slats: 12, bracketEvery: 0.6 } as const;
+/** How far a z-run's end goes into the back wall of the x-run it joins, metres: a crossing, never two ends on one plane. */
+const JOIN_POKE = 0.012;
+/** The thickness of a free end's cap: far enough out that no face of it lies within a millimetre of the slats' end faces. */
+const END_CAP = 0.012;
+/** The bracket's strap under the trough: its top is this far under the trough's inside (a rib in the trough) so it crosses the slats instead of lying on them. */
+const STRAP_SINK = -0.003;
 const DOWNPIPE = { radius: 0.04, clampEvery: 1.5, shoeOver: 0.12 } as const;
 /** The outlet's centre past the corner gutter's edge, metres. */
 const OUTLET_FROM_CORNER = 0.1;
@@ -46,12 +52,15 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     };
     // the half-round gutter: slats round its half circle (back against the fascia, open to the sky), the rolled lip on its outer edge, its brackets
     const halfRound = (ax: 'x' | 'z', a0: number, b0: number, p: number, outside: number, meets: readonly [boolean, boolean]): void => {
-      // to a corner it runs on to the other gutter's axis and a radius past it, so the two close the corner as a corner piece does; a free end is capped
-      const reach = GUTTER_OFF_FASCIA + 2 * GUTTER.radius + GUTTER.wall, a = a0 - (meets[0] ? reach : 0.02), b = b0 + (meets[1] ? reach : 0.02);
+      // at a corner the x run goes on past the z run's axis and closes the corner capped; the z run ends in the x run's back wall, so the two never share the corner's square
+      const reach = GUTTER_OFF_FASCIA + 2 * GUTTER.radius + GUTTER.wall, into = GUTTER_OFF_FASCIA + JOIN_POKE;
+      const lead = (joined: boolean): number => (!joined ? 0.02 : ax === 'x' ? reach : into);
+      const a = a0 - lead(meets[0]), b = b0 + lead(meets[1]);
       const R = GUTTER.radius, yc = y + R, pc = p + outside * R, L = b - a, m = (a + b) / 2, width = 2 * R * Math.sin(Math.PI / (2 * GUTTER.slats)) + 0.002;
-      for (const [end, open] of [[a, meets[0]], [b, meets[1]]] as const) {
-        if (open) continue;
-        if (ax === 'x') boxC('plain', end, yc - R / 2, pc, GUTTER.wall, R + 0.008, 2 * R, sh(c, 0.94)); else boxC('plain', pc, yc - R / 2, end, 2 * R, R + 0.008, GUTTER.wall, sh(c, 0.94));
+      for (const [end, joins] of [[a, meets[0]], [b, meets[1]]] as const) {
+        if (joins && ax === 'z') continue;
+        const cap = end + (end === a ? -1 : 1) * END_CAP / 2; // outside the slats' end faces, never a few millimetres off them
+        if (ax === 'x') boxC('plain', cap, yc - R / 2, pc, END_CAP, R + 0.008, 2 * R, sh(c, 0.94)); else boxC('plain', pc, yc - R / 2, cap, 2 * R, R + 0.008, END_CAP, sh(c, 0.94));
       }
       for (let k = 0; k < GUTTER.slats; k++) {
         const th = -Math.PI / 2 + (Math.PI * (k + 0.5)) / GUTTER.slats, across = pc + outside * Math.sin(th) * R, up = yc - Math.cos(th) * R;
@@ -60,8 +69,8 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
       if (ax === 'x') boxC('plain', m, yc + 0.006, pc + outside * R, L, 0.014, 0.014, sh(c, 0.92)); else boxC('plain', pc + outside * R, yc + 0.006, m, 0.014, 0.014, L, sh(c, 0.92));
       for (let t = a + 0.25; t < b - 0.1; t += GUTTER.bracketEvery) {
         // the bracket: a strap on the fascia, round under the gutter to its lip
-        if (ax === 'x') { boxC('metal', t, yc + 0.01, p + outside * 0.003, 0.025, 0.05, 0.006, sh(c, 0.7)); boxC('metal', t, yc - R - 0.004, pc, 0.025, 0.006, 2 * R, sh(c, 0.7)); }
-        else { boxC('metal', p + outside * 0.003, yc + 0.01, t, 0.006, 0.05, 0.025, sh(c, 0.7)); boxC('metal', pc, yc - R - 0.004, t, 2 * R, 0.006, 0.025, sh(c, 0.7)); }
+        if (ax === 'x') { boxC('metal', t, yc + 0.01, p + outside * 0.003, 0.025, 0.05, 0.006, sh(c, 0.7)); boxC('metal', t, yc - R - STRAP_SINK, pc, 0.025, 0.006, 2 * R, sh(c, 0.7)); }
+        else { boxC('metal', p + outside * 0.003, yc + 0.01, t, 0.006, 0.05, 0.025, sh(c, 0.7)); boxC('metal', pc, yc - R - STRAP_SINK, t, 2 * R, 0.006, 0.025, sh(c, 0.7)); }
       }
     };
     // no gutter on a gable end: the tiles drain to the eaves (the Visor's ran one on every side)
@@ -102,7 +111,7 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
       // (a drop at a free end, with no corner beside it, has its outlet over it)
       const corner = across[4] + across[5] * (GUTTER_OFF_FASCIA + GUTTER.radius), inward = -(alongX ? sx : sz), at = inward ? corner + inward * (GUTTER.radius + OUTLET_FROM_CORNER) : alongX ? px : pz;
       const ox = alongX ? at : outlet, oz = alongX ? outlet : at, out = Math.hypot(ox - px, oz - pz);
-      const yOut = y - 0.02, yWall = yOut - 0.06 - out;
+      const yOut = y + 0.01, yWall = yOut - 0.06 - out;
       const bx_ = px + sx * SAND_BOX.offset, bz_ = pz + sz * SAND_BOX.offset, shoe = Math.hypot(bx_ - px, bz_ - pz) * 0.5, yFoot = DOWNPIPE.shoeOver + shoe;
       const path: number[][] = [[ox, yOut, oz], [ox, yOut - 0.06, oz], [px, yWall, pz], [px, yFoot, pz], [px + (bx_ - px) * 0.5, DOWNPIPE.shoeOver, pz + (bz_ - pz) * 0.5]];
       for (let i = 0; i + 1 < path.length; i++) tube(path[i], path[i + 1], r, c);
@@ -127,18 +136,18 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     const g0 = cursor.group; cursor.group = 'f0';
     const h = SAND_BOX.side / 2, gh = SAND_BOX.grate / 2, top = 0.046;
     bx('plain', x - h, 0, z - h, x + h, top, z + h, 0xb9b5ac);
-    bx('plain', x - gh, top - 0.002, z - gh, x + gh, top, z + gh, 0x16171a);
-    for (let k = -6; k <= 6; k++) bx('metal', x + k * (gh / 6.5) - 0.006, top, z - gh, x + k * (gh / 6.5) + 0.006, top + 0.008, z + gh, 0x6a6e72);
-    bx('metal', x - gh, top, z - gh, x + gh, top + 0.01, z - gh + 0.015, 0x5a5d61); bx('metal', x - gh, top, z + gh - 0.015, x + gh, top + 0.01, z + gh, 0x5a5d61);
+    bx('plain', x - gh + 0.004, top - 0.01, z - gh + 0.004, x + gh - 0.004, top + 0.005, z + gh - 0.004, 0x16171a); // the pit stands 5 mm over the rim: its top never lies on the rim's
+    for (let k = -6; k <= 6; k++) bx('metal', x + k * (gh / 6.5) - 0.006, top + 0.005, z - gh + 0.004, x + k * (gh / 6.5) + 0.006, top + 0.011, z + gh - 0.004, 0x6a6e72);
+    bx('metal', x - gh, top, z - gh, x + gh, top + 0.016, z - gh + 0.015, 0x5a5d61); bx('metal', x - gh, top, z + gh - 0.015, x + gh, top + 0.016, z + gh, 0x5a5d61);
     cursor.group = g0;
   }
   // floor drain with grate: metal frame, dark bottom and bars
   function drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void { // px,pz,c: foot of the downpipe and colour of the pipe leading to the drain (optional); stays in the ground floor group (shows even with the roof cut)
     const g0 = cursor.group; cursor.group = 'f0';
     if (px != null && pz != null && c != null) boxC('plain', (px + x) / 2, 0.075, (pz + z) / 2, Math.abs(x - px) + 0.05, 0.05, Math.abs(z - pz) + 0.05, sh(c, 0.85));
-    const t = 0.045; bx('plain', x - 0.12, 0, z - 0.12, x + 0.12, t - 0.006, z + 0.12, 0xb9b5ac); bx('metal', x - 0.11, t, z - 0.11, x + 0.11, t + 0.012, z + 0.11, 0x5a5d61); bx('plain', x - 0.085, t + 0.012, z - 0.085, x + 0.085, t + 0.014, z + 0.085, 0x16171a);
-    for (let k = -3; k <= 3; k++) { bx('metal', x + k * 0.025 - 0.006, t + 0.012, z - 0.085, x + k * 0.025 + 0.006, t + 0.02, z + 0.085, 0x8a8e92); }
-    bx('metal', x - 0.085, t + 0.012, z - 0.006, x + 0.085, t + 0.02, z + 0.006, 0x8a8e92);
+    const t = 0.045; bx('plain', x - 0.12, 0, z - 0.12, x + 0.12, t - 0.006, z + 0.12, 0xb9b5ac); bx('metal', x - 0.11, t, z - 0.11, x + 0.11, t + 0.012, z + 0.11, 0x5a5d61); bx('plain', x - 0.085, t + 0.012, z - 0.085, x + 0.085, t + 0.017, z + 0.085, 0x16171a);
+    for (let k = -3; k <= 3; k++) { bx('metal', x + k * 0.025 - 0.006, t + 0.017, z - 0.085, x + k * 0.025 + 0.006, t + 0.025, z + 0.085, 0x8a8e92); }
+    bx('metal', x - 0.085, t + 0.017, z - 0.006, x + 0.085, t + 0.025, z + 0.006, 0x8a8e92);
     cursor.group = g0;
   }
   const defined: KernelRoofGutters = { gutterConfig, gutter, drain };

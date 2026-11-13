@@ -14,6 +14,7 @@ import { carriesShare } from '@adatechnology/game-load-path'
 import { pillarBox } from '../structure/context'
 import type { PillarSection } from '../structure/context'
 import type { SlabPanelOptions } from './options'
+import { slabThicknessFor } from './thickness'
 
 const SLAB_ID = /^slab_(\d+|top.*|ceiling|base)$/
 const PLAN_TOLERANCE = 0.05
@@ -371,14 +372,9 @@ function groundOf(context: Context, below: string): Rect[] {
   return context.parts.filter((q) => q.role === 'beam' && (q.slab === below || (q.beamKind === 'bond_beam' && Math.abs(q.y1 - level) < 0.4))).map((q) => q.aabb)
 }
 
-/** Thickness of the panels of a slab: what the most demanding of them asks (its short side over the ratio of how it spans), not under the minimum of the use. */
+/** Thickness of the panels of a slab: `slabThicknessFor` of the sides of its panels. */
 function thicknessOf(leaves: readonly Rect[], roof: boolean, options: SlabPanelOptions): number {
-  const asked = Math.max(...leaves.map((leaf) => {
-    const short = Math.min(leaf[2] - leaf[0], leaf[3] - leaf[1])
-    const long = Math.max(leaf[2] - leaf[0], leaf[3] - leaf[1])
-    return short / (long >= 2 * short ? options.oneWayThicknessRatio : options.thicknessRatio)
-  }))
-  return Math.max(roof ? options.roofMinThickness : options.floorMinThickness, ceilTo(asked, 0.01))
+  return slabThicknessFor(leaves.map((leaf) => ({ short: Math.min(leaf[2] - leaf[0], leaf[3] - leaf[1]), long: Math.max(leaf[2] - leaf[0], leaf[3] - leaf[1]) })), roof, options)
 }
 
 const restThickness = (slab: StructurePart, thickness: number, roof: boolean): void => {

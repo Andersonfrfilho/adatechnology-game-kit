@@ -114,6 +114,28 @@ describe('the trenches and pits of the rough-in are real holes in the terrain (g
     expect(plumb).toBe(0)
   })
 
+  it('the toe of every mound sinks under the ground: no face of it lies on, or leans nearly flat on, the ground plane', () => {
+    let heap: THREE.Mesh | undefined
+    stage.traverse((o) => { if (o.name === 'excavation:heap') heap = o as THREE.Mesh })
+    heap!.updateWorldMatrix(true, false)
+    const position = heap!.geometry.getAttribute('position'), index = heap!.geometry.getIndex()
+    const count = index ? index.count : position.count
+    const flat: string[] = [], shallow: string[] = []
+    let sunk = 0
+    for (let i = 0; i + 2 < count; i += 3) {
+      const [a, b, c] = [0, 1, 2].map((k) => new THREE.Vector3().fromBufferAttribute(position, index ? index.getX(i + k) : i + k).applyMatrix4(heap!.matrixWorld)) as [THREE.Vector3, THREE.Vector3, THREE.Vector3]
+      const lowest = Math.min(a.y, b.y, c.y), highest = Math.max(a.y, b.y, c.y)
+      if (lowest < -0.01) sunk++
+      if (Math.max(Math.abs(a.y), Math.abs(b.y), Math.abs(c.y)) < 0.002) flat.push(a.toArray().map((v) => v.toFixed(2)).join(','))
+      const normal = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a)).normalize()
+      // a face that crosses the ground meets it at 20 degrees or more, so the depth buffer has a line to cut it on, not a band
+      if (lowest < 0.002 && highest > -0.002 && Math.abs(normal.y) > Math.cos(Math.PI / 9)) shallow.push(a.toArray().map((v) => v.toFixed(2)).join(','))
+    }
+    expect(sunk).toBeGreaterThan(0)
+    expect(flat).toEqual([])
+    expect(shallow).toEqual([])
+  })
+
   it('after the backfill the trenches are closed: no excavation from level 5, and the ray meets the ground again', () => {
     house.setConstructionLevel(5)
     expect(house.excavations()).toEqual([])

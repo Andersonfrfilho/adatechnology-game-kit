@@ -3,7 +3,7 @@ import type * as THREE from 'three'
 import type { Three } from '../kernel-types.js'
 
 /** A visible triangle of the scene, in the world, with the mesh and the material it belongs to. */
-interface Triangle {
+export interface Triangle {
   readonly mesh: THREE.Mesh
   readonly material: THREE.Material
   readonly points: readonly THREE.Vector3[]
@@ -27,7 +27,7 @@ const isVisible = (o: THREE.Object3D): boolean => {
   return true
 }
 
-function trianglesOf(T: Three, root: THREE.Object3D, keep: (mesh: THREE.Mesh) => boolean): Triangle[] {
+export function trianglesOf(T: Three, root: THREE.Object3D, keep: (mesh: THREE.Mesh) => boolean): Triangle[] {
   root.updateMatrixWorld(true)
   const out: Triangle[] = []
   root.traverse((o) => {
@@ -52,7 +52,7 @@ function trianglesOf(T: Three, root: THREE.Object3D, keep: (mesh: THREE.Mesh) =>
   return out
 }
 
-function clip(polygon: number[][], a: number[], b: number[]): number[][] {
+export function clip(polygon: number[][], a: number[], b: number[]): number[][] {
   const out: number[][] = []
   const side = (p: number[]): number => (b[0]! - a[0]!) * (p[1]! - a[1]!) - (b[1]! - a[1]!) * (p[0]! - a[0]!)
   for (let i = 0; i < polygon.length; i++) {
@@ -67,7 +67,7 @@ function clip(polygon: number[][], a: number[], b: number[]): number[][] {
   return out
 }
 
-const signedArea = (p: number[][]): number => p.reduce((sum, a, i) => sum + a[0]! * p[(i + 1) % p.length]![1]! - p[(i + 1) % p.length]![0]! * a[1]!, 0) / 2
+export const signedArea = (p: number[][]): number => p.reduce((sum, a, i) => sum + a[0]! * p[(i + 1) % p.length]![1]! - p[(i + 1) % p.length]![0]! * a[1]!, 0) / 2
 
 /**
  * The faces of different materials that lie on one plane, facing the same way, and overlap: what the depth buffer cannot sort and the screen shows flickering
@@ -120,3 +120,4 @@ export function coplanarOverlaps(T: Three, root: THREE.Object3D, options: { read
   const minArea = options.minArea ?? 1e-4
   return [...found.values()].filter((o) => o.area >= minArea).sort((x, y) => y.area - x.area)
 }
+

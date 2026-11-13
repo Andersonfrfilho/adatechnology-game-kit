@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { SLAB_PANEL_DEFAULTS, slabThicknessFor } from '@adatechnology/game-floorplan-structure'
+import type { PlanStructure } from '@adatechnology/game-floorplan-structure'
+
+import { buildStructuralStageGroups } from '../src/construction-stages/structural-stages'
 import { houseOf, planOf, THREE } from './helpers/houses'
 
 interface Outbuilding { readonly id: string; readonly aabb: readonly number[]; readonly thickness?: number; readonly ceiling?: number }
@@ -85,5 +89,17 @@ describe('the outbuilding has no attic: its runs go across inside its roof slab,
     })
     expect(box).toBeDefined()
     expect(over).toEqual([])
+  })
+})
+
+describe('the outbuilding\'s roof slab is cast like the house\'s: one rule for the thickness', () => {
+  it('single_storey_a: the outbuilding slab is the precast 12 cm, the same the house slabs start from', () => {
+    const plan = planOf('single_storey_a', 1) as unknown as { outbuildings: Outbuilding[]; structure: PlanStructure }
+    const groups = buildStructuralStageGroups(THREE as never, plan.structure, plan.outbuildings as never)
+    const slab = groups.frame.children.find((c) => c.userData.structurePartId === `${plan.outbuildings[0]!.id}_slab`)
+    expect(slab).toBeDefined()
+    const box = new THREE.Box3().setFromObject(slab!)
+    expect(box.max.y - box.min.y).toBeCloseTo(SLAB_PANEL_DEFAULTS.precastThickness, 3)
+    expect(slabThicknessFor([{ short: 3.0, long: 3.2 }], true)).toBe(SLAB_PANEL_DEFAULTS.precastThickness)
   })
 })

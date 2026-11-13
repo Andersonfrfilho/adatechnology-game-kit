@@ -12,6 +12,8 @@ export const FLOOR_OVER_GROUND = 0.012;
 const CEILING_PAINT = 0.015
 /** Bare concrete of a slab's top. */
 const SLAB_CONCRETE = 0x8f8e8a
+/** How far the outer face of a 15 cm wall stands past the edge of its room, metres. */
+const WALL_FACE = 0.075
 
 export function installHouseFloors(K: Kernel, shared: Shared): void {
   const { rectsOf, EPS, OPEN_AREA, Y0, bx, cursor, floorColor, stairFootprint, structurePiece, subRects } = K;
@@ -89,16 +91,33 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       // ceiling of the rooms with nothing above
       cursor.group = 't' + f; const ceilingOf = hasSlab('slab_' + (f + 1)) ? 'slab_' + (f + 1) : (f === nA - 1 ? ['slab_ceiling', 'slab_top'].find(hasSlab) : null);
       const above = R.rooms.filter(c => c.floor === f + 1).flatMap(rectsOf);
-      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(coveredRects(c), above)) for (const [pc, r] of tilesOf(ceilingOf, rc)) {
+      const edges = slabEdgeStrips(f, above);
+      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(coveredRects(c), above)) for (const [pc, tile] of tilesOf(ceilingOf, rc)) {
         // the slab is concrete, bare on top under the roof; only its underside is rendered and painted (the room's ceiling)
         cursor.pc = pc;
-        if (shared.ctx.visorCeilings) { bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); continue; }
-        bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + CEILING_PAINT, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', r[0], y0 + c.ceiling + CEILING_PAINT, r[1], r[2], y0 + c.ceiling + 0.2, r[3], SLAB_CONCRETE);
+        if (shared.ctx.visorCeilings) { bx('plaster', tile[0], y0 + c.ceiling, tile[1], tile[2], y0 + c.ceiling + 0.2, tile[3], C.ceiling != null ? C.ceiling : 0xeeeae2); continue; }
+        // the strips of its edge that face the outside are rendered like the walls: nothing of the tile stands in them
+        for (const r of subRects([tile], edges)) { bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + CEILING_PAINT, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', r[0], y0 + c.ceiling + CEILING_PAINT, r[1], r[2], y0 + c.ceiling + 0.2, r[3], SLAB_CONCRETE); }
+      }
+      if (edges.length) {
+        const face = K.sideOf('outside', false), yb = y0 + (R.rooms.find(c => c.floor === f && !c.outbuilding)?.ceiling ?? 0);
+        cursor.pc = ceilingOf ? structurePiece(ceilingOf) : null;
+        for (const r of edges) bx(face.mat, r[0], yb, r[1], r[2], yb + 0.2, r[3], face.color);
       }
       if (!shared.ctx.visorCeilings) for (const c of R.rooms.filter((x) => x.floor === f && x.outbuilding)) outbuildingSlabEdge(c, y0, ceilingOf);
       cursor.pc = null;
       cursor.pc = null;
     }
+  }
+  /**
+   * The strips of the slab's edge that face the outside, from the wall's outer face in by the depth of its render: the slab is cast against the bond beam, so its
+   * edge is rendered and painted like the wall under it, never bare concrete. Only when drawn by construction stage (otherwise the eave band covers it).
+   */
+  function slabEdgeStrips(floor: number, above: readonly Rect[]): readonly Rect[] {
+    if (!shared.ctx.constructionStages || shared.ctx.visorCeilings) return [];
+    const rooms = (shared.ctx.r as HouseRecord).rooms.filter((c) => c.floor === floor && !OPEN_AREA(c) && !c.outbuilding);
+    const grown = (by: number): Rect[] => rooms.flatMap((c) => rectsOf(c).map((r): Rect => [r[0] - by, r[1] - by, r[2] + by, r[3] + by]));
+    return subRects(subRects(grown(WALL_FACE), above), grown(WALL_FACE - PLASTER_PER_FACE));
   }
   // built by construction stage, the slab over the top rooms is seen from above before the roof goes on: it covers the walls round them too (to the outer faces
   // of an outbuilding's walls), so no groove runs along each wall top

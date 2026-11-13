@@ -146,18 +146,25 @@ describe('construction stages of single_storey_a', () => {
     }
   })
 
-  it('hangs a lamp holder at every ceiling light from the rough-in to the fitting, its bare bulb once the walls are rendered', () => {
+  it('hangs a socket at every ceiling light from the rough-in to the fitting (under the slab, then under the render), its lamp once the walls are rendered', () => {
     const holders: THREE.Object3D[] = [], bulbs: THREE.Object3D[] = []
-    house.group.traverse((o) => { if (o.userData.part === 'lamp_holder') holders.push(o); if (o.userData.part === 'lamp_bulb') bulbs.push(o) })
-    // one holder part per storey, naming the lights it hangs at: every ceiling light of the plan (the outbuilding's too) has one
+    house.group.traverse((o) => {
+      if (typeof o.userData.id !== 'string') return
+      if (o.userData.part === 'lamp_holder') holders.push(o)
+      if (o.userData.part === 'lamp_bulb') bulbs.push(o)
+    })
+    // two socket sets per storey (the rough-in's and the finished one), each naming the lights it hangs at: every ceiling light of the plan (the outbuilding's too) has them
     const lights = (planOf('single_storey_a', 1) as unknown as { items: { id: string; type: string }[] }).items.filter((i) => i.type === 'ceiling_light').map((i) => i.id)
-    const hung = new Set(holders.flatMap((h) => (h.userData.lights as string[] | undefined) ?? []))
     expect(lights.length).toBeGreaterThan(0)
-    for (const id of lights) expect(hung.has(id), id).toBe(true)
-    expect(bulbs.length).toBe(holders.length)
+    for (const mount of ['slab', 'ceiling']) {
+      const hung = new Set(holders.filter((h) => h.userData.mount === mount).flatMap((h) => (h.userData.lights as string[] | undefined) ?? []))
+      for (const id of lights) expect(hung.has(id), `${id} on the ${mount}`).toBe(true)
+    }
+    expect(holders.length).toBe(2 * bulbs.length)
     for (const level of [3, 4, 5, 6, 7, 8]) {
       house.setConstructionLevel(level)
-      expect(holders.every(visibleIn), `holders at ${level}`).toBe(level >= 4 && level <= 7)
+      expect(holders.filter(visibleIn).every((h) => h.userData.mount === (level === 4 ? 'slab' : 'ceiling')), `holders at ${level}`).toBe(true)
+      expect(holders.some(visibleIn), `holders at ${level}`).toBe(level >= 4 && level <= 7)
       expect(bulbs.every(visibleIn), `bulbs at ${level}`).toBe(level >= 5 && level <= 7)
     }
   })

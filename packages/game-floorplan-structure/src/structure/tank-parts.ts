@@ -1,6 +1,7 @@
 import { GROUND } from '../types'
 import type { Rect, StructurePart, WaterTank } from '../types'
 import { touches } from '../geometry'
+import { SLAB_PANEL_DEFAULTS } from '../slab-panels/options'
 import { pillarBox } from './context'
 import type { BuildContext } from './context'
 
@@ -30,7 +31,7 @@ function ensureCeilingSlab(context: BuildContext, y: number): StructurePart {
       ((part.role === 'beam' && part.id.startsWith(`plate_${top}_`)) || (part.role === 'column' && part.floor === top) || (part.role === 'wall' && part.floor === top && !part.id.startsWith('basement'))) &&
       touches(box, part.aabb, 0.1),
   )
-  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top, footprint: [box] })
+  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - SLAB_PANEL_DEFAULTS.precastThickness, y1: y }, { floor: top, footprint: [box] })
   for (const carrier of carriers) builder.rest(slab, carrier, system.joints.slab)
   return slab
 }

@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { PLASTER_PER_FACE, applyPanels, pillarSectionForWidth, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels } from '@adatechnology/game-floorplan-structure'
+import { PLASTER_PER_FACE, applyPanels, pillarSectionForWidth, applySlabPanels, beamDepthFor, deepenBondBeams, resolveSlabPanels, slabThicknessFor } from '@adatechnology/game-floorplan-structure'
 import type { Outbuilding, PlanStructure, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { Three } from '../kernel-types.js'
 import { addStageBox, buildMasonryPanel, coreWidthOf, createMasonryBatches, masonryMeshes } from './masonry-stage.js'
@@ -134,7 +134,8 @@ function chasesIn(wall: ReturnType<typeof wallLineOf>, core: { readonly line: nu
   const out: Chase[] = []
   for (const r of runs) {
     const along = wall.alongU ? r.u : r.v, across = (wall.alongU ? r.v : r.u) - core.line
-    if (along < wall.a0 || along > wall.a1 || r.y1 <= core.y0 || r.y0 >= core.y1) continue
+    // a run whose side reaches into the wall's span is cut into it too (a box beside a pillar, its centre past the end of the masonry)
+    if (along + r.radius + CHASE_CLEAR < wall.a0 || along - r.radius - CHASE_CLEAR > wall.a1 || r.y1 <= core.y0 || r.y0 >= core.y1) continue
     // a run outside the wall's thickness is not in it; one wholly in the render does not reach the units
     if (Math.abs(across) > wall.thickness / 2) continue
     const back = Math.max(0, Math.abs(across) - r.radius - CHASE_CLEAR)
@@ -230,7 +231,7 @@ function fitLintel(l: Solid, beams: readonly Solid[], columns: readonly Solid[],
 }
 
 /** The outbuilding's structure in the terms of the house's: footings, ground beams, corner pillars, bond beams, the slab over them, lintels, sills and walls. */
-function outbuildingParts(e: Outbuilding): { parts: StructurePart[]; openings: { readonly id: string; readonly aabb: readonly number[]; readonly y0: number; readonly y1: number }[] } {
+export function outbuildingParts(e: Outbuilding): { parts: StructurePart[]; openings: { readonly id: string; readonly aabb: readonly number[]; readonly y0: number; readonly y1: number }[] } {
   const [a0, b0, a1, b1] = e.aabb
   const ceiling = e.ceiling || 2.6
   const th = e.thickness || 0.15
@@ -258,7 +259,9 @@ function outbuildingParts(e: Outbuilding): { parts: StructurePart[]; openings: {
     const outer = u - inward * h, [s0, s1] = inward > 0 ? [outer, outer + section.along] : [outer - section.along, outer]
     parts.push(part(`column_${k}`, 'column', [s0, v - section.across / 2, s1, v + section.across / 2], 0, ceiling))
   })
-  parts.push(part('slab', 'slab', [a0 - h, b0 - h, a1 + h, b1 + h], ceiling - 0.1, ceiling))
+  // the same slab system as the house's, by the structure's rule for its span
+  const slabThickness = slabThicknessFor([{ short: Math.min(a1 - a0, b1 - b0), long: Math.max(a1 - a0, b1 - b0) }], true)
+  parts.push(part('slab', 'slab', [a0 - h, b0 - h, a1 + h, b1 + h], ceiling - slabThickness, ceiling))
   const openings: { id: string; aabb: number[]; y0: number; y1: number }[] = []
   const opening = (o: Outbuilding['doors'][number], y0: number, y1: number, sill: boolean): void => {
     const alongU = o.axis === 'u'

@@ -26,6 +26,13 @@ export interface SlabPanelOptions {
   floorMinThickness: number
   /** Thinnest roof slab, metres (default 0.08). */
   roofMinThickness: number
+  /**
+   * Thickness of the slab system every house and outbuilding is cast with, metres (default 0.12): a precast joist-and-block (lajota) slab, 8 cm block and
+   * `toppingThickness` of concrete over it. A slab never gets thinner than this; one whose span asks more by the L/35 and L/25 rules gets the span's value.
+   */
+  precastThickness: number
+  /** The concrete topping poured over the blocks of a precast slab, metres (default 0.04, NBR 14859 asks 4 cm at least). */
+  toppingThickness: number
   /** Depth of a beam is its span over this (default 10: `h = L/10`, a simply supported beam of NBR 6118, and deep enough for the frame to carry the loss of one pillar; continuous beams are L/12). */
   beamDepthRatio: number
   /** Shallowest beam, metres (default 0.25). */
@@ -44,7 +51,7 @@ export interface SlabPanelOptions {
 }
 
 export const SLAB_PANEL_DEFAULTS: Readonly<SlabPanelOptions> = {
-  maxSpan: 5, minPanel: 1.5, lineCoverage: 0.6, doorGap: 1.3, lineTolerance: 0.2, footprintShare: 0.5, twoWayMaxSpan: 6.5, thicknessRatio: 35, oneWayThicknessRatio: 25, floorMinThickness: 0.1, roofMinThickness: 0.08,
+  maxSpan: 5, minPanel: 1.5, lineCoverage: 0.6, doorGap: 1.3, lineTolerance: 0.2, footprintShare: 0.5, twoWayMaxSpan: 6.5, thicknessRatio: 35, oneWayThicknessRatio: 25, floorMinThickness: 0.1, roofMinThickness: 0.08, precastThickness: 0.12, toppingThickness: 0.04,
   beamDepthRatio: 10, beamMinDepth: 0.25, beamStep: 0.05, beamWidthRatio: 3, columnSide: 0.2, maxStoreys: 8,
 }
 

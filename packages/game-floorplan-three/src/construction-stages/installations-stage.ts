@@ -19,18 +19,22 @@ const SPOIL_CLEAR = 0.12
 /** How long one shovelful's hump of a heap runs, metres, and how much its height varies from one to the next. */
 const HUMP = { length: 0.7, vary: 0.25, overlap: 0.25 } as const
 
-/** A heap laid as the shovel leaves it: humps one after another along it, each its own height (the same every time for the same place), overlapping a little. */
+/**
+ * A heap laid as the shovel leaves it: humps one after another along it, each its own height (the same every time for the same place), running into each other.
+ * One surface for the whole heap (the highest hump over each point), never two humps crossing: two slopes crossing at a shallow angle flicker along the seam.
+ */
 function addHumps(batch: BoxBatch, rect: Rect): void {
   const alongX = rect[2] - rect[0] >= rect[3] - rect[1]
   const from = alongX ? rect[0] : rect[1], to = alongX ? rect[2] : rect[3]
   const count = Math.max(1, Math.round((to - from) / HUMP.length)), step = (to - from) / count
-  for (let k = 0; k < count; k++) {
+  const humps = Array.from({ length: count }, (_, k) => {
     const a = Math.max(from, from + k * step - (k > 0 ? HUMP.overlap / 2 : 0)), b = Math.min(to, from + (k + 1) * step + (k < count - 1 ? HUMP.overlap / 2 : 0))
     // a height of its own from where it lies: a hash of its place, not a random draw
     const seed = Math.sin((rect[0] + rect[1]) * 12.9898 + (from + k * step) * 78.233) * 43758.5453
-    const h = TRENCH.berm.height * (1 + HUMP.vary * (2 * (seed - Math.floor(seed)) - 1))
-    addHeap(batch, alongX ? [a, rect[1], b, rect[3]] : [rect[0], a, rect[2], b], h)
-  }
+    return { a: a - from, b: b - from, h: TRENCH.berm.height * (1 + HUMP.vary * (2 * (seed - Math.floor(seed)) - 1)) }
+  })
+  const rise = (s: number): number => Math.max(0, ...humps.map(({ a, b, h }) => (s <= a || s >= b ? 0 : (h + MOUND_SINK) * Math.pow(Math.sin((Math.PI * (s - a)) / (b - a)), 0.6))))
+  addHeap(batch, rect, rise, count)
 }
 
 /** A face of four corners, wound and lit as it faces (its normal from its corners). */
@@ -44,19 +48,21 @@ function addFacet(batch: BoxBatch, corners: readonly (readonly [number, number, 
 
 /** How many facets a mound has along and across. */
 const MOUND_GRID = { along: 8, across: 5 } as const
+/** How far a mound's edge and ends sink under the ground, metres: the toe crosses the ground's plane at a slope instead of lying on it. */
+const MOUND_SINK = 0.04
 
 /**
- * A mound of dug earth: highest along its middle, falling off to the ground at its edges and ends as loose earth does (a bell across and along); no face
- * under it (it lies on the ground, and a face there would share the ground's plane).
+ * A mound of dug earth: highest along its middle, falling off into the ground at its edges and ends as loose earth does (a bell across and along, its toe a few
+ * centimetres under the surface so no face lies on the ground's plane); no face under it.
  */
-function addHeap(batch: BoxBatch, [x0, z0, x1, z1]: Rect, h: number): void {
+function addHeap(batch: BoxBatch, [x0, z0, x1, z1]: Rect, rise: (s: number) => number, humps: number): void {
   const alongX = x1 - x0 >= z1 - z0
-  const length = alongX ? x1 - x0 : z1 - z0, width = alongX ? z1 - z0 : x1 - x0
+  const width = alongX ? z1 - z0 : x1 - x0, length = alongX ? x1 - x0 : z1 - z0
   const at = (s: number, t: number): [number, number, number] => {
-    const y = h * Math.pow(Math.max(0, Math.sin((Math.PI * s) / length)), 0.6) * Math.pow(Math.max(0, Math.sin((Math.PI * t) / width)), 0.8)
+    const y = rise(s) * Math.pow(Math.max(0, Math.sin((Math.PI * t) / width)), 0.8) - MOUND_SINK
     return alongX ? [x0 + s, y, z0 + t] : [x0 + t, y, z0 + s]
   }
-  const { along, across } = MOUND_GRID
+  const along = MOUND_GRID.along * humps, { across } = MOUND_GRID
   for (let i = 0; i < along; i++) {
     for (let j = 0; j < across; j++) {
       const s0 = (length * i) / along, s1 = (length * (i + 1)) / along, t0 = (width * j) / across, t1 = (width * (j + 1)) / across
@@ -123,6 +129,8 @@ function openEdges(rect: Rect, others: readonly Rect[], solids: readonly Rect[] 
 function addSpoil(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trench[], material: THREE_NS.Material, site: { readonly solids: readonly Rect[]; readonly footprint: Rect; readonly buildings: readonly Rect[] }): void {
   const heap = new BoxBatch()
   const rects = trenches.map((t) => t.rect)
+  // the heaps already laid: a piece of another edge's heap is cut off them, so no two heaps lie one through the other
+  const laid: Rect[] = []
   trenches.forEach(({ rect: r }, i) => {
     const others = rects.filter((_, k) => k !== i)
     for (const e of openEdges(r, others, site.solids)) {
@@ -133,8 +141,10 @@ function addSpoil(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trenc
       const heapAt: Rect = ox ? [ox > 0 ? x1 + SPOIL_CLEAR : x0 - SPOIL_CLEAR - w, z0, ox > 0 ? x1 + SPOIL_CLEAR + w : x0 - SPOIL_CLEAR, z1] : [x0, oz > 0 ? z1 + SPOIL_CLEAR : z0 - SPOIL_CLEAR - w, x1, oz > 0 ? z1 + SPOIL_CLEAR + w : z0 - SPOIL_CLEAR]
       const onBuilding = [site.footprint, ...site.buildings].some(([bx0, bz0, bx1, bz1]) => heapAt[2] > bx0 - 0.4 && heapAt[0] < bx1 + 0.4 && heapAt[3] > bz0 - 0.4 && heapAt[1] < bz1 + 0.4)
       // never over a hole: the pieces of the heap off every trench and pit (with the slope of its edge) are heaped, a sliver of one is not
-      if (!onBuilding) for (const piece of rectMinus(heapAt, rects.map((t) => [t[0] - SPOIL_CLEAR, t[1] - SPOIL_CLEAR, t[2] + SPOIL_CLEAR, t[3] + SPOIL_CLEAR] as Rect))) {
-        if (Math.min(piece[2] - piece[0], piece[3] - piece[1]) >= TRENCH.berm.crest * 2) addHumps(heap, piece)
+      if (!onBuilding) for (const piece of rectMinus(heapAt, [...rects.map((t) => [t[0] - SPOIL_CLEAR, t[1] - SPOIL_CLEAR, t[2] + SPOIL_CLEAR, t[3] + SPOIL_CLEAR] as Rect), ...laid])) {
+        if (Math.min(piece[2] - piece[0], piece[3] - piece[1]) < TRENCH.berm.crest * 2) continue
+        addHumps(heap, piece)
+        laid.push(piece)
       }
     }
   })
