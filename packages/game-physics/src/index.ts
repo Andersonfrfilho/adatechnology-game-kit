@@ -145,6 +145,13 @@ export interface PhysicsWorld {
   setFriction(body: number, mu: number): void
   /** Lets two bodies pass through each other (false) or meet again (true). */
   setPairContacts(a: number, b: number, enabled: boolean): void
+  /**
+   * The bodies of `kind` whose colliders overlap this body's deeper than `depth` (m), as they stand now (no step needed): what a piece was born inside.
+   * Written into `out`; returns how many.
+   */
+  overlapsDeeperThan(body: number, depth: number, kind: BodyKind, out: number[]): number
+  /** Smallest distance between the colliders of two bodies (negative: overlapping by that much), up to `upTo`; `upTo` when farther. */
+  distance(a: number, b: number, upTo: number): number
   /** Whether any collider of the body has a contact point now. */
   touching(body: number): boolean
   snapshot(): Uint8Array

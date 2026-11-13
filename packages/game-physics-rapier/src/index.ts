@@ -158,6 +158,11 @@ export class RapierWorld implements PhysicsWorld {
   removeBody(body: number): void {
     const rb = this.world.getRigidBody(body)
     if (!rb) return
+    // its joints go with it: forget the pairs it was kept apart in
+    for (const key of [...this.apart.keys()]) {
+      const [a, b] = key.split(':').map(Number)
+      if (a === body || b === body) this.apart.delete(key)
+    }
     for (let i = 0; i < rb.numColliders(); i++) this.tags.delete(rb.collider(i).handle)
     this.world.removeRigidBody(rb)
   }
@@ -448,6 +453,36 @@ export class RapierWorld implements PhysicsWorld {
     const j = this.world.createImpulseJoint(data, this.rb(a), this.rb(b), true)
     j.setContactsEnabled(false)
     this.apart.set(key, j.handle)
+  }
+
+  overlapsDeeperThan(body: number, depth: number, kind: 'dynamic' | 'fixed' | 'kinematic', out: number[]): number {
+    const rb = this.rb(body)
+    const want = kind === 'dynamic' ? this.R.RigidBodyType.Dynamic : kind === 'fixed' ? this.R.RigidBodyType.Fixed : this.R.RigidBodyType.KinematicPositionBased
+    let n = 0
+    for (let i = 0; i < rb.numColliders(); i++) {
+      const c = rb.collider(i)
+      this.world.intersectionsWithShape(c.translation(), c.rotation(), c.shape, (other) => {
+        const parent = other.parent()
+        if (!parent || parent.handle === body || parent.bodyType() !== want || out.includes(parent.handle) || n >= out.length) return true
+        const contact = c.contactCollider(other, 0)
+        if (contact && contact.distance < -depth) out[n++] = parent.handle
+        return true
+      })
+    }
+    return n
+  }
+
+  distance(a: number, b: number, upTo: number): number {
+    const ra = this.rb(a)
+    const rb = this.rb(b)
+    let least = upTo
+    for (let i = 0; i < ra.numColliders(); i++) {
+      for (let j = 0; j < rb.numColliders(); j++) {
+        const contact = ra.collider(i).contactCollider(rb.collider(j), upTo)
+        if (contact && contact.distance < least) least = contact.distance
+      }
+    }
+    return least
   }
 
   touching(body: number): boolean {

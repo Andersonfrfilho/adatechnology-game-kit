@@ -18,7 +18,7 @@ describe('deepening bowl through the physics contract (Rapier): C1-C4 of DECISIO
       const r = engineBowl(seed, dt, engine, { maxStep: MAX_STEP, solverIterations: ITERATIONS })
       if (process.env.BOWL_REPORT)
         console.log(
-          `bowl dt ${dt.toFixed(3)} seed ${seed} restGain ${r.restGain.toFixed(4)} lift ${r.lift.toFixed(4)} created ${r.created.toFixed(4)} over1mm ${r.createdOver1mm} asleep ${r.asleepAtEnd}/${r.pieces} ms ${r.msPerUpdate.toFixed(3)} ground ${r.groundMsPerUpdate.toFixed(3)} awake ${r.awakeIds} hash ${r.poseHash}`,
+          `bowl dt ${dt.toFixed(3)} seed ${seed} restGain ${r.restGain.toFixed(4)} unhit ${r.restGainUnhit.toFixed(4)} lift ${r.lift.toFixed(4)} created ${r.created.toFixed(4)} over1mm ${r.createdOver1mm} asleep ${r.asleepAtEnd}/${r.pieces} ms ${r.msPerUpdate.toFixed(3)} ground ${r.groundMsPerUpdate.toFixed(3)} awake ${r.awakeIds} hash ${r.poseHash}`,
         )
       expect(r.restGain).toBeLessThanOrEqual(0.035)
       expect(r.lift).toBeLessThanOrEqual(0.035)

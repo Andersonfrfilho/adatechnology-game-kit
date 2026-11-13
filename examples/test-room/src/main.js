@@ -72,6 +72,8 @@ const scenery = isFloorplan
 // spike: ?engine=rapier steps the loose debris through Rapier once its WebAssembly has loaded (window.__physicsReady tells the probes)
 /** @type {import('@adatechnology/game-physics').PhysicsWorld | undefined} */
 let physicsWorld
+if (new URLSearchParams(location.search).get('statics') === '0') /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (globalThis)).__ENGINE_NO_STATICS__ = true
+if (new URLSearchParams(location.search).get('statics') === 'box') /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (globalThis)).__ENGINE_STATIC_BOXES__ = true
 if (new URLSearchParams(location.search).get('engine') === 'rapier') {
   const started = performance.now()
   void loadRapierEngine().then((engine) => {

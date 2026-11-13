@@ -301,6 +301,7 @@ class Renderer implements DestructionRenderer {
   private readonly staticBoxes = new Map<string, number[]>()
   /** The rotated boxes of the fixed objects' shown meshes (10 numbers each), made again when `staticNow` measured the object again. */
   private readonly staticRotated = new Map<string, { from: number[]; boxes: number[] }>()
+  private readonly staticTriangles = new Map<string, { from: number[]; meshes: Array<{ vertices: Float32Array; indices: Uint32Array }> }>()
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
@@ -429,7 +430,8 @@ class Renderer implements DestructionRenderer {
       maxAwake: o.maxAwakePieces ?? Infinity,
       // spike only: PIECE_ENGINE=rapier runs every existing test of the package through the engine (tests/setup-engine.ts)
       physics: o.physics ?? (globalThis as { __KIT_PHYSICS_ENGINE__?: import('@adatechnology/game-physics').PhysicsEngine }).__KIT_PHYSICS_ENGINE__?.createWorld({ gravity: [0, -(o.gravity ?? 9.81), 0] }),
-      staticBoxes: () => this.staticObbs(),
+      // spike: the fixed things as the triangles that are drawn (default), or as the rotated box of each mesh with ?statics=box in the room
+      ...((globalThis as { __ENGINE_STATIC_BOXES__?: boolean }).__ENGINE_STATIC_BOXES__ ? { staticBoxes: () => this.staticObbs() } : { staticMeshes: () => this.staticMeshes() }),
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
@@ -1024,10 +1026,56 @@ class Renderer implements DestructionRenderer {
     return top
   }
 
+  /** The drawn triangles of each fixed object (world space), from the same meshes `staticNow` measures: what a piece meets is what is drawn, holes and legs included. */
+  private staticMeshes(): Map<string, Array<{ vertices: Float32Array; indices: Uint32Array }>> {
+    const out = new Map<string, Array<{ vertices: Float32Array; indices: Uint32Array }>>()
+    if ((globalThis as { __ENGINE_NO_STATICS__?: boolean }).__ENGINE_NO_STATICS__) return out
+    const now = this.staticNow()
+    const box = new this.THREE.Box3()
+    const v = new this.THREE.Vector3()
+    for (const [id, from] of now) {
+      if (this.pieceSys.get(id)) continue
+      const known = this.staticTriangles.get(id)
+      if (known && known.from === from) {
+        out.set(id, known.meshes)
+        continue
+      }
+      const meshes: Array<{ vertices: Float32Array; indices: Uint32Array }> = []
+      const b = this.bounds.get(id)
+      if (b && from.length > 0) {
+        for (const mv of this.meshesOf(b)) {
+          if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
+          this.visuals.worldBox(mv, box)
+          if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
+          const g = mv.mesh.geometry
+          const pos = g.getAttribute('position')
+          if (!pos || pos.count < 3) continue
+          mv.mesh.updateWorldMatrix(true, false)
+          const vertices = new Float32Array(pos.count * 3)
+          for (let i = 0; i < pos.count; i++) {
+            v.fromBufferAttribute(pos, i).applyMatrix4(mv.mesh.matrixWorld)
+            vertices[i * 3] = v.x
+            vertices[i * 3 + 1] = v.y
+            vertices[i * 3 + 2] = v.z
+          }
+          const index = g.getIndex()
+          const indices = index ? Uint32Array.from(index.array) : Uint32Array.from({ length: pos.count - (pos.count % 3) }, (_, k) => k)
+          meshes.push({ vertices, indices })
+        }
+      }
+      this.staticTriangles.set(id, { from, meshes })
+      out.set(id, meshes)
+    }
+    for (const id of this.staticTriangles.keys()) if (!now.has(id)) this.staticTriangles.delete(id)
+    return out
+  }
+
   /** Rotated boxes of what is drawn of each fixed object (centre, half sizes, quaternion), for a physics engine: the same meshes `staticNow` measures, not their axis boxes. */
   private staticObbs(): Map<string, number[]> {
-    const now = this.staticNow()
     const out = new Map<string, number[]>()
+    // spike only: ?statics=0 in the room leaves the fixed boxes out of the engine, to tell what they cause
+    if ((globalThis as { __ENGINE_NO_STATICS__?: boolean }).__ENGINE_NO_STATICS__) return out
+    const now = this.staticNow()
     const box = new this.THREE.Box3()
     const p = new this.THREE.Vector3()
     const q = new this.THREE.Quaternion()

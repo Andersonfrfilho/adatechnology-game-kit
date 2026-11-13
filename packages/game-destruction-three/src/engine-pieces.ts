@@ -11,6 +11,8 @@ export interface EnginePieceOptions {
   readonly gravity: number
   /** Rotated boxes of what does not move, per object, 10 numbers each (centre x, y, z, half x, y, z, quaternion x, y, z, w): what is drawn, not its axis box. */
   readonly staticBoxes?: () => ReadonlyMap<string, readonly number[]>
+  /** The drawn triangles of what does not move, per object (world space); in place of `staticBoxes` when given. */
+  readonly staticMeshes?: () => ReadonlyMap<string, ReadonlyArray<{ readonly vertices: Float32Array; readonly indices: Uint32Array }>>
   readonly sweep?: (piece: PieceBody, from: Vec3, to: Vec3) => PieceSweepHit | null
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
@@ -31,6 +33,8 @@ const SLAM_FLOOR_NORMAL = 0.7
 const TIP_ACCELERATION = 30
 const TIP_LYING = 0.25
 const TILE_MARGIN = 0.5
+/** Deeper than this (m) inside a fixed thing at birth, a piece is not pushed out of it by the engine (`passOutOfStatics`). */
+const BORN_INSIDE = 0.03
 
 interface Link {
   body: number
@@ -58,7 +62,7 @@ interface Tile {
 export class EnginePieces {
   private readonly links = new Map<PieceBody, Link>()
   private readonly tiles = new Map<string, Tile>()
-  private readonly statics = new Map<string, { boxes: readonly number[]; body: number }>()
+  private readonly statics = new Map<string, { boxes: unknown; body: number }>()
   private readonly pose = new Float64Array(7)
   private readonly vel = new Float64Array(6)
   private readonly v: THREE_NS.Vector3
@@ -66,6 +70,9 @@ export class EnginePieces {
   private readonly tile: number
   private readonly cells: number
   private apartNow = new Map<string, [number, number]>()
+  /** Pieces born inside a fixed thing (deeper than a contact), and the fixed bodies they pass through until they are out of them. */
+  private readonly bornInside = new Map<number, number[]>()
+  private readonly scratch: number[] = new Array<number>(16).fill(-1)
   /** Seconds spent laying ground in the last update (for the measurements). */
   groundMs = 0
 
@@ -86,6 +93,7 @@ export class EnginePieces {
   remove(b: PieceBody): void {
     const link = this.links.get(b)
     if (!link) return
+    this.bornInside.delete(link.body)
     this.w.removeBody(link.body)
     this.links.delete(b)
   }
@@ -120,6 +128,7 @@ export class EnginePieces {
     this.layStatics()
     this.groundMs = performance.now() - t0
     this.keepApart(apart)
+    this.releaseBornInside()
     const before = new Map<PieceBody, { c: Vec3; vy: number }>()
     for (const b of list) {
       if (b.held || b.sleeping) continue
@@ -128,6 +137,40 @@ export class EnginePieces {
     }
     this.w.step(dt)
     for (const b of list) this.readBack(b, dt, time, before.get(b))
+  }
+
+  /** A piece born inside a fixed thing (a chunk inside a window's frame) passes through it until it is out: pushed out, it would be shot up through it. */
+  private passOutOfStatics(body: number): void {
+    this.scratch.fill(-1)
+    const n = this.w.overlapsDeeperThan(body, BORN_INSIDE, 'fixed', this.scratch)
+    if (n === 0) return
+    const statics = this.scratch.slice(0, n)
+    for (const s of statics) this.w.setPairContacts(body, s, false)
+    this.bornInside.set(body, statics)
+  }
+
+  /** A fixed thing measured again (an event changed it) may now cut through pieces lying there: they pass through it until they are out, as if born inside it. */
+  private passThroughNewStatic(body: number): void {
+    this.scratch.fill(-1)
+    const n = this.w.overlapsDeeperThan(body, BORN_INSIDE, 'dynamic', this.scratch)
+    for (let i = 0; i < n; i++) {
+      const piece = this.scratch[i]
+      this.w.setPairContacts(piece, body, false)
+      this.bornInside.set(piece, [...(this.bornInside.get(piece) ?? []), body])
+    }
+  }
+
+  /** Those that are out of what they were born inside meet it again. */
+  private releaseBornInside(): void {
+    for (const [body, statics] of this.bornInside) {
+      const left = statics.filter((s) => {
+        if (this.w.distance(body, s, 0.01) <= 0) return true
+        this.w.setPairContacts(body, s, true)
+        return false
+      })
+      if (left.length === 0) this.bornInside.delete(body)
+      else this.bornInside.set(body, left)
+    }
   }
 
   private keepApart(apart: ReadonlyArray<readonly [PieceBody, PieceBody]>): void {
@@ -178,7 +221,10 @@ export class EnginePieces {
     const c = this.centre(b)
     const q = b.root.quaternion
     if (!link || key !== link.key) {
-      if (link) this.w.removeBody(link.body)
+      if (link) {
+        this.w.removeBody(link.body)
+        this.bornInside.delete(link.body)
+      }
       // the engine's ground is one-sided: a piece born deeper in it than a contact would be pushed down through it, so it starts on top
       else if (!b.held) this.liftOutOfGround(b, c, q)
       const body = this.w.createBody({
@@ -194,6 +240,7 @@ export class EnginePieces {
         colliders: this.colliders(b),
       })
       const r = b.root.position
+      this.passOutOfStatics(body)
       link = { body, key, held: b.held, pos: [r.x, r.y, r.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], mu: b.friction?.static ?? MU_STATIC }
       this.links.set(b, link)
       if (b.sleeping) this.w.sleep(body)
@@ -297,6 +344,22 @@ export class EnginePieces {
 
   /** The host's rotated boxes of fixed things, made again for an object whose boxes were measured again. */
   private layStatics(): void {
+    const meshes = this.o.staticMeshes?.()
+    if (meshes) {
+      for (const [id, s] of this.statics) {
+        if (meshes.get(id) === s.boxes) continue
+        this.w.removeBody(s.body)
+        this.statics.delete(id)
+      }
+      for (const [id, list] of meshes) {
+        if (this.statics.has(id) || list.length === 0) continue
+        const colliders: ColliderDesc[] = list.map((m) => ({ shape: { kind: 'trimesh', vertices: m.vertices, indices: m.indices }, tag: -3 }))
+        const body = this.w.createBody({ kind: 'fixed', position: [0, 0, 0], colliders })
+        this.statics.set(id, { boxes: list, body })
+        this.passThroughNewStatic(body)
+      }
+      return
+    }
     const now = this.o.staticBoxes?.()
     if (!now) return
     for (const [id, s] of this.statics) {
@@ -312,7 +375,10 @@ export class EnginePieces {
         if (half.some((h) => !(h > 0))) continue
         colliders.push({ shape: { kind: 'box', half }, offset: [boxes[i], boxes[i + 1], boxes[i + 2]], rotation: [boxes[i + 6], boxes[i + 7], boxes[i + 8], boxes[i + 9]], tag: -3 })
       }
-      if (colliders.length > 0) this.statics.set(id, { boxes, body: this.w.createBody({ kind: 'fixed', position: [0, 0, 0], colliders }) })
+      if (colliders.length === 0) continue
+      const body = this.w.createBody({ kind: 'fixed', position: [0, 0, 0], colliders })
+      this.statics.set(id, { boxes, body })
+      this.passThroughNewStatic(body)
     }
   }
 

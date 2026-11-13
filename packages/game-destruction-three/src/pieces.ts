@@ -41,6 +41,8 @@ export interface PieceSystemOptions {
   physics?: PhysicsWorld | (() => PhysicsWorld | undefined)
   /** With `physics`: rotated boxes of what does not move, per object, 10 numbers each (centre, half sizes, quaternion). */
   staticBoxes?: () => ReadonlyMap<string, readonly number[]>
+  /** With `physics`: the drawn triangles of what does not move, per object (world space); used in place of `staticBoxes` when given. */
+  staticMeshes?: () => ReadonlyMap<string, ReadonlyArray<{ readonly vertices: Float32Array; readonly indices: Uint32Array }>>
 }
 
 /** What a moving piece ran into (`PieceSystemOptions.sweep`). */
@@ -479,6 +481,7 @@ export class PieceSystem {
         groundAt: this.o.groundAt,
         gravity: this.o.gravity,
         staticBoxes: this.o.staticBoxes,
+        staticMeshes: this.o.staticMeshes,
         sweep: this.o.sweep,
         onSlam: this.o.onSlam,
         onHardLanding: this.o.onHardLanding,

@@ -5,6 +5,8 @@ import type { Piece } from '../src/types'
 export interface EnergyReport {
   /** C2: the most energy height (m) a piece gained over one episode (wake to sleep) that it started at rest. */
   restGain: number
+  /** C2 with its exemption: gains in updates where another piece moving faster than 1 m/s was within its reach (a hit, not a launch) are left out. */
+  restGainUnhit: number
   /** C3: the most a centre of mass rose beyond what its own upward speed carried it, summed over a piece's episode (m). */
   lift: number
   /** C1: the largest rise of the scene's total m * energy height in one update, over m_total * g (m): energy made by contacts. */
@@ -46,14 +48,15 @@ export const energyHeight = (p: Piece): number => {
 
 /** Runs `frames` updates and measures C1-C3 around each. */
 export const measureEnergy = (pieces: () => Piece[], update: (dt: number) => void, dt: number, frames: number, between?: () => void): EnergyReport => {
-  const episode = new Map<Piece, { gain: number; lift: number; fromRest: boolean }>()
-  const out: EnergyReport = { restGain: 0, lift: 0, created: 0, createdOver1mm: 0 }
+  const episode = new Map<Piece, { gain: number; unhit: number; lift: number; fromRest: boolean }>()
+  const out: EnergyReport = { restGain: 0, restGainUnhit: 0, lift: 0, created: 0, createdOver1mm: 0 }
   for (let f = 0; f < frames; f++) {
     between?.()
     const list = pieces()
     const before = list.map((p) => {
       const k = p as unknown as Kinetic
-      return { p, e: energyHeight(p), y: centreY(p), vy: k.velocity[1], speed: Math.hypot(...k.velocity), asleep: k.sleeping }
+      const c = v.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld)
+      return { p, e: energyHeight(p), y: centreY(p), vy: k.velocity[1], speed: Math.hypot(...k.velocity), asleep: k.sleeping, x: c.x, z: c.z, reach: Math.hypot(...k.halfExtents) }
     })
     update(dt)
     let total = 0
@@ -65,11 +68,16 @@ export const measureEnergy = (pieces: () => Piece[], update: (dt: number) => voi
       mass += k.mass
       let ep = episode.get(b.p)
       // an episode starts when a piece is at rest (asleep, or slower than 5 cm/s) and ends when it sleeps
-      if (!ep) episode.set(b.p, (ep = { gain: 0, lift: 0, fromRest: b.asleep || b.speed < 0.05 }))
+      if (!ep) episode.set(b.p, (ep = { gain: 0, unhit: 0, lift: 0, fromRest: b.asleep || b.speed < 0.05 }))
       ep.gain += Math.max(0, e - b.e)
+      const hit = before.some((o) => o !== b && o.speed > 1 && Math.hypot(o.x - b.x, o.z - b.z) < o.reach + b.reach)
+      if (!hit) ep.unhit += Math.max(0, e - b.e)
       ep.lift += Math.max(0, centreY(b.p) - b.y - Math.max(0, b.vy) * dt)
       out.lift = Math.max(out.lift, ep.lift)
-      if (ep.fromRest) out.restGain = Math.max(out.restGain, ep.gain)
+      if (ep.fromRest) {
+        out.restGain = Math.max(out.restGain, ep.gain)
+        out.restGainUnhit = Math.max(out.restGainUnhit, ep.unhit)
+      }
       if (k.sleeping) episode.delete(b.p)
     }
     const made = total / Math.max(mass, 1e-9)
