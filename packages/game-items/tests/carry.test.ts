@@ -61,4 +61,15 @@ describe('carry', () => {
     expect(fitsInside([0.2, 0.5, 0.3], [0.5, 0.3, 0.2])).toBe(true)
     expect(fitsInside([0.55, 0.1, 0.1], [0.5, 0.3, 0.2])).toBe(false)
   })
+
+  it('says a 1.1 m shovel is too long for a 0.5 m backpack even when the bag is also full and the load at its limit: length is the reason that never changes', () => {
+    const shovel = item('shovel', { weight: 2, size: [1.1, 0.07, 0.22] })
+    const backpack = bagOption(item('backpack', { category: 'bags', carry: { capacityKg: 10, weightReduction: 0, quickSlots: 0 } }), 30)
+    // 30 kg carried of 30 kg: 2 kg more would be too heavy, and 10 of 10 slots are taken; the shovel still could not go in an empty bag
+    expect(canTake(shovel, backpack, { slots: 10, loadKg: 30, litres: 29 })).toBe('too_long')
+    // the same load refuses a brick that fits by shape for the slots, then the weight
+    const brick = item('brick', { weight: 2, size: [0.2, 0.1, 0.1] })
+    expect(canTake(brick, backpack, { slots: 10, loadKg: 0, litres: 0 })).toBe('bag_full')
+    expect(canTake(brick, backpack, { slots: 0, loadKg: 30, litres: 0 })).toBe('too_heavy')
+  })
 })

@@ -75,12 +75,15 @@ export interface TakeOptions {
   weightFactor?: number
 }
 
-/** Whether `item` can go into the bag now: first the slots, then the weight, then the shape against the inside dimensions, then the volume (when the bag has them). */
+/**
+ * Whether `item` can go into the bag now: first the shape against the inside dimensions (an item longer than the bag never goes in, however empty or light the bag is, so that is
+ * the reason given before any that depends on what the bag already holds), then the slots, the weight and the volume (when the bag has them).
+ */
 export const canTake = (item: ItemDef, bag: BagOption, used: { slots: number; loadKg: number; litres?: number }, options: TakeOptions = {}): TakeResult => {
   const { count = 1, slotsNeeded = 1, weightFactor = 1 } = options
+  if (bag.inside !== undefined && !fitsInside(item.size, bag.inside)) return 'too_long'
   if (used.slots + slotsNeeded > bag.slots) return 'bag_full'
   if (used.loadKg + item.weight * count * weightFactor > bag.capacityKg) return 'too_heavy'
-  if (bag.inside !== undefined && !fitsInside(item.size, bag.inside)) return 'too_long'
   if (bag.capacityLitres !== undefined && (used.litres ?? 0) + itemLitres(item) * count > bag.capacityLitres) return 'too_bulky'
   return 'ok'
 }
