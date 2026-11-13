@@ -95,6 +95,26 @@ describe('picking up a tool of the arsenal from the world', () => {
     expect(after.parts.find((part) => part.id === 'blade')!.bend).toBeGreaterThan(0.3)
   })
 
+  it('the object put back is drawn damaged: its bent blade and dent are in the meshes, not only in the state', () => {
+    const { room, objectId } = withShovel(bendBlade)
+    room.grab()
+    room.grab()
+    const dropped = room.log.entries({ type: 'drop' })[0]!.objectId!
+    expect(dropped).not.toBe(objectId)
+    const drawn = (root: THREE.Object3D): number[] => {
+      const out: number[] = []
+      root.traverse((child) => (child as THREE.Mesh).isMesh && out.push(...Array.from(((child as THREE.Mesh).geometry.getAttribute('position') as THREE.BufferAttribute).array)))
+      return out
+    }
+    const back = room.spawned().find((one) => one.objectId === dropped)!
+    const whole = buildFromSpec(THREE, SHOVEL_SPEC())
+    const bentDrawing = drawn(back.root)
+    const wholeDrawing = drawn(whole)
+    expect(bentDrawing).toHaveLength(wholeDrawing.length)
+    const lowered = bentDrawing.filter((value, index) => index % 3 === 1 && value < (wholeDrawing[index] ?? 0) - 0.02)
+    expect(lowered.length).toBeGreaterThan(0)
+  })
+
   it('throwing it sends the same damaged object off', () => {
     const { room, objectId } = withShovel(snapHandle)
     room.grab()

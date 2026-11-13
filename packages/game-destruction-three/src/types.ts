@@ -274,6 +274,8 @@ export interface DestructionRenderer {
   reset(): void
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
+  /** Draw a bound object again from the state its world holds now (after `DestructionWorld.loadObject` put it back damaged): dents, holes, cracks, bend, char, broken parts hidden. */
+  redraw(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
   /** The draws of the batches of the debris at rest and how many debris meshes they draw (`RendererOptions.settledBatches`). */
   settledBatchStats?(): SettledBatchStats

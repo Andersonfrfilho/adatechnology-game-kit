@@ -3162,6 +3162,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const rotation: Quat = [pose.rotation[0], pose.rotation[1], pose.rotation[2], pose.rotation[3]]
     world.loadObject(tool.saved, objectId)
     world.setTransform(objectId, position, rotation)
+    renderer.redraw(objectId)
     const piece = rendererPieces.get(objectId)
     if (thrown && piece) {
       piece.velocity = [0, 0, 0]

@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -1427,22 +1427,8 @@ class Renderer implements DestructionRenderer {
     const def = this.world.materials.get(pv.material)
     const n = this.worldDir(b, ev.hole.normal)
     const look = debrisLook(def, 'shot')
-    const draw = (point: Vec3, normal: THREE_NS.Vector3): void => {
-      const wp = new this.THREE.Vector3(point[0], point[1], point[2])
-      const mv = this.nearestMesh(pv, wp)
-      if (!mv) return
-      if (look.mark === 'star_crack') {
-        const seed = hashNumbers(ev.time, point[0], point[1], point[2])
-        this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, ev.hole.diameter * 5), 0xe8f4ff, seed)
-      } else {
-        // wood tears its fibres around the hole: a ragged rim of fresh wood under it
-        const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
-        if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, ev.hole.diameter * WOOD_RIM), fresh)
-        this.visuals.addHole(mv, wp, normal, ev.hole.diameter)
-      }
-    }
-    draw(ev.worldPoint, n)
-    if (ev.hole.through && ev.exitPoint) draw(ev.exitPoint, n.clone().negate())
+    this.drawHoleMark(pv, ev.worldPoint, n, ev.hole.diameter, ev.time)
+    if (ev.hole.through && ev.exitPoint) this.drawHoleMark(pv, ev.exitPoint, n.clone().negate(), ev.hole.diameter, ev.time)
     if (look.sparks) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
     if (ev.powder) {
       // what the part holds loose (flakes, flour) puffs out: a little back out of the entry, most out of the exit along the shot
@@ -1454,20 +1440,44 @@ class Renderer implements DestructionRenderer {
     this.sound(shotKey(def), ev.worldPoint, 0.6, impactSoundKeys(pv.material, def, ev.blow))
   }
 
+  /** The mark of one hole on the mesh of `pv` nearest to the world `point`: a star crack in glass, a ragged rim and a dark disc elsewhere. */
+  private drawHoleMark(pv: PartVis, point: Vec3, normal: THREE_NS.Vector3, diameter: number, time: number): void {
+    const def = this.world.materials.get(pv.material)
+    const look = debrisLook(def, 'shot')
+    const wp = new this.THREE.Vector3(point[0], point[1], point[2])
+    const mv = this.nearestMesh(pv, wp)
+    if (!mv) return
+    if (look.mark === 'star_crack') {
+      const seed = hashNumbers(time, point[0], point[1], point[2])
+      this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, diameter * 5), 0xe8f4ff, seed)
+      return
+    }
+    // wood tears its fibres around the hole: a ragged rim of fresh wood under it
+    const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
+    if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, diameter * WOOD_RIM), fresh)
+    this.visuals.addHole(mv, wp, normal, diameter)
+  }
+
   private onCrack(ev: Ev<'crack'>): void {
     const b = this.bounds.get(ev.object)
     const pv = b?.parts.get(ev.part)
     if (!b || !pv) return
+    this.drawCrackMark(b, pv, ev.crack, ev.worldPoint, ev.time)
+    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
+  }
+
+  /** The mark of one crack: the mortar gap of a settlement crack on both faces of a wall, or the star lines of glass; an opaque body shows chips, holes and dents instead. */
+  private drawCrackMark(b: Bound, pv: PartVis, crack: Crack, worldPoint: Vec3, time: number): void {
     const def = this.world.materials.get(pv.material)
-    const stair = ev.crack.stair
+    const stair = crack.stair
     // a stair-step crack of settlement opens the mortar joints of the wall: a dark gap drawn on its face, as wide as it opened (and wide enough to be seen)
     if (stair && !def?.visual?.transparent) {
-      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const wp = new this.THREE.Vector3(worldPoint[0], worldPoint[1], worldPoint[2])
+      const seed = hashNumbers(time, worldPoint[0], worldPoint[1], worldPoint[2])
       const width = Math.max(stair.width, MIN_DRAWN_CRACK_WIDTH)
-      const normal = this.worldDir(b, ev.crack.normal)
+      const normal = this.worldDir(b, crack.normal)
       const toward = this.worldDir(b, stair.along)
-      const look = { length: ev.crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
+      const look = { length: crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
       // the same crack on both faces of the wall (the far one seen from behind: its side runs the other way round, its path the same)
       for (const face of [wp, wp.clone().addScaledVector(normal, -stair.through)]) {
         const out = face === wp ? normal : normal.clone().negate()
@@ -1477,12 +1487,11 @@ class Renderer implements DestructionRenderer {
     }
     // only glass shows a crack as lines (the break runs inside a clear body); an opaque body shows its damage as chips, holes and dents, never lines drawn over it
     else if (def?.visual?.transparent) {
-      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const wp = new this.THREE.Vector3(worldPoint[0], worldPoint[1], worldPoint[2])
       const mv = this.nearestMesh(pv, wp)
-      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, ev.crack.length, 0xe8f4ff, seed)
+      const seed = hashNumbers(time, worldPoint[0], worldPoint[1], worldPoint[2])
+      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, crack.normal), crack.rays, crack.length, 0xe8f4ff, seed)
     }
-    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
   }
 
   /** Outward normal of the face of `mv` nearest to a world point: the thin axis of its world box (right for a wall; a sloped face is left to the vertex-range binding). */
@@ -2387,6 +2396,47 @@ class Renderer implements DestructionRenderer {
       this.ground.removeHome(home)
       this.cages.removeObject(home)
     }
+  }
+
+  /**
+   * Draws a bound object again from the state its world holds now: the host put it back damaged (`DestructionWorld.loadObject`) and the meshes, still whole, take its dents, holes,
+   * cracks, bend and char, with the broken, melted and burned parts hidden, as the live path drew them. Marks the meshes already carry are wiped first.
+   */
+  redraw(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (!b) return
+    this.restoreHome(objectId)
+    b.root.updateWorldMatrix(true, false)
+    for (const pv of b.parts.values()) this.drawPartState(b, pv)
+  }
+
+  private drawPartState(b: Bound, pv: PartVis): void {
+    const ps = this.world.part(b.id, pv.id)
+    if (!ps) return
+    if (ps.status === 'broken' || ps.status === 'melted' || ps.status === 'ashes') {
+      this.visuals.hide(pv, ps.status)
+      return
+    }
+    const toWorld = (local: Vec3): Vec3 => {
+      const at = new this.THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(b.root.matrixWorld)
+      return [at.x, at.y, at.z]
+    }
+    const shown = pv.meshes.filter((mv) => this.visuals.shown(mv))
+    for (const dent of ps.dents) {
+      const at = toWorld(dent.point)
+      const wp = new this.THREE.Vector3(at[0], at[1], at[2])
+      const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, dent)), dent.radius)
+      this.visuals.applyPartDent(shown, wp, this.worldDir(b, dent.normal), dent, reach)
+    }
+    for (const hole of ps.holes) this.drawHoleMark(pv, toWorld(hole.point), this.worldDir(b, hole.normal), hole.diameter, 0)
+    for (const crack of ps.cracks) this.drawCrackMark(b, pv, crack, toWorld(crack.point), 0)
+    if (ps.bend !== undefined && ps.bendHinge) {
+      const hinge = new this.THREE.Vector3(...toWorld(ps.bendHinge.point))
+      const axis = this.worldDir(b, ps.bendHinge.axis)
+      const side = this.worldDir(b, ps.bendHinge.side)
+      for (const mv of shown) this.visuals.applyBend(mv, hinge, axis, side, ps.bend)
+    }
+    if (ps.char > 0 || ps.melt > 0) this.activate(b.id, pv.id)
   }
 
   release(objectId: string): string[] {
