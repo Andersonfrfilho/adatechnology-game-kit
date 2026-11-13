@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
-import type { BodyId, JointId, PhysicsWorld } from '@adatechnology/game-physics'
+import type { BodyId, JointId, PhysicsWorld, RagdollId } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import { ground, ragdoll, report, stats } from './scenes'
 
@@ -54,18 +54,34 @@ describe('case 4: crowd', () => {
   it('100 dead bodies piling against a wall: full ragdolls, cheap chains, and the swap to one capsule far away', { timeout: 300000 }, async () => {
     const engine = await createJoltEngine()
     const results: Record<string, unknown> = {}
-    for (const [kind, sleepSpeed] of [['ragdoll', 0.03], ['chain', 0.03], ['ragdoll', 0.1], ['chain', 0.1]] as const) {
+    // 0.03 m/s is Jolt's default sleep speed, 0.08 the kit's world (debris, the room), 0.1 the spike's
+    for (const [kind, sleepSpeed] of [['ragdoll', 0.03], ['chain', 0.03], ['engineChain', 0.03], ['chain', 0.08], ['engineChain', 0.08], ['chain', 0.1]] as const) {
       const world = engine.createWorld({ fixedStep: 1 / 60, maxBodies: 8192, sleepSpeed })
       ground(world, 100)
       world.createBody({ shape: { kind: 'box', half: [6, 1.5, 0.2] }, motion: 'static', position: [0, 1.5, -0.2], user: -1 })
       const made: BodyId[][] = []
       const links: JointId[][] = []
+      const dolls: RagdollId[] = []
       for (let i = 0; i < 100; i++) {
         const at: [number, number, number] = [((i % 10) - 5) * 0.8, 0.3 + Math.floor(i / 10) * 0.45, 0.6 + (i % 3) * 0.3]
         if (kind === 'ragdoll') {
           const doll = ragdoll(world, at, i)
           made.push(doll.bodies)
           links.push(doll.joints.map((j) => j.id))
+        }
+        else if (kind === 'engineChain') {
+          // the same cheap body as the engine's own ragdoll, stabilized (gate 0 B3)
+          const doll = world.createRagdoll({
+            stabilize: true,
+            parts: [
+              { body: { shape: { kind: 'capsule', halfHeight: 0.25, radius: 0.17 }, mass: 40, position: [at[0], at[1] + 1.25, at[2]], layer: 'character', user: i }, parent: -1 },
+              { body: { shape: { kind: 'sphere', radius: 0.11 }, mass: 5, position: [at[0], at[1] + 1.75, at[2]], layer: 'character', user: i }, parent: 0, joint: { kind: 'swingTwist', point: [at[0], at[1] + 1.62, at[2]], twistAxis: [0, 1, 0], planeAxis: [0, 0, 1], normalHalfCone: 0.5, planeHalfCone: 0.5, twistMin: -0.5, twistMax: 0.5 } },
+              { body: { shape: { kind: 'capsule', halfHeight: 0.3, radius: 0.15 }, mass: 25, position: [at[0], at[1] + 0.45, at[2]], layer: 'character', user: i }, parent: 0, joint: { kind: 'swingTwist', point: [at[0], at[1] + 0.92, at[2]], twistAxis: [0, -1, 0], planeAxis: [0, 0, 1], normalHalfCone: 1.2, planeHalfCone: 1.0, twistMin: -0.4, twistMax: 0.4 } },
+            ],
+          })
+          dolls.push(doll.id)
+          made.push([])
+          links.push([])
         }
         else {
           // a cheap body: torso, and two legs as one capsule, on a swing-twist hip (3 bodies, 2 joints)
@@ -89,6 +105,7 @@ describe('case 4: crowd', () => {
       }
       // body LOD: far away a ragdoll becomes one capsule (remove its bodies and joints, make one): how long the swap takes for all 100
       const t0 = performance.now()
+      for (const d of dolls) world.removeRagdoll(d)
       for (const [i, bodies] of made.entries()) {
         // the joints go first: a joint must not outlive its bodies
         for (const j of links[i] ?? []) world.removeJoint(j)
@@ -96,9 +113,13 @@ describe('case 4: crowd', () => {
         world.createBody({ shape: { kind: 'capsule', halfHeight: 0.6, radius: 0.25 }, motion: 'dynamic', mass: 75, position: [((i % 10) - 5) * 0.8, 0.3, 1], layer: 'character', sleeping: true, user: i })
       }
       const swap = performance.now() - t0
-      results[`${kind}@sleep${sleepSpeed}`] = { bodies: made.flat().length, step: stats(steps), stepFirst2s: stats(steps.slice(0, 120)), asleepAtS: asleep, lodSwap100Ms: Math.round(swap * 100) / 100 }
+      results[`${kind}@sleep${sleepSpeed}`] = { bodies: made.flat().length + dolls.length * 3, step: stats(steps), stepFirst2s: stats(steps.slice(0, 120)), asleepAtS: asleep, lodSwap100Ms: Math.round(swap * 100) / 100 }
       world.dispose()
     }
     report('crowd-piles', results)
+    // B3: 100 cheap bodies made as the engine's ragdolls fall asleep in the pile within 10 s, in the kit's world (sleep speed 0.08)
+    const chains = results['engineChain@sleep0.08'] as { asleepAtS: number }
+    expect(chains.asleepAtS).toBeGreaterThan(0)
+    expect(chains.asleepAtS).toBeLessThanOrEqual(10)
   })
 })

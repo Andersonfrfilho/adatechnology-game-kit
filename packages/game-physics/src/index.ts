@@ -110,6 +110,30 @@ export type JointDesc =
       readonly breakImpulse?: number
     }
 
+/** A joint of a ragdoll part to its parent: a hinge or swing-twist as in `JointDesc`, the bodies being the part and its parent. */
+export type RagdollJoint = Omit<Extract<JointDesc, { kind: 'hinge' }>, 'a' | 'b' | 'breakImpulse'> | Omit<Extract<JointDesc, { kind: 'swingTwist' }>, 'a' | 'b' | 'breakImpulse'>
+
+/** One body of a ragdoll: a dynamic body, the index of its parent part (-1 for the root, which comes first) and its joint to it. */
+export interface RagdollPart {
+  readonly body: Omit<BodyDesc, 'motion' | 'group'>
+  readonly parent: number
+  readonly joint?: RagdollJoint
+}
+
+/**
+ * A ragdoll as one engine object (the engine's own ragdoll, not loose bodies and joints): parts ordered parents first. `stabilize` lets the engine even out
+ * mass and inertia between neighbouring parts (a 1 kg hand on a 3 kg forearm on a 30 kg torso) so its joints hold their limits; the masses then are the
+ * engine's. Neighbouring parts, and parts that touch in the pose they are made in, do not collide.
+ */
+export interface RagdollDesc {
+  readonly parts: readonly RagdollPart[]
+  readonly stabilize?: boolean
+  /** Solver passes for its bodies and joints in place of the world's (velocity, position): more holds the limits through a hard landing. */
+  readonly solverSteps?: { readonly velocity: number; readonly position: number }
+}
+
+export type RagdollId = number & { readonly __ragdoll: unique symbol }
+
 export interface WheelDesc {
   /** Attachment in the chassis frame (top of the suspension travel). */
   readonly position: Vec3
@@ -241,6 +265,9 @@ export interface PhysicsWorld {
   removeJoint(id: JointId): void
   /** Joints whose `breakImpulse` was passed in the last step: removed by the adapter, reported once. */
   readonly brokenJoints: readonly JointId[]
+  /** Its bodies (in part order) and its joints (one per part but the root, in part order), for reading poses and `jointAngles`. */
+  createRagdoll(desc: RagdollDesc): { readonly id: RagdollId; readonly bodies: readonly BodyId[]; readonly joints: readonly JointId[] }
+  removeRagdoll(id: RagdollId): void
   /** Disable contact between sub-ids of a group. Returns the group id. */
   createGroup(subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number
   createVehicle(desc: VehicleDesc): VehicleId

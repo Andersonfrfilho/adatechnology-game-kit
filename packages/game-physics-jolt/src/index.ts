@@ -19,6 +19,9 @@ import type {
   PhysicsWorld,
   QueryFilter,
   Quat,
+  RagdollDesc,
+  RagdollId,
+  RagdollJoint,
   RayHit,
   Rolling,
   SensorEvent,
@@ -69,6 +72,14 @@ interface JointEntry {
   readonly breakImpulse: number
   readonly hinge: JoltNS.HingeConstraint | null
   readonly swing: JoltNS.SwingTwistConstraint | null
+  /** A ragdoll's own joint: added and removed with its ragdoll. */
+  readonly ragdoll: boolean
+}
+
+interface RagdollEntry {
+  readonly ragdoll: JoltNS.Ragdoll
+  readonly bodies: readonly BodyId[]
+  readonly joints: readonly JointId[]
 }
 
 interface VehicleEntry {
@@ -120,6 +131,8 @@ export class JoltWorld implements PhysicsWorld {
   private readonly bodies = new Map<number, BodyEntry>()
   private readonly joints = new Map<number, JointEntry>()
   private readonly vehicles = new Map<number, VehicleEntry>()
+  private readonly ragdolls = new Map<number, RagdollEntry>()
+  private nextRagdoll = 1
   private readonly groups: JoltNS.GroupFilterTable[] = []
   private nextJoint = 1
   private nextVehicle = 1
@@ -771,11 +784,9 @@ export class JoltWorld implements PhysicsWorld {
     return this.groups.length - 1
   }
 
-  createJoint(desc: JointDesc): JointId {
+  /** Jolt's settings for a joint, in world space as given (the two bodies are added by whoever creates it). */
+  private constraintSettings(desc: JointDesc | RagdollJoint): JoltNS.TwoBodyConstraintSettings {
     const J = this.J
-    const a = this.entry(desc.a).body
-    const b = this.entry(desc.b).body
-    let settings: JoltNS.TwoBodyConstraintSettings
     if (desc.kind === 'hinge' || desc.kind === 'fixed') {
       // a fixed joint that can break is a hinge locked at 0: Jolt exposes the hinge's impulses, not the fixed one's
       const axis = desc.kind === 'hinge' ? desc.axis : ([0, 1, 0] as Vec3)
@@ -790,39 +801,141 @@ export class JoltWorld implements PhysicsWorld {
       s.mLimitsMin = desc.kind === 'hinge' ? desc.min : 0
       s.mLimitsMax = desc.kind === 'hinge' ? desc.max : 0
       if (desc.kind === 'hinge' && desc.friction !== undefined) s.mMaxFrictionTorque = desc.friction
-      settings = s
-    } else {
-      const s = new J.SwingTwistConstraintSettings()
-      s.mPosition1.Set(desc.point[0], desc.point[1], desc.point[2])
-      s.mPosition2.Set(desc.point[0], desc.point[1], desc.point[2])
-      s.mTwistAxis1.Set(desc.twistAxis[0], desc.twistAxis[1], desc.twistAxis[2])
-      s.mTwistAxis2.Set(desc.twistAxis[0], desc.twistAxis[1], desc.twistAxis[2])
-      s.mPlaneAxis1.Set(desc.planeAxis[0], desc.planeAxis[1], desc.planeAxis[2])
-      s.mPlaneAxis2.Set(desc.planeAxis[0], desc.planeAxis[1], desc.planeAxis[2])
-      s.mNormalHalfConeAngle = desc.normalHalfCone
-      s.mPlaneHalfConeAngle = desc.planeHalfCone
-      s.mTwistMinAngle = desc.twistMin
-      s.mTwistMaxAngle = desc.twistMax
-      if (desc.friction !== undefined) s.mMaxFrictionTorque = desc.friction
-      settings = s
+      return s
     }
-    const constraint = J.castObject(settings.Create(a, b), J.TwoBodyConstraint)
-    J.destroy(settings)
-    this.system.AddConstraint(constraint)
+    const s = new J.SwingTwistConstraintSettings()
+    s.mPosition1.Set(desc.point[0], desc.point[1], desc.point[2])
+    s.mPosition2.Set(desc.point[0], desc.point[1], desc.point[2])
+    s.mTwistAxis1.Set(desc.twistAxis[0], desc.twistAxis[1], desc.twistAxis[2])
+    s.mTwistAxis2.Set(desc.twistAxis[0], desc.twistAxis[1], desc.twistAxis[2])
+    s.mPlaneAxis1.Set(desc.planeAxis[0], desc.planeAxis[1], desc.planeAxis[2])
+    s.mPlaneAxis2.Set(desc.planeAxis[0], desc.planeAxis[1], desc.planeAxis[2])
+    s.mNormalHalfConeAngle = desc.normalHalfCone
+    s.mPlaneHalfConeAngle = desc.planeHalfCone
+    s.mTwistMinAngle = desc.twistMin
+    s.mTwistMaxAngle = desc.twistMax
+    if (desc.friction !== undefined) s.mMaxFrictionTorque = desc.friction
+    return s
+  }
+
+  private addJointEntry(constraint: JoltNS.TwoBodyConstraint, kind: JointDesc['kind'], breakImpulse: number, ragdoll: boolean): JointId {
+    const J = this.J
     const id = this.nextJoint++ as JointId
     this.joints.set(id, {
       constraint,
-      kind: desc.kind,
-      breakImpulse: desc.breakImpulse ?? Infinity,
-      hinge: desc.kind === 'swingTwist' ? null : J.castObject(constraint, J.HingeConstraint),
-      swing: desc.kind === 'swingTwist' ? J.castObject(constraint, J.SwingTwistConstraint) : null,
+      kind,
+      breakImpulse,
+      hinge: kind === 'swingTwist' ? null : J.castObject(constraint, J.HingeConstraint),
+      swing: kind === 'swingTwist' ? J.castObject(constraint, J.SwingTwistConstraint) : null,
+      ragdoll,
     })
     return id
   }
 
+  createJoint(desc: JointDesc): JointId {
+    const settings = this.constraintSettings(desc)
+    const constraint = this.J.castObject(settings.Create(this.entry(desc.a).body, this.entry(desc.b).body), this.J.TwoBodyConstraint)
+    this.J.destroy(settings)
+    this.system.AddConstraint(constraint)
+    return this.addJointEntry(constraint, desc.kind, desc.breakImpulse ?? Infinity, false)
+  }
+
+  /**
+   * Jolt's own ragdoll: a skeleton of the parts, each part's joint to its parent, `Stabilize` (it evens out mass and inertia along the chain so the joints hold
+   * their limits) when asked, no collision between neighbours or parts touching as made, the joints solved parents first. Its bodies and joints are the
+   * adapter's like any other until `removeRagdoll`.
+   */
+  createRagdoll(desc: RagdollDesc): { readonly id: RagdollId; readonly bodies: readonly BodyId[]; readonly joints: readonly JointId[] } {
+    const J = this.J
+    const skeleton = new J.Skeleton()
+    desc.parts.forEach((part, i) => {
+      const name = new J.JPHString(`part${i}`, `part${i}`.length)
+      skeleton.AddJoint(name, part.parent)
+      J.destroy(name)
+    })
+    const settings = new J.RagdollSettings()
+    settings.mSkeleton = skeleton
+    settings.mParts.resize(desc.parts.length)
+    desc.parts.forEach((part, i) => {
+      const s = settings.mParts.at(i)
+      const b = part.body
+      const shape = this.makeShape(b.shape)
+      s.SetShape(shape)
+      shape.Release()
+      const r = b.rotation ?? [0, 0, 0, 1]
+      s.mPosition.Set(b.position[0], b.position[1], b.position[2])
+      s.mRotation.Set(r[0], r[1], r[2], r[3])
+      s.mMotionType = J.EMotionType_Dynamic
+      s.mObjectLayer = this.layerOf(b.layer ?? 'character')
+      const material = b.material ?? DEFAULT_MATERIAL
+      s.mFriction = Math.sqrt(material.frictionStatic)
+      s.mRestitution = material.restitution
+      s.mUserData = b.user
+      if (b.linearDamping !== undefined) s.mLinearDamping = b.linearDamping
+      if (b.angularDamping !== undefined) s.mAngularDamping = b.angularDamping
+      if (b.continuous) s.mMotionQuality = J.EMotionQuality_LinearCast
+      if (b.allowSleep === false) s.mAllowSleeping = false
+      if (b.mass !== undefined) {
+        s.mOverrideMassProperties = J.EOverrideMassProperties_CalculateInertia
+        s.mMassPropertiesOverride.mMass = b.mass
+      }
+      if (b.linearVelocity) s.mLinearVelocity.Set(b.linearVelocity[0], b.linearVelocity[1], b.linearVelocity[2])
+      if (b.angularVelocity) s.mAngularVelocity.Set(b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2])
+      if (desc.solverSteps) {
+        s.mNumVelocityStepsOverride = desc.solverSteps.velocity
+        s.mNumPositionStepsOverride = desc.solverSteps.position
+      }
+      // the part holds its joint settings by reference from here on
+      if (part.joint) s.mToParent = this.constraintSettings(part.joint)
+    })
+    if (desc.stabilize) settings.Stabilize()
+    settings.DisableParentChildCollisions()
+    settings.CalculateConstraintPriorities()
+    settings.CalculateBodyIndexToConstraintIndex()
+    settings.CalculateConstraintIndexToBodyIdxPair()
+    // the ragdoll keeps its settings (and they their skeleton and joint settings) by reference: all go when it is destroyed
+    const ragdoll = settings.CreateRagdoll(this.nextRagdoll, 0, this.system)
+    ragdoll.AddToPhysicsSystem(J.EActivation_Activate)
+    const lock = this.system.GetBodyLockInterfaceNoLock()
+    const bodies: BodyId[] = desc.parts.map((part, i) => {
+      const body = lock.TryGetBody(ragdoll.GetBodyID(i))
+      const key = body.GetID().GetIndexAndSequenceNumber()
+      this.bodies.set(key, { body, id: new J.BodyID(key), user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass() })
+      if (part.body.rolling) this.rollers.set(key, part.body.rolling)
+      return key as BodyId
+    })
+    const joints: JointId[] = []
+    let k = 0
+    for (const part of desc.parts) {
+      if (!part.joint) continue
+      joints.push(this.addJointEntry(ragdoll.GetConstraint(k++), part.joint.kind, Infinity, true))
+    }
+    const id = this.nextRagdoll++ as RagdollId
+    this.ragdolls.set(id, { ragdoll, bodies, joints })
+    return { id, bodies, joints }
+  }
+
+  removeRagdoll(id: RagdollId): void {
+    const e = this.ragdolls.get(id)
+    if (!e) return
+    for (const j of e.joints) this.joints.delete(j)
+    for (const b of e.bodies) {
+      const entry = this.bodies.get(b)
+      if (entry) this.J.destroy(entry.id)
+      this.bodies.delete(b)
+      this.touches.delete(b)
+      this.points.delete(b)
+      this.rollers.delete(b)
+    }
+    // destroying the ragdoll destroys its bodies and constraints and lets go of its settings
+    e.ragdoll.RemoveFromPhysicsSystem()
+    this.J.destroy(e.ragdoll)
+    this.ragdolls.delete(id)
+  }
+
   removeJoint(id: JointId): void {
     const e = this.joints.get(id)
-    if (!e) return
+    if (!e || e.ragdoll) return
     this.system.RemoveConstraint(e.constraint)
     this.joints.delete(id)
   }
@@ -1199,6 +1312,7 @@ export class JoltWorld implements PhysicsWorld {
     this.disposed = true
     const J = this.J
     for (const id of [...this.vehicles.keys()]) this.removeVehicle(id as VehicleId)
+    for (const id of [...this.ragdolls.keys()]) this.removeRagdoll(id as RagdollId)
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
