@@ -47,6 +47,7 @@ const dropOnClutter = (seed: number): { lift: number; fastestUp: number } => {
 describe('a sheet laid over clutter', () => {
   it.each([40, 41, 43])('is put apart a few centimetres in all, never sent up (seed %i)', (seed) => {
     const { lift, fastestUp } = dropOnClutter(seed)
+    if (process.env.BOWL_REPORT) console.log(`clutter seed ${seed} lift ${lift.toFixed(4)} up ${fastestUp.toFixed(3)}`)
     expect(lift).toBeLessThan(0.035)
     expect(fastestUp).toBeLessThan(0.05)
   })

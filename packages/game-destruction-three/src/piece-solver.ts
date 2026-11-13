@@ -47,21 +47,6 @@ export interface SolverContact {
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 
-/** Velocity of the point at `r` of a body. */
-const pointVelocity = (body: SolverBody, r: Vec3): Vec3 => {
-  const v = body.v
-  const w = body.w
-  return [v[0] + w[1] * r[2] - w[2] * r[1], v[1] + w[2] * r[0] - w[0] * r[2], v[2] + w[0] * r[1] - w[1] * r[0]]
-}
-
-/** Velocity of `a` against `b` at the contact. */
-const relative = (c: SolverContact): Vec3 => {
-  const va = pointVelocity(c.a, c.ra)
-  if (!c.b) return va
-  const vb = pointVelocity(c.b, c.rb)
-  return [va[0] - vb[0], va[1] - vb[1], va[2] - vb[2]]
-}
-
 /** 1 / effective mass of the pair along the unit `d` at the contact: 1/m_a + (I_a^-1 (r_a x d) x r_a) . d + the same for b. */
 const resistance = (c: SolverContact, d: Vec3): number => {
   const ta = c.a.invInertia(...cross(c.ra, d))
@@ -98,40 +83,114 @@ export const warmStart = (contacts: readonly SolverContact[]): void => {
  * `passes` rounds over all the contacts of the substep `h`. The normal impulse aims for the contact's `bounce` (closing) or, when the two are still `sep` apart, lets them
  * close by no more than that gap in the substep; it never pulls. Friction in the plane of the contact, up to the static or dynamic coefficient times the push.
  */
+/** What a contact needs through the passes, computed once per substep: its tangents, and per direction (normal, two tangents) the turn each body takes per unit impulse and the effective mass. */
+interface Prepared {
+  readonly c: SolverContact
+  readonly dirs: [Vec3, Vec3, Vec3]
+  readonly turnA: [Vec3, Vec3, Vec3]
+  readonly turnB: [Vec3, Vec3, Vec3]
+  readonly mass: [number, number, number]
+  accT1: number
+  accT2: number
+}
+
+const ZERO: Vec3 = [0, 0, 0]
+
+const prepare = (c: SolverContact): Prepared => {
+  const n = c.n
+  // a tangent across the normal: along the world axis it leans on least
+  const helper: Vec3 = Math.abs(n[0]) < 0.6 ? [1, 0, 0] : Math.abs(n[1]) < 0.6 ? [0, 1, 0] : [0, 0, 1]
+  const t1raw = cross(n, helper)
+  const len = Math.hypot(t1raw[0], t1raw[1], t1raw[2])
+  const t1: Vec3 = [t1raw[0] / len, t1raw[1] / len, t1raw[2] / len]
+  const t2 = cross(n, t1)
+  const dirs: [Vec3, Vec3, Vec3] = [n, t1, t2]
+  const turnA = dirs.map((d) => c.a.invInertia(...cross(c.ra, d))) as [Vec3, Vec3, Vec3]
+  const turnB = dirs.map((d) => (c.b ? c.b.invInertia(...cross(c.rb, d)) : ZERO)) as [Vec3, Vec3, Vec3]
+  const mass = dirs.map((d, k) => {
+    let inv = c.a.invMass + dot(cross(turnA[k], c.ra), d)
+    if (c.b) inv += c.b.invMass + dot(cross(turnB[k], c.rb), d)
+    return inv > 0 ? 1 / inv : 0
+  }) as [number, number, number]
+  return { c, dirs, turnA, turnB, mass, accT1: dot(c.accT, t1), accT2: dot(c.accT, t2) }
+}
+
+/** Velocity of `a` against `b` at the contact along the unit `d`. */
+const relativeAlong = (c: SolverContact, d: Vec3): number => {
+  const a = c.a
+  const ra = c.ra
+  let x = a.v[0] + a.w[1] * ra[2] - a.w[2] * ra[1]
+  let y = a.v[1] + a.w[2] * ra[0] - a.w[0] * ra[2]
+  let z = a.v[2] + a.w[0] * ra[1] - a.w[1] * ra[0]
+  const b = c.b
+  if (b) {
+    const rb = c.rb
+    x -= b.v[0] + b.w[1] * rb[2] - b.w[2] * rb[1]
+    y -= b.v[1] + b.w[2] * rb[0] - b.w[0] * rb[2]
+    z -= b.v[2] + b.w[0] * rb[1] - b.w[1] * rb[0]
+  }
+  return x * d[0] + y * d[1] + z * d[2]
+}
+
+/** Gives the impulse `j` along direction `k` of the prepared contact (to `a`, and its opposite to `b`). */
+const push = (p: Prepared, k: number, j: number): void => {
+  const c = p.c
+  const d = p.dirs[k]
+  const a = c.a
+  const ta = p.turnA[k]
+  const ma = a.invMass * j
+  a.v[0] += d[0] * ma
+  a.v[1] += d[1] * ma
+  a.v[2] += d[2] * ma
+  a.w[0] += ta[0] * j
+  a.w[1] += ta[1] * j
+  a.w[2] += ta[2] * j
+  const b = c.b
+  if (!b) return
+  const tb = p.turnB[k]
+  const mb = b.invMass * j
+  b.v[0] -= d[0] * mb
+  b.v[1] -= d[1] * mb
+  b.v[2] -= d[2] * mb
+  b.w[0] -= tb[0] * j
+  b.w[1] -= tb[1] * j
+  b.w[2] -= tb[2] * j
+}
+
+/**
+ * `passes` rounds over all the contacts of the substep `h`. The normal impulse aims for the contact's `bounce` (closing) or, when the two are still `sep` apart, lets them
+ * close by no more than that gap in the substep; it never pulls. Friction along two tangents of the contact, together up to the static or dynamic coefficient times the push.
+ */
 export const solveContacts = (contacts: readonly SolverContact[], h: number, passes: number): void => {
+  const prepared = contacts.map(prepare)
   for (let it = 0; it < passes; it++) {
-    for (const c of contacts) {
-      const n = c.n
-      const vn = dot(relative(c), n)
+    for (const p of prepared) {
+      const c = p.c
       const goal = c.sep > 0 ? -c.sep / h : c.bounce
-      const total = Math.max(0, c.accN + (goal - vn) / resistance(c, n))
+      const total = Math.max(0, c.accN + (goal - relativeAlong(c, c.n)) * p.mass[0])
       const j = total - c.accN
       c.accN = total
-      if (j !== 0) apply(c, [n[0] * j, n[1] * j, n[2] * j])
-      const rv = relative(c)
-      const rn = dot(rv, n)
-      const vt: Vec3 = [rv[0] - rn * n[0], rv[1] - rn * n[1], rv[2] - rn * n[2]]
-      const speed = Math.hypot(vt[0], vt[1], vt[2])
-      const f: Vec3 = [c.accT[0], c.accT[1], c.accT[2]]
-      if (speed > 1e-6) {
-        const d: Vec3 = [vt[0] / speed, vt[1] / speed, vt[2] / speed]
-        const jt = speed / resistance(c, d)
-        f[0] -= d[0] * jt
-        f[1] -= d[1] * jt
-        f[2] -= d[2] * jt
-      } else if (f[0] === 0 && f[1] === 0 && f[2] === 0) continue
-      const fl = Math.hypot(f[0], f[1], f[2])
+      if (j !== 0) push(p, 0, j)
       const most = (c.slipping ? c.mu.dynamic : c.mu.static) * c.accN
+      let f1 = p.accT1 - relativeAlong(c, p.dirs[1]) * p.mass[1]
+      let f2 = p.accT2 - relativeAlong(c, p.dirs[2]) * p.mass[2]
+      const fl = Math.hypot(f1, f2)
       if (fl > most) {
         const k = fl > 0 ? most / fl : 0
-        f[0] *= k
-        f[1] *= k
-        f[2] *= k
+        f1 *= k
+        f2 *= k
       }
-      const dj: Vec3 = [f[0] - c.accT[0], f[1] - c.accT[1], f[2] - c.accT[2]]
-      c.accT = f
-      if (dj[0] !== 0 || dj[1] !== 0 || dj[2] !== 0) apply(c, dj)
+      const d1 = f1 - p.accT1
+      const d2 = f2 - p.accT2
+      p.accT1 = f1
+      p.accT2 = f2
+      if (d1 !== 0) push(p, 1, d1)
+      if (d2 !== 0) push(p, 2, d2)
     }
+  }
+  for (const p of prepared) {
+    const [, t1, t2] = p.dirs
+    p.c.accT = [t1[0] * p.accT1 + t2[0] * p.accT2, t1[1] * p.accT1 + t2[1] * p.accT2, t1[2] * p.accT1 + t2[2] * p.accT2]
   }
 }
 

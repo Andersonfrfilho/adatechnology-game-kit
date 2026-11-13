@@ -161,6 +161,8 @@ const WAKE_KNOCK_SPEED = 1
  * bowl's lift drops to millimetres, but the impulses kept across a wedge (a plate between the ground and a sheet) kick pieces up at 0.2-0.4 m/s when the contact set changes.
  */
 const PAIR_WARM = false
+/** Solve the contacts from the ground up (sorted by height). Measured off: it converges stacks faster, and the better converged solve sends more pieces up ramps of others. */
+const BOTTOM_UP = false
 /** A contact takes the warm start of the one kept within this distance (m) of it. */
 const WARM_REACH = 0.01
 
@@ -307,6 +309,8 @@ export class PieceSystem {
   private supportTurn = 0
   /** What each contact between two pieces gave in the last substep, by its key (`PairContact.key`). */
   private pairWarm = new Map<string, PairWarm[]>()
+  /** The moving piece of each solver body of the step (for the height of its contacts). */
+  private readonly heightOf = new Map<SolverBody, Moving>()
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
   private supportFriction: PieceFriction | null = null
@@ -867,6 +871,8 @@ export class PieceSystem {
     const h = dt / steps
     const byBody = new Map<PieceBody, Moving>()
     for (const st of movers) byBody.set(st.b, st)
+    this.heightOf.clear()
+    for (const st of movers) this.heightOf.set(st.solver, st)
     const pairs = this.candidatePairs(byBody, dt, meets)
     const fixed = new Map<PieceBody, SolverBody>()
     const wake = new Set<PieceBody>()
@@ -882,11 +888,13 @@ export class PieceSystem {
       for (const pc of pairContacts) contacts.push(pc.contact)
       // the landing: the fastest a point of the piece closes on what it is about to touch
       for (const st of movers) this.measureLanding(st, h)
+      // from the ground up: what holds a stack is solved before what it holds, so the weight goes down the pile in fewer passes
+      if (BOTTOM_UP) contacts.sort((p, q) => this.contactHeight(p) - this.contactHeight(q))
       warmStart(contacts)
       solveContacts(contacts, h, SOLVER_PASSES)
       for (const st of movers) this.keepWarm(st)
       const kept = new Map<string, PairWarm[]>()
-      for (const pc of pairContacts) {
+      if (PAIR_WARM) for (const pc of pairContacts) {
         if (!pc.ownerA || !pc.ownerB) continue
         const list = kept.get(pc.key) ?? []
         list.push({ point: pc.point, n: pc.contact.n, accN: pc.contact.accN, accT: pc.contact.accT })
@@ -932,6 +940,8 @@ export class PieceSystem {
       return r + (Math.hypot(v[0], v[1], v[2]) + Math.hypot(w[0], w[1], w[2]) * r) * dt + SPECULATIVE_MARGIN
     })
     const order = list.map((_, i) => i).sort((i, j) => centers[i][0] - radii[i] - (centers[j][0] - radii[j]))
+    const index = new Map<PieceBody, number>()
+    this.list.forEach((b, i) => index.set(b, i))
     const out: Array<[PieceBody, PieceBody]> = []
     for (let oi = 0; oi < order.length; oi++) {
       const i = order[oi]
@@ -947,10 +957,16 @@ export class PieceSystem {
         if (Math.abs(centers[i][1] - centers[j][1]) > r || Math.abs(centers[i][2] - centers[j][2]) > r) continue
         if (Math.hypot(centers[i][0] - centers[j][0], centers[i][1] - centers[j][1], centers[i][2] - centers[j][2]) > r) continue
         // in the order of the list, so the same scene solves the same way
-        out.push(this.list.indexOf(a) < this.list.indexOf(b) ? [a, b] : [b, a])
+        out.push(index.get(a)! < index.get(b)! ? [a, b] : [b, a])
       }
     }
     return out
+  }
+
+  /** Height of a contact (world): the centre of mass of its first body plus its arm. */
+  private contactHeight(c: SolverContact): number {
+    const st = this.heightOf.get(c.a)
+    return (st ? st.pos[1] : 0) + c.ra[1]
   }
 
   /** The boxes a piece meets others by (its parts', or its own), where it is now: a moving piece as the substeps have taken it. */
@@ -1007,10 +1023,10 @@ export class PieceSystem {
           const ra: Vec3 = [point.point[0] - cx[0], point.point[1] - cx[1], point.point[2] - cx[2]]
           const rb: Vec3 = [point.point[0] - cy[0], point.point[1] - cy[1], point.point[2] - cy[2]]
           // the warm start of the contact kept nearest to this point (Bullet matches its persistent manifold the same way), when the normal has hardly turned
-          const key = `${x.objectId}|${y.objectId}|${ia}|${ib}`
+          const key = PAIR_WARM ? `${x.objectId}|${y.objectId}|${ia}|${ib}` : ''
           let warm: PairWarm | undefined
           let nearest = WARM_REACH
-          for (const old of this.pairWarm.get(key) ?? []) {
+          for (const old of PAIR_WARM ? (this.pairWarm.get(key) ?? []) : []) {
             const gap = Math.hypot(old.point[0] - point.point[0], old.point[1] - point.point[1], old.point[2] - point.point[2])
             if (gap < nearest && old.n[0] * n[0] + old.n[1] * n[1] + old.n[2] * n[2] > WARM_SAME_NORMAL) {
               nearest = gap
