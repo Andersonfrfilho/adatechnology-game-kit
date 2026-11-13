@@ -94,7 +94,7 @@ describe('a hand grenade 0.5 m beside the broad side of the shovel, on the floor
     // the fireball of the M67 (0.8 m, 6 ms) gives the ash 9 kJ/m2, a tenth of the 93 kJ/m2 it needs to light: the handle breaks, it does not burn
     expect(lit).toEqual([])
     // what is left of the handle (pieces of 3.5 cm ash 0.25 m long or more: debris with a body, which never fades) is drawn on the floor where it slid to, and is still
-    // there after the 12 s a chip lasts; each piece slides its own way, as far as its own speed takes it on the floor, within a few metres of the charge
+    // there after the 12 s a chip lasts; each piece slides its own way, as far as its own speed takes it on the floor, within the slide its own speed allows
     for (let i = 0; i < 900; i++) room.update(1 / 60)
     const handle: THREE.Vector3[] = []
     room.scene.traverse((node) => {
@@ -103,7 +103,8 @@ describe('a hand grenade 0.5 m beside the broad side of the shovel, on the floor
     expect(handle.length).toBeGreaterThanOrEqual(1)
     for (const piece of handle) {
       expect(piece.y).toBeLessThan(0.1)
-      expect(Math.hypot(piece.x, piece.z + 2.7)).toBeLessThan(12)
+      // a free piece of the 3.5 cm ash handle takes I / (rho t) = 335 / (750 x 0.035) = 12.8 m/s and slides 12.8^2 / (2 x 0.5 x 9.81) = 16.7 m on the floor
+      expect(Math.hypot(piece.x, piece.z + 2.7)).toBeLessThan((12.8 * 12.8) / (2 * 0.5 * 9.81) + 1)
     }
   })
 })

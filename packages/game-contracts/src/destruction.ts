@@ -513,6 +513,8 @@ export interface Hit {
   radius?: number
   /** `explosive` only: inside this radius (metres) a body takes the blast as lethal; between it and `radius` it is hurt, less with distance. */
   lethalRadius?: number
+  /** `explosive` only: kilograms of TNT equivalent of the charge, for the blast wave on the parts (`waveWork`); without it `energy` stands for it at the arsenal's scale. */
+  tnt?: number
   /** `explosive` only: the fireball of the blast (`chargeFireball`, `fuelFireball`), whose heat is what the blast lights; without it, the fireball of the charge `energy` stands for. */
   fireball?: { readonly radius: number; readonly seconds: number; readonly flux: number }
   /** Source temperature for `fire` and `heat`. */

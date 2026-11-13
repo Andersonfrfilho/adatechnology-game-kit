@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import * as THREE from 'three'
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { TestRoomItem } from '../src'
@@ -27,6 +28,9 @@ describe('a hand grenade going off 0.8 m from a 2 kg shovel lying on the floor',
     const { root, objectId } = room.spawn('item_shovel', [0, 0, -3], 0)
     room.update(0.5)
     const start = root.position.clone()
+    // landed is the lowest point of the shovel back on the floor, on whichever face it comes down: a shovel turned over lies on its handle, its root 7 cm higher
+    const lowest = (): number => new THREE.Box3().setFromObject(root).min.y
+    const floor = lowest()
     expect(room.blastAt('m67', [start.x + offset[0], offset[1], start.z + offset[2]])).toBe(true)
     const piece = room.renderer.piece(objectId)!
     expect(piece.mass).toBeCloseTo(2, 1)
@@ -44,7 +48,7 @@ describe('a hand grenade going off 0.8 m from a 2 kg shovel lying on the floor',
       const t = i * dt
       if (!hasPeaked && piece.velocity[1] > 0 && root.position.y > start.y + 0.05) samples.push({ t, vy: piece.velocity[1] })
       else if (samples.length > 0) hasPeaked = true
-      if (landedAt === Infinity && t > 0.1 && root.position.y <= start.y + 0.03) landedAt = t
+      if (landedAt === Infinity && t > 0.1 && lowest() <= floor + 0.03) landedAt = t
     }
     if (hops) {
       expect(samples.length).toBeGreaterThan(3)
