@@ -20,6 +20,7 @@ import type {
   QueryFilter,
   Quat,
   RayHit,
+  Rolling,
   SensorEvent,
   ShapeDesc,
   Vec3,
@@ -89,6 +90,8 @@ const ROW_CAPACITY = 4096
 /** Height field blocks (samples a side) and Jolt's value for a sample with no ground (`HeightFieldShapeConstants::cNoCollisionValue`, FLT_MAX). */
 const HEIGHT_BLOCK = 4
 const NO_COLLISION = 3.4028234663852886e38
+/** How much larger the inertia a dynamic body is made with is than its own (see `settingsFor`). */
+const INERTIA_SCALE = 1e6
 const POINTS_PER_BODY = 16
 
 class Contacts implements ContactBuffer {
@@ -155,6 +158,9 @@ export class JoltWorld implements PhysicsWorld {
   /** Contact points of the last step per body: up to `POINTS_PER_BODY` x y z, and how many. Kept for the bodies asked about (`contactPoints`). */
   private readonly points = new Map<number, { xyz: Float32Array; n: number; step: number }>()
   private stepCount = 0
+  /** Bodies with rolling resistance (`BodyDesc.rolling`), by body key. */
+  private readonly rollers = new Map<number, Rolling>()
+  private readonly gravity: number
 
   constructor(J: Jolt, desc: WorldDesc) {
     this.J = J
@@ -197,6 +203,7 @@ export class JoltWorld implements PhysicsWorld {
     this.system = this.iface.GetPhysicsSystem()
     this.bi = this.system.GetBodyInterface()
     const g = desc.gravity ?? [0, -9.81, 0]
+    this.gravity = Math.hypot(g[0], g[1], g[2])
     this.v1 = new J.Vec3(g[0], g[1], g[2])
     this.system.SetGravity(this.v1)
     const ps = this.system.GetPhysicsSettings()
@@ -355,14 +362,17 @@ export class JoltWorld implements PhysicsWorld {
       s.mIsSensor = true
       s.mCollideKinematicVsNonDynamic = true
     }
+    // the inertia goes in `INERTIA_SCALE` times too large and is put right after the body is made (`unscaleInertia`): Jolt falls back to a 1 m sphere's inertia
+    // for any body whose principal moments are near zero (|I| < 1e-6 kg m^2: a 9 mm casing, a 1.5 cm chip), 10 000 times too much for a casing
     if (desc.motion === 'dynamic' && desc.mass !== undefined && desc.inertia) {
       s.mOverrideMassProperties = J.EOverrideMassProperties_MassAndInertiaProvided
       s.mMassPropertiesOverride.mMass = desc.mass
-      this.v2.Set(desc.inertia[0], desc.inertia[1], desc.inertia[2])
+      this.v2.Set(desc.inertia[0] * INERTIA_SCALE, desc.inertia[1] * INERTIA_SCALE, desc.inertia[2] * INERTIA_SCALE)
       s.mMassPropertiesOverride.mInertia = J.Mat44.prototype.sScaleVec3(this.v2)
     } else if (desc.motion === 'dynamic' && desc.mass !== undefined) {
+      // the shape's inertia is scaled to the mass given: to `INERTIA_SCALE` times it, then the mass alone is put back
       s.mOverrideMassProperties = J.EOverrideMassProperties_CalculateInertia
-      s.mMassPropertiesOverride.mMass = desc.mass
+      s.mMassPropertiesOverride.mMass = desc.mass * INERTIA_SCALE
     }
     if (desc.group) {
       const filter = this.groups[desc.group.id]
@@ -377,9 +387,20 @@ export class JoltWorld implements PhysicsWorld {
     return s
   }
 
+  /** Puts back the mass and inertia `settingsFor` gave `INERTIA_SCALE` times too large: same principal axes, the true moments. */
+  private unscaleInertia(desc: BodyDesc, body: JoltNS.Body): void {
+    if (desc.motion !== 'dynamic' || desc.mass === undefined) return
+    const mp = body.GetMotionProperties()
+    const d = mp.GetInverseInertiaDiagonal()
+    this.v2.Set(d.GetX() * INERTIA_SCALE, d.GetY() * INERTIA_SCALE, d.GetZ() * INERTIA_SCALE)
+    mp.SetInverseInertia(this.v2, mp.GetInertiaRotation())
+    mp.SetInverseMass(1 / desc.mass)
+  }
+
   private register(desc: BodyDesc, body: JoltNS.Body): BodyId {
     const id = body.GetID()
     const key = id.GetIndexAndSequenceNumber()
+    if (desc.rolling && desc.motion === 'dynamic') this.rollers.set(key, desc.rolling)
     const mp = desc.motion === 'dynamic' ? body.GetMotionProperties().GetInverseMass() : 0
     this.bodies.set(key, {
       body,
@@ -398,6 +419,7 @@ export class JoltWorld implements PhysicsWorld {
     const body = this.bi.CreateBody(s)
     this.J.destroy(s)
     shape.Release()
+    this.unscaleInertia(desc, body)
     const key = this.register(desc, body)
     this.bi.AddBody(body.GetID(), desc.sleeping || desc.motion === 'static' ? this.J.EActivation_DontActivate : this.J.EActivation_Activate)
     return key
@@ -417,6 +439,7 @@ export class JoltWorld implements PhysicsWorld {
       const body = this.bi.CreateBody(s)
       J.destroy(s)
       shape.Release()
+      this.unscaleInertia(descs[i], body)
       out.push(this.register(descs[i], body))
       J.HEAPU32[base + i] = body.GetID().GetIndexAndSequenceNumber()
     }
@@ -437,6 +460,7 @@ export class JoltWorld implements PhysicsWorld {
     this.bodies.delete(id)
     this.touches.delete(id)
     this.points.delete(id)
+    this.rollers.delete(id)
   }
 
   setShape(id: BodyId, shape: ShapeDesc): void {
@@ -533,6 +557,35 @@ export class JoltWorld implements PhysicsWorld {
     e.material = material
     this.bi.SetFriction(e.id, Math.sqrt(material.frictionStatic))
     this.bi.SetRestitution(e.id, material.restitution)
+  }
+
+  setRolling(id: BodyId, rolling: Rolling | undefined): void {
+    this.entry(id)
+    if (rolling) this.rollers.set(id, rolling)
+    else this.rollers.delete(id)
+  }
+
+  /**
+   * Rolling resistance, after each fixed step: a body that touches something loses the angular impulse C_rr m g r dt against its spin, through its own inverse
+   * inertia, and never more than stops the spin. Its contact's friction carries the change to its speed, as a rolling body's does.
+   */
+  private roll(dt: number): void {
+    for (const [key, rolling] of this.rollers) {
+      const e = this.bodies.get(key)
+      if (!e || e.invMass === 0 || !e.body.IsActive() || !this.touching(key as BodyId)) continue
+      const w = e.body.GetAngularVelocity()
+      const wx = w.GetX(), wy = w.GetY(), wz = w.GetZ()
+      const spin = Math.hypot(wx, wy, wz)
+      if (spin < 1e-6) continue
+      // spin taken away per unit of angular impulse against it: n . I^-1 n
+      this.v2.Set(wx / spin, wy / spin, wz / spin)
+      const iw = e.body.GetInverseInertia().Multiply3x3(this.v2)
+      const per = (iw.GetX() * wx + iw.GetY() * wy + iw.GetZ() * wz) / spin
+      if (per <= 0) continue
+      const impulse = Math.min((rolling.coefficient * this.gravity * rolling.radius * dt) / e.invMass, spin / per)
+      this.v2.Set((-wx / spin) * impulse, (-wy / spin) * impulse, (-wz / spin) * impulse)
+      this.bi.AddAngularImpulse(e.id, this.v2)
+    }
   }
 
   setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void {
@@ -1087,6 +1140,7 @@ export class JoltWorld implements PhysicsWorld {
       this.accumulator -= this.fixedStep
       this.stepCount++
       this.iface.Step(this.fixedStep, 1)
+      if (this.rollers.size > 0) this.roll(this.fixedStep)
       this.breakJoints(this.fixedStep)
       steps++
     }

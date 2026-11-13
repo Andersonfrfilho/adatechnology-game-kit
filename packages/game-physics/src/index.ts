@@ -78,6 +78,17 @@ export interface BodyDesc {
   readonly user: number
   readonly linearVelocity?: Vec3
   readonly angularVelocity?: Vec3
+  /** Dynamic only: a round body's rolling resistance (engines have none; a ball would roll for ever). See `Rolling`. */
+  readonly rolling?: Rolling
+}
+
+/**
+ * Rolling resistance of a round body (a can, a ball, a casing): while it touches something, a moment `coefficient` (C_rr) x its weight x `radius` (its rolling
+ * radius, m) opposes its spin, so it rolls to a stop as a real one does (C_rr 0.01-0.02 for a can on wood or concrete). It never turns the spin around.
+ */
+export interface Rolling {
+  readonly coefficient: number
+  readonly radius: number
 }
 
 /** An opaque handle; the adapter owns what it points to. */
@@ -216,6 +227,8 @@ export interface PhysicsWorld {
   /** Wakes every dynamic body whose bounds touch the box (ground dug, a support removed). */
   wakeInBox(min: Vec3, max: Vec3): void
   setMaterial(id: BodyId, material: Material): void
+  /** A body's rolling resistance from now on (`undefined`: none). */
+  setRolling(id: BodyId, rolling: Rolling | undefined): void
   /** Dynamic <-> kinematic (a piece picked up and put down). */
   setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void
   /** The points (world, x y z each) where the body touched anything in the last step, into `out`; returns how many points (at most `out.length / 3`). */

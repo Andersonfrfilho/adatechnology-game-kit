@@ -3,7 +3,7 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
-import type { BodyDesc, BodyId } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { eulerXYZ, ground, report, stairs, stats } from './scenes'
@@ -81,26 +81,51 @@ describe('case 7: small demos', () => {
       if (landed < 0 && world.touching(can)) landed = i / 60
     }
     const thrownTo = pose[0]
-    // a 400 g grenade (6 cm ball) thrown at 12 m/s onto concrete: bounces, rolls, rests
-    const grenade = world.createBody({ shape: { kind: 'sphere', radius: 0.03 }, motion: 'dynamic', mass: 0.4, position: [0, 1.5, 5], material: { frictionStatic: 0.6, frictionDynamic: 0.5, restitution: 0.35 }, linearVelocity: [0, 4, 11], continuous: true, user: 2 })
-    let bounces = 0
-    let lastVy = 0
-    let restAt = -1
-    for (let i = 0; i < 600; i++) {
-      world.step(1 / 60)
-      const v = new Float64Array(6)
-      world.readVelocity(grenade, v, 0)
-      if (lastVy < -0.5 && v[1] > 0.2) bounces++
-      lastVy = v[1]
-      if (restAt < 0 && world.isSleeping(grenade)) restAt = i / 60
+    // the M67 as the kit draws it (game-weapons-three `explosives.ts`): a 64 mm body, the fuze on top and the spoon down its side, 400 g, with the rolling
+    // resistance of the kit's round pieces (gate 0 B2). Thrown at 12 m/s onto concrete, and Rapier's spike throw at a wall 8 m off; a perfect ball beside it
+    const concrete = { frictionStatic: 0.6, frictionDynamic: 0.5, restitution: 0.35 }
+    const m67: BodyDesc['shape'] = {
+      kind: 'compound',
+      children: [
+        { shape: { kind: 'sphere', radius: 0.032 }, position: [0, 0, 0] },
+        { shape: { kind: 'cylinder', halfHeight: 0.011, radius: 0.011 }, position: [0, 0.04, 0] },
+        { shape: { kind: 'box', half: [0.006, 0.035, 0.003] }, position: [0.016, 0.018, 0], rotation: eulerXYZ(0, 0, 0.2) },
+      ],
     }
-    world.readPose(grenade, pose, 0)
-    const grenadeRest = [...pose.slice(0, 3)]
+    const rolling = { coefficient: 0.015, radius: 0.032 }
+    const throwOne = (shape: BodyDesc['shape'], wall: boolean): { restAtS: number; fromThrowM: number; fromLandingM: number; bounces: number } => {
+      const w = engine.createWorld({ fixedStep: 1 / 60 })
+      ground(w)
+      if (wall) w.createBody({ shape: { kind: 'box', half: [0.1, 1, 3] }, motion: 'static', position: [8, 1, 0], material: { ...concrete, restitution: 0.4 }, user: -2 })
+      const start: Vec3 = wall ? [0, 1.6, 0] : [0, 1.5, 5]
+      const g = w.createBody({ shape, motion: 'dynamic', mass: 0.4, position: start, material: concrete, linearVelocity: wall ? [9, 4, 0.5] : [0, 4, 11], angularVelocity: wall ? [0, 0, -8] : [0, 0, 0], continuous: true, rolling, user: 2 })
+      const at = new Float64Array(7)
+      const v = new Float64Array(6)
+      let landing: number[] | null = null
+      let restAt = -1
+      let lastVy = 0
+      let bounces = 0
+      for (let i = 0; i < 900; i++) {
+        w.step(1 / 60)
+        w.readPose(g, at, 0)
+        w.readVelocity(g, v, 0)
+        if (lastVy < -0.5 && v[1] > 0.2) bounces++
+        lastVy = v[1]
+        if (!landing && w.touching(g)) landing = [at[0], at[2]]
+        if (restAt < 0 && w.isSleeping(g)) restAt = (i + 1) / 60
+      }
+      w.dispose()
+      const r = (x: number): number => Math.round(x * 100) / 100
+      return { restAtS: r(restAt), fromThrowM: r(Math.hypot(at[0] - start[0], at[2] - start[2])), fromLandingM: landing ? r(Math.hypot(at[0] - landing[0], at[2] - landing[1])) : -1, bounces }
+    }
+    const grenadeOpen = throwOne(m67, false)
+    const grenadeWall = throwOne(m67, true)
+    const ballOpen = throwOne({ kind: 'sphere', radius: 0.032 }, false)
     // 200 9 mm casings (10 x 19 mm) ejected at 4-6 m/s: none ends under the floor
     const casings: BodyId[] = []
     const t: number[] = []
     for (let i = 0; i < 200; i++) {
-      casings.push(world.createBody({ shape: { kind: 'cylinder', halfHeight: 0.0095, radius: 0.005 }, motion: 'dynamic', mass: 0.004, position: [10, 1.4, (i % 20) * 0.02], linearVelocity: [4 + (i % 7) * 0.3, 2 + (i % 5) * 0.2, (i % 3) - 1], angularVelocity: [20, 5, 0], continuous: true, material: { frictionStatic: 0.4, frictionDynamic: 0.3, restitution: 0.4 }, user: 100 + i }))
+      casings.push(world.createBody({ shape: { kind: 'cylinder', halfHeight: 0.0095, radius: 0.005 }, motion: 'dynamic', mass: 0.004, position: [10, 1.4, (i % 20) * 0.02], linearVelocity: [4 + (i % 7) * 0.3, 2 + (i % 5) * 0.2, (i % 3) - 1], angularVelocity: [20, 5, 0], continuous: true, material: { frictionStatic: 0.4, frictionDynamic: 0.3, restitution: 0.4 }, rolling: { coefficient: 0.015, radius: 0.005 }, user: 100 + i }))
       const t0 = performance.now()
       world.step(1 / 60)
       t.push(performance.now() - t0)
@@ -117,8 +142,16 @@ describe('case 7: small demos', () => {
       if (pose[1] < 0) under++
       if (world.isSleeping(c)) asleep++
     }
-    report('pick-throw-grenade-casings', { thrownLandedAtS: landed, thrownTo, grenadeBounces: bounces, grenadeRestAtS: restAt, grenadeRest, casingsUnderFloor: under, casingsAsleep: asleep, step200casings: stats(t) })
+    report('pick-throw-grenade-casings', { thrownLandedAtS: landed, thrownTo, grenadeOpen, grenadeWall, ballOpen, casingsUnderFloor: under, casingsAsleep: asleep, step200casings: stats(t) })
     expect(under).toBe(0)
+    // B2: the grenade at rest within 5 s and 8 m (of where it lands on the open floor; of the throw against the wall), 95% of the casings asleep 5 s after the last
+    for (const g of [grenadeOpen, grenadeWall]) {
+      expect(g.restAtS).toBeGreaterThan(0)
+      expect(g.restAtS).toBeLessThanOrEqual(5)
+    }
+    expect(grenadeOpen.fromLandingM).toBeLessThanOrEqual(8)
+    expect(grenadeWall.fromThrowM).toBeLessThanOrEqual(8)
+    expect(asleep).toBeGreaterThanOrEqual(190)
     world.dispose()
   })
 

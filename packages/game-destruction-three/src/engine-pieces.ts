@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyId, Material, PhysicsWorld, Quat, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyId, Material, PhysicsWorld, Quat, Rolling, ShapeDesc } from '@adatechnology/game-physics'
 
 import { buildGroundTile, sameGround } from './engine-ground'
 import type { GroundTile } from './engine-ground'
@@ -81,7 +81,7 @@ interface Tile {
  * Steps the loose pieces through the kit's physics contract (`game-physics`): each piece a dynamic body at its centre of mass with its parts' boxes (or its box, or
  * its round shape), its mass, and its surface's static and dynamic friction (the engine adapter applies Coulomb per contact). The ground is `groundAt` as triangles
  * that keep its steps (`engine-ground`); the fixed things are their drawn boxes, turned as drawn. On top stay the kit's rules the engine does not know: the sweep
- * against walls, hard landings, rolling resistance, falling over (`tip`), the knock sound, and (in `PieceSystem`) the budget of awake pieces and their rest points.
+ * against walls, hard landings, falling over (`tip`), the knock sound, and (in `PieceSystem`) the budget of awake pieces and their rest points.
  */
 export class EnginePieces {
   private readonly links = new Map<PieceBody, Link>()
@@ -249,6 +249,11 @@ export class EnginePieces {
     return out
   }
 
+  /** A round piece rolls to a stop by its surface's rolling resistance (the adapter's rule; the engine has none). */
+  private rollingOf(b: PieceBody): Rolling | undefined {
+    return b.round ? { coefficient: b.friction?.rolling ?? ROLLING_RESISTANCE, radius: b.round.radius } : undefined
+  }
+
   private material(b: PieceBody): Material {
     return {
       frictionStatic: b.friction?.static ?? MU_STATIC,
@@ -282,10 +287,11 @@ export class EnginePieces {
         inertia: this.inertiaOf(b),
         material: this.material(b),
         layer: 'debris',
-        // no air drag: the kit's pieces never had any (rolling resistance is the kit's own rule)
+        // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)
         angularDamping: 0,
         linearDamping: 0,
         continuous: Math.min(...b.halfExtents) < 0.05,
+        rolling: this.rollingOf(b),
         sleeping: b.sleeping,
         user,
         linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
@@ -300,6 +306,7 @@ export class EnginePieces {
       link.shapeKey = shapeKey
       this.world.setShape(link.id, this.shapeOf(b))
       this.world.setMaterial(link.id, this.material(b))
+      this.world.setRolling(link.id, this.rollingOf(b))
     }
     if (b.held !== link.held) {
       link.held = b.held
@@ -505,7 +512,7 @@ export class EnginePieces {
     this.ignored = new Set(apart)
   }
 
-  /** Writes the body back to the piece, then the kit's rules: the sweep against walls, hard landings, rolling resistance, `still` for the budget. */
+  /** Writes the body back to the piece, then the kit's rules: the sweep against walls, hard landings, `still` for the budget. */
   private readBack(b: PieceBody, dt: number, time: number, before: { c: Vec3; vy: number } | undefined): void {
     const link = this.links.get(b)
     if (!link || b.held) return
@@ -521,7 +528,6 @@ export class EnginePieces {
     b.sleeping = this.world.isSleeping(link.id)
     if (!b.sleeping) b.onGround = this.world.touching(link.id)
     let moved = false
-    let slowed = false
     const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
     const floor = this.o.groundAt(pos[0], pos[2])
     if (pos[1] + reach < floor - 0.05) {
@@ -537,7 +543,6 @@ export class EnginePieces {
         b.lastHit = time
         this.o.onHardLanding(b, [pos[0], pos[1] - Math.min(...b.halfExtents), pos[2]], impact)
       }
-      if (b.round && b.onGround) slowed = this.rollingResistance(b, dt)
     }
     b.root.quaternion.set(this.pose[3], this.pose[4], this.pose[5], this.pose[6])
     const off = this.v.copy(b.centerV).applyQuaternion(b.root.quaternion)
@@ -551,7 +556,7 @@ export class EnginePieces {
     }
     // only what the kit changed goes back: writing the pose wakes the body and starts its sleep timer again
     if (moved) this.world.setPose(link.id, pos, [this.pose[3], this.pose[4], this.pose[5], this.pose[6]], true)
-    if (moved || slowed) this.world.setVelocity(link.id, [v[0], v[1], v[2]], [w[0], w[1], w[2]])
+    if (moved) this.world.setVelocity(link.id, [v[0], v[1], v[2]], [w[0], w[1], w[2]])
     // what is written back is what the next update compares against: a change from outside differs from it
     link.pos[0] = pos[0]
     link.pos[1] = pos[1]
@@ -593,22 +598,6 @@ export class EnginePieces {
       b.lastHit = time
       this.o.onSlam?.(b, hit, into)
     }
-    return true
-  }
-
-  /** A round piece on the ground loses spin by its rolling resistance (C_rr g / (k r) per second): the engine has none. */
-  private rollingResistance(b: PieceBody, dt: number): boolean {
-    const round = b.round
-    if (!round) return false
-    const w = b.angularVelocity
-    const spin = Math.hypot(w[0], w[1], w[2])
-    // slower than this it is at rest: the engine's sleep takes it from here
-    if (spin < 0.05) return false
-    const rolling = b.friction?.rolling ?? ROLLING_RESISTANCE
-    const slow = Math.max(0, spin - (rolling * this.o.gravity * dt) / (round.inertia * round.radius)) / spin
-    for (let i = 0; i < 3; i++) w[i] *= slow
-    // the linear speed of a rolling piece goes with its spin
-    for (let i = 0; i < 3; i++) b.velocity[i] *= slow
     return true
   }
 
