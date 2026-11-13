@@ -1,6 +1,8 @@
 import { ALLOWABLE_SOIL_PRESSURE, footingLoad, isFooting, onStripFooting } from '../footing'
+import type { LoadFlows } from '../footing'
 import { loadFlowsAtRest } from '../loads'
 import { isConcreteSlab } from '../slab-panels/apply'
+import { bracedLength, pillarDesign, pillarLoad, sectionOf, withinCapacity } from '../pillar-design'
 import { roofOn, roofOver, slabLoads, slabThicknessFor } from '../slab-design'
 import { eaveOverhang, MAX_ROOF_OVERHANG } from '../roof-overhang'
 import { GROUND } from '../types'
@@ -22,20 +24,6 @@ const isConcreteColumn = (part: StructurePart): boolean => part.role === 'column
 /** A pillar cast in a masonry wall (confined masonry): the wall it is cast against holds it all along its height. */
 const inWall = (column: StructurePart, parts: readonly StructurePart[]): boolean =>
   parts.some((p) => isMasonryWall(p) && inPlan(p, column) && overlap(p.y0, p.y1, column.y0, column.y1) >= (column.y1 - column.y0) / 2)
-
-/**
- * Longest stretch of `column` between the levels that brace it: its foot, its head and each slab or beam tied to it on the way (one storey of a pillar that
- * runs through slabs tied to it, NBR 6118 15.6). A slab it runs through untied braces nothing.
- */
-export function bracedLength(column: StructurePart, structure: Pick<Structure, 'parts' | 'supports'>): number {
-  const byId = new Map(structure.parts.map((part) => [part.id, part]))
-  const tied = structure.supports
-    .filter((s) => s.bears !== false && (s.part === column.id || s.on === column.id))
-    .map((s) => byId.get(s.part === column.id ? s.on : s.part))
-    .filter((p): p is StructurePart => p !== undefined && (p.role === 'slab' || p.role === 'beam'))
-  const levels = [column.y0, column.y1, ...tied.map((p) => Math.min(Math.max((p.y0 + p.y1) / 2, column.y0), column.y1))].sort((a, b) => a - b)
-  return levels.slice(1).reduce((most, y, k) => Math.max(most, y - levels[k]!), 0)
-}
 
 /** Free concrete pillars no slenderer than NBR 6118 allows without second-order analysis: λ = l_e √12 / b over their longest braced stretch. */
 function slendernessViolations(structure: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
@@ -118,10 +106,9 @@ function overlapViolations(structure: Pick<Structure, 'parts' | 'supports'>): St
 }
 
 /** Each footing on the soil (`isFooting`: a pillar's, a porch's, a crawl space's pier) within the allowable pressure: 1.05 N_k / A ≤ σ_adm. */
-function soilPressureViolations(structure: Pick<Structure, 'parts' | 'supports'>, allowable: number): StructuralViolation[] {
+function soilPressureViolations(structure: Pick<Structure, 'parts' | 'supports'>, allowable: number, flows: LoadFlows): StructuralViolation[] {
   const footings = structure.parts.filter((p) => isFooting(p, structure.supports))
   if (!footings.length) return []
-  const { flows } = loadFlowsAtRest(structure.parts, structure.supports)
   const out: StructuralViolation[] = []
   for (const footing of footings) {
     const load = footingLoad(flows, footing.id)
@@ -186,6 +173,23 @@ function slabViolations(structure: Pick<Structure, 'parts' | 'supports'>): Struc
   return out
 }
 
+/**
+ * Each concrete pillar within its section: N_d and M_d with the minimum eccentricity and the second order of the approximate curvature (NBR 6118 15.8.3.3.2)
+ * over its braced length, against concrete and at most 4% of steel, with ν = N_d / (A_c f_cd) at most `MAX_AXIAL_RATIO`.
+ */
+function pillarCapacityViolations(structure: Pick<Structure, 'parts' | 'supports'>, flows: LoadFlows): StructuralViolation[] {
+  const columns = structure.parts.filter(isConcreteColumn)
+  if (!columns.length) return []
+  const out: StructuralViolation[] = []
+  for (const column of columns) {
+    const load = pillarLoad(flows, column)
+    const design = pillarDesign(sectionOf(column), load, bracedLength(column, structure))
+    if (!withinCapacity(design))
+      out.push({ code: STRUCTURAL_VIOLATION.PILLAR_OVERLOADED, part: column.id, message: `${column.id} carries N_k ${load.toFixed(0)} kN: ν ${design.nu.toFixed(2)}, M_d ${design.moment.toFixed(0)} kN·m (λ ${design.lambda.toFixed(0)}) ask ${(design.steel * 100).toFixed(1)}% of steel` })
+  }
+  return out
+}
+
 /** What the member checks read besides the structure: which parts are infill masonry, and the soil's allowable pressure (kPa). */
 export interface MemberCheckOptions {
   readonly isInfill: (part: StructurePart) => boolean
@@ -200,8 +204,9 @@ export interface MemberCheckOptions {
  * through a member of its line (`built`, before the slabs are framed).
  */
 export function memberViolations(framed: Pick<Structure, 'parts' | 'supports'>, built: Pick<Structure, 'parts' | 'supports'>, options: MemberCheckOptions): StructuralViolation[] {
+  const { flows } = loadFlowsAtRest(framed.parts, framed.supports)
   return [
-    ...slendernessViolations(framed), ...foundationViolations(framed), ...soilPressureViolations(framed, options.soilPressure ?? ALLOWABLE_SOIL_PRESSURE),
-    ...bearingViolations(framed, options.isInfill), ...singleSupportViolations(framed), ...overhangViolations(framed), ...(options.slabsFramed ? slabViolations(framed) : []), ...overlapViolations(built),
+    ...slendernessViolations(framed), ...foundationViolations(framed), ...soilPressureViolations(framed, options.soilPressure ?? ALLOWABLE_SOIL_PRESSURE, flows),
+    ...bearingViolations(framed, options.isInfill), ...pillarCapacityViolations(framed, flows), ...singleSupportViolations(framed), ...overhangViolations(framed), ...(options.slabsFramed ? slabViolations(framed) : []), ...overlapViolations(built),
   ]
 }

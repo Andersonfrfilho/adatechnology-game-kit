@@ -79,6 +79,8 @@ export const STRUCTURAL_VIOLATION = {
   ROOF_OVERHANG_TOO_LONG: 'ROOF_OVERHANG_TOO_LONG',
   /** A concrete slab panel thinner than its loads ask (its finishes, live load and the roof on struts on it): deflection within span/250 and bending, NBR 6118. */
   SLAB_UNDERSIZED: 'SLAB_UNDERSIZED',
+  /** A concrete pillar whose N_d and M_d (minimum eccentricity, second order by approximate curvature, NBR 6118 15.8) ask more than its section gives: ν past 0.8 or more than 4% of steel. */
+  PILLAR_OVERLOADED: 'PILLAR_OVERLOADED',
   /** Two structural parts, not joined to each other, that occupy the same volume beyond a joint. */
   OVERLAPPING_PARTS: 'OVERLAPPING_PARTS',
 } as const

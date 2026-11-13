@@ -34,6 +34,17 @@ export function onStripFooting(box: Rect, structure: { parts: readonly Structure
   return structure.parts.some((p) => onSoil.has(p.id) && (p.beamKind === 'ground_beam' || p.role === 'wall') && overlapsInPlan(p.aabb, box))
 }
 
+const SOIL = new WeakMap<readonly Support[], { count: number; parts: Set<string> }>()
+
+/** The parts resting on the soil by a support that bears (once per list of supports). */
+function onSoilOf(supports: readonly Support[]): ReadonlySet<string> {
+  const cached = SOIL.get(supports)
+  if (cached && cached.count === supports.length) return cached.parts
+  const parts = new Set(supports.filter((s) => s.on === GROUND && s.bears !== false).map((s) => s.part))
+  SOIL.set(supports, { count: supports.length, parts })
+  return parts
+}
+
 /** The column a footing made by `footingDraft` carries, if `part` is one. */
 export function footingColumnOf(part: StructurePart, supports: readonly Support[]): string | undefined {
   if (!part.id.startsWith('footing_pier_')) return undefined
@@ -51,7 +62,7 @@ const PEDESTAL_RATIO = 3
  * ground (a porch's footings, a crawl space's piers: no taller than three times its least side).
  */
 export function isFooting(part: StructurePart, supports: readonly Support[]): boolean {
-  if (part.role !== 'column' || part.material !== 'concrete' || !supports.some((s) => s.part === part.id && s.on === GROUND && s.bears !== false)) return false
+  if (part.role !== 'column' || part.material !== 'concrete' || !onSoilOf(supports).has(part.id)) return false
   const least = Math.min(part.aabb[2] - part.aabb[0], part.aabb[3] - part.aabb[1])
   return footingColumnOf(part, supports) !== undefined || part.y1 - part.y0 <= PEDESTAL_RATIO * least
 }

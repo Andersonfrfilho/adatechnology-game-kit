@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { register as registerRural } from '../../game-floorplan-rural/src'
 import { applyPanels, applySlabPanels, GROUND, resolveSlabPanels, STRUCTURAL_VIOLATION, validateStructure } from '../src'
 import { FOOTING_DEPTH, FOOTING_SIDE } from '../src/footing'
+import { pillarDesign, withinCapacity } from '../src/pillar-design'
 import { slabLoads, slabThicknessFor } from '../src/slab-design'
 import { memberViolations } from '../src/validate/members'
 import type { StructuredResult, StructurePart, Support } from '../src'
@@ -157,8 +158,8 @@ describe('every footing by its load, every slab by what it carries', () => {
         expect(footing.y1 - footing.y0, footing.id).toBeGreaterThanOrEqual(FOOTING_DEPTH - 1e-6)
       }
       expect(codesOf(result), template).toEqual([])
-      // the same footings on a soil that takes 5 kPa
-      expect(validateStructure(result.structure, { doors: result.doors, soilPressure: 5 }).filter((v) => v.part.startsWith('porch_footing_')).map((v) => v.code), template).toContain(STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED)
+      // the same footings are checked too: on a soil that takes nothing they are reported
+      expect(validateStructure(result.structure, { doors: result.doors, soilPressure: 0 }).filter((v) => v.part.startsWith('porch_footing_')).map((v) => v.code), template).toContain(STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED)
     }
   })
 
@@ -192,5 +193,35 @@ describe('every footing by its load, every slab by what it carries', () => {
     expect(back.length).toBeGreaterThan(0)
     const reported = memberViolations({ parts: unloaded.parts, supports: [...unloaded.supports, ...back] }, built, { isInfill: () => false, slabsFramed: true }).filter((v) => v.code === STRUCTURAL_VIOLATION.SLAB_UNDERSIZED)
     expect(reported.length).toBeGreaterThan(0)
+  })
+})
+
+describe('pillars by their loads (NBR 6118 15.8, approximate curvature)', () => {
+  it('the reviewer\'s numbers: 30x30, N_k 1206 kN, 5.48 m: ν 1.05, M_d ≈ 95 kN·m, over capacity; 40x40: ν ≈ 0.59', () => {
+    const small = pillarDesign([0.3, 0.3], 1206, 5.48)
+    expect(small.nu).toBeCloseTo(1.05, 2)
+    expect(small.moment).toBeGreaterThan(90)
+    expect(small.moment).toBeLessThan(100)
+    expect(withinCapacity(small)).toBe(false)
+    const sized = pillarDesign([0.4, 0.4], 1206, 5.48)
+    expect(sized.nu).toBeCloseTo(0.59, 2)
+    expect(withinCapacity(sized)).toBe(true)
+  })
+
+  it('apartment_modern {tier: high}: the building base pillars are sized by the unit on them (40x40), and at 30x30 they are reported', () => {
+    const result = generate('apartment_modern', { tier: 'high' })
+    const { parts } = result.structure
+    const base = parts.filter((p) => p.id.startsWith('building_column_'))
+    expect(base.length).toBe(4)
+    for (const column of base) expect(Math.min(column.aabb[2] - column.aabb[0], column.aabb[3] - column.aabb[1]), column.id).toBeGreaterThanOrEqual(0.4 - 1e-6)
+    expect(codesOf(result)).toEqual([])
+    const thin = { ...result.structure, parts: parts.map((p) => (base.includes(p) ? { ...p, aabb: [(p.aabb[0] + p.aabb[2]) / 2 - 0.15, (p.aabb[1] + p.aabb[3]) / 2 - 0.15, (p.aabb[0] + p.aabb[2]) / 2 + 0.15, (p.aabb[1] + p.aabb[3]) / 2 + 0.15] as typeof p.aabb } : p)) }
+    expect(validateStructure(thin, { doors: result.doors }).filter((v) => v.code === STRUCTURAL_VIOLATION.PILLAR_OVERLOADED).map((v) => v.part).sort()).toEqual(base.map((p) => p.id).sort())
+  })
+
+  it('wood_frame_house: the ceiling slab is the rooms\' ceiling, on the walls and plates, never on the porch posts', () => {
+    const result = generate('wood_frame_house')
+    expect(result.structure.supports.filter((s) => s.part === 'slab_ceiling' && s.on.startsWith('porch_'))).toEqual([])
+    expect(codesOf(result)).toEqual([])
   })
 })

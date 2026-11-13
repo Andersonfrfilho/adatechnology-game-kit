@@ -18,11 +18,15 @@ import { addWalls } from './walls'
 import { WALL_PILLAR_SPACING } from './wall-pillars'
 import { addBearingCores } from '../beam-bearings'
 import { resolveConstruction } from '../construction'
+import { densityOf } from '../density'
 import { isFooting, sizeFootings } from '../footing'
+import type { LoadFlows } from '../footing'
+import { bracedLength, pillarLoad, sizePillars, wallAxisOf } from '../pillar-design'
 import { loadFlowsAtRest } from '../loads'
 import { applySlabPanels } from '../slab-panels/apply'
 import { resolveSlabPanels } from '../slab-panels/options'
 import { applyPanels } from '../wall-detail'
+import type { PartsAndSupports } from '../wall-detail/apply'
 import type { Structure, StructureOptions, StructureSource } from '../types'
 
 function buildFloors(context: BuildContext): void {
@@ -39,11 +43,24 @@ function buildFloors(context: BuildContext): void {
  * bring the slabs down onto the pillars otherwise than a whole slab does. A footing only grows.
  */
 function sizeFootingsByFrame(structure: Structure): void {
-  if (!structure.parts.some((part) => isFooting(part, structure.supports))) return
   const panels = resolveSlabPanels(true)
   if (!panels) return
-  const framed = applySlabPanels(applyPanels({ parts: structure.parts, supports: structure.supports }, structure, 'panels'), structure, panels)
-  sizeFootings(structure, { flows: loadFlowsAtRest(framed.parts, framed.supports).flows, ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })
+  const flowsOf = (): { framed: PartsAndSupports; flows: LoadFlows } => {
+    const framed = applySlabPanels(applyPanels({ parts: structure.parts, supports: structure.supports }, structure, 'panels'), structure, panels)
+    return { framed, flows: loadFlowsAtRest(framed.parts, framed.supports).flows }
+  }
+  // every concrete pillar past its capacity by the loads on it (N_d with the minimum and second-order moments, NBR 6118 15.8): a unit's building base, the
+  // ground storey of a tall stack; a pillar made stiffer draws more of the load, so again until none grows
+  const pillars = new Set(structure.parts.filter((part) => part.role === 'column' && part.material === 'concrete' && !isFooting(part, structure.supports)).map((part) => part.id))
+  let current = flowsOf()
+  for (let pass = 0; pillars.size && pass < 6; pass++) {
+    const { framed, flows } = current
+    const before = structure.parts.filter((part) => pillars.has(part.id)).map((part) => part.aabb.join())
+    sizePillars(structure.parts, pillars, { load: (column) => pillarLoad(flows, column), length: (column) => bracedLength(column, framed), density: densityOf('concrete'), alongWall: (column) => wallAxisOf(column, structure.parts) })
+    if (structure.parts.filter((part) => pillars.has(part.id)).every((part, k) => part.aabb.join() === before[k])) break
+    current = flowsOf()
+  }
+  if (structure.parts.some((part) => isFooting(part, structure.supports))) sizeFootings(structure, { flows: current.flows, ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })
 }
 
 const wallPillarSpacingOf = (options: StructureOptions): number => {

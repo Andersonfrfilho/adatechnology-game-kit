@@ -28,10 +28,13 @@ function ensureCeilingSlab(context: BuildContext, y: number): StructurePart {
   const box = context.topBox
   const carriers = builder.parts.filter(
     (part) =>
-      ((part.role === 'beam' && part.id.startsWith(`plate_${top}_`)) || (part.role === 'column' && part.floor === top) || (part.role === 'wall' && part.floor === top && !part.id.startsWith('basement'))) &&
+      ((part.role === 'beam' && part.id.startsWith(`plate_${top}_`)) || (part.role === 'column' && part.floor === top && (context.visorSections || !part.id.startsWith('porch_'))) || (part.role === 'wall' && part.floor === top && !part.id.startsWith('basement'))) &&
       touches(box, part.aabb, 0.1),
   )
-  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top, footprint: [box] })
+  // (the porch's posts carry the porch's roof, not the house's ceiling: the slab is the rooms' ceiling, the porch outside its footprint)
+  const porch = !context.visorSections && context.source.rooms.some((room) => room.floor === top && room.type === 'porch')
+  const rooms = porch ? context.rectsOf(top, ['porch']) : []
+  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top, footprint: rooms.length ? rooms : [box] })
   for (const carrier of carriers) builder.rest(slab, carrier, system.joints.slab)
   return slab
 }
