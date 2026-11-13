@@ -36,6 +36,8 @@ export interface BowlResult {
   readonly maxUp: number
   /** Lowest centre of any piece at the end (m): under -0.5 one went through the ground. */
   readonly lowest: number
+  /** Deepest any piece's centre ever was under the ground right below it, over every update after the sheet (m): above 0, one was under the ground. */
+  readonly deepest: number
   /** Pieces the engine let through the ground and the kit's net put back (`EnginePieces.fellThrough`); 0 on the kit's own solver. */
   readonly fellThrough: number
   readonly hash: string
@@ -88,6 +90,7 @@ export const bowl = (seed: number, dt: number): BowlResult => {
   let c1Excess = -Infinity
   let c2Gain = 0
   let maxUp = 0
+  let deepest = -Infinity
   const frame = (wake: boolean): void => {
     if (wake) sys.wakeRegion(0, 0, 2)
     const before = pieces.map((p) => {
@@ -105,6 +108,8 @@ export const bowl = (seed: number, dt: number): BowlResult => {
       c2Gain = Math.max(c2Gain, after - (base.get(p) ?? after))
       lift.set(p, (lift.get(p) ?? 0) + Math.max(0, centreY(p, v) - y - Math.max(0, vy) * dt))
       if (p.velocity[1] > Math.max(0, vy) + 1e-9) maxUp = Math.max(maxUp, p.velocity[1])
+      const c = v.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld)
+      deepest = Math.max(deepest, groundAt(c.x, c.z) - c.y)
     }
     c1Excess = Math.max(c1Excess, sum - total * 0.001)
   }
@@ -121,5 +126,5 @@ export const bowl = (seed: number, dt: number): BowlResult => {
   for (const p of pieces) hash.update(`${p.root.position.toArray().join(',')};${p.root.quaternion.toArray().join(',')};`)
   const lowest = Math.min(...pieces.map((p) => centreY(p, v)))
   const fellThrough = (renderer as unknown as { pieceSys: { engine: { fellThrough: number } | null } }).pieceSys.engine?.fellThrough ?? 0
-  return { c1Excess, c2Gain, c3Lift: Math.max(0, ...lift.values()), c4AsleepAfter: asleep, maxUp, lowest, fellThrough, hash: hash.digest('hex').slice(0, 16), ms: performance.now() - started }
+  return { c1Excess, c2Gain, c3Lift: Math.max(0, ...lift.values()), c4AsleepAfter: asleep, maxUp, lowest, deepest, fellThrough, hash: hash.digest('hex').slice(0, 16), ms: performance.now() - started }
 }
