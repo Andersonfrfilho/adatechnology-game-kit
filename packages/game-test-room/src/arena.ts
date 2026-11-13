@@ -162,10 +162,14 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
   return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, follow: o.follow, warmUpProbes: o.warmUpProbes, label: o.label, top: o.top, spout: o.spout, free: o.free, pushable: o.pushable }))
 }
 
-/** The ambient fill: sky above, bounce from the ground below (what a slab's underside and a house's shaded rooms are lit by). */
-export const HEMISPHERE_SKY = 0xcfe3ff
-export const HEMISPHERE_GROUND = 0xa8a298
-export const HEMISPHERE_INTENSITY = 0.85
+/**
+ * The ambient fill: sky above, bounce from the ground below (what a slab's underside and a house's shaded rooms are lit by).
+ * three.js lights are not pre-multiplied by pi (a hemisphere's diffuse is albedo * colour * intensity / pi), so the ground bounce needs an intensity
+ * of about 5 for light concrete to read light grey. The sky colour is scaled down by the same factor, so what the sky gives an upward face stays what it was.
+ */
+export const HEMISPHERE_SKY = 0x5c6573
+export const HEMISPHERE_GROUND = 0xa8a8a8
+export const HEMISPHERE_INTENSITY = 5
 
 export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
   // the room's own floor, grid and ruler (not a piece: the pieces in the room come from their packages)
