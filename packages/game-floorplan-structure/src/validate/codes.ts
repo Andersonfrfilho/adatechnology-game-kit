@@ -20,6 +20,8 @@ export const STRUCTURAL_VIOLATION = {
   MISSING_BOND_BEAM: 'MISSING_BOND_BEAM',
   /** A ground-floor masonry wall standing on the soil with no ground beam (viga baldrame) or foundation under it (structural masonry too: a strip footing or a raft). */
   MISSING_GROUND_BEAM: 'MISSING_GROUND_BEAM',
+  /** A part declared to rest on a pillar or post it does not touch in plan (a pillar pushed off the beam it is said to carry). */
+  SUPPORT_WITHOUT_CONTACT: 'SUPPORT_WITHOUT_CONTACT',
   /** A part with no load path down to the ground. */
   FLOATING_PART: 'FLOATING_PART',
   /** A concrete beam longer than a lintel that rests on masonry alone (no pillar, beam or slab carries it). */
@@ -51,6 +53,8 @@ export const STRUCTURAL_VIOLATION = {
    * top (eccentricity of the slab) or f_d A R at mid-height (slenderness), A its gross area (NBR 16868-1, loads of NBR 6120).
    */
   MASONRY_OVERSTRESSED: 'MASONRY_OVERSTRESSED',
+  /** A bearing wall of structural masonry whose bond beam course does not run over its whole length. */
+  BOND_BEAM_NOT_CONTINUOUS: 'BOND_BEAM_NOT_CONTINUOUS',
   /** Structural masonry laid of a unit with no channel (U) unit: its bond beams and lintels cannot be cast in a reinforced course of the wall. */
   MISSING_CHANNEL_UNIT: 'MISSING_CHANNEL_UNIT',
   /** Structural masonry whose grouted cores have no bar, or a bar thinner than the construction minimum (`MIN_GROUT_BAR`). */

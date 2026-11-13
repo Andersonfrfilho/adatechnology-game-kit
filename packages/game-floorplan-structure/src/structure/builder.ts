@@ -8,8 +8,10 @@ import type { PartRole, Rect, StructurePart, Support } from '../types'
 export type PartExtras = Partial<Pick<StructurePart, 'host' | 'exterior' | 'spacing' | 'beamKind' | 'steps' | 'door' | 'cover' | 'studs' | 'pitch' | 'tent' | 'form' | 'liters' | 'assembly' | 'footprint'>>
 export interface PartOptions extends PartExtras {
   floor?: number
-  /** Solid fraction of the box (studs, trusses, tile roofs). */
+  /** Solid fraction of the box (studs, chimneys). */
   fill?: number
+  /** kg, when the part is not a solid fraction of its box (a roof covering by its sloped surface, a timber member by its section and length). */
+  mass?: number
 }
 
 export interface PartDraft {
@@ -31,11 +33,11 @@ export class StructureBuilder {
     const { id, role, material, aabb, y0, y1 } = draft
     if (this.ids.has(id)) throw new Error(`Part repeated in the structure: ${id}`)
     this.ids.add(id)
-    const { floor, fill, ...extras } = options
+    const { floor, fill, mass, ...extras } = options
     const volume = Math.max(0, (aabb[2] - aabb[0]) * (aabb[3] - aabb[1]) * (y1 - y0)) * (fill ?? 1)
     const part: StructurePart = {
       id, role, material, aabb: aabb.map(round2) as Rect, y0: round2(y0), y1: round2(y1), floor: floor ?? 0,
-      mass: Math.max(1, Math.round(volume * densityOf(material))),
+      mass: Math.max(1, Math.round(mass ?? volume * densityOf(material))),
     }
     for (const [key, value] of Object.entries(extras)) if (value !== undefined) (part as unknown as Record<string, unknown>)[key] = value
     this.parts.push(part)

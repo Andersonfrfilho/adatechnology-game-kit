@@ -38,18 +38,31 @@ export interface RoofCoveringDef {
   material: string
   /** How the covering is fixed to the trusses. */
   joint: JointKind
+  /**
+   * Weight of the covering over its sloped surface, kN/m²: the tiles or sheets wet, with the battens and the light timber they are nailed to (ripas and
+   * caibros); the rafters and trusses under it are parts of their own. Without it, `DEFAULT_COVERING_WEIGHT`.
+   */
+  weight?: number
 }
 
+/**
+ * The coverings of the kit, by NBR 6120:2019 (table of roof weights) and the makers' data, kN/m² of sloped surface: ceramic capa-canal tiles saturated with
+ * their battens and caibros 0.70 (0.81 in plan at 30°, about 0.85 with the rafters), fibre-cement 6 mm sheets with their fixings 0.24, asphalt shingles on
+ * an OSB deck 0.25, zinc or steel sheet 0.10, timber boards 0.20, canvas 0.006 (600 g/m²), wet thatch 0.45, a 12 cm concrete slab 3.0.
+ */
 export const ROOF_COVERINGS = new Map<string, RoofCoveringDef>([
-  ['colonial', { material: 'ceramic', joint: 'resting' }],
-  ['fiber_cement', { material: 'concrete', joint: 'bolt' }],
-  ['slab', { material: 'concrete', joint: 'rebar' }],
-  ['asphalt', { material: 'plastic', joint: 'nail' }],
-  ['zinc', { material: 'steel', joint: 'nail' }],
-  ['wood', { material: 'wood_soft', joint: 'nail' }],
-  ['canvas', { material: 'fabric', joint: 'tie' }],
-  ['thatch', { material: 'foliage', joint: 'tie' }],
+  ['colonial', { material: 'ceramic', joint: 'resting', weight: 0.7 }],
+  ['fiber_cement', { material: 'concrete', joint: 'bolt', weight: 0.24 }],
+  ['slab', { material: 'concrete', joint: 'rebar', weight: 3 }],
+  ['asphalt', { material: 'plastic', joint: 'nail', weight: 0.25 }],
+  ['zinc', { material: 'steel', joint: 'nail', weight: 0.1 }],
+  ['wood', { material: 'wood_soft', joint: 'nail', weight: 0.2 }],
+  ['canvas', { material: 'fabric', joint: 'tie', weight: 0.006 }],
+  ['thatch', { material: 'foliage', joint: 'tie', weight: 0.45 }],
 ])
+
+/** A covering the table does not weigh: a light tile roof, kN/m² of sloped surface. */
+export const DEFAULT_COVERING_WEIGHT = 0.5
 
 export function registerRoofCovering(id: string, def: RoofCoveringDef): void {
   ROOF_COVERINGS.set(id, def)

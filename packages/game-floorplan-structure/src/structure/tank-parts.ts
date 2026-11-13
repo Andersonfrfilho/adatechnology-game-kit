@@ -3,6 +3,7 @@ import type { Rect, StructurePart, WaterTank } from '../types'
 import { touches } from '../geometry'
 import { pillarBox } from './context'
 import type { BuildContext } from './context'
+import { coveringMass, roofMassOption, slopedArea } from './roof-weight'
 
 const TANK_FILL = 0.08
 /** The sleepers under an attic tank span between its support beams: 15 cm deep (L/10 of their span). */
@@ -36,8 +37,10 @@ function ensureCeilingSlab(context: BuildContext, y: number): StructurePart {
 }
 
 /** A wall of the storey that a beam across (u or v) can bear on: its line and its plan box. */
+/** The walls a tank beam may end on: none laid on a door's lintel (the masonry over a doorway is no wall to bear a beam: its end would hang over the gap). */
 function bearingWalls(context: BuildContext, floor: number): StructurePart[] {
-  return context.builder.parts.filter((p) => (p.role === 'wall' || p.role === 'partition') && p.floor === floor && !p.unit)
+  const overDoors = new Set(context.builder.supports.filter((s) => s.on.startsWith('lintel_')).map((s) => s.part))
+  return context.builder.parts.filter((p) => (p.role === 'wall' || p.role === 'partition') && p.floor === floor && !p.unit && !overDoors.has(p.id))
 }
 
 /**
@@ -92,13 +95,17 @@ function supportBeams(context: BuildContext, slab: StructurePart, lines: { reado
       const half = context.pillar.along / 2
       const [w0, w1] = chosen.along ? [wall.aabb[1], wall.aabb[3]] : [wall.aabb[0], wall.aabb[2]]
       let centre = w1 - w0 >= 2 * half ? Math.min(Math.max(b.at, w0 + half), w1 - half) : b.at
+      let doorway: string | undefined
       for (const door of context.source.doors) {
         if (door.floor !== top || door.axis !== (chosen.along ? 'v' : 'u') || Math.abs((chosen.along ? door.u : door.v) - end) > 0.2) continue
         const d0 = (chosen.along ? door.v : door.u) - door.width / 2, d1 = d0 + door.width
         if (centre + half <= d0 || centre - half >= d1) continue
         centre = centre < (d0 + d1) / 2 ? d0 - half : d1 + half
+        doorway = door.id
       }
       const at: Rect = chosen.along ? pillarBox(context.pillar, end, centre, false) : pillarBox(context.pillar, centre, end, true)
+      // a pillar the doorway pushed off the beam's line would carry none of it: the wall takes that end
+      if (doorway !== undefined && !touches(at, beam.aabb, 0)) continue
       const pillar = builder.add({ id: `tank_beam_pillar_${k}_${end === b.a0 ? 0 : 1}`, role: 'column', material: construction.frame.pillars, aabb: at, y0: storeyFloor, y1: slab.y1 - depth }, { floor: top })
       const base = builder.parts.find((p) => p.id !== pillar.id && (p.role === 'slab' || p.role === 'beam') && Math.abs(p.y1 - storeyFloor) < 0.06 && touches(p.aabb, at, 0.01))
       builder.rest(pillar, storeyFloor <= 0.05 ? GROUND : base ?? wall, 'rebar')
@@ -169,7 +176,10 @@ function addCastle(context: BuildContext, tank: WaterTank, pillars: readonly Str
     builder.rest(wall, foot, 'mortar')
     builder.rest(bond, wall, 'mortar')
   }
-  const roof = builder.add({ id: 'castle_roof', role: 'roof', material: construction.roof.material || 'ceramic', aabb: [u0 - h - 0.3, v0 - h - 0.3, u1 + h + 0.3, v1 + h + 0.3], y0: beamTop, y1: beamTop + 0.6 }, { floor: top })
+  const castleRoof: Rect = [u0 - h - 0.3, v0 - h - 0.3, u1 + h + 0.3, v1 + h + 0.3]
+  // its slopes rise 0.6 m to the middle of its short side
+  const mass = coveringMass(construction.roof.covering, slopedArea(castleRoof, Math.min(castleRoof[2] - castleRoof[0], castleRoof[3] - castleRoof[1]) / 2, 0.6))
+  const roof = builder.add({ id: 'castle_roof', role: 'roof', material: construction.roof.material || 'ceramic', aabb: castleRoof, y0: beamTop, y1: beamTop + 0.6 }, { floor: top, ...roofMassOption(context.visorSections, mass) })
   for (const [side] of sides) builder.rest(roof, `castle_bond_beam_${side}`, 'nail')
 }
 

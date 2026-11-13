@@ -24,7 +24,27 @@ export function groundedParts(parts: readonly StructurePart[], supports: readonl
   return grounded
 }
 
-/** Every part with a load path to the ground, and every pillar standing on what it rests on. */
+/** How far apart in plan a part and what it is declared to rest on may be and still touch (metres): the joint. */
+const PLAN_CONTACT = 0.02
+
+/**
+ * A part declared to rest on a pillar (or post) it does not meet in plan: the load path goes through air (a pillar pushed out of a doorway, beside the beam
+ * it is said to carry). A pillar carries only what stands on its head.
+ */
+function contactViolations(part: StructurePart, supports: readonly Support[], byId: ReadonlyMap<string, StructurePart>): StructuralViolation[] {
+  const out: StructuralViolation[] = []
+  for (const support of supports.filter((s) => s.part === part.id && s.bears !== false && s.on !== GROUND)) {
+    const under = byId.get(support.on)
+    if (!under || under.role !== 'column') continue
+    const gapU = Math.max(0, under.aabb[0] - part.aabb[2], part.aabb[0] - under.aabb[2])
+    const gapV = Math.max(0, under.aabb[1] - part.aabb[3], part.aabb[1] - under.aabb[3])
+    if (Math.hypot(gapU, gapV) > PLAN_CONTACT)
+      out.push({ code: STRUCTURAL_VIOLATION.SUPPORT_WITHOUT_CONTACT, part: part.id, message: `${part.id} is declared on ${under.id} ${Math.hypot(gapU, gapV).toFixed(2)} m away in plan: they do not touch` })
+  }
+  return out
+}
+
+/** Every part with a load path to the ground, every support on something it touches, and every pillar standing on what it rests on. */
 export function loadPathViolations(structure: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
   const { parts, supports } = structure
   const grounded = groundedParts(parts, supports)
@@ -37,6 +57,7 @@ export function loadPathViolations(structure: Pick<Structure, 'parts' | 'support
       out.push({ code: pillar ? STRUCTURAL_VIOLATION.PILLAR_NOT_GROUNDED : STRUCTURAL_VIOLATION.FLOATING_PART, part: part.id, message: `${part.id} has no load path to the ground` })
       continue
     }
+    out.push(...contactViolations(part, supports, byId))
     if (!pillar) continue
     const bases = supports.filter((s) => s.part === part.id && s.bears !== false)
     const standsOnBase = bases.some((s) => {

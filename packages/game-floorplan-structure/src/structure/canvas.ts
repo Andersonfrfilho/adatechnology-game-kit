@@ -1,6 +1,7 @@
 import { GROUND } from '../types'
 import type { Construction, Rect, Roof, Structure, StructureExtras } from '../types'
 import { StructureBuilder } from './builder'
+import { coveringMass, slopedArea } from './roof-weight'
 
 const GROUNDSHEET = 0.02
 
@@ -14,7 +15,9 @@ export function buildCanvasStructure(construction: Construction, extras: Structu
     const centreV = (v0 + v1) / 2
     const sheet = builder.add({ id: `groundsheet_${tent.id}`, role: 'slab', material: 'plastic', aabb: tent.aabb, y0: 0, y1: GROUNDSHEET }, { floor: 0, tent: tent.id })
     builder.rest(sheet, GROUND, 'resting')
-    const canvas = builder.add({ id: `canvas_${tent.id}`, role: 'roof', material: 'fabric', aabb: tent.aabb, y0: GROUNDSHEET, y1: tent.height }, { floor: 0, fill: 0.04, tent: tent.id, form: tent.kind })
+    // the fabric over its two slopes from the ridge to the ground
+    const mass = coveringMass('canvas', slopedArea(tent.aabb, Math.min(u1 - u0, v1 - v0) / 2, tent.height))
+    const canvas = builder.add({ id: `canvas_${tent.id}`, role: 'roof', material: 'fabric', aabb: tent.aabb, y0: GROUNDSHEET, y1: tent.height }, { floor: 0, mass, tent: tent.id, form: tent.kind })
     panes.push(canvas.id)
     const poles: [Rect, number][] =
       tent.kind === 'tunnel'
@@ -29,7 +32,8 @@ export function buildCanvasStructure(construction: Construction, extras: Structu
     corners.forEach(([u, v], k) => {
       const peg = builder.add({ id: `peg_${tent.id}_${k}`, role: 'column', material: 'wood_soft', aabb: [u - 0.02, v - 0.02, u + 0.02, v + 0.02], y0: 0, y1: 0.2 }, { floor: 0 })
       builder.rest(peg, GROUND, 'nail')
-      builder.rest(canvas, peg, 'tie')
+      // a guy rope pulls the canvas down to the peg: it ties it, it does not carry it
+      builder.supports.push({ part: canvas.id, on: peg.id, joint: 'tie', bears: false })
     })
   }
   const roof: Roof = { shape: 'tent', covering: 'canvas', material: 'fabric', pitch: 0, bearingFloor: 0, panes, trusses: 0 }

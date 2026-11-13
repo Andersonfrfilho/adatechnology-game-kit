@@ -5,8 +5,11 @@ import { ROOF_COVERINGS } from '../registry'
 import type { Rect, RoofPane, StructurePart } from '../types'
 import type { BuildContext } from './context'
 import { OPEN_ROOM_TYPES } from './context'
+import { coveringMass, rafterMass, roofMassOption, slopedArea, trussMass } from './roof-weight'
 
 const TRUSS_PITCH = 1.2
+/** How far in plan a roof member may stop from what carries it and still bear on it, metres (the joint): a carrier farther off does not carry it. */
+const BEARING_CONTACT = 0.02
 const DEFAULT_PITCH = 20
 const DEFAULT_EAVE = 0.4
 const CLOSED_ONLY: readonly string[] = [...OPEN_ROOM_TYPES, 'void']
@@ -64,9 +67,11 @@ function addTrusses(context: BuildContext, unit: RoofUnit, carriers: StructurePa
   for (let k = 0; k < count; k++) {
     const at = (axis === 'u' ? box[0] : box[1]) + (k * length) / (count - 1)
     const aabb: Rect = axis === 'u' ? [at - 0.04, box[1] - eave * 0.5, at + 0.04, box[3] + eave * 0.5] : [box[0] - eave * 0.5, at - 0.04, box[2] + eave * 0.5, at + 0.04]
-    const truss = builder.add({ id: `truss${unit.suffix}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, fill: 0.25 })
-    const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, 0.2) && carrier.role !== 'slab')
-    const chosen = touching.length ? touching : carriers.slice().sort((a, b) => distanceBetween(aabb, a.aabb) - distanceBetween(aabb, b.aabb)).slice(0, 2)
+    const span = axis === 'u' ? aabb[3] - aabb[1] : aabb[2] - aabb[0]
+    const truss = builder.add({ id: `truss${unit.suffix}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, ...roofMassOption(context.visorSections, trussMass(construction.frame.timber, span, rise), 0.25) })
+    const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, context.visorSections ? 0.2 : BEARING_CONTACT) && carrier.role !== 'slab')
+    // with none in reach, the nearest plates or walls (a pillar carries only what stands on its head)
+    const chosen = touching.length ? touching : carriers.filter((c) => context.visorSections || c.role !== 'column').sort((a, b) => distanceBetween(aabb, a.aabb) - distanceBetween(aabb, b.aabb)).slice(0, 2)
     for (const carrier of chosen) builder.rest(truss, carrier, system.joints.truss)
     trusses.push(truss)
   }
@@ -115,10 +120,11 @@ function addRafters(context: BuildContext, unit: RoofUnit, carriers: StructurePa
         ? [['a', [at - 0.04, box[1] - eave * 0.5, at + 0.04, middle]], ['b', [at - 0.04, middle, at + 0.04, box[3] + eave * 0.5]]]
         : [['a', [box[0] - eave * 0.5, at - 0.04, middle, at + 0.04]], ['b', [middle, at - 0.04, box[2] + eave * 0.5, at + 0.04]]]
     for (const [side, aabb] of halves) {
-      const rafter = builder.add({ id: `rafter${unit.suffix}_${side}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, fill: 0.25 })
+      const run = axis === 'u' ? aabb[3] - aabb[1] : aabb[2] - aabb[0]
+      const rafter = builder.add({ id: `rafter${unit.suffix}_${side}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, ...roofMassOption(context.visorSections, rafterMass(construction.frame.timber, run, rise), 0.25) })
       // a pillar carries the rafter only where the rafter crosses it (one beside it, off its head, carries nothing)
-      const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, carrier.role === 'column' ? 0 : 0.2) && carrier.role !== 'slab')
-      const chosen = touching.length ? touching : carriers.slice().sort((x, y) => distanceBetween(aabb, x.aabb) - distanceBetween(aabb, y.aabb)).slice(0, 2)
+      const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, carrier.role === 'column' ? 0 : BEARING_CONTACT) && carrier.role !== 'slab')
+      const chosen = touching.length ? touching : carriers.filter((c) => c.role !== 'column').sort((x, y) => distanceBetween(aabb, x.aabb) - distanceBetween(aabb, y.aabb)).slice(0, 2)
       for (const carrier of chosen) builder.rest(rafter, carrier, system.joints.truss)
       frames.all.push(rafter)
       if (side === 'a') frames.sideA.push(rafter)
@@ -172,14 +178,17 @@ function addGableRoof(context: BuildContext, unit: RoofUnit, carriers: Structure
   const geometry = geometryOf(context, unit)
   const frames: Frames = context.rafterRoof ? addRafters(context, unit, carriers, geometry) : coarseFrames(context, unit, carriers, geometry)
   const panes: RoofPane[] = []
-  const options = { floor: unit.floor, fill: construction.roof.covering === 'colonial' ? 0.12 : 0.05, ...(construction.roof.pitch === undefined ? {} : { pitch: construction.roof.pitch }) }
+  // the covering by its sloped surface (the slope of the roof: rise over half the span)
+  const run = ((geometry.axis === 'u' ? unit.box[3] - unit.box[1] : unit.box[2] - unit.box[0]) / 2) || 1
+  const legacyFill = construction.roof.covering === 'colonial' ? 0.12 : 0.05
+  const options = (aabb: Rect) => ({ floor: unit.floor, ...roofMassOption(context.visorSections, coveringMass(construction.roof.covering, slopedArea(aabb, run, geometry.rise)), legacyFill), ...(construction.roof.pitch === undefined ? {} : { pitch: construction.roof.pitch }) })
   panesOf(unit, geometry).forEach((paneBox, k) => {
     const name = unit.annex ? 'annex' : k === 0 ? 'a' : 'b'
     const carried = unit.annex || !context.rafterRoof ? frames.all : k === 0 ? frames.sideA : frames.sideB
     const bays = unit.annex || !context.roofBays ? [paneBox] : baysOf(paneBox, unit, geometry)
     bays.forEach((aabb, bay) => {
       const id = bays.length === 1 ? `roof${unit.suffix}_${name}` : `roof${unit.suffix}_${name}_${bay}`
-      const pane = builder.add({ id, role: 'roof', material: construction.roof.material, aabb, y0: geometry.eaveY, y1: geometry.eaveY + geometry.rise + 0.05 }, options)
+      const pane = builder.add({ id, role: 'roof', material: construction.roof.material, aabb, y0: geometry.eaveY, y1: geometry.eaveY + geometry.rise + 0.05 }, options(aabb))
       const under = bays.length === 1 ? carried : carried.filter((frame) => touches(aabb, frame.aabb, 0.05))
       for (const frame of under) builder.rest(pane, frame, covering)
       panes.push({ id: pane.id, aabb: pane.aabb, y0: pane.y0, y1: pane.y1 })

@@ -15,6 +15,8 @@ export interface JoistOptions {
 }
 
 const JOIST_PITCH = 0.6
+/** How far in plan a joist may stop from what carries it and still bear on it, metres (the joint). */
+const BEARING_CONTACT = 0.02
 
 /** Joists every 0.6 m under the floor of `floor`, each resting on what touches it from below (or the nearest carrier). */
 export function addJoists(context: BuildContext, options: JoistOptions): StructurePart[] {
@@ -32,7 +34,7 @@ export function addJoists(context: BuildContext, options: JoistOptions): Structu
     const joist = context.builder.add({ id: `joist_${floor}${suffix}_${k}`, role: 'beam', material, aabb, y0: context.level(floor) - thickness, y1: top }, { floor, fill: 1, spacing: JOIST_PITCH })
     out.push(joist)
     const below = carriers.filter((carrier) => carrier.y0 <= top + 0.05)
-    const touching = below.filter((carrier) => touches(aabb, carrier.aabb, 0.2))
+    const touching = below.filter((carrier) => touches(aabb, carrier.aabb, context.visorSections ? 0.2 : BEARING_CONTACT))
     const pool = below.length ? below : carriers
     const chosen = touching.length ? touching : pool.slice().sort((a, b) => distanceBetween(aabb, a.aabb) - distanceBetween(aabb, b.aabb)).slice(0, 1)
     for (const carrier of chosen) context.builder.rest(joist, carrier, joint)
