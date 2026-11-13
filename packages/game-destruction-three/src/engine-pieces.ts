@@ -60,6 +60,8 @@ interface Link {
   groundAtSleep: number
   readonly user: number
   shapeKey: readonly unknown[]
+  /** What `shapeKey` was made from, by reference: the same objects need no new key (most updates). */
+  shapeFrom: readonly unknown[]
   readonly pos: number[]
   readonly quat: number[]
   readonly vel: number[]
@@ -270,8 +272,6 @@ export class EnginePieces {
 
   /** Makes the body of a piece, or brings it up to date with what changed on the piece since the last step (moved, pushed, picked up, put to sleep). */
   private sync(b: PieceBody, dt: number): void {
-    // by value: the renderer hands new arrays for the same boxes, and a new shape wakes the body
-    const shapeKey = [JSON.stringify(b.halfExtents), JSON.stringify(b.partBoxes), JSON.stringify(b.round), b.mass, b.localCenter[0], b.localCenter[1], b.localCenter[2], JSON.stringify(b.friction), b.restitution]
     let c = this.centre(b)
     const q = b.root.quaternion
     let link = this.links.get(b)
@@ -304,12 +304,17 @@ export class EnginePieces {
         linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
         angularVelocity: [b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2]],
       })
-      link = { id, groundAtSleep: NaN, user, shapeKey, pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
+      link = { id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
       this.links.set(b, link)
       this.byUser.set(user, b)
       this.byObject.set(b.objectId, b)
       return
     }
+    // by value: the renderer hands new arrays for the same boxes when it measures a piece again, and a new shape wakes the body; the same objects as last time
+    // are the same shape, and are not turned into text again (it was a sixth of an update with 200 pieces)
+    const from = this.shapeFrom(b)
+    const shapeKey = from.some((x, i) => x !== link.shapeFrom[i]) ? this.shapeKey(b) : link.shapeKey
+    link.shapeFrom = from
     if (shapeKey.some((s, i) => s !== link.shapeKey[i])) {
       link.shapeKey = shapeKey
       // the piece's mass and moments go with its new shape: left to the engine, they would be the new shape's volume at 1000 kg/m^3
@@ -343,6 +348,14 @@ export class EnginePieces {
       this.world.wake(link.id)
       this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
     } else if (pushed) this.world.wake(link.id)
+  }
+
+  private shapeFrom(b: PieceBody): unknown[] {
+    return [b.halfExtents, b.partBoxes, b.round, b.mass, b.localCenter[0], b.localCenter[1], b.localCenter[2], b.friction, b.restitution]
+  }
+
+  private shapeKey(b: PieceBody): unknown[] {
+    return [JSON.stringify(b.halfExtents), JSON.stringify(b.partBoxes), JSON.stringify(b.round), b.mass, b.localCenter[0], b.localCenter[1], b.localCenter[2], JSON.stringify(b.friction), b.restitution]
   }
 
   /**
@@ -529,6 +542,11 @@ export class EnginePieces {
   private readBack(b: PieceBody, dt: number, time: number, before: { c: Vec3; vy: number } | undefined): void {
     const link = this.links.get(b)
     if (!link || b.held) return
+    // asleep on both sides since the last update: the engine has not moved it, there is nothing to read
+    if (link.sleeping && b.sleeping && this.world.isSleeping(link.id)) {
+      b.still = 0
+      return
+    }
     this.world.readPose(link.id, this.pose, 0)
     this.world.readVelocity(link.id, this.velocity, 0)
     const pos: Vec3 = [this.pose[0], this.pose[1], this.pose[2]]
