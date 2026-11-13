@@ -111,7 +111,7 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
       // (a drop at a free end, with no corner beside it, has its outlet over it)
       const corner = across[4] + across[5] * (GUTTER_OFF_FASCIA + GUTTER.radius), inward = -(alongX ? sx : sz), at = inward ? corner + inward * (GUTTER.radius + OUTLET_FROM_CORNER) : alongX ? px : pz;
       const ox = alongX ? at : outlet, oz = alongX ? outlet : at, out = Math.hypot(ox - px, oz - pz);
-      const yOut = y + 0.01, yWall = yOut - 0.06 - out;
+      const yOut = shared.ctx.visorGutters ? y - 0.02 : y + 0.01, yWall = yOut - 0.06 - out; // the Visor's outlet as the team drew it
       const bx_ = px + sx * SAND_BOX.offset, bz_ = pz + sz * SAND_BOX.offset, shoe = Math.hypot(bx_ - px, bz_ - pz) * 0.5, yFoot = DOWNPIPE.shoeOver + shoe;
       const path: number[][] = [[ox, yOut, oz], [ox, yOut - 0.06, oz], [px, yWall, pz], [px, yFoot, pz], [px + (bx_ - px) * 0.5, DOWNPIPE.shoeOver, pz + (bz_ - pz) * 0.5]];
       for (let i = 0; i + 1 < path.length; i++) tube(path[i], path[i + 1], r, c);
@@ -136,6 +136,12 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
     const g0 = cursor.group; cursor.group = 'f0';
     const h = SAND_BOX.side / 2, gh = SAND_BOX.grate / 2, top = 0.046;
     bx('plain', x - h, 0, z - h, x + h, top, z + h, 0xb9b5ac);
+    if (shared.ctx.visorGutters) { // the Visor's sand box as the team drew it (its golden)
+      bx('plain', x - gh, top - 0.002, z - gh, x + gh, top, z + gh, 0x16171a);
+      for (let k = -6; k <= 6; k++) bx('metal', x + k * (gh / 6.5) - 0.006, top, z - gh, x + k * (gh / 6.5) + 0.006, top + 0.008, z + gh, 0x6a6e72);
+      bx('metal', x - gh, top, z - gh, x + gh, top + 0.01, z - gh + 0.015, 0x5a5d61); bx('metal', x - gh, top, z + gh - 0.015, x + gh, top + 0.01, z + gh, 0x5a5d61);
+      cursor.group = g0; return;
+    }
     bx('plain', x - gh + 0.004, top - 0.01, z - gh + 0.004, x + gh - 0.004, top + 0.005, z + gh - 0.004, 0x16171a); // the pit stands 5 mm over the rim: its top never lies on the rim's
     for (let k = -6; k <= 6; k++) bx('metal', x + k * (gh / 6.5) - 0.006, top + 0.005, z - gh + 0.004, x + k * (gh / 6.5) + 0.006, top + 0.011, z + gh - 0.004, 0x6a6e72);
     bx('metal', x - gh, top, z - gh, x + gh, top + 0.016, z - gh + 0.015, 0x5a5d61); bx('metal', x - gh, top, z + gh - 0.015, x + gh, top + 0.016, z + gh, 0x5a5d61);
@@ -145,9 +151,10 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
   function drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void { // px,pz,c: foot of the downpipe and colour of the pipe leading to the drain (optional); stays in the ground floor group (shows even with the roof cut)
     const g0 = cursor.group; cursor.group = 'f0';
     if (px != null && pz != null && c != null) boxC('plain', (px + x) / 2, 0.075, (pz + z) / 2, Math.abs(x - px) + 0.05, 0.05, Math.abs(z - pz) + 0.05, sh(c, 0.85));
-    const t = 0.045; bx('plain', x - 0.12, 0, z - 0.12, x + 0.12, t - 0.006, z + 0.12, 0xb9b5ac); bx('metal', x - 0.11, t, z - 0.11, x + 0.11, t + 0.012, z + 0.11, 0x5a5d61); bx('plain', x - 0.085, t + 0.012, z - 0.085, x + 0.085, t + 0.017, z + 0.085, 0x16171a);
-    for (let k = -3; k <= 3; k++) { bx('metal', x + k * 0.025 - 0.006, t + 0.017, z - 0.085, x + k * 0.025 + 0.006, t + 0.025, z + 0.085, 0x8a8e92); }
-    bx('metal', x - 0.085, t + 0.017, z - 0.006, x + 0.085, t + 0.025, z + 0.006, 0x8a8e92);
+    const t = 0.045; bx('plain', x - 0.12, 0, z - 0.12, x + 0.12, t - 0.006, z + 0.12, 0xb9b5ac); bx('metal', x - 0.11, t, z - 0.11, x + 0.11, t + 0.012, z + 0.11, 0x5a5d61); bx('plain', x - 0.085, t + 0.012, z - 0.085, x + 0.085, t + (shared.ctx.visorGutters ? 0.014 : 0.017), z + 0.085, 0x16171a);
+    const bars = shared.ctx.visorGutters ? 0.012 : 0.017; // the Visor's bars lie on its dark bottom (its golden); here they stand clear of it
+    for (let k = -3; k <= 3; k++) { bx('metal', x + k * 0.025 - 0.006, t + bars, z - 0.085, x + k * 0.025 + 0.006, t + bars + 0.008, z + 0.085, 0x8a8e92); }
+    bx('metal', x - 0.085, t + bars, z - 0.006, x + 0.085, t + bars + 0.008, z + 0.006, 0x8a8e92);
     cursor.group = g0;
   }
   const defined: KernelRoofGutters = { gutterConfig, gutter, drain };

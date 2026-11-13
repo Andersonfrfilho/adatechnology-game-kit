@@ -656,6 +656,8 @@ export interface BuildContext {
   visorCorners: boolean
   /** `BuildOptions.ceilings === 'visor'`. */
   visorCeilings: boolean
+  /** The scene of the Visor de casas 3D (its gutters, eave, corners and ceilings at once): what reproduces the team's golden draws as the team did. */
+  visorScene: boolean
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

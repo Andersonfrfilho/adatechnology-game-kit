@@ -40,7 +40,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       cursor.pc = pieceRecord('wiring:grid', 'copper', null, { tags: ['wiring'] }); for (const dx of [-0.65, -0.2, 0.25, 0.7]) for (const k of [-1, 1]) wireL([P.u + dx, P.h - 0.5, P.v], [P.u + k * 22 + dx, P.h - 0.5, P.v], 0.007);
       if (en.drop && en.drop.length > 1 && !(KV && KV.serviceEntrance)) { // service drop: pole -> meter head
         const r0 = en.drop[0], r1 = en.drop[en.drop.length - 1];
-        for (const dz of [0, 0.04]) wireL([r0[0], r0[2], r0[1] + dz], [r1[0], r1[2], r1[1] + dz], 0.009); // the two conductors 4 cm apart end to end: never one along the other
+        for (const dz of [0, 0.04]) wireL([r0[0], r0[2], r0[1] + (shared.ctx.visorScene ? 0 : dz)], [r1[0], r1[2], r1[1] + dz], 0.009); // the two conductors 4 cm apart end to end: never one along the other
         wireL([P.u - 0.2, P.h - 0.5, P.v], [r0[0], r0[2], r0[1]], 0.008);
       }
       cursor.pc = null;

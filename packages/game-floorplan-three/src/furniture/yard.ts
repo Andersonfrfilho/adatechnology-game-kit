@@ -85,7 +85,7 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
       for (let k = 0; k < 3; k++) { const a = k * 2.0944 + 0.5, x = Math.cos(a) * r * 0.62, z = Math.sin(a) * r * 0.62; K.t('metal', [x, H * 0.84, z], [Math.cos(a) * r * 0.62, H - 0.012, Math.sin(a) * r * 0.62], 0.009, 0x7a7e82); } // ring feet
       const N = 10, ra = r * 0.62; for (let k = 0; k < N; k++) { const a0 = k * 6.2832 / N, a1 = (k + 1) * 6.2832 / N; K.t('metal', [Math.cos(a0) * ra, H - 0.012, Math.sin(a0) * ra], [Math.cos(a1) * ra, H - 0.012, Math.sin(a1) * ra], 0.009, 0x7a7e82); } // handling ring
       K.c('metal', 0, H * 0.9, 0, 0.026, H * 0.1, brass); K.c('metal', 0, H - 0.015, 0, 0.034, 0.02, 0x2a2c2e); // valve and handwheel
-      K.c('metal', 0.045, H * 0.9 - 0.002, 0, 0.022, 0.075, 0xc23a1e); K.b('metal', 0.075, H * 0.9 + 0.045, 0, 0.05, 0.022, 0.03, 0x2a2c2e); // pressure regulator (its top 6 mm over the outlet's) and outlet
+      K.c('metal', 0.045, H * 0.9 - 0.002, 0, 0.022, shared.ctx.visorScene ? 0.07 : 0.075, 0xc23a1e); K.b('metal', 0.075, H * 0.9 + 0.045, 0, 0.05, 0.022, 0.03, 0x2a2c2e); // pressure regulator (its top 6 mm over the outlet's) and outlet
       if (shelterOf(M)) { /* the copper line and the hose to the stove are drawn with the shelter, outside the cylinder */ }
       else if (M.hose && M.hose.length > 1) { // hose: leaves the regulator, drops in a curve and rises to the stove
         const q = M.hose[M.hose.length - 1], dx = q[0] - M.x, dz = q[1] - M.z, lx = dx * c - dz * s, lz = dx * s + dz * c, y1 = Math.max(0.1, (q[2] != null ? q[2] : 0.5)) - (M.y || 0);

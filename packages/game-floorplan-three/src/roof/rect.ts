@@ -14,7 +14,7 @@ export function installRoofRect(K: Kernel, shared: Shared): void {
     // closes the eave: masonry band over the wall (no gap up to the roof), eave soffit and fascia at the edge
     { const wt = (shared.ctx.r.walls.find((w) => w.exterior)?.thickness || 0.15) / 2, yc = yb - 0.2, cf = C.facade != null ? C.facade : 0xd8d0c0, fas = (R_STYLE() === 'budget') ? 0x6e4e34 : sh(roofColor, 0.55), sof = 0xe6e2d8, tz = 0.035;
       const gx = gable && alongX, gz = gable && !alongX; // gable end (no horizontal fascia)
-      const sunk = 0.01; // a gable end's soffit stops this far inside the gable wall: its end face never lies on the wall's outer face
+      const sunk = shared.ctx.visorEave ? 0 : 0.01; // a gable end's soffit stops this far inside the gable wall: its end face never lies on the wall's outer face (the Visor's ran flush)
       // the soffit under the rafters' tails (the Visor's tight under the eave line)
       const soffitTop = shared.ctx.visorEave ? 0 : EAVE.soffitTop, soffitThickness = shared.ctx.visorEave ? 0.025 : EAVE.soffitThickness;
       if (!touchesU[0]) { bx('plaster', X0 - wt, yc, Z0 - (touchesU[1] ? 0 : wt), X0, yb, Z1 + (touchesU[3] ? 0 : wt), cf); bx('plain', gx ? x0 + sunk : x0, yb - soffitTop - soffitThickness, z0, X0 - wt, yb - soffitTop, z1, sof); if (!gx) bx('plain', x0 - tz, yb - EAVE.fasciaBottom, z0 - tz, x0, yb + 0.03, z1 + tz, fas); }
