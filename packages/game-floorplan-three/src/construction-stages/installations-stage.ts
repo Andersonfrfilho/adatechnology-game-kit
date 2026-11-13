@@ -14,6 +14,9 @@ const DRAIN_BORE: Readonly<Record<string, number>> = { flush: 0.1, shower: 0.05,
 /** Fall of a sewer run, metres per metre (NBR 8160: 1 % for 100 mm and up, 2 % under it). */
 const FALL = { main: 0.01, branch: 0.02 } as const
 const TRENCH = { width: 0.4, bed: 0.03, berm: { width: 0.45, height: 0.2, crest: 0.12 } } as const
+/** The name of the mesh of the spoil heaped by the trenches. */
+export const SPOIL_HEAP = 'excavation:heap'
+
 /** How far the spoil heaps stand off a trench's edge, metres: past the ground's cell the trench wall slopes in (`game-terrain` digs by its cells). */
 const SPOIL_CLEAR = 0.12
 
@@ -149,7 +152,7 @@ function addSpoil(THREE: Three, parent: THREE_NS.Group, trenches: readonly Trenc
       }
     }
   })
-  const mound = heap.mesh(THREE, material, 'excavation:heap')
+  const mound = heap.mesh(THREE, material, SPOIL_HEAP)
   if (mound) parent.add(mound)
 }
 

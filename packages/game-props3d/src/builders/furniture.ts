@@ -9,7 +9,8 @@ export function furnitureBuilders({ kit, atlas }: BuilderContext): Partial<Build
     for (let i = 0; i < 4; i++) { K.box('wood', -w / 2 + (i + 0.5) * w / 4, 0.12, zb - 0.004, w / 4 - 0.025, 0.72, 0.012, wood); K.box('metal', -w / 2 + (i + 0.5) * w / 4 + (i % 2 ? -0.12 : 0.12), 0.75, zb - 0.012, 0.012, 0.14, 0.016, 0x9a9a9a); }
     K.box('plain', 0, 0.88, zb + (cd + 0.32) / 2, w + 0.04, 0.04, cd + 0.32, paving);
     for (const s of [-1, 1]) K.box('metal', s * (w / 2 - 0.05), 0, zb + cd + 0.24, 0.05, 0.88, 0.05, 0x2a2a2a);
-    K.box('metal', -w * 0.22, 0.915, zb + cd / 2, 0.52, 0.006, 0.38, 0xb0b4b8); K.box('metal', -w * 0.22, 0.92, zb + cd / 2, 0.46, 0.004, 0.32, 0x70767a); K.cyl('metal', -w * 0.22, 0.92, zb + 0.1, 0.014, 0.26, 0xb8bcc0); K.box('metal', -w * 0.22, 1.16, zb + 0.15, 0.02, 0.02, 0.1, 0xb8bcc0);
+    K.box('metal', -w * 0.22, M.visorScene ? 0.915 : 0.916, zb + cd / 2, 0.52, 0.006, 0.38, 0xb0b4b8); // (the sink's rim 2 mm proud of the counter and 2 mm under the basin's plate outside the Visor's scene)
+    K.box('metal', -w * 0.22, 0.92, zb + cd / 2, 0.46, 0.004, 0.32, 0x70767a); K.cyl('metal', -w * 0.22, 0.92, zb + 0.1, 0.014, 0.26, 0xb8bcc0); K.box('metal', -w * 0.22, 1.16, zb + 0.15, 0.02, 0.02, 0.1, 0xb8bcc0);
     K.cyl('plain', w * 0.25, 0.92, zb + cd / 2 + 0.2, 0.13, 0.05, 0xf0f0ea); for (let i = 0; i < 3; i++) K.cyl('plain', w * 0.25 + (i - 1) * 0.07, 0.97, zb + cd / 2 + 0.2 + (i % 2) * 0.03, 0.045, 0.09, [0xe8801c, 0xc83030, 0xd8c040][i], 0, 0, 'sphere');
     const stool = K.accent(0x8a5a38); for (let i = 0; i < 3; i++) { const x = (i - 1) * w * 0.3, z = zb + cd + 0.5;
       K.cyl('plain', x, 0.62, z, 0.17, 0.05, stool); K.cyl('metal', x, 0.04, z, 0.02, 0.58, 0x2a2a2a); K.cyl('metal', x, 0, z, 0.17, 0.02, 0x2a2a2a); K.cyl('metal', x, 0.25, z, 0.14, 0.012, 0x2a2a2a); } };

@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import { BLUEPRINT_LINES } from './blueprint.js'
+import { SPOIL_HEAP } from './installations-stage.js'
 
 export const CONSTRUCTION_LEVEL_MAX = 8
 
@@ -181,6 +182,9 @@ export function applyConstructionLevel(
       // the chalk of the walls lies where the ground beams are cast: from the foundation on it is under them
       const lines = name === 'stage:0:blueprint' ? child.getObjectByName(BLUEPRINT_LINES) : undefined
       if (lines) lines.visible = level === 0
+      // the spoil goes back into the trenches when they are filled: past the rough-in the water layer shows the runs, never the heaps by them
+      const heap = name === 'stage:4:installations' ? child.getObjectByName(SPOIL_HEAP) : undefined
+      if (heap) heap.visible = level === 4
       continue
     }
     if (name === 'lot') child.visible = level >= 4 && lotOn

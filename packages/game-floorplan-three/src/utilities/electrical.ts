@@ -45,7 +45,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       }
       cursor.pc = null;
       if (en.descent && en.descent.length > 1 && !(KV && KV.serviceEntrance)) { // drop: steel conduit from the head to the meter box
-        const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hw = shared.ctx.visorScene ? 0.05 : 0.047; /* (the head 3 mm narrower each side outside the Visor's scene: its sides lay on a pillar's and a wall's faces) */ bx('metal', d0[0] - hw, d0[2] - 0.03, d0[1] - hw, d0[0] + hw, d0[2] + 0.08, d0[1] + hw, 0x7a7e84);
+        const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hw = shared.ctx.visorScene ? 0.05 : 0.047; /* (the head 3 mm narrower each side outside the Visor's scene: its sides lay on a pillar's and a wall's faces) */ const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls); /* (a head on the lot's wall is laid round the railing's bars standing there) */ try { bx('metal', d0[0] - hw, d0[2] - 0.03, d0[1] - hw, d0[0] + hw, d0[2] + 0.08, d0[1] + hw, 0x7a7e84); } finally { shared.ctx.keepOut = kept; }
       }
       const M = en.meter;
       if (M) { // meter box with window and seal, on the face of the pillar/facade turned to the street (with the kit: power_meter)

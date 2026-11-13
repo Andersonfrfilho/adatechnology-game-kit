@@ -3,6 +3,7 @@ import type * as THREE_NS from 'three'
 import type { Three } from '../kernel-types.js'
 import { CONSTRUCTION_LEVEL_MAX } from './apply-level.js'
 import { coplanarOverlaps } from './coplanar.js'
+import { SPOIL_HEAP } from './installations-stage.js'
 
 /** What `checkConstructionStages` needs of a house built with `constructionStages: true`. */
 export interface StagedHouseView {
@@ -118,7 +119,7 @@ const LID_FLUSH = 0.01
 function checkSewer(T: Three, h: StagedHouseView, out: StageProblem[]): void {
   for (const name of ['stage:4:installations', 'stage:4:sewer_boxes']) {
     h.groups[name]?.traverse((o) => {
-      if (!(o as THREE_NS.Mesh).isMesh || o.name === 'excavation:heap' || o.name === 'excavation:opening') return
+      if (!(o as THREE_NS.Mesh).isMesh || o.name === SPOIL_HEAP || o.name === 'excavation:opening') return
       const top = new T.Box3().setFromObject(o).max.y
       if (top > (o.name === 'sewer:lid' ? LID_FLUSH : 1e-4)) out.push({ code: STAGE_PROBLEM.SEWER_ABOVE_GROUND, level: 4, detail: `${o.name || o.type} top ${top.toFixed(3)}` })
     })

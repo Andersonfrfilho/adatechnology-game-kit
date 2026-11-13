@@ -393,7 +393,7 @@ export interface KernelFurniturePlants {
   potModel(K: Kit, x: number, y: number, z: number, r: number, h: number, color: Hex, soil?: boolean): number
   /** Arched leaf; returns its tip. */
   arcLeaf(K: Kit, bx_: number, by: number, bz: number, az: number, len: number, elev: number, drop: number, wmax: number, color: Hex, serrated: boolean, nSeg?: number): number[]
-  tuft(K: Kit, x: number, y: number, z: number, r: number, n: number, color: Hex, rnd: () => number): void
+  tuft(K: Kit, x: number, y: number, z: number, r: number, n: number, color: Hex, rnd: () => number, phase?: number): void
   palm_tree: PlantBuilder
   treeModel: PlantBuilder
   shrubModel: PlantBuilder

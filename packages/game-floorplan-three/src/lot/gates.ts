@@ -22,7 +22,9 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         bx('plaster', x0, 0, v - 0.13, x1, high, v + 0.13, wall); bx('plaster', x0 - 0.03, high, v - 0.16, x1 + 0.03, high + 0.05, v + 0.16, sh(wall, 1.12)); bx('plaster', x0 - 0.01, 0, v - 0.14, x1 + 0.01, 0.25, v + 0.14, sh(wall, 0.72));
         bx('plain', (x0 + x1) / 2 - 0.05, high + 0.05, v - 0.05, (x0 + x1) / 2 + 0.05, high + 0.12, v + 0.05, sh(wall, 1.2)); // decorative post
       };
-      pil(a - 0.22, a + 0.03, h + 0.14); pil(b - 0.03, b + 0.22, h + 0.14);
+      // (outside the Visor's scene the pillars are laid round the fence's posts and the lot's wall already standing there, never through them)
+      const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls);
+      try { pil(a - 0.22, a + 0.03, h + 0.14); pil(b - 0.03, b + 0.22, h + 0.14); } finally { shared.ctx.keepOut = kept; }
       const anchor = (x: number, y: number): void => { cylBase('metal', x, y, v - 0.0, 0.016, 0.1, gc); };
       const bars = (u0: number, y0: number, u1: number, y1: number, zc: number): void => { // grille leaf: frame and round bars
         const n = Math.max(3, Math.round((u1 - u0) / 0.12));

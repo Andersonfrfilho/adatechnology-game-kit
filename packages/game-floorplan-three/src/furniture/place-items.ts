@@ -6,6 +6,8 @@ import type { FurnitureApi, Hex, HouseItem, Kernel, KernelFurniturePlaceItems, M
 
 /** How far over an earlier ground cover a later one that overlaps it is laid, metres. */
 const COVER_STEP = 0.003;
+/** How far round the breaker panel no picture or mirror is hung, metres. */
+const PANEL_CLEAR = 0.05;
 
 export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
   const { THREE, Y0, _col, boxC, colorOf, cursor, decorLights, makeApi, structurePiece, OPEN_AREA, rectsOf } = K;
@@ -22,7 +24,9 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     // their pleats, its top in a blind's cords
     const drawn = new Map<string, Aabb[][]>(); // (each item's own list, filled as it is drawn)
     const hangs = (m: HouseItem): boolean => m.type === 'curtain' || m.type === 'blinds';
-    const ordered = shared.ctx.visorScene ? list : list.filter((m) => !hangs(m)).concat(list.filter(hangs));
+    // (and a picture or a mirror after the furniture too: it is not hung where a cabinet on the wall already is)
+    const onWall = (m: HouseItem): boolean => m.category === 'picture' && !hangs(m);
+    const ordered = shared.ctx.visorScene ? list : list.filter((m) => !hangs(m) && !onWall(m)).concat(list.filter(onWall), list.filter(hangs));
     const covers: Rect[] = [];
     for (const m of ordered) {
       if (m.type === 'stairs') continue;
@@ -60,6 +64,8 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); cursor.stage = st0; continue; }
       if (hangs(m) && !shared.ctx.visorScene && !hemOver(M, (drawn.get(cursor.group) ?? []).flat())) { cursor.stage = st0; continue; }
       if (!hangs(m) && !shared.ctx.visorScene && (M.y ?? 0) > 0) standOnTop(M, (drawn.get(cursor.group) ?? []).flat());
+      // a mirror or a picture centred over a shower stall is not hung (outside the Visor's scene): it lay on the stall's valve and arm
+      if (onWall(m) && !shared.ctx.visorScene && (list.some((o) => /shower/.test(o.type) && o.floor === m.floor && overlapsInPlan({ ...m, w: 0, d: 0 }, o)) || hungOver(M, (drawn.get(cursor.group) ?? []).flat()) || overPanel(m, M))) { cursor.stage = st0; continue; }
       const mine = shared.ctx.itemBoxes;
       if (mine) drawn.set(cursor.group, (drawn.get(cursor.group) ?? []).concat([mine]));
       try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
@@ -84,6 +90,24 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     const type = R.facade.roof, pitch = type === 'slab' ? 0 : type === 'fiber_cement' ? 0.2 : 0.5;
     const roofTop = Y0(f - 1) + (below.ceiling || 2.6) + 0.2 + (type === 'slab' ? 0.03 : 0) + pitch * ((m.d || 0) + 0.05) + ROOF_CLEAR;
     if (M.base + (M.y || 0) < roofTop) M.y = roofTop - M.base;
+  }
+  /** Whether a picture or a mirror would hang over what the storey's furniture drew on its wall (its box, as the item's footprint and height give it). */
+  function hungOver(M: Mount, boxes: readonly Aabb[]): boolean {
+    const c = Math.abs(Math.cos(M.ry)), s = Math.abs(Math.sin(M.ry)), hx = ((M.w || 0.5) * c + (M.d || 0.03) * s) / 2, hz = ((M.w || 0.5) * s + (M.d || 0.03) * c) / 2, y0 = M.base + (M.y ?? 0), y1 = y0 + (M.h || 0.5);
+    return boxes.some((b) => b[0] < M.x + hx && b[3] > M.x - hx && b[2] < M.z + hz && b[5] > M.z - hz && b[1] < y1 && b[4] > y0);
+  }
+  /** Whether a picture or a mirror would hang over the breaker panel set in its wall (drawn later, with the installations). */
+  function overPanel(m: HouseItem, M: Mount): boolean {
+    const Q = shared.ctx.r.utilities?.electrical?.panel;
+    if (!Q || (Q.floor || 0) !== m.floor) return false;
+    const w = (Q.w || 0.3) + 2 * PANEL_CLEAR, h = (Q.h || 0.4) + 2 * PANEL_CLEAR, y0 = M.base + (M.y ?? 0);
+    return overlapsInPlan(m, { ...m, x: Q.u, z: Q.v, w, d: w, ry: 0 }) && y0 < Q.y + h / 2 && y0 + (M.h || 0.5) > Q.y - h / 2;
+  }
+  /** Whether two items' footprints overlap in plan (each turned by its own ry). */
+  function overlapsInPlan(a: HouseItem, b: HouseItem): boolean {
+    const extent = (m: HouseItem): Rect => { const c = Math.abs(Math.cos(m.ry || 0)), s = Math.abs(Math.sin(m.ry || 0)), hx = ((m.w || 0) * c + (m.d || 0) * s) / 2, hz = ((m.w || 0) * s + (m.d || 0) * c) / 2; return [m.x - hx, m.z - hz, m.x + hx, m.z + hz]; };
+    const p = extent(a), q = extent(b);
+    return p[0] < q[2] && p[2] > q[0] && p[1] < q[3] && p[3] > q[1];
   }
   /** How far over the height an item is set at (on a table, a shelf) the top of what is drawn there may be and still be what it stands on (a tablecloth), metres. */
   const SET_ON_REACH = 0.01;
