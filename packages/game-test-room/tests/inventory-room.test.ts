@@ -107,7 +107,8 @@ describe('the bag in the test room', () => {
   })
 
   it('refuses by weight, with a localized reason in the log and the bag untouched', () => {
-    const room = makeRoom({ catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR', maxCarryKg: 0.2 })
+    // a bag long enough for the shovel: the weight is the only reason left (a backpack would say too long first)
+    const room = makeRoom({ catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR', maxCarryKg: 0.2, inventory: { inside: [1.5, 0.6, 0.6] } })
     room.setAvatar(digger())
     room.spawn('item_shovel', [-0.5, 0, -1.2], 0)
     room.update(0.4)
@@ -165,6 +166,18 @@ describe('the bag in the test room', () => {
     expect(room.grab()).toBe(true)
     expect(room.inventory().held?.name).toBe('Shovel')
     expect(room.storeHeld()).toEqual({ ok: false, reason: 'too_long' })
+  })
+
+  it('a hammer blow that dents the blade shows as a dent in the condition of the bag and of the hand, in millimetres', () => {
+    // 40 J blunt on the 2 mm blade: a plate dent of 40 x 0.0001 = 4 mm (the blunt dent of `game-destruction`), too little to bend the blade past 1°
+    const dentBlade = (room: Room, objectId: string): void => void room.world.hitPart(objectId, 'blade', { type: 'blunt', point: [0, 0.026, -1.2], direction: [0, -1, 0], energy: 40, radius: 0.02 })
+    const { room, objectId } = withShovel(dentBlade)
+    const deepest = Math.max(...room.world.part(objectId, 'blade')!.dents.map((dent) => dent.depth))
+    expect(deepest * 1000).toBeGreaterThanOrEqual(1)
+    room.grab()
+    expect(room.inventory().held?.condition).toContain(`dented ${Math.round(deepest * 1000)} mm`)
+    expect(room.storeHeld()).toEqual({ ok: true })
+    expect(room.inventory().rows[0]!.condition).toContain(`dented ${Math.round(deepest * 1000)} mm`)
   })
 
   it('says dents, bend, char and the snapped handle in words', () => {
