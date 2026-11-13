@@ -77,7 +77,16 @@ function wallBoxRunsOf(r: HouseRecord): EmbeddedRun[] {
     const point = { u: t.u, v: t.v, y: t.y, frontU: t.frontU || 0, frontV: t.frontV || 0 }, box = wallBoxExtent(point, wallBehindOf(r.walls, { ...point, floor: t.floor }));
     const y0 = r.floors[Math.max(0, Math.min(r.floors.length - 1, t.floor))]?.y0 ?? 0;
     return { u: (box.u0 + box.u1) / 2, v: (box.v0 + box.v1) / 2, y0: y0 + box.y0 - BOX_CHASE_CLEAR, y1: y0 + box.y1 + BOX_CHASE_CLEAR, radius: WALL_BOX.along / 2 };
-  });
+  }).concat(E.panel ? [panelRunOf(E.panel)] : []);
+}
+
+/** How far behind its plan point the breaker panel's back is, and how far over the plan's height it stands (`electricalStructure`), metres. */
+const PANEL_RECESS = 0.015, PANEL_LIFT = 0.003;
+
+/** The breaker panel as a box set in its wall: the masonry is cut round it as it is round an outlet's box (a log or a brick never ends on its top or bottom). */
+function panelRunOf(P: NonNullable<NonNullable<NonNullable<HouseRecord['utilities']>['electrical']>['panel']>): EmbeddedRun {
+  const w = P.w || 0.3, h = P.h || 0.4;
+  return { u: P.u - Math.sign(P.frontU || 0) * PANEL_RECESS, v: P.v - Math.sign(P.frontV || 0) * PANEL_RECESS, y0: P.y - h / 2 + PANEL_LIFT - BOX_CHASE_CLEAR, y1: P.y + h / 2 + PANEL_LIFT + BOX_CHASE_CLEAR, radius: w / 2, depth: 0 };
 }
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {

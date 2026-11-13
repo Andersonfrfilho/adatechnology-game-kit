@@ -19,7 +19,11 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
       // the roof only covers closed rooms of the top storey on that footprint: whatever has any room above (including terrace/balcony, whose floor is already the slab) gets no roof
       const rs: readonly Rect[] = R.rooms.filter(c => c.floor === f && c.type !== 'void' && !c.outbuilding && !OPEN_AREA(c)).flatMap(rectsOf), up: readonly Rect[] = R.rooms.filter(c => c.floor === f + 1 && c.type !== 'void').flatMap(rectsOf);
       if (!rs.length) continue;
-      const xs = [...new Set(rs.flatMap(r => [r[0], r[2]]).map(v => +v.toFixed(3)))].sort((a, b) => a - b), zs = [...new Set(rs.flatMap(r => [r[1], r[3]]).map(v => +v.toFixed(3)))].sort((a, b) => a - b);
+      // (outside the Visor's scene the grid also runs on the upper storey's room edges: a cell whose centre lay on the line between two rooms above was taken
+      // for open sky, and its roof stood in them)
+      const lines = shared.ctx.visorScene ? rs : rs.concat(up);
+      const within = (v: number, k: 0 | 1): boolean => v >= Math.min(...rs.map(r => r[k])) && v <= Math.max(...rs.map(r => r[k + 2]));
+      const xs = [...new Set(lines.flatMap(r => [r[0], r[2]]).filter(v => within(v, 0)).map(v => +v.toFixed(3)))].sort((a, b) => a - b), zs = [...new Set(lines.flatMap(r => [r[1], r[3]]).filter(v => within(v, 1)).map(v => +v.toFixed(3)))].sort((a, b) => a - b);
       const em = (L: readonly Rect[], x: number, z: number): boolean => L.some(r => x > r[0] + EPS && x < r[2] - EPS && z > r[1] + EPS && z < r[3] - EPS), nx = xs.length - 1, nz = zs.length - 1;
       const cxs = (i: number): number => (xs[i] + xs[i + 1]) / 2, czs = (j: number): number => (zs[j] + zs[j + 1]) / 2;
       const occ: boolean[][] = []; for (let j = 0; j < nz; j++) { occ[j] = []; for (let i = 0; i < nx; i++) occ[j][i] = em(rs, cxs(i), czs(j)) && !em(up, cxs(i), czs(j)); }

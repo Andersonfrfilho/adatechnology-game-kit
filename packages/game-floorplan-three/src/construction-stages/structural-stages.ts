@@ -124,6 +124,8 @@ export interface EmbeddedRun {
   readonly y0: number
   readonly y1: number
   readonly radius: number
+  /** A box set in the wall reaches this far in from (u, v), a point of its face: its radius is then its half width along the wall. */
+  readonly depth?: number
 }
 
 /** What a chase leaves round the run in it, metres: the run never touches the brick. */
@@ -137,9 +139,9 @@ function chasesIn(wall: ReturnType<typeof wallLineOf>, core: { readonly line: nu
     // a run whose side reaches into the wall's span is cut into it too (a box beside a pillar, its centre past the end of the masonry)
     if (along + r.radius + CHASE_CLEAR < wall.a0 || along - r.radius - CHASE_CLEAR > wall.a1 || r.y1 <= core.y0 || r.y0 >= core.y1) continue
     // a run outside the wall's thickness is not in it; one wholly in the render does not reach the units
-    if (Math.abs(across) > wall.thickness / 2) continue
-    const back = Math.max(0, Math.abs(across) - r.radius - CHASE_CLEAR)
-    if (back >= core.width / 2) continue
+    if (Math.abs(across) > wall.thickness / 2 + 1e-6) continue
+    const back = Math.max(0, Math.abs(across) - (r.depth ?? r.radius) - CHASE_CLEAR)
+    // (whether it reaches the units is told where they are laid, by their own width: a log is wider than a brick core)
     out.push({ a0: along - r.radius - CHASE_CLEAR, a1: along + r.radius + CHASE_CLEAR, y0: Math.max(core.y0, r.y0), y1: Math.min(core.y1, r.y1), side: across >= 0 ? 1 : -1, back })
   }
   return out

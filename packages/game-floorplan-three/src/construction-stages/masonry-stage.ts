@@ -235,7 +235,7 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   }
   if (part.assembly === 'log_wall') {
     const logD = 0.16
-    for (const r of pieces) for (let y = r.y0; y < r.y1 - 1e-3; y += logD) box(batches.log, r.a0, y + 0.004, r.a1, Math.min(r.y1, y + logD - 0.004), th * 0.96)
+    for (const r of pieces) for (let y = r.y0; y < r.y1 - 1e-3; y += logD) chased(batches.log, r.a0, y + 0.004, r.a1, Math.min(r.y1, y + logD - 0.004), th * 0.96) // (cut by the chase of a box set in the wall, as a brick is)
     return laidRects
   }
   if (part.assembly === 'sheet_metal_shack' || part.material === 'steel') {
