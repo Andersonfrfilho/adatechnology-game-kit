@@ -48,6 +48,18 @@ describe('a hand grenade in the kitchen of single_storey_a', () => {
     expect(panes.every((part) => part.status === 'broken' || part.cracks.length + part.holes.length > 0)).toBe(true)
   }, 600000)
 
+  // Its fireball is 1.3 x 0.24^(1/3) = 0.8 m wide and lives 6 ms: 9 kJ/m2 on what it touches, a tenth of what wood needs to light (93 kJ/m2), and nothing it does
+  // not see. The roof tiles over the 21 cm ceiling slab, the grille of a window, the outbuilding's door: none of them is warmed, none catches fire
+  it('lights nothing and warms nothing of the house: no fire, every part under 40 °C 25 s after it', () => {
+    const { r, house, id, events } = kitchenHouse()
+    const at = house.group.localToWorld(IN_KITCHEN.clone())
+    r.world.explode([at.x, at.y, at.z], M67_ENERGY, M67_RADIUS, 'player', { charge: M67 })
+    r.frame(25, 0.05)
+    expect(events.filter((event) => event.type === 'ignite').map((event) => (event as { part?: string }).part)).toEqual([])
+    const hot = r.world.state(id)!.parts.filter((part) => part.temperature >= 40).map((part) => `${part.id} ${Math.round(part.temperature)}`)
+    expect(hot).toEqual([])
+  }, 600000)
+
   it('keeps every window, door and jamb of the house and of its outbuilding in its wall: none comes loose as a free piece', () => {
     const { r, house, id } = kitchenHouse()
     const at = house.group.localToWorld(IN_KITCHEN.clone())

@@ -80,6 +80,8 @@ describe('a hand grenade 0.5 m beside the broad side of the shovel, on the floor
     const { root, objectId } = room.spawn(`${ITEM_PREFIX}shovel`, start, 0)
     for (let i = 0; i < 30; i++) room.update(1 / 60)
     const piece = room.renderer.piece(objectId)!
+    const lit: string[] = []
+    room.world.on('ignite', (event) => lit.push(`${event.object} ${(event as { part?: string }).part ?? ''}`))
     room.blastAt('m67', [0, 0.05, -2.7])
     room.update(1 / 60)
     const speed = Math.hypot(...(piece.velocity as [number, number, number]))
@@ -89,6 +91,8 @@ describe('a hand grenade 0.5 m beside the broad side of the shovel, on the floor
     const travelled = Math.hypot(root.position.x - start[0], root.position.z - start[2])
     expect(travelled).toBeLessThan((speed * speed) / (2 * 0.3 * 9.81) + 1)
     expect(room.world.part(objectId, 'handle')?.status).toBe('broken')
+    // the fireball of the M67 (0.8 m, 6 ms) gives the ash 9 kJ/m2, a tenth of the 93 kJ/m2 it needs to light: the handle breaks, it does not burn
+    expect(lit).toEqual([])
     // what is left of the handle (pieces of 3.5 cm ash 0.25 m long or more: debris with a body, which never fades) is drawn on the floor where it slid to, and is still
     // there after the 12 s a chip lasts; each piece slides its own way, as far as its own speed takes it on the floor, within a few metres of the charge
     for (let i = 0; i < 900; i++) room.update(1 / 60)

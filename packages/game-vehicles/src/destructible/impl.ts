@@ -24,7 +24,7 @@ import type {
 import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
 import { ARMOUR_LEVELS, armourLevelOf } from './armour'
 import type { ArmourLevel, ArmourLevelId } from './armour'
-import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
+import { chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, ignitionChance, ignitionDose, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import type { KitShared, SceneNode } from '../types'
 import { clamp, rng, strHash } from '../util'
@@ -192,6 +192,8 @@ const BLUNT: Record<string, number> = { steel: 0.8, aluminium: 1, glass: 1.5, pl
 const SHIELDED: ReadonlySet<PartRole> = new Set<PartRole>(['engine', 'gearbox', 'frame', 'radiator', 'fuel_tank', 'oil_pan', 'battery', 'alternator', 'brakes', 'steering', 'shocks'])
 const AMBIENT = 20
 const FLAME = 700
+/** Share of its ignition dose under which a fireball does not warm a part. */
+const FIREBALL_NOTICE = 0.05
 
 /** Millimetres of RHA-equivalent steel by part (a car skin is under a millimetre; the engine block stops most rounds). */
 const STEEL_MM: Record<string, number> = { panel: 0.8, door: 1.6, hood: 0.8, lid: 0.8, roof: 0.8, fender: 0.8, pillar: 2, frame: 4, rim: 3, engine: 40, gearbox: 25, fuel_tank: 1, radiator: 1, battery: 2, brakes: 10, steering: 8, shocks: 6, oil_pan: 2, alternator: 4, hitch: 8, other: 2 }
@@ -873,8 +875,16 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         }
       }
     }
-    // heat of the blast ignites tyres and plastics nearby
-    heat(v, radius * 0.5, 450, 1, out)
+    // the heat of the blast is its fireball's (`chargeFireball`, a few tenths of a metre and milliseconds for a grenade): the dose on each part over the life of the
+    // fireball warms it that share of the way to its ignition temperature, and lights it when it reaches the dose its material needs (`ignitionDose`)
+    const fireball = h.fireball ?? chargeFireball(E * DEFAULT_BLAST_IMPULSE.tntPerJoule)
+    for (const d of model.parts) {
+      const p = ps.get(d.id)!
+      if (p.lost || !d.ignitionC) continue
+      const needed = ignitionDose(d.ignitionC, AMBIENT)
+      const share = Math.min(1, fireballDose(fireball, distToBox(d, v)) / needed)
+      if (share >= FIREBALL_NOTICE) p.temp = Math.max(p.temp, AMBIENT + (d.ignitionC + 1 - AMBIENT) * share)
+    }
   }
 
   const fireHit = (h: Hit, out: DestructionEvent[]): void => {

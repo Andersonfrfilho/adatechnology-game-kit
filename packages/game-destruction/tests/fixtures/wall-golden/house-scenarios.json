@@ -6308,14 +6308,6 @@
    }
   },
   {
-   "type": "ignite",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "part": "roof"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "gas_explodes",
@@ -6437,6 +6429,14 @@
    }
   },
   {
+   "type": "ignite",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "tank"
+   }
+  },
+  {
    "type": "damage",
    "data": {
     "scenario": "gas_explodes",
@@ -6445,6 +6445,246 @@
     "amount": 212.0176,
     "hp": 61991.5169,
     "damageType": "explosive"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.3,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.4,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.5,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.6,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.7,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.9,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.9,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.3,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.4,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.5,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.6,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.7,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.9,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 1.9,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.3,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.4,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.5,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.6,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.7,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.9,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 2.9,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 3.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 3.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 3.3,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "drip",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 3.4,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "melt",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 3.5,
+    "part": "tank"
    }
   }
  ],
