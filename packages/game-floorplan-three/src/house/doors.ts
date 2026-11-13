@@ -30,7 +30,8 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       const inWhole = R.walls.some(w => doorsInWall([p], w, alongU ? w.v0 : w.u0, Math.min(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1), Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1)).length > 0);
       if (!cut && !inWhole && wallHeight > dH + 1e-3) { const st0 = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'finishes'; const wv = nearestWall(f, p.axis, L, p.at); cursor.pc = K.structurePiece(`wall_${f}_over_${p.id}`) ?? (wv ? pieceOf(wv) : null); /* the masonry the structure lays over the door, else the wall beside it */ wallBox(alongU, L, a, b, y0 + dH, y0 + effectiveHeight(f, wallHeight), th, lL.color, lH.color, lL.mat, lH.mat); cursor.pc = null; cursor.stage = st0; }
       const fb = (u0: number, y_0: number, u1: number, y_1: number, tt = th + 0.02, color = frame): void => alongU ? bx('wood', u0, y0 + y_0, L - tt / 2, u1, y0 + y_1, L + tt / 2, color) : bx('wood', L - tt / 2, y0 + y_0, u0, L + tt / 2, y0 + y_1, u1, color);
-      const jw = 0.05; cursor.pc = pieceRecord('jamb:' + p.id, 'wood_hard', null, { floor: f }); fb(a, 0, a + jw, visH); fb(b - jw, 0, b, visH); if (!cut) fb(a, dH - jw, b, dH); cursor.pc = null;
+      // the jambs reach 2 mm into the wall's ends, so their outer faces never lie on the ends of the threshold and the sidewalk under the doorway
+      const jw = 0.05, jin = shared.ctx.visorScene ? 0 : 0.002; cursor.pc = pieceRecord('jamb:' + p.id, 'wood_hard', null, { floor: f }); fb(a - jin, 0, a + jw, visH); fb(b - jw, 0, b + jin, visH); if (!cut) fb(a, dH - jw, b, dH); cursor.pc = null;
       // opening direction: room side p.opensTo
       const sample = (sd: number): ReturnType<Kernel['roomAt']> => roomAt(f, alongU ? p.at : L + sd * 0.5, alongU ? L + sd * 0.5 : p.at);
       let sw = 1; { const cH = sample(1), cL = sample(-1); if (cL && cL.id === p.opensTo) sw = -1; else if (cH && cH.id === p.opensTo) sw = 1; }
@@ -61,7 +62,8 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
           const u0 = nf === 2 ? (k ? (aa + bb) / 2 : aa) : aa, u1 = nf === 2 ? (k ? bb : (aa + bb) / 2) : bb, color = p.exterior ? extC : wood;
           const hingeAt = nf === 2 ? (k ? u1 : u0) : (p.hinge === 'end' ? u1 : u0), dir = hingeAt === u0 ? 1 : -1, len = u1 - u0; newGroup(k, hingeAt);
           const d0 = dir > 0 ? 0.005 : -len + 0.005, d1 = dir > 0 ? len - 0.005 : -0.005;
-          leafBox(hingeAt, d0, d1, 0, visH, 0.04, color, PMAT);
+          // the leaf closes under the head of the frame, never through it
+          leafBox(hingeAt, d0, d1, 0, cut || shared.ctx.visorScene ? visH : dH - jw - 0.003, 0.04, color, PMAT);
           { const e0 = Math.min(d0, d1) + 0.1, e1 = Math.max(d0, d1) - 0.1, pc = sh(color, 0.82); // leaf panels
             if (e1 - e0 > 0.2 && visH > 1.2) { leafBox(hingeAt, e0, e1, 0.15, visH * 0.45, 0.055, pc, PMAT); leafBox(hingeAt, e0, e1, visH * 0.5, visH - 0.15, 0.055, pc, PMAT); } }
           { // lock plate, keyhole and handle (own group, turns when opening)
