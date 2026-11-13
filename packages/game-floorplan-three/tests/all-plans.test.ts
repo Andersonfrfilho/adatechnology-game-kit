@@ -57,7 +57,10 @@ function missingMembers(structure: Structure): string[] {
   const count = (test: (part: Structure['parts'][number]) => boolean): number => parts.filter(test).length
   const out: string[] = []
   if (structure.construction.system === 'masonry') {
-    if (count((part) => part.role === 'column') < 4) out.push('fewer than 4 pillars')
+    // structural masonry (NBR 16868) has no pillars: the grouted cores at the corners, the junctions and along the walls do their work
+    if (structure.construction.walls.masonrySystem === 'structural') {
+      if (parts.reduce((sum, part) => sum + (part.grout?.length ?? 0), 0) < 4) out.push('fewer than 4 grouted cores')
+    } else if (count((part) => part.role === 'column') < 4) out.push('fewer than 4 pillars')
     if (!structure.framed && count((part) => part.beamKind === 'ground_beam') === 0) out.push('no ground beam (viga baldrame)')
     if (!structure.framed && count((part) => part.beamKind === 'bond_beam') === 0) out.push('no bond beam (cinta)')
   }

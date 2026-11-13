@@ -182,7 +182,7 @@ function heldBy(line: Line, width: number, props: readonly Prop[]): { intervals:
  */
 function pillarsFor(
   line: Line, width: number, props: readonly Prop[], spots: Array<Spot & { dist: number }>,
-  context: { dist: number; options: SlabPanelOptions; section: PillarSection; ends: boolean; allowed: readonly Interval[]; snap: (spot: Spot) => Spot; hosts?: { start: boolean; end: boolean } },
+  context: { dist: number; options: SlabPanelOptions; section: PillarSection; ends: boolean; allowed: readonly Interval[]; snap: (spot: Spot) => Spot; hosts?: { start: boolean; end: boolean }; wallsCarry?: boolean },
 ): { held: Interval[]; hosted: { start: boolean; end: boolean } } {
   const { options, ends, allowed } = context
   const length = line.to - line.from
@@ -208,7 +208,8 @@ function pillarsFor(
   const hostHeld = (): Interval[] => [...(hosted.start ? [[0, BEARING] as Interval] : []), ...(hosted.end ? [[length - BEARING, length] as Interval] : [])]
   let held = [...heldBy(line, width, all()).intervals, ...hostHeld()]
   // an end rests on a pillar or on the beam it frames into: masonry alone does not carry the end of a beam (confined masonry only closes)
-  const endHeld = (): Interval[] => [...heldBy(line, width, all().filter((prop) => prop.part === undefined || prop.part.role === 'column')).intervals, ...hostHeld()]
+  // (in structural masonry the wall is the structure and carries it)
+  const endHeld = (): Interval[] => [...heldBy(line, width, all().filter((prop) => context.wallsCarry || prop.part === undefined || prop.part.role === 'column')).intervals, ...hostHeld()]
   for (let guard = 0; guard < 64; guard++) {
     let at: number | undefined
     const ends_ = endHeld()
@@ -389,6 +390,7 @@ const restThickness = (slab: StructurePart, thickness: number, roof: boolean): v
 
 /** Cuts one slab into panels, adds the beams under their edges and the pillars those need; re-points what rested on the slab. */
 function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect[]): void {
+  const structural = context.structure.construction.walls.masonrySystem === 'structural'
   const { options } = context
   const roof = slab.cover === true
   const layout = layoutPanels(slab.aabb, linesOf(wallBoxes), options)
@@ -444,9 +446,10 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
       const line: Line = { dir: cut.dir === 'v' ? 'v' : 'u', at: cut.at, from, to }
       if (covered(line)) continue
       const hosts = { start: crosses(line, pointOf(line, 0)), end: crosses(line, pointOf(line, to - from)) }
-      const walled = wallStretches(context, line, storey.floor, top)
+      // structural masonry has no concrete pillars: its walls carry the beams
+      const walled = structural ? [] : wallStretches(context, line, storey.floor, top)
       const allowed = storey.below ? intersect(walled, merged(ground.map((box) => holds(line, 0.02, box)).filter((x): x is Interval => x !== undefined))) : walled
-      const { held, hosted } = pillarsFor(line, context.wallThickness, props, spots, { dist: near, options, section: context.section, ends: true, allowed, snap: (spot) => snapToWall(context, storey.floor, spot), hosts })
+      const { held, hosted } = pillarsFor(line, context.wallThickness, props, spots, { dist: near, options, section: context.section, ends: true, allowed, snap: (spot) => snapToWall(context, storey.floor, spot), hosts, wallsCarry: structural })
       const span = beamSpan(to - from, held).span
       // deep enough for its effective span, as the validator measures it (NBR 6118 14.6.2.4: the clear span and half of each support)
       let depth = beamDepthFor(span, options)
@@ -552,7 +555,7 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
   const storey = { floor, below: floor >= 1 ? `slab_${floor}` : undefined, bottom: context.structure.levels[floor] ?? 0 }
   const spots: Array<Spot & { dist: number }> = []
   const near = props.length ? Math.min(...props.map((p) => p.dist)) : pillarDist(context, dist, storey)
-  const { held } = pillarsFor(line, width, props, spots, { dist: near, options, section: context.section, ends: false, allowed: wallStretches(context, line, floor, plate.y0), snap: (spot) => snapToWall(context, floor, spot) })
+  const { held } = pillarsFor(line, width, props, spots, { dist: near, options, section: context.section, ends: false, allowed: context.structure.construction.walls.masonrySystem === 'structural' ? [] : wallStretches(context, line, floor, plate.y0), snap: (spot) => snapToWall(context, floor, spot) })
   const found = beamSpan(line.to - line.from, held)
   const span = found.span
   // over an opening the lintel cast under it spans with it: their section together is what the span asks of (growing it down would run into the lintel)

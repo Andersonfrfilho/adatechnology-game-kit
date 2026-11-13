@@ -3,7 +3,7 @@ import type { Rect, StructurePart } from '../types'
 import { round2, touches } from '../geometry'
 import { pillarBox } from './context'
 import type { BuildContext, BuildWall } from './context'
-import { addWallPillars } from './wall-pillars'
+import { addGroutCores, addWallPillars } from './wall-pillars'
 
 const MAX_GAP_WITHIN_RUN = 3.2
 const POST_SPACING = 2.4
@@ -22,7 +22,7 @@ const acrossOf = (wall: BuildWall): number => (wall.axis === 'u' ? wall.v0 : wal
 function runsOf(context: BuildContext, walls: readonly BuildWall[], floor: number): Run[][] {
   const lines = new Map<string, BuildWall[]>()
   for (const wall of walls) {
-    if (!wall.exterior || wall.type !== 'wall') continue
+    if (!(wall.exterior || (context.structural && wall.role === 'wall')) || wall.type !== 'wall') continue
     const top = round2(context.wallParts.get(wall.id)!.y1)
     const key = `${floor}|${wall.axis}|${acrossOf(wall).toFixed(2)}|${top.toFixed(2)}`
     lines.set(key, [...(lines.get(key) ?? []), wall])
@@ -145,7 +145,8 @@ function addCornerPillars(context: BuildContext, walls: readonly BuildWall[], fl
 export function addPlatesAndPillars(context: BuildContext, floor: number): void {
   const walls = context.walls.filter((wall) => wall.floor === floor)
   const { plates, pillars } = addPlates(context, walls, floor)
-  if (context.construction.system === 'masonry') {
+  if (context.structural) addGroutCores(context, walls)
+  else if (context.construction.system === 'masonry') {
     const corners = addCornerPillars(context, walls, floor, plates)
     pillars.push(...corners)
     if (context.wallPillarSpacing) pillars.push(...addWallPillars(context, walls, floor, plates, corners, context.wallPillarSpacing))

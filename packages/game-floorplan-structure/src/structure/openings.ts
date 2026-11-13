@@ -54,7 +54,7 @@ export function addDoorLintels(context: BuildContext): void {
     for (const wall of beside) builder.rest(lintel, context.wallParts.get(wall.id) as StructurePart, system.joints.beam)
     // the pillars at the jambs carry the lintel too (confined masonry: a wide door rests on the frame, not on the bricks alone)
     const jambs = (context.pillars.get(door.floor) ?? []).filter((pillar) => pillar.material === 'concrete' && overlapsInPlan(pillar.aabb, box) && pillar.y1 >= y0)
-    if (construction.system === 'masonry' && hi - lo > WIDE_DOOR) jambs.push(...addJambPillars(context, { door, beside, from, to, cross }, jambs))
+    if (construction.system === 'masonry' && !context.structural && hi - lo > WIDE_DOOR) jambs.push(...addJambPillars(context, { door, beside, from, to, cross }, jambs))
     for (const pillar of jambs) builder.rest(lintel, pillar, 'rebar')
     // the masonry over the door, from the lintel to the bond beam (encunhamento), laid as the wall beside it: the bond beam bears on it, it on the lintel
     const host = context.wallParts.get(beside[0]!.id)

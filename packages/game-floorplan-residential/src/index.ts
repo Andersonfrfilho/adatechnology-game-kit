@@ -28,6 +28,7 @@ export const version = '0.1.0'
 /** Residential template ids. */
 export const residentialTemplateIds = [
   'single_storey_a',
+  'single_storey_structural',
   'townhouse',
   'apartment_basic',
   'budget_slab_house',

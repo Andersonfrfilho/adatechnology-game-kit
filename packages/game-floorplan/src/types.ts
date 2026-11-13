@@ -197,6 +197,8 @@ export interface TemplateDef {
   /** Building system the structure pack builds (a reference registered there). */
   /** The masonry unit a structure pack lays the walls of (its catalog); the pack derives the walls' thickness from it. */
   masonryUnit?: string
+  /** How that masonry stands (`confined`, `structural`): a structure pack reads it. */
+  masonrySystem?: string
   construction?: string
   /** Region of the content (`br`...), chosen by the pack that registered the template. */
   region?: string
@@ -302,6 +304,8 @@ export interface FindsProvider {
 export interface FloorplanOptions {
   /** Thickness of the plan's walls, metres: wins over the template's. */
   wallThickness?: number
+  /** Grid the walls' centre lines are laid on, metres (structural masonry is laid to its unit's module, 15 or 20 cm); unset: no grid. */
+  module?: number
   /** Number of storeys, for templates that accept it. */
   floors?: number
   /** Building system of the structure pack (`masonry`, `wood_frame`, ...). */

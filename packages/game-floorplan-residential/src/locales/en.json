@@ -74,6 +74,7 @@
   },
   "templates": {
     "single_storey_a": "House type A (single storey)",
+    "single_storey_structural": "House type A in structural masonry (concrete block)",
     "townhouse": "Townhouse (2 floors)",
     "apartment_basic": "Apartment (1 unit per floor)",
     "mansion": "Mansion (up to 3 floors)",

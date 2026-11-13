@@ -25,6 +25,15 @@ const DEFAULT_UNITS: readonly MasonryUnit[] = [
     id: 'concrete_block_19', family: 'concrete_block', material: 'concrete', width: 0.19, height: 0.19, length: 0.39, mass: 14, uses: [SEALING, STRUCTURAL], fbk: 4, solid: 0.5,
     assembly: 'concrete_block_wall', channel: { id: 'concrete_channel_19', length: 0.39, height: 0.19, mass: 13 },
   },
+  // the same blocks in the next strength class of NBR 6136 (6 MPa), for walls a structural design loads past what the 4 MPa class takes
+  {
+    id: 'concrete_block_14_fbk6', family: 'concrete_block', material: 'concrete', width: 0.14, height: 0.19, length: 0.39, mass: 11.5, uses: [STRUCTURAL], fbk: 6, solid: 0.5,
+    assembly: 'concrete_block_wall', channel: { id: 'concrete_channel_14', length: 0.39, height: 0.19, mass: 10 },
+  },
+  {
+    id: 'concrete_block_19_fbk6', family: 'concrete_block', material: 'concrete', width: 0.19, height: 0.19, length: 0.39, mass: 14.5, uses: [STRUCTURAL], fbk: 6, solid: 0.5,
+    assembly: 'concrete_block_wall', channel: { id: 'concrete_channel_19', length: 0.39, height: 0.19, mass: 13 },
+  },
   // the solid brick has no U unit: its bond beams and lintels are cast in forms
   {
     id: 'solid_brick', family: 'solid_brick', material: 'brick', width: 0.1, height: 0.05, length: 0.2, mass: 1.9, uses: [SEALING, STRUCTURAL], fbk: 4, solid: 1,

@@ -11,6 +11,8 @@ export interface StructuralStageGroups {
   readonly foundation: THREE_NS.Group
   /** The pillars' starter bars out of the footings: seen while the foundation is open, inside the pillars once they are cast. */
   readonly starterBars: THREE_NS.Group
+  /** Structural masonry: the bars of the grouted cores, standing before the blocks are laid around them. */
+  readonly groutBars: THREE_NS.Group
   readonly frame: THREE_NS.Group
   readonly masonry: THREE_NS.Group
   readonly roofFraming: THREE_NS.Group
@@ -70,6 +72,8 @@ const overlapArea = (a: readonly number[], b: readonly number[]): number =>
 
 /** Plaster each side of a bare wall: the bricks, and the bond beams and lintels cast in the wall's line, are this much narrower than the finished wall. */
 const PLASTER = PLASTER_PER_FACE
+/** Side of the bar drawn in a grouted core of structural masonry, metres (a 12.5 mm bar). */
+const GROUT_BAR = 0.0125
 
 /** A beam cast in a wall's line (a bond beam, a lintel, a slab's beam over a partition) as wide as the wall's bricks: the plaster covers both later. */
 /** A solid as narrow as a wall's core (`toCoreWidth` took the render off it): it is cast in the wall. */
@@ -348,8 +352,12 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   roofFraming.name = 'stage:7:roof_framing'
   const starterBars = new THREE.Group()
   starterBars.name = 'stage:1:starter_bars'
-  const groups: StructuralStageGroups = { foundation, starterBars, frame, masonry, roofFraming }
+  const groutBars = new THREE.Group()
+  groutBars.name = 'stage:2:grout_bars'
+  const groups: StructuralStageGroups = { foundation, starterBars, groutBars, frame, masonry, roofFraming }
   if (!rawStructure) return groups
+  // in structural masonry the walls carry the bond beams (U-blocks) and the slab: they are cast on the walls, at the masonry stage, never before them
+  if (rawStructure.construction.walls.masonrySystem === 'structural') frame.name = 'stage:3:frame'
 
   const mats = createStageMaterials(THREE)
   const parts = detailedParts(rawStructure).filter((p) => p.role !== 'roof' && !/^(rafter_|ridge)/.test(p.id))
@@ -388,6 +396,18 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
     addStageBox(THREE, frame, c.aabb[0], c.y0, c.aabb[1], c.aabb[2], c.y1, c.aabb[3], mat, c.id)
     if (c.tank || c.y0 > 0.1 || c.material !== 'concrete') continue
     if (c.floor === 0) addRebarCage(THREE, starterBars, c.aabb, 0, 0.42, mats.rebar!)
+  }
+  // structural masonry (NBR 16868): the bar of each grouted core stands from the foundation in the wall's line, the blocks are laid around it
+  for (const wall of parts.filter((p) => (p.role === 'wall' || p.role === 'partition') && p.grout?.length)) {
+    const line = wallLineOf(wall.aabb)
+    const bottom = (wall.floor ?? 0) === 0 ? 0 : wall.y0
+    for (const [k, along] of wall.grout!.entries()) {
+      const [u, v] = line.alongU ? [along, line.line] : [line.line, along]
+      // up into the concrete over it, its end inside (on the plane of a face it would flicker)
+      const over = [...beams, ...slabs].filter((s) => s.aabb[0] < u && s.aabb[2] > u && s.aabb[1] < v && s.aabb[3] > v && s.y0 > bottom + 0.5)
+      const top = over.length ? Math.min(...over.map((s) => s.y0)) + 0.02 : wall.y1 - 0.02
+      addStageBox(THREE, groutBars, u - GROUT_BAR / 2, bottom, v - GROUT_BAR / 2, u + GROUT_BAR / 2, top, v + GROUT_BAR / 2, mats.rebar!, `${wall.id}_grout_${k}`)
+    }
   }
   for (const b of beams) {
     const p = beamParts.find((x) => x.id === b.id)

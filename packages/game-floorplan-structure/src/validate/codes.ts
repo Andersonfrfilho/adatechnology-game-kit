@@ -34,6 +34,20 @@ export const STRUCTURAL_VIOLATION = {
   UNBONDED_MASONRY: 'UNBONDED_MASONRY',
   /** A plastered brick wall without plaster on both faces. */
   MISSING_PLASTER: 'MISSING_PLASTER',
+  /** Structural masonry (NBR 16868) laid of a unit graded for sealing only. */
+  UNIT_NOT_STRUCTURAL: 'UNIT_NOT_STRUCTURAL',
+  /** Structural masonry with no grouted core beside an opening. */
+  OPENING_WITHOUT_GROUT: 'OPENING_WITHOUT_GROUT',
+  /** Structural masonry: a beam bears across the wall with no grouted core under it (NBR 16868, local bearing under a concentrated load). */
+  CONCENTRATED_LOAD_WITHOUT_GROUT: 'CONCENTRATED_LOAD_WITHOUT_GROUT',
+  /** A concrete pillar in a wall of structural masonry (the wall is the structure). */
+  PILLAR_IN_STRUCTURAL_WALL: 'PILLAR_IN_STRUCTURAL_WALL',
+  /** A bearing wall of structural masonry taller than 24 times its thickness (NBR 16868). */
+  WALL_TOO_SLENDER: 'WALL_TOO_SLENDER',
+  /** A wall of structural masonry whose corners are off the module of its unit. */
+  OFF_MODULE: 'OFF_MODULE',
+  /** A wall of structural masonry carrying more at rest than the design strength of its masonry. */
+  MASONRY_OVERSTRESSED: 'MASONRY_OVERSTRESSED',
 } as const
 
 export type StructuralViolationCode = (typeof STRUCTURAL_VIOLATION)[keyof typeof STRUCTURAL_VIOLATION]

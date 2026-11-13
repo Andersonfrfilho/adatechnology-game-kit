@@ -3,6 +3,8 @@ export { createDestruction, SHELTER_DEFAULTS, FRAGMENT_HIT_DEFAULTS, CONFINEMENT
 export { explosivePart, FIRE_PRIME_C } from './chain'
 export { GROUND_LOSS_DEFAULTS, resolveGroundLoss, settlementAt, undercutAt } from './ground-loss'
 export type { ChainTrigger, ExplosivePartOptions, WorldExplosive } from './chain'
+export { LAID_MASONRY_GPA, bearingModulus, isLaidUnits, isUpright } from './bearing-modulus'
+export type { BearingOf } from './bearing-modulus'
 export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity, fragility } from './materials'
 export { ASSEMBLIES, createAssemblies, defaultAssemblies, registerAssembly, getAssembly, assemblyPart, assemblyDepth } from './assemblies'
 export type { Assemblies, AssembliesOptions, AssemblyDef, AssemblyPartOptions } from './assemblies'

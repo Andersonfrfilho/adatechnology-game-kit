@@ -122,3 +122,23 @@ export function addWallPillars(context: BuildContext, walls: readonly BuildWall[
   }
   return pillars
 }
+
+/** Most metres between two grouted cores of a structural masonry wall (NBR 16868: 1.2 to 2 m in houses; the middle of that). */
+export const GROUT_SPACING = 1.6
+
+/**
+ * Structural masonry (NBR 16868): the vertical cores of the units grouted with a bar, where a confined wall would have its pillars: at each end of a
+ * stretch (a corner, a door jamb, beside a window), where a wall meets it, and at most every `GROUT_SPACING` metres. They go on the wall part (`grout`).
+ */
+export function addGroutCores(context: BuildContext, walls: readonly BuildWall[]): void {
+  const core = context.pillar.across
+  for (const wall of walls) {
+    if (wall.type !== 'wall') continue
+    const part = context.wallParts.get(wall.id)
+    if (!part) continue
+    const junctions = junctionsOf(context, wall)
+    const at = new Set<number>()
+    for (const stretch of stretchesOf(context, wall)) for (const along of pillarStations(stretch.from, stretch.to, junctions, GROUT_SPACING, core)) at.add(Math.round(along * 100) / 100)
+    part.grout = [...at].sort((a, b) => a - b)
+  }
+}

@@ -1,6 +1,7 @@
-import { SUPPORT_TOLERANCE, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
+import { SUPPORT_TOLERANCE, contactArea, contactCentre as planContact, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
 import type { PlanePoint, SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
 import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
+import { bearingModulus, isUpright } from './bearing-modulus'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
@@ -1058,12 +1059,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
     const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
     // what each part rests on through its bearing joints that hold
+    // what each part rests on through its bearing joints that hold, weighed by the contact (in plan) each gives it
+    const boxes = parts.map((p) => aabbOf(p.spec.shape, p.pos, p.q))
+    const plan = boxes.map((box) => [box.min[0], box.min[2], box.max[0], box.max[2]])
+    const bedded = new Array<boolean>(n).fill(false)
     const edges: SupportEdge[][] = parts.map((p, i) => {
       const out: SupportEdge[] = []
       for (const j of o.byPart.get(p.spec.id)!) {
         if (j.st.open || !j.bears) continue
         const k = restsOn(o, j, i)
-        if (k >= 0) out.push({ on: k, directed: directed(j) })
+        if (k >= 0 && j.spec.kind === 'mortar') bedded[i] = true
+        // (what stands on the anchored foundation bears on it with its whole footprint, as the structure that sized it counts it)
+        if (k < 0) continue
+        const under = parts[k]!.anchored ? plan[i]! : plan[k]!
+        out.push({ on: k, directed: directed(j), ...(o.spec.loadSharing === 'all' ? { weight: contactArea(plan[i]!, under), at: planContact(plan[i]!, under) } : {}) })
       }
       return out
     })
@@ -1072,6 +1081,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const graph: SupportGraph = {
       size: n, sharing: o.spec.loadSharing ?? 'nearest', anchored: (i) => parts[i].anchored, active: (i) => ok(i) && !out.has(i), partition: isPartition,
       supportsOf: (i) => edges[i],
+      // with `all`, the load goes by the stiffness of each path to the ground too (the structure that sized the building reads the same moduli)
+      ...(o.spec.loadSharing === 'all' ? {
+        stiffness: (i: number) => bearingModulus(parts[i].spec.material, { ...(parts[i].spec.units ? { units: parts[i].spec.units } : {}), bedded: bedded[i] }),
+        upright: (i: number) => isUpright(parts[i].spec.structure?.role),
+        height: (i: number) => boxes[i]!.max[1] - boxes[i]!.min[1],
+        centre: (i: number): PlanePoint => [(plan[i]![0]! + plan[i]![2]!) / 2, (plan[i]![1]! + plan[i]![3]!) / 2],
+      } : {}),
     }
     let solution = solveSupports(graph)
     const lowerOf = (i: number): readonly number[] => solution.carriers.get(i) ?? []
@@ -1109,10 +1125,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         parts[i].st.load = load
         if (parts[i].bend && lowerOf(i).length) for (const item of through[i]) if (parts[item.over]?.bend) pass(item.over, item.at, item.mass)
       },
-      share: (i, k) => {
+      share: (i, k, load) => {
         if (!parts[k].bend) return
         const bulk = parts[i].bend ? parts[i].st.mass + bending[i] : parts[i].st.load!
-        pass(k, contactCentre(parts[k], parts[i]), bulk / lowerOf(i).length)
+        pass(k, contactCentre(parts[k], parts[i]), (bulk * load) / Math.max(1e-9, parts[i].st.load!))
       },
     })
     for (let i = 0; i < n; i++) {

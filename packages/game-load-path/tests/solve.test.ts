@@ -76,3 +76,97 @@ describe('sizing from the loads', () => {
     expect(capacities.get('beam')).toBeCloseTo(5 / 0.45)
   })
 })
+
+describe('shares by contact', () => {
+  it('carriers under one bearing (no contact points given): each takes the share of its contact', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    const graph = {
+      size: 4, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false,
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 3 }, { on: 3, directed: true, weight: 1 }] : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const solution = solveSupports(graph)
+    const loads = distributeLoads(solution, (k) => (k === 1 ? 8 : 0))
+    expect(loads[2]).toBeCloseTo(6)
+    expect(loads[3]).toBeCloseTo(2)
+  })
+
+  it('a bond beam on a concrete pillar and on brick infill: by contact times stiffness, the stiffer pillar takes its share of E A', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // contact 0.042 m² of concrete (28 GPa) and 0.65 m² of brick (2.35 GPa)
+    const modulus = [0, 0, 28, 2.35]
+    const graph = {
+      size: 4, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, stiffness: (k: number) => modulus[k], upright: (k: number) => k > 1,
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 0.042 }, { on: 3, directed: true, weight: 0.65 }] : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 100 : 0))
+    const pillar = (0.042 * 28) / (0.042 * 28 + 0.65 * 2.35)
+    expect(loads[2]).toBeCloseTo(100 * pillar)
+    expect(loads[3]).toBeCloseTo(100 * (1 - pillar))
+  })
+
+  it('a concrete lintel on a masonry pier is as stiff as the masonry: the beam over both shares by contact alone', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // 1 beam on 2 (concrete lintel, lying, on the pier 3) and on 4 (masonry wall): both paths are masonry
+    const modulus = [0, 0, 28, 2.35, 2.35]
+    const graph = {
+      size: 5, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, stiffness: (k: number) => modulus[k], upright: (k: number) => k > 2,
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 1 }, { on: 4, directed: true, weight: 1 }] : k === 2 ? [{ on: 3, directed: true }] : k > 2 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 10 : 0))
+    expect(loads[2]).toBeCloseTo(5)
+    expect(loads[4]).toBeCloseTo(5)
+  })
+
+  it('a carrier with no known stiffness: the contact alone shares the load', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    const graph = {
+      size: 4, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false,
+      stiffness: (k: number) => (k === 2 ? 28 : undefined), upright: () => true,
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 3 }, { on: 3, directed: true, weight: 1 }] : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 8 : 0))
+    expect(loads[2]).toBeCloseTo(6)
+    expect(loads[3]).toBeCloseTo(2)
+  })
+
+  it('a lintel on two bearings of unequal length takes equal reactions: statics, not the bearing area', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // 1: a lintel from x 0 to 2.6 on 2 (bearing 0 to 0.2) and on 3 (bearing 2.2 to 2.6), its centroid at 1.3
+    const graph = {
+      size: 4, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, centre: (): [number, number] => [1.3, 0],
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 0.2, at: [0.1, 0] as [number, number] }, { on: 3, directed: true, weight: 0.4, at: [2.4, 0] as [number, number] }] : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 10 : 0))
+    // lever rule on the bearing centres 0.1 and 2.4: 1.3 is 1.2 from the first, 1.1 from the second
+    expect(loads[2]).toBeCloseTo((10 * 1.1) / 2.3)
+    expect(loads[3]).toBeCloseTo((10 * 1.2) / 2.3)
+  })
+
+  it('a beam from a concrete pillar to a masonry wall takes half on each: the stiffness of the ends does not move a determinate reaction', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    const modulus = [0, 0, 28, 2.35]
+    const graph = {
+      size: 4, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, stiffness: (k: number) => modulus[k], upright: (k: number) => k > 1,
+      height: () => 2.6, centre: (): [number, number] => [2, 0],
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 0.04, at: [0, 0] as [number, number] }, { on: 3, directed: true, weight: 0.03, at: [4, 0] as [number, number] }] : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 10 : 0))
+    expect(loads[2]).toBeCloseTo(5)
+    expect(loads[3]).toBeCloseTo(5)
+  })
+
+  it('a concrete pillar standing on a masonry pier is no stiffer than the pier: compliances add in series', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // 1 rests at one bearing on 2 (a concrete pillar 1 m on the masonry pier 4, 2 m) and on 3 (a masonry wall 3 m on the ground)
+    const modulus = [0, 0, 28, 2.35, 2.35]
+    const height = [0, 0, 1, 3, 2]
+    const graph = {
+      size: 5, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, stiffness: (k: number) => modulus[k], upright: (k: number) => k > 1,
+      height: (k: number) => height[k]!,
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, weight: 1 }, { on: 3, directed: true, weight: 1 }] : k === 2 ? [{ on: 4, directed: true }] : k > 2 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 10 : 0))
+    const pillar = 1 / (1 / 28 + 2 / 2.35), wall = 1 / (3 / 2.35)
+    expect(loads[2]).toBeCloseTo((10 * pillar) / (pillar + wall))
+  })
+})

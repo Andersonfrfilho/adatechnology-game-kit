@@ -198,7 +198,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? []);
           const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || []);
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
-          for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
+          for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.groutBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
             gs[sg.name] = sg;
             house.add(sg);
           }

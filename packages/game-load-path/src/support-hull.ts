@@ -39,3 +39,15 @@ export function restsOver(point: PlanePoint, contacts: readonly PlanePoint[], ma
   }
   return true
 }
+
+/** The centre in plan of the contact of two boxes `[x0, z0, x1, z1]` (their overlap, widened as `contactArea` widens it). */
+export function contactCentre(a: readonly number[], b: readonly number[]): PlanePoint {
+  const mid = (k: 0 | 1): number => (Math.max(a[k]!, b[k]!) - SUPPORT_TOLERANCE + Math.min(a[k + 2]!, b[k + 2]!) + SUPPORT_TOLERANCE) / 2
+  return [mid(0), mid(1)]
+}
+
+/** The area two boxes `[x0, z0, x1, z1]` share in plan, each widened by `SUPPORT_TOLERANCE` (an edge they only touch still bears a little): the weight of a support. */
+export function contactArea(a: readonly number[], b: readonly number[]): number {
+  const along = (k: 0 | 1): number => Math.max(0, Math.min(a[k + 2]!, b[k + 2]!) - Math.max(a[k]!, b[k]!) + 2 * SUPPORT_TOLERANCE)
+  return along(0) * along(1)
+}

@@ -8,7 +8,7 @@ type StagedHouse = ReturnType<typeof houseOf>['house'] & { setConstructionLevel(
 
 const staged = (template = 'single_storey_a', seed = 1): StagedHouse => houseOf(planOf(template, seed), {}, { quality: 'game', constructionStages: true, constructionLevel: 8 }).house as StagedHouse
 
-const STAGE_GROUPS = ['stage:1:foundation', 'stage:1:starter_bars', 'stage:2:frame', 'stage:3:masonry', 'stage:4:installations', 'stage:7:roof_framing']
+const STAGE_GROUPS = ['stage:1:foundation', 'stage:1:starter_bars', 'stage:2:frame', 'stage:3:frame', 'stage:3:masonry', 'stage:4:installations', 'stage:7:roof_framing']
 const partOf = (o: THREE.Object3D): string => String(o.userData.structurePartId ?? '')
 const visibleIn = (o: THREE.Object3D): boolean => {
   for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return false
@@ -263,7 +263,7 @@ describe('the water tank of a house with a pitched roof', () => {
 
 /** The same construction tests on every typology of the packs, a few seeds each (the test room's scenario runs them on what the page registered). */
 describe('construction stages of every typology', () => {
-  const TEMPLATES = ['single_storey_a', 'townhouse', 'budget_slab_house', 'budget_semi_detached', 'mid_modern_single_storey', 'mid_modern_townhouse', 'high_end_contemporary', 'mansion', 'apartment_basic', 'apartment_modern', 'market', 'pharmacy']
+  const TEMPLATES = ['single_storey_a', 'single_storey_structural', 'townhouse', 'budget_slab_house', 'budget_semi_detached', 'mid_modern_single_storey', 'mid_modern_townhouse', 'high_end_contemporary', 'mansion', 'apartment_basic', 'apartment_modern', 'market', 'pharmacy']
   for (const template of TEMPLATES) {
     for (const seed of [1, 2, 3]) {
       it(`${template} #${seed}`, () => {
@@ -274,4 +274,22 @@ describe('construction stages of every typology', () => {
       })
     }
   }
+})
+
+/** Structural masonry (NBR 16868): the walls are the structure, so what rests on them (bond beams in U-blocks, lintels, the slab) is cast on them, never before. */
+describe('construction stages of single_storey_structural', () => {
+  const house = staged('single_storey_structural')
+  const group = (name: string): THREE.Object3D | undefined => house.groups[name] as THREE.Object3D | undefined
+
+  it('shows only the foundation and the bars of the grouted cores before the walls: nothing of the frame hangs over the bars', () => {
+    expect(group('stage:2:frame')).toBeUndefined()
+    const frame = group('stage:3:frame')!
+    expect(frame.children.length).toBeGreaterThan(0)
+    house.setConstructionLevel(2)
+    expect(visibleIn(frame)).toBe(false)
+    expect(visibleIn(group('stage:2:grout_bars')!)).toBe(true)
+    house.setConstructionLevel(3)
+    expect(visibleIn(frame)).toBe(true)
+    expect(visibleIn(group('stage:3:masonry')!)).toBe(true)
+  })
 })

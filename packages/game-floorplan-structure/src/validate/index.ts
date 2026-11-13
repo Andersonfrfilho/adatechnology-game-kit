@@ -5,8 +5,9 @@ import type { SourceDoor, PlanStructure, WallDetail } from '../types'
 import { STRUCTURAL_VIOLATION } from './codes'
 import type { StructuralViolation } from './codes'
 import { applySlabPanels, resolveSlabPanels } from '../slab-panels'
+import { loadsAtRest } from '../loads'
 import { concreteViolations, loadPathViolations } from './load-path'
-import { isMasonryWall, masonryViolations } from './masonry'
+import { isMasonryWall, masonryViolations, structuralMasonryViolations } from './masonry'
 import { openingViolations } from './openings'
 import { specViolations } from './spec'
 
@@ -27,8 +28,12 @@ export function validateStructure(structure: PlanStructure, options: ValidateStr
   const built = applyPanels({ parts: structure.parts, supports: structure.supports }, structure, detail)
   // the concrete as the house is built: the slabs cut into panels on their beams and the pillars those need
   const framed = applySlabPanels(built, structure, resolveSlabPanels(true)!)
-  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, isMasonryWall)]
+  // a beam on structural masonry rests on the structure itself, not on infill
+  const weak = structure.construction.walls.masonrySystem === 'structural' ? (): boolean => false : isMasonryWall
+  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak)]
   if (structure.construction.system !== 'masonry') return out
+  if (structure.construction.walls.masonrySystem === 'structural')
+    return [...out, ...structuralMasonryViolations(structure, loadsAtRest(framed.parts, framed.supports), framed.parts), ...openingViolations(structure, built.parts, options.doors ?? [])]
   return [...out, ...masonryViolations(structure), ...openingViolations(structure, built.parts, options.doors ?? [])]
 }
 

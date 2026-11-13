@@ -1,6 +1,7 @@
 import { CONSTRUCTIONS } from './registry'
 import type { ConstructionBuild } from './registry'
 import { constructionOfSystem, masonryConstruction } from './presets'
+import type { MasonrySystem } from './masonry-units'
 import type { PlanContext, StructureSource, Tent } from './types'
 
 /** The construction of a plan: the one it already carries, else the masonry default of the engine's templates. */
@@ -33,10 +34,11 @@ export function constructionFor(context: PlanContext): ConstructionBuild {
   const forced = context.options?.construction
   const named = typeof forced === 'string' ? forced : (context.template?.construction as string | undefined)
   const unit = context.options?.masonryUnit as string | undefined
-  if (named === undefined) return { construction: masonryConstruction(context.result, unit) }
+  const masonrySystem = context.options?.masonrySystem as MasonrySystem | undefined
+  if (named === undefined) return { construction: masonryConstruction(context.result, unit, masonrySystem) }
   const registered = CONSTRUCTIONS.get(named)
   if (registered) return registered(context)
-  const preset = named === 'masonry' ? masonryConstruction(context.result, unit) : constructionOfSystem(named, context.result)
+  const preset = named === 'masonry' ? masonryConstruction(context.result, unit, masonrySystem) : constructionOfSystem(named, context.result)
   if (preset) return { construction: preset, ...(named === 'canvas' ? { extras: { tents: tentsOf(context.result) } } : {}) }
   throw new Error(`Unknown construction "${named}": register it with registerConstruction`)
 }

@@ -74,6 +74,7 @@
   },
   "templates": {
     "single_storey_a": "Casa tipo A (térrea)",
+    "single_storey_structural": "Casa tipo A em alvenaria estrutural (bloco de concreto)",
     "townhouse": "Sobrado (2 andares)",
     "apartment_basic": "Apartamento (1 unidade por andar)",
     "mansion": "Mansão (até 3 andares)",

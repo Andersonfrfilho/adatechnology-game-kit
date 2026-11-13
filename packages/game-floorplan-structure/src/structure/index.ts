@@ -16,6 +16,7 @@ import { addWaterTank } from './tank-parts'
 import { addUpperFloor } from './upper-floor'
 import { addWalls } from './walls'
 import { WALL_PILLAR_SPACING } from './wall-pillars'
+import { addBearingCores } from '../beam-bearings'
 import { resolveConstruction } from '../construction'
 import type { Structure, StructureOptions, StructureSource } from '../types'
 
@@ -60,5 +61,7 @@ export function buildStructure(source: StructureSource, options: StructureOption
   addWell(context)
   const levels = source.floors.map((_, floor) => context.level(floor))
   const framed = construction.system === 'masonry' && (context.isUnit || source.style === 'commercial' || context.floorCount >= 3)
-  return { parts: context.builder.parts, supports: context.builder.supports, levels, elevation: context.elevation, roof: context.roof, construction, framed, openings: findOpenings(context) }
+  const structure: Structure = { parts: context.builder.parts, supports: context.builder.supports, levels, elevation: context.elevation, roof: context.roof, construction, framed, openings: findOpenings(context) }
+  if (context.structural) addBearingCores(structure)
+  return structure
 }

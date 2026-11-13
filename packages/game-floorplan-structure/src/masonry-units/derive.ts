@@ -55,3 +55,6 @@ export function coursingOf(unitId: string | undefined, assemblyUnits: { readonly
   }
   return assemblyUnits ? { courseHeight: assemblyUnits.size[1]!, unitLength: assemblyUnits.size[0]! } : undefined
 }
+
+/** The module a structural wall of `unit` is laid to: half a unit with its mortar joint (15 cm for a 29 cm unit, 20 cm for a 39 cm one). */
+export const moduleOf = (unit: MasonryUnit): number => round2((unit.length + MORTAR_JOINT) / 2)

@@ -47,6 +47,8 @@ export interface StructurePart {
   footprint?: Rect[]
   /** Slab the panel, beam or column was made for (`toDestructibleSpec` with `slabPanels`; a `StructurePart` of `buildStructure` never has it). */
   slab?: string
+  /** Structural masonry (NBR 16868): where along the wall (plan coordinate) a vertical core of its units is grouted with a bar in it. */
+  grout?: number[]
 }
 
 /** `part` rests on `on` (`GROUND` or another part) through `joint`. `bears: false` ties the two without carrying load. */

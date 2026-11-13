@@ -1,8 +1,16 @@
-import { capacitiesByLoad, distributeLoads, solveSupports } from '@adatechnology/game-load-path'
-import type { LoadSharing, SupportEdge } from '@adatechnology/game-load-path'
+import { capacitiesByLoad, contactArea, contactCentre, distributeLoads, solveSupports } from '@adatechnology/game-load-path'
+import type { LoadSharing, PlanePoint, SupportEdge } from '@adatechnology/game-load-path'
+import { bearingModulus, getAssembly, isUpright } from '@adatechnology/game-destruction'
 
 import { GROUND } from './types'
 import type { StructurePart, Support } from './types'
+
+/** The stiffness of a part as a support, from what its spec is built of (`toDestructibleSpec`): the assembly's core and units, and its mortar bed. */
+const stiffnessOf = (part: StructurePart, bedded: boolean): number | undefined => {
+  const assembly = part.assembly ? getAssembly(part.assembly) : undefined
+  const units = part.unit ? undefined : assembly?.units
+  return bearingModulus(assembly?.core.material ?? part.material, { ...(units ? { units } : {}), bedded })
+}
 
 
 /**
@@ -20,12 +28,27 @@ export function loadsAtRest(parts: readonly StructurePart[], supports: readonly 
     const part = index.get(support.part)
     const on = index.get(support.on)
     if (part === undefined || on === undefined) continue
-    edges[part]!.push({ on, directed: true })
+    const top = kept[part - 1]
+    const under = on === 0 ? undefined : kept[on - 1]
+    // with `all`, by statics on two supports apart, else by contact over the compliance of the path (the Visor's `nearest` shares equally)
+    // (the ground is under the whole of a part: its footprint, as the terrain the world lays under the house)
+    edges[part]!.push({ on, directed: true, ...(sharing === 'all' && top ? { weight: contactArea(top.aabb, under?.aabb ?? top.aabb), at: contactCentre(top.aabb, under?.aabb ?? top.aabb) } : {}) })
   }
   const partOf = (k: number): StructurePart | undefined => (k === 0 ? undefined : kept[k - 1])
+  const bedded = new Set(supports.filter((support) => support.joint === 'mortar' && support.bears !== false).map((support) => support.part))
   const solution = solveSupports({
     size: ids.length, sharing, anchored: (k) => k === 0, active: (k) => k === 0 || partOf(k)!.role !== 'none', partition: (k) => partOf(k)?.role === 'partition',
     supportsOf: (k) => edges[k]!,
+    // with `all`, by the stiffness of each path to the ground too, read from what the spec is built of (the destruction world reads the same moduli)
+    ...(sharing === 'all' ? {
+      stiffness: (k: number) => (k === 0 ? undefined : stiffnessOf(partOf(k)!, bedded.has(ids[k]!))),
+      upright: (k: number) => k !== 0 && isUpright(partOf(k)!.role),
+      height: (k: number) => (k === 0 ? 0 : partOf(k)!.y1 - partOf(k)!.y0),
+      centre: (k: number): PlanePoint => {
+        const [u0, v0, u1, v1] = partOf(k)?.aabb ?? [0, 0, 0, 0]
+        return [(u0 + u1) / 2, (v0 + v1) / 2]
+      },
+    } : {}),
   })
   const loads = distributeLoads(solution, (k) => (k === 0 ? 0 : partOf(k)!.mass || 1))
   const out = new Map<string, number>()
@@ -65,7 +88,9 @@ export function sizeCapacities(parts: readonly StructurePart[], supports: readon
   })
   const sized = capacitiesByLoad({
     parts: parts.filter((part) => part.role !== 'none'), loadOf: (part) => loads.get(part.id), losses, minimum: 1, redundancy: options.redundancy,
-    safety: (part) => (isBearing(part) ? options.safety : options.safetyOthers), redundant: (part) => isBearing(part) || isRoofFrame(part),
+    // every part holds the loss of a pillar or bearing wall (a beam or a slab too: no collapse spreads from one loss), as the world sizes them; the Visor's
+    // sizing (`nearest`) held only the pillars, walls and roof frame to it
+    safety: (part) => (isBearing(part) ? options.safety : options.safetyOthers), redundant: (part) => options.sharing !== 'nearest' || isBearing(part) || isRoofFrame(part),
   })
   return new Map([...sized].map(([part, capacity]) => [part.id, capacity]))
 }

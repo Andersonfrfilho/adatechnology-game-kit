@@ -53,6 +53,7 @@ strength (`fbk`), use (`sealing` / `structural`) and the U unit (canaleta) of it
 | `ceramic_block_19` | 19 x 19 x 29 | sealing | 22 cm | 19 x 20 |
 | `concrete_block_14` | 14 x 19 x 39 | sealing and structural | 17 cm | 14 x 30 |
 | `concrete_block_19` | 19 x 19 x 39 | sealing and structural | 22 cm | 19 x 20 |
+| `concrete_block_14_fbk6`, `concrete_block_19_fbk6` | the same, 6 MPa class (NBR 6136) | structural | 17 / 22 cm | none (structural masonry) |
 | `solid_brick` | 10 x 5 x 20 | sealing and structural | 13 cm | 14 x 30 |
 
 Everything else follows from the unit: the wall's thickness (`wallThicknessOf`: the unit and 1.5 cm of render on each face), the pillar flush with the units and
@@ -64,16 +65,21 @@ the units drawn in the construction stages.
 - **Changed by the game:** `engine.generate(id, { masonryUnit: 'concrete_block_14' })`. The resolver the pack registers (`registerOptionResolver`) gives the plan
   engine the thickness before the walls are laid out. The Visor reproduction (`visorSections: true`) keeps the team's 15 cm walls.
 
-## Structural masonry (NBR 16868): the contract is ready, the building is not
+## Structural masonry (NBR 16868)
 
-Every masonry house is **confined** today (`masonrySystem: 'confined'`): the units close the walls and the reinforced concrete (pillars, bond beam, lintels) carries.
-The contract of **structural** masonry exists (`MASONRY_SYSTEM.STRUCTURAL`, the `structural` use of the units, `unitServes`), but asking for
-`masonrySystem: 'structural'` throws. What it still needs:
+`masonrySystem: 'structural'` (the typology `single_storey_structural` of `game-floorplan-residential`, or any masonry plan with
+`{ masonryUnit: 'concrete_block_14_fbk6', masonrySystem: 'structural' }`) builds the walls as the structure:
 
-1. No concrete pillars: the wall is the structure. Grout and bars in the vertical cores of the units at the corners, junctions, beside the openings and every
-   1.2 to 2 m.
-2. Bond beam and lintels in grouted, reinforced U units, the sill beams too; walls that cross bonded unit by unit (or tied with clamps).
-3. A 15 or 20 cm module: wall lengths, openings and storey heights in multiples of the unit (the plan engine does not modulate today).
-4. A validator of its own (NBR 16868): prism strength from `fbk`, wall slenderness, minimum grout and bonding, and the destruction world carrying the load through
-   the walls (a sealing wall carries nothing today).
-5. Only units graded `structural` (concrete 14 and 19, solid brick), with an `fbk` that suits the number of storeys.
+1. No concrete pillars: every wall carries (`role: 'wall'`). Grouted cores with a bar (`StructurePart.grout`, plan coordinates along the wall) at each end,
+   corner and junction, beside each opening, at most every `GROUT_SPACING` (1.6 m), and under every beam of the slab that bears across the wall (local bearing:
+   `beamBearings`, `addBearingCores`).
+2. Bond beams on every bearing wall and lintels in U units (the channel of the unit), the slab's beams carried by the walls.
+3. The module of the unit (`moduleOf`: half a unit and a joint, 20 cm for the 39 cm block): rooms on it and doors on it.
+4. Its own validator (`structuralMasonryViolations`): `UNIT_NOT_STRUCTURAL`, the grout rules (`CORNER_WITHOUT_PILLAR` and the like, read as cores,
+   `OPENING_WITHOUT_GROUT`, `CONCENTRATED_LOAD_WITHOUT_GROUT`), `PILLAR_IN_STRUCTURAL_WALL`, `WALL_TOO_SLENDER` (h/t over 24), `OFF_MODULE` and
+   `MASONRY_OVERSTRESSED`: the design load `N_d = 1.4 N_k` (the loads of `game-load-path`) over `f_d A R`, with `f_d = 0.7 · 0.7 · fbk / 2` on the net area
+   plus the grouted cells and `R = 1 - (h / 40 t)³`. The piers of `single_storey_structural` pass with the 6 MPa block and not with the 4 MPa one.
+5. Only units graded `structural`; the destruction world carries the load through the walls (the same load path rule, shared by contact over the compliance
+   of each path: laid masonry at `LAID_MASONRY_GPA` of `game-destruction`).
+
+Not modelled yet: the U units drawn as such (the bond beam and lintels are drawn as concrete bands), the bars of the cores in the destruction world.

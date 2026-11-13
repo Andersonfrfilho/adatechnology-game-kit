@@ -23,6 +23,20 @@ export interface BuildContext {
   adjustments?: ZoneAdjustment[]
 }
 
+/** The centre of an opening `width` wide near `at` whose jambs are on the grid of `module`, inside `[lo, hi]` when the grid allows. */
+function onGrid(at: number, width: number, module: number, [lo, hi]: [number, number]): number {
+  const start = Math.round((at - width / 2) / module) * module
+  for (const step of [0, 1, -1, 2, -2]) {
+    const c = r2(start + step * module + width / 2)
+    if (c >= lo - 1e-6 && c <= hi + 1e-6) return c
+  }
+  return at
+}
+
+/** `room` with its corners on the grid of `module` metres (the walls of structural masonry are laid to the unit's module); as it is without one. */
+const onModule = (room: Room, module: number | undefined): Room =>
+  module ? { ...room, parts: room.parts.map((part) => part.map((x) => r2(Math.round(x / module) * module)) as Rect) } : room
+
 export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number | undefined, opIn?: FloorplanOptions, bc: BuildContext = {}): Plan {
   const op = opIn || {}
   const { w, d } = clampSize(tpl, wIn, dIn, op)
@@ -44,7 +58,7 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
       ceiling: A.ceiling,
     })
     plan.openPairs[floorIndex] = A.openPairs || []
-    const list = A.rooms(w, d, op).map((c) => normalizeRoom(c, floorIndex))
+    const list = A.rooms(w, d, op).map((c) => onModule(normalizeRoom(c, floorIndex), op.module))
     for (const c of list) {
       if (plan.rooms.some((x) => x.id === c.id)) throw new Error('Duplicate room: ' + c.id)
       plan.rooms.push(c)
@@ -64,10 +78,12 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
         edge = sharedEdge(a, b, sp.at)
       }
       if (!edge) throw new Error('Door without a wall: ' + sp.a + ' / ' + sp.b)
-      const width = sp.width
+      // on a module the opening is whole units wide and its jambs fall on the grid (the walls beside it end on whole units)
+      const width = op.module ? r2(Math.max(op.module, Math.round(sp.width / op.module) * op.module)) : sp.width
       const margin = width / 2 + (sp.clearance ?? tpl.clearance?.door ?? DOOR_EDGE_CLEARANCE)
       if (edge.a1 - edge.a0 < width + 0.24) throw new Error('Wall too short for the door: ' + sp.a + ' / ' + sp.b)
-      const c = clamp(sp.at != null ? sp.at : (edge.a0 + edge.a1) / 2, edge.a0 + margin, edge.a1 - margin)
+      const wanted = clamp(sp.at != null ? sp.at : (edge.a0 + edge.a1) / 2, edge.a0 + margin, edge.a1 - margin)
+      const c = op.module ? onGrid(wanted, width, op.module, [edge.a0 + margin, edge.a1 - margin]) : wanted
       const exterior = sp.b === 'outside'
       const leaf = exterior && sp.steel ? 0 : width > 1.1 ? width / 2 : width
       const u = edge.axis === 'u' ? c : edge.pos

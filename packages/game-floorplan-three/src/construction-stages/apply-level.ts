@@ -152,7 +152,10 @@ function groupVisible(name: string, level: number, opts: ApplyConstructionLevelO
   if (name === 'stage:0:blueprint') return level <= 1
   if (name === 'stage:1:foundation') return level >= 1 && level <= 4
   if (name === 'stage:1:starter_bars') return level === 1
+  // the bars of the grouted cores stand until the blocks are laid around them (inside, they are no longer seen)
+  if (name === 'stage:2:grout_bars') return level >= 1 && level <= 2
   if (name === 'stage:2:frame') return level >= 2 && level <= 4
+  if (name === 'stage:3:frame') return level >= 3 && level <= 4
   if (name === 'stage:3:masonry') return level >= 3 && level <= 4
   if (name === 'stage:4:installations') return level === 4 || (level >= 4 && opts.waterLayer === true)
   if (name === 'stage:4:sewer_boxes') return level >= 4

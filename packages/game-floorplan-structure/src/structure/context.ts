@@ -44,6 +44,8 @@ export interface BuildContext {
   wallPillarSpacing: number
   /** `StructureOptions.visorSections`. */
   visorSections: boolean
+  /** Structural masonry (NBR 16868): the walls carry the building, with grouted cores; no concrete pillars. */
+  structural: boolean
   /** Section of the pillars cast in the walls: across the wall and along it (from the masonry unit of the walls; 0.2 x 0.2 without one). */
   pillar: PillarSection
   floorCount: number
@@ -112,7 +114,7 @@ export function createContext(source: StructureSource, construction: Constructio
     source.rooms.filter((room) => room.floor === floor && !exclude.includes(room.type)).flatMap((room) => room.parts)
   const builder = new StructureBuilder()
   const context: BuildContext = {
-    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, roofBays: options.roofBays, wallPillarSpacing: options.wallPillarSpacing, visorSections: options.visorSections, pillar: pillarSectionOfWalls(construction), floorCount, isUnit, elevation, isTimber: system.timber,
+    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, roofBays: options.roofBays, wallPillarSpacing: options.wallPillarSpacing, visorSections: options.visorSections, pillar: pillarSectionOfWalls(construction), structural: construction.walls.masonrySystem === 'structural', floorCount, isUnit, elevation, isTimber: system.timber,
     walls: [], wallParts: new Map(), groundBeams: new Map(), carriers: new Map(), plates: new Map(), pillars: new Map(), porches: new Map(), base0: GROUND,
     houseBox: [0, 0, 0, 0], topBox: [0, 0, 0, 0], hasBasement: false,
     roof: { shape: 'slab', covering: '', material: '', pitch: 0, bearingFloor: 0, panes: [], trusses: 0 },
@@ -137,6 +139,8 @@ const isBearingOnTop = (wall: BuildWall, walls: readonly BuildWall[]): boolean =
 
 function roleOf(context: BuildContext, wall: BuildWall, walls: readonly BuildWall[], porchIds: ReadonlySet<string>): PartRole {
   if (wall.type === 'railing') return 'partition'
+  // structural masonry: every wall carries
+  if (context.structural) return 'wall'
   const { wallRole } = context.system
   if (wallRole === 'bearing') return 'wall'
   if (wallRole === 'partition') return 'partition'

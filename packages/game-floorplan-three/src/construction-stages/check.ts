@@ -53,7 +53,7 @@ export type StageProblemCode = (typeof STAGE_PROBLEM)[keyof typeof STAGE_PROBLEM
 
 /** three's AlwaysDepth. */
 const ALWAYS_DEPTH = 1
-const STAGE_GROUPS = new Set(['stage:1:foundation', 'stage:1:starter_bars', 'stage:2:frame', 'stage:3:masonry', 'stage:4:installations', 'stage:7:roof_framing'])
+const STAGE_GROUPS = new Set(['stage:1:foundation', 'stage:1:starter_bars', 'stage:2:frame', 'stage:3:frame', 'stage:3:masonry', 'stage:4:installations', 'stage:7:roof_framing'])
 const isLintel = (id: string): boolean => /lintel|sillbeam|sill_beam/.test(id)
 const isSlabPanel = (id: string): boolean => /slab/.test(id) && !/_b\d+$/.test(id) && !id.startsWith('tank_')
 const partOf = (o: THREE_NS.Object3D): string => String(o.userData.structurePartId ?? '')
@@ -92,10 +92,13 @@ function checkTankSupport(plan: Plan, out: StageProblem[]): void {
 }
 
 function checkFrame(T: Three, h: StagedHouseView, out: StageProblem[]): void {
-  const frame = h.groups['stage:2:frame'], foundation = h.groups['stage:1:foundation']
+  // the frame comes before the masonry (stage 2), or with it where the walls carry it (structural masonry, stage 3)
+  const early = h.groups['stage:2:frame']
+  const frame = early ?? h.groups['stage:3:frame'], foundation = h.groups['stage:1:foundation']
   if (!frame || !foundation) return
+  const level = early ? 2 : 3
   const box = (o: THREE_NS.Object3D): THREE_NS.Box3 => new T.Box3().setFromObject(o)
-  for (const c of frame.children) if (isLintel(partOf(c))) out.push({ code: STAGE_PROBLEM.LINTEL_IN_FRAME, level: 2, detail: partOf(c) })
+  if (early) for (const c of frame.children) if (isLintel(partOf(c))) out.push({ code: STAGE_PROBLEM.LINTEL_IN_FRAME, level, detail: partOf(c) })
   const footings = foundation.children.map(box).filter((b) => b.max.y >= -0.001 && b.min.y < 0)
   const slabs = frame.children.filter((c) => isSlabPanel(partOf(c))).map(box)
   for (const c of frame.children) {
@@ -103,11 +106,11 @@ function checkFrame(T: Three, h: StagedHouseView, out: StageProblem[]): void {
     if (!id || isSlabPanel(id) || id.startsWith('tank_')) continue
     const b = box(c)
     if (/column/.test(id) && b.min.y < 0.1 && !footings.some((f) => f.min.x < b.max.x && f.max.x > b.min.x && f.min.z < b.max.z && f.max.z > b.min.z)) {
-      out.push({ code: STAGE_PROBLEM.PILLAR_UNSUPPORTED, level: 2, detail: id })
+      out.push({ code: STAGE_PROBLEM.PILLAR_UNSUPPORTED, level, detail: id })
     }
     for (const s of slabs) {
       const under = s.min.x < b.max.x - 1e-3 && s.max.x > b.min.x + 1e-3 && s.min.z < b.max.z - 1e-3 && s.max.z > b.min.z + 1e-3 && b.max.y > s.min.y - 0.05 && b.max.y < s.max.y - 0.005 && b.min.y < s.min.y
-      if (under && (b.max.y <= s.min.y || b.max.y >= s.max.y - 0.02)) out.push({ code: STAGE_PROBLEM.SLAB_UNSEATED, level: 2, detail: `${id} top ${b.max.y.toFixed(3)} under a slab ${s.min.y.toFixed(3)}-${s.max.y.toFixed(3)}` })
+      if (under && (b.max.y <= s.min.y || b.max.y >= s.max.y - 0.02)) out.push({ code: STAGE_PROBLEM.SLAB_UNSEATED, level, detail: `${id} top ${b.max.y.toFixed(3)} under a slab ${s.min.y.toFixed(3)}-${s.max.y.toFixed(3)}` })
     }
   }
 }

@@ -1,13 +1,14 @@
 import type { Construction, FoundationType, StructureSource } from './types'
 import { WALL_THICKNESS } from './geometry'
 import { MASONRY_SYSTEM, getMasonryUnit, wallThicknessOf } from './masonry-units'
+import type { MasonrySystem } from './masonry-units'
 import { ROOF_COVERINGS } from './registry'
 
 const SLAB_COVERING = 'slab'
 const PLASTERED_FINISHES = ['plaster', 'partial_plaster']
 
 /** Masonry house of the engine's own templates: brick with plaster, concrete frame, tiles by facade; a unit in a building gets a flat slab roof. */
-export function masonryConstruction(source: StructureSource, unitId?: string): Construction {
+export function masonryConstruction(source: StructureSource, unitId?: string, masonrySystem: MasonrySystem = MASONRY_SYSTEM.CONFINED): Construction {
   const masonry = unitId === undefined ? undefined : getMasonryUnit(unitId)
   const unit = source.floorNumber !== undefined
   const covering = unit ? SLAB_COVERING : (source.facade.roof ?? 'colonial')
@@ -18,7 +19,7 @@ export function masonryConstruction(source: StructureSource, unitId?: string): C
     system: 'masonry',
     walls: {
       material: masonry?.material ?? 'brick', cladding: PLASTERED_FINISHES.includes(finish) ? 'plaster' : null, finish, thickness: masonry ? wallThicknessOf(masonry) : WALL_THICKNESS,
-      ...(finish === 'exposed_block' || masonry?.family === 'concrete_block' ? { assembly: 'concrete_block_wall' } : {}), ...(masonry ? { unit: masonry.id, masonrySystem: MASONRY_SYSTEM.CONFINED } : {}),
+      ...(finish === 'exposed_block' || masonry?.family === 'concrete_block' ? { assembly: 'concrete_block_wall' } : {}), ...(masonry ? { unit: masonry.id, masonrySystem } : {}),
     },
     floor: { material: budget ? 'concrete' : 'ceramic', finish: budget ? 'burnt_cement' : 'ceramic_tile' },
     roof: { material: ROOF_COVERINGS.get(covering)?.material ?? 'ceramic', covering, shape: flat ? 'slab' : 'gable', pitch: flat ? 0 : covering === 'colonial' ? 30 : 15, timber: 'wood_soft' },

@@ -1,4 +1,5 @@
 export { singleStoreyA } from './single-storey-a'
+export { singleStoreyStructural } from './single-storey-structural'
 export { townhouse } from './townhouse'
 export { apartmentBasic } from './apartment-basic'
 export { createBudgetSlabHouse } from './budget-slab-house'
