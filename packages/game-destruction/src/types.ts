@@ -10,6 +10,7 @@
  * events on every machine (a LAN host can run the world and send only the inputs, or the events).
  */
 
+import type { HostedSolid } from './hosted-solids'
 import type {
   BallisticExtras,
   ShelterOptions,
@@ -666,6 +667,12 @@ export interface DestructionWorld {
    * (default 0.2 m). `ignore` is the object that is moving. What the box already overlaps does not stop it, so it can always back out.
    */
   sweepBox(box: { readonly min: Vec3; readonly max: Vec3 }, direction: Vec3, distance: number, options?: { readonly ignore?: string | readonly string[]; readonly spacing?: number }): RayHit | null
+  /**
+   * The parts of a hosted body (`register`: a vehicle) still on it, as boxes turned as the body holds them (world): what a physics engine collides with in its
+   * place, since its drawn meshes are its own module's. The same list until a part breaks, comes off, is posed or the body moves. Null for an id that is not a
+   * hosted body.
+   */
+  hostedSolids?(id: string): readonly HostedSolid[] | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
   shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, round?: number | BallisticExtras): HitResult[]
   /**

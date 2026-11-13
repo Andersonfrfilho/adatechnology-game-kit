@@ -605,6 +605,14 @@ class Renderer implements DestructionRenderer {
     return { half: [Math.max(0.02, size.x / 2), Math.max(0.02, size.y / 2), Math.max(0.02, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
   }
 
+  /** Whether a bound object has no mesh here at all (another module draws it), as against one whose meshes all broke or are hidden. */
+  private drawsNothingHere(objectId: string): boolean {
+    const b = this.bounds.get(objectId)
+    if (!b) return false
+    for (const pv of b.parts.values()) if (pv.meshes.length > 0) return false
+    return true
+  }
+
   private meshesOf(b: Bound): MeshVis[] {
     const out: MeshVis[] = []
     for (const pv of b.parts.values()) if (pv.gone === 'none') for (const mv of pv.meshes) out.push(mv)
@@ -1027,15 +1035,21 @@ class Renderer implements DestructionRenderer {
    * The fixed objects as their drawn boxes turned as drawn (the local box of each mesh in its world matrix), for an engine: one list per object, the same list until
    * `staticNow` measures that object again. The same meshes `staticNow` keeps: no merged host, no loose part, nothing hidden, nothing wider than `STATIC_SPAN`.
    */
-  private staticSolids(): Map<string, StaticSolid[]> {
+  private staticSolids(): Map<string, readonly StaticSolid[]> {
     const now = this.staticNow()
     for (const id of [...this.solidCache.keys()]) if (!now.has(id)) this.solidCache.delete(id)
-    const out = new Map<string, StaticSolid[]>()
+    const out = new Map<string, readonly StaticSolid[]>()
     const box = new this.THREE.Box3()
     const pos = new this.THREE.Vector3()
     const quat = new this.THREE.Quaternion()
     const scale = new this.THREE.Vector3()
     for (const [id, boxes] of now) {
+      // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
+      const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
+      if (hosted) {
+        out.set(id, hosted)
+        continue
+      }
       const cached = this.solidCache.get(id)
       // measured again on a timer, often to the same numbers: the same boxes keep the same list (an engine rebuilds what changed)
       if (cached && (cached.from === boxes || (cached.from.length === boxes.length && cached.from.every((v, k) => Math.abs(v - boxes[k]) < 1e-6)))) {

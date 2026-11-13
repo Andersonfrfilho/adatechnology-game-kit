@@ -1,4 +1,5 @@
 export type * from './types'
+export type { HostedSolid } from './hosted-solids'
 export { createDestruction, SHELTER_DEFAULTS, FRAGMENT_HIT_DEFAULTS, CONFINEMENT_DEFAULTS } from './world'
 export { explosivePart, FIRE_PRIME_C } from './chain'
 export { GROUND_LOSS_DEFAULTS, resolveGroundLoss, settlementAt, undercutAt } from './ground-loss'
