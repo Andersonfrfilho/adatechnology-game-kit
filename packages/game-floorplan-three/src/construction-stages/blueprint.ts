@@ -13,6 +13,8 @@ const DIRT_DEPTH = 0.05
 /** A pillar's mark stands this far round the pillar (clear of the ground beam's faces under it, 2 cm round), and a threshold this far inside the wall line's sides. */
 const PILLAR_MARGIN = 0.025
 const MARK_INSET = 0.003
+/** The group of the chalk lines of the walls, shown before the foundation only (the ground beams are cast over them). */
+export const BLUEPRINT_LINES = 'blueprint:lines'
 const MARK_BASE = { room: 0.004, door: 0.006, chalk: 0.008, pillar: 0.011 } as const
 
 function addBoxMesh(
@@ -65,10 +67,12 @@ function addBatterBoards(
   addBoxMesh(THREE, parent, x0, y, z1 - 0.015, x1, y + 0.08, z1 + 0.015, woodMat)
   addBoxMesh(THREE, parent, x0 - 0.015, y, z0, x0 + 0.015, y + 0.08, z1, woodMat)
   addBoxMesh(THREE, parent, x1 - 0.015, y, z0, x1 + 0.015, y + 0.08, z1, woodMat)
-  addBoxMesh(THREE, parent, bx0, 0.28, z0, bx0 + 0.005, 0.284, z1, wireMat)
-  addBoxMesh(THREE, parent, bx1, 0.28, z0, bx1 + 0.005, 0.284, z1, wireMat)
-  addBoxMesh(THREE, parent, x0, 0.28, bz0, x1, 0.284, bz0 + 0.005, wireMat)
-  addBoxMesh(THREE, parent, x0, 0.28, bz1, x1, 0.284, bz1 + 0.005, wireMat)
+  // the strings on the walls' axes, centred on them: their sides never on a face laid along an axis (a sill, a post)
+  const sw = 0.0025
+  addBoxMesh(THREE, parent, bx0 - sw, 0.28, z0, bx0 + sw, 0.284, z1, wireMat)
+  addBoxMesh(THREE, parent, bx1 - sw, 0.28, z0, bx1 + sw, 0.284, z1, wireMat)
+  addBoxMesh(THREE, parent, x0, 0.28, bz0 - sw, x1, 0.284, bz0 + sw, wireMat)
+  addBoxMesh(THREE, parent, x0, 0.28, bz1 - sw, x1, 0.284, bz1 + sw, wireMat)
 }
 
 function makeRoomSign(
@@ -156,7 +160,8 @@ export function buildBlueprintStage(
         bx1 = Math.max(bx1, u1)
         bz1 = Math.max(bz1, v1)
       }
-      addBoxMesh(THREE, group, u0, MARK_BASE.room, v0, u1, 0.012, v1, cyanMat)
+      // a hair inside the room's rectangle: its edges never on a foundation's laid along the walls' axes
+      addBoxMesh(THREE, group, u0 + 2 * MARK_INSET, MARK_BASE.room, v0 + 2 * MARK_INSET, u1 - 2 * MARK_INSET, 0.012, v1 - 2 * MARK_INSET, cyanMat)
     }
     const r0 = rs[0]
     if (r0) {
@@ -173,6 +178,9 @@ export function buildBlueprintStage(
   }
 
   // Draw chalk wall lines leaving doorway openings open
+  const chalkLines = new THREE.Group()
+  chalkLines.name = BLUEPRINT_LINES
+  group.add(chalkLines)
   for (const w of plan.walls) {
     if (w.floor !== 0) continue
     const alongU = w.axis === 'u'
@@ -196,8 +204,10 @@ export function buildBlueprintStage(
     // mark or on the end of the ground beam under it
     const wallSegs = cutSegments(a, b, holes).map(([s0, s1]): [number, number] => [s0 === a ? s0 - th / 2 + MARK_INSET : s0, s1 === b ? s1 + th / 2 - MARK_INSET : s1])
     for (const [s0, s1] of wallSegs) {
-      if (alongU) addBoxMesh(THREE, group, s0, MARK_BASE.chalk, L - th / 2, s1, 0.026, L + th / 2, chalkMat)
-      else addBoxMesh(THREE, group, L - th / 2, MARK_BASE.chalk, s0, L + th / 2, 0.026, s1, chalkMat)
+      // (the line as wide as the wall: under the ground beams from the foundation on, hidden with them)
+      const half = th / 2
+      if (alongU) addBoxMesh(THREE, chalkLines, s0, MARK_BASE.chalk, L - half, s1, 0.026, L + half, chalkMat)
+      else addBoxMesh(THREE, chalkLines, L - half, MARK_BASE.chalk, s0, L + half, 0.026, s1, chalkMat)
     }
   }
 

@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { BLUEPRINT_LINES } from './blueprint.js'
 
 export const CONSTRUCTION_LEVEL_MAX = 8
 
@@ -177,6 +178,9 @@ export function applyConstructionLevel(
     const own = groupVisible(name, level, opts)
     if (own !== null) {
       child.visible = own
+      // the chalk of the walls lies where the ground beams are cast: from the foundation on it is under them
+      const lines = name === 'stage:0:blueprint' ? child.getObjectByName(BLUEPRINT_LINES) : undefined
+      if (lines) lines.visible = level === 0
       continue
     }
     if (name === 'lot') child.visible = level >= 4 && lotOn
