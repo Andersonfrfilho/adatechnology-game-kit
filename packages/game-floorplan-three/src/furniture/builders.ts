@@ -119,7 +119,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     gondola(M, A) { // market gondola: double shelves with coloured products
       const { b: lb } = kk(M, A), w = M.w, d = M.d, h = M.h, rnd = rngOf(M);
       lb('metal', 0, 0, 0, w, 0.12, d, 0x8a8e92); lb('metal', 0, 0.12, -0.01, w - 0.04, h - 0.12, 0.03, 0xc8ccd0);
-      for (let k = 0; k < 4; k++) { const y = 0.2 + k * 0.28; for (const s of [-1, 1]) { lb('metal', 0, y, s * d * 0.22, w - 0.04, 0.025, d * 0.42, 0xa0a4a8); let u = -w / 2 + 0.06; while (u < w / 2 - 0.1) { const bw = 0.07 + rnd() * 0.07; lb('plain', u + bw / 2, y + 0.025, s * d * 0.22, bw, 0.12 + rnd() * 0.1, d * 0.3, [0xc0392b, 0x2a6aaa, 0xe0b020, 0x3a8a4a, 0xe8e4d8, 0x8a4a9a][(rnd() * 6) | 0]); u += bw + 0.015; } } }
+      for (let k = 0; k < 4; k++) { const y = 0.2 + k * 0.28; for (const s of [-1, 1]) { lb('metal', 0, y, s * d * 0.22, M.visorScene ? w - 0.04 : w - 0.044, 0.025, d * 0.42, 0xa0a4a8); let u = -w / 2 + 0.06; while (u < w / 2 - 0.1) { const bw = 0.07 + rnd() * 0.07; lb('plain', u + bw / 2, y + 0.025, s * d * 0.22, bw, 0.12 + rnd() * 0.1, d * 0.3, [0xc0392b, 0x2a6aaa, 0xe0b020, 0x3a8a4a, 0xe8e4d8, 0x8a4a9a][(rnd() * 6) | 0]); u += bw + 0.015; } } }
     },
     bench(M, A, o: BuilderOptions = {}) { const { b: lb, c: lc } = kk(M, A), w = M.w, d = M.d, h = M.h, wood = paletteColor(M, 'wood', 0x7a5434); if (o.stool) { lc('wood', 0, h - 0.04, 0, w / 2, 0.04, wood); for (let k = 0; k < 4; k++) lb('wood', Math.cos(k * PE + 0.78) * w * 0.3, 0, Math.sin(k * PE + 0.78) * w * 0.3, 0.03, h - 0.04, 0.03, sh(wood, 0.7)); return; } lb('wood', 0, h - 0.05, 0, w, 0.05, d, wood); for (const s of [-1, 1]) lb('wood', s * (w / 2 - 0.06), 0, 0, 0.05, h - 0.05, d - 0.04, sh(wood, 0.75)); if (o.backrest) lb('wood', 0, h, -d / 2 + 0.03, w, h * 0.7, 0.04, wood); },
     floorMirror(M, A) { const { b: lb } = kk(M, A), w = M.w, h = M.h, wood = paletteColor(M, 'wood', 0x6a4a30); lb('wood', 0, 0.05, 0, w, h - 0.05, 0.05, wood, 0, -0.1); lb('metal', 0, 0.12, 0.03, w - 0.1, h - 0.2, 0.01, 0xc0ccd0, 0, -0.1); },
@@ -158,7 +158,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     baskets(M, A) { // stack of shopping baskets with handle
       const { b: lb } = kk(M, A), w = M.w, d = M.d, h = M.h, n = Math.max(2, Math.round(h / 0.17)), alt = h / n, colors = [0xd8392f, 0x2f6fd8, 0xd8392f];
       for (let k = 0; k < n; k++) { const c = colors[k % 3], y = k * alt * 0.82, e = k * 0.012;
-        lb('plain', e, y, 0, w - 0.06, 0.02, d - 0.06, sh(c, 0.8));
+        lb('plain', e, y, 0, M.visorScene ? w - 0.06 : w - 0.064, 0.02, d - 0.06, sh(c, 0.8));
         lb('plain', e, y, d / 2 - 0.02 - 0.02, w - 0.01, alt, 0.02, c); lb('plain', e, y, -d / 2 + 0.02, w - 0.01, alt, 0.02, c);
         lb('plain', e + w / 2 - 0.02, y, 0, 0.02, alt, d - 0.04, c); lb('plain', e - w / 2 + 0.02, y, 0, 0.02, alt, d - 0.04, c); }
       lb('metal', 0, h - 0.02, 0, w * 0.8, 0.02, 0.025, 0x9a9ea2); lb('metal', -w * 0.4, h - 0.12, 0, 0.02, 0.12, 0.025, 0x9a9ea2); lb('metal', w * 0.4, h - 0.12, 0, 0.02, 0.12, 0.025, 0x9a9ea2);

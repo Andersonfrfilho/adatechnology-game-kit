@@ -33,8 +33,8 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
   };
   // ---------- clothesline with clothes swaying in the wind (one 'clothes' mesh with per-vertex sway) ----------
   const CLOTHES_COLORS: Hex[] = [0xd8d0b8, 0x4a6a8a, 0xb8483a, 0xe8e4d8, 0x6a8a5a, 0xe2b04a, 0x8a5a8a, 0x2f4a6a, 0xd47a8a, 0x7aa6b8];
-  function strip(K: Kit, rows: readonly (readonly number[])[], zc: number, rot: number, color: Hex, cx: number): void { // cloth strip: rows = [[y, xl, xr], ...] from top to bottom; rot = rotation of the cloth about y
-    const c = Math.cos(rot), s = Math.sin(rot), P = (x: number, y: number): number[] => [cx + (x - cx) * c, y, zc + (x - cx) * s];
+  function strip(K: Kit, rows: readonly (readonly number[])[], zc: number, rot: number, color: Hex, cx: number, off = 0): void { // cloth strip: rows = [[y, xl, xr], ...] from top to bottom; rot = rotation of the cloth about y
+    const c = Math.cos(rot), s = Math.sin(rot), P = (x: number, y: number): number[] => [cx + (x - cx) * c - off * s, y, zc + (x - cx) * s + off * c];
     for (let i = 0; i < rows.length - 1; i++) { const a = rows[i], b = rows[i + 1]; K.polyFace('clothes', [P(a[1], a[0]), P(a[2], a[0]), P(b[2], b[0]), P(b[1], b[0])], i % 2 ? sh(color, 0.96) : color, [0, 0, 1]); }
   }
   function garment(K: Kit, type: string, cx: number, ly: number, zc: number, rot: number, color: Hex, rnd: () => number): void { // ly = height of the line; cx = position along the line
@@ -42,7 +42,7 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
     if (type === 'shirt') strip(K, sh0([[0.0, -0.13, 0.13], [-0.03, -0.27, 0.27], [-0.15, -0.3, 0.3], [-0.2, -0.2, 0.2], [-0.62, -0.2, 0.2], [-0.63, -0.2, 0.2]]), zc, rot, color, cx);
     else if (type === 'trousers') { strip(K, sh0([[0, -0.19, -0.01], [-0.4, -0.18, -0.02], [-0.78, -0.16, -0.03], [-0.79, -0.16, -0.03]]), zc, rot, color, cx); strip(K, sh0([[0, 0.01, 0.19], [-0.4, 0.02, 0.18], [-0.78, 0.03, 0.16], [-0.79, 0.03, 0.16]]), zc, rot, sh(color, 0.95), cx); }
     else if (type === 'shorts') { strip(K, sh0([[0, -0.2, -0.01], [-0.3, -0.2, -0.02], [-0.31, -0.2, -0.02]]), zc, rot, color, cx); strip(K, sh0([[0, 0.01, 0.2], [-0.3, 0.02, 0.2], [-0.31, 0.02, 0.2]]), zc, rot, sh(color, 0.95), cx); }
-    else if (type === 'towel') { strip(K, sh0([[0, -0.32, 0.32], [-0.2, -0.32, 0.32], [-0.22, -0.32, 0.32], [-0.5, -0.32, 0.32], [-0.9, -0.32, 0.32], [-0.91, -0.32, 0.32]]), zc, rot, color, cx); strip(K, sh0([[-0.22, -0.32, 0.32], [-0.3, -0.32, 0.32]]), zc, rot, sh(color, 1.25), cx); }
+    else if (type === 'towel') { strip(K, sh0([[0, -0.32, 0.32], [-0.2, -0.32, 0.32], [-0.22, -0.32, 0.32], [-0.5, -0.32, 0.32], [-0.9, -0.32, 0.32], [-0.91, -0.32, 0.32]]), zc, rot, color, cx); strip(K, sh0([[-0.22, -0.32, 0.32], [-0.3, -0.32, 0.32]]), zc, rot, sh(color, 1.25), cx, shared.ctx.visorScene ? 0 : 0.002); } // (the towel's band 2 mm off its cloth outside the Visor's scene)
     else if (type === 'sheet') strip(K, sh0([[0, -0.5, 0.5], [-0.35, -0.5, 0.5], [-0.7, -0.5, 0.5], [-1.05, -0.5, 0.5], [-1.06, -0.5, 0.5]]), zc, rot, color, cx);
     else if (type === 'dress') strip(K, sh0([[0, -0.14, 0.14], [-0.06, -0.2, 0.2], [-0.3, -0.16, 0.16], [-0.62, -0.28, 0.28], [-0.63, -0.28, 0.28]]), zc, rot, color, cx);
     else { strip(K, sh0([[0, -0.05, 0.05], [-0.14, -0.05, 0.05], [-0.15, -0.05, 0.05]], -0.06), zc, rot, color, cx); strip(K, sh0([[0, -0.05, 0.05], [-0.14, -0.05, 0.05], [-0.15, -0.05, 0.05]], 0.06), zc, rot, sh(color, 0.9), cx); } // socks
@@ -51,7 +51,7 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
   }
   FURNITURE.clothesline = function (M, A) {
     const K = kit2(M, A), w = M.w || 3.6, d = M.d || 0.4, h = M.h || 2.0, rnd = rngString(SEED() + '|' + seedKey(M.seed) + '|varal'), ly = h - 0.1, nf = 3, zs = [-0.14, 0, 0.14];
-    for (const s of [-1, 1]) { const x = s * w / 2; K.c('metal', x, 0, 0, 0.032, h, 0x6a6e72); K.c('metal', x, 0, 0, 0.06, 0.03, 0x4a4e52); K.b('metal', x, h - 0.03, 0, 0.05, 0.03, d + 0.04, 0x6a6e72); K.e('metal', x, h + 0.01, 0, 0.032, 0.05, 0x6a6e72); }
+    for (const s of [-1, 1]) { const x = s * w / 2; K.c('metal', x, 0, 0, 0.032, h, 0x6a6e72); K.c('metal', x, 0, 0, 0.06, M.visorScene ? 0.03 : 0.034, 0x4a4e52); K.b('metal', x, h - 0.03, 0, 0.05, 0.03, d + 0.04, 0x6a6e72); K.e('metal', x, h + 0.01, 0, 0.032, 0.05, 0x6a6e72); }
     for (const z of zs) K.t('metal', [-w / 2, ly, z], [w / 2, ly, z], 0.0045, 0xb0b4b8);
     K.part('laundry', 0, ly, 0, () => {
       const types = ['shirt', 'trousers', 'towel', 'shorts', 'shirt', 'dress', 'sheet', 'sock', 'shirt', 'trousers'];
