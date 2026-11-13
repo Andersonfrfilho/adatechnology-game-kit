@@ -475,7 +475,7 @@ describe('fire and heat', () => {
     if (fr?.type === 'fracture') for (const f of fr.fragments) expect(Math.hypot(...f.velocity)).toBeLessThanOrEqual(41)
   })
 
-  it('an explosion hurts chairs, dents steel and ignites cloth', () => {
+  it('an explosion hurts chairs and dents steel; a charge does not light cloth 2 m from it, a burst of gas does', () => {
     const w = createDestruction()
     // 0.12 kg of TNT: a chair is only pushed at 2 m and at 0.5 m; at 0.3 m (Z = 0.6) the wave is some 10 MPa and the two legs nearest the charge, 4 cm sticks that hold 1.3 MPa across 40 cm, break. The 2 mm steel sheet at 2 m takes about 90 J: a dent and not a hole
     const c = w.add(chair(), { position: [0.3, 0, 0] })
@@ -485,8 +485,15 @@ describe('fire and heat', () => {
     expect(res.length).toBe(3)
     expect(w.part(door, 'plate')!.dents.length).toBeGreaterThan(0)
     expect(w.part(door, 'plate')!.status).not.toBe('broken')
-    expect(w.part(cloth, 'plate')!.burning).toBe(true)
+    // the fireball of 0.12 kg of TNT is 1.3 x 0.12^(1/3) = 0.64 m wide and lives 5 ms: 1.5 MW/m2 x 4.9 ms x (0.64 / 2)^2 = 0.76 kJ/m2 on the cloth 2 m away,
+    // against the 63 kJ/m2 fabric (230 °C) needs to light. The old test had it burning from the game radius of the blast: no condensed charge that size lights cloth there
+    expect(w.part(cloth, 'plate')!.burning).toBe(false)
     expect(w.state(c)!.parts.some((p) => p.status === 'broken')).toBe(true)
+    // 13 kg of propane (a P13) bursting makes a fireball of 2.9 x 13^(1/3) = 6.8 m that lives 1.1 s: 250 kW/m2 x 1.1 s = 270 kJ/m2, and the cloth catches
+    const gas = createDestruction()
+    const rag = gas.add(plate('fabric', 1, 1, 0.002, 'plate', { hp: 1000 }), { position: [0, 2, 0] })
+    gas.explode([0, 0, 0], 100000, 5, 'test', { charge: { fuel: 13 } })
+    expect(gas.part(rag, 'plate')!.burning).toBe(true)
   })
 })
 

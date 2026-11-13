@@ -469,6 +469,8 @@ export interface BlastCharge {
   readonly maxRays?: number
   /** Objects the fragments pass through (the explosive's own body). */
   readonly ignore?: readonly string[]
+  /** Kilograms of fuel the blast burns (the gas of a cylinder that bursts): its fireball (`fuelFireball`) is the heat of the blast instead of the charge's (`chargeFireball`). */
+  readonly fuel?: number
 }
 
 /** What a blast did to one target (`HitResult.blast`). */
@@ -511,6 +513,8 @@ export interface Hit {
   radius?: number
   /** `explosive` only: inside this radius (metres) a body takes the blast as lethal; between it and `radius` it is hurt, less with distance. */
   lethalRadius?: number
+  /** `explosive` only: the fireball of the blast (`chargeFireball`, `fuelFireball`), whose heat is what the blast lights; without it, the fireball of the charge `energy` stands for. */
+  fireball?: { readonly radius: number; readonly seconds: number; readonly flux: number }
   /** Source temperature for `fire` and `heat`. */
   temperature?: number
   /** Seconds the heat is applied for (a flamethrower calls `hit` every frame with `duration: dt`). */

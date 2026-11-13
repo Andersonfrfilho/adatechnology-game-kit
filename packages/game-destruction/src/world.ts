@@ -35,7 +35,8 @@ import type {
   BlastCharge, BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras, SweepProbe,
 } from './types'
-import { bodyImpulse, DEFAULT_BLAST_IMPULSE, ignitionChance, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
+import { bodyImpulse, chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, fuelFireball, ignitionChance, ignitionDose, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
+import type { Fireball } from '@adatechnology/game-contracts'
 
 /** Hit points removed per joule (before the material's `damageScale`). */
 /** Metres: a ductile part this thin or thinner dishes around a bullet hole. */
@@ -84,6 +85,11 @@ export const SHELTER_DEFAULTS: Required<ShelterOptions> = { k: 2800, brokenTrans
 export const FRAGMENT_HIT_DEFAULTS: Required<FragmentHitOptions> = { max: 24, energyFactor: 0.5, hitType: 'blunt', range: 6, flightTime: 0.4, spread: 10, aim: 40 }
 export const CONFINEMENT_DEFAULTS: Required<ConfinementOptions> = { rays: 26, reach: 1.5, gain: 1.5, power: 2, max: 3 }
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
+/** kg/L of liquefied petroleum gas and of petrol. */
+const LPG_KG_PER_L = 0.51
+const PETROL_KG_PER_L = 0.75
+/** Share of its ignition dose under which the heat of a fireball is not worth a part's notice (and its line of sight is not cast). */
+const MIN_HEAT_SHARE = 0.05
 /** Diameter in metres of the opening `vent` makes when none is given: a cylinder valve (about 8 mm). */
 const VENT_DIAMETER = 0.008
 /** A flame lights a flammable leak when it reaches this temperature (the auto-ignition of propane in air is about 470 °C; a lighter flame is above 1000 °C). */
@@ -407,6 +413,8 @@ interface Blast {
   point: Vec3
   energy: number
   radius: number
+  /** Kilograms of fuel the part burst with (the gas of a cylinder): its fireball is the heat of the blast. */
+  fuel?: number
   lethalRadius?: number
   source?: string
 }
@@ -574,7 +582,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
-    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, undefined, undefined, blast.lethalRadius)
+    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, blast.fuel ? { charge: { fuel: blast.fuel } } : undefined, undefined, blast.lethalRadius)
   }
 
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
@@ -3567,7 +3575,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (ex) {
       emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(ex.tnt !== undefined ? { tnt: ex.tnt } : {}), ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
-      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), source: src })
+      const fuel = burstFuel(p)
+      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(fuel > 0 ? { fuel } : {}), source: src })
     }
     partLost(o, p, src)
   }
@@ -3890,8 +3899,6 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const sp = surfacePoint(p.spec.shape, lp)
     const wp = toWorld(c, q, sp.point)
     const reach = reachAt ? reachAt(wp, p) : 1
-    // heat of the fireball falls with the distance as the game's blast radius says; the pressure work is the physical one (`waveWork`)
-    const f = (1 - dist / radius) ** 2 * reach
     const mat = p.mat
     const side = Math.hypot(lp[0], lp[1], lp[2])
     const toward: Vec3 = side > 1e-6 ? [lp[0] / side, lp[1] / side, lp[2] / side] : [0, 1, 0]
@@ -3925,12 +3932,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       debris(o, p, mat.hitDebris, wp, wn, clamp(Math.round(Ein / 80) + 1, 1, 12), clamp(Math.sqrt(Ein) / 4, 2, 15), src)
     }
     const th = mat.thermal
-    if (th.ignitionC !== undefined && p.st.fuel > 0) {
-      p.st.temperature += 300 * f
-      o.active = true
-      if (f >= 0.25 && !p.st.burning) {
-        p.st.temperature = Math.max(p.st.temperature, th.ignitionC + 1)
-        checkIgnite(o, p, src)
+    // the heat is the fireball's (`blastFireball`): the dose on the face of the part over the life of the fireball, if the fireball sees it; a part that takes the
+    // dose its material needs to light catches fire, one that takes less is warmed by that share of the way to its ignition temperature
+    if (th.ignitionC !== undefined && p.st.fuel > 0 && !p.st.burning) {
+      const needed = ignitionDose(th.ignitionC, ambient)
+      const dose = fireballDose(blastFireball, dist) * reach
+      if (dose >= needed * MIN_HEAT_SHARE && seesFireball(point, o, p, wp)) {
+        const share = Math.min(1, dose / needed)
+        p.st.temperature = Math.max(p.st.temperature, ambient + (th.ignitionC + 1 - ambient) * share)
+        o.active = true
+        if (share >= 1) checkIgnite(o, p, src)
       }
     }
     // a blast loosens a long joint (the mortar bed of a wall) over the stretch it breaks, not all along it; the trim on the part only within that stretch
@@ -3967,6 +3978,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Kilograms of TNT per joule of the blast being resolved: the charge's own, or the arsenal's scale. */
   let blastTntPerJoule = TNT_PER_JOULE
+  /** The fireball of the blast being resolved: the charge's, or the fuel's when the blast burns one. */
+  let blastFireball: Fireball = chargeFireball(0)
+
+  /** Kilograms of fuel a bursting part throws into its fireball: the flammable fluid it still holds (LPG 0.51 kg/L, petrol 0.75 kg/L). */
+  const burstFuel = (p: PartRT): number => {
+    const c = p.spec.contains
+    if (!c || !FLAMMABLE_FLUIDS.includes(c.fluid)) return 0
+    return Math.max(0, p.st.liters ?? c.liters) * (c.fluid === 'gas' ? LPG_KG_PER_L : PETROL_KG_PER_L)
+  }
+
+  /**
+   * Whether the straight line from the centre of the fireball to the point `wp` of the part crosses nothing else: radiant heat does not go through a wall, and the hot
+   * gases are held by it too (their flow round a wall is not modelled, so a part behind one stays cool even inside the fireball).
+   */
+  const seesFireball = (point: Vec3, o: ObjRT, p: PartRT, wp: Vec3): boolean => {
+    const L = vec.distance(point, wp)
+    if (L < 0.03) return true
+    const hit = raycastInternal(point, vec.sub(wp, point), L - 0.02)
+    return !hit || (hit.object === o.id && hit.part === p.spec.id)
+  }
 
   const blastProbe = { partsTested: 0, partsNear: 0 }
 
@@ -4074,7 +4105,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
+      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
     }
     return out
   }
@@ -4203,7 +4234,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           den += f
         }
         const k = den > 0 ? num / den : 1
-        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, fireball: blastFireball, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
         results.set(im, res)
         report(im).shelter = k
       }
@@ -4456,17 +4487,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const cfg = blastCfg(call)
     const charge = call?.charge ?? options.blast?.charge
     const outer = blastTntPerJoule
+    const outerFireball = blastFireball
     blastTntPerJoule = charge?.tnt !== undefined && energy > 0 ? charge.tnt / energy : TNT_PER_JOULE
+    blastFireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * blastTntPerJoule)
     try {
       // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
       const fragments = charge?.casing ? withBlow('ballistic', () => throwCasing(point, charge, src))() : []
       const wave = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
       const res = fragments.length > 0 ? mergeResults(wave, fragments) : wave
-      // a blast is a flame: a container that leaks flammable fluid inside it catches
-      lightLeaksNear(point, radius)
+      // a blast is a flame: a container that leaks flammable fluid inside its fireball catches
+      lightLeaksNear(point, blastFireball.radius)
       return res
     } finally {
       blastTntPerJoule = outer
+      blastFireball = outerFireball
     }
   }
 

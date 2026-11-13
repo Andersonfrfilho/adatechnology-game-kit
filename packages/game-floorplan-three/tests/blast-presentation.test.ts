@@ -17,9 +17,9 @@ const BLAST_RADIUS = 6
 // brings the panel down (wall_0_0 broken, 46 parts broken, as before); only the spec of the house it hits changed
 // Recorded again when the furniture, flights, frames and floors came to keep out of the walls (no two faces on one plane): the charge still fractures
 // wall_0_0 in front of it; only the parts' boxes the blast meets changed
-// Recorded again when the wave began to load only the solid share of a part's box (a sloped rafter or roof bay) and the doors and jambs to be held in their walls:
-// the charge still brings wall_0_0 down (45 parts broken, 11 collapsed)
-const RECORDED_BLAST_OUTCOME = '66f91e2f04617e20a2e6a1f22cd302a605369415'
+// Recorded again when the wave began to load only the solid share of a part's box (a sloped rafter or roof bay) and the doors and jambs to be held in their walls,
+// and once more when its heat became the fireball's: the charge still brings wall_0_0 down (39 parts broken, 7 collapsed), nothing catches fire
+const RECORDED_BLAST_OUTCOME = 'ddaf449aaa20507c93f90a131b3788dc13f84508'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
