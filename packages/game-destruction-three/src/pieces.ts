@@ -4,6 +4,8 @@ import type { PieceBody, PieceFriction } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
+import { boxManifold, correctPositions, solveContacts, warmStart } from './piece-solver'
+import type { ManifoldBox, SolverBody, SolverContact } from './piece-solver'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -137,6 +139,72 @@ const LIFT_DEPTH = STEP
  * for ever; half settles it where the pushes balance, and a single overlap still closes to a millimetre within ten steps.
  */
 const SEPARATE_SHARE = 0.5
+/** Two boxes this far apart (m), beyond what they close in a substep, already have contacts: they meet at the face, never inside it (speculative contacts). */
+const SPECULATIVE_MARGIN = 0.01
+/** A point of a piece this far over the ground (beyond what it falls in a substep) already has a contact with it. */
+const WORLD_MARGIN = 0.002
+/** Share of what two boxes still overlap after a substep's move put back by position, and the most per substep (m): no speed is given, so nothing is launched. */
+const SEPARATE_BETA = 0.2
+const SEPARATE_MOST = 0.004
+/** The same for a point in the ground: put back almost at once (as the ground always did), and the rounds of the pass over all the contacts together. */
+const GROUND_BETA = 0.8
+const GROUND_MOST = 0.03
+const POSITION_ROUNDS = 4
+/** A contact between two pieces holds the upper up (counts as its support) when its normal is at least this upright. */
+const SUPPORT_NORMAL = 0.3
+/** The warm start of a contact between two pieces is kept while its normal turns less than this (cosine). */
+const WARM_SAME_NORMAL = 0.95
+/** A sleeping piece another box runs into faster than this (m/s) wakes; slower, it holds the other as the ground does (a book set down on a case left at an angle). */
+const WAKE_KNOCK_SPEED = 1
+/**
+ * Whether the contacts between pieces start from what the nearest contact of the last substep gave (warm start, matched by position as Bullet does). Measured off: with it the
+ * bowl's lift drops to millimetres, but the impulses kept across a wedge (a plate between the ground and a sheet) kick pieces up at 0.2-0.4 m/s when the contact set changes.
+ */
+const PAIR_WARM = false
+/** A contact takes the warm start of the one kept within this distance (m) of it. */
+const WARM_REACH = 0.01
+
+/** A piece moving through the substeps of a step (`PieceSystem.substeps`). */
+interface Moving {
+  readonly b: PieceBody
+  /** Centre of mass and rotation as the substeps take them (written back at the end), and the rotation's matrix elements. */
+  readonly pos: Vec3
+  readonly start: Vec3
+  readonly q: THREE_NS.Quaternion
+  e: number[]
+  /** The points that touch the ground (its frame) and where each was at the start of the substep (world). */
+  local: Vec3[]
+  prev: Vec3[]
+  landing: number
+  landPoint: Vec3
+  touched: boolean
+  contactedLast: boolean
+  unstable: boolean
+  solver: SolverBody
+  /** Its contacts with the ground and fixed tops this substep, the slot of each (warm start), and their friction. */
+  world: SolverContact[]
+  worldIds: number[]
+  mus: PieceFriction[]
+  /** Where (from its centre of mass) it was held up this substep: its ground contacts and the contacts with pieces under it. */
+  supports: Vec3[]
+}
+
+/** A contact between two pieces, the key its impulses are kept under for the next substep and the moving pieces on each side. */
+interface PairContact {
+  readonly contact: SolverContact
+  readonly key: string
+  readonly point: Vec3
+  readonly ownerA: Moving | null
+  readonly ownerB: Moving | null
+}
+
+interface PairWarm {
+  /** Where the contact was (world), in the substep it was kept. */
+  readonly point: Vec3
+  readonly n: Vec3
+  readonly accN: number
+  readonly accT: Vec3
+}
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
 /** Which pieces a step moves and which pairs it meets (`PieceSystem.update` splits only what closes in on a round piece). */
@@ -237,6 +305,8 @@ export class PieceSystem {
   /** How far each piece is put apart from the boxes it overlaps this step (`separatePair`), summed over its pairs and applied once, bounded, at the end of `collide`. */
   private readonly pushes = new Map<PieceBody, Vec3>()
   private supportTurn = 0
+  /** What each contact between two pieces gave in the last substep, by its key (`PairContact.key`). */
+  private pairWarm = new Map<string, PairWarm[]>()
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
   private supportFriction: PieceFriction | null = null
@@ -318,6 +388,7 @@ export class PieceSystem {
     this.surfacesOf.clear()
     this.surfaceGrid.clear()
     this.wideSurfaces.length = 0
+    this.pairWarm.clear()
   }
 
   /** Drops a piece from the boxes of the step (`solids`, `surfaces` and their grid). */
@@ -559,16 +630,20 @@ export class PieceSystem {
     if (this.wideSurfaces.length > 0) for (const cell of this.surfaceGrid.values()) cell.push(...this.wideSurfaces)
     this.wakeUnsupported()
     for (const b of this.list) {
-      if (b.held) {
-        b.velocity = [0, 0, 0]
-        b.angularVelocity = [0, 0, 0]
-        b.sleeping = false
-        b.still = 0
-        b.calmAt = null
-        continue
-      }
-      if (b.sleeping || (only && !only.moves(b))) continue
-      this.integrate(b, dt)
+      if (!b.held) continue
+      b.velocity = [0, 0, 0]
+      b.angularVelocity = [0, 0, 0]
+      b.sleeping = false
+      b.still = 0
+      b.calmAt = null
+    }
+    const movers: Moving[] = []
+    for (const b of this.list) if (!b.held && !b.sleeping && (!only || only.moves(b))) movers.push(this.beginMove(b))
+    if (movers.length > 0) this.substeps(movers, dt, only?.meets)
+    else this.pairWarm.clear()
+    for (const st of movers) {
+      this.finishMove(st, dt)
+      const b = st.b
       if (b.sleeping) continue
       const v = b.velocity
       const w = b.angularVelocity
@@ -717,368 +792,591 @@ export class PieceSystem {
     }
   }
 
-  private integrate(b: PieceBody, dt: number): void {
+  /** A piece about to move through the substeps of a step: its centre of mass and rotation as they go, and what its contacts did. */
+  private beginMove(b: PieceBody): Moving {
     const c = this.centerOf(b, this.p)
-    const pos: Vec3 = [c.x, c.y, c.z]
-    const start: Vec3 = [c.x, c.y, c.z]
-    const q = this.q.copy(b.root.quaternion)
-    const v = b.velocity
-    const w = b.angularVelocity
-    const invM = 1 / b.mass
-    const steps = clamp(Math.ceil(dt / SUB_DT), 1, 8)
-    const h = dt / steps
-    let landing = 0
-    let landPoint: Vec3 = [pos[0], pos[1], pos[2]]
-    let contactedLast = false
-    const propped = b.propped
-    const proppedAt = b.proppedAt
-    b.propped = undefined
-    b.proppedAt = undefined
-    let touched = false
-    let unstable = false
-
-    // over a step of the ground (the corners find it at different heights: a table's edge under it) the points along the edges touch too
+    const q = new this.THREE.Quaternion().copy(b.root.quaternion)
+    const e = [...this.m.makeRotationFromQuaternion(q).elements]
     const corners = this.samples(b, false)
-    this.m.makeRotationFromQuaternion(q)
+    // over a step of the ground (the corners find it at different heights: a table's edge under it) the points along the edges touch too
     let gLow = Infinity
     let gHigh = -Infinity
     for (const [sx, sy, sz] of corners) {
-      const e0 = this.m.elements
-      const y = pos[1] + e0[1] * sx + e0[5] * sy + e0[9] * sz
-      const x = pos[0] + e0[0] * sx + e0[4] * sy + e0[8] * sz
-      const z = pos[2] + e0[2] * sx + e0[6] * sy + e0[10] * sz
+      const y = c.y + e[1] * sx + e[5] * sy + e[9] * sz
+      const x = c.x + e[0] * sx + e[4] * sy + e[8] * sz
+      const z = c.z + e[2] * sx + e[6] * sy + e[10] * sz
       // only the fixed ground counts here: other pieces touching it (a pile, things spawned together) keep the corners
       const g = Math.max(this.o.groundAt(x, z), this.o.staticTopAt?.(x, z, y, STEP) ?? -Infinity)
       gLow = Math.min(gLow, g)
       gHigh = Math.max(gHigh, g)
     }
-    let local = b.round ? this.roundSamples(b, q) : gHigh - gLow > STEP ? this.samples(b, true) : corners
-    let prev: Vec3[] = local.map(() => [0, 0, 0])
+    const local = b.round ? this.roundSamples(b, q) : gHigh - gLow > STEP ? this.samples(b, true) : corners
+    const st: Moving = {
+      b,
+      pos: [c.x, c.y, c.z],
+      start: [c.x, c.y, c.z],
+      q,
+      e,
+      local,
+      prev: local.map((): Vec3 => [0, 0, 0]),
+      landing: 0,
+      landPoint: [c.x, c.y, c.z],
+      touched: false,
+      contactedLast: false,
+      unstable: false,
+      world: [],
+      worldIds: [],
+      supports: [],
+      mus: [],
+      solver: null as unknown as SolverBody,
+    }
+    st.solver = {
+      v: b.velocity,
+      w: b.angularVelocity,
+      invMass: 1 / b.mass,
+      invInertia: (x, y, z) => this.mulInvInertiaWith(b, st.e, x, y, z),
+      moved: [0, 0, 0],
+      turned: [0, 0, 0],
+      shift: (d, turn) => {
+        for (let i = 0; i < 3; i++) {
+          st.pos[i] += d[i]
+          st.solver.moved[i] += d[i]
+          st.solver.turned[i] += turn[i]
+        }
+        const angle = Math.hypot(turn[0], turn[1], turn[2])
+        if (angle < 1e-9) return
+        st.q.premultiply(this.dq.setFromAxisAngle(this.ax.set(turn[0] / angle, turn[1] / angle, turn[2] / angle), angle)).normalize()
+        st.e = [...this.m.makeRotationFromQuaternion(st.q).elements]
+      },
+    }
+    return st
+  }
 
+  /** What does not move in this step (asleep, held, or left to another step), as the solver sees it: it pushes back, nothing moves it. */
+  private fixedBody(): SolverBody {
+    return { v: [0, 0, 0], w: [0, 0, 0], invMass: 0, invInertia: () => [0, 0, 0], shift: () => undefined, moved: [0, 0, 0], turned: [0, 0, 0] }
+  }
+
+  /**
+   * The substeps of a step, all the moving pieces together: gravity, the contacts found before the move (the ground and fixed tops under each piece's points, the corners of
+   * each box on the faces of the boxes it touches or is about to), all solved as one set, then the move, the position pass for what still overlaps, and each piece's
+   * support (topple, tipping, rolling resistance).
+   */
+  private substeps(movers: Moving[], dt: number, meets?: StepFilter['meets']): void {
+    const steps = clamp(Math.ceil(dt / SUB_DT), 1, 8)
+    const h = dt / steps
+    const byBody = new Map<PieceBody, Moving>()
+    for (const st of movers) byBody.set(st.b, st)
+    const pairs = this.candidatePairs(byBody, dt, meets)
+    const fixed = new Map<PieceBody, SolverBody>()
+    const wake = new Set<PieceBody>()
     for (let s = 0; s < steps; s++) {
-      if (b.round) {
-        // a round piece touches by its lowest points as it will be turned at the end of this substep: they move round it as it rolls
-        const wl0 = Math.hypot(w[0], w[1], w[2])
-        const next = this.nextQ.copy(q)
-        if (wl0 > 1e-6) next.premultiply(this.dq.setFromAxisAngle(this.ax.set(w[0] / wl0, w[1] / wl0, w[2] / wl0), wl0 * h)).normalize()
-        local = this.roundSamples(b, next)
-        if (prev.length !== local.length) prev = local.map(() => [0, 0, 0])
+      const contacts: SolverContact[] = []
+      for (const st of movers) {
+        this.beforeSubstep(st, h)
+        this.worldContacts(st, h)
+        contacts.push(...st.world)
       }
-      // where each point was before this substep: a point that comes at a higher ground from below it hit the side of the step
-      this.m.makeRotationFromQuaternion(q)
-      const e0 = this.m.elements
-      for (let i = 0; i < local.length; i++) {
-        const [sx, sy, sz] = local[i]
-        prev[i][0] = pos[0] + e0[0] * sx + e0[4] * sy + e0[8] * sz
-        prev[i][1] = pos[1] + e0[1] * sx + e0[5] * sy + e0[9] * sz
-        prev[i][2] = pos[2] + e0[2] * sx + e0[6] * sy + e0[10] * sz
+      const pairContacts: PairContact[] = []
+      for (const [x, y] of pairs) this.pairContacts(x, y, byBody, fixed, h, dt, pairContacts, wake)
+      for (const pc of pairContacts) contacts.push(pc.contact)
+      // the landing: the fastest a point of the piece closes on what it is about to touch
+      for (const st of movers) this.measureLanding(st, h)
+      warmStart(contacts)
+      solveContacts(contacts, h, SOLVER_PASSES)
+      for (const st of movers) this.keepWarm(st)
+      const kept = new Map<string, PairWarm[]>()
+      for (const pc of pairContacts) {
+        if (!pc.ownerA || !pc.ownerB) continue
+        const list = kept.get(pc.key) ?? []
+        list.push({ point: pc.point, n: pc.contact.n, accN: pc.contact.accN, accT: pc.contact.accT })
+        kept.set(pc.key, list)
       }
-      v[1] -= this.o.gravity * h
-      // what holds it up through their overlap pushes back what gravity drives into it, as a corner's support does
-      if (propped) {
-        const into = v[0] * propped[0] + v[1] * propped[1] + v[2] * propped[2]
-        if (into < 0) for (let k = 0; k < 3; k++) v[k] -= into * propped[k]
+      this.pairWarm = kept
+      for (const st of movers) this.moveBody(st, h)
+      correctPositions(contacts, POSITION_ROUNDS, { world: { slop: SLOP, beta: GROUND_BETA, most: GROUND_MOST }, pair: { slop: SLOP, beta: SEPARATE_BETA, most: SEPARATE_MOST } })
+      for (const st of movers) {
+        st.supports = st.world.filter((c) => c.accN > 0 || c.sep <= SLOP).map((c) => c.ra)
       }
-      pos[0] += v[0] * h
-      pos[1] += v[1] * h
-      pos[2] += v[2] * h
-      const wl = Math.hypot(w[0], w[1], w[2])
-      if (wl > 1e-6) {
-        this.dq.setFromAxisAngle(this.ax.set(w[0] / wl, w[1] / wl, w[2] / wl), wl * h)
-        q.premultiply(this.dq).normalize()
+      for (const pc of pairContacts) {
+        const c = pc.contact
+        if (c.accN <= 0 && c.sep > SLOP) continue
+        // a point that holds a piece: under it, or what it leans on (a plate leant on another is held up there, as by a corner on the ground)
+        if (pc.ownerA && (c.n[1] > SUPPORT_NORMAL || c.accN > 0)) pc.ownerA.supports.push(c.ra)
+        if (pc.ownerB && (-c.n[1] > SUPPORT_NORMAL || c.accN > 0)) pc.ownerB.supports.push(c.rb)
       }
-      // the air slows a box's spin a little; a round piece keeps rolling, held back only by its rolling resistance on the ground
-      const damp = b.round ? 1 : Math.exp(-0.15 * h)
-      w[0] *= damp
-      w[1] *= damp
-      w[2] *= damp
+      for (const st of movers) this.afterSubstep(st, h)
+    }
+    for (const b of wake) {
+      b.sleeping = false
+      b.still = 0
+      b.calmAt = null
+    }
+  }
 
-      this.m.makeRotationFromQuaternion(q)
-      const e = this.m.elements
-      const rs: Vec3[] = []
-      const ids: number[] = []
-      // per contact: the normal of the surface under it and the friction of the two surfaces
-      const ns: Vec3[] = []
-      const mus: PieceFriction[] = []
-      let maxPen = 0
-      // the normal of the surface under the deepest point: the piece is pushed out along it (straight up on the floor, across a tilted top)
-      let penNormal: Vec3 = UP
-      const rise = STEP + Math.max(0, -v[1]) * h * 2
-      // the side of a step of the ground: how far back the piece goes (metres along -dir) and the point that hit it
-      let side: { back: number; dir: [number, number]; r: Vec3 } | null = null
-      let lowest = Infinity
-      for (let i = 0; i < local.length; i++) {
-        const [sx, sy, sz] = local[i]
-        const r: Vec3 = [e[0] * sx + e[4] * sy + e[8] * sz, e[1] * sx + e[5] * sy + e[9] * sz, e[2] * sx + e[6] * sy + e[10] * sz]
-        const px = pos[0] + r[0]
-        const pz = pos[2] + r[2]
-        const cy = pos[1] + r[1]
-        // the ground's own step (a table, a counter) that the point was more than a step below before this substep: it came at its side or is
-        // under it, and does not stand on it (nor ratchets up onto it as the rest of the piece is lifted)
-        const was = prev[i]
-        const raw = this.o.groundAt(px, pz)
-        if (raw > cy - SLOP && was[1] < raw - STEP) {
-          // under a top it was already beneath (put under an overhang), or coming at its side: either way that top does not hold it
-          if (this.o.groundAt(was[0], was[2]) >= raw - STEP) {
-            // beneath it, the point stands on the floor the piece last stood on (the height field cannot see under a top)
-            const floor = b.floor
-            if (floor !== undefined && floor - cy > -SLOP && floor < raw - STEP) {
-              rs.push(r)
-              ids.push(i)
-              ns.push(UP)
-              mus.push(pairFriction(b.friction, null))
-              maxPen = Math.max(maxPen, floor - cy)
+  /**
+   * The pairs of boxes (neither round: a round piece meets the others by `knock`) that may touch within the step, by sweep and prune along x on their bounding spheres grown by
+   * what they can travel in it; at least one of each pair moves.
+   */
+  private candidatePairs(byBody: Map<PieceBody, Moving>, dt: number, meets?: StepFilter['meets']): Array<[PieceBody, PieceBody]> {
+    const list = this.list.filter((b) => !b.round && (!b.held || b.carrying))
+    const centers = list.map((b) => {
+      const c = this.centerOf(b, this.p)
+      return [c.x, c.y, c.z] as Vec3
+    })
+    const radii = list.map((b) => {
+      const r = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
+      if (!byBody.has(b)) return r
+      const v = b.velocity
+      const w = b.angularVelocity
+      return r + (Math.hypot(v[0], v[1], v[2]) + Math.hypot(w[0], w[1], w[2]) * r) * dt + SPECULATIVE_MARGIN
+    })
+    const order = list.map((_, i) => i).sort((i, j) => centers[i][0] - radii[i] - (centers[j][0] - radii[j]))
+    const out: Array<[PieceBody, PieceBody]> = []
+    for (let oi = 0; oi < order.length; oi++) {
+      const i = order[oi]
+      const reach = centers[i][0] + radii[i]
+      for (let oj = oi + 1; oj < order.length; oj++) {
+        const j = order[oj]
+        if (centers[j][0] - radii[j] > reach) break
+        const a = list[i]
+        const b = list[j]
+        if (!byBody.has(a) && !byBody.has(b)) continue
+        if (meets && !meets(a, b)) continue
+        const r = radii[i] + radii[j]
+        if (Math.abs(centers[i][1] - centers[j][1]) > r || Math.abs(centers[i][2] - centers[j][2]) > r) continue
+        if (Math.hypot(centers[i][0] - centers[j][0], centers[i][1] - centers[j][1], centers[i][2] - centers[j][2]) > r) continue
+        // in the order of the list, so the same scene solves the same way
+        out.push(this.list.indexOf(a) < this.list.indexOf(b) ? [a, b] : [b, a])
+      }
+    }
+    return out
+  }
+
+  /** The boxes a piece meets others by (its parts', or its own), where it is now: a moving piece as the substeps have taken it. */
+  private boxesOf(b: PieceBody, st: Moving | undefined): ManifoldBox[] {
+    if (!st) return (this.surfacesOf.get(b) ?? []).map((s) => ({ c: s.c, e: s.e, half: s.half }))
+    const e = st.e
+    const c = st.pos
+    const parts = b.partBoxes ?? [{ center: [0, 0, 0] as Vec3, half: b.halfExtents }]
+    return parts.map(({ center, half }) => ({
+      c: [c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2], c[1] + e[1] * center[0] + e[5] * center[1] + e[9] * center[2], c[2] + e[2] * center[0] + e[6] * center[1] + e[10] * center[2]] as Vec3,
+      e,
+      half,
+    }))
+  }
+
+  /**
+   * The contacts of two boxes for this substep (`boxManifold`): the corners of each on the other's face, within what they can close in the substep. Two made deep inside each
+   * other (deeper than a contact: chunks of one wall) are left to `collide`, which slides them apart along the ground. A sleeping or held one does not move (the solver
+   * pushes the other off it); knocked faster than `WAKE_KNOCK_SPEED`, it wakes for the next step.
+   */
+  private pairContacts(x: PieceBody, y: PieceBody, byBody: Map<PieceBody, Moving>, fixed: Map<PieceBody, SolverBody>, h: number, dt: number, out: PairContact[], wake: Set<PieceBody>): void {
+    const sx = byBody.get(x)
+    const sy = byBody.get(y)
+    const bodyOf = (b: PieceBody, st: Moving | undefined): SolverBody => {
+      if (st) return st.solver
+      let f = fixed.get(b)
+      if (!f) {
+        f = this.fixedBody()
+        fixed.set(b, f)
+      }
+      return f
+    }
+    const ax = bodyOf(x, sx)
+    const by = bodyOf(y, sy)
+    const cx = sx ? sx.pos : (this.solidOf.get(x)?.c ?? [0, 0, 0])
+    const cy = sy ? sy.pos : (this.solidOf.get(y)?.c ?? [0, 0, 0])
+    const rx = Math.hypot(x.halfExtents[0], x.halfExtents[1], x.halfExtents[2])
+    const ry = Math.hypot(y.halfExtents[0], y.halfExtents[1], y.halfExtents[2])
+    const speed = (sb: SolverBody, r: number): number => Math.hypot(sb.v[0], sb.v[1], sb.v[2]) + Math.hypot(sb.w[0], sb.w[1], sb.w[2]) * r
+    const margin = SPECULATIVE_MARGIN + (speed(ax, rx) + speed(by, ry)) * h
+    const boxesX = this.boxesOf(x, sx)
+    const boxesY = this.boxesOf(y, sy)
+    const friction = pairFriction(x.friction, y.friction ?? null)
+    const restitution = pairRestitution(x.restitution, y.restitution)
+    for (let ia = 0; ia < boxesX.length; ia++) {
+      for (let ib = 0; ib < boxesY.length; ib++) {
+        const m = boxManifold(boxesX[ia], boxesY[ib], margin)
+        if (!m) continue
+        const n = m.normal
+        // closing speed of the centres along the normal: how deep a contact may be after a step and still be one
+        const closing = Math.max(0, -((ax.v[0] - by.v[0]) * n[0] + (ax.v[1] - by.v[1]) * n[1] + (ax.v[2] - by.v[2]) * n[2]))
+        if (m.depth > LIFT_DEPTH + closing * dt) continue
+        for (const point of m.points) {
+          const ra: Vec3 = [point.point[0] - cx[0], point.point[1] - cx[1], point.point[2] - cx[2]]
+          const rb: Vec3 = [point.point[0] - cy[0], point.point[1] - cy[1], point.point[2] - cy[2]]
+          // the warm start of the contact kept nearest to this point (Bullet matches its persistent manifold the same way), when the normal has hardly turned
+          const key = `${x.objectId}|${y.objectId}|${ia}|${ib}`
+          let warm: PairWarm | undefined
+          let nearest = WARM_REACH
+          for (const old of this.pairWarm.get(key) ?? []) {
+            const gap = Math.hypot(old.point[0] - point.point[0], old.point[1] - point.point[1], old.point[2] - point.point[2])
+            if (gap < nearest && old.n[0] * n[0] + old.n[1] * n[1] + old.n[2] * n[2] > WARM_SAME_NORMAL) {
+              nearest = gap
+              warm = old
             }
-            continue
           }
-          const dx = px - was[0]
-          const dz = pz - was[2]
-          const len = Math.hypot(dx, dz)
-          if (len > 1e-6) {
-            // where along its move the point met the side: the first place the ground is up at this top
-            let lo = 0
-            let hi = 1
-            for (let it = 0; it < 6; it++) {
-              const mid = (lo + hi) / 2
-              if (this.o.groundAt(was[0] + dx * mid, was[2] + dz * mid) >= raw - STEP) hi = mid
-              else lo = mid
-            }
-            const back = (1 - lo) * len + 0.001
-            if (!side || back > side.back) side = { back, dir: [dx / len, dz / len], r }
+          const from = PAIR_WARM ? warm : undefined
+          const contact: SolverContact = {
+            a: ax,
+            b: by,
+            ra,
+            rb,
+            n,
+            sep: point.sep,
+            bounce: 0,
+            mu: friction,
+            slipping: false,
+            accN: from ? from.accN : 0,
+            accT: from ? [from.accT[0], from.accT[1], from.accT[2]] : [0, 0, 0],
           }
-          continue
-        }
-        // the points along the edges are there for the step of the ground; on other pieces only the corners stand, as everywhere else
-        this.supportNormal = UP
-        this.supportFriction = null
-        const gy = i < 8 || b.contacts ? this.supportAt(b, px, cy, pz, rise) : Math.max(raw, this.o.staticTopAt?.(px, pz, cy, rise) ?? -Infinity)
-        const pen = gy - cy
-        if (pen > -SLOP) {
-          rs.push(r)
-          ids.push(i)
-          ns.push(this.supportNormal)
-          mus.push(pairFriction(b.friction, this.supportFriction))
-          if (pen > maxPen) {
-            maxPen = pen
-            penNormal = this.supportNormal
+          const va = this.pointVelocityOf(ax, ra)
+          const vb = this.pointVelocityOf(by, rb)
+          const rv: Vec3 = [va[0] - vb[0], va[1] - vb[1], va[2] - vb[2]]
+          const vn = rv[0] * n[0] + rv[1] * n[1] + rv[2] * n[2]
+          // sliding as they moved before this substep's gravity: a thing at rest on a tilted top is held by the static grip, not let go by the pull it is to resist; and
+          // landing, the blow of the landing holds what it slides across within the static grip (a box set down on a tilted top is caught)
+          const fall = this.o.gravity * h * ((sx ? 1 : 0) - (sy ? 1 : 0))
+          const rv0: Vec3 = [rv[0], rv[1] + fall, rv[2]]
+          const vn0 = rv0[0] * n[0] + rv0[1] * n[1] + rv0[2] * n[2]
+          const slip = Math.hypot(rv0[0] - vn0 * n[0], rv0[1] - vn0 * n[1], rv0[2] - vn0 * n[2])
+          const full: SolverContact = { ...contact, bounce: -vn > BOUNCE_MIN_SPEED && point.sep <= SLOP ? -restitution * vn : 0, slipping: slip > SLIP_SPEED + friction.static * Math.max(0, -vn0) }
+          out.push({ contact: full, key, point: point.point, ownerA: sx ?? null, ownerB: sy ?? null })
+          if (-vn > WAKE_KNOCK_SPEED && point.sep <= SLOP) {
+            if (!sx && x.sleeping) wake.add(x)
+            if (!sy && y.sleeping) wake.add(y)
           }
-          lowest = Math.min(lowest, gy)
+          if (-vn >= SLAM_MIN_SPEED && point.sep <= SLOP && this.time - Math.max(x.lastHit, y.lastHit) > 0.15) {
+            x.lastHit = y.lastHit = this.time
+            this.o.onKnock?.(x, y, point.point, -vn)
+          }
         }
       }
-      if (lowest < Infinity) b.floor = lowest
-      if (b.round && ns.length > 0) {
+    }
+  }
+
+  private pointVelocityOf(sb: SolverBody, r: Vec3): Vec3 {
+    const v = sb.v
+    const w = sb.w
+    return [v[0] + w[1] * r[2] - w[2] * r[1], v[1] + w[2] * r[0] - w[0] * r[2], v[2] + w[0] * r[1] - w[1] * r[0]]
+  }
+
+  /** Before a substep: the points of a round piece as it is turned now, where each point is (for the side of a step), and gravity. */
+  private beforeSubstep(st: Moving, h: number): void {
+    const b = st.b
+    if (b.round) {
+      st.local = this.roundSamples(b, st.q)
+      if (st.prev.length !== st.local.length) st.prev = st.local.map((): Vec3 => [0, 0, 0])
+    }
+    const e = st.e
+    const pos = st.pos
+    for (let i = 0; i < st.local.length; i++) {
+      const [sx, sy, sz] = st.local[i]
+      st.prev[i][0] = pos[0] + e[0] * sx + e[4] * sy + e[8] * sz
+      st.prev[i][1] = pos[1] + e[1] * sx + e[5] * sy + e[9] * sz
+      st.prev[i][2] = pos[2] + e[2] * sx + e[6] * sy + e[10] * sz
+    }
+    b.velocity[1] -= this.o.gravity * h
+  }
+
+  /**
+   * The points of a piece on the ground and on fixed tops, found before the move: each point closer to what is under it than it can fall in the substep (speculative). A point
+   * under a top it was already beneath (put under an overhang) stands on the floor it last stood on. A round piece also stands on the tops of the other pieces (one-sided, as
+   * before: it meets them side on by `knock`).
+   */
+  private worldContacts(st: Moving, h: number): void {
+    const b = st.b
+    const v = b.velocity
+    const w = b.angularVelocity
+    const e = st.e
+    const pos = st.pos
+    st.world = []
+    st.worldIds = []
+    st.mus = []
+    const warm = b.warm && b.warm.length === WARM_SLOTS * 4 ? b.warm : null
+    let lowest = Infinity
+    const add = (i: number, r: Vec3, n: Vec3, sep: number, mu: PieceFriction): void => {
+      const pv: Vec3 = [v[0] + w[1] * r[2] - w[2] * r[1], v[1] + w[2] * r[0] - w[0] * r[2], v[2] + w[0] * r[1] - w[1] * r[0]]
+      const vn = pv[0] * n[0] + pv[1] * n[1] + pv[2] * n[2]
+      // as it moved before this substep's gravity: a thing at rest on a slope is held by the static grip, not let go by the pull it is to resist
+      const gy = pv[1] + this.o.gravity * h
+      const vn0 = pv[0] * n[0] + gy * n[1] + pv[2] * n[2]
+      const slip = Math.hypot(pv[0] - vn0 * n[0], gy - vn0 * n[1], pv[2] - vn0 * n[2])
+      st.world.push({
+        a: st.solver,
+        b: null,
+        ra: r,
+        rb: r,
+        n,
+        sep,
+        bounce: -vn > 2 && sep <= SLOP ? -0.25 * vn : 0,
+        mu,
+        slipping: slip > SLIP_SPEED,
+        accN: warm && i < WARM_SLOTS ? warm[i * 4] : 0,
+        accT: warm && i < WARM_SLOTS ? [warm[i * 4 + 1], warm[i * 4 + 2], warm[i * 4 + 3]] : [0, 0, 0],
+      })
+      st.worldIds.push(i)
+      st.mus.push(mu)
+    }
+    for (let i = 0; i < st.local.length; i++) {
+      const [sx, sy, sz] = st.local[i]
+      const r: Vec3 = [e[0] * sx + e[4] * sy + e[8] * sz, e[1] * sx + e[5] * sy + e[9] * sz, e[2] * sx + e[6] * sy + e[10] * sz]
+      const px = pos[0] + r[0]
+      const py = pos[1] + r[1]
+      const pz = pos[2] + r[2]
+      const fall = Math.max(0, -(v[1] + w[2] * r[0] - w[0] * r[2])) * h
+      const raw = this.o.groundAt(px, pz)
+      if (raw > py + STEP) {
+        // beneath a top (the height field cannot see under it): the point stands on the floor the piece last stood on
+        const floor = b.floor
+        if (floor !== undefined && floor < raw - STEP && py - floor < SLOP + fall + WORLD_MARGIN) add(i, r, UP, py - floor, pairFriction(b.friction, null))
+        continue
+      }
+      this.supportNormal = UP
+      this.supportFriction = null
+      const rise = STEP + fall * 2
+      const gy = b.round ? this.supportAt(b, px, py, pz, rise) : Math.max(raw, this.o.staticTopAt?.(px, pz, py, rise) ?? -Infinity)
+      const sep = py - gy
+      if (sep >= SLOP + fall + WORLD_MARGIN) continue
+      add(i, r, this.supportNormal, sep, pairFriction(b.friction, this.supportFriction))
+      lowest = Math.min(lowest, gy)
+    }
+    if (lowest < Infinity) b.floor = lowest
+    if (b.round) {
+      const ns = st.world.map((c) => c.n)
+      if (ns.length > 0) {
         const sum: Vec3 = [0, 0, 0]
         for (const one of ns) for (let k = 0; k < 3; k++) sum[k] += one[k]
         const len = Math.hypot(sum[0], sum[1], sum[2])
         b.surfaceNormal = len > 1e-6 ? [sum[0] / len, sum[1] / len, sum[2] / len] : UP
-      } else if (b.round && rs.length === 0) b.surfaceNormal = UP
-      if (side) {
-        // the side of the step stops the piece: back out of it, and the point loses the speed it had into the side
-        pos[0] -= side.dir[0] * side.back
-        pos[2] -= side.dir[1] * side.back
-        this.contactImpulse(b, e, side.r, [-side.dir[0], 0, -side.dir[1]], SIDE_BOUNCE)
+      } else b.surfaceNormal = UP
+    }
+  }
+
+  /** The fastest a point of the piece closes on what it touches (for `onHardLanding`), and where. */
+  private measureLanding(st: Moving, h: number): void {
+    const v = st.b.velocity
+    const w = st.b.angularVelocity
+    let impact = 0
+    let sx = 0
+    let sz = 0
+    let low = 0
+    let count = 0
+    for (const c of st.world) {
+      if (c.sep > SLOP + Math.max(0, -(v[1] + w[2] * c.ra[0] - w[0] * c.ra[2])) * h) continue
+      impact = Math.max(impact, -(v[1] + w[2] * c.ra[0] - w[0] * c.ra[2]))
+      sx += c.ra[0]
+      sz += c.ra[2]
+      low = Math.max(low, -c.ra[1])
+      count++
+    }
+    if (count === 0 || impact <= st.landing) return
+    st.landing = impact
+    st.landPoint = [st.pos[0] + sx / count, st.pos[1] - low, st.pos[2] + sz / count]
+  }
+
+  /** Keeps what each point of the piece gave this substep for the next one (warm start). */
+  private keepWarm(st: Moving): void {
+    const b = st.b
+    if (!b.warm || b.warm.length !== WARM_SLOTS * 4) b.warm = new Float64Array(WARM_SLOTS * 4)
+    const warm = b.warm
+    warm.fill(0)
+    for (let k = 0; k < st.world.length; k++) {
+      const id = st.worldIds[k]
+      if (id >= WARM_SLOTS) continue
+      const c = st.world[k]
+      warm[id * 4] = c.accN
+      warm[id * 4 + 1] = c.accT[0]
+      warm[id * 4 + 2] = c.accT[1]
+      warm[id * 4 + 3] = c.accT[2]
+    }
+  }
+
+  /**
+   * The move of a substep at the speeds the contacts left, then what the ground still asks: a point that came at the side of a step of the ground (a table's side) stops there,
+   * and one that turned into the ground is put back on it.
+   */
+  private moveBody(st: Moving, h: number): void {
+    const b = st.b
+    const v = b.velocity
+    const w = b.angularVelocity
+    const pos = st.pos
+    pos[0] += v[0] * h
+    pos[1] += v[1] * h
+    pos[2] += v[2] * h
+    for (let i = 0; i < 3; i++) {
+      st.solver.moved[i] = v[i] * h
+      st.solver.turned[i] = w[i] * h
+    }
+    const wl = Math.hypot(w[0], w[1], w[2])
+    if (wl > 1e-6) {
+      this.dq.setFromAxisAngle(this.ax.set(w[0] / wl, w[1] / wl, w[2] / wl), wl * h)
+      st.q.premultiply(this.dq).normalize()
+    }
+    // the air slows a box's spin a little; a round piece keeps rolling, held back only by its rolling resistance on the ground
+    const damp = b.round ? 1 : Math.exp(-0.15 * h)
+    w[0] *= damp
+    w[1] *= damp
+    w[2] *= damp
+    st.e = [...this.m.makeRotationFromQuaternion(st.q).elements]
+    const e = st.e
+    let side: { back: number; dir: [number, number]; r: Vec3 } | null = null
+    let maxPen = 0
+    let penNormal: Vec3 = UP
+    for (let i = 0; i < st.local.length; i++) {
+      const [sx, sy, sz] = st.local[i]
+      const r: Vec3 = [e[0] * sx + e[4] * sy + e[8] * sz, e[1] * sx + e[5] * sy + e[9] * sz, e[2] * sx + e[6] * sy + e[10] * sz]
+      const px = pos[0] + r[0]
+      const pz = pos[2] + r[2]
+      const cy = pos[1] + r[1]
+      const was = st.prev[i]
+      const raw = this.o.groundAt(px, pz)
+      if (raw > cy - SLOP && was[1] < raw - STEP) {
+        // under a top it was already beneath, or coming at its side: either way that top does not hold it
+        if (this.o.groundAt(was[0], was[2]) >= raw - STEP) {
+          const floor = b.floor
+          if (floor !== undefined && floor - cy > maxPen && floor < raw - STEP) {
+            maxPen = floor - cy
+            penNormal = UP
+          }
+          continue
+        }
+        const dx = px - was[0]
+        const dz = pz - was[2]
+        const len = Math.hypot(dx, dz)
+        if (len > 1e-6) {
+          // where along its move the point met the side: the first place the ground is up at this top
+          let lo = 0
+          let hi = 1
+          for (let it = 0; it < 6; it++) {
+            const mid = (lo + hi) / 2
+            if (this.o.groundAt(was[0] + dx * mid, was[2] + dz * mid) >= raw - STEP) hi = mid
+            else lo = mid
+          }
+          const back = (1 - lo) * len + 0.001
+          if (!side || back > side.back) side = { back, dir: [dx / len, dz / len], r }
+        }
+        continue
       }
-      contactedLast = rs.length > 0
-      if (contactedLast) touched = true
-      if (!contactedLast) continue
-      // a point `maxPen` under a surface of normal n is `maxPen * n.y` inside it, along n
-      const out = Math.max(0, maxPen - SLOP * 0.5) * penNormal[1]
+      this.supportNormal = UP
+      const gy = b.round ? this.supportAt(b, px, cy, pz, STEP) : Math.max(raw, this.o.staticTopAt?.(px, pz, cy, STEP) ?? -Infinity)
+      if (gy - cy > maxPen) {
+        maxPen = gy - cy
+        penNormal = this.supportNormal
+      }
+    }
+    if (side) {
+      // the side of the step stops the piece: back out of it, and the point loses the speed it had into the side
+      pos[0] -= side.dir[0] * side.back
+      pos[2] -= side.dir[1] * side.back
+      this.contactImpulse(b, e, side.r, [-side.dir[0], 0, -side.dir[1]], SIDE_BOUNCE)
+    }
+    // a point `maxPen` under a surface of normal n is `maxPen * n.y` inside it, along n; shallower, the position pass puts it back with the other contacts
+    if (maxPen > STEP) {
+      const out = (maxPen - SLOP * 0.5) * penNormal[1]
       pos[0] += penNormal[0] * out
       pos[1] += penNormal[1] * out
       pos[2] += penNormal[2] * out
-      let impact = 0
-      for (const r of rs) impact = Math.max(impact, -(v[1] + w[2] * r[0] - w[0] * r[2]))
-      const restitution = impact > 2 ? 0.25 : 0
-      if (impact > landing) {
-        landing = impact
-        let sx = 0
-        let sz = 0
-        for (const r of rs) {
-          sx += r[0]
-          sz += r[2]
-        }
-        const lx = pos[0] + sx / rs.length
-        const lz = pos[2] + sz / rs.length
-        landPoint = [lx, pos[1] - Math.max(...rs.map((r) => -r[1])), lz]
-      }
-      // Contact impulses, solved together: each point keeps the impulse it has given so far (pushing only, never pulling) and the friction it has
-      // given (within the paper's grip times that push), and every pass corrects them. Points spread unevenly under the box (a table's edge under
-      // half of it) then share the weight as they should, instead of the first ones handled kicking the box into a spin.
-      // the velocity of a point of the piece: v + w x r
-      const pointV = (r: Vec3): Vec3 => [v[0] + w[1] * r[2] - w[2] * r[1], v[1] + w[2] * r[0] - w[0] * r[2], v[2] + w[0] * r[1] - w[1] * r[0]]
-      const dot = (a: Vec3, c: Vec3): number => a[0] * c[0] + a[1] * c[1] + a[2] * c[2]
-      const goal = rs.map((r, k) => {
-        const vn = dot(pointV(r), ns[k])
-        return vn < 0 ? -restitution * vn : 0
-      })
-      // a point that slides drags with the dynamic friction, one that holds with the static one (Coulomb)
-      const slipping = rs.map((r, k) => {
-        // as it moved before this substep's gravity: a thing at rest on a slope is held by the static grip, not let go by the pull it is to resist
-        const pv = pointV(r)
-        pv[1] += this.o.gravity * h
-        const vn = dot(pv, ns[k])
-        return Math.hypot(pv[0] - vn * ns[k][0], pv[1] - vn * ns[k][1], pv[2] - vn * ns[k][2]) > SLIP_SPEED
-      })
-      // the step moved the piece at the speed it had before the contacts: what they took from it along the ground is taken from the move too, so
-      // a push the floor's grip holds does not creep the piece along
-      const vx0 = v[0]
-      const vz0 = v[2]
-      // warm start: each point starts from what it gave in the last substep (a resting box carries its weight from the first pass)
-      if (!b.warm || b.warm.length !== WARM_SLOTS * 4) b.warm = new Float64Array(WARM_SLOTS * 4)
-      const warm = b.warm
-      const accN = ids.map((id) => (id < WARM_SLOTS ? warm[id * 4] : 0))
-      const accT = ids.map((id): Vec3 => (id < WARM_SLOTS ? [warm[id * 4 + 1], warm[id * 4 + 2], warm[id * 4 + 3]] : [0, 0, 0]))
-      /** Gives the piece the impulse `j` (world) at `r`. */
-      const push = (r: Vec3, j: Vec3): void => {
-        v[0] += j[0] * invM
-        v[1] += j[1] * invM
-        v[2] += j[2] * invM
-        const dw = this.mulInvInertiaWith(b, e, r[1] * j[2] - r[2] * j[1], r[2] * j[0] - r[0] * j[2], r[0] * j[1] - r[1] * j[0])
-        w[0] += dw[0]
-        w[1] += dw[1]
-        w[2] += dw[2]
-      }
-      /** The mass the piece shows to an impulse along the unit `d` at `r`: 1 / (1/m + (I^-1 (r x d) x r) . d). */
-      const reach = (r: Vec3, d: Vec3): number => {
-        const a = this.mulInvInertiaWith(b, e, r[1] * d[2] - r[2] * d[1], r[2] * d[0] - r[0] * d[2], r[0] * d[1] - r[1] * d[0])
-        return invM + (a[1] * r[2] - a[2] * r[1]) * d[0] + (a[2] * r[0] - a[0] * r[2]) * d[1] + (a[0] * r[1] - a[1] * r[0]) * d[2]
-      }
-      for (let k = 0; k < rs.length; k++) {
-        const n = ns[k]
-        const t = accT[k]
-        if (accN[k] !== 0 || t[0] !== 0 || t[1] !== 0 || t[2] !== 0) push(rs[k], [n[0] * accN[k] + t[0], n[1] * accN[k] + t[1], n[2] * accN[k] + t[2]])
-      }
-      for (let it = 0; it < SOLVER_PASSES; it++) {
-        for (let k = 0; k < rs.length; k++) {
-          const r = rs[k]
-          const n = ns[k]
-          // the push along the normal of the surface (a tilted top pushes across it, not straight up)
-          const vn = dot(pointV(r), n)
-          const total = Math.max(0, accN[k] + (goal[k] - vn) / reach(r, n))
-          const j = total - accN[k]
-          accN[k] = total
-          if (j !== 0) push(r, [n[0] * j, n[1] * j, n[2] * j])
-          // friction in the plane of the surface, up to the static or dynamic coefficient times the push the point gives
-          const pv = pointV(r)
-          const pn = dot(pv, n)
-          const vt: Vec3 = [pv[0] - pn * n[0], pv[1] - pn * n[1], pv[2] - pn * n[2]]
-          const speed = Math.hypot(vt[0], vt[1], vt[2])
-          const f: Vec3 = [accT[k][0], accT[k][1], accT[k][2]]
-          if (speed > 1e-6) {
-            const d: Vec3 = [vt[0] / speed, vt[1] / speed, vt[2] / speed]
-            const jt = speed / reach(r, d)
-            f[0] -= d[0] * jt
-            f[1] -= d[1] * jt
-            f[2] -= d[2] * jt
-          } else if (f[0] === 0 && f[1] === 0 && f[2] === 0) continue
-          const most = (slipping[k] ? mus[k].dynamic : mus[k].static) * accN[k]
-          const fl = Math.hypot(f[0], f[1], f[2])
-          if (fl > most) {
-            f[0] *= most / fl
-            f[1] *= most / fl
-            f[2] *= most / fl
-          }
-          const dj: Vec3 = [f[0] - accT[k][0], f[1] - accT[k][1], f[2] - accT[k][2]]
-          accT[k] = f
-          if (dj[0] !== 0 || dj[1] !== 0 || dj[2] !== 0) push(r, dj)
-        }
-      }
-      pos[0] += (v[0] - vx0) * h
-      pos[2] += (v[2] - vz0) * h
-      warm.fill(0)
-      for (let k = 0; k < rs.length; k++) {
-        const id = ids[k]
-        if (id >= WARM_SLOTS) continue
-        warm[id * 4] = accN[k]
-        warm[id * 4 + 1] = accT[k][0]
-        warm[id * 4 + 2] = accT[k][1]
-        warm[id * 4 + 3] = accT[k][2]
-      }
-      // Support check. The corner contacts above are relative to the centre of mass, so they already give a torque when the centre of mass is
-      // outside the support. What they cannot do is end a balancing act: a tall thin piece on its edge (or a single corner) is in equilibrium
-      // with the centre of mass above a very small support, so it must not rest there. It gets a gentle topple push toward the side it leans
-      // to (or toward the wider side when it leans nowhere), and it may not sleep.
-      let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, low = 0
-      for (const r of rs) {
-        x0 = Math.min(x0, r[0]); x1 = Math.max(x1, r[0])
-        z0 = Math.min(z0, r[2]); z1 = Math.max(z1, r[2])
-        low = Math.min(low, r[1])
-      }
-      // held up through its overlap with a piece (`propped`), that point is a point of its support too
-      if (proppedAt) {
-        x0 = Math.min(x0, proppedAt[0]); x1 = Math.max(x1, proppedAt[0])
-        z0 = Math.min(z0, proppedAt[2]); z1 = Math.max(z1, proppedAt[2])
-      }
-      const height = -low
-      const wx = x1 - x0
-      const wz = z1 - z0
-      // a round piece lying on its side rests on a line: that is its rest, not a balancing act (it rolls if the ground slopes)
-      unstable = !b.round && (Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0)
-      if (b.tipping) {
-        b.tipping.seconds -= h
-        // lying is measured on the box as it is turned: a top corner held from above (a board it was joined to) says nothing of how it stands
-        const [hx, hy, hz] = b.halfExtents
-        const upHalf = Math.abs(e[1]) * hx + Math.abs(e[5]) * hy + Math.abs(e[9]) * hz
-        if (upHalf < TIP_LYING || b.tipping.seconds <= 0) b.tipping = null
-        else {
-          w[0] += b.tipping.x * TIP_ACCELERATION * h
-          w[2] += b.tipping.z * TIP_ACCELERATION * h
-          unstable = true
-        }
-      }
-      if (unstable) {
-        // the support centre relative to the centre of mass: the piece falls away from it (toward +axis when it is centred)
-        const dirX = x0 + x1 > 0 ? -1 : 1
-        const dirZ = z0 + z1 > 0 ? -1 : 1
-        const k = TOPPLE * Math.min(height, 1) * h
-        // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
-        if (wx <= wz) w[2] -= dirX * k
-        else w[0] += dirZ * k
-      }
-      // rolling / spinning resistance while touching the ground: a box loses its spin; a round piece rolls on, held back by its rolling resistance
-      // (a deceleration of C_RR g / r about the axis it rolls on) and a little spin about the others
-      if (b.round) {
-        let rolling = 0
-        for (const mu of mus) rolling = Math.max(rolling, mu.rolling ?? ROLLING_RESISTANCE)
-        this.rollingResistance(b, q, w, h, rolling)
-      } else {
-        const rd = Math.exp((rs.length >= 3 ? -3 : -1.5) * h)
-        w[0] *= rd
-        w[1] *= rd
-        w[2] *= rd
-        const fd = Math.exp(-0.3 * h)
-        v[0] *= fd
-        v[2] *= fd
+    }
+  }
+
+  /**
+   * After a substep, what the points that held the piece up say of it. The contacts are relative to the centre of mass, so they already turn it when the centre of mass is
+   * outside them. What they cannot do is end a balancing act: a tall thin piece on its edge (or a single corner) is in equilibrium with the centre of mass above a very small
+   * support, so it gets a gentle topple push toward the side it leans to and may not sleep. Then the spin it loses on the ground (a round piece: its rolling resistance).
+   */
+  private afterSubstep(st: Moving, h: number): void {
+    const b = st.b
+    const v = b.velocity
+    const w = b.angularVelocity
+    const rs = st.supports
+    st.contactedLast = rs.length > 0
+    if (!st.contactedLast) {
+      st.unstable = false
+      return
+    }
+    st.touched = true
+    const e = st.e
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, low = 0
+    for (const r of rs) {
+      x0 = Math.min(x0, r[0]); x1 = Math.max(x1, r[0])
+      z0 = Math.min(z0, r[2]); z1 = Math.max(z1, r[2])
+      low = Math.min(low, r[1])
+    }
+    const height = -low
+    const wx = x1 - x0
+    const wz = z1 - z0
+    // a round piece lying on its side rests on a line: that is its rest, not a balancing act (it rolls if the ground slopes)
+    let unstable = !b.round && (Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0)
+    if (b.tipping) {
+      b.tipping.seconds -= h
+      // lying is measured on the box as it is turned: a top corner held from above (a board it was joined to) says nothing of how it stands
+      const [hx, hy, hz] = b.halfExtents
+      const upHalf = Math.abs(e[1]) * hx + Math.abs(e[5]) * hy + Math.abs(e[9]) * hz
+      if (upHalf < TIP_LYING || b.tipping.seconds <= 0) b.tipping = null
+      else {
+        w[0] += b.tipping.x * TIP_ACCELERATION * h
+        w[2] += b.tipping.z * TIP_ACCELERATION * h
+        unstable = true
       }
     }
+    if (unstable) {
+      // the support centre relative to the centre of mass: the piece falls away from it (toward +axis when it is centred)
+      const dirX = x0 + x1 > 0 ? -1 : 1
+      const dirZ = z0 + z1 > 0 ? -1 : 1
+      const k = TOPPLE * Math.min(height, 1) * h
+      // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
+      if (wx <= wz) w[2] -= dirX * k
+      else w[0] += dirZ * k
+    }
+    st.unstable = unstable
+    if (b.round) {
+      let rolling = 0
+      for (const mu of st.mus) rolling = Math.max(rolling, mu.rolling ?? ROLLING_RESISTANCE)
+      this.rollingResistance(b, st.q, w, h, rolling)
+    } else {
+      const rd = Math.exp((rs.length >= 3 ? -3 : -1.5) * h)
+      w[0] *= rd
+      w[1] *= rd
+      w[2] *= rd
+      const fd = Math.exp(-0.3 * h)
+      v[0] *= fd
+      v[2] *= fd
+    }
+  }
 
+  /** The end of a step for a piece: what stands in its way (`sweep`), its new pose, its landing, and whether it sleeps. */
+  private finishMove(st: Moving, dt: number): void {
+    const b = st.b
+    const v = b.velocity
+    const w = b.angularVelocity
+    const pos = st.pos
+    const q = st.q
     // what stands in the way (a wall, a car): the piece stops against it, bounces a little and both take the blow
-    if (this.o.sweep && !b.held) this.sweepOn(b, start, pos)
-
-    // write back
+    if (this.o.sweep) this.sweepOn(b, st.start, pos)
     b.root.quaternion.copy(q)
     const off = this.ax.copy(b.centerV).applyQuaternion(q)
     b.root.position.set(pos[0] - off.x, pos[1] - off.y, pos[2] - off.z)
     b.root.updateMatrixWorld(true)
-    b.onGround = contactedLast
-
-    if (landing > HARD_LANDING && this.time - b.lastHit > 0.15) {
+    b.onGround = st.contactedLast
+    if (st.landing > HARD_LANDING && this.time - b.lastHit > 0.15) {
       b.lastHit = this.time
-      this.o.onHardLanding(b, landPoint, landing)
+      this.o.onHardLanding(b, st.landPoint, st.landing)
     }
-
-    const still = touched && !unstable && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
+    const still = st.touched && !st.unstable && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
     if (still) b.still += dt
     else b.still = 0
-    b.balancing = unstable
+    b.balancing = st.unstable
     this.keepsTilt(b, q, dt)
-    // held up through its overlap with what is under it (`propped`) it touches too: it may sleep where it stays, as a piece on its corners does
-    const held = (touched || propped !== undefined) && !b.tipping
+    const held = st.touched && !b.tipping
     if (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt)) this.sleep(b)
   }
 
   /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
   private sleep(b: PieceBody): void {
+    // what its contacts gave is forgotten: woken, it starts from nothing, not from a push of before it slept
+    b.warm = undefined
     b.restPoints = undefined
     b.sleeping = true
     b.calmAt = null
@@ -1222,12 +1520,6 @@ export class PieceSystem {
     for (let i = 0; i < 3; i++) w[i] = roll[i] * slow + rest[i] * damp
   }
 
-  /** Half the height of the box of a piece as it is turned now. */
-  private halfHeight(b: PieceBody): number {
-    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
-    return Math.abs(e[1]) * b.halfExtents[0] + Math.abs(e[5]) * b.halfExtents[1] + Math.abs(e[9]) * b.halfExtents[2]
-  }
-
   /**
    * Pieces against each other. Candidates by sweep and prune along x on their bounding spheres (sorted once per step: fifty cans cost a sort and a handful of pairs, not
    * 1225); a pair with a round piece in it meets by its shapes (`shapeContact`) and exchanges an impulse, two boxes are put apart by their separating axes (`separatePair`).
@@ -1255,18 +1547,14 @@ export class PieceSystem {
         const ca = centers[i]
         const cb = centers[j]
         if (Math.abs(ca[1] - cb[1]) > r || Math.abs(ca[2] - cb[2]) > r) continue
-        // one lies on the other (a book on a shelf): the corners hold them apart, a sideways push would slide it off
-        // (a round piece meets the other by their shapes, which tell lying on from beside: a can by a tall wardrobe whose middle is far above it still hits it)
-        const stacked = !a.round && !b.round && Math.abs(ca[1] - cb[1]) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9
-        // or on a tilted top (a table going over): the one above is over the other's top, whatever their boxes' heights
-        const onTop = this.onTopOf(b, a, new this.THREE.Vector3(...cb)) || this.onTopOf(a, b, new this.THREE.Vector3(...ca))
         if (a.round || b.round) {
-          if (!stacked && !onTop) this.knock(a, b, ca, cb)
+          // one on a tilted top (a table going over): the one above is over the other's top; a round piece meets the other by their shapes, which tell lying on from beside
+          const onTop = this.onTopOf(b, a, new this.THREE.Vector3(...cb)) || this.onTopOf(a, b, new this.THREE.Vector3(...ca))
+          if (!onTop) this.knock(a, b, ca, cb)
           continue
         }
-        // two boxes when a part of one is in a part of the other (a book lying in the hollow of a case on its back is inside its box, not in its boards); lying on each
-        // other, or one leaning on the other's part (a board on a bench's seat), the support holds them while they only touch: beside each other or deeper, they go apart
-        if (this.partsOverlap(a, b)) this.separatePair(a, b, ca, cb, dt, stacked || onTop || this.restsOn(a, b, false) || this.restsOn(b, a, false))
+        // two boxes deep inside each other: the contact solver leaves them, they slide apart along the ground
+        if (this.partsOverlap(a, b)) this.separatePair(a, b, ca, cb, dt)
       }
     }
     this.applyPushes(dt)
@@ -1416,15 +1704,12 @@ export class PieceSystem {
   }
 
   /**
-   * Two boxes overlapping, put apart by their separating axes (`shapeContact`); a held or sleeping piece is not moved. The move (`SEPARATE_SHARE` of the overlap less `SLOP`) is
-   * summed into `pushes` and bounded per piece in `applyPushes`.
-   * - Side by side (a normal at least `KNOCK_FLAT` level): apart along the ground only, as in `knock`, split by their inverse masses; the speed they close in with stops.
-   * - One over the other as deep as a contact (`LIFT_DEPTH` and what the closing speed sank them this step): left alone when `resting` (stacked, on a top, leaning on a
-   *   part: its support holds it); else only the upper rises, held up by the lower (`propped`), and its point in the lower stops sinking (`contactImpulse`): never a kick up.
-   * - One over the other deeper than that: they were made inside each other (chunks of one wall), or stand on one floor side by side. Lifting the upper out would give it
-   *   m g d nothing supplied (a 3 m chunk climbing 5 m through a pile), so they slide apart along the ground by their least level overlap (`boxesAlongGround`).
+   * Two boxes made deep inside each other (deeper than a contact, `LIFT_DEPTH` and what the closing speed sinks them in a step: chunks of one wall), which the contact solver
+   * leaves alone. Lifting the upper out would give it m g d nothing supplied (a 3 m chunk climbing 5 m through a pile), so they slide apart along the ground (by their normal when
+   * it is level, else by their least level overlap, `boxesAlongGround`), `SEPARATE_SHARE` of the overlap per step, summed into `pushes` and bounded in `applyPushes`. A held or
+   * sleeping piece is not moved.
    */
-  private separatePair(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number, resting: boolean): void {
+  private separatePair(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number): void {
     const sa = this.contactShape(a, ca)
     const sb = this.contactShape(b, cb)
     const hit = shapeContact(sa, sb)
@@ -1432,47 +1717,17 @@ export class PieceSystem {
     const ima = a.held || a.sleeping ? 0 : 1 / a.mass
     const imb = b.held || b.sleeping ? 0 : 1 / b.mass
     if (ima + imb === 0) return
-    if (Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT) {
-      this.slideApart(a, b, ima, imb, hit)
-      return
-    }
     const n = hit.normal
     const va = a.velocity
     const vb = b.velocity
     const contact = LIFT_DEPTH + Math.max(0, -((va[0] - vb[0]) * n[0] + (va[1] - vb[1]) * n[1] + (va[2] - vb[2]) * n[2])) * dt
-    if (hit.depth > contact) {
-      const level = boxesAlongGround(sa, sb)
-      if (level) this.slideApart(a, b, ima, imb, level)
+    if (hit.depth <= contact) return
+    if (Math.hypot(n[0], n[2]) > KNOCK_FLAT) {
+      this.slideApart(a, b, ima, imb, hit)
       return
     }
-    if (resting) return
-    const [upper, c, up]: [PieceBody, Vec3, Vec3] = n[1] > 0 ? [a, ca, n] : [b, cb, [-n[0], -n[1], -n[2]]]
-    if (upper.held || upper.sleeping) return
-    upper.propped = up
-    const e = this.m.makeRotationFromQuaternion(upper.root.quaternion).elements
-    const r: Vec3 = [hit.point[0] - c[0], hit.point[1] - c[1], hit.point[2] - c[2]]
-    upper.proppedAt = r
-    // the contact point comes out as a push at that point does (as the impulse below): the body moves by its share of the lift and turns by the rest, so what it still
-    // stands on elsewhere (a corner on the ground) is not carried up with it and left to fall back into the same neighbour
-    const turn = this.mulInvInertiaWith(upper, e, r[1] * up[2] - r[2] * up[1], r[2] * up[0] - r[0] * up[2], r[0] * up[1] - r[1] * up[0])
-    const angular = (turn[1] * r[2] - turn[2] * r[1]) * up[0] + (turn[2] * r[0] - turn[0] * r[2]) * up[1] + (turn[0] * r[1] - turn[1] * r[0]) * up[2]
-    const lift = (SEPARATE_SHARE * Math.max(0, hit.depth - SLOP)) / (1 + angular * upper.mass)
-    // lifted by several pieces under it at once (a sheet across three slabs) it needs the deepest of them, not all: each overlap is measured from where it stood, and their sum
-    // would lift it clear of all and leave it to fall back into them, step after step
-    const push = this.pushes.get(upper) ?? [0, 0, 0]
-    for (let i = 0; i < 3; i++) push[i] = Math.abs(up[i] * lift) > Math.abs(push[i]) ? up[i] * lift : push[i]
-    this.pushes.set(upper, push)
-    this.turnAboutCentre(upper, c, [turn[0] * lift * upper.mass, turn[1] * lift * upper.mass, turn[2] * lift * upper.mass])
-    this.contactImpulse(upper, e, r, up, 0)
-  }
-
-  /** Turns a piece by the rotation vector `by` (rad) about its centre `c`, which stays where it is. */
-  private turnAboutCentre(b: PieceBody, c: Vec3, by: Vec3): void {
-    const angle = Math.hypot(by[0], by[1], by[2])
-    if (angle < 1e-9) return
-    b.root.quaternion.premultiply(this.dq.setFromAxisAngle(this.ax.set(by[0] / angle, by[1] / angle, by[2] / angle), angle)).normalize()
-    const off = this.ax.copy(b.centerV).applyQuaternion(b.root.quaternion)
-    b.root.position.set(c[0] - off.x, c[1] - off.y, c[2] - off.z)
+    const level = boxesAlongGround(sa, sb)
+    if (level) this.slideApart(a, b, ima, imb, level)
   }
 
   /** Two boxes put apart along the ground by `hit` (its normal from `b` to `a`, laid level), split by their inverse masses; the speed they close in with along it stops. */

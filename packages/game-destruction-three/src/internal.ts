@@ -115,13 +115,6 @@ export interface PieceBody extends Piece {
   /** Height of the lowest support the piece last stood on: the floor under a top it was put beneath. */
   floor?: number
   /**
-   * In the last step it was held up by a piece under it through their overlap (`separatePair`), not by a corner on a top (a case lying across two books by its middle): the
-   * normal of that support, up from it.
-   */
-  propped?: Vec3
-  /** Where it is held up through that overlap, from its centre of mass (world): a point of its support, with the corners that touch. */
-  proppedAt?: Vec3
-  /**
    * The points that touch the ground in place of the corners of its box (its frame, from the centre of mass): the corners of each part left of it. A top left on one leg
    * stands on that leg's foot, so it goes over, and lands on the edge of the top.
    */

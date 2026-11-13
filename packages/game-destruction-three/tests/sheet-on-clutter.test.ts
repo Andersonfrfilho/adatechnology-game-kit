@@ -3,15 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { measureLift } from './lift-measure'
 
-type Body = { objectId: string; root: THREE.Object3D; velocity: number[] }
-type Internals = {
-  pushes: Map<Body, number[]>
-  applyPushes: (dt: number) => void
-  separatePair: (a: Body, b: Body, ca: number[], cb: number[], dt: number, resting: boolean) => void
-}
-
-/** A thin 1.2 x 1.2 m sheet laid over a clutter of slabs and boards that lies asleep on flat ground, by a fixed seed; what separation lifts and how fast it sends anything up. */
+/**
+ * A thin 1.2 x 1.2 m sheet laid over a clutter of slabs and boards that lies asleep on flat ground, by a fixed seed: the most any piece is carried up beyond its own flight
+ * and the fastest any is sent up by an update (`measureLift`).
+ */
 const dropOnClutter = (seed: number): { lift: number; fastestUp: number } => {
   let state = seed * 9301 + 49297
   const next = (): number => ((state = (state * 1103515245 + 12345) % 2147483648) / 2147483648)
@@ -28,30 +25,23 @@ const dropOnClutter = (seed: number): { lift: number; fastestUp: number } => {
     scene.add(root)
     root.updateMatrixWorld(true)
     renderer.bind(id, root, { parts: { body: mesh } })
-    return renderer.makePiece(id)
+    const piece = renderer.makePiece(id)
+    pieces.push(piece)
+    return piece
   }
-  const internals = (renderer as unknown as { pieceSys: Internals }).pieceSys
-  const lifted = new Map<Body, number>()
-  let fastestUp = 0
-  const applyPushes = internals.applyPushes.bind(internals)
-  internals.applyPushes = (dt) => {
-    const before = [...internals.pushes.keys()].map((body): [Body, number] => [body, body.root.position.y])
-    applyPushes(dt)
-    for (const [body, y] of before) if (body.root.position.y > y) lifted.set(body, (lifted.get(body) ?? 0) + body.root.position.y - y)
-  }
-  const separatePair = internals.separatePair.bind(internals)
-  internals.separatePair = (a, b, ca, cb, dt, resting) => {
-    separatePair(a, b, ca, cb, dt, resting)
-    for (const body of [a, b]) fastestUp = Math.max(fastestUp, body.velocity[1])
-  }
+  const pieces: Piece[] = []
   for (let i = 0; i < 4; i++) box(`slab${i}`, [0.5 + next() * 0.7, 0.04 + next() * 0.04, 0.3 + next() * 0.4], [(next() - 0.5) * 1.4, 0.03, (next() - 0.5) * 1.4], [0, next() * 3, 0])
   for (let i = 0; i < 3; i++) box(`board${i}`, [0.64, 0.3, 0.04], [(next() - 0.5) * 1.6, 0.15, (next() - 0.5) * 1.6], [0, next() * 3, (next() - 0.5) * 1.2])
   for (let i = 0; i < 120; i++) renderer.update(1 / 60)
   box('sheet', [1.2, 0.04, 1.2], [(next() - 0.5) * 0.6, 0.06 + next() * 0.03, (next() - 0.5) * 0.6], [(next() - 0.5) * 0.06, next() * 3, (next() - 0.5) * 0.06])
-  lifted.clear()
-  fastestUp = 0
-  for (let i = 0; i < 300; i++) renderer.update(1 / 60)
-  return { lift: Math.max(0, ...lifted.values()), fastestUp }
+  const lifts = measureLift(() => pieces, (dt) => renderer.update(dt), 1 / 60, 300)
+  let lift = 0
+  let fastestUp = 0
+  for (const r of lifts.values()) {
+    lift = Math.max(lift, r.lift)
+    fastestUp = Math.max(fastestUp, r.up)
+  }
+  return { lift, fastestUp }
 }
 
 describe('a sheet laid over clutter', () => {
