@@ -5,17 +5,21 @@ import type { HouseRecord, Kernel, KernelHouseStairs, Shared, StairRecord } from
 export function installHouseStairs(K: Kernel, shared: Shared): void {
   const { rectsOf, Y0, boxC, bx, cursor, flights, stairFootprint, structurePiece } = K;
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
+  // a plan's 3.14 or -1.57 is a quarter turn (outside the Visor's scene): the flight stands square to the walls it runs along
+  const squareTurn = (ry: number): number => { if (shared.ctx.visorScene) return ry; const quarter = Math.round(ry / (Math.PI / 2)); return Math.abs(ry - quarter * Math.PI / 2) < 0.01 ? quarter * Math.PI / 2 : ry; };
   function buildStairs(): void {
     const R: HouseRecord = shared.ctx.r, stairs: StairRecord[] = shared.ctx.stairs = [];
+    // outside the Visor's scene a flight keeps out of the walls and the floors it runs into (its top step lay on the upper floor's plane)
+    if (!shared.ctx.visorScene) shared.ctx.keepOut = shared.ctx.occupied.concat(shared.ctx.floorFinishes);
     for (const vo of flights()) {
-      const m = vo.m, f = vo.from, Dr = m.d - (vo.LP || 0); cursor.group = 'f' + f; cursor.pc = structurePiece('stairs_' + vo.from + '_' + vo.to); const y0 = Y0(f), H = Y0(vo.to) - y0 /* vo.to is the stair's link.to */, n = Math.max(8, Math.round(H / 0.18)), c = Math.cos(m.ry), s = Math.sin(m.ry);
+      const m = vo.m, f = vo.from, Dr = m.d - (vo.LP || 0); cursor.group = 'f' + f; cursor.pc = structurePiece('stairs_' + vo.from + '_' + vo.to); const y0 = Y0(f), H = Y0(vo.to) - y0 /* vo.to is the stair's link.to */, n = Math.max(8, Math.round(H / 0.18)), ry = squareTurn(m.ry), c = Math.cos(ry), s = Math.sin(ry);
       const wood = shared.ctx.colors.wood != null ? shared.ctx.colors.wood : 0x8a6a48, under = sh(wood, 0.7);
       const P = (lx: number, lz: number): [number, number] => [m.x + lx * c + lz * s, m.z - lx * s + lz * c];
-      const boxL = (mat: string, lx: number, y: number, lz: number, w: number, h: number, d: number, color: number, rx = 0): void => { const [px, pz] = P(lx, lz); boxC(mat, px, y, pz, w, h, d, color, rx, m.ry, 0); };
+      const boxL = (mat: string, lx: number, y: number, lz: number, w: number, h: number, d: number, color: number, rx = 0): void => { const [px, pz] = P(lx, lz); boxC(mat, px, y, pz, w, h, d, color, rx, ry, 0); };
       for (let i = 0; i < n; i++) {
         const top = (i + 1) * H / n, lz = m.d / 2 - (i + 0.5) * Dr / n;
         boxL('wood', 0, y0 + top - 0.03, lz, m.w - 0.08, 0.06, Dr / n + 0.03, wood); // step
-        boxL('wood', 0, y0 + top - H / n / 2, lz + Dr / n / 2, shared.ctx.visorScene ? m.w - 0.08 : m.w - 0.084, H / n, 0.025, under); // riser (2 mm inside the step's sides)
+        if (shared.ctx.visorScene) boxL('wood', 0, y0 + top - H / n / 2, lz + Dr / n / 2, m.w - 0.08, H / n, 0.025, under); else boxL('wood', 0, y0 + top - H / n / 2 - 0.001, lz + Dr / n / 2, m.w - 0.084, H / n - 0.002, 0.025, under); // riser (2 mm inside the step's sides and under its top)
       }
       const L = Math.hypot(Dr, H), al = Math.atan2(H, Dr), lzc = m.d / 2 - Dr / 2;
       for (const sd of [-1, 1]) {
@@ -26,6 +30,7 @@ export function installHouseStairs(K: Kernel, shared: Shared): void {
       }
       cursor.pc = null; stairs.push({ m, f, to: vo.to, y0, H, rect: stairFootprint(m), landingPoint: (vo.LP || 0) / m.d });
     }
+    shared.ctx.keepOut = undefined;
   }
   function elevator(): void {
     const R: HouseRecord = shared.ctx.r;
