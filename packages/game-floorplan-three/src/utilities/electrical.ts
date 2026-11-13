@@ -101,6 +101,15 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
     const slabs = stagedSlabsOf(R.structure, R.outbuildings);
     // where the slab's underside is over a point: the rough-in's socket hangs from it, the finished one from the rendered ceiling
     const undersideAt = (x: number, z: number, ceiling: number): number => slabs.reduce((low, slab) => (slab.aabb[0] <= x && x <= slab.aabb[2] && slab.aabb[1] <= z && z <= slab.aabb[3] && slab.y1 >= ceiling - MEMBER_REACH && slab.y1 <= ceiling + MEMBER_THICKNESS && slab.y0 < low ? slab.y0 : low), ceiling);
+    // a box set in a wall stands 2 mm clear of the end of a piece of the wall (a pillar or an opening splits it there): a side a millimetre off it lay on its plane
+    const clearOfWallEnds = (alongU: boolean, box: readonly number[]): number => {
+      const a = alongU ? 0 : 2, o = alongU ? 2 : 0;
+      for (const t of shared.ctx.occupied) {
+        if (t[1] >= box[4]! || t[4] <= box[1]! || t[o] >= box[o + 3]! || t[o + 3] <= box[o]!) continue;
+        for (const p of [t[a], t[a + 3]]) for (const end of [box[a]!, box[a + 3]!]) if (Math.abs(p - end) < 0.002) return end <= p ? p - 0.002 - end : p + 0.002 - end;
+      }
+      return 0;
+    };
     const boundsOf = (roomId: string | null | undefined, x: number, z: number): Bounds => {
       const rects = shared.ctx.roomById[roomId ?? '']?.parts ?? [], rect = rects.find((r) => r[0] <= x && x <= r[2] && r[1] <= z && z <= r[3]) ?? rects[0];
       return rect ? [rect[0] + WALL_HALF, rect[1] + WALL_HALF, rect[2] - WALL_HALF, rect[3] - WALL_HALF] : [-Infinity, -Infinity, Infinity, Infinity];
@@ -120,7 +129,8 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       part('electrical_box', [0, 0, 0], () => {
         for (const t of wallBoxes) {
           const point = { u: t.u, v: t.v, y: t.y, frontU: t.frontU || 0, frontV: t.frontV || 0 }, box = wallBoxExtent(point, wallBehindOf(R.walls, { ...point, floor: t.floor })), y = floorY(t.floor);
-          bx('plain', box.u0, y + box.y0, box.v0, box.u1, y + box.y1, box.v1, BOX_COLOR);
+          const shift = shared.ctx.visorScene ? 0 : clearOfWallEnds(Math.abs(point.frontV) >= Math.abs(point.frontU), [box.u0, y + box.y0, box.v0, box.u1, y + box.y1, box.v1]);
+          if (Math.abs(point.frontV) >= Math.abs(point.frontU)) bx('plain', box.u0 + shift, y + box.y0, box.v0, box.u1 + shift, y + box.y1, box.v1, BOX_COLOR); else bx('plain', box.u0, y + box.y0, box.v0 + shift, box.u1, y + box.y1, box.v1 + shift, BOX_COLOR);
         }
         for (const it of lights) cylBase('plain', it.x, ceilingOf(it) - 0.005, it.z, OCTAGONAL_BOX[0] / 2, OCTAGONAL_BOX[1], BOX_COLOR);
       }, { id: 'boxes:f' + f, hidden: true }, 'f' + f);
