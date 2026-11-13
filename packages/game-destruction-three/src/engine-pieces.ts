@@ -380,17 +380,20 @@ export class EnginePieces {
     const w = b.angularVelocity
     const v = b.velocity
     // turned about the edge of its support it goes over (about its centre of mass it would press that edge into the floor, and the contact would take it back):
-    // the spin, and the speed of the centre of mass that goes with it about that edge
+    // the spin, and the speed of the centre of mass that goes with it about that edge. Only while the centre is still over the edge it turns about: once past it,
+    // gravity takes it over; pushed on through the fall, a 3 kg sheet 5 m wide was driven down faster than it falls (4 cm of energy made in the room)
     if (wx <= wz) {
-      const dw = -dirX * k
-      const rx = -(dirX > 0 ? x1 : x0)
+      const edge = dirX > 0 ? x1 : x0
+      const dw = edge * dirX > 0 ? -dirX * k : 0
+      const rx = -edge
       const ry = -low
       w[2] += dw
       v[0] += -dw * ry
       v[1] += dw * rx
     } else {
-      const dw = dirZ * k
-      const rz = -(dirZ > 0 ? z1 : z0)
+      const edge = dirZ > 0 ? z1 : z0
+      const dw = edge * dirZ > 0 ? dirZ * k : 0
+      const rz = -edge
       const ry = -low
       w[0] += dw
       v[1] += -dw * rz
