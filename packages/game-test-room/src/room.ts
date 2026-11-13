@@ -4075,6 +4075,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     simulationStamp++
+    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
     renderer.update(dt)
     destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()

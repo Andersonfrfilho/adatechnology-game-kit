@@ -3,6 +3,7 @@ import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology
 import type { SurfaceSpec } from '@adatechnology/game-fluids'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { brickWallSpec } from './items'
+import { snapSunShadow } from './sun-shadow'
 import type { SceneryObject, SceneryTap } from './types'
 
 export interface ArenaObject {
@@ -52,6 +53,8 @@ export interface Arena {
   /** Where the tap pours: over the top of the `table` object; null when the room has no table with a top. */
   tapSpout: Vec3 | null
   sun: THREE_NS.DirectionalLight
+  /** Moves the sun's shadow frustum to the camera (snapped to the shadow map's texels). */
+  followSun(focus: Vec3): void
 }
 
 /** Box of a spec in world space, ignoring the parts that lie flat on the floor (a plinth, a ground slab: the player walks over them). */
@@ -173,7 +176,8 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   // the ground colour is what the underside of a slab reads in shade (no sun reaches it): light concrete-grey ground bounce, so it shows grey and not near black
   group.add(new THREE.HemisphereLight(HEMISPHERE_SKY, HEMISPHERE_GROUND, HEMISPHERE_INTENSITY))
   const sun = new THREE.DirectionalLight(0xffffff, 2.1)
-  sun.position.set(7, 13, 8)
+  const SUN_OFFSET: Vec3 = [7, 13, 8]
+  sun.position.set(...SUN_OFFSET)
   sun.castShadow = true
   sun.shadow.mapSize.set(1024, 1024)
   const sc = sun.shadow.camera
@@ -187,6 +191,13 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   // a texel of the map is 3 cm: a face nearly along the sun shades itself in stripes (acne) without pushing the lookup out along its normal
   sun.shadow.normalBias = 0.03
   group.add(sun)
+  group.add(sun.target)
+  // the frustum follows the camera, in whole texels, so shadows near the player are always inside it and never swim
+  const followSun = (focus: Vec3): void => {
+    const frame = snapSunShadow({ focus: [focus[0], 0, focus[2]], offset: SUN_OFFSET, half: sc.right, mapSize: sun.shadow.mapSize.x })
+    sun.target.position.set(...frame.target)
+    sun.position.set(...frame.position)
+  }
 
   const sceneryObjects = resolveScenery(scenery)
   const wallObject = sceneryObjects.find((o) => o.id === WALL_ID)
@@ -316,5 +327,6 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     tops,
     tapSpout,
     sun,
+    followSun,
   }
 }
