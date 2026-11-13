@@ -27,6 +27,8 @@ export interface UtilitiesContext {
   /** The outbuildings of the lot: each is wired as a room of the house. */
   outbuildings?: readonly Outbuilding[]
   energy?: EnergyConfig
+  /** The Visor de casas 3D's installations as they were (`visorSections`): its gas, no shelter. */
+  visor?: boolean
   /** Seeded stream by name: `gas`, `electrical`, `solar`. */
   rngFor(key: string): Rng
 }
@@ -34,10 +36,10 @@ export interface UtilitiesContext {
 /** Gas, electricity, solar panels and plumbing of a house, in the order that lets the later ones see the cylinders the first adds to `items`. */
 export function planUtilities(context: UtilitiesContext): Utilities {
   const { plan, items, stateItems, tank, energy, rngFor } = context
-  const gas = planGas({ plan, items, stateItems, rng: rngFor('gas') })
+  const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}) })
   // the outbuildings are wired as rooms of the house, their ceiling lights with them
   const outbuildings = context.outbuildings ?? []
-  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), ...(energy ? { energy } : {}) })
+  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}) })
   const solar = planSolar({ plan, rng: rngFor('solar'), ...(energy ? { energy } : {}) })
   const plumbing = planPlumbing({ plan, items, tank })
   return { gas, electrical, solar, plumbing }

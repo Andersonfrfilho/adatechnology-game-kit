@@ -1,5 +1,6 @@
 export { createHousehold, HOUSEHOLD_ITEM_IDS, HOUSEHOLD_TYPES, HOUSEHOLD_REGIONS } from './create'
 export { STOVE_WALL_GAP } from './builders/kitchen'
+export { WALL_PLATE } from './builders/electrical'
 export { createRecorder } from './recorder'
 export type { HouseholdRecorder, RecordedPart } from './recorder'
 export { cornersOf, motionPoint, sweepOf } from './util'

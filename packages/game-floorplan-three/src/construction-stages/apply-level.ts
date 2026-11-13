@@ -186,9 +186,9 @@ export function applyConstructionLevel(
       if (obj === child) return
       const ud = obj.userData
       if (!ud) return
-      // the lamp holder hangs from its box from the rough-in until the fitting goes up; its bare bulb once the walls are rendered
+      // the socket hangs from the slab's underside in the rough-in and from the rendered ceiling once the walls are rendered, with its lamp; the fitting goes up after
       if (ud.part === 'lamp_holder' || ud.part === 'lamp_bulb') {
-        obj.visible = level >= (ud.part === 'lamp_bulb' ? 5 : 4) && level <= 7
+        obj.visible = typeof ud.id !== 'string' || (ud.mount === 'slab' ? level === 4 : level >= 5 && level <= 7)
         return
       }
       if (typeof ud.part === 'string' && EMBEDDED.has(ud.part)) {

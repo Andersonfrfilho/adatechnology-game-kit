@@ -12,6 +12,7 @@ import type { RoutableElectrical } from '../construction-stages/installation-rou
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
 import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
 import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
+import { WALL_BOX, wallBehindOf, wallBoxExtent } from '../utilities/wall-box.js';
 
 import type * as THREE_NS from 'three';
 import type { Outbuilding, Structure } from '@adatechnology/game-floorplan-structure';
@@ -60,6 +61,23 @@ function embeddedRunsOf(house: THREE_NS.Object3D): EmbeddedRun[] {
     }
   });
   return out;
+}
+
+/** What a box's chase leaves round it, metres: no face of the box within a millimetre of a brick's or the mortar's. */
+const BOX_CHASE_CLEAR = 0.003
+
+/**
+ * The 4x2 boxes of the switches and outlets as runs for the masonry: each is cut into the wall in a chase as wide as the box (its half width as the run's
+ * radius) and as high, a few millimetres round it, so no unit's end or mortar fill ends on a side of the box.
+ */
+function wallBoxRunsOf(r: HouseRecord): EmbeddedRun[] {
+  const E = r.utilities?.electrical;
+  if (!E) return [];
+  return [...(E.switches || []), ...(E.outlets || [])].map((t) => {
+    const point = { u: t.u, v: t.v, y: t.y, frontU: t.frontU || 0, frontV: t.frontV || 0 }, box = wallBoxExtent(point, wallBehindOf(r.walls, { ...point, floor: t.floor }));
+    const y0 = r.floors[Math.max(0, Math.min(r.floors.length - 1, t.floor))]?.y0 ?? 0;
+    return { u: (box.u0 + box.u1) / 2, v: (box.v0 + box.v1) / 2, y0: y0 + box.y0 - BOX_CHASE_CLEAR, y1: y0 + box.y1 + BOX_CHASE_CLEAR, radius: WALL_BOX.along / 2 };
+  });
 }
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
@@ -194,7 +212,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         if (cs) {
           const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
           // the masonry is laid with the chases of the runs that go up and down inside it
-          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], embeddedRunsOf(house));
+          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r)]);
           const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? []);
           const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || []);
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer

@@ -180,9 +180,9 @@
   {
     "id": "wall_socket",
     "group": "electrical",
-    "w": 0.08,
+    "w": 0.075,
     "d": 0.03,
-    "h": 0.08,
+    "h": 0.12,
     "y": 0.3,
     "solid": false,
     "massKg": 0.05
@@ -190,9 +190,9 @@
   {
     "id": "wall_switch",
     "group": "electrical",
-    "w": 0.08,
+    "w": 0.075,
     "d": 0.03,
-    "h": 0.08,
+    "h": 0.12,
     "y": 1.2,
     "solid": false,
     "massKg": 0.05

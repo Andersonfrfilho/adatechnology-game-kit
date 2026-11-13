@@ -2,7 +2,8 @@ import type { PlanDoor, ResultItem, Room } from '@adatechnology/game-floorplan'
 import type { Layout } from './electrical'
 import { heightOf, keyOf } from './electrical'
 import { mainDoorOf } from './electrical-entrance'
-import { round2 } from './shared'
+import { OUTDOOR_LAMP_TYPE } from './lamp-types'
+import { alongRange, outwardOf, round2 } from './shared'
 import { atDoor, hasWindowAt, wallPointsOf } from './wall-points'
 import type { WallPoint } from './wall-points'
 import type { Circuit, Point3, WallFixture } from './types'
@@ -45,7 +46,9 @@ export function addSwitches(layout: Layout): void {
   }
   if (door && plan.lot) {
     const id = `outdoor_${door.id}`
-    electrical.outdoorLamps.push({ id, u: round2(door.at + door.width / 2 + 0.32), v: round2(door.pos), y: 2.15, door: door.id, switch: electrical.switches.find((s) => s.controls.includes(id))?.id ?? null })
+    const wall = plan.walls.find((w) => w.floor === door.floor && w.axis === door.axis && Math.abs((door.axis === 'u' ? w.v0 : w.u0) - door.pos) < 0.05 && alongRange(w)[0] <= door.at && alongRange(w)[1] >= door.at)
+    const [frontU, frontV] = wall ? outwardOf(wall) : [0, -1]
+    electrical.outdoorLamps.push({ id, u: round2(door.at + door.width / 2 + 0.32), v: round2(door.pos), y: 2.15, door: door.id, switch: electrical.switches.find((s) => s.controls.includes(id))?.id ?? null, lamp: OUTDOOR_LAMP_TYPE, frontU, frontV })
   }
 }
 
