@@ -679,7 +679,7 @@ describe('explode without an exploding part', () => {
 
 describe('explode with a blast report', () => {
   const shoved = (report: Parameters<ReturnType<typeof setup>['renderer']['explode']>[3]) => {
-    const { world, renderer, scene } = setup()
+    const { world, renderer, scene } = setup({ blastShove: {} })
     world.addObject('crate', [partState('box', 'wood', { mass: 10 })])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6))
     const root = new THREE.Group()
@@ -777,13 +777,25 @@ describe('the shove of a blast', () => {
       renderer.explode([0, 0.2, 0], 50000, 8, { visual: false })
       return Math.hypot(...piece.velocity)
     }
-    const near = speedAt({}, 2)
-    const far = speedAt({}, 5)
+    const near = speedAt({ blastShove: {} }, 2)
+    const far = speedAt({ blastShove: {} }, 5)
     expect(near).toBeGreaterThan(far)
     expect(far).toBeGreaterThan(0)
     expect(speedAt({ blastShove: { coupling: 0.04 } }, 2)).toBeGreaterThan(near)
     expect(speedAt({ blastShove: { maxSpeed: 0.5 } }, 2)).toBeLessThan(0.55)
     expect(speedAt({ blastShove: { minSpeed: 100 } }, 2)).toBe(0)
+  })
+
+  it('without numbers from the host the push is the blast wave: a 10 kg crate 0.9 m from a hand grenade leaves at single digits, a 60 kg one at about 1 m/s', () => {
+    const speedOf = (mass: number): number => {
+      const { renderer } = crate({}, 0.9, mass)
+      const piece = renderer.makePiece('crate', { mass })
+      renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+      return Math.hypot(...piece.velocity)
+    }
+    expect(speedOf(10)).toBeGreaterThan(3)
+    expect(speedOf(10)).toBeLessThan(10)
+    expect(speedOf(60)).toBeLessThan(1.5)
   })
 
   it('is cut by the cover the world finds between the centre and the piece (blastReach), the piece itself and the explosive left out', () => {
@@ -811,7 +823,7 @@ describe('the shove of a blast', () => {
 
   it('makes a bound object without a piece one when the host lets a blast move it, and only then', () => {
     const loosened: string[] = []
-    const { renderer, root } = crate({ shoveable: (id) => id === 'crate', onLoosened: (id) => loosened.push(id) }, 3, 60)
+    const { renderer, root } = crate({ blastShove: {}, shoveable: (id) => id === 'crate', onLoosened: (id) => loosened.push(id) }, 3, 60)
     expect(renderer.piece('crate')).toBeNull()
     renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
     const piece = renderer.piece('crate')
@@ -821,11 +833,11 @@ describe('the shove of a blast', () => {
     for (let i = 0; i < 30; i++) renderer.update(1 / 60)
     expect(root.position.x).toBeGreaterThan(3.5)
 
-    const fixed = crate({ shoveable: () => false }, 3, 60)
+    const fixed = crate({ blastShove: {}, shoveable: () => false }, 3, 60)
     fixed.renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
     expect(fixed.renderer.piece('crate')).toBeNull()
 
-    const far = crate({ shoveable: () => true }, 7.9, 60)
+    const far = crate({ blastShove: {}, shoveable: () => true }, 7.9, 60)
     far.renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
     expect(far.renderer.piece('crate')).toBeNull()
   })

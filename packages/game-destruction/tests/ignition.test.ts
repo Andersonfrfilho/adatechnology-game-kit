@@ -107,7 +107,9 @@ describe('a container of flammable fluid hit by a round', () => {
         w.hit(crate, { type: 'fire', point: [fireAt, 0.2, 0], temperature: 900, radius: 0.5, duration: 5 })
         for (let i = 0; i < 20; i++) w.update(0.1)
       }
-      if (blast) w.explode([1.2, 0.2, 0], 5000, 2)
+      // 5 kJ is 6 g of TNT: its fireball is 1.3 x 0.006^(1/3) = 0.24 m wide, so it lights the leak when it goes off beside the can (0.5 m from its centre, 0.16 m
+      // from its 0.34 m bounding sphere), not 1.2 m away as the test had it with the game radius of the blast
+      if (blast) w.explode([0.5, 0.2, 0], 5000, 2)
       let events: DestructionEvent[] = []
       for (let i = 0; i < 40; i++) events = events.concat(w.update(0.1))
       return lights(events) || w.part(tank, 'can')?.burning === true

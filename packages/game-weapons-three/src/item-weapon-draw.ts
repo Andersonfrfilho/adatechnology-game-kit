@@ -12,8 +12,23 @@ export type DrawItemWeaponParams = {
   /** The item model id that draws the weapon. */
   readonly itemId: string
   readonly turn: number
+  /** Quarter turns about z after `turn`: stands a flat item up on its edge (the brass knuckles worn with the rings facing forward). */
+  readonly roll?: number
   readonly flip: boolean
+  /** Where the hands close, as fractions of the length from its middle (-0.5 the tail, 0.5 the head): the right hand's `handle`, the left hand's `support`. */
+  readonly grips?: WeaponGrips | undefined
 }
+
+/** The hands on a long tool held in both: the right hand's grip and the left hand's, as fractions of the length from its middle (-0.5 the tail, 0.5 the head). */
+export interface WeaponGrips {
+  readonly handle: number
+  readonly support?: number
+  /** Where the right hand closes when a fraction of the length is not enough: metres along the weapon from its centre and above its underside (the brass knuckles gripped through their rings). */
+  readonly handleAt?: readonly [number, number]
+}
+
+/** The right hand a third of the length from the tail: a one-handed tool held by its handle. */
+const ONE_HAND_GRIP: WeaponGrips = { handle: -0.35 }
 
 type Context = { readonly THREE: typeof THREE_NS; readonly group: THREE_NS.Group; readonly root: THREE_NS.Object3D }
 
@@ -23,7 +38,7 @@ const sizeOf = ({ THREE, group, root }: Context): THREE_NS.Vector3 => {
 }
 
 // the long axis along x, the thinnest along y, then the quarter turns the data asks for
-function layFlat(context: Context, turn: number): void {
+function layFlat(context: Context, turn: number, roll = 0): void {
   const { THREE, root } = context
   let size = sizeOf(context)
   if (size.y > size.x && size.y >= size.z) root.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -Math.PI / 2)
@@ -31,6 +46,7 @@ function layFlat(context: Context, turn: number): void {
   size = sizeOf(context)
   if (size.z < size.y) root.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2)
   if (turn) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), (turn * Math.PI) / 2)
+  if (roll) root.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), (roll * Math.PI) / 2)
 }
 
 // the reach across the floor (z) of each half of the item, split at the middle of its length
@@ -62,8 +78,8 @@ function headToPositiveX(context: Context, flip: boolean): void {
   if (reach[0] > reach[1] !== flip) context.root.rotateOnWorldAxis(new context.THREE.Vector3(0, 1, 0), Math.PI)
 }
 
-// origin at the bottom centre, an empty `handle` at the narrow end where the hand closes
-function restOnFloor({ THREE, group, root }: Context): void {
+// origin at the bottom centre, an empty `handle` at the narrow end where the hand closes (and `support` where the other hand does, on a two-handed tool)
+function restOnFloor({ THREE, group, root }: Context, grips: WeaponGrips): void {
   group.updateMatrixWorld(true)
   const laid = new THREE.Box3().setFromObject(root)
   const centre = laid.getCenter(new THREE.Vector3())
@@ -71,8 +87,14 @@ function restOnFloor({ THREE, group, root }: Context): void {
   const length = laid.max.x - laid.min.x
   const handle = new THREE.Object3D()
   handle.name = 'handle'
-  handle.position.set(-length * 0.35, 0, 0)
+  handle.position.set(grips.handleAt ? grips.handleAt[0] : length * grips.handle, grips.handleAt ? grips.handleAt[1] : 0, 0)
   group.add(handle)
+  if (grips.support !== undefined) {
+    const support = new THREE.Object3D()
+    support.name = 'support'
+    support.position.set(length * grips.support, handle.position.y, 0)
+    group.add(support)
+  }
   root.traverse((node) => {
     const mesh = node as THREE_NS.Mesh
     if (!mesh.isMesh) return
@@ -81,14 +103,14 @@ function restOnFloor({ THREE, group, root }: Context): void {
   })
 }
 
-export function drawItemWeapon({ THREE, def, items, itemId, turn, flip }: DrawItemWeaponParams): THREE_NS.Group {
+export function drawItemWeapon({ THREE, def, items, itemId, turn, roll, flip, grips }: DrawItemWeaponParams): THREE_NS.Group {
   const { root } = (items ?? DEFAULT_ITEM_MODELS).build(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
   group.name = def.id
   group.add(root)
   const context: Context = { THREE, group, root }
-  layFlat(context, turn)
+  layFlat(context, turn, roll)
   headToPositiveX(context, flip)
-  restOnFloor(context)
+  restOnFloor(context, grips ?? ONE_HAND_GRIP)
   return group
 }

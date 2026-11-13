@@ -84,7 +84,8 @@ export interface RendererOptions {
   onReleased?: (pieceIds: readonly string[]) => void
   /**
    * The numbers of the shove a blast gives to the pieces (`BlastShoveOptions` of game-contracts: how much of the energy becomes speed, the fastest throw, the lift, the falloff).
-   * The defaults give the pieces the speed the blast always gave them, with the cap lowered to 20 m/s.
+   * Without it a piece is pushed by the blast wave itself (the impulse of the charge over the area the piece shows, divided by its mass: `blastShove` with an `area`); giving it chooses
+   * this game rule instead (default coupling 0.02, cap 20 m/s).
    */
   blastShove?: BlastShoveOptions
   /**
@@ -273,6 +274,8 @@ export interface DestructionRenderer {
   reset(): void
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
+  /** Draw a bound object again from the state its world holds now (after `DestructionWorld.loadObject` put it back damaged): dents, holes, cracks, bend, char, broken parts hidden. */
+  redraw(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
   /** The draws of the batches of the debris at rest and how many debris meshes they draw (`RendererOptions.settledBatches`). */
   settledBatchStats?(): SettledBatchStats

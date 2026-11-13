@@ -11,9 +11,14 @@ import { register as registerStructure } from '@adatechnology/game-floorplan-str
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
+import * as GameVegetation from '@adatechnology/game-vegetation'
+import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
+import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
+import { itemModels } from '@adatechnology/game-items-three'
+import { createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
 import { FLOORPLAN_AREA_ID, createFloorplanTestModule, floorplanAreaParams } from '@adatechnology/game-floorplan-three/testing'
 
-export { FLOORPLAN_AREA_ID, createFloorplanTestModule }
+export { FLOORPLAN_AREA_ID, createFloorplanTestModule, createWeaponsTestModule }
 
 let registered = false
 /** Puts the content packs in the engine (once). The rural pack extends the residential one, so that goes before it; the structure pack gives every plan its pillars, beams and roof. */
@@ -36,14 +41,41 @@ export const GROUPS = [
   { id: 'post_apocalyptic', name: { en: 'Post-apocalyptic', 'pt-BR': 'Pós-apocalíptico' }, templates: ['triage_tent'] },
 ]
 
+export const TEST_ROOM_FURNITURE = [
+  'dining_table',
+  'coffee_table',
+  'desk',
+  'sofa_3seat',
+  'fridge',
+  'stove_4burner',
+  'tv',
+  'floor_lamp',
+  'double_bed',
+  'toilet',
+  'washbasin',
+  'shower',
+  'mirror',
+  'washing_machine',
+]
+
 /**
  * The module for the room's locale (`?lang=en` or pt-BR); options replace or extend anything.
  * @param {Partial<Parameters<typeof createFloorplanTestModule>[0]>} [options]
  */
 export function createModule(options = {}) {
   registerPacks()
-  // the houses are drawn with the interactables kit: the adapter that turns the plan into doors, drawers, appliances, sockets and lamps is the package's default (game-floorplan-interactables)
-  return createFloorplanTestModule({ engine, groups: GROUPS, ...options, house: { interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree }, ...options.house } })
+  // the houses are drawn with the interactables kit and vegetation kit: the adapter that turns the plan into doors, drawers, appliances, sockets and lamps is the package's default (game-floorplan-interactables)
+  return createFloorplanTestModule({
+    engine,
+    groups: GROUPS,
+    furniture: options.furniture ?? TEST_ROOM_FURNITURE,
+    ...options,
+    house: {
+      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree },
+      vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
+      ...options.house,
+    },
+  })
 }
 
 /**
@@ -56,12 +88,19 @@ export function loadInto(room, options = {}) {
   const params = new URLSearchParams(globalThis.location?.search ?? '')
   const lang = options.locale ?? (params.get('lang') === 'en' ? 'en' : 'pt-BR')
   const arena = Number(params.get('arena'))
+  // Load the weapons module so 1st-person arms and 3rd-person avatar hold and animate 3D weapons
+  if (!room.modules().some((m) => m.id === 'weapons_area')) {
+    room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: '../weapon-svg/', flyRocket: false, items: itemModels }))
+  }
   // ?effectlights=0: a blast lights no house surface (what the houses did before `effectLightsIndoors`), to compare with the default
   const house = params.get('effectlights') === '0' ? { effectLightsIndoors: false, ...options.house } : options.house
   // ?template=mansion&seed=4&state=abandoned opens straight on that house
-  const area = createModule({ world: room.world, renderer: room.renderer, arenaSize: arena >= 14 ? arena : 14, ...floorplanAreaParams(globalThis.location?.search ?? ''), ...options, ...(house ? { house } : {}), locale: lang })
+  const area = createModule({ world: room.world, renderer: room.renderer, arenaSize: arena >= 14 ? arena : 40, ...floorplanAreaParams(globalThis.location?.search ?? ''), ...options, ...(house ? { house } : {}), locale: lang })
   const report = room.loadModule(area)
   room.openArea(FLOORPLAN_AREA_ID)
   area.build()
+  if (room.tool?.def?.category === 'hand' && room.arsenal?.weapons?.has('beretta_92fs')) {
+    room.setTool('beretta_92fs')
+  }
   return { ...report, area }
 }

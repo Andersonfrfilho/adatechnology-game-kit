@@ -14,7 +14,7 @@ const BACK_YARD_DEPTH = 16
 const HAY_BALES = 10
 
 const template: TemplateDef = {
-  id: 'farm', use: 'agricultural', place: 'farm', construction: 'masonry', partyWalls: [], style: 'farm',
+  id: 'farm', use: 'agricultural', place: 'farm', construction: 'masonry', masonryUnit: 'ceramic_block_14', partyWalls: [], style: 'farm',
   limits: { w: [HOUSE_WIDTH, HOUSE_WIDTH], d: [HOUSE_DEPTH, HOUSE_DEPTH] }, defaults: { w: HOUSE_WIDTH, d: HOUSE_DEPTH },
   lot: () => buildingLot({ frontSetback: FRONT_YARD_DEPTH, marginRight: SIDE_YARD_WIDTH, backyard: BACK_YARD_DEPTH, pedestrian: { u: 6 }, doorTarget: { a: 'living_room', side: 'front' }, libraries: { garden: 'farm_front', sideYard: 'farm_side', backyard: 'farm_back' } }),
   facade: { veranda: true },

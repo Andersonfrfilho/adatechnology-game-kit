@@ -1,9 +1,11 @@
+import { capacitiesByLoad } from '@adatechnology/game-load-path'
+
 import { createDestruction } from './world'
 import { GRAVITY, bendGeometry, isFlexural, isReinforced, resolveFlexure, sectionMoments, sectionWidth, steelMoment, tensionSteel } from './flexure'
 import { MATERIALS } from './materials'
 import { shapeDims } from './math'
 import { resolveWind, tensionCapacity } from './wind'
-import type { DestructibleSpec, MaterialDef, SizeStructureOptions, StructureRole } from './types'
+import type { DestructibleSpec, MaterialDef, PartSpec, SizeStructureOptions, StructureRole } from './types'
 
 /** Highest tension steel ratio a designer puts in a beam or slab (NBR 6118 17.3.5.2.4: 4% of the section). */
 const MAX_REBAR_RATIO = 0.04
@@ -102,15 +104,15 @@ export const sizeStructure = (spec: DestructibleSpec, options: SizeStructureOpti
   const out = structuredClone(spec)
   const base = loads(out, options.wind)
   const gamma = options.wind ? resolveWind(options.wind).loadFactor : 0
-  const need = new Map<string, number>()
-  for (const p of out.parts) {
-    if (!p.structure || p.structure.role === 'none') continue
+  const structural = out.parts.filter((p) => p.structure && p.structure.role !== 'none')
+  // the loads of the world itself, at rest (the wind adds its factored axial force to the dead load, compression side; on the tension side the bars are
+  // sized below) and with each part of `redundancyRoles` lost in turn
+  const loadAt = (p: PartSpec): number | undefined => {
     const b = base.get(p.id)
-    if (!b || b.stress <= 0) continue
-    // the wind adds its factored axial force to the dead load (compression side); on the tension side the bars are sized below
-    need.set(p.id, (b.load + (b.wind > 0 ? (gamma * b.wind) / GRAVITY : 0)) / safetyOf(p.structure.role))
+    return b && b.stress > 0 ? b.load + (b.wind > 0 ? (gamma * b.wind) / GRAVITY : 0) : undefined
   }
-  if (redundancy !== undefined) {
+  const lossesOf = function* (): Generator<(p: PartSpec) => number | undefined> {
+    if (redundancy === undefined) return
     for (const col of out.parts) {
       if (!col.structure || !redundancyRoles.includes(col.structure.role)) continue
       const reduced: DestructibleSpec = {
@@ -121,12 +123,15 @@ export const sizeStructure = (spec: DestructibleSpec, options: SizeStructureOpti
       // joints are inferred when the spec has none; removing a part then removes its joints with it
       if (!out.joints) delete reduced.joints
       const l = loads(reduced)
-      for (const [id, n] of need) {
-        const r = l.get(id)
-        if (r && r.stress > 0) need.set(id, Math.max(n, r.load / redundancy))
+      yield (p) => {
+        const r = l.get(p.id)
+        return r && r.stress > 0 ? r.load : undefined
       }
     }
   }
+  // the capacity rule of game-load-path: the same the structure that designs a building sizes it with
+  const sized = capacitiesByLoad({ parts: structural, loadOf: loadAt, losses: lossesOf(), safety: (p) => safetyOf(p.structure!.role), redundancy, redundant: () => true })
+  const need = new Map([...sized].map(([p, capacity]) => [p.id, capacity]))
   for (const p of out.parts) {
     const n = need.get(p.id)
     if (n !== undefined) p.structure = { ...p.structure!, capacity: n }

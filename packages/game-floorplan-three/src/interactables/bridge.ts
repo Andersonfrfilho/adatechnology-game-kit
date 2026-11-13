@@ -107,11 +107,16 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const spec = ik.A.household.build(type, loc, mesh.api);
     const out = mesh.finish(spec);
     for (const l of out.lights) l.removeFromParent(); // the house decides the real lights (per-room lighting)
-    const group = ivGroup(ent), g0 = cursor.group, root = new THREE.Group(); root.name = 'iv:' + ent.id;
+    const group = ivGroup(ent), g0 = cursor.group, stage0 = cursor.stage, root = new THREE.Group(); root.name = 'iv:' + ent.id;
+    // the panel, meter and entrance come with the rough-in; the plates of switches and sockets close their boxes once the walls are rendered and painted
+    const isInst = type === 'electrical_panel' || type === 'power_meter' || type === 'service_entrance' || type === 'gas_bottle';
+    const isPlate = type === 'wall_switch' || type === 'wall_socket';
+    const ivStage = shared.ctx.constructionStages ? (isInst ? 'installations' : isPlate ? 'finishes' : 'furniture') : undefined;
+    if (ivStage) root.userData.constructionStage = ivStage;
     root.position.set(ix, ent.floorY, iz); root.rotation.y = iry; root.userData.iv = ent.id;
     const screen = spec.devices && spec.devices.some(d => d.kind === 'screen');
     let body: THREE_NS.Mesh | null = null;
-    cursor.group = group; const pieceBefore = cursor.pc;
+    cursor.group = group; cursor.stage = ivStage; const pieceBefore = cursor.pc;
     if (type === 'gas_bottle') { // gas cylinder of the interactables kit: destruction piece (holds gas, explodes); the merged static geometry carries its range
       cursor.pc = pieceRecord('gas_cylinder:' + ent.id, 'steel', null, { floor: ent.floor, mass: 11, form: 'cyl', thickness: 0.003, fill: 0.03, contains: { fluid: 'gas', liters: 13, pressurized: true }, explodes: { energy: 120000, radius: 5, atC: 300 }, tags: ['gas_bottle'] });
       for (const m of out.group.children) if (!m.name.startsWith('static:')) m.traverse(o => { if (isMesh(o)) { o.userData.destructionPart = (cursor.pc as { id: string }).id; o.userData.destructionMaterial = 'steel'; } });
@@ -123,7 +128,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
           ivAccumulate(IV_MATERIAL[m.userData.material] || 'plain', m.geometry, ix, ent.floorY, iz, iry, null); m.geometry.dispose();
         } else root.add(m);
       }
-    } finally { cursor.group = g0; cursor.pc = pieceBefore; }
+    } finally { cursor.group = g0; cursor.stage = stage0; cursor.pc = pieceBefore; }
     const base = new Set<THREE_NS.Material | undefined>(Object.values(IV.mats));
     root.traverse(o => { if (!isMesh(o)) return; o.userData.iv = ent.id;
       if (o.castShadow) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); if ((o.geometry.boundingSphere as THREE_NS.Sphere).radius < 0.07) o.castShadow = false; } // tiny pieces (keys, breakers, pulls) cast no shadow: less drawing in the sun pass

@@ -13,7 +13,7 @@ describe('attack clips on the player body', () => {
     for (const clip of ATTACK_CLIPS) for (const key of clip.keys) for (const joint of Object.keys(key.pose)) expect(BODY_JOINTS, `${clip.id}.${joint}`).toContain(joint)
   })
 
-  it('move the joints they name, without NaN, and leave the legs to the gait when upper (a punch only bends the knees, a kick lifts the leg)', () => {
+  it('move the joints they name, without NaN, and leave the legs to the gait when upper (a punch only bends the knees, a kick lifts the leg), the arms to the tool when body', () => {
     for (const clip of ATTACK_CLIPS) {
       const avatar = createPlayerAvatar(THREE, { cascade: false })
       avatar.update(1 / 60, { speed: 0 })
@@ -31,7 +31,9 @@ describe('attack clips on the player body', () => {
         kneeMoved = Math.max(kneeMoved, Math.abs(kneeRight.rotation.x - restKnee))
         for (const value of [armWeapon.g.rotation.x, avatar.rig.upper.rotation.x, avatar.rig.legs[0]!.g.rotation.x]) expect(Number.isFinite(value)).toBe(true)
       }
-      expect(armMoved, clip.id).toBeGreaterThan(0.2)
+      // a clip of `body` channels (a shovel's dig) leaves the arms to the hands on the tool: they do not move by it
+      if (clip.channels === 'body') expect(armMoved, clip.id).toBeLessThan(1e-6)
+      else expect(armMoved, clip.id).toBeGreaterThan(0.2)
       if (clip.channels === 'upper') expect(kneeMoved, clip.id).toBeLessThan(1e-6)
       else expect(kneeMoved, clip.id).toBeGreaterThan(clip.id === 'front_kick' ? 0.5 : 0.1)
     }

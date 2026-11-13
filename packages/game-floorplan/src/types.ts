@@ -173,6 +173,8 @@ export interface LotConfig {
 
 export interface TemplateDef {
   id: string
+  /** Thickness of the plan's walls, metres (default `WALL_THICKNESS`); a pack may derive it from what the walls are built of. */
+  wallThickness?: number
   /** Declared use for zoning, e.g. `residential_single`. */
   use?: string
   style: string | ((o: FloorplanOptions) => string)
@@ -193,6 +195,8 @@ export interface TemplateDef {
   /** Place tag of the building for finds (`house`, `pharmacy`...). */
   place?: string
   /** Building system the structure pack builds (a reference registered there). */
+  /** The masonry unit a structure pack lays the walls of (its catalog); the pack derives the walls' thickness from it. */
+  masonryUnit?: string
   construction?: string
   /** Region of the content (`br`...), chosen by the pack that registered the template. */
   region?: string
@@ -258,6 +262,9 @@ export interface ResultExtensionContext {
   options: FloorplanOptions
 }
 export type ResultExtensionRun = (context: ResultExtensionContext) => unknown
+
+/** Turns a pack's own options of a plan into the engine's (it returns the options to lay the plan out with). */
+export type OptionResolver = (template: TemplateDef, options: FloorplanOptions) => FloorplanOptions
 export interface ResultExtensionOptions {
   /** Extensions that must run first. */
   after?: string[]
@@ -293,6 +300,8 @@ export interface FindsProvider {
 }
 
 export interface FloorplanOptions {
+  /** Thickness of the plan's walls, metres: wins over the template's. */
+  wallThickness?: number
   /** Number of storeys, for templates that accept it. */
   floors?: number
   /** Building system of the structure pack (`masonry`, `wood_frame`, ...). */
@@ -498,6 +507,8 @@ export interface Facade extends FacadeFields {
 }
 
 export interface Plan {
+  /** Thickness its walls were laid with. */
+  wallThickness: number
   w: number
   d: number
   tpl: TemplateDef

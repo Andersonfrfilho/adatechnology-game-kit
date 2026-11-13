@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { coincidentFacesOf, standOutCoincident } from '../src'
+import { GAME_DEPTH_PRECISION, coincidentFacesOf, standOutCoincident } from '../src'
 
 function block(name: string, size: readonly [number, number, number], at: readonly [number, number, number], material: THREE.Material = new THREE.MeshStandardMaterial()): THREE.Mesh {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]), material)
@@ -103,5 +103,40 @@ describe('coincidentFacesOf and the depth buffer', () => {
     const scorch = new THREE.Group()
     scorch.add(block('ground', [4, 0.1, 4], [0, -0.05, 0]), block('scorch', [1, 0.1, 1], [0, -0.05, 0], smoke()))
     expect(coincidentFacesOf(scorch).length).toBeGreaterThan(0)
+  })
+})
+
+describe('near mode on a scene: one material, one colour', () => {
+  const near = { depth: GAME_DEPTH_PRECISION }
+  const pair = (a: THREE.Material, b: THREE.Material): THREE.Group => {
+    const group = new THREE.Group()
+    // two slabs side by side whose tops lie on one plane and overlap over 10 cm
+    group.add(block('left', [1, 0.1, 1], [0, 0, 0], a), block('right', [1, 0.1, 1], [0.9, 0, 0], b))
+    return group
+  }
+
+  it('passes two meshes of the same material: their overlap draws the same pixels', () => {
+    const plaster = new THREE.MeshStandardMaterial({ color: 0xdddddd })
+    expect(coincidentFacesOf(pair(plaster, plaster), near)).toEqual([])
+  })
+
+  it('catches them in two materials, even of the same colour', () => {
+    expect(coincidentFacesOf(pair(new THREE.MeshStandardMaterial({ color: 0xdddddd }), new THREE.MeshStandardMaterial({ color: 0xdddddd })), near).length).toBeGreaterThan(0)
+  })
+
+  it('catches them when the vertex colours differ, and passes them when they agree', () => {
+    const painted = new THREE.MeshStandardMaterial({ vertexColors: true })
+    const tinted = (mesh: THREE.Mesh, rgb: readonly [number, number, number]): THREE.Mesh => {
+      const count = mesh.geometry.getAttribute('position').count
+      mesh.geometry.setAttribute('color', new THREE.Float32BufferAttribute(Array.from({ length: count }, () => rgb).flat(), 3))
+      return mesh
+    }
+    const scene = (b: readonly [number, number, number]): THREE.Group => {
+      const group = new THREE.Group()
+      group.add(tinted(block('left', [1, 0.1, 1], [0, 0, 0], painted), [1, 1, 1]), tinted(block('right', [1, 0.1, 1], [0.9, 0, 0], painted), b))
+      return group
+    }
+    expect(coincidentFacesOf(scene([1, 1, 1]), near)).toEqual([])
+    expect(coincidentFacesOf(scene([1, 0, 0]), near).length).toBeGreaterThan(0)
   })
 })

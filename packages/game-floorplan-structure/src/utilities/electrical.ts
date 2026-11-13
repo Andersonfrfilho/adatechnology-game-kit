@@ -5,6 +5,8 @@ import { NO_SOCKET_ROOMS } from './shared'
 import { addOutlets } from './electrical-outlets'
 import { addConduits, addSwitches } from './electrical-circuits'
 import { placeEntrance, placePanel } from './electrical-entrance'
+import { lightPointsOf } from './lamp-types'
+import type { LightPoint } from './lamp-types'
 import { wallPointsOf } from './wall-points'
 import type { WallPoint } from './wall-points'
 
@@ -26,6 +28,7 @@ export interface Electrical {
   conduits: Conduit[]
   exposed: boolean
   outdoorLamps: OutdoorLamp[]
+  lightPoints: LightPoint[]
   source?: 'solar' | 'lamp'
 }
 
@@ -34,6 +37,8 @@ export interface ElectricalContext {
   items: ResultItem[]
   rng: Rng
   energy?: EnergyConfig
+  /** Ids of the rooms that are outbuildings (lit by a batten). */
+  outbuildingIds?: readonly string[]
 }
 
 /** Shared state of the steps that lay the installation out. */
@@ -55,9 +60,9 @@ export const heightOf = absolute
  * the panel near the entrance, switches by the door latch, circuits and conduits. Items that plug in are annotated (`outlet`, `showerHeater`).
  */
 export function planElectrical(context: ElectricalContext): Electrical {
-  const { plan, items, rng, energy } = context
+  const { plan, items, rng, energy, outbuildingIds = [] } = context
   const mode: EnergyMode = energy?.mode ?? 'grid'
-  const electrical: Electrical = { mode, serviceEntrance: null, panel: null, outlets: [], switches: [], circuits: [], conduits: [], exposed: false, outdoorLamps: [] }
+  const electrical: Electrical = { mode, serviceEntrance: null, panel: null, outlets: [], switches: [], circuits: [], conduits: [], exposed: false, outdoorLamps: [], lightPoints: lightPointsOf(plan, items, outbuildingIds) }
   electrical.exposed = plan.style === 'budget' ? rng() < 0.65 : plan.style === 'mid' ? rng() < 0.12 : false
   if (mode !== 'grid') electrical.exposed = true
   if (mode === 'offgrid') {

@@ -20,7 +20,10 @@ type HouseEntry = PoolEntry & { type: string }
 const provenance = readGoods<Record<string, { ite?: string; game?: string[] }>>('provenance')
 const ammoBoxes = readGoods<(ArsenalItemRecord & { id: string; teamId: string })[]>('ammo-boxes')
 const containerRows = readGoods<(ContainerDef & { gameKey?: string })[]>('containers')
-const housePools = readGoods<{ pools: Record<string, HouseEntry[]>; aliasOf: Record<string, string> }>('house-pools')
+const allHousePools = readGoods<{ pools: Record<string, HouseEntry[]>; aliasOf: Record<string, string> }>('house-pools')
+/** The catalog adds the KA-BAR, the katana and the brass knuckles to some pools (`housePoolExtras` of items-catalog); the viewer's recording knows none of them. */
+const KIT_POOL_TYPES: ReadonlySet<string> = new Set(['faca_kabar', 'katana', 'soco_ingles'])
+const housePools = { aliasOf: allHousePools.aliasOf, pools: Object.fromEntries(Object.entries(allHousePools.pools).map(([key, entries]) => [key, entries.filter((entry) => !KIT_POOL_TYPES.has(entry.type))])) }
 
 const goodsItems = readGoods<ItemDef[]>('items')
 const arsenalPack = itemsFromArsenal(createArsenal(), { records: ammoBoxes })

@@ -12,14 +12,18 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
   const slabs = (...a: Parameters<Kernel['slabs']>): ReturnType<Kernel['slabs']> => K.slabs(...a);
   function roofs(): void {
     const R: HouseRecord = shared.ctx.r, F = R.facade, C = shared.ctx.colors, nA = R.floors.length, type = F.roof; cursor.group = 'roof';
-    const roofRects: RoofRect[] = shared.ctx.roofRects = [];
+    const roofRects: RoofRect[] = shared.ctx.roofRects = []; shared.ctx.eaveBoxes = undefined;
     const G: GutterConfig = shared.ctx.gutter = gutterConfig(); G.ncond = 0; G.nbuz = 0; G.bz = new Set(); shared.ctx.gutterInfo = { gutters: [], downpipes: [], drains: [] };
     const roofColor = C.roof != null ? C.roof : 0xa8543a, gable = (Number(R.seed) | 0) % 2 === 0;
     for (let f = 0; f < nA; f++) {
       // the roof only covers closed rooms of the top storey on that footprint: whatever has any room above (including terrace/balcony, whose floor is already the slab) gets no roof
       const rs: readonly Rect[] = R.rooms.filter(c => c.floor === f && c.type !== 'void' && !c.outbuilding && !OPEN_AREA(c)).flatMap(rectsOf), up: readonly Rect[] = R.rooms.filter(c => c.floor === f + 1 && c.type !== 'void').flatMap(rectsOf);
       if (!rs.length) continue;
-      const xs = [...new Set(rs.flatMap(r => [r[0], r[2]]).map(v => +v.toFixed(3)))].sort((a, b) => a - b), zs = [...new Set(rs.flatMap(r => [r[1], r[3]]).map(v => +v.toFixed(3)))].sort((a, b) => a - b);
+      // (outside the Visor's scene the grid also runs on the upper storey's room edges: a cell whose centre lay on the line between two rooms above was taken
+      // for open sky, and its roof stood in them)
+      const lines = shared.ctx.visorScene ? rs : rs.concat(up);
+      const within = (v: number, k: 0 | 1): boolean => v >= Math.min(...rs.map(r => r[k])) && v <= Math.max(...rs.map(r => r[k + 2]));
+      const xs = [...new Set(lines.flatMap(r => [r[0], r[2]]).filter(v => within(v, 0)).map(v => +v.toFixed(3)))].sort((a, b) => a - b), zs = [...new Set(lines.flatMap(r => [r[1], r[3]]).filter(v => within(v, 1)).map(v => +v.toFixed(3)))].sort((a, b) => a - b);
       const em = (L: readonly Rect[], x: number, z: number): boolean => L.some(r => x > r[0] + EPS && x < r[2] - EPS && z > r[1] + EPS && z < r[3] - EPS), nx = xs.length - 1, nz = zs.length - 1;
       const cxs = (i: number): number => (xs[i] + xs[i + 1]) / 2, czs = (j: number): number => (zs[j] + zs[j + 1]) / 2;
       const occ: boolean[][] = []; for (let j = 0; j < nz; j++) { occ[j] = []; for (let i = 0; i < nx; i++) occ[j][i] = em(rs, cxs(i), czs(j)) && !em(up, cxs(i), czs(j)); }
@@ -42,15 +46,29 @@ export function installRoofRoofs(K: Kernel, shared: Shared): void {
         for (let i = q.i0; i <= q.i1; i++) { if (U(q.j0 - 1, i)) touchesU[1] = 1; if (U(q.j1 + 1, i)) touchesU[3] = 1; }
         roofRects.push({ f, r: [x0, z0, x1, z1], touchesU });
         const ybq = pe(x0, z0, x1, z1); roofRect(type, x0, z0, x1, z1, ybq, roofColor, gable && single, F, touchesU); cursor.pc = null;
-        if (G.on) gutter(type, f, x0, z0, x1, z1, ybq, touchesU);
+        if (G.on) gutter(type, f, x0, z0, x1, z1, ybq, touchesU, gable && single);
       }
     }
     for (const e of (shared.ctx.outbuildingList || []) as Outbuilding[]) { // R43: outbuilding cover (same type of roof as the house)
       const [x0, z0, x1, z1] = e.aabb, yb = Y0(0) + (e.ceiling || 2.6) + 0.2; roofRects.push({ f: 0, r: [x0, z0, x1, z1], outbuilding: e.id });
       if (type === 'slab') { const c = C.facade != null ? C.facade : 0xd8d0c0; bx('plaster', x0 - 0.08, yb, z0 - 0.08, x1 + 0.08, yb + 0.03, z1 + 0.08, sh(C.ceiling != null ? C.ceiling : 0xb8b4ac, 0.85)); for (const [a, b, c2, d] of [[x0 - 0.08, z0 - 0.08, x1 + 0.08, z0 - 0.04], [x0 - 0.08, z1 + 0.04, x1 + 0.08, z1 + 0.08], [x0 - 0.08, z0 - 0.08, x0 - 0.04, z1 + 0.08], [x1 + 0.04, z0 - 0.08, x1 + 0.08, z1 + 0.08]]) bx('plaster', a, yb, b, c2, yb + 0.4, d, c); continue; }
       shared.ctx.noPiece = true; roofRect(type, x0, z0, x1, z1, yb, roofColor, true, F, [0, 0, 0, 0]); cursor.pc = null; shared.ctx.noPiece = false;
-      if (G.on) gutter(type, 0, x0, z0, x1, z1, yb, [0, 0, 0, 0]);
+      if (G.on) gutter(type, 0, x0, z0, x1, z1, yb, [0, 0, 0, 0], true);
     }
+    tankCastle(type, roofColor);
+  }
+  // the water tank's castle (res.waterTank.castle): where the house's roof is too low for the tank, four plastered walls rise from the ceiling slab round it
+  // to their bond beam and carry a hipped roof of their own, of the house's tiles (its timber comes with the construction stages' roof framing)
+  function tankCastle(type: string, roofColor: number): void {
+    const T = (shared.ctx.r as HouseRecord).waterTank, c = T && T.castle; if (!c || type === 'slab') return;
+    const C = shared.ctx.colors, f = Math.max(0, T.floor), y0 = Y0(f) + (shared.ctx.r as HouseRecord).floors[f].ceiling + 0.2, h = c.thickness / 2, [u0, v0, u1, v1] = c.aabb, color = C.facade != null ? C.facade : 0xd8d0c0;
+    // its walls belong to the storey under it (they stand before the roof goes on); its roof to the roof
+    const st0 = cursor.stage, g0 = cursor.group; if (shared.ctx.constructionStages) cursor.stage = 'finishes';
+    cursor.pc = null; cursor.group = 'f' + f;
+    for (const [a, b, c2, d] of [[u0 - h, v0 - h, u1 + h, v0 + h], [u0 - h, v1 - h, u1 + h, v1 + h], [u0 - h, v0 + h, u0 + h, v1 - h], [u1 - h, v0 + h, u1 + h, v1 - h]]) bx('roughcast', a, y0, b, c2, c.eaveY, d, color);
+    cursor.stage = st0; cursor.group = g0;
+    shared.ctx.roofRects.push({ f, r: [u0 - h, v0 - h, u1 + h, v1 + h], touchesU: [0, 0, 0, 0] });
+    roofRect(type, u0 - h, v0 - h, u1 + h, v1 + h, c.eaveY, roofColor, false, (shared.ctx.r as HouseRecord).facade, [0, 0, 0, 0]); cursor.pc = null;
   }
   const defined: KernelRoofRoofs = { roofs };
   Object.assign(K, defined);

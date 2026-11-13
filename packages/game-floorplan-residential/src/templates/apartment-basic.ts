@@ -2,7 +2,7 @@ import type { TemplateDef } from '@adatechnology/game-floorplan'
 import { r2 } from '../util'
 
 export const apartmentBasic: TemplateDef = {
-  id: 'apartment_basic', use: 'residential_multi', style: 'budget', lot: null, limits: { w: [8, 11], d: [11.5, 14] }, defaults: { w: 9, d: 12 }, singleFloor: true,
+  id: 'apartment_basic', masonryUnit: 'ceramic_block_14', use: 'residential_multi', style: 'budget', lot: null, limits: { w: [8, 11], d: [11.5, 14] }, defaults: { w: 9, d: 12 }, singleFloor: true,
   floors: [{
     label: 'floor', ceiling: 2.8,
     rooms: (w, d) => { const vs = 4.6, ac = r2(w * 0.4), qd = r2((d - vs) / 2); return [

@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
-import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createWorldOcclusion } from './world-occlusion'
@@ -32,6 +32,7 @@ import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
+import { displacedVolume } from './displaced-volume'
 import { createExplosives } from './explosives'
 import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
@@ -58,10 +59,14 @@ import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
 import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
+import { SHOVEL, biteShareOf, digsWith, shovelful, toolConditionOf } from './shovel'
+import type { ShovelMode, ToolCondition } from './shovel'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
+import { createRoomBag } from './inventory-room'
+import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import type { ToolMenuGroup } from './tool-menu'
@@ -585,6 +590,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
+  let carriedTool: { readonly weaponId: string; readonly itemId: string; readonly name: string; readonly saved: NonNullable<ReturnType<DestructionWorld['serializeObject']>> } | null = null
   const toolSettings: { condition?: string; ammoQuality?: string } = {}
   let fuseLength: number | undefined
   const SETTING_IDS = { condition: 'condition', ammoQuality: 'ammo_quality', fuseLength: 'fuse_length' } as const
@@ -806,6 +812,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (s.max[1] <= feet + STEP_UP) floor = Math.max(floor, s.max[1])
       else if (s.min[1] < feet + BODY_HEIGHT) blocked = true
     }
+    if (floor === -Infinity && world && Number.isFinite(feet)) {
+      const downRay = world.raycast([x, feet + STEP_UP, z], [0, -1, 0], STEP_UP + 2.5, { skipLoose: true })
+      if (downRay && downRay.point && downRay.point[1] <= feet + STEP_UP) {
+        floor = Math.max(floor, downRay.point[1])
+      }
+    }
     return { floor, blocked }
   }
   /**
@@ -890,7 +902,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           offFirst = true
           return
         }
-        if (heldEntry) throwHeld()
+        if (heldEntry || carriedTool) throwHeld()
         else grab()
       },
       secondaryUp: () => {
@@ -1582,6 +1594,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const clearEverything = (): void => releasingTogether(clearEverythingNow)
   const clearEverythingNow = (): void => {
     if (heldEntry || heldPiece) releaseHeld()
+    carriedTool = null
+    bag.releaseHand()
     useItemPlayer = null
     playing.length = 0
     explosives.clear()
@@ -1880,6 +1894,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         : null
     avatar.root.position.set(x, player.feet, z)
     avatar.root.rotation.set(0, player.yaw + Math.PI, 0) // the body's front is +z (the three.js way, as the catalogue items), the view looks down -z at yaw 0
+    avatarState.clipRate = scheduler.timeScale
     avatar.update(dt, avatarState)
     avatar.root.updateMatrixWorld(true)
     placeEye()
@@ -2018,6 +2033,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   /** Height of the hip above the feet (m): where a kick leaves from; and how far (rad) below the look it goes, so a level look kicks at the height of a chair seat. */
+  /** The striking body (m above the feet): the shoulder standing and crouched, how low it gets bending down (hips) and crouching down, how far under the target it comes, how far the eye looks for it, and the highest a standing body's eye gets. */
+  const MELEE_BODY = { downward: -0.3, shoulderStanding: 1.4, shoulderCrouched: 0.95, bentStanding: 0.7, bentCrouched: 0.4, armDrop: 0.4, lookRange: 6, eyeHighest: 1.9 } as const
   const KICK_HIP = 0.9
   const KICK_DROP = 0.35
   /**
@@ -2280,6 +2297,33 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.impulse(objectId, [dir[0] * momentum, dir[1] * momentum, dir[2] * momentum], point)
   }
 
+  /** Speed (m/s) a swung tool arrives at: its mass follows from the blow's energy (`2 E / v^2`). */
+  const BLOW_SPEED = 6
+  /** Share of the approach speed a struck piece rebounds with (a tool on wood or steel: mostly inelastic). */
+  const BLOW_RESTITUTION = 0.2
+  /** Friction between a tool and what it strikes: the sideways share of a blow onto the ground cannot exceed this times the share pressed into it. */
+  const BLOW_FRICTION = 0.4
+  /** Metres under which the lowest point of a piece counts as standing on the ground. */
+  const BLOW_SUPPORT_GAP = 0.03
+  /**
+   * What a swung tool gives the loose piece it hits: a two-body collision, `J = (1 + e) m_tool M / (m_tool + M) v`, so a light piece does not leave faster than the tool
+   * arrived. A piece standing on the ground takes no impulse into it: the ground answers the downward part of the blow, and only what friction carries moves it sideways (`BLOW_FRICTION`).
+   */
+  const pushByBlow = (objectId: string, direction: Vec3, energy: number, point: Vec3): void => {
+    const piece = renderer.piece(objectId)
+    if (!piece) return
+    const toolMass = (2 * energy) / (BLOW_SPEED * BLOW_SPEED)
+    const momentum = ((1 + BLOW_RESTITUTION) * ((toolMass * piece.mass) / (toolMass + piece.mass)) * BLOW_SPEED)
+    const lowest = new THREE.Box3().setFromObject(piece.root).min
+    const isOnGround = direction[1] < 0 && lowest.y - groundAt(lowest.x, lowest.z) < BLOW_SUPPORT_GAP
+    if (!isOnGround) return pushPiece(objectId, direction, momentum, point)
+    // what the tool's grip on the piece can carry sideways is the friction on the part of the blow the ground took
+    const flat = Math.hypot(direction[0], direction[2])
+    if (flat < 1e-6) return
+    const sideways = Math.min(flat, BLOW_FRICTION * -direction[1])
+    pushPiece(objectId, [direction[0] / flat, 0, direction[2] / flat], momentum * sideways, point)
+  }
+
   const shotRay = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   shotRay.layers.enableAll()
@@ -2533,9 +2577,28 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     return best ? { ...u, origin: best.origin, direction } : u
   }
+  /**
+   * A blow reaches from the body, not from the eye: aimed down, the striker bends (at the hips, or crouches further) to the spot the eye looks at, and the reach is measured
+   * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not.
+   */
+  const bodyReach = (use: Extract<Use, { kind: 'melee' }>): Extract<Use, { kind: 'melee' }> => {
+    // an eye placed higher than a standing body's (a scripted view over a tall plant) has no body under it to bend: the blow leaves from the eye
+    if (use.direction[1] > MELEE_BODY.downward || use.origin[1] - player.feet > MELEE_BODY.eyeHighest) return use
+    const seen = rayWorld(use.origin, use.direction, MELEE_BODY.lookRange)
+    if (!seen) return use
+    const crouched = player.crouching
+    const shoulder = player.feet + (crouched ? MELEE_BODY.shoulderCrouched : MELEE_BODY.shoulderStanding)
+    const lowest = player.feet + (crouched ? MELEE_BODY.bentCrouched : MELEE_BODY.bentStanding)
+    const height = Math.max(lowest, Math.min(shoulder, seen.point[1] + MELEE_BODY.armDrop))
+    const origin: Vec3 = [player.x, height, player.z]
+    const dx = seen.point[0] - origin[0], dy = seen.point[1] - origin[1], dz = seen.point[2] - origin[2]
+    const length = Math.hypot(dx, dy, dz)
+    if (length < 1e-6) return use
+    return { ...use, origin, direction: [dx / length, dy / length, dz / length] }
+  }
   const meleeUse = (use: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
     const w = toolName(id)
-    const u = id === 'kick' ? footRay(use) : use
+    const u = id === 'kick' ? footRay(use) : bodyReach(use)
     const r = rayWorld(u.origin, u.direction, u.reach)
     if (!r) {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
@@ -2551,7 +2614,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     const blow = blowOfTool(id, toolDef(id)?.category ?? '')
     if (blow) bodySounds.hit(blow, blowTarget(r), r.point as Vec3, u.energy)
-    pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
+    pushByBlow(r.object, u.direction, u.energy, r.point)
     action('melee', t('act.melee.hit', { weapon: w, energy: num(u.energy, 0), where: hitWhere(r), dist: num(r.distance, 1) }), {
       objectId: r.object,
       itemId: entryOf(r.object)?.so.itemId,
@@ -2585,7 +2648,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     say(t(on ? 'act.combo.on' : 'act.combo.off', { name }))
   }
   /** `side` is a blow of the left hand's tool (a tool in each hand): that hand strikes, and the blow waits on a key of its own. */
+  /** What damage did to the tools in hand, by arsenal id (`setToolCondition`): a snapped handle cannot swing or dig, a bent blade takes a smaller bite. */
+  const toolConditions = new Map<string, ToolCondition>()
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId, side?: { readonly hand: 'left'; readonly key: string }): void => {
+    if (toolConditions.get(id)?.handleBroken) {
+      action('tool_broken', t('act.tool.handle_broken', { weapon: toolName(id) }), { data: { weapon: id } })
+      say(t('act.tool.handle_broken', { weapon: toolName(id) }))
+      return
+    }
+    // a shovel aimed down at the ground near the feet digs (or throws earth back) instead of striking
+    if (!side && digsWith(arsenal.weapons.get(id)) && u.direction[1] < SHOVEL.downward) {
+      // the aim may start behind the shoulder (third person): what counts is how far the ground it meets is from the feet
+      const r = rayWorld(u.origin, u.direction, SHOVEL.aimReach)
+      const [px, feet, pz] = player.position
+      // the room's ground, or the ground an object stands on (the soil under a house, part of its spec)
+      if (r && (r.object === GROUND_ID || r.terrain) && Math.hypot(r.point[0] - px, r.point[2] - pz) <= SHOVEL.reachFromFeet && r.point[1] > feet - SHOVEL.reachDown) {
+        startShovelful(id, r.point as Vec3, u.direction as Vec3)
+        return
+      }
+    }
+    // a tool with motions of its own (a shovel's swing) moves through it while the body swings
+    if (!side && digsWith(arsenal.weapons.get(id))) emitHost({ type: 'motion', weapon: id, motion: 'swing', duration: SHOVEL.swingSeconds })
     const stepIndex = comboOn && combo?.tools.includes(id) && combo.steps.length > 0 ? (simTime - comboAt > combo.reset ? 0 : comboNext) : null
     const step = stepIndex === null ? undefined : combo!.steps[stepIndex]
     const clip = step ? step.clip : strikeClips[id]
@@ -2639,6 +2722,44 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const landed = strikes.filter((strike) => strike.remaining <= 0)
     strikes = strikes.filter((strike) => strike.remaining > 0)
     for (const strike of landed) strike.land()
+  }
+
+  /** What the shovel does where it is aimed now (`cycleToolMode` turns it over): dig, or throw earth back from the heap. */
+  let shovelMode: ShovelMode = 'dig'
+  /**
+   * A shovelful: the body digs (`shovel_dig` on the avatar, in both views) and the tool moves through its motion; when the blade bites (the clip's impact) the
+   * ground gives what it gives: earth thrown aside, a hole closing (mud), or the blade bouncing off what it cannot dig.
+   */
+  const startShovelful = (id: string, point: Vec3, direction: Vec3): void => {
+    const seconds = avatar?.strike?.('shovel_dig') ?? null
+    emitHost({ type: 'motion', weapon: id, motion: shovelMode, duration: SHOVEL.seconds })
+    const mode = shovelMode
+    const share = biteShareOf(toolConditions.get(id)?.bend ?? 0)
+    strikes.push({ key: id, remaining: seconds ?? SHOVEL.seconds / 2, land: () => landShovelful(id, mode, point, direction, share) })
+  }
+  const landShovelful = (id: string, mode: ShovelMode, point: Vec3, direction: Vec3, share: number): void => {
+    const done = shovelful(terrain, mode, point, direction, share)
+    const name = (material: string): string => S.text[`material.${material}`] ?? dStrings.materialNames[material] ?? material
+    if (done.kind === 'dug') {
+      const soil = world.materials.get(done.material)
+      renderer.emit('dust', done.dump, [0, 1, 0], 10, 1.4)
+      renderer.emit('chips', done.dump, [0, 1, 0], 6, 2)
+      playSound(impactKey(soil), done.dump, 0.45, impactSoundKeys(done.material, soil))
+      action('dig', t('act.dig.dug', { weapon: toolName(id), litres: num(done.volume * 1000, 0), material: name(done.material) }), { data: { weapon: id, volumeM3: done.volume, material: done.material, biteShare: share } })
+    } else if (done.kind === 'refused') {
+      // the blade bounces off: sparks off rock and concrete, a knock on the rest; the blow wears the blade as a strike would
+      const def = world.materials.get(done.material)
+      renderer.emit(done.material === 'stone' || done.material === 'concrete' ? 'sparks' : 'chips', done.point, [0, 1, 0], 4, 3)
+      playSound(impactKey(def), done.point, 0.7, impactSoundKeys(done.material, def, 'blunt'))
+      action('dig', t('act.dig.refused', { weapon: toolName(id), material: name(done.material) }), { data: { weapon: id, refused: done.material } })
+      say(t('act.dig.refused', { weapon: toolName(id), material: name(done.material) }))
+    } else if (done.kind === 'closed') {
+      renderer.emit('dust', done.point, [0, 1, 0], 4, 0.8)
+      say(t('act.dig.closed', { weapon: toolName(id), material: name(done.material) }))
+    } else if (done.kind === 'filled') {
+      renderer.emit('dust', done.point, [0, 1, 0], 8, 1)
+      action('dig', t('act.dig.filled', { weapon: toolName(id), litres: num(done.volume * 1000, 0) }), { data: { weapon: id, filledM3: done.volume } })
+    } else say(t('act.dig.no_heap', { weapon: toolName(id) }))
   }
 
   const toolWork = (u: Extract<Use, { kind: 'tool' }>, dt: number): void => {
@@ -2950,6 +3071,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
+    if (carriedTool && carriedTool.weaponId !== id) putDownTool()
     dropOffTool()
     releaseTrigger()
     toolId = id
@@ -3014,8 +3136,110 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     grab()
     return 'ok'
   }
+  /**
+   * A tool of the arsenal picked up from the world (an item with a `weapon`): the object left the world with all its damage, the tool is in hand with the condition that damage
+   * gives it, and dropping or throwing it puts the same object back, damage and all.
+   */
+  const pickUpTool = (objectId: string, entry: Entry, weaponId: string): boolean => {
+    const saved = world.serializeObject(objectId)
+    if (!saved || !entry.item) return false
+    if (carriedTool) putDownTool()
+    if (!bag.holdTool(objectId)) return false
+    toolConditions.set(weaponId, toolConditionOf(saved.spec, saved.state))
+    carriedTool = { weaponId, itemId: entry.item.id, name: entry.name, saved }
+    removeEntry(objectId)
+    equip(weaponId)
+    action('pickup_tool', t('act.pickup_tool', { name: entry.name, weapon: toolName(weaponId) }), { itemId: entry.item.id, data: { weapon: weaponId, ...toolConditions.get(weaponId) } })
+    return true
+  }
+  /** An object that was taken out of the world comes back with all its damage: at the feet, or ahead along the aim when `thrown`. */
+  const respawnSaved = (itemId: string, saved: NonNullable<ReturnType<DestructionWorld['serializeObject']>>, thrown: boolean): string => {
+    aim()
+    const x = thrown ? aimO[0] + aimD[0] * 0.5 : player.x - Math.sin(player.yaw) * 0.7
+    const z = thrown ? aimO[2] + aimD[2] * 0.5 : player.z - Math.cos(player.yaw) * 0.7
+    const y = thrown ? aimO[1] - 0.3 + aimD[1] * 0.5 : groundAt(x, z)
+    const { objectId } = spawn(itemId, [x, y, z], player.yaw)
+    const pose = world.state(objectId)!
+    const position: Vec3 = [pose.position[0], pose.position[1], pose.position[2]]
+    const rotation: Quat = [pose.rotation[0], pose.rotation[1], pose.rotation[2], pose.rotation[3]]
+    world.loadObject(saved, objectId)
+    world.setTransform(objectId, position, rotation)
+    renderer.redraw(objectId)
+    return objectId
+  }
+  /** The tool picked up goes back into the world as the object it was (dropped at the feet, or thrown along the aim at `speed`), with the damage it had. */
+  const putDownTool = (speed = 0): void => {
+    const tool = carriedTool
+    if (!tool) return
+    carriedTool = null
+    bag.releaseHand()
+    toolConditions.delete(tool.weaponId)
+    const thrown = speed > 0
+    const objectId = respawnSaved(tool.itemId, tool.saved, thrown)
+    const piece = rendererPieces.get(objectId)
+    if (thrown && piece) {
+      piece.velocity = [0, 0, 0]
+      renderer.impulse(objectId, [aimD[0] * speed * piece.mass, (aimD[1] * speed + 1.2) * piece.mass, aimD[2] * speed * piece.mass])
+      action('throw', t('act.throw', { name: tool.name, speed: num(speed, 1) }), { objectId, itemId: tool.itemId, data: { speedMs: speed, massKg: piece.mass } })
+    } else action('drop', t('act.drop', { name: tool.name }), { objectId, itemId: tool.itemId })
+  }
+  const bagEnabled = options.inventory !== false
+  const bagHost: BagHost = {
+    t,
+    say,
+    action,
+    aimedObject: () => {
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      return r && rendererPieces.has(r.object) ? r.object : null
+    },
+    inspect: (objectId) => {
+      const entry = entryOf(objectId)
+      const piece = rendererPieces.get(objectId)
+      const saved = world.serializeObject(objectId)
+      if (!entry?.item || !piece || !saved) return null
+      const weapon = entry.item.weapon && arsenal.weapons.has(entry.item.weapon) ? entry.item.weapon : undefined
+      const size = new THREE.Box3().setFromObject(piece.root).getSize(new THREE.Vector3())
+      const temperatures = saved.state.parts.map((part) => part.temperature)
+      return {
+        itemId: entry.item.id,
+        name: entry.name,
+        ...(weapon ? { weapon } : {}),
+        kg: entry.item.physical?.weightKg ?? piece.mass,
+        size: entry.item.physical?.size ?? [size.x, size.y, size.z],
+        ...(entry.item.physical?.litres === undefined ? {} : { litres: entry.item.physical.litres }),
+        state: { destruction: saved, ...(weapon ? { condition: toolConditionOf(saved.spec, saved.state) } : {}), ...(temperatures.length > 0 ? { temperatureC: Math.max(...temperatures) } : {}) },
+      }
+    },
+    remove: removeEntry,
+    heldObject: () => heldPiece?.objectId ?? null,
+    placeBack: ({ itemId, name, state }) => {
+      const objectId = state.destruction ? respawnSaved(itemId, state.destruction, false) : spawn(itemId, [player.x - Math.sin(player.yaw) * 0.7, groundAt(player.x, player.z), player.z - Math.cos(player.yaw) * 0.7], player.yaw).objectId
+      action('drop', t('act.drop', { name }), { objectId, itemId })
+    },
+    equipTool: ({ itemId, name, weapon, state }) => {
+      if (!state.destruction) return
+      if (state.condition) toolConditions.set(weapon, state.condition)
+      carriedTool = { weaponId: weapon, itemId, name, saved: state.destruction }
+      equip(weapon)
+    },
+    clearHandTool: () => {
+      if (carriedTool) toolConditions.delete(carriedTool.weaponId)
+      carriedTool = null
+    },
+    onOpen: (open) => {
+      if (open && document.pointerLockElement) document.exitPointerLock?.()
+    },
+  }
+  const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
+  if (bagEnabled) container.appendChild(bag.element)
   const grab = (): boolean => {
     if (push.active) return false
+    if (!heldPiece && carriedTool) {
+      putDownTool()
+      fire('grab', { held: false })
+      return true
+    }
     if (heldPiece) {
       const name = heldName
       releaseHeld()
@@ -3038,6 +3262,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (kg > maxCarry) {
       say(t('hud.too_heavy', { name: nameOf(r.object), kg: num(kg, 0) }))
       return false
+    }
+    const toolWeapon = entryOf(r.object)?.item?.weapon
+    const toolEntry = entries.get(r.object)
+    if (toolWeapon && toolEntry && arsenal.weapons.has(toolWeapon)) {
+      const picked = pickUpTool(r.object, toolEntry, toolWeapon)
+      if (picked) fire('grab', { held: true, objectId: r.object })
+      return picked
     }
     heldPiece = piece
     heldEntry = entries.get(r.object) ?? null
@@ -3063,6 +3294,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const throwHeld = (speed = 9): boolean => {
+    if (!heldPiece && carriedTool) {
+      putDownTool(speed)
+      return true
+    }
     if (!heldPiece) return false
     const piece = heldPiece
     const name = heldName
@@ -3418,7 +3653,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return
     }
     const size = box.getSize(tmpV2)
-    const volume = piece.halfExtents[0] * piece.halfExtents[1] * piece.halfExtents[2] * 8
+    const volume = displacedVolume(specs.get(piece.objectId), world.state(piece.objectId), piece.halfExtents[0] * piece.halfExtents[1] * piece.halfExtents[2] * 8)
     if (!inWater.has(piece.objectId)) {
       inWater.add(piece.objectId)
       const speed = -piece.velocity[1]
@@ -3498,6 +3733,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
       return
     }
+    if (bagEnabled && !e.ctrlKey && !e.metaKey && bag.handleKey(code, { shift: e.shiftKey, repeat: e.repeat })) return
     const digit = /^Digit(\d)$/.exec(code)
     if (digit && !e.ctrlKey && !e.metaKey) {
       const n = (Number(digit[1]) + 9) % 10
@@ -3568,6 +3804,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyN':
         setStrikeCombo(!comboOn)
         break
+      case 'KeyM':
+        if (e.repeat) break
+        {
+          const on = player.toggleFly()
+          say(
+            locale === 'pt-BR'
+              ? (on ? 'Modo Livre (Voo/Noclip): ATIVO [WASD: voar · Espaço: subir · C: descer · Shift: acelerar]' : 'Modo Livre: DESATIVADO')
+              : (on ? 'Free Fly Mode (Noclip): ON [WASD: fly · Space: up · C: down · Shift: boost]' : 'Free Fly Mode: OFF')
+          )
+        }
+        break
       case 'KeyH': {
         const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
         if (w) equip(w)
@@ -3633,6 +3880,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return t(leaf.locked ? 'hud.door_hint_locked' : leaf.open ? 'hud.door_hint_close' : 'hud.door_hint_open')
   }
 
+  const diggableKey = (dig: { readonly closes?: boolean } | undefined): string => (!dig ? 'ground.diggable.no' : dig.closes ? 'ground.diggable.closes' : 'ground.diggable.yes')
   /** The floor under the aim: the profile and the layer there, read from the terrain at the point the ray reached (the floor of a crater, not the flat top). */
   const groundInspect = (r: RayHit): InspectInfo => {
     const onFloor = terrain.raycast(aimO, aimD, r.distance + 3)
@@ -3644,7 +3892,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       objectId: GROUND_ID,
       part: column.profile,
       material: materialName,
-      status: '',
+      // whether a shovel goes in here: the ground's own data (game-terrain's `dig`), mud lifting and closing behind the blade
+      status: t(diggableKey(terrain.material(column.material).dig)),
       hp: 0,
       maxHp: 0,
       temperature: 0,
@@ -3827,6 +4076,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     simulationStamp++
+    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
     renderer.update(dt)
     destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()
@@ -4224,6 +4474,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const hand = commandHand()
     const slot = toolOf(hand)
     if (!slot) return
+    // a shovel has no fire modes: its mode is what it does where it is aimed, dig or fill
+    if (digsWith(arsenal.weapons.get(slot.id))) {
+      shovelMode = shovelMode === 'dig' ? 'fill' : 'dig'
+      say(t(`act.dig.mode.${shovelMode}`, { weapon: toolName(slot.id) }))
+      return
+    }
     slot.state.cycleMode()
     flushEvents(slot.id, slot.state, undefined, hand)
     if (offTool) say(`${toolName(slot.id)} (${t(hand === 'L' ? 'hand.left' : 'hand.right')}): ${slot.state.mode}`)
@@ -4278,6 +4534,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
+    setGround: (layout) => terrain.setLayout(layout),
     effects: vfx,
     particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,
@@ -4481,6 +4738,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         fluid: ti.fluid,
         seal: ti.seal,
         weapon: ti.weapon,
+        physical: ti.physical as TestRoomItem['physical'],
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
         seats: ti.seats,
@@ -4775,6 +5033,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     clear,
     resetAll,
     setTool,
+    inventory: () => bag.snapshot(),
+    openInventory: (open) => bagEnabled && bag.panel.toggle(open),
+    pickToBag: () => bag.pickToBag(),
+    storeHeld: () => bag.storeHeld(),
+    equipSlot: (slotId) => bag.equipSlot(slotId),
+    dropSlot: (slotId) => bag.dropSlot(slotId),
+    setToolCondition(weaponId, condition) {
+      if (condition) toolConditions.set(weaponId, condition)
+      else toolConditions.delete(weaponId)
+    },
     setOffTool,
     get offTool() {
       return offTool
@@ -4957,6 +5225,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     get playerPosition() {
       return player.position
     },
+    get flying() {
+      return player.flying
+    },
+    toggleFly() {
+      return player.toggleFly()
+    },
+    setFly(enabled) {
+      player.setFly(enabled)
+    },
     get playerKnock() {
       return player.knocked
     },
@@ -4991,6 +5268,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       player.dispose()
       cornerImage?.dispose()
       ui?.dispose()
+      bag.element.remove()
       graphics?.dispose()
       loading.dispose()
       renderer.dispose()

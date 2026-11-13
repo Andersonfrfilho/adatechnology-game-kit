@@ -2,6 +2,7 @@ import type { JointKind } from '@adatechnology/game-contracts'
 
 import { distanceBetween, round2, touches, unionOf } from '../geometry'
 import { ROOF_COVERINGS } from '../registry'
+import { SLAB_PANEL_DEFAULTS } from '../slab-panels/options'
 import type { Rect, RoofPane, StructurePart } from '../types'
 import type { BuildContext } from './context'
 import { OPEN_ROOM_TYPES } from './context'
@@ -49,7 +50,7 @@ function addFlatRoof(context: BuildContext, unit: RoofUnit, carriers: StructureP
   const { builder, construction, system } = context
   const top = context.level(unit.floor) + context.ceilingOf(unit.floor)
   const [u0, v0, u1, v1] = unit.box
-  const slab = builder.add({ id: `slab_top${unit.suffix}`, role: 'slab', material: construction.frame.slabs, aabb: [u0 - 0.15, v0 - 0.15, u1 + 0.15, v1 + 0.15], y0: top, y1: top + 0.12 }, { floor: unit.floor, cover: true, footprint: [unit.box] })
+  const slab = builder.add({ id: `slab_top${unit.suffix}`, role: 'slab', material: construction.frame.slabs, aabb: [u0 - 0.15, v0 - 0.15, u1 + 0.15, v1 + 0.15], y0: top, y1: top + SLAB_PANEL_DEFAULTS.precastThickness }, { floor: unit.floor, cover: true, footprint: [unit.box] })
   for (const carrier of carriers.length ? carriers : (context.plates.get(unit.floor) ?? [])) builder.rest(slab, carrier, system.joints.slab)
   if (unit.suffix === '') context.topSlab = slab
   return { id: slab.id, aabb: slab.aabb, y0: slab.y0, y1: slab.y1, flat: true }
@@ -116,7 +117,8 @@ function addRafters(context: BuildContext, unit: RoofUnit, carriers: StructurePa
         : [['a', [box[0] - eave * 0.5, at - 0.04, middle, at + 0.04]], ['b', [middle, at - 0.04, box[2] + eave * 0.5, at + 0.04]]]
     for (const [side, aabb] of halves) {
       const rafter = builder.add({ id: `rafter${unit.suffix}_${side}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, fill: 0.25 })
-      const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, 0.2) && carrier.role !== 'slab')
+      // a pillar carries the rafter only where the rafter crosses it (one beside it, off its head, carries nothing)
+      const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, carrier.role === 'column' ? 0 : 0.2) && carrier.role !== 'slab')
       const chosen = touching.length ? touching : carriers.slice().sort((x, y) => distanceBetween(aabb, x.aabb) - distanceBetween(aabb, y.aabb)).slice(0, 2)
       for (const carrier of chosen) builder.rest(rafter, carrier, system.joints.truss)
       frames.all.push(rafter)

@@ -7,8 +7,8 @@ import { drawTv, pick } from './shared'
 export function wallBuilders({ kit, atlas }: BuilderContext): Partial<BuilderMap> {
   const B: Partial<BuilderMap> = {}
   B.wall_ac = (M, a) => { const K = kit(M, a), { w, d, h } = K.dim('wall_ac'), y = M.y || 2.15;
-    K.box('plain', 0, y, 0, w, h, d, 0xf0f0ee); K.box('plain', 0, y + h - 0.02, d * 0.1, w - 0.04, 0.02, d * 0.8, 0xe6e6e2); // curved cover
-    K.box('plain', 0, y + 0.02, d / 2 - 0.02, w - 0.1, 0.035, 0.04, 0x30343a); K.box('plain', 0, y - 0.005, d / 2 - 0.03, w - 0.12, 0.012, 0.07, 0xe6e6e2, 0, 0.45); // slot and flap
+    K.box('plain', 0, y, 0, w, h, d, 0xf0f0ee); K.box('plain', 0, y + h - (M.visorScene ? 0.02 : 0.018), d * 0.1, w - 0.04, 0.02, M.visorScene ? d * 0.8 : d * 0.8 + 0.004, 0xe6e6e2); // curved cover (2 mm proud of the body's top and front outside the Visor's scene)
+    K.box('plain', 0, y + 0.02, d / 2 - (M.visorScene ? 0.02 : 0.018), w - 0.1, 0.035, 0.04, 0x30343a); K.box('plain', 0, y - 0.005, d / 2 - 0.03, w - 0.12, 0.012, 0.07, 0xe6e6e2, 0, 0.45); // slot and flap
     K.box('plain', w / 2 - 0.1, y + h - 0.1, d / 2 + 0.001, 0.05, 0.02, 0.004, 0x2a3a30); K.box('plain', -w / 2 + 0.01, y + 0.02, 0.0, 0.01, h - 0.04, d - 0.02, 0xdcdcd8); };
   const frame = (K: Kit, id: PropType, def: number, large: boolean) => { const { w, d, h } = K.dim(id), y = K.M.y || def, fr = Math.min(w, h) * 0.07 + 0.008, margin = large ? 0.05 : 0.035, A = atlas('picture'), idx = K.M.art != null ? K.M.art % 7 : Math.floor(K.rnd() * 7);
     const cm = K.color('picture_accent', pick(K, [0x4a3324, 0x1c1c1c, 0xe8e2d4, 0x8a6a44])); K.box('wood', 0, y, 0, w, h, d, K.M.color != null ? hex(K.M.color) : cm);

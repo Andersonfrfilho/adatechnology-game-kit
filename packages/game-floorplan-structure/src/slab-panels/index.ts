@@ -1,3 +1,5 @@
-export { applySlabPanels, beamDepthFor, beamSpan, deepenBondBeams, slabPanelView, slabPanelsOf } from './apply'
+export { HOUSE_SHARING, applySlabPanels, beamDepthFor, beamSpan, deepenBondBeams, slabPanelView, slabPanelsOf } from './apply'
 export { SLAB_PANEL_DEFAULTS, resolveSlabPanels } from './options'
 export type { SlabPanelOptions } from './options'
+export { slabThicknessFor } from './thickness'
+export type { SlabSpan } from './thickness'

@@ -438,6 +438,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-load-path':
+        specifier: workspace:^
+        version: link:../game-load-path
     devDependencies:
       '@adatechnology/game-weapons':
         specifier: workspace:^
@@ -711,6 +714,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-load-path':
+        specifier: workspace:^
+        version: link:../game-load-path
     devDependencies:
       '@adatechnology/game-floorplan':
         specifier: workspace:^
@@ -788,6 +794,9 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-terrain':
+        specifier: workspace:^
+        version: link:../game-terrain
       '@adatechnology/game-vegetation':
         specifier: workspace:^
         version: link:../game-vegetation
@@ -1034,6 +1043,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-interactables':
         specifier: workspace:^
         version: link:../game-interactables
@@ -1106,6 +1118,9 @@ importers:
         specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods
@@ -1158,6 +1173,21 @@ importers:
       '@adatechnology/game-stories':
         specifier: workspace:^
         version: link:../game-stories
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-load-path:
+    devDependencies:
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1424,6 +1454,9 @@ importers:
       '@adatechnology/game-graphics-three':
         specifier: workspace:^
         version: link:../game-graphics-three
+      '@adatechnology/game-items':
+        specifier: workspace:^
+        version: link:../game-items
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
@@ -1710,6 +1743,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three

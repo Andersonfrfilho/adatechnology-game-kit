@@ -10,7 +10,7 @@ const CELL_WIDTH = 2.5
 const CHIEF_WIDTH = 4.6
 
 const template: TemplateDef = {
-  id: 'police_station', use: 'institutional', place: 'police_station', construction: 'masonry', partyWalls: ['left', 'right'], style: 'commercial',
+  id: 'police_station', use: 'institutional', place: 'police_station', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: ['left', 'right'], style: 'commercial',
   limits: { w: [16, 20], d: [11, 14] }, defaults: { w: 16, d: 11 },
   lot: (w) => buildingLot({ frontSetback: 8, garage: { u: w - 3, width: 3.5 }, cargoU: w - 3.5, doorTarget: { a: 'reception', side: 'front' }, libraries: { garden: 'patrol_yard' } }),
   facade: { steelDoor: true },

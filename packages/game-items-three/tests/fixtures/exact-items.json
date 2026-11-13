@@ -10266,6 +10266,148 @@
    "0/2 Group 55dd014c"
   ]
  },
+ "model/kabar": {
+  "hash": "9296891e",
+  "nodes": [
+   "0 Group 28d9de20",
+   "0/0 Group e9614fa4",
+   "0/0/0 Mesh c6b0e421",
+   "0/0/1 Mesh 3678ee96",
+   "0/0/2 Mesh 3c78373f",
+   "0/0/3 Mesh 81d04c0b",
+   "0/0/4 Mesh 3fe9736c",
+   "0/0/5 Mesh 7ca9981f",
+   "0/0/6 Mesh 6bf8603c",
+   "0/0/7 Mesh 1552e3b6",
+   "0/0/8 Mesh e751d3f2",
+   "0/0/9 Mesh 901d9dd5",
+   "0/0/10 Mesh f252f6db"
+  ]
+ },
+ "model/kabar:merged": {
+  "hash": "223bcf0d",
+  "nodes": [
+   "0 Group 28d9de20",
+   "0/0 Mesh 392dcb80",
+   "0/1 Mesh 8239a5b1",
+   "0/2 Mesh 6181b464",
+   "0/3 Mesh 5ec65d0c"
+  ]
+ },
+ "model/kabar:lod": {
+  "hash": "d0141a2d",
+  "nodes": [
+   "0 LOD ab95678a",
+   "0/0 Group ae5069a2",
+   "0/0/0 Mesh d4f9847d",
+   "0/0/1 Mesh 1b7f6503",
+   "0/0/2 Mesh 592a275d",
+   "0/0/3 Mesh a20fe976",
+   "0/1 Group 3a6ebde9",
+   "0/1/0 Mesh ebb6792d",
+   "0/1/1 Mesh 5a4c3ce1",
+   "0/1/2 Mesh 987ab101",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/katana": {
+  "hash": "7fc8e324",
+  "nodes": [
+   "0 Group 6b166ad9",
+   "0/0 Group 97c62436",
+   "0/0/0 Mesh 62dd875e",
+   "0/0/1 Mesh 9af8344d",
+   "0/0/2 Mesh 8ad79e1",
+   "0/0/3 Mesh 140b8099",
+   "0/0/4 Mesh 6e364d64",
+   "0/0/5 Mesh e924850f",
+   "0/0/6 Mesh 28fe828b",
+   "0/0/7 Mesh 4a683233",
+   "0/0/8 Mesh 6417a05",
+   "0/0/9 Mesh b687ccfa",
+   "0/0/10 Mesh 4b111eb7",
+   "0/0/11 Mesh d10d1dcc",
+   "0/0/12 Mesh 844c8a3"
+  ]
+ },
+ "model/katana:merged": {
+  "hash": "61259cbd",
+  "nodes": [
+   "0 Group 6b166ad9",
+   "0/0 Mesh 9053eabf",
+   "0/1 Mesh 68a5d1aa",
+   "0/2 Mesh 742335d7",
+   "0/3 Mesh 74064e2a",
+   "0/4 Mesh 4a438f57",
+   "0/5 Mesh 2c0e1c11",
+   "0/6 Mesh dc179689",
+   "0/7 Mesh 8eae3127",
+   "0/8 Mesh b422f539",
+   "0/9 Mesh 3f64d6cd",
+   "0/10 Mesh e63e0712",
+   "0/11 Mesh 817342a6",
+   "0/12 Mesh 3d2253af"
+  ]
+ },
+ "model/katana:lod": {
+  "hash": "cc39e9a9",
+  "nodes": [
+   "0 LOD c5eb71ab",
+   "0/0 Group dcc7df99",
+   "0/0/0 Mesh 21ef0e35",
+   "0/0/1 Mesh 2539c142",
+   "0/0/2 Mesh 9f6b2fa7",
+   "0/0/3 Mesh 22dba1d2",
+   "0/0/4 Mesh 3d79c31f",
+   "0/0/5 Mesh 4289fc59",
+   "0/0/6 Mesh 5691ba21",
+   "0/0/7 Mesh 223d4313",
+   "0/0/8 Mesh 4339217d",
+   "0/0/9 Mesh 24d981e9",
+   "0/0/10 Mesh 4f92bc9a",
+   "0/0/11 Mesh 79e7222a",
+   "0/0/12 Mesh 47e1a445",
+   "0/1 Group e442aeba",
+   "0/1/0 Mesh d3a446b9",
+   "0/1/1 Mesh 95c4ee61",
+   "0/1/2 Mesh d4ba6517",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/brass_knuckles": {
+  "hash": "e610b78e",
+  "nodes": [
+   "0 Group 59b5b568",
+   "0/0 Group d2c3c3ae",
+   "0/0/0 Mesh 85314e83",
+   "0/0/1 Mesh 68f9ce0a",
+   "0/0/2 Mesh 5ce74fe4",
+   "0/0/3 Mesh 1b92467f",
+   "0/0/4 Mesh f363b085",
+   "0/0/5 Mesh bb6cfc62",
+   "0/0/6 Mesh d5839bcd"
+  ]
+ },
+ "model/brass_knuckles:merged": {
+  "hash": "c0093620",
+  "nodes": [
+   "0 Group 59b5b568",
+   "0/0 Mesh 37b0f0b"
+  ]
+ },
+ "model/brass_knuckles:lod": {
+  "hash": "260f2dd0",
+  "nodes": [
+   "0 LOD 5f8f6879",
+   "0/0 Group d6e7d39c",
+   "0/0/0 Mesh fb577f9f",
+   "0/1 Group 12ced740",
+   "0/1/0 Mesh 6756ee71",
+   "0/1/1 Mesh b0cb6b58",
+   "0/1/2 Mesh fcd37fee",
+   "0/2 Group 55dd014c"
+  ]
+ },
  "shape/can": {
   "hash": "4d2dd367",
   "nodes": [

@@ -1,5 +1,4 @@
 {
-  "game-floorplan-three": "pending: houses, walls and their furniture get the guard on top of the single_storey_a rounds (fix/single-storey-a-round8), which rework the same builders",
   "game-vehicles": "sample prototypes of the engine's own tests; the real fleet is guarded in game-vehicles-fleet and game-vehicles-three",
   "game-shapes-three": "the guard itself (coincidentFacesOf); it draws no catalog",
   "game-render-three": "lights and shaders, no pieces",

@@ -180,3 +180,29 @@ describe('reach seen from the body\'s own eyes (view)', () => {
     }
   })
 })
+
+describe('third-person reach: the fingers close around what the tool asks for', () => {
+  const curl = (avatar: ReturnType<typeof createPlayerAvatar>, side: 'R' | 'L'): number => {
+    let total = 0
+    handGroup(avatar, side).traverse((node) => {
+      if (node.name !== `hand_group_${side}`) total += Math.abs(node.rotation.z)
+    })
+    return total
+  }
+
+  it('a hand with a grip of 0.9 closes more than the open hand, and the one with none stays open', () => {
+    const avatar = standing()
+    avatar.update(1 / 60, { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 })
+    const open = curl(avatar, 'R')
+    const openLeft = curl(avatar, 'L')
+    const hold: HandTargets = { R: HOLDS.axe!.R, L: { position: [0.15, 1.5, -0.3], quaternion: [0.7071, 0.7071, 0, 0] }, grip: 0.9, gripL: 0.9 }
+    avatar.reach(hold)
+    expect(curl(avatar, 'R')).toBeGreaterThan(open * 4)
+    expect(curl(avatar, 'L')).toBeGreaterThan(openLeft * 4)
+    avatar.update(1 / 60, { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 })
+    avatar.reach({ R: HOLDS.axe!.R, L: null, grip: 0.9 })
+    expect(curl(avatar, 'R')).toBeGreaterThan(open * 4)
+    expect(curl(avatar, 'L')).toBeLessThan(openLeft * 2)
+  })
+})
+

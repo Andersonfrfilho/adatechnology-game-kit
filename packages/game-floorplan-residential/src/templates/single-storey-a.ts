@@ -1,7 +1,7 @@
 import type { TemplateDef } from '@adatechnology/game-floorplan'
 
 export const singleStoreyA: TemplateDef = {
-  id: 'single_storey_a', use: 'residential_single', style: 'budget', limits: { w: [8, 14], d: [10, 14] }, defaults: { w: 11, d: 11 },
+  id: 'single_storey_a', masonryUnit: 'ceramic_block_14', use: 'residential_single', style: 'budget', limits: { w: [8, 14], d: [10, 14] }, defaults: { w: 11, d: 11 },
   lot: (w, _d) => ({ frontSetback: 6, marginLeft: 1.2, marginRight: 1.2, backyardDepth: 5.5, parking: { width: 3.4 }, garage: { u: -1.2 + 1.7, width: 3.0, to: 'parking' }, pedestrian: { u: w - 0.9 }, doorTarget: { a: 'living', side: 'front' } }),
   floors: [{
     label: 'ground_floor', ceiling: 2.8,

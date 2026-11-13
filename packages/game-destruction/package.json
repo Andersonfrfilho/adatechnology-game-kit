@@ -42,7 +42,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:^"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-load-path": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-weapons": "workspace:^",

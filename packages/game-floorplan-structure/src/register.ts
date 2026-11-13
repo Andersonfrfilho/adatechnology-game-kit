@@ -1,6 +1,7 @@
-import type { FloorplanEngine, FloorplanResult, ResultExtensionContext } from '@adatechnology/game-floorplan'
+import type { FloorplanEngine, FloorplanOptions, FloorplanResult, ResultExtensionContext, TemplateDef } from '@adatechnology/game-floorplan'
 
 import { constructionFor } from './construction'
+import { MASONRY_SYSTEM, getMasonryUnit, wallThicknessOf } from './masonry-units'
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
 import type { ConstructionBuild } from './registry'
@@ -10,6 +11,7 @@ import { contentOf } from './utilities/content'
 import { planContents, planUtilities } from './utilities'
 import { addOutbuildingPaths, planOutbuildings } from './utilities/outbuildings'
 import type { EnergyConfig } from './utilities/electrical'
+import type { Outbuilding } from './utilities/types'
 import type { TankPlanOptions } from './water-tank'
 import { VISOR_TANK_PILLAR_SIDE, planWaterTank } from './water-tank'
 import { structureLayer } from './viewer-layer'
@@ -42,6 +44,19 @@ const cacheOf = (result: object): Cache => {
   const cache = CACHE.get(result)
   if (!cache) throw new Error('The construction extension did not run for this plan')
   return cache
+}
+
+/**
+ * The masonry unit of a plan (`options.masonryUnit`, else the template's) and the thickness of its walls that follows from it, before the walls are laid out.
+ * A house of another system, or the Visor de casas 3D reproduction, keeps the engine's walls.
+ */
+function resolveMasonryUnit(template: TemplateDef, options: FloorplanOptions): FloorplanOptions {
+  if (options.visorSections === true) return options
+  const unit = (options.masonryUnit as string | undefined) ?? template.masonryUnit
+  const system = (options.construction as string | undefined) ?? template.construction
+  if (unit === undefined || (system !== undefined && system !== 'masonry')) return options
+  if (options.masonrySystem === MASONRY_SYSTEM.STRUCTURAL) throw new Error('Structural masonry (NBR 16868) is declared but not built yet: see the README of game-floorplan-structure')
+  return { ...options, masonryUnit: unit, wallThickness: options.wallThickness ?? wallThicknessOf(getMasonryUnit(unit)) }
 }
 
 function constructionExtension(context: ResultExtensionContext): unknown {
@@ -80,12 +95,13 @@ function energyOf(context: ResultExtensionContext): EnergyConfig | undefined {
 export function register(engine: FloorplanEngine, options: StructurePackOptions = {}): void {
   engine.registerLocale('en', enLocale)
   engine.registerLocale('pt-BR', ptBrLocale)
+  engine.registerOptionResolver('masonryUnit', resolveMasonryUnit)
   engine.registerResultExtension('construction', constructionExtension)
   engine.registerResultExtension('structureExtras', (context) => cacheOf(context.result).build.extras ?? {}, { after: ['construction'] })
   engine.registerResultExtension(
     'waterTank',
     (context) => {
-      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'], ...(context.options.visorSections === true ? { pillarSide: VISOR_TANK_PILLAR_SIDE } : {}) } // templates declare their own tank hooks
+      const tank: TankPlanOptions = { capacities: options.tankCapacities, custom: context.plan.tpl.tank as TankPlanOptions['custom'], location: context.plan.tpl.tankLocation as TankPlanOptions['location'], ...(context.options.visorSections === true ? { pillarSide: VISOR_TANK_PILLAR_SIDE, underRoof: false } : {}) } // templates declare their own tank hooks
       return planWaterTank(context.result as never, context.rng, tank)
     },
     { after: ['construction'], seedKey: 'caixa' },
@@ -96,9 +112,10 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
   engine.registerItem(COOKING_CYLINDER)
   engine.registerResultExtension('contents', (context) => planContents({ items: context.result.items, state: context.result.state, place: context.plan.tpl.place ?? 'house', ...(typeof context.options.day === 'number' ? { day: context.options.day } : {}), ...(typeof context.options.region === 'string' ? { region: context.options.region } : {}), rngFor: (key) => engine.createRng(context.seed, key), findsFor: (query) => { const answered = engine.findsAnswer(query); return answered ?? contentOf({ container: query.container, state: query.state, rng: query.rng, footprint: query.footprint ?? 0.5 }) } }))
   engine.registerResultExtension('outbuildings', (context) => {
-    const outbuildings = planOutbuildings({ plan: context.plan, items: context.result.items, catalog: engine.catalog, rngFor: (key) => engine.createRng(context.seed, key) })
+    const outbuildings = planOutbuildings({ plan: context.plan, items: context.result.items, catalog: engine.catalog, rngFor: (key) => engine.createRng(context.seed, key), visor: context.options.visorSections === true })
     if (context.result.lot) addOutbuildingPaths(context.result.lot, outbuildings, context.result.items)
     return outbuildings
   }, { after: ['contents'] })
-  engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
+  engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), // (the Visor's golden leaves the outbuilding unwired)
+    outbuildings: context.options.visorSections === true ? [] : ((context.result.outbuildings as Outbuilding[] | undefined) ?? []), ...(context.options.visorSections === true ? { visor: true } : {}), ...(context.options.gasLayout === 'indoor_beside_stove' ? { gasLayout: 'indoor_beside_stove' as const } : {}), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
 }

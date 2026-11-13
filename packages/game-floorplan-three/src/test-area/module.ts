@@ -3,7 +3,11 @@ import { isLightBudget } from '@adatechnology/game-render-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 
 import { create } from '../create.js'
-import { planLod } from '../statics.js'
+import { CONSTRUCTION_LEVEL_MAX, clampConstructionLevel, constructionLevelInfo } from '../construction-stages/apply-level.js'
+import { renderBlueprintDataUrl } from '../construction-stages/blueprint.js'
+import { checkConstructionStages } from '../construction-stages/check.js'
+import { groundLayoutOfPlans } from '../lot/ground-layout.js'
+import { planLod, rectsOf } from '../statics.js'
 import { createHouseScenarios, SPECIMEN_AT } from './scenarios.js'
 import type { AreaContext } from './scenarios.js'
 import { DEFAULT_AREA_FURNITURE, furnitureItems } from './furniture-items.js'
@@ -67,6 +71,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     template: firstTemplate,
     state: options.state && states.includes(options.state) ? options.state : states.includes('normal') ? 'normal' : (states[0] ?? 'normal'),
     seed: options.seed ?? 1,
+    constructionLevel: clampConstructionLevel(options.constructionLevel ?? CONSTRUCTION_LEVEL_MAX),
     quality: 'game',
     lod: 'auto',
     houses: 1,
@@ -120,7 +125,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       houseRenderer?.dispose?.()
       houseRenderer = create(THREE as Three, {
         locale,
-        lod: { interior: 10, hide: 40 },
+        lod: { interior: 48, hide: 220 },
         breachPaintBudgetMs: 4,
         ...options.house,
         ...(options.house?.interactives ? { interactives: { effectSink: () => host?.effects, ...options.house.interactives } } : {}),
@@ -144,13 +149,69 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     for (const p of placed) p.house.dispose()
     placed.length = 0
     lastSheet = ''
+    host?.cornerImage?.(null)
+  }
+
+  const updateBlueprintCorner = (): void => {
+    if (!host?.cornerImage) return
+    const first = placed[0]
+    if (!first) {
+      host.cornerImage(null)
+      return
+    }
+    const doc = (options.house?.document as Document | undefined) ?? (typeof document !== 'undefined' ? document : null)
+    const stage = constructionLevelInfo(settings.constructionLevel, locale)
+    const url = renderBlueprintDataUrl(doc, first.house.r, rectsOf, stage.title)
+    if (url) {
+      host.cornerImage({
+        url,
+        alt: `${templateName(settings.template)} — ${stage.title}`,
+        credit: stage.description,
+      })
+    }
+  }
+
+  const updateGround = (): void => {
+    if (!host?.setGround) return
+    if (placed.length === 0) {
+      host.setGround({ surface: 'lawn' })
+      return
+    }
+    // the trenches and pits open at this construction level are dug in the room's ground itself: real holes, closed again by the backfill
+    const excavations = placed.flatMap((p) => p.house.excavations?.() ?? [])
+    const dug = excavations.length ? { excavations } : {}
+    const lot = host.bench?.layer('lot') ?? false
+    if (!lot) {
+      // a building site's ground: its topsoil, the clay under it, rock deep down (game-terrain's yard)
+      host.setGround({ surface: 'yard', ...dug })
+      return
+    }
+    host.setGround({
+      ...groundLayoutOfPlans(
+        placed.map((p) => ({
+          plan: p.plan,
+          offset: [p.house.group.position.x, p.house.group.position.z],
+          flipped: true,
+        })),
+      ),
+      ...dug,
+    })
   }
 
   const showAll = (): void => {
     const sel = settings.floorView === 'all' ? -1 : Number(settings.floorView)
     const roof = host?.bench?.layer('roof') ?? true
     const lot = host?.bench?.layer('lot') ?? false
-    for (const p of placed) p.house.show({ floor: sel, cut: !roof, lot })
+    const water = host?.bench?.layer('water') ?? false
+    for (const p of placed) {
+      p.house.show({ floor: sel, cut: !roof, lot })
+      p.house.setConstructionLevel?.(settings.constructionLevel, {
+        waterLayer: water,
+        roofLayer: roof && sel < 0,
+        lotLayer: lot,
+      })
+    }
+    updateGround()
   }
 
   const applyLod = (): void => {
@@ -184,7 +245,14 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     for (let i = 0; i < settings.houses; i++) {
       const seed = settings.seed + i
       const plan = engine.generate(settings.template, { seed, state: settings.state })
-      const house = renderer.build(plan, { quality: settings.quality as 'high' | 'game', night, terrain: lot, noPerimeter: !lot })
+      const house = renderer.build(plan, {
+        quality: settings.quality as 'high' | 'game',
+        night,
+        terrain: host.setGround ? false : lot,
+        noPerimeter: !lot,
+        constructionStages: true,
+        constructionLevel: settings.constructionLevel,
+      })
       scene.add(house.group)
       placed.push({ house, plan, seed, ...bounds(plan) })
     }
@@ -192,6 +260,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     for (const p of placed) if (options.world) p.house.destruction.activate()
     showAll()
     applyLod()
+    updateBlueprintCorner()
     floorNow = 0
     const first = placed[0] as Placed
     host.log(fill(text.steps.built as string, { template: templateName(settings.template), seed: settings.seed, state: stateName(settings.state), parts: first.house.structure.parts.length, floors: first.plan.floors.length }), { template: settings.template, seed: settings.seed, houses: placed.length })
@@ -203,7 +272,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     const depth = Math.max(...placed.map((p) => p.depth))
     const span = placed.reduce((sum, p) => sum + p.width, 0) + GAP * (placed.length - 1)
     const back = Math.min(arenaSize - 0.7, depth / 2 + Math.max(10, span * 0.8))
-    host.bench.look([0, 4.5, back], [0, 1.6, 0])
+    host.bench.look([0, EYE, back], [0, 1.5, 0])
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -381,7 +450,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       return
     }
     if (change.kind === 'layer') {
-      if (change.id === 'roof') showAll()
+      if (change.id === 'roof' || change.id === 'water') showAll()
       else if (change.id === 'room_lights') dropRoomLights()
       else if (placed.length > 0) {
         dirty = true
@@ -404,6 +473,16 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       case 'template': settings.template = String(value); break
       case 'state': settings.state = String(value); break
       case 'seed': settings.seed = Number(value); break
+      case 'construction_level': {
+        settings.constructionLevel = clampConstructionLevel(Number(value))
+        if (placed.length > 0) {
+          showAll()
+          updateBlueprintCorner()
+          const info = constructionLevelInfo(settings.constructionLevel, locale)
+          host?.log(fill(text.steps.stage_changed as string, { level: info.level, title: info.title, description: info.description }), { level: info.level })
+        }
+        break
+      }
       case 'quality': settings.quality = String(value); break
       case 'houses': settings.houses = Number(value); break
       case 'budget': settings.budget = Number(value); break
@@ -447,7 +526,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     }
     return { parts, standing: parts - broken, broken, holes }
   }
-  const sheetOf = (_p: Placed): string => `${settings.template}|${settings.seed}|${settings.state}|${aimText}|${floorNow}`
+  const sheetOf = (_p: Placed): string => `${settings.template}|${settings.seed}|${settings.state}|${settings.constructionLevel}|${aimText}|${floorNow}`
   const updateSheet = (): void => {
     const p = placed[0]
     if (!host?.bench?.sheet) return
@@ -458,10 +537,12 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     const key = sheetOf(p)
     if (key === lastSheet) return
     lastSheet = key
+    const stage = constructionLevelInfo(settings.constructionLevel, locale)
     host.bench.sheet({
       kicker: text.sheet.kicker,
       title: templateName(settings.template),
       facts: [
+        { label: text.sheet.stage, value: stage.title },
         { label: text.sheet.seed, value: String(settings.seed) },
         { label: text.sheet.state, value: stateName(settings.state) },
         { label: text.sheet.floors, value: String(p.plan.floors.length) },
@@ -489,6 +570,28 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
           const house = create(THREE ?? (host?.THREE as Three), { locale, ...options.house, destruction: undefined, destructionRenderer: undefined, interactives: undefined, vegetation: undefined, fleet: null }).build(plan, { quality: 'game', terrain: false, noPerimeter: true })
           const ok = house.structure.parts.length > 0 && house.floors.length >= 1 && house.colliders.length > 0
           expect(ok, `${groupName(group)}: ${templateName(id)} (${house.structure.parts.length})`)
+          house.dispose()
+        }
+      }
+    },
+  }
+
+  // the construction tests of the stages (the CI's, construction-stages.test.ts) on every typology the page registered: level by level, faces that would
+  // flicker, lintels in the frame, pillars without a footing, beams short of their slab, sewer over the ground, the pipes laid twice or across a room,
+  // what is hidden shown, the roof's timber or the water tank out of the tiles, the tank on the middle of a slab panel, a castle without its walls or roof
+  const stagesScenario: ModuleScenario<AreaContext> = {
+    id: 'floorplan_construction_stages',
+    name: locale === 'en' ? 'every typology, level by level from 0 to 8, passes the construction tests of its stages' : 'toda tipologia, nível a nível de 0 a 8, passa nos testes de construção das etapas',
+    run({ expect }) {
+      const templates = engine?.listTemplates() ?? []
+      for (const group of groups) {
+        for (const id of group.templates) {
+          const range = templates.find((t) => t.id === id)?.floorRange
+          if (range && range[0] >= TALL_STOREYS) continue // a tower is checked by its own scenario: its stages are the house's, storey after storey
+          const plan = (engine as NonNullable<typeof engine>).generate(id, { seed: 1 })
+          const house = create(THREE ?? (host?.THREE as Three), { locale, ...options.house, destruction: undefined, destructionRenderer: undefined, interactives: undefined, vegetation: undefined, fleet: null }).build(plan, { quality: 'game', terrain: false, noPerimeter: true, constructionStages: true, constructionLevel: CONSTRUCTION_LEVEL_MAX })
+          const problems = checkConstructionStages(THREE ?? (host?.THREE as Three), house)
+          expect(problems.length === 0, `${groupName(group)}: ${templateName(id)}${problems.length ? ` — ${problems.length}: ${problems.slice(0, 3).map((p) => `${p.code} @${p.level} ${p.detail}`).join('; ')}` : ''}`)
           house.dispose()
         }
       }
@@ -525,6 +628,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         { kind: 'choice', id: 'template', name: text.controls.template, hint: text.hints.template, options: (group?.templates ?? []).map((id) => ({ id, name: templateName(id) })), default: settings.template },
         choice('state', states, settings.state, text.options.state),
         { kind: 'number', id: 'seed', name: text.controls.seed, min: 1, max: 999, step: 1, default: settings.seed },
+        { kind: 'number', id: 'construction_level', name: text.controls.construction_level, hint: text.hints.construction_level, min: 0, max: CONSTRUCTION_LEVEL_MAX, step: 1, default: settings.constructionLevel },
         choice('quality', ['game', 'high'], 'game', text.options.quality),
         choice('lod', ['auto', '0', '1', '2'], 'auto', text.options.lod),
         { kind: 'number', id: 'houses', name: text.controls.houses, hint: text.hints.houses, min: 1, max: 5, step: 1, default: 1 },
@@ -545,10 +649,12 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     layers: (): ModuleLayer[] => [
       { id: 'roof', name: text.layers.roof, default: true },
       { id: 'lot', name: text.layers.lot, default: false },
+      { id: 'water', name: text.layers.water, default: false },
       { id: 'night', name: text.layers.night, default: false },
       { id: 'room_lights', name: text.layers.room_lights, default: false },
     ],
     metrics: (): ModuleMetric[] => [
+      { id: 'construction_stage', name: text.metrics.construction_stage, read: () => constructionLevelInfo(settings.constructionLevel, locale).title },
       { id: 'houses_built', name: text.metrics.houses, read: () => placed.length },
       { id: 'parts', name: text.metrics.parts, read: () => stats().parts },
       { id: 'standing', name: text.metrics.standing, read: () => stats().standing },
@@ -562,7 +668,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       { id: 'target', name: text.metrics.target, read: () => aimText || text.sheet.none },
       { id: 'planned', name: text.metrics.planned, read: () => planned },
     ],
-    scenarios: (): Array<ModuleScenario<AreaContext>> => [...scenarios, typologyScenario],
+    scenarios: (): Array<ModuleScenario<AreaContext>> => [...scenarios, typologyScenario, stagesScenario],
     attach(lent) {
       host = lent
       THREE = lent.THREE as Three

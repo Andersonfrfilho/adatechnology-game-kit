@@ -46,3 +46,23 @@ describe('blastShove', () => {
     expect(blastShove(BLAST, { position: [0, 0, 0], mass: 5 })?.direction).toEqual([0, 1, 0])
   })
 })
+
+describe('blastShove of a target that shows an area to the wave', () => {
+  const grenade = { point: [0, 0, 0] as [number, number, number], energy: 200_000, radius: 14, tnt: 0.24 }
+  const shovel = (area: number, mass = 2) => blastShove(grenade, { position: [0.8, 0, 0], mass, area })
+
+  it('is pushed by the impulse of the wave (Kinney-Graham, reflected) over its area, divided by its mass: single digits for a 2 kg shovel at 0.8 m, not the cap', () => {
+    const broadside = shovel(0.08)!
+    // 67 Pa s side-on impulse at Z = 1.29 m/kg^(1/3), reflected 3.5 times, over 0.08 m2, per 2 kg
+    expect(broadside.speed).toBeGreaterThan(8)
+    expect(broadside.speed).toBeLessThan(11)
+    expect(shovel(0.015)!.speed).toBeLessThan(2)
+  })
+
+  it('goes with the area and against the mass, and is capped by `maxSpeed` but does not depend on the coupling', () => {
+    expect(shovel(0.16)!.speed).toBeCloseTo(2 * shovel(0.08)!.speed, 6)
+    expect(shovel(0.08, 4)!.speed).toBeCloseTo(shovel(0.08)!.speed / 2, 6)
+    expect(blastShove(grenade, { position: [0.8, 0, 0], mass: 2, area: 0.08 }, { coupling: 0.5 })!.speed).toBeCloseTo(shovel(0.08)!.speed, 6)
+    expect(blastShove(grenade, { position: [0.8, 0, 0], mass: 2, area: 0.08 }, { maxSpeed: 3 })!.speed).toBe(3)
+  })
+})

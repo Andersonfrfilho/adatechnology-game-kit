@@ -56,7 +56,7 @@ export function createBudgetSlabHouse(hashString: (s: string) => number): Templa
   const floorsOf = (op: FloorplanOptions): number =>
     op.randomFloors ? 1 + (hashString(String(op.seed == null ? 1 : op.seed) + '|slab:floors') % 3) : floorCount(op, 1)
   return {
-    id: 'budget_slab_house', use: 'residential_single', floorRange: [1, 3], partyWalls: ['right'], style: 'budget', limits: { w: [5, 7.2], d: [9.2, 10.4] }, defaults: { w: 6, d: 9.6 },
+    id: 'budget_slab_house', masonryUnit: 'ceramic_block_14', use: 'residential_single', floorRange: [1, 3], partyWalls: ['right'], style: 'budget', limits: { w: [5, 7.2], d: [9.2, 10.4] }, defaults: { w: 6, d: 9.6 },
     options: { floors: [1, 2, 3], randomFloors: [false, true] },
     floorsFn: (op) => [GROUND_FLOOR, ...UPPER_FLOORS.slice(0, floorsOf(op) - 1)],
     config: (op) => { const floors = floorsOf(op); const sideStair = floors > 1 ? { side: 'left', rect: [-0.75, STAIR.start, -0.05, r2(STAIR.start + STAIR.flight * (floors - 1))], flights: floors - 1, risers: STAIR.risers, doors: Array.from({ length: floors - 1 }, (_, index) => `d${index + 1}_0`) } : null; return { floors, sideStair } },

@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -372,6 +372,8 @@ class Renderer implements DestructionRenderer {
   private readonly tmpQ: THREE_NS.Quaternion
   private readonly v1: THREE_NS.Vector3
   private readonly v2: THREE_NS.Vector3
+  private readonly v3: THREE_NS.Vector3
+  private readonly q1: THREE_NS.Quaternion
 
   constructor(
     private readonly THREE: ThreeNamespace,
@@ -390,6 +392,8 @@ class Renderer implements DestructionRenderer {
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()
     this.v2 = new THREE.Vector3()
+    this.v3 = new THREE.Vector3()
+    this.q1 = new THREE.Quaternion()
     const maxParticles = Math.max(8, Math.floor((o.maxParticles ?? 2500) * (this.low ? 0.5 : 1)))
     this.visuals = new Visuals(THREE, this.low, 600)
     this.settlement = new SettlementView(THREE, this.visuals)
@@ -1124,6 +1128,9 @@ class Renderer implements DestructionRenderer {
       case 'dent':
         this.onDent(ev)
         break
+      case 'bend':
+        this.onBend(ev)
+        break
       case 'hole':
         this.onHole(ev)
         break
@@ -1387,6 +1394,23 @@ class Renderer implements DestructionRenderer {
     return new this.THREE.Vector3(v[0], v[1], v[2]).applyQuaternion(b.root.getWorldQuaternion(this.tmpQ)).normalize()
   }
 
+  /** A plate bent: every mesh of the part turns about the hinge line together (a shovel's blade pieces), on top of the dents they already have. */
+  private onBend(ev: Ev<'bend'>): void {
+    const b = this.bounds.get(ev.object)
+    const pv = b?.parts.get(ev.part)
+    if (!b || !pv) return
+    // the object's frame is in metres whatever the scale of the model root (a model drawn in centimetres): its pose is the root's position and rotation only
+    b.root.updateWorldMatrix(true, false)
+    const point = new this.THREE.Vector3(ev.hinge.point[0], ev.hinge.point[1], ev.hinge.point[2])
+    const origin = this.v1
+    const rotation = this.tmpQ
+    b.root.matrixWorld.decompose(origin, rotation, this.v2)
+    point.applyQuaternion(rotation).add(origin)
+    const axis = this.worldDir(b, ev.hinge.axis)
+    const side = this.worldDir(b, ev.hinge.side)
+    for (const mv of pv.meshes) if (this.visuals.shown(mv)) this.visuals.applyBend(mv, point, axis, side, ev.angle)
+  }
+
   private onDent(ev: Ev<'dent'>): void {
     const b = this.bounds.get(ev.object)
     const pv = b?.parts.get(ev.part)
@@ -1408,22 +1432,8 @@ class Renderer implements DestructionRenderer {
     const def = this.world.materials.get(pv.material)
     const n = this.worldDir(b, ev.hole.normal)
     const look = debrisLook(def, 'shot')
-    const draw = (point: Vec3, normal: THREE_NS.Vector3): void => {
-      const wp = new this.THREE.Vector3(point[0], point[1], point[2])
-      const mv = this.nearestMesh(pv, wp)
-      if (!mv) return
-      if (look.mark === 'star_crack') {
-        const seed = hashNumbers(ev.time, point[0], point[1], point[2])
-        this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, ev.hole.diameter * 5), 0xe8f4ff, seed)
-      } else {
-        // wood tears its fibres around the hole: a ragged rim of fresh wood under it
-        const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
-        if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, ev.hole.diameter * WOOD_RIM), fresh)
-        this.visuals.addHole(mv, wp, normal, ev.hole.diameter)
-      }
-    }
-    draw(ev.worldPoint, n)
-    if (ev.hole.through && ev.exitPoint) draw(ev.exitPoint, n.clone().negate())
+    this.drawHoleMark(pv, ev.worldPoint, n, ev.hole.diameter, ev.time)
+    if (ev.hole.through && ev.exitPoint) this.drawHoleMark(pv, ev.exitPoint, n.clone().negate(), ev.hole.diameter, ev.time)
     if (look.sparks) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
     if (ev.powder) {
       // what the part holds loose (flakes, flour) puffs out: a little back out of the entry, most out of the exit along the shot
@@ -1435,20 +1445,44 @@ class Renderer implements DestructionRenderer {
     this.sound(shotKey(def), ev.worldPoint, 0.6, impactSoundKeys(pv.material, def, ev.blow))
   }
 
+  /** The mark of one hole on the mesh of `pv` nearest to the world `point`: a star crack in glass, a ragged rim and a dark disc elsewhere. */
+  private drawHoleMark(pv: PartVis, point: Vec3, normal: THREE_NS.Vector3, diameter: number, time: number): void {
+    const def = this.world.materials.get(pv.material)
+    const look = debrisLook(def, 'shot')
+    const wp = new this.THREE.Vector3(point[0], point[1], point[2])
+    const mv = this.nearestMesh(pv, wp)
+    if (!mv) return
+    if (look.mark === 'star_crack') {
+      const seed = hashNumbers(time, point[0], point[1], point[2])
+      this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, diameter * 5), 0xe8f4ff, seed)
+      return
+    }
+    // wood tears its fibres around the hole: a ragged rim of fresh wood under it
+    const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
+    if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, diameter * WOOD_RIM), fresh)
+    this.visuals.addHole(mv, wp, normal, diameter)
+  }
+
   private onCrack(ev: Ev<'crack'>): void {
     const b = this.bounds.get(ev.object)
     const pv = b?.parts.get(ev.part)
     if (!b || !pv) return
+    this.drawCrackMark(b, pv, ev.crack, ev.worldPoint, ev.time)
+    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
+  }
+
+  /** The mark of one crack: the mortar gap of a settlement crack on both faces of a wall, or the star lines of glass; an opaque body shows chips, holes and dents instead. */
+  private drawCrackMark(b: Bound, pv: PartVis, crack: Crack, worldPoint: Vec3, time: number): void {
     const def = this.world.materials.get(pv.material)
-    const stair = ev.crack.stair
+    const stair = crack.stair
     // a stair-step crack of settlement opens the mortar joints of the wall: a dark gap drawn on its face, as wide as it opened (and wide enough to be seen)
     if (stair && !def?.visual?.transparent) {
-      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const wp = new this.THREE.Vector3(worldPoint[0], worldPoint[1], worldPoint[2])
+      const seed = hashNumbers(time, worldPoint[0], worldPoint[1], worldPoint[2])
       const width = Math.max(stair.width, MIN_DRAWN_CRACK_WIDTH)
-      const normal = this.worldDir(b, ev.crack.normal)
+      const normal = this.worldDir(b, crack.normal)
       const toward = this.worldDir(b, stair.along)
-      const look = { length: ev.crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
+      const look = { length: crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
       // the same crack on both faces of the wall (the far one seen from behind: its side runs the other way round, its path the same)
       for (const face of [wp, wp.clone().addScaledVector(normal, -stair.through)]) {
         const out = face === wp ? normal : normal.clone().negate()
@@ -1458,12 +1492,11 @@ class Renderer implements DestructionRenderer {
     }
     // only glass shows a crack as lines (the break runs inside a clear body); an opaque body shows its damage as chips, holes and dents, never lines drawn over it
     else if (def?.visual?.transparent) {
-      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const wp = new this.THREE.Vector3(worldPoint[0], worldPoint[1], worldPoint[2])
       const mv = this.nearestMesh(pv, wp)
-      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, ev.crack.length, 0xe8f4ff, seed)
+      const seed = hashNumbers(time, worldPoint[0], worldPoint[1], worldPoint[2])
+      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, crack.normal), crack.rays, crack.length, 0xe8f4ff, seed)
     }
-    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
   }
 
   /** Outward normal of the face of `mv` nearest to a world point: the thin axis of its world box (right for a wall; a sloped face is left to the vertex-range binding). */
@@ -2074,12 +2107,14 @@ class Renderer implements DestructionRenderer {
       wentOff?.get(objectId) ??
       this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ??
       1
+    // the wave presses on the whole face it meets, so the push has no lever arm beyond the thinnest side of the body: a thin long piece (a shovel) is not spun by it
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
       if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
-      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
+      const area = this.waveArea(pc.objectId, pc.halfExtents, pc.root.quaternion, c, p)
+      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) return
-      const spread = pc.halfExtents[0]
+      const spread = Math.min(...pc.halfExtents)
       const momentum = hit.speed * pc.mass
       this.pieceSys.impulse(pc, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
     }
@@ -2092,6 +2127,54 @@ class Renderer implements DestructionRenderer {
       ...(options.effect !== undefined ? { effect: options.effect } : {}),
       ...(report ? { confinement } : {}),
     })
+  }
+
+  /** The area a body shows the blast, or undefined when the host gave the numbers of the game rule (`blastShove`): then the push is that rule, not the blast wave. */
+  private waveArea(objectId: string, half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number | undefined {
+    if (this.o.blastShove !== undefined) return undefined
+    const box = this.areaFacing(half, quaternion, centre, point)
+    const shown = this.shownArea(objectId, point)
+    return shown === undefined ? box : Math.min(box, shown)
+  }
+
+  /**
+   * Square metres the drawn parts of an object still standing show a blast at `point`: the box of each mesh, turned as it is, seen from there. The box of the whole piece
+   * overstates a slender thing: a shovel lying on its side is a 1.1 x 0.07 m box (0.077 m2) but its handle and blade show 0.9 x 0.035 + 0.3 x 0.012 = 0.035 m2.
+   */
+  private shownArea(objectId: string, point: Vec3): number | undefined {
+    const b = this.bounds.get(objectId)
+    if (!b) return undefined
+    const seen = new Set<THREE_NS.Object3D>()
+    const size = new this.THREE.Vector3()
+    const scale = new this.THREE.Vector3()
+    const centre = new this.THREE.Vector3()
+    const turn = new this.THREE.Quaternion()
+    let area = 0
+    for (const pv of b.parts.values()) {
+      if (pv.gone !== 'none') continue
+      for (const { mesh } of pv.meshes) {
+        if (seen.has(mesh) || !mesh.visible) continue
+        seen.add(mesh)
+        const geometry = mesh.geometry
+        if (!geometry.boundingBox) geometry.computeBoundingBox()
+        const bounds = geometry.boundingBox
+        if (!bounds || bounds.isEmpty()) continue
+        mesh.updateWorldMatrix(true, false)
+        mesh.matrixWorld.decompose(centre, turn, scale)
+        bounds.getSize(size).multiply(scale)
+        bounds.getCenter(centre).applyMatrix4(mesh.matrixWorld)
+        area += this.areaFacing([Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], turn, centre, point)
+      }
+    }
+    return area > 0 ? area : undefined
+  }
+
+  /** Square metres a box of half sizes `half` (its own axes, turned by `quaternion`) at `centre` shows a blast at `point`: the sum of its faces seen from there, by the cosine of each. */
+  private areaFacing(half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number {
+    const toward = this.v3.set(centre.x - point[0], centre.y - point[1], centre.z - point[2])
+    if (toward.lengthSq() < 1e-12) return 0
+    toward.normalize().applyQuaternion(this.q1.copy(quaternion).invert())
+    return 4 * (half[1] * half[2] * Math.abs(toward.x) + half[0] * half[2] * Math.abs(toward.y) + half[0] * half[1] * Math.abs(toward.z))
   }
 
   /** The cover between a part of the world that goes off and the centre of each piece and each shoveable body within its radius, as the world stands at that moment. */
@@ -2128,13 +2211,14 @@ class Renderer implements DestructionRenderer {
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
       if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
-      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
+      const area = this.waveArea(b.id, half, b.root.quaternion, world, point)
+      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) continue
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)
       if (!body) continue
       this.o.onLoosened?.(b.id, piece, 'blast')
-      const spread = half[0]
+      const spread = Math.min(...half)
       const momentum = hit.speed * mass
       this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])
     }
@@ -2353,6 +2437,47 @@ class Renderer implements DestructionRenderer {
       this.ground.removeHome(home)
       this.cages.removeObject(home)
     }
+  }
+
+  /**
+   * Draws a bound object again from the state its world holds now: the host put it back damaged (`DestructionWorld.loadObject`) and the meshes, still whole, take its dents, holes,
+   * cracks, bend and char, with the broken, melted and burned parts hidden, as the live path drew them. Marks the meshes already carry are wiped first.
+   */
+  redraw(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (!b) return
+    this.restoreHome(objectId)
+    b.root.updateWorldMatrix(true, false)
+    for (const pv of b.parts.values()) this.drawPartState(b, pv)
+  }
+
+  private drawPartState(b: Bound, pv: PartVis): void {
+    const ps = this.world.part(b.id, pv.id)
+    if (!ps) return
+    if (ps.status === 'broken' || ps.status === 'melted' || ps.status === 'ashes') {
+      this.visuals.hide(pv, ps.status)
+      return
+    }
+    const toWorld = (local: Vec3): Vec3 => {
+      const at = new this.THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(b.root.matrixWorld)
+      return [at.x, at.y, at.z]
+    }
+    const shown = pv.meshes.filter((mv) => this.visuals.shown(mv))
+    for (const dent of ps.dents) {
+      const at = toWorld(dent.point)
+      const wp = new this.THREE.Vector3(at[0], at[1], at[2])
+      const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, dent)), dent.radius)
+      this.visuals.applyPartDent(shown, wp, this.worldDir(b, dent.normal), dent, reach)
+    }
+    for (const hole of ps.holes) this.drawHoleMark(pv, toWorld(hole.point), this.worldDir(b, hole.normal), hole.diameter, 0)
+    for (const crack of ps.cracks) this.drawCrackMark(b, pv, crack, toWorld(crack.point), 0)
+    if (ps.bend !== undefined && ps.bendHinge) {
+      const hinge = new this.THREE.Vector3(...toWorld(ps.bendHinge.point))
+      const axis = this.worldDir(b, ps.bendHinge.axis)
+      const side = this.worldDir(b, ps.bendHinge.side)
+      for (const mv of shown) this.visuals.applyBend(mv, hinge, axis, side, ps.bend)
+    }
+    if (ps.char > 0 || ps.melt > 0) this.activate(b.id, pv.id)
   }
 
   release(objectId: string): string[] {

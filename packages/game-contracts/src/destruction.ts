@@ -331,6 +331,12 @@ export interface DestructibleSpec {
    * this object. `false` keeps the object out of the wind. Without the world's `wind` it does nothing.
    */
   wind?: WindExposure | false
+  /**
+   * How the load of a part goes down to what it rests on. `nearest` (default): only to its supports closest to the ground. `all`: to every support its
+   * joints lay it on (`bears: 'a_on_b'`), at any distance from the ground: a beam on the beam it frames into (NBR 6118 18.3.7), a slab on all four of its
+   * edges (a two-way slab).
+   */
+  loadSharing?: 'nearest' | 'all'
 }
 
 /** What belongs to the place and the shape of one building in the wind (`DestructibleSpec.wind`; the world's `wind` has the same fields as defaults). */
@@ -430,6 +436,41 @@ export interface BlastOptions {
   fragmentHits?: boolean | FragmentHitOptions
   /** A number is the multiplier itself (a room volume the host knows, skips the rays); `true` or options estimate it with rays. */
   confinement?: boolean | number | ConfinementOptions
+  /** The charge (its TNT equivalent and its case): the wave is read from the first, the fragments thrown from the second. */
+  charge?: BlastCharge
+}
+
+/**
+ * The metal case of a charge that breaks into fragments (a grenade body, a pipe). The destruction world throws them: their number and masses follow Mott's distribution of the case
+ * mass, their first speed Gurney's formula for the charge and case masses, and they fly as projectiles through the same path as a gun round.
+ */
+export interface BlastCasing {
+  /** Kilograms of the case that breaks up. */
+  readonly mass: number
+  /** Material id of the case (a fragment's density and its hardness against what it hits are those of steel unless the world has another material by this id). */
+  readonly material: string
+  /** How many fragments the case breaks into (the Mott scale is `mass / (2 * fragments)`). */
+  readonly fragments: number
+  /** Kilograms of the explosive in the case (the charge `C` of Gurney's `M / C`). */
+  readonly chargeMass: number
+  /** Gurney velocity `sqrt(2E)` of the explosive in m/s (Composition B 2700, TNT 2440, C4 2680). */
+  readonly gurneyVelocity: number
+  /** `sphere` (default: a grenade, `v = sqrt(2E) / sqrt(M/C + 3/5)`) or `cylinder` (a pipe, `M/C + 1/2`). */
+  readonly geometry?: 'sphere' | 'cylinder'
+}
+
+/** The charge behind a blast, when the host knows it: its TNT equivalent for the blast wave, and its case for the fragments. */
+export interface BlastCharge {
+  /** Kilograms of TNT equivalent. Without it the charge is the blast `energy` by `0.24 kg / 200 kJ` (the arsenal's scale). */
+  readonly tnt?: number
+  /** Case that throws fragments. Without it the blast is the wave alone. */
+  readonly casing?: BlastCasing
+  /** Most fragment rays cast in one blast (default 256): a grenade breaks into hundreds of pieces, only the ones that can reach something are cast. */
+  readonly maxRays?: number
+  /** Objects the fragments pass through (the explosive's own body). */
+  readonly ignore?: readonly string[]
+  /** Kilograms of fuel the blast burns (the gas of a cylinder that bursts): its fireball (`fuelFireball`) is the heat of the blast instead of the charge's (`chargeFireball`). */
+  readonly fuel?: number
 }
 
 /** What a blast did to one target (`HitResult.blast`). */
@@ -472,6 +513,10 @@ export interface Hit {
   radius?: number
   /** `explosive` only: inside this radius (metres) a body takes the blast as lethal; between it and `radius` it is hurt, less with distance. */
   lethalRadius?: number
+  /** `explosive` only: kilograms of TNT equivalent of the charge, for the blast wave on the parts (`waveWork`); without it `energy` stands for it at the arsenal's scale. */
+  tnt?: number
+  /** `explosive` only: the fireball of the blast (`chargeFireball`, `fuelFireball`), whose heat is what the blast lights; without it, the fireball of the charge `energy` stands for. */
+  fireball?: { readonly radius: number; readonly seconds: number; readonly flux: number }
   /** Source temperature for `fire` and `heat`. */
   temperature?: number
   /** Seconds the heat is applied for (a flamethrower calls `hit` every frame with `duration: dt`). */
@@ -630,6 +675,20 @@ export interface PartState {
    * and bends it where one end went down more. A part that rests on a settled one (the wall on its ground beam) follows it with the same line.
    */
   settlement?: PartSettlement
+  /** Radians a thin ductile plate (a pressed steel blade) was bent for good by heavy blunt blows (`MaterialDef.bending`); only present once it bent. */
+  bend?: number
+  /** Where the last blow folded the plate (`bend` set): drawn by rotating the part beyond that line, so a bent plate keeps its hinge in the state. */
+  bendHinge?: BendHinge
+}
+
+/** The line a thin plate folds about and the way its free end goes, in local space of the part's object. */
+export interface BendHinge {
+  /** A point on the hinge line. */
+  point: Vec3
+  /** Unit direction of the hinge line (the rotation axis: from the free end towards the way it goes, `side` × the way it goes). */
+  axis: Vec3
+  /** Unit direction from the hinge towards the end that folds over (the shorter side of the blow). */
+  side: Vec3
 }
 
 /** How the ground under an object is holding (`DestructibleSpec.soil`). */
@@ -765,6 +824,8 @@ interface EventBase {
 export type DestructionEvent =
   | (EventBase & { type: 'damage'; part: string; amount: number; hp: number; damageType: DamageType })
   | (EventBase & { type: 'dent'; part: string; dent: Dent; worldPoint: Vec3 })
+  /** A thin ductile plate bent by `angle` more radians about `hinge` (`PartState.bend` holds the total). */
+  | (EventBase & { type: 'bend'; part: string; hinge: BendHinge; angle: number; worldPoint: Vec3 })
   /** `powder`: the part's loose dry contents (`PartSpec.powder`), which puff out of the hole. */
   | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number }; /** Joules the round still carries out of the part, when the part knows. */ energyLeft?: number })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })
@@ -879,4 +940,6 @@ export interface RayHit {
   point: Vec3
   normal: Vec3
   distance: number
+  /** The part hit is the ground an object stands on (tagged `terrain`, as the soil under a house): a tool that works the ground (a shovel) works it there. */
+  terrain?: true
 }

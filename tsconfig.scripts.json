@@ -21,6 +21,9 @@
       "@adatechnology/*/testing": [
         "packages/*/dist/testing.d.ts"
       ],
+      "@adatechnology/game-vegetation/three": [
+        "packages/game-vegetation/dist/three.d.ts"
+      ],
       "@adatechnology/*": [
         "packages/*/dist/index.d.ts"
       ],

@@ -226,8 +226,11 @@ describe('skyscraper structure', () => {
       const shattered = events.filter((e): e is Ev<'fracture'> => e.type === 'fracture').flatMap((e) => (e as Ev<'fracture'>).part ? [(e as Ev<'fracture'>).part] : [])
       const glass = shattered.filter((p) => p.startsWith('glass_'))
       expect(glass.length).toBeGreaterThan(3)
-      // the panels of that storey on that face, not the whole tower
-      expect(glass.every((p) => /^glass_(8|9|10|11|12)_s_/.test(p))).toBe(true)
+      // the panels on that face within the blast's reach, not the whole tower: with the wave read by Hopkinson-Cranz, 5 kg of TNT 3 m off the facade still
+      // reflects about 45 kPa 10 m away (Z = 5.8 m/kg^(1/3)), over the 24 kPa a 12 mm pane of 1.5 x 3.2 m holds, so the panes break out to the 12 m radius of
+      // the blast: three storeys up and down (they were storeys 8 to 12 when the wave was a tenth of the energy)
+      const reach = Math.floor(12 / layout.pitch)
+      expect(glass.every((p) => p.includes('_s_') && Math.abs(Number(p.split('_')[1]) - f) <= reach)).toBe(true)
       expect(glass.some((p) => p.startsWith('glass_10_s_'))).toBe(true)
       // the slab above and below the blast is hurt where it is hit, and no other slab
       const hurt = w.state(id)!.parts.filter((p) => p.id.startsWith('slab_') && p.hp < p.maxHp)

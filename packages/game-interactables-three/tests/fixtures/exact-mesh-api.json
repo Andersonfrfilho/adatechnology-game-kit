@@ -32,10 +32,10 @@
   ]
  },
  "props3d/wall_ac:high": {
-  "hash": "48dff561",
+  "hash": "f8a7201e",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 35413f2f"
+   "0/0 Mesh ccb3d9e4"
   ]
  },
  "props3d/picture_small:high": {
@@ -124,12 +124,12 @@
   ]
  },
  "props3d/breakfast_bar:high": {
-  "hash": "3de348c9",
+  "hash": "fc25c989",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh e9b79740",
    "0/1 Mesh 1cd88d50",
-   "0/2 Mesh 35c3f4ed"
+   "0/2 Mesh 2cfac465"
   ]
  },
  "props3d/sofa_l:high": {
@@ -160,10 +160,10 @@
   ]
  },
  "props3d/closet:high": {
-  "hash": "ef9aa78a",
+  "hash": "c25a9e2f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 3cde2ff7",
+   "0/0 Mesh c729caa6",
    "0/1 Mesh 17689a6d",
    "0/2 Mesh 46c00446",
    "0/3 Mesh 99cecd49"
@@ -180,10 +180,10 @@
   ]
  },
  "props3d/ac_condenser:high": {
-  "hash": "ed2c38f7",
+  "hash": "44031d87",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh d5ec7c43",
+   "0/0 Mesh ec5a5843",
    "0/1 Mesh ac14290b"
   ]
  },
@@ -223,19 +223,19 @@
   ]
  },
  "props3d/gourmet_counter:high": {
-  "hash": "6dd62a94",
+  "hash": "1863afd1",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 6eadae77",
-   "0/1 Mesh 51eb6d0c",
+   "0/0 Mesh ef0473bd",
+   "0/1 Mesh e8161d89",
    "0/2 Mesh e61e23d7"
   ]
  },
  "props3d/sauna:high": {
-  "hash": "dec71c9f",
+  "hash": "1380b523",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5d8791f7",
+   "0/0 Mesh 6b6fbccf",
    "0/1 Mesh 8ef88a52",
    "0/2 Mesh ed75090b",
    "0/3 Mesh 9c3981bf",
@@ -253,13 +253,13 @@
   ]
  },
  "props3d/pool:high": {
-  "hash": "3e3dc831",
+  "hash": "5be2833",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh cf516c4f",
    "0/1 Mesh 60c10eb4",
    "0/2 Mesh 6fefbf22",
-   "0/3 Mesh a80f68f7"
+   "0/3 Mesh c44763bd"
   ]
  },
  "props3d/deck:high": {
@@ -271,12 +271,12 @@
   ]
  },
  "props3d/sun_lounger:high": {
-  "hash": "29929d33",
+  "hash": "27f36519",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 9ddd93d7",
    "0/1 Mesh e70137c3",
-   "0/2 Mesh 37316469"
+   "0/2 Mesh 1a034b47"
   ]
  },
  "props3d/garden_bed:high": {
@@ -330,19 +330,19 @@
   ]
  },
  "props3d/bbq_simple:high": {
-  "hash": "af2fa30e",
+  "hash": "b9e992b6",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 86e54fff",
+   "0/0 Mesh 9b2f34c3",
    "0/1 Mesh c16be423",
    "0/2 Mesh 8b850a28"
   ]
  },
  "props3d/garage_car:high": {
-  "hash": "e259ed3c",
+  "hash": "38c7d6e",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 67b8f54a",
+   "0/0 Mesh b43cc14",
    "0/1 Mesh 8325400a",
    "0/2 Mesh 136afab4"
   ]
@@ -381,10 +381,10 @@
   ]
  },
  "props3d/razor_wire:high": {
-  "hash": "5cbdc561",
+  "hash": "59a0a287",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ac5b1d53"
+   "0/0 Mesh f27af5f9"
   ]
  },
  "props3d/water_bottle_crates:high": {
@@ -742,20 +742,20 @@
   ]
  },
  "household/wall_socket:high": {
-  "hash": "7cdf5805",
+  "hash": "188624e3",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh c76579f",
-   "0/1 Mesh 71a32d69"
+   "0/0 Mesh 6b1bfba6",
+   "0/1 Mesh 5175edea"
   ]
  },
  "household/wall_switch:high": {
-  "hash": "5989c79f",
+  "hash": "c74e28c2",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 676a48f4",
-   "0/1 Group f57af221",
-   "0/1/0 Mesh 3e7c7b84"
+   "0/0 Mesh 4a176f61",
+   "0/1 Group e2c98c7f",
+   "0/1/0 Mesh 254c1012"
   ]
  },
  "household/service_entrance:high": {
@@ -1229,10 +1229,10 @@
   ]
  },
  "props3d/wall_ac:game": {
-  "hash": "20d32cc1",
+  "hash": "fb352d54",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 2070f2f7"
+   "0/0 Mesh cae5f742"
   ]
  },
  "props3d/picture_small:game": {
@@ -1312,10 +1312,10 @@
   ]
  },
  "props3d/breakfast_bar:game": {
-  "hash": "cc863e3d",
+  "hash": "5b33c82c",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a09eb7ef"
+   "0/0 Mesh b6bf5aaa"
   ]
  },
  "props3d/sofa_l:game": {
@@ -1340,10 +1340,10 @@
   ]
  },
  "props3d/closet:game": {
-  "hash": "b4dc6398",
+  "hash": "ecf635c4",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 92741222"
+   "0/0 Mesh 126dcb92"
   ]
  },
  "props3d/vanity:game": {
@@ -1355,10 +1355,10 @@
   ]
  },
  "props3d/ac_condenser:game": {
-  "hash": "d0ed2ef4",
+  "hash": "7932e408",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh d222133a"
+   "0/0 Mesh bc17ad1a"
   ]
  },
  "props3d/lawn:game": {
@@ -1397,17 +1397,17 @@
   ]
  },
  "props3d/gourmet_counter:game": {
-  "hash": "bfd73c34",
+  "hash": "a7d8bbac",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh b53a2d36"
+   "0/0 Mesh 25278b4a"
   ]
  },
  "props3d/sauna:game": {
-  "hash": "fa8273c0",
+  "hash": "5205bb2a",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 81ee39d8",
+   "0/0 Mesh 21711492",
    "0/1 Mesh e7925492",
    "0/2 Mesh 46485566"
   ]
@@ -1421,10 +1421,10 @@
   ]
  },
  "props3d/pool:game": {
-  "hash": "4cd46658",
+  "hash": "cbc292e9",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a3d8715c",
+   "0/0 Mesh 4e4ef1c7",
    "0/1 Mesh baafc792",
    "0/2 Mesh 4fe88238"
   ]
@@ -1438,10 +1438,10 @@
   ]
  },
  "props3d/sun_lounger:game": {
-  "hash": "fa444e67",
+  "hash": "ce5f81ec",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 171f2481"
+   "0/0 Mesh e3431446"
   ]
  },
  "props3d/garden_bed:game": {
@@ -1491,17 +1491,17 @@
   ]
  },
  "props3d/bbq_simple:game": {
-  "hash": "c6626e61",
+  "hash": "c2d5e528",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a579783f"
+   "0/0 Mesh fb1eb5a2"
   ]
  },
  "props3d/garage_car:game": {
-  "hash": "b5647448",
+  "hash": "5e1a1845",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 39ce7e95",
+   "0/0 Mesh 17a9ff5c",
    "0/1 Mesh ec7c00aa"
   ]
  },
@@ -1534,10 +1534,10 @@
   ]
  },
  "props3d/razor_wire:game": {
-  "hash": "6d1636d",
+  "hash": "ab41595b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 2b3c627"
+   "0/0 Mesh 9745fcad"
   ]
  },
  "props3d/water_bottle_crates:game": {
@@ -1824,19 +1824,19 @@
   ]
  },
  "household/wall_socket:game": {
-  "hash": "d804140f",
+  "hash": "b561d03b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 1e489c95"
+   "0/0 Mesh 2f8ca829"
   ]
  },
  "household/wall_switch:game": {
-  "hash": "b0f29875",
+  "hash": "9993d268",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh af1fd6d2",
-   "0/1 Group f57af221",
-   "0/1/0 Mesh 61c259e2"
+   "0/0 Mesh f1d20ac1",
+   "0/1 Group e2c98c7f",
+   "0/1/0 Mesh 5223c5d0"
   ]
  },
  "household/service_entrance:game": {

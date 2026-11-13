@@ -10,7 +10,7 @@ const FRONT_DEPTH = 6.5
 const OXYGEN_CYLINDERS = 6
 
 const template: TemplateDef = {
-  id: 'emergency_room', use: 'institutional', place: 'emergency_room', construction: 'masonry', partyWalls: ['left', 'right'], style: 'commercial',
+  id: 'emergency_room', use: 'institutional', place: 'emergency_room', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: ['left', 'right'], style: 'commercial',
   limits: { w: [18, 24], d: [11, 14] }, defaults: { w: 18, d: 11 },
   lot: (w) => buildingLot({ backyard: 5, cargoU: w - 3.5, doorTarget: { a: 'emergency_room', side: 'front' } }),
   facade: {},

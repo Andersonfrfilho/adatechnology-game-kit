@@ -6,8 +6,11 @@ export type PoseKey = { t: number; pose: Record<string, number> }
 /** What a clip says happens at a time: `impact` ("the blow lands now"), `phase` (a label for the screen), or any type a game defines. */
 export type PoseClipEvent = { t: number; type: string; data?: Record<string, unknown> }
 
-/** Which joints a clip drives: `upper` leaves the legs to the gait, `lower` leaves the trunk, head and arms, `full` sets everything. */
-export type PoseClipChannels = 'full' | 'upper' | 'lower'
+/**
+ * Which joints a clip drives: `upper` leaves the legs to the gait, `lower` leaves the trunk, head and arms, `body` leaves the arms to the hands on a tool
+ * (a shovel's dig moves the trunk and legs while the hands stay on its grips), `full` sets everything.
+ */
+export type PoseClipChannels = 'full' | 'upper' | 'lower' | 'body'
 
 export type PoseClip = {
   id: string
@@ -46,6 +49,7 @@ export const POSE_CHANNEL_JOINTS: Readonly<Record<PoseClipChannels, readonly str
   full: undefined,
   upper: ['lean', 'twist', 'side', 'headX', 'headY', 'headZ', 'armR', 'armL', 'elbR', 'elbL', 'armRz', 'armLz'],
   lower: ['drop', 'legL', 'legR', 'kneeL', 'kneeR'],
+  body: ['lean', 'twist', 'side', 'drop', 'headX', 'headY', 'headZ', 'legL', 'legR', 'kneeL', 'kneeR'],
 }
 
 /** Keeps from a sampled pose only the joints of the channel set (`full` keeps everything, including extra channels such as `x`). */

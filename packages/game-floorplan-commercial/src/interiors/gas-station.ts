@@ -12,7 +12,7 @@ const PUMP_ISLANDS = 3
 const OIL_DRUMS = 4
 
 const template: TemplateDef = {
-  id: 'gas_station', use: 'commercial', place: 'gas_station', construction: 'masonry', partyWalls: [], style: 'commercial',
+  id: 'gas_station', use: 'commercial', place: 'gas_station', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: [], style: 'commercial',
   limits: { w: [22, 26], d: [7, 9] }, defaults: { w: 22, d: 7 },
   lot: () => buildingLot({ frontSetback: 12, garage: { u: 4, width: 3.5 }, backyard: 3, cargoU: STORE_WIDTH - 3, doorTarget: { a: 'convenience_store', side: 'front' }, libraries: { garden: 'forecourt', backyard: 'backyard_service' } }),
   facade: {},

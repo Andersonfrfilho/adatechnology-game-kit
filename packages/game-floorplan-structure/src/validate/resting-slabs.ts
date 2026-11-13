@@ -1,4 +1,6 @@
 import type { DestructibleSpec, JointKind, JointSpec, PartSpec } from '@adatechnology/game-contracts'
+import { SUPPORT_TOLERANCE, restsOver } from '@adatechnology/game-load-path'
+import type { PlanePoint } from '@adatechnology/game-load-path'
 
 /** What `slabsOffSupport` reads of a world's state: which parts still stand and which joints opened (`world.state(id)` of `game-destruction`). */
 export interface RestingState {
@@ -29,8 +31,8 @@ const boxOf = (part: PartSpec): Box => {
   return { min: part.position.map((v, k) => v - size[k]! / 2), max: part.position.map((v, k) => v + size[k]! / 2) }
 }
 
-/** Contact tolerance (metres) between the underside of a slab and the top of a wall it is tied to. */
-const LEDGER_GAP = 0.05
+/** Contact tolerance between the underside of a slab and what it rests on: the world's (`SUPPORT_TOLERANCE` of game-load-path). */
+const LEDGER_GAP = SUPPORT_TOLERANCE
 
 /** The wall is under the slab: their boxes overlap in plan and the top of the wall meets the underside of the slab. */
 function bearsUnder(slab: PartSpec, wall: PartSpec): boolean {
@@ -62,22 +64,20 @@ export function slabsOffSupport(spec: DestructibleSpec, state?: RestingState, op
     }
     const supports = (spec.joints ?? []).filter((joint) => joint.a === part.id && (joint.bears === 'a_on_b' || isLedger(joint)) && stands(joint.b) && !openJoints.has(joint.id ?? `${joint.a}~${joint.b}`))
     if (supports.length === 0 || supports.some((joint) => FIXED_JOINTS.has(joint.kind))) continue
+    // the rule the destruction world holds a resting slab by (`restsOver` of game-load-path): its centre over the hull of where it touches its supports
     const mine = boxOf(part)
-    let x0 = Infinity
-    let x1 = -Infinity
-    let z0 = Infinity
-    let z1 = -Infinity
+    const corners: PlanePoint[] = []
     for (const joint of supports) {
       const other = byId.get(joint.b)
       if (!other) continue
       const bearing = boxOf(other)
-      x0 = Math.min(x0, Math.max(mine.min[0]!, bearing.min[0]!))
-      x1 = Math.max(x1, Math.min(mine.max[0]!, bearing.max[0]!))
-      z0 = Math.min(z0, Math.max(mine.min[2]!, bearing.min[2]!))
-      z1 = Math.max(z1, Math.min(mine.max[2]!, bearing.max[2]!))
+      const [x0, x1] = [Math.max(mine.min[0]!, bearing.min[0]!), Math.min(mine.max[0]!, bearing.max[0]!)]
+      const [z0, z1] = [Math.max(mine.min[2]!, bearing.min[2]!), Math.min(mine.max[2]!, bearing.max[2]!)]
+      // (an edge the slab only touches still bears, within the contact tolerance the world measures it with)
+      if (x1 < x0 - LEDGER_GAP || z1 < z0 - LEDGER_GAP) continue
+      corners.push([x0, z0], [x1, z0], [x0, z1], [x1, z1])
     }
-    const [cx, , cz] = part.position
-    if (!(cx > x0 && cx < x1 && cz > z0 && cz < z1)) out.push(part.id)
+    if (!restsOver([part.position[0], part.position[2]], corners, 0)) out.push(part.id)
   }
   return out
 }

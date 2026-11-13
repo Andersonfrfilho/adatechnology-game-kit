@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@adatechnology/game-items-goods": "workspace:^",
+    "@adatechnology/game-destruction": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

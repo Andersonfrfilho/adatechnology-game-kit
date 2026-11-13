@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createArsenal } from '@adatechnology/game-weapons'
-import { buildHandheldModel, buildThrowableModel, buildWeaponModelById } from '../src'
+import { buildItemWeaponModel, buildThrowableModel, buildWeaponModelById } from '../src'
 import { buildToolClips } from '../src/animation/clip-set'
 import { holdOfModel } from '../src/fx/hand-hold'
 
@@ -61,33 +61,43 @@ describe('the explosives the kit added', () => {
   })
 })
 
-describe('the melee weapons the kit added', () => {
-  it('lies the KA-BAR 302 mm long with the blade at +x and the handle mark behind the middle', () => {
-    const model = buildHandheldModel(THREE, { id: 'kabar' })!
+describe('the melee weapons the kit added: the item models, lent to the weapons', () => {
+  const build = (id: string): THREE.Group => buildItemWeaponModel(THREE, { id })!
+
+  it('lies the KA-BAR 302 mm long with the handle mark behind the middle, the same model as the item', () => {
+    const model = build('kabar')
     expect(sizeOf(model).x).toBeCloseTo(0.302, 2)
     expect(model.getObjectByName('handle')!.position.x).toBeLessThan(0)
   })
 
-  it('lies the katana 0.98 m long, curved, with a mark for each hand along the handle', () => {
-    const model = buildHandheldModel(THREE, { id: 'katana' })!
-    const size = sizeOf(model)
-    expect(size.x).toBeCloseTo(0.98, 2)
-    expect(size.z).toBeGreaterThan(0.08)
+  it('lies the katana 0.98 m long with a mark for each hand along the handle', () => {
+    const model = build('katana')
+    expect(sizeOf(model).x).toBeCloseTo(0.98, 2)
     const handle = model.getObjectByName('handle')!
     const support = model.getObjectByName('support')!
     expect(support.position.x).toBeLessThan(handle.position.x)
-    expect(handle.position.x).toBeLessThan(-0.2)
+    expect(handle.position.x - support.position.x).toBeCloseTo(0.11, 3)
   })
 
-  it('stands the brass knuckles the way they are worn: four rings in a row across z, the punch along x', () => {
-    const model = buildHandheldModel(THREE, { id: 'brass_knuckles' })!
+  it('wears the brass knuckles in the hand: the ring row along the knuckles (z), the rings facing forward (thin along x), the palm bar below the rings', () => {
+    const model = build('brass_knuckles')
     const size = sizeOf(model)
-    expect(size.z).toBeGreaterThan(0.1)
-    expect(size.z).toBeLessThan(0.16)
-    expect(size.x).toBeLessThan(size.z)
-  })
-
-  it('draws nothing for a weapon it did not draw', () => {
-    expect(buildHandheldModel(THREE, { id: 'machete' })).toBeUndefined()
+    expect(size.z).toBeCloseTo(0.12, 2)
+    expect(size.x).toBeLessThan(0.03)
+    expect(size.x).toBeLessThan(size.y)
+    expect(size.y).toBeLessThan(size.z)
+    // the palm bar is the one thin cylinder (its box is long along z and low): it lies under the middle of the ring row
+    model.updateMatrixWorld(true)
+    let bar = Infinity
+    let ringsTop = -Infinity
+    model.traverse((node) => {
+      const mesh = node as THREE.Mesh
+      if (!mesh.isMesh) return
+      const box = new THREE.Box3().setFromObject(mesh)
+      const thin = box.getSize(new THREE.Vector3())
+      if (thin.z > 0.1 && thin.y < 0.02) bar = Math.min(bar, box.getCenter(new THREE.Vector3()).y)
+      ringsTop = Math.max(ringsTop, box.max.y)
+    })
+    expect(bar).toBeLessThan(ringsTop - 0.02)
   })
 })

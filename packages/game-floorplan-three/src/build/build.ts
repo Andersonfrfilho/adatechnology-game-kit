@@ -3,9 +3,21 @@ import { markKitOrigin } from '@adatechnology/game-contracts';
 import { isMesh } from '@adatechnology/game-shapes-three';
 
 import { panelViewOf } from '../destruction/panels.js';
+import { applyConstructionLevel, CONSTRUCTION_LEVEL_MAX } from '../construction-stages/apply-level.js';
+import { buildBlueprintStage } from '../construction-stages/blueprint.js';
+import { buildInstallationsStage, buriedSewerOf } from '../construction-stages/installations-stage.js';
+import { openExcavations } from '../construction-stages/excavations.js';
+import { routeConduits, routingPlanOf } from '../construction-stages/installation-routes.js';
+import type { RoutableElectrical } from '../construction-stages/installation-routes.js';
+import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
+import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
+import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
+import { gutterKeepOut } from '../roof/gutters.js';
+import { WALL_BOX, wallBehindOf, wallBoxExtent } from '../utilities/wall-box.js';
+import type { Aabb } from '../house/solids.js';
 
 import type * as THREE_NS from 'three';
-import type { Structure } from '@adatechnology/game-floorplan-structure';
+import type { Outbuilding, Structure } from '@adatechnology/game-floorplan-structure';
 import type { ApartmentBuilding, BoxCollider, DoorLeaf, Eye, HouseInstance, HouseRecord, InteractionTarget, InteractivePiece, Kernel, KernelBuildBuild, KitTargetOptions, LightRequest, Rect, Shared } from '../kernel-types.js';
 import type { BuildOptions, Damageable, House, HouseFurnitureCollider, HouseInteractable, HousePart, HousePoint, HouseTargetOptions } from '../types.js';
 
@@ -18,11 +30,87 @@ type BuildContextPanes = Shared['ctx']['panes'];
 /** Options of the house's target and interact. */
 type TargetOptions = HouseTargetOptions;
 
+/** The house built by construction stage lays its conduits as an electrician does, embedded (see construction-stages/installation-routes); the plan stays as generated. */
+function withLaidConduits(r: HouseRecord, stages: boolean): HouseRecord {
+  const E = r.utilities?.electrical;
+  if (!stages || !E || !E.conduits?.length) return r;
+  const lamps = new Map<string, { u: number; v: number; y: number }>();
+  // a light's run ends at its box, set in its room's ceiling (an outbuilding's is lower than the storey's)
+  const roomCeiling = (it: { room?: string | null; floor: number }): number | undefined => r.rooms.find((c) => c.id === it.room)?.ceiling ?? r.floors[Math.max(0, it.floor)]?.ceiling;
+  for (const it of r.items) if (it.type === 'ceiling_light') lamps.set(it.id, { u: it.x, v: it.z, y: (r.floors[Math.max(0, it.floor)]?.y0 ?? 0) + (roomCeiling(it) ?? it.y ?? 2.7) });
+  // in the construction stages every conduit is laid as the water is: cut into the bare masonry in the rough-in, embedded once the walls are plastered
+  const embedded = { ...E, conduits: E.conduits.map((c) => ({ ...c, exposed: false })) };
+  // a feed to a building in the yard keeps clear of the sewer laid in the same yard
+  const conduits = routeConduits({ ...routingPlanOf(r), buried: buriedSewerOf(r) }, embedded as unknown as RoutableElectrical, lamps) as unknown as typeof E.conduits;
+  return { ...r, utilities: { ...r.utilities, electrical: { ...E, exposed: false, conduits } } };
+}
+
+/** Radius of the runs in the walls when the part does not say: a 20 mm conduit, a 25 mm water pipe. */
+const RUN_RADIUS = { wall_conduit: 0.01, wall_pipe: 0.0125 } as const
+
+/** The stretches of the conduits and the water pipes laid in the house that go plumb up or down (inside a wall), in plan: where its masonry gets a chase. */
+function embeddedRunsOf(house: THREE_NS.Object3D): EmbeddedRun[] {
+  const out: EmbeddedRun[] = []
+  house.traverse((o) => {
+    const part = o.userData.part as string | undefined
+    if (part !== 'wall_conduit' && part !== 'wall_pipe') return
+    // a conduit keeps its plan points [u, v, y]; a pipe its routes in the house's frame [u, y, v]
+    const routes = part === 'wall_conduit' ? [((o.userData.points ?? []) as number[][]).map((p) => [p[0]!, p[2]!, p[1]!])] : ((o.userData.routes ?? []) as number[][][])
+    for (const route of routes) for (let i = 0; i + 1 < route.length; i++) {
+      const a = route[i]!, b = route[i + 1]!
+      if (Math.hypot(a[0]! - b[0]!, a[2]! - b[2]!) > 1e-3 || Math.abs(a[1]! - b[1]!) < 0.05) continue
+      out.push({ u: a[0]!, v: a[2]!, y0: Math.min(a[1]!, b[1]!), y1: Math.max(a[1]!, b[1]!), radius: RUN_RADIUS[part] });
+    }
+  });
+  return out;
+}
+
+/** The water tank's box in the house's frame (what the roof's timber is cut around: a tank in the attic stands between the purlins, never pierced by them). */
+function atticKeepOut(THREE: Kernel['THREE'], house: THREE_NS.Object3D, parts: readonly HousePart[]): Aabb[] {
+  house.updateMatrixWorld(true);
+  const toHouse = new THREE.Matrix4().copy(house.matrixWorld).invert();
+  const out: Aabb[] = [];
+  const groups: THREE_NS.Object3D[] = parts.filter((p) => p.type === 'water_tank' && p.group).map((p) => p.group as THREE_NS.Object3D);
+  house.traverse((o) => { if (o.name === 'attic_tank') groups.push(o); }); // (and the platform it stands on)
+  for (const group of groups) {
+    const box = new THREE.Box3().setFromObject(group).applyMatrix4(toHouse);
+    if (!box.isEmpty()) out.push([box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z]);
+  }
+  return out;
+}
+
+/** What a box's chase leaves round it, metres: no face of the box within a millimetre of a brick's or the mortar's. */
+const BOX_CHASE_CLEAR = 0.003
+
+/**
+ * The 4x2 boxes of the switches and outlets as runs for the masonry: each is cut into the wall in a chase as wide as the box (its half width as the run's
+ * radius) and as high, a few millimetres round it, so no unit's end or mortar fill ends on a side of the box.
+ */
+function wallBoxRunsOf(r: HouseRecord, shifts: ReadonlyMap<object, readonly [number, number]> = new Map()): EmbeddedRun[] {
+  const E = r.utilities?.electrical;
+  if (!E) return [];
+  return [...(E.switches || []), ...(E.outlets || [])].map((t): EmbeddedRun => {
+    const point = { u: t.u, v: t.v, y: t.y, frontU: t.frontU || 0, frontV: t.frontV || 0 }, box = wallBoxExtent(point, wallBehindOf(r.walls, { ...point, floor: t.floor }));
+    const y0 = r.floors[Math.max(0, Math.min(r.floors.length - 1, t.floor))]?.y0 ?? 0;
+    const [du, dv] = shifts.get(t) ?? [0, 0];
+    return { u: (box.u0 + box.u1) / 2 + du, v: (box.v0 + box.v1) / 2 + dv, y0: y0 + box.y0 - BOX_CHASE_CLEAR, y1: y0 + box.y1 + BOX_CHASE_CLEAR, radius: WALL_BOX.along / 2, box: true };
+  }).concat(E.panel ? [panelRunOf(E.panel)] : []);
+}
+
+/** How far behind its plan point the breaker panel's back is, and how far over the plan's height it stands (`electricalStructure`), metres. */
+const PANEL_RECESS = 0.015, PANEL_LIFT = 0.003;
+
+/** The breaker panel as a box set in its wall: the masonry is cut round it as it is round an outlet's box (a log or a brick never ends on its top or bottom). */
+function panelRunOf(P: NonNullable<NonNullable<NonNullable<HouseRecord['utilities']>['electrical']>['panel']>): EmbeddedRun {
+  const w = P.w || 0.3, h = P.h || 0.4;
+  return { u: P.u - Math.sign(P.frontU || 0) * PANEL_RECESS, v: P.v - Math.sign(P.frontV || 0) * PANEL_RECESS, y0: P.y - h / 2 + PANEL_LIFT - BOX_CHASE_CLEAR, y1: P.y + h / 2 + PANEL_LIFT + BOX_CHASE_CLEAR, radius: w / 2, depth: 0 };
+}
+
 export function installBuildBuild(K: Kernel, shared: Shared): void {
   const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
   function build(r0: HouseRecord, options?: BuildOptions): House {
         const opts: BuildOptions = options || {};
-        const r = applyOutbuildings(r0); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
+        const r = withLaidConduits(applyOutbuildings(r0), !!(opts.constructionStages || opts.constructionLevel != null)); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
         const t0 = performance.now();
         const h: HouseInstance = { ctx: { mv: props, types: TYPES } as HouseInstance['ctx'], inter: newInteractiveState(), state: opts.state || newState(), mirrors: newMirrorState(), quality: opts.quality === 'game' || opts.quality === 'high' ? opts.quality : (cfg.quality === 'game' ? 'game' : 'high'), lodCurrent: 0, lodMin: 0 } as Omit<HouseInstance, 'houseGroup'> as HouseInstance; /* the groups come at the end of the build */
         enter(h);
@@ -31,33 +119,47 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.r = r; shared.ctx.colors = r.colors as unknown as Record<string, number>; shared.ctx.cut = !!opts.cut; shared.ctx.night = !!opts.night; shared.ctx.labels = []; shared.ctx.colliders = []; shared.ctx.stairs = []; shared.ctx.noTerrain = opts.terrain === false;
         shared.ctx.roomById = {}; for (const c of r.rooms) shared.ctx.roomById[c.id] = c;
         shared.ctx.pieces = new Map(); shared.ctx.pieceObjects = new Map(); shared.ctx.structureIndex = {}; for (const e of (r0.structure as Structure | undefined)?.parts || []) shared.ctx.structureIndex[e.id] = e; { const view = shared.ctx.panelView = panelViewOf(r0.structure as Structure | undefined, !!cfg.destruction); shared.ctx.panelsOf = new Map(); for (const id of view.replaced) delete shared.ctx.structureIndex[id]; for (const e of view.panels) { shared.ctx.structureIndex[e.id] = e; const l = shared.ctx.panelsOf.get(e.slab as string); if (l) l.push(e); else shared.ctx.panelsOf.set(e.slab as string, [e]); } } shared.ctx.panes = (r0.roof as { panes?: BuildContextPanes } | undefined)?.panes || []; shared.ctx.noPiece = false;
-        cursor.separate = opts.pieces === 'meshes'; cursor.pc = null; shared.ctx.showPillars = opts.pillars !== 'hidden'; shared.ctx.baseboardBand = opts.baseboard === 'band';
+        cursor.separate = opts.pieces === 'meshes'; cursor.pc = null; shared.ctx.showPillars = opts.pillars !== 'hidden'; shared.ctx.baseboardBand = opts.baseboard === 'band'; shared.ctx.visorGutters = opts.gutters === 'visor'; shared.ctx.visorEave = opts.eave === 'visor'; shared.ctx.visorCorners = opts.wallCorners === 'visor'; shared.ctx.visorCeilings = opts.ceilings === 'visor'; shared.ctx.visorScene = shared.ctx.visorGutters && shared.ctx.visorEave && shared.ctx.visorCorners && shared.ctx.visorCeilings; shared.ctx.occupied = []; shared.ctx.floorFinishes = []; shared.ctx.paving = []; shared.ctx.baseboards = []; shared.ctx.blockLaid = undefined; shared.ctx.unitGround = undefined; shared.ctx.lotWalls = []; shared.ctx.wallBoxShifts = new Map(); shared.ctx.railBoxes = [];
         shared.ctx.apartment = r.template === 'apartment_modern'; shared.ctx.pa = Math.max(3, Math.min(20, pr.floors != null ? pr.floors : 5)); shared.ctx.pf = Math.max(1, Math.min(shared.ctx.pa, pr.floor != null ? pr.floor : 3)); shared.ctx.pu = Math.max(0, pr.unit != null ? pr.unit : 0);
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
         shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { quality: 'high', lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
-        terrain();
-        if (r.lot) { if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
-        walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length; doors(); windows(); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
+        const cs = !!(opts.constructionStages || opts.constructionLevel != null);
+        shared.ctx.constructionStages = cs;
+        if (Y0(0) > 0 && !shared.ctx.visorScene) shared.ctx.unitGround = Y0(0); // (a unit standing in its block)
+        const st = (s: string | undefined): void => { cursor.stage = cs ? s : undefined; };
+        st(undefined); terrain();
+        if (r.lot) { st('perimeter'); if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
+        st('finishes'); walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length;
+        st('openings'); doors(); windows();
+        st('finishes'); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
         const water = createWater(r, h.state);
         shared.ctx.iv = null; h.IV = null;
+        st('furniture');
         if (IVK) { try { h.IV = shared.ctx.iv = ivBuild(h, water); } catch (e) { console.warn('interactables', e); shared.ctx.iv = h.IV = null; } } // interactables kit: plans, draws and wires (see 75)
-        const noModel = houseItems(); placeSwitches(); waterPipes(); electricalStructure();
-        roofs(); solar();
+        st('furniture'); const noModel = houseItems();
+        st('installations'); placeSwitches(); waterPipes(); electricalStructure();
+        st('roof'); roofs(); solar();
+        st(undefined);
         if (shared.ctx.showBuilding) building();
         for (const c of r.rooms) { if (c.type === 'void') continue; const [a, b, c2, d] = rectsOf(c)[0] as Rect; shared.ctx.labels.push({ pos: new THREE.Vector3((a + c2) / 2, Y0(c.floor) + 1.1, (b + d) / 2), text: c.name as string, group: 'f' + c.floor, type: 'room', floor: c.floor }); }
         const mirrorsCopy = MIRRORS.map((E, i) => Object.assign({ i }, E)), gs = closeScene(shared.mats);
         for (const fo of shared.ctx.leaves) { // door leaves: loose groups with the origin at the hinge, inside the floor group
           const parent = gs['f' + fo.floor] || (gs['f' + fo.floor] = new THREE.Group()); fo.gs = [];
-          for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.fromArray(gd.pos); parent.add(g); fo.gs.push(g); }
+          for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.fromArray(gd.pos); if (cs) g.userData.constructionStage = 'openings'; parent.add(g); fo.gs.push(g); }
           applyLeaf(fo);
         }
         if (shared.ctx.iv) ivAssemble(shared.ctx.iv, gs);
         assembleInteractive(gs); linkDoorLeaves(); mailboxInteractive();
+        if (cs) {
+          for (const def of shared.inter.defs.values()) { if (def.outer && !def.outer.userData.constructionStage) def.outer.userData.constructionStage = /^gate/.test(def.kind) ? 'perimeter' : 'furniture'; }
+          for (const g of Object.values(gs)) for (const c of g.children) if (!c.userData.constructionStage) c.userData.constructionStage = 'furniture';
+        }
         const root = markKitOrigin(new THREE.Group(), { owner: 'game-floorplan-three', kind: 'structure', id: r.template }), house = new THREE.Group(); root.name = 'house3d'; root.add(house); shared.mirrors.house = house;
         if (shared.ctx.apartment) { const units = (r.building as ApartmentBuilding).units, u = units[Math.min(shared.ctx.pu, units.length - 1)] as ApartmentBuilding['units'][number]; house.position.set(u.u, shared.ctx.showBuilding ? 0 : -(r.floors[0] as { y0: number }).y0, u.v); house.rotation.y = u.ry; shared.ctx.unitRy = u.ry; }
         house.updateMatrixWorld(true); shared.ctx.unitInverse = house.matrixWorld.clone().invert();
         for (const [k, g] of Object.entries(gs)) { g.name = k; (k === 'floor' || k === 'building' ? root : house).add(g); }
+        let currentConstructionLevel = CONSTRUCTION_LEVEL_MAX;
         h.groups = gs; h.root = root; h.house = house; h.houseGroup = house;
         shared.ctx.noModel = noModel;
         shared.ctx.lights = LIGHTS.filter(l => l.type !== 'lantern' && l.type !== 'candles' || shared.ctx.night).map((l): LightRequest => ({ ...l })); // real lights requested by the builders (at night)
@@ -134,6 +236,20 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         // ---- destruction: tags the loose groups, describes the structure and prepares the world adapter (cfg.destruction) ----
         markGroups(r, root, parts);
         const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
+        if (cs) {
+          const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
+          // the masonry is laid with the chases of the runs that go up and down inside it
+          const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r, shared.ctx.wallBoxShifts)], shared.ctx.blockLaid ?? []);
+          const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? [], shared.ctx.paving ?? []);
+          // (its rafters clear of the faces of the slabs' edges they pass, its timbers cut around the water tank standing in the attic and the gutters hung on the eaves)
+          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, shared.ctx.occupied, [...atticKeepOut(THREE, house, Object.values(parts)), ...gutterKeepOut(shared.ctx.gutterInfo?.gutters ?? [])]);
+          const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
+          for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
+            gs[sg.name] = sg;
+            house.add(sg);
+          }
+          currentConstructionLevel = applyConstructionLevel(house, opts.constructionLevel ?? CONSTRUCTION_LEVEL_MAX);
+        }
         // legacy damage: `house.damage(id, point, type, amount)` still subtracts the damageable's hp (the game reads `hp`) and calls cfg.onDamage, and now also
         // becomes a hit in the core when there is a world (cfg.destruction): the piece really breaks, hides its mesh and drops what it carries. Once fractured, hp is zeroed.
         const strikePiece = (id: string, point: Point | null | undefined, type: string | undefined, amount: number | undefined, d: Damageable | { hpMax: number }, before: number): void => {
@@ -175,6 +291,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           show(options?: { floor?: number; cut?: boolean; lot?: boolean }) { // visibility per floor: {floor: -1 all, cut: bool, lot: bool}
             enter(h); const o = options || {}; const rr = shared.ctx.r, nA = rr.floors.length, a = o.floor == null ? -1 : o.floor, sel = a >= nA ? -1 : a, cut = !!o.cut;
             for (const [k, g] of Object.entries(gs)) {
+              if (k.startsWith('stage:')) continue;
               let v = true;
               if (k[0] === 'f') v = sel < 0 || +k.slice(1) <= sel;
               else if (k[0] === 't') v = !cut && (sel < 0 || +k.slice(1) < sel);
@@ -183,7 +300,18 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
               else if (k === 'lot') v = o.lot == null ? true : !!o.lot;
               g.visible = v;
             }
+            if (cs && currentConstructionLevel < CONSTRUCTION_LEVEL_MAX) {
+              applyConstructionLevel(house, currentConstructionLevel, { roofLayer: !cut && sel < 0, lotLayer: o.lot !== false });
+            }
           },
+          setConstructionLevel(level: number, stageOpts?: { waterLayer?: boolean; roofLayer?: boolean; lotLayer?: boolean }) {
+            enter(h);
+            currentConstructionLevel = applyConstructionLevel(house, level, stageOpts);
+            invalidateShadow();
+            return currentConstructionLevel;
+          },
+          get constructionLevel() { return currentConstructionLevel; },
+          excavations() { return cs ? openExcavations(THREE, house) : []; },
           target(o: Eye, opt?: TargetOptions) { enter(h); return targetOf(o, opt); },
           interact(o: Eye, opt?: TargetOptions) { enter(h); const a = targetOf(o, opt); if (!a) return false; return actOn(a.target && a.target.pub ? a.target.pub as HouseInteractable : { id: a.target && a.target.id || a.text, type: a.target && a.target.kit ? a.target.type as string : 'door', label: a.text, ref: a.target, _action: a.action, floor: 0, pos: [], radius: 0 } as HouseInteractable, a); },
           message() { return shared.inter.msg && performance.now() < shared.inter.msg.until ? shared.inter.msg.text : null; },

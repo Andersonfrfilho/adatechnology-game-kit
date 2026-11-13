@@ -1,4 +1,4 @@
-import type { ExplosionChain } from '@adatechnology/game-contracts'
+import type { BlastCasing, ExplosionChain } from '@adatechnology/game-contracts'
 
 import type { DataSource } from './types'
 
@@ -68,6 +68,11 @@ export interface ExplosiveDef {
    * body is read from it (`knockOf` of `game-contracts`); without it the body takes the charge from `energy`.
    */
   readonly tnt?: number
+  /**
+   * The metal case that breaks into fragments (the destruction world throws them: Mott's distribution of `mass` in `fragments` pieces, Gurney's first speed from `chargeMass` and the explosive's `gurneyVelocity`).
+   * Estimates from the public specifications of each munition (the M67's body is about 190 g round 180 g of Composition B); without it the blast is the wave alone.
+   */
+  readonly casing?: BlastCasing
   /** What the blast tears down: 0 nothing, 1 light, 2 walls, 3 structures. */
   readonly destructionLevel: 0 | 1 | 2 | 3
   /** Audible distance in metres. */

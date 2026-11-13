@@ -1,5 +1,6 @@
 import type { LotPath, PlanAxis } from '@adatechnology/game-floorplan'
 import type { Rect } from '../types'
+import type { LampType } from './lamp-types'
 
 /** A point in the world: `[u, v, y]` (y is the absolute height). */
 export type Point3 = [number, number, number]
@@ -91,6 +92,11 @@ export interface OutdoorLamp {
   y: number
   door: string
   switch: string | null
+  /** The wall base the lamp is fixed to. */
+  lamp: LampType
+  /** Unit vector out of the wall the base stands on (away from the house). */
+  frontU: number
+  frontV: number
 }
 
 export interface PlumbingPoint {

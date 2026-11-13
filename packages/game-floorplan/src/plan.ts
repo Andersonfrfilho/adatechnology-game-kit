@@ -1,4 +1,5 @@
 import { CAR_CLEARANCE, DOOR_EDGE_CLEARANCE, MARGIN, PLAYER_RADIUS, TOL, WALL_THICKNESS, WINDOWLESS_ROOM_TYPES, WINDOW_EDGE_CLEARANCE } from './constants'
+import { wallThickness } from './wall-thickness'
 import { buildWalls, clamp, eq, exteriorEdge, inRect, normalizeRoom, openingDepth, openingZones, r2, sharedEdge } from './geometry'
 import { STREAM } from './legacy-seeds'
 import { createRng, pickWeighted } from './rng'
@@ -29,7 +30,7 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
   const FLOOR_DEFS = floorsOf(tpl, op)
   const style = styleOf(styleId)
   const plan: Plan = {
-    w, d, tpl, floorDefs: FLOOR_DEFS, style: styleId, floors: [], rooms: [], zones: [], doors: [], windows: [], walls: [], gates: [], paths: [], lot: null, openPairs: {}, reservations: [], options: op,
+    wallThickness: wallThickness(), w, d, tpl, floorDefs: FLOOR_DEFS, style: styleId, floors: [], rooms: [], zones: [], doors: [], windows: [], walls: [], gates: [], paths: [], lot: null, openPairs: {}, reservations: [], options: op,
     playerRadius: op.playerRadius ?? PLAYER_RADIUS,
     carClearance: Object.assign({}, CAR_CLEARANCE, op.carClearance),
   }

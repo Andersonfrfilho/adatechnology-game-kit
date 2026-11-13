@@ -15,7 +15,7 @@ const LOCKER_UNITS = 9
 const LOCKER_UNIT_WIDTH = 0.42
 
 const template: TemplateDef = {
-  id: 'school', use: 'institutional', place: 'school', construction: 'masonry', partyWalls: [], style: 'commercial',
+  id: 'school', use: 'institutional', place: 'school', construction: 'masonry', masonryUnit: 'ceramic_block_19', partyWalls: [], style: 'commercial',
   limits: { w: [18, 24], d: [15, 18] }, defaults: { w: 18, d: 15 },
   lot: (w) => buildingLot({ frontSetback: 6, pedestrian: { u: 14 }, cargoU: w - 3.5, doorTarget: { a: 'sports_court', side: 'front' }, libraries: { garden: 'schoolyard' } }),
   facade: {},

@@ -1,4 +1,5 @@
 /** The kernel's types of the house's systems and state: materials, mirrors, cars, vegetation, interaction, room lights, the interactables kit and the build. */
+import type { Aabb } from './house/solids.js';
 import type * as THREE_NS from 'three'
 import type { ResultGate } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
@@ -625,6 +626,8 @@ export interface VegetationInfo {
 
 /** What one build of a house knows while it draws (`shared.ctx`): the record, its tables and what each module collected. */
 export interface BuildContext {
+  /** The house is built with its construction stages (`BuildOptions.constructionStages`): the builders tag what they draw with the stage it belongs to. */
+  constructionStages?: boolean
   mv: Props3d
   types: TypeTable
   r: HouseRecord
@@ -646,6 +649,46 @@ export interface BuildContext {
   panelsOf: Map<string, StructurePart[]>
   showPillars: boolean
   baseboardBand: boolean
+  /** `BuildOptions.gutters === 'visor'`. */
+  visorGutters: boolean
+  /** `BuildOptions.eave === 'visor'`. */
+  visorEave: boolean
+  /** `BuildOptions.wallCorners === 'visor'`. */
+  visorCorners: boolean
+  /** `BuildOptions.ceilings === 'visor'`. */
+  visorCeilings: boolean
+  /** The scene of the Visor de casas 3D (its gutters, eave, corners and ceilings at once): what reproduces the team's golden draws as the team did. */
+  visorScene: boolean
+  /** Boxes of the ceilings' slabs, by their builder (outside the Visor's scene): a later box of another builder is laid round them, never through them. */
+  occupied: Aabb[]
+  /** The boxes of the lot's walls (outside the Visor's scene): the house's sidewalk and baseboard are laid round where one meets the house. */
+  lotWalls: Aabb[]
+  /** How far along its wall each box of a switch or an outlet was moved off a wall's end ([du, dv], outside the Visor's scene): its chase in the masonry moves with it. */
+  wallBoxShifts?: Map<object, readonly [number, number]>
+  /** The boxes of the eaves laid so far (soffits, fascias and bands of the roof's covers, outside the Visor's eave): a later cover's eave keeps out of them. */
+  eaveBoxes?: Aabb[] | undefined
+  /** The boxes of the railings laid with the walls (outside the Visor's scene): the baseboard on the wall a railing runs into is laid round its rails. */
+  railBoxes?: Aabb[]
+  /** The boxes of the storeys' floor finishes and slabs (outside the Visor's scene): the furniture and the flights standing on them keep out of them. */
+  floorFinishes: Aabb[]
+  /** While set (the block of an apartment drawn with construction stages, outside the Visor's scene): every plain box drawn is kept here, as laid. */
+  blockBoxes?: Aabb[] | undefined
+  /** The boxes the apartment's block laid (`blockBoxes` once it is drawn). */
+  blockLaid?: Aabb[] | undefined
+  /** The sidewalk's slabs laid round the house (outside the Visor's scene): what a sewer box's lid set in the paving keeps its sides off. */
+  paving?: Aabb[]
+  /** The baseboard's tiles laid on the outer walls (outside the Visor's scene): a window's sill at the foot of the wall keeps out of them. */
+  baseboards?: Aabb[]
+  /** The floor the piece being drawn stands on (a storey's furniture, outside the Visor's scene): a face looking down on its plane is shut by it, as by the ground. */
+  restOn?: number | undefined
+  /** The plane a unit stands on in its block (its ground floor over the street) (outside the Visor's scene): a face looking down on it is shut by the slab under it, as by the ground. */
+  unitGround?: number | undefined
+  /** The boxes a piece being drawn keeps out of (a storey's furniture among the walls, outside the Visor's scene): what of a box stands in them is not drawn. */
+  keepOut?: readonly Aabb[] | undefined
+  /** The square boxes of the piece being drawn so far (a storey's furniture, outside the Visor's scene): a face of a later one lying against one is not drawn. */
+  itemBoxes?: Aabb[] | undefined
+  /** The group the piece being drawn stands in: only its boxes there are noted (a moving part shows its faces once moved). */
+  itemGroup?: string | undefined
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

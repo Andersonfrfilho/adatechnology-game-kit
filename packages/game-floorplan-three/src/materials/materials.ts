@@ -22,18 +22,20 @@ export function installMaterialsMaterials(K: Kernel, _shared: Shared): void {
     const A: NonNullable<typeof cfg.atlas> = cfg.atlas || {}; ATLAS.picture = A.picture || makeAtlas(props.atlas('picture').canvas); ATLAS.floorKind = A.floorKind || makeAtlas(props.atlas('floor').canvas); ATLAS.water = A.water || makeAtlas(props.atlas('water').canvas, true); // cfg.atlas: ready-made textures from the app
     const L = (o: THREE_NS.MeshLambertMaterialParameters): THREE_NS.MeshLambertMaterial => new THREE.MeshLambertMaterial(Object.assign({ vertexColors: true }, o));
     const P = (o: THREE_NS.MeshPhongMaterialParameters): THREE_NS.MeshPhongMaterial => new THREE.MeshPhongMaterial(Object.assign({ vertexColors: true }, o));
+    // a film that writes no depth but tests it (glass, water, screens) is pulled in front of a face it lies on, or it flickers there
+    const FILM = { depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 } as const;
     const M: MaterialTable = {
       plain: P({ shininess: 30, specular: 0x222222 }), plaster: L({}), fabric: L({}), wood: L({}),
       metal: P({ shininess: 80, specular: 0x777777 }),
-      glass: P({ color: 0xdbe6ee, transparent: true, opacity: 0.24, shininess: 120, specular: 0xffffff, depthWrite: false, emissive: 0x000000 }),
+      glass: P({ color: 0xdbe6ee, transparent: true, opacity: 0.24, shininess: 120, specular: 0xffffff, ...FILM, emissive: 0x000000 }),
       plant: L({ side: THREE.DoubleSide, emissive: 0x16280f }),
-      water: P({ map: ATLAS.water, transparent: true, opacity: 0.78, shininess: 110, specular: 0xffffff, depthWrite: false }),
+      water: P({ map: ATLAS.water, transparent: true, opacity: 0.78, shininess: 110, specular: 0xffffff, ...FILM }),
       emissive: new THREE.MeshBasicMaterial({ vertexColors: true }),
       picture: L({ map: ATLAS.picture }), floor: L({ map: ATLAS.floorKind }),
       dirt: L({ map: TEX.dirt }), roughcast: L({ map: TEX.roughcast }), block: L({ map: TEX.block }), grass: L({ map: TEX.grass }), asphalt: L({ map: TEX.asphalt }), sidewalk: L({ map: TEX.sidewalk }),
       tile: L({ map: TEX.tile, side: THREE.DoubleSide }), fiber_cement: L({ map: TEX.fiber_cement, side: THREE.DoubleSide }),
-      screen: new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide }),
-      building: L({ transparent: true, opacity: 0.2, depthWrite: false }),
+      screen: new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.35, ...FILM, side: THREE.DoubleSide }),
+      building: L({ transparent: true, opacity: 0.2, ...FILM }),
     };
     M.clothes = clothesMaterial();
     antiTile(M.grass, 0.31, 0.045); antiTile(M.asphalt, 0.37, 0.06); dirtMaterial(M.dirt);

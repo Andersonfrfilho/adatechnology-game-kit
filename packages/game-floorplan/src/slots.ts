@@ -1,5 +1,6 @@
-import { EPS, MARGIN, TOL } from './constants'
-import { cardinal, clamp, eq, extent, inner, overlaps, r2 } from './geometry'
+import { EPS, TOL } from './constants'
+import { roomMargin } from './wall-thickness'
+import { cardinal, clamp, eq, extent, inner, insetBy, overlaps, r2 } from './geometry'
 import { registries } from './registry'
 import { isOpenSide, openingsOfFloor, windowsOfRoom, zonesOfFloor } from './queries'
 import type { Plan, PlanOpening, PlanWindow, Rect, Room, Slot, SlotDef, Vec2 } from './types'
@@ -15,7 +16,7 @@ export function slotDefsOf(plan: Plan, room: Room): SlotDef[] {
   const key = registries().LIBRARY_ALIAS[name] || name
   const library = room.slots ? room.slots : registries().LIBRARIES[key]
   if (!library) return []
-  const R = inner(room.parts[0])
+  const R = insetBy(room.parts[0], roomMargin(room))
   let defs = typeof library === 'function' ? library({ w: R[2] - R[0], d: R[3] - R[1] }) : library.slice()
   defs = defs.map((x) => Object.assign({}, x))
   for (const id of room.without || []) defs = defs.filter((x) => x.id !== id)
@@ -87,7 +88,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
   }
   const size = def.size as Vec2
   const roomCenter = ((): Vec2 => {
-    const R0 = inner(room.parts[0])
+    const R0 = insetBy(room.parts[0], roomMargin(room))
     return [(R0[0] + R0[2]) / 2, (R0[1] + R0[3]) / 2]
   })()
   const openings = openingsOfFloor(plan, room.floor)
@@ -113,7 +114,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
   }
   const free = (rect: Rect) => !!def.floorFree || !zones.some((z) => overlaps(rect, z, room.type === 'stairs' ? -0.011 : EPS))
   const rule: string = def.facing || 'center'
-  let R = inner(room.parts[Math.min(def.part || 0, room.parts.length - 1)])
+  let R = insetBy(room.parts[Math.min(def.part || 0, room.parts.length - 1)], roomMargin(room))
   if (def.anchor === 'wall' || def.anchor === 'window') {
     let side = def.side as string
     let a: number | null = null
@@ -129,7 +130,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
         .find(
           (r) =>
             (found.axis === 'u' ? found.u >= r[0] - TOL && found.u <= r[2] + TOL : found.v >= r[1] - TOL && found.v <= r[3] + TOL) &&
-            ((side === 'left' && eq(r[0], found.pos + MARGIN)) || (side === 'right' && eq(r[2], found.pos - MARGIN)) || (side === 'front' && eq(r[1], found.pos + MARGIN)) || (side === 'back' && eq(r[3], found.pos - MARGIN))),
+            ((side === 'left' && eq(r[0], found.pos + roomMargin(room))) || (side === 'right' && eq(r[2], found.pos - roomMargin(room))) || (side === 'front' && eq(r[1], found.pos + roomMargin(room))) || (side === 'back' && eq(r[3], found.pos - roomMargin(room)))),
         )
       if (!cand) return invalid('window_outside_room')
       R = cand
@@ -147,7 +148,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     const cell = (ac: number): Rect =>
       side === 'left' ? [R[0], ac - hw, R[0] + depth, ac + hw] : side === 'right' ? [R[2] - depth, ac - hw, R[2], ac + hw] : side === 'front' ? [ac - hw, R[1], ac + hw, R[1] + depth] : [ac - hw, R[3] - depth, ac + hw, R[3]]
     const nominal = a != null ? a : a0 + hw + (def.pos == null ? 0.5 : def.pos) * Math.max(0, len - 2 * hw) + (def.shift || 0)
-    const wp = side === 'left' ? R[0] - MARGIN : side === 'right' ? R[2] + MARGIN : side === 'front' ? R[1] - MARGIN : R[3] + MARGIN
+    const wp = side === 'left' ? R[0] - roomMargin(room) : side === 'right' ? R[2] + roomMargin(room) : side === 'front' ? R[1] - roomMargin(room) : R[3] + roomMargin(room)
     const pa = clamp(nominal, a0 + hw, a1 - hw)
     let found: number | null = null
     const steps = [0]
@@ -186,7 +187,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     if (extentU > R[2] - R[0] + EPS || extentV > R[3] - R[1] + EPS) return invalid('larger_than_room')
     const rect: Rect = [cornerU === 'left' ? R[0] : R[2] - extentU, cornerV === 'front' ? R[1] : R[3] - extentV, cornerU === 'left' ? R[0] + extentU : R[2], cornerV === 'front' ? R[1] + extentV : R[3]]
     if (!free(rect)) return invalid('blocked_by_door')
-    for (const sp of [[kx - normalU[0] * (MARGIN + 0.1), (rect[1] + rect[3]) / 2], [(rect[0] + rect[2]) / 2, kz - normalV[1] * (MARGIN + 0.1)]]) if (isOpenSide(plan, room, sp[0], sp[1])) return invalid('open_wall')
+    for (const sp of [[kx - normalU[0] * (roomMargin(room) + 0.1), (rect[1] + rect[3]) / 2], [(rect[0] + rect[2]) / 2, kz - normalV[1] * (roomMargin(room) + 0.1)]]) if (isOpenSide(plan, room, sp[0], sp[1])) return invalid('open_wall')
     return Object.assign(base, { x: r2((rect[0] + rect[2]) / 2), z: r2((rect[1] + rect[3]) / 2), frontU: f[0], frontV: f[1], ry: r2(Math.atan2(f[0], f[1])), w: size[0], d: size[1], aabb: rect.map(r2) as Rect, _cell: { rect, f, enclosed: [cornerU, cornerV], R, size } }) as Slot
   }
   if (def.anchor === 'center') {

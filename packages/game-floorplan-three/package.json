@@ -80,7 +80,8 @@
     "@adatechnology/game-vegetation": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-floorplan-rural": "workspace:^",
-    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:^"
+    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:^",
+    "@adatechnology/game-terrain": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@adatechnology/game-floorplan": {

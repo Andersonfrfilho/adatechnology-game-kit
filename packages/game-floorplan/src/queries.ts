@@ -1,4 +1,5 @@
-import { EPS, MARGIN, OVERHEAD_TOP } from './constants'
+import { EPS, OVERHEAD_TOP } from './constants'
+import { wallMargin } from './wall-thickness'
 import { eq, inRect } from './geometry'
 import type { FurnitureDef, Plan, PlanOpening, PlanWindow, Rect, Room } from './types'
 
@@ -33,6 +34,7 @@ export function windowZone(j: Pick<PlanWindow, 'width' | 'side' | 'u' | 'v' | 'a
   if (outside) n = [-n[0], -n[1]]
   const u = j.u
   const v = j.v
+  const MARGIN = wallMargin()
   if (j.axis === 'u') return n[1] > 0 ? [u - h, v - MARGIN, u + h, v + depth] : [u - h, v - depth, u + h, v + MARGIN]
   return n[0] > 0 ? [u - MARGIN, v - h, u + depth, v + h] : [u - depth, v - h, u + MARGIN, v + h]
 }

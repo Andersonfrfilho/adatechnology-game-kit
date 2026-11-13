@@ -1,3 +1,6 @@
+import { SUPPORT_TOLERANCE, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
+import type { PlanePoint, SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
+import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
@@ -15,9 +18,8 @@ import type { BendGeometry } from './flexure'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
-import { restsOver } from './support-hull'
-import type { PlanePoint } from './support-hull'
 import type { VoidRun } from './foundation-span'
+import { BEND_MIN, BEND_MAX, plasticBend, plateHinge, pressedAgainstFloor, snapRatio } from './bending'
 import { BEAM_SPREAD, DISTORTION_BASE, distortionOf, FOOTPRINT_MAX_SAMPLES, FOOTPRINT_STEP, mergeSettlement, relativeToChord, resolveGroundLoss, SETTLEMENT_POINTS, settlementAt, settlementProfile, smoothProfile, undercutAt } from './ground-loss'
 import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
 import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
@@ -30,10 +32,11 @@ import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
-  BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
+  BlastCharge, BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras, SweepProbe,
 } from './types'
-import { bodyImpulse, DEFAULT_BLAST_IMPULSE, ignitionChance, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
+import { bodyImpulse, chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, fuelFireball, ignitionChance, ignitionDose, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
+import type { Fireball } from '@adatechnology/game-contracts'
 
 /** Hit points removed per joule (before the material's `damageScale`). */
 /** Metres: a ductile part this thin or thinner dishes around a bullet hole. */
@@ -70,8 +73,8 @@ const THIN_SHEET_CRUSH = 0.0005
 /** Metres: the widest dent a blow leaves on such a sheet; the sheet folds under the fist, the shoe or the corner it lands on, not under the whole reach of the blow. */
 const THIN_SHEET_CONTACT = 0.025
 const DMG_PER_J = 0.02
-/** Fraction of a blast's energy that reaches a part at distance 0. */
-const BLAST_COUPLING = 0.1
+/** Most fragment rays cast by one blast when the charge does not say. */
+const FRAGMENT_RAYS = 256
 /**
  * Blast options (all off until asked for). Shelter: a part the line from the blast to the target crosses lets through `exp(-r / k)`, `r` being the
  * hit points of the slab it crosses per square metre (`hpPerKg * density * path * damageScale.shelter`). Fragment hits: up to 24 fragments, half their
@@ -82,6 +85,11 @@ export const SHELTER_DEFAULTS: Required<ShelterOptions> = { k: 2800, brokenTrans
 export const FRAGMENT_HIT_DEFAULTS: Required<FragmentHitOptions> = { max: 24, energyFactor: 0.5, hitType: 'blunt', range: 6, flightTime: 0.4, spread: 10, aim: 40 }
 export const CONFINEMENT_DEFAULTS: Required<ConfinementOptions> = { rays: 26, reach: 1.5, gain: 1.5, power: 2, max: 3 }
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
+/** kg/L of liquefied petroleum gas and of petrol. */
+const LPG_KG_PER_L = 0.51
+const PETROL_KG_PER_L = 0.75
+/** Share of its ignition dose under which the heat of a fireball is not worth a part's notice (and its line of sight is not cast). */
+const MIN_HEAT_SHARE = 0.05
 /** Diameter in metres of the opening `vent` makes when none is given: a cylinder valve (about 8 mm). */
 const VENT_DIAMETER = 0.008
 /** A flame lights a flammable leak when it reaches this temperature (the auto-ignition of propane in air is about 470 °C; a lighter flame is above 1000 °C). */
@@ -144,8 +152,6 @@ const SEVER_BALLISTIC = 2
 const TEAR_JOULES = 150
 /** Running number of the torn pieces (their ids). */
 let tears = 0
-/** Metres two parts may be apart and still rest on each other, for the span of a beam or a slab. */
-const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
@@ -407,6 +413,8 @@ interface Blast {
   point: Vec3
   energy: number
   radius: number
+  /** Kilograms of fuel the part burst with (the gas of a cylinder): its fireball is the heat of the blast. */
+  fuel?: number
   lethalRadius?: number
   source?: string
 }
@@ -574,7 +582,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
-    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, undefined, undefined, blast.lethalRadius)
+    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, blast.fuel ? { charge: { fuel: blast.fuel } } : undefined, undefined, blast.lethalRadius)
   }
 
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
@@ -1043,47 +1051,42 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return 2 * far
   }
 
-  /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
+  /** A joint the spec lays one way: one end rests on the other. */
+  const directed = (j: JointRT): boolean => j.bears === 'a_on_b' || j.bears === 'b_on_a'
+
+  /**
+   * Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. What carries what, the order
+   * the load goes down and how it is shared are the load path rule of `game-load-path` (the structure that sized the building uses the same one).
+   */
   const solveStructure = (o: ObjRT) => {
     o.maxStress = 0
     if (!o.hasStructure) return
     const parts = o.parts
     const n = parts.length
-    const dist = new Array<number>(n).fill(-1)
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
     const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
+    // what each part rests on through its bearing joints that hold
+    const edges: SupportEdge[][] = parts.map((p, i) => {
+      const out: SupportEdge[] = []
+      for (const j of o.byPart.get(p.spec.id)!) {
+        if (j.st.open || !j.bears) continue
+        const k = restsOn(o, j, i)
+        if (k >= 0) out.push({ on: k, directed: directed(j) })
+      }
+      return out
+    })
     // a part whose supports leave it a longer span than it holds (`structure.maxSpan`) is out, and so is what stood on it only through it
     const out = new Set<number>()
-    let queue: number[] = []
-    let lowerOf = new Map<number, number[]>()
+    const graph: SupportGraph = {
+      size: n, sharing: o.spec.loadSharing ?? 'nearest', anchored: (i) => parts[i].anchored, active: (i) => ok(i) && !out.has(i), partition: isPartition,
+      supportsOf: (i) => edges[i],
+    }
+    let solution = solveSupports(graph)
+    const lowerOf = (i: number): readonly number[] => solution.carriers.get(i) ?? []
     for (;;) {
-      dist.fill(-1)
-      queue = []
-      for (let i = 0; i < n; i++) if (ok(i) && !out.has(i) && parts[i].anchored) {
-        dist[i] = 0
-        queue.push(i)
-      }
-      for (let h = 0; h < queue.length; h++) {
-        const s = queue[h]
-        if (isPartition(s)) continue
-        for (const j of o.byPart.get(parts[s].spec.id)!) {
-          if (j.st.open || !j.bears) continue
-          const r = j.ia === s ? j.ib : j.ia
-          if (dist[r] >= 0 || !ok(r) || out.has(r) || restsOn(o, j, r) !== s) continue
-          dist[r] = dist[s] + 1
-          queue.push(r)
-        }
-      }
-      lowerOf = new Map<number, number[]>()
       let dropped = false
-      for (const i of queue) {
-        const lower: number[] = []
-        for (const j of o.byPart.get(parts[i].spec.id)!) {
-          if (j.st.open || !j.bears) continue
-          const k = restsOn(o, j, i)
-          if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
-        }
-        lowerOf.set(i, lower)
+      for (const i of solution.reached) {
+        const lower = lowerOf(i)
         const max = parts[i].spec.structure?.maxSpan
         const tooLong = max !== undefined && freeSpan(parts[i], lower.map((k) => parts[k])) > max
         // a slab the spec itself lays over fewer supports than a resting slab needs (a porch roof on its posts and a ledger, a canvas on its poles) is
@@ -1096,29 +1099,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
       if (!dropped) break
+      solution = solveSupports(graph)
     }
-    const incoming = new Array<number>(n).fill(0)
+    const dist = solution.distance
     // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
     // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
     // and bends that one only if it is away from its own supports
     const bending = new Array<number>(n).fill(0)
     const through: Array<Array<{ at: Vec3; mass: number; over: number }>> = parts.map(() => [])
     const pass = (k: number, at: Vec3, mass: number) => {
-      const over = overSupportAt(o, parts[k], at, lowerOf.get(k) ?? [])
+      const over = overSupportAt(o, parts[k], at, lowerOf(k))
       if (over < 0) bending[k] += mass
       else through[k].push({ at, mass, over })
     }
-    for (let h = queue.length - 1; h >= 0; h--) {
-      const i = queue[h]
-      const total = parts[i].st.mass + incoming[i]
-      parts[i].st.load = total
-      const lower = lowerOf.get(i)!
-      for (const k of lower) incoming[k] += total / lower.length
-      if (lower.length === 0) continue
-      const bulk = parts[i].bend ? parts[i].st.mass + bending[i] : total
-      for (const k of lower) if (parts[k].bend) pass(k, contactCentre(parts[k], parts[i]), bulk / lower.length)
-      if (parts[i].bend) for (const item of through[i]) if (parts[item.over]?.bend) pass(item.over, item.at, item.mass)
-    }
+    distributeLoads(solution, (i) => parts[i].st.mass, {
+      settled: (i, load) => {
+        parts[i].st.load = load
+        if (parts[i].bend && lowerOf(i).length) for (const item of through[i]) if (parts[item.over]?.bend) pass(item.over, item.at, item.mass)
+      },
+      share: (i, k) => {
+        if (!parts[k].bend) return
+        const bulk = parts[i].bend ? parts[i].st.mass + bending[i] : parts[i].st.load!
+        pass(k, contactCentre(parts[k], parts[i]), bulk / lowerOf(i).length)
+      },
+    })
     for (let i = 0; i < n; i++) {
       const p = parts[i]
       o.unsup[i] = false
@@ -1130,10 +1134,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.unsup[i] = o.anyAnchor && !isLost(p) && !p.orphan
         continue
       }
-      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p, borneOn(p, (lowerOf.get(i) ?? []).map((k) => parts[k])), throughOf(p)))
+      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p, borneOn(p, lowerOf(i).map((k) => parts[k])), throughOf(p)))
       if (p.bend) {
         p.bendLoad = p.st.mass + bending[i]
-        const bent = restFlexure(o, p, lowerOf.get(i) ?? [])
+        const bent = restFlexure(o, p, lowerOf(i))
         p.st.flexure = bent
         p.snap = bent > 1 && !p.st.stripped && !sectionOf(p, p.bend.gravity).reinforced
         // a beam or slab carries its load in bending: the load the solver routes through it is not a compression it takes, unless a designer gave
@@ -2891,7 +2895,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const [u, v] = planeAxes(p.thin)
     const lp = toLocal(p.pos, p.q, objectPoint)
     // a block of a member's concrete that broke off is its cover: the core between the bars is still behind it, and takes the rounds until the cut there
-    if (p.spec.reinforcement && isMember(p.dims) && !p.st.stripped) {
+    if (p.spec.reinforcement && isMember(p.dims, p.spec.structure?.role) && !p.st.stripped) {
       const along = p.dims.indexOf(Math.max(...p.dims))
       const bands = Math.max(1, Math.round(p.dims[along] / MEMBER_BAND))
       const band = clamp(Math.floor(((lp[along] + p.dims[along] / 2) / p.dims[along]) * bands), 0, bands - 1)
@@ -2906,10 +2910,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * the cut the band's concrete comes out (what is above stays on its bars), and what rested on the member no longer bears on it.
    */
   /** A member whose shots `wearMember` takes where they land (a pillar, a beam, cast with its bars): its hit points do not decide its concrete. */
-  const wornLocally = (p: PartRT): boolean => !!p.spec.reinforcement && !!p.spec.units && p.spec.units.mortar === p.spec.material && isMember(p.dims) && p.spec.shape.kind === 'box'
+  const wornLocally = (p: PartRT): boolean => !!p.spec.reinforcement && !!p.spec.units && p.spec.units.mortar === p.spec.material && isMember(p.dims, p.spec.structure?.role) && p.spec.shape.kind === 'box'
 
   const wearMember = (o: ObjRT, p: PartRT, entry: Vec3, d: Vec3, E: number, caliber: number, penMm: number | undefined, src?: string): boolean => {
-    if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
+    if (!p.spec.reinforcement || !p.spec.units || !isMember(p.dims, p.spec.structure?.role) || p.st.stripped || isLost(p) || p.spec.shape.kind !== 'box') return false
     const along = p.dims.indexOf(Math.max(...p.dims))
     const lp = toLocal(p.pos, p.q, objLocal(o, entry))
     const ld = rotateVec(quat.conjugate(p.q), objLocalDir(o, d))
@@ -3118,7 +3122,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const r = p.spec.reinforcement
     if (!r) return
     const [u, v] = planeAxes(p.thin)
-    const all = rebarBars(p.dims, p.thin, r.spacing)
+    const all = rebarBars(p.dims, p.thin, r.spacing, p.spec.structure?.role)
     let bars: Array<[Vec3, Vec3]>
     if (p.st.stripped) bars = all
     else {
@@ -3134,7 +3138,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const bow = clamp(((p.st.stress ?? 0) - 1) / 0.5, 0, 1)
     if (bow > 0) bars = bars.flatMap((bar, i) => bendBar(bar, p.thin, bow * BAR_BOW, i))
     // a member's stirrups show where its concrete went, around the bars they hold
-    const stirrups = memberStirrups(p.dims)
+    const stirrups = memberStirrups(p.dims, undefined, p.spec.structure?.role)
     if (stirrups.length > 0 && bars.length > 0) {
       if (p.st.stripped) bars = [...bars, ...stirrups]
       else for (const box of [...(p.st.chipped ?? []), ...(p.rt.bared ?? [])]) bars.push(...clipBarsToVolume(stirrups, box.center, box.size))
@@ -3447,7 +3451,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** The concrete of a reinforced part is gone: the part stays as its rebar cage, with the capacity the reinforcement leaves it. */
   const stripPart = (o: ObjRT, p: PartRT, reinforcement: NonNullable<PartSpec['reinforcement']>, src?: string) => {
-    const bars = rebarBars(p.dims, p.thin, reinforcement.spacing)
+    const bars = rebarBars(p.dims, p.thin, reinforcement.spacing, p.spec.structure?.role)
     p.st.stripped = true
     p.st.hp = p.st.maxHp
     p.st.mass = rebarMass(bars, reinforcement.diameter, materials.get(reinforcement.material)?.density)
@@ -3571,7 +3575,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (ex) {
       emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(ex.tnt !== undefined ? { tnt: ex.tnt } : {}), ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
-      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), source: src })
+      const fuel = burstFuel(p)
+      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(fuel > 0 ? { fuel } : {}), source: src })
     }
     partLost(o, p, src)
   }
@@ -3809,6 +3814,32 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
   }
 
+  /**
+   * What a heavy blunt blow does to the part as a whole, not only where it lands (`bending.ts`, by `MaterialDef.bending`): a thin ductile plate bends for good
+   * (`PartState.bend`, a `damage`-free state change); a long wooden piece that is flexed past the moment its section holds snaps across at the blow.
+   * Returns the hit points that finish the part off when it snaps, else 0.
+   */
+  const bendOrSnap = (o: ObjRT, p: PartRT, E: number, point: Vec3, d: Vec3): number => {
+    if (E <= 0 || !p.mat.bending) return 0
+    const { c, q } = partXf(o, p)
+    const local = rotateVec([-q[0], -q[1], -q[2], q[3]], d)
+    const corner = (n: number): Vec3 => [(n & 1 ? 1 : -1) * p.dims[0] / 2, (n & 2 ? 1 : -1) * p.dims[1] / 2, (n & 4 ? 1 : -1) * p.dims[2] / 2]
+    const lowestY = Math.min(...[0, 1, 2, 3, 4, 5, 6, 7].map((n) => toWorld(c, q, corner(n))[1]))
+    const angle = pressedAgainstFloor(lowestY, options.groundHeight ?? 0, d) ? 0 : plasticBend(p.dims, p.thickness, p.mat.bending, E, local)
+    if (angle >= BEND_MIN) {
+      const before = p.st.bend ?? 0
+      p.st.bend = Math.min(BEND_MAX, before + angle)
+      const hinge = plateHinge(p.dims, toLocal(c, q, point), local)
+      const toObject = (v: Vec3): Vec3 => rotateVec(p.q, v)
+      p.st.bendHinge = { point: vec.add(p.pos, toObject(hinge.point)), axis: toObject(hinge.axis), side: toObject(hinge.side) }
+      emit({ ...base(o), type: 'bend', part: p.spec.id, hinge: p.st.bendHinge, angle: p.st.bend - before, worldPoint: point })
+    }
+    const axis = severAxis(p)
+    if (axis < 0 || snapRatio(p.dims, p.mat.bending, E, local, SEVER_ASPECT) < 1) return 0
+    p.rt.cutAt = clamp(toLocal(c, q, point)[axis], -p.dims[axis] / 2, p.dims[axis] / 2)
+    return Math.max(0, p.st.hp)
+  }
+
   const melee = (o: ObjRT, p: PartRT, kind: 'blunt' | 'slash', E: number, point: Vec3, n: Vec3, d: Vec3, contactR: number, src?: string): number => {
     const mat = p.mat
     const thrMm = mat.penetration * p.thickness * 1000
@@ -3846,7 +3877,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     } else wearJoints(o, p, E * 0.3, point, 0.06, src)
     if (kind === 'blunt' && E > 0 && p.layers.length > 0) spallOuter(o, p, point, faceOf(o, p, n), n, Math.max(contactR, 0.05), src)
     const scale = mat.damageScale?.[kind] ?? 1
-    const done = applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
+    const snapped = kind === 'blunt' ? bendOrSnap(o, p, E, point, d) : 0
+    const done = applyDamage(o, p, Math.max(snapped, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1)), kind, point, d, E * 0.1, 12, src)
     addBreach(o, p, point, breachAreaOf(p, done, false), E, d, src)
     // a blow that did not open the wall wears the units it lands on
     if (kind === 'blunt') chipUnits(o, p, 'blunt', point, E, d, Math.max(contactR, 0.03), src)
@@ -3867,33 +3899,56 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const sp = surfacePoint(p.spec.shape, lp)
     const wp = toWorld(c, q, sp.point)
     const reach = reachAt ? reachAt(wp, p) : 1
-    const f = (1 - dist / radius) ** 2 * reach
-    const Ein = energy * f * BLAST_COUPLING
+    const mat = p.mat
+    const side = Math.hypot(lp[0], lp[1], lp[2])
+    const toward: Vec3 = side > 1e-6 ? [lp[0] / side, lp[1] / side, lp[2] / side] : [0, 1, 0]
+    // a solid part whose box holds less material than the box (a sloped rafter or a roof bay given as the box of its slope, a lattice) shows the wave only its solid
+    // share of that box: a 181 kg rafter in a 0.08 x 3.18 x 5.7 m box is 0.36 m3 of wood in 1.45 m3, a quarter of the 18 m2 the box shows. A shell (a part with a
+    // `thickness`: a tin, a pane, a tank) is hollow on purpose and shows its whole face
+    const solid = p.spec.thickness === undefined ? Math.min(1, p.st.mass / Math.max(mat.density * partVolume(p.spec.shape), 1e-9)) : 1
+    const wave = waveWork({ tnt: energy * blastTntPerJoule, distance: dist, reach, area: projectedArea(p.spec.shape, toward) * solid, mass: p.st.mass, thickness: p.thickness })
+    let Ein = wave.energy + wave.shock
+    // the share of the part the wave breaks: its work over the work the part's strength takes to fail (`failureWork`); a material with no strength data takes it at DMG_PER_J
+    let share: number | undefined
+    // a part tagged `structure` with the role `none` (a tile, a baseboard) is no member of the frame: it fails as a plate like any other; a pane of glass laid
+    // in units (a curtain wall: the units are the size of its shards) is one plate of glass to the wave, not courses of masonry
+    if (mat.failureMPa !== undefined && wave.loaded > 0 && (!p.spec.units || mat.tags?.includes('glass') === true) && !p.spec.reinforcement && !(p.spec.structure && p.spec.structure.role !== 'none') && !p.bend) {
+      const sorted = [...p.dims].sort((a, b) => a - b)
+      // a free stick at least four times as long as it is wide spans its length; a plate (or anything held along its length) its short side
+      const isBeam = !p.anchored && (sorted[2] ?? 0) >= 4 * Math.max(sorted[1] ?? 0, 1e-6)
+      const fail = failureWork({ failureMPa: mat.failureMPa, ductility: mat.ductility, isGlass: mat.tags?.includes('glass') === true, isBeam, thickness: isBeam ? Math.max(p.thickness, sorted[0] ?? 0) : p.thickness, span: (isBeam ? sorted[2] : sorted[1]) ?? p.thickness, loaded: wave.loaded })
+      share = wave.pressure < fail.pressure ? 0 : Math.min(1, wave.energy / fail.work)
+      if (share === 0) Ein = wave.shock
+      else if (share === 1) Ein = Math.max(Ein, p.st.maxHp / DMG_PER_J)
+    }
     const wn = rotateVec(q, sp.normal)
     if (!res.part) {
       res.part = p.spec.id
       res.point = wp
     }
-    const mat = p.mat
     if (Ein > 20) {
       if (mat.ductility >= 0.5) addDent(o, p, wp, wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), clamp(0.004 + Ein * 0.00002, 0.004, 0.08), src)
       else if (mat.ductility < 0.3 && Ein > 60) addCrack(o, p, wp, wn, clamp(0.05 + Ein * 0.0005, 0.05, 1), src)
       debris(o, p, mat.hitDebris, wp, wn, clamp(Math.round(Ein / 80) + 1, 1, 12), clamp(Math.sqrt(Ein) / 4, 2, 15), src)
     }
     const th = mat.thermal
-    if (th.ignitionC !== undefined && p.st.fuel > 0) {
-      p.st.temperature += 300 * f
-      o.active = true
-      if (f >= 0.25 && !p.st.burning) {
-        p.st.temperature = Math.max(p.st.temperature, th.ignitionC + 1)
-        checkIgnite(o, p, src)
+    // the heat is the fireball's (`blastFireball`): the dose on the face of the part over the life of the fireball, if the fireball sees it; a part that takes the
+    // dose its material needs to light catches fire, one that takes less is warmed by that share of the way to its ignition temperature
+    if (th.ignitionC !== undefined && p.st.fuel > 0 && !p.st.burning) {
+      const needed = ignitionDose(th.ignitionC, ambient)
+      const dose = fireballDose(blastFireball, dist) * reach
+      if (dose >= needed * MIN_HEAT_SHARE && seesFireball(point, o, p, wp)) {
+        const share = Math.min(1, dose / needed)
+        p.st.temperature = Math.max(p.st.temperature, ambient + (th.ignitionC + 1 - ambient) * share)
+        o.active = true
+        if (share >= 1) checkIgnite(o, p, src)
       }
     }
     // a blast loosens a long joint (the mortar bed of a wall) over the stretch it breaks, not all along it; the trim on the part only within that stretch
     // (a grenade at a pillar's foot does not shake loose the baseboards and the paving at the other end of the wall)
     const stretch = 2 * BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)
     wearJoints(o, p, Ein * 0.5, undefined, 0, src, false, stretch, { point, reach: stretch })
-    const amount = Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1)
+    const amount = (share !== undefined ? share * p.st.maxHp + wave.shock * DMG_PER_J : Ein * DMG_PER_J) * (mat.damageScale?.explosive ?? 1)
     if (blastFrontSpeed > 0 && dist > 0 && mat.tags?.includes('glass')) {
       frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
       return reach
@@ -3904,7 +3959,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // points and takes the concrete out only where it reaches (a charge at contact cuts a band a couple of sections tall, the bars and stirrups bared there)
     const caged = Boolean(p.spec.reinforcement && p.spec.units)
     // a reinforced wall out of the cut reach is not severed at one band either: it keeps its floor and loses the concrete the blast reaches
-    const member = caged && (isMember(p.dims) || dist > MEMBER_CUT_REACH * breachReach)
+    const member = caged && (isMember(p.dims, p.spec.structure?.role) || dist > MEMBER_CUT_REACH * breachReach)
     const dealt = member
       ? applyDamage(o, p, Math.min(amount, Math.max(0, p.st.hp - p.st.maxHp * FAR_MEMBER_HP_FLOOR)), 'explosive', null, null, Ein * 0.3, 40, src)
       : applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
@@ -3919,6 +3974,29 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     else if (member) blastUnits(o, p, wp, energy, dist, src)
     else if (dist <= breachReach) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
+  }
+
+  /** Kilograms of TNT per joule of the blast being resolved: the charge's own, or the arsenal's scale. */
+  let blastTntPerJoule = TNT_PER_JOULE
+  /** The fireball of the blast being resolved: the charge's, or the fuel's when the blast burns one. */
+  let blastFireball: Fireball = chargeFireball(0)
+
+  /** Kilograms of fuel a bursting part throws into its fireball: the flammable fluid it still holds (LPG 0.51 kg/L, petrol 0.75 kg/L). */
+  const burstFuel = (p: PartRT): number => {
+    const c = p.spec.contains
+    if (!c || !FLAMMABLE_FLUIDS.includes(c.fluid)) return 0
+    return Math.max(0, p.st.liters ?? c.liters) * (c.fluid === 'gas' ? LPG_KG_PER_L : PETROL_KG_PER_L)
+  }
+
+  /**
+   * Whether the straight line from the centre of the fireball to the point `wp` of the part crosses nothing else: radiant heat does not go through a wall, and the hot
+   * gases are held by it too (their flow round a wall is not modelled, so a part behind one stays cool even inside the fireball).
+   */
+  const seesFireball = (point: Vec3, o: ObjRT, p: PartRT, wp: Vec3): boolean => {
+    const L = vec.distance(point, wp)
+    if (L < 0.03) return true
+    const hit = raycastInternal(point, vec.sub(wp, point), L - 0.02)
+    return !hit || (hit.object === o.id && hit.part === p.spec.id)
   }
 
   const blastProbe = { partsTested: 0, partsNear: 0 }
@@ -4027,7 +4105,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
+      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
     }
     return out
   }
@@ -4156,7 +4234,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           den += f
         }
         const k = den > 0 ? num / den : 1
-        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule * k, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
         results.set(im, res)
         report(im).shelter = k
       }
@@ -4273,12 +4351,181 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     rep.fragmentHits++
   }
 
+  /**
+   * One projectile through the world: the first part it reaches, then what it keeps after going through, up to four parts. `flight` scales the energy at the first hit by the distance
+   * flown (a fragment slowed by the air); a gun round keeps its muzzle energy.
+   */
+  const shootRay = (origin: Vec3, direction: Vec3, energy: number, caliber: number, source: string | undefined, extras: BallisticExtras, flight?: (distance: number) => number, ignored?: ReadonlySet<string>): HitResult[] => {
+    const results: HitResult[] = []
+    const d = vec.normalize(direction)
+    const ignore = new Set<string>(ignored)
+    let org = origin
+    let E = energy
+    for (let i = 0; i < 4 && E > 0; i++) {
+      const rh = raycastInternal(org, d, Infinity, ignore, false, true)
+      if (!rh) break
+      const im = impls.get(rh.object)
+      if (im) {
+        // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
+        const scaled = extras.penetration && E < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (E / energy)])) } : extras
+        const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}) })
+        r.part = rh.part
+        r.point = rh.point
+        // the part says what the round keeps (a sheet takes little, a block all of it); else half, as before
+        const left = r.events.find((e) => e.type === 'hole' && (e as { energyLeft?: number }).energyLeft !== undefined) as { energyLeft?: number } | undefined
+        r.exitEnergy = r.penetrated ? (left?.energyLeft ?? E * 0.5) : 0
+        results.push(r)
+        ignore.add(`${im.impl.id}\0${rh.part}`)
+        if (!r.penetrated) break
+        org = vec.madd(rh.point, d, Math.min(rh.pathLen, 0.05) + 0.001)
+        E = r.exitEnergy
+        continue
+      }
+      const o = getObj(rh.object)
+      const p = getPart(o, rh.part)
+      const start = cur.length
+      const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, extras)
+      results.push({ object: o.id, part: p.spec.id, point: rh.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy, events: cur.slice(start) })
+      ignore.add(`${o.id}\0${p.spec.id}`)
+      if (!out.penetrated || !out.exitPoint) break
+      org = vec.madd(out.exitPoint, d, 0.001)
+      E = out.exitEnergy
+    }
+    return results
+  }
+
+  /** A fragment target: a part's bounding sphere seen from the charge, with the share of the fragments that fly into it. */
+  interface FragmentTarget {
+    readonly centre: Vec3
+    readonly radius: number
+    readonly distance: number
+    readonly expected: number
+  }
+
+  /**
+   * The fragments of a case, thrown as gun rounds. The case breaks into `fragments` pieces (Mott), flying evenly in all directions at Gurney's speed and slowing in the air
+   * (`exp(-k d)`). Only the pieces that can reach something are cast: each part in range takes the pieces that fly into its bounding sphere (`fragments * (1 - cos(theta)) / 2`,
+   * theta the half angle of the sphere seen from the charge), so the cost follows what is near, not the count of the case; the total is capped at `maxRays` (the rest is cut evenly).
+   * The stream is seeded from the world seed and the charge, so a blast throws the same pieces every time. Each piece is a ballistic round of its own energy and calibre
+   * through the same path as a shot (`shootRay`): penetration by material, ricochet, holes. Pieces aimed at several overlapping spheres are counted in each (a small overcount).
+   */
+  const throwCasing = (point: Vec3, charge: BlastCharge, src: string | undefined): HitResult[] => {
+    const casing = charge.casing
+    if (!casing || !(casing.mass > 0) || !(casing.fragments > 0)) return []
+    const { mottScale, speed } = casingFlight(casing)
+    const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments))
+    const farthest = Math.log(speed / FRAGMENT_MIN_SPEED) / fragmentDrag(mottMass(0, mottScale, casing.fragments))
+    const skip = new Set<string>()
+    for (const id of charge.ignore ?? []) {
+      const ignored = objects.get(id)
+      if (ignored) for (const p of ignored.parts) skip.add(`${ignored.id}\0${p.spec.id}`)
+    }
+    const targets: FragmentTarget[] = []
+    let total = 0
+    for (const o of objects.values()) {
+      if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= farthest) continue
+      for (const p of o.parts) {
+        if (isLost(p) || p.spec.tags?.includes('terrain') || skip.has(`${o.id}\0${p.spec.id}`)) continue
+        const centre = toWorld(o.st.position, o.st.rotation, p.pos)
+        const distance = vec.distance(centre, point)
+        if (distance - p.bound >= farthest) continue
+        const half = Math.asin(Math.min(1, p.bound / Math.max(distance, 1e-6)))
+        const expected = (casing.fragments * (1 - Math.cos(half))) / 2
+        targets.push({ centre, radius: p.bound, distance, expected })
+        total += expected
+      }
+    }
+    // a registered body (a vehicle) is a target too, as one sphere round all its parts (its parts overlap: a sphere per part would count the pieces that fly at a door
+    // once for the door, once for its window and once for the fender); its pieces are rounds to it as a gun's are (`shootRay` takes them through its `surfaceRay`)
+    for (const im of impls.values()) {
+      if (charge.ignore?.includes(im.impl.id)) continue
+      const parts = implParts(im)
+      if (parts.length === 0) continue
+      const lo: Vec3 = [Infinity, Infinity, Infinity]
+      const hi: Vec3 = [-Infinity, -Infinity, -Infinity]
+      for (const { ps, c } of parts) {
+        const r = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
+        for (let k = 0; k < 3; k++) {
+          lo[k] = Math.min(lo[k], c[k] - r)
+          hi[k] = Math.max(hi[k], c[k] + r)
+        }
+      }
+      const centre: Vec3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2]
+      const bound = vec.distance(lo, hi) / 2
+      const distance = vec.distance(centre, point)
+      if (distance - bound >= farthest) continue
+      const half = Math.asin(Math.min(1, bound / Math.max(distance, 1e-6)))
+      const expected = (casing.fragments * (1 - Math.cos(half))) / 2
+      targets.push({ centre, radius: bound, distance, expected })
+      total += expected
+    }
+    const cap = Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS))
+    const keep = total > cap ? cap / total : 1
+    const out: HitResult[] = []
+    const ignore = skip.size > 0 ? skip : undefined
+    for (const t of targets) {
+      const count = Math.floor(t.expected * keep + rng.next())
+      if (count === 0) continue
+      const axis = vec.scale(vec.sub(t.centre, point), 1 / Math.max(t.distance, 1e-6))
+      const side = Math.abs(axis[1]) < 0.9 ? vec.normalize(vec.cross(axis, [0, 1, 0])) : vec.normalize(vec.cross(axis, [1, 0, 0]))
+      const up = vec.cross(axis, side)
+      const cosMax = Math.cos(Math.asin(Math.min(1, t.radius / Math.max(t.distance, 1e-6))))
+      for (let i = 0; i < count; i++) {
+        const mass = mottMass(rng.next(), mottScale, casing.fragments)
+        const cos = 1 - rng.next() * (1 - cosMax)
+        const sin = Math.sqrt(Math.max(0, 1 - cos * cos))
+        const phi = rng.next() * Math.PI * 2
+        const dir: Vec3 = [
+          axis[0] * cos + (side[0] * Math.cos(phi) + up[0] * Math.sin(phi)) * sin,
+          axis[1] * cos + (side[1] * Math.cos(phi) + up[1] * Math.sin(phi)) * sin,
+          axis[2] * cos + (side[2] * Math.cos(phi) + up[2] * Math.sin(phi)) * sin,
+        ]
+        const drag = fragmentDrag(mass)
+        const slowed = (distance: number): number => (speed * Math.exp(-drag * distance) < FRAGMENT_MIN_SPEED ? 0 : Math.exp(-2 * drag * distance))
+        out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, slowed, ignore))
+      }
+    }
+    return out
+  }
+
+  /** The results of `extra` added to `base`, one result per object. */
+  const mergeResults = (base: HitResult[], extra: readonly HitResult[]): HitResult[] => {
+    const byObject = new Map(base.map((r) => [r.object, r]))
+    for (const r of extra) {
+      const have = byObject.get(r.object)
+      if (!have) {
+        const copy: HitResult = { ...r, events: [...r.events] }
+        byObject.set(r.object, copy)
+        base.push(copy)
+        continue
+      }
+      have.damage += r.damage
+      have.penetrated ||= r.penetrated
+      have.events.push(...r.events)
+      if (!have.part && r.part) have.part = r.part
+    }
+    return base
+  }
+
   const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const cfg = blastCfg(call)
-    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
-    // a blast is a flame: a container that leaks flammable fluid inside it catches
-    lightLeaksNear(point, radius)
-    return res
+    const charge = call?.charge ?? options.blast?.charge
+    const outer = blastTntPerJoule
+    const outerFireball = blastFireball
+    blastTntPerJoule = charge?.tnt !== undefined && energy > 0 ? charge.tnt / energy : TNT_PER_JOULE
+    blastFireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * blastTntPerJoule)
+    try {
+      // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
+      const fragments = charge?.casing ? withBlow('ballistic', () => throwCasing(point, charge, src))() : []
+      const wave = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
+      const res = fragments.length > 0 ? mergeResults(wave, fragments) : wave
+      // a blast is a flame: a container that leaks flammable fluid inside its fireball catches
+      lightLeaksNear(point, blastFireball.radius)
+      return res
+    } finally {
+      blastTntPerJoule = outer
+      blastFireball = outerFireball
+    }
   }
 
   const heatObject = (o: ObjRT, point: Vec3, T: number, radius: number, duration: number, src?: string): HitResult => {
@@ -4692,6 +4939,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return r.value
   }
 
+  /** One object as `serialize` writes it, and as `loadObject` takes it back. */
+  const serializeObject = (o: ObjRT): DestructionSnapshot['objects'][number] => {
+    const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.loose ? { loose: true } : {}), ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
+    for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
+    for (const j of o.joints) runtime.joints[j.spec.id] = j.step
+    return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
+  }
+  const buildFromEntry = (e: DestructionSnapshot['objects'][number], id: string): ObjRT => {
+    const state = clone(e.state)
+    const carry: Carry = {
+      parts: new Map(
+        state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? clone(e.runtime.parts[st.id]) : { ...freshRuntime(), prevTemp: st.temperature } }]),
+      ),
+      joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
+      collapsed: e.runtime?.collapsed,
+      ...(e.runtime?.unanchored ? { unanchored: e.runtime.unanchored } : {}),
+      ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
+      ...(e.runtime?.loose ? { loose: true } : {}),
+    }
+    let pos = state.position, rot = state.rotation
+    if (state.soil) {
+      // the saved pose has the settlement on top of the host's: take it off to get the host's back
+      carry.soil = state.soil
+      if (e.runtime?.soil) carry.soilSets = e.runtime.soil
+      rot = quat.normalize(quat.mul(state.rotation, quat.conjugate(state.soil.offset.rotation)))
+      pos = vec.sub(state.position, rotateVec(rot, state.soil.offset.position))
+    }
+    return build(clone(e.spec), id, pos, rot, carry)
+  }
+
   const world: DestructionWorld = {
     materials,
     get time() {
@@ -4763,10 +5040,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         collapsed: [...o.collapsed].filter(keep),
       })
       const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
-        const s: DestructibleSpec = { parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
-        if (o.spec.name !== undefined) s.name = o.spec.name
+        // every other field of the spec goes with both halves: the load sharing above all (a house sized for `all` that is solved as `nearest` after its first split
+        // piece puts twice the load on the columns by the doors and crushes them), and the wind exposure
+        const s: DestructibleSpec = { ...o.spec, parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
         if (o.spec.tags) s.tags = [...o.spec.tags]
-        if (o.spec.soil !== undefined) s.soil = o.spec.soil
         // the part and joint specs are never written after `add`, so the halves share them instead of deep-copying a whole house twice
         return s
       }
@@ -4849,7 +5126,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     raycast(origin, direction, maxDistance = Infinity, options) {
       const r = raycastInternal(origin, direction, maxDistance, undefined, false, true, options)
-      return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
+      if (!r) return null
+      const terrain = objects.get(r.object)?.parts.find((p) => p.spec.id === r.part)?.spec.tags?.includes('terrain') === true
+      return { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance, ...(terrain ? { terrain: true as const } : {}) }
     },
     sweepBox(box, direction, distance, options = {}) {
       const d = vec.normalize(direction)
@@ -4885,44 +5164,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     shoot(origin, direction, energy, caliber, source, round) {
       const extras: BallisticExtras = typeof round === 'number' ? { piercing: round } : round ?? {}
-      return withCollapses(run(withBlow('ballistic', () => {
-        const results: HitResult[] = []
-        const d = vec.normalize(direction)
-        const ignore = new Set<string>()
-        let org = origin
-        let E = energy
-        for (let i = 0; i < 4 && E > 0; i++) {
-          const rh = raycastInternal(org, d, Infinity, ignore, false, true)
-          if (!rh) break
-          const im = impls.get(rh.object)
-          if (im) {
-            // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
-            const scaled = extras.penetration && E < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (E / energy)])) } : extras
-            const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}) })
-            r.part = rh.part
-            r.point = rh.point
-            // the part says what the round keeps (a sheet takes little, a block all of it); else half, as before
-            const left = r.events.find((e) => e.type === 'hole' && (e as { energyLeft?: number }).energyLeft !== undefined) as { energyLeft?: number } | undefined
-            r.exitEnergy = r.penetrated ? (left?.energyLeft ?? E * 0.5) : 0
-            results.push(r)
-            ignore.add(`${im.impl.id}\0${rh.part}`)
-            if (!r.penetrated) break
-            org = vec.madd(rh.point, d, Math.min(rh.pathLen, 0.05) + 0.001)
-            E = r.exitEnergy
-            continue
-          }
-          const o = getObj(rh.object)
-          const p = getPart(o, rh.part)
-          const start = cur.length
-          const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, extras)
-          results.push({ object: o.id, part: p.spec.id, point: rh.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy, events: cur.slice(start) })
-          ignore.add(`${o.id}\0${p.spec.id}`)
-          if (!out.penetrated || !out.exitPoint) break
-          org = vec.madd(out.exitPoint, d, 0.001)
-          E = out.exitEnergy
-        }
-        return results
-      })))
+      return withCollapses(run(withBlow('ballistic', () => shootRay(origin, direction, energy, caliber, source, extras))))
     },
     disassemble(objectId, jointId, tool: ToolKind, dt) {
       const im = impls.get(objectId)
@@ -5111,16 +5353,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         time,
         rng: rng.state(),
         counter,
-        objects: [...objects.values()].map((o) => {
-          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.loose ? { loose: true } : {}), ...(o.unanchored.size ? { unanchored: [...o.unanchored] } : {}), ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
-          for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
-          for (const j of o.joints) runtime.joints[j.spec.id] = j.step
-          return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
-        }),
+        objects: [...objects.values()].map(serializeObject),
         ...(impls.size
           ? { impls: [...impls.values()].map((im) => ({ id: im.impl.id, position: [...im.position] as Vec3, rotation: [...im.rotation] as Quat, data: im.impl.serialize?.() })) }
           : {}),
       }
+    },
+    serializeObject: (id) => {
+      const o = objects.get(id)
+      return o ? serializeObject(o) : null
+    },
+    loadObject(entry, id = entry.id) {
+      objects.set(id, buildFromEntry(entry, id))
     },
     load(snap) {
       if (snap.version !== 1) throw new Error(`unsupported snapshot version ${String(snap.version)}`)
@@ -5128,28 +5372,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       time = snap.time
       rng.set(snap.rng)
       counter = snap.counter ?? 0
-      for (const e of snap.objects) {
-        const state = clone(e.state)
-        const carry: Carry = {
-          parts: new Map(
-            state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? clone(e.runtime.parts[st.id]) : { ...freshRuntime(), prevTemp: st.temperature } }]),
-          ),
-          joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
-          collapsed: e.runtime?.collapsed,
-          ...(e.runtime?.unanchored ? { unanchored: e.runtime.unanchored } : {}),
-          ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
-          ...(e.runtime?.loose ? { loose: true } : {}),
-        }
-        let pos = state.position, rot = state.rotation
-        if (state.soil) {
-          // the saved pose has the settlement on top of the host's: take it off to get the host's back
-          carry.soil = state.soil
-          if (e.runtime?.soil) carry.soilSets = e.runtime.soil
-          rot = quat.normalize(quat.mul(state.rotation, quat.conjugate(state.soil.offset.rotation)))
-          pos = vec.sub(state.position, rotateVec(rot, state.soil.offset.position))
-        }
-        objects.set(e.id, build(clone(e.spec), e.id, pos, rot, carry))
-      }
+      for (const e of snap.objects) objects.set(e.id, buildFromEntry(e, e.id))
       for (const e of snap.impls ?? []) {
         const im = impls.get(e.id)
         if (!im) continue

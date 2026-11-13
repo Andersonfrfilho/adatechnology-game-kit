@@ -39,7 +39,8 @@ const locale = params.get('lang') === 'en' ? 'en' : 'pt-BR'
 document.documentElement.lang = locale
 document.title = locale === 'en' ? 'Test room' : 'Sala de testes'
 
-const arena = Number(params.get('arena'))
+const isFloorplan = params.get('area') === 'floorplan_area' || location.pathname.includes('sala-casas')
+const arena = Number(params.get('arena')) || (isFloorplan ? 40 : 0)
 const quality = /** @type {import('@adatechnology/game-test-room').TestRoomOptions['quality']} */ (['low', 'medium', 'high'].includes(/** @type {string} */ (params.get('quality'))) ? params.get('quality') : 'medium')
 const items = params.get('items')
 
@@ -54,16 +55,18 @@ const sink = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCata
 // over the items): the room lays the catalogue on it a page at a time (its panel: Mesa de testes) to try each item with a shot, a punch,
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
 const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
-/** @type {Record<string, import('@adatechnology/game-test-room').SceneryObject>} */
-const scenery = {
-  // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
-  target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes },
-  // the table stands free on the floor like the shelf: leaning on it pushes it, with what rests on its top
-  table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top ?? undefined, free: true, pushable: true },
-  shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true, pushable: true },
-  test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top ?? undefined, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
-  sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
-}
+/** @type {Record<string, import('@adatechnology/game-test-room').SceneryObject | null>} */
+const scenery = isFloorplan
+  ? { target_wall: null, table: null, shelf: null }
+  : {
+      // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
+      target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes },
+      // the table stands free on the floor like the shelf: leaning on it pushes it, with what rests on its top
+      table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top ?? undefined, free: true, pushable: true },
+      shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build, free: true, pushable: true },
+      test_table: { spec: testTable.spec, position: [-8, 0, 3], build: testTable.build, top: testTable.top ?? undefined, label: locale === 'en' ? 'Test table' : 'Mesa de testes' },
+      sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
+    }
 
 const room = createTestRoom({
   THREE,

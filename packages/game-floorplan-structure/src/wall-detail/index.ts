@@ -1,5 +1,7 @@
 import { getAssembly } from '@adatechnology/game-destruction'
 
+import { coursingOf } from '../masonry-units'
+
 import type { Construction, Rect, PlanStructure, StructurePart, WallDetail } from '../types'
 import { applySplits } from './apply'
 import type { PartsAndSupports } from './apply'
@@ -67,7 +69,8 @@ export function applyUnits(input: Sized, structure: PlanStructure): Sized {
     const units = getAssembly(part.assembly)?.units
     if (!units) continue
     const joint = CONSTRUCTION_SYSTEMS.get(structure.construction.system)!.joints.wall
-    splits.set(part.id, splitIntoCourses(part, [], { rowHeight: units.size[1], unitLength: units.size[0], bond: units.bond, joint: units.mortar === 'concrete' ? 'mortar' : joint, assembly: part.assembly }))
+    const coursing = coursingOf(structure.construction.walls.unit, units)!
+    splits.set(part.id, splitIntoCourses(part, [], { rowHeight: coursing.courseHeight, unitLength: coursing.unitLength, bond: units.bond, joint: units.mortar === 'concrete' ? 'mortar' : joint, assembly: part.assembly }))
   }
   const next = applySplits(input, splits)
   const capacities = new Map(input.capacities)

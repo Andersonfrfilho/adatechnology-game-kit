@@ -423,7 +423,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       action('smoke', translate('act.smoke', { weapon: weaponName, seconds: format(smokeSources[smokeSources.length - 1]!.left, 0) }), { data: { weapon: projectile.weapon, explosive: detonation.explosive, point: detonation.point } })
       return
     }
-    const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', context.blast())
+    const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', { ...context.blast(), charge: { ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}), ...(detonation.casing ? { casing: detonation.casing } : {}) } })
     const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : results.length
     if (!detonation.cone) told(results)
     // under the water the water takes the blast: a column and a dome of white water, no fireball

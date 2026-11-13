@@ -13,10 +13,11 @@ const specOf = (template: string, seed = 3, state: 'normal' | 'abandoned' = 'nor
 const panelsOf = (spec: { parts: { id: string }[] }, slab: string) => spec.parts.map((p) => p.id).filter((id) => new RegExp(`^${slab}_p\\d+$`).test(id))
 
 describe('slab panels: options and rules', () => {
-  it('the slab thickness follows the span (L/40) with a floor and a roof minimum, and the beam depth follows L/10 in steps', () => {
+  it('the slab thickness follows the span (L/35 both ways, L/25 one way) with a floor and a roof minimum, and the beam depth follows L/10 in steps', () => {
     const o = SLAB_PANEL_DEFAULTS
     expect(o.maxSpan).toBe(5)
-    expect(o.thicknessRatio).toBe(40)
+    expect(o.thicknessRatio).toBe(35)
+    expect(o.oneWayThicknessRatio).toBe(25)
     expect(o.floorMinThickness).toBeGreaterThanOrEqual(0.1)
     expect(o.roofMinThickness).toBeGreaterThanOrEqual(0.08)
     expect(beamDepthFor(6, o)).toBeCloseTo(0.6, 6)

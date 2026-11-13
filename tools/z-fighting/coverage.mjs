@@ -12,8 +12,13 @@ const packages = readdirSync(join(ROOT, 'packages'))
 
 /** @param {string} name */
 const drawsPieces = (name) => name.endsWith('-three') || existsSync(join(ROOT, 'packages', name, 'tests/exact-golden.test.ts'))
+/** Packages whose scenes are not a list of catalog cases: houses (every template, level and seed) and the ground (heaps, holes, loose earth). @type {Record<string, string[]>} */
+const GUARD_FILES = {
+  'game-floorplan-three': ['tests/z-fighting-houses.test.ts', 'tests/helpers/z-fighting-houses.ts'],
+  'game-terrain-three': ['tests/z-fighting.test.ts', 'tests/fixtures/z-fighting-ledger.json'],
+}
 /** @param {string} name */
-const guarded = (name) => ['tests/catalog-cases.ts', 'tests/z-fighting.test.ts'].every((f) => existsSync(join(ROOT, 'packages', name, f)))
+const guarded = (name) => (GUARD_FILES[name] ?? ['tests/catalog-cases.ts', 'tests/z-fighting.test.ts']).every((f) => existsSync(join(ROOT, 'packages', name, f)))
 
 /** @type {string[]} */
 const problems = []

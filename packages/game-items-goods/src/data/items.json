@@ -3132,6 +3132,7 @@
       "kind": "uses",
       "amount": 400
     },
+    "weapon": "shovel",
     "finds": {
       "places": [
         "farm",
@@ -10644,5 +10645,87 @@
       "protection",
       "parts"
     ]
+  },
+  {
+    "id": "kabar",
+    "category": "melee",
+    "kind": "melee",
+    "size": [
+      0.302,
+      0.0383,
+      0.0563
+    ],
+    "weight": 0.32,
+    "stack": 1,
+    "shape": "tool",
+    "color": 2895667,
+    "rarity": "uncommon",
+    "finds": {
+      "places": [
+        "house",
+        "military_base",
+        "police_station",
+        "gun_shop"
+      ]
+    },
+    "durability": {
+      "kind": "hits",
+      "amount": 200
+    },
+    "weapon": "kabar",
+    "model": "kabar"
+  },
+  {
+    "id": "katana",
+    "category": "melee",
+    "kind": "melee",
+    "size": [
+      0.98,
+      0.0788,
+      0.08
+    ],
+    "weight": 1.1,
+    "stack": 1,
+    "shape": "tool",
+    "color": 9080208,
+    "rarity": "rare",
+    "finds": {
+      "places": [
+        "house"
+      ]
+    },
+    "durability": {
+      "kind": "hits",
+      "amount": 250
+    },
+    "weapon": "katana",
+    "model": "katana"
+  },
+  {
+    "id": "brass_knuckles",
+    "category": "melee",
+    "kind": "melee",
+    "size": [
+      0.12,
+      0.0127,
+      0.051
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "tool",
+    "color": 12095802,
+    "rarity": "rare",
+    "finds": {
+      "places": [
+        "house",
+        "police_station"
+      ]
+    },
+    "durability": {
+      "kind": "hits",
+      "amount": 500
+    },
+    "weapon": "brass_knuckles",
+    "model": "brass_knuckles"
   }
 ]

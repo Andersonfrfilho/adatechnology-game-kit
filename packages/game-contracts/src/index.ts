@@ -8,8 +8,11 @@ export type {
   DamageStage,
   DamageType,
   DebrisKind,
+  BendHinge,
   Dent,
   DestructibleSpec,
+  BlastCasing,
+  BlastCharge,
   BlastOptions,
   BlastReport,
   ConfinementOptions,
@@ -59,6 +62,10 @@ export type {
 } from './destruction'
 export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
+export { chargeFireball, fireballDose, fuelFireball, ignitionDose } from './fireball'
+export { reflectedLoad, waveWork } from './blast-wave'
+export type { WaveLoad, WaveWork, WaveWorkInput } from './blast-wave'
+export type { Fireball } from './fireball'
 export { bodyMass, FRAGMENT_COVER, KNOCK_CHEST, KNOCK_DOWN_SPEED, KNOCKED_DOWN_ANGLE, knockOf, launchBody, stepKnock, takeLaunch } from './blast-knock'
 export { blastBodySpeed, bodyImpulse, DEFAULT_BLAST_IMPULSE, sideOnImpulse, sideOnOverpressure } from './blast-impulse'
 export type { BlastImpulseOptions } from './blast-impulse'
@@ -67,6 +74,7 @@ export type { BlastShove, BlastShoveOptions, BlastSource } from './blast-shove'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'
 export type { CheckOptions, DestructibleImpl, ImpactContract, SurfaceRay, SurfaceRayHit } from './impact'
 export type { CostOptions } from './impact-cost'
+export type { ToolCondition } from './tool-condition'
 export { MISSING_BITS } from './body'
 export type { BodyRegion, BodySlot, SegmentKind } from './body'
 export { checkSpec } from './spec'
@@ -90,7 +98,7 @@ export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, leadClipE
 export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
 export { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, FRAME_PHASES, checkDeferredQueue } from './frame'
 export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePhase } from './frame'
-export type { FrameOptions, AreaPlacement, GroundLayout, GroundZone, HostEvent, HostGraphics, HostTool, HostToolAttachment, CornerImage, ModuleArea, ModuleHost, HostMovable, HostShove, ModuleView, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, ItemSounds, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
+export type { FrameOptions, AreaPlacement, GroundExcavation, GroundLayout, GroundZone, HostEvent, HostGraphics, HostTool, HostToolAttachment, CornerImage, ModuleArea, ModuleHost, HostMovable, HostShove, ModuleView, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, ItemSounds, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
 import { resetWarnOnce as resetWarnOnceForTests } from './warn'

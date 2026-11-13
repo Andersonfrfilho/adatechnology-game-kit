@@ -123,7 +123,7 @@ export const partCapacity = (part: PartSpec, material: MaterialDef, options: { m
   if (upright && isSlender(part, material)) newtons *= slendernessFactor(sh[1], Math.min(sh[0], sh[2]), options.masonry)
   else if (role === 'column' && part.reinforcement) {
     const m = resolveMasonry(options.masonry)
-    const bars = rebarBars(sh, thinAxisOf(sh), part.reinforcement.spacing).length
+    const bars = rebarBars(sh, thinAxisOf(sh), part.reinforcement.spacing, role).length
     const steel = bars * Math.PI * (part.reinforcement.diameter / 2) ** 2
     newtons = m.concreteFactor * fc * section + steel * resolveFlexure(options.flexure).rebarYieldMPa * 1e6
   }

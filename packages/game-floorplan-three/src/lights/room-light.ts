@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three';
 import type { LightBudget, LightPatch } from '@adatechnology/game-render-three';
 import type { BoxRect, EffectLighting, HouseRoom, Kernel, KernelLightsRoomLight, LightRequest, LitHouse, MaterialTable, RoomLighting, RoomMaskUniforms, Shared } from '../kernel-types.js';
 import type { LightingOptions } from '../types.js';
+import { STICKY_SLOT_BONUS, seatLights } from './sticky-slots.js';
 
 /** The material classes a mask applies to. */
 type MaterialFlags = { isMeshLambertMaterial?: boolean; isMeshPhongMaterial?: boolean; isMeshStandardMaterial?: boolean; isMeshPhysicalMaterial?: boolean };
@@ -78,6 +79,7 @@ export function installLightsRoomLight(K: Kernel, shared: Shared): void {
         const effects = lease ? effectLights({ budget, ours: lease.handles.map(h => h.slot) }) : null;
         const A = { lights: lease ? lease.handles : PL, crates: new Array(N).fill(null), n: N, shadows: NS, stats: { rooms: 0, external: 0, shadows: 0, shadowChanged: false }, indirect: (v: number): void => { LZU.uIndK.value = v; } } as RoomLighting;
         const _p = new THREE.Vector3(), _f = new THREE.Vector3();
+        let seated: string[] = [];
         const lim = (v: number, a: number, b: number): number => Math.max(a, Math.min(b, v));
         A.invalidate = () => { if (lease) { lease.invalidateShadow(); return; } for (let i = 0; i < NS; i++) (PL[i] as THREE_NS.PointLight).shadow.needsUpdate = true; };
         // houses: [house] (or one house); focus: world THREE.Vector3 (first-person camera or orbit target); op: {maxFloor: -1 all, focusHouse, focusRoom: id of the room the camera is in}
@@ -107,8 +109,10 @@ export function installLightsRoomLight(K: Kernel, shared: Shared): void {
               (g.exterior ? exterior : rooms).push(g);
             }
           }
+          const seatedKey = (g: LampGroup): string => (g.house.group as THREE_NS.Object3D).uuid + '|' + g.k;
+          for (const g of rooms.concat(exterior)) if (g.d >= 0 && seated.includes(seatedKey(g))) g.d = Math.max(0, g.d - STICKY_SLOT_BONUS);
           rooms.sort((a, b) => a.d - b.d); exterior.sort((a, b) => a.d - b.d);
-          const Ne = Math.min(MAX_EXTERNAL, exterior.length, Math.max(0, N - 1)), Ni = Math.min(rooms.length, N - Ne), asg = rooms.slice(0, Ni).concat(exterior.slice(0, Ne));
+          const Ne = Math.min(MAX_EXTERNAL, exterior.length, Math.max(0, N - 1)), Ni = Math.min(rooms.length, N - Ne), asg = seatLights(rooms.slice(0, Ni).concat(exterior.slice(0, Ne)), seatedKey, seated, N, NS); seated = asg.map((g) => (g ? seatedKey(g) : ''));
           A.stats.rooms = Ni; A.stats.external = Ne; let shadows = 0;
           for (let i = 0; i < N; i++) {
             const g: LampGroup | undefined = asg[i], at = slotOf(i), b0 = LZU.uRB0.value, b1 = LZU.uRB1.value, b2 = LZU.uRB2.value, by = LZU.uRBY.value, ex = LZU.uREx.value;

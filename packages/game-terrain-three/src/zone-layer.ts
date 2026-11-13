@@ -62,7 +62,8 @@ export function createZoneLayer(THREE: ThreeLib, terrain: Terrain): { group: THR
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-terrain-three', kind: 'ground' })
   group.name = 'terrain-zones'
   const waves = createWaveTexture(THREE)
-  const water = new THREE.MeshStandardMaterial({ color: WATER_COLOUR, transparent: true, opacity: WATER_OPACITY, roughness: WATER_ROUGHNESS, metalness: 0.1, normalMap: waves, depthWrite: false })
+  // where the water meets the bed at its edge the two lie on one plane: the offset draws the water in front instead of flickering
+  const water = new THREE.MeshStandardMaterial({ color: WATER_COLOUR, transparent: true, opacity: WATER_OPACITY, roughness: WATER_ROUGHNESS, metalness: 0.1, normalMap: waves, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
   let drawnFor: GroundLayout | null = null
   const throwAway = (): void => {
     for (const child of [...group.children]) {

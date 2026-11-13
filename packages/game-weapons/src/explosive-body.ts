@@ -19,6 +19,8 @@ export interface Detonation {
   readonly energy: number
   /** Kilograms of TNT equivalent of the charge (`ExplosiveDef.tnt`), when it says. */
   readonly tnt?: number
+  /** The case that breaks into fragments (`ExplosiveDef.casing`), when the explosive has one. */
+  readonly casing?: ExplosiveDef['casing']
   readonly lethalRadius: number
   readonly injuryRadius: number
   readonly noise: number
@@ -217,6 +219,7 @@ export class ExplosiveBody {
       at,
       energy: def.energy,
       ...(def.tnt !== undefined ? { tnt: def.tnt } : {}),
+      ...(def.casing ? { casing: def.casing } : {}),
       lethalRadius: def.lethalRadius,
       injuryRadius: def.injuryRadius,
       noise: def.noise,

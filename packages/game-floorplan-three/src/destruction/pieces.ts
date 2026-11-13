@@ -68,14 +68,24 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           parts.push(p); byId.set(id, p);
         }
         const inside = (p: HouseStructurePart, q: HouseStructurePart, m: number) => { const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2, cy = (p.y0 + p.y1) / 2; return cx >= q.aabb[0] - m && cx <= q.aabb[2] + m && cz >= q.aabb[1] - m && cz <= q.aabb[3] + m && cy >= q.y0 - m && cy <= q.y1 + m; };
+        const touches = (p: HouseStructurePart, q: HouseStructurePart, m: number) => p.aabb[0] <= q.aabb[2] + m && q.aabb[0] <= p.aabb[2] + m && p.aabb[1] <= q.aabb[3] + m && q.aabb[1] <= p.aabb[3] + m && p.y0 <= q.y1 + m && q.y0 <= p.y1 + m;
         for (const p of parts.slice(base)) { // what is fitted into a wall or slab falls with it (a joint that does not carry)
           // a slab of the sidewalk rests on the ground it is cast on
           if (/^sidewalk:/.test(p.id)) { supports.push({ part: p.id, on: 'ground', joint: 'mortar', extra: true }); continue; }
           if (!/^(window|window_pane|door|jamb|pipe|water_tank|baseboard)/.test(p.id)) continue;
           const target = /^water_tank/.test(p.id) ? ['slab'] : ['wall', 'partition'];
           let m: HouseStructurePart | null = null, md = 1e9; for (const q of parts.slice(0, base)) { if (!target.includes(q.role) || !inside(p, q, 0.2)) continue; const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; } }
+          // a door frame (its jamb and the door in it) stands in the opening, between the walls beside it and under the lintel: its centre is in no wall, so it
+          // is held by the wall, pillar or lintel its box meets
+          if (!m && /^(window|door|jamb)/.test(p.id)) for (const q of parts.slice(0, base)) {
+            if (!['wall', 'partition', 'column', 'beam'].includes(q.role) || !touches(p, q, 0.02)) continue;
+            const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.y0 + p.y1 - q.y0 - q.y1) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; }
+          }
           // a tile of the baseboard is set in tile adhesive on the wall: glued, it comes off with the wall
           if (m) supports.push({ part: p.id, on: m.id, joint: /^(window|jamb|baseboard)/.test(p.id) ? 'glue' : 'clip', bears: false, extra: true });
+          // a window or door of a building whose walls are drawn but are no part of the structure (an outbuilding) is held by that wall, which stands on the
+          // ground: tied to the ground, it stays in its wall instead of coming loose as a free piece at the first split of the house
+          else if (/^(window|door|jamb)/.test(p.id)) supports.push({ part: p.id, on: 'ground', joint: /^door/.test(p.id) ? 'clip' : 'glue', bears: false, extra: true });
         }
         // The spec is made from the pieces of the plan (the slabs whole), and the structure cuts them into panels; the house is then bound to the panels: a floor, a
         // ceiling and a roof slab are drawn tile by tile in the panel they lie on (house/floors), and the slab they were cut from is not a piece any more.
