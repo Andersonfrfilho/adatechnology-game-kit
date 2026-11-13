@@ -47,15 +47,17 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       const newGroup = (k: number, hu: number, topY?: number): void => { cursor.group = 'dyn:' + p.id + ':' + k; fo.groups.push({ name: cursor.group, pos: alongU ? [hu, topY != null ? y0 + topY : y0, L] : [L, topY != null ? y0 + topY : y0, hu] }); };
       if (p.model === 'steel') {
         // sectional garage door: light neutral colour or wood (never the dark lot gate colour), panels with grooves and viewer
-        const light = [0xd9d5cc, 0xc9c6bf, 0xe4e0d6], pal = ((Number(R.seed) | 0) + (p.id.length * 7)) % 4, color = pal === 3 ? wood : light[pal], mid = (a + b) / 2; newGroup(0, mid, visH);
-        const la = a + jw - mid, lb = b - jw - mid, nSec = Math.max(4, Math.round(visH / 0.5)), hs = visH / nSec, grv = sh(color, 0.55);
-        leafBox(0, la, lb, -visH, 0, 0.05, color, 'metal');
-        for (let k = 1; k < nSec; k++) leafBox(0, la, lb, -k * hs - 0.012, -k * hs + 0.012, 0.07, grv, 'metal'); // joints between sections
+        // (outside the Visor's scene the door closes under the frame's head, and the joints stop short of its sides)
+        const sH = cut || shared.ctx.visorScene ? visH : dH - jw - 0.003, ji = shared.ctx.visorScene ? 0 : 0.003;
+        const light = [0xd9d5cc, 0xc9c6bf, 0xe4e0d6], pal = ((Number(R.seed) | 0) + (p.id.length * 7)) % 4, color = pal === 3 ? wood : light[pal], mid = (a + b) / 2; newGroup(0, mid, sH);
+        const la = a + jw - mid, lb = b - jw - mid, nSec = Math.max(4, Math.round(sH / 0.5)), hs = sH / nSec, grv = sh(color, 0.55);
+        leafBox(0, la, lb, -sH, 0, 0.05, color, 'metal');
+        for (let k = 1; k < nSec; k++) leafBox(0, la + ji, lb - ji, -k * hs - 0.012, -k * hs + 0.012, 0.07, grv, 'metal'); // joints between sections
         const np = Math.max(2, Math.round((lb - la) / 0.8)), pw = (lb - la) / np;
         for (let k = 0; k < nSec; k++) for (let i = 0; i < np; i++) leafBox(0, la + i * pw + 0.07, la + (i + 1) * pw - 0.07, -(k + 1) * hs + 0.07, -k * hs - 0.07, 0.062, sh(color, k % 2 ? 0.93 : 1.06), 'metal'); // raised panels
         for (let i = 0; i < np; i++) leafBox(0, la + i * pw + 0.14, la + (i + 1) * pw - 0.14, -hs + 0.12, -0.12, 0.072, 0x5a6670, 'glass'); // viewers in the top section
-        leafBox(0, -0.1, 0.1, -visH + 0.5, -visH + 0.55, 0.085, 0x3a3a3e, 'metal'); // pull
-        fo.minScale = Math.min(1, 0.28 / visH); fo.rot = 0;
+        leafBox(0, -0.1, 0.1, -sH + 0.5, -sH + 0.55, 0.085, 0x3a3a3e, 'metal'); // pull
+        fo.minScale = Math.min(1, 0.28 / sH); fo.rot = 0;
       } else {
         const nf = p.model === 'double' ? 2 : 1, aa = a + jw, bb = b - jw;
         for (let k = 0; k < nf; k++) {

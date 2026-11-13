@@ -3,9 +3,9 @@
 import type { StructurePart } from '@adatechnology/game-floorplan-structure';
 
 import type { BoxCollider, Hex, HouseRecord, HouseWall, Kernel, KernelHouseWalls, PieceRecord, Shared, WallLook, WallSide } from '../kernel-types.js';
-import { FLOOR_OVER_GROUND } from './floors.js';
+import { FLOOR_OVER_GROUND, FLOOR_UNDER_GROUND } from './floors.js';
 import { doorHeightOf, doorsInWall } from './helpers.js';
-import { exclusiveBoxes } from './solids.js';
+import { exclusiveBoxes, outsideBoxes } from './solids.js';
 import type { Aabb } from './solids.js';
 
 /** A box of the walls held back to be laid with the others: pillars first, then the corners, then the walls, each cut by what came before. */
@@ -19,7 +19,8 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
   // a pillar in its wall) only one does, and no two faces lie on one plane the same way round
   let solids: WallSolid[] | null = null;
   const lay = (rank: number, mat: string, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: Hex): void => {
-    if (!solids) { bx(mat, x0, y0, z0, x1, y1, z1, color); return; }
+    // a box laid after the walls (the wall over a door) keeps round them, outside the Visor's scene
+    if (!solids) { for (const b of shared.ctx.visorScene ? [[x0, y0, z0, x1, y1, z1] as const] : outsideBoxes([x0, y0, z0, x1, y1, z1], shared.ctx.occupied)) bx(mat, b[0], b[1], b[2], b[3], b[4], b[5], color); return; }
     if (x1 - x0 < 1e-4 || y1 - y0 < 1e-4 || z1 - z0 < 1e-4) return;
     solids.push({ rank, mat, color, group: cursor.group, pc: cursor.pc ?? null, stage: cursor.stage, box: [x0, y0, z0, x1, y1, z1] });
   };
@@ -37,6 +38,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       if (s.rank < 0) continue; // drawn by its own builder
       cursor.group = s.group; cursor.pc = s.pc; cursor.stage = s.stage;
       bx(s.mat, s.box[0], s.box[1], s.box[2], s.box[3], s.box[4], s.box[5], s.color);
+      if (s.rank < 3) shared.ctx.occupied.push(s.box); // the slabs laid later keep round the walls
     }
     cursor.group = g0; cursor.pc = pc0; cursor.stage = st0;
   }
@@ -65,7 +67,7 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
     // built by construction stage, the ground floor's finish stands 1.2 cm over the ground (floorsAndSlabs): the walls stand on it where it runs under them
     if (solids && shared.ctx.constructionStages) for (const c of R.rooms) {
       if (c.floor !== 0 || c.type === 'void' || c.outbuilding) continue;
-      for (const r of K.rectsOf(c)) solids.push({ rank: -1, mat: '', color: 0, group: '', pc: null, stage: undefined, box: [r[0], Y0(0) - 0.04, r[1], r[2], Y0(0) + FLOOR_OVER_GROUND, r[3]] });
+      for (const r of K.rectsOf(c)) solids.push({ rank: -1, mat: '', color: 0, group: '', pc: null, stage: undefined, box: [r[0], Y0(0) - FLOOR_UNDER_GROUND, r[1], r[2], Y0(0) + FLOOR_OVER_GROUND, r[3]] });
     }
     // (CTX.colliders is zeroed on rebuild: here only the walls are added, after the lot wall and gates)
     for (const w of R.walls) {
@@ -82,9 +84,11 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
         const c0 = shared.ctx.colors.metal != null ? shared.ctx.colors.metal : 0x8a8e92;
         const sx = alongU ? 1 : 0, sz = alongU ? 0 : 1, len = s1 - s0, n = Math.max(1, Math.round(len / 1.4));
         const cx_ = alongU ? (s0 + s1) / 2 : L, cz_ = alongU ? L : (s0 + s1) / 2;
-        boxC('glass', cx_, y0 + 0.55, cz_, alongU ? len : 0.02, 0.85, alongU ? 0.02 : len, 0xffffff);
-        boxC('metal', cx_, y0 + 1.08, cz_, alongU ? len : 0.05, 0.05, alongU ? 0.05 : len, c0); boxC('metal', cx_, y0 + 0.1, cz_, alongU ? len : 0.05, 0.04, alongU ? 0.05 : len, c0);
-        for (let k = 0; k <= n; k++) { const t = s0 + len * k / n; boxC('metal', alongU ? t : L, y0 + 0.55, alongU ? L : t, 0.05, 1.1, 0.05, c0); }
+        // (outside the Visor's scene laid with the walls, after them: where a railing runs into a wall the wall keeps the space)
+        const rail = (mat: string, cx: number, cy: number, cz: number, sx: number, sy: number, sz: number, color: Hex): void => { if (solids) lay(3, mat, cx - sx / 2, cy - sy / 2, cz - sz / 2, cx + sx / 2, cy + sy / 2, cz + sz / 2, color); else boxC(mat, cx, cy, cz, sx, sy, sz, color); };
+        rail('glass', cx_, y0 + 0.55, cz_, alongU ? len : 0.02, 0.85, alongU ? 0.02 : len, 0xffffff);
+        rail('metal', cx_, y0 + 1.08, cz_, alongU ? len : 0.05, 0.05, alongU ? 0.05 : len, c0); rail('metal', cx_, y0 + 0.1, cz_, alongU ? len : 0.05, 0.04, alongU ? 0.05 : len, c0);
+        for (let k = 0; k <= n; k++) { const t = s0 + len * k / n; rail('metal', alongU ? t : L, y0 + 0.55, alongU ? L : t, 0.05, 1.1, 0.05, c0); }
         cursor.stage = st0;
         continue;
       }
@@ -153,9 +157,11 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       const end = (alongU ? host.aabb[3] - host.aabb[1] : host.aabb[2] - host.aabb[0]) / 2 + 0.05; // the structure's wall reaches past its drawn ends by half its thickness
       // ... except at a door or a window, where the structure's wall stops at the jamb itself: an end of the pillar on an opening's edge is at a jamb
       const line = alongU ? (host.aabb[1] + host.aabb[3]) / 2 : (host.aabb[0] + host.aabb[2]) / 2;
-      const atJamb = (at: number): boolean => openingEdges(e.floor ?? 0, alongU ? 'u' : 'v', line).some((edge) => Math.abs(edge - at) < 0.02);
-      if (e.aabb[k0] > host.aabb[k0] + end || atJamb(e.aabb[k0])) box[k0] = e.aabb[k0] - PILLAR_PROUD;
-      if (e.aabb[k1] < host.aabb[k1] - end || atJamb(e.aabb[k1])) box[k1] = e.aabb[k1] + PILLAR_PROUD;
+      const jambAt = (at: number): number | undefined => openingEdges(e.floor ?? 0, alongU ? 'u' : 'v', line).find((edge) => Math.abs(edge - at) < 0.02);
+      // proud of the jamb itself (outside the Visor's scene): a pillar a few millimetres back from the opening's edge would stand that much less proud of it
+      const j0 = jambAt(e.aabb[k0]), j1 = jambAt(e.aabb[k1]);
+      if (e.aabb[k0] > host.aabb[k0] + end || j0 !== undefined) box[k0] = (solids && j0 !== undefined ? Math.min(j0, e.aabb[k0]) : e.aabb[k0]) - PILLAR_PROUD;
+      if (e.aabb[k1] < host.aabb[k1] - end || j1 !== undefined) box[k1] = (solids && j1 !== undefined ? Math.max(j1, e.aabb[k1]) : e.aabb[k1]) + PILLAR_PROUD;
       lay(0, look.mat, box[0], e.y0, box[1], box[2], Math.min(e.y1, look.top), box[3], sh(look.color != null ? look.color : 0xe8e2d4, 0.93));
     }
     cursor.pc = null;

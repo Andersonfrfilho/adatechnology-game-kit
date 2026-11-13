@@ -4,9 +4,12 @@ import { PLASTER_PER_FACE } from '@adatechnology/game-floorplan-structure';
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure';
 
 import type { Flight, HouseRecord, HouseRoom, Kernel, KernelHouseFloors, PieceRecord, Rect, Shared, Tile } from '../kernel-types.js';
+import { outsideBoxes } from './solids.js';
 
 /** How far the ground floor's finish stands over the ground in the construction stages, metres. */
 export const FLOOR_OVER_GROUND = 0.012;
+/** How deep the ground floor's finish goes, built by construction stage: down to the lot's base (3 cm under the ground), never into it. */
+export const FLOOR_UNDER_GROUND = 0.03;
 
 /** The render and paint under a ceiling slab, metres; the rest of the slab is concrete. */
 const CEILING_PAINT = 0.015
@@ -84,7 +87,8 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
         const col = floorColor(c), parent = f > 0 ? ['slab_' + f + '_' + c.type, 'slab_' + f + '_' + c.id, 'slab_' + f].find(hasSlab) : null;
         // built by construction stage, the ground floor's finish stands 1.2 cm over the ground the house sits on, never on its plane
         const lift = shared.ctx.constructionStages && f === 0 ? FLOOR_OVER_GROUND : 0;
-        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.04, r[1], r[2], y0 + lift, r[3], col); }
+        const under = shared.ctx.constructionStages && f === 0 && !shared.ctx.visorScene ? FLOOR_UNDER_GROUND : 0.04;
+        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - under, r[1], r[2], y0 + lift, r[3], col); }
       }
       if (f > 0) { // slab under the floor
         const rs = R.rooms.filter(c => c.floor === f && c.type !== 'void' && c.type !== 'elevator').flatMap(rectsOf); 
@@ -99,12 +103,15 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
         cursor.pc = pc;
         if (shared.ctx.visorCeilings) { bx('plaster', tile[0], y0 + c.ceiling, tile[1], tile[2], y0 + c.ceiling + 0.2, tile[3], C.ceiling != null ? C.ceiling : 0xeeeae2); continue; }
         // the strips of its edge that face the outside are rendered like the walls: nothing of the tile stands in them
-        for (const r of subRects([tile], edges)) { bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + CEILING_PAINT, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', r[0], y0 + c.ceiling + CEILING_PAINT, r[1], r[2], y0 + c.ceiling + 0.2, r[3], SLAB_CONCRETE); shared.ctx.occupied.push([r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3]]); }
+        // (and round the walls standing through it: a storey's walls over a double-height room, a wall higher than the ceiling)
+        for (const r of subRects([tile], edges)) for (const b of outsideBoxes([r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3]], shared.ctx.occupied)) {
+          bx('plaster', b[0], b[1], b[2], b[3], Math.min(b[4], y0 + c.ceiling + CEILING_PAINT), b[5], C.ceiling != null ? C.ceiling : 0xeeeae2); bx('plain', b[0], Math.max(b[1], y0 + c.ceiling + CEILING_PAINT), b[2], b[3], b[4], b[5], SLAB_CONCRETE); shared.ctx.occupied.push(b);
+        }
       }
       if (edges.length) {
         const face = K.sideOf('outside', false), yb = y0 + (R.rooms.find(c => c.floor === f && !c.outbuilding)?.ceiling ?? 0);
         cursor.pc = ceilingOf ? structurePiece(ceilingOf) : null;
-        for (const r of edges) { bx(face.mat, r[0], yb, r[1], r[2], yb + 0.2, r[3], face.color); shared.ctx.occupied.push([r[0], yb, r[1], r[2], yb + 0.2, r[3]]); }
+        for (const r of edges) for (const b of outsideBoxes([r[0], yb, r[1], r[2], yb + 0.2, r[3]], shared.ctx.occupied)) { bx(face.mat, b[0], b[1], b[2], b[3], b[4], b[5], face.color); shared.ctx.occupied.push(b); }
       }
       if (!shared.ctx.visorCeilings) for (const c of R.rooms.filter((x) => x.floor === f && x.outbuilding)) outbuildingSlabEdge(c, y0, ceilingOf);
       cursor.pc = null;
