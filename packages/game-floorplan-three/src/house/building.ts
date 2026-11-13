@@ -9,6 +9,9 @@ export function installHouseBuilding(K: Kernel, shared: Shared): void {
   function building(): void {
     const R: HouseRecord = shared.ctx.r, P = R.building as ApartmentBuilding /* the apartment template's `building` output */, C = shared.ctx.colors, N = shared.ctx.pa, uf = shared.ctx.pf, pe = P.ceilingHeight, fa = C.facade != null ? C.facade : 0xd8d0c0;
     cursor.group = 'building';
+    // outside the Visor's scene the block keeps out of the unit drawn in it (its walls, ceilings and floors): no face of one on a face of the other
+    if (!shared.ctx.visorScene) shared.ctx.keepOut = shared.ctx.occupied.concat(shared.ctx.floorFinishes);
+    const ytop = N * pe - 0.2, top = (y: number): number => shared.ctx.visorScene ? y : Math.min(y, ytop); // (the core stops under the roof's slab)
     const uw = P.unit.w, ud = P.unit.d, un = P.units;
     const unitBox = (u: BuildingUnit): Rect => { const x = u.ry ? [u.u - uw, u.u] : [u.u, u.u + uw], z = u.ry ? [u.v - ud, u.v] : [u.v, u.v + ud]; return [x[0], z[0], x[1], z[1]]; };
     const un0 = unitBox(un[0]), color = P.corridor, hall = P.hall, el = P.elevator.rect, es = P.stairs.rect;
@@ -26,16 +29,17 @@ export function installHouseBuilding(K: Kernel, shared: Shared): void {
       for (const rc of [color, hall]) { bx('plaster', rc[0], y0 - 0.2, rc[1], rc[2], y0, rc[3], 0xb8b4aa); }
       shell([Math.min(color[0], hall[0]), hall[1], color[2], color[3]], y0, y0 + pe - 0.2);
       // core: elevator and stairs
-      bx('metal', el[0] + 0.05, y0, el[1] + 0.05, el[2] - 0.05, y0 + pe, el[3] - 0.05, 0x7e848a); bx('building', es[0], y0, es[1], es[2], y0 + pe - 0.2, es[3], 0xcfcbc2);
+      bx('metal', el[0] + 0.05, y0, el[1] + 0.05, el[2] - 0.05, top(y0 + pe), el[3] - 0.05, 0x7e848a); bx('building', es[0], y0, es[1], es[2], y0 + pe - 0.2, es[3], 0xcfcbc2);
       const ns = 16, rise = pe / ns, wl = es[2] - es[0] - 0.2; // straight stair inside the shaft
-      for (let i = 0; i < ns; i++) bx('wood', es[0] + 0.1, y0 + (i + 1) * rise - 0.05, es[1] + 0.05 + i * (es[3] - es[1] - 0.1) / ns, es[0] + 0.1 + wl, y0 + (i + 1) * rise, es[1] + 0.05 + (i + 1) * (es[3] - es[1] - 0.1) / ns, 0x8a6a48);
+      for (let i = 0; i < ns; i++) bx('wood', es[0] + 0.1, top(y0 + (i + 1) * rise) - 0.05, es[1] + 0.05 + i * (es[3] - es[1] - 0.1) / ns, es[0] + 0.1 + wl, top(y0 + (i + 1) * rise), es[1] + 0.05 + (i + 1) * (es[3] - es[1] - 0.1) / ns, 0x8a6a48);
       if (k === 0) bx('building', hall[0] - 3, y0, hall[1], hall[0], y0 + pe, hall[3], 0x9ab0c0);
       // highlight strip of the unit's floor
       if (ehSel) { const cc = 0xffa31a, e = 0.08, [a, b, c, d] = selR; for (const [x0, z0, x1, z1] of [[a, b, c, b + e], [a, d - e, c, d], [a, b, a + e, d], [c - e, b, c, d]] as const) { bx('emissive', x0, y0 - 0.2, z0, x1, y0 - 0.12, z1, cc); bx('emissive', x0, y0 + pe - 0.28, z0, x1, y0 + pe - 0.2, z1, cc); }
         for (const [px, pz] of [[a, b], [c - e, b], [a, d - e], [c - e, d - e]] as const) bx('emissive', px, y0 - 0.2, pz, px + e, y0 + pe - 0.2, pz + e, cc); }
     }
     // building roof
-    const ytop = N * pe - 0.2; bx('plaster', Math.min(hall[0] - 3, color[0]), ytop, Math.min(un[1] ? unitBox(un[1])[1] : 0, el[1]), Math.max(color[2], un0[2]), ytop + 0.2, Math.max(un0[3], un[1] ? unitBox(un[1])[3] : 0), 0xb4b0a8);
+    bx('plaster', Math.min(hall[0] - 3, color[0]), ytop, Math.min(un[1] ? unitBox(un[1])[1] : 0, el[1]), Math.max(color[2], un0[2]), ytop + 0.2, Math.max(un0[3], un[1] ? unitBox(un[1])[3] : 0), 0xb4b0a8);
+    shared.ctx.keepOut = undefined;
     shared.ctx.limits = { x0: Math.min(hall[0] - 3, color[0]), z0: Math.min(el[1], un[1] ? unitBox(un[1])[1] : 0), x1: Math.max(color[2], un0[2]), z1: Math.max(un0[3], un[1] ? unitBox(un[1])[3] : 0) };
   }
   const defined: KernelHouseBuilding = { building };
