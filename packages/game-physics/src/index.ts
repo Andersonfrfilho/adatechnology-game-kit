@@ -223,7 +223,7 @@ export interface WorldDesc {
   readonly penetrationSlop?: number
   /** Most (m) the position solver moves two bodies apart per iteration: how fast what was made inside something comes out of it (a launch is that speed at most). */
   readonly maxPushOut?: number
-  /** Coulomb static/dynamic friction per contact (§12): a contact slower than this (m/s) along the surface holds with the static coefficient. */
+  /** Coulomb static/dynamic friction per body (§12): a body whose foot moves against what it touches slower than this (m/s) holds with the static coefficient. */
   readonly slipSpeed?: number
   /** Report only contacts that closed faster than this (m/s), and at most `maxContacts` per step. */
   readonly contactReportSpeed?: number

@@ -6,7 +6,7 @@
 import initJolt from 'jolt-physics/wasm-compat'
 import type JoltNS from 'jolt-physics/wasm-compat'
 
-import { DEFAULT_MATERIAL, LAYERS, LAYER_PAIRS, mixFriction } from '@adatechnology/game-physics'
+import { DEFAULT_MATERIAL, LAYERS, LAYER_PAIRS } from '@adatechnology/game-physics'
 import type {
   BodyDesc,
   BodyId,
@@ -66,6 +66,8 @@ interface BodyEntry {
   readonly layer: Layer
   material: Material
   readonly invMass: number
+  /** Its friction now (`updateFriction`): the material's dynamic coefficient while it slides on what it touches, the static one otherwise. */
+  sliding: boolean
 }
 
 interface JointEntry {
@@ -172,6 +174,9 @@ export class JoltWorld implements PhysicsWorld {
   private readonly asserts: JoltNS.AssertFailedHandlerJS
   /** Contacts each body has now (added minus removed), for `touching`. */
   private readonly touches = new Map<number, number>()
+  /** The bodies each body touches now, with how many contacts each (`updateFriction`). */
+  private readonly partners = new Map<number, Map<number, number>>()
+  private readonly activeIds: JoltNS.BodyIDVector
   private readonly ignored = new Set<number>()
   /** Contact points of the last step per body: up to `POINTS_PER_BODY` x y z, and how many. Kept for the bodies asked about (`contactPoints`). */
   private readonly points = new Map<number, { xyz: Float32Array; n: number; step: number }>()
@@ -248,6 +253,7 @@ export class JoltWorld implements PhysicsWorld {
     this.collideCollector = new J.CollideShapeAllHitCollisionCollector()
     this.castSettings = new J.ShapeCastSettings()
     this.castCollector = new J.CastShapeAllHitCollisionCollector()
+    this.activeIds = new J.BodyIDVector()
     this.listener = this.makeListener()
     this.system.SetContactListener(this.listener)
   }
@@ -369,7 +375,8 @@ export class JoltWorld implements PhysicsWorld {
     const layer = desc.layer ?? (desc.motion === 'static' ? 'static' : 'debris')
     const s = new J.BodyCreationSettings(shape, this.r1, this.q1, motion, this.layerOf(layer))
     const material = desc.material ?? DEFAULT_MATERIAL
-    s.mFriction = Math.sqrt(material.frictionStatic)
+    // Jolt mixes two bodies' friction by geometric mean, as the kit does (`mixFriction`): each body holds its own coefficient, static until it slides
+    s.mFriction = material.frictionStatic
     s.mRestitution = material.restitution
     s.mUserData = desc.user
     if (desc.linearDamping !== undefined) s.mLinearDamping = desc.linearDamping
@@ -429,6 +436,7 @@ export class JoltWorld implements PhysicsWorld {
       layer: desc.layer ?? (desc.motion === 'static' ? 'static' : 'debris'),
       material: desc.material ?? DEFAULT_MATERIAL,
       invMass: mp,
+      sliding: false,
     }
     this.bodies.set(key, entry)
     this.byPointer.set(this.J.getPointer(body), entry)
@@ -482,6 +490,7 @@ export class JoltWorld implements PhysicsWorld {
     this.J.destroy(e.id)
     this.bodies.delete(id)
     this.touches.delete(id)
+    this.partners.delete(id)
     this.points.delete(id)
     this.rollers.delete(id)
   }
@@ -578,7 +587,7 @@ export class JoltWorld implements PhysicsWorld {
   setMaterial(id: BodyId, material: Material): void {
     const e = this.entry(id)
     e.material = material
-    this.bi.SetFriction(e.id, Math.sqrt(material.frictionStatic))
+    this.bi.SetFriction(e.id, e.sliding ? material.frictionDynamic : material.frictionStatic)
     this.bi.SetRestitution(e.id, material.restitution)
   }
 
@@ -677,26 +686,23 @@ export class JoltWorld implements PhysicsWorld {
   // Contacts ----------------------------------------------------------------------------------------------------------------------------
 
   /**
-   * One JS listener for the whole world. Per new or kept contact: the kit's Coulomb rule (static coefficient while the contact point barely slides,
-   * dynamic once it slides faster than `slipSpeed`), and a row in `contacts` for every new contact that closed faster than `reportSpeed`.
+   * One JS listener for the whole world. A new contact: who touches whom (`touching`, and the partners `updateFriction` reads), restitution mixed as the kit
+   * mixes it (geometric mean; Jolt's default takes the larger), and a row in `contacts` if it closed faster than `reportSpeed`. A kept contact only records its
+   * points for a body asked about (`contactPoints`): friction is the bodies' own (`updateFriction`), mixed by Jolt, so no rule runs per contact per step
+   * (gate 0 B6: that rule was a third of the frame a wall woke in).
    */
   private makeListener(): JoltNS.ContactListenerJS {
     const J = this.J
     const listener = new J.ContactListenerJS()
     // the bodies come as heap addresses: entries are found by them, so a contact asks Jolt only for what it must (one call across the wasm boundary costs as
     // much as the rest of the rule; a wall waking at once makes thousands of contacts in one step)
-    const coulomb = (p1: number, p2: number, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings, report: boolean): void => {
-      const e1 = this.byPointer.get(p1)
-      const e2 = this.byPointer.get(p2)
-      if (!e1 || !e2) return
-      if (this.points.size > 0) {
-        this.recordPoints(e1.key, m, true)
-        this.recordPoints(e2.key, m, false)
-      }
+    const added = (e1: BodyEntry, e2: BodyEntry, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings): void => {
       if (cs.mIsSensor) {
-        if (report) this.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.key as BodyId, other: e2.key as BodyId, entered: true } : { sensor: e2.key as BodyId, other: e1.key as BodyId, entered: true })
+        this.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.key as BodyId, other: e2.key as BodyId, entered: true } : { sensor: e2.key as BodyId, other: e1.key as BodyId, entered: true })
         return
       }
+      cs.mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
+      if (this.contacts.count >= this.maxContacts) return
       const n = m.mWorldSpaceNormal
       const nx = n.GetX()
       const ny = n.GetY()
@@ -706,37 +712,21 @@ export class JoltWorld implements PhysicsWorld {
       const px = p.GetX()
       const py = p.GetY()
       const pz = p.GetZ()
-      let rvx = 0
-      let rvy = 0
-      let rvz = 0
+      let along = 0
       for (const [e, sign] of [[e1, 1], [e2, -1]] as const) {
-        // a static or kinematic-free body: no speed (static bodies have no inverse mass in the entry)
+        // a static body: no speed (static bodies have no inverse mass in the entry)
         if (e.invMass === 0 && e.layer === 'static') continue
         const body = e.body
         const v = body.GetLinearVelocity()
-        const vx = v.GetX(), vy = v.GetY(), vz = v.GetZ()
         const w = body.GetAngularVelocity()
         const wx = w.GetX(), wy = w.GetY(), wz = w.GetZ()
         const c = body.GetCenterOfMassPosition()
         const rx = px - c.GetX()
         const ry = py - c.GetY()
         const rz = pz - c.GetZ()
-        rvx += sign * (vx + wy * rz - wz * ry)
-        rvy += sign * (vy + wz * rx - wx * rz)
-        rvz += sign * (vz + wx * ry - wy * rx)
+        along += sign * ((v.GetX() + wy * rz - wz * ry) * nx + (v.GetY() + wz * rx - wx * rz) * ny + (v.GetZ() + wx * ry - wy * rx) * nz)
       }
-      const along = rvx * nx + rvy * ny + rvz * nz
-      const tx = rvx - along * nx
-      const ty = rvy - along * ny
-      const tz = rvz - along * nz
-      const slip = Math.hypot(tx, ty, tz)
-      const sliding = slip > this.slipSpeed
-      // restitution mixed as the kit always has (geometric mean); Jolt's default takes the larger
-      cs.mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
-      cs.mCombinedFriction = sliding
-        ? mixFriction(e1.material.frictionDynamic, e2.material.frictionDynamic)
-        : mixFriction(e1.material.frictionStatic, e2.material.frictionStatic)
-      if (!report || along < this.reportSpeed || this.contacts.count >= this.maxContacts) return
+      if (along < this.reportSpeed) return
       const c = this.contacts
       const i = c.count++
       c.a[i] = e1.key
@@ -763,32 +753,98 @@ export class JoltWorld implements PhysicsWorld {
       if (!e1 || !e2) return J.ValidateResult_AcceptAllContactsForThisBodyPair
       return this.ignored.has(this.pairKey(e1.key, e2.key)) ? J.ValidateResult_RejectAllContactsForThisBodyPair : J.ValidateResult_AcceptAllContactsForThisBodyPair
     }
-    const touch = (key: number | undefined, by: number): void => {
-      if (key === undefined) return
-      const n = (this.touches.get(key) ?? 0) + by
-      if (n > 0) this.touches.set(key, n)
-      else this.touches.delete(key)
-    }
     listener.OnContactAdded = (body1: number, body2: number, manifold: number, settings: number) => {
-      touch(this.byPointer.get(body1)?.key, 1)
-      touch(this.byPointer.get(body2)?.key, 1)
-      coulomb(body1, body2, J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), true)
+      const e1 = this.byPointer.get(body1)
+      const e2 = this.byPointer.get(body2)
+      if (!e1 || !e2) return
+      this.touch(e1.key, e2.key, 1)
+      this.touch(e2.key, e1.key, 1)
+      const m = J.wrapPointer(manifold, J.ContactManifold)
+      if (this.points.size > 0) this.recordPair(e1.key, e2.key, m)
+      added(e1, e2, m, J.wrapPointer(settings, J.ContactSettings))
     }
-    listener.OnContactPersisted = (body1: number, body2: number, manifold: number, settings: number) => {
-      coulomb(body1, body2, J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), false)
+    listener.OnContactPersisted = (body1: number, body2: number, manifold: number) => {
+      if (this.points.size === 0) return
+      const e1 = this.byPointer.get(body1)
+      const e2 = this.byPointer.get(body2)
+      if (!e1 || !e2 || (!this.points.has(e1.key) && !this.points.has(e2.key))) return
+      this.recordPair(e1.key, e2.key, J.wrapPointer(manifold, J.ContactManifold))
     }
     listener.OnContactRemoved = (pair: number) => {
       const p = J.wrapPointer(pair, J.SubShapeIDPair)
       const k1 = p.GetBody1ID().GetIndexAndSequenceNumber()
       const k2 = p.GetBody2ID().GetIndexAndSequenceNumber()
-      touch(k1, -1)
-      touch(k2, -1)
+      this.touch(k1, k2, -1)
+      this.touch(k2, k1, -1)
       const e1 = this.bodies.get(k1)
       const e2 = this.bodies.get(k2)
       if (e1?.layer === 'sensor') this.sensorEvents.push({ sensor: k1 as BodyId, other: k2 as BodyId, entered: false })
       else if (e2?.layer === 'sensor') this.sensorEvents.push({ sensor: k2 as BodyId, other: k1 as BodyId, entered: false })
     }
     return listener
+  }
+
+  /** One more (or one fewer) contact between `key` and `other`: `touching`, and the partners `updateFriction` compares speeds with. */
+  private touch(key: number, other: number, by: number): void {
+    const n = (this.touches.get(key) ?? 0) + by
+    if (n > 0) this.touches.set(key, n)
+    else this.touches.delete(key)
+    let mine = this.partners.get(key)
+    if (!mine) {
+      if (by < 0) return
+      mine = new Map()
+      this.partners.set(key, mine)
+    }
+    const k = (mine.get(other) ?? 0) + by
+    if (k > 0) mine.set(other, k)
+    else {
+      mine.delete(other)
+      if (mine.size === 0) this.partners.delete(key)
+    }
+  }
+
+  private recordPair(k1: number, k2: number, m: JoltNS.ContactManifold): void {
+    this.recordPoints(k1, m, true)
+    this.recordPoints(k2, m, false)
+  }
+
+  /**
+   * Coulomb by body (spec 008 D1.1, owner's B6 decision), after each `step`: an awake dynamic body whose foot (the point under its centre of mass at the bottom of
+   * its bounds) moves against what it touches faster than `slipSpeed` slides, and holds its material's dynamic coefficient; slower, it sticks, and holds the
+   * static one. Jolt mixes the two bodies' coefficients (geometric mean), a fixed body entering with its static one. The foot's speed has the body's turning in
+   * it, so a can rolling without slipping sticks; against a moving body it is the difference of the two bodies' speeds at that point. A body touching nothing
+   * keeps its state.
+   */
+  private updateFriction(): void {
+    const J = this.J
+    const ids = this.activeIds
+    this.system.GetActiveBodies(J.EBodyType_RigidBody, ids)
+    const n = ids.size()
+    for (let i = 0; i < n; i++) {
+      const key = ids.at(i).GetIndexAndSequenceNumber()
+      const e = this.bodies.get(key)
+      const mine = this.partners.get(key)
+      if (!e || !mine || e.invMass === 0 || e.material.frictionStatic === e.material.frictionDynamic) continue
+      const c = e.body.GetCenterOfMassPosition()
+      this.r1.Set(c.GetX(), e.body.GetWorldSpaceBounds().mMin.GetY(), c.GetZ())
+      const v = this.bi.GetPointVelocity(e.id, this.r1)
+      const vx = v.GetX(), vy = v.GetY(), vz = v.GetZ()
+      let slip = 0
+      for (const other of mine.keys()) {
+        const o = this.bodies.get(other)
+        if (!o) continue
+        if (o.invMass === 0 && o.layer === 'static') slip = Math.max(slip, Math.hypot(vx, vy, vz))
+        else {
+          const w = this.bi.GetPointVelocity(o.id, this.r1)
+          slip = Math.max(slip, Math.hypot(vx - w.GetX(), vy - w.GetY(), vz - w.GetZ()))
+        }
+        if (slip > this.slipSpeed) break
+      }
+      const sliding = slip > this.slipSpeed
+      if (sliding === e.sliding) continue
+      e.sliding = sliding
+      this.bi.SetFriction(e.id, sliding ? e.material.frictionDynamic : e.material.frictionStatic)
+    }
   }
 
   // Joints ------------------------------------------------------------------------------------------------------------------------------
@@ -886,7 +942,7 @@ export class JoltWorld implements PhysicsWorld {
       s.mMotionType = J.EMotionType_Dynamic
       s.mObjectLayer = this.layerOf(b.layer ?? 'character')
       const material = b.material ?? DEFAULT_MATERIAL
-      s.mFriction = Math.sqrt(material.frictionStatic)
+      s.mFriction = material.frictionStatic
       s.mRestitution = material.restitution
       s.mUserData = b.user
       if (b.linearDamping !== undefined) s.mLinearDamping = b.linearDamping
@@ -918,7 +974,7 @@ export class JoltWorld implements PhysicsWorld {
     const bodies: BodyId[] = desc.parts.map((part, i) => {
       const body = lock.TryGetBody(ragdoll.GetBodyID(i))
       const key = body.GetID().GetIndexAndSequenceNumber()
-      const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass() }
+      const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), sliding: false }
       this.bodies.set(key, entry)
       this.byPointer.set(J.getPointer(body), entry)
       if (part.body.rolling) this.rollers.set(key, part.body.rolling)
@@ -947,6 +1003,7 @@ export class JoltWorld implements PhysicsWorld {
       }
       this.bodies.delete(b)
       this.touches.delete(b)
+      this.partners.delete(b)
       this.points.delete(b)
       this.rollers.delete(b)
     }
@@ -1280,10 +1337,14 @@ export class JoltWorld implements PhysicsWorld {
       this.breakJoints(this.fixedStep)
       steps++
     }
+    if (steps > 0) this.updateFriction()
     if (steps === 0) this.brokenJoints.length = 0
   }
 
-  /** Exact state of every body (positions, velocities, sleep, contact cache), for save/load and determinism checks. */
+  /**
+   * Exact state of every body (positions, velocities, sleep, contact cache), for save/load and determinism checks: Jolt's own bytes, then the adapter's (each
+   * body's friction state, and who touches whom: what `updateFriction` and `touching` read), then the length of Jolt's part.
+   */
   saveState(): Uint8Array {
     const J = this.J
     const chunks: Uint8Array[] = []
@@ -1296,22 +1357,41 @@ export class JoltWorld implements PhysicsWorld {
     rec.IsFailed = () => false
     this.system.SaveState(rec)
     J.destroy(rec)
-    const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0))
+    const own: number[] = []
+    const sliding = [...this.bodies.values()].filter((e) => e.sliding).map((e) => e.key)
+    own.push(sliding.length, ...sliding)
+    own.push(this.partners.size)
+    for (const [key, mine] of this.partners) {
+      own.push(key, mine.size)
+      for (const [other, count] of mine) own.push(other, count)
+    }
+    const joltBytes = chunks.reduce((n, c) => n + c.length, 0)
+    const out = new Uint8Array(joltBytes + own.length * 4 + 4)
     let at = 0
     for (const c of chunks) {
       out.set(c, at)
       at += c.length
     }
+    const view = new DataView(out.buffer)
+    for (const x of own) {
+      view.setUint32(at, x, true)
+      at += 4
+    }
+    view.setUint32(at, joltBytes, true)
     return out
   }
 
   restoreState(data: Uint8Array): boolean {
     const J = this.J
+    if (data.length < 4) return false
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength)
+    const joltBytes = view.getUint32(data.length - 4, true)
+    if (joltBytes > data.length - 4) return false
     let at = 0
     let failed = false
     const rec = new J.StateRecorderJS()
     rec.ReadBytes = (out: number, size: number) => {
-      if (at + size > data.length) {
+      if (at + size > joltBytes) {
         failed = true
         return
       }
@@ -1319,11 +1399,40 @@ export class JoltWorld implements PhysicsWorld {
       at += size
     }
     rec.WriteBytes = () => undefined
-    rec.IsEOF = () => at >= data.length
+    rec.IsEOF = () => at >= joltBytes
     rec.IsFailed = () => failed
     const ok = this.system.RestoreState(rec)
     J.destroy(rec)
-    return ok && !failed
+    if (!ok || failed) return false
+    let p = joltBytes
+    const next = (): number => {
+      const x = view.getUint32(p, true)
+      p += 4
+      return x
+    }
+    const sliding = new Set<number>()
+    for (let n = next(); n > 0; n--) sliding.add(next())
+    for (const e of this.bodies.values()) {
+      const was = e.sliding
+      e.sliding = sliding.has(e.key)
+      if (was !== e.sliding) this.bi.SetFriction(e.id, e.sliding ? e.material.frictionDynamic : e.material.frictionStatic)
+    }
+    this.partners.clear()
+    this.touches.clear()
+    for (let n = next(); n > 0; n--) {
+      const key = next()
+      const mine = new Map<number, number>()
+      let total = 0
+      for (let k = next(); k > 0; k--) {
+        const other = next()
+        const count = next()
+        mine.set(other, count)
+        total += count
+      }
+      this.partners.set(key, mine)
+      this.touches.set(key, total)
+    }
+    return true
   }
 
   /** The whole wasm heap (bytes): fixed in this build, shared by every world. */
@@ -1346,7 +1455,7 @@ export class JoltWorld implements PhysicsWorld {
     for (const s of this.sphereShapes.values()) s.Release()
     for (const g of this.groups) g.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
-    for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector]) J.destroy(o)
+    for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
     J.destroy(this.iface)
     J.destroy(this.listener)
     J.destroy(this.asserts)
