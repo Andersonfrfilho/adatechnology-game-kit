@@ -62,6 +62,8 @@ export interface BodyDesc {
   readonly rotation?: Quat
   /** Dynamic only: the mass; inertia from the shape scaled to it. */
   readonly mass?: number
+  /** Dynamic only, with `mass`: the moments of inertia about the body's own axes (kg m^2), in place of the shape's (a can whose contents roll with it or not). */
+  readonly inertia?: Vec3
   readonly material?: Material
   readonly layer?: Layer
   /** Bodies of one group whose sub-ids are in `disabledPairs` of that group do not meet (a ragdoll's neighbouring segments). */
@@ -182,6 +184,8 @@ export interface WorldDesc {
   /** Solver iterations per step. */
   readonly velocityIterations?: number
   readonly positionIterations?: number
+  /** How deep (m) two bodies may sink into each other before they are pushed apart: what a resting box sinks into the floor. */
+  readonly penetrationSlop?: number
   /** Coulomb static/dynamic friction per contact (§12): a contact slower than this (m/s) along the surface holds with the static coefficient. */
   readonly slipSpeed?: number
   /** Report only contacts that closed faster than this (m/s), and at most `maxContacts` per step. */
@@ -210,6 +214,14 @@ export interface PhysicsWorld {
   /** Wakes every dynamic body whose bounds touch the box (ground dug, a support removed). */
   wakeInBox(min: Vec3, max: Vec3): void
   setMaterial(id: BodyId, material: Material): void
+  /** Dynamic <-> kinematic (a piece picked up and put down). */
+  setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void
+  /** The points (world, x y z each) where the body touched anything in the last step, into `out`; returns how many points (at most `out.length / 3`). */
+  contactPoints(id: BodyId, out: Float32Array): number
+  /** Whether the body touched anything in the last step. */
+  touching(id: BodyId): boolean
+  /** The two bodies stop meeting (true) or meet again (false): our rule handles the pair (chunks born inside each other go apart along the ground). */
+  ignorePair(a: BodyId, b: BodyId, ignore: boolean): void
   createJoint(desc: JointDesc): JointId
   removeJoint(id: JointId): void
   /** Joints whose `breakImpulse` was passed in the last step: removed by the adapter, reported once. */

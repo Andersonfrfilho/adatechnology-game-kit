@@ -4,6 +4,9 @@ import type { PieceBody, PieceFriction } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
+import type { PhysicsWorld } from '@adatechnology/game-physics'
+import { EnginePieces } from './engine-pieces'
+import type { StaticSolid } from './engine-pieces'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -32,6 +35,13 @@ export interface PieceSystemOptions {
    * sleeps under it too. Default: no limit.
    */
   maxAwake?: number
+  /**
+   * Spike: a rigid-body engine (`game-physics`) steps the pieces in place of the kit's own solver; the kit's rules stay on top (`EnginePieces`). The world is made
+   * by the host once its engine is loaded: there is no switching solver mid-game. Without it, the kit's own solver.
+   */
+  physics?: PhysicsWorld
+  /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
+  staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
 }
 
 /** What a moving piece ran into (`PieceSystemOptions.sweep`). */
@@ -185,6 +195,9 @@ const boxTopAt = (s: Solid, x: number, z: number): number => {
 
 const UP: Vec3 = [0, 1, 0]
 
+/** The key of a pair of pieces (`PieceSystem.apartDeep`), the same whichever comes first. */
+export const apartKey = (a: string, b: string): string => (a < b ? `${a}\u0000${b}` : `${b}\u0000${a}`)
+
 /** The outward normal of face `axis` of a box on its upper side: the surface of a tilted table top under a point. */
 const faceNormal = (s: Solid, axis: number): Vec3 => {
   const e = s.e
@@ -224,6 +237,8 @@ export class PieceSystem {
   private readonly m: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
+  /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
+  private readonly engine: EnginePieces | null
   /** The boxes other pieces land on: a piece's own parts when it has them (`partBoxes`), else its box. */
   private surfaces: Solid[] = []
   /** The surfaces by the cells of a grid on the ground (`SURFACE_CELL`) their bounding circle covers: what is under a point is looked for in its cell only. */
@@ -251,6 +266,59 @@ export class PieceSystem {
     this.nextQ = new THREE.Quaternion()
     this.m = new THREE.Matrix4()
     this.ax = new THREE.Vector3()
+    // spike: the room and the tests hand the engine's world by a global (`?solver=own`, PIECE_SOLVER=own leave it unset) to measure both in one build
+    const physics = o.physics ?? (globalThis as { __PIECE_PHYSICS__?: () => PhysicsWorld }).__PIECE_PHYSICS__?.()
+    this.engine = physics
+      ? new EnginePieces(THREE, physics, {
+          groundAt: o.groundAt,
+          gravity: o.gravity,
+          staticSolids: o.staticSolids,
+          sweep: o.sweep,
+          onSlam: o.onSlam,
+          onKnock: o.onKnock,
+          onHardLanding: o.onHardLanding,
+        })
+      : null
+  }
+
+  /**
+   * Pieces made inside each other deeper than a contact (`LIFT_DEPTH`: chunks of one wall) go apart along the ground by the kit's rule (`slideApart`), and the engine
+   * leaves the pair alone until they are apart: it would push them out along their least overlap, up through the pile. The pairs, by `apartKey`.
+   */
+  private apartDeep(dt: number): Set<string> {
+    const keys = new Set<string>()
+    const n = this.list.length
+    if (n < 2) return keys
+    const centers = this.list.map((b) => {
+      const c = this.centerOf(b, this.p)
+      return [c.x, c.y, c.z] as Vec3
+    })
+    const radii = this.list.map((b) => Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2]))
+    const order = this.list.map((_, i) => i).sort((i, j) => centers[i][0] - radii[i] - (centers[j][0] - radii[j]))
+    for (let oi = 0; oi < n; oi++) {
+      const i = order[oi]
+      const reach = centers[i][0] + radii[i]
+      for (let oj = oi + 1; oj < n; oj++) {
+        const j = order[oj]
+        if (centers[j][0] - radii[j] > reach) break
+        const a = this.list[i]
+        const b = this.list[j]
+        if (a.round || b.round || ((a.held || a.sleeping) && (b.held || b.sleeping))) continue
+        const r = radii[i] + radii[j]
+        if (Math.abs(centers[i][1] - centers[j][1]) > r || Math.abs(centers[i][2] - centers[j][2]) > r || !this.partsOverlap(a, b)) continue
+        const sa = this.contactShape(a, centers[i])
+        const sb = this.contactShape(b, centers[j])
+        const hit = shapeContact(sa, sb)
+        if (!hit || hit.depth <= LIFT_DEPTH) continue
+        const ima = a.held || a.sleeping ? 0 : 1 / a.mass
+        const imb = b.held || b.sleeping ? 0 : 1 / b.mass
+        const level = Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? hit : boxesAlongGround(sa, sb)
+        if (level) this.slideApart(a, b, ima, imb, level)
+        keys.add(apartKey(a.objectId, b.objectId))
+      }
+    }
+    this.applyPushes(dt)
+    return keys
   }
 
   get(objectId: string): PieceBody | null {
@@ -307,10 +375,14 @@ export class PieceSystem {
     if (i < 0) return
     // the boxes of the step forget it too: nothing keeps a removed piece's tree alive
     const [gone] = this.list.splice(i, 1)
-    if (gone) this.forgetSolids(gone)
+    if (gone) {
+      this.forgetSolids(gone)
+      this.engine?.remove(gone)
+    }
   }
 
   clear(): void {
+    this.engine?.clear()
     this.list.length = 0
     this.solids = []
     this.surfaces = []
@@ -443,6 +515,7 @@ export class PieceSystem {
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
   wakeRegion(x: number, z: number, radius: number): void {
+    this.engine?.groundChanged(x, z, radius)
     for (const b of this.list) {
       if (!b.sleeping || b.held || Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius) continue
       b.sleeping = false
@@ -452,6 +525,16 @@ export class PieceSystem {
   }
 
   update(dt: number): void {
+    if (this.engine) {
+      this.time += dt
+      this.measure()
+      // what slept on a support that is gone (a top that broke, ground dug under it) wakes: the kit's rule, the engine does not see our ground change
+      this.wakeUnsupported()
+      this.engine.update(this.list, dt, this.time, this.apartDeep(dt))
+      this.measure()
+      this.keepBudget()
+      return
+    }
     const { steps, near } = this.collisionSteps(dt)
     if (steps === 1) {
       this.time += dt
@@ -506,6 +589,30 @@ export class PieceSystem {
 
   /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
   private step(dt: number, only?: StepFilter): void {
+    this.measure()
+    this.wakeUnsupported()
+    for (const b of this.list) {
+      if (b.held) {
+        b.velocity = [0, 0, 0]
+        b.angularVelocity = [0, 0, 0]
+        b.sleeping = false
+        b.still = 0
+        b.calmAt = null
+        continue
+      }
+      if (b.sleeping || (only && !only.moves(b))) continue
+      this.integrate(b, dt)
+      if (b.sleeping) continue
+      const v = b.velocity
+      const w = b.angularVelocity
+      if (Math.hypot(v[0], v[1], v[2]) > WAKE_ABOVE_SPEED || Math.hypot(w[0], w[1], w[2]) > WAKE_ABOVE_SPIN) this.wakeAbove(b)
+    }
+    this.collide(dt, only?.meets)
+    this.keepBudget()
+  }
+
+  /** The boxes of the pieces as they stand (`solids`, `surfaces` and their grid): what a point lands on and what `topAt` answers. */
+  private measure(): void {
     this.solids = this.list.map((body) => {
       const c = this.centerOf(body, new this.THREE.Vector3())
       const h = body.halfExtents
@@ -557,25 +664,6 @@ export class PieceSystem {
       }
     }
     if (this.wideSurfaces.length > 0) for (const cell of this.surfaceGrid.values()) cell.push(...this.wideSurfaces)
-    this.wakeUnsupported()
-    for (const b of this.list) {
-      if (b.held) {
-        b.velocity = [0, 0, 0]
-        b.angularVelocity = [0, 0, 0]
-        b.sleeping = false
-        b.still = 0
-        b.calmAt = null
-        continue
-      }
-      if (b.sleeping || (only && !only.moves(b))) continue
-      this.integrate(b, dt)
-      if (b.sleeping) continue
-      const v = b.velocity
-      const w = b.angularVelocity
-      if (Math.hypot(v[0], v[1], v[2]) > WAKE_ABOVE_SPEED || Math.hypot(w[0], w[1], w[2]) > WAKE_ABOVE_SPIN) this.wakeAbove(b)
-    }
-    this.collide(dt, only?.meets)
-    this.keepBudget()
   }
 
   /** A few sleeping pieces each update (`SUPPORT_CHECKS`, in turn) look under them again: one whose table broke, or whose shelf fell over, falls. */

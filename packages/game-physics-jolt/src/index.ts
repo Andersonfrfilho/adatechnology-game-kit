@@ -79,6 +79,7 @@ interface VehicleEntry {
 }
 
 const ROW_CAPACITY = 4096
+const POINTS_PER_BODY = 16
 
 class Contacts implements ContactBuffer {
   count = 0
@@ -138,6 +139,12 @@ export class JoltWorld implements PhysicsWorld {
   private readonly bpInterface: JoltNS.BroadPhaseLayerInterfaceTable
   private readonly objVsBp: JoltNS.ObjectVsBroadPhaseLayerFilterTable
   private disposed = false
+  /** Contacts each body has now (added minus removed), for `touching`. */
+  private readonly touches = new Map<number, number>()
+  private readonly ignored = new Set<number>()
+  /** Contact points of the last step per body: up to `POINTS_PER_BODY` x y z, and how many. Kept for the bodies asked about (`contactPoints`). */
+  private readonly points = new Map<number, { xyz: Float32Array; n: number; step: number }>()
+  private stepCount = 0
 
   constructor(J: Jolt, desc: WorldDesc) {
     this.J = J
@@ -164,6 +171,17 @@ export class JoltWorld implements PhysicsWorld {
     settings.mObjectLayerPairFilter = this.objectFilter
     settings.mBroadPhaseLayerInterface = this.bpInterface
     settings.mObjectVsBroadPhaseLayerFilter = this.objVsBp
+    // the debug build reports its asserts here (the release build has none)
+    const asserts = new J.AssertFailedHandlerJS()
+    asserts.OnAssertFailed = (expression: number, message: number, file: number, line: number) => {
+      const text = (ptr: number): string => {
+        let out = ''
+        for (let i = ptr; ptr && J.HEAPU8[i] !== 0 && i < ptr + 400; i++) out += String.fromCharCode(J.HEAPU8[i])
+        return out
+      }
+      throw new Error(`jolt assert ${text(expression)} ${text(message)} ${text(file)}:${line}`)
+    }
+    settings.mAssertFailedHandler = asserts
     this.iface = new J.JoltInterface(settings)
     J.destroy(settings)
     this.system = this.iface.GetPhysicsSystem()
@@ -176,6 +194,7 @@ export class JoltWorld implements PhysicsWorld {
     if (desc.sleepSpeed !== undefined) ps.mPointVelocitySleepThreshold = desc.sleepSpeed
     if (desc.velocityIterations !== undefined) ps.mNumVelocitySteps = desc.velocityIterations
     if (desc.positionIterations !== undefined) ps.mNumPositionSteps = desc.positionIterations
+    if (desc.penetrationSlop !== undefined) ps.mPenetrationSlop = desc.penetrationSlop
     this.system.SetPhysicsSettings(ps)
     this.v2 = new J.Vec3(0, 0, 0)
     this.r1 = new J.RVec3(0, 0, 0)
@@ -316,11 +335,17 @@ export class JoltWorld implements PhysicsWorld {
     if (desc.angularDamping !== undefined) s.mAngularDamping = desc.angularDamping
     if (desc.continuous) s.mMotionQuality = J.EMotionQuality_LinearCast
     if (desc.allowSleep === false) s.mAllowSleeping = false
+    if (desc.motion !== 'static') s.mAllowDynamicOrKinematic = true
     if (layer === 'sensor') {
       s.mIsSensor = true
       s.mCollideKinematicVsNonDynamic = true
     }
-    if (desc.motion === 'dynamic' && desc.mass !== undefined) {
+    if (desc.motion === 'dynamic' && desc.mass !== undefined && desc.inertia) {
+      s.mOverrideMassProperties = J.EOverrideMassProperties_MassAndInertiaProvided
+      s.mMassPropertiesOverride.mMass = desc.mass
+      this.v2.Set(desc.inertia[0], desc.inertia[1], desc.inertia[2])
+      s.mMassPropertiesOverride.mInertia = J.Mat44.prototype.sScaleVec3(this.v2)
+    } else if (desc.motion === 'dynamic' && desc.mass !== undefined) {
       s.mOverrideMassProperties = J.EOverrideMassProperties_CalculateInertia
       s.mMassPropertiesOverride.mMass = desc.mass
     }
@@ -394,6 +419,8 @@ export class JoltWorld implements PhysicsWorld {
     this.bi.DestroyBody(e.id)
     this.J.destroy(e.id)
     this.bodies.delete(id)
+    this.touches.delete(id)
+    this.points.delete(id)
   }
 
   setShape(id: BodyId, shape: ShapeDesc): void {
@@ -491,6 +518,61 @@ export class JoltWorld implements PhysicsWorld {
     this.bi.SetRestitution(e.id, material.restitution)
   }
 
+  setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void {
+    this.bi.SetMotionType(this.entry(id).id, motion === 'kinematic' ? this.J.EMotionType_Kinematic : this.J.EMotionType_Dynamic, this.J.EActivation_Activate)
+  }
+
+  contactPoints(id: BodyId, out: Float32Array): number {
+    let p = this.points.get(id)
+    if (!p) {
+      // asked about from now on: recorded from the next step
+      p = { xyz: new Float32Array(POINTS_PER_BODY * 3), n: 0, step: -1 }
+      this.points.set(id, p)
+      return 0
+    }
+    if (p.step !== this.stepCount) return 0
+    const n = Math.min(p.n, out.length / 3)
+    out.set(p.xyz.subarray(0, n * 3))
+    return n
+  }
+
+  private recordPoints(key: number, m: JoltNS.ContactManifold, onFirst: boolean): void {
+    const p = this.points.get(key)
+    if (!p) return
+    if (p.step !== this.stepCount) {
+      p.step = this.stepCount
+      p.n = 0
+    }
+    const count = m.mRelativeContactPointsOn1.size()
+    for (let i = 0; i < count && p.n < POINTS_PER_BODY; i++) {
+      const w = onFirst ? m.GetWorldSpaceContactPointOn1(i) : m.GetWorldSpaceContactPointOn2(i)
+      p.xyz[p.n * 3] = w.GetX()
+      p.xyz[p.n * 3 + 1] = w.GetY()
+      p.xyz[p.n * 3 + 2] = w.GetZ()
+      p.n++
+    }
+  }
+
+  touching(id: BodyId): boolean {
+    return (this.touches.get(id) ?? 0) > 0
+  }
+
+  private pairKey(a: number, b: number): number {
+    // body keys are index + sequence in 32 bits; the low 16 bits of each are enough within one world of under 65536 bodies
+    const x = a & 0xffff
+    const y = b & 0xffff
+    return x < y ? x * 65536 + y : y * 65536 + x
+  }
+
+  ignorePair(a: BodyId, b: BodyId, ignore: boolean): void {
+    const key = this.pairKey(a, b)
+    if (ignore === this.ignored.has(key)) return
+    if (ignore) this.ignored.add(key)
+    else this.ignored.delete(key)
+    // the body pair cache would keep the pair's contact: it is looked at again
+    this.bi.InvalidateContactCache(this.entry(a).id)
+  }
+
   get bodyCount(): number {
     return this.bodies.size
   }
@@ -513,6 +595,10 @@ export class JoltWorld implements PhysicsWorld {
       const e1 = this.bodies.get(b1.GetID().GetIndexAndSequenceNumber())
       const e2 = this.bodies.get(b2.GetID().GetIndexAndSequenceNumber())
       if (!e1 || !e2) return
+      if (this.points.size > 0) {
+        this.recordPoints(e1.body.GetID().GetIndexAndSequenceNumber(), m, true)
+        this.recordPoints(e2.body.GetID().GetIndexAndSequenceNumber(), m, false)
+      }
       if (cs.mIsSensor) {
         if (report) this.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.body.GetID().GetIndexAndSequenceNumber() as BodyId, other: e2.body.GetID().GetIndexAndSequenceNumber() as BodyId, entered: true } : { sensor: e2.body.GetID().GetIndexAndSequenceNumber() as BodyId, other: e1.body.GetID().GetIndexAndSequenceNumber() as BodyId, entered: true })
         return
@@ -547,6 +633,8 @@ export class JoltWorld implements PhysicsWorld {
       const tz = rvz - along * nz
       const slip = Math.hypot(tx, ty, tz)
       const sliding = slip > this.slipSpeed
+      // restitution mixed as the kit always has (geometric mean); Jolt's default takes the larger
+      cs.mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
       cs.mCombinedFriction = sliding
         ? mixFriction(e1.material.frictionDynamic, e2.material.frictionDynamic)
         : mixFriction(e1.material.frictionStatic, e2.material.frictionStatic)
@@ -570,8 +658,19 @@ export class JoltWorld implements PhysicsWorld {
       const invMass = e1.invMass + e2.invMass
       c.impulse[i] = invMass > 0 ? ((1 + cs.mCombinedRestitution) * along) / invMass : 0
     }
-    listener.OnContactValidate = () => J.ValidateResult_AcceptAllContactsForThisBodyPair
+    listener.OnContactValidate = (body1: number, body2: number) => {
+      if (this.ignored.size === 0) return J.ValidateResult_AcceptAllContactsForThisBodyPair
+      const k = this.pairKey(bodyOf(body1).GetID().GetIndexAndSequenceNumber(), bodyOf(body2).GetID().GetIndexAndSequenceNumber())
+      return this.ignored.has(k) ? J.ValidateResult_RejectAllContactsForThisBodyPair : J.ValidateResult_AcceptAllContactsForThisBodyPair
+    }
+    const touch = (key: number, by: number): void => {
+      const n = (this.touches.get(key) ?? 0) + by
+      if (n > 0) this.touches.set(key, n)
+      else this.touches.delete(key)
+    }
     listener.OnContactAdded = (body1: number, body2: number, manifold: number, settings: number) => {
+      touch(bodyOf(body1).GetID().GetIndexAndSequenceNumber(), 1)
+      touch(bodyOf(body2).GetID().GetIndexAndSequenceNumber(), 1)
       coulomb(bodyOf(body1), bodyOf(body2), J.wrapPointer(manifold, J.ContactManifold), J.wrapPointer(settings, J.ContactSettings), true)
     }
     listener.OnContactPersisted = (body1: number, body2: number, manifold: number, settings: number) => {
@@ -581,6 +680,8 @@ export class JoltWorld implements PhysicsWorld {
       const p = J.wrapPointer(pair, J.SubShapeIDPair)
       const k1 = p.GetBody1ID().GetIndexAndSequenceNumber()
       const k2 = p.GetBody2ID().GetIndexAndSequenceNumber()
+      touch(k1, -1)
+      touch(k2, -1)
       const e1 = this.bodies.get(k1)
       const e2 = this.bodies.get(k2)
       if (e1?.layer === 'sensor') this.sensorEvents.push({ sensor: k1 as BodyId, other: k2 as BodyId, entered: false })
@@ -919,6 +1020,7 @@ export class JoltWorld implements PhysicsWorld {
     let steps = 0
     while (this.accumulator >= this.fixedStep - 1e-9) {
       this.accumulator -= this.fixedStep
+      this.stepCount++
       this.iface.Step(this.fixedStep, 1)
       this.breakJoints(this.fixedStep)
       steps++

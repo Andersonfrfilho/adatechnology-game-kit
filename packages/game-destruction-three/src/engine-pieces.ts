@@ -1,0 +1,500 @@
+import type * as THREE_NS from 'three'
+import type { Vec3 } from '@adatechnology/game-destruction'
+import type { BodyId, Material, PhysicsWorld, Quat, ShapeDesc } from '@adatechnology/game-physics'
+
+import { buildGroundMesh } from './engine-ground'
+import type { PieceBody } from './internal'
+import type { PieceSweepHit } from './pieces'
+
+/** A fixed box of what does not move, as it is drawn: centre, half sizes and rotation (world). */
+export interface StaticSolid {
+  readonly center: Vec3
+  readonly half: Vec3
+  readonly rotation: Quat
+}
+
+export interface EnginePieceOptions {
+  readonly groundAt: (x: number, z: number) => number
+  readonly gravity: number
+  /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
+  readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
+  readonly sweep?: (piece: PieceBody, from: Vec3, to: Vec3) => PieceSweepHit | null
+  readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
+  readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
+  readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
+}
+
+/** Side of a tile of ground (m); how far around an awake piece tiles are laid (m). */
+const TILE = 2
+const TILE_MARGIN = 0.5
+const MU_STATIC = 0.7
+const MU_DYNAMIC = 0.6
+const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0 }
+const ROLLING_RESISTANCE = 0.015
+const STILL_SPEED = 0.12
+const STILL_SPIN = 0.45
+const HARD_LANDING = 3
+const SLAM_MIN_SPEED = 2
+const SLAM_BOUNCE = 0.2
+const SLAM_FLOOR_NORMAL = 0.7
+const KNOCK_EVERY = 0.15
+/** The kit's balancing rule: a support narrower than this share of the height of the centre of mass is a balancing act, and the push (rad/s^2 per metre) that ends it. */
+const NARROW = 0.3
+const TOPPLE = 3
+/** Corners this close (m) to the lowest one are what it stands on. */
+const STEADY_TURN = 0.1
+const STEADY_SECONDS = 1.5
+
+interface Link {
+  readonly id: BodyId
+  readonly user: number
+  shapeKey: readonly unknown[]
+  readonly pos: number[]
+  readonly quat: number[]
+  readonly vel: number[]
+  readonly ang: number[]
+  held: boolean
+  sleeping: boolean
+}
+
+interface Tile {
+  id: BodyId
+  dirty: boolean
+}
+
+/**
+ * Steps the loose pieces through the kit's physics contract (`game-physics`): each piece a dynamic body at its centre of mass with its parts' boxes (or its box, or
+ * its round shape), its mass, and its surface's static and dynamic friction (the engine adapter applies Coulomb per contact). The ground is `groundAt` as triangles
+ * that keep its steps (`engine-ground`); the fixed things are their drawn boxes, turned as drawn. On top stay the kit's rules the engine does not know: the sweep
+ * against walls, hard landings, rolling resistance, falling over (`tip`), the knock sound, and (in `PieceSystem`) the budget of awake pieces and their rest points.
+ */
+export class EnginePieces {
+  private readonly links = new Map<PieceBody, Link>()
+  private readonly byUser = new Map<number, PieceBody>()
+  private nextUser = 1
+  private readonly tiles = new Map<string, Tile>()
+  private readonly statics = new Map<string, { solids: readonly StaticSolid[]; id: BodyId | null }>()
+  private ignored = new Set<string>()
+  private readonly knocks = new Map<string, number>()
+  private readonly pose = new Float64Array(7)
+  private readonly velocity = new Float64Array(6)
+  private readonly contactXYZ = new Float32Array(48)
+  private readonly v: THREE_NS.Vector3
+
+  constructor(
+    THREE: typeof THREE_NS,
+    private readonly world: PhysicsWorld,
+    private readonly o: EnginePieceOptions,
+  ) {
+    this.v = new THREE.Vector3()
+  }
+
+  remove(b: PieceBody): void {
+    const link = this.links.get(b)
+    if (!link) return
+    this.world.removeBody(link.id)
+    this.byUser.delete(link.user)
+    this.links.delete(b)
+  }
+
+  clear(): void {
+    for (const b of [...this.links.keys()]) this.remove(b)
+    for (const t of this.tiles.values()) this.world.removeBody(t.id)
+    this.tiles.clear()
+    for (const s of this.statics.values()) if (s.id !== null) this.world.removeBody(s.id)
+    this.statics.clear()
+    this.ignored.clear()
+  }
+
+  /** The ground under the disc changed: its tiles are laid again before the next step, and what lies there wakes. */
+  groundChanged(x: number, z: number, radius: number): void {
+    for (const [key, tile] of this.tiles) {
+      const [ix, iz] = key.split(',').map(Number)
+      const nx = Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE))
+      const nz = Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE))
+      if (Math.hypot(nx - x, nz - z) <= radius) tile.dirty = true
+    }
+  }
+
+  /** One update: the pairs in `apart` (by object id, `a\0b`) do not meet in the engine; the kit puts them apart along the ground. */
+  update(list: readonly PieceBody[], dt: number, time: number, apart: ReadonlySet<string>): void {
+    if (dt <= 0) return
+    const present = new Set(list)
+    for (const b of [...this.links.keys()]) if (!present.has(b)) this.remove(b)
+    for (const b of list) this.sync(b, dt)
+    this.layStatics()
+    this.layGround(list)
+    this.keepApart(apart)
+    const before = new Map<PieceBody, { c: Vec3; vy: number }>()
+    for (const b of list) {
+      if (b.held || b.sleeping) continue
+      const c = this.centre(b)
+      before.set(b, { c: [c.x, c.y, c.z], vy: b.velocity[1] })
+    }
+    this.world.step(dt)
+    for (const b of list) this.readBack(b, dt, time, before.get(b))
+    this.knock(time)
+  }
+
+  private shapeOf(b: PieceBody): ShapeDesc {
+    const round = b.round
+    if (round) {
+      if (round.kind === 'sphere') return { kind: 'sphere', radius: round.radius }
+      // a cylinder stands along its own y: turned onto x or z
+      const rotation: Quat = round.axis === 0 ? [0, 0, Math.SQRT1_2, Math.SQRT1_2] : round.axis === 2 ? [Math.SQRT1_2, 0, 0, Math.SQRT1_2] : [0, 0, 0, 1]
+      return { kind: 'compound', children: [{ shape: { kind: 'cylinder', halfHeight: b.halfExtents[round.axis], radius: round.radius }, position: [0, 0, 0], rotation }] }
+    }
+    if (b.partBoxes && b.partBoxes.length > 0) {
+      return { kind: 'compound', children: b.partBoxes.map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, tag: i })) }
+    }
+    return { kind: 'box', half: b.halfExtents }
+  }
+
+  /** A round piece turns about its axis by its own k (a full can, an empty one); about the others, and for a box, the engine's from the shape. */
+  private inertiaOf(b: PieceBody): Vec3 | undefined {
+    const round = b.round
+    if (!round) return undefined
+    const [hx, hy, hz] = b.halfExtents
+    const m = b.mass
+    const out: [number, number, number] = [(m * (hy * hy + hz * hz)) / 3, (m * (hx * hx + hz * hz)) / 3, (m * (hx * hx + hy * hy)) / 3]
+    const about = round.inertia * m * round.radius * round.radius
+    if (round.kind === 'sphere') return [about, about, about]
+    out[round.axis] = about
+    return out
+  }
+
+  private material(b: PieceBody): Material {
+    return {
+      frictionStatic: b.friction?.static ?? MU_STATIC,
+      frictionDynamic: b.friction?.dynamic ?? MU_DYNAMIC,
+      // a box lands dead (the kit never bounced them); a round piece bounces by its material
+      restitution: b.round ? (b.restitution ?? SLAM_BOUNCE) : 0,
+    }
+  }
+
+  /** Makes the body of a piece, or brings it up to date with what changed on the piece since the last step (moved, pushed, picked up, put to sleep). */
+  private sync(b: PieceBody, dt: number): void {
+    // by value: the renderer hands new arrays for the same boxes, and a new shape wakes the body
+    const shapeKey = [JSON.stringify(b.halfExtents), JSON.stringify(b.partBoxes), JSON.stringify(b.round), b.mass, b.localCenter[0], b.localCenter[1], b.localCenter[2], JSON.stringify(b.friction), b.restitution]
+    const c = this.centre(b)
+    const q = b.root.quaternion
+    let link = this.links.get(b)
+    if (!link) {
+      const user = this.nextUser++
+      const id = this.world.createBody({
+        shape: this.shapeOf(b),
+        motion: b.held ? 'kinematic' : 'dynamic',
+        position: [c.x, c.y, c.z],
+        rotation: [q.x, q.y, q.z, q.w],
+        mass: b.mass,
+        inertia: this.inertiaOf(b),
+        material: this.material(b),
+        layer: 'debris',
+        // no air drag: the kit's pieces never had any (rolling resistance is the kit's own rule)
+        angularDamping: 0,
+        linearDamping: 0,
+        continuous: Math.min(...b.halfExtents) < 0.05,
+        sleeping: b.sleeping,
+        user,
+        linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
+        angularVelocity: [b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2]],
+      })
+      link = { id, user, shapeKey, pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity], held: b.held, sleeping: b.sleeping }
+      this.links.set(b, link)
+      this.byUser.set(user, b)
+      return
+    }
+    if (shapeKey.some((s, i) => s !== link.shapeKey[i])) {
+      link.shapeKey = shapeKey
+      this.world.setShape(link.id, this.shapeOf(b))
+      this.world.setMaterial(link.id, this.material(b))
+    }
+    if (b.held !== link.held) {
+      link.held = b.held
+      this.world.setMotion(link.id, b.held ? 'kinematic' : 'dynamic')
+    }
+    if (b.held) {
+      this.world.moveKinematic(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], dt)
+      return
+    }
+    // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved
+    const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
+    const moved = far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
+    if (moved) this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
+    // `tip` is the kit solver's push for a piece whose feet are thinner than its box; here the engine stands it on its parts as drawn, so it goes over by itself
+    b.tipping = null
+    if (!b.round && b.onGround && !b.sleeping) this.topple(b, dt)
+    const v = b.velocity
+    const w = b.angularVelocity
+    const pushed = v[0] !== link.vel[0] || v[1] !== link.vel[1] || v[2] !== link.vel[2] || w[0] !== link.ang[0] || w[1] !== link.ang[1] || w[2] !== link.ang[2]
+    if (pushed) this.world.setVelocity(link.id, [v[0], v[1], v[2]], [w[0], w[1], w[2]])
+    if (b.sleeping && !link.sleeping) this.world.sleep(link.id)
+    else if (!b.sleeping && (link.sleeping || pushed)) {
+      // woken from outside (its support looked at again, a blow): the ground under it may have been dug while it slept
+      this.world.wake(link.id)
+      this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
+    }
+  }
+
+  /**
+   * The kit's balancing rule (§12: what stands on less than its centre of mass needs goes over): the points the engine has it touching by are its support; narrower than `NARROW` of the height of the centre of mass above them, or not under it, the piece gets the kit's push toward the side
+   * it leans to. The engine alone keeps a door balanced on its 4 cm edge for ever.
+   */
+  private topple(b: PieceBody, dt: number): void {
+    const link = this.links.get(b)
+    if (!link) return
+    // where the engine has it touching (the floor, a step, another piece), from its centre of mass
+    const n = this.world.contactPoints(link.id, this.contactXYZ)
+    if (n === 0) return
+    const c = this.centre(b)
+    const q = b.root.quaternion
+    let low = Infinity
+    for (let i = 0; i < n; i++) low = Math.min(low, this.contactXYZ[i * 3 + 1] - c.y)
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity
+    for (let i = 0; i < n; i++) {
+      const rx = this.contactXYZ[i * 3] - c.x
+      const rz = this.contactXYZ[i * 3 + 2] - c.z
+      x0 = Math.min(x0, rx); x1 = Math.max(x1, rx)
+      z0 = Math.min(z0, rz); z1 = Math.max(z1, rz)
+    }
+    const height = -low
+    const wx = x1 - x0
+    const wz = z1 - z0
+    b.balancing = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
+    if (!b.balancing) {
+      b.steady = null
+      return
+    }
+    // held up at an angle by something (leant on a wall, on another piece): once it has kept its tilt for `STEADY_SECONDS` the push stops and it may sleep
+    const was = b.steady
+    if (!was || Math.abs(was.quaternion[0] * q.x + was.quaternion[1] * q.y + was.quaternion[2] * q.z + was.quaternion[3] * q.w) < Math.cos(STEADY_TURN / 2)) {
+      b.steady = { quaternion: [q.x, q.y, q.z, q.w], seconds: 0 }
+    } else {
+      was.seconds += dt
+      if (was.seconds >= STEADY_SECONDS) return
+    }
+    const dirX = x0 + x1 > 0 ? -1 : 1
+    const dirZ = z0 + z1 > 0 ? -1 : 1
+    const k = TOPPLE * Math.min(height, 1) * dt
+    const w = b.angularVelocity
+    const v = b.velocity
+    // turned about the edge of its support it goes over (about its centre of mass it would press that edge into the floor, and the contact would take it back):
+    // the spin, and the speed of the centre of mass that goes with it about that edge
+    if (wx <= wz) {
+      const dw = -dirX * k
+      const rx = -(dirX > 0 ? x1 : x0)
+      const ry = -low
+      w[2] += dw
+      v[0] += -dw * ry
+      v[1] += dw * rx
+    } else {
+      const dw = dirZ * k
+      const rz = -(dirZ > 0 ? z1 : z0)
+      const ry = -low
+      w[0] += dw
+      v[1] += -dw * rz
+      v[2] += dw * ry
+    }
+  }
+
+  private centre(b: PieceBody): THREE_NS.Vector3 {
+    return this.v.copy(b.centerV).applyQuaternion(b.root.quaternion).add(b.root.position)
+  }
+
+  /** Lays the tiles of ground under and around what is awake, and lays again those whose region changed. */
+  private layGround(list: readonly PieceBody[]): void {
+    for (const b of list) {
+      if (b.sleeping) continue
+      const c = this.centre(b)
+      const r = Math.hypot(...b.halfExtents) + TILE_MARGIN
+      for (let ix = Math.floor((c.x - r) / TILE); ix <= Math.floor((c.x + r) / TILE); ix++) {
+        for (let iz = Math.floor((c.z - r) / TILE); iz <= Math.floor((c.z + r) / TILE); iz++) {
+          const key = `${ix},${iz}`
+          const tile = this.tiles.get(key)
+          if (tile && !tile.dirty) continue
+          if (tile) this.world.removeBody(tile.id)
+          this.tiles.set(key, { id: this.makeTile(ix, iz), dirty: false })
+        }
+      }
+    }
+  }
+
+  private makeTile(ix: number, iz: number): BodyId {
+    const mesh = buildGroundMesh(this.o.groundAt, ix * TILE, iz * TILE, TILE)
+    if (mesh.flat) {
+      // level ground is a slab: exact, cheaper, and solid below
+      return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, mesh.high - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
+    }
+    return this.world.createBody({ shape: { kind: 'trimesh', vertices: mesh.vertices, indices: mesh.indices }, motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+  }
+
+  /** The host's fixed boxes, one static body per object, made again when the object's boxes changed; what lay on a removed one wakes. */
+  private layStatics(): void {
+    const now = this.o.staticSolids?.()
+    if (!now) return
+    for (const [id, s] of this.statics) {
+      if (now.get(id) === s.solids) continue
+      if (s.id !== null) {
+        this.wakeAround(s.solids)
+        this.world.removeBody(s.id)
+      }
+      this.statics.delete(id)
+    }
+    for (const [id, solids] of now) {
+      if (this.statics.has(id)) continue
+      const kept = solids.filter((s) => s.half[0] > 0 && s.half[1] > 0 && s.half[2] > 0)
+      const body =
+        kept.length === 0
+          ? null
+          : this.world.createBody({
+              shape: { kind: 'compound', children: kept.map((s, i) => ({ shape: { kind: 'box', half: s.half }, position: s.center, rotation: s.rotation, tag: i })) },
+              motion: 'static',
+              position: [0, 0, 0],
+              material: GROUND,
+              user: 0,
+            })
+      this.statics.set(id, { solids, id: body })
+    }
+  }
+
+  private wakeAround(solids: readonly StaticSolid[]): void {
+    for (const s of solids) {
+      const r = Math.hypot(s.half[0], s.half[1], s.half[2]) + 0.05
+      this.world.wakeInBox([s.center[0] - r, s.center[1] - r, s.center[2] - r], [s.center[0] + r, s.center[1] + r, s.center[2] + r])
+    }
+  }
+
+  private keepApart(apart: ReadonlySet<string>): void {
+    const ids = new Map<string, BodyId>()
+    for (const [b, link] of this.links) ids.set(b.objectId, link.id)
+    const pair = (key: string): [BodyId, BodyId] | null => {
+      const [a, b] = key.split('\u0000')
+      const x = ids.get(a)
+      const y = ids.get(b)
+      return x !== undefined && y !== undefined ? [x, y] : null
+    }
+    for (const key of this.ignored) {
+      if (apart.has(key)) continue
+      const p = pair(key)
+      if (p) this.world.ignorePair(p[0], p[1], false)
+    }
+    for (const key of apart) {
+      if (this.ignored.has(key)) continue
+      const p = pair(key)
+      if (p) this.world.ignorePair(p[0], p[1], true)
+    }
+    this.ignored = new Set(apart)
+  }
+
+  /** Writes the body back to the piece, then the kit's rules: the sweep against walls, hard landings, rolling resistance, `still` for the budget. */
+  private readBack(b: PieceBody, dt: number, time: number, before: { c: Vec3; vy: number } | undefined): void {
+    const link = this.links.get(b)
+    if (!link || b.held) return
+    this.world.readPose(link.id, this.pose, 0)
+    this.world.readVelocity(link.id, this.velocity, 0)
+    const pos: Vec3 = [this.pose[0], this.pose[1], this.pose[2]]
+    const v = b.velocity
+    const w = b.angularVelocity
+    for (let i = 0; i < 3; i++) {
+      v[i] = this.velocity[i]
+      w[i] = this.velocity[i + 3]
+    }
+    b.sleeping = this.world.isSleeping(link.id)
+    if (!b.sleeping) b.onGround = this.world.touching(link.id)
+    let moved = false
+    let slowed = false
+    if (before && !b.sleeping) {
+      if (this.o.sweep) moved = this.sweepOn(b, before.c, pos, time)
+      const impact = -before.vy
+      if (b.onGround && impact > HARD_LANDING && v[1] > before.vy + impact * 0.5 && time - b.lastHit > 0.15) {
+        b.lastHit = time
+        this.o.onHardLanding(b, [pos[0], pos[1] - Math.min(...b.halfExtents), pos[2]], impact)
+      }
+      if (b.round && b.onGround) slowed = this.rollingResistance(b, dt)
+    }
+    b.root.quaternion.set(this.pose[3], this.pose[4], this.pose[5], this.pose[6])
+    const off = this.v.copy(b.centerV).applyQuaternion(b.root.quaternion)
+    b.root.position.set(pos[0] - off.x, pos[1] - off.y, pos[2] - off.z)
+    b.root.updateMatrixWorld(true)
+    if (!b.sleeping) {
+      const still = b.onGround && !b.tipping && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
+      b.still = still ? b.still + dt : 0
+    } else {
+      b.still = 0
+    }
+    // only what the kit changed goes back: writing the pose wakes the body and starts its sleep timer again
+    if (moved) this.world.setPose(link.id, pos, [this.pose[3], this.pose[4], this.pose[5], this.pose[6]], true)
+    if (moved || slowed) this.world.setVelocity(link.id, [v[0], v[1], v[2]], [w[0], w[1], w[2]])
+    // what is written back is what the next update compares against: a change from outside differs from it
+    link.pos[0] = pos[0]
+    link.pos[1] = pos[1]
+    link.pos[2] = pos[2]
+    const q = b.root.quaternion
+    link.quat[0] = q.x
+    link.quat[1] = q.y
+    link.quat[2] = q.z
+    link.quat[3] = q.w
+    for (let i = 0; i < 3; i++) {
+      link.vel[i] = v[i]
+      link.ang[i] = w[i]
+    }
+    link.sleeping = b.sleeping
+  }
+
+  /** Stops a piece that ran into a wall on its way (`sweep`): back to where it met it, the speed into it reflected, as the kit's solver does. */
+  private sweepOn(b: PieceBody, start: Vec3, pos: Vec3, time: number): boolean {
+    const travel = Math.hypot(pos[0] - start[0], pos[1] - start[1], pos[2] - start[2])
+    if (travel < 1e-3) return false
+    const hit = this.o.sweep?.(b, start, pos)
+    if (!hit || hit.normal[1] > SLAM_FLOOR_NORMAL) return false
+    const v = b.velocity
+    const n = hit.normal
+    const into = -(v[0] * n[0] + v[1] * n[1] + v[2] * n[2])
+    if (into <= 0) return false
+    const k = Math.min(1, hit.distance / travel)
+    const bounce = Math.sqrt((b.restitution ?? SLAM_BOUNCE) * (hit.restitution ?? SLAM_BOUNCE))
+    for (let i = 0; i < 3; i++) {
+      pos[i] = start[i] + (pos[i] - start[i]) * k
+      v[i] += (1 + bounce) * into * n[i]
+    }
+    for (let i = 0; i < 3; i++) b.angularVelocity[i] *= 0.5
+    if (into >= SLAM_MIN_SPEED && time - b.lastHit > 0.15) {
+      b.lastHit = time
+      this.o.onSlam?.(b, hit, into)
+    }
+    return true
+  }
+
+  /** A round piece on the ground loses spin by its rolling resistance (C_rr g / (k r) per second): the engine has none. */
+  private rollingResistance(b: PieceBody, dt: number): boolean {
+    const round = b.round
+    if (!round) return false
+    const w = b.angularVelocity
+    const spin = Math.hypot(w[0], w[1], w[2])
+    // slower than this it is at rest: the engine's sleep takes it from here
+    if (spin < 0.05) return false
+    const rolling = b.friction?.rolling ?? ROLLING_RESISTANCE
+    const slow = Math.max(0, spin - (rolling * this.o.gravity * dt) / (round.inertia * round.radius)) / spin
+    for (let i = 0; i < 3; i++) w[i] *= slow
+    // the linear speed of a rolling piece goes with its spin
+    for (let i = 0; i < 3; i++) b.velocity[i] *= slow
+    return true
+  }
+
+  /** Two pieces that hit each other hard enough sound (`onKnock`), from the engine's contact rows, once per pair per `KNOCK_EVERY`. */
+  private knock(time: number): void {
+    const on = this.o.onKnock
+    if (!on) return
+    const c = this.world.contacts
+    for (let i = 0; i < c.count; i++) {
+      if (c.approach[i] < SLAM_MIN_SPEED) continue
+      const a = this.byUser.get(c.userA[i])
+      const b = this.byUser.get(c.userB[i])
+      if (!a || !b) continue
+      const key = a.objectId < b.objectId ? `${a.objectId}\u0000${b.objectId}` : `${b.objectId}\u0000${a.objectId}`
+      if (time - (this.knocks.get(key) ?? -Infinity) < KNOCK_EVERY) continue
+      this.knocks.set(key, time)
+      on(a, b, [c.point[i * 3], c.point[i * 3 + 1], c.point[i * 3 + 2]], c.approach[i])
+    }
+  }
+}

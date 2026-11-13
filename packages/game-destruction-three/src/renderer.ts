@@ -11,6 +11,7 @@ import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartVis, PieceBody, PieceRound } from './internal'
 import { clamp, createRng, hashNumbers, hashString } from './math'
+import type { StaticSolid } from './engine-pieces'
 import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
@@ -299,6 +300,8 @@ class Renderer implements DestructionRenderer {
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
+  /** `staticSolids` per object, with the `staticBoxes` list they were measured with. */
+  private readonly solidCache = new Map<string, { from: number[]; solids: StaticSolid[] }>()
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
@@ -422,6 +425,7 @@ class Renderer implements DestructionRenderer {
     this.pieceSys = new PieceSystem(THREE, {
       groundAt: this.groundAt,
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
+      staticSolids: () => this.staticSolids(),
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
@@ -1017,6 +1021,48 @@ class Renderer implements DestructionRenderer {
       }
     }
     return top
+  }
+
+  /**
+   * The fixed objects as their drawn boxes turned as drawn (the local box of each mesh in its world matrix), for an engine: one list per object, the same list until
+   * `staticNow` measures that object again. The same meshes `staticNow` keeps: no merged host, no loose part, nothing hidden, nothing wider than `STATIC_SPAN`.
+   */
+  private staticSolids(): Map<string, StaticSolid[]> {
+    const now = this.staticNow()
+    for (const id of [...this.solidCache.keys()]) if (!now.has(id)) this.solidCache.delete(id)
+    const out = new Map<string, StaticSolid[]>()
+    const box = new this.THREE.Box3()
+    const pos = new this.THREE.Vector3()
+    const quat = new this.THREE.Quaternion()
+    const scale = new this.THREE.Vector3()
+    for (const [id, boxes] of now) {
+      const cached = this.solidCache.get(id)
+      // measured again on a timer, often to the same numbers: the same boxes keep the same list (an engine rebuilds what changed)
+      if (cached && (cached.from === boxes || (cached.from.length === boxes.length && cached.from.every((v, k) => Math.abs(v - boxes[k]) < 1e-6)))) {
+        cached.from = boxes
+        out.set(id, cached.solids)
+        continue
+      }
+      const solids: StaticSolid[] = []
+      const b = this.bounds.get(id)
+      if (b && boxes.length > 0) {
+        for (const mv of this.meshesOf(b)) {
+          if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
+          this.visuals.worldBox(mv, box)
+          if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
+          this.visuals.localBox(mv, box)
+          if (box.isEmpty()) continue
+          mv.mesh.updateWorldMatrix(true, false)
+          mv.mesh.matrixWorld.decompose(pos, quat, scale)
+          const c = box.getCenter(new this.THREE.Vector3()).multiply(scale).applyQuaternion(quat).add(pos)
+          const size = box.getSize(new this.THREE.Vector3()).multiply(scale)
+          solids.push({ center: [c.x, c.y, c.z], half: [Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], rotation: [quat.x, quat.y, quat.z, quat.w] })
+        }
+      }
+      this.solidCache.set(id, { from: boxes, solids })
+      out.set(id, solids)
+    }
+    return out
   }
 
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
