@@ -71,6 +71,8 @@ export interface TakeParams {
 export interface Inventory {
   /** Puts an item from the world into the bag. */
   take(params: TakeParams): InventoryResult<{ slotIds: readonly number[] }>
+  /** Puts an item from the world straight into the hand (it takes no slot and no bag volume, only weight). */
+  hold(params: Omit<TakeParams, 'count'>): InventoryResult<{ held: ItemStack }>
   /** Moves the item in hand back into the bag (unequip). */
   store(): InventoryResult<{ slotIds: readonly number[] }>
   /** Moves a slot to the hand; returns what is now held. */

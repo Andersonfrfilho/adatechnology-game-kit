@@ -90,6 +90,15 @@ export const createInventory = (options: InventoryOptions): Inventory => {
       const now = totals()
       return putInBag(stack, { kg: now.kg, litres: now.litres })
     },
+    hold: ({ itemId, state }) => {
+      const item = items.get(itemId)
+      if (!item) return { ok: false, reason: 'unknown_item' }
+      if (held) return { ok: false, reason: 'hand_full' }
+      const verdict = canTake(item, { ...bag, capacityLitres: undefined }, { slots: 0, loadKg: totals().kg }, { slotsNeeded: 0 })
+      if (verdict !== 'ok') return { ok: false, reason: verdict }
+      held = state === undefined ? { itemId, count: 1 } : copyStack({ itemId, count: 1, state })
+      return { ok: true, held: copyStack(held) }
+    },
     store: () => {
       if (!held) return { ok: false, reason: 'hand_empty' }
       const now = totals()
