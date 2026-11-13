@@ -21,6 +21,7 @@ export const kabar: ItemModelBuilder = ({ mesh, bx, cyl, extrude, G, metal, plas
     mesh(bx(0.12, 0.12, 0.04), steel, [1.36, axis, 0.26]),
     mesh(bx(0.12, 0.12, 0.04), steel, [1.36, axis, -0.26]),
     mesh(blade, steel, [0, axis + 0.0225, 0], [R, 0, 0]),
-    mesh(bx(0.95, 0.016, 0.045), metal(0x1b1d20), [1.95, axis + 0.026, 0.07]),
+    // the fuller stands 2 mm proud of the blade face, sunk into the blade below it, so the two never share a depth
+    mesh(bx(0.95, 0.04, 0.045), metal(0x1b1d20), [1.95, axis + 0.0405, 0.07]),
   )
 }

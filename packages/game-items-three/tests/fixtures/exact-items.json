@@ -10267,7 +10267,7 @@
   ]
  },
  "model/kabar": {
-  "hash": "7c910270",
+  "hash": "9296891e",
   "nodes": [
    "0 Group 28d9de20",
    "0/0 Group e9614fa4",
@@ -10281,30 +10281,30 @@
    "0/0/7 Mesh 1552e3b6",
    "0/0/8 Mesh e751d3f2",
    "0/0/9 Mesh 901d9dd5",
-   "0/0/10 Mesh 902ff84d"
+   "0/0/10 Mesh f252f6db"
   ]
  },
  "model/kabar:merged": {
-  "hash": "f37e1e06",
+  "hash": "223bcf0d",
   "nodes": [
    "0 Group 28d9de20",
    "0/0 Mesh 392dcb80",
    "0/1 Mesh 8239a5b1",
    "0/2 Mesh 6181b464",
-   "0/3 Mesh a36e0a0f"
+   "0/3 Mesh 5ec65d0c"
   ]
  },
  "model/kabar:lod": {
-  "hash": "dc18b13",
+  "hash": "d0141a2d",
   "nodes": [
    "0 LOD ab95678a",
    "0/0 Group ae5069a2",
    "0/0/0 Mesh d4f9847d",
    "0/0/1 Mesh 1b7f6503",
    "0/0/2 Mesh 592a275d",
-   "0/0/3 Mesh d1903301",
+   "0/0/3 Mesh a20fe976",
    "0/1 Group 3a6ebde9",
-   "0/1/0 Mesh 7aa7ac84",
+   "0/1/0 Mesh ebb6792d",
    "0/1/1 Mesh 5a4c3ce1",
    "0/1/2 Mesh 987ab101",
    "0/2 Group 55dd014c"
@@ -10350,7 +10350,7 @@
   ]
  },
  "model/katana:lod": {
-  "hash": "1d9ed392",
+  "hash": "cc39e9a9",
   "nodes": [
    "0 LOD c5eb71ab",
    "0/0 Group dcc7df99",
@@ -10368,14 +10368,14 @@
    "0/0/11 Mesh 79e7222a",
    "0/0/12 Mesh 47e1a445",
    "0/1 Group e442aeba",
-   "0/1/0 Mesh ac9111c9",
+   "0/1/0 Mesh d3a446b9",
    "0/1/1 Mesh 95c4ee61",
-   "0/1/2 Mesh f874ccb0",
+   "0/1/2 Mesh d4ba6517",
    "0/2 Group 55dd014c"
   ]
  },
  "model/brass_knuckles": {
-  "hash": "36a25681",
+  "hash": "e610b78e",
   "nodes": [
    "0 Group 59b5b568",
    "0/0 Group d2c3c3ae",
@@ -10385,26 +10385,26 @@
    "0/0/3 Mesh 1b92467f",
    "0/0/4 Mesh f363b085",
    "0/0/5 Mesh bb6cfc62",
-   "0/0/6 Mesh 1d1abf7c"
+   "0/0/6 Mesh d5839bcd"
   ]
  },
  "model/brass_knuckles:merged": {
-  "hash": "6dd227b1",
+  "hash": "c0093620",
   "nodes": [
    "0 Group 59b5b568",
-   "0/0 Mesh 6e2e138a"
+   "0/0 Mesh 37b0f0b"
   ]
  },
  "model/brass_knuckles:lod": {
-  "hash": "2f8b769",
+  "hash": "260f2dd0",
   "nodes": [
    "0 LOD 5f8f6879",
    "0/0 Group d6e7d39c",
-   "0/0/0 Mesh 219aa46a",
+   "0/0/0 Mesh fb577f9f",
    "0/1 Group 12ced740",
-   "0/1/0 Mesh 2f698666",
+   "0/1/0 Mesh 6756ee71",
    "0/1/1 Mesh b0cb6b58",
-   "0/1/2 Mesh 8a8793b",
+   "0/1/2 Mesh fcd37fee",
    "0/2 Group 55dd014c"
   ]
  },

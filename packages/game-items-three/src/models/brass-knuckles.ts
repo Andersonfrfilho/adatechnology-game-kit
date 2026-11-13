@@ -15,6 +15,7 @@ export const brassKnuckles: ItemModelBuilder = ({ mesh, bx, cyl, lathe, G, metal
     ...RINGS.map((x, index) => mesh(ring(index === 0 || index === 3 ? 0.118 : 0.135), brass, [x, 0, 0.1])),
     mesh(bx(1.3, 0.1, 0.07), brass, [0, 0.05, 0.1]),
     mesh(cyl(0.068, 0.068, 1.16, 8), brass, [0, 0.07, -0.2], [0, 0, R]),
-    mesh(bx(1.1, 0.1, 0.3), brass, [0, 0.05, -0.05]),
+    // the plate behind the bar is 2 mm thinner on each face, so its top and bottom never share a plane with the bar's
+    mesh(bx(1.1, 0.05, 0.3), brass, [0, 0.05, -0.05]),
   )
 }
