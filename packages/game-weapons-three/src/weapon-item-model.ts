@@ -35,9 +35,9 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   ['claw_hammer', { item: 'hammer' }],
   // a shovel is held in both hands: the right on the grip at the end of the shaft, the left 30 cm down the shaft (within the arm's reach from the hold)
   ['shovel', { grips: { handle: -0.46, support: -0.19 } }],
-  // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle (the left 11 cm behind the right); the brass knuckles lie with the ring row across the strike
+  // the blade of the KA-BAR and of the katana is the narrow end of the lying item, so the head is turned to +x; the katana is held with both hands on its long handle (the left 11 cm behind the right: 0.1122 of its 0.98 m); the brass knuckles lie with the ring row across the strike
   ['kabar', { flip: true }],
-  ['katana', { flip: true, grips: { handle: -0.35, support: -0.46 } }],
+  ['katana', { flip: true, grips: { handle: -0.35, support: -0.4622 } }],
   ['brass_knuckles', { turn: 1, roll: 1, grips: { handle: -0.35, handleAt: [-0.045, 0.03] } }],
 ]
 
