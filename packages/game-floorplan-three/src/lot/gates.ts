@@ -43,7 +43,7 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         const zc = v + sd * 0.19, tail = 0.9, dirx = slideDirection(g, lt), D = dirx * g.width;
         const x0 = dirx > 0 ? a + 0.05 : a + 0.05 - tail, x1 = dirx > 0 ? b - 0.05 + tail : b - 0.05;
         const r0 = Math.min(x0, x0 + D) - 0.1, r1 = Math.max(x1, x1 + D) + 0.1;
-        bx('metal', r0, 0, zc - 0.05, r1, 0.04, zc + 0.05, 0x6a6a6e); bx('plain', r0, 0.04, zc - 0.012, r1, shared.ctx.visorScene ? 0.05 : 0.053, zc + 0.012, 0x2a2a2c); /* (the track's top 3 mm over the path's outside the Visor's scene) */
+        bx('metal', r0, 0, zc - 0.05, r1, 0.04, zc + 0.05, 0x6a6a6e); bx('plain', r0, 0.04, zc - 0.012, r1, shared.ctx.visorScene ? 0.05 : 0.047, zc + 0.012, 0x2a2a2c); /* (the track's top 3 mm under the path's outside the Visor's scene, 5 mm under the leaf) */
         bx('metal', r0, h + 0.02, zc - 0.05, r1, h + 0.09, zc + 0.05, 0x5a5a5e);
         for (const x of [r0 + 0.05, r1 - 0.05, dirx > 0 ? b + 0.1 : a - 0.1]) bx('metal', x - 0.025, 0, zc - 0.04, x + 0.025, h + 0.09, zc + 0.04, 0x5a5a5e);
         // leaf (captured by gatesInteractive: part 'ix:gate:<id>' with pose by type 'sliding_gate')
