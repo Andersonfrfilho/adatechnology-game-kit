@@ -7,7 +7,7 @@ import { bowl } from './bowl-energy'
 const SEEDS = Array.from({ length: Number(process.env.BOWL_SEEDS ?? 16) }, (_, i) => i + 1)
 
 describe('deepening bowl, energy criteria (DECISION-fable §2)', () => {
-  for (const dt of [0.05, 1 / 60]) {
+  for (const dt of [0.05, 1 / 60].filter((d) => !process.env.BOWL_DT || Math.abs(d - Number(process.env.BOWL_DT)) < 1e-3)) {
     it.each(SEEDS)(`C1-C4 (dt ${dt.toFixed(3)}, seed %i)`, { timeout: 60000 }, (seed) => {
       const r = bowl(seed, dt)
       const line = JSON.stringify({ solver: process.env.PIECE_SOLVER ?? 'jolt', dt: Number(dt.toFixed(4)), seed, ...r })

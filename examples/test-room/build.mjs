@@ -81,6 +81,35 @@ const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-
 //    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
 const fullHtml = page(await bundleMain(true), true)
 const at = fullHtml.lastIndexOf('</body>')
+// spike: the room's pieces step on Jolt (the wasm loads before the room's bundle runs, so no piece system starts on the kit's solver); ?solver=own keeps the kit's
+const joltBoot = (
+  await esbuild.build({
+    stdin: {
+      contents: `import { createJoltEngine } from '@adatechnology/game-physics-jolt'
+window.__joltBoot = () => /[?&]solver=own(&|$)/.test(location.search) ? Promise.resolve() : createJoltEngine().then((engine) => {
+  const alive = []
+  window.__PIECE_PHYSICS__ = () => {
+    if (alive.length >= 3) alive.shift().dispose()
+    const world = engine.createWorld({ fixedStep: 1 / 120, sleepAfter: 0.5, sleepSpeed: 0.08, penetrationSlop: 0.002, maxBodies: 8192 })
+    alive.push(world)
+    window.__joltWorld = world
+    return world
+  }
+})`,
+      resolveDir: here,
+      loader: 'js',
+    },
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2020',
+    minify: true,
+    external: ['node:module'],
+    alias: { '@adatechnology/game-physics-jolt': join(pkg('game-physics-jolt'), 'src/index.ts'), '@adatechnology/game-physics': join(pkg('game-physics'), 'src/index.ts') },
+  })
+).outputFiles[0].text
+console.log(`jolt boot: ${joltBoot.length} bytes`)
 const boot = `(function () {
   var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt'
   var title = lang === 'en' ? 'Loading the test room…' : 'Carregando a sala de testes…'
@@ -112,6 +141,8 @@ const boot = `(function () {
     throw error
   }
   paint().then(paint).then(function () {
+    return window.__joltBoot && window.__joltBoot()
+  }).then(function () {
     run('room-bundle')
     task = window.__bootRoom.loading.begin(title, { total: 100, opaque: true })
     task.step(lang === 'en' ? 'Starting…' : 'Iniciando…', 0)
@@ -160,7 +191,7 @@ const SFX_CATEGORIES = new Set(['armas'])
 const sfxSounds = (sfxManifest?.sounds ?? []).filter((/** @type {{ category: string; }} */ sound) => SFX_CATEGORIES.has(sound.category))
 const sfxFiles = Object.fromEntries(sfxSounds.flatMap((sound) => Object.values(sound.layers).flat()).map((/** @type {{ file: string; }} */ entry) => [entry.file, `data:audio/ogg;base64,${readFileSync(join(sfxDir, entry.file)).toString('base64')}`]))
 const sfxScript = sfxManifest ? `<script>window.__kitSfx=${safe(JSON.stringify({ manifest: { ...sfxManifest, sounds: sfxSounds }, files: sfxFiles }))}</script>\n` : ''
-const html = `${fullHtml.slice(0, at)}${sfxScript}<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`
+const html = `${fullHtml.slice(0, at)}${sfxScript}<script>${safe(joltBoot)}</script>\n<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`
 
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)

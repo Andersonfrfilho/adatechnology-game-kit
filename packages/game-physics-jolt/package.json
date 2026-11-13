@@ -12,7 +12,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
