@@ -77,6 +77,8 @@ export const STRUCTURAL_VIOLATION = {
   PILLAR_ON_INFILL: 'PILLAR_ON_INFILL',
   /** A rafter or truss that runs more than `MAX_ROOF_OVERHANG` past the last thing that holds it: a timber cantilever. */
   ROOF_OVERHANG_TOO_LONG: 'ROOF_OVERHANG_TOO_LONG',
+  /** A concrete slab panel thinner than its loads ask (its finishes, live load and the roof on struts on it): deflection within span/250 and bending, NBR 6118. */
+  SLAB_UNDERSIZED: 'SLAB_UNDERSIZED',
   /** Two structural parts, not joined to each other, that occupy the same volume beyond a joint. */
   OVERLAPPING_PARTS: 'OVERLAPPING_PARTS',
 } as const

@@ -18,8 +18,8 @@ import { addWalls } from './walls'
 import { WALL_PILLAR_SPACING } from './wall-pillars'
 import { addBearingCores } from '../beam-bearings'
 import { resolveConstruction } from '../construction'
-import { sizeFootings } from '../footing'
-import { loadsAtRest } from '../loads'
+import { isFooting, sizeFootings } from '../footing'
+import { loadFlowsAtRest } from '../loads'
 import { applySlabPanels } from '../slab-panels/apply'
 import { resolveSlabPanels } from '../slab-panels/options'
 import { applyPanels } from '../wall-detail'
@@ -39,11 +39,11 @@ function buildFloors(context: BuildContext): void {
  * bring the slabs down onto the pillars otherwise than a whole slab does. A footing only grows.
  */
 function sizeFootingsByFrame(structure: Structure): void {
-  if (!structure.parts.some((part) => part.id.startsWith('footing_pier_'))) return
+  if (!structure.parts.some((part) => isFooting(part, structure.supports))) return
   const panels = resolveSlabPanels(true)
   if (!panels) return
   const framed = applySlabPanels(applyPanels({ parts: structure.parts, supports: structure.supports }, structure, 'panels'), structure, panels)
-  sizeFootings(structure, { loads: loadsAtRest(framed.parts, framed.supports), ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })
+  sizeFootings(structure, { flows: loadFlowsAtRest(framed.parts, framed.supports).flows, ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })
 }
 
 const wallPillarSpacingOf = (options: StructureOptions): number => {

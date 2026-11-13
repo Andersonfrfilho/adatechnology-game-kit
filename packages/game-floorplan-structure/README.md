@@ -89,11 +89,14 @@ A concrete pillar on the soil away from the strip footings of the walls stands o
 `PILLAR_WITHOUT_FOUNDATION`), as the pillars of a unit's building base and the slab pillars do. A partition on an eave beam's line stops under its soffit;
 a beam between pillars built along its line through a member it is not joined to is `OVERLAPPING_PARTS`.
 
-Isolated footings are sized by load: A ≥ 1.05 N_k / σ_adm (`soilPressure`, kPa, default `ALLOWABLE_SOIL_PRESSURE` 200), never under 0.6 m, h ≥ (B − b)/3
+Every footing on the soil (a pillar's, a porch's, a crawl space's pier) is sized by the load that comes onto it: A ≥ 1.05 N_k / σ_adm (`soilPressure`, kPa, default `ALLOWABLE_SOIL_PRESSURE` 200), never under 0.6 m, h ≥ (B − b)/3
 (rigid footing), by the larger of the loads of the house with whole slabs and with its slabs framed (`SOIL_PRESSURE_EXCEEDED`). An eave post stands on a
 bond beam, a pillar or a concrete beam (or structural masonry), never on infill, else it goes down to the foundation (`PILLAR_ON_INFILL`). A rafter or truss
 running more than 1 m past what holds it over a slab bears on the slab through struts (pontaletes), so the slab takes the roof (`ROOF_OVERHANG_TOO_LONG`).
 A partition cut under a beam records it in `soffit`, and the house renderer draws it up to its structural top.
+Each slab panel is also as thick as its loads ask (`slab-design`: long-term deflection within span/250 and bending at x/d ≤ 0.45, C25, NBR 6118), with
+finishes 1 kN/m², live 2 (floor) or 0.5 (ceiling), and the roof on struts, each member's weight spread along it over the panels of its slab, with the roof's
+live load 0.5 kN/m² (`SLAB_UNDERSIZED`). In the kit's houses the span ratio still governs; a roof many times heavier makes the load govern.
 
 ## Structural masonry (NBR 16868)
 

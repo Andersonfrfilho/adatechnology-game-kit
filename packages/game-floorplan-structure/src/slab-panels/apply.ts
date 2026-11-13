@@ -2,6 +2,8 @@ import type { JointKind } from '@adatechnology/game-contracts'
 
 import { densityOf } from '../density'
 import { footingDraft, onStripFooting, sizeFootings } from '../footing'
+import { roofOn, roofOver, slabLoads, slabThicknessFor } from '../slab-design'
+import type { SlabLoads } from '../slab-design'
 import { round2, touches } from '../geometry'
 import { CONSTRUCTION_SYSTEMS } from '../registry'
 import { GROUND } from '../types'
@@ -34,7 +36,8 @@ const JAMB_CLEAR = 0.02
 type Interval = [number, number]
 
 const ceilTo = (value: number, step: number): number => Math.ceil(value / step - 1e-9) * step
-const isConcreteSlab = (part: StructurePart, material: string): boolean => part.role === 'slab' && part.material === material && SLAB_ID.test(part.id)
+/** A slab of the storeys that `applySlabPanels` cuts into panels and sizes (its panels carry its id in `slab`). */
+export const isConcreteSlab = (part: StructurePart, material: string): boolean => part.role === 'slab' && part.material === material && SLAB_ID.test(part.id)
 const isBondBeam = (part: StructurePart, material: string): boolean => part.role === 'beam' && part.beamKind === 'bond_beam' && part.material === material
 
 function merged(intervals: readonly Interval[]): Interval[] {
@@ -388,13 +391,15 @@ function groundOf(context: Context, below: string): Rect[] {
 }
 
 /** Thickness of the panels of a slab: what the most demanding of them asks (its short side over the ratio of how it spans), not under the minimum of the use. */
-function thicknessOf(leaves: readonly Rect[], roof: boolean, options: SlabPanelOptions): number {
+function thicknessOf(leaves: readonly Rect[], roof: boolean, options: SlabPanelOptions, loads?: (leaf: Rect) => SlabLoads): number {
   const asked = Math.max(...leaves.map((leaf) => {
     const short = Math.min(leaf[2] - leaf[0], leaf[3] - leaf[1])
     const long = Math.max(leaf[2] - leaf[0], leaf[3] - leaf[1])
     return short / (long >= 2 * short ? options.oneWayThicknessRatio : options.thicknessRatio)
   }))
-  return Math.max(roof ? options.roofMinThickness : options.floorMinThickness, ceilTo(asked, 0.01))
+  // and as thick as its loads ask (the roof on struts included, `slab-design`)
+  const carried = loads ? Math.max(...leaves.map((leaf) => slabThicknessFor(leaf, loads(leaf)))) : 0
+  return Math.max(roof ? options.roofMinThickness : options.floorMinThickness, ceilTo(asked, 0.01), carried)
 }
 
 const restThickness = (slab: StructurePart, thickness: number, roof: boolean): void => {
@@ -412,7 +417,8 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
   const footprint = slab.footprint ?? [slab.aabb]
   const kept = layout.leaves.filter((leaf) => shareInside(leaf, footprint) >= options.footprintShare)
   const leaves = kept.length ? kept : [slab.aabb]
-  const thickness = thicknessOf(leaves, roof, options)
+  const struts = roofOn(new Set([slab.id]), context)
+  const thickness = thicknessOf(leaves, roof, options, (leaf) => slabLoads(slab, (leaf[2] - leaf[0]) * (leaf[3] - leaf[1]), roofOver(leaf, leaves, struts)))
   if (leaves.length === 1 && layout.cuts.length === 0) {
     restThickness(slab, thickness, roof)
     context.panelsOf.set(slab.id, [slab])

@@ -36,7 +36,7 @@ export function validateStructure(structure: PlanStructure, options: ValidateStr
   const framed = applySlabPanels(built, structure, resolveSlabPanels(true)!)
   // a beam on structural masonry rests on the structure itself, not on infill
   const weak = structure.construction.walls.masonrySystem === 'structural' ? (): boolean => false : isMasonryWall
-  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak), ...memberViolations(framed, built, { isInfill: weak, soilPressure: options.soilPressure ?? structure.soilPressure })]
+  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak), ...memberViolations(framed, built, { isInfill: weak, soilPressure: options.soilPressure ?? structure.soilPressure, slabsFramed: framed !== built })]
   if (structure.construction.system !== 'masonry') return out
   if (structure.construction.walls.masonrySystem === 'structural')
     return [...out, ...structuralMasonryViolations(structure, { framed, rooms: options.rooms ?? [] }), ...openingViolations(structure, built.parts, options.doors ?? [])]

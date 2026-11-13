@@ -1,5 +1,7 @@
-import { ALLOWABLE_SOIL_PRESSURE, footingColumnOf, footingLoad, onStripFooting } from '../footing'
-import { loadsAtRest } from '../loads'
+import { ALLOWABLE_SOIL_PRESSURE, footingLoad, isFooting, onStripFooting } from '../footing'
+import { loadFlowsAtRest } from '../loads'
+import { isConcreteSlab } from '../slab-panels/apply'
+import { roofOn, roofOver, slabLoads, slabThicknessFor } from '../slab-design'
 import { eaveOverhang, MAX_ROOF_OVERHANG } from '../roof-overhang'
 import { GROUND } from '../types'
 import type { Structure, StructurePart, Support } from '../types'
@@ -115,16 +117,14 @@ function overlapViolations(structure: Pick<Structure, 'parts' | 'supports'>): St
   return out
 }
 
-/** Each isolated footing of a pillar (`footingDraft`) on the soil within the allowable pressure: 1.05 N_k / A ≤ σ_adm, N_k what the columns on it bring down. */
+/** Each footing on the soil (`isFooting`: a pillar's, a porch's, a crawl space's pier) within the allowable pressure: 1.05 N_k / A ≤ σ_adm. */
 function soilPressureViolations(structure: Pick<Structure, 'parts' | 'supports'>, allowable: number): StructuralViolation[] {
-  const onSoil = new Set(structure.supports.filter((s) => s.on === GROUND && s.bears !== false).map((s) => s.part))
-  const footings = structure.parts.filter((p) => onSoil.has(p.id) && footingColumnOf(p, structure.supports) !== undefined)
+  const footings = structure.parts.filter((p) => isFooting(p, structure.supports))
   if (!footings.length) return []
-  const loads = loadsAtRest(structure.parts, structure.supports)
+  const { flows } = loadFlowsAtRest(structure.parts, structure.supports)
   const out: StructuralViolation[] = []
   for (const footing of footings) {
-    const columns = structure.supports.filter((s) => s.on === footing.id && s.bears !== false).map((s) => s.part)
-    const load = columns.reduce((sum, column) => sum + footingLoad(loads, column), 0)
+    const load = footingLoad(flows, footing.id)
     const pressure = load / ((footing.aabb[2] - footing.aabb[0]) * (footing.aabb[3] - footing.aabb[1]))
     if (pressure > allowable + 0.5)
       out.push({ code: STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED, part: footing.id, message: `${footing.id} presses ${pressure.toFixed(0)} kPa on the soil under ${load.toFixed(0)} kN: the soil takes ${allowable} kPa` })
@@ -163,10 +163,35 @@ function overhangViolations(structure: Pick<Structure, 'parts' | 'supports'>): S
   return out
 }
 
+/**
+ * Each concrete slab panel as thick as its loads ask (`slabThicknessFor`): its finishes, its live load and the roof standing on it on struts, each member's share
+ * spread along it over the panels of its slab. A slab on the soil (a raft) or laid on another slab is not a spanning panel.
+ */
+function slabViolations(structure: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
+  const slabs = new Set(structure.parts.filter((p) => p.role === 'slab').map((p) => p.id))
+  // (a slab on the soil, or one laid on another slab, a balcony's floor on the slab under it, spans nothing)
+  const onSoil = new Set(structure.supports.filter((s) => s.on === GROUND || slabs.has(s.on)).map((s) => s.part))
+  const groups = new Map<string, StructurePart[]>()
+  for (const slab of structure.parts.filter((p) => p.role === 'slab' && (p.slab !== undefined || isConcreteSlab(p, 'concrete')) && !onSoil.has(p.id))) groups.set(slab.slab ?? slab.id, [...(groups.get(slab.slab ?? slab.id) ?? []), slab])
+  const out: StructuralViolation[] = []
+  for (const [id, panels] of groups) {
+    const struts = roofOn(new Set(panels.map((p) => p.id)), structure)
+    for (const panel of panels) {
+      const loads = slabLoads({ id, ...(panel.cover ? { cover: true } : {}) }, (panel.aabb[2] - panel.aabb[0]) * (panel.aabb[3] - panel.aabb[1]), roofOver(panel.aabb, panels.map((p) => p.aabb), struts))
+      const needed = slabThicknessFor(panel.aabb, loads)
+      if (panel.y1 - panel.y0 < needed - EPSILON)
+        out.push({ code: STRUCTURAL_VIOLATION.SLAB_UNDERSIZED, part: panel.id, message: `${panel.id} is ${(panel.y1 - panel.y0).toFixed(2)} m thick: its loads (${loads.dead.toFixed(1)} kN/m² dead besides its weight, ${loads.live.toFixed(1)} live) ask ${needed.toFixed(2)} m` })
+    }
+  }
+  return out
+}
+
 /** What the member checks read besides the structure: which parts are infill masonry, and the soil's allowable pressure (kPa). */
 export interface MemberCheckOptions {
   readonly isInfill: (part: StructurePart) => boolean
   readonly soilPressure?: number
+  /** Whether the slabs were cut into panels and sized (`applySlabPanels` ran): a tall building keeps whole slabs on its frame, sized as a frame. */
+  readonly slabsFramed?: boolean
 }
 
 /**
@@ -177,6 +202,6 @@ export interface MemberCheckOptions {
 export function memberViolations(framed: Pick<Structure, 'parts' | 'supports'>, built: Pick<Structure, 'parts' | 'supports'>, options: MemberCheckOptions): StructuralViolation[] {
   return [
     ...slendernessViolations(framed), ...foundationViolations(framed), ...soilPressureViolations(framed, options.soilPressure ?? ALLOWABLE_SOIL_PRESSURE),
-    ...bearingViolations(framed, options.isInfill), ...singleSupportViolations(framed), ...overhangViolations(framed), ...overlapViolations(built),
+    ...bearingViolations(framed, options.isInfill), ...singleSupportViolations(framed), ...overhangViolations(framed), ...(options.slabsFramed ? slabViolations(framed) : []), ...overlapViolations(built),
   ]
 }

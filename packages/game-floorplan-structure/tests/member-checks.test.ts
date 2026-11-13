@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { GROUND, STRUCTURAL_VIOLATION, validateStructure } from '../src'
+import { register as registerRural } from '../../game-floorplan-rural/src'
+import { applyPanels, applySlabPanels, GROUND, resolveSlabPanels, STRUCTURAL_VIOLATION, validateStructure } from '../src'
+import { FOOTING_DEPTH, FOOTING_SIDE } from '../src/footing'
+import { slabLoads, slabThicknessFor } from '../src/slab-design'
+import { memberViolations } from '../src/validate/members'
 import type { StructuredResult, StructurePart, Support } from '../src'
 import { engine } from './support'
+
+registerRural(engine)
 
 const generate = (template: string, options: Record<string, unknown> = {}): StructuredResult => engine.generate(template, { seed: 1, ...options }) as StructuredResult
 const codesOf = (result: StructuredResult, structure = result.structure): string[] => validateStructure(structure, { doors: result.doors }).map((v) => v.code)
@@ -137,5 +143,54 @@ describe('footings sized by their load, posts on what carries, roofs held at the
       const loose = { ...result.structure, supports: supports.filter((s) => !strutted.includes(s)) }
       expect(codesOf(result, loose)).toContain(STRUCTURAL_VIOLATION.ROOF_OVERHANG_TOO_LONG)
     }
+  })
+})
+
+describe('every footing by its load, every slab by what it carries', () => {
+  it('the porch footings of the rural houses are sized by load (at least 0.6 m, rigid depth) and a smaller one is reported', () => {
+    for (const template of ['wood_frame_house', 'a_frame_chalet', 'log_cabin']) {
+      const result = generate(template)
+      const footings = result.structure.parts.filter((p) => p.id.startsWith('porch_footing_'))
+      expect(footings.length, template).toBeGreaterThan(0)
+      for (const footing of footings) {
+        expect(footing.aabb[2] - footing.aabb[0], footing.id).toBeGreaterThanOrEqual(FOOTING_SIDE - 1e-6)
+        expect(footing.y1 - footing.y0, footing.id).toBeGreaterThanOrEqual(FOOTING_DEPTH - 1e-6)
+      }
+      expect(codesOf(result), template).toEqual([])
+      // the same footings on a soil that takes 5 kPa
+      expect(validateStructure(result.structure, { doors: result.doors, soilPressure: 5 }).filter((v) => v.part.startsWith('porch_footing_')).map((v) => v.code), template).toContain(STRUCTURAL_VIOLATION.SOIL_PRESSURE_EXCEEDED)
+    }
+  })
+
+  it('a slab panel is as thick as its loads ask, the roof on struts included', () => {
+    const panel: [number, number, number, number] = [0, 0, 4.5, 4.5]
+    const bare = slabThicknessFor(panel, slabLoads({ id: 'slab_ceiling' }, 20, { load: 0, carried: false }))
+    const roofed = slabThicknessFor(panel, slabLoads({ id: 'slab_ceiling' }, 20, { load: 160, carried: true }))
+    expect(roofed).toBeGreaterThan(bare)
+  })
+
+  it('high_end_contemporary {floors: 3} under a roof thirty times its weight (the load of a heavy covering): its ceiling slab is sized for the roof on its struts, and sized without it is reported', () => {
+    const result = generate('high_end_contemporary', { floors: 3 })
+    const heavy = (parts: readonly StructurePart[]): StructurePart[] => parts.map((p) => (/^(rafter|truss)/.test(p.id) || p.role === 'roof' ? { ...p, mass: p.mass * 30 } : p))
+    const structure = { ...result.structure, parts: heavy(result.structure.parts) }
+    const struts = structure.supports.filter((s) => /^(rafter|truss)/.test(s.part) && structure.parts.find((p) => p.id === s.on)?.role === 'slab')
+    expect(struts.length).toBeGreaterThan(0)
+    const slab = struts[0]!.on
+    const panels = resolveSlabPanels(true)!
+    const built = applyPanels({ parts: structure.parts, supports: structure.supports }, structure, 'panels')
+    const thicknessOf = (framed: { parts: readonly StructurePart[] }): number => Math.min(...framed.parts.filter((p) => p.id === slab || p.slab === slab).map((p) => p.y1 - p.y0))
+    // sized with the roof on it: nothing to report
+    const sized = applySlabPanels(built, structure, panels)
+    expect(memberViolations(sized, built, { isInfill: () => false, slabsFramed: true }).filter((v) => v.code === STRUCTURAL_VIOLATION.SLAB_UNDERSIZED)).toEqual([])
+    // sized without the roof (the struts left out of the sizing), then the roof put back on it
+    const isStrut = (s: Support): boolean => struts.some((t) => t.part === s.part && t.on === s.on)
+    const unloaded = applySlabPanels({ parts: built.parts, supports: built.supports.filter((s) => !isStrut(s)) }, { ...structure, supports: structure.supports.filter((s) => !isStrut(s)) }, panels)
+    expect(thicknessOf(unloaded)).toBeLessThan(thicknessOf(sized))
+    const onPanels = unloaded.parts.filter((p) => p.role === 'slab' && (p.id === slab || p.slab === slab))
+    const meets = (a: readonly number[], b: readonly number[]): boolean => a[0]! < b[2]! && a[2]! > b[0]! && a[1]! < b[3]! && a[3]! > b[1]!
+    const back = struts.flatMap((s) => onPanels.filter((p) => meets(p.aabb, structure.parts.find((q) => q.id === s.part)!.aabb)).map((p) => ({ ...s, on: p.id })))
+    expect(back.length).toBeGreaterThan(0)
+    const reported = memberViolations({ parts: unloaded.parts, supports: [...unloaded.supports, ...back] }, built, { isInfill: () => false, slabsFramed: true }).filter((v) => v.code === STRUCTURAL_VIOLATION.SLAB_UNDERSIZED)
+    expect(reported.length).toBeGreaterThan(0)
   })
 })
