@@ -140,6 +140,10 @@ export interface Chase {
  * 20 mm conduit or a 25 mm pipe set 14 mm under the face of a 14 cm unit leaves 5.5 cm of it to the centre line, the mortar 5.04).
  */
 const MORTAR_BACKING = 0.72
+/** How far inside a chase's edges the mortar is cut, metres: clear of the units' ends at the chase's edge (the side of a box 3 mm in from it faces the other way). */
+const MORTAR_CHASE_INSET = 0.004
+/** The mortar is cut only by a chase this much deeper than its face (a box): a run's shallow chase stops at it, as it always has. */
+const DEEP_CHASE = 0.01
 /** How far a chase's bottom keeps from the plane of the mortar behind the units, metres. */
 const CHASE_CLEAR_OF_MORTAR = 0.005
 
@@ -177,31 +181,31 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   const box = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number, shift = 0): void =>
     batch.add(wall.alongU ? [a0, y0, wall.line + shift - t / 2, a1, y1, wall.line + shift + t / 2] : [wall.line + shift - t / 2, y0, a0, wall.line + shift + t / 2, y1, a1])
   /** A unit laid where the chases cross it thinner on their face, by their depth: the run lies in the cut, never in the brick. */
-  const chased = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number): void => {
+  const chased = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number, inset = 0): void => {
     // a chase cuts a unit only where it reaches into it: its bottom inside the unit's half thickness
     // a chase edge on the end of the mortar behind a wall piece's end unit (`MORTAR_INSET` in from it) would put the unit's split on that plane: the chase
     // grows past it
     const clearOfMortarEnd = (x: number, grow: 1 | -1): number => [a0 + MORTAR_INSET, a1 - MORTAR_INSET].reduce((at, end) => (Math.abs(at - end) < CHASE_CLEAR_OF_MORTAR ? end + grow * CHASE_CLEAR_OF_MORTAR : at), x)
-    const crossing = (layout.chases ?? []).map((c) => ({ ...c, a0: clearOfMortarEnd(c.a0, -1), a1: clearOfMortarEnd(c.a1, 1) })).filter((c) => c.a1 > a0 && c.a0 < a1 && c.y1 > y0 && c.y0 < y1 && c.back < t / 2)
+    const crossing = (layout.chases ?? []).map((c) => (inset ? { ...c, a0: c.a0 + inset, a1: c.a1 - inset, y0: c.y0 + inset, y1: c.y1 - inset } : { ...c, a0: clearOfMortarEnd(c.a0, -1), a1: clearOfMortarEnd(c.a1, 1) })).filter((c) => c.a1 > a0 && c.a0 < a1 && c.y1 > y0 && c.y0 < y1 && c.back < t / 2 - (inset ? DEEP_CHASE : 0))
     if (!crossing.length) return box(batch, a0, y0, a1, y1, t)
     const cuts = [...new Set([a0, a1, ...crossing.flatMap((c) => [c.a0, c.a1]).filter((x) => x > a0 && x < a1)])].sort((p, q) => p - q)
     for (let k = 0; k + 1 < cuts.length; k++) {
       const p0 = cuts[k]!, p1 = cuts[k + 1]!, mid = (p0 + p1) / 2
       const here = crossing.filter((c) => c.a0 <= mid && c.a1 >= mid)
       if (!here.length) { box(batch, p0, y0, p1, y1, t); continue }
-      const deep = here.reduce((m, c) => (c.back < m.back ? c : m))
-      // the chase's bottom never on the plane of the mortar behind the units: near it, the cut goes on past it
+      // the unit is split at every chase's ends over its height; each band is cut by the deepest chase over it (a box's chase with a run's going up from it)
       const mortar = (coreWidthOf(th, layout.unitId) * MORTAR_BACKING) / 2
-      const back = Math.abs(deep.back - mortar) < CHASE_CLEAR_OF_MORTAR ? mortar - CHASE_CLEAR_OF_MORTAR : deep.back
-      const depth = t / 2 - back
-      // where the chase covers only part of the unit's height the unit is split there too
-      const ys = [...new Set([y0, y1, Math.max(y0, deep.y0), Math.min(y1, deep.y1)])].sort((p, q) => p - q)
+      const ys = [...new Set([y0, y1, ...here.flatMap((c) => [Math.max(y0, c.y0), Math.min(y1, c.y1)])])].sort((p, q) => p - q)
       for (let j = 0; j + 1 < ys.length; j++) {
         const q0 = ys[j]!, q1 = ys[j + 1]!
         if (q1 - q0 < 1e-4) continue
-        const inChase = q0 >= deep.y0 - 1e-6 && q1 <= deep.y1 + 1e-6
-        if (inChase) box(batch, p0, q0, p1, q1, t - depth, -deep.side * depth / 2)
-        else box(batch, p0, q0, p1, q1, t)
+        const over = here.filter((c) => q0 >= c.y0 - 1e-6 && q1 <= c.y1 + 1e-6)
+        if (!over.length) { box(batch, p0, q0, p1, q1, t); continue }
+        const deep = over.reduce((m, c) => (c.back < m.back ? c : m))
+        // the chase's bottom never on the plane of the mortar behind the units: near it, the cut goes on past it
+        const back = Math.abs(deep.back - mortar) < CHASE_CLEAR_OF_MORTAR ? mortar - CHASE_CLEAR_OF_MORTAR : deep.back
+        const depth = t / 2 - (back - inset) // the mortar a little deeper than the units: its bottom never on theirs
+        box(batch, p0, q0, p1, q1, t - depth, -deep.side * depth / 2)
       }
     }
   }
@@ -239,7 +243,8 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   // the bricks of a bare wall: the units of the catalog, within the finished wall less its render each side (`coreWidthOf`), the width of the bond beam and
   // lintels cast in it
   const coreTh = coreWidthOf(th, unitId)
-  for (const r of slivers) box(batches.mortar, r.a0 + SLIVER_CLEAR, r.y0 + SLIVER_CLEAR, r.a1 - SLIVER_CLEAR, r.y1 - SLIVER_CLEAR, coreTh * 0.98)
+  // a sliver is cut by the chases that cross it as a unit is (a box set in the wall beside a pillar), a little inside their edges: its ends never on the units'
+  for (const r of slivers) chased(batches.mortar, r.a0 + SLIVER_CLEAR, r.y0 + SLIVER_CLEAR, r.a1 - SLIVER_CLEAR, r.y1 - SLIVER_CLEAR, coreTh * 0.98, MORTAR_CHASE_INSET)
   // laid as the structure lays it (`coursingOf`: the unit of the catalog, else the units of the wall's assembly the world breaks it into)
   const laid = coursingOf(unitId, getAssembly(part.assembly ?? (isBlock ? 'concrete_block_wall' : 'brick_wall_plastered'))?.units)!
   const coursing: Coursing = { courseH: laid.courseHeight, unitLen: laid.unitLength, joint: 0.012, courseBase }

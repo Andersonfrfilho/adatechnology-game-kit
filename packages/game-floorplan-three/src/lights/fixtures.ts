@@ -66,14 +66,14 @@ export function installLightsFixtures(K: Kernel, shared: Shared): void {
       emitter(() => K.e('emissive', 0, t - 0.165, 0, 0.0385, 0.088, color)); yLight = t - 0.22; range = 5.5;
     } else if (type === 'round') {
       K.c('plain', 0, t - 0.05, 0, 0.19, 0.05, white); K.c('plain', 0, t - 0.07, 0, 0.165, 0.02, offset);
-      emitter(() => K.c('emissive', 0, t - 0.073, 0, 0.1675, 0.023, color)); yLight = t - 0.2;
+      emitter(() => K.c('emissive', 0, t - 0.073, 0, 0.1675, 0.019, color)); yLight = t - 0.2; // its top 4 mm under the diffuser's, never on it
     } else if (type === 'square') {
       K.b('plain', 0, t - 0.05, 0, 0.36, 0.05, 0.36, white); K.b('plain', 0, t - 0.07, 0, 0.3, 0.02, 0.3, offset);
-      emitter(() => K.b('emissive', 0, t - 0.073, 0, 0.3025, 0.023, 0.3025, color)); yLight = t - 0.2;
+      emitter(() => K.b('emissive', 0, t - 0.073, 0, 0.3025, 0.019, 0.3025, color)); yLight = t - 0.2;
     } else if (type === 'recessed') {
       const o = 0.5;
       for (const [x, z] of [[-o, -o], [o, -o], [-o, o], [o, o]]) { K.c('metal', x, t - 0.014, z, 0.066, 0.014, 0xe2e2de); K.c('plain', x, t - 0.026, z, 0.05, 0.012, offset); }
-      emitter(() => { for (const [x, z] of [[-o, -o], [o, -o], [-o, o], [o, o]]) K.c('emissive', x, t - 0.028, z, 0.0505, 0.014, color); }); yLight = t - 0.3; range = 6.5;
+      emitter(() => { for (const [x, z] of [[-o, -o], [o, -o], [-o, o], [o, o]]) K.c('emissive', x, t - 0.028, z, 0.0505, 0.01, color); }); yLight = t - 0.3; range = 6.5;
     } else if (type === 'track') {
       const len = 1.1, angle = r() < 0.5 ? 0 : Math.PI / 2, c = Math.cos(angle), s = Math.sin(angle);
       K.b('metal', 0, t - 0.03, 0, angle ? 0.035 : len, 0.03, angle ? len : 0.035, 0x2a2a2c);
@@ -92,7 +92,7 @@ export function installLightsFixtures(K: Kernel, shared: Shared): void {
       emitter(() => { for (let i = 0; i < N; i++) { const an = i * Math.PI * 2 / N; K.e('emissive', Math.cos(an) * 0.28, yc + 0.07, Math.sin(an) * 0.28, 0.0155, 0.036, color); } }); yLight = yc - 0.05; range = 7;
     } else if (type === 'trough') {
       K.b('metal', 0, t - 0.045, 0, 1.2, 0.045, 0.1, 0xdcdcd8); K.b('plain', 0, t - 0.058, 0, 1.12, 0.013, 0.06, 0xe9e9e4);
-      emitter(() => K.b('emissive', 0, t - 0.0605, 0, 1.125, 0.0155, 0.0625, color)); yLight = t - 0.2; range = 7;
+      emitter(() => K.b('emissive', 0, t - 0.0605, 0, 1.125, 0.0115, 0.0625, color)); yLight = t - 0.2; range = 7;
     }
     if (M.on && A.light) A.light(Object.assign({}, M, { lampId: id }), 0, yLight, 0, color, range, 'ceiling_light');
   }

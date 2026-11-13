@@ -5,6 +5,9 @@ import { renderBlueprintDataUrl } from './blueprint-canvas.js'
 
 export { renderBlueprintDataUrl }
 
+/** The levelled dirt of the site: 3 mm under the compacted bed of the foundation (6 mm), shown with it at level 1, and 3 mm over the ground. */
+const BLUEPRINT_DIRT_TOP = 0.003
+
 function addBoxMesh(
   THREE: Three,
   parent: THREE_NS.Group,
@@ -182,7 +185,8 @@ export function buildBlueprintStage(
       const hw = (d.width || 0.8) / 2
       return [dAt - hw, dAt + hw] as const
     })
-    const wallSegs = cutSegments(a, b, holes)
+    // the line runs on to the outer faces of the walls it meets at either end, so a corner is closed by chalk and no end of a line lies on a room's mark
+    const wallSegs = cutSegments(a, b, holes).map(([s0, s1]): [number, number] => [s0 === a ? s0 - th / 2 : s0, s1 === b ? s1 + th / 2 : s1])
     for (const [s0, s1] of wallSegs) {
       if (alongU) addBoxMesh(THREE, group, s0, 0.006, L - th / 2, s1, 0.026, L + th / 2, chalkMat)
       else addBoxMesh(THREE, group, L - th / 2, 0.006, s0, L + th / 2, 0.026, s1, chalkMat)
@@ -215,14 +219,14 @@ export function buildBlueprintStage(
   }
 
   if (Number.isFinite(bx0) && Number.isFinite(bx1)) {
-    addBoxMesh(THREE, group, bx0 - 0.25, -0.06, bz0 - 0.25, bx1 + 0.25, 0.005, bz1 + 0.25, dirtMat)
+    addBoxMesh(THREE, group, bx0 - 0.25, -0.06, bz0 - 0.25, bx1 + 0.25, BLUEPRINT_DIRT_TOP, bz1 + 0.25, dirtMat)
     addBatterBoards(THREE, group, bx0, bz0, bx1, bz1, woodMat, cyanMat)
   }
   for (const ob of (plan.outbuildings || []).filter(Boolean)) {
     const [ou0, ov0, ou1, ov1] = ob.aabb
     const th = ob.thickness || 0.15
     const hw = th / 2
-    addBoxMesh(THREE, group, ou0 - 0.25, -0.06, ov0 - 0.25, ou1 + 0.25, 0.005, ov1 + 0.25, dirtMat)
+    addBoxMesh(THREE, group, ou0 - 0.25, -0.06, ov0 - 0.25, ou1 + 0.25, BLUEPRINT_DIRT_TOP, ov1 + 0.25, dirtMat)
     addBatterBoards(THREE, group, ou0, ov0, ou1, ov1, woodMat, cyanMat)
 
     // Structural concrete column / beam markers (pillarMat - red boxes) at the 4 corners

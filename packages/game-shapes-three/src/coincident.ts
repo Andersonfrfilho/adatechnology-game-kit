@@ -2,8 +2,8 @@ import type * as THREE_NS from 'three'
 import { coincidentFaces } from '@adatechnology/game-shapes'
 import type { CoincidentBatch, CoincidentFaceHit, CoincidentFacesOptions } from '@adatechnology/game-shapes'
 
-export { describeCoincidentFaces } from '@adatechnology/game-shapes'
-export type { CoincidentFaceHit } from '@adatechnology/game-shapes'
+export { GAME_DEPTH_PRECISION, depthResolution, describeCoincidentFaces } from '@adatechnology/game-shapes'
+export type { CoincidentFaceHit, DepthPrecision } from '@adatechnology/game-shapes'
 
 import { isMesh } from './guards'
 
@@ -28,10 +28,10 @@ function isDrawn(node: THREE_NS.Object3D, root: THREE_NS.Object3D): boolean {
   return true
 }
 
-/** A decal pushed forward with polygonOffset is meant to lie on its surface: the GPU orders it, it does not flicker. */
+/** A decal pushed forward with polygonOffset, or a transparent film that writes no depth (water, stains), lies on its surface by design: the GPU orders it, it does not flicker. */
 function isOffsetDecal(mesh: THREE_NS.Mesh): boolean {
   const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as Material[]
-  return materials.length > 0 && materials.every((m) => m?.polygonOffset === true)
+  return materials.length > 0 && materials.every((m) => m?.polygonOffset === true || (m?.transparent === true && m.depthWrite === false))
 }
 
 function labelOf(mesh: THREE_NS.Mesh, root: THREE_NS.Object3D): string {
@@ -60,19 +60,52 @@ function worldPositions(position: THREE_NS.BufferAttribute | THREE_NS.Interleave
   return out
 }
 
+/** three's DoubleSide. */
+const DOUBLE_SIDE = 2
+
+function isDoubleSided(mesh: THREE_NS.Mesh): boolean {
+  const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE_NS.Material[]
+  return materials.some((m) => m?.side === DOUBLE_SIDE)
+}
+
+type Shaded = THREE_NS.Material & { readonly vertexColors?: boolean; readonly map?: unknown; readonly normalMap?: unknown; readonly bumpMap?: unknown; readonly alphaMap?: unknown; readonly roughnessMap?: unknown }
+
+const attributeValues = (attribute: THREE_NS.BufferAttribute | THREE_NS.InterleavedBufferAttribute, size: number): number[] => {
+  const out = new Array<number>(attribute.count * size)
+  const read = [(i: number): number => attribute.getX(i), (i: number): number => attribute.getY(i), (i: number): number => attribute.getZ(i)]
+  for (let i = 0; i < attribute.count; i++) for (let k = 0; k < size; k++) out[i * size + k] = read[k]!(i)
+  return out
+}
+
+/** How the mesh is shaded, for the near mode's test of faces that draw the same pixels: one material (its identity), its vertex colours and, when textured, its UVs. */
+function lookOf(mesh: THREE_NS.Mesh, geometry: THREE_NS.BufferGeometry): Pick<CoincidentBatch, 'look' | 'colors' | 'uvs'> {
+  if (Array.isArray(mesh.material)) return {}
+  const material = mesh.material as Shaded
+  const color = material.vertexColors ? geometry.getAttribute('color') : undefined
+  const textured = Boolean(material.map || material.normalMap || material.bumpMap || material.alphaMap || material.roughnessMap)
+  const uv = textured ? geometry.getAttribute('uv') : undefined
+  if (textured && !uv) return {}
+  return { look: material.uuid, ...(color ? { colors: attributeValues(color, 3) } : {}), ...(uv ? { uvs: attributeValues(uv, 2) } : {}) }
+}
+
 function batchesOfMesh(mesh: THREE_NS.Mesh, label: string): CoincidentBatch[] {
+  const doubleSided = isDoubleSided(mesh)
   const geometry = mesh.geometry as THREE_NS.BufferGeometry | undefined
   const position = geometry?.getAttribute('position')
   if (!geometry || !position) return []
   const indices = geometry.index?.array
   const instanced = mesh as THREE_NS.InstancedMesh
-  if (!instanced.isInstancedMesh) return [{ positions: worldPositions(position, mesh.matrixWorld), ...(indices ? { indices } : {}), label }]
+  const look = lookOf(mesh, geometry)
+  if (!instanced.isInstancedMesh) return [{ positions: worldPositions(position, mesh.matrixWorld), ...(indices ? { indices } : {}), label, doubleSided, ...look }]
   const batches: CoincidentBatch[] = []
   const instance = mesh.matrixWorld.clone()
+  // instances of one colour each are told apart by it: an instance colour joins the look
+  const tint = instanced.instanceColor
   for (let i = 0; i < instanced.count; i++) {
     instanced.getMatrixAt(i, instance)
     instance.premultiply(mesh.matrixWorld)
-    batches.push({ positions: worldPositions(position, instance), ...(indices ? { indices } : {}), label: `${label} #${i}` })
+    const instanceLook = tint && look.look !== undefined ? { ...look, look: `${look.look}:${tint.getX(i)},${tint.getY(i)},${tint.getZ(i)}` } : look
+    batches.push({ positions: worldPositions(position, instance), ...(indices ? { indices } : {}), label: `${label} #${i}`, doubleSided, ...instanceLook })
   }
   return batches
 }
