@@ -169,6 +169,7 @@ export class JoltWorld implements PhysicsWorld {
   private readonly bpInterface: JoltNS.BroadPhaseLayerInterfaceTable
   private readonly objVsBp: JoltNS.ObjectVsBroadPhaseLayerFilterTable
   private disposed = false
+  private readonly asserts: JoltNS.AssertFailedHandlerJS
   /** Contacts each body has now (added minus removed), for `touching`. */
   private readonly touches = new Map<number, number>()
   private readonly ignored = new Set<number>()
@@ -206,6 +207,7 @@ export class JoltWorld implements PhysicsWorld {
     settings.mObjectVsBroadPhaseLayerFilter = this.objVsBp
     // the debug build reports its asserts here (the release build has none)
     const asserts = new J.AssertFailedHandlerJS()
+    this.asserts = asserts
     asserts.OnAssertFailed = (expression: number, message: number, file: number, line: number) => {
       const text = (ptr: number): string => {
         let out = ''
@@ -1324,6 +1326,11 @@ export class JoltWorld implements PhysicsWorld {
     return ok && !failed
   }
 
+  /** The whole wasm heap (bytes): fixed in this build, shared by every world. */
+  memoryTotal(): number {
+    return this.iface.sGetTotalMemory()
+  }
+
   memoryInUse(): number {
     return this.iface.sGetTotalMemory() - this.iface.sGetFreeMemory()
   }
@@ -1342,5 +1349,6 @@ export class JoltWorld implements PhysicsWorld {
     for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector]) J.destroy(o)
     J.destroy(this.iface)
     J.destroy(this.listener)
+    J.destroy(this.asserts)
   }
 }

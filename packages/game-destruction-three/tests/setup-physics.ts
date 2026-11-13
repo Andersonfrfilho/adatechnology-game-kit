@@ -1,3 +1,5 @@
+import { afterEach } from 'vitest'
+
 import type { PhysicsWorld } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 
@@ -22,4 +24,8 @@ if (process.env.PIECE_SOLVER !== 'own') {
     alive.push(world)
     return world
   }
+  // a test's worlds go with it (gate 0 B4): a world holds ~19 MB of the fixed 128 MB heap, so none outlives the test that made it
+  afterEach(() => {
+    for (const world of alive.splice(0)) world.dispose()
+  })
 }
