@@ -23,10 +23,10 @@ export function installHouseStairs(K: Kernel, shared: Shared): void {
       }
       const L = Math.hypot(Dr, H), al = Math.atan2(H, Dr), lzc = m.d / 2 - Dr / 2;
       for (const sd of [-1, 1]) {
-        boxL('wood', sd * (m.w / 2 - 0.02), y0 + H / 2 - 0.12, lzc, 0.04, 0.24, L, under, al);
-        const side = sd; // handrail on the side opposite the wall (local +x side) and on the other
-        boxL('metal', side * (m.w / 2 - 0.02), y0 + H / 2 + 0.9, lzc, 0.04, 0.04, L, 0x4a4a4e, al);
-        for (let k = 0; k <= 4; k++) { const t = k / 4, lz = m.d / 2 - t * Dr; boxL('metal', side * (m.w / 2 - 0.02), y0 + t * H + 0.45, lz, 0.03, 0.9, 0.03, 0x4a4a4e); }
+        const side = shared.ctx.visorScene ? 0.02 : 0.024; // (outside the Visor's scene the stringers and rails stand 4 mm inside the flight's sides: a wall's end lies there, the slab's opening 2 mm out)
+        boxL('wood', sd * (m.w / 2 - side), y0 + H / 2 - 0.12, lzc, 0.04, 0.24, L, under, al);
+        boxL('metal', sd * (m.w / 2 - side), y0 + H / 2 + 0.9, lzc, 0.04, 0.04, L, 0x4a4a4e, al); // handrail on the side opposite the wall (local +x side) and on the other
+        for (let k = 0; k <= 4; k++) { const t = k / 4, lz = m.d / 2 - t * Dr; boxL('metal', sd * (m.w / 2 - side), y0 + t * H + 0.45, lz, 0.03, 0.9, 0.03, 0x4a4a4e); }
       }
       cursor.pc = null; stairs.push({ m, f, to: vo.to, y0, H, rect: stairFootprint(m), landingPoint: (vo.LP || 0) / m.d });
     }
