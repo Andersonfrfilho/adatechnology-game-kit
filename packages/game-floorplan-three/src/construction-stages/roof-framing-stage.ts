@@ -106,7 +106,8 @@ function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly
     if (b - a < 0.1) return
     const top = k === 0 ? rafter.top + rafter.height : purlin.top
     const p0 = down(slope.point(s, a), top), p1 = down(slope.point(s, b), top)
-    const depth = Math.min(purlin.height, p0[1] - slabTop)
+    // (a plate cut short by the slab stops 3 mm over the slab's plane: its bottom lay on the ceiling's)
+    const depth = Math.min(purlin.height, p0[1] - slabTop - 0.003)
     if (depth < 0.02) return
     addTimber(batches.timber, p0, p1, purlin.width, depth)
     if (k === 0) return
