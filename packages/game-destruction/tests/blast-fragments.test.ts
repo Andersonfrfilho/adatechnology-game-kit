@@ -118,3 +118,21 @@ describe('the wave of a grenade', () => {
     expect(reflectedLoad(1.92, 2).impulse / reflectedLoad(0.24, 1).impulse).toBeCloseTo(2, 6)
   })
 })
+
+describe('the wave on a part given as the box of its slope', () => {
+  it('loads the solid share of the box: a 181 kg rafter in its 0.08 x 3.18 x 5.7 m box 2 m from a grenade keeps its bolts', () => {
+    // 181 kg of softwood (500 kg/m3) is 0.36 m3 in a 1.45 m3 box: the wave meets a quarter of the 18 m2 the box shows. With 86 Pa s reflected at 2 m, over the
+    // whole box (14.5 m2 loaded, a disc as wide as the standoff) J^2 / 2m = (86 x 14.5)^2 / 362 = 5.3 kJ go into the rafter and tear its bolt; over the wood,
+    // 4.5 m2, it is 0.41 kJ, and the joint keeps it
+    const world = createDestruction({ seed: 1 })
+    const id = world.add({
+      parts: [
+        { id: 'plate', material: 'concrete', shape: { kind: 'box', size: [6, 0.3, 0.3] }, position: [0, 2.5, 3], anchored: true },
+        { id: 'rafter', material: 'wood_soft', shape: { kind: 'box', size: [0.08, 3.18, 5.7] }, position: [0, 4.1, 0], mass: 181 },
+      ],
+      joints: [{ id: 'rafter~plate', a: 'rafter', b: 'plate', kind: 'bolt' }],
+    })
+    world.explode([2, 3, 0], m67.energy, 15, 'test', { charge: { tnt: m67.tnt! } })
+    expect(world.state(id)!.joints.find((joint) => joint.id === 'rafter~plate')!.open).toBe(false)
+  })
+})

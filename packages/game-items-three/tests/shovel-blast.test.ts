@@ -67,6 +67,43 @@ describe('a hand grenade beside the shovel of the goods catalog, lying on the fl
   })
 })
 
+describe('a hand grenade 0.5 m beside the broad side of the shovel, on the floor of the room', () => {
+  // The wave pushes what the shovel shows it, not the box round it: lying on its side the box is 1.1 x 0.07 m (0.077 m2), the handle and blade 0.9 x 0.035 +
+  // 0.3 x 0.012 = 0.035 m2 (a little more with the grip and the rivets). The reflected impulse at 0.5 m from 0.24 kg of TNT is 335 Pa s (Kinney and Graham), so
+  // 2 kg leave at 335 x 0.035 to 0.06 / 2 = 5.9 to 10 m/s, not the 13 m/s of the box; on a tile floor (mu 0.3 at least) that slides v^2 / (2 x 0.3 x 9.81)
+  it('throws it under 10 m/s, it comes to rest within the slide that speed allows, and what is left of its broken handle stays drawn where it slid to', () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), locale: 'en', translate: goodsText }))
+    const start: [number, number, number] = [0, 0.03, -2.2]
+    const { root, objectId } = room.spawn(`${ITEM_PREFIX}shovel`, start, 0)
+    for (let i = 0; i < 30; i++) room.update(1 / 60)
+    const piece = room.renderer.piece(objectId)!
+    room.blastAt('m67', [0, 0.05, -2.7])
+    room.update(1 / 60)
+    const speed = Math.hypot(...(piece.velocity as [number, number, number]))
+    expect(speed).toBeGreaterThan((335 * 0.035) / 2 - 1)
+    expect(speed).toBeLessThan(10)
+    for (let i = 0; i < 480; i++) room.update(1 / 60)
+    const travelled = Math.hypot(root.position.x - start[0], root.position.z - start[2])
+    expect(travelled).toBeLessThan((speed * speed) / (2 * 0.3 * 9.81) + 1)
+    expect(room.world.part(objectId, 'handle')?.status).toBe('broken')
+    // what is left of the handle (pieces of 3.5 cm ash 0.25 m long or more: debris with a body, which never fades) is drawn on the floor where it slid to, and is still
+    // there after the 12 s a chip lasts; each piece slides its own way, as far as its own speed takes it on the floor, within a few metres of the charge
+    for (let i = 0; i < 900; i++) room.update(1 / 60)
+    const handle: THREE.Vector3[] = []
+    room.scene.traverse((node) => {
+      if (node.name === 'fragment' && node.visible && Math.max(node.scale.x, node.scale.y, node.scale.z) >= 0.25) handle.push(node.position.clone())
+    })
+    expect(handle.length).toBeGreaterThanOrEqual(1)
+    for (const piece of handle) {
+      expect(piece.y).toBeLessThan(0.1)
+      expect(Math.hypot(piece.x, piece.z + 2.7)).toBeLessThan(12)
+    }
+  })
+})
+
 /** The M67 of `@adatechnology/game-weapons` (`explosives.json`): 0.24 kg of TNT, a 190 g steel body in 1000 pieces round 180 g of Composition B. */
 const M67_TNT = 0.24
 const M67_ENERGY = 200000

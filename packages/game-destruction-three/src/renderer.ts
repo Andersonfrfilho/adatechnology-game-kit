@@ -2111,7 +2111,7 @@ class Renderer implements DestructionRenderer {
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
       if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
-      const area = this.waveArea(pc.halfExtents, pc.root.quaternion, c, p)
+      const area = this.waveArea(pc.objectId, pc.halfExtents, pc.root.quaternion, c, p)
       const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) return
       const spread = Math.min(...pc.halfExtents)
@@ -2130,8 +2130,43 @@ class Renderer implements DestructionRenderer {
   }
 
   /** The area a body shows the blast, or undefined when the host gave the numbers of the game rule (`blastShove`): then the push is that rule, not the blast wave. */
-  private waveArea(half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number | undefined {
-    return this.o.blastShove === undefined ? this.areaFacing(half, quaternion, centre, point) : undefined
+  private waveArea(objectId: string, half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number | undefined {
+    if (this.o.blastShove !== undefined) return undefined
+    const box = this.areaFacing(half, quaternion, centre, point)
+    const shown = this.shownArea(objectId, point)
+    return shown === undefined ? box : Math.min(box, shown)
+  }
+
+  /**
+   * Square metres the drawn parts of an object still standing show a blast at `point`: the box of each mesh, turned as it is, seen from there. The box of the whole piece
+   * overstates a slender thing: a shovel lying on its side is a 1.1 x 0.07 m box (0.077 m2) but its handle and blade show 0.9 x 0.035 + 0.3 x 0.012 = 0.035 m2.
+   */
+  private shownArea(objectId: string, point: Vec3): number | undefined {
+    const b = this.bounds.get(objectId)
+    if (!b) return undefined
+    const seen = new Set<THREE_NS.Object3D>()
+    const size = new this.THREE.Vector3()
+    const scale = new this.THREE.Vector3()
+    const centre = new this.THREE.Vector3()
+    const turn = new this.THREE.Quaternion()
+    let area = 0
+    for (const pv of b.parts.values()) {
+      if (pv.gone !== 'none') continue
+      for (const { mesh } of pv.meshes) {
+        if (seen.has(mesh) || !mesh.visible) continue
+        seen.add(mesh)
+        const geometry = mesh.geometry
+        if (!geometry.boundingBox) geometry.computeBoundingBox()
+        const bounds = geometry.boundingBox
+        if (!bounds || bounds.isEmpty()) continue
+        mesh.updateWorldMatrix(true, false)
+        mesh.matrixWorld.decompose(centre, turn, scale)
+        bounds.getSize(size).multiply(scale)
+        bounds.getCenter(centre).applyMatrix4(mesh.matrixWorld)
+        area += this.areaFacing([Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], turn, centre, point)
+      }
+    }
+    return area > 0 ? area : undefined
   }
 
   /** Square metres a box of half sizes `half` (its own axes, turned by `quaternion`) at `centre` shows a blast at `point`: the sum of its faces seen from there, by the cosine of each. */
@@ -2176,7 +2211,7 @@ class Renderer implements DestructionRenderer {
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
       if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
-      const area = this.waveArea(half, b.root.quaternion, world, point)
+      const area = this.waveArea(b.id, half, b.root.quaternion, world, point)
       const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) continue
       const piece = this.makePiece(b.id, { mass })

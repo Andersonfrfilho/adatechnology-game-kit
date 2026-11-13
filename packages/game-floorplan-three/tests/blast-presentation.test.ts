@@ -12,8 +12,9 @@ const BLAST_RADIUS = 6
 // sha1 of the results, events and state of that blast on this house (with its ground beams and sill beams, its wood split by how it is made on a stream of its
 // own; its windows open in the wall, frames of real weight and the grille a steel piece of its own; a reinforced member out of the cut reach keeps a floor of its hit points; the infill panel in front of the charge comes down, ragged on its frame; the water tank on its platform under the tiles, its pillars on beams under the slab that bear on the bond beams or on pillars of their own, off the doorways; its outer baseboard on the sidewalk, the sidewalk and a threshold across each outside door): the solver gives the same whether it remembers the contact boxes of its parts or not
 // Recorded again with the wave read from Hopkinson-Cranz scaling and the P-I work (`waveWork`) instead of a tenth of the energy: 4 MJ is 4.8 kg of TNT 0.4 m from the
-// wall (Z = 0.24 m/kg^(1/3), 99 MPa and 1.7 kPa s reflected), and the panel in front of it still comes down (wall_0_0 broken, 46 parts broken, the upper walls over it and the rafters fall)
-const RECORDED_BLAST_OUTCOME = '19096694c16def2043d291a7f403006782488212'
+// wall (Z = 0.24 m/kg^(1/3), 99 MPa and 1.7 kPa s reflected), and the panel in front of it still comes down (wall_0_0 broken, 39 parts broken, the upper walls over it and two rafters fall). Recorded again
+// when the wave began to load only the solid share of a part's box (a sloped rafter or roof bay) and the doors and jambs to be held in their walls
+const RECORDED_BLAST_OUTCOME = 'bc44809c11beb200dfac54034fe47a9b14f9a424'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
