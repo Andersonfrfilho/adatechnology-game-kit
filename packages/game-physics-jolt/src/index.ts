@@ -407,8 +407,9 @@ export class JoltWorld implements PhysicsWorld {
     }
     const ref = J.wrapPointer(J.getPointer(ids.data()), J.BodyIDMemRef)
     const state = this.bi.AddBodiesPrepare(ref, descs.length)
-    this.bi.AddBodiesFinalize(ref, descs.length, state, J.EActivation_Activate)
+    this.bi.AddBodiesFinalize(ref, descs.length, state, J.EActivation_DontActivate)
     J.destroy(ids)
+    for (let i = 0; i < descs.length; i++) if (!descs[i].sleeping && descs[i].motion !== 'static') this.bi.ActivateBody(this.entry(out[i]).id)
     return out
   }
 
