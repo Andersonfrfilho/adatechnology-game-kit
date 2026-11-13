@@ -3,6 +3,7 @@ import { WALL_THICKNESS } from './geometry'
 import { MASONRY_SYSTEM, getMasonryUnit, wallThicknessOf } from './masonry-units'
 import type { MasonrySystem } from './masonry-units'
 import { ROOF_COVERINGS } from './registry'
+import { GROUT_BAR } from './structural-masonry/design'
 
 const SLAB_COVERING = 'slab'
 const PLASTERED_FINISHES = ['plaster', 'partial_plaster']
@@ -19,7 +20,7 @@ export function masonryConstruction(source: StructureSource, unitId?: string, ma
     system: 'masonry',
     walls: {
       material: masonry?.material ?? 'brick', cladding: PLASTERED_FINISHES.includes(finish) ? 'plaster' : null, finish, thickness: masonry ? wallThicknessOf(masonry) : WALL_THICKNESS,
-      ...(finish === 'exposed_block' || masonry?.family === 'concrete_block' ? { assembly: 'concrete_block_wall' } : {}), ...(masonry ? { unit: masonry.id, masonrySystem } : {}),
+      ...(finish === 'exposed_block' || masonry?.family === 'concrete_block' ? { assembly: 'concrete_block_wall' } : {}), ...(masonry ? { unit: masonry.id, masonrySystem } : {}), ...(masonry && masonrySystem === MASONRY_SYSTEM.STRUCTURAL ? { groutBar: GROUT_BAR } : {}),
     },
     floor: { material: budget ? 'concrete' : 'ceramic', finish: budget ? 'burnt_cement' : 'ceramic_tile' },
     roof: { material: ROOF_COVERINGS.get(covering)?.material ?? 'ceramic', covering, shape: flat ? 'slab' : 'gable', pitch: flat ? 0 : covering === 'colonial' ? 30 : 15, timber: 'wood_soft' },

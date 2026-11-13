@@ -18,7 +18,7 @@ export const STRUCTURAL_VIOLATION = {
   OPENING_WITHOUT_SILL: 'OPENING_WITHOUT_SILL',
   /** An exterior masonry wall with no bond beam (cinta de amarração) on top. */
   MISSING_BOND_BEAM: 'MISSING_BOND_BEAM',
-  /** A ground-floor masonry wall standing on the soil with no ground beam (viga baldrame) or foundation under it. */
+  /** A ground-floor masonry wall standing on the soil with no ground beam (viga baldrame) or foundation under it (structural masonry too: a strip footing or a raft). */
   MISSING_GROUND_BEAM: 'MISSING_GROUND_BEAM',
   /** A part with no load path down to the ground. */
   FLOATING_PART: 'FLOATING_PART',
@@ -36,18 +36,31 @@ export const STRUCTURAL_VIOLATION = {
   MISSING_PLASTER: 'MISSING_PLASTER',
   /** Structural masonry (NBR 16868) laid of a unit graded for sealing only. */
   UNIT_NOT_STRUCTURAL: 'UNIT_NOT_STRUCTURAL',
-  /** Structural masonry with no grouted core beside an opening. */
+  /** Structural masonry with no grouted core in the first cell beside a window jamb (inside the masonry, within a module of the jamb). */
   OPENING_WITHOUT_GROUT: 'OPENING_WITHOUT_GROUT',
   /** Structural masonry: a beam bears across the wall with no grouted core under it (NBR 16868, local bearing under a concentrated load). */
   CONCENTRATED_LOAD_WITHOUT_GROUT: 'CONCENTRATED_LOAD_WITHOUT_GROUT',
   /** A concrete pillar in a wall of structural masonry (the wall is the structure). */
   PILLAR_IN_STRUCTURAL_WALL: 'PILLAR_IN_STRUCTURAL_WALL',
-  /** A bearing wall of structural masonry taller than 24 times its thickness (NBR 16868). */
+  /** A bearing wall of structural masonry whose slenderness λ = h_ef / t_ef passes 24 (NBR 16868-1, unreinforced). */
   WALL_TOO_SLENDER: 'WALL_TOO_SLENDER',
-  /** A wall of structural masonry whose corners are off the module of its unit. */
+  /** Structural masonry off the coordination of its unit: a wall end or a window jamb off the module, or a sill or head off the courses. */
   OFF_MODULE: 'OFF_MODULE',
-  /** A wall of structural masonry carrying more at rest than the design strength of its masonry. */
+  /**
+   * A pier of structural masonry (a stretch between openings, or the whole wall without them) whose design load N_d = 1.4 (G + Q) passes f_d A Φ at its
+   * top (eccentricity of the slab) or f_d A R at mid-height (slenderness), A its gross area (NBR 16868-1, loads of NBR 6120).
+   */
   MASONRY_OVERSTRESSED: 'MASONRY_OVERSTRESSED',
+  /** Structural masonry laid of a unit with no channel (U) unit: its bond beams and lintels cannot be cast in a reinforced course of the wall. */
+  MISSING_CHANNEL_UNIT: 'MISSING_CHANNEL_UNIT',
+  /** Structural masonry whose grouted cores have no bar, or a bar thinner than the construction minimum (`MIN_GROUT_BAR`). */
+  GROUT_WITHOUT_BAR: 'GROUT_WITHOUT_BAR',
+  /** Structural masonry whose bar fills more of its grouted cell than NBR 16868-1 allows (`MAX_STEEL_IN_CELL`): the grout cannot wrap it. */
+  GROUT_STEEL_CONGESTED: 'GROUT_STEEL_CONGESTED',
+  /** Two walls of structural masonry that meet at a corner or a T without interlocking: they do not touch, or their bond beams do not tie over the meeting. */
+  JUNCTION_NOT_INTERLOCKED: 'JUNCTION_NOT_INTERLOCKED',
+  /** Two grouted cores in the same cell (a corner or junction grouted by both walls that meet there): one cell counted and built twice. */
+  GROUT_CORE_DOUBLED: 'GROUT_CORE_DOUBLED',
 } as const
 
 export type StructuralViolationCode = (typeof STRUCTURAL_VIOLATION)[keyof typeof STRUCTURAL_VIOLATION]

@@ -5,9 +5,10 @@ import type { SourceDoor, PlanStructure, WallDetail } from '../types'
 import { STRUCTURAL_VIOLATION } from './codes'
 import type { StructuralViolation } from './codes'
 import { applySlabPanels, resolveSlabPanels } from '../slab-panels'
-import { loadsAtRest } from '../loads'
 import { concreteViolations, loadPathViolations } from './load-path'
-import { isMasonryWall, masonryViolations, structuralMasonryViolations } from './masonry'
+import { isMasonryWall, masonryViolations } from './masonry'
+import { structuralMasonryViolations } from './structural-masonry'
+import type { LoadedRoom } from '../structural-masonry/live-loads'
 import { openingViolations } from './openings'
 import { specViolations } from './spec'
 
@@ -16,6 +17,8 @@ export interface ValidateStructureOptions {
   wallDetail?: WallDetail
   /** The doors of the plan (`plan.doors`): each door gap in a masonry wall needs a lintel. Without them only the windows are checked. */
   doors?: readonly SourceDoor[]
+  /** The rooms of the plan (`result.rooms`): structural masonry loads each floor slab with the live load of NBR 6120 for their use (without them, 2 kN/m²). */
+  rooms?: readonly LoadedRoom[]
 }
 
 /**
@@ -33,7 +36,7 @@ export function validateStructure(structure: PlanStructure, options: ValidateStr
   const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak)]
   if (structure.construction.system !== 'masonry') return out
   if (structure.construction.walls.masonrySystem === 'structural')
-    return [...out, ...structuralMasonryViolations(structure, loadsAtRest(framed.parts, framed.supports), framed.parts), ...openingViolations(structure, built.parts, options.doors ?? [])]
+    return [...out, ...structuralMasonryViolations(structure, { framed, rooms: options.rooms ?? [] }), ...openingViolations(structure, built.parts, options.doors ?? [])]
   return [...out, ...masonryViolations(structure), ...openingViolations(structure, built.parts, options.doors ?? [])]
 }
 

@@ -1,4 +1,5 @@
 import { round2, touches } from './geometry'
+import { coresAlong } from './grout'
 import { applySlabPanels, resolveSlabPanels } from './slab-panels'
 import type { Structure, StructurePart } from './types'
 
@@ -17,8 +18,8 @@ export interface BeamBearing {
 
 const alongU = (part: StructurePart): boolean => part.aabb[2] - part.aabb[0] >= part.aabb[3] - part.aabb[1]
 
-/** Whether a grouted core of `wall` takes the bearing at `at`. */
-export const groutedAt = (wall: StructurePart, at: number): boolean => (wall.grout ?? []).some((station) => Math.abs(station - at) <= BEARING_CORE_REACH)
+/** Whether a grouted core in the line of a wall (`coresAlong`: its own or the one it shares at a corner or junction) takes the bearing at `at`. */
+export const groutedAt = (stations: readonly number[], at: number): boolean => stations.some((station) => Math.abs(station - at) <= BEARING_CORE_REACH)
 
 /**
  * The concentrated loads beams put on bearing walls: each beam that crosses a wall under it (on the wall, or on the bond beam over it), at its axis. A beam
@@ -50,6 +51,6 @@ export function addBearingCores(structure: Structure): void {
   const framed = applySlabPanels({ parts: structure.parts, supports: structure.supports }, structure, resolveSlabPanels(true)!)
   const walls = structure.parts.filter((part) => part.role === 'wall' && part.grout)
   for (const { wall, at } of beamBearings([...framed.parts.filter((part) => part.role === 'beam'), ...walls])) {
-    if (!groutedAt(wall, at)) wall.grout = [...wall.grout!, at].sort((a, b) => a - b)
+    if (!groutedAt(coresAlong(wall, walls), at)) wall.grout = [...wall.grout!, at].sort((a, b) => a - b)
   }
 }

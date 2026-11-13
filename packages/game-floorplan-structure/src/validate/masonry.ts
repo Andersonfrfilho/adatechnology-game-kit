@@ -1,10 +1,7 @@
 import { getAssembly } from '@adatechnology/game-destruction'
 
-import { beamBearings, groutedAt } from '../beam-bearings'
-
 import { GROUND } from '../types'
 import type { Structure, StructurePart } from '../types'
-import { getMasonryUnit, moduleOf, unitServes } from '../masonry-units'
 import { MAX_PILLAR_SPACING, STRUCTURAL_VIOLATION } from './codes'
 import type { StructuralViolation } from './codes'
 
@@ -44,15 +41,15 @@ export function isMasonryWall(part: StructurePart): boolean {
   return units !== undefined && units.mortar !== 'concrete'
 }
 
-const pointOf = (wall: WallLine, along: number): [number, number] => (wall.alongU ? [along, wall.line] : [wall.line, along])
-const alongOfPoint = (wall: WallLine, point: readonly [number, number]): number => (wall.alongU ? point[0] : point[1])
+export const pointOf = (wall: WallLine, along: number): [number, number] => (wall.alongU ? [along, wall.line] : [wall.line, along])
+export const alongOfPoint = (wall: WallLine, point: readonly [number, number]): number => (wall.alongU ? point[0] : point[1])
 const acrossOfPoint = (wall: WallLine, point: readonly [number, number]): number => (wall.alongU ? point[1] : point[0])
-const centre = (part: StructurePart): [number, number] => [(part.aabb[0] + part.aabb[2]) / 2, (part.aabb[1] + part.aabb[3]) / 2]
-const onLine = (wall: WallLine, point: readonly [number, number], slack = 0): boolean =>
+export const centre = (part: StructurePart): [number, number] => [(part.aabb[0] + part.aabb[2]) / 2, (part.aabb[1] + part.aabb[3]) / 2]
+export const onLine = (wall: WallLine, point: readonly [number, number], slack = 0): boolean =>
   Math.abs(acrossOfPoint(wall, point) - wall.line) <= wall.half + TOLERANCE && alongOfPoint(wall, point) >= wall.from - wall.half - slack && alongOfPoint(wall, point) <= wall.to + wall.half + slack
 
 /** What the end of a wall meets: another wall end at a corner, the side of another wall (a T), the next wall on the same line, or nothing (a free end, a door jamb). */
-function endKind(wall: WallLine, along: number, others: readonly WallLine[]): 'corner' | 'junction' | 'continued' | 'free' {
+export function endKind(wall: WallLine, along: number, others: readonly WallLine[]): 'corner' | 'junction' | 'continued' | 'free' {
   const point = pointOf(wall, along)
   const meeting = others.filter((other) => onLine(other, point))
   const across = meeting.filter((other) => other.alongU !== wall.alongU)
@@ -63,7 +60,7 @@ function endKind(wall: WallLine, along: number, others: readonly WallLine[]): 'c
   return !continued && across.every(atEnd) ? 'corner' : 'junction'
 }
 
-interface WallContext {
+export interface WallContext {
   wall: WallLine
   pillars: StructurePart[]
   stations: number[]
@@ -76,7 +73,7 @@ const masonryBetween = (from: number, to: number, windows: readonly [number, num
   windows.reduce((left, [a, b]) => left - Math.max(0, Math.min(to, b) - Math.max(from, a)), to - from)
 
 /** What confines a masonry wall at its points: the concrete pillars of confined masonry, or the grouted cores of structural masonry (NBR 16868). */
-interface Confinement {
+export interface Confinement {
   readonly name: string
   readonly spacing: number
   readonly reach: number
@@ -84,7 +81,7 @@ interface Confinement {
 
 const PILLARS: Confinement = { name: 'pillar', spacing: MAX_PILLAR_SPACING, reach: AT_POINT }
 
-function pointViolations(context: WallContext, others: readonly WallLine[], by: Confinement = PILLARS): StructuralViolation[] {
+export function pointViolations(context: WallContext, others: readonly WallLine[], by: Confinement = PILLARS): StructuralViolation[] {
   const { wall, stations } = context
   const out: StructuralViolation[] = []
   const covered = (along: number): boolean => stations.some((at) => Math.abs(at - along) <= by.reach)
@@ -129,7 +126,7 @@ function bondBeamViolations(context: WallContext, structure: Pick<Structure, 'pa
 }
 
 /** The units and coats of a masonry wall: a running bond, and plaster on both faces of a plastered brick wall. */
-function assemblyViolations(part: StructurePart, finish: string | undefined): StructuralViolation[] {
+export function assemblyViolations(part: StructurePart, finish: string | undefined): StructuralViolation[] {
   const def = getAssembly(part.assembly ?? '')
   if (!def) return []
   const out: StructuralViolation[] = []
@@ -159,71 +156,6 @@ export function masonryViolations(structure: Pick<Structure, 'parts' | 'supports
     const context: WallContext = { wall, pillars, stations: pillars.map((p) => alongOfPoint(wall, centre(p))), windows }
     const others = walls.filter((w) => w !== part && w.floor === part.floor).map(lineOf)
     out.push(...pointViolations(context, others), ...bondBeamViolations(context, structure))
-  }
-  return out
-}
-
-/** Most metres between grouted cores the validator accepts in structural masonry (NBR 16868 practice in houses: 1.2 to 2 m). */
-export const MAX_GROUT_SPACING = 2
-/** NBR 16868: the slenderness h/t of an unreinforced bearing wall is at most 24. */
-export const MAX_WALL_SLENDERNESS = 24
-/** NBR 16868: partial factor of the masonry. */
-export const MASONRY_GAMMA = 2
-/** NBR 16868 (and NBR 8681): partial factor of the permanent and variable loads on the masonry. */
-export const LOAD_GAMMA = 1.4
-
-/** NBR 16868: the reduction of the compressive strength of a wall by its slenderness, `1 - (h / 40 t)³`. */
-export const slendernessReduction = (height: number, thickness: number): number => 1 - (height / (40 * thickness)) ** 3
-/** Prism strength over the unit's (hollow concrete blocks, ungrouted) and the wall's characteristic strength over the prism's (NBR 16868 / 15961 practice). */
-export const PRISM_EFFICIENCY = 0.7
-export const WALL_OVER_PRISM = 0.7
-const CORES: Confinement = { name: 'grouted core', spacing: MAX_GROUT_SPACING, reach: 0.3 }
-
-/**
- * Structural masonry (NBR 16868): the walls carry the building. Each is laid of a unit graded for it, has a grouted core at each end, corner, junction and
- * beside each window and at most every `MAX_GROUT_SPACING` metres, no concrete pillar, a slenderness h/t up to `MAX_WALL_SLENDERNESS`, its corners on the
- * module of its unit, and carries its load at rest (the load path rule of game-load-path) under the design strength of its masonry.
- */
-export function structuralMasonryViolations(
-  structure: Pick<Structure, 'parts' | 'supports' | 'construction' | 'openings'>, loads: ReadonlyMap<string, number>, framed: readonly StructurePart[] = structure.parts,
-): StructuralViolation[] {
-  const unitId = structure.construction.walls.unit
-  if (unitId === undefined) return []
-  const unit = getMasonryUnit(unitId)
-  const out: StructuralViolation[] = []
-  if (!unitServes(unit, 'structural')) out.push({ code: STRUCTURAL_VIOLATION.UNIT_NOT_STRUCTURAL, part: unit.id, message: `${unit.id} is graded for sealing only: a structural wall needs a unit graded for it` })
-  // (the masonry laid on a door's lintel is no wall of its own: the jambs are the free ends of the walls beside the door)
-  const walls = structure.parts.filter((p) => isMasonryWall(p) && p.role === 'wall' && !isOverOpening(p, structure))
-  const module = moduleOf(unit)
-  const strength = (WALL_OVER_PRISM * PRISM_EFFICIENCY * unit.fbk * 1e6) / MASONRY_GAMMA
-  // the beams as the slab is cut into panels (`framed`) over the plan's walls
-  const bearings = beamBearings([...framed.filter((p) => p.role === 'beam'), ...structure.parts.filter((p) => p.role === 'wall')])
-  for (const part of walls) {
-    const wall = lineOf(part)
-    const stations = part.grout ?? []
-    const windows = structure.openings.filter((o) => o.wall === part.id).map((o): [number, number] => [o.from, o.to])
-    const others = walls.filter((w) => w !== part && w.floor === part.floor).map(lineOf)
-    out.push(...pointViolations({ wall, pillars: [], stations, windows }, others, CORES))
-    for (const [a, b] of windows) for (const side of [a, b]) {
-      if (!stations.some((at) => Math.abs(at - side) <= CORES.reach)) out.push({ code: STRUCTURAL_VIOLATION.OPENING_WITHOUT_GROUT, part: part.id, message: `${part.id} has no grouted core beside its opening at ${side.toFixed(2)} m` })
-    }
-    if (structure.parts.some((c) => c.role === 'column' && c.material === 'concrete' && c.floor === part.floor && onLine(wall, centre(c))))
-      out.push({ code: STRUCTURAL_VIOLATION.PILLAR_IN_STRUCTURAL_WALL, part: part.id, message: `${part.id} is structural masonry with a concrete pillar in it` })
-    for (const bearing of bearings.filter((b) => b.wall.id === part.id && !groutedAt(part, b.at)))
-      out.push({ code: STRUCTURAL_VIOLATION.CONCENTRATED_LOAD_WITHOUT_GROUT, part: part.id, message: `${bearing.beam.id} bears on ${part.id} at ${bearing.at.toFixed(2)} m with no grouted core under it` })
-    const height = part.y1 - part.y0
-    if (height / unit.width > MAX_WALL_SLENDERNESS + 1e-9) out.push({ code: STRUCTURAL_VIOLATION.WALL_TOO_SLENDER, part: part.id, message: `${part.id} is ${height.toFixed(2)} m tall on a ${unit.width} m unit: h/t ${(height / unit.width).toFixed(1)} over ${MAX_WALL_SLENDERNESS}` })
-    for (const end of [wall.from, wall.to]) {
-      if (Math.abs(end / module - Math.round(end / module)) > 0.02 / module) out.push({ code: STRUCTURAL_VIOLATION.OFF_MODULE, part: part.id, message: `${part.id} ends at ${end.toFixed(3)} m, off the ${module} m module of ${unit.id}` })
-    }
-    const load = loads.get(part.id)
-    // the net area of the units and, at each grouted core, the cell the grout fills (a unit has two cells)
-    const cell = (unit.width * unit.length * (1 - unit.solid)) / 2
-    const area = Math.max(1e-6, (wall.to - wall.from + 2 * wall.half) * unit.width * unit.solid + stations.length * cell)
-    // N_d = 1.4 N_k within f_d A R (NBR 16868)
-    const resists = strength * slendernessReduction(height, unit.width)
-    if (load !== undefined && (LOAD_GAMMA * load * 9.81) / area > resists)
-      out.push({ code: STRUCTURAL_VIOLATION.MASONRY_OVERSTRESSED, part: part.id, message: `${part.id} carries ${((LOAD_GAMMA * load * 9.81) / area / 1e6).toFixed(2)} MPa (design) on its net area: its masonry takes ${(resists / 1e6).toFixed(2)} MPa` })
   }
   return out
 }

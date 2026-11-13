@@ -3,7 +3,8 @@ import type { Rect, StructurePart } from '../types'
 import { round2, touches } from '../geometry'
 import { pillarBox } from './context'
 import type { BuildContext, BuildWall } from './context'
-import { addGroutCores, addWallPillars } from './wall-pillars'
+import { addGroutCores } from './grout-cores'
+import { addWallPillars } from './wall-pillars'
 
 const MAX_GAP_WITHIN_RUN = 3.2
 const POST_SPACING = 2.4

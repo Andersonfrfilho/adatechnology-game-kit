@@ -15,17 +15,17 @@ export const WALL_PILLAR_SIDE = 0.2
 const MERGE_DISTANCE = 0.45
 const TOLERANCE = 0.03
 
-interface Stretch {
+export interface Stretch {
   wall: BuildWall
   from: number
   to: number
 }
 
-const alongRange = (wall: BuildWall): [number, number] => (wall.axis === 'u' ? [Math.min(wall.u0, wall.u1), Math.max(wall.u0, wall.u1)] : [Math.min(wall.v0, wall.v1), Math.max(wall.v0, wall.v1)])
-const acrossOf = (wall: BuildWall): number => (wall.axis === 'u' ? wall.v0 : wall.u0)
+export const alongRange = (wall: BuildWall): [number, number] => (wall.axis === 'u' ? [Math.min(wall.u0, wall.u1), Math.max(wall.u0, wall.u1)] : [Math.min(wall.v0, wall.v1), Math.max(wall.v0, wall.v1)])
+export const acrossOf = (wall: BuildWall): number => (wall.axis === 'u' ? wall.v0 : wall.u0)
 
 /** The solid stretches of a wall: the wall cut at its windows (a door is already a gap between two walls). */
-function stretchesOf(context: BuildContext, wall: BuildWall): Stretch[] {
+export function stretchesOf(context: BuildContext, wall: BuildWall): Stretch[] {
   const [low, high] = alongRange(wall)
   const windows = (context.source.windows ?? [])
     .filter((w) => w.floor === wall.floor && w.axis === wall.axis && Math.abs(w.pos - acrossOf(wall)) <= TOLERANCE && w.at + w.width / 2 > low && w.at - w.width / 2 < high)
@@ -42,7 +42,7 @@ function stretchesOf(context: BuildContext, wall: BuildWall): Stretch[] {
 }
 
 /** Where another wall meets this one inside its length (a T): the along coordinates of the meeting points. */
-function junctionsOf(context: BuildContext, wall: BuildWall): number[] {
+export function junctionsOf(context: BuildContext, wall: BuildWall): number[] {
   const [low, high] = alongRange(wall)
   const line = acrossOf(wall)
   const half = context.pillar.along / 2

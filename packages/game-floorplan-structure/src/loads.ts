@@ -19,6 +19,22 @@ const stiffnessOf = (part: StructurePart, bedded: boolean): number | undefined =
  * load. `without` leaves one part out (as if it had failed). Parts that are not structural (the tank) are not loaded.
  */
 export function loadsAtRest(parts: readonly StructurePart[], supports: readonly Support[], without?: string, sharing: LoadSharing = 'all'): Map<string, number> {
+  return solveAtRest({ parts, supports, sharing, ...(without !== undefined ? { without } : {}) }).loads
+}
+
+/** One share of load a part passes down to a part it rests on, kg. */
+export interface LoadFlow {
+  readonly from: string
+  readonly load: number
+}
+
+/** The loads at rest of `loadsAtRest` (with `all`) and, for each part, the shares that come down onto it from what rests on it. */
+export function loadFlowsAtRest(parts: readonly StructurePart[], supports: readonly Support[]): { loads: Map<string, number>; flows: Map<string, LoadFlow[]> } {
+  return solveAtRest({ parts, supports, sharing: 'all' })
+}
+
+function solveAtRest(params: { parts: readonly StructurePart[]; supports: readonly Support[]; sharing: LoadSharing; without?: string }): { loads: Map<string, number>; flows: Map<string, LoadFlow[]> } {
+  const { parts, supports, without, sharing } = params
   const kept = parts.filter((part) => part.id !== without && part.id !== GROUND)
   const ids = [GROUND, ...kept.map((part) => part.id)]
   const index = new Map(ids.map((id, k) => [id, k]))
@@ -50,10 +66,16 @@ export function loadsAtRest(parts: readonly StructurePart[], supports: readonly 
       },
     } : {}),
   })
-  const loads = distributeLoads(solution, (k) => (k === 0 ? 0 : partOf(k)!.mass || 1))
+  const flows = new Map<string, LoadFlow[]>()
+  const loads = distributeLoads(solution, (k) => (k === 0 ? 0 : partOf(k)!.mass || 1), {
+    share: (part, support, load) => {
+      const on = ids[support]!
+      flows.set(on, [...(flows.get(on) ?? []), { from: ids[part]!, load }])
+    },
+  })
   const out = new Map<string, number>()
   for (const k of solution.reached) if (k !== 0) out.set(ids[k]!, loads[k]!)
-  return out
+  return { loads: out, flows }
 }
 
 export interface SizingOptions {

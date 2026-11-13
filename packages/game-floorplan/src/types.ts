@@ -306,6 +306,8 @@ export interface FloorplanOptions {
   wallThickness?: number
   /** Grid the walls' centre lines are laid on, metres (structural masonry is laid to its unit's module, 15 or 20 cm); unset: no grid. */
   module?: number
+  /** Height of one course of the units with its joint, metres: on a `module`, the sills and heads of the windows land on whole courses. */
+  course?: number
   /** Number of storeys, for templates that accept it. */
   floors?: number
   /** Building system of the structure pack (`masonry`, `wood_frame`, ...). */

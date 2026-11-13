@@ -112,14 +112,55 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
     })
     plan.doors.push(...floorDoors)
     const floorWalls = (tpl.noWalls ? [] : buildWalls(list, floorDoors, A.openPairs || [], floorIndex)).map((p) => Object.assign(p, { h: p.h || A.ceiling }))
-    const windowsOut = placeWindows({ list, byId, floorWalls, windowDefs: A.windows(w, d, op) || [], floorIndex, ceiling: A.ceiling, w, d, clearance: tpl.clearance?.window ?? WINDOW_EDGE_CLEARANCE })
-    plan.windows.push(...windowsOut)
+    const clearance = tpl.clearance?.window ?? WINDOW_EDGE_CLEARANCE
+    const windowsOut = placeWindows({ list, byId, floorWalls, windowDefs: A.windows(w, d, op) || [], floorIndex, ceiling: A.ceiling, w, d, clearance })
+    const grid = op.module ? { module: op.module, course: op.course, ceiling: A.ceiling, clearance, doors: floorDoors } : undefined
+    plan.windows.push(...(grid ? windowsOut.map((win) => windowOnModule(win, floorWalls, grid)) : windowsOut))
     plan.walls.push(...floorWalls)
   })
   if (tpl.config) plan.config = tpl.config(op, w, d)
   if (tpl.reservations) tpl.reservations(plan)
   buildLot(plan, tpl, w, d, op, style, styleId, bc)
   return plan
+}
+
+/**
+ * A window of a wall laid to a module (structural masonry): its jambs on the grid, whole units wide, inside its stretch of wall; its sill and head on whole
+ * courses, the head at least a course under the top of the wall (the lintel's channel course).
+ */
+function windowOnModule(win: PlanWindow, walls: readonly PlanWall[], grid: { module: number; course: number | undefined; ceiling: number; clearance: number; doors: readonly PlanDoor[] }): PlanWindow {
+  const { module, course, ceiling, clearance } = grid
+  const width = r2(Math.max(module, Math.round(win.width / module) * module))
+  const wall = walls.find((t) => t.exterior && t.type === 'wall' && t.axis === win.axis && eq(win.axis === 'u' ? t.v0 : t.u0, win.pos) && win.at >= (win.axis === 'u' ? t.u0 : t.v0) - TOL && win.at <= (win.axis === 'u' ? t.u1 : t.v1) + TOL)
+  const at = wall ? windowCentreOnGrid({ win, width, module, clearance, doors: grid.doors }, wall) : win.at
+  const placed = { ...win, at, width, u: win.axis === 'u' ? at : win.u, v: win.axis === 'u' ? win.v : at }
+  if (!course) return placed
+  const y1 = r2(Math.min(Math.round(win.y1 / course), Math.floor((ceiling - course) / course + 1e-6)) * course)
+  const y0 = r2(Math.min(Math.round(win.y0 / course) * course, y1 - course * Math.max(1, Math.round((win.y1 - win.y0) / course))))
+  return { ...placed, y0, y1 }
+}
+
+/**
+ * The centre of a window on the grid between the two placements around where it was: inside the wall with its clearance, the one that leaves the wider
+ * pier beside a door (a pier at a corner or a junction works with the wall interlocked into it; one at a door jamb stands alone), then the more centred.
+ */
+function windowCentreOnGrid(params: { win: PlanWindow; width: number; module: number; clearance: number; doors: readonly PlanDoor[] }, wall: PlanWall): number {
+  const { win, width, module, clearance, doors } = params
+  const [low, high] = win.axis === 'u' ? [wall.u0, wall.u1] : [wall.v0, wall.v1]
+  const isJamb = (x: number): boolean => doors.some((d) => d.axis === win.axis && eq(d.pos, win.pos) && (eq(d.at - d.width / 2, x) || eq(d.at + d.width / 2, x)))
+  const below = Math.floor((win.at - width / 2) / module + 1e-6) * module
+  const starts = [below, below + module].filter((start) => start >= low + clearance - TOL && start + width <= high - clearance + TOL)
+  if (!starts.length) return onGrid(win.at, width, module, [low + clearance + width / 2, high - clearance - width / 2])
+  const score = (start: number): [number, number] => {
+    const piers = [start - low, high - start - width]
+    const atDoors = piers.filter((_, k) => isJamb(k === 0 ? low : high))
+    return [atDoors.length ? Math.min(...atDoors) : high - low, Math.min(...piers)]
+  }
+  const best = starts.reduce((a, b) => {
+    const [x, y] = [score(a), score(b)]
+    return y[0] > x[0] + TOL || (Math.abs(y[0] - x[0]) <= TOL && y[1] > x[1] + TOL) ? b : a
+  })
+  return r2(best + width / 2)
 }
 
 interface WindowGroup {

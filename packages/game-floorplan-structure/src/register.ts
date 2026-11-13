@@ -1,7 +1,7 @@
 import type { FloorplanEngine, FloorplanOptions, FloorplanResult, ResultExtensionContext, TemplateDef } from '@adatechnology/game-floorplan'
 
 import { constructionFor } from './construction'
-import { MASONRY_SYSTEM, getMasonryUnit, moduleOf, unitServes, wallThicknessOf } from './masonry-units'
+import { MASONRY_SYSTEM, MORTAR_JOINT, getMasonryUnit, moduleOf, unitServes, wallThicknessOf } from './masonry-units'
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
 import type { ConstructionBuild } from './registry'
@@ -60,7 +60,7 @@ function resolveMasonryUnit(template: TemplateDef, options: FloorplanOptions): F
   if (masonrySystem === MASONRY_SYSTEM.STRUCTURAL && !unitServes(block, MASONRY_SYSTEM.STRUCTURAL))
     throw new Error(`Structural masonry (NBR 16868) needs a unit graded for it: "${unit}" is for sealing only`)
   // a structural wall is laid to the module of its unit (half a unit with its joint: 15 or 20 cm), so its corners and openings fall on whole units
-  const module = masonrySystem === MASONRY_SYSTEM.STRUCTURAL ? { module: options.module ?? moduleOf(block) } : {}
+  const module = masonrySystem === MASONRY_SYSTEM.STRUCTURAL ? { module: options.module ?? moduleOf(block), course: options.course ?? Math.round((block.height + MORTAR_JOINT) * 100) / 100 } : {}
   return { ...options, masonryUnit: unit, masonrySystem, ...module, wallThickness: options.wallThickness ?? wallThicknessOf(block) }
 }
 

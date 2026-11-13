@@ -125,6 +125,8 @@ export interface WallMaterials {
   unit?: string
   /** How the masonry stands (default `confined`). */
   masonrySystem?: MasonrySystem
+  /** Structural masonry: diameter of the bar grouted in each core, metres (one bar per core). */
+  groutBar?: number
   studs?: string
   /** Materials drawn per wall by a hash of its legacy key (the improvised shack). */
   mixed?: MaterialId[]
