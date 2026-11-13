@@ -282,9 +282,9 @@ export interface PhysicsWorld {
   overlapSphere(center: Vec3, radius: number, out: BodyId[], filter?: QueryFilter): number
   /**
    * How deep (m) a body is inside the fixed bodies (layer `static`) where it stands now, and the way to move it out (unit, world) into `out`; 0 when it is in none.
-   * The deepest overlap is reported: a host that places a body checks it, so nothing is made or put inside what does not move.
+   * The deepest overlap is reported: a host that places a body checks it, so nothing is made or put inside what does not move. `among` counts only those bodies.
    */
-  penetration?(id: BodyId, out: Float64Array): number
+  penetration?(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number
   /** A sphere swept along the ray: every body it meets, nearest first. */
   sphereCastAll(from: Vec3, direction: Vec3, length: number, radius: number, out: RayHit[], filter?: QueryFilter): number
   readonly contacts: ContactBuffer

@@ -117,7 +117,7 @@ export const sphereCastAll = (w: JoltWorld, c: Cast & { readonly radius: number 
 }
 
 /** The deepest overlap of a body with the fixed bodies where it stands, and the way out of it (`PhysicsWorld.penetration`). */
-export const penetration = (w: JoltWorld, id: BodyId, out: Float64Array): number => {
+export const penetration = (w: JoltWorld, id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number => {
   const J = w.J
   const e = w.entry(id)
   w.v2.Set(1, 1, 1)
@@ -131,7 +131,7 @@ export const penetration = (w: JoltWorld, id: BodyId, out: Float64Array): number
   const hits = c.mHits
   for (let i = 0; i < hits.size(); i++) {
     const h = hits.at(i)
-    if (h.mPenetrationDepth <= depth) continue
+    if (h.mPenetrationDepth <= depth || (among && !among.has(h.mBodyID2.GetIndexAndSequenceNumber() as BodyId))) continue
     const a = h.mPenetrationAxis
     const l = Math.hypot(a.GetX(), a.GetY(), a.GetZ())
     if (l < 1e-9) continue

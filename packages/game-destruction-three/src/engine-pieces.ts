@@ -402,7 +402,8 @@ export class EnginePieces {
     let wedged = false
     let lifts = 0
     for (let i = 0; i < OUT_TRIES; i++) {
-      const depth = this.world.penetration(link.id, axis)
+      // the host's fixed things only: a piece made in the ground is the ground's rule (`underGround`)
+      const depth = this.world.penetration(link.id, axis, this.statics.ids)
       if (depth <= SINK) return
       // out of one the shortest way put it back into the other (a door made between its frame and a car parked against the wall): it goes up out of both
       wedged ||= i > 0 && axis[0] * px + axis[1] * py + axis[2] * pz < -0.5

@@ -570,8 +570,8 @@ export class JoltWorld implements PhysicsWorld {
     return overlapSphere(this, { center, radius }, out, filter)
   }
 
-  penetration(id: BodyId, out: Float64Array): number {
-    return penetration(this, id, out)
+  penetration(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number {
+    return penetration(this, id, out, among)
   }
 
   sphereCastAll(from: Vec3, direction: Vec3, length: number, radius: number, out: RayHit[], filter?: QueryFilter): number {

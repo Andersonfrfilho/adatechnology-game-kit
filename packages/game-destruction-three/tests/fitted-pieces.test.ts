@@ -77,5 +77,28 @@ describe('a piece collides as it is drawn, not as the box around it', () => {
     const engine = (system as unknown as { engine: { world: { penetration(id: number, out: Float64Array): number }; links: Map<unknown, { id: number }> } }).engine
     expect(engine.world.penetration(engine.links.get(piece)!.id, out)).toBeLessThan(0.006)
   })
+
+  it("a piece is put out of the host's fixed things only, not out of the ground (the ground has its own lift): bowl seed 39 at 1/60 made 3 mm of C1 when it was", async () => {
+    const { createJoltEngine } = await import('@adatechnology/game-physics-jolt')
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120, velocityIterations: 20 })
+    const asked: Array<ReadonlySet<number> | undefined> = []
+    const counted = Object.create(world) as typeof world
+    counted.penetration = (id, out, among) => {
+      asked.push(among as ReadonlySet<number> | undefined)
+      return world.penetration?.(id, out, among) ?? 0
+    }
+    const shelf: StaticSolid[] = [{ center: [3, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] }]
+    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), physics: counted, staticSolids: () => new Map([['shelf', shelf]]) })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.09, 0)
+    system.create('plate', root, [0.3, 0.1, 0.3], new THREE.Vector3(), 2)
+    system.update(1 / 60)
+    expect(asked.length).toBeGreaterThan(0)
+    for (const among of asked) {
+      expect(among?.size).toBe(1)
+    }
+    world.dispose()
+  })
 })
 

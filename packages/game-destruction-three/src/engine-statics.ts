@@ -39,6 +39,8 @@ export class EngineStatics {
   readonly bodies = new Map<string, Fixed>()
   /** The bodies whose boxes changed in the last `lay`, made or gone: what an outside input under a piece is, for a probe. */
   readonly changed = new Set<BodyId>()
+  /** Every body it holds now: what a piece made or put is checked against (`EnginePieces.outOfStatics`; the ground has its own rule). */
+  readonly ids = new Set<BodyId>()
 
   constructor(
     private readonly world: PhysicsWorld,
@@ -57,7 +59,7 @@ export class EngineStatics {
       this.wakeAround(f.kept)
       if (f.id !== null) {
         this.changed.add(f.id)
-        this.world.removeBody(f.id)
+        this.drop(f.id)
       }
       this.bodies.delete(id)
     }
@@ -79,7 +81,7 @@ export class EngineStatics {
   }
 
   clear(): void {
-    for (const f of this.bodies.values()) if (f.id !== null) this.world.removeBody(f.id)
+    for (const f of this.bodies.values()) if (f.id !== null) this.drop(f.id)
     this.bodies.clear()
     this.changed.clear()
   }
@@ -89,7 +91,7 @@ export class EngineStatics {
     if (kept.length === 0) {
       if (f.id !== null) {
         this.changed.add(f.id)
-        this.world.removeBody(f.id)
+        this.drop(f.id)
       }
       f.id = null
       return
@@ -104,7 +106,14 @@ export class EngineStatics {
   }
 
   private make(kept: readonly StaticSolid[]): BodyId {
-    return this.world.createBody({ shape: this.shapeOf(kept), motion: 'static', position: [0, 0, 0], material: this.material, user: 0 })
+    const id = this.world.createBody({ shape: this.shapeOf(kept), motion: 'static', position: [0, 0, 0], material: this.material, user: 0 })
+    this.ids.add(id)
+    return id
+  }
+
+  private drop(id: BodyId): void {
+    this.ids.delete(id)
+    this.world.removeBody(id)
   }
 
   /** What lies by a box that is not in both lists (went, came, or moved: in one list at one place, in the other at another) wakes. */
