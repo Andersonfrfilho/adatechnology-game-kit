@@ -24,6 +24,8 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
     f.setAttribute('uv', new THREE.Float32BufferAttribute([0.5, 0, 1, 0.4, 0.5, 1, 0, 0.4], 2)); f.setIndex([0, 1, 2, 0, 2, 3]);
     GEO.leaf = read(f);
   }
+  /** A box face looking down at or under this height (the ground's plane) is shut by the ground. */
+  const GROUND_SHUT = 1e-4;
   // metres per texture repeat, per material (only materials with a map)
   const UV_SCALE: Record<string, number> = { dirt: 2.0, roughcast: 1.0, block: 1.2, tile: 1.0, fiber_cement: 1.0, grass: 2.5, asphalt: 3.0, sidewalk: 1.0 };
   const WITH_MAP: Record<string, number> = { roughcast: 1, block: 1 };
@@ -93,8 +95,16 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
       if (uvr) { let gu = G.u[k * 2], gv = G.u[k * 2 + 1]; for (let r = (uvr.rot ?? 0) | 0; r > 0; r--) { const t = gu; gu = gv; gv = 1 - t; } if (uvr.fx) gu = 1 - gu; A.u[o * 2] = uvr.u0 + gu * (uvr.u1 - uvr.u0); A.u[o * 2 + 1] = uvr.v0 + gv * (uvr.v1 - uvr.v0); }
       else if (scale) { const ax = Math.abs(wnx), ay = Math.abs(wny), az = Math.abs(wnz); if (ax >= ay && ax >= az) { A.u[o * 2] = wz_ / scale; A.u[o * 2 + 1] = wy_ / scale; } else if (ay >= az) { A.u[o * 2] = wx_ / scale; A.u[o * 2 + 1] = wz_ / scale; } else { A.u[o * 2] = wx_ / scale; A.u[o * 2 + 1] = wy_ / scale; } }
     }
-    if (G.i) for (let k = 0; k < G.i.length; k++) A.i[A.ni + k] = b + G.i[k]; else for (let k = 0; k < G.nv; k++) A.i[A.ni + k] = b + k;
-    A.nv += G.nv; A.ni += G.i ? G.i.length : G.nv;
+    let ni = 0;
+    const count = G.i ? G.i.length : G.nv, y0 = cursor.org[1];
+    for (let k = 0; k < count; k += 3) {
+      const t0 = b + (G.i ? G.i[k] : k), t1 = b + (G.i ? G.i[k + 1] : k + 1), t2 = b + (G.i ? G.i[k + 2] : k + 2);
+      // the bottom of a box that rests on the ground or stands in it is shut by the ground: it is not drawn (it would lie on the bottom of every other
+      // thing standing there, on one plane, the same way); the Visor's scene keeps every face as the team drew it
+      if (geo === 'box' && !shared.ctx.visorScene && A.n[t0 * 3 + 1] < -0.99 && Math.max(A.p[t0 * 3 + 1], A.p[t1 * 3 + 1], A.p[t2 * 3 + 1]) + y0 <= GROUND_SHUT) continue;
+      A.i[A.ni + ni] = t0; A.i[A.ni + ni + 1] = t1; A.i[A.ni + ni + 2] = t2; ni += 3;
+    }
+    A.nv += G.nv; A.ni += ni;
   }
   // box by its centre, with YXZ Euler rotation
   function boxC(mat: string, cx: number, cy: number, cz: number, sx: number, sy: number, sz: number, color: Hex, rx = 0, ry = 0, rz = 0, uvr?: UvRect | null): void {

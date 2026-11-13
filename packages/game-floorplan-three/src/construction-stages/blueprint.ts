@@ -7,6 +7,13 @@ export { renderBlueprintDataUrl }
 
 /** The levelled dirt of the site: 3 mm under the compacted bed of the foundation (6 mm), shown with it at level 1, and 3 mm over the ground. */
 const BLUEPRINT_DIRT_TOP = 0.003
+/** How deep the levelled dirt goes: its bottom 1 cm over the foundation bed's (6 cm), never on its plane. */
+const DIRT_DEPTH = 0.05
+/** Where each kind of mark starts over the dirt, metres: kinds of another paint never start on one plane (their bottoms overlap where they cross). */
+/** A pillar's mark stands this far round the pillar (clear of the ground beam's faces under it, 2 cm round), and a threshold this far inside the wall line's sides. */
+const PILLAR_MARGIN = 0.025
+const MARK_INSET = 0.003
+const MARK_BASE = { room: 0.004, door: 0.006, chalk: 0.008, pillar: 0.011 } as const
 
 function addBoxMesh(
   THREE: Three,
@@ -149,7 +156,7 @@ export function buildBlueprintStage(
         bx1 = Math.max(bx1, u1)
         bz1 = Math.max(bz1, v1)
       }
-      addBoxMesh(THREE, group, u0, 0.006, v0, u1, 0.012, v1, cyanMat)
+      addBoxMesh(THREE, group, u0, MARK_BASE.room, v0, u1, 0.012, v1, cyanMat)
     }
     const r0 = rs[0]
     if (r0) {
@@ -185,11 +192,12 @@ export function buildBlueprintStage(
       const hw = (d.width || 0.8) / 2
       return [dAt - hw, dAt + hw] as const
     })
-    // the line runs on to the outer faces of the walls it meets at either end, so a corner is closed by chalk and no end of a line lies on a room's mark
-    const wallSegs = cutSegments(a, b, holes).map(([s0, s1]): [number, number] => [s0 === a ? s0 - th / 2 : s0, s1 === b ? s1 + th / 2 : s1])
+    // the line runs on to just short of the outer faces of the walls it meets at either end: a corner is closed by chalk, and no end of a line lies on a room's
+    // mark or on the end of the ground beam under it
+    const wallSegs = cutSegments(a, b, holes).map(([s0, s1]): [number, number] => [s0 === a ? s0 - th / 2 + MARK_INSET : s0, s1 === b ? s1 + th / 2 - MARK_INSET : s1])
     for (const [s0, s1] of wallSegs) {
-      if (alongU) addBoxMesh(THREE, group, s0, 0.006, L - th / 2, s1, 0.026, L + th / 2, chalkMat)
-      else addBoxMesh(THREE, group, L - th / 2, 0.006, s0, L + th / 2, 0.026, s1, chalkMat)
+      if (alongU) addBoxMesh(THREE, group, s0, MARK_BASE.chalk, L - th / 2, s1, 0.026, L + th / 2, chalkMat)
+      else addBoxMesh(THREE, group, L - th / 2, MARK_BASE.chalk, s0, L + th / 2, 0.026, s1, chalkMat)
     }
   }
 
@@ -203,11 +211,11 @@ export function buildBlueprintStage(
     const hw = w / 2
     const th = plan.walls.find((w) => w.floor === d.floor && w.axis === d.axis && Math.abs((alongU ? w.v0 : w.u0) - pos) < 0.05)?.thickness || 0.15
     // Threshold line covering the full thickness of the wall
-    if (alongU) addBoxMesh(THREE, group, at - hw, 0.005, pos - th / 2, at + hw, 0.015, pos + th / 2, doorMat)
-    else addBoxMesh(THREE, group, pos - th / 2, 0.005, at - hw, pos + th / 2, 0.015, at + hw, doorMat)
+    if (alongU) addBoxMesh(THREE, group, at - hw, MARK_BASE.door, pos - th / 2 + MARK_INSET, at + hw, 0.015, pos + th / 2 - MARK_INSET, doorMat)
+    else addBoxMesh(THREE, group, pos - th / 2 + MARK_INSET, MARK_BASE.door, at - hw, pos + th / 2 - MARK_INSET, 0.015, at + hw, doorMat)
     // Open door leaf at 90° resting against the perpendicular wall (leaves the doorway completely open)
-    if (alongU) addBoxMesh(THREE, group, at - hw, 0.010, pos, at - hw + 0.035, 0.032, pos + w, doorMat)
-    else addBoxMesh(THREE, group, pos, 0.010, at - hw, pos + w, 0.032, at - hw + 0.035, doorMat)
+    if (alongU) addBoxMesh(THREE, group, at - hw, MARK_BASE.door, pos + MARK_INSET, at - hw + 0.035, 0.032, pos + w, doorMat)
+    else addBoxMesh(THREE, group, pos + MARK_INSET, MARK_BASE.door, at - hw, pos + w, 0.032, at - hw + 0.035, doorMat)
   }
 
   const parts: readonly StructurePart[] = (plan.structure as Structure | undefined)?.parts ?? []
@@ -215,18 +223,18 @@ export function buildBlueprintStage(
     if (p.floor !== 0) continue
     if (!/^(column_|wall_column_|jamb_column_|footing_pier_)/.test(p.id)) continue
     const [u0, v0, u1, v1] = p.aabb
-    addBoxMesh(THREE, group, u0 - 0.02, 0.01, v0 - 0.02, u1 + 0.02, 0.042, v1 + 0.02, pillarMat)
+    addBoxMesh(THREE, group, u0 - PILLAR_MARGIN, MARK_BASE.pillar, v0 - PILLAR_MARGIN, u1 + PILLAR_MARGIN, 0.042, v1 + PILLAR_MARGIN, pillarMat)
   }
 
   if (Number.isFinite(bx0) && Number.isFinite(bx1)) {
-    addBoxMesh(THREE, group, bx0 - 0.25, -0.06, bz0 - 0.25, bx1 + 0.25, BLUEPRINT_DIRT_TOP, bz1 + 0.25, dirtMat)
+    addBoxMesh(THREE, group, bx0 - 0.25, -DIRT_DEPTH, bz0 - 0.25, bx1 + 0.25, BLUEPRINT_DIRT_TOP, bz1 + 0.25, dirtMat)
     addBatterBoards(THREE, group, bx0, bz0, bx1, bz1, woodMat, cyanMat)
   }
   for (const ob of (plan.outbuildings || []).filter(Boolean)) {
     const [ou0, ov0, ou1, ov1] = ob.aabb
     const th = ob.thickness || 0.15
     const hw = th / 2
-    addBoxMesh(THREE, group, ou0 - 0.25, -0.06, ov0 - 0.25, ou1 + 0.25, BLUEPRINT_DIRT_TOP, ov1 + 0.25, dirtMat)
+    addBoxMesh(THREE, group, ou0 - 0.25, -DIRT_DEPTH, ov0 - 0.25, ou1 + 0.25, BLUEPRINT_DIRT_TOP, ov1 + 0.25, dirtMat)
     addBatterBoards(THREE, group, ou0, ov0, ou1, ov1, woodMat, cyanMat)
 
     // Structural concrete column / beam markers (pillarMat - red boxes) at the 4 corners
@@ -237,7 +245,7 @@ export function buildBlueprintStage(
       [ou1 - hw, ov1 - hw],
     ]
     for (const [cx, cz] of corners) {
-      addBoxMesh(THREE, group, cx - hw - 0.02, 0.008, cz - hw - 0.02, cx + hw + 0.02, 0.045, cz + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, cx - hw - 0.02, MARK_BASE.pillar, cz - hw - 0.02, cx + hw + 0.02, 0.045, cz + hw + 0.02, pillarMat)
     }
 
     // Concrete grade beam line markers (baldrame / vigas de concreto) under outbuilding walls
@@ -247,9 +255,9 @@ export function buildBlueprintStage(
       const b = Math.max(alongU ? w.u0 : w.v0, alongU ? w.u1 : w.v1)
       const L = alongU ? w.v0 : w.u0
       if (alongU) {
-        addBoxMesh(THREE, group, a, 0.007, L - hw, b, 0.024, L + hw, chalkMat)
+        addBoxMesh(THREE, group, a, MARK_BASE.chalk, L - hw, b, 0.024, L + hw, chalkMat)
       } else {
-        addBoxMesh(THREE, group, L - hw, 0.007, a, L + hw, 0.024, b, chalkMat)
+        addBoxMesh(THREE, group, L - hw, MARK_BASE.chalk, a, L + hw, 0.024, b, chalkMat)
       }
     }
 
@@ -262,20 +270,20 @@ export function buildBlueprintStage(
       for (const offset of [-dhw, dhw]) {
         const jx = alongU ? dAt + offset : dPos
         const jz = alongU ? dPos : dAt + offset
-        addBoxMesh(THREE, group, jx - hw - 0.01, 0.008, jz - hw - 0.01, jx + hw + 0.01, 0.045, jz + hw + 0.01, pillarMat)
+        addBoxMesh(THREE, group, jx - hw - 0.01, MARK_BASE.pillar, jz - hw - 0.01, jx + hw + 0.01, 0.045, jz + hw + 0.01, pillarMat)
       }
     }
 
     // Intermediate wall tie columns if span > 3.2m
     if (ou1 - ou0 > 3.2) {
       const midU = (ou0 + ou1) / 2
-      addBoxMesh(THREE, group, midU - hw - 0.02, 0.008, ov0 - 0.02, midU + hw + 0.02, 0.045, ov0 + th + 0.02, pillarMat)
-      addBoxMesh(THREE, group, midU - hw - 0.02, 0.008, ov1 - th - 0.02, midU + hw + 0.02, 0.045, ov1 + 0.02, pillarMat)
+      addBoxMesh(THREE, group, midU - hw - 0.02, MARK_BASE.pillar, ov0 - 0.02, midU + hw + 0.02, 0.045, ov0 + th + 0.02, pillarMat)
+      addBoxMesh(THREE, group, midU - hw - 0.02, MARK_BASE.pillar, ov1 - th - 0.02, midU + hw + 0.02, 0.045, ov1 + 0.02, pillarMat)
     }
     if (ov1 - ov0 > 3.2) {
       const midV = (ov0 + ov1) / 2
-      addBoxMesh(THREE, group, ou0 - 0.02, 0.008, midV - hw - 0.02, ou0 + th + 0.02, 0.045, midV + hw + 0.02, pillarMat)
-      addBoxMesh(THREE, group, ou1 - th - 0.02, 0.008, midV - hw - 0.02, ou1 + 0.02, 0.045, midV + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, ou0 - 0.02, MARK_BASE.pillar, midV - hw - 0.02, ou0 + th + 0.02, 0.045, midV + hw + 0.02, pillarMat)
+      addBoxMesh(THREE, group, ou1 - th - 0.02, MARK_BASE.pillar, midV - hw - 0.02, ou1 + 0.02, 0.045, midV + hw + 0.02, pillarMat)
     }
   }
   return group
