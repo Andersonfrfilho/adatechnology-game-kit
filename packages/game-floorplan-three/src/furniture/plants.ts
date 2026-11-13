@@ -47,7 +47,7 @@ export function installFurniturePlants(K: Kernel, shared: Shared): void {
   function palm_tree(M: Mount, A: FurnitureApi, o: PlantOptions = {}): void {
     const K = kit2(M, A), h = M.h || 3.2, rnd = rngString(SEED() + '|' + seedKey(M.seed) + '|palm'), green = (M.palette && M.palette.plant != null) ? M.palette.plant : 0x3f7a3a, trunk = 0x8a6a48, tilts = (rnd() - 0.5) * 0.25;
     const nseg = 8, th = h * 0.78; let tx = 0, tz = 0, ty = 0;
-    for (let i = 0; i < nseg; i++) { const f = i / nseg, rr = 0.075 - f * 0.03, hh = th / nseg; K.c('wood', tx, ty, tz, rr, hh + 0.01, i % 2 ? sh(trunk, 0.86) : trunk); tx += tilts * hh; ty += hh; }
+    for (let i = 0; i < nseg; i++) { const f = i / nseg, rr = 0.075 - f * 0.03, hh = th / nseg; K.c('wood', tx, ty, tz, rr, hh + (M.visorScene ? 0.01 : 0), i % 2 ? sh(trunk, 0.86) : trunk); /* (outside the Visor's scene a segment stands on the one under it: their sides crossed where the trunk leans) */ tx += tilts * hh; ty += hh; }
     K.c('wood', tx, ty, tz, 0.062, 0.1, sh(trunk, 0.7)); K.e('plant', tx, ty + 0.08, tz, 0.11, 0.16, sh(green, 0.6));
     const nf = 10;
     for (let i = 0; i < nf; i++) { const az = i * 6.283 / nf + rnd() * 0.3, el = 0.55 - (i % 3) * 0.2 + rnd() * 0.15; arcLeaf(K, tx, ty + 0.1, tz, az, h * (0.4 + rnd() * 0.12), el, 0.5 + (i % 3) * 0.25, 0.2, sh(green, 0.85 + rnd() * 0.3), true, 8); }

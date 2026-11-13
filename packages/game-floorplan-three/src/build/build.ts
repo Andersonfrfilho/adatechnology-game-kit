@@ -224,7 +224,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           // the masonry is laid with the chases of the runs that go up and down inside it
           const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r)]);
           const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? []);
-          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || []);
+          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, shared.ctx.occupied); // (its rafters clear of the faces of the slabs' edges they pass)
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
           for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
             gs[sg.name] = sg;

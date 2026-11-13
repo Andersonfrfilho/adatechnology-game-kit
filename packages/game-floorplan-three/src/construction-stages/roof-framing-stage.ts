@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 
+import type { Aabb } from '../house/solids.js'
 import type { RoofRect, Three } from '../kernel-types.js'
 import { EAVE } from '../roof/eave.js'
 import { BoxBatch } from './box-batch.js'
@@ -77,13 +78,29 @@ function slopesOf(rect: Required<Pick<RoofRect, 'yb' | 'tp' | 'exterior' | 'rm' 
 
 const down = (p: Vec, by: number): Vec => [p[0], p[1] - by, p[2]]
 
+/** Metres a timber's side keeps from the face of a solid of the house it runs past (a slab's edge and its render), and the step it moves by to get there. */
+const SIDE_CLEAR = 0.002, SIDE_STEP = 0.003
+
+/**
+ * Where along the eave a timber of `width` between `a` and `b` (its top edge) stands so that neither side lies on the plane of a face of the house's solids it
+ * passes (`solids`, boxes in the house's frame): `t` moved a few millimetres off such a plane.
+ */
+function clearOfSolids(t: number, width: number, a: Vec, b: Vec, axis: 0 | 2, solids: readonly Aabb[]): number {
+  const other = axis === 0 ? 2 : 0, lo = Math.min(a[other], b[other]), hi = Math.max(a[other], b[other]), y0 = Math.min(a[1], b[1]) - 0.2, y1 = Math.max(a[1], b[1])
+  for (const box of solids) {
+    if (box[other] > hi || box[other + 3] < lo || box[1] > y1 || box[4] < y0 || box[axis] > t + width || box[axis + 3] < t - width) continue
+    for (const face of [box[axis], box[axis + 3]]) for (const side of [t - width / 2, t + width / 2]) if (Math.abs(face - side) < SIDE_CLEAR) return t + (side <= face ? -SIDE_STEP : SIDE_STEP)
+  }
+  return t
+}
+
 /** Where the slope is at height `s`: the stretch of its eave line that is still roof (the hips eat `s` at each end of a hipped slope). */
 function spanAt(slope: Slope, s: number): readonly [number, number] {
   return slope.hipped ? [slope.t0 + s + EDGE, slope.t1 - s - EDGE] : [slope.t0 + EDGE, slope.t1 - EDGE]
 }
 
 /** Slope's timber: battens across the rafters under the tiles, rafters from the eave to the ridge or the hip, purlins and the wall plate under them, posts on the slab. */
-function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly battens: BoxBatch }, slabTop: number): void {
+function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly battens: BoxBatch }, slabTop: number, solids: readonly Aabb[]): void {
   const { batten, rafter, purlin } = TIMBER
   for (let s = batten.spacing / 2; s < slope.run - 0.12; s += batten.spacing) {
     const [a0, b0] = spanAt(slope, s)
@@ -94,9 +111,11 @@ function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly
   const t0 = slope.t0 + EDGE, t1 = slope.t1 - EDGE
   const count = Math.max(1, Math.round((t1 - t0) / rafter.spacing))
   for (let i = 0; i <= count; i++) {
-    const t = t0 + ((t1 - t0) * i) / count
-    const end = slope.hipped ? Math.min(slope.run, t - slope.t0 - EDGE, slope.t1 - t - EDGE) : slope.run
+    const at = t0 + ((t1 - t0) * i) / count
+    const end = slope.hipped ? Math.min(slope.run, at - slope.t0 - EDGE, slope.t1 - at - EDGE) : slope.run
     if (end < 0.1) continue
+    const axis = slope.point(0, 1)[0] - slope.point(0, 0)[0] !== 0 ? 0 : 2
+    const t = clearOfSolids(at, rafter.width, down(slope.point(EDGE, at), rafter.top), down(slope.point(end, at), rafter.top), axis, solids)
     addTimber(batches.timber, down(slope.point(EDGE, t), rafter.top), down(slope.point(end, t), rafter.top), rafter.width, rafter.height)
   }
   // the wall plate (frechal) where the slope crosses the wall, and the purlins (terças) at a third and two thirds of the way to the ridge, each on posts
@@ -124,7 +143,7 @@ function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly
  * from the eave to the ridge and the hips, and the battens cross them under the tiles. Every piece lies under the tile planes, so none of it shows through the
  * tiles, and none of it hangs inside the rooms.
  */
-export function buildRoofFramingStage(THREE: Three, roofRects: readonly RoofRect[], material?: THREE_NS.Material): THREE_NS.Group {
+export function buildRoofFramingStage(THREE: Three, roofRects: readonly RoofRect[], material?: THREE_NS.Material, solids: readonly Aabb[] = []): THREE_NS.Group {
   const group = new THREE.Group()
   group.name = 'stage:7:roof_framing'
   const timber = new BoxBatch(), battens = new BoxBatch()
@@ -132,7 +151,7 @@ export function buildRoofFramingStage(THREE: Three, roofRects: readonly RoofRect
     if (rr.slab || rr.yb === undefined || rr.tp === undefined || !rr.exterior || rr.rm === undefined || rr.alongX === undefined) continue
     const rect = { yb: rr.yb, tp: rr.tp, exterior: rr.exterior, rm: rr.rm, alongX: rr.alongX, r: rr.r, gable: !!rr.gable }
     const slabTop = rr.yb
-    for (const slope of slopesOf(rect)) frameSlope(slope, { timber, battens }, slabTop)
+    for (const slope of slopesOf(rect)) frameSlope(slope, { timber, battens }, slabTop, solids)
     // ridge beam (cumeeira) on posts, and the hips (espigões) from each corner of the eave up to the ridge's ends
     const [x0, z0, x1, z1] = rr.exterior
     const ridgeY = rr.yb + rr.tp * rr.rm

@@ -15,12 +15,13 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
     const houseWalls = shared.ctx.visorScene ? [] : groundWallBoxes((shared.ctx.r as HouseRecord).walls);
     for (const s of lt.perimeter) {
       const alongU = Math.abs(s.v1 - s.v0) < EPS, L = alongU ? s.v0 : s.u0, a = Math.min(alongU ? s.u0 : s.v0, alongU ? s.u1 : s.v1), b = Math.max(alongU ? s.u0 : s.v0, alongU ? s.u1 : s.v1);
+      const others = houseWalls.concat(shared.ctx.visorScene ? [] : shared.ctx.lotWalls); // (and out of the sides laid before it: a corner's rail ended on the face of the other side's)
       cursor.pc = pieceRecord('lot_wall:' + s.id, s.type === 'wall' ? 'brick' : s.type === 'fence' ? 'wood_soft' : 'steel', null, { tags: ['wall'] });
       const th = s.thickness || 0.15, h = s.height, color = colorOf(s.color) ?? (C.wall || 0xb8b4aa), len = b - a;
       // (outside the Visor's scene the lot's wall stops at the house's walls where it meets them, never in them)
       const B = (mat: string, u0: number, y0: number, u1: number, y1: number, t: number, c: Hex, off = 0): void => {
         const box: Aabb = alongU ? [u0, y0, L + off - t / 2, u1, y1, L + off + t / 2] : [L + off - t / 2, y0, u0, L + off + t / 2, y1, u1];
-        for (const p of houseWalls.length ? outsideBoxes(box, houseWalls) : [box]) { bx(mat, p[0], p[1], p[2], p[3], p[4], p[5], c); if (!shared.ctx.visorScene) shared.ctx.lotWalls.push(p); } // (the house's sidewalk is laid round it)
+        for (const p of others.length ? outsideBoxes(box, others) : [box]) { bx(mat, p[0], p[1], p[2], p[3], p[4], p[5], c); if (!shared.ctx.visorScene) shared.ctx.lotWalls.push(p); } // (the house's sidewalk is laid round it)
       };
       const col: BoxCollider = { type: 'lot_wall', f: -1, x0: alongU ? a : L - th / 2, z0: alongU ? L - th / 2 : a, x1: alongU ? b : L + th / 2, z1: alongU ? L + th / 2 : b }; shared.ctx.colliders.push(col);
       if (s.type === 'wall') { B('plaster', a, 0, b, h, th, color); B('plaster', a, h, b, h + 0.05, th + 0.06, sh(color, 1.15)); }
@@ -45,7 +46,7 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
           // the wire's own end posts stand clear of the post that closes a cut end (the Visor's stood in it, on one foot plane)
           const clear = shared.ctx.visorScene || top !== 'razor_wire' ? 0 : 0.06, w0 = x0 + (x0 > a + 0.01 ? clear : 0), w1 = x1 - (x1 < b - 0.01 ? clear : 0);
           const w2 = w1 - w0, cm = (w0 + w1) / 2;
-          const M: Mount = top === 'razor_wire' ? { x: alongU ? cm : L, z: alongU ? L : cm, ry: alongU ? 0 : K.PE, w: w2, d: 0.4, h: 0.4, y: ym, base: 0, floor: -1, colors: C, seed: s.id } : { x: alongU ? cm : L, z: alongU ? L : cm, ry: alongU ? 0 : K.PE, w: w2, d: 0.1, h: 0.3, y: 0, base: ym, floor: -1, colors: C, seed: s.id };
+          const M: Mount = top === 'razor_wire' ? { visorScene: shared.ctx.visorScene, x: alongU ? cm : L, z: alongU ? L : cm, ry: alongU ? 0 : K.PE, w: w2, d: 0.4, h: 0.4, y: ym, base: 0, floor: -1, colors: C, seed: s.id } : { x: alongU ? cm : L, z: alongU ? L : cm, ry: alongU ? 0 : K.PE, w: w2, d: 0.1, h: 0.3, y: 0, base: ym, floor: -1, colors: C, seed: s.id };
           try { shared.ctx.mv.builders[top](M, api); } catch (e) { console.warn(e); }
           for (const [e, cutOff] of [[x0, x0 > a + 0.01], [x1, x1 < b - 0.01]] as const) if (cutOff) { B('metal', e - 0.025, ym, e + 0.025, ym + high, 0.05, 0x55585c); B('metal', e - 0.04, ym + high, e + 0.04, ym + high + 0.025, 0.08, 0x3a3c40); }
         }
