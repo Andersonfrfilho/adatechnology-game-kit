@@ -15,7 +15,7 @@ export function installHouseStairs(K: Kernel, shared: Shared): void {
       for (let i = 0; i < n; i++) {
         const top = (i + 1) * H / n, lz = m.d / 2 - (i + 0.5) * Dr / n;
         boxL('wood', 0, y0 + top - 0.03, lz, m.w - 0.08, 0.06, Dr / n + 0.03, wood); // step
-        boxL('wood', 0, y0 + top - H / n / 2, lz + Dr / n / 2, m.w - 0.08, H / n, 0.025, under); // riser
+        boxL('wood', 0, y0 + top - H / n / 2, lz + Dr / n / 2, shared.ctx.visorScene ? m.w - 0.08 : m.w - 0.084, H / n, 0.025, under); // riser (2 mm inside the step's sides)
       }
       const L = Math.hypot(Dr, H), al = Math.atan2(H, Dr), lzc = m.d / 2 - Dr / 2;
       for (const sd of [-1, 1]) {

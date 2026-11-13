@@ -36,7 +36,7 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         for (const y of [0.3, h - 0.3]) { cylBase('metal', a + 0.035, y - 0.06, v, 0.014, 0.12, sh(gc, 1.3)); bx('metal', a + 0.0, y - 0.03, v - 0.012, a + 0.2 > b - 0.05 ? b - 0.05 : a + 0.04, y + 0.03, v + 0.012, sh(gc, 0.9)); } // hinges (pin on the pillar and flap)
         bx('plain', b - 0.032, h * 0.5 - 0.06, v - 0.03, b - 0.012, h * 0.5 + 0.06, v + 0.03, 0x2a2a2c); bx('metal', b - 0.06, h * 0.5 - 0.02, v - 0.034, shared.ctx.visorScene ? b - 0.05 : b - 0.032, h * 0.5 + 0.02, v + 0.034, 0xc8c8cc); // lock and latch (the latch reaches the lock, never ends on the leaf's stile)
       } else if (tilt) {
-        blade(a + 0.05, 0.05, b - 0.05, h, v); bx('metal', a + 0.05 + (shared.ctx.visorScene ? 0 : 0.005), h - 0.06, v - 0.03, b - 0.05 - (shared.ctx.visorScene ? 0 : 0.005), h + (shared.ctx.visorScene ? 0 : 0.005), v + 0.03, sh(gc, 0.8)); // the top rail caps the blade: short of its ends, over its top
+        blade(a + 0.05, 0.05, b - 0.05, h, v); bx('metal', a + 0.05 + (shared.ctx.visorScene ? 0 : 0.008), h - 0.06, v - 0.03, b - 0.05 - (shared.ctx.visorScene ? 0 : 0.008), h + (shared.ctx.visorScene ? 0 : 0.005), v + 0.03, sh(gc, 0.8)); // the top rail caps the blade: short of its ends, over its top
         bx('metal', a - 0.03, h - 0.02, v - 0.06, a + 0.05, h + 0.06, v + 0.06, 0x3a3a3e); bx('metal', b - 0.05, h - 0.02, v - 0.06, b + 0.03, h + 0.06, v + 0.06, 0x3a3a3e); // axle bearings
         if (auto) { const mx = g.u; bx('plain', mx - 0.2, h + 0.02, v - 0.05 + sd * 0.1, mx + 0.2, h + 0.3, v + 0.2 + sd * 0.1, 0xdcdcd8); bx('plain', mx - 0.17, h + 0.04, v + sd * 0.3, mx + 0.17, h + 0.12, v + sd * 0.31, 0x2a2a2c); bx('emissive', mx + 0.1, h + 0.2, v + sd * 0.2 + sd * 0.0, mx + 0.13, h + 0.23, v + sd * 0.21 + 0.003 * sd, 0xff5a3a); }
       } else { // sliding (R37): the WHOLE leaf (blade, frames, rack) slides on a track; the tail sits on the side it opens to, the track covers the whole travel
@@ -48,7 +48,7 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         for (const x of [r0 + 0.05, r1 - 0.05, dirx > 0 ? b + 0.1 : a - 0.1]) bx('metal', x - 0.025, 0, zc - 0.04, x + 0.025, h + 0.09, zc + 0.04, 0x5a5a5e);
         // leaf (captured by gatesInteractive: part 'ix:gate:<id>' with pose by type 'sliding_gate')
         // (outside the Visor's scene the leaf rides over the rail's groove, its top bar caps the blade short of its ends, the casters reach the leaf)
-        const V = shared.ctx.visorScene, cap = V ? 0 : 0.005;
+        const V = shared.ctx.visorScene, cap = V ? 0 : 0.008; // (the ribs stop 5 mm short)
         blade(x0, 0.08, x1, h, zc); bx('metal', x0, V ? 0.04 : 0.052, zc - 0.03, x1, 0.08, zc + 0.03, sh(gc, 0.8)); bx('metal', x0 + cap, h - 0.07, zc - 0.03, x1 - cap, h + cap, zc + 0.03, sh(gc, 0.8));
         for (let x = x0 + 0.04; x < x1 - 0.04; x += 0.06) bx('metal', x, 0.08, zc + sd * 0.03, x + 0.03, 0.12, zc + sd * 0.045, 0x8a8a8e); // rack
         for (const x of [x0 + 0.2, x1 - 0.2]) cylBase('metal', x, 0.0, zc, 0.03, V ? 0.05 : 0.052, 0x2a2a2c); // casters

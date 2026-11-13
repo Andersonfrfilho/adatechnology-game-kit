@@ -50,7 +50,9 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       const M = en.meter;
       if (M) { // meter box with window and seal, on the face of the pillar/facade turned to the street (with the kit: power_meter)
         const hw = (M.w || 0.35) / 2, hd = (M.d || 0.2) / 2, hh = (M.h || 0.5) / 2, fr = M.side === 'front' ? -1 : 1;
-        if (!(KV && KV.meter)) bx('plain', M.u - hw, M.y - hh, M.v - hd, M.u + hw, M.y + hh, M.v + hd, 0xd9dbdd);
+        // (outside the Visor's scene its back stops 3 mm short of where the plan puts it: a box set into a wall has its back on the wall's axis)
+        const back = shared.ctx.visorScene ? 0 : 0.003;
+        if (!(KV && KV.meter)) bx('plain', M.u - hw, M.y - hh, M.v - hd + (fr > 0 ? back : 0), M.u + hw, M.y + hh, M.v + hd - (fr < 0 ? back : 0), 0xd9dbdd);
         const fz = fr < 0 ? [M.v - hd - 0.012, M.v - hd] : [M.v + hd, M.v + hd + 0.012];
         if (!(KV && KV.meter)) { bx('glass', M.u - hw * 0.6, M.y - hh * 0.2, fz[0], M.u + hw * 0.6, M.y + hh * 0.6, fz[1], 0xffffff); bx('plain', M.u - hw * 0.35, M.y - hh * 0.1, fz[0] - fr * 0.002 * 0, M.u + hw * 0.35, M.y + hh * 0.3, fz[1], 0x2b2f33);
         bx('metal', M.u - 0.02, M.y - hh * 0.85, fz[0], M.u + 0.02, M.y - hh * 0.6, fz[1], 0x9a9ea2); }

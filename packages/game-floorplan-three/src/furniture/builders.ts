@@ -46,7 +46,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
       for (const s of [-1, 1]) lb(iron ? 'metal' : 'wood', s * (w / 2 - 0.02), 0, 0, 0.04, h, d, wood);
       if (!iron && !o.open) lb('wood', 0, 0, -d / 2 + 0.01, apart() ? w - 0.08 : w, h, 0.02, sh(wood, 0.8)); // (the back between the sides)
       for (let k = 0; k < ns; k++) {
-        const y = 0.05 + k * (h - 0.08) / (ns - 1); lb(iron ? 'metal' : 'wood', 0, y, 0, w - 0.04, 0.03, d, wood);
+        const y = 0.05 + k * (h - 0.08) / (ns - 1); if (apart()) lb(iron ? 'metal' : 'wood', 0, y, 0.01, w - 0.08, 0.03, d - 0.02, wood); else lb(iron ? 'metal' : 'wood', 0, y, 0, w - 0.04, 0.03, d, wood); // (the boards between the sides, in front of the back)
         if (k === ns - 1) continue;
         let u = -w / 2 + 0.06; while (u < w / 2 - 0.1) { const bw = 0.03 + rnd() * 0.05, bh = 0.18 + rnd() * 0.14; if (rnd() < 0.2) { u += 0.14; continue; } if (o.crates) lb('plain', u + 0.1, y + 0.03, 0, 0.2, 0.2 + rnd() * 0.1, d * 0.8, [0xa8865a, 0xc8b08a, 0x8a6a46][(rnd() * 3) | 0]); else lb('plain', u + bw / 2, y + 0.03, 0.02, bw, bh, d * 0.75, [0x8a2a2a, 0x2a4a6a, 0x3a5a3a, 0xc8b88a, 0x5a3a5a, 0x1a1a1a][(rnd() * 6) | 0]); u += o.crates ? 0.24 : bw + 0.004; }
       }

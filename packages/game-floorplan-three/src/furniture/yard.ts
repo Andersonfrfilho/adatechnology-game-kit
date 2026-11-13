@@ -117,7 +117,9 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
     const range = (r: readonly [number, number], k: number): [number, number] => (k > 0 ? [r[0] * k, r[1] * k] : [r[1] * k, r[0] * k]);
     const COLORS = { wall: 0xb8b4aa, roof: 0xa9a59b, door: 0x6f7a80, louvre: 0x2a2f33 } as const;
     for (const box of gasShelterBoxes(shelter)) {
-      const [x0, x1] = alongX ? range(box.front, sign) : box.across, [z0, z1] = alongX ? box.across : range(box.front, sign);
+      // (outside the Visor's scene the shelter backs onto the wall's 12 mm baseboard tiles, never into them)
+      const off = shared.ctx.visorScene ? 0 : 0.012 * sign, front = range(box.front, sign).map((x) => x + off) as [number, number];
+      const [x0, x1] = alongX ? front : box.across, [z0, z1] = alongX ? box.across : front;
       K.b(box.part === 'door' || box.part === 'louvre' ? 'metal' : 'plain', (x0 + x1) / 2, box.y[0], (z0 + z1) / 2, x1 - x0, box.y[1] - box.y[0], z1 - z0, COLORS[box.part]);
     }
     const copper = 0xb87333;
