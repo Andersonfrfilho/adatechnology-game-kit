@@ -299,6 +299,8 @@ class Renderer implements DestructionRenderer {
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
+  /** The rotated boxes of the fixed objects' shown meshes (10 numbers each), made again when `staticNow` measured the object again. */
+  private readonly staticRotated = new Map<string, { from: number[]; boxes: number[] }>()
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
@@ -425,6 +427,9 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
+      // spike only: PIECE_ENGINE=rapier runs every existing test of the package through the engine (tests/setup-engine.ts)
+      physics: o.physics ?? (globalThis as { __KIT_PHYSICS_ENGINE__?: import('@adatechnology/game-physics').PhysicsEngine }).__KIT_PHYSICS_ENGINE__?.createWorld({ gravity: [0, -(o.gravity ?? 9.81), 0] }),
+      staticBoxes: () => this.staticObbs(),
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
@@ -1017,6 +1022,47 @@ class Renderer implements DestructionRenderer {
       }
     }
     return top
+  }
+
+  /** Rotated boxes of what is drawn of each fixed object (centre, half sizes, quaternion), for a physics engine: the same meshes `staticNow` measures, not their axis boxes. */
+  private staticObbs(): Map<string, number[]> {
+    const now = this.staticNow()
+    const out = new Map<string, number[]>()
+    const box = new this.THREE.Box3()
+    const p = new this.THREE.Vector3()
+    const q = new this.THREE.Quaternion()
+    const s = new this.THREE.Vector3()
+    const c = new this.THREE.Vector3()
+    for (const [id, from] of now) {
+      // a piece made since the object was last measured is not fixed any more: its old boxes would hold it where it was
+      if (this.pieceSys.get(id)) continue
+      const known = this.staticRotated.get(id)
+      if (known && known.from === from) {
+        out.set(id, known.boxes)
+        continue
+      }
+      const boxes: number[] = []
+      const b = this.bounds.get(id)
+      if (b && from.length > 0) {
+        for (const mv of this.meshesOf(b)) {
+          if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
+          this.visuals.worldBox(mv, box)
+          if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
+          const g = mv.mesh.geometry
+          if (!g.boundingBox) g.computeBoundingBox()
+          if (!g.boundingBox || g.boundingBox.isEmpty()) continue
+          mv.mesh.updateWorldMatrix(true, false)
+          mv.mesh.matrixWorld.decompose(p, q, s)
+          g.boundingBox.getCenter(c).applyMatrix4(mv.mesh.matrixWorld)
+          const size = g.boundingBox.getSize(new this.THREE.Vector3())
+          boxes.push(c.x, c.y, c.z, (size.x * Math.abs(s.x)) / 2, (size.y * Math.abs(s.y)) / 2, (size.z * Math.abs(s.z)) / 2, q.x, q.y, q.z, q.w)
+        }
+      }
+      this.staticRotated.set(id, { from, boxes })
+      out.set(id, boxes)
+    }
+    for (const id of this.staticRotated.keys()) if (!now.has(id)) this.staticRotated.delete(id)
+    return out
   }
 
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */

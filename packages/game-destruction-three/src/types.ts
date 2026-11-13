@@ -53,6 +53,8 @@ export interface RendererOptions {
    * support.
    */
   maxAwakePieces?: number
+  /** Spike: the physics world the loose pieces step in (`@adatechnology/game-physics`), loaded by the host before the renderer is made; without it the kit's own solver. */
+  physics?: import('@adatechnology/game-physics').PhysicsWorld | (() => import('@adatechnology/game-physics').PhysicsWorld | undefined)
   /** Most fragments moving at once (default no limit; `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64): over it the oldest at rest on what is under them sleep where they lie. */
   maxAwakeFragments?: number
   /**

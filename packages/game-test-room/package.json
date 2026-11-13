@@ -61,7 +61,8 @@
     "@adatechnology/game-terrain-three": "workspace:^",
     "@adatechnology/game-vfx": "workspace:^",
     "@adatechnology/game-vfx-three": "workspace:^",
-    "@adatechnology/game-weapons": "workspace:^"
+    "@adatechnology/game-weapons": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"

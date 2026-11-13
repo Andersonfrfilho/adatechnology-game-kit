@@ -461,6 +461,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.maxAwakePieces !== undefined ? { maxAwakePieces: options.debris.maxAwakePieces } : {}),
     ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
     ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
+    ...(options.physics ? { physics: options.physics } : {}),
     onSound: playSound,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it

@@ -28,6 +28,7 @@ import { terrainLotsGround } from '@adatechnology/game-terrain-three'
 import { createFirstPersonArms, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 import { defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
+import { loadRapierEngine } from '@adatechnology/game-physics-rapier'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__ */
@@ -68,7 +69,19 @@ const scenery = isFloorplan
       sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
     }
 
+// spike: ?engine=rapier steps the loose debris through Rapier once its WebAssembly has loaded (window.__physicsReady tells the probes)
+/** @type {import('@adatechnology/game-physics').PhysicsWorld | undefined} */
+let physicsWorld
+if (new URLSearchParams(location.search).get('engine') === 'rapier') {
+  const started = performance.now()
+  void loadRapierEngine().then((engine) => {
+    physicsWorld = engine.createWorld({ gravity: [0, -9.81, 0] })
+    ;/** @type {Record<string, unknown>} */ (/** @type {unknown} */ (window)).__physicsReady = performance.now() - started
+  })
+}
+
 const room = createTestRoom({
+  physics: () => physicsWorld,
   THREE,
   container: /** @type {HTMLElement} */ (document.getElementById('app')),
   locale,

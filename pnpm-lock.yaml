@@ -472,6 +472,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
@@ -482,6 +485,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vfx-three
     devDependencies:
+      '@adatechnology/game-physics-rapier':
+        specifier: workspace:^
+        version: link:../game-physics-rapier
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1192,6 +1198,52 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-physics:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-physics-rapier:
+    dependencies:
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@dimforge/rapier3d-deterministic-compat':
+        specifier: 0.21.0
+        version: 0.21.0
+    devDependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
+      '@dimforge/rapier3d-simd-compat':
+        specifier: 0.21.0
+        version: 0.21.0
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-player:
     dependencies:
       '@adatechnology/game-contracts':
@@ -1442,6 +1494,9 @@ importers:
       '@adatechnology/game-items':
         specifier: workspace:^
         version: link:../game-items
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
@@ -2468,6 +2523,12 @@ packages:
 
   '@changesets/write@0.4.0':
     resolution: {integrity: sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q==}
+
+  '@dimforge/rapier3d-deterministic-compat@0.21.0':
+    resolution: {integrity: sha512-n7JuU62Obljlgq+OeH2DHhTmRSjRzwuJPl54tS9pFIzVQyvXsO5CH+a5KkIRBtnFWDbg1Zicv9BulG0jfBAopA==}
+
+  '@dimforge/rapier3d-simd-compat@0.21.0':
+    resolution: {integrity: sha512-o30irwGVP/Q8CYxZBBtftMqhq/kUY2nGv4ml5xNkblpDD5IViybzxo3XtuNnq1C5RJgeGagLgBFRJBMrt2ydLw==}
 
   '@esbuild/aix-ppc64@0.27.7':
     resolution: {integrity: sha512-EKX3Qwmhz1eMdEJokhALr0YiD0lhQNwDqkPYyPhiSwKrh7/4KRjQc04sZ8db+5DVVnZ1LmbNDI1uAMPEUBnQPg==}
@@ -4323,6 +4384,10 @@ snapshots:
       fs-extra: 7.0.1
       human-id: 4.2.2
       prettier: 2.8.8
+
+  '@dimforge/rapier3d-deterministic-compat@0.21.0': {}
+
+  '@dimforge/rapier3d-simd-compat@0.21.0': {}
 
   '@esbuild/aix-ppc64@0.27.7':
     optional: true

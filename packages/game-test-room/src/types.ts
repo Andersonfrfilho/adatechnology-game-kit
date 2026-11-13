@@ -335,6 +335,11 @@ export interface TestRoomOptions {
   lightSizes?: { readonly point?: number; readonly spot?: number }
   /** Drawn frames the GPU may be behind before the room holds a draw back (`createFramePacer`, default 2). */
   framesInFlight?: number
+  /**
+   * Spike: the physics world the loose debris steps in (`@adatechnology/game-physics`), or a getter for one still loading. A getter is a spike shortcut for this synchronous
+   * room: pieces made before it answers step on the kit's own solver. Production makes the room after the engine has loaded.
+   */
+  physics?: import('@adatechnology/game-physics').PhysicsWorld | (() => import('@adatechnology/game-physics').PhysicsWorld | undefined)
   debris?: {
     fragmentLife?: number | FragmentLifeRule
     maxFragments?: number
