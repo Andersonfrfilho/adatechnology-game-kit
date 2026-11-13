@@ -86,6 +86,9 @@ export interface JoltCharacter {
 }
 
 const ROW_CAPACITY = 4096
+/** Height field blocks (samples a side) and Jolt's value for a sample with no ground (`HeightFieldShapeConstants::cNoCollisionValue`, FLT_MAX). */
+const HEIGHT_BLOCK = 4
+const NO_COLLISION = 3.4028234663852886e38
 const POINTS_PER_BODY = 16
 
 class Contacts implements ContactBuffer {
@@ -285,12 +288,16 @@ export class JoltWorld implements PhysicsWorld {
         const s = new J.HeightFieldShapeSettings()
         s.mOffset.Set(shape.origin[0], shape.origin[1], shape.origin[2])
         s.mScale.Set(shape.cell, 1, shape.cell)
-        s.mSampleCount = shape.size
-        s.mBlockSize = 4
+        // Jolt takes a multiple of the block size: the samples past `size` are holes, so the field ends where ours does
+        const count = Math.ceil(shape.size / HEIGHT_BLOCK) * HEIGHT_BLOCK
+        s.mSampleCount = count
+        s.mBlockSize = HEIGHT_BLOCK
         s.mBitsPerSample = 8
-        s.mHeightSamples.resize(shape.size * shape.size)
+        s.mHeightSamples.resize(count * count)
         const ptr = J.getPointer(s.mHeightSamples.data()) >> 2
-        for (let i = 0; i < shape.size * shape.size; i++) J.HEAPF32[ptr + i] = shape.heights[i]
+        for (let z = 0; z < count; z++) {
+          for (let x = 0; x < count; x++) J.HEAPF32[ptr + z * count + x] = x < shape.size && z < shape.size ? shape.heights[z * shape.size + x] : NO_COLLISION
+        }
         return s
       }
       case 'compound': {
@@ -435,7 +442,8 @@ export class JoltWorld implements PhysicsWorld {
   setShape(id: BodyId, shape: ShapeDesc): void {
     const e = this.entry(id)
     const made = this.makeShape(shape)
-    this.bi.SetShape(e.id, made, true, this.J.EActivation_Activate)
+    // a static body has no mass to update; the body keeps its id, so what touches it keeps its cached contacts to warm start from
+    this.bi.SetShape(e.id, made, e.body.IsDynamic(), this.J.EActivation_Activate)
     made.Release()
   }
 

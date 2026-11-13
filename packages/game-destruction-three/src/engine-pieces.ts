@@ -2,7 +2,8 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { BodyId, Material, PhysicsWorld, Quat, ShapeDesc } from '@adatechnology/game-physics'
 
-import { buildGroundMesh } from './engine-ground'
+import { buildGroundTile, sameGround } from './engine-ground'
+import type { GroundTile } from './engine-ground'
 import type { PieceBody } from './internal'
 import type { PieceSweepHit } from './pieces'
 
@@ -63,7 +64,13 @@ interface Link {
 }
 
 interface Tile {
-  id: BodyId
+  /** The ground body: a slab when the tile is level, else a height field; kept across changes so what lies on it keeps its contacts. */
+  ground: BodyId
+  slab: boolean
+  /** The step boxes' body, if the tile has steps, and the boxes it was made from. */
+  steps: BodyId | null
+  boxes: readonly number[]
+  samples: Float64Array
   dirty: boolean
 }
 
@@ -110,7 +117,10 @@ export class EnginePieces {
 
   clear(): void {
     for (const b of [...this.links.keys()]) this.remove(b)
-    for (const t of this.tiles.values()) this.world.removeBody(t.id)
+    for (const t of this.tiles.values()) {
+      this.world.removeBody(t.ground)
+      if (t.steps !== null) this.world.removeBody(t.steps)
+    }
     this.tiles.clear()
     for (const s of this.statics.values()) if (s.id !== null) this.world.removeBody(s.id)
     this.statics.clear()
@@ -328,7 +338,7 @@ export class EnginePieces {
     return this.v.copy(b.centerV).applyQuaternion(b.root.quaternion).add(b.root.position)
   }
 
-  /** Lays the tiles of ground under and around what is awake, and lays again those whose region changed. */
+  /** Lays the tiles of ground under and around what is awake, and lays again those whose region changed (only if their ground did change). */
   private layGround(list: readonly PieceBody[]): void {
     for (const b of list) {
       if (b.sleeping) continue
@@ -339,20 +349,51 @@ export class EnginePieces {
           const key = `${ix},${iz}`
           const tile = this.tiles.get(key)
           if (tile && !tile.dirty) continue
-          if (tile) this.world.removeBody(tile.id)
-          this.tiles.set(key, { id: this.makeTile(ix, iz), dirty: false })
+          this.layTile(key, ix, iz, tile)
         }
       }
     }
   }
 
-  private makeTile(ix: number, iz: number): BodyId {
-    const mesh = buildGroundMesh(this.o.groundAt, ix * TILE, iz * TILE, TILE)
-    if (mesh.flat) {
-      // level ground is a slab: exact, cheaper, and solid below
-      return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, mesh.high - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
+  /**
+   * A tile of ground, made or brought up to date on the same bodies: the height field is swapped in place (`setShape` keeps the body's id, so the engine still
+   * warm-starts the contacts of what lies on it), the slab moved, the step boxes made again only when they changed. Unchanged ground is left alone.
+   */
+  private layTile(key: string, ix: number, iz: number, tile: Tile | undefined): void {
+    const t = buildGroundTile(this.o.groundAt, ix * TILE, iz * TILE, TILE)
+    if (tile && sameGround(tile.samples, t.samples)) {
+      tile.dirty = false
+      return
     }
-    return this.world.createBody({ shape: { kind: 'trimesh', vertices: mesh.vertices, indices: mesh.indices }, motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+    const slab = t.level !== null
+    let ground: BodyId
+    if (tile && tile.slab === slab) {
+      ground = tile.ground
+      if (slab) this.world.setPose(ground, [(ix + 0.5) * TILE, (t.level ?? 0) - 0.5, (iz + 0.5) * TILE], [0, 0, 0, 1], false)
+      else this.world.setShape(ground, this.heightField(t, ix, iz))
+    } else {
+      if (tile) this.world.removeBody(tile.ground)
+      ground = slab
+        ? this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, (t.level ?? 0) - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
+        : this.world.createBody({ shape: this.heightField(t, ix, iz), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+    }
+    let steps = tile?.steps ?? null
+    const same = tile !== undefined && tile.boxes.length === t.boxes.length && tile.boxes.every((x, i) => x === t.boxes[i])
+    if (!same) {
+      if (steps !== null) this.world.removeBody(steps)
+      steps = t.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(t.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+    }
+    this.tiles.set(key, { ground, slab, steps, boxes: t.boxes, samples: t.samples, dirty: false })
+  }
+
+  private heightField(t: GroundTile, ix: number, iz: number): ShapeDesc {
+    return { kind: 'heightfield', origin: [ix * TILE, 0, iz * TILE], cell: TILE / t.cells, size: t.cells + 1, heights: t.heights }
+  }
+
+  private stepBoxes(boxes: readonly number[]): ShapeDesc {
+    const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
+    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]] }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
+    return { kind: 'compound', children }
   }
 
   /** The host's fixed boxes, one static body per object, made again when the object's boxes changed; what lay on a removed one wakes. */

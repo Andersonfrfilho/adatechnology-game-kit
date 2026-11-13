@@ -20,8 +20,8 @@ export type ShapeDesc =
   /** Static (or kinematic) only: triangles as drawn. `vertices` x,y,z; `indices` three per triangle. */
   | { readonly kind: 'trimesh'; readonly vertices: ArrayLike<number>; readonly indices: ArrayLike<number> }
   /**
-   * Static only: `size` x `size` samples, `cell` metres apart, from `origin` (x, z of sample 0; y added to every height). Smooth terrain; a hard
-   * step (a slab edge) must be a trimesh or a box: a height field turns it into a ramp one cell wide.
+   * Static only: `size` x `size` samples, `cell` metres apart, from `origin` (x, z of sample 0; y added to every height), x fastest
+   * (`heights[iz * size + ix]`). Smooth terrain; a hard step (a slab edge) must be a box beside it: a height field turns it into a ramp one cell wide.
    */
   | { readonly kind: 'heightfield'; readonly origin: Vec3; readonly cell: number; readonly size: number; readonly heights: ArrayLike<number> }
   /** Children placed in the body's frame; `tag` comes back on queries and contacts (our part id). */
