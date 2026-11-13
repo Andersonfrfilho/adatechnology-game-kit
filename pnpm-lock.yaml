@@ -1192,6 +1192,43 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-physics:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-physics-jolt:
+    dependencies:
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      jolt-physics:
+        specifier: 1.1.1
+        version: 1.1.1
+    devDependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:^
+        version: link:../game-characters
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-player:
     dependencies:
       '@adatechnology/game-contracts':
@@ -3579,6 +3616,9 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
+  jolt-physics@1.1.1:
+    resolution: {integrity: sha512-kMCQu/b4wbHwy7EgZWaSbUyDthIKZUvAGGqta4pBF4Pdq+ljWaNvQoa5hPr/PkVCUVsqcoLwXITUm6975mQhiQ==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -5294,6 +5334,8 @@ snapshots:
   is-windows@1.0.2: {}
 
   isexe@2.0.0: {}
+
+  jolt-physics@1.1.1: {}
 
   joycon@3.1.1: {}
 
