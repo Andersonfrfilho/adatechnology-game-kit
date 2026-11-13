@@ -9,6 +9,8 @@ const TANK_FILL = 0.08
 const SLEEPER_DEPTH = 0.15
 /** The beam a castle wall stands on between its pillars where no support beam runs under it (L/10 of its span). */
 const CASTLE_SILL = 0.2
+/** How far a free-standing support beam runs past the outer pillar of its line, to bear on a pillar of its own. */
+const FREE_BEAM_BEARING = 0.3
 
 const squareAround = (u: number, v: number, side: number): Rect => [u - side / 2, v - side / 2, u + side / 2, v + side / 2]
 
@@ -68,7 +70,7 @@ function supportBeams(context: BuildContext, slab: StructurePart, lines: { reado
   }
   const alongU = plan(true), alongV = plan(false)
   const chosen = alongU && (!alongV || alongU.worst <= alongV.worst) ? { along: true, p: alongU } : alongV ? { along: false, p: alongV } : null
-  if (!chosen) return []
+  if (!chosen) return freeStandingBeams(context, slab, lines)
   return chosen.p.beams.map((b, k) => {
     const depth = Math.max(0.25, (b.a1 - b.a0) / 10)
     const h = 0.075
@@ -104,6 +106,36 @@ function supportBeams(context: BuildContext, slab: StructurePart, lines: { reado
     }
     builder.rest(beam, b.a, system.joints.slab)
     builder.rest(beam, b.b, system.joints.slab)
+    builder.rest(slab, beam, 'rebar')
+    return beam
+  })
+}
+
+/**
+ * Where no bearing wall crosses a support line on both sides (an open plan, a wing), the beam is carried by two pillars of its own that go down to the
+ * foundation (or to the floor slab of an upper storey), a little past the outer pillars of the line: the tank never bears on the bare panel.
+ */
+function freeStandingBeams(context: BuildContext, slab: StructurePart, lines: { readonly u: readonly [number, number]; readonly v: readonly [number, number] }): StructurePart[] {
+  const { builder, construction } = context
+  const top = context.floorCount - 1
+  const storeyFloor = context.source.floors[top]?.y0 ?? 0
+  const alongU = lines.u[1] - lines.u[0] <= lines.v[1] - lines.v[0]
+  const ats = alongU ? lines.v : lines.u
+  const [from, to] = alongU ? lines.u : lines.v
+  const ends = [from - FREE_BEAM_BEARING, to + FREE_BEAM_BEARING] as const
+  const depth = Math.max(0.25, (ends[1] - ends[0]) / 10)
+  const h = 0.075
+  return ats.map((at, k) => {
+    const aabb: Rect = alongU ? [ends[0], at - h, ends[1], at + h] : [at - h, ends[0], at + h, ends[1]]
+    const beam = builder.add({ id: `tank_beam_${k}`, role: 'beam', material: construction.frame.slabs, aabb, y0: slab.y1 - depth, y1: slab.y1 }, { floor: top })
+    ends.forEach((end, side) => {
+      const box: Rect = alongU ? pillarBox(context.pillar, end, at, false) : pillarBox(context.pillar, at, end, true)
+      const pillar = builder.add({ id: `tank_beam_pillar_${k}_${side}`, role: 'column', material: construction.frame.pillars, aabb: box, y0: storeyFloor, y1: slab.y1 - depth }, { floor: top })
+      const base = builder.parts.find((p) => p.id !== pillar.id && (p.role === 'slab' || p.role === 'beam') && Math.abs(p.y1 - storeyFloor) < 0.06 && touches(p.aabb, box, 0.01))
+      if (storeyFloor <= 0.05) builder.rest(pillar, GROUND, 'rebar')
+      else if (base) builder.rest(pillar, base, 'rebar')
+      builder.rest(beam, pillar, 'rebar')
+    })
     builder.rest(slab, beam, 'rebar')
     return beam
   })
