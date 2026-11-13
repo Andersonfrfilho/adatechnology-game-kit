@@ -7,9 +7,9 @@ export function yardBuilders({ kit, cover }: BuilderContext): Partial<BuilderMap
   B.ac_condenser = (M, a) => { const K = kit(M, a), { w, d, h } = K.dim('ac_condenser'), y = M.y != null && M.y > 0 ? M.y : 0.5;
     for (const s of [-1, 1]) { K.box('metal', s * w * 0.32, y - 0.06, -d / 2 - 0.2, 0.04, 0.04, 0.3, 0x6a6a6a); K.box('metal', s * w * 0.32, y - 0.5 + 0.06, -d / 2 - 0.2 - 0.0, 0.035, 0.46, 0.035, 0x6a6a6a, 0, 0.0); }
     K.box('plain', 0, y, 0, w, h, d, 0xe8e8e4); K.box('plain', 0, y + h - 0.02, 0, w + 0.02, 0.025, d + 0.02, 0xd8d8d4);
-    K.cyl('metal', -w * 0.12, y + h / 2, d / 2 + 0.004, 0.2, 0.012, 0x2a2a2e, Math.PI / 2, 0); K.cyl('metal', -w * 0.12, y + h / 2, d / 2 + 0.012, 0.085, 0.02, 0x4a4a4e, Math.PI / 2, 0);
-    for (let i = 0; i < 4; i++) K.box('metal', -w * 0.12, y + h / 2 - 0.2, d / 2 + 0.018, 0.4, 0.008, 0.008, 0x8a8a8a, 0, 0, i * 0.785);
-    for (let i = 0; i < 3; i++) K.cyl('metal', -w * 0.12, y + h / 2, d / 2 + 0.02, 0.07 + i * 0.043, 0.006, 0x7a7a7e, Math.PI / 2, 0);
+    K.cyl('metal', -w * 0.12, y + h / 2, d / 2 + 0.004, 0.2, 0.012, 0x2a2a2e, Math.PI / 2, 0); const V = M.visorScene; K.cyl('metal', -w * 0.12, y + h / 2, d / 2 + (V ? 0.012 : 0.016), 0.085, 0.02, 0x4a4a4e, Math.PI / 2, 0); // (outside the Visor's scene the grille's bars, hub and rings stand 2 to 3 mm apart, front to front)
+    for (let i = 0; i < 4; i++) K.box('metal', -w * 0.12, y + h / 2 - 0.2, d / 2 + (V ? 0.018 : 0.010 + i * 0.002), 0.4, 0.008, 0.008, 0x8a8a8a, 0, 0, i * 0.785);
+    for (let i = 0; i < 3; i++) K.cyl('metal', -w * 0.12, y + h / 2, d / 2 + (V ? 0.02 : 0.027 + i * 0.003), 0.07 + i * 0.043, 0.006, 0x7a7a7e, Math.PI / 2, 0);
     for (let i = 0; i < 6; i++) K.box('plain', w * 0.33, y + 0.06 + i * 0.075, d / 2 + 0.003, 0.14, 0.03, 0.006, 0xc4c4c0);
     K.cyl('metal', w / 2 - 0.05, y + 0.1, -d / 2 - 0.08, 0.012, 0.18, 0xb8733c, Math.PI / 2, 0); K.box('plain', w / 2 - 0.05, y + 0.06, -d / 2 - 0.02, 0.05, 0.12, 0.05, 0xe0e0dc); };
   B.pool = (M, a) => { const K = kit(M, a), { w, d } = K.dim('pool'), t = 0.32, bo = K.color('exterior_floor', 0xe8e4da);
@@ -18,7 +18,7 @@ export function yardBuilders({ kit, cover }: BuilderContext): Partial<BuilderMap
     K.plane('water', 0, 0.075, 0, w, d, 0x8fd4ee, 0, -Math.PI / 2, 0);
     for (let i = 0; i < 3; i++) K.box('plain', w / 2 - 0.35 + i * 0.0, 0.035 + i * 0.01, d / 2 - 0.2 - i * 0.28, 0.7 - i * 0.05, 0.03, 0.26, 0xdfeef2);
     for (const s of [-1, 1]) { K.box('metal', -w / 4 + s * 0.2, 0.0, d / 2 + t * 0.6, 0.03, 0.85, 0.03, 0xc8ccd0); K.box('metal', -w / 4 + s * 0.2, 0.85, d / 2 + t * 0.6 - 0.1, 0.03, 0.03, 0.22, 0xc8ccd0); K.box('metal', -w / 4 + s * 0.2, 0.0, d / 2 - 0.25, 0.03, 0.88, 0.03, 0xc8ccd0, 0, 0.0); }
-    for (let i = 0; i < 3; i++) K.box('metal', -w / 4, 0.02, d / 2 - 0.08 - i * 0.07, 0.4, 0.015, 0.05, 0xc8ccd0); };
+    for (let i = 0; i < 3; i++) K.box('metal', -w / 4, M.visorScene ? 0.02 : 0.04, d / 2 - 0.08 - i * 0.07, 0.4, 0.015, 0.05, 0xc8ccd0); }; // (over the floor's tiles outside the Visor's scene)
   B.deck = (M, a) => { const K = kit(M, a), { w, d } = K.dim('deck'), h = 0.2, wood = K.wood(0x6a4a30);
     K.box('wood', 0, 0, 0, w - 0.05, h, d - 0.05, shade(wood, 0.7)); cover(a, M, 'deck_floor', { w, d, y: h + 0.012, size: 1.2, color: M.color });
     for (const [x, z, ww, dd] of [[0, -d / 2, w, 0.05], [0, d / 2, w, 0.05], [-w / 2, 0, 0.05, d], [w / 2, 0, 0.05, d]]) K.box('wood', x, 0, z, ww, h + 0.02, dd, wood);
@@ -63,7 +63,7 @@ export function yardBuilders({ kit, cover }: BuilderContext): Partial<BuilderMap
     for (let i = 0; i < 2; i++) { const x = (i - 0.5) * w * 0.45, sy = 0.5, sw = 0.46; for (const s of [-1, 1]) K.box('metal', x + s * (sw / 2 - 0.02), sy, 0, 0.012, h - 0.05 - sy, 0.012, 0xa0a4a8); K.box('plain', x, sy - 0.04, 0, sw, 0.045, 0.17, cs[i]); } };
   B.bbq_simple = (M, a) => { const K = kit(M, a), { w, d } = K.dim('bbq_simple'), br = K.color('exterior_floor', 0xb25a40), hb = 0.78;
     K.box('plain', 0, 0, 0, w, 0.45, d, br); for (const [x, z, ww, dd] of [[0, -d / 2 + 0.06, w, 0.12], [0, d / 2 - 0.06, w, 0.12], [-w / 2 + 0.06, 0, 0.12, d - 0.2], [w / 2 - 0.06, 0, 0.12, d - 0.2]]) K.box('plain', x, 0.45, z, ww, hb - 0.45, dd, br);
-    K.box('plain', 0, 0.45, 0, w - 0.22, 0.04, d - 0.22, 0x2a2624); for (let i = 0; i < 10; i++) K.box('plain', (K.rnd() - 0.5) * (w - 0.3), 0.49, (K.rnd() - 0.5) * (d - 0.3), 0.08, 0.02, 0.07, i % 3 ? 0xc84a1a : 0x3a2a24, K.rnd() * 3);
+    K.box('plain', 0, 0.45, 0, w - 0.22, 0.04, d - 0.22, 0x2a2624); for (let i = 0; i < 10; i++) K.box('plain', (K.rnd() - 0.5) * (w - 0.3), M.visorScene ? 0.49 : 0.49 + i * 0.0022, (K.rnd() - 0.5) * (d - 0.3), 0.08, 0.02, 0.07, i % 3 ? 0xc84a1a : 0x3a2a24, K.rnd() * 3);
     for (let i = 0; i < 7; i++) K.box('metal', -w / 2 + 0.16 + i * (w - 0.32) / 6, hb + 0.01, 0, 0.012, 0.012, d - 0.1, 0x5a5a5e); K.box('metal', 0, hb + 0.01, -d / 2 + 0.2, w - 0.1, 0.012, 0.02, 0x5a5a5e);
     for (let i = 0; i < 3; i++) { const z = (i - 1) * 0.15; K.cyl('metal', 0, hb + 0.05, z, 0.006, w + 0.12, 0xb0b4b8, 0, Math.PI / 2); for (let j = 0; j < 3; j++) K.cyl('plain', -w * 0.25 + j * w * 0.22, hb + 0.05, z, 0.035, 0.07, [0x8a3a2a, 0xa8483a, 0xd8b090][j], 0, Math.PI / 2); }
     for (let i = 0; i < 4; i++) K.cyl('wood', w / 2 + 0.2, 0.05 + (i > 2 ? 0.1 : 0), -0.1 + (i % 3) * 0.1, 0.04, 0.3, 0x8a6a44, 0, Math.PI / 2); };

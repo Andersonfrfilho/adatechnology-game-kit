@@ -23,7 +23,7 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     armchair(M, A) {
       const { b: lb } = kk(M, A), c = M.color != null ? M.color : paletteColor(M, 'fabric_accent', 0x84604a), w = M.w, d = M.d, h = M.h || 0.85;
       lb('wood', 0, 0, 0, w, 0.1, d, sh(paletteColor(M, 'wood', 0x3a2a1e), 0.6));
-      lb('fabric', 0, 0.1, 0.04, w - 0.26, 0.32, d - 0.15, c); lb('fabric', 0, 0.1, -d / 2 + 0.1, w, h - 0.1, 0.2, sh(c, 0.85));
+      lb('fabric', 0, 0.1, 0.04, w - 0.26, 0.32, d - 0.15, c); if (M.visorScene) lb('fabric', 0, 0.1, -d / 2 + 0.1, w, h - 0.1, 0.2, sh(c, 0.85)); else lb('fabric', 0, 0.1, -d / 2 + 0.101, w - 0.004, h - 0.1, 0.198, sh(c, 0.85)); // (the back 2 mm inside the arms' sides and backs)
       for (const s of [-1, 1]) lb('fabric', s * (w / 2 - 0.07), 0.1, 0, 0.14, 0.5, d, sh(c, 0.85));
     },
     cabinet(M, A, o: BuilderOptions = {}) { // box with doors (rack, sideboard, laundry cabinet...)
@@ -165,8 +165,9 @@ export function installFurnitureBuilders(K: Kernel, shared: Shared): void {
     },
     wall_shelf(M, A) { // wall shelf: panel, boards and product boxes
       const { b: lb } = kk(M, A), w = M.w, d = M.d, h = M.h, rnd = rngOf(M), ns = Math.max(4, Math.round(h / 0.4)), colors = [0xf2f2ee, 0x3a7bd5, 0x3fa56b, 0xe2b53a, 0xd8574a, 0xe8e8e4];
-      lb('wood', 0, 0, -d / 2 + 0.015, w, h, 0.03, 0xc9bda6); for (const s of [-1, 1]) lb('metal', s * (w / 2 - 0.02), 0, 0, 0.04, h, d, 0x8a8e92);
-      for (let k = 0; k < ns; k++) { const y = 0.12 + k * (h - 0.2) / (ns - 1); lb('metal', 0, y, 0, w - 0.04, 0.025, d, 0xa4a8ac); lb('metal', 0, y + 0.025, d / 2 - 0.01, w - 0.04, 0.04, 0.012, 0xe4e4e0);
+      const V = M.visorScene; // (outside the Visor's scene the panel stands 2 mm inside the sides' backs, sides and tops, and the boards between the sides)
+      if (V) lb('wood', 0, 0, -d / 2 + 0.015, w, h, 0.03, 0xc9bda6); else lb('wood', 0, 0, -d / 2 + 0.016, w - 0.004, h - 0.002, 0.028, 0xc9bda6); for (const s of [-1, 1]) lb('metal', s * (w / 2 - 0.02), 0, 0, 0.04, h, d, 0x8a8e92);
+      for (let k = 0; k < ns; k++) { const y = 0.12 + k * (h - 0.2) / (ns - 1); lb('metal', 0, y, 0, V ? w - 0.04 : w - 0.08, 0.025, d, 0xa4a8ac); lb('metal', 0, y + 0.025, d / 2 - 0.01, w - 0.04, 0.04, 0.012, 0xe4e4e0);
         if (k === ns - 1) continue; const gap = (h - 0.2) / (ns - 1) - 0.06; let x = -w / 2 + 0.07;
         while (x < w / 2 - 0.1) { const bw = 0.07 + rnd() * 0.08, bh = Math.min(gap, 0.12 + rnd() * 0.16), bd = d * 0.55; if (x + bw > w / 2 - 0.05) break; lb('plain', x + bw / 2, y + 0.025, 0.02, bw - 0.012, bh, bd, colors[(rnd() * colors.length) | 0]); x += bw + 0.012; } }
     },

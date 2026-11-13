@@ -100,7 +100,7 @@ export function installLightsFixtures(K: Kernel, shared: Shared): void {
   function tableLamp(M: Mount, A: FurnitureApi, y: number): void { // table lamp: base, stem and shade
     const K = kit2(M, A, 0), color = colorTemperature(M), id = 'lamp_ab_' + M.seed, cp = [0xf0e2c0, 0xe8e2d4, 0xcfd8de][(hashString(seedKey(M.seed) + 'cp') % 3)], meta = { id, room: M.room, on: !!M.on, color, lightType: 'table_lamp', hidden: !M.on };
     K.e('plain', 0, y + 0.045, 0, 0.065, 0.09, 0x3a3228); K.c('metal', 0, y + 0.08, 0, 0.008, 0.14, 0x8a7a5a); K.c('plain', 0, y + 0.2, 0, 0.115, 0.15, cp);
-    K.part('lamp', 0, y + 0.2, 0, () => K.c('emissive', 0, y + 0.2, 0, 0.118, 0.152, color), meta);
+    K.part('lamp', 0, y + 0.2, 0, () => K.c('emissive', 0, shared.ctx.visorScene ? y + 0.2 : y + 0.198, 0, 0.118, shared.ctx.visorScene ? 0.152 : 0.156, color), meta); // (its caps 3 mm off the shade's outside the Visor's scene)
     if (M.on && A.light) A.light(Object.assign({}, M, { lampId: id }), 0, y + 0.3, 0, color, 3.5, 'table_lamp');
   }
   function floorLamp(M: Mount, A: FurnitureApi): void { // floor lamp: base, stem and cylindrical shade
