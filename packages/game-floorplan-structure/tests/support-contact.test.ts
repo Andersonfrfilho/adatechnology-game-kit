@@ -78,12 +78,17 @@ describe('a roof that runs past the walls rests on an eave beam on pillars, made
     }
   })
 
-  it('gas_station: the beam over the garage door spans it from plate to plate, h = L/10', () => {
+  it('gas_station: the bond beam runs on over the 3.4 m garage door, on the masonry over it and its lintel (h = L/10): no eave beam is needed there', () => {
     const result = generate('gas_station', 1)
-    const [beam] = eaveOf(result)
-    expect(result.structure.supports.filter((s) => s.part === beam!.id).map((s) => s.on).sort()).toEqual(['plate_0_0', 'plate_0_1'])
-    // 17.41 to 20.59: 3.18 m, 0.32 m deep
-    expect(beam!.y1 - beam!.y0).toBeCloseTo(0.32, 2)
+    expect(eaveOf(result)).toEqual([])
+    const { parts, supports } = result.structure
+    const header = parts.find((p) => p.id === 'wall_0_over_d0_3')!
+    const plate = parts.find((p) => p.beamKind === 'bond_beam' && supports.some((s) => s.part === p.id && s.on === header.id))!
+    expect(plate.aabb[0]).toBeLessThanOrEqual(header.aabb[0])
+    expect(plate.aabb[2]).toBeGreaterThanOrEqual(header.aabb[2])
+    // the lintel under the masonry: 3.4 m door plus 0.2 m of bearing, 0.36 m deep
+    const lintel = parts.find((p) => p.id === 'lintel_d0_3')!
+    expect(lintel.y1 - lintel.y0).toBeGreaterThanOrEqual((3.4 + 0.2) / 10 - 1e-6)
   })
 
   it('wood_frame_house: a timber beam on timber posts of its own frame, standing on the foundation raft', () => {

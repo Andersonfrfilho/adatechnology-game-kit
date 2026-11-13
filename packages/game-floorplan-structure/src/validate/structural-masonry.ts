@@ -9,7 +9,7 @@ import { GROUND } from '../types'
 import type { Opening, Structure, StructurePart } from '../types'
 import { STRUCTURAL_VIOLATION } from './codes'
 import type { StructuralViolation } from './codes'
-import { assemblyViolations, centre, endKind, isMasonryWall, isOverOpening, lineOf, onLine, pointOf, pointViolations } from './masonry'
+import { assemblyViolations, bondBeamCoverage, bondBeamsOn, centre, endKind, isMasonryWall, isOverOpening, lineOf, onLine, pointOf, pointViolations } from './masonry'
 import type { Confinement, WallLine } from './masonry'
 import { strengthViolations } from './structural-masonry-strength'
 
@@ -17,8 +17,6 @@ import { strengthViolations } from './structural-masonry-strength'
 const coresOf = (unit: MasonryUnit): Confinement => ({ name: 'grouted core', spacing: MAX_GROUT_SPACING, reach: moduleOf(unit) + TOLERANCE })
 /** Bars in a cell where they are spliced: the bar of the course below laps the one above (traspasse), so a cell holds two. */
 const BARS_AT_SPLICE = 2
-/** Metres of a wall its bond beam may leave uncovered (the joint at its end). */
-const BOND_BEAM_SLACK = 0.05
 /** How far a wall end, a jamb, a sill or a head may sit off its grid, metres (the joint takes it). */
 const GRID_SLACK = 0.02
 const TOLERANCE = 0.01
@@ -26,11 +24,6 @@ const TOLERANCE = 0.01
 type MasonryStructure = Pick<Structure, 'parts' | 'supports' | 'construction' | 'openings' | 'levels'>
 
 const offGrid = (x: number, step: number): boolean => Math.abs(x - Math.round(x / step) * step) > GRID_SLACK
-const bondBeamsOn = (part: StructurePart, structure: MasonryStructure): StructurePart[] => {
-  const resting = new Set(structure.supports.filter((s) => s.on === part.id && s.bears !== false).map((s) => s.part))
-  return structure.parts.filter((p) => p.beamKind === 'bond_beam' && resting.has(p.id))
-}
-
 /** The unit and the steel of the cores: graded for structural use, with a channel unit for the reinforced courses, a bar in each core within its cell. */
 function unitViolations(unit: MasonryUnit, groutBar: number | undefined): StructuralViolation[] {
   const out: StructuralViolation[] = []
@@ -105,21 +98,6 @@ function junctionViolations(walls: readonly StructurePart[], structure: MasonryS
   return out
 }
 
-/** Metres of the length of `part` no bond beam on it covers. */
-function uncovered(part: StructurePart, beams: readonly StructurePart[]): number {
-  const alongU = lineOf(part).alongU
-  const [from, to] = alongU ? [part.aabb[0], part.aabb[2]] : [part.aabb[1], part.aabb[3]]
-  const spans = beams.map((b): [number, number] => (alongU ? [b.aabb[0], b.aabb[2]] : [b.aabb[1], b.aabb[3]])).sort((x, y) => x[0] - y[0])
-  let cursor = from
-  let open = 0
-  for (const [a, b] of spans) {
-    if (a > cursor) open += Math.min(a, to) - cursor
-    cursor = Math.max(cursor, b)
-    if (cursor >= to) break
-  }
-  return open + Math.max(0, to - cursor)
-}
-
 /** The detailing of one bearing wall: foundation, bond, grouted cores, bond beam, no concrete pillar, cores under the beams that bear on it. */
 function wallViolations(part: StructurePart, context: { structure: MasonryStructure; walls: readonly StructurePart[]; framed: readonly StructurePart[]; cores: Confinement }): StructuralViolation[] {
   const { structure, walls } = context
@@ -130,12 +108,7 @@ function wallViolations(part: StructurePart, context: { structure: MasonryStruct
   const out = [...assemblyViolations(part, structure.construction.walls.finish), ...pointViolations({ wall, pillars: [], stations, windows }, others, context.cores)]
   if (part.floor === 0 && structure.supports.some((s) => s.part === part.id && s.on === GROUND))
     out.push({ code: STRUCTURAL_VIOLATION.MISSING_GROUND_BEAM, part: part.id, message: `${part.id} stands on the soil with no strip footing, ground beam or raft under it` })
-  const beams = bondBeamsOn(part, structure)
-  if (!beams.length) out.push({ code: STRUCTURAL_VIOLATION.MISSING_BOND_BEAM, part: part.id, message: `${part.id} has no reinforced bond beam course on top` })
-  else {
-    const open = uncovered(part, beams)
-    if (open > BOND_BEAM_SLACK) out.push({ code: STRUCTURAL_VIOLATION.BOND_BEAM_NOT_CONTINUOUS, part: part.id, message: `${part.id}: its bond beam leaves ${open.toFixed(2)} m of the wall uncovered` })
-  }
+  out.push(...bondBeamCoverage(part, structure))
   if (structure.parts.some((c) => c.role === 'column' && c.material === 'concrete' && c.floor === part.floor && onLine(wall, centre(c))))
     out.push({ code: STRUCTURAL_VIOLATION.PILLAR_IN_STRUCTURAL_WALL, part: part.id, message: `${part.id} is structural masonry with a concrete pillar in it` })
   for (const bearing of beamBearings([...context.framed.filter((p) => p.role === 'beam'), ...walls]).filter((b) => b.wall.id === part.id && !groutedAt(stations, b.at)))
@@ -159,6 +132,8 @@ export function structuralMasonryViolations(structure: MasonryStructure, context
   for (const part of walls) {
     out.push(...wallViolations(part, { structure, walls, framed: context.framed.parts, cores: coresOf(unit) }), ...coordinationViolations(part, walls, structure, unit))
   }
+  // the masonry over a door is tied at its top by the bond beam running on over it, as the wall beside it
+  for (const part of structure.parts.filter((p) => isMasonryWall(p) && p.role === 'wall' && isOverOpening(p, structure))) out.push(...bondBeamCoverage(part, structure))
   for (const [a, b] of doubledCores(walls))
     out.push({ code: STRUCTURAL_VIOLATION.GROUT_CORE_DOUBLED, part: a.wall.id, message: `${a.wall.id} at ${a.at.toFixed(2)} m and ${b.wall.id} at ${b.at.toFixed(2)} m grout the same cell` })
   return [...out, ...strengthViolations({ structure, framed: context.framed, rooms: context.rooms, unit, walls })]

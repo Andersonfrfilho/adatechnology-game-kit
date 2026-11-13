@@ -13,14 +13,27 @@ registerStructure(engine)
 const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8]
 /** The tower is a spec built straight from its layout (`buildResidentialTower`), checked below. */
 const HOUSES = residentialTemplateIds.filter((id) => id !== 'residential_tower')
+/** Each house on its defaults and on every option of its template that changes how it is built (storeys, the lift, the tier of the flat). */
+const VARIANTS: [string, Record<string, unknown>][] = [
+  ...HOUSES.map((id): [string, Record<string, unknown>] => [id, {}]),
+  ['high_end_contemporary', { floors: 1 }],
+  ['high_end_contemporary', { floors: 3 }],
+  ['mansion', { floors: 1 }],
+  ['mansion', { floors: 2 }],
+  ['mansion', { elevator: true }],
+  ['budget_slab_house', { floors: 2 }],
+  ['budget_slab_house', { floors: 3 }],
+  ['budget_slab_house', { randomFloors: true }],
+  ['apartment_modern', { tier: 'high' }],
+]
 
 /** Construction tests (CLAUDE.md §11): every residential typology is a structure a structural engineer signs, the validator of the SDK finds nothing. */
 describe('residential construction', () => {
-  for (const id of HOUSES) {
-    it(`${id}: confined masonry, concrete and load paths on seeds ${SEEDS[0]}-${SEEDS[SEEDS.length - 1]}`, () => {
+  for (const [id, options] of VARIANTS) {
+    it(`${id} ${JSON.stringify(options)}: confined masonry, concrete and load paths on seeds ${SEEDS[0]}-${SEEDS[SEEDS.length - 1]}`, () => {
       for (const seed of SEEDS) {
-        const plan = engine.generate(id, { seed }) as unknown as { structure: Structure; doors: SourceDoor[] }
-        expect(validateStructure(plan.structure, { doors: plan.doors }), `${id} seed ${seed}`).toEqual([])
+        const plan = engine.generate(id, { seed, ...options }) as unknown as { structure: Structure; doors: SourceDoor[] }
+        expect(validateStructure(plan.structure, { doors: plan.doors }), `${id} ${JSON.stringify(options)} seed ${seed}`).toEqual([])
       }
     })
   }

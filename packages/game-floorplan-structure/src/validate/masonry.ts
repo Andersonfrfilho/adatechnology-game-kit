@@ -109,12 +109,44 @@ export function pointViolations(context: WallContext, others: readonly WallLine[
   return out
 }
 
+/** Metres of a wall its bond beam may leave uncovered (the joint at its end). */
+const BOND_BEAM_SLACK = 0.05
+
+/** The bond beams resting on `part`. */
+export const bondBeamsOn = (part: StructurePart, structure: Pick<Structure, 'parts' | 'supports'>): StructurePart[] => {
+  const resting = new Set(structure.supports.filter((s) => s.on === part.id && s.bears !== false).map((s) => s.part))
+  return structure.parts.filter((p) => p.beamKind === 'bond_beam' && resting.has(p.id))
+}
+
+/** Metres of the length of `part` no bond beam on it covers. */
+function uncovered(part: StructurePart, beams: readonly StructurePart[]): number {
+  const alongU = lineOf(part).alongU
+  const [from, to] = alongU ? [part.aabb[0], part.aabb[2]] : [part.aabb[1], part.aabb[3]]
+  const spans = beams.map((b): [number, number] => (alongU ? [b.aabb[0], b.aabb[2]] : [b.aabb[1], b.aabb[3]])).sort((x, y) => x[0] - y[0])
+  let cursor = from
+  let open = 0
+  for (const [a, b] of spans) {
+    if (a > cursor) open += Math.min(a, to) - cursor
+    cursor = Math.max(cursor, b)
+    if (cursor >= to) break
+  }
+  return open + Math.max(0, to - cursor)
+}
+
+/** A bond beam on `part` over its whole length (the masonry over a door too: a bond beam cut over it leaves its top untied). */
+export function bondBeamCoverage(part: StructurePart, structure: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
+  const beams = bondBeamsOn(part, structure)
+  if (!beams.length) return [{ code: STRUCTURAL_VIOLATION.MISSING_BOND_BEAM, part: part.id, message: `${part.id} has no bond beam on top` }]
+  const open = uncovered(part, beams)
+  return open > BOND_BEAM_SLACK ? [{ code: STRUCTURAL_VIOLATION.BOND_BEAM_NOT_CONTINUOUS, part: part.id, message: `${part.id}: its bond beam leaves ${open.toFixed(2)} m of the wall uncovered` }] : []
+}
+
 function bondBeamViolations(context: WallContext, structure: Pick<Structure, 'parts' | 'supports'>): StructuralViolation[] {
   const { wall, pillars } = context
-  const resting = new Set(structure.supports.filter((s) => s.on === wall.part.id).map((s) => s.part))
-  const beams = structure.parts.filter((p) => p.beamKind === 'bond_beam' && resting.has(p.id))
-  if (!beams.length) return [{ code: STRUCTURAL_VIOLATION.MISSING_BOND_BEAM, part: wall.part.id, message: `${wall.part.id} has no bond beam on top` }]
-  const out: StructuralViolation[] = []
+  const coverage = bondBeamCoverage(wall.part, structure)
+  if (coverage.some((v) => v.code === STRUCTURAL_VIOLATION.MISSING_BOND_BEAM)) return coverage
+  const beams = bondBeamsOn(wall.part, structure)
+  const out: StructuralViolation[] = [...coverage]
   for (const pillar of pillars) {
     // the beam is over the pillar where their plan boxes overlap (a long pillar at a wall's end carries the beam over part of its length)
     const [p0, q0, p1, q1] = pillar.aabb
@@ -148,7 +180,11 @@ export function masonryViolations(structure: Pick<Structure, 'parts' | 'supports
     out.push(...assemblyViolations(part, structure.construction.walls.finish))
     if (part.floor === 0 && structure.supports.some((s) => s.part === part.id && s.on === GROUND))
       out.push({ code: STRUCTURAL_VIOLATION.MISSING_GROUND_BEAM, part: part.id, message: `${part.id} stands on the soil with no ground beam under it` })
-    if (!part.exterior || isOverOpening(part, structure)) continue
+    if (!part.exterior) continue
+    if (isOverOpening(part, structure)) {
+      out.push(...bondBeamCoverage(part, structure))
+      continue
+    }
     const wall = lineOf(part)
     // a pillar of the next wall on the line, standing just past this one's end, confines this end too
     const pillars = columns.filter((c) => c.floor === part.floor && onLine(wall, centre(c), AT_POINT) && Math.min(c.y1, part.y1) - Math.max(c.y0, part.y0) > 0.5)

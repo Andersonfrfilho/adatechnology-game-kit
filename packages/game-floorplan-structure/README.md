@@ -81,6 +81,14 @@ balcony slabs between, as the column of stacked balconies does) or on the founda
 a lintel. Concrete with NBR 6118 sections (h ≥ L/10 over its longest span, at least 25 cm; pillars of the walls' section), timber posts and beam in a timber
 house. The house renderer draws them in the facade's finish (or timber). The reproduction of the Visor de casas 3D keeps its team's supports.
 
+The bond beam runs on over every door with a lintel, however wide: the masonry over the door is tied at its top as the wall beside it is (validated:
+`MISSING_BOND_BEAM` / `BOND_BEAM_NOT_CONTINUOUS` on the masonry over a door too). Members of an eave line with only air between them within 4 m share one
+eave beam (never a short one on a single pillar: `BEAM_SINGLE_SUPPORT`). Each slab an eave pillar runs through is cast on it, so it is braced per storey
+(`COLUMN_TOO_SLENDER`: λ = l_e √12 / b over the longest braced stretch, at most 90, NBR 6118 15.8; pillars cast in masonry walls are braced by the wall).
+A concrete pillar on the soil away from the strip footings of the walls stands on a footing of its own, `footing_pier_<pillar>` (0.6 m at least, NBR 6122;
+`PILLAR_WITHOUT_FOUNDATION`), as the pillars of a unit's building base and the slab pillars do. A partition on an eave beam's line stops under its soffit;
+a beam between pillars built along its line through a member it is not joined to is `OVERLAPPING_PARTS`.
+
 ## Structural masonry (NBR 16868)
 
 `masonrySystem: 'structural'` (the typology `single_storey_structural` of `game-floorplan-residential`, or any masonry plan with

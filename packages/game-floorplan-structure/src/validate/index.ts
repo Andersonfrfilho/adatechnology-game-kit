@@ -9,6 +9,7 @@ import { concreteViolations, loadPathViolations } from './load-path'
 import { isMasonryWall, masonryViolations } from './masonry'
 import { structuralMasonryViolations } from './structural-masonry'
 import type { LoadedRoom } from '../structural-masonry/live-loads'
+import { memberViolations } from './members'
 import { openingViolations } from './openings'
 import { specViolations } from './spec'
 
@@ -33,7 +34,7 @@ export function validateStructure(structure: PlanStructure, options: ValidateStr
   const framed = applySlabPanels(built, structure, resolveSlabPanels(true)!)
   // a beam on structural masonry rests on the structure itself, not on infill
   const weak = structure.construction.walls.masonrySystem === 'structural' ? (): boolean => false : isMasonryWall
-  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak)]
+  const out = [...loadPathViolations(structure), ...concreteViolations({ ...framed, construction: structure.construction }, weak), ...memberViolations(framed, built)]
   if (structure.construction.system !== 'masonry') return out
   if (structure.construction.walls.masonrySystem === 'structural')
     return [...out, ...structuralMasonryViolations(structure, { framed, rooms: options.rooms ?? [] }), ...openingViolations(structure, built.parts, options.doors ?? [])]
@@ -54,5 +55,5 @@ export function countViolations(violations: readonly StructuralViolation[]): Par
 
 export { slabsOffSupport } from './resting-slabs'
 export type { RestingState, SlabsOffSupportOptions } from './resting-slabs'
-export { BEAM_DEPTH_RATIO, MAX_LINTEL_ON_MASONRY, MAX_PILLAR_SPACING, MIN_BEAM_WIDTH, MIN_PILLAR_AREA, MIN_PILLAR_SIDE, STRUCTURAL_VIOLATION } from './codes'
+export { BEAM_DEPTH_RATIO, MAX_COLUMN_SLENDERNESS, MAX_LINTEL_ON_MASONRY, MAX_PILLAR_SPACING, MIN_BEAM_WIDTH, MIN_PILLAR_AREA, MIN_PILLAR_SIDE, STRUCTURAL_VIOLATION } from './codes'
 export type { StructuralViolation, StructuralViolationCode } from './codes'

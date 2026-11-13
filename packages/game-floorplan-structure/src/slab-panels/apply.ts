@@ -1,6 +1,7 @@
 import type { JointKind } from '@adatechnology/game-contracts'
 
 import { densityOf } from '../density'
+import { footingDraft, onStripFooting } from '../footing'
 import { round2, touches } from '../geometry'
 import { CONSTRUCTION_SYSTEMS } from '../registry'
 import { GROUND } from '../types'
@@ -346,7 +347,13 @@ function addPillar(context: Context, spot: Spot, bottom: number, top: number, fl
   })
   context.parts.push(pillar)
   if (below && context.panelsOf.has(below)) for (const panel of panelsUnder(context, below, pillar.aabb)) rest(context, panel, pillar, 'rebar')
-  else rest(context, context.groundBase, pillar, 'rebar')
+  else if (context.groundBase === GROUND && !onStripFooting(pillar.aabb, context)) {
+    // on the soil away from the strip footings of the walls: on a footing of its own
+    const footing = make({ ...footingDraft(pillar), role: 'column', material: 'concrete', floor: 0 })
+    context.parts.push(footing)
+    rest(context, GROUND, footing, 'resting')
+    rest(context, footing, pillar, 'rebar')
+  } else rest(context, context.groundBase, pillar, 'rebar')
   return pillar
 }
 
@@ -500,6 +507,12 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
   for (const panel of panels) {
     for (const { part: beam } of beams) if (touches(panel.aabb, beam.aabb, PLAN_TOLERANCE)) rest(context, beam, panel)
     for (const bond of bonds) if (touches(panel.aabb, bond.aabb, PLAN_TOLERANCE)) rest(context, bond, panel, own.find((s) => s.on === bond.id)?.joint ?? context.joint)
+  }
+  // a pillar the slab was cast on as it runs on up through it (an eave pillar tied to each storey) stays tied to the panels it passes through
+  for (const support of own) {
+    const column = context.parts.find((q) => q.id === support.on)
+    if (column?.role !== 'column' || column.y1 <= slab.y1) continue
+    for (const panel of panels) if (touches(panel.aabb, column.aabb, -PLAN_TOLERANCE)) rest(context, column, panel, support.joint)
   }
   for (const panel of panels.filter((p) => !context.supports.some((s) => s.part === p.id))) {
     const nearest = [...beams.map((b) => b.part), ...bonds].sort((a, b) => distance(a.aabb, panel.aabb) - distance(b.aabb, panel.aabb))[0]

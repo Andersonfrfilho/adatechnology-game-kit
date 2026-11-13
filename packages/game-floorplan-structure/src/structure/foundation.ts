@@ -1,3 +1,4 @@
+import { footingDraft } from '../footing'
 import type { StructurePart, Rect } from '../types'
 import { GROUND } from '../types'
 import type { BuildContext } from './context'
@@ -17,7 +18,14 @@ function addBuildingBase(context: BuildContext): void {
   const top = context.level(0) - context.system.slabThickness
   const pillars = corners.map(([u, v], k) => {
     const pillar = builder.add({ id: `building_column_${k}`, role: 'column', material: construction.frame.pillars, aabb: [u - 0.15, v - 0.15, u + 0.15, v + 0.15], y0: 0, y1: top }, { floor: 0 })
-    builder.rest(pillar, GROUND, 'rebar')
+    // (each on its footing: a pillar on the bare soil spreads its load on nothing; the Visor de casas 3D, reproduced for the team's golden, has none)
+    if (context.visorSections) {
+      builder.rest(pillar, GROUND, 'rebar')
+      return pillar
+    }
+    const footing = builder.add({ ...footingDraft(pillar), role: 'column', material: 'concrete' }, { floor: 0 })
+    builder.rest(footing, GROUND, 'resting')
+    builder.rest(pillar, footing, 'rebar')
     return pillar
   })
   const slab = builder.add({ id: 'slab_base', role: 'slab', material: construction.frame.slabs, aabb: box, y0: top, y1: context.level(0) }, { floor: 0, footprint: [box] })

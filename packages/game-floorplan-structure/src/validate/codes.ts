@@ -53,7 +53,7 @@ export const STRUCTURAL_VIOLATION = {
    * top (eccentricity of the slab) or f_d A R at mid-height (slenderness), A its gross area (NBR 16868-1, loads of NBR 6120).
    */
   MASONRY_OVERSTRESSED: 'MASONRY_OVERSTRESSED',
-  /** A bearing wall of structural masonry whose bond beam course does not run over its whole length. */
+  /** A masonry wall (a bearing wall of structural masonry, an exterior wall of confined masonry, the masonry over a door) whose bond beam does not run over its whole length. */
   BOND_BEAM_NOT_CONTINUOUS: 'BOND_BEAM_NOT_CONTINUOUS',
   /** Structural masonry laid of a unit with no channel (U) unit: its bond beams and lintels cannot be cast in a reinforced course of the wall. */
   MISSING_CHANNEL_UNIT: 'MISSING_CHANNEL_UNIT',
@@ -65,6 +65,14 @@ export const STRUCTURAL_VIOLATION = {
   JUNCTION_NOT_INTERLOCKED: 'JUNCTION_NOT_INTERLOCKED',
   /** Two grouted cores in the same cell (a corner or junction grouted by both walls that meet there): one cell counted and built twice. */
   GROUT_CORE_DOUBLED: 'GROUT_CORE_DOUBLED',
+  /** A free concrete pillar whose slenderness λ = l_e √12 / b over its longest braced stretch passes 90 (NBR 6118 15.8: past 90 it needs second-order analysis with creep, which the kit does not do; 200 is the hard limit). */
+  COLUMN_TOO_SLENDER: 'COLUMN_TOO_SLENDER',
+  /** A concrete pillar standing on the soil with no footing under it (no pad of its own, no strip footing of a wall or ground beam). */
+  PILLAR_WITHOUT_FOUNDATION: 'PILLAR_WITHOUT_FOUNDATION',
+  /** A beam held at a single point (a mechanism): it needs two supports or a bearing along half its length. */
+  BEAM_SINGLE_SUPPORT: 'BEAM_SINGLE_SUPPORT',
+  /** Two structural parts, not joined to each other, that occupy the same volume beyond a joint. */
+  OVERLAPPING_PARTS: 'OVERLAPPING_PARTS',
 } as const
 
 export type StructuralViolationCode = (typeof STRUCTURAL_VIOLATION)[keyof typeof STRUCTURAL_VIOLATION]
@@ -84,6 +92,8 @@ export const MAX_PILLAR_SPACING = 4
  */
 export const MIN_PILLAR_SIDE = 0.14
 export const MIN_PILLAR_AREA = 0.036
+/** NBR 6118 15.8.2: past λ = 90 a pillar needs second-order analysis with creep (the kit sizes none so: 90 is its limit; NBR 6118 never allows past 200). */
+export const MAX_COLUMN_SLENDERNESS = 90
 /** NBR 6118 13.2.2: a beam at least 12 cm wide. */
 export const MIN_BEAM_WIDTH = 0.12
 /** A beam between point supports is at least a tenth of its span deep (pre-sizing of reinforced concrete beams, h = L/10). */

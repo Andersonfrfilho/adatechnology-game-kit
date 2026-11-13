@@ -19,6 +19,19 @@ interface Run {
 const alongOf = (wall: BuildWall, pick: (a: number, b: number) => number): number => (wall.axis === 'u' ? pick(wall.u0, wall.u1) : pick(wall.v0, wall.v1))
 const acrossOf = (wall: BuildWall): number => (wall.axis === 'u' ? wall.v0 : wall.u0)
 
+/**
+ * Whether a door with a lintel fills the gap from `from` to `to` on the line of `wall`: the masonry over it stands on the lintel, and the bond beam runs on
+ * over it however wide the door (a bond beam cut there leaves the masonry over the door with nothing tying its top).
+ */
+function doorFills(context: BuildContext, wall: BuildWall, gap: { from: number; to: number }): boolean {
+  return context.source.doors.some((door) => {
+    if (door.floor !== wall.floor || door.axis !== wall.axis || door.a === undefined || door.type === 'zipper') return false
+    const along = door.axis === 'u' ? door.u : door.v
+    const across = door.axis === 'u' ? door.v : door.u
+    return Math.abs(across - acrossOf(wall)) <= 0.02 && along - door.width / 2 <= gap.from + 0.05 && along + door.width / 2 >= gap.to - 0.05
+  })
+}
+
 /** Continuous runs of exterior wall on one line and height: a plate or bond beam runs along each. */
 function runsOf(context: BuildContext, walls: readonly BuildWall[], floor: number): Run[][] {
   const lines = new Map<string, BuildWall[]>()
@@ -35,7 +48,7 @@ function runsOf(context: BuildContext, walls: readonly BuildWall[], floor: numbe
       const from = alongOf(wall, Math.min)
       const to = alongOf(wall, Math.max)
       const last = runs[runs.length - 1]
-      if (last && from - last.to <= MAX_GAP_WITHIN_RUN) {
+      if (last && (from - last.to <= MAX_GAP_WITHIN_RUN || (context.construction.system !== 'improvised' && !context.visorSections && doorFills(context, wall, { from: last.to, to: from })))) {
         last.to = Math.max(last.to, to)
         last.walls.push(wall)
       } else runs.push({ from, to, walls: [wall] })

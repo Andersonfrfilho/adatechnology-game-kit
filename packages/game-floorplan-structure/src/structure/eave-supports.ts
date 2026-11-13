@@ -2,6 +2,7 @@ import type { JointKind } from '@adatechnology/game-contracts'
 
 import { GROUND } from '../types'
 import type { Rect, StructurePart } from '../types'
+import { footingDraft, onStripFooting } from '../footing'
 import { round2, touches } from '../geometry'
 import { pillarBox } from './context'
 import type { BuildContext } from './context'
@@ -84,6 +85,37 @@ function postBase(context: BuildContext, box: Rect, at: { floor: number; top: nu
   return postBase(context, box, { floor: 0, top })
 }
 
+/**
+ * The footing (sapata isolada) of a concrete pillar that stands on the soil away from the house's strip footings: a pad of concrete buried under it, its
+ * top at the pillar's foot. Returns the footing, for the pillar to rest on.
+ */
+function addFooting(context: BuildContext, post: StructurePart): StructurePart {
+  const footing = context.builder.add({ ...footingDraft(post), role: 'column', material: 'concrete' }, { floor: 0 })
+  context.builder.rest(footing, GROUND, 'resting')
+  return footing
+}
+
+/**
+ * The slabs a pillar runs through, cast on it: each storey's slab bears on it and braces it there, so it buckles over a storey, not over its whole height
+ * (NBR 6118 15.6). A slab it ran through untied would brace nothing.
+ */
+function tieCrossedSlabs(context: BuildContext, post: StructurePart): void {
+  for (const slab of context.builder.parts.filter((p) => p.role === 'slab' && p.y0 > post.y0 + TOLERANCE && p.y1 < post.y1 - TOLERANCE && touches(p.aabb, post.aabb, -TOLERANCE)))
+    context.builder.rest(slab, post, 'rebar')
+}
+
+/** A partition on the beam's line under it stops at the beam's soffit (its last course wedged under it): the beam is cast on it, never through it. */
+function trimPartitionsUnder(context: BuildContext, beam: StructurePart, axis: 'u' | 'v'): void {
+  const across = axis === 'u' ? 1 : 0
+  for (const wall of context.builder.parts) {
+    if (wall.role !== 'partition' || wall.y0 >= beam.y0 || wall.y1 <= beam.y0 + TOLERANCE) continue
+    const alongWall = wall.aabb[across + 2]! - wall.aabb[across]! < alongOf(wall, axis)[1] - alongOf(wall, axis)[0]
+    if (!alongWall || !touches(wall.aabb, beam.aabb, -TOLERANCE)) continue
+    wall.mass = Math.max(1, Math.round((wall.mass * (beam.y0 - wall.y0)) / (wall.y1 - wall.y0)))
+    wall.y1 = beam.y0
+  }
+}
+
 /** A station near `at` (within `range`, nearest first) where a post can stand. */
 function stationNear(context: BuildContext, at: number, place: { axis: 'u' | 'v'; line: number; floor: number; top: number; range: readonly number[] }): number | undefined {
   return place.range.map((d) => at + d).find((x) => postBase(context, postBox(context, { axis: place.axis, line: place.line, at: x }), place) !== undefined)
@@ -103,14 +135,18 @@ export function addEaveSupports(context: BuildContext, eave: BareEave): Structur
   const timber = context.isTimber
   const material = timber ? construction.frame.timber : construction.frame.beams
   const sorted = [...eave.members].sort((a, b) => centreAlong(a, axis) - centreAlong(b, axis))
+  const onLine = carriers.filter((c) => c.role !== 'slab' && crossesLine(c, axis, line))
   const groups: StructurePart[][] = []
   for (const member of sorted) {
     const last = groups[groups.length - 1]
-    if (last && centreAlong(member, axis) - centreAlong(last[last.length - 1]!, axis) <= GROUPING) last.push(member)
+    const gap = last ? ([centreAlong(last[last.length - 1]!, axis), centreAlong(member, axis)] as const) : undefined
+    // members a pitch apart are one group; so are two groups with only air between them within a span: one beam on its supports, never a short one on a
+    // single pillar (a mechanism)
+    const joins = gap !== undefined && (gap[1] - gap[0] <= GROUPING || (!context.visorSections && gap[1] - gap[0] <= EAVE_SUPPORT_SPACING && !onLine.some((c) => alongOf(c, axis)[1] > gap[0] + TOLERANCE && alongOf(c, axis)[0] < gap[1] - TOLERANCE)))
+    if (last && joins) last.push(member)
     else groups.push([member])
   }
   const created: StructurePart[] = []
-  const onLine = carriers.filter((c) => c.role !== 'slab' && crossesLine(c, axis, line))
   for (const group of groups) {
     let lo = centreAlong(group[0]!, axis) - 0.1
     let hi = centreAlong(group[group.length - 1]!, axis) + 0.1
@@ -157,10 +193,14 @@ export function addEaveSupports(context: BuildContext, eave: BareEave): Structur
       const base = postBase(context, box, { floor, top: beam.y0 })
       if (!base) return
       const post = builder.add({ id: `${id}_post_${n}`, role: 'column', material: timber ? construction.frame.timber : construction.frame.pillars, aabb: box, y0: base.y0, y1: beam.y0 }, { floor, ...(timber ? {} : { assembly: 'reinforced_concrete' }) })
-      builder.rest(post, base.on, timber ? 'nail' : 'rebar')
+      const onSoil = base.on === GROUND && !timber && !context.visorSections && !onStripFooting(post.aabb, builder)
+      builder.rest(post, onSoil ? addFooting(context, post) : base.on, timber ? 'nail' : 'rebar')
       builder.rest(beam, post, timber ? 'nail' : 'rebar')
+      // (the Visor de casas 3D, reproduced for the team's golden, has none of the ties, footings and trims below)
+      if (!context.visorSections) tieCrossedSlabs(context, post)
       created.push(post)
     })
+    if (!context.visorSections) trimPartitionsUnder(context, beam, axis)
     for (const member of group) builder.rest(member, beam, eave.joint)
   }
   return created

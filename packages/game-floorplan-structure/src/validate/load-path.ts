@@ -94,7 +94,7 @@ function bearingsOf(beam: StructurePart, supports: readonly Support[], byId: Rea
 const isWallLike = (part: StructurePart): boolean => part.role === 'wall' || part.role === 'partition'
 /** A plain concrete pedestal (a footing block under a post) may go without steel: no taller than three times its least side (ACI 318 14.3.3). */
 const PEDESTAL_RATIO = 3
-const isPedestal = (part: StructurePart): boolean => part.role === 'column' && part.y1 - part.y0 <= PEDESTAL_RATIO * Math.min(part.aabb[2] - part.aabb[0], part.aabb[3] - part.aabb[1])
+export const isPedestal = (part: StructurePart): boolean => part.role === 'column' && part.y1 - part.y0 <= PEDESTAL_RATIO * Math.min(part.aabb[2] - part.aabb[0], part.aabb[3] - part.aabb[1])
 
 /**
  * Concrete pillars and beams against NBR 6118: the minimum sections (13.2.2, 13.2.3), the steel of a reinforced member, a beam between point supports at
