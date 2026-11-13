@@ -140,6 +140,10 @@ export interface Chase {
  * 20 mm conduit or a 25 mm pipe set 14 mm under the face of a 14 cm unit leaves 5.5 cm of it to the centre line, the mortar 5.04).
  */
 const MORTAR_BACKING = 0.72
+/** How far the end of the mortar behind the units keeps from the side of a box cut into it, metres. */
+const BOX_SIDE_CLEAR = 0.003
+/** How far a mortar end moved off a box's cut keeps from the ends and splits of the units, metres (the stages' check counts planes 3 mm apart as one). */
+const UNIT_END_CLEAR = 0.0035
 /** How far inside a chase's edges the mortar is cut, metres: clear of the units' ends at the chase's edge (the side of a box 3 mm in from it faces the other way). */
 const MORTAR_CHASE_INSET = 0.004
 /** The mortar is cut only by a chase this much deeper than its face (a box): a run's shallow chase stops at it, as it always has. */
@@ -178,8 +182,12 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
     return false
   })
   const laidRects: readonly WallRect[] = [...pieces, ...slivers]
-  const box = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number, shift = 0): void =>
+  // the planes along the wall where the units of the piece being laid end or are split (the mortar's ends keep clear of them)
+  const unitEnds: number[] = []
+  const box = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number, shift = 0): void => {
+    if (batch !== batches.mortar) unitEnds.push(a0, a1)
     batch.add(wall.alongU ? [a0, y0, wall.line + shift - t / 2, a1, y1, wall.line + shift + t / 2] : [wall.line + shift - t / 2, y0, a0, wall.line + shift + t / 2, y1, a1])
+  }
   /** A unit laid where the chases cross it thinner on their face, by their depth: the run lies in the cut, never in the brick. */
   const chased = (batch: BoxBatch, a0: number, y0: number, a1: number, y1: number, t: number, inset = 0): void => {
     // a chase cuts a unit only where it reaches into it: its bottom inside the unit's half thickness
@@ -252,8 +260,21 @@ export function buildMasonryPanel(batches: MasonryBatches, part: StructurePart, 
   for (const r of pieces) {
     // the mortar behind the units shows in every joint; it is thinner than the units, so no face of it lies on theirs
     // inset from the piece's edges too: the units are cut flush with a jamb or a pillar, the mortar stays a little behind them
-    box(batches.mortar, r.a0 + MORTAR_INSET, r.y0 + MORTAR_LIFT, r.a1 - MORTAR_INSET, r.y1 - MORTAR_LIFT, coreTh * MORTAR_BACKING)
+    unitEnds.length = 0
     layUnits(r, coursing, (a0, y0, a1, y1) => chased(unit, a0, y0, a1, y1, coreTh))
+    // ... and never ends in the cut of a box set into it (a box at the end of a piece, by a jamb, would have the mortar's end by its side): the end steps back out
+    // of the cut, clear of the box's side and of every end and split of the units; a piece the cut spans whole keeps its mortar under and over the box only
+    const clear = (x: number, step: 1 | -1): number => { let at = x; while (unitEnds.some((p) => Math.abs(p - at) < UNIT_END_CLEAR)) at += step * 0.001; return at }
+    let m0 = r.a0 + MORTAR_INSET, m1 = r.a1 - MORTAR_INSET
+    let bands: Array<readonly [number, number]> = [[r.y0 + MORTAR_LIFT, r.y1 - MORTAR_LIFT]]
+    for (const c of layout.chases ?? []) {
+      if (c.back >= (coreTh * MORTAR_BACKING) / 2 - DEEP_CHASE || c.y1 <= r.y0 || c.y0 >= r.y1) continue // a box's cut, never a run's
+      const inCut = (x: number): boolean => x > c.a0 - BOX_SIDE_CLEAR && x < c.a1 + BOX_SIDE_CLEAR
+      if (inCut(m0) && inCut(m1)) { bands = bands.flatMap(([y0, y1]) => [[y0, Math.min(y1, c.y0 - BOX_SIDE_CLEAR)], [Math.max(y0, c.y1 + BOX_SIDE_CLEAR), y1]] as const).filter(([y0, y1]) => y1 - y0 > 1e-3); continue }
+      if (inCut(m1) && c.a0 > m0) m1 = clear(c.a0 - BOX_SIDE_CLEAR, -1)
+      if (inCut(m0) && c.a1 < m1) m0 = clear(c.a1 + BOX_SIDE_CLEAR, 1)
+    }
+    for (const [y0, y1] of bands) box(batches.mortar, m0, y0, m1, y1, coreTh * MORTAR_BACKING)
   }
   return laidRects
 }
