@@ -13,6 +13,8 @@ interface BowlRun {
   readonly rise: number
   /** Fastest any piece went up after a step, while the bowl deepens. */
   readonly fastestUp: number
+  /** Where every piece ended (root position and rotation), to compare two runs. */
+  readonly end: readonly number[]
 }
 
 const centreY = (piece: Piece): number => {
@@ -69,8 +71,9 @@ export const runBowl = (seed: number, dt: number, trace?: (frame: number, pieces
       if (!piece.sleeping) fastestUp = Math.max(fastestUp, piece.velocity[1])
     })
   }
+  const end = pieces.flatMap((p) => [...p.root.position.toArray(), ...p.root.quaternion.toArray()])
   renderer.dispose()
-  return { rise: Math.max(0, ...rise.values()), fastestUp }
+  return { rise: Math.max(0, ...rise.values()), fastestUp, end }
 }
 
 const SEEDS = Array.from({ length: 16 }, (_, i) => i + 1)
@@ -84,4 +87,10 @@ describe('debris in a bowl that deepens under it', () => {
       expect(fastestUp).toBeLessThanOrEqual(MOST_UP_SPEED)
     })
   }
+})
+
+describe('the same seed and step', () => {
+  it('end the same, to the last bit', () => {
+    for (const dt of [0.05, 1 / 60]) expect(runBowl(7, dt).end).toEqual(runBowl(7, dt).end)
+  })
 })
