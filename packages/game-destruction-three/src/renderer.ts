@@ -2107,13 +2107,14 @@ class Renderer implements DestructionRenderer {
       wentOff?.get(objectId) ??
       this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ??
       1
+    // the wave presses on the whole face it meets, so the push has no lever arm beyond the thinnest side of the body: a thin long piece (a shovel) is not spun by it
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
       if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
       const area = this.waveArea(pc.halfExtents, pc.root.quaternion, c, p)
       const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) return
-      const spread = pc.halfExtents[0]
+      const spread = Math.min(...pc.halfExtents)
       const momentum = hit.speed * pc.mass
       this.pieceSys.impulse(pc, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
     }
@@ -2182,7 +2183,7 @@ class Renderer implements DestructionRenderer {
       const body = this.pieceSys.get(b.id)
       if (!body) continue
       this.o.onLoosened?.(b.id, piece, 'blast')
-      const spread = half[0]
+      const spread = Math.min(...half)
       const momentum = hit.speed * mass
       this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])
     }

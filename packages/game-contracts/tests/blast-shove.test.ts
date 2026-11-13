@@ -59,9 +59,10 @@ describe('blastShove of a target that shows an area to the wave', () => {
     expect(shovel(0.015)!.speed).toBeLessThan(2)
   })
 
-  it('goes with the area and against the mass, and does not depend on the coupling or the cap of the game rule', () => {
+  it('goes with the area and against the mass, and is capped by `maxSpeed` but does not depend on the coupling', () => {
     expect(shovel(0.16)!.speed).toBeCloseTo(2 * shovel(0.08)!.speed, 6)
     expect(shovel(0.08, 4)!.speed).toBeCloseTo(shovel(0.08)!.speed / 2, 6)
-    expect(blastShove(grenade, { position: [0.8, 0, 0], mass: 2, area: 0.08 }, { coupling: 0.5, maxSpeed: 1 })!.speed).toBeCloseTo(shovel(0.08)!.speed, 6)
+    expect(blastShove(grenade, { position: [0.8, 0, 0], mass: 2, area: 0.08 }, { coupling: 0.5 })!.speed).toBeCloseTo(shovel(0.08)!.speed, 6)
+    expect(blastShove(grenade, { position: [0.8, 0, 0], mass: 2, area: 0.08 }, { maxSpeed: 3 })!.speed).toBe(3)
   })
 })
