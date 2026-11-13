@@ -108,7 +108,7 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
     const box: Aabb = [px - hx, py - hy, pz - hz, px + hx, py + hy, pz + hz];
     const touching = (t: Aabb): boolean => t[0] <= box[3] + 1e-6 && t[3] >= box[0] - 1e-6 && t[1] <= box[4] + 1e-6 && t[4] >= box[1] - 1e-6 && t[2] <= box[5] + 1e-6 && t[5] >= box[2] - 1e-6;
     const near = taken.filter(touching), before = mine ? mine.filter(touching) : [];
-    const pieces = (near.length ? outsideBoxes(box, near) : [box]).map((b) => ({ b, shut: shutBy(b, near) | shutBy(b, before) }));
+    const cut = near.length ? outsideBoxes(box, near) : [box], pieces = cut.map((b) => ({ b, shut: shutBy(b, near.concat(cut.filter((o) => o !== b))) | shutBy(b, before) })); // (a face between two pieces of the box is inside it)
     if (mine) for (const { b } of pieces) mine.push(b);
     if (pieces.length === 1 && pieces[0]!.b === box && !pieces[0]!.shut) return false;
     const all = shared.ctx.itemBoxes;
@@ -143,7 +143,7 @@ export function installKernelGeometry(K: Kernel, shared: Shared): void {
       // the bottom of a box (or a post) that rests on the ground or stands in it is shut by the ground: it is not drawn (it would lie on the bottom of every other
       // thing standing there, on one plane, the same way); the Visor's scene keeps every face as the team drew it
       if (shutFaces && geo === 'box' && shutFaces & (1 << Math.floor(k / 6))) continue;
-      if (!shared.ctx.visorScene && A.n[t0 * 3 + 1] < -0.99) { const top = Math.max(A.p[t0 * 3 + 1], A.p[t1 * 3 + 1], A.p[t2 * 3 + 1]) + y0, rest = shared.ctx.restOn; if (top <= GROUND_SHUT || (rest !== undefined && Math.abs(top - rest) <= GROUND_SHUT)) continue; }
+      if (!shared.ctx.visorScene && A.n[t0 * 3 + 1] < -0.99) { const top = Math.max(A.p[t0 * 3 + 1], A.p[t1 * 3 + 1], A.p[t2 * 3 + 1]) + y0, rest = shared.ctx.restOn; if (top <= GROUND_SHUT || (rest !== undefined && Math.abs(top - rest) <= GROUND_SHUT) || (shared.ctx.unitGround !== undefined && Math.abs(top - shared.ctx.unitGround) <= GROUND_SHUT)) continue; }
       A.i[A.ni + ni] = t0; A.i[A.ni + ni + 1] = t1; A.i[A.ni + ni + 2] = t2; ni += 3;
     }
     A.nv += G.nv; A.ni += ni;

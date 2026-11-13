@@ -667,6 +667,8 @@ export interface BuildContext {
   floorFinishes: Aabb[]
   /** The floor the piece being drawn stands on (a storey's furniture, outside the Visor's scene): a face looking down on its plane is shut by it, as by the ground. */
   restOn?: number | undefined
+  /** The plane a unit stands on in its block (its ground floor over the street) (outside the Visor's scene): a face looking down on it is shut by the slab under it, as by the ground. */
+  unitGround?: number | undefined
   /** The boxes a piece being drawn keeps out of (a storey's furniture among the walls, outside the Visor's scene): what of a box stands in them is not drawn. */
   keepOut?: readonly Aabb[] | undefined
   /** The square boxes of the piece being drawn so far (a storey's furniture, outside the Visor's scene): a face of a later one lying against one is not drawn. */
