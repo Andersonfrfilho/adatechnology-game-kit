@@ -18,12 +18,8 @@ export const GROUT_BAR = 0.0125
 export const MIN_GROUT_BAR = 0.01
 /** Most of a grouted cell the steel may fill (NBR 16868-1: the bars take at most 8 % of the cell they are grouted in). */
 export const MAX_STEEL_IN_CELL = 0.08
-/** EN 1996-1-1 6.1.2.2: the eccentricity at the top of a wall is at least 5 % of its thickness. */
-export const MIN_ECCENTRICITY_RATIO = 0.05
-/** EN 1996-1-1 5.5.1.1: the initial (accidental) eccentricity is h_ef / 450. */
-export const INITIAL_ECCENTRICITY_DIVISOR = 450
-/** A slab bearing on one side of a wall loads it a third of the bearing in from the inner face: t/2 - t/3 = t/6 off its axis. */
-export const ONE_SIDED_SLAB_ECCENTRICITY = 1 / 6
+/** A slab or a beam bearing on one face of a wall loads it a third of the bearing in from that face: t/2 - t/3 = t/6 off its axis. */
+export const ONE_SIDED_BEARING_ECCENTRICITY = 1 / 6
 /** NBR 16868-1: a wall interlocked into another at a corner or a T (direct bond) works with it as a flange up to 6 times its thickness each side. */
 export const FLANGE_THICKNESSES = 6
 /** g, m/s². */
@@ -46,18 +42,20 @@ export const slendernessOf = (effective: number, thickness: number): number => e
 /** NBR 16868-1: the reduction of the compressive strength of a wall by its slenderness, R = 1 - (λ / 40)³. */
 export const slendernessReduction = (slenderness: number): number => 1 - (slenderness / 40) ** 3
 
-/**
- * Eccentricity at the top of a wall, metres: the share of the load a slab brings on one side only, `t/6` off the axis, the initial eccentricity
- * h_ef / 450, and at least 0.05 t (EN 1996-1-1 6.1.2.2; NBR 16868-1 asks the eccentric load be considered and does not give the simplified factor).
- */
-export function topEccentricity(params: { readonly thickness: number; readonly effective: number; readonly oneSidedShare: number }): number {
-  const { thickness, effective, oneSidedShare } = params
-  const e = oneSidedShare * thickness * ONE_SIDED_SLAB_ECCENTRICITY + effective / INITIAL_ECCENTRICITY_DIVISOR
-  return Math.max(e, MIN_ECCENTRICITY_RATIO * thickness)
-}
+/** NBR 16868-1: under bending the compressed masonry takes 1.5 f_d (the flexural compression of the combined check). */
+export const FLEXURAL_COMPRESSION_FACTOR = 1.5
 
-/** EN 1996-1-1 6.1.2.2: the capacity factor at the top of a wall, Φ = 1 - 2 e / t. */
-export const eccentricityFactor = (eccentricity: number, thickness: number): number => Math.max(0, 1 - (2 * eccentricity) / thickness)
+/** Elastic section modulus of `length` metres of wall bending out of its plane, m³ (gross section): W = L t² / 6. */
+export const sectionModulus = (length: number, unit: MasonryUnit): number => (length * unit.width * unit.width) / 6
+
+/**
+ * NBR 16868-1, compression with bending (flexo-compressão) of an unreinforced wall: N_d / (A R) + M_d / (1.5 W) ≤ f_d. Returns the left side over f_d
+ * (1 at the limit).
+ */
+export function combinedRatio(params: { readonly normal: number; readonly moment: number; readonly area: number; readonly modulus: number; readonly reduction: number; readonly strength: number }): number {
+  const { normal, moment, area, modulus, reduction, strength } = params
+  return (normal / (area * reduction) + moment / (FLEXURAL_COMPRESSION_FACTOR * modulus)) / strength
+}
 
 /** Cross-section of one cell of `unit`, m² (a hollow block has two cells across its length). */
 export const cellArea = (unit: MasonryUnit): number => (unit.width * unit.length * (1 - unit.solid)) / 2

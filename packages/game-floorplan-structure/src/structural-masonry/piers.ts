@@ -13,8 +13,8 @@ export interface Pier {
 export interface LoadedPier extends Pier {
   readonly top: number
   readonly own: number
-  /** What a slab bearing on one side only puts at the top, over `top` (the moment arm is `t/6`): the slabs on both sides cancel. */
-  readonly oneSidedShare: number
+  /** kg of what bears on one face of the wall only, signed by the face (a slab on one side, a beam ending on the wall): loads on both faces cancel. */
+  readonly oneSided: number
 }
 
 /** The piers of a wall from `from` to `to` cut by its windows (`[from, to]` along the wall). */
@@ -39,7 +39,7 @@ interface PierLoadParams {
   readonly parts: ReadonlyMap<string, StructurePart>
   /** Parts that bear on the wall at a point (a lintel at a jamb, a beam across it): their load goes down the pier under them, not spread. */
   readonly concentrated: (part: StructurePart) => boolean
-  /** -1 or +1 for what brings a slab's load from one face of the wall, the share of it so for a bond beam carrying slabs, 0 for a centred load. */
+  /** -1 or +1 for what bears on one face of the wall (a slab, a beam ending on it), the share of it so for a bond beam carrying slabs, 0 for a centred load. */
   readonly sided: (part: StructurePart) => number
 }
 
@@ -65,7 +65,10 @@ export function loadPiers(params: PierLoadParams): LoadedPier[] {
       const distance = piers.map((pier) => Math.max(0, pier.from - at, at - pier.to))
       const nearest = Math.min(...distance)
       const under = piers.flatMap((_, k) => (distance[k]! <= nearest + 1e-3 ? [k] : []))
-      for (const k of under) top[k] = top[k]! + flow.load / under.length
+      for (const k of under) {
+        top[k] = top[k]! + flow.load / under.length
+        moment[k] = moment[k]! + (side * flow.load) / under.length
+      }
       continue
     }
     piers.forEach((pier, k) => {
@@ -74,5 +77,5 @@ export function loadPiers(params: PierLoadParams): LoadedPier[] {
       moment[k] = moment[k]! + side * share
     })
   }
-  return piers.map((pier, k) => ({ ...pier, top: top[k]!, own: (params.wall.mass * (pier.to - pier.from)) / Math.max(1e-6, length), oneSidedShare: top[k]! > 0 ? Math.abs(moment[k]!) / top[k]! : 0 }))
+  return piers.map((pier, k) => ({ ...pier, top: top[k]!, own: (params.wall.mass * (pier.to - pier.from)) / Math.max(1e-6, length), oneSided: moment[k]! }))
 }

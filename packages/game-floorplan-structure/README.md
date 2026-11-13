@@ -65,6 +65,15 @@ the units drawn in the construction stages.
 - **Changed by the game:** `engine.generate(id, { masonryUnit: 'concrete_block_14' })`. The resolver the pack registers (`registerOptionResolver`) gives the plan
   engine the thickness before the walls are laid out. The Visor reproduction (`visorSections: true`) keeps the team's 15 cm walls.
 
+## Weight of the roof
+
+A roof pane weighs its covering over its sloped surface (`RoofCoveringDef.weight`, kN/m² of slope: ceramic tiles 0.70, fibre-cement 0.24, asphalt 0.25,
+zinc 0.10, timber boards 0.20, canvas 0.006, thatch 0.45, a concrete slab 3.0), a rafter its 6 x 16 cm section over its sloped length, a coarse truss the pair
+of rafters it stands for: a tile roof at 30° is about 0.85 kN/m² in plan (NBR 6120). The reproduction of the Visor de casas 3D (`visorSections`) keeps the
+team's weights (a share of each part's box).
+
+A support declared on a pillar the part does not touch in plan is `SUPPORT_WITHOUT_CONTACT`: a pillar carries only what stands on its head.
+
 ## Structural masonry (NBR 16868)
 
 `masonrySystem: 'structural'` (the typology `single_storey_structural` of `game-floorplan-residential`, or any masonry plan with
@@ -72,25 +81,27 @@ the units drawn in the construction stages.
 
 1. No concrete pillars and no bond beam on pillars: every wall carries (`role: 'wall'`). Grouted cores with a bar (`StructurePart.grout`, plan coordinates
    along the wall; `construction.walls.groutBar`, Ø 12.5 mm) at each corner and junction (in the cell where the walls' lines cross, grouted once by one of
-   the two walls: `coresAlong` reads the shared one, `doubledCores` finds a cell grouted twice), in the first cell beside each jamb, at most every
-   `GROUT_SPACING` (1.6 m), and under every beam of the slab that bears across the wall (local bearing: `beamBearings`, `addBearingCores`).
-2. A reinforced bond beam course on every bearing wall and lintels in U units (the channel of the unit), the bond beams of the walls tied over each corner
-   and T (direct bond), the slab's beams carried by the walls.
+   the two walls: `coresAlong` reads the shared one, `doubledCores` finds a cell grouted twice), in the first cell of each free end and beside each jamb,
+   at most every `GROUT_SPACING` (1.6 m), and under every beam of the slab that bears across the wall (local bearing: `beamBearings`, `addBearingCores`).
+2. A reinforced bond beam course over the whole length of every bearing wall and lintels in U units (the channel of the unit), the bond beams of the walls
+   tied over each corner and T (direct bond; in `units` detail the courses take turns over the square the walls share), the slab's beams carried by them.
 3. The coordination of the unit (`moduleOf`: half a unit and a joint, 20 cm for the 39 cm block): rooms, doors and window jambs on the module, sills and
-   heads of the windows on the courses (19 + 1 cm), the head at least a course under the top of the wall.
+   heads on the courses (19 + 1 cm), a door's head at 2.20 m with its lintel a course of channel blocks over it (doors are openings of the structure
+   too, `kind: 'door'`), a window's head at least a course under the top of the wall.
 4. Its own validator (`structuralMasonryViolations`), which asks what structural masonry needs instead of the pillars of confined masonry:
-   - the unit: `UNIT_NOT_STRUCTURAL`, `MISSING_CHANNEL_UNIT`; the steel: `GROUT_WITHOUT_BAR` (no bar, or under Ø 10 mm), `GROUT_STEEL_CONGESTED` (over 8 %
-     of the cell);
-   - the detailing: the core rules (`CORNER_WITHOUT_PILLAR` and the like, read as cores), `OPENING_WITHOUT_GROUT`, `CONCENTRATED_LOAD_WITHOUT_GROUT`,
-     `GROUT_CORE_DOUBLED`, `PILLAR_IN_STRUCTURAL_WALL`, `MISSING_BOND_BEAM`, `MISSING_GROUND_BEAM` (a foundation under every wall),
-     `JUNCTION_NOT_INTERLOCKED`, `UNBONDED_MASONRY`, `OFF_MODULE`;
-   - the strength (`pierDesigns`), pier by pier between the windows (each pier part of the wall built for play carries its own load of the load path),
-     with the walls interlocked at its corner or T up to 6 t each side as flanges: `N_d = 1.4 (G + Q)`, Q the live loads of NBR 6120 by the use of each
-     room (`liveLoads`: 1.5 kN/m² in the rooms of a dwelling, 2 in service areas, 0.5 on a ceiling slab, the water of the tank), under `f_d A Φ` at the
-     top (`Φ = 1 - 2 e / t`, e the slab bearing on one face t/6 off the axis plus h_ef / 450, at least 0.05 t) and under `f_d A R` at mid-height, with
-     `f_d = 0.7 · 0.7 · fbk / 2` and A on the gross area (f_bk of NBR 6136 is on the gross area), `R = 1 - (λ / 40)³`, `λ = h_ef / t_ef` up to 24
-     (`WALL_TOO_SLENDER`), h_ef the height of a wall braced at its top by its bond beam or slab, twice it for a wall free at the top. The piers of
-     `single_storey_structural` pass with the 6 MPa block and not with the 4 MPa one.
+   - the unit: `UNIT_NOT_STRUCTURAL`, `MISSING_CHANNEL_UNIT`; the steel: `GROUT_WITHOUT_BAR` (no bar, or under Ø 10 mm), `GROUT_STEEL_CONGESTED` (the two
+     bars of a lap splice over 8 % of the cell);
+   - the detailing: the core rules (`CORNER_WITHOUT_PILLAR` and the like, read as cores within the first cell), `OPENING_WITHOUT_GROUT`,
+     `CONCENTRATED_LOAD_WITHOUT_GROUT`, `GROUT_CORE_DOUBLED`, `PILLAR_IN_STRUCTURAL_WALL`, `MISSING_BOND_BEAM`, `BOND_BEAM_NOT_CONTINUOUS`,
+     `MISSING_GROUND_BEAM` (a foundation under every wall), `JUNCTION_NOT_INTERLOCKED`, `UNBONDED_MASONRY`, `OFF_MODULE`;
+   - the strength (`pierDesigns`), pier by pier between the windows (each pier of the wall built for play carries its own load of the load path), with
+     the walls interlocked at its corner or T up to 6 t each side as flanges in compression: NBR 16868-1 compression with bending,
+     `N_d / (A R) + M_d / (1.5 W) ≤ f_d`, `N_d = 1.4 (G + Q)` at mid-height, Q the live loads of NBR 6120 (`liveLoads`: 1.5 kN/m² in the rooms of a
+     dwelling, 2 in service areas, 0.5 on a ceiling slab, 0.25 in horizontal projection on a pitched roof, the water of the tank), `M_d` what bears on
+     one face (a slab, a beam ending on the wall) t/6 off the axis, `f_d = 0.7 · 0.7 · fbk / 2` and A on the gross area (f_bk of NBR 6136 is on the
+     gross area), W the pier's own section, `R = 1 - (λ / 40)³`, `λ = h_ef / t_ef` up to 24 (`WALL_TOO_SLENDER`), h_ef the height of a wall braced at
+     its top, twice it free there. With the roof weighed by its covering, the 20 cm stub of `single_storey_structural` beside the bathroom door takes
+     0.93 of the 6 MPa block and 1.39 of the 4 MPa one: the typology needs the 6 MPa class.
 5. Only units graded `structural`; the destruction world carries the load through the walls (the same load path rule, shared by contact over the compliance
    of each path: laid masonry at `LAID_MASONRY_GPA` of `game-destruction`).
 

@@ -152,7 +152,7 @@ export function masonryViolations(structure: Pick<Structure, 'parts' | 'supports
     const wall = lineOf(part)
     // a pillar of the next wall on the line, standing just past this one's end, confines this end too
     const pillars = columns.filter((c) => c.floor === part.floor && onLine(wall, centre(c), AT_POINT) && Math.min(c.y1, part.y1) - Math.max(c.y0, part.y0) > 0.5)
-    const windows = structure.openings.filter((o) => o.wall === part.id).map((o): [number, number] => [o.from, o.to])
+    const windows = structure.openings.filter((o) => o.wall === part.id && o.kind === 'window').map((o): [number, number] => [o.from, o.to])
     const context: WallContext = { wall, pillars, stations: pillars.map((p) => alongOfPoint(wall, centre(p))), windows }
     const others = walls.filter((w) => w !== part && w.floor === part.floor).map(lineOf)
     out.push(...pointViolations(context, others), ...bondBeamViolations(context, structure))

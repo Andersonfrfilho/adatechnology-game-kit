@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { STRUCTURAL_VIOLATION, applySlabPanels, coresAlong, getMasonryUnit, registerMasonryUnit, resolveSlabPanels, validateStructure } from '../src'
 import type { StructuredResult, StructurePart } from '../src'
 import {
-  GROUT_BAR, barArea, cellArea, designStrength, eccentricityFactor, effectiveHeight, grossArea, MAX_STEEL_IN_CELL, netArea, netStrength, slendernessOf, slendernessReduction, topEccentricity,
+  GROUT_BAR, barArea, cellArea, combinedRatio, designStrength, effectiveHeight, grossArea, MAX_STEEL_IN_CELL, netArea, netStrength, sectionModulus, slendernessOf, slendernessReduction,
 } from '../src/structural-masonry/design'
-import { CEILING_SLAB_LIVE_LOAD, liveLoadOf, liveLoads } from '../src/structural-masonry/live-loads'
+import { CEILING_SLAB_LIVE_LOAD, PITCHED_ROOF_LIVE_LOAD, liveLoadOf, liveLoads } from '../src/structural-masonry/live-loads'
+import { loadPiers } from '../src/structural-masonry/piers'
 import { pierDesigns } from '../src/validate/structural-masonry-strength'
 import { applyPanels } from '../src/wall-detail'
 import { engine } from './support'
@@ -73,18 +74,21 @@ describe('pier by pier (3)', () => {
       expect(d.from).toBeCloseTo(from!, 1)
       expect(d.to).toBeCloseTo(to!, 1)
     }
-    for (const d of designs) expect(d.topLoad, `${d.wall} ${d.from}`).toBeGreaterThan(0)
+    for (const d of designs) expect(d.normal, `${d.wall} ${d.from}`).toBeGreaterThan(0)
   })
 
-  it('catches a narrow pier the whole wall would hide: wall_0_13 in the 4 MPa block', () => {
-    const designs = designsOf(generate(1, { masonryUnit: 'concrete_block_14' }), 'concrete_block_14').filter((d) => d.wall === 'wall_0_13')
+  it('catches a narrow pier the whole wall would hide: wall_0_13 in a 2 MPa block', () => {
+    // a block of half the 4 MPa class, structural only for the test: f_d = 0.7 x 0.7 x 2 / 2 = 0.49 MPa
+    registerMasonryUnit({ ...getMasonryUnit('concrete_block_14'), id: 'test_block_14_fbk2', fbk: 2, uses: ['structural'] })
+    const designs = designsOf(generate(1, { masonryUnit: 'test_block_14_fbk2' }), 'test_block_14_fbk2').filter((d) => d.wall === 'wall_0_13')
     const pier = designs.find((d) => Math.abs(d.from - 1.41) < 0.01)!
-    // alone between the back door and the kitchen window, 0.59 m x 0.14 m = 0.083 m² at f_d = 0.98 MPa x Φ 0.89: about 72 kN, under some 97 kN of design load
+    // alone between the back door and the kitchen window (0.59 m x 0.14 m, no flange): past f_d
     expect(pier.flange).toBe(0)
-    expect(pier.topLoad).toBeGreaterThan(pier.topResistance)
-    // the wall's two piers summed would pass
-    const sum = (key: 'topLoad' | 'topResistance'): number => designs.reduce((total, d) => total + d[key], 0)
-    expect(sum('topLoad')).toBeLessThan(sum('topResistance'))
+    expect(pier.ratio).toBeGreaterThan(1)
+    // the wall taken whole (its loads over all its area) would pass
+    const strength = designStrength(getMasonryUnit('test_block_14_fbk2'))
+    const whole = designs.reduce((t, d) => t + d.normal, 0) / designs.reduce((t, d) => t + d.area * d.reduction, 0) / strength
+    expect(whole).toBeLessThan(1)
   })
 
   it('lets a pier at a corner or a T work with the walls interlocked into it, up to 6 t each side', () => {
@@ -92,11 +96,11 @@ describe('pier by pier (3)', () => {
     // the 20 cm stub between the bathroom door and the T with wall_0_18: 6 x 0.14 = 0.84 m of wall_0_18 each side of the junction, cut at its end
     expect(stub.to - stub.from).toBeCloseTo(0.2, 1)
     expect(stub.flange).toBeGreaterThan(0.8)
-    expect(stub.topLoad).toBeLessThan(stub.topResistance)
+    expect(stub.ratio).toBeLessThan(1)
   })
 })
 
-describe('live loads of NBR 6120 and the eccentricity of the slab (4)', () => {
+describe('live loads of NBR 6120 and compression with bending (4)', () => {
   it('loads each slab by the use of the rooms over it, a ceiling slab by maintenance, and puts a tank\'s water on what it stands on', () => {
     expect([liveLoadOf('bedroom'), liveLoadOf('living'), liveLoadOf('bathroom'), liveLoadOf('laundry'), liveLoadOf('stairs'), liveLoadOf('garage')]).toEqual([1.5, 1.5, 1.5, 2, 2.5, 3])
     const floor: StructurePart = { id: 'slab_1', role: 'slab', material: 'concrete', aabb: [0, 0, 4, 3], y0: 2.68, y1: 2.8, floor: 1, mass: 3456 }
@@ -108,18 +112,41 @@ describe('live loads of NBR 6120 and the eccentricity of the slab (4)', () => {
     expect(loads.get('slab_ceiling')).toBeCloseTo((CEILING_SLAB_LIVE_LOAD * 12 * 1000) / 9.81 + 500, 6)
   })
 
-  it('takes a slab bearing on one face t/6 off the axis, h_ef / 450 more, at least 0.05 t: Φ = 1 - 2 e / t', () => {
-    // exterior wall, 14 cm, h_ef 2.6 m, all the top load from a slab on one side: e = 0.14 / 6 + 2.6 / 450 = 0.0291 m, Φ = 1 - 2 x 0.0291 / 0.14 = 0.584
-    const e = topEccentricity({ thickness: 0.14, effective: 2.6, oneSidedShare: 1 })
-    expect(e).toBeCloseTo(0.14 / 6 + 2.6 / 450, 9)
-    expect(eccentricityFactor(e, 0.14)).toBeCloseTo(0.584, 3)
-    // slabs on both faces cancel: e = max(2.6 / 450, 0.05 x 0.14) = 0.007 m, Φ = 0.9
-    expect(eccentricityFactor(topEccentricity({ thickness: 0.14, effective: 2.6, oneSidedShare: 0 }), 0.14)).toBeCloseTo(0.9, 9)
-    // in the house the exterior walls, under the slab on one face, take more of it than the interior ones, under slabs on both
+  it('puts the maintenance load of a pitched roof, 0.25 kN/m² in horizontal projection, on each pane', () => {
+    const pane: StructurePart = { id: 'roof_a', role: 'roof', material: 'ceramic', aabb: [0, 0, 6, 3], y0: 2.8, y1: 4.5, floor: 0, mass: 1 }
+    expect(liveLoads([pane], [], { rooms: [], levels: [0] }).get('roof_a')).toBeCloseTo((PITCHED_ROOF_LIVE_LOAD * 18 * 1000) / 9.81, 6)
+  })
+
+  it('checks N_d / (A R) + M_d / (1.5 W) ≤ f_d (NBR 16868-1, flexo-compression), M_d of what bears on one face t/6 off the axis', () => {
+    // one metre of 14 cm wall under N_d = 100 kN and M_d = 1 kN m, R = 0.9, f_d = 1.47 MPa:
+    // 100e3 / (0.14 x 0.9) = 0.794 MPa, 1e3 / (1.5 x 0.14² / 6) = 0.204 MPa, (0.794 + 0.204) / 1.47 = 0.679
+    const ratio = combinedRatio({ normal: 100e3, moment: 1e3, area: grossArea(1, BLOCK), modulus: sectionModulus(1, BLOCK), reduction: 0.9, strength: designStrength(BLOCK) })
+    expect(sectionModulus(1, BLOCK)).toBeCloseTo(0.14 ** 2 / 6, 12)
+    expect(ratio).toBeCloseTo((100e3 / (0.14 * 0.9) + 1e3 / (1.5 * (0.14 ** 2 / 6))) / 1.47e6, 9)
+    expect(ratio).toBeCloseTo(0.679, 3)
+  })
+
+  it('takes the moment of a beam that ends on one face (a point load) as well as that of a slab', () => {
+    const wall: StructurePart = { id: 'wall_x', role: 'wall', material: 'concrete', aabb: [0, -0.07, 4, 0.07], y0: 0, y1: 2.6, floor: 0, mass: 1000 }
+    const beam: StructurePart = { id: 'beam_x', role: 'beam', material: 'concrete', aabb: [1.9, 0, 2.1, 3], y0: 2.4, y1: 2.6, floor: 0, mass: 1 }
+    const slab: StructurePart = { id: 'slab_x', role: 'slab', material: 'concrete', aabb: [0, -3, 4, 0], y0: 2.6, y1: 2.7, floor: 0, mass: 1 }
+    const side = (part: StructurePart): number => (part.aabb[1] >= 0 ? 1 : -1)
+    const [pier] = loadPiers({
+      wall, alongU: true, piers: [{ from: 0, to: 4, tributary: 4 }], parts: new Map([[beam.id, beam], [slab.id, slab]]), concentrated: (p) => p.id === 'beam_x', sided: side,
+      flows: [{ from: 'beam_x', load: 500 }, { from: 'slab_x', load: 300 }],
+    })
+    // 500 kg from the beam on one face, 300 kg of slab on the other: 200 kg left on the beam's side
+    expect(pier!.top).toBe(800)
+    expect(pier!.oneSided).toBe(200)
+  })
+
+  it('bends a wall by what bears on one face only: the slabs on its two faces cancel', () => {
     const designs = designsOf(generate(1))
+    // the exterior wall under the slab on its inner face is bent; the interior one carries slabs on both faces: less than all its load t/6 off its axis
     const exterior = designs.find((d) => d.wall === 'wall_0_9')!
     const interior = designs.find((d) => d.wall === 'wall_0_4')!
-    expect(exterior.eccentricity).toBeLessThan(interior.eccentricity)
+    expect(exterior.moment).toBeGreaterThan(0)
+    expect(interior.moment / interior.normal).toBeLessThan(0.14 / 6)
   })
 })
 
@@ -138,6 +165,11 @@ describe('steel in the grout (5)', () => {
     expect(codesOf(result, withBar(0.008))).toContain(STRUCTURAL_VIOLATION.GROUT_WITHOUT_BAR)
     // a Ø 40 mm bar: 12.6 cm², 9.2 % of the cell
     expect(codesOf(result, withBar(0.04))).toContain(STRUCTURAL_VIOLATION.GROUT_STEEL_CONGESTED)
+    // a Ø 30 mm bar alone fills 7.07 cm² (5.2 %), but where the bar of the course below laps it the cell holds two: 14.1 cm², 10.4 % (6)
+    expect(barArea(0.03) / cellArea(BLOCK)).toBeLessThan(MAX_STEEL_IN_CELL)
+    expect(codesOf(result, withBar(0.03))).toContain(STRUCTURAL_VIOLATION.GROUT_STEEL_CONGESTED)
+    // the house's Ø 12.5 mm: two at a splice, 2.45 cm², 1.8 %
+    expect((2 * barArea(GROUT_BAR)) / cellArea(BLOCK)).toBeCloseTo(0.018, 3)
   })
 })
 

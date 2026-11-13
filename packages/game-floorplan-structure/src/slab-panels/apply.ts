@@ -265,7 +265,7 @@ function wallStretches(context: Context, line: Line, floor: number, top: number)
     const along: Interval = [padded[0] + (padded[0] > 0 ? PLAN_TOLERANCE + JAMB_CLEAR + reach : 0), padded[1] - (padded[1] < line.to - line.from ? PLAN_TOLERANCE + JAMB_CLEAR + reach : 0)]
     if (along[1] <= along[0]) continue
     const alongU = wall.aabb[2] - wall.aabb[0] >= wall.aabb[3] - wall.aabb[1]
-    const openings = context.structure.openings.filter((o) => o.wall === wall.id)
+    const openings = context.structure.openings.filter((o) => o.wall === wall.id && o.kind === 'window')
     if ((line.dir === 'u') === alongU) {
       // the wall runs with the beam: all of it but its openings
       let pieces: Interval[] = [along]

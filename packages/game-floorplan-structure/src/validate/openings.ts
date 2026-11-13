@@ -49,7 +49,7 @@ export function openingViolations(structure: Pick<Structure, 'parts' | 'openings
   const walls = structure.parts.filter(isMasonryWall)
   const hosts = new Map(walls.map((wall) => [wall.id, wall]))
   const out: StructuralViolation[] = []
-  for (const opening of structure.openings) {
+  for (const opening of structure.openings.filter((o) => o.kind === 'window')) {
     const wall = hosts.get(opening.wall)
     if (wall) out.push(...windowViolations(opening, wall, built))
   }
@@ -58,7 +58,9 @@ export function openingViolations(structure: Pick<Structure, 'parts' | 'openings
     if (!beside.length) continue
     const along = door.axis === 'u' ? door.u : door.v
     const span = { from: along - door.width / 2, to: along + door.width / 2 }
-    const lintel = beamAcross(built, beside[0]!, span, 'y0', (structure.levels[door.floor] ?? 0) + DOOR_HEIGHT)
+    // its head where the structure put it (on the courses in structural masonry), else the door's height
+    const head = structure.openings.find((o) => o.kind === 'door' && o.id === door.id)?.y1 ?? (structure.levels[door.floor] ?? 0) + DOOR_HEIGHT
+    const lintel = beamAcross(built, beside[0]!, span, 'y0', head)
     if (!lintel) out.push({ code: STRUCTURAL_VIOLATION.OPENING_WITHOUT_LINTEL, part: door.id, message: `door ${door.id} has no lintel over it` })
   }
   return out

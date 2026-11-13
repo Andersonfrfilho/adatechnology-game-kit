@@ -2,16 +2,24 @@ import { getAssembly } from '@adatechnology/game-destruction'
 
 import { coursingOf } from '../masonry-units'
 
-import type { Construction, Rect, PlanStructure, StructurePart, WallDetail } from '../types'
+import type { Construction, Opening, Rect, PlanStructure, StructurePart, WallDetail } from '../types'
 import { applySplits } from './apply'
 import type { PartsAndSupports } from './apply'
 import { splitIntoCourses } from './courses'
 import type { CourseSpec } from './courses'
+import { interlockCuts } from './interlock'
 import { splitIntoPanels } from './panels'
 import type { WallSplit } from './panels'
 import { CONSTRUCTION_SYSTEMS } from '../registry'
 
 const LOG_DIAMETER = 0.26
+
+/** Whether an opening lies inside a wall's length, clear of its ends by its thickness. */
+function opensInside(opening: Opening, part: StructurePart): boolean {
+  const alongU = part.aabb[2] - part.aabb[0] >= part.aabb[3] - part.aabb[1]
+  const [from, to, thickness] = alongU ? [part.aabb[0], part.aabb[2], part.aabb[3] - part.aabb[1]] : [part.aabb[1], part.aabb[3], part.aabb[2] - part.aabb[0]]
+  return opening.from >= from + thickness && opening.to <= to - thickness
+}
 const isWall = (part: StructurePart): boolean => part.id.startsWith('wall_') && part.assembly !== undefined && (part.role === 'wall' || part.role === 'partition')
 
 function logSpec(construction: Construction, part: StructurePart): CourseSpec {
@@ -25,11 +33,13 @@ function panelSplits(input: PartsAndSupports, structure: PlanStructure, lintelDe
   const system = CONSTRUCTION_SYSTEMS.get(construction.system)!
   const splits = new Map<string, WallSplit>()
   for (const part of input.parts.filter(isWall)) {
+    // a window cuts the wall; a door only where it opens inside it (in a plan a door is the gap between two walls, the opening at their ends)
+    const windows = structure.openings.filter((o) => o.kind === 'window' || opensInside(o, part))
     if (construction.system === 'log') {
-      splits.set(part.id, splitIntoCourses(part, structure.openings, logSpec(construction, part)))
+      splits.set(part.id, splitIntoCourses(part, windows, logSpec(construction, part)))
       continue
     }
-    const split = splitIntoPanels(part, structure.openings, {
+    const split = splitIntoPanels(part, windows, {
       lintelMaterial: system.timber ? construction.frame.timber : 'concrete', ...(system.timber ? {} : { lintelAssembly: 'reinforced_concrete' }), lintelJoint: system.joints.beam, wallJoint: system.joints.wall, ...(lintelDepth && !system.timber ? { lintelDepth } : {}), ...(construction.system === 'masonry' ? { sillBeam: true } : {}),
     })
     if (split.pieces.length > 1) splits.set(part.id, split)
@@ -64,13 +74,15 @@ export interface Sized extends PartsAndSupports {
 /** Cuts each wall piece that its assembly lays in units (bricks, blocks, concrete panels) into those units; a unit takes the share of the piece's capacity its width has (it carries its column of the wall). */
 export function applyUnits(input: Sized, structure: PlanStructure): Sized {
   const splits = new Map<string, WallSplit>()
-  for (const part of input.parts) {
-    if (part.unit || !part.assembly || part.role === 'beam' || part.role === 'none') continue
-    const units = getAssembly(part.assembly)?.units
-    if (!units) continue
+  const laid = input.parts.filter((part) => !part.unit && part.assembly && part.role !== 'beam' && part.role !== 'none' && getAssembly(part.assembly)?.units)
+  const coursingOfPart = (part: StructurePart) => coursingOf(structure.construction.walls.unit, getAssembly(part.assembly!)!.units)!
+  // the courses on the storey's floor: where two walls meet, they take turns over the square they share
+  const cuts = interlockCuts(laid, (part) => ({ base: structure.levels[part.floor] ?? 0, height: coursingOfPart(part).courseHeight }))
+  for (const part of laid) {
+    const units = getAssembly(part.assembly!)!.units!
     const joint = CONSTRUCTION_SYSTEMS.get(structure.construction.system)!.joints.wall
-    const coursing = coursingOf(structure.construction.walls.unit, units)!
-    splits.set(part.id, splitIntoCourses(part, [], { rowHeight: coursing.courseHeight, unitLength: coursing.unitLength, bond: units.bond, joint: units.mortar === 'concrete' ? 'mortar' : joint, assembly: part.assembly }))
+    const coursing = coursingOfPart(part)
+    splits.set(part.id, splitIntoCourses(part, cuts.get(part.id) ?? [], { rowHeight: coursing.courseHeight, unitLength: coursing.unitLength, bond: units.bond, joint: units.mortar === 'concrete' ? 'mortar' : joint, assembly: part.assembly! }))
   }
   const next = applySplits(input, splits)
   const capacities = new Map(input.capacities)

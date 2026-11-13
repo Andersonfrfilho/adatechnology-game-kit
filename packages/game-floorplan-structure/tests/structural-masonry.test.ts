@@ -36,12 +36,45 @@ describe('structural masonry (NBR 16868): the walls are the structure', () => {
     }
   })
 
-  it('lays the walls on the module of the block (20 cm), doors included', () => {
+  it('lays the walls on the module of the block (20 cm), doors included: jambs on the module, heads and lintels on the 20 cm courses', () => {
     const module = moduleOf(getMasonryUnit('concrete_block_14_fbk6'))
     expect(module).toBe(0.2)
-    const result = generate(2)
-    for (const wall of result.walls) for (const x of [wall.u0, wall.u1, wall.v0, wall.v1]) expect(Math.abs(x / module - Math.round(x / module)), `${x}`).toBeLessThan(0.02)
-    for (const door of result.doors) expect(Math.abs((door.at - door.width / 2) / module - Math.round((door.at - door.width / 2) / module)), door.id).toBeLessThan(0.02)
+    const onGrid = (x: number, step: number): boolean => Math.abs(x / step - Math.round(x / step)) < 0.02
+    for (const seed of [1, 2, 3]) {
+      const result = generate(seed)
+      for (const wall of result.walls) for (const x of [wall.u0, wall.u1, wall.v0, wall.v1]) expect(onGrid(x, module), `${x}`).toBe(true)
+      for (const door of result.doors) expect(onGrid(door.at - door.width / 2, module), door.id).toBe(true)
+      const doors = result.structure.openings.filter((o) => o.kind === 'door')
+      expect(doors.length, `seed ${seed}`).toBe(result.doors.length)
+      for (const door of doors) {
+        // the head at 2.20 m (11 courses of 20 cm), the lintel a course of channel blocks over it
+        expect(door.y1, door.id).toBeCloseTo(2.2, 6)
+        const lintel = result.structure.parts.find((p) => p.id === `lintel_${door.id}`)!
+        expect(lintel.y0, door.id).toBeCloseTo(door.y1, 6)
+        expect(onGrid(lintel.y1 - lintel.y0, 0.2), door.id).toBe(true)
+      }
+    }
+    // a door lintel off the courses (the confined masonry's 2.10 m)
+    const result = generate(1)
+    const parts = result.structure.parts.map((p) => (p.id === 'lintel_d0_0' ? { ...p, y0: 2.1, y1: 2.3 } : p))
+    expect(validate(result, parts).filter((v) => v.code === STRUCTURAL_VIOLATION.OFF_MODULE).map((v) => v.part)).toContain('lintel_d0_0')
+  })
+
+  it('grouts the first cell at a free end and a door jamb, not 30 cm in (5)', () => {
+    const result = generate(1)
+    // wall_0_0 ends at the front door's jamb at 5.0 m: its core in the first cell, 10 cm in; moved 30 cm in, the end is left without
+    const front = result.structure.parts.find((p) => p.id === 'wall_0_0')!
+    expect(front.grout).toContain(4.9)
+    const moved = result.structure.parts.map((p) => (p.id === 'wall_0_0' ? { ...p, grout: (p.grout ?? []).map((g) => (g === 4.9 ? 4.7 : g)) } : p))
+    expect(validate(result, moved).map((v) => v.code)).toContain(STRUCTURAL_VIOLATION.WALL_END_WITHOUT_PILLAR)
+  })
+
+  it('runs the bond beam over the whole length of every bearing wall (3)', () => {
+    const result = generate(1)
+    // the bond beam of the right wall cut back 1.1 m from the front corner: wall_0_9 is left without it there
+    const parts = result.structure.parts.map((p) => (p.id === 'plate_0_3' ? { ...p, aabb: [p.aabb[0], p.aabb[1] + 1.1, p.aabb[2], p.aabb[3]] as typeof p.aabb } : p))
+    const found = validate(result, parts).filter((v) => v.code === STRUCTURAL_VIOLATION.BOND_BEAM_NOT_CONTINUOUS)
+    expect(found.map((v) => v.part)).toContain('wall_0_9')
   })
 
   it('passes its own validator (grout, steel, coordination, slenderness, piers in compression with the loads of NBR 6120) and the walls carry the roof slab', () => {
@@ -82,12 +115,13 @@ describe('structural masonry (NBR 16868): the walls are the structure', () => {
     expect(validate(result, stripped).map((v) => v.code)).toContain(STRUCTURAL_VIOLATION.CONCENTRATED_LOAD_WITHOUT_GROUT)
   })
 
-  it('reports masonry past its design strength: the narrow piers of this plan in the 4 MPa block', () => {
+  it('reports masonry past its design strength: the 20 cm stub of this plan in the 4 MPa block', () => {
     const result = generate(1, { masonryUnit: 'concrete_block_14' })
     const over = validate(result).filter((v) => v.code === STRUCTURAL_VIOLATION.MASONRY_OVERSTRESSED)
-    // the 0.6 m pier of wall_0_13 between the back door and the kitchen window, alone between its two openings
-    expect(over.map((v) => v.part)).toContain('wall_0_13')
-    expect(over.find((v) => v.part === 'wall_0_13')!.message).toMatch(/pier 1\.41-2\.00 m/)
+    // the stub between the bathroom door and the T with wall_0_18 (with 0.84 m of that wall as flange) takes the roof, the ceiling slab, the bond beam
+    // and the door's lintel: (N_d / A R + M_d / 1.5 W) / f_d about 1.4 with f_d = 0.98 MPa, about 0.93 with the 6 MPa block of the typology
+    expect(over.map((v) => v.part)).toEqual(['wall_0_5'])
+    expect(over[0]!.message).toMatch(/pier 9\.00-9\.20 m/)
   })
 
   it('reports a wall too slender, a wall off the module and a concrete pillar standing in a structural wall', () => {

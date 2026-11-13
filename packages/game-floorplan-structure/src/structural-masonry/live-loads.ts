@@ -24,6 +24,8 @@ export const DEFAULT_LIVE_LOAD = 2
 export const CEILING_SLAB_LIVE_LOAD = 0.5
 /** NBR 6120: a flat roof slab reached only for maintenance, kN/m². */
 export const ROOF_SLAB_LIVE_LOAD = 1
+/** NBR 6120: a pitched roof with no access but for maintenance, kN/m² in horizontal projection. */
+export const PITCHED_ROOF_LIVE_LOAD = 0.25
 /** A slab whose top is this close to a storey's floor level is that storey's floor, metres. */
 const LEVEL_TOLERANCE = 0.15
 
@@ -46,7 +48,8 @@ function slabLiveLoad(slab: StructurePart, rooms: readonly LoadedRoom[], levels:
 }
 
 /**
- * The variable loads of NBR 6120 as masses on the parts that take them, kg: on each slab, the use of the rooms over it (or the roof's maintenance), and
+ * The variable loads of NBR 6120 as masses on the parts that take them, kg: on each slab, the use of the rooms over it (or the roof's maintenance), on a
+ * pitched roof its maintenance load in horizontal projection, and
  * the water of a tank on what it stands on (the tank itself carries none in the load path).
  */
 export function liveLoads(parts: readonly StructurePart[], supports: readonly Support[], params: { readonly rooms: readonly LoadedRoom[]; readonly levels: readonly number[] }): Map<string, number> {
@@ -55,6 +58,7 @@ export function liveLoads(parts: readonly StructurePart[], supports: readonly Su
     if (kg > 0) out.set(id, (out.get(id) ?? 0) + kg)
   }
   for (const slab of parts.filter((part) => part.role === 'slab')) add(slab.id, kilogramsOf(slabLiveLoad(slab, params.rooms, params.levels)))
+  for (const roof of parts.filter((part) => part.role === 'roof')) add(roof.id, kilogramsOf(PITCHED_ROOF_LIVE_LOAD * areaOf(roof.aabb)))
   for (const tank of parts.filter((part) => part.liters)) {
     const under = supports.filter((support) => support.part === tank.id && support.bears !== false)
     for (const support of under) add(support.on, tank.liters! / under.length)

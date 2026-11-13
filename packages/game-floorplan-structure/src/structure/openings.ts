@@ -1,5 +1,6 @@
 import { GROUND } from '../types'
 import type { Opening, Rect, SourceDoor, StructurePart } from '../types'
+import { getMasonryUnit, MORTAR_JOINT } from '../masonry-units'
 import { pillarBox } from './context'
 import type { BuildContext, BuildWall } from './context'
 
@@ -9,10 +10,42 @@ export const DOOR_HEIGHT = 2.1
 const LINTEL_DEPTH = 0.2
 const LINTEL_BEARING = 0.2
 
+/**
+ * Structural masonry is laid in whole courses: the height of one with its joint (20 cm for a 19 cm block), or nothing for other walls. The door's head and its
+ * lintel (a course of channel blocks, or more for a wide door) land on them.
+ */
+function courseOf(context: BuildContext): number | undefined {
+  const unit = context.construction.walls.unit
+  return context.structural && unit !== undefined ? Math.round((getMasonryUnit(unit).height + MORTAR_JOINT) * 100) / 100 : undefined
+}
+
+/** Height of the head of a door over its floor: `DOOR_HEIGHT`, raised to the next course in structural masonry (2.20 m on 20 cm courses). */
+export function doorHeadOf(context: BuildContext): number {
+  const course = courseOf(context)
+  return course === undefined ? DOOR_HEIGHT : Math.round(Math.ceil(DOOR_HEIGHT / course - 1e-6) * course * 100) / 100
+}
+
+/** The masonry gaps of the doors of structural masonry, each as an opening of the wall at its start side: its jambs, its floor and its head. */
+function doorOpenings(context: BuildContext): Opening[] {
+  if (!context.structural) return []
+  const out: Opening[] = []
+  for (const door of context.source.doors.filter((d) => d.a !== undefined && d.type !== 'zipper')) {
+    const along = door.axis === 'u' ? door.u : door.v
+    const cross = door.axis === 'u' ? door.v : door.u
+    const [from, to] = [along - door.width / 2, along + door.width / 2]
+    const beside = context.walls.filter((w) => w.floor === door.floor && w.axis === door.axis && w.type === 'wall' && Math.abs(crossOf(w) - cross) <= TOLERANCE)
+    const wall = beside.find((w) => Math.abs(alongRange(w)[1] - from) <= 0.05) ?? beside.find((w) => Math.abs(alongRange(w)[0] - to) <= 0.05)
+    if (!wall) continue
+    const base = context.level(door.floor)
+    out.push({ id: door.id, kind: 'door', wall: wall.id, from, to, y0: base, y1: base + doorHeadOf(context) })
+  }
+  return out
+}
+
 const crossOf = (wall: BuildWall): number => (wall.axis === 'u' ? wall.v0 : wall.u0)
 const alongRange = (wall: BuildWall): [number, number] => (wall.axis === 'u' ? [Math.min(wall.u0, wall.u1), Math.max(wall.u0, wall.u1)] : [Math.min(wall.v0, wall.v1), Math.max(wall.v0, wall.v1)])
 
-/** The windows of the plan, each in the wall it sits in. */
+/** The windows of the plan, each in the wall it sits in, and (structural masonry) the doors. */
 export function findOpenings(context: BuildContext): Opening[] {
   const openings: Opening[] = []
   for (const window of context.source.windows ?? []) {
@@ -27,7 +60,7 @@ export function findOpenings(context: BuildContext): Opening[] {
     const base = context.level(window.floor)
     openings.push({ id: window.id, kind: 'window', wall: wall.id, from, to, y0: base + window.y0, y1: base + window.y1 })
   }
-  return openings
+  return [...openings, ...doorOpenings(context)]
 }
 
 /**
@@ -47,9 +80,11 @@ export function addDoorLintels(context: BuildContext): void {
     const lo = from - LINTEL_BEARING
     const hi = to + LINTEL_BEARING
     const box: Rect = door.axis === 'u' ? [lo, cross - half, hi, cross + half] : [cross - half, lo, cross + half, hi]
-    const y0 = context.level(door.floor) + DOOR_HEIGHT
-    // h = L/10 of reinforced concrete: a wide door (a garage) needs a deeper lintel
-    const depth = Math.max(LINTEL_DEPTH, (door.width + LINTEL_BEARING) / 10)
+    const y0 = context.level(door.floor) + doorHeadOf(context)
+    // h = L/10 of reinforced concrete: a wide door (a garage) needs a deeper lintel; in structural masonry, whole courses of channel blocks
+    const course = courseOf(context)
+    const needed = Math.max(LINTEL_DEPTH, (door.width + LINTEL_BEARING) / 10)
+    const depth = course === undefined ? needed : Math.round(Math.ceil(needed / course - 1e-6) * course * 100) / 100
     const lintel = builder.add({ id: `lintel_${door.id}`, role: 'beam', material: system.timber ? construction.frame.timber : 'concrete', aabb: box, y0, y1: y0 + depth }, { floor: door.floor, ...(system.timber ? {} : { assembly: 'reinforced_concrete' }) })
     for (const wall of beside) builder.rest(lintel, context.wallParts.get(wall.id) as StructurePart, system.joints.beam)
     // the pillars at the jambs carry the lintel too (confined masonry: a wide door rests on the frame, not on the bricks alone)
@@ -60,7 +95,12 @@ export function addDoorLintels(context: BuildContext): void {
     const host = context.wallParts.get(beside[0]!.id)
     const top = Math.max(...beside.map((w) => context.wallParts.get(w.id)?.y1 ?? 0))
     const header = host && !context.visorSections && top - (y0 + depth) > MIN_HEADER ? addDoorHeader(context, { door, host, lintel, top, box: door.axis === 'u' ? [from, cross - half, to, cross + half] : [cross - half, from, cross + half, to] }) : null
-    for (const plate of context.plates.get(door.floor) ?? []) if (overlapsInPlan(plate.aabb, box)) builder.rest(plate, header ?? lintel, header ? context.system.joints.wall : system.joints.beam)
+    // a plate rests on the masonry over the door where it lies over it, else on the lintel's bearing in the wall (a plate of the wall across the door's end)
+    for (const plate of context.plates.get(door.floor) ?? []) {
+      if (!overlapsInPlan(plate.aabb, box)) continue
+      const onHeader = header !== null && overlapsInPlan(plate.aabb, header.aabb)
+      builder.rest(plate, onHeader ? header : lintel, onHeader ? context.system.joints.wall : system.joints.beam)
+    }
   }
 }
 
