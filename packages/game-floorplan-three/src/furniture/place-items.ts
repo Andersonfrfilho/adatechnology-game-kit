@@ -34,12 +34,12 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       const ent = T[m.type];
       const st0 = cursor.stage;
       if (shared.ctx.constructionStages && (m.type === 'cooking_gas_cylinder' || m.type === 'gas_cylinder' || m.type === 'water_tank')) cursor.stage = 'installations';
-      if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); cursor.stage = st0; continue; }
       shared.ctx.restOn = exterior || shared.ctx.visorScene ? undefined : base; // what stands on a storey's floor has its bottom shut by it
       // a plan's 3.14 or -1.57 turns it square to the walls (it stood a tenth of a degree off them, its back crossing their faces)
       if (!shared.ctx.visorScene) { const quarter = Math.round(M.ry / (Math.PI / 2)); if (Math.abs(M.ry - quarter * Math.PI / 2) < 0.01) M.ry = quarter * Math.PI / 2; }
       shared.ctx.keepOut = exterior || shared.ctx.visorScene ? undefined : keepOut; // ... and keeps out of the walls and of its floor
       shared.ctx.itemBoxes = shared.ctx.visorScene ? undefined : []; shared.ctx.itemGroup = cursor.group;
+      if (!ent) { labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); cursor.stage = st0; continue; }
       try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
     }
     shared.ctx.restOn = undefined; shared.ctx.keepOut = undefined; shared.ctx.itemBoxes = undefined;
@@ -95,7 +95,7 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
   function hashColor(s: unknown): Hex { let h = 7; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return _col.setHSL(((h >>> 0) % 360) / 360, 0.45, 0.55).getHex(); }
   function labeledBox(m: HouseItem, M: Mount, group: string): void { // no builder: a box on the item's footprint and height, in the paper colour
     const color = M.color != null ? M.color : hashColor(m.category || m.type), h = Math.max(0.05, m.h || 0.5);
-    boxC('plain', m.x, M.base + (m.y || 0) + h / 2, m.z, m.w, h, m.d, color, 0, m.ry || 0, 0);
+    boxC('plain', m.x, M.base + (m.y || 0) + h / 2, m.z, m.w, h, m.d, color, 0, M.visorScene ? m.ry || 0 : M.ry, 0);
     shared.ctx.labels.push({ pos: new THREE.Vector3(m.x, M.base + (m.y || 0) + h + 0.15, m.z), text: m.type, group, type: 'no_model' });
   }
   const defined: KernelFurniturePlaceItems = { houseItems, waterTankOfHouse, hashColor, labeledBox };
