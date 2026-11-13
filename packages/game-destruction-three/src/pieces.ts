@@ -731,7 +731,9 @@ export class PieceSystem {
     let landPoint: Vec3 = [pos[0], pos[1], pos[2]]
     let contactedLast = false
     const propped = b.propped
+    const proppedAt = b.proppedAt
     b.propped = undefined
+    b.proppedAt = undefined
     let touched = false
     let unstable = false
 
@@ -1001,6 +1003,11 @@ export class PieceSystem {
         x0 = Math.min(x0, r[0]); x1 = Math.max(x1, r[0])
         z0 = Math.min(z0, r[2]); z1 = Math.max(z1, r[2])
         low = Math.min(low, r[1])
+      }
+      // held up through its overlap with a piece (`propped`), that point is a point of its support too
+      if (proppedAt) {
+        x0 = Math.min(x0, proppedAt[0]); x1 = Math.max(x1, proppedAt[0])
+        z0 = Math.min(z0, proppedAt[2]); z1 = Math.max(z1, proppedAt[2])
       }
       const height = -low
       const wx = x1 - x0
@@ -1442,12 +1449,30 @@ export class PieceSystem {
     const [upper, c, up]: [PieceBody, Vec3, Vec3] = n[1] > 0 ? [a, ca, n] : [b, cb, [-n[0], -n[1], -n[2]]]
     if (upper.held || upper.sleeping) return
     upper.propped = up
-    const push = this.pushes.get(upper) ?? [0, 0, 0]
-    const lift = SEPARATE_SHARE * Math.max(0, hit.depth - SLOP)
-    for (let i = 0; i < 3; i++) push[i] += up[i] * lift
-    this.pushes.set(upper, push)
     const e = this.m.makeRotationFromQuaternion(upper.root.quaternion).elements
-    this.contactImpulse(upper, e, [hit.point[0] - c[0], hit.point[1] - c[1], hit.point[2] - c[2]], up, 0)
+    const r: Vec3 = [hit.point[0] - c[0], hit.point[1] - c[1], hit.point[2] - c[2]]
+    upper.proppedAt = r
+    // the contact point comes out as a push at that point does (as the impulse below): the body moves by its share of the lift and turns by the rest, so what it still
+    // stands on elsewhere (a corner on the ground) is not carried up with it and left to fall back into the same neighbour
+    const turn = this.mulInvInertiaWith(upper, e, r[1] * up[2] - r[2] * up[1], r[2] * up[0] - r[0] * up[2], r[0] * up[1] - r[1] * up[0])
+    const angular = (turn[1] * r[2] - turn[2] * r[1]) * up[0] + (turn[2] * r[0] - turn[0] * r[2]) * up[1] + (turn[0] * r[1] - turn[1] * r[0]) * up[2]
+    const lift = (SEPARATE_SHARE * Math.max(0, hit.depth - SLOP)) / (1 + angular * upper.mass)
+    // lifted by several pieces under it at once (a sheet across three slabs) it needs the deepest of them, not all: each overlap is measured from where it stood, and their sum
+    // would lift it clear of all and leave it to fall back into them, step after step
+    const push = this.pushes.get(upper) ?? [0, 0, 0]
+    for (let i = 0; i < 3; i++) push[i] = Math.abs(up[i] * lift) > Math.abs(push[i]) ? up[i] * lift : push[i]
+    this.pushes.set(upper, push)
+    this.turnAboutCentre(upper, c, [turn[0] * lift * upper.mass, turn[1] * lift * upper.mass, turn[2] * lift * upper.mass])
+    this.contactImpulse(upper, e, r, up, 0)
+  }
+
+  /** Turns a piece by the rotation vector `by` (rad) about its centre `c`, which stays where it is. */
+  private turnAboutCentre(b: PieceBody, c: Vec3, by: Vec3): void {
+    const angle = Math.hypot(by[0], by[1], by[2])
+    if (angle < 1e-9) return
+    b.root.quaternion.premultiply(this.dq.setFromAxisAngle(this.ax.set(by[0] / angle, by[1] / angle, by[2] / angle), angle)).normalize()
+    const off = this.ax.copy(b.centerV).applyQuaternion(b.root.quaternion)
+    b.root.position.set(c[0] - off.x, c[1] - off.y, c[2] - off.z)
   }
 
   /** Two boxes put apart along the ground by `hit` (its normal from `b` to `a`, laid level), split by their inverse masses; the speed they close in with along it stops. */

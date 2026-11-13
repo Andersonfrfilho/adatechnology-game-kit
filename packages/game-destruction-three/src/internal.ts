@@ -119,6 +119,8 @@ export interface PieceBody extends Piece {
    * normal of that support, up from it.
    */
   propped?: Vec3
+  /** Where it is held up through that overlap, from its centre of mass (world): a point of its support, with the corners that touch. */
+  proppedAt?: Vec3
   /**
    * The points that touch the ground in place of the corners of its box (its frame, from the centre of mass): the corners of each part left of it. A top left on one leg
    * stands on that leg's foot, so it goes over, and lands on the edge of the top.
