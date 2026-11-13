@@ -50,7 +50,7 @@ if (toBuild.length) {
   if (build.status !== 0) process.exit(build.status ?? 1)
 }
 
-/** The templates a pack adds to the engine, read from the registry as each pack registers. */
+/** The templates a pack adds to the engine, read from the registry as each pack registers. @param {readonly string[]} dirs */
 async function templatesOf(dirs) {
   const { engine } = await import(pathToFileURL(join(ROOT, 'packages/game-floorplan/dist/index.js')).href)
   const ids = (/** @type {{ id: string }[]} */ list) => new Set(list.map((t) => t.id))
