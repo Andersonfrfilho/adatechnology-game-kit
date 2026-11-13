@@ -1,0 +1,15 @@
+{
+  "name": "@adatechnology/game-physics",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Spike: the engine-agnostic rigid-body contract of the kit (bodies, colliders, joints, queries, contact events). Types plus tiny helpers.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist"],
+  "scripts": { "build": "tsup", "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run --passWithNoTests" },
+  "devDependencies": { "@types/node": "^22.10.7", "tsup": "^8.5.1", "typescript": "^5.7.3", "vitest": "^3.2.4" }
+}

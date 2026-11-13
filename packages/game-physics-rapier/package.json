@@ -1,0 +1,38 @@
+{
+  "name": "@adatechnology/game-physics-rapier",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Spike: the game-physics contract implemented on Rapier (dimforge, Apache-2.0).",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-physics": "workspace:^",
+    "@dimforge/rapier3d-deterministic-compat": "0.21.0"
+  },
+  "devDependencies": {
+    "@dimforge/rapier3d-simd-compat": "0.21.0",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4",
+    "@adatechnology/game-destruction": "workspace:^",
+    "@adatechnology/game-contracts": "workspace:^"
+  }
+}
