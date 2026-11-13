@@ -190,6 +190,9 @@ const boxTopAt = (s: Solid, x: number, z: number): number => {
 
 const UP: Vec3 = [0, 1, 0]
 
+/** The key of a pair of pieces (`PieceSystem.apartDeep`), the same whichever comes first. */
+export const apartKey = (a: string, b: string): string => (a < b ? `${a}\u0000${b}` : `${b}\u0000${a}`)
+
 /** The outward normal of face `axis` of a box on its upper side: the surface of a tilted table top under a point. */
 const faceNormal = (s: Solid, axis: number): Vec3 => {
   const e = s.e
@@ -301,6 +304,46 @@ export class PieceSystem {
     }
     this.list.push(body)
     return body
+  }
+
+  /**
+   * Pieces made inside each other deeper than a contact (`LIFT_DEPTH`: chunks of one wall) go apart along the ground by the kit's rule (`slideApart`, `boxesAlongGround`),
+   * and Rapier leaves the pair alone until they are apart: it would push them out along their least overlap, up through the pile. The pairs, by `apartKey`.
+   */
+  private apartDeep(dt: number): Set<string> {
+    const keys = new Set<string>()
+    const n = this.list.length
+    if (n < 2) return keys
+    const centers = this.list.map((b) => {
+      const c = this.centerOf(b, this.p)
+      return [c.x, c.y, c.z] as Vec3
+    })
+    const radii = this.list.map((b) => Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2]))
+    const order = this.list.map((_, i) => i).sort((i, j) => centers[i][0] - radii[i] - (centers[j][0] - radii[j]))
+    for (let oi = 0; oi < n; oi++) {
+      const i = order[oi]
+      const reach = centers[i][0] + radii[i]
+      for (let oj = oi + 1; oj < n; oj++) {
+        const j = order[oj]
+        if (centers[j][0] - radii[j] > reach) break
+        const a = this.list[i]
+        const b = this.list[j]
+        if (a.round || b.round || ((a.held || a.sleeping) && (b.held || b.sleeping))) continue
+        const r = radii[i] + radii[j]
+        if (Math.abs(centers[i][1] - centers[j][1]) > r || Math.abs(centers[i][2] - centers[j][2]) > r || !this.partsOverlap(a, b)) continue
+        const sa = this.contactShape(a, centers[i])
+        const sb = this.contactShape(b, centers[j])
+        const hit = shapeContact(sa, sb)
+        if (!hit || hit.depth <= LIFT_DEPTH) continue
+        const ima = a.held || a.sleeping ? 0 : 1 / a.mass
+        const imb = b.held || b.sleeping ? 0 : 1 / b.mass
+        const level = Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? hit : boxesAlongGround(sa, sb)
+        if (level) this.slideApart(a, b, ima, imb, level)
+        keys.add(apartKey(a.objectId, b.objectId))
+      }
+    }
+    this.applyPushes(dt)
+    return keys
   }
 
   /** Move the centre of mass (after a part broke off). */
@@ -464,7 +507,8 @@ export class PieceSystem {
   }
 
   update(dt: number): void {
-    if ((this.o.solver ?? 'rapier') === 'rapier') {
+    // spike only: the room and the tests pick the solver by a global (?solver=own, PIECE_SOLVER=own) to measure both in one build
+    if ((this.o.solver ?? (globalThis as { __PIECE_SOLVER__?: 'own' | 'rapier' }).__PIECE_SOLVER__ ?? 'rapier') === 'rapier') {
       if (piecePhysicsReady()) {
         this.rapier ??= new RapierPieces(this.THREE, {
           groundAt: this.o.groundAt,
@@ -476,7 +520,9 @@ export class PieceSystem {
           onHardLanding: this.o.onHardLanding,
         })
         this.time += dt
-        this.rapier.update(this.list, dt, this.time)
+        // what slept on a support that is gone (a top that broke, ground dug under it) wakes: the kit's rule, Rapier does not see the ground change
+        this.wakeUnsupported()
+        this.rapier.update(this.list, dt, this.time, this.apartDeep(dt))
         this.measure()
         return
       }

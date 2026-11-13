@@ -3,6 +3,7 @@ import type { Collider, RigidBody, World } from '@dimforge/rapier3d-deterministi
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { PieceBody, PieceFriction } from './internal'
+import { apartKey } from './pieces'
 import type { PieceSweepHit } from './pieces'
 
 let ready = false
@@ -44,6 +45,9 @@ const SLAM_BOUNCE = 0.2
 const SLAM_FLOOR_NORMAL = 0.7
 const TIP_ACCELERATION = 30
 const TIP_LYING = 0.25
+/** A support narrower than this share of the height of the centre of mass is a balancing act, and the push (rad/s^2 per metre of height) that ends it (`topple`). */
+const NARROW = 0.3
+const TOPPLE = 3
 /** Fastest (m/s) a step's contacts may send a piece up (`noLaunch`): under 0.05 by what float32 rounds it to. */
 const MOST_UP_SPEED = 0.049
 
@@ -78,6 +82,18 @@ export class RapierPieces {
   private readonly statics = new Map<string, { boxes: readonly number[]; colliders: Collider[] }>()
   private readonly v: THREE_NS.Vector3
   private readonly q: THREE_NS.Quaternion
+  /** The piece each collider belongs to (its handle), for the hook. */
+  private readonly owner = new Map<number, string>()
+  private apart: ReadonlySet<string> = new Set()
+  private readonly events = new RAPIER.EventQueue(false)
+  private readonly hooks: RAPIER.PhysicsHooks = {
+    filterContactPair: (c1, c2) => {
+      const a = this.owner.get(c1)
+      const b = this.owner.get(c2)
+      return a !== undefined && b !== undefined && this.apart.has(apartKey(a, b)) ? null : RAPIER.SolverFlags.COMPUTE_IMPULSE
+    },
+    filterIntersectionPair: () => true,
+  }
 
   constructor(
     THREE: typeof THREE_NS,
@@ -91,6 +107,7 @@ export class RapierPieces {
   remove(b: PieceBody): void {
     const link = this.links.get(b)
     if (!link) return
+    for (const c of link.colliders) this.owner.delete(c.handle)
     this.world.removeRigidBody(link.rb)
     this.links.delete(b)
   }
@@ -104,6 +121,7 @@ export class RapierPieces {
   }
 
   dispose(): void {
+    this.events.free()
     this.world.free()
   }
 
@@ -117,9 +135,11 @@ export class RapierPieces {
     }
   }
 
-  update(list: readonly PieceBody[], dt: number, time: number): void {
+  /** A step of `dt`; the pairs in `apart` (`apartKey`) do not meet: the kit puts them apart along the ground. */
+  update(list: readonly PieceBody[], dt: number, time: number, apart: ReadonlySet<string> = new Set()): void {
     if (dt <= 0) return
     for (const b of list) this.sync(b, dt)
+    this.filterApart(list, apart)
     for (const [b] of this.links) if (!list.includes(b)) this.remove(b)
     this.layGround(list)
     this.layStatics()
@@ -135,7 +155,9 @@ export class RapierPieces {
     const rising = new Map<PieceBody, number>()
     for (const b of list) rising.set(b, before.get(b)?.vy ?? 0)
     for (let i = 0; i < steps; i++) {
-      this.world.step()
+      // the bindings only call the hooks of a step given an event queue
+      this.world.step(this.events, this.hooks)
+      this.events.clear()
       this.noLaunch(list, rising)
     }
     for (const b of list) this.readBack(b, dt, time, before.get(b))
@@ -156,6 +178,19 @@ export class RapierPieces {
       const most = Math.max(was, MOST_UP_SPEED)
       if (v.y > most) rb.setLinvel({ x: v.x, y: most, z: v.z }, false)
       rising.set(b, Math.min(v.y, most))
+    }
+  }
+
+  /** Only the colliders of the pieces in a pair kept apart ask the hook (`hooks`): a call back per pair for every piece would cost the step. */
+  private filterApart(list: readonly PieceBody[], apart: ReadonlySet<string>): void {
+    this.apart = apart
+    const involved = new Set<string>()
+    for (const key of apart) for (const id of key.split('\u0000')) involved.add(id)
+    for (const b of list) {
+      const link = this.links.get(b)
+      if (!link) continue
+      const hooks = involved.has(b.objectId) ? RAPIER.ActiveHooks.FILTER_CONTACT_PAIRS : RAPIER.ActiveHooks.NONE
+      for (const c of link.colliders) if (c.activeHooks() !== hooks) c.setActiveHooks(hooks)
     }
   }
 
@@ -192,7 +227,11 @@ export class RapierPieces {
     if (v[0] !== link.vel[0] || v[1] !== link.vel[1] || v[2] !== link.vel[2]) rb.setLinvel({ x: v[0], y: v[1], z: v[2] }, !b.sleeping)
     if (w[0] !== link.ang[0] || w[1] !== link.ang[1] || w[2] !== link.ang[2]) rb.setAngvel({ x: w[0], y: w[1], z: w[2] }, !b.sleeping)
     if (b.sleeping && !rb.isSleeping()) rb.sleep()
-    else if (!b.sleeping && rb.isSleeping()) rb.wakeUp()
+    else if (!b.sleeping && rb.isSleeping()) {
+      // woken from outside (its support looked at again, a blow): the ground under it is read again, it may have been dug while it slept
+      rb.wakeUp()
+      this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
+    }
   }
 
   /** Falling over (`PieceSystem.tip`): the spin it is given on the ground, until it lies or its time is up. */
@@ -218,7 +257,10 @@ export class RapierPieces {
 
   /** The colliders of a piece, from the centre of mass: its parts' boxes, else its box, or its round shape; its mass and the inertia of its box. */
   private shape(b: PieceBody, link: Link, shape: readonly unknown[]): void {
-    for (const c of link.colliders) this.world.removeCollider(c, false)
+    for (const c of link.colliders) {
+      this.owner.delete(c.handle)
+      this.world.removeCollider(c, false)
+    }
     link.colliders = []
     link.shape = shape
     const friction = Math.sqrt(b.friction?.static ?? MU_STATIC)
@@ -239,7 +281,9 @@ export class RapierPieces {
     } else descs.push(RAPIER.ColliderDesc.cuboid(...b.halfExtents))
     for (const desc of descs) {
       desc.setDensity(0).setFriction(friction).setFrictionCombineRule(RAPIER.CoefficientCombineRule.Multiply).setRestitution(restitution).setRestitutionCombineRule(RAPIER.CoefficientCombineRule.Multiply)
-      link.colliders.push(this.world.createCollider(desc, link.rb))
+      const collider = this.world.createCollider(desc, link.rb)
+      this.owner.set(collider.handle, b.objectId)
+      link.colliders.push(collider)
     }
     const [hx, hy, hz] = b.halfExtents
     const m = b.mass
@@ -362,6 +406,7 @@ export class RapierPieces {
     const off = this.v.copy(b.centerV).applyQuaternion(this.q)
     b.root.position.set(pos[0] - off.x, pos[1] - off.y, pos[2] - off.z)
     b.root.updateMatrixWorld(true)
+    if (!b.sleeping && !b.round && b.onGround) this.topple(b, link, dt, pos)
     // Rapier puts whole islands to sleep (forcing one body of an island asleep left it sinking under the sheet that landed on it): `still` only feeds the budget
     if (!b.sleeping) {
       const still = b.onGround && !b.tipping && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
@@ -385,6 +430,44 @@ export class RapierPieces {
       rb.setLinvel({ x: v[0], y: v[1], z: v[2] }, true)
       rb.setAngvel({ x: w[0], y: w[1], z: w[2] }, true)
     }
+  }
+
+  /**
+   * The kit's balancing rule over Rapier's contacts: a piece whose support (the points it touches by) is narrower than `NARROW` of the height of its centre of mass, or
+   * does not have the centre of mass over it, is not at rest there: it gets a gentle push toward the side it leans to, and stays awake.
+   */
+  private topple(b: PieceBody, link: Link, dt: number, c: Vec3): void {
+    let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, low = 0
+    let any = false
+    for (const collider of link.colliders) {
+      this.world.contactPairsWith(collider, (other) => {
+        this.world.contactPair(collider, other, (manifold) => {
+          for (let i = 0; i < manifold.numSolverContacts(); i++) {
+            const p = manifold.solverContactPoint(i)
+            if (!p) continue
+            any = true
+            const rx = p.x - c[0], ry = p.y - c[1], rz = p.z - c[2]
+            x0 = Math.min(x0, rx); x1 = Math.max(x1, rx)
+            z0 = Math.min(z0, rz); z1 = Math.max(z1, rz)
+            low = Math.min(low, ry)
+          }
+        })
+      })
+    }
+    b.balancing = false
+    if (!any) return
+    const height = -low
+    const wx = x1 - x0
+    const wz = z1 - z0
+    if (!(Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0)) return
+    b.balancing = true
+    const dirX = x0 + x1 > 0 ? -1 : 1
+    const dirZ = z0 + z1 > 0 ? -1 : 1
+    const k = TOPPLE * Math.min(height, 1) * dt
+    const w = b.angularVelocity
+    if (wx <= wz) w[2] -= dirX * k
+    else w[0] += dirZ * k
+    link.rb.setAngvel({ x: w[0], y: w[1], z: w[2] }, true)
   }
 
   private sleep(b: PieceBody, link: Link): void {
