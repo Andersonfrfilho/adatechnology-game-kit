@@ -35,23 +35,40 @@ export const loadState = (loadKg: number, maxKg: number, rules: ItemRules = DEFA
   return { ratio, level: 'normal', runFactor: 1, canRun: true }
 }
 
+const LITRES_PER_CUBIC_METRE = 1000
+
+/** Volume of one unit, litres: the catalog's `volume`, or the bounding box of its size. */
+export const itemLitres = (item: ItemDef): number => item.volume ?? item.size[0] * item.size[1] * item.size[2] * LITRES_PER_CUBIC_METRE
+
 /** The bag of a character: how many item slots it has and how much it holds. */
 export interface BagOption {
   slots: number
   capacityKg: number
+  /** Volume the bag holds, litres; without it only slots and weight limit the bag. */
+  capacityLitres?: number
 }
 
-/** The bag a bag item gives: its `carry.capacityKg` is the slot count the team's game reads from `cap`; the weight limit is the character's. */
+/** The bag a bag item gives: its `carry.capacityKg` is the slot count the team's game reads from `cap`; the weight limit is the character's; the volume is the bag's real litres. */
 export const bagOption = (bag: ItemDef | undefined, characterMaxKg: number, rules: ItemRules = DEFAULT_RULES): BagOption => ({
   slots: bag?.carry ? Math.round(bag.carry.capacityKg) : rules.inventory.defaultSlots,
   capacityKg: characterMaxKg,
+  capacityLitres: (bag ? (rules.inventory.bagLitres[bag.id] ?? bag.volume) : undefined) ?? rules.inventory.defaultLitres,
 })
 
-export type TakeResult = 'ok' | 'bag_full' | 'too_heavy'
+export type TakeResult = 'ok' | 'bag_full' | 'too_heavy' | 'too_bulky'
 
-/** Whether `item` can go into the bag now: first the slots, then the weight. */
-export const canTake = (item: ItemDef, bag: BagOption, used: { slots: number; loadKg: number }): TakeResult => {
-  if (used.slots >= bag.slots) return 'bag_full'
-  if (used.loadKg + item.weight > bag.capacityKg) return 'too_heavy'
+/** What is being added: `count` units, taking `slotsNeeded` new slots, weighing `weightFactor` of their full weight (`1 - weightReduction` inside a bag). */
+export interface TakeOptions {
+  count?: number
+  slotsNeeded?: number
+  weightFactor?: number
+}
+
+/** Whether `item` can go into the bag now: first the slots, then the weight, then the volume (when the bag has one). */
+export const canTake = (item: ItemDef, bag: BagOption, used: { slots: number; loadKg: number; litres?: number }, options: TakeOptions = {}): TakeResult => {
+  const { count = 1, slotsNeeded = 1, weightFactor = 1 } = options
+  if (used.slots + slotsNeeded > bag.slots) return 'bag_full'
+  if (used.loadKg + item.weight * count * weightFactor > bag.capacityKg) return 'too_heavy'
+  if (bag.capacityLitres !== undefined && (used.litres ?? 0) + itemLitres(item) * count > bag.capacityLitres) return 'too_bulky'
   return 'ok'
 }

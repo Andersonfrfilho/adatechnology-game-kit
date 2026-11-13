@@ -30,8 +30,8 @@ describe('carry', () => {
 
   it('has 10 slots by default and the slots of a bag item', () => {
     const backpack = item('backpack', { category: 'bags', carry: { capacityKg: 24, weightReduction: 0.35, quickSlots: 4 } })
-    expect(bagOption(undefined, 30)).toEqual({ slots: 10, capacityKg: 30 })
-    expect(bagOption(backpack, 30)).toEqual({ slots: 24, capacityKg: 30 })
+    expect(bagOption(undefined, 30)).toEqual({ slots: 10, capacityKg: 30, capacityLitres: 12 })
+    expect(bagOption(backpack, 30)).toEqual({ slots: 24, capacityKg: 30, capacityLitres: 30 })
   })
 
   it('refuses first by slots, then by weight', () => {
@@ -41,5 +41,13 @@ describe('carry', () => {
     expect(canTake(rock, bag, { slots: 2, loadKg: 0 })).toBe('bag_full')
     expect(canTake(rock, bag, { slots: 1, loadKg: 5.1 })).toBe('too_heavy')
     expect(canTake(rock, bag, { slots: 2, loadKg: 99 })).toBe('bag_full')
+  })
+
+  it('refuses a take that is too bulky after the slots and the weight pass', () => {
+    const crate = item('crate', { weight: 1, size: [0.4, 0.4, 0.4] })
+    const bag = { slots: 5, capacityKg: 50, capacityLitres: 100 }
+    expect(canTake(crate, bag, { slots: 0, loadKg: 0, litres: 0 })).toBe('ok')
+    expect(canTake(crate, bag, { slots: 0, loadKg: 0, litres: 0 }, { count: 2 })).toBe('too_bulky')
+    expect(canTake(crate, bag, { slots: 4, loadKg: 0 }, { slotsNeeded: 2 })).toBe('bag_full')
   })
 })

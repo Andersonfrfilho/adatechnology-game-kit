@@ -73,6 +73,10 @@ export interface ItemRules {
   inventory: {
     /** Slots of a character's bag when no bag item says otherwise. */
     defaultSlots: number
+    /** Volume of a character's bag, litres, when no bag item says otherwise (pockets and a belt). */
+    defaultLitres: number
+    /** Real capacity of each bag item, litres, by item id: a bounding box says little about a soft bag. */
+    bagLitres: Readonly<Record<string, number>>
     /** Running speed and breath multiplier while carrying more than `carry.encumbered` of the maximum. */
     encumberedRunFactor: number
   }

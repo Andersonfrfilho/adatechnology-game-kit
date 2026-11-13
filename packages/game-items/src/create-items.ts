@@ -1,5 +1,6 @@
 import { applyPatches, deepMerge, mergeById, removeIds } from '@adatechnology/game-contracts'
 
+import { itemLitres } from './carry'
 import { ITEM_CATEGORIES } from './categories'
 import type { ItemsCatalog, ItemsOptions } from './catalog-types'
 import { checkItems, findDuplicateIds } from './check-items'
@@ -8,10 +9,8 @@ import type { RecipeDef } from './recipe-types'
 import type { ContainerDef, ItemDef, PlaceDef, PoolEntry } from './types'
 import type { UseEffectDef } from './use-types'
 
-const LITRES_PER_CUBIC_METRE = 1000
-
 /** Fills what a pack leaves out: the volume comes from the size. */
-const withDerivedFields = (item: ItemDef): ItemDef => (item.volume === undefined ? { ...item, volume: item.size[0] * item.size[1] * item.size[2] * LITRES_PER_CUBIC_METRE } : item)
+const withDerivedFields = (item: ItemDef): ItemDef => (item.volume === undefined ? { ...item, volume: itemLitres(item) } : item)
 
 const buildPools = (options: ItemsOptions, packs: NonNullable<ItemsOptions['packs']>): Map<string, readonly PoolEntry[]> => {
   const pools = new Map<string, readonly PoolEntry[]>()
