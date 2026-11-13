@@ -100,5 +100,22 @@ describe('a piece collides as it is drawn, not as the box around it', () => {
     }
     world.dispose()
   })
+
+  it('a kit move that puts a piece into the ground is refused: it stays where the engine had it, and does not sink (the room: 214 fell through in one blast)', () => {
+    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.1, 0)
+    system.create('crate', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
+    for (let i = 0; i < 30; i++) system.update(1 / 60)
+    const rest = root.position.y
+    expect(rest).toBeCloseTo(0.1, 2)
+    // the kit's rule pushes it 6 cm down into the floor (as `slideApart` along a slope would)
+    root.position.y -= 0.06
+    root.updateMatrixWorld(true)
+    system.update(1 / 60)
+    expect(root.position.y).toBeGreaterThan(rest - 0.006)
+    for (let i = 0; i < 60; i++) system.update(1 / 60)
+    expect(root.position.y).toBeCloseTo(rest, 2)
+  })
 })
 
