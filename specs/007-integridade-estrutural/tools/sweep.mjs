@@ -1,4 +1,4 @@
-const W='/home/miyazaki/Documents/personal/adatechnology-game-kit-wt/rodada10-alvenaria/packages'
+const W = new URL('../../../packages', import.meta.url).pathname.replace(/\/$/, '')
 const { engine } = await import(W+'/game-floorplan/dist/index.js')
 const names=['residential','commercial','rural','post-apocalyptic']
 const mods = await Promise.all(names.map(p=>import(W+'/game-floorplan-'+p+'/dist/index.js')))
