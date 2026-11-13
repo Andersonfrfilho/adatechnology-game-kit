@@ -38,13 +38,19 @@ const PANEL_LAP = 0.01
 /** The slab's edge stands this far out of the outer faces of what carries it: never on their plane. */
 const SLAB_LIP = 0.005
 
-function addRebarCage(THREE: Three, parent: THREE_NS.Group, box: readonly [number, number, number, number], yBase: number, height: number, rebarMat: THREE_NS.Material): void {
+function addRebarCage(THREE: Three, parent: THREE_NS.Group, box: readonly [number, number, number, number], yBase: number, height: number, rebarMat: THREE_NS.Material, avoid: { readonly u: readonly number[]; readonly v: readonly number[] } = { u: [], v: [] }): void {
   const [u0, v0, u1, v1] = box
-  // the bars sit inside the ground beams too (a pillar is wider than the beam under it): no bar face on a beam face
-  const inset = Math.min(0.045, (u1 - u0) * 0.25, (v1 - v0) * 0.25)
   const r = 0.006
-  for (const x of [u0 + inset, u1 - inset]) for (const z of [v0 + inset, v1 - inset]) addStageBox(THREE, parent, x - r, yBase, z - r, x + r, yBase + height, z + r, rebarMat)
-  for (let y = yBase + 0.08; y < yBase + height - 0.03; y += 0.14) addStageBox(THREE, parent, u0 + inset, y, v0 + inset, u1 - inset, y + 0.006, v1 - inset, rebarMat)
+  // the bars sit inside the ground beams too (a pillar is wider than the beam under it): no bar face on a beam face (`avoid`, the faces of the beams under
+  // it), the cage drawn 5 mm further in where one would fall on it
+  const insetFor = (low: number, high: number, faces: readonly number[]): number => {
+    let inset = Math.min(0.045, (high - low) * 0.25)
+    for (let k = 0; k < 4 && faces.some((f) => [low + inset, high - inset].some((x) => [x - r, x, x + r].some((y) => Math.abs(y - f) < 0.003))); k++) inset += 0.005
+    return inset
+  }
+  const [iu, iv] = [insetFor(u0, u1, avoid.u), insetFor(v0, v1, avoid.v)]
+  for (const x of [u0 + iu, u1 - iu]) for (const z of [v0 + iv, v1 - iv]) addStageBox(THREE, parent, x - r, yBase, z - r, x + r, yBase + height, z + r, rebarMat)
+  for (let y = yBase + 0.08; y < yBase + height - 0.03; y += 0.14) addStageBox(THREE, parent, u0 + iu, y, v0 + iv, u1 - iu, y + 0.006, v1 - iv, rebarMat)
 }
 
 function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
@@ -391,11 +397,13 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   const beams = beamParts.filter((p) => !isLintel(p.id)).map(solidOf).map(toCoreWidth).map(inWall)
   seatSlabs(slabs.filter((s) => !s.id.startsWith('tank_')), [...beams, ...columns.filter((c) => !c.tank)], beams)
 
+  const groundBeams = parts.filter(isGroundBeam)
+  const beamFaces = { u: groundBeams.flatMap((b) => [b.aabb[0], b.aabb[2]]), v: groundBeams.flatMap((b) => [b.aabb[1], b.aabb[3]]) }
   for (const c of columns) {
     const mat = c.material === 'wood_soft' || c.material === 'wood_hard' ? mats.wood! : c.material === 'steel' ? mats.sheet! : mats.concrete!
     addStageBox(THREE, frame, c.aabb[0], c.y0, c.aabb[1], c.aabb[2], c.y1, c.aabb[3], mat, c.id)
     if (c.tank || c.y0 > 0.1 || c.material !== 'concrete') continue
-    if (c.floor === 0) addRebarCage(THREE, starterBars, c.aabb, 0, 0.42, mats.rebar!)
+    if (c.floor === 0) addRebarCage(THREE, starterBars, c.aabb, 0, 0.42, mats.rebar!, beamFaces)
   }
   // structural masonry (NBR 16868): the bar of each grouted core stands from the foundation in the wall's line, the blocks are laid around it
   for (const wall of parts.filter((p) => (p.role === 'wall' || p.role === 'partition') && p.grout?.length)) {

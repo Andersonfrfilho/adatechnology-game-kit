@@ -1,4 +1,5 @@
-import type { StructurePart, Support } from './types'
+import { pillarLoadFactor } from './masonry-units/derive'
+import type { Opening, Rect, StructurePart, Support } from './types'
 
 /** Concrete C25 and steel CA-50 of the pillars (NBR 6118): design strengths, kPa. */
 const FCD = 25e3 / 1.4
@@ -22,7 +23,7 @@ export interface PillarDesign {
 }
 
 /**
- * The design of a pillar of `section` (its two sides, metres) under a characteristic load `load` (kN), braced every `length` metres: N_d = 1.4 N_k, the
+ * The design of a pillar of `section` (its two sides, metres) under a characteristic load `load` (kN), braced every `length` metres: N_d = 1.4 γn N_k, the
  * minimum eccentricity e1,min = 0.015 + 0.03 h about its weak axis, the second-order eccentricity of the approximate curvature past λ1, and the symmetric
  * steel the section then needs (a plastic rectangular section: concrete 0.85 f_cd over 0.8 x, the bars at f_yd).
  */
@@ -30,7 +31,8 @@ export function pillarDesign(section: readonly [number, number], load: number, l
   const h = Math.min(...section)
   const b = Math.max(...section)
   const area = h * b
-  const normal = GAMMA * load
+  // (NBR 6118 13.2.3: a pillar under 19 cm takes its loads times γn = 1.95 − 0.05 b)
+  const normal = GAMMA * pillarLoadFactor(h) * load
   const nu = normal / (area * FCD)
   const lambda = (length * Math.sqrt(12)) / h
   const e1 = 0.015 + 0.03 * h
@@ -58,12 +60,19 @@ const up = (metres: number): number => Math.ceil(metres / STEP - 1e-6) * STEP
 
 /**
  * Each pillar of `ids` past its capacity sized by its load (in 5 cm steps) until ν ≤ 0.6 and its design is within capacity (`pillarDesign`), its centre kept:
- * along the wall it is cast in (`alongWall`), else its least side. `load` gives its characteristic load (kN) and `length` its braced length (m).
+ * along the wall it is cast in (`alongWall`), else across it, else its least side. `load` gives its characteristic load (kN) and `length` its braced length (m).
  */
 export function sizePillars(
   parts: readonly StructurePart[],
   ids: ReadonlySet<string>,
-  measure: { load: (column: StructurePart) => number; length: (column: StructurePart) => number; density: number; alongWall?: (column: StructurePart) => 'u' | 'v' | undefined },
+  measure: {
+    load: (column: StructurePart) => number
+    length: (column: StructurePart) => number
+    density: number
+    alongWall?: (column: StructurePart) => { readonly axis: 'u' | 'v'; readonly box: Rect } | undefined
+    /** Whether a pillar may stand over `box` (never in a doorway). */
+    allowed?: (box: Rect, column: StructurePart) => boolean
+  },
 ): void {
   for (const column of parts.filter((p) => ids.has(p.id) && p.role === 'column' && p.material === 'concrete')) {
     const [du, dv] = sectionOf(column)
@@ -71,24 +80,38 @@ export function sizePillars(
     const length = measure.length(column)
     // (a pillar within capacity keeps its section; one past it grows until it has room for the moments not computed)
     if (withinCapacity(pillarDesign([du, dv], load, length))) continue
-    const fits = (section: readonly [number, number]): boolean => {
-      const design = pillarDesign(section, load, length)
-      return design.nu <= TARGET_AXIAL_RATIO && withinCapacity(design)
+    const fits = (box: Rect): boolean => {
+      const design = pillarDesign([box[2] - box[0], box[3] - box[1]], load, length)
+      return design.nu <= TARGET_AXIAL_RATIO && withinCapacity(design) && (measure.allowed?.(box, column) ?? true)
     }
-    // a pillar cast in a wall grows along it, as thick as it is (out of the wall it would stand proud of both faces); else its least side, square
-    const along = measure.alongWall?.(column)
-    let section: [number, number] = [du, dv]
-    if (along) {
-      for (let k = 0; k < 40 && !fits(section); k++) section = along === 'u' ? [up(section[0] + STEP), dv] : [du, up(section[1] + STEP)]
+    const [u0, v0, u1, v1] = column.aabb
+    // a pillar cast in a wall grows along it, as thick as it is (out of the wall it would stand proud of both faces), both ways about its centre (it still
+    // confines the corner, end or junction it stands at) and within the wall
+    const wall = measure.alongWall?.(column)
+    const along = wall?.axis
+    const inWall = (box: Rect): boolean =>
+      !wall || (along === 'u' ? box[0] >= wall.box[0] - 0.01 && box[2] <= wall.box[2] + 0.01 : box[1] >= wall.box[1] - 0.01 && box[3] <= wall.box[3] + 0.01)
+    let found: Rect | undefined
+    for (let k = 1; along && k <= 40 && !found; k++) {
+      const grow = k * STEP
+      const box: Rect = along === 'u' ? [u0 - grow / 2, v0, u1 + grow / 2, v1] : [u0, v0 - grow / 2, u1, v1 + grow / 2]
+      if (inWall(box) && fits(box)) found = box
     }
-    if (!fits(section)) {
-      let least = Math.min(du, dv)
-      while (!fits([least, Math.max(least, du, dv)]) && least < 1.2) least = up(least + STEP)
-      section = du <= dv ? [least, Math.max(least, dv)] : [Math.max(least, du), least]
+    // across the wall then (proud of its faces), its length along the wall kept
+    for (let k = 1; along && k <= 20 && !found; k++) {
+      const grow = k * STEP
+      const box: Rect = along === 'u' ? [u0, v0 - grow / 2, u1, v1 + grow / 2] : [u0 - grow / 2, v0, u1 + grow / 2, v1]
+      if (fits(box)) found = box
     }
-    const [u, v] = [(column.aabb[0] + column.aabb[2]) / 2, (column.aabb[1] + column.aabb[3]) / 2]
-    column.aabb = [u - section[0] / 2, v - section[1] / 2, u + section[0] / 2, v + section[1] / 2].map((x) => Math.round(x * 1000) / 1000) as typeof column.aabb
-    column.mass = Math.max(1, Math.round(section[0] * section[1] * (column.y1 - column.y0) * measure.density))
+    const [u, v] = [(u0 + u1) / 2, (v0 + v1) / 2]
+    for (let least = up(Math.min(du, dv) + STEP); !found && least <= 1.2; least = up(least + STEP)) {
+      const [su, sv] = du <= dv ? [least, Math.max(least, dv)] : [Math.max(least, du), least]
+      const box: Rect = [u - su / 2, v - sv / 2, u + su / 2, v + sv / 2]
+      if (fits(box)) found = box
+    }
+    if (!found) continue
+    column.aabb = found.map((x) => Math.round(x * 1000) / 1000) as Rect
+    column.mass = Math.max(1, Math.round((found[2] - found[0]) * (found[3] - found[1]) * (column.y1 - column.y0) * measure.density))
   }
 }
 
@@ -130,12 +153,32 @@ function indexOf(structure: { readonly parts: readonly StructurePart[]; readonly
 export const pillarLoad = (flows: ReadonlyMap<string, readonly { load: number }[]>, column: StructurePart): number =>
   (((flows.get(column.id) ?? []).reduce((sum, flow) => sum + flow.load, 0) + column.mass) * 9.81) / 1000
 
-/** The axis of the wall `column` is cast in (its centre in the wall's plan box, over half its height), if any: the way it may grow. */
-export function wallAxisOf(column: StructurePart, parts: readonly StructurePart[]): 'u' | 'v' | undefined {
+/** The axis and box of the wall `column` is cast in (its centre in the wall's plan box, over half its height), if any: the way it may grow. */
+export function wallAxisOf(column: StructurePart, parts: readonly StructurePart[]): { readonly axis: 'u' | 'v'; readonly box: Rect } | undefined {
   const [u, v] = [(column.aabb[0] + column.aabb[2]) / 2, (column.aabb[1] + column.aabb[3]) / 2]
   const wall = parts.find(
     (p) => (p.role === 'wall' || p.role === 'partition') && p.id.startsWith('wall_') && u >= p.aabb[0] - 1e-3 && u <= p.aabb[2] + 1e-3 && v >= p.aabb[1] - 1e-3 && v <= p.aabb[3] + 1e-3 && Math.min(p.y1, column.y1) - Math.max(p.y0, column.y0) > (column.y1 - column.y0) / 2,
   )
   if (!wall) return undefined
-  return wall.aabb[2] - wall.aabb[0] >= wall.aabb[3] - wall.aabb[1] ? 'u' : 'v'
+  return { axis: wall.aabb[2] - wall.aabb[0] >= wall.aabb[3] - wall.aabb[1] ? 'u' : 'v', box: wall.aabb }
+}
+
+/**
+ * Whether a pillar over `box` stays out of the doors and windows of its storey (`openings`, on the walls of `parts`): a pillar grown into a doorway would stand
+ * in it. Height is left out: a pillar runs the whole storey.
+ */
+export function clearOfOpenings(structure: { readonly parts: readonly StructurePart[]; readonly openings: readonly Opening[] }): (box: Rect, column: StructurePart) => boolean {
+  const byId = new Map(structure.parts.map((part) => [part.id, part]))
+  const gaps = structure.openings.flatMap((opening) => {
+    const wall = byId.get(opening.wall)
+    if (!wall) return []
+    const alongU = wall.aabb[2] - wall.aabb[0] >= wall.aabb[3] - wall.aabb[1]
+    const gap: Rect = alongU ? [opening.from, wall.aabb[1], opening.to, wall.aabb[3]] : [wall.aabb[0], opening.from, wall.aabb[2], opening.to]
+    return [{ floor: wall.floor, gap }]
+  })
+  // (and every doorway the masonry laid over a door spans, an inner door among them)
+  for (const header of structure.parts) if (/^wall_\d+_over_/.test(header.id)) gaps.push({ floor: header.floor, gap: header.aabb })
+  // (a jamb a few millimetres into the pillar it stands against is the joint, not a pillar in the opening)
+  const MARGIN = 0.01
+  return (box, column) => !gaps.some(({ floor, gap }) => floor === column.floor && box[0] < gap[2] - MARGIN && box[2] > gap[0] + MARGIN && box[1] < gap[3] - MARGIN && box[3] > gap[1] + MARGIN)
 }

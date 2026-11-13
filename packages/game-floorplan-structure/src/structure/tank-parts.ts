@@ -26,15 +26,17 @@ function ensureCeilingSlab(context: BuildContext, y: number): StructurePart {
   if (existing) return existing
   const top = context.floorCount - 1
   const box = context.topBox
-  const carriers = builder.parts.filter(
-    (part) =>
-      ((part.role === 'beam' && part.id.startsWith(`plate_${top}_`)) || (part.role === 'column' && part.floor === top && (context.visorSections || !part.id.startsWith('porch_'))) || (part.role === 'wall' && part.floor === top && !part.id.startsWith('basement'))) &&
-      touches(box, part.aabb, 0.1),
-  )
-  // (the porch's posts carry the porch's roof, not the house's ceiling: the slab is the rooms' ceiling, the porch outside its footprint)
+  // (the porch's posts carry the porch's roof, not the house's ceiling: the slab is the rooms' ceiling, the porch outside its footprint, and only what stands
+  // under that footprint carries it)
   const porch = !context.visorSections && context.source.rooms.some((room) => room.floor === top && room.type === 'porch')
   const rooms = porch ? context.rectsOf(top, ['porch']) : []
-  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top, footprint: rooms.length ? rooms : [box] })
+  const under = rooms.length ? rooms : [box]
+  const carriers = builder.parts.filter(
+    (part) =>
+      ((part.role === 'beam' && part.id.startsWith(`plate_${top}_`)) || (part.role === 'column' && part.floor === top) || (part.role === 'wall' && part.floor === top && !part.id.startsWith('basement'))) &&
+      under.some((rect) => touches(rect, part.aabb, 0.02)),
+  )
+  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top, footprint: under })
   for (const carrier of carriers) builder.rest(slab, carrier, system.joints.slab)
   return slab
 }

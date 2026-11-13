@@ -114,7 +114,7 @@ function addFooting(context: BuildContext, post: StructurePart): StructurePart {
  * (NBR 6118 15.6). A slab it ran through untied would brace nothing.
  */
 function tieCrossedSlabs(context: BuildContext, post: StructurePart): void {
-  for (const slab of context.builder.parts.filter((p) => p.role === 'slab' && p.y0 > post.y0 + TOLERANCE && p.y1 < post.y1 - TOLERANCE && touches(p.aabb, post.aabb, -TOLERANCE)))
+  for (const slab of context.builder.parts.filter((p) => p.role === 'slab' && p.y0 > post.y0 + TOLERANCE && p.y1 < post.y1 - TOLERANCE && (p.footprint ?? [p.aabb]).some((rect) => touches(rect, post.aabb, -TOLERANCE))))
     context.builder.rest(slab, post, 'rebar')
 }
 

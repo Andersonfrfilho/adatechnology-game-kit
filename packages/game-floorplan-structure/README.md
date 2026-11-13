@@ -94,10 +94,10 @@ Every footing on the soil (a pillar's, a porch's, a crawl space's pier) is sized
 bond beam, a pillar or a concrete beam (or structural masonry), never on infill, else it goes down to the foundation (`PILLAR_ON_INFILL`). A rafter or truss
 running more than 1 m past what holds it over a slab bears on the slab through struts (pontaletes), so the slab takes the roof (`ROOF_OVERHANG_TOO_LONG`).
 A partition cut under a beam records it in `soffit`, and the house renderer draws it up to its structural top.
-Every concrete pillar is checked by its load (`pillar-design`, `PILLAR_OVERLOADED`): N_d = 1.4 N_k with e1,min = 0.015 + 0.03 h and, past λ 35, the
+Every concrete pillar is checked by its load (`pillar-design`, `PILLAR_OVERLOADED`): N_d = 1.4 γn N_k (γn of NBR 6118 13.2.3 under 19 cm) with e1,min = 0.015 + 0.03 h and, past λ 35, the
 second order of the approximate curvature (NBR 6118 15.8.3.3.2) over its braced length, against a plastic section of C25 with CA-50 bars, at most 4% of
 steel and ν = N_d/(A_c f_cd) ≤ 0.8. A pillar past it is grown (least side in 5 cm steps) to ν ≤ 0.6, again until the loads settle: the building base of a
-high apartment comes to 40×40. The ceiling slab rests on the walls and plates of the rooms, never on a porch's posts.
+high apartment comes to 40×40. A slab rests only on what stands under its footprint (the rooms it covers), and `SUPPORT_WITHOUT_CONTACT` measures plan contact against the footprint: the ceiling never rests on the posts of a porch outside it.
 Each slab panel is also as thick as its loads ask (`slab-design`: long-term deflection within span/250 and bending at x/d ≤ 0.45, C25, NBR 6118), with
 finishes 1 kN/m², live 2 (floor) or 0.5 (ceiling), and the roof on struts, each member's weight spread along it over the panels of its slab, with the roof's
 live load 0.5 kN/m² (`SLAB_UNDERSIZED`). In the kit's houses the span ratio still governs; a roof many times heavier makes the load govern.

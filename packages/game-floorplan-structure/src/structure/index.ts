@@ -20,8 +20,9 @@ import { addBearingCores } from '../beam-bearings'
 import { resolveConstruction } from '../construction'
 import { densityOf } from '../density'
 import { isFooting, sizeFootings } from '../footing'
+import { touches } from '../geometry'
 import type { LoadFlows } from '../footing'
-import { bracedLength, pillarLoad, sizePillars, wallAxisOf } from '../pillar-design'
+import { bracedLength, clearOfOpenings, pillarLoad, sizePillars, wallAxisOf } from '../pillar-design'
 import { loadFlowsAtRest } from '../loads'
 import { applySlabPanels } from '../slab-panels/apply'
 import { resolveSlabPanels } from '../slab-panels/options'
@@ -56,8 +57,15 @@ function sizeFootingsByFrame(structure: Structure): void {
   for (let pass = 0; pillars.size && pass < 6; pass++) {
     const { framed, flows } = current
     const before = structure.parts.filter((part) => pillars.has(part.id)).map((part) => part.aabb.join())
-    sizePillars(structure.parts, pillars, { load: (column) => pillarLoad(flows, column), length: (column) => bracedLength(column, framed), density: densityOf('concrete'), alongWall: (column) => wallAxisOf(column, structure.parts) })
-    if (structure.parts.filter((part) => pillars.has(part.id)).every((part, k) => part.aabb.join() === before[k])) break
+    sizePillars(structure.parts, pillars, { load: (column) => pillarLoad(flows, column), length: (column) => bracedLength(column, framed), density: densityOf('concrete'), alongWall: (column) => wallAxisOf(column, structure.parts), allowed: clearOfOpenings(structure) })
+    const grown = structure.parts.filter((part) => pillars.has(part.id)).filter((part, k) => part.aabb.join() !== before[k])
+    if (!grown.length) break
+    // a pillar grown under a bond beam it did not reach before (thickened at a corner) carries it there as it does its own
+    for (const column of grown) {
+      for (const beam of structure.parts.filter((p) => p.beamKind === 'bond_beam' && p.floor === column.floor && Math.abs(p.y0 - column.y1) <= 0.05 && touches(p.aabb, column.aabb, -0.01))) {
+        if (!structure.supports.some((x) => x.part === beam.id && x.on === column.id)) structure.supports.push({ part: beam.id, on: column.id, joint: 'rebar' })
+      }
+    }
     current = flowsOf()
   }
   if (structure.parts.some((part) => isFooting(part, structure.supports))) sizeFootings(structure, { flows: current.flows, ...(structure.soilPressure === undefined ? {} : { soilPressure: structure.soilPressure }) })

@@ -3,7 +3,7 @@ import type { JointKind } from '@adatechnology/game-contracts'
 import { densityOf } from '../density'
 import { footingDraft, onStripFooting, sizeFootings } from '../footing'
 import { loadFlowsAtRest } from '../loads'
-import { bracedLength, pillarLoad, sizePillars, wallAxisOf } from '../pillar-design'
+import { bracedLength, clearOfOpenings, pillarLoad, sizePillars, wallAxisOf } from '../pillar-design'
 import { roofOn, roofOver, slabLoads, slabThicknessFor } from '../slab-design'
 import type { SlabLoads } from '../slab-design'
 import { round2, touches } from '../geometry'
@@ -641,10 +641,11 @@ export function applySlabPanels(input: PartsAndSupports, structure: PlanStructur
   // its own pillars by their loads (N_d with the minimum and second-order moments, NBR 6118 15.8), then their footings
   const pillars = new Set(context.parts.filter((p) => /^pillar_\d+_\d+$/.test(p.id)).map((p) => p.id))
   // (a pillar made stiffer draws more of the load: again until none grows)
+  const clear = clearOfOpenings({ parts: context.parts, openings: structure.openings })
   for (let pass = 0; pillars.size && pass < 6; pass++) {
     const { flows } = loadFlowsAtRest(context.parts, context.supports)
     const before = context.parts.filter((p) => pillars.has(p.id)).map((p) => p.aabb.join())
-    sizePillars(context.parts, pillars, { load: (column) => pillarLoad(flows, column), length: (column) => bracedLength(column, context), density: densityOf('concrete'), alongWall: (column) => wallAxisOf(column, context.parts) })
+    sizePillars(context.parts, pillars, { load: (column) => pillarLoad(flows, column), length: (column) => bracedLength(column, context), density: densityOf('concrete'), alongWall: (column) => wallAxisOf(column, context.parts), allowed: clear })
     if (context.parts.filter((p) => pillars.has(p.id)).every((p, k) => p.aabb.join() === before[k])) break
   }
   // the footings of its own pillars on the soil, by the loads the framed slabs bring down (those of the structure come sized with it)

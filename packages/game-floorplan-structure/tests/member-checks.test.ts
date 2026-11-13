@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { register as registerRural } from '../../game-floorplan-rural/src'
 import { applyPanels, applySlabPanels, GROUND, resolveSlabPanels, STRUCTURAL_VIOLATION, validateStructure } from '../src'
 import { FOOTING_DEPTH, FOOTING_SIDE } from '../src/footing'
-import { pillarDesign, withinCapacity } from '../src/pillar-design'
+import { bracedLength, pillarDesign, pillarLoad, withinCapacity } from '../src/pillar-design'
+import { loadFlowsAtRest } from '../src/loads'
 import { slabLoads, slabThicknessFor } from '../src/slab-design'
 import { memberViolations } from '../src/validate/members'
 import type { StructuredResult, StructurePart, Support } from '../src'
@@ -13,6 +14,7 @@ registerRural(engine)
 
 const generate = (template: string, options: Record<string, unknown> = {}): StructuredResult => engine.generate(template, { seed: 1, ...options }) as StructuredResult
 const codesOf = (result: StructuredResult, structure = result.structure): string[] => validateStructure(structure, { doors: result.doors }).map((v) => v.code)
+const gapOf = (a: readonly number[], b: readonly number[]): number => Math.hypot(Math.max(0, b[0]! - a[2]!, a[0]! - b[2]!), Math.max(0, b[1]! - a[3]!, a[1]! - b[3]!))
 const alongU = (part: StructurePart): boolean => part.aabb[2] - part.aabb[0] >= part.aabb[3] - part.aabb[1]
 const span = (part: StructurePart): [number, number] => (alongU(part) ? [part.aabb[0], part.aabb[2]] : [part.aabb[1], part.aabb[3]])
 
@@ -54,7 +56,8 @@ describe('eave pillars of a three-storey house', () => {
   it('every slab a pillar runs through is cast on it (braced per storey), a pillar off the strip footings stands on a footing, every eave beam has two supports', () => {
     expect(posts.length).toBeGreaterThan(0)
     for (const post of posts) {
-      const crossed = parts.filter((p) => p.role === 'slab' && p.y0 > post.y0 + 0.02 && p.y1 < post.y1 - 0.02 && p.aabb[0] < post.aabb[2] && p.aabb[2] > post.aabb[0] && p.aabb[1] < post.aabb[3] && p.aabb[3] > post.aabb[1])
+      // (a slab is where its footprint is: a post beside it, in the open corner of its box, runs past it)
+      const crossed = parts.filter((p) => p.role === 'slab' && p.y0 > post.y0 + 0.02 && p.y1 < post.y1 - 0.02 && (p.footprint ?? [p.aabb]).some((r) => r[0] < post.aabb[2] && r[2] > post.aabb[0] && r[1] < post.aabb[3] && r[3] > post.aabb[1]))
       for (const slab of crossed) expect(supports.some((s) => s.part === slab.id && s.on === post.id), `${slab.id} on ${post.id}`).toBe(true)
       expect(supports.some((s) => s.part === post.id && s.on === GROUND), `${post.id} on the bare soil`).toBe(false)
     }
@@ -219,9 +222,52 @@ describe('pillars by their loads (NBR 6118 15.8, approximate curvature)', () => 
     expect(validateStructure(thin, { doors: result.doors }).filter((v) => v.code === STRUCTURAL_VIOLATION.PILLAR_OVERLOADED).map((v) => v.part).sort()).toEqual(base.map((p) => p.id).sort())
   })
 
-  it('wood_frame_house: the ceiling slab is the rooms\' ceiling, on the walls and plates, never on the porch posts', () => {
+  it('wood_frame_house: the ceiling slab is the rooms\' ceiling, on what stands under its footprint, never on the posts of the porch outside it', () => {
     const result = generate('wood_frame_house')
-    expect(result.structure.supports.filter((s) => s.part === 'slab_ceiling' && s.on.startsWith('porch_'))).toEqual([])
+    const { parts, supports } = result.structure
+    const slab = parts.find((p) => p.id === 'slab_ceiling')!
+    expect(slab.footprint!.length).toBeGreaterThan(0)
+    const under = supports.filter((s) => s.part === slab.id).map((s) => parts.find((p) => p.id === s.on)!)
+    expect(under.filter((p) => !slab.footprint!.some((rect) => gapOf(rect, p.aabb) <= 0.02)).map((p) => p.id)).toEqual([])
+    expect(under.some((p) => /^(porch_post|eave_beam_)/.test(p.id))).toBe(false)
+    expect(codesOf(result)).toEqual([])
+    // and the support declared on a post in the porch, outside the footprint though inside the slab's box, is reported
+    const post = parts.find((p) => p.id.startsWith('eave_beam_0_0_post_'))!
+    expect(codesOf(result, { ...result.structure, supports: [...supports, { part: slab.id, on: post.id, joint: 'nail' as const }] })).toContain(STRUCTURAL_VIOLATION.SUPPORT_WITHOUT_CONTACT)
+  })
+
+  it('no slab of any template rests on anything outside its footprint (seed 1, every pack, the towers left to their own tests)', () => {
+    const ids = (engine.listTemplates() as unknown as { id: string; floorRange: [number, number] | null }[]).filter((t) => (t.floorRange?.[0] ?? 1) < 10).map((t) => t.id)
+    expect(ids.length).toBeGreaterThan(20)
+    const outside: string[] = []
+    for (const id of ids) {
+      const result = generate(id)
+      if (!result.structure) continue
+      const { parts, supports } = result.structure
+      const byId = new Map(parts.map((p) => [p.id, p]))
+      for (const s of supports) {
+        const slab = byId.get(s.part)
+        const on = byId.get(s.on)
+        if (slab?.role !== 'slab' || !slab.footprint?.length || !on || s.bears === false) continue
+        if (!slab.footprint.some((rect) => gapOf(rect, on.aabb) <= 0.02)) outside.push(`${id}: ${slab.id} on ${on.id}`)
+      }
+    }
+    expect(outside).toEqual([])
+  })
+
+  it('NBR 6118 13.2.3 γn: high_end_contemporary {floors: 3} pillar_0_4, 60×14 under its load, is past capacity with γn = 1.25 and is sized until it passes', () => {
+    const result = generate('high_end_contemporary', { floors: 3 })
+    const structure = result.structure
+    const framed = applySlabPanels(applyPanels({ parts: structure.parts, supports: structure.supports }, structure, 'panels'), structure, resolveSlabPanels(true)!)
+    const pillar = framed.parts.find((p) => p.id === 'pillar_0_4')!
+    const { flows } = loadFlowsAtRest(framed.parts, framed.supports)
+    const load = pillarLoad(flows, pillar)
+    const length = bracedLength(pillar, framed)
+    // the reviewer's case: 60×14 under 855 kN gives ν 0.80 without γn and about 1.0 with it
+    expect(pillarDesign([0.6, 0.14], 855, length).nu).toBeCloseTo((1.4 * 1.25 * 855) / (0.6 * 0.14 * (25e3 / 1.4)), 2)
+    expect(withinCapacity(pillarDesign([0.6, 0.14], 855, length))).toBe(false)
+    const sized = pillarDesign([pillar.aabb[2] - pillar.aabb[0], pillar.aabb[3] - pillar.aabb[1]], load, length)
+    expect(withinCapacity(sized)).toBe(true)
     expect(codesOf(result)).toEqual([])
   })
 })

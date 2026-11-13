@@ -24,6 +24,10 @@ export function groundedParts(parts: readonly StructurePart[], supports: readonl
   return grounded
 }
 
+/** The rectangles a part covers in plan: its footprint where it has one (a slab over the rooms of an L), else its box. */
+const footprintOf = (part: StructurePart): readonly (readonly number[])[] => (part.footprint?.length ? part.footprint : [part.aabb])
+const planGap = (a: readonly number[], b: readonly number[]): number => Math.hypot(Math.max(0, b[0]! - a[2]!, a[0]! - b[2]!), Math.max(0, b[1]! - a[3]!, a[1]! - b[3]!))
+
 /** How far apart in plan a part and what it is declared to rest on may be and still touch (metres): the joint. */
 const PLAN_CONTACT = 0.02
 
@@ -36,10 +40,10 @@ function contactViolations(part: StructurePart, supports: readonly Support[], by
   for (const support of supports.filter((s) => s.part === part.id && s.bears !== false && s.on !== GROUND)) {
     const under = byId.get(support.on)
     if (!under) continue
-    const gapU = Math.max(0, under.aabb[0] - part.aabb[2], part.aabb[0] - under.aabb[2])
-    const gapV = Math.max(0, under.aabb[1] - part.aabb[3], part.aabb[1] - under.aabb[3])
-    if (Math.hypot(gapU, gapV) > PLAN_CONTACT)
-      out.push({ code: STRUCTURAL_VIOLATION.SUPPORT_WITHOUT_CONTACT, part: part.id, message: `${part.id} is declared on ${under.id} ${Math.hypot(gapU, gapV).toFixed(2)} m away in plan: they do not touch` })
+    // (a slab is where its footprint is, not all over its box: an L-shaped ceiling does not reach a post in the notch of the L)
+    const gap = Math.min(...footprintOf(part).flatMap((a) => footprintOf(under).map((b) => planGap(a, b))))
+    if (gap > PLAN_CONTACT)
+      out.push({ code: STRUCTURAL_VIOLATION.SUPPORT_WITHOUT_CONTACT, part: part.id, message: `${part.id} is declared on ${under.id} ${gap.toFixed(2)} m away in plan: they do not touch` })
   }
   return out
 }
