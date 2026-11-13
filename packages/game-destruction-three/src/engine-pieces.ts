@@ -229,11 +229,11 @@ export class EnginePieces {
     const pushed = v[0] !== link.vel[0] || v[1] !== link.vel[1] || v[2] !== link.vel[2] || w[0] !== link.ang[0] || w[1] !== link.ang[1] || w[2] !== link.ang[2]
     if (pushed) this.world.setVelocity(link.id, [v[0], v[1], v[2]], [w[0], w[1], w[2]])
     if (b.sleeping && !link.sleeping) this.world.sleep(link.id)
-    else if (!b.sleeping && (link.sleeping || pushed)) {
+    else if (!b.sleeping && link.sleeping) {
       // woken from outside (its support looked at again, a blow): the ground under it may have been dug while it slept
       this.world.wake(link.id)
       this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
-    }
+    } else if (pushed) this.world.wake(link.id)
   }
 
   /**
