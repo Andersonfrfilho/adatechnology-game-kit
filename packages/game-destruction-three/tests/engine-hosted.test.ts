@@ -71,4 +71,20 @@ describe('a body another module draws is in the engine as its parts', () => {
     r.world.setTransform('car', [10, 0, 0], [0, 0, 0, 1])
     expect(r.step(3)).toBeCloseTo(0.1, 1)
   })
+
+  it('only where the body is drawn: a crate dropped by the car, inside its zone boxes but outside what it draws, reaches the ground', () => {
+    const r = drop([1.95, 1.5, 0], 3, (world, renderer) => {
+      world.register(parked().impl)
+      // drawn 3.6 x 1.4 x 1.6 m: the zone boxes (4 x 0.8 x 1.8 body) reach 20 cm past each end and 10 cm past each side
+      const root = new THREE.Group()
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.4, 1.6))
+      body.position.set(0, 0.7, 0)
+      root.add(body)
+      root.updateMatrixWorld(true)
+      renderer.bind('car', root)
+    })
+    // from x 1.85 to 2.05: past the drawn end at 1.8, and 15 cm over the zone box that ends at 2.0
+    expect(r.y).toBeCloseTo(0.1, 1)
+  })
 })
+

@@ -304,6 +304,8 @@ class Renderer implements DestructionRenderer {
   private readonly staticBoxes = new Map<string, number[]>()
   /** `staticSolids` per object, with the `staticBoxes` list they were measured with. */
   private readonly solidCache = new Map<string, { from: number[]; solids: StaticSolid[] }>()
+  /** `clipToDrawn` per hosted body: the boxes it was given, the root's world matrix, and the boxes cut to what it draws. */
+  private readonly clipped = new Map<string, { from: readonly StaticSolid[]; matrix: number[]; solids: readonly StaticSolid[] }>()
   /** What `staticSolids` hands back, refilled each call. */
   private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
@@ -579,6 +581,7 @@ class Renderer implements DestructionRenderer {
 
   unbind(objectId: string): void {
     this.staticDirty.add(objectId)
+    this.clipped.delete(objectId)
     const b = this.bounds.get(objectId)
     if (!b) return
     this.restore(objectId)
@@ -607,6 +610,59 @@ class Renderer implements DestructionRenderer {
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
     return { half: [Math.max(0.02, size.x / 2), Math.max(0.02, size.y / 2), Math.max(0.02, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
+  }
+
+  /**
+   * A hosted body's boxes (`hostedSolids`: its damage zones) cut to the box of what its root draws, in the root's frame: the zones reach past the drawn body (17 cm each
+   * side and 14 cm over the room's sedan), and a box where nothing is drawn is an invisible collider (§12): doors made by the wall it is parked against were made inside
+   * it. A box turned against the root (a door swung open) is kept as it is. The same list back until the boxes or the root's place change.
+   */
+  private clipToDrawn(id: string, hosted: readonly StaticSolid[]): readonly StaticSolid[] {
+    const b = this.bounds.get(id)
+    if (!b) return hosted
+    b.root.updateWorldMatrix(true, true)
+    const m = b.root.matrixWorld.elements
+    const known = this.clipped.get(id)
+    if (known && known.from === hosted && known.matrix.every((v, k) => v === m[k])) return known.solids
+    const inv = new this.THREE.Matrix4().copy(b.root.matrixWorld).invert()
+    const drawn = new this.THREE.Box3()
+    const part = new this.THREE.Box3()
+    const to = new this.THREE.Matrix4()
+    b.root.traverseVisible((o) => {
+      const mesh = o as Mesh
+      if (!mesh.isMesh || !mesh.geometry) return
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+      if (!mesh.geometry.boundingBox) return
+      drawn.union(part.copy(mesh.geometry.boundingBox).applyMatrix4(to.multiplyMatrices(inv, mesh.matrixWorld)))
+    })
+    const rootQ = new this.THREE.Quaternion()
+    b.root.getWorldQuaternion(rootQ)
+    const solids = drawn.isEmpty() ? hosted : this.clipEach(hosted, { drawn, inv, root: b.root, rootQ })
+    this.clipped.set(id, { from: hosted, matrix: [...m], solids })
+    return solids
+  }
+
+  private clipEach(hosted: readonly StaticSolid[], frame: { readonly drawn: THREE_NS.Box3; readonly inv: THREE_NS.Matrix4; readonly root: Object3D; readonly rootQ: THREE_NS.Quaternion }): StaticSolid[] {
+    const out: StaticSolid[] = []
+    const q = new this.THREE.Quaternion()
+    const c = new this.THREE.Vector3()
+    const box = new this.THREE.Box3()
+    for (const s of hosted) {
+      q.set(s.rotation[0], s.rotation[1], s.rotation[2], s.rotation[3])
+      // turned against the root (a part posed): kept as the world holds it
+      if (Math.abs(q.dot(frame.rootQ)) < 1 - 1e-6) {
+        out.push(s)
+        continue
+      }
+      c.set(s.center[0], s.center[1], s.center[2]).applyMatrix4(frame.inv)
+      box.min.set(c.x - s.half[0], c.y - s.half[1], c.z - s.half[2])
+      box.max.set(c.x + s.half[0], c.y + s.half[1], c.z + s.half[2])
+      box.intersect(frame.drawn)
+      if (box.isEmpty()) continue
+      const center = box.getCenter(c).applyMatrix4(frame.root.matrixWorld)
+      out.push({ center: [center.x, center.y, center.z], half: [(box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2], rotation: s.rotation })
+    }
+    return out
   }
 
   /** Whether a bound object has no mesh here at all (another module draws it), as against one whose meshes all broke or are hidden. */
@@ -1059,7 +1115,7 @@ class Renderer implements DestructionRenderer {
       // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
       const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
       if (hosted) {
-        out.set(id, hosted)
+        out.set(id, this.clipToDrawn(id, hosted))
         continue
       }
       const cached = this.solidCache.get(id)
