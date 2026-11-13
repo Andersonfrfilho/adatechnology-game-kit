@@ -67,7 +67,7 @@ describe('an explosion shoves what is around it', () => {
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     room.renderer.explode([0, 0.3, -6], 150000, 9, { visual: false })
     for (let i = 0; i < 20; i++) room.update(1 / 60)
-    expect(near.root.position.x).toBeGreaterThan(2.5)
+    expect(near.root.position.x).toBeGreaterThan(2.2)
     const nearMove = near.root.position.x - 2
     const farMove = -5 - far.root.position.x
     expect(farMove).toBeGreaterThan(0)

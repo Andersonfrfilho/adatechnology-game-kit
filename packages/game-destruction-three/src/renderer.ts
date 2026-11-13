@@ -372,6 +372,8 @@ class Renderer implements DestructionRenderer {
   private readonly tmpQ: THREE_NS.Quaternion
   private readonly v1: THREE_NS.Vector3
   private readonly v2: THREE_NS.Vector3
+  private readonly v3: THREE_NS.Vector3
+  private readonly q1: THREE_NS.Quaternion
 
   constructor(
     private readonly THREE: ThreeNamespace,
@@ -390,6 +392,8 @@ class Renderer implements DestructionRenderer {
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()
     this.v2 = new THREE.Vector3()
+    this.v3 = new THREE.Vector3()
+    this.q1 = new THREE.Quaternion()
     const maxParticles = Math.max(8, Math.floor((o.maxParticles ?? 2500) * (this.low ? 0.5 : 1)))
     this.visuals = new Visuals(THREE, this.low, 600)
     this.settlement = new SettlementView(THREE, this.visuals)
@@ -2092,7 +2096,8 @@ class Renderer implements DestructionRenderer {
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
       if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
-      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
+      const area = this.waveArea(pc.halfExtents, pc.root.quaternion, c, p)
+      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) return
       const spread = pc.halfExtents[0]
       const momentum = hit.speed * pc.mass
@@ -2107,6 +2112,19 @@ class Renderer implements DestructionRenderer {
       ...(options.effect !== undefined ? { effect: options.effect } : {}),
       ...(report ? { confinement } : {}),
     })
+  }
+
+  /** The area a body shows the blast, or undefined when the host gave the numbers of the game rule (`blastShove`): then the push is that rule, not the blast wave. */
+  private waveArea(half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number | undefined {
+    return this.o.blastShove === undefined ? this.areaFacing(half, quaternion, centre, point) : undefined
+  }
+
+  /** Square metres a box of half sizes `half` (its own axes, turned by `quaternion`) at `centre` shows a blast at `point`: the sum of its faces seen from there, by the cosine of each. */
+  private areaFacing(half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number {
+    const toward = this.v3.set(centre.x - point[0], centre.y - point[1], centre.z - point[2])
+    if (toward.lengthSq() < 1e-12) return 0
+    toward.normalize().applyQuaternion(this.q1.copy(quaternion).invert())
+    return 4 * (half[1] * half[2] * Math.abs(toward.x) + half[0] * half[2] * Math.abs(toward.y) + half[0] * half[1] * Math.abs(toward.z))
   }
 
   /** The cover between a part of the world that goes off and the centre of each piece and each shoveable body within its radius, as the world stands at that moment. */
@@ -2143,7 +2161,8 @@ class Renderer implements DestructionRenderer {
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
       if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
-      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
+      const area = this.waveArea(half, b.root.quaternion, world, point)
+      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) continue
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)

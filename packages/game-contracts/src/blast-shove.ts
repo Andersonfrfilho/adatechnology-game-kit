@@ -1,3 +1,4 @@
+import { bodyImpulse, DEFAULT_BLAST_IMPULSE } from './blast-impulse'
 import type { Vec3 } from './destruction'
 
 /**
@@ -51,9 +52,11 @@ const clampShare = (share: number): number => Math.min(1, Math.max(0, share))
 /**
  * The shove a blast gives to a body of `mass` kg whose centre is at `position`: away from the centre, lifted a little, with the speed
  * `sqrt(reach) * min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - distance / radius) ^ 2`. Undefined when the body is outside the radius or the speed is under `minSpeed`.
+ * A target that says its `area` (m2 it shows the wave) is pushed by the blast wave itself instead (`bodyImpulse`: Kinney-Graham impulse of the charge `blast.tnt`, or of `energy` by
+ * `tntPerJoule`, reflected on that area, divided by the mass): a 2 kg shovel 0.8 m from a hand grenade gets a few m/s, not the cap. `maxSpeed` and `falloffPower` do not apply to it.
  * The same rule moves the loose items and furniture of the test room and the people of the characters module, so a game that tunes the options tunes all of them.
  */
-export function blastShove(blast: BlastSource, target: { readonly position: Vec3; readonly mass: number }, options: BlastShoveOptions = {}): BlastShove | undefined {
+export function blastShove(blast: BlastSource, target: { readonly position: Vec3; readonly mass: number; readonly area?: number }, options: BlastShoveOptions = {}): BlastShove | undefined {
   const o = { ...DEFAULT_BLAST_SHOVE, ...options }
   const dx = target.position[0] - blast.point[0]
   const dy = target.position[1] - blast.point[1]
@@ -64,7 +67,10 @@ export function blastShove(blast: BlastSource, target: { readonly position: Vec3
   const mass = Math.max(target.mass, 0.05)
   // cover takes its share off the push itself, past the cap too: a light thing behind a cupboard is not thrown as fast as one in the open
   const reach = clampShare(blast.reach ?? 1)
-  const speed = Math.sqrt(reach) * Math.min(o.maxSpeed, Math.sqrt((2 * blast.energy * o.coupling) / mass)) * falloff
+  const speed =
+    target.area !== undefined
+      ? (bodyImpulse(blast.tnt ?? blast.energy * DEFAULT_BLAST_IMPULSE.tntPerJoule, distance) * target.area * reach) / mass
+      : Math.sqrt(reach) * Math.min(o.maxSpeed, Math.sqrt((2 * blast.energy * o.coupling) / mass)) * falloff
   if (!(speed >= o.minSpeed)) return undefined
   // straight above or below the centre there is no "away": the push goes up
   const direction: Vec3 = distance > 1e-4 ? [dx / distance, dy / distance + o.lift, dz / distance] : [0, 1, 0]
