@@ -159,13 +159,19 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
   return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, follow: o.follow, warmUpProbes: o.warmUpProbes, label: o.label, top: o.top, spout: o.spout, free: o.free, pushable: o.pushable }))
 }
 
+/** The ambient fill: sky above, bounce from the ground below (what a slab's underside and a house's shaded rooms are lit by). */
+export const HEMISPHERE_SKY = 0xcfe3ff
+export const HEMISPHERE_GROUND = 0xa8a298
+export const HEMISPHERE_INTENSITY = 0.85
+
 export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
   // the room's own floor, grid and ruler (not a piece: the pieces in the room come from their packages)
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-test-room', kind: 'room' })
   group.name = 'test-room-arena'
   scene.background = new THREE.Color(0x9fb4c8)
 
-  group.add(new THREE.HemisphereLight(0xcfe3ff, 0x6b6257, 0.75))
+  // the ground colour is what the underside of a slab reads in shade (no sun reaches it): light concrete-grey ground bounce, so it shows grey and not near black
+  group.add(new THREE.HemisphereLight(HEMISPHERE_SKY, HEMISPHERE_GROUND, HEMISPHERE_INTENSITY))
   const sun = new THREE.DirectionalLight(0xffffff, 2.1)
   sun.position.set(7, 13, 8)
   sun.castShadow = true
