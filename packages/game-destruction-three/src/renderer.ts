@@ -1399,8 +1399,13 @@ class Renderer implements DestructionRenderer {
     const b = this.bounds.get(ev.object)
     const pv = b?.parts.get(ev.part)
     if (!b || !pv) return
+    // the object's frame is in metres whatever the scale of the model root (a model drawn in centimetres): its pose is the root's position and rotation only
     b.root.updateWorldMatrix(true, false)
-    const point = new this.THREE.Vector3(ev.hinge.point[0], ev.hinge.point[1], ev.hinge.point[2]).applyMatrix4(b.root.matrixWorld)
+    const point = new this.THREE.Vector3(ev.hinge.point[0], ev.hinge.point[1], ev.hinge.point[2])
+    const origin = this.v1
+    const rotation = this.tmpQ
+    b.root.matrixWorld.decompose(origin, rotation, this.v2)
+    point.applyQuaternion(rotation).add(origin)
     const axis = this.worldDir(b, ev.hinge.axis)
     const side = this.worldDir(b, ev.hinge.side)
     for (const mv of pv.meshes) if (this.visuals.shown(mv)) this.visuals.applyBend(mv, point, axis, side, ev.angle)
