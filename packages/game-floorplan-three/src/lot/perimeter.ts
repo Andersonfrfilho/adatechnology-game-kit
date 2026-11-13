@@ -15,13 +15,12 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
     const houseWalls = shared.ctx.visorScene ? [] : groundWallBoxes((shared.ctx.r as HouseRecord).walls);
     for (const s of lt.perimeter) {
       const alongU = Math.abs(s.v1 - s.v0) < EPS, L = alongU ? s.v0 : s.u0, a = Math.min(alongU ? s.u0 : s.v0, alongU ? s.u1 : s.v1), b = Math.max(alongU ? s.u0 : s.v0, alongU ? s.u1 : s.v1);
-      const others = houseWalls.concat(shared.ctx.visorScene ? [] : shared.ctx.lotWalls); // (and out of the sides laid before it: a corner's rail ended on the face of the other side's)
       cursor.pc = pieceRecord('lot_wall:' + s.id, s.type === 'wall' ? 'brick' : s.type === 'fence' ? 'wood_soft' : 'steel', null, { tags: ['wall'] });
       const th = s.thickness || 0.15, h = s.height, color = colorOf(s.color) ?? (C.wall || 0xb8b4aa), len = b - a;
       // (outside the Visor's scene the lot's wall stops at the house's walls where it meets them, never in them)
       const B = (mat: string, u0: number, y0: number, u1: number, y1: number, t: number, c: Hex, off = 0): void => {
         const box: Aabb = alongU ? [u0, y0, L + off - t / 2, u1, y1, L + off + t / 2] : [L + off - t / 2, y0, u0, L + off + t / 2, y1, u1];
-        for (const p of others.length ? outsideBoxes(box, others) : [box]) { bx(mat, p[0], p[1], p[2], p[3], p[4], p[5], c); if (!shared.ctx.visorScene) shared.ctx.lotWalls.push(p); } // (the house's sidewalk is laid round it)
+        for (const p of houseWalls.length ? outsideBoxes(box, houseWalls) : [box]) { bx(mat, p[0], p[1], p[2], p[3], p[4], p[5], c); if (!shared.ctx.visorScene) shared.ctx.lotWalls.push(p); } // (the house's sidewalk is laid round it)
       };
       const col: BoxCollider = { type: 'lot_wall', f: -1, x0: alongU ? a : L - th / 2, z0: alongU ? L - th / 2 : a, x1: alongU ? b : L + th / 2, z1: alongU ? L + th / 2 : b }; shared.ctx.colliders.push(col);
       if (s.type === 'wall') { B('plaster', a, 0, b, h, th, color); B('plaster', a, h, b, h + 0.05, th + 0.06, sh(color, 1.15)); }
