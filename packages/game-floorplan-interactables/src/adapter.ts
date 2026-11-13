@@ -29,6 +29,7 @@ import {
 } from './tables.js'
 import type { TypeMapEntry } from './tables.js'
 import type { ContainerSpec, DeviceSpec, ObjectSpec, World } from '@adatechnology/game-interactables'
+import { WALL_PLATE } from '@adatechnology/game-interactables-household'
 import type { ContentsEntry, HouseholdItem } from '@adatechnology/game-interactables-household'
 import type {
   AdapterOptions,
@@ -251,6 +252,9 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
   }
 
   // ---- plan ----
+  /** The gas valve beside each stove fed by a copper line from an outdoor shelter, by plan (world coordinates): kept out of the plan's own data. */
+  const stoveValves = new WeakMap<AdapterPlan, ReadonlyMap<string, [number, number, number]>>()
+
   function plan(source: SourcePlan, options: PlanOptions | null = {}): AdapterPlan {
     const res = sourceOf(source)
     const popts: PlanOptions = options || {}
@@ -664,7 +668,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       for (const t of electrical.outlets || []) {
         if (!onFloor(t.floor, false)) continue
         const c = circuits.find((x) => (x.outlets || []).indexOf(t.id) >= 0)
-        const item: EntryItem = { x: K.x(t.u), z: K.z(t.v), ry: K.ry(t.frontU, t.frontV), y: t.y, seed: seedOf(t.id) }
+        const item: EntryItem = { x: K.x(t.u), z: K.z(t.v), ry: K.ry(t.frontU, t.frontV), y: t.y - WALL_PLATE.height / 2, seed: seedOf(t.id) }
         if (c) item.circuit = c.id
         const e = entry(t.id, 'wall_socket', item, t.id, t.floor)
         e.connections.circuit = c ? c.id : null
@@ -674,7 +678,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       const lights = new Set<string>(result.lights)
       for (const s of electrical.switches || []) {
         if (!onFloor(s.floor, false)) continue
-        const item: EntryItem = { x: K.x(s.u), z: K.z(s.v), ry: K.ry(s.frontU, s.frontV), y: s.y, seed: seedOf(s.id) }
+        const item: EntryItem = { x: K.x(s.u), z: K.z(s.v), ry: K.ry(s.frontU, s.frontV), y: s.y - WALL_PLATE.height / 2, seed: seedOf(s.id) }
         // global device ids ("object:device"): each lamp is an object with the `lamp` device
         item.controls = (s.controls || []).map((id) => id + ':lamp')
         const e = entry(s.id, 'wall_switch', item, s.id, s.floor)
@@ -778,6 +782,14 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       }
     }
     hideCylinders()
+    // a cylinder in its outdoor shelter feeds a copper line through the wall: the stove's hose ends at the line's valve beside it, never at the cylinder
+    const valves = new Map<string, [number, number, number]>()
+    for (const m of res.items ?? []) {
+      const valve = (m as { gasValve?: { x?: unknown; z?: unknown; y?: unknown } }).gasValve
+      if (m.category !== 'stove' || !valve || typeof valve.x !== 'number' || typeof valve.z !== 'number' || typeof valve.y !== 'number') continue
+      valves.set(m.id, [K.x(valve.x), floorYOf(res, o, m.floor) + valve.y, K.z(valve.z)])
+    }
+    stoveValves.set(result, valves)
     return result
   }
 
@@ -794,8 +806,9 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
 
   /** The valve on top of each stove's cylinder, by stove id (world coordinates, y absolute): its gas hose runs to it. */
   function cylinderValves(planned: AdapterPlan): Map<string, [number, number, number]> {
-    const out = new Map<string, [number, number, number]>()
+    const out = new Map<string, [number, number, number]>(stoveValves.get(planned))
     for (const b of planned.cylinders) {
+      if (b.stove && out.has(b.stove)) continue
       const cylinder = planned.items.find((e) => e.id === b.id)
       if (b.stove && cylinder) out.set(b.stove, [cylinder.item.x ?? 0, cylinder.floorY + (cylinder.item.h ?? CYLINDER_VALVE_Y), cylinder.item.z ?? 0])
     }

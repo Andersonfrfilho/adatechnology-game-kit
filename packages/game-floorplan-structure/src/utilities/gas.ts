@@ -1,4 +1,4 @@
-import type { Plan, ResultItem, Room } from '@adatechnology/game-floorplan'
+import type { Plan, PlanWall, ResultItem, Room } from '@adatechnology/game-floorplan'
 import type { Rect } from '../types'
 import type { Rng } from './shared'
 import { HALF_WALL, clamp, groundExteriorWalls, inner, isSolid, outwardOf, overlaps, round2, sideNameOf } from './shared'
@@ -18,10 +18,35 @@ export interface GasMeter {
   h: number
 }
 
+/** Where the cylinder of a house stands. */
+export const GAS_LAYOUT = { OUTDOOR_SHELTER: 'outdoor_shelter', INDOOR_BESIDE_STOVE: 'indoor_beside_stove' } as const
+export type GasLayout = (typeof GAS_LAYOUT)[keyof typeof GAS_LAYOUT]
+
+/** The variants of the cylinder's position and how often each comes up: the ventilated outdoor shelter is the default, the cylinder in the kitchen the variant. */
+export const GAS_LAYOUTS: readonly { readonly id: GasLayout; readonly weight: number }[] = [
+  { id: GAS_LAYOUT.OUTDOOR_SHELTER, weight: 0.75 },
+  { id: GAS_LAYOUT.INDOOR_BESIDE_STOVE, weight: 0.25 },
+]
+
+/** The standard of the external shelter of a cooking gas cylinder. */
+export const SHELTER_STANDARD = 'NBR 13523'
+/** Rigid copper tube of the line from the shelter to the stove's valve, millimetres. */
+const PIPE_DIAMETER_MM = 15
+/** The shelter: the cylinder with 10 cm round it, ventilated high and low (the gas is heavier than air), backed on the wall. */
+const SHELTER = { side: 0.56, h: 0.7 }
+const VALVE_HEIGHT = 0.55
+const PIPE_WALL_HEIGHT = 0.6
+/** How far the line stands off the wall it runs along, metres. */
+const PIPE_CLEARANCE = 0.03
+
 export interface Gas {
   type: 'piped' | 'cylinder'
   meter: GasMeter | null
+  /** The variant of the cylinder's position (a house with cylinders; none in the Visor's golden). */
+  layout?: GasLayout
 }
+
+export type GasValve = { readonly id: string; readonly x: number; readonly z: number; readonly y: number }
 
 interface Spot {
   mode: 'beside' | 'niche' | 'under'
@@ -30,6 +55,9 @@ interface Spot {
   rect: Rect
   outdoor?: boolean
   cabinet?: string
+  /** The shelter's box (outdoor shelter) and the wall it is backed on. */
+  shelter?: Rect
+  wall?: PlanWall
 }
 
 /** Gas meter on the front wall of the ground floor, 1.2 m up. */
@@ -50,6 +78,8 @@ interface Context {
   items: ResultItem[]
   stateItems: ResultItem[]
   rng: Rng
+  /** The Visor de casas 3D's gas as it was: a niche at the wall with a hose, no shelter nor copper line (its golden). */
+  visor?: boolean
 }
 
 function besideStove(context: Context, stove: ResultItem, room: Room, solids: Rect[], doorZones: Rect[]): Spot | undefined {
@@ -65,27 +95,47 @@ function besideStove(context: Context, stove: ResultItem, room: Room, solids: Re
   return undefined
 }
 
+/** The shelter's line may run this far from the stove to the exterior wall of its kitchen, metres. */
+const MAX_PIPE_RUN = 4
+
+const distanceToWall = (stove: ResultItem, wall: PlanWall): number =>
+  wall.axis === 'u' ? Math.hypot(stove.x - clamp(stove.x, wall.u0, wall.u1), stove.z - wall.v0) : Math.hypot(stove.x - wall.u0, stove.z - clamp(stove.z, wall.v0, wall.v1))
+
 function inNiche(context: Context, stove: ResultItem, room: Room, doorZones: Rect[]): Spot | undefined {
+  const { plan } = context
+  if (stove.floor !== 0) return undefined
+  const walls = plan.walls.filter((p) => p.exterior && p.floor === stove.floor && p.type === 'wall' && p.sides.includes(room.id))
+  if (context.visor) {
+    // the Visor's niche: the first wall of the room within 1.6 m of the stove on both axes
+    const wall = walls.find((p) => (p.axis === 'u' ? Math.abs(stove.x - clamp(stove.x, p.u0, p.u1)) < 1.6 && Math.abs(stove.z - p.v0) < 1.6 : Math.abs(stove.z - clamp(stove.z, p.v0, p.v1)) < 1.6 && Math.abs(stove.x - p.u0) < 1.6))
+    return wall ? nicheAt(context, stove, wall, doorZones) : undefined
+  }
+  // the shelter: the nearest exterior wall of the kitchen with room for it, the copper line runs as far as it needs
+  for (const wall of walls.filter((p) => distanceToWall(stove, p) <= MAX_PIPE_RUN).sort((x, y) => distanceToWall(stove, x) - distanceToWall(stove, y))) {
+    const spot = nicheAt(context, stove, wall, doorZones)
+    if (spot) return spot
+  }
+  return undefined
+}
+
+function nicheAt(context: Context, stove: ResultItem, wall: PlanWall, doorZones: Rect[]): Spot | undefined {
   const { plan, items, stateItems } = context
-  const wall = plan.walls.find(
-    (p) =>
-      p.exterior && p.floor === stove.floor && p.type === 'wall' && p.sides.includes(room.id) &&
-      (p.axis === 'u'
-        ? Math.abs(stove.x - clamp(stove.x, p.u0, p.u1)) < 1.6 && Math.abs(stove.z - p.v0) < 1.6
-        : Math.abs(stove.z - clamp(stove.z, p.v0, p.v1)) < 1.6 && Math.abs(stove.x - p.u0) < 1.6),
-  )
-  if (!wall || stove.floor !== 0) return undefined
+  const shelter = !context.visor
   const vector = outwardOf(wall)
-  const cx = wall.axis === 'u' ? clamp(stove.x, wall.u0 + 0.4, wall.u1 - 0.4) : wall.u0 + vector[0] * (HALF_WALL + CYLINDER.w / 2 + 0.05)
-  const cz = wall.axis === 'u' ? wall.v0 + vector[1] * (HALF_WALL + CYLINDER.d / 2 + 0.05) : clamp(stove.z, wall.v0 + 0.4, wall.v1 - 0.4)
-  const rect = [cx - CYLINDER.w / 2, cz - CYLINDER.d / 2, cx + CYLINDER.w / 2, cz + CYLINDER.d / 2].map(round2) as Rect
+  const reachU = shelter ? SHELTER.side / 2 : CYLINDER.w / 2 + 0.05
+  const reachV = shelter ? SHELTER.side / 2 : CYLINDER.d / 2 + 0.05
+  const cx = wall.axis === 'u' ? clamp(stove.x, wall.u0 + 0.4, wall.u1 - 0.4) : wall.u0 + vector[0] * (HALF_WALL + reachU)
+  const cz = wall.axis === 'u' ? wall.v0 + vector[1] * (HALF_WALL + reachV) : clamp(stove.z, wall.v0 + 0.4, wall.v1 - 0.4)
+  const cylinder = [cx - CYLINDER.w / 2, cz - CYLINDER.d / 2, cx + CYLINDER.w / 2, cz + CYLINDER.d / 2].map(round2) as Rect
+  const box = shelter ? ([cx - SHELTER.side / 2, cz - SHELTER.side / 2, cx + SHELTER.side / 2, cz + SHELTER.side / 2].map(round2) as Rect) : cylinder
+  const rect = box
   const blockedByItem = items.some((o) => o.outdoor && isSolid(o) && overlaps(rect, o.aabb, 0.011))
   const blockedByState = stateItems.some((o) => o.outdoor && o.aabb && !o.flat && o.mount !== 'ground' && overlaps(rect, o.aabb, 0.011))
   const blockedByPath = plan.paths.some((c) => c.rects.some((z: Rect) => overlaps(rect, z, 0.011)))
   const blockedByGate = plan.gates.some((g) => g.zones.some((z: Rect) => overlaps(rect, z, 0.011)))
   const blockedByFence = !plan.lot || plan.lot.perimeter.some((q) => overlaps(rect, [Math.min(q.u0, q.u1) - HALF_WALL, Math.min(q.v0, q.v1) - HALF_WALL, Math.max(q.u0, q.u1) + HALF_WALL, Math.max(q.v0, q.v1) + HALF_WALL], 0.011))
   if (blockedByItem || blockedByState || blockedByPath || doorZones.some((z) => overlaps(rect, z, 0.011)) || blockedByGate || blockedByFence) return undefined
-  return { mode: 'niche', x: cx, z: cz, rect, outdoor: true }
+  return { mode: 'niche', x: cx, z: cz, rect: cylinder, outdoor: true, ...(shelter ? { shelter: box, wall } : {}) }
 }
 
 function underCounter(context: Context, stove: ResultItem): Spot | undefined {
@@ -111,6 +161,27 @@ function underCounter(context: Context, stove: ResultItem): Spot | undefined {
 }
 
 const PLACEMENT = { beside: 'beside', niche: 'external_niche', under: 'under_counter' } as const
+const OUTDOOR_SHELTER_PLACEMENT = 'outdoor_shelter'
+
+/** The valve (registro) at the stove, on the wall side of its back: where the copper line ends and the flexible hose to the stove starts. */
+function valveOf(stove: ResultItem): GasValve {
+  const back = stove.d / 2 + 0.04
+  return { id: `${stove.id}.gas_valve`, x: round2(stove.x - (stove.frontU ?? 0) * back), z: round2(stove.z - (stove.frontV ?? 1) * back), y: VALVE_HEIGHT }
+}
+
+/** The copper line from the shelter's outlet, through the wall and along its inner face at the height of the valve, to the stove's valve: points of plan (x, z) and height. */
+function copperLine(spot: Spot, valve: GasValve): [number, number, number][] {
+  const wall = spot.wall!
+  const inward = outwardOf(wall).map((component) => -component)
+  const face = HALF_WALL + PIPE_CLEARANCE
+  const outlet: [number, number, number] = [round2(spot.x), round2(spot.z), CYLINDER.h]
+  if (wall.axis === 'u') {
+    const faceZ = round2(wall.v0 + inward[1]! * face)
+    return [outlet, [round2(spot.x), wall.v0, PIPE_WALL_HEIGHT], [round2(spot.x), faceZ, PIPE_WALL_HEIGHT], [valve.x, faceZ, PIPE_WALL_HEIGHT], [valve.x, valve.z, valve.y]]
+  }
+  const faceX = round2(wall.u0 + inward[0]! * face)
+  return [outlet, [wall.u0, round2(spot.z), PIPE_WALL_HEIGHT], [faceX, round2(spot.z), PIPE_WALL_HEIGHT], [faceX, valve.z, PIPE_WALL_HEIGHT], [valve.x, valve.z, valve.y]]
+}
 
 function cylinderItem(stove: ResultItem, spot: Spot): ResultItem {
   const item: ResultItem = {
@@ -122,14 +193,35 @@ function cylinderItem(stove: ResultItem, spot: Spot): ResultItem {
     item.on = spot.cabinet
     item.hidden = true
   }
+  if (spot.shelter) {
+    const valve = valveOf(stove)
+    item.placement = OUTDOOR_SHELTER_PLACEMENT
+    item.shelter = { standard: SHELTER_STANDARD, ventilated: true, ventilation: { low: true, high: true }, aabb: spot.shelter, h: SHELTER.h }
+    item.pipe = { material: 'copper', diameterMm: PIPE_DIAMETER_MM, route: copperLine(spot, valve), valve: valve.id }
+    item.valve = valve
+    item.hose = [[valve.x, valve.z, valve.y], [stove.x, stove.z, 0.5]]
+    stove.gasValve = valve
+  }
   if (spot.outdoor) item.floor = -1
   item.color = stove.color
   return item
 }
 
+function pickLayout(rng: Rng): GasLayout {
+  const roll = rng() * GAS_LAYOUTS.reduce((sum, layout) => sum + layout.weight, 0)
+  let acc = 0
+  for (const layout of GAS_LAYOUTS) {
+    acc += layout.weight
+    if (roll < acc) return layout.id
+  }
+  return GAS_LAYOUTS[0]!.id
+}
+
 /**
- * Gas for the stoves of the house: a cylinder beside the stove, in an outside niche with a hose or under the counter, or (high-end houses, or when
- * nothing fits) piped gas with a meter on the facade. The cylinders are added to `items`; the stoves are annotated (`gas`, `cylinder`, `gasMeter`).
+ * Gas for the stoves of the house. By default the cylinder stands in a ventilated outdoor shelter (NBR 13523) backed on the kitchen wall, with a copper line
+ * through the wall to the valve at the stove; the variant is the cylinder in the kitchen beside the stove (`GAS_LAYOUTS`). Under the counter is the last
+ * resort, and (high-end houses, or when nothing fits) piped gas with a meter on the facade. The cylinders are added to `items`; the stoves are annotated
+ * (`gas`, `cylinder`, `gasMeter`, `gasValve`). The Visor's golden (`visor`) keeps its niche with a hose and its order of draws.
  */
 export function planGas(context: Context): Gas | null {
   const { plan, items, stateItems, rng } = context
@@ -138,6 +230,8 @@ export function planGas(context: Context): Gas | null {
   const high = plan.style === 'high'
   const piped = plan.style !== 'commercial' && (high ? rng() < 0.8 : plan.style === 'mid' ? rng() < 0.1 : false)
   const out: Gas = { type: piped ? 'piped' : 'cylinder', meter: null }
+  const layout = context.visor || piped ? undefined : pickLayout(rng)
+  if (layout) out.layout = layout
   const ensureMeter = (): void => {
     if (!out.meter) out.meter = placeMeter(plan)
   }
@@ -153,7 +247,8 @@ export function planGas(context: Context): Gas | null {
     const solids = items.filter((m) => m.floor === stove.floor && m.room === stove.room && isSolid(m) && m.id !== stove.id).map((m) => m.aabb as Rect)
       .concat(stateItems.filter((m) => m.aabb && m.room === stove.room && m.floor === stove.floor && !m.flat && !m.on && m.mount !== 'window' && m.mount !== 'ground').map((m) => m.aabb as Rect))
     const doorZones = plan.doors.filter((p) => p.floor === stove.floor).flatMap((p) => p.zones as Rect[])
-    const order: Spot['mode'][] = rng() < 0.7 ? ['beside', 'niche', 'under'] : ['niche', 'beside', 'under']
+    const indoorFirst = layout ? layout === GAS_LAYOUT.INDOOR_BESIDE_STOVE : rng() < 0.7
+    const order: Spot['mode'][] = indoorFirst ? ['beside', 'niche', 'under'] : ['niche', 'beside', 'under']
     let spot: Spot | undefined
     for (const mode of order) {
       if (spot) break

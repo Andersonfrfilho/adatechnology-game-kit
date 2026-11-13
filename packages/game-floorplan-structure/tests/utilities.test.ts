@@ -63,7 +63,7 @@ describe('every plan has its installations', () => {
     for (let seed = 1; seed <= 20; seed++) {
       for (const item of plan('single_storey_a', seed).items.filter((m) => m.type === 'cooking_gas_cylinder')) {
         expect(item.capacityKg).toBe(13)
-        if (item.placement === 'external_niche') {
+        if (item.placement === 'outdoor_shelter') {
           expect(item.outdoor).toBe(true)
           expect(item.floor).toBe(-1)
         }

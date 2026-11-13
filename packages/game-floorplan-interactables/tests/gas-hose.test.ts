@@ -7,21 +7,21 @@ import { GameInteractables, GameInteractablesHousehold, planOf } from './support
 const kit = { GameInteractables, GameInteractablesHousehold }
 
 /** The specs the adapter adds, by entry id, with the pose it adds them at. */
-function added(seed: number): { specs: Map<string, { spec: ObjectSpec; x: number; y: number; z: number; ry: number }>; planned: ReturnType<ReturnType<typeof create>['plan']> } {
+function added(seed: number): { specs: Map<string, { spec: ObjectSpec; x: number; y: number; z: number; ry: number }>; planned: ReturnType<ReturnType<typeof create>['plan']>; source: ReturnType<typeof planOf> } {
   const adapter = create(kit)
   const r = planOf('single_storey_a', seed)
   const planned = adapter.plan(r, { seed: r.seed })
   const specs = new Map<string, { spec: ObjectSpec; x: number; y: number; z: number; ry: number }>()
   const world = { add: (id: string, spec: ObjectSpec, pose: { x: number; y: number; z: number; ry: number }) => specs.set(id, { spec, ...pose }), fitSweep: () => 1 }
   adapter.add(world as never, planned)
-  return { specs, planned }
+  return { specs, planned, source: r }
 }
 
 describe('the gas hose of a stove', () => {
-  it('runs from behind the stove along the floor to the valve of its cylinder, never through the wall behind it', () => {
-    let linked = 0
+  it('runs from behind the stove along the floor to the valve of its cylinder (or of the copper line from its outdoor shelter), never through the wall behind it', () => {
+    let linked = 0, sheltered = 0
     for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
-      const { specs, planned } = added(seed)
+      const { specs, planned, source } = added(seed)
       for (const stove of planned.items.filter((e) => e.type === 'stove')) {
         const placed = specs.get(stove.id)
         const hose = placed?.spec.wires?.find((w) => w.id === 'gas_hose')
@@ -29,7 +29,10 @@ describe('the gas hose of a stove', () => {
         const cylinder = planned.cylinders.find((b) => b.stove === stove.id)
         const entry = cylinder && planned.items.find((e) => e.id === cylinder.id)
         if (!entry) continue
-        const valve = [entry.item.x ?? 0, entry.floorY + (entry.item.h ?? 0.47), entry.item.z ?? 0] as const
+        // a cylinder in its outdoor shelter feeds a copper line through the wall to a valve beside the stove: the hose ends there
+        const line = cylinder.place === 'outdoor_shelter' ? (source.items.find((m) => m.id === stove.id) as { gasValve?: { x: number; y: number; z: number } } | undefined)?.gasValve : undefined
+        const valve = line ? ([line.x, stove.floorY + line.y, line.z] as const) : ([entry.item.x ?? 0, entry.floorY + (entry.item.h ?? 0.47), entry.item.z ?? 0] as const)
+        if (line) sheltered++
         linked++
         const end = hose.points[hose.points.length - 1]!
         // local back to world: the inverse of the adapter's rotation
@@ -40,6 +43,7 @@ describe('the gas hose of a stove', () => {
       }
     }
     expect(linked).toBeGreaterThan(0)
+    expect(sheltered).toBeGreaterThan(0)
   })
 
   it('of a stove with no cylinder stays in the gap it leaves to the wall', () => {

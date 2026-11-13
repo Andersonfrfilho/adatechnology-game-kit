@@ -16,12 +16,14 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       const exterior = m.outdoor || m.floor < 0, f = exterior ? -1 : Math.min(m.floor, R.floors.length - 1);
       cursor.group = exterior ? 'lot' : 'f' + f;
       const com = m.room != null ? shared.ctx.roomById[m.room] : undefined, base = exterior ? 0 : Y0(f);
-      const M: Mount = { x: m.x, z: m.z, ry: m.ry || 0, w: m.w, d: m.d, h: m.h, y: m.y || 0, base, floor: exterior ? -1 : f, palette: shared.ctx.colors, color: m.category === 'ground_cover' ? undefined : (colorOf(m.color) ?? undefined), seed: m.id, room: m.room, typeWith: com ? com.type : null, ceiling: com ? com.ceiling : 2.9, on: shared.ctx.night, light: shared.ctx.night, lit: shared.ctx.night, open: !!m.doorOpen, overhead: m.overhead, assembly: m.assembly, hose: m.hose };
+      const M: Mount = { x: m.x, z: m.z, ry: m.ry || 0, w: m.w, d: m.d, h: m.h, y: m.y || 0, base, floor: exterior ? -1 : f, palette: shared.ctx.colors, color: m.category === 'ground_cover' ? undefined : (colorOf(m.color) ?? undefined), seed: m.id, room: m.room, typeWith: com ? com.type : null, ceiling: com ? com.ceiling : 2.9, on: shared.ctx.night, light: shared.ctx.night, lit: shared.ctx.night, open: !!m.doorOpen, overhead: m.overhead, assembly: m.assembly, hose: m.hose, shelter: m.shelter, pipe: m.pipe };
       if (m.category === 'ground_cover' && m.polygon) {
         const xs = m.polygon.map((p: number[]) => p[0]), zs = m.polygon.map((p: number[]) => p[1]); M.x = (Math.min(...xs) + Math.max(...xs)) / 2; M.z = (Math.min(...zs) + Math.max(...zs)) / 2; M.w = Math.max(...xs) - Math.min(...xs); M.d = Math.max(...zs) - Math.min(...zs); M.ry = 0;
         if (!rect(m.polygon)) M.poly = m.polygon.map((p: number[]) => [p[0] - M.x, p[1] - M.z]);
       }
       if (shared.ctx.veg && vegItem(m, M, exterior ? 'lot' : 'f' + f)) continue;
+      // the outdoor shelter of a gas cylinder (NBR 13523) and its copper line are the house's, whoever draws the cylinder in it
+      if (m.type === 'cooking_gas_cylinder' && m.shelter && T.gas_shelter) { const st = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations'; try { buildItem(m, M, T.gas_shelter, api, cursor.group); } finally { cursor.stage = st; } }
       if (shared.ctx.iv && shared.ctx.iv.replace.has(m.id)) { registerCollision(m, M); continue; } // the interactables kit draws this furniture (the collision is still a single one)
       const ent = T[m.type];
       const st0 = cursor.stage;

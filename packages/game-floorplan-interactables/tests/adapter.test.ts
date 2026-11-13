@@ -199,3 +199,15 @@ describe('world', () => {
     expect(planned.meter).toBe('meter')
   })
 })
+
+describe('plates of switches and sockets', () => {
+  it('are centred on the height of their point, so each covers the box cut in the wall there', () => {
+    const planned = create(kit).plan(plan, { seed: plan.seed })
+    const points = [...plan.utilities.electrical.outlets, ...plan.utilities.electrical.switches]
+    expect(points.length).toBeGreaterThan(0)
+    for (const point of points) {
+      const entry = planned.items.find((e) => e.id === point.id)!
+      expect((entry.item.y as number) + GameInteractablesHousehold.WALL_PLATE.height / 2, point.id).toBeCloseTo(point.y, 9)
+    }
+  })
+})
