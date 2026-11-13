@@ -3,7 +3,7 @@ import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology
 import type { SurfaceSpec } from '@adatechnology/game-fluids'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { brickWallSpec } from './items'
-import { snapSunShadow } from './sun-shadow'
+import { snapSunShadow, sunOffsetOf, sunShadowFrustum } from './sun-shadow'
 import type { SceneryObject, SceneryTap } from './types'
 
 export interface ArenaObject {
@@ -176,17 +176,14 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   // the ground colour is what the underside of a slab reads in shade (no sun reaches it): light concrete-grey ground bounce, so it shows grey and not near black
   group.add(new THREE.HemisphereLight(HEMISPHERE_SKY, HEMISPHERE_GROUND, HEMISPHERE_INTENSITY))
   const sun = new THREE.DirectionalLight(0xffffff, 2.1)
-  const SUN_OFFSET: Vec3 = [7, 13, 8]
+  // the sun's direction as it always was (7, 13, 8), set back far enough that the whole cascade fits between its planes
+  const SUN_OFFSET: Vec3 = sunOffsetOf([7, 13, 8])
   sun.position.set(...SUN_OFFSET)
   sun.castShadow = true
   sun.shadow.mapSize.set(1024, 1024)
   const sc = sun.shadow.camera
-  sc.left = -16
-  sc.right = 16
-  sc.top = 16
-  sc.bottom = -16
-  sc.near = 1
-  sc.far = 40
+  Object.assign(sc, sunShadowFrustum())
+  sc.updateProjectionMatrix()
   sun.shadow.bias = -0.0006
   // a texel of the map is 3 cm: a face nearly along the sun shades itself in stripes (acne) without pushing the lookup out along its normal
   sun.shadow.normalBias = 0.03

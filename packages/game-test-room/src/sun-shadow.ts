@@ -14,6 +14,26 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 
 /**
+ * The one shadow cascade of the room: a box of fixed size centred on the camera at every shadow level (`half` metres each side), and 48 m deep along the light,
+ * with the sun `distance` metres from the camera's point towards it: a caster 18 m up at the corner of the box nearest the sun is still past the near plane, and the
+ * ground at the far edge before the far plane, so no caster near the player falls out of the map as it walks up to it.
+ */
+export const SUN_SHADOW = { half: 16, depth: 48, distance: 26, near: 0.5 } as const
+
+/** The shadow camera of the cascade: an orthographic box `half` each side, from `near` to `depth` along the light. */
+export function sunShadowFrustum(): { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number; readonly near: number; readonly far: number } {
+  const { half, depth, near } = SUN_SHADOW
+  return { left: -half, right: half, top: half, bottom: -half, near, far: depth }
+}
+
+/** The sun's offset from the point it looks at: along `direction` (towards the sun), `SUN_SHADOW.distance` long. */
+export function sunOffsetOf(direction: Vec3): Vec3 {
+  const [x, y, z] = normalize(direction)
+  return [x * SUN_SHADOW.distance, y * SUN_SHADOW.distance, z * SUN_SHADOW.distance]
+}
+
+
+/**
  * The sun's frustum follows the focus (the camera) so the shadows near the player are always inside it, and its centre moves only in whole texels of the
  * shadow map along the light's own axes: a shadow edge never swims as the player walks. `half` is the frustum's half width, `mapSize` the map's side in texels.
  */

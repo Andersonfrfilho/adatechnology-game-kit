@@ -7,10 +7,12 @@ import type { FpsOverlay, GraphicsScreen } from '@adatechnology/game-graphics/sc
 import { createGpuFrameTimer, createGraphicsView, gpuName } from '@adatechnology/game-graphics-three'
 import type { GpuFrameTimer, GraphicsView } from '@adatechnology/game-graphics-three'
 
+import { SUN_SHADOW } from './sun-shadow'
+
 const QUIET_FRAMES = 10
 
-/** Half the side of the sun's shadow box under the `near` shadow level, metres: wide enough that the shadows of what the player walks up to are already there. */
-const NEAR_SHADOW_EXTENT = 12
+/** The sun's shadow box under the `near` shadow level is the room's one cascade (`SUN_SHADOW.half`): the same box at every level, only the map's size changes. */
+const NEAR_SHADOW_EXTENT = SUN_SHADOW.half
 
 /** The room's graphics settings (`TestRoomOptions.graphics`). */
 export interface RoomGraphicsOptions {
