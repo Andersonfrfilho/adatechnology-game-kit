@@ -4,6 +4,7 @@ import type { PieceBody, PieceFriction } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
+import { initPiecePhysics, piecePhysicsReady, RapierPieces } from './rapier-pieces'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -32,6 +33,10 @@ export interface PieceSystemOptions {
    * sleeps under it too. Default: no limit.
    */
   maxAwake?: number
+  /** Who steps the pieces: the kit's own solver, or Rapier (the kit's own until its WebAssembly is loaded, `initPiecePhysics`). Default `rapier`. */
+  solver?: 'own' | 'rapier'
+  /** The boxes of what does not move, per object (the box around them all, then each box: min x, y, z, max x, y, z): Rapier's fixed colliders. */
+  staticBoxes?: () => ReadonlyMap<string, readonly number[]>
 }
 
 /** What a moving piece ran into (`PieceSystemOptions.sweep`). */
@@ -224,6 +229,8 @@ export class PieceSystem {
   private readonly m: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
+  /** Rapier, stepping the pieces in place of the kit's own solver (`PieceSystemOptions.solver`). */
+  private rapier: RapierPieces | null = null
   /** The boxes other pieces land on: a piece's own parts when it has them (`partBoxes`), else its box. */
   private surfaces: Solid[] = []
   /** The surfaces by the cells of a grid on the ground (`SURFACE_CELL`) their bounding circle covers: what is under a point is looked for in its cell only. */
@@ -307,10 +314,14 @@ export class PieceSystem {
     if (i < 0) return
     // the boxes of the step forget it too: nothing keeps a removed piece's tree alive
     const [gone] = this.list.splice(i, 1)
-    if (gone) this.forgetSolids(gone)
+    if (gone) {
+      this.forgetSolids(gone)
+      this.rapier?.remove(gone)
+    }
   }
 
   clear(): void {
+    this.rapier?.clear()
     this.list.length = 0
     this.solids = []
     this.surfaces = []
@@ -443,6 +454,7 @@ export class PieceSystem {
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
   wakeRegion(x: number, z: number, radius: number): void {
+    this.rapier?.groundChanged(x, z, radius)
     for (const b of this.list) {
       if (!b.sleeping || b.held || Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius) continue
       b.sleeping = false
@@ -452,6 +464,24 @@ export class PieceSystem {
   }
 
   update(dt: number): void {
+    if ((this.o.solver ?? 'rapier') === 'rapier') {
+      if (piecePhysicsReady()) {
+        this.rapier ??= new RapierPieces(this.THREE, {
+          groundAt: this.o.groundAt,
+          gravity: this.o.gravity,
+          maxAwake: this.o.maxAwake,
+          staticBoxes: this.o.staticBoxes,
+          sweep: this.o.sweep,
+          onSlam: this.o.onSlam,
+          onHardLanding: this.o.onHardLanding,
+        })
+        this.time += dt
+        this.rapier.update(this.list, dt, this.time)
+        this.measure()
+        return
+      }
+      void initPiecePhysics()
+    }
     const { steps, near } = this.collisionSteps(dt)
     if (steps === 1) {
       this.time += dt
@@ -504,8 +534,8 @@ export class PieceSystem {
     return { steps: Math.max(1, Math.min(MAX_COLLISION_STEPS, need)), near }
   }
 
-  /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
-  private step(dt: number, only?: StepFilter): void {
+  /** The boxes of the pieces as they stand (`solids`, `surfaces` and their grid): what a point lands on and what `topAt` answers. */
+  private measure(): void {
     this.solids = this.list.map((body) => {
       const c = this.centerOf(body, new this.THREE.Vector3())
       const h = body.halfExtents
@@ -557,6 +587,11 @@ export class PieceSystem {
       }
     }
     if (this.wideSurfaces.length > 0) for (const cell of this.surfaceGrid.values()) cell.push(...this.wideSurfaces)
+  }
+
+  /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
+  private step(dt: number, only?: StepFilter): void {
+    this.measure()
     this.wakeUnsupported()
     for (const b of this.list) {
       if (b.held) {

@@ -425,6 +425,8 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
+      solver: o.pieceSolver,
+      staticBoxes: () => this.staticNow(),
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),

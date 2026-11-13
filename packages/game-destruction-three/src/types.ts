@@ -53,6 +53,8 @@ export interface RendererOptions {
    * support.
    */
   maxAwakePieces?: number
+  /** Who steps the loose pieces: Rapier (default; the kit's own solver until `initPiecePhysics` has loaded it) or the kit's own solver. */
+  pieceSolver?: 'own' | 'rapier'
   /** Most fragments moving at once (default no limit; `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64): over it the oldest at rest on what is under them sleep where they lie. */
   maxAwakeFragments?: number
   /**

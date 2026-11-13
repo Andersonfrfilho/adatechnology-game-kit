@@ -481,6 +481,9 @@ importers:
       '@adatechnology/game-vfx-three':
         specifier: workspace:^
         version: link:../game-vfx-three
+      '@dimforge/rapier3d-deterministic-compat':
+        specifier: 0.21.0
+        version: 0.21.0
     devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:^
@@ -2469,6 +2472,9 @@ packages:
   '@changesets/write@0.4.0':
     resolution: {integrity: sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q==}
 
+  '@dimforge/rapier3d-deterministic-compat@0.21.0':
+    resolution: {integrity: sha512-n7JuU62Obljlgq+OeH2DHhTmRSjRzwuJPl54tS9pFIzVQyvXsO5CH+a5KkIRBtnFWDbg1Zicv9BulG0jfBAopA==}
+
   '@esbuild/aix-ppc64@0.27.7':
     resolution: {integrity: sha512-EKX3Qwmhz1eMdEJokhALr0YiD0lhQNwDqkPYyPhiSwKrh7/4KRjQc04sZ8db+5DVVnZ1LmbNDI1uAMPEUBnQPg==}
     engines: {node: '>=18'}
@@ -4323,6 +4329,8 @@ snapshots:
       fs-extra: 7.0.1
       human-id: 4.2.2
       prettier: 2.8.8
+
+  '@dimforge/rapier3d-deterministic-compat@0.21.0': {}
 
   '@esbuild/aix-ppc64@0.27.7':
     optional: true

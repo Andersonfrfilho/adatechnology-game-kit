@@ -2,6 +2,7 @@ export { impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_
 export { SETTLED_BATCH_DEFAULTS, SETTLED_BATCH_ORIGIN } from './settled-batches'
 export type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
 export { specFromObject3D } from './spec'
+export { initPiecePhysics, piecePhysicsReady } from './rapier-pieces'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'
 export type { FragmentLifeRule } from './fragments'
