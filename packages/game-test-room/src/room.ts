@@ -2293,6 +2293,33 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.impulse(objectId, [dir[0] * momentum, dir[1] * momentum, dir[2] * momentum], point)
   }
 
+  /** Speed (m/s) a swung tool arrives at: its mass follows from the blow's energy (`2 E / v^2`). */
+  const BLOW_SPEED = 6
+  /** Share of the approach speed a struck piece rebounds with (a tool on wood or steel: mostly inelastic). */
+  const BLOW_RESTITUTION = 0.2
+  /** Friction between a tool and what it strikes: the sideways share of a blow onto the ground cannot exceed this times the share pressed into it. */
+  const BLOW_FRICTION = 0.4
+  /** Metres under which the lowest point of a piece counts as standing on the ground. */
+  const BLOW_SUPPORT_GAP = 0.03
+  /**
+   * What a swung tool gives the loose piece it hits: a two-body collision, `J = (1 + e) m_tool M / (m_tool + M) v`, so a light piece does not leave faster than the tool
+   * arrived. A piece standing on the ground takes no impulse into it: the ground answers the downward part of the blow, and only what friction carries moves it sideways (`BLOW_FRICTION`).
+   */
+  const pushByBlow = (objectId: string, direction: Vec3, energy: number, point: Vec3): void => {
+    const piece = renderer.piece(objectId)
+    if (!piece) return
+    const toolMass = (2 * energy) / (BLOW_SPEED * BLOW_SPEED)
+    const momentum = ((1 + BLOW_RESTITUTION) * ((toolMass * piece.mass) / (toolMass + piece.mass)) * BLOW_SPEED)
+    const lowest = new THREE.Box3().setFromObject(piece.root).min
+    const isOnGround = direction[1] < 0 && lowest.y - groundAt(lowest.x, lowest.z) < BLOW_SUPPORT_GAP
+    if (!isOnGround) return pushPiece(objectId, direction, momentum, point)
+    // what the tool's grip on the piece can carry sideways is the friction on the part of the blow the ground took
+    const flat = Math.hypot(direction[0], direction[2])
+    if (flat < 1e-6) return
+    const sideways = Math.min(flat, BLOW_FRICTION * -direction[1])
+    pushPiece(objectId, [direction[0] / flat, 0, direction[2] / flat], momentum * sideways, point)
+  }
+
   const shotRay = new THREE.Raycaster()
   // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
   shotRay.layers.enableAll()
@@ -2582,7 +2609,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     const blow = blowOfTool(id, toolDef(id)?.category ?? '')
     if (blow) bodySounds.hit(blow, blowTarget(r), r.point as Vec3, u.energy)
-    pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
+    pushByBlow(r.object, u.direction, u.energy, r.point)
     action('melee', t('act.melee.hit', { weapon: w, energy: num(u.energy, 0), where: hitWhere(r), dist: num(r.distance, 1) }), {
       objectId: r.object,
       itemId: entryOf(r.object)?.so.itemId,
