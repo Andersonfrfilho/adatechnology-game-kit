@@ -7,6 +7,13 @@
     "injuryRadius": 15,
     "energy": 200000,
     "tnt": 0.24,
+    "casing": {
+      "mass": 0.19,
+      "material": "steel",
+      "fragments": 1000,
+      "chargeMass": 0.18,
+      "gurneyVelocity": 2700
+    },
     "destructionLevel": 2,
     "noise": 500,
     "fuse": 4,
@@ -53,6 +60,14 @@
     "injuryRadius": 10,
     "energy": 43200,
     "tnt": 0.15,
+    "casing": {
+      "mass": 0.35,
+      "material": "steel",
+      "fragments": 60,
+      "chargeMass": 0.15,
+      "gurneyVelocity": 2000,
+      "geometry": "cylinder"
+    },
     "destructionLevel": 2,
     "noise": 450,
     "fuse": 3,
@@ -216,6 +231,13 @@
     "injuryRadius": 12,
     "energy": 102400,
     "tnt": 0.045,
+    "casing": {
+      "mass": 0.09,
+      "material": "steel",
+      "fragments": 250,
+      "chargeMass": 0.032,
+      "gurneyVelocity": 2700
+    },
     "destructionLevel": 2,
     "noise": 450,
     "armRange": [
@@ -446,6 +468,13 @@
     "injuryRadius": 12,
     "energy": 102400,
     "tnt": 0.045,
+    "casing": {
+      "mass": 0.1,
+      "material": "steel",
+      "fragments": 300,
+      "chargeMass": 0.037,
+      "gurneyVelocity": 2650
+    },
     "destructionLevel": 2,
     "noise": 450,
     "armRange": [

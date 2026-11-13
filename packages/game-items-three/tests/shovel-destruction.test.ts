@@ -143,9 +143,11 @@ describe('fire on the shovel', () => {
 })
 
 describe('an explosion beside the shovel', () => {
-  it('a grenade a metre away opens the rivets and breaks the handle, which comes off as pieces', () => {
+  // 0.24 kg of TNT (an M67, 200 kJ) takes the handle off only close: the wave is 3 MPa at 0.6 m against the 0.16 MPa its 3.5 cm of ash holds across 90 cm, and 20 J of it
+  // at a metre, where the old 10% of the energy broke it from far away
+  it('a grenade 0.6 m away opens the rivets and breaks the handle, which comes off as pieces', () => {
     const { world, id } = fresh()
-    const result = world.hit(id, { type: 'explosive', point: [0.2, 0.3, 1], energy: 100000, radius: 5, source: 'test' })
+    const result = world.hit(id, { type: 'explosive', point: [0.2, 0.3, 0.6], energy: 200000, radius: 8, source: 'test' })
     expect(world.state(id)!.joints[0]!.open).toBe(true)
     expect(world.part(id, 'handle')!.status).toBe('broken')
     expect(result.events.map((e) => e.type)).toEqual(expect.arrayContaining(['detach', 'fracture']))
