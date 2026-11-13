@@ -28,14 +28,14 @@ export function groundedParts(parts: readonly StructurePart[], supports: readonl
 const PLAN_CONTACT = 0.02
 
 /**
- * A part declared to rest on a pillar (or post) it does not meet in plan: the load path goes through air (a pillar pushed out of a doorway, beside the beam
- * it is said to carry). A pillar carries only what stands on its head.
+ * A part declared to rest on another it does not meet in plan: the load path goes through air (a pillar pushed out of a doorway beside the beam it is said
+ * to carry, a rafter over a terrace said to rest on the plate of a wall metres away). Only what touches carries.
  */
 function contactViolations(part: StructurePart, supports: readonly Support[], byId: ReadonlyMap<string, StructurePart>): StructuralViolation[] {
   const out: StructuralViolation[] = []
   for (const support of supports.filter((s) => s.part === part.id && s.bears !== false && s.on !== GROUND)) {
     const under = byId.get(support.on)
-    if (!under || under.role !== 'column') continue
+    if (!under) continue
     const gapU = Math.max(0, under.aabb[0] - part.aabb[2], part.aabb[0] - under.aabb[2])
     const gapV = Math.max(0, under.aabb[1] - part.aabb[3], part.aabb[1] - under.aabb[3])
     if (Math.hypot(gapU, gapV) > PLAN_CONTACT)
@@ -149,6 +149,8 @@ export function sectionDepthAt(beam: StructurePart, at: readonly number[], parts
     for (const under of parts) {
       if (under === beam || under.role !== 'beam' || under.material !== beam.material || Math.abs(under.y1 - bottom) > 0.01) continue
       if (under.aabb[0] >= at[2]! || under.aabb[2] <= at[0]! || under.aabb[1] >= at[3]! || under.aabb[3] <= at[1]!) continue
+      // (cast under the beam itself: one under the other part far from the beam is no part of its section)
+      if (under.aabb[0] >= beam.aabb[2] || under.aabb[2] <= beam.aabb[0] || under.aabb[1] >= beam.aabb[3] || under.aabb[3] <= beam.aabb[1]) continue
       bottom = under.y0
       found = true
     }

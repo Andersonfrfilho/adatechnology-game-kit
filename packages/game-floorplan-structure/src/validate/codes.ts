@@ -20,7 +20,7 @@ export const STRUCTURAL_VIOLATION = {
   MISSING_BOND_BEAM: 'MISSING_BOND_BEAM',
   /** A ground-floor masonry wall standing on the soil with no ground beam (viga baldrame) or foundation under it (structural masonry too: a strip footing or a raft). */
   MISSING_GROUND_BEAM: 'MISSING_GROUND_BEAM',
-  /** A part declared to rest on a pillar or post it does not touch in plan (a pillar pushed off the beam it is said to carry). */
+  /** A part declared to rest on another it does not touch in plan (a pillar pushed off the beam it is said to carry, a rafter over a terrace). */
   SUPPORT_WITHOUT_CONTACT: 'SUPPORT_WITHOUT_CONTACT',
   /** A part with no load path down to the ground. */
   FLOATING_PART: 'FLOATING_PART',

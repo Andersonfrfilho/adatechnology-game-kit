@@ -72,7 +72,14 @@ zinc 0.10, timber boards 0.20, canvas 0.006, thatch 0.45, a concrete slab 3.0), 
 of rafters it stands for: a tile roof at 30° is about 0.85 kN/m² in plan (NBR 6120). The reproduction of the Visor de casas 3D (`visorSections`) keeps the
 team's weights (a share of each part's box).
 
-A support declared on a pillar the part does not touch in plan is `SUPPORT_WITHOUT_CONTACT`: a pillar carries only what stands on its head.
+Every support that bears touches what it rests on in plan (`SUPPORT_WITHOUT_CONTACT`, swept over every template): only what touches carries. A roof member
+bears on what it touches (2 cm); where the roof runs past the walls (over a terrace, a balcony, a wide doorway the bond beam does not cross) and a rafter or
+truss reaches nothing, `addEaveSupports` makes the missing support: an eave beam along the eave line, on pillars of its own (from 0.65 m past the end of a
+wall's plate it abuts, so never on the end of a shallower beam; only over a doorway, where no pillar can stand, does it bear on the plate), more pillars so
+that no span passes 4 m where something can carry one, each on the bond beam, wall or pillar of the storey below (or of a lower one, running past the
+balcony slabs between, as the column of stacked balconies does) or on the foundation; a pillar never stands in a doorway nor runs through a wall, a beam or
+a lintel. Concrete with NBR 6118 sections (h ≥ L/10 over its longest span, at least 25 cm; pillars of the walls' section), timber posts and beam in a timber
+house. The house renderer draws them in the facade's finish (or timber). The reproduction of the Visor de casas 3D keeps its team's supports.
 
 ## Structural masonry (NBR 16868)
 

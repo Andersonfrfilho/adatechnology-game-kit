@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { register as registerRural } from '../../game-floorplan-rural/src'
 import { STRUCTURAL_VIOLATION, validateStructure } from '../src'
-import type { StructuredResult } from '../src'
+import type { StructuredResult, StructurePart } from '../src'
 import { engine } from './support'
 
 registerRural(engine)
@@ -41,5 +41,74 @@ describe('a pillar carries only what stands on its head', () => {
     const ties = result.structure.supports.filter((s) => s.part.startsWith('canvas_') && s.on.startsWith('peg_'))
     expect(ties.length).toBeGreaterThan(0)
     for (const tie of ties) expect(tie.bears).toBe(false)
+  })
+})
+
+describe('a roof that runs past the walls rests on an eave beam on pillars, made where it is missing', () => {
+  const eaveOf = (result: StructuredResult) => result.structure.parts.filter((p) => p.id.startsWith('eave_beam_'))
+  const spansOf = (beam: StructurePart, result: StructuredResult): number[] => {
+    const alongU = beam.aabb[2] - beam.aabb[0] >= beam.aabb[3] - beam.aabb[1]
+    const [from, to] = alongU ? [beam.aabb[0], beam.aabb[2]] : [beam.aabb[1], beam.aabb[3]]
+    const byId = new Map(result.structure.parts.map((p) => [p.id, p]))
+    const stations = result.structure.supports.filter((s) => s.part === beam.id).map((s) => byId.get(s.on)!).map((p) => (alongU ? (p.aabb[0] + p.aabb[2]) / 2 : (p.aabb[1] + p.aabb[3]) / 2))
+    const all = [from, ...stations.map((x) => Math.min(to, Math.max(from, x))), to].sort((a, b) => a - b)
+    return all.slice(1).map((x, k) => x - all[k]!)
+  }
+
+  it('mansion: the rafters over the terrace rest on a beam along the front eave, from the end of the front plate, on pillars of its own on the front wall below', () => {
+    const result = generate('mansion', 1)
+    const { parts, supports } = result.structure
+    const rafter = parts.find((p) => p.id === 'rafter_a_7')!
+    // over the terrace at u 8.2, 2.09 m past the end of plate_2_0 (u 6.11): it rests on the eave beam alone, which it crosses
+    const under = supports.filter((s) => s.part === rafter.id).map((s) => s.on)
+    expect(under).toEqual(['eave_beam_2_0'])
+    const [beam] = eaveOf(result)
+    expect(beam!.aabb[0]).toBeCloseTo(6.11, 2)
+    // it abuts the plate and bears on a pillar of its own 0.65 m past the plate's end (past the reach of the wall's own pillars), never on the plate's end
+    expect(supports.some((s) => s.part === beam!.id && s.on === 'plate_2_0')).toBe(false)
+    // NBR 6118: h ≥ L/10 over its longest span between supports (3.3 m: 0.33 m), at least 0.25 m
+    expect(beam!.y1 - beam!.y0).toBeGreaterThanOrEqual(Math.max(0.25, Math.max(...spansOf(beam!, result)) / 10) - 0.01)
+    const posts = parts.filter((p) => p.id.startsWith(`${beam!.id}_post_`))
+    expect(posts.length).toBe(5)
+    for (const post of posts) {
+      const sides = [post.aabb[2] - post.aabb[0], post.aabb[3] - post.aabb[1]]
+      expect(Math.min(...sides) * Math.max(...sides)).toBeGreaterThanOrEqual(0.036 - 1e-9)
+      expect(supports.filter((s) => s.part === post.id).map((s) => s.on)).toEqual(['plate_1_0'])
+      expect(post.y1).toBeCloseTo(beam!.y0, 6)
+    }
+  })
+
+  it('gas_station: the beam over the garage door spans it from plate to plate, h = L/10', () => {
+    const result = generate('gas_station', 1)
+    const [beam] = eaveOf(result)
+    expect(result.structure.supports.filter((s) => s.part === beam!.id).map((s) => s.on).sort()).toEqual(['plate_0_0', 'plate_0_1'])
+    // 17.41 to 20.59: 3.18 m, 0.32 m deep
+    expect(beam!.y1 - beam!.y0).toBeCloseTo(0.32, 2)
+  })
+
+  it('wood_frame_house: a timber beam on timber posts of its own frame, standing on the foundation raft', () => {
+    const result = generate('wood_frame_house', 1)
+    const [beam] = eaveOf(result)
+    expect(beam!.material).toBe('wood_soft')
+    const posts = result.structure.parts.filter((p) => p.id.startsWith(`${beam!.id}_post_`))
+    expect(posts.length).toBeGreaterThan(0)
+    for (const post of posts) {
+      expect(post.material).toBe('wood_soft')
+      expect(result.structure.supports.filter((s) => s.part === post.id).map((s) => s.on)).toEqual(['foundation_raft'])
+    }
+  })
+
+  it('the five typologies whose roofs ran past their walls stand as their construction tests ask, seeds 1-3', () => {
+    for (const template of ['mansion', 'high_end_contemporary', 'metalworks', 'gas_station', 'wood_frame_house']) {
+      for (const seed of [1, 2, 3]) {
+        const result = generate(template, seed)
+        expect(validateStructure(result.structure, { doors: result.doors }), `${template}#${seed}`).toEqual([])
+      }
+    }
+  })
+
+  it('the reproduction of the Visor de casas 3D has none (its golden)', () => {
+    const visor = engine.generate('mansion', { seed: 1, state: 'normal', wallDetail: 'coarse', wallPillars: false, groundBeams: false, visorSections: true }) as StructuredResult
+    expect(eaveOf(visor)).toEqual([])
   })
 })

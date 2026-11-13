@@ -90,6 +90,19 @@ export function installHouseWalls(K: Kernel, shared: Shared): void {
       cursor.group = 'f' + e.f; bx(look.mat, e.pu - e.th / 2, e.y0, e.pv - e.th / 2, e.pu + e.th / 2, e.y0 + e.hh, e.pv + e.th / 2, look.color);
     }
     if (shared.ctx.showPillars) wallPillars(looks);
+    eaveFrames();
+  }
+  // where the roof runs past the walls (a terrace, a balcony, a wide doorway) the structure laid an eave beam on pillars of its own: plastered concrete in the
+  // facade's finish, or timber, drawn as pieces of their own so the destruction breaks them as it does the walls' pillars
+  function eaveFrames(): void {
+    const facade = sideOf('outside', true);
+    for (const e of Object.values<StructurePart>(shared.ctx.structureIndex)) {
+      if (!e.id.startsWith('eave_beam_')) continue;
+      const timber = e.material === 'wood_soft' || e.material === 'wood_hard';
+      cursor.group = 'f' + e.floor; cursor.pc = structurePiece(e.id);
+      bx(timber ? 'wood' : facade.mat, e.aabb[0], e.y0, e.aabb[1], e.aabb[2], e.y1, e.aabb[3], timber ? 0x8a6a48 : sh(facade.color, 0.95));
+    }
+    cursor.pc = null;
   }
   // the pillars of confined masonry that stand in the walls: along them, at the corners and at the jambs of the wide doors
   const PILLAR_IN_WALL = /^(wall_column_|column_\d|jamb_column_)/;

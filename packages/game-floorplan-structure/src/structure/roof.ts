@@ -5,6 +5,7 @@ import { ROOF_COVERINGS } from '../registry'
 import type { Rect, RoofPane, StructurePart } from '../types'
 import type { BuildContext } from './context'
 import { OPEN_ROOM_TYPES } from './context'
+import { addEaveSupports } from './eave-supports'
 import { coveringMass, rafterMass, roofMassOption, slopedArea, trussMass } from './roof-weight'
 
 const TRUSS_PITCH = 1.2
@@ -64,17 +65,24 @@ function addTrusses(context: BuildContext, unit: RoofUnit, carriers: StructurePa
   const { axis, length, eave, rise, eaveY } = geometry
   const count = Math.max(2, Math.ceil(length / TRUSS_PITCH) + 1)
   const trusses: StructurePart[] = []
+  const bare: StructurePart[] = []
   for (let k = 0; k < count; k++) {
     const at = (axis === 'u' ? box[0] : box[1]) + (k * length) / (count - 1)
     const aabb: Rect = axis === 'u' ? [at - 0.04, box[1] - eave * 0.5, at + 0.04, box[3] + eave * 0.5] : [box[0] - eave * 0.5, at - 0.04, box[2] + eave * 0.5, at + 0.04]
     const span = axis === 'u' ? aabb[3] - aabb[1] : aabb[2] - aabb[0]
     const truss = builder.add({ id: `truss${unit.suffix}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, ...roofMassOption(context.visorSections, trussMass(construction.frame.timber, span, rise), 0.25) })
     const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, context.visorSections ? 0.2 : BEARING_CONTACT) && carrier.role !== 'slab')
-    // with none in reach, the nearest plates or walls (a pillar carries only what stands on its head)
-    const chosen = touching.length ? touching : carriers.filter((c) => context.visorSections || c.role !== 'column').sort((a, b) => distanceBetween(aabb, a.aabb) - distanceBetween(aabb, b.aabb)).slice(0, 2)
-    for (const carrier of chosen) builder.rest(truss, carrier, system.joints.truss)
     trusses.push(truss)
+    if (!touching.length && !context.visorSections) {
+      bare.push(truss)
+      continue
+    }
+    // (the Visor de casas 3D laid a truss with nothing under it on the two nearest carriers: its golden)
+    const chosen = touching.length ? touching : carriers.slice().sort((a, b) => distanceBetween(aabb, a.aabb) - distanceBetween(aabb, b.aabb)).slice(0, 2)
+    for (const carrier of chosen) builder.rest(truss, carrier, system.joints.truss)
   }
+  // a truss with nothing in reach: an eave beam on each side carries it, where the walls stop
+  if (bare.length) for (const line of eaveLines(unit, axis)) addEaveSupports(context, { members: bare, axis, line, floor: unit.floor, eaveY, carriers, joint: system.joints.truss })
   return trusses
 }
 
@@ -99,6 +107,9 @@ function geometryOf(context: BuildContext, unit: RoofUnit): GableGeometry {
   return { axis, length: axis === 'u' ? width : depth, eave: roof.eave ?? DEFAULT_EAVE, rise: round2((span / 2) * Math.tan((pitch * Math.PI) / 180)), eaveY }
 }
 
+/** The two eave lines of a gable unit (side a, side b): the edges of its box across the ridge, where its walls stand. */
+const eaveLines = (unit: RoofUnit, axis: 'u' | 'v'): [number, number] => (axis === 'u' ? [unit.box[1], unit.box[3]] : [unit.box[0], unit.box[2]])
+
 interface Frames {
   all: StructurePart[]
   sideA: StructurePart[]
@@ -113,6 +124,7 @@ function addRafters(context: BuildContext, unit: RoofUnit, carriers: StructurePa
   const count = Math.max(2, Math.ceil(length / TRUSS_PITCH) + 1)
   const middle = axis === 'u' ? (box[1] + box[3]) / 2 : (box[0] + box[2]) / 2
   const frames: Frames = { all: [], sideA: [], sideB: [] }
+  const bare: [StructurePart[], StructurePart[]] = [[], []]
   for (let k = 0; k < count; k++) {
     const at = (axis === 'u' ? box[0] : box[1]) + (k * length) / (count - 1)
     const halves: [string, Rect][] =
@@ -124,13 +136,17 @@ function addRafters(context: BuildContext, unit: RoofUnit, carriers: StructurePa
       const rafter = builder.add({ id: `rafter${unit.suffix}_${side}_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: eaveY, y1: eaveY + rise }, { floor: unit.floor, ...roofMassOption(context.visorSections, rafterMass(construction.frame.timber, run, rise), 0.25) })
       // a pillar carries the rafter only where the rafter crosses it (one beside it, off its head, carries nothing)
       const touching = carriers.filter((carrier) => touches(aabb, carrier.aabb, carrier.role === 'column' ? 0 : BEARING_CONTACT) && carrier.role !== 'slab')
-      const chosen = touching.length ? touching : carriers.filter((c) => c.role !== 'column').sort((x, y) => distanceBetween(aabb, x.aabb) - distanceBetween(aabb, y.aabb)).slice(0, 2)
-      for (const carrier of chosen) builder.rest(rafter, carrier, system.joints.truss)
+      // nothing in reach (the roof runs on past the walls): an eave beam on posts carries it, laid below
+      if (!touching.length) bare[side === 'a' ? 0 : 1].push(rafter)
+      for (const carrier of touching) builder.rest(rafter, carrier, system.joints.truss)
       frames.all.push(rafter)
       if (side === 'a') frames.sideA.push(rafter)
       else frames.sideB.push(rafter)
     }
   }
+  eaveLines(unit, axis).forEach((line, side) => {
+    if (bare[side]!.length) addEaveSupports(context, { members: bare[side]!, axis, line, floor: unit.floor, eaveY, carriers, joint: system.joints.truss })
+  })
   if (!unit.annex) {
     const ridgeBox: Rect = axis === 'u' ? [box[0] - eave, middle - 0.05, box[2] + eave, middle + 0.05] : [middle - 0.05, box[1] - eave, middle + 0.05, box[3] + eave]
     const ridge = builder.add({ id: `ridge${unit.suffix}`, role: 'beam', material: construction.frame.timber, aabb: ridgeBox, y0: eaveY + rise - 0.12, y1: eaveY + rise }, { floor: unit.floor })
@@ -224,8 +240,11 @@ function addCeilingJoists(context: BuildContext): void {
     const at = (alongU ? box[0] : box[1]) + 0.05 + (k * (span - 0.1)) / (count - 1)
     const aabb: Rect = alongU ? [at - 0.025, box[1], at + 0.025, box[3]] : [box[0], at - 0.025, box[2], at + 0.025]
     const joist = builder.add({ id: `ceiling_joist_${k}`, role: 'beam', material: construction.frame.timber, aabb, y0: y0 - 0.02, y1: y0 + context.system.plateThickness - 0.02 }, { floor: bearing, spacing: 0.6 })
-    const beams = carriers.filter((carrier) => carrier.role === 'beam' && touches(aabb, carrier.aabb, 0.2))
-    for (const carrier of beams.length ? beams : carriers.slice(0, 2)) builder.rest(joist, carrier, 'nail')
+    const reach = context.visorSections ? 0.2 : BEARING_CONTACT
+    const beams = carriers.filter((carrier) => carrier.role === 'beam' && touches(aabb, carrier.aabb, reach))
+    const walls = carriers.filter((carrier) => carrier.role !== 'beam' && touches(aabb, carrier.aabb, reach))
+    // (the Visor de casas 3D laid a joist with nothing under it on the first two carriers: its golden)
+    for (const carrier of beams.length ? beams : walls.length || !context.visorSections ? walls : carriers.slice(0, 2)) builder.rest(joist, carrier, 'nail')
     joists.push(joist)
   }
   context.ceilingJoists = joists

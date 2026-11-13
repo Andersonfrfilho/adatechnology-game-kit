@@ -608,7 +608,27 @@ export function applySlabPanels(input: PartsAndSupports, structure: PlanStructur
     const depth = depthToCarry(beam, context, options.beamStep)
     if (depth > beam.y1 - beam.y0 + EPS) deepen(beam, depth)
   }
+  holdHungBeams(context)
   return { parts: context.parts, supports: context.supports }
+}
+
+/**
+ * After the last deepening, a slab beam that rests on another slab beam hangs from it (NBR 6118 18.3.7): the one under is made deep enough to hold it, down
+ * the chain until none grows (a beam deepened by its span last can outgrow the one it frames into).
+ */
+function holdHungBeams(context: Context): void {
+  const isSlabBeam = (p: StructurePart | undefined): p is StructurePart => p !== undefined && p.role === 'beam' && p.slab !== undefined && /_b\d+$/.test(p.id)
+  const byId = new Map(context.parts.map((p) => [p.id, p]))
+  const hung = context.supports.map((s) => ({ beam: byId.get(s.part), host: byId.get(s.on) })).filter((x): x is { beam: StructurePart; host: StructurePart } => isSlabBeam(x.beam) && isSlabBeam(x.host))
+  for (let changed = true, guard = 0; changed && guard < hung.length + 1; guard++) {
+    changed = false
+    for (const { beam, host } of hung) {
+      const section = sectionDepthAt(host, beam.aabb, context.parts)
+      if (section >= depthToHold(host, beam) - EPS || section > host.y1 - host.y0 + EPS) continue
+      deepen(host, depthToHold(host, beam))
+      changed = true
+    }
+  }
 }
 
 /**
