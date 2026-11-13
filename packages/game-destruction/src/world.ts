@@ -4105,7 +4105,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
+      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
     }
     return out
   }
@@ -4234,7 +4234,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           den += f
         }
         const k = den > 0 ? num / den : 1
-        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, fireball: blastFireball, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule * k, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
         results.set(im, res)
         report(im).shelter = k
       }
@@ -4434,6 +4434,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         targets.push({ centre, radius: p.bound, distance, expected })
         total += expected
       }
+    }
+    // a registered body (a vehicle) is a target too, as one sphere round all its parts (its parts overlap: a sphere per part would count the pieces that fly at a door
+    // once for the door, once for its window and once for the fender); its pieces are rounds to it as a gun's are (`shootRay` takes them through its `surfaceRay`)
+    for (const im of impls.values()) {
+      if (charge.ignore?.includes(im.impl.id)) continue
+      const parts = implParts(im)
+      if (parts.length === 0) continue
+      const lo: Vec3 = [Infinity, Infinity, Infinity]
+      const hi: Vec3 = [-Infinity, -Infinity, -Infinity]
+      for (const { ps, c } of parts) {
+        const r = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
+        for (let k = 0; k < 3; k++) {
+          lo[k] = Math.min(lo[k], c[k] - r)
+          hi[k] = Math.max(hi[k], c[k] + r)
+        }
+      }
+      const centre: Vec3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2]
+      const bound = vec.distance(lo, hi) / 2
+      const distance = vec.distance(centre, point)
+      if (distance - bound >= farthest) continue
+      const half = Math.asin(Math.min(1, bound / Math.max(distance, 1e-6)))
+      const expected = (casing.fragments * (1 - Math.cos(half))) / 2
+      targets.push({ centre, radius: bound, distance, expected })
+      total += expected
     }
     const cap = Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS))
     const keep = total > cap ? cap / total : 1

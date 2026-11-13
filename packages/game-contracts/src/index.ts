@@ -63,6 +63,8 @@ export type {
 export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
 export { chargeFireball, fireballDose, fuelFireball, ignitionDose } from './fireball'
+export { reflectedLoad, waveWork } from './blast-wave'
+export type { WaveLoad, WaveWork, WaveWorkInput } from './blast-wave'
 export type { Fireball } from './fireball'
 export { bodyMass, FRAGMENT_COVER, KNOCK_CHEST, KNOCK_DOWN_SPEED, KNOCKED_DOWN_ANGLE, knockOf, launchBody, stepKnock, takeLaunch } from './blast-knock'
 export { blastBodySpeed, bodyImpulse, DEFAULT_BLAST_IMPULSE, sideOnImpulse, sideOnOverpressure } from './blast-impulse'

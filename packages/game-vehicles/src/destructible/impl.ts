@@ -24,7 +24,7 @@ import type {
 import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
 import { ARMOUR_LEVELS, armourLevelOf } from './armour'
 import type { ArmourLevel, ArmourLevelId } from './armour'
-import { chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, ignitionChance, ignitionDose, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
+import { chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, waveWork, ignitionChance, ignitionDose, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import type { KitShared, SceneNode } from '../types'
 import { clamp, rng, strHash } from '../util'
@@ -189,6 +189,10 @@ const ROLE_RESIST: Partial<Record<PartRole, number>> = {
 /** Scale of blunt damage by material. */
 const BLUNT: Record<string, number> = { steel: 0.8, aluminium: 1, glass: 1.5, plastic: 1.2, rubber: 0.3 }
 /** Parts inside the body take a fraction of an outside blow. */
+/** Share of the wave that reaches what the body covers (the engine under the hood, the tank under the floor). */
+const SHIELDED_REACH = 0.25
+/** kg/m3 of the materials of a vehicle part. */
+const DENSITY: Record<string, number> = { steel: 7850, aluminium: 2700, glass: 2500, plastic: 1100, rubber: 1100, wood_hard: 750, fabric: 400 }
 const SHIELDED: ReadonlySet<PartRole> = new Set<PartRole>(['engine', 'gearbox', 'frame', 'radiator', 'fuel_tank', 'oil_pan', 'battery', 'alternator', 'brakes', 'steering', 'shocks'])
 const AMBIENT = 20
 const FLAME = 700
@@ -598,16 +602,38 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       if (l?.pud && l.fluid === 'fuel') I.igniteFuel(c, l.pud)
     }
   }
-  const burningBlast = (centreLocal: Vector3, radius: number, energy: number, source: string | undefined, out: DestructionEvent[]): void => {
+  /**
+   * The blast wave on each part (`waveWork` of game-contracts, as the destruction world loads its own parts): the reflected load of `tnt` kg of TNT at the part's
+   * distance over the area its box shows the charge, into the part's mass and its equivalent thickness, cut by `SHIELDED_REACH` for what the body covers. The work in
+   * joules is the damage (a part's `hp` is the joules that wreck it). An M67 3 m from a sedan puts some 10^2 J into a door and a few joules into the engine; 5 kg of
+   * TNT 2 m away tens of kilojoules.
+   */
+  const burningBlast = (centreLocal: Vector3, radius: number, energy: number, source: string | undefined, out: DestructionEvent[], tnt = energy * DEFAULT_BLAST_IMPULSE.tntPerJoule): number => {
+    let tank = 0
     for (const d of model.parts) {
       const p = ps.get(d.id)!
       if (p.lost) continue
       const dist = distToBox(d, centreLocal)
       if (dist > radius) continue
-      const base = energy / (1 + dist * dist * 4)
-      const shield = SHIELDED.has(d.role) ? 0.25 : 1
-      damage(p, base * (BLUNT[d.material] ?? 1) * shield * 0.04, 'explosive', source, out)
+      const work = waveOn(d, centreLocal, dist, tnt)
+      if (d.role === 'fuel_tank') tank = work
+      damage(p, work * (BLUNT[d.material] ?? 1), 'explosive', source, out)
     }
+    return tank
+  }
+  /** Joules the wave of `tnt` kg of TNT at `centreLocal` puts into the part `d`, `dist` metres from it. */
+  const waveOn = (d: PartDef, centreLocal: Vector3, dist: number, tnt: number): number => {
+    const [sx, sy, sz] = d.box.size
+    const toward = new V3(centreLocal.x - d.box.center[0], centreLocal.y - d.box.center[1], centreLocal.z - d.box.center[2])
+    const length = toward.length()
+    if (length > 1e-6) toward.multiplyScalar(1 / length)
+    else toward.set(0, 1, 0)
+    const area = Math.abs(toward.x) * sy * sz + Math.abs(toward.y) * sx * sz + Math.abs(toward.z) * sx * sy
+    // a panel is a sheet in the box of its curve: its own thickness is its mass over its largest face (a 15 kg steel hood of 1.5 m2: 1.3 mm)
+    const face = Math.max(sx * sy, sx * sz, sy * sz, 1e-6)
+    const thickness = Math.min(Math.min(sx, sy, sz), d.mass / ((DENSITY[d.material] ?? 1000) * face))
+    const wave = waveWork({ tnt, distance: dist, reach: SHIELDED.has(d.role) ? SHIELDED_REACH : 1, area, mass: Math.max(d.mass, 0.05), thickness })
+    return wave.energy + wave.shock
   }
   const explode = (tank: PState, source: string | undefined, out: DestructionEvent[]): void => {
     if (exploded) return
@@ -862,12 +888,13 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const nearest = Math.min(...model.parts.map((d) => distToBox(d, v)))
     if (nearest > radius) return
     if (vis && E >= 3000) kit.impact(c, v.clone().addScaledVector(dir, -0.1).setY(clamp(v.y, 0.3, 1.2)), dir, clamp(0.4 + E / 60000, 0.4, 1.4), { noStain: true })
-    burningBlast(v, radius, E, h.source, out)
+    const tankWork = burningBlast(v, radius, E, h.source, out, h.tnt)
     const tank = [...ps.values()].find((q) => q.def.role === 'fuel_tank' && !q.lost)
     if (tank && !exploded) {
       const dist = distToBox(tank.def, v)
       if (dist <= radius) {
-        const verdict = kit.blastDamage(c, E / (1 + dist * dist * 4) / 50)
+        // the tank sums the joules the wave put into it: 200 J split its seams and light the fuel, 400 J burst it (`blastDamage`)
+        const verdict = kit.blastDamage(c, tankWork)
         if (verdict === 'explosion') explode(tank, h.source, out)
         else if (verdict === 'fire') {
           light(tank, out)
