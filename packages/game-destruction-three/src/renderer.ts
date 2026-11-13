@@ -1869,6 +1869,8 @@ class Renderer implements DestructionRenderer {
     const piece = this.pieceSys.create(newId, group, half, center, this.massOf(newId), vel, ang)
     nb.piece = piece
     this.fitSurface(nb, piece)
+    // what lands on it meets its parts as drawn (a board come off with its books), not the box around them all: nothing invisible collides
+    this.fitPartBoxes(nb, piece)
     if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
   }

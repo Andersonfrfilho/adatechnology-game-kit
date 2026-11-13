@@ -2,8 +2,8 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { PieceBody, PieceFriction } from './internal'
 import { clamp } from './math'
-import { shapeContact } from './piece-contacts'
-import type { ContactShape } from './piece-contacts'
+import { boxesAlongGround, shapeContact } from './piece-contacts'
+import type { ContactShape, ShapeContact } from './piece-contacts'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -124,8 +124,19 @@ const MIN_ROUND_RADIUS = 0.005
 const BOUNCE_MIN_SPEED = 0.1
 /** A contact normal at least this level (its share along the ground) puts two pieces apart along the ground only. */
 const KNOCK_FLAT = 0.5
-/** Fastest (m/s) two overlapping boxes are put apart (`separatePair`): a deep overlap opens over a few frames instead of in a jump. */
+/** Fastest (m/s) a piece is put apart from the boxes it overlaps (`separatePair`, all its pairs of a step together): a deep overlap opens over a few frames instead of in a jump. */
 const SEPARATE_SPEED = 1.5
+/**
+ * Deepest (m) one box may be in the top of another and still be lifted out of it: as far as a resting corner sits in its support (`STEP`), more what the closing speed sinks it
+ * in a step. Deeper, the two were made inside each other (chunks of one wall), not landed one on the other: lifting the upper out would give it m g d nothing supplied (a 3 m
+ * chunk climbing 5 m through the pile), so they slide apart along the ground instead.
+ */
+const LIFT_DEPTH = STEP
+/**
+ * Share of an overlap one step takes back (`separatePair`). Wedged between two it cannot push (asleep on either side), the full overlap each way swings a piece back and forth
+ * for ever; half settles it where the pushes balance, and a single overlap still closes to a millimetre within ten steps.
+ */
+const SEPARATE_SHARE = 0.5
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
 /** Which pieces a step moves and which pairs it meets (`PieceSystem.update` splits only what closes in on a round piece). */
@@ -223,6 +234,8 @@ export class PieceSystem {
   private readonly solidOf = new Map<PieceBody, Solid>()
   /** Each piece's surfaces of the step (its parts' boxes, or its box), by its body. */
   private readonly surfacesOf = new Map<PieceBody, Solid[]>()
+  /** How far each piece is put apart from the boxes it overlaps this step (`separatePair`), summed over its pairs and applied once, bounded, at the end of `collide`. */
+  private readonly pushes = new Map<PieceBody, Vec3>()
   private supportTurn = 0
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
@@ -717,6 +730,8 @@ export class PieceSystem {
     let landing = 0
     let landPoint: Vec3 = [pos[0], pos[1], pos[2]]
     let contactedLast = false
+    const propped = b.propped
+    b.propped = undefined
     let touched = false
     let unstable = false
 
@@ -757,6 +772,11 @@ export class PieceSystem {
         prev[i][2] = pos[2] + e0[2] * sx + e0[6] * sy + e0[10] * sz
       }
       v[1] -= this.o.gravity * h
+      // what holds it up through their overlap pushes back what gravity drives into it, as a corner's support does
+      if (propped) {
+        const into = v[0] * propped[0] + v[1] * propped[1] + v[2] * propped[2]
+        if (into < 0) for (let k = 0; k < 3; k++) v[k] -= into * propped[k]
+      }
       pos[0] += v[0] * h
       pos[1] += v[1] * h
       pos[2] += v[2] * h
@@ -1045,7 +1065,9 @@ export class PieceSystem {
     else b.still = 0
     b.balancing = unstable
     this.keepsTilt(b, q, dt)
-    if (b.still >= SLEEP_AFTER || this.staysInPlace(b, touched && !b.tipping, pos, q, dt)) this.sleep(b)
+    // held up through its overlap with what is under it (`propped`) it touches too: it may sleep where it stays, as a piece on its corners does
+    const held = (touched || propped !== undefined) && !b.tipping
+    if (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt)) this.sleep(b)
   }
 
   /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
@@ -1228,15 +1250,37 @@ export class PieceSystem {
         if (Math.abs(ca[1] - cb[1]) > r || Math.abs(ca[2] - cb[2]) > r) continue
         // one lies on the other (a book on a shelf): the corners hold them apart, a sideways push would slide it off
         // (a round piece meets the other by their shapes, which tell lying on from beside: a can by a tall wardrobe whose middle is far above it still hits it)
-        if (!a.round && !b.round && Math.abs(ca[1] - cb[1]) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9) continue
+        const stacked = !a.round && !b.round && Math.abs(ca[1] - cb[1]) >= (this.halfHeight(a) + this.halfHeight(b)) * 0.9
         // or on a tilted top (a table going over): the one above is over the other's top, whatever their boxes' heights
-        if (this.onTopOf(b, a, new this.THREE.Vector3(...cb)) || this.onTopOf(a, b, new this.THREE.Vector3(...ca))) continue
-        if (a.round || b.round) this.knock(a, b, ca, cb)
-        // two boxes, unless one leans on the other's part (a board on a bench's seat): the support holds them, not a push apart
-        // nor when no part of one is in a part of the other (a book lying in the hollow of a case on its back is inside its box, not in its boards)
-        else if (this.partsOverlap(a, b) && !this.restsOn(a, b, false) && !this.restsOn(b, a, false)) this.separatePair(a, b, ca, cb, dt)
+        const onTop = this.onTopOf(b, a, new this.THREE.Vector3(...cb)) || this.onTopOf(a, b, new this.THREE.Vector3(...ca))
+        if (a.round || b.round) {
+          if (!stacked && !onTop) this.knock(a, b, ca, cb)
+          continue
+        }
+        // two boxes when a part of one is in a part of the other (a book lying in the hollow of a case on its back is inside its box, not in its boards); lying on each
+        // other, or one leaning on the other's part (a board on a bench's seat), the support holds them while they only touch: beside each other or deeper, they go apart
+        if (this.partsOverlap(a, b)) this.separatePair(a, b, ca, cb, dt, stacked || onTop || this.restsOn(a, b, false) || this.restsOn(b, a, false))
       }
     }
+    this.applyPushes(dt)
+  }
+
+  /**
+   * Moves each piece by what its pairs put it apart this step (`pushes`), at most `SEPARATE_SPEED` along the ground and as much up: a chunk in five others is not pushed five
+   * times as fast, and nothing is ever moved down (into what holds it). A piece still being put apart is moving, though its speed is nil: it does not fall asleep in the other.
+   */
+  private applyPushes(dt: number): void {
+    const most = SEPARATE_SPEED * dt
+    for (const [body, push] of this.pushes) {
+      const level = Math.hypot(push[0], push[2])
+      const k = level > most ? most / level : 1
+      const up = Math.min(most, Math.max(0, push[1]))
+      body.root.position.x += push[0] * k
+      body.root.position.y += up
+      body.root.position.z += push[2] * k
+      if (Math.max(level * k, up) > SLOP) body.still = 0
+    }
+    this.pushes.clear()
   }
 
   /** The shape a piece meets others by (`ContactShape`), as it stands now: a round one a capsule round its axis, any other the boxes of its parts or its box. */
@@ -1365,36 +1409,65 @@ export class PieceSystem {
   }
 
   /**
-   * Two boxes overlapping: put apart along the axis their parts overlap least on (`shapeContact`, by their separating axes), by that depth less `SLOP`, gently (at most
-   * `SEPARATE_SPEED` m/s), split by their inverse masses; the speed with which they close in along it stops. Side by side (a normal at least `KNOCK_FLAT` level) they go apart
-   * along the ground only, as in `knock`; one over the other, only the upper rises. A held or sleeping piece is not moved.
+   * Two boxes overlapping, put apart by their separating axes (`shapeContact`); a held or sleeping piece is not moved. The move (`SEPARATE_SHARE` of the overlap less `SLOP`) is
+   * summed into `pushes` and bounded per piece in `applyPushes`.
+   * - Side by side (a normal at least `KNOCK_FLAT` level): apart along the ground only, as in `knock`, split by their inverse masses; the speed they close in with stops.
+   * - One over the other as deep as a contact (`LIFT_DEPTH` and what the closing speed sank them this step): left alone when `resting` (stacked, on a top, leaning on a
+   *   part: its support holds it); else only the upper rises, held up by the lower (`propped`), and its point in the lower stops sinking (`contactImpulse`): never a kick up.
+   * - One over the other deeper than that: they were made inside each other (chunks of one wall), or stand on one floor side by side. Lifting the upper out would give it
+   *   m g d nothing supplied (a 3 m chunk climbing 5 m through a pile), so they slide apart along the ground by their least level overlap (`boxesAlongGround`).
    */
-  private separatePair(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number): void {
-    const hit = shapeContact(this.contactShape(a, ca), this.contactShape(b, cb))
+  private separatePair(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number, resting: boolean): void {
+    const sa = this.contactShape(a, ca)
+    const sb = this.contactShape(b, cb)
+    const hit = shapeContact(sa, sb)
     if (!hit) return
-    const n = hit.normal
-    let ima = a.held || a.sleeping ? 0 : 1 / a.mass
-    let imb = b.held || b.sleeping ? 0 : 1 / b.mass
-    const flat = Math.hypot(n[0], n[2])
-    const side = flat > KNOCK_FLAT
-    // one over the other, the lower is held by what it stands on: only the upper rises, and a held or sleeping upper presses nothing down
-    if (!side) {
-      if (n[1] > 0) imb = 0
-      else ima = 0
-    }
+    const ima = a.held || a.sleeping ? 0 : 1 / a.mass
+    const imb = b.held || b.sleeping ? 0 : 1 / b.mass
     if (ima + imb === 0) return
-    const out: Vec3 = side ? [n[0] / flat, 0, n[2] / flat] : n
-    const move = Math.min(SEPARATE_SPEED * dt, Math.max(0, hit.depth - SLOP) / (side ? flat : 1)) / (ima + imb)
+    if (Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT) {
+      this.slideApart(a, b, ima, imb, hit)
+      return
+    }
+    const n = hit.normal
     const va = a.velocity
     const vb = b.velocity
-    const closing = (va[0] - vb[0]) * n[0] + (va[1] - vb[1]) * n[1] + (va[2] - vb[2]) * n[2]
+    const contact = LIFT_DEPTH + Math.max(0, -((va[0] - vb[0]) * n[0] + (va[1] - vb[1]) * n[1] + (va[2] - vb[2]) * n[2])) * dt
+    if (hit.depth > contact) {
+      const level = boxesAlongGround(sa, sb)
+      if (level) this.slideApart(a, b, ima, imb, level)
+      return
+    }
+    if (resting) return
+    const [upper, c, up]: [PieceBody, Vec3, Vec3] = n[1] > 0 ? [a, ca, n] : [b, cb, [-n[0], -n[1], -n[2]]]
+    if (upper.held || upper.sleeping) return
+    upper.propped = up
+    const push = this.pushes.get(upper) ?? [0, 0, 0]
+    const lift = SEPARATE_SHARE * Math.max(0, hit.depth - SLOP)
+    for (let i = 0; i < 3; i++) push[i] += up[i] * lift
+    this.pushes.set(upper, push)
+    const e = this.m.makeRotationFromQuaternion(upper.root.quaternion).elements
+    this.contactImpulse(upper, e, [hit.point[0] - c[0], hit.point[1] - c[1], hit.point[2] - c[2]], up, 0)
+  }
+
+  /** Two boxes put apart along the ground by `hit` (its normal from `b` to `a`, laid level), split by their inverse masses; the speed they close in with along it stops. */
+  private slideApart(a: PieceBody, b: PieceBody, ima: number, imb: number, hit: ShapeContact): void {
+    const n = hit.normal
+    const flat = Math.hypot(n[0], n[2])
+    const out: Vec3 = [n[0] / flat, 0, n[2] / flat]
+    const move = (SEPARATE_SHARE * Math.max(0, hit.depth - SLOP)) / flat / (ima + imb)
+    const va = a.velocity
+    const vb = b.velocity
+    const closing = (va[0] - vb[0]) * out[0] + (va[2] - vb[2]) * out[2]
     const stop = closing < 0 ? -closing / (ima + imb) : 0
     for (const [body, share, sign] of [[a, ima, 1], [b, imb, -1]] as const) {
       if (share === 0) continue
-      body.root.position.x += out[0] * move * share * sign
-      body.root.position.y += out[1] * move * share * sign
-      body.root.position.z += out[2] * move * share * sign
-      for (let i = 0; i < 3; i++) body.velocity[i] += n[i] * stop * share * sign
+      const push = this.pushes.get(body) ?? [0, 0, 0]
+      push[0] += out[0] * move * share * sign
+      push[2] += out[2] * move * share * sign
+      body.velocity[0] += out[0] * stop * share * sign
+      body.velocity[2] += out[2] * stop * share * sign
+      this.pushes.set(body, push)
     }
   }
 
