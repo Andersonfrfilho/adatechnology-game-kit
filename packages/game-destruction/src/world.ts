@@ -3899,8 +3899,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     let Ein = wave.energy + wave.shock
     // the share of the part the wave breaks: its work over the work the part's strength takes to fail (`failureWork`); a material with no strength data takes it at DMG_PER_J
     let share: number | undefined
-    // a part tagged `structure` with the role `none` (a tile, a baseboard) is no member of the frame: it fails as a plate like any other
-    if (mat.failureMPa !== undefined && wave.loaded > 0 && !p.spec.units && !p.spec.reinforcement && !(p.spec.structure && p.spec.structure.role !== 'none') && !p.bend) {
+    // a part tagged `structure` with the role `none` (a tile, a baseboard) is no member of the frame: it fails as a plate like any other; a pane of glass laid
+    // in units (a curtain wall: the units are the size of its shards) is one plate of glass to the wave, not courses of masonry
+    if (mat.failureMPa !== undefined && wave.loaded > 0 && (!p.spec.units || mat.tags?.includes('glass') === true) && !p.spec.reinforcement && !(p.spec.structure && p.spec.structure.role !== 'none') && !p.bend) {
       const sorted = [...p.dims].sort((a, b) => a - b)
       // a free stick at least four times as long as it is wide spans its length; a plate (or anything held along its length) its short side
       const isBeam = !p.anchored && (sorted[2] ?? 0) >= 4 * Math.max(sorted[1] ?? 0, 1e-6)
