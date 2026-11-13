@@ -37,6 +37,8 @@ const STILL_SPIN = 0.45
 const HARD_LANDING = 3
 const SLAM_MIN_SPEED = 2
 const SLAM_BOUNCE = 0.2
+/** Slower than this (m/s) into a wall the engine does not have, a piece does not bounce off it: the engine's own threshold (Jolt's `mMinVelocityForRestitution`). */
+const BOUNCE_SPEED = 1
 const SLAM_FLOOR_NORMAL = 0.7
 const KNOCK_EVERY = 0.15
 /** Sleeping pieces whose ground is looked at again each update, and how far (m) it must have dropped for one to wake. */
@@ -604,9 +606,15 @@ export class EnginePieces {
     const engineHas = this.byObject.has(hit.object) || (this.statics.get(hit.object)?.id ?? null) !== null
     if (!engineHas) {
       const k = Math.min(1, hit.distance / travel)
-      const bounce = Math.sqrt((b.restitution ?? SLAM_BOUNCE) * (hit.restitution ?? SLAM_BOUNCE))
+      // below the engine's restitution threshold the speed into it is only taken away: reflected, a door pressed into a parked car (which the engine does not
+      // have) by its own weight was sent back off it every update and never slept
+      const bounce = into >= BOUNCE_SPEED ? Math.sqrt((b.restitution ?? SLAM_BOUNCE) * (hit.restitution ?? SLAM_BOUNCE)) : 0
+      // up to where it met it, then the rest of the way along it: only the part into it is taken out (set back the whole way, a door sliding down a parked car
+      // was put back up on every update)
+      const rest = [0, 1, 2].map((i) => (pos[i] - start[i]) * (1 - k))
+      const restInto = Math.min(0, rest[0] * n[0] + rest[1] * n[1] + rest[2] * n[2])
       for (let i = 0; i < 3; i++) {
-        pos[i] = start[i] + (pos[i] - start[i]) * k
+        pos[i] = start[i] + (pos[i] - start[i]) * k + rest[i] - restInto * n[i]
         v[i] += (1 + bounce) * into * n[i]
       }
       for (let i = 0; i < 3; i++) b.angularVelocity[i] *= 0.5
