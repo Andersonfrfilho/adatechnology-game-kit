@@ -32,7 +32,9 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
       else if (top === 'razor_wire' || top === 'barbed_wire') { // R63: where the house meets the lot wall the wire crossed the room's wall; cuts the stretch and closes each end with a post
         const frees = freeSpans(alongU, L, a, b), high = top === 'razor_wire' ? 0.46 : 0.4;
         for (const [x0, x1] of frees) {
-          const w2 = x1 - x0, cm = (x0 + x1) / 2;
+          // the wire's own end posts stand clear of the post that closes a cut end (the Visor's stood in it, on one foot plane)
+          const clear = shared.ctx.visorScene || top !== 'razor_wire' ? 0 : 0.06, w0 = x0 + (x0 > a + 0.01 ? clear : 0), w1 = x1 - (x1 < b - 0.01 ? clear : 0);
+          const w2 = w1 - w0, cm = (w0 + w1) / 2;
           const M: Mount = top === 'razor_wire' ? { x: alongU ? cm : L, z: alongU ? L : cm, ry: alongU ? 0 : K.PE, w: w2, d: 0.4, h: 0.4, y: ym, base: 0, floor: -1, colors: C, seed: s.id } : { x: alongU ? cm : L, z: alongU ? L : cm, ry: alongU ? 0 : K.PE, w: w2, d: 0.1, h: 0.3, y: 0, base: ym, floor: -1, colors: C, seed: s.id };
           try { shared.ctx.mv.builders[top](M, api); } catch (e) { console.warn(e); }
           for (const [e, cutOff] of [[x0, x0 > a + 0.01], [x1, x1 < b - 0.01]] as const) if (cutOff) { B('metal', e - 0.025, ym, e + 0.025, ym + high, 0.05, 0x55585c); B('metal', e - 0.04, ym + high, e + 0.04, ym + high + 0.025, 0.08, 0x3a3c40); }

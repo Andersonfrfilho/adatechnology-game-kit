@@ -10,22 +10,24 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
   FURNITURE.laundry_tub = function (M, A) {
     const K = kit2(M, A), w = M.w || 0.6, d = M.d || 0.55, H = M.h || 0.9, structure = STYLE(), upper = structure === 'budget', color = upper ? 0xb4b0a4 : 0xf0efea, int = upper ? 0x9aa4a6 : 0xe2e6e8, rim = sh(color, 1.06);
     const yb = H - 0.36, t = 0.04, rc = 0.055, zw = -d / 2;
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) K.c('plain', sx * (w / 2 - rc), yb, sz * (d / 2 - rc), rc, 0.36, color);
+    const V = shared.ctx.visorScene; // the Visor's tub as the team drew it; outside it the corners' tops sink 2 mm into the rim and the rim's strips stand 2 mm out of the walls' faces
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) K.c('plain', sx * (w / 2 - rc), yb, sz * (d / 2 - rc), rc, V ? 0.36 : 0.358, color);
     K.b('plain', 0, yb, d / 2 - t / 2, w - 2 * rc + 0.01, 0.36, t, color); K.b('plain', 0, yb, -d / 2 + t / 2, w - 2 * rc + 0.01, 0.36, t, color);
     K.b('plain', -w / 2 + t / 2, yb, 0, t, 0.36, d - 2 * rc + 0.01, color); K.b('plain', w / 2 - t / 2, yb, 0, t, 0.36, d - 2 * rc + 0.01, color);
-    K.b('plain', 0, yb, 0, w - 2 * t, 0.06, d - 2 * t, int);
+    K.b('plain', 0, shared.ctx.visorScene ? yb : yb + 0.004, 0, w - 2 * t, shared.ctx.visorScene ? 0.06 : 0.056, d - 2 * t, int); // the basin's floor 4 mm over the foot of its walls
     // rounded top edge (ring of cylinders and strips)
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) K.c('plain', sx * (w / 2 - rc), H - 0.004, sz * (d / 2 - rc), rc + 0.008, 0.012, rim);
-    K.b('plain', 0, H - 0.004, d / 2 - 0.011, w - 2 * rc, 0.012, 0.022, rim); K.b('plain', 0, H - 0.004, -d / 2 + 0.011, w - 2 * rc, 0.012, 0.022, rim);
-    K.b('plain', -w / 2 + 0.011, H - 0.004, 0, 0.022, 0.012, d - 2 * rc, rim); K.b('plain', w / 2 - 0.011, H - 0.004, 0, 0.022, 0.012, d - 2 * rc, rim);
+    const rw = V ? 0.022 : 0.026, rh = V ? 0.012 : 0.01, ro = 0.011;
+    K.b('plain', 0, H - 0.004, d / 2 - ro, w - 2 * rc, rh, rw, rim); K.b('plain', 0, H - 0.004, -d / 2 + ro, w - 2 * rc, rh, rw, rim);
+    K.b('plain', -w / 2 + ro, H - 0.004, 0, rw, rh, d - 2 * rc, rim); K.b('plain', w / 2 - ro, H - 0.004, 0, rw, rh, d - 2 * rc, rim);
     // wavy scrubbing board, tilted on the left side of the basin
     const tw = Math.min(0.2, w * 0.34), tx = -w / 2 + t + tw / 2 + 0.01, zt1 = d / 2 - t - 0.01, zt0 = -d / 2 + t + 0.08, ytop = H - 0.03, ybot = yb + 0.14, L = Math.hypot(zt1 - zt0, ytop - ybot), al = Math.atan2(ytop - ybot, zt1 - zt0);
     K.b('plain', tx, (ytop + ybot) / 2 - 0.015, (zt0 + zt1) / 2, tw, 0.03, L, sh(color, 0.96), 0, -al, 0);
-    const nr = 7; for (let i = 0; i < nr; i++) { const f = (i + 0.5) / nr, zz = zt0 + (zt1 - zt0) * f, yy = ybot + (ytop - ybot) * f; K.b('plain', tx, yy + 0.003, zz, tw - 0.02, 0.014, 0.018, sh(color, 0.88), 0, -al, 0); }
+    const nr = 7; for (let i = 0; i < nr; i++) { const f = (i + 0.5) / nr, zz = zt0 + (zt1 - zt0) * f, yy = ybot + (ytop - ybot) * f; K.b('plain', tx, yy + (V ? 0.003 : 0.0105), zz, tw - 0.02, 0.014, 0.018, sh(color, 0.88), 0, -al, 0); } // (outside the Visor the ribs stand on the board, never in its face)
     // drain and plug with chain
     K.c('metal', 0.1, yb + 0.06, 0, 0.034, 0.008, 0xb0b4b8); K.c('plain', 0.1, yb + 0.068, 0, 0.026, 0.01, 0x3a3e42);
     // feet: two concrete gables (budget) or round legs
-    if (upper) { for (const sx of [-1, 1]) K.b('plain', sx * (w / 2 - 0.035), 0, 0, 0.07, yb, d - 0.05, sh(color, 0.94)); K.b('plain', 0, yb - 0.04, 0, w - 0.1, 0.04, d - 0.06, sh(color, 0.9)); }
+    if (upper) { for (const sx of [-1, 1]) K.b('plain', sx * (w / 2 - 0.035), 0, 0, 0.07, yb, d - 0.05, sh(color, 0.94)); K.b('plain', 0, yb - 0.04, 0, shared.ctx.visorScene ? w - 0.1 : w - 0.14, 0.04, d - 0.06, sh(color, 0.9)); /* the shelf between the gables, never into them */ }
     else for (const sx of [-1, 1]) for (const sz of [-1, 1]) { K.c('metal', sx * (w / 2 - 0.07), 0, sz * (d / 2 - 0.07), 0.022, yb, 0xb4b8bc); K.c('metal', sx * (w / 2 - 0.07), 0, sz * (d / 2 - 0.07), 0.03, 0.012, 0x6a6e72); }
     wallTap(K, 0.0, H + 0.14, zw + 0.0, 1, yb + 0.06, { laundry_tub: true });
   };
@@ -133,7 +135,7 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
     if (M.pole !== false && !(M.y != null && M.y > 0)) { K.b('plain', 0, 0, -d / 2 - 0.1, 0.12, y, 0.12, 0xb8b4aa); }
     K.b('metal', 0, y, 0, w, h * 0.78, d, pc); K.b('metal', 0, y + h * 0.78, 0, w + 0.02, 0.025, d + 0.02, sh(pc, 0.8));
     K.b('metal', 0, y + h * 0.805, 0, w * 0.55, 0.03, d * 0.7, sh(pc, 0.65), 0, 0.5); // sloped roof
-    K.b('plain', 0, y + h * 0.5, d / 2 + 0.002, w * 0.5, 0.012, 0.004, 0x1a1a1a); // slot
+    K.b('plain', 0, y + h * (shared.ctx.visorScene ? 0.5 : 0.72), d / 2 + 0.002, w * 0.5, 0.012, 0.004, 0x1a1a1a); // slot (over the door, never behind it)
     K.part('mailbox_door', 0, y + 0.04, d / 2, () => { K.b('metal', 0, y + 0.04, d / 2 + 0.006, w - 0.06, h * 0.4, 0.012, sh(pc, 1.1)); K.b('metal', 0, y + 0.04 + h * 0.3, d / 2 + 0.018, 0.05, 0.02, 0.012, 0x909498); },
       { id: 'mailbox_' + M.seed, opens: { type: 'swing', axis: [1, 0, 0], angle: 1.5 } });
     K.b('plain', 0.0, y + h * 0.62, d / 2 + 0.004, 0.08, 0.05, 0.004, 0xf2f0ea);

@@ -30,13 +30,13 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         bx('metal', u0, y0, zc - t / 2, u0 + 0.05, y1, zc + t / 2, gc); bx('metal', u1 - 0.05, y0, zc - t / 2, u1, y1, zc + t / 2, gc);
         for (let k = 1; k < n; k++) { const u = u0 + k * (u1 - u0) / n; bx('metal', u - 0.015, y0 + 0.07, zc - 0.015, u + 0.015, y1 - 0.07, zc + 0.015, gc); }
       };
-      const blade = (u0: number, y0: number, u1: number, y1: number, zc: number): void => { bx('metal', u0, y0, zc - t / 2, u1, y1, zc + t / 2, gc); for (let y = y0 + 0.12; y < y1 - 0.05; y += 0.16) bx('metal', u0, y, zc - t / 2 - 0.01, u1, y + 0.03, zc + t / 2 + 0.01, sh(gc, 0.6)); };
+      const blade = (u0: number, y0: number, u1: number, y1: number, zc: number): void => { bx('metal', u0, y0, zc - t / 2, u1, y1, zc + t / 2, gc); const rib = shared.ctx.visorScene ? 0 : 0.005; for (let y = y0 + 0.12; y < y1 - 0.05; y += 0.16) bx('metal', u0 + rib, y, zc - t / 2 - 0.01, u1 - rib, y + 0.03, zc + t / 2 + 0.01, sh(gc, 0.6)); }; // the ribs stop short of the blade's ends
       if (ped) {
         bars(a + 0.05, 0.1, b - 0.05, h - 0.03, v);
         for (const y of [0.3, h - 0.3]) { cylBase('metal', a + 0.035, y - 0.06, v, 0.014, 0.12, sh(gc, 1.3)); bx('metal', a + 0.0, y - 0.03, v - 0.012, a + 0.2 > b - 0.05 ? b - 0.05 : a + 0.04, y + 0.03, v + 0.012, sh(gc, 0.9)); } // hinges (pin on the pillar and flap)
-        bx('plain', b - 0.032, h * 0.5 - 0.06, v - 0.03, b - 0.012, h * 0.5 + 0.06, v + 0.03, 0x2a2a2c); bx('metal', b - 0.06, h * 0.5 - 0.02, v - 0.034, b - 0.05, h * 0.5 + 0.02, v + 0.034, 0xc8c8cc); // lock and latch
+        bx('plain', b - 0.032, h * 0.5 - 0.06, v - 0.03, b - 0.012, h * 0.5 + 0.06, v + 0.03, 0x2a2a2c); bx('metal', b - 0.06, h * 0.5 - 0.02, v - 0.034, shared.ctx.visorScene ? b - 0.05 : b - 0.032, h * 0.5 + 0.02, v + 0.034, 0xc8c8cc); // lock and latch (the latch reaches the lock, never ends on the leaf's stile)
       } else if (tilt) {
-        blade(a + 0.05, 0.05, b - 0.05, h, v); bx('metal', a + 0.05, h - 0.06, v - 0.03, b - 0.05, h, v + 0.03, sh(gc, 0.8));
+        blade(a + 0.05, 0.05, b - 0.05, h, v); bx('metal', a + 0.05 + (shared.ctx.visorScene ? 0 : 0.005), h - 0.06, v - 0.03, b - 0.05 - (shared.ctx.visorScene ? 0 : 0.005), h + (shared.ctx.visorScene ? 0 : 0.005), v + 0.03, sh(gc, 0.8)); // the top rail caps the blade: short of its ends, over its top
         bx('metal', a - 0.03, h - 0.02, v - 0.06, a + 0.05, h + 0.06, v + 0.06, 0x3a3a3e); bx('metal', b - 0.05, h - 0.02, v - 0.06, b + 0.03, h + 0.06, v + 0.06, 0x3a3a3e); // axle bearings
         if (auto) { const mx = g.u; bx('plain', mx - 0.2, h + 0.02, v - 0.05 + sd * 0.1, mx + 0.2, h + 0.3, v + 0.2 + sd * 0.1, 0xdcdcd8); bx('plain', mx - 0.17, h + 0.04, v + sd * 0.3, mx + 0.17, h + 0.12, v + sd * 0.31, 0x2a2a2c); bx('emissive', mx + 0.1, h + 0.2, v + sd * 0.2 + sd * 0.0, mx + 0.13, h + 0.23, v + sd * 0.21 + 0.003 * sd, 0xff5a3a); }
       } else { // sliding (R37): the WHOLE leaf (blade, frames, rack) slides on a track; the tail sits on the side it opens to, the track covers the whole travel

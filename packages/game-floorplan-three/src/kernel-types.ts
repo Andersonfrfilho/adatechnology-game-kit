@@ -198,6 +198,8 @@ export interface Frame {
  * Builders read other flags by name.
  */
 export interface Mount extends Frame {
+  /** Drawn for the Visor de casas 3D's scene (the props of `game-props3d` lay their pieces as the team did). */
+  visorScene?: boolean
   w: number
   d: number
   h: number

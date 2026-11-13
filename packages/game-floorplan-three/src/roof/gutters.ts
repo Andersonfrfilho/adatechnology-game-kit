@@ -134,7 +134,7 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
   // the sand box (caixa de areia) set flush in the sidewalk: its concrete rim, the dark of its pit and the cast grate over it
   function sandBox(x: number, z: number): void {
     const g0 = cursor.group; cursor.group = 'f0';
-    const h = SAND_BOX.side / 2, gh = SAND_BOX.grate / 2, top = 0.046;
+    const h = SAND_BOX.side / 2, gh = SAND_BOX.grate / 2, top = shared.ctx.visorGutters ? 0.046 : 0.048; // the rim 3 mm over the sidewalk's 4.5 cm: never on its plane (the Visor's 1 mm)
     bx('plain', x - h, 0, z - h, x + h, top, z + h, 0xb9b5ac);
     if (shared.ctx.visorGutters) { // the Visor's sand box as the team drew it (its golden)
       bx('plain', x - gh, top - 0.002, z - gh, x + gh, top, z + gh, 0x16171a);
