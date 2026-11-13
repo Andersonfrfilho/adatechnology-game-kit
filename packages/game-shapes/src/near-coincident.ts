@@ -1,7 +1,7 @@
 import { dominantAxis, normalOf, overlapOfTriangles, projectTriangle, unprojectPoint } from './coincident-geometry'
 import type { Triangle, Vec3 } from './coincident-geometry'
-import { boxOf, depthResolution } from './coincident'
-import type { CoincidentBatch, CoincidentFaceHit, CoincidentFacesOptions } from './coincident'
+import { boxOf, depthResolution } from './coincident-types'
+import type { CoincidentBatch, CoincidentFaceHit, CoincidentFacesOptions } from './coincident-types'
 
 interface NearFace {
   readonly triangle: Triangle
