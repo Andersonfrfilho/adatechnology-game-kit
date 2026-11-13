@@ -38,7 +38,7 @@ describe('every plan has its installations', () => {
     const kinds = new Set<string>()
     for (const template of ['single_storey_a', 'townhouse', 'mansion', 'mid_modern_townhouse', 'high_end_contemporary']) {
       for (let seed = 1; seed <= SEEDS; seed++) {
-        const result = plan(template, seed)
+        const result = plan(template, seed, 'normal', seed % 2 ? { gasLayout: 'indoor_beside_stove' } : {})
         const gas = result.utilities.gas
         if (!gas) continue
         for (const stove of result.items.filter((m) => m.category === 'stove' && !m.outdoor)) {

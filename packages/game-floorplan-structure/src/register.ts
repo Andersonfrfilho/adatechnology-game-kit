@@ -117,5 +117,5 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
     return outbuildings
   }, { after: ['contents'] })
   engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), // (the Visor's golden leaves the outbuilding unwired)
-    outbuildings: context.options.visorSections === true ? [] : ((context.result.outbuildings as Outbuilding[] | undefined) ?? []), ...(context.options.visorSections === true ? { visor: true } : {}), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
+    outbuildings: context.options.visorSections === true ? [] : ((context.result.outbuildings as Outbuilding[] | undefined) ?? []), ...(context.options.visorSections === true ? { visor: true } : {}), ...(context.options.gasLayout === 'indoor_beside_stove' ? { gasLayout: 'indoor_beside_stove' as const } : {}), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
 }

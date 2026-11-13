@@ -22,12 +22,6 @@ export interface GasMeter {
 export const GAS_LAYOUT = { OUTDOOR_SHELTER: 'outdoor_shelter', INDOOR_BESIDE_STOVE: 'indoor_beside_stove' } as const
 export type GasLayout = (typeof GAS_LAYOUT)[keyof typeof GAS_LAYOUT]
 
-/** The variants of the cylinder's position and how often each comes up: the ventilated outdoor shelter is the default, the cylinder in the kitchen the variant. */
-export const GAS_LAYOUTS: readonly { readonly id: GasLayout; readonly weight: number }[] = [
-  { id: GAS_LAYOUT.OUTDOOR_SHELTER, weight: 0.75 },
-  { id: GAS_LAYOUT.INDOOR_BESIDE_STOVE, weight: 0.25 },
-]
-
 /** The standard of the external shelter of a cooking gas cylinder. */
 export const SHELTER_STANDARD = 'NBR 13523'
 /** Rigid copper tube of the line from the shelter to the stove's valve, millimetres. */
@@ -80,6 +74,8 @@ interface Context {
   rng: Rng
   /** The Visor de casas 3D's gas as it was: a niche at the wall with a hose, no shelter nor copper line (its golden). */
   visor?: boolean
+  /** The layout asked for: the ventilated outdoor shelter unless the cylinder is explicitly asked to stand in the kitchen. */
+  layout?: GasLayout
 }
 
 function besideStove(context: Context, stove: ResultItem, room: Room, solids: Rect[], doorZones: Rect[]): Spot | undefined {
@@ -207,19 +203,9 @@ function cylinderItem(stove: ResultItem, spot: Spot): ResultItem {
   return item
 }
 
-function pickLayout(rng: Rng): GasLayout {
-  const roll = rng() * GAS_LAYOUTS.reduce((sum, layout) => sum + layout.weight, 0)
-  let acc = 0
-  for (const layout of GAS_LAYOUTS) {
-    acc += layout.weight
-    if (roll < acc) return layout.id
-  }
-  return GAS_LAYOUTS[0]!.id
-}
-
 /**
  * Gas for the stoves of the house. By default the cylinder stands in a ventilated outdoor shelter (NBR 13523) backed on the kitchen wall, with a copper line
- * through the wall to the valve at the stove; the variant is the cylinder in the kitchen beside the stove (`GAS_LAYOUTS`). Under the counter is the last
+ * through the wall to the valve at the stove; the cylinder in the kitchen beside the stove is only an explicit option (`gasLayout`). Under the counter is the last
  * resort, and (high-end houses, or when nothing fits) piped gas with a meter on the facade. The cylinders are added to `items`; the stoves are annotated
  * (`gas`, `cylinder`, `gasMeter`, `gasValve`). The Visor's golden (`visor`) keeps its niche with a hose and its order of draws.
  */
@@ -230,7 +216,7 @@ export function planGas(context: Context): Gas | null {
   const high = plan.style === 'high'
   const piped = plan.style !== 'commercial' && (high ? rng() < 0.8 : plan.style === 'mid' ? rng() < 0.1 : false)
   const out: Gas = { type: piped ? 'piped' : 'cylinder', meter: null }
-  const layout = context.visor || piped ? undefined : pickLayout(rng)
+  const layout = context.visor || piped ? undefined : (context.layout ?? GAS_LAYOUT.OUTDOOR_SHELTER)
   if (layout) out.layout = layout
   const ensureMeter = (): void => {
     if (!out.meter) out.meter = placeMeter(plan)
@@ -248,7 +234,8 @@ export function planGas(context: Context): Gas | null {
       .concat(stateItems.filter((m) => m.aabb && m.room === stove.room && m.floor === stove.floor && !m.flat && !m.on && m.mount !== 'window' && m.mount !== 'ground').map((m) => m.aabb as Rect))
     const doorZones = plan.doors.filter((p) => p.floor === stove.floor).flatMap((p) => p.zones as Rect[])
     const indoorFirst = layout ? layout === GAS_LAYOUT.INDOOR_BESIDE_STOVE : rng() < 0.7
-    const order: Spot['mode'][] = indoorFirst ? ['beside', 'niche', 'under'] : ['niche', 'beside', 'under']
+    // a cylinder asked for outdoors stands in the shelter or, where none fits, the house goes on piped gas: it is never put in the kitchen unasked
+    const order: Spot['mode'][] = indoorFirst ? ['beside', 'niche', 'under'] : layout === GAS_LAYOUT.OUTDOOR_SHELTER ? ['niche'] : ['niche', 'beside', 'under']
     let spot: Spot | undefined
     for (const mode of order) {
       if (spot) break

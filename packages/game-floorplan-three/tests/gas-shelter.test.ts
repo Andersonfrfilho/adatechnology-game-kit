@@ -45,21 +45,31 @@ describe('the outdoor gas shelter (NBR 13523)', () => {
 })
 
 describe('single_storey_a draws the shelter of its cylinder', () => {
-  it('puts a roof over every shelter the plan gives, in the seeds where the shelter comes up', () => {
-    let checked = 0
-    for (const seed of [1, 2, 3, 4, 5, 6]) {
+  const shown = (o: THREE.Object3D): boolean => { for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return false; return true }
+
+  it('puts a roof over the shelter of every seed (the default is the outdoor shelter), with the lot layer on or off', () => {
+    for (const seed of [1, 2, 3]) {
       const plan = planOf('single_storey_a', seed)
-      const cylinder = plan.items.find((item) => item.type === 'cooking_gas_cylinder' && item.placement === 'outdoor_shelter')
-      if (!cylinder) continue
+      const cylinder = plan.items.find((item) => item.type === 'cooking_gas_cylinder')!
+      expect(cylinder.placement, `seed ${seed}`).toBe('outdoor_shelter')
       const { house } = houseOf(plan, {}, { quality: 'game', constructionStages: true, constructionLevel: 8 })
-      house.group.updateMatrixWorld(true)
-      const ray = new THREE.Raycaster(new THREE.Vector3(cylinder.x, 1.2, cylinder.z), new THREE.Vector3(0, -1, 0), 0, 1.2)
-      const shown = (o: THREE.Object3D): boolean => { for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) return false; return true }
-      const hit = ray.intersectObject(house.group, true).find((h) => shown(h.object))
-      expect(hit, `seed ${seed}`).toBeDefined()
-      expect(hit!.point.y, `seed ${seed}: the shelter's roof`).toBeCloseTo(SIZE.height + 0.05, 2)
-      checked++
+      for (const lotLayer of [true, false]) {
+        house.setConstructionLevel!(8, { lotLayer })
+        house.group.updateMatrixWorld(true)
+        const ray = new THREE.Raycaster(new THREE.Vector3(cylinder.x, 1.2, cylinder.z), new THREE.Vector3(0, -1, 0), 0, 1.2)
+        const hit = ray.intersectObject(house.group, true).find((h) => shown(h.object))
+        expect(hit, `seed ${seed} lot ${lotLayer}`).toBeDefined()
+        expect(hit!.point.y, `seed ${seed} lot ${lotLayer}: the shelter's roof`).toBeCloseTo(SIZE.height + 0.05, 2)
+      }
     }
-    expect(checked).toBeGreaterThan(0)
+  })
+
+  it('stands outside the footprint of the house', () => {
+    for (const seed of [1, 2, 3]) {
+      const plan = planOf('single_storey_a', seed)
+      const cylinder = plan.items.find((item) => item.type === 'cooking_gas_cylinder')!
+      const inside = plan.rooms.filter((room) => room.floor === 0).some((room) => room.parts.some((part: number[]) => cylinder.x > part[0]! && cylinder.x < part[2]! && cylinder.z > part[1]! && cylinder.z < part[3]!))
+      expect(inside, `seed ${seed}`).toBe(false)
+    }
   })
 })

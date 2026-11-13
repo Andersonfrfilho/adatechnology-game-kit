@@ -31,7 +31,8 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     for (const m of ordered) {
       if (m.type === 'stairs') continue;
       const exterior = m.outdoor || m.floor < 0, f = exterior ? -1 : Math.min(m.floor, R.floors.length - 1);
-      cursor.group = exterior ? 'lot' : 'f' + f;
+      // a gas shelter is the house's (backed on its wall, drawn with its installations): the lot layer, off by default in the room, never hides it
+      cursor.group = exterior && !(m.type === 'cooking_gas_cylinder' && m.shelter && !shared.ctx.visorScene) ? 'lot' : 'f' + Math.max(f, 0);
       const com = m.room != null ? shared.ctx.roomById[m.room] : undefined, lift = !exterior && f === 0 && shared.ctx.constructionStages && !shared.ctx.visorScene && !com?.outbuilding ? FLOOR_OVER_GROUND : 0, base = exterior ? 0 : Y0(f) + lift; // (on the ground floor's finish, never 1.2 cm into it)
       const M: Mount = { visorScene: shared.ctx.visorScene, x: m.x, z: m.z, ry: m.ry || 0, w: m.w, d: m.d, h: m.h, y: m.y || 0, base, floor: exterior ? -1 : f, palette: shared.ctx.colors, color: m.category === 'ground_cover' ? undefined : (colorOf(m.color) ?? undefined), seed: m.id, room: m.room, typeWith: com ? com.type : null, ceiling: com ? com.ceiling : 2.9, on: shared.ctx.night, light: shared.ctx.night, lit: shared.ctx.night, open: !!m.doorOpen, overhead: m.overhead, assembly: m.assembly, hose: m.hose, shelter: m.shelter, pipe: m.pipe };
       // under a storey above, the room's ceiling is the underside of that floor's slab (a lamp hung at the room's height stood in the slab, its top on the floor's plane)

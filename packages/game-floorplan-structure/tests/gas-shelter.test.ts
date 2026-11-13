@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { GAS_LAYOUT, GAS_LAYOUTS } from '../src/utilities/gas'
+import { GAS_LAYOUT } from '../src/utilities/gas'
 import type { StructuredResult } from '../src'
 import { engine } from './support'
 
@@ -14,30 +14,33 @@ const cylindersOf = (result: StructuredResult) => result.items.filter((item) => 
 const inside = (x: number, z: number, box: Box, margin = 0): boolean => x >= box[0]! - margin && x <= box[2]! + margin && z >= box[1]! - margin && z <= box[3]! + margin
 const overlap = (a: Box, b: Box): boolean => a[0]! < b[2]! - 1e-6 && a[2]! > b[0]! + 1e-6 && a[1]! < b[3]! - 1e-6 && a[3]! > b[1]! + 1e-6
 
-describe('the gas cylinder is a variation of the house: an outdoor shelter by default, in the kitchen beside the stove as the variant', () => {
-  const layouts = new Map<string, number>()
+describe('the gas cylinder stands in an outdoor shelter by default; in the kitchen beside the stove only when asked for', () => {
   const shelters: { result: StructuredResult; cylinder: ReturnType<typeof cylindersOf>[number] }[] = []
-  const indoors: { result: StructuredResult; cylinder: ReturnType<typeof cylindersOf>[number] }[] = []
 
   for (const template of TEMPLATES) {
     for (let seed = 1; seed <= SEEDS; seed++) {
       const result = generate(template, seed)
       const gas = result.utilities.gas
       if (!gas || gas.type !== 'cylinder') continue
-      layouts.set(gas.layout!, (layouts.get(gas.layout!) ?? 0) + 1)
-      for (const cylinder of cylindersOf(result)) (cylinder.placement === 'outdoor_shelter' ? shelters : cylinder.placement === 'beside' ? indoors : []).push({ result, cylinder })
+      for (const cylinder of cylindersOf(result)) if (cylinder.placement === 'outdoor_shelter') shelters.push({ result, cylinder })
     }
   }
 
-  it('is data: the layouts and their weights, the shelter first and the most frequent', () => {
-    expect(GAS_LAYOUTS.map((layout) => layout.id)).toEqual([GAS_LAYOUT.OUTDOOR_SHELTER, GAS_LAYOUT.INDOOR_BESIDE_STOVE])
-    expect(GAS_LAYOUTS[0]!.weight).toBeGreaterThan(GAS_LAYOUTS[1]!.weight)
-  })
-
-  it('the shelter comes up most often and the kitchen variant still comes up', () => {
-    expect(shelters.length).toBeGreaterThan(indoors.length)
-    expect(indoors.length).toBeGreaterThan(0)
-    expect(layouts.get(GAS_LAYOUT.OUTDOOR_SHELTER)!).toBeGreaterThan(layouts.get(GAS_LAYOUT.INDOOR_BESIDE_STOVE) ?? 0)
+  it('the default is the outdoor shelter in every seed of every residential template: never beside the stove', () => {
+    const residential = ['single_storey_a', 'mid_modern_single_storey', 'townhouse', 'apartment_basic', 'apartment_modern']
+    for (const template of residential) {
+      for (const seed of [1, 2, 3]) {
+        const result = generate(template, seed)
+        for (const cylinder of cylindersOf(result)) {
+          const where = `${template}#${seed}`
+          expect(cylinder.placement, where).toBe('outdoor_shelter')
+          expect(cylinder.outdoor, where).toBe(true)
+          expect(cylinder.shelter, where).toBeDefined()
+          const footprint = result.rooms.filter((room) => room.floor === 0).flatMap((room) => room.parts as Box[])
+          expect(footprint.some((part) => inside(cylinder.x, cylinder.z, part)), `${where} outside the building`).toBe(false)
+        }
+      }
+    }
   })
 
   it('the shelter stands outside the house, ventilated high and low (NBR 13523), backed on an exterior wall of the kitchen', () => {
@@ -79,7 +82,14 @@ describe('the gas cylinder is a variation of the house: an outdoor shelter by de
     }
   })
 
-  it('the variant stands in the kitchen beside the stove, with a hose and no shelter or copper line', () => {
+  it('the kitchen variant is an explicit option: beside the stove, with a hose and no shelter or copper line', () => {
+    const indoors: { result: StructuredResult; cylinder: ReturnType<typeof cylindersOf>[number] }[] = []
+    for (let seed = 1; seed <= 20; seed++) {
+      const result = generate('single_storey_a', seed, { gasLayout: GAS_LAYOUT.INDOOR_BESIDE_STOVE })
+      expect(result.utilities.gas?.layout ?? GAS_LAYOUT.INDOOR_BESIDE_STOVE).toBe(GAS_LAYOUT.INDOOR_BESIDE_STOVE)
+      for (const cylinder of cylindersOf(result)) if (cylinder.placement === 'beside') indoors.push({ result, cylinder })
+    }
+    expect(indoors.length).toBeGreaterThan(0)
     for (const { result, cylinder } of indoors) {
       const where = `${result.template}#${result.seed}`
       const stove = result.items.find((item) => item.id === cylinder.link)!

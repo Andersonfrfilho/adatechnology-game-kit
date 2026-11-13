@@ -5,7 +5,7 @@ import { hasContent } from './content'
 import type { EnergyConfig, Electrical } from './electrical'
 import { planElectrical } from './electrical'
 import { planGas } from './gas'
-import type { Gas } from './gas'
+import type { Gas, GasLayout } from './gas'
 import { outbuildingCeilingLight, withOutbuildingRooms } from './outbuildings'
 import { planPlumbing } from './plumbing'
 import type { Rng } from './shared'
@@ -29,6 +29,8 @@ export interface UtilitiesContext {
   energy?: EnergyConfig
   /** The Visor de casas 3D's installations as they were (`visorSections`): its gas, no shelter. */
   visor?: boolean
+  /** Where the cooking cylinder stands: the outdoor shelter (default) or, asked for, the kitchen beside the stove. */
+  gasLayout?: GasLayout
   /** Seeded stream by name: `gas`, `electrical`, `solar`. */
   rngFor(key: string): Rng
 }
@@ -36,7 +38,7 @@ export interface UtilitiesContext {
 /** Gas, electricity, solar panels and plumbing of a house, in the order that lets the later ones see the cylinders the first adds to `items`. */
 export function planUtilities(context: UtilitiesContext): Utilities {
   const { plan, items, stateItems, tank, energy, rngFor } = context
-  const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}) })
+  const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}), ...(context.gasLayout ? { layout: context.gasLayout } : {}) })
   // the outbuildings are wired as rooms of the house, their ceiling lights with them
   const outbuildings = context.outbuildings ?? []
   const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}) })
