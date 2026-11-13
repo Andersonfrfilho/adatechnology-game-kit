@@ -15,7 +15,9 @@ const BLAST_RADIUS = 6
 // wall (Z = 0.24 m/kg^(1/3), 99 MPa and 1.7 kPa s reflected), and the panel in front of it still comes down (wall_0_0 broken, 46 parts broken, the upper walls over it and the rafters fall)
 // Recorded again for the house of round 10 (12 cm precast slabs, the gas cylinder in its outdoor shelter, a chase cut for each wall box): the same blast still
 // brings the panel down (wall_0_0 broken, 46 parts broken, as before); only the spec of the house it hits changed
-const RECORDED_BLAST_OUTCOME = '5ff7ddbd2ee6f1eb9980c607793bceb8b685f6bc'
+// Recorded again when the furniture, flights, frames and floors came to keep out of the walls (no two faces on one plane): the charge still fractures
+// wall_0_0 in front of it; only the parts' boxes the blast meets changed
+const RECORDED_BLAST_OUTCOME = '903e1b9d6c39f7c812a8af303a054c1eede05efe'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
