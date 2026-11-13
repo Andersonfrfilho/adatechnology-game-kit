@@ -169,4 +169,69 @@ describe('shares by contact', () => {
     const pillar = 1 / (1 / 28 + 2 / 2.35), wall = 1 / (3 / 2.35)
     expect(loads[2]).toBeCloseTo((10 * pillar) / (pillar + wall))
   })
+  it('a rigid slab on four pillars under a centred load: a quarter each, whatever the stiffness of the paths under them (statics before stiffness)', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // 1 a tank slab 1.34 x 1.34 m on the pillars 2, 3 (on concrete, 28 GPa) and 4, 5 (on masonry, 2.35 GPa), its centroid in the middle
+    const modulus = [0, 0, 28, 28, 2.35, 2.35]
+    const corners: [number, number][] = [[0, 0], [1.34, 0], [0, 1.34], [1.34, 1.34]]
+    const graph = {
+      size: 6, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, stiffness: (k: number) => modulus[k], upright: (k: number) => k > 1,
+      height: () => 2.6, centre: (): [number, number] => [0.67, 0.67],
+      supportsOf: (k: number) => (k === 1 ? corners.map((at, i) => ({ on: [2, 4, 3, 5][i]!, directed: true, weight: 0.04, at })) : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 1000 : 0))
+    for (const k of [2, 3, 4, 5]) expect(loads[k]).toBeCloseTo(250)
+  })
+
+  it('a rigid slab on three pillars takes its load by statics: the centroid over a third of the way gives the reactions of the lever', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // pillars at (0, 0), (3, 0) and (0, 3); the centroid at (1, 0.5): R2 = 1000 x 0.5 / 3 ... by moments, R3 = 1000 x 1 / 3, R4 = 1000 x 0.5 / 3, R2 the rest
+    const graph = {
+      size: 5, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, upright: (k: number) => k > 1, centre: (): [number, number] => [1, 0.5],
+      supportsOf: (k: number) => (k === 1 ? [{ on: 2, directed: true, at: [0, 0] as [number, number] }, { on: 3, directed: true, at: [3, 0] as [number, number] }, { on: 4, directed: true, at: [0, 3] as [number, number] }] : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 1000 : 0))
+    expect(loads[3]).toBeCloseTo(1000 / 3)
+    expect(loads[4]).toBeCloseTo(1000 / 6)
+    expect(loads[2]).toBeCloseTo(1000 / 2)
+  })
+
+  it('a load outside its carriers lifts the far one: it carries nothing and the others share by statics', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // pillars at (0, 0), (1, 0), (0, 1) and (4, 4), the centroid at (0.2, 0.2): on four equal springs the far one would take -0.03 of the load (pulled
+    // up); it carries nothing and the other three take it by statics, 0.6, 0.2 and 0.2
+    const at: [number, number][] = [[0, 0], [1, 0], [0, 1], [4, 4]]
+    const graph = {
+      size: 6, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, upright: (k: number) => k > 1, centre: (): [number, number] => [0.2, 0.2],
+      supportsOf: (k: number) => (k === 1 ? at.map((p, i) => ({ on: 2 + i, directed: true, at: p })) : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 10 : 0))
+    expect(loads[5]).toBeCloseTo(0)
+    expect(loads[2]).toBeCloseTo(6)
+    expect(loads[3]).toBeCloseTo(2)
+    expect(loads[4]).toBeCloseTo(2)
+  })
+
+  it('a slab panel on four beams is no rigid body: it bends with them and shares by contact and stiffness, as before', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // the four edge beams (lying) of a panel, contact 3 on the long edges and 1 on the short ones, the centroid in the middle: 3 : 1 : 3 : 1
+    const at: [number, number][] = [[2, 0], [4, 1], [2, 2], [0, 1]]
+    const graph = {
+      size: 6, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, upright: () => false, centre: (): [number, number] => [2, 1],
+      supportsOf: (k: number) => (k === 1 ? at.map((p, i) => ({ on: 2 + i, directed: true, weight: i % 2 ? 1 : 3, at: p })) : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 8 : 0))
+    expect([loads[2], loads[3], loads[4], loads[5]].map((x) => Math.round(x! * 100) / 100)).toEqual([3, 1, 3, 1])
+  })
+
+  it('a beam over a row of pillars is no rigid body: it shares by the stiffness of each, as before', async () => {
+    const { distributeLoads, solveSupports } = await import('../src')
+    // three equal pillars on a line at x 0, 1 and 4, the centroid at 0.2: equal thirds (a rigid beam would lift the far one)
+    const graph = {
+      size: 5, sharing: 'all' as const, anchored: (k: number) => k === 0, active: () => true, partition: () => false, upright: (k: number) => k > 1, centre: (): [number, number] => [0.2, 0],
+      supportsOf: (k: number) => (k === 1 ? [0, 1, 4].map((x, i) => ({ on: 2 + i, directed: true, at: [x, 0] as [number, number] })) : k > 1 ? [{ on: 0, directed: true }] : []),
+    }
+    const loads = distributeLoads(solveSupports(graph), (k) => (k === 1 ? 9 : 0))
+    for (const k of [2, 3, 4]) expect(loads[k]).toBeCloseTo(3)
+  })
 })

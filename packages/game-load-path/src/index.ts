@@ -1,4 +1,4 @@
-export { SAME_BEARING, carriesShare, distributeLoads, solveSupports } from './solve'
+export { MAX_RIGID_CARRIERS, SAME_BEARING, carriesShare, distributeLoads, solveSupports } from './solve'
 export { capacitiesByLoad } from './capacity'
 export type { CapacityRule } from './capacity'
 export { SUPPORT_TOLERANCE, contactArea, contactCentre, convexHull, restsOver } from './support-hull'

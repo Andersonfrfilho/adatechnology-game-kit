@@ -20,6 +20,11 @@ const loads = distributeLoads(solution, (part) => massOf(part))
   shortens by its own modulus, a lying one (lintel, beam) by its carriers', as springs in series: a concrete pillar (28 GPa) takes about twelve times what
   as much contact of laid masonry (2.35 GPa, NBR 16868 `E = 800 f_pk`) takes, and a concrete lintel on a masonry pier is as stiff as the masonry. Where a
   carrier's stiffness is unknown (timber, the ground) the contact alone shares. The moduli come from `bearingModulus` of `game-destruction`.
+- Statics first, where the contact points (`SupportEdge.at`) and the part's centroid (`SupportGraph.centre`) are given: a lying part on two supports apart
+  takes the lever rule; on three or four pillars spread over the plane (a tank slab, a cap: `MAX_RIGID_CARRIERS`) it is a rigid part on springs (each carrier's stiffness as above), sinking and tilting until the reactions
+  balance its load and its moment, so a tank slab centred on four pillars puts a quarter on each whatever is under them; a carrier the tilt would lift
+  carries nothing and the others share again. The stiffness alone shares at one bearing (carriers closer than `SAME_BEARING`) along a row of carriers, on beams and on more than four (a beam over many,
+  a slab panel on its edge beams, a whole slab on every wall: they bend, no rigid body).
 - With `nearest` the share is equal among a part's carriers. Either way it is an approximation good for the game and for pre-sizing. It does not weigh where the load stands on a beam,
   nor that the long sides of a rectangular two-way slab take more (Marcus' tables). The structure makes a beam that receives another at least as deep as it
   (NBR 6118 18.3.7); the suspension bars of that indirect support are not modelled (the members carry the generic cage, `MEMBER_CAGE`).
