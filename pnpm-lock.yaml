@@ -1439,6 +1439,9 @@ importers:
       '@adatechnology/game-graphics-three':
         specifier: workspace:^
         version: link:../game-graphics-three
+      '@adatechnology/game-items':
+        specifier: workspace:^
+        version: link:../game-items
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player

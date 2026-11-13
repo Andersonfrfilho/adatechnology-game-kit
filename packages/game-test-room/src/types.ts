@@ -29,6 +29,7 @@ import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
 import type { ToolCondition } from './shovel'
+import type { BagResult, InventorySnapshot } from './inventory-types'
 import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
@@ -298,6 +299,8 @@ export interface TestRoomOptions {
   kick?: { keys?: string[] }
   /** The weapon picker: every weapon of the arsenal by group (firearms, melee, explosives, tools) and category, a click equips it and adds it to the hotbar. `keys` open it (default `['Backquote']`, the key left of 1); `false`: no picker. */
   toolMenu?: false | { keys?: string[] }
+  /** The bag (I opens its list, P puts what is aimed at into it, O stores the hand): a 30 L backpack of 20 slots by default, weight limit `maxCarryKg`. `false`: no bag keys and no list. */
+  inventory?: false | { litres?: number; slots?: number }
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists', 'brass_knuckles']`); the shove and the kick are not. */
@@ -535,6 +538,18 @@ export interface TestRoom {
   equip(weaponId: string): void
   /** Opens or closes the weapon picker (no argument: toggles); answers whether it is open. Always false without the panels (`ui: false`) or with `toolMenu: false`. */
   toggleToolMenu(open?: boolean): boolean
+  /** The bag: slots and the hand with each item's name, weight, volume and damage in words, the totals and the limits. */
+  inventory(): InventorySnapshot
+  /** Opens or closes the bag list (I does the same; no argument: toggles); answers whether it is open. Always false with `inventory: false`. */
+  openInventory(open?: boolean): boolean
+  /** Puts the object aimed at (within reach) into the bag with all its damage; refusals (too_heavy, too_bulky, bag_full...) are said and logged. */
+  pickToBag(): BagResult
+  /** Stores what is in the hand (a tool picked up from the world, or the piece held) in the bag. */
+  storeHeld(): BagResult
+  /** Takes a bag slot into the hand with the same damage (items that are a `weapon` only). */
+  equipSlot(slotId: number): BagResult
+  /** Puts a bag slot back into the world at the feet, damage and all. */
+  dropSlot(slotId: number): BagResult
   /**
    * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.

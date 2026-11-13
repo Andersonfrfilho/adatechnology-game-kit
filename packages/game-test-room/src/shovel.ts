@@ -1,4 +1,4 @@
-import type { Vec3 } from '@adatechnology/game-contracts'
+import type { ToolCondition, Vec3 } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, ObjectState } from '@adatechnology/game-destruction'
 import type { Terrain } from '@adatechnology/game-terrain'
 
@@ -91,11 +91,7 @@ export function shovelful(terrain: Terrain, mode: ShovelMode, point: Vec3, direc
   return { kind: 'dug', volume: result.volume, material: result.material, dump }
 }
 
-/** What damage did to a tool in hand: its handle snapped (no swing, no dig) and how far its blade is bent (radians, `PartState.bend`). */
-export interface ToolCondition {
-  readonly handleBroken: boolean
-  readonly bend: number
-}
+export type { ToolCondition }
 
 /** Smallest share of a full bite a folded blade still takes. */
 export const MIN_BITE_SHARE = 0.25

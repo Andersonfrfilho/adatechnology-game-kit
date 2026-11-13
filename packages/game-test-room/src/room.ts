@@ -64,6 +64,8 @@ import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, Third
 import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
+import { createRoomBag } from './inventory-room'
+import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import type { ToolMenuGroup } from './tool-menu'
@@ -1592,6 +1594,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const clearEverythingNow = (): void => {
     if (heldEntry || heldPiece) releaseHeld()
     carriedTool = null
+    bag.releaseHand()
     useItemPlayer = null
     playing.length = 0
     explosives.clear()
@@ -3135,34 +3138,42 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * A tool of the arsenal picked up from the world (an item with a `weapon`): the object left the world with all its damage, the tool is in hand with the condition that damage
    * gives it, and dropping or throwing it puts the same object back, damage and all.
    */
-  const pickUpTool = (objectId: string, entry: Entry, weaponId: string): void => {
+  const pickUpTool = (objectId: string, entry: Entry, weaponId: string): boolean => {
     const saved = world.serializeObject(objectId)
-    if (!saved || !entry.item) return
+    if (!saved || !entry.item) return false
     if (carriedTool) putDownTool()
+    if (!bag.holdTool(objectId)) return false
     toolConditions.set(weaponId, toolConditionOf(saved.spec, saved.state))
     carriedTool = { weaponId, itemId: entry.item.id, name: entry.name, saved }
     removeEntry(objectId)
     equip(weaponId)
     action('pickup_tool', t('act.pickup_tool', { name: entry.name, weapon: toolName(weaponId) }), { itemId: entry.item.id, data: { weapon: weaponId, ...toolConditions.get(weaponId) } })
+    return true
+  }
+  /** An object that was taken out of the world comes back with all its damage: at the feet, or ahead along the aim when `thrown`. */
+  const respawnSaved = (itemId: string, saved: NonNullable<ReturnType<DestructionWorld['serializeObject']>>, thrown: boolean): string => {
+    aim()
+    const x = thrown ? aimO[0] + aimD[0] * 0.5 : player.x - Math.sin(player.yaw) * 0.7
+    const z = thrown ? aimO[2] + aimD[2] * 0.5 : player.z - Math.cos(player.yaw) * 0.7
+    const y = thrown ? aimO[1] - 0.3 + aimD[1] * 0.5 : groundAt(x, z)
+    const { objectId } = spawn(itemId, [x, y, z], player.yaw)
+    const pose = world.state(objectId)!
+    const position: Vec3 = [pose.position[0], pose.position[1], pose.position[2]]
+    const rotation: Quat = [pose.rotation[0], pose.rotation[1], pose.rotation[2], pose.rotation[3]]
+    world.loadObject(saved, objectId)
+    world.setTransform(objectId, position, rotation)
+    renderer.redraw(objectId)
+    return objectId
   }
   /** The tool picked up goes back into the world as the object it was (dropped at the feet, or thrown along the aim at `speed`), with the damage it had. */
   const putDownTool = (speed = 0): void => {
     const tool = carriedTool
     if (!tool) return
     carriedTool = null
+    bag.releaseHand()
     toolConditions.delete(tool.weaponId)
-    aim()
     const thrown = speed > 0
-    const x = thrown ? aimO[0] + aimD[0] * 0.5 : player.x - Math.sin(player.yaw) * 0.7
-    const z = thrown ? aimO[2] + aimD[2] * 0.5 : player.z - Math.cos(player.yaw) * 0.7
-    const y = thrown ? aimO[1] - 0.3 + aimD[1] * 0.5 : groundAt(x, z)
-    const { objectId } = spawn(tool.itemId, [x, y, z], player.yaw)
-    const pose = world.state(objectId)!
-    const position: Vec3 = [pose.position[0], pose.position[1], pose.position[2]]
-    const rotation: Quat = [pose.rotation[0], pose.rotation[1], pose.rotation[2], pose.rotation[3]]
-    world.loadObject(tool.saved, objectId)
-    world.setTransform(objectId, position, rotation)
-    renderer.redraw(objectId)
+    const objectId = respawnSaved(tool.itemId, tool.saved, thrown)
     const piece = rendererPieces.get(objectId)
     if (thrown && piece) {
       piece.velocity = [0, 0, 0]
@@ -3170,6 +3181,55 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('throw', t('act.throw', { name: tool.name, speed: num(speed, 1) }), { objectId, itemId: tool.itemId, data: { speedMs: speed, massKg: piece.mass } })
     } else action('drop', t('act.drop', { name: tool.name }), { objectId, itemId: tool.itemId })
   }
+  const bagEnabled = options.inventory !== false
+  const bagHost: BagHost = {
+    t,
+    say,
+    action,
+    aimedObject: () => {
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      return r && rendererPieces.has(r.object) ? r.object : null
+    },
+    inspect: (objectId) => {
+      const entry = entryOf(objectId)
+      const piece = rendererPieces.get(objectId)
+      const saved = world.serializeObject(objectId)
+      if (!entry?.item || !piece || !saved) return null
+      const weapon = entry.item.weapon && arsenal.weapons.has(entry.item.weapon) ? entry.item.weapon : undefined
+      const size = new THREE.Box3().setFromObject(piece.root).getSize(new THREE.Vector3())
+      const temperatures = saved.state.parts.map((part) => part.temperature)
+      return {
+        itemId: entry.item.id,
+        name: entry.name,
+        ...(weapon ? { weapon } : {}),
+        kg: piece.mass,
+        size: [size.x, size.y, size.z],
+        state: { destruction: saved, ...(weapon ? { condition: toolConditionOf(saved.spec, saved.state) } : {}), ...(temperatures.length > 0 ? { temperatureC: Math.max(...temperatures) } : {}) },
+      }
+    },
+    remove: removeEntry,
+    heldObject: () => heldPiece?.objectId ?? null,
+    placeBack: ({ itemId, name, state }) => {
+      const objectId = state.destruction ? respawnSaved(itemId, state.destruction, false) : spawn(itemId, [player.x - Math.sin(player.yaw) * 0.7, groundAt(player.x, player.z), player.z - Math.cos(player.yaw) * 0.7], player.yaw).objectId
+      action('drop', t('act.drop', { name }), { objectId, itemId })
+    },
+    equipTool: ({ itemId, name, weapon, state }) => {
+      if (!state.destruction) return
+      if (state.condition) toolConditions.set(weapon, state.condition)
+      carriedTool = { weaponId: weapon, itemId, name, saved: state.destruction }
+      equip(weapon)
+    },
+    clearHandTool: () => {
+      if (carriedTool) toolConditions.delete(carriedTool.weaponId)
+      carriedTool = null
+    },
+    onOpen: (open) => {
+      if (open && document.pointerLockElement) document.exitPointerLock?.()
+    },
+  }
+  const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
+  if (bagEnabled) container.appendChild(bag.element)
   const grab = (): boolean => {
     if (push.active) return false
     if (!heldPiece && carriedTool) {
@@ -3203,9 +3263,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const toolWeapon = entryOf(r.object)?.item?.weapon
     const toolEntry = entries.get(r.object)
     if (toolWeapon && toolEntry && arsenal.weapons.has(toolWeapon)) {
-      pickUpTool(r.object, toolEntry, toolWeapon)
-      fire('grab', { held: true, objectId: r.object })
-      return true
+      const picked = pickUpTool(r.object, toolEntry, toolWeapon)
+      if (picked) fire('grab', { held: true, objectId: r.object })
+      return picked
     }
     heldPiece = piece
     heldEntry = entries.get(r.object) ?? null
@@ -3670,6 +3730,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
       return
     }
+    if (bagEnabled && !e.ctrlKey && !e.metaKey && bag.handleKey(code, { shift: e.shiftKey, repeat: e.repeat })) return
     const digit = /^Digit(\d)$/.exec(code)
     if (digit && !e.ctrlKey && !e.metaKey) {
       const n = (Number(digit[1]) + 9) % 10
@@ -4967,6 +5028,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     clear,
     resetAll,
     setTool,
+    inventory: () => bag.snapshot(),
+    openInventory: (open) => bagEnabled && bag.panel.toggle(open),
+    pickToBag: () => bag.pickToBag(),
+    storeHeld: () => bag.storeHeld(),
+    equipSlot: (slotId) => bag.equipSlot(slotId),
+    dropSlot: (slotId) => bag.dropSlot(slotId),
     setToolCondition(weaponId, condition) {
       if (condition) toolConditions.set(weaponId, condition)
       else toolConditions.delete(weaponId)
@@ -5196,6 +5263,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       player.dispose()
       cornerImage?.dispose()
       ui?.dispose()
+      bag.element.remove()
       graphics?.dispose()
       loading.dispose()
       renderer.dispose()
