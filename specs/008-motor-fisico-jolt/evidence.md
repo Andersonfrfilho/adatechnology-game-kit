@@ -229,3 +229,23 @@ Pendente, fora desta task: `changeset` (`minor` para 0.1.0, conforme README da r
   destroços. Não é a física nova.
 - Não se gera golden agora: a release regera esses goldens em outros commits (rodadas da casa), e um golden nosso daria conflito no rebase.
   Resolve-se no rebase sobre a `main` com a release; o que restar entra na T3.9, comparado com a `origin/main` daquele dia.
+
+
+## T2.4
+
+2026-11-13, Intel Core Ultra 9 275HX. Bug 1 (`setShape` mantém a massa do kit): o código já estava na branch (`kitMass` em `BodyEntry`, `putMass` em `world.ts`, vindo do commit `36753ec0` do spike); conferido, sem mudança em `src`.
+
+Teste novo `packages/game-physics-jolt/tests/set-shape-mass.test.ts` (3 testes), cada caso compara a peça trocada com outra criada direto na forma nova e na mesma massa (diagonais da inversa da inércia, erro relativo < 1e-6):
+
+- peça de 2 kg troca de forma: massa 2 kg, massa inversa 0,5, inércia da forma nova escalada para 2 kg;
+- lasca de 5 g e 1,5 cm (momentos abaixo de 1e-6 kg m^2, condição 7): 5 g e a inércia própria da forma nova, não a de uma esfera de 1 m;
+- `mass.inertia` dado ao `setShape` (peça de 2 kg e lasca de 5 g): os momentos dados são os mantidos.
+
+Prova de que o teste pega o comportamento antigo: com `putMass` desligado localmente e `SetShape(..., updateMass = dynamic)` (Jolt recalcula a massa pela densidade), os 3 testes falham (`expected 0.0833 to be close to 0.5`; na lasca `1666.7` contra `200`). Restaurado com `git checkout`, volta ao verde.
+
+| Gate | Resultado |
+|---|---|
+| `pnpm --filter @adatechnology/game-physics-jolt typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-physics-jolt test` | 14 arquivos, 46/46 passam |
+| `eslint` no teste novo | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |
