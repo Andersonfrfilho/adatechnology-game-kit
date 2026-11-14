@@ -26,6 +26,8 @@ import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rota
 import type { DestructibleImpl } from './contracts'
 import { boundsInFrame, boundsTouch, rayMissesBounds, sphereTouchesBounds, SWEEP_BROAD_SLACK, sweptBounds } from './sweep-broad-phase'
 import type { SweepBounds } from './sweep-broad-phase'
+import { hostedSolids } from './hosted-solids'
+import type { HostedSolid } from './hosted-solids'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
@@ -2338,6 +2340,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const bounds: SweepBounds = { min, max }
     implBounds.set(im, { spec, key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], im.posesVersion], bounds })
     return bounds
+  }
+
+  /** `hostedSolids` per hosted body, with what they were made from: the same list back until the spec, its state, its place or a part's pose changes. */
+  const implSolids = new WeakMap<ImplRT, { readonly spec: DestructibleSpec; readonly state: Readonly<ObjectState>; readonly key: number[]; readonly solids: readonly HostedSolid[] }>()
+  const implSolidsOf = (im: ImplRT): readonly HostedSolid[] => {
+    const spec = im.impl.describe()
+    const state = im.impl.state()
+    const p = im.position, q = im.rotation
+    const known = implSolids.get(im)
+    if (known && known.spec === spec && known.state === state) {
+      const k = known.key
+      if (k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === im.posesVersion) return known.solids
+    }
+    const solids = hostedSolids(spec, state, im)
+    implSolids.set(im, { spec, state, key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], im.posesVersion], solids })
+    return solids
   }
 
   /** What the rays of one sweep can reach (`sweepScope`): objects and hosted bodies in the world's order, each with the parts it keeps in that order. */
@@ -4879,6 +4897,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         lastSweep = { objectVisits: counts.objectVisits, partVisits: counts.partVisits, shapeTests: counts.shapeTests, shapeTested: [...counts.shapeTested] }
       }
       return best
+    },
+    hostedSolids(id) {
+      const im = impls.get(id)
+      return im ? implSolidsOf(im) : null
     },
     sweepProbe() {
       return lastSweep
