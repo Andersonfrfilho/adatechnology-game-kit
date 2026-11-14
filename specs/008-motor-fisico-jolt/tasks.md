@@ -122,6 +122,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` e `pnpm --filter @adatechnology/game-destruction test` sem falha · `sonnet`.
 - **T3.6 C6: varredura de robustez** como teste: 64 sementes × dt {1/30, 0,05, 1/60, 1/144} × iterações {8, 10, 20} × push-out ±50%, pilha
   20:1 e pilha de 5. Roda por variável de ambiente, fora do `test` padrão.
+  **Status 2026-11-14: parcial, não ✅** (`evidence.md`, seção T3.6): varredura pronta (`node tests/sweep-c6.mjs`, 678 s, 6912 corridas), mas 1742 falham: 31/64 da pilha 20:1 na produção (convergência com razão de massa 20:1; passa a ≥ 32 iterações), 8/10 iterações (conflito com a T3.3) e dt 1/144 (C2 0,3 m na semente 61). Decisão do dono pendente.
   Mecânica? sim · Aceite por comando? sim: o comando da varredura com 0 falhas · `sonnet`.
 - **T3.7 C8: determinismo** entre dois processos e salvar/carregar bit a bit, como teste de `d3` e `jolt`. Chromium e Bun à mão; Firefox à mão.
   Mecânica? sim · Aceite por comando? sim (Node) · `sonnet`.

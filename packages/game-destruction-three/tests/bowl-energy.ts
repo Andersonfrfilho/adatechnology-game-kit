@@ -10,7 +10,7 @@ import { FakeWorld, partState } from './fake-world'
 import { physicsOption } from './setup-physics'
 
 /** A piece at this instant, for the ruler: the centre in the world, the energy height with the inertia of its box (DECISION-fable §2). */
-const sampleOf = (p: Piece, scratch: THREE.Vector3, turn: THREE.Quaternion, groundY: (x: number, z: number) => number): EnergySample => {
+export const sampleOf = (p: Piece, scratch: THREE.Vector3, turn: THREE.Quaternion, groundY: (x: number, z: number) => number): EnergySample => {
   p.root.updateMatrixWorld(true)
   const centre = scratch.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld)
   const at: [number, number, number] = [centre.x, centre.y, centre.z]

@@ -841,3 +841,145 @@ Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `mot
 
 T3.5 **não** fica ✅: o aceite exige `game-destruction-three` sem falha nos dois solvers e 3 testes de `rolling` seguem falhando no Jolt (duas por contato cilindro–cilindro do motor, uma pelo teto de giro de 47 rad/s). 10 das 13 estão corrigidas, nenhuma asserção ou tolerância foi mexida, nenhum teste apagado ou pulado.
 Decisão para o dono: (1) o teto de giro (T4.3) para a lata a 2 m/s; (2) o contato lata–lata (aceitar o casco de 16 lados e o custo no rolamento, ou tolerar o teste).
+
+## T3.6 — C6: varredura de robustez (2026-11-14) — **parcial: a varredura existe e roda; 1742 de 6912 corridas falham, 31 delas na configuração de produção**
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `motor-fisico-jolt`. Sem GPU nem navegador.
+
+**Como ler o C6** (spec §6, linha C6; §7 item 4): bacia em 64 sementes × dt {1/30, 0,05, 1/60, 1/144} × iterações {8, 10, 20} × push-out {−50%, 0, +50%} do valor de produção (0,002 m: 0,001 / 0,002 / 0,003), mais pilha 20:1 e pilha de 5 peças, "tudo passa, e mais trabalho nunca piora". Cada corrida passa pelos critérios da bacia (C1 ≤ 0, C2 ≤ 3,5 cm com e sem a condição, C3 ≤ 3,5 cm, C4 dorme em até 3 s, nada sob o chão, `fellThrough` 0). A spec **não** dá expectativa por número de iterações: C6 exige que 8 e 10 passem como 20 (§7 item 4: "C6 exige que 8 e 10 passem também"). Isso conflita com a T3.3 (C1 falha a 8 e 10, levado ao dono), então a varredura **não pode fechar** com 8 e 10 sem a decisão dela. dt é o dt de quadro (`renderer.update(dt)`); o passo fixo do mundo segue 1/120 s. "Mais trabalho nunca piora": contada à parte (um caso que passa com menos iterações e falha com mais).
+
+**Onde.** `packages/game-destruction-three/tests/sweep-c6.test.ts` (só roda com `SWEEP=1` e `PIECE_SOLVER=jolt`; o `test` padrão a pula), `tests/stack-energy.ts` (pilhas; `sampleOf` agora exportado de `bowl-energy.ts`), `tests/sweep-c6.mjs` (8 processos, junta as linhas e imprime a tabela). Pilhas: caixas de 0,4 × 0,2 × 0,4 m soltas de 1 cm de folga cada, jitter de 2 cm e giro por semente, sem entrada de fora, 3 s; 20:1 = 10 kg sob 200 kg; pilha de 5 = 5 × 50 kg.
+
+**Comando** (da pasta do pacote; `SWEEP_SEEDS=n` encurta): `node tests/sweep-c6.mjs`. Tempo: **678 s** (11 min 18 s), 6912 corridas (2304 por cenário), 8 processos.
+
+### Resultado
+| Cenário | Corridas que falham | Na produção (dt 1/60, 20 it., push-out ×1) |
+|---|---|---|
+| bacia | 60 de 2304 | **64/64 passam** |
+| pilha 20:1 | **1320** de 2304 | **33/64 passam, 31 falham (C1)** |
+| pilha de 5 | 362 de 2304 | 64/64 passam |
+
+Por iterações: 8 it. → 976 de 2304 falham; 10 it. → 538; 20 it. → 228 (5 da bacia, 223 da pilha 20:1, 0 da pilha de 5). "Mais iterações piora": 44 casos (bacia 12, pilha 20:1 21, pilha de 5 15; todos 8→10, 8→20 ou 10→20) — o C1 é caótico, não monótono, abaixo da convergência.
+
+### Falhas e causas
+1. **Pilha 20:1, produção (dt 1/60, 20 it.): 31/64 falham por C1**, até +0,29 kg·m (≈ 1,4 mm de altura de energia da pilha de 210 kg acima da folga de 1 mm), sementes 1, 2, 4, 5, 7, 8, 9, 11–15, 22, 23, 26, 27, 32, 36, 39, 42, 44, 46, 47, 51, 52, 54–56, 60, 61, 63. A 1/30 e a 0,05 s com 20 it. passam 64/64; a 1/60 e a 1/144 não (1/144: 43 falham). Rastro da semente 1 (1/60): a chapa de 200 kg pousa a 0,49 m/s sobre a de 10 kg no quadro 3, afunda 2 mm (perde 4 kg·m), e no quadro 5 sobe 1,2 mm com v_y +0,056 m/s (+0,25 kg·m): o solver de velocidade não converge com razão de massa 20:1. **Prova da causa** (dt 1/60, 32 sementes, só `JOLT_ITERATIONS`): 24 it. 4/32 falham, 28 it. 2/32, **32 it. 0/32**, 36 it. 0/32, 40 e 80 it. 0/16. Não é correção de posição: `JOLT_POSITION_ITERATIONS` 0, 1, 2, 4, 8 × slop 2 mm e 0,5 mm deixam 11–14 de 16 falhando; e o push-out ×0,5/×1/×1,5 não muda nada a 20 it.
+2. **Pilha 20:1 e pilha de 5 com 8 e 10 iterações**: mesma causa (convergência), pior com mais razão de massa. Pilha de 5 passa a 8 e 10 it. em dt 1/30 e 0,05, falha 62/64 a 8 it. e 20/64 a 10 it. em 1/60, e 34/64 e 4–5/64 em 1/144.
+3. **Bacia a 8 e 10 iterações**: 0–5 sementes por célula falham C1 (já conhecido pela T3.3), mais C2 0,05 m (1/60, 10 it.) e C3 0,041 e 0,048 (1/60 ×1,5 a 8 it.; 1/144 ×1,5 a 10 it.).
+4. **Bacia a 20 iterações (produção de iterações)**: só 5 corridas de 576 falham, todas **fora do dt 1/60 de produção com push-out ×1**: semente 16, dt 1/60, push-out ×1,5: C3 0,0447 m (limite 0,035); semente 43, dt 1/144, ×1: C1 +0,205; **semente 61, dt 1/144, os três push-outs: C2 0,24–0,32 m** (uma peça lançada, C1 −0,22: a ilha não violou C1, é lançamento sem a condição). O C2 de 1/144 é o achado mais grave da bacia: dt 1/144 não divide o passo fixo de 1/120 (quadros alternam 0 e 1 passos), e a semente 61 repete em todos os push-outs.
+
+### Estado
+- **T3.6 fica desmarcada.** A varredura existe, é determinística e roda por um comando, mas tem falhas na configuração de produção (pilha 20:1) e fora dela (8/10 it., dt 1/144, push-out ×1,5). Nada foi afrouxado nem corrigido: duas tentativas na configuração de produção (posição/slop; contagem de iterações como prova) não produziram uma correção dentro do que a task autoriza.
+- **Decisão para o dono (3 saídas):** (a) subir `velocityIterations` de produção de 20 para 32–40 (o custo do passo sobe na mesma proporção; B5/B6 e a bacia teriam de ser medidos de novo) — é o que a pilha 20:1 pede; (b) autorizar a terceira via da T3.3, limite de razão de massa só em contato em repouso, que mexe no adaptador e nos testes de `rolling`; (c) reescrever o C6 para a faixa real: 20 it. como piso, pilha 20:1 só a ≥ 32 it., e 8/10 it. fora do C6. A semente 61 a 1/144 (C2 0,3 m) precisa de investigação própria, com ou sem a decisão acima.
+
+### Tabela completa (64 sementes por linha; "pior" = máximo nas 64)
+
+| Cenário | dt | it. | push-out | passa | critérios que falham | pior C1 (kg·m) | C2 (m) | C3 (m) | C4 (s) | mais fundo (m) | fellThrough |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| bowl | 0.0333 | 8 | x0.5 | 60/64 | {C1:4} | 0.1125 | 0.0113 | 0.0272 | 1.90 | -0.0371 | 0 |
+| bowl | 0.0333 | 8 | x1 | 62/64 | {C1:2} | 0.2826 | 0.0121 | 0.0207 | 0.50 | -0.0377 | 0 |
+| bowl | 0.0333 | 8 | x1.5 | 62/64 | {C1:2} | 0.3622 | 0.0190 | 0.0283 | 0.50 | -0.0351 | 0 |
+| bowl | 0.0333 | 10 | x0.5 | 64/64 | {} | -0.0868 | 0.0172 | 0.0132 | 0.50 | -0.0378 | 0 |
+| bowl | 0.0333 | 10 | x1 | 62/64 | {C1:2} | 0.4254 | 0.0122 | 0.0212 | 1.53 | -0.0372 | 0 |
+| bowl | 0.0333 | 10 | x1.5 | 63/64 | {C1:1} | 0.0891 | 0.0088 | 0.0283 | 0.93 | -0.0356 | 0 |
+| bowl | 0.0333 | 20 | x0.5 | 64/64 | {} | -0.1405 | 0.0032 | 0.0059 | 0.50 | -0.0372 | 0 |
+| bowl | 0.0333 | 20 | x1 | 64/64 | {} | -0.1634 | 0.0040 | 0.0089 | 0.50 | -0.0387 | 0 |
+| bowl | 0.0333 | 20 | x1.5 | 64/64 | {} | -0.1512 | 0.0032 | 0.0253 | 0.50 | -0.0378 | 0 |
+| bowl | 0.05 | 8 | x0.5 | 64/64 | {} | -0.1058 | 0.0037 | 0.0185 | 1.35 | -0.0375 | 0 |
+| bowl | 0.05 | 8 | x1 | 61/64 | {C1:3} | 0.5559 | 0.0054 | 0.0154 | 0.50 | -0.0385 | 0 |
+| bowl | 0.05 | 8 | x1.5 | 63/64 | {C1:1} | 0.0438 | 0.0080 | 0.0091 | 0.90 | -0.0374 | 0 |
+| bowl | 0.05 | 10 | x0.5 | 63/64 | {C1:1} | 0.2052 | 0.0268 | 0.0209 | 0.50 | -0.0393 | 0 |
+| bowl | 0.05 | 10 | x1 | 64/64 | {} | -0.0866 | 0.0068 | 0.0179 | 0.65 | -0.0389 | 0 |
+| bowl | 0.05 | 10 | x1.5 | 63/64 | {C1:1} | 0.6542 | 0.0317 | 0.0142 | 0.50 | -0.0384 | 0 |
+| bowl | 0.05 | 20 | x0.5 | 64/64 | {} | -0.1224 | 0.0102 | 0.0249 | 0.85 | -0.0389 | 0 |
+| bowl | 0.05 | 20 | x1 | 64/64 | {} | -0.0923 | 0.0186 | 0.0093 | 0.50 | -0.0383 | 0 |
+| bowl | 0.05 | 20 | x1.5 | 64/64 | {} | -0.1480 | 0.0160 | 0.0068 | 0.50 | -0.0385 | 0 |
+| bowl | 0.0167 | 8 | x0.5 | 61/64 | {C1:3} | 0.8319 | 0.0107 | 0.0112 | 0.50 | -0.0387 | 0 |
+| bowl | 0.0167 | 8 | x1 | 59/64 | {C1:5} | 0.6327 | 0.0099 | 0.0137 | 0.52 | -0.0389 | 0 |
+| bowl | 0.0167 | 8 | x1.5 | 59/64 | {C3:1,C1:4} | 0.4759 | 0.0175 | 0.0409 | 0.50 | -0.0384 | 0 |
+| bowl | 0.0167 | 10 | x0.5 | 62/64 | {C1:2} | 0.7218 | 0.0109 | 0.0146 | 0.50 | -0.0384 | 0 |
+| bowl | 0.0167 | 10 | x1 | 62/64 | {C1:1,C2:1} | 0.0062 | 0.0514 | 0.0274 | 0.50 | -0.0377 | 0 |
+| bowl | 0.0167 | 10 | x1.5 | 63/64 | {C1:1} | 0.0223 | 0.0154 | 0.0206 | 0.50 | -0.0383 | 0 |
+| bowl | 0.0167 | 20 | x0.5 | 64/64 | {} | -0.1315 | 0.0163 | 0.0114 | 0.92 | -0.0387 | 0 |
+| bowl | 0.0167 | 20 | x1 | 64/64 | {} | -0.0325 | 0.0240 | 0.0121 | 0.50 | -0.0391 | 0 |
+| bowl | 0.0167 | 20 | x1.5 | 63/64 | {C3:1} | -0.1357 | 0.0121 | 0.0447 | 0.58 | -0.0386 | 0 |
+| bowl | 0.0069 | 8 | x0.5 | 60/64 | {C1:3,C2:1} | 0.2177 | 0.3479 | 0.0163 | 0.56 | -0.0385 | 0 |
+| bowl | 0.0069 | 8 | x1 | 62/64 | {C1:1,C2:1} | 0.1761 | 0.3652 | 0.0137 | 0.50 | -0.0380 | 0 |
+| bowl | 0.0069 | 8 | x1.5 | 60/64 | {C1:3,C2:1} | 0.2110 | 0.3220 | 0.0233 | 1.90 | -0.0362 | 0 |
+| bowl | 0.0069 | 10 | x0.5 | 62/64 | {C1:1,C2:1} | 0.2534 | 0.2426 | 0.0191 | 0.50 | -0.0387 | 0 |
+| bowl | 0.0069 | 10 | x1 | 61/64 | {C1:2,C2:1} | 0.2609 | 0.2606 | 0.0326 | 0.65 | -0.0387 | 0 |
+| bowl | 0.0069 | 10 | x1.5 | 59/64 | {C2:2,C3:1,C1:2} | 0.1451 | 0.3497 | 0.0480 | 0.50 | -0.0386 | 0 |
+| bowl | 0.0069 | 20 | x0.5 | 63/64 | {C2:1} | -0.1306 | 0.2922 | 0.0125 | 0.50 | -0.0384 | 0 |
+| bowl | 0.0069 | 20 | x1 | 62/64 | {C1:1,C2:1} | 0.2048 | 0.3220 | 0.0142 | 0.49 | -0.0387 | 0 |
+| bowl | 0.0069 | 20 | x1.5 | 63/64 | {C2:1} | -0.1865 | 0.2413 | 0.0085 | 0.49 | -0.0378 | 0 |
+| stack 20:1 | 0.0333 | 8 | x0.5 | 9/64 | {C1:55} | 0.8613 | 0.0026 | 0.0036 | 0.53 | -0.0979 | 0 |
+| stack 20:1 | 0.0333 | 8 | x1 | 16/64 | {C1:48} | 0.9080 | 0.0024 | 0.0043 | 0.53 | -0.0978 | 0 |
+| stack 20:1 | 0.0333 | 8 | x1.5 | 5/64 | {C1:59} | 1.0711 | 0.0043 | 0.0041 | 0.53 | -0.0977 | 0 |
+| stack 20:1 | 0.0333 | 10 | x0.5 | 50/64 | {C1:14} | 0.4110 | 0.0014 | 0.0029 | 0.53 | -0.0983 | 0 |
+| stack 20:1 | 0.0333 | 10 | x1 | 43/64 | {C1:21} | 0.7963 | 0.0019 | 0.0036 | 0.53 | -0.0980 | 0 |
+| stack 20:1 | 0.0333 | 10 | x1.5 | 48/64 | {C1:16} | 0.6911 | 0.0018 | 0.0035 | 0.53 | -0.0979 | 0 |
+| stack 20:1 | 0.0333 | 20 | x0.5 | 64/64 | {} | -0.1118 | 0.0009 | 0.0030 | 0.53 | -0.0994 | 0 |
+| stack 20:1 | 0.0333 | 20 | x1 | 64/64 | {} | -0.1131 | 0.0009 | 0.0030 | 0.53 | -0.0995 | 0 |
+| stack 20:1 | 0.0333 | 20 | x1.5 | 64/64 | {} | -0.1131 | 0.0009 | 0.0030 | 0.53 | -0.0995 | 0 |
+| stack 20:1 | 0.05 | 8 | x0.5 | 24/64 | {C1:40} | 0.8281 | 0.0023 | 0.0036 | 0.55 | -0.0979 | 0 |
+| stack 20:1 | 0.05 | 8 | x1 | 31/64 | {C1:33} | 0.8479 | 0.0019 | 0.0040 | 0.55 | -0.0978 | 0 |
+| stack 20:1 | 0.05 | 8 | x1.5 | 24/64 | {C1:40} | 1.1498 | 0.0038 | 0.0049 | 0.55 | -0.0977 | 0 |
+| stack 20:1 | 0.05 | 10 | x0.5 | 61/64 | {C1:3} | 0.3276 | 0.0011 | 0.0013 | 0.55 | -0.0983 | 0 |
+| stack 20:1 | 0.05 | 10 | x1 | 57/64 | {C1:7} | 0.6533 | 0.0013 | 0.0022 | 0.55 | -0.0980 | 0 |
+| stack 20:1 | 0.05 | 10 | x1.5 | 57/64 | {C1:7} | 0.5523 | 0.0017 | 0.0019 | 0.55 | -0.0979 | 0 |
+| stack 20:1 | 0.05 | 20 | x0.5 | 64/64 | {} | -0.1665 | 0.0014 | 0.0014 | 0.55 | -0.0994 | 0 |
+| stack 20:1 | 0.05 | 20 | x1 | 64/64 | {} | -0.1260 | 0.0014 | 0.0014 | 0.55 | -0.0995 | 0 |
+| stack 20:1 | 0.05 | 20 | x1.5 | 64/64 | {} | -0.1653 | 0.0014 | 0.0014 | 0.55 | -0.0995 | 0 |
+| stack 20:1 | 0.0167 | 8 | x0.5 | 1/64 | {C1:63} | 1.0304 | 0.0030 | 0.0046 | 0.52 | -0.0979 | 0 |
+| stack 20:1 | 0.0167 | 8 | x1 | 2/64 | {C1:62} | 1.1229 | 0.0039 | 0.0045 | 0.52 | -0.0978 | 0 |
+| stack 20:1 | 0.0167 | 8 | x1.5 | 1/64 | {C1:63} | 1.3139 | 0.0111 | 0.0053 | 0.52 | -0.0977 | 0 |
+| stack 20:1 | 0.0167 | 10 | x0.5 | 0/64 | {C1:64} | 1.1115 | 0.0023 | 0.0044 | 0.52 | -0.0983 | 0 |
+| stack 20:1 | 0.0167 | 10 | x1 | 1/64 | {C1:63} | 1.2600 | 0.0024 | 0.0042 | 0.52 | -0.0980 | 0 |
+| stack 20:1 | 0.0167 | 10 | x1.5 | 2/64 | {C1:62} | 1.2182 | 0.0060 | 0.0046 | 0.52 | -0.0979 | 0 |
+| stack 20:1 | 0.0167 | 20 | x0.5 | 32/64 | {C1:32} | 0.3045 | 0.0014 | 0.0016 | 0.52 | -0.0994 | 0 |
+| stack 20:1 | 0.0167 | 20 | x1 | 33/64 | {C1:31} | 0.2923 | 0.0014 | 0.0015 | 0.52 | -0.0994 | 0 |
+| stack 20:1 | 0.0167 | 20 | x1.5 | 33/64 | {C1:31} | 0.2912 | 0.0014 | 0.0015 | 0.52 | -0.0994 | 0 |
+| stack 20:1 | 0.0069 | 8 | x0.5 | 0/64 | {C1:64} | 0.6914 | 0.0033 | 0.0037 | 0.51 | -0.0979 | 0 |
+| stack 20:1 | 0.0069 | 8 | x1 | 1/64 | {C1:63} | 0.7366 | 0.0058 | 0.0039 | 0.51 | -0.0978 | 0 |
+| stack 20:1 | 0.0069 | 8 | x1.5 | 1/64 | {C1:63} | 0.7390 | 0.0111 | 0.0044 | 0.51 | -0.0977 | 0 |
+| stack 20:1 | 0.0069 | 10 | x0.5 | 1/64 | {C1:63} | 0.5016 | 0.0037 | 0.0033 | 0.51 | -0.0983 | 0 |
+| stack 20:1 | 0.0069 | 10 | x1 | 1/64 | {C1:63} | 0.5318 | 0.0039 | 0.0032 | 0.51 | -0.0980 | 0 |
+| stack 20:1 | 0.0069 | 10 | x1.5 | 3/64 | {C1:61} | 0.5247 | 0.0062 | 0.0035 | 0.51 | -0.0978 | 0 |
+| stack 20:1 | 0.0069 | 20 | x0.5 | 21/64 | {C1:43} | 0.1918 | 0.0020 | 0.0017 | 0.51 | -0.0994 | 0 |
+| stack 20:1 | 0.0069 | 20 | x1 | 21/64 | {C1:43} | 0.1918 | 0.0015 | 0.0017 | 0.51 | -0.0994 | 0 |
+| stack 20:1 | 0.0069 | 20 | x1.5 | 21/64 | {C1:43} | 0.1918 | 0.0016 | 0.0016 | 0.51 | -0.0994 | 0 |
+| stack of 5 | 0.0333 | 8 | x0.5 | 64/64 | {} | -0.1584 | 0.0010 | 0.0021 | 0.53 | -0.0994 | 0 |
+| stack of 5 | 0.0333 | 8 | x1 | 64/64 | {} | -0.1584 | 0.0010 | 0.0021 | 0.53 | -0.0994 | 0 |
+| stack of 5 | 0.0333 | 8 | x1.5 | 64/64 | {} | -0.1584 | 0.0010 | 0.0021 | 0.53 | -0.0994 | 0 |
+| stack of 5 | 0.0333 | 10 | x0.5 | 64/64 | {} | -0.1957 | 0.0012 | 0.0022 | 0.53 | -0.0996 | 0 |
+| stack of 5 | 0.0333 | 10 | x1 | 64/64 | {} | -0.1957 | 0.0016 | 0.0023 | 0.53 | -0.0996 | 0 |
+| stack of 5 | 0.0333 | 10 | x1.5 | 64/64 | {} | -0.1957 | 0.0016 | 0.0023 | 0.53 | -0.0996 | 0 |
+| stack of 5 | 0.0333 | 20 | x0.5 | 64/64 | {} | -0.2173 | 0.0006 | 0.0011 | 0.53 | -0.0999 | 0 |
+| stack of 5 | 0.0333 | 20 | x1 | 64/64 | {} | -0.2173 | 0.0006 | 0.0011 | 0.53 | -0.0999 | 0 |
+| stack of 5 | 0.0333 | 20 | x1.5 | 64/64 | {} | -0.2173 | 0.0006 | 0.0011 | 0.53 | -0.0999 | 0 |
+| stack of 5 | 0.05 | 8 | x0.5 | 64/64 | {} | -0.1503 | 0.0011 | 0.0025 | 0.55 | -0.0994 | 0 |
+| stack of 5 | 0.05 | 8 | x1 | 64/64 | {} | -0.1503 | 0.0011 | 0.0025 | 0.55 | -0.0994 | 0 |
+| stack of 5 | 0.05 | 8 | x1.5 | 64/64 | {} | -0.1503 | 0.0011 | 0.0025 | 0.55 | -0.0994 | 0 |
+| stack of 5 | 0.05 | 10 | x0.5 | 64/64 | {} | -0.2318 | 0.0009 | 0.0022 | 0.55 | -0.0996 | 0 |
+| stack of 5 | 0.05 | 10 | x1 | 64/64 | {} | -0.2318 | 0.0012 | 0.0024 | 0.55 | -0.0996 | 0 |
+| stack of 5 | 0.05 | 10 | x1.5 | 64/64 | {} | -0.2318 | 0.0012 | 0.0024 | 0.55 | -0.0996 | 0 |
+| stack of 5 | 0.05 | 20 | x0.5 | 64/64 | {} | -0.2119 | 0.0004 | 0.0007 | 0.55 | -0.0999 | 0 |
+| stack of 5 | 0.05 | 20 | x1 | 64/64 | {} | -0.2119 | 0.0004 | 0.0007 | 0.55 | -0.0999 | 0 |
+| stack of 5 | 0.05 | 20 | x1.5 | 64/64 | {} | -0.2119 | 0.0004 | 0.0007 | 0.55 | -0.0999 | 0 |
+| stack of 5 | 0.0167 | 8 | x0.5 | 2/64 | {C1:62} | 0.2757 | 0.0023 | 0.0018 | 0.52 | -0.0993 | 0 |
+| stack of 5 | 0.0167 | 8 | x1 | 2/64 | {C1:62} | 0.2762 | 0.0023 | 0.0019 | 0.52 | -0.0993 | 0 |
+| stack of 5 | 0.0167 | 8 | x1.5 | 2/64 | {C1:62} | 0.2762 | 0.0023 | 0.0019 | 0.52 | -0.0993 | 0 |
+| stack of 5 | 0.0167 | 10 | x0.5 | 44/64 | {C1:20} | 0.1689 | 0.0013 | 0.0013 | 0.52 | -0.0995 | 0 |
+| stack of 5 | 0.0167 | 10 | x1 | 44/64 | {C1:20} | 0.1689 | 0.0016 | 0.0013 | 0.52 | -0.0995 | 0 |
+| stack of 5 | 0.0167 | 10 | x1.5 | 44/64 | {C1:20} | 0.1689 | 0.0016 | 0.0013 | 0.52 | -0.0995 | 0 |
+| stack of 5 | 0.0167 | 20 | x0.5 | 64/64 | {} | -0.1659 | 0.0006 | 0.0005 | 0.52 | -0.0999 | 0 |
+| stack of 5 | 0.0167 | 20 | x1 | 64/64 | {} | -0.1659 | 0.0006 | 0.0005 | 0.52 | -0.0999 | 0 |
+| stack of 5 | 0.0167 | 20 | x1.5 | 64/64 | {} | -0.1659 | 0.0006 | 0.0005 | 0.52 | -0.0999 | 0 |
+| stack of 5 | 0.0069 | 8 | x0.5 | 30/64 | {C1:34} | 0.1098 | 0.0024 | 0.0018 | 0.51 | -0.0993 | 0 |
+| stack of 5 | 0.0069 | 8 | x1 | 30/64 | {C1:34} | 0.1096 | 0.0024 | 0.0018 | 0.51 | -0.0993 | 0 |
+| stack of 5 | 0.0069 | 8 | x1.5 | 30/64 | {C1:34} | 0.1096 | 0.0024 | 0.0018 | 0.51 | -0.0993 | 0 |
+| stack of 5 | 0.0069 | 10 | x0.5 | 60/64 | {C1:4} | 0.0302 | 0.0013 | 0.0015 | 0.51 | -0.0995 | 0 |
+| stack of 5 | 0.0069 | 10 | x1 | 59/64 | {C1:5} | 0.0302 | 0.0016 | 0.0015 | 0.51 | -0.0995 | 0 |
+| stack of 5 | 0.0069 | 10 | x1.5 | 59/64 | {C1:5} | 0.0302 | 0.0016 | 0.0015 | 0.51 | -0.0995 | 0 |
+| stack of 5 | 0.0069 | 20 | x0.5 | 64/64 | {} | -0.1063 | 0.0013 | 0.0007 | 0.51 | -0.0998 | 0 |
+| stack of 5 | 0.0069 | 20 | x1 | 64/64 | {} | -0.1063 | 0.0013 | 0.0007 | 0.51 | -0.0998 | 0 |
+| stack of 5 | 0.0069 | 20 | x1.5 | 64/64 | {} | -0.1063 | 0.0013 | 0.0007 | 0.51 | -0.0998 | 0 |
