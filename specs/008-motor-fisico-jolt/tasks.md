@@ -33,7 +33,7 @@ Pacotes, por nome curto: `physics` = `@adatechnology/game-physics`, `jolt` = `@a
 
 Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 
-- **T1.1 🧠 Desenho do atrito por corpo.** Fechar D1.1 do `plan.md`: quando um corpo vira `sticking`/`sliding`, a mistura com corpo estático,
+- T1.1 ✅ 🧠 **Desenho do atrito por corpo.** Feito em 2026-11-13 (`design/atrito-por-corpo.md`, revisado por `architect`, `evidence.md`). Fechar D1.1 do `plan.md`: quando um corpo vira `sticking`/`sliding`, a mistura com corpo estático,
   o caso de um corpo em dois apoios com estados diferentes, a restituição só no contato novo, o que fica no listener (eventos, sensores,
   `touching`) e como o estado fica determinístico. Escrito em `design/atrito-por-corpo.md` e revisado por `architect` antes de implementar.
   Mecânica? não · Aceite por comando? não (revisão) · `opus`.
