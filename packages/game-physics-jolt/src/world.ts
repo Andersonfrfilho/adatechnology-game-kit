@@ -33,6 +33,7 @@ import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, remo
 import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { makeShape } from './shapes'
 import { restoreState, saveState } from './state'
+import { checkVec3Layout } from './vec3'
 import { createVehicle, driveVehicle, removeVehicle, vehicleBody, wheelContacts } from './vehicles'
 
 /**
@@ -90,9 +91,7 @@ export class JoltWorld implements PhysicsWorld {
   private readonly objVsBp: JoltNS.ObjectVsBroadPhaseLayerFilterTable
   private disposed = false
   private readonly asserts: JoltNS.AssertFailedHandlerJS
-  /** Contacts each body has now (added minus removed), for `touching`. */
-  readonly touches = new Map<number, number>()
-  /** The bodies each body touches now, with how many contacts each (`updateFriction`). */
+  /** The bodies each body touches now, with how many contacts each (added minus removed): `updateFriction` reads them, and a body with any is `touching`. */
   readonly partners = new Map<number, Map<number, number>>()
   readonly activeIds: JoltNS.BodyIDVector
   readonly ignored = new Set<number>()
@@ -109,6 +108,7 @@ export class JoltWorld implements PhysicsWorld {
     this.slipSpeed = desc.slipSpeed ?? 0.02
     this.reportSpeed = desc.contactReportSpeed ?? 0.5
     this.maxContacts = Math.min(ROW_CAPACITY, desc.maxContacts ?? ROW_CAPACITY)
+    checkVec3Layout(J)
     const settings = new J.JoltSettings()
     settings.mMaxBodies = desc.maxBodies ?? 16384
     settings.mMaxBodyPairs = 32768
@@ -312,7 +312,6 @@ export class JoltWorld implements PhysicsWorld {
   /** What the adapter keeps about a body that went (removed, or its ragdoll destroyed). */
   forget(id: number): void {
     this.bodies.delete(id)
-    this.touches.delete(id)
     this.partners.delete(id)
     this.points.delete(id)
     this.rollers.delete(id)
@@ -484,7 +483,7 @@ export class JoltWorld implements PhysicsWorld {
   }
 
   touching(id: BodyId): boolean {
-    return (this.touches.get(id) ?? 0) > 0
+    return this.partners.has(id)
   }
 
   touch(key: number, other: number, by: number): void {

@@ -1056,3 +1056,68 @@ Reproduzido: `SEED=61 FPS=144 PIECE_SOLVER=jolt` numa cópia da bacia com um reg
 - **O que 32 não fecha:** a pilha 20:1 a dt 1/144 (6 sementes, ≈ 0,3 mm de C1), 8 e 10 iterações no C6 (T3.3, fora de alcance por passadas) e a semente 61 a 1/144 por C2 sem condição (parte 2). O C6 só fecha com a decisão do dono sobre: (a) 32 como valor de produção; (b) a régua de C2 sem condição fora do reprovador; (c) 8 e 10 fora do C6 (ou a terceira via da T3.3).
 - **O B6 de produção (modo B) está fora do orçamento com qualquer número de passadas** (p99 ≈ 6 ms, despertar ≈ 10,5 ms): o "PASSA" da T1.3 vale para o mundo do teste, não para o de 120 Hz com ouvinte. O orçamento do C7 para a cascata de 500 precisa ser reaberto à parte, não é efeito de subir para 32.
 - Ruído: o B5 oscila ±0,1 entre pares (a mesma bancada deu 1,06–1,23× na T1.3); as tendências acima (custo de 20 → 40 de ≈ +0,5 a 1,2 ms) são maiores que o ruído, as diferenças de 20 para 28 não são.
+
+## T3.6c — B6 no mundo de produção (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `motor-fisico-jolt` (branch `feat/motor-fisico-jolt`), sobre `a12d0ec9`. Feito por `executor` (sonnet). Pedido do dono: "medir e otimizar antes de mexer no orçamento". Nada mudou em passo (120 Hz), iterações (20), velocidade de sono, semântica de `contactReportSpeed`, tolerância ou orçamento. B6, perfil e B5 rodaram com a máquina quieta, um processo por vez.
+
+### O bench agora mede o mundo de produção
+`game-physics-jolt/tests/cascade-tail.test.ts` cria o mundo com `KIT_WORLD` (120 Hz, 20 passadas, ouvinte de contatos, `contactReportSpeed` 0,5, `maxContacts` 4096). **`B6_LEGACY=1` traz de volta o modo do gate 0** (`{ fixedStep: 1/60, maxBodies: 8192 }`, 10 passadas, sem `KIT_WORLD`) para comparação. O relatório ganhou `head` (os 12 primeiros quadros), `over5ms` e `over6ms` (quadros acima de 5 e 6 ms por blast).
+
+### Atribuição: para onde vai o quadro (antes de otimizar)
+Ferramenta nova: `tests/step-profile.test.ts` (`PROFILE=1 PROFILE_RUNS=12 npx vitest run tests/step-profile.test.ts`, da pasta de `game-physics-jolt`). Roda a cena do B6 passo fixo a passo fixo à mão, como `stepFixed` roda (`Step`, `updateFriction`, `roll`, `breakJoints`), e lê a pose dos 500 corpos no fim. Seis variantes em rodadas intercaladas (12 cada, 2 de aquecimento), médias em ms por quadro de 1/60:
+
+| Parte (mundo de produção, 120 Hz, 2 passos por quadro) | f0 (despertar) | f1 | f2 | f3 | média dos outros quadros |
+|---|---|---|---|---|---|
+| Quadro inteiro | 10,50 | 5,95 | 4,48 | 3,25 | 1,18 |
+| `Step` do Jolt, com ouvinte (inclui a ponte wasm→JS) | 10,07 | 5,60 | 4,16 | 2,98 | 1,01 |
+| `updateFriction` | 0,34 | 0,27 | 0,23 | 0,19 | 0,08 |
+| `roll` e `breakJoints` | 0,00 | 0,00 | 0,00 | 0,00 | 0,00 |
+| leitura da pose dos 500 corpos | 0,08 | 0,08 | 0,08 | 0,08 | 0,08 |
+
+Separando o `Step` (mesma cena, mesma rodada, quadro inteiro em ms):
+
+| Variante | f0 | f1 | f2 | f3 | média dos outros |
+|---|---|---|---|---|---|
+| 120 Hz, ouvinte real (produção) | 10,50 | 5,95 | 4,48 | 3,25 | 1,18 |
+| 120 Hz, ouvinte com as 4 funções vazias (só o custo de cruzar para o JS) | 9,56 | 5,92 | 4,23 | 2,93 | 1,10 |
+| 120 Hz, sem ouvinte (piso do Jolt a 120 Hz) | 8,74 | 5,17 | 3,77 | 2,74 | 1,08 |
+| 60 Hz, ouvinte real | 6,81 | 4,48 | 3,06 | 2,14 | 0,70 |
+| 60 Hz, sem ouvinte | 5,29 | 3,76 | 2,65 | 1,78 | 0,66 |
+
+Leitura (despertar, f0, 10,5 ms): **piso do Jolt a 120 Hz 8,7 ms; cruzar para o JS 0,8 ms (68 mil chamadas por rodada, 64 mil delas `OnContactValidate` e `OnContactPersisted` que não fazem nada); trabalho de JS do ouvinte (`OnContactAdded`: contato novo, ≈ 1,7 mil por rodada) ≈ 0,7–1,0 ms; `updateFriction` 0,3 ms; pose 0,1 ms.** Contagem por função numa rodada de 180 quadros: `OnContactValidate` 32 mil, `OnContactPersisted` 32 mil, `OnContactAdded` 1,7 mil, `OnContactRemoved` 1,7 mil. Os cronômetros dentro das funções (variante "timed" do perfil) inflam o resultado em ≈ 2 ms no despertar: valem como limite superior.
+
+O `p99` de 180 quadros do bench é o **segundo pior quadro, o f1** (5,6–6,2 ms), não um ruído do meio: a cauda do despertar decai de forma determinística (`head`: 10,5 / 5,7 / 4,2 / 3,0 / 2,3 / 1,9 ms ...). Com 120 Hz e **nenhum** ouvinte o f1 já é 5,2 ms; a 60 Hz sem ouvinte, 3,8 ms.
+
+### O que foi otimizado (só JS, sem mudar a física)
+1. **Vetores lidos do heap do wasm, não por `GetX/GetY/GetZ`** (`src/vec3.ts`, `vec3At`): o Jolt devolve um `Vec3` como endereço no heap, e os três `float` seguidos são x, y, z; uma chamada no lugar de quatro. Em `contacts.ts` (normal, ponto, velocidade linear, giro e centro de massa dos dois corpos, por contato novo) e em `friction.ts` (centro de massa, mínimo dos limites, velocidade do ponto do pé e do parceiro). Os valores são os mesmos `float` convertidos para `double`: **o resultado é idêntico bit a bit**. `checkVec3Layout` (chamada em todo `new JoltWorld`) confere o formato do build em uso e **lança** se mudar; `tests/vec3.test.ts` compara a leitura do heap com `GetX` num corpo com velocidade.
+2. **`touches` removido**: a contagem de contatos por corpo era a soma das contagens de `partners`; `touching(id)` virou `partners.has(id)` (a invariante já valia: o mapa do corpo some quando fica vazio). Um `Map.get/set/delete` a menos por `touch`, duas vezes por contato novo. `state.ts` deixa de gravar o total (o formato do estado salvo não muda: ele nunca o guardava). A linha de `friction.test.ts` que comparava `touches` com a soma dos parceiros foi apagada: a invariante agora é estrutural.
+3. Já era assim e foi medido, sem mudança: `updateFriction` visita só os corpos ativos com parceiros; `roll` só os `rollers` ativos e tocando; `OnContactPersisted` só faz algo para corpo perguntado (`contactPoints`); `OnContactValidate` só com pares ignorados; a linha de contato fora de `contactReportSpeed` não faz mais que ler vetores (agora no heap).
+4. **Não é possível por JS**: o Jolt chama as quatro funções do ouvinte para todo par de formas, e o `ContactListenerJS` do build não deixa tirar `OnContactValidate` e `OnContactPersisted` (cada chamada atravessa a ponte mesmo vazia: 0,8 ms no despertar). `updateFriction` já está no chão de uma chamada por parceiro em movimento.
+
+### Antes e depois (A/B intercalado, a mesma máquina, a mesma hora)
+A máquina deriva entre execuções (térmica: o mesmo código deu mediana de despertar de 10,3 a 10,9 ms em horas diferentes), então o antes e o depois foram medidos **intercalados**: 6 rodadas de (3 invocações do código de `a12d0ec9`, 3 do otimizado), cada invocação com o aquecimento de sempre e 3 execuções aquecidas = **54 execuções por lado**. Comando (sem commitar nada entre as duas): `git apply -R` e `git apply` do patch de `src/` em volta de `npx vitest run tests/cascade-tail.test.ts`.
+
+| B6 no mundo de produção (54 execuções por lado) | antes (`a12d0ec9`) | depois | orçamento |
+|---|---|---|---|
+| p99 (de 180 quadros), mediana | 6,12 ms | **5,68 ms** | ≤ 4 ms |
+| p99, pior | 8,93 ms | **7,35 ms** | ≤ 5 ms |
+| quadro de despertar, mediana | 10,86 ms | **10,14 ms** | ≤ 10 ms |
+| quadros acima de 6 ms por blast, mediana / máximo | 2 / 3 | **1 / 3** | no máximo 1 |
+| mediana dos 3 s | 1,07 ms | 1,06 ms | — |
+
+Execuções avulsas de 9 invocações × 3 (27 valores) com o código final, sem intercalar, ficaram na mesma faixa (p99 mediana 5,78–5,92, pior 6,7–7,5, despertar mediana 10,3–10,4) porque a máquina estava mais lenta do que na hora do "antes" do A/B: o ganho só aparece de forma confiável intercalado. Modo do gate 0 (`B6_LEGACY=1`), 27 valores: p99 mediana 3,09, pior 5,00, despertar mediana 5,12 (máx 6,88), mesma coisa que a T1.3.
+- **B5** (`BENCH=1 PIECE_SOLVER={own,jolt} npx vitest run tests/bench-pieces.test.ts` em `game-destruction-three`, 3 pares alternados): antes mediana 0,87 / p99 1,24; depois **0,87 / 0,65** (razão Jolt/próprio da mediana; limite 1,25). O p99 oscila de 0,65 a 1,42 entre pares: ruído do p99 de 200 quadros.
+
+### Gates
+- `pnpm -r typecheck`: 0 erros. `eslint` em `game-physics-jolt/src` e `tests`: 0 erros. `node tools/kit-audit/audit.mjs --check`: 0 novos fora do SDK dono.
+- `game-physics-jolt`: 15 arquivos passam, 56 testes (1 pulado: o perfil, `PROFILE=1`). `game-destruction`: 507/507.
+- `game-destruction-three`, solver próprio: 375 passam, 126 pulados (benches e varreduras), 0 falhas.
+- `game-destruction-three`, `PIECE_SOLVER=jolt`: 438 passam, **só as 3 falhas conhecidas** (lata no ar com restituição, lata rolando bate numa parada, cinquenta latas).
+- Bacia, 64 sementes, um processo (`PIECE_SOLVER=jolt BOWL_SEEDS=64 npx vitest run tests/bowl-energy.test.ts`), 128/128: `worstC1 -0.03250907368947817, worstC2 0, worstC2Unconditioned 0.023955968734763244, worstC3 0.012113776835190042, worstC4 0.49999999999999867, fellThrough 0`: **idêntico, dígito a dígito, ao da T3.5** (`-0,0325, 0,023956, 0,012114, 0,5, 0`), como esperado de uma mudança que lê os mesmos `float`.
+
+### O orçamento é cumprido? **Não, e não é alcançável só por otimização de JS.**
+- Despertar: 10,86 → 10,14 ms; limite 10. Ainda acima por ≈ 0,1–0,4 ms (mediana; máximo avulso 12–15 ms).
+- p99: 5,68 ms (limite 4) e pior 7,35 (limite 5). O p99 do bench é o quadro f1 (o segundo depois do despertar). **Mesmo com o ouvinte removido por inteiro** (nenhum JS, nenhum atrito por corpo, variante "sem ouvinte"), f1 é 5,2 ms a 120 Hz: o piso do Jolt em dois passos de 1/120 com 500 corpos acordando já passa do limite de 5 ms. Só o passo de 60 Hz (3,8 ms) ficaria dentro, e o passo é a decisão fechada de 120 Hz.
+- O que sobra de JS é ≈ 1,1 ms no despertar (0,3 de `updateFriction` e 0,8 de ponte wasm→JS inevitável) e ≈ 0,4 ms em f1. Zerar tudo isso levaria o despertar a ≈ 8,7–9,0 e o f1 a ≈ 5,2: o despertar passaria, o p99 não.
+- **Decisão do dono:** (a) manter 120 Hz e reescrever o orçamento do B6 de produção para o que o Jolt entrega (p99 de 180 quadros ≈ 5,7 ms, despertar ≈ 10 ms, um ou dois quadros acima de 6 ms por blast, ainda sem frame acima de 12 ms); ou (b) medir o B6 e o orçamento em 60 Hz (passo da simulação a 60 Hz para a cascata, 120 Hz só onde a estabilidade exige) — muda o gate de bacia e pilhas, que foram medidos a 120 Hz; ou (c) reduzir o custo de despertar na origem (acordar a cascata em lotes entre quadros, ou ilha menor por blast). Nenhum desses é mudança de JS do adaptador.

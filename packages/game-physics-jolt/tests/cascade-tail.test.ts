@@ -2,7 +2,8 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
-import type { BodyDesc, Vec3 } from '@adatechnology/game-physics'
+import { KIT_WORLD } from '@adatechnology/game-physics'
+import type { BodyDesc, Vec3, WorldDesc } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { ground, report, stats } from './scenes'
@@ -13,6 +14,9 @@ interface Tail {
   readonly steps: number[]
 }
 
+/** The world the bench runs in: the kit's (120 Hz, 20 passes, contact listener); `B6_LEGACY=1` brings back the gate 0 one (60 Hz, Jolt's 10 passes, no `KIT_WORLD`) for comparison. */
+const worldDesc = (): WorldDesc => (process.env.B6_LEGACY === '1' ? { fixedStep: 1 / 60, maxBodies: 8192 } : KIT_WORLD)
+
 /**
  * Gate 0 B6: a wall, a slab and crates (500 bodies, asleep) hit by one blast that reaches all of them, so all 500 wake in one frame; the step cost of the
  * next 3 s. `frontSpeed` (m/s) spreads the blast's pushes over the frames its front takes to reach each body (a shock front, not every body at the same
@@ -20,7 +24,7 @@ interface Tail {
  */
 const tail = async (frontSpeed: number): Promise<Tail> => {
   const engine = await createJoltEngine()
-  const world = engine.createWorld({ fixedStep: 1 / 60, maxBodies: 8192 }) as JoltWorld
+  const world = engine.createWorld(worldDesc()) as JoltWorld
   ground(world, 100)
   const descs: BodyDesc[] = []
   const block = (at: Vec3, half: Vec3, mass: number): void => {
@@ -55,6 +59,8 @@ const tail = async (frontSpeed: number): Promise<Tail> => {
   return { woke, firstFrameMs: steps[0] ?? 0, steps }
 }
 
+/** Frames over a limit (ms): the budget lets one per blast pass 6 ms (condition 10). */
+const over = (steps: readonly number[], limit: number): number => steps.filter((x) => x > limit).length
 const ms = (x: number): number => Math.round(x * 1000) / 1000
 /** Runs after the first one in the process: the wasm and the adapter's code paths have been through the same scene (V8's tiers, Jolt's first allocations). */
 const WARM_UP = 2
@@ -68,7 +74,7 @@ describe('case 5b: cascade tail (gate 0 B6), cold and warm', () => {
     for (let i = 0; i < WARM_UP; i++) await tail(0)
     for (let i = 0; i < WARM_RUNS; i++) {
       const warm = await tail(0)
-      report('cascade-tail', { phase: 'warm', run: i + 1, frontSpeed: 0, wokeInOneFrame: warm.woke, firstFrameMs: ms(warm.firstFrameMs), first1s: stats(warm.steps.slice(0, 60)), all3s: stats(warm.steps) })
+      report('cascade-tail', { phase: 'warm', run: i + 1, frontSpeed: 0, wokeInOneFrame: warm.woke, firstFrameMs: ms(warm.firstFrameMs), first1s: stats(warm.steps.slice(0, 60)), all3s: stats(warm.steps), head: warm.steps.slice(0, 12).map(ms), over5ms: over(warm.steps, 5), over6ms: over(warm.steps, 6) })
       expect(warm.woke).toBe(500)
     }
     for (const frontSpeed of [340, 150]) {

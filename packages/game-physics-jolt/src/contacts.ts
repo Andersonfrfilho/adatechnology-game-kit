@@ -3,7 +3,9 @@ import type JoltNS from 'jolt-physics/wasm-compat'
 import type { BodyId, ContactBuffer } from '@adatechnology/game-physics'
 
 import { POINTS_PER_BODY, ROW_CAPACITY } from './constants'
+import type { Jolt } from './constants'
 import type { BodyEntry } from './entries'
+import { vec3At } from './vec3'
 import type { JoltWorld } from './world'
 
 export class Contacts implements ContactBuffer {
@@ -22,23 +24,25 @@ export class Contacts implements ContactBuffer {
   readonly impulse = new Float32Array(ROW_CAPACITY)
 }
 
-/** The speed (m/s) a body's point at (px, py, pz) moves along (nx, ny, nz): 0 for a fixed body. */
-const speedAlong = (e: BodyEntry, p: readonly [number, number, number], n: readonly [number, number, number]): number => {
-  if (e.invMass === 0 && e.layer === 'static') return 0
-  const body = e.body
-  const v = body.GetLinearVelocity()
-  const w = body.GetAngularVelocity()
-  const wx = w.GetX(), wy = w.GetY(), wz = w.GetZ()
-  const c = body.GetCenterOfMassPosition()
-  const rx = p[0] - c.GetX()
-  const ry = p[1] - c.GetY()
-  const rz = p[2] - c.GetZ()
-  return (v.GetX() + wy * rz - wz * ry) * n[0] + (v.GetY() + wz * rx - wx * rz) * n[1] + (v.GetZ() + wx * ry - wy * rx) * n[2]
-}
-
 /** Scratch for one contact's first point and normal: reused, so a contact makes no garbage. */
 const P: [number, number, number] = [0, 0, 0]
 const N: [number, number, number] = [0, 0, 0]
+
+/** The speed (m/s) a body's point at `P` moves along `N`: 0 for a fixed body. The vectors are read from the heap (`vec3At`): a contact reads thousands in the frame a wall wakes. */
+const speedAlong = (J: Jolt, e: BodyEntry): number => {
+  if (e.invMass === 0 && e.layer === 'static') return 0
+  const body = e.body
+  const heap = J.HEAPF32
+  let at = vec3At(J, body.GetLinearVelocity())
+  const vx = heap[at] as number, vy = heap[at + 1] as number, vz = heap[at + 2] as number
+  at = vec3At(J, body.GetAngularVelocity())
+  const wx = heap[at] as number, wy = heap[at + 1] as number, wz = heap[at + 2] as number
+  at = vec3At(J, body.GetCenterOfMassPosition())
+  const rx = P[0] - (heap[at] as number)
+  const ry = P[1] - (heap[at + 1] as number)
+  const rz = P[2] - (heap[at + 2] as number)
+  return (vx + wy * rz - wz * ry) * N[0] + (vy + wz * rx - wx * rz) * N[1] + (vz + wx * ry - wy * rx) * N[2]
+}
 
 /** A new contact's restitution, mixed as the kit mixes it, and its row in `contacts` if it closed faster than `reportSpeed`. */
 const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings): void => {
@@ -48,16 +52,18 @@ const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.C
     return
   }
   cs.mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
-  const n = m.mWorldSpaceNormal
-  N[0] = n.GetX()
-  N[1] = n.GetY()
-  N[2] = n.GetZ()
+  const J = w.J
+  const heap = J.HEAPF32
+  let at = vec3At(J, m.mWorldSpaceNormal)
+  N[0] = heap[at] as number
+  N[1] = heap[at + 1] as number
+  N[2] = heap[at + 2] as number
   // the relative velocity of the first contact point, body 1 minus body 2 (the normal points from 1 to 2)
-  const p = m.GetWorldSpaceContactPointOn1(0)
-  P[0] = p.GetX()
-  P[1] = p.GetY()
-  P[2] = p.GetZ()
-  const along = speedAlong(e1, P, N) - speedAlong(e2, P, N)
+  at = vec3At(J, m.GetWorldSpaceContactPointOn1(0))
+  P[0] = heap[at] as number
+  P[1] = heap[at + 1] as number
+  P[2] = heap[at + 2] as number
+  const along = speedAlong(J, e1) - speedAlong(J, e2)
   if (along < w.reportSpeed) return
   const c = w.contacts
   if (c.count >= w.maxContacts) {

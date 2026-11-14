@@ -182,7 +182,6 @@ describe('Coulomb friction by body: static while it holds, dynamic while it slid
     for (let i = 0; i < 2; i++) world.step(1 / 120)
     expect(world.partners.get(box)?.has(lid) ?? false).toBe(false)
     expect(world.touching(box)).toBe(true)
-    expect(world.touches.get(box)).toBe([...world.partners.get(box)!.values()].reduce((sum, n) => sum + n, 0))
     world.dispose()
   })
 })

@@ -114,19 +114,15 @@ export const restoreState = (w: JoltWorld, data: Uint8Array): boolean => {
     e.friction = friction
   }
   w.partners.clear()
-  w.touches.clear()
   for (let n = next(); n > 0; n--) {
     const key = next()
     const mine = new Map<number, number>()
-    let total = 0
     for (let k = next(); k > 0; k--) {
       const other = next()
       const count = next()
       mine.set(other, count)
-      total += count
     }
     w.partners.set(key, mine)
-    w.touches.set(key, total)
   }
   const nextFloat = (): number => {
     bits.setUint32(0, next(), true)

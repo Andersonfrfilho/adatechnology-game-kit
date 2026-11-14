@@ -1,18 +1,16 @@
 import type { BodyId, Material } from '@adatechnology/game-physics'
 
+import { vec3At } from './vec3'
 import type { JoltWorld } from './world'
 
 /**
- * One more (or one fewer) contact between `key` and `other`: `touching`, and the partners `updateFriction` compares speeds with. One fewer counts only for a
+ * One more (or one fewer) contact between `key` and `other`: the partners `updateFriction` compares speeds with, and `touching` (a body with a partner). One fewer counts only for a
  * pair that was counted: a sensor's pair never is, and a body already removed has no entry left to say which kind its pair was (Jolt reports the removal a step
  * later).
  */
 export const touch = (w: JoltWorld, key: number, other: number, by: number): void => {
   let mine = w.partners.get(key)
   if (by < 0 && !mine?.has(other)) return
-  const n = (w.touches.get(key) ?? 0) + by
-  if (n > 0) w.touches.set(key, n)
-  else w.touches.delete(key)
   if (!mine) {
     mine = new Map()
     w.partners.set(key, mine)
@@ -45,8 +43,9 @@ const slipAgainst = (_count: number, other: number): void => {
     foot.slip = Math.max(foot.slip, Math.sqrt(foot.vx * foot.vx + foot.vy * foot.vy + foot.vz * foot.vz))
     return
   }
-  const u = w.bi.GetPointVelocity(o.id, w.r1)
-  const dx = foot.vx - u.GetX(), dy = foot.vy - u.GetY(), dz = foot.vz - u.GetZ()
+  const heap = w.J.HEAPF32
+  const at = vec3At(w.J, w.bi.GetPointVelocity(o.id, w.r1))
+  const dx = foot.vx - (heap[at] as number), dy = foot.vy - (heap[at + 1] as number), dz = foot.vz - (heap[at + 2] as number)
   foot.slip = Math.max(foot.slip, Math.sqrt(dx * dx + dy * dy + dz * dz))
 }
 
@@ -77,13 +76,16 @@ export const updateFriction = (w: JoltWorld): void => {
     const e = w.bodies.get(key)
     const mine = w.partners.get(key)
     if (!e || !mine || e.invMass === 0) continue
-    const c = e.body.GetCenterOfMassPosition()
-    w.r1.Set(c.GetX(), e.body.GetWorldSpaceBounds().mMin.GetY(), c.GetZ())
-    const v = w.bi.GetPointVelocity(e.id, w.r1)
+    const heap = J.HEAPF32
+    let at = vec3At(J, e.body.GetCenterOfMassPosition())
+    const cx = heap[at] as number, cz = heap[at + 2] as number
+    at = vec3At(J, e.body.GetWorldSpaceBounds().mMin)
+    w.r1.Set(cx, heap[at + 1] as number, cz)
+    at = vec3At(J, w.bi.GetPointVelocity(e.id, w.r1))
     foot.world = w
-    foot.vx = v.GetX()
-    foot.vy = v.GetY()
-    foot.vz = v.GetZ()
+    foot.vx = heap[at] as number
+    foot.vy = heap[at + 1] as number
+    foot.vz = heap[at + 2] as number
     foot.slip = 0
     foot.ground = null
     // a callback made once: a for-of over the partners made an iterator per awake body per step
