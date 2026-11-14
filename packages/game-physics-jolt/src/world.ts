@@ -59,7 +59,8 @@ export class JoltWorld implements PhysicsWorld {
   nextJoint = 1
   nextVehicle = 1
   readonly fixedStep: number
-  private accumulator = 0
+  /** Time `step` has not run yet (less than one fixed step): saved with the state. */
+  accumulator = 0
   readonly slipSpeed: number
   readonly reportSpeed: number
   readonly maxContacts: number
@@ -252,6 +253,7 @@ export class JoltWorld implements PhysicsWorld {
       invMass: mp,
       kitMass: desc.motion === 'dynamic' && desc.mass !== undefined ? { mass: desc.mass, ...(desc.inertia ? { inertia: desc.inertia } : {}) } : null,
       sliding: false,
+      friction: (desc.material ?? DEFAULT_MATERIAL).frictionStatic,
     }
     this.bodies.set(key, entry)
     this.byPointer.set(this.J.getPointer(body), entry)
@@ -446,7 +448,9 @@ export class JoltWorld implements PhysicsWorld {
   setMaterial(id: BodyId, material: Material): void {
     const e = this.entry(id)
     e.material = material
-    this.bi.SetFriction(e.id, e.sliding ? material.frictionDynamic : material.frictionStatic)
+    // the next step's `updateFriction` refines it against what the body touches
+    e.friction = e.sliding ? material.frictionDynamic : material.frictionStatic
+    this.bi.SetFriction(e.id, e.friction)
     this.bi.SetRestitution(e.id, material.restitution)
   }
 
@@ -584,18 +588,17 @@ export class JoltWorld implements PhysicsWorld {
   step(dt: number): void {
     this.contacts.count = 0
     this.sensorEvents.length = 0
+    this.brokenJoints.length = 0
     this.accumulator += dt
-    let steps = 0
     while (this.accumulator >= this.fixedStep - 1e-9) {
       this.accumulator -= this.fixedStep
       this.stepCount++
       this.iface.Step(this.fixedStep, 1)
+      // by fixed step, not by call (the result does not depend on how the caller cuts its time), on the solver's speeds, before the rolling impulse
+      updateFriction(this)
       if (this.rollers.size > 0) roll(this, this.fixedStep)
       breakJoints(this, this.fixedStep)
-      steps++
     }
-    if (steps > 0) updateFriction(this)
-    if (steps === 0) this.brokenJoints.length = 0
   }
 
   saveState(): Uint8Array {

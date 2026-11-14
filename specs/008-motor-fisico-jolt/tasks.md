@@ -41,7 +41,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 > alocação (`0fea652f`), adaptador dividido (`72bb3a5e`), carro como corpo (`213878dc`), casa reformada no lugar (`f3187454`). A T1.1 passa a
 > documentar e revisar o que já existe, e a T1.2 a conferir os testes listados contra o código atual, completando o que faltar.
 
-- **T1.2 Implementar o atrito por corpo** no adaptador, conforme T1.1. Teste novo em `jolt`: caixa μs 0,5 / μd 0,4 em 25° segura; μs 0,4 em 25°
+- T1.2 ✅ **Implementar o atrito por corpo** (feito em 2026-11-13; `slope-friction.test.ts` 3/5 no Jolt, 2 pré-existentes vão para a T3.5) no adaptador, conforme T1.1. Teste novo em `jolt`: caixa μs 0,5 / μd 0,4 em 25° segura; μs 0,4 em 25°
   escorrega 0,42 ± 0,05 m em 1 s; corpo escorregando volta a `sticking` ao parar.
   Mecânica? sim (depois de T1.1) · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` e
   `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/slope-friction.test.ts` · `sonnet`.

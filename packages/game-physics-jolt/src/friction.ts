@@ -1,15 +1,19 @@
-import type { BodyId } from '@adatechnology/game-physics'
+import type { BodyId, Material } from '@adatechnology/game-physics'
 
 import type { JoltWorld } from './world'
 
-/** One more (or one fewer) contact between `key` and `other`: `touching`, and the partners `updateFriction` compares speeds with. */
+/**
+ * One more (or one fewer) contact between `key` and `other`: `touching`, and the partners `updateFriction` compares speeds with. One fewer counts only for a
+ * pair that was counted: a sensor's pair never is, and a body already removed has no entry left to say which kind its pair was (Jolt reports the removal a step
+ * later).
+ */
 export const touch = (w: JoltWorld, key: number, other: number, by: number): void => {
+  let mine = w.partners.get(key)
+  if (by < 0 && !mine?.has(other)) return
   const n = (w.touches.get(key) ?? 0) + by
   if (n > 0) w.touches.set(key, n)
   else w.touches.delete(key)
-  let mine = w.partners.get(key)
   if (!mine) {
-    if (by < 0) return
     mine = new Map()
     w.partners.set(key, mine)
   }
@@ -21,16 +25,23 @@ export const touch = (w: JoltWorld, key: number, other: number, by: number): voi
   }
 }
 
-/** The foot `updateFriction` is looking at: its world, its speed, and the fastest it slips against a partner so far. */
-const foot = { world: null as JoltWorld | null, vx: 0, vy: 0, vz: 0, slip: 0 }
+/**
+ * The foot `updateFriction` is looking at: its world, its speed, the fastest it slips against a partner so far, and the one material all its partners share
+ * when they are all fixed (`null` before the first, `false` once a partner moves or has another material).
+ */
+const foot = { world: null as JoltWorld | null, vx: 0, vy: 0, vz: 0, slip: 0, ground: null as Material | null | false }
 
-/** The foot's speed against one partner, at the foot (a fixed body has none); skipped once it already slips. */
+/** The foot's speed against one partner, at the foot (a fixed body has none), until it already slips; and whether the partners are one fixed material. */
 const slipAgainst = (_count: number, other: number): void => {
   const w = foot.world
-  if (!w || foot.slip > w.slipSpeed) return
+  if (!w) return
   const o = w.bodies.get(other)
   if (!o) return
-  if (o.invMass === 0 && o.layer === 'static') {
+  const fixed = o.invMass === 0 && o.layer === 'static'
+  if (!fixed || (foot.ground !== null && foot.ground !== o.material)) foot.ground = false
+  else if (foot.ground === null) foot.ground = o.material
+  if (foot.slip > w.slipSpeed) return
+  if (fixed) {
     foot.slip = Math.max(foot.slip, Math.sqrt(foot.vx * foot.vx + foot.vy * foot.vy + foot.vz * foot.vz))
     return
   }
@@ -40,11 +51,21 @@ const slipAgainst = (_count: number, other: number): void => {
 }
 
 /**
- * Coulomb by body (spec 008 D1.1, owner's B6 decision), after each `step`: an awake dynamic body whose foot (the point under its centre of mass at the bottom of
- * its bounds) moves against what it touches faster than `slipSpeed` slides, and holds its material's dynamic coefficient; slower, it sticks, and holds the
- * static one. Jolt mixes the two bodies' coefficients (geometric mean), a fixed body entering with its static one. The foot's speed has the body's turning in
- * it, so a can rolling without slipping sticks; against a moving body it is the difference of the two bodies' speeds at that point. A body touching nothing
- * keeps its state.
+ * The coefficient a body holds (design `atrito-por-corpo.md` §3): sticking, its static one; sliding, its dynamic one, or, when everything it touches is fixed and of
+ * one material, `mu_d1 mu_d2 / mu_s2`, so that Jolt's geometric mean with the fixed body's static coefficient is the kit's `sqrt(mu_d1 mu_d2)` exactly.
+ */
+const coefficientOf = (material: Material, sliding: boolean, ground: Material | null | false): number => {
+  if (!sliding) return material.frictionStatic
+  if (!ground || ground.frictionStatic <= 0) return material.frictionDynamic
+  return (material.frictionDynamic * ground.frictionDynamic) / ground.frictionStatic
+}
+
+/**
+ * Coulomb by body (spec 008 D1.1, owner's B6 decision), after each fixed step: an awake dynamic body whose foot (the point under its centre of mass at the bottom
+ * of its bounds) moves against what it touches faster than `slipSpeed` slides; slower, it sticks. Its coefficient is `coefficientOf`; Jolt mixes the two bodies'
+ * (geometric mean), a fixed body entering with its static one. The foot's speed has the body's turning in it, so a can rolling without slipping on flat ground
+ * sticks; on a slope, or bouncing, the speed along the contact normal counts too (design §2). A body touching nothing keeps its state. Each body's result reads
+ * only speeds after the step, never another body's friction: the order bodies and partners are visited in does not change it.
  */
 export const updateFriction = (w: JoltWorld): void => {
   const J = w.J
@@ -55,7 +76,7 @@ export const updateFriction = (w: JoltWorld): void => {
     const key = ids.at(i).GetIndexAndSequenceNumber()
     const e = w.bodies.get(key)
     const mine = w.partners.get(key)
-    if (!e || !mine || e.invMass === 0 || e.material.frictionStatic === e.material.frictionDynamic) continue
+    if (!e || !mine || e.invMass === 0) continue
     const c = e.body.GetCenterOfMassPosition()
     w.r1.Set(c.GetX(), e.body.GetWorldSpaceBounds().mMin.GetY(), c.GetZ())
     const v = w.bi.GetPointVelocity(e.id, w.r1)
@@ -64,15 +85,18 @@ export const updateFriction = (w: JoltWorld): void => {
     foot.vy = v.GetY()
     foot.vz = v.GetZ()
     foot.slip = 0
+    foot.ground = null
     // a callback made once: a for-of over the partners made an iterator per awake body per step
     mine.forEach(slipAgainst)
-    const sliding = foot.slip > w.slipSpeed
-    if (sliding === e.sliding) continue
-    e.sliding = sliding
-    w.bi.SetFriction(e.id, sliding ? e.material.frictionDynamic : e.material.frictionStatic)
+    e.sliding = foot.slip > w.slipSpeed
+    const friction = coefficientOf(e.material, e.sliding, foot.ground)
+    if (friction === e.friction) continue
+    e.friction = friction
+    w.bi.SetFriction(e.id, friction)
   }
-  // the scratch lets go of the world: a disposed world is not kept by it
+  // the scratch lets go of the world and its materials: a disposed world is not kept by it
   foot.world = null
+  foot.ground = null
 }
 
 /**

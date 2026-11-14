@@ -99,7 +99,7 @@ const recordPair = (w: JoltWorld, k1: number, k2: number, m: JoltNS.ContactManif
 }
 
 /**
- * One JS listener for the whole world. A new contact: who touches whom (`touching`, and the partners `updateFriction` reads), restitution mixed as the kit
+ * One JS listener for the whole world. A new contact: who touches whom (`touching`, and the partners `updateFriction` reads; never a sensor), restitution mixed as the kit
  * mixes it (geometric mean; Jolt's default takes the larger), and a row in `contacts` if it closed faster than `reportSpeed`. A kept contact only records its
  * points for a body asked about (`contactPoints`): friction is the bodies' own (`updateFriction`), mixed by Jolt, so no rule runs per contact per step
  * (gate 0 B6: that rule was a third of the frame a wall woke in).
@@ -121,13 +121,18 @@ export const makeListener = (w: JoltWorld): JoltNS.ContactListenerJS => {
     const e1 = w.byPointer.get(body1)
     const e2 = w.byPointer.get(body2)
     if (!e1 || !e2) return
-    w.touch(e1.key, e2.key, 1)
-    w.touch(e2.key, e1.key, 1)
-    const m = J.wrapPointer(manifold, J.ContactManifold)
-    if (w.points.size > 0) recordPair(w, e1.key, e2.key, m)
+    const cs = J.wrapPointer(settings, J.ContactSettings)
     pair.e1 = e1
     pair.e2 = e2
-    added(w, pair, m, J.wrapPointer(settings, J.ContactSettings))
+    // a sensor is overlapped, not touched: it is no one's partner and keeps no one `touching` (rolling resistance would brake a body in the air)
+    const sensor = e1.layer === 'sensor' || e2.layer === 'sensor'
+    if (!sensor) {
+      w.touch(e1.key, e2.key, 1)
+      w.touch(e2.key, e1.key, 1)
+    }
+    const m = J.wrapPointer(manifold, J.ContactManifold)
+    if (!sensor && w.points.size > 0) recordPair(w, e1.key, e2.key, m)
+    added(w, pair, m, cs)
   }
   listener.OnContactPersisted = (body1: number, body2: number, manifold: number) => {
     if (w.points.size === 0) return

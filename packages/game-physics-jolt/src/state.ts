@@ -2,7 +2,7 @@ import type { JoltWorld } from './world'
 
 /**
  * Exact state of every body (positions, velocities, sleep, contact cache), for save/load and determinism checks: Jolt's own bytes, then the adapter's (each
- * body's friction state, and who touches whom: what `updateFriction` and `touching` read), then the length of Jolt's part.
+ * body's friction state and coefficient, who touches whom: what `updateFriction` and `touching` read; and the time not stepped yet), then the length of Jolt's part.
  */
 export const saveState = (w: JoltWorld): Uint8Array => {
   const J = w.J
@@ -17,13 +17,20 @@ export const saveState = (w: JoltWorld): Uint8Array => {
   w.system.SaveState(rec)
   J.destroy(rec)
   const own: number[] = []
-  const sliding = [...w.bodies.values()].filter((e) => e.sliding).map((e) => e.key)
-  own.push(sliding.length, ...sliding)
+  const bits = new DataView(new ArrayBuffer(8))
+  const changed = [...w.bodies.values()].filter((e) => e.sliding || e.friction !== e.material.frictionStatic)
+  own.push(changed.length)
+  for (const e of changed) {
+    bits.setFloat64(0, e.friction, true)
+    own.push(e.key, e.sliding ? 1 : 0, bits.getUint32(0, true), bits.getUint32(4, true))
+  }
   own.push(w.partners.size)
   for (const [key, mine] of w.partners) {
     own.push(key, mine.size)
     for (const [other, count] of mine) own.push(other, count)
   }
+  bits.setFloat64(0, w.accumulator, true)
+  own.push(bits.getUint32(0, true), bits.getUint32(4, true))
   const joltBytes = chunks.reduce((n, c) => n + c.length, 0)
   const out = new Uint8Array(joltBytes + own.length * 4 + 4)
   let at = 0
@@ -74,12 +81,21 @@ export const restoreState = (w: JoltWorld, data: Uint8Array): boolean => {
     p += 4
     return x
   }
-  const sliding = new Set<number>()
-  for (let n = next(); n > 0; n--) sliding.add(next())
+  const bits = new DataView(new ArrayBuffer(8))
+  const changed = new Map<number, { sliding: boolean; friction: number }>()
+  for (let n = next(); n > 0; n--) {
+    const key = next()
+    const sliding = next() === 1
+    bits.setUint32(0, next(), true)
+    bits.setUint32(4, next(), true)
+    changed.set(key, { sliding, friction: bits.getFloat64(0, true) })
+  }
   for (const e of w.bodies.values()) {
-    const was = e.sliding
-    e.sliding = sliding.has(e.key)
-    if (was !== e.sliding) w.bi.SetFriction(e.id, e.sliding ? e.material.frictionDynamic : e.material.frictionStatic)
+    const saved = changed.get(e.key)
+    e.sliding = saved?.sliding ?? false
+    const friction = saved?.friction ?? e.material.frictionStatic
+    if (friction !== e.friction) w.bi.SetFriction(e.id, friction)
+    e.friction = friction
   }
   w.partners.clear()
   w.touches.clear()
@@ -96,5 +112,8 @@ export const restoreState = (w: JoltWorld, data: Uint8Array): boolean => {
     w.partners.set(key, mine)
     w.touches.set(key, total)
   }
+  bits.setUint32(0, next(), true)
+  bits.setUint32(4, next(), true)
+  w.accumulator = bits.getFloat64(0, true)
   return true
 }

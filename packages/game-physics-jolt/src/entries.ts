@@ -13,8 +13,10 @@ export interface BodyEntry {
   invMass: number
   /** The mass and moments the kit gave it (dynamic only): kept when its shape changes (`setShape`). */
   kitMass: { readonly mass: number; readonly inertia?: Vec3 } | null
-  /** Its friction now (`updateFriction`): the material's dynamic coefficient while it slides on what it touches, the static one otherwise. */
+  /** Whether it slides on what it touches (`updateFriction`): its friction is then the dynamic one, else the material's static coefficient. */
   sliding: boolean
+  /** The coefficient Jolt holds for it now (`updateFriction`, `SetFriction`). */
+  friction: number
 }
 
 export interface JointEntry {

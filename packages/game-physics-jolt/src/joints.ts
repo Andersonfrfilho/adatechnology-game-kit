@@ -141,7 +141,7 @@ export const createRagdoll = (w: JoltWorld, desc: RagdollDesc): { readonly id: R
   const bodies: BodyId[] = desc.parts.map((part, i) => {
     const body = lock.TryGetBody(ragdoll.GetBodyID(i))
     const key = body.GetID().GetIndexAndSequenceNumber()
-    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, sliding: false }
+    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
     w.bodies.set(key, entry)
     w.byPointer.set(J.getPointer(body), entry)
     if (part.body.rolling) w.rollers.set(key, part.body.rolling)
@@ -198,9 +198,8 @@ export const jointAngles = (w: JoltWorld, id: JointId): { swing: number; twist: 
   return { swing, twist, hinge: 0 }
 }
 
-/** The joints whose impulse this step passed their breaking impulse (scaled to the step) go, and are listed in `brokenJoints`. */
+/** The joints whose impulse this fixed step passed their breaking impulse (scaled to the step) go, and are added to `brokenJoints` (cleared once per `step` call). */
 export const breakJoints = (w: JoltWorld, dt: number): void => {
-  w.brokenJoints.length = 0
   for (const [id, e] of w.joints) {
     if (e.breakImpulse === Infinity) continue
     let impulse = 0
