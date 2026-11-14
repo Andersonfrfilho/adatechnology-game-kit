@@ -249,3 +249,36 @@ Prova de que o teste pega o comportamento antigo: com `putMass` desligado localm
 | `pnpm --filter @adatechnology/game-physics-jolt test` | 14 arquivos, 46/46 passam |
 | `eslint` no teste novo | 0 problemas |
 | `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |
+
+
+## T2.5
+
+2026-11-13, Intel Core Ultra 9 275HX. Auditoria de `packages/game-physics-jolt/src`: cada `new J.` conferido contra o caminho de remoção e o `dispose` (corpos e formas e suas settings, juntas incl. slider, settings do ragdoll e o ragdoll, constraint/controller/listener/tester do veículo, character, sensores, tabelas de grupo, filtros, vetores de rascunho, listener, `StateRecorderJS`, settings do height field). Tudo tinha `destroy`/`Release`/`RemoveBody`+`DestroyBody`/`RemoveConstraint`, menos um.
+
+**Vazamento achado e corrigido:** `createCharacter` devolvia um objeto cujo `dispose` ficava com o chamador; o mundo não conhecia o character. `world.dispose()` com um character vivo deixava `CharacterVirtual`, `ExtendedUpdateSettings` e dois `Vec3` na heap: **+544 a 560 bytes por mundo** (6 mundos seguidos: 20 685 360, 20 685 904, 20 686 448, 20 687 000, 20 687 544, 20 688 104). Correção: `JoltWorld.characters` (conjunto), `createCharacter` registra o character, `dispose` do character se tira do conjunto (segunda chamada não faz nada) e `world.dispose()` descarta os que sobraram, antes de destruir o sistema (`src/world.ts`, `src/character.ts`). O resto do `src` não mudou.
+
+`tests/heap.test.ts` ganhou o bloco `C9` (9 testes novos), cada ciclo repetido 20 vezes depois de 1 de aquecimento, exigindo `world.memoryInUse()` igual ao byte antes de cada ciclo:
+
+| Ciclo | Bytes por ciclo |
+|---|---|
+| ragdoll (3 partes: swingTwist, hinge) criar e remover, com 1 passo | 0 |
+| veículo (4 rodas) criar, dirigir, 1 passo, remover | 0 |
+| junta `fixed`, `hinge`, `swingTwist`, `slider` (cada uma, com os dois corpos) | 0 |
+| sensor criar e remover | 0 |
+| `setShape` em corpo dinâmico (box, compound, com `mass` e com `mass.inertia`) | 0 |
+| character criar e `dispose` (duas vezes) | 0 |
+| `createPhysicsLoop` + fase + `step` + retirar (num mundo por ciclo) | 0 |
+| `saveState` / `restoreState` | 0 |
+| mundo criado e descartado, com ragdoll, veículo e character vivos | 0 (era +544..560 antes da correção) |
+
+Notas: a heap em uso difere em 8 bytes entre uma forma `compound` e uma `box` (tamanho do objeto de forma, não vazamento); por isso o ciclo do `setShape` termina na forma com que começou. Grupos de colisão (`createGroup`) não têm remoção na API: ficam até o `dispose` do mundo, que os libera (não ciclado). O teste B4 existente (pior cena) segue: **pico 21 MB** (0,164 da heap de 128 MB; limite da task 64 MB), `afterBytes` iguais nas 5 rodadas.
+
+Os testes pegam o vazamento: com `J.destroy(listener)` do veículo, `J.destroy(e.ragdoll)` e `J.destroy(update)` do character comentados localmente, 5 testes ficam vermelhos (ragdoll, veículo, character, mundo, e o B4); restaurado, voltam ao verde.
+
+| Gate | Resultado |
+|---|---|
+| `pnpm --filter @adatechnology/game-physics-jolt typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-physics-jolt test` | 14 arquivos, 55/55 passam |
+| `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/heap.test.ts` | 10/10 passam |
+| `eslint` em `character.ts`, `world.ts`, `heap.test.ts` | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |

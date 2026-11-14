@@ -35,7 +35,7 @@ export const createCharacter = (w: JoltWorld, at: Vec3, size: CharacterDesc): Jo
   const velocity = new J.Vec3(0, 0, 0)
   const gravity = new J.Vec3(0, -9.81, 0)
   let fall = 0
-  return {
+  const made: JoltCharacter = {
     update: (dt: number, vx: number, vz: number) => {
       fall = character.IsSupported() ? 0 : fall - 9.81 * dt
       velocity.Set(vx, fall, vz)
@@ -50,10 +50,13 @@ export const createCharacter = (w: JoltWorld, at: Vec3, size: CharacterDesc): Jo
     },
     supported: () => character.IsSupported(),
     dispose: () => {
+      if (!w.characters.delete(made)) return
       J.destroy(update)
       J.destroy(velocity)
       J.destroy(gravity)
       J.destroy(character)
     },
   }
+  w.characters.add(made)
+  return made
 }

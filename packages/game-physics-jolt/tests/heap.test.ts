@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import type { BodyDesc, Vec3 } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, JointDesc, RagdollDesc, ShapeDesc, VehicleDesc, Vec3 } from '@adatechnology/game-physics'
+import { createPhysicsLoop } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { ground, report } from './scenes'
@@ -93,5 +94,178 @@ describe('gate 0 B4: wasm heap', () => {
       expect(r.after).toBe(runs[0].after)
     }
     expect(runs[0].after - runs[0].before).toBeLessThan(4096)
+  })
+})
+
+const CYCLES = 20
+
+/** One warm-up pass (Jolt grows its arrays and caches once), then `CYCLES` more: the heap in use before each must be the same byte. */
+const bytesPerCycle = (world: JoltWorld, cycle: (i: number) => void): number[] => {
+  cycle(0)
+  const before: number[] = []
+  for (let i = 1; i <= CYCLES; i++) {
+    before.push(world.memoryInUse())
+    cycle(i)
+  }
+  before.push(world.memoryInUse())
+  return before
+}
+
+const expectFlat = (name: string, world: JoltWorld, cycle: (i: number) => void): void => {
+  const used = bytesPerCycle(world, cycle)
+  report(`heap-cycles-${name}`, { cycles: CYCLES, startBytes: used[0], endBytes: used[used.length - 1], perCycle: (used[used.length - 1]! - used[0]!) / CYCLES })
+  console.log(name, used.join(","))
+  for (const bytes of used) expect(bytes).toBe(used[0])
+}
+
+const ragdollDesc = (at: Vec3): RagdollDesc => ({
+  stabilize: true,
+  parts: [
+    { body: { shape: { kind: 'capsule', halfHeight: 0.25, radius: 0.17 }, mass: 40, position: [at[0], at[1] + 1.25, at[2]], layer: 'character', user: 1 }, parent: -1 },
+    { body: { shape: { kind: 'sphere', radius: 0.11 }, mass: 5, position: [at[0], at[1] + 1.75, at[2]], layer: 'character', user: 1 }, parent: 0, joint: { kind: 'swingTwist', point: [at[0], at[1] + 1.62, at[2]], twistAxis: [0, 1, 0], planeAxis: [0, 0, 1], normalHalfCone: 0.5, planeHalfCone: 0.5, twistMin: -0.5, twistMax: 0.5 } },
+    { body: { shape: { kind: 'box', half: [0.1, 0.3, 0.1] }, mass: 25, position: [at[0], at[1] + 0.45, at[2]], layer: 'character', user: 1 }, parent: 0, joint: { kind: 'hinge', point: [at[0], at[1] + 0.92, at[2]], axis: [1, 0, 0], normal: [0, 1, 0], min: -1, max: 1 } },
+  ],
+})
+
+const vehicleDesc: VehicleDesc = {
+  chassis: { shape: { kind: 'box', half: [0.8, 0.3, 2] }, motion: 'dynamic', position: [0, 1, 0], mass: 1000, user: 2 },
+  wheels: [[0.7, 1.4], [-0.7, 1.4], [0.7, -1.4], [-0.7, -1.4]].map(([x, z], i) => ({
+    position: [x!, -0.3, z!] as Vec3, radius: 0.3, width: 0.2, suspensionMin: 0.05, suspensionMax: 0.25, frequency: 1.5, damping: 0.5,
+    maxSteer: i < 2 ? 0.6 : 0, driven: i < 2, maxBrakeTorque: 1500, maxHandBrakeTorque: i < 2 ? 0 : 4000,
+  })),
+  maxTorque: 160, minRpm: 1000, maxRpm: 6000, gears: [3.5, 2.0, 1.4], reverseGears: [-3.3], differentialRatio: 4.2, antiRoll: 1000,
+}
+
+describe('C9: every Jolt object the adapter makes is destroyed (heap in cycles)', () => {
+  const made = async (): Promise<{ engine: Awaited<ReturnType<typeof createJoltEngine>>; world: JoltWorld }> => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld() as JoltWorld
+    ground(world, 50)
+    return { engine, world }
+  }
+  const pair = (world: JoltWorld): [BodyId, BodyId] => [
+    world.createBody({ shape: { kind: 'box', half: [0.2, 0.2, 0.2] }, motion: 'static', position: [10, 1, 0], user: 0 }),
+    world.createBody({ shape: { kind: 'box', half: [0.2, 0.2, 0.2] }, motion: 'dynamic', mass: 5, position: [10.5, 1, 0], user: 0 }),
+  ]
+
+  it('ragdoll create and remove', async () => {
+    const { world } = await made()
+    expectFlat('ragdoll', world, () => {
+      const doll = world.createRagdoll(ragdollDesc([0, 0, 0]))
+      world.step(1 / 30)
+      world.removeRagdoll(doll.id)
+    })
+    world.dispose()
+  })
+
+  it('vehicle create and remove', async () => {
+    const { world } = await made()
+    expectFlat('vehicle', world, () => {
+      const car = world.createVehicle(vehicleDesc)
+      world.driveVehicle(car, { forward: 1, right: 0.2, brake: 0, handBrake: 0 })
+      world.step(1 / 30)
+      world.removeVehicle(car)
+    })
+    world.dispose()
+  })
+
+  it('each joint kind, create and remove', async () => {
+    const { world } = await made()
+    const joints = (a: BodyId, b: BodyId): JointDesc[] => [
+      { kind: 'fixed', a, b, point: [10, 1, 0], breakImpulse: 100 },
+      { kind: 'hinge', a, b, point: [10, 1, 0], axis: [0, 1, 0], normal: [1, 0, 0], min: -1, max: 1, friction: 1 },
+      { kind: 'swingTwist', a, b, point: [10, 1, 0], twistAxis: [1, 0, 0], planeAxis: [0, 1, 0], normalHalfCone: 0.5, planeHalfCone: 0.5, twistMin: -0.5, twistMax: 0.5, friction: 1 },
+      { kind: 'slider', a, b, point: [10, 1, 0], axis: [1, 0, 0], min: 0, max: 0.4, friction: 1 },
+    ]
+    for (const kind of ['fixed', 'hinge', 'swingTwist', 'slider'] as const) {
+      expectFlat(`joint-${kind}`, world, () => {
+        const [a, b] = pair(world)
+        const desc = joints(a, b).find((j) => j.kind === kind)!
+        const id = world.createJoint(desc)
+        world.step(1 / 30)
+        world.removeJoint(id)
+        world.removeBody(b)
+        world.removeBody(a)
+      })
+    }
+    world.dispose()
+  })
+
+  it('sensor create and remove', async () => {
+    const { world } = await made()
+    expectFlat('sensor', world, () => {
+      const sensor = world.createBody({ shape: { kind: 'sphere', radius: 1 }, motion: 'static', layer: 'sensor', position: [0, 1, 0], user: 3 })
+      const probe = world.createBody({ shape: { kind: 'box', half: [0.2, 0.2, 0.2] }, motion: 'dynamic', mass: 1, position: [0, 1, 0], user: 4 })
+      world.step(1 / 30)
+      world.removeBody(probe)
+      world.removeBody(sensor)
+    })
+    world.dispose()
+  })
+
+  it('setShape on a dynamic body, repeatedly', async () => {
+    const { world } = await made()
+    const piece = world.createBody({ shape: { kind: 'box', half: [0.1, 0.1, 0.1] }, motion: 'dynamic', mass: 2, position: [0, 3, 0], user: 5 })
+    const box: ShapeDesc = { kind: 'box', half: [0.1, 0.1, 0.1] }
+    const compound: ShapeDesc = { kind: 'compound', children: [{ shape: { kind: 'box', half: [0.1, 0.05, 0.1] }, position: [0, 0, 0], tag: 0 }] }
+    // the heap holds a compound 8 bytes above a box, so a cycle ends on the shape it began with
+    expectFlat('setShape', world, () => {
+      world.setShape(piece, compound)
+      world.setShape(piece, box, { mass: 2, inertia: [0.01, 0.02, 0.03] })
+      world.setShape(piece, compound, { mass: 3 })
+      world.setShape(piece, box, { mass: 2 })
+    })
+    world.dispose()
+  })
+
+  it('character create and dispose', async () => {
+    const { world } = await made()
+    expectFlat('character', world, () => {
+      const character = world.createCharacter([0, 0, 0], 0.3, 0.6, 75, 400)
+      character.update(1 / 60, 1, 0)
+      world.step(1 / 60)
+      character.dispose()
+      character.dispose()
+    })
+    world.dispose()
+  })
+
+  it('a physics loop made, given a phase, stepped, and let go', async () => {
+    const { engine, world } = await made()
+    expectFlat('loop', world, () => {
+      const other = engine.createWorld() as JoltWorld
+      const loop = createPhysicsLoop(other)
+      const remove = loop.add({ beforeStep: () => undefined }, 'actors')
+      loop.step(1 / 30)
+      remove()
+      other.dispose()
+    })
+    world.dispose()
+  })
+
+  it('saveState and restoreState', async () => {
+    const { world } = await made()
+    world.createBody({ shape: { kind: 'box', half: [0.2, 0.2, 0.2] }, motion: 'dynamic', mass: 5, position: [0, 2, 0], user: 6 })
+    expectFlat('state', world, () => {
+      const saved = world.saveState()
+      world.step(1 / 30)
+      expect(world.restoreState(saved)).toBe(true)
+    })
+    world.dispose()
+  })
+
+  it('a world made and disposed gives the heap back to the byte', async () => {
+    const engine = await createJoltEngine()
+    const holder = engine.createWorld() as JoltWorld
+    expectFlat('world', holder, () => {
+      const world = engine.createWorld() as JoltWorld
+      ground(world, 10)
+      world.createRagdoll(ragdollDesc([0, 0, 0]))
+      world.createVehicle(vehicleDesc)
+      world.createCharacter([4, 0, 0], 0.3, 0.6, 75, 400)
+      world.step(1 / 30)
+      world.dispose()
+    })
+    holder.dispose()
   })
 })

@@ -54,6 +54,7 @@ export class JoltWorld implements PhysicsWorld {
   readonly joints = new Map<number, JointEntry>()
   readonly vehicles = new Map<number, VehicleEntry>()
   readonly ragdolls = new Map<number, RagdollEntry>()
+  readonly characters = new Set<JoltCharacter>()
   nextRagdoll = 1
   readonly groups: JoltNS.GroupFilterTable[] = []
   nextJoint = 1
@@ -637,6 +638,7 @@ export class JoltWorld implements PhysicsWorld {
     this.disposed = true
     const J = this.J
     for (const id of [...this.vehicles.keys()]) this.removeVehicle(id as VehicleId)
+    for (const character of [...this.characters]) character.dispose()
     for (const id of [...this.ragdolls.keys()]) this.removeRagdoll(id as RagdollId)
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
