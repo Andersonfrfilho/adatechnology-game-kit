@@ -112,8 +112,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - **T3.3 Bug 4: C1 com 8 e 10 iterações.** Achar a causa dos 3/128 e 8/128 (excesso de 0,5–5,2 mm). Duas tentativas; se persistir, registrar  **Status 2026-11-14: levado ao dono** (8: 120/128, 10: 125/128; duas tentativas falharam; ver evidence.md `## T3.3`).
   e levar ao dono, mantendo 20 como piso de produção.
   Mecânica? não · Aceite por comando? sim: `BOWL_SEEDS=64 JOLT_ITERATIONS=8 ...bowl-energy.test.ts` e o mesmo com 10 · `sonnet`.
-- **T3.4 Régua única de energia** (C1 por ilha, C2 com a condição de C1, C3, C3b) em `tests/` de `d3`, usada pela bacia e pelas sondas da sala
-  (`specs/008-solver-de-contato-dos-destrocos/decision/probes/`). Aceite: reproduz as colunas do gate 0 no Jolt e no próprio.
+- T3.4 ✅ **Régua única de energia** (feito em 2026-11-14; `evidence.md`, seção T3.4) (C1 por ilha, C2 com a condição de C1, C3, C3b) em `tests/` de `d3`, usada pela bacia e pelas sondas da sala
+  (`specs/008-motor-fisico-jolt/decision/probes/`; as de `008-solver-de-contato-dos-destrocos` só existem em `spike/engine-jolt`). Aceite: reproduz as colunas do gate 0 no Jolt e no próprio.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` · `sonnet`.
 - **T3.5 C5: os 10 comportamentos do §12** (`spec.md` §6.1), um teste cada; reescrever os 14 que falham com apoio desenhado, motivo de cada
   um em `evidence.md`.

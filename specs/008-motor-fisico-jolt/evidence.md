@@ -723,3 +723,52 @@ Bacia 128/128 em 8, 10 e 20. **Reprovada no portão de linhas de base**: `PIECE_
 ### Estado
 - **Persiste. T3.3 fica desmarcada, "levado ao dono".** `JOLT_ITERATIONS=20` segue como piso de produção (128/128, pior C1 −0,0022, C2 0,024 m, C3 0,0121 m, `fellThrough` 0, medido de novo no HEAD limpo; `rolling` com as 6 falhas conhecidas).
 - Decisão para o dono: aceitar 20 como piso (custo do passo mantido) ou autorizar uma terceira via, **não testada**: limitar a razão de massa só em contato em repouso (velocidade de aproximação pequena, p.ex. < 0,5 m/s, o que cobre o pouso de 0,7 m/s só se o limite subir), preservando o momento das colisões livres. Custo: a chamada JS do ouvinte por contato persistido por passo (B6 já gastou um terço do quadro com isso no gate 0).
+
+## T3.4 — Régua única de energia (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20. Feito por `executor` (sonnet). Sem GPU nem navegador.
+
+**Onde mora.** `packages/game-destruction-three/tests/energy-ruler.ts` (sem imports, fora da API pública de qualquer pacote publicado). Testes dela:
+`tests/energy-ruler.test.ts` (14, com valores contados à mão). A bacia (`tests/bowl-energy.ts`) usa a régua; o teste da bacia agora imprime no fim a linha
+`bowl worst {...}` (pior C1, C2, C2 sem a condição, C3, C4, mais fundo, `fellThrough`).
+
+**Definições da régua** (uma só implementação):
+- **Ilha:** peças cujas esferas envolventes (`|halfExtents|`) se tocam no estado de antes **ou** de depois do update (união-busca). É mais larga que o contato real, então nunca separa o que está em contato.
+- **C1:** por ilha e por update, `Σ m·(altura de energia depois − antes) − m_ilha·1 mm`; pior valor em kg·m, > 0 falha. Update com entrada de fora (`'energy'`) não conta.
+- **C2:** ganho de altura de energia sobre o último repouso, por episódio (um episódio fecha quando a peça volta ao repouso ou quando uma entrada de fora acontece; a entrada de fora é absorvida, só conta o ganho depois dela). Só vira lançamento se a ilha também violou C1 no episódio (`c2Gain`); `c2GainUnconditioned` é a régua antiga, a coluna do gate 0. Também `c2PiecesOver` e `c2PiecesOverUnconditioned` (peças acima de 3,5 cm, a coluna da sala).
+- **C3:** subida do centro além da própria velocidade para cima, somada por peça (não conta em update `'energy'`). **C3b:** `deepest` (centro sob o chão logo abaixo, a cada update) e `fellThrough` (a rede do motor).
+- **C4:** segundos da última entrada de fora (`'energy'` ou `'wake'`) até todas dormirem; volta a -1 se algo acordar depois.
+- `OutsideInput`: `'none' | 'wake' | 'energy'`. Sala: blast e martelo são `'energy'` (T3.8: só o ganho sem entrada de fora, sono contado da última entrada de fora).
+
+**A bacia não perdoa nada.** Ela passa `'wake'` (só reinicia o relógio do sono) e nunca `'energy'`: o chão que aprofunda e o despertar contam em C1, C2 e C3, como já contavam. A spec permitiria perdoar o chão que muda; não afrouxei.
+
+**Sondas da sala.** `specs/008-solver-de-contato-dos-destrocos/decision/probes/` **não existe nesta branch** (está só em `spike/engine-jolt`, commit `5ae2a9aa`; esta branch não o contém) e as antigas `blast.js`/`hammer.js` medem só `lift`, sem coluna de energia. Criei `specs/008-motor-fisico-jolt/decision/probes/`: `room.js` (um só arquivo para blast e martelo, `__KIND__`), `ruler-bundle.mjs` e `run.sh`. As sondas são texto injetado na página, sem `import`: `ruler-bundle.mjs` transpila o mesmo `energy-ruler.ts` (TypeScript do repositório, sem bundler, a régua não tem imports) e `run.sh` o põe no escopo como `EnergyRuler`. A régua fica em `tests/`, não num pacote publicado. **Não rodei as sondas** (T3.8, à mão). Conferi só que a expressão final tem sintaxe válida e que a régua transpilada executa.
+
+**Colunas: a régua reproduz o gate 0.** Bacia, 64 sementes × dt {0,05; 1/60} = 128 casos, `JOLT_ITERATIONS=20`, um processo só (`BOWL_SEEDS=64`):
+
+| Coluna | Jolt (T3.4) | Jolt registrado (T3.1/T3.3/T1.4) | Próprio (T3.4, `BOWL_OWN=1`) | Próprio no gate 0 / spec |
+|---|---|---|---|---|
+| Casos que passam | **128/128** | 128/128 | **46/128** | 46/128 (`spec.md` §2.1; 82/128 falham) |
+| Pior C1 (kg·m) | **−0,0022080** | −0,0022 | +7,29 | — (o gate 0 não media C1 por ilha no próprio) |
+| Pior C2 sem condição (m) | **0,023956** | 0,024 | 0,251 | sala blast 0,54 m; bacia não registrada no próprio |
+| Pior C2 com a condição de C1 (m) | 0 (C1 nunca violado) | — (coluna nova) | 0,251 | — |
+| Pior C3 (m) | **0,012114** | 0,0121 | 0,400 | — |
+| Pior C4 (s) | 0,500 | 0,5 (T1.3) | 2,78 | 2,05 s (Jolt, gate 0); próprio não registrado |
+| Centro mais fundo (m, negativo = sobre o chão) | −0,0383 | −0,038 (T1.3) | +0,313 | — |
+| `fellThrough` | 0 | 0 | 0 (a rede só existe no Jolt) | 0 |
+
+- Jolt: C1, C2 sem condição, C3 e `fellThrough` batem com os números gravados até o último dígito registrado (−0,0022, 0,024, 0,0121, 0). O C2 com a condição é 0 porque C1 nunca é violado no Jolt a 20 iterações: a condição só faz diferença em quem viola C1.
+- Próprio: 46/128 passam e 82/128 falham, exatamente os números da spec. O próprio **não** passa 128/128, nem no gate 0; por isso o teste da bacia continua sendo o gate do Jolt (`PIECE_SOLVER=jolt`) e roda no próprio só com `BOWL_OWN=1`, para ler as mesmas colunas. A diferença para o gate 0 de "pior C1": lá o C1 era a soma de todas as peças; aqui é por ilha, e na bacia a esfera envolvente junta as peças em uma ilha só, então os dois coincidem (o número do Jolt confirma).
+- O teste da bacia não passou a aceitar mais: agora também exige `c2GainUnconditioned ≤ 3,5 cm` além do `c2Gain` da régua (mais estrito que antes, nenhuma tolerância mudou).
+- Divisão para dentro do teste (pendência da T1.3): cada caso cede um turno do laço de eventos, e `BOWL_SEEDS=64` em um processo só sai com código 0 (antes: 128/128, mas `Timeout calling "onTaskUpdate"`, código 1).
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio (`pnpm test`) | **365 passam, 0 falham** (62 pulados; +14 da régua) |
+| `PIECE_SOLVER=jolt` `pnpm test` | 418 passam, **13 falham, os mesmos 13 conhecidos** (`pieces-stack` 1, `rolling` 6, `settled-debris` 2, `slope-friction` 2 + 2 do modo laço) |
+| Bacia Jolt, `BOWL_SEEDS=64 JOLT_ITERATIONS=20`, um processo | **128/128**, exit 0 |
+| Bacia no próprio, `BOWL_OWN=1 BOWL_SEEDS=64` | 46/128, o mesmo do gate 0 (não é gate) |
+| `eslint` nos 4 arquivos de `tests/` mudados | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+| GPU / navegador / sondas | nenhum |

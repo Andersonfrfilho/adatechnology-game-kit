@@ -4,32 +4,39 @@ import * as THREE from 'three'
 
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece } from '../src/types'
+import { EnergyRuler, energyHeightOf } from './energy-ruler'
+import type { EnergySample } from './energy-ruler'
 import { FakeWorld, partState } from './fake-world'
 import { physicsOption } from './setup-physics'
 
-const G = 9.81
-const REST_SPEED = 0.05
-const REST_SPIN = 0.1
-
-/** Energy height of a piece (DECISION-fable §2): y of the centre of mass + (|v|^2 + w.Iw/m) / 2g, with the inertia of its box. */
-const energyHeight = (p: Piece, v: THREE.Vector3, q: THREE.Quaternion): number => {
+/** A piece at this instant, for the ruler: the centre in the world, the energy height with the inertia of its box (DECISION-fable §2). */
+const sampleOf = (p: Piece, scratch: THREE.Vector3, turn: THREE.Quaternion, groundY: (x: number, z: number) => number): EnergySample => {
   p.root.updateMatrixWorld(true)
-  const y = v.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld).y
+  const centre = scratch.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld)
+  const at: [number, number, number] = [centre.x, centre.y, centre.z]
+  const w = scratch.set(p.angularVelocity[0], p.angularVelocity[1], p.angularVelocity[2]).applyQuaternion(turn.copy(p.root.quaternion).invert())
   const [hx, hy, hz] = p.halfExtents
-  // w in the box's frame
-  const w = v.set(p.angularVelocity[0], p.angularVelocity[1], p.angularVelocity[2]).applyQuaternion(q.copy(p.root.quaternion).invert())
-  const k = ((hy * hy + hz * hz) * w.x * w.x + (hx * hx + hz * hz) * w.y * w.y + (hx * hx + hy * hy) * w.z * w.z) / 3
-  const s = p.velocity[0] ** 2 + p.velocity[1] ** 2 + p.velocity[2] ** 2
-  return y + (s + k) / (2 * G)
+  return {
+    id: p.objectId,
+    mass: p.mass,
+    centre: at,
+    radius: Math.hypot(hx, hy, hz),
+    energyHeight: energyHeightOf({ centreY: at[1], velocity: p.velocity, bodyAngularVelocity: [w.x, w.y, w.z], halfExtents: p.halfExtents }),
+    velocityY: p.velocity[1],
+    speed: Math.hypot(...p.velocity),
+    spin: Math.hypot(...p.angularVelocity),
+    sleeping: p.sleeping,
+    groundY: groundY(at[0], at[2]),
+  }
 }
 
-const centreY = (p: Piece, v: THREE.Vector3): number => v.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld).y
-
 export interface BowlResult {
-  /** C1: most the summed m * energy height of all pieces rose in one update, over m_total g 1 mm (> 0 fails). */
+  /** C1: most the summed m * energy height of an island rose in one update, over m_island g 1 mm (> 0 fails). */
   readonly c1Excess: number
-  /** C2: most energy height any piece gained above its last rest (m). */
+  /** C2 with the C1 condition: most energy height a piece gained above its last rest, in an episode where its island also broke C1 (m). */
   readonly c2Gain: number
+  /** C2 without the condition, the gate 0 column: most energy height any piece gained above its last rest (m). */
+  readonly c2GainUnconditioned: number
   /** C3: most centre-of-mass rise beyond its own upward speed summed per piece (spike A's `lift`, m). */
   readonly c3Lift: number
   /** C4: seconds after the last wake until every piece slept (-1: not within 3 s). */
@@ -84,48 +91,37 @@ export const bowl = (seed: number, dt: number): BowlResult => {
   for (let i = 0; i < 0.5 / dt; i++) renderer.update(dt)
   const v = new THREE.Vector3()
   const q = new THREE.Quaternion()
-  const mass = (p: Piece): number => p.mass
-  const total = pieces.reduce((n, p) => n + mass(p), 0)
-  const base = new Map<Piece, number>()
-  const lift = new Map<Piece, number>()
-  let c1Excess = -Infinity
-  let c2Gain = 0
-  let maxUp = 0
-  let deepest = -Infinity
+  // the ground deepening and the wake are the bowl's own doing, not an outside input to forgive: every update counts for C1, C2 and C3, stricter than the spec
+  const ruler = new EnergyRuler()
+  const snapshot = (): EnergySample[] => pieces.map((p) => sampleOf(p, v, q, groundAt))
   const frame = (wake: boolean): void => {
     if (wake) sys.wakeRegion(0, 0, 2)
-    const before = pieces.map((p) => {
-      const eh = energyHeight(p, v, q)
-      const atRest = Math.hypot(...p.velocity) < REST_SPEED && Math.hypot(...p.angularVelocity) < REST_SPIN
-      if (atRest || !base.has(p)) base.set(p, eh)
-      return { p, eh, y: centreY(p, v), vy: p.velocity[1] }
-    })
+    const before = snapshot()
     t += dt
     renderer.update(dt)
-    let sum = 0
-    for (const { p, eh, y, vy } of before) {
-      const after = energyHeight(p, v, q)
-      sum += mass(p) * (after - eh)
-      c2Gain = Math.max(c2Gain, after - (base.get(p) ?? after))
-      lift.set(p, (lift.get(p) ?? 0) + Math.max(0, centreY(p, v) - y - Math.max(0, vy) * dt))
-      if (p.velocity[1] > Math.max(0, vy) + 1e-9) maxUp = Math.max(maxUp, p.velocity[1])
-      const c = v.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld)
-      deepest = Math.max(deepest, groundAt(c.x, c.z) - c.y)
-    }
-    c1Excess = Math.max(c1Excess, sum - total * 0.001)
+    ruler.step(before, snapshot(), dt, wake ? 'wake' : 'none')
   }
   for (let i = 0; i < Math.round(4 / dt); i++) frame(true)
-  let asleep = -1
   for (let i = 0; i < Math.round(3 / dt); i++) {
     frame(false)
-    if (pieces.every((p) => p.sleeping)) {
-      asleep = (i + 1) * dt
-      break
-    }
+    if (pieces.every((p) => p.sleeping)) break
   }
   const hash = createHash('sha256')
   for (const p of pieces) hash.update(`${p.root.position.toArray().join(',')};${p.root.quaternion.toArray().join(',')};`)
-  const lowest = Math.min(...pieces.map((p) => centreY(p, v)))
-  const fellThrough = (renderer as unknown as { pieceSys: { engine: { fellThrough: number } | null } }).pieceSys.engine?.fellThrough ?? 0
-  return { c1Excess, c2Gain, c3Lift: Math.max(0, ...lift.values()), c4AsleepAfter: asleep, maxUp, lowest, deepest, fellThrough, hash: hash.digest('hex').slice(0, 16), ms: performance.now() - started }
+  const lowest = Math.min(...snapshot().map((sample) => sample.centre[1]))
+  ruler.recordFellThrough((renderer as unknown as { pieceSys: { engine: { fellThrough: number } | null } }).pieceSys.engine?.fellThrough ?? 0)
+  const r = ruler.result()
+  return {
+    c1Excess: r.c1Excess,
+    c2Gain: r.c2Gain,
+    c2GainUnconditioned: r.c2GainUnconditioned,
+    c3Lift: r.c3Lift,
+    c4AsleepAfter: r.c4AsleepAfter,
+    maxUp: r.maxUp,
+    lowest,
+    deepest: r.deepest,
+    fellThrough: r.fellThrough,
+    hash: hash.digest('hex').slice(0, 16),
+    ms: performance.now() - started,
+  }
 }
