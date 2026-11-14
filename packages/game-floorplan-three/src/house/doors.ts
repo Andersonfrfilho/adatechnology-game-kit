@@ -28,6 +28,8 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       if (!cut && wallHeight > dH + 1e-3) { const wv = nearestWall(f, p.axis, L, p.at); cursor.pc = wv ? pieceOf(wv) : null; wallBox(alongU, L, a, b, y0 + dH, y0 + effectiveHeight(f, wallHeight), th, lL.color, lH.color, lL.mat, lH.mat); cursor.pc = null; }
       const fb = (u0: number, y_0: number, u1: number, y_1: number, tt = th + 0.02, color = frame): void => alongU ? bx('wood', u0, y0 + y_0, L - tt / 2, u1, y0 + y_1, L + tt / 2, color) : bx('wood', L - tt / 2, y0 + y_0, u0, L + tt / 2, y0 + y_1, u1, color);
       const jw = 0.05; cursor.pc = pieceRecord('jamb:' + p.id, 'wood_hard', null, { floor: f }); fb(a, 0, a + jw, visH); fb(b - jw, 0, b, visH); if (!cut) fb(a, dH - jw, b, dH); cursor.pc = null;
+      // the leaf stops short of the lintel by the clearance it has to the posts
+      const leafH = cut || !shared.ctx.fittedDoors ? visH : visH - jw - 0.005;
       // opening direction: room side p.opensTo
       const sample = (sd: number): ReturnType<Kernel['roomAt']> => roomAt(f, alongU ? p.at : L + sd * 0.5, alongU ? L + sd * 0.5 : p.at);
       let sw = 1; { const cH = sample(1), cL = sample(-1); if (cL && cL.id === p.opensTo) sw = -1; else if (cH && cH.id === p.opensTo) sw = 1; }
@@ -43,14 +45,14 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
       const newGroup = (k: number, hu: number, topY?: number): void => { cursor.group = 'dyn:' + p.id + ':' + k; fo.groups.push({ name: cursor.group, pos: alongU ? [hu, topY != null ? y0 + topY : y0, L] : [L, topY != null ? y0 + topY : y0, hu] }); };
       if (p.model === 'steel') {
         // sectional garage door: light neutral colour or wood (never the dark lot gate colour), panels with grooves and viewer
-        const light = [0xd9d5cc, 0xc9c6bf, 0xe4e0d6], pal = ((Number(R.seed) | 0) + (p.id.length * 7)) % 4, color = pal === 3 ? wood : light[pal], mid = (a + b) / 2; newGroup(0, mid, visH);
-        const la = a + jw - mid, lb = b - jw - mid, nSec = Math.max(4, Math.round(visH / 0.5)), hs = visH / nSec, grv = sh(color, 0.55);
-        leafBox(0, la, lb, -visH, 0, 0.05, color, 'metal');
+        const light = [0xd9d5cc, 0xc9c6bf, 0xe4e0d6], pal = ((Number(R.seed) | 0) + (p.id.length * 7)) % 4, color = pal === 3 ? wood : light[pal], mid = (a + b) / 2; newGroup(0, mid, leafH);
+        const gap = shared.ctx.fittedDoors ? 0.005 : 0, la = a + jw + gap - mid, lb = b - jw - gap - mid, nSec = Math.max(4, Math.round(leafH / 0.5)), hs = leafH / nSec, grv = sh(color, 0.55);
+        leafBox(0, la, lb, -leafH, 0, 0.05, color, 'metal');
         for (let k = 1; k < nSec; k++) leafBox(0, la, lb, -k * hs - 0.012, -k * hs + 0.012, 0.07, grv, 'metal'); // joints between sections
         const np = Math.max(2, Math.round((lb - la) / 0.8)), pw = (lb - la) / np;
         for (let k = 0; k < nSec; k++) for (let i = 0; i < np; i++) leafBox(0, la + i * pw + 0.07, la + (i + 1) * pw - 0.07, -(k + 1) * hs + 0.07, -k * hs - 0.07, 0.062, sh(color, k % 2 ? 0.93 : 1.06), 'metal'); // raised panels
         for (let i = 0; i < np; i++) leafBox(0, la + i * pw + 0.14, la + (i + 1) * pw - 0.14, -hs + 0.12, -0.12, 0.072, 0x5a6670, 'glass'); // viewers in the top section
-        leafBox(0, -0.1, 0.1, -visH + 0.5, -visH + 0.55, 0.085, 0x3a3a3e, 'metal'); // pull
+        leafBox(0, -0.1, 0.1, -leafH + 0.5, -leafH + 0.55, 0.085, 0x3a3a3e, 'metal'); // pull
         fo.minScale = Math.min(1, 0.28 / visH); fo.rot = 0;
       } else {
         const nf = p.model === 'double' ? 2 : 1, aa = a + jw, bb = b - jw;
@@ -58,9 +60,9 @@ export function installHouseDoors(K: Kernel, shared: Shared): void {
           const u0 = nf === 2 ? (k ? (aa + bb) / 2 : aa) : aa, u1 = nf === 2 ? (k ? bb : (aa + bb) / 2) : bb, color = p.exterior ? extC : wood;
           const hingeAt = nf === 2 ? (k ? u1 : u0) : (p.hinge === 'end' ? u1 : u0), dir = hingeAt === u0 ? 1 : -1, len = u1 - u0; newGroup(k, hingeAt);
           const d0 = dir > 0 ? 0.005 : -len + 0.005, d1 = dir > 0 ? len - 0.005 : -0.005;
-          leafBox(hingeAt, d0, d1, 0, visH, 0.04, color, PMAT);
+          leafBox(hingeAt, d0, d1, 0, leafH, 0.04, color, PMAT);
           { const e0 = Math.min(d0, d1) + 0.1, e1 = Math.max(d0, d1) - 0.1, pc = sh(color, 0.82); // leaf panels
-            if (e1 - e0 > 0.2 && visH > 1.2) { leafBox(hingeAt, e0, e1, 0.15, visH * 0.45, 0.055, pc, PMAT); leafBox(hingeAt, e0, e1, visH * 0.5, visH - 0.15, 0.055, pc, PMAT); } }
+            if (e1 - e0 > 0.2 && leafH > 1.2) { leafBox(hingeAt, e0, e1, 0.15, leafH * 0.45, 0.055, pc, PMAT); leafBox(hingeAt, e0, e1, leafH * 0.5, leafH - 0.15, 0.055, pc, PMAT); } }
           { // lock plate, keyhole and handle (own group, turns when opening)
             const hxp = dir * (len - 0.07), yh = 1.0, gn = cursor.group;
             const bk = (da: number, db: number, ya: number, yb: number, sa: number, sb: number, cr: Hex, mt: string): void => { const dl = Math.min(da, db), dh = Math.max(da, db), sl = Math.min(sa, sb), sH = Math.max(sa, sb); if (alongU) bx(mt, dl, ya, sl, dh, yb, sH, cr); else bx(mt, sl, ya, dl, sH, yb, dh, cr); };

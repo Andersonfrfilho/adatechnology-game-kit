@@ -146,6 +146,11 @@ export interface BuildOptions {
    * `SIDEWALK_SLABS`). `'band'`: one strip of each per face, as the Visor de casas 3D drew them (still destructible, as a whole).
    */
   baseboard?: 'tiles' | 'band'
+  /**
+   * `'fitted'` (default): a door leaf stops short of the lintel and keeps 5 mm to the posts, as a real one does in its frame. `'visor'`: the leaf as tall as the opening, 5 cm
+   * into the lintel, as the Visor de casas 3D drew it.
+   */
+  doors?: 'fitted' | 'visor'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
 }
