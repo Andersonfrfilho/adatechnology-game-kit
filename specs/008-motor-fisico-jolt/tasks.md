@@ -117,6 +117,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` · `sonnet`.
 - **T3.5 C5: os 10 comportamentos do §12** (`spec.md` §6.1), um teste cada; reescrever os 14 que falham com apoio desenhado, motivo de cada
   um em `evidence.md`.
+  **Status 2026-11-14: parcial** (`evidence.md`, seção T3.5): os 10 comportamentos têm teste (`tests/c5-behaviours.test.ts`, nos dois solvers) e 10 das 13 falhas do Jolt estão corrigidas;
+  3 de `rolling` ficam para o dono (teto de giro de 47 rad/s e contato cilindro–cilindro).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` e `pnpm --filter @adatechnology/game-destruction test` sem falha · `sonnet`.
 - **T3.6 C6: varredura de robustez** como teste: 64 sementes × dt {1/30, 0,05, 1/60, 1/144} × iterações {8, 10, 20} × push-out ±50%, pilha
   20:1 e pilha de 5. Roda por variável de ambiente, fora do `test` padrão.

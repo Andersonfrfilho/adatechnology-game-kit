@@ -772,3 +772,72 @@ Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20. Feito por `ex
 | `eslint` nos 4 arquivos de `tests/` mudados | 0 problemas |
 | `node tools/kit-audit/audit.mjs --check` | exit 0 |
 | GPU / navegador / sondas | nenhum |
+
+## T3.5 — C5: os 10 comportamentos do §12 e as falhas de `game-destruction-three` no Jolt (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `motor-fisico-jolt`, sobre `4f98a5a5`. Feito por `executor` (sonnet). Sem GPU nem navegador.
+
+### Parte A — os 10 comportamentos (`tests/c5-behaviours.test.ts`, um `it` cada, nos dois solvers)
+
+| # | Comportamento (`spec.md` §6.1) | Teste | Próprio | Jolt |
+|---|---|---|---|---|
+| 1 | Apoio perdido: o que sobrou cai e se apoia | mesa sem as duas pernas de uma ponta: a peça existe, dorme, o tampo desce abaixo de 0,3 m e nada fica sob o chão | passa | passa |
+| 2 | Tomba quando o centro de massa sai do apoio | uma perna sozinha termina abaixo de 0,2 m; duas pernas de um lado: o tampo gira até bater (< 5 cm) e dorme | passa | passa |
+| 3 | O que estava em cima cai junto, no mesmo quadro | lata dormindo no caixote acorda no `update` em que o caixote leva o impulso | passa | passa |
+| 4 | Coulomb: μ 0,4 escorrega em 25°, μ 0,5 segura | plástico sobre o topo de cerâmica desliza a distância analítica de `g (sin t − √(μd₁μd₂) cos t) cos t · t²/2` (0,75 a 1,15×); cerâmica sobre cerâmica anda < 3 cm | passa | passa |
+| 5 | Normal da face inclinada do apoio, não do mundo | caixa posta nivelada numa rampa de 15° termina deitada nela (inclinação ± 0,05 rad) | passa | passa |
+| 6 | Nenhum colisor sem geometria | prateleira de duas partes, uma quebra: `shownBoxes` cai de 2 a 1; a peça solta sobre a que ficou para nela, a solta sobre a que quebrou chega ao chão | passa | passa |
+| 7 | `onBrokenChecked` e catálogo quebrado | quatro postes quebrados: `onBrokenChecked` só com `released = false` e a tábua desce; o que pende é deixado a quem o segura (`[['stand', false]]`, sem peça). O catálogo (`broken-catalogue.test.ts`) mora em `game-floorplan-three` e roda no gate dele | passa | passa |
+| 8 | Lata em pé na rampa de 10° anda ≤ 2 cm em 2 s | `rampa` de madeira, lata de 410 g | passa | passa |
+| 9 | Peça que escorrega numa parede volta ao ponto do encontro (`sweep`) | caixa a 3 m/s contra a parede que o motor não tem: nunca passa de `x_parede + 5 mm` | passa | passa |
+| 10 | Pouso duro avisado pelos eventos de contato | queda de 1,5 m: `onHardLanding` uma vez, com 4,5–6 m/s (√(2gh) = 5,4) | passa | passa |
+
+**Pendência do item 4 (spec cita 0,42 m, esperado 0,47).** O número da spec é do teste do motor (`game-physics-jolt/tests/friction.test.ts`, uma caixa de μ 0,4 contra rampa de μ 0,4); a física dá ~0,295 m em 1 s, que é a analítica de μ 0,4 (`0,5 · g · (sin 25° − 0,4 cos 25°) · 1 s²`). O 0,47 não sai de nenhum μ declarado (daria μ ≈ 0,36). O teste novo usa a analítica derivada do μ do material, não a cifra 0,42/0,47; a regra "μ 0,4 escorrega, μ 0,5 segura" não mudou e a spec não foi tocada. A conferir pelo dono: trocar 0,42/0,47 por 0,295 em `spec.md` §6.1.
+
+### Parte B — as 13 falhas conhecidas no Jolt
+
+**13 contra 14.** A spec diz 14 (gate 0). As 13 são as medidas na T3.2/T3.3 (`pieces-stack` 1, `rolling` 6, `settled-debris` 2, `slope-friction` 2 + 2 do modo laço). A 14ª era "lata em pé na rampa de 10° anda 2,14 cm": a T3.2 mostrou que era a rampa (peça dormindo) caindo, e ela já passava antes da T3.5. Não sobra outra.
+
+| # | Teste (Jolt) | Classe | Causa, com número | Correção |
+|---|---|---|---|---|
+| 1 | `pieces-stack`: perna sozinha tomba | **(b)** | A perna de 5 × 5 × 74 cm em pé fica 6 s com ω ≈ 0,01 rad/s. A regra de equilíbrio (`topple`) empurra com `TOPPLE · min(h,1)` = 1,1 rad/s², menos que o que a gravidade segura na aresta (`m g a / I` ≈ 2,6 rad/s² medido no motor; limite superior de ponto de massa `g a/(h²+a²)` = 1,8); e o lado do empurro (`x0+x1 > 0`) trocava de sinal a cada quadro (ruído dos contatos, base centrada), anulando-se | `engine-pieces.ts`: lado do empurro guardado (`Link.side`, só muda quando o meio do apoio passa de 1 cm do centro de massa) e, só em **coluna** (apoio estreito nos dois sentidos, `max(wx,wz) < 0,3 h`) enquanto ela gira a menos de 0,3 rad/s, empurro ≥ 4 × o limite de ponto de massa (`topplePush`). 1,5×, 2× e 2,5× não viram a perna, 3× vira; 4× dá folga. A bacia pegou isso: sem a trava de giro, a semente 61 (1/60) fez C2 0,27–0,31 m; com a trava de 0,1 rad/s a 57 fez 0,042 (limite 0,035); 0,05–0,15 e 1 flutuam por semente (caos), 0,3 dá 128/128 com o mesmo pior C2 de antes (0,023956). Sem a condição de coluna, uma caixa estreita à beira da mesa (`pieces-edge`) também virava |
+| 2 | `settled-debris`: acorda a peça de cima quando o topo some | **(a)** | O topo era a função `staticTopAt`; no Jolt uma função não é corpo, e a peça fica sem o que a segura | topo desenhado como `staticSolids` (caixa com a face de cima em `top`) só no Jolt; o próprio continua lendo a função. Mesma asserção e mesma tolerância |
+| 3 | `settled-debris`: peça encostada no degrau desce quando o degrau some | **(a)** + **(b)** | (a) mesmo motivo do 2. (b) Com o degrau desenhado a tábua acordava e, no mesmo quadro, o orçamento (`maxAwake: 0`) a punha de volta a dormir: `steady.seconds` (1,5 s de "inclinação mantida" de antes de dormir) ficava velho, e `balancing` ainda não fora avaliado, então `hasComeToRest` dava verdadeiro. Ficou 1 mm abaixo do repouso por 240 quadros | `readBack` (`engine-pieces.ts`): peça que acorda no motor zera `steady` e é julgada na hora (`topple(b, 0)`). Asserção igual |
+| 4–7 | `slope-friction` ×2 e ×2 do modo laço: madeira escorrega em 25°, aço segura; lata deitada rola | **(a)** + **(b)** | (a) a tábua era peça dormindo (no Jolt, 200 kg que cai, T3.2): `makePiece` só sob o solver próprio. (b) Depois disso a caixa de madeira ainda ficava (0,02 cm em 1 s): **toda peça fixa desenhada tinha o atrito do chão (0,7/0,6), não o do material dela** (`describe` de `EngineStatics` usava `GROUND` para todas); a tábua de madeira agarrava como concreto. (c) a lata deitada passou a rolar. (d) A caixa de aço a 25° escorregava por causa da queda de 2 mm (pousa a 0,2 m/s numa rampa de 25° onde o aço agarra 0,49 contra tan 25° = 0,466: o pouso sozinho decide); com 1–2 mm desliza (13 cm em 1 s), com ≤ 0,5 mm segura | `StaticSolid.friction` (estático, dinâmico, rolamento) com o material da parte (`renderer.measureSolids` → `engine-statics.describe`); no teste, caixa posta a 0,5 mm (era 2 mm) e `makePiece` da tábua só no próprio. Mesma asserção e tolerância nos dois solvers |
+| 8, 9 | `rolling`: lata cheia / vazia na rampa a `g (sin t − C_rr cos t)/(1+k)` | **(b)** | A hipótese da T3.2 se confirma, com outra causa: o coeficiente de rolamento do Jolt era o da lata (aço, 0,002) em qualquer apoio; o solver próprio usa o maior dos dois (`pairFriction`: aço 0,002 sobre madeira 0,01 → 0,01, sobre o chão 0,015). 0,002 / 0,01 = 1/5: a aceleração media 1,070 e 0,842 (+4,8 %) contra a faixa 0,991–1,052 e 0,779–0,827 | `Material.rolling` (novo, opcional, `game-physics`); `roll` (`game-physics-jolt/src/friction.ts`) usa o maior entre o da lata e o dos parceiros em contato; o chão, as peças e as partes fixas carregam o seu. Passam as duas |
+| 10 | `rolling`: garrafa cônica empurrada de lado | **(b)** | O motor recebia sempre um cilindro reto do raio maior (`shapeOf`), mesmo com `round.profile`: a garrafa rolava reta (os dois extremos andavam 0,72 m, razão 1,0 contra os 1,3 exigidos) | `shapeOf`: perfil que varia mais de 2 mm vira o casco convexo dos anéis do perfil (16 pontos por anel). Passa |
+| 11 | `rolling`: duas latas no ar, restituição | **(b), sem correção** | Ver "Sem correção" abaixo | — |
+| 12 | `rolling`: lata rolando bate numa parada | **bloqueada pelo teto de giro de 47 rad/s** | O teste dá à lata 2 m/s com `ω = 2/0,033 = 60,6 rad/s`; o motor limita a 47,06 (medido no primeiro quadro: `ω_z −47,06`), então ela derrapa: 2,00 → 1,17 m/s antes de bater na outra (a 0,2 s já estava em 1,55). A outra anda 0,06 m em 0,5 s contra os > 0,2 m exigidos. Não mexi no teto (decisão do dono, T4.3) | **não corrigida; a levar ao dono** |
+| 13 | `rolling`: cinquenta latas | **(b), sem correção** | Ver "Sem correção" | — |
+
+### Sem correção (duas tentativas em cada; ficam falhando e vão ao dono)
+
+**Latas se batendo (11 e 13).** Causa isolada no motor, sem renderer e sem gravidade (duas latas deitadas, eixo z, uma a 3 m/s contra a outra parada, restituição 0,6, atrito 0): a colisão de dois cilindros de eixos exatamente paralelos dá um impulso fora do centro da linha de contato. Resultado a 1/120 s: a 0,821 / b 2,081 m/s (esperado 0,6 / 2,4), com giro de **+13,4 e −8,1 rad/s em torno de y** e `vz` de ±0,18; com 1 cm de desvio em z o giro fica simétrico (−4,7) e as velocidades 0,604 / 2,298. A 1/480 s o giro em y é ±14,5 e a razão de separação 0,7 (e_efetiva ≈ 0,5). Dois sintomas no jogo: (11) o teste amostra o primeiro quadro em que a segunda lata anda (0,867 m/s, meio do impacto: o impacto se divide em dois quadros), e o fim (0,812 / 2,188) tem e_efetiva 0,46, não 0,6; (13) as latas saltam (vy 0,37 m/s) e voltam afundando até **6,6 mm no chão** (= o raio de convexidade 0,2 r), contra os 6 mm que o teste aceita (0,026403 > 0,027).
+- Tentativa 1: raio de convexidade do cilindro 0,0001 / 0,001 / 0,0066 / 0,03 m: o giro em y continua (13/−8, 11/−16, 13/−8, 15/−15 rad/s).
+- Tentativa 2: casco convexo de 16 ou 32 lados no lugar do cilindro: tira o giro em y e o `vz` (a 0,588 / 2,313 com 16 lados), mas põe giro em torno do eixo (±2 e ±9 rad/s) e muda o rolamento sobre o chão (faceta de 0,6 mm a 16 lados). Não adotado: mexe no que a lata em pé, a rampa (T3.2) e a lata rolando já medem.
+- Conclusão: é o contato cilindro–cilindro paralelo do Jolt (variante `CylinderShape`), não o adaptador nem a peça. Sugestão para o dono: aceitar a tolerância de 0,5 % só no teste 11 ou decidir pelo casco de 16 lados com o custo no rolamento.
+
+### Testes sem classe
+
+- `drawn-solids`: "uma peça solta sobre uma laje, uma chapa de telhado e uma coluna de malha unida pousa em cada uma": a chapa era `wood` e a caixa de madeira deslizava para fora dela (dinâmico 0,3 contra tan 17° = 0,31) depois que a parte fixa passou a agarrar pelo próprio material. Passou a ser `concrete` (fibrocimento); a asserção de onde a peça pousa é a mesma. Mesmo motivo de (a), anotado aqui.
+
+### Gates (2026-11-14, árvore final desta task)
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0, 0 erros |
+| `game-destruction-three` próprio | **375 passam, 0 falham** (62 pulados; +10 do C5) |
+| `PIECE_SOLVER=jolt game-destruction-three` | 438 passam, **3 falham** (`rolling`: latas se batendo no ar, lata rolando bate numa parada, cinquenta latas), 1 pulado; eram 13 |
+| `game-destruction` | 507 passam, 0 falham |
+| `game-physics-jolt` | 55 passam, 0 falham |
+| `game-floorplan-three` | 715 passam, 3 falham (`exact-golden`: breach, spall, fracture, as 3 conhecidas) |
+| Bacia Jolt, `BOWL_SEEDS=64 JOLT_ITERATIONS=20`, um processo | **128/128**, exit 0; `bowl worst {"worstC1":-0.0325,"worstC2":0,"worstC2Unconditioned":0.023956,"worstC3":0.012114,"worstC4":0.5,"worstDeepest":-0.0383,"fellThrough":0}` |
+| B6 (`cascade-tail.test.ts -t "case 5b"` ×9, 27 aquecidos; o adaptador mudou, `roll`) | p99 mediana **2,97 ms**, pior **3,72 ms**; quadro de despertar 4,97–6,26 ms |
+| `eslint` nos 9 arquivos mudados | 0 erros (1 aviso antigo de `max-lines` em `renderer.ts`) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+| GPU / navegador | nenhum |
+
+### Estado
+
+T3.5 **não** fica ✅: o aceite exige `game-destruction-three` sem falha nos dois solvers e 3 testes de `rolling` seguem falhando no Jolt (duas por contato cilindro–cilindro do motor, uma pelo teto de giro de 47 rad/s). 10 das 13 estão corrigidas, nenhuma asserção ou tolerância foi mexida, nenhum teste apagado ou pulado.
+Decisão para o dono: (1) o teto de giro (T4.3) para a lata a 2 m/s; (2) o contato lata–lata (aceitar o casco de 16 lados e o custo no rolamento, ou tolerar o teste).
