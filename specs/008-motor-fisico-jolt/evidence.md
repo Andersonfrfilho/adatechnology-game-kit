@@ -1607,3 +1607,74 @@ Com a sonda da sala (`probes/room.js`, agora com `overPieces`: id, ganho, massa,
 Commits (locais, nada enviado): `07e2e52c` (batente é triângulos), `c0c3e4eb` (folha sob a verga, teste, goldens), `423bb92a` (batente solto é caixa a caixa).
 
 T3.8 continua sem ✅.
+
+## T3.8f — D5: o caixilho da janela da edícula (2026-11-14) — **T3.8 continua SEM ✅: 8 de 20 rodadas passam (igual à T3.8e), mas o caixilho, o vidro e a laje de calçada saíram da lista; sobram os postes, o arame, um cano e o C4 do martelo**
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0 (o `node` desta máquina é 24, não 20). Navegador: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo, com `timeout`, duas pistas ao mesmo tempo (D4 ligada e D4 desligada). Aceite igual ao da T3.8b/d/e (C2 condicionado 0 peças acima de 3,5 cm, tudo dormindo em até 3 s, `fellThrough` 0). Nenhuma tolerância, régua nem teste foi afrouxado ou removido. `dist` de `game-floorplan-three` refeito (`pnpm build`) antes do `examples/test-room/build.mjs`, e conferido por grep (`fittedWindows` no `dist` do pacote e em `examples/test-room/dist/test-room.html`).
+
+### 1. Medida no nascimento
+- A hipótese da T3.8e (o caixilho nascer dentro da parede da edícula) **não se confirma**: as paredes da edícula **não são peças nem sólidos fixos do motor** (`structure.parts` não tem parede nenhuma em `x 9,05–9,20`; os sólidos fixos que o motor segura ali são só `window_frame:…:0` (a soleira, caixa), `window_frame:…:1` (malha: 144 vértices), `window:…`, `window_grille:…`, `door:…` e `jamb:…`). Não há parede para o caixilho atravessar.
+- Quem o atravessa são **as outras duas peças da própria janela**, medidas por caixa desenhada (componentes conexos dos triângulos de cada peça, a mesma medida do `door-clearance`), a profundidade pela face mais rasa:
+
+| Par (casa `casaA` semente 1, janela `backyard.outbuilding.w0`; igual nas outras janelas) | Profundidade |
+|---|---|
+| `window_frame` (travessa e caixilho do meio, 4 cm) x `window` (vidro de 1,2 cm, no meio do caixilho) | **0,026 m** (0,014 m nos apartamentos) |
+| `window_frame` (soleira de reboco, `y 0,96–1,00`) x `window_grille` (barras e travessas, que começam em `y 0,97`) | **0,018 m** |
+| `window` x `window_grille` | 0 |
+
+### 2. Causa
+`game-floorplan-three/src/house/windows.ts` desenhava as três peças da janela (que o motor segura separadas, como corpos separados) **uma dentro da outra**, em toda janela de toda casa: o vidro centrado na parede, no meio do caixilho de 4 cm; as barras da grade 3 cm dentro da soleira (para "ficar presa"). Quando a janela se solta, as peças nascem sobrepostas e o motor as empurra para fora com energia: o caixilho de 13,8 kg (que carrega a soleira) ganhou 0,24 a 0,62 m, e o vidro de 3,6 kg 0,23 m, em 5 das 20 rodadas da T3.8e. A porta da T3.8e era o mesmo defeito (folha 5 cm dentro da verga).
+
+### 3. Conserto (commit `aa5fa26d`, `game-floorplan-three`, dono das janelas)
+- O vidro encosta no lado da sala do caixilho do meio e da travessa (`paneShift` = meia espessura do caixilho + meia do vidro + 2 mm de folga); a grade sai de 2 mm acima da soleira (`GRILLE_FOOT`) em vez de 3 cm abaixo do topo dela. Massa e abertura (`aperture`) da grade acompanham.
+- Opção de montagem `windows: 'visor'` mantém o desenho do time para o golden do time (`golden-scene.test.ts`), como `doors: 'visor'`; o padrão é `'fitted'`. O `vc3-house-scene.json` não foi tocado.
+- Teste novo `tests/window-clearance.test.ts` (22 casos, sem motor, 7 plantas x 3 sementes + a edícula): **nenhuma peça de janela (caixilho, vidro, grade) tem sobreposição de mais de 1 mm com outra da mesma janela**. Reprovava os 21 casos antes do conserto (0,026 e 0,018 m), passa nos 22 depois. Auxiliar novo `tests/helpers/piece-boxes.ts`.
+- Golden exato regravado **só** nas 39 entradas com janela: 35 casas (`house/*`) e 4 amostras (`specimen/house_casa_portico`, `_inteira`, `_wood_frame`, `_tronco`); as três cenas `destruction/breach|spall|fracture`, que já reprovavam antes (as 3 conhecidas), foram restauradas do `HEAD` linha a linha e continuam reprovando. Hash de `blast-presentation.test.ts` regravado (`0fa1f11e…` para `281edd1c…`: a peça da janela mudou de caixa, a regravação é o contrato do teste).
+- §13: nenhuma face nova coincidente (o vidro e a grade ficam com 2 mm de folga, e o vidro saiu de dentro do caixilho). `game-destruction-three` (`z-fighting.test.ts`) passa; `game-floorplan-three` não tem teste de z-fighting próprio.
+
+### 4. Rodadas na sala (código final, 5 de blast e 5 de martelo por configuração, uma por processo)
+| Configuração | T3.8e: passam | Agora: passam | peças > 3,5 cm cond. por rodada | quem reprova | C4 (s) por rodada | `fellThrough` |
+|---|---|---|---|---|---|---|
+| D4 ligada, blast | 4 de 5 | **4 de 5** | 0, 0, 0, 0, 0 | r4 só C4 | 0,5; 2,1; 2,25; **3,75**; 0,5 | 0 |
+| D4 ligada, martelo | 0 de 5 | **0 de 5** | 1, 1, 0, 0, 2 | arame `wiring:grid` (11,9 kg) 0,043–0,081 m (r1, r2, r5) e poste (950 kg) 0,057 m (r5); todas reprovam no C4 | 5,8; 5,05; 6,35; 6,1; 6,25 | 0 |
+| D4 desligada, blast | 3 de 5 | **4 de 5** | 0, 0, 0, 0, 0 | r5 só C4 | 0,5; 0,9; 0,75; 0,5; **5,45** | 0 |
+| D4 desligada, martelo | 1 de 5 | **0 de 5** | 1, 2, 0, 1, 2 | `pipe:run_outlet` (0,6 kg) 0,136 m (r1); poste 0,056–0,058 m (r2, r4, r5); arame 0,063 e 0,122 m (r2, r5); r3 só C4 | 4,15; 5,8; 3,05; 3,95; 2,75 | 0 |
+
+**8 de 20 rodadas passam**, o mesmo total da T3.8e, mas por outro motivo: **o caixilho, o vidro e a laje de calçada não aparecem em nenhuma das 20 rodadas** (eram 5, 3 e 1 rodadas). Os 0,24–0,62 m do caixilho acabaram. Um pouco da variação de rodada para rodada (o `PhysicsCostMeter` e o orçamento do blast variam com o tempo de quadro) explica o D4 desligada/blast ter ido de 3 para 4 e o martelo de 1 para 0: não atribuo isso ao conserto.
+
+### 5. O que sobra e por quê
+- **Poste de concreto (950 kg, `obj_2`) e arame (`wiring:grid`, 11,9 kg, 45 m)**: 0,043–0,122 m no martelo; são os casos de D6 (tombamento) e D7 (fiação em trechos). Não mexi.
+- **`pipe:run_outlet` (0,6 kg, o "`metal_1`" da T3.8e é este cano de 1,78 m de altura)**: 0,136 m em 1 das 10 rodadas com D4 desligada (e 0,087 m na T3.8e). **Não compartilha a causa da janela**: o cano atravessa por desenho laje do forro, laje da caixa d'água e telhado (`slab_ceiling` 0,35 m, `tank_slab` 0,27 m medidos por caixa, que superestima os planos inclinados) e passa a 3 cm de conduítes; é uma peça longa e fina que a casa passa por dentro da estrutura, não um par de peças soltas que nascem sobrepostas. Não investigado além da medida por caixa: precisa de uma decisão do dono (o cano ser parte do que atravessa, ou ter furo).
+- **Laje de calçada 72,9 kg (D4 desligada, blast)**: 0 rodadas desta vez (era 1 de 5, 0,041 m). Não identifiquei relação com a janela; sem o gatilho na amostra, não afirmo causa.
+- **C4 acima de 3 s**: **todas as 10 rodadas de martelo e 2 de 10 de blast** (3,75 s e 5,45 s); peças de telhado e fios voltando a se mexer, como na T3.8e. Não investigado. É agora **o critério que mais reprova**: com os ganhos de C2 limpos, os 12 casos restantes dependem dele.
+- `bookcase-topple.test.ts` (modo Jolt) continua reprovando, como antes (pré-existente, conferido na T3.8e).
+- O batente de `game-vehicles-three/src/collider-fit.ts` (mesmo `hugs`) e a possível mesma sobreposição entre peças de outros produtos (`ix:drawer`, maçanetas) não foram varridos: o teste novo cobre só as peças de janela.
+
+### Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | 398 passam, 0 falhas (49 arquivos, 9 pulados) |
+| `PIECE_SOLVER=jolt` em `game-destruction-three` | 470 passam, **só as 2 conhecidas** (`rolling`: lata no ar com restituição, cinquenta latas) |
+| `game-floorplan-three` próprio | 759 passam (+22 de `window-clearance`), **só os 3 `exact-golden` conhecidos** (breach, fracture, spall) |
+| `game-floorplan-three` Jolt | 761 passam; os 3 conhecidos e `bookcase-topple` (pré-existente) |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, `worstC2Unconditioned 0,014651`, `worstC3 0,013626`, `fellThrough 0` (idêntico ao da T3.8e) |
+| `z-fighting.test.ts` de `game-destruction-three` | passa |
+| `eslint` nos arquivos mudados | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
+
+### Comandos
+```text
+cd packages/game-floorplan-three && pnpm exec vitest run tests/window-clearance.test.ts
+UPDATE_EXACT=1 pnpm exec vitest run tests/exact-golden.test.ts   # e restaurar as 3 linhas destruction/* do HEAD
+pnpm -r typecheck
+(cd packages/game-floorplan-three && pnpm test; PIECE_SOLVER=jolt pnpm test)
+(cd packages/game-destruction-three && pnpm test; PIECE_SOLVER=jolt pnpm test)
+(cd packages/game-destruction-three && PIECE_SOLVER=jolt BOWL_SEEDS=64 pnpm exec vitest run tests/bowl-energy.test.ts; pnpm exec vitest run tests/z-fighting.test.ts)
+node tools/kit-audit/audit.mjs --check
+(cd packages/game-floorplan-three && pnpm build) && node examples/test-room/build.mjs
+OUT=<dir> timeout 900 node specs/008-motor-fisico-jolt/decision/probes/drive.mjs <rotulo> "&solver=jolt&blastDebris=1" 1 blast|hammer   # D4 ligada
+OUT=<dir> timeout 900 node specs/008-motor-fisico-jolt/decision/probes/drive.mjs <rotulo> "&solver=jolt" 1 blast|hammer                   # D4 desligada
+```
+
+T3.8 continua sem ✅.
