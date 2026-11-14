@@ -1358,3 +1358,111 @@ Os 1,5 s estimados na T3.0b não se confirmam: o carro fica sólido em 0,27 s (s
 3. **C4 de 4,2–10,7 s** (limite 3 s): as peças só dormem depois de os corpos grandes do item 2 acabarem de cair; o C4 é medido da última entrada de fora e esses corpos nunca entraram em repouso antes do passo 44–52 (2,2–2,6 s depois do último golpe). Sem eles, o C4 do Jolt na bacia é 0,5 s (T3.4).
 
 Resumo para o dono: o Jolt passa a bacia (128/128) e o `fellThrough` (0), mas a sala reprova C2 e C4 em 20/20 rodadas, e a causa não é a política D4 (ligar não muda) nem o peso dos carros (sólidos em 0,27–0,5 s). Falta decidir se os corpos de 950 kg (item 2) são do motor ou da sala, e se o choque de entulho contra peça leve em repouso (item 1) deve ser considerado ganho pela régua (a régua da bacia, por ilha, não vê o par porque a bacia não tem esse lançamento). Nenhuma tolerância nem regra do kit foi alterada; T3.8 fica sem ✅.
+
+
+## T3.8b — investigação da reprovação da sala (2026-11-14) — **T3.8 continua SEM ✅: a reexecução não passa; as três causas medidas foram consertadas ou explicadas, sobram peças presas no telhado**
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, `node --version` = v24.22 (o `node` desta máquina é 24, não 20). Navegador: `chrome-headless-shell` do Playwright (Chrome for Testing 145), headless, janela 1600x900, `--use-angle=gl --enable-gpu --disable-gpu-vsync`; a GPU que o Chrome usou é a **Intel Arrow Lake (iGPU, Mesa)**, não a RTX 5070, como na T3.8. A GPU não entra nos números: o desenho fica fora de `r.update` e a física é CPU. **A máquina não estava quieta**: carga 2,2 a 3,4 (outras sessões) nas execuções; por isso os tempos de quadro são por estágio (CPU de cada parte) e comparados dentro da mesma hora. Uma sessão pesada de navegador por vez, à mão (`CLAUDE.md` §9); nada entrou em hook, pre-push nem CI. Nenhuma tolerância nem regra do kit mudou (3,5 cm, 1 mm, 3 s); o que mudou é como a régua da sala lê a cena e três pontos de código (adaptador, `game-destruction`, ladrilhos do chão).
+
+### 1. Os dois corpos de 950 kg: **postes de concreto do lote, e a medida estava errada porque o motor girava por outro ponto**
+- **Identidade.** `obj_19` e `obj_20` (blast; `obj_1`/`obj_2` no martelo): a parte `pole:-10.3` / `pole:33.7` da casa (`house3d:1`, etiqueta `pole`, concreto, caixa 1,6 x 7,5 x 0,22 m, 950,4 kg), em x 15,8 e −28,2. Viram peças soltas pouco depois do primeiro golpe (quadro 12 do blast) e tombam: movimento **real** no motor, não um corpo cinemático.
+- **Causa.** Os colisores de cada poste são 6 placas finas desenhadas (`partBoxes`: duas de 22 x 2 x 22 cm, a travessa de 1,4 x 0,1 x 0,06 m...) e o Jolt tira o centro de massa **do volume dessas partes**: `Shape::GetCenterOfMass` = (0,02, **2,237**, 0) em relação à origem do corpo. O kit lê a pose da origem e a velocidade do Jolt é a do centro de massa: a pose andava 0,65x do que a velocidade dizia (distância do centro por update 0,299 m contra 0,456 m = 9,1 m/s x 0,05), e `energyHeightOf` somava o `y` de um ponto com a velocidade de outro (+150 a 190 kg·m por update, e o relógio C4 preso). Medido: `body.GetPosition()` y 3,633 contra `GetCenterOfMassPosition()` y 5,776.
+- **Conserto (motor).** `BodyDesc.centreAtOrigin` (`game-physics`), que o Jolt atende com `OffsetCenterOfMassShape` (o centro de massa na origem, onde o kit o põe: `engine-pieces.ts` diz "um corpo dinâmico no seu centro de massa"); as peças pedem. Teste `game-physics-jolt/tests/centre-at-origin.test.ts` (queda livre de um poste girando: a origem cai ½gt² e a velocidade é a dela; sem a opção, o desvio passa de 0,5 m). Depois: distância por update = velocidade x dt (0,084 contra 0,084; 0,307 contra 0,313), C1 caiu de 255–320 para 100 kg·m numa rodada.
+- Os postes continuam tombando (a base é uma placa de 22 cm sob 7,5 m: o empurro de tombamento do kit, §12, e o equilíbrio instável): é movimento legítimo.
+
+### 2. Régua da sala: ilhas reais, energia que o kit dá, inércia do motor
+Cada degrau medido com 1–2 rodadas (`probes/room.js`, Jolt D4 desligada), um de cada vez:
+
+| Degrau | C1 (kg·m) | C2 cond. (m) | peças > 3,5 cm cond. | C4 (s) |
+|---|---|---|---|---|
+| T3.8 como estava (5 rodadas) | 255–320 | 3,88–4,35 blast, 4,10–4,33 martelo | 4–6 / 7–8 | 4,2–10,7 |
+| + `centreAtOrigin` | 100,2 / 13,3 | 0,192 / 0,052 | 3 / 1 | -1 / 4,85 |
+| + ilhas pelo grafo de contatos | 100,2 | 4,07 (a peça de 18 kg) | 4 | 9,85 |
+| + inércia do motor (tensor) | 127 | 0,242 | 3 | 3,75 |
+| + energia dada pelo kit tirada da peça e da ilha | 0,6–1,9 | 0,011–0,042 | 0–2 | 0,5–2,2 |
+
+- **Ilhas por contato** (`tests/energy-ruler.ts`, `islandsOf(before, after, touching)`): o adaptador ganhou `JoltWorld.trackPairs`/`pairLog` (desligado por padrão: os pares que se tocaram no quadro, os que já se tocavam no começo mais cada `OnContactAdded`, mesmo o que acabou no mesmo quadro); `tests/contact-graph.ts` põe os pares em ids de peça. Sem o grafo (solver próprio) a régua cai na fusão por esfera, como antes. Testes à mão (`energy-ruler.test.ts`, 26 testes): cadeia de contatos junta, esferas vizinhas sem contato não, id de chão/parede fixa não junta nada, par adicionado e desfeito no mesmo update junta, a transferência de 18 kg por 36 kg (par que conserva energia) não é lançamento com o grafo e é lançamento com esferas. **A bacia não muda de veredito**: 128/128 antes e depois; `worstC2Unconditioned 0,014651` e `worstC3 0,013626` idênticos; C1 mais perto de zero por ilha menor (−0,1416 para −0,0077); `fellThrough 0`.
+- **O "choque de entulho contra peça leve em repouso" da T3.8 não era choque**: a peça de 18 kg (`obj_56`, 2,1 m de altura, x −3,3 z −8,7) não tinha **nenhum contato com peça** no quadro (só com o chão e um pilar fixo), e levou `pieceSys.impulse` de 142,9 N·s: **um empurro do blast que chega depois** (frente do blast, ou uma segunda explosão na casa), nos quadros 24, 28 e 34 (`window.__imp`, monkey patch de `pieceSys.impulse`). A 36 kg a 7,5 m/s era coincidência de vizinhança.
+- **Energia que o próprio kit dá** (a régua da sala agora a mede e a tira): `pieceSys.impulse` (empurros de blast atrasados) e `engine.topple` (o empurro de equilíbrio do §12: uma peça em pé sobre apoio estreito, o poste, ganha velocidade a cada update). `StepContext.given`: energia-altura que o kit somou a cada peça no update; sai do ganho da **ilha dela** (não do update inteiro: outra ilha que ganhe sozinha no mesmo update continua contando) e levanta o piso do episódio da peça; o relógio C4 reinicia. Medido: 250–630 updates por rodada com energia do kit, **490–580 kg·m por rodada** (quase tudo o `topple` do poste e do arame, mais os empurros); no próprio, 19 kg·m (2 updates). Testes à mão (4). **Isto é decisão de régua, não de tolerância; o dono precisa confirmar que perdoar o empurro de tombamento do kit é o certo**: sem isso o C1 volta a 14–127 kg·m pelos postes.
+- **Inércia do motor.** `energyHeightOf` aceita o tensor de inércia do corpo (o Jolt guarda o inverso no referencial do corpo; a sonda o inverte): a peça de placas finas gira com inércia que não é a da caixa. Só o Jolt (o próprio não tem tensor). 3 testes à mão.
+
+### 3. Custo de quadro da sala, por estágio (`probes/profile.js`, `profile-drive.mjs`)
+Mesma cena (blast `c4` a 2,5 m da casa, ou 12 golpes de 8000 J), 11 s depois, métodos de `PieceSystem`, `EnginePieces`, `EngineStatics`, do mundo Jolt e do ouvinte de contatos embrulhados com cronômetro na página (tempo inclusivo; desenho fora). `dt` 0,05 s = 6 passos de 1/120 por update (o da T3.8); `dt` 1/60 s = o quadro de produção (2 passos). Arquivos: `decision/t38b-profile-before.json`, `t38b-profile-after.json`.
+
+**Antes (código de `b5d2cc92`), Jolt, dt 0,05:**
+
+| Estágio (ms por update) | blast, update do meio (p40–p60) | blast, pior update | martelo, pior update |
+|---|---|---|---|
+| update inteiro | **21,1** (p50 19,6; máx 566) | 566 | 318 |
+| `layStatics` (→ `EngineStatics.lay` → `fit`) | **10,6** (fit 6,5) | 11 | — |
+| `layGround` (`layTile`: 600 ladrilhos) | 0 | **477** | **297** (483 ladrilhos) |
+| passo do Jolt (`Step`, 6 passos) | 1,8 | 59 | 5 (46–53 nos piores) |
+| `room.world.update` | 2,0 | — | — |
+| `outOfStatics` (`penetration` x 9) | — | — | 57 (outro update, 98 ms) |
+
+**Culpados.**
+1. **`layStatics`, 10,6 ms por update com nenhuma peça acordada (blast).** O sedã estacionado queima depois do blast; o `state()` dele é **um objeto novo a cada update** (o contrato permite: mudou). `implSolidsOf` (`game-destruction/src/world.ts`) só reaproveitava a lista se `state` fosse o mesmo objeto, então refazia `hostedPieces` (208 peças: cada triângulo posto em coordenada de mundo, `Float32Array` novo) e o motor media as 208 partes de novo todo update (`statics.fit`, comparando malhas). Conserto: com o mesmo spec, o mesmo lugar e **as mesmas peças desenhadas** (`pieces[i] === known.pieces[i]`), devolve a lista de antes; o motor a pula pela identidade. Teste `game-destruction/tests/hosted-solids-cache.test.ts` (3: mesma lista com estado novo a cada leitura; lista nova se uma peça mudou; lista nova se o corpo se mexeu).
+2. **`layGround`/`layTile`: o quadro de despertar de 290 ms (martelo) e o máximo de 440–580 ms (blast).** O objeto `obj_22`/`obj_21` é a **fiação elétrica da casa (`wiring:grid`, cobre, 45,35 m x 1,4 cm, 11,9 kg) virada em peça solta rígida**; as peças acordadas ganham ladrilhos de chão de 2 m dentro da **esfera da diagonal** da caixa (raio 23,2 m = 625 ladrilhos), 0,6 ms cada (`buildGroundTile` amostra `groundAt` 26 mil vezes: 0,35 ms só isso; 483 `createBody` no mesmo update). Conserto: os ladrilhos vão sob a **pegada da peça vista de cima** (os 8 cantos da caixa girada, teste de eixo separador contra cada ladrilho) mais `TILE_MARGIN` e o balanço das pontas, no máximo `MAX_SWING` = 3 m (o blast gira o arame a **47 rad/s**, 53 m de balanço por quadro: sem o teto, 4290 ladrilhos e 2,4 s). Nunca mais largo que a esfera de antes. Teste `engine-ground.test.ts` (o arame de 45 m na diagonal pousa em 20 a 80 ladrilhos, não 576, e todo ponto dele fica sobre ladrilho posto).
+3. Sobram `outOfStatics` (`jolt.penetration` 53–57 ms num update, ao criar peça dentro de colisor fixo) e o `Step` do Jolt no despertar (47–69 ms em dt 0,05 = 6 passos com 33 corpos acordados em cima dos colisores de triângulo da casa).
+
+**Depois (código final), Jolt:**
+
+| (ms por update) | blast dt 0,05 | blast dt 1/60 | martelo dt 0,05 | martelo dt 1/60 | próprio blast dt 0,05 | próprio martelo dt 0,05 |
+|---|---|---|---|---|---|---|
+| update do meio (p40–p60) | **9,0** | **5,4** | 2,2 | 2,0 | 5,7 | 2,4 |
+| p50 / p99 / máximo | 7,9 / 60,8 / 78 | 5,2 / 48,9 / 204 | 2,2 / 79,2 / 287 | 2,0 / 30,4 / 211 | 5,5 / 43,8 / 62 | 2,3 / 30,9 / 36 |
+| `Step` do Jolt (meio) | 3,2 | 1,0 | 0,03 | 0,3 | — | — |
+| `layStatics` (meio) | 0,46 | 0,32 | 0,006 | 0,01 | — | — |
+| `world.update` da sala (meio) | 1,6 | 1,4 | 0,04 | 0,02 | 1,4 | 0,04 |
+| pior update | layTile 33 de 67 | layTile 172 de 204 | layTile 197 de 287 | layTile 150 de 211 | `integrate`+`sweepOn` | idem |
+
+O update do meio do blast caiu de 21,1 para 9,0 ms (dt 0,05) e o máximo de 566 para 78 ms; o do martelo, de 318 para 287 no pior update (o despertar ainda lança ~160 ladrilhos de uma vez: o arame e os dois postes). Em dt 1/60 (produção) o meio é 5,4 ms (blast) e 2,0 ms (martelo). O `Step` do Jolt é a parte que sobra (3,2 ms no blast do meio com 6 passos). Os 9 ms do blast do meio em dt 0,05 incluem 1,6 ms de `world.update` (o carro queimando, destruição, não física) e 0,9 do renderer.
+
+### 4. Reexecução da T3.8 (5 rodadas de blast e de martelo, 3 configurações), mesma régua, código final
+Comandos (raiz do worktree; um JSON por rodada em `decision/t38b-results.json`, 30 rodadas; as sondas `room.js` e `profile.js`):
+```text
+node examples/test-room/build.mjs
+node specs/008-motor-fisico-jolt/decision/probes/drive.mjs joltoff "&solver=jolt"                5
+node specs/008-motor-fisico-jolt/decision/probes/drive.mjs jolton  "&solver=jolt&blastDebris=1"  5
+node specs/008-motor-fisico-jolt/decision/probes/drive.mjs own     ""                            5
+OUT=<dir> node specs/008-motor-fisico-jolt/decision/probes/profile-drive.mjs <rotulo> "&solver=jolt" blast|hammer 0.05|0.016667
+```
+Aceite do Jolt: C2 condicionado 0 peças acima de 3,5 cm, tudo dormindo em até 3 s depois da última entrada de fora, `fellThrough` 0. Células: valores das 5 rodadas.
+
+| Cenário | Peças / dormindo | C1 pior ilha (kg·m) | C2 cond. máx (m) | peças > 3,5 cm (cond. por rodada) / sem cond. | C3 (m) | C4 (s) por rodada | `fellThrough` | rodadas que passam |
+|---|---|---|---|---|---|---|---|---|
+| **Jolt, D4 desligada, blast** | 52 / 52 em 5 | 0,4–10,7 | 0,000–0,414 | 0, 1, 0, 1, 1 / 2–3 | 0,04–0,11 | 3,35; 0,5; 0,5; 1,65; 1,9 | 0 | **1 de 5** |
+| **Jolt, D4 desligada, martelo** | 34 / 34 em 4 (uma peça não dorme) | 0,6–2,5 | 0,047–0,074 | 2, 1, 2, 1, 1 / 1–4 | 0,33–0,37 | 2,0; 1,35; 0,5; -1; 1,7 | 0 | **0 de 5** |
+| **Jolt, D4 ligada, blast** | 52 / 52 | 0,0–26,7 | 0,000–0,043 | 0, 0, 1, 0, 0 / 2–3 | 0,10–0,13 | 0,95; 0,5; 0,5; 2,55; 0,5 | 0 | **4 de 5** |
+| **Jolt, D4 ligada, martelo** | 34 / 34 | 1,5–3,9 | 0,040–0,075 | 2, 1, 1, 1, 2 / 3–5 | 0,36–0,40 | 1,35; 0,4; 5,25; 4,6; 1,0 | 0 | **0 de 5** |
+| Próprio, blast | 52 / 51 | 5,3 | 0,076–0,204 | 5, 6, 7, 5, 5 / 9–13 (esferas) | 1,71–1,92 | -1 nas 5 (uma peça não dorme) | n/a | 0 de 5 |
+| Próprio, martelo | 34 / 32–34 | −1,9–0,3 | 0,000–0,062 | 0, 0, 1, 0, 0 / 0–1 (esferas) | 0,05–0,13 | -1; -1; -1; 3,3; -1 | n/a | 0 de 5 |
+
+Custo de quadro da mesma reexecução (ms por `r.update`, dt 0,05, física + sala): Jolt blast p50 5,0–12,5, p99 54–130, **máximo 98–315** (era 437–580, e em reexecução intermediária com os ladrilhos sem teto, 3 s); Jolt martelo p50 0,9–2,6, p99 71–89, máximo 93–294, quadro do despertar 43–88 ms (era 285–300); próprio blast p50 4,0–5,2, máximo 45–61; martelo 1,1–1,6, máximo 28–32.
+
+**Veredito: a sala do Jolt continua reprovada pelo critério do dono (C2 em 4 das 5 configurações de blast/martelo com ao menos uma rodada; C4 em 5 rodadas; uma peça que não dorme).** `fellThrough` 0 em todas. Mas as causas medidas na T3.8 não são mais as que reprovam, e o próprio também reprova a mesma régua (o blast em 5/5 rodadas).
+
+### 5. O que sobra e por quê (medido, sem mexer em regra)
+- **C2 residual: peças de 42,8 kg (e uma de 18 kg) sozinhas na ilha, tocando só colisores fixos da casa, ganham 4 a 10 cm de altura de energia num update** (`worstIsland` da sonda: `obj_4` no martelo, y 3,5 m, 0,1 a 0,8 m/s, +3,4 a +3,96 kg·m; `obj_47` no blast, y 4,36 m, +0,4 a +0,7 kg·m; uma rodada de blast 41 cm numa peça de 18 kg). São pedaços do telhado calçados no vão entre a laje do forro (caixa fixa de 12 m x 16 cm no topo y 3,03) e os dois planos do telhado (colisor de malha). Nenhum `setPose`/`setVelocity` do kit nem criação/remoção de colisor fixo no update (monkey patch de `createBody`, `removeBody`, `setShape`, `setPose`, `setVelocity`): é o próprio Jolt ejetando uma peça apertada entre planos que convergem. Não segui além disso. Opções do dono: aceitar o ganho contra colisor fixo de casa (ele não é "peça lançada por outra"), ou investigar o contato de cunha (velocidade de ejeção de uma peça de 43 kg entre dois colisores fixos).
+- **C4 residual**: uma peça que não dorme em 1 de 5 rodadas do martelo (D4 desligada) e 4,6–5,25 s em duas rodadas do martelo com D4 ligada; o blast com D4 desligada leva 3,35 s numa rodada. São as mesmas peças presas no telhado voltando a se mexer.
+- **O arame de 45 m**: a fiação inteira da casa vira **uma só peça rígida de 12 kg**, que o blast gira a 47 rad/s (a ponta a mais de 1000 m/s). Isso é regra do kit (um empurro `impulse(piece, impulse, point)` numa peça de 45 m; o kit decide que a fiação se solta inteira), não do motor; é o que fazia 625 ladrilhos por quadro. O teto de balanço de 3 m esconde o custo, mas a peça segue irreal: **decisão do dono** se a fiação deve se soltar em trechos.
+- **O empurro de tombamento do kit injeta 490–580 kg·m por rodada** (`engine.topple`, no poste e no arame, mais os empurros do blast que chegam depois): a régua da sala os tira da conta da ilha da peça. Se o dono preferir contá-los, C1 volta a 14–127 kg·m e C2 a metros pelos postes.
+- **Despertar ainda de 43–88 ms (blast e martelo, dt 0,05)**: ~160 ladrilhos de uma vez (os dois postes e o arame; 0,6 ms cada, 60% disso é `groundAt`), mais `outOfStatics` (53 ms num update) e o `Step` em cima dos colisores de triângulo. Opções, nenhuma feita: (a) caminho rápido do hospedeiro para ladrilho plano (`groundAt` só amostrado onde o terreno mudou); (b) assentar o chão ao redor da casa quando a área é montada (custa no carregamento, 8 s de montagem hoje); (c) orçamento de ladrilhos por update (risco: peça sobre ladrilho que ainda não existe; a rede `fellThrough` pega, mas a regra muda).
+- **Bacia** com a mudança de ladrilhos: 128/128 antes e depois; `worstC4` foi de 0,5 para 1,52 s (limite 3) e `worstDeepest` de −0,0383 para −0,0379: a criação dos ladrilhos em outra ordem muda a ordem dos corpos no Jolt e perturba as trajetórias; as duas versões passam em todos os 128 casos (com a esfera de antes, mesmo código de régua: `worstC4 0,5`).
+
+### Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio (`pnpm test`) | 398 passam, 0 falhas (132 pulados) (uma execução com duas suítes em paralelo e carga 11 reprovou "cinquenta latas" por tempo; sozinha e na repetição passa) |
+| `PIECE_SOLVER=jolt pnpm test` | 467 passam, **só as 2 conhecidas** (lata no ar com restituição, cinquenta latas) |
+| `game-physics-jolt` | 17 arquivos, 64 passam (2 pulados); +3 do `centre-at-origin` |
+| `game-physics` | 9 passam |
+| `game-destruction` | 510 passam (+3 do cache de sólidos hospedados) |
+| `game-floorplan-three` | 715 passam, só os 3 `exact-golden` conhecidos (breach, fracture, spall) |
+| Bacia 64 sementes, um processo, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**; `bowl worst {"worstC1":-0.00766,"worstC2":0,"worstC2Unconditioned":0.014651,"worstC3":0.013626,"worstC4":1.5167,"worstDeepest":-0.03795,"fellThrough":0}` |
+| B6 no mundo de produção (`cascade-tail.test.ts`, máquina com carga 3) | despertar quente 6,4 / 6,4 / 8,0 ms, p99 de 3 s 3,8 / 3,9 / 4,6 ms, 1 quadro acima de 6 ms por blast: sem regressão (o adaptador ganhou um `if` por contato novo e por `clearEvents`) |
+| `eslint` nos arquivos mudados | 0 erros (1 aviso antigo: `world.ts` de `game-destruction` com mais de 1500 linhas) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos) |
+
+Commits (locais, nada enviado): `4b5c4717` (centro de massa na origem + registro de pares), `23c6cc08` (cache de sólidos hospedados e ladrilhos pela pegada), `3da24800` (régua: ilhas por contato, energia dada pelo kit, tensor; sonda de perfil), e o do teto de balanço de 3 m.
