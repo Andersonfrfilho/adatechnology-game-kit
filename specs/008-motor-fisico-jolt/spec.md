@@ -89,7 +89,7 @@ O build próprio do wasm, que o gate 0 listava como saída para B6, **não** é 
 
 ## 5. Condições que saíram do gate (obrigatórias)
 
-1. **20 iterações de velocidade nos destroços** (`velocityIterations: 20`). Com 8–10, C1 falha (seção 7, bug 4).
+1. **32 iterações de velocidade nos destroços** (`velocityIterations: 32`, opção do mundo, padrão do `KIT_WORLD`). **Decisão do dono 2026-11-14:** o piso de produção sobe de 20 para 32 (a pilha 20:1 só converge a ≥ 32; evidence T3.6b). Com 8–10, C1 falha (seção 7, bug 4); 8 e 10 **saem do C6**, que se avalia a partir do piso.
 2. **Ragdolls com 20 passes de velocidade e 8 de posição** (`RagdollDesc.solverSteps`). Com os padrões do mundo (10/2), 20 quadros passam do limite.
 3. **Velocidade de sono 0,08 m/s** no mundo (`sleepSpeed: 0.08`). Com o padrão do Jolt (0,03), a pilha de corpos e as correntes soltas não dormem em 10 s.
 4. **Um mundo só por jogo.** Um mundo custa ≈ 19,7 MB do heap fixo de 128 MB. Nenhum sistema cria mundo próprio.
@@ -141,12 +141,12 @@ do gate 0. **Altura de energia** de uma peça = `y do centro de massa + (|v|² +
 | # | Critério proposto | Valor no gate 0 | Como se prova |
 |---|---|---|---|
 | C1 | **Nenhuma energia criada.** Por ilha, em cada update sem entrada externa (golpe, blast, chão que muda, rede), `Σ m·altura de energia` não sobe mais que `m_ilha·g·1 mm`. Uma só implementação da régua | 20 it.: 0/128 falham; 10 it.: 3/128 (0,5–2,9 mm); 8 it.: 8/128 (até 5,2 mm) | `bowl-energy.test.ts` com `BOWL_SEEDS=64` e `JOLT_ITERATIONS` 8, 10 e 20: 0 falhas nos três |
-| C2 | **Peça em repouso não é lançada.** Ganho de altura de energia ≤ **3,5 cm** por episódio, contando como lançamento só se a ilha também violou C1 no episódio (transferência paga não é lançamento) | bacia: pior 2,5 cm; sala blast: 2/1/2 peças acima (máx. 0,20 m), martelo: 3/0/2 (máx. 0,11 m), régua antiga sem C1 | bacia: `bowl-energy.test.ts`; sala: sondas com a régua única, 5 rodadas, 0 lançamentos |
+| C2 | **Peça em repouso não é lançada.** Ganho de altura de energia ≤ **3,5 cm** por episódio, contando como lançamento só se a ilha também violou C1 no episódio (transferência paga não é lançamento). **Decisão do dono 2026-11-14:** a bacia e a varredura usam este C2 condicionado; a coluna sem condição só é impressa, para informação | bacia: pior 2,5 cm; sala blast: 2/1/2 peças acima (máx. 0,20 m), martelo: 3/0/2 (máx. 0,11 m), régua antiga sem C1 | bacia: `bowl-energy.test.ts`; sala: sondas com a régua única, 5 rodadas, 0 lançamentos |
 | C3 | **Correção de posição limitada.** Subida do centro de massa só pelo passe de posição ≤ 3,5 cm por peça por episódio | pior 1,7 cm | `bowl-energy.test.ts` (`c3Lift`) |
 | C3b | **Nada abaixo do chão.** Nenhum centro abaixo do chão em nenhum update; a rede `fellThrough` dispara 0 vezes em teste | 0 disparos; mais perto 3,7 cm acima | `bowl-energy.test.ts` (`deepest`, `fellThrough`) |
 | C4 | **Assenta.** Bacia: 100% dormindo em até 3 s após o último evento. Sala: todas as peças dormindo 3 s após o último evento, em 5 de 5 rodadas | bacia: mais lento 2,05 s; sala blast 36/36 ×3, martelo 36–37/37 | bacia: `bowl-energy.test.ts`; sala: 5 rodadas à mão (`CLAUDE.md` §9) |
 | C5 | **§12 por comportamento.** Uma lista nomeada de comportamentos do §12, um teste cada, todos verdes; todo teste reescrito tem o motivo registrado em `evidence.md` (lista na seção 6.1) | 14 testes de `game-destruction-three` falham hoje | `pnpm --filter @adatechnology/game-destruction-three test` e `... game-destruction test` |
-| C6 | **Robustez.** Bacia em 64 sementes × dt {1/30, 0,05, 1/60, 1/144} × iterações {8, 10, 20} × push-out {−50%, 0, +50%}, mais pilha 20:1 e pilha de 5 peças: tudo passa, e mais trabalho nunca piora | medidos só dt 0,05 e 1/60, 8/10/20 it. e 240 Hz (128/128 em C2–C4) | varredura como teste (`JOLT_STEP`, `JOLT_ITERATIONS`, `JOLT_PUSHOUT`) |
+| C6 | **Robustez.** Bacia em 64 sementes × dt {1/30, 0,05, 1/60, 1/144} × iterações {20, 32} × push-out {−50%, 0, +50%}, mais pilha 20:1 e pilha de 5 peças: tudo passa no piso (32), e mais trabalho nunca piora. **Decisão do dono 2026-11-14:** 8 e 10 iterações saem do C6 (ficam em `SWEEP_ITS=8,10,20,32` para informação); 20 roda só para comparação | medidos só dt 0,05 e 1/60, 8/10/20 it. e 240 Hz (128/128 em C2–C4) | varredura como teste (`JOLT_STEP`, `JOLT_ITERATIONS`, `JOLT_PUSHOUT`) |
 | C7 | **Custo por orçamento absoluto**, mediana e p99, na faixa de hardware nomeada (tabela 6.2), cobrado pela rodada diária (`perf-gate.mjs`). Transitório, enquanto os dois solvers existem: mediana do bench ≤ 1,25× o próprio | bench 160+40: 1,45× na mediana, 2× no p99 (o transitório **falha** hoje) | `BENCH=1 ... bench-pieces.test.ts`, `cascade.test.ts` caso 5b, rodada diária |
 | C8 | **Determinismo.** Mesma semente e dt dão pose idêntica em dois processos, em Node, Chromium, Bun e Firefox; salvar → rodar → carregar → rodar dá estado bit a bit igual | Node, Chromium, Bun iguais; Firefox não medido; save/load bit a bit igual | teste de determinismo por processo (novo); Firefox à mão |
 | C9 | **Memória (§8).** O heap do wasm volta ao mesmo byte após ciclos de criar e descartar; pico da cena pior ≤ 50% do heap; `leak.mjs` ganha a sonda do wasm | volta ao mesmo byte; pico 21 MB (16%); sonda do `leak.mjs` não existe | `heap.test.ts`; `leak.mjs` na rodada diária |
@@ -190,7 +190,7 @@ A faixa AMD e as faixas mais fracas ganham a própria linha depois da medição 
    escondia isso amortecendo a velocidade linear. Corrigir a causa; não afrouxar o limite.
 3. **O height field tem um lado só.** Só as caixas dos degraus são sólidas. B1 passa porque nenhuma peça nasce dentro do chão e os contatos
    ficam quentes; o chão que sobe por baixo de uma peça (cratera fechando, deslizamento) ainda pode prendê-la. Tornar o chão sólido sem fork.
-4. **C1 falha com 8–10 iterações** (3/128 a 10, até 2,9 mm; 8/128 a 8, até 5,2 mm). 20 é o valor seguro hoje; C6 exige que 8 e 10 passem também.
+4. **C1 falha com 8–10 iterações** (3/128 a 10, até 2,9 mm; 8/128 a 8, até 5,2 mm). **Decisão do dono 2026-11-14:** o piso de produção é 32 e 8 e 10 saem do C6 (condição 1, C6); o bug fica fechado como "não se corrige abaixo do piso".
 
 ## 8. O que não foi verificado
 
@@ -263,3 +263,10 @@ telhado), as peças estruturais sem malha própria (vigas, pilares, caibros, ver
 As caixas do carro vêm das caixas de dano, alargadas pelos retrovisores. As regras antigas do kit (separar empurrando, levantar na criação, rede)
 tentam compensar e brigam entre si: a versão que segurou a sala (1–2 peças acima, 6/6 dormindo, rede 0) derrubou a bacia para 127/128, e a que
 devolveu a bacia trouxe a rede de volta. Por isso a sala passa a ser aceite da fase 3 (T3.0a–T3.0c, T3.1 e T3.8), depois de todo colisor existir.
+
+## 12. Decisões do dono (2026-11-14)
+
+- **D1. Iterações de velocidade dos destroços: piso de produção 20 → 32** (opção do mundo `velocityIterations`, padrão 32 no `KIT_WORLD`). A condição 1 muda. O C6 se avalia a partir do piso: 8 e 10 iterações saem dele (§5 condição 1, §6 C6, §7 item 4).
+- **D2. Régua do C2:** a bacia e a varredura usam o C2 condicionado da spec (o ganho só conta se a ilha também violou C1); a coluna sem condição segue impressa, só para informação. **E** o empurro de tombamento do kit passa a derrubar a peça fina em pé sobre a aresta escorada noutra (§12: nada se equilibra de forma irreal): peça com apoio estreito parada sobre ele por 0,3 s perde quase todo o atrito até se mexer ou dormir; a bacia semente 61 a dt 1/144 deixa de formar a tenda.
+- **D3. Teto de giro fica em 47 rad/s.** O teste "a rolling can knocks a still one on" passa a lançar a lata a um giro alcançável (1,5 m/s, 45 rad/s), com mais tempo de corrida; a tolerância não mudou.
+- **D4. Depois de explosões:** (a) os destroços acordam em lotes do centro do blast para fora, em alguns quadros (frente de choque); (b) a quantidade de peças que entram na física por explosão sai do custo medido na máquina, entre um mínimo e um máximo; peça grande sempre entra, pedaço pequeno vira partícula visual sem colisão; (c) teto de destroços vivos, com os distantes e velhos dormindo ou sumindo. **"Deixa configurável":** todo número do D4 é opção com padrão documentado (mundo, sistema ou explosão), nunca constante; a iteração de velocidade também é opção do mundo (padrão 32). Números e opções em `evidence.md` (T3.6d) e no README do pacote.

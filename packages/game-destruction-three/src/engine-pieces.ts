@@ -61,6 +61,10 @@ const PUSH_SPIN = 0.3
 /** Corners this close (m) to the lowest one are what it stands on. */
 const STEADY_TURN = 0.1
 const STEADY_SECONDS = 1.5
+/** A piece on a narrow support that has not turned for this long (s) is propped by something its contact points do not read as support (a tent of two plates on their edges). */
+const PROPPED_SECONDS = 0.3
+/** What is left of its friction while propped: it slips, and gravity, not the kit's push, brings it down. */
+const PROPPED_GRIP = 0.1
 /** How far (m) a new piece may reach into the ground and be left to the engine's contact (over its slop, under a thin plate's half), and how far above it one lifted is put. */
 const SINK = 0.005
 const LIFT_MARGIN = 0.001
@@ -93,6 +97,7 @@ interface Link {
   stepped: boolean
   /** The side (x, z) the balancing push goes to: kept while the support is centred under the piece, where the contact points only flicker either way (`topple`). */
   readonly side: [number, number]
+  isSlipping: boolean
 }
 
 interface Tile {
@@ -426,7 +431,7 @@ export class EnginePieces {
       })
       link = {
         id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity],
-        held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1],
+        held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1], isSlipping: false,
       }
       this.links.set(b, link)
       this.byUser.set(user, b)
@@ -451,6 +456,7 @@ export class EnginePieces {
     // `tip` is the kit solver's push for a piece whose feet are thinner than its box; here the engine stands it on its parts as drawn, so it goes over by itself
     b.tipping = null
     if (!b.round && b.onGround && !b.sleeping) this.topple(b, dt)
+    else this.slip(b, link, false)
     const v = b.velocity
     const w = b.angularVelocity
     const pushed = v[0] !== link.vel[0] || v[1] !== link.vel[1] || v[2] !== link.vel[2] || w[0] !== link.ang[0] || w[1] !== link.ang[1] || w[2] !== link.ang[2]
@@ -558,7 +564,10 @@ export class EnginePieces {
     if (!link) return
     // where the engine has it touching (the floor, a step, another piece), from its centre of mass
     const n = this.world.contactPoints(link.id, this.contactXYZ)
-    if (n === 0) return
+    if (n === 0) {
+      this.slip(b, link, false)
+      return
+    }
     const c = this.centre(b)
     const q = b.root.quaternion
     let low = Infinity
@@ -583,7 +592,9 @@ export class EnginePieces {
     if (!was || Math.abs(was.quaternion[0] * q.x + was.quaternion[1] * q.y + was.quaternion[2] * q.z + was.quaternion[3] * q.w) < Math.cos(STEADY_TURN / 2)) {
       b.steady = { quaternion: [q.x, q.y, q.z, q.w], seconds: 0 }
     } else was.seconds += dt
-    if (!b.balancing || (b.steady?.seconds ?? 0) >= STEADY_SECONDS) return
+    const held = b.steady?.seconds ?? 0
+    this.slip(b, link, isNarrow && held >= PROPPED_SECONDS)
+    if (!b.balancing || held >= STEADY_SECONDS) return
     if (Math.abs(x0 + x1) > SIDE_DEAD) link.side[0] = x0 + x1 > 0 ? -1 : 1
     if (Math.abs(z0 + z1) > SIDE_DEAD) link.side[1] = z0 + z1 > 0 ? -1 : 1
     const [dirX, dirZ] = link.side
@@ -609,6 +620,14 @@ export class EnginePieces {
       v[1] += -dw * rz
       v[2] += dw * ry
     }
+  }
+
+  /** Propped pieces lose most of their friction until they move or sleep (the push only presses them into the prop: an energy-free way to end a wedge). */
+  private slip(b: PieceBody, link: Link, isSlipping: boolean): void {
+    if (link.isSlipping === isSlipping) return
+    link.isSlipping = isSlipping
+    const m = this.material(b)
+    this.world.setMaterial(link.id, isSlipping ? { ...m, frictionStatic: m.frictionStatic * PROPPED_GRIP, frictionDynamic: m.frictionDynamic * PROPPED_GRIP } : m)
   }
 
   private centre(b: PieceBody): THREE_NS.Vector3 {

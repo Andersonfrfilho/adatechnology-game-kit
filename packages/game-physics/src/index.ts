@@ -242,10 +242,10 @@ export interface WorldDesc {
   readonly maxContacts?: number
 }
 
-/** The kit's world (what spec 008 conditions 1-3 measured): 120 Hz, 20/2 solver passes, sleep after 0.5 s under 8 cm/s, 2 mm slop and push-out. Game, room and tests start from it. */
+/** The kit's world (what spec 008 conditions 1-3 measured; owner decision 2026-11-14: 32 velocity passes, the least that keeps a 20:1 mass stack from making energy): 120 Hz, 32/2 solver passes, sleep after 0.5 s under 8 cm/s, 2 mm slop and push-out. Game, room and tests start from it. */
 export const KIT_WORLD: WorldDesc = {
   fixedStep: 1 / 120,
-  velocityIterations: 20,
+  velocityIterations: 32,
   positionIterations: 2,
   sleepAfter: 0.5,
   sleepSpeed: 0.08,

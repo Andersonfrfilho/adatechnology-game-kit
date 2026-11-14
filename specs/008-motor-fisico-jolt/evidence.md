@@ -1121,3 +1121,52 @@ Execuções avulsas de 9 invocações × 3 (27 valores) com o código final, sem
 - p99: 5,68 ms (limite 4) e pior 7,35 (limite 5). O p99 do bench é o quadro f1 (o segundo depois do despertar). **Mesmo com o ouvinte removido por inteiro** (nenhum JS, nenhum atrito por corpo, variante "sem ouvinte"), f1 é 5,2 ms a 120 Hz: o piso do Jolt em dois passos de 1/120 com 500 corpos acordando já passa do limite de 5 ms. Só o passo de 60 Hz (3,8 ms) ficaria dentro, e o passo é a decisão fechada de 120 Hz.
 - O que sobra de JS é ≈ 1,1 ms no despertar (0,3 de `updateFriction` e 0,8 de ponte wasm→JS inevitável) e ≈ 0,4 ms em f1. Zerar tudo isso levaria o despertar a ≈ 8,7–9,0 e o f1 a ≈ 5,2: o despertar passaria, o p99 não.
 - **Decisão do dono:** (a) manter 120 Hz e reescrever o orçamento do B6 de produção para o que o Jolt entrega (p99 de 180 quadros ≈ 5,7 ms, despertar ≈ 10 ms, um ou dois quadros acima de 6 ms por blast, ainda sem frame acima de 12 ms); ou (b) medir o B6 e o orçamento em 60 Hz (passo da simulação a 60 Hz para a cascata, 120 Hz só onde a estabilidade exige) — muda o gate de bacia e pilhas, que foram medidos a 120 Hz; ou (c) reduzir o custo de despertar na origem (acordar a cascata em lotes entre quadros, ou ilha menor por blast). Nenhum desses é mudança de JS do adaptador.
+
+## T3.6d — decisões do dono (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `motor-fisico-jolt` (branch `feat/motor-fisico-jolt`), sobre `4efe0ae2`. Feito por `executor` (sonnet). Sem GPU nem navegador. As quatro decisões estão no `spec.md` §12 e nos textos de §5 condição 1, §6 C2 e C6, §7 item 4.
+
+### D1 — piso de produção 20 → 32 iterações de velocidade
+`KIT_WORLD.velocityIterations` 20 → 32 (`game-physics/src/index.ts`); a iteração já era opção do mundo (`WorldDesc.velocityIterations`), e `tests/setup-physics.ts`, a bacia e a varredura leem o padrão do `KIT_WORLD` (`JOLT_ITERATIONS` ainda sobrescreve). Custo e benefício medidos na T3.6b (B5 0,96×, bacia 128/128, pilha 20:1 de produção 33/64 → 64/64). 8 e 10 iterações saem do C6; `SWEEP_ITS=8,10,20,32` as traz de volta para informação. Teste: `game-physics/tests/wake-queue.test.ts` afirma que o padrão é 32.
+
+### D2 — régua do C2 e a tenda de placas
+**Régua.** `bowl-energy.test.ts` deixou de reprovar pela coluna "sem condição" (`c2GainUnconditioned`): ela segue no resumo `bowl worst`, só para informação. `sweep-c6.test.ts` (`failuresOf`) reprova só o C2 condicionado (a coluna sem condição vai impressa pela `sweep-c6.mjs`). O bowl aceita `BOWL_DT=0.00694` para rodar a 1/144.
+
+**Causa da tenda, medida de novo** (`TOPDBG`, rastro por quadro, semente 61, dt 1/144, 20 it., push-out 0,002): `plate2` e `plate3` ficam de pé sobre a aresta de 4 cm encostadas uma na outra; as pontas de contato de `plate2` ficam todas de um lado do centro de massa (x 0,03 a 0,08 m, centro em 0), a peça está fora do apoio e mesmo assim não cai. O giro fica em 0,001–0,01 rad/s por 2,4 s: o empurro do kit (`TOPPLE × min(h, 1)` ≈ 1 rad/s², 0,007 rad/s por quadro) é absorvido pelo contato. Tentativas, todas em `s61.sh` (semente 61, dt {1/144, 1/60} × it {20, 32} × push-out {0,001; 0,002; 0,003}, coluna C2 sem condição):
+
+| Tentativa | Resultado a 1/144 |
+|---|---|
+| (base, T3.6b) | 0,29 / 0,32 / 0,24 / 0,29 / 0,003 / 0,33 m |
+| 1. não parar o empurro por `STEADY_SECONDS` enquanto o apoio é estreito | idêntico (a tenda não depende do relógio) |
+| 2. 1 + empurro que cresce com o tempo parado (8×/s até 12×), com e sem empurrar mesmo fora do apoio | a tenda cai, mas o empurro cria energia: C1 +1,98 a +5,4 kg·m, C2 até 0,33 m; reprovada |
+| 3. **atrito da peça escorada cai a 10%** (`PROPPED_GRIP`) depois de 0,3 s parada sobre apoio estreito (`PROPPED_SECONDS`), de volta ao normal quando ela se mexe ou dorme (`slip`, `engine-pieces.ts`) | **os 12 casos < 0,0045 m**, C1 −0,145 a −0,22 |
+
+Escolha (tentativa 3): é a única que derruba a tenda **sem criar energia** (quem faz o trabalho é a gravidade; o C1 não sobe) e vale por passo fixo, não por quadro (o atrito é do motor). Mantém a regra antiga de `STEADY_SECONDS` do empurro: a tentativa 1 mostrou que ela não importa. Comparado com o pedido do dono ("o empurro não para por `STEADY_SECONDS` enquanto o apoio é estreito e escorado, ou por passo fixo"): o empurro foi tentado nas duas formas (tentativas 1 e 2) e não derruba a tenda sem violar o C1; por isso a correção é o escorregão. Nota da T3.5 (teto de empurro 0,3 frágil na bacia): `PUSH_SPIN` não foi tocado; a bacia 64 sementes ficou 128/128.
+
+### D3 — teto de giro em 47 rad/s e a lata que bate numa parada
+O teste "on the floor, a rolling can knocks a still one on and nearly stops; they never overlap" (`rolling.test.ts`) dava à lata 2 m/s com ω = 60,6 rad/s, acima do teto do motor (47,06; Jolt, medido na T3.5). A lata derrapava (2,00 → 1,17 m/s antes do choque) e a outra não andava o exigido. Entrada nova: 1,5 m/s com ω = 1,5 / raio = 45,5 rad/s (rolamento puro, abaixo do teto), a lata sai de x = −0,2 (antes −0,4) e a corrida vai a 0,8 s (antes 0,5): a 1,5 m/s as duas latas passam a rolar juntas a 0,4 m/s depois do choque (medido: a 1,48 → 0,29, b 0,75 → 0,41, ω da a −41,6 → −11,9) e a outra só passa de 0,4 m em x depois de ~0,6 s de corrida. **As asserções e tolerâncias são as mesmas** (`> 2 R − 6 mm` entre as latas em todo quadro, `b.x > 0,4`, `b.v > a.v`). Resultado: `PIECE_SOLVER=jolt`, `rolling`: restam as 2 conhecidas (latas no ar com restituição, cinquenta latas).
+
+### Gates (D1+D2+D3)
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | 375 passam, 0 falham (126 pulados) |
+| `PIECE_SOLVER=jolt game-destruction-three` | 438 passam, **2 falham** (`rolling`: latas no ar com restituição; cinquenta latas); eram 3 |
+| `game-physics-jolt` | 56 passam, 0 falham (1 pulado) |
+| `game-destruction` | 507 passam |
+| `game-floorplan-three` | 715 passam, 3 falham (`exact-golden`: breach, spall, fracture, as 3 conhecidas) |
+| Bacia Jolt, `BOWL_SEEDS=64`, um processo, 32 it. | **128/128**; `bowl worst {"worstC1":-0.1416,"worstC2":0,"worstC2Unconditioned":0.014651,"worstC3":0.013626,"worstC4":0.5,"worstDeepest":-0.0383,"fellThrough":0}` |
+| Bacia semente 61, dt 1/144 | C2 sem condição 0,0001–0,0017 m nos 6 casos (20 e 32 it. × 3 push-outs); era até 0,33 m |
+| `eslint` nos arquivos mudados | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono |
+
+### Varredura C6 completa (`node tests/sweep-c6.mjs`, iterações {20, 32}, 498 s, 4608 corridas, 8 processos)
+| Escopo | Resultado |
+|---|---|
+| **Célula de produção** (dt 1/60, push-out ×1, 32 it.) | bacia **64/64**, pilha 20:1 **64/64**, pilha de 5 **64/64** |
+| Piso (32 it.), todas as células | **19 falhas de 2304**: pilha 20:1 a dt 1/144, 6 sementes × 3 push-outs, C1 até +0,068 kg·m (~0,3 mm de altura de energia de 210 kg), 18 falhas; bacia dt 1/60 push-out ×1,5, C3 0,0407 m (limite 0,035), 1 falha |
+| 20 it. (comparação) | 225 falhas: pilha 20:1 a 1/60 (31–32 por célula) e a 1/144 (43 por célula), bacia dt 1/144 ×1 (C1 +0,205, semente 43) e dt 1/60 ×1,5 (C3 0,0447) |
+| "Mais trabalho piorou um caso que passava" | **0** |
+| C2 condicionado | **0 corridas acima de 3,5 cm em 4608** (máx. 0,0020); coluna sem condição máx. 0,0272 m |
+
+**T3.6 não vira ✅:** o C6 atualizado ainda tem 19 falhas no piso, todas fora da célula de produção e fora das quatro decisões (pilha 20:1 a 1/144 não converge a 32 it. por ~0,3 mm; bacia a push-out ×1,5 passa 0,035 de C3 por 0,6 cm). Levar ao dono: subir o piso para 40 (T3.6b: pilha 20:1 a 1/144 passa de 58 para 62/64 e o C2 sem condição da bacia fica em 0,0341), aceitar a pilha 20:1 a 1/144 como fora do C6, ou ajustar o limite de C3 a push-out ×1,5.

@@ -13,7 +13,8 @@ const RUNS = process.env.SWEEP === '1' && process.env.PIECE_SOLVER === 'jolt'
 const FROM = Number(process.env.SWEEP_FROM ?? 1)
 const SEEDS = Array.from({ length: Number(process.env.SWEEP_COUNT ?? 64) }, (_, i) => i + FROM)
 const STEPS = [1 / 30, 0.05, 1 / 60, 1 / 144]
-const ITERATIONS = [8, 10, 20]
+// the production floor (KIT_WORLD, 32) and the old 20 for comparison; 8 and 10 left C6 by the owner's decision of 2026-11-14 (SWEEP_ITS=8,10,20,32 brings them back)
+const ITERATIONS = (process.env.SWEEP_ITS ?? `20,${KIT_WORLD.velocityIterations}`).split(',').map(Number)
 const PUSHOUTS = [0.5, 1, 1.5]
 const PRODUCTION_PUSHOUT = KIT_WORLD.maxPushOut
 if (PRODUCTION_PUSHOUT === undefined) throw new Error('KIT_WORLD has no maxPushOut: the sweep turns it around that value')
@@ -26,7 +27,8 @@ const SCENARIOS: Record<string, (seed: number, dt: number) => BowlResult> = {
 const failuresOf = (r: BowlResult): string[] => {
   const failed: string[] = []
   if (r.c1Excess > 0) failed.push('C1')
-  if (r.c2Gain > 0.035 || r.c2GainUnconditioned > 0.035) failed.push('C2')
+  // C2 as the spec defines it, with the C1 condition; the unconditioned column is printed, never judged (owner decision 2026-11-14)
+  if (r.c2Gain > 0.035) failed.push('C2')
   if (r.c3Lift > 0.035) failed.push('C3')
   if (r.c4AsleepAfter <= 0) failed.push('C4')
   if (r.lowest <= -0.5 || r.deepest > 0) failed.push('C3b')
