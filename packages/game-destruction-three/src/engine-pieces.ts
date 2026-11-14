@@ -4,6 +4,8 @@ import type { BodyId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@ada
 
 import { buildGroundTile, sameGround } from './engine-ground'
 import type { GroundTile } from './engine-ground'
+import { sameSolid } from './engine-ground-solid'
+import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
 import type { PartBox, PieceBody } from './internal'
@@ -89,6 +91,9 @@ interface Tile {
   /** The step boxes' body, if the tile has steps, and the boxes it was made from. */
   steps: BodyId | null
   boxes: readonly number[]
+  /** The solid body under the height field (not under a slab) and the boxes it was made from: a second body, so the height field keeps its own shape across changes. */
+  solid: BodyId | null
+  volume: SolidVolume
   samples: Float64Array
   dirty: boolean
 }
@@ -159,14 +164,33 @@ export class EnginePieces {
     for (const t of this.tiles.values()) {
       this.world.removeBody(t.ground)
       if (t.steps !== null) this.world.removeBody(t.steps)
+      if (t.solid !== null) this.world.removeBody(t.solid)
     }
     this.tiles.clear()
     this.statics.clear()
     this.ignored.clear()
   }
 
-  /** The ground under the disc changed: its tiles are laid again before the next step, and what lies there wakes. */
+  /**
+   * The ground under the disc changed (the host dug or heaped it): its tiles are laid again before the next step, and what the new ground reaches into is lifted
+   * onto it once, as one made in the ground is (`underGround`): the engine pushes a deep one out too slowly and puts it to sleep half way.
+   */
   groundChanged(x: number, z: number, radius: number): void {
+    this.markDirty(x, z, radius)
+    for (const [b, link] of this.links) {
+      if (b.held) continue
+      const c = this.centre(b)
+      if (Math.hypot(c.x - x, c.z - z) > radius + Math.hypot(...b.halfExtents)) continue
+      const under = this.underGround(b)
+      if (under <= 0) continue
+      b.root.position.y += under
+      b.root.updateMatrixWorld(true)
+      link.groundAtSleep = NaN
+    }
+  }
+
+  /** The tiles the disc touches are laid again before the next step. */
+  private markDirty(x: number, z: number, radius: number): void {
     for (const [key, tile] of this.tiles) {
       const ix = Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN
       const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
@@ -236,7 +260,7 @@ export class EnginePieces {
       const link = this.links.get(b)
       if (!link || !b.sleeping || b.held || Number.isNaN(link.groundAtSleep)) continue
       const c = this.centre(b)
-      if (this.o.groundAt(c.x, c.z) >= link.groundAtSleep - GROUND_DROP) continue
+      if (Math.abs(this.o.groundAt(c.x, c.z) - link.groundAtSleep) <= GROUND_DROP) continue
       b.sleeping = false
       b.still = 0
       this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
@@ -399,7 +423,7 @@ export class EnginePieces {
     else if (!b.sleeping && link.sleeping) {
       // woken from outside (its support looked at again, a blow): the ground under it may have been dug while it slept
       this.world.wake(link.id)
-      this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
+      this.markDirty(c.x, c.z, Math.hypot(...b.halfExtents))
     } else if (pushed) this.world.wake(link.id)
   }
 
@@ -589,7 +613,33 @@ export class EnginePieces {
       if (steps !== null) this.world.removeBody(steps)
       steps = t.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(t.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
     }
-    this.tiles.set(key, { ground, slab, steps, boxes: t.boxes, samples: t.samples, dirty: false })
+    this.tiles.set(key, { ground, slab, steps, boxes: t.boxes, solid: this.layVolume(t, tile), volume: t.solid, samples: t.samples, dirty: false })
+  }
+
+  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. */
+  private layVolume(t: GroundTile, tile: Tile | undefined): BodyId | null {
+    const id = tile?.solid ?? null
+    if (t.level !== null) {
+      if (id !== null) this.world.removeBody(id)
+      return null
+    }
+    if (id === null) return this.world.createBody({ shape: this.solidShape(t.solid), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+    if (tile && !sameSolid(tile.volume, t.solid)) this.world.setShape(id, this.solidShape(t.solid))
+    return id
+  }
+
+  private solidShape(solid: SolidVolume): ShapeDesc {
+    const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
+    const { boxes, prisms } = solid
+    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3]!, boxes[i + 4]!, boxes[i + 5]!] }, position: [boxes[i]!, boxes[i + 1]!, boxes[i + 2]!] })
+    for (let i = 0; i < prisms.length; i += 24) {
+      // about the block's own centre, so the hull's points stay small numbers
+      const cx = (prisms[i]! + prisms[i + 3]!) / 2, cy = prisms[i + 13]!, cz = (prisms[i + 2]! + prisms[i + 8]!) / 2
+      const points: number[] = []
+      for (let k = 0; k < 24; k += 3) points.push(prisms[i + k]! - cx, prisms[i + k + 1]! - cy, prisms[i + k + 2]! - cz)
+      children.push({ shape: { kind: 'convex', points }, position: [cx, cy, cz] })
+    }
+    return { kind: 'compound', children }
   }
 
   private heightField(t: GroundTile, ix: number, iz: number): ShapeDesc {

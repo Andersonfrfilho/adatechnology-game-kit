@@ -563,3 +563,72 @@ Teste de diagnóstico (descartado), modo Jolt, explosão de 4 MJ na parede 0 de 
 - A sala (GPU/navegador) não foi medida aqui: a medida da sala vai com a T3.8.
 - `world.ignorePair` segue em uso (pares nascidos sobrepostos); a decisão de tirar da API fica para a T8.1.
 - Peças embutidas em vizinhas intactas (conduíte, tubo, batente) seguem sendo levantadas por `outOfStatics`; tornar a caixa dessas peças fiel ao traçado seria o caminho para tirar a regra, e fica para depois da T3.8.
+
+## T3.1 — Chão sólido (bug 3) (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, Node 20, worktree `motor-fisico-jolt`, branch `feat/motor-fisico-jolt`. O solver próprio não muda; só o modo Jolt.
+
+### Decisão: um corpo ou dois (pendência de `arquitetura.md`, seção 11)
+
+**Dois corpos por ladrilho com terreno que não é plano**: o height field (que já era um corpo) e o volume sólido (corpo novo). Ladrilho plano continua uma laje de 1 m (já era sólida), sem corpo novo.
+- Verificado: o Jolt **aceita** um height field dentro de um composto estático (`createBody` com composto de height field + caixa, sem erro). A resposta ao "não verificado" é sim; mesmo assim a escolha é dois corpos.
+- Razão (do desenho do Jolt, não medida aqui): o que está sobre o chão guarda o contato em cache pelo identificador da sub-forma. O height field trocado no lugar (`setShape`) mantém a mesma forma e os mesmos ids; dentro de um composto o id leva o índice do filho, e a largura desse índice muda com o número de filhos (o volume tem de 19 a 500 blocos conforme o terreno). Cada cavada tiraria o cache de tudo que está em cima. Com dois corpos a troca do volume não toca o height field, e vice-versa; o corpo dos degraus (já separado) segue o mesmo padrão.
+
+### Desenho do volume (`engine-ground-solid.ts`, novo; `engine-pieces.ts`, `engine-ground.ts`)
+
+- A superfície continua o height field (só terreno, `groundAt` do ADR). Embaixo, por ladrilho de 2 m, **um composto estático** de blocos que vão de `SOLID_DEPTH` (0,5 m) abaixo do canto mais baixo do ladrilho até um topo que **nunca passa da superfície**.
+- Blocos por quadtree sobre os cantos do height field (80 × 80 células de 2,5 cm): bloco com os cantos a menos de 5 mm entre si é uma **caixa**; senão um **prisma convexo** com o topo plano inclinado, ajustado pelos quatro cantos e baixado até a amostra mais baixa do bloco (então o plano fica sob a superfície em toda a malha de triângulos, que é linear entre cantos); se o desvio do plano passa de 5 mm, divide, até blocos de 3 células (7,5 cm). Topo 5 mm abaixo do que representa (`SOLID_MARGIN`). Distância ao desenhado: ≤ 1 cm em terreno suave e numa cratera de cos² de 30 cm; medido nos testes.
+- Contagem: terreno ondulado 1 caixa + 18 prismas; cratera de 30 cm 39 caixas + 463 prismas; bacia de 45 cm 20 + 296. Construir os blocos (JS): 0,8–2,0 ms por ladrilho.
+- Atualização: `layTile` refaz o volume só se as amostras do ladrilho mudaram e os blocos diferem (`sameSolid`); no mesmo corpo por `setShape`; ladrilho que vira plano perde o corpo, o que deixa de ser plano ganha. `clear()` remove os corpos do volume (§8: teste de vazamento abaixo).
+- **Regra nova, pequena, junto (decisão desta task, para a coordenação rever):** o motor empurra uma peça fundo no sólido só 0,5 mm por passo (`maxPushOut`) e a põe para dormir antes de sair (medido: placa de 4 cm, chão que sobe 5 cm, dormiu 1,8 cm dentro). Por isso `EnginePieces.groundChanged` (a chamada do host, `wakeRegion`) levanta uma vez o que o chão novo alcançou, com o mesmo `underGround`/`liftFor` da condição 6 (peça criada no chão); a condição 6 em si não mudou. E `groundTurn` (a vistoria das peças dormindo) agora acorda também quando o chão **subiu** mais de 2 cm (só detectava descida). Subida maior que o maior semi-eixo da peça não é levantada (é "debaixo de alguma coisa", como a condição 6) e fica para o sólido e a rede `fellThrough`.
+- Sensibilidade (a registrar): com a margem de 2 mm o sólido entrou nos contatos de quem pousa no chão e a semente 18 da bacia (dt 1/60) passou a ganhar 4,2 cm de energia (C2), contra 0,0000 sem o sólido; margens de 5, 10, 20 e 30 mm dão 0,0000, 0,0042, 0,0022 e 0,0000. Escolhido 5 mm (e 5 mm de relevo máximo), medido na bacia inteira abaixo. Como o `JOLT_PUSHOUT` da T3.0c, é sensível à configuração e não é colisor faltando.
+
+### Testes (`tests/engine-ground.test.ts`, 8 novos; os de Jolt só com `PIECE_SOLVER=jolt`)
+
+| Teste | O que prova |
+|---|---|
+| volume sob terreno suave | topo sob a superfície em toda parte (−0,6 mm a 1,06 cm), fundo = canto mais baixo − 0,5 m |
+| volume sob bacia íngreme / ladrilho plano | topo nunca passa da superfície (+0,6 mm); plano não tem volume |
+| cavada | volume refeito dos novos alturas, ≤ 1 cm da superfície nova |
+| (Jolt) chão sobe 5 cm sob placa dormindo, com `wakeRegion` | fica em cima (± 1,2 cm do topo), mais baixa de todos os quadros acima do chão menos 1 cm, `fellThrough` 0 |
+| (Jolt) o mesmo sem o host avisar | a peça dormindo vê o chão subir e acorda |
+| (Jolt) placa a 40 m/s para baixo | termina em cima, nunca abaixo, `fellThrough` 0 |
+| (Jolt) placa posta direto sob a superfície (como a que atravessou) | o sólido a segura: não cai mais de 1 cm do ponto; sem o volume cai a −0,44 m |
+| (Jolt) cavar 20 cm sob a placa | topo do sólido ≤ 0,1 cm sob a superfície nova, ≤ 2,5 cm dela, 10 cm abaixo do antigo; a placa desce junto |
+| (Jolt) vazamento: 44 rodadas de refazer o chão (2 terrenos alternados) | `bodyCount` igual; heap igual a menos de 4 KB (ruído de ±100 bytes dos contatos; um volume vazado são ~39 KB por rodada, 1,5 MB nas 40) |
+
+Conferido que os testes pegam: com o volume desligado (um `if` local, desfeito) o teste da placa posta sob a superfície e o do corpo do volume ficam vermelhos. O de 5 cm precisa dos dois: com o sólido e sem o levantar a placa dorme 1,8 cm dentro; só o levantar (sem sólido) passa nesse teste, e quem pega a falta do sólido é o da placa posta sob a superfície.
+
+### Custo (sem GPU, `PieceSystem` com 150 peças de 20 × 10 × 20 cm em 14 ladrilhos de terreno ondulado, modo Jolt, 3 rodadas cada)
+
+| Medida | Antes (sem volume) | Depois |
+|---|---|---|
+| Corpos no mundo | 164 | **178** (+1 por ladrilho de terreno, +14) |
+| Passo de `update` com peças acordadas, p50 / p99 (quadros 5–120) | 0,71–0,72 / 3,4–3,7 ms | 0,42–0,44 / 3,5–4,1 ms (o p99 é o ladrilho novo sob a peça que rola) |
+| Quadro de cavar (`wakeRegion` raio 1,6 m + `update`, ~9 ladrilhos refeitos), mediana / pior de 12 | 9,5–9,7 / 12,2–12,8 ms | **13,0–13,3 / 15,6–16,0 ms** (+3,4 ms) |
+| B6 (`cascade-tail`, caso 5b, aquecido, 3 invocações × 3 rodadas; só o adaptador, não muda nesta task) | — | p99 2,89–3,29 ms (mediana 2,98), quadro de despertar 5,01–5,71 ms |
+
+O quadro de cavar fica 3,4 ms mais caro (≈ 0,4 ms por ladrilho: construir blocos + trocar a forma). **Sem orçamento por update**, ao contrário dos estáticos da T3.0a: o height field e os degraus dos ladrilhos também não têm orçamento (quadro de cavar de 9,6 ms já antes), e adiar o volume é inseguro (cavada: o volume antigo, acima da superfície nova, seguraria a peça no ar). Orçamentar os ladrilhos todos fica como decisão para a coordenação, se a sala medir mal.
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three test` (próprio) | **347 passam, 0 falham** (62 pulados) |
+| `PIECE_SOLVER=jolt game-destruction-three test` | 400 passam, **13 falham, os mesmos 13 conhecidos** (`pieces-stack` 1, `rolling` 6, `settled-debris` 2, `slope-friction` 2 + 2 do modo laço); nenhum a menos, nenhum novo |
+| `vitest run tests/engine-ground.test.ts tests/ground-settlement.test.ts` | próprio 11 passam (6 pulados); `PIECE_SOLVER=jolt` 17 passam |
+| `game-physics-jolt test` | 55 passam, 0 falham |
+| `game-destruction test` | 507 passam, 0 falham |
+| `game-floorplan-three test` | 715 passam, 3 falham (`exact-golden`: breach, fracture, spall, as 3 conhecidas) |
+| `game-terrain` | não tocado |
+| Bacia, `JOLT_ITERATIONS=20`, dt {0,05; 1/60} × `BOWL_FROM` {1,17,33,49} × 16 sementes (8 processos, 32 s) | **128/128**; `fellThrough` 0; pior C1 −0,0022 (nenhuma energia criada); pior C2 0,024 m; pior C3 0,0121 m; sono mais lento 0,5 s; centro mais fundo 3,8 cm acima do chão. (Com margem de 2 mm: 127/128, semente 18, C2 0,0424.) |
+| `eslint` nos arquivos mudados | exit 0, nada impresso |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+| GPU / navegador | nenhum |
+
+### O que sobrou
+
+- A sala (blast, martelo, rede `fellThrough`) é medida à mão na T3.8.
+- Cratera mais íngreme que a testada (30 cm em 0,8 m): o volume fica a até ≈ 1,2 cm da superfície onde o plano de um bloco de 7,5 cm não acompanha a curva; o que rola ali é segurado do mesmo jeito.
+- Subida do chão maior que o maior semi-eixo da peça não é levantada: a peça fica dentro do sólido, sai por onde a saída é mais curta (pode ser por baixo, até o `SOLID_DEPTH`) e a rede `fellThrough` a põe de volta se estiver acordada e inteira sob o chão (placa de 60 cm com subida de 30 cm: `fellThrough` 1).

@@ -1,3 +1,6 @@
+import { NO_SOLID, buildSolidVolume } from './engine-ground-solid'
+import type { SolidVolume } from './engine-ground-solid'
+
 /**
  * The ground a physics engine stands the pieces on, one tile of `groundAt` at a time: a height field over the cell corners for what is smooth, and solid boxes
  * for the cells a hard step runs through (a crater's rim, a terraced slope) and the cells around them. A box's top is its cell's centre height and its
@@ -23,6 +26,8 @@ export interface GroundTile {
   readonly cells: number
   /** The step boxes: centre x, y, z and half x, y, z, six numbers each. */
   readonly boxes: readonly number[]
+  /** The solid under the height field (`engine-ground-solid`); none when the tile is level (a slab is solid already). */
+  readonly solid: SolidVolume
   /** The height of a level tile (every sample equal), or null. */
   readonly level: number | null
   /** Every sample read, to tell whether the ground changed since. */
@@ -52,7 +57,7 @@ export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: 
     low = Math.min(low, h)
     high = Math.max(high, h)
   }
-  if (high - low < 1e-9) return { heights: new Float32Array(0), cells: n, boxes: [], level: high, samples }
+  if (high - low < 1e-9) return { heights: new Float32Array(0), cells: n, boxes: [], solid: NO_SOLID, level: high, samples }
   const corner = (i: number, j: number): number => corners[j * m + i]
   const off = (a: number, b: number): boolean => Math.abs(a - b) > STEP_TOLERANCE
   // a cell whose centre or an edge's middle leaves its corners holds a step; it and the cells around it become boxes
@@ -101,7 +106,7 @@ export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: 
       i = end
     }
   }
-  return { heights, cells: n, boxes, level: null, samples }
+  return { heights, cells: n, boxes, solid: buildSolidVolume(heights, n, x0, z0, c), level: null, samples }
 }
 
 /** The same samples: the ground of the tile did not change. */

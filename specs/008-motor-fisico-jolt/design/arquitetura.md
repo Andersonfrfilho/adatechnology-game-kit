@@ -207,8 +207,7 @@ A tabela é `LAYER_PAIRS`, sem mudança. Consultas rodam numa camada própria do
   interno (`mInnerBodyShape`) na camada `character`.
 - **Saída do sensor quando o corpo some**: hoje `OnContactRemoved` procura a entrada depois do `forget`, e a fumaça não avisa a saída (T7.3).
 - **`QueryFilter.exclude`** para o atirador ou o carro pularem o próprio corpo (T6/T7.2).
-- **Chão sólido num corpo só ou em dois** (T3.1): não verificado se o Jolt aceita height field dentro de composto estático. Se não, o chão são
-  dois corpos e a troca no lugar vale só para o height field.
+- **Chão sólido num corpo só ou em dois** (T3.1): decidido em 2026-11-14, **dois corpos** (height field num, volume sólido noutro); razão em `evidence.md`, seção T3.1.
 
 ## 12. Consequências
 
