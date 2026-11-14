@@ -1,11 +1,16 @@
 import { quat, quatFromEuler, toWorld } from './math'
-import type { DestructibleSpec, ObjectState, PartSpec, Quat, Vec3 } from './types'
+import type { DestructibleImpl, DestructibleSpec, ObjectState, PartSpec, Quat, Vec3 } from './types'
 
-/** One part of a hosted body as a box turned as the body holds it (world): what a physics engine collides with in its place. */
+/**
+ * One part of a hosted body as a box turned as the body holds it (world): what a physics engine collides with in its place. A drawn piece (`DestructibleImpl.colliders`)
+ * carries its part id as `key` and, where no box fits it, its triangles (`mesh`, world space) with the box around them as the box.
+ */
 export interface HostedSolid {
   readonly center: Vec3
   readonly half: Vec3
   readonly rotation: Quat
+  readonly key?: string
+  readonly mesh?: { readonly vertices: Float32Array; readonly indices: Uint32Array }
 }
 
 /** Where a hosted body is and how its parts are posed (object-local overrides of `setPartPose`). */
@@ -41,3 +46,19 @@ export const hostedSolids = (spec: DestructibleSpec, state: Readonly<ObjectState
   }
   return out
 }
+
+/** The drawn pieces of a hosted body (`DestructibleImpl.colliders`, in its frame) as the world holds them: each box placed with the body, the triangles of a piece carried along. */
+export const hostedPieces = (pieces: ReturnType<NonNullable<DestructibleImpl['colliders']>>, pose: Pick<HostedPose, 'position' | 'rotation'>): HostedSolid[] =>
+  pieces.map((piece, index) => {
+    const base = { center: toWorld(pose.position, pose.rotation, piece.center), half: piece.half, rotation: quat.mul(pose.rotation, piece.rotation), key: `${piece.id}:${index}` }
+    if (!piece.mesh) return base
+    const source = piece.mesh.vertices
+    const vertices = new Float32Array(source.length)
+    for (let i = 0; i < source.length; i += 3) {
+      const world = toWorld(pose.position, pose.rotation, [source[i] as number, source[i + 1] as number, source[i + 2] as number])
+      vertices[i] = world[0]
+      vertices[i + 1] = world[1]
+      vertices[i + 2] = world[2]
+    }
+    return { ...base, mesh: { vertices, indices: piece.mesh.indices } }
+  })

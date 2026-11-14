@@ -13,7 +13,7 @@ import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound }
 import { isTurned } from './internal'
 import { drawnSolidsOf } from './drawn-solids'
 import type { MeasureBudget } from './drawn-solids'
-import { fitOrientedBoxes } from './oriented-boxes'
+import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
 import { sameSolids } from './engine-statics'
@@ -1123,7 +1123,8 @@ class Renderer implements DestructionRenderer {
       // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
       const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
       if (hosted) {
-        out.set(id, this.clipToDrawn(id, hosted))
+        // pieces the body's own module measured on what it draws (a part id as key) are the drawn shape already: only the damage-zone boxes are cut to it
+        out.set(id, hosted.length > 0 && hosted.every((solid) => solid.key !== undefined) ? hosted : this.clipToDrawn(id, hosted))
         continue
       }
       const cached = this.solidCache.get(id)

@@ -475,6 +475,9 @@ importers:
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
+      '@adatechnology/game-shapes':
+        specifier: workspace:^
+        version: link:../game-shapes
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx
@@ -1832,6 +1835,9 @@ importers:
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
+      '@adatechnology/game-shapes':
+        specifier: workspace:^
+        version: link:../game-shapes
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three

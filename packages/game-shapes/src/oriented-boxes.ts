@@ -1,5 +1,5 @@
-import type { Vec3 } from '@adatechnology/game-destruction'
-import type { Quat } from '@adatechnology/game-physics'
+type Vec3 = [number, number, number]
+type Quat = [number, number, number, number]
 
 /** A box turned as what it holds is turned: centre, half sizes along its own axes, and its rotation (in the frame the points were given in). */
 export interface OrientedBox {
@@ -185,3 +185,32 @@ export const fitOrientedBoxes = (points: readonly number[]): OrientedBox[] => {
 
 /** The one box along the principal axes of the points (x y z triples), uncut; null for fewer than three points. */
 export const fitOrientedBox = (points: readonly number[]): OrientedBox | null => (points.length < 9 ? null : fitOne(points).box)
+
+/**
+ * Whether each corner of the box (centre, half sizes, axes as three rows of 3) has a point within `tolerance` on every axis. A side thinner than its tolerance is a plane
+ * (a sheet with no thickness): its two sides are the same corners.
+ */
+export const hugs = (points: ArrayLike<number>, box: { readonly center: readonly number[]; readonly half: readonly number[]; readonly axes: readonly number[]; readonly tolerance: readonly number[] }): boolean => {
+  const found = new Uint8Array(8)
+  const a = box.axes
+  let flat = 0
+  for (let k = 0; k < 3; k++) if (box.half[k] <= box.tolerance[k]) flat |= 1 << k
+  for (let i = 0; i < points.length; i += 3) {
+    const dx = points[i] - box.center[0], dy = points[i + 1] - box.center[1], dz = points[i + 2] - box.center[2]
+    let corner = 0
+    let near = true
+    for (let k = 0; k < 3 && near; k++) {
+      const t = dx * a[k * 3] + dy * a[k * 3 + 1] + dz * a[k * 3 + 2]
+      if (Math.abs(Math.abs(t) - box.half[k]) > box.tolerance[k]) near = false
+      else if (t >= 0) corner |= 1 << k
+    }
+    if (!near) continue
+    corner &= ~flat
+    for (let s = flat; ; s = (s - 1) & flat) {
+      found[corner | s] = 1
+      if (s === 0) break
+    }
+  }
+  for (let c = 0; c < 8; c++) if (!found[c]) return false
+  return true
+}

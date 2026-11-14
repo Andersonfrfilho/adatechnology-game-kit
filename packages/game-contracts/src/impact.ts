@@ -28,6 +28,18 @@ export interface SurfaceRayHit {
   readonly pathLen: number
 }
 
+/**
+ * One drawn piece of a hosted body as a solid for a physics engine, in the impl's frame (`DestructibleImpl.colliders`): a box turned as drawn where a box fits the piece
+ * (every corner within 1 cm of a vertex), else the piece's triangles (`mesh`, with the box around them). `id` is the part of `describe()` the piece is.
+ */
+export interface DrawnCollider {
+  readonly id: string
+  readonly center: Vec3
+  readonly half: Vec3
+  readonly rotation: [number, number, number, number]
+  readonly mesh?: { readonly vertices: Float32Array; readonly indices: Uint32Array }
+}
+
 export interface DestructibleImpl {
   readonly id: string
   readonly name?: string
@@ -44,6 +56,11 @@ export interface DestructibleImpl {
    * them without touching the drawn surface goes on. `ignored` answers for the parts the round already went through. Null when the ray meets nothing.
    */
   surfaceRay?(ray: SurfaceRay): SurfaceRayHit | null
+  /**
+   * The pieces the impl draws, as what an engine collides with in their place (in the frame `describe()` answers in): one per drawn piece, none for a part that broke or
+   * came off. Without it the engine takes the boxes of `describe()`. Same cost contract as `describe()`: the world asks again only when state, place or a pose changes.
+   */
+  colliders?(): readonly DrawnCollider[]
   /** Advance fire, melting, collapse and other timed behaviour. */
   update?(dt: number): DestructionEvent[]
   /**

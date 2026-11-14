@@ -399,3 +399,63 @@ Corpo pelo mundo: `world.bodyCount` = 783 / 397, igual ao número de malhas (nen
 - O carro (T3.0b) segue pelas caixas de dano cortadas ao desenhado.
 - Fora do renderer: malhas desenhadas sem `bind` (cenário que o host não liga à destruição) não têm corpo; hoje não há caso conhecido na casa.
 - Medir o tempo para uma casa maior que `sobrado` (a de 783 corpos é a maior do catálogo medida): o enchimento é por orçamento, cresce em updates, não em ms por update.
+
+## T3.0b — O carro estacionado colide pelo que desenha, peça a peça (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, Node 22, worktree `motor-fisico-jolt`, branch `feat/motor-fisico-jolt`. Só modo Jolt; o solver próprio não muda.
+
+### O que mudou
+
+- **`vehicleColliders(THREE, vehicle, frame)`** (`game-vehicles-three/src/colliders.ts`, exportado): para um veículo construído devolve uma peça por parte, no quadro do `describe()`, cada uma com o id da parte.
+  Parte com malha própria (capô, tampa, porta aberta, para-choque, roda, pneu, farol, retrovisor, bateria, engate) é a sua malha; o resto do desenhado (as malhas mescladas do corpo, vidros, interior, porta fechada)
+  é dividido **por triângulo** pela parte da casca cuja caixa de dano contém o centro do triângulo (a menor), ou pelo `hub`. O retrovisor é peça própria e nunca alarga a cabine.
+  Cada peça: caixa alinhada ao quadro se os 8 cantos têm vértice a até 1 cm; senão a caixa pelos eixos principais (`fitOrientedBox`); senão os triângulos (`mesh`) com a caixa dos vértices desenhados em volta.
+  Peça de parte que quebrou/soltou (`status` ou `group`) não existe. Peça com mais de 1 500 triângulos vira malha mais grossa (vértices fundidos em células de 5 cm): o carro desenha até 50 000 triângulos por painel
+  para aceitar cortes. Sem isso o sedã tinha 230 000 triângulos de colisão (um corpo de 117 000); com isso, 27 000.
+- **Costura tipada** (nenhum carro conhecido pelo motor): `DestructibleImpl.colliders?()` e o tipo `DrawnCollider` em `game-contracts`; `DestructionWorld.hostedSolids` usa `colliders()` quando o impl o tem (peças postas no mundo, triângulos
+  carregados junto, chave `id:n`) e as caixas do `describe()` quando não; mesma lista até mudar estado, lugar ou pose. O renderer (`staticSolids`) não corta peças com chave ao desenhado (já são o desenhado) e continua cortando as caixas de zona.
+  A sala do veículo liga: `d.colliders = () => vehicleColliders(...)` no `impl` do módulo. A lógica de zonas de dano de `game-vehicles` não mudou; só `objectsOf(partId)` ficou público em `VehicleDestructible` (já existia em `VehicleVisuals`).
+- **Ajuste de caixa movido para `game-shapes`** (`oriented-boxes.ts` e `hugs`, a regra de 1 cm): `game-destruction-three` e `game-vehicles-three` importam de lá (a adaptação de veículos não carrega o renderer no seu bundle). `game-destruction-three` ganha a dependência de `game-shapes`.
+
+### Frota inteira (69 modelos, qualidade alta, `tests/vehicle-colliders.test.ts`)
+
+Para cada modelo: id de toda peça é parte do modelo; cada canto de toda caixa dentro da caixa da malha da sua peça (+1 cm); toda caixa sem malha tem vértice da peça a ≤ 1 cm por eixo em cada canto; uma amostra de 3 000 vértices
+desenhados cai numa peça (3 cm de folga da malha grossa).
+
+| Medida | Resultado |
+|---|---|
+| Modelos / testes | 69 / 72 testes passam (39 s) |
+| Maior excesso da caixa sobre a malha da peça | **0,000 mm** nos 69 (a caixa é a dos vértices) |
+| Maior distância canto → vértice, caixas sem malha | 15,4 mm (≤ 1 cm por eixo da caixa; só 4 caixas na frota: `naked_bike`, `sport_bike`, `attack_helicopter`, `transport_helicopter`) |
+| Peças por modelo | 7 (motos) a 37 (SUV); sedã `midsize_sedan`: 32 |
+| Caixas / malhas | quase tudo é malha: a casca de um carro é curva, nenhuma caixa serve a 1 cm |
+| Triângulos de colisão | 3 340 (bicicleta) a 62 605 (`light_jet`); carros 22 000–30 000; `battle_tank` 48 359 |
+| Custo de `vehicleColliders` | 4 ms (bicicleta) a 241 ms (`battle_tank`); carros 65–115 ms |
+
+Testes de `vehicle-colliders.test.ts` ainda: retrovisor é peça própria e a casca não chega à ponta dele; parte que soltou (desparafusar `mirror_left`) perde a peça e as outras ficam.
+Em `game-destruction-three/tests/engine-hosted.test.ts` (Jolt, motor real): caixa solta sobre os triângulos do teto repousa a 1,5 m e sobre a caixa do corpo a 1,1 m; uma porta feita encostada ao lado desenhado
+(zona de dano da cabine 60 cm além) sobe **menos de 3 cm** na criação (0 cm medido).
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm build` · `pnpm -r typecheck` | exit 0 · exit 0 |
+| `game-vehicles-three test` | 339 passam, 0 falham |
+| `game-vehicles-fleet test` (goldens da geometria da frota iguais) | 1225 passam, 0 falham |
+| `game-vehicles test` | 342 passam, 0 falham |
+| `game-destruction test` | 507 passam, 0 falham |
+| `game-destruction-three test` (próprio) | **344 passam, 0 falham** (55 pulados, os de Jolt) |
+| `PIECE_SOLVER=jolt ... game-destruction-three test` | 390 passam, **13 falham, os mesmos 13 conhecidos** (nenhum novo, nenhum a menos); +2 testes novos passam |
+| `game-floorplan-three test` | 715 passam, 3 falham (`exact-golden`: breach, fracture, spall, as 3 conhecidas) |
+| Bacia, `JOLT_ITERATIONS=20`, dt {0,05; 1/60} × `BOWL_FROM` {1,17,33,49} × 16 sementes (8 execuções paralelas) | **128/128** |
+| `eslint` nos arquivos mudados | 0 erros (2 avisos `max-lines` de `renderer.ts` e `world.ts`, que já os tinham) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+
+### O que fica
+
+- A geometria desenhada não mudou (os goldens da frota seguem iguais); `revisor-z-fighting` não foi preciso.
+- A lista é refeita quando o `state()` do carro muda (cada tiro): 65–115 ms por carro, só no modo Jolt e só no corpo hospedado. Cache por malha seria o próximo passo se a sala mostrar engasgo.
+- Um amassado só de desenho (`crumple`) não troca o `state()`: as peças só acompanham depois da próxima mudança de estado, lugar ou pose.
+- O teste da porta guarda a propriedade (sem levantar com o colisor desenhado); o cenário de 1,4 m de Q4 não se reproduz com um carro de caixas sintético sem a sala, então o teste não distingue sozinho do caminho antigo. A prova na sala fica para T3.8.
+

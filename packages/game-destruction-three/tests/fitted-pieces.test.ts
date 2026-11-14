@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import type { StaticSolid } from '../src/engine-pieces'
-import { fitOrientedBoxes } from '../src/oriented-boxes'
+import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { PieceSystem } from '../src/pieces'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'

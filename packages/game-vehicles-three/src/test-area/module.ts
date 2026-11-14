@@ -10,6 +10,7 @@ import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners
 import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
+import { vehicleColliders } from '../colliders'
 import { createVehicleLod } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
 import { createCabinSmoke } from '../cabin-smoke'
@@ -171,6 +172,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const kit = r.userData.kit as VehicleKit
       const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
       tapEffects(d)
+      // an engine collides with what the vehicle draws, piece by piece, not with its damage-zone boxes
+      d.colliders = () => vehicleColliders(kit.THREE as Three, d, root as THREE_NS.Object3D)
       // a leaf the room swings (door, hood, lid) is posed through here: away from its rest the vehicle draws in full, or the fused one shows it shut
       const setPartPose = d.setPartPose?.bind(d)
       {

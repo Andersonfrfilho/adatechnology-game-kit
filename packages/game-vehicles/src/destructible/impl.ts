@@ -97,6 +97,8 @@ export interface VehicleDestructible extends DestructibleImpl {
   readonly model: VehicleModel
   /** Display name of a part (from the kit locale). */
   partName(partId: string): string
+  /** The meshes and groups that draw the part now (none when it has no mesh of its own, came off or is not drawn: the body shell is the vehicle's merged meshes). */
+  objectsOf(partId: string): Object3D[]
   status(): VehicleStatus
   /** Open and close clips for the doors, the hood and the trunk lid the vehicle has. */
   animations(): AnimationClipSpec[]
@@ -1304,6 +1306,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       joints: js.map((j) => [j.def.id, j.hp, j.progress, j.open, j.by ?? null]),
     }),
     partName: (pid) => ps.get(pid)?.def.name ?? pid,
+    objectsOf: (pid) => vis?.objectsOf(pid) ?? [],
     status: computeStatus,
     animations: () => createVehicleClips(model, vis, kit, c),
     crumple: (point: Vec3, direction: Vec3, depth: number): void => {

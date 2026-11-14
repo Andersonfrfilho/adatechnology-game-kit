@@ -26,7 +26,7 @@ import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rota
 import type { DestructibleImpl } from './contracts'
 import { boundsInFrame, boundsTouch, rayMissesBounds, sphereTouchesBounds, SWEEP_BROAD_SLACK, sweptBounds } from './sweep-broad-phase'
 import type { SweepBounds } from './sweep-broad-phase'
-import { hostedSolids } from './hosted-solids'
+import { hostedPieces, hostedSolids } from './hosted-solids'
 import type { HostedSolid } from './hosted-solids'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
@@ -2353,7 +2353,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const k = known.key
       if (k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === im.posesVersion) return known.solids
     }
-    const solids = hostedSolids(spec, state, im)
+    const pieces = im.impl.colliders?.()
+    const solids = pieces ? hostedPieces(pieces, im) : hostedSolids(spec, state, im)
     implSolids.set(im, { spec, state, key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], im.posesVersion], solids })
     return solids
   }

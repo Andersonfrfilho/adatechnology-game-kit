@@ -87,5 +87,67 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a body another module draw
     // from x 1.85 to 2.05: past the drawn end at 1.8, and 15 cm over the zone box that ends at 2.0
     expect(r.y).toBeCloseTo(0.1, 1)
   })
+
+  /** A car that draws what its module measured: a body box 1.8 m wide with a mirror box on its side, and a flat roof of two triangles; its damage boxes (`describe`) are 20 cm wider. */
+  const drawnCar = (): DestructibleImpl => {
+    const { impl } = parked()
+    const spec = impl.describe()
+    // the damage zone of the cab reaches 60 cm past the drawn side, as the cab's zone box does with the mirrors in it
+    const wide: DestructibleSpec = { ...spec, parts: spec.parts.map((p) => (p.id === 'body' ? { ...p, shape: { kind: 'box', size: [4, 0.8, 2] } } : p.id === 'roof' ? { ...p, shape: { kind: 'box', size: [2, 0.4, 2.4] } } : p)) }
+    return {
+      ...impl,
+      describe: () => wide,
+      colliders: () => [
+        { id: 'body', center: [0, 0.6, 0], half: [2, 0.4, 0.9], rotation: [0, 0, 0, 1] },
+        { id: 'mirror_left', center: [0.8, 1.0, 1.0], half: [0.1, 0.05, 0.1], rotation: [0, 0, 0, 1] },
+        { id: 'roof', center: [0, 1.4, 0], half: [0.5, 0.01, 0.5], rotation: [0, 0, 0, 1], mesh: { vertices: new Float32Array([-0.5, 1.4, -0.5, 0.5, 1.4, -0.5, 0.5, 1.4, 0.5, -0.5, 1.4, 0.5]), indices: new Uint32Array([0, 2, 1, 0, 3, 2]) } },
+      ],
+    }
+  }
+
+  /** A plate of `size` made at `at` against the car: the most it rose over its first second, and where it was after three. */
+  const plateAgainstCar = (size: Vec3, at: Vec3): { rise: number; y: number } => {
+    const world = createDestruction()
+    const scene = new THREE.Scene()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, eventBudgetMs: Infinity })
+    world.register(drawnCar(), { id: 'car' })
+    renderer.bind('car', new THREE.Group())
+    const id = world.add({ parts: [{ id: 'door', material: 'steel', shape: { kind: 'box', size }, position: [0, 0, 0] }], joints: [] }, { position: at })
+    const root = new THREE.Group()
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))
+    root.add(mesh)
+    root.position.set(...at)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind(id, root, { parts: { door: mesh } })
+    renderer.makePiece(id)
+    let rise = 0
+    for (let t = 0; t < 3; t += 1 / 60) {
+      world.update(1 / 60)
+      renderer.update(1 / 60)
+      if (t < 1) rise = Math.max(rise, root.position.y - at[1])
+    }
+    return { rise, y: root.position.y }
+  }
+
+  it('a crate dropped on the triangles of a drawn piece rests on them, and on the box of another', () => {
+    const onRoof = drop([0.2, 2.5, 0.1], 3, (world, renderer) => {
+      world.register(drawnCar(), { id: 'car' })
+      renderer.bind('car', new THREE.Group())
+    })
+    // the roof is a sheet at 1.4 m: the crate's centre 10 cm over it (the damage boxes' roof top is at 1.4 too, the body's at 1.0)
+    expect(onRoof.y).toBeCloseTo(1.5, 1)
+    const onBody = drop([1.5, 2.5, 0], 3, (world, renderer) => {
+      world.register(drawnCar(), { id: 'car' })
+      renderer.bind('car', new THREE.Group())
+    })
+    expect(onBody.y).toBeCloseTo(1.1, 1)
+  })
+
+  it('a door made touching the drawn side is not lifted: the damage boxes reaching past it do not hold it', () => {
+    // 4 cm thick, 80 cm high, 3 cm off the drawn side (z 0.9), inside the cab's damage box that reaches z 1.2 and from y 1.0
+    const door = plateAgainstCar([0.9, 0.8, 0.04], [-0.8, 1.2, 0.95])
+    expect(door.rise).toBeLessThan(0.03)
+  })
 })
 

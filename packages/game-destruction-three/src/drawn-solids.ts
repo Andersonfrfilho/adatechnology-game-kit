@@ -2,8 +2,8 @@ import type * as THREE_NS from 'three'
 
 import type { StaticSolid } from './engine-statics'
 import type { MeshVis } from './internal'
-import { fitOrientedBox } from './oriented-boxes'
-import type { OrientedBox } from './oriented-boxes'
+import { fitOrientedBox, hugs } from '@adatechnology/game-shapes'
+import type { OrientedBox } from '@adatechnology/game-shapes'
 import type { Visuals } from './visual'
 
 /** A box fits a drawn part when each of its eight corners has a vertex within this (m): a box drawn is a box held, a cylinder or a chamfered post is not. */
@@ -28,35 +28,6 @@ interface Made {
 const made = new WeakMap<MeshVis, Made>()
 /** The triangles of each range of a merged mesh, by the index buffer they were found in (one pass over the buffer for all the parts of the host). */
 const triangles = new WeakMap<object, Map<number, number[]>>()
-
-/**
- * Whether each corner of the box (centre, half sizes, axes as three rows of 3) has a point within `tolerance` on every axis. A side thinner than its tolerance is a plane
- * (a sheet with no thickness): its two sides are the same corners.
- */
-const hugs = (points: Points, box: { readonly center: readonly number[]; readonly half: readonly number[]; readonly axes: readonly number[]; readonly tolerance: readonly number[] }): boolean => {
-  const found = new Uint8Array(8)
-  const a = box.axes
-  let flat = 0
-  for (let k = 0; k < 3; k++) if (box.half[k] <= box.tolerance[k]) flat |= 1 << k
-  for (let i = 0; i < points.length; i += 3) {
-    const dx = points[i] - box.center[0], dy = points[i + 1] - box.center[1], dz = points[i + 2] - box.center[2]
-    let corner = 0
-    let near = true
-    for (let k = 0; k < 3 && near; k++) {
-      const t = dx * a[k * 3] + dy * a[k * 3 + 1] + dz * a[k * 3 + 2]
-      if (Math.abs(Math.abs(t) - box.half[k]) > box.tolerance[k]) near = false
-      else if (t >= 0) corner |= 1 << k
-    }
-    if (!near) continue
-    corner &= ~flat
-    for (let s = flat; ; s = (s - 1) & flat) {
-      found[corner | s] = 1
-      if (s === 0) break
-    }
-  }
-  for (let c = 0; c < 8; c++) if (!found[c]) return false
-  return true
-}
 
 /** What a part costs besides its vertices (in vertices) to measure from scratch. */
 const PART_COST = 24

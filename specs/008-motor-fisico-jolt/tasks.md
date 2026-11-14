@@ -95,7 +95,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   qualquer objeto fixo que outro módulo desenha. Caixas orientadas por parte desenhada; malha triangular só onde caixa não serve. Teste novo
   em `d3`: na cena da sala montada sem GPU, toda malha desenhada fixa tem um corpo no mundo (contagem e caixa batendo com a malha ± 1 cm).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` · `sonnet`.
-- **T3.0b Caixas do carro a partir das malhas desenhadas.** Método tipado novo no `game-vehicles-three` que devolve as caixas de cada peça
+- ✅ **T3.0b Caixas do carro a partir das malhas desenhadas.** Método tipado novo no `game-vehicles-three` que devolve as caixas de cada peça
   desenhada (sem retrovisor alargando a cabine), usado no lugar das caixas de dano cortadas (`dcfad8a2`). Teste: nenhuma caixa passa 1 cm da
   malha da sua peça, na frota inteira.
   Mecânica? não · Aceite por comando? sim: testes de `game-vehicles-three` e `d3` · `sonnet`.
