@@ -113,5 +113,13 @@
   times.sort((a, b) => a - b)
   const engine = r.renderer.pieceSys && r.renderer.pieceSys.engine
   ruler.recordFellThrough(engine ? engine.fellThrough : 0)
-  return { worstIsland, kitEnergy: { updatesWithKitEnergy: kitEnergy.shoves, kgm: +kitEnergy.kgm.toFixed(1) }, kind: KIND, islands: graph ? 'contact graph' : 'bounding spheres', n: pieces.length, asleep: pieces.filter(p => p.sleeping).length, c2Limit: EnergyRuler.C2_LIMIT, ...ruler.result(), worstRises: steps.sort((a, b) => b.rise - a.rise).slice(0, 8), risingSteps: steps.length, frameMs: { p50: +times[110].toFixed(2), p99: +times[Math.floor(times.length * 0.99)].toFixed(2), max: +times[times.length - 1].toFixed(2), wakeFrame: +wakeFrameMs.toFixed(2) } }
+  // who the pieces that gain more than the limit are (T3.8e): mass, box and the parts of the object they were, from the ruler's own per-piece gains
+  const gains = new Map(ruler.pieceGains)
+  for (const [id, episode] of ruler.episodes) gains.set(id, ruler.withEpisode(gains.get(id), episode))
+  const objects = r.world.serialize().objects
+  const overPieces = [...gains].filter(([, g]) => g.conditioned > EnergyRuler.C2_LIMIT).map(([id, g]) => {
+    const p = pieces.find(q => q.objectId === id), ob = objects.find(x => x.id === id)
+    return { id, gain: +g.conditioned.toFixed(3), mass: p && +p.mass.toFixed(1), half: p && p.halfExtents.map(x => +x.toFixed(2)), parts: ob && ob.state && ob.state.parts ? ob.state.parts.map(x => x.id).slice(0, 4) : null }
+  })
+  return { overPieces, worstIsland, kitEnergy: { updatesWithKitEnergy: kitEnergy.shoves, kgm: +kitEnergy.kgm.toFixed(1) }, kind: KIND, islands: graph ? 'contact graph' : 'bounding spheres', n: pieces.length, asleep: pieces.filter(p => p.sleeping).length, c2Limit: EnergyRuler.C2_LIMIT, ...ruler.result(), worstRises: steps.sort((a, b) => b.rise - a.rise).slice(0, 8), risingSteps: steps.length, frameMs: { p50: +times[110].toFixed(2), p99: +times[Math.floor(times.length * 0.99)].toFixed(2), max: +times[times.length - 1].toFixed(2), wakeFrame: +wakeFrameMs.toFixed(2) } }
 })()

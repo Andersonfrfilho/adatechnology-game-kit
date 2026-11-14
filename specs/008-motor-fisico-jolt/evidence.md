@@ -1542,3 +1542,68 @@ OUT=<dir> timeout 900 node specs/008-motor-fisico-jolt/decision/probes/drive.mjs
 O "Target page, context or browser has been closed" da rodada anterior não voltou: com um processo por rodada as 20 rodadas fecharam sem erro de página (`errors` vazio nas 20).
 
 T3.8 continua sem ✅.
+
+## T3.8e — D5 de novo: A/B da regressão do blast, a porta e, por trás dela, o batente (2026-11-14) — **T3.8 continua SEM ✅: 8 de 20 rodadas passam (era 0 de 20 na T3.8d), sobram o caixilho da janela da edícula, os postes e o arame**
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22 (o `node` desta máquina é 24, não 20). Navegador: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo, com `timeout`, no máximo 2 trabalhos pesados juntos. Aceite igual ao da T3.8b/T3.8d (C2 condicionado 0 peças acima de 3,5 cm, tudo dormindo em até 3 s, `fellThrough` 0). Nenhuma tolerância, régua nem teste foi afrouxado ou removido.
+
+### 1. A/B do blast com D4 ligada (`solver=jolt&blastDebris=1`), `dist` refeito a cada revisão
+Entre `22d52cd7` e `HEAD` só `engine-pieces.ts` mudou (`git diff 22d52cd7 HEAD --stat`): em vez de três `git worktree` (cada um pediria `pnpm install` e build de tudo), troquei só esse arquivo por revisão no mesmo worktree, `pnpm build` do pacote, `examples/test-room/build.mjs`, e conferi o `dist` por grep (`isWayClear`: 0 em (a), presente em (b) e (c); a página da sala em (b)/(c) tem o código novo). Arquivo restaurado ao fim (`git checkout HEAD --`).
+
+| Revisão | Rodada | peças > 3,5 cm cond. | ganho C2 cond. (m) | C4 (s) | Passa |
+|---|---|---|---|---|---|
+| (a) `22d52cd7`, antes da D5 | 1 / 2 / 3 / 4 / 5 | 0 / 0 / 0 / 0 / 1 | 0,004 / 0,003 / 0,002 / 0,015 / 0,252 | 0,5 / 4,5 / **-1 (2 não dormem)** / 0,5 / 3,0 | **2 de 5** (só C2: 4 de 5) |
+| (b) `324e9aa9` sozinho | 1 / 2 / 3 / 4 / 5 | 2 / 1 / 1 / 2 / 2 | 0,107 / 0,085 / 0,107 / 0,104 / 0,088 | 0,45 / 0,5 / 2,9 / 4,55 / 0,5 | **0 de 5** |
+| (c) `HEAD` (`9a4c34ba`, com `26fe2ec1`) | 1 / 2 / 3 / 4 / 5 | 1 / 1 / 1 / 1 / 1 | 0,105 / 0,088 / 0,104 / 0,107 / 0,106 | 2,65 / 0,5 / 0,7 / 0,5 / 0,5 | **0 de 5** |
+
+**Veredito.** O 4 de 5 da T3.8b **se reproduz no C2** em `dist` novo ((a): 4 rodadas com 0 peças acima do limite), mas **não no critério inteiro**: duas das cinco reprovam o C4 (4,5 s e uma peça que não dorme). **A regressão do C2 entrou em `324e9aa9`** ((a) → (b): de 0 para 1–2 peças em todas as rodadas); `26fe2ec1` não mexeu ((b) → (c) igual). Leitura (inferência, não medida): em (a) a subida em passos que dobram tirava a peça do colisor que a prendia e o Jolt não tinha o que empurrar; em (b)/(c) o `putBack` devolve a peça ao lugar onde nasceu e o Jolt a empurra ~0,1 m, que a régua conta. Não mexi no `NO_PROGRESS` nem no `putBack`: a causa estava antes deles (itens 2 e 3).
+
+### 2. Causa-raiz 1: o colisor fixo do batente era uma laje cheia no vão da porta
+Sonda temporária (não commitada): para a porta `d0_0` do `sobrado`, os sólidos fixos que tocam a folha. O batente (`jamb:d0_0`, uma peça, um intervalo de vértices com 3 caixas: dois montantes e a verga) virava **uma caixa 1,0 x 2,1 x 0,17 m inteira**, e a folha (0,89 x 2,1 x 0,10 m) ficava dentro dela. Causa em `game-destruction-three/src/drawn-solids.ts`: o ajuste de caixa pedia só que cada um dos oito cantos da caixa tivesse um vértice a até 1 cm (`hugs`); um batente em U invertido tem os oito cantos e nenhuma das faces. O motor segurava uma laje no vão, e qualquer coisa que nascesse ou passasse ali nascia dentro dela.
+- **Conserto** (`07e2e52c`): a caixa só vale se for a peça: cada face dela precisa ser coberta ao menos pela metade por triângulos da peça (`fillsFaces`, `FILL = 0,5`; uma folha de painéis fica com a borda a 73%, um batente a 12%). Senão a peça colide pelos triângulos desenhados. Vale para a caixa alinhada e para a girada.
+- Teste (`drawn-solids.test.ts`, só Jolt): batente de três caixas numa peça: o sólido é malha, e um bloco posto no vão cai até o chão (reprovava antes do conserto, `solid.mesh` indefinido).
+
+### 3. Causa 2: a folha desenhada entrava 5 cm na verga
+Em `game-floorplan-three/src/house/doors.ts` a folha tinha a altura do vão (`visH`) e a verga desenha de `dH - 0,05` a `dH`: 5 cm de folha dentro da verga, em toda casa. A folha da garagem (aço) também encostava nos montantes (folga 0) e subia até a verga.
+- **Conserto** (`c0c3e4eb`): a folha para 5 mm abaixo da verga (`leafH = visH - jw - 0,005`, sem corte) e a folha da garagem ganha 5 mm de cada lado, como a de abrir já tinha. Opção `doors: 'visor'` mantém a folha do time para o golden do time (`golden-scene.test.ts` a usa, como já usa `pillars: 'hidden'` e `baseboard: 'band'`; o `vc3-house-scene.json` não foi tocado).
+- **Teste** (`door-clearance.test.ts`, 22 casos, sem motor): 7 plantas x 3 sementes, nenhuma folha (nem o puxador) de porta tem sobreposição com montante ou verga do próprio batente, e a folga é de pelo menos 2 mm. Com o desenho antigo os casos reprovam com sobreposição de 0,05 m.
+- Golden exato regravado para as 39 casas com porta (`UPDATE_EXACT=1`, e restaurei do `HEAD` as três cenas `destruction/*`, que já reprovavam antes e continuam as 3 conhecidas; `sobrado:3:cut` não mudou, o corte não tem verga); hash do `blast-presentation.test.ts` regravado (a peça da porta ficou menor).
+- §13: nenhuma face nova coincidente (a folha só ficou mais baixa; a face de cima dela, que coincidia com a de cima da verga, saiu). O catálogo de `game-destruction-three` (`z-fighting.test.ts`) passa; `game-floorplan-three` não tem teste de z-fighting próprio.
+
+### 4. O que a T3.8d chamou de "porta de 42,8 kg" eram os batentes
+Com a sonda da sala (`probes/room.js`, agora com `overPieces`: id, ganho, massa, caixa e as partes do objeto, vindos do ganho por peça da própria régua), as peças acima do limite depois dos itens 2 e 3 eram `jamb:d0_2` (38,5 kg, caixa 0,45 x 1,05 x 0,09) e `jamb:backyard.outbuilding.d0` (36,4 kg): o **batente solto**, cujo colisor de peça era a mesma laje cheia (`partBoxesOf`, `fitOrientedBoxes` dos pontos: uma caixa só). Nascia dentro da parede de onde saiu e o motor a empurrava ~0,1 m.
+- **Conserto** (`423bb92a`): `game-destruction-three/src/drawn-boxes.ts` (`hollowBoxesOf`): um trecho desenhado como 2 a 16 caixas de 24 vértices (cada grupo, oito cantos de caixa alinhada) que ocupam menos de metade da caixa em volta é segurado caixa a caixa, como desenhado. Qualquer outra coisa segue o caminho de antes. Teste (`drawn-solids.test.ts`): o batente virado peça tem 3 caixas, que somam menos de 0,1 m³ (a caixa em volta tem 0,357); reprovava antes (`partBoxes` indefinido).
+- Medido: 2 rodadas de blast com D4 ligada depois do conserto: 2 passam, ganho 0,005–0,006 m, sem peça acima do limite.
+
+### 5. Rodadas na sala (código final, uma por processo)
+| Configuração | T3.8d: passam | Agora: passam | peças > 3,5 cm cond. por rodada | quem reprova | C4 (s) por rodada | `fellThrough` |
+|---|---|---|---|---|---|---|
+| D4 ligada, blast | 0 de 5 | **4 de 5** | 0, 1, 0, 0, 0 | r2: `metal_1` (0,6 kg) 0,087 m e C4 4,65 s | 0,8; 4,65; 0,6; 0,45; 0,45 | 0 |
+| D4 ligada, martelo | 0 de 5 | **0 de 5** | 3, 2, 0, 2, 1 | poste `pole:33.7` (950 kg) 0,056–0,058 m e arame `wiring:grid` 0,05–0,07 m (r1, r2, r4); `pipe:run_outlet` 0,134; caixilho `window_frame:backyard.outbuilding.w0` 0,622 (r5); r3 só C4 | 0,4; 3,8; 3,15; 5,85; 5,7 | 0 |
+| D4 desligada, blast | 0 de 5 | **3 de 5** | 2, 0, 3, 0, 0 | caixilho e vidro da janela da edícula 0,24 (r1, r3); laje de calçada 72,9 kg 0,041 (r3) | 0,5; 0,5; 0,5; 0,45; 0,5 | 0 |
+| D4 desligada, martelo | 0 de 5 | **1 de 5** | 0, 0, 1, 2, 0 | caixilho da janela da edícula 0,58–0,62 (r3, r4); r1 e r5 só C4 (6,15 e 5,75 s) | 6,15; 2,75; 6,45; 1,9; 5,75 | 0 |
+
+**8 de 20 rodadas passam** (T3.8b: 5; T3.8d: 0). Nenhuma peça de porta (folha nem batente) aparece mais acima do limite. Sem exigir que o Jolt seja determinístico: o `PhysicsCostMeter` e o orçamento do blast variam com o tempo de quadro, e rodadas iguais diferem.
+
+### 6. O que sobra e por quê
+- **Caixilho da janela da edícula (`window_frame:backyard.outbuilding.w0`, 13,8 kg)**: ganho de 0,24 a 0,62 m em 5 das 20 rodadas (e o vidro dela, 3,6 kg, 0,23). Já é segurado caixa a caixa (os 144 vértices são 6 caixas); **não identifiquei por que ainda ganha**: a hipótese a verificar é o caixilho nascer dentro da parede da edícula, como o batente nascia. Medida a fazer: o `penetration` no nascimento dele contra os sólidos fixos da edícula.
+- **Poste de concreto (950 kg) e arame**: 0,05–0,07 m no martelo com D4 ligada; são as peças do tombamento (`engine.topple`, que a régua perdoa pela D6) e da fiação rígida de 45 m, que a D7 troca por trechos. Não mexi.
+- **C4 acima de 3 s** em 7 das 20 rodadas (peças de telhado e fios voltando a se mexer); não investigado.
+- `bookcase-topple.test.ts` (modo Jolt) reprova **no `HEAD` também**, com os dois conjuntos de alteração revertidos (conferido); `game-floorplan-three` no modo Jolt nunca teve a linha de base registrada.
+- O batente de `vehicles` (`game-vehicles-three/src/collider-fit.ts`) usa o mesmo `hugs` e pode ter o mesmo vazio; fora do escopo, não mexi.
+
+### Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | 398 passam, 0 falhas |
+| `PIECE_SOLVER=jolt` | 470 passam, **só as 2 conhecidas** (lata no ar com restituição, cinquenta latas) |
+| `game-floorplan-three` próprio | 737 passam (+22 de `door-clearance`), **só os 3 `exact-golden` conhecidos** (breach, fracture, spall) |
+| `game-floorplan-three` Jolt | 739 passam; os 3 conhecidos e `bookcase-topple` (já reprovava no `HEAD`) |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, `worstC2Unconditioned 0,014651`, `worstC3 0,013626`, `fellThrough 0` (idêntico ao da T3.8b/T3.8d), duas vezes (depois de cada conserto) |
+| `eslint` nos arquivos mudados | 0 erros (1 aviso antigo: `renderer.ts` com mais de 1500 linhas) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos) |
+
+Commits (locais, nada enviado): `07e2e52c` (batente é triângulos), `c0c3e4eb` (folha sob a verga, teste, goldens), `423bb92a` (batente solto é caixa a caixa).
+
+T3.8 continua sem ✅.
