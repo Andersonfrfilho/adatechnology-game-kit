@@ -691,3 +691,35 @@ Nenhuma das 6 é o bug 2 (a lata em pé): ele não aparece mais. Duas delas (as 
 
 - O fator +4,8% do rolamento na rampa (dois testes) vai para a T3.5; hipótese não verificada: a resistência de rolamento age menos que `C_rr cos t` com a lata no contato da tábua estática.
 - O teto de giro de 47 rad/s (T4.3) não foi tocado e não entra aqui.
+
+## T3.3 — Bug 4: C1 com 8 e 10 iterações (2026-11-14) — **levado ao dono, sem mudança de código**
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, Node 20, worktree `motor-fisico-jolt`, sobre `4e3914e3`. Nada foi commitado em código; as duas tentativas foram desfeitas e os `dist` refeitos do HEAD.
+
+### Medida em HEAD (bacia, dt {0,05; 1/60} × `BOWL_FROM` {1,17,33,49} × 16 sementes, 8 processos, `PIECE_SOLVER=jolt`, `SPIKE_OUT` para o pior caso)
+
+| `JOLT_ITERATIONS` | Passam | Falham | Pior C1 (kg·m, soma de m·altura de energia; total 220 kg) | Pior C2 / C3 |
+|---|---|---|---|---|
+| 8 | **120/128** | 8, todas por C1: sementes 26 (1/60) 0,633, 28 (1/60) 0,622, 33 (0,05) 0,556, 45 (0,05) 0,157, 54 (1/60) 0,144, 39 (0,05) 0,064, 30 (1/60) 0,016, 60 (1/60) 0,018 | +0,633 (2,9 mm por kg total) | 0,0099 / 0,0154 |
+| 10 | **125/128** | 3: 28 (1/60) C1 0,354, 39 (1/60) C1 0,117, 30 (1/60) C2 0,051 | +0,354 | 0,0514 / 0,0274 |
+| 20 (referência) | **128/128** | 0 | −0,0022 | 0,024 / 0,0121; `fellThrough` 0 |
+
+`fellThrough` 0 nas três. O teste imprime a linha de cada corrida em `SPIKE_OUT`; os números acima saem dela.
+
+### Causa
+Cada falha é **um quadro só**, entre 0,12 e 0,22 s depois de a chapa de 142 kg cair (a 0,7 m/s) sobre as quatro placas de ~20 kg. A chapa já parou (v_y 0,02) e no quadro seguinte sai a +0,1 a +0,4 m/s (semente 26: +0,26; dE da chapa +0,95 kg·m). Nenhum outro corpo contribui. É o solver de velocidade sem convergir numa pilha de razão de massa 7:1 (chapa sobre placas sobre chão): com 8 ou 10 passadas sobra velocidade para cima, com 20 não. Não é restituição (caixas têm restituição 0 no motor) nem ordem do atrito por passo.
+
+Confirmações:
+- **Correção de posição ajuda mas não resolve.** Em 5 sementes ruins com 8 iterações: `JOLT_POSITION_ITERATIONS` 0, 1, 4, `JOLT_SLOP` 0,005, `JOLT_PUSHOUT` 0,0005 mudam *quais* sementes falham e quanto (caos), nunca zeram. A melhor combinação (`SLOP` 5 mm + `PUSHOUT` 0,5 mm) limpa as 5, mas na bacia inteira dá **126/128 com 8 e 126/128 com 10** (pior C1 +0,851 e +0,427).
+- **A razão de massa é a causa.** Escalando a massa inversa do mais pesado por contato (Jolt `ContactSettings.mInvMassScale/mInvInertiaScale`, novo e persistido, só entre peças de entulho, razão máxima 3): bacia **128/128 com 8, 10 e 20** (pior C1 −0,091, −0,044, −0,100; pior C3 0,0325 com 8, perto do teto de 0,035).
+- Achado de infraestrutura: `game-destruction-three` importa `game-physics-jolt` e `game-physics` pelo `dist`; mexer em `src` sem `pnpm build` não tem efeito (por isso `mBaumgarte`, que não toca contato, parecia sem efeito antes de refazer o `dist`).
+
+### Tentativa 1 — retocar a correção de posição (`penetrationSlop`, `maxPushOut`, iterações de posição)
+Só configuração, sem código. Resultado: 126/128 com 8 e 126/128 com 10 (acima). **Não atinge o aceite.** Além disso, a T3.1 já mostrou que a bacia a 20 iterações é sensível a esses dois valores e à margem do sólido (5 mm); mudar o padrão de produção por causa de 8/10 arrisca as medidas de B1/B5/B6.
+
+### Tentativa 2 — limitar a razão de massa por contato entre entulhos (`debrisMassRatioLimit: 3` no `KIT_WORLD`, aplicado no ouvinte de contatos do adaptador)
+Bacia 128/128 em 8, 10 e 20. **Reprovada no portão de linhas de base**: `PIECE_SOLVER=jolt game-destruction-three test` fica com **16 falhas em vez das 13 conhecidas** (`rolling` 9 em vez de 6; os 3 novos: "a heavy can into a light one: the light one leaves faster than the heavy one came, momentum kept", "a can rolled into a 1,9 m wardrobe bounces off it, never through it", "a can and a table: rolls under the top between the legs..."). O limite de razão é falso para colisão livre: fingir que o pesado pesa no máximo 3× o leve tira momento do pesado e entrega menos ao leve. Desfeita.
+
+### Estado
+- **Persiste. T3.3 fica desmarcada, "levado ao dono".** `JOLT_ITERATIONS=20` segue como piso de produção (128/128, pior C1 −0,0022, C2 0,024 m, C3 0,0121 m, `fellThrough` 0, medido de novo no HEAD limpo; `rolling` com as 6 falhas conhecidas).
+- Decisão para o dono: aceitar 20 como piso (custo do passo mantido) ou autorizar uma terceira via, **não testada**: limitar a razão de massa só em contato em repouso (velocidade de aproximação pequena, p.ex. < 0,5 m/s, o que cobre o pouso de 0,7 m/s só se o limite subir), preservando o momento das colisões livres. Custo: a chamada JS do ouvinte por contato persistido por passo (B6 já gastou um terço do quadro com isso no gate 0).
