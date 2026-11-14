@@ -9,6 +9,7 @@ import type * as THREE_NS from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { BlastDebrisOptions } from './blast-debris'
 import type { PiecePhysics } from './physics-option'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
@@ -69,6 +70,16 @@ export interface RendererOptions {
    * next frame, in order; at least one event is applied per frame, so 0 means one at a time.
    */
   eventBudgetMs?: number
+  /**
+   * What the kit decides about the debris of a blast: the speed of the front that wakes it from the centre out, how many pieces enter physics (between a minimum and a maximum,
+   * by the cost measured), the size under which a loosened object is a chip, the cap of pieces alive and the far and old rule. Each is a number with a default
+   * (`BLAST_DEBRIS_DEFAULTS`); a blast can override them (`ExplodeOptions.debris`).
+   */
+  blastDebris?: BlastDebrisOptions
+  /** Where the player is (m): the far and old rule of `blastDebris.far` counts distance from it. Without it, no piece is far. */
+  focus?: () => Vec3
+  /** A piece faded away (`blastDebris.far.action: 'fade'`, or over `maxLivePieces`) has left the scene: the host owns its geometry and disposes it here. */
+  onDebrisFaded?: (objectId: string, root: THREE_NS.Object3D) => void
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
   /**
@@ -193,6 +204,8 @@ export interface ExplodeOptions {
    * the energy that reached it (`energy * confinement * shelter` of the piece's object) instead of the raw energy. Without it the old formula.
    */
   readonly report?: readonly HitResult[]
+  /** This blast's own debris numbers over the renderer's (`RendererOptions.blastDebris`): a big charge a slower front, a small one fewer pieces. */
+  readonly debris?: BlastDebrisOptions
 }
 
 /** One box of `DestructionRenderer.solidsNear`. */

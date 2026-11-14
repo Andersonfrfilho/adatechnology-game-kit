@@ -55,3 +55,9 @@ Desenho: `specs/008-motor-fisico-jolt/design/arquitetura.md` (seções 3 e 5).
 ## Ambiente de teste
 
 Não há testes próprios neste pacote (só tipos e o laço); os testes que rodam o contrato com o motor ficam em `packages/game-physics-jolt/tests/`.
+
+## Despertar em lotes e custo (D4, spec 008)
+- `WakeQueue` (despertar de entulho em lotes, mais perto do jogador primeiro, limitada) e `PhysicsCostMeter` (custo por corpo acordado, suavizado de `PhysicsFrame.stepMs` ÷ `world.activeCount`). Todo número é opção; padrões medidos: `DEFAULT_WAKE_COST_TARGET_MS` 4, `DEFAULT_MAX_WAKE_DELAY` 0,08 s, `DEFAULT_MAX_QUEUED_WAKES` 2048, `DEFAULT_MIN_WAKES_PER_FRAME` 8, `DEFAULT_PHYSICS_COST_PER_BODY_MS` 0,0022, `DEFAULT_WAKE_COST_PER_BODY_MS` 0,02, `DEFAULT_MIN/MAX_PHYSICS_PIECES` 24/300, `DEFAULT_PHYSICS_COST_TARGET_MS` 5, `DEFAULT_CHIP_SIZE` 0,15 m. `physicsPieceCount` e `chooseForPhysics` escolhem quantas e quais peças do blast viram corpo.
+- `PhysicsFrame.stepMs`: milissegundos dos passos fixos do último quadro.
+- `velocityIterations` é opção do mundo; padrão do `KIT_WORLD` 32 (decisão do dono, 2026-11-14).
+

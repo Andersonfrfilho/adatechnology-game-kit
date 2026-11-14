@@ -7,6 +7,8 @@ import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
+import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris } from './blast-debris'
+import type { ResolvedBlastDebris } from './blast-debris'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -303,6 +305,12 @@ class Renderer implements DestructionRenderer {
   private readonly gravity: number
   private readonly autoSplit: boolean
   private readonly maxFragments: number
+  /** The debris policy of blasts (`RendererOptions.blastDebris`), or null: a host that sets nothing wakes and loosens everything in the blast's frame, as before. */
+  private readonly blastDebris: ResolvedBlastDebris | null
+  private readonly blastWakes: BlastWakes | null
+  private readonly costMeter: PhysicsCostMeter
+  /** The pieces faded away (`faded`): their root shrinks, then leaves the scene. */
+  private readonly fading = new Map<string, { root: Object3D; age: number }>()
   private readonly eventBudgetMs: number
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
@@ -403,6 +411,10 @@ class Renderer implements DestructionRenderer {
     this.gravity = o.gravity ?? 9.81
     this.autoSplit = o.autoSplit !== false
     this.maxFragments = o.maxFragments ?? 160
+    this.blastDebris = o.blastDebris ? resolveBlastDebris(o.blastDebris) : null
+    this.blastWakes = this.blastDebris ? new BlastWakes(this.blastDebris) : null
+    const priors = resolveBlastDebris(o.blastDebris)
+    this.costMeter = new PhysicsCostMeter(priors.physicsCostPerBodyMs, priors.wakeCostPerBodyMs)
     this.eventBudgetMs = o.eventBudgetMs ?? Infinity
     this.box = new THREE.Box3()
     this.tmpQ = new THREE.Quaternion()
@@ -442,6 +454,9 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
+      ...(this.blastDebris
+        ? { keep: { maxLive: this.blastDebris.maxLivePieces, far: this.blastDebris.far, ...(o.focus ? { focus: o.focus } : {}), onFade: (b: PieceBody) => this.fadePiece(b) } }
+        : {}),
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
@@ -926,7 +941,10 @@ class Renderer implements DestructionRenderer {
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.settlement.update(dt)
+    this.advanceWakes(dt)
     this.pieceSys.update(dt)
+    this.measureCost()
+    this.updateFading(dt)
     this.fragments.update(dt)
     // what goes on at a part (fire, leaks, trickling grit) reads where the part is after the bodies moved this frame, not a frame behind
     this.updateActive(dt)
@@ -2267,17 +2285,31 @@ class Renderer implements DestructionRenderer {
       wentOff?.get(objectId) ??
       this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ??
       1
+    // with a debris policy the shove waits its turn in the wake queue (nearest the player first, else the centre), sized by the measured step cost: not the whole pile in the blast's frame
+    const policy = this.blastDebris ? resolveBlastDebris(this.o.blastDebris, options.debris) : null
+    const focus = this.o.focus?.()
+    const reach = (distance: number, apply: () => void, at: Vec3): void => {
+      if (!policy || !this.blastWakes) return apply()
+      const priority = focus ? Math.hypot(at[0] - focus[0], at[1] - focus[1], at[2] - focus[2]) : distance
+      this.blastWakes.push(priority, apply, policy.maxWakeDelay)
+    }
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
-      if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
+      const distance = c.distanceTo(this.v2.set(p[0], p[1], p[2]))
+      if (distance > ev.radius) return
       const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
       if (!hit) return
       const spread = pc.halfExtents[0]
       const momentum = hit.speed * pc.mass
-      this.pieceSys.impulse(pc, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
+      const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
+      const point: Vec3 = [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread]
+      reach(distance, () => {
+        if (this.pieceSys.get(pc.objectId) === pc) this.pieceSys.impulse(pc, impulse, point)
+      }, [c.x, c.y, c.z])
     }
     for (const pc of [...this.pieceSys.list]) shove(pc)
-    if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf)
+    if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf, policy, reach)
+    this.advanceWakes(0)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
     this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1), {
       radius: ev.radius,
@@ -2311,25 +2343,89 @@ class Renderer implements DestructionRenderer {
     return cover
   }
 
-  /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */
-  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number): void {
+  /**
+   * The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. With a debris
+   * policy, how many enter physics is the count the measured cost allows (`physicsPieceCount`): every big one, then the nearest chips while there is room; the chips left
+   * over stay where they stand (nothing invisible collides, nothing drawn is taken away) and the blast throws visual chips there instead.
+   */
+  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number, policy: ResolvedBlastDebris | null, reach: (distance: number, apply: () => void, at: Vec3) => void): void {
     const shoveable = this.o.shoveable
     if (!shoveable) return
+    const candidates: Array<{ b: Bound; world: THREE_NS.Vector3; half: Vec3; mass: number; hit: { direction: Vec3; speed: number }; size: number; distance: number }> = []
+    const focus = this.o.focus?.()
     for (const b of [...this.bounds.values()]) {
       if (b.piece || this.pieceSys.get(b.id) || !shoveable(b.id) || !this.world.has(b.id)) continue
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
-      if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
+      const distance = world.distanceTo(this.v2.set(point[0], point[1], point[2]))
+      if (distance > radius) continue
       const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
-      if (!hit) continue
+      // what orders them is the distance to the player when there is one, else to the blast
+      const rank = focus ? Math.hypot(world.x - focus[0], world.y - focus[1], world.z - focus[2]) : distance
+      if (hit) candidates.push({ b, world, half, mass, hit, size: 2 * Math.max(...half), distance: rank })
+    }
+    const count = policy ? physicsPieceCount({ minPieces: policy.minPhysicsPieces, maxPieces: policy.maxPhysicsPieces, costTargetMs: policy.physicsCostTargetMs }, this.costMeter.wakeCostPerBodyMs, this.awakeBodies()) : Infinity
+    const { physics, chips } = policy ? chooseForPhysics(candidates, count, policy.chipSize) : { physics: candidates, chips: [] }
+    for (const { b, world, half, mass, hit, distance } of physics) {
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)
       if (!body) continue
       this.o.onLoosened?.(b.id, piece, 'blast')
       const spread = half[0]
       const momentum = hit.speed * mass
-      this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])
+      const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
+      const at: Vec3 = [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread]
+      reach(distance, () => {
+        if (this.pieceSys.get(b.id) === body) this.pieceSys.impulse(body, impulse, at)
+      }, [world.x, world.y, world.z])
+    }
+    for (const { world, hit } of chips) this.vfx.burst('chips', [world.x, world.y, world.z], hit.direction, 4, Math.min(6, hit.speed))
+  }
+
+  /** One frame of the wake queue: the step cost of the frames before sizes the batch. */
+  private advanceWakes(dt: number): void {
+    const cost = this.pieceSys.stepCost()
+    this.blastWakes?.advance(dt, cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs)
+  }
+
+  /** Awake bodies in the physics world (what a blast's debris adds to). */
+  private awakeBodies(): number {
+    return this.pieceSys.activeBodies()
+  }
+
+  /** The world's cost per awake body, from the loop's last frame. */
+  private measureCost(): void {
+    const cost = this.pieceSys.stepCost()
+    if (cost) this.costMeter.observe(cost.stepMs, cost.active)
+  }
+
+  /** A piece at rest that is far and old, or over the cap (`PieceSystemOptions.keep`): its body and collider go now and its root shrinks away. */
+  private fadePiece(b: PieceBody): void {
+    const bound = this.bounds.get(b.objectId)
+    if (!bound || this.fading.has(b.objectId)) return
+    this.staticDirty.add(b.objectId)
+    this.pieceSys.remove(b.objectId)
+    this.bounds.delete(b.objectId)
+    this.hitPoints.forget(b.objectId)
+    this.fading.set(b.objectId, { root: bound.root, age: 0 })
+  }
+
+  private updateFading(dt: number): void {
+    if (this.fading.size === 0) return
+    const seconds = this.blastDebris?.far.fadeSeconds ?? 0
+    for (const [id, f] of this.fading) {
+      f.age += dt
+      const left = seconds > 0 ? 1 - f.age / seconds : 0
+      if (left > 0) {
+        f.root.scale.setScalar(left)
+        continue
+      }
+      this.fading.delete(id)
+      // the host owns the geometry and disposes it in `onDebrisFaded`
+      // eslint-disable-next-line kit/no-bare-remove -- the host disposes the root it is handed
+      f.root.removeFromParent()
+      this.o.onDebrisFaded?.(id, f.root)
     }
   }
 

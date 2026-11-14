@@ -10,6 +10,8 @@ export interface PhysicsFrame {
   readonly steps: number
   /** The fraction of a step left over, 0 to 1, for interpolating drawn poses. */
   readonly alpha: number
+  /** Milliseconds the last frame's fixed steps took (the world's cost, for a system that adapts to it). */
+  readonly stepMs: number
 }
 
 export interface PhysicsPhase {
@@ -43,6 +45,7 @@ interface MutableFrame {
   time: number
   steps: number
   alpha: number
+  stepMs: number
 }
 
 /** The one loop of a world (it owns the time accumulator); a second one for the same world throws, so two systems never step it twice. */
@@ -50,7 +53,7 @@ export const createPhysicsLoop = (world: PhysicsWorld, options: PhysicsLoopOptio
   if (looped.has(world)) throw new Error('game-physics: this world already has a physics loop')
   looped.add(world)
   const maxDt = options.maxDt ?? 0.1
-  const frame: MutableFrame = { time: 0, steps: 0, alpha: 0 }
+  const frame: MutableFrame = { time: 0, steps: 0, alpha: 0, stepMs: 0 }
   // copy on write: a phase added or removed while the loop runs does not disturb the pass in progress
   const phases: Record<PhaseOrder, readonly PhysicsPhase[]> = { crowd: [], actors: [], contacts: [], rules: [] }
   let accumulator = 0
@@ -71,11 +74,13 @@ export const createPhysicsLoop = (world: PhysicsWorld, options: PhysicsLoopOptio
     frame.steps = steps
     frame.alpha = accumulator / h
     world.clearEvents()
+    const started = performance.now()
     for (let i = 0; i < steps; i++) {
       for (const order of BEFORE_ORDER) for (const phase of phases[order]) phase.beforeStep?.(h, frame)
       world.stepFixed(h)
       frame.time += h
     }
+    frame.stepMs = performance.now() - started
     for (const order of AFTER_ORDER) for (const phase of phases[order]) phase.afterSteps?.(clamped, frame)
   }
 

@@ -16,7 +16,7 @@ import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-playe
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { BlastDebrisOptions, DestructionRenderer, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
@@ -345,6 +345,8 @@ export interface TestRoomOptions {
     maxAwakeFragments?: number
     /** How the debris at rest is drawn in batches (`RendererOptions.settledBatches`; default on with its defaults); `false` draws every debris mesh on its own. */
     settledBatches?: SettledBatchOptions | false
+    /** What a blast does to its debris (`RendererOptions.blastDebris`: wake in batches by the measured step cost, how many pieces enter physics, far and old debris); omitted, off. `{}` takes the defaults; the player is the camera. */
+    blast?: BlastDebrisOptions
   }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions

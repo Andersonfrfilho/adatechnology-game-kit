@@ -54,6 +54,13 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 
 `specFromObject3D` lê `userData.destructionMaterial`, `destructionPart`, `destructionIgnore`, `destructionTags` e `hollow`.
 
+## Detritos de explosão (`blastDebris`, opcional)
+Sem a opção, o blast empurra, acorda e solta tudo no próprio quadro. Com `blastDebris: {}`: **todo número é opção** (renderer: `RendererOptions.blastDebris`; por explosão: `ExplodeOptions.debris`, que vence, no que é de uma explosão só: `maxWakeDelay`, `minPhysicsPieces`, `maxPhysicsPieces`, `physicsCostTargetMs`, `chipSize`; padrões em `BLAST_DEBRIS_DEFAULTS`, medidos na máquina "Intel Core Ultra 9 275HX", evidence T3.6d). Nada adapta por GPU, só pelo custo medido (`PhysicsFrame.stepMs` ÷ corpos acordados).
+- `wakeCostTargetMs` (4): fila de despertar em lotes, mais perto do jogador (`focus`) primeiro, dimensionada pelo custo agregado dos quadros anteriores; `maxWakeDelay` (0,08 s), `maxQueuedWakes` (2048), `minWakesPerFrame` (8).
+- `minPhysicsPieces`/`maxPhysicsPieces` (24/300), `physicsCostTargetMs` (5), `wakeCostPerBodyMs` (0,02), `physicsCostPerBodyMs` (0,0022): quantas peças do blast entram na física (250 na máquina medida), as grandes e as mais perto do jogador primeiro. `chipSize` (0,15 m): abaixo disso é lasca e vai depois das grandes; a peça que fica de fora continua parada e o blast joga lascas visuais (`vfx`) ali.
+- `maxLivePieces` (600) e `far` (`distance` 40 m, `age` 30 s, `action` `'sleep'`|`'fade'`, `fadeSeconds` 0,5): distantes e velhas dormem ou somem; `onDebrisFaded(id, root)` devolve a geometria ao jogo. Desenho mesclado de entulho parado é `settledBatches`.
+- `velocityIterations` é opção do mundo (`WorldDesc`), padrão 32 no `KIT_WORLD`.
+
 ## Compõe com
 - `game-destruction` (dependência): fonte de todos os eventos.
 - `game-fluids-three`: vazamento e poça são do fluido; o evento `leak` aqui só desenha o fio de gotas da peça.

@@ -1170,3 +1170,68 @@ O teste "on the floor, a rolling can knocks a still one on and nearly stops; the
 | C2 condicionado | **0 corridas acima de 3,5 cm em 4608** (máx. 0,0020); coluna sem condição máx. 0,0272 m |
 
 **T3.6 não vira ✅:** o C6 atualizado ainda tem 19 falhas no piso, todas fora da célula de produção e fora das quatro decisões (pilha 20:1 a 1/144 não converge a 32 it. por ~0,3 mm; bacia a push-out ×1,5 passa 0,035 de C3 por 0,6 cm). Levar ao dono: subir o piso para 40 (T3.6b: pilha 20:1 a 1/144 passa de 58 para 62/64 e o C2 sem condição da bacia fica em 0,0341), aceitar a pilha 20:1 a 1/144 como fora do C6, ou ajustar o limite de C3 a push-out ×1,5.
+
+### D4 — depois de uma explosão: despertar em lotes, quantas peças entram na física, teto de vivas (feito sobre `bbea0212`)
+
+**"Deixa configurável" (dono, 2026-11-14):** nenhum número do D4 é constante do código. Cada um é opção com padrão documentado; os padrões são os medidos abaixo e um teste afirma que os padrões são esses números e que a sobrescrita funciona (`game-physics/tests/wake-queue.test.ts`, `game-destruction-three/tests/blast-debris.test.ts`, `tests/blast-debris-renderer.test.ts`, nos dois solvers). A iteração de velocidade do mundo é `WorldDesc.velocityIterations` (padrão 32 no `KIT_WORLD`). Documentado em `packages/game-physics/README.md`, `packages/game-destruction-three/README.md` e nas referências de skill `kit-base/game-physics.md` e `kit-destruicao/game-destruction-three.md`. O recurso é opt-in no renderer (`blastDebris: {}` liga com os padrões, como `settledBatches`); sem a opção o comportamento é o de antes. A sala (`game-test-room`) ganhou `debris.blast` opt-in (o jogador é a câmera); não foi ligado por padrão por falta de teste de GPU.
+
+**Opções** (por mundo, por sistema = renderer, por explosão = `ExplodeOptions.debris`, que vence no que é de uma explosão só):
+
+| Opção | Padrão | Onde | O que faz |
+|---|---|---|---|
+| `velocityIterations` | 32 | mundo | passadas de velocidade (D1) |
+| `wakeCostTargetMs` | 4 | renderer | o passo pode chegar a isto ao acordar entulho: cada quadro acorda quantos o custo agregado dos quadros anteriores deixa |
+| `maxWakeDelay` | 0,08 s | renderer, explosão | espera máxima de uma peça para acordar |
+| `maxQueuedWakes` | 2048 | renderer | fila limitada: o excedente, o mais longe, acorda na hora |
+| `minWakesPerFrame` | 8 | renderer | a fila sempre anda |
+| `minPhysicsPieces` / `maxPhysicsPieces` | 24 / 300 | renderer, explosão | quantas peças da explosão entram na física, entre os dois |
+| `physicsCostTargetMs` | 5 | renderer, explosão | ms de passo que os destroços de uma explosão podem somar no quadro em que acordam |
+| `wakeCostPerBodyMs` / `physicsCostPerBodyMs` | 0,02 / 0,0022 | renderer | custo por corpo até medir (acordando / assentado) |
+| `chipSize` | 0,15 m | renderer, explosão | lado maior abaixo do qual o objeto solto é lasca |
+| `maxLivePieces` | 600 | renderer | peças vivas (dormindo ou não); acima, as longe e velhas em repouso somem primeiro, depois as mais velhas |
+| `far.distance` / `far.age` / `far.action` / `far.fadeSeconds` | 40 m / 30 s / `'sleep'` / 0,5 s | renderer | longe e velha em repouso: dorme (padrão) ou some (`'fade'`: sem corpo nem colisor, a raiz encolhe, `onDebrisFaded` devolve a geometria ao jogo). "Mesclar" é o `settledBatches` que já existia (desenho) |
+
+**O que já existia (conferido antes):** `maxAwakePieces`/`maxAwakeFragments` (dorme o mais velho em repouso quando passa do teto, sem regra de distância), `maxFragments` (o mais velho some; lascas de fratura são do sistema de fragmentos, que não usa o Jolt), `settledBatches` (desenho mesclado de entulho dormindo), `eventBudgetMs`/`slices` (orçamento de tempo para criar fragmentos e peças). Foi reaproveitado o que existe: `keepBudget`/`sleepByBudget` para dormir; o sistema de lascas (`vfx.burst('chips')`) para as lascas visuais.
+
+**Como adapta (nada por GPU, nada por corpo):** `PhysicsFrame.stepMs` (novo, ms dos passos fixos do último quadro, `loop.ts`) sobre `world.activeCount` dá o custo agregado por corpo, suavizado (`PhysicsCostMeter`, 0,1 por quadro). Duas leituras: assentado e **no quadro em que a pilha acorda** (salto de ≥ 16 corpos acordados; uma ilha acordada custa ~9× o que custa assentada: 10,4 ms / 500 = 0,021 contra 0,0022). A fila (`WakeQueue`) solta por quadro `floor((alvo − passo do quadro anterior) / custo de acordar)` peças (mínimo `minWakesPerFrame`), as mais perto do jogador primeiro (`focus`; sem jogador, do centro do blast); o que esperou `maxWakeDelay` sai de qualquer jeito. A contagem de peças da explosão (`physicsPieceCount`) é `floor(alvo / custo de acordar) − corpos já acordados`, entre mínimo e máximo: **250 nesta máquina** (5 / 0,02); numa máquina com o dobro do custo por corpo, 125; com metade, 300 (o máximo). As grandes entram primeiro, as mais perto do jogador primeiro; lascas (< `chipSize`) vão depois; a peça que fica de fora **continua parada** (desenhada e sólida: nada invisível colide, nada desenhado some) e a explosão joga lascas visuais (`vfx.burst('chips')`, sem colisão) onde ela está. Limite assumido: a peça que sobra não vira partícula que some do mundo; trocá-la por fragmento pediria remover o objeto do mundo de destruição, o que não existe fora de um evento de dano.
+
+### B6 no mundo de produção, antes e depois do D4 (`cascade-tail.test.ts`, `KIT_WORLD` 32 it., 9 invocações × 3 rodadas aquecidas = 27 valores por linha, máquina quieta, intercalado)
+`B6_WAKE=burst` = antes (500 corpos dormindo, todos os empurrões no mesmo quadro); `queue` = receita de produção (contagem 250 pelo custo medido, o resto fica parado, fila de despertar, jogador a 8 m do blast); `budget` = só a contagem, sem fila (ablação).
+
+| Linha | p99 mediana / pior | quadro de despertar mediana / máx | quadros > 6 ms por blast | meta |
+|---|---|---|---|---|
+| antes (`burst`), rodada A | 6,00 / 7,89 ms | 10,44 / 13,76 ms | 2 | p99 mediana ≤ 4, nenhum > 5, despertar ≤ 10, ≤ 1 quadro > 6 |
+| antes (`burst`), rodada B (máquina mais lenta) | 6,88 / 8,69 ms | 11,71 / 13,47 ms | 2 | |
+| **depois (`queue`), rodada A** | **3,52 / 4,02 ms** | **6,01 / 7,41 ms** | **1** | cumpre as 4 |
+| **depois (`queue`), rodada B** | **3,88 / 4,34 ms** | **6,69 / 7,51 ms** | **1** | cumpre as 4 |
+| ablação `budget` (sem fila) | 3,61 / 5,27 ms | 6,20 / 6,39 ms | 1 | pior > 5 |
+| tentativa 1 da fila, custo por corpo assentado (0,0022) como estimativa | 6,05 / 6,37 ms | 10,48 / 12,41 ms | 2 | solta os 500 no 1º quadro: o custo de acordar não era conhecido |
+| tentativa 2, custo de acordar 0,02, sem limitar a contagem (500 corpos) | 8,74 / 11,28 ms | 12,56 / 13,02 ms | 5 | pior: acordou 485 de qualquer jeito e alongou a cauda |
+
+Leituras: (1) **a fila sozinha não divide uma ilha de contatos**: com a pilha encostada, o primeiro empurrão acorda a pilha toda no passo seguinte (485 de 500 acordados no quadro 0). O ganho vem de **quantos corpos entram** (contagem pelo custo medido: 6,0 → 3,6 de p99); a fila acrescenta o corte do pior caso (5,27 → 4,02) porque o que sai primeiro é o mais perto do jogador e o resto espera pelo custo medido. (2) O quadro de despertar continua sendo o `Step` do Jolt resolvendo a ilha acordada (T3.6c); AddBody e criação custam ~0 porque as peças já estão no mundo dormindo. Dois quadros > 6 ms caíram para um (o próprio quadro de despertar, 6,0–7,5 ms).
+
+### Perfil por estágio depois da mudança (`PROFILE=1 PROFILE_RUNS=8 npx vitest run tests/step-profile.test.ts`, ms por quadro de 1/60, 8 rodadas, 2 de aquecimento; quadros 0–3 depois do despertar, depois a média dos 176 restantes)
+| Estágio | antes: 500 corpos | depois: 250 corpos + fila |
+|---|---|---|
+| quadro inteiro (0, 1, 2, 3 / resto) | 10,39 / 6,12 / 4,68 / 3,08 / 1,11 | **6,05 / 3,56 / 2,79 / 2,25 / 0,71** |
+| `Step` do Jolt (ponte wasm→JS do ouvinte incluída) | 9,94 / 5,76 / 4,35 / 2,81 / 0,95 | 5,81 / 3,36 / 2,59 / 2,09 / 0,62 |
+| nosso JS: `updateFriction` | 0,37 / 0,28 / 0,24 / 0,19 / 0,08 | 0,19 / 0,16 / 0,16 / 0,12 / 0,05 |
+| nosso JS: soltar da fila (`wake`) | 0,09 / 0 / 0 / 0 / 0 | 0,07 / 0,006 / 0,008 / 0,004 / 0 |
+| leitura da pose (`readback`) | 0,08 / 0,08 / 0,08 / 0,08 / 0,08 | 0,04 / 0,04 / 0,04 / 0,04 / 0,04 |
+A ponte (chamadas do ouvinte, 0,8 ms de 68 mil chamadas, T3.6c) não foi medida de novo por variante: o `Step` acima a inclui; o restante do JS é < 0,3 ms em todos os quadros.
+
+### Gates (D4)
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | 386 passam, 0 falham (126 pulados; +11 testes novos) |
+| `PIECE_SOLVER=jolt game-destruction-three` | 450 passam, **só as 2 conhecidas** (`rolling`: latas no ar com restituição; cinquenta latas) |
+| `game-physics-jolt` | 56 passam, 0 falham |
+| `game-destruction` | 507 passam |
+| `game-physics` | 8 passam (testes novos) |
+| `game-floorplan-three` | 715 passam, 3 falham (`exact-golden`, as 3 conhecidas) |
+| Bacia Jolt 64 sementes, um processo | **128/128**, mesmos números da D1–D3 (`worstC1 −0,1416`, `worstC3 0,01363`, `fellThrough 0`) |
+| B5 (`BENCH=1`, 3 pares próprio/Jolt, mediana de `renderer.update`) | 0,761/0,727, 0,746/0,691, 0,766/0,693: razão **0,93** (0,91–0,96); p99 do Jolt 1,40–1,60 ms contra 1,94–2,77 do próprio |
+| `eslint` nos arquivos mudados | 0 erros (avisos antigos de `max-lines`) |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono |
+| GPU / navegador | nenhum |

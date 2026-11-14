@@ -52,7 +52,9 @@ Phase orders: `crowd` and `actors` run before each fixed step; `contacts` and `r
 |---|---|
 | `PhysicsEngine`, `PhysicsWorld`, `SeamWorld` | The adapter's factory and the world it makes; `SeamWorld` is the world handed to seams |
 | `BodyDesc`, `ShapeDesc`, `JointDesc`, `RagdollDesc`, `VehicleDesc`, `WorldDesc` | Descriptions the world is built from |
-| `KIT_WORLD` | The kit's world: 120 Hz fixed step, solver passes, sleep and push-out limits |
+| `KIT_WORLD` | The kit's world: 120 Hz fixed step, 32/2 solver passes (`velocityIterations` is a world option), sleep and push-out limits |
+| `WakeQueue`, `PhysicsCostMeter` | Wakes debris in batches sized by the aggregate step cost (`PhysicsFrame.stepMs`) against a target, nearest the player first, bounded; defaults `DEFAULT_WAKE_COST_TARGET_MS` (4), `DEFAULT_MAX_WAKE_DELAY` (0.08 s), `DEFAULT_MAX_QUEUED_WAKES` (2048), `DEFAULT_MIN_WAKES_PER_FRAME` (8), `DEFAULT_PHYSICS_COST_PER_BODY_MS` (0.0022), `DEFAULT_WAKE_COST_PER_BODY_MS` (0.02); every one is an option |
+| `physicsPieceCount`, `chooseForPhysics` | How many pieces of a blast enter physics (cost target 5 ms at the wake cost per body, clamped 24 to 300) and which (big first, nearest the player first); `DEFAULT_MIN_PHYSICS_PIECES`, `DEFAULT_MAX_PHYSICS_PIECES`, `DEFAULT_PHYSICS_COST_TARGET_MS`, `DEFAULT_CHIP_SIZE` |
 | `KIT_RAGDOLL_SOLVER` | Solver passes of a ragdoll's own bodies and joints |
 | `DEFAULT_MATERIAL`, `Material`, `mixFriction` | Coulomb static and dynamic friction, restitution; geometric-mean mixing |
 | `LAYERS`, `LAYER_PAIRS`, `Layer` | Collision layers and the default pair table |

@@ -41,6 +41,11 @@ export interface PieceSystemOptions {
    */
   maxAwake?: number
   /**
+   * The far and old rule and the cap of pieces alive (`BlastDebrisOptions`): a piece at rest, older than `far.age` seconds and farther than `far.distance` from `focus`, sleeps or is
+   * handed to `onFade`; over `maxLive` pieces the far and old ones at rest go first, then the oldest, by `onFade`. Default: none.
+   */
+  keep?: { readonly maxLive: number; readonly far: { readonly distance: number; readonly age: number; readonly action: 'sleep' | 'fade' }; readonly focus?: () => Vec3; readonly onFade: (b: PieceBody) => void }
+  /**
    * What steps the pieces, handed by the host and never defaulted (left out, it throws): a `PhysicsLoop` (`game-physics`; the host calls `loop.step(dt)` and then `update`, and the
    * system registers its phases on it), a world (the system makes its own loop and steps it inside `update`), or `'own'` for the kit's own solver. The kit's rules stay on top
    * (`EnginePieces`). There is no switching mid-game.
@@ -125,6 +130,8 @@ const SUPPORT_CHECKS = 16
 /** A sleeping piece none of whose lowest points has a support within this many metres under it wakes and falls. */
 const SUPPORT_GAP = 0.02
 /** A piece moving faster than this (m/s) or turning faster than this (rad/s) wakes what lies asleep on it. */
+/** How often (s) the far and old rule looks at the pieces. */
+const KEEP_EVERY = 0.5
 const WAKE_ABOVE_SPEED = 0.05
 const WAKE_ABOVE_SPIN = 0.1
 /** Side (m) of the cells of the grid the surfaces are found by (`surfaceGrid`). */
@@ -266,6 +273,9 @@ export class PieceSystem {
   /** The phases' way out of the loop, and whether this frame's `prepare` ran (it runs once, in the first fixed step). */
   private readonly leaveLoop: Array<() => void> = []
   private prepared = false
+  /** The time each piece was made (`keepFar`: how old it is). */
+  private readonly bornAt = new WeakMap<PieceBody, number>()
+  private keptAt = -Infinity
   /** The boxes other pieces land on: a piece's own parts when it has them (`partBoxes`), else its box. */
   private surfaces: Solid[] = []
   /** The surfaces by the cells of a grid on the ground (`SURFACE_CELL`) their bounding circle covers: what is under a point is looked for in its cell only. */
@@ -468,7 +478,18 @@ export class PieceSystem {
       onGround: false,
     }
     this.list.push(body)
+    this.bornAt.set(body, this.time)
     return body
+  }
+
+  /** What the loop's last frame cost (ms) and how many bodies the world had awake: the pair the cost of a body is read from. Null on the kit's own solver. */
+  stepCost(): { stepMs: number; active: number } | null {
+    return this.loop ? { stepMs: this.loop.frame.stepMs, active: this.loop.world.activeCount } : null
+  }
+
+  /** Bodies awake in the physics world, or the pieces not asleep on the kit's own solver. */
+  activeBodies(): number {
+    return this.loop ? this.loop.world.activeCount : this.list.filter((b) => !b.sleeping).length
   }
 
   /** Move the centre of mass (after a part broke off). */
@@ -642,6 +663,7 @@ export class PieceSystem {
       // under a loop the host stepped it already, and its time is the one that counts
       if (!this.stepsItself) {
         this.time = this.loop.frame.time
+        this.keepFar()
         return
       }
       this.time += dt
@@ -656,6 +678,7 @@ export class PieceSystem {
       }
       this.measure()
       this.keepBudget()
+      this.keepFar()
       return
     }
     const { steps, near } = this.collisionSteps(dt)
@@ -732,6 +755,7 @@ export class PieceSystem {
     }
     this.collide(dt, only?.meets)
     this.keepBudget()
+    this.keepFar()
   }
 
   /** The boxes of the pieces as they stand (`solids`, `surfaces` and their grid): what a point lands on and what `topAt` answers. */
@@ -1388,6 +1412,35 @@ export class PieceSystem {
       if (b.sleeping || b.held || !this.hasComeToRest(b)) continue
       this.sleepByBudget(b)
       awake--
+    }
+  }
+
+  /**
+   * The far and old rule (`PieceSystemOptions.keep`), looked at twice a second: a piece at rest, old and far, sleeps or fades; over `maxLive` pieces the far and old ones at rest
+   * fade first, then the oldest at rest. Only what has come to rest goes, so nothing is taken from under a falling thing.
+   */
+  private keepFar(): void {
+    const keep = this.o.keep
+    if (!keep || this.time - this.keptAt < KEEP_EVERY) return
+    this.keptAt = this.time
+    const focus = keep.focus?.()
+    const isFarAndOld = (b: PieceBody): boolean => {
+      if (!focus || this.time - (this.bornAt.get(b) ?? this.time) < keep.far.age) return false
+      const c = this.centerOf(b, this.p)
+      return Math.hypot(c.x - focus[0], c.y - focus[1], c.z - focus[2]) > keep.far.distance
+    }
+    const atRest = this.list.filter((b) => !b.held && this.hasComeToRest(b))
+    if (keep.far.action === 'sleep') {
+      for (const b of atRest) if (!b.sleeping && isFarAndOld(b)) this.sleepByBudget(b)
+    }
+    const fades = keep.far.action === 'fade'
+    let over = this.list.length - keep.maxLive
+    const far = new Set(atRest.filter(isFarAndOld))
+    // far and old first, the oldest next (the list is in the order the pieces were made)
+    for (const b of [...atRest].sort((a, c) => Number(far.has(c)) - Number(far.has(a)))) {
+      if (!(over > 0 || (fades && far.has(b)))) return
+      keep.onFade(b)
+      over--
     }
   }
 
