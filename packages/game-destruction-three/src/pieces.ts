@@ -279,10 +279,9 @@ export class PieceSystem {
   /** Each piece's boxes, reused by `measure` from one update to the next, and the count of measures (what a record was last measured in). */
   private readonly records = new WeakMap<PieceBody, MeasuredBody>()
   private measures = 0
-  /** `apartDeep`'s pairs, centres (x y z and reach per piece) and order, kept from one update to the next. */
+  /** `apartDeep`'s marked pairs, kept from one update to the next, and the pieces it has already looked at when they were born. */
   private readonly apartKeys = new Set<string>()
-  private apartAt = new Float64Array(0)
-  private readonly apartOrder: number[] = []
+  private readonly seenBorn = new WeakSet<PieceBody>()
   /** The grid's cells by key: each its list (the one in `surfaceGrid`) and how many it holds in this measure. */
   private readonly cellIndex = new Map<number, number>()
   private readonly cellLists: Solid[][] = []
@@ -370,68 +369,56 @@ export class PieceSystem {
   }
 
   /**
-   * Pieces made inside each other deeper than a contact (`LIFT_DEPTH`: chunks of one wall) go apart along the ground by the kit's rule (`slideApart`), and the engine
-   * leaves the pair alone until they are apart: it would push them out along their least overlap, up through the pile. The pairs, by `apartKey`.
+   * Pairs born overlapping (both made in the same update, or one made inside the other) deeper than a contact (`LIFT_DEPTH`: chunks of one wall) go apart along the ground by
+   * the kit's rule (`slideApart`), and the engine leaves the pair alone until they are apart: it would push them out along their least overlap, up through the pile. A pair
+   * is marked once, when the second of them is first seen, and unmarked for good when apart; what comes to overlap later through the dynamics is the engine's. The pairs, by `apartKey`.
    */
   private apartDeep(dt: number): Set<string> {
     const keys = this.apartKeys
-    keys.clear()
-    const n = this.list.length
-    if (n < 2) return keys
-    // the centres and reaches of this update in arrays kept from one update to the next
-    if (this.apartAt.length < n * 4) this.apartAt = new Float64Array(n * 8)
-    const at = this.apartAt
-    const order = this.apartOrder
-    for (let i = 0; i < n; i++) {
-      const b = this.list[i]
-      const c = this.centerOf(b, this.p)
-      const h = b.halfExtents
-      at[i * 4] = c.x
-      at[i * 4 + 1] = c.y
-      at[i * 4 + 2] = c.z
-      at[i * 4 + 3] = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2])
-    }
-    // by the left edge (x less reach): last update's order is nearly this one's, so insertion keeps it in about n steps and makes nothing (a comparator to sort made a
-    // number per comparison)
-    if (order.length !== n) {
-      order.length = n
-      for (let i = 0; i < n; i++) order[i] = i
-    }
-    for (let k = 1; k < n; k++) {
-      const i = order[k]
-      const edge = at[i * 4] - at[i * 4 + 3]
-      let m = k - 1
-      while (m >= 0 && at[order[m] * 4] - at[order[m] * 4 + 3] > edge) {
-        order[m + 1] = order[m]
-        m--
+    const born = this.list.filter((b) => !this.seenBorn.has(b))
+    for (const b of born) this.seenBorn.add(b)
+    for (const b of born) {
+      for (const o of this.list) {
+        if (o === b || (born.includes(o) && o.objectId < b.objectId)) continue
+        if (this.bornApart(b, o)) keys.add(apartKey(b.objectId, o.objectId))
       }
-      order[m + 1] = i
     }
-    for (let oi = 0; oi < n; oi++) {
-      const i = order[oi]
-      const reach = at[i * 4] + at[i * 4 + 3]
-      for (let oj = oi + 1; oj < n; oj++) {
-        const j = order[oj]
-        if (at[j * 4] - at[j * 4 + 3] > reach) break
-        const a = this.list[i]
-        const b = this.list[j]
-        if (a.round || b.round || ((a.held || a.sleeping) && (b.held || b.sleeping))) continue
-        const r = at[i * 4 + 3] + at[j * 4 + 3]
-        if (Math.abs(at[i * 4 + 1] - at[j * 4 + 1]) > r || Math.abs(at[i * 4 + 2] - at[j * 4 + 2]) > r || !this.partsOverlap(a, b)) continue
-        // the boxes `measure` placed this update (nothing has moved since): not made again per pair
-        const sa = this.measuredShape(a)
-        const sb = this.measuredShape(b)
-        const hit = shapeContact(sa, sb)
-        if (!hit || hit.depth <= LIFT_DEPTH) continue
-        const ima = a.held || a.sleeping ? 0 : 1 / a.mass
-        const imb = b.held || b.sleeping ? 0 : 1 / b.mass
-        const level = Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? hit : boxesAlongGround(sa, sb)
-        if (level) this.slideApart(a, b, ima, imb, level)
-        keys.add(apartKey(a.objectId, b.objectId))
+    if (keys.size === 0) return keys
+    const byObject = new Map<string, PieceBody>()
+    for (const b of this.list) byObject.set(b.objectId, b)
+    for (const key of keys) {
+      const cut = key.indexOf('\u0000')
+      const a = byObject.get(key.slice(0, cut))
+      const b = byObject.get(key.slice(cut + 1))
+      const hit = a && b ? this.deepContact(a, b) : null
+      if (!a || !b || !hit) {
+        keys.delete(key)
+        continue
       }
+      const ima = a.held || a.sleeping ? 0 : 1 / a.mass
+      const imb = b.held || b.sleeping ? 0 : 1 / b.mass
+      this.slideApart(a, b, ima, imb, hit)
     }
     this.applyPushes(dt)
     return keys
+  }
+
+  /** Whether two pieces just seen are inside each other deeper than a contact. */
+  private bornApart(a: PieceBody, b: PieceBody): boolean {
+    if (a.round || b.round || ((a.held || a.sleeping) && (b.held || b.sleeping))) return false
+    if (!this.partsOverlap(a, b)) return false
+    const hit = shapeContact(this.measuredShape(a), this.measuredShape(b))
+    return !!hit && hit.depth > LIFT_DEPTH
+  }
+
+  /** The contact to slide a marked pair apart by, or null once they are no deeper than a contact (or no longer both boxes that can be moved). */
+  private deepContact(a: PieceBody, b: PieceBody): ShapeContact | null {
+    if (a.round || b.round || ((a.held || a.sleeping) && (b.held || b.sleeping))) return null
+    const sa = this.measuredShape(a)
+    const sb = this.measuredShape(b)
+    const hit = shapeContact(sa, sb)
+    if (!hit || hit.depth <= LIFT_DEPTH) return null
+    return Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? hit : boxesAlongGround(sa, sb)
   }
 
   /** A box piece's shape as `measure` left it (`surfacesOf`), one object per piece. */

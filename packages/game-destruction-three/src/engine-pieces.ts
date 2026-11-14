@@ -387,7 +387,7 @@ export class EnginePieces {
     }
     // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved
     const moved = far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
-    if (moved) this.place(b, link, c)
+    if (moved) this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
     // `tip` is the kit solver's push for a piece whose feet are thinner than its box; here the engine stands it on its parts as drawn, so it goes over by itself
     b.tipping = null
     if (!b.round && b.onGround && !b.sleeping) this.topple(b, dt)
@@ -401,25 +401,6 @@ export class EnginePieces {
       this.world.wake(link.id)
       this.groundChanged(c.x, c.z, Math.hypot(...b.halfExtents))
     } else if (pushed) this.world.wake(link.id)
-  }
-
-  /**
-   * The kit or the host moved a piece (not the engine: `slideApart`, a hand that let go). Where the move puts it deeper into a fixed thing or the ground than it was, the
-   * move is refused and the piece stays where the engine had it: pushed out the shortest way, a plate slid into a step of the bowl went sideways (seed 39 at 1/60, 3 mm
-   * of energy), and left in, a piece sank through the one-sided ground (the room, 214 times in one blast).
-   */
-  private place(b: PieceBody, link: Link, c: THREE_NS.Vector3): void {
-    const q = b.root.quaternion
-    const before = this.world.penetration ? this.world.penetration(link.id, this.outAxis) : 0
-    this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
-    if (!this.world.penetration) return
-    const after = this.world.penetration(link.id, this.outAxis)
-    if (after <= SINK || after <= before + SINK) return
-    this.world.setPose(link.id, [link.pos[0], link.pos[1], link.pos[2]], [link.quat[0], link.quat[1], link.quat[2], link.quat[3]], !b.sleeping)
-    q.set(link.quat[0], link.quat[1], link.quat[2], link.quat[3])
-    const off = this.v.copy(b.centerV).applyQuaternion(q)
-    b.root.position.set(link.pos[0] - off.x, link.pos[1] - off.y, link.pos[2] - off.z)
-    b.root.updateMatrixWorld(true)
   }
 
   /**

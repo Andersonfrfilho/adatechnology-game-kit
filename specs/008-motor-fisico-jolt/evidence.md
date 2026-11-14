@@ -499,3 +499,67 @@ Testes novos em `vehicle-colliders.test.ts`: distância de superfície nos 69 mo
 
 Gates do seguimento: `pnpm build` e `pnpm -r typecheck` exit 0; `game-vehicles-three` 411 passam; `game-vehicles-fleet` 1225; `game-vehicles` 342; `game-destruction` 507; `game-destruction-three` próprio 344 passam, 0 falham;
 Jolt 390 passam e os mesmos 13 conhecidos; `game-floorplan-three` 715 passam, 3 conhecidas; bacia 128/128; `eslint` 0 erros (avisos `max-lines` que já existiam); `kit-audit --check` exit 0.
+
+## T3.0c — Regras antigas desligadas no modo Jolt (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, Node 20, worktree `motor-fisico-jolt`, branch `feat/motor-fisico-jolt`. O solver próprio não muda (o código dele é o mesmo).
+
+### Decisão da coordenação (segue o ADR, `arquitetura.md` linha 33: "condição 6 (separar na criação)" usa `penetration`)
+
+1. **Separar empurrando**: fica só para **pares nascidos sobrepostos** (criados no mesmo update, ou um criado dentro do outro, mais fundo que um contato, `LIFT_DEPTH`).
+   O par é marcado quando o segundo é visto pela primeira vez, o kit o afasta pelo chão (`slideApart`) com o motor ignorando o par, e ao ficarem afastados é desmarcado e
+   nunca mais armado. A varredura de todos os pares a cada update (`apartDeep`) saiu: o que passa a se sobrepor depois, pela dinâmica, é do Jolt.
+2. **Recusa de movimento (`c6c42d87`)**: removida (`EnginePieces.place`). O movimento do kit ou do host vai direto ao motor (`setPose`).
+3. **`outOfStatics` (levantar na criação para fora dos fixos): fica.** Causa medida abaixo; não é a ordem de remoção do estático da fonte.
+4. **`liftFor`/`underGround`** (condição 6 de `spec.md` §5, levantar peça criada no chão) fica, como a regra pede.
+
+### Bisseção da bacia (semente 57, dt 1/60: C2 0,047 m contra o limite 0,035)
+
+Com as três regras fora de uma vez a bacia deu 127/128. Bisseção com a mesma semente (determinística):
+- só a recusa de movimento de volta: idêntico, C2 0,0470 (a recusa não é a causa; sem `apartDeep` nada do kit move peça);
+- `pieces.ts` e `engine-pieces.ts` originais: C2 0,0290 (passa);
+- logo, a causa é só a saída do `apartDeep`. As placas 0 e 1 da bacia nascem quase no mesmo lugar (centros a 4 cm); sem o afastamento do kit o Jolt as resolve sozinho, elas ficam
+  encaixadas (repouso a 8 cm uma da outra) e, quando a chapa cai, a placa 1 é espremida para cima a cerca de 0,2 m/s (4,7 cm de energia acima do repouso).
+- É sensível à configuração, não é colisor faltando: `JOLT_PUSHOUT` 0,001 / 0,003 / 0,01 passam a mesma semente (C2 0,0026 / 0,0072 / 0,0047); só o 0,002 padrão falha.
+- Correção: o afastamento volta **só para o par nascido sobreposto** (decisão 1). Semente 57 volta a C2 0,0290, igual ao solver antes da tarefa. Nenhum limite nem `maxPushOut` foi mexido.
+
+### Por que há peça nascendo dentro de estático (`outOfStatics`)
+
+Teste de diagnóstico (descartado), modo Jolt, explosão de 4 MJ na parede 0 de cada casa, medindo `world.penetration` contra os estáticos no update em que cada peça nasce:
+- `sobrado`: 131 peças nascidas, **4 a mais de 5 mm dentro de um estático**: conduítes soltos (`conduit:conduit_circuit_laundry_0` 0,454 m dentro de `roof_a_4`, `conduit_outlet14` 0,119 m em `wall_1_21`,
+  `conduit_switch5` 0,400 m em `tank_column_3`/`roof_b_*`) e um conduíte a 8 mm de `pipe:run_wall_laundry_0`;
+- `casaA`: 72 peças, 2 acima de 5 mm: `conduit_switch1` 8 mm em `wall_0_1`, `jamb:d0_0` 5 mm em `wall_0_0`.
+- Em todos, a parte da fonte já saiu do objeto da casa (`adoptSplit` a move) e o estático que o peça atravessa é de **outra parte que continua de pé** (`gone` = `none`): conduíte, tubo e batente
+  correm dentro de parede e telhado, e a caixa de uma peça longa (o circuito) envolve um traçado diagonal. Não é a ordem (remover o estático da fonte antes de criar os pedaços), então não há o que
+  corrigir ali; pelo critério da decisão, `outOfStatics` fica. O item aberto da T3.0a fica registrado assim: a sobreposição é de peça embutida com vizinha intacta, até 0,45 m na `sobrado`.
+
+### Testes (`game-destruction-three/tests/fitted-pieces.test.ts`, modo Jolt)
+
+| Teste | Antes | Agora | Motivo (uma linha) |
+|---|---|---|---|
+| peça criada 15 cm dentro de prateleira | passa | igual | comportamento do kit que fica (`outOfStatics`), não remendo |
+| peça criada entalada entre dois fixos | passa | igual | idem |
+| só os fixos do host, não o chão | passa | igual | idem; o chão tem a regra própria (`liftFor`) |
+| movimento do kit para dentro do chão é recusado | passava | **reescrito**: o motor recebe a pose movida uma vez, o corpo não atravessa o chão, `fellThrough` 0 | a recusa saiu; o contato é do motor |
+| novo: par criado sobreposto é afastado uma vez e solto; par que passa a se sobrepor depois nunca é marcado | — | passa | prova a regra de pares nascidos e que a dinâmica é do Jolt |
+
+`separate-pair.test.ts` (modo Jolt) passa inteiro de novo (11/11): "pedaço criado 0,6 m dentro de outro não sobe" e "duas caixas lado a lado terminam lado a lado".
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three test` (próprio) | **344 passam, 0 falham** (56 pulados) |
+| `PIECE_SOLVER=jolt ... game-destruction-three test` | 391 passam, **13 falham, os mesmos 13 conhecidos** (`pieces-stack` 1, `rolling` 6, `settled-debris` 2, `slope-friction` 2 + 2 do modo laço); nenhum novo, nenhum a menos |
+| `game-destruction test` | 507 passam, 0 falham |
+| `game-floorplan-three test` | 715 passam, 3 falham (`exact-golden`: breach, fracture, spall, as 3 conhecidas) |
+| Bacia, `JOLT_ITERATIONS=20`, dt {0,05; 1/60} × `BOWL_FROM` {1,17,33,49} × 16 sementes (8 processos) | **128/128**; `fellThrough` 0; pior C1 −0,0225 (nenhuma energia criada); pior C2 0,0290 m; pior C3 0,0229 m; sono mais lento 0,5 s; centro mais fundo 3,8 cm acima do chão |
+| `eslint` nos arquivos mudados | 0 erros (1 aviso `max-lines` de `pieces.ts`, que já o tinha) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+
+### O que sobrou
+
+- A sala (GPU/navegador) não foi medida aqui: a medida da sala vai com a T3.8.
+- `world.ignorePair` segue em uso (pares nascidos sobrepostos); a decisão de tirar da API fica para a T8.1.
+- Peças embutidas em vizinhas intactas (conduíte, tubo, batente) seguem sendo levantadas por `outOfStatics`; tornar a caixa dessas peças fiel ao traçado seria o caminho para tirar a regra, e fica para depois da T3.8.

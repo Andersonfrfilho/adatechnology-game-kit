@@ -99,7 +99,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   desenhada (sem retrovisor alargando a cabine), usado no lugar das caixas de dano cortadas (`dcfad8a2`). Teste: nenhuma caixa passa 1 cm da
   malha da sua peça, na frota inteira.
   Mecânica? não · Aceite por comando? sim: testes de `game-vehicles-three` e `d3` · `sonnet`.
-- **T3.0c Regras antigas desligadas no modo Jolt.** Com T3.0a e T3.0b prontos, o separar empurrando (`slideApart`/`applyPushes`), o levantar
+- T3.0c ✅ **Regras antigas desligadas no modo Jolt** (feito em 2026-11-14; `evidence.md`, seção T3.0c). Com T3.0a e T3.0b prontos, o separar empurrando (`slideApart`/`applyPushes`), o levantar
   na criação além da condição 6 e a recusa de movimento (`c6c42d87`) não agem quando o solver é o Jolt; o contato é do motor. Medir a bacia
   (128/128) e a sala depois. Se a bacia cair, a causa vai para `evidence.md` e se corrige no colisor, não religando a regra.
   Mecânica? não · Aceite por comando? sim: bacia `BOWL_SEEDS=64 JOLT_ITERATIONS=20 ...bowl-energy.test.ts` · `sonnet`.

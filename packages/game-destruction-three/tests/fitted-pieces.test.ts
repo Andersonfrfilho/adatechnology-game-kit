@@ -102,21 +102,56 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is 
     world.dispose()
   })
 
-  it('a kit move that puts a piece into the ground is refused: it stays where the engine had it, and does not sink (the room: 214 fell through in one blast)', () => {
-    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+  it('a kit move that puts a piece into the ground is not refused: the engine is handed the moved pose once and owns the contact from there, it does not fall through', async () => {
+    const { createJoltEngine } = await import('@adatechnology/game-physics-jolt')
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120, velocityIterations: 20 })
+    const poses: number[] = []
+    const watched = Object.create(world) as typeof world
+    watched.setPose = (id, position, rotation, wake) => {
+      poses.push(position[1])
+      world.setPose(id, position, rotation, wake)
+    }
+    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), physics: watched })
     const root = new THREE.Object3D()
     root.position.set(0, 0.1, 0)
     system.create('crate', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
     for (let i = 0; i < 30; i++) system.update(1 / 60)
     const rest = root.position.y
     expect(rest).toBeCloseTo(0.1, 2)
+    poses.length = 0
     // the kit's rule pushes it 6 cm down into the floor (as `slideApart` along a slope would)
     root.position.y -= 0.06
     root.updateMatrixWorld(true)
     system.update(1 / 60)
-    expect(root.position.y).toBeGreaterThan(rest - 0.006)
-    for (let i = 0; i < 60; i++) system.update(1 / 60)
-    expect(root.position.y).toBeCloseTo(rest, 2)
+    expect(poses.length).toBe(1)
+    expect(poses[0]).toBeCloseTo(rest - 0.06, 3)
+    for (let i = 0; i < 120; i++) system.update(1 / 60)
+    expect(root.position.y).toBeGreaterThan(rest - 0.05)
+    expect((system as unknown as { engine: { fellThrough: number } }).engine.fellThrough).toBe(0)
+    world.dispose()
+  })
+
+  it('a pair made inside each other is slid apart once, marked at creation and let go when apart; a pair that comes to overlap later is the engine\'s alone', () => {
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+    const make = (id: string, x: number, y = 0.3): THREE.Object3D => {
+      const root = new THREE.Object3D()
+      root.position.set(x, y, 0)
+      system.create(id, root, [0.3, 0.3, 0.3], new THREE.Vector3(), 2)
+      return root
+    }
+    make('a', 0)
+    make('b', 0.1)
+    const marked = (): number => (system as unknown as { apartKeys: Set<string> }).apartKeys.size
+    system.update(1 / 60)
+    expect(marked()).toBe(1)
+    for (let i = 0; i < 240; i++) system.update(1 / 60)
+    expect(marked()).toBe(0)
+    // a third dropped onto them later is never marked, though it overlaps them while it lands
+    make('c', 0.05, 1.5)
+    for (let i = 0; i < 90; i++) {
+      system.update(1 / 60)
+      expect(marked()).toBe(0)
+    }
   })
 })
-
