@@ -1,6 +1,6 @@
 # Tasks — Spec 008, Jolt como motor físico do kit
 
-Leia `spec.md`, `plan.md` e, na pasta de rascunho `item6-escalation/`, `GATE0-REPORT-jolt.md` e `DECISION-ENGINE-fable.md` antes de começar.
+Leia `spec.md`, `plan.md`, `decision/GATE0-REPORT-jolt.md`, `decision/Q4-REPORT-jolt.md` e `decision/DECISION-ENGINE-fable.md` antes de começar.
 Uma task por vez, na ordem.
 
 Cada task responde: **Mecânica?** (o que fazer está todo descrito) e **Aceite por comando?** (um comando diz se passou). Duas vezes "sim" →
@@ -222,7 +222,7 @@ Pendências do `spec.md` §11 respondidas pelo dono em 2026-11-13. Prompt para `
 
 ```text
 /oh-my-claudecode:autopilot Execute a spec specs/008-motor-fisico-jolt/ do adatechnology-game-kit (leia spec.md, plan.md e tasks.md
-antes de começar, e na pasta de rascunho item6-escalation/ GATE0-REPORT-jolt.md e Q4-REPORT-jolt.md). Uma task por vez, na ordem do tasks.md,
+antes de começar, e decision/GATE0-REPORT-jolt.md e decision/Q4-REPORT-jolt.md). Uma task por vez, na ordem do tasks.md,
 começando pela primeira não marcada ✅ (T1.1).
 Siga o CLAUDE.md do repositório (SDK primeiro, §12 nada flutua e nenhum colisor sem geometria, §8 memória, §10 tudo tipado sem any).
 Ambiente: fases 1 no worktree adatechnology-game-kit-wt/engine-jolt (branch spike/engine-jolt); da T2.1 em diante no worktree novo
