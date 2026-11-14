@@ -1,9 +1,13 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { PieceBody, PieceFriction } from './internal'
+import type { PartBox, PieceBody, PieceFriction } from './internal'
+import { squareBoxOf } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
+import type { PhysicsWorld } from '@adatechnology/game-physics'
+import { EnginePieces } from './engine-pieces'
+import type { StaticSolid } from './engine-pieces'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -32,6 +36,13 @@ export interface PieceSystemOptions {
    * sleeps under it too. Default: no limit.
    */
   maxAwake?: number
+  /**
+   * Spike: a rigid-body engine (`game-physics`) steps the pieces in place of the kit's own solver; the kit's rules stay on top (`EnginePieces`). The world is made
+   * by the host once its engine is loaded: there is no switching solver mid-game. Without it, the kit's own solver.
+   */
+  physics?: PhysicsWorld
+  /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
+  staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
 }
 
 /** What a moving piece ran into (`PieceSystemOptions.sweep`). */
@@ -154,6 +165,21 @@ interface Solid {
   r: number
 }
 
+/** How far a box reaches from its centre along the world axis `k` (a function of the module: a closure made per call was made per pair per update). */
+const extent = (s: Solid, k: number): number => Math.abs(s.e[k]) * s.half[0] + Math.abs(s.e[k + 4]) * s.half[1] + Math.abs(s.e[k + 8]) * s.half[2]
+
+/** A piece's boxes as `measure` keeps them: its whole box, its parts (square to it, from `from`), the list of its surfaces, and when it was last measured. */
+interface MeasuredBody {
+  readonly whole: Solid
+  parts: Solid[]
+  from: readonly PartBox[] | undefined
+  squares: Array<{ readonly center: Vec3; readonly half: Vec3 }>
+  readonly list: Solid[]
+  stamp: number
+  /** `list` as a contact shape (`apartDeep`). */
+  shape?: ContactShape
+}
+
 /** The axis of the box whose face the last `boxTopAt` line left through (its top there): the face a point on that spot stands on. */
 let topFace = 1
 
@@ -184,6 +210,9 @@ const boxTopAt = (s: Solid, x: number, z: number): number => {
 }
 
 const UP: Vec3 = [0, 1, 0]
+
+/** The key of a pair of pieces (`PieceSystem.apartDeep`), the same whichever comes first. */
+export const apartKey = (a: string, b: string): string => (a < b ? `${a}\u0000${b}` : `${b}\u0000${a}`)
 
 /** The outward normal of face `axis` of a box on its upper side: the surface of a tilted table top under a point. */
 const faceNormal = (s: Solid, axis: number): Vec3 => {
@@ -224,6 +253,8 @@ export class PieceSystem {
   private readonly m: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
+  /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
+  private readonly engine: EnginePieces | null
   /** The boxes other pieces land on: a piece's own parts when it has them (`partBoxes`), else its box. */
   private surfaces: Solid[] = []
   /** The surfaces by the cells of a grid on the ground (`SURFACE_CELL`) their bounding circle covers: what is under a point is looked for in its cell only. */
@@ -234,6 +265,17 @@ export class PieceSystem {
   private readonly solidOf = new Map<PieceBody, Solid>()
   /** Each piece's surfaces of the step (its parts' boxes, or its box), by its body. */
   private readonly surfacesOf = new Map<PieceBody, Solid[]>()
+  /** Each piece's boxes, reused by `measure` from one update to the next, and the count of measures (what a record was last measured in). */
+  private readonly records = new WeakMap<PieceBody, MeasuredBody>()
+  private measures = 0
+  /** `apartDeep`'s pairs, centres (x y z and reach per piece) and order, kept from one update to the next. */
+  private readonly apartKeys = new Set<string>()
+  private apartAt = new Float64Array(0)
+  private readonly apartOrder: number[] = []
+  /** The grid's cells by key: each its list (the one in `surfaceGrid`) and how many it holds in this measure. */
+  private readonly cellIndex = new Map<number, number>()
+  private readonly cellLists: Solid[][] = []
+  private cellCounts = new Int32Array(64)
   /** How far each piece is put apart from the boxes it overlaps this step (`separatePair`), summed over its pairs and applied once, bounded, at the end of `collide`. */
   private readonly pushes = new Map<PieceBody, Vec3>()
   private supportTurn = 0
@@ -251,6 +293,91 @@ export class PieceSystem {
     this.nextQ = new THREE.Quaternion()
     this.m = new THREE.Matrix4()
     this.ax = new THREE.Vector3()
+    // the room and the tests hand the engine's world by a global (`?solver=jolt`, PIECE_SOLVER=jolt set it; unset, the kit's own solver runs)
+    const physics = o.physics ?? (globalThis as { __PIECE_PHYSICS__?: () => PhysicsWorld }).__PIECE_PHYSICS__?.()
+    this.engine = physics
+      ? new EnginePieces(THREE, physics, {
+          groundAt: o.groundAt,
+          gravity: o.gravity,
+          staticSolids: o.staticSolids,
+          sweep: o.sweep,
+          onSlam: o.onSlam,
+          onKnock: o.onKnock,
+          onHardLanding: o.onHardLanding,
+        })
+      : null
+  }
+
+  /**
+   * Pieces made inside each other deeper than a contact (`LIFT_DEPTH`: chunks of one wall) go apart along the ground by the kit's rule (`slideApart`), and the engine
+   * leaves the pair alone until they are apart: it would push them out along their least overlap, up through the pile. The pairs, by `apartKey`.
+   */
+  private apartDeep(dt: number): Set<string> {
+    const keys = this.apartKeys
+    keys.clear()
+    const n = this.list.length
+    if (n < 2) return keys
+    // the centres and reaches of this update in arrays kept from one update to the next
+    if (this.apartAt.length < n * 4) this.apartAt = new Float64Array(n * 8)
+    const at = this.apartAt
+    const order = this.apartOrder
+    for (let i = 0; i < n; i++) {
+      const b = this.list[i]
+      const c = this.centerOf(b, this.p)
+      const h = b.halfExtents
+      at[i * 4] = c.x
+      at[i * 4 + 1] = c.y
+      at[i * 4 + 2] = c.z
+      at[i * 4 + 3] = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2])
+    }
+    // by the left edge (x less reach): last update's order is nearly this one's, so insertion keeps it in about n steps and makes nothing (a comparator to sort made a
+    // number per comparison)
+    if (order.length !== n) {
+      order.length = n
+      for (let i = 0; i < n; i++) order[i] = i
+    }
+    for (let k = 1; k < n; k++) {
+      const i = order[k]
+      const edge = at[i * 4] - at[i * 4 + 3]
+      let m = k - 1
+      while (m >= 0 && at[order[m] * 4] - at[order[m] * 4 + 3] > edge) {
+        order[m + 1] = order[m]
+        m--
+      }
+      order[m + 1] = i
+    }
+    for (let oi = 0; oi < n; oi++) {
+      const i = order[oi]
+      const reach = at[i * 4] + at[i * 4 + 3]
+      for (let oj = oi + 1; oj < n; oj++) {
+        const j = order[oj]
+        if (at[j * 4] - at[j * 4 + 3] > reach) break
+        const a = this.list[i]
+        const b = this.list[j]
+        if (a.round || b.round || ((a.held || a.sleeping) && (b.held || b.sleeping))) continue
+        const r = at[i * 4 + 3] + at[j * 4 + 3]
+        if (Math.abs(at[i * 4 + 1] - at[j * 4 + 1]) > r || Math.abs(at[i * 4 + 2] - at[j * 4 + 2]) > r || !this.partsOverlap(a, b)) continue
+        // the boxes `measure` placed this update (nothing has moved since): not made again per pair
+        const sa = this.measuredShape(a)
+        const sb = this.measuredShape(b)
+        const hit = shapeContact(sa, sb)
+        if (!hit || hit.depth <= LIFT_DEPTH) continue
+        const ima = a.held || a.sleeping ? 0 : 1 / a.mass
+        const imb = b.held || b.sleeping ? 0 : 1 / b.mass
+        const level = Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? hit : boxesAlongGround(sa, sb)
+        if (level) this.slideApart(a, b, ima, imb, level)
+        keys.add(apartKey(a.objectId, b.objectId))
+      }
+    }
+    this.applyPushes(dt)
+    return keys
+  }
+
+  /** A box piece's shape as `measure` left it (`surfacesOf`), one object per piece. */
+  private measuredShape(b: PieceBody): ContactShape {
+    const rec = this.measured(b)
+    rec.shape ??= { kind: 'boxes', boxes: rec.list }
+    return rec.shape
   }
 
   get(objectId: string): PieceBody | null {
@@ -307,16 +434,22 @@ export class PieceSystem {
     if (i < 0) return
     // the boxes of the step forget it too: nothing keeps a removed piece's tree alive
     const [gone] = this.list.splice(i, 1)
-    if (gone) this.forgetSolids(gone)
+    if (gone) {
+      this.forgetSolids(gone)
+      this.engine?.remove(gone)
+    }
   }
 
   clear(): void {
+    this.engine?.clear()
     this.list.length = 0
     this.solids = []
     this.surfaces = []
     this.solidOf.clear()
     this.surfacesOf.clear()
     this.surfaceGrid.clear()
+    this.cellIndex.clear()
+    this.cellLists.length = 0
     this.wideSurfaces.length = 0
   }
 
@@ -327,9 +460,13 @@ export class PieceSystem {
     this.solids = this.solids.filter((s) => s.body !== body)
     this.surfaces = this.surfaces.filter((s) => s.body !== body)
     for (const [key, cell] of this.surfaceGrid) {
-      const kept = cell.filter((s) => s.body !== body)
-      if (kept.length === 0) this.surfaceGrid.delete(key)
-      else if (kept.length !== cell.length) this.surfaceGrid.set(key, kept)
+      // the cell's own list, cut in place: `gridSurfaces` fills the same lists again
+      let kept = 0
+      for (const one of cell) if (one.body !== body) cell[kept++] = one
+      cell.length = kept
+      if (kept > 0) continue
+      this.surfaceGrid.delete(key)
+      this.cellIndex.delete(key)
     }
     const wide = this.wideSurfaces.filter((s) => s.body !== body)
     this.wideSurfaces.length = 0
@@ -443,6 +580,7 @@ export class PieceSystem {
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
   wakeRegion(x: number, z: number, radius: number): void {
+    this.engine?.groundChanged(x, z, radius)
     for (const b of this.list) {
       if (!b.sleeping || b.held || Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius) continue
       b.sleeping = false
@@ -452,6 +590,17 @@ export class PieceSystem {
   }
 
   update(dt: number): void {
+    if (this.engine) {
+      this.time += dt
+      this.measure()
+      // what the budget put to sleep (the engine did not) wakes when a point it lay on loses its support: the kit's rule. What the engine put to sleep it wakes
+      // itself when what holds it moves; a fixed thing removed or the ground changed wakes what was there (`EnginePieces`)
+      this.wakeUnsupported(true)
+      this.engine.update(this.list, dt, this.time, this.apartDeep(dt))
+      this.measure()
+      this.keepBudget()
+      return
+    }
     const { steps, near } = this.collisionSteps(dt)
     if (steps === 1) {
       this.time += dt
@@ -506,57 +655,7 @@ export class PieceSystem {
 
   /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
   private step(dt: number, only?: StepFilter): void {
-    this.solids = this.list.map((body) => {
-      const c = this.centerOf(body, new this.THREE.Vector3())
-      const h = body.halfExtents
-      return { body, c: [c.x, c.y, c.z] as Vec3, e: [...new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements], half: h, r: Math.hypot(h[0], h[1], h[2]) }
-    })
-    // what lands on a piece lands on its parts (a shelf's boards, a table's top), not on the box around them all
-    this.surfaces = this.solids.flatMap((whole): Solid[] => {
-      const parts = whole.body.partBoxes
-      if (!parts) return [whole]
-      const e = whole.e
-      return parts.map(({ center, half }) => ({
-        body: whole.body,
-        c: [
-          whole.c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2],
-          whole.c[1] + e[1] * center[0] + e[5] * center[1] + e[9] * center[2],
-          whole.c[2] + e[2] * center[0] + e[6] * center[1] + e[10] * center[2],
-        ] as Vec3,
-        e,
-        half,
-        r: Math.hypot(half[0], half[1], half[2]),
-      }))
-    })
-    this.solidOf.clear()
-    for (const one of this.solids) this.solidOf.set(one.body, one)
-    this.surfacesOf.clear()
-    for (const one of this.surfaces) {
-      const list = this.surfacesOf.get(one.body)
-      if (list) list.push(one)
-      else this.surfacesOf.set(one.body, [one])
-    }
-    this.surfaceGrid.clear()
-    this.wideSurfaces.length = 0
-    for (const one of this.surfaces) {
-      const x0 = Math.floor((one.c[0] - one.r) / SURFACE_CELL)
-      const x1 = Math.floor((one.c[0] + one.r) / SURFACE_CELL)
-      const z0 = Math.floor((one.c[2] - one.r) / SURFACE_CELL)
-      const z1 = Math.floor((one.c[2] + one.r) / SURFACE_CELL)
-      if (x1 - x0 > SURFACE_CELLS_ACROSS || z1 - z0 > SURFACE_CELLS_ACROSS) {
-        this.wideSurfaces.push(one)
-        continue
-      }
-      for (let ix = x0; ix <= x1; ix++) {
-        for (let iz = z0; iz <= z1; iz++) {
-          const key = cellKey(ix, iz)
-          const cell = this.surfaceGrid.get(key)
-          if (cell) cell.push(one)
-          else this.surfaceGrid.set(key, [one])
-        }
-      }
-    }
-    if (this.wideSurfaces.length > 0) for (const cell of this.surfaceGrid.values()) cell.push(...this.wideSurfaces)
+    this.measure()
     this.wakeUnsupported()
     for (const b of this.list) {
       if (b.held) {
@@ -578,13 +677,127 @@ export class PieceSystem {
     this.keepBudget()
   }
 
+  /** The boxes of the pieces as they stand (`solids`, `surfaces` and their grid): what a point lands on and what `topAt` answers. */
+  private measure(): void {
+    // each piece's boxes are its own objects from one update to the next, written over in place: two measures an update over 200 pieces made a Vector3, a Matrix4,
+    // its elements twice and the surfaces anew for each (90 MB in 200 updates of the debris bench, most of the collector's pauses)
+    this.measures++
+    // written over by index and cut to length at the end: emptied and pushed again, each list was made anew twice an update
+    let solids = 0
+    let surfaces = 0
+    for (const body of this.list) {
+      const rec = this.measured(body)
+      const w = rec.whole
+      const c = this.centerOf(body, this.p)
+      w.c[0] = c.x
+      w.c[1] = c.y
+      w.c[2] = c.z
+      const el = this.m.makeRotationFromQuaternion(body.root.quaternion).elements
+      for (let k = 0; k < 16; k++) w.e[k] = el[k]
+      const h = body.halfExtents
+      w.half = h
+      w.r = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2])
+      this.solids[solids++] = w
+      // what lands on a piece lands on its parts (a shelf's boards, a table's top), not on the box around them all
+      const parts = body.partBoxes
+      if (!parts) {
+        rec.list[0] = w
+        if (rec.list.length !== 1) rec.list.length = 1
+      } else this.measureParts(rec, parts)
+      for (const one of rec.list) this.surfaces[surfaces++] = one
+      rec.stamp = this.measures
+      this.solidOf.set(body, w)
+      this.surfacesOf.set(body, rec.list)
+    }
+    this.solids.length = solids
+    this.surfaces.length = surfaces
+    // a piece taken out goes through `forgetSolids`: this walk only finds one that left the list some other way
+    if (this.solidOf.size !== this.list.length) for (const body of this.solidOf.keys()) {
+      if (this.records.get(body)?.stamp === this.measures) continue
+      this.solidOf.delete(body)
+      this.surfacesOf.delete(body)
+    }
+    this.gridSurfaces()
+  }
+
+  /** A piece's own boxes for `measure`, made once. */
+  private measured(body: PieceBody): MeasuredBody {
+    let rec = this.records.get(body)
+    if (!rec) {
+      rec = { whole: { body, c: [0, 0, 0], e: new Array<number>(16).fill(0), half: body.halfExtents, r: 0 }, parts: [], from: undefined, squares: [], list: [], stamp: 0 }
+      this.records.set(body, rec)
+    }
+    return rec
+  }
+
+  /** Its parts' boxes, square to the piece (`squareBoxOf`, worked out again only when its parts change), placed by its centre and turn of this update. */
+  private measureParts(rec: MeasuredBody, parts: readonly PartBox[]): void {
+    const w = rec.whole
+    if (rec.from !== parts) {
+      rec.from = parts
+      rec.squares = parts.map(squareBoxOf)
+      rec.parts = parts.map(() => ({ body: w.body, c: [0, 0, 0], e: w.e, half: w.half, r: 0 }))
+    }
+    const e = w.e
+    for (let i = 0; i < rec.parts.length; i++) {
+      const { center, half } = rec.squares[i]
+      const one = rec.parts[i]
+      one.c[0] = w.c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2]
+      one.c[1] = w.c[1] + e[1] * center[0] + e[5] * center[1] + e[9] * center[2]
+      one.c[2] = w.c[2] + e[2] * center[0] + e[6] * center[1] + e[10] * center[2]
+      one.half = half
+      one.r = Math.sqrt(half[0] * half[0] + half[1] * half[1] + half[2] * half[2])
+    }
+    for (let i = 0; i < rec.parts.length; i++) rec.list[i] = rec.parts[i]
+    if (rec.list.length !== rec.parts.length) rec.list.length = rec.parts.length
+  }
+
+  /**
+   * The surfaces into the cells of the grid they cover (`surfaceGrid`). The cells' lists are kept from one measure to the next, written over by index and cut to their
+   * count at the end: emptied and pushed again, every list was made anew each measure (31 MB in 200 updates of the debris bench).
+   */
+  private gridSurfaces(): void {
+    this.cellCounts.fill(0)
+    this.wideSurfaces.length = 0
+    for (const one of this.surfaces) {
+      const x0 = Math.floor((one.c[0] - one.r) / SURFACE_CELL)
+      const x1 = Math.floor((one.c[0] + one.r) / SURFACE_CELL)
+      const z0 = Math.floor((one.c[2] - one.r) / SURFACE_CELL)
+      const z1 = Math.floor((one.c[2] + one.r) / SURFACE_CELL)
+      if (x1 - x0 > SURFACE_CELLS_ACROSS || z1 - z0 > SURFACE_CELLS_ACROSS) {
+        this.wideSurfaces.push(one)
+        continue
+      }
+      for (let ix = x0; ix <= x1; ix++) for (let iz = z0; iz <= z1; iz++) this.intoCell(cellKey(ix, iz), one)
+    }
+    for (const one of this.wideSurfaces) for (const key of this.surfaceGrid.keys()) this.intoCell(key, one)
+    for (let i = 0; i < this.cellLists.length; i++) if (this.cellLists[i].length !== this.cellCounts[i]) this.cellLists[i].length = this.cellCounts[i]
+  }
+
+  private intoCell(key: number, one: Solid): void {
+    let i = this.cellIndex.get(key)
+    if (i === undefined) {
+      i = this.cellLists.length
+      const list: Solid[] = []
+      this.cellLists.push(list)
+      this.cellIndex.set(key, i)
+      this.surfaceGrid.set(key, list)
+      if (this.cellCounts.length <= i) {
+        const grown = new Int32Array(Math.max(64, this.cellCounts.length * 2))
+        grown.set(this.cellCounts)
+        this.cellCounts = grown
+      }
+    }
+    this.cellLists[i][this.cellCounts[i]++] = one
+  }
+
   /** A few sleeping pieces each update (`SUPPORT_CHECKS`, in turn) look under them again: one whose table broke, or whose shelf fell over, falls. */
-  private wakeUnsupported(): void {
+  private wakeUnsupported(onlyBudget = false): void {
     const n = this.list.length
     for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
       this.supportTurn = (this.supportTurn + 1) % n
       const b = this.list[this.supportTurn]
-      if (!b.sleeping || b.held) continue
+      if (!b.sleeping || b.held || (onlyBudget && !b.restPoints?.length)) continue
       // one put to sleep by the budget needs every point it went to sleep on: a board leaning on a step whose step is gone comes down, though its foot is still on the floor
       const rest = b.restPoints
       if (rest && rest.length > 0 ? rest.every((point) => this.supportsPoint(b, point)) : this.supported(b, false) || this.supported(b, true)) continue
@@ -1305,7 +1518,7 @@ export class PieceSystem {
     const parts = b.partBoxes ?? [{ center: [0, 0, 0] as Vec3, half: b.halfExtents }]
     return {
       kind: 'boxes',
-      boxes: parts.map(({ center, half }) => ({
+      boxes: parts.map(squareBoxOf).map(({ center, half }) => ({
         c: [c[0] + e[0] * center[0] + e[4] * center[1] + e[8] * center[2], c[1] + e[1] * center[0] + e[5] * center[1] + e[9] * center[2], c[2] + e[2] * center[0] + e[6] * center[1] + e[10] * center[2]] as Vec3,
         e,
         half,
@@ -1404,7 +1617,6 @@ export class PieceSystem {
 
   /** Whether a part of `a` and a part of `b` (their boxes of the step, as world-aligned boxes around them) overlap. */
   private partsOverlap(a: PieceBody, b: PieceBody): boolean {
-    const extent = (s: Solid, k: number): number => Math.abs(s.e[k]) * s.half[0] + Math.abs(s.e[k + 4]) * s.half[1] + Math.abs(s.e[k + 8]) * s.half[2]
     for (const pa of this.surfacesOf.get(a) ?? []) {
       for (const pb of this.surfacesOf.get(b) ?? []) {
         let apart = false

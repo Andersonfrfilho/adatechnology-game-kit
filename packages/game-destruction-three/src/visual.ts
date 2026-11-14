@@ -248,6 +248,18 @@ export class Visuals {
     return out
   }
 
+  /** The part's vertices (a ranged part: its own range only) through `matrix` (from its mesh's space), appended to `out` as x y z. */
+  rangePoints(mv: MeshVis, matrix: THREE_NS.Matrix4, out: number[]): void {
+    const arr = mv.host?.work ?? (positionAttr(mv.mesh.geometry)?.array as unknown as ArrayLike<number> | undefined)
+    if (!arr) return
+    const from = mv.range ? mv.range[0] : 0
+    const to = mv.range ? mv.range[1] : arr.length / 3
+    for (let i = from * 3; i < to * 3; i += 3) {
+      this.t.set(arr[i], arr[i + 1], arr[i + 2]).applyMatrix4(matrix)
+      out.push(this.t.x, this.t.y, this.t.z)
+    }
+  }
+
   /** Box of the part in world space. */
   /** Appends the boxes that follow the mesh in the world (`pushFittedBoxes`) to `out`. */
   fittedBoxes(mv: MeshVis, out: number[]): void {

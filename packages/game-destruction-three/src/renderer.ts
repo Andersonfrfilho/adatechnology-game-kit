@@ -9,8 +9,11 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
-import type { Bound, HostVis, MeshVis, PartVis, PieceBody, PieceRound } from './internal'
+import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
+import { isTurned } from './internal'
+import { fitOrientedBoxes } from './oriented-boxes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
+import type { StaticSolid } from './engine-pieces'
 import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
@@ -299,6 +302,12 @@ class Renderer implements DestructionRenderer {
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
+  /** `staticSolids` per object, with the `staticBoxes` list they were measured with. */
+  private readonly solidCache = new Map<string, { from: number[]; solids: StaticSolid[] }>()
+  /** `clipToDrawn` per hosted body: the boxes it was given, the root's world matrix, and the boxes cut to what it draws. */
+  private readonly clipped = new Map<string, { from: readonly StaticSolid[]; matrix: number[]; solids: readonly StaticSolid[] }>()
+  /** What `staticSolids` hands back, refilled each call. */
+  private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
@@ -418,6 +427,7 @@ class Renderer implements DestructionRenderer {
     this.pieceSys = new PieceSystem(THREE, {
       groundAt: this.groundAt,
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
+      staticSolids: () => this.staticSolids(),
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
@@ -567,6 +577,7 @@ class Renderer implements DestructionRenderer {
 
   unbind(objectId: string): void {
     this.staticDirty.add(objectId)
+    this.clipped.delete(objectId)
     const b = this.bounds.get(objectId)
     if (!b) return
     this.restore(objectId)
@@ -595,6 +606,67 @@ class Renderer implements DestructionRenderer {
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
     return { half: [Math.max(0.02, size.x / 2), Math.max(0.02, size.y / 2), Math.max(0.02, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
+  }
+
+  /**
+   * A hosted body's boxes (`hostedSolids`: its damage zones) cut to the box of what its root draws, in the root's frame: the zones reach past the drawn body (17 cm each
+   * side and 14 cm over the room's sedan), and a box where nothing is drawn is an invisible collider (§12): doors made by the wall it is parked against were made inside
+   * it. A box turned against the root (a door swung open) is kept as it is. The same list back until the boxes or the root's place change.
+   */
+  private clipToDrawn(id: string, hosted: readonly StaticSolid[]): readonly StaticSolid[] {
+    const b = this.bounds.get(id)
+    if (!b) return hosted
+    b.root.updateWorldMatrix(true, true)
+    const m = b.root.matrixWorld.elements
+    const known = this.clipped.get(id)
+    if (known && known.from === hosted && known.matrix.every((v, k) => v === m[k])) return known.solids
+    const inv = new this.THREE.Matrix4().copy(b.root.matrixWorld).invert()
+    const drawn = new this.THREE.Box3()
+    const part = new this.THREE.Box3()
+    const to = new this.THREE.Matrix4()
+    b.root.traverseVisible((o) => {
+      const mesh = o as Mesh
+      if (!mesh.isMesh || !mesh.geometry) return
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+      if (!mesh.geometry.boundingBox) return
+      drawn.union(part.copy(mesh.geometry.boundingBox).applyMatrix4(to.multiplyMatrices(inv, mesh.matrixWorld)))
+    })
+    const rootQ = new this.THREE.Quaternion()
+    b.root.getWorldQuaternion(rootQ)
+    const solids = drawn.isEmpty() ? hosted : this.clipEach(hosted, { drawn, inv, root: b.root, rootQ })
+    this.clipped.set(id, { from: hosted, matrix: [...m], solids })
+    return solids
+  }
+
+  private clipEach(hosted: readonly StaticSolid[], frame: { readonly drawn: THREE_NS.Box3; readonly inv: THREE_NS.Matrix4; readonly root: Object3D; readonly rootQ: THREE_NS.Quaternion }): StaticSolid[] {
+    const out: StaticSolid[] = []
+    const q = new this.THREE.Quaternion()
+    const c = new this.THREE.Vector3()
+    const box = new this.THREE.Box3()
+    for (const s of hosted) {
+      q.set(s.rotation[0], s.rotation[1], s.rotation[2], s.rotation[3])
+      // turned against the root (a part posed): kept as the world holds it
+      if (Math.abs(q.dot(frame.rootQ)) < 1 - 1e-6) {
+        out.push(s)
+        continue
+      }
+      c.set(s.center[0], s.center[1], s.center[2]).applyMatrix4(frame.inv)
+      box.min.set(c.x - s.half[0], c.y - s.half[1], c.z - s.half[2])
+      box.max.set(c.x + s.half[0], c.y + s.half[1], c.z + s.half[2])
+      box.intersect(frame.drawn)
+      if (box.isEmpty()) continue
+      const center = box.getCenter(c).applyMatrix4(frame.root.matrixWorld)
+      out.push({ center: [center.x, center.y, center.z], half: [(box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2], rotation: s.rotation })
+    }
+    return out
+  }
+
+  /** Whether a bound object has no mesh here at all (another module draws it), as against one whose meshes all broke or are hidden. */
+  private drawsNothingHere(objectId: string): boolean {
+    const b = this.bounds.get(objectId)
+    if (!b) return false
+    for (const pv of b.parts.values()) if (pv.meshes.length > 0) return false
+    return true
   }
 
   private meshesOf(b: Bound): MeshVis[] {
@@ -987,8 +1059,18 @@ class Renderer implements DestructionRenderer {
     const lq = b.lastQuat
     const moved = !last || !lq || Math.abs(p.x - last[0]) + Math.abs(p.y - last[1]) + Math.abs(p.z - last[2]) > 1e-5 || Math.abs(q.x - lq[0]) + Math.abs(q.y - lq[1]) + Math.abs(q.z - lq[2]) + Math.abs(q.w - lq[3]) > 1e-6
     if (!moved) return
-    b.lastPos = [p.x, p.y, p.z]
-    b.lastQuat = [q.x, q.y, q.z, q.w]
+    if (last && lq) {
+      last[0] = p.x
+      last[1] = p.y
+      last[2] = p.z
+      lq[0] = q.x
+      lq[1] = q.y
+      lq[2] = q.z
+      lq[3] = q.w
+    } else {
+      b.lastPos = [p.x, p.y, p.z]
+      b.lastQuat = [q.x, q.y, q.z, q.w]
+    }
     if (this.world.has(b.id)) this.world.setTransform(b.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w])
   }
 
@@ -1013,6 +1095,61 @@ class Renderer implements DestructionRenderer {
       }
     }
     return top
+  }
+
+  /**
+   * The fixed objects as their drawn boxes turned as drawn (the local box of each mesh in its world matrix), for an engine: one list per object, the same list until
+   * `staticNow` measures that object again. The same meshes `staticNow` keeps: no merged host, no loose part, nothing hidden, nothing wider than `STATIC_SPAN`.
+   */
+  private staticSolids(): Map<string, readonly StaticSolid[]> {
+    const now = this.staticNow()
+    for (const id of this.solidCache.keys()) if (!now.has(id)) this.solidCache.delete(id)
+    // asked every update: the map and the scratch are kept, the lists are the cached ones
+    const out = this.solidsOut
+    out.clear()
+    for (const [id, boxes] of now) {
+      // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
+      const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
+      if (hosted) {
+        out.set(id, this.clipToDrawn(id, hosted))
+        continue
+      }
+      const cached = this.solidCache.get(id)
+      // measured again on a timer, often to the same numbers: the same boxes keep the same list (an engine rebuilds what changed)
+      if (cached && (cached.from === boxes || (cached.from.length === boxes.length && cached.from.every((v, k) => Math.abs(v - boxes[k]) < 1e-6)))) {
+        cached.from = boxes
+        out.set(id, cached.solids)
+        continue
+      }
+      const solids = this.measureSolids(id, boxes)
+      this.solidCache.set(id, { from: boxes, solids })
+      out.set(id, solids)
+    }
+    return out
+  }
+
+  /** The drawn boxes of one fixed object, turned as drawn (`staticSolids`), measured again. */
+  private measureSolids(id: string, boxes: readonly number[]): StaticSolid[] {
+    const box = new this.THREE.Box3()
+    const pos = new this.THREE.Vector3()
+    const quat = new this.THREE.Quaternion()
+    const scale = new this.THREE.Vector3()
+    const solids: StaticSolid[] = []
+    const b = this.bounds.get(id)
+    if (!b || boxes.length === 0) return solids
+    for (const mv of this.meshesOf(b)) {
+      if (mv.host || mv.loose || !this.visuals.shown(mv)) continue
+      this.visuals.worldBox(mv, box)
+      if (box.isEmpty() || box.max.x - box.min.x > STATIC_SPAN || box.max.z - box.min.z > STATIC_SPAN) continue
+      this.visuals.localBox(mv, box)
+      if (box.isEmpty()) continue
+      mv.mesh.updateWorldMatrix(true, false)
+      mv.mesh.matrixWorld.decompose(pos, quat, scale)
+      const c = box.getCenter(new this.THREE.Vector3()).multiply(scale).applyQuaternion(quat).add(pos)
+      const size = box.getSize(new this.THREE.Vector3()).multiply(scale)
+      solids.push({ center: [c.x, c.y, c.z], half: [Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], rotation: [quat.x, quat.y, quat.z, quat.w] })
+    }
+    return solids
   }
 
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
@@ -2017,20 +2154,45 @@ class Renderer implements DestructionRenderer {
     const lb = new this.THREE.Box3()
     const [cx, cy, cz] = body.localCenter
     const points: Vec3[] = []
-    const boxes: Array<{ center: Vec3; half: Vec3 }> = []
+    const boxes: PartBox[] = []
     for (const mv of meshes) {
       mv.mesh.updateWorldMatrix(true, false)
       this.visuals.localBox(mv, lb)
       if (lb.isEmpty()) continue
-      lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld))
+      m4.multiplyMatrices(inv, mv.mesh.matrixWorld)
+      this.partBoxesOf(mv, { lb, m4, from: [cx, cy, cz] }, boxes)
+      lb.applyMatrix4(m4)
       for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
-      boxes.push({
-        center: [(lb.min.x + lb.max.x) / 2 - cx, (lb.min.y + lb.max.y) / 2 - cy, (lb.min.z + lb.max.z) / 2 - cz],
-        half: [Math.max(0.005, (lb.max.x - lb.min.x) / 2), Math.max(0.005, (lb.max.y - lb.min.y) / 2), Math.max(0.005, (lb.max.z - lb.min.z) / 2)],
-      })
     }
     body.contacts = points.length > 0 && meshes.length <= CONTACT_MESHES ? points : undefined
-    body.partBoxes = boxes.length > 1 ? boxes : undefined
+    // one box turned as drawn (a roof sheet lying askew) is kept too: the box of the piece would be the air around it
+    body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
+  }
+
+  /**
+   * The boxes of one mesh in the piece's frame, from its centre of mass, turned as the mesh is drawn: a plain mesh is its geometry's box in its own space, turned by its
+   * place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
+   * of those vertices in the merged mesh's space is the box around a tilted sheet, mostly air.
+   */
+  private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
+    const [cx, cy, cz] = at.from
+    if (mv.range) {
+      const pts: number[] = []
+      this.visuals.rangePoints(mv, at.m4, pts)
+      for (const box of fitOrientedBoxes(pts)) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })
+      return
+    }
+    const pos = new this.THREE.Vector3()
+    const quat = new this.THREE.Quaternion()
+    const scale = new this.THREE.Vector3()
+    at.m4.decompose(pos, quat, scale)
+    const c = at.lb.getCenter(new this.THREE.Vector3()).applyMatrix4(at.m4)
+    const size = at.lb.getSize(new this.THREE.Vector3())
+    out.push({
+      center: [c.x - cx, c.y - cy, c.z - cz],
+      half: [Math.max(0.005, Math.abs(size.x * scale.x) / 2), Math.max(0.005, Math.abs(size.y * scale.y) / 2), Math.max(0.005, Math.abs(size.z * scale.z) / 2)],
+      rotation: [quat.x, quat.y, quat.z, quat.w],
+    })
   }
 
   /**
