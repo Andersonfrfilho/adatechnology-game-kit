@@ -86,6 +86,8 @@ const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
 const OUT_TRIES = 8
 /** The first step (m) a wedged piece is lifted by (`outOfStatics`). */
 const WEDGE_LIFT = 0.1
+/** A lift that leaves more than this share of the depth it had is no way out of that fixed thing: the piece is in two (`outOfStatics`). */
+const NO_PROGRESS = 0.75
 /** How far apart (m) the poses are that a wedge lift is checked at on its way up: about the piece's thinnest half, so it cannot step over a slab it would cross. */
 const WAY_STEP_MIN = 0.02
 const WAY_STEP_MAX = 0.1
@@ -501,14 +503,16 @@ export class EnginePieces {
     // what the piece was made inside, how deep it was where it turned out to be wedged, and how far the tries moved it in all: a way out that is no better is put back (`putBack`)
     let found = 0
     let wedge = 0
+    let previous = 0
     const moved = [0, 0, 0]
     for (let i = 0; i < OUT_TRIES; i++) {
       // the host's fixed things only: a piece made in the ground is the ground's rule (`underGround`; out of a step the shortest way too, the bowl's seed 39 made 3 mm)
       const depth = this.world.penetration(link.id, axis, this.statics.ids)
       if (depth <= SINK) return
       if (i === 0) found = depth
-      // out of one the shortest way put it back into the other (a door made between its frame and a car parked against the wall): it goes up out of both
-      wedged ||= i > 0 && axis[0] * px + axis[1] * py + axis[2] * pz < -0.5
+      // out of one the shortest way put it back into the other (a door made between its frame and a car parked against the wall), or no shallower for it (a door whose jamb it overlaps the same at any height rode up 0.4 m): it goes up out of both
+      wedged ||= i > 0 && (axis[0] * px + axis[1] * py + axis[2] * pz < -0.5 || depth > previous * NO_PROGRESS)
+      previous = depth
       px = axis[0]
       py = axis[1]
       pz = axis[2]
