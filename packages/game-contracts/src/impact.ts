@@ -34,6 +34,8 @@ export interface SurfaceRayHit {
  */
 export interface DrawnCollider {
   readonly id: string
+  /** Names the piece across lists (a piece measured again is the same piece): without it, the place in the list. */
+  readonly key?: string
   readonly center: Vec3
   readonly half: Vec3
   readonly rotation: [number, number, number, number]
@@ -61,6 +63,8 @@ export interface DestructibleImpl {
    * came off. Without it the engine takes the boxes of `describe()`. Same cost contract as `describe()`: the world asks again only when state, place or a pose changes.
    */
   colliders?(): readonly DrawnCollider[]
+  /** True while `colliders()` still has pieces to make (a vehicle that just spawned fills in over several updates): the world asks again at the next update. */
+  collidersPending?(): boolean
   /** Advance fire, melting, collapse and other timed behaviour. */
   update?(dt: number): DestructionEvent[]
   /**

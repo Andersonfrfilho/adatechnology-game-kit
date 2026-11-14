@@ -452,10 +452,50 @@ Em `game-destruction-three/tests/engine-hosted.test.ts` (Jolt, motor real): caix
 | `eslint` nos arquivos mudados | 0 erros (2 avisos `max-lines` de `renderer.ts` e `world.ts`, que já os tinham) |
 | `node tools/kit-audit/audit.mjs --check` | exit 0 |
 
-### O que fica
+### O que fica (versão do primeiro commit; corrigida no seguimento abaixo)
 
 - A geometria desenhada não mudou (os goldens da frota seguem iguais); `revisor-z-fighting` não foi preciso.
-- A lista é refeita quando o `state()` do carro muda (cada tiro): 65–115 ms por carro, só no modo Jolt e só no corpo hospedado. Cache por malha seria o próximo passo se a sala mostrar engasgo.
-- Um amassado só de desenho (`crumple`) não troca o `state()`: as peças só acompanham depois da próxima mudança de estado, lugar ou pose.
-- O teste da porta guarda a propriedade (sem levantar com o colisor desenhado); o cenário de 1,4 m de Q4 não se reproduz com um carro de caixas sintético sem a sala, então o teste não distingue sozinho do caminho antigo. A prova na sala fica para T3.8.
+- O custo por tiro e a malha mais grossa de 5 cm, apontados aqui como pendentes, foram refeitos no seguimento abaixo.
 
+### Seguimento (2026-11-14): só as peças que mudam, e a menos de 1 cm do desenhado
+
+Máquina: Intel Core Ultra 9 275HX, Node 22.
+
+**1. Custo por tiro.** `createVehicleColliders` (`colliders.ts`) guarda estado entre chamadas. Cada malha desenhada é lida uma vez: cada triângulo vai para uma peça (parte do veículo × célula de 80 cm do veículo; chave `parte#célula`,
+estável). Depois, por chamada: matriz da malha mudou (porta virada, capô aberto) refaz as peças da malha; `position.version` mudou compara os vértices com a cópia e refaz só as peças que têm triângulo com vértice movido;
+geometria ou índice trocados (corte, arrancar painel) reatribui só aquela malha. Parte que soltou ou quebrou sai da lista; sem mudança, as mesmas peças voltam (mesmo objeto). Triângulo sem área ou com canto que não é número não entra.
+O `crumple` já trocava o `state()` (`stateCache = undefined`; o que eu escrevi antes, que não trocava, estava errado), então o mundo já pedia as peças de novo; o teste novo confirma que as peças acompanham o desenho.
+Orçamento: `{ budget: 25000 }` triângulos de trabalho por chamada na sala; um carro que nasce enche em 12 a 33 chamadas (sedã 17), e `DestructibleImpl.collidersPending()` faz o mundo pedir de novo no update seguinte enquanto falta.
+Chave da peça no mundo vem de `DrawnCollider.key`.
+
+| Medida (sedã `midsize_sedan`, 192 peças) | Resultado |
+|---|---|
+| Primeira montagem, tudo de uma vez | 79 ms (carros 55–105 ms, `battle_tank` 181 ms, bicicleta 4 ms) |
+| Depois de um tiro (9 mm, 8 tiros em portas, paralama, capô, para-choque, teto, tampa) | mediana **1,7 a 2,5 ms** em 3 execuções (0,6 a 4,8 ms); 16 peças refeitas em 8 tiros (2 por tiro) |
+| Golpe contundente de 20 kJ (amassa o lado todo) | 13 a 15 ms, 41 peças refeitas |
+| Antes (primeiro commit) | 65–115 ms a cada tiro |
+
+**2. Colisão a menos de 1 cm do desenhado.** O teste novo, nos 69 modelos, mede a distância de cada vértice de colisão e de uma amostra de pontos dos triângulos (centro e meio das arestas, até 1 500 triângulos por peça) até os
+triângulos desenhados da própria peça (distância ponto-triângulo, grade de 2 cm), e exige ≤ 1 cm. A fusão em células de 5 cm do primeiro commit falhava (até 3,5 cm em criação e chapa dupla); medido: células de 3 cm, 2 cm e 1,5 cm
+ainda deixavam pontos fora, 1 cm deixava 3 modelos (chapa fina com duas camadas), **8 mm** passa a frota inteira. Cada vértice mantido é um vértice desenhado (o mais perto da média da célula). Uma escolha adaptativa
+(células maiores onde a malha é plana) foi tentada e descartada: reduz pouco e atravessa vincos. Pior distância na frota: **7,6 mm** (`crop_duster`); caixas: o canto está a ≤ 17 mm de um vértice (regra de 1 cm por eixo, mais 5 mm da chapa).
+Achados no caminho: (a) duas malhas que repartem a mesma geometria na mesma peça usavam as posições da primeira (bug do primeiro commit, corrigido: a tabela de vértices é por malha e não por array); (b) a caixa girada saía com 1 cm
+a mais de cada lado numa chapa, agora é apertada nos vértices; (c) triângulo sem área fora.
+
+| Triângulos de colisão e custo | Resultado |
+|---|---|
+| Carros (hatch, sedã, SUV, picape) | 86 000 a 120 000 triângulos, 118 a 255 peças |
+| Caminhão, ônibus | 79 000 a 133 000; `city_bus` 559 peças |
+| `battle_tank` | 159 858 triângulos, 334 peças (o maior carro); `monster_truck` 140 728 |
+| Motos, barcos pequenos | 11 000 a 35 000 |
+| Aviões e helicópteros | 30 000 a 135 000 |
+| Antes (primeiro commit, fora do 1 cm) | 22 000 a 30 000 num carro |
+
+Por modelo (peças, caixas, triângulos, montagem em ms, chamadas com orçamento de 25 000, pior distância em mm): ver os testes; os 69 passam. A malha desenhada tem 230 000 triângulos num sedã: 1 cm de erro máximo custa quatro
+vezes o que 5 cm custava. No motor, o enchimento por update (`TRIANGLES_PER_UPDATE` 1 200) leva então um carro a ficar sólido em cerca de 90 updates (1,5 s). Se a sala mostrar peso, o próximo passo é simplificação por erro
+quadrático por malha (arestas colapsadas) feita uma vez e seguindo só os vértices que sobrevivem; não foi feito porque exigiria desistir da distância exata de 1 cm sob amassado.
+
+Testes novos em `vehicle-colliders.test.ts`: distância de superfície nos 69 modelos; tiro refaz poucas peças e mede o tempo; `crumple` move as peças; orçamento termina com as mesmas peças (chaves iguais) de uma montagem só.
+
+Gates do seguimento: `pnpm build` e `pnpm -r typecheck` exit 0; `game-vehicles-three` 411 passam; `game-vehicles-fleet` 1225; `game-vehicles` 342; `game-destruction` 507; `game-destruction-three` próprio 344 passam, 0 falham;
+Jolt 390 passam e os mesmos 13 conhecidos; `game-floorplan-three` 715 passam, 3 conhecidas; bacia 128/128; `eslint` 0 erros (avisos `max-lines` que já existiam); `kit-audit --check` exit 0.

@@ -50,7 +50,7 @@ export const hostedSolids = (spec: DestructibleSpec, state: Readonly<ObjectState
 /** The drawn pieces of a hosted body (`DestructibleImpl.colliders`, in its frame) as the world holds them: each box placed with the body, the triangles of a piece carried along. */
 export const hostedPieces = (pieces: ReturnType<NonNullable<DestructibleImpl['colliders']>>, pose: Pick<HostedPose, 'position' | 'rotation'>): HostedSolid[] =>
   pieces.map((piece, index) => {
-    const base = { center: toWorld(pose.position, pose.rotation, piece.center), half: piece.half, rotation: quat.mul(pose.rotation, piece.rotation), key: `${piece.id}:${index}` }
+    const base = { center: toWorld(pose.position, pose.rotation, piece.center), half: piece.half, rotation: quat.mul(pose.rotation, piece.rotation), key: piece.key ?? `${piece.id}:${index}` }
     if (!piece.mesh) return base
     const source = piece.mesh.vertices
     const vertices = new Float32Array(source.length)

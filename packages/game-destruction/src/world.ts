@@ -2349,7 +2349,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const state = im.impl.state()
     const p = im.position, q = im.rotation
     const known = implSolids.get(im)
-    if (known && known.spec === spec && known.state === state) {
+    if (known && known.spec === spec && known.state === state && im.impl.collidersPending?.() !== true) {
       const k = known.key
       if (k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === im.posesVersion) return known.solids
     }
