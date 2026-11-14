@@ -1477,3 +1477,68 @@ Contexto: depois da T3.8b, 5 de 20 rodadas do Jolt passam (explosão com D4: 4 d
 - **D8 (quadro de despertar, 43–88 ms):** o chão da área é montado quando ela é construída, para que o custo saia do quadro do jogo. Nenhuma regra muda: não há limite de pedaços por quadro.
 
 Ordem de execução: D5, depois D8, depois D7. Depois disso, as 5+5 rodadas são refeitas na sala.
+
+## T3.8d — D5 peças presas no telhado (2026-11-14) — **a causa do lançamento ao sótão está consertada; a sala continua reprovada, por outra peça (a porta nascida no vão)**
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22 (o `node` desta máquina é 24, não 20). Navegador: `chrome-headless-shell` do Playwright, headless, janela 1600x900, GPU Intel Arrow Lake (Mesa). Carga da máquina 0,9 a 2 nas execuções; no máximo 2 trabalhos pesados juntos (a bacia rodou ao lado de uma rodada da sala).
+
+### 1. Causa
+- As "peças de telhado de 42,8 kg a y 3,5–4,4 m" são **portas que nascem dentro do próprio vão** (folha de 2,1 m x 0,1 m, a base no piso; a folha pega 4 a 8 cm no batente). `EnginePieces.outOfStatics` via a cunha e subia a peça em passos que dobram (0,1; 0,2; 0,4...). Para cima não há saída: a verga, a laje do forro e o telhado. A subida atravessava a verga e a laje e deixava a porta no sótão, onde o Jolt a empurra para fora dos fixos que convergem, e ela ganha energia.
+- Reprodução em teste (`fitted-pieces.test.ts`, só com `PIECE_SOLVER=jolt`): dois blocos a 16 cm um do outro e uma laje 10 cm acima deles, a peça de 20 cm nasce entre eles. **Sem o conserto**: a peça sobe a 2,20 m e chega a **102 m/s**. **Com o conserto**: fica em 0,50 m, no máximo **2,6 m/s** (o empurrão gradual do próprio motor para 2 cm de sobreposição).
+- Medido na sala (log temporário, não commitado): a porta de 18 kg (`half 0,05 x 1,05 x 0,37`) tem profundidade **0,078 m a qualquer altura** (varrida de −0,2 a +0,2 m em y: sempre 0,078; só some a 0,5 m de lado em x). Sem o conserto a segunda causa fazia o kit subi-la 0,42 m em 8 tentativas de 8 cm, sem nunca ficar mais rasa (o eixo que o Jolt devolve para a malha é o mesmo a cada tentativa).
+
+### 2. Conserto (`packages/game-destruction-three/src/engine-pieces.ts`)
+- `isWayClear`: a subida da cunha é amostrada a cada meia espessura da peça (2 a 10 cm) e desiste quando encontra um fixo mais fundo que a cunha.
+- `putBack`: desistir, ou terminar as tentativas mais fundo do que começou, devolve a peça para onde nasceu (o motor a empurra para fora aos poucos).
+- `NO_PROGRESS = 0,75`: uma subida que deixa a peça com mais de 75% da profundidade que tinha conta como cunha (a porta que subia 0,4 m).
+- Revisão do diff: `wayAxis` e `outAxis` não se cruzam (`isWayClear` usa `outAxis` como "para cima", só leitura, e `wayAxis` como saída de `penetration`; `putBack` usa `wayAxis` depois que `isWayClear` terminou). `world.penetration?.` está certo: em `SeamWorld` o método é opcional. A nota "malhas com zero triângulos locais" não apareceu: nenhum erro nem log; não tratada.
+- Commits: `324e9aa9` (`isWayClear`/`putBack` + teste com checagem de velocidade) e `26fe2ec1` (`NO_PROGRESS`).
+
+### 3. Achado de infraestrutura que invalidou a primeira rodada
+`examples/test-room/build.mjs` embute `packages/*/dist`, **não** o `src`. A primeira passada das 20 rodadas rodou com o `dist` de `game-destruction-three` antigo (sem o conserto) e foi descartada. As rodadas abaixo são depois de `pnpm build` do pacote e do `build.mjs` da sala (confirmado por grep do código no `dist`).
+
+### 4. Rodadas na sala (código final, 5 de blast e 5 de martelo por configuração, um processo por rodada)
+Aceite igual ao da T3.8b: C2 condicionado 0 peças acima de 3,5 cm, tudo dormindo em até 3 s, `fellThrough` 0.
+
+| Configuração | T3.8b: passam | Agora: passam | C2 cond. máx (m) | peças > 3,5 cm cond. por rodada | C4 (s) por rodada | `fellThrough` |
+|---|---|---|---|---|---|---|
+| D4 ligada, blast | 4 de 5 | **0 de 5** | 0,099–0,107 | 1, 1, 1, 2, 1 | 0,9; 0,5; 0,5; 6,0; 0,5 | 0 |
+| D4 ligada, martelo | 0 de 5 | **0 de 5** | 0,078–0,094 | 1, 1, 1, 1, 1 | 2,85; 3,0; 0,4; 0,55; 0,4 | 0 |
+| D4 desligada, blast | 1 de 5 | **0 de 5** | 0,092–0,120 | 1, 1, 2, 1, 1 | 4,1; 0,45; 3,85; 0,5; 0,5 | 0 |
+| D4 desligada, martelo | 0 de 5 | **0 de 5** | 0,091–0,142 | 1, 1, 1, 1, 3 | 3,0; 2,5; 2,5; 0,9; 2,25 | 0 |
+
+A régua mudou desde a T3.8b? **Não** (mesmo `energy-ruler.ts`). Mas o conjunto de peças que reprova mudou: em todas as 20 rodadas há **uma peça com ganho de 0,09 a 0,12 m** (o limite é 0,035): a porta de 18 kg (`obj_56` no blast, `obj_18` no martelo) nascida no vão. Nas rodadas da T3.8b o ganho era de 0,000–0,043 em 4 de 5 blasts com D4 ligada; hoje é 0,1 em todas. Não consegui separar, com as rodadas desta sessão, se isso é a porta que antes era lançada ao sótão (e contava como outra ilha) ou ruído do `dist` da T3.8b: **não há rodada do código anterior no mesmo `dist`** para comparar.
+
+### 5. O que sobra e por quê
+- A porta tem 7,8 cm de sobreposição com o batente que **nenhuma subida resolve** (profundidade igual a qualquer altura). O conserto não a lança mais ao sótão, mas devolvê-la ao lugar deixa o Jolt empurrá-la ~0,1 m para fora: é esse ganho que a régua conta como lançamento (D5 manda contá-lo).
+- Opções para o dono: (a) a folha da porta nascer com a largura do vão menos a folga (`kit-objetos-itens`, o dono das portas), que remove a sobreposição na origem; (b) aceitar o ganho de até 0,1 m de uma peça que nasce presa; (c) mover a peça para o lado livre mais próximo (varredura: sai a 0,5 m de lado, longe demais para uma porta). Nenhuma foi feita: (a) mexe no SDK dono das portas, fora do escopo de D5.
+- Não cobri `NO_PROGRESS` com teste próprio: o teste existente cobre `isWayClear`/`putBack`; o caso do vale de telhado não foi reproduzido em teste isolado.
+
+### Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | 398 passam, 0 falhas |
+| `PIECE_SOLVER=jolt` | 468 passam, **só as 2 conhecidas** (lata no ar com restituição, cinquenta latas) |
+| `game-physics-jolt` | 64 passam (2 pulados) |
+| `game-destruction` | 510 passam |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, `worstC2Unconditioned 0,014651`, `worstC3 0,013626`, `fellThrough 0` (idêntico ao da T3.8b) |
+| `eslint` nos arquivos mudados | 0 erros |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos) |
+
+### Comandos
+```text
+cd packages/game-destruction-three && PIECE_SOLVER=jolt pnpm exec vitest run tests/fitted-pieces.test.ts
+pnpm -r typecheck
+(cd packages/game-destruction-three && pnpm test; PIECE_SOLVER=jolt pnpm test)
+(cd packages/game-physics-jolt && pnpm test); (cd packages/game-destruction && pnpm test)
+(cd packages/game-destruction-three && PIECE_SOLVER=jolt BOWL_SEEDS=64 pnpm exec vitest run tests/bowl-energy.test.ts)
+node tools/kit-audit/audit.mjs --check
+(cd packages/game-destruction-three && pnpm build) && node examples/test-room/build.mjs
+# uma rodada por processo, com timeout (drive.mjs com rounds=1 e OUT próprio):
+OUT=<dir> timeout 900 node specs/008-motor-fisico-jolt/decision/probes/drive.mjs <rotulo> "&solver=jolt&blastDebris=1" 1 blast|hammer   # D4 ligada
+OUT=<dir> timeout 900 node specs/008-motor-fisico-jolt/decision/probes/drive.mjs <rotulo> "&solver=jolt" 1 blast|hammer                   # D4 desligada
+```
+O "Target page, context or browser has been closed" da rodada anterior não voltou: com um processo por rodada as 20 rodadas fecharam sem erro de página (`errors` vazio nas 20).
+
+T3.8 continua sem ✅.
