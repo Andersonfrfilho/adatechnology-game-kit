@@ -151,6 +151,11 @@ export interface BuildOptions {
    * into the lintel, as the Visor de casas 3D drew it.
    */
   doors?: 'fitted' | 'visor'
+  /**
+   * `'fitted'` (default): the pane rests against the room side of the mullion and the transom, and the grille stands on the sill, so no piece of a window is inside another.
+   * `'visor'`: the pane in the middle of the mullion and the grille 3 cm into the sill, as the Visor de casas 3D drew them.
+   */
+  windows?: 'fitted' | 'visor'
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
 }
