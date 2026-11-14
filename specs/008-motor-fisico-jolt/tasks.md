@@ -170,7 +170,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 6 — Veículos
 > 🤖 Modelo: `sonnet` (T6.1 é 🧠 → `opus`; T6.5 → `haiku`)
 
-- **T6.1 🧠 Mapa do arcade para o veículo de rodas:** controles → `driveVehicle`; ajustes → curvas de atrito do pneu, curva de torque,
+- ✅ **T6.1 🧠 Mapa do arcade para o veículo de rodas** (feito em 2026-11-14, escopo ampliado pelo dono: batida que deforma, peças que soltam, toda a frota; `design/veiculos.md`, revisado por `architect` com 12 mudanças aplicadas; divisão 008/009 e D2, D3, D4, D9, D12, D13 decididas pelo dono em 2026-11-14; o plano de tasks da fase 6 está na seção 21 do desenho e entra aqui antes da T6.2): controles → `driveVehicle`; ajustes → curvas de atrito do pneu, curva de torque,
   marchas; carro criado já andando (rodas giradas e marcha); zonas de dano como filhos marcados. Em `design/veiculos.md`, revisado por
   `architect`. Mecânica? não · Aceite por comando? não · `opus`.
 - **T6.2 Implementar o mapa** em `game-vehicles-driving` atrás do contrato. Aceite: testes do pacote (os de andar e bater recalibrados com
