@@ -45,7 +45,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   escorrega 0,42 ± 0,05 m em 1 s; corpo escorregando volta a `sticking` ao parar.
   Mecânica? sim (depois de T1.1) · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` e
   `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/slope-friction.test.ts` · `sonnet`.
-- **T1.3 Medir de novo B6, B5, B1 e o bug 2.**
+- T1.3 ✅ **Medir de novo B6, B5, B1 e o bug 2.** Feito em 2026-11-13: B6 passa (mediana 3,05 ms, pior 3,87, despertar ≤ 7,39); B5 1,17×; bacia 128/128 (`evidence.md`).
   - B6: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/cascade.test.ts -t "case 5b"`, 3 rodadas, máquina com carga < 3.
     Rodar 9 vezes, aquecido (o teste já separa frio e aquecido, `c23470f6`). Aceite (dono, 2026-11-13, até a medição em AMD): mediana dos p99
     ≤ 4 ms, nenhum p99 acima de 5 ms, e quadro de despertar ≤ 10 ms em todas.
