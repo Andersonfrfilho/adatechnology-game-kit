@@ -23,6 +23,23 @@ describe('energyHeightOf', () => {
   })
 })
 
+describe('energyHeightOf with the engine\'s own inertia tensor', () => {
+  it('uses the tensor given: w = 3 about x with Ixx = 12 kg m^2 on a 2 kg body is 12 * 9 / 2 / 2g, not the box\'s', () => {
+    const height = energyHeightOf({ centreY: 0, velocity: [0, 0, 0], bodyAngularVelocity: [3, 0, 0], halfExtents: [1, 1, 1], mass: 2, inertia: [12, 12, 12, 0, 0, 0] })
+    expect(height).toBeCloseTo(54 / (2 * GRAVITY), 12)
+  })
+
+  it('counts the products of inertia: w = (1, 1, 0) with Ixx = Iyy = 2 and Ixy = -1 on a 1 kg body is (2 + 2 - 2) / 2g', () => {
+    const height = energyHeightOf({ centreY: 0, velocity: [0, 0, 0], bodyAngularVelocity: [1, 1, 0], halfExtents: [1, 1, 1], mass: 1, inertia: [2, 2, 2, -1, 0, 0] })
+    expect(height).toBeCloseTo(2 / (2 * GRAVITY), 12)
+  })
+
+  it('left out, it is the box\'s: the same 2 kg body without a tensor', () => {
+    const height = energyHeightOf({ centreY: 0, velocity: [0, 0, 0], bodyAngularVelocity: [3, 0, 0], halfExtents: [1, 1, 1], mass: 2 })
+    expect(height).toBeCloseTo(6 / (2 * GRAVITY), 12)
+  })
+})
+
 describe('islandsOf', () => {
   it('joins pieces whose spheres touch before or after the update, and leaves distant ones apart', () => {
     const before = [sample('a', { x: 0 }), sample('b', { x: 0.15 }), sample('c', { x: 5 }), sample('d', { x: 9 })]
@@ -31,6 +48,96 @@ describe('islandsOf', () => {
     expect(islands[0]).toBe(islands[1])
     expect(islands[2]).toBe(islands[3])
     expect(islands[0]).not.toBe(islands[2])
+  })
+})
+
+describe('islandsOf with the engine\'s contact graph (T3.8b)', () => {
+  it('joins by a chain of contacts, not by bounding spheres: near pieces that never touched are apart, and ids the engine gave that are no piece (the ground, a fixed wall) join nothing', () => {
+    const near = [sample('a', { x: 0, radius: 5 }), sample('b', { x: 1, radius: 5 }), sample('c', { x: 2, radius: 5 }), sample('d', { x: 3, radius: 5 })]
+    const islands = islandsOf(near, near, [['a', 'b'], ['b', 'c'], ['wall', 'd'], ['wall', 'a']])
+    expect(islands[0]).toBe(islands[1])
+    expect(islands[1]).toBe(islands[2])
+    expect(islands[3]).not.toBe(islands[0])
+  })
+
+  it('a contact that was added and gone inside the update still joins its two pieces: the pair is in the graph', () => {
+    const pieces = [sample('a', { x: 0 }), sample('b', { x: 40 })]
+    const islands = islandsOf(pieces, pieces, [['a', 'b']])
+    expect(islands[0]).toBe(islands[1])
+  })
+
+  it('with no graph the old rule stands: spheres that overlap are one island', () => {
+    const pieces = [sample('a', { x: 0, radius: 5 }), sample('b', { x: 1, radius: 5 })]
+    const islands = islandsOf(pieces, pieces)
+    expect(islands[0]).toBe(islands[1])
+  })
+})
+
+describe('a transfer between two touching pieces is not a launch (T3.8b)', () => {
+  // an 18 kg piece at rest is hit by a 36 kg piece: it gains 4.3 m of energy height, the 36 kg piece pays 2.15 m (18 * 4.3 = 36 * 2.15); a 50 kg pile, near by, creeps up 1 cm
+  const step = (touching: readonly (readonly [string, string])[] | undefined): ReturnType<EnergyRuler['result']> => {
+    const before = [sample('small', { mass: 18, x: 0, radius: 6 }), sample('big', { mass: 36, x: 1, radius: 6, energyHeight: 6, speed: 7.5, y: 1 }), sample('pile', { mass: 50, x: 2, radius: 6, speed: 0.01 })]
+    const after = [sample('small', { mass: 18, x: 0, radius: 6, energyHeight: 1 + 4.3, speed: 8.3 }), sample('big', { mass: 36, x: 1, radius: 6, energyHeight: 6 - 2.15, speed: 5 }), sample('pile', { mass: 50, x: 2, radius: 6, energyHeight: 1.01 })]
+    const ruler = new EnergyRuler()
+    ruler.step(before, after, 0.05, 'none', { touching })
+    return ruler.result()
+  }
+
+  it('with the contact graph the pair is its own island, the sum is 0, and nothing is a launch', () => {
+    const result = step([['small', 'big']])
+    expect(result.c2PiecesOver).toBe(0)
+    expect(result.c1Violations).toBe(1)
+    expect(result.c1Excess).toBeCloseTo(50 * 0.01 - 50 * 0.001, 9)
+  })
+
+  it('with bounding spheres everything is one island, the pile\'s centimetre breaks C1, and the transfer is counted as a launch of the 18 kg piece', () => {
+    const result = step(undefined)
+    expect(result.c2PiecesOver).toBe(1)
+  })
+})
+
+describe('energy the host gave a piece from outside is taken out of its island, not the whole update (T3.8b)', () => {
+  const pieces = (gain: number): [EnergySample[], EnergySample[]] => [
+    [sample('a', { mass: 18, x: 0 }), sample('b', { mass: 2, x: 0.1 }), sample('far', { mass: 5, x: 50, sleeping: true })],
+    [sample('a', { mass: 18, x: 0, energyHeight: 1 + 4 }), sample('b', { mass: 2, x: 0.1 }), sample('far', { mass: 5, x: 50, energyHeight: 1 + gain })],
+  ]
+
+  it('a gain of exactly what was given is no violation and no launch', () => {
+    const [before, after] = pieces(0)
+    const ruler = new EnergyRuler()
+    ruler.step(before, after, 0.05, 'none', { touching: [['a', 'b']], given: new Map([['a', 4]]) })
+    const result = ruler.result()
+    expect(result.c1Violations).toBe(0)
+    expect(result.c2PiecesOverUnconditioned).toBe(0)
+    expect(result.c3Lift).toBe(0)
+  })
+
+  it('what the engine made on top of what was given still counts: 4 m of 4.1 given leaves 0.1 m on 18 kg', () => {
+    const [before, after] = pieces(0)
+    const ruler = new EnergyRuler()
+    ruler.step(before, after, 0.05, 'none', { touching: [['a', 'b']], given: new Map([['a', 3.9]]) })
+    const result = ruler.result()
+    expect(result.c1Violations).toBe(1)
+    expect(result.c1Excess).toBeCloseTo(18 * 0.1 - 20 * 0.001, 9)
+    expect(result.c2PiecesOver).toBe(1)
+  })
+
+  it('the same gain with nothing given is a violation and a launch', () => {
+    const [before, after] = pieces(0)
+    const ruler = new EnergyRuler()
+    ruler.step(before, after, 0.05, 'none', { touching: [['a', 'b']] })
+    const result = ruler.result()
+    expect(result.c1Violations).toBe(1)
+    expect(result.c2PiecesOver).toBe(1)
+  })
+
+  it('a piece in another island that gains on its own is still counted in the same update', () => {
+    const [before, after] = pieces(0.2)
+    const ruler = new EnergyRuler()
+    ruler.step(before, after, 0.05, 'none', { touching: [['a', 'b']], given: new Map([['a', 4]]) })
+    const result = ruler.result()
+    expect(result.c1Violations).toBe(1)
+    expect(result.c2PiecesOver).toBe(1)
   })
 })
 

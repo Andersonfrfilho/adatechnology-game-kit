@@ -11,16 +11,25 @@ export const C2_LIMIT = 0.035
 
 export type Vec3 = readonly [number, number, number]
 
-/** Energy height of a body (DECISION-fable §2): y of the centre of mass + (|v|^2 + w.Iw/m) / 2g, with the inertia of its box; `bodyAngularVelocity` is w in the box's frame. */
-export const energyHeightOf = (body: { readonly centreY: number; readonly velocity: Vec3; readonly bodyAngularVelocity: Vec3; readonly halfExtents: Vec3 }): number => {
+/** The inertia tensor of a body about its centre of mass in its own frame (kg m^2): xx, yy, zz, xy, xz, yz. */
+export type InertiaTensor = readonly [number, number, number, number, number, number]
+
+/**
+ * Energy height of a body (DECISION-fable §2): y of the centre of mass + (|v|^2 + w.Iw/m) / 2g; `bodyAngularVelocity` is w in the body's frame. I is the inertia of the body's box,
+ * unless the engine's own tensor is given (`inertia`): a piece whose parts are thin plates at one end turns with an inertia that is not its box's.
+ */
+export const energyHeightOf = (body: { readonly centreY: number; readonly velocity: Vec3; readonly bodyAngularVelocity: Vec3; readonly halfExtents: Vec3; readonly mass?: number; readonly inertia?: InertiaTensor }): number => {
   const [hx, hy, hz] = body.halfExtents
   const [wx, wy, wz] = body.bodyAngularVelocity
-  const spin = ((hy * hy + hz * hz) * wx * wx + (hx * hx + hz * hz) * wy * wy + (hx * hx + hy * hy) * wz * wz) / 3
+  const tensor = body.inertia
+  const spin = tensor && body.mass
+    ? (tensor[0] * wx * wx + tensor[1] * wy * wy + tensor[2] * wz * wz + 2 * (tensor[3] * wx * wy + tensor[4] * wx * wz + tensor[5] * wy * wz)) / body.mass
+    : ((hy * hy + hz * hz) * wx * wx + (hx * hx + hz * hz) * wy * wy + (hx * hx + hy * hy) * wz * wz) / 3
   const [vx, vy, vz] = body.velocity
   return body.centreY + (vx * vx + vy * vy + vz * vz + spin) / (2 * GRAVITY)
 }
 
-/** One piece at one instant. `radius` is the bounding sphere that decides which pieces are touching (an island). `groundY` is the ground right below the centre, when known. */
+/** One piece at one instant. `radius` is the bounding sphere that decides which pieces are touching (an island) when no contact graph is given. `groundY` is the ground right below the centre, when known. */
 export type EnergySample = {
   readonly id: string
   readonly mass: number
@@ -68,18 +77,37 @@ type Episode = { base: number; gain: number; violated: boolean }
 
 const isAtRest = (sample: EnergySample): boolean => sample.speed < REST_SPEED && sample.spin < REST_SPIN
 
-/** Pieces whose bounding spheres overlap, before or after the update, are one island. Returns the island index of every piece. */
-export const islandsOf = (before: readonly EnergySample[], after: readonly EnergySample[]): number[] => {
+/** What a host adds to one update: the contact graph, and the energy height (m) its own rules gave each piece from outside (a delayed blast's shove, the kit's balancing push). */
+export type StepContext = { readonly touching?: readonly TouchingPair[]; readonly given?: ReadonlyMap<string, number> }
+
+/** Two pieces (their ids) the engine had touching at some point of the update: an edge of the contact graph. */
+export type TouchingPair = readonly [string, string]
+
+/**
+ * The island of every piece (an index). With `touching`, the contact graph the engine gave for the update (pairs touching when it began, and every contact added during it):
+ * two pieces are one island when a chain of contacts joins them, as the spec defines it. Without it, the fallback: pieces whose bounding spheres overlap, before or after the
+ * update (wider than the contact: one big island when a pile is near).
+ */
+export const islandsOf = (before: readonly EnergySample[], after: readonly EnergySample[], touching?: readonly TouchingPair[]): number[] => {
   const parent = before.map((_, index) => index)
   const find = (index: number): number => {
     let root = index
     while (parent[root] !== root) root = parent[root] as number
     return root
   }
-  const touching = (a: EnergySample, b: EnergySample): boolean => Math.hypot(a.centre[0] - b.centre[0], a.centre[1] - b.centre[1], a.centre[2] - b.centre[2]) <= a.radius + b.radius
+  if (touching) {
+    const indexOf = new Map(before.map((sample, index) => [sample.id, index] as const))
+    for (const [first, second] of touching) {
+      const a = indexOf.get(first)
+      const b = indexOf.get(second)
+      if (a !== undefined && b !== undefined) parent[find(a)] = find(b)
+    }
+    return before.map((_, index) => find(index))
+  }
+  const near = (a: EnergySample, b: EnergySample): boolean => Math.hypot(a.centre[0] - b.centre[0], a.centre[1] - b.centre[1], a.centre[2] - b.centre[2]) <= a.radius + b.radius
   for (let i = 0; i < before.length; i++) {
     for (let j = i + 1; j < before.length; j++) {
-      if (touching(before[i] as EnergySample, before[j] as EnergySample) || touching(after[i] as EnergySample, after[j] as EnergySample)) parent[find(i)] = find(j)
+      if (near(before[i] as EnergySample, before[j] as EnergySample) || near(after[i] as EnergySample, after[j] as EnergySample)) parent[find(i)] = find(j)
     }
   }
   return before.map((_, index) => find(index))
@@ -101,16 +129,22 @@ export class EnergyRuler {
   private readonly pieceGains = new Map<string, { conditioned: number; unconditioned: number }>()
   private readonly lift = new Map<string, number>()
 
-  /** One update: the samples of the same pieces, in the same order, before and after it. */
-  step(before: readonly EnergySample[], after: readonly EnergySample[], dt: number, input: OutsideInput = 'none'): void {
+  /**
+   * One update: the samples of the same pieces, in the same order, before and after it. `context.touching` is the engine's contact graph for it (`islandsOf`); `context.given` the energy
+   * height (m) the host's own rules added to a piece in it: the island's gain is counted without it, the piece's episode starts that much higher, and the sleep clock restarts. What
+   * the engine made on top of it still counts; `'energy'` forgives the whole update instead.
+   */
+  step(before: readonly EnergySample[], after: readonly EnergySample[], dt: number, input: OutsideInput = 'none', context: StepContext = {}): void {
     this.time += dt
-    if (input !== 'none') this.lastInputAt = this.time
-    const islands = islandsOf(before, after)
-    const violated = input === 'energy' ? new Set<number>() : this.measureC1(before, after, islands)
+    const given = context.given ?? new Map<string, number>()
+    if (input !== 'none' || given.size > 0) this.lastInputAt = this.time
+    const islands = islandsOf(before, after, context.touching)
+    const violated = input === 'energy' ? new Set<number>() : this.measureC1(before, after, islands, given)
     before.forEach((from, index) => {
       const to = after[index] as EnergySample
-      this.measureEpisode(from, to, violated.has(islands[index] as number), input === 'energy')
-      this.measureLift(from, to, dt, input === 'energy')
+      const added = given.get(from.id) ?? 0
+      this.measureEpisode(from, to, violated.has(islands[index] as number), input === 'energy', added)
+      this.measureLift(from, to, dt, input === 'energy' || added > 0)
       this.measureGround(to)
     })
     this.measureSleep(after, input)
@@ -145,12 +179,12 @@ export class EnergyRuler {
   }
 
   /** C1 per island over `m_island * 1 mm`; returns the islands that went over it. */
-  private measureC1(before: readonly EnergySample[], after: readonly EnergySample[], islands: readonly number[]): Set<number> {
+  private measureC1(before: readonly EnergySample[], after: readonly EnergySample[], islands: readonly number[], given: ReadonlyMap<string, number>): Set<number> {
     const gained = new Map<number, { energy: number; mass: number }>()
     before.forEach((from, index) => {
       const island = islands[index] as number
       const entry = gained.get(island) ?? { energy: 0, mass: 0 }
-      entry.energy += from.mass * ((after[index] as EnergySample).energyHeight - from.energyHeight)
+      entry.energy += from.mass * ((after[index] as EnergySample).energyHeight - from.energyHeight - (given.get(from.id) ?? 0))
       entry.mass += from.mass
       gained.set(island, entry)
     })
@@ -166,7 +200,7 @@ export class EnergyRuler {
   }
 
   /** C2: gain above the last rest, per episode; an update with outside energy closes the episode and absorbs what it gave. */
-  private measureEpisode(from: EnergySample, to: EnergySample, islandViolated: boolean, isOutsideEnergy: boolean): void {
+  private measureEpisode(from: EnergySample, to: EnergySample, islandViolated: boolean, isOutsideEnergy: boolean, added: number): void {
     const open = this.episodes.get(from.id)
     if (isOutsideEnergy || isAtRest(from) || !open) {
       if (open) this.closeEpisode(from.id, open)
@@ -174,6 +208,7 @@ export class EnergyRuler {
       if (isOutsideEnergy) return
     }
     const episode = this.episodes.get(from.id) as Episode
+    episode.base += added
     episode.gain = Math.max(episode.gain, to.energyHeight - episode.base)
     if (islandViolated) episode.violated = true
     this.c2GainUnconditioned = Math.max(this.c2GainUnconditioned, episode.gain)
