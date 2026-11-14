@@ -983,3 +983,76 @@ Por iterações: 8 it. → 976 de 2304 falham; 10 it. → 538; 20 it. → 228 (5
 | stack of 5 | 0.0069 | 20 | x0.5 | 64/64 | {} | -0.1063 | 0.0013 | 0.0007 | 0.51 | -0.0998 | 0 |
 | stack of 5 | 0.0069 | 20 | x1 | 64/64 | {} | -0.1063 | 0.0013 | 0.0007 | 0.51 | -0.0998 | 0 |
 | stack of 5 | 0.0069 | 20 | x1.5 | 64/64 | {} | -0.1063 | 0.0013 | 0.0007 | 0.51 | -0.0998 | 0 |
+
+## T3.6b — números para a decisão do dono (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `motor-fisico-jolt` (branch `feat/motor-fisico-jolt`), sobre `090e91a3`. Feito por `executor` (sonnet). **Nenhum código de produção mudou**: `git diff` em `src` vazio, `dist` de `game-physics` e `game-physics-jolt` refeitos do HEAD (o `dist` nunca foi sujo: tudo foi medido por `JOLT_ITERATIONS`, que `setup-physics.ts` já lê). Sondas temporárias (cópias dos testes com variáveis de ambiente, `zz-*`) rodaram e foram removidas; os arquivos ficam só na pasta de rascunho da sessão, fora do repositório. B5, B6 e a bacia rodaram com a máquina quieta (um processo de cada vez); as sondas de correção (pilhas, varredura, rastro da semente 61) rodaram em paralelo, sem relógio.
+
+### Achado de método: o B6 da T1.3 não media o mundo de produção
+`game-physics-jolt/tests/cascade-tail.test.ts` cria o mundo com `{ fixedStep: 1/60, maxBodies: 8192 }`: **passo de 60 Hz, padrão do Jolt de 10 passadas de velocidade, sem `KIT_WORLD`** (sem ouvinte de contato, `contactReportSpeed`, `maxContacts`, sono ou folga). O "PASSA" da T1.3 (mediana 3,05 ms, despertar 5–7 ms) é desse mundo, não do de 20 iterações a 120 Hz. Por isso o B6 aparece abaixo em **dois modos**, os dois com 9 invocações × 3 rodadas aquecidas = 27 valores (como a T1.3):
+- **Modo A (`B6_PROD=0`)**: o teste como está, só com `velocityIterations` posto por `JOLT_ITERATIONS` (a linha 10 reproduz a T1.3: mediana 2,96, pior 3,66, despertar 4,95–5,63 ms).
+- **Modo B (`B6_PROD=1`)**: `{ ...KIT_WORLD, velocityIterations }`, isto é, 120 Hz, 2 passos por quadro de 1/60, com ouvinte de contatos: o mundo que o jogo usa.
+
+### Parte 1 — custo e benefício de subir as passadas de velocidade
+
+Comandos (da pasta do pacote indicado; cada célula numa invocação própria do `vitest run`):
+- B6: cópia de `tests/cascade-tail.test.ts` em `tests/zz-b6-iter.test.ts` com `createWorld(process.env.B6_PROD === '1' ? { ...KIT_WORLD, velocityIterations: N } : { fixedStep: 1/60, maxBodies: 8192, velocityIterations: N })`; `B6_PROD={0,1} JOLT_ITERATIONS=N SPIKE_OUT=... npx vitest run tests/zz-b6-iter.test.ts` ×9 por célula. "p99" é o `all3s.p99` (3 s de quadros) de cada rodada aquecida; "despertar" é `firstFrameMs`.
+- B5: `BENCH=1 PIECE_SOLVER={own,jolt} JOLT_ITERATIONS=N npx vitest run tests/bench-pieces.test.ts` (game-destruction-three), 3 pares alternados (próprio, Jolt) por N; razão = Jolt/próprio da mediana e do p99 de `renderer.update`.
+- Bacia: `PIECE_SOLVER=jolt BOWL_SEEDS=64 JOLT_ITERATIONS=N npx vitest run tests/bowl-energy.test.ts` (um processo, 128 casos: dt 0,05 e 1/60).
+- Pilhas: `tests/stack-energy.ts` (a da varredura) em dt 1/60 e 1/144, 64 sementes, push-out de produção, mesmos critérios de `failuresOf` do `sweep-c6.test.ts`, `JOLT_ITERATIONS` por corrida.
+
+| Iterações | B6 modo A: p99 mediana / pior; despertar aquecido (mín–máx) | B6 modo B (produção): p99 mediana / pior; despertar (mín–máx) | B5 razão da mediana (3 pares) / do p99 | Bacia 64 sementes (128 casos) | Pilha 20:1, dt 1/60 | Pilha de 5, dt 1/60 |
+|---|---|---|---|---|---|---|
+| 10 (padrão do Jolt, só como referência do modo A) | 2,96 / 3,66 ms; 4,95–5,63 | — | — | 125/128 (T3.3) | 1/64 (T3.6) | 44/64 (T3.6) |
+| **20** (produção) | 3,04 / 3,35 ms; 5,07–5,95 | 5,68 / 7,21 ms; 10,21–11,27 | 0,92 / 0,79 / 0,90 → **0,90**; p99 **1,07** | **128/128**; pior C1 −0,0325, C2 sem condição 0,0240, C3 0,0121, dorme em 0,50 s | **33/64** (31 por C1, até +0,29 kg·m) | 64/64 |
+| 28 | 3,29 / 3,57 ms; 5,54–6,50 | 6,04 / 6,84 ms; 10,01–11,19 | 0,86 (0,77–0,87); p99 0,84 | 128/128; pior C1 −0,1115, C2 sem cond. 0,0138, **C3 0,0324 (limite 0,035)**, dorme em 0,50 s | 62/64 (pior C1 +0,039) | 64/64 |
+| **32** | 3,45 / 3,91 ms; 5,80–6,74 | 6,04 / 6,56 ms; 10,26–11,11 | 0,96 (0,93–1,02); p99 0,75 | **128/128**; pior C1 −0,1495, C2 sem cond. 0,0147, C3 0,0136, dorme em 0,85 s | **64/64** (pior C1 0,000) | 64/64 |
+| 40 | 3,63 / 3,68 ms; 6,55–7,46 | 6,21 / 6,84 ms; 10,88–12,04 | 1,05 (0,97–1,07); p99 1,15 | 128/128; pior C1 −0,1646, **C2 sem cond. 0,0341 (limite 0,035)**, C3 0,0082, dorme em 0,50 s | 64/64 | 64/64 |
+
+Orçamento: mediana do p99 ≤ 4 ms, nenhum > 5 ms, despertar ≤ 10 ms (condição 10); razão do B5 ≤ 1,25. Leitura:
+- **Modo A (o B6 como a T1.3 o mede): todas as quatro passam**, com o custo de passadas pequeno: 20 → 32 soma 0,41 ms ao p99 mediano e 0,7 ms ao despertar; 20 → 40 soma 0,6 e 1,2. Frio (primeira cena do processo): despertar 13,2–18,9 ms e p99 4,8–8,1 ms em todas, sem tendência por passadas.
+- **Modo B (mundo de produção): nenhuma passa, nem a de 20.** p99 mediano 5,7–6,2 ms (limite 4) e pior 6,6–7,2 ms (limite 5); despertar 10,0–12,0 ms (limite 10). A causa não são as passadas (20 → 40 muda o p99 em 0,5 ms e o despertar em 0,6 ms): é o passo de 120 Hz (dois passos por quadro: mediana de passo 1,05 ms contra 0,50 ms no modo A) mais o ouvinte de contatos. Isso já estava no `spec.md` §6.2 ("5,9–6,4 ms p99 e 11,7–13,1 ms de despertar com listener, no gate 0") e é independente da decisão de passadas; fica aqui como número que o "PASSA" da T1.3 não cobria.
+- B5: todas ≤ 1,25 (0,86–1,05 na mediana); 20, 28 e 32 ficam abaixo do solver próprio; 40 já empata. O ruído de um par é de ±0,1 (a T1.3 teve 1,06–1,23 no mesmo teste).
+- Bacia: 128/128 em todas as quatro. 28 e 40 têm uma margem fina (C3 0,0324 e C2 sem condição 0,0341 contra 0,035); 32 tem as melhores margens das quatro.
+
+### Varredura inteira no melhor candidato (32), uma execução
+`node tests/zz-sweep.mjs` (cópia de `sweep-c6.mjs` com `SWEEP_ITS=8,10,20,32`): **9216 corridas, 925 s (15 min 25 s)** com 8 processos (4 iterações em vez de 3, mais sondas em paralelo na primeira metade), 1763 falham.
+
+| Cenário (3072 corridas) | 8 it. | 10 it. | 20 it. | **32 it.** |
+|---|---|---|---|---|
+| bacia | 35/768 | 20/768 | 5/768 | **3/768** |
+| pilha 20:1 | 653/768 | 444/768 | 223/768 | **18/768** |
+| pilha de 5 | 288/768 | 74/768 | 0/768 | **0/768** |
+
+(falhas por cenário em todas as iterações: bacia 63, pilha 20:1 1338, pilha de 5 362.) A 20 ou mais iterações: 228 falhas a 20, **21 a 32**. Nenhuma corrida que passa a 20 falha a 32 (0 casos de "mais trabalho piorou"); 205 da pilha 20:1 e 2 da bacia que falhavam a 20 passam a 32.
+- **Célula de produção (dt 1/60, push-out ×1):** a 20: bacia 64/64, pilha 20:1 **33/64**, pilha de 5 64/64. A 32: **64/64, 64/64, 64/64**.
+- **Falhas que sobram a 32:** (1) pilha 20:1 em dt 1/144: 18 corridas (6 sementes × 3 push-outs, todas por C1, pior +0,068 kg·m ≈ 0,3 mm de altura de energia da pilha de 210 kg); a 40 it. dt 1/144 dá 62/64 (pilha 20:1) contra 58/64 a 32 (sondagem de 64 sementes, push-out ×1); (2) bacia, semente 61, dt 1/144, push-out ×0,5 e ×1,5 por C2 sem condição 0,29 e 0,33 m (parte 2); (3) bacia, semente 16, dt 1/60, push-out ×1,5, C3 0,041 m (limite 0,035; a 20 era 0,045).
+- 8 e 10 iterações continuam falhando como na T3.6 (C6 exige que passem; passadas não o resolvem, T3.3).
+- **C2 como a spec o define (§6, linha C2: lançamento só se a ilha também violou C1) nunca falha: 0 corridas de bacia em 9216 com C2 condicionado acima de 3,5 cm.** O `failuresOf` da varredura e o `expect.soft` da bacia somam a coluna "sem condição" (a régua antiga do gate 0), mais dura que a spec.
+
+### Parte 2 — bacia, semente 61, dt 1/144: o que lança a peça
+
+Reproduzido: `SEED=61 FPS=144 PIECE_SOLVER=jolt` numa cópia da bacia com um registro por quadro (posição, velocidade, giro, energia, pontos de contato do motor de cada peça): C1 −0,216, C2 com condição 0, **C2 sem condição 0,322 m** (idêntico à varredura, 0,3220). Peça: `plate2`.
+
+**O que se vê, quadro a quadro** (dt 1/144; os quadros repetidos 59/60, 65/66 são os que rodam 0 passos de 1/120):
+1. Fim do assentamento das placas (2 s, antes de a chapa de 142 kg cair): a 1/144, `plate2` e `plate3` ficam **de pé sobre a aresta de 4 cm, encostadas uma na outra** (eixo da espessura quase horizontal; centro a 0,15 e 0,13 m do chão; velocidade 0,004 m/s; não dormem). A 1/60 as mesmas duas placas já caíram deitadas e dormem (`plate2` y −0,048, `plate3` −0,083).
+2. A regra de equilíbrio do kit (`topple`, `engine-pieces.ts`) mede nas duas placas apoio estreito (`wx` 0,04 m, `wz` 0,2–0,3 m, `narrow` 1) e empurra. A 1/144 o giro nunca sai de ≈ 0,00–0,01 rad/s em 2,4 s, o relógio `steady` chega a 1,5 s (`STEADY_SECONDS`, depois do qual o empurro para para a peça poder dormir) e o empurro acaba com as duas ainda de pé; a 1/60 o giro cresce (−0,29, −0,44, −0,62, −1,0 rad/s) desde 0,4 s e a placa cai antes de a chapa chegar. É uma tenda de duas placas: o motor a sustenta e o kit desiste dela.
+3. A chapa (142 kg, 0,7 m/s) pousa sobre a tenda e para em y 0,25 (apoiada nas arestas das placas). Com o despertar do quadro a quadro a tenda cede (t 0,29–0,47 s depois do despertar). Soma de m·altura de energia, em kg·m: a ilha **perde** 0,11–0,16 por quadro nos quadros de 55 a 59, **perde 1,9 e 2,0 nos quadros 61 e 62**; a chapa perde 3,6 e 4,5 e `plate2` ganha 1,1 e 2,2 (e `plate3` 0,6 e 0,4). Nenhum quadro cria energia na ilha (por isso C1 −0,216).
+4. `plate2` é a ponta de alavanca da tenda: v_y vai de −1,14 a −2,50 m/s em 5 quadros (≈ 4 g, só possível com a chapa empurrando), giro de −4,9 a −7,9 rad/s, energia de altura de 0,211 a 0,478 m; no quadro 67 bate no chão (giro −14 rad/s) e perde tudo (−4,8 kg·m). Os contatos do motor de `plate2` ficam todos a 0–2 cm da superfície da bacia: ela não encosta em nada acima do chão, a chapa a empurra por uma ponta que o rastro de pontos de contato da própria placa não mostra (o ponto da outra peça é de `plate3`/chapa).
+
+**Hipótese de causa raiz (com as provas):**
+- **Não é o solver de velocidade.** Reproduz a 20, 28 e 40 iterações (C2 sem condição 0,322 / 0,255 / 0,322 a 1/144) e a 1/120 a 20, 28, 32 e 40 (0,282 / 0,286 / 0,282 / 0,304). Só a 32 e 1/144 passa, por acaso: a 32 e push-out ×0,5/×1,5 falha (0,29 / 0,33).
+- **Não é o passo alternado 0/1 de 1/144 contra 1/120.** Falha também em 1/120 (um passo por quadro), 1/90, 1/100, 1/145, 1/150 e 1/240 (0,28 / 0,34 / 0,25 / 0,34 / 0,35 / 0,29 m); passa em 1/60, 1/130, 1/143 e 1/200. Com `JOLT_STEP=144` (passo = quadro) passa (0,002) e com `JOLT_STEP=60` passa (0,0002); com `JOLT_STEP=240` falha (0,33). Sete de onze taxas de quadro testadas falham: a bacia a 1/60 e 0,05 s passa também por estar afinada nessas duas taxas.
+- **É a tenda de placas que o `topple` não derruba** (itens 1 e 2 acima, medidos nos dois lados), seguida de uma transferência de energia da chapa para a placa da ponta. Sem a chapa (`ZZ_NOSHEET`) a tenda ainda cai a 1/144 em t 1,0–1,2 s e `plate2` ganha 0,047 m (`plate3` perde 0,04); a 1/60 sem a chapa o ganho é 0,00002. Ou seja, o empurro por quadro (× dt) não acumula igual em taxas diferentes contra um contato que segura uma placa encostada, e a diferença decide se a tenda cai antes ou depois da chapa.
+- **Pelo critério da spec isso não é lançamento:** a energia da placa sai da chapa (a ilha só perde), C1 passa em todos os quadros.
+
+**Correção proposta (nada commitado, nenhuma testada):**
+1. **A mais barata e honesta:** alinhar a varredura e a bacia com o C2 da spec (só o C2 com condição reprova; a coluna sem condição vira informativa no relatório). A semente 61 deixa de falhar a 1/144 e a varredura a 32 fica com 3 falhas de bacia → 1 (semente 16, C3 a push-out ×1,5) mais as 18 da pilha 20:1 a 1/144. É mudança de teste, não de comportamento; custa afrouxar uma régua mais dura que a spec, então é decisão do dono.
+2. Se o dono quiser a tenda desfeita no motor: em `topple`, não parar o empurro por `STEADY_SECONDS` enquanto o apoio for estreito nos dois sentidos de uma peça de chapa (`wx` < `NARROW` · altura) e o ponto de apoio de cima for outra peça, ou aplicar o empurro por passo fixo e não por quadro (assim 1/144 e 1/60 dariam o mesmo empurro por passo). Risco conhecido: a T3.5 já mostrou que `PUSH_SPIN`, a trava de giro e `STEADY` mexem na bacia (semente 61 a 1/60 deu 0,27–0,31 m com a trava errada). Precisa de bacia 128/128, varredura e `pieces-edge` depois.
+3. Não resolvem: mais passadas (acima), push-out, `JOLT_STEP` (muda o resto do jogo).
+
+### Recomendação
+- **Subir `velocityIterations` de 20 para 32 em `KIT_WORLD`.** Custo medido pequeno (modo A: +0,4 ms de p99 mediano e +0,7 ms de despertar; modo B: +0,4 ms de p99, despertar igual dentro do ruído; B5 0,96× do solver próprio), a pilha 20:1 de produção passa de 33/64 para 64/64, a bacia fica 128/128 com margens melhores que a 20, e na varredura inteira caem as falhas de 228 (a 20) para 21 (a 32) sem nenhuma regressão. 28 não basta (pilha 20:1 62/64 a 1/60, C3 da bacia a 0,0324); 40 ganha só 4 sementes sobre 32 na pilha 20:1 a 1/144 (62/64 contra 58/64, sem fechar), encosta o C2 da bacia no limite (0,0341) e custa mais.
+- **O que 32 não fecha:** a pilha 20:1 a dt 1/144 (6 sementes, ≈ 0,3 mm de C1), 8 e 10 iterações no C6 (T3.3, fora de alcance por passadas) e a semente 61 a 1/144 por C2 sem condição (parte 2). O C6 só fecha com a decisão do dono sobre: (a) 32 como valor de produção; (b) a régua de C2 sem condição fora do reprovador; (c) 8 e 10 fora do C6 (ou a terceira via da T3.3).
+- **O B6 de produção (modo B) está fora do orçamento com qualquer número de passadas** (p99 ≈ 6 ms, despertar ≈ 10,5 ms): o "PASSA" da T1.3 vale para o mundo do teste, não para o de 120 Hz com ouvinte. O orçamento do C7 para a cascata de 500 precisa ser reaberto à parte, não é efeito de subir para 32.
+- Ruído: o B5 oscila ±0,1 entre pares (a mesma bancada deu 1,06–1,23× na T1.3); as tendências acima (custo de 20 → 40 de ≈ +0,5 a 1,2 ms) são maiores que o ruído, as diferenças de 20 para 28 não são.
