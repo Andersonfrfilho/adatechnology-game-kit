@@ -37,13 +37,18 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   o caso de um corpo em dois apoios com estados diferentes, a restituição só no contato novo, o que fica no listener (eventos, sensores,
   `touching`) e como o estado fica determinístico. Escrito em `design/atrito-por-corpo.md` e revisado por `architect` antes de implementar.
   Mecânica? não · Aceite por comando? não (revisão) · `opus`.
+> Já feito no spike (rodadas Q1–Q4, 2026-11-13): atrito por corpo (`62da7619`), `setShape` mantendo a massa (`36753ec0`), costura com 5× menos
+> alocação (`0fea652f`), adaptador dividido (`72bb3a5e`), carro como corpo (`213878dc`), casa reformada no lugar (`f3187454`). A T1.1 passa a
+> documentar e revisar o que já existe, e a T1.2 a conferir os testes listados contra o código atual, completando o que faltar.
+
 - **T1.2 Implementar o atrito por corpo** no adaptador, conforme T1.1. Teste novo em `jolt`: caixa μs 0,5 / μd 0,4 em 25° segura; μs 0,4 em 25°
   escorrega 0,42 ± 0,05 m em 1 s; corpo escorregando volta a `sticking` ao parar.
   Mecânica? sim (depois de T1.1) · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` e
   `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/slope-friction.test.ts` · `sonnet`.
 - **T1.3 Medir de novo B6, B5, B1 e o bug 2.**
   - B6: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/cascade.test.ts -t "case 5b"`, 3 rodadas, máquina com carga < 3.
-    Aceite: p99 ≤ 4 ms e quadro de despertar ≤ 10 ms nas 3.
+    Rodar 9 vezes, aquecido (o teste já separa frio e aquecido, `c23470f6`). Aceite (dono, 2026-11-13, até a medição em AMD): mediana dos p99
+    ≤ 4 ms, nenhum p99 acima de 5 ms, e quadro de despertar ≤ 10 ms em todas.
   - B5: `BENCH=1 pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/bench-pieces.test.ts`, alternando com
     `PIECE_SOLVER=own`, ×3. Registrar mediana, p90, p99 e a razão.
   - B1: `BOWL_SEEDS=64 JOLT_ITERATIONS=20 pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/bowl-energy.test.ts`.
@@ -55,8 +60,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   quem o cria, carga assíncrona, ordem do passo, camadas, `tag` de parte, contrato do chão (móvel fora do `groundAt`, topos como malha
   desenhada, chão sólido do bug 3), eventos de contato para o dano. Em `design/arquitetura.md`, revisado por `architect`.
   Mecânica? não · Aceite por comando? não · `opus`.
-- **T1.5 Dono aprova C1–C10 e responde as pendências do `spec.md` §11.** Sem isso, a fase 2 não começa.
-  Mecânica? não · Aceite por comando? não · dono.
+- T1.5 ✅ Dono aprovou C1–C10 e respondeu as pendências (`spec.md` §11). **Feito em 2026-11-13.**
 
 ## Fase 2 — Contrato e adaptador de produção
 > 🤖 Modelo: `sonnet` (T2.3, T2.6 e T2.7 → `haiku`)
@@ -86,6 +90,19 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 3 — Destroços
 > 🤖 Modelo: `sonnet` (T3.9 → `haiku`)
 
+- **T3.0a Todo o desenhado vira colisor no Jolt** (`CLAUDE.md` §12: nenhum colisor sem geometria, nenhuma geometria sem colisor). A casa
+  (malhas mescladas de parede, piso, telhado e lote, mais vigas, pilares, caibros, vergas e lajes), as malhas largas de móveis e alvos, e
+  qualquer objeto fixo que outro módulo desenha. Caixas orientadas por parte desenhada; malha triangular só onde caixa não serve. Teste novo
+  em `d3`: na cena da sala montada sem GPU, toda malha desenhada fixa tem um corpo no mundo (contagem e caixa batendo com a malha ± 1 cm).
+  Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` · `sonnet`.
+- **T3.0b Caixas do carro a partir das malhas desenhadas.** Método tipado novo no `game-vehicles-three` que devolve as caixas de cada peça
+  desenhada (sem retrovisor alargando a cabine), usado no lugar das caixas de dano cortadas (`dcfad8a2`). Teste: nenhuma caixa passa 1 cm da
+  malha da sua peça, na frota inteira.
+  Mecânica? não · Aceite por comando? sim: testes de `game-vehicles-three` e `d3` · `sonnet`.
+- **T3.0c Regras antigas desligadas no modo Jolt.** Com T3.0a e T3.0b prontos, o separar empurrando (`slideApart`/`applyPushes`), o levantar
+  na criação além da condição 6 e a recusa de movimento (`c6c42d87`) não agem quando o solver é o Jolt; o contato é do motor. Medir a bacia
+  (128/128) e a sala depois. Se a bacia cair, a causa vai para `evidence.md` e se corrige no colisor, não religando a regra.
+  Mecânica? não · Aceite por comando? sim: bacia `BOWL_SEEDS=64 JOLT_ITERATIONS=20 ...bowl-energy.test.ts` · `sonnet`.
 - **T3.1 Chão sólido (bug 3).** Height field mais volume sólido por baixo (caixas ou prismas convexos por ladrilho), sem fork. Teste: chão que
   sobe 5 cm por baixo de uma peça dormindo a deixa em cima, nunca dentro nem abaixo; a rede `fellThrough` fica em 0.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/engine-ground.test.ts tests/ground-settlement.test.ts` · `sonnet`.
@@ -107,6 +124,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - **T3.7 C8: determinismo** entre dois processos e salvar/carregar bit a bit, como teste de `d3` e `jolt`. Chromium e Bun à mão; Firefox à mão.
   Mecânica? sim · Aceite por comando? sim (Node) · `sonnet`.
 - **T3.8 Sala (à mão, `CLAUDE.md` §9):** blast e martelo, 5 rodadas cada, com a régua de T3.4, nos dois solvers. Aceite: C2 e C4 da sala.
+  Régua: só o ganho sem entrada de fora (C2), sono contado da última entrada de fora (C4); 0 peças acima de 3,5 cm, tudo dormindo em ≤ 3 s e
+  rede `fellThrough` em 0, nas 5 rodadas de cada. Falhou: parar e levar ao dono com os números (não ajustar regra do kit para passar).
   Mecânica? sim · Aceite por comando? não (sondas à mão) · `sonnet`.
 - **T3.9 Goldens dos destroços** (`plan.md` D4), num commit só, por último, comparados com o `origin/main` atual.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-floorplan-three test` · `haiku`.
@@ -199,15 +218,26 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 
 ## Prompt de execução
 
-A spec tem `[NEEDS CLARIFICATION]` aberto (`spec.md` §11). Pelo `model-economy.md` §4, ela não ganha prompt de execução até as respostas. Perguntas pendentes:
+Pendências do `spec.md` §11 respondidas pelo dono em 2026-11-13. Prompt para `/oh-my-claudecode:autopilot`:
 
-1. **Aprovar os critérios C1–C10 propostos** (`spec.md` §6) e os orçamentos de custo (`spec.md` §6.2). Dentro disso:
-   - (a) Sala no C4: 100% das peças dormindo 3 s após o último evento, em 5 de 5 rodadas. Serve?
-   - (b) Os números da tabela 6.2, medidos na faixa "Intel Core Ultra 9 275HX, Node". Servem como orçamento até a medição em AMD?
-   - (c) O transitório do C7 (mediana do bench ≤ 1,25× o solver próprio) falha hoje com 1,45×. Fica como gate até o corte da fase 8, ou só
-     registrado?
-2. **AMD e ARM:** em que máquina ou aparelho medir, e quando? ARM é exigido antes do merge ou só registrado? (Firefox roda nesta máquina.)
-
-Com as respostas, o prompt de `/oh-my-claudecode:autopilot` entra aqui. Ele vai declarar: trabalhar no worktree (`engine-jolt` nas fases 0–1,
-`motor-fisico-jolt` a partir da T2.1), nunca no `main`; commits só locais, nunca push, nunca `--no-verify`; nenhum teste de GPU ou navegador em
-commit; parar antes de qualquer `[NEEDS CLARIFICATION]`, de B6 reprovado na T1.3, da T2.1 sem a release no `main`, e antes de abrir a issue upstream.
+```text
+/oh-my-claudecode:autopilot Execute a spec specs/008-motor-fisico-jolt/ do adatechnology-game-kit (leia spec.md, plan.md e tasks.md
+antes de começar, e na pasta de rascunho item6-escalation/ GATE0-REPORT-jolt.md e Q4-REPORT-jolt.md). Uma task por vez, na ordem do tasks.md,
+começando pela primeira não marcada ✅ (T1.1).
+Siga o CLAUDE.md do repositório (SDK primeiro, §12 nada flutua e nenhum colisor sem geometria, §8 memória, §10 tudo tipado sem any).
+Ambiente: fases 1 no worktree adatechnology-game-kit-wt/engine-jolt (branch spike/engine-jolt); da T2.1 em diante no worktree novo
+motor-fisico-jolt criado da origin/main atualizada. Nunca a pasta principal, nunca a main. Commits só locais, um por task; nunca push,
+nunca PR, nunca --no-verify (hook falhou: corrigir a causa).
+Testes de GPU e de navegador não rodam em commit, pre-push nem CI: sondas da sala, perf.mjs, leak.mjs e browser-checks.mjs só à mão,
+conforme o tasks.md. Nos commits, só testes sem GPU.
+Modelos: Fase 1 → opus (T1.1 🧠 e T1.4 🧠 revisados por architect antes de implementar; T1.2 e T1.3 → executor model=sonnet) ·
+Fase 2 → executor model=sonnet (T2.3, T2.6, T2.7 → haiku) · Fase 3 → executor model=sonnet (T3.9 → haiku) ·
+Fase 4 → sonnet (T4.5 → haiku) · Fase 5 → sonnet (T5.3 🧠 → opus) · Fase 6 → sonnet (T6.1 🧠 → opus; T6.5 → haiku) ·
+Fase 7 → sonnet · Fase 8 → haiku (T8.1–T8.3) e sonnet (T8.4–T8.6) · revisão final → code-reviewer model=sonnet.
+Escalada: gate falhou 2x → sobe um nível (haiku→sonnet→opus) e registra em evidence.md.
+Cada task fecha com typecheck + testes sem GPU dos pacotes tocados + lint dos arquivos + kit-audit --check + commit isolado, com
+evidência (comando, números, data, máquina) em specs/008-motor-fisico-jolt/evidence.md. Nunca afrouxar tolerância, tirar teste ou
+desligar regra para passar.
+Pare e pergunte ao dono antes de: B6 reprovado na T1.3 (mediana dos p99 > 4 ms ou algum > 5 ms); T2.1 se release/casa-a-pa-2026-11-13
+ainda não estiver na origin/main; sala reprovada na T3.8; qualquer push, PR, merge ou deploy; qualquer decisão nova que mude C1–C10.
+```

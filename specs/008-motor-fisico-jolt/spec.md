@@ -106,7 +106,7 @@ O build próprio do wasm, que o gate 0 listava como saída para B6, **não** é 
 10. **Pico de despertar aceito:** o quadro em que uma ilha grande (≥ 300 corpos) acorda pode custar até **10 ms** (medido ≈ 9,5 ms), no máximo
     **um quadro por blast**. Fora desse quadro vale o orçamento do C7. Passar de 10 ms, ou dois quadros seguidos acima de 6 ms, reprova.
 
-### 5.1 Issue para o Jolt (texto pronto; abrir só com o ok do dono)
+### 5.1 Issue para o Jolt (aberta em 2026-11-13: https://github.com/jrouwe/JoltPhysics/issues/2220)
 
 ```text
 Title: Bodies with very small principal inertia get a 1 m sphere's inertia (0.4 * mass) instead of their own
@@ -133,7 +133,7 @@ Workaround we use: create the body with mass and inertia scaled by 1e6, then wri
 MotionProperties::SetInverseInertia / SetInverseMass right after creation.
 ```
 
-## 6. Critérios de aceite C1–C10 — **PROPOSTOS** (aguardam aprovação do dono)
+## 6. Critérios de aceite C1–C10 — **APROVADOS** pelo dono em 2026-11-13 (seção 11)
 
 Revisão dos C1–C8 aprovados em 2026-11-13 (`DECISION-fable.md` §2) para um motor, conforme `DECISION-ENGINE-fable.md` §4, com os valores reais
 do gate 0. **Altura de energia** de uma peça = `y do centro de massa + (|v|² + ω·Iω/m) / (2g)`; **ilha** = grupo de peças em contato.
@@ -184,7 +184,7 @@ A faixa AMD e as faixas mais fracas ganham a própria linha depois da medição 
 
 ## 7. Bugs conhecidos a corrigir
 
-1. **`setShape` perde a massa do kit.** Em corpo dinâmico, o Jolt recalcula a massa pela densidade da forma; a peça que quebra fica com a massa
+1. **(Corrigido em `36753ec0`.) `setShape` perde a massa do kit.** Em corpo dinâmico, o Jolt recalcula a massa pela densidade da forma; a peça que quebra fica com a massa
    errada. Correção no adaptador: reaplicar massa e inércia do kit (com o contorno da condição 7) depois de toda troca de forma.
 2. **Lata em pé numa rampa de 10° anda 2,14 cm em 2 s** (limite 2 cm, `rolling.test.ts`, "a standing can does not roll"). A regra antiga
    escondia isso amortecendo a velocidade linear. Corrigir a causa; não afrouxar o limite.
@@ -200,7 +200,7 @@ A faixa AMD e as faixas mais fracas ganham a própria linha depois da medição 
 - A rodada diária de GPU (`nightly-gpu.mjs`) com o Jolt.
 - A sonda do wasm no `leak.mjs` (hoje ele não enxerga a memória do wasm).
 - A sala em GPU real: as sondas rodaram em SwiftShader, 3 rodadas, sem determinismo.
-- O atrito por corpo (B6) ainda não existe; o p99 ≈ 3 ms é a medição com o listener inteiro desligado, inclusive os eventos de contato.
+- O atrito por corpo existe desde `62da7619`; o B6 com ele foi medido na rodada Q4 (seção 11.1), só nesta máquina e com carga.
 
 ## 9. Riscos
 
@@ -227,11 +227,39 @@ A faixa AMD e as faixas mais fracas ganham a própria linha depois da medição 
 - Simulação da multidão pelo motor.
 - Push, PR, merge e deploy: só com o ok do dono.
 
-## 11. Pendências do dono
+## 11. Decisões do dono (2026-11-13) — nenhuma pendência aberta
 
-- **[NEEDS CLARIFICATION] Aprovar C1–C10 (seção 6) e os orçamentos da seção 6.2.** Três pontos em aberto dentro disso:
-  (a) o alvo da sala no C4 (5 de 5 rodadas com 100% dormindo);
-  (b) os números da tabela 6.2 e a faixa de hardware nomeada;
-  (c) o transitório de 1,25× do C7, que falha hoje (1,45×): manter como gate até o corte, ou só registrar.
-- **[NEEDS CLARIFICATION] Onde e quando medir AMD e ARM** (máquina ou aparelho), e se ARM é exigido antes do merge ou só registrado. Firefox
-  roda nesta máquina.
+- **C1–C10 aprovados** (seção 6), com a régua abaixo. O dono escolheu "fechar a spec" depois da rodada Q4, levando a sala para o aceite da fase 3.
+- **Régua do C2 e do C4:** no C2 só conta a energia que a ilha ganhou **sem entrada de fora** (golpe, blast, chão que muda, rede); no C4 o sono
+  conta a partir da **última entrada de fora**.
+- **(a) Sala no C4:** todas as peças dormindo até 3 s depois da última entrada de fora, em 5 de 5 rodadas. É aceite da T3.8, não condição para
+  aprovar a spec.
+- **(b) Orçamentos da tabela 6.2** valem na faixa "Intel Core Ultra 9 275HX, Node" até a medição em AMD.
+- **(c) Transitório de 1,25× do C7 é gate** até o corte da fase 8 (barra a entrega). Na rodada Q4: 0,91×.
+- **B6 (cascata de 500, fora do quadro de despertar) até a medição em AMD:** mediana das rodadas ≤ 4 ms e nenhuma rodada acima de 5 ms. Na
+  rodada Q4: mediana 3,38 ms, 6 de 9 rodadas abaixo de 4 ms, máximo 4,64 ms.
+- **AMD e ARM: só registrar**, não exigidos antes do merge. Firefox roda nesta máquina e entra no C8.
+- **Issue do bug de inércia aberta com o ok do dono:** https://github.com/jrouwe/JoltPhysics/issues/2220. O contorno da condição 7 fica no
+  adaptador até haver versão corrigida.
+
+### 11.1 Rodada Q4 (2026-11-13): o que ela mostrou
+
+Relatório em `item6-escalation/Q4-REPORT-jolt.md`; commits `72bb3a5e` … `c6c42d87` em `spike/engine-jolt`.
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Sala blast ×3, peças acima de 3,5 cm (régua da spec) | 0 / 0 / 0 | 2 / 2 / 3 |
+| Sala martelo ×3, idem | 0 / 1 / 0 | 0 / 1 / 0 |
+| Sala, rodadas com tudo dormindo ≤ 3 s | 4 de 6 | 4 de 6 |
+| Rede `fellThrough` na sala | 0 | 215 numa rodada de blast |
+| Bacia, 20 iterações | 128/128 | 128/128 |
+| Bench 160+40, Jolt / próprio na mediana | 1,22× | 0,91× |
+| Bench, razão do p99 | 2,16× | 1,50× |
+| Pausas do coletor > 1 ms por 200 updates (Jolt) | 4–5 | 0–1 |
+| Bytes alocados pela costura por update | 1 112 810 | ≈ 208 000 |
+
+**Causa medida das falhas da sala:** o Jolt não tem a maior parte do que está desenhado. 329 das 351 malhas mescladas da casa (paredes, pisos,
+telhado), as peças estruturais sem malha própria (vigas, pilares, caibros, vergas, lajes) e malhas largas da mesa e do alvo ficam fora do mundo.
+As caixas do carro vêm das caixas de dano, alargadas pelos retrovisores. As regras antigas do kit (separar empurrando, levantar na criação, rede)
+tentam compensar e brigam entre si: a versão que segurou a sala (1–2 peças acima, 6/6 dormindo, rede 0) derrubou a bacia para 127/128, e a que
+devolveu a bacia trouxe a rede de volta. Por isso a sala passa a ser aceite da fase 3 (T3.0a–T3.0c, T3.1 e T3.8), depois de todo colisor existir.
