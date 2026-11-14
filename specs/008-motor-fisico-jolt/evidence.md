@@ -65,3 +65,27 @@ Notas:
   para dentro do teste.
 - B6 com frente de 150 m/s: p99 6,02–6,96 ms nas 9 (dominado pelo passo do despertar). Fora do aceite do dono, que fala da cascata sem frente;
   registrado para a decisão em AMD.
+
+## T1.4 — Registro de decisão de arquitetura (2026-11-13)
+
+- Documento: `design/arquitetura.md`.
+- Revisão: `architect` (opus), **APPROVE WITH CHANGES**, 11 mudanças obrigatórias, todas aplicadas:
+  1. dois modos (um sistema e laço do jogo) testados; C5 e áudio nos dois; C8 e sala em modo laço;
+  2. `createPhysicsLoop` recusa segundo laço por mundo; costuras recebem `SeamWorld` sem `step`/`dispose`/`saveState`/`restoreState`;
+  3. `dt` limitado no laço (`maxDt` 0,1 s);
+  4. o laço é dono do acumulador: `beforeStep(h)` por passo fixo (cinemáticos e personagem), `world.clearEvents()` por quadro;
+  5. fases recebem `PhysicsFrame` (`time`, `steps`, `alpha`);
+  6. `tag` −1 de verdade (hoje 0 e `uint32` cru), na T2.2;
+  7. escopo de `saveState`: mesmos corpos na mesma ordem; mais `ignored`, `rollers`, `stepCount`, mapas em ordem de chave;
+  8. `physics` explícito (`PhysicsLoop | SeamWorld | 'own'`), sem cair calado no solver próprio; helper de teste único; `setup-physics.ts` em
+     `game-floorplan-three`;
+  9. linhas de contato podem citar corpo removido (`has(id)`);
+  10. contrato ganha agora `jointAngles`, `wheelContacts`, junta `slider`, `KIT_WORLD` completo, `KIT_RAGDOLL_SOLVER`;
+  11. `dropped` contado depois do filtro de velocidade.
+  Sugestões registradas como decisões das tasks donas (§11 do documento): corpo do personagem (T4.1), saída do sensor de corpo removido (T7.3),
+  `QueryFilter.exclude`, chão sólido em um ou dois corpos (T3.1).
+
+## Fim da fase 1 (2026-11-13)
+
+- `pnpm -r typecheck`: saída 0, sem erros.
+- `node tools/kit-audit/audit.mjs --check`: 0 novos fora do SDK dono, 11 pendentes conhecidos.

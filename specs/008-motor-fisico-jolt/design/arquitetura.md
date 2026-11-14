@@ -1,6 +1,6 @@
 # Registro de decisão — arquitetura do motor físico (T1.4)
 
-Estado: proposto em 2026-11-13, revisado por `architect` (ver `evidence.md`, T1.4). Herdado por toda a fase 2 em diante.
+Estado: aceito em 2026-11-13, revisado por `architect` (APPROVE WITH CHANGES, as 11 mudanças aplicadas; ver `evidence.md`, T1.4). Herdado por toda a fase 2 em diante.
 Base: `spec.md` (C1–C10, condições 1–10), `plan.md` D1–D3, código do spike em `spike/engine-jolt` (`game-physics`, `game-physics-jolt`,
 `game-destruction-three/src/engine-*.ts`, `tests/setup-physics.ts`, `examples/test-room/build.mjs`), desenho `atrito-por-corpo.md`.
 
@@ -31,10 +31,16 @@ Regra: nenhum tipo do Jolt atravessa o contrato; nenhum pacote além do adaptado
 | Item | Decisão | Task |
 |---|---|---|
 | `penetration?` | deixa de ser opcional: a condição 6 (separar na criação) e o host dependem dele | T2.2 |
-| `saveState()` / `restoreState(data)` | entram no `PhysicsWorld` (hoje só no adaptador): C8 e salvar jogo | T2.2 |
-| `KIT_WORLD` | constante com os ajustes do mundo do kit (condições 1–3): passo 1/120, 20/2 iterações, sono 0,5 s a 0,08 m/s, slop 2 mm, push-out 2 mm, `slipSpeed` 2 cm/s. Jogo, sala e testes partem dela; o spike repete os números em três lugares | T2.2 |
-| `ContactBuffer.dropped` | quantos contatos passaram de `maxContacts` no passo: dano e som não somem calados; teste exige 0 nos cenários do C7 | T2.2 |
-| `PhysicsLoop` (seção 5) | helper pequeno: um laço por mundo, sistemas registrados por fase | T2.2 |
+| `saveState()` / `restoreState(data)` | entram no `PhysicsWorld` (hoje só no adaptador), com o escopo da seção 10 | T2.2 |
+| `KIT_WORLD` | constante com os ajustes do mundo do kit (condições 1–3): passo 1/120, 20/2 iterações, sono 0,5 s a 0,08 m/s, slop 2 mm, push-out 2 mm, `slipSpeed` 2 cm/s, `contactReportSpeed`, `maxContacts` e `maxBodies` (o spike usa 4096 nos testes e 8192 na sala: um valor só). Jogo, sala e testes partem dela | T2.2 |
+| `KIT_RAGDOLL_SOLVER` | constante dos 20/8 passes de ragdoll (condição 2) | T2.2 |
+| `ContactBuffer.dropped` | linhas que passaram de `maxContacts` no passo, contadas **depois** do filtro de velocidade (só o que viraria linha): dano e som não somem calados; teste exige 0 nos cenários do C7 | T2.2 |
+| `has(id)` | o corpo ainda existe (seção 9: linhas de contato podem citar corpo removido) | T2.2 |
+| `jointAngles(id)` | já prometido no comentário do contrato e só no adaptador: o ragdoll precisa (fase 5) | T2.2 |
+| `wheelContacts(id)` | só no adaptador hoje: a regra de sono do carro precisa (fase 6) | T2.2 |
+| junta `slider` | gaveta e corrediça (`spec.md` §3); `JointDesc` só tem fixa, dobradiça e swing-twist | T2.2 (tipo), T4.4 (uso) |
+| `tag` = −1 de verdade | hoje filho sem `tag` vira `0` (`shapes.ts:42`), forma simples devolve 0, e a leitura devolve o `uint32` cru (−1 viraria 4294967295, `queries.ts:30`): `child.tag ?? -1`, −1 nas formas simples, leitura com `\| 0` | T2.2 |
+| `PhysicsLoop` e `SeamWorld` (seção 5) | um laço por mundo, sistemas registrados por fase; as costuras recebem `SeamWorld = Omit<PhysicsWorld, 'step' \| 'dispose' \| 'saveState' \| 'restoreState'>` | T2.2 |
 | controlador de personagem | `createCharacter(desc)` com tipos do contrato (hoje `JoltCharacter` só no adaptador) | T4.1 |
 | `ignorePair` | fica até a T3.0c (regras antigas desligadas no modo Jolt); se nada mais usar, sai na T8.1 | T3.0c / T8.1 |
 
@@ -52,11 +58,15 @@ Regra: nenhum tipo do Jolt atravessa o contrato; nenhum pacote além do adaptado
 - **Entrega explícita**: cada costura recebe o mundo (ou o laço, seção 5) por opção na criação — `createDestructionRenderer(THREE, { physics })`,
   e o mesmo para veículos, jogador, multidão e interativos. Nenhum sistema cria mundo próprio (condição 4: um mundo ≈ 19,7 MB do heap fixo de
   128 MB).
-- **Sem troca no meio do jogo** (C10): a escolha do solver é feita uma vez, na criação. Até a T3.10, costura sem `physics` usa o solver
-  próprio (`plan.md` D3); a chave `PIECE_SOLVER`/`?solver=own` decide se o boot da sala e o `setup-physics.ts` passam o mundo. Ambas saem na T8.1.
-- **Testes**: `tests/setup-physics.ts` de cada pacote cria o motor uma vez por arquivo e entrega `physicsWorld()` (um mundo por teste, criado a
-  partir de `KIT_WORLD` e das variáveis do C6: `JOLT_STEP`, `JOLT_ITERATIONS`, `JOLT_PUSHOUT`, `JOLT_SLOP`); `afterEach` descarta todos. O teto
-  de quatro mundos vivos do spike fica como trava de segurança do heap.
+- **Sem troca no meio do jogo** (C10): a escolha do solver é feita uma vez, na criação, e é **explícita**: `physics: PhysicsLoop |
+  SeamWorld | 'own'`. Deixar a opção de fora dá erro (não cai calado no solver próprio). Até a T3.10, `'own'` é o padrão de produção pedido
+  pelo `plan.md` D3, escrito por quem cria; a chave `PIECE_SOLVER`/`?solver=own` decide o que o boot da sala e o helper de teste passam.
+  Ambas saem na T8.1. Todos os pontos de criação (69 `createDestructionRenderer(` e 10 `new PieceSystem(` nos testes de
+  `game-destruction-three`, os de `game-floorplan-three`, `room.ts:450`) passam por um helper de teste, para mudar num lugar só.
+- **Testes**: `tests/setup-physics.ts` de cada pacote cria o motor uma vez por arquivo e entrega `physicsWorld()` (um mundo **novo a cada
+  chamada**, a partir de `KIT_WORLD` e das variáveis do C6: `JOLT_STEP`, `JOLT_ITERATIONS`, `JOLT_PUSHOUT`, `JOLT_SLOP`) e
+  `physicsLoop()` (modo do jogo, seção 5); `afterEach` descarta todos. O teto de quatro mundos vivos do spike fica como trava do heap.
+  `game-floorplan-three` ganha o seu `setup-physics.ts` (os goldens do D4 dependem dele).
 
 ## 4. Carga assíncrona
 
@@ -69,37 +79,65 @@ Regra: nenhum tipo do Jolt atravessa o contrato; nenhum pacote além do adaptado
 ## 5. Ordem do passo: um laço por mundo
 
 No spike cada `PieceSystem` chama `world.step(dt)` dentro do próprio `update`. Com o mundo compartilhado isso daria um passo por sistema por
-quadro. **Decisão:** só o laço chama `world.step`.
+quadro, e cada `step` limpa `contacts`, `sensorEvents` e `brokenJoints` (`world.ts:589-591`): um sistema apagaria os eventos do outro.
+**Decisão:** só o laço dá o passo, e o laço é dono do acumulador.
 
 ```ts
+interface PhysicsFrame {
+  /** Tempo do laço (s), somado por passo fixo. */
+  readonly time: number
+  /** Passos fixos que este quadro rodou (0 num quadro curto: as fases `contacts` e `rules` não agem sobre eventos velhos). */
+  readonly steps: number
+  /** Fração do passo que sobrou, para interpolar poses no desenho. */
+  readonly alpha: number
+}
 interface PhysicsPhase {
-  /** Antes do passo: alvos cinemáticos, entradas, forças. */
-  beforeStep?(dt: number): void
-  /** Depois do passo: eventos de contato, sensores, juntas quebradas, regras do §12. */
-  afterStep?(dt: number): void
+  /** Antes de cada passo fixo `h`: alvos cinemáticos, controladores, entradas, forças. */
+  beforeStep?(h: number, frame: PhysicsFrame): void
+  /** Uma vez por quadro, depois dos passos: eventos de contato do quadro inteiro, sensores, juntas quebradas, regras do §12. */
+  afterSteps?(dt: number, frame: PhysicsFrame): void
 }
 interface PhysicsLoop {
-  readonly world: PhysicsWorld
+  readonly world: SeamWorld
+  readonly frame: PhysicsFrame
   add(phase: PhysicsPhase, order: PhaseOrder): () => void
+  /** `dt` limitado a `maxDt` (0,1 s): uma aba que volta depois de 5 s não roda 600 passos num quadro. */
   step(dt: number): void
 }
 ```
 
-`PhaseOrder`, na ordem em que roda em cada quadro:
+- `createPhysicsLoop(world)` recusa um segundo laço para o mesmo mundo (`WeakSet`): dois sistemas que recebam o mesmo mundo não dão dois
+  passos. As costuras recebem `SeamWorld` (sem `step`, `dispose`, `saveState`, `restoreState`): o TypeScript garante que nenhuma chama o passo.
+- O laço chama, por passo fixo `h` (1/120): todos os `beforeStep(h)` → `world.step(h)`. O mundo deixa de limpar eventos a cada `step`; o laço
+  chama `world.clearEvents()` no começo do quadro, e `contacts`, `sensorEvents`, `brokenJoints` cobrem o quadro inteiro.
+- **Cinemáticos e personagens andam por passo fixo**: `moveKinematic(id, alvo, h)` e o `CharacterVirtual` rodam em `beforeStep(h)`, nunca com
+  o `dt` do quadro (a 144 Hz, com passo de 1/120, alguns quadros rodam 0 passos e outros 1: o alvo com `dt` do quadro faria o agente passar ou
+  ficar e empurrar destroço com a velocidade errada).
+- As fases recebem o `dt` já limitado; em modo laço, nenhuma costura limita o seu (hoje `renderer.update` limita a 0,1 por conta própria,
+  `renderer.ts:914`; passa a ler o do laço).
 
-1. `crowd` — `game-crowd` simula; as cápsulas dos agentes recebem o alvo cinemático (`moveKinematic`).
-2. `actors` — controladores de personagem, veículos (`driveVehicle`), itens segurados (cinemáticos), portas empurradas.
-3. **`world.step(dt)`** — passos fixos de 1/120 dentro (o atrito por corpo e o rolamento rodam por passo fixo, `atrito-por-corpo.md` §6).
-4. `contacts` — linhas de `contacts` viram `hit` do `game-destruction` (dano, fratura) e som; `sensorEvents` (fumaça); `brokenJoints`
-   (interativos).
-5. `rules` — regras do §12 que continuam nossas: `onBrokenChecked`, tombar em apoio estreito, orçamento de peças acordadas (`maxAwake`),
-   cratera e chão que muda, contador `fellThrough`.
-6. desenho — fora do laço: o quadro lê as poses e desenha.
+`PhaseOrder`, na ordem em que roda:
 
-Dentro da mesma fase, a ordem é a de registro (determinística). **Caso de um sistema só** (testes, demos): uma costura que recebeu um
-`PhysicsWorld` em vez de um `PhysicsLoop` cria o próprio laço e o chama no seu `update(dt)`, como o spike faz hoje; o jogo, que passa o laço,
-chama `loop.step(dt)` uma vez por quadro e os `update` das costuras só desenham e aplicam regras. Assim os ~400 testes de
-`game-destruction-three` que chamam `renderer.update(dt)` continuam valendo.
+1. `crowd` (por passo) — as cápsulas dos agentes recebem o alvo cinemático do `game-crowd`. A simulação do `game-crowd` roda no seu ritmo,
+   antes do quadro.
+2. `actors` (por passo) — controladores de personagem, veículos (`driveVehicle`), itens segurados (cinemáticos), portas empurradas.
+3. **passos fixos** — `world.step(h)` (atrito por corpo e rolamento por passo fixo, `atrito-por-corpo.md` §6).
+4. `contacts` (por quadro) — linhas de `contacts` viram `hit` do `game-destruction` (dano, fratura) e som; `sensorEvents` (fumaça);
+   `brokenJoints` (interativos).
+5. `rules` (por quadro) — regras do §12 que continuam nossas: `onBrokenChecked`, tombar em apoio estreito, orçamento de peças acordadas
+   (`maxAwake`), cratera e chão que muda, contador `fellThrough`.
+6. desenho — fora do laço, com `alpha` para interpolar.
+
+Dentro da mesma fase, a ordem é a de registro. Isso só é determinístico se o carregamento também for (casas e áreas carregadas sempre na mesma
+ordem): o jogo carrega em ordem fixa.
+
+**Dois modos, os dois testados.** Uma costura que recebeu `SeamWorld` cria o próprio laço e o chama no seu `update(dt)` (modo de um sistema,
+como o spike: sincroniza, passo, lê de volta, regras). Uma costura que recebeu `PhysicsLoop` só registra fases; o jogo chama
+`loop.step(dt)` e depois os `update(dt)` das costuras, que desenham. A ordem muda entre os dois (hoje `renderer.update` roda `checkBroken`,
+`settlement` e `drainQueue` antes do passo e fragmentos e chão depois, `renderer.ts:912-933`). Por isso:
+- `setup-physics.ts` dá também `tick(dt)` em modo laço (`loop.step(dt)` e então `renderer.update(dt)`);
+- no mínimo os testes do C5 e o `audio.test.ts` rodam nos dois modos;
+- o C8 (determinismo) e a sala medem o modo laço, que é o do jogo.
 
 ## 6. Camadas (`Layer`) por sistema
 
@@ -119,7 +157,8 @@ A tabela é `LAYER_PAIRS`, sem mudança. Consultas rodam numa camada própria do
 
 - `user` (int32) é o índice do host na sua tabela (peça, objeto, agente, veículo); volta em consultas e contatos.
 - `tag` (int32) de um filho de composto é o **índice da parte** no objeto do host (`DestructibleImpl` parts, zona de dano do veículo); `-1`
-  quando o corpo não é composto ou o filho não tem parte. O par `(user, tag)` identifica a parte atingida; o espaço de `tag` é por `user`.
+  quando o corpo não é composto ou o filho não tem parte. Hoje o adaptador grava 0 nesses casos e devolve o `uint32` cru: corrigido na T2.2
+  (seção 2.2). O par `(user, tag)` identifica a parte atingida; o espaço de `tag` é por `user`.
 - Zonas de dano do veículo são filhos marcados do composto do chassi (`spec.md` §4).
 
 ## 8. Contrato do chão
@@ -139,7 +178,13 @@ A tabela é `LAYER_PAIRS`, sem mudança. Consultas rodam numa camada própria do
   (`(1 + e)·v / (1/m₁ + 1/m₂)`, sem rotação). Contato mantido não gera linha.
 - A costura dos destroços (T7.4) converte as linhas em `hit` do `game-destruction` na fase `contacts`, **sem alocar por quadro** (tabelas
   reaproveitadas); o som de batida lê as mesmas linhas (goldens de áudio mudam no fim da fase 3).
-- `contacts` vale para a chamada inteira de `step` (todos os passos fixos dela); `dropped` conta o que passou do teto.
+- `contacts` vale para o quadro inteiro (o laço limpa no começo do quadro, seção 5); `dropped` conta o que passou do teto, depois do filtro de
+  velocidade.
+- **Corpo removido durante a fase `contacts`**: um contato vira golpe, o golpe fratura e a fratura chama `removeBody`/`setShape`; as linhas
+  seguintes ainda citam o corpo. Regra: linhas podem citar corpo removido; quem lê confere com `has(id)` antes de usar; mudanças de corpo feitas
+  na fase `contacts` valem a partir do próximo passo.
+- **Esmagamento contínuo não gera linha**: laje que assenta sobre uma peça que já tocava não é contato novo. Carga parada continua no caminho de
+  carga do `game-destruction`, não no evento de contato.
 - Despertar em massa (condição 10): o quadro em que uma ilha de ≥ 300 corpos acorda pode custar até 10 ms, uma vez por blast; reprova
   passar de 10 ms ou dois quadros seguidos acima de 6 ms.
 
@@ -147,11 +192,27 @@ A tabela é `LAYER_PAIRS`, sem mudança. Consultas rodam numa camada própria do
 
 - Todo objeto do Jolt criado pelo adaptador é destruído por ele (`J.destroy`, `RemoveBody`/`DestroyBody`, `Release`); o mundo é descartado
   pelo dono; o listener de assert é destruído com o mundo. C9: heap no mesmo byte após ciclos (`heap.test.ts`).
-- Uma thread, passo fixo, nenhuma aleatoriedade no adaptador, nenhum resultado dependente da ordem de `Map`. `saveState` leva os bytes do
-  Jolt mais o estado do adaptador (atrito, parceiros, `accumulator`). C8 em Node, Chromium, Bun e Firefox.
+- Uma thread, passo fixo, nenhuma aleatoriedade no adaptador, nenhum resultado dependente da ordem de `Map`. C8 em Node, Chromium, Bun e
+  Firefox, medido em modo laço.
+- **Escopo de `saveState`/`restoreState`:** o `SaveState` do Jolt não registra **quais** corpos, juntas e veículos existem; só o estado de um
+  mundo com os mesmos corpos, criados na mesma ordem. Logo: restaurar exige que o host recrie os mesmos corpos na mesma ordem; salvar o jogo é
+  a descrição do host mais os bytes do mundo. Os bytes levam também o que o adaptador guarda e muda o contato: atrito, parceiros, `accumulator`,
+  pares ignorados (`ignored`, enquanto existir), rolamento (`rollers`) e `stepCount`, e os mapas são gravados em ordem de chave (para salvar →
+  restaurar → salvar dar os mesmos bytes). O teste bit a bit do C8 compara poses, ou a ida e volta salvar → restaurar → salvar, nunca bytes
+  depois de qualquer restauração.
 
-## 11. Consequências
+## 11. Decisões deixadas para a task dona
 
-- T2.2 implementa 2.2, 2.3 (gancho global), `KIT_WORLD` e o `PhysicsLoop`; T2.5 cobre o descarte.
+- **Corpo do personagem** (T4.1): o `CharacterVirtual` não tem corpo; destroço o atravessa e não gera linha de contato. Decidir se ganha corpo
+  interno (`mInnerBodyShape`) na camada `character`.
+- **Saída do sensor quando o corpo some**: hoje `OnContactRemoved` procura a entrada depois do `forget`, e a fumaça não avisa a saída (T7.3).
+- **`QueryFilter.exclude`** para o atirador ou o carro pularem o próprio corpo (T6/T7.2).
+- **Chão sólido num corpo só ou em dois** (T3.1): não verificado se o Jolt aceita height field dentro de composto estático. Se não, o chão são
+  dois corpos e a troca no lugar vale só para o height field.
+
+## 12. Consequências
+
+- T2.2 implementa 2.2, 2.3 (gancho global), `KIT_WORLD`, `PhysicsLoop`/`SeamWorld`, `clearEvents`, a opção explícita e o helper de teste;
+  T2.5 cobre o descarte.
 - Toda costura nova (fases 3–7) recebe `physics` por opção e se registra numa fase do laço; nenhuma chama `world.step`.
 - O teste de boot da sala (C10) confere que o mundo existe antes do primeiro sistema e que só há um.

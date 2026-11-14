@@ -56,7 +56,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - Bug 2: `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/rolling.test.ts`. Registrar o deslize da lata.
   - **B6 reprovado: parar e levar ao dono** (o build próprio do wasm está descartado; não há saída prevista).
   Mecânica? sim · Aceite por comando? sim · `sonnet`.
-- **T1.4 🧠 Registro de decisão de arquitetura.** Contrato final de `game-physics` (o que entra e o que sai do spike), um mundo por jogo e
+- T1.4 ✅ 🧠 **Registro de decisão de arquitetura.** Feito em 2026-11-13 (`design/arquitetura.md`, revisado por `architect`). Contrato final de `game-physics` (o que entra e o que sai do spike), um mundo por jogo e
   quem o cria, carga assíncrona, ordem do passo, camadas, `tag` de parte, contrato do chão (móvel fora do `groundAt`, topos como malha
   desenhada, chão sólido do bug 3), eventos de contato para o dano. Em `design/arquitetura.md`, revisado por `architect`.
   Mecânica? não · Aceite por comando? não · `opus`.
