@@ -24,6 +24,16 @@ export interface EnginePieceOptions {
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
 }
 
+/** A piece's box seen from above (`EnginePieces.footprint`). */
+interface Footprint {
+  readonly corners: Float64Array
+  readonly normals: Float64Array
+  minX: number
+  maxX: number
+  minZ: number
+  maxZ: number
+}
+
 /** Side of a tile of ground (m); how far around an awake piece tiles are laid (m). */
 const TILE = 2
 const TILE_MARGIN = 0.5
@@ -138,6 +148,7 @@ export class EnginePieces {
   readonly statics: EngineStatics
   private readonly ignored = new Set<string>()
   private readonly knocks = new Map<string, number>()
+  private readonly footprintOut: Footprint = { corners: new Float64Array(16), normals: new Float64Array(6), minX: 0, maxX: 0, minZ: 0, maxZ: 0 }
   private readonly pose = new Float64Array(7)
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
@@ -232,7 +243,7 @@ export class EnginePieces {
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
     for (const b of list) this.sync(b, dt, h)
-    this.layGround(list)
+    this.layGround(list, dt)
     this.keepApart(apart)
     for (const b of list) {
       const link = this.links.get(b)
@@ -635,22 +646,80 @@ export class EnginePieces {
     return this.v.copy(b.centerV).applyQuaternion(b.root.quaternion).add(b.root.position)
   }
 
-  /** Lays the tiles of ground under and around what is awake, and lays again those whose region changed (only if their ground did change). */
-  private layGround(list: readonly PieceBody[]): void {
+  /**
+   * Lays the tiles of ground under and around what is awake, and lays again those whose region changed (only if their ground did change). "Around" is the piece's own footprint
+   * (its box as it stands now, seen from above) plus `TILE_MARGIN` and how far its tips swing in this update: a 45 m wire that fell lies on 23 tiles, not under the 625 of the
+   * circle around it (a 480 ms update in the room).
+   */
+  private layGround(list: readonly PieceBody[], dt: number): void {
     for (const b of list) {
       if (b.sleeping) continue
       const c = this.centre(b)
-      const h = b.halfExtents
-      const r = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2]) + TILE_MARGIN
-      for (let ix = Math.floor((c.x - r) / TILE); ix <= Math.floor((c.x + r) / TILE); ix++) {
-        for (let iz = Math.floor((c.z - r) / TILE); iz <= Math.floor((c.z + r) / TILE); iz++) {
+      const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
+      const margin = TILE_MARGIN + Math.hypot(b.angularVelocity[0] as number, b.angularVelocity[1] as number, b.angularVelocity[2] as number) * reach * Math.max(dt, 1 / 60)
+      const foot = this.footprint(b, c)
+      for (let ix = Math.floor((foot.minX - margin) / TILE); ix <= Math.floor((foot.maxX + margin) / TILE); ix++) {
+        for (let iz = Math.floor((foot.minZ - margin) / TILE); iz <= Math.floor((foot.maxZ + margin) / TILE); iz++) {
           const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
           const tile = this.tiles.get(key)
           if (tile && !tile.dirty) continue
+          if (!this.footprintReaches(foot, ix * TILE, iz * TILE, margin)) continue
           this.layTile(key, ix, iz, tile)
         }
       }
     }
+  }
+
+  /** The piece's box seen from above: its 8 corners in x and z, the box around them, and the directions its edges run (the axes that tell a tile apart from it). */
+  private footprint(b: PieceBody, c: THREE_NS.Vector3): Footprint {
+    const q = b.root.quaternion
+    const h = b.halfExtents
+    const out = this.footprintOut
+    let k = 0
+    out.minX = out.minZ = Infinity
+    out.maxX = out.maxZ = -Infinity
+    for (let corner = 0; corner < 8; corner++) {
+      this.w.set(corner & 1 ? h[0] : -h[0], corner & 2 ? h[1] : -h[1], corner & 4 ? h[2] : -h[2]).applyQuaternion(q)
+      const x = c.x + this.w.x
+      const z = c.z + this.w.z
+      out.corners[k++] = x
+      out.corners[k++] = z
+      out.minX = Math.min(out.minX, x)
+      out.maxX = Math.max(out.maxX, x)
+      out.minZ = Math.min(out.minZ, z)
+      out.maxZ = Math.max(out.maxZ, z)
+    }
+    // the three box axes seen from above: a tile and the footprint are apart when a gap shows along the x axis, the z axis or the normal of one of these
+    for (let axis = 0; axis < 3; axis++) {
+      this.w.set(axis === 0 ? 1 : 0, axis === 1 ? 1 : 0, axis === 2 ? 1 : 0).applyQuaternion(q)
+      const length = Math.hypot(this.w.x, this.w.z)
+      out.normals[axis * 2] = length > 1e-6 ? -this.w.z / length : 0
+      out.normals[axis * 2 + 1] = length > 1e-6 ? this.w.x / length : 0
+    }
+    return out
+  }
+
+  /** Whether the tile at (x0, z0) is within `margin` of the footprint (a gap wider than that along any axis rules it out; narrower, it is laid). */
+  private footprintReaches(foot: Footprint, x0: number, z0: number, margin: number): boolean {
+    const gap = (nx: number, nz: number): number => {
+      if (nx === 0 && nz === 0) return 0
+      let low = Infinity, high = -Infinity
+      for (let i = 0; i < 16; i += 2) {
+        const p = foot.corners[i]! * nx + foot.corners[i + 1]! * nz
+        low = Math.min(low, p)
+        high = Math.max(high, p)
+      }
+      let tileLow = Infinity, tileHigh = -Infinity
+      for (let i = 0; i < 4; i++) {
+        const p = (x0 + (i & 1 ? TILE : 0)) * nx + (z0 + (i & 2 ? TILE : 0)) * nz
+        tileLow = Math.min(tileLow, p)
+        tileHigh = Math.max(tileHigh, p)
+      }
+      return Math.max(tileLow - high, low - tileHigh)
+    }
+    if (gap(1, 0) > margin || gap(0, 1) > margin) return false
+    for (let axis = 0; axis < 3; axis++) if (gap(foot.normals[axis * 2]!, foot.normals[axis * 2 + 1]!) > margin) return false
+    return true
   }
 
   /**

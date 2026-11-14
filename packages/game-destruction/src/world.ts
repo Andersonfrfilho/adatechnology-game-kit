@@ -2342,20 +2342,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return bounds
   }
 
-  /** `hostedSolids` per hosted body, with what they were made from: the same list back until the spec, its state, its place or a part's pose changes. */
-  const implSolids = new WeakMap<ImplRT, { readonly spec: DestructibleSpec; readonly state: Readonly<ObjectState>; readonly key: number[]; readonly solids: readonly HostedSolid[] }>()
+  /** `hostedSolids` per hosted body, with what they were made from: the same list back until the spec, its place, a part's pose or (drawn pieces) the pieces change. */
+  const implSolids = new WeakMap<ImplRT, { readonly spec: DestructibleSpec; readonly state: Readonly<ObjectState>; readonly key: number[]; readonly solids: readonly HostedSolid[]; readonly pieces?: ReturnType<NonNullable<DestructibleImpl['colliders']>> }>()
+  const sameImplPlace = (k: readonly number[], im: ImplRT): boolean => {
+    const p = im.position, q = im.rotation
+    return k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === im.posesVersion
+  }
   const implSolidsOf = (im: ImplRT): readonly HostedSolid[] => {
     const spec = im.impl.describe()
     const state = im.impl.state()
-    const p = im.position, q = im.rotation
     const known = implSolids.get(im)
-    if (known && known.spec === spec && known.state === state && im.impl.collidersPending?.() !== true) {
-      const k = known.key
-      if (k[0] === p[0] && k[1] === p[1] && k[2] === p[2] && k[3] === q[0] && k[4] === q[1] && k[5] === q[2] && k[6] === q[3] && k[7] === im.posesVersion) return known.solids
-    }
+    if (known && known.spec === spec && known.state === state && im.impl.collidersPending?.() !== true && sameImplPlace(known.key, im)) return known.solids
     const pieces = im.impl.colliders?.()
+    // a body whose state changes every update (a car burning) draws the same pieces: the same list back, so an engine does not measure hundreds of parts again each update
+    if (pieces && known?.pieces && known.spec === spec && sameImplPlace(known.key, im) && pieces.length === known.pieces.length && pieces.every((piece, i) => piece === known.pieces?.[i])) {
+      implSolids.set(im, { ...known, state })
+      return known.solids
+    }
     const solids = pieces ? hostedPieces(pieces, im) : hostedSolids(spec, state, im)
-    implSolids.set(im, { spec, state, key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], im.posesVersion], solids })
+    const p = im.position, q = im.rotation
+    implSolids.set(im, { spec, state, key: [p[0], p[1], p[2], q[0], q[1], q[2], q[3], im.posesVersion], solids, ...(pieces ? { pieces } : {}) })
     return solids
   }
 

@@ -252,4 +252,23 @@ describe.skipIf(!IS_JOLT)('solid ground in the engine', () => {
     expect(p.world.bodyCount).toBe(bodies)
     expect(Math.abs(p.world.memoryInUse() - bytes)).toBeLessThan(4096)
   })
+
+  it('a 45 m wire lying across the ground lays the tiles under it, not the circle around it (a 480 ms update in the room), and a thin piece still has ground under every point of it (T3.8b)', () => {
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.02, 0)
+    // 22.7 m each way along a diagonal of the ground, 4 cm thick, lying
+    root.rotation.set(0, Math.PI / 4, 0)
+    const piece = system.create('wire', root, [22.675, 0.02, 0.02], new THREE.Vector3(), 12)
+    system.update(1 / 60)
+    const tiles = (system as unknown as { engine: { tiles: Map<number, unknown> } }).engine.tiles
+    // the circle around it is 24 x 24 = 576+ tiles; the diagonal strip is about 2 x 23
+    expect(tiles.size).toBeLessThan(80)
+    expect(tiles.size).toBeGreaterThan(20)
+    // every point along the wire is over a laid tile (the key is column and row of a 2 m tile)
+    const laid = (x: number, z: number): boolean => tiles.has((Math.floor(x / 2) + 32768) * 65536 + (Math.floor(z / 2) + 32768))
+    const along = Math.SQRT1_2
+    for (let d = -22.6; d <= 22.6; d += 0.5) expect(laid(d * along, -d * along) || laid(d * along, d * along)).toBe(true)
+    expect(piece.mass).toBe(12)
+  })
 })
