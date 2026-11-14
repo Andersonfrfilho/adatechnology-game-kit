@@ -84,7 +84,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - **T2.6 ✅ Teste da inércia pequena**: cilindro r 5 mm, meia-altura 9,5 mm, 4 g → inversa da inércia ≈ (6,9e6; 2,0e7; 6,9e6), não 625.
   Texto da issue (spec §5.1) em `docs/`. **Abrir a issue no GitHub só com o ok do dono.**
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` · `haiku`.
-- **T2.7 Skills** `game-physics` e `game-physics-jolt` (o que cada um faz, quem é dono de quê) e entrada em `tools/kit-audit/rules.json`.
+- **T2.7 ✅ Skills** `game-physics` e `game-physics-jolt` (o que cada um faz, quem é dono de quê) e entrada em `tools/kit-audit/rules.json`.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
 
 ## Fase 3 — Destroços

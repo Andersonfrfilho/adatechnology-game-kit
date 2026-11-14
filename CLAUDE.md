@@ -31,7 +31,7 @@ de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin
 
 | Domínio | Pacotes |
 |---|---|
-| Contratos e base | `game-contracts` (destruição, tiro, `TestableModule`), `game-runtime` (quadro), `game-render-three` (luzes, shaders), `game-shapes`/`-three` (formas, liberar memória), `game-kit-defaults` (preset) |
+| Contratos e base | `game-contracts` (destruição, tiro, `TestableModule`), `game-runtime` (quadro), `game-physics` (corpos rígidos, laço de passo fixo), `game-physics-jolt` (adaptador Jolt), `game-render-three` (luzes, shaders), `game-shapes`/`-three` (formas, liberar memória), `game-kit-defaults` (preset) |
 | Casas e construção | `game-floorplan` (planta, lote), `-structure` (sistemas construtivos, caminho de carga, validador, instalações), `-three` (desenho, paredes, telhado), `-residential`, `-commercial`, `-rural`, `-post-apocalyptic`, `-interactables` (planta → objetos e redes) |
 | Materiais e destruição | `game-destruction` (materiais, fratura, vergalhão, solo), `game-destruction-three` (furos, lascas, partículas), `game-vfx`/`-three` (explosão, fogo) |
 | Terreno, clima, plantas | `game-terrain`/`-three`, `game-weather`/`-three`, `game-vegetation`/`-species`/`-three` |

@@ -294,3 +294,37 @@ Adicionado: `docs/jolt-issue-small-inertia.md`, com o texto da §5.1 do `spec.md
 | `pnpm --filter @adatechnology/game-physics-jolt test` | 14 arquivos, 55/55 passam |
 | `eslint` | nenhum TypeScript alterado nesta task; sem comando de lint sobre arquivo sem mudança |
 | `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |
+
+## T2.7 — Skills de game-physics e game-physics-jolt, e kit-audit (2026-11-13)
+
+Criados, em português com identificadores em inglês, seguindo as referências de `kit-base`:
+
+- `.claude/skills/kit-base/references/game-physics.md`: contrato, quem é dono de quê (tipos, `KIT_WORLD`, `createPhysicsLoop`, `PhysicsLoop`, `SeamWorld`), fases do laço (`crowd`, `actors` antes do passo; `contacts`, `rules` depois), e como a costura recebe `physics: PhysicsLoop | SeamWorld | 'own'` (resolvedor em `game-destruction-three/src/physics-option.ts`).
+- `.claude/skills/kit-base/references/game-physics-jolt.md`: adaptador, único que importa `jolt-physics`; boot com um motor, um mundo e um laço (`createJoltEngine` async, `createWorld` síncrono); destruição de todo objeto Jolt; inércia pequena (`INERTIA_SCALE`, issue em `docs/jolt-issue-small-inertia.md`); atrito por corpo (`sticking | sliding`, sem callback por contato); rolamento (`BodyDesc.rolling`, `setRolling`); massa do kit em `setShape`. Links para `specs/008-motor-fisico-jolt/design/arquitetura.md` e `atrito-por-corpo.md`.
+
+Entradas:
+
+- `.claude/skills/kit-base/SKILL.md`: duas linhas na tabela de referências, antes de `game-render-three`, no mesmo formato das outras.
+- `CLAUDE.md`, seção "Mapa do SDK", linha "Contratos e base": `game-physics` e `game-physics-jolt`.
+- `tools/kit-audit/rules.json`: domínio `physics` com owners `game-physics` e `game-physics-jolt` e palavras `jolt`, `rigidbody`, `fisica`. Sem findings novos (ver abaixo).
+
+**Divergências do pedido, registradas:**
+
+1. `.claude/skills/game-kit/SKILL.md` **não tem tabela de pacotes**: só o mapa de decisão e os exemplos. A linha "Contratos e base" existe só no `CLAUDE.md` da raiz, então ela foi atualizada lá e o `game-kit` não recebeu linha.
+2. `rules.json` **não expressa a regra de import** (só diz quem desenha cada tipo de peça, por palavra). A regra "`jolt-physics` só é importado por `game-physics-jolt`" não é verificada por nenhum comando. Fica registrada aqui e na referência `game-physics-jolt.md`, sem check novo (fora do escopo desta task).
+3. Os owners do domínio `physics` não estão em nenhum domínio de peça existente (carro, parede, mesa...): criei um domínio próprio em vez de colocar os pacotes de física em owners de outro domínio, o que mudaria o significado daquele domínio.
+
+Verificação do `physics` no kit-audit: a palavra `fisica` ou `jolt` perto de primitiva desenhada fora dos owners teria virado finding novo; não virou (rodado abaixo).
+
+| Gate | Resultado |
+|---|---|
+| `node tools/kit-audit/audit.mjs --check` | exit 0; 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |
+| `rules.json` lido como JSON | válido |
+| `pnpm check:packages` | `check:packages ok (64 packages)`, exit 0 |
+| `pnpm -r typecheck` | exit 0 (ver "Fim da fase 2") |
+
+## Fim da fase 2 (2026-11-13)
+
+Máquina: Intel Core Ultra 9 275HX. `pnpm -r typecheck` na raiz do worktree `motor-fisico-jolt`, em `feat/motor-fisico-jolt`, depois de T2.6 e T2.7 (ainda sem o commit de T2.7): **exit 0**, todos os pacotes e ferramentas (75 projetos com `typecheck: Done`), sem erro. Tempo: 31 s de relógio.
+
+Fase 2 fechada: T2.1 a T2.7 com evidência neste arquivo. T2.6 não mudou código de teste: o teste de inércia pequena já existia (`inertia.test.ts`) e a issue foi documentada em `docs/jolt-issue-small-inertia.md`.
