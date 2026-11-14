@@ -51,6 +51,8 @@ export interface Material {
   readonly frictionStatic: number
   readonly frictionDynamic: number
   readonly restitution: number
+  /** The surface's rolling resistance (C_rr): a round body rolling on it takes the larger of its own (`Rolling.coefficient`) and the surface's, as the softer surface decides. */
+  readonly rolling?: number
 }
 
 export const DEFAULT_MATERIAL: Material = { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0.2 }

@@ -41,8 +41,8 @@ const slope = (degrees: number, material = 'wood', can = false) => {
   scene.add(board)
   board.updateMatrixWorld(true)
   renderer.bind('board', board, { parts: { body: boardMesh } })
-  const boardPiece = renderer.makePiece('board')
-  boardPiece.sleeping = true
+  // under Jolt a drawn fixed thing is a static body already; a sleeping piece is a dynamic board that the thing on it wakes and drops flat
+  if (!IS_JOLT) renderer.makePiece('board').sleeping = true
   world.addObject('box', [partState('body', material, { mass: can ? 0.45 : 2 })])
   const boxMesh = can ? new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.11, 24)) : new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.2))
   // the can lies on its side, its axis along z: across the slope, so it can roll down it
@@ -50,14 +50,14 @@ const slope = (degrees: number, material = 'wood', can = false) => {
   const box = new THREE.Group()
   box.add(boxMesh)
   box.rotation.z = -angle
-  // on the surface, over the middle of the board
-  const lift = 0.025 + (can ? 0.035 : 0.05) + 0.002
+  // on the surface, over the middle of the board, set down touching it (0.5 mm: a 2 mm fall lands at 0.2 m/s on a 25 degree slope, where steel's grip is 0.49 against tan 25 = 0.466, so the landing alone decides whether it holds)
+  const lift = 0.025 + (can ? 0.035 : 0.05) + 0.0005
   box.position.set(Math.sin(angle) * lift, board.position.y + Math.cos(angle) * lift, 0)
   scene.add(box)
   box.updateMatrixWorld(true)
   renderer.bind('box', box, { parts: { body: boxMesh } })
   const piece = renderer.makePiece('box')
-  return { renderer, box, boardPiece, piece }
+  return { renderer, box, piece }
 }
 
 describe.each(MODES)('a thing on a tilted top (%s)', (mode) => {

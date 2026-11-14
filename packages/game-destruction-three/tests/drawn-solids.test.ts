@@ -86,6 +86,7 @@ const wideTable = (s: Stage) => {
 }
 
 /** A floor slab, a roof sheet lying askew and a round column, in one mesh as a house joins its parts. */
+// the roof sheet is fibre cement: a drawn fixed part grips by its own material (wood on a 17 degree wooden sheet slides on, dynamic 0.3 against tan 17 = 0.31), and the test is about where the piece lands
 const joinedHouse = (s: Stage) => {
   const { geometry, ranges } = merge([
     placed(new THREE.BoxGeometry(3, 0.2, 3), [0, 0.1, 10]),
@@ -97,7 +98,7 @@ const joinedHouse = (s: Stage) => {
   root.add(mesh)
   s.scene.add(root)
   root.updateMatrixWorld(true)
-  s.world.addObject('joined', [partState('slab', 'concrete', { mass: 200 }), partState('sheet', 'wood', { mass: 20 }), partState('column', 'concrete', { mass: 50 })])
+  s.world.addObject('joined', [partState('slab', 'concrete', { mass: 200 }), partState('sheet', 'concrete', { mass: 20 }), partState('column', 'concrete', { mass: 50 })])
   s.renderer.bind('joined', root, { parts: { slab: { mesh, range: ranges[0]! }, sheet: { mesh, range: ranges[1]! }, column: { mesh, range: ranges[2]! } } })
   return { mesh, ranges }
 }

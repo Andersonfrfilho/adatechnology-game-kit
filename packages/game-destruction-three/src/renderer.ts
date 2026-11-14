@@ -1158,9 +1158,11 @@ class Renderer implements DestructionRenderer {
     if (!b) return solids
     for (const pv of b.parts.values()) {
       if (pv.gone !== 'none') continue
+      const material = this.world.part(id, pv.id)?.material ?? pv.material
+      const surface = material ? surfaceOf(material, this.world.materials.get(material)) : undefined
       pv.meshes.forEach((mv, k) => {
         if (mv.loose || !this.visuals.shown(mv)) return
-        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(solid)
+        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(surface ? { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling ?? 0 } } : solid)
       })
     }
     return solids

@@ -99,11 +99,21 @@ export const updateFriction = (w: JoltWorld): void => {
   foot.ground = null
 }
 
+/** The largest rolling resistance among the surfaces a rolling body touches so far, and the world it is read in. */
+const surface = { world: null as JoltWorld | null, rolling: 0 }
+
+const softest = (_count: number, other: number): void => {
+  const o = surface.world?.bodies.get(other)
+  if (o?.material.rolling !== undefined && o.material.rolling > surface.rolling) surface.rolling = o.material.rolling
+}
+
 /**
  * Rolling resistance, after each fixed step: a body that touches something loses the angular impulse C_rr m g r dt against its spin, through its own inverse
- * inertia, and never more than stops the spin. Its contact's friction carries the change to its speed, as a rolling body's does.
+ * inertia, and never more than stops the spin. C_rr is the larger of the body's own and of what it touches (`Material.rolling`: the softer surface decides). Its
+ * contact's friction carries the change to its speed, as a rolling body's does.
  */
 export const roll = (w: JoltWorld, dt: number): void => {
+  surface.world = w
   for (const [key, rolling] of w.rollers) {
     const e = w.bodies.get(key)
     if (!e || e.invMass === 0 || !e.body.IsActive() || !w.touching(key as BodyId)) continue
@@ -116,8 +126,11 @@ export const roll = (w: JoltWorld, dt: number): void => {
     const iw = e.body.GetInverseInertia().Multiply3x3(w.v2)
     const per = (iw.GetX() * wx + iw.GetY() * wy + iw.GetZ() * wz) / spin
     if (per <= 0) continue
-    const impulse = Math.min((rolling.coefficient * w.gravity * rolling.radius * dt) / e.invMass, spin / per)
+    surface.rolling = rolling.coefficient
+    w.partners.get(key)?.forEach(softest)
+    const impulse = Math.min((surface.rolling * w.gravity * rolling.radius * dt) / e.invMass, spin / per)
     w.v2.Set((-wx / spin) * impulse, (-wy / spin) * impulse, (-wz / spin) * impulse)
     w.bi.AddAngularImpulse(e.id, w.v2)
   }
+  surface.world = null
 }

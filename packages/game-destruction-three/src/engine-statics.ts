@@ -15,6 +15,8 @@ export interface StaticSolid {
   readonly mesh?: StaticMesh
   /** Names the part across lists (a part measured again is the same part): without it, the place in the list. */
   readonly key?: string
+  /** The Coulomb friction and rolling resistance of the part's material; without it the body has the ground's. */
+  readonly friction?: { readonly static: number; readonly dynamic: number; readonly rolling: number }
 }
 
 interface Held {
@@ -170,7 +172,11 @@ export class EngineStatics {
   }
 
   private describe(solid: StaticSolid): BodyDesc {
-    return { shape: shapeOf(solid), motion: 'static', position: solid.mesh ? [0, 0, 0] : solid.center, ...(solid.mesh ? {} : { rotation: solid.rotation }), material: this.material, user: 0 }
+    return { shape: shapeOf(solid), motion: 'static', position: solid.mesh ? [0, 0, 0] : solid.center, ...(solid.mesh ? {} : { rotation: solid.rotation }), material: this.materialOf(solid), user: 0 }
+  }
+
+  private materialOf(solid: StaticSolid): Material {
+    return solid.friction ? { ...this.material, frictionStatic: solid.friction.static, frictionDynamic: solid.friction.dynamic, rolling: solid.friction.rolling } : this.material
   }
 
   private release(h: Held, wake: boolean): void {

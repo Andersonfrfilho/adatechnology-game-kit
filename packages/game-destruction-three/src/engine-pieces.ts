@@ -8,7 +8,7 @@ import { sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
-import type { PartBox, PieceBody } from './internal'
+import type { PartBox, PieceBody, PieceRound } from './internal'
 import type { PieceSweepHit } from './pieces'
 
 export type { StaticSolid } from './engine-statics'
@@ -31,9 +31,9 @@ const TILE_MARGIN = 0.5
 const TILE_KEY = 65536
 const TILE_KEY_ORIGIN = 32768
 const MU_STATIC = 0.7
-const MU_DYNAMIC = 0.6
-const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0 }
 const ROLLING_RESISTANCE = 0.015
+const MU_DYNAMIC = 0.6
+const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE }
 const STILL_SPEED = 0.12
 const STILL_SPIN = 0.45
 const HARD_LANDING = 3
@@ -48,7 +48,16 @@ const GROUND_CHECKS = 16
 const GROUND_DROP = 0.02
 /** The kit's balancing rule: a support narrower than this share of the height of the centre of mass is a balancing act, and the push (rad/s^2 per metre) that ends it. */
 const NARROW = 0.3
+/** Radii of a round piece's profile that differ by less than this (m) are one cylinder; the segments of the ring each profile point makes in the engine's shape. */
+const TAPER_MIN = 0.002
+const RING_SEGMENTS = 16
 const TOPPLE = 3
+/** How many times the point-mass bound on gravity's hold the push is: the engine held a 5 cm leg against 2.5 times it, and tipped it at 3 (measured). */
+const HOLD_MARGIN = 4
+/** A support whose middle is closer than this (m) to the centre of mass is under it: which way it goes over is then not read from the contact points, which flicker. */
+const SIDE_DEAD = 0.01
+/** The strong push stops once it has turned a column this fast (rad/s): a 5 cm leg tips from it; measured on the bowl, 0.1 made 4.2 cm in seed 57 and 1 made 31 cm in seed 61, 0.3 is clean in all 128. */
+const PUSH_SPIN = 0.3
 /** Corners this close (m) to the lowest one are what it stands on. */
 const STEADY_TURN = 0.1
 const STEADY_SECONDS = 1.5
@@ -82,6 +91,8 @@ interface Link {
   readonly before: Vec3
   beforeVy: number
   stepped: boolean
+  /** The side (x, z) the balancing push goes to: kept while the support is centred under the piece, where the contact points only flicker either way (`topple`). */
+  readonly side: [number, number]
 }
 
 interface Tile {
@@ -267,10 +278,34 @@ export class EnginePieces {
     }
   }
 
+  /** A round piece whose radius changes along its axis (a bottle, a cup): its shape is not the straight cylinder at its widest, or it would roll straight. */
+  private isTapered(round: PieceRound): boolean {
+    const radii = round.profile?.map(([, radius]) => radius) ?? []
+    return radii.length > 1 && Math.max(...radii) - Math.min(...radii) > TAPER_MIN
+  }
+
+  /** The hull of the rings of its profile (`PieceRound.profile`), in the piece's frame: a cone, or a bottle, rolls round its narrow end. */
+  private ringPoints(round: PieceRound): number[] {
+    const points: number[] = []
+    const across = [0, 1, 2].filter((axis) => axis !== round.axis)
+    for (const [at, radius] of round.profile ?? []) {
+      for (let k = 0; k < RING_SEGMENTS; k++) {
+        const angle = (2 * Math.PI * k) / RING_SEGMENTS
+        const point = [0, 0, 0]
+        point[round.axis] = at
+        point[across[0]!] = Math.cos(angle) * radius
+        point[across[1]!] = Math.sin(angle) * radius
+        points.push(point[0]!, point[1]!, point[2]!)
+      }
+    }
+    return points
+  }
+
   private shapeOf(b: PieceBody): ShapeDesc {
     const round = b.round
     if (round) {
       if (round.kind === 'sphere') return { kind: 'sphere', radius: round.radius }
+      if (this.isTapered(round)) return { kind: 'compound', children: [{ shape: { kind: 'convex', points: this.ringPoints(round) }, position: [0, 0, 0] }] }
       // a cylinder stands along its own y: turned onto x or z
       const rotation: Quat = round.axis === 0 ? [0, 0, Math.SQRT1_2, Math.SQRT1_2] : round.axis === 2 ? [Math.SQRT1_2, 0, 0, Math.SQRT1_2] : [0, 0, 0, 1]
       return { kind: 'compound', children: [{ shape: { kind: 'cylinder', halfHeight: b.halfExtents[round.axis], radius: round.radius }, position: [0, 0, 0], rotation }] }
@@ -351,6 +386,7 @@ export class EnginePieces {
       frictionDynamic: b.friction?.dynamic ?? MU_DYNAMIC,
       // a box lands dead (the kit never bounced them); a round piece bounces by its material
       restitution: b.round ? (b.restitution ?? SLAM_BOUNCE) : 0,
+      rolling: b.friction?.rolling ?? ROLLING_RESISTANCE,
     }
   }
 
@@ -390,7 +426,7 @@ export class EnginePieces {
       })
       link = {
         id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity],
-        held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false,
+        held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1],
       }
       this.links.set(b, link)
       this.byUser.set(user, b)
@@ -507,6 +543,16 @@ export class EnginePieces {
    * The kit's balancing rule (§12: what stands on less than its centre of mass needs goes over): the points the engine has it touching by are its support; narrower than `NARROW` of the height of the centre of mass above them, or not under it, the piece gets the kit's push toward the side
    * it leans to. The engine alone keeps a door balanced on its 4 cm edge for ever.
    */
+  /**
+   * The push (rad/s2) that turns a piece about the edge of its support at `edge` (m from its centre, `height` m above it): the kit's `TOPPLE`, and on a support narrow both ways (a leg, a pole: a plate on its
+   * edge is narrow one way only) at least what beats gravity's hold (at most `g |edge| / (height^2 + edge^2)` for any shape: a 5 cm leg 74 cm tall held against `TOPPLE` alone and stood for ever). Not where only
+   * the contacts of one instant sit off its centre: a box rocking on a table's edge reads like that, and stays.
+   */
+  private topplePush(edge: number, height: number, isNarrow: boolean): number {
+    const push = TOPPLE * Math.min(height, 1)
+    return isNarrow ? Math.max(push, (HOLD_MARGIN * this.o.gravity * Math.abs(edge)) / (height * height + edge * edge)) : push
+  }
+
   private topple(b: PieceBody, dt: number): void {
     const link = this.links.get(b)
     if (!link) return
@@ -527,7 +573,9 @@ export class EnginePieces {
     const height = -low
     const wx = x1 - x0
     const wz = z1 - z0
-    b.balancing = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
+    const isNarrow = Math.min(wx, wz) < NARROW * height
+    const isColumn = Math.max(wx, wz) < NARROW * height
+    b.balancing = isNarrow || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
     // held up at an angle by something (leant on a wall, on another piece): once it has kept its tilt for `STEADY_SECONDS` the push stops and it may sleep. The
     // tilt is timed whether or not this update's contact points read as balancing: they come and go between the engine's steps at rest, and a timer started
     // again on each flicker kept a leaning plate pushed, and awake, for good
@@ -536,9 +584,9 @@ export class EnginePieces {
       b.steady = { quaternion: [q.x, q.y, q.z, q.w], seconds: 0 }
     } else was.seconds += dt
     if (!b.balancing || (b.steady?.seconds ?? 0) >= STEADY_SECONDS) return
-    const dirX = x0 + x1 > 0 ? -1 : 1
-    const dirZ = z0 + z1 > 0 ? -1 : 1
-    const k = TOPPLE * Math.min(height, 1) * dt
+    if (Math.abs(x0 + x1) > SIDE_DEAD) link.side[0] = x0 + x1 > 0 ? -1 : 1
+    if (Math.abs(z0 + z1) > SIDE_DEAD) link.side[1] = z0 + z1 > 0 ? -1 : 1
+    const [dirX, dirZ] = link.side
     const w = b.angularVelocity
     const v = b.velocity
     // turned about the edge of its support it goes over (about its centre of mass it would press that edge into the floor, and the contact would take it back):
@@ -546,7 +594,7 @@ export class EnginePieces {
     // gravity takes it over; pushed on through the fall, a 3 kg sheet 5 m wide was driven down faster than it falls (4 cm of energy made in the room)
     if (wx <= wz) {
       const edge = dirX > 0 ? x1 : x0
-      const dw = edge * dirX > 0 ? -dirX * k : 0
+      const dw = edge * dirX > 0 ? -dirX * this.topplePush(edge, height, isColumn && Math.abs(w[2]!) < PUSH_SPIN) * dt : 0
       const rx = -edge
       const ry = -low
       w[2] += dw
@@ -554,7 +602,7 @@ export class EnginePieces {
       v[1] += dw * rx
     } else {
       const edge = dirZ > 0 ? z1 : z0
-      const dw = edge * dirZ > 0 ? dirZ * k : 0
+      const dw = edge * dirZ > 0 ? dirZ * this.topplePush(edge, height, isColumn && Math.abs(w[0]!) < PUSH_SPIN) * dt : 0
       const rz = -edge
       const ry = -low
       w[0] += dw
@@ -704,6 +752,11 @@ export class EnginePieces {
     }
     b.sleeping = this.world.isSleeping(link.id)
     if (!b.sleeping) b.onGround = this.world.touching(link.id)
+    // the tilt it kept while asleep says nothing of the new fall, and what it stands on is judged now: the budget put a board back to sleep in the frame its step went
+    if (link.sleeping && !b.sleeping) {
+      b.steady = undefined
+      if (b.onGround && !b.round) this.topple(b, 0)
+    }
     let moved = false
     const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
     const floor = this.o.groundAt(pos[0], pos[2])
