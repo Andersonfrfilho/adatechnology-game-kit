@@ -219,3 +219,13 @@ Gates (saída resumida):
 
 Pendente, fora desta task: `changeset` (`minor` para 0.1.0, conforme README da raiz) não foi criado, porque a publicação é a fase de release.
 
+
+### Goldens de `game-floorplan-three` na branch de produção (2026-11-13)
+
+- `exact-golden` (breach, spall, fracture) falha 3/44 no modo padrão (solver próprio) desde a T2.1. Na `origin/main` (`8e29943a`, cópia limpa em
+  `adatechnology-game-kit-wt/tmp-main-golden`) passa **44/44**.
+- Bisseção na mesma cópia: em `c7f90548` (antes dos três commits da release) **44/44**; em `f9d7eebe` (depois deles) e em `452bb23d` **3 falham**.
+  Causa: os três commits da release trazidos na T2.1 (`6cc4abe2`, `7c06d978`, `f9d7eebe`: separar peças pelas caixas reais), que mudam os
+  destroços. Não é a física nova.
+- Não se gera golden agora: a release regera esses goldens em outros commits (rodadas da casa), e um golden nosso daria conflito no rebase.
+  Resolve-se no rebase sobre a `main` com a release; o que restar entra na T3.9, comparado com a `origin/main` daquele dia.
