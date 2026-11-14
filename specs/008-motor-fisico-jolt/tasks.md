@@ -72,8 +72,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `pnpm build && pnpm -r typecheck` e os testes de `physics`, `jolt`, `d3`, `dest` iguais aos do spike · `sonnet`.
 - **T2.2 ✅ Contrato final** de `game-physics` conforme T1.4: tirar o que o spike deixou e a decisão cortou; tipos explícitos em todo export.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics typecheck` e `pnpm check:packages` · `sonnet`.
-- **T2.3 Pacote de produção**: `jolt-physics` fixado na versão exata, `private` revisto, `LICENSE` com o texto MIT do Jolt, README de
-  `game-physics` e `game-physics-jolt`, `pnpm-lock.yaml` commitado.
+- **T2.3 ✅ Pacote de produção**: `jolt-physics` fixado na versão exata, `private` revisto, `LICENSE` com o texto MIT do Jolt, README de
+  `game-physics` e `game-physics-jolt`, `pnpm-lock.yaml` commitado. Feito em 2026-11-13 (`evidence.md`, § T2.3).
   Mecânica? sim · Aceite por comando? sim: `pnpm install --frozen-lockfile` e `grep -q '"jolt-physics": "1.1.1"' packages/game-physics-jolt/package.json` · `haiku`.
 - **T2.4 Bug 1: `setShape` mantém a massa do kit.** Reaplicar massa e inércia (com o contorno da condição 7) depois da troca de forma. Teste:
   peça de 2 kg troca de forma e continua com 2 kg e a inércia nova escalada para 2 kg.

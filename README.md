@@ -14,6 +14,8 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-contracts`](packages/game-contracts) | `GameContracts` | The contracts every module depends on: destruction (`DestructibleImpl`, hits, events), shots, containers, item animations and `TestableModule`; types plus tiny checkers, no runtime deps |
 | [`@adatechnology/game-destruction`](packages/game-destruction) | `GameDestruction` | Engine-agnostic destruction world: parts, joints, materials, damage, fire, melting, structural integrity |
 | [`@adatechnology/game-destruction-three`](packages/game-destruction-three) | `GameDestructionThree` | three.js renderer for the destruction world: pieces, holes, cracks, fire and debris |
+| [`@adatechnology/game-physics`](packages/game-physics) | `GamePhysics` | Engine-agnostic rigid-body contract: bodies, shapes, joints, ragdolls, vehicles, materials, contacts, raycasts and the fixed-step loop; types plus tiny helpers |
+| [`@adatechnology/game-physics-jolt`](packages/game-physics-jolt) | `GamePhysicsJolt` | Adapter of `game-physics` over Jolt Physics (`jolt-physics` 1.1.1, wasm inlined): small-inertia guard, per-body friction, rolling resistance; the only package that depends on Jolt |
 | [`@adatechnology/game-weapons`](packages/game-weapons) | `GameWeapons` | Arsenal of firearms, melee, fire, heat and tools with ballistics and tool state |
 | [`@adatechnology/game-fluids`](packages/game-fluids) | `GameFluids` | Liquids in containers, streams, stains, drinking and item uses |
 | [`@adatechnology/game-fluids-three`](packages/game-fluids-three) | `GameFluidsThree` | three.js renderer for the fluids world |

@@ -191,3 +191,31 @@ Data 2026-11-13, máquina Intel Core Ultra 9 275HX. Escopo: costuras (`game-dest
 
 Testes de navegador/GPU não rodados. T2.2 marcada como feita em `tasks.md`.
 
+## T2.3
+
+Pacote de produção de `game-physics` e `game-physics-jolt`. Feito em 2026-11-13, máquina Intel Core Ultra 9 275HX, branch `feat/motor-fisico-jolt` (worktree `motor-fisico-jolt`).
+
+Mudanças:
+- `package.json` dos dois: sem `private`; `version` 0.1.0; descrição sem "Spike"; `repository.directory`, `publishConfig`, `keywords`; `main`/`module`/`types`/`exports` (com `./global`) em `dist`; `unpkg`/`jsdelivr`; `files` (`game-physics-jolt` inclui `LICENSE`); `build` com `tsup`. `game-physics` ganha `tsup` em `devDependencies`. `jolt-physics` segue exato em `1.1.1`.
+- `tsup.config.ts` nos dois. `game-physics`: ESM + d.ts + IIFE (`GamePhysics`). `game-physics-jolt`: ESM + d.ts externo a `jolt-physics`; IIFE (`GamePhysicsJolt`) com Jolt e `game-physics` embutidos (4,2 MB, o wasm já vai inline no JS).
+- `packages/game-physics-jolt/LICENSE`: texto MIT do projeto (copiado de `LICENSE` da raiz) e, na seção "Third-party: Jolt Physics", o texto MIT do `jolt-physics` 1.1.1 copiado verbatim de `node_modules/.pnpm/jolt-physics@1.1.1/node_modules/jolt-physics/LICENSE`.
+- `README.md` dos dois (inglês, com trecho em português ao fim); linhas `GamePhysics` e `GamePhysicsJolt` na tabela de pacotes do `README.md` da raiz.
+- `pnpm-lock.yaml`: +3 linhas (`tsup` em `packages/game-physics`).
+
+Gates (saída resumida):
+
+| Gate | Resultado |
+|---|---|
+| `pnpm install --frozen-lockfile` | exit 0 |
+| `grep -q '"jolt-physics": "1.1.1"' packages/game-physics-jolt/package.json` | ok |
+| `pnpm build` (todos os pacotes, ordem topológica) | exit 0, sem erro |
+| `pnpm -r typecheck` | exit 0, 0 `error TS` |
+| `pnpm --filter @adatechnology/game-physics-jolt test` | **13 arquivos, 43/43 passam** |
+| `pnpm --filter @adatechnology/game-destruction-three test` | **344 passam, 0 falham**, 48 pulados (igual ao T2.2) |
+| `pnpm check:packages` | `check:packages ok (64 packages)` |
+| `node tools/kit-audit/audit.mjs --check` | `0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos` |
+| `eslint` em `packages/game-physics/src`, `packages/game-physics-jolt/src` e os dois `tsup.config.ts` | exit 0, 0 erros |
+| Smoke do IIFE `packages/game-physics-jolt/dist/index.global.js` num `vm` do Node | carrega; `GamePhysicsJolt` expõe `createJoltEngine`, `JoltWorld`, `loadJolt` |
+
+Pendente, fora desta task: `changeset` (`minor` para 0.1.0, conforme README da raiz) não foi criado, porque a publicação é a fase de release.
+

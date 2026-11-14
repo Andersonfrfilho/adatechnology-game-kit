@@ -1,14 +1,49 @@
 {
   "name": "@adatechnology/game-physics",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "license": "MIT",
-  "description": "Spike: the engine-agnostic rigid-body contract of the kit (bodies, shapes, joints, materials, contacts, sleep, raycast, fixed step). Types plus tiny helpers.",
+  "description": "Engine-agnostic rigid-body contract of the kit: bodies, shapes, joints, materials, contacts, sleep, raycast and the fixed-step loop. Types plus tiny helpers.",
+  "keywords": [
+    "game",
+    "physics",
+    "rigid-body",
+    "contract",
+    "fixed-step"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-physics"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
   "sideEffects": false,
-  "exports": { ".": "./src/index.ts" },
-  "scripts": { "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run --passWithNoTests" },
-  "devDependencies": { "@types/node": "^22.10.7", "typescript": "^5.7.3", "vitest": "^3.2.4" }
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
 }
