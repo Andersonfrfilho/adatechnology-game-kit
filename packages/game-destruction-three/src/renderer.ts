@@ -14,6 +14,7 @@ import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
 import { isTurned } from './internal'
 import { drawnSolidsOf } from './drawn-solids'
+import { hollowBoxesOf } from './drawn-boxes'
 import type { MeasureBudget } from './drawn-solids'
 import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
@@ -2228,6 +2229,21 @@ class Renderer implements DestructionRenderer {
   private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
     const [cx, cy, cz] = at.from
     if (mv.range) {
+      const own: number[] = []
+      this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
+      const drawn = hollowBoxesOf(own)
+      if (drawn) {
+        const pos = new this.THREE.Vector3()
+        const quat = new this.THREE.Quaternion()
+        const scale = new this.THREE.Vector3()
+        at.m4.decompose(pos, quat, scale)
+        for (const box of drawn) {
+          const c = new this.THREE.Vector3((box.low[0]! + box.high[0]!) / 2, (box.low[1]! + box.high[1]!) / 2, (box.low[2]! + box.high[2]!) / 2).applyMatrix4(at.m4)
+          const half: Vec3 = [Math.abs((box.high[0]! - box.low[0]!) * scale.x) / 2, Math.abs((box.high[1]! - box.low[1]!) * scale.y) / 2, Math.abs((box.high[2]! - box.low[2]!) * scale.z) / 2]
+          out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half, rotation: [quat.x, quat.y, quat.z, quat.w] })
+        }
+        return
+      }
       const pts: number[] = []
       this.visuals.rangePoints(mv, at.m4, pts)
       for (const box of fitOrientedBoxes(pts)) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })

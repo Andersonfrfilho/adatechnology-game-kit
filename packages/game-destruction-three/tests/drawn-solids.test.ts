@@ -184,6 +184,17 @@ engineOnly('every drawn fixed thing collides in the engine', () => {
     expect(block.bottom()).toBeGreaterThan(-0.03)
   })
 
+  it('a door frame made a piece collides as its two posts and its lintel, not as the slab filling the doorway', () => {
+    const s = stage()
+    doorFrame(s)
+    s.run(0.2)
+    const piece = s.renderer.makePiece('frame') as unknown as { partBoxes?: Array<{ half: number[] }> }
+    expect(piece.partBoxes).toHaveLength(3)
+    const volume = piece.partBoxes!.reduce((sum, box) => sum + 8 * box.half[0]! * box.half[1]! * box.half[2]!, 0)
+    // the box around the frame is 1 x 2.1 x 0.17 m = 0.357 m3: the three boxes hold about an eighth of it
+    expect(volume).toBeLessThan(0.1)
+  })
+
   it('a part that breaks has no body any more: nothing collides where nothing is drawn', () => {
     const s = stage()
     const { legs, legIds } = wideTable(s)
