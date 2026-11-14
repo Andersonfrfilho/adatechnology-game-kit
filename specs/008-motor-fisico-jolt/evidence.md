@@ -282,3 +282,15 @@ Os testes pegam o vazamento: com `J.destroy(listener)` do veículo, `J.destroy(e
 | `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/heap.test.ts` | 10/10 passam |
 | `eslint` em `character.ts`, `world.ts`, `heap.test.ts` | 0 problemas |
 | `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |
+
+## T2.6 — Teste da inércia pequena (2026-11-13)
+
+`packages/game-physics-jolt/tests/inertia.test.ts` já tinha o teste pedido; nenhum código de teste mudou. O segundo `it` cria pelo adaptador um cilindro de r 5 mm, meia-altura 9,5 mm, 4 g, e confere `world.massProperties(casing).inertia` contra `ACROSS = m(3r² + h²)/12` e `ALONG = m r²/2` (h = 0,019 m, calculados no próprio teste), com tolerância de 2%. `massProperties` devolve o momento de inércia (já invertido de volta de `GetLocalSpaceInverseInertia`), então 1,45e-7 e 5e-8 correspondem à inversa (6,9e6; 2,0e7; 6,9e6) pedida, dentro de 2% (mais estrito que os 5% pedidos). Um corpo com 625 em todos os eixos reprovaria. O primeiro `it` documenta o comportamento cru do Jolt (625 com `CalculateInertia`), sem o adaptador.
+
+Adicionado: `docs/jolt-issue-small-inertia.md`, com o texto da §5.1 do `spec.md` copiado por `awk` (sem redigitar), cabeçalho com a data 2026-11-13, o ok do dono e o link https://github.com/jrouwe/JoltPhysics/issues/2220. Nada foi aberto no GitHub.
+
+| Gate | Resultado |
+|---|---|
+| `pnpm --filter @adatechnology/game-physics-jolt test` | 14 arquivos, 55/55 passam |
+| `eslint` | nenhum TypeScript alterado nesta task; sem comando de lint sobre arquivo sem mudança |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos, 15 permitidos |
