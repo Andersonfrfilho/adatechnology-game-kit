@@ -248,6 +248,13 @@ export class Visuals {
     return out
   }
 
+  /** The current positions of the mesh the part is drawn by (its dented copy when it has one) and the vertex range of the part in them. */
+  positionsOf(mv: MeshVis): { readonly array: ArrayLike<number>; readonly from: number; readonly to: number } | null {
+    const array = mv.host?.work ?? (positionAttr(mv.mesh.geometry)?.array as unknown as ArrayLike<number> | undefined)
+    if (!array) return null
+    return { array, from: mv.range ? mv.range[0] : 0, to: mv.range ? mv.range[1] : array.length / 3 }
+  }
+
   /** The part's vertices (a ranged part: its own range only) through `matrix` (from its mesh's space), appended to `out` as x y z. */
   rangePoints(mv: MeshVis, matrix: THREE_NS.Matrix4, out: number[]): void {
     const arr = mv.host?.work ?? (positionAttr(mv.mesh.geometry)?.array as unknown as ArrayLike<number> | undefined)

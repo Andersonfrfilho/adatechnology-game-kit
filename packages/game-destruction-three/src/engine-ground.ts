@@ -1,6 +1,6 @@
 /**
  * The ground a physics engine stands the pieces on, one tile of `groundAt` at a time: a height field over the cell corners for what is smooth, and solid boxes
- * for the cells a hard step runs through (a slab's edge, a table top, a crater's rim) and the cells around them. A box's top is its cell's centre height and its
+ * for the cells a hard step runs through (a crater's rim, a terraced slope) and the cells around them. A box's top is its cell's centre height and its
  * sides are vertical, so a step keeps its edge (within half a cell of where it is) instead of a ramp one cell wide; under the boxes the height field is lowered so
  * it does not ramp up through them. A level tile is one slab, solid below.
  *

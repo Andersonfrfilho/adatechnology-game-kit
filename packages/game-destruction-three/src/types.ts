@@ -78,6 +78,11 @@ export interface RendererOptions {
   fragmentLife?: number | FragmentLifeRule
   /** Ground height at (x, z) for fragments, pieces and drips (default 0). */
   groundAt?: (x: number, z: number) => number
+  /**
+   * The terrain alone at (x, z): soil, lot, street, crater; never the top of a table or the floor of a house. With an engine (`physics` other than `'own'`) the ground it stands the pieces
+   * on is this, because every drawn fixed thing is a body of its own there (`staticSolids`) and a top in both would be ground twice. Default `groundAt`; the kit's own solver ignores it.
+   */
+  terrainAt?: (x: number, z: number) => number
   gravity?: number
   /** Turn a loose group into a separate physical piece automatically (default true). */
   autoSplit?: boolean

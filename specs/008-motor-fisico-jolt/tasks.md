@@ -90,7 +90,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 3 — Destroços
 > 🤖 Modelo: `sonnet` (T3.9 → `haiku`)
 
-- **T3.0a Todo o desenhado vira colisor no Jolt** (`CLAUDE.md` §12: nenhum colisor sem geometria, nenhuma geometria sem colisor). A casa
+- T3.0a ✅ **Todo o desenhado vira colisor no Jolt** (feito em 2026-11-14; `evidence.md`, seção T3.0a) (`CLAUDE.md` §12: nenhum colisor sem geometria, nenhuma geometria sem colisor). A casa
   (malhas mescladas de parede, piso, telhado e lote, mais vigas, pilares, caibros, vergas e lajes), as malhas largas de móveis e alvos, e
   qualquer objeto fixo que outro módulo desenha. Caixas orientadas por parte desenhada; malha triangular só onde caixa não serve. Teste novo
   em `d3`: na cena da sala montada sem GPU, toda malha desenhada fixa tem um corpo no mundo (contagem e caixa batendo com a malha ± 1 cm).

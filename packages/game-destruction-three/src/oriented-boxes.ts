@@ -182,3 +182,6 @@ export const fitOrientedBoxes = (points: readonly number[]): OrientedBox[] => {
   fitInto(points, 0, out)
   return out
 }
+
+/** The one box along the principal axes of the points (x y z triples), uncut; null for fewer than three points. */
+export const fitOrientedBox = (points: readonly number[]): OrientedBox | null => (points.length < 9 ? null : fitOne(points).box)

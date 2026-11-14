@@ -452,6 +452,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     vfx: vfx.world,
     quality,
     groundAt,
+    terrainAt: (x, z) => terrain.heightAt(x, z),
     pointScale,
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),

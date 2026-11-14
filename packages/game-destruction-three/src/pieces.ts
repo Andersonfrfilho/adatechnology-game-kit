@@ -13,6 +13,8 @@ import type { PiecePhysics } from './physics-option'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
+  /** The terrain alone (no top of furniture or of anything drawn): the ground of an engine, which has every drawn top as a body. Default `groundAt`. */
+  terrainAt?: (x: number, z: number) => number
   /**
    * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
    * `-Infinity` when none. The ground and the other pieces are added by the system.
@@ -307,7 +309,7 @@ export class PieceSystem {
     this.stepsItself = resolved?.stepsItself ?? false
     this.engine = resolved
       ? new EnginePieces(THREE, resolved.loop.world, {
-          groundAt: o.groundAt,
+          groundAt: o.terrainAt ?? o.groundAt,
           gravity: o.gravity,
           staticSolids: o.staticSolids,
           sweep: o.sweep,

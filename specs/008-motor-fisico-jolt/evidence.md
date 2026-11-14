@@ -328,3 +328,74 @@ Verificação do `physics` no kit-audit: a palavra `fisica` ou `jolt` perto de p
 Máquina: Intel Core Ultra 9 275HX. `pnpm -r typecheck` na raiz do worktree `motor-fisico-jolt`, em `feat/motor-fisico-jolt`, depois de T2.6 e T2.7 (ainda sem o commit de T2.7): **exit 0**, todos os pacotes e ferramentas (75 projetos com `typecheck: Done`), sem erro. Tempo: 31 s de relógio.
 
 Fase 2 fechada: T2.1 a T2.7 com evidência neste arquivo. T2.6 não mudou código de teste: o teste de inércia pequena já existia (`inertia.test.ts`) e a issue foi documentada em `docs/jolt-issue-small-inertia.md`.
+
+## T3.0a — Todo o desenhado fixo vira colisor no Jolt (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, Node 22, worktree `motor-fisico-jolt`, branch `feat/motor-fisico-jolt`. Só modo Jolt; o solver próprio (padrão) não muda.
+
+### O que mudou
+
+- **Cada parte desenhada é um corpo estático** (`engine-statics.ts`): um corpo por parte, chave `parte:malha`. Lista nova de um objeto é comparada parte a parte: parte igual não é tocada,
+  parte mudada fica no mesmo corpo (`setPose` + `setShape`), parte que sumiu perde o corpo, parte nova ganha o seu. Antes era um composto por objeto, refeito inteiro a cada mudança.
+- **Medição do desenhado** (`drawn-solids.ts`, novo): parte de malha mesclada (parede, piso, telhado, viga, pilar da casa) pelos próprios vértices (`range`), sem o limite de 3 m
+  (`STATIC_SPAN` só segue valendo para o solver próprio). Uma parte colapsada a um ponto (escondida pela casa) não gera corpo; parte quebrada, derretida, solta ou escondida também não
+  (§12: nenhum colisor sem geometria). Estruturas sem malha própria (vigas, pilares, caibros, vergas, lajes) são desenhadas dentro das malhas mescladas e o colisor vem delas; o que não é
+  desenhado não tem colisor.
+- **Estratégia por tipo de malha**, pelo teste "os oito cantos da caixa têm um vértice a até 1 cm":
+  1. caixa do próprio espaço da malha, girada pela matriz (parede, piso, laje, mesa, pés, vigas, pilar quadrado, lajes de cobertura): `box`;
+  2. senão a caixa pelos eixos principais dos vértices (`fitOrientedBox`, o mesmo ajuste da peça solta): chapa de telhado torta, `box` girada;
+  3. senão os triângulos desenhados (`trimesh`, só estático): telha, degraus de escada, eletroduto, caixilho, batente, poste, cilindro. Plano sem espessura vira chapa de 1 cm (`MIN_HALF` 0,005).
+- **Chão da engine é só terreno**: opção nova `terrainAt` (`RendererOptions`, `PieceSystemOptions`), usada nos ladrilhos, na rede `fellThrough` e na checagem de solo das peças dormindo;
+  o `groundAt` composto do host (terreno + topo de móvel + peça em repouso) fica só para o solver próprio. A sala passa `terrainAt: terrain.heightAt`. `engine-ground.ts` não cita mais
+  "a table top". Sem `terrainAt`, vale o `groundAt` (outros hosts, testes).
+- **Orçamento por update** (determinístico, sem relógio): 3 000 vértices medidos do zero (`VERTICES_PER_UPDATE`) e 1 200 triângulos de malha construídos (`TRIANGLES_PER_UPDATE`); o que
+  sobra espera o update seguinte. Caixas entram todas de uma vez. Uma parte já medida e inalterada (mesma matriz, mesmos vértices, comparados por soma e dispersão) devolve a mesma lista:
+  um evento que suja a casa não a mede de novo. Remedição do objeto só por evento, raiz que mexeu ou caixas do solver próprio que mudaram, não a cada 0,5 s.
+
+### Custo e contagem da casa (`sobrado` e `casaA`, planta 3, modo Jolt)
+
+| Medida | `sobrado` | `casaA` |
+|---|---|---|
+| Malhas desenhadas (corpos) | **783** (646 caixas, 137 `trimesh`) | **397** (297 caixas, 100 `trimesh`) |
+| Partes de malha mesclada | 666 | 335 |
+| Medir tudo de uma vez (frio / morno) | 22–30 ms | 14 ms |
+| Jolt, 646 caixas como corpos separados (`createBodies`) | 2,0–2,6 ms | — |
+| Jolt, 137 `trimesh` | **25 ms** (0,18 ms cada; por isso o orçamento) | — |
+| Enchimento com o orçamento | 34 updates, 1,0–3,8 ms típico, pico 8,1–11,7 ms (1º update traz o init do mundo e o JIT) | 31 updates, ≤ 2,8 ms, pico 3,6 ms |
+| Soma dos 40 primeiros updates | 70–103 ms | 44 ms |
+| Depois de cheio | 0,0 ms por update (nada refeito) | 0,0 ms |
+
+Corpo pelo mundo: `world.bodyCount` = 783 / 397, igual ao número de malhas (nenhum ladrilho de chão sem peça).
+
+### Testes novos
+
+- `packages/game-destruction-three/tests/drawn-solids.test.ts` (só com `PIECE_SOLVER=jolt`, sem GPU): mesa de 4,2 m (corpo por malha, topo a 0,775 m pelo raio, peça pousa nela); malha mesclada com laje, chapa torta
+  e coluna redonda (caixa, caixa girada, `trimesh`, topo a 1 cm do desenhado); peça solta sobre a laje, sobre a chapa e sobre a coluna pousa em cada uma, não no terreno; parte quebrada perde o corpo; `terrainAt`
+  (peça sob a mesa fica no chão, o topo da mesa é corpo próprio).
+- `packages/game-floorplan-three/tests/engine-statics.test.ts` (só Jolt): a casa montada pelas chamadas do SDK (`planOf` + `houseOf`, o que a sala usa). **Fica em `floorplan-three` e não em `d3`** porque
+  `d3` não depende de `floorplan-three` (a dependência é no outro sentido; ligar criaria ciclo). Para `sobrado` e `casaA`: o conjunto de chaves dos corpos é igual ao conjunto de malhas desenhadas
+  (mais de 300), cada corpo com a caixa do mundo a menos de 1,1 cm da caixa dos vértices da malha (união, para `trimesh`), `bodyCount` igual. E: bloco solto sobre a laje do andar de cima pousa no topo desenhado
+  (2,80 m), bloco solto sobre as telhas do telhado fica nelas (acima de 5 m), não no terreno.
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-destruction-three test` (próprio) | **344 passam, 0 falham** (53 pulados, os de Jolt) |
+| `PIECE_SOLVER=jolt ... game-destruction-three test` | 388 passam, **13 falham**, os mesmos 13 conhecidos (`pieces-stack` perna sozinha 1, `rolling` 6, `settled-debris` 2, `slope-friction` 2 + 2 do modo laço); **nenhum a menos, nenhum novo**; +5 testes novos passam |
+| `pnpm --filter @adatechnology/game-floorplan-three test` | 715 passam, 3 falham (`exact-golden`: breach, fracture, spall, as 3 conhecidas) |
+| `pnpm --filter @adatechnology/game-physics-jolt test` | 55 passam, 0 falham |
+| Bacia, `JOLT_ITERATIONS=20`, dt {0,05; 1/60} × `BOWL_FROM` {1,17,33,49} × 16 sementes | **128/128** (oito arquivos de 16) |
+| `eslint` nos arquivos mudados | 0 erros (3 avisos `max-lines` de arquivos que já os tinham) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+
+### O que sobrou
+
+- A sala (`game-test-room`) só ganhou `terrainAt`; o efeito nela (blast, martelo, rede `fellThrough`) é medido à mão na T3.8, não aqui (regra 9, sem navegador).
+- Peças soltas criadas por fratura dentro de uma parede agora nascem dentro do colisor das vizinhas: `outOfStatics` já as levanta, mas a conferência na sala fica para T3.0c/T3.8.
+- As regras antigas do kit (separar empurrando, levantar na criação, recusa de movimento) seguem ligadas: T3.0c.
+- O carro (T3.0b) segue pelas caixas de dano cortadas ao desenhado.
+- Fora do renderer: malhas desenhadas sem `bind` (cenário que o host não liga à destruição) não têm corpo; hoje não há caso conhecido na casa.
+- Medir o tempo para uma casa maior que `sobrado` (a de 783 corpos é a maior do catálogo medida): o enchimento é por orçamento, cresce em updates, não em ms por update.

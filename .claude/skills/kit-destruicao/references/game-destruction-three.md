@@ -42,7 +42,7 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 ## API principal
 | Função / tipo | Para que serve |
 |---|---|
-| `createDestructionRenderer(THREE, options)` | cria o `DestructionRenderer` (`scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `groundAt`, `autoSplit`, `onPiece`, `onSound`, `vfx`, `camera`, `pointScale`) |
+| `createDestructionRenderer(THREE, options)` | cria o `DestructionRenderer` (`scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `groundAt`, `terrainAt`, `autoSplit`, `onPiece`, `onSound`, `vfx`, `camera`, `pointScale`) |
 | `renderer.bind / unbind` | liga um objeto do mundo à raiz three.js (`parts`, `syncTransform`) |
 | `renderer.makePiece / pieces / piece / impulse` | peça física arremessável e empurrões |
 | `renderer.update(dt)` | integra fragmentos, peças e partículas |
