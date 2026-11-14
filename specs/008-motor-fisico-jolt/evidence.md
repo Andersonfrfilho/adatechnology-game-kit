@@ -1466,3 +1466,14 @@ Custo de quadro da mesma reexecução (ms por `r.update`, dt 0,05, física + sal
 | `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos) |
 
 Commits (locais, nada enviado): `4b5c4717` (centro de massa na origem + registro de pares), `23c6cc08` (cache de sólidos hospedados e ladrilhos pela pegada), `3da24800` (régua: ilhas por contato, energia dada pelo kit, tensor; sonda de perfil), e o do teto de balanço de 3 m.
+
+## T3.8c — decisões do dono sobre o resultado da T3.8b (2026-11-14)
+
+Contexto: depois da T3.8b, 5 de 20 rodadas do Jolt passam (explosão com D4: 4 de 5; martelo: 0 de 5). Com as réguas corrigidas, o solver próprio também falha a sala (0 de 10). O que sobra no Jolt são 1–2 peças de telhado presas entre colisores fixos da casa, que ganham 4–10 cm de energia por atualização (uma pulou 41 cm).
+
+- **D5 (peças presas no telhado):** investigar a fundo e corrigir a causa sem mudar a régua. O ganho contra os colisores fixos continua contando como lançamento.
+- **D6 (energia dada pelo kit):** confirmado. O empurrão atrasado da explosão (`pieceSys.impulse`) e o empurrão de equilíbrio (`engine.topple`) são entrada do anfitrião. Eles saem da ilha e do episódio da peça, não da atualização inteira.
+- **D7 (fiação):** a fiação deixa de se soltar como uma peça rígida só de 45 m e passa a se soltar por trechos, no SDK dono das instalações. O teto de 3 m na margem de giro fica só como guarda.
+- **D8 (quadro de despertar, 43–88 ms):** o chão da área é montado quando ela é construída, para que o custo saia do quadro do jogo. Nenhuma regra muda: não há limite de pedaços por quadro.
+
+Ordem de execução: D5, depois D8, depois D7. Depois disso, as 5+5 rodadas são refeitas na sala.
