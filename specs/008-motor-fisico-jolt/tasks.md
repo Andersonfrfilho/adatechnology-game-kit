@@ -129,6 +129,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - **T3.8 Sala (à mão, `CLAUDE.md` §9):** blast e martelo, 5 rodadas cada, com a régua de T3.4, nos dois solvers. Aceite: C2 e C4 da sala.
   Régua: só o ganho sem entrada de fora (C2), sono contado da última entrada de fora (C4); 0 peças acima de 3,5 cm, tudo dormindo em ≤ 3 s e
   rede `fellThrough` em 0, nas 5 rodadas de cada. Falhou: parar e levar ao dono com os números (não ajustar regra do kit para passar).
+  **Status 2026-11-14: reprovada no Jolt (C2 e C4 em 20/20 rodadas; `fellThrough` 0), levada ao dono; não ✅, ver `evidence.md` T3.8.**
   Mecânica? sim · Aceite por comando? não (sondas à mão) · `sonnet`.
 - **T3.9 Goldens dos destroços** (`plan.md` D4), num commit só, por último, comparados com o `origin/main` atual.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-floorplan-three test` · `haiku`.

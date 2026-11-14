@@ -1295,3 +1295,66 @@ O teste automático é Node. Para os outros runtimes a pergunta é a mesma: **me
 6. Salvar e carregar nos três: no mesmo `Sim`, `save()` no quadro 11, rodar 120, `load(saved)`, rodar 120; as duas listas de hashes devem ser idênticas. [ ] Node (feito), [ ] Chromium, [ ] Bun, [ ] Firefox.
 7. Anotar o resultado aqui (iguais/divergem, versão do navegador, onde divergiu o primeiro quadro). Divergência entre runtimes é achado para o C8 (build sem `CROSS_PLATFORM_DETERMINISTIC`, `spec.md` §5), não falha desta task.
 
+
+## T3.8 — Sala à mão: blast e martelo, 5 rodadas, régua de T3.4 (2026-11-14) — **REPROVADA no Jolt; levada ao dono, nada de regra do kit foi mexido**
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 24.22 (o `node` desta máquina é 24, não 20; a régua e as sondas rodam igual). Navegador: Chrome for Testing 145.0.7632.6 (`chrome-headless-shell` do Playwright 1208, headless), janela 1600x900, `--use-angle=gl --enable-gpu --disable-gpu-vsync`. GPU que o Chrome usou: **Intel Arrow Lake (Mesa, `ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)`)**, não a RTX 5070. Rodar com `__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia` faz a sala ficar presa por mais de 8 minutos no primeiro frame (a rodada nunca termina; sem isso, 12 a 16 s por rodada). A GPU não pesa nestes números: a régua mede a física (CPU), e a sala é conduzida por `r.update(0.05)` com o `requestAnimationFrame` desligado, como nas sondas antigas. Máquina com outras sessões rodando (carga ~4,6): tempos de quadro são pessimistas, os de energia não dependem disso. Sessão pesada única, à mão (`CLAUDE.md` §9); nada entrou em hook, pre-push nem CI.
+
+**Comandos** (da raiz do worktree; `$OUT` guarda um JSON por rodada):
+```text
+node examples/test-room/build.mjs                       # a sala; ?solver=jolt carrega o Jolt (c9fbc6eb), ?blastDebris=1 liga a política D4 (novo, abaixo)
+node specs/008-motor-fisico-jolt/decision/probes/drive.mjs own     ""                             5   # próprio
+node specs/008-motor-fisico-jolt/decision/probes/drive.mjs joltoff "&solver=jolt"                 5   # Jolt, política D4 desligada (padrão)
+node specs/008-motor-fisico-jolt/decision/probes/drive.mjs jolton  "&solver=jolt&blastDebris=1"   5   # Jolt, política D4 ligada
+node specs/008-motor-fisico-jolt/decision/probes/car-drive.mjs "&solver=jolt" sedan                    # solidez do carro (também battle_tank; "" é o próprio)
+```
+URLs: `file:///.../examples/test-room/dist/test-room.html?area=floorplan` + a consulta acima. Cena: `floorplan_area`, pacote `residential`, modelo `single_storey_a`, semente 1; blast = `c4` a 2,5 m da casa, 0,6 m de altura; martelo = 12 golpes `blunt` de 8000 J, raio 0,5 m, um por update; depois 220 updates de 0,05 s. Tudo sai em `decision/t38-results.json` (30 rodadas e 3 carros), prints em `decision/t38-room-jolt-blast.png` e `t38-room-jolt-hammer.png`.
+
+**O que precisei consertar (só harness, nenhuma regra do kit):**
+1. A sonda `room.js` nunca tinha rodado: `r.world.serializeObject` não existe (usei `world.serialize().objects`); o marcador `__KIND__` aparecia também num comentário e o `replace` trocava o comentário (a primeira rodada era sempre martelo); o `run.sh` dependia de um `$PROBE` do rascunho que não existe. Entrou `probes/drive.mjs` (Playwright, uma página nova por rodada) no lugar do `run.sh`, que fica obsoleto.
+2. **Peça recém-nascida lida na pose antes do primeiro passo.** O mesh de uma peça criada no update k fica numa pose provisória (y = 1,05 igual para todas) até o update k+1; a primeira amostra "antes" dava saltos de 3,7 a 4,6 m com velocidade de 0,5 m/s (impossível: 74 m/s) e inflava C3 para 5,6 m. A sonda agora só põe a peça na régua a partir da segunda observação. Vale para os dois solvers. Sem essa troca, os números do Jolt eram ainda piores (C2 4,6 m, C3 4,6 m).
+3. `examples/test-room/src/main.js`: parâmetro `?blastDebris=1` que passa `debris: { blast: {} }` à sala (a opção já existia em `createTestRoom`, a página não a expunha). Sem o parâmetro, comportamento igual ao de antes.
+4. `probes/hang-stack.mjs` (pausa o JS da página e imprime a pilha) e `probes/car.js` + `car-drive.mjs` (solidez do carro).
+
+**Resultado por rodada.** Cada célula: mín–máx das 5 rodadas; as rodadas são quase idênticas entre si (o Jolt é determinístico; varia a política por tempo de parede e o relógio de sono). Aceite do Jolt: 0 peças acima de 3,5 cm no C2 condicionado, tudo dormindo ≤ 3 s depois da última entrada de fora, `fellThrough` 0.
+
+| Cenário | Peças / dormindo no fim | C1 pior ilha (kg·m) | C2 condicionado (m) | peças > 3,5 cm (cond. / sem cond.) | C3 (m) | C4 (s) por rodada | `fellThrough` |
+|---|---|---|---|---|---|---|---|
+| **Jolt, D4 desligada, blast** | 52 / 52 | 255–320 | **3,88–4,35** | **4–6** / 5–7 | 0,11–0,32 | 5,05; 5,05; 10,70; 6,10; 5,15 | 0 |
+| **Jolt, D4 desligada, martelo** | 34 / 34 | 280–314 | **4,10–4,33** | **7–8** / 7–8 | 0,62–0,65 | 4,50; 4,55; 5,50; 4,20; 9,00 | 0 |
+| **Jolt, D4 ligada, blast** | 52 / 52 | 252–287 | **2,22–4,35** | **4–6** / 5–7 | 0,13–0,19 | 8,90; 5,35; 5,55; 6,80; 5,10 | 0 |
+| **Jolt, D4 ligada, martelo** | 34 / 34 | 269–309 | **4,06–11,32** | **7–9** / 7–9 | 0,61–0,66 | 4,20; 5,15; 4,25; 5,00; 8,10 | 0 |
+| Próprio, blast | 52 / 51–52 | 5,33 | 0,078–0,138 | 5–11 / 10–14 | 1,60–1,90 | -1 (4 de 5; uma peça não dorme); 7,90 | n/a |
+| Próprio, martelo | 34 / 32–33 | −1,94 a −0,71 | 0 | 0 / 0–1 | 0,06–0,09 | -1 nas 5 (uma peça não dorme) | n/a |
+
+`deepest` ficou `null` na sala (o chão da sala não é lido pela sonda; a rede é o `fellThrough` do motor: **0 em todas as 20 rodadas do Jolt**). **C3b passa; C2 e C4 reprovam em 20 de 20 rodadas do Jolt, nas duas políticas.** O próprio também reprova pela mesma régua (blast: 5–11 peças acima de 3,5 cm; um corpo nunca dorme), como na spec §2.1; o martelo no próprio fica no limite (0 peças acima de 3,5 cm no condicionado, 0–1 sem condição).
+
+**Custo de quadro** (ms por `r.update`, física + sala, sem desenho; máquina carregada):
+
+| Cenário | p50 | p99 (5 rodadas) | máximo | quadro do despertar |
+|---|---|---|---|---|
+| Jolt, D4 desligada, blast | 12,7–14,2 | 78–346 | 486–571 | 45–48 |
+| Jolt, D4 desligada, martelo | 1,0–8,0 | 63–74 | 437–449 | 285–300 |
+| Jolt, D4 ligada, blast | 12,6–13,7 | 62–351 | 493–580 | 46–50 |
+| Jolt, D4 ligada, martelo | 1,0–2,0 | 61–71 | 437–450 | 286–289 |
+| Próprio, blast | 3,7–4,0 | 34–40 | 43–56 | 26–28 |
+| Próprio, martelo | 1,3–1,6 | 20–25 | 26–29 | 20–26 |
+
+O máximo de 440–580 ms do Jolt é o primeiro update depois de a casa estar construída com peças soltas novas (montagem dos corpos e, no martelo, o primeiro golpe, 285–300 ms); no blast o quadro do despertar é só 45–50 ms. A política D4 ligada não mudou o quadro do despertar nem o C2 de forma útil (mesmos números, a rodada de 2,22 m é o único valor menor).
+
+**Carro estacionado** (`car-drive.mjs`, `r.spawn`, 1 update = 1/60 s; "sólido" = `collidersPending()` falso):
+
+| Carro | Peças de colisão | Sólido depois de | Custo do spawn | Updates de enchimento: total / pior update | Update em regime com o carro (p50 / p99 / máx) | Sem carro (p50 / p99) |
+|---|---|---|---|---|---|---|
+| `sedan`, Jolt | 192 | **16 updates = 0,27 s** | 513 ms | 302 ms / **160 ms** | 1,5 / 5,5 / 6,1 ms | 0,5 / 1,5 ms |
+| `battle_tank`, Jolt | 334 | **30 updates = 0,50 s** | 171 ms | 765 ms / **460 ms** | 2,4 / 5,1 / 6,8 ms | 0,5 / 1,8 ms |
+| `sedan`, próprio | 0 | 1 update (sem colisor por peça) | 582 ms | 5 ms / 5 ms | 0,6 / 14,7 / 160,6 ms | 0,6 / 1,8 ms |
+
+Os 1,5 s estimados na T3.0b não se confirmam: o carro fica sólido em 0,27 s (sedã) e 0,5 s (o maior, `battle_tank`, 160 mil triângulos). O custo que pesa é o pior update de enchimento (160 e 460 ms, um quadro perdido), mais o spawn (170 a 513 ms, comum aos dois solvers). Em regime o carro custa +1 a +2 ms por update.
+
+**Diagnóstico das falhas (parcial; sem mexer em regra).** Três sinais, todos medidos com a sonda de diagnóstico (`worstRises`, `near`, `kin` em `room.js`):
+1. **O C2 de ~4,1–4,35 m (e os 11,3 m de uma rodada) é uma peça de 18 kg em repouso a ~1 m de altura (perto de x −3,3, z −8,7), lançada de 0,8 m/s para 8,3 m/s por uma peça de 36,4 kg que chega a 7,5 m/s** (rodada do martelo: `obj_7` 7,52 para 2,9 m/s, 0,52 m de distância; ganho 4,3 m×18 kg = 78 kg·m, contra −88 kg·m da outra: a troca conserva a energia). Na régua isso aparece como ganho da peça pequena e, quando a ilha do contato é separada da peça que perdeu energia, como violação do C1 e do C2. A outra rodada (11,3 m): uma peça de 18 kg parada no chão (y 0,016) vai a 9,1 m/s. É o mesmo padrão: choque de entulho já lançado contra peça leve em repouso, contado como ganho. Não é a explosão (entrada de fora absorvida) nem ruído de repouso.
+2. **C1 de 250–320 kg·m vem de dois corpos de 950 kg com raio 3,84 m, longe da casa (x 15,8 / x −28,2, z 16,4)** que caem por mais de 2 s a ~9 m/s: o deslocamento de um update é 0,25–0,29 m, mas a velocidade pede 0,44–0,49 m (a pose anda 0,6× do que a velocidade diz) e a "altura de energia" sobe 0,15–0,2 m por update × 950 kg = 150–190 kg·m. Só acontece no Jolt (o próprio não tem esses corpos). **Não está claro se é o motor ou a leitura da pose na sala** (pose interpolada entre passos fixos, ou corpos de laje/telhado que a sala move por fora do Jolt); é a primeira coisa a investigar, porque sozinho explica os 250–320 kg·m e o C4. Não identifiquei o que são esses dois corpos (`obj_1`/`obj_2` no martelo, `obj_19`/`obj_20` no blast).
+3. **C4 de 4,2–10,7 s** (limite 3 s): as peças só dormem depois de os corpos grandes do item 2 acabarem de cair; o C4 é medido da última entrada de fora e esses corpos nunca entraram em repouso antes do passo 44–52 (2,2–2,6 s depois do último golpe). Sem eles, o C4 do Jolt na bacia é 0,5 s (T3.4).
+
+Resumo para o dono: o Jolt passa a bacia (128/128) e o `fellThrough` (0), mas a sala reprova C2 e C4 em 20/20 rodadas, e a causa não é a política D4 (ligar não muda) nem o peso dos carros (sólidos em 0,27–0,5 s). Falta decidir se os corpos de 950 kg (item 2) são do motor ou da sala, e se o choque de entulho contra peça leve em repouso (item 1) deve ser considerado ganho pela régua (a régua da bacia, por ilha, não vê o par porque a bacia não tem esse lançamento). Nenhuma tolerância nem regra do kit foi alterada; T3.8 fica sem ✅.

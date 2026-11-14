@@ -83,6 +83,8 @@ const room = createTestRoom({
   // ?lights=8,2: point and spot slots of the room's light budget
   ...(params.get('lights') ? { lightSizes: { point: Number(/** @type {string} */ (params.get('lights')).split(',')[0]), spot: Number(/** @type {string} */ (params.get('lights')).split(',')[1]) } } : {}),
   ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
+  // ?blastDebris=1: the blast debris policy of the owner's D4 (wake queue by step cost); off by default
+  ...(params.get('blastDebris') === '1' ? { debris: { blast: {} } } : {}),
   strikeCombo: PUNCH_COMBO,
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
   firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),
