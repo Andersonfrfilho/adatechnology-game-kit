@@ -169,7 +169,7 @@ export const createRagdoll = (w: JoltWorld, desc: RagdollDesc): { readonly id: R
   const bodies: BodyId[] = desc.parts.map((part, i) => {
     const body = lock.TryGetBody(ragdoll.GetBodyID(i))
     const key = body.GetID().GetIndexAndSequenceNumber()
-    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
+    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, centred: false, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
     w.bodies.set(key, entry)
     w.byPointer.set(J.getPointer(body), entry)
     if (part.body.rolling) w.rollers.set(key, part.body.rolling)

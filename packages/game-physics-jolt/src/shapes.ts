@@ -115,3 +115,31 @@ export const makeShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): Jolt
   J.destroy(settings)
   return made
 }
+
+/** The shape with its centre of mass moved to the origin: Jolt takes a compound's centre of mass from its parts' volumes, the kit puts it where it measured it. */
+export const makeCentredShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): JoltNS.Shape => {
+  const plain = makeShape(J, scratch, shape)
+  const centre = plain.GetCenterOfMass()
+  const x = centre.GetX()
+  const y = centre.GetY()
+  const z = centre.GetZ()
+  if (Math.hypot(x, y, z) < 1e-5) return plain
+  plain.Release()
+  const inner = shapeSettings(J, scratch, shape)
+  inner.mUserData = NO_TAG
+  const offset = new J.Vec3(-x, -y, -z)
+  const settings = new J.OffsetCenterOfMassShapeSettings(offset, inner)
+  settings.mUserData = NO_TAG
+  const result = settings.Create()
+  if (result.HasError()) {
+    const message = result.GetError().c_str()
+    J.destroy(result)
+    throw new Error(`game-physics-jolt: ${shape.kind} shape: ${message}`)
+  }
+  const made = result.Get()
+  made.AddRef()
+  J.destroy(result)
+  J.destroy(settings)
+  J.destroy(offset)
+  return made
+}

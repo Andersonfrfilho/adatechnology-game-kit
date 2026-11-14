@@ -66,6 +66,8 @@ export interface BodyDesc {
   readonly mass?: number
   /** Dynamic only, with `mass`: the moments of inertia about the body's own axes (kg m^2), in place of the shape's (a can whose contents roll with it or not). */
   readonly inertia?: Vec3
+  /** Dynamic only, with `mass`: the body's origin is its centre of mass, wherever the shape's own centroid is (a piece whose parts are thin plates at one end): the engine turns it about the origin, so a pose and a velocity name the same point. */
+  readonly centreAtOrigin?: boolean
   readonly material?: Material
   readonly layer?: Layer
   /** Bodies of one group whose sub-ids are in `disabledPairs` of that group do not meet (a ragdoll's neighbouring segments). */

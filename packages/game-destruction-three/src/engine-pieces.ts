@@ -415,6 +415,7 @@ export class EnginePieces {
         rotation: [q.x, q.y, q.z, q.w],
         mass: b.mass,
         inertia: this.inertiaOf(b),
+        centreAtOrigin: true,
         material: this.material(b),
         layer: 'debris',
         // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)

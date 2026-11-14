@@ -140,6 +140,7 @@ export const makeListener = (w: JoltWorld): JoltNS.ContactListenerJS => {
     if (!sensor) {
       w.touch(e1.key, e2.key, 1)
       w.touch(e2.key, e1.key, 1)
+      if (w.trackPairs) w.pairLog.push(e1.key, e2.key)
     }
     const m = J.wrapPointer(manifold, J.ContactManifold)
     if (!sensor && w.points.size > 0) recordPair(w, e1.key, e2.key, m)

@@ -31,7 +31,7 @@ import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry }
 import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
 import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
-import { makeShape } from './shapes'
+import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout } from './vec3'
 import { createVehicle, driveVehicle, removeVehicle, vehicleBody, wheelContacts } from './vehicles'
@@ -93,6 +93,12 @@ export class JoltWorld implements PhysicsWorld {
   private readonly asserts: JoltNS.AssertFailedHandlerJS
   /** The bodies each body touches now, with how many contacts each (added minus removed): `updateFriction` reads them, and a body with any is `touching`. */
   readonly partners = new Map<number, Map<number, number>>()
+  /**
+   * Off by default. On, `pairLog` holds the pairs of bodies (flat: key, key, key, key...) that touched at any point of the last frame: the ones touching when it began,
+   * and every contact added during it (also one that was removed again before the frame ended). It is the contact graph an energy ruler cuts into islands.
+   */
+  trackPairs = false
+  readonly pairLog: number[] = []
   readonly activeIds: JoltNS.BodyIDVector
   readonly ignored = new Set<number>()
   /** Contact points of the last step per body: up to `POINTS_PER_BODY` x y z, and how many. Kept for the bodies asked about (`contactPoints`). */
@@ -176,8 +182,8 @@ export class JoltWorld implements PhysicsWorld {
     this.system.SetContactListener(this.listener)
   }
 
-  makeShape(shape: ShapeDesc): JoltNS.Shape {
-    return makeShape(this.J, this.v2, shape)
+  makeShape(shape: ShapeDesc, centred = false): JoltNS.Shape {
+    return centred ? makeCentredShape(this.J, this.v2, shape) : makeShape(this.J, this.v2, shape)
   }
 
   // Bodies ------------------------------------------------------------------------------------------------------------------------------
@@ -252,6 +258,7 @@ export class JoltWorld implements PhysicsWorld {
       layer: desc.layer ?? (desc.motion === 'static' ? 'static' : 'debris'),
       material: desc.material ?? DEFAULT_MATERIAL,
       invMass: mp,
+      centred: desc.motion === 'dynamic' && desc.mass !== undefined && desc.centreAtOrigin === true,
       kitMass: desc.motion === 'dynamic' && desc.mass !== undefined ? { mass: desc.mass, ...(desc.inertia ? { inertia: desc.inertia } : {}) } : null,
       sliding: false,
       friction: (desc.material ?? DEFAULT_MATERIAL).frictionStatic,
@@ -262,7 +269,7 @@ export class JoltWorld implements PhysicsWorld {
   }
 
   createBody(desc: BodyDesc): BodyId {
-    const shape = this.makeShape(desc.shape)
+    const shape = this.makeShape(desc.shape, desc.centreAtOrigin === true && desc.motion === 'dynamic' && desc.mass !== undefined)
     const s = this.settingsFor(desc, shape)
     const body = this.bi.CreateBody(s)
     this.J.destroy(s)
@@ -282,7 +289,7 @@ export class JoltWorld implements PhysicsWorld {
     const base = J.getPointer(ids.data()) >> 2
     const out: BodyId[] = []
     for (let i = 0; i < descs.length; i++) {
-      const shape = this.makeShape(descs[i].shape)
+      const shape = this.makeShape(descs[i].shape, descs[i].centreAtOrigin === true && descs[i].motion === 'dynamic' && descs[i].mass !== undefined)
       const s = this.settingsFor(descs[i], shape)
       const body = this.bi.CreateBody(s)
       J.destroy(s)
@@ -324,7 +331,7 @@ export class JoltWorld implements PhysicsWorld {
    */
   setShape(id: BodyId, shape: ShapeDesc, mass?: { readonly mass: number; readonly inertia?: Vec3 }): void {
     const e = this.entry(id)
-    const made = this.makeShape(shape)
+    const made = this.makeShape(shape, e.centred)
     const dynamic = e.body.IsDynamic()
     if (mass && dynamic) e.kitMass = mass
     const kit = dynamic ? e.kitMass : null
@@ -613,6 +620,9 @@ export class JoltWorld implements PhysicsWorld {
     this.contacts.dropped = 0
     this.sensorEvents.length = 0
     this.brokenJoints.length = 0
+    if (!this.trackPairs) return
+    this.pairLog.length = 0
+    for (const [key, others] of this.partners) for (const other of others.keys()) if (key < other) this.pairLog.push(key, other)
   }
 
   saveState(): Uint8Array {
