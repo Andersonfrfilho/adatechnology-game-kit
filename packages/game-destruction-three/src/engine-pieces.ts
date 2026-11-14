@@ -86,6 +86,9 @@ const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
 const OUT_TRIES = 8
 /** The first step (m) a wedged piece is lifted by (`outOfStatics`). */
 const WEDGE_LIFT = 0.1
+/** How far apart (m) the poses are that a wedge lift is checked at on its way up: about the piece's thinnest half, so it cannot step over a slab it would cross. */
+const WAY_STEP_MIN = 0.02
+const WAY_STEP_MAX = 0.1
 
 interface Link {
   readonly id: BodyId
@@ -155,6 +158,7 @@ export class EnginePieces {
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
   private readonly outAxis = new Float64Array(3)
+  private readonly wayAxis = new Float64Array(3)
   /** The centre `readBack` reads into (the sweep may move it). */
   private readonly readPos: Vec3 = [0, 0, 0]
   private readonly v: THREE_NS.Vector3
@@ -494,10 +498,15 @@ export class EnginePieces {
     let px = 0, py = 0, pz = 0
     let wedged = false
     let lifts = 0
+    // what the piece was made inside, how deep it was where it turned out to be wedged, and how far the tries moved it in all: a way out that is no better is put back (`putBack`)
+    let found = 0
+    let wedge = 0
+    const moved = [0, 0, 0]
     for (let i = 0; i < OUT_TRIES; i++) {
       // the host's fixed things only: a piece made in the ground is the ground's rule (`underGround`; out of a step the shortest way too, the bowl's seed 39 made 3 mm)
       const depth = this.world.penetration(link.id, axis, this.statics.ids)
       if (depth <= SINK) return
+      if (i === 0) found = depth
       // out of one the shortest way put it back into the other (a door made between its frame and a car parked against the wall): it goes up out of both
       wedged ||= i > 0 && axis[0] * px + axis[1] * py + axis[2] * pz < -0.5
       px = axis[0]
@@ -511,19 +520,56 @@ export class EnginePieces {
       // up out of a wedge, the depth across tells nothing of how high the two reach: a step that doubles each try, at most twice as high as it had to go
       const d = wedged ? depth + WEDGE_LIFT * 2 ** lifts++ : depth + LIFT_MARGIN
       this.world.readPose(link.id, this.pose, 0)
-      const p = this.pose
-      p[0] += axis[0] * d
-      p[1] += axis[1] * d
-      p[2] += axis[2] * d
-      this.world.setPose(link.id, [p[0], p[1], p[2]], [p[3], p[4], p[5], p[6]], !b.sleeping)
-      b.root.position.x += axis[0] * d
-      b.root.position.y += axis[1] * d
-      b.root.position.z += axis[2] * d
-      b.root.updateMatrixWorld(true)
-      link.pos[0] = p[0]
-      link.pos[1] = p[1]
-      link.pos[2] = p[2]
+      // a lift that goes through a third fixed thing on its way (a door made in its doorway, lifted past the lintel, the ceiling slab and into the attic) is no exit
+      if (wedged && wedge === 0) wedge = depth + SINK
+      if (wedged && !this.isWayClear(b, link, d, wedge)) {
+        this.putBack(b, link, moved)
+        return
+      }
+      this.moveBy(b, link, axis, d, moved)
     }
+    if (this.world.penetration(link.id, axis, this.statics.ids) > found) this.putBack(b, link, moved)
+  }
+
+  /** The piece is moved by `d` along `axis`, in the engine and on its root (`this.pose` is where it stands); `moved` adds it up. */
+  private moveBy(b: PieceBody, link: Link, axis: Float64Array, d: number, moved: number[]): void {
+    const p = this.pose
+    p[0] += axis[0] * d
+    p[1] += axis[1] * d
+    p[2] += axis[2] * d
+    this.world.setPose(link.id, [p[0], p[1], p[2]], [p[3], p[4], p[5], p[6]], !b.sleeping)
+    for (let k = 0; k < 3; k++) moved[k] += axis[k] * d
+    b.root.position.x += axis[0] * d
+    b.root.position.y += axis[1] * d
+    b.root.position.z += axis[2] * d
+    b.root.updateMatrixWorld(true)
+    link.pos[0] = p[0]
+    link.pos[1] = p[1]
+    link.pos[2] = p[2]
+  }
+
+  /** Back to where the piece was made: the tries moved it by `moved`, and the engine is left to push it out of what it is in (a little each step). */
+  private putBack(b: PieceBody, link: Link, moved: number[]): void {
+    const back = this.wayAxis
+    back[0] = -moved[0]
+    back[1] = -moved[1]
+    back[2] = -moved[2]
+    this.world.readPose(link.id, this.pose, 0)
+    this.moveBy(b, link, back, 1, moved)
+  }
+
+  /** Whether going up by `d` from `this.pose` meets no fixed thing deeper than `limit` (m): sampled about every thinnest half of the piece, which leaves the body where it was. */
+  private isWayClear(b: PieceBody, link: Link, d: number, limit: number): boolean {
+    const p = this.pose
+    const up = this.outAxis
+    const step = Math.min(WAY_STEP_MAX, Math.max(WAY_STEP_MIN, Math.min(...b.halfExtents)))
+    let isClear = true
+    for (let s = step; s < d && isClear; s += step) {
+      this.world.setPose(link.id, [p[0] + up[0] * s, p[1] + up[1] * s, p[2] + up[2] * s], [p[3], p[4], p[5], p[6]], false)
+      isClear = (this.world.penetration?.(link.id, this.wayAxis, this.statics.ids) ?? 0) <= limit
+    }
+    this.world.setPose(link.id, [p[0], p[1], p[2]], [p[3], p[4], p[5], p[6]], false)
+    return isClear
   }
 
   /**

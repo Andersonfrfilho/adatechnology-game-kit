@@ -79,6 +79,31 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is 
     expect(engine.world.penetration(engine.links.get(piece)!.id, out)).toBeLessThan(0.006)
   })
 
+  it('a piece made wedged in a doorway under a ceiling is not lifted through the ceiling: it stays, and the engine does not make it climb (spec 008 D5)', () => {
+    // the same two blocks 16 cm apart, and a slab 10 cm over their tops: no way up out of them that is not through the slab (the room's doors, lifted 3.6 m into the attic)
+    const solids: StaticSolid[] = [
+      { center: [-0.58, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] },
+      { center: [0.58, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] },
+      { center: [0, 1.2, 0], half: [1.5, 0.1, 0.5], rotation: [0, 0, 0, 1] },
+    ]
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map([['house', solids]]) })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.5, 0)
+    system.create('door', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
+    let highest = 0
+    let fastest = 0
+    let before = root.position.clone()
+    for (let i = 0; i < 120; i++) {
+      system.update(1 / 60)
+      highest = Math.max(highest, root.position.y)
+      fastest = Math.max(fastest, root.position.distanceTo(before) * 60)
+      before = root.position.clone()
+    }
+    expect(highest).toBeLessThan(1.0)
+    // the engine's own push out of 2 cm of overlap is a few m/s; lifted through the slab the piece left at 100 m/s
+    expect(fastest).toBeLessThan(5)
+  })
+
   it("a piece is put out of the host's fixed things only, not out of the ground (the ground has its own lift): bowl seed 39 at 1/60 made 3 mm of C1 when it was", async () => {
     const { createJoltEngine } = await import('@adatechnology/game-physics-jolt')
     const engine = await createJoltEngine()
