@@ -1,10 +1,25 @@
 import * as THREE from 'three'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { IS_JOLT, physicsLoop, physicsOption, tick } from './setup-physics'
+import type { PiecePhysics } from '../src/physics-option'
+
+// on Jolt the suite runs twice: the renderer stepping its own world (one system) and a loop the host steps (the game's mode); on the kit's own solver once
+const MODES = IS_JOLT ? ['one system', 'loop'] : ['one system']
+let loopMode = false
+const physicsOf = new WeakMap<object, PiecePhysics>()
+
+const makeRenderer = (scene: THREE.Scene, world: FakeWorld): ReturnType<typeof createDestructionRenderer> => {
+  const physics = loopMode ? physicsLoop() : physicsOption()
+  const renderer = createDestructionRenderer(THREE, { physics, scene, world: world.asWorld() })
+  physicsOf.set(renderer, physics)
+  return renderer
+}
 
 const run = (renderer: { update(dt: number): void }, seconds: number): void => {
-  for (let t = 0; t < seconds; t += 1 / 60) renderer.update(1 / 60)
+  const physics = physicsOf.get(renderer) ?? 'own'
+  for (let t = 0; t < seconds; t += 1 / 60) tick(physics, renderer, 1 / 60)
 }
 
 /**
@@ -14,7 +29,7 @@ const run = (renderer: { update(dt: number): void }, seconds: number): void => {
 const slope = (degrees: number, material = 'wood', can = false) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = makeRenderer(scene, world)
   const angle = (degrees * Math.PI) / 180
   world.addObject('board', [partState('body', 'wood', { mass: 200 })])
   const boardMesh = new THREE.Mesh(new THREE.BoxGeometry(3, 0.05, 1))
@@ -45,7 +60,11 @@ const slope = (degrees: number, material = 'wood', can = false) => {
   return { renderer, box, boardPiece, piece }
 }
 
-describe('a thing on a tilted top', () => {
+describe.each(MODES)('a thing on a tilted top (%s)', (mode) => {
+  beforeEach(() => {
+    loopMode = mode === 'loop'
+  })
+
   it('stays put on a slope gentler than the friction angle', () => {
     const { renderer, box } = slope(15)
     const x0 = box.position.x
@@ -86,11 +105,15 @@ describe('a thing on a tilted top', () => {
   })
 })
 
-describe('a round thing on the floor', () => {
+describe.each(MODES)('a round thing on the floor (%s)', (mode) => {
+  beforeEach(() => {
+    loopMode = mode === 'loop'
+  })
+
   it('a can given a push rolls on and slows to a stop by its rolling resistance', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = makeRenderer(scene, world)
     world.addObject('can', [partState('body', 'steel', { mass: 0.45 })])
     const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.11, 24))
     mesh.rotation.x = Math.PI / 2

@@ -81,3 +81,6 @@ export const createPhysicsLoop = (world: PhysicsWorld, options: PhysicsLoopOptio
 
   return { world, frame, add, step }
 }
+
+/** A `PhysicsLoop` told from a world (a seam is handed either): only the loop has `frame` and `add`. */
+export const isPhysicsLoop = (value: SeamWorld | PhysicsLoop): value is PhysicsLoop => 'frame' in value && 'add' in value

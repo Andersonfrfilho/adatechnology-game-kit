@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const G = 9.81
 const REST_SPEED = 0.05
@@ -60,7 +61,7 @@ export const bowl = (seed: number, dt: number): BowlResult => {
   }
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), groundAt })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), groundAt })
   const pieces: Piece[] = []
   const box = (id: string, size: [number, number, number], at: [number, number, number], turn: [number, number, number]): Piece => {
     world.addObject(id, [partState('body', 'concrete', { mass: size[0] * size[1] * size[2] * 2400 + 1 })])

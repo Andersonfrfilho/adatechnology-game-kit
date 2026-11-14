@@ -10,13 +10,14 @@ import type { PieceSystemOptions } from '../src/pieces'
 import { createDestructionRenderer } from '../src/renderer'
 import type { SettledBatchOptions } from '../src/settled-batches'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const DT = 1 / 60
 /** Batches made as soon as anything settles, merged in the update that makes them. */
 const PROMPT_BATCHES: SettledBatchOptions = { minMeshes: 1, intervalSeconds: 0, budgetMs: Infinity }
 
 const pieceSystem = (options: Partial<PieceSystemOptions> = {}): PieceSystem =>
-  new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), ...options })
+  new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), ...options })
 
 /** `count` boxes 20 cm across, a metre apart along x, their bottoms `lift` m over the ground. */
 const dropBoxes = (system: PieceSystem, count: number, lift: number): THREE.Object3D[] =>
@@ -32,7 +33,7 @@ const awake = (system: PieceSystem): number => system.list.filter((body) => !bod
 const rendererScene = (settledBatches: SettledBatchOptions = PROMPT_BATCHES) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), settledBatches })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), settledBatches })
   const materials = [new THREE.MeshLambertMaterial({ color: 0x8a6a4a }), new THREE.MeshLambertMaterial({ color: 0x777777 })]
   const box = (id: string, at: [number, number, number], material: THREE.Material = materials[0]!): THREE.Mesh => {
     world.addObject(id, [partState('body', 'wood', { mass: 2 })])

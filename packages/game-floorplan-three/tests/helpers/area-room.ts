@@ -9,6 +9,7 @@ import { createFloorplanTestModule } from '../../src'
 import type { FloorplanTestOptions } from '../../src'
 import { THREE, planOf } from './houses'
 import { fakeDocument } from './fake-document'
+import { physicsOption } from '../setup-physics'
 
 let extras = false
 /** The rural and post-apocalyptic packs, on top of what `planOf` registers (residential, commercial, structure). */
@@ -25,7 +26,7 @@ export function fakeRoom(options: FloorplanTestOptions = {}) {
   registerExtras()
   const world = createDestruction({ seed: 1 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
   const camera = new THREE.PerspectiveCamera(70, 1.6, 0.05, 400)
   camera.position.set(0, 1.7, 14)
   const frames = new Set<(dt: number) => void>()

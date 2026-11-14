@@ -70,7 +70,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   `game-physics`, `game-physics-jolt`, `engine-*.ts`, `setup-physics.ts`, testes e boot da sala do spike e da fase 1, em commits limpos.
   Solver próprio como padrão (`plan.md` D3).
   Mecânica? sim · Aceite por comando? sim: `pnpm build && pnpm -r typecheck` e os testes de `physics`, `jolt`, `d3`, `dest` iguais aos do spike · `sonnet`.
-- **T2.2 Contrato final** de `game-physics` conforme T1.4: tirar o que o spike deixou e a decisão cortou; tipos explícitos em todo export.
+- **T2.2 ✅ Contrato final** de `game-physics` conforme T1.4: tirar o que o spike deixou e a decisão cortou; tipos explícitos em todo export.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics typecheck` e `pnpm check:packages` · `sonnet`.
 - **T2.3 Pacote de produção**: `jolt-physics` fixado na versão exata, `private` revisto, `LICENSE` com o texto MIT do Jolt, README de
   `game-physics` e `game-physics-jolt`, `pnpm-lock.yaml` commitado.

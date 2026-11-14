@@ -1,5 +1,5 @@
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyId, Material, PhysicsWorld, Quat, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyId, Material, Quat, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
 /** A fixed box of what does not move, as it is drawn: centre, half sizes and rotation (world). */
 export interface StaticSolid {
@@ -43,7 +43,7 @@ export class EngineStatics {
   readonly ids = new Set<BodyId>()
 
   constructor(
-    private readonly world: PhysicsWorld,
+    private readonly world: SeamWorld,
     private readonly material: Material,
   ) {}
 

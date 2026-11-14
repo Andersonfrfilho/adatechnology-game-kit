@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { StaticSolid } from '../src/engine-pieces'
 import { PieceSystem } from '../src/pieces'
 import type { PieceSweepHit, PieceSystemOptions } from '../src/pieces'
+import { physicsOption } from './setup-physics'
 
 const DT = 0.05
 /** A fixed box (a table, 80 cm high) whose near face is at x = 0.8. */
@@ -19,7 +20,7 @@ const edgeBeside = (_piece: unknown, from: Vec3, to: Vec3): PieceSweepHit | null
 
 /** A 20 cm box 5 cm beside the table face, its bottom 40 cm over the floor, dropped: its centre each update for 2 s, and when it fell asleep. */
 const drop = (solids: ReadonlyMap<string, readonly StaticSolid[]>, sweep?: typeof edgeBeside): { path: number[][]; asleepAt: number } => {
-  const options: PieceSystemOptions = { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => solids }
+  const options: PieceSystemOptions = { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => solids }
   if (sweep) options.sweep = sweep
   const system = new PieceSystem(THREE, options)
   const root = new THREE.Object3D()
@@ -64,7 +65,7 @@ const wallAhead = (_piece: unknown, from: Vec3, to: Vec3): PieceSweepHit | null 
 
 /** A 20 cm box slid along the floor at `speed` toward that wall: the fastest it goes back after meeting it, and whether it sleeps within 3 s. */
 const slideInto = (speed: number): { back: number; slept: boolean } => {
-  const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map(), sweep: wallAhead })
+  const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map(), sweep: wallAhead })
   const root = new THREE.Object3D()
   // 1 cm short of meeting it: the floor's grip (0.6) takes only a little of the speed first
   root.position.set(0.69, 0.1, 0)
@@ -94,7 +95,7 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('sliding along a wall the e
   it('a piece pressed into the wall as it falls slides down it and lands: only the part of its way into the wall is taken out', () => {
     const wallBeside = (_piece: unknown, from: Vec3, to: Vec3): PieceSweepHit | null =>
       to[0] > from[0] ? { object: 'wall', part: 'body', distance: 0, point: [from[0] + 0.1, from[1], from[2]], normal: [-1, 0, 0] } : null
-    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map(), sweep: wallBeside })
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map(), sweep: wallBeside })
     const root = new THREE.Object3D()
     root.position.set(0, 0.6, 0)
     const box = system.create('box', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)

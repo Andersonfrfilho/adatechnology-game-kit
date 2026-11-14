@@ -5,9 +5,11 @@ import { squareBoxOf } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
-import type { PhysicsWorld } from '@adatechnology/game-physics'
+import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
+import { resolvePhysics } from './physics-option'
+import type { PiecePhysics } from './physics-option'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -37,10 +39,11 @@ export interface PieceSystemOptions {
    */
   maxAwake?: number
   /**
-   * Spike: a rigid-body engine (`game-physics`) steps the pieces in place of the kit's own solver; the kit's rules stay on top (`EnginePieces`). The world is made
-   * by the host once its engine is loaded: there is no switching solver mid-game. Without it, the kit's own solver.
+   * What steps the pieces, handed by the host and never defaulted (left out, it throws): a `PhysicsLoop` (`game-physics`; the host calls `loop.step(dt)` and then `update`, and the
+   * system registers its phases on it), a world (the system makes its own loop and steps it inside `update`), or `'own'` for the kit's own solver. The kit's rules stay on top
+   * (`EnginePieces`). There is no switching mid-game.
    */
-  physics?: PhysicsWorld
+  physics: PiecePhysics
   /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
   staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
 }
@@ -255,6 +258,12 @@ export class PieceSystem {
   private solids: Solid[] = []
   /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
   private readonly engine: EnginePieces | null
+  /** The loop the system steps itself (a world was handed), the loop it only registers on (a loop was handed), or null on `'own'`. */
+  private readonly loop: PhysicsLoop | null
+  private readonly stepsItself: boolean
+  /** The phases' way out of the loop, and whether this frame's `prepare` ran (it runs once, in the first fixed step). */
+  private readonly leaveLoop: Array<() => void> = []
+  private prepared = false
   /** The boxes other pieces land on: a piece's own parts when it has them (`partBoxes`), else its box. */
   private surfaces: Solid[] = []
   /** The surfaces by the cells of a grid on the ground (`SURFACE_CELL`) their bounding circle covers: what is under a point is looked for in its cell only. */
@@ -293,10 +302,11 @@ export class PieceSystem {
     this.nextQ = new THREE.Quaternion()
     this.m = new THREE.Matrix4()
     this.ax = new THREE.Vector3()
-    // the room and the tests hand the engine's world by a global (`?solver=jolt`, PIECE_SOLVER=jolt set it; unset, the kit's own solver runs)
-    const physics = o.physics ?? (globalThis as { __PIECE_PHYSICS__?: () => PhysicsWorld }).__PIECE_PHYSICS__?.()
-    this.engine = physics
-      ? new EnginePieces(THREE, physics, {
+    const resolved = resolvePhysics(o.physics)
+    this.loop = resolved?.loop ?? null
+    this.stepsItself = resolved?.stepsItself ?? false
+    this.engine = resolved
+      ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.groundAt,
           gravity: o.gravity,
           staticSolids: o.staticSolids,
@@ -306,6 +316,55 @@ export class PieceSystem {
           onHardLanding: o.onHardLanding,
         })
       : null
+    if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)
+  }
+
+  /**
+   * The loop mode: the system's work goes into the loop's phases. `prepare` (sync, kinematic targets, the kit's rules that came before the step) runs in the first fixed step of
+   * a frame; a held piece's target again in each later one; the read-back and knock sounds after the steps (`contacts`); the budget and the measure after those (`rules`).
+   */
+  private joinLoop(loop: PhysicsLoop, engine: EnginePieces): void {
+    const h = loop.world.fixedStep
+    this.leaveLoop.push(
+      loop.add(
+        {
+          beforeStep: (step, frame) => {
+            if (this.prepared) return engine.moveHeld(this.list, step)
+            this.prepared = true
+            this.measure()
+            this.wakeUnsupported(true)
+            engine.prepare(this.list, frame.steps * h, step, this.apartDeep(frame.steps * h))
+          },
+        },
+        'actors',
+      ),
+      loop.add(
+        {
+          afterSteps: (dt, frame) => {
+            // a frame too short for a step has no events and nothing moved: nothing to read back
+            if (frame.steps > 0) engine.finish(this.list, dt, frame.time)
+          },
+        },
+        'contacts',
+      ),
+      loop.add(
+        {
+          afterSteps: () => {
+            const ran = this.prepared
+            this.prepared = false
+            if (!ran) return
+            this.measure()
+            this.keepBudget()
+          },
+        },
+        'rules',
+      ),
+    )
+  }
+
+  /** Takes the system's phases out of the loop it was handed. */
+  dispose(): void {
+    for (const leave of this.leaveLoop.splice(0)) leave()
   }
 
   /**
@@ -590,13 +649,22 @@ export class PieceSystem {
   }
 
   update(dt: number): void {
-    if (this.engine) {
+    if (this.engine && this.loop) {
+      // under a loop the host stepped it already, and its time is the one that counts
+      if (!this.stepsItself) {
+        this.time = this.loop.frame.time
+        return
+      }
       this.time += dt
       this.measure()
       // what the budget put to sleep (the engine did not) wakes when a point it lay on loses its support: the kit's rule. What the engine put to sleep it wakes
       // itself when what holds it moves; a fixed thing removed or the ground changed wakes what was there (`EnginePieces`)
       this.wakeUnsupported(true)
-      this.engine.update(this.list, dt, this.time, this.apartDeep(dt))
+      if (dt > 0) {
+        this.engine.prepare(this.list, dt, dt, this.apartDeep(dt))
+        this.loop.step(dt)
+        this.engine.finish(this.list, dt, this.time)
+      }
       this.measure()
       this.keepBudget()
       return

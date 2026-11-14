@@ -6,6 +6,7 @@ import { bindNavigator, createFloorNavigator, navigationDefOf } from '../src'
 import type { House, HouseBoxCollider } from '../src'
 import type { DestructionEvent } from '@adatechnology/game-destruction'
 import { THREE, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 // The floor navigator (the team's AndaresSDK, a 10 cm grid per floor) and its binding to the house and to its destruction.
 const FLAT = { id: 'flat', floors: [{ y: 0, h: 2.8, solids: [[0, 0, 6, 0.15], [0, 4.85, 6, 5]] as [number, number, number, number][] }, { y: 2.8, h: 2.8, solids: [[2, 0, 2.2, 5]] as [number, number, number, number][] }], stairs: [[3, 1, 4, 3, 0, 1, 'z']] as [number, number, number, number, number, number, 'z'][], own: true }
@@ -189,7 +190,7 @@ describe('bound to the destruction', () => {
     const plan = planOf('sobrado', 3)
     const world = createDestruction({ seed: 5 })
     const scene = new THREE.Scene()
-    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
     const { house } = houseOf(plan, { destruction: world, destructionRenderer: renderer })
     scene.add(house.group)
     const nav = createFloorNavigator()

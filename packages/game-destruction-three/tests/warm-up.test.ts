@@ -2,10 +2,11 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 describe('warm-up probes', () => {
   it('gives a mesh for the hole, patch and crack decals, each warm-up with materials of its own', () => {
-    const renderer = createDestructionRenderer(THREE, { scene: new THREE.Scene(), world: new FakeWorld().asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene: new THREE.Scene(), world: new FakeWorld().asWorld() })
     const first = renderer.warmUpProbes().group as THREE.Group
     const firstMaterials = first.children.map((child) => (child as THREE.Mesh).material)
     expect(first.children.length).toBeGreaterThanOrEqual(3)
@@ -18,7 +19,7 @@ describe('warm-up probes', () => {
   })
 
   it('draws every shared piece of a fragment once: the box, the six shards, the six wood splinters, MDF lumps, plywood veneers, broken board ends and broken masonry, the bullet-hole disc, opaque and glass', () => {
-    const renderer = createDestructionRenderer(THREE, { scene: new THREE.Scene(), world: new FakeWorld().asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene: new THREE.Scene(), world: new FakeWorld().asWorld() })
     const group = renderer.warmUpProbes().group as THREE.Group
     const fragmentMeshes = group.children.slice(3) as THREE.Mesh[]
     const geometries = new Set(fragmentMeshes.map((mesh) => mesh.geometry))

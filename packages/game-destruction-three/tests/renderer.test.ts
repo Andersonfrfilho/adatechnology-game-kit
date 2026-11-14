@@ -4,6 +4,7 @@ import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece, RendererOptions } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 function setup(opts: Partial<RendererOptions> = {}) {
   const scene = new THREE.Scene()
@@ -11,7 +12,7 @@ function setup(opts: Partial<RendererOptions> = {}) {
   scene.add(hostMesh)
   const world = new FakeWorld()
   const sounds: string[] = []
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (k) => sounds.push(k), eventBudgetMs: Infinity, ...opts })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onSound: (k) => sounds.push(k), eventBudgetMs: Infinity, ...opts })
   return { scene, world, renderer, hostMesh, sounds }
 }
 

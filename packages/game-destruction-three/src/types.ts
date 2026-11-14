@@ -9,6 +9,7 @@ import type * as THREE_NS from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { PiecePhysics } from './physics-option'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 import type { FragmentLifeRule } from './fragments'
@@ -39,6 +40,8 @@ export interface SoundDetail {
 }
 
 export interface RendererOptions {
+  /** What steps the loose pieces; required, so a host never ends up on the kit's solver by forgetting it. See `PieceSystemOptions.physics`. */
+  physics: PiecePhysics
   /** Scene that receives fragments, loose pieces, decals and particles. */
   scene: THREE_NS.Scene
   world: DestructionWorld

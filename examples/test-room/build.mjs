@@ -81,21 +81,18 @@ const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-
 //    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
 const fullHtml = page(await bundleMain(true), true)
 const at = fullHtml.lastIndexOf('</body>')
-// the room's pieces step on Jolt only with ?solver=jolt (the wasm loads before the room's bundle runs, so no piece system starts on the kit's solver); by default the kit's own solver
+// the room's pieces step on Jolt only with ?solver=jolt: one world from KIT_WORLD and one loop, handed to the room (`window.__roomPhysics`; the room steps it each frame). The wasm
+// loads before the room's bundle runs; by default the room is handed 'own' (the kit's own solver)
 const joltBoot = (
   await esbuild.build({
     stdin: {
-      contents: `import { createJoltEngine } from '@adatechnology/game-physics-jolt'
+      contents: `import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
+import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 window.__joltBoot = () => !/[?&]solver=jolt(&|$)/.test(location.search) ? Promise.resolve() : createJoltEngine().then((engine) => {
-  const alive = []
-  window.__PIECE_PHYSICS__ = () => {
-    if (alive.length >= 3) alive.shift().dispose()
-    const q = new URLSearchParams(location.search)
-    const world = engine.createWorld({ fixedStep: 1 / 120, velocityIterations: Number(q.get('iterations') ?? 20), sleepAfter: 0.5, sleepSpeed: 0.08, penetrationSlop: 0.002, maxPushOut: Number(q.get('pushout') ?? 0.002), maxBodies: 8192 })
-    alive.push(world)
-    window.__joltWorld = world
-    return world
-  }
+  const q = new URLSearchParams(location.search)
+  const world = engine.createWorld({ ...KIT_WORLD, velocityIterations: Number(q.get('iterations') ?? KIT_WORLD.velocityIterations), maxPushOut: Number(q.get('pushout') ?? KIT_WORLD.maxPushOut) })
+  window.__joltWorld = world
+  window.__roomPhysics = createPhysicsLoop(world)
 })`,
       resolveDir: here,
       loader: 'js',

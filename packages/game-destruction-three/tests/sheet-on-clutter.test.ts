@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 type Body = { objectId: string; root: THREE.Object3D; velocity: number[] }
 type Internals = {
@@ -17,7 +18,7 @@ const dropOnClutter = (seed: number): { lift: number; fastestUp: number } => {
   const next = (): number => ((state = (state * 1103515245 + 12345) % 2147483648) / 2147483648)
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   const box = (id: string, size: [number, number, number], at: [number, number, number], turn: [number, number, number]): Piece => {
     world.addObject(id, [partState('body', 'wood', { mass: size[0] * size[1] * size[2] * 400 + 1 })])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))

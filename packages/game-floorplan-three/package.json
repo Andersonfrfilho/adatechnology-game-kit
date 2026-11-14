@@ -77,6 +77,8 @@
     "@adatechnology/game-floorplan-commercial": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@adatechnology/game-destruction-three": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-vegetation": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-floorplan-rural": "workspace:^",

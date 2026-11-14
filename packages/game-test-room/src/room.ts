@@ -5,7 +5,7 @@ import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } f
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { DESTRUCTION_SOUND_KEYS, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { DESTRUCTION_SOUND_KEYS, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, Hit, SurfaceId } from '@adatechnology/game-contracts'
@@ -442,7 +442,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const water = createWaterEffects({ levelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null })
   const waterView = createWaterEffectsLayer(THREE, water)
   scene.add(waterView.group)
+  // the room is the host: it hands the pieces their physics (a loop it steps itself each frame, or the kit's own solver) and never leaves it to the renderer to choose
+  const physics = options.physics ?? 'own'
+  const physicsLoop = physics !== 'own' && isPhysicsLoop(physics) ? physics : null
   const renderer = createDestructionRenderer(THREE, {
+    physics,
     scene,
     world,
     vfx: vfx.world,
@@ -3827,6 +3831,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     simulationStamp++
+    physicsLoop?.step(dt)
     renderer.update(dt)
     destructionSound?.update(dt)
     for (const e of entries.values()) e.follower?.update?.()

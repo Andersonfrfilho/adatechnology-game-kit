@@ -425,6 +425,7 @@ class Renderer implements DestructionRenderer {
     this.cages = new RebarCages(THREE, o.scene)
     this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
+      physics: o.physics,
       groundAt: this.groundAt,
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       staticSolids: () => this.staticSolids(),
@@ -2691,6 +2692,7 @@ class Renderer implements DestructionRenderer {
     this.ground.dispose()
     this.cages.dispose()
     this.stopLanding()
+    this.pieceSys.dispose()
     this.visuals.dispose()
     this.ownVfx?.dispose()
     this.disposed = true

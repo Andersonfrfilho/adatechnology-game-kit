@@ -5,6 +5,7 @@ import { createDestructionRenderer } from '../src/renderer'
 import { boxesAlongGround, shapeContact, type ContactShape } from '../src/piece-contacts'
 import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const IDENTITY = new THREE.Matrix4().elements
 
@@ -77,7 +78,7 @@ describe('two boxes meet by their separating axes', () => {
 const setup = () => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   const box = (id: string, size: [number, number, number], at: [number, number, number]): Piece => {
     world.addObject(id, [partState('body', 'wood', { mass: 2 })])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))

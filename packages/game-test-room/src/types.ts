@@ -16,7 +16,7 @@ import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-playe
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { DestructionRenderer, FragmentLifeRule, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
@@ -191,6 +191,8 @@ export interface RoomFirstPersonArms {
 
 export interface TestRoomOptions {
   THREE: ThreeNamespace
+  /** What steps the loose pieces (`RendererOptions.physics`): a `PhysicsLoop` the room steps once per frame before drawing, a world, or `'own'` (the kit's own solver). Default `'own'`. */
+  physics?: PiecePhysics
   /** Element the bench fills (canvas + HUD). */
   container: HTMLElement
   /** `en` (default) or `pt-BR`. */

@@ -5,6 +5,7 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import type { DestructibleImpl, DestructibleSpec, ObjectState, PartState, Vec3 } from '@adatechnology/game-destruction'
 
 import { createDestructionRenderer } from '../src/renderer'
+import { physicsOption } from './setup-physics'
 
 /** A hosted body as a vehicle module registers one: drawn by its own module (nothing of it bound to the renderer), its parts as boxes, a roof that can break. */
 const parked = (): { impl: DestructibleImpl; breakRoof: () => void } => {
@@ -30,7 +31,7 @@ const parked = (): { impl: DestructibleImpl; breakRoof: () => void } => {
 const drop = (at: Vec3, seconds: number, setup?: (world: ReturnType<typeof createDestruction>, renderer: ReturnType<typeof createDestructionRenderer>) => void): { y: number; sleeping: boolean; world: ReturnType<typeof createDestruction>; step: (s: number) => number } => {
   const world = createDestruction()
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world, eventBudgetMs: Infinity })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, eventBudgetMs: Infinity })
   setup?.(world, renderer)
   const id = world.add({ parts: [{ id: 'crate', material: 'wood_hard', shape: { kind: 'box', size: [0.2, 0.2, 0.2] }, position: [0, 0, 0] }], joints: [] }, { position: at })
   const root = new THREE.Group()

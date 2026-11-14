@@ -152,3 +152,42 @@ Data 2026-11-13, máquina Intel Core Ultra 9 275HX. Escopo: `game-physics` (cont
 | `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos |
 
 Testes de navegador/GPU não rodados. T2.2 não está marcada como feita: falta a parte B.
+
+## T2.2 (parte B)
+
+Data 2026-11-13, máquina Intel Core Ultra 9 275HX. Escopo: costuras (`game-destruction-three`), testes de `game-destruction-three` e `game-floorplan-three`, boot da sala.
+
+- Gancho `globalThis.__PIECE_PHYSICS__` removido (`pieces.ts`, `setup-physics.ts`, `build.mjs`). `RendererOptions.physics` e `PieceSystemOptions.physics` são obrigatórios:
+  `PhysicsLoop | SeamWorld | 'own'` (`PiecePhysics`, `src/physics-option.ts`). Omitir é erro de TypeScript e, em tempo de execução (host em JS), `PhysicsOptionError`
+  (`code: 'PHYSICS_OPTION'`) dizendo o que passar. `isPhysicsLoop` entrou no `game-physics` e é reexportado pelo `game-destruction-three`.
+- Modo de um sistema (recebeu mundo): o `PieceSystem` cria o próprio laço (`createPhysicsLoop`) e o passa no `update(dt)`: sincroniza, `loop.step(dt)`, lê de volta, regras. Mesma
+  ordem de hoje; o mundo recebido tem de ser um `PhysicsWorld` completo (o tipo `SeamWorld` não tem `stepFixed`; checado em tempo de execução).
+- Modo laço (recebeu `PhysicsLoop`): fases registradas, `update(dt)` não dá passo (só lê `loop.frame.time`). `EnginePieces.update` virou `prepare` / `moveHeld` / `finish`; só o laço chama o passo.
+  - `actors` `beforeStep`: no 1º passo do quadro, `measure` + `wakeUnsupported` + `prepare` (sincronia, ancora, separar em fundo); em cada passo seguinte, o alvo do item segurado de novo, com `h` (não o `dt` do quadro).
+  - `contacts` `afterSteps`: `finish` (ler de volta, `sweep`, pouso duro, `still`, sons de batida). `rules` `afterSteps`: `measure` + `keepBudget`. Quadro com 0 passos não lê nada.
+- **Mudança de ordem no modo laço** (a do desenho §5, já prevista): `checkBroken`, `settlement` e `drainQueue` do renderer, que hoje rodam antes do passo, rodam depois dele (o jogo chama `loop.step`
+  antes de `renderer.update`); uma peça criada por esses eventos entra no mundo no passo do quadro seguinte. Dentro do sistema de peças a ordem é a de hoje. O `dt` do `topple` e do `still` é
+  `passos x h` (tempo simulado). Modo de um sistema: sem mudança.
+- Auxiliar único de testes (`tests/setup-physics.ts`, nos dois pacotes): `IS_JOLT`, `physicsOption()` (`'own'` ou mundo novo de `KIT_WORLD` com as variáveis do C6, `maxBodies` do `KIT_WORLD` = 8192),
+  `physicsLoop()`, `tick(physics, renderer, dt)`; `afterEach` descarta os mundos, teto de 4 vivos mantido. Todos os `createDestructionRenderer(`/`new PieceSystem(` dos testes passam por ele
+  (`game-destruction-three`: 10 de `PieceSystem`, o resto de renderer; `game-floorplan-three`: 10 arquivos). `game-floorplan-three` ganhou `setup-physics.ts` (na `vitest.config.ts`) e
+  `game-physics` e `game-physics-jolt` como `devDependencies` (`pnpm install --offline`, lockfile atualizado).
+- Variantes nos dois modos: `slope-friction.test.ts` (`describe.each` de "um sistema" e "laço", só com `PIECE_SOLVER=jolt`) e `loop-mode.test.ts` (queda, pouso duro e batida: mesmos pousos, mesmas batidas e mesmo
+  repouso nos dois modos; mais o teste do erro tipado). `audio.test.ts` não cria renderer (é o motor de som), então não tem variante; os sons que passam pela costura (`onHardLanding`, `onKnock`) estão no `loop-mode.test.ts`.
+- Sala: com `?solver=jolt`, o boot (`build.mjs`) cria o motor, UM mundo de `KIT_WORLD` (`?iterations`/`?pushout` ainda valem) e UM laço, em `window.__roomPhysics`; `main.js` passa ao `createTestRoom({ physics })`,
+  que passa ao renderer e dá `loop.step(dt)` uma vez por quadro antes de `renderer.update(dt)` (`room.ts`). Sem o parâmetro, `'own'`. `TestRoomOptions.physics` é opcional (padrão `'own'` escrito na sala, o host).
+  `node examples/test-room/build.mjs` gera; o HTML contém `__roomPhysics` e o erro tipado. Navegador não aberto.
+
+| Gate | Resultado |
+|---|---|
+| `pnpm build && pnpm -r typecheck` | 0 erros |
+| `game-destruction-three test`, solver próprio | **344 passam, 0 falham**, 48 pulados (343 + o teste do erro tipado) |
+| `PIECE_SOLVER=jolt game-destruction-three test` | **13 falham / 383 passam / 1 pulado**: os mesmos 11 conhecidos (pieces-stack 1, rolling 6, settled-debris 2, slope-friction 2 em "um sistema") + as 2 do mesmo teste na variante "laço" (igual ao "um sistema": mesmos dois testes de slope-friction); nenhuma falha nova |
+| `game-floorplan-three test`, solver próprio | **antes 715 passam / 3 falham; depois 715 / 3** (os mesmos 3 goldens `exact-golden` destruction/breach, spall, fracture, que já falhavam antes) |
+| `game-physics-jolt test` | 13 arquivos, **43/43** |
+| `pnpm check:packages` | ok (64 pacotes) |
+| `eslint` nos `.ts` alterados | 0 erros; 3 avisos de `max-lines` que já existiam (`pieces.ts`, `renderer.ts`, `room.ts`) |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos |
+
+Testes de navegador/GPU não rodados. T2.2 marcada como feita em `tasks.md`.
+

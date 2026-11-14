@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 // a table top 0.78 m high for x < 0 (from x = -1), the floor elsewhere: the ground under a piece is a step at the table's edge
 const TOP = 0.78
@@ -11,7 +12,7 @@ const onEdge = (x: number, opts: { velocity?: [number, number, number]; size?: [
   const size = opts.size ?? [0.3, 0.2, 0.25]
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), groundAt })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), groundAt })
   world.addObject('box', [partState('body', 'paper', { mass: opts.mass ?? 0.4 })])
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))
   const root = new THREE.Group()

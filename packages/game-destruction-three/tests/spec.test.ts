@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { physicsOption } from './setup-physics'
 
 const hasCore = existsSync(fileURLToPath(new URL('../../game-destruction/dist/index.js', import.meta.url)))
 
@@ -126,7 +127,7 @@ describe.skipIf(!hasCore)('userData.destructionPart as an object', () => {
     const { g, trunk, branch } = tree()
     const world = new FakeWorld()
     world.addObject('t', [partState('trunk', 'wood'), partState('branch', 'wood')])
-    const renderer = createDestructionRenderer(THREE, { scene: new THREE.Scene(), world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene: new THREE.Scene(), world: world.asWorld() })
     const trunkGeo = trunk.geometry
     const branchGeo = branch.geometry
     renderer.bind('t', g)
@@ -167,7 +168,7 @@ describe.skipIf(!hasCore)('a root scaled down to metres', () => {
     const { FakeWorld, partState } = await import('./fake-world')
     const world = new FakeWorld()
     const scene = new THREE.Scene()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('can', [partState('body', 'steel')])
     const { root, body } = can()
     scene.add(root)

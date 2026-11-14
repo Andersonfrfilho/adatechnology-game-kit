@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyId, Material, PhysicsWorld, Quat, Rolling, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
 import { buildGroundTile, sameGround } from './engine-ground'
 import type { GroundTile } from './engine-ground'
@@ -130,7 +130,7 @@ export class EnginePieces {
 
   constructor(
     THREE: typeof THREE_NS,
-    private readonly world: PhysicsWorld,
+    private readonly world: SeamWorld,
     private readonly o: EnginePieceOptions,
   ) {
     this.v = new THREE.Vector3()
@@ -176,9 +176,11 @@ export class EnginePieces {
     }
   }
 
-  /** One update: the pairs in `apart` (by object id, `a\0b`) do not meet in the engine; the kit puts them apart along the ground. */
-  update(list: readonly PieceBody[], dt: number, time: number, apart: ReadonlySet<string>): void {
-    if (dt <= 0) return
+  /**
+   * Before the frame's fixed steps: the pairs in `apart` (by object id, `a\0b`) do not meet in the engine; the kit puts them apart along the ground. `dt` is the frame's
+   * time, `h` the fixed step a kinematic target is reached in.
+   */
+  prepare(list: readonly PieceBody[], dt: number, h: number, apart: ReadonlySet<string>): void {
     // nothing here is made anew per piece per update (the collector's pauses were the worst frames: gate 0 B5)
     const n = ++this.updates
     for (const b of list) {
@@ -189,7 +191,7 @@ export class EnginePieces {
     this.groundTurn(list)
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
-    for (const b of list) this.sync(b, dt)
+    for (const b of list) this.sync(b, dt, h)
     this.layGround(list)
     this.keepApart(apart)
     for (const b of list) {
@@ -203,7 +205,21 @@ export class EnginePieces {
       link.before[2] = c.z
       link.beforeVy = b.velocity[1]
     }
-    this.world.step(dt)
+  }
+
+  /** Before each fixed step after the first of a frame: a held piece's target again, so it moves by `h`, not by the frame's `dt`. */
+  moveHeld(list: readonly PieceBody[], h: number): void {
+    for (const b of list) {
+      const link = this.links.get(b)
+      if (!link || !b.held) continue
+      const c = this.centre(b)
+      const q = b.root.quaternion
+      this.world.moveKinematic(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], h)
+    }
+  }
+
+  /** After the frame's fixed steps: each piece read back with the kit's rules on it, then the knock sounds from the frame's contact rows. */
+  finish(list: readonly PieceBody[], dt: number, time: number): void {
     for (const b of list) this.readBack(b, dt, time)
     this.knock(time)
   }
@@ -315,7 +331,7 @@ export class EnginePieces {
   }
 
   /** Makes the body of a piece, or brings it up to date with what changed on the piece since the last step (moved, pushed, picked up, put to sleep). */
-  private sync(b: PieceBody, dt: number): void {
+  private sync(b: PieceBody, dt: number, h: number): void {
     let c = this.centre(b)
     const q = b.root.quaternion
     let link = this.links.get(b)
@@ -366,7 +382,7 @@ export class EnginePieces {
       this.world.setMotion(link.id, b.held ? 'kinematic' : 'dynamic')
     }
     if (b.held) {
-      this.world.moveKinematic(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], dt)
+      this.world.moveKinematic(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], h)
       return
     }
     // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved

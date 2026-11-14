@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const stats = (xs: number[]): { median: number; p90: number; p99: number } => {
   const s = [...xs].sort((a, b) => a - b)
@@ -18,7 +19,7 @@ describe.runIf(process.env.BENCH === '1')('debris cost', () => {
   it('160 pieces at rest + 40 moving: ms per renderer.update', { timeout: 120000 }, async () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     let seed = 7
     const rnd = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647
     const ids: string[] = []

@@ -3,12 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 describe('dent on a coarse mesh', () => {
   it('moves at least one vertex inward by more than a millimetre when the dent is smaller than the vertex spacing', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: () => {}, vfx: createVfx() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onSound: () => {}, vfx: createVfx() })
     // a can: radius 33 mm, height 122 mm, 16 sides and one height segment, so the vertices are 61 mm apart
     const geometry = new THREE.CylinderGeometry(0.033, 0.033, 0.122, 16, 1)
     const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial())
@@ -33,7 +34,7 @@ describe('dent on a coarse mesh', () => {
   it('moves a label with the dented shell under it, so the label stays outside the shell', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: () => {}, vfx: createVfx() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onSound: () => {}, vfx: createVfx() })
     const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.122, 20, 6), new THREE.MeshStandardMaterial())
     const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0335, 0.0335, 0.06, 20, 3, true), new THREE.MeshStandardMaterial())
     const root = new THREE.Group()

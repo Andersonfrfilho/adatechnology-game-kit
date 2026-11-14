@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 /** Merge geometries into one indexed geometry and return it with the vertex range of each one. */
 function merge(geos: THREE.BufferGeometry[]): { geo: THREE.BufferGeometry; ranges: Array<[number, number]> } {
@@ -33,7 +34,7 @@ function setup(opts: { nonIndexed?: boolean } = {}) {
   const world = new FakeWorld()
   const sounds: string[] = []
   // a shared effects world adds nothing to the scene, so these tests read only what the host put there
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (k) => sounds.push(k), vfx: createVfx() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onSound: (k) => sounds.push(k), vfx: createVfx() })
   // two walls 0.2 apart, merged into one mesh and placed away from the origin
   const { geo: indexed, ranges } = merge([box(-0.6), box(0.6)])
   const geo = opts.nonIndexed ? indexed.toNonIndexed() : indexed

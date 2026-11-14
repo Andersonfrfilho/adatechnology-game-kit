@@ -14,6 +14,7 @@ import type { HouseDestruction } from '../src/destruction/types'
 import { buildSpecimenMeshes, DEFAULT_SPECIMENS, specimenSpec } from '../src/test-area/specimens'
 import { fakeDocument } from './helpers/fake-document'
 import { THREE, TEMPLATES, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 /**
  * Every bit of the houses: the seven templates of the Visor in both qualities and two seeds, at night, cut, one mesh per piece, without terrain
@@ -38,7 +39,7 @@ cases.push(['house/apartamento:1:floor2', () => house('apartamento', 1, { buildi
 const destroyed = (hit: (s: { world: DestructionWorld; d: HouseDestruction; centre: (id: string) => [number, number, number] }) => void): Root => {
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
   const { house: built } = houseOf(planOf('sobrado', 3), { destruction: world, destructionRenderer: renderer })
   scene.add(built.group)
   const d = built.destruction

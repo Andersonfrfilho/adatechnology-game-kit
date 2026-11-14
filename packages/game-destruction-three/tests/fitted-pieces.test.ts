@@ -6,6 +6,7 @@ import { fitOrientedBoxes } from '../src/oriented-boxes'
 import { PieceSystem } from '../src/pieces'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 /** A 4 x 3 m sheet pitched 30 degrees, drawn as a range of a merged mesh (the house's roof mesh): its vertices are in the house's space, the mesh itself square. */
 const roofSheet = (): THREE.BufferGeometry => new THREE.PlaneGeometry(4, 3, 4, 4).rotateX(-Math.PI / 2).rotateX(Math.PI / 6).translate(0, 2, 0)
@@ -27,7 +28,7 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is 
   it('a 3 kg roof sheet made a piece pitched 30 degrees falls flat on the ground, not onto the 1.5 m tall box around it', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: Infinity })
     world.addObject('roof', [partState('sheet', 'steel', { mass: 3 })])
     const geo = roofSheet()
     const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial())
@@ -46,7 +47,7 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is 
 
   it('a piece made 15 cm inside a fixed shelf is out of it in the update it is made, on its top, and does not rise after', () => {
     const shelf: StaticSolid[] = [{ center: [0, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] }]
-    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map([['shelf', shelf]]) })
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map([['shelf', shelf]]) })
     const root = new THREE.Object3D()
     // its bottom at 0.85, the shelf's top at 1
     root.position.set(0.1, 0.95, 0)
@@ -68,7 +69,7 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is 
       { center: [-0.58, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] },
       { center: [0.58, 0.5, 0], half: [0.5, 0.5, 0.5], rotation: [0, 0, 0, 1] },
     ]
-    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map([['wall', solids]]) })
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), staticSolids: () => new Map([['wall', solids]]) })
     const root = new THREE.Object3D()
     root.position.set(0, 0.5, 0)
     const piece = system.create('door', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
@@ -102,7 +103,7 @@ describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is 
   })
 
   it('a kit move that puts a piece into the ground is refused: it stays where the engine had it, and does not sink (the room: 214 fell through in one blast)', () => {
-    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
     const root = new THREE.Object3D()
     root.position.set(0, 0.1, 0)
     system.create('crate', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)

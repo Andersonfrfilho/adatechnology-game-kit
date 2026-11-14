@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 /** The files of the seam between the kit's pieces and the engine: what an update makes in them is what the collector then pauses for. */
 const SEAM = ['pieces.ts', 'engine-pieces.ts', 'engine-statics.ts', 'piece-contacts.ts', 'friction.ts', 'contacts.ts', 'world.ts']
@@ -28,7 +29,7 @@ const seamBytes = (node: ProfileNode, owner: string): number => {
 const debris = (): { update: () => void; kick: () => void } => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   let seed = 7
   const rnd = (): number => (seed = (seed * 16807) % 2147483647) / 2147483647
   const ids: string[] = []

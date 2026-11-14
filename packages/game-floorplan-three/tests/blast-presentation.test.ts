@@ -6,6 +6,7 @@ import type { DestructionEvent } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 const BLAST_ENERGY = 4e6
 const BLAST_RADIUS = 6
@@ -16,7 +17,7 @@ const RECORDED_BLAST_OUTCOME = '7cd91a45946fc431a0ae18c77cefb3a791525f13'
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
   const { house } = houseOf(planOf('sobrado', 3), { destruction: world, ...(isDrawn ? { destructionRenderer: renderer } : {}), ...(paintBudgetMs !== undefined ? { breachPaintBudgetMs: paintBudgetMs } : {}) })
   scene.add(house.group)
   const d = house.destruction

@@ -362,5 +362,5 @@ export const mixFriction = (a: number, b: number): number => Math.sqrt(a * b)
 /** The world without the calls only the loop (or the owner) makes: what the seams (`engine-*.ts` of the domain packages) are handed. */
 export type SeamWorld = Omit<PhysicsWorld, 'step' | 'stepFixed' | 'clearEvents' | 'dispose' | 'saveState' | 'restoreState'>
 
-export { createPhysicsLoop } from './loop'
+export { createPhysicsLoop, isPhysicsLoop } from './loop'
 export type { PhaseOrder, PhysicsFrame, PhysicsLoop, PhysicsLoopOptions, PhysicsPhase } from './loop'

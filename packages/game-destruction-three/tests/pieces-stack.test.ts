@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const setup = () => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   const box = (id: string, size: [number, number, number], at: [number, number, number]) => {
     world.addObject(id, [partState('body', 'wood', { mass: 2 })])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))
@@ -82,7 +83,7 @@ describe('furniture that came apart', () => {
   it('what stayed standing is loose too: a lone leg topples and ends lower than a step', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('table', [partState('leg', 'wood', { mass: 1.4 }), partState('board', 'wood', { mass: 4 })], [['leg'], ['board']])
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.74, 0.05))
     leg.position.y = 0.37
@@ -104,7 +105,7 @@ describe('furniture that came apart', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const loosened: string[] = []
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onLoosened: (objectId) => loosened.push(objectId) })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onLoosened: (objectId) => loosened.push(objectId) })
     world.addObject('table', [partState('leg', 'wood', { mass: 1.4 }), partState('board', 'wood', { mass: 4 })], [['leg'], ['board']])
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.74, 0.05))
     const board = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.16))
@@ -123,7 +124,7 @@ describe('furniture that came apart', () => {
   it('a board on two legs in a line falls over too', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('table', [partState('frame', 'wood', { mass: 18 }), partState('other', 'wood', { mass: 1 })], [['frame'], ['other']])
     const legs = [-0.7, 0.7].map((x) => {
       const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.74, 0.05))
@@ -148,7 +149,7 @@ describe('furniture that came apart', () => {
   it('a fixed object that is not furniture keeps standing', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('post', [partState('leg', 'wood', { mass: 1.4 }), partState('sign', 'wood', { mass: 4 })], [['leg'], ['sign']])
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.74, 0.05))
     const sign = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.16))

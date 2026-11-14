@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import { furnitureSpec } from '../src'
 import { fakeDocument } from './helpers/fake-document'
+import { physicsOption } from './setup-physics'
 
 describe('a toppled bookcase spills its books', () => {
   it('pushed over, the books leave the case as pieces of their own and land apart from it', () => {
@@ -13,7 +14,7 @@ describe('a toppled bookcase spills its books', () => {
     const books = made.spec.parts.filter((part) => part.material === 'paper').map((part) => part.id)
     const scene = new THREE.Scene()
     const world = createDestruction()
-    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
     const id = world.add(made.spec, { id: 'bookcase' })
     const root = made.build(THREE)
     scene.add(root)
@@ -36,7 +37,7 @@ describe('a toppled bookcase spills its books', () => {
     const made = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument })
     const scene = new THREE.Scene()
     const world = createDestruction()
-    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
     const id = world.add(made.spec, { id: 'bookcase' })
     const root = made.build(THREE)
     scene.add(root)
@@ -56,7 +57,7 @@ describe('a toppled bookcase spills its books', () => {
     const made = furnitureSpec(THREE, 'bookcase', { catalog: defaultFurnitureCatalog(), document: fakeDocument })
     const scene = new THREE.Scene()
     const world = createDestruction()
-    const renderer = createDestructionRenderer(THREE, { scene, world, maxAwakePieces: SUGGESTED_MAX_AWAKE_PIECES, maxAwakeFragments: SUGGESTED_MAX_AWAKE_FRAGMENTS, settledBatches: {} })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, maxAwakePieces: SUGGESTED_MAX_AWAKE_PIECES, maxAwakeFragments: SUGGESTED_MAX_AWAKE_FRAGMENTS, settledBatches: {} })
     const id = world.add(made.spec, { id: 'bookcase' })
     const root = made.build(THREE)
     scene.add(root)

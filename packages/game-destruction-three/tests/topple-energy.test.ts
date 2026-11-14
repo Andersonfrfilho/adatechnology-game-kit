@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const DT = 0.05
 const G = 9.81
@@ -14,7 +15,7 @@ const G = 9.81
 const standAndRelease = (size: [number, number, number], mass: number) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   world.addObject('panel', [partState('body', 'wood', { mass })])
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))
   const root = new THREE.Group()

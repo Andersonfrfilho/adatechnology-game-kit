@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const run = (renderer: { update(dt: number): void }, seconds: number): void => {
   for (let t = 0; t < seconds; t += 1 / 60) renderer.update(1 / 60)
@@ -12,7 +13,7 @@ describe('the ground changes under what is asleep on it', () => {
     let floor = 0
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), groundAt: () => floor })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), groundAt: () => floor })
     world.addObject('block', [partState('body', 'concrete', { mass: 60 })])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3))
     const root = new THREE.Group()
@@ -31,7 +32,7 @@ describe('the ground changes under what is asleep on it', () => {
   it('wakeRegion wakes what lies in the disc at once', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), groundAt: () => 0 })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), groundAt: () => 0 })
     world.addObject('block', [partState('body', 'concrete', { mass: 60 })])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3))
     const root = new THREE.Group()

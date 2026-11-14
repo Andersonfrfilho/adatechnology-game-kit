@@ -4,6 +4,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const G = 9.81
 /** A 350 ml can: 6.6 cm across, 11.5 cm long, a steel wall of a quarter millimetre (7850 kg/m3), 60 g empty and 410 g full. */
@@ -24,7 +25,7 @@ const scene3 = () => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   world.materials.set('steel', mat('steel', { density: 7850, tags: ['metal'], fracture: 'none' }))
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   return { scene, world, renderer }
 }
 
@@ -271,7 +272,7 @@ describe('a can and the furniture', () => {
   it('a can rolling into a table leg bounces off it by the restitution of steel on wood', () => {
     const scene = new THREE.Scene()
     const world = new LegWorld({ min: [0.3, 0, -0.025], max: [0.35, 0.7, 0.025] })
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const s = { scene, world, renderer } as unknown as Setup
     const can = addCan(s, 'can', [0, CAN_RADIUS + 0.001, 0], { velocity: [2.5, 0, 0] })
     can.piece.angularVelocity[2] = -2.5 / CAN_RADIUS
@@ -384,7 +385,7 @@ describe('what others meet a piece by after a part comes off it', () => {
   it('a shelf of 14 boards (part boxes, no contacts) that loses its top board is met by the 13 left, not by the one gone', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: Infinity })
     const ids = Array.from({ length: 14 }, (_, i) => `board${i}`)
     world.addObject('shelf', ids.map((id) => partState(id, 'wood', { mass: 1 })), [ids.slice(0, 13), [ids[13] ?? 'board13']])
     const root = new THREE.Group()
