@@ -103,6 +103,22 @@ const joinedHouse = (s: Stage) => {
   return { mesh, ranges }
 }
 
+/** A door frame as a house draws it: two posts and a lintel, three boxes in one part, one vertex range. The opening is 0.9 m wide and 2.05 m high. */
+const doorFrame = (s: Stage) => {
+  const { geometry, ranges } = merge([
+    placed(new THREE.BoxGeometry(0.05, 2.1, 0.17), [-0.475, 1.05, 40]),
+    placed(new THREE.BoxGeometry(0.05, 2.1, 0.17), [0.475, 1.05, 40]),
+    placed(new THREE.BoxGeometry(0.9, 0.05, 0.17), [0, 2.075, 40]),
+  ])
+  const mesh = new THREE.Mesh(geometry)
+  const root = new THREE.Group()
+  root.add(mesh)
+  s.scene.add(root)
+  root.updateMatrixWorld(true)
+  s.world.addObject('frame', [partState('frame', 'wood', { mass: 12 })])
+  s.renderer.bind('frame', root, { parts: { frame: { mesh, range: [ranges[0]![0], ranges[2]![1]] } } })
+}
+
 /** The height of the first thing the engine has under (x, z) looking down from 50 m: the drawn top, in the engine's own world. */
 const topUnder = (s: Stage, x: number, z: number): number => {
   const hit = s.physics.rayFirst([x, 50, z], [0, -1, 0], 100)
@@ -153,6 +169,19 @@ engineOnly('every drawn fixed thing collides in the engine', () => {
     expect(onSheet.bottom()).toBeGreaterThan(1.9)
     expect(onColumn.bottom()).toBeGreaterThan(0.98)
     expect(onColumn.bottom()).toBeLessThan(1.05)
+  })
+
+  it('a door frame (two posts and a lintel in one part) is its triangles, not the box around the opening: a block put in the doorway falls to the floor', () => {
+    const s = stage()
+    doorFrame(s)
+    s.run(0.2)
+    const held = s.statics().bodies.get('frame')!.held
+    expect(held.get('frame:0')!.solid.mesh).toBeDefined()
+    const block = drop(s, 'in_doorway', [0, 1, 40], 0.1)
+    s.run(3)
+    expect(block.piece.sleeping).toBe(true)
+    expect(block.bottom()).toBeLessThan(0.03)
+    expect(block.bottom()).toBeGreaterThan(-0.03)
   })
 
   it('a part that breaks has no body any more: nothing collides where nothing is drawn', () => {
