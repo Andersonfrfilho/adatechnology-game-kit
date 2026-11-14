@@ -74,7 +74,18 @@ export class WakeQueue<TItem> {
   clear(): void {
     this.entries = []
   }
+
+  /** What waits, in queue order, for a save: the items are the host's own data (the host keeps them saveable). */
+  saveState(): WakeQueueState<TItem> {
+    return this.entries.map((entry) => ({ item: entry.item, priority: entry.priority, maxDelay: entry.maxDelay, waited: entry.waited }))
+  }
+
+  restoreState(state: WakeQueueState<TItem>): void {
+    this.entries = state.map((entry) => ({ ...entry }))
+  }
 }
+
+export type WakeQueueState<TItem> = ReadonlyArray<{ readonly item: TItem; readonly priority: number; readonly maxDelay: number; readonly waited: number }>
 
 /** Milliseconds an awake body costs a step once the pile is awake, and in the frame it wakes (the world's step over its awake bodies; B6 production world, evidence T3.6d): until the world has been measured. */
 export const DEFAULT_PHYSICS_COST_PER_BODY_MS = 0.0022
@@ -94,9 +105,29 @@ export class PhysicsCostMeter {
   private wakePerBodyMs: number
   private lastAwake = 0
 
-  constructor(priorMs: number = DEFAULT_PHYSICS_COST_PER_BODY_MS, wakePriorMs: number = DEFAULT_WAKE_COST_PER_BODY_MS) {
+  constructor(
+    private readonly priorMs: number = DEFAULT_PHYSICS_COST_PER_BODY_MS,
+    private readonly wakePriorMs: number = DEFAULT_WAKE_COST_PER_BODY_MS,
+  ) {
     this.perBodyMs = priorMs
     this.wakePerBodyMs = wakePriorMs
+  }
+
+  /** Back to the priors, as a world that was never measured. */
+  reset(): void {
+    this.perBodyMs = this.priorMs
+    this.wakePerBodyMs = this.wakePriorMs
+    this.lastAwake = 0
+  }
+
+  saveState(): PhysicsCostMeterState {
+    return { perBodyMs: this.perBodyMs, wakePerBodyMs: this.wakePerBodyMs, lastAwake: this.lastAwake }
+  }
+
+  restoreState(state: PhysicsCostMeterState): void {
+    this.perBodyMs = state.perBodyMs
+    this.wakePerBodyMs = state.wakePerBodyMs
+    this.lastAwake = state.lastAwake
   }
 
   get costPerBodyMs(): number {
@@ -115,6 +146,12 @@ export class PhysicsCostMeter {
     if (woke) this.wakePerBodyMs += COST_SMOOTHING * (sample - this.wakePerBodyMs)
     else this.perBodyMs += COST_SMOOTHING * (sample - this.perBodyMs)
   }
+}
+
+export interface PhysicsCostMeterState {
+  readonly perBodyMs: number
+  readonly wakePerBodyMs: number
+  readonly lastAwake: number
 }
 
 /** Pieces of one blast that enter physics, at least and at most, and the milliseconds of step (in the frame they wake) the debris of one blast may add: the count follows the measured wake cost between them. */

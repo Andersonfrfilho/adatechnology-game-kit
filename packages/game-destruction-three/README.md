@@ -173,6 +173,7 @@ bounded. **Every number is an option** (per renderer in `RendererOptions.blastDe
 
 | Option | Default | What it does |
 |---|---|---|
+| `debrisCost` (renderer option) | `{ source: 'measured' }` | Where the step cost above comes from. `measured` reads the loop's wall-clock step time (`PhysicsFrame.stepMs`): batch sizes and piece counts then depend on the machine, so two machines (or a replay) diverge; `record` collects each frame's sample. `{ source: 'fixed' }` never reads the clock: batches and counts come only from the numbers in this table, the same on every machine (tests, lockstep). `{ source: 'replay', samples }` plays a recorded list frame by frame instead of the clock. |
 | `wakeCostTargetMs` | 4 | The physics step may reach this as debris wakes: each frame wakes as many (nearest `focus` first, else the blast's centre) as the cost of the frames before leaves room for. Nothing is timed per body |
 | `maxWakeDelay` | 0.08 s | A piece waits at most this to wake, whatever the cost |
 | `maxQueuedWakes` | 2048 | Pieces waiting to wake at most; the farthest over it wake at once |

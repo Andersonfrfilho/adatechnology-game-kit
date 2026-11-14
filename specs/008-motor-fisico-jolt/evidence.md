@@ -1235,3 +1235,63 @@ A ponte (chamadas do ouvinte, 0,8 ms de 68 mil chamadas, T3.6c) não foi medida 
 | `eslint` nos arquivos mudados | 0 erros (avisos antigos de `max-lines`) |
 | `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono |
 | GPU / navegador | nenhum |
+
+## T3.7 — C8: determinismo entre processos e salvar/carregar bit a bit (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `motor-fisico-jolt` (branch `feat/motor-fisico-jolt`), sobre `5e438832`. Feito por `executor` (sonnet). Sem GPU nem navegador. **Parte Node pronta; Chromium, Bun e Firefox ficam à mão (lista abaixo).**
+
+### O que era não determinístico
+Um só ponto: a política de destroços da D4 (T3.6d) dimensionava lotes de despertar (`WakeQueue.release(dt, lastStepMs, custoPorCorpo)`) e a contagem de peças da explosão (`physicsPieceCount`) pelo tempo de parede do passo (`PhysicsFrame.stepMs`, `performance.now()` em `loop.ts`) e pelo `PhysicsCostMeter` alimentado por ele. A mesma partida em máquinas de velocidades diferentes acordava lotes e soltava quantidades de peças diferentes, e a física seguinte divergia. O mundo Jolt em si já era determinístico (T2.2A, `cascade.test.ts`).
+
+### Escolha (a menor consistente com `veiculos.md` §15.3 item 5 e §17.2, e com o `spec.md` §12 D4)
+- **Padrão continua `measured`** (a D4 do dono diz que a contagem sai do custo medido na máquina, e o B6 foi ajustado assim). Nada mudou para quem não pede nada.
+- **Opção nova `RendererOptions.debrisCost`** (`game-destruction-three/src/blast-debris.ts`, `DebrisCostOptions`), três fontes do custo do quadro:
+  - `{ source: 'measured', record? }`: lê `loop.frame.stepMs`; com `record` junta a amostra (`stepMs`, `active`) de cada quadro.
+  - `{ source: 'fixed' }`: **nunca lê o relógio**: `lastStepMs = 0` e o medidor não observa; lotes e contagens saem só dos números configurados (`wakeCostTargetMs`, `physicsCostTargetMs`, `physicsCostPerBodyMs`, `wakeCostPerBodyMs`...). É o modo de teste, replay e lockstep (a regra do §15.3: "não há média móvel nem ajuste durante o jogo").
+  - `{ source: 'replay', samples }`: toca as amostras gravadas, quadro a quadro, no lugar do relógio: a partida medida numa máquina reproduz as mesmas decisões em outra (veiculos §17.2: "replays gravam as decisões"; aqui se grava a entrada das decisões, que é o que as determina).
+- A amostra é lida **uma vez por `update`** (`sampleCost`, antes de acordar a fila), em vez de duas leituras do relógio vivo; `advanceWakes` e `measureCost` usam a mesma. `renderer.reset()` agora também esvazia a fila de despertar, zera o medidor (`PhysicsCostMeter.reset()`) e o índice do replay.
+- `WakeQueue.saveState/restoreState` e `PhysicsCostMeter.saveState/restoreState/reset` (`game-physics/src/wake-queue.ts`), `BlastWakes.saveState/restoreState`. Os itens da fila são dados do hospedeiro (no teste do Jolt, `{índice, impulso}`).
+
+### Testes (todos Node, sem GPU)
+| Arquivo | Teste | O que prova |
+|---|---|---|
+| `game-physics-jolt/tests/determinism.test.ts` | dois processos, custo fixo, máquinas de custo 0,002 e 0,09 ms/corpo | 240 quadros, hash por quadro (bits de pose e velocidade de todos os corpos, fila, medidor) **idêntico**, e idêntico ao do processo do teste com 0,5 |
+| idem | dois processos, mesmo custo medido | idêntico |
+| idem | **controle negativo:** dois processos, custo medido 0,002 e 0,09 | **divergem** (o perigo é real; sem este teste o de cima poderia passar por a cena não depender do custo) |
+| idem | salvar no quadro 11 (fila com 23 de 48 pendentes), rodar 120, carregar num mundo novo e no mesmo, rodar 120 (modos `fixed` e `measured`) | hashes iguais bit a bit nos dois. Cena: pilha 20:1, lata rolando (`rolling`), caixa deslizando (atrito), par ignorado (`ignorePair`), pilha de 48 caixas dormindo com semente, fila e medidor |
+| `game-destruction-three/tests/determinism.test.ts` (só `PIECE_SOLVER=jolt`) | dois processos, `fixed`, custo 0,002 e 0,09 | 150 quadros idênticos; cena: bacia com semente (4 placas e a folha), pilha de 5, 100 caixas soltas com explosão no quadro 30 sob a política D4 (50 peças entram na física, fila de despertar), hash das poses e velocidades dos `Piece`, dos bytes do mundo e da fila |
+| idem | **controle negativo:** `measured`, custo 0,002 e 0,09 | divergem |
+| idem | **replay:** grava num processo (`measured`, 0,03) e toca em outro (`replay`, que reporta 0,09) | os 150 hashes iguais aos da gravação |
+| idem | salvar no quadro 32 (fila com peças pendentes), rodar 100; um renderer **refeito** até o quadro 32 recebe os bytes sobre um mundo acordado à força; rodar 100 | iguais bit a bit |
+| `game-physics/tests/wake-queue.test.ts` | salvar/restaurar fila e medidor; `reset` volta aos padrões | exato |
+
+**Limite achado (não é regressão):** restaurar os bytes do mundo no **mesmo** renderer depois de ele rodar mais quadros **não** reproduz os quadros: o renderer tem estado próprio fora do mundo (`EnginePieces`: `isSlipping`, lado do empurro, `turn`, ligações; o `PieceSystem`: `still`, `calm`; fila com fechamentos sobre as peças; e o conjunto de corpos pode mudar entre salvar e carregar, o que o `saveState` não aceita: "mesmos corpos, mesma ordem"). Restaurar só campos de `Link` e `PieceBody` não bastou (testado), então a causa exata não foi isolada; **hipótese não verificada:** corpos de chão criados quando as peças se espalham. Por isso o teste do renderer recarrega num renderer refeito (a descrição do hospedeiro é refeita, como o desenho §17.3 manda). Salvar o estado do renderer inteiro é trabalho de hospedeiro (spec 009, T6.9/009-h), não desta task.
+
+### Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0, sem `Failed` |
+| `game-destruction-three` próprio | 386 passam, 0 falham (131 pulados; os 4 testes novos são só Jolt) |
+| `PIECE_SOLVER=jolt game-destruction-three` | 454 passam (+4 novos), **só as 2 conhecidas** (`rolling`: latas no ar com restituição; cinquenta latas) |
+| `game-physics-jolt` | 61 passam (+5), 0 falham (2 pulados: o perfil e o worker) |
+| `game-physics` | 9 passam (+1) |
+| `game-destruction` | 507 passam |
+| `game-floorplan-three` | 715 passam, 3 falham (`exact-golden`: breach, spall, fracture, as 3 conhecidas) |
+| Bacia Jolt, `BOWL_SEEDS=64`, um processo | **128/128**, números iguais aos da D4 (`worstC1 −0,1416`, `worstC2 0`, `worstC3 0,01363`, `fellThrough 0`) |
+| B6 produção (`cascade-tail.test.ts`, 9 invocações × 3 = 27 valores), rodada 1 | p99 mediana **3,67**, pior **5,37** (um valor; os outros 26 ≤ 4,19), despertar mediana 6,28 / máx 6,95, ≤ 1 quadro > 6 ms |
+| B6 produção, rodada 2 | p99 mediana **3,56**, pior **4,82**, despertar mediana 6,09 / máx 8,27, ≤ 1 quadro > 6 ms |
+| `eslint` nos arquivos mudados | 0 erros (aviso antigo de `max-lines` no `renderer.ts`) |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono |
+
+Sobre o B6: o caminho quente do Jolt não mudou (só métodos novos na fila e no medidor, e o renderer lê a amostra uma vez por `update`). Na rodada 1 um valor isolado (5,37) passou de 5 com o desktop em uso (VM `qemu`, Chrome; carga 3); a rodada 2, repetida, ficou dentro (4,82). Nada foi afrouxado: a meta "nenhum > 5" fica como está e este um valor fica registrado.
+
+### Procedimento à mão (dono): C8 em Chromium, Bun e Firefox
+O teste automático é Node. Para os outros runtimes a pergunta é a mesma: **mesma semente e dt dão o mesmo hash de pose?** Use o modo `fixed` (os hashes só valem entre máquinas com ele; no `measured` eles divergem por desenho).
+1. Na raiz do worktree: `pnpm build` (os pacotes `game-physics`, `game-physics-jolt`).
+2. Rodar a cena do `tests/determinism.test.ts` do `game-physics-jolt` em Node e guardar a saída: `DETERMINISM_OUT=/tmp/node.json DETERMINISM_MODE=fixed DETERMINISM_COST=0.01 npx vitest run tests/determinism.test.ts` (dentro de `packages/game-physics-jolt`). O arquivo é uma lista de 240 hashes.
+3. **Chromium:** abrir a sala (`examples/test-room`, porta 4280) ou uma página mínima que importe `@adatechnology/game-physics-jolt`, rodar `Sim` (de `tests/determinism-sim.ts`: `Sim.create(7, 'fixed', 0.01)`, 240 × `step()` e `hash()` por quadro; `hash` usa `node:crypto`, trocar por `crypto.subtle.digest('SHA-256', ...)` ou comparar os `Float64Array` byte a byte) e comparar a lista com a do Node. [ ] iguais nos 240 quadros.
+4. **Bun:** `cd packages/game-physics-jolt && DETERMINISM_OUT=/tmp/bun.json DETERMINISM_MODE=fixed DETERMINISM_COST=0.01 bunx vitest run tests/determinism.test.ts` e `cmp /tmp/node.json /tmp/bun.json`. [ ] `cmp` sem diferença.
+5. **Firefox:** igual ao Chromium (passo 3), na mesma máquina. [ ] iguais.
+6. Salvar e carregar nos três: no mesmo `Sim`, `save()` no quadro 11, rodar 120, `load(saved)`, rodar 120; as duas listas de hashes devem ser idênticas. [ ] Node (feito), [ ] Chromium, [ ] Bun, [ ] Firefox.
+7. Anotar o resultado aqui (iguais/divergem, versão do navegador, onde divergiu o primeiro quadro). Divergência entre runtimes é achado para o C8 (build sem `CROSS_PLATFORM_DETERMINISTIC`, `spec.md` §5), não falha desta task.
+

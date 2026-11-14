@@ -124,7 +124,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   20:1 e pilha de 5. Roda por variável de ambiente, fora do `test` padrão.
   **Status 2026-11-14 (T3.6d, decisões do dono): produção 0 falhas (dt 1/60, ×1, 32 it.), piso com 19 falhas de 2304 (pilha 20:1 a 1/144: 18; bacia ×1,5 C3: 1); não ✅, ver `evidence.md` T3.6d.** Antes: parcial (`evidence.md`, seção T3.6): varredura pronta (`node tests/sweep-c6.mjs`, 678 s, 6912 corridas), mas 1742 falham: 31/64 da pilha 20:1 na produção (convergência com razão de massa 20:1; passa a ≥ 32 iterações), 8/10 iterações (conflito com a T3.3) e dt 1/144 (C2 0,3 m na semente 61). Decisão do dono pendente.
   Mecânica? sim · Aceite por comando? sim: o comando da varredura com 0 falhas · `sonnet`.
-- **T3.7 C8: determinismo** entre dois processos e salvar/carregar bit a bit, como teste de `d3` e `jolt`. Chromium e Bun à mão; Firefox à mão.
+- **T3.7 C8: determinismo** entre dois processos e salvar/carregar bit a bit, como teste de `d3` e `jolt`. Chromium e Bun à mão; Firefox à mão. ✅ **Parte Node (2026-11-14, `evidence.md` T3.7):** testes em `game-physics-jolt/tests/determinism.test.ts` e `game-destruction-three/tests/determinism.test.ts`; política D4 com `debrisCost` (`fixed`/`replay`). **Pendente à mão:** Chromium, Bun e Firefox (lista na T3.7 da evidence).
   Mecânica? sim · Aceite por comando? sim (Node) · `sonnet`.
 - **T3.8 Sala (à mão, `CLAUDE.md` §9):** blast e martelo, 5 rodadas cada, com a régua de T3.4, nos dois solvers. Aceite: C2 e C4 da sala.
   Régua: só o ganho sem entrada de fora (C2), sono contado da última entrada de fora (C4); 0 peças acima de 3,5 cm, tudo dormindo em ≤ 3 s e

@@ -9,7 +9,7 @@ import type * as THREE_NS from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
-import type { BlastDebrisOptions } from './blast-debris'
+import type { BlastDebrisOptions, DebrisCostOptions } from './blast-debris'
 import type { PiecePhysics } from './physics-option'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
@@ -76,6 +76,8 @@ export interface RendererOptions {
    * (`BLAST_DEBRIS_DEFAULTS`); a blast can override them (`ExplodeOptions.debris`).
    */
   blastDebris?: BlastDebrisOptions
+  /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
+  debrisCost?: DebrisCostOptions
   /** Where the player is (m): the far and old rule of `blastDebris.far` counts distance from it. Without it, no piece is far. */
   focus?: () => Vec3
   /** A piece faded away (`blastDebris.far.action: 'fade'`, or over `maxLivePieces`) has left the scene: the host owns its geometry and disposes it here. */

@@ -8,7 +8,7 @@ import type { VfxWorld } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris } from './blast-debris'
-import type { ResolvedBlastDebris } from './blast-debris'
+import type { DebrisCostSample, ResolvedBlastDebris } from './blast-debris'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -309,6 +309,9 @@ class Renderer implements DestructionRenderer {
   private readonly blastDebris: ResolvedBlastDebris | null
   private readonly blastWakes: BlastWakes | null
   private readonly costMeter: PhysicsCostMeter
+  /** The step cost the debris policy reads this frame (`debrisCost`), null when there is none (the kit's own solver, or `fixed`). */
+  private cost: DebrisCostSample | null = null
+  private costFrame = 0
   /** The pieces faded away (`faded`): their root shrinks, then leaves the scene. */
   private readonly fading = new Map<string, { root: Object3D; age: number }>()
   private readonly eventBudgetMs: number
@@ -941,6 +944,7 @@ class Renderer implements DestructionRenderer {
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.settlement.update(dt)
+    this.cost = this.sampleCost()
     this.advanceWakes(dt)
     this.pieceSys.update(dt)
     this.measureCost()
@@ -2383,10 +2387,19 @@ class Renderer implements DestructionRenderer {
     for (const { world, hit } of chips) this.vfx.burst('chips', [world.x, world.y, world.z], hit.direction, 4, Math.min(6, hit.speed))
   }
 
+  /** The step cost of this frame by the `debrisCost` source: the loop's clock, nothing (`fixed`), or the recording. */
+  private sampleCost(): DebrisCostSample | null {
+    const source = this.o.debrisCost
+    if (source?.source === 'fixed') return null
+    if (source?.source === 'replay') return source.samples[this.costFrame++] ?? null
+    const sample = this.pieceSys.stepCost()
+    if (sample && source?.record) source.record.push(sample)
+    return sample
+  }
+
   /** One frame of the wake queue: the step cost of the frames before sizes the batch. */
   private advanceWakes(dt: number): void {
-    const cost = this.pieceSys.stepCost()
-    this.blastWakes?.advance(dt, cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs)
+    this.blastWakes?.advance(dt, this.cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs)
   }
 
   /** Awake bodies in the physics world (what a blast's debris adds to). */
@@ -2396,8 +2409,7 @@ class Renderer implements DestructionRenderer {
 
   /** The world's cost per awake body, from the loop's last frame. */
   private measureCost(): void {
-    const cost = this.pieceSys.stepCost()
-    if (cost) this.costMeter.observe(cost.stepMs, cost.active)
+    if (this.cost) this.costMeter.observe(this.cost.stepMs, this.cost.active)
   }
 
   /** A piece at rest that is far and old, or over the cap (`PieceSystemOptions.keep`): its body and collider go now and its root shrinks away. */
@@ -2760,6 +2772,10 @@ class Renderer implements DestructionRenderer {
     this.throttles.clear()
     this.fragments.reset()
     this.pieceSys.reset()
+    this.blastWakes?.clear()
+    this.costMeter.reset()
+    this.cost = null
+    this.costFrame = 0
   }
 
   wakeRegion(x: number, z: number, radius: number): void {

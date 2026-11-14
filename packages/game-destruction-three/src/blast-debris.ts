@@ -1,4 +1,6 @@
+import type { WakeQueueState } from '@adatechnology/game-physics'
 import { DEFAULT_CHIP_SIZE, DEFAULT_MAX_PHYSICS_PIECES, DEFAULT_MIN_PHYSICS_PIECES, DEFAULT_PHYSICS_COST_TARGET_MS, DEFAULT_MAX_QUEUED_WAKES, DEFAULT_PHYSICS_COST_PER_BODY_MS, DEFAULT_WAKE_COST_PER_BODY_MS, DEFAULT_MAX_WAKE_DELAY, DEFAULT_MIN_WAKES_PER_FRAME, DEFAULT_WAKE_COST_TARGET_MS, WakeQueue } from '@adatechnology/game-physics'
+export type { PhysicsCostMeterState } from '@adatechnology/game-physics'
 export { PhysicsCostMeter, chooseForPhysics, physicsPieceCount } from '@adatechnology/game-physics'
 
 /** What happens to debris that is far from the player and old (`FarDebrisOptions.action`): it sleeps where it lies, or shrinks away and leaves the scene. Debris at rest is already drawn merged by `settledBatches`. */
@@ -92,6 +94,23 @@ export const resolveBlastDebris = (...layers: ReadonlyArray<BlastDebrisOptions |
   return out
 }
 
+/** What one frame's step cost: `PhysicsFrame.stepMs` and the bodies the world had awake. */
+export interface DebrisCostSample {
+  readonly stepMs: number
+  readonly active: number
+}
+
+/**
+ * Where the cost the debris policy adapts to comes from (`RendererOptions.debrisCost`). `measured` (the default, as the owner decided in D4) reads the loop's wall-clock step
+ * time, so the batch sizes and piece counts depend on the machine's speed; `record` collects each frame's sample. `fixed` never reads the clock: batches and counts come only
+ * from the configured numbers (`wakeCostTargetMs`, `physicsCostPerBodyMs`, `wakeCostPerBodyMs`...), the same on every machine (tests, lockstep). `replay` feeds a recorded list,
+ * frame by frame, in place of the clock, so a session recorded on one machine plays the same decisions on another.
+ */
+export type DebrisCostOptions =
+  | { readonly source: 'measured'; readonly record?: DebrisCostSample[] }
+  | { readonly source: 'fixed' }
+  | { readonly source: 'replay'; readonly samples: readonly DebrisCostSample[] }
+
 /** The debris waiting to wake: one queue for every blast in flight, nearest the player first. */
 export class BlastWakes {
   private readonly queue: WakeQueue<() => void>
@@ -114,5 +133,14 @@ export class BlastWakes {
 
   clear(): void {
     this.queue.clear()
+  }
+
+  /** The waiting pieces' priority, delay and `apply` (the host keeps what `apply` stands for saveable). */
+  saveState(): WakeQueueState<() => void> {
+    return this.queue.saveState()
+  }
+
+  restoreState(state: WakeQueueState<() => void>): void {
+    this.queue.restoreState(state)
   }
 }
