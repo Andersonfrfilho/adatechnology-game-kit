@@ -16,6 +16,32 @@ export const createGroup = (w: JoltWorld, subCount: number, disabledPairs: Reado
   return w.groups.length - 1
 }
 
+/** Any unit vector perpendicular to `axis`: the slider's normal axis, which only has to be off the slide. */
+const perpendicularTo = (axis: Vec3): Vec3 => {
+  const [x, y, z] = axis
+  const raw: Vec3 = Math.abs(x) < 0.9 ? [0, z, -y] : [-z, 0, x]
+  const length = Math.hypot(raw[0], raw[1], raw[2])
+  return [raw[0] / length, raw[1] / length, raw[2] / length]
+}
+
+const sliderSettings = (w: JoltWorld, desc: Extract<JointDesc, { kind: 'slider' }>): JoltNS.TwoBodyConstraintSettings => {
+  const s = new w.J.SliderConstraintSettings()
+  const length = Math.hypot(desc.axis[0], desc.axis[1], desc.axis[2])
+  const axis: Vec3 = [desc.axis[0] / length, desc.axis[1] / length, desc.axis[2] / length]
+  const normal = perpendicularTo(axis)
+  s.mAutoDetectPoint = false
+  s.mPoint1.Set(desc.point[0], desc.point[1], desc.point[2])
+  s.mPoint2.Set(desc.point[0], desc.point[1], desc.point[2])
+  s.mSliderAxis1.Set(axis[0], axis[1], axis[2])
+  s.mSliderAxis2.Set(axis[0], axis[1], axis[2])
+  s.mNormalAxis1.Set(normal[0], normal[1], normal[2])
+  s.mNormalAxis2.Set(normal[0], normal[1], normal[2])
+  s.mLimitsMin = desc.min
+  s.mLimitsMax = desc.max
+  if (desc.friction !== undefined) s.mMaxFrictionForce = desc.friction
+  return s
+}
+
 /** Jolt's settings for a joint, in world space as given (the two bodies are added by whoever creates it). */
 const constraintSettings = (w: JoltWorld, desc: JointDesc | RagdollJoint): JoltNS.TwoBodyConstraintSettings => {
   const J = w.J
@@ -35,6 +61,7 @@ const constraintSettings = (w: JoltWorld, desc: JointDesc | RagdollJoint): JoltN
     if (desc.kind === 'hinge' && desc.friction !== undefined) s.mMaxFrictionTorque = desc.friction
     return s
   }
+  if (desc.kind === 'slider') return sliderSettings(w, desc)
   const s = new J.SwingTwistConstraintSettings()
   s.mPosition1.Set(desc.point[0], desc.point[1], desc.point[2])
   s.mPosition2.Set(desc.point[0], desc.point[1], desc.point[2])
@@ -63,8 +90,9 @@ const addJointEntry = (w: JoltWorld, constraint: JoltNS.TwoBodyConstraint, made:
     constraint,
     kind: made.kind,
     breakImpulse: made.breakImpulse,
-    hinge: made.kind === 'swingTwist' ? null : J.castObject(constraint, J.HingeConstraint),
+    hinge: made.kind === 'hinge' || made.kind === 'fixed' ? J.castObject(constraint, J.HingeConstraint) : null,
     swing: made.kind === 'swingTwist' ? J.castObject(constraint, J.SwingTwistConstraint) : null,
+    slider: made.kind === 'slider' ? J.castObject(constraint, J.SliderConstraint) : null,
     ragdoll: made.ragdoll,
   })
   return id
@@ -209,6 +237,9 @@ export const breakJoints = (w: JoltWorld, dt: number): void => {
     } else if (e.swing) {
       const l = e.swing.GetTotalLambdaPosition()
       impulse = Math.hypot(l.GetX(), l.GetY(), l.GetZ())
+    } else if (e.slider) {
+      const l = e.slider.GetTotalLambdaPosition()
+      impulse = Math.hypot(l.GetComponent(0), l.GetComponent(1), e.slider.GetTotalLambdaPositionLimits())
     }
     if (impulse > e.breakImpulse * (dt / w.fixedStep)) {
       w.system.RemoveConstraint(e.constraint)

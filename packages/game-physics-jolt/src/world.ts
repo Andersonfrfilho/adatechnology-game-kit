@@ -364,6 +364,10 @@ export class JoltWorld implements PhysicsWorld {
     return { mass: 1 / mp.GetInverseMass(), inertia: [1 / m.GetAxisX().GetX(), 1 / m.GetAxisY().GetY(), 1 / m.GetAxisZ().GetZ()] }
   }
 
+  has(id: BodyId): boolean {
+    return this.bodies.has(id)
+  }
+
   entry(id: BodyId): BodyEntry {
     const e = this.bodies.get(id)
     if (!e) throw new Error(`game-physics-jolt: no body ${id}`)
@@ -586,19 +590,29 @@ export class JoltWorld implements PhysicsWorld {
 
   /** Runs every whole fixed step in `dt` (the rest waits for the next call). Contacts and sensor events are those of these steps. */
   step(dt: number): void {
-    this.contacts.count = 0
-    this.sensorEvents.length = 0
-    this.brokenJoints.length = 0
+    this.clearEvents()
     this.accumulator += dt
     while (this.accumulator >= this.fixedStep - 1e-9) {
       this.accumulator -= this.fixedStep
-      this.stepCount++
-      this.iface.Step(this.fixedStep, 1)
-      // by fixed step, not by call (the result does not depend on how the caller cuts its time), on the solver's speeds, before the rolling impulse
-      updateFriction(this)
-      if (this.rollers.size > 0) roll(this, this.fixedStep)
-      breakJoints(this, this.fixedStep)
+      this.stepFixed(this.fixedStep)
     }
+  }
+
+  /** One step of `h` with no accumulator and no clearing: the loop's (`createPhysicsLoop`) calls this once per fixed step and `clearEvents` once per frame. */
+  stepFixed(h: number): void {
+    this.stepCount++
+    this.iface.Step(h, 1)
+    // by fixed step, not by call (the result does not depend on how the caller cuts its time), on the solver's speeds, before the rolling impulse
+    updateFriction(this)
+    if (this.rollers.size > 0) roll(this, h)
+    breakJoints(this, h)
+  }
+
+  clearEvents(): void {
+    this.contacts.count = 0
+    this.contacts.dropped = 0
+    this.sensorEvents.length = 0
+    this.brokenJoints.length = 0
   }
 
   saveState(): Uint8Array {

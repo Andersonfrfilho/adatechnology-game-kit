@@ -23,5 +23,7 @@ export const NO_COLLISION = 3.4028234663852886e38
 /** How much larger the inertia a dynamic body is made with is than its own (see `settingsFor`). */
 export const INERTIA_SCALE = 1e6
 export const POINTS_PER_BODY = 16
+/** A sub-shape's user data when it has no tag: all 32 bits set, read back signed as -1. */
+export const NO_TAG = 0xffffffff
 
 export const layerOf = (layer: Layer): number => LAYER_INDEX.get(layer) ?? 0

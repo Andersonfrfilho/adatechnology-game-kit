@@ -2,7 +2,7 @@ import type JoltNS from 'jolt-physics/wasm-compat'
 
 import type { ShapeDesc } from '@adatechnology/game-physics'
 
-import { HEIGHT_BLOCK, NO_COLLISION } from './constants'
+import { HEIGHT_BLOCK, NO_COLLISION, NO_TAG } from './constants'
 import type { Jolt } from './constants'
 
 /** Jolt's settings for a shape of the contract; `scratch` is a vector the caller owns and reuses. */
@@ -36,10 +36,12 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): 
       const s = new J.StaticCompoundShapeSettings()
       for (const child of shape.children) {
         const inner = shapeSettings(J, scratch, child.shape)
+        // a compound answers a sub-shape's user data with its inner shape's own (the one given to `AddShape` is read back through `GetCompoundUserData`)
+        inner.mUserData = (child.tag ?? -1) >>> 0
         const r = child.rotation ?? [0, 0, 0, 1]
         const pos = new J.Vec3(child.position[0], child.position[1], child.position[2])
         const rot = new J.Quat(r[0], r[1], r[2], r[3])
-        s.AddShape(pos, rot, inner, child.tag ?? 0)
+        s.AddShape(pos, rot, inner, (child.tag ?? -1) >>> 0)
         J.destroy(pos)
         J.destroy(rot)
       }
@@ -98,6 +100,8 @@ const heightFieldSettings = (J: Jolt, shape: Extract<ShapeDesc, { kind: 'heightf
 /** A shape made from its settings, with one reference the caller owns (`Release` it once a body took its own). */
 export const makeShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): JoltNS.Shape => {
   const settings = shapeSettings(J, scratch, shape)
+  // a plain shape answers its user data as the sub-shape's `tag`: all ones read back as -1 (`| 0`), "no part"
+  settings.mUserData = NO_TAG
   const result = settings.Create()
   if (result.HasError()) {
     const message = result.GetError().c_str()

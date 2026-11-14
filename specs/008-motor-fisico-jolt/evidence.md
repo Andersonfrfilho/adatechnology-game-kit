@@ -121,3 +121,34 @@ Máquina: Intel Core Ultra 9 275HX. Worktree `adatechnology-game-kit-wt/motor-fi
 | `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos |
 
 Testes de navegador/GPU não rodados.
+
+## T2.2 (parte A)
+
+Data 2026-11-13, máquina Intel Core Ultra 9 275HX. Escopo: `game-physics` (contrato) e `game-physics-jolt` (adaptador) e os testes dos dois. As costuras
+(`game-destruction-three`, sala de teste) são a parte B; nenhum call site precisou mudar para compilar.
+
+- Contrato: `penetration` obrigatório; `saveState`/`restoreState`, `has`, `jointAngles`, `wheelContacts`, `fixedStep`, `clearEvents`, `stepFixed`;
+  `ContactBuffer.dropped`; junta `slider`; `KIT_WORLD`, `KIT_RAGDOLL_SOLVER`; `PhysicsLoop`/`PhysicsPhase`/`PhysicsFrame`/`PhaseOrder`/`SeamWorld` e
+  `createPhysicsLoop` (`game-physics/src/loop.ts`, sem Jolt). "(spike)" removido dos cabeçalhos dos dois pacotes.
+- Eventos (item 9): `step(dt)` continua limpando no começo (quem tem um sistema só não muda). O laço usa `stepFixed(h)` (um passo, sem acumulador, sem
+  limpar) e `clearEvents()` uma vez por quadro. Ambos são do `PhysicsWorld`, e o `SeamWorld` omite `step`, `stepFixed`, `clearEvents`, `dispose`,
+  `saveState` e `restoreState` (o desenho T1.4 omitia só quatro: as duas novas também são só do laço). O laço precisa do passo: `PhysicsWorld.fixedStep`.
+- Estado salvo: acrescenta `ignored`, `rollers`, `stepCount`; todos os mapas e conjuntos em ordem de chave.
+- `tag`: achado, além do desenhado em T1.4: no Jolt 1.1.1 um composto devolve o `mUserData` da forma interna, não o do `AddShape`; o `tag` do spike nunca
+  voltava (sempre 0). Agora a forma interna de cada filho leva o `tag` (ou -1) e toda forma simples leva `0xffffffff`; leitura com `| 0` em consultas e contatos.
+- `dropped` conta depois do filtro de velocidade; o teto de linhas passou a ser checado só aí.
+- Slider: o limite estoura 1,5 cm a 5 m/s antes de assentar no limite (solver com slop); o teste aceita 3 cm de transiente e confere o repouso em 0,4 m.
+
+| Gate | Resultado |
+|---|---|
+| `pnpm --filter @adatechnology/game-physics typecheck` | 0 erros |
+| `pnpm --filter @adatechnology/game-physics-jolt typecheck` | 0 erros |
+| `pnpm --filter @adatechnology/game-physics-jolt test` | 13 arquivos, **43/43** (eram 29; +3 de estado salvo, +4 de contrato, +1 slider, +6 de laço) |
+| `pnpm -r typecheck` | 0 erros |
+| `game-destruction-three test`, solver próprio | **343 passam, 0 falham**, 47 pulados (igual) |
+| `PIECE_SOLVER=jolt game-destruction-three test` | **11 falham / 378 passam / 1 pulado** (igual: os mesmos 11 conhecidos) |
+| `pnpm check:packages` | ok (64 pacotes) |
+| `eslint` nos arquivos alterados | 0 erros, 0 avisos |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos fora do SDK dono, 11 pendentes conhecidos |
+
+Testes de navegador/GPU não rodados. T2.2 não está marcada como feita: falta a parte B.

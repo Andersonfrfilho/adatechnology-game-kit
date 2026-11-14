@@ -1,5 +1,5 @@
 /**
- * @adatechnology/game-physics-jolt (spike): the kit's physics contract over Jolt Physics (JoltPhysics.js, single-threaded `wasm-compat` build: the
+ * @adatechnology/game-physics-jolt: the kit's physics contract over Jolt Physics (JoltPhysics.js, single-threaded `wasm-compat` build: the
  * wasm is inlined in the JS, so node, vitest and the single-file test room load it with no loader config; no SharedArrayBuffer, no COOP/COEP).
  * Every Jolt object the package creates is destroyed by it (`Jolt.destroy`, `RemoveBody`/`DestroyBody`, `Release`): CLAUDE.md §8.
  */

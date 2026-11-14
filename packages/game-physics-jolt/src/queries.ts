@@ -27,7 +27,7 @@ const filterFor = (w: JoltWorld, filter?: QueryFilter): JoltNS.ObjectLayerFilter
 
 const hitOf = (w: JoltWorld, bodyKey: number, sub: JoltNS.SubShapeID, distance: number): RayHit => {
   const e = w.bodies.get(bodyKey)
-  const tag = e ? e.body.GetShape().GetSubShapeUserData(sub) : -1
+  const tag = e ? e.body.GetShape().GetSubShapeUserData(sub) | 0 : -1
   return { body: bodyKey as BodyId, user: e?.user ?? -1, tag, distance }
 }
 

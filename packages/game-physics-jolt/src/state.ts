@@ -2,7 +2,7 @@ import type { JoltWorld } from './world'
 
 /**
  * Exact state of every body (positions, velocities, sleep, contact cache), for save/load and determinism checks: Jolt's own bytes, then the adapter's (each
- * body's friction state and coefficient, who touches whom: what `updateFriction` and `touching` read; and the time not stepped yet), then the length of Jolt's part.
+ * body's friction state and coefficient, who touches whom: what `updateFriction` and `touching` read; the time not stepped yet, the ignored pairs, the rolling bodies and the step count; every map in key order), then the length of Jolt's part.
  */
 export const saveState = (w: JoltWorld): Uint8Array => {
   const J = w.J
@@ -18,19 +18,35 @@ export const saveState = (w: JoltWorld): Uint8Array => {
   J.destroy(rec)
   const own: number[] = []
   const bits = new DataView(new ArrayBuffer(8))
-  const changed = [...w.bodies.values()].filter((e) => e.sliding || e.friction !== e.material.frictionStatic)
+  const pushFloat = (x: number): void => {
+    bits.setFloat64(0, x, true)
+    own.push(bits.getUint32(0, true), bits.getUint32(4, true))
+  }
+  const byKey = (x: number, y: number): number => x - y
+  const changed = [...w.bodies.values()].filter((e) => e.sliding || e.friction !== e.material.frictionStatic).sort((x, y) => x.key - y.key)
   own.push(changed.length)
   for (const e of changed) {
-    bits.setFloat64(0, e.friction, true)
-    own.push(e.key, e.sliding ? 1 : 0, bits.getUint32(0, true), bits.getUint32(4, true))
+    own.push(e.key, e.sliding ? 1 : 0)
+    pushFloat(e.friction)
   }
   own.push(w.partners.size)
-  for (const [key, mine] of w.partners) {
+  for (const key of [...w.partners.keys()].sort(byKey)) {
+    const mine = w.partners.get(key) ?? new Map<number, number>()
     own.push(key, mine.size)
-    for (const [other, count] of mine) own.push(other, count)
+    for (const other of [...mine.keys()].sort(byKey)) own.push(other, mine.get(other) ?? 0)
   }
-  bits.setFloat64(0, w.accumulator, true)
-  own.push(bits.getUint32(0, true), bits.getUint32(4, true))
+  pushFloat(w.accumulator)
+  const ignored = [...w.ignored].sort(byKey)
+  own.push(ignored.length)
+  for (const pair of ignored) own.push(pair)
+  own.push(w.rollers.size)
+  for (const key of [...w.rollers.keys()].sort(byKey)) {
+    const rolling = w.rollers.get(key)
+    own.push(key)
+    pushFloat(rolling?.coefficient ?? 0)
+    pushFloat(rolling?.radius ?? 0)
+  }
+  pushFloat(w.stepCount)
   const joltBytes = chunks.reduce((n, c) => n + c.length, 0)
   const out = new Uint8Array(joltBytes + own.length * 4 + 4)
   let at = 0
@@ -112,8 +128,20 @@ export const restoreState = (w: JoltWorld, data: Uint8Array): boolean => {
     w.partners.set(key, mine)
     w.touches.set(key, total)
   }
-  bits.setUint32(0, next(), true)
-  bits.setUint32(4, next(), true)
-  w.accumulator = bits.getFloat64(0, true)
+  const nextFloat = (): number => {
+    bits.setUint32(0, next(), true)
+    bits.setUint32(4, next(), true)
+    return bits.getFloat64(0, true)
+  }
+  w.accumulator = nextFloat()
+  w.ignored.clear()
+  for (let n = next(); n > 0; n--) w.ignored.add(next())
+  w.rollers.clear()
+  for (let n = next(); n > 0; n--) {
+    const key = next()
+    const coefficient = nextFloat()
+    w.rollers.set(key, { coefficient, radius: nextFloat() })
+  }
+  w.stepCount = nextFloat()
   return true
 }

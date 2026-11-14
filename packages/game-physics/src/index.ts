@@ -1,5 +1,5 @@
 /**
- * @adatechnology/game-physics (spike): the rigid-body contract the kit talks to, whatever engine sits under it. Types plus tiny helpers.
+ * @adatechnology/game-physics: the rigid-body contract the kit talks to, whatever engine sits under it. Types plus tiny helpers.
  * Our own layers (materials and mass, damage, fracture, load path, ballistics, blast, CLAUDE.md §12) sit on top of it; an adapter
  * (`game-physics-<engine>`) implements it. Units: metres, kilograms, seconds; y up.
  */
@@ -24,7 +24,7 @@ export type ShapeDesc =
    * (`heights[iz * size + ix]`). Smooth terrain; a hard step (a slab edge) must be a box beside it: a height field turns it into a ramp one cell wide.
    */
   | { readonly kind: 'heightfield'; readonly origin: Vec3; readonly cell: number; readonly size: number; readonly heights: ArrayLike<number> }
-  /** Children placed in the body's frame; `tag` comes back on queries and contacts (our part id). */
+  /** Children placed in the body's frame; `tag` (our part id) comes back on queries and contacts, -1 for a child without one and for a plain shape. */
   | { readonly kind: 'compound'; readonly children: ReadonlyArray<{ readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation?: Quat; readonly tag?: number }> }
 
 export type Motion = 'static' | 'kinematic' | 'dynamic'
@@ -108,6 +108,14 @@ export type JointDesc =
       readonly kind: 'swingTwist'; readonly a: BodyId; readonly b: BodyId; readonly point: Vec3; readonly twistAxis: Vec3; readonly planeAxis: Vec3
       readonly normalHalfCone: number; readonly planeHalfCone: number; readonly twistMin: number; readonly twistMax: number; readonly friction?: number
       readonly breakImpulse?: number
+    }
+  /**
+   * Slides along `axis` (world, at creation) through `point`; the distance of b from where it was made, along the axis, is held in [min, max] metres
+   * (min <= 0 <= max). A drawer, a rail. `friction` is the most force (N) that holds it still against the slide.
+   */
+  | {
+      readonly kind: 'slider'; readonly a: BodyId; readonly b: BodyId; readonly point: Vec3; readonly axis: Vec3
+      readonly min: number; readonly max: number; readonly friction?: number; readonly breakImpulse?: number
     }
 
 /** A joint of a ragdoll part to its parent: a hinge or swing-twist as in `JointDesc`, the bodies being the part and its parent. */
@@ -200,6 +208,8 @@ export interface ContactBuffer {
   readonly normal: Float32Array
   readonly approach: Float32Array
   readonly impulse: Float32Array
+  /** Contacts that closed faster than `contactReportSpeed` (they would have been rows) but found no room past `maxContacts`; reset with the events. */
+  readonly dropped: number
 }
 
 export interface SensorEvent {
@@ -230,8 +240,30 @@ export interface WorldDesc {
   readonly maxContacts?: number
 }
 
+/** The kit's world (what spec 008 conditions 1-3 measured): 120 Hz, 20/2 solver passes, sleep after 0.5 s under 8 cm/s, 2 mm slop and push-out. Game, room and tests start from it. */
+export const KIT_WORLD: WorldDesc = {
+  fixedStep: 1 / 120,
+  velocityIterations: 20,
+  positionIterations: 2,
+  sleepAfter: 0.5,
+  sleepSpeed: 0.08,
+  penetrationSlop: 0.002,
+  maxPushOut: 0.002,
+  slipSpeed: 0.02,
+  contactReportSpeed: 0.5,
+  maxContacts: 4096,
+  maxBodies: 8192,
+}
+
+/** Solver passes of a ragdoll's own bodies and joints (condition 2): more than the world's, so its joints hold their limits through a hard landing. */
+export const KIT_RAGDOLL_SOLVER: { readonly velocity: number; readonly position: number } = { velocity: 20, position: 8 }
+
 export interface PhysicsWorld {
   readonly engine: string
+  /** The fixed step (s) the world runs at: `PhysicsLoop` steps by it. */
+  readonly fixedStep: number
+  /** The body still exists (contact rows may name a body removed since: check before using it). */
+  has(id: BodyId): boolean
   createBody(desc: BodyDesc): BodyId
   removeBody(id: BodyId): void
   /** Many at once (a blast breaking a wall): one broadphase insert. */
@@ -264,6 +296,8 @@ export interface PhysicsWorld {
   ignorePair(a: BodyId, b: BodyId, ignore: boolean): void
   createJoint(desc: JointDesc): JointId
   removeJoint(id: JointId): void
+  /** Angles of a joint now (radians), for checking limits: `hinge` for hinge, fixed and ragdoll hinge joints; `swing` and `twist` for swing-twist; 0 for the rest. */
+  jointAngles(id: JointId): { swing: number; twist: number; hinge: number }
   /** Joints whose `breakImpulse` was passed in the last step: removed by the adapter, reported once. */
   readonly brokenJoints: readonly JointId[]
   /** Its bodies (in part order) and its joints (one per part but the root, in part order), for reading poses and `jointAngles`. */
@@ -275,6 +309,8 @@ export interface PhysicsWorld {
   driveVehicle(id: VehicleId, input: VehicleInput): void
   vehicleBody(id: VehicleId): BodyId
   removeVehicle(id: VehicleId): void
+  /** How many of the vehicle's wheels touch the ground now (a car with none is airborne: its sleep rule reads this). */
+  wheelContacts(id: VehicleId): number
   /** Every hit along the ray, nearest first, into `out` (cleared); returns the count. */
   rayAll(from: Vec3, direction: Vec3, length: number, out: RayHit[], filter?: QueryFilter): number
   rayFirst(from: Vec3, direction: Vec3, length: number, filter?: QueryFilter): RayHit | null
@@ -284,12 +320,29 @@ export interface PhysicsWorld {
    * How deep (m) a body is inside the fixed bodies (layer `static`) where it stands now, and the way to move it out (unit, world) into `out`; 0 when it is in none.
    * The deepest overlap is reported: a host that places a body checks it, so nothing is made or put inside what does not move. `among` counts only those bodies.
    */
-  penetration?(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number
+  penetration(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number
   /** A sphere swept along the ray: every body it meets, nearest first. */
   sphereCastAll(from: Vec3, direction: Vec3, length: number, radius: number, out: RayHit[], filter?: QueryFilter): number
   readonly contacts: ContactBuffer
   readonly sensorEvents: readonly SensorEvent[]
+  /**
+   * Single-system callers: runs every whole fixed step in `dt` (the rest waits) after clearing `contacts`, `sensorEvents` and `brokenJoints`, so they hold
+   * those steps' events. Under a `PhysicsLoop` nobody calls this: the loop uses `stepFixed`.
+   */
   step(dt: number): void
+  /** Exactly one step of `h` (the world's `fixedStep`), no accumulator, events kept: they pile up until `clearEvents`. The loop's step; not in `SeamWorld`. */
+  stepFixed(h: number): void
+  /** Empties `contacts`, `sensorEvents` and `brokenJoints` (and `contacts.dropped`): the loop does it once per frame. */
+  clearEvents(): void
+  /**
+   * The world's exact state as bytes: bodies, velocities, sleep, contact cache and what the adapter keeps that changes contact (friction, partners, pending
+   * time, ignored pairs, rolling, step count), maps written in key order so save, restore, save gives the same bytes. Scope: it holds no description of
+   * which bodies, joints and vehicles exist, so `restoreState` is only valid on a world with the same ones, created in the same order. Saving a game is the
+   * host's own description plus these bytes.
+   */
+  saveState(): Uint8Array
+  /** Puts a `saveState` back (same bodies, same order, see there); false when the bytes do not fit. */
+  restoreState(data: Uint8Array): boolean
   readonly bodyCount: number
   readonly activeCount: number
   /** Bytes the engine holds (its heap), for leak checks. */
@@ -305,3 +358,9 @@ export interface PhysicsEngine {
 
 /** Mixed friction of two surfaces (geometric mean), as the kit has always mixed it. */
 export const mixFriction = (a: number, b: number): number => Math.sqrt(a * b)
+
+/** The world without the calls only the loop (or the owner) makes: what the seams (`engine-*.ts` of the domain packages) are handed. */
+export type SeamWorld = Omit<PhysicsWorld, 'step' | 'stepFixed' | 'clearEvents' | 'dispose' | 'saveState' | 'restoreState'>
+
+export { createPhysicsLoop } from './loop'
+export type { PhaseOrder, PhysicsFrame, PhysicsLoop, PhysicsLoopOptions, PhysicsPhase } from './loop'

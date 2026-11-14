@@ -8,6 +8,8 @@ import type { JoltWorld } from './world'
 
 export class Contacts implements ContactBuffer {
   count = 0
+  /** Contacts over `reportSpeed` that found no row (`maxContacts`): cleared with the events. */
+  dropped = 0
   readonly a = new Int32Array(ROW_CAPACITY)
   readonly b = new Int32Array(ROW_CAPACITY)
   readonly userA = new Int32Array(ROW_CAPACITY)
@@ -46,7 +48,6 @@ const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.C
     return
   }
   cs.mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
-  if (w.contacts.count >= w.maxContacts) return
   const n = m.mWorldSpaceNormal
   N[0] = n.GetX()
   N[1] = n.GetY()
@@ -59,13 +60,17 @@ const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.C
   const along = speedAlong(e1, P, N) - speedAlong(e2, P, N)
   if (along < w.reportSpeed) return
   const c = w.contacts
+  if (c.count >= w.maxContacts) {
+    c.dropped++
+    return
+  }
   const i = c.count++
   c.a[i] = e1.key
   c.b[i] = e2.key
   c.userA[i] = e1.user
   c.userB[i] = e2.user
-  c.tagA[i] = e1.body.GetShape().GetSubShapeUserData(m.mSubShapeID1)
-  c.tagB[i] = e2.body.GetShape().GetSubShapeUserData(m.mSubShapeID2)
+  c.tagA[i] = e1.body.GetShape().GetSubShapeUserData(m.mSubShapeID1) | 0
+  c.tagB[i] = e2.body.GetShape().GetSubShapeUserData(m.mSubShapeID2) | 0
   for (let k = 0; k < 3; k++) {
     c.point[i * 3 + k] = P[k]
     c.normal[i * 3 + k] = N[k]
