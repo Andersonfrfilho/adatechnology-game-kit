@@ -4,7 +4,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
-import { physicsOption } from './setup-physics'
+import { IS_JOLT, physicsOption } from './setup-physics'
 
 const G = 9.81
 /** A 350 ml can: 6.6 cm across, 11.5 cm long, a steel wall of a quarter millimetre (7850 kg/m3), 60 g empty and 410 g full. */
@@ -63,7 +63,8 @@ const addRamp = (s: Setup, degrees: number): number => {
   s.scene.add(root)
   root.updateMatrixWorld(true)
   s.renderer.bind('ramp', root, { parts: { body: mesh } })
-  s.renderer.makePiece('ramp').sleeping = true
+  // under Jolt a drawn fixed thing is a static body already; a sleeping piece is a dynamic board that the first can to touch it wakes and drops flat
+  if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
   return root.position.y
 }
 

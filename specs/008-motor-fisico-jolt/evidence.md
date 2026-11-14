@@ -632,3 +632,62 @@ O quadro de cavar fica 3,4 ms mais caro (≈ 0,4 ms por ladrilho: construir bloc
 - A sala (blast, martelo, rede `fellThrough`) é medida à mão na T3.8.
 - Cratera mais íngreme que a testada (30 cm em 0,8 m): o volume fica a até ≈ 1,2 cm da superfície onde o plano de um bloco de 7,5 cm não acompanha a curva; o que rola ali é segurado do mesmo jeito.
 - Subida do chão maior que o maior semi-eixo da peça não é levantada: a peça fica dentro do sólido, sai por onde a saída é mais curta (pode ser por baixo, até o `SOLID_DEPTH`) e a rede `fellThrough` a põe de volta se estiver acordada e inteira sob o chão (placa de 60 cm com subida de 30 cm: `fellThrough` 1).
+
+## T3.2 — Bug 2: lata na rampa de 10° (2026-11-14)
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, Node 20, worktree `motor-fisico-jolt`, branch `feat/motor-fisico-jolt`, sobre `b305b3f0`. Adaptador e motor **não tocados**; só testes.
+
+### Causa
+
+Não era a lata nem o atrito. **A rampa do teste era uma peça dormindo** (`makePiece('ramp').sleeping = true`, 200 kg, uma tábua de 3 m apoiada só pela ponta baixa). No solver próprio uma peça dormindo nunca acorda por contato, então é um apoio fixo. No Jolt é um corpo dinâmico: o primeiro contato da lata (posta a 1 mm) a acorda e a tábua cai chapada. Rastro da lata em pé a 10° (rampa e lata, `y` a cada 0,1 s): rampa 0,290 → 0,244 → 0,127 → 0,025 m (queda livre), lata junto, e a lata para sobre o chão a 1,998 cm do ponto de partida. O "deslize" era o arrasto da lata pela tábua caindo.
+
+| Medida (lata em pé, 2 s) | Rampa = peça dormindo (como estava) | Rampa = corpo fixo desenhado (Jolt, agora) | Solver próprio (rampa peça dormindo) |
+|---|---|---|---|
+| 5° | 1,381 cm | **0,003 cm** | 0,349 cm |
+| 10° | 1,998 cm (a T1.3 mediu o teste "passa"; o valor de 2,14 cm era o de antes da T1.2) | **0,006 cm** | 0,687 cm |
+| 20° | 1,437 cm | **0,011 cm** | 1,291 cm |
+| queda da rampa | 13,6 / 26,5 / 51,8 cm | < 0,1 cm | 0 |
+
+Os valores antigos não crescem com o ângulo (1,38 / 2,00 / 1,44 cm): é o que sobra de uma tábua que cai, não atrito. Com a rampa fixa o Jolt segura a lata 100× melhor que o limite, sem amortecer a velocidade linear (`linearDamping` segue 0; teste de queda livre: −9,81 m/s em 1 s, ± 1%). A mola de rolamento (condição 8) e o atrito por corpo (condição 9) não entram: a lata em pé fica presa pelo atrito estático.
+
+### Correção
+
+`tests/rolling.test.ts` (`addRamp`) e o teste novo: `if (!IS_JOLT) makePiece('ramp').sleeping = true`. No Jolt a rampa fica só ligada (`bind`), que a T3.0a já transforma em corpo estático. O solver próprio não muda. Nenhum teste apagado nem afrouxado; o limite de 2 cm é o mesmo.
+
+### Testes
+
+`tests/can-ramp-grip.test.ts` (novo, 4): a lata em pé a 5°, 10° e 20° anda ≤ 2 cm em 2 s **e a tábua não desce** (> 1 mm); queda livre a g sem amortecimento. Passa nos dois solvers (próprio e Jolt). Conferido que pega: com a rampa de volta como peça dormindo, no Jolt os 3 de rampa ficam vermelhos (a tábua cai 13,6 / 26,5 / 51,8 cm).
+
+### As 6 falhas de `rolling.test.ts` no Jolt (continuam 6; nenhuma apagada ou afrouxada)
+
+| Teste | Antes | Agora | Dono |
+|---|---|---|---|
+| lata cheia rola na rampa a g sin t/1,57 | aceleração −0,60 (a rampa caía) | 1,070 contra faixa 0,991–1,052 (+4,8% sobre o esperado) | **T3.5**: era do mesmo defeito da rampa, agora é só calibração do rolamento: a resistência de rolamento (condição 8) parece aplicada a ~1/5 do esperado; ver T3.5 |
+| lata vazia (k = 1) | −0,61 | 0,842 contra 0,779–0,827 (+4,8%) | **T3.5** (idem, o mesmo fator) |
+| garrafa cônica empurrada de lado | 0,81 > 1,06 | igual | **T3.5** (sem rampa: cone, o caminho curva) |
+| duas latas no ar, restituição | 0,87 vs 2,4 | igual | **T3.5** (colisão lata–lata; vai por restituição e momento) |
+| lata rolando bate numa parada | 0,26 > 0,4 | igual | **T3.5** (idem) |
+| cinquenta latas | 0,02638 > 0,027 | igual | **T3.5** |
+
+Nenhuma das 6 é o bug 2 (a lata em pé): ele não aparece mais. Duas delas (as de rolar na rampa) eram o mesmo defeito do fixture e agora medem outra coisa, um erro de +4,8% igual nas duas massas.
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | **351 passam, 0 falham** (62 pulados; +4 novos) |
+| `PIECE_SOLVER=jolt game-destruction-three` | 404 passam, **13 falham, os mesmos 13 conhecidos** (`pieces-stack` 1, `rolling` 6, `settled-debris` 2, `slope-friction` 2 + 2 do modo laço); nenhum a menos, nenhum novo |
+| `game-physics-jolt` | 55 passam, 0 falham |
+| `game-destruction` | 507 passam, 0 falham |
+| `game-floorplan-three` | 715 passam, 3 falham (`exact-golden`: breach, spall, fracture, as 3 conhecidas) |
+| Bacia, `JOLT_ITERATIONS=20`, dt {0,05; 1/60} × `BOWL_FROM` {1,17,33,49} × 16 sementes, 8 processos | **128/128** (8 × 16 passam); o teste não imprime pior C1/C2/C3 nesta invocação; adaptador não mudou desde a T3.1 (pior C1 −0,0022, C2 0,024 m, C3 0,0121 m, `fellThrough` 0) |
+| B6 | não rodado: adaptador não tocado |
+| `eslint` nos 2 arquivos mudados | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 |
+| GPU / navegador | nenhum |
+
+### O que sobrou
+
+- O fator +4,8% do rolamento na rampa (dois testes) vai para a T3.5; hipótese não verificada: a resistência de rolamento age menos que `C_rr cos t` com a lata no contato da tábua estática.
+- O teto de giro de 47 rad/s (T4.3) não foi tocado e não entra aqui.

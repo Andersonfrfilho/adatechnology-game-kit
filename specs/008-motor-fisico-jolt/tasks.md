@@ -106,7 +106,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - T3.1 ✅ **Chão sólido (bug 3)** (feito em 2026-11-14; `evidence.md`, seção T3.1). Height field mais volume sólido por baixo (caixas ou prismas convexos por ladrilho), sem fork. Teste: chão que
   sobe 5 cm por baixo de uma peça dormindo a deixa em cima, nunca dentro nem abaixo; a rede `fellThrough` fica em 0.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/engine-ground.test.ts tests/ground-settlement.test.ts` · `sonnet`.
-- **T3.2 Bug 2: lata na rampa de 10°.** Achar a causa do deslize de 2,14 cm (depois de T1.2, medir de novo). Aceite: ≤ 2 cm em 2 s sem
+- T3.2 ✅ **Bug 2: lata na rampa de 10°** (feito em 2026-11-14; `evidence.md`, seção T3.2). Achar a causa do deslize de 2,14 cm (depois de T1.2, medir de novo). Aceite: ≤ 2 cm em 2 s sem
   amortecer a velocidade linear.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/rolling.test.ts` · `sonnet`.
 - **T3.3 Bug 4: C1 com 8 e 10 iterações.** Achar a causa dos 3/128 e 8/128 (excesso de 0,5–5,2 mm). Duas tentativas; se persistir, registrar
