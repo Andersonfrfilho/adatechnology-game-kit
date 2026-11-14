@@ -37,6 +37,8 @@ interface Footprint {
 /** Side of a tile of ground (m); how far around an awake piece tiles are laid (m). */
 const TILE = 2
 const TILE_MARGIN = 0.5
+/** The most (m) a piece's tips swinging in one update widen the tiles laid around its footprint. */
+const MAX_SWING = 3
 /** A tile's key: its column and row from `TILE_KEY_ORIGIN`, in one number (no text made per tile per update). */
 const TILE_KEY = 65536
 const TILE_KEY_ORIGIN = 32768
@@ -648,7 +650,7 @@ export class EnginePieces {
 
   /**
    * Lays the tiles of ground under and around what is awake, and lays again those whose region changed (only if their ground did change). "Around" is the piece's own footprint
-   * (its box as it stands now, seen from above) plus `TILE_MARGIN` and how far its tips swing in this update: a 45 m wire that fell lies on 23 tiles, not under the 625 of the
+   * (its box as it stands now, seen from above) plus `TILE_MARGIN` and how far its tips swing in this update (up to `MAX_SWING`): a 45 m wire that fell lies on 23 tiles, not under the 625 of the
    * circle around it (a 480 ms update in the room).
    */
   private layGround(list: readonly PieceBody[], dt: number): void {
@@ -656,7 +658,9 @@ export class EnginePieces {
       if (b.sleeping) continue
       const c = this.centre(b)
       const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
-      const margin = TILE_MARGIN + Math.hypot(b.angularVelocity[0] as number, b.angularVelocity[1] as number, b.angularVelocity[2] as number) * reach * Math.max(dt, 1 / 60)
+      const swing = Math.hypot(b.angularVelocity[0] as number, b.angularVelocity[1] as number, b.angularVelocity[2] as number) * reach * Math.max(dt, 1 / 60)
+      // a 45 m wire the blast spun to 47 rad/s swings 53 m a frame: the circle around it was 4290 tiles (2.4 s), and it is 4 m up; past a few metres the next update lays what it reached
+      const margin = TILE_MARGIN + Math.min(swing, MAX_SWING)
       const foot = this.footprint(b, c)
       for (let ix = Math.floor((foot.minX - margin) / TILE); ix <= Math.floor((foot.maxX + margin) / TILE); ix++) {
         for (let iz = Math.floor((foot.minZ - margin) / TILE); iz <= Math.floor((foot.maxZ + margin) / TILE); iz++) {

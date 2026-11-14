@@ -66,7 +66,8 @@
   const meanOf = list => { const out = {}; for (const l of labels) out[l] = { ms: +(list.reduce((a, u) => a + (u.stages[l] ? u.stages[l].ms : 0), 0) / list.length).toFixed(3), calls: +(list.reduce((a, u) => a + (u.stages[l] ? u.stages[l].calls : 0), 0) / list.length).toFixed(1) }; return out }
   const mid = sorted.slice(Math.floor(sorted.length * 0.4), Math.ceil(sorted.length * 0.6))
   const worst = sorted.slice(-3)
-  return { kind: KIND, dt: DT, n: updates.length, total: { mean: +(updates.reduce((a, u) => a + u.total, 0) / updates.length).toFixed(2), p50: sorted[Math.floor(sorted.length * 0.5)].total, p99: sorted[Math.floor(sorted.length * 0.99)].total, max: sorted[sorted.length - 1].total },
+  const stalls = updates.map((u, i) => ({ i, total: u.total, stages: Object.fromEntries(Object.entries(u.stages).filter(([, e]) => e.ms >= 20).sort((a, b) => b[1].ms - a[1].ms)) })).filter((u) => u.total > 300)
+  return { stalls, kind: KIND, dt: DT, n: updates.length, total: { mean: +(updates.reduce((a, u) => a + u.total, 0) / updates.length).toFixed(2), p50: sorted[Math.floor(sorted.length * 0.5)].total, p99: sorted[Math.floor(sorted.length * 0.99)].total, max: sorted[sorted.length - 1].total },
     stepsPerUpdate: jolt ? +(jolt.fixedStep ? DT / jolt.fixedStep : 0).toFixed(2) : 0, middle: { total: +(mid.reduce((a, u) => a + u.total, 0) / mid.length).toFixed(2), active: mid[0].active, bodies: mid[0].bodies, stages: meanOf(mid) },
     worst: worst.map(u => ({ total: u.total, active: u.active, bodies: u.bodies, stages: Object.fromEntries(Object.entries(u.stages).filter(([, e]) => e.ms >= 1).sort((a, b) => b[1].ms - a[1].ms)) })), all: { stages: meanOf(updates) } }
 })()
