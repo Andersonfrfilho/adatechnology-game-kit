@@ -105,9 +105,9 @@ jobs:
 
       - id: set
         env:
-          SHARDS: '{"@adatechnology/game-vehicles-fleet":8,"@adatechnology/game-floorplan-structure":3,"@adatechnology/game-vehicles-three":4}'
+          SHARDS: '{"@adatechnology/game-vehicles-fleet":8,"@adatechnology/game-floorplan-structure":3,"@adatechnology/game-vehicles-three":6,"@adatechnology/game-floorplan-three":10}'
           GROUPS: '6'
-          WEIGHTS: '{"@adatechnology/game-floorplan-post-apocalyptic":162,"@adatechnology/game-weapons-three":144,"@adatechnology/game-floorplan-three":123,"@adatechnology/game-floorplan-commercial":69,"@adatechnology/game-vehicles":66,"@adatechnology/game-floorplan-residential":48,"@adatechnology/game-crowd":39,"@adatechnology/game-test-room":25,"@adatechnology/game-interactables-household":20,"@adatechnology/game-characters-three":19,"@adatechnology/game-floorplan-rural":18,"@adatechnology/game-items-three":18,"@adatechnology/game-vegetation-three":17,"@adatechnology/game-crowd-three":15,"@adatechnology/game-fluids":15,"@adatechnology/game-destruction":14,"@adatechnology/game-floorplan-interactables":13}'
+          WEIGHTS: '{"@adatechnology/game-weapons-three":274,"@adatechnology/game-floorplan-post-apocalyptic":214,"@adatechnology/game-test-room":97,"@adatechnology/game-floorplan-commercial":61,"@adatechnology/game-floorplan-residential":53,"@adatechnology/game-crowd":46,"@adatechnology/game-vehicles":42,"@adatechnology/game-physics-jolt":34,"@adatechnology/game-characters-three":32,"@adatechnology/game-vegetation-three":29,"@adatechnology/game-terrain-three":24,"@adatechnology/game-items-three":23,"@adatechnology/game-destruction-three":21,"@adatechnology/game-interactables-household":18,"@adatechnology/game-destruction":17,"@adatechnology/game-floorplan-rural":16,"@adatechnology/game-animals-three":15,"@adatechnology/game-urban-three":14,"@adatechnology/game-crowd-three":13,"@adatechnology/game-fluids":11,"@adatechnology/game-floorplan-interactables":10}'
         run: |
           node -e '
             const fs = require("fs");
@@ -142,11 +142,16 @@ jobs:
     name: test (${{ matrix.name }})
     needs: [matrix, build]
     runs-on: ubuntu-latest
+    env:
+      # a test job over this many seconds gets a warning annotation (it never fails the job): the matrix is out of balance, see CONTRIBUTING.md, "CI"
+      TEST_BUDGET_SECONDS: 480
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.matrix.outputs.include) }}
     steps:
+      - run: echo "JOB_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -170,6 +175,15 @@ jobs:
             filters=""
             for pkg in ${{ matrix.pkgs }}; do filters="$filters --filter $pkg"; done
             pnpm $filters --workspace-concurrency=1 --no-bail run test
+          fi
+
+      - name: Test time budget
+        if: always()
+        run: |
+          elapsed=$(( $(date +%s) - JOB_STARTED_AT ))
+          echo "test (${{ matrix.name }}) took ${elapsed}s, budget ${TEST_BUDGET_SECONDS}s"
+          if [ "$elapsed" -gt "$TEST_BUDGET_SECONDS" ]; then
+            echo "::warning title=Test job over budget::test (${{ matrix.name }}) took ${elapsed}s, over the ${TEST_BUDGET_SECONDS}s budget. Rebalance: node tools/ci/weights.mjs --files <run-id> (CONTRIBUTING.md, CI)"
           fi
 
   # The goldens must give the same hashes on a newer Node (V8 changed Math.pow's last bit between Node 22 and 24); one cheap job, not the whole matrix.

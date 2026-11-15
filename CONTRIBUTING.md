@@ -99,8 +99,18 @@ where the reports go.
 
 ### CI
 
-- CI runs `lint`, `typecheck` and one `test` job per package in parallel; the `ci-ok` job aggregates them into a single required check, and Release starts only after the whole workflow succeeds.
-- If a package's tests get slow, split them: add it to the `SHARDS` map in the `matrix` job of `.github/workflows/ci.yml` (for example `{"@adatechnology/game-vehicles-fleet":13}`, one shard per test file; vitest shards by file, so a single heavy file sets the floor) and CI runs it as N `vitest --shard` jobs.
+- CI runs `lint`, `typecheck`, the `test` jobs and a few more checks in parallel; the `ci-ok` job aggregates them into a single required check, and Release starts only after the whole workflow succeeds.
+- The `test` jobs come from the `matrix` job in `.github/workflows/ci.yml`: packages in `SHARDS` run as N `vitest --shard` jobs, all the others are packed into `GROUPS` jobs balanced by `WEIGHTS` (seconds of `vitest run` measured on CI; 10 for a package not listed).
+- If a package's tests get slow, split them: add it to the `SHARDS` map (for example `{"@adatechnology/game-vehicles-fleet":13}`). Vitest shards by file: it sorts the files by the hash of their path and deals them out in consecutive blocks of `ceil(files / shards)` files, so **a single heavy file sets the floor**, and with the blocks fixed by the hash, more shards do not always mean a lower maximum. Check the layout before picking the count: sum the per-file times of each block (`--files` below lists the slowest files). A file that is one big `it.each` over the fleet splits into several files, one slice each, with the test names unchanged (see `packages/game-vehicles-three/tests/vehicle-colliders-surface-<n>.test.ts`).
+- Re-balance from what CI measured, after a run on a branch:
+
+```bash
+node tools/ci/weights.mjs --files <run-id> [<run-id> ...]   # job times, the slowest test files and the WEIGHTS map; nothing is written
+node tools/ci/weights.mjs --update <run-id> [<run-id> ...]  # also rewrites WEIGHTS in ci.yml (packages in SHARDS are left out)
+```
+
+  It needs `gh` logged in, reads the job logs of the runs given (the median over the runs; failed jobs are skipped) and prints the map. Give it two or three runs: a runner's speed varies by up to 1.5x between runs. A package that still shows up over about 5 minutes in a `group` job, or a shard over 5 minutes, goes into `SHARDS` or is split as above.
+- Time budget: every `test` job ends with a step that adds a `::warning::` annotation ("Test job over budget") when the job took more than `TEST_BUDGET_SECONDS` (480, 8 minutes, set on the job in `ci.yml`). It only warns, never fails. When it shows up in a PR, re-balance with the commands above.
 
 ### Releasing
 
