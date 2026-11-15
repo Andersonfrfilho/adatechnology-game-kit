@@ -131,6 +131,13 @@ export interface PartSpec {
   /** Free tags the host can use (`door`, `wheel`, `screen`, `trunk`, `leaf`...). */
   tags?: string[]
   /**
+   * The part is hosted by (embedded in, or clamped to) this part of the object, a pipe in a wall or a slab. Where a hole of the host (an `opening`, knocked-out
+   * units, or the host itself lost) reaches the part's plane box the part shows (`PartState.exposed`, a `reveal` event) and its joint to the host opens, so what
+   * the hole takes away of the host takes its stretch of the part with it. The part keeps what else joins it (the next stretch of a run), so a stretch between
+   * two held ones hangs in the hole. A part wholly inside the host's box is sheltered by it: the blast and the shaking of joints leave it be until a hole reaches it.
+   */
+  hostedIn?: string
+  /**
    * Structural role. Structural parts (any role but `none`) carry their own mass plus the load of the parts resting on them down to the anchored
    * parts, over the joints that `bears`. `foundation` implies `anchored`. `none` (and parts without `structure`) never carry load: a window, a door
    * or furniture is not part of the structure. Objects without any structural part behave as before.
@@ -662,6 +669,8 @@ export interface PartState {
   cracked?: boolean
   /** Reinforced part whose concrete is gone: only the rebar cage is left (capacity x `residualCapacity`); it is still part of the structure. */
   stripped?: boolean
+  /** A part embedded in a host (`PartSpec.hostedIn`) that a hole of the host now reaches: it shows, whether it came off or hangs there. */
+  exposed?: boolean
   /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */
   opening?: { center: Vec3; radius: number }
   /** Units (`PartSpec.units`) knocked out one by one by shots and blows, in the part's own axes (`chip` events). Raycasts and shots pass through them. */
@@ -881,6 +890,8 @@ export type DestructionEvent =
    * `center` and `size` are the box around them all.
    */
   | (EventBase & { type: 'chip'; part: string; center: Vec3; size: Vec3; rotation: Quat; fragments: readonly Fragment[]; torn?: true; units?: readonly { center: Vec3; size: Vec3 }[] })
+  /** A part embedded in `host` (`PartSpec.hostedIn`) lies in a hole of it now: it shows (once per part). */
+  | (EventBase & { type: 'reveal'; part: string; host: string })
   /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
   | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
   /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */
