@@ -4,6 +4,7 @@ import type { ResultGate } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { PanelView } from './destruction/panels.js'
 import type { Kernel } from './kernel-types.js'
+import type { SegmentLimits } from './utilities/segments.js'
 import type { Props3d } from '@adatechnology/game-props3d'
 import type * as Vegetation from '@adatechnology/game-vegetation'
 import type * as VegetationThree from '@adatechnology/game-vegetation/three'
@@ -648,6 +649,8 @@ export interface BuildContext {
   baseboardBand: boolean
   fittedDoors: boolean
   fittedWindows: boolean
+  /** The longest stretch (m) a wiring or pipe run detaches as one piece. */
+  segmentLimits: SegmentLimits
   apartment: boolean
   /** Apartment building: floors, the unit's floor and the unit index. */
   pa: number

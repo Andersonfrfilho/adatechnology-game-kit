@@ -156,6 +156,11 @@ export interface BuildOptions {
    * `'visor'`: the pane in the middle of the mullion and the grille 3 cm into the sill, as the Visor de casas 3D drew them.
    */
   windows?: 'fitted' | 'visor'
+  /**
+   * The longest stretch (m) of a wiring or pipe run that detaches as one piece (default 3 for wiring, 2.5 for pipes). A run is also cut where it enters and leaves a slab,
+   * a wall or a partition, so no piece of it crosses one.
+   */
+  segmentLimits?: Partial<{ wiring: number; pipe: number }>
   drawCallBudget?: number
   building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
 }
