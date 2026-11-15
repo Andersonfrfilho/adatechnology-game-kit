@@ -1,4 +1,4 @@
-import type { PhysicsWorld, SeamWorld } from './index'
+import type { PhysicsWorld, SeamWorld } from './contract'
 
 /** Where a phase runs: `crowd` and `actors` before each fixed step, `contacts` then `rules` once per frame after the steps. */
 export type PhaseOrder = 'crowd' | 'actors' | 'contacts' | 'rules'

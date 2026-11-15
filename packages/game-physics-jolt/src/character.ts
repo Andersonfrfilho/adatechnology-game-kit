@@ -1,7 +1,7 @@
 import type { Vec3 } from '@adatechnology/game-physics'
 
 import type { JoltCharacter } from './entries'
-import type { JoltWorld } from './world'
+import type { JoltWorldHost } from './world-host'
 
 export interface CharacterDesc {
   readonly radius: number
@@ -14,7 +14,7 @@ export interface CharacterDesc {
  * A walking capsule (Jolt's `CharacterVirtual`, spike: not yet in the contract): not a body, it moves by sweeps against the world, steps up stairs and sticks
  * to the floor going down (`ExtendedUpdate`), and pushes dynamic bodies with up to `strength` N. `update` takes the wanted horizontal speed; gravity is its own.
  */
-export const createCharacter = (w: JoltWorld, at: Vec3, size: CharacterDesc): JoltCharacter => {
+export const createCharacter = (w: JoltWorldHost, at: Vec3, size: CharacterDesc): JoltCharacter => {
   const J = w.J
   const settings = new J.CharacterVirtualSettings()
   const shape = w.makeShape({ kind: 'capsule', halfHeight: size.halfHeight, radius: size.radius })

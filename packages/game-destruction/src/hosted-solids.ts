@@ -1,17 +1,7 @@
 import { quat, quatFromEuler, toWorld } from './math'
-import type { DestructibleImpl, DestructibleSpec, ObjectState, PartSpec, Quat, Vec3 } from './types'
+import type { DestructibleImpl, DestructibleSpec, HostedSolid, ObjectState, PartSpec, Quat, Vec3 } from './types'
 
-/**
- * One part of a hosted body as a box turned as the body holds it (world): what a physics engine collides with in its place. A drawn piece (`DestructibleImpl.colliders`)
- * carries its part id as `key` and, where no box fits it, its triangles (`mesh`, world space) with the box around them as the box.
- */
-export interface HostedSolid {
-  readonly center: Vec3
-  readonly half: Vec3
-  readonly rotation: Quat
-  readonly key?: string
-  readonly mesh?: { readonly vertices: Float32Array; readonly indices: Uint32Array }
-}
+export type { HostedSolid } from './types'
 
 /** Where a hosted body is and how its parts are posed (object-local overrides of `setPartPose`). */
 export interface HostedPose {

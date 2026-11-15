@@ -8,8 +8,7 @@ import { sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
-import type { PartBox, PieceBody, PieceRound } from './internal'
-import type { PieceSweepHit } from './pieces'
+import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
 
 export type { StaticSolid } from './engine-statics'
 

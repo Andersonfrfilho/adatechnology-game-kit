@@ -1,10 +1,10 @@
-import type { JoltWorld } from './world'
+import type { JoltWorldHost } from './world-host'
 
 /**
  * Exact state of every body (positions, velocities, sleep, contact cache), for save/load and determinism checks: Jolt's own bytes, then the adapter's (each
  * body's friction state and coefficient, who touches whom: what `updateFriction` and `touching` read; the time not stepped yet, the ignored pairs, the rolling bodies and the step count; every map in key order), then the length of Jolt's part.
  */
-export const saveState = (w: JoltWorld): Uint8Array => {
+export const saveState = (w: JoltWorldHost): Uint8Array => {
   const J = w.J
   const chunks: Uint8Array[] = []
   const rec = new J.StateRecorderJS()
@@ -64,7 +64,7 @@ export const saveState = (w: JoltWorld): Uint8Array => {
 }
 
 /** Jolt's part of a saved state put back; false when it does not fit. */
-const restoreJolt = (w: JoltWorld, data: Uint8Array, joltBytes: number): boolean => {
+const restoreJolt = (w: JoltWorldHost, data: Uint8Array, joltBytes: number): boolean => {
   const J = w.J
   let at = 0
   let failed = false
@@ -85,7 +85,7 @@ const restoreJolt = (w: JoltWorld, data: Uint8Array, joltBytes: number): boolean
   return ok && !failed
 }
 
-export const restoreState = (w: JoltWorld, data: Uint8Array): boolean => {
+export const restoreState = (w: JoltWorldHost, data: Uint8Array): boolean => {
   if (data.length < 4) return false
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength)
   const joltBytes = view.getUint32(data.length - 4, true)

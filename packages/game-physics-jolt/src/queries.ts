@@ -3,7 +3,7 @@ import type JoltNS from 'jolt-physics/wasm-compat'
 import type { BodyId, QueryFilter, RayHit, Vec3 } from '@adatechnology/game-physics'
 
 import { layerOf } from './constants'
-import type { JoltWorld } from './world'
+import type { JoltWorldHost } from './world-host'
 
 /** A ray or a sphere swept: where from, which way (unit), how far. */
 export interface Cast {
@@ -12,7 +12,7 @@ export interface Cast {
   readonly length: number
 }
 
-const filterFor = (w: JoltWorld, filter?: QueryFilter): JoltNS.ObjectLayerFilter => {
+const filterFor = (w: JoltWorldHost, filter?: QueryFilter): JoltNS.ObjectLayerFilter => {
   if (!filter?.layers) return w.objFilter
   const key = [...filter.layers].sort().join(',')
   let f = w.layerFilters.get(key)
@@ -25,18 +25,18 @@ const filterFor = (w: JoltWorld, filter?: QueryFilter): JoltNS.ObjectLayerFilter
   return f
 }
 
-const hitOf = (w: JoltWorld, bodyKey: number, sub: JoltNS.SubShapeID, distance: number): RayHit => {
+const hitOf = (w: JoltWorldHost, bodyKey: number, sub: JoltNS.SubShapeID, distance: number): RayHit => {
   const e = w.bodies.get(bodyKey)
   const tag = e ? e.body.GetShape().GetSubShapeUserData(sub) | 0 : -1
   return { body: bodyKey as BodyId, user: e?.user ?? -1, tag, distance }
 }
 
-const aimRay = (w: JoltWorld, c: Cast): void => {
+const aimRay = (w: JoltWorldHost, c: Cast): void => {
   w.ray.mOrigin.Set(c.from[0], c.from[1], c.from[2])
   w.ray.mDirection.Set(c.direction[0] * c.length, c.direction[1] * c.length, c.direction[2] * c.length)
 }
 
-export const rayAll = (w: JoltWorld, c: Cast, out: RayHit[], filter?: QueryFilter): number => {
+export const rayAll = (w: JoltWorldHost, c: Cast, out: RayHit[], filter?: QueryFilter): number => {
   aimRay(w, c)
   const col = w.rayCollector
   col.Reset()
@@ -51,7 +51,7 @@ export const rayAll = (w: JoltWorld, c: Cast, out: RayHit[], filter?: QueryFilte
   return out.length
 }
 
-export const rayFirst = (w: JoltWorld, c: Cast, filter?: QueryFilter): RayHit | null => {
+export const rayFirst = (w: JoltWorldHost, c: Cast, filter?: QueryFilter): RayHit | null => {
   aimRay(w, c)
   const col = w.rayClosest
   col.Reset()
@@ -60,7 +60,7 @@ export const rayFirst = (w: JoltWorld, c: Cast, filter?: QueryFilter): RayHit | 
   return hitOf(w, col.mHit.mBodyID.GetIndexAndSequenceNumber(), col.mHit.mSubShapeID2, col.mHit.mFraction * c.length)
 }
 
-const sphere = (w: JoltWorld, radius: number): JoltNS.Shape => {
+const sphere = (w: JoltWorldHost, radius: number): JoltNS.Shape => {
   const key = Math.round(radius * 1000)
   let s = w.sphereShapes.get(key)
   if (!s) {
@@ -70,7 +70,7 @@ const sphere = (w: JoltWorld, radius: number): JoltNS.Shape => {
   return s
 }
 
-export const overlapSphere = (w: JoltWorld, at: { readonly center: Vec3; readonly radius: number }, out: BodyId[], filter?: QueryFilter): number => {
+export const overlapSphere = (w: JoltWorldHost, at: { readonly center: Vec3; readonly radius: number }, out: BodyId[], filter?: QueryFilter): number => {
   const J = w.J
   const shape = sphere(w, at.radius)
   w.r1.Set(at.center[0], at.center[1], at.center[2])
@@ -93,7 +93,7 @@ export const overlapSphere = (w: JoltWorld, at: { readonly center: Vec3; readonl
   return out.length
 }
 
-export const sphereCastAll = (w: JoltWorld, c: Cast & { readonly radius: number }, out: RayHit[], filter?: QueryFilter): number => {
+export const sphereCastAll = (w: JoltWorldHost, c: Cast & { readonly radius: number }, out: RayHit[], filter?: QueryFilter): number => {
   const J = w.J
   const shape = sphere(w, c.radius)
   w.r1.Set(c.from[0], c.from[1], c.from[2])
@@ -117,7 +117,7 @@ export const sphereCastAll = (w: JoltWorld, c: Cast & { readonly radius: number 
 }
 
 /** The deepest overlap of a body with the fixed bodies where it stands, and the way out of it (`PhysicsWorld.penetration`). */
-export const penetration = (w: JoltWorld, id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number => {
+export const penetration = (w: JoltWorldHost, id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number => {
   const J = w.J
   const e = w.entry(id)
   w.v2.Set(1, 1, 1)

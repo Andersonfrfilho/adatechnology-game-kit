@@ -1,10 +1,10 @@
 import type { BodyId, VehicleDesc, VehicleId, VehicleInput } from '@adatechnology/game-physics'
 
 import { layerOf } from './constants'
-import type { JoltWorld } from './world'
+import type { JoltWorldHost } from './world-host'
 
 /** A wheeled vehicle: its chassis a body of the world, Jolt's vehicle constraint and controller, stepped by its own step listener. */
-export const createVehicle = (w: JoltWorld, desc: VehicleDesc): VehicleId => {
+export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId => {
   const J = w.J
   const body = w.createBody({ ...desc.chassis, layer: 'vehicle', allowSleep: true })
   const vs = new J.VehicleConstraintSettings()
@@ -86,20 +86,20 @@ export const createVehicle = (w: JoltWorld, desc: VehicleDesc): VehicleId => {
   return id
 }
 
-export const driveVehicle = (w: JoltWorld, id: VehicleId, input: VehicleInput): void => {
+export const driveVehicle = (w: JoltWorldHost, id: VehicleId, input: VehicleInput): void => {
   const v = w.vehicles.get(id)
   if (!v) return
   v.controller.SetDriverInput(input.forward, input.right, input.brake, input.handBrake)
   if (input.forward !== 0 || input.right !== 0) w.bi.ActivateBody(w.entry(v.body).id)
 }
 
-export const vehicleBody = (w: JoltWorld, id: VehicleId): BodyId => {
+export const vehicleBody = (w: JoltWorldHost, id: VehicleId): BodyId => {
   const v = w.vehicles.get(id)
   if (!v) throw new Error(`game-physics-jolt: no vehicle ${id}`)
   return v.body
 }
 
-export const removeVehicle = (w: JoltWorld, id: VehicleId): void => {
+export const removeVehicle = (w: JoltWorldHost, id: VehicleId): void => {
   const v = w.vehicles.get(id)
   if (!v) return
   w.system.RemoveStepListener(v.listener)
@@ -109,7 +109,7 @@ export const removeVehicle = (w: JoltWorld, id: VehicleId): void => {
   w.vehicles.delete(id)
 }
 
-export const wheelContacts = (w: JoltWorld, id: VehicleId): number => {
+export const wheelContacts = (w: JoltWorldHost, id: VehicleId): number => {
   const v = w.vehicles.get(id)
   if (!v) return 0
   let n = 0

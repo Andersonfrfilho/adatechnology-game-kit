@@ -1,28 +1,12 @@
 import type JoltNS from 'jolt-physics/wasm-compat'
 
-import type { BodyId, ContactBuffer } from '@adatechnology/game-physics'
+import type { BodyId } from '@adatechnology/game-physics'
 
-import { POINTS_PER_BODY, ROW_CAPACITY } from './constants'
+import { POINTS_PER_BODY } from './constants'
 import type { Jolt } from './constants'
 import type { BodyEntry } from './entries'
 import { vec3At } from './vec3'
-import type { JoltWorld } from './world'
-
-export class Contacts implements ContactBuffer {
-  count = 0
-  /** Contacts over `reportSpeed` that found no row (`maxContacts`): cleared with the events. */
-  dropped = 0
-  readonly a = new Int32Array(ROW_CAPACITY)
-  readonly b = new Int32Array(ROW_CAPACITY)
-  readonly userA = new Int32Array(ROW_CAPACITY)
-  readonly userB = new Int32Array(ROW_CAPACITY)
-  readonly tagA = new Int32Array(ROW_CAPACITY)
-  readonly tagB = new Int32Array(ROW_CAPACITY)
-  readonly point = new Float32Array(ROW_CAPACITY * 3)
-  readonly normal = new Float32Array(ROW_CAPACITY * 3)
-  readonly approach = new Float32Array(ROW_CAPACITY)
-  readonly impulse = new Float32Array(ROW_CAPACITY)
-}
+import type { JoltWorldHost } from './world-host'
 
 /** Scratch for one contact's first point and normal: reused, so a contact makes no garbage. */
 const P: [number, number, number] = [0, 0, 0]
@@ -45,7 +29,7 @@ const speedAlong = (J: Jolt, e: BodyEntry): number => {
 }
 
 /** A new contact's restitution, mixed as the kit mixes it, and its row in `contacts` if it closed faster than `reportSpeed`. */
-const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings): void => {
+const added = (w: JoltWorldHost, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.ContactManifold, cs: JoltNS.ContactSettings): void => {
   const { e1, e2 } = pair
   if (cs.mIsSensor) {
     w.sensorEvents.push(e1.layer === 'sensor' ? { sensor: e1.key as BodyId, other: e2.key as BodyId, entered: true } : { sensor: e2.key as BodyId, other: e1.key as BodyId, entered: true })
@@ -87,7 +71,7 @@ const added = (w: JoltWorld, pair: { e1: BodyEntry; e2: BodyEntry }, m: JoltNS.C
   c.impulse[i] = invMass > 0 ? ((1 + cs.mCombinedRestitution) * along) / invMass : 0
 }
 
-const recordPoints = (w: JoltWorld, key: number, m: JoltNS.ContactManifold, onFirst: boolean): void => {
+const recordPoints = (w: JoltWorldHost, key: number, m: JoltNS.ContactManifold, onFirst: boolean): void => {
   const p = w.points.get(key)
   if (!p) return
   if (p.step !== w.stepCount) {
@@ -104,7 +88,7 @@ const recordPoints = (w: JoltWorld, key: number, m: JoltNS.ContactManifold, onFi
   }
 }
 
-const recordPair = (w: JoltWorld, k1: number, k2: number, m: JoltNS.ContactManifold): void => {
+const recordPair = (w: JoltWorldHost, k1: number, k2: number, m: JoltNS.ContactManifold): void => {
   recordPoints(w, k1, m, true)
   recordPoints(w, k2, m, false)
 }
@@ -115,7 +99,7 @@ const recordPair = (w: JoltWorld, k1: number, k2: number, m: JoltNS.ContactManif
  * points for a body asked about (`contactPoints`): friction is the bodies' own (`updateFriction`), mixed by Jolt, so no rule runs per contact per step
  * (gate 0 B6: that rule was a third of the frame a wall woke in).
  */
-export const makeListener = (w: JoltWorld): JoltNS.ContactListenerJS => {
+export const makeListener = (w: JoltWorldHost): JoltNS.ContactListenerJS => {
   const J = w.J
   const listener = new J.ContactListenerJS()
   // the bodies come as heap addresses: entries are found by them, so a contact asks Jolt only for what it must (one call across the wasm boundary costs as

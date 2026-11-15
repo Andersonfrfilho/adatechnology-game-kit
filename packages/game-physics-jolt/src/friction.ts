@@ -1,14 +1,14 @@
 import type { BodyId, Material } from '@adatechnology/game-physics'
 
 import { vec3At } from './vec3'
-import type { JoltWorld } from './world'
+import type { JoltWorldHost } from './world-host'
 
 /**
  * One more (or one fewer) contact between `key` and `other`: the partners `updateFriction` compares speeds with, and `touching` (a body with a partner). One fewer counts only for a
  * pair that was counted: a sensor's pair never is, and a body already removed has no entry left to say which kind its pair was (Jolt reports the removal a step
  * later).
  */
-export const touch = (w: JoltWorld, key: number, other: number, by: number): void => {
+export const touch = (w: JoltWorldHost, key: number, other: number, by: number): void => {
   let mine = w.partners.get(key)
   if (by < 0 && !mine?.has(other)) return
   if (!mine) {
@@ -27,7 +27,7 @@ export const touch = (w: JoltWorld, key: number, other: number, by: number): voi
  * The foot `updateFriction` is looking at: its world, its speed, the fastest it slips against a partner so far, and the one material all its partners share
  * when they are all fixed (`null` before the first, `false` once a partner moves or has another material).
  */
-const foot = { world: null as JoltWorld | null, vx: 0, vy: 0, vz: 0, slip: 0, ground: null as Material | null | false }
+const foot = { world: null as JoltWorldHost | null, vx: 0, vy: 0, vz: 0, slip: 0, ground: null as Material | null | false }
 
 /** The foot's speed against one partner, at the foot (a fixed body has none), until it already slips; and whether the partners are one fixed material. */
 const slipAgainst = (_count: number, other: number): void => {
@@ -66,7 +66,7 @@ const coefficientOf = (material: Material, sliding: boolean, ground: Material | 
  * sticks; on a slope, or bouncing, the speed along the contact normal counts too (design §2). A body touching nothing keeps its state. Each body's result reads
  * only speeds after the step, never another body's friction: the order bodies and partners are visited in does not change it.
  */
-export const updateFriction = (w: JoltWorld): void => {
+export const updateFriction = (w: JoltWorldHost): void => {
   const J = w.J
   const ids = w.activeIds
   w.system.GetActiveBodies(J.EBodyType_RigidBody, ids)
@@ -102,7 +102,7 @@ export const updateFriction = (w: JoltWorld): void => {
 }
 
 /** The largest rolling resistance among the surfaces a rolling body touches so far, and the world it is read in. */
-const surface = { world: null as JoltWorld | null, rolling: 0 }
+const surface = { world: null as JoltWorldHost | null, rolling: 0 }
 
 const softest = (_count: number, other: number): void => {
   const o = surface.world?.bodies.get(other)
@@ -114,7 +114,7 @@ const softest = (_count: number, other: number): void => {
  * inertia, and never more than stops the spin. C_rr is the larger of the body's own and of what it touches (`Material.rolling`: the softer surface decides). Its
  * contact's friction carries the change to its speed, as a rolling body's does.
  */
-export const roll = (w: JoltWorld, dt: number): void => {
+export const roll = (w: JoltWorldHost, dt: number): void => {
   surface.world = w
   for (const [key, rolling] of w.rollers) {
     const e = w.bodies.get(key)

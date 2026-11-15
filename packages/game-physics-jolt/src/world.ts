@@ -26,7 +26,8 @@ import type {
 import { createCharacter } from './character'
 import { BP_AGENT, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, layerOf } from './constants'
 import type { Jolt } from './constants'
-import { Contacts, makeListener } from './contacts'
+import { Contacts } from './contact-rows'
+import { makeListener } from './contacts'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
@@ -34,13 +35,14 @@ import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './q
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout } from './vec3'
+import type { JoltWorldHost } from './world-host'
 import { createVehicle, driveVehicle, removeVehicle, vehicleBody, wheelContacts } from './vehicles'
 
 /**
  * The kit's physics contract over one Jolt `PhysicsSystem`. Its fields without `private` are the adapter's own: the files beside this one (contacts, friction,
  * joints, vehicles, queries, state) work on them; nothing outside the package does.
  */
-export class JoltWorld implements PhysicsWorld {
+export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly engine = 'jolt'
   readonly contacts = new Contacts()
   readonly sensorEvents: SensorEvent[] = []

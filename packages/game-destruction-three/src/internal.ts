@@ -207,3 +207,15 @@ export interface Bound {
   /** Node between the root and its children that carries the settlement and tilt of the soil (`settle` events), made on the first one. */
   soilNode?: THREE_NS.Object3D
 }
+
+/** What a moving piece ran into (`PieceSystemOptions.sweep`). */
+export interface PieceSweepHit {
+  readonly object: string
+  readonly part: string
+  /** Metres along the way from the centre where the piece meets it. */
+  readonly distance: number
+  readonly point: Vec3
+  readonly normal: Vec3
+  /** Coefficient of restitution of what it met (by its material); mixed with the piece's (geometric mean). */
+  readonly restitution?: number
+}

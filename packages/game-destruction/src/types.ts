@@ -10,7 +10,6 @@
  * events on every machine (a LAN host can run the world and send only the inputs, or the events).
  */
 
-import type { HostedSolid } from './hosted-solids'
 import type {
   BallisticExtras,
   ShelterOptions,
@@ -814,4 +813,16 @@ export interface DestructionSnapshot {
   objects: Array<{ id: string; spec: DestructibleSpec; state: ObjectState; runtime?: ObjectRuntime }>
   /** Registered impls: transform and `serialize()` data. `load` restores them into impls registered under the same ids. */
   impls?: Array<{ id: string; position: Vec3; rotation: Quat; data?: unknown }>
+}
+
+/**
+ * One part of a hosted body as a box turned as the body holds it (world): what a physics engine collides with in its place. A drawn piece (`DestructibleImpl.colliders`)
+ * carries its part id as `key` and, where no box fits it, its triangles (`mesh`, world space) with the box around them as the box.
+ */
+export interface HostedSolid {
+  readonly center: Vec3
+  readonly half: Vec3
+  readonly rotation: Quat
+  readonly key?: string
+  readonly mesh?: { readonly vertices: Float32Array; readonly indices: Uint32Array }
 }

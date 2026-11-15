@@ -5,9 +5,9 @@ import type { BodyId, JointDesc, JointId, RagdollDesc, RagdollId, RagdollJoint, 
 
 import { layerOf } from './constants'
 import type { BodyEntry } from './entries'
-import type { JoltWorld } from './world'
+import type { JoltWorldHost } from './world-host'
 
-export const createGroup = (w: JoltWorld, subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number => {
+export const createGroup = (w: JoltWorldHost, subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number => {
   const table = new w.J.GroupFilterTable(subCount)
   for (const [a, b] of disabledPairs) table.DisableCollision(a, b)
   // the bodies hold references to the filter; the world keeps one for itself
@@ -24,7 +24,7 @@ const perpendicularTo = (axis: Vec3): Vec3 => {
   return [raw[0] / length, raw[1] / length, raw[2] / length]
 }
 
-const sliderSettings = (w: JoltWorld, desc: Extract<JointDesc, { kind: 'slider' }>): JoltNS.TwoBodyConstraintSettings => {
+const sliderSettings = (w: JoltWorldHost, desc: Extract<JointDesc, { kind: 'slider' }>): JoltNS.TwoBodyConstraintSettings => {
   const s = new w.J.SliderConstraintSettings()
   const length = Math.hypot(desc.axis[0], desc.axis[1], desc.axis[2])
   const axis: Vec3 = [desc.axis[0] / length, desc.axis[1] / length, desc.axis[2] / length]
@@ -43,7 +43,7 @@ const sliderSettings = (w: JoltWorld, desc: Extract<JointDesc, { kind: 'slider' 
 }
 
 /** Jolt's settings for a joint, in world space as given (the two bodies are added by whoever creates it). */
-const constraintSettings = (w: JoltWorld, desc: JointDesc | RagdollJoint): JoltNS.TwoBodyConstraintSettings => {
+const constraintSettings = (w: JoltWorldHost, desc: JointDesc | RagdollJoint): JoltNS.TwoBodyConstraintSettings => {
   const J = w.J
   if (desc.kind === 'hinge' || desc.kind === 'fixed') {
     // a fixed joint that can break is a hinge locked at 0: Jolt exposes the hinge's impulses, not the fixed one's
@@ -83,7 +83,7 @@ interface JointMade {
   readonly ragdoll: boolean
 }
 
-const addJointEntry = (w: JoltWorld, constraint: JoltNS.TwoBodyConstraint, made: JointMade): JointId => {
+const addJointEntry = (w: JoltWorldHost, constraint: JoltNS.TwoBodyConstraint, made: JointMade): JointId => {
   const J = w.J
   const id = w.nextJoint++ as JointId
   w.joints.set(id, {
@@ -98,7 +98,7 @@ const addJointEntry = (w: JoltWorld, constraint: JoltNS.TwoBodyConstraint, made:
   return id
 }
 
-export const createJoint = (w: JoltWorld, desc: JointDesc): JointId => {
+export const createJoint = (w: JoltWorldHost, desc: JointDesc): JointId => {
   const settings = constraintSettings(w, desc)
   const constraint = w.J.castObject(settings.Create(w.entry(desc.a).body, w.entry(desc.b).body), w.J.TwoBodyConstraint)
   w.J.destroy(settings)
@@ -107,7 +107,7 @@ export const createJoint = (w: JoltWorld, desc: JointDesc): JointId => {
 }
 
 /** One part's body settings in a ragdoll's settings: shape, pose, layer, material, mass and solver steps as the contract gives them. */
-const ragdollPart = (w: JoltWorld, s: JoltNS.RagdollPart, part: RagdollDesc['parts'][number], desc: RagdollDesc): void => {
+const ragdollPart = (w: JoltWorldHost, s: JoltNS.RagdollPart, part: RagdollDesc['parts'][number], desc: RagdollDesc): void => {
   const J = w.J
   const b = part.body
   const shape = w.makeShape(b.shape)
@@ -145,7 +145,7 @@ const ragdollPart = (w: JoltWorld, s: JoltNS.RagdollPart, part: RagdollDesc['par
  * their limits) when asked, no collision between neighbours or parts touching as made, the joints solved parents first. Its bodies and joints are the
  * adapter's like any other until `removeRagdoll`.
  */
-export const createRagdoll = (w: JoltWorld, desc: RagdollDesc): { readonly id: RagdollId; readonly bodies: readonly BodyId[]; readonly joints: readonly JointId[] } => {
+export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly id: RagdollId; readonly bodies: readonly BodyId[]; readonly joints: readonly JointId[] } => {
   const J = w.J
   const skeleton = new J.Skeleton()
   desc.parts.forEach((part, i) => {
@@ -186,7 +186,7 @@ export const createRagdoll = (w: JoltWorld, desc: RagdollDesc): { readonly id: R
   return { id, bodies, joints }
 }
 
-export const removeRagdoll = (w: JoltWorld, id: RagdollId): void => {
+export const removeRagdoll = (w: JoltWorldHost, id: RagdollId): void => {
   const e = w.ragdolls.get(id)
   if (!e) return
   for (const j of e.joints) w.joints.delete(j)
@@ -204,7 +204,7 @@ export const removeRagdoll = (w: JoltWorld, id: RagdollId): void => {
   w.ragdolls.delete(id)
 }
 
-export const removeJoint = (w: JoltWorld, id: JointId): void => {
+export const removeJoint = (w: JoltWorldHost, id: JointId): void => {
   const e = w.joints.get(id)
   if (!e || e.ragdoll) return
   w.system.RemoveConstraint(e.constraint)
@@ -212,7 +212,7 @@ export const removeJoint = (w: JoltWorld, id: JointId): void => {
 }
 
 /** Swing and twist of a swing-twist joint now (radians), for checking limits. */
-export const jointAngles = (w: JoltWorld, id: JointId): { swing: number; twist: number; hinge: number } => {
+export const jointAngles = (w: JoltWorldHost, id: JointId): { swing: number; twist: number; hinge: number } => {
   const e = w.joints.get(id)
   if (!e) return { swing: 0, twist: 0, hinge: 0 }
   if (e.hinge) return { swing: 0, twist: 0, hinge: e.hinge.GetCurrentAngle() }
@@ -227,7 +227,7 @@ export const jointAngles = (w: JoltWorld, id: JointId): { swing: number; twist: 
 }
 
 /** The joints whose impulse this fixed step passed their breaking impulse (scaled to the step) go, and are added to `brokenJoints` (cleared once per `step` call). */
-export const breakJoints = (w: JoltWorld, dt: number): void => {
+export const breakJoints = (w: JoltWorldHost, dt: number): void => {
   for (const [id, e] of w.joints) {
     if (e.breakImpulse === Infinity) continue
     let impulse = 0

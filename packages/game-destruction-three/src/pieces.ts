@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { PartBox, PieceBody, PieceFriction } from './internal'
+import type { PartBox, PieceBody, PieceFriction, PieceSweepHit } from './internal'
 import { squareBoxOf } from './internal'
 import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
@@ -10,6 +10,7 @@ import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import { resolvePhysics } from './physics-option'
 import type { PiecePhysics } from './physics-option'
+export type { PieceSweepHit } from './internal'
 
 export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
@@ -53,18 +54,6 @@ export interface PieceSystemOptions {
   physics: PiecePhysics
   /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
   staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
-}
-
-/** What a moving piece ran into (`PieceSystemOptions.sweep`). */
-export interface PieceSweepHit {
-  readonly object: string
-  readonly part: string
-  /** Metres along the way from the centre where the piece meets it. */
-  readonly distance: number
-  readonly point: Vec3
-  readonly normal: Vec3
-  /** Coefficient of restitution of what it met (by its material); mixed with the piece's (geometric mean). */
-  readonly restitution?: number
 }
 
 /** Slower than this (m/s) into a wall a piece only stops against it: no blow, no sound. */
