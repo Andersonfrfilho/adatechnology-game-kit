@@ -263,3 +263,81 @@ describe('pieces over the C2 limit', () => {
     expect(result.c2PiecesOver).toBe(1)
   })
 })
+
+// the three rules the owner approved on 2026-11-15 (T3.8w). `legacy*` are the formulas the ruler used before, written out so each test shows the old ruler counted the case
+describe('R1: C3 counts a rise only when the piece\'s energy also rose', () => {
+  const legacyRise = (from: EnergySample, to: EnergySample, dt: number): number => Math.max(0, to.centre[1] - from.centre[1] - Math.max(0, from.velocityY) * dt)
+
+  it('a 1 t pole turning flat climbs a ledge 5 cm while losing 85 kg m: the old rule counted 0.05 m, the new one 0', () => {
+    // energy height 0.065 + 0.2 before, 0.115 + 0.05 after (it lost m * 0.085 m = 85 kg m); vy -0.04 before, +0.85 after
+    const from = sample('pole', { mass: 1000, y: 0.065, energyHeight: 0.265, velocityY: -0.04, speed: 0.06, spin: 0.74 })
+    const to = sample('pole', { mass: 1000, y: 0.115, energyHeight: 0.165, velocityY: 0.85, speed: 0.85, spin: 0.15 })
+    expect(legacyRise(from, to, 0.05)).toBeCloseTo(0.05, 12)
+    const ruler = new EnergyRuler()
+    ruler.step([from], [to], 0.05)
+    expect(ruler.result().c3Lift).toBe(0)
+  })
+
+  it('a real launch still fails: the same 5 cm rise with the energy height going up 0.2 m counts in full', () => {
+    const from = sample('rock', { mass: 10, y: 0.065, energyHeight: 0.065 })
+    const to = sample('rock', { mass: 10, y: 0.115, energyHeight: 0.265, velocityY: 2, speed: 2 })
+    const ruler = new EnergyRuler()
+    ruler.step([from], [to], 0.05)
+    expect(ruler.result().c3Lift).toBeCloseTo(0.05, 12)
+  })
+
+  it('the rise is kept out only in the update that lost energy: a later update that gains counts', () => {
+    const ruler = new EnergyRuler()
+    ruler.step([sample('a', { y: 1, energyHeight: 1.3 })], [sample('a', { y: 1.04, energyHeight: 1.1 })], 0.05)
+    ruler.step([sample('a', { y: 1.04, energyHeight: 1.1 })], [sample('a', { y: 1.06, energyHeight: 1.12 })], 0.05)
+    expect(ruler.result().c3Lift).toBeCloseTo(0.02, 12)
+  })
+})
+
+describe('R2: energy the kit declares is out of C3 as it is out of C1 and C2 (D6)', () => {
+  it('a delayed blast shove that lifts a 0.6 kg pipe 2.5 cm is not C3; the engine\'s own rise in a later update still is', () => {
+    const ruler = new EnergyRuler()
+    // the shove: energy height +0.4 m, declared; the centre rises 0.025 (the pipe's own speed was 0)
+    ruler.step([sample('pipe', { mass: 0.6, y: 1.35, energyHeight: 1.35 })], [sample('pipe', { mass: 0.6, y: 1.375, energyHeight: 1.75, velocityY: 3, speed: 3 })], 0.05, 'none', { given: new Map([['pipe', 0.4]]) })
+    expect(ruler.result().c3Lift).toBe(0)
+    ruler.step([sample('pipe', { mass: 0.6, y: 1.375, energyHeight: 1.75 })], [sample('pipe', { mass: 0.6, y: 1.395, energyHeight: 1.77 })], 0.05)
+    expect(ruler.result().c3Lift).toBeCloseTo(0.02, 12)
+  })
+})
+
+describe('R3: the continuous-collision pull-back at a first contact is not a C1 gain', () => {
+  // a 1 t pole falling at ~6.3 m/s, 6 fixed steps of 1/120 s in a 0.05 s update. Free fall for 0.05 s: vy -6.14 -> -6.6305 and the centre moves 0.3193 m; with the pull-back it moves 0.3068 m, 12.5 mm less, and the speed is the free fall's
+  const fall = (y: number, vy: number): EnergySample => sample('pole', { mass: 1000, y, velocityY: vy, speed: Math.abs(vy), energyHeight: energyHeightOf({ centreY: y, velocity: [0, vy, 0], bodyAngularVelocity: [0, 0, 0], halfExtents: [1, 1, 1] }) })
+  const free = fall(0.7943, -6.14)
+  const pulledBack = fall(0.7943 - 0.3068, -6.6305)
+  const contact = { firstContact: new Set(['pole']) }
+
+  it('the old ruler counted the 12.5 kg m the pole did not gain; at a first contact the new one counts none', () => {
+    const old = new EnergyRuler()
+    old.step([free], [pulledBack], 0.05)
+    expect(old.result().c1Excess).toBeGreaterThan(10)
+    expect(old.result().c1Violations).toBe(1)
+    const ruler = new EnergyRuler()
+    ruler.step([free], [pulledBack], 0.05, 'none', contact)
+    expect(ruler.result().c1Violations).toBe(0)
+    expect(ruler.result().c1Excess).toBeLessThanOrEqual(0)
+  })
+
+  it('narrow: the same numbers without a first contact in the update are still a violation', () => {
+    const ruler = new EnergyRuler()
+    ruler.step([free], [pulledBack], 0.05, 'none', { firstContact: new Set(['somebody else']) })
+    expect(ruler.result().c1Violations).toBe(1)
+  })
+
+  it('narrow: only the pull-back counts out. A pole that also speeds up to 8 m/s at its first contact fails C1 with the 1 t m it gained, and a rock that gains height still fails C3', () => {
+    const launched = fall(0.7943 - 0.3068, -8)
+    const ruler = new EnergyRuler()
+    ruler.step([free], [launched], 0.05, 'none', contact)
+    const result = ruler.result()
+    expect(result.c1Violations).toBe(1)
+    expect(result.c1Excess).toBeGreaterThan(900)
+    const lift = new EnergyRuler()
+    lift.step([sample('rock', { mass: 10, y: 0.065, energyHeight: 0.065 })], [sample('rock', { mass: 10, y: 0.115, energyHeight: 0.265, velocityY: 2, speed: 2 })], 0.05, 'none', { firstContact: new Set(['rock']) })
+    expect(lift.result().c3Lift).toBeCloseTo(0.05, 12)
+  })
+})

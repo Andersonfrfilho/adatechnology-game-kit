@@ -60,6 +60,21 @@
   }
   // energy the kit's own rules give a piece (a blast's front that arrives later and a second explosion shove it; the kit's balancing push turns a pole or a plank over): measured as the
   // energy height it adds, in the update it lands, and taken out of that piece's island and episode, so only what the engine makes on top of it counts
+  // R3: pieces whose continuous-motion body touches something now and touched nothing in the previous update (the same rule as tests/contact-graph.ts `createFirstContactTracker`)
+  let previousPartners = new Map()
+  const firstContactNow = () => {
+    if (!graph) return undefined
+    const log = glue.world.pairLog, partners = new Map()
+    for (let i = 0; i < log.length; i += 2) { partners.set(log[i], (partners.get(log[i]) ?? 0) + 1); partners.set(log[i + 1], (partners.get(log[i + 1]) ?? 0) + 1) }
+    const first = new Set()
+    for (const [objectId, body] of glue.byObject) {
+      const link = glue.links.get(body)
+      if (!link || !partners.has(link.id) || previousPartners.has(link.id)) continue
+      if (glue.world.bi.GetMotionQuality(glue.world.entry(link.id).id) === glue.world.J.EMotionQuality_LinearCast) first.add(objectId)
+    }
+    previousPartners = partners
+    return first
+  }
   let given = new Map()
   const giving = (piece, apply) => {
     const before = sampleOf(piece).energyHeight
@@ -182,7 +197,7 @@
         worstIsland.history = ring.map(rg => ({ step: rg.step, s: rg.s.filter(x => around.has(x.id)) }))
         worstIsland.neighbours = Object.fromEntries([...around].filter(id => !ids.has(id)).map(id => [id, { parts: partsOf(id), mass: (all.find(q => q.objectId === id) || {}).mass }])) } }
     }
-    ruler.step(before, after, dt, input, { touching, given })
+    ruler.step(before, after, dt, input, { touching, given, firstContact: firstContactNow() })
     given = new Map()
     input = 'none'
     return ms
