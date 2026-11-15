@@ -78,7 +78,12 @@ type Episode = { base: number; gain: number; violated: boolean }
 const isAtRest = (sample: EnergySample): boolean => sample.speed < REST_SPEED && sample.spin < REST_SPIN
 
 /** What a host adds to one update: the contact graph, and the energy height (m) its own rules gave each piece from outside (a delayed blast's shove, the kit's balancing push). */
-export type StepContext = { readonly touching?: readonly TouchingPair[]; readonly given?: ReadonlyMap<string, number> }
+export type StepContext = {
+  readonly touching?: readonly TouchingPair[]
+  readonly given?: ReadonlyMap<string, number>
+  /** R3: pieces whose continuous-motion body made its first contact in this update (the host reads it from the engine's contact log); only these may have the pull-back below counted out of C1. */
+  readonly firstContact?: ReadonlySet<string>
+}
 
 /** Two pieces (their ids) the engine had touching at some point of the update: an edge of the contact graph. */
 export type TouchingPair = readonly [string, string]
@@ -113,6 +118,10 @@ export const islandsOf = (before: readonly EnergySample[], after: readonly Energ
   return before.map((_, index) => find(index))
 }
 
+/** R3: how much less (m) the centre moved than the mean of its vertical speeds over the update says: the part the engine's continuous collision took back. Never negative. */
+const pullBackOf = (from: EnergySample, to: EnergySample, dt: number): number =>
+  Math.max(0, to.centre[1] - from.centre[1] - ((from.velocityY + to.velocityY) / 2) * dt)
+
 export class EnergyRuler {
   private time = 0
   private lastInputAt = 0
@@ -139,7 +148,7 @@ export class EnergyRuler {
     const given = context.given ?? new Map<string, number>()
     if (input !== 'none' || given.size > 0) this.lastInputAt = this.time
     const islands = islandsOf(before, after, context.touching)
-    const violated = input === 'energy' ? new Set<number>() : this.measureC1(before, after, islands, given)
+    const violated = input === 'energy' ? new Set<number>() : this.measureC1(before, after, { islands, given, firstContact: context.firstContact, dt })
     before.forEach((from, index) => {
       const to = after[index] as EnergySample
       const added = given.get(from.id) ?? 0
@@ -178,13 +187,19 @@ export class EnergyRuler {
     }
   }
 
-  /** C1 per island over `m_island * 1 mm`; returns the islands that went over it. */
-  private measureC1(before: readonly EnergySample[], after: readonly EnergySample[], islands: readonly number[], given: ReadonlyMap<string, number>): Set<number> {
+  /**
+   * C1 per island over `m_island * 1 mm`; returns the islands that went over it. R3: a piece in `firstContact` has the pull-back of the engine's continuous collision
+   * taken out of its gain: at the first contact the body is moved back to the instant of impact and keeps its velocity, so its centre moved less than the mean of its
+   * vertical speeds says (`from.velocityY`, `to.velocityY`) while nothing was added to it. Only that shortfall counts out, never more than the piece's own gain.
+   */
+  private measureC1(before: readonly EnergySample[], after: readonly EnergySample[], update: { islands: readonly number[]; given: ReadonlyMap<string, number>; firstContact: ReadonlySet<string> | undefined; dt: number }): Set<number> {
     const gained = new Map<number, { energy: number; mass: number }>()
     before.forEach((from, index) => {
-      const island = islands[index] as number
+      const to = after[index] as EnergySample
+      const island = update.islands[index] as number
       const entry = gained.get(island) ?? { energy: 0, mass: 0 }
-      entry.energy += from.mass * ((after[index] as EnergySample).energyHeight - from.energyHeight - (given.get(from.id) ?? 0))
+      const gain = from.mass * (to.energyHeight - from.energyHeight - (update.given.get(from.id) ?? 0))
+      entry.energy += gain - (update.firstContact?.has(from.id) ? Math.min(Math.max(0, gain), from.mass * pullBackOf(from, to, update.dt)) : 0)
       entry.mass += from.mass
       gained.set(island, entry)
     })
@@ -223,10 +238,11 @@ export class EnergyRuler {
     return { conditioned: Math.max(gain?.conditioned ?? 0, episode.violated ? episode.gain : 0), unconditioned: Math.max(gain?.unconditioned ?? 0, episode.gain) }
   }
 
-  /** C3: centre rise beyond its own upward speed, summed per piece; also the highest upward speed gained. */
+  /** C3: centre rise beyond its own upward speed, summed per piece, in updates where the piece's energy rose (R1) and the kit gave it none (R2); also the highest upward speed gained. */
   private measureLift(from: EnergySample, to: EnergySample, dt: number, isOutsideEnergy: boolean): void {
     if (isOutsideEnergy) return
-    const rise = Math.max(0, to.centre[1] - from.centre[1] - Math.max(0, from.velocityY) * dt)
+    // R1: a rise the piece paid for with its own energy (a spinning pole climbing a ledge) is not a launch: it counts only in an update where its energy height also rose
+    const rise = to.energyHeight > from.energyHeight ? Math.max(0, to.centre[1] - from.centre[1] - Math.max(0, from.velocityY) * dt) : 0
     const total = (this.lift.get(from.id) ?? 0) + rise
     this.lift.set(from.id, total)
     this.c3Lift = Math.max(this.c3Lift, total)

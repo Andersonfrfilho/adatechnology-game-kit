@@ -23,7 +23,7 @@ for (const kind of kinds.split(',')) for (let round = 1; round <= Number(rounds)
   await page.goto(`${pathToFileURL(page_).href}?area=floorplan${query}`, { timeout: 180000 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 600000 })
   const started = Date.now()
-  const expression = `(async () => { const EnergyRuler = ${ruler}; return await ${source.replaceAll('__KIND__', kind)} })()`
+  const expression = `(async () => { const EnergyRuler = ${ruler}; return await ${source.replaceAll('__KIND__', kind).replaceAll('__DISCRETE__', process.env.DISCRETE ?? 'none')} })()`
   const result = await page.evaluate(expression)
   const gpu = await page.evaluate(() => { const gl = document.createElement('canvas').getContext('webgl2'); const i = gl.getExtension('WEBGL_debug_renderer_info'); return i ? gl.getParameter(i.UNMASKED_RENDERER_WEBGL) : 'unknown' })
   const line = { label, kind, round, seconds: (Date.now() - started) / 1000, gpu, errors, ...result }
