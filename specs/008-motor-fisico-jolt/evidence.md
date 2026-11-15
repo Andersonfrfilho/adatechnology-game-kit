@@ -2185,3 +2185,91 @@ Contra a T3.8n:
 | `eslint` nos arquivos mudados | sem problemas |
 | `node tools/kit-audit/audit.mjs --check` | 0 novos, 11 pendentes conhecidos |
 | `pnpm check:layers` | sem violações novas |
+
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 (com `game-destruction-three` rebuildado) |
+| `game-destruction-three` próprio / Jolt | 409 passam, 0 falham / 495 passam, só as 2 `rolling` conhecidas |
+| `game-floorplan-three` próprio / Jolt | 1068 passam, 0 falham / 1068 passam, as 4 conhecidas (3 `exact-golden` + `bookcase-topple`) |
+| `game-test-room` próprio / Jolt | 458 / 458 passam |
+| Bacia `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, `worstC4` 1,5167, `worstC2Unconditioned` 0,014651, `fellThrough` 0 (igual à T3.8j) |
+| z-fighting (`z-fighting-houses`, dentro do `game-floorplan-three`) | passa |
+| `eslint` nos arquivos mudados | 0 erros (avisos antigos de `max-lines`) |
+| `kit-audit --check` / `pnpm check:layers` | exit 0 (0 novos) / sem violações novas |
+| Goldens | nenhum regravado: o pré-assento não muda o que o solver próprio ou o desenho produzem |
+
+
+## T3.8m — rodadas da sala depois de D5–D8 (2026-11-15) — **T3.8 continua SEM ✅: 0 de 20 rodadas passam no Jolt com o pré-assento ligado; a causa dominante é uma peça nova (`pipe:run_wall_*`), e o D8 não ajuda nos quadros e piora o C1 do poste**
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, Node v24.22.0. Navegador: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo (`decision/probes/drive.mjs`), duas pistas ao mesmo tempo no máximo (`a` com `c`, depois `b` sozinha). Código: `feat/chao-ao-construir` com o D8 (`25b3d114`) mais dois commits desta tarefa (abaixo). `pnpm build` e `node examples/test-room/build.mjs` refeitos antes de cada lote, conferidos por grep no `dist` (`R.prelayGround` na página) e por sonda no navegador (chamadas de `prelayGround`). Aceite igual ao da T3.8b a T3.8g: C2 condicionado 0 peças acima de 3,5 cm, C4 em até 3 s, `fellThrough` 0; C1 e C3 só se relatam. Nenhuma tolerância, régua nem teste foi afrouxado. JSON: `decision/t38m-results.json` (80 rodadas, com `overPieces`, `worstRises`, quadros).
+
+### 1. O pré-assento não rodava na sala (achado antes de medir)
+A primeira opção (`?prelay=0`, commit `3619bed7`) desligava só o `layArea`. Mas a casa da sala é construída pela ação `build` do banco do módulo `game-floorplan-three` (`openArea('floorplan_area')` tem `placements: []`), que nunca chamava `prelayGround`: **sondado no navegador, 0 chamadas com e sem a opção, 692 corpos nos dois**. O D8 da T3.8l, portanto, só valia para `layArea`. Corrigido em `9f15a4ea`: `house.destruction.activate()` pede `prelayGround` à caixa da casa, e o liga/desliga passou para o dono (`RendererOptions.prelayGround`, padrão ligado; a sala repassa `TestRoomOptions.prelayGround`/`?prelay=0`). Depois: **504 ladrilhos assentados, 1196 corpos** (692 + 504) com a opção ligada; 0 e 692 com `?prelay=0`. Testes: `game-destruction-three/tests/engine-prelay.test.ts` (opção, Jolt), `game-floorplan-three/tests/house-ground-prelay.test.ts` (pede uma vez, caixa da casa; no Jolt assenta > 0 e 0 com a opção desligada).
+O primeiro lote de rodadas (`pa`, `pb`, `pc`, 10 por configuração) foi feito **antes** dessa correção: nele o pré-assento nunca rodou, então são rodadas "sem pré-assento" extras e medem a variação de uma rodada para outra.
+
+### 2. Tabela (5 rodadas por célula; ordem das rodadas 1 a 5)
+Passa = C2 cond. 0 peças, C4 de 0 a 3 s, `fellThrough` 0. `-1` em C4 = uma peça não dorme. C1 em kg·m (pior ilha), C2 = maior ganho de uma peça (m), C3 em m.
+
+| Configuração | Passam | C1 | C2 ganho (m) / peças > 3,5 cm | C3 | C4 (s) | `fellThrough` | quadro p50 / p99 / máx (ms), medianas | despertar (ms), mediana |
+|---|---|---|---|---|---|---|---|---|
+| **(a) Jolt, D4 ligada, pré-assento ligado, blast** | **0/5** | 0,52; 8,55; 0,44; 0,44; 5,14 | 0,124; 0,053; 0,124; 0,124; 0,125 / 2; 2; 2; 2; 3 | 1,16; 0,12; 1,36; 1,13; 1,14 | 8,05; 2,25; -1; 3,2; 5,05 | 0 | 18,1 / 144,1 / 258,6 | 38,9 |
+| (a) martelo | **0/5** | 9,19; 0,25; 9,19; 0,21; 9,19 | 0,086; 0,088; 0,083; 0,071; 0,086 / 1 em todas | 1,09; 1,04; 1,18; 1,17; 1,08 | 5,5; 5,5; 0,95; 0,95; 5,55 | 0 | 15,5 / 96,4 / 243,7 | 28,9 |
+| **(b) Jolt, D4 desligada, pré-assento ligado, blast** | **0/5** | 8,55; 0,37; 6,82; 0,51; 0,38 | 0,057; 0,130; 0,124; 0,124; 0,132 / 3; 2; 3; 2; 2 | 0,12; 1,00; 1,11; 1,25; 1,26 | 2,45; 0,85; 3,5; -1; -1 | 0 | 10,5 / 117,5 / 241,1 | 34,9 |
+| (b) martelo | **0/5** | 9,19; 9,19; 5,6; 0,46; 9,19 | 0,131; 0,091; 0,131; 0,131; 0,083 / 2; 1; 2; 2; 1 | 1,11; 1,09; 1,20; 1,17; 1,19 | 6,85; 5,75; 5,55; 5,55; 1,05 | 0 | 14,4 / 81,4 / 226,4 | 137,8 (3 de 5 entre 138 e 139; as outras 27 e 75) |
+| **(c) Jolt, D4 ligada, pré-assento desligado (`?prelay=0`), blast** | **0/5** | 0,97; 0,50; 1,40; 0,94; 5,17 | 0,129; 0,129; 0,129; 0,124; 0,128 / 3; 2; 3; 3; 2 | 1,16; 1,09; 1,15; 1,13; 1,16 | 5,1; 4,15; 5,6; 3,25; 4,95 | 0 | 19,4 / 122,9 / 250,5 | 43,0 |
+| (c) martelo | **2/5** | 0,01; 0,25; 0,34; 0,13; 0,07 | 0,005; 0,079; 0,105; 0,060; 0,011 / 0; 1; 2; 1; 0 | 0,08; 1,05; 1,07; 0,99; 0,04 | 0,7; 6,05; 6,7; 6,05; 2,85 | 0 | 14,6 / 102,2 / 245,3 | 30,9 |
+| **(d) solver próprio, D4 ligada, blast** | 0/5 | 5,8; 5,68; 5,79; 5,68; 5,68 | 0,113 em todas / 3 em todas | 0,07; 0,30; 0,05; 0,07; 0,07 | 3,6; -1; 3,45; 3,55; 3,6 | 0 | 1,4 / 18,3 / 24,7 | 34,6 |
+| (d) martelo | 0/5 | 2,35 (4x); 20,02 | 0,034; 0,003; 0,018; 0,003; 0,434 / 0; 0; 0; 0; 1 | 0,05 a 0,09 | 3,8; 3,55; 3,1; 3,1; 4,45 | 0 | 1,2 / 12,1 / 15,2 | 25,7 |
+| extra: próprio, D4 desligada, blast | 0/5 | 5,7 a 5,9 | 0,033 a 0,113 / 2; 0; 2; 2; 1 | 0,03 a 0,07 | 4,7; 3,55; 4,5; 4,85; 4,55 | 0 | 1,6 / 21,5 / 30,8 | 39,8 |
+| extra: próprio, D4 desligada, martelo | 0/5 | 2,35 a 19,84 | 0,013 a 0,444 / 3; 0; 3; 3; 3 | 0,03 a 0,06 | 3,95; 3,3; 4,05; 5,1; 4,6 | 0 | 1,4 / 15,5 / 18,6 | 31,2 |
+| extra, 1º lote, pré-assento nunca rodou: Jolt D4 ligada blast / martelo | 1/5 / 2/5 | | pior 0,128 / 0,130 | | | 0 | 19,7 / 154,4 / 285,9; 14,1 / 109,2 / 262,9 | 48,4; 38,7 |
+| extra, 1º lote: Jolt D4 desligada blast / martelo | 0/5 / 1/5 | | pior 0,129 / 0,129 | | | 0 | 19,7 / 122,1 / 254,9; 16,9 / 98,5 / 240,7 | 38,7; 43,1 |
+| extra, 1º lote: Jolt D4 ligada, `?prelay=0`, blast / martelo | 0/5 / 0/5 | | pior 0,129 / 0,130 | | | 0 | 19,0 / 145,5 / 253,5; 17,4 / 120,4 / 282,5 | 50,6; 30,3 |
+
+Peças por rodada: 25 (blast) e 27 (martelo), contra 63 e 42 na T3.8g: a casa da sala mudou com o merge da release (#301, construção em etapas); os números não são comparáveis peça a peça. Nenhuma rodada deu erro de página. `fellThrough` = 0 nas **60 rodadas** do Jolt.
+
+### 3. Comparação com a T3.8g
+| | T3.8g | Agora |
+|---|---|---|
+| D4 ligada, blast | 4/5 | **0/5** (pré-assento ligado), 0/5 (desligado, no 2º lote), 1/5 (1º lote) |
+| D4 ligada, martelo | 3/5 | **0/5** (ligado), 2/5 (desligado), 2/5 (1º lote) |
+| D4 desligada, blast | 5/5 | **0/5** |
+| D4 desligada, martelo | 2/5 | **0/5** |
+
+**Regressão de 14 de 20 para 0 de 20 (e 5 de 30 sem o pré-assento).** A causa **não é o D8**: está nas listas de `overPieces` e vem junto com a mudança da casa da sala.
+- **`pipe:run_wall_bathroom_0` e `pipe:run_wall_backyard_outside`** (3 kg cada, uma peça escondida por cômodo): em **20 de 20** rodadas com o pré-assento ligado e em 32 de 40 sem ele, com ganho de 0,035 a 0,132 m, **parados** (velocidade 0 antes e depois) subindo de y 2,05 a 2,46 em 3 a 5 quadros (quadros 10 a 16), e depois acordados até 5 a 7 s. A caixa de `pipe:run_wall_bathroom_0` é de 4,7 x 2,0 x 2,1 m. **Causa visível no código**: a sala monta a casa com `constructionStages: true`, e nesse caminho `waterPipes` chama `stagedWallRuns` (`game-floorplan-three/src/utilities/water.ts`), que ainda desenha **uma só parte escondida por cômodo com todas as rotas** (`part('wall_pipe', ..., { id: 'pipe:' + tr.id, hidden: true, run, to, from, routes })`, sem `cutRun`, sem `holder`, sem massa por trecho). O conserto da T3.8h (`cutRun` nas lajes/paredes/divisórias) está só no ramo sem etapas, que a sala não usa. Mesmo defeito que a T3.8h consertou, no ramo que ficou de fora.
+- O C3 acompanha essa peça: 0,04 a 0,12 m nas 8 rodadas (de 60 do Jolt) sem cano de parede acima do limite; 1,0 a 1,36 m nas rodadas com ele acima (uma exceção, 0,12 m, em que só o cano do quintal passa, por 0,0003 m).
+- **C4**: as peças de C4 > 3 s ou -1 são as mesmas rodadas (7 de 10 em (a), 7 de 10 em (b), 8 de 10 em (c)); o cano de parede é o que acorda.
+- **`threshold:d0_0` e `d0_1`** (soleira da porta, 24,8 e 22,3 kg, ganho de 0,048 a 0,058 m com o pré-assento ligado e 0,04 a 0,080 m desligado): é a segunda peça, em 2 de 10 rodadas ligadas contra 3 de 10 desligadas (no 2º lote) e 6 de 10 no 1º lote. Causa não investigada.
+- **O poste de 1010 kg** (`obj_2`, `pole:-10.3` mais trechos de fiação) aparece como o C1 de 5 a 9 kg·m (dEm 10,2 num quadro, velocidade 0,19 m/s, y 0,39): é a pior ilha em 13 de 20 rodadas com o pré-assento ligado e em 11 de 40 sem ele, e C1 > 5 em **11 de 20 contra 5 de 40** (Fisher, p ~ 0,0008). **É o único sinal estatístico do D8 e é contra ele** (ver seção 4). O limite de C1 não é de aceite, e o poste não entra em C2 (**sem tombar mais**: a T3.8j (colisor do poste) tirou o poste da lista de C2; nenhuma rodada de Jolt tem poste ou fiação em `overPieces`; a única exceção é o solver próprio, onde a fiação `wiring:grid:*` e o cano `run_outlet` seguem acima, como na T3.8g).
+- **`fellThrough` 0 nas 60 rodadas do Jolt** (T3.8h): a rodada de 119 repetições da T3.8g não voltou.
+
+### 4. O pré-assento (D8) ajuda ou atrapalha na sala?
+**Nem ajuda nem atrapalha nos quadros; nos critérios, os dois sinais que existem (cano de parede, C1 do poste) vão contra ele, o do poste com força estatística. Não há ganho na sala que justifique o custo de 504 corpos, no estado de hoje.**
+- **Quadros** (10 rodadas D4 ligada, ligado `a` contra desligado `c`, mesmo carregamento por rodar em par): máximo médio **246,4 contra 249,8 ms**, p99 médio **121,5 contra 117,1 ms**, despertar médio **39,9 contra 38,8 ms**. O 1º lote (pré-assento nunca rodou) deu os mesmos valores (máximos 215 a 300 ms, despertar 29 a 57 ms). A diferença entre dois lotes sem pré-assento (`c` e `pc`) é do mesmo tamanho que a entre ligado e desligado.
+- **O ganho sintético da T3.8l (despertar de 65 para 0,5 ms) não aparece na sala**: o quadro de despertar na sala é de 30 a 55 ms com e sem; quem o custa não é o assentamento do chão (a sonda de despertar da T3.8l tinha o `Step` do arame de 45 m como pior quadro, e na sala os 504 ladrilhos não mudam o máximo). Causa do despertar na sala não investigada aqui.
+- **Custo**: +504 corpos de chão (692 para 1196, +73 %) ao construir a casa; o tempo da montagem na sala não foi medido.
+- **C1 do poste de 1010 kg (o sinal que existe)**: C1 > 5 kg·m em 5 de 10 rodadas de (a) e 6 de 10 de (b), contra 1 de 10 em (c), 2 de 10 em `pa`, 0 de 10 em `pb` e 2 de 10 em `pc`: **11 de 20 ligadas contra 5 de 40 desligadas, p ~ 0,0008**. Nas rodadas ligadas o poste acordado rola a ~0,2 m/s e a energia da ilha sobe ~10 kg·m num quadro com a velocidade igual (o centro sobe ~1 cm: um ressalto do chão). O pré-assento, então, **mexe no que o poste faz**; **mecanismo não achado** (hipótese não testada: o ladrilho assentado ao construir tem a forma do terreno de antes de a casa e do poste se assentarem, e o preguiçoso tem a de depois; ou as emendas dos 504 ladrilhos). Isso não reprova nenhum critério de aceite (o poste não passa de C2), mas pesa no C4 quando o poste não dorme.
+- **Aceite**: ligado 0 de 20 rodadas (a e b); desligado 2 de 10 em `c`, 0 de 10 em `pc`, 3 de 10 em `pa`: 5 de 30 sem o pré-assento. A diferença não é significativa por si (0 de 10 contra 5 de 30), mas o cano de parede está acima do limite em **20 de 20** rodadas com o pré-assento ligado contra 32 de 40 sem (probabilidade de acaso ~0,03 se a taxa fosse a mesma, uma só mistura de D4: sinal fraco, não confirmado). **Não há mecanismo conhecido** que ligue o pré-assento ao cano; é uma hipótese a medir com mais rodadas depois que o cano de parede for cortado em trechos (aí a causa dominante sai da frente).
+- **Item 4 (par de corpos com muitos ladrilhos)**: não foi preciso. O pior quadro com o pré-assento ligado **não** é claramente pior que com ele desligado (máximo 246 contra 250 ms), então não procurei o par de corpos de muitos ladrilhos. O arame de 45 m não aparece mais na sala (a fiação saiu da lista de peças acima do limite e o poste tem colisor de fuste, T3.8g/T3.8j).
+
+### 5. Veredito por critério (Jolt, (a), D4 ligada, pré-assento ligado)
+| Critério | Resultado | Veredito |
+|---|---|---|
+| C1 (relato) | 0,2 a 0,5 em 5 de 10; 5,1 a 9,2 em 5 de 10 (o poste de 1010 kg acordado a 0,2 m/s) | sem limite de aceite; o poste segue como pior ilha |
+| C2 condicionado | 0 peças acima de 3,5 cm em **0 de 10** rodadas; peças: `pipe:run_wall_bathroom_0` (9 de 10), `pipe:run_wall_backyard_outside` (5 de 10, 0,035 a 0,043), `threshold:d0_0` (2 de 10, 0,053) | **reprova** |
+| C3 (relato) | 0,12 em 1 de 10; 1,04 a 1,36 nas outras 9 | segue o cano de parede |
+| C4 (3 s) | passam 3 de 10 (2,25; 0,95; 0,95) | **reprova** |
+| `fellThrough` | 0 em 10 de 10 (60 de 60 no Jolt) | **passa** |
+
+**Não é verdade que todas as rodadas de (a) passem todos os critérios: 0 de 10 passam.**
+
+### 6. O que ainda falha, e a causa onde se vê
+1. **`pipe:run_wall_*` do caminho em etapas** (causa acima): cortar em trechos com `cutRun`, `holder` e massa por trecho também em `stagedWallRuns` (mesmo conserto da T3.8h; os testes `utility-segments.test.ts` hoje não cobrem o caminho em etapas). Provavelmente leva 8 a 10 das 10 rodadas de (a) a passar C2, C3 e boa parte do C4.
+2. **`threshold:d0_0` / `d0_1`** (soleira de 22 a 25 kg, 0,05 a 0,08 m): não investigada.
+3. **O poste de 1010 kg** rolando a 0,2 m/s (C1 e C4 em algumas rodadas): como na T3.8h item 1, aguarda decisão do dono sobre o tombamento (§12).
+4. **O solver próprio**, como sempre, reprova a mesma régua (fiação `wiring:grid:*`, `pipe:run_outlet`, poste de 1010 kg, um corpo que não dorme em `-1`); não é critério de aceite dele.
+
+### 7. Commits (locais, nada enviado)
+`3619bed7` (opção `?prelay=0`, `TestRoomOptions.prelayGround`), `9f15a4ea` (a ativação da casa assenta o chão; opção do dono em `RendererOptions.prelayGround`; testes), e o desta evidência com `t38m-results.json`.
+
+### 8. Gates
+`pnpm build` exit 0; `tsc --noEmit` limpo em `game-test-room`, `game-destruction-three` e `game-floorplan-three`; `game-test-room` 458/458; `game-destruction-three` próprio 409 passam, 152 pulados (Jolt); `engine-prelay.test.ts` com `PIECE_SOLVER=jolt` 8 passam, 1 pulado (o perfil); `house-ground-prelay.test.ts` 1+1 pulado (próprio) e 2 (Jolt); `game-floorplan-three` só os 4 arquivos que ativam casa com renderer (`navigation`, `pole-collider`, `house-switch-release`, `house-ground-prelay`) passam no próprio (22 passam, 2 pulados) e `pole-collider`/`house-switch-release` no Jolt (6); a suíte inteira de `game-floorplan-three` não coube nos 590 s de uma chamada e **não foi rodada**.
