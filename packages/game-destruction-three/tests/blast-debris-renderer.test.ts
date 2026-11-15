@@ -27,18 +27,19 @@ const crates = (count: number, size: number, options: Partial<RendererOptions>, 
   return { renderer, pieces }
 }
 
+// the wave presses on the area a body shows (the release's side-on impulse), so these small crates need more energy than before to be shoved at all
 const moving = (pieces: readonly Piece[]): number => pieces.filter((p) => Math.hypot(...p.velocity) > 0.5).length
 
 describe('the debris of a blast (spec 008 D4)', () => {
   it('without the option the whole blast shoves in its own frame, as before', () => {
     const { renderer, pieces } = crates(40, 0.3, {})
-    renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    renderer.explode([0, 0.2, 0], 1000000, 8, { visual: false })
     expect(moving(pieces)).toBe(40)
   })
 
   it('with the option the shoves wait their turn, from the numbers given, and all are in by the maximum delay', () => {
     const { renderer, pieces } = crates(40, 0.3, { blastDebris: { wakeCostTargetMs: 0, minWakesPerFrame: 4, maxWakeDelay: 0.1 } })
-    renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    renderer.explode([0, 0.2, 0], 1000000, 8, { visual: false })
     expect(moving(pieces)).toBe(4)
     for (let frame = 0; frame < 3; frame++) renderer.update(1 / 60)
     expect(moving(pieces)).toBeGreaterThan(4)
@@ -49,17 +50,17 @@ describe('the debris of a blast (spec 008 D4)', () => {
 
   it('a blast can override the numbers of the renderer that are its own (how long its debris waits, how many pieces)', () => {
     const { renderer, pieces } = crates(40, 0.3, { blastDebris: { wakeCostTargetMs: 0, minWakesPerFrame: 4 } })
-    renderer.explode([0, 0.2, 0], 200000, 8, { visual: false, debris: { maxWakeDelay: 0 } })
+    renderer.explode([0, 0.2, 0], 1000000, 8, { visual: false, debris: { maxWakeDelay: 0 } })
     expect(moving(pieces)).toBe(40)
   })
 
   it('only the count the measured cost allows enters physics, the big ones first; the rest stay where they stand', () => {
     const loosened: string[] = []
     const { renderer } = crates(12, 0.3, { blastDebris: { minPhysicsPieces: 2, maxPhysicsPieces: 5 }, shoveable: () => true, onLoosened: (id) => loosened.push(id) }, false)
-    renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    renderer.explode([0, 0.2, 0], 1000000, 8, { visual: false })
     expect(loosened).toHaveLength(5)
     const small = crates(12, 0.05, { blastDebris: { minPhysicsPieces: 2, maxPhysicsPieces: 5, chipSize: 0.15 }, shoveable: () => true }, false)
-    small.renderer.explode([0, 0.2, 0], 200000, 8, { visual: false, debris: { maxPhysicsPieces: 3 } })
+    small.renderer.explode([0, 0.2, 0], 20000000, 8, { visual: false, debris: { maxPhysicsPieces: 3 } })
     const bodies = Array.from({ length: 12 }, (_, i) => small.renderer.piece(`crate${i}`)).filter((p) => p !== null)
     expect(bodies).toHaveLength(3)
   })
