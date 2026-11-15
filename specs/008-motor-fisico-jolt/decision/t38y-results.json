@@ -1,0 +1,8386 @@
+{
+ "final.blast.r1": {
+  "label": "t38x-1",
+  "kind": "blast",
+  "round": 1,
+  "seconds": 11.705,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 406,
+  "fixedSteps": 2762,
+  "c3Offenders": [
+   {
+    "id": "obj_30",
+    "total": 0.0517,
+    "givenPart": 0.0357,
+    "mass": 0.6,
+    "half": [
+     1.13,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "pipe:run_wall_kitchen_0:0"
+    ],
+    "hist": [
+     {
+      "step": 25,
+      "islandNet": 0,
+      "rise": 0.0012,
+      "dEm": 0,
+      "spinBefore": 2.78,
+      "spinAfter": 0.87,
+      "given": 0,
+      "vyBefore": -0.3,
+      "vyAfter": -0.01,
+      "speedBefore": 0.32,
+      "speedAfter": 0.02,
+      "y": 1.334,
+      "sleepingBefore": false
+     },
+     {
+      "step": 26,
+      "islandNet": 0,
+      "rise": 0.0011,
+      "dEm": 0,
+      "spinBefore": 0.87,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 1.335,
+      "sleepingBefore": false
+     },
+     {
+      "step": 27,
+      "islandNet": 0,
+      "rise": 0.0018,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.337,
+      "sleepingBefore": false
+     },
+     {
+      "step": 28,
+      "islandNet": 0,
+      "rise": 0.0015,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.339,
+      "sleepingBefore": false
+     },
+     {
+      "step": 30,
+      "islandNet": 0,
+      "rise": 0.0035,
+      "dEm": 0,
+      "spinBefore": 0.15,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0,
+      "speedBefore": 0.04,
+      "speedAfter": 0,
+      "y": 1.343,
+      "sleepingBefore": false
+     },
+     {
+      "step": 31,
+      "islandNet": 0,
+      "rise": 0.003,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.82,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.01,
+      "y": 1.346,
+      "sleepingBefore": false
+     },
+     {
+      "step": 33,
+      "islandNet": 0,
+      "rise": 0.0023,
+      "dEm": 0,
+      "spinBefore": 0.14,
+      "spinAfter": 0.04,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": -0.01,
+      "speedBefore": 0.03,
+      "speedAfter": 0.01,
+      "y": 1.349,
+      "sleepingBefore": false
+     },
+     {
+      "step": 34,
+      "islandNet": 0,
+      "rise": 0.0014,
+      "dEm": 0,
+      "spinBefore": 0.04,
+      "spinAfter": 0.15,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 1.35,
+      "sleepingBefore": false
+     },
+     {
+      "step": 35,
+      "islandNet": 0,
+      "rise": 0.002,
+      "dEm": 0,
+      "spinBefore": 0.15,
+      "spinAfter": 0.7,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.02,
+      "y": 1.352,
+      "sleepingBefore": false
+     },
+     {
+      "step": 36,
+      "islandNet": 0,
+      "rise": 0.0025,
+      "dEm": 0,
+      "spinBefore": 0.7,
+      "spinAfter": 0.05,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.02,
+      "speedAfter": 0.01,
+      "y": 1.355,
+      "sleepingBefore": false
+     },
+     {
+      "step": 37,
+      "islandNet": 0,
+      "rise": 0.0022,
+      "dEm": 0,
+      "spinBefore": 0.05,
+      "spinAfter": 0.05,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.01,
+      "y": 1.357,
+      "sleepingBefore": false
+     },
+     {
+      "step": 38,
+      "islandNet": 0,
+      "rise": 0.0015,
+      "dEm": 0,
+      "spinBefore": 0.05,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.01,
+      "y": 1.359,
+      "sleepingBefore": false
+     },
+     {
+      "step": 39,
+      "islandNet": 0,
+      "rise": 0.0032,
+      "dEm": 0,
+      "spinBefore": 0.07,
+      "spinAfter": 0.27,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.01,
+      "y": 1.362,
+      "sleepingBefore": false
+     },
+     {
+      "step": 40,
+      "islandNet": 0,
+      "rise": 0.0035,
+      "dEm": 0,
+      "spinBefore": 0.27,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 1.365,
+      "sleepingBefore": false
+     },
+     {
+      "step": 41,
+      "islandNet": 0,
+      "rise": 0.0013,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.92,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.02,
+      "y": 1.367,
+      "sleepingBefore": false
+     },
+     {
+      "step": 50,
+      "islandNet": 0,
+      "rise": 0.0031,
+      "dEm": 0,
+      "spinBefore": 0.17,
+      "spinAfter": 0.03,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.03,
+      "speedAfter": 0,
+      "y": 1.368,
+      "sleepingBefore": false
+     },
+     {
+      "step": 51,
+      "islandNet": 0,
+      "rise": 0.0034,
+      "dEm": 0,
+      "spinBefore": 0.03,
+      "spinAfter": 0.11,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.372,
+      "sleepingBefore": false
+     },
+     {
+      "step": 52,
+      "islandNet": 0,
+      "rise": 0.003,
+      "dEm": 0,
+      "spinBefore": 0.11,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.01,
+      "y": 1.375,
+      "sleepingBefore": false
+     },
+     {
+      "step": 53,
+      "islandNet": 0,
+      "rise": 0.0031,
+      "dEm": 0,
+      "spinBefore": 0.07,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 1.378,
+      "sleepingBefore": false
+     },
+     {
+      "step": 54,
+      "islandNet": 0,
+      "rise": 0.002,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.01,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.38,
+      "sleepingBefore": false
+     },
+     {
+      "step": 55,
+      "islandNet": 0,
+      "rise": 0.0016,
+      "dEm": 0,
+      "spinBefore": 0.01,
+      "spinAfter": 0.04,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.381,
+      "sleepingBefore": false
+     },
+     {
+      "step": 56,
+      "islandNet": 0,
+      "rise": 0.0018,
+      "dEm": 0,
+      "spinBefore": 0.04,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.383,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_14",
+    "total": 0.0118,
+    "givenPart": 0.0061,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": [
+     {
+      "step": 46,
+      "islandNet": 0.03,
+      "rise": 0.0014,
+      "dEm": 0.03,
+      "spinBefore": 0,
+      "spinAfter": 2.23,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.05,
+      "speedBefore": 0,
+      "speedAfter": 0.06,
+      "y": 0.01,
+      "sleepingBefore": false
+     },
+     {
+      "step": 47,
+      "islandNet": 0.02,
+      "rise": 0.0013,
+      "dEm": 0.02,
+      "spinBefore": 2.23,
+      "spinAfter": 1.28,
+      "given": 0,
+      "vyBefore": -0.05,
+      "vyAfter": 0,
+      "speedBefore": 0.06,
+      "speedAfter": 0.03,
+      "y": 0.011,
+      "sleepingBefore": false
+     },
+     {
+      "step": 50,
+      "islandNet": 0.01,
+      "rise": 0.0018,
+      "dEm": 0.01,
+      "spinBefore": 0.46,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.12,
+      "vyAfter": 0,
+      "speedBefore": 0.12,
+      "speedAfter": 0,
+      "y": 0.012,
+      "sleepingBefore": false
+     },
+     {
+      "step": 58,
+      "islandNet": 0.02,
+      "rise": 0.0012,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.01,
+      "sleepingBefore": false
+     },
+     {
+      "step": 69,
+      "islandNet": 0.02,
+      "rise": 0.0015,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 1.06,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.02,
+      "speedBefore": 0,
+      "speedAfter": 0.03,
+      "y": 0.011,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_29",
+    "total": 0.0071,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 36,
+      "islandNet": -0.05,
+      "rise": 0.0066,
+      "dEm": -0.05,
+      "spinBefore": 7.38,
+      "spinAfter": 0.35,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0.04,
+      "speedBefore": 0.09,
+      "speedAfter": 0.04,
+      "y": 3.021,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 30,
+  "asleep": 30,
+  "c2Limit": 0.035,
+  "c1Excess": 0.1524026224637744,
+  "c1Violations": 31,
+  "c2Gain": 0.006531395185395805,
+  "c2GainUnconditioned": 0.2465020076833171,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 2,
+  "c3Lift": 0.016033053305500457,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4499999999999984,
+  "maxUp": 3.5901476860046384,
+  "risingSteps": 2,
+  "frameMs": {
+   "p50": 1.8,
+   "p99": 46.4,
+   "max": 56.2,
+   "wakeFrame": 24.7
+  }
+ },
+ "final.hammer.r1": {
+  "label": "t38x-1",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.531,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 397,
+  "fixedSteps": 2878,
+  "c3Offenders": [
+   {
+    "id": "obj_6",
+    "total": 0.0183,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:5"
+    ],
+    "hist": [
+     {
+      "step": 32,
+      "islandNet": -221.47,
+      "rise": 0.0101,
+      "dEm": 0.16,
+      "spinBefore": 0.04,
+      "spinAfter": 0.21,
+      "given": 0,
+      "vyBefore": -0.06,
+      "vyAfter": -0.01,
+      "speedBefore": 0.06,
+      "speedAfter": 0.02,
+      "y": 0.024,
+      "sleepingBefore": false
+     },
+     {
+      "step": 42,
+      "islandNet": 0.02,
+      "rise": 0.0012,
+      "dEm": 0.02,
+      "spinBefore": 0.02,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.015,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_15",
+    "total": 0.0119,
+    "givenPart": 0.0009,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": [
+     {
+      "step": 33,
+      "islandNet": -76.54,
+      "rise": 0.0015,
+      "dEm": 0,
+      "spinBefore": 5.89,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.05,
+      "vyAfter": 0,
+      "speedBefore": 0.13,
+      "speedAfter": 0,
+      "y": 0.016,
+      "sleepingBefore": false
+     },
+     {
+      "step": 38,
+      "islandNet": -0.15,
+      "rise": 0.0012,
+      "dEm": 0.01,
+      "spinBefore": 0.05,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.07,
+      "vyAfter": 0,
+      "speedBefore": 0.07,
+      "speedAfter": 0,
+      "y": 0.014,
+      "sleepingBefore": false
+     },
+     {
+      "step": 74,
+      "islandNet": 0.02,
+      "rise": 0.0011,
+      "dEm": 0.01,
+      "spinBefore": 0.32,
+      "spinAfter": 0.73,
+      "given": 0,
+      "vyBefore": -0.08,
+      "vyAfter": -0.01,
+      "speedBefore": 0.08,
+      "speedAfter": 0.02,
+      "y": 0.014,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_12",
+    "total": 0.009,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 43,
+      "islandNet": 0.02,
+      "rise": 0.0019,
+      "dEm": 0.03,
+      "spinBefore": 2.63,
+      "spinAfter": 0.2,
+      "given": 0,
+      "vyBefore": -0.04,
+      "vyAfter": 0,
+      "speedBefore": 0.06,
+      "speedAfter": 0,
+      "y": 0.015,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 32,
+  "asleep": 32,
+  "c2Limit": 0.035,
+  "c1Excess": -0.001017145861300594,
+  "c1Violations": 0,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.009698099970507607,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.018264719928806152,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.6146726608276367,
+  "risingSteps": 1,
+  "frameMs": {
+   "p50": 1.5,
+   "p99": 51,
+   "max": 60.9,
+   "wakeFrame": 21.9
+  }
+ },
+ "final.blast.r2": {
+  "label": "t38x-2",
+  "kind": "blast",
+  "round": 1,
+  "seconds": 11.648,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 285,
+  "fixedSteps": 2776,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0111,
+    "givenPart": 0.0015,
+    "mass": 950.4,
+    "half": [
+     0.8,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7"
+    ],
+    "hist": [
+     {
+      "step": 50,
+      "islandNet": -513.7,
+      "rise": 0.0067,
+      "dEm": -513.7,
+      "spinBefore": 25.45,
+      "spinAfter": 2.24,
+      "given": 0,
+      "vyBefore": -0.78,
+      "vyAfter": 0.1,
+      "speedBefore": 1.64,
+      "speedAfter": 0.69,
+      "y": 0.222,
+      "sleepingBefore": false
+     },
+     {
+      "step": 56,
+      "islandNet": -65.56,
+      "rise": 0.0028,
+      "dEm": -65.56,
+      "spinBefore": 6.61,
+      "spinAfter": 0.43,
+      "given": 0,
+      "vyBefore": -0.72,
+      "vyAfter": 0.04,
+      "speedBefore": 0.89,
+      "speedAfter": 0.06,
+      "y": 0.115,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_30",
+    "total": 0.0086,
+    "givenPart": 0.0068,
+    "mass": 0.6,
+    "half": [
+     1.13,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "pipe:run_wall_kitchen_0:0"
+    ],
+    "hist": [
+     {
+      "step": 26,
+      "islandNet": 0,
+      "rise": 0.0012,
+      "dEm": 0,
+      "spinBefore": 2.78,
+      "spinAfter": 0.87,
+      "given": 0,
+      "vyBefore": -0.3,
+      "vyAfter": -0.01,
+      "speedBefore": 0.32,
+      "speedAfter": 0.02,
+      "y": 1.334,
+      "sleepingBefore": false
+     },
+     {
+      "step": 27,
+      "islandNet": 0,
+      "rise": 0.0011,
+      "dEm": 0,
+      "spinBefore": 0.87,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 1.335,
+      "sleepingBefore": false
+     },
+     {
+      "step": 28,
+      "islandNet": 0,
+      "rise": 0.0018,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.337,
+      "sleepingBefore": false
+     },
+     {
+      "step": 29,
+      "islandNet": 0,
+      "rise": 0.0015,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.339,
+      "sleepingBefore": false
+     },
+     {
+      "step": 30,
+      "islandNet": 0,
+      "rise": 0.0013,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.1,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.34,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_29",
+    "total": 0.0071,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 37,
+      "islandNet": -0.05,
+      "rise": 0.0066,
+      "dEm": -0.05,
+      "spinBefore": 7.38,
+      "spinAfter": 0.35,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0.04,
+      "speedBefore": 0.09,
+      "speedAfter": 0.04,
+      "y": 3.021,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 30,
+  "asleep": 30,
+  "c2Limit": 0.035,
+  "c1Excess": 0.026783955696805486,
+  "c1Violations": 7,
+  "c2Gain": 0.002853661504423455,
+  "c2GainUnconditioned": 0.1114762081507017,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.0033098674379306915,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.5901476860046384,
+  "risingSteps": 4,
+  "frameMs": {
+   "p50": 2,
+   "p99": 41.5,
+   "max": 48.7,
+   "wakeFrame": 28.6
+  }
+ },
+ "final.hammer.r2": {
+  "label": "t38x-2",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.255,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 378,
+  "fixedSteps": 2884,
+  "c3Offenders": [
+   {
+    "id": "obj_6",
+    "total": 0.014,
+    "givenPart": 0.0011,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:5"
+    ],
+    "hist": [
+     {
+      "step": 31,
+      "islandNet": -332.42,
+      "rise": 0.0122,
+      "dEm": 0.32,
+      "spinBefore": 0,
+      "spinAfter": 11.7,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0.09,
+      "speedBefore": 0,
+      "speedAfter": 0.34,
+      "y": 0.027,
+      "sleepingBefore": false
+     },
+     {
+      "step": 33,
+      "islandNet": 0,
+      "rise": 0.0011,
+      "dEm": 0.02,
+      "spinBefore": 1.5,
+      "spinAfter": 1.45,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": -0.03,
+      "speedBefore": 0.04,
+      "speedAfter": 0.04,
+      "y": 0.016,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_32",
+    "total": 0.0068,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 36,
+      "islandNet": -0.05,
+      "rise": 0.0068,
+      "dEm": -0.05,
+      "spinBefore": 7.53,
+      "spinAfter": 0.7,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0.03,
+      "speedBefore": 0.09,
+      "speedAfter": 0.03,
+      "y": 3.022,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_12",
+    "total": 0.0054,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:3"
+    ],
+    "hist": []
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 32,
+  "asleep": 32,
+  "c2Limit": 0.035,
+  "c1Excess": 0.000475232798216544,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.03249964204526878,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.012905527747417548,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4499999999999984,
+  "maxUp": 3.6022143363952637,
+  "risingSteps": 2,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 43.4,
+   "max": 59.1,
+   "wakeFrame": 24.2
+  }
+ },
+ "final.blast.r3": {
+  "label": "t38x-3",
+  "kind": "blast",
+  "round": 1,
+  "seconds": 11.746,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 408,
+  "fixedSteps": 2766,
+  "c3Offenders": [
+   {
+    "id": "obj_30",
+    "total": 0.0155,
+    "givenPart": 0.0152,
+    "mass": 0.6,
+    "half": [
+     1.13,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "pipe:run_wall_kitchen_0:0"
+    ],
+    "hist": [
+     {
+      "step": 24,
+      "islandNet": -0.01,
+      "rise": 0.0023,
+      "dEm": -0.01,
+      "spinBefore": 1.04,
+      "spinAfter": 0.08,
+      "given": 0,
+      "vyBefore": 0.27,
+      "vyAfter": 0.12,
+      "speedBefore": 0.68,
+      "speedAfter": 0.46,
+      "y": 1.356,
+      "sleepingBefore": false
+     },
+     {
+      "step": 26,
+      "islandNet": -0.01,
+      "rise": 0.0026,
+      "dEm": -0.01,
+      "spinBefore": 1.17,
+      "spinAfter": 0.02,
+      "given": 0,
+      "vyBefore": -0.26,
+      "vyAfter": 0,
+      "speedBefore": 0.46,
+      "speedAfter": 0,
+      "y": 1.357,
+      "sleepingBefore": false
+     },
+     {
+      "step": 27,
+      "islandNet": 0,
+      "rise": 0.0014,
+      "dEm": 0,
+      "spinBefore": 0.02,
+      "spinAfter": 0.04,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.359,
+      "sleepingBefore": false
+     },
+     {
+      "step": 36,
+      "islandNet": 0,
+      "rise": 0.0016,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.52,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.02,
+      "speedBefore": 0,
+      "speedAfter": 0.03,
+      "y": 1.36,
+      "sleepingBefore": false
+     },
+     {
+      "step": 37,
+      "islandNet": 0,
+      "rise": 0.0018,
+      "dEm": 0,
+      "spinBefore": 0.52,
+      "spinAfter": 0.16,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": -0.02,
+      "speedBefore": 0.03,
+      "speedAfter": 0.03,
+      "y": 1.362,
+      "sleepingBefore": false
+     },
+     {
+      "step": 38,
+      "islandNet": 0,
+      "rise": 0.0032,
+      "dEm": 0,
+      "spinBefore": 0.16,
+      "spinAfter": 0.18,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.03,
+      "speedAfter": 0,
+      "y": 1.365,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_14",
+    "total": 0.0118,
+    "givenPart": 0.006,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": [
+     {
+      "step": 60,
+      "islandNet": 0.01,
+      "rise": 0.001,
+      "dEm": 0.01,
+      "spinBefore": 0.21,
+      "spinAfter": 1.01,
+      "given": 0,
+      "vyBefore": -0.06,
+      "vyAfter": -0.02,
+      "speedBefore": 0.06,
+      "speedAfter": 0.03,
+      "y": 0.009,
+      "sleepingBefore": false
+     },
+     {
+      "step": 64,
+      "islandNet": 0,
+      "rise": 0.0016,
+      "dEm": 0,
+      "spinBefore": 0.16,
+      "spinAfter": 0.6,
+      "given": 0,
+      "vyBefore": -0.18,
+      "vyAfter": -0.04,
+      "speedBefore": 0.18,
+      "speedAfter": 0.04,
+      "y": 0.009,
+      "sleepingBefore": false
+     },
+     {
+      "step": 75,
+      "islandNet": 0.03,
+      "rise": 0.0018,
+      "dEm": 0.03,
+      "spinBefore": 0,
+      "spinAfter": 0.27,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0.01,
+      "y": 0.01,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_2",
+    "total": 0.0112,
+    "givenPart": 0.0015,
+    "mass": 950.4,
+    "half": [
+     0.8,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7"
+    ],
+    "hist": [
+     {
+      "step": 50,
+      "islandNet": -513.83,
+      "rise": 0.0066,
+      "dEm": -513.83,
+      "spinBefore": 25.47,
+      "spinAfter": 2.24,
+      "given": 0,
+      "vyBefore": -0.79,
+      "vyAfter": 0.1,
+      "speedBefore": 1.64,
+      "speedAfter": 0.69,
+      "y": 0.222,
+      "sleepingBefore": false
+     },
+     {
+      "step": 56,
+      "islandNet": -65.81,
+      "rise": 0.0031,
+      "dEm": -65.81,
+      "spinBefore": 6.64,
+      "spinAfter": 0.41,
+      "given": 0,
+      "vyBefore": -0.72,
+      "vyAfter": 0.04,
+      "speedBefore": 0.89,
+      "speedAfter": 0.06,
+      "y": 0.115,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 30,
+  "asleep": 30,
+  "c2Limit": 0.035,
+  "c1Excess": 0.03856098909830956,
+  "c1Violations": 7,
+  "c2Gain": 0.0075585465400844765,
+  "c2GainUnconditioned": 0.1114762449603317,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.005191144553921996,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.5901476860046384,
+  "risingSteps": 1,
+  "frameMs": {
+   "p50": 1.8,
+   "p99": 43.1,
+   "max": 53.8,
+   "wakeFrame": 30.1
+  }
+ },
+ "final.hammer.r3": {
+  "label": "t38x-3",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.548,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 473,
+  "fixedSteps": 2884,
+  "c3Offenders": [
+   {
+    "id": "obj_13",
+    "total": 0.0152,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:4"
+    ],
+    "hist": [
+     {
+      "step": 60,
+      "islandNet": -1.57,
+      "rise": 0.0151,
+      "dEm": -1.57,
+      "spinBefore": 19.32,
+      "spinAfter": 36.12,
+      "given": 0,
+      "vyBefore": 0.02,
+      "vyAfter": 0.13,
+      "speedBefore": 1.96,
+      "speedAfter": 1.39,
+      "y": 0.037,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_7",
+    "total": 0.0124,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:e:1"
+    ],
+    "hist": [
+     {
+      "step": 46,
+      "islandNet": 0.06,
+      "rise": 0.0043,
+      "dEm": 0.06,
+      "spinBefore": 1.63,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.06,
+      "vyAfter": 0,
+      "speedBefore": 0.07,
+      "speedAfter": 0,
+      "y": 0.013,
+      "sleepingBefore": false
+     },
+     {
+      "step": 47,
+      "islandNet": 0.03,
+      "rise": 0.0021,
+      "dEm": 0.03,
+      "spinBefore": 0,
+      "spinAfter": 0.22,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.015,
+      "sleepingBefore": false
+     },
+     {
+      "step": 58,
+      "islandNet": -0.48,
+      "rise": 0.0025,
+      "dEm": -0.09,
+      "spinBefore": 12.35,
+      "spinAfter": 0.53,
+      "given": 0,
+      "vyBefore": -0.21,
+      "vyAfter": 0,
+      "speedBefore": 0.28,
+      "speedAfter": 0.02,
+      "y": 0.015,
+      "sleepingBefore": false
+     },
+     {
+      "step": 62,
+      "islandNet": 0.02,
+      "rise": 0.0015,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.016,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_6",
+    "total": 0.0105,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:5"
+    ],
+    "hist": [
+     {
+      "step": 56,
+      "islandNet": -1.38,
+      "rise": 0.0088,
+      "dEm": -1.38,
+      "spinBefore": 7.9,
+      "spinAfter": 13.63,
+      "given": 0,
+      "vyBefore": -0.11,
+      "vyAfter": 0.09,
+      "speedBefore": 1.33,
+      "speedAfter": 0.61,
+      "y": 0.021,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 32,
+  "asleep": 32,
+  "c2Limit": 0.035,
+  "c1Excess": 0.048601223483287756,
+  "c1Violations": 4,
+  "c2Gain": 0.0028380101291291086,
+  "c2GainUnconditioned": 0.13622693050462387,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.009828327136828267,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.5901476860046384,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.6,
+   "p99": 43.7,
+   "max": 48.5,
+   "wakeFrame": 25.7
+  }
+ },
+ "final.blast.r4": {
+  "label": "t38x-4",
+  "kind": "blast",
+  "round": 1,
+  "seconds": 11.7,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 346,
+  "fixedSteps": 2788,
+  "c3Offenders": [
+   {
+    "id": "obj_30",
+    "total": 0.0319,
+    "givenPart": 0.0312,
+    "mass": 0.6,
+    "half": [
+     1.13,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "pipe:run_wall_kitchen_0:0"
+    ],
+    "hist": [
+     {
+      "step": 23,
+      "islandNet": -0.01,
+      "rise": 0.0023,
+      "dEm": -0.01,
+      "spinBefore": 1.04,
+      "spinAfter": 0.08,
+      "given": 0,
+      "vyBefore": 0.27,
+      "vyAfter": 0.12,
+      "speedBefore": 0.68,
+      "speedAfter": 0.46,
+      "y": 1.356,
+      "sleepingBefore": false
+     },
+     {
+      "step": 25,
+      "islandNet": -0.01,
+      "rise": 0.0026,
+      "dEm": -0.01,
+      "spinBefore": 1.17,
+      "spinAfter": 0.02,
+      "given": 0,
+      "vyBefore": -0.26,
+      "vyAfter": 0,
+      "speedBefore": 0.46,
+      "speedAfter": 0,
+      "y": 1.357,
+      "sleepingBefore": false
+     },
+     {
+      "step": 26,
+      "islandNet": 0,
+      "rise": 0.0014,
+      "dEm": 0,
+      "spinBefore": 0.02,
+      "spinAfter": 0.04,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.359,
+      "sleepingBefore": false
+     },
+     {
+      "step": 35,
+      "islandNet": 0,
+      "rise": 0.0016,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.52,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.02,
+      "speedBefore": 0,
+      "speedAfter": 0.03,
+      "y": 1.36,
+      "sleepingBefore": false
+     },
+     {
+      "step": 36,
+      "islandNet": 0,
+      "rise": 0.0016,
+      "dEm": 0,
+      "spinBefore": 0.52,
+      "spinAfter": 0.06,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": -0.01,
+      "speedBefore": 0.03,
+      "speedAfter": 0.01,
+      "y": 1.362,
+      "sleepingBefore": false
+     },
+     {
+      "step": 37,
+      "islandNet": 0,
+      "rise": 0.0029,
+      "dEm": 0,
+      "spinBefore": 0.06,
+      "spinAfter": 0.02,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 1.365,
+      "sleepingBefore": false
+     },
+     {
+      "step": 38,
+      "islandNet": 0,
+      "rise": 0.0017,
+      "dEm": 0,
+      "spinBefore": 0.02,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 1.367,
+      "sleepingBefore": false
+     },
+     {
+      "step": 41,
+      "islandNet": 0,
+      "rise": 0.003,
+      "dEm": 0,
+      "spinBefore": 0.16,
+      "spinAfter": 0.19,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0.01,
+      "y": 1.369,
+      "sleepingBefore": false
+     },
+     {
+      "step": 42,
+      "islandNet": 0,
+      "rise": 0.004,
+      "dEm": 0,
+      "spinBefore": 0.08,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 1.377,
+      "sleepingBefore": false
+     },
+     {
+      "step": 43,
+      "islandNet": 0,
+      "rise": 0.0018,
+      "dEm": 0,
+      "spinBefore": 0,
+      "spinAfter": 0.09,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.01,
+      "y": 1.379,
+      "sleepingBefore": false
+     },
+     {
+      "step": 44,
+      "islandNet": 0,
+      "rise": 0.002,
+      "dEm": 0,
+      "spinBefore": 0.09,
+      "spinAfter": 1,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.03,
+      "y": 1.381,
+      "sleepingBefore": false
+     },
+     {
+      "step": 48,
+      "islandNet": 0,
+      "rise": 0.0016,
+      "dEm": 0,
+      "spinBefore": 0.09,
+      "spinAfter": 0.59,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.01,
+      "y": 1.383,
+      "sleepingBefore": false
+     },
+     {
+      "step": 49,
+      "islandNet": 0,
+      "rise": 0.0034,
+      "dEm": 0,
+      "spinBefore": 0.59,
+      "spinAfter": 0.25,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.01,
+      "y": 1.386,
+      "sleepingBefore": false
+     },
+     {
+      "step": 50,
+      "islandNet": 0,
+      "rise": 0.001,
+      "dEm": 0,
+      "spinBefore": 0.25,
+      "spinAfter": 0.01,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 1.387,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_29",
+    "total": 0.0073,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 36,
+      "islandNet": -0.05,
+      "rise": 0.0073,
+      "dEm": -0.05,
+      "spinBefore": 7.57,
+      "spinAfter": 0.78,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0.02,
+      "speedBefore": 0.1,
+      "speedAfter": 0.02,
+      "y": 3.022,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_3",
+    "total": 0.0035,
+    "givenPart": 0,
+    "mass": 73,
+    "half": [
+     0.56,
+     0.02,
+     0.3
+    ],
+    "parts": [
+     "sidewalk:wall_0_0:0:3"
+    ],
+    "hist": [
+     {
+      "step": 4,
+      "islandNet": 0.08,
+      "rise": 0.001,
+      "dEm": 0.08,
+      "spinBefore": 0.01,
+      "spinAfter": 0.1,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.01,
+      "y": 0.052,
+      "sleepingBefore": false
+     },
+     {
+      "step": 5,
+      "islandNet": 0.1,
+      "rise": 0.0014,
+      "dEm": 0.1,
+      "spinBefore": 0.1,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 0.054,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 30,
+  "asleep": 30,
+  "c2Limit": 0.035,
+  "c1Excess": 0.029879302885438858,
+  "c1Violations": 15,
+  "c2Gain": 0.0057233991046088395,
+  "c2GainUnconditioned": 0.1114762081507017,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.003452024780160413,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.5901476860046384,
+  "risingSteps": 2,
+  "frameMs": {
+   "p50": 1.8,
+   "p99": 44.8,
+   "max": 50.8,
+   "wakeFrame": 28.6
+  }
+ },
+ "final.hammer.r4": {
+  "label": "t38x-4",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.384,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 319,
+  "fixedSteps": 2876,
+  "c3Offenders": [
+   {
+    "id": "obj_11",
+    "total": 0.0101,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:1"
+    ],
+    "hist": [
+     {
+      "step": 35,
+      "islandNet": -0.08,
+      "rise": 0.0012,
+      "dEm": 0.01,
+      "spinBefore": 0.26,
+      "spinAfter": 0.51,
+      "given": 0,
+      "vyBefore": -0.09,
+      "vyAfter": 0,
+      "speedBefore": 0.09,
+      "speedAfter": 0.01,
+      "y": 0.012,
+      "sleepingBefore": false
+     },
+     {
+      "step": 44,
+      "islandNet": 0.02,
+      "rise": 0.0013,
+      "dEm": 0,
+      "spinBefore": 0.08,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.12,
+      "vyAfter": 0,
+      "speedBefore": 0.12,
+      "speedAfter": 0,
+      "y": 0.012,
+      "sleepingBefore": false
+     },
+     {
+      "step": 46,
+      "islandNet": 0,
+      "rise": 0.0017,
+      "dEm": 0.01,
+      "spinBefore": 0.08,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.12,
+      "vyAfter": 0,
+      "speedBefore": 0.12,
+      "speedAfter": 0,
+      "y": 0.012,
+      "sleepingBefore": false
+     },
+     {
+      "step": 56,
+      "islandNet": 0.04,
+      "rise": 0.0018,
+      "dEm": 0.03,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.012,
+      "sleepingBefore": false
+     },
+     {
+      "step": 59,
+      "islandNet": 0,
+      "rise": 0.001,
+      "dEm": 0.02,
+      "spinBefore": 0.12,
+      "spinAfter": 0.01,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": -0.01,
+      "speedBefore": 0.03,
+      "speedAfter": 0.01,
+      "y": 0.013,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_6",
+    "total": 0.0093,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:5"
+    ],
+    "hist": [
+     {
+      "step": 45,
+      "islandNet": 0.01,
+      "rise": 0.0012,
+      "dEm": 0.02,
+      "spinBefore": 1.12,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 0.013,
+      "sleepingBefore": false
+     },
+     {
+      "step": 55,
+      "islandNet": -0.02,
+      "rise": 0.0011,
+      "dEm": 0,
+      "spinBefore": 0.13,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.11,
+      "vyAfter": 0,
+      "speedBefore": 0.11,
+      "speedAfter": 0,
+      "y": 0.013,
+      "sleepingBefore": false
+     },
+     {
+      "step": 61,
+      "islandNet": 0.02,
+      "rise": 0.0011,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.013,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_12",
+    "total": 0.0092,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 38,
+      "islandNet": 0,
+      "rise": 0.0014,
+      "dEm": 0.02,
+      "spinBefore": 0.23,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 0.014,
+      "sleepingBefore": false
+     },
+     {
+      "step": 47,
+      "islandNet": 0.02,
+      "rise": 0.0019,
+      "dEm": 0.03,
+      "spinBefore": 0.37,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.06,
+      "vyAfter": 0,
+      "speedBefore": 0.06,
+      "speedAfter": 0,
+      "y": 0.014,
+      "sleepingBefore": false
+     },
+     {
+      "step": 58,
+      "islandNet": 0.04,
+      "rise": 0.0016,
+      "dEm": 0.02,
+      "spinBefore": 1.51,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0.03,
+      "speedAfter": 0,
+      "y": 0.014,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 32,
+  "asleep": 32,
+  "c2Limit": 0.035,
+  "c1Excess": -0.0016113745655982896,
+  "c1Violations": 0,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.1362449739930791,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.009234796001192652,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.549999999999998,
+  "maxUp": 3.625152015686035,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 51.2,
+   "max": 57.4,
+   "wakeFrame": 25.3
+  }
+ },
+ "final.blast.r5": {
+  "label": "t38x-5",
+  "kind": "blast",
+  "round": 1,
+  "seconds": 11.769,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 414,
+  "fixedSteps": 2773,
+  "c3Offenders": [
+   {
+    "id": "obj_21",
+    "total": 0.0116,
+    "givenPart": 0,
+    "mass": 12.3,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:7"
+    ],
+    "hist": [
+     {
+      "step": 47,
+      "islandNet": -0.51,
+      "rise": 0.0093,
+      "dEm": -0.51,
+      "spinBefore": 5.17,
+      "spinAfter": 0.22,
+      "given": 0,
+      "vyBefore": 0.24,
+      "vyAfter": 0.31,
+      "speedBefore": 0.27,
+      "speedAfter": 0.32,
+      "y": 0.033,
+      "sleepingBefore": false
+     },
+     {
+      "step": 57,
+      "islandNet": 0.01,
+      "rise": 0.0011,
+      "dEm": 0.01,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": -0.008,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_29",
+    "total": 0.0068,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 36,
+      "islandNet": -0.05,
+      "rise": 0.0068,
+      "dEm": -0.05,
+      "spinBefore": 7.49,
+      "spinAfter": 0.68,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0.02,
+      "speedBefore": 0.09,
+      "speedAfter": 0.03,
+      "y": 3.022,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_12",
+    "total": 0.0062,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 46,
+      "islandNet": -3.33,
+      "rise": 0.0011,
+      "dEm": -3.33,
+      "spinBefore": 8.45,
+      "spinAfter": 7.11,
+      "given": 0,
+      "vyBefore": -1.72,
+      "vyAfter": 0.06,
+      "speedBefore": 1.72,
+      "speedAfter": 0.17,
+      "y": 0.016,
+      "sleepingBefore": false
+     },
+     {
+      "step": 48,
+      "islandNet": 0,
+      "rise": 0.0012,
+      "dEm": 0,
+      "spinBefore": 4.18,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.06,
+      "vyAfter": 0,
+      "speedBefore": 0.12,
+      "speedAfter": 0,
+      "y": 0.018,
+      "sleepingBefore": false
+     },
+     {
+      "step": 49,
+      "islandNet": 0.04,
+      "rise": 0.0025,
+      "dEm": 0.04,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.02,
+      "sleepingBefore": false
+     },
+     {
+      "step": 50,
+      "islandNet": 0.02,
+      "rise": 0.001,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.06,
+      "speedBefore": 0,
+      "speedAfter": 0.06,
+      "y": 0.021,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 30,
+  "asleep": 30,
+  "c2Limit": 0.035,
+  "c1Excess": 0.14613647468385782,
+  "c1Violations": 5,
+  "c2Gain": 0.002477034932984422,
+  "c2GainUnconditioned": 0.11157031434460496,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.0049169313746451945,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.5901476860046384,
+  "risingSteps": 1,
+  "frameMs": {
+   "p50": 1.8,
+   "p99": 50,
+   "max": 61.4,
+   "wakeFrame": 29.8
+  }
+ },
+ "final.hammer.r5": {
+  "label": "t38x-5",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.464,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 383,
+  "fixedSteps": 2876,
+  "c3Offenders": [
+   {
+    "id": "obj_15",
+    "total": 0.0088,
+    "givenPart": 0.0047,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": [
+     {
+      "step": 34,
+      "islandNet": -170.43,
+      "rise": 0.001,
+      "dEm": 0.04,
+      "spinBefore": 0.02,
+      "spinAfter": 4.07,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0.04,
+      "speedBefore": 0,
+      "speedAfter": 0.15,
+      "y": 0.016,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_11",
+    "total": 0.0076,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:1"
+    ],
+    "hist": [
+     {
+      "step": 38,
+      "islandNet": 0.06,
+      "rise": 0.0011,
+      "dEm": 0.02,
+      "spinBefore": 0.02,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 0.013,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_32",
+    "total": 0.0071,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 38,
+      "islandNet": -0.05,
+      "rise": 0.0066,
+      "dEm": -0.05,
+      "spinBefore": 7.38,
+      "spinAfter": 0.35,
+      "given": 0,
+      "vyBefore": -0.03,
+      "vyAfter": 0.04,
+      "speedBefore": 0.09,
+      "speedAfter": 0.04,
+      "y": 3.021,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [
+   {
+    "id": "obj_28",
+    "gain": 0.136,
+    "mass": 5.3,
+    "half": [
+     0.32,
+     0.15,
+     0.02
+    ],
+    "parts": [
+     "baseboard:wall_0_0:0:5"
+    ]
+   }
+  ],
+  "worstIsland": {
+   "excess": 3.1,
+   "step": 24,
+   "members": [
+    {
+     "id": "obj_3",
+     "mass": 43,
+     "dEm": 2.09,
+     "v0": 2.39,
+     "v1": 2.86,
+     "sleepingBefore": false,
+     "y": 0.83
+    },
+    {
+     "id": "obj_5",
+     "mass": 16.3,
+     "dEm": 1.09,
+     "v0": 2.05,
+     "v1": 2.58,
+     "sleepingBefore": false,
+     "y": 0.83
+    }
+   ],
+   "parts": {
+    "obj_3": [
+     "window_grille:w0_0"
+    ],
+    "obj_5": [
+     "window_frame:w0_0"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_28",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    }
+   ],
+   "history": [
+    {
+     "step": 16,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.5383,
+       "vy": -1,
+       "v": 1.02,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.5018,
+       "vy": -0.98,
+       "v": 0.98,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 17,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.4741,
+       "vy": -1.49,
+       "v": 1.5,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.4384,
+       "vy": -1.47,
+       "v": 1.47,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 18,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.3854,
+       "vy": -1.98,
+       "v": 1.99,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.3505,
+       "vy": -1.96,
+       "v": 1.96,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 19,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.2721,
+       "vy": -2.47,
+       "v": 2.48,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.2381,
+       "vy": -2.45,
+       "v": 2.45,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 20,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.1344,
+       "vy": -2.96,
+       "v": 2.97,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.1012,
+       "vy": -2.94,
+       "v": 2.94,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 21,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.9721,
+       "vy": -3.45,
+       "v": 3.46,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 0.9432,
+       "vy": -3.12,
+       "v": 3.12,
+       "sl": false,
+       "dE": -1.587
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1975,
+       "vy": -0.94,
+       "v": 0.94,
+       "sl": false,
+       "dE": 0.727
+      }
+     ]
+    },
+    {
+     "step": 22,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.9055,
+       "vy": -2.37,
+       "v": 2.39,
+       "sl": false,
+       "dE": -10.806
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8891,
+       "vy": -2.01,
+       "v": 2.05,
+       "sl": false,
+       "dE": -2.264
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1963,
+       "vy": -0.02,
+       "v": 0.28,
+       "sl": false,
+       "dE": -0.704
+      }
+     ]
+    },
+    {
+     "step": 23,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8302,
+       "vy": -2.84,
+       "v": 2.86,
+       "sl": false,
+       "dE": 2.089
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8267,
+       "vy": -2.56,
+       "v": 2.58,
+       "sl": false,
+       "dE": 1.089
+      },
+      {
+       "id": "obj_28",
+       "y": 0.1939,
+       "vy": -0.08,
+       "v": 0.33,
+       "sl": false,
+       "dE": -0.004
+      }
+     ]
+    }
+   ],
+   "neighbours": {
+    "obj_28": {
+     "parts": [
+      "baseboard:wall_0_0:0:5"
+     ],
+     "mass": 5.34
+    }
+   }
+  },
+  "islands": "contact graph",
+  "n": 32,
+  "asleep": 32,
+  "c2Limit": 0.035,
+  "c1Excess": 3.098552815972133,
+  "c1Violations": 1,
+  "c2Gain": 0.13623426111887527,
+  "c2GainUnconditioned": 0.13623426111887527,
+  "c2PiecesOver": 1,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.007574119629973661,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4999999999999982,
+  "maxUp": 3.6391976356506346,
+  "risingSteps": 2,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 47.9,
+   "max": 64,
+   "wakeFrame": 25.2
+  }
+ },
+ "base.hammer.r1": {
+  "label": "base-1",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.726,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 314,
+  "fixedSteps": 2868,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0214,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 31,
+      "islandNet": -8.81,
+      "rise": 0.0066,
+      "dEm": -8.81,
+      "spinBefore": 0.44,
+      "spinAfter": 0.39,
+      "given": 0,
+      "vyBefore": -0.4,
+      "vyAfter": -0.16,
+      "speedBefore": 0.75,
+      "speedAfter": 0.26,
+      "y": 0.392,
+      "sleepingBefore": false
+     },
+     {
+      "step": 58,
+      "islandNet": -310.64,
+      "rise": 0.0147,
+      "dEm": -310.64,
+      "spinBefore": 0.82,
+      "spinAfter": 0.18,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.89,
+      "speedBefore": 0.38,
+      "speedAfter": 0.89,
+      "y": 0.088,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_24",
+    "total": 0.0066,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 36,
+      "islandNet": -0.05,
+      "rise": 0.0062,
+      "dEm": -0.05,
+      "spinBefore": 7.42,
+      "spinAfter": 0.38,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0.04,
+      "speedBefore": 0.09,
+      "speedAfter": 0.04,
+      "y": 3.021,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_9",
+    "total": 0.0049,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": []
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.47,
+   "step": 36,
+   "members": [
+    {
+     "id": "obj_2",
+     "mass": 1010.7,
+     "dEm": 1.48,
+     "v0": 0.2,
+     "v1": 0.21,
+     "sleepingBefore": false,
+     "y": 0.35
+    }
+   ],
+   "parts": {
+    "obj_2": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    }
+   ],
+   "history": [
+    {
+     "step": 28,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.5852,
+       "vy": -6.39,
+       "v": 6.62,
+       "sl": false,
+       "dE": -5.7
+      }
+     ]
+    },
+    {
+     "step": 29,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.4034,
+       "vy": -0.11,
+       "v": 0.78,
+       "sl": false,
+       "dE": -3413.408
+      }
+     ]
+    },
+    {
+     "step": 30,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3859,
+       "vy": -0.4,
+       "v": 0.75,
+       "sl": false,
+       "dE": -14.995
+      }
+     ]
+    },
+    {
+     "step": 31,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3925,
+       "vy": -0.16,
+       "v": 0.26,
+       "sl": false,
+       "dE": -8.806
+      }
+     ]
+    },
+    {
+     "step": 32,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3777,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -9.632
+      }
+     ]
+    },
+    {
+     "step": 33,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.365,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -0.679
+      }
+     ]
+    },
+    {
+     "step": 34,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3586,
+       "vy": -0.13,
+       "v": 0.2,
+       "sl": false,
+       "dE": -0.728
+      }
+     ]
+    },
+    {
+     "step": 35,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3536,
+       "vy": -0.13,
+       "v": 0.21,
+       "sl": false,
+       "dE": 1.477
+      }
+     ]
+    }
+   ],
+   "neighbours": {}
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.465884017039665,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.007394261549929865,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.0046271111331124245,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.8999999999999968,
+  "maxUp": 1.0477644205093384,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 53.9,
+   "max": 202.6,
+   "wakeFrame": 27.3
+  }
+ },
+ "base.hammer.r10": {
+  "label": "base-10",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.032,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 373,
+  "fixedSteps": 2868,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0143,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 58,
+      "islandNet": -311.21,
+      "rise": 0.0143,
+      "dEm": -311.21,
+      "spinBefore": 0.83,
+      "spinAfter": 0.18,
+      "given": 0,
+      "vyBefore": -0.43,
+      "vyAfter": 0.88,
+      "speedBefore": 0.43,
+      "speedAfter": 0.88,
+      "y": 0.087,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_7",
+    "total": 0.0117,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:e:1"
+    ],
+    "hist": [
+     {
+      "step": 42,
+      "islandNet": 0.02,
+      "rise": 0.0012,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 0.01,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.013,
+      "sleepingBefore": false
+     },
+     {
+      "step": 70,
+      "islandNet": 0.01,
+      "rise": 0.0011,
+      "dEm": 0.01,
+      "spinBefore": 0.31,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.06,
+      "vyAfter": 0,
+      "speedBefore": 0.06,
+      "speedAfter": 0,
+      "y": 0.014,
+      "sleepingBefore": false
+     },
+     {
+      "step": 77,
+      "islandNet": 0.02,
+      "rise": 0.0012,
+      "dEm": 0.02,
+      "spinBefore": 0.04,
+      "spinAfter": 1.36,
+      "given": 0,
+      "vyBefore": -0.05,
+      "vyAfter": -0.03,
+      "speedBefore": 0.05,
+      "speedAfter": 0.04,
+      "y": 0.013,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_1",
+    "total": 0.0091,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 56,
+      "islandNet": -306.09,
+      "rise": 0.0046,
+      "dEm": -306.09,
+      "spinBefore": 0.82,
+      "spinAfter": 0.23,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 1.1,
+      "speedBefore": 0.37,
+      "speedAfter": 1.1,
+      "y": 0.079,
+      "sleepingBefore": false
+     },
+     {
+      "step": 66,
+      "islandNet": -0.6,
+      "rise": 0.0021,
+      "dEm": -0.6,
+      "spinBefore": 0.12,
+      "spinAfter": 0.1,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": -0.01,
+      "speedBefore": 0.01,
+      "speedAfter": 0.01,
+      "y": 0.068,
+      "sleepingBefore": false
+     },
+     {
+      "step": 67,
+      "islandNet": -0.13,
+      "rise": 0.0023,
+      "dEm": -0.13,
+      "spinBefore": 0.1,
+      "spinAfter": 0.09,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0.04,
+      "speedBefore": 0.01,
+      "speedAfter": 0.04,
+      "y": 0.07,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.029750876832405196,
+  "c1Violations": 2,
+  "c2Gain": 0.0048577371594068115,
+  "c2GainUnconditioned": 0.004933219289134816,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.010784993836104206,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.6499999999999977,
+  "maxUp": 1.1034584045410156,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 71,
+   "max": 187.1,
+   "wakeFrame": 31.6
+  }
+ },
+ "base.hammer.r11": {
+  "label": "base-11",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.928,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 349,
+  "fixedSteps": 2868,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0214,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 31,
+      "islandNet": -8.81,
+      "rise": 0.0066,
+      "dEm": -8.81,
+      "spinBefore": 0.44,
+      "spinAfter": 0.39,
+      "given": 0,
+      "vyBefore": -0.4,
+      "vyAfter": -0.16,
+      "speedBefore": 0.75,
+      "speedAfter": 0.26,
+      "y": 0.392,
+      "sleepingBefore": false
+     },
+     {
+      "step": 58,
+      "islandNet": -310.64,
+      "rise": 0.0147,
+      "dEm": -310.64,
+      "spinBefore": 0.82,
+      "spinAfter": 0.18,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.89,
+      "speedBefore": 0.38,
+      "speedAfter": 0.89,
+      "y": 0.088,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_24",
+    "total": 0.0066,
+    "givenPart": 0,
+    "mass": 1.6,
+    "half": [
+     0.02,
+     0.82,
+     0.11
+    ],
+    "parts": [
+     "pipe:run_outlet"
+    ],
+    "hist": [
+     {
+      "step": 35,
+      "islandNet": -0.05,
+      "rise": 0.0062,
+      "dEm": -0.05,
+      "spinBefore": 7.42,
+      "spinAfter": 0.38,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0.04,
+      "speedBefore": 0.09,
+      "speedAfter": 0.04,
+      "y": 3.021,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_14",
+    "total": 0.0064,
+    "givenPart": 0,
+    "mass": 12.3,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:7"
+    ],
+    "hist": [
+     {
+      "step": 33,
+      "islandNet": 0.02,
+      "rise": 0.0012,
+      "dEm": 0.01,
+      "spinBefore": 0.03,
+      "spinAfter": 0.06,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.02,
+      "sleepingBefore": false
+     },
+     {
+      "step": 34,
+      "islandNet": 0.01,
+      "rise": 0.0012,
+      "dEm": 0.01,
+      "spinBefore": 0.06,
+      "spinAfter": 0.94,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.02,
+      "y": 0.021,
+      "sleepingBefore": false
+     },
+     {
+      "step": 35,
+      "islandNet": 0.01,
+      "rise": 0.0012,
+      "dEm": 0.01,
+      "spinBefore": 0.94,
+      "spinAfter": 0.05,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 0.022,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.47,
+   "step": 36,
+   "members": [
+    {
+     "id": "obj_2",
+     "mass": 1010.7,
+     "dEm": 1.48,
+     "v0": 0.2,
+     "v1": 0.21,
+     "sleepingBefore": false,
+     "y": 0.35
+    }
+   ],
+   "parts": {
+    "obj_2": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    }
+   ],
+   "history": [
+    {
+     "step": 28,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.5852,
+       "vy": -6.39,
+       "v": 6.62,
+       "sl": false,
+       "dE": -5.7
+      }
+     ]
+    },
+    {
+     "step": 29,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.4034,
+       "vy": -0.11,
+       "v": 0.78,
+       "sl": false,
+       "dE": -3413.408
+      }
+     ]
+    },
+    {
+     "step": 30,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3859,
+       "vy": -0.4,
+       "v": 0.75,
+       "sl": false,
+       "dE": -14.995
+      }
+     ]
+    },
+    {
+     "step": 31,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3925,
+       "vy": -0.16,
+       "v": 0.26,
+       "sl": false,
+       "dE": -8.806
+      }
+     ]
+    },
+    {
+     "step": 32,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3777,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -9.632
+      }
+     ]
+    },
+    {
+     "step": 33,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.365,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -0.679
+      }
+     ]
+    },
+    {
+     "step": 34,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3586,
+       "vy": -0.13,
+       "v": 0.2,
+       "sl": false,
+       "dE": -0.728
+      }
+     ]
+    },
+    {
+     "step": 35,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3536,
+       "vy": -0.13,
+       "v": 0.21,
+       "sl": false,
+       "dE": 1.477
+      }
+     ]
+    }
+   ],
+   "neighbours": {}
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.465884017039665,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.005119967126133718,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.00642517637633306,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.1999999999999957,
+  "maxUp": 1.0704408884048462,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 55.9,
+   "max": 200,
+   "wakeFrame": 28.6
+  }
+ },
+ "base.hammer.r12": {
+  "label": "base-12",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.049,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 339,
+  "fixedSteps": 2868,
+  "c3Offenders": [
+   {
+    "id": "obj_5",
+    "total": 0.0123,
+    "givenPart": 0,
+    "mass": 16.3,
+    "half": [
+     0.65,
+     0.6,
+     0.13
+    ],
+    "parts": [
+     "window_frame:w0_0"
+    ],
+    "hist": [
+     {
+      "step": 31,
+      "islandNet": -3.81,
+      "rise": 0.0123,
+      "dEm": -2.14,
+      "spinBefore": 1.78,
+      "spinAfter": 0.54,
+      "given": 0,
+      "vyBefore": -0.84,
+      "vyAfter": 0.17,
+      "speedBefore": 1.37,
+      "speedAfter": 0.56,
+      "y": 0.66,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_1",
+    "total": 0.0079,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 56,
+      "islandNet": -301.77,
+      "rise": 0.0016,
+      "dEm": -301.77,
+      "spinBefore": 0.82,
+      "spinAfter": 0.26,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 1.07,
+      "speedBefore": 0.38,
+      "speedAfter": 1.07,
+      "y": 0.077,
+      "sleepingBefore": false
+     },
+     {
+      "step": 69,
+      "islandNet": 0.19,
+      "rise": 0.0024,
+      "dEm": 0.19,
+      "spinBefore": 0.11,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0.03,
+      "speedBefore": 0.02,
+      "speedAfter": 0.03,
+      "y": 0.075,
+      "sleepingBefore": false
+     },
+     {
+      "step": 82,
+      "islandNet": -13.63,
+      "rise": 0.0027,
+      "dEm": -13.63,
+      "spinBefore": 0.17,
+      "spinAfter": 0.02,
+      "given": 0,
+      "vyBefore": -0.07,
+      "vyAfter": 0.04,
+      "speedBefore": 0.07,
+      "speedAfter": 0.04,
+      "y": 0.065,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_2",
+    "total": 0.0078,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 58,
+      "islandNet": -315.02,
+      "rise": 0.0078,
+      "dEm": -315.02,
+      "spinBefore": 0.82,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.86,
+      "speedBefore": 0.37,
+      "speedAfter": 0.86,
+      "y": 0.083,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.34,
+   "step": 26,
+   "members": [
+    {
+     "id": "obj_3",
+     "mass": 43,
+     "dEm": 0.38,
+     "v0": 1.22,
+     "v1": 1.47,
+     "sleepingBefore": false,
+     "y": 0.73
+    },
+    {
+     "id": "obj_5",
+     "mass": 16.3,
+     "dEm": 0.1,
+     "v0": 0.29,
+     "v1": 0.54,
+     "sleepingBefore": false,
+     "y": 0.8
+    }
+   ],
+   "parts": {
+    "obj_3": [
+     "window_grille:w0_0"
+    ],
+    "obj_5": [
+     "window_frame:w0_0"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    }
+   ],
+   "history": [
+    {
+     "step": 18,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.0891,
+       "vy": -3.11,
+       "v": 3.11,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.0501,
+       "vy": -3.11,
+       "v": 3.11,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0211,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 19,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.947,
+       "vy": -1.7,
+       "v": 1.72,
+       "sl": false,
+       "dE": -13.336
+      },
+      {
+       "id": "obj_5",
+       "y": 0.9162,
+       "vy": -1.56,
+       "v": 1.57,
+       "sl": false,
+       "dE": -3.958
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0211,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 20,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8509,
+       "vy": -2.03,
+       "v": 2.04,
+       "sl": false,
+       "dE": -0.225
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8268,
+       "vy": -1.84,
+       "v": 1.85,
+       "sl": false,
+       "dE": 0.046
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0211,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 21,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8178,
+       "vy": -0.06,
+       "v": 0.69,
+       "sl": false,
+       "dE": -17.578
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8069,
+       "vy": 0.19,
+       "v": 0.37,
+       "sl": false,
+       "dE": -7.829
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0208,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.021
+      }
+     ]
+    },
+    {
+     "step": 22,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8082,
+       "vy": -0.3,
+       "v": 0.79,
+       "sl": false,
+       "dE": -0.115
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8142,
+       "vy": 0.08,
+       "v": 0.16,
+       "sl": false,
+       "dE": -0.024
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.007
+      }
+     ]
+    },
+    {
+     "step": 23,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.7864,
+       "vy": -0.55,
+       "v": 0.97,
+       "sl": false,
+       "dE": -0.23
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8159,
+       "vy": -0.01,
+       "v": 0.06,
+       "sl": false,
+       "dE": -0.002
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 24,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.7546,
+       "vy": -0.9,
+       "v": 1.22,
+       "sl": false,
+       "dE": -0.058
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8127,
+       "vy": -0.18,
+       "v": 0.29,
+       "sl": false,
+       "dE": 0.028
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 25,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.7263,
+       "vy": -1.16,
+       "v": 1.47,
+       "sl": false,
+       "dE": 0.384
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8037,
+       "vy": -0.33,
+       "v": 0.54,
+       "sl": false,
+       "dE": 0.102
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.001
+      }
+     ]
+    }
+   ],
+   "neighbours": {
+    "obj_11": {
+     "parts": [
+      "sidewalk:wall_0_0:0:2"
+     ],
+     "mass": 73.03
+    }
+   }
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.3368522718018001,
+  "c1Violations": 2,
+  "c2Gain": 8.040235144335384e-13,
+  "c2GainUnconditioned": 0.0025396709654531835,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.004603483714166856,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.149999999999996,
+  "maxUp": 1.07026207447052,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 56.2,
+   "max": 198.9,
+   "wakeFrame": 26
+  }
+ },
+ "base.hammer.r13": {
+  "label": "base-13",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.808,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 322,
+  "fixedSteps": 2874,
+  "c3Offenders": [
+   {
+    "id": "obj_1",
+    "total": 0.0268,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 56,
+      "islandNet": -89.58,
+      "rise": 0.0242,
+      "dEm": -89.58,
+      "spinBefore": 0.57,
+      "spinAfter": 0.13,
+      "given": 0,
+      "vyBefore": 0.42,
+      "vyAfter": 0.76,
+      "speedBefore": 0.42,
+      "speedAfter": 0.76,
+      "y": 0.111,
+      "sleepingBefore": false
+     },
+     {
+      "step": 65,
+      "islandNet": -0.52,
+      "rise": 0.0026,
+      "dEm": -0.52,
+      "spinBefore": 0.15,
+      "spinAfter": 0.12,
+      "given": 0,
+      "vyBefore": 0.01,
+      "vyAfter": 0.05,
+      "speedBefore": 0.01,
+      "speedAfter": 0.05,
+      "y": 0.068,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_2",
+    "total": 0.0062,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 58,
+      "islandNet": -10.11,
+      "rise": 0.0023,
+      "dEm": -10.11,
+      "spinBefore": 0.27,
+      "spinAfter": 0.14,
+      "given": 0,
+      "vyBefore": 0.76,
+      "vyAfter": 0.71,
+      "speedBefore": 0.76,
+      "speedAfter": 0.71,
+      "y": 0.11,
+      "sleepingBefore": false
+     },
+     {
+      "step": 66,
+      "islandNet": -0.51,
+      "rise": 0.0039,
+      "dEm": -0.51,
+      "spinBefore": 0.18,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0.08,
+      "speedBefore": 0.01,
+      "speedAfter": 0.08,
+      "y": 0.069,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_6",
+    "total": 0.0035,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:5"
+    ],
+    "hist": []
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.28,
+   "step": 26,
+   "members": [
+    {
+     "id": "obj_3",
+     "mass": 43,
+     "dEm": 0.37,
+     "v0": 1.16,
+     "v1": 1.43,
+     "sleepingBefore": false,
+     "y": 0.73
+    }
+   ],
+   "parts": {
+    "obj_3": [
+     "window_grille:w0_0"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_3"
+    }
+   ],
+   "history": [
+    {
+     "step": 18,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.115,
+       "vy": -3.03,
+       "v": 3.03,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.076,
+       "vy": -3.02,
+       "v": 3.02,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0211,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 19,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.9605,
+       "vy": -2.2,
+       "v": 2.21,
+       "sl": false,
+       "dE": -12.365
+      },
+      {
+       "id": "obj_5",
+       "y": 0.931,
+       "vy": -2.04,
+       "v": 2.04,
+       "sl": false,
+       "dE": -4.279
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0211,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 20,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8678,
+       "vy": -2.02,
+       "v": 2.03,
+       "sl": false,
+       "dE": -1.098
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8421,
+       "vy": -1.84,
+       "v": 1.85,
+       "sl": false,
+       "dE": 0.311
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0211,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 21,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8183,
+       "vy": -0.02,
+       "v": 0.69,
+       "sl": false,
+       "dE": -17.664
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8054,
+       "vy": 0.22,
+       "v": 0.42,
+       "sl": false,
+       "dE": -7.755
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0208,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.016
+      }
+     ]
+    },
+    {
+     "step": 22,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8111,
+       "vy": -0.25,
+       "v": 0.77,
+       "sl": false,
+       "dE": -0.089
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8136,
+       "vy": 0.11,
+       "v": 0.2,
+       "sl": false,
+       "dE": -0.036
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.01
+      }
+     ]
+    },
+    {
+     "step": 23,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.7917,
+       "vy": -0.49,
+       "v": 0.92,
+       "sl": false,
+       "dE": -0.221
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8164,
+       "vy": 0,
+       "v": 0.04,
+       "sl": false,
+       "dE": -0.008
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 24,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.7601,
+       "vy": -0.82,
+       "v": 1.16,
+       "sl": false,
+       "dE": -0.212
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8142,
+       "vy": -0.14,
+       "v": 0.22,
+       "sl": false,
+       "dE": 0.024
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 25,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.7307,
+       "vy": -1.12,
+       "v": 1.43,
+       "sl": false,
+       "dE": 0.374
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8064,
+       "vy": -0.3,
+       "v": 0.47,
+       "sl": false,
+       "dE": 0.053
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0207,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.001
+      }
+     ]
+    }
+   ],
+   "neighbours": {
+    "obj_5": {
+     "parts": [
+      "window_frame:w0_0"
+     ],
+     "mass": 16.259999999999998
+    },
+    "obj_11": {
+     "parts": [
+      "sidewalk:wall_0_0:0:2"
+     ],
+     "mass": 73.03
+    }
+   }
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.27759849115952384,
+  "c1Violations": 2,
+  "c2Gain": 8.040235144335384e-13,
+  "c2GainUnconditioned": 0.008248250412932617,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.0034800498316836237,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.7499999999999938,
+  "maxUp": 0.7630111575126648,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 65.4,
+   "max": 239.8,
+   "wakeFrame": 27.5
+  }
+ },
+ "base.hammer.r14": {
+  "label": "base-14",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.87,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 293,
+  "fixedSteps": 2882,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0412,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 30,
+      "islandNet": -8.81,
+      "rise": 0.0066,
+      "dEm": -8.81,
+      "spinBefore": 0.44,
+      "spinAfter": 0.39,
+      "given": 0,
+      "vyBefore": -0.4,
+      "vyAfter": -0.16,
+      "speedBefore": 0.75,
+      "speedAfter": 0.26,
+      "y": 0.392,
+      "sleepingBefore": false
+     },
+     {
+      "step": 57,
+      "islandNet": -310.92,
+      "rise": 0.0347,
+      "dEm": -310.92,
+      "spinBefore": 0.83,
+      "spinAfter": 0.16,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.81,
+      "speedBefore": 0.38,
+      "speedAfter": 0.81,
+      "y": 0.101,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_1",
+    "total": 0.0263,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 55,
+      "islandNet": -308.38,
+      "rise": 0.0226,
+      "dEm": -308.38,
+      "spinBefore": 0.82,
+      "spinAfter": 0.16,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 1.03,
+      "speedBefore": 0.38,
+      "speedAfter": 1.03,
+      "y": 0.092,
+      "sleepingBefore": false
+     },
+     {
+      "step": 65,
+      "islandNet": -0.24,
+      "rise": 0.0033,
+      "dEm": -0.24,
+      "spinBefore": 0.16,
+      "spinAfter": 0.13,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0.05,
+      "speedBefore": 0.01,
+      "speedAfter": 0.05,
+      "y": 0.07,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_14",
+    "total": 0.0098,
+    "givenPart": 0,
+    "mass": 12.3,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:7"
+    ],
+    "hist": [
+     {
+      "step": 34,
+      "islandNet": 0.03,
+      "rise": 0.0015,
+      "dEm": 0.02,
+      "spinBefore": 0.05,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.005,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 1.26,
+   "step": 34,
+   "members": [
+    {
+     "id": "obj_2",
+     "mass": 1010.7,
+     "dEm": 2.27,
+     "v0": 0.29,
+     "v1": 0.21,
+     "sleepingBefore": false,
+     "y": 0.36
+    }
+   ],
+   "parts": {
+    "obj_2": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    }
+   ],
+   "history": [
+    {
+     "step": 26,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.8957,
+       "vy": -6.03,
+       "v": 6.31,
+       "sl": false,
+       "dE": -2.892
+      }
+     ]
+    },
+    {
+     "step": 27,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.5852,
+       "vy": -6.39,
+       "v": 6.62,
+       "sl": false,
+       "dE": -5.7
+      }
+     ]
+    },
+    {
+     "step": 28,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.4034,
+       "vy": -0.11,
+       "v": 0.78,
+       "sl": false,
+       "dE": -3413.408
+      }
+     ]
+    },
+    {
+     "step": 29,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3859,
+       "vy": -0.4,
+       "v": 0.75,
+       "sl": false,
+       "dE": -14.995
+      }
+     ]
+    },
+    {
+     "step": 30,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3925,
+       "vy": -0.16,
+       "v": 0.26,
+       "sl": false,
+       "dE": -8.806
+      }
+     ]
+    },
+    {
+     "step": 31,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3777,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -9.632
+      }
+     ]
+    },
+    {
+     "step": 32,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3719,
+       "vy": -0.11,
+       "v": 0.19,
+       "sl": false,
+       "dE": -0.738
+      }
+     ]
+    },
+    {
+     "step": 33,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3566,
+       "vy": -0.13,
+       "v": 0.21,
+       "sl": false,
+       "dE": 2.267
+      }
+     ]
+    }
+   ],
+   "neighbours": {}
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 1.2562387464322071,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.007394261549929865,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.00844385288655669,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.149999999999996,
+  "maxUp": 1.0287202596664429,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 51.2,
+   "max": 195.3,
+   "wakeFrame": 32.6
+  }
+ },
+ "base.hammer.r15": {
+  "label": "base-15",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.281,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 296,
+  "fixedSteps": 2874,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0214,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 31,
+      "islandNet": -8.81,
+      "rise": 0.0066,
+      "dEm": -8.81,
+      "spinBefore": 0.44,
+      "spinAfter": 0.39,
+      "given": 0,
+      "vyBefore": -0.4,
+      "vyAfter": -0.16,
+      "speedBefore": 0.75,
+      "speedAfter": 0.26,
+      "y": 0.392,
+      "sleepingBefore": false
+     },
+     {
+      "step": 58,
+      "islandNet": -310.64,
+      "rise": 0.0147,
+      "dEm": -310.64,
+      "spinBefore": 0.82,
+      "spinAfter": 0.18,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.89,
+      "speedBefore": 0.38,
+      "speedAfter": 0.89,
+      "y": 0.088,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_4",
+    "total": 0.0088,
+    "givenPart": 0.0015,
+    "mass": 18,
+    "half": [
+     0.44,
+     1.02,
+     0.05
+    ],
+    "parts": [
+     "door:d0_0"
+    ],
+    "hist": [
+     {
+      "step": 36,
+      "islandNet": 0.02,
+      "rise": 0.0011,
+      "dEm": 0.02,
+      "spinBefore": 0.06,
+      "spinAfter": 0.08,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0.06,
+      "speedAfter": 0.08,
+      "y": 1.031,
+      "sleepingBefore": false
+     },
+     {
+      "step": 39,
+      "islandNet": 0.02,
+      "rise": 0.0011,
+      "dEm": 0.02,
+      "spinBefore": 0,
+      "spinAfter": 0.02,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0.02,
+      "y": 1.032,
+      "sleepingBefore": true
+     }
+    ]
+   },
+   {
+    "id": "obj_14",
+    "total": 0.0084,
+    "givenPart": 0,
+    "mass": 12.3,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:7"
+    ],
+    "hist": [
+     {
+      "step": 34,
+      "islandNet": -0.03,
+      "rise": 0.0015,
+      "dEm": 0,
+      "spinBefore": 14.74,
+      "spinAfter": 0.62,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.11,
+      "speedAfter": 0.01,
+      "y": 0.01,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.47,
+   "step": 36,
+   "members": [
+    {
+     "id": "obj_2",
+     "mass": 1010.7,
+     "dEm": 1.48,
+     "v0": 0.2,
+     "v1": 0.21,
+     "sleepingBefore": false,
+     "y": 0.35
+    }
+   ],
+   "parts": {
+    "obj_2": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    },
+    {
+     "a": "obj_2",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_2"
+    }
+   ],
+   "history": [
+    {
+     "step": 28,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.5852,
+       "vy": -6.39,
+       "v": 6.62,
+       "sl": false,
+       "dE": -5.7
+      }
+     ]
+    },
+    {
+     "step": 29,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.4034,
+       "vy": -0.11,
+       "v": 0.78,
+       "sl": false,
+       "dE": -3413.408
+      }
+     ]
+    },
+    {
+     "step": 30,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3859,
+       "vy": -0.4,
+       "v": 0.75,
+       "sl": false,
+       "dE": -14.995
+      }
+     ]
+    },
+    {
+     "step": 31,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3925,
+       "vy": -0.16,
+       "v": 0.26,
+       "sl": false,
+       "dE": -8.806
+      }
+     ]
+    },
+    {
+     "step": 32,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3777,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -9.632
+      }
+     ]
+    },
+    {
+     "step": 33,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.365,
+       "vy": -0.19,
+       "v": 0.26,
+       "sl": false,
+       "dE": -0.679
+      }
+     ]
+    },
+    {
+     "step": 34,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3586,
+       "vy": -0.13,
+       "v": 0.2,
+       "sl": false,
+       "dE": -0.728
+      }
+     ]
+    },
+    {
+     "step": 35,
+     "s": [
+      {
+       "id": "obj_2",
+       "y": 0.3536,
+       "vy": -0.13,
+       "v": 0.21,
+       "sl": false,
+       "dE": 1.477
+      }
+     ]
+    }
+   ],
+   "neighbours": {}
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.465884017039665,
+  "c1Violations": 2,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.00525909600612251,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.006630772735400447,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.4999999999999947,
+  "maxUp": 1.07026207447052,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 59.2,
+   "max": 206.3,
+   "wakeFrame": 30.3
+  }
+ },
+ "base.hammer.r2": {
+  "label": "base-2",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.803,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 290,
+  "fixedSteps": 2866,
+  "c3Offenders": [
+   {
+    "id": "obj_1",
+    "total": 0.0268,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 57,
+      "islandNet": -89.58,
+      "rise": 0.0242,
+      "dEm": -89.58,
+      "spinBefore": 0.57,
+      "spinAfter": 0.13,
+      "given": 0,
+      "vyBefore": 0.42,
+      "vyAfter": 0.76,
+      "speedBefore": 0.42,
+      "speedAfter": 0.76,
+      "y": 0.111,
+      "sleepingBefore": false
+     },
+     {
+      "step": 66,
+      "islandNet": -0.52,
+      "rise": 0.0026,
+      "dEm": -0.52,
+      "spinBefore": 0.15,
+      "spinAfter": 0.12,
+      "given": 0,
+      "vyBefore": 0.01,
+      "vyAfter": 0.05,
+      "speedBefore": 0.01,
+      "speedAfter": 0.05,
+      "y": 0.068,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_2",
+    "total": 0.0084,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 59,
+      "islandNet": -10.11,
+      "rise": 0.0023,
+      "dEm": -10.11,
+      "spinBefore": 0.27,
+      "spinAfter": 0.14,
+      "given": 0,
+      "vyBefore": 0.76,
+      "vyAfter": 0.71,
+      "speedBefore": 0.76,
+      "speedAfter": 0.71,
+      "y": 0.11,
+      "sleepingBefore": false
+     },
+     {
+      "step": 67,
+      "islandNet": -0.51,
+      "rise": 0.0039,
+      "dEm": -0.51,
+      "spinBefore": 0.18,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0.08,
+      "speedBefore": 0.01,
+      "speedAfter": 0.08,
+      "y": 0.069,
+      "sleepingBefore": false
+     },
+     {
+      "step": 85,
+      "islandNet": -16.83,
+      "rise": 0.0018,
+      "dEm": -16.83,
+      "spinBefore": 0.18,
+      "spinAfter": 0.01,
+      "given": 0,
+      "vyBefore": -0.08,
+      "vyAfter": 0.06,
+      "speedBefore": 0.08,
+      "speedAfter": 0.06,
+      "y": 0.067,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_6",
+    "total": 0.0039,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:5"
+    ],
+    "hist": []
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.003495165585384985,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.005441871616754579,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.0039056504641272233,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.7499999999999938,
+  "maxUp": 0.7630111575126648,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 78.2,
+   "max": 235.9,
+   "wakeFrame": 31.2
+  }
+ },
+ "base.hammer.r3": {
+  "label": "base-3",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.811,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 325,
+  "fixedSteps": 2866,
+  "c3Offenders": [
+   {
+    "id": "obj_1",
+    "total": 0.0268,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 57,
+      "islandNet": -89.58,
+      "rise": 0.0242,
+      "dEm": -89.58,
+      "spinBefore": 0.57,
+      "spinAfter": 0.13,
+      "given": 0,
+      "vyBefore": 0.42,
+      "vyAfter": 0.76,
+      "speedBefore": 0.42,
+      "speedAfter": 0.76,
+      "y": 0.111,
+      "sleepingBefore": false
+     },
+     {
+      "step": 66,
+      "islandNet": -0.52,
+      "rise": 0.0026,
+      "dEm": -0.52,
+      "spinBefore": 0.15,
+      "spinAfter": 0.12,
+      "given": 0,
+      "vyBefore": 0.01,
+      "vyAfter": 0.05,
+      "speedBefore": 0.01,
+      "speedAfter": 0.05,
+      "y": 0.068,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_2",
+    "total": 0.0084,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 59,
+      "islandNet": -10.11,
+      "rise": 0.0023,
+      "dEm": -10.11,
+      "spinBefore": 0.27,
+      "spinAfter": 0.14,
+      "given": 0,
+      "vyBefore": 0.76,
+      "vyAfter": 0.71,
+      "speedBefore": 0.76,
+      "speedAfter": 0.71,
+      "y": 0.11,
+      "sleepingBefore": false
+     },
+     {
+      "step": 67,
+      "islandNet": -0.51,
+      "rise": 0.0039,
+      "dEm": -0.51,
+      "spinBefore": 0.18,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0.08,
+      "speedBefore": 0.01,
+      "speedAfter": 0.08,
+      "y": 0.069,
+      "sleepingBefore": false
+     },
+     {
+      "step": 85,
+      "islandNet": -16.83,
+      "rise": 0.0018,
+      "dEm": -16.83,
+      "spinBefore": 0.18,
+      "spinAfter": 0.01,
+      "given": 0,
+      "vyBefore": -0.08,
+      "vyAfter": 0.06,
+      "speedBefore": 0.08,
+      "speedAfter": 0.06,
+      "y": 0.067,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_3",
+    "total": 0.0044,
+    "givenPart": 0,
+    "mass": 43,
+    "half": [
+     0.6,
+     0.6,
+     0.02
+    ],
+    "parts": [
+     "window_grille:w0_0"
+    ],
+    "hist": [
+     {
+      "step": 51,
+      "islandNet": -3.64,
+      "rise": 0.0044,
+      "dEm": -1.6,
+      "spinBefore": 2.14,
+      "spinAfter": 0.09,
+      "given": 0,
+      "vyBefore": -0.41,
+      "vyAfter": -0.05,
+      "speedBefore": 0.44,
+      "speedAfter": 0.05,
+      "y": 0.054,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.003495165585384985,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.1362480141277726,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 2,
+  "c3Lift": 0.003807188305164644,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.6499999999999941,
+  "maxUp": 0.7630111575126648,
+  "risingSteps": 1,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 55.8,
+   "max": 237.7,
+   "wakeFrame": 28.8
+  }
+ },
+ "base.hammer.r4": {
+  "label": "base-4",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.225,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 347,
+  "fixedSteps": 2876,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0078,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 57,
+      "islandNet": -315.02,
+      "rise": 0.0078,
+      "dEm": -315.02,
+      "spinBefore": 0.82,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.86,
+      "speedBefore": 0.37,
+      "speedAfter": 0.86,
+      "y": 0.083,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_9",
+    "total": 0.0071,
+    "givenPart": 0.0012,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": []
+   },
+   {
+    "id": "obj_1",
+    "total": 0.0065,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 55,
+      "islandNet": -301.77,
+      "rise": 0.0016,
+      "dEm": -301.77,
+      "spinBefore": 0.82,
+      "spinAfter": 0.26,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 1.07,
+      "speedBefore": 0.38,
+      "speedAfter": 1.07,
+      "y": 0.077,
+      "sleepingBefore": false
+     },
+     {
+      "step": 68,
+      "islandNet": 0.19,
+      "rise": 0.0024,
+      "dEm": 0.19,
+      "spinBefore": 0.11,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0.03,
+      "speedBefore": 0.02,
+      "speedAfter": 0.03,
+      "y": 0.075,
+      "sleepingBefore": false
+     },
+     {
+      "step": 81,
+      "islandNet": -13.47,
+      "rise": 0.0018,
+      "dEm": -13.47,
+      "spinBefore": 0.16,
+      "spinAfter": 0.04,
+      "given": 0,
+      "vyBefore": -0.07,
+      "vyAfter": 0.07,
+      "speedBefore": 0.07,
+      "speedAfter": 0.07,
+      "y": 0.064,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.016823773820077825,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.0029452513479949205,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.006141004783870936,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.4999999999999947,
+  "maxUp": 1.07026207447052,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 84.9,
+   "max": 199,
+   "wakeFrame": 28.2
+  }
+ },
+ "base.hammer.r5": {
+  "label": "base-5",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.084,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 338,
+  "fixedSteps": 2870,
+  "c3Offenders": [
+   {
+    "id": "obj_11",
+    "total": 0.0244,
+    "givenPart": 0,
+    "mass": 73,
+    "half": [
+     0.56,
+     0.02,
+     0.3
+    ],
+    "parts": [
+     "sidewalk:wall_0_0:0:2"
+    ],
+    "hist": [
+     {
+      "step": 40,
+      "islandNet": 0.61,
+      "rise": 0.0067,
+      "dEm": 0.49,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.028,
+      "sleepingBefore": false
+     },
+     {
+      "step": 41,
+      "islandNet": 1.1,
+      "rise": 0.0159,
+      "dEm": 1.16,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.044,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_19",
+    "total": 0.0204,
+    "givenPart": 0,
+    "mass": 5.3,
+    "half": [
+     0.32,
+     0.15,
+     0.02
+    ],
+    "parts": [
+     "baseboard:wall_0_0:0:2"
+    ],
+    "hist": [
+     {
+      "step": 41,
+      "islandNet": 1.1,
+      "rise": 0.0077,
+      "dEm": 0.04,
+      "spinBefore": 0.01,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0.01,
+      "y": 0.205,
+      "sleepingBefore": false
+     },
+     {
+      "step": 42,
+      "islandNet": 0.02,
+      "rise": 0.0051,
+      "dEm": 0.03,
+      "spinBefore": 0,
+      "spinAfter": 0.24,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.02,
+      "speedBefore": 0.01,
+      "speedAfter": 0.05,
+      "y": 0.21,
+      "sleepingBefore": false
+     },
+     {
+      "step": 43,
+      "islandNet": 0.12,
+      "rise": 0.0048,
+      "dEm": 0.03,
+      "spinBefore": 0.24,
+      "spinAfter": 0.18,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": -0.01,
+      "speedBefore": 0.05,
+      "speedAfter": 0.04,
+      "y": 0.215,
+      "sleepingBefore": false
+     },
+     {
+      "step": 44,
+      "islandNet": 0.1,
+      "rise": 0.0017,
+      "dEm": 0.01,
+      "spinBefore": 0.18,
+      "spinAfter": 0.06,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.04,
+      "speedAfter": 0.02,
+      "y": 0.217,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_3",
+    "total": 0.0162,
+    "givenPart": 0,
+    "mass": 43,
+    "half": [
+     0.6,
+     0.6,
+     0.02
+    ],
+    "parts": [
+     "window_grille:w0_0"
+    ],
+    "hist": [
+     {
+      "step": 40,
+      "islandNet": 0.61,
+      "rise": 0.003,
+      "dEm": 0.13,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.049,
+      "sleepingBefore": false
+     },
+     {
+      "step": 41,
+      "islandNet": 1.1,
+      "rise": 0.0018,
+      "dEm": 0.08,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.051,
+      "sleepingBefore": false
+     },
+     {
+      "step": 42,
+      "islandNet": 0.02,
+      "rise": 0.0038,
+      "dEm": 0.16,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.055,
+      "sleepingBefore": false
+     },
+     {
+      "step": 43,
+      "islandNet": 0.12,
+      "rise": 0.004,
+      "dEm": 0.17,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.059,
+      "sleepingBefore": false
+     },
+     {
+      "step": 44,
+      "islandNet": 0.1,
+      "rise": 0.0017,
+      "dEm": 0.07,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.061,
+      "sleepingBefore": false
+     },
+     {
+      "step": 45,
+      "islandNet": 0.1,
+      "rise": 0.0011,
+      "dEm": 0.05,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.062,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.93,
+   "step": 42,
+   "members": [
+    {
+     "id": "obj_3",
+     "mass": 43,
+     "dEm": 0.08,
+     "v0": 0,
+     "v1": 0,
+     "sleepingBefore": false,
+     "y": 0.05
+    },
+    {
+     "id": "obj_5",
+     "mass": 16.3,
+     "dEm": -0.18,
+     "v0": 0.97,
+     "v1": 0.97,
+     "sleepingBefore": false,
+     "y": 0.55
+    },
+    {
+     "id": "obj_11",
+     "mass": 73,
+     "dEm": 1.16,
+     "v0": 0,
+     "v1": 0,
+     "sleepingBefore": false,
+     "y": 0.04
+    }
+   ],
+   "parts": {
+    "obj_3": [
+     "window_grille:w0_0"
+    ],
+    "obj_5": [
+     "window_frame:w0_0"
+    ],
+    "obj_11": [
+     "sidewalk:wall_0_0:0:2"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_5",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_5"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_3"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": "obj_19",
+     "b": "obj_11"
+    },
+    {
+     "a": "obj_20",
+     "b": "obj_5"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_5"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_5",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_5",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_5",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_5",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_11",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_11"
+    },
+    {
+     "a": "obj_11",
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    }
+   ],
+   "history": [
+    {
+     "step": 34,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0464,
+       "vy": 0.02,
+       "v": 0.02,
+       "sl": false,
+       "dE": -0.973
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6319,
+       "vy": -0.07,
+       "v": 0.42,
+       "sl": false,
+       "dE": -0.236
+      },
+      {
+       "id": "obj_11",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.001
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 35,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0464,
+       "vy": -0.01,
+       "v": 0.01,
+       "sl": false,
+       "dE": -0.005
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6276,
+       "vy": -0.1,
+       "v": 0.48,
+       "sl": false,
+       "dE": -0.002
+      },
+      {
+       "id": "obj_11",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 36,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0463,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.006
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6218,
+       "vy": -0.13,
+       "v": 0.54,
+       "sl": false,
+       "dE": -0.003
+      },
+      {
+       "id": "obj_11",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 37,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0463,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_5",
+       "y": 0.614,
+       "vy": -0.18,
+       "v": 0.62,
+       "sl": false,
+       "dE": -0.003
+      },
+      {
+       "id": "obj_11",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 38,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0463,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6032,
+       "vy": -0.24,
+       "v": 0.72,
+       "sl": false,
+       "dE": -0.005
+      },
+      {
+       "id": "obj_11",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 39,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0463,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_5",
+       "y": 0.5886,
+       "vy": -0.33,
+       "v": 0.83,
+       "sl": false,
+       "dE": -0.007
+      },
+      {
+       "id": "obj_11",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 40,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0493,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.129
+      },
+      {
+       "id": "obj_5",
+       "y": 0.5687,
+       "vy": -0.46,
+       "v": 0.97,
+       "sl": false,
+       "dE": -0.009
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0277,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.491
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 41,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0512,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.078
+      },
+      {
+       "id": "obj_5",
+       "y": 0.5525,
+       "vy": -0.19,
+       "v": 0.97,
+       "sl": false,
+       "dE": -0.182
+      },
+      {
+       "id": "obj_11",
+       "y": 0.0436,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 1.161
+      },
+      {
+       "id": "obj_19",
+       "y": 0.2052,
+       "vy": 0,
+       "v": 0.01,
+       "sl": false,
+       "dE": 0.041
+      },
+      {
+       "id": "obj_20",
+       "y": 0.0201,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    }
+   ],
+   "neighbours": {
+    "obj_19": {
+     "parts": [
+      "baseboard:wall_0_0:0:2"
+     ],
+     "mass": 5.34
+    },
+    "obj_20": {
+     "parts": [
+      "baseboard:wall_0_0:0:5"
+     ],
+     "mass": 5.34
+    }
+   }
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.9320700153186374,
+  "c1Violations": 3,
+  "c2Gain": 0.015903050639033658,
+  "c2GainUnconditioned": 0.015903050639033658,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.024411603076769168,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.2999999999999954,
+  "maxUp": 1.07026207447052,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 67.4,
+   "max": 195.7,
+   "wakeFrame": 29.7
+  }
+ },
+ "base.hammer.r6": {
+  "label": "base-6",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.19,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 347,
+  "fixedSteps": 2868,
+  "c3Offenders": [
+   {
+    "id": "obj_1",
+    "total": 0.0079,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 56,
+      "islandNet": -301.77,
+      "rise": 0.0016,
+      "dEm": -301.77,
+      "spinBefore": 0.82,
+      "spinAfter": 0.26,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 1.07,
+      "speedBefore": 0.38,
+      "speedAfter": 1.07,
+      "y": 0.077,
+      "sleepingBefore": false
+     },
+     {
+      "step": 69,
+      "islandNet": 0.19,
+      "rise": 0.0024,
+      "dEm": 0.19,
+      "spinBefore": 0.11,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0.03,
+      "speedBefore": 0.02,
+      "speedAfter": 0.03,
+      "y": 0.075,
+      "sleepingBefore": false
+     },
+     {
+      "step": 82,
+      "islandNet": -13.63,
+      "rise": 0.0027,
+      "dEm": -13.63,
+      "spinBefore": 0.17,
+      "spinAfter": 0.02,
+      "given": 0,
+      "vyBefore": -0.07,
+      "vyAfter": 0.04,
+      "speedBefore": 0.07,
+      "speedAfter": 0.04,
+      "y": 0.065,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_2",
+    "total": 0.0078,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 58,
+      "islandNet": -315.02,
+      "rise": 0.0078,
+      "dEm": -315.02,
+      "spinBefore": 0.82,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.86,
+      "speedBefore": 0.37,
+      "speedAfter": 0.86,
+      "y": 0.083,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_9",
+    "total": 0.0073,
+    "givenPart": 0.0012,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:6"
+    ],
+    "hist": []
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.016823773820077825,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.0029452513479949205,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.00614401854372328,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.4999999999999947,
+  "maxUp": 1.07026207447052,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 74.8,
+   "max": 206.5,
+   "wakeFrame": 30.3
+  }
+ },
+ "base.hammer.r7": {
+  "label": "base-7",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.961,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 356,
+  "fixedSteps": 2870,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.009,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 58,
+      "islandNet": -314.27,
+      "rise": 0.009,
+      "dEm": -314.27,
+      "spinBefore": 0.82,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.86,
+      "speedBefore": 0.37,
+      "speedAfter": 0.86,
+      "y": 0.083,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_7",
+    "total": 0.0088,
+    "givenPart": 0,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:e:1"
+    ],
+    "hist": [
+     {
+      "step": 32,
+      "islandNet": -195.51,
+      "rise": 0.0088,
+      "dEm": 0.24,
+      "spinBefore": 1.71,
+      "spinAfter": 13.84,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.17,
+      "speedBefore": 0.03,
+      "speedAfter": 0.17,
+      "y": 0.025,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_10",
+    "total": 0.0063,
+    "givenPart": 0.0052,
+    "mass": 16,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:e:2"
+    ],
+    "hist": [
+     {
+      "step": 40,
+      "islandNet": 0.08,
+      "rise": 0.0051,
+      "dEm": 0.08,
+      "spinBefore": 0,
+      "spinAfter": 0.79,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": -0.01,
+      "speedBefore": 0,
+      "speedAfter": 0.02,
+      "y": 0.024,
+      "sleepingBefore": false
+     },
+     {
+      "step": 42,
+      "islandNet": 0.02,
+      "rise": 0.0011,
+      "dEm": 0.02,
+      "spinBefore": 0.45,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 0.024,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [
+   {
+    "id": "obj_20",
+    "gain": 0.136,
+    "mass": 5.3,
+    "half": [
+     0.32,
+     0.15,
+     0.02
+    ],
+    "parts": [
+     "baseboard:wall_0_0:0:5"
+    ]
+   }
+  ],
+  "worstIsland": {
+   "excess": 2.88,
+   "step": 22,
+   "members": [
+    {
+     "id": "obj_3",
+     "mass": 43,
+     "dEm": 2.01,
+     "v0": 2.3,
+     "v1": 2.65,
+     "sleepingBefore": false,
+     "y": 0.84
+    },
+    {
+     "id": "obj_5",
+     "mass": 16.3,
+     "dEm": 0.92,
+     "v0": 2.04,
+     "v1": 2.4,
+     "sleepingBefore": false,
+     "y": 0.84
+    }
+   ],
+   "parts": {
+    "obj_3": [
+     "window_grille:w0_0"
+    ],
+    "obj_5": [
+     "window_frame:w0_0"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_20",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    },
+    {
+     "a": "obj_3",
+     "b": "obj_5"
+    }
+   ],
+   "history": [
+    {
+     "step": 14,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.5401,
+       "vy": -0.99,
+       "v": 1.01,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.5017,
+       "vy": -0.98,
+       "v": 0.98,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 15,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.4761,
+       "vy": -1.48,
+       "v": 1.5,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.4383,
+       "vy": -1.47,
+       "v": 1.47,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 16,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.3876,
+       "vy": -1.97,
+       "v": 1.98,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.3504,
+       "vy": -1.96,
+       "v": 1.96,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 17,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.2746,
+       "vy": -2.47,
+       "v": 2.47,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.238,
+       "vy": -2.45,
+       "v": 2.45,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 18,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 1.137,
+       "vy": -2.96,
+       "v": 2.96,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 1.1011,
+       "vy": -2.94,
+       "v": 2.94,
+       "sl": false,
+       "dE": -0.033
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 19,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.9749,
+       "vy": -3.45,
+       "v": 3.45,
+       "sl": false,
+       "dE": -0.088
+      },
+      {
+       "id": "obj_5",
+       "y": 0.9432,
+       "vy": -3.12,
+       "v": 3.12,
+       "sl": false,
+       "dE": -1.584
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1975,
+       "vy": -0.94,
+       "v": 0.94,
+       "sl": false,
+       "dE": 0.728
+      }
+     ]
+    },
+    {
+     "step": 20,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.896,
+       "vy": -2.28,
+       "v": 2.3,
+       "sl": false,
+       "dE": -11.732
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8785,
+       "vy": -2,
+       "v": 2.04,
+       "sl": false,
+       "dE": -2.224
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1961,
+       "vy": 0,
+       "v": 0.09,
+       "sl": false,
+       "dE": -0.733
+      }
+     ]
+    },
+    {
+     "step": 21,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.8419,
+       "vy": -2.63,
+       "v": 2.65,
+       "sl": false,
+       "dE": 2.013
+      },
+      {
+       "id": "obj_5",
+       "y": 0.8372,
+       "vy": -2.35,
+       "v": 2.4,
+       "sl": false,
+       "dE": 0.922
+      },
+      {
+       "id": "obj_20",
+       "y": 0.1948,
+       "vy": -0.04,
+       "v": 0.3,
+       "sl": false,
+       "dE": 0.024
+      }
+     ]
+    }
+   ],
+   "neighbours": {
+    "obj_20": {
+     "parts": [
+      "baseboard:wall_0_0:0:5"
+     ],
+     "mass": 5.34
+    }
+   }
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 2.8839238378897685,
+  "c1Violations": 3,
+  "c2Gain": 0.13631599212668982,
+  "c2GainUnconditioned": 0.13631599212668982,
+  "c2PiecesOver": 1,
+  "c2PiecesOverUnconditioned": 1,
+  "c3Lift": 0.00884845217625152,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 0.4499999999999984,
+  "maxUp": 1.2182530164718628,
+  "risingSteps": 2,
+  "frameMs": {
+   "p50": 1.3,
+   "p99": 72,
+   "max": 189.7,
+   "wakeFrame": 30.8
+  }
+ },
+ "base.hammer.r8": {
+  "label": "base-8",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 11.823,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 328,
+  "fixedSteps": 2874,
+  "c3Offenders": [
+   {
+    "id": "obj_2",
+    "total": 0.0452,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.89,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:33.7",
+     "wiring:grid:e:4",
+     "wiring:grid:e:5",
+     "wiring:grid:e:6",
+     "wiring:grid:e:7"
+    ],
+    "hist": [
+     {
+      "step": 58,
+      "islandNet": -313.68,
+      "rise": 0.0409,
+      "dEm": -313.68,
+      "spinBefore": 0.83,
+      "spinAfter": 0.15,
+      "given": 0,
+      "vyBefore": -0.37,
+      "vyAfter": 0.75,
+      "speedBefore": 0.38,
+      "speedAfter": 0.75,
+      "y": 0.104,
+      "sleepingBefore": false
+     },
+     {
+      "step": 66,
+      "islandNet": -6.27,
+      "rise": 0.0034,
+      "dEm": -6.27,
+      "spinBefore": 0.17,
+      "spinAfter": 0.17,
+      "given": 0,
+      "vyBefore": -0.21,
+      "vyAfter": 0.08,
+      "speedBefore": 0.21,
+      "speedAfter": 0.08,
+      "y": 0.068,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_1",
+    "total": 0.0427,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 56,
+      "islandNet": -308.29,
+      "rise": 0.0425,
+      "dEm": -308.29,
+      "spinBefore": 0.83,
+      "spinAfter": 0.14,
+      "given": 0,
+      "vyBefore": -0.33,
+      "vyAfter": 0.82,
+      "speedBefore": 0.34,
+      "speedAfter": 0.82,
+      "y": 0.104,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_14",
+    "total": 0.0059,
+    "givenPart": 0,
+    "mass": 12.3,
+    "half": [
+     1.46,
+     0.02,
+     0.02
+    ],
+    "parts": [
+     "wiring:grid:w:7"
+    ],
+    "hist": [
+     {
+      "step": 33,
+      "islandNet": 0.02,
+      "rise": 0.0012,
+      "dEm": 0.01,
+      "spinBefore": 0,
+      "spinAfter": 0.1,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.02,
+      "sleepingBefore": false
+     },
+     {
+      "step": 34,
+      "islandNet": 0.03,
+      "rise": 0.0013,
+      "dEm": 0.02,
+      "spinBefore": 0.1,
+      "spinAfter": 0.07,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.022,
+      "sleepingBefore": false
+     },
+     {
+      "step": 35,
+      "islandNet": 0.01,
+      "rise": 0.0011,
+      "dEm": 0.01,
+      "spinBefore": 0.07,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.023,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": null,
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.003495165585384985,
+  "c1Violations": 1,
+  "c2Gain": 0,
+  "c2GainUnconditioned": 0.006356362736088028,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.005855992960839628,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.7499999999999938,
+  "maxUp": 0.8232156038284302,
+  "risingSteps": 0,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 53.7,
+   "max": 230.4,
+   "wakeFrame": 29.4
+  }
+ },
+ "base.hammer.r9": {
+  "label": "base-9",
+  "kind": "hammer",
+  "round": 1,
+  "seconds": 12.013,
+  "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+  "errors": [],
+  "discrete": "none",
+  "kitOpsTotal": 313,
+  "fixedSteps": 2866,
+  "c3Offenders": [
+   {
+    "id": "obj_1",
+    "total": 0.0268,
+    "givenPart": 0,
+    "mass": 1010.7,
+    "half": [
+     5.91,
+     3.75,
+     0.11
+    ],
+    "parts": [
+     "pole:-10.3",
+     "wiring:grid:w:0",
+     "wiring:grid:w:1",
+     "wiring:grid:w:2",
+     "wiring:grid:w:3"
+    ],
+    "hist": [
+     {
+      "step": 57,
+      "islandNet": -89.58,
+      "rise": 0.0242,
+      "dEm": -89.58,
+      "spinBefore": 0.57,
+      "spinAfter": 0.13,
+      "given": 0,
+      "vyBefore": 0.42,
+      "vyAfter": 0.76,
+      "speedBefore": 0.42,
+      "speedAfter": 0.76,
+      "y": 0.111,
+      "sleepingBefore": false
+     },
+     {
+      "step": 66,
+      "islandNet": -0.52,
+      "rise": 0.0026,
+      "dEm": -0.52,
+      "spinBefore": 0.15,
+      "spinAfter": 0.12,
+      "given": 0,
+      "vyBefore": 0.01,
+      "vyAfter": 0.05,
+      "speedBefore": 0.01,
+      "speedAfter": 0.05,
+      "y": 0.068,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_12",
+    "total": 0.0221,
+    "givenPart": 0,
+    "mass": 73,
+    "half": [
+     0.56,
+     0.02,
+     0.3
+    ],
+    "parts": [
+     "sidewalk:wall_0_0:0:2"
+    ],
+    "hist": [
+     {
+      "step": 38,
+      "islandNet": 0.48,
+      "rise": 0.0049,
+      "dEm": 0.36,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.026,
+      "sleepingBefore": false
+     },
+     {
+      "step": 39,
+      "islandNet": 0.67,
+      "rise": 0.0079,
+      "dEm": 0.58,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.034,
+      "sleepingBefore": false
+     },
+     {
+      "step": 40,
+      "islandNet": 0.19,
+      "rise": 0.0015,
+      "dEm": 0.11,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.035,
+      "sleepingBefore": false
+     },
+     {
+      "step": 48,
+      "islandNet": 0.12,
+      "rise": 0.0011,
+      "dEm": 0.08,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.04,
+      "sleepingBefore": false
+     },
+     {
+      "step": 52,
+      "islandNet": 0.11,
+      "rise": 0.0011,
+      "dEm": 0.08,
+      "spinBefore": 0.03,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.02,
+      "vyAfter": 0,
+      "speedBefore": 0.02,
+      "speedAfter": 0,
+      "y": 0.04,
+      "sleepingBefore": false
+     }
+    ]
+   },
+   {
+    "id": "obj_3",
+    "total": 0.0148,
+    "givenPart": 0,
+    "mass": 43,
+    "half": [
+     0.6,
+     0.6,
+     0.02
+    ],
+    "parts": [
+     "window_grille:w0_0"
+    ],
+    "hist": [
+     {
+      "step": 38,
+      "islandNet": 0.48,
+      "rise": 0.0028,
+      "dEm": 0.12,
+      "spinBefore": 0.02,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": -0.01,
+      "vyAfter": 0,
+      "speedBefore": 0.01,
+      "speedAfter": 0,
+      "y": 0.048,
+      "sleepingBefore": false
+     },
+     {
+      "step": 39,
+      "islandNet": 0.67,
+      "rise": 0.0016,
+      "dEm": 0.07,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.049,
+      "sleepingBefore": false
+     },
+     {
+      "step": 40,
+      "islandNet": 0.19,
+      "rise": 0.0018,
+      "dEm": 0.08,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.051,
+      "sleepingBefore": false
+     },
+     {
+      "step": 41,
+      "islandNet": 0.12,
+      "rise": 0.0014,
+      "dEm": 0.06,
+      "spinBefore": 0,
+      "spinAfter": 0,
+      "given": 0,
+      "vyBefore": 0,
+      "vyAfter": 0,
+      "speedBefore": 0,
+      "speedAfter": 0,
+      "y": 0.053,
+      "sleepingBefore": false
+     }
+    ]
+   }
+  ],
+  "overPieces": [],
+  "worstIsland": {
+   "excess": 0.5,
+   "step": 40,
+   "members": [
+    {
+     "id": "obj_3",
+     "mass": 43,
+     "dEm": 0.07,
+     "v0": 0,
+     "v1": 0,
+     "sleepingBefore": false,
+     "y": 0.05
+    },
+    {
+     "id": "obj_12",
+     "mass": 73,
+     "dEm": 0.58,
+     "v0": 0,
+     "v1": 0,
+     "sleepingBefore": false,
+     "y": 0.03
+    }
+   ],
+   "parts": {
+    "obj_3": [
+     "window_grille:w0_0"
+    ],
+    "obj_12": [
+     "sidewalk:wall_0_0:0:2"
+    ]
+   },
+   "contacts": [
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": "obj_5"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_12"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_3"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_12"
+    },
+    {
+     "a": "obj_19",
+     "b": "obj_12"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_12"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_12"
+    },
+    {
+     "a": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     },
+     "b": "obj_3"
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_3",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    },
+    {
+     "a": "obj_12",
+     "b": {
+      "layer": "static",
+      "user": "0",
+      "fixed": true
+     }
+    }
+   ],
+   "history": [
+    {
+     "step": 32,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.056,
+       "vy": -0.01,
+       "v": 0.01,
+       "sl": false,
+       "dE": -0.079
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6539,
+       "vy": 0.18,
+       "v": 0.58,
+       "sl": false,
+       "dE": -2.239
+      },
+      {
+       "id": "obj_12",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.001
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 33,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0475,
+       "vy": 0.03,
+       "v": 0.03,
+       "sl": false,
+       "dE": -0.164
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6505,
+       "vy": -0.21,
+       "v": 0.41,
+       "sl": false,
+       "dE": -0.131
+      },
+      {
+       "id": "obj_12",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 34,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0468,
+       "vy": -0.04,
+       "v": 0.04,
+       "sl": false,
+       "dE": -0.024
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6359,
+       "vy": -0.26,
+       "v": 0.37,
+       "sl": false,
+       "dE": -0.249
+      },
+      {
+       "id": "obj_12",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 35,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.045,
+       "vy": -0.03,
+       "v": 0.03,
+       "sl": false,
+       "dE": -0.097
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6336,
+       "vy": -0.05,
+       "v": 0.35,
+       "sl": false,
+       "dE": -0.086
+      },
+      {
+       "id": "obj_12",
+       "y": 0.0209,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": -0.003
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 36,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0448,
+       "vy": -0.02,
+       "v": 0.02,
+       "sl": false,
+       "dE": -0.005
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6305,
+       "vy": -0.07,
+       "v": 0.4,
+       "sl": false,
+       "dE": -0.001
+      },
+      {
+       "id": "obj_12",
+       "y": 0.0209,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.001
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 37,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0449,
+       "vy": -0.01,
+       "v": 0.01,
+       "sl": false,
+       "dE": -0.016
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6262,
+       "vy": -0.1,
+       "v": 0.46,
+       "sl": false,
+       "dE": -0.002
+      },
+      {
+       "id": "obj_12",
+       "y": 0.021,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.002
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 38,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0478,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.122
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6209,
+       "vy": -0.14,
+       "v": 0.53,
+       "sl": false,
+       "dE": 0.006
+      },
+      {
+       "id": "obj_12",
+       "y": 0.0258,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.356
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    },
+    {
+     "step": 39,
+     "s": [
+      {
+       "id": "obj_3",
+       "y": 0.0494,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.07
+      },
+      {
+       "id": "obj_5",
+       "y": 0.6142,
+       "vy": -0.18,
+       "v": 0.61,
+       "sl": false,
+       "dE": 0.019
+      },
+      {
+       "id": "obj_12",
+       "y": 0.0337,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0.577
+      },
+      {
+       "id": "obj_19",
+       "y": 0.1975,
+       "vy": 0,
+       "v": 0,
+       "sl": false,
+       "dE": 0
+      }
+     ]
+    }
+   ],
+   "neighbours": {
+    "obj_5": {
+     "parts": [
+      "window_frame:w0_0"
+     ],
+     "mass": 16.259999999999998
+    },
+    "obj_19": {
+     "parts": [
+      "baseboard:wall_0_0:0:2"
+     ],
+     "mass": 5.34
+    }
+   }
+  },
+  "islands": "contact graph",
+  "n": 24,
+  "asleep": 24,
+  "c2Limit": 0.035,
+  "c1Excess": 0.501798010954805,
+  "c1Violations": 5,
+  "c2Gain": 0.007894551381467042,
+  "c2GainUnconditioned": 0.007894551381467042,
+  "c2PiecesOver": 0,
+  "c2PiecesOverUnconditioned": 0,
+  "c3Lift": 0.02208894958452623,
+  "deepest": null,
+  "fellThrough": 0,
+  "c4AsleepAfter": 1.7499999999999938,
+  "maxUp": 0.7630111575126648,
+  "risingSteps": 1,
+  "frameMs": {
+   "p50": 1.4,
+   "p99": 85.5,
+   "max": 242.7,
+   "wakeFrame": 31.1
+  }
+ }
+}

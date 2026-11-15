@@ -24,8 +24,8 @@ const BLAST_RADIUS = 6
 // Recorded again on the merge of the house release: the windows' panes rest on the mullion, the pipes and wires detach in segments and the drop's second conductor runs parallel to the first
 // Recorded again with the drain runs of the house (sewer stretches in its walls and slabs, the downpipes in stretches clamped to the wall): they are parts of the spec the blast meets now, and a hole in a wall shows the ones in it
 // Recorded again with the wall pipes of the house built by stages cut in stretches hosted by their wall, and the door thresholds laid between the posts of their frame, clear of the structure
-// Recorded again with the wires of the poles detaching as pieces of their own (they hang from the pole by a joint that tears): 21 more objects, the pole's piece keeps only its shaft, crossarm and insulators
-const RECORDED_BLAST_OUTCOME = '7585826afd4ff4e1edf306c98df9c3217bc75c24'
+// Recorded again with the wires of the poles detaching as pieces of their own (they hang from the pole by a joint that tears): 21 more objects, the pole's piece keeps only its shaft, crossarm and insulators, and the state of a joint says whether it tears
+const RECORDED_BLAST_OUTCOME = '2213024316105c1e34d8a8104fafe1fa29a736f5'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
