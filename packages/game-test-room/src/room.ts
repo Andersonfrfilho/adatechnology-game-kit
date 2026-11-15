@@ -4920,6 +4920,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const piece = asleep ? rendererPieces.get(so.objectId) : undefined
       if (piece) piece.sleeping = true
     }
+    // the engine's ground under what was just built is laid now, so the frame its pieces first wake in does not pay for it
+    const built = new THREE.Box3()
+    for (const { so } of placed) built.expandByObject(so.root)
+    if (!built.isEmpty()) renderer.prelayGround({ minX: built.min.x, minZ: built.min.z, maxX: built.max.x, maxZ: built.max.z })
     if (layout.view) room.look(layout.view.eye, layout.view.target)
     return placed.map(({ so }) => so)
   }

@@ -12,6 +12,15 @@ import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
 
 export type { StaticSolid } from './engine-statics'
 
+/** A rectangle on the ground (x, z) whose tiles are laid up front, and how far around it (m; default `PRELAY_MARGIN`). */
+export interface GroundBounds {
+  readonly minX: number
+  readonly minZ: number
+  readonly maxX: number
+  readonly maxZ: number
+  readonly margin?: number
+}
+
 export interface EnginePieceOptions {
   readonly groundAt: (x: number, z: number) => number
   readonly gravity: number
@@ -36,6 +45,10 @@ interface Footprint {
 /** Side of a tile of ground (m); how far around an awake piece tiles are laid (m). */
 const TILE = 2
 const TILE_MARGIN = 0.5
+/** How far around a built area (m) its ground is laid up front: a chip a blast throws lands a few metres past the walls. */
+const PRELAY_MARGIN = 4
+/** The most tiles one `prelayGround` lays (100 x 100 m): a wider area is laid as far as this and the rest is left to the lazy laying. */
+const PRELAY_MAX_TILES = 2500
 /** The most (m) a piece's tips swinging in one update widen the tiles laid around its footprint. */
 const MAX_SWING = 3
 /** The most stops along a piece's path in one update where its footprint's tiles are laid (a piece that crosses a tile or more in an update lands on ground not laid yet). */
@@ -223,6 +236,30 @@ export class EnginePieces {
       b.root.updateMatrixWorld(true)
       link.groundAtSleep = NaN
     }
+  }
+
+  /**
+   * The ground of a built area is laid now, not in the frame its pieces first wake in: every tile within `margin` of the rectangle that has no body yet gets its height
+   * field and solid (`layTile`). Tiles outside stay lazy (`layGround`), a tile that changes is laid again as before (`groundChanged`), and `clear` removes them all.
+   * Returns how many tiles it laid (the ones already there are left alone).
+   */
+  prelayGround(bounds: GroundBounds): number {
+    const margin = bounds.margin ?? PRELAY_MARGIN
+    const ix0 = Math.floor((bounds.minX - margin) / TILE)
+    const ix1 = Math.floor((bounds.maxX + margin) / TILE)
+    const iz0 = Math.floor((bounds.minZ - margin) / TILE)
+    const iz1 = Math.floor((bounds.maxZ + margin) / TILE)
+    let laid = 0
+    for (let ix = ix0; ix <= ix1; ix++) {
+      for (let iz = iz0; iz <= iz1; iz++) {
+        if (laid >= PRELAY_MAX_TILES) return laid
+        const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
+        if (this.tiles.has(key)) continue
+        this.layTile(key, ix, iz, undefined)
+        laid++
+      }
+    }
+    return laid
   }
 
   /** The tiles the disc touches are laid again before the next step. */

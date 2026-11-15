@@ -7,7 +7,7 @@ import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
-import type { StaticSolid } from './engine-pieces'
+import type { GroundBounds, StaticSolid } from './engine-pieces'
 import { resolvePhysics } from './physics-option'
 import type { PiecePhysics } from './physics-option'
 export type { PieceSweepHit } from './internal'
@@ -634,6 +634,11 @@ export class PieceSystem {
       v[i] += (j * n[i]) / b.mass
       w[i] += a[i] * j
     }
+  }
+
+  /** The engine's ground under and around a built area is laid now (`EnginePieces.prelayGround`); the kit's own solver has no ground bodies: 0. */
+  prelayGround(bounds: GroundBounds): number {
+    return this.engine?.prelayGround(bounds) ?? 0
   }
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */

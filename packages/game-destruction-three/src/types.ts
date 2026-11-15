@@ -13,6 +13,7 @@ import type { BlastDebrisOptions, DebrisCostOptions } from './blast-debris'
 import type { PiecePhysics } from './physics-option'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
+import type { GroundBounds } from './engine-pieces'
 import type { FragmentLifeRule } from './fragments'
 import type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
 
@@ -256,6 +257,12 @@ export interface DestructionRenderer {
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: MakePieceOptions): Piece
   pieces(): Piece[]
+  /**
+   * With an engine, lays the ground under a built area (a house, a room: its footprint as a rectangle plus `margin` metres, default 4) now, so the cost of making the ground's bodies
+   * is in the build and not in the frame its pieces first wake in. Ground outside is still laid as pieces reach it; a dug tile is still laid again; `release`/reset removes it all.
+   * Returns the tiles laid (0 on the kit's own solver).
+   */
+  prelayGround(bounds: GroundBounds): number
   /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
   wakeRegion(x: number, z: number, radius: number): void
   piece(objectId: string): Piece | null

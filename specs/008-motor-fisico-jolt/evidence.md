@@ -1957,3 +1957,46 @@ As duas outras checagens que **já reprovam** na linha de base (`e987bbe4`, conf
 - O dreno embutido num pavimento de cima sai do bocal para a parede mais próxima **daquele pavimento** e cai na parede mais próxima do de baixo, mesmo que as duas não se alinhem, e passa pela laje na horizontal (no meio da espessura de 13 cm) entre elas; a casa de verdade tem um shaft, que a planta não tem.
 - Os trechos soltos que a explosão deixa caem como peças (colisores de `fitOrientedBoxes` com os triângulos, as caixas abraçam o desenho; conferido no teste 3), mas a conta de custo de uma sala com muitas casas e vários furos não foi medida.
 - A saída de água de laje (`roof/slabs.ts`, bocal pela mureta) segue como estava.
+
+## T3.8l — D8 chão montado ao construir (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, Node v24.22.0, worktree `chao-ao-construir`, branch `feat/chao-ao-construir` sobre `7b3ab89d`. Só o modo Jolt; o solver próprio não tem corpos de chão. As rodadas da sala (navegador) não foram feitas aqui.
+
+### Desenho
+
+- **Onde mora (SDK primeiro).** O chão do motor é de `game-destruction-three` (`engine-pieces.ts`, `layTile`), com a fonte `terrainAt`/`groundAt` que o hospedeiro já entrega. Então a API é **explícita**, no dono: `EnginePieces.prelayGround(bounds)` → `PieceSystem.prelayGround` → `DestructionRenderer.prelayGround(bounds)` (tipo `GroundBounds` exportado). Automático em `setGround`/`bind` foi descartado: `bind` roda para qualquer item (uma lata jogada) e o renderer não sabe qual é a pegada da "área".
+- **O que faz.** Assenta, com o mesmo `layTile` do caminho preguiçoso, todo ladrilho de 2 m dentro do retângulo mais `margin` (padrão 4 m, configurável por chamada) que ainda não tem corpo; os que já existem ficam. Devolve quantos fez. Teto de 2500 ladrilhos por chamada (100 x 100 m): área maior é assentada até aí e o resto fica preguiçoso (nada falha).
+- **Quem chama.** `game-test-room`: `layArea` (a montagem de uma área de módulo) passa a caixa do que acabou de montar. O jogo chama o mesmo método ao construir a casa.
+- **Caminhos antigos intactos** (testados): ladrilho fora da área continua assentado quando a peça chega, inclusive ao longo do caminho de peça rápida (`b545ac16`); `groundChanged`/`wakeRegion` continua refazendo ladrilho cavado (`setShape` no mesmo corpo).
+- **Memória (§8).** Os corpos de chão são os mesmos de `tiles`; `EnginePieces.clear()` (reset/`release` do renderer) remove todos. Teste: `bodyCount` volta ao de antes, e a área pode ser montada de novo igual.
+- **Chão plano rápido (item 4): não feito.** Ladrilho plano não se reconhece sem amostrar; um sorteio grosseiro perderia cratera pequena (muda regra de chão). Com o pré-assento o custo sai do quadro, então não vale o risco.
+
+### Números (Node, `PROFILE=1 PROFILE_RUNS=7 PIECE_SOLVER=jolt vitest run tests/engine-prelay.test.ts`, mediana de 7; cena de despertar: dois postes de 950 kg e o arame de 45 m na diagonal, área de 32 m, terreno ondulado, `dt` 1/60, 40 quadros)
+
+| Medida | Sem pré-assento | Com |
+|---|---|---|
+| Quadro do despertar (1º `update`) | 65,3 ms (61,5–86,4) | **0,53 ms** |
+| Corpos de chão criados depois do despertar (60 quadros) | > 100 (teste) | **0** (teste) |
+| Custo total dos 40 quadros | 512 ms | 295 ms |
+| Pior quadro | 93,6 ms (despertar) | **168 ms** (primeiro contato do arame com o chão, quadro 18) |
+| Custo da montagem (441 ladrilhos, 21 x 21, margem 4 m) | 0 | 405 ms (0,92 ms por ladrilho) |
+
+**Achado, não escondido:** o pior quadro **piorou** nesta cena (168 contra 94 ms). Não é assentar ladrilho: sem o arame e com os mesmos postes nenhum quadro passa de 8 ms nas duas configurações. É o `Step` do Jolt quando o arame de 45 m (caixa de contorno de 32 x 32 m na diagonal) toca o chão: com a área toda assentada ele se emparelha com os ~440 ladrilhos (height field + volume de até centenas de blocos) em vez dos ~60 da faixa que o assentamento preguiçoso fazia. No preguiçoso esse custo existia também, espalhado pelos quadros 18–24 (46+91+65+65+34+34+34 ms). É o caso da decisão pendente do dono (a fiação se soltar em trechos, `T3.8b`); com trechos o contorno do arame deixa de cobrir a casa. Quem decide é o dono; não mexi no adaptador nem na regra.
+
+### Testes (`tests/engine-prelay.test.ts`, só `PIECE_SOLVER=jolt`)
+
+6 testes: assenta área + margem e não refaz os existentes; **despertar sobre a área construída não cria corpo de chão** (e sem pré-assento cria mais de 100), `fellThrough` 0 nos dois e só 3 corpos a mais (as peças); fora da área e ao longo do caminho da peça rápida ainda assenta; ladrilho cavado é refeito (`setShape`) e a placa desce; **`clear()` libera todos os corpos** e a área remonta igual; solver próprio devolve 0. Mais um bloco `PROFILE=1` que imprime a tabela acima.
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 (com `game-destruction-three` rebuildado) |
+| `game-destruction-three` próprio / Jolt | 409 passam, 0 falham / 495 passam, só as 2 `rolling` conhecidas |
+| `game-floorplan-three` próprio / Jolt | 1068 passam, 0 falham / 1068 passam, as 4 conhecidas (3 `exact-golden` + `bookcase-topple`) |
+| `game-test-room` próprio / Jolt | 458 / 458 passam |
+| Bacia `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, `worstC4` 1,5167, `worstC2Unconditioned` 0,014651, `fellThrough` 0 (igual à T3.8j) |
+| z-fighting (`z-fighting-houses`, dentro do `game-floorplan-three`) | passa |
+| `eslint` nos arquivos mudados | 0 erros (avisos antigos de `max-lines`) |
+| `kit-audit --check` / `pnpm check:layers` | exit 0 (0 novos) / sem violações novas |
+| Goldens | nenhum regravado: o pré-assento não muda o que o solver próprio ou o desenho produzem |

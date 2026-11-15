@@ -18,7 +18,7 @@ import { hollowBoxesOf } from './drawn-boxes'
 import type { MeasureBudget } from './drawn-solids'
 import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
-import type { StaticSolid } from './engine-pieces'
+import type { GroundBounds, StaticSolid } from './engine-pieces'
 import { sameSolids } from './engine-statics'
 import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
@@ -2933,6 +2933,10 @@ class Renderer implements DestructionRenderer {
     this.costMeter.reset()
     this.cost = null
     this.costFrame = 0
+  }
+
+  prelayGround(bounds: GroundBounds): number {
+    return this.pieceSys.prelayGround(bounds)
   }
 
   wakeRegion(x: number, z: number, radius: number): void {

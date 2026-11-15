@@ -10,6 +10,7 @@ export { specFromObject3D } from './spec'
 export type { PartHint } from './spec'
 export { heatColor } from './heat'
 export type { FragmentLifeRule } from './fragments'
+export type { GroundBounds } from './engine-pieces'
 import type { SpriteKind } from '@adatechnology/game-vfx'
 
 /** Every particle kind the renderer can emit (the game's sprite kinds, see `@adatechnology/game-vfx`). */
