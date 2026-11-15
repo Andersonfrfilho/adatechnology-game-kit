@@ -43,3 +43,6 @@ export function installHouseHelpers(K: Kernel, shared: Shared): void {
   const defined: KernelHouseHelpers = { OPEN_ROOM_TYPES, NO_CEILING, OPEN_AREA, EPS, Y0, colorOf, rectsOf, roomAt, subRect, subRects, wallColor, floorColor, stairFootprint, effectiveHeight };
   Object.assign(K, defined);
 }
+
+/** How wide the posts of a door frame are (m): the jambs stand this far into the opening from its edges. */
+export const DOOR_JAMB_WIDTH = 0.05;

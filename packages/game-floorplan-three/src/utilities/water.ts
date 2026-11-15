@@ -5,8 +5,8 @@ import type { PlumbingPoint } from '@adatechnology/game-floorplan-structure';
 import { ATTIC_LIFT, atticFloor, routeToTerminal, routingPlanOf } from '../construction-stages/installation-routes.js';
 
 import type { Hex, HouseRecord, HouseRoom, Kernel, KernelUtilitiesWater, Shared, WaterApi, WaterState } from '../kernel-types.js';
-import { cutRun, holdersOf, solidsOf } from './segments.js';
-import type { Vec3 } from './segments.js';
+import { cutRun, drawnEnds, holdersOf, solidsOf } from './segments.js';
+import type { Span, Vec3 } from './segments.js';
 
 /** Share of a solid cylinder a plastic pipe is: its wall (about a tenth of the diameter), the rest is bore. */
 const PIPE_WALL_FILL = 0.3;
@@ -46,12 +46,40 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
     _q.setFromUnitVectors(_Y, _v3.set(dx / L, dy / L, dz / L)); put('plain', 'cyl', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, _q, diameter, L, diameter, color);
   }
   const _v3 = new THREE.Vector3();
+  /**
+   * A run laid inside the walls (the staged house and the plain one lay it the same way): `segmentLimits.pipe: Infinity` keeps it as the team drew it, one part;
+   * otherwise each route is cut at every slab and wall it crosses and at the limit, one part per stretch, the run's 3 kg shared by length, each stretch held by the
+   * solid it lies in (`hostedIn`: a hole there reveals it) or by the stretch beside it, and joined to the one before it.
+   */
+  function layWallRun({ id, routes, diameter, group, meta }: { id: string; routes: readonly (readonly Vec3[])[]; diameter: number; group: string; meta: Record<string, unknown> }): void {
+    const limit = shared.ctx.segmentLimits.pipe;
+    const sleeve = (point: Vec3): void => { cylBase('plain', point[0], point[1] - diameter, point[2], diameter * 0.7, diameter * 2, PIPE_COLOR); };
+    if (!Number.isFinite(limit)) {
+      part('wall_pipe', [0, 0, 0], () => { for (const route of routes) { for (let i = 0; i + 1 < route.length; i++) pipe(route[i]!, route[i + 1]!, diameter, PIPE_COLOR); route.forEach(sleeve); } }, { id: 'pipe:' + id, ...meta, routes }, group);
+      return;
+    }
+    const solids = solidsOf(shared.ctx.structureIndex), cut = routes.map((route) => cutRun(route, limit, solids)), count = cut.reduce((sum, spans) => sum + spans.length, 0), total = cut.reduce((sum, spans) => sum + spans.reduce((length, span) => length + span.length, 0), 0);
+    const pieceId = (index: number): string => count > 1 ? 'pipe:' + id + ':' + index : 'pipe:' + id;
+    let offset = 0;
+    cut.forEach((spans: Span[], routeIndex: number) => {
+      const route = routes[routeIndex]!, first = offset, holders = holdersOf(spans, (index) => pieceId(first + index));
+      spans.forEach((span, index) => {
+        const at = first + index, holder = holders[index], hosted = span.host ?? undefined;
+        const sleeves = [span.fromVertex, index === spans.length - 1 && span.toVertex === route.length - 1 ? span.toVertex : -1].filter((vertex) => vertex >= 0);
+        const chain = [at - 1].filter((next) => index > 0 && holder !== pieceId(next) && holders[index - 1] !== pieceId(at)).map(pieceId);
+        const [from, to] = drawnEnds(span, spans[index - 1], spans[index + 1]);
+        part('wall_pipe', [0, 0, 0], () => { pipe(from, to, diameter, PIPE_COLOR); for (const vertex of sleeves) sleeve(route[vertex]!); },
+          { ...meta, id: pieceId(at), routes: [[[...span.a], [...span.b]]], mass: WALL_PIPE_MASS * span.length / total, chain, ...(holder ? { holder } : {}), ...(hosted ? { hostedIn: hosted } : {}) }, group);
+      });
+      offset += spans.length;
+    });
+  }
   // the house built by construction stage lays the plan's runs where a plumber does (see construction-stages/installation-routes): the same pipes show cut
   // into the bare masonry in the rough-in stage and, embedded, in the finished house
   function stagedWallRuns(H: NonNullable<NonNullable<HouseRecord['utilities']>['plumbing']>): void {
     const r = shared.ctx.r as HouseRecord, nA = r.floors.length, plan = routingPlanOf(r), tank = r.waterTank, base = shared.ctx.waterTankPos ? shared.ctx.waterTankPos.y : tank ? tank.y : atticFloor(plan);
     if (!tank) return;
-    const xyz = (p: readonly number[]): number[] => [p[0], p[1], p[2]];
+    const xyz = (p: readonly number[]): Vec3 => [p[0]!, p[1]!, p[2]!];
     // the tank's outlet leaves its side by the bottom, clear of the platform, and goes down to the attic floor: never through the ceiling into a room
     const out: [number, number] = [tank.u, tank.v - (tank.d || 1.1) / 2 - 0.2], attic = atticFloor(plan) + ATTIC_LIFT.water;
     const outlet = [[tank.u, base + 0.08, tank.v - (tank.d || 1.1) / 2], [out[0], base + 0.08, out[1]], [out[0], attic, out[1]]];
@@ -63,7 +91,7 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
       const points = H.points.filter((p) => p.run === tr.id), d = tr.diameter || 0.025, com: HouseRoom | undefined = tr.to != null ? shared.ctx.roomById[tr.to] : undefined;
       const g = com && com.floor >= 0 ? 'f' + Math.min(com.floor, nA - 1) : 'f0';
       const routes = points.map((p) => routeToTerminal(plan, out, { u: p.u, v: p.v, y: p.y, floor: p.floor }, { kind: 'water' }).map(xyz)).filter((route) => route.length > 1);
-      part('wall_pipe', [0, 0, 0], () => { for (const route of routes) { for (let i = 0; i + 1 < route.length; i++) pipe(route[i], route[i + 1], d, PIPE_COLOR); for (const p of route.slice(1)) cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); } }, { id: 'pipe:' + tr.id, hidden: true, run: tr.id, to: tr.to, from: tr.from, routes }, g);
+      layWallRun({ id: tr.id, routes, diameter: d, group: g, meta: { hidden: true, run: tr.id, to: tr.to, from: tr.from } });
     }
   }
   function waterPipes(): void {
@@ -72,19 +100,9 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
     const groupOf = (c: { floor: number } | null | undefined): string => c && c.floor >= 0 ? 'f' + Math.min(c.floor, nA - 1) : 'lot', xyz = (p: readonly number[]): Vec3 => [p[0]!, p[2]!, p[1]!]; // plan points: [u, v, y] -> [x, y, z]
     for (const tr of H.visibleRuns) {
       const pts = tr.points.map(xyz), d = tr.diameter || 0.025;
-      if (tr.exposed === 'wall') { // inside the wall: hidden part (vanishes until the wall breaks)
-        const pt = H.points.find(p => p.run === tr.id), com: HouseRoom | undefined = tr.to != null ? shared.ctx.roomById[tr.to] : undefined, g = groupOf(com || (pt && { floor: pt.floor })), parent = g === 'lot' ? 'f0' : g;
-        const meta = { hidden: true, run: tr.id, to: tr.to, from: tr.from };
-        if (!Number.isFinite(shared.ctx.segmentLimits.pipe)) { // `segmentLimits.pipe: Infinity`: the run as the team drew it, one part (the golden of the team)
-          part('wall_pipe', [0, 0, 0], () => { for (let i = 0; i + 1 < pts.length; i++) pipe(pts[i], pts[i + 1], d, PIPE_COLOR); for (const p of pts) cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); }, { id: 'pipe:' + tr.id, ...meta }, parent);
-          continue;
-        }
-        // the run detaches in spans like the visible ones (one part, one box of 8 m across a room, was a collider wedged in walls and furniture that the engine pushed out for seconds); the 3 kg of the run are shared by length
-        const spans = cutRun(pts, shared.ctx.segmentLimits.pipe, solidsOf(shared.ctx.structureIndex)), pieceId = (index: number): string => spans.length > 1 ? 'pipe:' + tr.id + ':' + index : 'pipe:' + tr.id, holders = holdersOf(spans, pieceId), total = spans.reduce((sum, span) => sum + span.length, 0);
-        spans.forEach((span, index) => {
-          const sleeves = [span.fromVertex, index === spans.length - 1 && span.toVertex === pts.length - 1 ? span.toVertex : -1].filter(vertex => vertex >= 0);
-          part('wall_pipe', [0, 0, 0], () => { pipe(span.a, span.b, d, PIPE_COLOR); for (const vertex of sleeves) { const p = pts[vertex]; cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); } }, { id: pieceId(index), ...meta, mass: WALL_PIPE_MASS * span.length / total, ...(holders[index] ? { holder: holders[index] } : {}) }, parent);
-        });
+      if (tr.exposed === 'wall') { // inside the wall: hidden parts (vanish until the wall breaks)
+        const pt = H.points.find(p => p.run === tr.id), com: HouseRoom | undefined = tr.to != null ? shared.ctx.roomById[tr.to] : undefined, g = groupOf(com || (pt && { floor: pt.floor }));
+        layWallRun({ id: tr.id, routes: [pts], diameter: d, group: g === 'lot' ? 'f0' : g, meta: { hidden: true, run: tr.id, to: tr.to, from: tr.from } });
         continue;
       }
       let g: string;

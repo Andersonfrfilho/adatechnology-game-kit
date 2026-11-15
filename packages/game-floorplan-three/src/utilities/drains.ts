@@ -4,7 +4,7 @@ import { DRAIN_BORE } from '../construction-stages/installations-stage.js';
 import { routingPlanOf, wallDrop } from '../construction-stages/installation-routes.js';
 import type { RoutingPlan } from '../construction-stages/installation-routes.js';
 import type { Hex, HouseRecord, Kernel, KernelUtilitiesDrains, Shared } from '../kernel-types.js';
-import { cutRun, holdersOf, solidsOf } from './segments.js';
+import { cutRun, drawnEnds, holdersOf, solidsOf } from './segments.js';
 import type { Span, Vec3 } from './segments.js';
 import { pipeMass } from './water.js';
 
@@ -19,8 +19,6 @@ const CLAMP_REACH = 0.3;
 /** The clamp ring of a downpipe's stretch: its top this far under the stretch's top end (never on the end's plane), its height, metres. It shares the pipe's mesh: no draw call of its own. */
 const CLAMP_DROP = 0.06;
 const CLAMP_HEIGHT = 0.03;
-/** How far (m) the cap of a stretch cut at a face of the solid it lies in is drawn off that face. */
-const CAP_SINK = 0.002;
 const CLAMPED_ROLES = new Set(['wall', 'partition', 'column']);
 
 /** The run of one fixture's drain from its mouth into the wall nearest it, then down inside that wall (and through each slab into the wall of the storey below) to the foot of the ground floor's wall, where the buried branch of the sewer takes it. */
@@ -48,17 +46,6 @@ export function drainRoute(plan: RoutingPlan, point: PlumbingPoint): Vec3[] | nu
 export function installUtilitiesDrains(K: Kernel, shared: Shared): void {
   const { part, pipe, cylBase } = K;
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
-
-  /**
-   * Where a stretch is drawn from and to: its ends are cut at the faces of the slabs and walls, and a cap lying on a face of the wall it ends in fights it, so a stretch in a solid
-   * is drawn `CAP_SINK` short of its cut and the stretch in the open beside it goes `CAP_SINK` into the solid: every cap lies inside the solid, none on its plane.
-   */
-  function drawnEnds(span: Span, previous: Span | undefined, next: Span | undefined): [Vec3, Vec3] {
-    const along: Vec3 = [(span.b[0] - span.a[0]) / span.length, (span.b[1] - span.a[1]) / span.length, (span.b[2] - span.a[2]) / span.length];
-    const shift = (neighbour: Span | undefined): number => (span.host !== null ? -CAP_SINK : neighbour && neighbour.host !== null ? CAP_SINK : 0);
-    const move = (end: Vec3, amount: number): Vec3 => [end[0] + along[0] * amount, end[1] + along[1] * amount, end[2] + along[2] * amount];
-    return span.length > 4 * CAP_SINK ? [move(span.a, -shift(previous)), move(span.b, shift(next))] : [span.a, span.b];
-  }
 
   /** What a run is: its id, the points it passes, its bore and colour, the group it is drawn in, the longest stretch it detaches in, and (a downpipe) the wall it is clamped to. */
   type Run = { readonly id: string; readonly points: readonly Vec3[]; readonly diameter: number; readonly color: Hex; readonly group: string; readonly limit: number; readonly clampedTo?: string; readonly clampEvery?: number };
