@@ -1,0 +1,394 @@
+// @vitest-environment happy-dom
+import * as THREE from 'three'
+import { createHash } from 'node:crypto'
+import { Session } from 'node:inspector'
+import { describe, it } from 'vitest'
+import { engine } from '@adatechnology/game-floorplan'
+
+import { createTestRoom } from '../../game-test-room/src'
+import { stubRenderer } from '../../game-test-room/tests/helpers'
+import { createFloorplanTestModule } from '../src'
+import { EnginePieces } from '../../game-destruction-three/src/engine-pieces'
+import { PieceSystem } from '../../game-destruction-three/src/pieces'
+import { planOf } from './helpers/houses'
+import { fakeDocument } from './helpers/fake-document'
+import { IS_JOLT, physicsLoop } from './setup-physics'
+
+type Any = any // probe only
+const ACC: Record<string, number> = {}
+const wrapProto = (proto: Any, name: string, label: string): void => {
+  const f = proto[name]
+  proto[name] = function (this: unknown, ...a: unknown[]) { const s0 = performance.now(); try { return f.apply(this, a) } finally { ACC[label] = (ACC[label] ?? 0) + performance.now() - s0 } }
+}
+for (const n of ['layGround', 'layStatics', 'sync', 'outOfStatics', 'layTile', 'prepare', 'finish']) wrapProto(EnginePieces.prototype, n, 'engine.' + n)
+wrapProto(PieceSystem.prototype, 'update', 'pieces.update')
+const wrapOnce = (obj: Any, name: string, label: string): void => {
+  const f = obj[name].bind(obj)
+  obj[name] = (...a: unknown[]) => { const s0 = performance.now(); try { return f(...a) } finally { ACC[label] = (ACC[label] ?? 0) + performance.now() - s0 } }
+}
+const pct = (xs: number[], p: number): number => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * p))]!
+
+const LABELS = ['world.update', 'jolt.stepFixed', 'w.createBody', 'w.createBodies', 'w.setShape', 'w.updateHeights', 'w.removeBody', 'engine.layGround', 'engine.layTile', 'engine.layStatics', 'engine.sync', 'engine.outOfStatics', 'pieces.update']
+
+const once = (kind: 'blast' | 'hammer', dt: number, frames: number, profile: boolean) => {
+  planOf('single_storey_a', 1)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physicsLoop(), worldOptions: { chainLinksPerUpdate: 1 } } as Any) as Any
+  room.loadModule(createFloorplanTestModule({ engine, locale: 'en', world: room.world, renderer: room.renderer, house: { document: fakeDocument } } as Any))
+  room.openArea('floorplan_area')
+  const b = room.bench('floorplan_area')
+  b.set('package', 'residential'); b.set('template', 'single_storey_a'); b.set('seed', 1)
+  b.act('build')
+  let guard = 0
+  while (!room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1') && guard++ < 2000) room.update(0.05)
+  for (let i = 0; i < 60; i++) room.update(0.05)
+  const eng = room.renderer.pieceSys.engine
+  wrapOnce(room.world, 'update', 'world.update')
+  wrapOnce(eng.world, 'stepFixed', 'jolt.stepFixed')
+  for (const [n, l] of [['createBody', 'w.createBody'], ['createBodies', 'w.createBodies'], ['setShape', 'w.setShape'], ['updateHeights', 'w.updateHeights'], ['removeBody', 'w.removeBody']] as const) wrapOnce(eng.world, n, l)
+  ;(eng as Any).solidKeys = new Set<number>()
+  const refreshSolids = (): void => { const set = (eng as Any).solidKeys as Set<number>; for (const t of (eng as Any).tiles.values() as Any) if (t.solid != null) set.add(t.solid) }
+  const o = room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1').state.position
+  const spot: [number, number, number] = [o[0] - 2.5, 0.6, o[2]]
+  for (let i = 0; i < 10; i++) room.update(0.05)
+  if (kind === 'blast') room.blastAt('c4', spot)
+  else for (let k = 0; k < 12; k++) room.world.hit('house3d:1', { type: 'blunt', point: [spot[0], 0.5 + 0.5 * (k % 4), spot[2] + ((k % 3) - 1) * 0.6], direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' })
+  const session = new Session(); session.connect()
+  const post = (m: string, p?: object): void => { session.post(m as Any, (p ?? {}) as Any, () => {}) }
+  if (profile) { post('Profiler.enable'); post('Profiler.setSamplingInterval', { interval: 100 }); post('Profiler.start') }
+  const rows: Array<{ f: number; ms: number; stage: number[]; active: number; info: string }> = []
+  const jw = eng.world as Any
+  const CNT = { val: 0, per: 0, add: 0 }
+  const PRUNE = Number(process.env.PRUNE ?? 0)
+  const stats = { rej: 0, acc: 0 }
+  if (PRUNE) {
+    const L = jw.listener; const J = jw.J; const orig = L.OnContactValidate
+    L.OnContactValidate = (b1: number, b2: number, off: number, res: number) => {
+      const e1 = jw.byPointer.get(b1), e2 = jw.byPointer.get(b2)
+      if (!e1 || !e2) return orig(b1, b2, off, res)
+      const solid = (eng as Any).solidKeys.has(e1.key) ? e1 : (eng as Any).solidKeys.has(e2.key) ? e2 : null
+      if (!solid) return orig(b1, b2, off, res)
+      const other = solid === e1 ? e2 : e1
+      if (other.invMass === 0) return J.ValidateResult_AcceptContact
+      const depth = J.HEAPF32[(res >> 2) + 12]!
+      const gap = -depth
+      const heap = J.HEAPF32
+      let at = J.getPointer(other.body.GetLinearVelocity()) >> 2
+      const sp = Math.hypot(heap[at]!, heap[at + 1]!, heap[at + 2]!)
+      at = J.getPointer(other.body.GetAngularVelocity()) >> 2
+      const sw = Math.hypot(heap[at]!, heap[at + 1]!, heap[at + 2]!)
+      const dt = jw.fixedStep
+      const reach = other.reach ?? (other.reach = (() => { const bb = other.body.GetShape().GetLocalBounds(); const a = bb.mMin, b = bb.mMax; return Math.hypot(b.GetX() - a.GetX(), b.GetY() - a.GetY(), b.GetZ() - a.GetZ()) / 2 })())
+      const slack = ((sp + sw * reach + 9.81 * dt) * dt) * PRUNE + 0.001
+      if (gap > slack) { stats.rej++; return J.ValidateResult_RejectContact }
+      stats.acc++
+      return J.ValidateResult_AcceptContact
+    }
+  }
+  { const L = jw.listener; const v = L.OnContactValidate, pe = L.OnContactPersisted, ad = L.OnContactAdded
+    L.OnContactValidate = (...a: Any[]) => { CNT.val++; return v(...a) }
+    L.OnContactPersisted = (...a: Any[]) => { CNT.per++; return pe(...a) }
+    L.OnContactAdded = (...a: Any[]) => { CNT.add++; return ad(...a) } }
+  for (let f = 0; f < frames; f++) {
+    if (process.env.DEACT && f === 122) { const wants = process.env.DEACT.split(',').map(Number); for (const [, e] of jw.bodies as Any) if (wants.includes(e.user)) { jw.bi.DeactivateBody(e.id); console.log('[DEACT]', e.user) } }
+    if (process.env.STATICS && f === 122) {
+      const cat = new Map<string, number>()
+      const eng2 = eng as Any
+      const tileIds = new Map<number, string>()
+      for (const t of eng2.tiles.values() as Any) { if (t.ground !== undefined && t.ground !== null) tileIds.set(t.ground, 'tile-ground'); if (t.steps != null) tileIds.set(t.steps, 'tile-steps'); if (t.solid != null) tileIds.set(t.solid, 'tile-solid') }
+      for (const [key, e] of jw.bodies as Any) {
+        if (!e.body.IsStatic()) continue
+        const sh = e.body.GetShape(); const st = sh.GetSubType()
+        let k = tileIds.get(key) ?? (eng2.statics.ids.has(key) ? 'house-static' : 'other-static')
+        k += '/st' + st
+        cat.set(k, (cat.get(k) ?? 0) + 1)
+      }
+      const kids: number[] = []; const kinds2 = new Map<number, number>()
+      for (const t of eng2.tiles.values() as Any) { if (t.solid == null) continue; const e = jw.bodies.get(t.solid); if (!e) continue; const c = jw.J.castObject(e.body.GetShape(), jw.J.CompoundShape); kids.push(c.GetNumSubShapes()) }
+      kids.sort((a, b) => b - a)
+      console.log('[SOLIDKIDS]', 'n', kids.length, 'sum', kids.reduce((a, b) => a + b, 0), 'top', kids.slice(0, 15).join(','), 'median', kids[Math.floor(kids.length / 2)])
+      { const rows3: string[] = []
+        for (const [key, t] of eng2.tiles as Map<number, Any>) { if (!t.volume) continue; const nb = t.volume.boxes.length / 6, np = t.volume.prisms.length / 24; if (nb + np < 100) continue; const ix = Math.floor(key / 65536) - 32768, iz = (key % 65536) - 32768; let lo = Infinity, hi = -Infinity; for (const h of t.samples) { lo = Math.min(lo, h); hi = Math.max(hi, h) } rows3.push(`tile(${ix},${iz}) x ${ix * 2} z ${iz * 2} boxes ${nb} prisms ${np} lo ${lo.toFixed(3)} hi ${hi.toFixed(3)}`) }
+        console.log('[BIGTILES]\n' + rows3.join('\n')) }
+      console.log('[STATICS]', JSON.stringify([...cat.entries()]), 'tiles', eng2.tiles.size)
+      if (process.env.REMOVE) {
+        let n = 0
+        for (const [key, e] of [...jw.bodies] as Any) {
+          if (!e.body.IsStatic()) continue
+          const k = tileIds.get(key) ?? (eng2.statics.ids.has(key) ? 'house-static' : 'other-static')
+          if (k + '/st' + e.body.GetShape().GetSubType() === process.env.REMOVE) { jw.bi.RemoveBody(e.id); n++ }
+        }
+        console.log('[REMOVED]', process.env.REMOVE, n)
+      }
+    }
+    let continue_ = false
+    if (process.env.QUERY && f === Number(process.env.QUERY)) {
+      const J = jw.J; const eng2 = eng as Any
+      const cat = new Map<number, string>()
+      for (const t of eng2.tiles.values() as Any) { if (t.ground != null) cat.set(t.ground, 'tile-ground'); if (t.steps != null) cat.set(t.steps, 'tile-steps'); if (t.solid != null) cat.set(t.solid, 'tile-solid') }
+      for (const k of eng2.statics.ids) cat.set(k, 'house')
+      if (process.env.ALLBODIES) {
+        jw.collideSettings.mMaxSeparationDistance = 0.02
+        jw.collideSettings.mCollectFacesMode = jw.J.ECollectFacesMode_CollectFaces
+        const rows2: string[] = []
+        for (const [key, e] of jw.bodies as Any) {
+          if (!e.body.IsActive() || e.body.IsStatic()) continue
+          const c = jw.collideCollector
+          const ts: number[] = []; let hits = 0
+          for (let rep = 0; rep < 3; rep++) { c.Reset(); jw.r1.Set(0, 0, 0); jw.v2.Set(1, 1, 1); const t0 = performance.now(); jw.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), jw.v2, e.body.GetCenterOfMassTransform(), jw.collideSettings, jw.r1, c, jw.bpFilter, jw.objFilter, jw.bodyFilter, jw.shapeFilter); ts.push(performance.now() - t0); hits = c.mHits.size() }
+          const p = e.body.GetPosition()
+          rows2.push(`${Math.min(...ts).toFixed(2)}ms user ${e.user} hits ${hits} pos ${p.GetX().toFixed(1)},${p.GetY().toFixed(2)},${p.GetZ().toFixed(1)}`)
+        }
+        console.log('[ALLBODIES]\n' + rows2.sort((a, b) => parseFloat(b) - parseFloat(a)).slice(0, 8).join('\n'))
+      }
+      const sub = process.env.WHO ? [...jw.bodies].filter(([, e]: Any) => e.user === Number(process.env.WHO)) : []
+      if (!sub[0]) continue_ = true
+      const target = (sub[0] ?? [0, null])[1] as Any
+      jw.collideSettings.mMaxSeparationDistance = 0.02
+      for (const want of continue_ ? [] : ['all', 'tile-solid', 'tile-ground', 'tile-steps', 'house']) {
+        const filt = new J.BodyFilterJS()
+        filt.ShouldCollide = (id: number) => { const k = J.wrapPointer(id, J.BodyID).GetIndexAndSequenceNumber(); const c = cat.get(k) ?? 'other'; return want === 'all' ? true : c === want }
+        filt.ShouldCollideLocked = () => true
+        const c = jw.collideCollector
+        const ts: number[] = []
+        let hits = 0
+        for (let rep = 0; rep < 8; rep++) {
+          c.Reset(); jw.r1.Set(0, 0, 0); jw.v2.Set(1, 1, 1)
+          const t0 = performance.now()
+          jw.system.GetNarrowPhaseQuery().CollideShape(target.body.GetShape(), jw.v2, target.body.GetCenterOfMassTransform(), jw.collideSettings, jw.r1, c, jw.bpFilter, jw.objFilter, filt, jw.shapeFilter)
+          ts.push(performance.now() - t0); hits = c.mHits.size()
+        }
+        console.log('[QUERY]', 'f' + f, 'user', process.env.WHO, want, 'median ms', ts.sort((a, b) => a - b)[4]!.toFixed(2), 'hits', hits)
+      }
+    }
+    refreshSolids()
+    if (process.env.STEPTEST && f === 125) {
+      const timeSteps = (label: string): void => { const ts: number[] = []; for (let k = 0; k < Number(process.env.NSTEPS ?? 4); k++) { const t0 = performance.now(); jw.stepFixed(jw.fixedStep); ts.push(performance.now() - t0) } console.log('[STEPTEST]', label, ts.map((x) => x.toFixed(1)).join(' ')) }
+      if (process.env.TRACE) {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const out: string[] = []
+        for (let k = 0; k < 24; k++) {
+          CNT.val = 0; CNT.per = 0; CNT.add = 0
+          const t0 = performance.now(); jw.stepFixed(jw.fixedStep); const ms = performance.now() - t0
+          const p2 = roof.body.GetPosition(); const v = roof.body.GetLinearVelocity(); const w = roof.body.GetAngularVelocity()
+          out.push(`${k}: ${ms.toFixed(0)}ms val${CNT.val} per${CNT.per} add${CNT.add} y${p2.GetY().toFixed(3)} v${Math.hypot(v.GetX(), v.GetY(), v.GetZ()).toFixed(2)} w${Math.hypot(w.GetX(), w.GetY(), w.GetZ()).toFixed(2)} act${jw.system.GetNumActiveBodies(jw.J.EBodyType_RigidBody)}`)
+        }
+        console.log('[TRACE]\n' + out.join('\n'))
+      }
+      timeSteps('baseline')
+      const mode = process.env.STEPTEST
+      if (mode === 'roof') { for (const [key, e] of [...jw.bodies] as Any) if (e.user === 1) jw.bi.RemoveBody(e.id); timeSteps('roof removed') }
+      if (mode === 'solids') { let n = 0; for (const [, t] of (eng as Any).tiles as Map<number, Any>) { if (t.solid == null) continue; const e = jw.bodies.get(t.solid); if (e) { jw.bi.RemoveBody(e.id); n++ } } timeSteps('solids removed ' + n) }
+      if (mode === 'boards') { for (const [, e] of [...jw.bodies] as Any) if (e.user === 16 || e.user === 17) jw.bi.RemoveBody(e.id); timeSteps('boards removed') }
+      if (mode.startsWith('keep')) {
+        const K = Number(mode.slice(4)); let n = 0; let kept = 0
+        // keep the K solids nearest the roof's centre
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any; const rp = roof.body.GetPosition()
+        const list: Array<{ d: number; id: Any }> = []
+        for (const [key, t] of (eng as Any).tiles as Map<number, Any>) { if (t.solid == null) continue; const ix = Math.floor(key / 65536) - 32768, iz = (key % 65536) - 32768; const e = jw.bodies.get(t.solid); if (e) list.push({ d: Math.hypot((ix + 0.5) * 2 - rp.GetX(), (iz + 0.5) * 2 - rp.GetZ()), id: e }) }
+        list.sort((a, b) => a.d - b.d)
+        for (const [i, x] of list.entries()) { if (i < K) { kept++; continue } jw.bi.RemoveBody(x.id.id); n++ }
+        timeSteps(`kept ${kept} removed ${n}`)
+      }
+      if (mode.startsWith('set:')) {
+        const [name, val] = mode.slice(4).split('=')
+        const ps = jw.system.GetPhysicsSettings(); const before = ps[name!]
+        ps[name!] = val === 'true' ? true : val === 'false' ? false : Number(val)
+        jw.system.SetPhysicsSettings(ps)
+        timeSteps(`${name} ${before} -> ${val}`)
+      }
+      if (mode.startsWith('only:')) {
+        // keep only the listed children of the roof body: swap its shape for a compound of those (physics wrong, timing only)
+        const keep = new Set(mode.slice(5).split(',').map(Number))
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const J = jw.J
+        const inner = J.castObject(roof.body.GetShape(), J.OffsetCenterOfMassShape).GetInnerShape()
+        const comp = J.castObject(inner, J.CompoundShape)
+        const settings = new J.StaticCompoundShapeSettings()
+        for (let i = 0; i < comp.GetNumSubShapes(); i++) { if (!keep.has(i)) continue; const sub = comp.GetSubShape(i); settings.AddShapeShape(sub.GetPositionCOM(), sub.GetRotation(), sub.mShape, 0) }
+        const res = settings.Create(); let sh = res.Get(); sh.AddRef()
+        if (process.env.WRAP) {
+          const c = sh.GetCenterOfMass()
+          const off = new J.Vec3(-c.GetX(), -c.GetY(), -c.GetZ())
+          const st2 = new J.OffsetCenterOfMassShapeSettings(off, settings)
+          const r2 = st2.Create(); sh = r2.Get(); sh.AddRef()
+        }
+        jw.bi.SetShape(roof.id, sh, false, J.EActivation_Activate)
+        timeSteps('only ' + [...keep].join(','))
+      }
+      if (mode.startsWith('lift')) {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const J = jw.J; const dy = Number(mode.slice(4))
+        const p0 = roof.body.GetPosition()
+        const np = new J.RVec3(p0.GetX(), p0.GetY() + dy, p0.GetZ())
+        jw.bi.SetPosition(roof.id, np, J.EActivation_Activate)
+        jw.bi.SetLinearVelocity(roof.id, new J.Vec3(0, 0, 0))
+        timeSteps('lift ' + dy)
+      }
+      if (mode === 'reset') {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        jw.bi.SetShape(roof.id, roof.body.GetShape(), false, jw.J.EActivation_Activate)
+        timeSteps('same shape set again')
+      }
+      if (mode.startsWith('poke')) {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const J = jw.J
+        const how = mode.slice(4)
+        if (how === 'sleep') { jw.bi.DeactivateBody(roof.id); jw.bi.ActivateBody(roof.id) }
+        if (how === 'pos') { const p = roof.body.GetPosition(); jw.bi.SetPosition(roof.id, new J.RVec3(p.GetX(), p.GetY(), p.GetZ()), J.EActivation_Activate) }
+        if (how === 'remove') { const p = roof.body.GetPosition(); jw.bi.RemoveBody(roof.id); jw.bi.AddBody(roof.id, J.EActivation_Activate) }
+        timeSteps('poke ' + how)
+      }
+      if (mode === 'fresh') {
+        let n = 0
+        const e2 = eng as Any
+        for (const [, t] of e2.tiles as Map<number, Any>) {
+          if (t.solid == null) continue
+          const old = t.solid
+          const id = e2.world.createBody({ shape: e2.solidShape(t.volume), motion: 'static', position: [0, 0, 0], material: e2.constructor.GROUND ?? { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0, rolling: 0.015 }, user: 0 })
+          e2.world.removeBody(old); t.solid = id; n++
+        }
+        timeSteps('fresh solids ' + n)
+      }
+      if (mode === 'alone') {
+        for (const [, e] of [...jw.bodies] as Any) if (e.user !== 1 && !e.body.IsStatic() && e.body.IsActive()) jw.bi.DeactivateBody(e.id)
+        timeSteps('pole alone, act ' + jw.system.GetNumActiveBodies(jw.J.EBodyType_RigidBody))
+      }
+      if (mode === 'still') {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const J = jw.J
+        jw.bi.SetLinearVelocity(roof.id, new J.Vec3(0, 0, 0)); jw.bi.SetAngularVelocity(roof.id, new J.Vec3(0, 0, 0))
+        timeSteps('velocity zeroed')
+      }
+      if (mode === 'kids') {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const J = jw.J
+        const inner = J.castObject(roof.body.GetShape(), J.OffsetCenterOfMassShape).GetInnerShape()
+        const comp = J.castObject(inner, J.CompoundShape)
+        const rows4: string[] = []
+        for (let i = 0; i < comp.GetNumSubShapes(); i++) {
+          const sub = comp.GetSubShape(i); const sh = sub.mShape; const bb = sh.GetLocalBounds(); const a = bb.mMin, b = bb.mMax; const q = sub.GetRotation(); const p2 = sub.GetPositionCOM()
+          rows4.push(`#${i} st${sh.GetSubType()} size ${(b.GetX() - a.GetX()).toFixed(2)}x${(b.GetY() - a.GetY()).toFixed(2)}x${(b.GetZ() - a.GetZ()).toFixed(2)} pos ${p2.GetX().toFixed(1)},${p2.GetY().toFixed(1)},${p2.GetZ().toFixed(1)} q ${q.GetX().toFixed(2)},${q.GetY().toFixed(2)},${q.GetZ().toFixed(2)},${q.GetW().toFixed(2)}`)
+        }
+        console.log('[STEPTEST] roof kids\n' + rows4.join('\n'))
+      }
+      if (mode === 'rev') {
+        const roof = [...jw.bodies.values()].find((e: Any) => e.user === 1) as Any
+        const rid = roof.key
+        const J = jw.J
+        jw.collideSettings.mMaxSeparationDistance = 0.02
+        jw.collideSettings.mCollectFacesMode = J.ECollectFacesMode_CollectFaces
+        const filt = new J.BodyFilterJS(); filt.ShouldCollide = (id: number) => J.wrapPointer(id, J.BodyID).GetIndexAndSequenceNumber() === rid; filt.ShouldCollideLocked = () => true
+        const ts: number[] = []
+        let hitsTotal = 0
+        for (const [, t] of (eng as Any).tiles as Map<number, Any>) {
+          if (t.solid == null) continue; const e = jw.bodies.get(t.solid); if (!e) continue
+          const c = jw.collideCollector; c.Reset(); jw.r1.Set(0, 0, 0); jw.v2.Set(1, 1, 1)
+          const t0 = performance.now()
+          jw.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), jw.v2, e.body.GetCenterOfMassTransform(), jw.collideSettings, jw.r1, c, jw.bpFilter, jw.objFilter, filt, jw.shapeFilter)
+          ts.push(performance.now() - t0); hitsTotal += c.mHits.size()
+        }
+        ts.sort((a, b) => a - b)
+        console.log('[STEPTEST] reversed: tiles', ts.length, 'sum', ts.reduce((a, b) => a + b, 0).toFixed(1), 'max', ts[ts.length - 1]!.toFixed(2), 'hits', hitsTotal)
+      }
+      if (mode === 'ground') { let n = 0; for (const [, t] of (eng as Any).tiles as Map<number, Any>) { if (t.ground == null) continue; const e = jw.bodies.get(t.ground); if (e) { jw.bi.RemoveBody(e.id); n++ } } timeSteps('grounds removed ' + n) }
+    }
+    if (process.env.REMBOX && f === 122) {
+      const [bx0, bx1, bz0, bz1] = process.env.REMBOX.split(',').map(Number) as [number, number, number, number]
+      let n = 0
+      const only = process.env.REMLIST ? new Set(process.env.REMLIST.split(';')) : null
+      for (const [key, t] of (eng as Any).tiles as Map<number, Any>) {
+        if (t.solid == null) continue
+        const ix = Math.floor(key / 65536) - 32768, iz = (key % 65536) - 32768
+        const cx = (ix + 0.5) * 2, cz = (iz + 0.5) * 2
+        if (cx < bx0 || cx > bx1 || cz < bz0 || cz > bz1) continue
+        if (process.env.LISTONLY) { console.log('[TILE]', ix, iz); continue }
+        if (only && !only.has(`${ix},${iz}`)) continue
+        const e = jw.bodies.get(t.solid); if (e) { jw.bi.RemoveBody(e.id); n++ }
+      }
+      console.log('[REMBOX]', n)
+    }
+    const before = LABELS.map((l) => ACC[l] ?? 0)
+    const pf = process.env.PF ? process.env.PF.split(',').map(Number) : []
+    const prof1 = pf.includes(f)
+    if (prof1) { post('Profiler.enable'); post('Profiler.setSamplingInterval', { interval: 50 }); post('Profiler.start') }
+    const s = performance.now(); room.update(dt); const ms = performance.now() - s
+    if (prof1) { let pr: Any = null; session.post('Profiler.stop' as Any, (_e: Any, r: Any) => { pr = r.profile }); console.log('[PF]', f, ms.toFixed(1), '\n' + incl(pr, 45).filter((l) => l.startsWith('INCL')).join('\n')) }
+    if (process.env.DUMP && f === Number(process.env.DUMP)) {
+      const out: string[] = []
+      for (const [key, e] of jw.bodies as Any) {
+        if (!e.body.IsActive() || e.body.IsStatic()) continue
+        const bb = e.body.GetWorldSpaceBounds(); const mn = bb.mMin, mx = bb.mMax
+        const sh = e.body.GetShape()
+        const p = e.body.GetPosition()
+        out.push(`key${key} ext ${(mx.GetX() - mn.GetX()).toFixed(2)}x${(mx.GetY() - mn.GetY()).toFixed(2)}x${(mx.GetZ() - mn.GetZ()).toFixed(2)} pos ${p.GetX().toFixed(1)},${p.GetY().toFixed(2)},${p.GetZ().toFixed(1)} mass ${(1 / e.body.GetMotionProperties().GetInverseMass()).toFixed(1)} partners ${jw.partners.get(key)?.size ?? 0} v ${Math.hypot(e.body.GetLinearVelocity().GetX(), e.body.GetLinearVelocity().GetY(), e.body.GetLinearVelocity().GetZ()).toFixed(2)} st${sh.GetSubType()} ${(() => { try { let x = sh; if (x.GetSubType() === 11) x = jw.J.castObject(x, jw.J.OffsetCenterOfMassShape).GetInnerShape(); const st = x.GetSubType(); if (st === 7 || st === 8) return 'children ' + jw.J.castObject(x, jw.J.CompoundShape).GetNumSubShapes(); return 'inner' + st } catch (er) { return 'err ' + er } })()} user ${e.user}`)
+      }
+      console.log('[DUMP]', f, '\n' + out.join('\n'))
+    }
+    const active = jw.system.GetNumActiveBodies(jw.J.EBodyType_RigidBody)
+    let info = ''
+    if (ms > 60) {
+      const kinds = new Map<string, number>()
+      for (const e of jw.bodies.values() as Any) { if (!e.body.IsActive()) continue; const sh = e.body.GetShape(); const k = `${e.layer}/${e.body.IsStatic() ? 's' : 'd'}/st${sh.GetSubType()}/${sh.GetType()}`; kinds.set(k, (kinds.get(k) ?? 0) + 1) }
+      info = JSON.stringify([...kinds.entries()])
+    }
+    info += ` val ${CNT.val} per ${CNT.per} add ${CNT.add}`; CNT.val = 0; CNT.per = 0; CNT.add = 0
+    rows.push({ f, ms, stage: LABELS.map((l, i) => (ACC[l] ?? 0) - before[i]!), active, info })
+  }
+  const digest = room.renderer.pieces().map((pc: Any) => `${pc.objectId}:${pc.root.position.x.toFixed(4)},${pc.root.position.y.toFixed(4)},${pc.root.position.z.toFixed(4)}`).sort().join(' ')
+  let prof: Any = null
+  if (profile) session.post('Profiler.stop' as Any, (_e: Any, r: Any) => { prof = r.profile })
+  session.disconnect()
+  return { rows, prof, digest, stats }
+}
+
+const incl = (prof: Any, top: number): string[] => {
+  const byId = new Map<number, Any>(prof.nodes.map((n: Any) => [n.id, n]))
+  const dt = prof.timeDeltas as number[]
+  const selfById = new Map<number, number>()
+  prof.samples.forEach((id: number, i: number) => selfById.set(id, (selfById.get(id) ?? 0) + (dt[i] ?? 0) / 1000))
+  const parent = new Map<number, number>()
+  for (const n of prof.nodes as Any[]) for (const c of (n.children ?? []) as number[]) parent.set(c, n.id)
+  const inc = new Map<string, number>()
+  const self = new Map<string, number>()
+  for (const [id, t] of selfById) {
+    const n0 = byId.get(id)!
+    const k0 = `${n0.callFrame.functionName || '(anon)'} ${String(n0.callFrame.url).split('/').slice(-2).join('/')}:${n0.callFrame.lineNumber}`
+    self.set(k0, (self.get(k0) ?? 0) + t)
+    const seen = new Set<string>()
+    for (let cur: number | undefined = id; cur !== undefined; cur = parent.get(cur)) {
+      const n = byId.get(cur)!; const k = `${n.callFrame.functionName || '(anon)'} ${String(n.callFrame.url).split('/').slice(-2).join('/')}:${n.callFrame.lineNumber}`
+      if (seen.has(k)) continue
+      seen.add(k); inc.set(k, (inc.get(k) ?? 0) + t)
+    }
+  }
+  const a = [...inc.entries()].filter(([k]) => !/^(\(root\)|\(program\)|post |once|fn |js-to-wasm|\(anon\) .*probe)/.test(k)).sort((x, y) => y[1] - x[1]).slice(0, top).map(([k, v]) => `INCL ${v.toFixed(1)}ms ${k}`)
+  const s = [...self.entries()].sort((x, y) => y[1] - x[1]).slice(0, 15).map(([k, v]) => `SELF ${v.toFixed(1)}ms ${k}`)
+  return [...a, ...s]
+}
+
+describe.skipIf(!IS_JOLT)('probe spikes', () => {
+  for (const kind of ['blast', 'hammer'] as const)
+    it(kind, () => {
+      const dt = Number(process.env.DT ?? 1 / 60)
+      const frames = Number(process.env.FRAMES ?? 240)
+      const runs = Number(process.env.RUNS ?? 3)
+      const profile = !!process.env.PROFILE
+      for (let r = 0; r < runs; r++) {
+        const { rows, prof, digest, stats } = once(kind, dt, frames, profile)
+        const ms = rows.map((x) => x.ms)
+        const worst = [...rows].sort((a, b) => b.ms - a.ms).slice(0, 6)
+        const kitWorst = [...rows].sort((a, b) => (b.ms - b.stage[1]!) - (a.ms - a.stage[1]!)).slice(0, 8)
+        console.log('[KITWORST]', kind, 'frame total | jolt step | kit remainder\n' + kitWorst.map((w) => `f${w.f} ${w.ms.toFixed(1)} | ${w.stage[1]!.toFixed(1)} | ${(w.ms - w.stage[1]!).toFixed(1)} createBody ${w.stage[2]!.toFixed(1)} setShape ${w.stage[4]!.toFixed(1)} upd ${w.stage[5]!.toFixed(1)}`).join('\n'))
+        console.log('[SPIKE]', kind, 'run', r, 'p50', pct(ms, 0.5).toFixed(2), 'p99', pct(ms, 0.99).toFixed(1), 'max', Math.max(...ms).toFixed(1), 'over16', ms.filter((x) => x > 16).length, 'sum', ms.reduce((a, b) => a + b, 0).toFixed(0))
+        console.log('[WORST]', kind, LABELS.join(' '), '\n' + worst.map((w) => `f${w.f} ${w.ms.toFixed(1)} | ${w.stage.map((s) => s.toFixed(1)).join(' ')} | active ${w.active} ${w.info}`).join('\n'))
+        console.log('[PRUNE]', process.env.PRUNE, JSON.stringify(stats))
+        console.log('[DIGEST]', kind, createHash('md5').update(digest).digest('hex'), digest.split(' ').length)
+        if (process.env.POSES) console.log('[POSES]', digest)
+        console.log('[HEAD]', kind, rows.slice(0, 12).map((x) => x.ms.toFixed(0)).join(' '))
+        if (process.env.SERIES) console.log('[SERIES]', rows.map((x) => `${x.f}:${x.ms.toFixed(0)}/${x.active}${x.info.replace(/.*(val.*)/, ' $1')}`).join(' '))
+        if (prof && r === runs - 1) console.log('[PROF]', kind, '\n' + incl(prof, 50).join('\n'))
+      }
+    })
+})

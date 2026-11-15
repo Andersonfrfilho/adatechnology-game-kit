@@ -22,6 +22,8 @@ export interface EnginePieceOptions {
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
+  /** Lay the ground under each part box of a piece of several parts, not under the box around all of them (default off: the same tiles as before). */
+  readonly tilesUnderParts?: boolean
 }
 
 /** A piece's box seen from above (`EnginePieces.footprint`). */
@@ -188,6 +190,8 @@ export class EnginePieces {
   private readonly u: THREE_NS.Vector3
   private readonly w: THREE_NS.Vector3
   private readonly turn3: THREE_NS.Quaternion
+  private readonly partQuaternion: THREE_NS.Quaternion
+  private readonly partCentre: THREE_NS.Vector3
 
   constructor(
     THREE: typeof THREE_NS,
@@ -198,6 +202,8 @@ export class EnginePieces {
     this.u = new THREE.Vector3()
     this.w = new THREE.Vector3()
     this.turn3 = new THREE.Quaternion()
+    this.partQuaternion = new THREE.Quaternion()
+    this.partCentre = new THREE.Vector3()
     this.statics = new EngineStatics(world, GROUND)
   }
 
@@ -748,8 +754,24 @@ export class EnginePieces {
       for (let stop = 0; stop <= stops; stop++) {
         const fraction = stops === 0 ? 0 : stop / stops
         const at = stop === 0 ? c : this.u.set(x0 + (b.velocity[0] as number) * dt * fraction, y0, z0 + (b.velocity[2] as number) * dt * fraction)
-        this.layAround(this.footprint(b, at), margin)
+        this.layBeneath(b, at, margin)
       }
+    }
+  }
+
+  /** The tiles under what the piece is made of: with `tilesUnderParts`, its parts' boxes where it has them (a pole with its wires is 23 m across and mostly air); else its one box. */
+  private layBeneath(b: PieceBody, at: THREE_NS.Vector3, margin: number): void {
+    const parts = b.partBoxes
+    if (!this.o.tilesUnderParts || b.round || !parts || parts.length === 0) {
+      this.layAround(this.footprint(b, at), margin)
+      return
+    }
+    const q = b.root.quaternion
+    for (const part of parts) {
+      this.partCentre.set(part.center[0], part.center[1], part.center[2]).applyQuaternion(q).add(at)
+      this.partQuaternion.copy(q)
+      if (part.rotation) this.partQuaternion.multiply(this.turn3.set(part.rotation[0], part.rotation[1], part.rotation[2], part.rotation[3]))
+      this.layAround(this.footprintOf(part.half, this.partQuaternion, this.partCentre), margin)
     }
   }
 
@@ -768,8 +790,10 @@ export class EnginePieces {
 
   /** The piece's box seen from above: its 8 corners in x and z, the box around them, and the directions its edges run (the axes that tell a tile apart from it). */
   private footprint(b: PieceBody, c: THREE_NS.Vector3): Footprint {
-    const q = b.root.quaternion
-    const h = b.halfExtents
+    return this.footprintOf(b.halfExtents, b.root.quaternion, c)
+  }
+
+  private footprintOf(h: Vec3, q: THREE_NS.Quaternion, c: THREE_NS.Vector3): Footprint {
     const out = this.footprintOut
     let k = 0
     out.minX = out.minZ = Infinity

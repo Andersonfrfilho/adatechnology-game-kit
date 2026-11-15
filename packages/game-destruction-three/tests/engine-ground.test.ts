@@ -271,4 +271,39 @@ describe.skipIf(!IS_JOLT)('solid ground in the engine', () => {
     for (let d = -22.6; d <= 22.6; d += 0.5) expect(laid(d * along, -d * along) || laid(d * along, d * along)).toBe(true)
     expect(piece.mass).toBe(12)
   })
+
+  it('with tilesUnderParts, a piece of two far parts (a pole and the wire span it hung) lays the tiles under each part, not the 20 m of ground between them (T3.8v)', () => {
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), tilesUnderParts: true })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.02, 0)
+    const piece = system.create('span', root, [10.1, 0.02, 1], new THREE.Vector3(), 9)
+    piece.partBoxes = [
+      { center: [-10, 0, 0], half: [0.1, 0.02, 0.1] },
+      { center: [10, 0, 0], half: [0.1, 0.02, 0.1] },
+    ]
+    system.update(1 / 60)
+    const tiles = (system as unknown as { engine: { tiles: Map<number, unknown> } }).engine.tiles
+    const laid = (x: number, z: number): boolean => tiles.has((Math.floor(x / 2) + 32768) * 65536 + (Math.floor(z / 2) + 32768))
+    expect(laid(-10, 0)).toBe(true)
+    expect(laid(10, 0)).toBe(true)
+    expect(laid(0, 0)).toBe(false)
+    expect(laid(-5, 0)).toBe(false)
+    // the box of the whole piece, 20 m by 2 m, was 11 tiles a row and more: two parts of 0.2 m are a few tiles each
+    expect(tiles.size).toBeLessThan(14)
+  })
+
+  it('without tilesUnderParts the same piece lays the ground under the box of the whole piece, as it always did', () => {
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.02, 0)
+    const piece = system.create('span', root, [10.1, 0.02, 1], new THREE.Vector3(), 9)
+    piece.partBoxes = [
+      { center: [-10, 0, 0], half: [0.1, 0.02, 0.1] },
+      { center: [10, 0, 0], half: [0.1, 0.02, 0.1] },
+    ]
+    system.update(1 / 60)
+    const tiles = (system as unknown as { engine: { tiles: Map<number, unknown> } }).engine.tiles
+    expect(tiles.has((Math.floor(0 / 2) + 32768) * 65536 + (Math.floor(0 / 2) + 32768))).toBe(true)
+    expect(tiles.size).toBeGreaterThan(20)
+  })
 })

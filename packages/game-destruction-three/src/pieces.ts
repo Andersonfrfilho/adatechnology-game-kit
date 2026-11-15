@@ -41,6 +41,8 @@ export interface PieceSystemOptions {
    * sleeps under it too. Default: no limit.
    */
   maxAwake?: number
+  /** Engine only: lay the ground under each part box of a piece of several parts, not under the box around all of them (default off; `RendererOptions.tilesUnderParts`). */
+  tilesUnderParts?: boolean
   /**
    * The far and old rule and the cap of pieces alive (`BlastDebrisOptions`): a piece at rest, older than `far.age` seconds and farther than `far.distance` from `focus`, sleeps or is
    * handed to `onFade`; over `maxLive` pieces the far and old ones at rest go first, then the oldest, by `onFade`. Default: none.
@@ -314,6 +316,7 @@ export class PieceSystem {
           onSlam: o.onSlam,
           onKnock: o.onKnock,
           onHardLanding: o.onHardLanding,
+          ...(o.tilesUnderParts ? { tilesUnderParts: true } : {}),
         })
       : null
     if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)

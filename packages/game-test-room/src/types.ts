@@ -353,6 +353,8 @@ export interface TestRoomOptions {
     settledBatches?: SettledBatchOptions | false
     /** What a blast does to its debris (`RendererOptions.blastDebris`: wake in batches by the measured step cost, how many pieces enter physics, far and old debris); omitted, off. `{}` takes the defaults; the player is the camera. */
     blast?: BlastDebrisOptions
+    /** Lay the engine's ground under each part of a loose piece, not under the box of the whole piece (`RendererOptions.tilesUnderParts`; default off). */
+    tilesUnderParts?: boolean
   }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
