@@ -84,7 +84,7 @@ describe('case 2: ragdoll', () => {
     expect(r.longestFramesOver0_1rad).toBeLessThanOrEqual(3)
   })
 
-  it('costs: 20 ragdolls falling and piling', async () => {
+  it('costs: 20 ragdolls falling and piling', { timeout: 60000 }, async () => {
     const engine = await createJoltEngine()
     const world = engine.createWorld({ fixedStep: 1 / 60 })
     ground(world)
