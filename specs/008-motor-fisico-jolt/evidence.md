@@ -2371,4 +2371,4 @@ T3.8b: blast max 98–315 ms, despertar 43–88 ms. Agora (a) blast max 121–30
 5. Frame max do Jolt de 120 a 320 ms ainda no despertar do blast e do martelo (T3.8b: 98–315 ms): sem avanço.
 6. O solver próprio (c) reprova C1, C3 e C4 como antes.
 
-Veredito: **a T3.8 continua sem ✅**: (a) passa 1 de 10 rodadas; nenhum critério isolado fecha 10 de 10 além de C4 e `fellThrough`.
+Veredito: **a T3.8 continua sem ✅**: (a) passa 1 de 10 rodadas; em (a) só C4 e `fellThrough` fecham 10 de 10 (C2 fecha 10 de 10 em (b)).
