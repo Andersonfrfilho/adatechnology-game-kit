@@ -2127,3 +2127,61 @@ Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0, pnpm 10.28.2. Bra
 | `pnpm check:layers` | sem violações novas |
 
 Nenhum golden mudou: o assentamento do entulho só acorda o que está perto, e nenhuma cena gravada tem terreno com entulho assentando ao lado de peça dormindo. Nenhuma regravação.
+
+
+## T3.8r — peças apoiadas nos restos fixos (C1) (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0, pnpm 10.28.2. Branch `fix/pecas-sobre-restos` (sobre `fix/canos-parede-etapas` `3cfa9229`: main #302 a #306, fuste do poste, terreno que assenta avisa o motor, canos de parede em etapas e soleiras). Navegador das rodadas: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo. Nenhuma tolerância, régua, critério nem teste foi afrouxado ou removido.
+
+### 1. A pergunta: sobre quais fixos o poste está apoiado quando ganha energia?
+Reprodução sem navegador, como a T3.8o (`createTestRoom` + módulo da planta, Jolt, `single_storey_a`, semente 1, etapas, C4 a 2,5 m da casa; sonda copiada de `decision/probes/t38o/probe-d8-wake.test.ts.txt` para `tests/`, com sondas a mais: `penetration` por quadro, `pairLog` classificado, `setPose`/`setVelocity`/`addImpulse` do poste embrulhados com a energia antes e depois, energia por passo fixo). Sem código de sonda commitado.
+
+- **Os fixos que o poste toca ao ganhar energia não eram o problema.** Apoiado, o poste fica nas malhas do telhado (`roof_a_7:0`, `roof_a_9:*`, `roof_a_4:*`) e nas lajes do forro (`slab_ceiling_p0:0`, `:4`), com profundidade de repouso de 15 a 20 mm contra os fixos. Em nenhum dos quadros de ganho um fixo foi criado, trocado ou removido (`EngineStatics.changed` vazio em todos): **as hipóteses (a) e (b) do pedido não se confirmam**. Os ganhos de 2 a 4 kg·m que a T3.8o viu "apoiado, velocidade 0, 3 a 4 mm por quadro" existem, mas são o menor dos dois ganhos abaixo (1 a 3 kg·m, à altura do poste de 1010 kg, e só no empoleirado no telhado).
+- **A causa do ganho grande é do kit, não do Jolt: `EnginePieces.groundChanged` levantava o poste.** Instrumentado: a cada `onDeform` do entulho que assenta (T3.8p, #306), `PieceSystem.wakeRegion` chama `groundChanged(x, z, raio)` e, para toda peça cujo alcance (raio do disco + a diagonal da caixa da peça: 11,6 m no poste, que carrega 22 m de fio) toca o disco, `underGround(b)` mede os cantos de todas as caixas contra `groundAt`; se algum canto está mais de `SINK` (5 mm) sob o chão novo, o kit faz `root.position.y += under`: um teleporte para cima, sem velocidade. Medido no poste (`obj_1`, semente 3 da sonda): `under` 6,07 mm e 8,11 mm em dois quadros seguidos, por um disco a 17 m do poste (a ponta do fio de 11 m encontrando o entulho). O `setPose` seguinte no `sync` mostrou o ganho exato: +6,14 e +8,19 kg·m (1010 kg x 6,1 e 8,1 mm). Cada subida de entulho perto de qualquer ponta do poste era uma dádiva de massa x g x subida, que a régua conta como C1 (e ela só desconta a que o kit declara em `given`: empurros e tombamento, não este levantamento).
+- **Confirmação por exclusão**: com `groundChanged` sem o levantamento (experimento, revertido), o pior ganho do poste foi de 4,0 a 7,9 kg·m (4 variantes) para 2,41 a 2,95 kg·m; com o conserto final, 2,41 a 4,0 nas 8 variantes das sondas (nenhuma acima de 5).
+- **O que o levantamento protege** (o comentário do código): uma peça enterrada fundo pelo chão que sobe, que o motor empurra devagar demais e deixa dormir no meio do caminho. Isso é para subidas de centímetros; uma sobreposição de 6 a 8 mm o contato do motor limpa dentro de um update (empurrão de 2 mm em cada uma de 2 passadas por passo, 2 a 6 passos por update).
+
+### 2. O conserto (dono: `game-destruction-three`)
+`engine-pieces.ts`, `groundChanged`: o kit só levanta a peça quando a subida passa de `ENGINE_CLEARS` = 1 cm (nova constante); até lá o contato do motor resolve, como já fazia para o que afundava menos de `SINK` (5 mm). Quatro linhas. Uma primeira versão também subtraía o quanto a peça já afundava no chão do motor (consulta `penetration` contra os ladrilhos): descartada, porque cada consulta fazia o heap do Jolt crescer em degraus de 1 MB e o teste "laying the ground again and again leaks nothing" (4096 bytes) reprovava (ela não era necessária: com 1 cm o repouso de 5 mm de uma peça pesada já não levanta).
+- **Teste** `tests/ground-rise-lift.test.ts` (Jolt; 2): uma viga de 1 t em repouso e dormindo, o chão sobe 8 mm perto de uma ponta e `wakeRegion` chama: `root.position.y` não muda (sem o conserto, falha); a 6 cm continua levantada de uma vez, como antes.
+- Changeset `peca-nao-sobe-por-assentamento-leve.md` (`game-destruction-three`, patch). Sem golden regravado.
+
+### 3. Rodadas da sala (Jolt, D4 ligada `blastDebris=1`, 5 de blast e 5 de martelo, um processo por rodada)
+`pnpm build`, `node examples/test-room/build.mjs`, e o `dist` conferido (`groundChanged` do `test-room.html` com `r<=km0||` onde `km0=.01`, em vez de `r<=0`). Sondas `decision/probes/room.js` e `drive.mjs`; JSONs em `/tmp` (rodadas `r1` a `r5`).
+
+| rodada | C1 excesso (kg·m) / pior ilha | C2 peças acima de 3,5 cm (sem a condição) | C3 (m) | C4 (s) | fellThrough | mais fundo |
+|---|---|---|---|---|---|---|
+| blast 1 | 0,58 / `obj_2` poste (1010 kg) | 0 (0) | 0,040 | 1,30 | 0 | nenhum |
+| blast 2 | 0,55 / poste | 0 (1) | 0,054 | 0,50 | 0 | nenhum |
+| blast 3 | 0,77 / poste | 0 (0) | 0,012 | 0,40 | 0 | nenhum |
+| blast 4 | 0,58 / poste | 0 (0) | 0,041 | 0,50 | 0 | nenhum |
+| blast 5 | 0,58 / poste | 0 (0) | 0,029 | 0,50 | 0 | nenhum |
+| hammer 1 | 0,00 | 0 (0) | 0,031 | 0,70 | 0 | nenhum |
+| hammer 2 | **6,82 / poste** (6,3 a 6,7 m/s, +7,83 kg·m) | 0 (1) | 0,025 | 1,45 | 0 | nenhum |
+| hammer 3 | 0,30 / `obj_3` (43 kg) e `obj_5` | 0 (1) | 0,008 | 0,60 | 0 | nenhum |
+| hammer 4 | 0,38 / `obj_5`, `obj_10` | 0 (1) | 0,032 | 1,50 | 0 | nenhum |
+| hammer 5 | 0,00 | 0 (1) | 0,009 | 1,05 | 0 | nenhum |
+
+Contra a T3.8n:
+- **C1 do poste no blast: de 4,75 a 7,41 para 0,55 a 0,77 kg·m** nas 5 rodadas (a pior ilha continua o poste; o excesso de 0,6 é +1,6 mm de altura de energia num update de uma peça de 1010 kg, a menos de 1 mm a mais que o piso de 1 mm de C1).
+- Martelo: 3 rodadas com excesso 0,00 a 0,38 (eram 5,2 a 5,9 nas duas primeiras e 0,00 nas outras); a rodada 2 (6,82) é o poste a 6,3 m/s ganhando 7,8 kg·m num update.
+- C2 condicionado: 0 em 10 de 10 (era 1 de 10). C4 no máximo 1,50 s (era 1,75). `fellThrough` 0 e nada abaixo do chão.
+- **C3 acima de 3,5 cm: 3 de 5 no blast (0,040, 0,054, 0,041), 0 de 5 no martelo** (T3.8n: 4 de 5 e 1 de 5). As peças são as mesmas de 12 a 16 kg (`obj_11` 16 kg, `obj_12` 12 kg, subidas de 9 a 32 cm com velocidade 6 a 7 m/s: lançadas pelo blast, não levantadas pelo terreno). **Não partilham a causa do poste**: o levantamento do `groundChanged` só vale para sobreposição de mais de 1 cm sob o chão, e essas peças saem voando com a onda.
+
+### 4. O que ainda reprova (C1 em 8 de 10 rodadas, 0 de 10 passam todos os critérios)
+- **Blast, poste, +1,6 mm por update (excesso 0,55 a 0,77)**: medido por passo fixo (1/120 s) na sonda: no voo do poste (tombando sobre o pé, velocidade 3,6 a 4,5 m/s, 3 a 6 quadros depois do blast) alguns passos por update ganham +0,8 a +1,7 kg·m, todos sem chamada do kit (`setPose`/`setVelocity`/`addImpulse` mudando o corpo) e sem fixo novo, no passo em que o par com um ladrilho de chão (`tile`) aparece no `pairLog`. Em Jolt isolado, o mesmo poste (mesmo compound) tombando sobre ladrilhos de 2 m ou sobre uma caixa só ganha 0 mm por update; a queda livre perde 2,0 mm por update (Euler semi-implícito, constante), sem ganho. O ganho é do contato do pé com o ladrilho a 4 m/s. **Não achei alavanca do kit**; o que sobra é de configuração do Jolt (iterações, folga, `maxPushOut` do `KIT_WORLD`, qualidade de movimento do corpo), que a spec fixa. **Parei aqui e levo ao dono**: opções (A) reportar ao poste um `given` por passo (muda a régua: não feito); (B) um poste que tomba sobre o pé como cinemático até encostar (muda o comportamento do kit); (C) subir `positionIterations`/baixar `maxPushOut` do `KIT_WORLD` (muda C1 a C10, é decisão do dono, e precisa de nova bacia e de nova rodada de B5/B6).
+- **Martelo 2, poste +7,83 kg·m a 6,3 m/s**: não investigado a fundo (um caso em dez); a sonda sem navegador não o reproduziu em 4 variantes.
+- **Peças pequenas de C3** (blast 1, 2 e 4): lançadas pela onda com 6 a 7 m/s; não investigadas.
+
+### 5. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `game-floorplan-three` próprio | **1184 passam, 0 falhas** (exact-golden 44/44) |
+| `game-floorplan-three` Jolt | 1184 passam, **4 falhas, as da linha de base**: 3 `destruction/*` do golden exato e `bookcase-topple` |
+| `game-destruction-three` próprio | **410 passam, 0 falhas** (145 pulados) |
+| `game-destruction-three` Jolt | 492 passam, **só as 2 `rolling` conhecidas** (lata no ar com restituição, cinquenta latas); o `engine-ground` "leaks nothing" reprovou na primeira versão do conserto (ver 2) e passa na final |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**; `worst {"worstC1":-0.00766,"worstC2":0,"worstC2Unconditioned":0.00768,"worstC3":0.02287,"worstC4":1.5167,"worstDeepest":-0.03787,"fellThrough":0}` |
+| `eslint` nos arquivos mudados | sem problemas |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos, 11 pendentes conhecidos |
+| `pnpm check:layers` | sem violações novas |

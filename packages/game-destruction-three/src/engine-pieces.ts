@@ -95,6 +95,8 @@ const PROPPED_GRIP = 0.1
 /** How far (m) a new piece may reach into the ground and be left to the engine's contact (over its slop, under a thin plate's half), and how far above it one lifted is put. */
 const SINK = 0.005
 const LIFT_MARGIN = 0.001
+/** Ground that rises under a piece by up to this (m) is cleared by the engine's contact within an update (2 mm of push-out in each of 2 passes a step, 2 to 6 steps): the kit does not lift the piece. */
+const ENGINE_CLEARS = 0.01
 /** Two numbers of a pose further apart than this differ (the centre comes back through the root: equal within rounding is the same). */
 const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
 /** How many times a piece made inside fixed things is moved out of the deepest one (it may be inside two, or wedged between them). */
@@ -235,8 +237,9 @@ export class EnginePieces {
       if (b.held) continue
       const c = this.centre(b)
       if (Math.hypot(c.x - x, c.z - z) > radius + Math.hypot(...b.halfExtents)) continue
+      // lifted, a 1 t pole whose wire tip meets settling rubble would gain its weight times the rise from nowhere
       const under = this.underGround(b)
-      if (under <= 0) continue
+      if (under <= ENGINE_CLEARS) continue
       b.root.position.y += under
       b.root.updateMatrixWorld(true)
       link.groundAtSleep = NaN
