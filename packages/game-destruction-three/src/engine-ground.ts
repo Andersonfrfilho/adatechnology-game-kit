@@ -34,23 +34,74 @@ export interface GroundTile {
   readonly samples: Float64Array
 }
 
+/** A rectangle of the ground, world x and z. */
+export interface GroundRect {
+  readonly minX: number
+  readonly maxX: number
+  readonly minZ: number
+  readonly maxZ: number
+}
+
+/**
+ * The four series of samples of a tile, one after the other in `samples`: the corners, the cells' centres, the middles of the edges along x and those along z.
+ * `ox` and `oz` are where the series sits in a cell (0 or half), `width` and `rows` how many samples it has along x and along z.
+ */
+const seriesOf = (n: number): ReadonlyArray<{ offset: number; width: number; rows: number; ox: number; oz: number }> => {
+  const m = n + 1
+  return [
+    { offset: 0, width: m, rows: m, ox: 0, oz: 0 },
+    { offset: m * m, width: n, rows: n, ox: 0.5, oz: 0.5 },
+    { offset: m * m + n * n, width: n, rows: m, ox: 0.5, oz: 0 },
+    { offset: m * m + n * n + n * m, width: m, rows: n, ox: 0, oz: 0.5 },
+  ]
+}
+
+/** The `samples` array of a tile of `n` cells. */
+const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (n + 1)
+
+/**
+ * Reads the ground of the tile at (x0, z0) into `samples`: every sample, or only those a rectangle reaches (a sample a cell outside it is read too, so what the
+ * rectangle's edge touches is not left old). True when a sample read differs from the one held. A crater in a corner of a tile asks `groundAt` for the corner.
+ */
+export const readGround = (groundAt: (x: number, z: number) => number, samples: Float64Array, x0: number, z0: number, size: number, rect?: GroundRect): boolean => {
+  const n = Math.round(size / GROUND_CELL)
+  const c = size / n
+  let changed = false
+  for (const { offset, width, rows, ox, oz } of seriesOf(n)) {
+    const i0 = rect ? Math.max(0, Math.floor((rect.minX - x0) / c - ox)) : 0
+    const i1 = rect ? Math.min(width - 1, Math.ceil((rect.maxX - x0) / c - ox)) : width - 1
+    const j0 = rect ? Math.max(0, Math.floor((rect.minZ - z0) / c - oz)) : 0
+    const j1 = rect ? Math.min(rows - 1, Math.ceil((rect.maxZ - z0) / c - oz)) : rows - 1
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        const h = groundAt(x0 + (i + ox) * c, z0 + (j + oz) * c)
+        if (samples[offset + j * width + i] !== h) changed = true
+        samples[offset + j * width + i] = h
+      }
+    }
+  }
+  return changed
+}
+
 export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: number, z0: number, size: number): GroundTile => {
+  const samples = new Float64Array(sampleCount(Math.round(size / GROUND_CELL)))
+  readGround(groundAt, samples, x0, z0, size)
+  return shapeGround(samples, x0, z0, size, true)
+}
+
+/**
+ * The tile the samples make: level, or its height field, step boxes and (when `withSolid`; else `NO_SOLID`, for a caller that may not need it) the solid under it.
+ * Pure of the samples, so a tile made from samples patched in place is the one made from all of them read again.
+ */
+export const shapeGround = (samples: Float64Array, x0: number, z0: number, size: number, withSolid: boolean): GroundTile => {
   const n = Math.round(size / GROUND_CELL)
   const c = size / n
   const m = n + 1
-  const corners = new Float64Array(m * m)
-  const centres = new Float64Array(n * n)
-  const midX = new Float64Array(n * m)
-  const midZ = new Float64Array(m * n)
-  for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) corners[j * m + i] = groundAt(x0 + i * c, z0 + j * c)
-  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) centres[j * n + i] = groundAt(x0 + (i + 0.5) * c, z0 + (j + 0.5) * c)
-  for (let j = 0; j <= n; j++) for (let i = 0; i < n; i++) midX[j * n + i] = groundAt(x0 + (i + 0.5) * c, z0 + j * c)
-  for (let j = 0; j < n; j++) for (let i = 0; i <= n; i++) midZ[j * m + i] = groundAt(x0 + i * c, z0 + (j + 0.5) * c)
-  const samples = new Float64Array(corners.length + centres.length + midX.length + midZ.length)
-  samples.set(corners, 0)
-  samples.set(centres, corners.length)
-  samples.set(midX, corners.length + centres.length)
-  samples.set(midZ, corners.length + centres.length + midX.length)
+  const [cornerSeries, centreSeries, midXSeries, midZSeries] = seriesOf(n)
+  const corners = samples.subarray(cornerSeries!.offset, centreSeries!.offset)
+  const centres = samples.subarray(centreSeries!.offset, midXSeries!.offset)
+  const midX = samples.subarray(midXSeries!.offset, midZSeries!.offset)
+  const midZ = samples.subarray(midZSeries!.offset)
   let low = Infinity
   let high = -Infinity
   for (const h of samples) {
@@ -106,12 +157,5 @@ export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: 
       i = end
     }
   }
-  return { heights, cells: n, boxes, solid: buildSolidVolume(heights, n, x0, z0, c), level: null, samples }
-}
-
-/** The same samples: the ground of the tile did not change. */
-export const sameGround = (a: Float64Array, b: Float64Array): boolean => {
-  if (a.length !== b.length) return false
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
-  return true
+  return { heights, cells: n, boxes, solid: withSolid ? buildSolidVolume(heights, n, x0, z0, c) : NO_SOLID, level: null, samples }
 }
