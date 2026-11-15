@@ -4,7 +4,7 @@ import * as THREE from 'three'
 
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece } from '../src/types'
-import { touchingPairsOf, trackContactGraph } from './contact-graph'
+import { createFirstContactTracker, touchingPairsOf, trackContactGraph } from './contact-graph'
 import { EnergyRuler, energyHeightOf } from './energy-ruler'
 import type { EnergySample } from './energy-ruler'
 import { FakeWorld, partState } from './fake-world'
@@ -96,13 +96,14 @@ export const bowl = (seed: number, dt: number): BowlResult => {
   const ruler = new EnergyRuler()
   // on the Jolt adapter the islands are the contact graph of the frame; on the kit's own solver (no log) they are the bounding-sphere merge, as before
   trackContactGraph(renderer)
+  const firstContactOf = createFirstContactTracker()
   const snapshot = (): EnergySample[] => pieces.map((p) => sampleOf(p, v, q, groundAt))
   const frame = (wake: boolean): void => {
     if (wake) sys.wakeRegion(0, 0, 2)
     const before = snapshot()
     t += dt
     renderer.update(dt)
-    ruler.step(before, snapshot(), dt, wake ? 'wake' : 'none', { touching: touchingPairsOf(renderer) })
+    ruler.step(before, snapshot(), dt, wake ? 'wake' : 'none', { touching: touchingPairsOf(renderer), firstContact: firstContactOf(renderer) })
   }
   for (let i = 0; i < Math.round(4 / dt); i++) frame(true)
   for (let i = 0; i < Math.round(3 / dt); i++) {

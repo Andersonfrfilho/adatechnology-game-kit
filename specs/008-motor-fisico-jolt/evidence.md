@@ -2485,3 +2485,150 @@ O ganho de máximo e de p99 que o par intercalado sem navegador mostra (30 a 45%
 2. **O quadro do corte da casa (f0, 57–66 ms) continua inteiro.** São `fitOrientedBoxes` (26 ms: cada parte nova da casa ganha as caixas que a desenham; o ajuste só repetiria a entrada se o quadro da peça nova fosse bit a bit o da casa, o que não se garante) e o `rebuildHost` por parte extraída (14 ms, 12 deles `computeVertexNormals` da malha inteira da casa, uma vez por parte). Seguir por aqui: reconstruir cada hospedeiro uma vez por `splitLoose`, e ajustar as caixas das partes no quadro da casa durante a montagem. Nenhum dos dois foi feito: o ganho é de um quadro e "não muda o desenho nem a física" pede teste próprio.
 3. **Ladrilhos novos (f96, f110: 65–113 ms).** O custo é o chão novo sob peças que acabaram de acordar: `readGround` (26 mil leituras de `groundAt` por ladrilho), o composto do sólido (~500 cascos convexos por ladrilho de cratera, 20 ms de `Create` numa leva) e o campo de altura. A decisão sobre o pré-assento (D8) continua a da T3.8t. O que daria para fazer sem mudar resultado: reaproveitar os cascos do sólido que não mudaram entre reassentamentos (o seguimento da T3.8q); não foi medido em quadro de pico, onde quase todo ladrilho é novo, e não reassentado.
 4. O `Step` não tem camada de broadphase, sono nem corpo estático fora do lugar: 390 corpos fixos da casa (187 caixas, 203 malhas) mais 101 sólidos de chão, 101 campos de altura e 63 lajes; remover as malhas da casa não tira os picos, remover os campos de altura também não, remover os sólidos de chão tira quase todo o custo do poste (§2). Não mexi em `KIT_WORLD`.
+
+## T3.8u — resíduos da sala (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0. Navegador: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), um processo por rodada, uma rodada por vez. Código: `fix/sala-residuos` sobre a main `ff5bf561` (inclui até a #310). **Nenhum código-fonte do kit mudou, nenhuma régua, critério, tolerância ou teste foi alterado.** O que mudou é só a sonda (`decision/probes/room.js`, `drive.mjs`). Resultado: **não achei alavanca do kit para nenhum dos quatro resíduos; os que têm causa reproduzida só se movem por configuração do Jolt ou pela régua. Parei e levo ao dono (opções no fim).**
+
+### 1. A sonda
+`room.js` agora grava, por rodada: (a) os 3 maiores C3 com id, massa, partes, e o histórico (`rise`, `dEm` = energia que a peça ganhou ou perdeu no update sem o que o kit deu, `given`, velocidades antes e depois); (b) da ilha de pior C1: nomes das partes, os pares do `pairLog` classificados (peça, estático, ladrilho, sólido do chão), a vizinhança e a história dos 8 últimos updates; (c) a energia por passo fixo (1/120 s) das peças acima de 500 kg com o que cada uma toca (`partners`); (d) toda movimentação do kit de uma peça acima de 5 kg (`setPose`, `setVelocity`, levantamento do `groundChanged`) com o update em que ocorre; (e) a opção `DISCRETE=heavy|all` (variável de ambiente do `drive.mjs`) que tira a varredura contínua do Jolt dos corpos. 60 rodadas de Jolt, D4 ligada (`blastDebris=1`), nenhuma com erro de página.
+
+### 2. Quem é cada resíduo (60 rodadas, mesma main)
+| item | quem | o que a medida mostra | de onde vem |
+|---|---|---|---|
+| C1 grande (5,6 a 9,6 kg·m, 6 de 60) e C1 pequeno do blast (0,35 a 1,5 em quase toda rodada de blast) | **o poste de 1010,7 kg** (`pole:33.7` e `pole:-10.3` com a fiação), 32 das 42 rodadas com ilha registrada | ver 3 e 4 | motor |
+| C1 de 0,25 a 4,0 kg·m (10 de 60), **o item 1** | `obj_3` = `window_grille:w0_0` (43 kg) e `obj_5` = `window_frame:w0_0` (16,3 kg), às vezes `obj_20`/`obj_21` = `baseboard:wall_0_0:0:5`/`:6` (5,3 kg) e `obj_11` = `sidewalk:wall_0_0:0:2` (73 kg) | ver 5 | motor (solver) |
+| C3 acima de 3,5 cm (27 de 60) | o poste em 24 das 27; as outras 3: grade 43 kg (0,063), tubo de 0,6 kg (0,043), peça de 12,3 kg (0,044) | ver 6 | motor + régua |
+| C2 `obj_20` (rodapé de 5,3 kg, 0,136 m) | **não reproduziu em 60 rodadas** (C2 condicionado 0 em todas; sem a condição 1 a 2 peças em quase todo martelo, todas abaixo do limite de 3,5 cm no condicionado) | é uma das peças do par do item 1 (o rodapé é onde a janela cai) | motor |
+
+### 3. O poste, C1 grande: a varredura contínua do Jolt para o corpo antes do fim do passo
+Medido por passo fixo (poste caindo a 6,3 a 6,5 m/s, 4 a 6 updates depois do blast): no passo em que o pé chega ao chão, o centro anda **4,2 cm em vez dos 5,5 cm de `v dt`**, a velocidade segue a da queda livre (`vy` -6,273 para -6,354) e a energia sobe +10,5 kg·m (1,0 cm de altura de 1010 kg) num passo. O par de ladrilho aparece no `pairLog` só no passo seguinte. É o **`LinearCast` do Jolt** (`continuous: true`, que o kit liga em todo corpo de peça): o corpo é recuado até o instante do impacto com a velocidade intacta, e a régua lê isso como altura ganha. Proporcional à velocidade de chegada (6,6 a 9,6 kg·m a 6,5 m/s; 0,8 a 1,7 a 3,6 a 4,5 m/s na T3.8r).
+- **Contraprova** (`DISCRETE=heavy`, 8 rodadas de blast): sem a varredura o poste afunda mais no chão (o `groundChanged` do kit o levanta 44 a 67 mm, `kitOps`) e o C1 sobe a **45,6 a 61,5 kg·m em 7 de 8** (contra 6,82 a 8,55 em 25 % das rodadas e 0,4 a 1,5 nas outras). **Piora; não é consertar.** Desligar a varredura só do poste está descartado.
+- Outro achado do kit, **sem efeito na régua**: o levantamento de `groundChanged` (`ENGINE_CLEARS`, 1 cm) ainda dispara no poste **a cada tombo**: +11 a +19 mm (`obj_1`, disco em (9,7; 9,6) de raio 9,6, assentamento do entulho; ponta do fio). Cai no update do impacto (perda de 3 a 4 m de altura de energia), então o C1 não vê: 13 a 19 kg·m dados pelo kit e escondidos pelo impacto. Não toquei: o poste tem 22 m de fio e a ponta do fio assentando é o caso que o levantamento protege.
+
+### 4. O poste, C1 pequeno (item 3): +0,4 kg·m por passo fixo, 0,4 mm, ao rolar/pivotar sobre ladrilhos
+O poste deitado e escorregando (`vy` -0,1 m/s, `w` 0,4 rad/s, y 0,39 m, 7 a 12 contatos com um ladrilho do chão) ganha +0,33 a +0,56 kg·m por passo fixo, 2 a 6 passos por update, o que dá o 0,58, 1,23, 1,59 kg·m por update do blast. **Verificado, descartado como causa do kit:**
+- **#308 (alturas no lugar) não mudou isto:** nenhum `updateHeights`/`setPose` do kit no poste nesses passos (`kitOps` sem ocorrência no intervalo); a assinatura (0,4 por passo) é a da T3.8r. Sem peça de chão criada, trocada ou removida (`EngineStatics` e o `pairLog` só mudam quando o poste muda de ladrilho).
+- **O sólido sob o campo de alturas** (`SOLID_MARGIN`) **não é a causa:** o poste aparece com `solid` nos contatos em 11 a 35 dos passos com ganho. Experimento: `SOLID_MARGIN` de 5 mm para 3 cm (rebuild, 8 rodadas de blast): **0 contatos com o sólido, o ganho por passo fica igual** (0,37 a 0,52), C1 0,58 a 1,23 como antes. Revertido, nada commitado.
+- **Hipótese que sobra (não provada):** passo semi-implícito de 120 Hz (a queda livre perde 0,34 kg·m por passo na mesma conta: 0,5 g dt² m), que num pivô com atrito dá erro de energia de sinal oposto. É da configuração do Jolt (passo fixo, iterações), que a spec fixa.
+
+### 5. O par janela, C1 do martelo (item 1) e o rodapé (item 4)
+`obj_3` (grade, 43 kg) e `obj_5` (batente, 16,3 kg) saem da janela juntas e **caem juntas de 1,5 m** (centros a 1,50 e 1,54 m, vy -1,0 a -3,5 m/s) sobre os rodapés `obj_20`/`obj_21` (5,3 kg, no chão, y 0,198) e a calçada `obj_11` (73 kg). No update do impacto o par perde 10 a 12 kg·m e o rodapé de 5,3 kg sai a 0,94 m/s; **no update seguinte o par ganha +0,3 a +2,6 kg·m** (rodada de 4,01: `obj_3` 43 kg +2,58 e `obj_5` +1,51, a velocidade sobe de 2,42 para 2,86 e de 2,01 para 2,58 m/s). Nenhuma movimentação do kit (`kitOps`: nenhum `setPose`, `setVelocity` nem levantamento nessas peças) nem peça nova: **é o solver do Jolt**, uma pilha de 59 kg em cima de 5,3 kg (razão 11:1) prensada contra o chão, a classe que a decisão do dono de 14/11 (32 passadas) já trata, e que não cabe no que o kit controla. O `obj_20` da T3.8s (0,136 m) é a peça de baixo do mesmo par; não reproduziu em 60 rodadas.
+
+### 6. C3: como é calculado e quem passa de 3,5 cm
+`EnergyRuler.measureLift` soma por peça `max(0, y_depois - y_antes - max(0, vy_antes) dt)` em **todo update sem entrada de energia de fora** (`input === 'none'`). Duas consequências, ambas lidas do código da régua:
+- **Correção (T3.8w): a régua já pulava em C3 o update de uma peça a quem o kit deu energia** (`this.measureLift(from, to, dt, input === 'energy' || added > 0)`); a frase anterior desta seção estava errada. Os 0,0254 m do tubo `pipe:run_wall_kitchen_0:0` (0,6 kg) que a sonda marca como `givenPart` eram soma da própria sonda, que não pulava esses updates; **a régua não os contava**. O C3 do poste (a causa de 24 das 27 rodadas) tem `given` 0 e não muda.
+- **C3 não olha a energia da peça.** O poste (1010 kg) deitado gira a 0,6 a 0,8 rad/s sobre o chão; uma ponta encontra um ressalto (borda de laje, entulho), e a peça sobe 2,4 a 5,0 cm com `vy` de -0,04 para +0,85 m/s **enquanto a energia dele cai** (`dEm` -90, -194, -273 kg·m, o giro virando subida). É o que um corpo rígido faz, e é a **causa de 24 dos 27 C3 acima do limite**. Não é impulso do blast (`given` 0) nem energia criada: é contato do motor, e a régua mede centro, não energia. (A T3.8r inferia "peças de 12 a 16 kg lançadas pelo blast": na main de hoje o dono do C3 é o poste; as de 12 a 16 kg são 1 de 27.)
+- Os outros 3: a grade de 43 kg subindo 6,3 cm em um update depois de cair a 1,8 m/s sobre um estático (`obj_4`, `window_grille:w0_0`, `dEm` +2,99: empurrão de penetração do motor), o tubo de 0,6 kg acima e uma peça de 12,3 kg.
+
+### 7. Rodadas finais (Jolt, D4 ligada, 5 blast + 5 martelo, um processo por rodada)
+`pnpm build` (exit 0), `node examples/test-room/build.mjs` (exit 0); conferido no `dist`: `updateHeights` e o limite de 1 cm do `ENGINE_CLEARS` (minificado `=.01`) presentes, `SOLID_MARGIN = 5e-3` no `dist` do pacote (a experiência do item 4 revertida). C1 = excesso em kg·m / ilhas com violação; C2 cond. = peças acima de 3,5 cm (sem a condição); C3 em m com o dono; C4 em s.
+
+| rodada | C1 / violações / pior ilha | C2 cond. (sem) | C3 / dono | C4 | `fellThrough` | frame p50 / p99 / max (ms) | despertar (ms) | passa tudo |
+|---|---|---|---|---|---|---|---|---|
+| blast 1 | 0,58 / 18 / poste | 0 (0) | 0,043 / poste | 0,50 | 0 | 2,5 / 91 / 235 | 39,3 | não |
+| blast 2 | 0,38 / 13 / poste | 0 (0) | 0,041 / poste | 0,45 | 0 | 2,1 / 118 / 241 | 45,4 | não |
+| blast 3 | 0,49 / 14 / poste | 0 (0) | 0,044 / poste | 0,80 | 0 | 2,0 / 105 / 170 | 41,2 | não |
+| blast 4 | 0,35 / 11 / poste | 0 (0) | 0,041 / poste | 0,45 | 0 | 2,2 / 130 / 326 | 55,4 | não |
+| blast 5 | **6,82** / 9 / poste | 0 (0) | 0,054 / poste | 0,50 | 0 | 2,4 / 89 / 267 | 48,3 | não |
+| hammer 1 | 0,00 / 1 | 0 (1) | 0,013 / poste | 0,90 | 0 | 1,7 / 96 / 264 | 37,7 | não (1 violação) |
+| hammer 2 | 0,15 / 2 | 0 (1) | 0,028 / poste | 1,75 | 0 | 1,9 / 210 / 383 | 37,8 | não |
+| hammer 3 | -0,00 / 0 | 0 (1) | 0,032 / poste | 0,60 | 0 | 1,6 / 76 / 314 | 40,6 | **sim** |
+| hammer 4 | 0,00 / 1 | 0 (1) | 0,008 / poste | 0,95 | 0 | 1,9 / 82 / 255 | 40,5 | não (1 violação) |
+| hammer 5 | 0,11 / 1 | 0 (2) | 0,012 / `obj_14` 12,3 kg | 0,45 | 0 | 3,5 / 95 / 257 | 49,0 | não |
+
+**1 de 10 passa tudo** (igual à T3.8s). Dos critérios: C2 condicionado 10 de 10, C4 10 de 10, `fellThrough` 10 de 10, C3 5 de 10 (nenhuma acima de 3,5 cm no martelo; **o blast tem o poste em 0,041 a 0,054 em 5 de 5**), C1 1 de 10 (só o martelo 3 fecha em zero violações; martelo 1, 2, 4 e 5 têm 1 a 2 violações de 0,00 a 0,15 kg·m; **todo blast tem as violações do poste**). Nas 50 rodadas anteriores desta tarefa (blast e martelo, mesma main): C3 acima de 3,5 cm em 27 de 50, C1 positivo em 46 de 50, C2 condicionado acima do limite em 1 de 50.
+
+### 8. O que ainda reprova e as opções (precisa do dono)
+| resíduo | causa medida | a única alavanca | opções |
+|---|---|---|---|
+| C1 do poste, 0,4 kg·m por passo (0,4 mm de altura de energia) | pivô/rolagem de 1010 kg sobre ladrilho no passo de 120 Hz | passo fixo, iterações e `maxPushOut` do `KIT_WORLD`; ou a régua | **A.** C1 com tolerância por passo fixo (`n_passos × m × 0,x mm`) em vez de `m × 1 mm` por update. **B.** passo de 240 Hz só para peças acima de 500 kg (custo: 2x de passo em 2 corpos). **C.** o poste sai da população do C1 (fica fixo/quebrável, §12 do tombamento) |
+| C1 grande do poste (6 a 10 kg·m, 10 % das rodadas) | `LinearCast` do Jolt recua o corpo no impacto a 6,5 m/s; desligar piora (45 a 61) | `continuous` (kit) e passo; ou a régua | **A.** a régua desconta o recuo do `LinearCast` (altura que o centro não andou: `v dt` menos o deslocamento medido, no passo do primeiro contato). **B.** nenhuma mudança no motor: o recuo é o menor dos males medidos. |
+| C3 do poste (24 de 27) | giro deitado vira subida de 2 a 5 cm com a energia caindo 90 a 273 kg·m | a régua | **A.** C3 só conta a subida de uma peça cuja energia também subiu (o mesmo condicionamento que o C2 já tem). **B.** o poste sem giro livre deitado (amortecimento angular, config do Jolt). |
+| C3 com `given` (tubo de 0,6 kg) | **já descontado**: a régua pula o update com `given` em C3 (correção na T3.8w) | | nada a fazer |
+| C1 do par janela (grade 43 kg + batente 16,3 kg sobre rodapé de 5,3 kg) | pilha 11:1 prensada | passadas de velocidade do `KIT_WORLD` (decisão de 14/11) | **A.** aceitar (0,3 a 4 kg·m em 10 de 60 rodadas). **B.** subir de 32 passadas só se o custo de quadro for aceito (a outra sessão mede o quadro). |
+| C2 `obj_20` | não reproduziu | | acompanhar no próximo lote |
+
+### 9. Gates
+| gate | resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `node tools/kit-audit/audit.mjs --check` / `pnpm check:layers` | exit 0 / exit 0 |
+| `eslint` em `drive.mjs` | exit 0 |
+| suítes `game-destruction-three`, `game-floorplan-three` (próprio e Jolt) e bacia 128/128 | **não rodadas de novo: nenhum arquivo de `packages/` mudou** (a única mudança foi a sonda em `specs/`, fora de qualquer pacote e de qualquer teste); valem os números da T3.8r sobre a mesma main. A experiência do `SOLID_MARGIN` foi revertida antes de qualquer commit |
+| changeset | nenhum: nenhum pacote público mudou |
+
+### 10. Commits (locais, nada enviado)
+Um commit com a sonda e esta evidência.
+
+## T3.8w — régua R1–R3 (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0. Código: `fix/sala-residuos` sobre a main `ff5bf561`.
+
+### 1. Decisões do dono (2026-11-15), registradas como foram aprovadas
+- **R1 (C3 condicionado):** "C3 counts a rise only when the piece's energy also rose in that update, the same conditioning C2 already uses. Example: a pole that rolls onto a ledge while losing energy is not a launch."
+- **R2 (C3 menos `given`):** "energy the kit declares (`given`: impulses, topple, delayed blast shove) is subtracted in C3 too, as it already is in C1 and C2 (D6)."
+- **R3 (recuo do LinearCast em C1):** "at a body's first contact, Jolt's continuous-collision pull-back (the centre moves less than v·dt while velocity is kept) is not counted as a C1 gain. Detect it narrowly, only at a first contact with a continuous-motion body in that step. Do not turn it into a general tolerance."
+- **Limites conhecidos, não mudanças de régua:** o ~0,4 mm por passo fixo do poste e o par grade/batente da janela sobre o rodapé (0,3 a 4 kg·m em 10 de 60 rodadas).
+
+### 2. O que mudou (`packages/game-destruction-three/tests/energy-ruler.ts`, `contact-graph.ts`, `bowl-energy.ts`)
+- **R1:** `measureLift` só soma a subida do centro de uma peça no update em que a altura de energia dela também subiu (`to.energyHeight > from.energyHeight`). A leitura "energia da peça" é por peça, como o pedido diz; não é por ilha (a ilha é a condição do C2).
+- **R2: já valia, sem mudança de código.** `step` já chamava `measureLift(..., input === 'energy' || added > 0)`: o update de uma peça a quem o kit deu energia fica fora do C3 (o teste "a gain of exactly what was given is no violation and no launch", T3.8b, já cobre `c3Lift` 0). Corrijo a T3.8u: lá escrevi que C3 não descontava `given`; descontava, e a soma de 0,0254 m do tubo era da sonda, não da régua. Mantive o "pula o update" (mais brando que "subtrai"); se o dono quiser a forma estrita (`rise - given`), é uma linha, e mais rodadas reprovariam.
+- **R3:** `StepContext.firstContact` (conjunto de ids). Para uma peça nele, tira-se do ganho dela em C1 o **recuo**: `max(0, y_depois - y_antes - ((vy_antes + vy_depois)/2) dt)` (o quanto o centro andou a menos do que a velocidade média diz), nunca mais que o ganho da própria peça. Quem diz o "primeiro contato" é o hospedeiro: `createFirstContactTracker` (`contact-graph.ts`) dá os ids cujo corpo é `LinearCast` e tem, neste update, um par de contato que não tinha no update anterior (o `pairLog` do Jolt). Sem o log (solver próprio) devolve `undefined` e nada é descontado. A bacia e a sonda da sala usam o mesmo.
+
+### 3. Testes (`tests/energy-ruler.test.ts`, 33 passam; escritos à mão, no estilo dos de grafo de contato)
+Cada regra mostra a conta da régua antiga escrita no próprio teste (`legacyRise`, ou o ruler sem `firstContact`) e o resultado novo. Rodados também contra a régua antiga (`git show HEAD:...`): os de R1 e R3 **reprovam** nela (3 falhas: o poste que sobe 5 cm perdendo 85 kg·m, a subida que só conta no update que ganha, o recuo de 12,5 kg·m); passam na nova.
+- R1: poste de 1 t sobe 5 cm perdendo energia, antes 0,05 m, agora 0; **lançamento de verdade ainda reprova**: a mesma subida de 5 cm com +0,2 m de altura de energia conta 0,05 m inteiros; uma peça que perde num update e ganha no seguinte só conta o segundo.
+- R2: tubo de 0,6 kg empurrado 2,5 cm por um `given` de 0,4 m não é C3; a subida do motor no update seguinte (2 cm) ainda é. (Já passava na régua antiga: é o teste que trava a regra.)
+- R3: poste de 1 t caindo a 6,1 m/s, recuo de 12,5 mm: antes C1 acima de 10 kg·m e 1 violação, agora 0 com o primeiro contato; **estreito**: sem primeiro contato na peça ainda é violação; e um poste que também acelera a 8 m/s no primeiro contato ainda reprova C1 (acima de 900 kg·m), e uma pedra que ganha altura no primeiro contato ainda reprova C3.
+
+### 4. Bacia (`PIECE_SOLVER=jolt BOWL_SEEDS=64`)
+| | worstC1 | worstC2 | worstC3 | worstC4 | worstC2Unconditioned | fellThrough | casos |
+|---|---|---|---|---|---|---|---|
+| antes | -0,007656 | 0 | 0,027460 | 1,5167 | 0,007681 | 0 | **128/128** |
+| depois | -0,007656 | 0 | **0,024192** | 1,5167 | 0,007681 | 0 | **128/128** |
+
+### 5. Rodadas da sala sob a régua nova (Jolt, D4 ligada, 5 blast + 5 martelo frescas, um processo por rodada)
+`pnpm build` e `node examples/test-room/build.mjs` (exit 0, antes das rodadas). Colunas "antes" vêm da sonda: C1 sem o desconto do R3 (segunda régua alimentada com os mesmos dados) e C3 sem o R1 (a soma por peça da sonda, sem os updates com `given`). Ilhas pelo grafo de contato.
+
+| rodada | C1 novo (kg·m / violações) | C1 sem R3 | C2 cond. (sem) | C3 novo (m) | C3 sem R1 | C4 (s) | `fellThrough` | quadro p50 / p99 / max (ms) | despertar | passa tudo |
+|---|---|---|---|---|---|---|---|---|---|---|
+| blast 1 | 0,381 / 14 | 0,381 / 14 | 0 (0) | 0,0029 | 0,0435 | 1,15 | 0 | 1,9 / 102 / 255 | 45,5 | não (C1) |
+| blast 2 | 1,046 / 3 | 1,046 / 3 | 0 (0) | 0,0067 | 0,0361 | 0,50 | 0 | 2,2 / 98 / 269 | 46,0 | não (C1) |
+| blast 3 | 1,111 / 18 | 1,111 / 18 | 0 (0) | 0,0095 | 0,0128 | 0,50 | 0 | 2,0 / 83 / 158 | 45,3 | não (C1) |
+| blast 4 | 1,348 / 16 | 1,348 / 16 | 0 (0) | 0,0330 | 0,0426 | 0,50 | 0 | 2,2 / 86 / 261 | 39,8 | não (C1) |
+| blast 5 | 0,028 / 19 | 0,028 / 19 | 0 (0) | 0,0326 | 0,0408 | 0,50 | 0 | 2,2 / 99 / 246 | 43,2 | não (C1) |
+| hammer 1 | -0,002 / 0 | -0,002 / 0 | 0 (1) | 0,0015 | 0,0428 | 1,70 | 0 | 1,6 / 75 / 285 | 32,5 | **sim** |
+| hammer 2 | 0,003 / 1 | 0,003 / 1 | 0 (1) | 0,0038 | 0,0321 | 1,75 | 0 | 1,7 / 76 / 283 | 33,6 | não (C1) |
+| hammer 3 | -0,002 / 0 | -0,002 / 0 | 0 (1) | 0,0118 | 0,0448 | 1,55 | 0 | 1,7 / 56 / 276 | 35,6 | **sim** |
+| hammer 4 | 0,001 / 1 | 0,001 / 1 | 0 (0) | 0,0039 | 0,0078 | 0,90 | 0 | 1,5 / 61 / 209 | 31,9 | não (C1) |
+| hammer 5 | 0,003 / 1 | 0,003 / 1 | 0 (1) | 0,0047 | 0,0296 | 1,75 | 0 | 1,4 / 85 / 274 | 33,8 | não (C1) |
+
+**Resultado: 2 de 10 passam tudo; os 10 passam C2, C3 (máximo 0,0330 m), C4 e `fellThrough`; C1 reprova em 8 de 10.**
+- **R1 fez o que devia:** C3 foi de 6 de 10 rodadas acima de 3,5 cm (pela soma da sonda, sem R1: 0,0361 a 0,0448) para **0 de 10** (0,0015 a 0,0330). O pior que sobrou (0,0326 a 0,0330) é uma peça de 12 kg que a onda lança com energia que ela de fato ganhou (+1,12 kg·m): o R1 não a perdoa, e não deve.
+- **R3 não apareceu nestas rodadas:** nenhum recuo grande ocorreu (maior C1 1,35); "C1 sem R3" e "C1 novo" são idênticos nas 10. O caso de 6,5 a 9,6 kg·m do poste a 6,5 m/s apareceu em 7 de 60 rodadas antes e em 0 de 35 depois do R3 (25 rodadas com a sonda de definição anterior, 10 com a final), o que é compatível com o R3 e **não prova** (uma amostra sem o evento). A prova do R3 é a do teste unitário e a de que não altera as 10 rodadas onde não havia recuo.
+- **O que ainda reprova C1 são exatamente os dois limites conhecidos:** (a) o poste de 1010,7 kg: +0,33 a +0,56 kg·m por passo fixo (0,4 mm de altura de energia), 0,38 a 1,35 kg·m por update, 3 a 19 violações por rodada de blast, o poste é a pior ilha em todos; (b) nas rodadas de martelo, 1 violação por rodada de 0,001 a 0,003 kg·m (a sonda só nomeia a ilha acima de 0,2 kg·m, então não sei qual peça é), e o par grade (43 kg) e batente (16,3 kg) sobre o rodapé de 5,3 kg não apareceu como pior ilha nestas 10 (0,3 a 4 kg·m em 10 de 60 rodadas antes).
+- **Recomputar o veredito das 60 rodadas guardadas:** não dá por inteiro. Os JSON guardam só a pior ilha, os 3 maiores C3 com histórico e os passos fixos de maior ganho, não as amostras de todas as peças por update, e a régua precisa delas. Parcial, do que está guardado: os C3 acima do limite eram o poste em 24 de 27 rodadas, todos com `dEm` negativo (-90 a -319 kg·m) no update da subida, ou seja, **R1 perdoa os 24**; os 3 restantes (grade de 43 kg com +2,99, tubo de 0,6 kg, peça de 12,3 kg com +1,12) ganharam energia e **continuam contando**.
+
+### 6. Varredura C6
+`node tests/sweep-c6.mjs` (8 processos, 64 sementes, 3 cenários, 4 passos, 20 e 32 iterações, 3 fatores de empurrão: 4608 corridas) levou **585 s** com a régua nova e 612 s com a antiga (menos de 30 min: rodada). Mesma máquina, as duas seguidas.
+
+| | corridas | reprovadas | reprovadas a 32 iterações | "mais iterações piorou" | pior C3 da bacia a 32 (dt 0,0167, empurrão x1,5) |
+|---|---|---|---|---|---|
+| régua antiga | 4608 | 244 | 19 | 0 | 0,0401 (1 caso reprova) |
+| régua nova (R1–R3) | 4608 | 244 | 19 | 0 | 0,0357 (o mesmo caso, ainda 0,7 mm acima do limite) |
+
+As 19 de 32 iterações são as mesmas nas duas: 1 da bacia (C3, dt 0,0167, empurrão x1,5) e 18 do `stack 20:1` a dt 0,0069 (C1, 6 sementes por empurrão). **R1–R3 não mudaram nenhuma célula de aprovado para reprovado nem o contrário**; só baixaram o pior C3 da bacia. O sweep sai com código 1 nas duas por essas 19; é o estado herdado, não efeito desta mudança.
+
+### 7. Gates
+| gate | resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 (na 1ª versão do rastreador); depois da reescrita do rastreador: `tsc` do pacote exit 0 |
+| `eslint` nos 4 arquivos de teste mudados | exit 0 (as duas versões) |
+| `kit-audit --check` / `pnpm check:layers` | exit 0 / exit 0 |
+| `game-destruction-three`, solver próprio | **417 passam, 0 falham** (154 pulados) |
+| `game-destruction-three`, Jolt | 506 passam, **só as 2 `rolling` conhecidas** (`cans knock each other`, `fifty cans`) |
+| bacia 128/128 | sim, antes e depois (seção 4; depois medida com a versão final do rastreador) |
+
+### 8. O que ainda reprova e precisa do dono
+**C1 em 8 de 10 rodadas** (R1 e R2 não mexem em C1; o R3 só vale em primeiro contato). São os limites conhecidos: o poste de 1010 kg a +0,33 a +0,56 kg·m por passo fixo de 1/120 s (0,4 mm de altura de energia; 0,38 a 1,35 kg·m por update; 3 a 19 violações por rodada de blast) e as violações de 1 a 3 g·m dos martelos. As opções A, B, C da seção 8 da T3.8u para o poste seguem de pé (tolerância por passo fixo, 240 Hz só acima de 500 kg, ou o poste fora da população de C1). Em aberto também: o R2 como "subtrai" estrito (hoje "pula o update") e o R3 sem caso real nas rodadas.
