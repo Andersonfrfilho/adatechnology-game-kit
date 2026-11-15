@@ -16,7 +16,7 @@ const SPLIT_GAIN = 0.7
 const MIN_POINTS = 8
 /**
  * A box is cut only while it holds air across its thinnest side (thicker than this, m, and than `FAT` of its middle side): the points are vertices of a surface that
- * is drawn between them, so a plate cut into its rows of vertices would lose the surface between them.
+ * is drawn between them, so a plate cut into its rows of vertices would lose the surface between them. Points that sample the surface (`isSurface`) have no such rows: the air shows.
  */
 const THICK = 0.03
 const FAT = 0.15
@@ -133,10 +133,15 @@ const fitOne = (points: readonly number[]): Fit => {
   return { box: { center, half, rotation }, axes, volume: 8 * half[0] * half[1] * half[2] }
 }
 
-/** The points on each side of the box's middle across its axis `k`. */
-const cut = (points: readonly number[], fit: Fit, k: number): [number[], number[]] => {
+/** Where along its axis a box is cut when the points are only vertices (the middle), and where when they sample the surface (a bent pipe is cut at its bend, not at its middle). */
+const MIDDLE = [0.5] as const
+const ALONG = [0.15, 0.3, 0.5, 0.7, 0.85] as const
+
+/** The points on each side of the box's axis `k`, at `along` (0 to 1) of its length. */
+const cut = (points: readonly number[], fit: Fit, k: number, along: number): [number[], number[]] => {
   const a = fit.axes
-  const mid = fit.box.center[0] * a[k] + fit.box.center[1] * a[3 + k] + fit.box.center[2] * a[6 + k]
+  const middle = fit.box.center[0] * a[k] + fit.box.center[1] * a[3 + k] + fit.box.center[2] * a[6 + k]
+  const mid = middle + (along - 0.5) * 2 * fit.box.half[k]
   const low: number[] = []
   const high: number[] = []
   for (let i = 0; i < points.length; i += 3) {
@@ -146,30 +151,32 @@ const cut = (points: readonly number[], fit: Fit, k: number): [number[], number[
   return [low, high]
 }
 
-const fitInto = (points: readonly number[], depth: number, out: OrientedBox[]): void => {
+const fitInto = (points: readonly number[], depth: number, out: OrientedBox[], isSurface = false): void => {
   const fit = fitOne(points)
   const [thin, middle] = [...fit.box.half].sort((a, b) => a - b)
-  if (depth >= MAX_DEPTH || points.length / 3 < MIN_POINTS || thin <= Math.max(THICK, FAT * middle)) {
+  if (depth >= MAX_DEPTH || points.length / 3 < MIN_POINTS || (!isSurface && thin <= Math.max(THICK, FAT * middle))) {
     out.push(fit.box)
     return
   }
   let best: [number[], number[]] | null = null
   let bestVolume = fit.volume * SPLIT_GAIN
   for (let k = 0; k < 3; k++) {
-    const [low, high] = cut(points, fit, k)
-    if (low.length < 9 || high.length < 9) continue
-    const v = fitOne(low).volume + fitOne(high).volume
-    if (v < bestVolume) {
-      bestVolume = v
-      best = [low, high]
+    for (const along of isSurface ? ALONG : MIDDLE) {
+      const [low, high] = cut(points, fit, k, along)
+      if (low.length < 9 || high.length < 9) continue
+      const v = fitOne(low).volume + fitOne(high).volume
+      if (v < bestVolume) {
+        bestVolume = v
+        best = [low, high]
+      }
     }
   }
   if (!best) {
     out.push(fit.box)
     return
   }
-  fitInto(best[0], depth + 1, out)
-  fitInto(best[1], depth + 1, out)
+  fitInto(best[0], depth + 1, out, isSurface)
+  fitInto(best[1], depth + 1, out, isSurface)
 }
 
 /** Along a drawn edge longer than this (m) the surface is sampled, so a long thin solid (a pole, a beam) is not read as two plates at its ends. */
@@ -255,7 +262,7 @@ export const fitOrientedBoxes = (points: readonly number[], triangles?: readonly
       }
       return renumber.get(v) as number
     })
-    if (own.length >= 9) fitInto(sampled(own, local), 0, out)
+    if (own.length >= 9) fitInto(sampled(own, local), 0, out, true)
   }
   return out
 }

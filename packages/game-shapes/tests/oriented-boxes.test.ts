@@ -53,4 +53,21 @@ describe('fitOrientedBoxes with the triangles a part is drawn by', () => {
     expect(boxes).toHaveLength(2)
     expect(boxes.map((box) => Math.max(...box.half) * 2).sort((a, b) => a - b)[1]).toBeCloseTo(7.5, 2)
   })
+
+  it('holds a bent run as its legs, not as the plane across the bend', () => {
+    const long = cylinder(0.02, 9.4, [0, 0, 0])
+    const short = cylinder(0.02, 2.8, [0, 0, 0])
+    // the short leg lies along x from the foot of the long one: (x, y, z) of the cylinder becomes (y, x, z)
+    const turned = short.points.flatMap((_, index) => (index % 3 === 0 ? [short.points[index + 1]!, short.points[index]!, short.points[index + 2]!] : []))
+    // both share the vertex at their common corner, so they are one solid
+    const points = [...long.points, ...turned]
+    const triangles = [...long.triangles, ...short.triangles.map((vertex) => vertex + long.points.length / 3)]
+    const corner = long.points.length / 3 + short.points.length / 3
+    points.push(0, 0, 0)
+    triangles.push(0, 1, corner)
+    triangles.push(long.points.length / 3, long.points.length / 3 + 1, corner)
+    const volume = fitOrientedBoxes(points, triangles).reduce((sum, box) => sum + 8 * box.half[0] * box.half[1] * box.half[2], 0)
+    // the box around both legs is 2.8 x 9.4 m: the legs themselves are a few litres
+    expect(volume).toBeLessThan(0.05)
+  })
 })
