@@ -79,7 +79,7 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
   }
   /**
    * The stretch of a doorway a threshold can fill: between the door's posts and clear of the walls, pillars and beams of the structure that reach into the opening,
-   * so the slab, set on the ground and held by it, is born inside none of them.
+   * so the slab, laid on the ground, is born inside none of them.
    */
   function clearSpan({ a, b, au, across, rise }: { a: number; b: number; au: boolean; across: readonly [number, number]; rise: readonly [number, number] }): [number, number] {
     let from = a, to = b;
@@ -114,7 +114,7 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
       // the threshold: through the wall, its top level with the floor inside
       const top = y0 + (shared.ctx.constructionStages ? FLOOR_OVER_GROUND : 0) + 0.002, t0 = d.pos - th / 2, t1 = d.pos + th / 2;
       const [from, to] = clearSpan({ a: a + DOOR_JAMB_WIDTH, b: b - DOOR_JAMB_WIDTH, au, across: [t0, t1], rise: [y0, top] });
-      cursor.pc = pieceRecord(`threshold:${d.id}`, THRESHOLD.material, null, { floor: 0, mass: Math.round((to - from) * th * (top - y0) * THRESHOLD.density * 100) / 100, tags: ['threshold'], holder: 'ground' });
+      cursor.pc = pieceRecord(`threshold:${d.id}`, THRESHOLD.material, null, { floor: 0, mass: Math.round((to - from) * th * (top - y0) * THRESHOLD.density * 100) / 100, tags: ['threshold'] });
       if (au) bx('plain', from, y0, t0, to, top, t1, THRESHOLD.color); else bx('plain', t0, y0, from, t1, top, to, THRESHOLD.color);
     }
     cursor.pc = null;

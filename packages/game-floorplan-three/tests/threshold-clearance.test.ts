@@ -34,10 +34,12 @@ describe('the threshold of an outside door', () => {
     expect(overlaps).toEqual([])
   })
 
-  it.each(CASES)('%s, seed %i, staged %s: is held by the ground it is set on, so it is no free piece born in the doorway', (template, seed, staged) => {
+  it.each(CASES)('%s, seed %i, staged %s: rests on the ground, its base level with the sidewalk slab laid under the door', (template, seed, staged) => {
     const { house } = houseOf(planOf(template, seed), {}, staged ? STAGED : {})
-    const held = new Map(house.structure.supports.map((support) => [support.part, support.on]))
-    for (const threshold of thresholdsOf(house)) expect(held.get(threshold.id), threshold.id).toBe('ground')
+    for (const threshold of thresholdsOf(house)) {
+      const ground = Math.min(...pieceBoxes(house, threshold.id.replace('threshold:', 'sidewalk:door:')).map((box) => box.min.y))
+      expect(Math.abs(threshold.y0 - ground), threshold.id).toBeLessThanOrEqual(OVERLAP)
+    }
   })
 
   it('exists in the houses that have a doorway between two walls, and has a body of its own', () => {

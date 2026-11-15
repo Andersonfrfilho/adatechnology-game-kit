@@ -23,8 +23,8 @@ const BLAST_RADIUS = 6
 // Recorded again when the contact shock and the side-on impulse took products instead of `**` past 2, so Node 22 and 24 give the same last bits
 // Recorded again on the merge of the house release: the windows' panes rest on the mullion, the pipes and wires detach in segments and the drop's second conductor runs parallel to the first
 // Recorded again with the drain runs of the house (sewer stretches in its walls and slabs, the downpipes in stretches clamped to the wall): they are parts of the spec the blast meets now, and a hole in a wall shows the ones in it
-// Recorded again with the wall pipes of the house built by stages cut in stretches hosted by their wall, and the door thresholds laid between the posts of their frame, held by the ground
-const RECORDED_BLAST_OUTCOME = 'c3e72e9907a47cbb5619ff65d2195468f3bb5918'
+// Recorded again with the wall pipes of the house built by stages cut in stretches hosted by their wall, and the door thresholds laid between the posts of their frame, clear of the structure
+const RECORDED_BLAST_OUTCOME = '4528ab0398c0f21f9af9d9704e71f8fadd7f16fa'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
