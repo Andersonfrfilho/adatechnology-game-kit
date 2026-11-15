@@ -39,6 +39,8 @@ const TILE = 2
 const TILE_MARGIN = 0.5
 /** The most (m) a piece's tips swinging in one update widen the tiles laid around its footprint. */
 const MAX_SWING = 3
+/** The most stops along a piece's path in one update where its footprint's tiles are laid (a piece that crosses a tile or more in an update lands on ground not laid yet). */
+const MAX_PATH_STOPS = 6
 /** A tile's key: its column and row from `TILE_KEY_ORIGIN`, in one number (no text made per tile per update). */
 const TILE_KEY = 65536
 const TILE_KEY_ORIGIN = 32768
@@ -711,15 +713,27 @@ export class EnginePieces {
       const swing = Math.hypot(b.angularVelocity[0] as number, b.angularVelocity[1] as number, b.angularVelocity[2] as number) * reach * Math.max(dt, 1 / 60)
       // a 45 m wire the blast spun to 47 rad/s swings 53 m a frame: the circle around it was 4290 tiles (2.4 s), and it is 4 m up; past a few metres the next update lays what it reached
       const margin = TILE_MARGIN + Math.min(swing, MAX_SWING)
-      const foot = this.footprint(b, c)
-      for (let ix = Math.floor((foot.minX - margin) / TILE); ix <= Math.floor((foot.maxX + margin) / TILE); ix++) {
-        for (let iz = Math.floor((foot.minZ - margin) / TILE); iz <= Math.floor((foot.maxZ + margin) / TILE); iz++) {
-          const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
-          const tile = this.tiles.get(key)
-          if (tile && !tile.dirty) continue
-          if (!this.footprintReaches(foot, ix * TILE, iz * TILE, margin)) continue
-          this.layTile(key, ix, iz, tile)
-        }
+      // a fast one (a blast's chip) moves further than the margin in an update, and would land on ground not laid yet: the tiles are laid along its path too, a tile apart
+      const travel = Math.hypot(b.velocity[0] as number, b.velocity[1] as number, b.velocity[2] as number) * dt
+      const stops = travel > TILE_MARGIN ? Math.min(MAX_PATH_STOPS, Math.ceil(travel / TILE)) : 0
+      const x0 = c.x, y0 = c.y, z0 = c.z
+      for (let stop = 0; stop <= stops; stop++) {
+        const fraction = stops === 0 ? 0 : stop / stops
+        const at = stop === 0 ? c : this.u.set(x0 + (b.velocity[0] as number) * dt * fraction, y0, z0 + (b.velocity[2] as number) * dt * fraction)
+        this.layAround(this.footprint(b, at), margin)
+      }
+    }
+  }
+
+  /** The tiles within `margin` of the footprint are laid, or laid again when their ground changed. */
+  private layAround(foot: Footprint, margin: number): void {
+    for (let ix = Math.floor((foot.minX - margin) / TILE); ix <= Math.floor((foot.maxX + margin) / TILE); ix++) {
+      for (let iz = Math.floor((foot.minZ - margin) / TILE); iz <= Math.floor((foot.maxZ + margin) / TILE); iz++) {
+        const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
+        const tile = this.tiles.get(key)
+        if (tile && !tile.dirty) continue
+        if (!this.footprintReaches(foot, ix * TILE, iz * TILE, margin)) continue
+        this.layTile(key, ix, iz, tile)
       }
     }
   }
