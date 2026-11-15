@@ -1770,3 +1770,61 @@ Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0. Nav
 
 ### 5. Pendente
 Reexecução da sala (5 blast + 5 martelo com D4 ligada e desligada, mais 5 extras de martelo por configuração, contra a T3.8g: D4 ligada blast 4/5, martelo 3/5; D4 desligada blast 5/5, martelo 2/5) **depois do merge do PR #301**; o poste (item 1) provavelmente ainda reprova algumas rodadas de C4.
+
+## T3.8i — merge da release #301 (2026-11-14) — **sem rodada de sala nem de navegador (ficam para depois); 1 teste novo vermelho que não é da release sozinha: `grenade-in-kitchen`**
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0, pnpm 10.28.2. Merge local de `origin/release/casa-a-rodada10-2026-11-13` (cabeça `a84f68b3`, 131 commits sobre a `main`) em `feat/motor-fisico-jolt` com `git merge --no-ff`; nada enviado.
+
+### 1. Conflitos e como cada um foi resolvido
+| Arquivo | Resolução |
+|---|---|
+| `game-destruction-three/src/renderer.ts` (2 trechos) | Nossa política de entulho (`policy`, fila de acordar, `chooseForPhysics`) mantida; a área de onda da release (`waveArea`, passada ao `blastShove`) somada por cima nos dois empurrões. |
+| `game-test-room/src/room.ts` | As duas linhas: `physicsLoop?.step(dt)` e `arena.followSun(...)`. |
+| `game-floorplan-three/src/types.ts` | `BuildOptions` com as quatro opções da release (`gutters`, `eave`, `wallCorners`, `ceilings`) e as nossas (`windows`, `segmentLimits`). A opção `doors` saiu (duplicata, ver 2). |
+| `kernel-types-systems.ts` | Campos `visor*`, `occupied` etc. da release mais os nossos `fittedWindows` e `segmentLimits`; `fittedDoors` saiu. |
+| `build/build.ts` | Imports das duas; a linha de preparo do contexto junta as flags da release com `fittedWindows` e `segmentLimits`. |
+| `house/doors.ts` (3 trechos) | Geometria da release como base (folha sob o batente, batente entra 2 mm na parede e no piso, batente anotado com as paredes). Folha pivotante: `leafH` passou a ser a altura que a release dá à folha (`dH - jw - 0.003`; `visH` na cena do Visor). |
+| `house/windows.ts` (2 trechos) | `bar` da release (anota o caixilho em `occupied`) com o nosso `shift` do vidro; a laje do peitoril da release (`keepOut` das rodapés) com o nosso pé da grade (`GRILLE_FOOT`). |
+| `utilities/electrical.ts` | Nosso `wiringSpans`; imports unidos; o segundo condutor do ramal agora sai paralelo ao primeiro (correção da release, 4 cm de distância de ponta a ponta) também nos trechos, fora da cena do Visor. |
+| `utilities/water.ts` | A linha de `constructionStages` (`stagedWallRuns`) da release antes da nossa `groupOf` tipada (`Vec3`). |
+| `tests/golden-scene.test.ts` | Opções da release (`gutters`, `eave`, `wallCorners`, `ceilings` em `'visor'`) mais `windows: 'visor'` e `segmentLimits: Infinity`; `doors: 'visor'` removido. |
+| `tests/blast-presentation.test.ts`, `tests/fixtures/exact-floorplan.json` | Reescritos a partir do código mesclado (ver 4). |
+| `pnpm-lock.yaml` | Lado da release e `pnpm install`; sem mão. |
+| Fora de conflito, mas quebrado | `bend`, `bend-shovel`, `redraw` (testes novos da release) não passavam `physics` (obrigatório aqui): `physicsOption()` como nos outros. |
+
+### 2. Nossas correções largadas como duplicata
+- `c0c3e4eb` na parte do batente: opção `doors: 'visor'`, `fittedDoors` e a altura `leafH` própria. A release já põe a folha sob o batente e a cena do Visor desenha a porta como a equipe. A folha pivotante tem folga de 5 mm dos dois lados desde sempre; `door-clearance.test.ts` passa sem geometria nossa.
+- Mantidas (a release não faz): `windows: 'visor'` e o vidro apoiado no caixilho (`aa5fa26d`), os trechos de fiação e cano (`segments.ts`, `cutRun`, `segmentLimits`), o `drawn-boxes`.
+- Segmentação nas peças novas da release: os canos de parede da etapa de construção (`stagedWallRuns`, `wall_pipe`) e o esgoto/pluvial de `installations-stage.ts` **não** são peças de destruição segmentadas (são partes escondidas ou malhas da etapa). Não foram segmentados; ficam como estavam na release.
+
+### 3. Ajustes de teste por causa da área de onda da release (um commit por correção)
+- `7e79a6d9`: `blast-debris-renderer.test.ts` empurrava caixas de 0,3 m e de 0,05 m com 200 kJ; a onda agora empurra pela área que o corpo mostra, e só 19 de 40 caixas passavam de 0,5 m/s. Energia subiu para 1 MJ (e 20 MJ para as de 5 cm); limiares e contagens iguais.
+- `b78c7df3`: a cena de `determinism-scene.ts` (Jolt) pelo mesmo motivo, 200 kJ para 1 MJ.
+- No merge: `utility-segments.test.ts` esperava o segundo condutor do ramal de ponta a ponta com 4 cm de altura numa só ponta; agora é paralelo (mesmo comprimento do primeiro), como a release o desenha. Comprimento esperado ajustado, tolerância igual.
+
+### 4. Golden
+- `exact-floorplan.json`: **as 43 entradas mudaram** (casas, `specimen/*` e `destruction/*`): a geometria da casa é outra (cena e portas da release, vidro no caixilho, ramal paralelo, trechos). Regravado de novo do código mesclado (`UPDATE_EXACT=1`).
+- As 3 falhas conhecidas (`destruction/breach`, `fracture`, `spall`): eram da geometria cherry-pickada da release; com a gravação refeita **passam no solver próprio**. No Jolt ainda falham (gravação é do solver próprio, como antes).
+- Hash do `blast-presentation`: `9c88042f…` (release) para `9e631476…`. O resultado físico segue o da release (parede de frente quebra, nada pega fogo); só o desenho das peças que a onda encontra mudou.
+- Ouro da equipe (`golden-scene.test.ts`, `vc3-house-scene.json`): passa nó a nó, sem regravar.
+
+### 5. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm install`, `pnpm build` | ok |
+| `pnpm -r typecheck` | exit 0 |
+| Release sozinha (worktree temporário, removido) | `game-floorplan-three` 900 passam, 0 falhas; `game-destruction-three` 332 passam; `game-destruction` 542 passam |
+| `game-destruction-three` próprio | 409 passam, 0 falhas (linha de base: 0) |
+| `game-destruction-three` Jolt | só as 2 `rolling` conhecidas (linha de base: as mesmas 2) |
+| `game-floorplan-three` próprio | 1030 passam, **1 falha: `grenade-in-kitchen`** (linha de base: 3 golden; os 3 passaram a verdes) |
+| `game-floorplan-three` Jolt | 5 falhas: os 3 `destruction/*` do golden, `bookcase-topple` (conhecidos) e `grenade-in-kitchen` |
+| Demais pacotes (`pnpm -r`, sem floorplan) | sem falha além do já corrigido acima |
+| Construção por tipologia e z-fighting | dentro do `game-floorplan-three` e dos pacotes de tipologia: verdes |
+| `eslint` nos arquivos mudados | 0 erros (avisos de `max-lines` antigos) |
+| `kit-audit --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
+
+### 6. `grenade-in-kitchen` (aberto)
+O vidro `window:w0_2` da cozinha (a 2,2 m da granada) fica `damaged` (hp 33,7) sem rachadura nem furo, e a asserção «todo vidro quebrou ou rachou» falha. Passa na release sozinha e passa aqui com `segmentLimits.wiring: Infinity`; falha com qualquer limite finito (2,5, 3, 4, 6). Os cabos que mudam são os da grade do lote, a 12 m, sem ligação geométrica com o vidro: a suspeita é a ordem/quantidade de objetos no raio de 15 m mudando o sorteio dos estilhaços, não a física. Não afrouxei nada nem mexi no teste.
+
+### 7. Cherry-pick
+`git cherry-pick -x 77ea4aa5` (`spec/004-fase-4`): a mão abre a porta e a empurra, não segue a folha. `dc5d557b` não veio. Conflitos só de tipo e de texto em `game-characters-three` (`avatar.ts`, `room-avatar.ts`), `game-test-room` (`avatar.ts`, `README.md`): fase `push` somada ao nosso `clipRate` e ao `fallForward`. Gates: `game-player` 63, `game-characters-three` 549, `game-test-room` 458 testes passam (a evidência da 004 registrava 52 e 261); typecheck, eslint e `kit-audit --check` ok.
