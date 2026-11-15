@@ -22,10 +22,14 @@ if (!runIds.length) {
   process.exit(2)
 }
 
+/** @param {string} path @param {string[]} [extra] @returns {string} */
 const gh = (path, extra = []) => execFileSync('gh', ['api', ...extra, path], { encoding: 'utf8', maxBuffer: 1 << 28 })
 // eslint-disable-next-line no-control-regex
+/** @param {string} text @returns {string} */
 const stripColors = (text) => text.replace(/\x1b\[[0-9;]*m/g, '')
+/** @param {string} value @param {string} unit @returns {number} */
 const seconds = (value, unit) => Number(value) / (unit === 'ms' ? 1000 : 1)
+/** @param {number[]} values @returns {number} */
 const median = (values) => {
   const sorted = [...values].sort((a, b) => a - b)
   const middle = Math.floor(sorted.length / 2)
@@ -33,6 +37,7 @@ const median = (values) => {
 }
 
 /** Per `##[group]<pkg>@<version> : test` block of a log, the vitest `Duration` it printed, and every `✓ tests/<file> (n tests) <time>` line. */
+/** @param {string} log */
 const readLog = (log) => {
   const packages = new Map()
   const files = []
@@ -52,7 +57,7 @@ const perPackage = new Map()
 const jobSeconds = new Map()
 const slowFiles = new Map()
 for (const runId of runIds) {
-  const jobs = JSON.parse(gh(`repos/${REPO}/actions/runs/${runId}/jobs?per_page=100`, ['--paginate', '--slurp'])).flatMap((page) => page.jobs)
+  const jobs = JSON.parse(gh(`repos/${REPO}/actions/runs/${runId}/jobs?per_page=100`, ['--paginate', '--slurp'])).flatMap((/** @type {{ jobs: { id: number, name: string, conclusion: string, started_at: string, completed_at: string }[] }} */ page) => page.jobs)
   for (const job of jobs) {
     const name = job.name.match(/^test \((.+)\)$/)
     if (!name || job.conclusion !== 'success') continue
