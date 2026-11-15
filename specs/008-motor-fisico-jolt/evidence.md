@@ -2101,7 +2101,7 @@ Contra a T3.8n:
 
 ### 4. O que ainda reprova (C1 em 8 de 10 rodadas, 0 de 10 passam todos os critérios)
 - **Blast, poste, +1,6 mm por update (excesso 0,55 a 0,77)**: medido por passo fixo (1/120 s) na sonda: no voo do poste (tombando sobre o pé, velocidade 3,6 a 4,5 m/s, 3 a 6 quadros depois do blast) alguns passos por update ganham +0,8 a +1,7 kg·m, todos sem chamada do kit (`setPose`/`setVelocity`/`addImpulse` mudando o corpo) e sem fixo novo, no passo em que o par com um ladrilho de chão (`tile`) aparece no `pairLog`. Em Jolt isolado, o mesmo poste (mesmo compound) tombando sobre ladrilhos de 2 m ou sobre uma caixa só ganha 0 mm por update; a queda livre perde 2,0 mm por update (Euler semi-implícito, constante), sem ganho. O ganho é do contato do pé com o ladrilho a 4 m/s. **Não achei alavanca do kit**; o que sobra é de configuração do Jolt (iterações, folga, `maxPushOut` do `KIT_WORLD`, qualidade de movimento do corpo), que a spec fixa. **Parei aqui e levo ao dono**: opções (A) reportar ao poste um `given` por passo (muda a régua: não feito); (B) um poste que tomba sobre o pé como cinemático até encostar (muda o comportamento do kit); (C) subir `positionIterations`/baixar `maxPushOut` do `KIT_WORLD` (muda C1 a C10, é decisão do dono, e precisa de nova bacia e de nova rodada de B5/B6).
-- **Martelo 2, poste +7,83 kg·m a 6,3 m/s**: não investigado a fundo (um caso em dez); a sonda sem navegador não o reproduz (o `hammer` dela é igual ao blast: o poste não gira do mesmo jeito).
+- **Martelo 2, poste +7,83 kg·m a 6,3 m/s**: não investigado a fundo (um caso em dez); a sonda sem navegador não o reproduziu em 4 variantes.
 - **Peças pequenas de C3** (blast 1, 2 e 4): lançadas pela onda com 6 a 7 m/s; não investigadas.
 
 ### 5. Gates
