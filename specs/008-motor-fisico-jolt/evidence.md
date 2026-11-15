@@ -1819,6 +1819,7 @@ Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0, pnpm 10.28.2. Mer
 | `game-floorplan-three` próprio | 1030 passam, **1 falha: `grenade-in-kitchen`** (linha de base: 3 golden; os 3 passaram a verdes) |
 | `game-floorplan-three` Jolt | 5 falhas: os 3 `destruction/*` do golden, `bookcase-topple` (conhecidos) e `grenade-in-kitchen` |
 | Demais pacotes (`pnpm -r`, sem floorplan) | sem falha além do já corrigido acima |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128** (linha de base: 128/128) |
 | Construção por tipologia e z-fighting | dentro do `game-floorplan-three` e dos pacotes de tipologia: verdes |
 | `eslint` nos arquivos mudados | 0 erros (avisos de `max-lines` antigos) |
 | `kit-audit --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
