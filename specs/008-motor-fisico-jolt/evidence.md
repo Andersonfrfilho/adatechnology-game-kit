@@ -1957,3 +1957,43 @@ As duas outras checagens que **já reprovam** na linha de base (`e987bbe4`, conf
 - O dreno embutido num pavimento de cima sai do bocal para a parede mais próxima **daquele pavimento** e cai na parede mais próxima do de baixo, mesmo que as duas não se alinhem, e passa pela laje na horizontal (no meio da espessura de 13 cm) entre elas; a casa de verdade tem um shaft, que a planta não tem.
 - Os trechos soltos que a explosão deixa caem como peças (colisores de `fitOrientedBoxes` com os triângulos, as caixas abraçam o desenho; conferido no teste 3), mas a conta de custo de uma sala com muitas casas e vários furos não foi medida.
 - A saída de água de laje (`roof/slabs.ts`, bocal pela mureta) segue como estava.
+
+## T3.8p — o terreno que assenta avisa o motor (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0, pnpm 10.28.2. Branch `fix/terreno-assenta-avisa-motor` (de `main` `6b0e6af4`).
+
+### 1. Causa
+`settle` (`packages/game-terrain/src/terrain.ts`) soma o volume do entulho que pousa ao vértice por `addToVertex` e nunca chama `emitDeform`. O chão desenhado sobe 2 a 8 cm, a 5 a 13 m do evento, e ninguém é avisado: o `onDeform` que o anfitrião liga em `renderer.wakeRegion` (`game-test-room/src/room.ts`) não dispara, os ladrilhos do motor (`engine-pieces.ts`: `layGround`, `groundChanged`) seguem com `dirty` falso, e o que dorme em cima não acorda. O sono só enxerga o chão pelo centro e só se ele mudou mais de `GROUND_DROP` (2 cm): uma subida menor, ou fora do centro, passa.
+
+### 2. Correção
+- `settle` acumula a caixa (x, z) dos vértices que subiram; `update` emite **um** `emitDeform` por atualização (centro da caixa, raio da meia diagonal mais 2 células). Nunca um por vértice, e o custo é uma comparação por vértice.
+- Varredura das outras vias que mudam altura: `heapAt`, `dig`, `strike`, `giveWay`/`bearAll`, `burn` e `updateSlides` já emitiam. Faltavam: `fill` (avisava só onde pôs a terra, não de onde tirou: agora também avisa a região `from`), e `reset`/`setLayout`/`load` (refazem `dug` e `loose` do mapa inteiro: avisam o mapa todo; `excavate` e `layBeds` entram por aí).
+
+### 3. Números (mesma semente 7, granada de 3,2 MJ em (0, 0), terreno de 40 m, sem deslizamento, 8 s)
+| | antes | depois |
+|---|---|---|
+| ladrilhos de 2 m com chão subido (> 1 mm, fora da cratera) | 19 | 19 |
+| desses, avisados por `onDeform` | **0** | **19** (em 18 emissões, uma por atualização com entulho) |
+| maior subida | 83 mm | 83 mm |
+| ladrilho do motor ao lado do que dormia a 1,2 cm de subida: distância ao chão desenhado | 12,5 mm (1 de 4 ladrilhos velho) | 0 (0 de 4) |
+| peça dormindo ali | não acorda, afundada 12,5 mm | acorda, afunda 5 mm no ápice (as células de 2,5 cm do ladrilho cortam o ápice de um pico de 10 cm) |
+
+### 4. Testes
+- `game-terrain/tests/terrain.test.ts`: o entulho que assenta emite deforms cuja região cobre todo vértice que subiu (sem deslizamento, todo aumento é do entulho; falha sem a correção), no máximo uma por atualização; `fill` de longe avisa as duas regiões; `reset` e `load` avisam o mapa todo.
+- `game-destruction-three/tests/terrain-settle-engine.test.ts` (com `@adatechnology/game-terrain` como devDependency): terreno real ligado ao `wakeRegion`; peça dormindo onde o entulho assenta com menos de 1,8 cm; depois do assentamento, no Jolt, o ladrilho confere com `groundAt` (< 1 mm), a peça acordou e não termina dentro do chão. No solver próprio confere só que acordou (o solver próprio repousa do seu jeito, igual com e sem a correção).
+
+### 5. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `game-terrain` | 106 passam, 0 falhas (os 4 testes novos incluídos) |
+| `game-terrain-three` | 12 passam, 0 falhas |
+| `game-destruction-three` próprio / Jolt | 410 passam, 0 falhas / 490 passam, só as 2 `rolling` conhecidas |
+| `game-floorplan-three` próprio | **1068 passam, 0 falhas**, golden exato 44/44 |
+| `game-floorplan-three` Jolt | 1068 passam, 4 falhas: os 3 `destruction/*` do golden exato e `bookcase-topple`, as mesmas conhecidas |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, `worstC4` 1,5167, `worstC2Unconditioned` 0,014651, `fellThrough` 0 (idênticos à T3.8j) |
+| `eslint` nos arquivos mudados | 0 erros |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
+| `pnpm check:layers` | sem violações novas |
+
+Nenhum golden mudou: o assentamento do entulho só acorda o que está perto, e nenhuma cena gravada tem terreno com entulho assentando ao lado de peça dormindo. Nenhuma regravação.
