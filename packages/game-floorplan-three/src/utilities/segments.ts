@@ -107,3 +107,17 @@ export function holdersOf(spans: readonly Span[], pieceIdOf: (index: number) => 
   }
   return holders
 }
+
+/** How far (m) the cap of a stretch cut at a face of the solid it lies in is drawn off that face. */
+const CAP_SINK = 0.002
+
+/**
+ * Where a stretch is drawn from and to: its ends are cut at the faces of the slabs and walls, and a cap lying on a face of the wall it ends in fights it, so a stretch in a solid
+ * is drawn `CAP_SINK` short of its cut and the stretch in the open beside it goes `CAP_SINK` into the solid: every cap lies inside the solid, none on its plane.
+ */
+export function drawnEnds(span: Span, previous: Span | undefined, next: Span | undefined): [Vec3, Vec3] {
+  const along: Vec3 = [(span.b[0] - span.a[0]) / span.length, (span.b[1] - span.a[1]) / span.length, (span.b[2] - span.a[2]) / span.length]
+  const shift = (neighbour: Span | undefined): number => (span.host !== null ? -CAP_SINK : neighbour && neighbour.host !== null ? CAP_SINK : 0)
+  const move = (end: Vec3, amount: number): Vec3 => [end[0] + along[0] * amount, end[1] + along[1] * amount, end[2] + along[2] * amount]
+  return span.length > 4 * CAP_SINK ? [move(span.a, -shift(previous)), move(span.b, shift(next))] : [span.a, span.b]
+}
