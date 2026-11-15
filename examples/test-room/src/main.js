@@ -9,6 +9,7 @@
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
+//   ?prelay=0           do not lay the engine ground under an area when it is built (default: laid)
 //   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
 //   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
 //                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
@@ -88,6 +89,8 @@ const room = createTestRoom({
   ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   // ?blastDebris=1: the blast debris policy of the owner's D4 (wake queue by step cost); off by default
   ...(params.get('blastDebris') === '1' ? { debris: { blast: {} } } : {}),
+  // ?prelay=0: the area's engine ground is laid when a piece first needs it, not when the area is built (the comparison of spec 008 T3.8m); on by default
+  ...(params.get('prelay') === '0' ? { prelayGround: false } : {}),
   strikeCombo: PUNCH_COMBO,
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
   firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),

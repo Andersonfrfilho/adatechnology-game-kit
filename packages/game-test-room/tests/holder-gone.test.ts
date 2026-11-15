@@ -95,3 +95,23 @@ describe('what is thrown falls and rests', () => {
     expect(bottom(stick)).toBeGreaterThan(-0.05)
   })
 })
+
+describe('the engine ground under a built area', () => {
+  const opened = (extra: Parameters<typeof makeRoom>[0]): number => {
+    const room = makeRoom({ ...EVERY_EVENT_IN_ITS_FRAME, ...extra })
+    let calls = 0
+    const prelay = room.renderer.prelayGround.bind(room.renderer)
+    room.renderer.prelayGround = (bounds) => { calls++; return prelay(bounds) }
+    room.loadModule(benchModule())
+    room.openArea('holder_module')
+    return calls
+  }
+
+  it('is laid when the area is built, by default', () => {
+    expect(opened({})).toBe(1)
+  })
+
+  it('is left alone with prelayGround: false', () => {
+    expect(opened({ prelayGround: false })).toBe(0)
+  })
+})
