@@ -76,6 +76,11 @@ export interface RendererOptions {
    * (`BLAST_DEBRIS_DEFAULTS`); a blast can override them (`ExplodeOptions.debris`).
    */
   blastDebris?: BlastDebrisOptions
+  /**
+   * With an engine (Jolt): the ground of a loose piece of several parts (a pole with its wires, a wall with its openings) is laid under each part's box, not under the box around
+   * all of them, so a piece 23 m across and mostly air gets the tiles (and the solid under each) it touches, not 70. Default off: the same tiles as before (T3.8v).
+   */
+  tilesUnderParts?: boolean
   /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
   debrisCost?: DebrisCostOptions
   /** Where the player is (m): the far and old rule of `blastDebris.far` counts distance from it. Without it, no piece is far. */

@@ -462,6 +462,7 @@ class Renderer implements DestructionRenderer {
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
+      ...(o.tilesUnderParts ? { tilesUnderParts: true } : {}),
       ...(this.blastDebris
         ? { keep: { maxLive: this.blastDebris.maxLivePieces, far: this.blastDebris.far, ...(o.focus ? { focus: o.focus } : {}), onFade: (b: PieceBody) => this.fadePiece(b) } }
         : {}),
