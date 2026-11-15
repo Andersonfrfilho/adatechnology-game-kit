@@ -59,6 +59,8 @@ export interface HouseDestructionRenderer {
   restore(objectId: string): void
   /** The object leaves for good: its pieces leave the world and every effect of it and of them goes at once, then it is unbound. */
   release?(objectId: string): string[]
+  /** The engine's ground under and around the built area is laid now, so the frame its pieces first wake in does not pay for it (the renderer lays it when it has an engine). */
+  prelayGround?(bounds: { minX: number; minZ: number; maxX: number; maxZ: number }): number
   /** What split from the object leaves the world with its effects; the object stays bound (a reset). */
   releasePieces?(objectId: string): string[]
 }

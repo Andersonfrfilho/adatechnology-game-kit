@@ -42,6 +42,8 @@ export interface SoundDetail {
 }
 
 export interface RendererOptions {
+  /** Whether `prelayGround` lays the engine's ground under a built area (default true); `false` leaves it to be laid when a piece first needs it (a comparison, or a host that builds in many small steps). */
+  prelayGround?: boolean
   /** What steps the loose pieces; required, so a host never ends up on the kit's solver by forgetting it. See `PieceSystemOptions.physics`. */
   physics: PiecePhysics
   /** Scene that receives fragments, loose pieces, decals and particles. */

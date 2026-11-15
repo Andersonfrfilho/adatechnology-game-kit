@@ -308,6 +308,7 @@ class Renderer implements DestructionRenderer {
   private readonly maxFragments: number
   /** The debris policy of blasts (`RendererOptions.blastDebris`), or null: a host that sets nothing wakes and loosens everything in the blast's frame, as before. */
   private readonly blastDebris: ResolvedBlastDebris | null
+  private readonly isGroundPrelaid: boolean
   private readonly blastWakes: BlastWakes | null
   private readonly costMeter: PhysicsCostMeter
   /** The step cost the debris policy reads this frame (`debrisCost`), null when there is none (the kit's own solver, or `fixed`). */
@@ -418,6 +419,7 @@ class Renderer implements DestructionRenderer {
     this.autoSplit = o.autoSplit !== false
     this.maxFragments = o.maxFragments ?? 160
     this.blastDebris = o.blastDebris ? resolveBlastDebris(o.blastDebris) : null
+    this.isGroundPrelaid = o.prelayGround !== false
     this.blastWakes = this.blastDebris ? new BlastWakes(this.blastDebris) : null
     const priors = resolveBlastDebris(o.blastDebris)
     this.costMeter = new PhysicsCostMeter(priors.physicsCostPerBodyMs, priors.wakeCostPerBodyMs)
@@ -2936,6 +2938,7 @@ class Renderer implements DestructionRenderer {
   }
 
   prelayGround(bounds: GroundBounds): number {
+    if (!this.isGroundPrelaid) return 0
     return this.pieceSys.prelayGround(bounds)
   }
 

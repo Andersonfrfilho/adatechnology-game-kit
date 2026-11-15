@@ -354,7 +354,7 @@ export interface TestRoomOptions {
     /** What a blast does to its debris (`RendererOptions.blastDebris`: wake in batches by the measured step cost, how many pieces enter physics, far and old debris); omitted, off. `{}` takes the defaults; the player is the camera. */
     blast?: BlastDebrisOptions
   }
-  /** Whether a module area lays the engine's ground under what it built (`DestructionRenderer.prelayGround`; default true); `false` leaves it to be laid when a piece first needs it. */
+  /** Whether the engine's ground is laid under what a module area or a house builds (`RendererOptions.prelayGround`; default true); `false` leaves it to be laid when a piece first needs it. */
   prelayGround?: boolean
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions

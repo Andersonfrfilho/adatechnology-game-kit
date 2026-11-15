@@ -462,6 +462,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
     eventBudgetMs: options.debris?.eventBudgetMs ?? 8,
+    ...(options.prelayGround === false ? { prelayGround: false } : {}),
     // the debris at rest is drawn in batches (its collision unchanged); the awake budget stays off unless asked for
     ...(options.debris?.maxAwakePieces !== undefined ? { maxAwakePieces: options.debris.maxAwakePieces } : {}),
     ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
@@ -4923,7 +4924,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     // the engine's ground under what was just built is laid now, so the frame its pieces first wake in does not pay for it
     const built = new THREE.Box3()
     for (const { so } of placed) built.expandByObject(so.root)
-    if (options.prelayGround !== false && !built.isEmpty()) renderer.prelayGround({ minX: built.min.x, minZ: built.min.z, maxX: built.max.x, maxZ: built.max.z })
+    if (!built.isEmpty()) renderer.prelayGround({ minX: built.min.x, minZ: built.min.z, maxX: built.max.x, maxZ: built.max.z })
     if (layout.view) room.look(layout.view.eye, layout.view.target)
     return placed.map(({ so }) => so)
   }

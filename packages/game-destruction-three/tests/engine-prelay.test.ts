@@ -1,10 +1,12 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
+import { createDestruction } from '@adatechnology/game-destruction'
 import type { PhysicsWorld } from '@adatechnology/game-physics'
 
 import type { GroundBounds } from '../src/engine-pieces'
 import { PieceSystem } from '../src/pieces'
+import { createDestructionRenderer } from '../src/renderer'
 import { IS_JOLT, physicsOption } from './setup-physics'
 
 /** A built area of 32 m (the diagonal of it is the 45 m wire's length), on ground that is never level: every tile is a height field with its solid. */
@@ -173,5 +175,19 @@ describe.runIf(IS_JOLT && process.env.PROFILE === '1')('wake cost with and witho
     }
     const mid = (v: number[]): number => [...v].sort((a, b) => a - b)[Math.floor(v.length / 2)] ?? 0
     process.stderr.write(`wake-profile ${JSON.stringify(Object.fromEntries(Object.entries(rows).map(([k, v]) => [k, { median: +mid(v).toFixed(2), runs: v.map((x) => +x.toFixed(2)) }])))}\n`)
+  })
+})
+
+describe.skipIf(!IS_JOLT)('the renderer option that turns the pre-lay off', () => {
+  const rendererWith = (prelayGround?: boolean) =>
+    createDestructionRenderer(THREE, { physics: physicsOption(), scene: new THREE.Scene(), world: createDestruction({ seed: 1 }), ...(prelayGround === undefined ? {} : { prelayGround }) })
+
+  it('lays the ground by default', () => {
+    expect(rendererWith().prelayGround(AREA)).toBe(21 * 21)
+  })
+
+  it('lays nothing with prelayGround: false', () => {
+    const renderer = rendererWith(false)
+    expect(renderer.prelayGround(AREA)).toBe(0)
   })
 })
