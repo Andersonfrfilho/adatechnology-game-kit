@@ -4425,20 +4425,21 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     readonly radius: number
     readonly distance: number
     readonly expected: number
+    /** The target's own name, which seeds its stream so what it draws does not depend on the other targets. */
+    readonly id: string
   }
 
   /**
    * The fragments of a case, thrown as gun rounds. The case breaks into `fragments` pieces (Mott), flying evenly in all directions at Gurney's speed and slowing in the air
    * (`exp(-k d)`). Only the pieces that can reach something are cast: each part in range takes the pieces that fly into its bounding sphere (`fragments * (1 - cos(theta)) / 2`,
    * theta the half angle of the sphere seen from the charge), so the cost follows what is near, not the count of the case; the total is capped at `maxRays` (the rest is cut evenly).
-   * The stream is seeded from the world seed and the charge, so a blast throws the same pieces every time. Each piece is a ballistic round of its own energy and calibre
+   * Each target draws from a stream seeded from the world seed, the charge and the target's own name, so a blast throws the same pieces every time and a piece's flight does not change when other parts are added elsewhere. Each piece is a ballistic round of its own energy and calibre
    * through the same path as a shot (`shootRay`): penetration by material, ricochet, holes. Pieces aimed at several overlapping spheres are counted in each (a small overcount).
    */
   const throwCasing = (point: Vec3, charge: BlastCharge, src: string | undefined): HitResult[] => {
     const casing = charge.casing
     if (!casing || !(casing.mass > 0) || !(casing.fragments > 0)) return []
     const { mottScale, speed } = casingFlight(casing)
-    const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments))
     const farthest = Math.log(speed / FRAGMENT_MIN_SPEED) / fragmentDrag(mottMass(0, mottScale, casing.fragments))
     const skip = new Set<string>()
     for (const id of charge.ignore ?? []) {
@@ -4456,7 +4457,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (distance - p.bound >= farthest) continue
         const half = Math.asin(Math.min(1, p.bound / Math.max(distance, 1e-6)))
         const expected = (casing.fragments * (1 - Math.cos(half))) / 2
-        targets.push({ centre, radius: p.bound, distance, expected })
+        targets.push({ centre, radius: p.bound, distance, expected, id: `${o.id}|${p.spec.id}` })
         total += expected
       }
     }
@@ -4481,7 +4482,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (distance - bound >= farthest) continue
       const half = Math.asin(Math.min(1, bound / Math.max(distance, 1e-6)))
       const expected = (casing.fragments * (1 - Math.cos(half))) / 2
-      targets.push({ centre, radius: bound, distance, expected })
+      targets.push({ centre, radius: bound, distance, expected, id: im.impl.id })
       total += expected
     }
     const cap = Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS))
@@ -4489,6 +4490,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const out: HitResult[] = []
     const ignore = skip.size > 0 ? skip : undefined
     for (const t of targets) {
+      const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments, ...Array.from(t.id, (char) => char.charCodeAt(0) / 1000)))
       const count = Math.floor(t.expected * keep + rng.next())
       if (count === 0) continue
       const axis = vec.scale(vec.sub(t.centre, point), 1 / Math.max(t.distance, 1e-6))
