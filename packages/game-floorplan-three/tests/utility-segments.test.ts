@@ -98,11 +98,11 @@ describe('the wiring and pipe runs detach in segments', () => {
     const entrance = utilities?.electrical?.serviceEntrance
     if (!entrance?.pole) return
     const drop = entrance.drop ?? []
-    const dropLength = (from: readonly number[], to: readonly number[], lift = 0): number => Math.hypot(to[0]! - from[0]!, to[2]! - from[2]!, to[1]! + lift - from[1]!)
+    const dropLength = (from: readonly number[], to: readonly number[]): number => Math.hypot(to[0]! - from[0]!, to[2]! - from[2]!, to[1]! - from[1]!)
     const head = drop[0]
     const end = drop[drop.length - 1]
     const grid = 8 * 22 * Math.PI * 0.007 ** 2
-    const wires = head && end ? Math.PI * (0.009 ** 2 * (dropLength(head, end) + dropLength(head, end, 0.04)) + 0.008 ** 2 * Math.hypot(head[0]! - (entrance.pole.u - 0.2), head[2]! - (entrance.pole.h - 0.5), head[1]! - entrance.pole.v)) : 0
+    const wires = head && end ? Math.PI * (0.009 ** 2 * 2 * dropLength(head, end) + 0.008 ** 2 * Math.hypot(head[0]! - (entrance.pole.u - 0.2), head[2]! - (entrance.pole.h - 0.5), head[1]! - entrance.pole.v)) : 0
     expect(massOf('wiring:grid') + massOf('wiring:drop')).toBeCloseTo(DENSITY.copper! * (grid + wires), 4)
   })
 })

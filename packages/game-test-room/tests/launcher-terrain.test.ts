@@ -147,7 +147,10 @@ describe('every launcher in the ground area goes off on every lot (it never stop
         const dug = room.terrain.heightAt(cx, cz)
         if (DIGGABLE.includes(surface)) expect(dug, `${weapon} digs ${surface}`).toBeLessThan(flat - 0.02)
         const before = groundNow(room, [cx, 0, cz])
-        const blast = fireAt(eyeAt(cx + 0.3, cz + 3), [cx, dug, cz])
+        // from 1.5 m back, not 3 m: from 3 m the line to the slab lot's crater passes 2 cm over the near edge of the room's table (top 0.78 m high, its edge at z -0.4),
+        // and the two blasts of the paving lots 2 m from it now throw their case (250 to 300 steel pieces) into its legs and top: the table tilts some 6 degrees,
+        // its edge rises 0.4 m x sin 6 = 4 cm into the line, and the round rightly goes off on the table. From 1.5 m the line crosses that edge 0.8 m above it
+        const blast = fireAt(eyeAt(cx + 0.3, cz + 1.5), [cx, dug, cz])
         expect(blast, `${weapon} into the crater on ${surface}`).toMatchObject({ type: 'explosion', cause: 'impact' })
         const [x, y, z] = blast!.point
         // on the ground as the first blast left it (the round's radius above it): never under it, nor up on a rim it did not reach

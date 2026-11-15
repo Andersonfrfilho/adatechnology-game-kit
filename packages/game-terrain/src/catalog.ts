@@ -6,6 +6,7 @@ import type { TerrainBlow, TerrainMaterial, TerrainProfile } from './types'
 export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'turf',
+    dig: { effort: 1.3 },
     debris: 'clods',
     rimShare: 0.25,
     reposeDegrees: 55,
@@ -21,6 +22,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'soil',
+    dig: { effort: 1 },
     debris: 'clods',
     rimShare: 0.35,
     reposeDegrees: 40,
@@ -36,6 +38,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'sand',
+    dig: { effort: 0.8 },
     debris: 'dust',
     rimShare: 0.5,
     reposeDegrees: 33,
@@ -51,6 +54,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'gravel',
+    dig: { effort: 1.6 },
     debris: 'chips',
     rimShare: 0.15,
     reposeDegrees: 38,
@@ -150,6 +154,8 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'mud',
+    // the shovel lifts it, and the hole fills in behind the blade
+    dig: { effort: 1.4, closes: true },
     debris: 'clods',
     rimShare: 0.15,
     reposeDegrees: 18,
@@ -168,6 +174,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'clay',
+    dig: { effort: 2.2 },
     debris: 'chips',
     color: [0.47, 0.27, 0.14],
     pattern: 'clay',
@@ -181,7 +188,22 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     cracks: 4,
   },
   {
+    // laterite, a soil baked hard (piçarra): no shovel goes in; only a heavy blow or a charge sinks or cracks it
+    id: 'laterite',
+    debris: 'chips',
+    rimShare: 0.2,
+    color: [0.36, 0.17, 0.08],
+    pattern: 'soil',
+    hits: {
+      ballistic: { specificEnergy: 5e7, aspect: 0.2, thresholdJoules: 200 },
+      blunt: { specificEnergy: 8e7, aspect: 0.1, thresholdJoules: 600 },
+      slash: { specificEnergy: 2e8, aspect: 0.1, thresholdJoules: 400 },
+      explosive: { specificEnergy: 3e8, aspect: 0.18 },
+    },
+  },
+  {
     id: 'snow',
+    dig: { effort: 0.6 },
     debris: 'dust',
     rimShare: 0.4,
     reposeDegrees: 38,
@@ -245,6 +267,10 @@ export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
   { id: 'snow', strata: [{ material: 'snow', thickness: 0.3 }, { material: 'soil', thickness: 1.5 }, { material: 'stone', thickness: 0.5 }] },
   { id: 'cobblestone', strata: [{ material: 'cobble', thickness: 0.12 }, { material: 'sand', thickness: 0.06 }, { material: 'gravel', thickness: 0.2 }, { material: 'soil', thickness: 1.2 }] },
   // rock at the surface (an outcrop, a quarry floor): a blast only spalls it and a shot chips it
+  // a yard as it is dug: topsoil, the clay under it, rock deep down
+  { id: 'yard', strata: [{ material: 'soil', thickness: 0.35 }, { material: 'clay', thickness: 1.6 }, { material: 'stone', thickness: 1 }] },
+  // ground baked hard (laterite over rock): no shovel goes in
+  { id: 'hardpan', strata: [{ material: 'laterite', thickness: 0.8 }, { material: 'stone', thickness: 1.5 }] },
   { id: 'bedrock', surfacePattern: 'rock', strata: [{ material: 'stone', thickness: 3 }] },
   { id: 'paver_floor', strata: [{ material: 'paver', thickness: 0.08 }, { material: 'sand', thickness: 0.05 }, { material: 'gravel', thickness: 0.15 }, { material: 'soil', thickness: 1.2 }] },
   // a pond deep enough to stand chest-high in: a charge on its bed goes off under the water

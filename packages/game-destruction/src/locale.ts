@@ -22,7 +22,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
       steel: 'steel', cast_iron: 'cast iron', aluminium: 'aluminium', copper: 'copper', wood_soft: 'softwood', wood_hard: 'hardwood', plywood: 'plywood',
       mdf: 'MDF', glass: 'glass', tempered_glass: 'tempered glass', ceramic: 'ceramic', concrete: 'concrete', brick: 'brick', plaster: 'plaster',
       stone: 'stone', plastic: 'plastic', rubber: 'rubber', fabric: 'fabric', foam: 'foam', leather: 'leather', paper: 'paper', foliage: 'foliage',
-      green_wood: 'green wood', cactus: 'cactus', flesh_fruit: 'fruit', wax: 'wax', soil: 'soil', asphalt: 'asphalt', sand: 'sand', gravel: 'gravel', turf: 'turf', mortar: 'mortar', mud: 'mud', clay: 'dry clay', snow: 'snow', cobble: 'cobblestone', paver: 'concrete paver',
+      green_wood: 'green wood', cactus: 'cactus', flesh_fruit: 'fruit', wax: 'wax', soil: 'soil', asphalt: 'asphalt', sand: 'sand', gravel: 'gravel', turf: 'turf', mortar: 'mortar', mud: 'mud', clay: 'dry clay', laterite: 'laterite', snow: 'snow', cobble: 'cobblestone', paver: 'concrete paver',
     },
     partStatus: { intact: 'intact', damaged: 'damaged', collapsed: 'collapsed', broken: 'broken', melted: 'melted', ashes: 'ashes' },
     jointKinds: {
@@ -34,7 +34,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     },
     damageTypes: { ballistic: 'ballistic', blunt: 'blunt', slash: 'slash', explosive: 'explosive', fire: 'fire', heat: 'heat' },
     eventLabels: {
-      damage: 'damage', dent: 'dent', hole: 'hole', crack: 'crack', ricochet: 'ricochet', debris: 'debris', fracture: 'broke', detach: 'came loose',
+      damage: 'damage', dent: 'dent', bend: 'bent', hole: 'hole', crack: 'crack', ricochet: 'ricochet', debris: 'debris', fracture: 'broke', detach: 'came loose',
       disassemble_progress: 'taking apart', ignite: 'caught fire', extinguish: 'put out', burnout: 'burned to ash', melt: 'melting', drip: 'dripping',
       leak: 'leak', explode: 'exploded', primed: 'about to explode', stress: 'overload', collapse: 'collapsed', settle: 'ground gave way', subside: 'ground lost under the footing', sway: 'sway', spall: 'plaster came off', stage: 'damage stage', chip: 'brick knocked out', expose: 'rebar bare', body: 'body', blast: 'blast', fragment_hit: 'fragment hit', destroyed: 'destroyed',
     },
@@ -46,7 +46,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
       steel: 'aço', cast_iron: 'ferro fundido', aluminium: 'alumínio', copper: 'cobre', wood_soft: 'madeira macia', wood_hard: 'madeira de lei',
       plywood: 'compensado', mdf: 'MDF', glass: 'vidro', tempered_glass: 'vidro temperado', ceramic: 'cerâmica', concrete: 'concreto', brick: 'tijolo',
       plaster: 'gesso', stone: 'pedra', plastic: 'plástico', rubber: 'borracha', fabric: 'tecido', foam: 'espuma', leather: 'couro', paper: 'papel',
-      foliage: 'folhagem', green_wood: 'madeira verde', cactus: 'cacto', flesh_fruit: 'fruta', wax: 'cera', soil: 'terra', asphalt: 'asfalto', sand: 'areia', gravel: 'brita', turf: 'grama', mortar: 'argamassa', mud: 'lama', clay: 'barro seco', snow: 'neve', cobble: 'paralelepípedo', paver: 'bloquete',
+      foliage: 'folhagem', green_wood: 'madeira verde', cactus: 'cacto', flesh_fruit: 'fruta', wax: 'cera', soil: 'terra', asphalt: 'asfalto', sand: 'areia', gravel: 'brita', turf: 'grama', mortar: 'argamassa', mud: 'lama', clay: 'barro seco', laterite: 'piçarra', snow: 'neve', cobble: 'paralelepípedo', paver: 'bloquete',
     },
     partStatus: { intact: 'intacto', damaged: 'danificado', collapsed: 'desabado', broken: 'quebrado', melted: 'derretido', ashes: 'cinzas' },
     jointKinds: {
@@ -58,7 +58,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     },
     damageTypes: { ballistic: 'tiro', blunt: 'impacto', slash: 'corte', explosive: 'explosão', fire: 'fogo', heat: 'calor' },
     eventLabels: {
-      damage: 'dano', dent: 'amassado', hole: 'furo', crack: 'trinca', ricochet: 'ricochete', debris: 'estilhaços', fracture: 'quebrou', detach: 'soltou',
+      damage: 'dano', dent: 'amassado', bend: 'entortou', hole: 'furo', crack: 'trinca', ricochet: 'ricochete', debris: 'estilhaços', fracture: 'quebrou', detach: 'soltou',
       disassemble_progress: 'desmontando', ignite: 'pegou fogo', extinguish: 'apagou', burnout: 'virou cinza', melt: 'derretendo', drip: 'pingando',
       leak: 'vazamento', explode: 'explodiu', primed: 'prestes a explodir', stress: 'sobrecarga', collapse: 'desabou', settle: 'recalque do solo', subside: 'solo perdido sob a fundação', sway: 'balanço', spall: 'reboco soltou', stage: 'estágio de dano', chip: 'tijolo arrancado', expose: 'vergalhão à mostra', body: 'corpo', blast: 'explosão', fragment_hit: 'estilhaço atingiu', destroyed: 'destruído',
     },

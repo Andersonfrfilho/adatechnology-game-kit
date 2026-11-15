@@ -97,13 +97,79 @@ export function concreteViolations(structure: Pick<Structure, 'parts' | 'support
       .map((s) => byId.get(s.part))
       .filter((top): top is StructurePart => top !== undefined && top.role === 'beam' && top.material === 'concrete' && Math.abs(top.y0 - part.y1) < 0.01)
       .reduce((most, top) => Math.max(most, top.y1 - top.y0), 0)
-    out.push(...beamViolations(part, bearingsOf(part, supports, byId), { isMasonry, castOn }))
+    const bearings = bearingsOf(part, supports, byId)
+    out.push(...beamViolations(part, bearings, { isMasonry, castOn }))
+    // a beam framing into another hangs from it: the one it frames into is at least as deep (a lintel cast under a bond beam is the bond beam's own section)
+    for (const { on } of bearings) {
+      // (a bond beam on its wall is held all along by the masonry under it: only one that spans takes the beam as a point load)
+      if (on.role !== 'beam' || on.material !== 'concrete' || on.y1 < part.y1 - 0.01 || castOn > 0 || (on.beamKind === 'bond_beam' && !spansAt(on, part, byId, supports))) continue
+      if (sectionDepthAt(on, part.aabb, structure.parts) < depthToHold(on, part) - 0.01)
+        out.push({ code: STRUCTURAL_VIOLATION.BEAM_ON_SHALLOWER_BEAM, part: part.id, message: `${part.id} (bottom at ${part.y0.toFixed(2)} m) rests on ${on.id}, whose section ends at ${(on.y1 - sectionDepthAt(on, part.aabb, structure.parts)).toFixed(2)} m` })
+    }
   }
   return out
 }
 
+/**
+ * How deep the section of `host` has to reach under its top to take `beam` framed into it (NBR 6118 18.3.7, indirect support): down to the bottom of
+ * `beam`, so the supported beam never hangs under the one that carries it. A bond beam level with the slab's top takes a beam cast under the slab: it
+ * reaches past the beam's own depth by the slab.
+ */
+export const depthToHold = (host: StructurePart, beam: StructurePart): number => host.y1 - beam.y0
+
+/**
+ * Depth of the concrete section `beam` makes over the plan box `at`: its own and that of the beams cast under it there (a bond beam over an opening and the
+ * lintel under it work as one beam).
+ */
+export function sectionDepthAt(beam: StructurePart, at: readonly number[], parts: readonly StructurePart[]): number {
+  let bottom = beam.y0
+  for (let found = true; found; ) {
+    found = false
+    for (const under of parts) {
+      if (under === beam || under.role !== 'beam' || under.material !== beam.material || Math.abs(under.y1 - bottom) > 0.01) continue
+      if (under.aabb[0] >= at[2]! || under.aabb[2] <= at[0]! || under.aabb[1] >= at[3]! || under.aabb[3] <= at[1]!) continue
+      bottom = under.y0
+      found = true
+    }
+  }
+  return beam.y1 - bottom
+}
+
+/** Whether `host` spans where `part` rests on it: no wall or pillar under it there (a bond beam over an opening). */
+function spansAt(host: StructurePart, part: StructurePart, byId: ReadonlyMap<string, StructurePart>, supports: readonly Support[]): boolean {
+  const [u0, v0, u1, v1] = part.aabb
+  return !supports.some((s) => {
+    if (s.part !== host.id || s.bears === false) return false
+    const under = byId.get(s.on)
+    if (!under || (under.role !== 'wall' && under.role !== 'column')) return false
+    return under.aabb[0] < u1 && under.aabb[2] > u0 && under.aabb[1] < v1 && under.aabb[3] > v0
+  })
+}
+
+/** The span a beam on `bearings` is sized for: none on a wall under half its length or more (it rests on it all along), else its effective span. */
+const spanToCarry = (bearings: readonly Bearing[], length: number, depth: number): number =>
+  bearings.some((b) => isWallLike(b.on) && b.to - b.from >= length / 2) ? 0 : effectiveSpan(bearings, depth)
+
+/**
+ * The least depth `beam` needs on the supports `structure` gives it (a tenth of its effective span, NBR 6118 14.6.2.4), counting a beam cast on it: what the
+ * validator asks of it, for a builder to size it with.
+ */
+export function depthToCarry(beam: StructurePart, structure: Pick<Structure, 'parts' | 'supports'>, step = 0.05): number {
+  const byId = new Map(structure.parts.map((part) => [part.id, part]))
+  const castOn = structure.supports
+    .filter((s) => s.on === beam.id && s.bears !== false)
+    .map((s) => byId.get(s.part))
+    .filter((top): top is StructurePart => top !== undefined && top.role === 'beam' && top.material === 'concrete' && Math.abs(top.y0 - beam.y1) < 0.01)
+    .reduce((most, top) => Math.max(most, top.y1 - top.y0), 0)
+  const frame = alongOf(beam)
+  const bearings = bearingsOf(beam, structure.supports, byId)
+  let depth = beam.y1 - beam.y0
+  while (depth + castOn < spanToCarry(bearings, frame.to - frame.from, depth + castOn) / BEAM_DEPTH_RATIO - EPSILON) depth = Math.round((depth + step) * 100) / 100
+  return depth
+}
+
 /** Longest effective span between the bearings of a beam: the clear span plus, at each end, half the bearing up to 0.3 of the depth (NBR 6118 14.6.2.4). */
-function effectiveSpan(bearings: readonly { from: number; to: number }[], depth: number): number {
+export function effectiveSpan(bearings: readonly { from: number; to: number }[], depth: number): number {
   const sorted = [...bearings].sort((a, b) => a.from - b.from)
   let most = 0
   for (let k = 1; k < sorted.length; k++) {
@@ -130,8 +196,7 @@ function beamViolations(beam: StructurePart, bearings: readonly Bearing[], conte
   const depth = beam.y1 - beam.y0 + context.castOn
   if (frame.width < MIN_BEAM_WIDTH - EPSILON) out.push({ code: STRUCTURAL_VIOLATION.CONCRETE_BELOW_MIN_SECTION, part: beam.id, message: `${beam.id} is ${frame.width.toFixed(2)} m wide: NBR 6118 asks at least ${MIN_BEAM_WIDTH} m` })
   if (!bearings.length) return out
-  const continuous = bearings.some((b) => isWallLike(b.on) && b.to - b.from >= length / 2)
-  const span = continuous ? 0 : effectiveSpan(bearings, depth)
+  const span = spanToCarry(bearings, length, depth)
   if (depth < span / BEAM_DEPTH_RATIO - EPSILON) out.push({ code: STRUCTURAL_VIOLATION.CONCRETE_BELOW_MIN_SECTION, part: beam.id, message: `${beam.id} is ${depth.toFixed(2)} m deep over a ${span.toFixed(2)} m span: it needs at least L/${BEAM_DEPTH_RATIO} = ${(span / BEAM_DEPTH_RATIO).toFixed(2)} m` })
   if (length > MAX_LINTEL_ON_MASONRY && bearings.every((b) => context.isMasonry(b.on)))
     out.push({ code: STRUCTURAL_VIOLATION.BEAM_ON_WEAK_MASONRY, part: beam.id, message: `${beam.id} spans ${length.toFixed(2)} m on masonry alone: no pillar carries it` })

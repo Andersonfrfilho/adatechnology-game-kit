@@ -1,6 +1,6 @@
 {
-  "calibrationMs": 0.6134,
-  "node": "v22.22.0",
+  "calibrationMs": 0.9667,
+  "node": "v22.23.4",
   "budget": 1,
   "warn": 0.5,
   "groupBudget": 0.5,
@@ -9,1368 +9,2360 @@
   "overrides": {},
   "entries": {
     "animals/capybara": {
-      "ratio": 0.9713,
-      "ms": 0.757
+      "ratio": 0.7784,
+      "ms": 0.7525
     },
     "animals/cat": {
-      "ratio": 1.2196,
-      "ms": 0.9506
+      "ratio": 1.0533,
+      "ms": 1.0183
     },
     "animals/chicken": {
-      "ratio": 0.5492,
-      "ms": 0.4281
+      "ratio": 0.5839,
+      "ms": 0.5645
     },
     "animals/cow": {
-      "ratio": 1.4998,
-      "ms": 1.169
+      "ratio": 1.0628,
+      "ms": 1.0275
     },
     "animals/dog": {
-      "ratio": 1.1862,
-      "ms": 0.9245
+      "ratio": 1.0414,
+      "ms": 1.0067
     },
     "animals/horse": {
-      "ratio": 1.2789,
-      "ms": 0.9967
+      "ratio": 1.0705,
+      "ms": 1.0349
     },
     "animals/jaguar": {
-      "ratio": 1.6332,
-      "ms": 1.2729
+      "ratio": 1.158,
+      "ms": 1.1195
     },
     "animals/lancehead": {
-      "ratio": 0.81,
-      "ms": 0.6313
+      "ratio": 0.5928,
+      "ms": 0.5731
     },
     "animals/pig": {
-      "ratio": 1.1627,
-      "ms": 0.9062
+      "ratio": 1.0733,
+      "ms": 1.0376
     },
     "animals/rat": {
-      "ratio": 1.3755,
-      "ms": 1.072
+      "ratio": 1.0856,
+      "ms": 1.0494
     },
     "animals/southern_lapwing": {
-      "ratio": 0.5713,
-      "ms": 0.4453
+      "ratio": 0.5965,
+      "ms": 0.5767
     },
     "animals/vulture": {
-      "ratio": 0.5362,
-      "ms": 0.4179
+      "ratio": 0.6134,
+      "ms": 0.593
     },
     "animals/wild_boar": {
-      "ratio": 1.4899,
-      "ms": 1.1612
+      "ratio": 1.2066,
+      "ms": 1.1664
     },
     "characters/bake:Corredor": {
-      "ratio": 15.454,
-      "ms": 10.0234
+      "ratio": 5.471,
+      "ms": 5.289
     },
     "characters/bake:Lento": {
-      "ratio": 20.8149,
-      "ms": 13.5004
+      "ratio": 5.6914,
+      "ms": 5.5021
     },
     "characters/bake:Rastejante": {
-      "ratio": 14.1598,
-      "ms": 9.184
+      "ratio": 5.9518,
+      "ms": 5.7538
     },
     "characters/best:Afogado": {
-      "ratio": 1.2978,
-      "ms": 0.8417
+      "ratio": 0.905,
+      "ms": 0.8749
     },
     "characters/best:Brutamonte": {
-      "ratio": 1.3045,
-      "ms": 0.8461
+      "ratio": 0.9579,
+      "ms": 0.9261
     },
     "characters/best:Carbonizado": {
-      "ratio": 1.4292,
-      "ms": 0.927
+      "ratio": 1.0641,
+      "ms": 1.0288
     },
     "characters/best:Cego": {
-      "ratio": 1.2102,
-      "ms": 0.7849
+      "ratio": 0.8632,
+      "ms": 0.8345
     },
     "characters/best:Corredor": {
-      "ratio": 0.9635,
-      "ms": 0.6249
+      "ratio": 0.8989,
+      "ms": 0.869
     },
     "characters/best:Devorador": {
-      "ratio": 1.3755,
-      "ms": 0.8921
+      "ratio": 0.9801,
+      "ms": 0.9475
     },
     "characters/best:Espreitador": {
-      "ratio": 1.2623,
-      "ms": 0.8187
+      "ratio": 0.8106,
+      "ms": 0.7837
     },
     "characters/best:Farejador": {
-      "ratio": 1.1276,
-      "ms": 0.7313
+      "ratio": 0.8606,
+      "ms": 0.832
     },
     "characters/best:Gritador": {
-      "ratio": 1.3877,
-      "ms": 0.9001
+      "ratio": 0.8559,
+      "ms": 0.8275
     },
     "characters/best:Inchado": {
-      "ratio": 1.5313,
-      "ms": 0.9932
+      "ratio": 1.1127,
+      "ms": 1.0756
     },
     "characters/best:Lento": {
-      "ratio": 1.7856,
-      "ms": 1.1581
+      "ratio": 0.8685,
+      "ms": 0.8396
     },
     "characters/best:Rastejante": {
-      "ratio": 1.0378,
-      "ms": 0.6731
+      "ratio": 0.8401,
+      "ms": 0.8122
     },
     "characters/best:Saltador": {
-      "ratio": 0.9651,
-      "ms": 0.626
+      "ratio": 0.8291,
+      "ms": 0.8015
     },
     "characters/instanced:8": {
-      "ratio": 1.153,
-      "ms": 0.7478
-    },
-    "characters/person:arnaldo": {
-      "ratio": 5.2372,
-      "ms": 3.3968
-    },
-    "characters/person:bigode": {
-      "ratio": 4.6917,
-      "ms": 3.043
-    },
-    "characters/person:brasa": {
-      "ratio": 5.1049,
-      "ms": 3.311
-    },
-    "characters/person:criancas": {
-      "ratio": 15.9601,
-      "ms": 10.3516
-    },
-    "characters/person:italo": {
-      "ratio": 5.2553,
-      "ms": 3.4085
-    },
-    "characters/person:jessica": {
-      "ratio": 4.276,
-      "ms": 2.7734
-    },
-    "characters/person:mariana": {
-      "ratio": 4.7296,
-      "ms": 3.0676
-    },
-    "characters/person:nelson": {
-      "ratio": 5.1034,
-      "ms": 3.31
-    },
-    "characters/person:rafa": {
-      "ratio": 5.7804,
-      "ms": 3.7492
-    },
-    "characters/person:rosa": {
-      "ratio": 6.252,
-      "ms": 4.055
-    },
-    "characters/person:val": {
-      "ratio": 3.9986,
-      "ms": 2.5935
-    },
-    "characters/person:zilda": {
-      "ratio": 5.5018,
-      "ms": 3.5684
-    },
-    "household/armchair": {
-      "ratio": 0.2696,
-      "ms": 0.1672
-    },
-    "household/bathroom_cabinet": {
-      "ratio": 0.9947,
-      "ms": 0.6167
-    },
-    "household/bbq": {
-      "ratio": 1.7359,
-      "ms": 1.0763
-    },
-    "household/bed_double": {
-      "ratio": 0.2399,
-      "ms": 0.1487
-    },
-    "household/bed_single": {
-      "ratio": 0.2369,
-      "ms": 0.1469
-    },
-    "household/bench": {
-      "ratio": 0.2529,
-      "ms": 0.1568
-    },
-    "household/blinds": {
-      "ratio": 1.9382,
-      "ms": 1.2017
-    },
-    "household/bunk_bed": {
-      "ratio": 0.2492,
-      "ms": 0.1545
-    },
-    "household/camp_chair": {
-      "ratio": 0.3517,
-      "ms": 0.2181
-    },
-    "household/camp_stove": {
-      "ratio": 0.3693,
-      "ms": 0.229
-    },
-    "household/camp_table": {
-      "ratio": 0.2161,
-      "ms": 0.134
-    },
-    "household/campfire": {
-      "ratio": 0.4801,
-      "ms": 0.2977
-    },
-    "household/clothesline": {
-      "ratio": 2.9355,
-      "ms": 1.8201
-    },
-    "household/conduit_run": {
-      "ratio": 0.0368,
-      "ms": 0.0228
-    },
-    "household/cooler": {
-      "ratio": 0.4247,
-      "ms": 0.2633
-    },
-    "household/curtain": {
-      "ratio": 0.997,
-      "ms": 0.6181
-    },
-    "household/dining_chair": {
-      "ratio": 0.1441,
-      "ms": 0.0893
-    },
-    "household/dog_house": {
-      "ratio": 0.5196,
-      "ms": 0.3222
-    },
-    "household/dresser": {
-      "ratio": 2.2801,
-      "ms": 1.4137
-    },
-    "household/electrical_panel": {
-      "ratio": 0.6574,
-      "ms": 0.4076
-    },
-    "household/fireplace": {
-      "ratio": 0.7764,
-      "ms": 0.4814
-    },
-    "household/fridge": {
-      "ratio": 2.2083,
-      "ms": 1.3692
-    },
-    "household/fridge_compact": {
-      "ratio": 0.9717,
-      "ms": 0.6025
-    },
-    "household/gas_bottle": {
-      "ratio": 0.296,
-      "ms": 0.1835
-    },
-    "household/gas_canister": {
-      "ratio": 0.2581,
-      "ms": 0.16
-    },
-    "household/kitchen_cabinet_base": {
-      "ratio": 1.8793,
-      "ms": 1.1652
-    },
-    "household/kitchen_cabinet_wall": {
-      "ratio": 1.6545,
-      "ms": 1.0258
-    },
-    "household/lantern_lamp": {
-      "ratio": 0.3808,
-      "ms": 0.2361
-    },
-    "household/mailbox": {
-      "ratio": 0.6469,
-      "ms": 0.4011
-    },
-    "household/microwave": {
-      "ratio": 1.0036,
-      "ms": 0.6223
-    },
-    "household/nightstand": {
-      "ratio": 1.2477,
-      "ms": 0.7736
-    },
-    "household/outhouse": {
-      "ratio": 2.5441,
-      "ms": 1.5774
-    },
-    "household/pantry": {
-      "ratio": 1.5794,
-      "ms": 0.9792
-    },
-    "household/power_meter": {
-      "ratio": 0.8233,
-      "ms": 0.5105
-    },
-    "household/service_entrance": {
-      "ratio": 0.8246,
-      "ms": 0.5113
-    },
-    "household/shower": {
-      "ratio": 0.5543,
-      "ms": 0.3437
-    },
-    "household/sink_bathroom": {
-      "ratio": 1.3482,
-      "ms": 0.8359
-    },
-    "household/sink_kitchen": {
-      "ratio": 2.0116,
-      "ms": 1.2472
-    },
-    "household/sofa": {
-      "ratio": 0.3081,
-      "ms": 0.191
-    },
-    "household/stove": {
-      "ratio": 1.9386,
-      "ms": 1.202
-    },
-    "household/toilet": {
-      "ratio": 0.5384,
-      "ms": 0.3338
-    },
-    "household/trash_bin": {
-      "ratio": 0.3547,
-      "ms": 0.2199
-    },
-    "household/tv": {
-      "ratio": 0.1732,
-      "ms": 0.1074
-    },
-    "household/utility_sink": {
-      "ratio": 0.3139,
-      "ms": 0.1946
-    },
-    "household/wall_socket": {
-      "ratio": 0.2096,
-      "ms": 0.13
-    },
-    "household/wall_switch": {
-      "ratio": 0.1325,
-      "ms": 0.0821
-    },
-    "household/wardrobe": {
-      "ratio": 7.8504,
-      "ms": 4.8674
-    },
-    "household/washing_machine": {
-      "ratio": 0.6854,
-      "ms": 0.425
-    },
-    "household/well": {
-      "ratio": 1.0351,
-      "ms": 0.6418
-    },
-    "household/wheelie_bin": {
-      "ratio": 0.8602,
-      "ms": 0.5333
-    },
-    "household/wood_stove": {
-      "ratio": 0.6667,
-      "ms": 0.4134
-    },
-    "houses/apartment_basic": {
-      "ratio": 25.8595,
-      "ms": 18.6816
-    },
-    "houses/apartment_modern": {
-      "ratio": 27.0857,
-      "ms": 19.5674
-    },
-    "houses/market": {
-      "ratio": 26.0343,
-      "ms": 18.8079
-    },
-    "houses/mid_modern_single_storey": {
-      "ratio": 58.9858,
-      "ms": 42.613
-    },
-    "houses/pharmacy": {
-      "ratio": 19.9765,
-      "ms": 14.4316
-    },
-    "houses/single_storey_a": {
-      "ratio": 42.1636,
-      "ms": 30.4601
-    },
-    "houses/townhouse": {
-      "ratio": 54.5719,
-      "ms": 39.4242
-    },
-    "items/model:amoxicillin": {
-      "ratio": 0.1256,
-      "ms": 0.0779
-    },
-    "items/model:axe": {
-      "ratio": 0.1583,
-      "ms": 0.0981
-    },
-    "items/model:bandage": {
-      "ratio": 0.0815,
-      "ms": 0.0505
-    },
-    "items/model:batteries": {
-      "ratio": 0.1457,
-      "ms": 0.0903
-    },
-    "items/model:cachaca": {
-      "ratio": 0.09,
-      "ms": 0.0558
-    },
-    "items/model:canned_beans": {
-      "ratio": 0.1185,
-      "ms": 0.0735
-    },
-    "items/model:crowbar": {
-      "ratio": 0.3147,
-      "ms": 0.1951
-    },
-    "items/model:first_aid_kit": {
-      "ratio": 0.0947,
-      "ms": 0.0587
-    },
-    "items/model:flashlight": {
-      "ratio": 0.1798,
-      "ms": 0.1115
-    },
-    "items/model:fuel_jerrycan": {
-      "ratio": 0.1001,
-      "ms": 0.0621
-    },
-    "items/model:hammer": {
-      "ratio": 0.1123,
-      "ms": 0.0696
-    },
-    "items/model:hiking_backpack_40l": {
-      "ratio": 0.1119,
-      "ms": 0.0694
-    },
-    "items/model:house_key": {
-      "ratio": 0.4,
-      "ms": 0.248
-    },
-    "items/model:lpg_cylinder_13kg": {
-      "ratio": 0.1478,
-      "ms": 0.0916
-    },
-    "items/model:machete": {
-      "ratio": 0.2025,
-      "ms": 0.1255
-    },
-    "items/model:military_ration": {
-      "ratio": 0.0714,
-      "ms": 0.0443
-    },
-    "items/model:motorcycle_helmet": {
-      "ratio": 0.1223,
-      "ms": 0.0758
-    },
-    "items/model:nail_bat": {
-      "ratio": 0.2251,
-      "ms": 0.1396
-    },
-    "items/model:portable_radio": {
-      "ratio": 0.1368,
-      "ms": 0.0848
-    },
-    "items/model:rice": {
-      "ratio": 0.0836,
-      "ms": 0.0519
-    },
-    "items/model:survivor_diary": {
-      "ratio": 0.129,
-      "ms": 0.08
-    },
-    "items/model:walkie_talkies": {
-      "ratio": 0.1625,
-      "ms": 0.1008
-    },
-    "items/model:water_bottle": {
-      "ratio": 0.1174,
-      "ms": 0.0728
-    },
-    "items/model:wooden_plank": {
-      "ratio": 0.0939,
-      "ms": 0.0582
-    },
-    "items/shape:backpack": {
-      "ratio": 0.0905,
-      "ms": 0.0561
-    },
-    "items/shape:bag": {
-      "ratio": 0.0516,
-      "ms": 0.032
-    },
-    "items/shape:battery": {
-      "ratio": 0.0458,
-      "ms": 0.0284
-    },
-    "items/shape:blade": {
-      "ratio": 0.1135,
-      "ms": 0.0704
-    },
-    "items/shape:book": {
-      "ratio": 0.0755,
-      "ms": 0.0468
-    },
-    "items/shape:bottle": {
-      "ratio": 0.0543,
-      "ms": 0.0337
-    },
-    "items/shape:box": {
-      "ratio": 0.0555,
-      "ms": 0.0344
-    },
-    "items/shape:can": {
-      "ratio": 0.0739,
-      "ms": 0.0458
-    },
-    "items/shape:cloth": {
-      "ratio": 0.0482,
-      "ms": 0.0299
-    },
-    "items/shape:cup": {
-      "ratio": 0.0308,
-      "ms": 0.0191
-    },
-    "items/shape:device": {
-      "ratio": 0.0601,
-      "ms": 0.0373
-    },
-    "items/shape:dish": {
-      "ratio": 0.0341,
-      "ms": 0.0211
-    },
-    "items/shape:fruit": {
-      "ratio": 0.0461,
-      "ms": 0.0286
-    },
-    "items/shape:garment": {
-      "ratio": 0.0518,
-      "ms": 0.0321
-    },
-    "items/shape:jar": {
-      "ratio": 0.0506,
-      "ms": 0.0314
-    },
-    "items/shape:jerrycan": {
-      "ratio": 0.0703,
-      "ms": 0.0436
-    },
-    "items/shape:key": {
-      "ratio": 0.0698,
-      "ms": 0.0433
-    },
-    "items/shape:long_tool": {
-      "ratio": 0.0487,
-      "ms": 0.0302
-    },
-    "items/shape:paper": {
-      "ratio": 0.0545,
-      "ms": 0.0338
-    },
-    "items/shape:plank": {
-      "ratio": 0.0608,
-      "ms": 0.0377
-    },
-    "items/shape:roll": {
-      "ratio": 0.0501,
-      "ms": 0.0311
-    },
-    "items/shape:shoe": {
-      "ratio": 0.0606,
-      "ms": 0.0376
-    },
-    "items/shape:tank": {
-      "ratio": 0.0824,
-      "ms": 0.0511
-    },
-    "items/shape:tool": {
-      "ratio": 0.0447,
-      "ms": 0.0277
-    },
-    "items/shape:tube": {
-      "ratio": 0.0635,
-      "ms": 0.0394
-    },
-    "props3d/ac_condenser": {
-      "ratio": 0.2304,
-      "ms": 0.1429
-    },
-    "props3d/barbed_wire": {
-      "ratio": 0.7493,
-      "ms": 0.4646
-    },
-    "props3d/barricade": {
-      "ratio": 0.256,
-      "ms": 0.1587
-    },
-    "props3d/bbq_simple": {
-      "ratio": 0.6202,
-      "ms": 0.3845
-    },
-    "props3d/blinds": {
-      "ratio": 0.1921,
-      "ms": 0.1191
-    },
-    "props3d/blood_stains": {
-      "ratio": 0.3445,
-      "ms": 0.2136
-    },
-    "props3d/breakfast_bar": {
-      "ratio": 0.579,
-      "ms": 0.359
-    },
-    "props3d/candles": {
-      "ratio": 0.3117,
-      "ms": 0.1933
-    },
-    "props3d/canned_food": {
-      "ratio": 0.7422,
-      "ms": 0.4602
-    },
-    "props3d/ceiling_light": {
-      "ratio": 0.1395,
-      "ms": 0.0865
-    },
-    "props3d/chandelier": {
-      "ratio": 0.6744,
-      "ms": 0.4182
-    },
-    "props3d/closet": {
-      "ratio": 0.4056,
-      "ms": 0.2515
-    },
-    "props3d/clothes_on_floor": {
-      "ratio": 0.1793,
-      "ms": 0.1112
-    },
-    "props3d/concrete": {
-      "ratio": 0.0685,
-      "ms": 0.0425
-    },
-    "props3d/curtain": {
-      "ratio": 0.2224,
-      "ms": 0.1379
-    },
-    "props3d/deck": {
-      "ratio": 0.17,
-      "ms": 0.1054
-    },
-    "props3d/deck_floor": {
-      "ratio": 0.0905,
-      "ms": 0.0561
-    },
-    "props3d/dirt": {
-      "ratio": 0.0724,
-      "ms": 0.0449
-    },
-    "props3d/double_bed_modern": {
-      "ratio": 0.3559,
-      "ms": 0.2206
-    },
-    "props3d/fallen_chair": {
-      "ratio": 0.079,
-      "ms": 0.049
-    },
-    "props3d/flat_tv": {
-      "ratio": 0.0843,
-      "ms": 0.0523
-    },
-    "props3d/floor_mattress": {
-      "ratio": 0.1243,
-      "ms": 0.0771
-    },
-    "props3d/floor_plant": {
-      "ratio": 0.2082,
-      "ms": 0.1291
-    },
-    "props3d/fruit_tree": {
-      "ratio": 0.7872,
-      "ms": 0.4881
-    },
-    "props3d/garage_car": {
-      "ratio": 0.4454,
-      "ms": 0.2761
-    },
-    "props3d/garden_bed": {
-      "ratio": 1.1088,
-      "ms": 0.6875
-    },
-    "props3d/gourmet_counter": {
-      "ratio": 0.5316,
-      "ms": 0.3296
-    },
-    "props3d/hanging_plant": {
-      "ratio": 0.2001,
-      "ms": 0.1241
-    },
-    "props3d/home_office": {
-      "ratio": 0.4813,
-      "ms": 0.2984
-    },
-    "props3d/lantern": {
-      "ratio": 0.2879,
-      "ms": 0.1785
-    },
-    "props3d/lawn": {
-      "ratio": 0.0825,
-      "ms": 0.0511
-    },
-    "props3d/mirror": {
-      "ratio": 0.0772,
-      "ms": 0.0479
-    },
-    "props3d/open_door": {
-      "ratio": 0.1213,
-      "ms": 0.0752
-    },
-    "props3d/open_suitcases": {
-      "ratio": 0.2138,
-      "ms": 0.1325
-    },
-    "props3d/palm_tree": {
-      "ratio": 0.5928,
-      "ms": 0.3675
-    },
-    "props3d/pendant": {
-      "ratio": 0.1701,
-      "ms": 0.1054
-    },
-    "props3d/pergola": {
-      "ratio": 0.2718,
-      "ms": 0.1685
-    },
-    "props3d/picture_large": {
-      "ratio": 0.1009,
-      "ms": 0.0625
-    },
-    "props3d/picture_small": {
-      "ratio": 0.126,
-      "ms": 0.0781
-    },
-    "props3d/pool": {
-      "ratio": 0.2733,
-      "ms": 0.1694
-    },
-    "props3d/razor_wire": {
-      "ratio": 0.7798,
-      "ms": 0.4835
-    },
-    "props3d/sandbags": {
-      "ratio": 0.143,
-      "ms": 0.0886
-    },
-    "props3d/sauna": {
-      "ratio": 0.4388,
-      "ms": 0.2721
-    },
-    "props3d/slide": {
-      "ratio": 0.1724,
-      "ms": 0.1069
-    },
-    "props3d/soaking_tub": {
-      "ratio": 0.2524,
-      "ms": 0.1565
-    },
-    "props3d/sofa_l": {
-      "ratio": 0.1557,
-      "ms": 0.0965
-    },
-    "props3d/sun_lounger": {
-      "ratio": 0.2206,
-      "ms": 0.1368
-    },
-    "props3d/swing": {
-      "ratio": 0.1535,
-      "ms": 0.0952
-    },
-    "props3d/table_plant": {
-      "ratio": 0.1381,
-      "ms": 0.0856
-    },
-    "props3d/tile_floor": {
-      "ratio": 0.1147,
-      "ms": 0.0711
-    },
-    "props3d/track_spot": {
-      "ratio": 0.2409,
-      "ms": 0.1494
-    },
-    "props3d/tv_stand": {
-      "ratio": 0.1784,
-      "ms": 0.1106
-    },
-    "props3d/vanity": {
-      "ratio": 0.2207,
-      "ms": 0.1368
-    },
-    "props3d/wall_ac": {
-      "ratio": 0.0989,
-      "ms": 0.0613
-    },
-    "props3d/water_bottle_crates": {
-      "ratio": 0.5499,
-      "ms": 0.3409
-    },
-    "props3d/water_jug": {
-      "ratio": 0.1679,
-      "ms": 0.1041
-    },
-    "props3d/window_boards": {
-      "ratio": 0.4212,
-      "ms": 0.2611
-    },
-    "shapes/generate:cabinet": {
-      "ratio": 0.9986,
-      "ms": 0.6125
-    },
-    "shapes/generator:box": {
-      "ratio": 0.0641,
-      "ms": 0.0393
-    },
-    "shapes/generator:cylinder": {
-      "ratio": 0.1193,
-      "ms": 0.0732
-    },
-    "shapes/generator:extrude": {
-      "ratio": 0.1989,
-      "ms": 0.122
-    },
-    "shapes/generator:lathe": {
-      "ratio": 0.0452,
-      "ms": 0.0277
-    },
-    "shapes/generator:sphere": {
-      "ratio": 0.1262,
-      "ms": 0.0774
-    },
-    "shapes/generator:torus": {
-      "ratio": 0.1272,
-      "ms": 0.078
-    },
-    "shapes/three:cylinder-cached": {
-      "ratio": 0.0151,
-      "ms": 0.0093
-    },
-    "urban/block": {
-      "ratio": 0.1363,
-      "ms": 0.0824
-    },
-    "urban/patterns": {
-      "ratio": 21.9718,
-      "ms": 13.2812
-    },
-    "urban/pole:concrete": {
-      "ratio": 0.0676,
-      "ms": 0.0409
-    },
-    "urban/pole:flood": {
-      "ratio": 0.0602,
-      "ms": 0.0364
-    },
-    "urban/tent": {
-      "ratio": 0.0422,
-      "ms": 0.0255
-    },
-    "urban/watchtower": {
-      "ratio": 0.0715,
-      "ms": 0.0432
-    },
-    "vegetation/araucaria": {
-      "ratio": 3.5733,
-      "ms": 2.203
-    },
-    "vegetation/banana_with_bunch": {
-      "ratio": 1.0114,
-      "ms": 0.6236
-    },
-    "vegetation/boxwood_hedge": {
-      "ratio": 3.4202,
-      "ms": 2.1086
-    },
-    "vegetation/coconut_palm": {
-      "ratio": 2.5302,
-      "ms": 1.5599
-    },
-    "vegetation/crown_cactus": {
-      "ratio": 0.8855,
-      "ms": 0.5459
-    },
-    "vegetation/dead_tree": {
-      "ratio": 0.5904,
-      "ms": 0.364
-    },
-    "vegetation/hibiscus_shrub": {
-      "ratio": 2.3486,
-      "ms": 1.448
-    },
-    "vegetation/lawn_tuft": {
-      "ratio": 0.2509,
-      "ms": 0.1547
-    },
-    "vegetation/mandacaru": {
-      "ratio": 2.0881,
-      "ms": 1.2874
-    },
-    "vegetation/mango_tree": {
-      "ratio": 2.4292,
-      "ms": 1.4977
-    },
-    "vegetation/mango_young_15": {
-      "ratio": 2.6453,
-      "ms": 1.6309
-    },
-    "vegetation/mango_young_30": {
-      "ratio": 2.9106,
-      "ms": 1.7944
-    },
-    "vegetation/nursery:1": {
-      "ratio": 664.4336,
-      "ms": 409.6373
-    },
-    "vegetation/potted_cactus": {
-      "ratio": 0.9066,
-      "ms": 0.559
-    },
-    "vegetation/potted_fern": {
-      "ratio": 0.7641,
-      "ms": 0.4711
-    },
-    "vegetation/prickly_pear": {
-      "ratio": 1.0495,
+      "ratio": 0.6694,
       "ms": 0.6471
     },
-    "vegetation/rose_bush_red": {
-      "ratio": 0.8616,
-      "ms": 0.5312
+    "characters/person:arnaldo": {
+      "ratio": 2.4645,
+      "ms": 2.3826
     },
-    "vegetation/sunflower": {
-      "ratio": 0.6072,
-      "ms": 0.3743
+    "characters/person:bigode": {
+      "ratio": 2.4486,
+      "ms": 2.3672
     },
-    "vegetation/yellow_ipe": {
-      "ratio": 2.7493,
-      "ms": 1.695
+    "characters/person:brasa": {
+      "ratio": 2.5992,
+      "ms": 2.5127
     },
-    "vehicles/compact_hatch:lite": {
-      "ratio": 168.3807,
-      "ms": 110.0695
+    "characters/person:criancas": {
+      "ratio": 8.5828,
+      "ms": 8.2974
     },
-    "vehicles/midsize_pickup:lite": {
-      "ratio": 98.2438,
-      "ms": 64.2214
+    "characters/person:italo": {
+      "ratio": 2.2861,
+      "ms": 2.2101
     },
-    "vehicles/sport_bike:lite": {
-      "ratio": 12.3054,
-      "ms": 8.044
+    "characters/person:jessica": {
+      "ratio": 2.5377,
+      "ms": 2.4533
     },
-    "weapons/aa_12": {
-      "ratio": 0.4037,
-      "ms": 0.2778
+    "characters/person:mariana": {
+      "ratio": 2.458,
+      "ms": 2.3762
     },
-    "weapons/accuracy_awm": {
-      "ratio": 0.9018,
-      "ms": 0.6206
+    "characters/person:nelson": {
+      "ratio": 2.6413,
+      "ms": 2.5535
     },
-    "weapons/ak_12": {
-      "ratio": 0.9508,
-      "ms": 0.6543
+    "characters/person:rafa": {
+      "ratio": 2.467,
+      "ms": 2.3849
     },
-    "weapons/ak_47": {
-      "ratio": 0.5598,
-      "ms": 0.3852
+    "characters/person:rosa": {
+      "ratio": 3.1995,
+      "ms": 3.0931
     },
-    "weapons/ak_74": {
-      "ratio": 0.3922,
-      "ms": 0.2699
+    "characters/person:val": {
+      "ratio": 2.2856,
+      "ms": 2.2096
     },
-    "weapons/akm": {
-      "ratio": 0.5354,
-      "ms": 0.3685
+    "characters/person:zilda": {
+      "ratio": 2.6097,
+      "ms": 2.5229
     },
-    "weapons/at4": {
-      "ratio": 0.1282,
+    "household/armchair": {
+      "ratio": 0.2047,
+      "ms": 0.1979
+    },
+    "household/bathroom_cabinet": {
+      "ratio": 0.6157,
+      "ms": 0.5952
+    },
+    "household/bbq": {
+      "ratio": 0.8872,
+      "ms": 0.8577
+    },
+    "household/bed_double": {
+      "ratio": 0.2249,
+      "ms": 0.2175
+    },
+    "household/bed_single": {
+      "ratio": 0.1498,
+      "ms": 0.1448
+    },
+    "household/bench": {
+      "ratio": 0.1659,
+      "ms": 0.1604
+    },
+    "household/blinds": {
+      "ratio": 1.0301,
+      "ms": 0.9958
+    },
+    "household/bunk_bed": {
+      "ratio": 0.1806,
+      "ms": 0.1746
+    },
+    "household/camp_chair": {
+      "ratio": 0.2493,
+      "ms": 0.241
+    },
+    "household/camp_stove": {
+      "ratio": 0.255,
+      "ms": 0.2465
+    },
+    "household/camp_table": {
+      "ratio": 0.2422,
+      "ms": 0.2342
+    },
+    "household/campfire": {
+      "ratio": 0.2456,
+      "ms": 0.2374
+    },
+    "household/clothesline": {
+      "ratio": 1.4337,
+      "ms": 1.386
+    },
+    "household/conduit_run": {
+      "ratio": 0.0379,
+      "ms": 0.0366
+    },
+    "household/cooler": {
+      "ratio": 0.3181,
+      "ms": 0.3076
+    },
+    "household/curtain": {
+      "ratio": 0.6299,
+      "ms": 0.6089
+    },
+    "household/dining_chair": {
+      "ratio": 0.1549,
+      "ms": 0.1497
+    },
+    "household/dog_house": {
+      "ratio": 0.2996,
+      "ms": 0.2897
+    },
+    "household/dresser": {
+      "ratio": 1.1747,
+      "ms": 1.1356
+    },
+    "household/electrical_panel": {
+      "ratio": 0.4502,
+      "ms": 0.4352
+    },
+    "household/fireplace": {
+      "ratio": 0.4038,
+      "ms": 0.3904
+    },
+    "household/fridge": {
+      "ratio": 1.3254,
+      "ms": 1.2813
+    },
+    "household/fridge_compact": {
+      "ratio": 0.7621,
+      "ms": 0.7367
+    },
+    "household/gas_bottle": {
+      "ratio": 0.272,
+      "ms": 0.263
+    },
+    "household/gas_canister": {
+      "ratio": 0.2036,
+      "ms": 0.1968
+    },
+    "household/kitchen_cabinet_base": {
+      "ratio": 1.1032,
+      "ms": 1.0665
+    },
+    "household/kitchen_cabinet_wall": {
+      "ratio": 1.0103,
+      "ms": 0.9767
+    },
+    "household/lantern_lamp": {
+      "ratio": 0.3078,
+      "ms": 0.2975
+    },
+    "household/mailbox": {
+      "ratio": 0.3474,
+      "ms": 0.3358
+    },
+    "household/microwave": {
+      "ratio": 0.6847,
+      "ms": 0.662
+    },
+    "household/nightstand": {
+      "ratio": 0.902,
+      "ms": 0.872
+    },
+    "household/outhouse": {
+      "ratio": 1.3485,
+      "ms": 1.3037
+    },
+    "household/pantry": {
+      "ratio": 0.8945,
+      "ms": 0.8648
+    },
+    "household/power_meter": {
+      "ratio": 0.4373,
+      "ms": 0.4228
+    },
+    "household/service_entrance": {
+      "ratio": 0.4641,
+      "ms": 0.4487
+    },
+    "household/shower": {
+      "ratio": 0.3777,
+      "ms": 0.3652
+    },
+    "household/sink_bathroom": {
+      "ratio": 0.6545,
+      "ms": 0.6327
+    },
+    "household/sink_kitchen": {
+      "ratio": 1.1842,
+      "ms": 1.1448
+    },
+    "household/sofa": {
+      "ratio": 0.2263,
+      "ms": 0.2188
+    },
+    "household/stove": {
+      "ratio": 0.9605,
+      "ms": 0.9286
+    },
+    "household/toilet": {
+      "ratio": 0.368,
+      "ms": 0.3558
+    },
+    "household/trash_bin": {
+      "ratio": 0.2448,
+      "ms": 0.2366
+    },
+    "household/tv": {
+      "ratio": 0.1635,
+      "ms": 0.1581
+    },
+    "household/utility_sink": {
+      "ratio": 0.2496,
+      "ms": 0.2413
+    },
+    "household/wall_socket": {
+      "ratio": 0.166,
+      "ms": 0.1605
+    },
+    "household/wall_switch": {
+      "ratio": 0.184,
+      "ms": 0.1779
+    },
+    "household/wardrobe": {
+      "ratio": 3.3823,
+      "ms": 3.2698
+    },
+    "household/washing_machine": {
+      "ratio": 0.3957,
+      "ms": 0.3825
+    },
+    "household/well": {
+      "ratio": 0.5607,
+      "ms": 0.5421
+    },
+    "household/wheelie_bin": {
+      "ratio": 0.4009,
+      "ms": 0.3875
+    },
+    "household/wood_stove": {
+      "ratio": 0.4354,
+      "ms": 0.4209
+    },
+    "houses/apartment_basic": {
+      "ratio": 37.3752,
+      "ms": 36.132
+    },
+    "houses/apartment_modern": {
+      "ratio": 68.1904,
+      "ms": 65.9224
+    },
+    "houses/market": {
+      "ratio": 36.945,
+      "ms": 35.7162
+    },
+    "houses/mid_modern_single_storey": {
+      "ratio": 113.392,
+      "ms": 109.6205
+    },
+    "houses/pharmacy": {
+      "ratio": 26.3289,
+      "ms": 25.4532
+    },
+    "houses/single_storey_a": {
+      "ratio": 60.533,
+      "ms": 58.5197
+    },
+    "houses/townhouse": {
+      "ratio": 123.5692,
+      "ms": 119.4592
+    },
+    "items/model:activated_charcoal": {
+      "ratio": 0.0955,
+      "ms": 0.0923
+    },
+    "items/model:adhesive_bandages": {
+      "ratio": 0.0765,
+      "ms": 0.0739
+    },
+    "items/model:adjustable_wrench": {
+      "ratio": 0.0875,
+      "ms": 0.0846
+    },
+    "items/model:alcohol_70": {
+      "ratio": 0.1261,
+      "ms": 0.122
+    },
+    "items/model:amoxicillin": {
+      "ratio": 0.1341,
+      "ms": 0.1296
+    },
+    "items/model:antihistamine": {
+      "ratio": 0.1304,
+      "ms": 0.1261
+    },
+    "items/model:antivenom": {
+      "ratio": 0.1476,
+      "ms": 0.1427
+    },
+    "items/model:army_camouflage_uniform": {
+      "ratio": 0.1516,
+      "ms": 0.1466
+    },
+    "items/model:arrows_and_bolts": {
+      "ratio": 0.1334,
+      "ms": 0.129
+    },
+    "items/model:axe": {
+      "ratio": 0.2408,
+      "ms": 0.2328
+    },
+    "items/model:backpack": {
+      "ratio": 0.1382,
+      "ms": 0.1336
+    },
+    "items/model:ballistic_vest": {
+      "ratio": 0.1335,
+      "ms": 0.129
+    },
+    "items/model:banana_bunch": {
+      "ratio": 0.259,
+      "ms": 0.2504
+    },
+    "items/model:bandage": {
+      "ratio": 0.1158,
+      "ms": 0.1119
+    },
+    "items/model:barbed_wire": {
+      "ratio": 0.1303,
+      "ms": 0.1259
+    },
+    "items/model:baseball_bat": {
+      "ratio": 0.0877,
+      "ms": 0.0848
+    },
+    "items/model:batteries": {
+      "ratio": 0.1108,
+      "ms": 0.1071
+    },
+    "items/model:battery_9v": {
+      "ratio": 0.093,
+      "ms": 0.0899
+    },
+    "items/model:bean_seeds": {
+      "ratio": 0.0874,
+      "ms": 0.0845
+    },
+    "items/model:beans": {
+      "ratio": 0.0963,
+      "ms": 0.0931
+    },
+    "items/model:beekeeper_suit": {
+      "ratio": 0.1722,
+      "ms": 0.1664
+    },
+    "items/model:beer_can": {
+      "ratio": 0.1218,
+      "ms": 0.1178
+    },
+    "items/model:binoculars": {
+      "ratio": 0.1487,
+      "ms": 0.1438
+    },
+    "items/model:biscuits": {
+      "ratio": 0.151,
+      "ms": 0.146
+    },
+    "items/model:bolt_cutters": {
+      "ratio": 0.195,
+      "ms": 0.1885
+    },
+    "items/model:brass_knuckles": {
+      "ratio": 0.1371,
+      "ms": 0.1325
+    },
+    "items/model:bread": {
+      "ratio": 0.0603,
+      "ms": 0.0583
+    },
+    "items/model:bricks": {
+      "ratio": 0.0678,
+      "ms": 0.0655
+    },
+    "items/model:bucket": {
+      "ratio": 0.097,
+      "ms": 0.0938
+    },
+    "items/model:cachaca": {
+      "ratio": 0.1362,
+      "ms": 0.1317
+    },
+    "items/model:camp_stove": {
+      "ratio": 0.1637,
+      "ms": 0.1582
+    },
+    "items/model:can_opener": {
+      "ratio": 0.0974,
+      "ms": 0.0941
+    },
+    "items/model:candles": {
+      "ratio": 0.0851,
+      "ms": 0.0823
+    },
+    "items/model:canned_beans": {
+      "ratio": 0.1688,
+      "ms": 0.1632
+    },
+    "items/model:canned_corn_and_peas": {
+      "ratio": 0.1215,
+      "ms": 0.1174
+    },
+    "items/model:canned_sardines": {
+      "ratio": 0.1113,
+      "ms": 0.1076
+    },
+    "items/model:canned_sausages": {
+      "ratio": 0.146,
+      "ms": 0.1412
+    },
+    "items/model:car_alarm_remote": {
+      "ratio": 0.0809,
+      "ms": 0.0782
+    },
+    "items/model:car_battery_12v": {
+      "ratio": 0.1675,
+      "ms": 0.1619
+    },
+    "items/model:car_jack": {
+      "ratio": 0.1913,
+      "ms": 0.1849
+    },
+    "items/model:car_key": {
+      "ratio": 0.1953,
+      "ms": 0.1888
+    },
+    "items/model:cash": {
+      "ratio": 0.0531,
+      "ms": 0.0514
+    },
+    "items/model:cassava_cuttings": {
+      "ratio": 0.1382,
+      "ms": 0.1336
+    },
+    "items/model:cassava_flour": {
+      "ratio": 0.1521,
+      "ms": 0.147
+    },
+    "items/model:cassava_root": {
+      "ratio": 0.0988,
+      "ms": 0.0955
+    },
+    "items/model:cast_iron_skillet": {
+      "ratio": 0.1253,
+      "ms": 0.1211
+    },
+    "items/model:cb_radio": {
+      "ratio": 0.1428,
+      "ms": 0.138
+    },
+    "items/model:ceftriaxone": {
+      "ratio": 0.2195,
+      "ms": 0.2122
+    },
+    "items/model:cell_key": {
+      "ratio": 0.1603,
+      "ms": 0.155
+    },
+    "items/model:cement_bag": {
+      "ratio": 0.1071,
+      "ms": 0.1036
+    },
+    "items/model:chainsaw": {
+      "ratio": 0.1302,
+      "ms": 0.1258
+    },
+    "items/model:charcoal_bag": {
+      "ratio": 0.0693,
+      "ms": 0.067
+    },
+    "items/model:cheese": {
+      "ratio": 0.2581,
+      "ms": 0.2496
+    },
+    "items/model:chocolate_bar": {
+      "ratio": 0.1233,
+      "ms": 0.1192
+    },
+    "items/model:cigarettes": {
+      "ratio": 0.0952,
+      "ms": 0.092
+    },
+    "items/model:city_map": {
+      "ratio": 0.1028,
+      "ms": 0.0994
+    },
+    "items/model:clonazepam": {
+      "ratio": 0.1013,
+      "ms": 0.0979
+    },
+    "items/model:coconut_water": {
+      "ratio": 0.137,
+      "ms": 0.1324
+    },
+    "items/model:coffee": {
+      "ratio": 0.1358,
+      "ms": 0.1313
+    },
+    "items/model:combat_boots": {
+      "ratio": 0.2017,
+      "ms": 0.195
+    },
+    "items/model:communion_wine": {
+      "ratio": 0.1373,
+      "ms": 0.1328
+    },
+    "items/model:condensed_milk": {
+      "ratio": 0.2047,
+      "ms": 0.1979
+    },
+    "items/model:cooking_oil": {
+      "ratio": 0.1059,
+      "ms": 0.1024
+    },
+    "items/model:cooler_box": {
+      "ratio": 0.0731,
+      "ms": 0.0707
+    },
+    "items/model:copper_wire": {
+      "ratio": 0.0913,
+      "ms": 0.0883
+    },
+    "items/model:cordless_drill": {
+      "ratio": 0.1232,
+      "ms": 0.1191
+    },
+    "items/model:corn_seeds": {
+      "ratio": 0.0902,
+      "ms": 0.0872
+    },
+    "items/model:crossbody_bag": {
+      "ratio": 0.1242,
+      "ms": 0.1201
+    },
+    "items/model:crossbow": {
+      "ratio": 0.1353,
+      "ms": 0.1308
+    },
+    "items/model:crowbar": {
+      "ratio": 0.0761,
+      "ms": 0.0735
+    },
+    "items/model:delivery_bag": {
+      "ratio": 0.1103,
+      "ms": 0.1067
+    },
+    "items/model:denim_jacket": {
+      "ratio": 0.1501,
+      "ms": 0.1451
+    },
+    "items/model:diesel": {
+      "ratio": 0.089,
+      "ms": 0.086
+    },
+    "items/model:dirty_water": {
+      "ratio": 0.1056,
+      "ms": 0.1021
+    },
+    "items/model:diy_magazine": {
+      "ratio": 0.1335,
+      "ms": 0.1291
+    },
+    "items/model:dog_food": {
+      "ratio": 0.1518,
+      "ms": 0.1468
+    },
+    "items/model:dog_tag": {
+      "ratio": 0.0824,
+      "ms": 0.0797
+    },
+    "items/model:duct_tape": {
+      "ratio": 0.0648,
+      "ms": 0.0627
+    },
+    "items/model:eggs": {
+      "ratio": 0.1199,
+      "ms": 0.116
+    },
+    "items/model:electric_fence_energizer": {
+      "ratio": 0.1834,
+      "ms": 0.1773
+    },
+    "items/model:electronic_components": {
+      "ratio": 0.2367,
+      "ms": 0.2288
+    },
+    "items/model:empty_can": {
+      "ratio": 0.0844,
+      "ms": 0.0816
+    },
+    "items/model:energy_drink": {
+      "ratio": 0.1304,
+      "ms": 0.1261
+    },
+    "items/model:epoxy_glue": {
+      "ratio": 0.1638,
+      "ms": 0.1584
+    },
+    "items/model:exam_gloves": {
+      "ratio": 0.1113,
+      "ms": 0.1076
+    },
+    "items/model:extension_cord": {
+      "ratio": 0.0849,
+      "ms": 0.0821
+    },
+    "items/model:fanny_pack": {
+      "ratio": 0.1198,
+      "ms": 0.1158
+    },
+    "items/model:farmers_almanac": {
+      "ratio": 0.1583,
+      "ms": 0.153
+    },
+    "items/model:fertilizer_bag": {
+      "ratio": 0.1318,
+      "ms": 0.1274
+    },
+    "items/model:fire_extinguisher": {
+      "ratio": 0.1558,
+      "ms": 0.1506
+    },
+    "items/model:firefighter_suit": {
+      "ratio": 0.1858,
+      "ms": 0.1796
+    },
+    "items/model:firewood": {
+      "ratio": 0.1493,
+      "ms": 0.1444
+    },
+    "items/model:first_aid_kit": {
+      "ratio": 0.0921,
+      "ms": 0.089
+    },
+    "items/model:fishing_net": {
+      "ratio": 0.2352,
+      "ms": 0.2274
+    },
+    "items/model:fishing_rod": {
+      "ratio": 0.1448,
+      "ms": 0.14
+    },
+    "items/model:fishing_tackle_box": {
+      "ratio": 0.0933,
+      "ms": 0.0902
+    },
+    "items/model:flashlight": {
+      "ratio": 0.2205,
+      "ms": 0.2131
+    },
+    "items/model:flint_striker": {
+      "ratio": 0.1742,
+      "ms": 0.1684
+    },
+    "items/model:flip_flops": {
+      "ratio": 0.175,
+      "ms": 0.1692
+    },
+    "items/model:folding_solar_panel": {
+      "ratio": 0.1734,
+      "ms": 0.1676
+    },
+    "items/model:fresh_fish": {
+      "ratio": 0.1828,
+      "ms": 0.1767
+    },
+    "items/model:frozen_chicken": {
+      "ratio": 0.1307,
+      "ms": 0.1264
+    },
+    "items/model:fuel_jerrycan": {
+      "ratio": 0.1435,
+      "ms": 0.1387
+    },
+    "items/model:game_meat": {
+      "ratio": 0.0914,
+      "ms": 0.0884
+    },
+    "items/model:gas_cartridge": {
+      "ratio": 0.0744,
+      "ms": 0.0719
+    },
+    "items/model:gas_torch": {
+      "ratio": 0.1575,
+      "ms": 0.1523
+    },
+    "items/model:gasoline": {
+      "ratio": 0.0924,
+      "ms": 0.0893
+    },
+    "items/model:generator_key": {
+      "ratio": 0.1758,
+      "ms": 0.1699
+    },
+    "items/model:glass_bottle": {
+      "ratio": 0.0814,
+      "ms": 0.0787
+    },
+    "items/model:glass_shards": {
+      "ratio": 0.2518,
+      "ms": 0.2434
+    },
+    "items/model:hacksaw": {
+      "ratio": 0.0961,
+      "ms": 0.0929
+    },
+    "items/model:hammer": {
+      "ratio": 0.1127,
+      "ms": 0.1089
+    },
+    "items/model:handsaw": {
+      "ratio": 0.2135,
+      "ms": 0.2064
+    },
+    "items/model:hard_hat": {
+      "ratio": 0.148,
+      "ms": 0.143
+    },
+    "items/model:hatchet": {
+      "ratio": 0.2363,
+      "ms": 0.2284
+    },
+    "items/model:headlamp": {
+      "ratio": 0.0982,
+      "ms": 0.0949
+    },
+    "items/model:hiking_backpack_40l": {
+      "ratio": 0.1177,
+      "ms": 0.1138
+    },
+    "items/model:hoe": {
+      "ratio": 0.0907,
+      "ms": 0.0877
+    },
+    "items/model:home_preserves": {
+      "ratio": 0.1751,
+      "ms": 0.1693
+    },
+    "items/model:honey_jar": {
+      "ratio": 0.116,
+      "ms": 0.1121
+    },
+    "items/model:hoodie": {
+      "ratio": 0.127,
+      "ms": 0.1228
+    },
+    "items/model:house_key": {
+      "ratio": 0.2259,
+      "ms": 0.2184
+    },
+    "items/model:ibuprofen": {
+      "ratio": 0.1106,
+      "ms": 0.1069
+    },
+    "items/model:improvised_spear": {
+      "ratio": 0.1137,
+      "ms": 0.1099
+    },
+    "items/model:instant_noodles": {
+      "ratio": 0.184,
+      "ms": 0.1778
+    },
+    "items/model:inverter_welder": {
+      "ratio": 0.178,
+      "ms": 0.1721
+    },
+    "items/model:iron_pipe": {
+      "ratio": 0.15,
+      "ms": 0.145
+    },
+    "items/model:janitor_keys": {
+      "ratio": 0.3346,
+      "ms": 0.3234
+    },
+    "items/model:jeans": {
+      "ratio": 0.1176,
+      "ms": 0.1136
+    },
+    "items/model:jerked_beef": {
+      "ratio": 0.1393,
+      "ms": 0.1347
+    },
+    "items/model:juice_box": {
+      "ratio": 0.1022,
+      "ms": 0.0988
+    },
+    "items/model:kabar": {
+      "ratio": 0.2821,
+      "ms": 0.2727
+    },
+    "items/model:kale_and_lettuce_seeds": {
+      "ratio": 0.0777,
+      "ms": 0.0751
+    },
+    "items/model:katana": {
+      "ratio": 0.4035,
+      "ms": 0.39
+    },
+    "items/model:kerosene": {
+      "ratio": 0.0912,
       "ms": 0.0882
     },
-    "weapons/barrett_m82a1": {
-      "ratio": 1.2586,
-      "ms": 0.8661
+    "items/model:knife": {
+      "ratio": 0.245,
+      "ms": 0.2369
     },
-    "weapons/barrett_mrad": {
-      "ratio": 2.182,
-      "ms": 1.5016
+    "items/model:laptop": {
+      "ratio": 0.1282,
+      "ms": 0.1239
     },
-    "weapons/benelli_m4": {
-      "ratio": 0.7796,
-      "ms": 0.5365
+    "items/model:leather_motorcycle_jacket": {
+      "ratio": 0.1578,
+      "ms": 0.1526
     },
-    "weapons/beretta_92fs": {
-      "ratio": 0.394,
-      "ms": 0.2711
+    "items/model:leather_motorcycle_pants": {
+      "ratio": 0.1243,
+      "ms": 0.1202
     },
-    "weapons/boito_double_barrel": {
-      "ratio": 0.3127,
-      "ms": 0.2152
+    "items/model:leather_work_gloves": {
+      "ratio": 0.1,
+      "ms": 0.0967
     },
-    "weapons/browning_m2": {
-      "ratio": 0.4132,
-      "ms": 0.2843
+    "items/model:led_camp_lantern": {
+      "ratio": 0.1174,
+      "ms": 0.1135
     },
-    "weapons/carl_gustaf_m4": {
+    "items/model:lighter": {
+      "ratio": 0.1449,
+      "ms": 0.1401
+    },
+    "items/model:lockpick_kit": {
+      "ratio": 0.0914,
+      "ms": 0.0884
+    },
+    "items/model:lpg_cylinder_13kg": {
+      "ratio": 0.1337,
+      "ms": 0.1293
+    },
+    "items/model:lubricant_spray": {
+      "ratio": 0.1581,
+      "ms": 0.1528
+    },
+    "items/model:machete": {
+      "ratio": 0.2424,
+      "ms": 0.2343
+    },
+    "items/model:magazine_arm_guard": {
+      "ratio": 0.2068,
+      "ms": 0.1999
+    },
+    "items/model:magazines_and_comics": {
+      "ratio": 0.1017,
+      "ms": 0.0983
+    },
+    "items/model:maintenance_medication": {
+      "ratio": 0.1166,
+      "ms": 0.1127
+    },
+    "items/model:master_key": {
+      "ratio": 0.2016,
+      "ms": 0.1949
+    },
+    "items/model:matches": {
+      "ratio": 0.136,
+      "ms": 0.1315
+    },
+    "items/model:meat_cleaver": {
+      "ratio": 0.224,
+      "ms": 0.2166
+    },
+    "items/model:mechanic_coveralls": {
+      "ratio": 0.1815,
+      "ms": 0.1755
+    },
+    "items/model:mechanic_toolbox": {
+      "ratio": 0.1268,
+      "ms": 0.1226
+    },
+    "items/model:medical_tape": {
+      "ratio": 0.1146,
+      "ms": 0.1108
+    },
+    "items/model:military_backpack": {
+      "ratio": 0.1538,
+      "ms": 0.1487
+    },
+    "items/model:military_radio": {
+      "ratio": 0.2267,
+      "ms": 0.2191
+    },
+    "items/model:military_ration": {
+      "ratio": 0.0813,
+      "ms": 0.0786
+    },
+    "items/model:milk_carton": {
+      "ratio": 0.2005,
+      "ms": 0.1938
+    },
+    "items/model:mobile_phone": {
+      "ratio": 0.1145,
+      "ms": 0.1107
+    },
+    "items/model:mortadella": {
+      "ratio": 0.103,
+      "ms": 0.0995
+    },
+    "items/model:motor_oil": {
+      "ratio": 0.1439,
+      "ms": 0.1391
+    },
+    "items/model:motorcycle_helmet": {
+      "ratio": 0.0951,
+      "ms": 0.0919
+    },
+    "items/model:multivitamin": {
+      "ratio": 0.1048,
+      "ms": 0.1013
+    },
+    "items/model:n95_mask": {
+      "ratio": 0.2382,
+      "ms": 0.2303
+    },
+    "items/model:nail_bat": {
+      "ratio": 0.2546,
+      "ms": 0.2461
+    },
+    "items/model:nails": {
+      "ratio": 0.1859,
+      "ms": 0.1797
+    },
+    "items/model:night_vision_goggles": {
+      "ratio": 0.1352,
+      "ms": 0.1307
+    },
+    "items/model:note": {
+      "ratio": 0.0496,
+      "ms": 0.048
+    },
+    "items/model:orange": {
+      "ratio": 0.0833,
+      "ms": 0.0805
+    },
+    "items/model:padded_coat": {
+      "ratio": 0.1517,
+      "ms": 0.1466
+    },
+    "items/model:padlock_key": {
+      "ratio": 0.147,
+      "ms": 0.1421
+    },
+    "items/model:painkillers": {
+      "ratio": 0.1233,
+      "ms": 0.1192
+    },
+    "items/model:pasta": {
+      "ratio": 0.1173,
+      "ms": 0.1134
+    },
+    "items/model:pet_bottle": {
+      "ratio": 0.1032,
+      "ms": 0.0998
+    },
+    "items/model:photo": {
+      "ratio": 0.0677,
+      "ms": 0.0654
+    },
+    "items/model:pickaxe": {
+      "ratio": 0.215,
+      "ms": 0.2079
+    },
+    "items/model:pliers": {
+      "ratio": 0.1074,
+      "ms": 0.1038
+    },
+    "items/model:pocket_knife": {
+      "ratio": 0.0943,
+      "ms": 0.0911
+    },
+    "items/model:police_baton": {
+      "ratio": 0.2135,
+      "ms": 0.2064
+    },
+    "items/model:portable_generator": {
+      "ratio": 0.2825,
+      "ms": 0.2731
+    },
+    "items/model:portable_radio": {
+      "ratio": 0.1247,
+      "ms": 0.1205
+    },
+    "items/model:pot": {
+      "ratio": 0.1194,
+      "ms": 0.1154
+    },
+    "items/model:potatoes": {
+      "ratio": 0.069,
+      "ms": 0.0667
+    },
+    "items/model:povidone_iodine": {
+      "ratio": 0.181,
+      "ms": 0.175
+    },
+    "items/model:power_bank": {
+      "ratio": 0.0879,
+      "ms": 0.085
+    },
+    "items/model:pumpkin_seeds": {
+      "ratio": 0.0867,
+      "ms": 0.0838
+    },
+    "items/model:raffia_sack": {
+      "ratio": 0.0754,
+      "ms": 0.0728
+    },
+    "items/model:rag": {
+      "ratio": 0.1003,
+      "ms": 0.097
+    },
+    "items/model:raincoat": {
+      "ratio": 0.1678,
+      "ms": 0.1623
+    },
+    "items/model:rapadura": {
+      "ratio": 0.1394,
+      "ms": 0.1347
+    },
+    "items/model:raw_beef": {
+      "ratio": 0.1116,
+      "ms": 0.1079
+    },
+    "items/model:rebar": {
+      "ratio": 0.135,
+      "ms": 0.1305
+    },
+    "items/model:recurve_bow": {
+      "ratio": 0.1677,
+      "ms": 0.1621
+    },
+    "items/model:rehydration_salts": {
+      "ratio": 0.1117,
+      "ms": 0.108
+    },
+    "items/model:rice": {
+      "ratio": 0.1106,
+      "ms": 0.107
+    },
+    "items/model:road_map": {
+      "ratio": 0.0619,
+      "ms": 0.0599
+    },
+    "items/model:rolling_suitcase": {
+      "ratio": 0.1592,
+      "ms": 0.1539
+    },
+    "items/model:rope": {
+      "ratio": 0.1261,
+      "ms": 0.1219
+    },
+    "items/model:rubber_boots": {
+      "ratio": 0.165,
+      "ms": 0.1596
+    },
+    "items/model:safe_key": {
       "ratio": 0.1869,
-      "ms": 0.1286
+      "ms": 0.1807
     },
-    "weapons/cbc_122": {
-      "ratio": 0.308,
-      "ms": 0.212
+    "items/model:safety_goggles": {
+      "ratio": 0.1293,
+      "ms": 0.125
     },
-    "weapons/cbc_7022": {
-      "ratio": 0.2837,
-      "ms": 0.1953
+    "items/model:saline_iv_bag": {
+      "ratio": 0.219,
+      "ms": 0.2117
     },
-    "weapons/cbc_pump_military_3_0": {
-      "ratio": 0.3727,
-      "ms": 0.2565
+    "items/model:salt": {
+      "ratio": 0.169,
+      "ms": 0.1634
     },
-    "weapons/cheytac_m200": {
-      "ratio": 0.9113,
-      "ms": 0.6272
+    "items/model:salted_fish": {
+      "ratio": 0.2348,
+      "ms": 0.227
     },
-    "weapons/colt_m16a2": {
-      "ratio": 0.465,
-      "ms": 0.32
+    "items/model:scissors": {
+      "ratio": 0.1723,
+      "ms": 0.1666
     },
-    "weapons/colt_m1911": {
-      "ratio": 0.5453,
-      "ms": 0.3753
+    "items/model:scrap_metal": {
+      "ratio": 0.1627,
+      "ms": 0.1573
     },
-    "weapons/colt_m4a1": {
-      "ratio": 1.1925,
-      "ms": 0.8207
+    "items/model:screwdriver": {
+      "ratio": 0.1159,
+      "ms": 0.112
     },
-    "weapons/cz_75": {
-      "ratio": 0.2623,
-      "ms": 0.1805
+    "items/model:screws": {
+      "ratio": 0.1404,
+      "ms": 0.1357
     },
-    "weapons/cz_scorpion_evo_3": {
-      "ratio": 0.6829,
-      "ms": 0.4699
+    "items/model:sewing_kit": {
+      "ratio": 0.1575,
+      "ms": 0.1522
     },
-    "weapons/desert_eagle_mark_xix": {
-      "ratio": 0.3715,
-      "ms": 0.2557
+    "items/model:sharpening_stone": {
+      "ratio": 0.0911,
+      "ms": 0.0881
     },
-    "weapons/fn_fal": {
-      "ratio": 0.5378,
-      "ms": 0.3701
+    "items/model:sheet_metal": {
+      "ratio": 0.2203,
+      "ms": 0.213
     },
-    "weapons/fn_five_seven": {
-      "ratio": 0.276,
-      "ms": 0.1899
+    "items/model:sheet_metal_forearm_guard": {
+      "ratio": 0.2675,
+      "ms": 0.2586
     },
-    "weapons/fn_m249": {
-      "ratio": 0.7226,
-      "ms": 0.4973
+    "items/model:shopping_bag": {
+      "ratio": 0.1091,
+      "ms": 0.1054
     },
-    "weapons/fn_mag": {
-      "ratio": 0.6558,
-      "ms": 0.4513
+    "items/model:shopping_cart": {
+      "ratio": 0.3753,
+      "ms": 0.3628
     },
-    "weapons/fn_minimi": {
-      "ratio": 0.6253,
-      "ms": 0.4304
+    "items/model:shovel": {
+      "ratio": 0.1724,
+      "ms": 0.1666
     },
-    "weapons/fn_minimi_para": {
-      "ratio": 0.6846,
-      "ms": 0.4711
+    "items/model:sickle": {
+      "ratio": 0.1883,
+      "ms": 0.1821
     },
-    "weapons/fn_p90": {
-      "ratio": 0.3643,
-      "ms": 0.2507
+    "items/model:skill_book": {
+      "ratio": 0.1129,
+      "ms": 0.1091
     },
-    "weapons/fn_parafal": {
-      "ratio": 0.449,
-      "ms": 0.309
+    "items/model:sledgehammer": {
+      "ratio": 0.163,
+      "ms": 0.1576
     },
-    "weapons/fn_scar_h": {
-      "ratio": 1.5189,
-      "ms": 1.0453
+    "items/model:slingshot": {
+      "ratio": 0.1165,
+      "ms": 0.1126
     },
-    "weapons/franchi_spas_12": {
-      "ratio": 0.2822,
-      "ms": 0.1942
+    "items/model:snack_chips": {
+      "ratio": 0.165,
+      "ms": 0.1595
     },
-    "weapons/glock_17": {
-      "ratio": 0.2958,
-      "ms": 0.2035
+    "items/model:snare_trap": {
+      "ratio": 0.1197,
+      "ms": 0.1157
     },
-    "weapons/glock_18": {
-      "ratio": 0.3573,
-      "ms": 0.2459
+    "items/model:sneakers": {
+      "ratio": 0.1533,
+      "ms": 0.1482
     },
-    "weapons/glock_19": {
-      "ratio": 0.3796,
-      "ms": 0.2612
+    "items/model:soda_can": {
+      "ratio": 0.1225,
+      "ms": 0.1184
     },
-    "weapons/hk416": {
-      "ratio": 1.2045,
-      "ms": 0.8289
+    "items/model:splint": {
+      "ratio": 0.2065,
+      "ms": 0.1996
     },
-    "weapons/hk_g36": {
-      "ratio": 0.6069,
-      "ms": 0.4176
+    "items/model:sports_drink": {
+      "ratio": 0.1408,
+      "ms": 0.1361
     },
-    "weapons/hk_g36c": {
-      "ratio": 0.515,
-      "ms": 0.3544
+    "items/model:sterile_gauze": {
+      "ratio": 0.0853,
+      "ms": 0.0824
     },
-    "weapons/hk_g36k": {
-      "ratio": 0.569,
-      "ms": 0.3915
+    "items/model:sugar": {
+      "ratio": 0.0865,
+      "ms": 0.0837
     },
-    "weapons/hk_g3a3": {
-      "ratio": 0.3459,
-      "ms": 0.2381
+    "items/model:survivor_diary": {
+      "ratio": 0.1694,
+      "ms": 0.1637
     },
-    "weapons/hk_mp5a3": {
-      "ratio": 0.406,
-      "ms": 0.2794
+    "items/model:suture_kit": {
+      "ratio": 0.1045,
+      "ms": 0.101
     },
-    "weapons/hk_mp5k": {
-      "ratio": 0.3187,
-      "ms": 0.2193
+    "items/model:syringe": {
+      "ratio": 0.1595,
+      "ms": 0.1542
     },
-    "weapons/hk_mp5sd3": {
-      "ratio": 0.409,
-      "ms": 0.2815
+    "items/model:tactical_knife": {
+      "ratio": 0.1929,
+      "ms": 0.1865
     },
-    "weapons/hk_mp7a1": {
-      "ratio": 0.6038,
-      "ms": 0.4155
+    "items/model:tactical_vest": {
+      "ratio": 0.1095,
+      "ms": 0.1058
     },
-    "weapons/hk_psg_1": {
-      "ratio": 0.8413,
-      "ms": 0.579
+    "items/model:tarp": {
+      "ratio": 0.1501,
+      "ms": 0.1451
     },
-    "weapons/hk_ump9": {
-      "ratio": 0.4252,
-      "ms": 0.2926
+    "items/model:technical_manual": {
+      "ratio": 0.1639,
+      "ms": 0.1584
     },
-    "weapons/hk_ump_45": {
-      "ratio": 0.5032,
-      "ms": 0.3463
+    "items/model:thermometer": {
+      "ratio": 0.1308,
+      "ms": 0.1265
     },
-    "weapons/hunting_rifle_30_06": {
-      "ratio": 0.631,
-      "ms": 0.4342
+    "items/model:tool_belt": {
+      "ratio": 0.1619,
+      "ms": 0.1565
     },
-    "weapons/imbel_ia2": {
-      "ratio": 0.5376,
-      "ms": 0.37
+    "items/model:tramadol": {
+      "ratio": 0.0828,
+      "ms": 0.08
     },
-    "weapons/improvised_flamethrower": {
-      "ratio": 0.8542,
-      "ms": 0.5878
+    "items/model:trash_bag": {
+      "ratio": 0.0958,
+      "ms": 0.0926
     },
-    "weapons/kel_tec_ksg": {
-      "ratio": 0.3551,
-      "ms": 0.2444
+    "items/model:trekking_backpack_70l": {
+      "ratio": 0.0984,
+      "ms": 0.0951
     },
-    "weapons/knights_sr_25_mk11": {
-      "ratio": 2.0784,
-      "ms": 1.4303
+    "items/model:tshirt": {
+      "ratio": 0.0982,
+      "ms": 0.095
     },
-    "weapons/kriss_vector": {
-      "ratio": 0.7471,
-      "ms": 0.5141
+    "items/model:walkie_talkies": {
+      "ratio": 0.1003,
+      "ms": 0.097
     },
-    "weapons/m134": {
-      "ratio": 0.6206,
-      "ms": 0.4271
+    "items/model:water_bottle": {
+      "ratio": 0.1181,
+      "ms": 0.1142
     },
-    "weapons/m14_ebr": {
-      "ratio": 1.7736,
-      "ms": 1.2205
+    "items/model:water_jug_5l": {
+      "ratio": 0.1281,
+      "ms": 0.1239
     },
-    "weapons/m24_sws": {
-      "ratio": 0.6587,
-      "ms": 0.4533
+    "items/model:watering_can": {
+      "ratio": 0.1152,
+      "ms": 0.1114
     },
-    "weapons/m2_flamethrower": {
-      "ratio": 2.299,
-      "ms": 1.5821
+    "items/model:wheelbarrow": {
+      "ratio": 0.1921,
+      "ms": 0.1857
     },
-    "weapons/m60": {
-      "ratio": 0.6431,
-      "ms": 0.4426
+    "items/model:windup_alarm_clock": {
+      "ratio": 0.1862,
+      "ms": 0.18
     },
-    "weapons/m72_law": {
-      "ratio": 0.174,
-      "ms": 0.1197
+    "items/model:wire_roll": {
+      "ratio": 0.0862,
+      "ms": 0.0834
     },
-    "weapons/mac_10": {
-      "ratio": 0.1541,
-      "ms": 0.106
+    "items/model:wooden_plank": {
+      "ratio": 0.0923,
+      "ms": 0.0893
     },
-    "weapons/makarov_pm": {
-      "ratio": 0.2857,
-      "ms": 0.1966
+    "items/shape:backpack": {
+      "ratio": 0.0893,
+      "ms": 0.0864
     },
-    "weapons/mg3": {
-      "ratio": 0.6691,
-      "ms": 0.4604
+    "items/shape:bag": {
+      "ratio": 0.0922,
+      "ms": 0.0891
     },
-    "weapons/mini_uzi": {
-      "ratio": 0.2339,
-      "ms": 0.161
+    "items/shape:battery": {
+      "ratio": 0.0676,
+      "ms": 0.0653
     },
-    "weapons/mosin_nagant_91_30": {
-      "ratio": 0.4253,
-      "ms": 0.2927
+    "items/shape:blade": {
+      "ratio": 0.1699,
+      "ms": 0.1643
     },
-    "weapons/mossberg_500": {
-      "ratio": 0.2066,
-      "ms": 0.1422
+    "items/shape:book": {
+      "ratio": 0.0934,
+      "ms": 0.0903
     },
-    "weapons/mossberg_500_cruiser": {
-      "ratio": 0.2116,
-      "ms": 0.1456
+    "items/shape:bottle": {
+      "ratio": 0.0886,
+      "ms": 0.0857
     },
-    "weapons/pkm": {
-      "ratio": 0.525,
-      "ms": 0.3613
+    "items/shape:box": {
+      "ratio": 0.0624,
+      "ms": 0.0603
     },
-    "weapons/pp19_bizon": {
-      "ratio": 0.5361,
-      "ms": 0.3689
+    "items/shape:can": {
+      "ratio": 0.0807,
+      "ms": 0.078
     },
-    "weapons/remington_700": {
-      "ratio": 0.5335,
-      "ms": 0.3671
+    "items/shape:cloth": {
+      "ratio": 0.0631,
+      "ms": 0.061
     },
-    "weapons/remington_700_300wm": {
-      "ratio": 0.7739,
-      "ms": 0.5326
+    "items/shape:cup": {
+      "ratio": 0.0483,
+      "ms": 0.0467
     },
-    "weapons/remington_870": {
-      "ratio": 0.211,
+    "items/shape:device": {
+      "ratio": 0.0683,
+      "ms": 0.066
+    },
+    "items/shape:dish": {
+      "ratio": 0.0445,
+      "ms": 0.043
+    },
+    "items/shape:fruit": {
+      "ratio": 0.0549,
+      "ms": 0.0531
+    },
+    "items/shape:garment": {
+      "ratio": 0.0746,
+      "ms": 0.0721
+    },
+    "items/shape:jar": {
+      "ratio": 0.0829,
+      "ms": 0.0801
+    },
+    "items/shape:jerrycan": {
+      "ratio": 0.0875,
+      "ms": 0.0846
+    },
+    "items/shape:key": {
+      "ratio": 0.0719,
+      "ms": 0.0695
+    },
+    "items/shape:long_tool": {
+      "ratio": 0.0705,
+      "ms": 0.0681
+    },
+    "items/shape:paper": {
+      "ratio": 0.0856,
+      "ms": 0.0828
+    },
+    "items/shape:plank": {
+      "ratio": 0.0911,
+      "ms": 0.0881
+    },
+    "items/shape:roll": {
+      "ratio": 0.0584,
+      "ms": 0.0564
+    },
+    "items/shape:shoe": {
+      "ratio": 0.0793,
+      "ms": 0.0766
+    },
+    "items/shape:tank": {
+      "ratio": 0.0936,
+      "ms": 0.0905
+    },
+    "items/shape:tool": {
+      "ratio": 0.0657,
+      "ms": 0.0635
+    },
+    "items/shape:tube": {
+      "ratio": 0.0933,
+      "ms": 0.0902
+    },
+    "props3d/ac_condenser": {
+      "ratio": 0.1941,
+      "ms": 0.1877
+    },
+    "props3d/barbed_wire": {
+      "ratio": 0.4968,
+      "ms": 0.4803
+    },
+    "props3d/barricade": {
+      "ratio": 0.2306,
+      "ms": 0.2229
+    },
+    "props3d/bbq_simple": {
+      "ratio": 0.3155,
+      "ms": 0.305
+    },
+    "props3d/blinds": {
+      "ratio": 0.1468,
+      "ms": 0.1419
+    },
+    "props3d/blood_stains": {
+      "ratio": 0.2426,
+      "ms": 0.2346
+    },
+    "props3d/breakfast_bar": {
+      "ratio": 0.3229,
+      "ms": 0.3122
+    },
+    "props3d/candles": {
+      "ratio": 0.2376,
+      "ms": 0.2296
+    },
+    "props3d/canned_food": {
+      "ratio": 0.3794,
+      "ms": 0.3668
+    },
+    "props3d/ceiling_light": {
+      "ratio": 0.107,
+      "ms": 0.1035
+    },
+    "props3d/chandelier": {
+      "ratio": 0.3392,
+      "ms": 0.3279
+    },
+    "props3d/closet": {
+      "ratio": 0.2701,
+      "ms": 0.2611
+    },
+    "props3d/clothes_on_floor": {
+      "ratio": 0.1501,
       "ms": 0.1452
     },
-    "weapons/rossi_puma": {
-      "ratio": 0.2562,
-      "ms": 0.1763
+    "props3d/concrete": {
+      "ratio": 0.0969,
+      "ms": 0.0936
     },
-    "weapons/rpg_7": {
-      "ratio": 0.4746,
-      "ms": 0.3266
+    "props3d/curtain": {
+      "ratio": 0.1718,
+      "ms": 0.1661
     },
-    "weapons/rpk": {
-      "ratio": 0.5405,
-      "ms": 0.372
+    "props3d/deck": {
+      "ratio": 0.1604,
+      "ms": 0.155
     },
-    "weapons/ruger_10_22": {
-      "ratio": 0.2971,
-      "ms": 0.2045
+    "props3d/deck_floor": {
+      "ratio": 0.1639,
+      "ms": 0.1585
     },
-    "weapons/saiga_12": {
-      "ratio": 0.4453,
-      "ms": 0.3064
+    "props3d/dirt": {
+      "ratio": 0.1064,
+      "ms": 0.1028
     },
-    "weapons/sako_trg_42": {
-      "ratio": 1.0805,
-      "ms": 0.7436
+    "props3d/double_bed_modern": {
+      "ratio": 0.2613,
+      "ms": 0.2526
     },
-    "weapons/sig_mpx": {
-      "ratio": 0.8272,
-      "ms": 0.5692
+    "props3d/fallen_chair": {
+      "ratio": 0.0933,
+      "ms": 0.0902
     },
-    "weapons/sig_sauer_p226": {
-      "ratio": 0.2156,
-      "ms": 0.1484
+    "props3d/flat_tv": {
+      "ratio": 0.1452,
+      "ms": 0.1404
     },
-    "weapons/sks": {
-      "ratio": 0.3622,
-      "ms": 0.2493
+    "props3d/floor_mattress": {
+      "ratio": 0.1014,
+      "ms": 0.098
     },
-    "weapons/steyr_aug_a1": {
-      "ratio": 0.3175,
-      "ms": 0.2185
+    "props3d/floor_plant": {
+      "ratio": 0.1994,
+      "ms": 0.1927
     },
-    "weapons/steyr_ssg_69": {
-      "ratio": 0.704,
-      "ms": 0.4844
+    "props3d/fruit_tree": {
+      "ratio": 0.4214,
+      "ms": 0.4073
     },
-    "weapons/svd_dragunov": {
-      "ratio": 0.6604,
-      "ms": 0.4545
+    "props3d/garage_car": {
+      "ratio": 0.2832,
+      "ms": 0.2738
     },
-    "weapons/sw_686": {
-      "ratio": 0.3605,
-      "ms": 0.2481
+    "props3d/garden_bed": {
+      "ratio": 0.6811,
+      "ms": 0.6584
     },
-    "weapons/sw_model_29": {
-      "ratio": 0.2977,
-      "ms": 0.2049
+    "props3d/gourmet_counter": {
+      "ratio": 0.3214,
+      "ms": 0.3107
     },
-    "weapons/taurus_82": {
-      "ratio": 0.306,
-      "ms": 0.2106
+    "props3d/hanging_plant": {
+      "ratio": 0.2709,
+      "ms": 0.2619
     },
-    "weapons/taurus_g2c": {
-      "ratio": 0.2227,
+    "props3d/home_office": {
+      "ratio": 0.2774,
+      "ms": 0.2682
+    },
+    "props3d/lantern": {
+      "ratio": 0.1947,
+      "ms": 0.1883
+    },
+    "props3d/lawn": {
+      "ratio": 0.1011,
+      "ms": 0.0977
+    },
+    "props3d/mirror": {
+      "ratio": 0.121,
+      "ms": 0.1169
+    },
+    "props3d/open_door": {
+      "ratio": 0.1262,
+      "ms": 0.122
+    },
+    "props3d/open_suitcases": {
+      "ratio": 0.1514,
+      "ms": 0.1464
+    },
+    "props3d/palm_tree": {
+      "ratio": 0.2862,
+      "ms": 0.2767
+    },
+    "props3d/pendant": {
+      "ratio": 0.2199,
+      "ms": 0.2126
+    },
+    "props3d/pergola": {
+      "ratio": 0.1917,
+      "ms": 0.1853
+    },
+    "props3d/picture_large": {
+      "ratio": 0.1508,
+      "ms": 0.1458
+    },
+    "props3d/picture_small": {
+      "ratio": 0.1711,
+      "ms": 0.1654
+    },
+    "props3d/pool": {
+      "ratio": 0.2161,
+      "ms": 0.2089
+    },
+    "props3d/razor_wire": {
+      "ratio": 0.5203,
+      "ms": 0.503
+    },
+    "props3d/sandbags": {
+      "ratio": 0.1358,
+      "ms": 0.1313
+    },
+    "props3d/sauna": {
+      "ratio": 0.2928,
+      "ms": 0.2831
+    },
+    "props3d/slide": {
+      "ratio": 0.1365,
+      "ms": 0.132
+    },
+    "props3d/soaking_tub": {
+      "ratio": 0.2407,
+      "ms": 0.2327
+    },
+    "props3d/sofa_l": {
+      "ratio": 0.1314,
+      "ms": 0.1271
+    },
+    "props3d/sun_lounger": {
+      "ratio": 0.178,
+      "ms": 0.172
+    },
+    "props3d/swing": {
+      "ratio": 0.1253,
+      "ms": 0.1212
+    },
+    "props3d/table_plant": {
+      "ratio": 0.1601,
+      "ms": 0.1547
+    },
+    "props3d/tile_floor": {
+      "ratio": 0.1585,
       "ms": 0.1532
     },
+    "props3d/track_spot": {
+      "ratio": 0.1821,
+      "ms": 0.176
+    },
+    "props3d/tv_stand": {
+      "ratio": 0.169,
+      "ms": 0.1634
+    },
+    "props3d/vanity": {
+      "ratio": 0.3091,
+      "ms": 0.2988
+    },
+    "props3d/wall_ac": {
+      "ratio": 0.1326,
+      "ms": 0.1282
+    },
+    "props3d/water_bottle_crates": {
+      "ratio": 0.3443,
+      "ms": 0.3328
+    },
+    "props3d/water_jug": {
+      "ratio": 0.125,
+      "ms": 0.1208
+    },
+    "props3d/window_boards": {
+      "ratio": 0.2977,
+      "ms": 0.2878
+    },
+    "shapes/generate:cabinet": {
+      "ratio": 0.7712,
+      "ms": 0.7456
+    },
+    "shapes/generator:box": {
+      "ratio": 0.0594,
+      "ms": 0.0574
+    },
+    "shapes/generator:cylinder": {
+      "ratio": 0.0414,
+      "ms": 0.0401
+    },
+    "shapes/generator:extrude": {
+      "ratio": 0.1439,
+      "ms": 0.1391
+    },
+    "shapes/generator:lathe": {
+      "ratio": 0.039,
+      "ms": 0.0377
+    },
+    "shapes/generator:sphere": {
+      "ratio": 0.075,
+      "ms": 0.0725
+    },
+    "shapes/generator:torus": {
+      "ratio": 0.0796,
+      "ms": 0.0769
+    },
+    "shapes/three:cylinder-cached": {
+      "ratio": 0.0176,
+      "ms": 0.017
+    },
+    "urban/block": {
+      "ratio": 0.1184,
+      "ms": 0.1145
+    },
+    "urban/patterns": {
+      "ratio": 13.2613,
+      "ms": 12.8203
+    },
+    "urban/pole:concrete": {
+      "ratio": 0.0813,
+      "ms": 0.0786
+    },
+    "urban/pole:flood": {
+      "ratio": 0.0796,
+      "ms": 0.077
+    },
+    "urban/tent": {
+      "ratio": 0.0617,
+      "ms": 0.0596
+    },
+    "urban/watchtower": {
+      "ratio": 0.0973,
+      "ms": 0.094
+    },
+    "vegetation/araucaria": {
+      "ratio": 1.9364,
+      "ms": 1.872
+    },
+    "vegetation/banana_with_bunch": {
+      "ratio": 0.7232,
+      "ms": 0.6991
+    },
+    "vegetation/boxwood_hedge": {
+      "ratio": 1.8734,
+      "ms": 1.8111
+    },
+    "vegetation/coconut_palm": {
+      "ratio": 1.6816,
+      "ms": 1.6257
+    },
+    "vegetation/crown_cactus": {
+      "ratio": 0.543,
+      "ms": 0.5249
+    },
+    "vegetation/dead_tree": {
+      "ratio": 0.3342,
+      "ms": 0.3231
+    },
+    "vegetation/hibiscus_shrub": {
+      "ratio": 1.2828,
+      "ms": 1.2402
+    },
+    "vegetation/lawn_tuft": {
+      "ratio": 0.1401,
+      "ms": 0.1354
+    },
+    "vegetation/mandacaru": {
+      "ratio": 1.3905,
+      "ms": 1.3443
+    },
+    "vegetation/mango_tree": {
+      "ratio": 1.5398,
+      "ms": 1.4886
+    },
+    "vegetation/mango_young_15": {
+      "ratio": 1.4735,
+      "ms": 1.4245
+    },
+    "vegetation/mango_young_30": {
+      "ratio": 1.475,
+      "ms": 1.4259
+    },
+    "vegetation/nursery:1": {
+      "ratio": 436.5859,
+      "ms": 422.0648
+    },
+    "vegetation/potted_cactus": {
+      "ratio": 0.4951,
+      "ms": 0.4786
+    },
+    "vegetation/potted_fern": {
+      "ratio": 0.4191,
+      "ms": 0.4052
+    },
+    "vegetation/prickly_pear": {
+      "ratio": 0.5859,
+      "ms": 0.5664
+    },
+    "vegetation/rose_bush_red": {
+      "ratio": 0.5715,
+      "ms": 0.5524
+    },
+    "vegetation/sunflower": {
+      "ratio": 0.3724,
+      "ms": 0.36
+    },
+    "vegetation/yellow_ipe": {
+      "ratio": 1.4691,
+      "ms": 1.4202
+    },
+    "vehicles/compact_hatch:lite": {
+      "ratio": 90.5137,
+      "ms": 87.5032
+    },
+    "vehicles/midsize_pickup:lite": {
+      "ratio": 63.6919,
+      "ms": 61.5735
+    },
+    "vehicles/sport_bike:lite": {
+      "ratio": 9.4299,
+      "ms": 9.1163
+    },
+    "weapons/aa_12": {
+      "ratio": 0.3152,
+      "ms": 0.3047
+    },
+    "weapons/accuracy_awm": {
+      "ratio": 0.6407,
+      "ms": 0.6194
+    },
+    "weapons/accuracy_l96a1": {
+      "ratio": 0.6307,
+      "ms": 0.6097
+    },
+    "weapons/ak_12": {
+      "ratio": 0.8047,
+      "ms": 0.778
+    },
+    "weapons/ak_47": {
+      "ratio": 0.4546,
+      "ms": 0.4394
+    },
+    "weapons/ak_74": {
+      "ratio": 0.4547,
+      "ms": 0.4395
+    },
+    "weapons/akm": {
+      "ratio": 0.4639,
+      "ms": 0.4485
+    },
+    "weapons/aks_74u": {
+      "ratio": 0.453,
+      "ms": 0.4379
+    },
+    "weapons/at4": {
+      "ratio": 0.1156,
+      "ms": 0.1117
+    },
+    "weapons/barrett_m82a1": {
+      "ratio": 0.6297,
+      "ms": 0.6088
+    },
+    "weapons/barrett_mrad": {
+      "ratio": 1.2831,
+      "ms": 1.2404
+    },
+    "weapons/benelli_m4": {
+      "ratio": 0.5453,
+      "ms": 0.5272
+    },
+    "weapons/beretta_92fs": {
+      "ratio": 0.3209,
+      "ms": 0.3103
+    },
+    "weapons/boito_double_barrel": {
+      "ratio": 0.2343,
+      "ms": 0.2265
+    },
+    "weapons/browning_m2": {
+      "ratio": 0.3911,
+      "ms": 0.3781
+    },
+    "weapons/bt_mp9": {
+      "ratio": 0.3219,
+      "ms": 0.3112
+    },
+    "weapons/carl_gustaf_m4": {
+      "ratio": 0.169,
+      "ms": 0.1634
+    },
+    "weapons/cbc_122": {
+      "ratio": 0.3271,
+      "ms": 0.3163
+    },
+    "weapons/cbc_7022": {
+      "ratio": 0.2706,
+      "ms": 0.2616
+    },
+    "weapons/cbc_pump_military_3_0": {
+      "ratio": 0.3535,
+      "ms": 0.3418
+    },
+    "weapons/cheytac_m200": {
+      "ratio": 0.69,
+      "ms": 0.667
+    },
+    "weapons/colt_m16a2": {
+      "ratio": 0.3634,
+      "ms": 0.3513
+    },
+    "weapons/colt_m1911": {
+      "ratio": 0.406,
+      "ms": 0.3925
+    },
+    "weapons/colt_m4a1": {
+      "ratio": 0.8005,
+      "ms": 0.7739
+    },
+    "weapons/colt_python": {
+      "ratio": 0.7599,
+      "ms": 0.7346
+    },
+    "weapons/cz_75": {
+      "ratio": 0.2433,
+      "ms": 0.2352
+    },
+    "weapons/cz_scorpion_evo_3": {
+      "ratio": 0.6083,
+      "ms": 0.588
+    },
+    "weapons/desert_eagle_mark_xix": {
+      "ratio": 0.2876,
+      "ms": 0.2781
+    },
+    "weapons/famas": {
+      "ratio": 0.3601,
+      "ms": 0.3481
+    },
+    "weapons/fn_fal": {
+      "ratio": 0.3769,
+      "ms": 0.3643
+    },
+    "weapons/fn_five_seven": {
+      "ratio": 0.241,
+      "ms": 0.233
+    },
+    "weapons/fn_m240b": {
+      "ratio": 0.7288,
+      "ms": 0.7045
+    },
+    "weapons/fn_m249": {
+      "ratio": 0.5048,
+      "ms": 0.488
+    },
+    "weapons/fn_mag": {
+      "ratio": 0.541,
+      "ms": 0.523
+    },
+    "weapons/fn_minimi": {
+      "ratio": 0.5298,
+      "ms": 0.5122
+    },
+    "weapons/fn_minimi_para": {
+      "ratio": 0.5167,
+      "ms": 0.4995
+    },
+    "weapons/fn_p90": {
+      "ratio": 0.2904,
+      "ms": 0.2807
+    },
+    "weapons/fn_parafal": {
+      "ratio": 0.3434,
+      "ms": 0.332
+    },
+    "weapons/fn_ps90": {
+      "ratio": 1.1513,
+      "ms": 1.113
+    },
+    "weapons/fn_scar_h": {
+      "ratio": 0.921,
+      "ms": 0.8903
+    },
+    "weapons/fn_scar_l": {
+      "ratio": 0.8535,
+      "ms": 0.8252
+    },
+    "weapons/franchi_spas_12": {
+      "ratio": 0.2577,
+      "ms": 0.2491
+    },
+    "weapons/glock_17": {
+      "ratio": 0.3174,
+      "ms": 0.3068
+    },
+    "weapons/glock_18": {
+      "ratio": 0.3063,
+      "ms": 0.2961
+    },
+    "weapons/glock_19": {
+      "ratio": 0.2929,
+      "ms": 0.2832
+    },
+    "weapons/hk_g36": {
+      "ratio": 0.5623,
+      "ms": 0.5436
+    },
+    "weapons/hk_g36c": {
+      "ratio": 0.6593,
+      "ms": 0.6373
+    },
+    "weapons/hk_g36k": {
+      "ratio": 0.5394,
+      "ms": 0.5215
+    },
+    "weapons/hk_g3a3": {
+      "ratio": 0.3324,
+      "ms": 0.3213
+    },
+    "weapons/hk_mp5a3": {
+      "ratio": 0.3304,
+      "ms": 0.3194
+    },
+    "weapons/hk_mp5k": {
+      "ratio": 0.2459,
+      "ms": 0.2377
+    },
+    "weapons/hk_mp5sd3": {
+      "ratio": 0.3983,
+      "ms": 0.3851
+    },
+    "weapons/hk_mp7a1": {
+      "ratio": 0.4446,
+      "ms": 0.4298
+    },
+    "weapons/hk_psg_1": {
+      "ratio": 0.5424,
+      "ms": 0.5244
+    },
+    "weapons/hk_ump_45": {
+      "ratio": 0.4216,
+      "ms": 0.4076
+    },
+    "weapons/hk_ump9": {
+      "ratio": 0.4074,
+      "ms": 0.3939
+    },
+    "weapons/hk_usp": {
+      "ratio": 0.2899,
+      "ms": 0.2802
+    },
+    "weapons/hk416": {
+      "ratio": 0.8663,
+      "ms": 0.8375
+    },
+    "weapons/hunting_rifle_30_06": {
+      "ratio": 0.5037,
+      "ms": 0.487
+    },
+    "weapons/imbel_ia2": {
+      "ratio": 0.5216,
+      "ms": 0.5043
+    },
+    "weapons/improvised_flamethrower": {
+      "ratio": 0.6698,
+      "ms": 0.6475
+    },
+    "weapons/iwi_tavor": {
+      "ratio": 0.48,
+      "ms": 0.4641
+    },
+    "weapons/kel_tec_ksg": {
+      "ratio": 0.2801,
+      "ms": 0.2708
+    },
+    "weapons/knights_sr_25_mk11": {
+      "ratio": 1.2169,
+      "ms": 1.1764
+    },
+    "weapons/kriss_vector": {
+      "ratio": 0.6069,
+      "ms": 0.5867
+    },
+    "weapons/l85a2": {
+      "ratio": 0.7159,
+      "ms": 0.6921
+    },
+    "weapons/m1_garand": {
+      "ratio": 0.2823,
+      "ms": 0.2729
+    },
+    "weapons/m134": {
+      "ratio": 0.5785,
+      "ms": 0.5592
+    },
+    "weapons/m14_ebr": {
+      "ratio": 1.1265,
+      "ms": 1.0891
+    },
+    "weapons/m2_flamethrower": {
+      "ratio": 0.967,
+      "ms": 0.9349
+    },
+    "weapons/m24_sws": {
+      "ratio": 0.5543,
+      "ms": 0.5358
+    },
+    "weapons/m32_mgl": {
+      "ratio": 0.5494,
+      "ms": 0.5312
+    },
+    "weapons/m60": {
+      "ratio": 0.5383,
+      "ms": 0.5204
+    },
+    "weapons/m72_law": {
+      "ratio": 0.1504,
+      "ms": 0.1454
+    },
+    "weapons/m79": {
+      "ratio": 0.2995,
+      "ms": 0.2895
+    },
+    "weapons/mac_10": {
+      "ratio": 0.1726,
+      "ms": 0.1669
+    },
+    "weapons/makarov_pm": {
+      "ratio": 0.2553,
+      "ms": 0.2468
+    },
+    "weapons/mauser_kar98k": {
+      "ratio": 0.4658,
+      "ms": 0.4503
+    },
+    "weapons/mg3": {
+      "ratio": 0.5036,
+      "ms": 0.4869
+    },
+    "weapons/mg42": {
+      "ratio": 0.5479,
+      "ms": 0.5297
+    },
+    "weapons/mini_uzi": {
+      "ratio": 0.204,
+      "ms": 0.1972
+    },
+    "weapons/mosin_nagant_91_30": {
+      "ratio": 0.3465,
+      "ms": 0.3349
+    },
+    "weapons/mossberg_500": {
+      "ratio": 0.2212,
+      "ms": 0.2138
+    },
+    "weapons/mossberg_500_cruiser": {
+      "ratio": 0.1884,
+      "ms": 0.1822
+    },
+    "weapons/mossberg_590": {
+      "ratio": 0.2787,
+      "ms": 0.2694
+    },
+    "weapons/mp40": {
+      "ratio": 0.4927,
+      "ms": 0.4763
+    },
+    "weapons/pkm": {
+      "ratio": 0.4559,
+      "ms": 0.4407
+    },
+    "weapons/pp19_bizon": {
+      "ratio": 0.3786,
+      "ms": 0.366
+    },
+    "weapons/ppsh_41": {
+      "ratio": 0.4265,
+      "ms": 0.4123
+    },
+    "weapons/remington_700": {
+      "ratio": 0.5281,
+      "ms": 0.5105
+    },
+    "weapons/remington_700_300wm": {
+      "ratio": 0.4982,
+      "ms": 0.4816
+    },
+    "weapons/remington_870": {
+      "ratio": 0.2211,
+      "ms": 0.2138
+    },
+    "weapons/rossi_puma": {
+      "ratio": 0.249,
+      "ms": 0.2407
+    },
+    "weapons/rpg_7": {
+      "ratio": 0.2952,
+      "ms": 0.2854
+    },
+    "weapons/rpk": {
+      "ratio": 0.4872,
+      "ms": 0.471
+    },
+    "weapons/ruger_10_22": {
+      "ratio": 0.2697,
+      "ms": 0.2608
+    },
+    "weapons/saiga_12": {
+      "ratio": 0.3527,
+      "ms": 0.341
+    },
+    "weapons/sako_trg_42": {
+      "ratio": 0.6152,
+      "ms": 0.5948
+    },
+    "weapons/sig_mpx": {
+      "ratio": 0.6029,
+      "ms": 0.5828
+    },
+    "weapons/sig_sauer_p226": {
+      "ratio": 0.2416,
+      "ms": 0.2336
+    },
+    "weapons/sig_sauer_p320": {
+      "ratio": 0.2344,
+      "ms": 0.2266
+    },
+    "weapons/sks": {
+      "ratio": 0.2942,
+      "ms": 0.2844
+    },
+    "weapons/steyr_aug_a1": {
+      "ratio": 0.2581,
+      "ms": 0.2495
+    },
+    "weapons/steyr_ssg_69": {
+      "ratio": 0.5071,
+      "ms": 0.4902
+    },
+    "weapons/svd_dragunov": {
+      "ratio": 0.5634,
+      "ms": 0.5447
+    },
+    "weapons/sw_686": {
+      "ratio": 0.3057,
+      "ms": 0.2956
+    },
+    "weapons/sw_model_29": {
+      "ratio": 0.2772,
+      "ms": 0.268
+    },
+    "weapons/taurus_82": {
+      "ratio": 0.2687,
+      "ms": 0.2597
+    },
+    "weapons/taurus_g2c": {
+      "ratio": 0.2189,
+      "ms": 0.2116
+    },
     "weapons/taurus_pt100": {
-      "ratio": 0.2205,
-      "ms": 0.1517
+      "ratio": 0.2336,
+      "ms": 0.2258
     },
     "weapons/taurus_smt9": {
-      "ratio": 0.8009,
-      "ms": 0.5512
+      "ratio": 0.6025,
+      "ms": 0.5824
     },
     "weapons/taurus_t4": {
-      "ratio": 0.9228,
-      "ms": 0.635
+      "ratio": 0.831,
+      "ms": 0.8034
     },
     "weapons/taurus_t4_civil": {
-      "ratio": 1.3532,
-      "ms": 0.9312
+      "ratio": 0.8567,
+      "ms": 0.8282
     },
     "weapons/taurus_th380": {
-      "ratio": 0.2216,
-      "ms": 0.1525
+      "ratio": 0.2141,
+      "ms": 0.207
     },
     "weapons/taurus_ts9": {
-      "ratio": 0.2325,
-      "ms": 0.16
+      "ratio": 0.2504,
+      "ms": 0.242
     },
     "weapons/thompson_m1a1": {
-      "ratio": 0.477,
-      "ms": 0.3283
+      "ratio": 0.3881,
+      "ms": 0.3752
     },
     "weapons/uzi": {
-      "ratio": 0.2242,
-      "ms": 0.1543
+      "ratio": 0.2154,
+      "ms": 0.2083
+    },
+    "weapons/vss_vintorez": {
+      "ratio": 0.25,
+      "ms": 0.2417
     },
     "weapons/vz61": {
-      "ratio": 0.2197,
-      "ms": 0.1512
+      "ratio": 0.2113,
+      "ms": 0.2043
+    },
+    "weapons/walther_p99": {
+      "ratio": 0.4475,
+      "ms": 0.4326
+    },
+    "weapons/winchester_1887": {
+      "ratio": 1.3267,
+      "ms": 1.2825
     },
     "weapons/winchester_1894": {
-      "ratio": 0.2655,
-      "ms": 0.1827
+      "ratio": 0.2783,
+      "ms": 0.269
     }
   }
 }

@@ -1,4 +1,4 @@
-import type { Vec3 } from './types'
+import type { StructureRole, Vec3 } from './types'
 
 /** A bar as two end points. */
 export type Bar = [Vec3, Vec3]
@@ -29,10 +29,15 @@ const bar = (axis: number, along: number, fixed: Array<[number, number]>): Bar =
   return [a, b]
 }
 
-/** Long members (columns, beams): two smaller dimensions close to each other and a much longer third one. */
-export const isMember = (dims: Vec3): boolean => {
+/**
+ * Long members (columns, beams). A part declared a beam or a column is one at any section from a length of twice its larger side (NBR 6118 22.4: under
+ * that a beam is a wall-beam): a 22 x 80 cm beam, a lintel 80 cm deep over 2.2 m. Without a role a member is three times as long as the larger side of a
+ * compact section (its two sides within 3:1), or it is a plate.
+ */
+export const isMember = (dims: Vec3, role?: StructureRole): boolean => {
   const [a = 0, b = 0, c = 0] = [...dims].sort((x, y) => x - y)
-  return b / a < 3 && c / b >= 3
+  if (role === 'beam' || role === 'column') return c / b >= 2
+  return c / b >= 3 && b / a < 3
 }
 
 /** Bars of a long member's perimeter that lie on one face of width `width` (the face's row of the cage). */
@@ -42,9 +47,9 @@ export const memberBarCount = (width: number, spacing: number): number => spread
  * Rebar of a box in the part's own axes. Plates (walls, slabs) get a grid along each of the two large axes at mid thickness; long members get
  * bars along their length at the perimeter of the section. `thin` is the axis the part is thinnest along.
  */
-export const rebarBars = (dims: Vec3, thin: number, spacing: number): Bar[] => {
+export const rebarBars = (dims: Vec3, thin: number, spacing: number, role?: StructureRole): Bar[] => {
   const out: Bar[] = []
-  if (isMember(dims)) {
+  if (isMember(dims, role)) {
     const long = dims.indexOf(Math.max(...dims))
     const [u = 0, v = 0] = [0, 1, 2].filter((i) => i !== long)
     const us = spread(dims[u], COVER, spacing, MAX_MEMBER_BARS_PER_SIDE)
@@ -67,8 +72,8 @@ export const STIRRUP_SPACING = 0.15
  * The stirrups of a long member (a column, a beam): a closed rectangle around its perimeter bars every `spacing` metres along its length, each as four
  * straight legs. They hold the bars in place and confine the core; a wall or slab has none.
  */
-export const memberStirrups = (dims: Vec3, spacing = STIRRUP_SPACING): Bar[] => {
-  if (!isMember(dims)) return []
+export const memberStirrups = (dims: Vec3, spacing = STIRRUP_SPACING, role?: StructureRole): Bar[] => {
+  if (!isMember(dims, role)) return []
   const long = dims.indexOf(Math.max(...dims))
   const [u = 0, v = 0] = [0, 1, 2].filter((i) => i !== long)
   // the stirrup wraps the bars: its legs run at the cover, a bar's width outside their centres

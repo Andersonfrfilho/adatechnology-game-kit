@@ -38,6 +38,8 @@ export interface RoomAvatarState {
   seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null
   /** A hand on a door, lid or drawer: `reach` to the handle, `swing` with it (`pull` toward the body or pushed away), `release`, `rattle` on a locked one; `height` of the hand over the feet, metres. */
   door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
+  /** The world's time scale (slow motion): the body walks in real time, its strikes play at the world's pace, with the tools they swing and the blows they land. */
+  clipRate?: number
 }
 
 /** What the room tells the first-person arms every frame, after the modules have placed the tool in the hands. */
@@ -103,7 +105,7 @@ export type PunchHand = 'alternate' | 'left' | 'right'
 export type CameraMode = 'first' | 'third'
 
 /** Which clip a melee tool plays before its blow lands (`TestRoomOptions.strikeClips`). */
-export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { hand: 'punch_right', fists: 'punch_right', brass_knuckles: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }
+export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { hand: 'punch_right', fists: 'punch_right', brass_knuckles: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', shovel: 'shovel_swing' }
 /** The first-person stance of the tools that choose one (`TestRoomOptions.handStances`). */
 export const DEFAULT_HAND_STANCES: Readonly<Record<string, string>> = { fists: 'fists' }
 

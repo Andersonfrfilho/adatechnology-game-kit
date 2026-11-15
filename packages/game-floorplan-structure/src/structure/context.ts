@@ -5,6 +5,7 @@ import { CONSTRUCTION_SYSTEMS } from '../registry'
 import type { ConstructionSystemDef } from '../registry'
 import { GROUND } from '../types'
 import type { Construction, PartRole, Rect, Roof, StructureExtras, StructurePart, StructureSource, WaterTank, SourceWall } from '../types'
+import { getMasonryUnit, pillarSectionOf } from '../masonry-units'
 import { StructureBuilder } from './builder'
 import { hashLegacyKey } from './legacy-key'
 
@@ -43,6 +44,8 @@ export interface BuildContext {
   wallPillarSpacing: number
   /** `StructureOptions.visorSections`. */
   visorSections: boolean
+  /** Section of the pillars cast in the walls: across the wall and along it (from the masonry unit of the walls; 0.2 x 0.2 without one). */
+  pillar: PillarSection
   floorCount: number
   isUnit: boolean
   elevation: number
@@ -69,6 +72,25 @@ export interface BuildContext {
   baseOf(floor: number): Base
 }
 
+export interface PillarSection {
+  readonly across: number
+  readonly along: number
+}
+
+/** Section of a pillar with no masonry unit to follow (the frame of the Visor de casas 3D and of a wall with no unit). */
+const SQUARE_PILLAR: PillarSection = { across: 0.2, along: 0.2 }
+
+const pillarSectionOfWalls = (construction: Construction): PillarSection => {
+  const unit = construction.walls.unit
+  return typeof unit === 'string' ? pillarSectionOf(getMasonryUnit(unit)) : SQUARE_PILLAR
+}
+
+/** The plan box of a pillar of `section` centred at (u, v), its long side along u (`alongU`) or along v. */
+export const pillarBox = (section: PillarSection, u: number, v: number, alongU: boolean): Rect => {
+  const [hu, hv] = alongU ? [section.along / 2, section.across / 2] : [section.across / 2, section.along / 2]
+  return [u - hu, v - hv, u + hu, v + hv]
+}
+
 export interface ContextOptions {
   porchRoofOnPostsOnly: boolean
   rafterRoof: boolean
@@ -90,7 +112,7 @@ export function createContext(source: StructureSource, construction: Constructio
     source.rooms.filter((room) => room.floor === floor && !exclude.includes(room.type)).flatMap((room) => room.parts)
   const builder = new StructureBuilder()
   const context: BuildContext = {
-    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, roofBays: options.roofBays, wallPillarSpacing: options.wallPillarSpacing, visorSections: options.visorSections, floorCount, isUnit, elevation, isTimber: system.timber,
+    source, construction, system, extras, tank, builder, porchRoofOnPostsOnly: options.porchRoofOnPostsOnly, rafterRoof: options.rafterRoof, roofBays: options.roofBays, wallPillarSpacing: options.wallPillarSpacing, visorSections: options.visorSections, pillar: pillarSectionOfWalls(construction), floorCount, isUnit, elevation, isTimber: system.timber,
     walls: [], wallParts: new Map(), groundBeams: new Map(), carriers: new Map(), plates: new Map(), pillars: new Map(), porches: new Map(), base0: GROUND,
     houseBox: [0, 0, 0, 0], topBox: [0, 0, 0, 0], hasBasement: false,
     roof: { shape: 'slab', covering: '', material: '', pitch: 0, bearingFloor: 0, panes: [], trusses: 0 },

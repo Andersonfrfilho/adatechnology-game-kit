@@ -29,9 +29,9 @@ function build(event: HouseEvent): { house: House; plan: ReturnType<typeof planO
   pair(plan.windows, event.ids.windows)
   legacy.set(plan.template, event.ids.template)
   const seedKey = (id: string): string => legacy.get(id) ?? id.replace(/^backyard\.outbuilding\./, 'quintal.edicula.').replace(/\.ceiling_light$/, '.plafon')
-  // the team's scene has no pillars standing out of the walls (they came with the confined masonry of the kit) and draws the baseboard as one strip per face (the kit
-  // lays it tile by tile) and a door leaf as tall as its opening (the kit stops it under the lintel): built that way to compare node by node
-  return { plan, ...houseOf(plan, { seedKey }, { pillars: 'hidden', baseboard: 'band', doors: 'visor', windows: 'visor', segmentLimits: { wiring: Infinity, pipe: Infinity } }) }
+  // the team's scene has no pillars standing out of the walls (they came with the confined masonry of the kit), hangs the gutters tight on the fascia, the soffit tight under the eave line, leaves the inner L corners open, draws the baseboard as one strip per face (the kit
+  // lays it tile by tile) and the runs whole: built that way to compare node by node
+  return { plan, ...houseOf(plan, { seedKey }, { pillars: 'hidden', baseboard: 'band', windows: 'visor', gutters: 'visor', eave: 'visor', wallCorners: 'visor', ceilings: 'visor', segmentLimits: { wiring: Infinity, pipe: Infinity } }) }
 }
 
 const built = new Map<string, House>()

@@ -2,7 +2,7 @@ import type { TemplateDef } from '@adatechnology/game-floorplan'
 import { clamp, r2 } from '../util'
 
 export const midModernSingleStorey: TemplateDef = {
-  id: 'mid_modern_single_storey', use: 'residential_single', style: 'mid', limits: { w: [10, 13], d: [12.8, 14.5] }, defaults: { w: 11, d: 13.2 },
+  id: 'mid_modern_single_storey', masonryUnit: 'ceramic_block_14', use: 'residential_single', style: 'mid', limits: { w: [10, 13], d: [12.8, 14.5] }, defaults: { w: 11, d: 13.2 },
   lot: (w, d) => ({ frontSetback: 5.5, marginLeft: 1.0, marginRight: 1.0, backyardDepth: clamp(30 - 5.5 - d, 8, 18), parking: { width: 3.4 }, garage: { u: -1 + 1.7, width: 3.0, to: 'parking' }, pedestrian: { u: w - 0.9 }, doorTarget: { a: 'living', side: 'front' }, libraries: { garden: 'garden_mid', backyard: 'backyard_mid' } }),
   facadeExtra: (f) => { f.veranda = true; f.modern = true; },
   floors: [{

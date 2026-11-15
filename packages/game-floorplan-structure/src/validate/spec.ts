@@ -36,7 +36,7 @@ function sectionViolation(part: PartSpec): StructuralViolation | null {
   const role = part.structure?.role
   const [x, y, z] = part.shape.size
   if (role === 'column' && (Math.min(x, z) < MIN_PILLAR_SIDE - EPSILON || x * z < MIN_PILLAR_AREA - EPSILON))
-    return { code: STRUCTURAL_VIOLATION.CONCRETE_BELOW_MIN_SECTION, part: part.id, message: `${part.id} is ${x.toFixed(2)} x ${z.toFixed(2)} m: NBR 6118 asks at least ${MIN_PILLAR_SIDE} m a side` }
+    return { code: STRUCTURAL_VIOLATION.CONCRETE_BELOW_MIN_SECTION, part: part.id, message: `${part.id} is ${x.toFixed(2)} x ${z.toFixed(2)} m: NBR 6118 asks at least ${MIN_PILLAR_SIDE} m a side and ${MIN_PILLAR_AREA} m²` }
   if (role === 'beam' && Math.min(x, z) < MIN_BEAM_WIDTH - EPSILON && y >= Math.min(x, z))
     return { code: STRUCTURAL_VIOLATION.CONCRETE_BELOW_MIN_SECTION, part: part.id, message: `${part.id} is ${Math.min(x, z).toFixed(2)} m wide: NBR 6118 asks at least ${MIN_BEAM_WIDTH} m` }
   return null

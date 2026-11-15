@@ -23,6 +23,10 @@ export const ARM_REACH = {
   protraction: 0.11,
   /** A hand is within reach below this fraction of the arm's length. */
   slack: 0.96,
+  /** The share of the shoulder blade's slide counted on when the left hand looks for a point of a shaft in reach (the rest is margin). */
+  slideProtraction: 0.8,
+  /** Points of a shaft tried for the left hand. */
+  slideSteps: 48,
   /** Where the elbow points: down and out from the body, a little back (body space, x outward). */
   elbowPole: [0.55, -1, -0.25] as const,
   /** The support arm's elbow: under the gun, hardly out of the body (the first-person arms' `elbowPoleLeft`), so the forearm meets the handguard nearer the aim's line. */
@@ -44,6 +48,7 @@ export const ARM_REACH = {
 } as const
 
 type Side = 'R' | 'L'
+type Vec3Tuple = [number, number, number]
 type ReachArm = { readonly g: THREE_NS.Object3D; readonly el: THREE_NS.Object3D; readonly hand: THREE_NS.Object3D; readonly outward: 1 | -1 }
 
 /**
@@ -211,6 +216,31 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
     return { ...pose, position: [place.x, place.y, place.z] }
   }
 
+  /**
+   * A left grip out of reach on a two-handed tool: the palm slides along the shaft to the point nearest its grip that the arm reaches (with the shoulder blade forward), the
+   * hand keeping its turn on the shaft. With no point in reach, the point of the shaft nearest the shoulder.
+   */
+  const slideOnShaft = (pose: HandPose, shaft: { readonly from: Vec3Tuple; readonly to: Vec3Tuple }): HandPose => {
+    const arm = arms.L
+    const { upper: up, fore, palm } = lengthsOf(arm)
+    wristOf('L', pose, palm)
+    arm.g.getWorldPosition(v.shoulder)
+    const reachable = limitOf('L', up, fore) + ARM_REACH.protraction * ARM_REACH.slideProtraction
+    if (v.shoulder.distanceTo(v.wrist) <= reachable) return pose
+    // the wrist keeps its offset from the palm while the palm moves along the shaft
+    const offset = v.a.copy(v.wrist).sub(v.palm)
+    const grip = v.b.set(...pose.position)
+    let best: { at: Vec3Tuple; miss: number; out: number } | null = null
+    for (let k = 0; k <= ARM_REACH.slideSteps; k++) {
+      const t = k / ARM_REACH.slideSteps
+      const at: Vec3Tuple = [shaft.from[0] + (shaft.to[0] - shaft.from[0]) * t, shaft.from[1] + (shaft.to[1] - shaft.from[1]) * t, shaft.from[2] + (shaft.to[2] - shaft.from[2]) * t]
+      const out = Math.max(0, v.c.set(...at).add(offset).distanceTo(v.shoulder) - reachable)
+      const miss = v.c.set(...at).distanceTo(grip)
+      if (!best || out < best.out - 1e-6 || (Math.abs(out - best.out) <= 1e-6 && miss < best.miss)) best = { at, miss, out }
+    }
+    return best ? { ...pose, position: best.at } : pose
+  }
+
   const save = (): void => {
     saved.twist = upper.rotation.y
     for (const side of ['R', 'L'] as const) {
@@ -230,7 +260,8 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
       applied = true
       upper.updateWorldMatrix(true, true)
       let { R, L } = targets
-      bendLimit = view ? (view.reachBend ?? ARM_REACH.viewBend) : null
+      // two hands on one shaft (a shovel, an axe) reach out along it as far as the arms go: the view's bend is for a tool held up before the eye
+      bendLimit = view && !targets.slideL ? (view.reachBend ?? ARM_REACH.viewBend) : null
       if (view?.keepOutside) {
         view.camera.updateWorldMatrix(true, false)
         view.camera.matrixWorld.decompose(camera.position, camera.quaternion, v.a)
@@ -239,6 +270,7 @@ export const createArmReach = (THREE: Three, rig: RichRig, hands: Readonly<Recor
         if (L) L = keepOutside(L, view.keepOutside)
       }
       if (L && R) turnChest(L)
+      if (L && targets.slideL) L = slideOnShaft(L, targets.slideL)
       if (R) reach('R', R)
       if (L) reach('L', L)
       bendLimit = null

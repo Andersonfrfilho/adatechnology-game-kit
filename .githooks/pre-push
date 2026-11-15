@@ -40,5 +40,6 @@ if [ -z "$PRE_PUSH_ALL" ] && [ -z "$(git status --porcelain --untracked-files=no
   exit 0
 fi
 
+node tools/z-fighting/coverage.mjs
 locked cpu.lock node tools/pre-push/checks.mjs
 mkdir -p "$(dirname "$stamp")" && touch "$stamp"

@@ -134,7 +134,8 @@ describe('structure', () => {
   it('when the columns and the roof supports fail on the same tick, the roof group still gets its collapse event, computed after all losses', () => {
     const w = createDestruction()
     const id = w.add(slabSpec([0, 1, 2, 3], { wall: true }))
-    const ev = w.explode([0, 1.5, 0], 20000, 8).flatMap((r) => r.events)
+    // four 30 cm concrete columns 2.5 m from the charge: the 24 g of TNT the test used (20 kJ) puts a few joules into each, a 30 cm column is not a pane; it takes 6 kg of TNT (5 MJ, Z = 1.4 m/kg^(1/3), a pipe bomb in a van) to break all four, and still not enough to throw the slab down by itself
+    const ev = w.explode([0, 1.5, 0], 5e6, 8).flatMap((r) => r.events)
     for (const c of ['c0', 'c1', 'c2', 'c3']) expect(w.part(id, c)!.status).toBe('broken')
     const collapses = ev.filter((e) => e.type === 'collapse')
     expect(collapses.length).toBeGreaterThan(0)

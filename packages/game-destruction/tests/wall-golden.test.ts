@@ -91,6 +91,8 @@ describe('self-goldens: layered walls', () => {
       w = fresh('tank_leak')
       bullet(w, 'tank')
       runFor(w.world, 40)
+      // recorded again when the heat of a blast became its fireball's, seen in a straight line: the wooden roof lies over the 20 cm concrete slab, which the fireball of
+      // the bottle below cannot see through, and no longer catches fire at the burst (it did when every flammable part within the game radius of the blast was lit)
       w = fresh('gas_explodes')
       w.world.hitPart(w.id, 'bottle', { type: 'fire', point: at('bottle'), temperature: 900, radius: 0.6, duration: 8 })
       runFor(w.world, 12)

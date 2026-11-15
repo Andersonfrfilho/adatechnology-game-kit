@@ -15,7 +15,7 @@ describe('the module declares itself', () => {
       const items = module.items(locale)
       expect(items.map((i) => i.id)).toEqual(['house_casa_portico', 'house_casa_inteira', 'house_casa_wood_frame', 'house_casa_tronco', 'house_barraca', 'furniture_dining_table', 'furniture_coffee_table', 'furniture_desk'])
       expect(module.area!(locale).placements).toEqual([])
-      expect(module.scenarios!(locale).map((s) => s.id)).toEqual(['house_one_pillar', 'house_two_pillars', 'house_partition', 'house_window_glass', 'house_tank_leak', 'house_gas_explodes', 'floorplan_typologies'])
+      expect(module.scenarios!(locale).map((s) => s.id)).toEqual(['house_one_pillar', 'house_two_pillars', 'house_partition', 'house_window_glass', 'house_tank_leak', 'house_gas_explodes', 'floorplan_typologies', 'floorplan_construction_stages'])
     }
     expect(fakeRoom({ locale: 'pt-BR' }).module.name).toBe('Área de casas e prédios')
   })
@@ -222,6 +222,81 @@ describe('houses in the room', () => {
     expect(Math.max(...levels)).toBeGreaterThan(0)
     expect(levels.includes(0)).toBe(true)
     expect(r.module.metrics!('en').find((m) => m.id === 'planned')!.read()).toBeGreaterThan(0)
+  })
+
+  it('steps through construction levels 0..8 from blueprint and foundation to complete house', () => {
+    const r = fakeRoom()
+    r.set('template', 'single_storey_a')
+    r.act('build')
+    const { house } = r.module.houses[0]!
+    const stageMetric = () => r.module.metrics!('en').find((m) => m.id === 'construction_stage')!.read() as string
+
+    r.set('construction_level', 0)
+    expect(stageMetric()).toContain('0 ·')
+    expect(house.groups['stage:0:blueprint']?.visible).toBe(true)
+    expect(house.groups['stage:1:foundation']?.visible).toBe(false)
+    expect(house.groups['f0']?.visible).toBe(false)
+
+    r.set('construction_level', 1)
+    expect(stageMetric()).toContain('1 ·')
+    expect(house.groups['stage:0:blueprint']?.visible).toBe(true)
+    expect(house.groups['stage:1:foundation']?.visible).toBe(true)
+    expect(house.groups['stage:2:frame']?.visible).toBe(false)
+    const foundationGroup = house.groups['stage:1:foundation']!
+    const dirtBed = foundationGroup.children.find((c) => c.userData.structurePartId === 'foundation_dirt_bed')
+    expect(dirtBed).toBeDefined()
+
+    r.set('construction_level', 2)
+    expect(stageMetric()).toContain('2 ·')
+    expect(house.groups['stage:0:blueprint']?.visible).toBe(false)
+    expect(house.groups['stage:1:foundation']?.visible).toBe(true)
+    expect(house.groups['stage:2:frame']?.visible).toBe(true)
+    expect(house.groups['stage:3:masonry']?.visible).toBe(false)
+    const frameGroup = house.groups['stage:2:frame']!
+    // the frame draws the structure's own pillars (the slab's among them), none the renderer makes up
+    const ids = frameGroup.children.map((c) => String(c.userData.structurePartId || ''))
+    expect(ids.some((id) => id.startsWith('pillar_'))).toBe(true)
+    expect(ids.some((id) => id.startsWith('interior_column_'))).toBe(false)
+
+    r.set('construction_level', 3)
+    expect(stageMetric()).toContain('3 ·')
+    expect(house.groups['stage:2:frame']?.visible).toBe(true)
+    expect(house.groups['stage:3:masonry']?.visible).toBe(true)
+
+    r.set('construction_level', 4)
+    expect(stageMetric()).toContain('4 ·')
+    expect(house.groups['stage:4:installations']?.visible).toBe(true)
+    expect(house.groups['f0']?.visible).toBe(true)
+
+    r.set('construction_level', 5)
+    expect(stageMetric()).toContain('5 ·')
+    expect(house.groups['stage:2:frame']?.visible).toBe(false)
+    expect(house.groups['stage:3:masonry']?.visible).toBe(false)
+    expect(house.groups['stage:4:installations']?.visible).toBe(false)
+
+    r.layer('water', true)
+    expect(house.groups['stage:4:installations']?.visible).toBe(true)
+    r.layer('water', false)
+
+    // the timber frame goes up at 7, before the tiles; the tiles come at 8 and the frame stays under them
+    r.set('construction_level', 7)
+    expect(stageMetric()).toContain('7 ·')
+    expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
+    expect(house.groups['roof']?.visible).toBe(false)
+
+    r.set('construction_level', 8)
+    expect(stageMetric()).toContain('8 ·')
+    expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
+    expect(house.groups['roof']?.visible).toBe(true)
+  })
+
+  it('every typology passes the construction tests of its stages, in the room\'s scenario', async () => {
+    const r = fakeRoom()
+    const scenario = r.module.scenarios!('en').find((s) => s.id === 'floorplan_construction_stages')!
+    const checks: Array<[boolean, string]> = []
+    await scenario.run({ room: r.room, step: r.step, expect: (ok, label) => checks.push([ok, label]) })
+    expect(checks.length).toBeGreaterThanOrEqual(10)
+    expect(checks.filter(([ok]) => !ok).map(([, label]) => label)).toEqual([])
   })
 
   it('every typology of the engine builds', async () => {

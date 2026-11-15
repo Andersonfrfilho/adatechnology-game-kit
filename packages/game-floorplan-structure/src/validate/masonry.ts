@@ -28,6 +28,13 @@ export const lineOf = (part: StructurePart): WallLine => {
 }
 
 /** A wall laid in bricks or blocks with mortar (not a concrete wall, not timber). */
+/**
+ * Masonry laid on a lintel, between it and the bond beam (over a door, the encunhamento): confined by the walls at its sides and the bond beam on it, it is no
+ * free wall and has no pillars of its own.
+ */
+export const isOverOpening = (part: StructurePart, structure: Pick<Structure, 'supports'>): boolean =>
+  structure.supports.some((s) => s.part === part.id && s.on.startsWith('lintel_'))
+
 export function isMasonryWall(part: StructurePart): boolean {
   if (!part.id.startsWith('wall_') || !part.assembly || (part.role !== 'wall' && part.role !== 'partition')) return false
   const units = getAssembly(part.assembly)?.units
@@ -100,8 +107,9 @@ function bondBeamViolations(context: WallContext, structure: Pick<Structure, 'pa
   if (!beams.length) return [{ code: STRUCTURAL_VIOLATION.MISSING_BOND_BEAM, part: wall.part.id, message: `${wall.part.id} has no bond beam on top` }]
   const out: StructuralViolation[] = []
   for (const pillar of pillars) {
-    const [u, v] = centre(pillar)
-    const over = beams.filter((b) => u >= b.aabb[0] - TOLERANCE && u <= b.aabb[2] + TOLERANCE && v >= b.aabb[1] - TOLERANCE && v <= b.aabb[3] + TOLERANCE)
+    // the beam is over the pillar where their plan boxes overlap (a long pillar at a wall's end carries the beam over part of its length)
+    const [p0, q0, p1, q1] = pillar.aabb
+    const over = beams.filter((b) => Math.min(p1, b.aabb[2]) - Math.max(p0, b.aabb[0]) > TOLERANCE && Math.min(q1, b.aabb[3]) - Math.max(q0, b.aabb[1]) > TOLERANCE)
     const carries = over.some((b) => pillar.y1 >= b.y0 - TOLERANCE && structure.supports.some((s) => s.part === b.id && s.on === pillar.id && s.bears !== false))
     if (!carries) out.push({ code: STRUCTURAL_VIOLATION.PILLAR_DOES_NOT_REACH_BOND_BEAM, part: pillar.id, message: `${pillar.id} stops at ${pillar.y1} m and does not carry the bond beam of ${wall.part.id}` })
   }
@@ -131,7 +139,7 @@ export function masonryViolations(structure: Pick<Structure, 'parts' | 'supports
     out.push(...assemblyViolations(part, structure.construction.walls.finish))
     if (part.floor === 0 && structure.supports.some((s) => s.part === part.id && s.on === GROUND))
       out.push({ code: STRUCTURAL_VIOLATION.MISSING_GROUND_BEAM, part: part.id, message: `${part.id} stands on the soil with no ground beam under it` })
-    if (!part.exterior) continue
+    if (!part.exterior || isOverOpening(part, structure)) continue
     const wall = lineOf(part)
     // a pillar of the next wall on the line, standing just past this one's end, confines this end too
     const pillars = columns.filter((c) => c.floor === part.floor && onLine(wall, centre(c), AT_POINT) && Math.min(c.y1, part.y1) - Math.max(c.y0, part.y0) > 0.5)

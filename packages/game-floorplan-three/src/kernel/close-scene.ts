@@ -28,7 +28,7 @@ export function installKernelCloseScene(K: Kernel, shared: Shared): void {
       g.setAttribute('position', new THREE.BufferAttribute(A.p.slice(0, A.nv * 3), 3)); g.setAttribute('normal', new THREE.BufferAttribute(A.n.slice(0, A.nv * 3), 3));
       g.setAttribute('color', new THREE.BufferAttribute(A.c.slice(0, A.nv * 3), 3)); g.setAttribute('uv', new THREE.BufferAttribute(A.u.slice(0, A.nv * 2), 2));
       g.setIndex(new THREE.BufferAttribute(A.i.slice(0, A.ni), 1)); g.computeBoundingSphere(); g.computeBoundingBox();
-      const m = new THREE.Mesh(g, mats[A.mat]); m.castShadow = !NO_SHADOW.has(A.mat); m.receiveShadow = A.mat !== 'emissive'; m.renderOrder = ORDER[A.mat] || 0; m.name = A.group + '/' + A.mat + (A.piece0 ? '/' + A.piece0.id : ''); markMesh(m, A);
+      const m = new THREE.Mesh(g, mats[A.mat]); m.castShadow = !NO_SHADOW.has(A.mat); m.receiveShadow = A.mat !== 'emissive'; m.renderOrder = ORDER[A.mat] || 0; m.name = A.group + '/' + A.mat + (A.piece0 ? '/' + A.piece0.id : ''); if (A.stage) m.userData.constructionStage = A.stage; markMesh(m, A);
       (groups[A.group] || (groups[A.group] = new THREE.Group())).add(m);
     }
     cursor.accs.clear();
@@ -36,7 +36,7 @@ export function installKernelCloseScene(K: Kernel, shared: Shared): void {
     for (const P of PARTS) {
       const g = groups[P.name] || new THREE.Group(); delete groups[P.name];
       g.name = P.name; g.position.set(P.pos[0], P.pos[1], P.pos[2]); g.rotation.y = P.ry || 0; g.updateMatrix();
-      Object.assign(g.userData, P.meta, { part: P.type, pivot: true });
+      Object.assign(g.userData, P.meta, { part: P.type, pivot: true, ...(P.stage ? { constructionStage: P.stage } : {}) });
       g.traverse((o) => { if (o !== g) o.userData.part = P.type; });
       if (P.meta.hidden) g.visible = false;
       if (g.userData.opens) { g.userData.pose0 = null; applyPart(g, 0); if (P.meta.t0) applyPart(g, P.meta.t0); }

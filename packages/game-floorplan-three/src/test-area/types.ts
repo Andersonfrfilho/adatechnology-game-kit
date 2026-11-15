@@ -55,6 +55,8 @@ export interface FloorplanTestOptions {
   template?: string
   seed?: number
   state?: string
+  /** Initial construction level (`0..8`) on the bench. */
+  constructionLevel?: number
   /** Specimens of the structural scenarios; default the five of the team's house area, those whose template the engine has. */
   specimens?: readonly SpecimenDef[]
   /** Half size of the room's arena (`createTestRoom({ arenaSize })`), 14 by default: where the houses are laid. */

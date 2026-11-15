@@ -6,7 +6,7 @@ import { lossOf, SLIDE_LOSS_MIN_LOWERING, tallyLowered, voidUnder } from './grou
 import type { HeightGrid, LossTally } from './ground-loss'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
-import type { GroundLayout, Terrain, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
+import type { GroundExcavation, GroundLayout, Terrain, TerrainDig, TerrainDigResult, TerrainFill, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
 
 export const DEFAULT_TERRAIN_BUDGET: TerrainBudget = {
   markAreaSize: 2,
@@ -234,6 +234,33 @@ export function createTerrain(options: TerrainOptions): Terrain {
         dirty.add(chunk)
       }
     }
+    for (const excavation of layout.excavations ?? []) excavate(excavation)
+  }
+
+  /**
+   * Digs a construction's trench or pit: every vertex over the rectangle (the cell it starts in to the one it ends in, so the full depth spans the whole
+   * rectangle and the wall slopes in the cell outside it) down to its depth, never less deep than it already was. A planned dig is no ground loss.
+   */
+  function excavate(excavation: GroundExcavation): void {
+    const [ex0, ez0, ex1, ez1] = excavation.rect
+    const column0 = clampIndex(Math.floor((ex0 - x0) / cellSize + 1e-6), columns)
+    const column1 = clampIndex(Math.ceil((ex1 - x0) / cellSize - 1e-6), columns)
+    const row0 = clampIndex(Math.floor((ez0 - z0) / cellSize + 1e-6), rows)
+    const row1 = clampIndex(Math.ceil((ez1 - z0) / cellSize - 1e-6), rows)
+    const alongX = (excavation.along ?? (ex1 - ex0 >= ez1 - ez0 ? 'x' : 'z')) === 'x'
+    const from = alongX ? ex0 : ez0, length = Math.max(1e-6, alongX ? ex1 - ex0 : ez1 - ez0)
+    const far = excavation.toDepth ?? excavation.depth
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const index = row * stride + column
+        const at = alongX ? x0 + column * cellSize : z0 + row * cellSize
+        const t = Math.max(0, Math.min(1, (at - from) / length))
+        const depth = excavation.depth + (far - excavation.depth) * t
+        if (depth <= dug[index]!) continue
+        dug[index] = depth
+        touchVertex(column, row)
+      }
+    }
   }
 
   /** Lowers the ground under the water, in a bank from the edge of each pool. */
@@ -359,6 +386,123 @@ export function createTerrain(options: TerrainOptions): Terrain {
     loose[index] = loose[index]! + amount - filled
   }
   const isSoftExposed = (index: number): boolean => materials.get(stratumAtDepth(profileList[profileIndex[index]!]!, dug[index]!).stratum.material)!.reposeDegrees !== undefined
+
+  /** The vertices under a rectangle centred at (x, z): the cells a blade of that size bites. */
+  function verticesUnder(x: number, z: number, size: readonly [number, number]): number[] {
+    // as many vertices across as the size has cells (each vertex stands for its cell's area), centred on (x, z)
+    const nu = Math.max(1, Math.round(size[0] / cellSize)), nv = Math.max(1, Math.round(size[1] / cellSize))
+    const column0 = clampIndex(Math.round((x - x0) / cellSize - (nu - 1) / 2), columns), column1 = clampIndex(column0 + nu - 1, columns)
+    const row0 = clampIndex(Math.round((z - z0) / cellSize - (nv - 1) / 2), rows), row1 = clampIndex(row0 + nv - 1, rows)
+    const out: number[] = []
+    for (let row = row0; row <= row1; row++) for (let column = column0; column <= column1; column++) out.push(row * stride + column)
+    return out
+  }
+  const touchIndex = (index: number): void => touchVertex(index % stride, Math.floor(index / stride))
+  /** The material a shovel meets at a vertex: the loose earth heaped there, else the stratum at the depth dug so far. */
+  const materialAtVertex = (index: number): TerrainMaterial =>
+    loose[index]! > 1e-4 ? materials.get('soil')! : materials.get(stratumAtDepth(profileList[profileIndex[index]!]!, dug[index]!).stratum.material)!
+
+  /** Lowers a vertex by up to `depth` through what a shovel digs (heaped earth first), stopping at what it does not. Returns how far it went. */
+  function digVertex(index: number, depth: number): number {
+    let left = depth
+    while (left > 1e-6) {
+      if (loose[index]! > 1e-6) {
+        const take = Math.min(loose[index]!, left)
+        loose[index] = loose[index]! - take
+        left -= take
+        continue
+      }
+      const profile = profileList[profileIndex[index]!]!
+      const layer = stratumAtDepth(profile, dug[index]!)
+      if (!materials.get(layer.stratum.material)?.dig || dug[index]! >= maxDepthOf[profileIndex[index]!]! - 1e-6) break
+      const take = Math.min(left, layer.top + layer.stratum.thickness - dug[index]!)
+      if (take <= 1e-6) break
+      dug[index] = dug[index]! + take
+      left -= take
+    }
+    return depth - left
+  }
+
+  /** Heaps `volume` of earth round (x, z), highest in the middle, and lets it settle to its slope. */
+  function heapAt(x: number, z: number, volume: number): void {
+    if (volume <= 0) return
+    const radius = Math.max(cellSize * 2, Math.cbrt(volume) * 1.6)
+    const indices = verticesUnder(x, z, [2 * radius, 2 * radius])
+    const weight = (index: number): number => {
+      const px = x0 + (index % stride) * cellSize, pz = z0 + Math.floor(index / stride) * cellSize
+      const q = Math.hypot(px - x, pz - z) / radius
+      return q < 1 ? 1 - q * q : 0
+    }
+    const total = indices.reduce((sum, i) => sum + weight(i), 0)
+    if (total <= 0) return
+    const cellArea = cellSize * cellSize
+    for (const index of indices) {
+      const w = weight(index)
+      if (w <= 0) continue
+      loose[index] = loose[index]! + (volume * w) / (total * cellArea)
+      sliding.add(index)
+      touchIndex(index)
+    }
+    emitDeform(x, z, radius)
+  }
+
+  function dig(spec: TerrainDig): TerrainDigResult {
+    const size = spec.size ?? [0.3, 0.3], depth = spec.depth ?? 0.2
+    const centre = vertexOf(spec.x, spec.z).index
+    // under water a shovel brings nothing up
+    if (profileList[profileIndex[centre]!]!.water) return { volume: 0, material: 'water', effort: 0, refused: 'water' }
+    const met = materialAtVertex(centre)
+    if (!met.dig) return { volume: 0, material: met.id, effort: 0, refused: met.id }
+    if (met.dig.closes) return { volume: 0, material: met.id, effort: met.dig.effort, closes: true }
+    const cellArea = cellSize * cellSize
+    const tally: LossTally = new Map()
+    let volume = 0
+    for (const index of verticesUnder(spec.x, spec.z, size)) {
+      const before = dug[index]!
+      const went = digVertex(index, depth)
+      if (went <= 0) continue
+      tallyLowered(tally, index, dug[index]! - before)
+      volume += went * cellArea
+      sliding.add(index)
+      touchIndex(index)
+    }
+    marks.removeInside(spec.x, spec.z, Math.max(size[0], size[1]) / 2)
+    emitDeform(spec.x, spec.z, Math.max(size[0], size[1]))
+    // what the blade took from under a footing is ground lost under it: the structure feels it
+    emitGroundLoss(tally, 'dig', 0)
+    if (spec.dump) heapAt(spec.dump.x, spec.dump.z, volume)
+    return { volume, material: met.id, effort: volume > 0 ? met.dig.effort : 0 }
+  }
+
+  function fill(spec: TerrainFill): number {
+    const cellArea = cellSize * cellSize
+    // the earth of the heap round `from`, nearest first, up to the volume asked
+    let taken = 0
+    const source = verticesUnder(spec.from.x, spec.from.z, [2 * spec.from.radius, 2 * spec.from.radius]).filter((i) => loose[i]! > 1e-6)
+    for (const index of source) {
+      if (taken >= spec.volume) break
+      const take = Math.min(loose[index]!, (spec.volume - taken) / cellArea)
+      loose[index] = loose[index]! - take
+      taken += take * cellArea
+      sliding.add(index)
+      touchIndex(index)
+    }
+    if (taken <= 0) return 0
+    // laid in the hole: the deepest vertices of the bite first, so the hole closes level
+    const target = verticesUnder(spec.x, spec.z, spec.size ?? [0.3, 0.3]).sort((a, b) => dug[b]! - dug[a]!)
+    let left = taken
+    for (const index of target) {
+      if (left <= 1e-9) break
+      const amount = Math.min(left / cellArea, Math.max(dug[index]!, (left / cellArea) / target.length))
+      addToVertex(index, amount, true)
+      left -= amount * cellArea
+      sliding.add(index)
+      touchIndex(index)
+    }
+    if (left > 1e-9) heapAt(spec.x, spec.z, left)
+    emitDeform(spec.x, spec.z, Math.max(...(spec.size ?? [0.3, 0.3])))
+    return taken
+  }
 
   /** Digs a lobed bowl into the height field, heaps the rim share around it. */
   function stampBowl(x: number, z: number, radius: number, depth: number, rimVolume: number, lossSource: string | null = 'crater'): void {
@@ -1060,6 +1204,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
     raycast,
     strike,
     burn,
+    dig,
+    fill,
     applyHit,
     bear: bearAll,
     voidUnder: (x, z, radius) => voidUnder(grid, { x, z, radius }),

@@ -34,6 +34,16 @@ export interface GraphicsView {
   readonly applied: { readonly pixelRatio: number; readonly shadows: ShadowLevel; readonly far: number } | null
 }
 
+/** The axes of a camera that looks from `offset` at the origin with world up, as `Matrix4.lookAt` builds them: right, up, back. */
+function shadowCameraAxes(offset: THREE_NS.Vector3): readonly [THREE_NS.Vector3, THREE_NS.Vector3, THREE_NS.Vector3] {
+  const back = offset.clone().normalize()
+  const right = offset.clone().set(0, 1, 0).cross(back)
+  if (right.lengthSq() < 1e-12) right.set(1, 0, 0)
+  right.normalize()
+  const up = back.clone().cross(right)
+  return [right, up, back]
+}
+
 const devicePixelRatioOf = (): number => (typeof devicePixelRatio === 'number' && devicePixelRatio > 0 ? devicePixelRatio : 1)
 
 /**
@@ -55,6 +65,9 @@ export function createGraphicsView(options: GraphicsViewOptions): GraphicsView {
   const sunHome = sun ? sun.position.clone() : null
   const targetHome = sun ? sun.target.position.clone() : null
   const sunOffset = sun && targetHome ? sun.position.clone().sub(targetHome) : null
+  // the shadow camera's right, up and back axes (three's lookAt from the sun to its target, world up): the map's texel grid lies in the first two
+  const lightAxes = sunOffset && sunOffset.lengthSq() > 0 ? shadowCameraAxes(sunOffset) : null
+  const followPoint = sunOffset ? sunOffset.clone() : null
   let shadows: ShadowLevel | null = null
   let applied: GraphicsView['applied'] = null
 
@@ -104,13 +117,17 @@ export function createGraphicsView(options: GraphicsViewOptions): GraphicsView {
       applied = { pixelRatio, shadows: e.shadows, far }
     },
     follow(x, z) {
-      if (shadows !== 'near' || !sun || !sunOffset) return
-      // snapped to the texels of the map, so the edges of the shadows do not crawl as the player walks
+      if (shadows !== 'near' || !sun || !sunOffset || !lightAxes || !followPoint) return
+      // snapped to the texels of the map in the light's own plane (the sun is oblique: snapping world x and z still let every shadow edge shimmer as the player walks)
       const texel = (2 * nearExtent) / sun.shadow.mapSize.x
-      const fx = Math.round(x / texel) * texel
-      const fz = Math.round(z / texel) * texel
-      sun.target.position.set(fx, targetHome?.y ?? 0, fz)
-      sun.position.set(fx + sunOffset.x, sunOffset.y, fz + sunOffset.z)
+      const [ax, ay, az] = lightAxes
+      followPoint.set(x, targetHome?.y ?? 0, z)
+      const a = Math.round(followPoint.dot(ax) / texel) * texel
+      const b = Math.round(followPoint.dot(ay) / texel) * texel
+      const c = followPoint.dot(az)
+      followPoint.copy(ax).multiplyScalar(a).addScaledVector(ay, b).addScaledVector(az, c)
+      sun.target.position.copy(followPoint)
+      sun.position.copy(followPoint).add(sunOffset)
       sun.target.updateMatrixWorld()
     },
     hold() {

@@ -60,7 +60,7 @@ const MID_TOWNHOUSE_FLOORS: FloorDef[] = [
 ]
 
 export const midModernTownhouse: TemplateDef = {
-  id: 'mid_modern_townhouse', use: 'residential_single', floorRange: [2, 3], style: 'mid', limits: { w: [7.5, 10], d: [14.4, 16.4] }, defaults: { w: 8.5, d: 14.6 },
+  id: 'mid_modern_townhouse', masonryUnit: 'ceramic_block_14', use: 'residential_single', floorRange: [2, 3], style: 'mid', limits: { w: [7.5, 10], d: [14.4, 16.4] }, defaults: { w: 8.5, d: 14.6 },
   options: { floors: [2, 3] },
   floorsFn: op => (op.floors === 3 ? [0, 1, 2] : [0, 1]).map(i => MID_TOWNHOUSE_FLOORS[i]),
   lot: (w, d) => ({ frontSetback: 5.5, marginLeft: 1.0, marginRight: 1.0, backyardDepth: clamp(30 - 5.5 - d, 5, 12), parking: { width: 3.4 }, garage: { u: -1 + 1.7, width: 3.0, to: 'parking' }, pedestrian: { u: w - 0.8 }, doorTarget: { a: 'living', side: 'front' }, libraries: { garden: 'garden_mid', backyard: 'backyard_townhouse' } }),

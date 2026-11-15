@@ -16,6 +16,8 @@ export interface OutbuildingContext {
   items: ResultItem[]
   catalog: Record<string, FurnitureDef>
   rngFor(key: string): Rng
+  /** The Visor de casas 3D's outbuilding (its golden): each wall cut at the door into two walls. */
+  visor?: boolean
 }
 
 /**
@@ -60,18 +62,22 @@ function opening(frame: Frame, id: string, a: number, b: number, vector: [number
   return { id, axis: alongU ? 'u' : 'v', pos: round2(alongU ? v : u), at: round2(alongU ? u : v), u: round2(u), v: round2(v), width: round2(width), side: sideOf(vector[0], vector[1]), ...extra }
 }
 
-function wallsOf(box: Rect, door: OutbuildingOpening, height: number): OutbuildingWall[] {
+/**
+ * The four walls of the outbuilding, each whole: the door is an opening in its wall (as in the house), not a gap between two walls. Cut at the door, the
+ * header over it and the wall beside it were two pieces, and their seam ran up the render from the door's corner to the slab. The Visor's (`cutAt`) cut it.
+ */
+function wallsOf(box: Rect, height: number, cutAt: OutbuildingOpening | null): OutbuildingWall[] {
   const walls: OutbuildingWall[] = []
   const sides: { axis: 'u' | 'v'; pos: number; i0: number; i1: number; side: string }[] = [
     { axis: 'u', pos: box[1], i0: box[0], i1: box[2], side: 'front' }, { axis: 'u', pos: box[3], i0: box[0], i1: box[2], side: 'back' },
     { axis: 'v', pos: box[0], i0: box[1], i1: box[3], side: 'left' }, { axis: 'v', pos: box[2], i0: box[1], i1: box[3], side: 'right' },
   ]
   for (const w of sides) {
-    const cut = w.axis === door.axis && Math.abs(w.pos - door.pos) < 0.02 ? [door.at - door.width / 2, door.at + door.width / 2] : null
-    const segments = cut ? [[w.i0, cut[0]!], [cut[1]!, w.i1]] : [[w.i0, w.i1]]
+    const cut = cutAt && w.axis === cutAt.axis && Math.abs(w.pos - cutAt.pos) < 0.02 ? [cutAt.at - cutAt.width / 2, cutAt.at + cutAt.width / 2] : null
+    const segments: [number, number][] = cut ? [[w.i0, cut[0]!], [cut[1]!, w.i1]] : [[w.i0, w.i1]]
     for (const [x0, x1] of segments) {
-      if (x1! - x0! <= 1e-3) continue
-      walls.push(w.axis === 'u' ? { axis: 'u', u0: round2(x0!), v0: round2(w.pos), u1: round2(x1!), v1: round2(w.pos), thickness: WALL, h: height, side: w.side } : { axis: 'v', u0: round2(w.pos), v0: round2(x0!), u1: round2(w.pos), v1: round2(x1!), thickness: WALL, h: height, side: w.side })
+      if (x1 - x0 <= 1e-3) continue
+      walls.push(w.axis === 'u' ? { axis: 'u', u0: round2(x0), v0: round2(w.pos), u1: round2(x1), v1: round2(w.pos), thickness: WALL, h: height, side: w.side } : { axis: 'v', u0: round2(w.pos), v0: round2(x0), u1: round2(w.pos), v1: round2(x1), thickness: WALL, h: height, side: w.side })
     }
   }
   return walls
@@ -124,7 +130,7 @@ export function planOutbuildings(context: OutbuildingContext): Outbuilding[] {
     door.zone = (horizontal ? [Math.min(p[0], q[0]), p[1] - door.width / 2, Math.max(p[0], q[0]), p[1] + door.width / 2] : [p[0] - door.width / 2, Math.min(p[1], q[1]), p[0] + door.width / 2, Math.max(p[1], q[1])]).map(round2) as Rect
     const interior: Rect = [a0 + WALL, a1 + WALL, a2 - WALL, a3 - WALL]
     const use = pickWeighted(rng, USE_WEIGHTS)
-    out.push({ id: item.id, type: 'outbuilding', use, floor: 0, aabb: item.aabb.slice() as Rect, interior: [interior.map(round2) as Rect], ceiling: item.h, thickness: WALL, front: n, walls: wallsOf(item.aabb, door, item.h), doors: [door], windows: [windowFront, windowSide], items: furnish(context, frame, use, interior, door.zone) })
+    out.push({ id: item.id, type: 'outbuilding', use, floor: 0, aabb: item.aabb.slice() as Rect, interior: [interior.map(round2) as Rect], ceiling: item.h, thickness: WALL, front: n, walls: wallsOf(item.aabb, item.h, context.visor ? door : null), doors: [door], windows: [windowFront, windowSide], items: furnish(context, frame, use, interior, door.zone) })
   }
   return out
 }
@@ -173,5 +179,57 @@ export function addOutbuildingPaths(lot: ResultLot, outbuildings: Outbuilding[],
       const chosen = best ? best.k : { rects: [stub], points: [A, S] }
       lot.paths.push({ id: `path_${door.id}`, type: 'pedestrian', from: best ? best.from : null, to: door.id, width: PATH_WIDTH, rects: chosen.rects.map((q) => q.map(round2) as Rect), points: chosen.points.map((q) => q.map(round2) as Vec2) })
     }
+  }
+}
+
+/** The room an outbuilding of each use is, as the plan names room types (a gourmet space is a living room with a counter). */
+export const OUTBUILDING_ROOM_TYPE: Readonly<Record<string, string>> = { guest_room: 'bedroom', office: 'office', storage: 'stockroom', gourmet: 'living' }
+
+/**
+ * The plan with each outbuilding as a room of its own on the ground floor (its walls, door and windows), for what is planned room by room: the electrical
+ * installation gives it a circuit, a switch by its door, sockets and its ceiling light, as any room of the house.
+ */
+export function withOutbuildingRooms(plan: Plan, outbuildings: readonly Outbuilding[]): Plan {
+  if (!outbuildings.length) return plan
+  const rooms = [...plan.rooms], walls = [...plan.walls], doors = [...plan.doors], windows = [...plan.windows]
+  for (const building of outbuildings) {
+    const inside = building.interior[0]
+    if (!inside) continue
+    const [cu, cv] = [(inside[0] + inside[2]) / 2, (inside[1] + inside[3]) / 2]
+    const outward = (axis: 'u' | 'v', pos: number): boolean => pos < (axis === 'u' ? cv : cu)
+    rooms.push({
+      id: building.id, type: OUTBUILDING_ROOM_TYPE[building.use] ?? 'living', floor: 0, parts: building.interior.map((part) => [...part] as Rect), library: null, without: [], overrides: {},
+      extras: [], slots: null, link: null, outdoor: false, ceiling: building.ceiling,
+    })
+    for (const wall of building.walls) {
+      const before = outward(wall.axis, wall.axis === 'u' ? wall.v0 : wall.u0)
+      walls.push({ floor: 0, axis: wall.axis, u0: wall.u0, v0: wall.v0, u1: wall.u1, v1: wall.v1, thickness: wall.thickness, sides: before ? ['outside', building.id] : [building.id, 'outside'], exterior: true, type: 'wall', h: wall.h })
+    }
+    for (const door of building.doors) {
+      const before = outward(door.axis, door.pos)
+      doors.push({
+        id: door.id, floor: 0, u: door.u, v: door.v, axis: door.axis, pos: door.pos, at: door.at, width: door.width, a: before ? 'outside' : building.id, b: before ? building.id : 'outside',
+        opensTo: building.id, exterior: true, side: door.side, leaves: 1, model: 'single', type: 'door', steps: 0, hinge: 'start', zones: door.zone ? [door.zone] : [],
+      })
+    }
+    for (const window of building.windows) {
+      windows.push({ id: window.id, floor: 0, u: window.u, v: window.v, axis: window.axis, pos: window.pos, at: window.at, width: window.width, y0: window.y0 ?? 1, y1: window.y1 ?? 2, room: building.id, side: window.side })
+    }
+  }
+  return { ...plan, rooms, walls, doors, windows }
+}
+
+/** Side of the ceiling light of an outbuilding and how far it hangs under the ceiling, metres. */
+const CEILING_LIGHT = 0.35
+const CEILING_LIGHT_DROP = 0.1
+
+/** The ceiling light in the middle of an outbuilding, an item of the plan: its switch, its circuit and its drawing all name it. */
+export function outbuildingCeilingLight(building: Outbuilding): ResultItem {
+  const inside = building.interior[0] ?? building.aabb
+  const [u, v] = [(inside[0] + inside[2]) / 2, (inside[1] + inside[3]) / 2]
+  const half = CEILING_LIGHT / 2
+  return {
+    id: `${building.id}.ceiling_light`, type: 'ceiling_light', category: 'ceiling_light', x: u, z: v, ry: 0, w: CEILING_LIGHT, d: CEILING_LIGHT, h: CEILING_LIGHT_DROP,
+    y: building.ceiling - CEILING_LIGHT_DROP, room: building.id, floor: building.floor, outdoor: false, aabb: [u - half, v - half, u + half, v + half], assembly: 'ceiling', color: 'metal', decor: true,
   }
 }

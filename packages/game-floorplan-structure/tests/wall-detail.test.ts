@@ -84,7 +84,27 @@ describe('wallDetail on a generated plan', () => {
     }
     const outside = generated.doors.filter((door) => door.exterior).map((door) => `lintel_${door.id}`)
     expect(outside.length).toBeGreaterThan(0)
-    for (const id of outside) expect(generated.structure.supports.some((s) => s.on === id && s.part.startsWith('plate_')), id).toBe(true)
+    // the bond beam bears on the masonry over the door (encunhamento), and it on the lintel
+    const carries = (id: string): boolean => generated.structure.supports.some((s) => s.on === id && (s.part.startsWith('plate_') || (/_over_/.test(s.part) && generated.structure.supports.some((t) => t.on === s.part && t.part.startsWith('plate_')))))
+    for (const id of outside) expect(carries(id), id).toBe(true)
+  })
+
+  it('lays masonry over every door, from its lintel to the bond beam (encunhamento), never an open slot over it', () => {
+    for (const seed of [1, 2, 3]) {
+      const generated = plan('single_storey_a', seed)
+      const parts = generated.structure.parts
+      for (const lintel of parts.filter((p) => p.id.startsWith('lintel_d'))) {
+        // the wall the lintel bears on, beside the door
+        const beside = generated.structure.supports.filter((s) => s.part === lintel.id).map((s) => parts.find((p) => p.id === s.on)).filter((p) => p && /^wall_/.test(p.id))
+        if (!beside.length) continue
+        const top = Math.max(...beside.map((p) => p!.y1))
+        if (top - lintel.y1 <= 0.04) continue
+        const over = generated.structure.supports.filter((s) => s.on === lintel.id).map((s) => parts.find((p) => p.id === s.part)).find((p) => p && /_over_/.test(p.id))
+        expect(over, `seed ${seed}: ${lintel.id}`).toBeDefined()
+        expect(over!.y0).toBeCloseTo(lintel.y1, 6)
+        expect(over!.y1).toBeCloseTo(top, 6)
+      }
+    }
   })
 
   it('coarse keeps one box per wall and no assembly layers', () => {

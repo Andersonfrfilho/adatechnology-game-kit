@@ -39,3 +39,16 @@ describe('a fragment asleep on a top that is gone', () => {
     expect(mesh.position.y).toBeCloseTo(0.05, 2)
   })
 })
+
+describe('a fragment sliding on the floor', () => {
+  it('slows by Coulomb friction (mu 0.5): a half handle leaving flat at 7.5 m/s comes to rest about v^2 / (2 mu g) = 5.7 m away, not a metre', () => {
+    const { system } = makeSystem()
+    const material = system.materialFor('wood', 0x808080, false)
+    // a 0.5 m half of a 3.5 cm ash handle lying on the floor, sent along x
+    const mesh = system.spawn({ ...fragment, shape: 'slab', size: [0.5, 0.035, 0.035], center: [0, 0.0175, 0], velocity: [7.5, 0, 0] } as never, material, 'home', 10)!
+    for (let frame = 0; frame < 300; frame++) system.update(1 / 60)
+    const slid = (7.5 * 7.5) / (2 * 0.5 * 9.8)
+    expect(mesh.position.x).toBeGreaterThan(slid * 0.8)
+    expect(mesh.position.x).toBeLessThan(slid * 1.1)
+  })
+})

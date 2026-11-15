@@ -38,7 +38,7 @@ describe('every plan has its installations', () => {
     const kinds = new Set<string>()
     for (const template of ['single_storey_a', 'townhouse', 'mansion', 'mid_modern_townhouse', 'high_end_contemporary']) {
       for (let seed = 1; seed <= SEEDS; seed++) {
-        const result = plan(template, seed)
+        const result = plan(template, seed, 'normal', seed % 2 ? { gasLayout: 'indoor_beside_stove' } : {})
         const gas = result.utilities.gas
         if (!gas) continue
         for (const stove of result.items.filter((m) => m.category === 'stove' && !m.outdoor)) {
@@ -63,7 +63,7 @@ describe('every plan has its installations', () => {
     for (let seed = 1; seed <= 20; seed++) {
       for (const item of plan('single_storey_a', seed).items.filter((m) => m.type === 'cooking_gas_cylinder')) {
         expect(item.capacityKg).toBe(13)
-        if (item.placement === 'external_niche') {
+        if (item.placement === 'outdoor_shelter') {
           expect(item.outdoor).toBe(true)
           expect(item.floor).toBe(-1)
         }

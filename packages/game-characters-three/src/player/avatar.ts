@@ -120,6 +120,11 @@ export type AvatarUpdate = {
    * `height` is the hand over the feet, metres (a fridge handle, a car door, a low drawer).
    */
   door?: { readonly phase: 'reach' | 'swing' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null
+  /**
+   * How fast a clip plays against `dt`: the world's time scale when the body walks in real time but the world is slowed (a strike and the tool it swings stay on one clock, so a
+   * shovelful's body and blade move together in slow motion). Default 1.
+   */
+  clipRate?: number
 }
 
 export type PlayPoseOptions = {
@@ -158,7 +163,8 @@ export type PlayerAvatar = {
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /**
    * Brings the hands to where the tool in them asks (`HandTargets`, world space) after `update`: shoulder, elbow and wrist each bend inside the human range, the chest turns and the shoulder
-   * blade slides toward a hand out of reach. Null, a strike playing or the body going down leave the arms as `update` posed them. Call it after the tool is placed and the root moved.
+   * blade slides toward a hand out of reach. Null, a strike playing (but one of `body` channels, which leaves the arms to the tool) or the body going down leave
+   * the arms as `update` posed them. Call it after the tool is placed and the root moved.
    * `view` (given on each call, as the camera moves) is for the body seen from its own eyes: the elbows keep their bend and the hands stay out of walls; without it nothing changes.
    */
   reach(targets: HandTargets | null, view?: ReachView | null): void
@@ -265,13 +271,21 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     hands.push({ side, hg, fingers: built.fingers as THREE_NS.Object3D[], th: built.th as THREE_NS.Object3D | null })
   })
   const armReach = createArmReach(THREE, rig, { R: hands.find((hand) => hand.side < 0)!.hg, L: hands.find((hand) => hand.side > 0)!.hg })
-  const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
+  const closeFingers = (hand: ThirdPersonHand, grip: number): void => {
     hand.fingers.forEach((finger, j) => {
       finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
     })
     if (hand.th) hand.th.rotation.z = -hand.side * (0.32 + grip * 0.25)
+  }
+  const setHandGrip = (hand: ThirdPersonHand, grip: number, wristX = 0): void => {
+    closeFingers(hand, grip)
     hand.hg.rotation.x = wristX
   }
+
+  /** The closure `update` gave each hand this frame, which `reach` raises for a hand that holds something. */
+  const gripNow = new Map<ThirdPersonHand, number>()
+  /** One unit of `HandTargets.grip` in the closure of a hand (the armed hand's 1.22 is a full grip). */
+  const FULL_GRIP = 1.22
 
   const eyeSocket = new THREE.Object3D()
   eyeSocket.name = 'eye'
@@ -640,8 +654,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       }
       if (seat?.pose === 'lie') layBody(seat.hip)
       else placeBody(fall, state.fallForward)
-      stepClip(dt, down, Boolean(state.crouch || seat))
-      const cascadeDt = run && !run.clip.loop ? dt * clipCascade : dt
+      const clipDt = dt * (state.clipRate ?? 1)
+      stepClip(clipDt, down, Boolean(state.crouch || seat))
+      const cascadeDt = run && !run.clip.loop ? clipDt * clipCascade : dt
       const targetWithoutBob = rig.fig.position.y - bob
       if (smooth) animator.cascade(rig, cascadeDt)
       hipWithoutBob = smooth && hipWithoutBob !== null ? stepCascade(hipWithoutBob, targetWithoutBob, cascadeDt, 'hip') : targetWithoutBob
@@ -667,6 +682,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
                   ? 0.85
                   : 0.12
         const wristSwing = holdRight || state.armed || running ? 0 : -Math.min(1, gait) * Math.sin(ph - 0.6) * 0.12 * hand.side
+        gripNow.set(hand, grip)
         setHandGrip(hand, grip, wristSwing)
       })
       root.updateMatrixWorld(true)
@@ -695,9 +711,19 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     hand: (side) => sockets[side],
     shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
     reach(targets, view) {
-      if (run || fall > 0) return
+      // a clip that drives the arms (a punch) keeps them; one that leaves them (`body`: a shovel's dig) lets the hands stay on the tool
+      if ((run && (run.clip.channels ?? 'full') !== 'body') || fall > 0) return
       root.updateMatrixWorld(true)
       armReach.apply(targets, view)
+      // a hand a tool asks for closes around it, whatever the tool is: a knife, a sword or a bar has no firearm pose to close the fingers for it
+      for (const hand of hands) {
+        const isRight = hand.side < 0
+        const asked = isRight ? targets?.R : targets?.L
+        const grip = isRight ? targets?.grip : (targets?.gripL ?? targets?.grip)
+        if (!asked || grip === undefined) continue
+        const wanted = FULL_GRIP * grip
+        if (wanted > (gripNow.get(hand) ?? 0)) setHandGrip(hand, wanted, hand.hg.rotation.x)
+      }
       // the index finger of a hand on a trigger curls by itself (`HandTargets.fingers` for the right hand, `fingersL` for the left), the other fingers keep the grip
       for (const hand of hands) {
         const curl = hand.side < 0 ? targets?.fingers?.index : targets?.fingersL?.index

@@ -35,9 +35,10 @@ const wallWithBaseboards = (): DestructibleSpec => ({
 })
 
 describe('a blast on trim and on the seams of a loose thing', () => {
-  it('a P13 going off 2.5 m from a tin still tears its welds: the seams of a loose thing are not trim fixed on a wall', () => {
+  // a P13 is 0.24 kg of TNT: at 2.5 m its wave is 100 kPa over a 70 cm2 tin, which pushes it (0.2 J), it does not tear it. The seams go within a metre, where the wave is a few MPa (about 20 J into the tin).
+  it('a P13 going off 0.5 m from a tin still tears its welds: the seams of a loose thing are not trim fixed on a wall', () => {
     const world = createDestruction({ seed: 1 })
-    const id = world.add(tin(), { id: 'tin', position: [2.5, 0, 0] })
+    const id = world.add(tin(), { id: 'tin', position: [0.5, 0, 0] })
     world.explode([0, 0.3, 0], P13_ENERGY, P13_RADIUS, 'test')
     const joints = world.state(id)!.joints
     expect(joints.filter((joint) => joint.open).map((joint) => joint.id).sort()).toEqual(['weld_bottom', 'weld_top'])

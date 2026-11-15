@@ -256,6 +256,52 @@
   },
   {
     "type": "cycle",
+    "from": "packages/game-floorplan/src/geometry.ts",
+    "to": "packages/game-floorplan/src/wall-thickness.ts",
+    "unresolvedTo": "./wall-thickness",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "packages/game-floorplan/src/wall-thickness.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-floorplan/src/types.ts",
+        "dependencyTypes": [
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-floorplan/src/palette.ts",
+        "dependencyTypes": [
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-floorplan/src/geometry.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
     "from": "packages/game-floorplan/src/palette.ts",
     "to": "packages/game-floorplan/src/geometry.ts",
     "unresolvedTo": "./geometry",
@@ -1314,6 +1360,44 @@
     "cycle": [
       {
         "name": "packages/game-items-three/src/models/bolt-cutters.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-items-three/src/models/registry.ts",
+        "dependencyTypes": [
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-items-three/src/models/shipped.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "packages/game-items-three/src/models/shipped.ts",
+    "to": "packages/game-items-three/src/models/brass-knuckles.ts",
+    "unresolvedTo": "./brass-knuckles",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "packages/game-items-three/src/models/brass-knuckles.ts",
         "dependencyTypes": [
           "local",
           "import"
@@ -5329,6 +5413,44 @@
   {
     "type": "cycle",
     "from": "packages/game-items-three/src/models/shipped.ts",
+    "to": "packages/game-items-three/src/models/kabar.ts",
+    "unresolvedTo": "./kabar",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "packages/game-items-three/src/models/kabar.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-items-three/src/models/registry.ts",
+        "dependencyTypes": [
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-items-three/src/models/shipped.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "packages/game-items-three/src/models/shipped.ts",
     "to": "packages/game-items-three/src/models/kale-and-lettuce-seeds.ts",
     "unresolvedTo": "./kale-and-lettuce-seeds",
     "dependencyTypes": [
@@ -5342,6 +5464,44 @@
     "cycle": [
       {
         "name": "packages/game-items-three/src/models/kale-and-lettuce-seeds.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-items-three/src/models/registry.ts",
+        "dependencyTypes": [
+          "local",
+          "type-only",
+          "import"
+        ]
+      },
+      {
+        "name": "packages/game-items-three/src/models/shipped.ts",
+        "dependencyTypes": [
+          "local",
+          "import"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "cycle",
+    "from": "packages/game-items-three/src/models/shipped.ts",
+    "to": "packages/game-items-three/src/models/katana.ts",
+    "unresolvedTo": "./katana",
+    "dependencyTypes": [
+      "local",
+      "import"
+    ],
+    "rule": {
+      "severity": "error",
+      "name": "no-circular"
+    },
+    "cycle": [
+      {
+        "name": "packages/game-items-three/src/models/katana.ts",
         "dependencyTypes": [
           "local",
           "import"
@@ -10313,6 +10473,20 @@
   {
     "type": "dependency",
     "from": "packages/game-terrain-three/src/index.ts",
+    "to": "packages/game-terrain-three/src/test-area/locale.ts",
+    "unresolvedTo": "./test-area/locale",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-terrain-three/src/index.ts",
     "to": "packages/game-terrain-three/src/testing.ts",
     "unresolvedTo": "./testing",
     "dependencyTypes": [
@@ -10343,6 +10517,20 @@
     "from": "packages/game-vegetation-three/src/index.ts",
     "to": "packages/game-vegetation-three/src/testing.ts",
     "unresolvedTo": "./testing",
+    "dependencyTypes": [
+      "local",
+      "export"
+    ],
+    "rule": {
+      "severity": "warn",
+      "name": "testing-only-from-testing"
+    }
+  },
+  {
+    "type": "dependency",
+    "from": "packages/game-vehicles-three/src/index.ts",
+    "to": "packages/game-vehicles-three/src/test-area/proving/index.ts",
+    "unresolvedTo": "./test-area/proving",
     "dependencyTypes": [
       "local",
       "export"

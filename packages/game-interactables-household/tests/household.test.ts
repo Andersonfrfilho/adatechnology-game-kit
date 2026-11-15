@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ContainerSpec, ObjectSpec, SlotSpec } from '@adatechnology/game-interactables'
-import { cornersOf, createHousehold, motionPoint } from '../src'
+import { WALL_PLATE, cornersOf, createHousehold, motionPoint } from '../src'
 import { REGIONS, SEEDS, bbox, boxes, build, closedPoints, localPrims, pack, partPoints } from './helpers'
 
 const hh = pack()
@@ -403,6 +403,19 @@ describe('electrical', () => {
     expect(br.spec.sockets!.length).toBe(1)
     expect(JSON.stringify(br.rec.primitives)).not.toBe(JSON.stringify(us.rec.primitives))
     expect(boxes(br.rec.primitives).length).toBeGreaterThan(2)
+  })
+
+  it('has a 4x2 plate of real size, portrait, standing on the wall face, its module in the middle', () => {
+    for (const type of ['wall_socket', 'wall_switch']) {
+      const b = build(type, { y: 1 })
+      expect([b.dims.w, b.dims.h], type).toEqual([WALL_PLATE.width, WALL_PLATE.height])
+      const plate = bbox(cornersOf(boxes(b.rec.primitives)[0]!))
+      expect(plate.max[0] - plate.min[0], type).toBeCloseTo(WALL_PLATE.width, 6)
+      expect(plate.max[1] - plate.min[1], type).toBeCloseTo(WALL_PLATE.height, 6)
+      expect(plate.min[2], type).toBeCloseTo(-WALL_PLATE.sink, 6)
+      expect((plate.min[0] + plate.max[0]) / 2, type).toBeCloseTo(0, 6)
+    }
+    expect(build('wall_socket', { y: 1 }).spec.sockets![0]!.pos[1]).toBeCloseTo(1 + WALL_PLATE.height / 2, 3)
   })
 
   it('switch controls come from the item', () => {

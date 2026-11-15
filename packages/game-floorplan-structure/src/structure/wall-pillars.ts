@@ -1,6 +1,7 @@
 import { GROUND } from '../types'
 import type { Rect, StructurePart } from '../types'
 import { touches } from '../geometry'
+import { pillarBox } from './context'
 import type { BuildContext, BuildWall } from './context'
 
 /**
@@ -12,7 +13,6 @@ export const WALL_PILLAR_SPACING = 4
 export const WALL_PILLAR_SIDE = 0.2
 /** Two pillars closer than this along a wall are one (the corner pillar or a jamb pillar already stands there). */
 const MERGE_DISTANCE = 0.45
-const HALF = WALL_PILLAR_SIDE / 2
 const TOLERANCE = 0.03
 
 interface Stretch {
@@ -45,13 +45,14 @@ function stretchesOf(context: BuildContext, wall: BuildWall): Stretch[] {
 function junctionsOf(context: BuildContext, wall: BuildWall): number[] {
   const [low, high] = alongRange(wall)
   const line = acrossOf(wall)
+  const half = context.pillar.along / 2
   const out: number[] = []
   for (const other of context.walls) {
     if (other === wall || other.floor !== wall.floor || other.axis === wall.axis || other.type !== 'wall') continue
     const at = acrossOf(other)
     const [a, b] = alongRange(other)
     const meets = Math.abs(a - line) <= (wall.thickness ?? 0.15) / 2 + TOLERANCE || Math.abs(b - line) <= (wall.thickness ?? 0.15) / 2 + TOLERANCE
-    if (meets && at > low + HALF && at < high - HALF) out.push(at)
+    if (meets && at > low + half && at < high - half) out.push(at)
   }
   return out
 }
@@ -61,12 +62,13 @@ function junctionsOf(context: BuildContext, wall: BuildWall): number[] {
  * `spacing`. A short pier still gets one at each end (a door jamb beside a corner keeps its own pillar; `addWallPillars` drops the one a pillar already
  * stands near); one too short for two gets one in its middle, and one too short for a pillar none.
  */
-export function pillarStations(from: number, to: number, junctions: readonly number[], spacing: number): number[] {
+export function pillarStations(from: number, to: number, junctions: readonly number[], spacing: number, side = WALL_PILLAR_SIDE): number[] {
   const length = to - from
-  if (length < WALL_PILLAR_SIDE - 1e-6) return []
-  if (length < 2 * WALL_PILLAR_SIDE) return [(from + to) / 2]
-  if (length < WALL_PILLAR_SIDE + MERGE_DISTANCE) return [from + HALF, to - HALF]
-  const fixed = [from + HALF, ...junctions.filter((at) => at > from + HALF + MERGE_DISTANCE && at < to - HALF - MERGE_DISTANCE), to - HALF].sort((a, b) => a - b)
+  const half = side / 2
+  if (length < side - 1e-6) return []
+  if (length < 2 * side) return [(from + to) / 2]
+  if (length < side + MERGE_DISTANCE) return [from + half, to - half]
+  const fixed = [from + half, ...junctions.filter((at) => at > from + half + MERGE_DISTANCE && at < to - half - MERGE_DISTANCE), to - half].sort((a, b) => a - b)
   const out: number[] = []
   fixed.forEach((at, k) => {
     out.push(at)
@@ -88,19 +90,21 @@ export function addWallPillars(context: BuildContext, walls: readonly BuildWall[
   const pillars: StructurePart[] = []
   const placed: [number, number][] = taken.map((p) => [(p.aabb[0] + p.aabb[2]) / 2, (p.aabb[1] + p.aabb[3]) / 2])
   const base = context.baseOf(floor)
+  const HALF = context.pillar.along / 2
   for (const wall of walls) {
     if (!wall.exterior || wall.type !== 'wall') continue
     const top = context.wallParts.get(wall.id)!.y1
     const across = acrossOf(wall)
     const junctions = junctionsOf(context, wall)
     for (const stretch of stretchesOf(context, wall)) {
-      // a pillar already standing at an end of the stretch (a corner, the end of the next wall) is where the spacing counts from
-      const standing = (end: number): number | undefined => placed.map(([pu, pv]) => (wall.axis === 'u' ? [pu, pv] : [pv, pu]) as [number, number]).find(([a, c]) => Math.abs(c - across) <= TOLERANCE && Math.abs(a - end) < MERGE_DISTANCE + HALF)?.[0]
+      // a pillar already standing at an end of the stretch (a corner, the end of the next wall) is where the spacing counts from; a long corner pillar lying in
+      // the other wall has its centre off this wall's line by up to half its length
+      const standing = (end: number): number | undefined => placed.map(([pu, pv]) => (wall.axis === 'u' ? [pu, pv] : [pv, pu]) as [number, number]).find(([a, c]) => Math.abs(c - across) <= Math.max(TOLERANCE, HALF) && Math.abs(a - end) < MERGE_DISTANCE + HALF)?.[0]
       const first = standing(stretch.from)
       const last = standing(stretch.to)
       const from = first === undefined ? stretch.from : Math.min(stretch.from, first - HALF)
       const to = last === undefined ? stretch.to : Math.max(stretch.to, last + HALF)
-      for (const along of pillarStations(from, to, junctions, spacing)) {
+      for (const along of pillarStations(from, to, junctions, spacing, context.pillar.along)) {
         const [u, v] = wall.axis === 'u' ? [along, across] : [across, along]
         // a pillar near the end of a stretch only stands for it when it is near the end itself (a short pier keeps its jamb pillar)
         const end = Math.abs(along - stretch.from) < Math.abs(along - stretch.to) ? stretch.from : stretch.to
@@ -108,7 +112,7 @@ export function addWallPillars(context: BuildContext, walls: readonly BuildWall[
         const isEnd = Math.abs(along - end) <= HALF + TOLERANCE
         if (placed.some(([pu, pv]) => Math.hypot(pu - u, pv - v) < MERGE_DISTANCE && (!isEnd || Math.hypot(pu - endPoint[0]!, pv - endPoint[1]!) < MERGE_DISTANCE))) continue
         placed.push([u, v])
-        const box: Rect = [u - HALF, v - HALF, u + HALF, v + HALF]
+        const box: Rect = pillarBox(context.pillar, u, v, wall.axis === 'u')
         const pillar = builder.add({ id: `wall_column_${floor}_${pillars.length}`, role: 'column', material: context.construction.frame.pillars, aabb: box, y0: context.level(floor), y1: top }, { floor })
         builder.rest(pillar, base === GROUND || !base ? GROUND : base, 'rebar')
         for (const plate of plates.filter((p) => touches(p.aabb, box, 0.01))) builder.rest(plate, pillar, 'rebar')

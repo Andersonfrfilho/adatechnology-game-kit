@@ -1,6 +1,6 @@
 import type { GroundLayout, GroundLoss, Hit } from '@adatechnology/game-contracts'
 
-export type { GroundLayout, GroundZone } from '@adatechnology/game-contracts'
+export type { GroundExcavation, GroundLayout, GroundZone } from '@adatechnology/game-contracts'
 
 /** The blows that remove ground. Fire and heat char it instead (`TerrainMaterial.fire`). */
 export type TerrainBlow = 'ballistic' | 'blunt' | 'slash' | 'explosive'
@@ -31,6 +31,8 @@ export interface TerrainMaterial {
   readonly rimShare?: number
   /** Steepest slope in degrees it holds; loose ground slides until it is back to it. */
   readonly reposeDegrees?: number
+  /** A shovel digs it: `effort` is how hard a shovelful is against loose soil (1); a material without it (concrete, stone, asphalt) is not dug by hand. */
+  readonly dig?: { readonly effort: number; readonly closes?: boolean }
   readonly fire?: TerrainFireResponse
   /** Linear rgb, 0..1, of the material where it is exposed. */
   readonly color: readonly [number, number, number]
@@ -199,6 +201,41 @@ export interface TerrainOptions {
    * (`slide`). The host hands it to what stands there (`DestructionWorld.groundLoss`), so foundations over it settle or lose their support.
    */
   readonly onGroundLoss?: (loss: GroundLoss) => void
+}
+
+/** A shovelful (`Terrain.dig`): the blade's footprint at (x, z), how deep it goes in, where the earth is thrown (a heap on the ground there). */
+export interface TerrainDig {
+  readonly x: number
+  readonly z: number
+  /** Width and length of the blade's bite, metres (default 0.3 x 0.3). */
+  readonly size?: readonly [number, number]
+  /** How deep one shovelful goes, metres (default 0.2). */
+  readonly depth?: number
+  /** Where the earth lands: heaped round this point. Without it, it is lost (carried away). */
+  readonly dump?: { readonly x: number; readonly z: number }
+}
+
+/** What a shovelful took. */
+export interface TerrainDigResult {
+  /** Cubic metres taken out (and heaped at `dump`). */
+  readonly volume: number
+  /** The material dug (the one at the bite's centre). */
+  readonly material: string
+  /** How hard it was against loose soil (1): a shovelful of it takes that much longer. 0 when nothing was dug. */
+  readonly effort: number
+  /** The material that stopped the blade (concrete, stone...), when it could not dig; `water` where the ground is under water. */
+  readonly refused?: string
+  /** The blade lifted it but the hole closed behind it (mud): nothing changed. */
+  readonly closes?: true
+}
+
+/** Earth thrown back into a hole (`Terrain.fill`): taken from the heap round `from`, laid into the hole at (x, z), at most `volume`. */
+export interface TerrainFill {
+  readonly x: number
+  readonly z: number
+  readonly size?: readonly [number, number]
+  readonly from: { readonly x: number; readonly z: number; readonly radius: number }
+  readonly volume: number
 }
 
 /** What is missing under a disc of the ground (`Terrain.voidUnder`). */
@@ -383,6 +420,10 @@ export interface Terrain {
   raycast(origin: readonly number[], direction: readonly number[], maxDistance: number): { point: [number, number, number]; distance: number; normal: [number, number, number] } | null
   /** A blow at (x, z). `energy` in joules, `direction` where it travels (it throws the pieces back along it). */
   strike(blow: TerrainBlow, spec: TerrainStrike): TerrainBlowResult
+  /** A shovelful at (x, z): takes the earth down through what a shovel digs, stops at what it does not (concrete, rock), heaps it at `dump`. */
+  dig(spec: TerrainDig): TerrainDigResult
+  /** Earth thrown back from a heap into a hole: fills what was dug first, then heaps. Returns the cubic metres moved. */
+  fill(spec: TerrainFill): number
   /** A flame over a disc for `seconds`. */
   burn(spec: { x: number; z: number; radius: number; temperature: number; seconds: number }): void
   /** Applies a world hit (`Hit` of the destruction contract); null when it does nothing to the ground. */

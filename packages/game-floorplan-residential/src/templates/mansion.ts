@@ -91,7 +91,7 @@ const MANSION_FLOORS: FloorDef[] = [
 ]
 
 export const mansion: TemplateDef = {
-  id: 'mansion', use: 'residential_single', floorRange: [1, 3], style: 'high', limits: { w: [19, 26], d: [15, 20] }, defaults: { w: 20, d: 16 },
+  id: 'mansion', masonryUnit: 'ceramic_block_19', use: 'residential_single', floorRange: [1, 3], style: 'high', limits: { w: [19, 26], d: [15, 20] }, defaults: { w: 20, d: 16 },
   options: { floors: [1, 2, 3], elevator: [false, true] },
   floorsFn: op => { const n = floorCount(op, 3); return MANSION_FLOORS.slice(0, n); },
   lot: (w, _d) => { const hu1 = r2(w * 0.7), garageU = (hu1 + w) / 2; return { frontSetback: 10, marginLeft: 3, marginRight: 3, backyardDepth: 14, parking: { width: 4.2 }, garage: { u: garageU, width: 3.6, to: 'inner_garage' }, pedestrian: { u: w / 2 }, pool: true, libraries: { garden: 'garden_high', backyard: 'backyard_pool', parking: 'access' }, doorTarget: { a: 'hall', side: 'front' } }; },

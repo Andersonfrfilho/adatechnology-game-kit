@@ -2,7 +2,7 @@ import type { TemplateDef } from '@adatechnology/game-floorplan'
 import { r2 } from '../util'
 
 export const townhouse: TemplateDef = {
-  id: 'townhouse', use: 'residential_single', style: 'budget', limits: { w: [7.5, 11], d: [12, 15] }, defaults: { w: 8, d: 12 },
+  id: 'townhouse', masonryUnit: 'ceramic_block_14', use: 'residential_single', style: 'budget', limits: { w: [7.5, 11], d: [12, 15] }, defaults: { w: 8, d: 12 },
   lot: (w, _d) => ({ frontSetback: 6, marginLeft: 1.0, marginRight: 1.0, backyardDepth: 5, parking: { width: 3.4 }, garage: { u: -1 + 1.7, width: 3.0, to: 'parking' }, pedestrian: { u: w - 0.8 }, doorTarget: { a: 'living', side: 'front' } }),
   facade: { balcony: true },
   floors: [

@@ -14,10 +14,12 @@ const NEUTRAL_AIMED: Record<string, number> = { lean: 0, twist: 0, headX: 0, arm
 const GUARD: Record<string, number> = { lean: 0.12, twist: -0.3, side: 0, drop: -0.06, headX: 0.18, headY: 0.28, headZ: 0, armR: -0.85, elbR: -1.95, armRz: -0.5, armL: -0.75, elbL: -2.0, armLz: 0.55, legL: 0.25, kneeL: 0.3, legR: -0.3, kneeR: 0.3 }
 /** The guard as a lead-hand punch written for the right hand stores it: its mirror, so the left hand plays it from the orthodox guard. */
 const GUARD_MIRRORED: Record<string, number> = mirrorPose(GUARD)
+/** Standing with a long tool in both hands (a shovel): the body upright, the arms where the tool's grips hold them; the shovel's clips start and end here. */
+const TOOL_HELD: Record<string, number> = { lean: 0.05, twist: 0, side: 0, drop: 0, headX: 0.25, headY: 0, headZ: 0, legL: 0, legR: 0, kneeL: 0.05, kneeR: 0.05 }
 const TOLERANCE = 0.12
 const STEPS = 200
 
-type Expectation = { duration: number; channels: 'upper' | 'full'; impactAt: [number, number]; neutral: Record<string, number>; phases: string[] }
+type Expectation = { duration: number; channels: 'upper' | 'full' | 'body'; impactAt: [number, number]; neutral: Record<string, number>; phases: string[] }
 
 const EXPECTED: Record<string, Expectation> = {
   punch_right: { duration: 0.38, channels: 'full', impactAt: [0.1, 0.18], neutral: GUARD, phases: ['windup', 'strike', 'recover'] },
@@ -28,6 +30,9 @@ const EXPECTED: Record<string, Expectation> = {
   front_kick: { duration: 0.6, channels: 'full', impactAt: [0.2, 0.4], neutral: NEUTRAL_FULL, phases: ['windup', 'strike', 'recover'] },
   recoil_rifle: { duration: 0.22, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
   recoil_pistol: { duration: 0.18, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
+  // a shovelful: the foot drives the blade, the body levers and lifts (the bite is taken there), then turns to throw the earth aside
+  shovel_dig: { duration: 1.5, channels: 'body', impactAt: [0.6, 0.9], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
+  shovel_swing: { duration: 0.6, channels: 'body', impactAt: [0.2, 0.35], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
 }
 
 function mirrorPose(pose: Record<string, number>): Record<string, number> {

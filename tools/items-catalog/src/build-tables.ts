@@ -79,7 +79,9 @@ export const buildSpawn = ({ html, game }: Sources): SpawnRecord => {
 
 export type MeleeRecord = { id: string; reach: number; noise: number }
 
-export const buildMelee = (sources: Sources, resolve: (reference: string) => string): MeleeRecord[] =>
-  sources.ite.itens.filter((item) => item.alc !== undefined && !sources.decisions.scope[item.id]).map((item) => ({ id: resolve(item.id), reach: item.alc ?? 0, noise: item.ru ?? 0 }))
+export const buildMelee = (sources: Sources, resolve: (reference: string) => string): MeleeRecord[] => [
+  ...sources.ite.itens.filter((item) => item.alc !== undefined && !sources.decisions.scope[item.id]).map((item) => ({ id: resolve(item.id), reach: item.alc ?? 0, noise: item.ru ?? 0 })),
+  ...Object.entries(sources.decisions.extraItems).flatMap(([id, { value }]) => (value.melee ? [{ id, reach: value.melee.reach, noise: value.melee.noise }] : [])),
+]
 
 export const placesOf = (codes: readonly string[], sources: Sources): string[] => codes.map((code) => placeIdOf(code, sources))

@@ -92,6 +92,8 @@ export interface TestableItem {
   seal?: ModuleItemSeal
   /** The item is also a weapon the player can equip: an id of the arsenal in use. */
   weapon?: string
+  /** What the item is in the catalog (weight, size, volume), for a bag to weigh and fit it; without it the host measures the built object. */
+  physical?: { weightKg: number; size: readonly [number, number, number]; litres?: number }
   /** Use animations this item brings (a pistol `reload` moves `mag`; a car door `open` rotates `door_l`). */
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
@@ -142,11 +144,24 @@ export interface GroundZone {
   readonly label?: string
 }
 
+/**
+ * Ground dug away on purpose (a trench, a footing's pit, a box's pit): a real hole in the floor, to `depth` metres under the untouched surface. A trench whose
+ * bed falls along it gives `toDepth` at the far end of its `along` axis (`depth` at the near one, the rectangle's least coordinate).
+ */
+export interface GroundExcavation {
+  readonly rect: readonly [number, number, number, number]
+  readonly depth: number
+  readonly toDepth?: number
+  readonly along?: 'x' | 'z'
+}
+
 /** What the floor is made of. `surface` is a ground profile id (`lawn`, `road`, `concrete_slab`, `tile_floor`...); a host that does not know it uses its default. */
 export interface GroundLayout {
   readonly surface: string
   /** Later zones over earlier ones. */
   readonly zones?: readonly GroundZone[]
+  /** What is dug in the ground (a construction's open trenches and pits): the host's terrain opens them, and closes them when a later layout leaves them out. */
+  readonly excavations?: readonly GroundExcavation[]
 }
 
 /** How the host sets the module's area up: what goes where, and where the camera starts. */
@@ -191,6 +206,11 @@ export type HostEvent =
   | { type: 'safety'; weapon: string; on: boolean; hand?: ToolHand }
   /** The action works between shots (a pump, a bolt); `duration` is the seconds of the cycle, on `start`. */
   | { type: 'cycle'; weapon: string; phase: 'start' | 'end'; duration?: number; hand?: ToolHand }
+  /**
+   * The tool in hand makes one of its motions (a shovel's `dig` or `swing`, an axe's chop): the module that draws it moves it through it for `duration`
+   * seconds, the hands on it following, in the first-person view and on the body alike.
+   */
+  | { type: 'motion'; weapon: string; motion: string; duration: number; hand?: ToolHand }
   /** A step of a longer phase (a reload's magazine out, magazine in, charge), at the moment the rule reaches it. */
   | { type: 'stage'; weapon: string; stage: string; hand?: ToolHand }
   /** One more round went into the tool while it loads round by round. */
@@ -391,6 +411,8 @@ export interface ModuleHost {
   groundAt(x: number, z: number): number
   /** Material id of the floor at (x, z) (`concrete`, `soil`, `wood_hard`...): what a dropped case or a footstep lands on. Optional; undefined where the host does not know. */
   surfaceAt?(x: number, z: number): string | undefined
+  /** Replaces the floor layout of the host's terrain (zones of grass, road, paving, water...) when a module changes its lot or area. */
+  setGround?(layout: GroundLayout): void
   tool(): HostTool
   /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
   player(): PlayerState
