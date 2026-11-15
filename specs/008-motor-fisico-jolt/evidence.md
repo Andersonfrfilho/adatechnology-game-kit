@@ -2730,3 +2730,15 @@ O conjunto de peças e objetos de uma explosão que solta o lote muda (21 objeto
 
 ### 9. Veredito
 Os picos acabaram (p99 -64%, máximo -66%, `Step` dos quadros do poste de 123 ms para 6,5), C3, C4 e `fellThrough` seguem 10 de 10, C1 melhora muito, os gates passam com **uma falha a mais que o combinado** (o teste do poste, §8.1). Mantive o código (commit local `78ac5399`, nada enviado); a decisão sobre a constante `LYING` e sobre o C2 de 9 de 10 é do dono.
+
+### T3.8y — o teste do poste deitado (2026-11-15)
+
+O teste `pole-collider.test.ts` ("deitado no chão, dorme em até 3 s") considerava o poste deitado quando |cos| < 0,1, ou seja, a menos de ~5,7° da horizontal.
+
+Com os fios em trechos, o poste caído passou a ficar apoiado na ponta da cruzeta, inclinado 5,8° (|cos| 0,1005). Ele dorme, mas o teste deixava de contá-lo como deitado por 0,1°.
+
+O dono escolheu medir "deitado" pela altura, e não pelo ângulo. Agora o poste conta como deitado quando o desenho inteiro dele fica abaixo de metade de um poste em pé (`SHAFT / 2` = 3,7 m). As alturas medidas, com `Box3` do desenho no mundo:
+- **Poste caído:** de -0,61 a 1,60 m. A cruzeta, de 1,6 m, fica em pé.
+- **Poste em pé:** chega a 7,5 m.
+
+Os 3 s para dormir continuam iguais. Com esse critério, o relógio começa assim que o poste desce, então o teste fica igual ou mais exigente. Resultado: 2/2 no Jolt e 1 passou mais 1 pulado no solver próprio.
