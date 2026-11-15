@@ -2254,6 +2254,22 @@ class Renderer implements DestructionRenderer {
     body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
   }
 
+  /** The triangles of a ranged part as vertex numbers of its own range (three each): the surface its vertices are joined by. A loose part is read from the buffer itself, not from what the host keeps for the parts that still hang on it. */
+  private trianglesOf(mv: MeshVis): number[] {
+    const [from, to] = mv.range ?? [0, 0]
+    const index = mv.mesh.geometry.getIndex()?.array
+    const count = index ? index.length : (mv.mesh.geometry.getAttribute('position')?.count ?? 0)
+    const own: number[] = []
+    for (let i = 0; i + 2 < count; i += 3) {
+      const a = index ? index[i]! : i
+      const b = index ? index[i + 1]! : i + 1
+      const c = index ? index[i + 2]! : i + 2
+      if (a < from || a >= to || b < from || b >= to || c < from || c >= to) continue
+      own.push(a - from, b - from, c - from)
+    }
+    return own
+  }
+
   /**
    * The boxes of one mesh in the piece's frame, from its centre of mass, turned as the mesh is drawn: a plain mesh is its geometry's box in its own space, turned by its
    * place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
@@ -2279,7 +2295,7 @@ class Renderer implements DestructionRenderer {
       }
       const pts: number[] = []
       this.visuals.rangePoints(mv, at.m4, pts)
-      for (const box of fitOrientedBoxes(pts)) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })
+      for (const box of fitOrientedBoxes(pts, this.trianglesOf(mv))) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })
       return
     }
     const pos = new this.THREE.Vector3()

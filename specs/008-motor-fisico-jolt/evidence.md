@@ -1834,3 +1834,40 @@ O vidro `window:w0_2` da cozinha (a 2,2 m da granada) fica `damaged` (hp 33,7) s
 
 ### 7. Cherry-pick
 `git cherry-pick -x 77ea4aa5` (`spec/004-fase-4`): a mão abre a porta e a empurra, não segue a folha. `dc5d557b` não veio. Conflitos só de tipo e de texto em `game-characters-three` (`avatar.ts`, `room-avatar.ts`), `game-test-room` (`avatar.ts`, `README.md`): fase `push` somada ao nosso `clipRate` e ao `fallForward`. Gates: `game-player` 63, `game-characters-three` 549, `game-test-room` 458 testes passam (a evidência da 004 registrava 52 e 261); typecheck, eslint e `kit-audit --check` ok.
+
+## T3.8j — colisor do poste (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0. Sem rodada de sala nem de navegador. Nenhuma tolerância, régua ou teste foi afrouxado ou removido.
+
+### Causa
+- O poste do lote (`pole:*`, 7,5 m, ~950 kg) é uma parte de malha unida (`range`): dois cilindros (`cylBase`), uma travessa e quatro isoladores. Um cilindro desenhado tem vértices só nos anéis das duas pontas.
+- Ao virar peça, `partBoxesOf` (`game-destruction-three/src/renderer.ts`) passa os vértices da parte a `fitOrientedBoxes` (`game-shapes`), que só vê pontos: a caixa do poste inteiro "tinha ar" no meio e era cortada nos anéis. Resultado medido: duas placas de 22 x 2 x 22 cm nas pontas, sem o fuste (maior caixa do poste: 2,9 m de 7,5; antes do conserto, na peça `obj_19` do blast).
+- A regra FILL do `drawn-solids.ts` (commit 07e2e52c) não participa: ela vale para sólidos fixos; o caminho de peças solta usa `fitOrientedBoxes`.
+
+### Conserto (dono: `game-shapes`)
+- `fitOrientedBoxes(points, triangles?)`: com os triângulos da parte, (1) cada sólido que os triângulos mantêm separado é ajustado sozinho (vértices na mesma posição, 0,1 mm, são um só: a tampa de um cilindro tem vértices próprios sobre o anel do lado); (2) a superfície ao longo de cada aresta maior que 20 cm conta como pontos. Sem triângulos o comportamento é o de antes. Mais de 16 sólidos separados: ajusta como uma nuvem só.
+- `renderer.ts`: `trianglesOf(mv)` lê os triângulos da faixa direto do buffer de índices (a lista que o hospedeiro guarda não tem as partes já soltas) e os entrega ao ajuste.
+- Resultado no poste: um fuste de 0,22 x 7,5 x 0,22 m, quatro isoladores de 5 x 10 x 5 cm e a travessa de 1,6 x 0,08 x 0,08 m, cada um como desenhado. Folga conhecida: a seção de cima do fuste (raio 8 cm) está dentro da caixa do fuste de 11 cm de raio (3 cm de ar), porque as duas seções dividem o vértice central da tampa.
+- Outras peças: o mesmo caminho vale para toda parte em faixa de malha unida (cano, fiação, condutor, viga, pilar desenhados com cilindros). Nenhum golden `house/*` nem `specimen/*` mudou: nada foi regravado.
+
+### Testes novos
+- `game-shapes/tests/oriented-boxes.test.ts` (2): cilindro de dois anéis vira uma caixa de 7,5 m com triângulos (sem eles continua em placas); fuste e travessa são duas caixas.
+- `game-floorplan-three/tests/pole-collider.test.ts` (2, o de sono só com `PIECE_SOLVER=jolt`): o blast do lote solta os postes; a maior caixa de cada um passa de 7,4 m; os postes deitados dormem em até 3 s (lidos de `piece.sleeping` do Jolt) e `activeCount` termina em 0. Sem o conserto os dois falham (maior caixa 2,9 m; só 1 poste chega deitado).
+
+### Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-destruction-three` próprio | 409 passam, 0 falhas |
+| `game-destruction-three` Jolt | 489 passam, só as 2 `rolling` conhecidas |
+| `game-floorplan-three` próprio | 1029 passam, só os 3 `destruction/*` conhecidos |
+| `game-floorplan-three` Jolt | 1032 passam, só os 3 `destruction/*` e `bookcase-topple` conhecidos |
+| `game-shapes` | 187 passam, 0 falhas |
+| Bacia `PIECE_SOLVER=jolt BOWL_SEEDS=64` | 128/128, números idênticos (`worstC4 1,5167`, `fellThrough 0`) |
+| z-fighting (`z-fighting.test.ts`, `z-fighting-houses.test.ts`) | passam nas execuções acima |
+| `eslint` nos arquivos mudados | 0 erros; 1 aviso `max-lines` em `renderer.ts` (arquivo já maior que o limite) |
+| `kit-audit --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
+| `pnpm check:layers` | sem violações novas (297 conhecidas ignoradas) |
+
+### Pendente
+A rodada de sala (C4 do martelo, 10 rodadas) não foi refeita; o teste headless mostra os postes deitados dormindo em ~1,5 a 2 s.

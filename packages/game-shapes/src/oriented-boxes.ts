@@ -172,14 +172,91 @@ const fitInto = (points: readonly number[], depth: number, out: OrientedBox[]): 
   fitInto(best[1], depth + 1, out)
 }
 
+/** Along a drawn edge longer than this (m) the surface is sampled, so a long thin solid (a pole, a beam) is not read as two plates at its ends. */
+const EDGE = 0.2
+/** Most samples one edge gets. */
+const MAX_SAMPLES = 64
+/** A mesh of more separate solids than this is fitted as one cloud: boxes are for a handful of parts, not for a hundred leaves. */
+const MAX_SOLIDS = 16
+
+/** The points with samples along every triangle edge longer than `EDGE` (`triangles`: vertex numbers of `points`, three each). */
+const sampled = (points: readonly number[], triangles: readonly number[]): number[] => {
+  const out = points.slice()
+  for (let t = 0; t + 2 < triangles.length; t += 3) {
+    for (let e = 0; e < 3; e++) {
+      const a = triangles[t + e] * 3
+      const b = triangles[t + ((e + 1) % 3)] * 3
+      const length = Math.hypot(points[b] - points[a], points[b + 1] - points[a + 1], points[b + 2] - points[a + 2])
+      const count = Math.min(MAX_SAMPLES, Math.ceil(length / EDGE) - 1)
+      for (let i = 1; i <= count; i++) {
+        const f = i / (count + 1)
+        out.push(points[a] + (points[b] - points[a]) * f, points[a + 1] + (points[b + 1] - points[a + 1]) * f, points[a + 2] + (points[b + 2] - points[a + 2]) * f)
+      }
+    }
+  }
+  return out
+}
+
+/** Two vertices closer than this (m) are one: the cap of a cylinder has vertices of its own on the ring of its side. */
+const WELD = 1e-4
+
+/** The triangles grouped by the vertices they share, or sit on the same spot: each group is one drawn solid. */
+const solidsOf = (points: readonly number[], triangles: readonly number[]): number[][] => {
+  const parent = Array.from({ length: points.length / 3 }, (_, v) => v)
+  const at = new Map<string, number>()
+  for (let v = 0; v < parent.length; v++) {
+    const key = `${Math.round(points[v * 3] / WELD)},${Math.round(points[v * 3 + 1] / WELD)},${Math.round(points[v * 3 + 2] / WELD)}`
+    const first = at.get(key)
+    if (first === undefined) at.set(key, v)
+    else parent[v] = first
+  }
+  const find = (v: number): number => {
+    let root = v
+    while (parent[root] !== root) root = parent[root]
+    while (parent[v] !== root) [parent[v], v] = [root, parent[v]]
+    return root
+  }
+  for (let t = 0; t + 2 < triangles.length; t += 3) {
+    parent[find(triangles[t + 1])] = find(triangles[t])
+    parent[find(triangles[t + 2])] = find(triangles[t])
+  }
+  const groups = new Map<number, number[]>()
+  for (let t = 0; t + 2 < triangles.length; t += 3) {
+    const root = find(triangles[t])
+    const group = groups.get(root)
+    if (group) group.push(triangles[t], triangles[t + 1], triangles[t + 2])
+    else groups.set(root, [triangles[t], triangles[t + 1], triangles[t + 2]])
+  }
+  return [...groups.values()]
+}
+
 /**
  * Boxes that hold the drawn points (x y z triples) with little air: one along their principal axes (a tilted roof sheet is a thin plate, not the 2 m tall box
- * around it), cut in two where the two halves hold them in much less (a gable's two slopes), up to `2^MAX_DEPTH` boxes.
+ * around it), cut in two where the two halves hold them in much less (a gable's two slopes), up to `2^MAX_DEPTH` boxes. With the `triangles` they are drawn by
+ * (vertex numbers of `points`, three each) each solid the triangles keep apart is fitted on its own, and the surface along each edge counts as points: a pole
+ * drawn by two rings of vertices is a shaft, not two plates.
  */
-export const fitOrientedBoxes = (points: readonly number[]): OrientedBox[] => {
+export const fitOrientedBoxes = (points: readonly number[], triangles?: readonly number[]): OrientedBox[] => {
   if (points.length < 9) return []
   const out: OrientedBox[] = []
-  fitInto(points, 0, out)
+  if (!triangles || triangles.length < 3) {
+    fitInto(points, 0, out)
+    return out
+  }
+  const solids = solidsOf(points, triangles)
+  const parts = solids.length > MAX_SOLIDS ? [triangles] : solids
+  for (const part of parts) {
+    const own: number[] = []
+    const renumber = new Map<number, number>()
+    const local = part.map((v) => {
+      if (!renumber.has(v)) {
+        renumber.set(v, own.length / 3)
+        own.push(points[v * 3], points[v * 3 + 1], points[v * 3 + 2])
+      }
+      return renumber.get(v) as number
+    })
+    if (own.length >= 9) fitInto(sampled(own, local), 0, out)
+  }
   return out
 }
 
