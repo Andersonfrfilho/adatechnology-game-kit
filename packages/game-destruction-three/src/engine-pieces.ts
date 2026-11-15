@@ -1,10 +1,11 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
-import { buildGroundTile, sameGround } from './engine-ground'
-import type { GroundTile } from './engine-ground'
-import { sameSolid } from './engine-ground-solid'
+import { buildGroundTile, readGround, shapeGround } from './engine-ground'
+import type { GroundRect, GroundTile } from './engine-ground'
+import { changedHeights } from './engine-ground-heights'
+import { NO_SOLID, buildSolidVolume, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
@@ -36,6 +37,19 @@ interface Footprint {
 /** Side of a tile of ground (m); how far around an awake piece tiles are laid (m). */
 const TILE = 2
 const TILE_MARGIN = 0.5
+/** How far (m) past the disc the host names a change its ground is read again (the ground's own height is read between its grid points, so a change reaches a little past them). */
+const GROUND_REACH = 0.25
+/**
+ * The share of a height field's samples a change may cover and still be written into the shape (`updateHeights`): it costs about 23 ns a sample against 0.21 ms for a whole
+ * new field of 81 x 81, so past about three quarters a new shape is the cheaper (measured, T3.8q); half leaves room for the engine's own work around the write.
+ */
+const IN_PLACE_SHARE = 0.5
+/**
+ * How many times in a row a height field is written in place before a whole new one is made from the exact heights. Jolt's `SetHeights` also requantizes the blocks
+ * left of and above the written ones, and a sample requantized from its own dequantized value moves down: up to 4.4e-5 m a write, 1.8 mm over 50 (measured, T3.8q). Four
+ * writes keep the ground within 0.18 mm of the exact heights, under one step of its 8 bit samples, and the new shape resets it.
+ */
+const MAX_IN_PLACE_WRITES = 4
 /** The most (m) a piece's tips swinging in one update widen the tiles laid around its footprint. */
 const MAX_SWING = 3
 /** The most stops along a piece's path in one update where its footprint's tiles are laid (a piece that crosses a tile or more in an update lands on ground not laid yet). */
@@ -130,8 +144,12 @@ interface Tile {
   /** The solid body under the height field (not under a slab) and the boxes it was made from: a second body, so the height field keeps its own shape across changes. */
   solid: BodyId | null
   volume: SolidVolume
+  /** The height field's samples, to find what a change moved (empty under a slab), and how many times in a row it was written in place (`MAX_IN_PLACE_WRITES`). */
+  heights: Float32Array
+  writes: number
   samples: Float64Array
-  dirty: boolean
+  /** Where the host said the ground changed (world x and z, widened by `GROUND_REACH`): only the samples there are read again. Null when it did not. */
+  dirty: GroundRect | null
 }
 
 /**
@@ -228,14 +246,22 @@ export class EnginePieces {
     }
   }
 
-  /** The tiles the disc touches are laid again before the next step. */
+  /** The tiles the disc touches are laid again before the next step, reading the ground again where the disc is (and `GROUND_REACH` past it). */
   private markDirty(x: number, z: number, radius: number): void {
+    const reach = radius + GROUND_REACH
     for (const [key, tile] of this.tiles) {
       const ix = Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN
       const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
       const nx = Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE))
       const nz = Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE))
-      if (Math.hypot(nx - x, nz - z) <= radius) tile.dirty = true
+      if (Math.hypot(nx - x, nz - z) > radius) continue
+      const before = tile.dirty
+      tile.dirty = {
+        minX: Math.min(before?.minX ?? Infinity, x - reach),
+        maxX: Math.max(before?.maxX ?? -Infinity, x + reach),
+        minZ: Math.min(before?.minZ ?? Infinity, z - reach),
+        maxZ: Math.max(before?.maxZ ?? -Infinity, z + reach),
+      }
     }
   }
 
@@ -733,7 +759,7 @@ export class EnginePieces {
       for (let iz = Math.floor((foot.minZ - margin) / TILE); iz <= Math.floor((foot.maxZ + margin) / TILE); iz++) {
         const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
         const tile = this.tiles.get(key)
-        if (tile && !tile.dirty) continue
+        if (tile && tile.dirty === null) continue
         if (!this.footprintReaches(foot, ix * TILE, iz * TILE, margin)) continue
         this.layTile(key, ix, iz, tile)
       }
@@ -793,34 +819,65 @@ export class EnginePieces {
   }
 
   /**
-   * A tile of ground, made or brought up to date on the same bodies: the height field is swapped in place (`setShape` keeps the body's id, so the engine still
-   * warm-starts the contacts of what lies on it), the slab moved, the step boxes made again only when they changed. Unchanged ground is left alone.
+   * A tile of ground, made or brought up to date on the same bodies. A tile the host marked is read again only where it said (`readGround`) and left alone when nothing
+   * there differs; a height field that stays one has just the samples that moved written into its shape (`updateHeights`, the same ground as a new one within the
+   * quantisation: the body keeps its id, so the engine still warm-starts the contacts of what lies on it, and the whole field is not made again); a slab is moved; the
+   * solid under a height field and the step boxes are made again only when the heights or the boxes changed.
    */
   private layTile(key: number, ix: number, iz: number, tile: Tile | undefined): void {
-    const t = buildGroundTile(this.o.groundAt, ix * TILE, iz * TILE, TILE)
-    if (tile && sameGround(tile.samples, t.samples)) {
-      tile.dirty = false
-      return
-    }
-    const slab = t.level !== null
-    let ground: BodyId
-    if (tile && tile.slab === slab) {
-      ground = tile.ground
-      if (slab) this.world.setPose(ground, [(ix + 0.5) * TILE, (t.level ?? 0) - 0.5, (iz + 0.5) * TILE], [0, 0, 0, 1], false)
-      else this.world.setShape(ground, this.heightField(t, ix, iz))
-    } else {
-      if (tile) this.world.removeBody(tile.ground)
-      ground = slab
-        ? this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, (t.level ?? 0) - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
-        : this.world.createBody({ shape: this.heightField(t, ix, iz), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
-    }
+    const x0 = ix * TILE
+    const z0 = iz * TILE
+    const made = tile ? this.readTile(tile, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE)
+    if (!made) return
+    const slab = made.level !== null
+    const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
+    const kept = tile !== undefined && tile.slab === slab
+    const ground = kept ? tile.ground : this.replaceGround(tile, made, ix, iz)
+    const writes = kept ? this.updateGround(tile, made, moved, ix, iz) : 0
     let steps = tile?.steps ?? null
-    const same = tile !== undefined && tile.boxes.length === t.boxes.length && tile.boxes.every((x, i) => x === t.boxes[i])
+    const same = tile !== undefined && tile.boxes.length === made.boxes.length && tile.boxes.every((x, i) => x === made.boxes[i])
     if (!same) {
       if (steps !== null) this.world.removeBody(steps)
-      steps = t.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(t.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+      steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
     }
-    this.tiles.set(key, { ground, slab, steps, boxes: t.boxes, solid: this.layVolume(t, tile), volume: t.solid, samples: t.samples, dirty: false })
+    // the solid is a function of the heights: the same heights, the same solid
+    const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells)
+    const laid = { ...made, solid: volume }
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, dirty: null })
+  }
+
+  /** The tile as the ground is now, its marked samples read again; null (and the mark cleared) when none of them changed. */
+  private readTile(tile: Tile, x0: number, z0: number): GroundTile | null {
+    const changed = readGround(this.o.groundAt, tile.samples, x0, z0, TILE, tile.dirty ?? undefined)
+    if (!changed) {
+      tile.dirty = null
+      return null
+    }
+    return shapeGround(tile.samples, x0, z0, TILE, false)
+  }
+
+  /**
+   * The ground body of a tile that stays a slab or a height field: the slab moved, or the height field's moved samples written in place (a whole new shape when the engine
+   * cannot, when most of the field moved, or after `MAX_IN_PLACE_WRITES`). Returns how many times in a row the shape has been written in place.
+   */
+  private updateGround(tile: Tile, made: GroundTile, moved: HeightRegion | null, ix: number, iz: number): number {
+    if (made.level !== null) {
+      this.world.setPose(tile.ground, [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], [0, 0, 0, 1], false)
+      return 0
+    }
+    if (!moved) return tile.writes
+    const size = made.cells + 1
+    const small = moved.sizeX * moved.sizeZ <= IN_PLACE_SHARE * size * size
+    if (small && tile.writes < MAX_IN_PLACE_WRITES && this.world.updateHeights(tile.ground, moved, made.heights)) return tile.writes + 1
+    this.world.setShape(tile.ground, this.heightField(made, ix, iz))
+    return 0
+  }
+
+  /** A tile that is new, or went from a slab to a height field or back: its ground body made anew. */
+  private replaceGround(tile: Tile | undefined, made: GroundTile, ix: number, iz: number): BodyId {
+    if (tile) this.world.removeBody(tile.ground)
+    if (made.level === null) return this.world.createBody({ shape: this.heightField(made, ix, iz), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
   }
 
   /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. */
@@ -831,7 +888,7 @@ export class EnginePieces {
       return null
     }
     if (id === null) return this.world.createBody({ shape: this.solidShape(t.solid), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
-    if (tile && !sameSolid(tile.volume, t.solid)) this.world.setShape(id, this.solidShape(t.solid))
+    if (tile && t.solid !== tile.volume && !sameSolid(tile.volume, t.solid)) this.world.setShape(id, this.solidShape(t.solid))
     return id
   }
 

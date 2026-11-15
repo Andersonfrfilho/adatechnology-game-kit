@@ -4,6 +4,7 @@ import { DEFAULT_MATERIAL, LAYERS, LAYER_PAIRS } from '@adatechnology/game-physi
 import type {
   BodyDesc,
   BodyId,
+  HeightRegion,
   JointDesc,
   JointId,
   Material,
@@ -24,6 +25,7 @@ import type {
 } from '@adatechnology/game-physics'
 
 import { createCharacter } from './character'
+import { updateHeights } from './heights'
 import { BP_AGENT, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, layerOf } from './constants'
 import type { Jolt } from './constants'
 import { Contacts } from './contact-rows'
@@ -340,6 +342,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.bi.SetShape(e.id, made, dynamic && !kit, this.J.EActivation_Activate)
     if (kit) this.putMass(e, made, kit)
     made.Release()
+  }
+
+  updateHeights(id: BodyId, region: HeightRegion, heights: ArrayLike<number>): boolean {
+    return updateHeights(this, id, region, heights)
   }
 
   /** The kit's mass and moments on a body, with its new shape: made `INERTIA_SCALE` times too large for Jolt, then the true values put back (`unscaleInertia`). */
