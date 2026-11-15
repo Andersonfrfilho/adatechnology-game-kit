@@ -46,25 +46,33 @@ export const touchingPairsOf = (renderer: unknown): TouchingPair[] | undefined =
 }
 
 /**
- * R3: the pieces (by object id) whose continuous-motion body (Jolt `LinearCast`) touches something now and touched nothing in the previous update: its first contact after flight,
- * where the engine's pull-back to the instant of impact can make the centre move less than its speed says. One tracker per renderer; call it once per update, after the update.
+ * R3: the pieces (by object id) whose continuous-motion body (Jolt `LinearCast`) has a contact in this update that it did not have in the previous one: a new pair, where the
+ * engine's pull-back to the instant of impact can make the centre move less than its speed says. One tracker per renderer; call it once per update, after the update.
  * Undefined on a world with no log or no way to read the body's motion quality (the kit's own solver).
  */
 export const createFirstContactTracker = (): ((renderer: unknown) => ReadonlySet<string> | undefined) => {
-  let previous = new Map<number, number>()
+  let previous = new Map<number, Set<number>>()
   return (renderer) => {
     const engine = engineOf(renderer)
     if (!engine || !engine.world.trackPairs || !engine.world.entry || !engine.world.bi || !engine.world.J) return undefined
     const log = engine.world.pairLog as readonly number[]
-    const partners = new Map<number, number>()
+    const partners = new Map<number, Set<number>>()
+    const add = (key: number, other: number): void => {
+      const set = partners.get(key) ?? new Set<number>()
+      set.add(other)
+      partners.set(key, set)
+    }
     for (let i = 0; i < log.length; i += 2) {
-      partners.set(log[i] as number, (partners.get(log[i] as number) ?? 0) + 1)
-      partners.set(log[i + 1] as number, (partners.get(log[i + 1] as number) ?? 0) + 1)
+      add(log[i] as number, log[i + 1] as number)
+      add(log[i + 1] as number, log[i] as number)
     }
     const first = new Set<string>()
     for (const [objectId, body] of engine.byObject) {
       const link = engine.links.get(body)
-      if (!link || !partners.has(link.id) || previous.has(link.id)) continue
+      const now = link ? partners.get(link.id) : undefined
+      if (!link || !now) continue
+      const before = previous.get(link.id)
+      if (![...now].some((other) => !before?.has(other))) continue
       if (engine.world.bi.GetMotionQuality(engine.world.entry(link.id).id) === engine.world.J.EMotionQuality_LinearCast) first.add(objectId)
     }
     previous = partners

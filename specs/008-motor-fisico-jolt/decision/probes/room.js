@@ -46,6 +46,7 @@
   const seen = new Map()
   let stepNo = 0
   const ruler = new EnergyRuler.EnergyRuler()
+  const rulerWithoutR3 = new EnergyRuler.EnergyRuler()
   // islands are the engine's contact graph of the update (T3.8b); the own solver has no log: bounding spheres, as before
   const glue = r.renderer.pieceSys && r.renderer.pieceSys.engine
   const graph = !!(glue && glue.world.pairLog)
@@ -60,16 +61,19 @@
   }
   // energy the kit's own rules give a piece (a blast's front that arrives later and a second explosion shove it; the kit's balancing push turns a pole or a plank over): measured as the
   // energy height it adds, in the update it lands, and taken out of that piece's island and episode, so only what the engine makes on top of it counts
-  // R3: pieces whose continuous-motion body touches something now and touched nothing in the previous update (the same rule as tests/contact-graph.ts `createFirstContactTracker`)
+  // R3: pieces whose continuous-motion body has a contact it did not have in the previous update (the same rule as tests/contact-graph.ts `createFirstContactTracker`)
   let previousPartners = new Map()
   const firstContactNow = () => {
     if (!graph) return undefined
     const log = glue.world.pairLog, partners = new Map()
-    for (let i = 0; i < log.length; i += 2) { partners.set(log[i], (partners.get(log[i]) ?? 0) + 1); partners.set(log[i + 1], (partners.get(log[i + 1]) ?? 0) + 1) }
+    const add = (key, other) => { const set = partners.get(key) ?? new Set(); set.add(other); partners.set(key, set) }
+    for (let i = 0; i < log.length; i += 2) { add(log[i], log[i + 1]); add(log[i + 1], log[i]) }
     const first = new Set()
     for (const [objectId, body] of glue.byObject) {
-      const link = glue.links.get(body)
-      if (!link || !partners.has(link.id) || previousPartners.has(link.id)) continue
+      const link = glue.links.get(body), now = link && partners.get(link.id)
+      if (!link || !now) continue
+      const before = previousPartners.get(link.id)
+      if (![...now].some(other => !(before && before.has(other)))) continue
       if (glue.world.bi.GetMotionQuality(glue.world.entry(link.id).id) === glue.world.J.EMotionQuality_LinearCast) first.add(objectId)
     }
     previousPartners = partners
@@ -167,13 +171,14 @@
       const rise = after[k].energyHeight - before[k].energyHeight
       if (input === 'none' && !given.has(before[k].id) && rise > 0.02) steps.push({ step: stepNo, id: before[k].id, mass: +before[k].mass.toFixed(1), rise: +rise.toFixed(3), speedBefore: +before[k].speed.toFixed(2), speedAfter: +after[k].speed.toFixed(2), y: +after[k].centre[1].toFixed(3), yBefore: +before[k].centre[1].toFixed(3), seen: (seen.get(before[k].id) ?? 0), xz: [+after[k].centre[0].toFixed(2), +after[k].centre[2].toFixed(2)], sleepingBefore: before[k].sleeping, kin: before[k].mass > 500 ? { dy: +(after[k].centre[1] - before[k].centre[1]).toFixed(3), vyBefore: +before[k].velocityY.toFixed(2), vyAfter: +after[k].velocityY.toFixed(2), spinBefore: +before[k].spin.toFixed(2), spinAfter: +after[k].spin.toFixed(2), radius: +before[k].radius.toFixed(2) } : undefined, near: rise > 1 ? after.map((o, j) => ({ id: o.id, d: +Math.hypot(o.centre[0] - after[k].centre[0], o.centre[1] - after[k].centre[1], o.centre[2] - after[k].centre[2]).toFixed(2), mass: +o.mass.toFixed(1), speedBefore: +before[j].speed.toFixed(2), speedAfter: +o.speed.toFixed(2), y: +o.centre[1].toFixed(2) })).filter(o => o.id !== before[k].id).sort((a, b) => a.d - b.d).slice(0, 4) : undefined })
     }
+    const islandNetOf = (() => { const t = touchingNow(); if (!t) return () => undefined; const isl = EnergyRuler.islandsOf(before, after, t); const sums = new Map(); before.forEach((b0, k) => sums.set(isl[k], (sums.get(isl[k]) ?? 0) + b0.mass * (after[k].energyHeight - b0.energyHeight - (given.get(b0.id) ?? 0)))); return k => +sums.get(isl[k]).toFixed(2) })()
     if (input === 'none') for (let k = 0; k < before.length; k++) {
       const b0 = before[k], a0 = after[k]
       const rise = Math.max(0, a0.centre[1] - b0.centre[1] - Math.max(0, b0.velocityY) * dt)
       const e = lifts.get(b0.id) ?? { total: 0, givenPart: 0, mass: b0.mass, hist: [] }
       e.total += rise
       if (given.has(b0.id)) e.givenPart += rise
-      if (rise > 0.001) e.hist.push({ step: stepNo, rise: +rise.toFixed(4), dEm: +(b0.mass * (a0.energyHeight - b0.energyHeight - (given.get(b0.id) ?? 0))).toFixed(2), spinBefore: +b0.spin.toFixed(2), spinAfter: +a0.spin.toFixed(2), given: given.has(b0.id) ? +given.get(b0.id).toFixed(3) : 0, vyBefore: +b0.velocityY.toFixed(2), vyAfter: +a0.velocityY.toFixed(2), speedBefore: +b0.speed.toFixed(2), speedAfter: +a0.speed.toFixed(2), y: +a0.centre[1].toFixed(3), sleepingBefore: b0.sleeping })
+      if (rise > 0.001) e.hist.push({ step: stepNo, islandNet: islandNetOf(k), rise: +rise.toFixed(4), dEm: +(b0.mass * (a0.energyHeight - b0.energyHeight - (given.get(b0.id) ?? 0))).toFixed(2), spinBefore: +b0.spin.toFixed(2), spinAfter: +a0.spin.toFixed(2), given: given.has(b0.id) ? +given.get(b0.id).toFixed(3) : 0, vyBefore: +b0.velocityY.toFixed(2), vyAfter: +a0.velocityY.toFixed(2), speedBefore: +b0.speed.toFixed(2), speedAfter: +a0.speed.toFixed(2), y: +a0.centre[1].toFixed(3), sleepingBefore: b0.sleeping })
       lifts.set(b0.id, e)
     }
     ring.push({ step: stepNo, s: before.map((b0, k) => ({ id: b0.id, y: +after[k].centre[1].toFixed(4), vy: +after[k].velocityY.toFixed(2), v: +after[k].speed.toFixed(2), sl: after[k].sleeping, dE: +(b0.mass * (after[k].energyHeight - b0.energyHeight - (given.get(b0.id) ?? 0))).toFixed(3) })) })
@@ -197,7 +202,9 @@
         worstIsland.history = ring.map(rg => ({ step: rg.step, s: rg.s.filter(x => around.has(x.id)) }))
         worstIsland.neighbours = Object.fromEntries([...around].filter(id => !ids.has(id)).map(id => [id, { parts: partsOf(id), mass: (all.find(q => q.objectId === id) || {}).mass }])) } }
     }
-    ruler.step(before, after, dt, input, { touching, given, firstContact: firstContactNow() })
+    const firstContact = firstContactNow()
+    ruler.step(before, after, dt, input, { touching, given, firstContact })
+    rulerWithoutR3.step(before, after, dt, input, { touching, given })
     given = new Map()
     input = 'none'
     return ms
@@ -225,5 +232,7 @@
   for (const row of fixedLog) { const list = perId.get(row.id) ?? []; list.push(row); perId.set(row.id, list) }
   for (const list of perId.values()) for (let i = 1; i < list.length; i++) { const a = list[i - 1], b = list[i]; if (b.u < (KIND === 'blast' ? 10 : 20)) continue; const d = b.mass * (b.e - a.e); if (d > 0.3) fixedGain.push({ gain: +d.toFixed(2), prev: list.slice(Math.max(0, i - 4), i + 2).map(x => ({ ...x, e: +x.e.toFixed(4), mass: undefined })) }) }
   const quality = (() => { const out = {}; for (const p of r.renderer.pieces()) { if (base.has(p.objectId) || p.mass < 500) continue; const link = glue.links.get(glue.byObject.get(p.objectId)); if (link) out[p.objectId] = glue.world.bi.GetMotionQuality(glue.world.entry(link.id).id) } return out })()
-  return { motionQuality: quality, discrete: DISCRETE, kitOps: kitOps.filter(o => o.u >= (KIND === 'blast' ? 10 : 20) && (o.op !== 'setPose' || Math.abs(o.dy) > 3) && (o.op !== 'setVelocity' || o.d > 0.3)).slice(0, 80), kitOpsTotal: kitOps.length, fixedGain: fixedGain.sort((a, b) => b.gain - a.gain).slice(0, 6), fixedSteps: fixedLog.length, c3Offenders: c3List, overPieces, worstIsland, kitEnergy: { updatesWithKitEnergy: kitEnergy.shoves, kgm: +kitEnergy.kgm.toFixed(1) }, kind: KIND, islands: graph ? 'contact graph' : 'bounding spheres', n: pieces.length, asleep: pieces.filter(p => p.sleeping).length, c2Limit: EnergyRuler.C2_LIMIT, ...ruler.result(), worstRises: steps.sort((a, b) => b.rise - a.rise).slice(0, 8), risingSteps: steps.length, frameMs: { p50: +times[110].toFixed(2), p99: +times[Math.floor(times.length * 0.99)].toFixed(2), max: +times[times.length - 1].toFixed(2), wakeFrame: +wakeFrameMs.toFixed(2) } }
+  const oldC3 = Math.max(0, ...[...lifts.values()].map(e => e.total - e.givenPart))
+  const oldC1 = rulerWithoutR3.result()
+  return { before: { c1Excess: oldC1.c1Excess, c1Violations: oldC1.c1Violations, c3LiftWithoutR1: oldC3 }, motionQuality: quality, discrete: DISCRETE, kitOps: kitOps.filter(o => o.u >= (KIND === 'blast' ? 10 : 20) && (o.op !== 'setPose' || Math.abs(o.dy) > 3) && (o.op !== 'setVelocity' || o.d > 0.3)).slice(0, 80), kitOpsTotal: kitOps.length, fixedGain: fixedGain.sort((a, b) => b.gain - a.gain).slice(0, 6), fixedSteps: fixedLog.length, c3Offenders: c3List, overPieces, worstIsland, kitEnergy: { updatesWithKitEnergy: kitEnergy.shoves, kgm: +kitEnergy.kgm.toFixed(1) }, kind: KIND, islands: graph ? 'contact graph' : 'bounding spheres', n: pieces.length, asleep: pieces.filter(p => p.sleeping).length, c2Limit: EnergyRuler.C2_LIMIT, ...ruler.result(), worstRises: steps.sort((a, b) => b.rise - a.rise).slice(0, 8), risingSteps: steps.length, frameMs: { p50: +times[110].toFixed(2), p99: +times[Math.floor(times.length * 0.99)].toFixed(2), max: +times[times.length - 1].toFixed(2), wakeFrame: +wakeFrameMs.toFixed(2) } }
 })()
