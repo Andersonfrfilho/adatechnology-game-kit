@@ -1,0 +1,36 @@
+import { describe, it } from 'vitest'
+
+import { KIT_WORLD } from '@adatechnology/game-physics'
+import type { Material, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
+import { createJoltEngine } from '../src/index'
+
+const GROUND: Material = { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0, rolling: 0.015 }
+const engine = await createJoltEngine()
+
+const run = (kind: 'one' | 'slabs', shape: ShapeDesc, y0: number, spin: Vec3, speed: number, rotation?: [number, number, number, number]): { maxY: number; minY: number; endV: number } => {
+  const world = engine.createWorld({ ...KIT_WORLD })
+  if (kind === 'one') world.createBody({ shape: { kind: 'box', half: [100, 0.5, 100] }, motion: 'static', position: [0, -0.5, 0], material: GROUND, user: 0 })
+  else for (let ix = -20; ix <= 30; ix++) for (let iz = -3; iz <= 3; iz++) world.createBody({ shape: { kind: 'box', half: [1, 0.5, 1] }, motion: 'static', position: [(ix + 0.5) * 2, -0.5, (iz + 0.5) * 2], material: GROUND, user: 0 })
+  const id = world.createBody({ shape, motion: 'dynamic', mass: 50, position: [0, y0, 0.3], ...(rotation ? { rotation } : {}), material: { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0 }, user: 1, linearVelocity: [speed, 0, 0], angularVelocity: spin })
+  const pose = new Float64Array(7), vel = new Float64Array(6)
+  let maxY = -1, minY = 9
+  for (let s = 0; s < 120 * 4; s++) { world.stepFixed(1 / 120); if (s > 60) { world.readPose(id, pose, 0); maxY = Math.max(maxY, pose[1]!); minY = Math.min(minY, pose[1]!) } }
+  world.readVelocity(id, vel, 0)
+  const out = { maxY, minY, endV: vel[0]! }
+  world.dispose?.()
+  return out
+}
+
+describe.skipIf(process.env.PROBE_SEAM !== '1')('rolling across slab seams', () => {
+  it('ball, cylinder and box', () => {
+    const cases: Array<[string, ShapeDesc, number, Vec3, number, [number, number, number, number]?]> = [
+      ['ball r0.3', { kind: 'sphere', radius: 0.3 }, 0.3, [0, 0, -10], 3],
+      ['cylinder rolling (axis z) r0.11', { kind: 'cylinder', halfHeight: 3.7, radius: 0.11 }, 0.11, [0, 0, 0], 0.3, [Math.SQRT1_2, 0, 0, Math.SQRT1_2]],
+      ['box 0.22 tumbling', { kind: 'box', half: [0.11, 3.75, 0.11] }, 0.5, [1.5, 0, 0], 0.3, [0, 0, Math.SQRT1_2, Math.SQRT1_2]],
+    ]
+    for (const [name, shape, y0, spin, speed, rot] of cases) {
+      const a = run('one', shape, y0, spin, speed, rot), b = run('slabs', shape, y0, spin, speed, rot)
+      console.log('[SEAM2]', name, 'one: y', a.minY.toFixed(4), a.maxY.toFixed(4), 'v', a.endV.toFixed(3), '| slabs: y', b.minY.toFixed(4), b.maxY.toFixed(4), 'v', b.endV.toFixed(3))
+    }
+  })
+})
