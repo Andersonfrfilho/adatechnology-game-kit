@@ -203,6 +203,8 @@ if (!playwright || !existsSync(page)) {
       bench.set('template', 'single_storey_a')
       bench.act('build')
       for (let i = 0; i < 40; i++) room.update(0.05)
+      // the rebuild runs behind the room's loading indicator, a frame later: wait for it to finish
+      await room.loading.idle()
       const { house } = window.__floorplanReport.area.houses[0]
       const THREE_V = /** @type {typeof import('three').Vector3} */ (room.camera.position.constructor)
       const p = house.group.localToWorld(new THREE_V(4, 1.4, 0.05))
@@ -219,6 +221,39 @@ if (!playwright || !existsSync(page)) {
     })
     await tab.screenshot({ path: join(shots, `floorplan-c4-${lang}.png`) })
     check(`[${lang}] the C4 on the aimed wall brings parts down and the reset puts them back`, hit.before === 0 && hit.after > 0 && hit.reset === 0, hit)
+
+    // a charge against the wall of the bathroom behind its basin opens it where the basin's drain runs down inside it: the pipe, hidden until then, shows in the hole
+    const drain = await tab.evaluate(async () => {
+      const room = window.__testRoom
+      const bench = /** @type {RoomBench} */ (room.bench('floorplan_area'))
+      bench.set('template', 'single_storey_a')
+      bench.set('seed', 1)
+      bench.act('build')
+      for (let i = 0; i < 40; i++) room.update(0.05)
+      // the rebuild runs behind the room's loading indicator, a frame later: wait for it to finish
+      await room.loading.idle()
+      const { house } = window.__floorplanReport.area.houses[0]
+      const THREE_V = /** @type {typeof import('three').Vector3} */ (room.camera.position.constructor)
+      const embedded = house.structure.parts.filter((/** @type {{ id: string; hostedIn?: string }} */ part) => part.hostedIn === 'wall_0_17' && /^drain:sewer_pt3/.test(part.id)).map((/** @type {{ id: string }} */ part) => part.id)
+      const drawn = (/** @type {string[]} */ ids) => ids.filter((id) => house.structure.meshesOf(id).some((/** @type {{ obj?: { visible: boolean } }} */ item) => item.obj?.visible)).length
+      const before = drawn(embedded)
+      const eye = house.group.localToWorld(new THREE_V(10.4, 0.9, 5.3))
+      const target = house.group.localToWorld(new THREE_V(9.6, 0.4, 7.12))
+      room.look([eye.x, eye.y, eye.z], [target.x, target.y, target.z])
+      room.update(0.05)
+      const at = house.group.localToWorld(new THREE_V(9.6, 0.3, 6.85))
+      room.world.explode([at.x, at.y, at.z], 30000, 15)
+      // the dust settles, and the blast shoved the player: look again from where the print is taken
+      for (let i = 0; i < 100; i++) room.update(0.05)
+      room.look([eye.x, eye.y, eye.z], [target.x, target.y, target.z])
+      for (let i = 0; i < 2; i++) room.update(0.05)
+      return { embedded: embedded.length, before, after: drawn(embedded) }
+    })
+    // (the room draws a frame every second or so in software GL: let it draw the ones after the blast before the print)
+    await tab.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    await tab.waitForTimeout(2500)
+    await tab.screenshot({ path: join(shots, `floorplan-drain-exposed-${lang}.png`) })
+    check(`[${lang}] a charge on the bathroom wall exposes the basin's drain pipe that ran hidden inside it`, drain.embedded > 0 && drain.before === 0 && drain.after === drain.embedded, drain)
 
     // the scenarios: the six of the team and the typologies
     const scen = await tab.evaluate(async () => {

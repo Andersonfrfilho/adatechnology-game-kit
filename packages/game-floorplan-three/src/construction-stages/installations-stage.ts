@@ -10,7 +10,7 @@ import { BURIED_Y, FEED_EXIT_Y, FEED_Y, houseFootprint, routingPlanOf } from './
 import type { RoutePoint } from './installation-routes.js'
 
 /** What drains into the sewer, and the bore of its pipe (metres). */
-const DRAIN_BORE: Readonly<Record<string, number>> = { flush: 0.1, shower: 0.05, tap: 0.05, tub: 0.05, machine: 0.05 }
+export const DRAIN_BORE: Readonly<Record<string, number>> = { flush: 0.1, shower: 0.05, tap: 0.05, tub: 0.05, machine: 0.05 }
 /** Fall of a sewer run, metres per metre (NBR 8160: 1 % for 100 mm and up, 2 % under it). */
 const FALL = { main: 0.01, branch: 0.02 } as const
 const TRENCH = { width: 0.4, bed: 0.03, berm: { width: 0.45, height: 0.2, crest: 0.12 } } as const
@@ -79,7 +79,7 @@ function addHeap(batch: BoxBatch, [x0, z0, x1, z1]: Rect, rise: (s: number) => n
   }
 }
 /** The capped end of a fixture's drain waits just under the ground, in its pit, for the floor and the fixture. */
-const RISER_TOP = -0.02
+export const RISER_TOP = -0.02
 /** A box's lid stands this little over the ground: flush to the eye and the foot, never on the ground's plane. */
 const LID_TOP = 0.009
 
@@ -225,7 +225,7 @@ function addSunkBox(THREE: Three, parent: THREE_NS.Group, box: SunkBox, mats: { 
   if (cover) parent.add(cover)
 }
 
-interface Drain {
+export interface Drain {
   readonly u: number
   readonly v: number
   readonly bore: number
@@ -351,7 +351,7 @@ function sewerLayout(plan: HouseRecord, drains: readonly Drain[]): { pieces: Sew
 }
 
 /** The plan's drains that go to the sewer, with the bore of each. */
-function drainsOf(plan: HouseRecord): Drain[] {
+export function drainsOf(plan: HouseRecord): Drain[] {
   return (plan.utilities?.plumbing?.points ?? []).filter((p) => DRAIN_BORE[p.kind] !== undefined).map((p) => ({ u: p.u, v: p.v, bore: DRAIN_BORE[p.kind]!, kind: p.kind }))
 }
 

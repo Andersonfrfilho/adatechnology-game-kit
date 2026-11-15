@@ -1878,3 +1878,82 @@ A primeira versão desta seção copiou a linha de base da T3.8h (3 goldens verm
 | `eslint` (shapes) / `kit-audit --check` / `pnpm check:layers` | sem problemas / exit 0 / sem violações novas |
 
 Tabela de gates anterior (acima): onde diz "só os 3 `destruction/*` conhecidos" no próprio, vale a correção desta seção: a linha de base era 0.
+
+## T3.8k — buracos de explosão expõem os canos de saída (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0, pnpm 10.28.2. Branch `feat/canos-saida-explosao` (sobre `e987bbe4`). Nenhuma tolerância, régua nem teste foi afrouxado ou removido. Navegador da conferência à mão: `chromium` do Playwright com GL por software (SwiftShader), 3 a 50 quadros por segundo.
+
+### 1. O mapa: que canos de saída existem numa casa pronta e como são desenhados
+| Rede | Onde nasce | Como é desenhada | É peça de destruição? | Fica dentro de parede ou laje? |
+|---|---|---|---|---|
+| Esgoto dos aparelhos (vaso, chuveiro, pias, banheira de lavar, máquina) | `construction-stages/installations-stage.ts`: `drainsOf` lê `plumbing.points` (`DRAIN_BORE`: vaso 0,1 m, o resto 0,05 m), `sewerLayout` põe de cada aparelho um ramal com caimento (NBR 8160) até o coletor e a caixa de inspeção | malhas no grupo `stage:4:installations`, **enterradas** (a ponta do ramal fica em y -0,02 e desce a -0,35); só aparece no nível 4 da obra (ou 4 em diante com `waterLayer`); a casa pronta (nível 8) **não as desenha**, só as tampas das caixas (`stage:4:sewer_boxes`) | não: sem peça, sem colisor, sem `cutRun` | não: debaixo do chão, em vala; nada atravessa parede nem laje |
+| Pluvial (NBR 10844) | `rainLayout`: da caixa de areia ao meio-fio, enterrado a -0,3 m, 0,1 m de diâmetro, grupo `rain_drains` | igual ao esgoto (malha da etapa) | não | não |
+| Descida da calha (`downpipe`) | `roof/gutters.ts` (`roundDownpipe`): bocal na calha, duas curvas de 45°, desce rente à parede, luva de 45° sobre a caixa de areia | `tube()`/`cylBase` fundidos na malha do telhado; sem peça | não (nem a calha de meia-cana) | não: corre por **fora**, a 6 cm da quina (fora das caixas das paredes), presa por braçadeiras que são só desenho |
+| Ralo com grelha ao pé da descida e boca de escoamento da laje (`roof/slabs.ts`) | `gutters.ts drain()` e `slabs.ts` | caixas fundidas na malha | não | não |
+| Água fria escondida na parede (`wall_pipe`) | `utilities/water.ts` | com `constructionStages` (a sala): **uma parte só por traçado** (`stagedWallRuns`, 3 kg), sem `cutRun`, desenhada e visível (`EMBEDDED`: `visible = nível >= 4`) escondida só pelo reboco; sem etapas: segmentada em trechos (c69a1774), `hidden: true` | sim | com `constructionStages` sim (nas paredes), sem elas corre pelo meio do cômodo |
+
+Como um `hidden` é revelado: `parts[id].opens(1)` mostra a parte, e **ninguém o chamava quando a parede abria**. O que existe do lado da destruição é o estado de cada parte (`PartState.opening`, `chipped`, `status`) e o evento `stage`/`chip`; `breach.standing(parte)` só diz que vãos de parede restam.
+
+O chão do térreo **não tem parte de laje** (a casa assenta nas vigas baldrame): um furo de laje só existe nos pavimentos de cima.
+
+Conclusão do mapa: o esgoto e o pluvial da release estão só na vista da obra, enterrados e sem peça, e as descidas da calha não são peças. Nenhuma rede de saída da casa pronta era peça segmentada nem ficava dentro de parede ou laje; o furo de explosão não tinha nada a expor.
+
+### 2. O projeto
+**`game-contracts`/`game-destruction`** (dono dos furos): `PartSpec.hostedIn` (a peça está embutida ou presa numa parte do mesmo objeto), `PartState.exposed` e o evento `reveal`. Regras no `world.ts`:
+- uma peça com `hostedIn` **inteira dentro da caixa do hospedeiro** (`embedded`, tolerância 2 cm) não toma a onda da explosão (`blastPart`) nem tem a junta com ele afrouxada pelo choque (`wearJoints`, o mesmo que solta o rodapé perto da carga) enquanto o hospedeiro está de pé;
+- um furo do hospedeiro (`opening` do estágio 2, unidade arrancada em `chipped`, ou o hospedeiro perdido ou caído) que alcança a caixa da peça no plano da parede (folga de 5 cm: um cano a poucos centímetros da parede, por fora) a **mostra** (`exposed`, evento `reveal`, uma vez por peça, antes do `detach`) e **abre a junta com o hospedeiro**. A peça fica com o que mais a prende: um trecho preso aos vizinhos fica pendurado no furo, um que sobra solto cai como peça;
+- feito ao fim de cada operação do mundo (`run`), uma vez por peça: o custo some quando o objeto não tem peça hospedada.
+
+**`game-floorplan-three`**:
+- `utilities/drains.ts` (novo, `drainPipes()`, chamado depois do telhado, que pendura as descidas): cada dreno de aparelho do pavimento vai do bocal (altura por tipo de aparelho: vaso 0,18 m, chuveiro 0,03, pia 0,5, tanque 0,45, máquina 0,5) para dentro da **parede mais próxima** (`wallDrop` da release, no eixo da parede), desce dentro dela e, em pavimento de cima, **atravessa a laje pelo meio da espessura** para a parede do andar de baixo, até o pé da parede do térreo, onde o ramal enterrado da release o pega. Cada traçado é cortado por `cutRun` nas faces de laje e parede (os mesmos sólidos de `segments.ts`, com os painéis no lugar da laje inteira quando há destruição), um `part('drain_pipe')` por trecho com massa pelo comprimento (`pipeMass`), `hostedIn` = o sólido onde está, `holder` = o sólido ou o trecho vizinho já preso (`holdersOf`) e **junta com o trecho anterior** (`chain`, cola de PVC). Trecho embutido nasce `hidden`; o trecho no ar (o toco da pia ao bocal) é desenhado.
+- As **descidas da calha** saem de `roundDownpipe` (`gutters.ts`) como `GutterInfo.runs` e são peças em trechos entre as braçadeiras (1,5 m), presas à parede ou pilar mais perto (a 30 cm no máximo), `hostedIn` a ele; o bocal e a primeira curva ficam na malha da calha. O anel da braçadeira é da mesma malha do cano.
+- `destruction/pieces.ts`: o apoio por `holder` aceita o **painel** da laje (`panelIds`): antes ele só olhava as partes do plano, e o apoio de um trecho de fiação ou cano numa laje (`slab_ceiling`, `tank_slab`) era descartado quando a laje virava painéis (a lista `view.replaced`); o trecho nascia sem apoio. Também as juntas entre trechos e a de um trecho sem sólido com o chão.
+- `destruction/world.ts` (da casa): o evento `reveal` liga o desenho do trecho; `restore()` o enterra de novo.
+- Fica como a release: `segmentLimits` (padrão 2,5 m de cano; `Infinity` mantém o traçado inteiro), e a cena do time (qualquer `visor*`, `golden-scene.test.ts`) **não desenha** nenhum desses canos.
+- Custo de desenho: a sala desenha 355 partes na casa A (331 antes, 24 canos); os trechos de ambiente (toco da pia, descida da calha) entram na lista de LOD 1 (`lodObjects`) e os embutidos estão invisíveis, então a conta de chamadas da casa só cresce pelos poucos desenhados; o teste de LOD da sala com 4 casas e 300 chamadas continua com uma casa no nível 0.
+
+### 3. O que foi reaproveitado e o que foi acrescentado
+Reaproveitado: `wallDrop`/`routingPlanOf` (instalações da release), `DRAIN_BORE`, `RISER_TOP` e `drainsOf` (agora exportados), `cutRun`/`holdersOf`/`solidsOf` e `pipeMass`, o par `part()`/`markGroups`/`assembleStructure` das peças soltas (como o `wall_pipe`), o `reveal` da peça só como estado do mundo. **Não** reaproveitado como estava: `sewerLayout`/`rainLayout` (a malha enterrada da etapa 4 segue como estava, sem peça). Acrescentado: `hostedIn`/`exposed`/`reveal` e a regra de furo no mundo de destruição, `utilities/drains.ts`, a mudança em `gutters.ts`, o apoio por painel, os testes e a conferência à mão.
+
+### 4. Testes (sem GPU)
+`game-destruction/tests/hosted-parts.test.ts` (3): a peça embutida fica escondida e presa enquanto o hospedeiro está inteiro; um furo de 20 kJ numa parede de tijolos de 6 m mostra e solta só o trecho sobre o furo (os trechos a 1,5 m e 3 m ficam embutidos, com a junta fechada) e o trecho solto fica pendurado pelas juntas de cola aos vizinhos; o `reveal` sai uma vez por peça.
+
+`game-floorplan-three/tests/drain-runs.test.ts` (36, casas reais, `fakeRoom` e `houseOf`, as granadas e cargas como `grenade-in-kitchen.test.ts` e `blast-presentation.test.ts`):
+1. um furo de 30 kJ na parede do banheiro de `single_storey_a` (`wall_0_10`, o dreno do chuveiro) mostra os trechos dentro dela (`reveal`, desenhados, o `detach` das juntas com a parede), a parede não cai;
+2. só os trechos dentro ou cruzando o furo: no sobrado (`townhouse` semente 3) 10 kJ no banheiro de cima mostram os trechos do dreno que estão na parede de cima e **todos os outros trechos do mesmo traçado** (descem pela laje e pelas paredes de baixo) seguem escondidos, sem `exposed`, no objeto da casa, com a junta ao hospedeiro fechada;
+3. nada flutua e nenhum colisor sem desenho: nas 7 plantas x 2 sementes, todo trecho tem desenho, é preso por uma peça que existe ou pelo chão e nenhuma cadeia de apoios faz laço; nenhum trecho de esgoto cruza laje ou parede (ou está fora, ou dentro e hospedado nela; na parede sobre a porta, que entra na laje, em uma das duas); e as peças soltas que a explosão deixa têm `partBoxes` (colisores) para cada trecho desenhado;
+4. furo de laje: no sobrado, 40 kJ sobre o piso do banheiro de cima **não** abre o painel `slab_1_p6` e os trechos que o atravessam seguem escondidos; 120 kJ abrem (`opening`, raio 0,32 m) e eles aparecem; o resto do traçado, na parede do térreo, fica escondido;
+5. descida da calha: 60 kJ à altura do trecho de cima, na quina da parede da frente, soltam só trechos que o furo alcançou (`reveal`), e os que sobram ficam presos à parede.
+Mais: a casa com todas as chaves `visor*` não tem nenhum dos canos, e `restore()` os enterra de novo.
+
+Números da casa A (single_storey_a, semente 1): 24 partes de cano (esgoto: pia da cozinha, vaso, pia do banheiro e chuveiro, 3 trechos cada; calhas: 4 descidas de 3 trechos), todas as de dentro da parede escondidas.
+
+### 5. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `game-destruction` | 548 passam, 0 falhas (eram 545, mais os 3 novos) |
+| `game-destruction-three` próprio / Jolt | 409 passam, 0 falhas / 489 passam, só as 2 `rolling` conhecidas |
+| `game-floorplan-three` próprio | **1068 passam, 0 falhas** (o golden exato passa com o fixture regravado, ver abaixo; linha de base: 0 falhas) |
+| `game-floorplan-three` Jolt | 1068 passam, 4 falhas: os 3 `destruction/*` do golden exato (a gravação é do solver próprio) e `bookcase-topple`: as mesmas da linha de base |
+| Pacotes de tipologia (a suíte inteira de cada um, onde está o teste de construção) | residencial 56, comercial 93, rural 37 e pós-apocalíptica 273 passam |
+| z-fighting | `z-fighting-houses.test.ts` e `gutter-close-faces.test.ts` passam (dentro do `game-floorplan-three`) |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, números idênticos à T3.8j (`worstC4` 1,5167, `worstC2Unconditioned` 0,014651, `fellThrough` 0) |
+| `eslint` nos arquivos mudados | 0 erros (os avisos de `max-lines` do `world.ts` são antigos) |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
+| `pnpm check:layers` | sem violações novas |
+| `golden-scene.test.ts` (cena do time) | passa nó a nó, sem regravar |
+
+**Golden exato**: `UPDATE_EXACT=1`, as **43** entradas mudaram (todas): as 35 `house/*` e as 5 `specimen/*` porque o desenho ganha as partes dos canos (a casa mais simples, a barraca, também tem pia), e as 3 `destruction/breach`, `spall` e `fracture` (passavam na linha de base) porque os mesmos tiros e blasts agora encontram partes novas na casa e o hash do estado as inclui. Regravadas as 43 (o fixture guarda hash e contagem de objetos de cada entrada: a casa A `bare` foi de 229 para 277 objetos, a barraca de 68 para 84, a cabana de troncos de 182 para 192). **`blast-presentation.test.ts`**: hash `9e631476…` para `2304b205…` pelo mesmo motivo (o resultado físico segue o da release: a parede da frente quebra, nada pega fogo).
+
+### 6. Conferência à mão (navegador, não CI)
+`examples/floorplan-test-area/test.mjs` ganhou a checagem «a charge on the bathroom wall exposes the basin's drain pipe that ran hidden inside it»: constrói a casa A, confere que os 2 trechos embutidos do dreno da pia do banheiro (`wall_0_17`) estão escondidos, dispara 30 kJ junto à parede, e confere que os 2 estão desenhados. **Passou em pt-BR e en** (`{"embedded":2,"before":0,"after":2}`). Os prints ficam em `examples/floorplan-test-area/shots/floorplan-drain-exposed-en.png` e `-pt-BR.png` (a pasta é ignorada pelo git do exemplo, como as demais). O print mostra o banheiro depois do estrago com o GL por software da conferência (3 quadros por segundo): o cano é um cilindro de 5 cm de diâmetro e 50 cm de comprimento e aparece pouco; a prova é a contagem da checagem, não a imagem.
+As duas outras checagens que **já reprovam** na linha de base (`e987bbe4`, conferido num worktree limpo, mesmos números): «contract report is clean» (espera 7 cenários, a casa tem 8 desde `floorplan_construction_stages`) e «the C4 on the aimed wall brings parts down» (`broken` 0 antes e depois). Não foram tocadas.
+
+### 7. O que sobra
+- **O esgoto enterrado e o pluvial da release seguem sendo malhas da etapa 4** (sem peça, nem desenhados na casa pronta): só uma cratera no chão os exporia, e a cratera é do terreno (`groundLoss`), não de um furo de parede ou laje; ficam para uma tarefa do terreno. A parte **dentro da casa** (o que um furo de parede ou laje alcança) é o desta tarefa.
+- **Térreo sem furo de piso**: o chão do térreo não tem parte de laje (assenta nas vigas baldrame), então os drenos do térreo só se expõem pelo furo na parede onde descem; a laje só existe nos pavimentos de cima.
+- A altura do bocal de cada aparelho (0,18 a 0,5 m) e o dreno no eixo da parede mais próxima são decisão desta tarefa, não do plano da release; aparelho fora da casa (a banheira do quintal, `floor -1`) não ganha dreno peça.
+- O dreno embutido num pavimento de cima sai do bocal para a parede mais próxima **daquele pavimento** e cai na parede mais próxima do de baixo, mesmo que as duas não se alinhem, e passa pela laje na horizontal (no meio da espessura de 13 cm) entre elas; a casa de verdade tem um shaft, que a planta não tem.
+- Os trechos soltos que a explosão deixa caem como peças (colisores de `fitOrientedBoxes` com os triângulos, as caixas abraçam o desenho; conferido no teste 3), mas a conta de custo de uma sala com muitas casas e vários furos não foi medida.
+- A saída de água de laje (`roof/slabs.ts`, bocal pela mureta) segue como estava.

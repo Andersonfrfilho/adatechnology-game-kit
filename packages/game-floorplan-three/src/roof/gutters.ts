@@ -131,9 +131,10 @@ export function installRoofGutters(K: Kernel, shared: Shared): void {
       const yOut = shared.ctx.visorGutters ? y - 0.02 : y + 0.01, yWall = yOut - 0.06 - out; // the Visor's outlet as the team drew it
       const bx_ = px + sx * SAND_BOX.offset, bz_ = pz + sz * SAND_BOX.offset, shoe = Math.hypot(bx_ - px, bz_ - pz) * 0.5, yFoot = DOWNPIPE.shoeOver + shoe;
       const path: number[][] = [[ox, yOut, oz], [ox, yOut - 0.06, oz], [px, yWall, pz], [px, yFoot, pz], [px + (bx_ - px) * 0.5, DOWNPIPE.shoeOver, pz + (bz_ - pz) * 0.5]];
-      for (let i = 0; i + 1 < path.length; i++) tube(path[i], path[i + 1], r, c);
-      for (let i = 1; i + 1 < path.length; i++) cylBase('plain', path[i][0], path[i][1] - r * 1.2, path[i][2], r * 1.15, r * 2.4, sh(c, 0.94)); // the bends' sockets
-      for (let yy = yWall - 0.3; yy > yFoot + 0.3; yy -= DOWNPIPE.clampEvery) cylBase('metal', px, yy - 0.015, pz, r * 1.25, 0.03, sh(c, 0.7)); // clamps
+      // the outlet and its first bend stay with the gutter; the run down the wall and the shoe are the downpipe's own pieces (`utilities/drains`), cut in stretches that come off by themselves
+      for (let i = 0; i < 2; i++) tube(path[i], path[i + 1], r, c);
+      cylBase('plain', path[1][0], path[1][1] - r * 1.2, path[1][2], r * 1.15, r * 2.4, sh(c, 0.94)); // the first bend's socket
+      (INF.runs ??= []).push({ f, points: path.slice(2), radius: r, color: c, clampEvery: DOWNPIPE.clampEvery });
       INF.downpipes.push({ f, x: px, z: pz, y0: DOWNPIPE.shoeOver, y1: yt, drain: [bx_, bz_] });
       sandBox(bx_, bz_); INF.drains.push({ x: bx_, z: bz_ });
       return true;

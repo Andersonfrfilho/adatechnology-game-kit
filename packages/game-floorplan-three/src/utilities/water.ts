@@ -12,7 +12,7 @@ import type { Vec3 } from './segments.js';
 const PIPE_WALL_FILL = 0.3;
 /** What the team gave the hidden pipe of one run (kg); the run's spans share it by length. */
 const WALL_PIPE_MASS = 3;
-const pipeMass = (diameter: number, length: number): number => DENSITY.plastic! * Math.PI * (diameter / 2) ** 2 * length * PIPE_WALL_FILL;
+export const pipeMass = (diameter: number, length: number): number => DENSITY.plastic! * Math.PI * (diameter / 2) ** 2 * length * PIPE_WALL_FILL;
 
 export function installUtilitiesWater(K: Kernel, shared: Shared): void {
   const { THREE, _Y, _q, cursor, cylBase, part, pieceRecord, put } = K;

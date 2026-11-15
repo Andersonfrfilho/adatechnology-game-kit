@@ -237,6 +237,8 @@ interface PartRT {
   structural: boolean
   anchored: boolean
   cap: number
+  /** Hosted by a part (`PartSpec.hostedIn`) and wholly inside its box: the host shelters it, so the blast, and what shakes joints loose, leave it be until a hole reaches it. */
+  embedded?: boolean
   /** Structural part that never had a support path (the spec itself leaves it floating): it is held by its joints like a non-structural part and does not collapse by itself. */
   orphan: boolean
   /** The part has layers, units, reinforcement or a breach: it goes through damage stages. */
@@ -320,6 +322,8 @@ interface ObjRT {
   wind?: WindRT
   /** A piece `splitGroup` cut from another object (`RaycastOptions.skipLoose`). */
   loose: boolean
+  /** Parts hosted by another part (`PartSpec.hostedIn`) that no hole of it has reached yet. */
+  hosted?: PartRT[]
 }
 
 interface WindRT {
@@ -497,6 +501,11 @@ const forEachSection = (p: PartRT, borne: BorneAt | undefined, visit: (c: { read
     visit(c, along, Math.min(1, gone / Math.max(p.dims[across], 1e-6)))
   }
 }
+/** How far (m) a hosted part's box may stand out of its host's and still be inside it: the cap of a slanted pipe cut at a face. */
+const HOSTED_TOLERANCE = 0.02
+/** How far (m) past the edge of a hole a hosted part still counts as in it: a pipe clamped a few centimetres off the wall is reached by the hole in the wall behind it. */
+const HOLE_SLACK = 0.05
+
 const isLost = (p: PartRT) => p.st.status === 'broken' || p.st.status === 'melted' || p.st.status === 'ashes'
 const clone = <T>(v: T): T => structuredClone(v)
 /**
@@ -595,7 +604,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     try {
       const value = fn()
       drainBlasts()
-      if (runDepth === 1) flushCollapse()
+      if (runDepth === 1) {
+        flushCollapse()
+        if (revealHostedIn(objects.values())) flushCollapse()
+      }
       return { value, events: mine }
     } finally {
       runDepth--
@@ -699,6 +711,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p = o.byId.get(id)
       if (p) p.anchored = false
     }
+    const hosted = o.parts.filter((p) => p.spec.hostedIn !== undefined && o.byId.has(p.spec.hostedIn) && p.st.exposed !== true)
+    for (const p of hosted) {
+      const host = aabbOf(o.byId.get(p.spec.hostedIn!)!.spec.shape, o.byId.get(p.spec.hostedIn!)!.pos, o.byId.get(p.spec.hostedIn!)!.q)
+      const box = aabbOf(p.spec.shape, p.pos, p.q)
+      p.embedded = [0, 1, 2].every((k) => box.min[k]! >= host.min[k]! - HOSTED_TOLERANCE && box.max[k]! <= host.max[k]! + HOSTED_TOLERANCE)
+    }
+    if (hosted.length > 0) o.hosted = hosted
     // open joints whose parts are no longer both here (left behind by `splitGroup`) stay listed, inert, so callers still see them open
     for (const [jid, c] of carry?.joints ?? []) if (c.st.open && !o.jointMap.has(jid)) o.st.joints.push(c.st)
     updateBound(o)
@@ -2630,6 +2649,63 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
+  /**
+   * Whether a hole of `host` reaches the part's box (object space): the host lost or fallen, its `opening` (a disc in its plane), or a unit knocked out of it.
+   * Only the plane counts: a pipe clamped on the outside of a wall is reached by the hole in the wall behind it.
+   */
+  const holeReaches = (host: PartRT, box: { min: Vec3; max: Vec3 }): boolean => {
+    if (isLost(host) || host.st.status === 'collapsed') return true
+    const [u, v] = planeAxes(host.thin)
+    const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => toLocal(host.pos, host.q, [i & 1 ? box.max[0] : box.min[0], i & 2 ? box.max[1] : box.min[1], i & 4 ? box.max[2] : box.min[2]]))
+    const lo = [0, 1, 2].map((k) => Math.min(...corners.map((c) => c[k]!)))
+    const hi = [0, 1, 2].map((k) => Math.max(...corners.map((c) => c[k]!)))
+    const op = host.st.opening
+    if (op) {
+      const lc = toLocal(host.pos, host.q, op.center)
+      if (Math.hypot(clamp(lc[u]!, lo[u]!, hi[u]!) - lc[u]!, clamp(lc[v]!, lo[v]!, hi[v]!) - lc[v]!) <= op.radius + HOLE_SLACK) return true
+    }
+    return (host.st.chipped ?? []).some((cell) => [u, v].every((k) => cell.center[k]! + cell.size[k]! / 2 + HOLE_SLACK >= lo[k]! && cell.center[k]! - cell.size[k]! / 2 - HOLE_SLACK <= hi[k]!))
+  }
+
+  /**
+   * The parts embedded in a host (`PartSpec.hostedIn`) that a hole of it reaches now show (`reveal`), and their joint to the host opens: the hole takes its
+   * stretch off the host, and the rest of the run stays where it is. What else joins a part (the next stretch of its run) keeps holding it. True when any opened.
+   */
+  const revealHosted = (o: ObjRT): boolean => {
+    const opened: JointRT[] = []
+    const shown: PartRT[] = []
+    for (const p of o.hosted ?? []) {
+      const host = o.byId.get(p.spec.hostedIn!)!
+      if (!holeReaches(host, aabbOf(p.spec.shape, p.pos, p.q))) continue
+      p.st.exposed = true
+      shown.push(p)
+      for (const j of o.byPart.get(p.spec.id) ?? []) {
+        if (j.st.open || (j.spec.a !== host.spec.id && j.spec.b !== host.spec.id)) continue
+        j.st.open = true
+        j.st.openedBy = 'break'
+        opened.push(j)
+      }
+    }
+    if (shown.length === 0) return false
+    o.hosted = o.hosted!.filter((p) => !p.st.exposed)
+    if (o.hosted.length === 0) delete o.hosted
+    // it shows before it comes off, so what draws the piece that detaches finds it drawn
+    for (const p of shown) emit({ ...base(o), type: 'reveal', part: p.spec.id, host: p.spec.hostedIn! })
+    if (opened.length > 0) {
+      solveStructure(o)
+      recomputeGroups(o)
+      detachEvents(o, opened, 'break')
+      collapseCheck(o)
+    }
+    return true
+  }
+
+  const revealHostedIn = (all: Iterable<ObjRT>): boolean => {
+    let any = false
+    for (const o of [...all]) if (o.hosted && revealHosted(o)) any = true
+    return any
+  }
+
   const partLost = (o: ObjRT, p: PartRT, src?: string) => {
     const opened: JointRT[] = []
     for (const j of o.byPart.get(p.spec.id) ?? []) {
@@ -2713,6 +2789,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   /** A joint that fixes trim on a part that carries (a baseboard on a wall, a paving slab on the ground): the seams of a loose thing (a can's welds) are not one. */
   const fixesTrim = (o: ObjRT, j: JointRT): boolean => isTrim(o.parts[j.ia]) !== isTrim(o.parts[j.ib])
 
+  /** The joint of an embedded part to its host, while no hole has reached the part: only that hole opens it (`revealHosted`). */
+  const holdsEmbedded = (o: ObjRT, j: JointRT): boolean => {
+    const a = o.parts[j.ia], b = o.parts[j.ib]
+    return (a.embedded === true && a.spec.hostedIn === b.spec.id && a.st.exposed !== true) || (b.embedded === true && b.spec.hostedIn === a.spec.id && b.st.exposed !== true)
+  }
+
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
     const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
@@ -2722,6 +2804,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       // the rebar of a reinforced part (a cage, or the tension steel of `structure.rebar`) ties it to the next one: blows do not wear it, only a torch
       // or a saw cuts it (or the part itself giving way)
       if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
+      if (holdsEmbedded(o, j)) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       // a blast shakes loose the trim fixed on a part (a baseboard, a paving slab: no structure of its own) only near it, not along the whole wall
       if (blast && fixesTrim(o, j) && jointReach(o, j, blast.point) > Math.max(blast.reach, jointReachLimit(o, j))) continue
@@ -3917,6 +4000,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    */
   const blastPart = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, src: string | undefined, res: HitResult, reachAt?: (wp: Vec3, p: PartRT) => number): number | null => {
     if (isLost(p)) return null
+    // a part embedded in its host takes no wave while the host stands round it: the wall is what the blast meets, and only a hole of it lets the blast to the pipe
+    if (p.embedded === true && p.st.exposed !== true) return null
     const { c, q } = partXf(o, p)
     const lp = toLocal(c, q, point)
     const dist = distanceToShape(p.spec.shape, lp)
