@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@adatechnology/game-shapes-three": "workspace:^",
+    "@adatechnology/game-terrain": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
