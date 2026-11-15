@@ -17,7 +17,7 @@ const FOLLOW_FLUSH_FALLBACK_MS = 100;
 export function installDestructionWorld(K: Kernel, shared: Shared): void {
   const { THREE, cfg, invalidateShadow, invalidate, rngString, FRAGMENT_GEO, fragmentMaterial, createBreachView } = K;
   function createHouseDestruction(root: THREE_NS.Group, house: THREE_NS.Group, structure: HouseStructure, parts: Record<string, HousePart>, colliders: readonly DestructionCollider[], water: WaterApi): HouseDestruction {
-        const D = { world: cfg.destruction || null, id: null, active: false } as unknown as HouseDestruction & { world: DestructionWorld; id: string }, hiddenPieces = new Set<string>(), bodies = new Map<string, FallingBody[] & { impacted?: boolean }>(), frags: Shard[] = [], facets = new Map<string, Damageable[]>(); let flow = 0, off: (() => void) | null = null, inside = false;
+        const D = { world: cfg.destruction || null, id: null, active: false } as unknown as HouseDestruction & { world: DestructionWorld; id: string }, hiddenPieces = new Set<string>(), shown = new Set<THREE_NS.Object3D>(), bodies = new Map<string, FallingBody[] & { impacted?: boolean }>(), frags: Shard[] = [], facets = new Map<string, Damageable[]>(); let flow = 0, off: (() => void) | null = null, inside = false;
         // cfg.destructionRenderer = createDestructionRenderer(THREE, { scene, world }) of @adatechnology/game-destruction-three: it draws fracture, collapse, fragments, spalls and the rebar cage on the vertex ranges this house binds. Without it the house draws its own (hide, fall, shards).
         const R = cfg.destructionRenderer || null, listeners = new Set<(e: DestructionEvent) => void>();
         D.renderer = R; D.spec = null;
@@ -53,6 +53,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         D.restore = () => { // everything goes back to what it was (after world.reset)
           breach.restore(); if (R && D.id && D.active) R.restore(D.id);
           for (const id of hiddenPieces) for (const it of structure.meshesOf(id)) show(it);
+          for (const obj of shown) obj.visible = false; shown.clear(); // what a hole showed (a pipe in a wall) is buried again
           hiddenPieces.clear(); for (const l of bodies.values()) for (const b of l) { b.mesh.removeFromParent(); b.mesh.geometry.dispose(); } bodies.clear();
           for (const f of frags) f.mesh.removeFromParent(); frags.length = 0; flow = 0; if (water.leak) water.leak(0);
           for (const l of facets.values()) for (const d of l) d.hp = d.hpMax; invalidate(); invalidateShadow();
@@ -75,6 +76,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
               breach.drop(e.part); if (R) break;
               const c = bodies.get(e.part); if (c) { for (const b of c) { b.mesh.removeFromParent(); b.mesh.geometry.dispose(); } bodies.delete(e.part); } else D.hide(e.part);
               fragments(e); break; }
+            case 'reveal': for (const it of structure.meshesOf(e.part)) if (it.obj && !it.obj.visible) { it.obj.visible = true; shown.add(it.obj); } invalidateShadow(); break; // a hidden part (a pipe in a wall) that a hole reached
             case 'stage': breach.stage(e); break;
             case 'chip': breach.chip(e); break;
             case 'spall': breach.spall(e); break;

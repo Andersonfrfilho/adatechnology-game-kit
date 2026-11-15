@@ -30,6 +30,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           if (tp === 'water_tank') { const e = shared.ctx.structureIndex.water_tank, L = cap || (g.userData.volume ? Math.round(g.userData.volume * 1000) : 0); tagObject('water_tank', [g], 'plastic', e ? e.role : null, { floor: e ? e.floor : 0, contains: L ? { fluid: 'water', liters: L } : undefined, mass: e ? e.mass : 25, thickness: 0.004, fill: 0.05, tags: ['tank'] }); }
           else if (tp === 'gas_cylinder') tagObject(id, [g], 'steel', null, { mass: 11, form: 'cylinder', thickness: 0.003, fill: 0.03, contains: { fluid: 'gas', liters: 13, pressurized: true }, explodes: { energy: 120000, radius: 5, atC: 300 }, tags: ['gas_bottle'] });
           else if (tp === 'wall_pipe') tagObject(id, [g], 'plastic', null, { mass: g.userData.mass ?? 3, tags: ['pipe'], ...(g.userData.holder ? { holder: g.userData.holder } : {}) });
+          else if (tp === 'drain_pipe') tagObject(id, [g], 'plastic', null, { mass: g.userData.mass ?? 1, tags: ['pipe', 'drain'], run: g.userData.run, holder: g.userData.holder, chain: g.userData.chain, ...(g.userData.hostedIn ? { hostedIn: g.userData.hostedIn } : {}) });
           else if (tp === 'shower_door') tagObject(id, [g], 'tempered_glass', null, { mass: 25 });
           else if (tp === 'gate_leaf' || tp === 'mailbox_door') tagObject(id, [g], 'steel', null, { mass: 30 });
         }
@@ -64,7 +65,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
           const p: HouseStructurePart = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill as number : 0.15)), meshes: meshes.get(id)!.length, extra: true } as HouseStructurePart;
-          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture', 'holder']) if (pc[k] != null) p[k] = pc[k];
+          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture', 'holder', 'hostedIn', 'chain']) if (pc[k] != null) p[k] = pc[k];
           parts.push(p); byId.set(id, p);
         }
         const inside = (p: HouseStructurePart, q: HouseStructurePart, m: number) => { const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2, cy = (p.y0 + p.y1) / 2; return cx >= q.aabb[0] - m && cx <= q.aabb[2] + m && cz >= q.aabb[1] - m && cz <= q.aabb[3] + m && cy >= q.y0 - m && cy <= q.y1 + m; };
@@ -73,7 +74,10 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           // a slab of the sidewalk rests on the ground it is cast on
           if (/^sidewalk:/.test(p.id)) { supports.push({ part: p.id, on: 'ground', joint: 'mortar', extra: true }); continue; }
           // a stretch of a wiring or pipe run hangs from what holds it: the solid it lies in, or the stretch beside it that is held
-          if (typeof p.holder === 'string' && byId.has(p.holder)) { supports.push({ part: p.id, on: p.holder, joint: 'clip', bears: false, extra: true }); continue; }
+          // (the stretches of one run are also joined to the one before it: one that a hole frees from its host still hangs by them)
+          for (const next of Array.isArray(p.chain) ? p.chain as string[] : []) if (byId.has(next)) supports.push({ part: p.id, on: next, joint: 'glue', bears: false, extra: true });
+          if (p.holder === 'ground') { supports.push({ part: p.id, on: 'ground', joint: 'clip', bears: false, extra: true }); continue; }
+          if (typeof p.holder === 'string' && (byId.has(p.holder) || panelIds.has(p.holder))) { supports.push({ part: p.id, on: p.holder, joint: 'clip', bears: false, extra: true }); continue; }
           if (!/^(window|window_pane|door|jamb|pipe|water_tank|baseboard)/.test(p.id)) continue;
           const target = /^water_tank/.test(p.id) ? ['slab'] : ['wall', 'partition'];
           let m: HouseStructurePart | null = null, md = 1e9; for (const q of parts.slice(0, base)) { if (!target.includes(q.role) || !inside(p, q, 0.2)) continue; const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; } }
@@ -112,7 +116,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
             // what a part holds, what makes it explode and how thin its wall is (the water tank, the gas cylinder) comes from the piece; the structure package's spec does not carry it
             spec.parts = spec.parts.map(sp => {
               const pc0 = byId.get(sp.id); if (!pc0) return sp;
-              const extra: Record<string, unknown> = {}; for (const k of ['contains', 'explodes', 'thickness', 'fill', 'tags']) if (pc0[k] != null && (sp as unknown as Record<string, unknown>)[k] == null) extra[k] = pc0[k];
+              const extra: Record<string, unknown> = {}; for (const k of ['contains', 'explodes', 'thickness', 'fill', 'tags', 'hostedIn']) if (pc0[k] != null && (sp as unknown as Record<string, unknown>)[k] == null) extra[k] = pc0[k];
               const aperture = apertureOf(sp, pc0.aperture as PieceAperture | undefined); if (aperture) extra.apertures = [aperture];
               return Object.keys(extra).length ? { ...sp, ...extra } : sp;
             });

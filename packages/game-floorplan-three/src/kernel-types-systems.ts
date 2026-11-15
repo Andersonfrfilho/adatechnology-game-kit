@@ -614,6 +614,8 @@ export interface GutterInfo {
   /** Each downpipe: floor, place, bottom and top, and the drain it ends in (none when it floats over a lower roof). */
   downpipes: { f: number; x: number; z: number; y0: number; y1: number; drain: [number, number] | null; hornBox?: boolean }[]
   drains: { x: number; z: number }[]
+  /** The run of each round downpipe from where it meets the wall to the end of its shoe, with its radius, colour and the spacing of its clamps: `utilities/drains` draws them as pieces. */
+  runs?: { f: number; points: number[][]; radius: number; color: number; clampEvery: number }[]
 }
 
 /** The plants the vegetation drew (`house.vegetation`). */

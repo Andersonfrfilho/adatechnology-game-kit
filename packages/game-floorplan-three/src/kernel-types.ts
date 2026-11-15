@@ -864,6 +864,12 @@ export interface KernelUtilitiesWater {
   waterPipes(): void
 }
 
+/** What `utilities/drains` puts on the kernel. */
+export interface KernelUtilitiesDrains {
+  /** Lays the sewer's drains and the downpipes as pieces of the finished house (after the roofs, which hang the downpipes). */
+  drainPipes(): void
+}
+
 /** The solar panels and inverter as the game sees them (`house.solar`). */
 export interface SolarInfo {
   type: string
@@ -911,7 +917,7 @@ export interface KernelCloseScene {
 }
 
 /** Every module of the kernel, typed; a member no module declares is `unknown`. */
-export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge, KernelBuildBuild, KernelBuildInstance, KernelDestruction {
+export interface Kernel extends KernelBase, KernelGeometry, KernelNoise, KernelCloseScene, KernelUtilitiesDrains, KernelFurnitureApi, KernelFurnitureBuilders, KernelLightsFixtures, KernelFurniturePlants, KernelFurnitureTaps, KernelFurnitureYard, KernelFurniturePlaceItems, KernelFurnitureTypeTable, KernelFurnitureExtraTypes, KernelHouseHelpers, KernelHouseFloors, KernelHouseStairs, KernelHouseBaseboard, KernelHouseBuilding, KernelHouseOutbuildings, KernelHouseWindows, KernelHouseWalls, KernelHouseDoors, KernelRoofTiles, KernelRoofRect, KernelRoofGutters, KernelRoofSlabs, KernelRoofRoofs, KernelLotTerrain, KernelLotPerimeter, KernelLotGates, KernelLightsDecor, KernelUtilitiesWater, KernelUtilitiesSolar, KernelUtilitiesElectrical, KernelMaterialsTextures, KernelMaterialsMaterials, KernelAnimationClotheslines, KernelMirrors, KernelCars, KernelVegetationBridge, KernelInteractionState, KernelInteractionCollision, KernelInteractionDoors, KernelInteractionTarget, KernelInteractionItems, KernelInteractionFittings, KernelLightsRoomLight, KernelInteractablesKit, KernelInteractablesBridge, KernelBuildBuild, KernelBuildInstance, KernelDestruction {
   [member: string]: unknown
 }
 

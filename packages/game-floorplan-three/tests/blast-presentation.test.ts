@@ -22,7 +22,8 @@ const BLAST_RADIUS = 6
 // and once more when its heat became the fireball's: the charge still brings wall_0_0 down (39 parts broken, 7 collapsed), nothing catches fire.
 // Recorded again when the contact shock and the side-on impulse took products instead of `**` past 2, so Node 22 and 24 give the same last bits
 // Recorded again on the merge of the house release: the windows' panes rest on the mullion, the pipes and wires detach in segments and the drop's second conductor runs parallel to the first
-const RECORDED_BLAST_OUTCOME = '9e6314764286a331316e158d4eac335d05756012'
+// Recorded again with the drain runs of the house (sewer stretches in its walls and slabs, the downpipes in stretches clamped to the wall): they are parts of the spec the blast meets now, and a hole in a wall shows the ones in it
+const RECORDED_BLAST_OUTCOME = '2304b20515359c035368ba0965a9cf078ac76430'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })

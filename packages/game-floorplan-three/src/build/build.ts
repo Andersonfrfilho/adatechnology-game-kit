@@ -108,7 +108,7 @@ function panelRunOf(P: NonNullable<NonNullable<NonNullable<HouseRecord['utilitie
 }
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
-  const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
+  const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, drainPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
   function build(r0: HouseRecord, options?: BuildOptions): House {
         const opts: BuildOptions = options || {};
         const r = withLaidConduits(applyOutbuildings(r0), !!(opts.constructionStages || opts.constructionLevel != null)); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
@@ -140,7 +140,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         if (IVK) { try { h.IV = shared.ctx.iv = ivBuild(h, water); } catch (e) { console.warn('interactables', e); shared.ctx.iv = h.IV = null; } } // interactables kit: plans, draws and wires (see 75)
         st('furniture'); const noModel = houseItems();
         st('installations'); placeSwitches(); waterPipes(); electricalStructure();
-        st('roof'); roofs(); solar();
+        st('roof'); roofs(); solar(); st('installations'); drainPipes();
         st(undefined);
         if (shared.ctx.showBuilding) building();
         for (const c of r.rooms) { if (c.type === 'void') continue; const [a, b, c2, d] = rectsOf(c)[0] as Rect; shared.ctx.labels.push({ pos: new THREE.Vector3((a + c2) / 2, Y0(c.floor) + 1.1, (b + d) / 2), text: c.name as string, group: 'f' + c.floor, type: 'room', floor: c.floor }); }
@@ -177,7 +177,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         for (const [id, g] of Object.entries(shared.ctx.parts || {})) {
           const tp: string = g.userData.part, dn = PART_DAMAGE[tp]; if (dn) g.userData.damageable = tagDamage(dn);
           mark(g, id);
-          if (tp === 'wall_pipe') { parts[id] = { id, type: tp, group: g, damageable: null, hidden: true, run: g.userData.run, to: g.userData.to, opens: (t: number) => { g.visible = t > 0.5; invalidateShadow(); }, get t() { return g.visible ? 1 : 0; }, meta: g.userData }; continue; } // R69: pipe inside the wall: hidden until the destruction stage reveals it (opens(1))
+          if (tp === 'wall_pipe' || tp === 'drain_pipe') { parts[id] = { id, type: tp, group: g, damageable: null, hidden: true, run: g.userData.run, to: g.userData.to, opens: (t: number) => { g.visible = t > 0.5; invalidateShadow(); }, get t() { return g.visible ? 1 : 0; }, meta: g.userData }; continue; } // R69: pipe inside the wall: hidden until the destruction stage reveals it (opens(1))
           parts[id] = { id, type: tp, group: g, damageable: g.userData.damageable || null, opens: (t: number) => { applyPart(g, t); invalidateShadow(); }, get t() { return g.userData.t || 0; }, meta: g.userData };
         }
         for (const fo of shared.ctx.leaves) {
@@ -221,7 +221,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         // ---- LOD / draw statistics ----
         const lodObjects: THREE_NS.Object3D[] = [];
         for (const def of shared.inter.defs.values()) if (def.outer && /^(light|drawer|swing|curtain|light_switch|handle)$/.test(def.kind)) lodObjects.push(def.outer);
-        for (const [id, g] of Object.entries(shared.ctx.parts || {})) if (/^(handle|shower_door)$/.test(g.userData.part) && g.visible !== false) lodObjects.push(g);
+        for (const [id, g] of Object.entries(shared.ctx.parts || {})) if (/^(handle|shower_door|drain_pipe)$/.test(g.userData.part) && g.visible !== false) lodObjects.push(g);
         if (shared.ctx.iv) { for (const E of shared.ctx.iv.roots) lodObjects.push(E.root); }
         const countDraw = () => { let n = 0, t = 0; root.traverseVisible(o => { if (isMesh(o)) { n++; t += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } }); return { n, t: Math.round(t) }; };
         const s0 = countDraw(); for (const o of lodObjects) o.visible = false; const s1 = countDraw(); for (const o of lodObjects) o.visible = true;

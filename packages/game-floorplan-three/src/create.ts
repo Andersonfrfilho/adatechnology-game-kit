@@ -28,6 +28,7 @@ import { installRoofRect } from './roof/rect.js'
 import { installMirrors } from './mirrors.js'
 import { installCars } from './cars.js'
 import { installHouseBuilding } from './house/building.js'
+import { installUtilitiesDrains } from './utilities/drains.js'
 import { installUtilitiesWater } from './utilities/water.js'
 import { installUtilitiesElectrical } from './utilities/electrical.js'
 import { installHouseBaseboard } from './house/baseboard.js'
@@ -111,6 +112,7 @@ export function create(THREE: Three, options: HouseRendererOptions = {}): HouseR
   installCars(K, shared)
   installHouseBuilding(K, shared)
   installUtilitiesWater(K, shared)
+  installUtilitiesDrains(K, shared)
   installUtilitiesElectrical(K, shared)
   installHouseBaseboard(K, shared)
   installUtilitiesSolar(K, shared)
