@@ -918,8 +918,38 @@ export class Visuals {
     this.rebuildHost(mv.merged.host)
   }
 
+  /** Within a batch (`batchRebuilds`): the merged meshes written once already, and whether a change since is still to be written. */
+  private rebuildBatch: Map<HostVis, { stale: boolean }> | null = null
+
+  /**
+   * Runs `work`, writing a merged mesh into its geometry for the first change it sees and once more at the end if others followed, not once per change. The geometry is a function of what
+   * the host keeps (`work`, the collapsed ranges, the melt), so the last write is the same as the last of many; the first stays because `extract` of the next part reads the normals that write leaves.
+   */
+  batchRebuilds(work: () => void): void {
+    if (this.rebuildBatch) {
+      work()
+      return
+    }
+    const hosts = (this.rebuildBatch = new Map<HostVis, { stale: boolean }>())
+    try {
+      work()
+    } finally {
+      this.rebuildBatch = null
+      for (const [host, state] of hosts) if (state.stale) this.rebuildHost(host)
+    }
+  }
+
   /** Write `work` into the geometry again with the melt of ranged parts and the collapsed ranges applied. */
   private rebuildHost(host: HostVis): void {
+    const batch = this.rebuildBatch
+    if (batch) {
+      const seen = batch.get(host)
+      if (seen) {
+        seen.stale = true
+        return
+      }
+      batch.set(host, { stale: false })
+    }
     const geo = host.mesh.geometry
     const pos = positionAttr(geo)
     const work = host.work
