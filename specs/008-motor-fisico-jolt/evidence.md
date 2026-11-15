@@ -2301,3 +2301,74 @@ No sintético (T3.8l) o terreno era ondulado: todo ladrilho é height field + s�
 1. **D8: entregar desligado por padrão** (manter a API `prelayGround` e a opção, para lotes pedidos por quem medir ganho). Ele tira ~20 ms do quadro 1 e nada do quadro medido, p99 nem máximo, custa 250 a 330 ms e +504 corpos ao construir, e o sinal do poste, mesmo não confirmado, vai contra.
 2. **Conserto de emenda: não se aplica** (sem defeito de emenda; o das lajes redondas é do preguiçoso igual). Para a main importa o **entulho que sobe o terreno sem `emitDeform`**: avisar em lote, um `emitDeform` por `update` com a caixa do que assentou. Decisão do dono: acorda fragmentos próximos (`wakeRegion`).
 3. Não foram rodados os gates (nenhum código mudou).
+
+## T3.8s — rodadas da sala na main com #306–#309 (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0. Navegador: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa, ANGLE/OpenGL 4.6), um processo por rodada, no primeiro plano, com `timeout`, uma rodada por vez (frames medidos sem outra carga pesada). Código: `fix/pecas-sobre-restos` em `1ee9b5f6` (main #302 a #308 e o conserto `ENGINE_CLEARS`; #309 em CI). **Só medição: nenhum código-fonte, régua, tolerância ou teste foi alterado.** `pnpm build` e `node examples/test-room/build.mjs` ok; o `dist/test-room.html` tem `updateHeights` e o limite de 1 cm do `ENGINE_CLEARS` (minificado: `Rm0=.01`, `r<=Rm0||(...root.position.y+=r`; o nome `ENGINE_CLEARS` não sobrevive à minificação). Sondas `decision/probes/room.js` e `drive.mjs`; JSON completo em `decision/t38s-results.json`.
+
+Critérios (iguais aos da T3.8r): C1 `c1Violations` = 0; C2 condicionado 0 peças acima de 3,5 cm; C3 subida de pedaço <= 3,5 cm; C4 todas dormindo em até 3 s; `fellThrough` 0. Configurações: (a) Jolt, D4 ligada (`blastDebris=1`); (b) Jolt, D4 desligada; (c) solver próprio, D4 ligada. 5 de blast e 5 de martelo cada.
+
+### 1. Resumo por configuração (rodadas que passam cada critério)
+| configuração | todos | C1 | C2 cond. | C3 | C4 | `fellThrough` |
+|---|---|---|---|---|---|---|
+| (a) Jolt D4, blast | **0/5** | 0/5 | 5/5 | 4/5 | 5/5 | 5/5 |
+| (a) Jolt D4, martelo | **1/5** | 3/5 | 4/5 | 3/5 | 5/5 | 5/5 |
+| (b) Jolt sem D4, blast | 0/5 | 0/5 | 5/5 | 1/5 | 5/5 | 5/5 |
+| (b) Jolt sem D4, martelo | 0/5 | 0/5 | 5/5 | 5/5 | 5/5 | 5/5 |
+| (c) próprio D4, blast | 0/5 | 0/5 | 0/5 | 0/5 | 0/5 | 5/5 |
+| (c) próprio D4, martelo | 0/5 | 0/5 | 4/5 | 3/5 | 0/5 | 5/5 |
+
+Totais: (a) **1/10 passa tudo** (C1 3/10, C2 9/10, C3 7/10, C4 10/10, `fellThrough` 10/10); (b) 0/10 (C1 0, C2 10, C3 6, C4 10); (c) 0/10 (C1 0, C2 4, C3 3, C4 0). `fellThrough` 0 e nenhuma peça abaixo do chão (`deepest` nulo) em 30 de 30 rodadas.
+
+### 2. (a) Jolt, D4 ligada, rodada a rodada
+| rodada | C1 excesso (kg·m) / pior ilha | C2 acima de 3,5 cm (sem a condição) | C3 (m) | C4 (s) | frame p50 / p99 / max (ms) | despertar (ms) |
+|---|---|---|---|---|---|---|
+| blast 1 | 0,41 / `obj_2` poste (1010,7 kg, +1,42 kg·m; parte `pole`) | 0 (0) | **0,043** | 0,45 | 3,0 / 114,9 / 302,6 | 45,4 |
+| blast 2 | 0,18 / ilha não registrada (< 0,2) | 0 (1) | 0,019 | 0,75 | 2,4 / 125,7 / 256,5 | 51,3 |
+| blast 3 | 0,18 / idem | 0 (0) | 0,028 | 0,45 | 2,9 / 97,7 / 121,0 | 61,2 |
+| blast 4 | 0,07 / idem | 0 (2) | 0,024 | 1,50 | 2,4 / 85,3 / 223,6 | 49,8 |
+| blast 5 | 0,18 / idem | 0 (0) | 0,018 | 0,45 | 2,5 / 102,2 / 224,0 | 50,8 |
+| hammer 1 | 0 (0 violações) | 0 (0) | **0,058** | 0,45 | 1,7 / 106,9 / 233,3 | 39,5 |
+| hammer 2 | 0 (0 violações) | 0 (1) | **0,043** | 1,75 | 1,8 / 72,4 / 318,8 | 33,6 |
+| hammer 3 | 0,003 (1 violação, ilha não registrada) | 0 (1) | 0,032 | 1,70 | 1,7 / 100,7 / 287,2 | 35,3 |
+| hammer 4 | 0 (0 violações) | 0 (1) | 0,032 | 1,30 | 1,7 / 70,8 / 292,9 | 34,1 |
+| hammer 5 | **1,27** / `obj_3` (43 kg, +1,10) e `obj_5` (16,3 kg, +0,22) | **1** (1): `obj_20` 5,3 kg, 0,136 m, parte `baseboard:wall_0_0:0:5` | 0,017 | 0,90 | 1,5 / 99,1 / 223,1 | 38,2 |
+
+Só **hammer 4 passa todos os critérios**. A sonda só registra a ilha de pior C1 quando o excesso passa de 0,2 kg·m, por isso as ilhas de 0,07 a 0,18 não têm nome.
+
+### 3. (b) Jolt sem D4 e (c) solver próprio (resumo; todas as rodadas no JSON)
+- **(b) blast**: C1 0,35 / 0,58 / 0,58 / 0,93 / **6,82**, sempre o poste `obj_2` (1010,7 kg; +7,83 kg·m na rodada 4); C3 0,043, 0,043, 0,045, 0,051 e 0,023 (4 de 5 acima de 3,5 cm); C4 0,45 a 1,4 s. **(b) martelo**: C1 com violação em 5 de 5 (excesso 0,003, 0,003, 0,02, 0,03 e **3,64**: `obj_3` 43 kg +2,40 e `obj_5` 16,3 kg +1,31); C3 0,008 a 0,030; C4 até 1,8 s.
+- **(c) blast**: C1 5,68 a **31,96** (a rodada 2 carrega o poste `obj_1`, 1010,7 kg, +0,381 m de C2); C2 com 1 a 5 peças acima do limite, as de 16 kg com a rede de fio (`wiring:grid:*`), 0,069 a 0,113 m; C3 0,058 a **0,421**; C4 3,65 s, 4,55 s e duas rodadas com peça que não dorme (`-1`). **(c) martelo**: C1 2,27 a 2,35 em 5 de 5; C4 3,15 a 3,4 s e uma rodada sem dormir; C2 só em 1 (`obj_5`, 16,3 kg, `window_frame:w0_0`, 0,036 m).
+
+### 4. Frames (ms), contra a T3.8b
+| configuração | p50 | p99 | max | despertar |
+|---|---|---|---|---|
+| (a) blast | 2,4–3,0 | 85–126 | **121–303** | **45–61** |
+| (a) martelo | 1,5–1,8 | 71–107 | 223–319 | 34–40 |
+| (b) blast | 1,7–2,5 | 77–133 | 178–311 | 41–55 |
+| (b) martelo | 1,3–1,8 | 58–103 | 183–306 | 30–40 |
+| (c) próprio, blast | 1,6–2,1 | 18–24 | 30–39 | 38–43 |
+| (c) próprio, martelo | 1,3–1,5 | 12–14 | 14–17 | 27–32 |
+
+T3.8b: blast max 98–315 ms, despertar 43–88 ms. Agora (a) blast max 121–303 ms e despertar 45–61 ms: **max na mesma faixa (sem melhora), despertar um pouco menor no teto (61 contra 88)**. O quadro mais caro do Jolt continua entre 220 e 320 ms em quase toda rodada; o solver próprio fica abaixo de 40 ms, porque a sala dele quase não faz trabalho de motor (e reprova C4 por peças que não dormem).
+
+### 5. Contra a T3.8r (Jolt, D4 ligada)
+| item | T3.8r | T3.8s (a) |
+|---|---|---|
+| C1 do blast (poste) | 0,55 a 0,77 kg·m, 5 de 5 | **0,07 a 0,41**; só a rodada 1 é o poste (0,41); as outras quatro ficam abaixo de 0,2 |
+| C1 do martelo | 0,00 a 0,38 e **6,82 (poste)** | 0 em 3, 0,003 em 1, **1,27** em 1; **sem o caso de 6,82** (o 6,82 apareceu em (b), blast 4) |
+| C3 acima de 3,5 cm | 3 de 5 no blast (0,040, 0,054, 0,041), 0 de 5 no martelo | **1 de 5 no blast (0,043), 2 de 5 no martelo (0,058, 0,043)**: sobe no martelo, cai no blast |
+| C4 | até 1,50 s | até 1,75 s (martelo 2) |
+| C2 condicionado | 0 de 10 acima | 1 de 10 (`obj_20`, rodapé, martelo 5) |
+| `fellThrough` | 0 | 0 |
+| rodadas que passam tudo | 0 de 10 | **1 de 10** (hammer 4) |
+
+### 6. O que ainda reprova (inferência marcada)
+1. **C1 em 7 de 10 rodadas do (a)**; blast 0 de 5. Maior: martelo 5, 1,27 kg·m (`obj_3` 43 kg e `obj_5` 16,3 kg). Poste 1010,7 kg: 0,41 no blast 1. Os excessos de 0,07 a 0,18 no blast e 0,003 no martelo 3 são de ilhas que a sonda não registra; **não sei quais peças são**.
+2. **C3 acima de 3,5 cm em 3 de 10**: blast 1 (0,043), martelo 1 (0,058), martelo 2 (0,043). A sonda não grava o nome da peça do C3; **não identificada nesta rodada**. Na T3.8r eram as de 12 a 16 kg lançadas pela onda (inferência: as mesmas).
+3. **C2 condicionado**: martelo 5, rodapé `obj_20` (5,3 kg) ganhando 0,136 m.
+4. O poste tomba com ganho em (b) (6,82 no blast 4, o mesmo número da T3.8r, +7,83 kg·m a 6,3 m/s): sem a D4 o caso grande volta; com a D4 não apareceu nas 10 rodadas, mas 10 rodadas não provam que sumiu.
+5. Frame max do Jolt de 120 a 320 ms ainda no despertar do blast e do martelo (T3.8b: 98–315 ms): sem avanço.
+6. O solver próprio (c) reprova C1, C3 e C4 como antes.
+
+Veredito: **a T3.8 continua sem ✅**: (a) passa 1 de 10 rodadas; nenhum critério isolado fecha 10 de 10 além de C4 e `fellThrough`.
