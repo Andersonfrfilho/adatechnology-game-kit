@@ -48,5 +48,10 @@ export const buildHousePools = (sources: Sources, resolve: (reference: string) =
       }
     })
   }
+  for (const [key, extras] of Object.entries(sources.decisions.housePoolExtras)) {
+    const pool = pools[key]
+    if (!pool) throw new Error(`items-catalog: housePoolExtras names the pool "${key}", which the team's house pools do not have`)
+    for (const [type, { value }] of Object.entries(extras)) pool.push({ type, item: value.item, name: value.name, qty: [value.qty[0], value.qty[1]], viewerCategory: value.viewerCategory, isTakeable: value.isTakeable, weight: value.weight, isSupply: value.isSupply })
+  }
   return { pools, aliasOf }
 }

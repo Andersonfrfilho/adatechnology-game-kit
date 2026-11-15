@@ -87,6 +87,7 @@ export interface Accumulator {
   piece0: PieceRecord | null
   mat: string
   group: string
+  stage?: string
   ensure(nv: number, ni: number): void
 }
 
@@ -99,6 +100,7 @@ export interface Cursor {
   ry: number
   pc?: PieceRecord | null
   separate?: boolean
+  stage?: string
 }
 
 /** How a moving part opens: `swing`/`toggle` turn about `axis` by `angle`, `slide` moves `dist`, `scale` scales by `k`. */
@@ -127,6 +129,7 @@ export interface PartRecord {
   type: string
   meta: PartMeta
   ry: number
+  stage?: string
 }
 
 /** A real mirror to assemble at the end of the build (`furniture/fixtures` writes it, `mirrors.ts` assembles it). */
@@ -195,6 +198,8 @@ export interface Frame {
  * Builders read other flags by name.
  */
 export interface Mount extends Frame {
+  /** Drawn for the Visor de casas 3D's scene (the props of `game-props3d` lay their pieces as the team did). */
+  visorScene?: boolean
   w: number
   d: number
   h: number
@@ -388,7 +393,7 @@ export interface KernelFurniturePlants {
   potModel(K: Kit, x: number, y: number, z: number, r: number, h: number, color: Hex, soil?: boolean): number
   /** Arched leaf; returns its tip. */
   arcLeaf(K: Kit, bx_: number, by: number, bz: number, az: number, len: number, elev: number, drop: number, wmax: number, color: Hex, serrated: boolean, nSeg?: number): number[]
-  tuft(K: Kit, x: number, y: number, z: number, r: number, n: number, color: Hex, rnd: () => number): void
+  tuft(K: Kit, x: number, y: number, z: number, r: number, n: number, color: Hex, rnd: () => number, phase?: number): void
   palm_tree: PlantBuilder
   treeModel: PlantBuilder
   shrubModel: PlantBuilder
@@ -773,7 +778,7 @@ export interface RoofGrid {
 /** What `roof/gutters` puts on the kernel. */
 export interface KernelRoofGutters {
   gutterConfig(): GutterConfig
-  gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[]): void
+  gutter(type: string, f: number, X0: number, Z0: number, X1: number, Z1: number, yb: number, touchesU: readonly number[], gable?: boolean): void
   /** Floor drain with a grate; with `px`, `pz`, the pipe from the downpipe's foot. */
   drain(x: number, z: number, px?: number | null, pz?: number | null, c?: Hex): void
 }

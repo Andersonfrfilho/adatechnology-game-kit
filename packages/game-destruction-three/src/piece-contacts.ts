@@ -109,7 +109,137 @@ const capsuleBox = (from: Vec3, to: Vec3, radius: number, box: { c: Vec3; e: Arr
   return { point: p, normal: [sign * e[axis * 4], sign * e[axis * 4 + 1], sign * e[axis * 4 + 2]], depth: radius + box.half[axis] - Math.abs(l[axis]) }
 }
 
-/** Where shape `a` meets shape `b` (the normal from `b` to `a`), the deepest of their boxes; null when they do not touch. Two box shapes are not answered here. */
+type Box = { readonly c: Vec3; readonly e: ArrayLike<number>; readonly half: Vec3 }
+
+/** An edge axis (the cross of an edge of each box) wins over a face axis only when it overlaps this much less: two faces flat on each other stay face to face. */
+const EDGE_BIAS = 0.95
+/** A cross of two edges shorter than this is two parallel edges: their axis is a face axis already tried. */
+const PARALLEL_EDGES = 1e-6
+
+/** How far a box reaches from its centre along the unit (lx, ly, lz). */
+const reachAlong = (box: Box, lx: number, ly: number, lz: number): number => {
+  const e = box.e
+  const h = box.half
+  return h[0] * Math.abs(e[0] * lx + e[1] * ly + e[2] * lz) + h[1] * Math.abs(e[4] * lx + e[5] * ly + e[6] * lz) + h[2] * Math.abs(e[8] * lx + e[9] * ly + e[10] * lz)
+}
+
+/** The 15 axes of a box pair (`pairAxes`), x y z each, and whether each is one (two parallel edges have none): filled per pair, never made anew. */
+const AXES = new Float64Array(45)
+const HAS_AXIS = new Uint8Array(15)
+
+/** The axes of a box pair to try into `AXES`: the 3 face axes of each (a's and b's in turn) and the 9 crosses of their edges, unit. */
+const pairAxes = (a: Box, b: Box): void => {
+  const ea = a.e
+  const eb = b.e
+  for (let k = 0; k < 3; k++) {
+    for (let c = 0; c < 3; c++) {
+      AXES[k * 6 + c] = ea[k * 4 + c]
+      AXES[k * 6 + 3 + c] = eb[k * 4 + c]
+    }
+    HAS_AXIS[k * 2] = 1
+    HAS_AXIS[k * 2 + 1] = 1
+  }
+  for (let i = 0; i < 3; i++) {
+    const u0 = ea[i * 4], u1 = ea[i * 4 + 1], u2 = ea[i * 4 + 2]
+    for (let j = 0; j < 3; j++) {
+      const v0 = eb[j * 4], v1 = eb[j * 4 + 1], v2 = eb[j * 4 + 2]
+      const x = u1 * v2 - u2 * v1
+      const y = u2 * v0 - u0 * v2
+      const z = u0 * v1 - u1 * v0
+      const len = Math.sqrt(x * x + y * y + z * z)
+      const n = 6 + i * 3 + j
+      HAS_AXIS[n] = len < PARALLEL_EDGES ? 0 : 1
+      if (len >= PARALLEL_EDGES) {
+        AXES[n * 3] = x / len
+        AXES[n * 3 + 1] = y / len
+        AXES[n * 3 + 2] = z / len
+      }
+    }
+  }
+}
+
+/**
+ * Two boxes by their separating axes (Ericson, Real-Time Collision Detection 4.4.1): the 3 face axes of each and the 9 crosses of their edges. Apart on any axis, they do
+ * not touch; else they meet along the axis they overlap least on, by that overlap, the normal from `b` to `a`, at the middle of the overlap between their centres. Pairs
+ * apart (most of them, every update) make nothing.
+ */
+const boxBox = (a: Box, b: Box): ShapeContact | null => {
+  const dx = a.c[0] - b.c[0], dy = a.c[1] - b.c[1], dz = a.c[2] - b.c[2]
+  let nx = 0, ny = 1, nz = 0
+  let depth = Infinity
+  let faceDepth = Infinity
+  pairAxes(a, b)
+  for (let k = 0; k < 15; k++) {
+    if (!HAS_AXIS[k]) continue
+    const lx = AXES[k * 3], ly = AXES[k * 3 + 1], lz = AXES[k * 3 + 2]
+    const centres = dx * lx + dy * ly + dz * lz
+    const overlap = reachAlong(a, lx, ly, lz) + reachAlong(b, lx, ly, lz) - Math.abs(centres)
+    if (overlap < 0) return null
+    const face = k < 6
+    if (face ? overlap < depth : overlap < depth && overlap < faceDepth * EDGE_BIAS) {
+      depth = overlap
+      if (face) faceDepth = overlap
+      const sign = centres < 0 ? -1 : 1
+      nx = sign * lx
+      ny = sign * ly
+      nz = sign * lz
+    }
+  }
+  const normal: Vec3 = [nx, ny, nz]
+  // the middle of the overlap along the normal, on the line between the centres
+  const mid: Vec3 = [(a.c[0] + b.c[0]) / 2, (a.c[1] + b.c[1]) / 2, (a.c[2] + b.c[2]) / 2]
+  const middle = (dot(a.c, normal) - reachAlong(a, nx, ny, nz) + dot(b.c, normal) + reachAlong(b, nx, ny, nz)) / 2
+  return { point: along(mid, normal, middle - dot(mid, normal)), normal, depth }
+}
+
+/** An axis whose share along the ground is under this has no direction along it: it is not a way to slide apart. */
+const LEVEL_SHARE = 1e-3
+
+/**
+ * Two overlapping boxes put apart along the ground only: of the level directions of their separating axes (each axis laid flat) and the world's x and z, the one they
+ * overlap least on, by that overlap, the normal (level) from `b` to `a`. Null when they do not touch (`boxBox`). Any direction bounds how far they must go apart along it.
+ */
+const boxBoxAlongGround = (a: Box, b: Box): ShapeContact | null => {
+  if (!boxBox(a, b)) return null
+  const dx = a.c[0] - b.c[0], dz = a.c[2] - b.c[2]
+  let normal: Vec3 = [1, 0, 0]
+  let depth = Infinity
+  // the pair's axes (`boxBox` left them in `AXES`), then the world's x and z
+  for (let k = 0; k < 17; k++) {
+    if (k < 15 && !HAS_AXIS[k]) continue
+    const lx = k < 15 ? AXES[k * 3] : k === 15 ? 1 : 0
+    const lz = k < 15 ? AXES[k * 3 + 2] : k === 15 ? 0 : 1
+    const flat = Math.sqrt(lx * lx + lz * lz)
+    if (flat < LEVEL_SHARE) continue
+    const gx = lx / flat, gz = lz / flat
+    const centres = dx * gx + dz * gz
+    const overlap = reachAlong(a, gx, 0, gz) + reachAlong(b, gx, 0, gz) - Math.abs(centres)
+    if (overlap < depth) {
+      depth = overlap
+      normal = centres < 0 ? [-gx, 0, -gz] : [gx, 0, gz]
+    }
+  }
+  const mid: Vec3 = [(a.c[0] + b.c[0]) / 2, (a.c[1] + b.c[1]) / 2, (a.c[2] + b.c[2]) / 2]
+  return { point: mid, normal, depth: Math.max(0, depth) }
+}
+
+/**
+ * Two box shapes put apart along the ground only (`boxBoxAlongGround`): the deepest of their overlapping part pairs, so moving by its depth clears them all. Null when no
+ * part of one is in a part of the other.
+ */
+export function boxesAlongGround(a: ContactShape, b: ContactShape): ShapeContact | null {
+  if (a.kind !== 'boxes' || b.kind !== 'boxes') return null
+  let best: ShapeContact | null = null
+  for (const boxA of a.boxes) {
+    for (const boxB of b.boxes) {
+      const hit = boxBoxAlongGround(boxA, boxB)
+      if (hit && (!best || hit.depth > best.depth)) best = hit
+    }
+  }
+  return best
+}
+
+/** Where shape `a` meets shape `b` (the normal from `b` to `a`), the deepest of their boxes; null when they do not touch. */
 export function shapeContact(a: ContactShape, b: ContactShape): ShapeContact | null {
   if (a.kind === 'capsule' && b.kind === 'capsule') {
     const [pa, pb] = nearestOfSegments(a.from, a.to, b.from, b.to)
@@ -132,6 +262,16 @@ export function shapeContact(a: ContactShape, b: ContactShape): ShapeContact | n
   if (a.kind === 'boxes' && b.kind === 'capsule') {
     const hit = shapeContact(b, a)
     return hit && { point: hit.point, normal: [-hit.normal[0], -hit.normal[1], -hit.normal[2]], depth: hit.depth }
+  }
+  if (a.kind === 'boxes' && b.kind === 'boxes') {
+    let best: ShapeContact | null = null
+    for (const boxA of a.boxes) {
+      for (const boxB of b.boxes) {
+        const hit = boxBox(boxA, boxB)
+        if (hit && (!best || hit.depth > best.depth)) best = hit
+      }
+    }
+    return best
   }
   return null
 }

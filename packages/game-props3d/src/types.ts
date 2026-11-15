@@ -61,6 +61,8 @@ export interface Palette {
  * Without `w/d/h` the defaults of the type are used. `x`, `z`, `ry` are read by the host's api, not by the builders.
  */
 export interface PropItem {
+  /** Drawn for the Visor de casas 3D's scene (its team golden): the pieces as the team laid them, faces touching the same way round and all. */
+  visorScene?: boolean
   x?: number
   z?: number
   ry?: number

@@ -22,7 +22,9 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         bx('plaster', x0, 0, v - 0.13, x1, high, v + 0.13, wall); bx('plaster', x0 - 0.03, high, v - 0.16, x1 + 0.03, high + 0.05, v + 0.16, sh(wall, 1.12)); bx('plaster', x0 - 0.01, 0, v - 0.14, x1 + 0.01, 0.25, v + 0.14, sh(wall, 0.72));
         bx('plain', (x0 + x1) / 2 - 0.05, high + 0.05, v - 0.05, (x0 + x1) / 2 + 0.05, high + 0.12, v + 0.05, sh(wall, 1.2)); // decorative post
       };
-      pil(a - 0.22, a + 0.03, h + 0.14); pil(b - 0.03, b + 0.22, h + 0.14);
+      // (outside the Visor's scene the pillars are laid round the fence's posts and the lot's wall already standing there, never through them)
+      const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls);
+      try { pil(a - 0.22, a + 0.03, h + 0.14); pil(b - 0.03, b + 0.22, h + 0.14); } finally { shared.ctx.keepOut = kept; }
       const anchor = (x: number, y: number): void => { cylBase('metal', x, y, v - 0.0, 0.016, 0.1, gc); };
       const bars = (u0: number, y0: number, u1: number, y1: number, zc: number): void => { // grille leaf: frame and round bars
         const n = Math.max(3, Math.round((u1 - u0) / 0.12));
@@ -30,26 +32,28 @@ export function installLotGates(K: Kernel, shared: Shared): void {
         bx('metal', u0, y0, zc - t / 2, u0 + 0.05, y1, zc + t / 2, gc); bx('metal', u1 - 0.05, y0, zc - t / 2, u1, y1, zc + t / 2, gc);
         for (let k = 1; k < n; k++) { const u = u0 + k * (u1 - u0) / n; bx('metal', u - 0.015, y0 + 0.07, zc - 0.015, u + 0.015, y1 - 0.07, zc + 0.015, gc); }
       };
-      const blade = (u0: number, y0: number, u1: number, y1: number, zc: number): void => { bx('metal', u0, y0, zc - t / 2, u1, y1, zc + t / 2, gc); for (let y = y0 + 0.12; y < y1 - 0.05; y += 0.16) bx('metal', u0, y, zc - t / 2 - 0.01, u1, y + 0.03, zc + t / 2 + 0.01, sh(gc, 0.6)); };
+      const blade = (u0: number, y0: number, u1: number, y1: number, zc: number): void => { bx('metal', u0, y0, zc - t / 2, u1, y1, zc + t / 2, gc); const rib = shared.ctx.visorScene ? 0 : 0.005; for (let y = y0 + 0.12; y < y1 - 0.05; y += 0.16) bx('metal', u0 + rib, y, zc - t / 2 - 0.01, u1 - rib, y + 0.03, zc + t / 2 + 0.01, sh(gc, 0.6)); }; // the ribs stop short of the blade's ends
       if (ped) {
         bars(a + 0.05, 0.1, b - 0.05, h - 0.03, v);
         for (const y of [0.3, h - 0.3]) { cylBase('metal', a + 0.035, y - 0.06, v, 0.014, 0.12, sh(gc, 1.3)); bx('metal', a + 0.0, y - 0.03, v - 0.012, a + 0.2 > b - 0.05 ? b - 0.05 : a + 0.04, y + 0.03, v + 0.012, sh(gc, 0.9)); } // hinges (pin on the pillar and flap)
-        bx('plain', b - 0.032, h * 0.5 - 0.06, v - 0.03, b - 0.012, h * 0.5 + 0.06, v + 0.03, 0x2a2a2c); bx('metal', b - 0.06, h * 0.5 - 0.02, v - 0.034, b - 0.05, h * 0.5 + 0.02, v + 0.034, 0xc8c8cc); // lock and latch
+        bx('plain', b - 0.032, h * 0.5 - 0.06, v - 0.03, b - 0.012, h * 0.5 + 0.06, v + 0.03, 0x2a2a2c); bx('metal', b - 0.06, h * 0.5 - 0.02, v - 0.034, shared.ctx.visorScene ? b - 0.05 : b - 0.032, h * 0.5 + 0.02, v + 0.034, 0xc8c8cc); // lock and latch (the latch reaches the lock, never ends on the leaf's stile)
       } else if (tilt) {
-        blade(a + 0.05, 0.05, b - 0.05, h, v); bx('metal', a + 0.05, h - 0.06, v - 0.03, b - 0.05, h, v + 0.03, sh(gc, 0.8));
+        blade(a + 0.05, 0.05, b - 0.05, h, v); bx('metal', a + 0.05 + (shared.ctx.visorScene ? 0 : 0.008), h - 0.06, v - 0.03, b - 0.05 - (shared.ctx.visorScene ? 0 : 0.008), h + (shared.ctx.visorScene ? 0 : 0.005), v + 0.03, sh(gc, 0.8)); // the top rail caps the blade: short of its ends, over its top
         bx('metal', a - 0.03, h - 0.02, v - 0.06, a + 0.05, h + 0.06, v + 0.06, 0x3a3a3e); bx('metal', b - 0.05, h - 0.02, v - 0.06, b + 0.03, h + 0.06, v + 0.06, 0x3a3a3e); // axle bearings
         if (auto) { const mx = g.u; bx('plain', mx - 0.2, h + 0.02, v - 0.05 + sd * 0.1, mx + 0.2, h + 0.3, v + 0.2 + sd * 0.1, 0xdcdcd8); bx('plain', mx - 0.17, h + 0.04, v + sd * 0.3, mx + 0.17, h + 0.12, v + sd * 0.31, 0x2a2a2c); bx('emissive', mx + 0.1, h + 0.2, v + sd * 0.2 + sd * 0.0, mx + 0.13, h + 0.23, v + sd * 0.21 + 0.003 * sd, 0xff5a3a); }
       } else { // sliding (R37): the WHOLE leaf (blade, frames, rack) slides on a track; the tail sits on the side it opens to, the track covers the whole travel
         const zc = v + sd * 0.19, tail = 0.9, dirx = slideDirection(g, lt), D = dirx * g.width;
         const x0 = dirx > 0 ? a + 0.05 : a + 0.05 - tail, x1 = dirx > 0 ? b - 0.05 + tail : b - 0.05;
         const r0 = Math.min(x0, x0 + D) - 0.1, r1 = Math.max(x1, x1 + D) + 0.1;
-        bx('metal', r0, 0, zc - 0.05, r1, 0.04, zc + 0.05, 0x6a6a6e); bx('plain', r0, 0.04, zc - 0.012, r1, 0.05, zc + 0.012, 0x2a2a2c);
+        bx('metal', r0, 0, zc - 0.05, r1, 0.04, zc + 0.05, 0x6a6a6e); bx('plain', r0, 0.04, zc - 0.012, r1, shared.ctx.visorScene ? 0.05 : 0.047, zc + 0.012, 0x2a2a2c); /* (the track's top 3 mm under the path's outside the Visor's scene, 5 mm under the leaf) */
         bx('metal', r0, h + 0.02, zc - 0.05, r1, h + 0.09, zc + 0.05, 0x5a5a5e);
         for (const x of [r0 + 0.05, r1 - 0.05, dirx > 0 ? b + 0.1 : a - 0.1]) bx('metal', x - 0.025, 0, zc - 0.04, x + 0.025, h + 0.09, zc + 0.04, 0x5a5a5e);
         // leaf (captured by gatesInteractive: part 'ix:gate:<id>' with pose by type 'sliding_gate')
-        blade(x0, 0.08, x1, h, zc); bx('metal', x0, 0.04, zc - 0.03, x1, 0.08, zc + 0.03, sh(gc, 0.8)); bx('metal', x0, h - 0.07, zc - 0.03, x1, h, zc + 0.03, sh(gc, 0.8));
+        // (outside the Visor's scene the leaf rides over the rail's groove, its top bar caps the blade short of its ends, the casters reach the leaf)
+        const V = shared.ctx.visorScene, cap = V ? 0 : 0.008; // (the ribs stop 5 mm short)
+        blade(x0, 0.08, x1, h, zc); bx('metal', x0, V ? 0.04 : 0.052, zc - 0.03, x1, 0.08, zc + 0.03, sh(gc, 0.8)); bx('metal', x0 + cap, h - 0.07, zc - 0.03, x1 - cap, h + cap, zc + 0.03, sh(gc, 0.8));
         for (let x = x0 + 0.04; x < x1 - 0.04; x += 0.06) bx('metal', x, 0.08, zc + sd * 0.03, x + 0.03, 0.12, zc + sd * 0.045, 0x8a8a8e); // rack
-        for (const x of [x0 + 0.2, x1 - 0.2]) cylBase('metal', x, 0.0, zc, 0.03, 0.05, 0x2a2a2c); // casters
+        for (const x of [x0 + 0.2, x1 - 0.2]) cylBase('metal', x, 0.0, zc, 0.03, V ? 0.05 : 0.052, 0x2a2a2c); // casters
         if (auto) { const mx = dirx > 0 ? b + 0.45 : a - 0.45; bx('plain', mx - 0.22, 0, zc - sd * 0.0 + sd * 0.1, mx + 0.22, 0.34, zc + sd * 0.45, 0xdcdcd8); bx('plain', mx - 0.2, 0.34, zc + sd * 0.12, mx + 0.2, 0.37, zc + sd * 0.43, 0x2a2a2c); cylBase('metal', mx, 0.05, zc + sd * 0.07, 0.035, 0.05, 0xb0b4b8); bx('emissive', mx + 0.1, 0.28, zc + sd * 0.452, mx + 0.14, 0.31, zc + sd * 0.455, 0x62e07a); }
       }
       if (!g.open || ped) shared.ctx.colliders.push({ type: 'gate', f: -1, x0: a, z0: v - 0.1, x1: b, z1: v + 0.1 });

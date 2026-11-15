@@ -1,0 +1,2812 @@
+{
+ "jolt.blast.0.016667.json": {
+  "kind": "blast",
+  "dt": 0.016667,
+  "n": 661,
+  "total": {
+   "mean": 10.23,
+   "p50": 5.2,
+   "p99": 48.9,
+   "max": 204.1
+  },
+  "stepsPerUpdate": 2,
+  "middle": {
+   "total": 5.44,
+   "active": 0,
+   "bodies": 795,
+   "stages": {
+    "kit.pieces.centerOf": {
+     "ms": 0.02,
+     "calls": 156
+    },
+    "kit.engine.markDirty": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.groundChanged": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.wakeRegion": {
+     "ms": 0,
+     "calls": 0
+    },
+    "room.world.update": {
+     "ms": 1.421,
+     "calls": 1
+    },
+    "kit.pieces.measured": {
+     "ms": 0.011,
+     "calls": 104
+    },
+    "kit.pieces.measureParts": {
+     "ms": 0.009,
+     "calls": 34
+    },
+    "kit.pieces.intoCell": {
+     "ms": 0.27,
+     "calls": 2494.3
+    },
+    "kit.pieces.gridSurfaces": {
+     "ms": 0.499,
+     "calls": 2
+    },
+    "kit.pieces.measure": {
+     "ms": 0.58,
+     "calls": 2
+    },
+    "kit.pieces.wakeUnsupported": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.pieces.apartDeep": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.engine.groundTurn": {
+     "ms": 0.003,
+     "calls": 1
+    },
+    "kit.statics.wakeAround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.removeBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.drop": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.release": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.lay": {
+     "ms": 0.003,
+     "calls": 1
+    },
+    "kit.engine.layStatics": {
+     "ms": 0.32,
+     "calls": 1
+    },
+    "kit.engine.liftFor": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.underGround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.shapeOf": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.createBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.penetration": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setPose": {
+     "ms": 0.002,
+     "calls": 0.5
+    },
+    "kit.engine.outOfStatics": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.sync": {
+     "ms": 0.034,
+     "calls": 52
+    },
+    "kit.engine.footprint": {
+     "ms": 0.002,
+     "calls": 8
+    },
+    "kit.engine.footprintReaches": {
+     "ms": 0,
+     "calls": 0.3
+    },
+    "kit.engine.layVolume": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layTile": {
+     "ms": 0.019,
+     "calls": 0
+    },
+    "kit.engine.layGround": {
+     "ms": 0.025,
+     "calls": 1
+    },
+    "kit.engine.keepApart": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.engine.prepare": {
+     "ms": 0.392,
+     "calls": 1
+    },
+    "jolt.Step (wasm)": {
+     "ms": 0.971,
+     "calls": 2
+    },
+    "jolt.stepFixed": {
+     "ms": 0.99,
+     "calls": 2
+    },
+    "kit.engine.moveHeld": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.engine.sweepOn": {
+     "ms": 0.21,
+     "calls": 7.8
+    },
+    "kit.engine.readBack": {
+     "ms": 0.232,
+     "calls": 52
+    },
+    "kit.engine.knock": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.finish": {
+     "ms": 0.236,
+     "calls": 1
+    },
+    "kit.pieces.keepBudget": {
+     "ms": 0,
+     "calls": 1
+    },
+    "loop.step (all phases)": {
+     "ms": 2.211,
+     "calls": 1
+    },
+    "kit.pieces.stepCost": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.pieces.keepFar": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.pieces.update": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "room.renderer.update": {
+     "ms": 0.719,
+     "calls": 1
+    },
+    "kit.statics.named": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.fit": {
+     "ms": 0.002,
+     "calls": 0
+    },
+    "kit.engine.slip": {
+     "ms": 0.004,
+     "calls": 52
+    },
+    "kit.pieces.surfacesAt": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.topAt": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.create": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.tip": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.setCenter": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.partsOverlap": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.bornApart": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setShape": {
+     "ms": 0.004,
+     "calls": 0
+    },
+    "kit.statics.reshape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setMaterial": {
+     "ms": 0,
+     "calls": 0.1
+    },
+    "kit.engine.reshape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.materialOf": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.describe": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.createBodies": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.measuredShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactValidate": {
+     "ms": 0.003,
+     "calls": 30.9
+    },
+    "jolt.listener.OnContactAdded": {
+     "ms": 0.007,
+     "calls": 2.8
+    },
+    "jolt.listener.OnContactPersisted": {
+     "ms": 0.038,
+     "calls": 261.8
+    },
+    "jolt.contactPoints": {
+     "ms": 0.004,
+     "calls": 7
+    },
+    "kit.engine.topple": {
+     "ms": 0.012,
+     "calls": 7
+    },
+    "kit.engine.isTapered": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactRemoved": {
+     "ms": 0.003,
+     "calls": 4.6
+    },
+    "kit.engine.topplePush": {
+     "ms": 0.001,
+     "calls": 1.5
+    },
+    "jolt.setVelocity": {
+     "ms": 0.002,
+     "calls": 1.8
+    },
+    "jolt.wake": {
+     "ms": 0.001,
+     "calls": 1.5
+    },
+    "kit.engine.heightField": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.solidShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertiaWith": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertia": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.impulse": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.stepBoxes": {
+     "ms": 0,
+     "calls": 0
+    }
+   }
+  },
+  "worst": [
+   {
+    "total": 178.5,
+    "active": 51,
+    "bodies": 783,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 163.9,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 143.1,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 141.3,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 140.1,
+      "calls": 158
+     },
+     "jolt.setShape": {
+      "ms": 40.6,
+      "calls": 221
+     },
+     "kit.engine.layVolume": {
+      "ms": 20.7,
+      "calls": 110
+     },
+     "jolt.stepFixed": {
+      "ms": 17.7,
+      "calls": 2
+     },
+     "jolt.Step (wasm)": {
+      "ms": 17.5,
+      "calls": 2
+     },
+     "kit.engine.readBack": {
+      "ms": 2.4,
+      "calls": 52
+     },
+     "kit.engine.finish": {
+      "ms": 2.4,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.2,
+      "calls": 51
+     },
+     "room.world.update": {
+      "ms": 2,
+      "calls": 1
+     },
+     "kit.engine.layStatics": {
+      "ms": 1.6,
+      "calls": 1
+     }
+    }
+   },
+   {
+    "total": 198.4,
+    "active": 52,
+    "bodies": 782,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 164.4,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 149.4,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 148.3,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 148,
+      "calls": 158
+     },
+     "jolt.createBody": {
+      "ms": 26.2,
+      "calls": 214
+     },
+     "kit.engine.layVolume": {
+      "ms": 20.6,
+      "calls": 135
+     },
+     "jolt.setShape": {
+      "ms": 13.3,
+      "calls": 48
+     },
+     "jolt.stepFixed": {
+      "ms": 11.3,
+      "calls": 2
+     },
+     "jolt.Step (wasm)": {
+      "ms": 11.2,
+      "calls": 2
+     },
+     "kit.engine.solidShape": {
+      "ms": 3.3,
+      "calls": 110
+     },
+     "kit.engine.finish": {
+      "ms": 3,
+      "calls": 1
+     },
+     "kit.engine.readBack": {
+      "ms": 2.7,
+      "calls": 52
+     },
+     "room.world.update": {
+      "ms": 2.2,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.2,
+      "calls": 52
+     }
+    }
+   },
+   {
+    "total": 204.1,
+    "active": 52,
+    "bodies": 783,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 186,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 174.4,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 172.4,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 171.4,
+      "calls": 158
+     },
+     "jolt.setShape": {
+      "ms": 42,
+      "calls": 221
+     },
+     "kit.engine.layVolume": {
+      "ms": 19.8,
+      "calls": 110
+     },
+     "jolt.stepFixed": {
+      "ms": 8.7,
+      "calls": 2
+     },
+     "jolt.Step (wasm)": {
+      "ms": 8.6,
+      "calls": 2
+     },
+     "room.world.update": {
+      "ms": 3.1,
+      "calls": 1
+     },
+     "kit.engine.readBack": {
+      "ms": 2.3,
+      "calls": 52
+     },
+     "kit.engine.finish": {
+      "ms": 2.3,
+      "calls": 1
+     },
+     "kit.engine.layStatics": {
+      "ms": 1.9,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 1.8,
+      "calls": 52
+     }
+    }
+   }
+  ],
+  "stalls": []
+ },
+ "jolt.blast.0.05.json": {
+  "kind": "blast",
+  "dt": 0.05,
+  "n": 221,
+  "total": {
+   "mean": 18.25,
+   "p50": 7.9,
+   "p99": 60.8,
+   "max": 78.3
+  },
+  "stepsPerUpdate": 6,
+  "middle": {
+   "total": 9.02,
+   "active": 2,
+   "bodies": 703,
+   "stages": {
+    "kit.pieces.centerOf": {
+     "ms": 0.024,
+     "calls": 156
+    },
+    "kit.engine.markDirty": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.groundChanged": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.wakeRegion": {
+     "ms": 0,
+     "calls": 0
+    },
+    "room.world.update": {
+     "ms": 1.596,
+     "calls": 1
+    },
+    "kit.pieces.measured": {
+     "ms": 0.022,
+     "calls": 104
+    },
+    "kit.pieces.measureParts": {
+     "ms": 0.011,
+     "calls": 34
+    },
+    "kit.pieces.intoCell": {
+     "ms": 0.269,
+     "calls": 2540
+    },
+    "kit.pieces.gridSurfaces": {
+     "ms": 0.513,
+     "calls": 2
+    },
+    "kit.pieces.measure": {
+     "ms": 0.596,
+     "calls": 2
+    },
+    "kit.pieces.wakeUnsupported": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.apartDeep": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.groundTurn": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.statics.wakeAround": {
+     "ms": 0.004,
+     "calls": 0
+    },
+    "jolt.removeBody": {
+     "ms": 0.002,
+     "calls": 0
+    },
+    "kit.statics.drop": {
+     "ms": 0.002,
+     "calls": 0
+    },
+    "kit.statics.release": {
+     "ms": 0.007,
+     "calls": 0
+    },
+    "kit.statics.lay": {
+     "ms": 0.011,
+     "calls": 1
+    },
+    "kit.engine.layStatics": {
+     "ms": 0.458,
+     "calls": 1
+    },
+    "kit.engine.liftFor": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.underGround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.shapeOf": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.createBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.penetration": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setPose": {
+     "ms": 0.009,
+     "calls": 0.8
+    },
+    "kit.engine.outOfStatics": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.sync": {
+     "ms": 0.036,
+     "calls": 52
+    },
+    "kit.engine.footprint": {
+     "ms": 0.011,
+     "calls": 9.6
+    },
+    "kit.engine.footprintReaches": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layVolume": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layTile": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layGround": {
+     "ms": 0.016,
+     "calls": 1
+    },
+    "kit.engine.keepApart": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.prepare": {
+     "ms": 0.518,
+     "calls": 1
+    },
+    "jolt.Step (wasm)": {
+     "ms": 3.204,
+     "calls": 6
+    },
+    "jolt.stepFixed": {
+     "ms": 3.26,
+     "calls": 6
+    },
+    "kit.engine.moveHeld": {
+     "ms": 0.004,
+     "calls": 5
+    },
+    "kit.engine.sweepOn": {
+     "ms": 0.298,
+     "calls": 9
+    },
+    "kit.engine.readBack": {
+     "ms": 0.338,
+     "calls": 52
+    },
+    "kit.engine.knock": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.engine.finish": {
+     "ms": 0.34,
+     "calls": 1
+    },
+    "kit.pieces.keepBudget": {
+     "ms": 0,
+     "calls": 1
+    },
+    "loop.step (all phases)": {
+     "ms": 4.727,
+     "calls": 1
+    },
+    "kit.pieces.stepCost": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.keepFar": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.update": {
+     "ms": 0,
+     "calls": 1
+    },
+    "room.renderer.update": {
+     "ms": 0.902,
+     "calls": 1
+    },
+    "kit.statics.named": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.fit": {
+     "ms": 0.007,
+     "calls": 0
+    },
+    "kit.engine.slip": {
+     "ms": 0.002,
+     "calls": 52.1
+    },
+    "kit.pieces.surfacesAt": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.topAt": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.create": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.tip": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.setCenter": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.reshape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.materialOf": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.describe": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.createBodies": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setMaterial": {
+     "ms": 0,
+     "calls": 0.3
+    },
+    "kit.engine.reshape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.partsOverlap": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.bornApart": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.measuredShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.isTapered": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactValidate": {
+     "ms": 0.007,
+     "calls": 65.8
+    },
+    "jolt.listener.OnContactAdded": {
+     "ms": 0.031,
+     "calls": 17.1
+    },
+    "jolt.listener.OnContactPersisted": {
+     "ms": 0.149,
+     "calls": 600.6
+    },
+    "jolt.listener.OnContactRemoved": {
+     "ms": 0.013,
+     "calls": 21.9
+    },
+    "jolt.contactPoints": {
+     "ms": 0.004,
+     "calls": 7.8
+    },
+    "kit.engine.topple": {
+     "ms": 0.013,
+     "calls": 7.8
+    },
+    "kit.engine.topplePush": {
+     "ms": 0.002,
+     "calls": 0.9
+    },
+    "jolt.setVelocity": {
+     "ms": 0.002,
+     "calls": 1.7
+    },
+    "jolt.wake": {
+     "ms": 0,
+     "calls": 0.9
+    },
+    "kit.engine.heightField": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.solidShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertiaWith": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertia": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.impulse": {
+     "ms": 0,
+     "calls": 0
+    }
+   }
+  },
+  "worst": [
+   {
+    "total": 60.8,
+    "active": 50,
+    "bodies": 624,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 29.8,
+      "calls": 1
+     },
+     "jolt.stepFixed": {
+      "ms": 22.1,
+      "calls": 6
+     },
+     "jolt.Step (wasm)": {
+      "ms": 21.8,
+      "calls": 6
+     },
+     "room.renderer.update": {
+      "ms": 4.8,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 3.8,
+      "calls": 1
+     },
+     "kit.engine.readBack": {
+      "ms": 3,
+      "calls": 52
+     },
+     "kit.engine.finish": {
+      "ms": 3,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.5,
+      "calls": 49
+     },
+     "room.world.update": {
+      "ms": 2.1,
+      "calls": 1
+     },
+     "kit.engine.layStatics": {
+      "ms": 2,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 1.7,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 1.4,
+      "calls": 3
+     }
+    }
+   },
+   {
+    "total": 66.8,
+    "active": 46,
+    "bodies": 701,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 48.8,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 37.2,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 33.1,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 32.8,
+      "calls": 48
+     },
+     "jolt.stepFixed": {
+      "ms": 6.1,
+      "calls": 6
+     },
+     "jolt.Step (wasm)": {
+      "ms": 6,
+      "calls": 6
+     },
+     "kit.engine.readBack": {
+      "ms": 4.3,
+      "calls": 46
+     },
+     "kit.engine.finish": {
+      "ms": 4.3,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 3.5,
+      "calls": 46
+     },
+     "kit.engine.layStatics": {
+      "ms": 3.4,
+      "calls": 1
+     },
+     "jolt.createBody": {
+      "ms": 3.1,
+      "calls": 56
+     },
+     "room.world.update": {
+      "ms": 2.7,
+      "calls": 1
+     },
+     "kit.statics.fit": {
+      "ms": 1.8,
+      "calls": 1
+     },
+     "kit.statics.lay": {
+      "ms": 1.8,
+      "calls": 1
+     },
+     "room.renderer.update": {
+      "ms": 1.8,
+      "calls": 1
+     },
+     "kit.engine.layVolume": {
+      "ms": 1.3,
+      "calls": 48
+     },
+     "kit.pieces.measure": {
+      "ms": 1.1,
+      "calls": 2
+     }
+    }
+   },
+   {
+    "total": 78.3,
+    "active": 52,
+    "bodies": 674,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 40.2,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 20.5,
+      "calls": 1
+     },
+     "room.renderer.update": {
+      "ms": 19.4,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 17.7,
+      "calls": 8
+     },
+     "kit.engine.layGround": {
+      "ms": 17.7,
+      "calls": 1
+     },
+     "jolt.stepFixed": {
+      "ms": 12.7,
+      "calls": 6
+     },
+     "jolt.Step (wasm)": {
+      "ms": 12.3,
+      "calls": 6
+     },
+     "kit.engine.readBack": {
+      "ms": 6.2,
+      "calls": 52
+     },
+     "kit.engine.finish": {
+      "ms": 6.2,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 6,
+      "calls": 52
+     },
+     "jolt.setShape": {
+      "ms": 4.7,
+      "calls": 15
+     },
+     "kit.engine.layStatics": {
+      "ms": 2.5,
+      "calls": 1
+     },
+     "room.world.update": {
+      "ms": 2.1,
+      "calls": 1
+     },
+     "kit.engine.layVolume": {
+      "ms": 1.8,
+      "calls": 7
+     },
+     "kit.statics.fit": {
+      "ms": 1.3,
+      "calls": 1
+     },
+     "kit.statics.lay": {
+      "ms": 1.3,
+      "calls": 1
+     },
+     "jolt.listener.OnContactPersisted": {
+      "ms": 1.2,
+      "calls": 1243
+     }
+    }
+   }
+  ],
+  "stalls": []
+ },
+ "jolt.hammer.0.016667.json": {
+  "kind": "hammer",
+  "dt": 0.016667,
+  "n": 672,
+  "total": {
+   "mean": 5.37,
+   "p50": 2,
+   "p99": 30.4,
+   "max": 211.1
+  },
+  "stepsPerUpdate": 2,
+  "middle": {
+   "total": 2.03,
+   "active": 1,
+   "bodies": 971,
+   "stages": {
+    "room.world.update": {
+     "ms": 0.021,
+     "calls": 1
+    },
+    "kit.pieces.gridSurfaces": {
+     "ms": 0.732,
+     "calls": 2
+    },
+    "kit.pieces.measure": {
+     "ms": 0.771,
+     "calls": 2
+    },
+    "kit.pieces.wakeUnsupported": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.pieces.apartDeep": {
+     "ms": 0.003,
+     "calls": 1
+    },
+    "kit.engine.groundTurn": {
+     "ms": 0.004,
+     "calls": 1
+    },
+    "kit.statics.lay": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.engine.layStatics": {
+     "ms": 0.01,
+     "calls": 1
+    },
+    "kit.engine.layGround": {
+     "ms": 0.007,
+     "calls": 1
+    },
+    "kit.engine.keepApart": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.engine.prepare": {
+     "ms": 0.043,
+     "calls": 1
+    },
+    "jolt.Step (wasm)": {
+     "ms": 0.268,
+     "calls": 2
+    },
+    "jolt.stepFixed": {
+     "ms": 0.271,
+     "calls": 2
+    },
+    "kit.engine.moveHeld": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.engine.knock": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.finish": {
+     "ms": 0.14,
+     "calls": 1
+    },
+    "kit.pieces.keepBudget": {
+     "ms": 0,
+     "calls": 1
+    },
+    "loop.step (all phases)": {
+     "ms": 1.233,
+     "calls": 1
+    },
+    "kit.pieces.stepCost": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.keepFar": {
+     "ms": 0.001,
+     "calls": 1
+    },
+    "kit.pieces.update": {
+     "ms": 0.003,
+     "calls": 1
+    },
+    "room.renderer.update": {
+     "ms": 0.346,
+     "calls": 1
+    },
+    "kit.pieces.create": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.centerOf": {
+     "ms": 0.013,
+     "calls": 102
+    },
+    "kit.pieces.measured": {
+     "ms": 0.004,
+     "calls": 68
+    },
+    "kit.pieces.measureParts": {
+     "ms": 0.007,
+     "calls": 38
+    },
+    "kit.pieces.intoCell": {
+     "ms": 0.379,
+     "calls": 3834
+    },
+    "kit.statics.named": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.wakeAround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.removeBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.drop": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.release": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.fit": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.liftFor": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.underGround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.shapeOf": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.createBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.penetration": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.outOfStatics": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.sync": {
+     "ms": 0.013,
+     "calls": 34
+    },
+    "kit.engine.footprint": {
+     "ms": 0.001,
+     "calls": 1.1
+    },
+    "kit.engine.footprintReaches": {
+     "ms": 0.001,
+     "calls": 2.6
+    },
+    "kit.engine.layVolume": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layTile": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactValidate": {
+     "ms": 0,
+     "calls": 4.9
+    },
+    "jolt.listener.OnContactAdded": {
+     "ms": 0.001,
+     "calls": 0.4
+    },
+    "jolt.listener.OnContactPersisted": {
+     "ms": 0.004,
+     "calls": 17.1
+    },
+    "kit.engine.sweepOn": {
+     "ms": 0.129,
+     "calls": 1.1
+    },
+    "kit.engine.readBack": {
+     "ms": 0.137,
+     "calls": 34
+    },
+    "kit.pieces.partsOverlap": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.bornApart": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.contactPoints": {
+     "ms": 0,
+     "calls": 1.1
+    },
+    "kit.engine.slip": {
+     "ms": 0.003,
+     "calls": 34
+    },
+    "kit.engine.topple": {
+     "ms": 0.002,
+     "calls": 1.1
+    },
+    "kit.engine.topplePush": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setVelocity": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.wake": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setPose": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactRemoved": {
+     "ms": 0.002,
+     "calls": 0.8
+    },
+    "kit.pieces.measuredShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.deepContact": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.slideApart": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.applyPushes": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.isTapered": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.ignorePair": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.ignore": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setMaterial": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertiaWith": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertia": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.impulse": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.markDirty": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.groundChanged": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.wakeRegion": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.heightField": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.solidShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.stepBoxes": {
+     "ms": 0,
+     "calls": 0
+    }
+   }
+  },
+  "worst": [
+   {
+    "total": 73.1,
+    "active": 34,
+    "bodies": 750,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 65.1,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 58,
+      "calls": 1
+     },
+     "kit.engine.sync": {
+      "ms": 54.1,
+      "calls": 34
+     },
+     "kit.engine.outOfStatics": {
+      "ms": 53.5,
+      "calls": 4
+     },
+     "jolt.penetration": {
+      "ms": 53.4,
+      "calls": 15
+     },
+     "jolt.stepFixed": {
+      "ms": 2.7,
+      "calls": 2
+     },
+     "kit.engine.readBack": {
+      "ms": 2.6,
+      "calls": 34
+     },
+     "kit.engine.finish": {
+      "ms": 2.6,
+      "calls": 1
+     },
+     "jolt.Step (wasm)": {
+      "ms": 2.4,
+      "calls": 2
+     },
+     "kit.engine.layGround": {
+      "ms": 2.3,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 2.2,
+      "calls": 3
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.2,
+      "calls": 34
+     },
+     "kit.engine.layStatics": {
+      "ms": 1.4,
+      "calls": 1
+     },
+     "kit.pieces.measure": {
+      "ms": 1.2,
+      "calls": 2
+     }
+    }
+   },
+   {
+    "total": 143.8,
+    "active": 34,
+    "bodies": 947,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 139,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 129.1,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 128.9,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 128.2,
+      "calls": 158
+     },
+     "jolt.setShape": {
+      "ms": 31.7,
+      "calls": 220
+     },
+     "kit.engine.layVolume": {
+      "ms": 12.4,
+      "calls": 110
+     },
+     "jolt.stepFixed": {
+      "ms": 5.9,
+      "calls": 2
+     },
+     "jolt.Step (wasm)": {
+      "ms": 5.8,
+      "calls": 2
+     },
+     "kit.engine.readBack": {
+      "ms": 3.2,
+      "calls": 34
+     },
+     "kit.engine.finish": {
+      "ms": 3.2,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 3,
+      "calls": 34
+     },
+     "room.world.update": {
+      "ms": 2.3,
+      "calls": 1
+     }
+    }
+   },
+   {
+    "total": 211.1,
+    "active": 34,
+    "bodies": 942,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 178.7,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 150.6,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 150.3,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 150,
+      "calls": 158
+     },
+     "jolt.createBody": {
+      "ms": 28.2,
+      "calls": 238
+     },
+     "kit.engine.finish": {
+      "ms": 16.6,
+      "calls": 1
+     },
+     "kit.engine.readBack": {
+      "ms": 16.2,
+      "calls": 34
+     },
+     "kit.engine.sweepOn": {
+      "ms": 15.5,
+      "calls": 34
+     },
+     "kit.engine.layVolume": {
+      "ms": 12.9,
+      "calls": 135
+     },
+     "jolt.stepFixed": {
+      "ms": 10.7,
+      "calls": 2
+     },
+     "jolt.Step (wasm)": {
+      "ms": 10.4,
+      "calls": 2
+     },
+     "jolt.setShape": {
+      "ms": 5.2,
+      "calls": 24
+     },
+     "kit.engine.solidShape": {
+      "ms": 1.4,
+      "calls": 110
+     },
+     "room.renderer.update": {
+      "ms": 1,
+      "calls": 1
+     }
+    }
+   }
+  ],
+  "stalls": []
+ },
+ "jolt.hammer.0.05.json": {
+  "kind": "hammer",
+  "dt": 0.05,
+  "n": 232,
+  "total": {
+   "mean": 11.17,
+   "p50": 2.2,
+   "p99": 79.2,
+   "max": 286.6
+  },
+  "stepsPerUpdate": 6,
+  "middle": {
+   "total": 2.17,
+   "active": 0,
+   "bodies": 996,
+   "stages": {
+    "room.world.update": {
+     "ms": 0.04,
+     "calls": 1
+    },
+    "kit.pieces.gridSurfaces": {
+     "ms": 0.852,
+     "calls": 2
+    },
+    "kit.pieces.measure": {
+     "ms": 0.894,
+     "calls": 2
+    },
+    "kit.pieces.wakeUnsupported": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.apartDeep": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.engine.groundTurn": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.statics.lay": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.layStatics": {
+     "ms": 0.006,
+     "calls": 1
+    },
+    "kit.engine.layGround": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.keepApart": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.prepare": {
+     "ms": 0.046,
+     "calls": 1
+    },
+    "jolt.Step (wasm)": {
+     "ms": 0.029,
+     "calls": 6
+    },
+    "jolt.stepFixed": {
+     "ms": 0.035,
+     "calls": 6
+    },
+    "kit.engine.moveHeld": {
+     "ms": 0.008,
+     "calls": 5
+    },
+    "kit.engine.knock": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.engine.finish": {
+     "ms": 0.021,
+     "calls": 1
+    },
+    "kit.pieces.keepBudget": {
+     "ms": 0,
+     "calls": 1
+    },
+    "loop.step (all phases)": {
+     "ms": 1.012,
+     "calls": 1
+    },
+    "kit.pieces.stepCost": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.keepFar": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.update": {
+     "ms": 0,
+     "calls": 1
+    },
+    "room.renderer.update": {
+     "ms": 0.435,
+     "calls": 1
+    },
+    "kit.pieces.create": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.centerOf": {
+     "ms": 0.008,
+     "calls": 102
+    },
+    "kit.pieces.measured": {
+     "ms": 0.006,
+     "calls": 68
+    },
+    "kit.pieces.measureParts": {
+     "ms": 0.002,
+     "calls": 38
+    },
+    "kit.pieces.intoCell": {
+     "ms": 0.413,
+     "calls": 3552
+    },
+    "kit.statics.named": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.wakeAround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.removeBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.drop": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.release": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.statics.fit": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.liftFor": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.underGround": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.shapeOf": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.createBody": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.penetration": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.outOfStatics": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.sync": {
+     "ms": 0.023,
+     "calls": 34
+    },
+    "kit.engine.footprint": {
+     "ms": 0,
+     "calls": 0.1
+    },
+    "kit.engine.footprintReaches": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layVolume": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.layTile": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactValidate": {
+     "ms": 0,
+     "calls": 0.8
+    },
+    "jolt.listener.OnContactAdded": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactPersisted": {
+     "ms": 0,
+     "calls": 3
+    },
+    "kit.engine.sweepOn": {
+     "ms": 0.01,
+     "calls": 0.1
+    },
+    "kit.engine.readBack": {
+     "ms": 0.019,
+     "calls": 34
+    },
+    "kit.pieces.partsOverlap": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.bornApart": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.contactPoints": {
+     "ms": 0,
+     "calls": 0.1
+    },
+    "kit.engine.slip": {
+     "ms": 0.008,
+     "calls": 34
+    },
+    "kit.engine.topple": {
+     "ms": 0.002,
+     "calls": 0.1
+    },
+    "kit.engine.topplePush": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setVelocity": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.wake": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setPose": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.listener.OnContactRemoved": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.measuredShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.isTapered": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertiaWith": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertia": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.impulse": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.markDirty": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.groundChanged": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.wakeRegion": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.deepContact": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.slideApart": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.applyPushes": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setMaterial": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.heightField": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.solidShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.ignorePair": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.ignore": {
+     "ms": 0,
+     "calls": 0
+    },
+    "jolt.setShape": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.engine.stepBoxes": {
+     "ms": 0,
+     "calls": 0
+    }
+   }
+  },
+  "worst": [
+   {
+    "total": 79.2,
+    "active": 34,
+    "bodies": 951,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 74.7,
+      "calls": 1
+     },
+     "jolt.stepFixed": {
+      "ms": 52.8,
+      "calls": 6
+     },
+     "jolt.Step (wasm)": {
+      "ms": 52.5,
+      "calls": 6
+     },
+     "kit.engine.prepare": {
+      "ms": 18.4,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 18.3,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 17.9,
+      "calls": 14
+     },
+     "jolt.setShape": {
+      "ms": 5.5,
+      "calls": 22
+     },
+     "kit.engine.readBack": {
+      "ms": 2.5,
+      "calls": 34
+     },
+     "kit.engine.finish": {
+      "ms": 2.5,
+      "calls": 1
+     },
+     "kit.engine.layVolume": {
+      "ms": 2.4,
+      "calls": 14
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.4,
+      "calls": 34
+     },
+     "room.world.update": {
+      "ms": 1,
+      "calls": 1
+     },
+     "kit.pieces.measure": {
+      "ms": 1,
+      "calls": 2
+     },
+     "room.renderer.update": {
+      "ms": 1,
+      "calls": 1
+     }
+    }
+   },
+   {
+    "total": 100.6,
+    "active": 34,
+    "bodies": 752,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 85.3,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 67.1,
+      "calls": 1
+     },
+     "kit.engine.sync": {
+      "ms": 53.9,
+      "calls": 34
+     },
+     "kit.engine.outOfStatics": {
+      "ms": 53.4,
+      "calls": 2
+     },
+     "jolt.penetration": {
+      "ms": 53.3,
+      "calls": 9
+     },
+     "jolt.stepFixed": {
+      "ms": 13.2,
+      "calls": 6
+     },
+     "jolt.Step (wasm)": {
+      "ms": 13,
+      "calls": 6
+     },
+     "kit.engine.layTile": {
+      "ms": 11.5,
+      "calls": 4
+     },
+     "kit.engine.layGround": {
+      "ms": 11.5,
+      "calls": 1
+     },
+     "kit.engine.readBack": {
+      "ms": 3.6,
+      "calls": 34
+     },
+     "kit.engine.finish": {
+      "ms": 3.6,
+      "calls": 1
+     },
+     "jolt.createBody": {
+      "ms": 3.1,
+      "calls": 8
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.8,
+      "calls": 34
+     },
+     "kit.engine.layVolume": {
+      "ms": 1.9,
+      "calls": 4
+     },
+     "kit.engine.layStatics": {
+      "ms": 1.5,
+      "calls": 1
+     },
+     "kit.pieces.measure": {
+      "ms": 1,
+      "calls": 2
+     }
+    }
+   },
+   {
+    "total": 286.6,
+    "active": 33,
+    "bodies": 946,
+    "stages": {
+     "loop.step (all phases)": {
+      "ms": 248.2,
+      "calls": 1
+     },
+     "kit.engine.prepare": {
+      "ms": 197.9,
+      "calls": 1
+     },
+     "kit.engine.layGround": {
+      "ms": 197.6,
+      "calls": 1
+     },
+     "kit.engine.layTile": {
+      "ms": 196.9,
+      "calls": 162
+     },
+     "jolt.Step (wasm)": {
+      "ms": 46.6,
+      "calls": 6
+     },
+     "jolt.stepFixed": {
+      "ms": 46.6,
+      "calls": 6
+     },
+     "jolt.createBody": {
+      "ms": 33.3,
+      "calls": 238
+     },
+     "kit.engine.layVolume": {
+      "ms": 14.3,
+      "calls": 135
+     },
+     "jolt.setShape": {
+      "ms": 7,
+      "calls": 24
+     },
+     "kit.engine.readBack": {
+      "ms": 2.8,
+      "calls": 34
+     },
+     "kit.engine.finish": {
+      "ms": 2.8,
+      "calls": 1
+     },
+     "kit.engine.sweepOn": {
+      "ms": 2.5,
+      "calls": 33
+     },
+     "room.renderer.update": {
+      "ms": 1.7,
+      "calls": 1
+     }
+    }
+   }
+  ],
+  "stalls": []
+ },
+ "own.blast.0.05.json": {
+  "kind": "blast",
+  "dt": 0.05,
+  "n": 221,
+  "total": {
+   "mean": 11.37,
+   "p50": 5.5,
+   "p99": 43.8,
+   "max": 61.8
+  },
+  "stepsPerUpdate": 0,
+  "middle": {
+   "total": 5.74,
+   "active": 0,
+   "bodies": 0,
+   "stages": {
+    "kit.pieces.centerOf": {
+     "ms": 0.044,
+     "calls": 351
+    },
+    "kit.pieces.wakeRegion": {
+     "ms": 0,
+     "calls": 0
+    },
+    "room.world.update": {
+     "ms": 1.373,
+     "calls": 1
+    },
+    "kit.pieces.stepCost": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.collisionSteps": {
+     "ms": 0.036,
+     "calls": 1
+    },
+    "kit.pieces.measured": {
+     "ms": 0.011,
+     "calls": 102.8
+    },
+    "kit.pieces.measureParts": {
+     "ms": 0.007,
+     "calls": 33.6
+    },
+    "kit.pieces.intoCell": {
+     "ms": 0.267,
+     "calls": 2124.8
+    },
+    "kit.pieces.gridSurfaces": {
+     "ms": 0.469,
+     "calls": 2
+    },
+    "kit.pieces.measure": {
+     "ms": 0.54,
+     "calls": 2
+    },
+    "kit.pieces.wakeUnsupported": {
+     "ms": 0.102,
+     "calls": 2
+    },
+    "kit.pieces.samples": {
+     "ms": 0.013,
+     "calls": 42.1
+    },
+    "kit.pieces.surfacesAt": {
+     "ms": 0.038,
+     "calls": 241.6
+    },
+    "kit.pieces.supportAt": {
+     "ms": 0.16,
+     "calls": 192.6
+    },
+    "kit.pieces.mulInvInertiaWith": {
+     "ms": 0.2,
+     "calls": 1948.4
+    },
+    "kit.pieces.sweepOn": {
+     "ms": 0.12,
+     "calls": 4.2
+    },
+    "kit.pieces.keepsTilt": {
+     "ms": 0.002,
+     "calls": 4.2
+    },
+    "kit.pieces.staysInPlace": {
+     "ms": 0.007,
+     "calls": 4.1
+    },
+    "kit.pieces.integrate": {
+     "ms": 0.813,
+     "calls": 4.2
+    },
+    "kit.pieces.wakeAbove": {
+     "ms": 0.022,
+     "calls": 1.9
+    },
+    "kit.pieces.collide": {
+     "ms": 0.129,
+     "calls": 2
+    },
+    "kit.pieces.keepBudget": {
+     "ms": 0,
+     "calls": 2
+    },
+    "kit.pieces.keepFar": {
+     "ms": 0,
+     "calls": 2
+    },
+    "kit.pieces.step": {
+     "ms": 1.611,
+     "calls": 2
+    },
+    "kit.pieces.update": {
+     "ms": 1.651,
+     "calls": 1
+    },
+    "room.renderer.update": {
+     "ms": 2.571,
+     "calls": 1
+    },
+    "kit.pieces.topAt": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.create": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.tip": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.setCenter": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.applyPushes": {
+     "ms": 0.004,
+     "calls": 2
+    },
+    "kit.pieces.roundSamples": {
+     "ms": 0.007,
+     "calls": 6.9
+    },
+    "kit.pieces.rollingResistance": {
+     "ms": 0,
+     "calls": 5.5
+    },
+    "kit.pieces.halfHeight": {
+     "ms": 0.007,
+     "calls": 25.6
+    },
+    "kit.pieces.onTopOf": {
+     "ms": 0.002,
+     "calls": 28.1
+    },
+    "kit.pieces.partsOverlap": {
+     "ms": 0,
+     "calls": 12.8
+    },
+    "kit.pieces.contactShape": {
+     "ms": 0.007,
+     "calls": 7.8
+    },
+    "kit.pieces.knock": {
+     "ms": 0.009,
+     "calls": 1.4
+    },
+    "kit.pieces.separatePair": {
+     "ms": 0.02,
+     "calls": 2.5
+    },
+    "kit.pieces.restsOn": {
+     "ms": 0.036,
+     "calls": 8.2
+    },
+    "kit.pieces.slideApart": {
+     "ms": 0.002,
+     "calls": 2.1
+    },
+    "kit.pieces.turnAboutCentre": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.contactImpulse": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.sleep": {
+     "ms": 0,
+     "calls": 0.1
+    },
+    "kit.pieces.supported": {
+     "ms": 0.1,
+     "calls": 28.8
+    },
+    "kit.pieces.mulInvInertia": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.impulse": {
+     "ms": 0,
+     "calls": 0
+    }
+   }
+  },
+  "worst": [
+   {
+    "total": 43.8,
+    "active": 0,
+    "bodies": 0,
+    "stages": {
+     "room.renderer.update": {
+      "ms": 26,
+      "calls": 1
+     },
+     "kit.pieces.update": {
+      "ms": 18.6,
+      "calls": 1
+     },
+     "kit.pieces.step": {
+      "ms": 18.5,
+      "calls": 1
+     },
+     "kit.pieces.integrate": {
+      "ms": 17.3,
+      "calls": 14
+     },
+     "kit.pieces.mulInvInertiaWith": {
+      "ms": 5,
+      "calls": 29721
+     },
+     "room.world.update": {
+      "ms": 2.7,
+      "calls": 1
+     },
+     "kit.pieces.collide": {
+      "ms": 1.1,
+      "calls": 1
+     },
+     "kit.pieces.sweepOn": {
+      "ms": 1,
+      "calls": 14
+     }
+    }
+   },
+   {
+    "total": 50.3,
+    "active": 0,
+    "bodies": 0,
+    "stages": {
+     "room.renderer.update": {
+      "ms": 36.7,
+      "calls": 1
+     },
+     "kit.pieces.update": {
+      "ms": 17.5,
+      "calls": 1
+     },
+     "kit.pieces.step": {
+      "ms": 17.3,
+      "calls": 9
+     },
+     "kit.pieces.integrate": {
+      "ms": 13.4,
+      "calls": 151
+     },
+     "kit.pieces.sweepOn": {
+      "ms": 5.5,
+      "calls": 151
+     },
+     "kit.pieces.measure": {
+      "ms": 1.8,
+      "calls": 9
+     },
+     "kit.pieces.supportAt": {
+      "ms": 1.8,
+      "calls": 2741
+     },
+     "kit.pieces.collide": {
+      "ms": 1.7,
+      "calls": 9
+     },
+     "kit.pieces.gridSurfaces": {
+      "ms": 1.6,
+      "calls": 9
+     },
+     "room.world.update": {
+      "ms": 1.3,
+      "calls": 1
+     },
+     "kit.pieces.mulInvInertiaWith": {
+      "ms": 1.3,
+      "calls": 20865
+     }
+    }
+   },
+   {
+    "total": 61.8,
+    "active": 0,
+    "bodies": 0,
+    "stages": {
+     "room.renderer.update": {
+      "ms": 49.5,
+      "calls": 1
+     },
+     "kit.pieces.update": {
+      "ms": 45.8,
+      "calls": 1
+     },
+     "kit.pieces.step": {
+      "ms": 45.6,
+      "calls": 9
+     },
+     "kit.pieces.integrate": {
+      "ms": 40.4,
+      "calls": 159
+     },
+     "kit.pieces.sweepOn": {
+      "ms": 24.1,
+      "calls": 159
+     },
+     "kit.pieces.mulInvInertiaWith": {
+      "ms": 3.8,
+      "calls": 21036
+     },
+     "kit.pieces.supportAt": {
+      "ms": 3.7,
+      "calls": 3348
+     },
+     "kit.pieces.collide": {
+      "ms": 3,
+      "calls": 9
+     },
+     "kit.pieces.measure": {
+      "ms": 1.6,
+      "calls": 9
+     },
+     "room.world.update": {
+      "ms": 1.3,
+      "calls": 1
+     },
+     "kit.pieces.gridSurfaces": {
+      "ms": 1.2,
+      "calls": 9
+     }
+    }
+   }
+  ],
+  "stalls": []
+ },
+ "own.hammer.0.05.json": {
+  "kind": "hammer",
+  "dt": 0.05,
+  "n": 232,
+  "total": {
+   "mean": 5.9,
+   "p50": 2.3,
+   "p99": 30.9,
+   "max": 35.9
+  },
+  "stepsPerUpdate": 0,
+  "middle": {
+   "total": 2.35,
+   "active": 0,
+   "bodies": 0,
+   "stages": {
+    "room.world.update": {
+     "ms": 0.044,
+     "calls": 1
+    },
+    "kit.pieces.stepCost": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.collisionSteps": {
+     "ms": 0.002,
+     "calls": 1
+    },
+    "kit.pieces.gridSurfaces": {
+     "ms": 0.356,
+     "calls": 1
+    },
+    "kit.pieces.measure": {
+     "ms": 0.381,
+     "calls": 1
+    },
+    "kit.pieces.wakeUnsupported": {
+     "ms": 0.063,
+     "calls": 1
+    },
+    "kit.pieces.collide": {
+     "ms": 0.071,
+     "calls": 1
+    },
+    "kit.pieces.keepBudget": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.keepFar": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.step": {
+     "ms": 1.36,
+     "calls": 1
+    },
+    "kit.pieces.update": {
+     "ms": 1.365,
+     "calls": 1
+    },
+    "room.renderer.update": {
+     "ms": 1.746,
+     "calls": 1
+    },
+    "kit.pieces.create": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.centerOf": {
+     "ms": 0.017,
+     "calls": 128.8
+    },
+    "kit.pieces.measured": {
+     "ms": 0.006,
+     "calls": 34
+    },
+    "kit.pieces.measureParts": {
+     "ms": 0.006,
+     "calls": 19
+    },
+    "kit.pieces.intoCell": {
+     "ms": 0.173,
+     "calls": 1607.5
+    },
+    "kit.pieces.samples": {
+     "ms": 0.004,
+     "calls": 27.3
+    },
+    "kit.pieces.surfacesAt": {
+     "ms": 0.015,
+     "calls": 236.4
+    },
+    "kit.pieces.supportAt": {
+     "ms": 0.108,
+     "calls": 195.2
+    },
+    "kit.pieces.mulInvInertiaWith": {
+     "ms": 0.202,
+     "calls": 2091.1
+    },
+    "kit.pieces.sweepOn": {
+     "ms": 0.075,
+     "calls": 3.5
+    },
+    "kit.pieces.keepsTilt": {
+     "ms": 0.002,
+     "calls": 3.5
+    },
+    "kit.pieces.staysInPlace": {
+     "ms": 0,
+     "calls": 3.4
+    },
+    "kit.pieces.integrate": {
+     "ms": 0.838,
+     "calls": 3.5
+    },
+    "kit.pieces.wakeAbove": {
+     "ms": 0.002,
+     "calls": 0.8
+    },
+    "kit.pieces.applyPushes": {
+     "ms": 0,
+     "calls": 1
+    },
+    "kit.pieces.halfHeight": {
+     "ms": 0.002,
+     "calls": 26.4
+    },
+    "kit.pieces.onTopOf": {
+     "ms": 0.002,
+     "calls": 26.3
+    },
+    "kit.pieces.partsOverlap": {
+     "ms": 0.008,
+     "calls": 13.2
+    },
+    "kit.pieces.restsOn": {
+     "ms": 0.008,
+     "calls": 7.4
+    },
+    "kit.pieces.contactShape": {
+     "ms": 0.006,
+     "calls": 5.4
+    },
+    "kit.pieces.slideApart": {
+     "ms": 0,
+     "calls": 1.5
+    },
+    "kit.pieces.separatePair": {
+     "ms": 0.017,
+     "calls": 2.7
+    },
+    "kit.pieces.roundSamples": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.rollingResistance": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.knock": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.mulInvInertia": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.impulse": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.wakeRegion": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.sleep": {
+     "ms": 0,
+     "calls": 0.1
+    },
+    "kit.pieces.supported": {
+     "ms": 0.05,
+     "calls": 14.4
+    },
+    "kit.pieces.contactImpulse": {
+     "ms": 0,
+     "calls": 0
+    },
+    "kit.pieces.turnAboutCentre": {
+     "ms": 0,
+     "calls": 0
+    }
+   }
+  },
+  "worst": [
+   {
+    "total": 30.9,
+    "active": 0,
+    "bodies": 0,
+    "stages": {
+     "room.renderer.update": {
+      "ms": 22.5,
+      "calls": 1
+     },
+     "kit.pieces.update": {
+      "ms": 18.8,
+      "calls": 1
+     },
+     "kit.pieces.step": {
+      "ms": 18.7,
+      "calls": 6
+     },
+     "kit.pieces.integrate": {
+      "ms": 15.1,
+      "calls": 54
+     },
+     "kit.pieces.sweepOn": {
+      "ms": 5.7,
+      "calls": 54
+     },
+     "kit.pieces.measure": {
+      "ms": 2.1,
+      "calls": 6
+     },
+     "kit.pieces.gridSurfaces": {
+      "ms": 2,
+      "calls": 6
+     },
+     "kit.pieces.mulInvInertiaWith": {
+      "ms": 1.9,
+      "calls": 17097
+     },
+     "kit.pieces.supportAt": {
+      "ms": 1.3,
+      "calls": 1940
+     },
+     "kit.pieces.collide": {
+      "ms": 1.3,
+      "calls": 6
+     },
+     "kit.pieces.intoCell": {
+      "ms": 1,
+      "calls": 9326
+     }
+    }
+   },
+   {
+    "total": 35.2,
+    "active": 0,
+    "bodies": 0,
+    "stages": {
+     "room.renderer.update": {
+      "ms": 19.7,
+      "calls": 1
+     },
+     "kit.pieces.step": {
+      "ms": 18.8,
+      "calls": 9
+     },
+     "kit.pieces.update": {
+      "ms": 18.8,
+      "calls": 1
+     },
+     "kit.pieces.integrate": {
+      "ms": 14.6,
+      "calls": 90
+     },
+     "kit.pieces.sweepOn": {
+      "ms": 4,
+      "calls": 90
+     },
+     "kit.pieces.measure": {
+      "ms": 3,
+      "calls": 9
+     },
+     "kit.pieces.gridSurfaces": {
+      "ms": 2.7,
+      "calls": 9
+     },
+     "kit.pieces.mulInvInertiaWith": {
+      "ms": 2.5,
+      "calls": 15839
+     },
+     "kit.pieces.intoCell": {
+      "ms": 1,
+      "calls": 14264
+     },
+     "kit.pieces.supportAt": {
+      "ms": 1,
+      "calls": 1892
+     },
+     "kit.pieces.collide": {
+      "ms": 1,
+      "calls": 9
+     }
+    }
+   },
+   {
+    "total": 35.9,
+    "active": 0,
+    "bodies": 0,
+    "stages": {
+     "room.renderer.update": {
+      "ms": 18.8,
+      "calls": 1
+     },
+     "kit.pieces.step": {
+      "ms": 18.1,
+      "calls": 9
+     },
+     "kit.pieces.update": {
+      "ms": 18.1,
+      "calls": 1
+     },
+     "kit.pieces.integrate": {
+      "ms": 12.5,
+      "calls": 74
+     },
+     "kit.pieces.sweepOn": {
+      "ms": 3.5,
+      "calls": 74
+     },
+     "kit.pieces.gridSurfaces": {
+      "ms": 3,
+      "calls": 9
+     },
+     "kit.pieces.measure": {
+      "ms": 3,
+      "calls": 9
+     },
+     "kit.pieces.mulInvInertiaWith": {
+      "ms": 2.9,
+      "calls": 25983
+     },
+     "kit.pieces.intoCell": {
+      "ms": 1.5,
+      "calls": 14154
+     },
+     "kit.pieces.wakeAbove": {
+      "ms": 1.5,
+      "calls": 49
+     },
+     "kit.pieces.restsOn": {
+      "ms": 1.2,
+      "calls": 486
+     }
+    }
+   }
+  ],
+  "stalls": []
+ }
+}

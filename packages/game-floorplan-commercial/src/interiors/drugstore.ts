@@ -5,7 +5,7 @@ import { spot } from './spot'
 import type { FindsHint, InteriorModule } from './types'
 
 const template: TemplateDef = {
-  id: 'drugstore', use: 'commercial', place: 'pharmacy', construction: 'masonry', partyWalls: ['left', 'right'], style: 'commercial',
+  id: 'drugstore', use: 'commercial', place: 'pharmacy', construction: 'masonry', masonryUnit: 'ceramic_block_14', partyWalls: ['left', 'right'], style: 'commercial',
   limits: { w: [11, 14], d: [9, 12] }, defaults: { w: 11, d: 9 },
   lot: () => buildingLot({ backyard: 4.0, cargoU: 4, doorTarget: { a: 'shop', side: 'front' } }),
   facade: { steelDoor: true },

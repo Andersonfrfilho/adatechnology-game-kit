@@ -673,6 +673,10 @@
    "source": "generated",
    "file": "generated/shotgun_semi_12.svg"
   },
+  "shovel": {
+   "source": "generated",
+   "file": "generated/shovel.svg"
+  },
   "sickle": {
    "source": "generated",
    "file": "generated/sickle.svg"

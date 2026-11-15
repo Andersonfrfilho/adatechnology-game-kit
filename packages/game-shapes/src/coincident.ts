@@ -1,36 +1,12 @@
 import { dominantAxis, normalOf, overlapOfTriangles, projectTriangle, unprojectPoint } from './coincident-geometry'
 import type { Triangle, Vec3 } from './coincident-geometry'
+import { boxOf } from './coincident-types'
+import type { CoincidentBatch, CoincidentFaceHit, CoincidentFacesOptions } from './coincident-types'
+import { nearCoincidentFaces } from './near-coincident'
 
-/** One draw batch with its triangles already in world space (metres). */
-export interface CoincidentBatch {
-  readonly positions: ArrayLike<number>
-  readonly indices?: ArrayLike<number>
-  /** Names the batch in the report: mesh name, part, material. */
-  readonly label?: string
-}
+export { GAME_DEPTH_PRECISION, depthResolution } from './coincident-types'
+export type { CoincidentBatch, CoincidentFaceHit, CoincidentFacesOptions, DepthPrecision } from './coincident-types'
 
-export interface CoincidentFacesOptions {
-  /** Two parallel faces nearer than this (metres) are on the same plane and z-fight. Default 0.001. */
-  readonly eps?: number
-  /** Overlaps smaller than this (m²) are edge contacts nobody sees. Default 1e-4 (one square centimetre). */
-  readonly minArea?: number
-  /** Stop after this many hits (a broken house can have thousands). Default 200. */
-  readonly maxHits?: number
-}
-
-/** Two triangles on the same plane, facing the same way, that overlap: the renderer flickers between them. */
-export interface CoincidentFaceHit {
-  readonly normal: Vec3
-  readonly offset: number
-  readonly area: number
-  /** A point inside the overlap, in world space. */
-  readonly point: Vec3
-  readonly labelA: string
-  readonly labelB: string
-  /** Index in the input of the batch of each triangle. */
-  readonly batchA: number
-  readonly batchB: number
-}
 
 interface Face {
   readonly triangle: Triangle
@@ -58,10 +34,6 @@ function directionKey(n: Vec3): string {
   return n.map((c) => Math.round(c / NORMAL_STEP)).join(',')
 }
 
-function boxOf(t: Triangle): Face['box'] {
-  const xs = [t[0][0], t[1][0], t[2][0]], ys = [t[0][1], t[1][1], t[2][1]], zs = [t[0][2], t[1][2], t[2][2]]
-  return [Math.min(...xs), Math.min(...ys), Math.min(...zs), Math.max(...xs), Math.max(...ys), Math.max(...zs)]
-}
 
 function boxesTouch(a: Face['box'], b: Face['box'], slack: number): boolean {
   return a[0] <= b[3] + slack && b[0] <= a[3] + slack && a[1] <= b[4] + slack && b[1] <= a[4] + slack && a[2] <= b[5] + slack && b[2] <= a[5] + slack
@@ -97,6 +69,7 @@ function overlapHit(a: Face, b: Face, minArea: number): CoincidentFaceHit | unde
  * between them as the camera moves (z-fighting). Works on any geometry: boxes, extrusions, CSG, meshes, whatever built the triangles.
  */
 export function coincidentFaces(batches: readonly CoincidentBatch[], options: CoincidentFacesOptions = {}): CoincidentFaceHit[] {
+  if (options.depth) return nearCoincidentFaces(batches, options)
   const eps = options.eps ?? 0.001
   const minArea = options.minArea ?? 1e-4
   const maxHits = options.maxHits ?? 200

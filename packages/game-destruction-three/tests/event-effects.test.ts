@@ -5,12 +5,13 @@ import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import type { RendererOptions } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 function setup(options: Partial<RendererOptions> = {}) {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const vfx = createVfx({ seed: 3 })
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx, ...options })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), vfx, ...options })
   world.addObject('o1', [partState('wall', 'concrete')])
   const wall = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.1, 0.2), new THREE.MeshStandardMaterial({ color: 0xcfc8b8 }))
   wall.position.set(0, 1.05, 0)

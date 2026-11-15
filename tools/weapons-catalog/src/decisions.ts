@@ -88,6 +88,18 @@ export type ExplosiveDecision = {
   readonly energy?: Decision<number>
   /** Kilograms of TNT equivalent of the charge (its mass times its relative effectiveness): the blast wave that pushes a body is read from it. */
   readonly tnt?: Decision<number>
+  /** The metal case the charge breaks into fragments (Mott count, Gurney speed): a grenade or a shell has one, a smoke canister does not. */
+  readonly casing?: Decision<ExplosiveCasing>
+}
+
+/** The case of a fragmenting charge, as the game's BlastCasing keeps it. */
+export type ExplosiveCasing = {
+  readonly mass: number
+  readonly material: string
+  readonly fragments: number
+  readonly chargeMass: number
+  readonly gurneyVelocity: number
+  readonly geometry?: string
 }
 
 export type ModeChoice = { readonly modes: readonly string[]; readonly burst?: number }

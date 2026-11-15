@@ -10,13 +10,15 @@ import type { PieceSystemOptions } from '../src/pieces'
 import { createDestructionRenderer } from '../src/renderer'
 import type { SettledBatchOptions } from '../src/settled-batches'
 import { FakeWorld, partState } from './fake-world'
+import { IS_JOLT, physicsOption } from './setup-physics'
+import type { StaticSolid } from '../src/engine-pieces'
 
 const DT = 1 / 60
 /** Batches made as soon as anything settles, merged in the update that makes them. */
 const PROMPT_BATCHES: SettledBatchOptions = { minMeshes: 1, intervalSeconds: 0, budgetMs: Infinity }
 
 const pieceSystem = (options: Partial<PieceSystemOptions> = {}): PieceSystem =>
-  new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), ...options })
+  new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), ...options })
 
 /** `count` boxes 20 cm across, a metre apart along x, their bottoms `lift` m over the ground. */
 const dropBoxes = (system: PieceSystem, count: number, lift: number): THREE.Object3D[] =>
@@ -27,12 +29,27 @@ const dropBoxes = (system: PieceSystem, count: number, lift: number): THREE.Obje
     return root
   })
 
+/**
+ * A fixed top for the pieces on it, as a thing the engine collides with: under Jolt a function that answers "what is the top here" is no body, so the top is a drawn box (its
+ * upper face at `top`, from `fromX` on). Under the kit's own solver the function is what the pieces read (`staticTopAt`), as before.
+ */
+const fixedTop = (top: () => number, fromX: number): Partial<PieceSystemOptions> => {
+  if (!IS_JOLT) return { staticTopAt: (x, _z, y, step) => (x > fromX && top() <= y + step ? top() : -Infinity) }
+  const solids = (): Map<string, readonly StaticSolid[]> => {
+    const height = top()
+    if (height === -Infinity) return new Map()
+    const half: [number, number, number] = [(2 - fromX) / 2, height / 2, 2]
+    return new Map([['top', [{ center: [fromX + half[0], height / 2, 0], half, rotation: [0, 0, 0, 1] }]]])
+  }
+  return { staticSolids: solids }
+}
+
 const awake = (system: PieceSystem): number => system.list.filter((body) => !body.sleeping && !body.held).length
 
 const rendererScene = (settledBatches: SettledBatchOptions = PROMPT_BATCHES) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), settledBatches })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), settledBatches })
   const materials = [new THREE.MeshLambertMaterial({ color: 0x8a6a4a }), new THREE.MeshLambertMaterial({ color: 0x777777 })]
   const box = (id: string, at: [number, number, number], material: THREE.Material = materials[0]!): THREE.Mesh => {
     world.addObject(id, [partState('body', 'wood', { mass: 2 })])
@@ -100,7 +117,7 @@ describe('the budget of awake pieces', () => {
 
   it('wakes a piece put to sleep on a top when the top goes, and it falls to the ground', () => {
     let top = 0.5
-    const system = pieceSystem({ maxAwake: 0, staticTopAt: (_x, _z, y, step) => (top <= y + step ? top : -Infinity) })
+    const system = pieceSystem({ maxAwake: 0, ...fixedTop(() => top, -2) })
     const root = new THREE.Object3D()
     root.position.set(0, 0.61, 0)
     system.create('book', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 1)
@@ -115,7 +132,7 @@ describe('the budget of awake pieces', () => {
   it('wakes a piece put to sleep leaning on a step when the step goes, and it comes down, though its foot is still on the floor', () => {
     let top = 0.4
     // a board standing on a step: one end on the step, the rest on the floor
-    const system = pieceSystem({ maxAwake: 0, staticTopAt: (x, _z, y, step) => (x > 0.35 && top <= y + step ? top : -Infinity) })
+    const system = pieceSystem({ maxAwake: 0, ...fixedTop(() => top, 0.35) })
     const root = new THREE.Object3D()
     root.position.set(0, 0.6, 0)
     root.rotation.z = Math.atan2(0.4, 0.8)

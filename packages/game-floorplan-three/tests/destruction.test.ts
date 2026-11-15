@@ -7,6 +7,7 @@ import type { House } from '../src'
 import type { StructureRangeItem } from '../src/destruction/types'
 import type { BufferGeometry, InstancedMesh, Material, Mesh, MeshLambertMaterial, Object3D } from 'three'
 import { THREE, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 /** What the tests read of a part of the structure. */
 /** A breach mask as the shells and units carry it (`userData.breachMask`, `userData.breachCore`). */
@@ -20,7 +21,7 @@ function setup(options: { template?: string; seed?: number; onDamage?: (...args:
   const plan = planOf(options.template ?? 'sobrado', options.seed ?? 3)
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
   const { house } = houseOf(plan, { destruction: world, destructionRenderer: renderer, onDamage: options.onDamage })
   scene.add(house.group)
   const d = house.destruction

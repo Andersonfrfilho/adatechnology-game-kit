@@ -5,6 +5,7 @@ import { createVfx } from '@adatechnology/game-vfx'
 import type { Follow } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 /** Lasting emitters of a broken object (grit trickling off a broken face, its fire) go with the object as it tips or falls apart, never stay where it stood. */
 
@@ -14,7 +15,7 @@ function setup() {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const vfx = createVfx({ seed: 7 })
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx, eventBudgetMs: Infinity })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), vfx, eventBudgetMs: Infinity })
   const bursts: Burst[] = []
   const burst = vfx.burst.bind(vfx)
   vi.spyOn(vfx, 'burst').mockImplementation((kind, point, ...rest) => {

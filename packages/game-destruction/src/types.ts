@@ -43,6 +43,7 @@ export type {
   BallisticExtras,
   HitIgnition,
   ChainDelay,
+  BendHinge,
   Crack,
   DamageStage,
   DamageType,
@@ -52,6 +53,8 @@ export type {
   DestructibleSpec,
   DestructionEvent,
   DestructionEventType,
+  BlastCasing,
+  BlastCharge,
   BlastOptions,
   BlastReport,
   ConfinementOptions,
@@ -149,6 +152,20 @@ export interface MaterialHit {
   crater?: boolean
 }
 
+/**
+ * Real bending strengths of a material, for blows on single parts (`bending.ts`). `yieldMPa`: yield strength of a ductile plate (mild steel 250); a blow
+ * past the elastic limit bends a thin plate for good (`PartState.bend`). `ruptureMPa`: modulus of rupture of a wood (hardwood 100); a long piece snaps
+ * across when the blow flexes it past the moment its section holds.
+ */
+export interface MaterialBending {
+  yieldMPa?: number
+  ruptureMPa?: number
+  /** Modulus of elasticity in GPa (steel 200, ash 12). */
+  elasticGPa?: number
+  /** Share of a blow's energy that flexes the part; the rest moves it (steel 0.2: a heavy plate on a pivot, wood 0.4). */
+  absorbed?: number
+}
+
 export interface MaterialDef {
   id: MaterialId
   /** Density in kg/m³ (used when a part has no `mass`). */
@@ -191,6 +208,8 @@ export interface MaterialDef {
    * is not a punch). See `MaterialHit`.
    */
   hits?: Partial<Record<DamageType, MaterialHit>>
+  /** How a thin plate of the material bends for good, or a long piece of it snaps, under a heavy blow. See `MaterialBending`. */
+  bending?: MaterialBending
   /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
   damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */
@@ -215,6 +234,11 @@ export interface MaterialDef {
   }
   /** Free tags, e.g. `metal`, `organic`, `conductive`. */
   tags?: string[]
+  /**
+   * Stress in MPa at which a plate of the material fails under a blast: the yield stress of a ductile material (steel 250), the flexural strength of a brittle one (annealed glass 45,
+   * masonry 0.4). With it the wave work on a part is turned into the share of the part it breaks (`failureWork`); without it the part takes the work at `DMG_PER_J`.
+   */
+  failureMPa?: number
   /**
    * Load a structural part of this material carries per square metre of cross-section, in kg (game-tuned: concrete 444 000, brick 40 000,
    * softwood 100 000, steel 2 000 000). Default 20 000. See `PartSpec.structure`.
@@ -457,6 +481,11 @@ export interface DestructionOptions {
   onEvent?: (event: DestructionEvent) => void
   /** Maximum fragments in one `fracture` event (default 24). The renderer can draw fewer. */
   maxFragments?: number
+  /**
+   * World height in metres of the floor that loose things lie on (default 0; `-Infinity` for none): a plate that lies on it is not bent by a blow that drives it
+   * into the floor, which dents it instead (`pressedAgainstFloor`).
+   */
+  groundHeight?: number
   /** Maximum dents kept per part; older nearby dents merge (default 24). */
   maxDents?: number
   /** Maximum holes kept per part (default 32). */
@@ -637,6 +666,12 @@ export interface DestructionWorld {
    * (default 0.2 m). `ignore` is the object that is moving. What the box already overlaps does not stop it, so it can always back out.
    */
   sweepBox(box: { readonly min: Vec3; readonly max: Vec3 }, direction: Vec3, distance: number, options?: { readonly ignore?: string | readonly string[]; readonly spacing?: number }): RayHit | null
+  /**
+   * The parts of a hosted body (`register`: a vehicle) still on it, as boxes turned as the body holds them (world): what a physics engine collides with in its
+   * place, since its drawn meshes are its own module's. The same list until a part breaks, comes off, is posed or the body moves. Null for an id that is not a
+   * hosted body.
+   */
+  hostedSolids?(id: string): readonly HostedSolid[] | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
   shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, round?: number | BallisticExtras): HitResult[]
   /**
@@ -670,6 +705,10 @@ export interface DestructionWorld {
   /** Plain JSON of every object (spec + state + transform) and the rng state. */
   serialize(): DestructionSnapshot
   load(snapshot: DestructionSnapshot): void
+  /** One object as `serialize` writes it (spec, state with its damage, runtime), or null for an unknown id: the object can be taken out of the world and put back later with `loadObject`. */
+  serializeObject(id: string): DestructionSnapshot['objects'][number] | null
+  /** Puts an object back from `serializeObject` with all its damage (under `id`, default the one it had; an object with that id is replaced). Its transform is the saved one: `setTransform` moves it. */
+  loadObject(entry: DestructionSnapshot['objects'][number], id?: string): void
   /**
    * Fill or empty a container part (`PartSpec.contains`); `liters` is clamped to `[0, contains.liters]` of its spec. Used by fluid simulations
    * that drain or refill the part. Does nothing when the part has no `contains`.
@@ -774,4 +813,16 @@ export interface DestructionSnapshot {
   objects: Array<{ id: string; spec: DestructibleSpec; state: ObjectState; runtime?: ObjectRuntime }>
   /** Registered impls: transform and `serialize()` data. `load` restores them into impls registered under the same ids. */
   impls?: Array<{ id: string; position: Vec3; rotation: Quat; data?: unknown }>
+}
+
+/**
+ * One part of a hosted body as a box turned as the body holds it (world): what a physics engine collides with in its place. A drawn piece (`DestructibleImpl.colliders`)
+ * carries its part id as `key` and, where no box fits it, its triangles (`mesh`, world space) with the box around them as the box.
+ */
+export interface HostedSolid {
+  readonly center: Vec3
+  readonly half: Vec3
+  readonly rotation: Quat
+  readonly key?: string
+  readonly mesh?: { readonly vertices: Float32Array; readonly indices: Uint32Array }
 }

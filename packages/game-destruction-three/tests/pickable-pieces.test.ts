@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const hasCore = existsSync(fileURLToPath(new URL('../../game-destruction/dist/index.js', import.meta.url)))
 
@@ -18,7 +19,7 @@ const meshesOf = (o: THREE.Object3D): THREE.Mesh[] => {
 function chair() {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: Infinity })
   world.addObject('chair', [partState('seat', 'wood', { mass: 3 }), partState('leg', 'wood', { mass: 1 })], [['seat'], ['leg']])
   const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.5))
   seat.position.y = 2
@@ -70,7 +71,7 @@ describe('loose pieces stay pickable', () => {
   it('keeps an object-valued destructionPart hint intact when it already names the part', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('o', [partState('trunk', 'wood')])
     const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1))
     const hint = { id: 'trunk', material: 'green_wood' }
@@ -84,7 +85,7 @@ describe('loose pieces stay pickable', () => {
   it('a part drawn by a vertex range gets its own tagged mesh when it leaves, and the merged mesh stays untagged', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const a = new THREE.BoxGeometry(1, 1, 1).translate(-0.6, 0, 0)
     const b = new THREE.BoxGeometry(1, 1, 1).translate(0.6, 0, 0)
     const n = a.getAttribute('position').count
@@ -118,7 +119,7 @@ describe('visual debris is marked', () => {
   it('fracture fragments, decals and ground stains carry destructionDebris', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), eventBudgetMs: Infinity })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: Infinity })
     world.addObject('o', [partState('top', 'glass'), partState('plate', 'wood')])
     const plate = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1))
     const top = new THREE.Mesh(new THREE.BoxGeometry(1, 0.1, 1))
@@ -144,7 +145,7 @@ describe.skipIf(!hasCore)('with the real world', () => {
     const { createDestruction } = await import('@adatechnology/game-destruction')
     const world = createDestruction()
     const scene = new THREE.Scene()
-    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
     const parts = [
       { id: 'base', material: 'wood_hard', shape: { kind: 'box' as const, size: [1, 0.2, 1] as [number, number, number] }, position: [0, 0.1, 0] as [number, number, number], anchored: true },
       { id: 'lid', material: 'wood_hard', shape: { kind: 'box' as const, size: [1, 0.1, 1] as [number, number, number] }, position: [0, 0.3, 0] as [number, number, number] },

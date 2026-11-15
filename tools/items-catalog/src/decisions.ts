@@ -45,6 +45,21 @@ export type ExtraItem = {
   readonly portions?: number
   readonly nutrition?: { readonly satiety?: number; readonly hydration?: number }
   readonly places?: readonly string[]
+  /** Uses before it breaks (a melee weapon). */
+  readonly hits?: number
+  /** A melee item: the arsenal weapon it is, its reach (m) and the noise of a blow. */
+  readonly melee?: { readonly weapon: string; readonly reach: number; readonly noise: number }
+}
+
+/** One entry a pool of the house furniture gets besides the team's (`housePoolExtras`). */
+export type PoolExtra = {
+  readonly item: string
+  readonly name: string
+  readonly qty: readonly [number, number]
+  readonly viewerCategory: string
+  readonly isTakeable: boolean
+  readonly weight: number
+  readonly isSupply: boolean
 }
 
 export type Vec3 = readonly [number, number, number]
@@ -95,6 +110,8 @@ export type Decisions = {
   readonly gameOnlyExtras: DecisionTable<'game'>
   /** Final item id -> an item that exists only because the catalog needs it. */
   readonly extraItems: DecisionTable<ExtraItem>
+  /** Pool key -> entry type -> an item the pool of that furniture holds besides the team's; `weight` is its share of the pool, so the rarity of the item lives here. */
+  readonly housePoolExtras: Readonly<Record<string, DecisionTable<PoolExtra>>>
   /** Locale key (`item.<id>`, `category.<id>`, `container.<id>`) -> pt-BR text, for what no source names (created items, the game's categories). */
   readonly names: DecisionTable<string>
   readonly householdRarity: Decision<Rarity>

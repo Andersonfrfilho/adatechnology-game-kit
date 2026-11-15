@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import type { RendererOptions } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const FRAGMENT_COUNT = 40
 const LOOSE_GROUP_COUNT = 5
@@ -24,7 +25,7 @@ const fragment = (index: number) => ({
 function fracturedGlass(options: Partial<RendererOptions>) {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), ...options })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), ...options })
   world.addObject('o1', [partState('top', 'glass')])
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1), new THREE.MeshStandardMaterial())
   const root = new THREE.Group()
@@ -39,7 +40,7 @@ function fracturedGlass(options: Partial<RendererOptions>) {
 function looseParts(options: Partial<RendererOptions>) {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), ...options })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), ...options })
   const ids = Array.from({ length: LOOSE_GROUP_COUNT + 1 }, (_, index) => `part${index}`)
   world.addObject('o1', ids.map((id) => partState(id, 'wood')), ids.map((id) => [id]))
   const root = new THREE.Group()

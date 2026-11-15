@@ -6,7 +6,7 @@ import { SINGLE_BED_ONLY } from './shared'
 export function createApartmentModern(hashString: (s: string) => number): TemplateDef {
   const hashSeed = (op: { seed?: number | string }) => hashString(String(op.seed == null ? 1 : op.seed) + '|apto')
   return {
-  id: 'apartment_modern', use: 'residential_multi', style: op => (op.tier === 'high' ? 'high' : 'mid'), lot: null, singleFloor: true,
+  id: 'apartment_modern', masonryUnit: 'ceramic_block_14', use: 'residential_multi', style: op => (op.tier === 'high' ? 'high' : 'mid'), lot: null, singleFloor: true,
   limits: { w: [8.5, 14], d: [11, 16.5] }, defaults: { w: 9, d: 11.5 }, options: { tier: ['mid', 'high'] },
   limitsFn: op => (op.tier === 'high' ? { w: [12, 14], d: [15, 16.5] } : { w: [8.5, 10.5], d: [11, 13.5] }),
   defaultsFn: op => (op.tier === 'high' ? { w: 12.5, d: 15.5 } : { w: 9, d: 11.5 }),

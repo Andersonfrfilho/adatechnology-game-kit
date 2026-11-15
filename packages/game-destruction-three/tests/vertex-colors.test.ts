@@ -2,12 +2,13 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 describe('vertex-coloured meshes', () => {
   it('fragments take the average vertex colour times material.color instead of white', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('o1', [partState('top', 'wood_soft')])
     const geo = new THREE.BoxGeometry(1, 0.05, 1)
     const n = geo.getAttribute('position').count
@@ -33,7 +34,7 @@ describe('vertex-coloured meshes', () => {
   it('multiplies by material.color', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('o1', [partState('top', 'wood_soft')])
     const geo = new THREE.BoxGeometry(1, 1, 1)
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.getAttribute('position').count * 3).fill(0.5), 3))

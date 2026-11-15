@@ -9,6 +9,8 @@ import type * as THREE_NS from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { BlastDebrisOptions, DebrisCostOptions } from './blast-debris'
+import type { PiecePhysics } from './physics-option'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 import type { FragmentLifeRule } from './fragments'
@@ -39,6 +41,8 @@ export interface SoundDetail {
 }
 
 export interface RendererOptions {
+  /** What steps the loose pieces; required, so a host never ends up on the kit's solver by forgetting it. See `PieceSystemOptions.physics`. */
+  physics: PiecePhysics
   /** Scene that receives fragments, loose pieces, decals and particles. */
   scene: THREE_NS.Scene
   world: DestructionWorld
@@ -66,6 +70,18 @@ export interface RendererOptions {
    * next frame, in order; at least one event is applied per frame, so 0 means one at a time.
    */
   eventBudgetMs?: number
+  /**
+   * What the kit decides about the debris of a blast: the speed of the front that wakes it from the centre out, how many pieces enter physics (between a minimum and a maximum,
+   * by the cost measured), the size under which a loosened object is a chip, the cap of pieces alive and the far and old rule. Each is a number with a default
+   * (`BLAST_DEBRIS_DEFAULTS`); a blast can override them (`ExplodeOptions.debris`).
+   */
+  blastDebris?: BlastDebrisOptions
+  /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
+  debrisCost?: DebrisCostOptions
+  /** Where the player is (m): the far and old rule of `blastDebris.far` counts distance from it. Without it, no piece is far. */
+  focus?: () => Vec3
+  /** A piece faded away (`blastDebris.far.action: 'fade'`, or over `maxLivePieces`) has left the scene: the host owns its geometry and disposes it here. */
+  onDebrisFaded?: (objectId: string, root: THREE_NS.Object3D) => void
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
   /**
@@ -75,6 +91,11 @@ export interface RendererOptions {
   fragmentLife?: number | FragmentLifeRule
   /** Ground height at (x, z) for fragments, pieces and drips (default 0). */
   groundAt?: (x: number, z: number) => number
+  /**
+   * The terrain alone at (x, z): soil, lot, street, crater; never the top of a table or the floor of a house. With an engine (`physics` other than `'own'`) the ground it stands the pieces
+   * on is this, because every drawn fixed thing is a body of its own there (`staticSolids`) and a top in both would be ground twice. Default `groundAt`; the kit's own solver ignores it.
+   */
+  terrainAt?: (x: number, z: number) => number
   gravity?: number
   /** Turn a loose group into a separate physical piece automatically (default true). */
   autoSplit?: boolean
@@ -84,7 +105,8 @@ export interface RendererOptions {
   onReleased?: (pieceIds: readonly string[]) => void
   /**
    * The numbers of the shove a blast gives to the pieces (`BlastShoveOptions` of game-contracts: how much of the energy becomes speed, the fastest throw, the lift, the falloff).
-   * The defaults give the pieces the speed the blast always gave them, with the cap lowered to 20 m/s.
+   * Without it a piece is pushed by the blast wave itself (the impulse of the charge over the area the piece shows, divided by its mass: `blastShove` with an `area`); giving it chooses
+   * this game rule instead (default coupling 0.02, cap 20 m/s).
    */
   blastShove?: BlastShoveOptions
   /**
@@ -185,6 +207,8 @@ export interface ExplodeOptions {
    * the energy that reached it (`energy * confinement * shelter` of the piece's object) instead of the raw energy. Without it the old formula.
    */
   readonly report?: readonly HitResult[]
+  /** This blast's own debris numbers over the renderer's (`RendererOptions.blastDebris`): a big charge a slower front, a small one fewer pieces. */
+  readonly debris?: BlastDebrisOptions
 }
 
 /** One box of `DestructionRenderer.solidsNear`. */
@@ -273,6 +297,8 @@ export interface DestructionRenderer {
   reset(): void
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
+  /** Draw a bound object again from the state its world holds now (after `DestructionWorld.loadObject` put it back damaged): dents, holes, cracks, bend, char, broken parts hidden. */
+  redraw(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
   /** The draws of the batches of the debris at rest and how many debris meshes they draw (`RendererOptions.settledBatches`). */
   settledBatchStats?(): SettledBatchStats

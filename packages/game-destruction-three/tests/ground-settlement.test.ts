@@ -6,6 +6,7 @@ import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { SETTLE_SECONDS } from '../src/settlement'
 import { stairCrackPath, stairCrackStrip } from '../src/stair-crack'
+import { physicsOption } from './setup-physics'
 
 const LENGTH = 6
 
@@ -39,7 +40,7 @@ function setUp() {
   scene.add(root)
   root.updateMatrixWorld(true)
   const total = merged.getAttribute('position').count
-  const renderer = createDestructionRenderer(THREE, { scene, world, vfx: createVfx() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, vfx: createVfx() })
   renderer.bind('house', root, { parts: { beam: { mesh, range: [0, nb] }, wall: { mesh, range: [nb, total] } } })
   const events: DestructionEvent[] = []
   world.on('*', (event) => events.push(event))

@@ -47,6 +47,25 @@ describe('graphics view', () => {
     expect(sun.target.position.x).toBe(0)
   })
 
+  it('moves the shadow box that follows the player only by whole texels of the map, measured in the light plane', () => {
+    const { sun, view } = setup()
+    view.apply(effective({ shadows: 'near' }))
+    const texel = 18 / sun.shadow.mapSize.x
+    const lightSpace = (): THREE.Vector3 => {
+      sun.shadow.camera.position.copy(sun.position)
+      sun.shadow.camera.lookAt(sun.target.position)
+      sun.shadow.camera.updateMatrixWorld()
+      return new THREE.Vector3().applyMatrix4(sun.shadow.camera.matrixWorldInverse)
+    }
+    for (const [x, z] of [[0.3, 0.1], [3.137, -2.71], [-11.42, 7.77], [20.004, -4.0031]] as const) {
+      view.follow(x, z)
+      const origin = lightSpace()
+      expect(Math.abs(origin.x / texel - Math.round(origin.x / texel))).toBeLessThan(1e-3)
+      expect(Math.abs(origin.y / texel - Math.round(origin.y / texel))).toBeLessThan(1e-3)
+      expect(Math.hypot(sun.target.position.x - x, sun.target.position.z - z)).toBeLessThan(texel * 3)
+    }
+  })
+
   it('sets the far plane from the view distance', () => {
     const { camera, view } = setup()
     view.apply(effective({ viewDistance: 'short' }))

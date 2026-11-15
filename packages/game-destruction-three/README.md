@@ -164,6 +164,31 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
   vertices draw on their own. `settledBatchStats()` reports the batches. The test room turns the batches on; its awake budget stays off unless
   `debris.maxAwakePieces` / `maxAwakeFragments` are given (`SUGGESTED_MAX_AWAKE_PIECES`, `SUGGESTED_MAX_AWAKE_FRAGMENTS`).
 
+### Debris of a blast (`blastDebris`, opt-in)
+
+Left out, a blast shoves, wakes and loosens everything in its own frame, as before. With `blastDebris: {}` (or any of the numbers) the renderer keeps the cost of a blast
+bounded. **Every number is an option** (per renderer in `RendererOptions.blastDebris`; per blast in `ExplodeOptions.debris`, which wins, for what belongs to one blast:
+`maxWakeDelay`, `minPhysicsPieces`, `maxPhysicsPieces`, `physicsCostTargetMs`, `chipSize`; `BLAST_DEBRIS_DEFAULTS` is the default), measured on "Intel Core Ultra 9 275HX, 24 cores, Node 20" (spec 008, `evidence.md` T3.6d). Nothing adapts by GPU vendor, only by the cost measured on the machine
+(`PhysicsFrame.stepMs` over the world's awake bodies, smoothed).
+
+| Option | Default | What it does |
+|---|---|---|
+| `debrisCost` (renderer option) | `{ source: 'measured' }` | Where the step cost above comes from. `measured` reads the loop's wall-clock step time (`PhysicsFrame.stepMs`): batch sizes and piece counts then depend on the machine, so two machines (or a replay) diverge; `record` collects each frame's sample. `{ source: 'fixed' }` never reads the clock: batches and counts come only from the numbers in this table, the same on every machine (tests, lockstep). `{ source: 'replay', samples }` plays a recorded list frame by frame instead of the clock. |
+| `wakeCostTargetMs` | 4 | The physics step may reach this as debris wakes: each frame wakes as many (nearest `focus` first, else the blast's centre) as the cost of the frames before leaves room for. Nothing is timed per body |
+| `maxWakeDelay` | 0.08 s | A piece waits at most this to wake, whatever the cost |
+| `maxQueuedWakes` | 2048 | Pieces waiting to wake at most; the farthest over it wake at once |
+| `minWakesPerFrame` | 8 | Woken every frame at least, so a queue behind a heavy frame drains |
+| `minPhysicsPieces` / `maxPhysicsPieces` | 24 / 300 | Pieces of one blast that enter physics: `physicsCostTargetMs / wake cost per body - bodies already awake`, clamped between them (250 on the measured machine); the big ones first, nearest the player first |
+| `physicsCostTargetMs` | 5 | Milliseconds of step a blast's debris may add in the frame it wakes (sets the count above, at the wake cost per body) |
+| `wakeCostPerBodyMs` | 0.02 | Cost of one body in the frame a pile wakes in until measured (a woken island costs ~9 times what it costs settled) |
+| `physicsCostPerBodyMs` | 0.0022 | Cost of one awake body until the world has been measured |
+| `chipSize` | 0.15 m | Longest side under which a loosened object is a chip: it goes after every big one when the count is full. A piece left out stays where it stands (drawn, solid: nothing invisible collides) and the blast throws visual chips (`vfx`, no collision) there |
+| `maxLivePieces` | 600 | Pieces alive at once (asleep or not): over it the far and old ones at rest fade first, then the oldest |
+| `far.distance` / `far.age` | 40 m / 30 s | A piece at rest farther than this from `focus` and older than this is far and old |
+| `far.action` | `'sleep'` | `'sleep'` or `'fade'`. `'fade'` removes the body and collider and shrinks the root over `far.fadeSeconds` (0.5), then `onDebrisFaded(id, root)` hands it to the host to dispose. Merged drawing of debris at rest is `settledBatches` |
+
+The world's own solver passes are `WorldDesc.velocityIterations` (default 32 in `KIT_WORLD`, the least that keeps a 20:1 mass stack from making energy).
+
 ## API
 
 ```ts
@@ -172,7 +197,7 @@ specFromObject3D(THREE, root, options?: SpecFromObjectOptions): { spec, parts }
 heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~500, orange ~800, yellow ~1100, white from 1400
 ```
 
-`RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxAwakePieces`, `maxAwakeFragments`, `settledBatches`, `maxParticles`, `fragmentLife`, `groundAt`, `gravity`, `autoSplit`, `onPiece`, `onSound`,
+`RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxAwakePieces`, `maxAwakeFragments`, `settledBatches`, `blastDebris`, `focus`, `onDebrisFaded`, `maxParticles`, `fragmentLife`, `groundAt`, `terrainAt` (the terrain alone, what an engine stands pieces on: every drawn fixed thing is a body of its own there), `gravity`, `autoSplit`, `onPiece`, `onSound`,
 `vfx` (shared effects world), `camera` (of the own world, when `vfx` is not given), `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
 
 How long debris stays: `fragmentLife` is the seconds a resting fragment stays before it shrinks away (default 12, `0` = forever), or a `FragmentLifeRule`

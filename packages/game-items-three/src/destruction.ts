@@ -3,6 +3,7 @@ import type { ContainerSpec } from '@adatechnology/game-contracts'
 import { LIQUIDS } from '@adatechnology/game-fluids'
 
 import data from './data/destruction.json'
+import { itemMakeup, tagMakeupParts } from './makeup'
 
 /** The destruction material (`game-destruction` id) of each material tag of the kit, for a mesh whose model says nothing else. */
 export const DESTRUCTION_MATERIAL_BY_TAG: Readonly<Record<string, string>> = {
@@ -249,6 +250,10 @@ function tessellateShapes(root: THREE_NS.Object3D, rule: Tessellation, T?: typeo
 export function tagForDestruction(root: THREE_NS.Object3D, options: DestructionTagOptions = {}): void {
   const { modelId, shapeId, weight, size, powder, three } = options
   if (weight !== undefined && weight > 0) root.userData.destructionMass = weight
+  if (modelId !== undefined && itemMakeup(modelId)) {
+    tagMakeupParts(root, modelId)
+    return
+  }
   const rule = modelId !== undefined ? itemDestruction(modelId) : shapeId !== undefined ? shapeDestruction(shapeId) : undefined
   if (rule?.tessellate) tessellateShapes(root, rule.tessellate, three)
   const solid: THREE_NS.Mesh[] = []

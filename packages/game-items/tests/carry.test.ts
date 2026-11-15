@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { bagOption, canTake, carriedKg, createItems, loadState, maxLoadKg } from '../src'
+import { bagOption, canTake, carriedKg, createItems, fitsInside, loadState, maxLoadKg } from '../src'
 import { item } from './fixtures'
 
 describe('carry', () => {
@@ -30,8 +30,8 @@ describe('carry', () => {
 
   it('has 10 slots by default and the slots of a bag item', () => {
     const backpack = item('backpack', { category: 'bags', carry: { capacityKg: 24, weightReduction: 0.35, quickSlots: 4 } })
-    expect(bagOption(undefined, 30)).toEqual({ slots: 10, capacityKg: 30 })
-    expect(bagOption(backpack, 30)).toEqual({ slots: 24, capacityKg: 30 })
+    expect(bagOption(undefined, 30)).toEqual({ slots: 10, capacityKg: 30, capacityLitres: 12, inside: [0.3, 0.25, 0.16] })
+    expect(bagOption(backpack, 30)).toEqual({ slots: 24, capacityKg: 30, capacityLitres: 30, inside: [0.5, 0.3, 0.2] })
   })
 
   it('refuses first by slots, then by weight', () => {
@@ -41,5 +41,35 @@ describe('carry', () => {
     expect(canTake(rock, bag, { slots: 2, loadKg: 0 })).toBe('bag_full')
     expect(canTake(rock, bag, { slots: 1, loadKg: 5.1 })).toBe('too_heavy')
     expect(canTake(rock, bag, { slots: 2, loadKg: 99 })).toBe('bag_full')
+  })
+
+  it('refuses a take that is too bulky after the slots and the weight pass', () => {
+    const crate = item('crate', { weight: 1, size: [0.4, 0.4, 0.4] })
+    const bag = { slots: 5, capacityKg: 50, capacityLitres: 100 }
+    expect(canTake(crate, bag, { slots: 0, loadKg: 0, litres: 0 })).toBe('ok')
+    expect(canTake(crate, bag, { slots: 0, loadKg: 0, litres: 0 }, { count: 2 })).toBe('too_bulky')
+    expect(canTake(crate, bag, { slots: 4, loadKg: 0 }, { slotsNeeded: 2 })).toBe('bag_full')
+  })
+
+  it('refuses an item longer than the inside of the bag whatever its volume', () => {
+    const shovel = item('shovel', { weight: 2, size: [1.1, 0.07, 0.22] })
+    const brick = item('brick', { weight: 2, size: [0.2, 0.1, 0.1] })
+    const backpack = bagOption(item('backpack', { category: 'bags', carry: { capacityKg: 10, weightReduction: 0, quickSlots: 0 } }), 30)
+    expect(backpack.inside).toEqual([0.5, 0.3, 0.2])
+    expect(canTake(shovel, backpack, { slots: 0, loadKg: 0, litres: 0 })).toBe('too_long')
+    expect(canTake(brick, backpack, { slots: 0, loadKg: 0, litres: 0 })).toBe('ok')
+    expect(fitsInside([0.2, 0.5, 0.3], [0.5, 0.3, 0.2])).toBe(true)
+    expect(fitsInside([0.55, 0.1, 0.1], [0.5, 0.3, 0.2])).toBe(false)
+  })
+
+  it('says a 1.1 m shovel is too long for a 0.5 m backpack even when the bag is also full and the load at its limit: length is the reason that never changes', () => {
+    const shovel = item('shovel', { weight: 2, size: [1.1, 0.07, 0.22] })
+    const backpack = bagOption(item('backpack', { category: 'bags', carry: { capacityKg: 10, weightReduction: 0, quickSlots: 0 } }), 30)
+    // 30 kg carried of 30 kg: 2 kg more would be too heavy, and 10 of 10 slots are taken; the shovel still could not go in an empty bag
+    expect(canTake(shovel, backpack, { slots: 10, loadKg: 30, litres: 29 })).toBe('too_long')
+    // the same load refuses a brick that fits by shape for the slots, then the weight
+    const brick = item('brick', { weight: 2, size: [0.2, 0.1, 0.1] })
+    expect(canTake(brick, backpack, { slots: 10, loadKg: 0, litres: 0 })).toBe('bag_full')
+    expect(canTake(brick, backpack, { slots: 0, loadKg: 30, litres: 0 })).toBe('too_heavy')
   })
 })

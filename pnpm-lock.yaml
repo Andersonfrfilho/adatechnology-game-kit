@@ -438,6 +438,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-load-path':
+        specifier: workspace:^
+        version: link:../game-load-path
     devDependencies:
       '@adatechnology/game-weapons':
         specifier: workspace:^
@@ -469,9 +472,15 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
+      '@adatechnology/game-shapes':
+        specifier: workspace:^
+        version: link:../game-shapes
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx
@@ -479,6 +488,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vfx-three
     devDependencies:
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -711,6 +723,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-load-path':
+        specifier: workspace:^
+        version: link:../game-load-path
     devDependencies:
       '@adatechnology/game-floorplan':
         specifier: workspace:^
@@ -788,6 +803,15 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
+      '@adatechnology/game-terrain':
+        specifier: workspace:^
+        version: link:../game-terrain
       '@adatechnology/game-vegetation':
         specifier: workspace:^
         version: link:../game-vegetation
@@ -1034,6 +1058,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-interactables':
         specifier: workspace:^
         version: link:../game-interactables
@@ -1106,6 +1133,9 @@ importers:
         specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods
@@ -1158,6 +1188,64 @@ importers:
       '@adatechnology/game-stories':
         specifier: workspace:^
         version: link:../game-stories
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-load-path:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-physics:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-physics-jolt:
+    dependencies:
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      jolt-physics:
+        specifier: 1.1.1
+        version: 1.1.1
+    devDependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:^
+        version: link:../game-characters
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1424,6 +1512,9 @@ importers:
       '@adatechnology/game-graphics-three':
         specifier: workspace:^
         version: link:../game-graphics-three
+      '@adatechnology/game-items':
+        specifier: workspace:^
+        version: link:../game-items
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
@@ -1710,6 +1801,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -1777,6 +1871,9 @@ importers:
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
+      '@adatechnology/game-shapes':
+        specifier: workspace:^
+        version: link:../game-shapes
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -3564,6 +3661,9 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
+  jolt-physics@1.1.1:
+    resolution: {integrity: sha512-kMCQu/b4wbHwy7EgZWaSbUyDthIKZUvAGGqta4pBF4Pdq+ljWaNvQoa5hPr/PkVCUVsqcoLwXITUm6975mQhiQ==}
+
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
@@ -5279,6 +5379,8 @@ snapshots:
   is-windows@1.0.2: {}
 
   isexe@2.0.0: {}
+
+  jolt-physics@1.1.1: {}
 
   joycon@3.1.1: {}
 

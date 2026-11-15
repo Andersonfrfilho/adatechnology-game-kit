@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import { furnitureSpec } from '../src'
 import { fakeDocument } from './helpers/fake-document'
+import { physicsOption } from './setup-physics'
 
 type Box = readonly [number, number, number, number, number, number]
 type PartLike = { readonly id: string; readonly shape: { readonly kind: string; readonly size?: readonly number[]; readonly radius?: number; readonly height?: number }; readonly position?: readonly number[] }
@@ -61,7 +62,7 @@ describe('every piece of furniture of the catalogue, its feet broken', () => {
     }
     const scene = new THREE.Scene()
     const world = createDestruction()
-    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
     const id = world.add(made.spec, { id: type })
     const root = made.build(THREE)
     scene.add(root)

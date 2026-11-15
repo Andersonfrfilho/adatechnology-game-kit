@@ -4,13 +4,14 @@ import { checkDeferredQueue } from '@adatechnology/game-contracts'
 import { createDestructionRenderer } from '../src/renderer'
 import type { RendererOptions } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const PART_COUNT = 5
 
 function setup(options: Partial<RendererOptions> = {}) {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), ...options })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), ...options })
   const ids = Array.from({ length: PART_COUNT }, (_, index) => `part${index}`)
   world.addObject('o1', ids.map((id) => partState(id, 'glass')))
   const root = new THREE.Group()

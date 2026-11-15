@@ -29,6 +29,7 @@ import {
 } from './tables.js'
 import type { TypeMapEntry } from './tables.js'
 import type { ContainerSpec, DeviceSpec, ObjectSpec, World } from '@adatechnology/game-interactables'
+import { WALL_PLATE } from '@adatechnology/game-interactables-household'
 import type { ContentsEntry, HouseholdItem } from '@adatechnology/game-interactables-household'
 import type {
   AdapterOptions,
@@ -70,6 +71,9 @@ export const ADAPTER_VERSION = '0.3.0'
 const r3 = (n: number): number => Math.round(n * 1000) / 1000
 
 /** Position of a planned item: the builders of the plan always set x, z and ry. */
+/** Height of the valve on a 13 kg cylinder (P13) over the floor, metres. */
+const CYLINDER_VALVE_Y = 0.47
+
 const at = (it: EntryItem): { x: number; z: number; ry: number } => ({ x: it.x ?? 0, z: it.z ?? 0, ry: it.ry ?? 0 })
 
 /** Copy of a table with the overrides applied: a `null` or `undefined` value removes the entry. */
@@ -248,6 +252,9 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
   }
 
   // ---- plan ----
+  /** The gas valve beside each stove fed by a copper line from an outdoor shelter, by plan (world coordinates): kept out of the plan's own data. */
+  const stoveValves = new WeakMap<AdapterPlan, ReadonlyMap<string, [number, number, number]>>()
+
   function plan(source: SourcePlan, options: PlanOptions | null = {}): AdapterPlan {
     const res = sourceOf(source)
     const popts: PlanOptions = options || {}
@@ -661,7 +668,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       for (const t of electrical.outlets || []) {
         if (!onFloor(t.floor, false)) continue
         const c = circuits.find((x) => (x.outlets || []).indexOf(t.id) >= 0)
-        const item: EntryItem = { x: K.x(t.u), z: K.z(t.v), ry: K.ry(t.frontU, t.frontV), y: t.y, seed: seedOf(t.id) }
+        const item: EntryItem = { x: K.x(t.u), z: K.z(t.v), ry: K.ry(t.frontU, t.frontV), y: t.y - WALL_PLATE.height / 2, seed: seedOf(t.id) }
         if (c) item.circuit = c.id
         const e = entry(t.id, 'wall_socket', item, t.id, t.floor)
         e.connections.circuit = c ? c.id : null
@@ -671,7 +678,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       const lights = new Set<string>(result.lights)
       for (const s of electrical.switches || []) {
         if (!onFloor(s.floor, false)) continue
-        const item: EntryItem = { x: K.x(s.u), z: K.z(s.v), ry: K.ry(s.frontU, s.frontV), y: s.y, seed: seedOf(s.id) }
+        const item: EntryItem = { x: K.x(s.u), z: K.z(s.v), ry: K.ry(s.frontU, s.frontV), y: s.y - WALL_PLATE.height / 2, seed: seedOf(s.id) }
         // global device ids ("object:device"): each lamp is an object with the `lamp` device
         item.controls = (s.controls || []).map((id) => id + ':lamp')
         const e = entry(s.id, 'wall_switch', item, s.id, s.floor)
@@ -775,6 +782,14 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       }
     }
     hideCylinders()
+    // a cylinder in its outdoor shelter feeds a copper line through the wall: the stove's hose ends at the line's valve beside it, never at the cylinder
+    const valves = new Map<string, [number, number, number]>()
+    for (const m of res.items ?? []) {
+      const valve = (m as { gasValve?: { x?: unknown; z?: unknown; y?: unknown } }).gasValve
+      if (m.category !== 'stove' || !valve || typeof valve.x !== 'number' || typeof valve.z !== 'number' || typeof valve.y !== 'number') continue
+      valves.set(m.id, [K.x(valve.x), floorYOf(res, o, m.floor) + valve.y, K.z(valve.z)])
+    }
+    stoveValves.set(result, valves)
     return result
   }
 
@@ -789,9 +804,21 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
     throw new Error(msg('error.unknownOwnType', { type: entry.type }))
   }
 
+  /** The valve on top of each stove's cylinder, by stove id (world coordinates, y absolute): its gas hose runs to it. */
+  function cylinderValves(planned: AdapterPlan): Map<string, [number, number, number]> {
+    const out = new Map<string, [number, number, number]>(stoveValves.get(planned))
+    for (const b of planned.cylinders) {
+      if (b.stove && out.has(b.stove)) continue
+      const cylinder = planned.items.find((e) => e.id === b.id)
+      if (b.stove && cylinder) out.set(b.stove, [cylinder.item.x ?? 0, cylinder.floorY + (cylinder.item.h ?? CYLINDER_VALVE_Y), cylinder.item.z ?? 0])
+    }
+    return out
+  }
+
   // Wires what the plan has already decided: the outlet of the appliance, the cylinder of the stove, the circuit of the shower, the water inlet of the machine.
-  function connect(entry: PlanEntry, spec: ObjectSpec): ObjectSpec {
+  function connect(entry: PlanEntry, spec: ObjectSpec, valves: ReadonlyMap<string, readonly [number, number, number]> = new Map()): ObjectSpec {
     const L = entry.connections || {}
+    const cylinderAt = valves.get(entry.id)
     if (entry.type === 'wall_switch') for (const p of spec.parts || []) if (p.id === 'rocker') p.t0 = entry.lit ? 1 : 0 // the key at the position of the lamps
     if (entry.type !== 'shower') {
       for (const dv of spec.devices || []) if (L.outlet && dv.socket === 'auto') dv.socket = L.outlet + ':socket'
@@ -808,6 +835,20 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
       }
     }
     if ((entry.type === 'stove' || entry.type === 'camp_stove') && L.fuel) for (const b of spec.burners || []) if (b.fuel === 'auto') b.fuel = L.fuel
+    if (entry.type === 'stove' && cylinderAt) {
+      // the hose runs on from behind the stove, down the gap to the wall and along the floor, to the valve of its cylinder (local coordinates of the stove)
+      const it = at(entry.item)
+      const dx = cylinderAt[0] - it.x
+      const dz = cylinderAt[2] - it.z
+      const lx = r3(Math.cos(it.ry) * dx - Math.sin(it.ry) * dz)
+      const lz = r3(Math.sin(it.ry) * dx + Math.cos(it.ry) * dz)
+      const hose = (spec.wires || []).find((w) => w.id === 'gas_hose')
+      const behind = hose?.points?.[1]
+      if (hose && hose.points && behind) {
+        const floorZ = behind[2]!
+        hose.points = [hose.points[0]!, behind, [lx, 0.03, floorZ], [lx, 0.03, lz], [lx, r3(cylinderAt[1] - entry.floorY), lz]]
+      }
+    }
     if (entry.type === 'fireplace' && L.chimneyTop) {
       // the smoke comes out of the top of the outside chimney: the world point goes back to the local coordinates of the object
       const it = at(entry.item)
@@ -908,6 +949,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
 
   // ---- add ----
   function add(world: World, planned: AdapterPlan, options: AddOptions | null = {}): AddResult {
+    const valves = cylinderValves(planned)
     const aopts: AddOptions = options || {}
     const info = worlds.get(world)
     const build = aopts.build || ((type: string, item: EntryItem) => hh.build(type, item, recorderApi()))
@@ -1003,7 +1045,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
           continue
         }
       }
-      connect(e, spec)
+      connect(e, spec, valves)
       const pose = at(e.item)
       world.add(e.id, spec, { x: pose.x, y: e.floorY, z: pose.z, ry: pose.ry })
       out.added++

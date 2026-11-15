@@ -14,6 +14,7 @@ import type { HouseDestruction } from '../src/destruction/types'
 import { buildSpecimenMeshes, DEFAULT_SPECIMENS, specimenSpec } from '../src/test-area/specimens'
 import { fakeDocument } from './helpers/fake-document'
 import { THREE, TEMPLATES, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 /**
  * Every bit of the houses: the seven templates of the Visor in both qualities and two seeds, at night, cut, one mesh per piece, without terrain
@@ -38,7 +39,7 @@ cases.push(['house/apartamento:1:floor2', () => house('apartamento', 1, { buildi
 const destroyed = (hit: (s: { world: DestructionWorld; d: HouseDestruction; centre: (id: string) => [number, number, number] }) => void): Root => {
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
   const { house: built } = houseOf(planOf('sobrado', 3), { destruction: world, destructionRenderer: renderer })
   scene.add(built.group)
   const d = built.destruction
@@ -55,6 +56,12 @@ const destroyed = (hit: (s: { world: DestructionWorld; d: HouseDestruction; cent
   return scene
 }
 cases.push(['destruction/breach', () => destroyed(({ world, d, centre }) => world.hitPart(d.id!, 'wall_0_0', { type: 'blunt', point: centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' }))])
+// spall and fracture were recorded again when the blast work became the P-I work of a Hopkinson-Cranz wave (not a tenth of the energy): 0.48 kg of TNT on the 13 cm slab
+// takes 1% of its hit points (the 40 kJ of contact shock, 0.04 x 0.48 kg x 4.184 MJ/kg x half the sphere), cracks it and breaks the three walls standing over the charge;
+// 2.4 kg against wall_0_0 still breaks its window and the baseboard and sidewalk at its foot, and the upper walls over it fall
+// breach, spall and fracture recorded again when the doors and jambs came to be held in their walls (they no longer come off as loose pieces: fewer objects)
+// and the wave began to load only the solid share of a sloped part's box; the breach still opens wall_0_0, the spall still breaks the three walls over it
+// spall and fracture once more when the heat of a blast became its fireball's, seen in a straight line: the same parts break and fall, nothing catches fire
 cases.push(['destruction/spall', () => destroyed(({ world, d }) => world.hitPart(d.id!, 'slab_1_p0', { type: 'explosive', point: d.spec!.parts.find((p) => p.id === 'slab_1_p0')!.position, energy: 4e5, radius: 1.5 }))])
 cases.push(['destruction/fracture', () => destroyed(({ world, d, centre }) => world.hitPart(d.id!, 'wall_0_0', { type: 'explosive', point: centre('wall_0_0'), energy: 2e6, radius: 2.5, source: 'test' }))])
 // the specimens include rural typologies: their pack is registered when the first specimen is drawn (after the houses)

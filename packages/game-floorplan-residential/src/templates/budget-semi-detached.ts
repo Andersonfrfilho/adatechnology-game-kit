@@ -6,7 +6,7 @@ const SMALL_WARDROBE = { wardrobe: { size: [1.1, 0.6], cats: { wardrobe_small: 1
 const DOUBLE_BED_ONLY = { bed: { cats: { '=double_bed': 1 }, pos: 0, clearance: 0.05 } }
 
 export const budgetSemiDetached: TemplateDef = {
-  id: 'budget_semi_detached', use: 'residential_single', partyWalls: ['left'], style: 'budget', limits: { w: [5, 6], d: [11.5, 13] }, defaults: { w: 5.6, d: 12.2 },
+  id: 'budget_semi_detached', masonryUnit: 'ceramic_block_14', use: 'residential_single', partyWalls: ['left'], style: 'budget', limits: { w: [5, 6], d: [11.5, 13] }, defaults: { w: 5.6, d: 12.2 },
   lot: (w, d) => ({ frontSetback: 5.2, marginLeft: 0, marginRight: 1.2, backyardDepth: clamp(25 - 5.2 - d, 5, 14), parking: { width: 3.4 }, garage: { u: 1.7, width: 3.0, to: 'parking' }, pedestrian: { u: w - 1.0 }, doorTarget: { a: 'living', side: 'front' }, libraries: { backyard: 'backyard_slab' } }),
   facadeExtra: (f, _rng) => { f.semiDetached = 'left'; f.partyWall = 'left'; },
   floors: [{

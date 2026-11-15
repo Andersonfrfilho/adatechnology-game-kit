@@ -1,6 +1,7 @@
 import { GROUND } from '../types'
 import type { Rect, StructurePart } from '../types'
 import { round2, touches } from '../geometry'
+import { pillarBox } from './context'
 import type { BuildContext, BuildWall } from './context'
 import { addWallPillars } from './wall-pillars'
 
@@ -106,12 +107,31 @@ function cornerPoints(walls: readonly BuildWall[]): [number, number][] {
   return points
 }
 
+/**
+ * The box of the corner pillar at (u, v): its long side in one of the two walls, from the outer face of the other (a square pillar is centred on the corner,
+ * a long one centred there would stand out of the wall it crosses).
+ */
+function cornerBox(context: BuildContext, walls: readonly BuildWall[], u: number, v: number): Rect {
+  const { across, along } = context.pillar
+  // a pillar no longer than the wall is thick fits the corner centred on it
+  if (along <= context.construction.walls.thickness + 1e-6) return pillarBox(context.pillar, u, v, true)
+  const shift = (along - across) / 2
+  const inside = (box: Rect): boolean => walls.some((w) => box[0] >= w.box[0] - 0.005 && box[1] >= w.box[1] - 0.005 && box[2] <= w.box[2] + 0.005 && box[3] <= w.box[3] + 0.005)
+  for (const alongU of [true, false]) {
+    for (const sign of [1, -1]) {
+      const box = pillarBox(context.pillar, alongU ? u + sign * shift : u, alongU ? v : v + sign * shift, alongU)
+      if (inside(box)) return box
+    }
+  }
+  return pillarBox(context.pillar, u, v, true)
+}
+
 /** Concrete corner pillars of a masonry storey where two exterior walls of different axes meet; they run up to the highest plate they touch. */
 function addCornerPillars(context: BuildContext, walls: readonly BuildWall[], floor: number, plates: readonly StructurePart[]): StructurePart[] {
   const { builder } = context
   const topOfFloor = context.topOf(floor)
   return cornerPoints(walls).map(([u, v], k) => {
-    const box: Rect = [u - 0.1, v - 0.1, u + 0.1, v + 0.1]
+    const box = cornerBox(context, walls, u, v)
     const top = Math.max(topOfFloor, ...plates.filter((plate) => touches(plate.aabb, box, 0.05)).map((plate) => plate.y0))
     const pillar = builder.add({ id: `column_${floor}_${k}`, role: 'column', material: context.construction.frame.pillars, aabb: box, y0: context.level(floor), y1: top }, { floor })
     const base = context.baseOf(floor)

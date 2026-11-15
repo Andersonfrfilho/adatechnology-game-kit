@@ -28,8 +28,10 @@ const PUSH_KINDS: ReadonlyArray<{ readonly kind: 'can' | 'bottle' | 'chair'; rea
 ]
 /** Seconds after the blast at which the shove is read: the bodies are still flying, not yet piled against each other. */
 const PUSH_READ_AT = 0.8
-/** Metres a body must move to count as moved. */
+/** Metres a body inside half the reach must move to count as moved. */
 const MOVED = 0.15
+/** Metres a body in the outer half of the reach must move: the wave's impulse falls with distance (P-I), so a can at 8 m from an M67 slides a few centimetres, not 15. */
+const MOVED_FAR = 0.03
 /** Below this share of the blast getting through the cover (a stove, a cupboard, a fridge between), a body is sheltered: it is not expected to fly, only to move less than in the open. */
 const SHELTERED = 0.5
 /** Least bound (m) on how far a sheltered body may move outward: behind solid cover the blast barely reaches it. */
@@ -195,7 +197,7 @@ function pushScenario(all: ReturnType<typeof explosivesTextOf>, bench: Explosive
         const most = Math.max(SHELTERED_MOST, row.cover * Math.max(0, ...open))
         expect(row.outward < most, fillText(text.push_sheltered, { what: things[row.kind] ?? row.kind, distance: row.distance.toFixed(1), cover: (row.cover * 100).toFixed(0), moved: Math.max(0, row.outward).toFixed(2) }), { row: { kind: row.kind, distance: row.distance, outward: row.outward, cover: row.cover, most } })
       }
-      const movedAway = reached.filter((row) => row.outward >= MOVED)
+      const movedAway = reached.filter((row) => row.outward >= (row.distance < blast.radius * 0.5 ? MOVED : MOVED_FAR))
       const least = reached.length === 0 ? 0 : Math.min(...reached.map((row) => row.outward))
       expect(reached.length > 0 && movedAway.length === reached.length, fillText(text.push_outward, { moved: movedAway.length, n: reached.length, least: least.toFixed(2) }), { rows: reached.map((row) => ({ kind: row.kind, distance: row.distance, outward: row.outward })), torn: rows.filter(torn).map((row) => row.objectId) })
       for (const { kind } of PUSH_KINDS) {

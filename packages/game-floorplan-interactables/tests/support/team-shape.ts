@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import vm from 'node:vm'
 
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
+import { WALL_PLATE } from '@adatechnology/game-interactables-household'
 
 import { LEGACY_CONTENT, LEGACY_TYPE } from './legacy-names'
 
@@ -83,7 +84,8 @@ const GROUP: Record<string, string> = {
   food: 'comida', water: 'agua', medicine: 'remedio', tool: 'ferramenta', improvised_weapon: 'arma_improvisada', clothes: 'roupa', document: 'documento', cleaning: 'limpeza', trash: 'lixo', utensil: 'utensilio',
 }
 const POINT_KIND: Record<string, string> = { tap: 'torneira', shower: 'chuveiro', flush: 'descarga', tub: 'tanque', machine: 'maquina' }
-const PLACE: Record<string, string> = { beside: 'ao_lado', external_niche: 'nicho_externo', under_counter: 'sob_bancada' }
+// the outdoor shelter (NBR 13523) came after the team: its place is passed through under a name of the team's language
+const PLACE: Record<string, string> = { beside: 'ao_lado', external_niche: 'nicho_externo', under_counter: 'sob_bancada', outdoor_shelter: 'abrigo_externo' }
 const MODE: Record<string, string> = { grid: 'rede', tap: 'gato', offgrid: 'offgrid' }
 
 // the team told frozen meat by its name
@@ -166,7 +168,7 @@ const IDS: [RegExp, string][] = [
 ]
 const VALUES: Record<string, Record<string, string>> = {
   gas: { botijao: 'cylinder', encanado: 'piped' },
-  place: { ao_lado: 'beside', nicho_externo: 'external_niche', sob_bancada: 'under_counter' },
+  place: { ao_lado: 'beside', nicho_externo: 'external_niche', sob_bancada: 'under_counter', abrigo_externo: 'outdoor_shelter' },
   pointKind: Object.fromEntries(Object.entries(POINT_KIND).map(([k, v]) => [v, k])),
   group: Object.fromEntries(Object.entries(GROUP).map(([k, v]) => [v, k])),
 }
@@ -178,6 +180,8 @@ const KIT_TYPE = Object.fromEntries(Object.entries(LEGACY_TYPE).map(([k, v]) => 
 export function planToKit(answer: unknown): Json {
   const out = toKit(answer) as Json
   out.unmapped = Object.fromEntries(Object.entries(out.unmapped as Json).map(([k, v]) => [k.replace(/\/(.*)$/, (_m, t: string) => `/${KIT_TYPE[t] ?? t}`), v]))
+  // the one departure from the team: a 4x2 plate is centred on its box (the item's `y` is the plate's base, the point's height its centre)
+  for (const entry of out.items as Json[]) if (entry.type === 'wall_socket' || entry.type === 'wall_switch') (entry.item as Json).y = ((entry.item as Json).y as number) - WALL_PLATE.height / 2
   return out
 }
 

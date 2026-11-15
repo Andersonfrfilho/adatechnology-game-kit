@@ -3,14 +3,17 @@ import type { Ctx } from '../ctx'
 import { HANDLE, hingedDoor, plugged, shell } from '../parts'
 import { round3, shade } from '../util'
 
+/** A 4x2 plate (portrait, as its box) in metres: it stands on the finished wall face, which the item's origin is just in front of (the plate's back sinks into the render by `sink`); the item's `y` is its base, so a point at height H gets `y = H - height / 2`. */
+export const WALL_PLATE = { width: 0.075, height: 0.12, thickness: 0.012, sink: 0.005 } as const
+
 /** Plate with the holes of the region's socket standard on its front face. */
 export function wallSocket(c: Ctx): void {
-  const { hd, w, h, y0 } = c
+  const { w, h, y0 } = c
   const cx = 0
   const cy = y0 + h / 2
-  const zp = -hd + 0.012
+  const zp = WALL_PLATE.thickness - WALL_PLATE.sink
   const plate = c.main(0xf1f1ee)
-  c.b('plain', -w / 2, y0, -hd, w / 2, y0 + h, zp, plate)
+  c.b('plain', -w / 2, y0, -WALL_PLATE.sink, w / 2, y0 + h, zp, plate)
   c.b('plain', -w / 2 + 0.006, y0 + 0.006, zp, w / 2 - 0.006, y0 + h - 0.006, zp + 0.003, shade(plate, 0.97)) // raised face
   c.rod('plain', 'z', cx, cy, zp + 0.0035, 0.0285, 0.0015, shade(plate, 0.92))
   const dark = 0x1c1c1e
@@ -32,11 +35,11 @@ export function wallSocket(c: Ctx): void {
 }
 
 export function wallSwitch(c: Ctx): void {
-  const { hd, w, h, y0 } = c
+  const { w, h, y0 } = c
   const cy = y0 + h / 2
-  const zp = -hd + 0.012
+  const zp = WALL_PLATE.thickness - WALL_PLATE.sink
   const plate = c.main(0xf1f1ee)
-  c.b('plain', -w / 2, y0, -hd, w / 2, y0 + h, zp, plate)
+  c.b('plain', -w / 2, y0, -WALL_PLATE.sink, w / 2, y0 + h, zp, plate)
   c.b('plain', -w / 2 + 0.006, y0 + 0.006, zp, w / 2 - 0.006, y0 + h - 0.006, zp + 0.003, shade(plate, 0.97))
   c.b('plain', -0.018, cy - 0.032, zp + 0.003, 0.018, cy + 0.032, zp + 0.006, shade(plate, 0.85)) // key frame
   c.part(

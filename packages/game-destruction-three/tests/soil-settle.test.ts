@@ -4,6 +4,7 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
+import { physicsOption } from './setup-physics'
 
 describe('settle: the soil offset is drawn under the host root', () => {
   it('moves the parts with the settlement and tilt and leaves the root where the host put it', () => {
@@ -31,7 +32,7 @@ describe('settle: the soil offset is drawn under the host root', () => {
     })
     scene.add(root)
     root.updateMatrixWorld(true)
-    const renderer = createDestructionRenderer(THREE, { scene, world, vfx: createVfx() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, vfx: createVfx() })
     renderer.bind('tower', root)
     for (let i = 0; i < 10; i++) {
       world.update(0.1)

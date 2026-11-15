@@ -35,6 +35,11 @@
       "owners": ["game-weapons", "game-weapons-three"],
       "use": "the arsenal of game-weapons and its models in game-weapons-three (projectileModel, the explosives)",
       "words": ["grenade", "granada", "molotov", "rocket", "foguete", "mine", "mina", "claymore", "explosive", "explosivo"]
+    },
+    "physics": {
+      "owners": ["game-physics", "game-physics-jolt"],
+      "use": "bodies, shapes, joints and the step of game-physics (types, createPhysicsLoop, KIT_WORLD); game-physics-jolt is the only adapter over Jolt, and it draws nothing",
+      "words": ["jolt", "rigidbody", "fisica"]
     }
   },
   "window": 6,

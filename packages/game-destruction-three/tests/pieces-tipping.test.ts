@@ -2,11 +2,12 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const drop = (id: string, size: [number, number, number], tilt: number, mass: number, meshOffset: [number, number, number] = [0, 0, 0]) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
   world.addObject(id, [partState('body', 'wood', { mass })])
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))
   mesh.position.set(...meshOffset)

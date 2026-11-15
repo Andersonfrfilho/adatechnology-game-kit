@@ -88,7 +88,7 @@ const HIGH_FLOORS: FloorDef[] = [
 ]
 
 export const highEndContemporary: TemplateDef = {
-  id: 'high_end_contemporary', use: 'residential_single', floorRange: [1, 3], style: 'high', limits: { w: [20, 24], d: [18.5, 21] }, defaults: { w: 21, d: 19.5 },
+  id: 'high_end_contemporary', masonryUnit: 'ceramic_block_14', use: 'residential_single', floorRange: [1, 3], style: 'high', limits: { w: [20, 24], d: [18.5, 21] }, defaults: { w: 21, d: 19.5 },
   options: { floors: [2, 3] },
   floorsFn: op => { const n = floorCount(op, 2); return [HIGH_FLOORS[0], HIGH_FLOORS[1]].concat(n === 3 ? [HIGH_FLOORS[2]] : []).slice(0, Math.max(n, 1)); },
   lot: (w, d) => { const wa = w - 11.2, backDepth = clamp(40 - 8 - d, 13, 22); return {

@@ -42,7 +42,7 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 ## API principal
 | Função / tipo | Para que serve |
 |---|---|
-| `createDestructionRenderer(THREE, options)` | cria o `DestructionRenderer` (`scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `groundAt`, `autoSplit`, `onPiece`, `onSound`, `vfx`, `camera`, `pointScale`) |
+| `createDestructionRenderer(THREE, options)` | cria o `DestructionRenderer` (`scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `groundAt`, `terrainAt`, `autoSplit`, `onPiece`, `onSound`, `vfx`, `camera`, `pointScale`) |
 | `renderer.bind / unbind` | liga um objeto do mundo à raiz three.js (`parts`, `syncTransform`) |
 | `renderer.makePiece / pieces / piece / impulse` | peça física arremessável e empurrões |
 | `renderer.update(dt)` | integra fragmentos, peças e partículas |
@@ -53,6 +53,13 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 | `heatColor(temperatureC)` | cor `0xRRGGBB` do brilho: 0 abaixo de ~450 °C, vermelho ~500, laranja ~800, branco de 1400 |
 
 `specFromObject3D` lê `userData.destructionMaterial`, `destructionPart`, `destructionIgnore`, `destructionTags` e `hollow`.
+
+## Detritos de explosão (`blastDebris`, opcional)
+Sem a opção, o blast empurra, acorda e solta tudo no próprio quadro. Com `blastDebris: {}`: **todo número é opção** (renderer: `RendererOptions.blastDebris`; por explosão: `ExplodeOptions.debris`, que vence, no que é de uma explosão só: `maxWakeDelay`, `minPhysicsPieces`, `maxPhysicsPieces`, `physicsCostTargetMs`, `chipSize`; padrões em `BLAST_DEBRIS_DEFAULTS`, medidos na máquina "Intel Core Ultra 9 275HX", evidence T3.6d). Nada adapta por GPU, só pelo custo medido (`PhysicsFrame.stepMs` ÷ corpos acordados). **Determinismo (C8):** o custo medido depende da máquina; `RendererOptions.debrisCost` escolhe a fonte: `{ source: 'measured', record? }` (padrão, grava as amostras), `{ source: 'fixed' }` (lotes e contagens só pelos números configurados, igual em toda máquina: testes, replays, lockstep) ou `{ source: 'replay', samples }` (toca as amostras gravadas).
+- `wakeCostTargetMs` (4): fila de despertar em lotes, mais perto do jogador (`focus`) primeiro, dimensionada pelo custo agregado dos quadros anteriores; `maxWakeDelay` (0,08 s), `maxQueuedWakes` (2048), `minWakesPerFrame` (8).
+- `minPhysicsPieces`/`maxPhysicsPieces` (24/300), `physicsCostTargetMs` (5), `wakeCostPerBodyMs` (0,02), `physicsCostPerBodyMs` (0,0022): quantas peças do blast entram na física (250 na máquina medida), as grandes e as mais perto do jogador primeiro. `chipSize` (0,15 m): abaixo disso é lasca e vai depois das grandes; a peça que fica de fora continua parada e o blast joga lascas visuais (`vfx`) ali.
+- `maxLivePieces` (600) e `far` (`distance` 40 m, `age` 30 s, `action` `'sleep'`|`'fade'`, `fadeSeconds` 0,5): distantes e velhas dormem ou somem; `onDebrisFaded(id, root)` devolve a geometria ao jogo. Desenho mesclado de entulho parado é `settledBatches`.
+- `velocityIterations` é opção do mundo (`WorldDesc`), padrão 32 no `KIT_WORLD`.
 
 ## Compõe com
 - `game-destruction` (dependência): fonte de todos os eventos.

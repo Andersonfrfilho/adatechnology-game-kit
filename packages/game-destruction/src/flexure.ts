@@ -148,7 +148,7 @@ export const tensionSteel = (part: PartSpec, dims: Vec3, section: BendSection, o
   if (rebar && rebar.ratio > 0) return { area: rebar.ratio * section.b * d, d, yieldMPa }
   if (!cage) return { area: 0, d, yieldMPa }
   const one = (Math.PI * cage.diameter * cage.diameter) / 4
-  const count = isMember(dims) ? memberBarCount(section.b, cage.spacing) : section.b / cage.spacing
+  const count = isMember(dims, part.structure?.role) ? memberBarCount(section.b, cage.spacing) : section.b / cage.spacing
   return { area: one * count, d, yieldMPa }
 }
 
@@ -192,7 +192,7 @@ export interface BendGeometry {
 
 export const bendGeometry = (part: PartSpec): BendGeometry => {
   const dims = shapeDims(part.shape)
-  const member = isMember(dims)
+  const member = isMember(dims, part.structure?.role)
   const q = quatFromEuler(...(part.rotation ?? [0, 0, 0]))
   const up = rotateVec(quat.conjugate(q), [0, 1, 0])
   let spanAxes: number[]

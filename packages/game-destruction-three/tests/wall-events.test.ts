@@ -4,13 +4,14 @@ import { describe, expect, it } from 'vitest'
 import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 /** A wall of concrete 2.4 x 2.1 x 0.2 m facing +z, bound to the part `wall`. */
 function setup() {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const sounds: string[] = []
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (key) => sounds.push(key) })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onSound: (key) => sounds.push(key) })
   world.addObject('o1', [partState('wall', 'concrete')])
   const wall = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.1, 0.2), new THREE.MeshStandardMaterial({ color: 0xcfc8b8 }))
   wall.position.set(0, 1.05, 0)
@@ -68,7 +69,7 @@ describe('the mark of a round by material', () => {
   const piece = (material: string, color = 0x8a5a2b) => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('o1', [partState('p', material)])
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 0.05), new THREE.MeshStandardMaterial({ color }))
     const root = new THREE.Group()
@@ -237,7 +238,7 @@ describe('chip of a wall of laid units', () => {
   it('throws the bricks that came out whole in the brick colour, and a broken piece of brick in the colour of its inside', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('o1', [partState('wall', 'brick')])
     const colours = (): number[] => (scene.children.filter((c) => c.name === 'fragment') as THREE.Mesh[]).map((m) => (m.material as THREE.MeshLambertMaterial).color.getHex())
     world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0', { material: 'brick', unit: true })] })
@@ -254,7 +255,7 @@ describe('chip and the impact marks of the effects', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const vfx = createVfx()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), vfx })
     world.addObject('o1', [partState('wall', 'concrete')])
     const decals = vfx.workshop().decals
     decals.add(0.02, 1, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
@@ -268,7 +269,7 @@ describe('chip and the impact marks of the effects', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const vfx = createVfx()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), vfx })
     world.addObject('o1', [partState('board', 'mdf')])
     const decals = vfx.workshop().decals
     decals.add(0.02, 1, 0.1, 0.06, 0x0e0d0c, { n: [0, 0, 1] })
@@ -280,7 +281,7 @@ describe('chip and the impact marks of the effects', () => {
   it('marks the fragments it throws as pieces drawn by the kit', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('o1', [partState('board', 'mdf')])
     world.emit({ type: 'chip', object: 'o1', part: 'board', center: [0, 1, 0], size: [0.04, 0.04, 0.04], rotation: [0, 0, 0, 1], fragments: [fragment('board#t0-0')], torn: true })
     renderer.update(0.016)
@@ -299,7 +300,7 @@ describe('the colour of crushed masonry', () => {
     const bursts: { kind: string; color?: number }[] = []
     const burst = vfx.burst.bind(vfx)
     vfx.burst = (kind, point, normal, count, speed, options) => { bursts.push({ kind: String(kind), color: options?.color }); burst(kind, point, normal, count, speed, options) }
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), vfx })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), vfx })
     world.addObject('o1', [partState('wall', 'brick')])
     const wall = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.1, 0.2), new THREE.MeshStandardMaterial({ color: 0xffffff }))
     wall.position.set(0, 1.05, 0)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { box, coincidentFaces, describeCoincidentFaces } from '../src'
+import { GAME_DEPTH_PRECISION, box, coincidentFaces, depthResolution, describeCoincidentFaces } from '../src'
 import type { CoincidentBatch } from '../src'
 
 /** A box primitive moved to `at` (no rotation), as a world-space batch. */
@@ -58,5 +58,55 @@ describe('coincidentFaces', () => {
   it('ignores overlaps smaller than a square centimetre', () => {
     const hits = coincidentFaces([boxAt([1, 1, 1], [0, 0, 0], 'a'), boxAt([1, 1, 1], [0.995, 0.995, 0], 'b')])
     expect(hits).toEqual([])
+  })
+})
+
+describe('near mode (depth-buffer precision)', () => {
+  const sheet = (z: number, up = true): number[] => (up ? [0, 0, z, 1, 0, z, 0, 1, z] : [0, 0, z, 0, 1, z, 1, 0, z])
+
+  it('resolves about 1.07 mm at 30 m for the game camera', () => {
+    expect(depthResolution()).toBeGreaterThan(0.00105)
+    expect(depthResolution()).toBeLessThan(0.0011)
+  })
+
+  it('catches a 1 mm gap and ignores 3 mm', () => {
+    const near = coincidentFaces([{ positions: sheet(0), label: 'a' }, { positions: sheet(0.001), label: 'b' }], { depth: GAME_DEPTH_PRECISION })
+    expect(near).toHaveLength(1)
+    expect(near[0]!.kind).toBe('coplanar')
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a' }, { positions: sheet(0.003), label: 'b' }], { depth: GAME_DEPTH_PRECISION })).toEqual([])
+  })
+
+  it('catches nearly parallel faces that cross under the resolution, not ones that part further', () => {
+    const tilted = [0, 0, 0.0002, 1, 0, 0.0008, 0, 1, 0.0002]
+    const steep = [0, 0, 0.0002, 1, 0, 0.02, 0, 1, 0.0002]
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a' }, { positions: tilted, label: 'b' }], { depth: GAME_DEPTH_PRECISION })).toHaveLength(1)
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a' }, { positions: steep, label: 'b' }], { depth: GAME_DEPTH_PRECISION })).toEqual([])
+  })
+
+  it('catches the two sides of a thin double-sided wall only when something draws both sides', () => {
+    const wall = (doubleSided: boolean): ReturnType<typeof coincidentFaces> =>
+      coincidentFaces([{ positions: sheet(0), label: 'outer', doubleSided }, { positions: sheet(0.0005, false), label: 'inner' }], { depth: GAME_DEPTH_PRECISION })
+    expect(wall(false)).toEqual([])
+    expect(wall(true)[0]!.kind).toBe('opposed')
+  })
+})
+
+describe('near mode: faces that draw the same pixels', () => {
+  const sheet = (z: number): number[] => [0, 0, z, 1, 0, z, 0, 1, z]
+  const near = { depth: GAME_DEPTH_PRECISION }
+  const grey = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  const red = [1, 0, 0, 1, 0, 0, 1, 0, 0]
+
+  it('passes two faces of one look and one colour, facing exactly alike: whichever wins the depth test, the pixel is the same', () => {
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a', look: 'plaster', colors: grey }, { positions: sheet(0), label: 'b', look: 'plaster', colors: grey }], near)).toEqual([])
+  })
+
+  it('still catches them in another colour, another look, without a look, or with another texture placement', () => {
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a', look: 'plaster', colors: grey }, { positions: sheet(0), label: 'b', look: 'plaster', colors: red }], near)).toHaveLength(1)
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a', look: 'plaster' }, { positions: sheet(0), label: 'b', look: 'wood' }], near)).toHaveLength(1)
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a' }, { positions: sheet(0), label: 'b' }], near)).toHaveLength(1)
+    const uv = [0, 0, 1, 0, 0, 1], shifted = [0.5, 0, 1.5, 0, 0.5, 1]
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a', look: 'brick', uvs: uv }, { positions: sheet(0), label: 'b', look: 'brick', uvs: shifted }], near)).toHaveLength(1)
+    expect(coincidentFaces([{ positions: sheet(0), label: 'a', look: 'brick', uvs: uv }, { positions: sheet(0), label: 'b', look: 'brick', uvs: uv }], near)).toEqual([])
   })
 })

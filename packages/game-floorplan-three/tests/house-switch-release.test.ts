@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { fakeRoom } from './helpers/area-room'
 import { THREE, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 const DT = 1 / 30
 const C4 = { energy: 345600, radius: 18 }
@@ -18,7 +19,7 @@ function burntHouse() {
   const world = createDestruction({ seed: 1 })
   const scene = new THREE.Scene()
   const released: string[][] = []
-  const renderer = createDestructionRenderer(THREE, { scene, world, onReleased: (ids) => released.push([...ids]) })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, onReleased: (ids) => released.push([...ids]) })
   const step = (seconds: number): void => {
     for (let t = 0; t < seconds; t += DT) {
       world.update(DT)

@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { wallPiece, wallPlan } from '../src'
 import { THREE } from './helpers/houses'
 import { fakeDocument } from './helpers/fake-document'
+import { physicsOption } from './setup-physics'
 
 /** What the tests read of a part of the structure. */
 type StructurePiece = { id: string; role: string; aabb: number[]; y0: number; y1: number }
@@ -373,7 +374,7 @@ describe('wallPiece', () => {
     const piece = make()
     const world = createDestruction({ seed: 7 })
     const scene = new THREE.Scene()
-    const renderer = createDestructionRenderer(THREE, { scene, world })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
     const id = world.add(piece.spec, { id: 'target', position: [0, 0, -11] })
     const root = piece.build(THREE)
     root.position.set(0, 0, -11)

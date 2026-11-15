@@ -1,6 +1,10 @@
 #!/bin/sh
 # A local sound pack (tools/local-audio) never enters git: the config, a local-audio folder or any audio file but the kit's own sounds (the manifest's CC0 and CC-BY files in packages/game-audio/assets/sfx) stops the commit.
 node tools/local-audio/local-audio.mjs guard-git || exit 1
+# Every package that draws pieces has the z-fighting guard (CLAUDE.md section 3); it needs no GPU.
+node tools/z-fighting/coverage.mjs || exit 1
+# The houses (every construction level) for what the staged files touch: the reference house and the templates of a touched pack, one seed; no GPU.
+node tools/z-fighting/houses.mjs || exit 1
 # Fast check on what is being committed: eslint on the staged JS/TS files. Skip once with `git commit --no-verify`.
 files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|mjs|cjs)$' | grep -v '^specs/')
 [ -z "$files" ] && exit 0

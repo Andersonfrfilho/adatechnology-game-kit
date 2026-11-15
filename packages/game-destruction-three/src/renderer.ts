@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -7,10 +7,19 @@ import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
+import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris } from './blast-debris'
+import type { DebrisCostSample, ResolvedBlastDebris } from './blast-debris'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
-import type { Bound, HostVis, MeshVis, PartVis, PieceBody, PieceRound } from './internal'
+import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
+import { isTurned } from './internal'
+import { drawnSolidsOf } from './drawn-solids'
+import { hollowBoxesOf } from './drawn-boxes'
+import type { MeasureBudget } from './drawn-solids'
+import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
+import type { StaticSolid } from './engine-pieces'
+import { sameSolids } from './engine-statics'
 import { PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
@@ -77,6 +86,8 @@ const SURFACE_RAYS = 4
 const SURFACE_INSIDE = 0.005
 const SURFACE_STEP = 0.15
 const STATIC_SPAN = 3
+/** Vertices of fixed parts measured from scratch per update for an engine (about 2 ms): a house of hundreds of parts is filled in over a few updates, not one frame. */
+const VERTICES_PER_UPDATE = 3000
 /** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
 const FEET_BAND = 0.03
 const TIP_MIN_HEIGHT = 0.3
@@ -295,10 +306,29 @@ class Renderer implements DestructionRenderer {
   private readonly gravity: number
   private readonly autoSplit: boolean
   private readonly maxFragments: number
+  /** The debris policy of blasts (`RendererOptions.blastDebris`), or null: a host that sets nothing wakes and loosens everything in the blast's frame, as before. */
+  private readonly blastDebris: ResolvedBlastDebris | null
+  private readonly blastWakes: BlastWakes | null
+  private readonly costMeter: PhysicsCostMeter
+  /** The step cost the debris policy reads this frame (`debrisCost`), null when there is none (the kit's own solver, or `fixed`). */
+  private cost: DebrisCostSample | null = null
+  private costFrame = 0
+  /** The pieces faded away (`faded`): their root shrinks, then leaves the scene. */
+  private readonly fading = new Map<string, { root: Object3D; age: number }>()
   private readonly eventBudgetMs: number
   private readonly bounds = new Map<string, Bound>()
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
+  /** `staticSolids` per object, kept until `staticNow` measures the object again for a reason. */
+  private readonly solidCache = new Map<string, { solids: StaticSolid[] }>()
+  /** The objects `staticNow` measured again for a reason (an event, a moved root, boxes that changed): their `staticSolids` are measured again too. */
+  private readonly solidStale = new Set<string>()
+  /** The world matrix of each root when `staticNow` last measured it. */
+  private readonly rootMatrices = new Map<string, number[]>()
+  /** `clipToDrawn` per hosted body: the boxes it was given, the root's world matrix, and the boxes cut to what it draws. */
+  private readonly clipped = new Map<string, { from: readonly StaticSolid[]; matrix: number[]; solids: readonly StaticSolid[] }>()
+  /** What `staticSolids` hands back, refilled each call. */
+  private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
   private readonly staticDirty = new Set<string>()
   private staticAll = true
@@ -372,6 +402,8 @@ class Renderer implements DestructionRenderer {
   private readonly tmpQ: THREE_NS.Quaternion
   private readonly v1: THREE_NS.Vector3
   private readonly v2: THREE_NS.Vector3
+  private readonly v3: THREE_NS.Vector3
+  private readonly q1: THREE_NS.Quaternion
 
   constructor(
     private readonly THREE: ThreeNamespace,
@@ -385,11 +417,17 @@ class Renderer implements DestructionRenderer {
     this.gravity = o.gravity ?? 9.81
     this.autoSplit = o.autoSplit !== false
     this.maxFragments = o.maxFragments ?? 160
+    this.blastDebris = o.blastDebris ? resolveBlastDebris(o.blastDebris) : null
+    this.blastWakes = this.blastDebris ? new BlastWakes(this.blastDebris) : null
+    const priors = resolveBlastDebris(o.blastDebris)
+    this.costMeter = new PhysicsCostMeter(priors.physicsCostPerBodyMs, priors.wakeCostPerBodyMs)
     this.eventBudgetMs = o.eventBudgetMs ?? Infinity
     this.box = new THREE.Box3()
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()
     this.v2 = new THREE.Vector3()
+    this.v3 = new THREE.Vector3()
+    this.q1 = new THREE.Quaternion()
     const maxParticles = Math.max(8, Math.floor((o.maxParticles ?? 2500) * (this.low ? 0.5 : 1)))
     this.visuals = new Visuals(THREE, this.low, 600)
     this.settlement = new SettlementView(THREE, this.visuals)
@@ -416,11 +454,17 @@ class Renderer implements DestructionRenderer {
     this.cages = new RebarCages(THREE, o.scene)
     this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
+      physics: o.physics,
       groundAt: this.groundAt,
+      ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
+      staticSolids: () => this.staticSolids(),
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
+      ...(this.blastDebris
+        ? { keep: { maxLive: this.blastDebris.maxLivePieces, far: this.blastDebris.far, ...(o.focus ? { focus: o.focus } : {}), onFade: (b: PieceBody) => this.fadePiece(b) } }
+        : {}),
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
@@ -567,6 +611,7 @@ class Renderer implements DestructionRenderer {
 
   unbind(objectId: string): void {
     this.staticDirty.add(objectId)
+    this.clipped.delete(objectId)
     const b = this.bounds.get(objectId)
     if (!b) return
     this.restore(objectId)
@@ -595,6 +640,67 @@ class Renderer implements DestructionRenderer {
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
     return { half: [Math.max(0.02, size.x / 2), Math.max(0.02, size.y / 2), Math.max(0.02, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
+  }
+
+  /**
+   * A hosted body's boxes (`hostedSolids`: its damage zones) cut to the box of what its root draws, in the root's frame: the zones reach past the drawn body (17 cm each
+   * side and 14 cm over the room's sedan), and a box where nothing is drawn is an invisible collider (§12): doors made by the wall it is parked against were made inside
+   * it. A box turned against the root (a door swung open) is kept as it is. The same list back until the boxes or the root's place change.
+   */
+  private clipToDrawn(id: string, hosted: readonly StaticSolid[]): readonly StaticSolid[] {
+    const b = this.bounds.get(id)
+    if (!b) return hosted
+    b.root.updateWorldMatrix(true, true)
+    const m = b.root.matrixWorld.elements
+    const known = this.clipped.get(id)
+    if (known && known.from === hosted && known.matrix.every((v, k) => v === m[k])) return known.solids
+    const inv = new this.THREE.Matrix4().copy(b.root.matrixWorld).invert()
+    const drawn = new this.THREE.Box3()
+    const part = new this.THREE.Box3()
+    const to = new this.THREE.Matrix4()
+    b.root.traverseVisible((o) => {
+      const mesh = o as Mesh
+      if (!mesh.isMesh || !mesh.geometry) return
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+      if (!mesh.geometry.boundingBox) return
+      drawn.union(part.copy(mesh.geometry.boundingBox).applyMatrix4(to.multiplyMatrices(inv, mesh.matrixWorld)))
+    })
+    const rootQ = new this.THREE.Quaternion()
+    b.root.getWorldQuaternion(rootQ)
+    const solids = drawn.isEmpty() ? hosted : this.clipEach(hosted, { drawn, inv, root: b.root, rootQ })
+    this.clipped.set(id, { from: hosted, matrix: [...m], solids })
+    return solids
+  }
+
+  private clipEach(hosted: readonly StaticSolid[], frame: { readonly drawn: THREE_NS.Box3; readonly inv: THREE_NS.Matrix4; readonly root: Object3D; readonly rootQ: THREE_NS.Quaternion }): StaticSolid[] {
+    const out: StaticSolid[] = []
+    const q = new this.THREE.Quaternion()
+    const c = new this.THREE.Vector3()
+    const box = new this.THREE.Box3()
+    for (const s of hosted) {
+      q.set(s.rotation[0], s.rotation[1], s.rotation[2], s.rotation[3])
+      // turned against the root (a part posed): kept as the world holds it
+      if (Math.abs(q.dot(frame.rootQ)) < 1 - 1e-6) {
+        out.push(s)
+        continue
+      }
+      c.set(s.center[0], s.center[1], s.center[2]).applyMatrix4(frame.inv)
+      box.min.set(c.x - s.half[0], c.y - s.half[1], c.z - s.half[2])
+      box.max.set(c.x + s.half[0], c.y + s.half[1], c.z + s.half[2])
+      box.intersect(frame.drawn)
+      if (box.isEmpty()) continue
+      const center = box.getCenter(c).applyMatrix4(frame.root.matrixWorld)
+      out.push({ center: [center.x, center.y, center.z], half: [(box.max.x - box.min.x) / 2, (box.max.y - box.min.y) / 2, (box.max.z - box.min.z) / 2], rotation: s.rotation })
+    }
+    return out
+  }
+
+  /** Whether a bound object has no mesh here at all (another module draws it), as against one whose meshes all broke or are hidden. */
+  private drawsNothingHere(objectId: string): boolean {
+    const b = this.bounds.get(objectId)
+    if (!b) return false
+    for (const pv of b.parts.values()) if (pv.meshes.length > 0) return false
+    return true
   }
 
   private meshesOf(b: Bound): MeshVis[] {
@@ -843,7 +949,11 @@ class Renderer implements DestructionRenderer {
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.settlement.update(dt)
+    this.cost = this.sampleCost()
+    this.advanceWakes(dt)
     this.pieceSys.update(dt)
+    this.measureCost()
+    this.updateFading(dt)
     this.fragments.update(dt)
     // what goes on at a part (fire, leaks, trickling grit) reads where the part is after the bodies moved this frame, not a frame behind
     this.updateActive(dt)
@@ -987,8 +1097,18 @@ class Renderer implements DestructionRenderer {
     const lq = b.lastQuat
     const moved = !last || !lq || Math.abs(p.x - last[0]) + Math.abs(p.y - last[1]) + Math.abs(p.z - last[2]) > 1e-5 || Math.abs(q.x - lq[0]) + Math.abs(q.y - lq[1]) + Math.abs(q.z - lq[2]) + Math.abs(q.w - lq[3]) > 1e-6
     if (!moved) return
-    b.lastPos = [p.x, p.y, p.z]
-    b.lastQuat = [q.x, q.y, q.z, q.w]
+    if (last && lq) {
+      last[0] = p.x
+      last[1] = p.y
+      last[2] = p.z
+      lq[0] = q.x
+      lq[1] = q.y
+      lq[2] = q.z
+      lq[3] = q.w
+    } else {
+      b.lastPos = [p.x, p.y, p.z]
+      b.lastQuat = [q.x, q.y, q.z, q.w]
+    }
     if (this.world.has(b.id)) this.world.setTransform(b.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w])
   }
 
@@ -1015,6 +1135,66 @@ class Renderer implements DestructionRenderer {
     return top
   }
 
+  /**
+   * The fixed objects as their drawn boxes turned as drawn (the local box of each mesh in its world matrix), for an engine: one list per object, the same list until
+   * `staticNow` measures that object again. The same meshes `staticNow` keeps: no merged host, no loose part, nothing hidden, nothing wider than `STATIC_SPAN`.
+   */
+  private staticSolids(): Map<string, readonly StaticSolid[]> {
+    const now = this.staticNow()
+    for (const id of this.solidCache.keys()) if (!now.has(id)) this.solidCache.delete(id)
+    // asked every update: the map and the scratch are kept, the lists are the cached ones
+    const out = this.solidsOut
+    out.clear()
+    const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false }
+    for (const id of now.keys()) {
+      // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
+      const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
+      if (hosted) {
+        // pieces the body's own module measured on what it draws (a part id as key) are the drawn shape already: only the damage-zone boxes are cut to it
+        out.set(id, hosted.length > 0 && hosted.every((solid) => solid.key !== undefined) ? hosted : this.clipToDrawn(id, hosted))
+        continue
+      }
+      const cached = this.solidCache.get(id)
+      if (cached && !this.solidStale.has(id)) {
+        out.set(id, cached.solids)
+        continue
+      }
+      this.solidStale.delete(id)
+      budget.incomplete = false
+      const solids = this.measureSolids(id, budget)
+      // some parts wait for the next update: this object is measured again then, the parts done are kept
+      if (budget.incomplete) this.solidStale.add(id)
+      // measured again often to the same numbers: the same boxes keep the same list (an engine rebuilds what changed)
+      if (cached && sameSolids(cached.solids, solids)) {
+        out.set(id, cached.solids)
+        continue
+      }
+      this.solidCache.set(id, { solids })
+      out.set(id, solids)
+    }
+    return out
+  }
+
+  /**
+   * Every fixed thing the object draws as what it collides as (`drawnSolidsOf`): a box where one fits the part, the triangles where not, a part of a merged mesh by its own
+   * vertices, a mesh of any width. What is hidden, broken or loose is not drawn, so it is not here.
+   */
+  private measureSolids(id: string, budget: MeasureBudget): StaticSolid[] {
+    const solids: StaticSolid[] = []
+    const b = this.bounds.get(id)
+    if (!b) return solids
+    for (const pv of b.parts.values()) {
+      if (pv.gone !== 'none') continue
+      const material = this.world.part(id, pv.id)?.material ?? pv.material
+      const surface = material ? surfaceOf(material, this.world.materials.get(material)) : undefined
+      pv.meshes.forEach((mv, k) => {
+        if (mv.loose || !this.visuals.shown(mv)) return
+        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(surface ? { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling ?? 0 } } : solid)
+      })
+    }
+    return solids
+  }
+
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
   private staticNow(): Map<string, number[]> {
     if (this.time - this.staticAt > STATIC_REFRESH) {
@@ -1023,9 +1203,11 @@ class Renderer implements DestructionRenderer {
     }
     if (!this.staticAll && this.staticDirty.size === 0 && this.staticRound.length === 0) return this.staticBoxes
     const box = new this.THREE.Box3()
-    const measure = (b: Bound): void => {
+    const measure = (b: Bound, force: boolean): void => {
       if (b.piece || this.pieceSys.get(b.id)) {
         this.staticBoxes.delete(b.id)
+        this.solidStale.delete(b.id)
+        this.rootMatrices.delete(b.id)
         return
       }
       const out: number[] = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
@@ -1039,22 +1221,33 @@ class Renderer implements DestructionRenderer {
           out[k + 3] = Math.max(out[k + 3], box.max.getComponent(k))
         }
       }
-      this.staticBoxes.set(b.id, out.length > 6 ? out : [])
+      const next = out.length > 6 ? out : []
+      const was = this.staticBoxes.get(b.id)
+      b.root.updateWorldMatrix(true, false)
+      const matrix = b.root.matrixWorld.elements
+      const placed = this.rootMatrices.get(b.id)
+      if (force || !was || was.length !== next.length || next.some((v, k) => Math.abs(v - was[k]) > 1e-6) || !placed || matrix.some((v, k) => v !== placed[k])) this.solidStale.add(b.id)
+      this.rootMatrices.set(b.id, [...matrix])
+      this.staticBoxes.set(b.id, next)
     }
-    const measureId = (id: string): void => {
+    const measureId = (id: string, force: boolean): void => {
       const b = this.bounds.get(id)
-      if (b) measure(b)
-      else this.staticBoxes.delete(id)
+      if (b) measure(b, force)
+      else {
+        this.staticBoxes.delete(id)
+        this.solidStale.delete(id)
+        this.rootMatrices.delete(id)
+      }
     }
     if (this.staticAll) {
       this.staticBoxes.clear()
-      for (const b of this.bounds.values()) measure(b)
+      for (const b of this.bounds.values()) measure(b, true)
       this.staticRound = []
     } else {
-      for (const id of this.staticDirty) measureId(id)
+      for (const id of this.staticDirty) measureId(id, true)
       const until = performance.now() + STATIC_REFRESH_SLICE_MS
       while (this.staticRound.length > 0) {
-        measureId(this.staticRound.pop() as string)
+        measureId(this.staticRound.pop() as string, false)
         if (performance.now() >= until) break
       }
     }
@@ -1123,6 +1316,9 @@ class Renderer implements DestructionRenderer {
         break
       case 'dent':
         this.onDent(ev)
+        break
+      case 'bend':
+        this.onBend(ev)
         break
       case 'hole':
         this.onHole(ev)
@@ -1387,6 +1583,23 @@ class Renderer implements DestructionRenderer {
     return new this.THREE.Vector3(v[0], v[1], v[2]).applyQuaternion(b.root.getWorldQuaternion(this.tmpQ)).normalize()
   }
 
+  /** A plate bent: every mesh of the part turns about the hinge line together (a shovel's blade pieces), on top of the dents they already have. */
+  private onBend(ev: Ev<'bend'>): void {
+    const b = this.bounds.get(ev.object)
+    const pv = b?.parts.get(ev.part)
+    if (!b || !pv) return
+    // the object's frame is in metres whatever the scale of the model root (a model drawn in centimetres): its pose is the root's position and rotation only
+    b.root.updateWorldMatrix(true, false)
+    const point = new this.THREE.Vector3(ev.hinge.point[0], ev.hinge.point[1], ev.hinge.point[2])
+    const origin = this.v1
+    const rotation = this.tmpQ
+    b.root.matrixWorld.decompose(origin, rotation, this.v2)
+    point.applyQuaternion(rotation).add(origin)
+    const axis = this.worldDir(b, ev.hinge.axis)
+    const side = this.worldDir(b, ev.hinge.side)
+    for (const mv of pv.meshes) if (this.visuals.shown(mv)) this.visuals.applyBend(mv, point, axis, side, ev.angle)
+  }
+
   private onDent(ev: Ev<'dent'>): void {
     const b = this.bounds.get(ev.object)
     const pv = b?.parts.get(ev.part)
@@ -1408,22 +1621,8 @@ class Renderer implements DestructionRenderer {
     const def = this.world.materials.get(pv.material)
     const n = this.worldDir(b, ev.hole.normal)
     const look = debrisLook(def, 'shot')
-    const draw = (point: Vec3, normal: THREE_NS.Vector3): void => {
-      const wp = new this.THREE.Vector3(point[0], point[1], point[2])
-      const mv = this.nearestMesh(pv, wp)
-      if (!mv) return
-      if (look.mark === 'star_crack') {
-        const seed = hashNumbers(ev.time, point[0], point[1], point[2])
-        this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, ev.hole.diameter * 5), 0xe8f4ff, seed)
-      } else {
-        // wood tears its fibres around the hole: a ragged rim of fresh wood under it
-        const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
-        if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, ev.hole.diameter * WOOD_RIM), fresh)
-        this.visuals.addHole(mv, wp, normal, ev.hole.diameter)
-      }
-    }
-    draw(ev.worldPoint, n)
-    if (ev.hole.through && ev.exitPoint) draw(ev.exitPoint, n.clone().negate())
+    this.drawHoleMark(pv, ev.worldPoint, n, ev.hole.diameter, ev.time)
+    if (ev.hole.through && ev.exitPoint) this.drawHoleMark(pv, ev.exitPoint, n.clone().negate(), ev.hole.diameter, ev.time)
     if (look.sparks) this.vfx.burst('sparks', ev.worldPoint, [n.x, n.y, n.z], 6, 3.5)
     if (ev.powder) {
       // what the part holds loose (flakes, flour) puffs out: a little back out of the entry, most out of the exit along the shot
@@ -1435,20 +1634,44 @@ class Renderer implements DestructionRenderer {
     this.sound(shotKey(def), ev.worldPoint, 0.6, impactSoundKeys(pv.material, def, ev.blow))
   }
 
+  /** The mark of one hole on the mesh of `pv` nearest to the world `point`: a star crack in glass, a ragged rim and a dark disc elsewhere. */
+  private drawHoleMark(pv: PartVis, point: Vec3, normal: THREE_NS.Vector3, diameter: number, time: number): void {
+    const def = this.world.materials.get(pv.material)
+    const look = debrisLook(def, 'shot')
+    const wp = new this.THREE.Vector3(point[0], point[1], point[2])
+    const mv = this.nearestMesh(pv, wp)
+    if (!mv) return
+    if (look.mark === 'star_crack') {
+      const seed = hashNumbers(time, point[0], point[1], point[2])
+      this.visuals.addCrack(mv, wp, normal, 7, Math.max(0.05, diameter * 5), 0xe8f4ff, seed)
+      return
+    }
+    // wood tears its fibres around the hole: a ragged rim of fresh wood under it
+    const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
+    if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, diameter * WOOD_RIM), fresh)
+    this.visuals.addHole(mv, wp, normal, diameter)
+  }
+
   private onCrack(ev: Ev<'crack'>): void {
     const b = this.bounds.get(ev.object)
     const pv = b?.parts.get(ev.part)
     if (!b || !pv) return
+    this.drawCrackMark(b, pv, ev.crack, ev.worldPoint, ev.time)
+    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
+  }
+
+  /** The mark of one crack: the mortar gap of a settlement crack on both faces of a wall, or the star lines of glass; an opaque body shows chips, holes and dents instead. */
+  private drawCrackMark(b: Bound, pv: PartVis, crack: Crack, worldPoint: Vec3, time: number): void {
     const def = this.world.materials.get(pv.material)
-    const stair = ev.crack.stair
+    const stair = crack.stair
     // a stair-step crack of settlement opens the mortar joints of the wall: a dark gap drawn on its face, as wide as it opened (and wide enough to be seen)
     if (stair && !def?.visual?.transparent) {
-      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const wp = new this.THREE.Vector3(worldPoint[0], worldPoint[1], worldPoint[2])
+      const seed = hashNumbers(time, worldPoint[0], worldPoint[1], worldPoint[2])
       const width = Math.max(stair.width, MIN_DRAWN_CRACK_WIDTH)
-      const normal = this.worldDir(b, ev.crack.normal)
+      const normal = this.worldDir(b, crack.normal)
       const toward = this.worldDir(b, stair.along)
-      const look = { length: ev.crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
+      const look = { length: crack.length, step: stair.step, width, color: SETTLEMENT_CRACK_COLOR, seed }
       // the same crack on both faces of the wall (the far one seen from behind: its side runs the other way round, its path the same)
       for (const face of [wp, wp.clone().addScaledVector(normal, -stair.through)]) {
         const out = face === wp ? normal : normal.clone().negate()
@@ -1458,12 +1681,11 @@ class Renderer implements DestructionRenderer {
     }
     // only glass shows a crack as lines (the break runs inside a clear body); an opaque body shows its damage as chips, holes and dents, never lines drawn over it
     else if (def?.visual?.transparent) {
-      const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
+      const wp = new this.THREE.Vector3(worldPoint[0], worldPoint[1], worldPoint[2])
       const mv = this.nearestMesh(pv, wp)
-      const seed = hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
-      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, ev.crack.length, 0xe8f4ff, seed)
+      const seed = hashNumbers(time, worldPoint[0], worldPoint[1], worldPoint[2])
+      if (mv) this.visuals.addCrack(mv, wp, this.worldDir(b, crack.normal), crack.rays, crack.length, 0xe8f4ff, seed)
     }
-    this.impactSound(pv.material, ev.worldPoint, 0.5, ev.blow)
   }
 
   /** Outward normal of the face of `mv` nearest to a world point: the thin axis of its world box (right for a wall; a sloped face is left to the vertex-range binding). */
@@ -1836,6 +2058,8 @@ class Renderer implements DestructionRenderer {
     const piece = this.pieceSys.create(newId, group, half, center, this.massOf(newId), vel, ang)
     nb.piece = piece
     this.fitSurface(nb, piece)
+    // what lands on it meets its parts as drawn (a board come off with its books), not the box around them all: nothing invisible collides
+    this.fitPartBoxes(nb, piece)
     if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
   }
@@ -2015,20 +2239,60 @@ class Renderer implements DestructionRenderer {
     const lb = new this.THREE.Box3()
     const [cx, cy, cz] = body.localCenter
     const points: Vec3[] = []
-    const boxes: Array<{ center: Vec3; half: Vec3 }> = []
+    const boxes: PartBox[] = []
     for (const mv of meshes) {
       mv.mesh.updateWorldMatrix(true, false)
       this.visuals.localBox(mv, lb)
       if (lb.isEmpty()) continue
-      lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld))
+      m4.multiplyMatrices(inv, mv.mesh.matrixWorld)
+      this.partBoxesOf(mv, { lb, m4, from: [cx, cy, cz] }, boxes)
+      lb.applyMatrix4(m4)
       for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
-      boxes.push({
-        center: [(lb.min.x + lb.max.x) / 2 - cx, (lb.min.y + lb.max.y) / 2 - cy, (lb.min.z + lb.max.z) / 2 - cz],
-        half: [Math.max(0.005, (lb.max.x - lb.min.x) / 2), Math.max(0.005, (lb.max.y - lb.min.y) / 2), Math.max(0.005, (lb.max.z - lb.min.z) / 2)],
-      })
     }
     body.contacts = points.length > 0 && meshes.length <= CONTACT_MESHES ? points : undefined
-    body.partBoxes = boxes.length > 1 ? boxes : undefined
+    // one box turned as drawn (a roof sheet lying askew) is kept too: the box of the piece would be the air around it
+    body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
+  }
+
+  /**
+   * The boxes of one mesh in the piece's frame, from its centre of mass, turned as the mesh is drawn: a plain mesh is its geometry's box in its own space, turned by its
+   * place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
+   * of those vertices in the merged mesh's space is the box around a tilted sheet, mostly air.
+   */
+  private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
+    const [cx, cy, cz] = at.from
+    if (mv.range) {
+      const own: number[] = []
+      this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
+      const drawn = hollowBoxesOf(own)
+      if (drawn) {
+        const pos = new this.THREE.Vector3()
+        const quat = new this.THREE.Quaternion()
+        const scale = new this.THREE.Vector3()
+        at.m4.decompose(pos, quat, scale)
+        for (const box of drawn) {
+          const c = new this.THREE.Vector3((box.low[0]! + box.high[0]!) / 2, (box.low[1]! + box.high[1]!) / 2, (box.low[2]! + box.high[2]!) / 2).applyMatrix4(at.m4)
+          const half: Vec3 = [Math.abs((box.high[0]! - box.low[0]!) * scale.x) / 2, Math.abs((box.high[1]! - box.low[1]!) * scale.y) / 2, Math.abs((box.high[2]! - box.low[2]!) * scale.z) / 2]
+          out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half, rotation: [quat.x, quat.y, quat.z, quat.w] })
+        }
+        return
+      }
+      const pts: number[] = []
+      this.visuals.rangePoints(mv, at.m4, pts)
+      for (const box of fitOrientedBoxes(pts)) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })
+      return
+    }
+    const pos = new this.THREE.Vector3()
+    const quat = new this.THREE.Quaternion()
+    const scale = new this.THREE.Vector3()
+    at.m4.decompose(pos, quat, scale)
+    const c = at.lb.getCenter(new this.THREE.Vector3()).applyMatrix4(at.m4)
+    const size = at.lb.getSize(new this.THREE.Vector3())
+    out.push({
+      center: [c.x - cx, c.y - cy, c.z - cz],
+      half: [Math.max(0.005, Math.abs(size.x * scale.x) / 2), Math.max(0.005, Math.abs(size.y * scale.y) / 2), Math.max(0.005, Math.abs(size.z * scale.z) / 2)],
+      rotation: [quat.x, quat.y, quat.z, quat.w],
+    })
   }
 
   /**
@@ -2074,17 +2338,33 @@ class Renderer implements DestructionRenderer {
       wentOff?.get(objectId) ??
       this.world.blastReach?.(p, at, { ignore: ev.object ? [ev.object, objectId] : [objectId] }) ??
       1
+    // with a debris policy the shove waits its turn in the wake queue (nearest the player first, else the centre), sized by the measured step cost: not the whole pile in the blast's frame
+    const policy = this.blastDebris ? resolveBlastDebris(this.o.blastDebris, options.debris) : null
+    const focus = this.o.focus?.()
+    const reach = (distance: number, apply: () => void, at: Vec3): void => {
+      if (!policy || !this.blastWakes) return apply()
+      const priority = focus ? Math.hypot(at[0] - focus[0], at[1] - focus[1], at[2] - focus[2]) : distance
+      this.blastWakes.push(priority, apply, policy.maxWakeDelay)
+    }
+    // the wave presses on the whole face it meets, so the push has no lever arm beyond the thinnest side of the body: a thin long piece (a shovel) is not spun by it
     const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
-      if (c.distanceTo(this.v2.set(p[0], p[1], p[2])) > ev.radius) return
-      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
+      const distance = c.distanceTo(this.v2.set(p[0], p[1], p[2]))
+      if (distance > ev.radius) return
+      const area = this.waveArea(pc.objectId, pc.halfExtents, pc.root.quaternion, c, p)
+      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId, [c.x, c.y, c.z]) }, { position: [c.x, c.y, c.z], mass: pc.mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
       if (!hit) return
-      const spread = pc.halfExtents[0]
+      const spread = Math.min(...pc.halfExtents)
       const momentum = hit.speed * pc.mass
-      this.pieceSys.impulse(pc, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
+      const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
+      const point: Vec3 = [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread]
+      reach(distance, () => {
+        if (this.pieceSys.get(pc.objectId) === pc) this.pieceSys.impulse(pc, impulse, point)
+      }, [c.x, c.y, c.z])
     }
     for (const pc of [...this.pieceSys.list]) shove(pc)
-    if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf)
+    if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf, policy, reach)
+    this.advanceWakes(0)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
     this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1), {
       radius: ev.radius,
@@ -2092,6 +2372,54 @@ class Renderer implements DestructionRenderer {
       ...(options.effect !== undefined ? { effect: options.effect } : {}),
       ...(report ? { confinement } : {}),
     })
+  }
+
+  /** The area a body shows the blast, or undefined when the host gave the numbers of the game rule (`blastShove`): then the push is that rule, not the blast wave. */
+  private waveArea(objectId: string, half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number | undefined {
+    if (this.o.blastShove !== undefined) return undefined
+    const box = this.areaFacing(half, quaternion, centre, point)
+    const shown = this.shownArea(objectId, point)
+    return shown === undefined ? box : Math.min(box, shown)
+  }
+
+  /**
+   * Square metres the drawn parts of an object still standing show a blast at `point`: the box of each mesh, turned as it is, seen from there. The box of the whole piece
+   * overstates a slender thing: a shovel lying on its side is a 1.1 x 0.07 m box (0.077 m2) but its handle and blade show 0.9 x 0.035 + 0.3 x 0.012 = 0.035 m2.
+   */
+  private shownArea(objectId: string, point: Vec3): number | undefined {
+    const b = this.bounds.get(objectId)
+    if (!b) return undefined
+    const seen = new Set<THREE_NS.Object3D>()
+    const size = new this.THREE.Vector3()
+    const scale = new this.THREE.Vector3()
+    const centre = new this.THREE.Vector3()
+    const turn = new this.THREE.Quaternion()
+    let area = 0
+    for (const pv of b.parts.values()) {
+      if (pv.gone !== 'none') continue
+      for (const { mesh } of pv.meshes) {
+        if (seen.has(mesh) || !mesh.visible) continue
+        seen.add(mesh)
+        const geometry = mesh.geometry
+        if (!geometry.boundingBox) geometry.computeBoundingBox()
+        const bounds = geometry.boundingBox
+        if (!bounds || bounds.isEmpty()) continue
+        mesh.updateWorldMatrix(true, false)
+        mesh.matrixWorld.decompose(centre, turn, scale)
+        bounds.getSize(size).multiply(scale)
+        bounds.getCenter(centre).applyMatrix4(mesh.matrixWorld)
+        area += this.areaFacing([Math.abs(size.x) / 2, Math.abs(size.y) / 2, Math.abs(size.z) / 2], turn, centre, point)
+      }
+    }
+    return area > 0 ? area : undefined
+  }
+
+  /** Square metres a box of half sizes `half` (its own axes, turned by `quaternion`) at `centre` shows a blast at `point`: the sum of its faces seen from there, by the cosine of each. */
+  private areaFacing(half: Vec3, quaternion: THREE_NS.Quaternion, centre: THREE_NS.Vector3, point: Vec3): number {
+    const toward = this.v3.set(centre.x - point[0], centre.y - point[1], centre.z - point[2])
+    if (toward.lengthSq() < 1e-12) return 0
+    toward.normalize().applyQuaternion(this.q1.copy(quaternion).invert())
+    return 4 * (half[1] * half[2] * Math.abs(toward.x) + half[0] * half[2] * Math.abs(toward.y) + half[0] * half[1] * Math.abs(toward.z))
   }
 
   /** The cover between a part of the world that goes off and the centre of each piece and each shoveable body within its radius, as the world stands at that moment. */
@@ -2118,25 +2446,98 @@ class Renderer implements DestructionRenderer {
     return cover
   }
 
-  /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */
-  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number): void {
+  /**
+   * The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. With a debris
+   * policy, how many enter physics is the count the measured cost allows (`physicsPieceCount`): every big one, then the nearest chips while there is room; the chips left
+   * over stay where they stand (nothing invisible collides, nothing drawn is taken away) and the blast throws visual chips there instead.
+   */
+  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number, policy: ResolvedBlastDebris | null, reach: (distance: number, apply: () => void, at: Vec3) => void): void {
     const shoveable = this.o.shoveable
     if (!shoveable) return
+    const candidates: Array<{ b: Bound; world: THREE_NS.Vector3; half: Vec3; mass: number; hit: { direction: Vec3; speed: number }; size: number; distance: number }> = []
+    const focus = this.o.focus?.()
     for (const b of [...this.bounds.values()]) {
       if (b.piece || this.pieceSys.get(b.id) || !shoveable(b.id) || !this.world.has(b.id)) continue
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
       const mass = this.massOf(b.id)
-      if (world.distanceTo(this.v2.set(point[0], point[1], point[2])) > radius) continue
-      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
-      if (!hit) continue
+      const distance = world.distanceTo(this.v2.set(point[0], point[1], point[2]))
+      if (distance > radius) continue
+      const area = this.waveArea(b.id, half, b.root.quaternion, world, point)
+      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id, [world.x, world.y, world.z]) }, { position: [world.x, world.y, world.z], mass, ...(area !== undefined ? { area } : {}) }, this.o.blastShove)
+      // what orders them is the distance to the player when there is one, else to the blast
+      const rank = focus ? Math.hypot(world.x - focus[0], world.y - focus[1], world.z - focus[2]) : distance
+      if (hit) candidates.push({ b, world, half, mass, hit, size: 2 * Math.max(...half), distance: rank })
+    }
+    const count = policy ? physicsPieceCount({ minPieces: policy.minPhysicsPieces, maxPieces: policy.maxPhysicsPieces, costTargetMs: policy.physicsCostTargetMs }, this.costMeter.wakeCostPerBodyMs, this.awakeBodies()) : Infinity
+    const { physics, chips } = policy ? chooseForPhysics(candidates, count, policy.chipSize) : { physics: candidates, chips: [] }
+    for (const { b, world, half, mass, hit, distance } of physics) {
       const piece = this.makePiece(b.id, { mass })
       const body = this.pieceSys.get(b.id)
       if (!body) continue
       this.o.onLoosened?.(b.id, piece, 'blast')
-      const spread = half[0]
+      const spread = Math.min(...half)
       const momentum = hit.speed * mass
-      this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])
+      const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
+      const at: Vec3 = [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread]
+      reach(distance, () => {
+        if (this.pieceSys.get(b.id) === body) this.pieceSys.impulse(body, impulse, at)
+      }, [world.x, world.y, world.z])
+    }
+    for (const { world, hit } of chips) this.vfx.burst('chips', [world.x, world.y, world.z], hit.direction, 4, Math.min(6, hit.speed))
+  }
+
+  /** The step cost of this frame by the `debrisCost` source: the loop's clock, nothing (`fixed`), or the recording. */
+  private sampleCost(): DebrisCostSample | null {
+    const source = this.o.debrisCost
+    if (source?.source === 'fixed') return null
+    if (source?.source === 'replay') return source.samples[this.costFrame++] ?? null
+    const sample = this.pieceSys.stepCost()
+    if (sample && source?.record) source.record.push(sample)
+    return sample
+  }
+
+  /** One frame of the wake queue: the step cost of the frames before sizes the batch. */
+  private advanceWakes(dt: number): void {
+    this.blastWakes?.advance(dt, this.cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs)
+  }
+
+  /** Awake bodies in the physics world (what a blast's debris adds to). */
+  private awakeBodies(): number {
+    return this.pieceSys.activeBodies()
+  }
+
+  /** The world's cost per awake body, from the loop's last frame. */
+  private measureCost(): void {
+    if (this.cost) this.costMeter.observe(this.cost.stepMs, this.cost.active)
+  }
+
+  /** A piece at rest that is far and old, or over the cap (`PieceSystemOptions.keep`): its body and collider go now and its root shrinks away. */
+  private fadePiece(b: PieceBody): void {
+    const bound = this.bounds.get(b.objectId)
+    if (!bound || this.fading.has(b.objectId)) return
+    this.staticDirty.add(b.objectId)
+    this.pieceSys.remove(b.objectId)
+    this.bounds.delete(b.objectId)
+    this.hitPoints.forget(b.objectId)
+    this.fading.set(b.objectId, { root: bound.root, age: 0 })
+  }
+
+  private updateFading(dt: number): void {
+    if (this.fading.size === 0) return
+    const seconds = this.blastDebris?.far.fadeSeconds ?? 0
+    for (const [id, f] of this.fading) {
+      f.age += dt
+      const left = seconds > 0 ? 1 - f.age / seconds : 0
+      if (left > 0) {
+        f.root.scale.setScalar(left)
+        continue
+      }
+      this.fading.delete(id)
+      // the host owns the geometry and disposes it in `onDebrisFaded`
+      // eslint-disable-next-line kit/no-bare-remove -- the host disposes the root it is handed
+      f.root.removeFromParent()
+      this.o.onDebrisFaded?.(id, f.root)
     }
   }
 
@@ -2355,6 +2756,47 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  /**
+   * Draws a bound object again from the state its world holds now: the host put it back damaged (`DestructionWorld.loadObject`) and the meshes, still whole, take its dents, holes,
+   * cracks, bend and char, with the broken, melted and burned parts hidden, as the live path drew them. Marks the meshes already carry are wiped first.
+   */
+  redraw(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (!b) return
+    this.restoreHome(objectId)
+    b.root.updateWorldMatrix(true, false)
+    for (const pv of b.parts.values()) this.drawPartState(b, pv)
+  }
+
+  private drawPartState(b: Bound, pv: PartVis): void {
+    const ps = this.world.part(b.id, pv.id)
+    if (!ps) return
+    if (ps.status === 'broken' || ps.status === 'melted' || ps.status === 'ashes') {
+      this.visuals.hide(pv, ps.status)
+      return
+    }
+    const toWorld = (local: Vec3): Vec3 => {
+      const at = new this.THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(b.root.matrixWorld)
+      return [at.x, at.y, at.z]
+    }
+    const shown = pv.meshes.filter((mv) => this.visuals.shown(mv))
+    for (const dent of ps.dents) {
+      const at = toWorld(dent.point)
+      const wp = new this.THREE.Vector3(at[0], at[1], at[2])
+      const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, dent)), dent.radius)
+      this.visuals.applyPartDent(shown, wp, this.worldDir(b, dent.normal), dent, reach)
+    }
+    for (const hole of ps.holes) this.drawHoleMark(pv, toWorld(hole.point), this.worldDir(b, hole.normal), hole.diameter, 0)
+    for (const crack of ps.cracks) this.drawCrackMark(b, pv, crack, toWorld(crack.point), 0)
+    if (ps.bend !== undefined && ps.bendHinge) {
+      const hinge = new this.THREE.Vector3(...toWorld(ps.bendHinge.point))
+      const axis = this.worldDir(b, ps.bendHinge.axis)
+      const side = this.worldDir(b, ps.bendHinge.side)
+      for (const mv of shown) this.visuals.applyBend(mv, hinge, axis, side, ps.bend)
+    }
+    if (ps.char > 0 || ps.melt > 0) this.activate(b.id, pv.id)
+  }
+
   release(objectId: string): string[] {
     const removed = this.releasePieces(objectId)
     this.unbind(objectId)
@@ -2471,6 +2913,10 @@ class Renderer implements DestructionRenderer {
     this.throttles.clear()
     this.fragments.reset()
     this.pieceSys.reset()
+    this.blastWakes?.clear()
+    this.costMeter.reset()
+    this.cost = null
+    this.costFrame = 0
   }
 
   wakeRegion(x: number, z: number, radius: number): void {
@@ -2527,6 +2973,7 @@ class Renderer implements DestructionRenderer {
     this.ground.dispose()
     this.cages.dispose()
     this.stopLanding()
+    this.pieceSys.dispose()
     this.visuals.dispose()
     this.ownVfx?.dispose()
     this.disposed = true

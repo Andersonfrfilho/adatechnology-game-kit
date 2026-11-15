@@ -29,7 +29,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           const tp = g.userData.part;
           if (tp === 'water_tank') { const e = shared.ctx.structureIndex.water_tank, L = cap || (g.userData.volume ? Math.round(g.userData.volume * 1000) : 0); tagObject('water_tank', [g], 'plastic', e ? e.role : null, { floor: e ? e.floor : 0, contains: L ? { fluid: 'water', liters: L } : undefined, mass: e ? e.mass : 25, thickness: 0.004, fill: 0.05, tags: ['tank'] }); }
           else if (tp === 'gas_cylinder') tagObject(id, [g], 'steel', null, { mass: 11, form: 'cylinder', thickness: 0.003, fill: 0.03, contains: { fluid: 'gas', liters: 13, pressurized: true }, explodes: { energy: 120000, radius: 5, atC: 300 }, tags: ['gas_bottle'] });
-          else if (tp === 'wall_pipe') tagObject(id, [g], 'plastic', null, { mass: 3, tags: ['pipe'] });
+          else if (tp === 'wall_pipe') tagObject(id, [g], 'plastic', null, { mass: g.userData.mass ?? 3, tags: ['pipe'], ...(g.userData.holder ? { holder: g.userData.holder } : {}) });
           else if (tp === 'shower_door') tagObject(id, [g], 'tempered_glass', null, { mass: 25 });
           else if (tp === 'gate_leaf' || tp === 'mailbox_door') tagObject(id, [g], 'steel', null, { mass: 30 });
         }
@@ -64,18 +64,30 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
           const p: HouseStructurePart = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill as number : 0.15)), meshes: meshes.get(id)!.length, extra: true } as HouseStructurePart;
-          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture']) if (pc[k] != null) p[k] = pc[k];
+          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture', 'holder']) if (pc[k] != null) p[k] = pc[k];
           parts.push(p); byId.set(id, p);
         }
         const inside = (p: HouseStructurePart, q: HouseStructurePart, m: number) => { const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2, cy = (p.y0 + p.y1) / 2; return cx >= q.aabb[0] - m && cx <= q.aabb[2] + m && cz >= q.aabb[1] - m && cz <= q.aabb[3] + m && cy >= q.y0 - m && cy <= q.y1 + m; };
+        const touches = (p: HouseStructurePart, q: HouseStructurePart, m: number) => p.aabb[0] <= q.aabb[2] + m && q.aabb[0] <= p.aabb[2] + m && p.aabb[1] <= q.aabb[3] + m && q.aabb[1] <= p.aabb[3] + m && p.y0 <= q.y1 + m && q.y0 <= p.y1 + m;
         for (const p of parts.slice(base)) { // what is fitted into a wall or slab falls with it (a joint that does not carry)
           // a slab of the sidewalk rests on the ground it is cast on
           if (/^sidewalk:/.test(p.id)) { supports.push({ part: p.id, on: 'ground', joint: 'mortar', extra: true }); continue; }
+          // a stretch of a wiring or pipe run hangs from what holds it: the solid it lies in, or the stretch beside it that is held
+          if (typeof p.holder === 'string' && byId.has(p.holder)) { supports.push({ part: p.id, on: p.holder, joint: 'clip', bears: false, extra: true }); continue; }
           if (!/^(window|window_pane|door|jamb|pipe|water_tank|baseboard)/.test(p.id)) continue;
           const target = /^water_tank/.test(p.id) ? ['slab'] : ['wall', 'partition'];
           let m: HouseStructurePart | null = null, md = 1e9; for (const q of parts.slice(0, base)) { if (!target.includes(q.role) || !inside(p, q, 0.2)) continue; const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; } }
+          // a door frame (its jamb and the door in it) stands in the opening, between the walls beside it and under the lintel: its centre is in no wall, so it
+          // is held by the wall, pillar or lintel its box meets
+          if (!m && /^(window|door|jamb)/.test(p.id)) for (const q of parts.slice(0, base)) {
+            if (!['wall', 'partition', 'column', 'beam'].includes(q.role) || !touches(p, q, 0.02)) continue;
+            const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.y0 + p.y1 - q.y0 - q.y1) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; }
+          }
           // a tile of the baseboard is set in tile adhesive on the wall: glued, it comes off with the wall
           if (m) supports.push({ part: p.id, on: m.id, joint: /^(window|jamb|baseboard)/.test(p.id) ? 'glue' : 'clip', bears: false, extra: true });
+          // a window or door of a building whose walls are drawn but are no part of the structure (an outbuilding) is held by that wall, which stands on the
+          // ground: tied to the ground, it stays in its wall instead of coming loose as a free piece at the first split of the house
+          else if (/^(window|door|jamb)/.test(p.id)) supports.push({ part: p.id, on: 'ground', joint: /^door/.test(p.id) ? 'clip' : 'glue', bears: false, extra: true });
         }
         // The spec is made from the pieces of the plan (the slabs whole), and the structure cuts them into panels; the house is then bound to the panels: a floor, a
         // ceiling and a roof slab are drawn tile by tile in the panel they lie on (house/floors), and the slab they were cut from is not a piece any more.

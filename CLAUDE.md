@@ -10,7 +10,7 @@ qual). As regras valem inteiras: o resumo não tira nada do texto completo.
 |---|---|---|---|
 | 1 | **SDK primeiro** | Procure no SDK (`packages/*`, README e skill da área), depois nas entregas dos times; porte a entrega igual, nunca "parecido"; só crie o que não existe, e crie no pacote dono antes de usar no jogo. Cada peça vem do SDK dono, importada; parede sempre `wallPiece` (como as casas). | [01](specs/regras/01-sdk-primeiro.md) |
 | 2 | **Motor genérico** | Núcleo não conhece o ZombiAdA; conteúdo reaproveitável em pacote de conteúdo (`-fleet`, `-residential`...), conteúdo de um jogo no repositório do jogo; teste do GTA; mundo normal primeiro; tudo configurável; three.js só em `*-three`. | [02](specs/regras/02-motor-generico.md) |
-| 3 | **SDKs se compõem** | Um SDK usa os outros (a casa usa destruição, móveis, itens, vegetação); o jogo só junta. | [03](specs/regras/03-sdks-se-compoem.md) |
+| 3 | **SDKs se compõem** | Um SDK usa os outros (a casa usa destruição, móveis, itens, vegetação); o jogo só junta; regra estrutural num SDK de regras, nunca em mundos isolados. | [03](specs/regras/03-sdks-se-compoem.md) |
 | 4 | **Testes: contrato genérico** | `game-test-room` e `game-contracts` só têm contratos; o específico vai no pacote da lib e num `examples/<lib>-test-area` (`?area=`). | [04](specs/regras/04-testes-contratos.md) |
 | 5 | **Animação: todas as câmeras** | Animação, pose, IK, arma na mão ou bug visual: validar em primeira e terceira pessoa, parado/andando, mira alta/reta/baixa, uma arma por família, com print por câmera. | [05](specs/regras/05-animacao-todas-as-cameras.md) |
 | 6 | **Física: 21 critérios** | Nenhum objeto pronto sem os 21 critérios testados na sala com print. | [docs/criterios-fisica-objetos.md](docs/criterios-fisica-objetos.md) |
@@ -31,7 +31,7 @@ de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin
 
 | Domínio | Pacotes |
 |---|---|
-| Contratos e base | `game-contracts` (destruição, tiro, `TestableModule`), `game-runtime` (quadro), `game-render-three` (luzes, shaders), `game-shapes`/`-three` (formas, liberar memória), `game-kit-defaults` (preset) |
+| Contratos e base | `game-contracts` (destruição, tiro, `TestableModule`), `game-runtime` (quadro), `game-physics` (corpos rígidos, laço de passo fixo), `game-physics-jolt` (adaptador Jolt), `game-render-three` (luzes, shaders), `game-shapes`/`-three` (formas, liberar memória), `game-kit-defaults` (preset) |
 | Casas e construção | `game-floorplan` (planta, lote), `-structure` (sistemas construtivos, caminho de carga, validador, instalações), `-three` (desenho, paredes, telhado), `-residential`, `-commercial`, `-rural`, `-post-apocalyptic`, `-interactables` (planta → objetos e redes) |
 | Materiais e destruição | `game-destruction` (materiais, fratura, vergalhão, solo), `game-destruction-three` (furos, lascas, partículas), `game-vfx`/`-three` (explosão, fogo) |
 | Terreno, clima, plantas | `game-terrain`/`-three`, `game-weather`/`-three`, `game-vegetation`/`-species`/`-three` |

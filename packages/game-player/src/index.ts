@@ -10,5 +10,5 @@ export { createPlayerTestModule } from './testing'
 /** @deprecated import from '@adatechnology/game-player/testing' */
 export type { PlayerTestModule, PlayerTestModuleOptions } from './testing'
 export type * from './types'
-export { DOOR_USE_DEFAULTS, createDoorUse, swingSecondsFor } from './door-use'
-export type { DoorUse, DoorUseBlock, DoorUsePhase, DoorUseRules, DoorUseStep, DoorUseTarget } from './door-use'
+export { DOOR_ARM_REACH, DOOR_SHOULDER_HEIGHT, DOOR_USE_DEFAULTS, createDoorUse, swingSecondsFor } from './door-use'
+export type { DoorUse, DoorUseBlock, DoorUseHand, DoorUsePhase, DoorUseRules, DoorUseStep, DoorUseTarget } from './door-use'

@@ -4,11 +4,12 @@ import { checkDeferredQueue } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
+import { physicsOption } from './setup-physics'
 
 function setup() {
   const world = createDestruction({ seed: 5 })
   const scene = new THREE.Scene()
-  const renderer = createDestructionRenderer(THREE, { scene, world })
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
   const houseRenderer = houseOf(planOf('sobrado', 3), { destruction: world, destructionRenderer: renderer })
   const { house } = houseRenderer
   scene.add(house.group)

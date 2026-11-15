@@ -50,6 +50,7 @@
     "@adatechnology/game-camera": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-render-three": "workspace:^",
+    "@adatechnology/game-shapes": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-vehicles": "workspace:^",
     "@adatechnology/game-vehicles-driving": "workspace:^",

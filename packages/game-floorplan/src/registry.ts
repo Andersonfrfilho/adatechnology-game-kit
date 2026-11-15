@@ -7,6 +7,7 @@ import type {
   FurnitureDef,
   ItemInput,
   Json,
+  OptionResolver,
   RoomColorDef,
   SlotLibrary,
   StateContext,
@@ -37,6 +38,8 @@ export type Registries = {
   SEED_KEYS: { rooms: Record<string, string>; items: Record<string, string> }
   stateDistribution: { weights: Record<string, number> | null; seedKey: string }
   RESULT_EXTENSIONS: ResultExtension[]
+  /** Run in order on the options of every plan before it is laid out (a pack turning its own option into the engine's, e.g. a masonry unit into `wallThickness`). */
+  OPTION_RESOLVERS: { name: string; resolve: OptionResolver }[]
   FINDS_PROVIDERS: FindsProvider[]
   VIEWER_LAYERS: ViewerLayer[]
   LOCALES: Record<string, FloorplanLocale>
@@ -61,6 +64,7 @@ export const createRegistries = (): Registries => ({
   SEED_KEYS: { rooms: {}, items: {} },
   stateDistribution: { weights: null, seedKey: 'state' },
   RESULT_EXTENSIONS: [],
+  OPTION_RESOLVERS: [],
   FINDS_PROVIDERS: [],
   VIEWER_LAYERS: [],
   LOCALES: {},
@@ -175,6 +179,14 @@ export interface ResultExtension {
 }
 
 /** Adds a named piece to every result, after the state and before the zoning report; its output lands in `result[name]`. */
+/** Adds (or replaces, by `name`) a resolver of the options of every plan, run before the plan is laid out. */
+export function registerOptionResolver(name: string, resolve: OptionResolver): void {
+  const list = registries().OPTION_RESOLVERS
+  const i = list.findIndex((x) => x.name === name)
+  if (i >= 0) list[i] = { name, resolve }
+  else list.push({ name, resolve })
+}
+
 export function registerResultExtension(name: string, run: ResultExtensionRun, options: ResultExtensionOptions = {}): void {
   const entry: ResultExtension = { name, run, after: options.after || [], seedKey: options.seedKey ?? name }
   const i = registries().RESULT_EXTENSIONS.findIndex((x) => x.name === name)

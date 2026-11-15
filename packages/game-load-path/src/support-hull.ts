@@ -1,3 +1,6 @@
+/** Metres two parts may stand apart and still touch (a support's contact is measured this much wider). */
+export const SUPPORT_TOLERANCE = 0.05
+
 /** Points of the plane (x, z). */
 export type PlanePoint = readonly [number, number]
 

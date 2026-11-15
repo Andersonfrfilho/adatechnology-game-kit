@@ -2454,6 +2454,73 @@
       },
       "source": "T3.1c",
       "reason": "Viewer pool type \"oculos\": prescription glasses. The old alias pointed at the safety goggles (a protective item)."
+    },
+    "kabar": {
+      "value": {
+        "category": "melee",
+        "weight": 0.32,
+        "rarity": "uncommon",
+        "stack": 1,
+        "shape": "tool",
+        "color": 2895667,
+        "places": [
+          "house",
+          "military_base",
+          "police_station",
+          "gun_shop"
+        ],
+        "hits": 200,
+        "melee": {
+          "weapon": "kabar",
+          "reach": 0.55,
+          "noise": 1
+        }
+      },
+      "source": "reference",
+      "reason": "Melee item of the arsenal weapon `kabar` (lote 1, part C (owner decision 2026-11-06)). Uncommon: a fighting knife kept by veterans and collectors, found in a drawer or in the garage far more often than a tactical knife (rare) and less than a kitchen knife (common). Durability by hits is derived from the knife and machete entries (200 and the like), longer for solid brass."
+    },
+    "katana": {
+      "value": {
+        "category": "melee",
+        "weight": 1.1,
+        "rarity": "rare",
+        "stack": 1,
+        "shape": "tool",
+        "color": 9080208,
+        "places": [
+          "house"
+        ],
+        "hits": 250,
+        "melee": {
+          "weapon": "katana",
+          "reach": 1.1,
+          "noise": 5
+        }
+      },
+      "source": "reference",
+      "reason": "Melee item of the arsenal weapon `katana` (lote 1, part C (owner decision 2026-11-06)). Rare: a decorative or collector sword that hangs on a living-room or bedroom wall. The floorplan has pictures and mirrors on walls but no pickable wall item, so it lies in the bedroom wardrobe (the display cabinet and the TV unit have pools too small to give a rare item a rare chance). Durability by hits is derived from the knife and machete entries (200 and the like), longer for solid brass."
+    },
+    "brass_knuckles": {
+      "value": {
+        "category": "melee",
+        "weight": 0.15,
+        "rarity": "rare",
+        "stack": 1,
+        "shape": "tool",
+        "color": 12095802,
+        "places": [
+          "house",
+          "police_station"
+        ],
+        "hits": 500,
+        "melee": {
+          "weapon": "brass_knuckles",
+          "reach": 0.6,
+          "noise": 5
+        }
+      },
+      "source": "reference",
+      "reason": "Melee item of the arsenal weapon `brass_knuckles` (lote 1, part C (owner decision 2026-11-06)). Rare: an illegal weapon in most places, so a household keeps one hidden in a drawer or in a bag, rarely. Durability by hits is derived from the knife and machete entries (200 and the like), longer for solid brass."
     }
   },
   "names": {
@@ -2616,6 +2683,21 @@
       "value": "Balcão",
       "source": "T3.1f",
       "reason": "Added by the game, not in the team lists: named in pt-BR here."
+    },
+    "item.kabar": {
+      "value": "Faca KA-BAR",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.katana": {
+      "value": "Katana",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.brass_knuckles": {
+      "value": "Soco inglês",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
     }
   },
   "householdRarity": {
@@ -6167,6 +6249,36 @@
         "meters": 0.21,
         "scale": 0.201923
       }
+    },
+    "kabar": {
+      "value": [
+        0.302,
+        0.0383,
+        0.0563
+      ],
+      "source": "REF",
+      "reason": "KA-BAR USMC Mk 2: 11 7/8 in (302 mm) overall, 7 in clip-point blade, 0.7 lb (https://en.wikipedia.org/wiki/Ka-Bar). Thickness and width from the kit model drawn from the Commons photo \"KA-BAR.jpg\".",
+      "material": "metal_tool"
+    },
+    "katana": {
+      "value": [
+        0.98,
+        0.0788,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "Katana: blade (nagasa) of 60 to 80 cm, here 70 cm, in 98 cm with the handle (https://en.wikipedia.org/wiki/Katana). Mass 1.1 kg is a typical value for a mounted katana, not from a single source. Width and thickness from the kit model drawn from the Commons photo \"Antique Japanese (samurai) katana met museum.jpg\".",
+      "material": "long"
+    },
+    "brass_knuckles": {
+      "value": [
+        0.12,
+        0.0127,
+        0.051
+      ],
+      "source": "REF",
+      "reason": "Brass knuckles: four finger rings in a row, about 12 cm across (https://en.wikipedia.org/wiki/Brass_knuckles). Mass 0.15 kg is a typical value. Thickness and depth from the kit model drawn from the Commons photo \"Brass knuckles-P5120192-white.jpg\".",
+      "material": "metal_tool"
     }
   },
   "kitModels": {
@@ -9055,6 +9167,45 @@
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
+    },
+    "kabar": {
+      "value": {
+        "teamId": "kabar",
+        "teamBox": [
+          3.0021,
+          0.3804,
+          0.56
+        ],
+        "scale": 0.100596
+      },
+      "source": "kit",
+      "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit. The weapon of the same id is drawn with this model."
+    },
+    "katana": {
+      "value": {
+        "teamId": "katana",
+        "teamBox": [
+          9.8028,
+          0.7878,
+          0.8
+        ],
+        "scale": 0.099971
+      },
+      "source": "kit",
+      "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit. The weapon of the same id is drawn with this model."
+    },
+    "brass_knuckles": {
+      "value": {
+        "teamId": "soco_ingles",
+        "teamBox": [
+          1.3,
+          0.138,
+          0.553
+        ],
+        "scale": 0.092308
+      },
+      "source": "kit",
+      "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit. The weapon of the same id is drawn with this model."
     }
   },
   "stackByCategory": {
@@ -11089,6 +11240,26 @@
       "value": "crossbow",
       "source": "T3.1i",
       "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "kabar": {
+      "value": "kabar",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is (lote 1, part C)."
+    },
+    "katana": {
+      "value": "katana",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is (lote 1, part C)."
+    },
+    "brass_knuckles": {
+      "value": "brass_knuckles",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is (lote 1, part C)."
+    },
+    "shovel": {
+      "value": "shovel",
+      "source": "owner 2026-11-12",
+      "reason": "The garden shovel (a tool) is also the arsenal weapon `shovel`: picked up from the world it is the shovel in hand that digs, fills and swings, with the damage the object had (owner decision on the shovel's 21 criteria)."
     }
   },
   "meleeWithoutWeapon": {
@@ -11117,5 +11288,145 @@
     ],
     "source": "T3.1b",
     "reason": "Only gasoline fails after 180 days (the page: \"gasolina com mais de 180 dias falha 10% das partidas\")."
+  },
+  "housePoolExtras": {
+    "comoda": {
+      "faca_kabar": {
+        "value": {
+          "item": "kabar",
+          "name": "Faca KA-BAR",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.06,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      },
+      "soco_ingles": {
+        "value": {
+          "item": "brass_knuckles",
+          "name": "Soco inglês",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.03,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      }
+    },
+    "criado": {
+      "faca_kabar": {
+        "value": {
+          "item": "kabar",
+          "name": "Faca KA-BAR",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.06,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      },
+      "soco_ingles": {
+        "value": {
+          "item": "brass_knuckles",
+          "name": "Soco inglês",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.03,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      }
+    },
+    "bancada": {
+      "faca_kabar": {
+        "value": {
+          "item": "kabar",
+          "name": "Faca KA-BAR",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.06,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      }
+    },
+    "estante_ferr": {
+      "faca_kabar": {
+        "value": {
+          "item": "kabar",
+          "name": "Faca KA-BAR",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.06,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Uncommon entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.06 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      }
+    },
+    "guarda": {
+      "katana": {
+        "value": {
+          "item": "katana",
+          "name": "Katana",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.03,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      },
+      "soco_ingles": {
+        "value": {
+          "item": "brass_knuckles",
+          "name": "Soco inglês",
+          "qty": [
+            1,
+            1
+          ],
+          "viewerCategory": "arma_improvisada",
+          "isTakeable": true,
+          "weight": 0.03,
+          "isSupply": false
+        },
+        "source": "derived",
+        "reason": "Rare entry. A pool hands out its 2 to 5 best-ranked entries by weighted draw without replacement, so an entry of weight w in a pool of total weight T turns up in about n x w / T of the containers (n = 3 to 4 at a normal footprint). w = 0.03 puts an uncommon item in about 3 to 5% and a rare one in about 1 to 2% of the containers that list it (measured over 20000 seeds), in about the 28 : 9 proportion of the uncommon and rare shares of the rarity table (spawn.json). Only pools of 6 entries or more carry one: in a pool of 3 to 5 entries the cut to n takes nearly every entry whatever its weight (a katana would be in every china cabinet). (lote 1, part C)"
+      }
+    }
   }
 }

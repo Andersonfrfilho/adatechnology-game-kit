@@ -18,6 +18,11 @@ export interface HandPose {
 export interface HandTargets {
   R?: HandPose | null
   L?: HandPose | null
+  /**
+   * The shaft of a two-handed tool (a shovel, an axe, a sledgehammer) the left hand may slide along, world space: a left grip out of the arm's reach is taken at the nearest point of
+   * this segment the hand reaches, the hand still closed on the shaft, as one shortens the grip on a handle. Absent, the left hand goes to `L` or stops short of it.
+   */
+  slideL?: { readonly from: Vec3; readonly to: Vec3 } | null
   /** How closed the fingers are, 0 open to 1 closed on a grip. Default 1. */
   grip?: number
   /** The same for the left hand, when it differs from `grip` (a hand laid on a forend is looser than the one on the trigger). */

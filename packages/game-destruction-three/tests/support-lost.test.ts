@@ -5,6 +5,7 @@ import { createDestructionRenderer } from '../src/renderer'
 import { FragmentSystem } from '../src/fragments'
 import type { FragmentSystemOptions } from '../src/fragments'
 import { FakeWorld, partState } from './fake-world'
+import { physicsOption } from './setup-physics'
 
 const run = (renderer: { update(dt: number): void }, seconds: number): void => {
   for (let t = 0; t < seconds; t += 1 / 60) renderer.update(1 / 60)
@@ -57,7 +58,7 @@ describe('what lay on a support that is gone falls', () => {
   it('a can asleep on a table falls to the floor when every leg breaks and the top comes down', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { top, breakLeg } = table(world, scene, renderer)
     const { root, piece } = can(world, scene, renderer, 'can', [0.2, 0.79, 0])
     run(renderer, 3)
@@ -74,7 +75,7 @@ describe('what lay on a support that is gone falls', () => {
   it('a table missing one leg still stands, and what is on it stays', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { top, breakLeg } = table(world, scene, renderer)
     const { root } = can(world, scene, renderer, 'can', [0.2, 0.79, 0])
     run(renderer, 3)
@@ -88,7 +89,7 @@ describe('what lay on a support that is gone falls', () => {
   it('with both legs of one end broken the table goes over', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { top, breakLeg } = table(world, scene, renderer)
     breakLeg(0)
     breakLeg(2)
@@ -100,7 +101,7 @@ describe('what lay on a support that is gone falls', () => {
   it('a top left on one leg goes over and comes to rest on the floor', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { top, breakLeg } = table(world, scene, renderer)
     for (const i of [0, 1, 2]) breakLeg(i)
     run(renderer, 6)
@@ -113,7 +114,7 @@ describe('what lay on a support that is gone falls', () => {
   it('a top left on the two legs of one long side turns over that side until it lies on the floor', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { top, breakLeg } = table(world, scene, renderer)
     breakLeg(0)
     breakLeg(1)
@@ -127,7 +128,7 @@ describe('what lay on a support that is gone falls', () => {
   it('a piece asleep on another falls when the one under it is knocked away', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('crate', [partState('body', 'wood', { mass: 3 })])
     const crateMesh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4))
     crateMesh.position.y = 0.2
@@ -192,7 +193,7 @@ describe('after a break nothing is left over air, and nothing collides where not
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const checked: Array<[string, boolean]> = []
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onBrokenChecked: (id, released) => checked.push([id, released]) })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onBrokenChecked: (id, released) => checked.push([id, released]) })
     const { board, breakPost } = stand(world, scene, renderer)
     for (let i = 0; i < 4; i++) breakPost(i)
     run(renderer, 4)
@@ -206,7 +207,7 @@ describe('after a break nothing is left over air, and nothing collides where not
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const checked: Array<[string, boolean]> = []
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onBrokenChecked: (id, released) => checked.push([id, released]) })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onBrokenChecked: (id, released) => checked.push([id, released]) })
     const { breakPost } = stand(world, scene, renderer, 1.2)
     breakPost(0)
     run(renderer, 1)
@@ -217,7 +218,7 @@ describe('after a break nothing is left over air, and nothing collides where not
   it('the drawn boxes of an object leave out what broke', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { breakPost } = stand(world, scene, renderer)
     expect(renderer.shownBoxes('stand')).toHaveLength(5)
     breakPost(0)
@@ -232,7 +233,7 @@ describe('after a break nothing is left over air, and nothing collides where not
   it('a can asleep on a crate wakes in the same update the crate is shoved', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
-    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     world.addObject('crate', [partState('body', 'wood', { mass: 3 })])
     const crateMesh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4))
     crateMesh.position.y = 0.2

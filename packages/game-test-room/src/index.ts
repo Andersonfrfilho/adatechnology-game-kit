@@ -18,3 +18,7 @@ export type { TestTable, TestTableContext, TestTableObject, TestTableOptions, Te
 export type { RoomDoorEvent, RoomDoorState } from './door-open'
 export type { RoomGraphicsOptions } from './graphics'
 export type { ToolMenuGroup, ToolMenuSection, ToolMenuTool } from './tool-menu'
+export { biteShareOf, MIN_BITE_SHARE, toolConditionOf } from './shovel'
+export type { ToolCondition } from './shovel'
+export type { BagFailure, BagResult, InventoryRow, InventorySnapshot } from './inventory-types'
+export { describeCondition } from './inventory-room'

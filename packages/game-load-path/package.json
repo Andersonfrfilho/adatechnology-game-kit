@@ -1,0 +1,46 @@
+{
+  "name": "@adatechnology/game-load-path",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "The load path of a structure as one rule every SDK composes: what rests on what, which supports carry a part's load (the nearest to the ground, or all of them: a beam on a beam, a slab on its four edges), the order the load goes down and how it is shared. No runtime dependencies.",
+  "keywords": [
+    "game",
+    "structure",
+    "load path",
+    "supports",
+    "rules"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-load-path"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -10,6 +10,7 @@ import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners
 import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
+import { createVehicleColliders } from '../colliders'
 import { createVehicleLod } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
 import { createCabinSmoke } from '../cabin-smoke'
@@ -34,6 +35,8 @@ const itemId = (key: string): string => ITEM_OF[key] ?? key
 /** One item of the area: the fleet vehicle it is built from, its item id and, for a wreck, the scenario built into it. */
 type Entry = { readonly key: string; readonly id: string; readonly scenario?: string }
 
+/** Triangles of collider work per update when a vehicle is placed: a car fills in over about ten updates. */
+const COLLIDER_BUDGET = 25000
 const LANE = { z: 11, from: -12, wall: 13 }
 /** A rim on the road throws a burst of sparks this often. */
 const SPARK_EVERY_S = 0.08
@@ -171,6 +174,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const kit = r.userData.kit as VehicleKit
       const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
       tapEffects(d)
+      // an engine collides with what the vehicle draws, piece by piece, not with its damage-zone boxes
+      // (a vehicle that just spawned fills in over several updates)
+      const colliders = createVehicleColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET })
+      d.colliders = colliders.pieces
+      d.collidersPending = colliders.isPending
       // a leaf the room swings (door, hood, lid) is posed through here: away from its rest the vehicle draws in full, or the fused one shows it shut
       const setPartPose = d.setPartPose?.bind(d)
       {
