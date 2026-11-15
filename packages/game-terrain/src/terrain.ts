@@ -488,6 +488,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       touchIndex(index)
     }
     if (taken <= 0) return 0
+    emitDeform(spec.from.x, spec.from.z, spec.from.radius)
     // laid in the hole: the deepest vertices of the bite first, so the hole closes level
     const target = verticesUnder(spec.x, spec.z, spec.size ?? [0.3, 0.3]).sort((a, b) => dug[b]! - dug[a]!)
     let left = taken
@@ -1062,6 +1063,16 @@ export function createTerrain(options: TerrainOptions): Terrain {
     }
   }
 
+  /** The box (in x, z) round the vertices that settled rubble raised in this update, told once as one deform. */
+  const settledArea = { minX: Infinity, minZ: Infinity, maxX: -Infinity, maxZ: -Infinity }
+  function emitSettledArea(): void {
+    if (settledArea.minX > settledArea.maxX) return
+    const { minX, minZ, maxX, maxZ } = settledArea
+    settledArea.minX = settledArea.minZ = Infinity
+    settledArea.maxX = settledArea.maxZ = -Infinity
+    emitDeform((minX + maxX) / 2, (minZ + maxZ) / 2, Math.hypot(maxX - minX, maxZ - minZ) / 2 + cellSize * 2)
+  }
+
   /** A piece of soft ground joins the height where it stops, so that what is thrown out piles up and can be walked on. */
   function settle(piece: TerrainDebris): boolean {
     const material = materials.get(piece.material)
@@ -1072,6 +1083,11 @@ export function createTerrain(options: TerrainOptions): Terrain {
     addToVertex(index, ((4 / 3) * Math.PI * piece.radius ** 3) / (cellSize * cellSize), false)
     sliding.add(index)
     touchVertex(column, row)
+    const px = x0 + column * cellSize, pz = z0 + row * cellSize
+    settledArea.minX = Math.min(settledArea.minX, px)
+    settledArea.maxX = Math.max(settledArea.maxX, px)
+    settledArea.minZ = Math.min(settledArea.minZ, pz)
+    settledArea.maxZ = Math.max(settledArea.maxZ, pz)
     return true
   }
 
@@ -1157,6 +1173,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     // the craters and clods draw from here: a reset ground digs the same as a new one
     random = createRandom(seed)
     applyLayout(currentLayout)
+    emitDeform((x0 + x1) / 2, (z0 + z1) / 2, Math.hypot(x1 - x0, z1 - z0) / 2)
   }
 
   applyLayout(currentLayout)
@@ -1215,6 +1232,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     },
     update(dt) {
       debrisStore.update(dt, { heightAt, gravity, settle })
+      emitSettledArea()
       updateSlides()
       updateFire(dt)
       for (let i = decalList.length - 1; i >= 0; i--) {
@@ -1270,6 +1288,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       decalList.push(...(snapshot.decals ?? []).map((decal) => ({ ...decal })))
       decalSerial = decalList.reduce((highest, decal) => Math.max(highest, decal.id), decalSerial)
       for (let chunkIndex = 0; chunkIndex < touched.length; chunkIndex++) markChunk(chunkIndex)
+      emitDeform((x0 + x1) / 2, (z0 + z1) / 2, Math.hypot(x1 - x0, z1 - z0) / 2)
     },
   }
 }
