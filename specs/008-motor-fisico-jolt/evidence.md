@@ -2394,3 +2394,94 @@ Os picos de quadro de 100–300 ms vêm de duas fontes:
 - o passo do Jolt com cerca de 30 peças acordadas.
 
 Esse é o próximo alvo de desempenho.
+
+## T3.8v — picos de quadro da explosão (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0. Worktree `travamento-explosao` (branch `perf/travamento-explosao`, sobre `ff5bf561`). Nenhuma régua, tolerância, teste ou critério mudou; as iterações do Jolt (D1, 32) ficaram como estão. Sondas e saídas em `decision/probes/t38v/` (`probe-spikes.test.ts.txt`: copiar para `packages/game-floorplan-three/tests/` e rodar com `PIECE_SOLVER=jolt`, modos por variável de ambiente `PROFILE`, `PF`, `STEPTEST`, `QUERY`; `headless-ab.log`) e `decision/t38v-results.json` (as rodadas do navegador).
+
+### 1. Reprodução sem navegador e para onde vai cada quadro
+`createTestRoom` mais o módulo da planta, Jolt, `single_storey_a`, semente 1, ação `build` (etapas ligadas), 60 quadros de assentamento, C4 em `casa - 2,5 m` (blast) ou os 12 golpes de 8000 J (martelo), depois **240 quadros de 1/60 s** de `room.update`. Cada quadro é cronometrado inteiro e por estágio (Step do Jolt, `createBody`, `setShape`, `layGround`...). O pior quadro do blast cai nos mesmos números a cada execução: o que muda de uma para outra é a ordem de 10 a 20%.
+
+**Os quadros caros eram de três famílias** (antes do conserto, blast, uma execução; os mesmos quadros aparecem nas três execuções):
+
+| quadro | total (ms) | onde foi | o que é |
+|---|---|---|---|
+| f0 (primeiro após o blast) | 57–66 | 100% kit: `splitLoose` 49 (`adoptSplit` 45: `fitPartBoxes` 27, quase tudo `fitOrientedBoxes` 26; `extract` > `rebuildHost` 14, `computeVertexNormals` 12) | o kit cortando a casa em peças |
+| f96 | 144–146 | Step 71 + `layTile` 65 (`makeShape` 37, `createBody` 30) | ladrilhos novos sob as peças que acordam |
+| f110 | 144–160 | `layTile` 113 (`makeShape` 54, `readTile` 42, `layVolume` 38, `setShape` 20) | idem, mais reassentamentos |
+| **f124 a f130** | **130–190, sete quadros seguidos** | **só o `Step` do Jolt: 12 passos fixos de ~70 ms** | ver 2 |
+
+Perfil V8 de toda a janela (240 quadros, 4,2 s de `room.update`): o `Step` é 2,7 s (64%); `prepare` (`layGround`/`layTile`) 0,5 s; `splitLoose` 0,16 s; `sweepOn` 0,17 s. Os 7 quadros de f124 a f130 sozinhos são cerca de 1 s do `Step`.
+
+### 2. Por que o `Step` custava 70 ms por passo: a varredura contínua (CCD) de uma peça de partes finas
+Atribuição feita no quadro 125, medindo `stepFixed` a seco (4 passos) depois de mexer só naquele mundo:
+
+| experimento (quadro 125, ms por passo fixo) | resultado |
+|---|---|
+| nada (referência) | 61–76 |
+| tira o corpo `obj_1` (poste de concreto com os fios e estais, 26 caixas, 1092 kg, 23 m de largura) | **3–5** |
+| tira os 101 sólidos de chão (`tile-solid`) | 11–13 |
+| deixa só os 5 / 15 / 30 sólidos mais próximos do poste | 17–24 / 37 / 56 (cerca de 1,4 a 2 ms por sólido sob o poste) |
+| tira os campos de altura do chão, ou as duas tábuas de 6 kg que ficam na cratera | sem mudança (63 e 65) |
+| iterações de velocidade 32 para 4; aquecimento por contato desligado; passos de posição 0; redução de manifolds desligada; cache de contatos desligado; divisor de ilhas desligado; distância especulativa 5 mm | sem mudança (60–98) |
+| poste erguido 2 cm | **3,8** |
+| velocidade do poste zerada | **6** |
+| `DeactivateBody` e `ActivateBody` no poste | **6** (`SetPosition` com a mesma pose: 70) |
+| a consulta `CollideShape` do poste contra tudo | 1,4 ms (não é a colisão por posição) |
+
+Série de 24 passos seguidos com o poste: **rápido (4 ms) enquanto a velocidade dele é menor que ~0,88 m/s, 37–40 ms acima de ~0,90 m/s, e rápido de novo (5 ms) quando ele dorme**. O limiar é o `mLinearCastThreshold` do Jolt (0,75 do raio interno do corpo por passo): o raio interno de um composto é o da menor parte, os fios de 2 cm (0,01 m), e 0,75 x 0,01 m / (1/120 s) = 0,9 m/s. **Toda peça é criada `continuous: true`** (`EnginePieces.sync`, "swept so nothing the engine has is passed through"), e o Jolt só lança a varredura de um corpo que anda mais que esse limiar por passo. Um poste que desliza a 1 m/s sobre o telhado da casa é lançado a cada passo contra os ~100 sólidos de chão e os ~400 corpos fixos da casa.
+
+Prova de que a causa é essa e não outra: sem o CCD de nenhuma peça (só para medir, não commitado), o `Step` some dos picos (§4), mas a física **muda** (um poste a 45,6 kg·m de ganho em 1 de 10 rodadas, §4). Por isso **o CCD é decisão do dono** (§6): não mexi nele.
+
+### 3. O que mudou: uma opção, desligada por padrão
+`EnginePieces.layGround` assenta os ladrilhos sob a **caixa da peça inteira**. Uma peça de várias partes (`partBoxes`) é, para o motor, um composto dessas caixas; o poste com os fios mede 23 x 11 m e é quase ar. Com a opção nova **`tilesUnderParts`** (`RendererOptions`, `PieceSystemOptions`, `EnginePieceOptions`; `debris.tilesUnderParts` e `?tilesUnderParts=1` na sala) cada parte assenta os ladrilhos sob a sua própria caixa orientada (`layBeneath` > `footprintOf`), com a **mesma** margem (0,5 m), a mesma oscilação e os mesmos pontos do caminho. Uma peça sem partes, ou redonda, assenta como antes. O que cada parte pode tocar neste passo continua assentado antes dele, então por construção o contato é o mesmo; só deixam de existir corpos de chão (campo de altura, sólido) que nenhuma parte alcançava: depois dos 240 quadros, 167 para 151 ladrilhos e 707 para 642 corpos.
+- **Desligada por padrão.** Sem a opção o código assenta exatamente os ladrilhos de antes (o mesmo `footprint`). Não a deixei ligada porque a sala mostrou, nas rodadas do blast, o poste que ganha energia (C1 acima de 5 kg·m) em 9 de 30 rodadas com a opção contra 3 de 30 sem ela (Fisher bilateral 0,10: não significativo, mas é o único sinal de que a opção mexe no resultado, e a regra é que o resultado não mexa). Não achei o mecanismo: a cobertura é conservadora, nenhuma rodada teve `fellThrough`, `deepest` nem erro, e criar menos corpos de chão muda os ids de corpo e, com eles, a ordem em que o Jolt resolve os contatos, o que por si só muda uma situação caótica como o tombo do poste.
+- Testes novos, sem GPU, em `engine-ground.test.ts`: com a opção, duas partes de 0,2 m a 20 m uma da outra assentam menos de 14 ladrilhos e nenhum no meio; sem a opção, a mesma peça assenta mais de 20 (a caixa inteira), como sempre.
+- Changeset `picos-de-quadro-da-explosao.md`.
+
+### 4. Antes e depois (opção desligada = antes, ligada = depois)
+**Sem navegador** (§1: blast e martelo, dt 1/60, 240 quadros; **9 execuções por lado**, três pares intercalados de (3 execuções antes, 3 depois), mesma máquina, `decision/probes/t38v/headless-ab.log`; "antes" é o `dist` com o `layBeneath` forçado à caixa inteira, o mesmo que o padrão de agora). Medianas das 9 execuções (intervalo):
+
+| | p50 | p99 | máximo | quadros > 16 ms | soma dos 240 quadros | só o `Step` | resto (kit) | ladrilhos / corpos |
+|---|---|---|---|---|---|---|---|---|
+| blast antes | 7,98 | 165 (140–233) | 191 (174–260) | 75 | 4097 | 2631 | 1466 | 167 / 707 |
+| **blast depois** | 7,25 | **122 (96–136)** | **138 (100–167)** | 61 | 3461 | 2251 | 1210 | 151 / 642 |
+| martelo antes | 7,14 | 150 (140–159) | 168 (147–204) | 48 | 3409 | 2135 | 1274 | 169 / 718 |
+| **martelo depois** | 6,84 | **92 (86–110)** | **109 (96–133)** | 36 | 2808 | 1714 | 1094 | 153 / 653 |
+
+Perfil V8 do blast (240 quadros, ms, uma execução por lado): `stepFixed` 2876 para 2356; `layGround` 446 para 334; `layTile` 439 para 319; `readGround` 126 para 86; `makeShape` 165 para 106; `layVolume` 123 para 79; `splitLoose` 161 / 159 e `sweepOn` 170 / 175 (iguais, fora do alcance da opção).
+
+**Na sala do navegador** (`drive.mjs`, `chrome-headless-shell`, GPU Intel Arrow Lake via Mesa, Jolt, D4 ligada, `pnpm build` e `examples/test-room/build.mjs` antes, **um processo por rodada**, uma rodada por vez; a máquina **não estava sozinha** e a carga mudou entre conjuntos, de 2,7 a 7,7 de load average, então os números absolutos andam muito). Os quatro conjuntos de blast (5 + 10 + 10 + 5 rodadas) somam **30 por lado**:
+
+| blast, 30 rodadas por lado | antes (padrão) | depois (`tilesUnderParts`) |
+|---|---|---|
+| p99 do quadro (mediana; intervalo) | 91 (48–230) | 90 (48–217) |
+| máximo do quadro | **222** (145–327) | **189** (124–388) |
+| quadro do despertar | 44 | 45 |
+| C1: rodadas com o poste a mais de 5 kg·m | 3 de 30 (6,82; 8,55; 8,55) | 9 de 30 (5,6 x2; 6,82; 8,55 x2; 8,8 x2; 8,92; 9,27) |
+| C3 acima de 3,5 cm | 19 de 30 | 17 de 30 |
+
+| martelo, 20 rodadas por lado | antes | depois |
+|---|---|---|
+| p99 do quadro (mediana; intervalo) | 86 (54–163) | **66 (46–126)** |
+| máximo do quadro | 296 (205–592) | **203 (143–280)** |
+| C1 maior (kg·m) / rodadas com violação | 2,10 / 15 de 20 | 0,64 / 18 de 20 |
+
+O ganho de máximo e de p99 que o par intercalado sem navegador mostra (30 a 45%) chega à sala só pela metade (máximo -15% no blast, -31% no martelo; p99 do blast igual): a sala tem o mesmo teto de ~100 a 190 ms de custo fora do `Step` (§6.2 e §6.3) e o desenho de cada quadro. Nenhuma rodada, de nenhum lado, teve `fellThrough`, peça abaixo do chão, C2 condicionado acima do limite nem erro de página; C4 até 2,55 s com a opção e 1,80 s sem ela no último conjunto de 5 rodadas por lado.
+
+**CCD desligado em todas as peças (só medida, não commitado):** blast, 10 rodadas na sala: p99 mediana 60 (48–69), máximo mediana **95 (88–112)**, mas C1 com um poste a **45,6 kg·m** em 1 de 10 e C3 de 0,089 e 0,095 m em 2 de 10. Sem navegador: p99 do blast 42–52 ms, soma 2000 contra 2800 (§6.1).
+
+### 5. A física: o que foi conferido
+- Com a opção **desligada** o caminho de código é o de antes. Os gates rodaram duas vezes: primeiro com a mudança sem opção (equivale a ligada em tudo) e de novo no código final (padrão desligado; `game-destruction-three` próprio 410 passam e 0 falham, Jolt 501 passam e só as 2 de `rolling`; `game-floorplan-three` próprio 1184 passam com o golden exato 44/44, Jolt 1184 passam e as mesmas 4 falhas). Nenhum golden mexeu:
+  - `game-floorplan-three` solver próprio **1184 passam, golden exato 44/44**; Jolt **1184 passam, 4 falhas, as conhecidas** (os 3 `destruction/*` do golden exato, cuja gravação é do solver próprio, e `bookcase-topple`).
+  - `game-destruction-three` solver próprio **410 passam, 0 falhas**; Jolt **500 passam e só as 2 de `rolling.test.ts`** (na primeira passada; 501 no código final, com o teste a mais) (as conhecidas).
+  - Bacia B1 (`BOWL_SEEDS=16`, `BOWL_FROM` {1,17,33,49}, dt {0,05; 1/60}, Jolt, oito processos): **128/128**, como antes.
+  - `pnpm -r typecheck`, `pnpm typecheck:scripts` e o eslint dos arquivos mudados: 0 erros; `kit-audit --check`: 0 novos fora do SDK dono; `pnpm check:layers`: sem violações novas.
+- **Comparar a sala bit a bit não é possível**, nem entre duas execuções do mesmo código: o kit fatia trabalho por orçamento de relógio (`sliceDeadline`), então a posição final das peças muda de uma rodada para outra. A comparação é por critério e por distribuição, como nas T3.8r e T3.8s; foi essa que acendeu o poste de 9 de 30 contra 3 de 30 da §3. O mesmo evento (6,82; 8,55) aparece dos dois lados.
+
+### 6. O que sobra e o que precisa do dono
+0. **Decisão do dono: ligar ou não `tilesUnderParts`.** Ligada, o blast perde 15% do máximo e o martelo 31% na sala, e 25 a 45% sem navegador; mas o poste que ganha energia no blast passou de 3 para 9 em 30 rodadas (p 0,10). Antes de ligar vale rodar umas 30 rodadas de blast de cada lado numa máquina sozinha (as minhas dividiram a CPU com outra sessão), e olhar se o poste a 8,55 kg·m é o `topple` do kit ou o levantamento do chão assentado (T3.8r).
+1. **Decisão do dono: a varredura contínua (CCD) das peças.** É o que explica os quadros de 130 a 190 ms que sobram quando a opção está desligada. Cada peça é `continuous: true`; o Jolt lança a varredura de um composto de partes finas a ~0,9 m/s, contra ~100 sólidos de chão e a casa, a ~40 ms por passo. É a maior parte do p99 que sobra (sem ela o p99 do blast cai para 60 ms na sala e o máximo para 95 ms), mas desligar em todas muda a física (poste a 45,6 kg·m em 1 de 10). Caminhos, do menos ao mais invasivo, todos mudam o quando ou o se do CCD e por isso não foram tocados: (a) ligar o CCD só no passo em que o deslocamento passa da distância especulativa (0,02 m, ou 2,4 m/s a 120 Hz), com um `setContinuous` novo no contrato; (b) subir `mLinearCastThreshold` de 0,75 do raio interno, global; (c) tirar o CCD das peças de composto com mais de N partes. Qualquer um precisa rodar a bacia, a C6 e as rodadas da sala antes. O corpo do poste (`partBoxes` com os fios e os estais de 2 cm) é o que faz o raio interno do composto ser 1 cm; dar a esses estais um raio maior ou tirá-los do colisor também some com o limiar, mas muda a forma que colide: mesma classe de decisão.
+2. **O quadro do corte da casa (f0, 57–66 ms) continua inteiro.** São `fitOrientedBoxes` (26 ms: cada parte nova da casa ganha as caixas que a desenham; o ajuste só repetiria a entrada se o quadro da peça nova fosse bit a bit o da casa, o que não se garante) e o `rebuildHost` por parte extraída (14 ms, 12 deles `computeVertexNormals` da malha inteira da casa, uma vez por parte). Seguir por aqui: reconstruir cada hospedeiro uma vez por `splitLoose`, e ajustar as caixas das partes no quadro da casa durante a montagem. Nenhum dos dois foi feito: o ganho é de um quadro e "não muda o desenho nem a física" pede teste próprio.
+3. **Ladrilhos novos (f96, f110: 65–113 ms).** O custo é o chão novo sob peças que acabaram de acordar: `readGround` (26 mil leituras de `groundAt` por ladrilho), o composto do sólido (~500 cascos convexos por ladrilho de cratera, 20 ms de `Create` numa leva) e o campo de altura. A decisão sobre o pré-assento (D8) continua a da T3.8t. O que daria para fazer sem mudar resultado: reaproveitar os cascos do sólido que não mudaram entre reassentamentos (o seguimento da T3.8q); não foi medido em quadro de pico, onde quase todo ladrilho é novo, e não reassentado.
+4. O `Step` não tem camada de broadphase, sono nem corpo estático fora do lugar: 390 corpos fixos da casa (187 caixas, 203 malhas) mais 101 sólidos de chão, 101 campos de altura e 63 lajes; remover as malhas da casa não tira os picos, remover os campos de altura também não, remover os sólidos de chão tira quase todo o custo do poste (§2). Não mexi em `KIT_WORLD`.

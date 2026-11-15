@@ -1,0 +1,912 @@
+{
+ "after_final_5blast_5hammer": [
+  {
+   "label": "t38v-blast-1",
+   "kind": "blast",
+   "c1Excess": 8.545835771520576,
+   "c1Violations": 13,
+   "c3Lift": 0.03367119282484321,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.7,
+    "p99": 67.6,
+    "max": 129,
+    "wakeFrame": 44.3
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38v-blast-2",
+   "kind": "blast",
+   "c1Excess": 5.599327577036838,
+   "c1Violations": 20,
+   "c3Lift": 0.047303591109811374,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2,
+    "p99": 72,
+    "max": 173.8,
+    "wakeFrame": 35.4
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38v-blast-3",
+   "kind": "blast",
+   "c1Excess": 0.4250354940187553,
+   "c1Violations": 7,
+   "c3Lift": 0.04765730127692311,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 3.8,
+    "p99": 57.9,
+    "max": 185.1,
+    "wakeFrame": 42.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38v-blast-4",
+   "kind": "blast",
+   "c1Excess": 0.4166955810091284,
+   "c1Violations": 10,
+   "c3Lift": 0.0521480148425308,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2,
+    "p99": 96.7,
+    "max": 160.8,
+    "wakeFrame": 40.5
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38v-blast-5",
+   "kind": "blast",
+   "c1Excess": 0.7404410205435854,
+   "c1Violations": 3,
+   "c3Lift": 0.06075725803966812,
+   "c4AsleepAfter": 0.3999999999999986,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 69.1,
+    "max": 124.1,
+    "wakeFrame": 39.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38v-hammer-1",
+   "kind": "hammer",
+   "c1Excess": 0.022972015428696896,
+   "c1Violations": 2,
+   "c3Lift": 0.013454263284802436,
+   "c4AsleepAfter": 1.1999999999999957,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 66.6,
+    "max": 143.3,
+    "wakeFrame": 29.5
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38v-hammer-2",
+   "kind": "hammer",
+   "c1Excess": 0.05744435259188574,
+   "c1Violations": 3,
+   "c3Lift": 0.024389943503777368,
+   "c4AsleepAfter": 1.2999999999999954,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 51.6,
+    "max": 197.1,
+    "wakeFrame": 45.1
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38v-hammer-3",
+   "kind": "hammer",
+   "c1Excess": 0.2362761313344198,
+   "c1Violations": 3,
+   "c3Lift": 0.00837114744926204,
+   "c4AsleepAfter": 1.099999999999996,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.5,
+    "p99": 65.9,
+    "max": 165.1,
+    "wakeFrame": 35.1
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38v-hammer-4",
+   "kind": "hammer",
+   "c1Excess": 0.07074277500703965,
+   "c1Violations": 3,
+   "c3Lift": 0.028054288751447488,
+   "c4AsleepAfter": 1.5499999999999945,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 56.4,
+    "max": 195.8,
+    "wakeFrame": 38.3
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38v-hammer-5",
+   "kind": "hammer",
+   "c1Excess": 0.071899698652236,
+   "c1Violations": 4,
+   "c3Lift": 0.01294530928135007,
+   "c4AsleepAfter": 1.149999999999996,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 67.7,
+    "max": 178.4,
+    "wakeFrame": 31.6
+   },
+   "n": 24,
+   "asleep": 24
+  }
+ ],
+ "before_5blast_5hammer": [
+  {
+   "label": "t38vB-blast-1",
+   "kind": "blast",
+   "c1Excess": 1.2349816043872437,
+   "c1Violations": 22,
+   "c3Lift": 0.024569124749064933,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.7,
+    "p99": 68.7,
+    "max": 161.5,
+    "wakeFrame": 42.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38vB-blast-2",
+   "kind": "blast",
+   "c1Excess": 0.5816789188323748,
+   "c1Violations": 11,
+   "c3Lift": 0.049320138990880835,
+   "c4AsleepAfter": 1.149999999999996,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 68.3,
+    "max": 160.4,
+    "wakeFrame": 39.1
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38vB-blast-3",
+   "kind": "blast",
+   "c1Excess": 1.3478559913451138,
+   "c1Violations": 18,
+   "c3Lift": 0.044539817096665504,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.2,
+    "p99": 124,
+    "max": 170.6,
+    "wakeFrame": 42.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38vB-blast-4",
+   "kind": "blast",
+   "c1Excess": 1.3478559913451138,
+   "c1Violations": 6,
+   "c3Lift": 0.052374717243947974,
+   "c4AsleepAfter": 0.34999999999999876,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 48.4,
+    "max": 170.1,
+    "wakeFrame": 38.8
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38vB-blast-5",
+   "kind": "blast",
+   "c1Excess": 0.5816789188323748,
+   "c1Violations": 9,
+   "c3Lift": 0.03996717929840088,
+   "c4AsleepAfter": 0.549999999999998,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.4,
+    "p99": 82.6,
+    "max": 241.3,
+    "wakeFrame": 44.8
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "t38vB-hammer-1",
+   "kind": "hammer",
+   "c1Excess": 0.045491062506386154,
+   "c1Violations": 1,
+   "c3Lift": 0.036569030606186104,
+   "c4AsleepAfter": 1.2499999999999956,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 69,
+    "max": 205.4,
+    "wakeFrame": 30
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38vB-hammer-2",
+   "kind": "hammer",
+   "c1Excess": 0.0002217052929980312,
+   "c1Violations": 1,
+   "c3Lift": 0.012701831758023197,
+   "c4AsleepAfter": 1.699999999999994,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 90.7,
+    "max": 247.2,
+    "wakeFrame": 38
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38vB-hammer-3",
+   "kind": "hammer",
+   "c1Excess": -0.001611374565597574,
+   "c1Violations": 0,
+   "c3Lift": 0.017636992037297183,
+   "c4AsleepAfter": 0.3999999999999986,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 80.9,
+    "max": 225.2,
+    "wakeFrame": 35.5
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38vB-hammer-4",
+   "kind": "hammer",
+   "c1Excess": -0.001611374565597574,
+   "c1Violations": 0,
+   "c3Lift": 0.02944761016405941,
+   "c4AsleepAfter": 1.4499999999999948,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.5,
+    "p99": 76.3,
+    "max": 322.3,
+    "wakeFrame": 48
+   },
+   "n": 24,
+   "asleep": 24
+  },
+  {
+   "label": "t38vB-hammer-5",
+   "kind": "hammer",
+   "c1Excess": 0.003495165585384985,
+   "c1Violations": 1,
+   "c3Lift": 0.028126093791797757,
+   "c4AsleepAfter": 1.099999999999996,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 70.3,
+    "max": 265.3,
+    "wakeFrame": 31.5
+   },
+   "n": 24,
+   "asleep": 24
+  }
+ ],
+ "after_10blast": [
+  {
+   "label": "cA-blast-1",
+   "kind": "blast",
+   "c1Excess": 6.822827599649505,
+   "c1Violations": 19,
+   "c3Lift": 0.022018496785313778,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 4.4,
+    "p99": 72.4,
+    "max": 138,
+    "wakeFrame": 37.9
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-10",
+   "kind": "blast",
+   "c1Excess": 0.4857331119415107,
+   "c1Violations": 17,
+   "c3Lift": 0.03272901520132751,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.8,
+    "p99": 95.8,
+    "max": 195.4,
+    "wakeFrame": 54.7
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-2",
+   "kind": "blast",
+   "c1Excess": 0.3991926374954555,
+   "c1Violations": 8,
+   "c3Lift": 0.012425069510937622,
+   "c4AsleepAfter": 0.549999999999998,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 67.6,
+    "max": 139.9,
+    "wakeFrame": 49.7
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-3",
+   "kind": "blast",
+   "c1Excess": 0.3991926374954555,
+   "c1Violations": 16,
+   "c3Lift": 0.04049893468618482,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.7,
+    "p99": 54.7,
+    "max": 251.7,
+    "wakeFrame": 40
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-4",
+   "kind": "blast",
+   "c1Excess": 0.4166955810091284,
+   "c1Violations": 4,
+   "c3Lift": 0.04700119141489445,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.2,
+    "p99": 61.9,
+    "max": 189.8,
+    "wakeFrame": 42.6
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-5",
+   "kind": "blast",
+   "c1Excess": 0.4166955810091284,
+   "c1Violations": 28,
+   "c3Lift": 0.028591569000852423,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.9,
+    "p99": 120.5,
+    "max": 140.4,
+    "wakeFrame": 36.6
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-6",
+   "kind": "blast",
+   "c1Excess": 0.11211369479103162,
+   "c1Violations": 3,
+   "c3Lift": 0.032011620700359344,
+   "c4AsleepAfter": 1.0499999999999963,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2,
+    "p99": 84.8,
+    "max": 161.8,
+    "wakeFrame": 42.1
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-7",
+   "kind": "blast",
+   "c1Excess": 0.3991926374954555,
+   "c1Violations": 18,
+   "c3Lift": 0.04079084433615119,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.9,
+    "p99": 47.5,
+    "max": 190.8,
+    "wakeFrame": 46.9
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-8",
+   "kind": "blast",
+   "c1Excess": 0.020897384191696733,
+   "c1Violations": 7,
+   "c3Lift": 0.018620334565639496,
+   "c4AsleepAfter": 0.3999999999999986,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 3.3,
+    "p99": 147.3,
+    "max": 188.4,
+    "wakeFrame": 48.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cA-blast-9",
+   "kind": "blast",
+   "c1Excess": 8.545835771520576,
+   "c1Violations": 19,
+   "c3Lift": 0.03455421384423794,
+   "c4AsleepAfter": 1.7999999999999936,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.4,
+    "p99": 100.7,
+    "max": 166.6,
+    "wakeFrame": 46.3
+   },
+   "n": 22,
+   "asleep": 22
+  }
+ ],
+ "before_10blast": [
+  {
+   "label": "cB-blast-1",
+   "kind": "blast",
+   "c1Excess": 0.5816789188323748,
+   "c1Violations": 10,
+   "c3Lift": 0.049320138990880835,
+   "c4AsleepAfter": 1.099999999999996,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2,
+    "p99": 63.9,
+    "max": 186.7,
+    "wakeFrame": 45.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-10",
+   "kind": "blast",
+   "c1Excess": 0.36434701094958427,
+   "c1Violations": 4,
+   "c3Lift": 0.01818804442882449,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 112.2,
+    "max": 203.6,
+    "wakeFrame": 47.1
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-2",
+   "kind": "blast",
+   "c1Excess": 1.3478559913451138,
+   "c1Violations": 5,
+   "c3Lift": 0.04993907045572996,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.5,
+    "p99": 60,
+    "max": 267.8,
+    "wakeFrame": 40.8
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-3",
+   "kind": "blast",
+   "c1Excess": 6.824141004639183,
+   "c1Violations": 16,
+   "c3Lift": 0.019059961442418834,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 60.3,
+    "max": 208.2,
+    "wakeFrame": 43.8
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-4",
+   "kind": "blast",
+   "c1Excess": 0.4059907940528721,
+   "c1Violations": 3,
+   "c3Lift": 0.034019395709036004,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 90.3,
+    "max": 160.4,
+    "wakeFrame": 47.4
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-5",
+   "kind": "blast",
+   "c1Excess": 0.19197783298468168,
+   "c1Violations": 20,
+   "c3Lift": 0.031233224086465228,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 96.1,
+    "max": 178.6,
+    "wakeFrame": 41.7
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-6",
+   "kind": "blast",
+   "c1Excess": 0.38072672985548706,
+   "c1Violations": 17,
+   "c3Lift": 0.04397322982549756,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 92.5,
+    "max": 255.6,
+    "wakeFrame": 44.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-7",
+   "kind": "blast",
+   "c1Excess": 1.3478559913451138,
+   "c1Violations": 17,
+   "c3Lift": 0.0452753105899319,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.2,
+    "p99": 81.9,
+    "max": 179,
+    "wakeFrame": 41.5
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-8",
+   "kind": "blast",
+   "c1Excess": 0.5816789188323748,
+   "c1Violations": 7,
+   "c3Lift": 0.04280373640358448,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.9,
+    "p99": 132.3,
+    "max": 218.8,
+    "wakeFrame": 36.6
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "cB-blast-9",
+   "kind": "blast",
+   "c1Excess": 0.3658212760066686,
+   "c1Violations": 4,
+   "c3Lift": 0.04025290161371231,
+   "c4AsleepAfter": 0.5999999999999979,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.3,
+    "p99": 93.7,
+    "max": 246.2,
+    "wakeFrame": 43.6
+   },
+   "n": 22,
+   "asleep": 22
+  }
+ ],
+ "ccd_off_10blast_not_committed": [
+  {
+   "label": "dN-blast-1",
+   "kind": "blast",
+   "c1Excess": 0.04958520893400573,
+   "c1Violations": 12,
+   "c3Lift": 0.05447568473860365,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 63.8,
+    "max": 97.9,
+    "wakeFrame": 46.3
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-10",
+   "kind": "blast",
+   "c1Excess": 0.34656482237172626,
+   "c1Violations": 22,
+   "c3Lift": 0.09548286078020762,
+   "c4AsleepAfter": 0.549999999999998,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.3,
+    "p99": 57.3,
+    "max": 99.8,
+    "wakeFrame": 45
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-2",
+   "kind": "blast",
+   "c1Excess": 0.020897384191696733,
+   "c1Violations": 8,
+   "c3Lift": 0.08947583663146652,
+   "c4AsleepAfter": 0.549999999999998,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 3,
+    "p99": 69,
+    "max": 112.4,
+    "wakeFrame": 47.5
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-3",
+   "kind": "blast",
+   "c1Excess": 0.08440564031716447,
+   "c1Violations": 15,
+   "c3Lift": 0.03224211186170578,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.5,
+    "p99": 58.8,
+    "max": 87.5,
+    "wakeFrame": 52.2
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-4",
+   "kind": "blast",
+   "c1Excess": 0.020897384191696733,
+   "c1Violations": 5,
+   "c3Lift": 0.05941641103693307,
+   "c4AsleepAfter": 0.6999999999999975,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 3.2,
+    "p99": 66.9,
+    "max": 105.8,
+    "wakeFrame": 53.9
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-5",
+   "kind": "blast",
+   "c1Excess": 45.60257548144985,
+   "c1Violations": 9,
+   "c3Lift": 0.04535698699132364,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.2,
+    "p99": 47.5,
+    "max": 88,
+    "wakeFrame": 40.7
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-6",
+   "kind": "blast",
+   "c1Excess": 0.5135218196437986,
+   "c1Violations": 19,
+   "c3Lift": 0.0544838329776276,
+   "c4AsleepAfter": 0.4499999999999984,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.2,
+    "p99": 61.7,
+    "max": 91.3,
+    "wakeFrame": 43.4
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-7",
+   "kind": "blast",
+   "c1Excess": 0.31710668371188355,
+   "c1Violations": 15,
+   "c3Lift": 0.04096906632185071,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.4,
+    "p99": 65.7,
+    "max": 96.5,
+    "wakeFrame": 52.6
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-8",
+   "kind": "blast",
+   "c1Excess": 0.08243724006942199,
+   "c1Violations": 17,
+   "c3Lift": 0.04556994494050741,
+   "c4AsleepAfter": 0.4999999999999982,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 58.8,
+    "max": 94.3,
+    "wakeFrame": 52.8
+   },
+   "n": 22,
+   "asleep": 22
+  },
+  {
+   "label": "dN-blast-9",
+   "kind": "blast",
+   "c1Excess": 0.27900542039911436,
+   "c1Violations": 15,
+   "c3Lift": 0.045351041334877704,
+   "c4AsleepAfter": 0.5999999999999979,
+   "c2PiecesOver": 0,
+   "fellThrough": 0,
+   "frameMs": {
+    "p50": 2.1,
+    "p99": 56.9,
+    "max": 88.7,
+    "wakeFrame": 47
+   },
+   "n": 22,
+   "asleep": 22
+  }
+ ]
+}
