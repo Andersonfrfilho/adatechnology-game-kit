@@ -1,0 +1,7855 @@
+{
+ "meta": {
+  "task": "T3.8m",
+  "date": "2026-11-15",
+  "machine": "Intel Core Ultra 9 275HX, Arch Linux",
+  "node": "v24.22.0",
+  "branch": "feat/chao-ao-construir",
+  "pass": "c2PiecesOver == 0 and 0 <= c4 <= 3 and fellThrough == 0 (C1, C3 reported)",
+  "configs": {
+   "a": "Jolt, D4 on, prelay on",
+   "b": "Jolt, D4 off, prelay on",
+   "c": "Jolt, D4 on, prelay off",
+   "d": "own solver, D4 on",
+   "e": "own solver, D4 off (extra)",
+   "pa": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "pb": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "pc": "Jolt, D4 on, prelay off (first batch, same as pa)"
+  },
+  "note": "pa/pb/pc: first batch, run before the pre-lay was wired into the house activation (it never ran, so they are prelay-off rounds); a/b: prelay ran (504 tiles); c: ?prelay=0; d/e: own solver"
+ },
+ "rounds": [
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.52,
+   "c1Violations": 96,
+   "c2Gain": 0.1239,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.16,
+   "c4": 8.05,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18.3,
+    "p99": 144.1,
+    "max": 264.6,
+    "wakeFrame": 38.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.618,
+   "worstRises": [
+    {
+     "step": 44,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.258,
+     "speedBefore": 5.39,
+     "speedAfter": 6.31,
+     "y": 0.4,
+     "yBefore": 0.692,
+     "seen": 36,
+     "xz": [
+      -5.43,
+      12.05
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 45,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.142,
+     "speedBefore": 6.31,
+     "speedAfter": 7.01,
+     "y": 0.064,
+     "yBefore": 0.4,
+     "seen": 37,
+     "xz": [
+      -5.41,
+      12.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.336,
+     "yBefore": 2.212,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 8.55,
+   "c1Violations": 40,
+   "c2Gain": 0.0533,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.121,
+   "c4": 2.25,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.053,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.035,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 12.2,
+    "p99": 147.3,
+    "max": 245.3,
+    "wakeFrame": 36.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.357,
+   "worstRises": [
+    {
+     "step": 33,
+     "id": "obj_5",
+     "mass": 24.8,
+     "rise": 0.053,
+     "speedBefore": 0,
+     "speedAfter": 0.07,
+     "y": 0.076,
+     "yBefore": 0.023,
+     "seen": 30,
+     "xz": [
+      0.05,
+      5.5
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_24",
+     "mass": 3,
+     "rise": 0.035,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.054,
+     "yBefore": 2.019,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 10,
+     "id": "obj_22",
+     "mass": 3,
+     "rise": 0.026,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.049,
+     "yBefore": 2.023,
+     "seen": 1,
+     "xz": [
+      1.63,
+      -2.87
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 0.44,
+   "c1Violations": 74,
+   "c2Gain": 0.1241,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.356,
+   "c4": -1,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 21,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 13.6,
+    "p99": 147.5,
+    "max": 268,
+    "wakeFrame": 40.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.52,
+   "worstRises": [
+    {
+     "step": 27,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.317,
+     "speedBefore": 3.08,
+     "speedAfter": 0.6,
+     "y": 1.81,
+     "yBefore": 1.716,
+     "seen": 20,
+     "xz": [
+      -2.52,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.336,
+     "yBefore": 2.212,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.398,
+     "yBefore": 2.336,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.44,
+   "c1Violations": 108,
+   "c2Gain": 0.1239,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.132,
+   "c4": 3.2,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18.1,
+    "p99": 143.9,
+    "max": 214.6,
+    "wakeFrame": 37.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.296,
+   "worstRises": [
+    {
+     "step": 26,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.308,
+     "speedBefore": 3.03,
+     "speedAfter": 0.6,
+     "y": 1.978,
+     "yBefore": 1.885,
+     "seen": 20,
+     "xz": [
+      -2.53,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.336,
+     "yBefore": 2.212,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.398,
+     "yBefore": 2.336,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 5.14,
+   "c1Violations": 98,
+   "c2Gain": 0.1254,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.143,
+   "c4": 5.05,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.054,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.125,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19,
+    "p99": 137.9,
+    "max": 258.6,
+    "wakeFrame": 45.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 16.401,
+   "worstRises": [
+    {
+     "step": 27,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.305,
+     "speedBefore": 3,
+     "speedAfter": 0.6,
+     "y": 2.061,
+     "yBefore": 1.968,
+     "seen": 20,
+     "xz": [
+      -2.53,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.125,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.335,
+     "yBefore": 2.21,
+     "seen": 1,
+     "xz": [
+      -3.2,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.396,
+     "yBefore": 2.335,
+     "seen": 2,
+     "xz": [
+      -3.13,
+      -0.97
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 9.19,
+   "c1Violations": 114,
+   "c2Gain": 0.0855,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.086,
+   "c4": 5.5,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.086,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 15.3,
+    "p99": 122.2,
+    "max": 243.7,
+    "wakeFrame": 27.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.799,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.086,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.358,
+     "yBefore": 2.273,
+     "seen": 1,
+     "xz": [
+      -3.17,
+      -0.92
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.037,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.458,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.031,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.049,
+     "yBefore": 2.019,
+     "seen": 1,
+     "xz": [
+      -2.1,
+      -3.08
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 0.25,
+   "c1Violations": 106,
+   "c2Gain": 0.0875,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.042,
+   "c4": 5.5,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.088,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 16.5,
+    "p99": 82.7,
+    "max": 243.7,
+    "wakeFrame": 28.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.647,
+   "worstRises": [
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.088,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.356,
+     "yBefore": 2.269,
+     "seen": 1,
+     "xz": [
+      -3.17,
+      -0.91
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.036,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.457,
+     "yBefore": 2.42,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 44,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.026,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.84,
+     "yBefore": 2.814,
+     "seen": 31,
+     "xz": [
+      -3.01,
+      -0.64
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "hammer",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 9.19,
+   "c1Violations": 113,
+   "c2Gain": 0.0829,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.183,
+   "c4": 0.95,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.083,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.7,
+    "p99": 96.4,
+    "max": 262.9,
+    "wakeFrame": 76
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.784,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.083,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.355,
+     "yBefore": 2.272,
+     "seen": 1,
+     "xz": [
+      -3.17,
+      -0.92
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.066,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.421,
+     "yBefore": 2.355,
+     "seen": 2,
+     "xz": [
+      -3.11,
+      -1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.035,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.455,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.21,
+   "c1Violations": 101,
+   "c2Gain": 0.0711,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.173,
+   "c4": 0.95,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.071,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 15.6,
+    "p99": 78.6,
+    "max": 218.5,
+    "wakeFrame": 28.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.929,
+   "worstRises": [
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.071,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.364,
+     "yBefore": 2.293,
+     "seen": 1,
+     "xz": [
+      -3.16,
+      -0.92
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.065,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.43,
+     "yBefore": 2.364,
+     "seen": 2,
+     "xz": [
+      -3.1,
+      -1.01
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 55,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.048,
+     "speedBefore": 0,
+     "speedAfter": 0.9,
+     "y": 0.005,
+     "yBefore": 0.005,
+     "seen": 47,
+     "xz": [
+      3.02,
+      12.14
+     ],
+     "sleepingBefore": true
+    }
+   ]
+  },
+  {
+   "config": "a",
+   "prelayRan": true,
+   "configName": "Jolt, D4 on, prelay on",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 9.19,
+   "c1Violations": 124,
+   "c2Gain": 0.0855,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.08,
+   "c4": 5.55,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.086,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 15.5,
+    "p99": 114.4,
+    "max": 243.9,
+    "wakeFrame": 38.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.431,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.086,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.358,
+     "yBefore": 2.273,
+     "seen": 1,
+     "xz": [
+      -3.17,
+      -0.92
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 20,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.049,
+     "speedBefore": 1.37,
+     "speedAfter": 1.74,
+     "y": 0.832,
+     "yBefore": 0.918,
+     "seen": 14,
+     "xz": [
+      3,
+      5.52
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.037,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.458,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 8.55,
+   "c1Violations": 42,
+   "c2Gain": 0.0574,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.12,
+   "c4": 2.45,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.057,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_6",
+     "gain": 0.048,
+     "mass": 22.3,
+     "half": [
+      0.45,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_1"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.035,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 10.5,
+    "p99": 119.8,
+    "max": 218.6,
+    "wakeFrame": 33.7
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 13.609,
+   "worstRises": [
+    {
+     "step": 47,
+     "id": "obj_5",
+     "mass": 24.8,
+     "rise": 0.057,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 0.081,
+     "yBefore": 0.023,
+     "seen": 44,
+     "xz": [
+      0.05,
+      5.49
+     ],
+     "sleepingBefore": true
+    },
+    {
+     "step": 47,
+     "id": "obj_6",
+     "mass": 22.3,
+     "rise": 0.048,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 0.044,
+     "yBefore": -0.004,
+     "seen": 44,
+     "xz": [
+      4.5,
+      -5.45
+     ],
+     "sleepingBefore": true
+    },
+    {
+     "step": 10,
+     "id": "obj_24",
+     "mass": 3,
+     "rise": 0.035,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.054,
+     "yBefore": 2.019,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 0.37,
+   "c1Violations": 55,
+   "c2Gain": 0.13,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.003,
+   "c4": 0.85,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.13,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 117.5,
+    "max": 260.2,
+    "wakeFrame": 35.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 13.401,
+   "worstRises": [
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.13,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.207,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.398,
+     "yBefore": 2.337,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.97
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.053,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.451,
+     "yBefore": 2.398,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 6.82,
+   "c1Violations": 109,
+   "c2Gain": 0.1239,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.111,
+   "c4": 3.5,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.058,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 17.1,
+    "p99": 130.4,
+    "max": 190.4,
+    "wakeFrame": 33.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.312,
+   "worstRises": [
+    {
+     "step": 10,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.336,
+     "yBefore": 2.212,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 53,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.104,
+     "speedBefore": 4.19,
+     "speedAfter": 4.91,
+     "y": 0.592,
+     "yBefore": 0.823,
+     "seen": 46,
+     "xz": [
+      -5.43,
+      12.07
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.398,
+     "yBefore": 2.336,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.51,
+   "c1Violations": 91,
+   "c2Gain": 0.124,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.254,
+   "c4": -1,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 21,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 12.2,
+    "p99": 112.9,
+    "max": 242.1,
+    "wakeFrame": 34.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.55,
+   "worstRises": [
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.334,
+     "yBefore": 2.21,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.063,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.397,
+     "yBefore": 2.334,
+     "seen": 2,
+     "xz": [
+      -3.13,
+      -0.97
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.053,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.45,
+     "yBefore": 2.397,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 0.38,
+   "c1Violations": 103,
+   "c2Gain": 0.1321,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.255,
+   "c4": -1,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 21,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.132,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.044,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 10.4,
+    "p99": 114.9,
+    "max": 241.1,
+    "wakeFrame": 35.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.323,
+   "worstRises": [
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.132,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.206,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.06,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.398,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.97
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.052,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.45,
+     "yBefore": 2.398,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 9.19,
+   "c1Violations": 113,
+   "c2Gain": 0.131,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.11,
+   "c4": 6.85,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.131,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 16.3,
+    "p99": 64.4,
+    "max": 222.3,
+    "wakeFrame": 137.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.309,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.131,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.206,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.9
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.043,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.047,
+     "yBefore": 2.004,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3.06
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 42,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.028,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.843,
+     "yBefore": 2.815,
+     "seen": 31,
+     "xz": [
+      -3,
+      -0.64
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 9.19,
+   "c1Violations": 114,
+   "c2Gain": 0.0905,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.092,
+   "c4": 5.75,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.091,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.2,
+    "p99": 114,
+    "max": 230,
+    "wakeFrame": 27.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.101,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.091,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.358,
+     "yBefore": 2.267,
+     "seen": 1,
+     "xz": [
+      -3.17,
+      -0.92
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.036,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.457,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 43,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.027,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.856,
+     "yBefore": 2.829,
+     "seen": 31,
+     "xz": [
+      -3,
+      -0.63
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "hammer",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 5.6,
+   "c1Violations": 115,
+   "c2Gain": 0.131,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.199,
+   "c4": 5.55,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.131,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 13.9,
+    "p99": 81.4,
+    "max": 247.3,
+    "wakeFrame": 138.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.336,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.131,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.206,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.9
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.049,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.446,
+     "yBefore": 2.397,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.04
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.043,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.047,
+     "yBefore": 2.004,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3.06
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.46,
+   "c1Violations": 108,
+   "c2Gain": 0.131,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.168,
+   "c4": 5.55,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.131,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.4,
+    "p99": 65.4,
+    "max": 225.5,
+    "wakeFrame": 138.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.023,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.131,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.206,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.9
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.043,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.047,
+     "yBefore": 2.004,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3.06
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.034,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.455,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.04
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "b",
+   "prelayRan": true,
+   "configName": "Jolt, D4 off, prelay on",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 9.19,
+   "c1Violations": 109,
+   "c2Gain": 0.0829,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.187,
+   "c4": 1.05,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.083,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.4,
+    "p99": 95.2,
+    "max": 226.4,
+    "wakeFrame": 75
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.132,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.083,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.355,
+     "yBefore": 2.272,
+     "seen": 1,
+     "xz": [
+      -3.17,
+      -0.92
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.066,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.421,
+     "yBefore": 2.355,
+     "seen": 2,
+     "xz": [
+      -3.11,
+      -1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.035,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.455,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.97,
+   "c1Violations": 102,
+   "c2Gain": 0.129,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.162,
+   "c4": 5.1,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.04,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.044,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.7,
+    "p99": 122.9,
+    "max": 265.5,
+    "wakeFrame": 43
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.412,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.4,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.054,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.454,
+     "yBefore": 2.4,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.02
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 0.5,
+   "c1Violations": 105,
+   "c2Gain": 0.129,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.091,
+   "c4": 4.15,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.044,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.3,
+    "p99": 118.3,
+    "max": 219.7,
+    "wakeFrame": 43.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.007,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.4,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.054,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.454,
+     "yBefore": 2.4,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.02
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 1.4,
+   "c1Violations": 102,
+   "c2Gain": 0.1286,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.152,
+   "c4": 5.6,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.058,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.4,
+    "p99": 111.9,
+    "max": 229.1,
+    "wakeFrame": 41.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.543,
+   "worstRises": [
+    {
+     "step": 27,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.305,
+     "speedBefore": 3,
+     "speedAfter": 0.6,
+     "y": 2.061,
+     "yBefore": 1.968,
+     "seen": 21,
+     "xz": [
+      -2.53,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.94,
+   "c1Violations": 105,
+   "c2Gain": 0.1239,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.13,
+   "c4": 3.25,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.039,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18.3,
+    "p99": 156.6,
+    "max": 287.2,
+    "wakeFrame": 39.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.393,
+   "worstRises": [
+    {
+     "step": 27,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.317,
+     "speedBefore": 3.08,
+     "speedAfter": 0.6,
+     "y": 1.81,
+     "yBefore": 1.716,
+     "seen": 20,
+     "xz": [
+      -2.52,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.334,
+     "yBefore": 2.211,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.395,
+     "yBefore": 2.334,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 5.17,
+   "c1Violations": 92,
+   "c2Gain": 0.128,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.157,
+   "c4": 4.95,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.128,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.7,
+    "p99": 152.3,
+    "max": 250.5,
+    "wakeFrame": 52.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.995,
+   "worstRises": [
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.128,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.337,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.056,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.455,
+     "yBefore": 2.399,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.02
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "hammer",
+   "round": 1,
+   "pass": true,
+   "c1Excess": 0.01,
+   "c1Violations": 1,
+   "c2Gain": 0.005,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.084,
+   "c4": 0.7,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 102.2,
+    "max": 222.3,
+    "wakeFrame": 30.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 12.929,
+   "worstRises": []
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 0.25,
+   "c1Violations": 121,
+   "c2Gain": 0.0785,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.054,
+   "c4": 6.05,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.078,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 15.9,
+    "p99": 110.2,
+    "max": 258.2,
+    "wakeFrame": 29.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.556,
+   "worstRises": [
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.417,
+     "yBefore": 2.355,
+     "seen": 2,
+     "xz": [
+      -3.1,
+      -1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.039,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.457,
+     "yBefore": 2.417,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 55,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.026,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 3.026,
+     "yBefore": 3.001,
+     "seen": 43,
+     "xz": [
+      -2.92,
+      -0.31
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "hammer",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 0.34,
+   "c1Violations": 109,
+   "c2Gain": 0.1054,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.066,
+   "c4": 6.7,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.105,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.039,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.6,
+    "p99": 113.5,
+    "max": 300.9,
+    "wakeFrame": 30.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.854,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.046,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.456,
+     "yBefore": 2.41,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.039,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.054,
+     "yBefore": 2.015,
+     "seen": 1,
+     "xz": [
+      -2.1,
+      -3.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 43,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.026,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.852,
+     "yBefore": 2.826,
+     "seen": 31,
+     "xz": [
+      -3,
+      -0.63
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.13,
+   "c1Violations": 110,
+   "c2Gain": 0.0604,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.988,
+   "c4": 6.05,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.06,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 17,
+    "p99": 99.4,
+    "max": 245.3,
+    "wakeFrame": 32.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.924,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.041,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.459,
+     "yBefore": 2.417,
+     "seen": 2,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 42,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.025,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.833,
+     "yBefore": 2.808,
+     "seen": 29,
+     "xz": [
+      -3,
+      -0.65
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 43,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.024,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.858,
+     "yBefore": 2.833,
+     "seen": 30,
+     "xz": [
+      -3,
+      -0.63
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "c",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off",
+   "kind": "hammer",
+   "round": 5,
+   "pass": true,
+   "c1Excess": 0.07,
+   "c1Violations": 33,
+   "c2Gain": 0.0105,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.043,
+   "c4": 2.85,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 3.8,
+    "p99": 83.4,
+    "max": 219.7,
+    "wakeFrame": 45.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.322,
+   "worstRises": [
+    {
+     "step": 22,
+     "id": "obj_10",
+     "mass": 73,
+     "rise": 0.028,
+     "speedBefore": 0,
+     "speedAfter": 0.4,
+     "y": 0.021,
+     "yBefore": 0.021,
+     "seen": 13,
+     "xz": [
+      3.34,
+      5.88
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 5.8,
+   "c1Violations": 12,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.066,
+   "c4": 3.6,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_8",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:5"
+     ]
+    },
+    {
+     "id": "obj_9",
+     "gain": 0.095,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:1"
+     ]
+    },
+    {
+     "id": "obj_10",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:4"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 18.9,
+    "max": 26.1,
+    "wakeFrame": 35.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.411,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.069,
+     "speedBefore": 0.73,
+     "speedAfter": 1.1,
+     "y": 7.004,
+     "yBefore": 6.979,
+     "seen": 2,
+     "xz": [
+      -9.93,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      0.4,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      3.31,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 5.68,
+   "c1Violations": 13,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.304,
+   "c4": -1,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 24,
+   "overPieces": [
+    {
+     "id": "obj_10",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:4"
+     ]
+    },
+    {
+     "id": "obj_8",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:5"
+     ]
+    },
+    {
+     "id": "obj_9",
+     "gain": 0.095,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:1"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.7,
+    "p99": 15.9,
+    "max": 21.5,
+    "wakeFrame": 34.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.357,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.069,
+     "speedBefore": 0.73,
+     "speedAfter": 1.1,
+     "y": 7.004,
+     "yBefore": 6.979,
+     "seen": 2,
+     "xz": [
+      -9.93,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      0.4,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      3.31,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 5.79,
+   "c1Violations": 12,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.054,
+   "c4": 3.45,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_8",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:5"
+     ]
+    },
+    {
+     "id": "obj_9",
+     "gain": 0.095,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:1"
+     ]
+    },
+    {
+     "id": "obj_10",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:4"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 19.8,
+    "max": 22.9,
+    "wakeFrame": 34.6
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.346,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.069,
+     "speedBefore": 0.73,
+     "speedAfter": 1.1,
+     "y": 7.004,
+     "yBefore": 6.979,
+     "seen": 2,
+     "xz": [
+      -9.93,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      0.4,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      3.31,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 5.68,
+   "c1Violations": 13,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.066,
+   "c4": 3.55,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_8",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:5"
+     ]
+    },
+    {
+     "id": "obj_9",
+     "gain": 0.095,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:1"
+     ]
+    },
+    {
+     "id": "obj_10",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:4"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 17.9,
+    "max": 25.4,
+    "wakeFrame": 34.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.343,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.069,
+     "speedBefore": 0.73,
+     "speedAfter": 1.1,
+     "y": 7.004,
+     "yBefore": 6.979,
+     "seen": 2,
+     "xz": [
+      -9.93,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      0.4,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      3.31,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 5.68,
+   "c1Violations": 13,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.066,
+   "c4": 3.6,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_8",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:5"
+     ]
+    },
+    {
+     "id": "obj_9",
+     "gain": 0.095,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:1"
+     ]
+    },
+    {
+     "id": "obj_10",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:w:4"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 18.3,
+    "max": 24.7,
+    "wakeFrame": 34.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.299,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.069,
+     "speedBefore": 0.73,
+     "speedAfter": 1.1,
+     "y": 7.004,
+     "yBefore": 6.979,
+     "seen": 2,
+     "xz": [
+      -9.93,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      0.4,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 6,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      3.31,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 2.35,
+   "c1Violations": 4,
+   "c2Gain": 0.0344,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.08,
+   "c4": 3.8,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.2,
+    "p99": 12.1,
+    "max": 12.6,
+    "wakeFrame": 25.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.142,
+   "worstRises": [
+    {
+     "step": 19,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.051,
+     "speedBefore": 0.92,
+     "speedAfter": 1.41,
+     "y": 1.36,
+     "yBefore": 1.366,
+     "seen": 9,
+     "xz": [
+      -3.09,
+      0.08
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 57,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.047,
+     "speedBefore": 0.15,
+     "speedAfter": 0.52,
+     "y": 0.077,
+     "yBefore": 0.038,
+     "seen": 51,
+     "xz": [
+      0.5,
+      12.14
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 55,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.036,
+     "speedBefore": 1.08,
+     "speedAfter": 1.28,
+     "y": 0.536,
+     "yBefore": 0.528,
+     "seen": 49,
+     "xz": [
+      3.02,
+      5.06
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 2.35,
+   "c1Violations": 4,
+   "c2Gain": 0.0034,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.09,
+   "c4": 3.55,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.1,
+    "p99": 12.8,
+    "max": 17.6,
+    "wakeFrame": 25.7
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.136,
+   "worstRises": [
+    {
+     "step": 38,
+     "id": "obj_21",
+     "mass": 5.3,
+     "rise": 0.03,
+     "speedBefore": 0,
+     "speedAfter": 0.22,
+     "y": 0.202,
+     "yBefore": 0.175,
+     "seen": 28,
+     "xz": [
+      4,
+      5.59
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_3",
+     "mass": 43,
+     "rise": 0.025,
+     "speedBefore": 0.86,
+     "speedAfter": 0.45,
+     "y": 0.86,
+     "yBefore": 0.807,
+     "seen": 11,
+     "xz": [
+      3,
+      5.7
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "hammer",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 2.35,
+   "c1Violations": 6,
+   "c2Gain": 0.0183,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.052,
+   "c4": 3.1,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.2,
+    "p99": 11.8,
+    "max": 15.2,
+    "wakeFrame": 24.7
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.103,
+   "worstRises": [
+    {
+     "step": 33,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.038,
+     "speedBefore": 0.84,
+     "speedAfter": 0.35,
+     "y": 2.208,
+     "yBefore": 2.14,
+     "seen": 25,
+     "xz": [
+      -2.52,
+      12.08
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 18,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.031,
+     "speedBefore": 0.65,
+     "speedAfter": 1.1,
+     "y": 1.347,
+     "yBefore": 1.35,
+     "seen": 7,
+     "xz": [
+      -3.09,
+      0.08
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_3",
+     "mass": 43,
+     "rise": 0.024,
+     "speedBefore": 0.83,
+     "speedAfter": 0.42,
+     "y": 0.911,
+     "yBefore": 0.861,
+     "seen": 10,
+     "xz": [
+      3,
+      5.7
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 2.35,
+   "c1Violations": 6,
+   "c2Gain": 0.0034,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.051,
+   "c4": 3.1,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.1,
+    "p99": 12.6,
+    "max": 18.5,
+    "wakeFrame": 23.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.084,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.033,
+     "speedBefore": 1.61,
+     "speedAfter": 1.79,
+     "y": 1.643,
+     "yBefore": 1.676,
+     "seen": 4,
+     "xz": [
+      -1.94,
+      -3.11
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_3",
+     "mass": 43,
+     "rise": 0.025,
+     "speedBefore": 0.86,
+     "speedAfter": 0.45,
+     "y": 0.863,
+     "yBefore": 0.81,
+     "seen": 11,
+     "xz": [
+      3,
+      5.7
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 33,
+     "id": "obj_20",
+     "mass": 5.3,
+     "rise": 0.022,
+     "speedBefore": 0.02,
+     "speedAfter": 0.27,
+     "y": 0.172,
+     "yBefore": 0.155,
+     "seen": 23,
+     "xz": [
+      4.64,
+      5.59
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "d",
+   "prelayRan": false,
+   "configName": "own solver, D4 on",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 20.02,
+   "c1Violations": 44,
+   "c2Gain": 0.4342,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.065,
+   "c4": 4.45,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_1",
+     "gain": 0.434,
+     "mass": 1010.7,
+     "half": [
+      5.91,
+      3.75,
+      0.11
+     ],
+     "parts": [
+      "pole:-10.3",
+      "wiring:grid:w:0",
+      "wiring:grid:w:1",
+      "wiring:grid:w:2"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 12.1,
+    "max": 13.5,
+    "wakeFrame": 28.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.169,
+   "worstRises": [
+    {
+     "step": 35,
+     "id": "obj_21",
+     "mass": 5.3,
+     "rise": 0.029,
+     "speedBefore": 0,
+     "speedAfter": 0.17,
+     "y": 0.204,
+     "yBefore": 0.177,
+     "seen": 25,
+     "xz": [
+      4,
+      5.58
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_3",
+     "mass": 43,
+     "rise": 0.025,
+     "speedBefore": 0.86,
+     "speedAfter": 0.45,
+     "y": 0.862,
+     "yBefore": 0.809,
+     "seen": 11,
+     "xz": [
+      3,
+      5.7
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 36,
+     "id": "obj_20",
+     "mass": 5.3,
+     "rise": 0.022,
+     "speedBefore": 0.02,
+     "speedAfter": 0.27,
+     "y": 0.172,
+     "yBefore": 0.155,
+     "seen": 26,
+     "xz": [
+      4.64,
+      5.59
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 5.86,
+   "c1Violations": 12,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.045,
+   "c4": 4.7,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_12",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    },
+    {
+     "id": "obj_13",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 28,
+    "max": 33.5,
+    "wakeFrame": 41.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.646,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_12",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      -12.85,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 7,
+     "id": "obj_13",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      -15.76,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 8,
+     "id": "obj_12",
+     "mass": 16,
+     "rise": 0.038,
+     "speedBefore": 0.72,
+     "speedAfter": 1.1,
+     "y": 7.002,
+     "yBefore": 7.007,
+     "seen": 2,
+     "xz": [
+      -12.85,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 5.86,
+   "c1Violations": 16,
+   "c2Gain": 0.0326,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.06,
+   "c4": 3.55,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.5,
+    "p99": 21.7,
+    "max": 30,
+    "wakeFrame": 39.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.583,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.033,
+     "speedBefore": 0.47,
+     "speedAfter": 0.7,
+     "y": 7.02,
+     "yBefore": 7.012,
+     "seen": 1,
+     "xz": [
+      3.32,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 22,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.033,
+     "speedBefore": 1.65,
+     "speedAfter": 2.06,
+     "y": 1.168,
+     "yBefore": 1.182,
+     "seen": 12,
+     "xz": [
+      -3.11,
+      0.41
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 33,
+     "id": "obj_14",
+     "mass": 12.3,
+     "rise": 0.031,
+     "speedBefore": 0.65,
+     "speedAfter": 0.16,
+     "y": 2.224,
+     "yBefore": 2.173,
+     "seen": 26,
+     "xz": [
+      -7.01,
+      12.11
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 5.86,
+   "c1Violations": 14,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.029,
+   "c4": 4.5,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_12",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    },
+    {
+     "id": "obj_13",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.8,
+    "p99": 20.7,
+    "max": 30.8,
+    "wakeFrame": 39.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.591,
+   "worstRises": [
+    {
+     "step": 7,
+     "id": "obj_12",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      -12.85,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 7,
+     "id": "obj_13",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      -15.76,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 8,
+     "id": "obj_12",
+     "mass": 16,
+     "rise": 0.038,
+     "speedBefore": 0.72,
+     "speedAfter": 1.1,
+     "y": 7.002,
+     "yBefore": 7.007,
+     "seen": 2,
+     "xz": [
+      -12.85,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 5.68,
+   "c1Violations": 16,
+   "c2Gain": 0.1132,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.066,
+   "c4": 4.85,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_12",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    },
+    {
+     "id": "obj_13",
+     "gain": 0.113,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 19,
+    "max": 28.2,
+    "wakeFrame": 38.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.604,
+   "worstRises": [
+    {
+     "step": 29,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.046,
+     "speedBefore": 2.14,
+     "speedAfter": 1.65,
+     "y": 2.105,
+     "yBefore": 1.965,
+     "seen": 24,
+     "xz": [
+      -2.52,
+      12.11
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 7,
+     "id": "obj_12",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      -12.85,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 7,
+     "id": "obj_13",
+     "mass": 16,
+     "rise": 0.041,
+     "speedBefore": 0.37,
+     "speedAfter": 0.72,
+     "y": 7.007,
+     "yBefore": 6.992,
+     "seen": 1,
+     "xz": [
+      -15.76,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 5.68,
+   "c1Violations": 20,
+   "c2Gain": 0.095,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.055,
+   "c4": 4.55,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_9",
+     "gain": 0.095,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:1"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 21.5,
+    "max": 33.5,
+    "wakeFrame": 40.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.597,
+   "worstRises": [
+    {
+     "step": 8,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.069,
+     "speedBefore": 0.73,
+     "speedAfter": 1.1,
+     "y": 7.004,
+     "yBefore": 6.979,
+     "seen": 2,
+     "xz": [
+      -9.93,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 35,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.049,
+     "speedBefore": 1.14,
+     "speedAfter": 0.65,
+     "y": 2.226,
+     "yBefore": 2.132,
+     "seen": 27,
+     "xz": [
+      -5.44,
+      12.12
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 7,
+     "id": "obj_10",
+     "mass": 16,
+     "rise": 0.033,
+     "speedBefore": 0.47,
+     "speedAfter": 0.7,
+     "y": 7.02,
+     "yBefore": 7.012,
+     "seen": 1,
+     "xz": [
+      3.32,
+      12.1
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 3.45,
+   "c1Violations": 9,
+   "c2Gain": 0.2466,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.059,
+   "c4": 3.95,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_13",
+     "gain": 0.098,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    },
+    {
+     "id": "obj_14",
+     "gain": 0.098,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    },
+    {
+     "id": "obj_27",
+     "gain": 0.247,
+     "mass": 1.6,
+     "half": [
+      0.02,
+      0.82,
+      0.11
+     ],
+     "parts": [
+      "pipe:run_outlet"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 16.8,
+    "max": 18.6,
+    "wakeFrame": 32
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.439,
+   "worstRises": [
+    {
+     "step": 25,
+     "id": "obj_27",
+     "mass": 1.6,
+     "rise": 0.279,
+     "speedBefore": 5.38,
+     "speedAfter": 5.87,
+     "y": 2.163,
+     "yBefore": 2.163,
+     "seen": 13,
+     "xz": [
+      -0.71,
+      0.11
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 52,
+     "id": "obj_14",
+     "mass": 16,
+     "rise": 0.077,
+     "speedBefore": 1.81,
+     "speedAfter": 2.1,
+     "y": 0.275,
+     "yBefore": 0.259,
+     "seen": 43,
+     "xz": [
+      -15.59,
+      11.97
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 18,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.043,
+     "speedBefore": 2.28,
+     "speedAfter": 2.76,
+     "y": 1.44,
+     "yBefore": 1.464,
+     "seen": 6,
+     "xz": [
+      -3.1,
+      -0.06
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 2.35,
+   "c1Violations": 9,
+   "c2Gain": 0.0128,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.028,
+   "c4": 3.3,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 14.3,
+    "max": 16,
+    "wakeFrame": 26.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.246,
+   "worstRises": [
+    {
+     "step": 16,
+     "id": "obj_3",
+     "mass": 43,
+     "rise": 0.025,
+     "speedBefore": 0.86,
+     "speedAfter": 0.45,
+     "y": 0.861,
+     "yBefore": 0.809,
+     "seen": 11,
+     "xz": [
+      3,
+      5.7
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "hammer",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 3.45,
+   "c1Violations": 5,
+   "c2Gain": 0.2268,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.039,
+   "c4": 4.05,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_13",
+     "gain": 0.099,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    },
+    {
+     "id": "obj_14",
+     "gain": 0.099,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    },
+    {
+     "id": "obj_27",
+     "gain": 0.227,
+     "mass": 1.6,
+     "half": [
+      0.02,
+      0.82,
+      0.11
+     ],
+     "parts": [
+      "pipe:run_outlet"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.3,
+    "p99": 13.4,
+    "max": 16.9,
+    "wakeFrame": 27.7
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.433,
+   "worstRises": [
+    {
+     "step": 26,
+     "id": "obj_27",
+     "mass": 1.6,
+     "rise": 0.272,
+     "speedBefore": 5.39,
+     "speedAfter": 5.88,
+     "y": 2.139,
+     "yBefore": 2.145,
+     "seen": 14,
+     "xz": [
+      -0.7,
+      0.12
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 21,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.067,
+     "speedBefore": 1.25,
+     "speedAfter": 1.74,
+     "y": 0.782,
+     "yBefore": 0.789,
+     "seen": 14,
+     "xz": [
+      3,
+      5.53
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 32,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.044,
+     "speedBefore": 2.67,
+     "speedAfter": 2.2,
+     "y": 2.091,
+     "yBefore": 1.93,
+     "seen": 23,
+     "xz": [
+      -7.01,
+      12.14
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 3.6,
+   "c1Violations": 6,
+   "c2Gain": 0.1071,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.028,
+   "c4": 5.1,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_27",
+     "gain": 0.081,
+     "mass": 1.6,
+     "half": [
+      0.02,
+      0.82,
+      0.11
+     ],
+     "parts": [
+      "pipe:run_outlet"
+     ]
+    },
+    {
+     "id": "obj_14",
+     "gain": 0.107,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    },
+    {
+     "id": "obj_13",
+     "gain": 0.107,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 18.1,
+    "max": 22.5,
+    "wakeFrame": 41.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.45,
+   "worstRises": [
+    {
+     "step": 26,
+     "id": "obj_27",
+     "mass": 1.6,
+     "rise": 0.128,
+     "speedBefore": 5.38,
+     "speedAfter": 5.87,
+     "y": 1.997,
+     "yBefore": 2.148,
+     "seen": 13,
+     "xz": [
+      -0.7,
+      0.12
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 20,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.06,
+     "speedBefore": 1.28,
+     "speedAfter": 1.76,
+     "y": 1.364,
+     "yBefore": 1.364,
+     "seen": 7,
+     "xz": [
+      -3.1,
+      0.07
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 38,
+     "id": "obj_27",
+     "mass": 1.6,
+     "rise": 0.053,
+     "speedBefore": 1.62,
+     "speedAfter": 2.08,
+     "y": 1.159,
+     "yBefore": 1.192,
+     "seen": 25,
+     "xz": [
+      -0.75,
+      0.17
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "e",
+   "prelayRan": false,
+   "configName": "own solver, D4 off (extra)",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 19.84,
+   "c1Violations": 49,
+   "c2Gain": 0.4444,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 0.031,
+   "c4": 4.6,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_1",
+     "gain": 0.444,
+     "mass": 1010.7,
+     "half": [
+      5.91,
+      3.75,
+      0.11
+     ],
+     "parts": [
+      "pole:-10.3",
+      "wiring:grid:w:0",
+      "wiring:grid:w:1",
+      "wiring:grid:w:2"
+     ]
+    },
+    {
+     "id": "obj_13",
+     "gain": 0.11,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:2"
+     ]
+    },
+    {
+     "id": "obj_14",
+     "gain": 0.11,
+     "mass": 16,
+     "half": [
+      1.46,
+      0.02,
+      0.02
+     ],
+     "parts": [
+      "wiring:grid:e:3"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 1.6,
+    "p99": 15.5,
+    "max": 21.8,
+    "wakeFrame": 31.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 10.515,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_13",
+     "mass": 16,
+     "rise": 0.038,
+     "speedBefore": 0.72,
+     "speedAfter": 1.1,
+     "y": 7.002,
+     "yBefore": 7.007,
+     "seen": 2,
+     "xz": [
+      -12.85,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_14",
+     "mass": 16,
+     "rise": 0.038,
+     "speedBefore": 0.72,
+     "speedAfter": 1.1,
+     "y": 7.002,
+     "yBefore": 7.007,
+     "seen": 2,
+     "xz": [
+      -15.76,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_13",
+     "mass": 16,
+     "rise": 0.034,
+     "speedBefore": 1.18,
+     "speedAfter": 1.56,
+     "y": 6.994,
+     "yBefore": 7.023,
+     "seen": 3,
+     "xz": [
+      -12.85,
+      12.11
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.71,
+   "c1Violations": 101,
+   "c2Gain": 0.128,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.106,
+   "c4": 2.85,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.128,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.7,
+    "p99": 166.2,
+    "max": 297.7,
+    "wakeFrame": 50.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.469,
+   "worstRises": [
+    {
+     "step": 30,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.314,
+     "speedBefore": 3.08,
+     "speedAfter": 0.61,
+     "y": 1.811,
+     "yBefore": 1.716,
+     "seen": 21,
+     "xz": [
+      -2.52,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.128,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.337,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 7.5,
+   "c1Violations": 103,
+   "c2Gain": 0.128,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.133,
+   "c4": 4.55,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.128,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 20.3,
+    "p99": 133.5,
+    "max": 285.9,
+    "wakeFrame": 56.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.512,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.128,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.337,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 17,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.056,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.455,
+     "yBefore": 2.399,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.02
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 0.97,
+   "c1Violations": 40,
+   "c2Gain": 0.04,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.117,
+   "c4": 2.7,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.04,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 11,
+    "p99": 118.9,
+    "max": 251.6,
+    "wakeFrame": 36.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.171,
+   "worstRises": [
+    {
+     "step": 34,
+     "id": "obj_5",
+     "mass": 24.8,
+     "rise": 0.04,
+     "speedBefore": 0,
+     "speedAfter": 0.25,
+     "y": 0.057,
+     "yBefore": 0.021,
+     "seen": 30,
+     "xz": [
+      0.05,
+      5.5
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_24",
+     "mass": 3,
+     "rise": 0.033,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.051,
+     "yBefore": 2.018,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -2.99
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_22",
+     "mass": 3,
+     "rise": 0.024,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.048,
+     "yBefore": 2.024,
+     "seen": 1,
+     "xz": [
+      1.62,
+      -2.87
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.65,
+   "c1Violations": 52,
+   "c2Gain": 0.1238,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.975,
+   "c4": 1.4,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 5.9,
+    "p99": 154.4,
+    "max": 269.1,
+    "wakeFrame": 35.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 13.844,
+   "worstRises": [
+    {
+     "step": 44,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.258,
+     "speedBefore": 5.39,
+     "speedAfter": 6.31,
+     "y": 0.4,
+     "yBefore": 0.692,
+     "seen": 36,
+     "xz": [
+      -5.43,
+      12.05
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 45,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.13,
+     "speedBefore": 6.31,
+     "speedAfter": 6.99,
+     "y": 0.065,
+     "yBefore": 0.4,
+     "seen": 37,
+     "xz": [
+      -5.41,
+      12.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.334,
+     "yBefore": 2.21,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "blast",
+   "round": 5,
+   "pass": true,
+   "c1Excess": 7.35,
+   "c1Violations": 40,
+   "c2Gain": 0.0316,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 0,
+   "c3Lift": 0.117,
+   "c4": 1.9,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 11.3,
+    "p99": 161.5,
+    "max": 301.4,
+    "wakeFrame": 48.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.339,
+   "worstRises": [
+    {
+     "step": 46,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.214,
+     "speedBefore": 5.41,
+     "speedAfter": 6.24,
+     "y": 0.395,
+     "yBefore": 0.683,
+     "seen": 36,
+     "xz": [
+      -5.43,
+      12.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_24",
+     "mass": 3,
+     "rise": 0.032,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.05,
+     "yBefore": 2.019,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -2.99
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_22",
+     "mass": 3,
+     "rise": 0.025,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.05,
+     "yBefore": 2.025,
+     "seen": 1,
+     "xz": [
+      1.62,
+      -2.87
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.27,
+   "c1Violations": 104,
+   "c2Gain": 0.0784,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.051,
+   "c4": 4,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.078,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.1,
+    "p99": 112.4,
+    "max": 215.4,
+    "wakeFrame": 34.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.444,
+   "worstRises": [
+    {
+     "step": 16,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.041,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.458,
+     "yBefore": 2.418,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 42,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.026,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.837,
+     "yBefore": 2.811,
+     "seen": 29,
+     "xz": [
+      -3,
+      -0.65
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 43,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.024,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.861,
+     "yBefore": 2.837,
+     "seen": 30,
+     "xz": [
+      -3,
+      -0.63
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "hammer",
+   "round": 2,
+   "pass": true,
+   "c1Excess": 0.02,
+   "c1Violations": 27,
+   "c2Gain": 0.0084,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.098,
+   "c4": 2.95,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.7,
+    "p99": 95.2,
+    "max": 262.9,
+    "wakeFrame": 38.7
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 13.734,
+   "worstRises": []
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "hammer",
+   "round": 3,
+   "pass": true,
+   "c1Excess": 0.04,
+   "c1Violations": 3,
+   "c2Gain": 0.0124,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.094,
+   "c4": 0.65,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 103.9,
+    "max": 299.2,
+    "wakeFrame": 28.9
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 12.849,
+   "worstRises": []
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.62,
+   "c1Violations": 121,
+   "c2Gain": 0.1244,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.166,
+   "c4": 4.95,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.045,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 16.7,
+    "p99": 141.6,
+    "max": 264.7,
+    "wakeFrame": 46.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.048,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.335,
+     "yBefore": 2.211,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 17,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.055,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.45,
+     "yBefore": 2.395,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.045,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.049,
+     "yBefore": 2.004,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3.08
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pa",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay on in name only: the pre-lay never ran (first batch)",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 0.46,
+   "c1Violations": 111,
+   "c2Gain": 0.1301,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.162,
+   "c4": 5.8,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.13,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 16.1,
+    "p99": 109.2,
+    "max": 222.6,
+    "wakeFrame": 42.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.766,
+   "worstRises": [
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.13,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.339,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 16,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.052,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.452,
+     "yBefore": 2.4,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.041,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.049,
+     "yBefore": 2.008,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3.09
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.49,
+   "c1Violations": 93,
+   "c2Gain": 0.1281,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.149,
+   "c4": 5.4,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.128,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 21.3,
+    "p99": 116.6,
+    "max": 254.9,
+    "wakeFrame": 38.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.443,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.128,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.208,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.398,
+     "yBefore": 2.337,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.055,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.453,
+     "yBefore": 2.398,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.02
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 0.45,
+   "c1Violations": 100,
+   "c2Gain": 0.1286,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.126,
+   "c4": 6.05,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.7,
+    "p99": 121.8,
+    "max": 234.3,
+    "wakeFrame": 40.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.485,
+   "worstRises": [
+    {
+     "step": 26,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.305,
+     "speedBefore": 3,
+     "speedAfter": 0.6,
+     "y": 2.061,
+     "yBefore": 1.968,
+     "seen": 20,
+     "xz": [
+      -2.53,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 0.65,
+   "c1Violations": 51,
+   "c2Gain": 0.1238,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.977,
+   "c4": 1.15,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 2,
+    "p99": 186.2,
+    "max": 272.7,
+    "wakeFrame": 41.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.06,
+   "worstRises": [
+    {
+     "step": 45,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.258,
+     "speedBefore": 5.39,
+     "speedAfter": 6.31,
+     "y": 0.4,
+     "yBefore": 0.692,
+     "seen": 37,
+     "xz": [
+      -5.43,
+      12.05
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 46,
+     "id": "obj_15",
+     "mass": 12.3,
+     "rise": 0.13,
+     "speedBefore": 6.31,
+     "speedAfter": 6.99,
+     "y": 0.065,
+     "yBefore": 0.4,
+     "seen": 38,
+     "xz": [
+      -5.41,
+      12.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.334,
+     "yBefore": 2.21,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.65,
+   "c1Violations": 98,
+   "c2Gain": 0.129,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.151,
+   "c4": 5.05,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.044,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 20.2,
+    "p99": 122.1,
+    "max": 258.6,
+    "wakeFrame": 36.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.561,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.4,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.054,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.454,
+     "yBefore": 2.4,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.02
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 0.45,
+   "c1Violations": 101,
+   "c2Gain": 0.1286,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.147,
+   "c4": 7.05,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18.1,
+    "p99": 136,
+    "max": 242.3,
+    "wakeFrame": 38.7
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.355,
+   "worstRises": [
+    {
+     "step": 26,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.305,
+     "speedBefore": 3,
+     "speedAfter": 0.6,
+     "y": 2.061,
+     "yBefore": 1.968,
+     "seen": 20,
+     "xz": [
+      -2.53,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 11,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.17,
+   "c1Violations": 98,
+   "c2Gain": 0.0577,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.028,
+   "c4": 5.15,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.058,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18.7,
+    "p99": 95.7,
+    "max": 233.7,
+    "wakeFrame": 43.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.286,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.05,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.448,
+     "yBefore": 2.398,
+     "seen": 2,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 56,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.027,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 3.016,
+     "yBefore": 2.989,
+     "seen": 43,
+     "xz": [
+      -2.92,
+      -0.32
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 43,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.026,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.854,
+     "yBefore": 2.828,
+     "seen": 30,
+     "xz": [
+      -3,
+      -0.63
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 0.13,
+   "c1Violations": 110,
+   "c2Gain": 0.0604,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 0.975,
+   "c4": 5.65,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.06,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18.2,
+    "p99": 98.5,
+    "max": 253.6,
+    "wakeFrame": 41.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.634,
+   "worstRises": [
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.041,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.459,
+     "yBefore": 2.417,
+     "seen": 2,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 42,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.025,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.833,
+     "yBefore": 2.808,
+     "seen": 29,
+     "xz": [
+      -3,
+      -0.65
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 43,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.024,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.858,
+     "yBefore": 2.833,
+     "seen": 30,
+     "xz": [
+      -3,
+      -0.63
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "hammer",
+   "round": 3,
+   "pass": true,
+   "c1Excess": 0,
+   "c1Violations": 0,
+   "c2Gain": 0,
+   "c2PiecesOver": 0,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.08,
+   "c4": 0.55,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [],
+   "frameMs": {
+    "p50": 1.4,
+    "p99": 102.4,
+    "max": 257.8,
+    "wakeFrame": 31.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 12.923,
+   "worstRises": []
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 1.34,
+   "c1Violations": 122,
+   "c2Gain": 0.1292,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.094,
+   "c4": 0.4,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_22",
+     "gain": 0.066,
+     "mass": 5.3,
+     "half": [
+      0.32,
+      0.15,
+      0.02
+     ],
+     "parts": [
+      "baseboard:wall_0_0:0:5"
+     ]
+    },
+    {
+     "id": "obj_25",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.04,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 16.9,
+    "p99": 88.1,
+    "max": 238.4,
+    "wakeFrame": 150.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.847,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.337,
+     "yBefore": 2.208,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_26",
+     "mass": 3,
+     "rise": 0.04,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.049,
+     "yBefore": 2.009,
+     "seen": 1,
+     "xz": [
+      -2.09,
+      -3.05
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.032,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.451,
+     "yBefore": 2.419,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.04
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pb",
+   "prelayRan": false,
+   "configName": "Jolt, D4 off, prelay on in name only: never ran (first batch)",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 0.24,
+   "c1Violations": 106,
+   "c2Gain": 0.0856,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 1.064,
+   "c4": 5.75,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.086,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.5,
+    "p99": 104.8,
+    "max": 240.7,
+    "wakeFrame": 80.6
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.437,
+   "worstRises": [
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.062,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.42,
+     "yBefore": 2.359,
+     "seen": 2,
+     "xz": [
+      -3.1,
+      -0.99
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 20,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.049,
+     "speedBefore": 1.37,
+     "speedAfter": 1.74,
+     "y": 0.832,
+     "yBefore": 0.918,
+     "seen": 14,
+     "xz": [
+      3,
+      5.52
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.037,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.457,
+     "yBefore": 2.42,
+     "seen": 3,
+     "xz": [
+      -3.05,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "blast",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 0.97,
+   "c1Violations": 98,
+   "c2Gain": 0.1286,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.165,
+   "c4": 4.45,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.04,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.042,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.3,
+    "p99": 121.4,
+    "max": 239.7,
+    "wakeFrame": 57.6
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.753,
+   "worstRises": [
+    {
+     "step": 27,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.138,
+     "speedBefore": 3.03,
+     "speedAfter": 1.19,
+     "y": 2.005,
+     "yBefore": 1.885,
+     "seen": 20,
+     "xz": [
+      -2.52,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.2,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.13,
+      -0.97
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "blast",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 7.34,
+   "c1Violations": 38,
+   "c2Gain": 0.04,
+   "c2PiecesOver": 1,
+   "c2PiecesOverUnconditioned": 1,
+   "c3Lift": 0.11,
+   "c4": 2.35,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.04,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 10.9,
+    "p99": 179.8,
+    "max": 274.6,
+    "wakeFrame": 50.6
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.357,
+   "worstRises": [
+    {
+     "step": 29,
+     "id": "obj_8",
+     "mass": 16,
+     "rise": 0.115,
+     "speedBefore": 1.63,
+     "speedAfter": 1.63,
+     "y": 2.142,
+     "yBefore": 2.063,
+     "seen": 23,
+     "xz": [
+      0.4,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 28,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.056,
+     "speedBefore": 3.1,
+     "speedAfter": 1.1,
+     "y": 1.842,
+     "yBefore": 1.715,
+     "seen": 20,
+     "xz": [
+      -2.52,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 33,
+     "id": "obj_5",
+     "mass": 24.8,
+     "rise": 0.04,
+     "speedBefore": 0,
+     "speedAfter": 0.25,
+     "y": 0.057,
+     "yBefore": 0.021,
+     "seen": 28,
+     "xz": [
+      0.05,
+      5.5
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "blast",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 0.44,
+   "c1Violations": 96,
+   "c2Gain": 0.1239,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.119,
+   "c4": 4.15,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.124,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19,
+    "p99": 110.4,
+    "max": 200.6,
+    "wakeFrame": 53.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.798,
+   "worstRises": [
+    {
+     "step": 28,
+     "id": "obj_11",
+     "mass": 16,
+     "rise": 0.305,
+     "speedBefore": 3,
+     "speedAfter": 0.6,
+     "y": 2.061,
+     "yBefore": 1.968,
+     "seen": 21,
+     "xz": [
+      -2.53,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.124,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.334,
+     "yBefore": 2.211,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.88
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.395,
+     "yBefore": 2.334,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "blast",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 0.46,
+   "c1Violations": 98,
+   "c2Gain": 0.129,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.131,
+   "c4": 3.35,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 25,
+   "overPieces": [
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.043,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 21.3,
+    "p99": 145.5,
+    "max": 253.8,
+    "wakeFrame": 40.8
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.768,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.336,
+     "yBefore": 2.207,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.06,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.396,
+     "yBefore": 2.336,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.97
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.054,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.451,
+     "yBefore": 2.396,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "blast",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 0.97,
+   "c1Violations": 89,
+   "c2Gain": 0.129,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.189,
+   "c4": -1,
+   "fellThrough": 0,
+   "n": 25,
+   "asleep": 23,
+   "overPieces": [
+    {
+     "id": "obj_5",
+     "gain": 0.04,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_23",
+     "gain": 0.129,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_24",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.4,
+    "p99": 164,
+    "max": 253.5,
+    "wakeFrame": 42.1
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.529,
+   "worstRises": [
+    {
+     "step": 12,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.129,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.338,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 13,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.061,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.399,
+     "yBefore": 2.338,
+     "seen": 2,
+     "xz": [
+      -3.12,
+      -0.96
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_23",
+     "mass": 3,
+     "rise": 0.055,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.454,
+     "yBefore": 2.399,
+     "seen": 3,
+     "xz": [
+      -3.07,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "hammer",
+   "round": 1,
+   "pass": false,
+   "c1Excess": 1.65,
+   "c1Violations": 111,
+   "c2Gain": 0.0992,
+   "c2PiecesOver": 3,
+   "c2PiecesOverUnconditioned": 3,
+   "c3Lift": 1.005,
+   "c4": 6.1,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_4",
+     "gain": 0.073,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_25",
+     "gain": 0.099,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.037,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 17.4,
+    "p99": 120.4,
+    "max": 282.5,
+    "wakeFrame": 30.4
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.747,
+   "worstRises": [
+    {
+     "step": 20,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.073,
+     "speedBefore": 1.53,
+     "speedAfter": 1.76,
+     "y": 0.846,
+     "yBefore": 0.93,
+     "seen": 14,
+     "xz": [
+      3,
+      5.52
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 38,
+     "id": "obj_4",
+     "mass": 24.8,
+     "rise": 0.073,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 0.102,
+     "yBefore": 0.029,
+     "seen": 33,
+     "xz": [
+      0.05,
+      5.45
+     ],
+     "sleepingBefore": true
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.048,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.454,
+     "yBefore": 2.406,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "hammer",
+   "round": 2,
+   "pass": false,
+   "c1Excess": 1.63,
+   "c1Violations": 107,
+   "c2Gain": 0.0692,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.01,
+   "c4": 4.5,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_4",
+     "gain": 0.069,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_25",
+     "gain": 0.052,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14.3,
+    "p99": 125.2,
+    "max": 288.4,
+    "wakeFrame": 29.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.798,
+   "worstRises": [
+    {
+     "step": 19,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.064,
+     "speedBefore": 1.53,
+     "speedAfter": 1.75,
+     "y": 0.844,
+     "yBefore": 0.929,
+     "seen": 13,
+     "xz": [
+      3,
+      5.52
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 14,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.047,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.455,
+     "yBefore": 2.408,
+     "seen": 2,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 40,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.025,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.84,
+     "yBefore": 2.814,
+     "seen": 28,
+     "xz": [
+      -3,
+      -0.65
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "hammer",
+   "round": 3,
+   "pass": false,
+   "c1Excess": 6.77,
+   "c1Violations": 109,
+   "c2Gain": 0.0654,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.027,
+   "c4": 2.45,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_22",
+     "gain": 0.065,
+     "mass": 5.3,
+     "half": [
+      0.32,
+      0.15,
+      0.02
+     ],
+     "parts": [
+      "baseboard:wall_0_0:0:5"
+     ]
+    },
+    {
+     "id": "obj_25",
+     "gain": 0.058,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 18,
+    "p99": 96.2,
+    "max": 262.3,
+    "wakeFrame": 30.3
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.583,
+   "worstRises": [
+    {
+     "step": 54,
+     "id": "obj_14",
+     "mass": 16,
+     "rise": 0.219,
+     "speedBefore": 4.6,
+     "speedAfter": 5.47,
+     "y": 0.29,
+     "yBefore": 0.538,
+     "seen": 45,
+     "xz": [
+      -15.78,
+      12.1
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 19,
+     "id": "obj_3",
+     "mass": 43,
+     "rise": 0.042,
+     "speedBefore": 2.41,
+     "speedAfter": 2.75,
+     "y": 0.857,
+     "yBefore": 0.93,
+     "seen": 14,
+     "xz": [
+      2.99,
+      5.78
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 19,
+     "id": "obj_22",
+     "mass": 5.3,
+     "rise": 0.04,
+     "speedBefore": 0.65,
+     "speedAfter": 1.13,
+     "y": 0.179,
+     "yBefore": 0.194,
+     "seen": 7,
+     "xz": [
+      2.09,
+      5.52
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "hammer",
+   "round": 4,
+   "pass": false,
+   "c1Excess": 1.96,
+   "c1Violations": 114,
+   "c2Gain": 0.0856,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.03,
+   "c4": 1.6,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_4",
+     "gain": 0.08,
+     "mass": 24.8,
+     "half": [
+      0.5,
+      0.03,
+      0.09
+     ],
+     "parts": [
+      "threshold:d0_0"
+     ]
+    },
+    {
+     "id": "obj_25",
+     "gain": 0.086,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 19.4,
+    "p99": 104.8,
+    "max": 251.1,
+    "wakeFrame": 85.5
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 15.209,
+   "worstRises": [
+    {
+     "step": 134,
+     "id": "obj_4",
+     "mass": 24.8,
+     "rise": 0.08,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 0.128,
+     "yBefore": 0.048,
+     "seen": 129,
+     "xz": [
+      0.05,
+      5.47
+     ],
+     "sleepingBefore": true
+    },
+    {
+     "step": 20,
+     "id": "obj_7",
+     "mass": 16.3,
+     "rise": 0.049,
+     "speedBefore": 1.37,
+     "speedAfter": 1.74,
+     "y": 0.832,
+     "yBefore": 0.918,
+     "seen": 14,
+     "xz": [
+      3,
+      5.52
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.037,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.458,
+     "yBefore": 2.421,
+     "seen": 3,
+     "xz": [
+      -3.05,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  },
+  {
+   "config": "pc",
+   "prelayRan": false,
+   "configName": "Jolt, D4 on, prelay off (first batch, same as pa)",
+   "kind": "hammer",
+   "round": 5,
+   "pass": false,
+   "c1Excess": 0.65,
+   "c1Violations": 117,
+   "c2Gain": 0.1301,
+   "c2PiecesOver": 2,
+   "c2PiecesOverUnconditioned": 2,
+   "c3Lift": 1.167,
+   "c4": 3.65,
+   "fellThrough": 0,
+   "n": 27,
+   "asleep": 27,
+   "overPieces": [
+    {
+     "id": "obj_25",
+     "gain": 0.13,
+     "mass": 3,
+     "half": [
+      2.35,
+      0.99,
+      1.05
+     ],
+     "parts": [
+      "pipe:run_wall_bathroom_0"
+     ]
+    },
+    {
+     "id": "obj_26",
+     "gain": 0.041,
+     "mass": 3,
+     "half": [
+      1.19,
+      0.99,
+      2.88
+     ],
+     "parts": [
+      "pipe:run_wall_backyard_outside"
+     ]
+    }
+   ],
+   "frameMs": {
+    "p50": 14,
+    "p99": 146.1,
+    "max": 309.2,
+    "wakeFrame": 29.2
+   },
+   "errors": [],
+   "gpu": "ANGLE (Intel, Mesa Intel(R) Graphics (ARL), OpenGL 4.6)",
+   "seconds": 14.754,
+   "worstRises": [
+    {
+     "step": 13,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.13,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.339,
+     "yBefore": 2.209,
+     "seen": 1,
+     "xz": [
+      -3.19,
+      -0.89
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 61,
+     "id": "obj_9",
+     "mass": 16,
+     "rise": 0.118,
+     "speedBefore": 0.83,
+     "speedAfter": 1.72,
+     "y": 0.015,
+     "yBefore": 0.016,
+     "seen": 54,
+     "xz": [
+      -11.33,
+      12.11
+     ],
+     "sleepingBefore": false
+    },
+    {
+     "step": 15,
+     "id": "obj_25",
+     "mass": 3,
+     "rise": 0.052,
+     "speedBefore": 0,
+     "speedAfter": 0,
+     "y": 2.452,
+     "yBefore": 2.4,
+     "seen": 3,
+     "xz": [
+      -3.06,
+      -1.03
+     ],
+     "sleepingBefore": false
+    }
+   ]
+  }
+ ]
+}

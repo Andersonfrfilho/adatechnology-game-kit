@@ -1,0 +1,86 @@
+import { describe, it } from 'vitest'
+
+import { KIT_WORLD } from '@adatechnology/game-physics'
+import type { BodyId, Material, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
+import { createJoltEngine } from '../src/index'
+
+const GROUND: Material = { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0, rolling: 0.015 }
+const POLE_MATERIAL: Material = { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0, rolling: 0.012 }
+const G = 9.81
+const engine = await createJoltEngine()
+
+type Ground = 'one' | 'slabs' | 'slabsLazy'
+const build = (world: ReturnType<typeof engine.createWorld>, kind: Ground, around: Vec3): void => {
+  if (kind === 'one') {
+    world.createBody({ shape: { kind: 'box', half: [100, 0.5, 100] }, motion: 'static', position: [0, -0.5, 0], material: GROUND, user: 0 })
+    return
+  }
+  const [cx, , cz] = around
+  const r = kind === 'slabs' ? 12 : 2
+  for (let ix = Math.floor(cx / 2) - r; ix <= Math.floor(cx / 2) + r; ix++)
+    for (let iz = Math.floor(cz / 2) - r; iz <= Math.floor(cz / 2) + r; iz++)
+      world.createBody({ shape: { kind: 'box', half: [1, 0.5, 1] }, motion: 'static', position: [(ix + 0.5) * 2, -0.5, (iz + 0.5) * 2], material: GROUND, user: 0 })
+}
+
+const rng = (seed: number) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296)
+
+const trial = (kind: Ground, seed: number): { c1: number; asleepAt: number; roll: number } => {
+  const world = engine.createWorld({ ...KIT_WORLD })
+  const rand = rng(seed)
+  const x = 3 + rand() * 4, z = 3 + rand() * 4, yaw = rand() * Math.PI
+  build(world, kind, [x, 0, z])
+  const half: Vec3 = [0.11, 3.75, 0.11]
+  const shape: ShapeDesc = { kind: 'box', half }
+  const s = Math.sin(yaw / 2), c = Math.cos(yaw / 2)
+  // pole lying along its own y axis turned to horizontal: rotate about z by 90 deg, then yaw about y
+  const qz: [number, number, number, number] = [0, 0, Math.SQRT1_2, Math.SQRT1_2]
+  const qy: [number, number, number, number] = [0, s, 0, c]
+  const roll0 = rand() * Math.PI / 2
+  const qr: [number, number, number, number] = [0, Math.sin(roll0 / 2), 0, Math.cos(roll0 / 2)]
+  const mul = (a: number[], b: number[]): [number, number, number, number] => [a[3]! * b[0]! + a[0]! * b[3]! + a[1]! * b[2]! - a[2]! * b[1]!, a[3]! * b[1]! - a[0]! * b[2]! + a[1]! * b[3]! + a[2]! * b[0]!, a[3]! * b[2]! + a[0]! * b[1]! - a[1]! * b[0]! + a[2]! * b[3]!, a[3]! * b[3]! - a[0]! * b[0]! - a[1]! * b[1]! - a[2]! * b[2]!]
+  const id: BodyId = world.createBody({ shape, motion: 'dynamic', mass: 1010, position: [x, 0.11 * (Math.cos(roll0) + Math.sin(roll0)) + 0.02, z], rotation: mul(qy, mul(qz, qr)), material: POLE_MATERIAL, layer: 'debris', continuous: true, user: 1, angularVelocity: [0, 0, 0] })
+  // the room's wake: a gentle shove along the ground and a slow spin about its own long axis
+  world.setVelocity(id, [0.3 * Math.cos(yaw), 0, -0.3 * Math.sin(yaw)], [(rand() - 0.5) * 2 * Math.sin(yaw) * 0, (rand() - 0.5) * 0.5, 0])
+  const pose = new Float64Array(7), vel = new Float64Array(6)
+  const m = 1010
+  const inertiaY = (m / 12) * ((2 * 0.11) ** 2 + (2 * 0.11) ** 2) // about long axis (box y)
+  const Ih = (m / 12) * ((2 * 0.11) ** 2 + (2 * 3.75) ** 2)
+  const energy = (): number => {
+    world.readPose(id, pose, 0); world.readVelocity(id, vel, 0)
+    const v2 = vel[0]! ** 2 + vel[1]! ** 2 + vel[2]! ** 2
+    // spin energy: about-the-long-axis component and the others (world w projected on the long axis)
+    const q = [pose[3]!, pose[4]!, pose[5]!, pose[6]!]
+    const ax = [2 * (q[0]! * q[1]! - q[3]! * q[2]!), 1 - 2 * (q[0]! ** 2 + q[2]! ** 2), 2 * (q[1]! * q[2]! + q[3]! * q[0]!)]
+    const w = [vel[3]!, vel[4]!, vel[5]!]
+    const wLong = w[0]! * ax[0]! + w[1]! * ax[1]! + w[2]! * ax[2]!
+    const w2 = w[0]! ** 2 + w[1]! ** 2 + w[2]! ** 2
+    return pose[1]! + (v2 + (inertiaY * wLong ** 2 + Ih * (w2 - wLong ** 2)) / m) / (2 * G)
+  }
+  let c1 = 0, asleepAt = -1
+  let prev = energy()
+  let rollTotal = 0
+  const frames = 160
+  for (let f = 0; f < frames; f++) {
+    for (let k = 0; k < 6; k++) world.stepFixed(1 / 120)
+    const e = energy()
+    c1 = Math.max(c1, m * (e - prev))
+    prev = e
+    if (asleepAt < 0 && world.isSleeping(id)) asleepAt = f * 0.05
+    world.readVelocity(id, vel, 0)
+    rollTotal = Math.max(rollTotal, Math.hypot(vel[3]!, vel[4]!, vel[5]!))
+  }
+  world.dispose?.()
+  return { c1, asleepAt, roll: rollTotal }
+}
+
+describe.skipIf(process.env.PROBE_SEAM !== '1')('pole across slab seams', () => {
+  it('slabs vs one box', () => {
+    const N = Number(process.env.N ?? 30)
+    for (const kind of ['one', 'slabs', 'slabsLazy'] as const) {
+      const rows = Array.from({ length: N }, (_, i) => trial(kind, 1000 + i))
+      const c1 = rows.map((r) => r.c1).sort((a, b) => a - b)
+      const asleep = rows.filter((r) => r.asleepAt >= 0).length
+      console.log('[SEAM]', kind, 'N', N, 'c1 median', c1[Math.floor(N / 2)]!.toFixed(2), 'p90', c1[Math.floor(N * 0.9)]!.toFixed(2), 'max', c1[N - 1]!.toFixed(2), '>5', c1.filter((x) => x > 5).length, 'asleep', asleep, 'meanSleepAt', (rows.filter((r) => r.asleepAt >= 0).reduce((a, r) => a + r.asleepAt, 0) / Math.max(1, asleep)).toFixed(2))
+    }
+  })
+})

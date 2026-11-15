@@ -1,0 +1,274 @@
+// @vitest-environment happy-dom
+import * as THREE from 'three'
+import { Session } from 'node:inspector'
+import { energyHeightOf } from '../../game-destruction-three/tests/energy-ruler'
+import { describe, it } from 'vitest'
+import { engine } from '@adatechnology/game-floorplan'
+
+import { createTestRoom } from '../../game-test-room/src'
+import { stubRenderer } from '../../game-test-room/tests/helpers'
+import { createFloorplanTestModule } from '../src'
+import { EnginePieces } from '../../game-destruction-three/src/engine-pieces'
+import { buildGroundTile } from '../../game-destruction-three/src/engine-ground'
+import { PieceSystem } from '../../game-destruction-three/src/pieces'
+import { planOf } from './helpers/houses'
+import { fakeDocument } from './helpers/fake-document'
+import { IS_JOLT, physicsLoop } from './setup-physics'
+
+type Any = any // probe only
+
+const ACC: Record<string, number> = {}
+const COUNT: Record<string, number> = {}
+const wrapProto = (proto: Any, name: string, label: string): void => {
+  const f = proto[name]
+  proto[name] = function (this: unknown, ...a: unknown[]) { const s0 = performance.now(); try { return f.apply(this, a) } finally { ACC[label] = (ACC[label] ?? 0) + performance.now() - s0; COUNT[label] = (COUNT[label] ?? 0) + 1 } }
+}
+for (const n of ['layGround', 'layStatics', 'sync', 'outOfStatics', 'layTile', 'prepare', 'finish', 'keepApart', 'underGround', 'reshape']) wrapProto(EnginePieces.prototype, n, 'engine.' + n)
+wrapProto(PieceSystem.prototype, 'update', 'pieces.update')
+const wrapOnce = (obj: Any, name: string, label: string): void => {
+  const f = obj[name].bind(obj)
+  obj[name] = (...a: unknown[]) => { const s0 = performance.now(); try { return f(...a) } finally { ACC[label] = (ACC[label] ?? 0) + performance.now() - s0; COUNT[label] = (COUNT[label] ?? 0) + 1 } }
+}
+const median = (xs: number[]): number => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)]!
+
+const once = (prelay: boolean, kind: 'blast' | 'hammer', variant = 0) => {
+  planOf('single_storey_a', 1)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physicsLoop(), prelayGround: prelay, worldOptions: { chainLinksPerUpdate: 1 } } as Any) as Any
+  room.loadModule(createFloorplanTestModule({ engine, locale: 'en', world: room.world, renderer: room.renderer, house: { document: fakeDocument } } as Any))
+  room.openArea('floorplan_area')
+  const b = room.bench('floorplan_area')
+  b.set('package', 'residential'); b.set('template', 'single_storey_a'); b.set('seed', 1)
+  const t0 = performance.now()
+  b.act('build')
+  let guard = 0
+  while (!room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1') && guard++ < 2000) room.update(0.05)
+  for (let i = 0; i < 60; i++) room.update(0.05)
+  const buildMs = performance.now() - t0
+  const eng = room.renderer.pieceSys.engine
+  const sys = room.renderer.pieceSys
+  if (process.env.BALLAST) {
+    for (let i = 0; i < Number(process.env.BALLAST); i++) eng.world.createBody({ shape: { kind: 'box', half: [1, 0.5, 1] }, motion: 'static', position: [1000 + (i % 30) * 2, -0.5, 1000 + Math.floor(i / 30) * 2], material: { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0, rolling: 0.015 }, user: 0 })
+  }
+  const bodiesAfterBuild = eng.world.bodyCount
+  const tilesAfterBuild = eng.tiles.size
+  const acc = ACC
+  wrapOnce(room.world, 'update', 'world.update')
+  wrapOnce(eng.world, 'stepFixed', 'jolt.stepFixed')
+  wrapOnce(eng.world, 'createBody', 'world.createBody')
+  wrapOnce(eng.world, 'setShape', 'world.setShape')
+  const loop = room.physicsLoop ?? undefined
+  if (process.env.SHAPE) {
+    const cb = eng.world.createBody.bind(eng.world)
+    eng.world.createBody = (d: Any) => { if (d.mass && d.mass > 900) console.log('[POLE]', JSON.stringify({ mass: d.mass, inertia: d.inertia, centreAtOrigin: d.centreAtOrigin, material: d.material, rolling: d.rolling, damp: [d.linearDamping, d.angularDamping], continuous: d.continuous, layer: d.layer, shape: d.shape })); return cb(d) }
+  }
+  const base = new Set(room.renderer.pieces().map((p: Any) => p.objectId))
+  const o = room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1').state.position
+  const jit = (n: number): number => (((variant * 2654435761 + n * 40503) >>> 0) % 1000) / 1000 - 0.5
+  const spot: [number, number, number] = [o[0] - 2.5 + (variant ? jit(1) * 1.6 : 0), 0.6, o[2] + (variant ? jit(2) * 1.6 : 0)]
+  const DT = variant ? 0.045 + 0.01 * (jit(3) + 0.5) : 0.05
+  for (let i = 0; i < 10; i++) room.update(0.05)
+  const tilesBefore = eng.tiles.size
+  const made0 = eng.tiles.size
+  for (const k of Object.keys(acc)) { acc[k] = 0; COUNT[k] = 0 }
+  if (kind === 'blast') room.blastAt('c4', spot)
+  else for (let k = 0; k < 12; k++) room.world.hit('house3d:1', { type: 'blunt', point: [spot[0], 0.5 + 0.5 * (k % 4), spot[2] + ((k % 3) - 1) * 0.6], direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' })
+  if (process.env.POLE_TRACK) {
+    const poleOf = (): Any[] => room.renderer.pieces().filter((p: Any) => !base.has(p.objectId) && p.mass > 900)
+    const v = new THREE.Vector3()
+    const tensorOf = (p: Any): Any => {
+      const link = eng.links.get(eng.byObject.get(p.objectId)); if (!link) return undefined
+      const m = eng.world.entry(link.id).body.GetMotionProperties().GetLocalSpaceInverseInertia()
+      const x = m.GetAxisX(), y = m.GetAxisY(), z = m.GetAxisZ()
+      const a = x.GetX(), b = y.GetX(), c = z.GetX(), d = y.GetY(), e = z.GetY(), f = z.GetZ()
+      const det = a * (d * f - e * e) - b * (b * f - e * c) + c * (b * e - d * c)
+      return [(d * f - e * e) / det, (a * f - c * c) / det, (a * d - b * b) / det, (c * e - b * f) / det, (b * e - c * d) / det, (b * c - a * e) / det]
+    }
+    const sample = (p: Any) => {
+      p.root.updateMatrixWorld(true)
+      const c = v.set(p.localCenter[0], p.localCenter[1], p.localCenter[2]).applyMatrix4(p.root.matrixWorld)
+      const w = new THREE.Vector3(p.angularVelocity[0], p.angularVelocity[1], p.angularVelocity[2]).applyQuaternion(p.root.quaternion.clone().invert())
+      return { y: c.y, x: c.x, z: c.z, e: energyHeightOf({ centreY: c.y, velocity: p.velocity, bodyAngularVelocity: [w.x, w.y, w.z], halfExtents: p.halfExtents, mass: p.mass, inertia: tensorOf(p) }), speed: Math.hypot(...(p.velocity as number[])), sleeping: p.sleeping }
+    }
+    let given = new Map<string, number>()
+    const giving = (piece: Any, apply: () => unknown): unknown => { const b = sample(piece).e; const r = apply(); const add = sample(piece).e - b; if (add > 0) given.set(piece.objectId, (given.get(piece.objectId) ?? 0) + add); return r }
+    const impulseOf = sys.impulse.bind(sys); sys.impulse = (piece: Any, i: Any, pt: Any) => giving(piece, () => impulseOf(piece, i, pt))
+    const toppleOf = eng.topple.bind(eng); eng.topple = (piece: Any, dt: number) => giving(piece, () => toppleOf(piece, dt))
+    if (kind === 'blast') room.blastAt('c4', spot)
+    const events: Any[] = []
+    let worst = 0; let awakeFrames = 0; let sleptAt = -1
+    const partnerLog: string[] = []
+    if (process.env.PARTNERS) eng.world.trackPairs = true
+    const classify = (key: number): string => {
+      for (const t of eng.tiles.values() as Any) if (t.ground === key || t.steps === key || t.solid === key) return 'tile'
+      if (eng.statics.ids.has(key)) return 'static'
+      for (const [objectId, body] of eng.byObject) { const l = eng.links.get(body); if (l && l.id === key) return 'piece:' + objectId }
+      return 'other'
+    }
+    const deforms: Array<{ f: number; x: number; z: number; r: number; kind: string }> = []
+    let curF = -1
+    if (process.env.STALEWHEN) {
+      const gc = eng.groundChanged.bind(eng); eng.groundChanged = (x: number, z: number, r: number) => { deforms.push({ f: curF, x, z, r, kind: 'groundChanged' }); return gc(x, z, r) }
+    }
+    if (process.env.HEAPS) {
+      room.terrain.onDeform((r: Any) => console.log('[DEFORM]', `f${curF}`, `(${r.x.toFixed(1)},${r.z.toFixed(1)}) r=${r.radius.toFixed(2)}`))
+      const pts: Array<[number, number]> = [[-1.8, 1.6], [3.8, -0.1], [-5.3, -0.4]]
+      const last = pts.map(() => 0)
+      ;(globalThis as Any).__heapWatch = (f: number): void => pts.forEach((pt, i) => { const h = room.terrain.heightAt(pt[0], pt[1]); if (Math.abs(h - last[i]!) > 0.002) { console.log('[HEAP]', `f${f}`, `(${pt})`, last[i]!.toFixed(4), '->', h.toFixed(4)); last[i] = h } })
+    }
+    const seenStale = new Set<number>()
+    const staleNow = (f: number): void => {
+      for (const [key, t] of eng.tiles as Map<number, Any>) {
+        if (t.dirty || seenStale.has(key)) continue
+        const ix = Math.floor(key / 65536) - 32768, iz = (key % 65536) - 32768
+        const fresh = buildGroundTile((x: number, z: number) => eng.o.groundAt(x, z), ix * 2, iz * 2, 2)
+        let d = 0; for (let i = 0; i < fresh.samples.length; i++) d = Math.max(d, Math.abs(fresh.samples[i]! - t.samples[i]))
+        if (d > 0.005) {
+          seenStale.add(key)
+          { let wi = 0, wd = 0; for (let i = 0; i < fresh.samples.length; i++) { const dd = Math.abs(fresh.samples[i]! - t.samples[i]); if (dd > wd) { wd = dd; wi = i } }
+            const m = fresh.cells + 1; const cx0 = ix * 2, cz0 = iz * 2, c = 2 / fresh.cells
+            let px = 0, pz = 0; if (wi < m * m) { px = cx0 + (wi % m) * c; pz = cz0 + Math.floor(wi / m) * c }
+            console.log('[STALEWHO]', `f${f} tile(${ix},${iz}) worst sample idx ${wi} at (${px.toFixed(2)},${pz.toFixed(2)}) stored ${t.samples[wi].toFixed(4)} groundAtNow ${fresh.samples[wi].toFixed(4)} terrainNow ${wi < m * m ? room.terrain.heightAt(px, pz).toFixed(4) : 'n/a'}`) }
+          const cx = (ix + 1), cz = (iz + 1)
+          const near = deforms.map((e) => ({ ...e, d: Math.hypot(Math.max(ix * 2, Math.min(e.x, ix * 2 + 2)) - e.x, Math.max(iz * 2, Math.min(e.z, iz * 2 + 2)) - e.z) })).sort((a, b) => a.d - b.d).slice(0, 2)
+          console.log('[STALEWHEN]', kind, prelay, `f${f} tile(${ix},${iz}) diff ${(d * 1000).toFixed(1)}mm nearestEvents`, JSON.stringify(near.map((e) => `f${e.f} (${e.x.toFixed(1)},${e.z.toFixed(1)}) r=${e.r.toFixed(2)} dist=${e.d.toFixed(2)}`)), 'ndeforms', deforms.length)
+        }
+      }
+    }
+    const relays: Array<{ f: number; ix: number; iz: number; slab: boolean }> = []
+    if (process.env.RELAYS) {
+      const lt = eng.layTile.bind(eng)
+      eng.layTile = (key: number, ix: number, iz: number, tile: Any) => { const had = tile !== undefined; const before = tile ? tile.samples : null; const r = lt(key, ix, iz, tile); const t = eng.tiles.get(key); if (had && t && t.samples !== before) relays.push({ f: curF, ix, iz, slab: t.slab }); return r }
+    }
+    let before = new Map<string, Any>(poleOf().map((p: Any) => [p.objectId, sample(p)]))
+    for (let f = 0; f < 260; f++) {
+      curF = f
+      if (process.env.HEAPS) { const w = (globalThis as Any).__heapWatch; w(f - 0.5) }
+      room.update(DT)
+      if (process.env.HEAPS) (globalThis as Any).__heapWatch(f)
+      if (process.env.STALEWHEN && f % 2 === 0) staleNow(f)
+      for (const p of poleOf()) {
+        const a = sample(p); const b0 = before.get(p.objectId)
+        if (b0 && f > 2) { const dE = p.mass * (a.e - b0.e - (given.get(p.objectId) ?? 0)); if (dE > 0.5 && !b0.sleeping) events.push({ f, id: p.objectId, dE: +dE.toFixed(2), sp0: +b0.speed.toFixed(2), sp1: +a.speed.toFixed(2), dy: +(a.y - b0.y).toFixed(3), y: +a.y.toFixed(2), at: [+a.x.toFixed(2), +a.z.toFixed(2)] }); if (!b0.sleeping) worst = Math.max(worst, dE) }
+        before.set(p.objectId, a)
+      }
+      if (process.env.PARTNERS && f >= 30 && f <= 60 && eng.world.pairLog.length) {
+        const link1 = eng.links.get(eng.byObject.get('obj_1')); const id1 = link1 && link1.id
+        const log = eng.world.pairLog; const parts: Record<string, number> = {}
+        for (let i = 0; i < log.length; i += 2) { const a = log[i], b = log[i + 1]; if (a === id1 || b === id1) { const other = classify(a === id1 ? b : a); parts[other] = (parts[other] ?? 0) + 1 } }
+        const st = sample(poleOf().find((q: Any) => q.objectId === 'obj_1'))
+        partnerLog.push(`f${f} y=${st.y.toFixed(3)} sleeping=${st.sleeping} ${JSON.stringify(parts)}`)
+      }
+      given = new Map()
+    }
+    if (process.env.RELAYS) { const byF = new Map<number, string[]>(); for (const r of relays) { const a = byF.get(r.f) ?? []; a.push(`(${r.ix},${r.iz})`); byF.set(r.f, a) }; console.log('[RELAYS]', kind, prelay, 'total relays', relays.length, JSON.stringify([...byF.entries()].filter(([f]) => f >= 25 && f <= 70).map(([f, a]) => `f${f}:${a.length}`)), 'events', JSON.stringify(events.slice(0, 4).map((e: Any) => `f${e.f} dE${e.dE}`))) }
+    if (partnerLog.length) console.log('[PARTNERS]', kind, prelay, '\n' + partnerLog.join('\n'))
+    const stale = (label: string): void => {
+      let n1 = 0, n5 = 0, worst = 0, dirty = 0, total = 0, worstAt = ''
+      for (const [key, t] of eng.tiles as Map<number, Any>) {
+        const ix = Math.floor(key / 65536) - 32768, iz = (key % 65536) - 32768
+        const fresh = buildGroundTile((x: number, z: number) => eng.o.groundAt(x, z), ix * 2, iz * 2, 2)
+        let d = 0; for (let i = 0; i < fresh.samples.length; i++) d = Math.max(d, Math.abs(fresh.samples[i]! - t.samples[i]))
+        total++; if (t.dirty) dirty++
+        if (t.dirty) continue
+        if (d > 0.001) n1++; if (d > 0.005) n5++; if (d > worst) { worst = d; worstAt = `(${ix},${iz}) dirty=${t.dirty}` }
+      }
+      console.log('[STALE]', kind, prelay, label, 'tiles', total, 'dirty', dirty, 'stale>1mm', n1, 'stale>5mm', n5, 'worst', (worst * 1000).toFixed(1) + 'mm', worstAt)
+    }
+    if (process.env.STALE) stale('end')
+    if (process.env.TILEDUMP) {
+      const pl = poleOf().find((q: Any) => q.objectId === 'obj_1'); const st = sample(pl)
+      const rows: string[] = []
+      for (const [key, t] of eng.tiles as Map<number, Any>) {
+        const ix = Math.floor(key / 65536) - 32768, iz = (key % 65536) - 32768
+        const cx = (ix + 0.5) * 2, cz = (iz + 0.5) * 2
+        if (Math.hypot(cx - st.x, cz - st.z) > 5) continue
+        let lo = Infinity, hi = -Infinity; for (const h of t.samples) { lo = Math.min(lo, h); hi = Math.max(hi, h) }
+        rows.push(`tile(${ix},${iz}) slab=${t.slab} steps=${t.steps !== null} solid=${t.solid !== null} boxes=${t.boxes.length / 6} dirty=${t.dirty} lo=${lo.toFixed(4)} hi=${hi.toFixed(4)}`)
+      }
+      console.log('[TILEDUMP]', kind, prelay, 'pole', st.x.toFixed(2), st.z.toFixed(2), st.y.toFixed(3), '\n' + rows.sort().join('\n'))
+    }
+    const poles = poleOf()
+    return { prelay, kind, track: true, worst: +worst.toFixed(2), events: events.filter((e) => e.f > 6).sort((a, b) => b.dE - a.dE).slice(0, 3), nPoles: poles.length, asleep: poles.filter((p: Any) => p.sleeping).length } as Any
+  }
+  if (process.env.TILES) {
+    const tl = [...eng.tiles.values()] as Any[]
+    const slabs = tl.filter((t) => t.slab).length
+    console.log('[TILES]', prelay, 'tiles', tl.length, 'slab', slabs, 'heightfield', tl.length - slabs, 'withSteps', tl.filter((t) => t.steps !== null).length, 'withSolid', tl.filter((t) => t.solid !== null).length)
+    // cost of laying one more slab tile far away vs a rolling one
+    const t0 = performance.now(); const n = eng.prelayGround({ minX: 200, minZ: 200, maxX: 232, maxZ: 232, margin: 0 }); const ms = performance.now() - t0
+    console.log('[TILECOST] laid', n, 'ms', ms.toFixed(1), 'per tile', (ms / n).toFixed(3))
+    return { prelay, kind } as Any
+  }
+  if (process.env.SERIES) {
+    const labels = ['engine.prepare', 'engine.layGround', 'engine.layTile', 'engine.sync', 'engine.outOfStatics', 'engine.layStatics', 'jolt.stepFixed', 'world.createBody', 'world.update']
+    const rows: string[] = []
+    const pre = { ...ACC }
+    let awake = 0
+    for (let f = 0; f < Number(process.env.SERIES_FRAMES ?? 40); f++) {
+      const before = { ...ACC }
+      const q = performance.now(); room.update(0.05); const ms = performance.now() - q
+      const d = labels.map((l) => ((ACC[l] ?? 0) - (before[l] ?? 0)).toFixed(1)).join(' ')
+      awake = room.renderer.pieces().filter((p: Any) => !base.has(p.objectId) && !p.sleeping).length
+      rows.push(`f${f} total ${ms.toFixed(1)} | ${d} | tiles ${eng.tiles.size} bodies ${eng.world.bodyCount} awake ${awake}`)
+    }
+    console.log('[SERIES]', kind, prelay, labels.join(' '), '\n' + rows.join('\n'))
+    return { prelay, kind, series: true } as Any
+  }
+  const session = new Session(); session.connect()
+  const post = (m: string, p?: object): Promise<Any> => new Promise((res) => session.post(m as Any, (p ?? {}) as Any, (e: Any, r: Any) => res(r)))
+  void post('Profiler.enable'); void post('Profiler.setSamplingInterval', { interval: 100 }); void post('Profiler.start')
+  const s = performance.now()
+  room.update(0.05)
+  const wake = performance.now() - s
+  let prof: Any = null
+  session.post('Profiler.stop' as Any, (_e: Any, r: Any) => { prof = r.profile })
+  if (process.env.PROF_TOP && prof) {
+    const self = new Map<string, number>()
+    const byId = new Map<number, Any>(prof.nodes.map((n: Any) => [n.id, n]))
+    const dt = prof.timeDeltas as number[]
+    prof.samples.forEach((id: number, i: number) => { const n = byId.get(id)!; const k = `${n.callFrame.functionName || '(anon)'} ${String(n.callFrame.url).split('/').slice(-3).join('/')}:${n.callFrame.lineNumber}`; self.set(k, (self.get(k) ?? 0) + (dt[i] ?? 0) / 1000) })
+    const selfById = new Map<number, number>()
+    prof.samples.forEach((id: number, i: number) => selfById.set(id, (selfById.get(id) ?? 0) + (dt[i] ?? 0) / 1000))
+    const parent = new Map<number, number>()
+    for (const n of prof.nodes as Any[]) for (const c of (n.children ?? []) as number[]) parent.set(c, n.id)
+    const incl = new Map<string, number>()
+    for (const [id, t] of selfById) {
+      const seen = new Set<string>()
+      for (let cur: number | undefined = id; cur !== undefined; cur = parent.get(cur)) {
+        const n = byId.get(cur)!; const k = `${n.callFrame.functionName || '(anon)'} ${String(n.callFrame.url).split('/').slice(-2).join('/')}:${n.callFrame.lineNumber}`
+        if (seen.has(k)) continue
+        seen.add(k); incl.set(k, (incl.get(k) ?? 0) + t)
+      }
+    }
+    const topIncl = [...incl.entries()].filter(([k]) => !k.startsWith('post ') && !k.startsWith('(root)') && !k.startsWith('(program)')).sort((a, b) => b[1] - a[1]).slice(0, 45)
+    console.log('[INCL]', kind, prelay, JSON.stringify(topIncl.map(([k, v]) => `${v.toFixed(1)}ms ${k}`), null, 1))
+    const top = [...self.entries()].sort((a, b) => b[1] - a[1]).slice(0, 18)
+    console.log('[TOP]', kind, prelay, wake.toFixed(1), JSON.stringify(top.map(([k, v]) => `${v.toFixed(1)}ms ${k}`), null, 1))
+  }
+  session.disconnect()
+  const wakeAcc = { ...acc, ...Object.fromEntries(Object.entries(COUNT).map(([k, v]) => ['n:' + k, v])) }
+  const times: number[] = []
+  for (let i = 0; i < 100; i++) { const q = performance.now(); room.update(0.05); times.push(performance.now() - q) }
+  const pieces = room.renderer.pieces().filter((p: Any) => !base.has(p.objectId))
+  return { prelay, kind, buildMs, tilesAfterBuild, bodiesAfterBuild, tilesBefore, tilesAfterWake: eng.tiles.size, bodiesNow: eng.world.bodyCount, pieces: pieces.length, wake, wakeAcc, maxFrame: Math.max(...times), medFrame: median(times), loopKeys: Object.keys(room).filter((k) => /phys|loop/i.test(k)), made0 }
+}
+
+describe.skipIf(!IS_JOLT)('probe D8 wake', () => {
+  for (const kind of ['blast', 'hammer'] as const)
+    for (const prelay of [true, false])
+      it(`${kind} prelay=${prelay}`, () => {
+        if (process.env.POLE_TRACK) { const rowsT = Array.from({ length: Number(process.env.N ?? 4) }, (_, i) => once(prelay, kind, i + 1 + Number(process.env.START ?? 0))) as Any[]; console.log('[POLETRACK]', kind, prelay, 'over5:', rowsT.filter((r) => r.worst > 5).length, '/', rowsT.length, JSON.stringify(rowsT.map((r) => ({ w: r.worst, a: r.asleep + '/' + r.nPoles })))); if (process.env.EVENTS) console.log('[EVENTS]', kind, prelay, JSON.stringify(rowsT.map((r) => r.events.slice(0, 3)))); return }
+        const rows = [0, 1, 2, 3, 4, 5].slice(0, process.env.PROF_TOP ? 2 : process.env.SERIES ? Number(process.env.SERIES) : 3).map(() => once(prelay, kind))
+        if (process.env.POLE_TRACK) {
+          const rowsT = Array.from({ length: Number(process.env.N ?? 4) }, () => once(prelay, kind)) as Any[]
+          console.log('[POLETRACK]', kind, prelay, JSON.stringify(rowsT.map((r) => ({ w: r.worst, asleep: r.asleep + '/' + r.nPoles, ev: r.events.slice(0, 2) }))))
+          return
+        }
+        if (process.env.SERIES) return
+        const r = rows[1]!
+        console.log('[PROBE]', JSON.stringify({ ...r, wake: undefined, wakes: rows.map((x) => +x.wake.toFixed(1)), medMax: median(rows.map((x) => x.maxFrame)) }))
+        console.log('[PROBE-ACC]', kind, prelay, JSON.stringify(Object.fromEntries(Object.entries(r.wakeAcc).map(([k, v]) => [k, +(v as number).toFixed(1)]))))
+      })
+})
