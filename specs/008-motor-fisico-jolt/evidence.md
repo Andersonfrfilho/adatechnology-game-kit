@@ -2632,3 +2632,113 @@ As 19 de 32 iterações são as mesmas nas duas: 1 da bacia (C3, dt 0,0167, empu
 
 ### 8. O que ainda reprova e precisa do dono
 **C1 em 8 de 10 rodadas** (R1 e R2 não mexem em C1; o R3 só vale em primeiro contato). São os limites conhecidos: o poste de 1010 kg a +0,33 a +0,56 kg·m por passo fixo de 1/120 s (0,4 mm de altura de energia; 0,38 a 1,35 kg·m por update; 3 a 19 violações por rodada de blast) e as violações de 1 a 3 g·m dos martelos. As opções A, B, C da seção 8 da T3.8u para o poste seguem de pé (tolerância por passo fixo, 240 Hz só acima de 500 kg, ou o poste fora da população de C1). Em aberto também: o R2 como "subtrai" estrito (hoje "pula o update") e o R3 sem caso real nas rodadas.
+
+## T3.8x — chão em menos corpos (medido, não entrou)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0 (2026-11-15). Investigação feita antes da T3.8y, na sessão que achou o custo do poste (T3.8v §2). Nenhum código desta investigação foi mantido.
+
+Hipótese: o `Step` do poste custa 60 a 70 ms porque a varredura contínua (CCD) lança o poste contra os sólidos de chão; juntar os corpos de chão (menos corpos, mais formas por corpo) devia encurtar a varredura. Medi o custo do passo fixo no quadro 125 do blast (`single_storey_a`, semente 1), com o poste da T3.8v ligado, mudando só o número de corpos de chão:
+
+| corpos de chão | custo por passo fixo (ms) |
+|---|---|
+| 103 (como está) | 56,5 a 59,1 |
+| 10 | 57,3 a 58,8 |
+| 34 | 60,3 a 63,3 |
+| 4 | 59,0 a 61,9 |
+
+**O custo é por forma filha, não por corpo.** Juntar os sólidos em 4, 10 ou 34 corpos não muda nada (a variação é a do ruído): a consulta do `LinearCast` percorre as formas filhas cujas caixas tocam a caixa varrida, e as formas são as mesmas em qualquer agrupamento. Quem faz o poste varrer centenas de cascos é a caixa dele, de 23 m (os 22 m de fio em caixas diagonais), não a organização do chão. Por isso não entrou: a saída é encolher a caixa do poste, que é a T3.8y.
+
+## T3.8y — fios do poste em trechos
+
+Máquina: Intel Core Ultra 9 275HX, 24 núcleos, Arch Linux, `node --version` = v24.22.0; navegador `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa); 2026-11-15. Worktree `chao-um-corpo`, branch `perf/fios-do-poste`, sobre a main com `tilesUnderParts` (`33961e12`). Commit do código: `78ac5399`. Nenhuma régua, tolerância, regra ou teste foi afrouxado ou removido. Sondas em `decision/probes/t38x/` (a de T3.8v, com `?tilesUnderParts` por variável de ambiente `TILES`, e o `ab.sh` que alterna os dois lados), saídas em `decision/probes/t38x/headless-ab.log` e `decision/t38y-results.json` (as 25 rodadas da sala).
+
+### 1. Causa (o que o prompt chamava de "caixas-filhas do composto do poste")
+Os trechos de fio **já eram peças próprias** desde a T3.8g (`wiring:grid:<w|e>:<i>`, `wiring:drop:*`, cortados por `cutRun` e `segmentLimits.wiring`), cada um preso ao poste mais próximo por uma junta `clip` (`holder`). O que os punha no composto do poste era a junta: o `recomputeGroups` do `game-destruction` une em **um grupo** tudo o que uma junta viva liga, e `splitLoose` (`game-destruction-three`) vira cada grupo solto em **uma peça**. Quando o poste soltava, levava os fios cujas juntas a explosão não tinha aberto: no blast do lote, `obj_19` era `pole:-10.3` mais os 4 trechos `wiring:grid:w:0..3` (1010,7 kg, 14 caixas, 11,8 m) e, na sala, um poste de 1092 kg com 26 caixas e 23 m, que o CCD do Jolt varria contra ~100 sólidos de chão (T3.8v §2).
+
+### 2. Projeto
+- **`JointSpec.tears`** (`game-contracts`, `game-destruction`; padrão falso). A parte `a` pende de `b` só enquanto `b` está de pé (em grupo ancorado): `recomputeGroups` une uma junta que rasga só se o grupo de `b` está ancorado (`joinTornJoints`); com `b` solto a junta larga e `a` fica num grupo seu. Nada muda para quem não marca `tears`. `JointState.tears` leva o campo ao estado.
+- **Fiação** (`game-floorplan-three/src/utilities/electrical.ts`): cada trecho da grade e do ramal continua `holder` do poste mais próximo, agora com `tears: true` (`Support.tears` em `game-floorplan-structure` leva à junta, `pieces.ts` copia o campo). O trecho que cai dentro de laje ou parede, ou ao lado de um (`holdersOf`), fica preso a ela, sem `tears`: o ramal na casa **pende da casa**, e só o poste rasga. O poste não leva fio: só o fuste, a travessa e os isoladores (950,4 kg, 10 caixas, no lugar de 1010,7 kg e 14 caixas). `segmentLimits.wiring: Infinity` continua desenhando a fiação inteira como o time (uma peça, sem `holder`): o golden do time não mudou.
+- **Massa**: a do poste cai o que os fios pesavam; cada trecho carrega o cobre dele (`copperMass`, igual à T3.8g). A soma dos trechos não mudou.
+- **Peças que um `tears` separou não se tocam** (`PieceSystem.tether`, `renderer.tetherTorn`): sem isso o poste de 950 kg, ao tombar, batia nos fios de 12 kg que acabava de largar (a ponta do trecho fica a 1,3 cm do isolador) e os lançava. A primeira versão, sem isso, deu C1 de 34 a 105 kg·m em 3 de 5 rodadas de blast e C2 condicionado acima do limite em 4 de 10 (a peça era sempre o `wiring:grid:e:7` junto ao poste de 33,7). O renderizador lê, antes de soltar os grupos, as juntas vivas que rasgam entre grupos diferentes (`tornPairsOf`) e, depois de soltos, marca o par de peças; o motor deixa o par em paz para sempre (`ignorePair`, o mesmo canal do `apartDeep`). Vale só para o Jolt.
+
+### 3. Testes novos (sem GPU)
+- `game-destruction/tests/torn-joints.test.ts` (5): sem `tears` o fio vai com o poste solto; com `tears` fica num grupo seu; preso a uma parede ancorada pende dela; preso a um poste solto e a uma parede pende da parede e o poste fica só; um `tears` aberto à mão larga o fio.
+- `game-floorplan-three/tests/pole-wires.test.ts` (4, o último só no Jolt), `single_storey_a`, C4 no pé do primeiro poste: (a) nenhum objeto com um `pole:*` tem outra parte, e a peça pesa o que o poste pesa; a maior caixa < 8 m; (b) cada trecho da grade é objeto e peça de uma parte só (16 ou mais); (c) o cobre dos fios antes e depois do blast é o mesmo (soma das massas das partes) e os fios soltos pesam mais de metade do total; (d) **Jolt**: 14 s depois, todo fio solto dorme, com o canto mais baixo entre -0,05 e 1,5 m (no chão ou no que caiu ali: nada flutua, nada afunda). Não os rodei contra o código de antes; o que mostra que reprovariam é a sonda de grupos feita antes da mudança: `obj_19` era `pole:-10.3` mais `wiring:grid:w:0..3` (1010,7 kg, 14 caixas).
+
+### 4. Antes e depois, sem navegador (a sonda da T3.8v)
+`single_storey_a`, semente 1, `dt` 1/60, 240 quadros, `build` e blast (C4 a `casa - 2,5 m`) ou martelo (12 golpes de 8000 J), Jolt. **9 execuções por lado**, três pares intercalados de (3 antes, 3 depois), nesta ordem: ladrilhos sob a caixa inteira (padrão) primeiro, `tilesUnderParts` depois. "Antes" é o `electrical.ts` do `HEAD` (juntas que sempre unem) com o motor novo (que sem `tears` se comporta como o de antes). Medianas (intervalo):
+
+| | p50 | p99 | máximo | soma dos 240 quadros | `stepFixed` nos 6 piores quadros de cada execução (mediana / máx) |
+|---|---|---|---|---|---|
+| blast, antes | 5,9 | 134 (130-146) | 153 (143-159) | 3358 | 123 / 140 |
+| **blast, depois** | 9,1 | **49 (42-54)** | **52 (48-60)** | 3091 | **6,5 / 15** |
+| martelo, antes | 4,9 | 119 (117-131) | 132 (129-153) | 2622 | 111 / 131 |
+| **martelo, depois** | 7,8 | **39 (26-50)** | **45 (28-85)** | 2637 | **5,2 / 13** |
+| blast, antes, `tilesUnderParts` | 5,8 | 101 (87-118) | 119 (101-131) | 2932 | 90 / 126 |
+| blast, depois, `tilesUnderParts` | 9,9 | 53 (42-59) | 58 (46-80) | 3326 | 6,5 / 15 |
+| martelo, antes, `tilesUnderParts` | 4,9 | 78 (75-88) | 90 (84-92) | 2228 | 68 / 87 |
+| martelo, depois, `tilesUnderParts` | 7,9 | 42 (35-50) | 50 (41-65) | 2718 | 4,9 / 19 |
+
+- **Os picos acabaram.** Os quadros de 124 a 130 (sete seguidos, 12 passos fixos de ~70 ms) saíram da lista dos piores: o `Step` desses quadros foi de 123 ms (mediana dos piores, blast) para 6,5. p99 e máximo caem 63 a 67% no blast e 62 a 66% no martelo, com os ladrilhos no padrão; 41 a 52% com `tilesUnderParts`.
+- **O que piorou e por quê (não escondo):** o quadro mediano sobe de 5,9 para 9,1 ms (blast) e de 4,9 para 7,8 (martelo). Os 21 trechos de fio agora são peças que caem e assentam chão cada uma (`layGround`/`layTile`/`setShape` do composto de cada ladrilho novo), o custo que a T3.8v §6.3 já listava como o que sobra depois do CCD (no perfil V8 do blast, de uma versão intermediária desta mudança: `prepare` 512 ms para 1380 ms, `stepFixed` 2621 para 1384 ms, soma igual: 4087 para 4194 ms). A **soma dos 240 quadros** com os ladrilhos no padrão (o que se entrega) é igual ou menor: blast -8% (3358 para 3091), martelo +0,6% (2622 para 2637). Com `tilesUnderParts` ligada a soma sobe (+13% no blast, +22% no martelo): a opção já tirava do poste o custo que esta mudança tira, e o que sobra é só o custo dos 21 fios. **A opção continua desligada por padrão e sem o dono não deve ser ligada junto com esta mudança.**
+- Nenhum quadro, de nenhuma execução, passou de 85 ms (antes: até 159 ms no blast e 153 no martelo).
+
+### 5. Rodadas da sala (Jolt, D4 ligada, 5 blast e 5 martelo, um processo por rodada, `drive.mjs`, `chrome-headless-shell`)
+`pnpm build`, `node examples/test-room/build.mjs` (exit 0) e o `dist` conferido (`.tears` e `tether` em `examples/test-room/dist/test-room.html`) antes. Código final (`78ac5399`).
+
+| rodada | C1 (kg·m / violações) | C2 cond. | C3 (m) | C4 (s) | `fellThrough` | quadro p50 / p99 / máx (ms) | despertar | passa tudo |
+|---|---|---|---|---|---|---|---|---|
+| blast 1 | 0,152 / 31 | 0 | 0,0160 | 0,45 | 0 | 1,8 / 46 / 56 | 24,7 | não (C1) |
+| blast 2 | 0,027 / 7 | 0 | 0,0033 | 0,50 | 0 | 2,0 / 42 / 49 | 28,6 | não (C1) |
+| blast 3 | 0,039 / 7 | 0 | 0,0052 | 0,50 | 0 | 1,8 / 43 / 54 | 30,1 | não (C1) |
+| blast 4 | 0,030 / 15 | 0 | 0,0035 | 0,50 | 0 | 1,8 / 45 / 51 | 28,6 | não (C1) |
+| blast 5 | 0,146 / 5 | 0 | 0,0049 | 0,50 | 0 | 1,8 / 50 / 61 | 29,8 | não (C1) |
+| martelo 1 | -0,001 / 0 | 0 | 0,0183 | 0,50 | 0 | 1,5 / 51 / 61 | 21,9 | **sim** |
+| martelo 2 | 0,000 / 1 | 0 | 0,0129 | 0,45 | 0 | 1,3 / 43 / 59 | 24,2 | não (C1) |
+| martelo 3 | 0,049 / 4 | 0 | 0,0098 | 0,50 | 0 | 1,6 / 44 / 49 | 25,7 | não (C1) |
+| martelo 4 | -0,002 / 0 | 0 | 0,0092 | 0,55 | 0 | 1,3 / 51 / 57 | 25,3 | **sim** |
+| martelo 5 | 3,099 / 1 | **1 (`baseboard`, 0,136 m)** | 0,0076 | 0,50 | 0 | 1,4 / 48 / 64 | 25,2 | não (C1, C2) |
+
+- **C3, C4 e `fellThrough`: 10 de 10** (C3 máximo 0,0183 m; C4 máximo 0,55 s; `fellThrough` 0; nenhum erro de página). **C2: 9 de 10.** A exceção é o par grade da janela (43 kg) e batente (16,3 kg) sobre o rodapé de 5,3 kg, o limite já registrado na T3.8w ("0,3 a 4 kg·m em 10 de 60 rodadas"), que não toca poste nem fio. Para saber se a mudança o provocava, rodei **15 rodadas de martelo no código de antes** (`33961e12`, mesmo `dist` refeito): C2 condicionado acima do limite em **1 de 15** (a mesma classe, junto com C1 de 2,9 kg·m). Com 1 de 10 aqui e 1 de 15 lá a diferença não é mensurável; mas o critério ("C2 10 de 10") não se cumpriu nesta amostra e o registro é esse.
+- **C1: 2 de 10 passam (como na T3.8w), mas muito menos violentas.** O maior C1 do blast foi 0,152 kg·m (T3.8w: até 1,35; o poste de 1010 kg era a pior ilha em todas as rodadas de blast e com ele fora do composto some). No martelo, o maior foi 3,10 (a janela, acima) contra 0,001 a 0,003 na T3.8w. O poste de 950 kg não aparece mais como pior ilha em nenhuma das 10. Antes do `tether` (primeira versão, 10 rodadas): C1 de 34,2 e 105,6 kg·m em 3 de 5 blasts (o poste e o fio `wiring:grid:e:7`) e C2 em 4 de 10.
+- **Quadros** (p50 / p99 / máx / despertar): blast 1,8–2,0 / 42–50 / 49–61 / 25–30 ms (T3.8w: 2,0–2,2 / 83–102 / 158–269 / 40–46); martelo 1,3–1,6 / 43–51 / 49–64 / 22–26 (T3.8w: 1,4–1,7 / 56–85 / 209–285 / 32–36). As 15 rodadas de martelo de antes, na mesma máquina: p99 51–85, máximo 187–243 ms.
+
+### 6. Goldens regravados (só os que mudam por causa do poste e dos fios)
+O conjunto de peças e objetos de uma explosão que solta o lote muda (21 objetos a mais: os trechos viram objetos seus, e o estado de cada junta carrega `tears`); nenhuma cena sem o poste mudou.
+- `exact-floorplan.json`: **3 linhas**, `destruction/breach` (`acde80fe`, 1052 objetos para `128490aa`, 1073), `destruction/spall` (`fd6dd7c7`, 1041 para `bf5dd155`, 1062) e `destruction/fracture` (`24474c4c`, 1082 para `ddf959c0`, 1103): cada uma ganha exatamente 21 objetos, os trechos de fio. As 41 entradas `house/*` e `specimen/*` **não mudaram** (o conjunto de partes da casa é o mesmo; só as juntas dos fios carregam um campo a mais que o golden não lê).
+- `blast-presentation.test.ts`: `RECORDED_BLAST_OUTCOME` (`4528ab03…` para `22130243…`): o hash é o do JSON de `{resultados, eventos, estado}`, que agora tem 21 objetos a mais e o `tears` de cada junta. Foi regravado em dois passos (o primeiro, `7585826a…`, só com os objetos; o segundo, com `JointState.tears`).
+- **O golden do time (`golden-scene.test.ts`) não mudou**: passa, com `segmentLimits: Infinity`.
+
+### 7. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck`, `pnpm typecheck:scripts` | exit 0, exit 0 |
+| `game-floorplan-three`, solver próprio | **1186 passam, 0 falhas** (depois de regravar o hash do blast; a primeira passada tinha só essa falha) |
+| `game-floorplan-three`, Jolt | 1187 passam, **5 falhas: as 4 conhecidas (os 3 `destruction/*` do golden, cuja gravação é do solver próprio, e `bookcase-topple`) e `pole-collider.test.ts` "lying on the ground it sleeps within 3 s"** (§8) |
+| `game-destruction`, próprio | 553 passam, 0 falhas |
+| `game-destruction-three`, próprio | 417 passam, 0 falhas (156 pulados) |
+| `game-destruction-three`, Jolt | 508 passam, **só as 2 `rolling`** conhecidas |
+| Construção: residencial, comercial, rural, pós-apocalíptica | 56, 93, 37, 273 passam; `game-floorplan-structure` 407, `game-contracts` 115 |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, números idênticos (`worstC4` 1,5167, `fellThrough` 0) |
+| z-fighting (guarda do pre-commit, `single_storey_a`, todos os níveis) | passa; a geometria dos fios e do poste não mudou |
+| `eslint` nos arquivos mudados / `kit-audit --check` / `pnpm check:layers` | 0 erros (só o aviso de `max-lines` que já havia) / exit 0 (0 novos) / sem violações novas |
+
+### 8. O que precisa do dono
+1. **Um teste existente reprova no Jolt por 0,5%: `pole-collider.test.ts` "lying on the ground it sleeps within 3 s".** Antes os fios tinham o poste deitado de lado, a ~0°; sem eles os três postes dormem a **|cos| = 0,1005**, inclinados 5,8° porque a ponta da travessa (1,6 m, 8 cm de espessura) fica para baixo e escora o topo a ~0,8 m do chão, e o teste classifica "deitado" como `|cos| < 0,1`. Os postes dormem (em 3 s, como o teste pede, e `activeCount` termina em 0); só a classificação da pose falha. **Não mexi em `LYING = 0,1`**: é tolerância, e a regra é nunca afrouxar. Se o dono aceitar que a pose é válida, a constante vai para 0,12; se não, o poste precisa de outro desenho (travessa mais curta, por exemplo).
+2. **O critério C2 saiu 9 de 10 e não 10 de 10** na amostra (§5); a causa é o limite conhecido da janela, que aparece em 1 de 15 também sem a mudança.
+3. **O quadro mediano sobe** (§4). A soma dos quadros não, com os ladrilhos no padrão. Se o dono preferir o `tilesUnderParts` ligado com esta mudança, a soma sobe 13 a 22%.
+
+### 9. Veredito
+Os picos acabaram (p99 -64%, máximo -66%, `Step` dos quadros do poste de 123 ms para 6,5), C3, C4 e `fellThrough` seguem 10 de 10, C1 melhora muito, os gates passam com **uma falha a mais que o combinado** (o teste do poste, §8.1). Mantive o código (commit local `78ac5399`, nada enviado); a decisão sobre a constante `LYING` e sobre o C2 de 9 de 10 é do dono.
+
+### T3.8y — o teste do poste deitado (2026-11-15)
+
+O teste `pole-collider.test.ts` ("deitado no chão, dorme em até 3 s") considerava o poste deitado quando |cos| < 0,1, ou seja, a menos de ~5,7° da horizontal.
+
+Com os fios em trechos, o poste caído passou a ficar apoiado na ponta da cruzeta, inclinado 5,8° (|cos| 0,1005). Ele dorme, mas o teste deixava de contá-lo como deitado por 0,1°.
+
+O dono escolheu medir "deitado" pela altura, e não pelo ângulo. Agora o poste conta como deitado quando o desenho inteiro dele fica abaixo de metade de um poste em pé (`SHAFT / 2` = 3,7 m). As alturas medidas, com `Box3` do desenho no mundo:
+- **Poste caído:** de -0,61 a 1,60 m. A cruzeta, de 1,6 m, fica em pé.
+- **Poste em pé:** chega a 7,5 m.
+
+Os 3 s para dormir continuam iguais. Com esse critério, o relógio começa assim que o poste desce, então o teste fica igual ou mais exigente. Resultado: 2/2 no Jolt e 1 passou mais 1 pulado no solver próprio.

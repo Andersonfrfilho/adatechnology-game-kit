@@ -8,7 +8,7 @@ import { SOCKET_SIZE, ceilingSocketParts, sconceSocketParts, tubeLayoutOf } from
 import type { Bounds, SocketParts, SocketPrimitive } from './lamp-sockets.js';
 import { wallBehindOf, wallBoxExtent } from './wall-box.js';
 import type { ElectricalInfo, Hex, HouseRecord, HouseRoom, Kernel, KernelUtilitiesElectrical, Shared } from '../kernel-types.js';
-import { cutRun, solidsOf } from './segments.js';
+import { cutRun, holdersOf, solidsOf } from './segments.js';
 import type { Vec3 } from './segments.js';
 
 /** A solid copper conductor of the given radius (m) and length (m), in kg. */
@@ -39,24 +39,25 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       cursor.group = lotGroup; cursor.pc = pieceRecord('pole:' + u.toFixed(1), 'concrete', null, { tags: ['pole'] }); cylBase('plain', u, 0, v, 0.11, h * 0.55, concreteColor); cylBase('plain', u, h * 0.55, v, 0.08, h * 0.45, sh(concreteColor, 0.95));
       bx('wood', u - 0.8, h - 0.7, v - 0.04, u + 0.8, h - 0.62, v + 0.04, 0x6a4a30); for (const dx of [-0.65, -0.2, 0.25, 0.7]) cylBase('plain', u + dx, h - 0.62, v, 0.025, 0.1, 0xd0cfc8); cursor.pc = null;
     };
-    // the wiring of the lot detaches in stretches, not as one piece: the grid in slices at fixed stations along each span (shared by the parallel wires), the drops each in their own spans
-    const wireSpans = (a: Vec3, b: Vec3, radius: number, id: string, holder: string): void => {
-      const spans = cutRun([a, b], shared.ctx.segmentLimits.wiring, solids);
-      spans.forEach((span, index) => { cursor.pc = pieceRecord(spans.length > 1 ? id + ':' + index : id, 'copper', null, { tags: ['wiring'], mass: copperMass(radius, span.length), holder }); wireL(span.a, span.b, radius); });
+    // the wiring of the lot detaches in stretches: the grid in slices at fixed stations along each span (shared by the parallel wires), the drops each in their own spans.
+    // A stretch hangs from the solid it lies in (or the one beside it) at the house, else from a pole by a joint that tears: a falling pole does not carry its wires
+    const wireSpans = (a: Vec3, b: Vec3, radius: number, id: string, pole: string): void => {
+      const spans = cutRun([a, b], shared.ctx.segmentLimits.wiring, solids), pieceId = (index: number): string => spans.length > 1 ? id + ':' + index : id, holders = holdersOf(spans, pieceId);
+      spans.forEach((span, index) => { const holder = holders[index]; cursor.pc = pieceRecord(pieceId(index), 'copper', null, { tags: ['wiring'], mass: copperMass(radius, span.length), ...(holder ? { holder } : { holder: pole, tears: true }) }); wireL(span.a, span.b, radius); });
     };
     const wiringSpans = (P: { u: number; v: number; h: number }, drop: readonly (readonly number[])[] | null): void => {
+      const poleId = (u: number): string => 'pole:' + u.toFixed(1), nearestPole = (x: number): string => poleId([P.u - 22, P.u, P.u + 22].reduce((best, u) => Math.abs(u - x) < Math.abs(best - x) ? u : best));
       if (!Number.isFinite(shared.ctx.segmentLimits.wiring)) { // `segmentLimits.wiring: Infinity`: the wiring as the team drew it, one piece (the golden of the team)
         cursor.pc = pieceRecord('wiring:grid', 'copper', null, { tags: ['wiring'] }); for (const dx of [-0.65, -0.2, 0.25, 0.7]) for (const k of [-1, 1]) wireL([P.u + dx, P.h - 0.5, P.v], [P.u + k * 22 + dx, P.h - 0.5, P.v], 0.007);
         if (drop) { const r0 = drop[0], r1 = drop[drop.length - 1]; for (const dz of [0, 0.04]) wireL([r0[0], r0[2], r0[1] + (shared.ctx.visorScene ? 0 : dz)], [r1[0], r1[2], r1[1] + dz], 0.009); wireL([P.u - 0.2, P.h - 0.5, P.v], [r0[0], r0[2], r0[1]], 0.008); }
         cursor.pc = null; return;
       }
-      const poleId = (u: number): string => 'pole:' + u.toFixed(1), nearestPole = (x: number): string => poleId([P.u - 22, P.u, P.u + 22].reduce((best, u) => Math.abs(u - x) < Math.abs(best - x) ? u : best));
       for (const k of [-1, 1]) { // the four wires start and end 1.35 m apart along the span: the stations run over all of it, so a slice is never longer than the limit
         const reach = [-0.65, 0.7].map((dx) => [P.u + dx, P.u + k * 22 + dx]).flat(), line = cutRun([[Math.min(...reach), P.h - 0.5, P.v], [Math.max(...reach), P.h - 0.5, P.v]], shared.ctx.segmentLimits.wiring, solids);
         line.forEach((span, index) => {
           const lo = span.a[0], hi = span.b[0], id = 'wiring:grid:' + (k < 0 ? 'w' : 'e') + ':' + index; let length = 0; const drawn: [number, number][] = [];
           for (const dx of [-0.65, -0.2, 0.25, 0.7]) { const from = Math.max(Math.min(P.u + dx, P.u + k * 22 + dx), lo), to = Math.min(Math.max(P.u + dx, P.u + k * 22 + dx), hi); if (to - from > 1e-3) { drawn.push([from, to]); length += to - from; } }
-          cursor.pc = pieceRecord(id, 'copper', null, { tags: ['wiring'], mass: copperMass(0.007, length), holder: nearestPole((lo + hi) / 2) });
+          cursor.pc = pieceRecord(id, 'copper', null, { tags: ['wiring'], mass: copperMass(0.007, length), holder: nearestPole((lo + hi) / 2), tears: true });
           for (const [from, to] of drawn) wireL([from, P.h - 0.5, P.v], [to, P.h - 0.5, P.v], 0.007);
         });
       }

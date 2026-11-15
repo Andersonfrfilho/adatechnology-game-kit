@@ -12,7 +12,8 @@ const C4 = { energy: 345600, radius: 18 }
 const POLE_MASS = 900
 /** A concrete pole is 7.5 m (`pole()` of the lot's electrical structure); its shaft is one box of nearly that length. */
 const SHAFT = 7.4
-const LYING = 0.1
+/** A pole is down when its whole drawing is below half a standing pole: lying flat it reaches 1.6 m (the crossarm upright), standing it reaches 7.5 m. */
+const LYING_HEIGHT = SHAFT / 2
 const SLEEP_WITHIN = 3
 const SIMULATED = 14
 
@@ -37,7 +38,7 @@ function blastedLot() {
 }
 
 const polesOf = (pieces: readonly Piece[]): Piece[] => pieces.filter((piece) => piece.mass > POLE_MASS && piece.halfExtents[1] >= SHAFT / 2)
-const isLying = (piece: Piece): boolean => Math.abs(new THREE.Vector3(0, 1, 0).applyQuaternion(piece.root.quaternion).y) < LYING
+const isLying = (piece: Piece): boolean => new THREE.Box3().setFromObject(piece.root).max.y < LYING_HEIGHT
 
 describe('a concrete pole of the lot, loose', () => {
   it('collides as its shaft, not as plates at its two ends', () => {

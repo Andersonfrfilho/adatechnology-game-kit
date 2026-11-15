@@ -55,6 +55,8 @@ export interface Support {
   on: string
   joint: JointKind
   bears?: false
+  /** The joint lets go of a part whose other end is loose (`JointSpec.tears`): a wire on a falling pole comes down alone. */
+  tears?: true
 }
 
 export interface RoofPane {

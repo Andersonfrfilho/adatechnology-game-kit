@@ -315,6 +315,11 @@ export interface JointSpec {
    * anchored part. A part that loses every support path to an anchored part collapses, even if it is still connected sideways to other parts.
    */
   bears?: boolean | 'a_on_b' | 'b_on_a'
+  /**
+   * Part `a` hangs from `b` only while `b` stands (is in an anchored group): if `b` is loose the joint lets go, so a wire clipped to a falling pole comes
+   * down as a piece of its own instead of riding the pole (default false: a joint always joins its two parts in one group).
+   */
+  tears?: boolean
 }
 
 export interface DestructibleSpec {
@@ -764,6 +769,8 @@ export interface JointState {
   open: boolean
   /** How it opened. */
   openedBy?: 'break' | 'tool' | 'part_lost'
+  /** The spec's `JointSpec.tears`: `a` hangs from `b` only while `b` stands. */
+  tears?: boolean
 }
 
 export interface ObjectState {

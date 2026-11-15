@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, ObjectState, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -181,6 +181,13 @@ const GENERIC_REFERENCE_RADIUS = 15
 const SWEEP_CORE = 0.15
 /** The small flame of a part that a bullet or fire primed: it burns until the part goes off. */
 const PRIMED_FIRE_RADIUS = 0.2
+
+/** The joints that tear and still hold two parts that are in different groups of the object: the pairs of parts that are about to go apart. */
+function tornPairsOf(state: ObjectState): Array<readonly [string, string]> {
+  const groupOf = new Map<string, number>()
+  state.groups.forEach((group, index) => group.forEach((part) => groupOf.set(part, index)))
+  return state.joints.filter((joint) => joint.tears === true && !joint.open && groupOf.get(joint.a) !== groupOf.get(joint.b)).map((joint) => [joint.a, joint.b] as const)
+}
 
 interface FireEmitter {
   object: string
@@ -1961,19 +1968,33 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  /** The pieces that held two parts by a joint that tears leave each other alone for good: a wire does not hit the pole it was clipped to as that pole falls. */
+  private tetherTorn(torn: ReadonlyArray<readonly [string, string]>): void {
+    const objectOf = (part: string): string | undefined => {
+      for (const [id, bound] of this.bounds) if (bound.parts.has(part)) return id
+      return undefined
+    }
+    for (const [first, second] of torn) {
+      const a = objectOf(first)
+      const c = objectOf(second)
+      if (a !== undefined && c !== undefined && a !== c) this.pieceSys.tether(a, c)
+    }
+  }
+
   /** Turn every loose group of the object (a detach, a collapse) into a piece of its own. */
-  private splitLoose(objectId: string): void {
+  private splitLoose(objectId: string, tearing: ReadonlyArray<readonly [string, string]> = []): void {
     if (!this.autoSplit) return
     const b = this.bounds.get(objectId)
     if (!b) return
     const st = this.world.state(objectId)
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
+    const torn = [...tearing, ...tornPairsOf(st)]
     for (let i = 0; i < loose; i++) {
       if (i > 0 && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => {
           this.staticDirty.add(objectId)
-          this.splitLoose(objectId)
+          this.splitLoose(objectId, torn)
         })
         return
       }
@@ -1986,6 +2007,7 @@ class Renderer implements DestructionRenderer {
       }
       this.adoptSplit(b, newId)
     }
+    this.tetherTorn(torn)
     const old = b.piece
     if (old) {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
