@@ -282,6 +282,8 @@ export class PieceSystem {
   private measures = 0
   /** `apartDeep`'s marked pairs, kept from one update to the next, and the pieces it has already looked at when they were born. */
   private readonly apartKeys = new Set<string>()
+  /** Pieces torn apart by a joint that tears (a wire and the pole it hung from): the engine leaves each pair alone for good, by `apartKey`. */
+  private readonly tethered = new Set<string>()
   private readonly seenBorn = new WeakSet<PieceBody>()
   /** The grid's cells by key: each its list (the one in `surfaceGrid`) and how many it holds in this measure. */
   private readonly cellIndex = new Map<number, number>()
@@ -336,7 +338,7 @@ export class PieceSystem {
             this.prepared = true
             this.measure()
             this.wakeUnsupported(true)
-            engine.prepare(this.list, frame.steps * h, step, this.apartDeep(frame.steps * h))
+            engine.prepare(this.list, frame.steps * h, step, this.apartAll(frame.steps * h))
           },
         },
         'actors',
@@ -375,6 +377,24 @@ export class PieceSystem {
    * the kit's rule (`slideApart`), and the engine leaves the pair alone until they are apart: it would push them out along their least overlap, up through the pile. A pair
    * is marked once, when the second of them is first seen, and unmarked for good when apart; what comes to overlap later through the dynamics is the engine's. The pairs, by `apartKey`.
    */
+  /** The engine is to leave these two pieces (by object id) alone from now on: they were one object, held by a joint that tore. */
+  tether(a: string, b: string): void {
+    this.tethered.add(apartKey(a, b))
+  }
+
+  /** The pairs the engine leaves alone: the deep ones, and the tethered ones whose two pieces both exist. */
+  private apartAll(dt: number): Set<string> {
+    const deep = this.apartDeep(dt)
+    if (this.tethered.size === 0) return deep
+    const present = new Set(this.list.map((b) => b.objectId))
+    const all = new Set(deep)
+    for (const key of this.tethered) {
+      const cut = key.indexOf('\u0000')
+      if (present.has(key.slice(0, cut)) && present.has(key.slice(cut + 1))) all.add(key)
+    }
+    return all
+  }
+
   private apartDeep(dt: number): Set<string> {
     const keys = this.apartKeys
     const born = this.list.filter((b) => !this.seenBorn.has(b))
@@ -664,7 +684,7 @@ export class PieceSystem {
       // itself when what holds it moves; a fixed thing removed or the ground changed wakes what was there (`EnginePieces`)
       this.wakeUnsupported(true)
       if (dt > 0) {
-        this.engine.prepare(this.list, dt, dt, this.apartDeep(dt))
+        this.engine.prepare(this.list, dt, dt, this.apartAll(dt))
         this.loop.step(dt)
         this.engine.finish(this.list, dt, this.time)
       }

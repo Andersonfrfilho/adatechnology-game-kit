@@ -640,6 +640,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return {
         id: j.id ?? `${j.a}~${j.b}`, a: j.a, b: j.b, kind: j.kind, strength: j.strength ?? def.strength, tools: j.tools ?? [...def.tools], seconds: j.seconds ?? def.seconds,
         bears: j.bears ?? (structural(j.a) && structural(j.b)),
+        tears: j.tears ?? false,
       }
     })
     return out
@@ -699,7 +700,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       for (let k = 0; k < 3; k++) pos[k] = (Math.max(A.min[k], B.min[k]) + Math.min(A.max[k], B.max[k])) / 2
       const bears: JointRT['bears'] = r.bears ?? (pa.structural && pb.structural)
       const c = carry?.joints.get(r.id)
-      const jst: JointState = c?.st ?? { id: r.id, a: r.a, b: r.b, kind: r.kind, hp: r.strength, maxHp: r.strength, progress: 0, open: false }
+      const jst: JointState = c?.st ?? { id: r.id, a: r.a, b: r.b, kind: r.kind, hp: r.strength, maxHp: r.strength, progress: 0, open: false, ...(r.tears ? { tears: true } : {}) }
       const j: JointRT = { spec: r, st: jst, ia, ib, bears, pos, step: c?.step ?? 0 }
       o.joints.push(j)
       o.jointMap.set(r.id, j)
@@ -737,6 +738,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return o
   }
 
+  /** A joint that `tears` holds its part `a` to `b` only while `b` stands (its group is anchored): a wire on a standing pole or on a wall hangs there, on a loose one it lets go. */
+  const joinTornJoints = (o: ObjRT, find: (i: number) => number, union: (a: number, b: number) => void) => {
+    const torn = o.joints.filter((j) => j.spec.tears && !j.st.open && !isLost(o.parts[j.ia]) && !isLost(o.parts[j.ib]) && !o.unsup[j.ia] && !o.unsup[j.ib])
+    if (torn.length === 0) return
+    let joined = true
+    while (joined) {
+      joined = false
+      const held = new Set<number>()
+      o.parts.forEach((p, i) => { if (p.anchored && !isLost(p)) held.add(find(i)) })
+      for (const j of torn) {
+        if (find(j.ia) === find(j.ib) || !held.has(find(j.ib))) continue
+        union(j.ia, j.ib)
+        joined = true
+      }
+    }
+  }
+
   const recomputeGroups = (o: ObjRT) => {
     const n = o.parts.length
     const parent = Array.from({ length: n }, (_, i) => i)
@@ -750,7 +768,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const union = (a: number, b: number) => {
       parent[find(a)] = find(b)
     }
-    const live = (j: JointRT) => !j.st.open && !isLost(o.parts[j.ia]) && !isLost(o.parts[j.ib])
+    const live = (j: JointRT) => !j.st.open && !isLost(o.parts[j.ia]) && !isLost(o.parts[j.ib]) && !j.spec.tears
     if (o.unsup.some(Boolean)) {
       // parts that lost every support fall: cut them from the supported pieces; loose non-structural parts follow the part they hang on
       for (const j of o.joints) if (live(j) && !o.unsup[j.ia] && !o.unsup[j.ib]) union(j.ia, j.ib)
@@ -766,6 +784,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
     } else for (const j of o.joints) if (live(j)) union(j.ia, j.ib)
+    joinTornJoints(o, find, union)
     const comps = new Map<number, number[]>()
     for (let i = 0; i < n; i++) {
       if (isLost(o.parts[i])) continue
