@@ -78,7 +78,7 @@ export class Scene {
   }
 
   step(): void {
-    if (this.frame === BLAST_AT) this.renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    if (this.frame === BLAST_AT) this.renderer.explode([0, 0.2, 0], 1000000, 8, { visual: false })
     this.loop.step(DT)
     ;(this.loop.frame as { stepMs: number }).stepMs = this.options.msPerBody * this.loop.world.activeCount
     this.renderer.update(DT)
