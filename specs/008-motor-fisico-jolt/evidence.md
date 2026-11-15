@@ -1957,3 +1957,64 @@ As duas outras checagens que **já reprovam** na linha de base (`e987bbe4`, conf
 - O dreno embutido num pavimento de cima sai do bocal para a parede mais próxima **daquele pavimento** e cai na parede mais próxima do de baixo, mesmo que as duas não se alinhem, e passa pela laje na horizontal (no meio da espessura de 13 cm) entre elas; a casa de verdade tem um shaft, que a planta não tem.
 - Os trechos soltos que a explosão deixa caem como peças (colisores de `fitOrientedBoxes` com os triângulos, as caixas abraçam o desenho; conferido no teste 3), mas a conta de custo de uma sala com muitas casas e vários furos não foi medida.
 - A saída de água de laje (`roof/slabs.ts`, bocal pela mureta) segue como estava.
+
+## T3.8n — canos da parede nas etapas e soleiras (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0, pnpm 10.28.2. Branch `fix/canos-parede-etapas` (sobre a `main` `6b0e6af4`, que já tem #302 a #305; sem a D8 `prelayGround`). Navegador das rodadas: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo. Nenhuma tolerância, régua, critério nem teste foi afrouxado ou removido.
+
+### 1. Cano de parede nas etapas
+- **Causa**: com `constructionStages` (a casa da sala), `stagedWallRuns` (`utilities/water.ts`) punha **uma só parte escondida por cômodo** (`pipe:run_wall_bathroom_0`, `pipe:run_wall_backyard_outside`, 3 kg), com o traçado inteiro do tanque ao aparelho: uma caixa de metros por dentro de paredes e móveis. A segmentação da T3.8h (`c69a1774`) cobria só o ramo sem etapas, e os trechos de lá não tinham `hostedIn`. O motor empurrava essa peça para fora por posição, o que mantinha C2, C3 e C4 reprovando.
+- **Conserto**: os dois ramos usam o mesmo `layWallRun` (um só lugar, não podem mais divergir). Cada rota é cortada por `cutRun` em cada laje e parede que cruza e em `segmentLimits.pipe`; uma parte por trecho, os 3 kg do traçado divididos pelo comprimento, `holder` (a parede ou laje em que o trecho está, ou o trecho ao lado), `chain` ao trecho anterior e `hostedIn` quando o trecho está dentro de um sólido (um furo ali dispara o `reveal` da T3.8k). As pontas usam `drawnEnds` (movido de `drains.ts` para `utilities/segments.ts`, dividido com os drenos) para nenhuma tampa ficar no plano de uma face. `segmentLimits.pipe: Infinity` desenha o traçado inteiro como antes (golden do time). `destruction/pieces.ts` passa `hostedIn` e `chain` do `wall_pipe`.
+- **Visibilidade nas etapas**: continua a regra da etapa de obra (`EMBEDDED`: visível do nível 4 em diante, coberto pelo reboco; `check.ts` exige o cano mostrado nos níveis 4, 5 e 8). O `reveal` do furo é emitido e o estado `exposed` é gravado, mas o desenho já está ligado. Não mudei a regra da etapa.
+- **Testes** (`tests/wall-pipe-runs.test.ts`, 31, falham sem o conserto): casa por etapas, 7 plantas x 2 sementes: nenhum trecho passa do limite; todo trecho é preso por peça que existe, o hospedado é preso pelo hospedeiro, o traçado pesa 3 kg; os trechos da casa A são hospedados por parede; limite configurável e `Infinity` inteiro; um furo de 30 kJ no trecho do banheiro revela o trecho no furo e **não** todos, e os outros ficam sem `exposed` com a junta fechada.
+
+### 2. Soleiras
+- **Causa** (medida contra os sólidos no nascimento, como nas T3.8e e T3.8f): a `threshold:d0_*` ocupava a largura inteira da porta, de 4 cm **abaixo** do chão até o piso. Contra a estrutura: 4,0 cm dentro das vigas baldrame e 1,4 cm (staged; 0,2 cm sem etapas) dentro das paredes (cujas caixas incluem o pilar que entra 9 cm no vão), dos pilares e dos batentes; sem apoio, era uma peça solta (22 a 64 kg) nascida dentro de tudo isso e **4 cm abaixo do chão**. O Jolt a empurrava para cima.
+- **Conserto** (`house/baseboard.ts`): ocupa só o vão entre os batentes (`DOOR_JAMB_WIDTH`, novo em `house/helpers.ts`, usado também por `doors.ts`) e livre de parede, pilar, viga e laje da estrutura (`clearSpan`); assenta no chão (base em `y0`, sem o 4 cm enterrado, à altura da calçada da porta). Massa agora é a do volume desenhado (sobrado: de 24,8 para cerca de 5 kg).
+- **Por que sem `holder`**: a primeira versão também a prendia ao chão (`holder: 'ground'`, como as outras peças fixas). Com o apoio, dois testes do Jolt que passam na `main` passaram a falhar (`house-switch-release`: nenhuma partícula depois de trocar a casa; `pole-collider`: o poste dorme em 3,017 s, uma passada acima de 3 s), e o mesmo sem o apoio e com a mesma geometria passa os dois: o apoio é uma junta a mais na casa e muda a sequência de sorteios do mundo. Medi isolando (só a soleira revertida: passam; só os canos revertidos: falham; soleira sem apoio: passam). Como a soleira agora nasce livre de qualquer vizinho e sobre o chão, não precisa do apoio para não ganhar energia; ficou sem. Fica dito: os dois testes são sensíveis à ordem dos sorteios e passam por pouco.
+- **Outras peças fixas pequenas**: conferidas rodapé, calçada, batente e janela contra a estrutura (aabb) e contra o chão. Não nascem soltas (têm apoio); as caixas de aabb de parede incluem pilares e vãos, então as "sobreposições" de batente e rodapé com parede são da caixa, não do desenho, e não foram tocadas. Soleiras eram as únicas peças pequenas da casa sem apoio e nascidas no chão.
+- **Testes** (`tests/threshold-clearance.test.ts`, 85, falham sem o conserto): 7 plantas x 3 sementes x com e sem etapas: nenhuma sobreposição acima de 1 mm com parede, pilar, viga, laje, batente, calçada e rodapé, nem abaixo do chão; base na altura da calçada da porta.
+
+### 3. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `game-floorplan-three` próprio | **1184 passam, 0 falhas** (1068 mais os 116 novos; linha de base 0) |
+| `game-floorplan-three` Jolt | 1184 passam, **4 falhas, as da linha de base**: os 3 `destruction/*` do golden exato e `bookcase-topple` |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128** |
+| z-fighting | `z-fighting-houses` passa (hook de commit e suíte) |
+| `eslint` nos arquivos mudados | sem avisos |
+| `node tools/kit-audit/audit.mjs --check` | 0 novos, 11 pendentes conhecidos |
+| `pnpm check:layers` | sem violações novas |
+| Tipologias, `game-destruction-three` residencial 56, comercial 93, rural 37 e pós-apocalíptica 273 passam; `game-destruction-three` não foi tocado (não rodado de novo) |
+
+**Goldens regravados** (`UPDATE_EXACT=1`, solver próprio): 42 entradas de `tests/fixtures/exact-floorplan.json` (as `house/*`, `specimen/*` e as 3 `destruction/*`), porque os trechos de cano ganham `hostedIn`, `chain` e massa por trecho, e a soleira muda de caixa, massa e apoio; o hash do estado de cada uma inclui as peças. As 2 que não mudaram são cenas do time (`visor`). `blast-presentation.test.ts`: `RECORDED_BLAST_OUTCOME` de `2304b205…` para `c3e72e99…` pelo mesmo motivo (o conjunto de peças da casa mudou).
+
+### 4. Rodadas da sala (Jolt, D4 ligada `blastDebris=1`, 5 de blast e 5 de martelo, um processo por rodada)
+`pnpm build`, `node examples/test-room/build.mjs`, e o `dist` conferido (`holder:"ground"` na soleira, `wall_pipe` segmentado). Sondas `decision/probes/room.js` e `drive.mjs`.
+
+| rodada | C1 excesso (kg·m) / ilhas | C2 peças acima de 3,5 cm (sem a condição) | C3 (m) | C4 (s) | fellThrough | mais fundo |
+|---|---|---|---|---|---|---|
+| blast 1 | 7.40 / 13 | 0 (1) | 0.038 | 0.40 | 0 | nenhum |
+| blast 2 | 4.75 / 19 | 0 (0) | 0.064 | 0.50 | 0 | nenhum |
+| blast 3 | 7.41 / 6 | 0 (0) | 0.014 | 0.50 | 0 | nenhum |
+| blast 4 | 5.26 / 25 | 0 (0) | 0.043 | 1.00 | 0 | nenhum |
+| blast 5 | 7.20 / 16 | 0 (0) | 0.050 | 1.75 | 0 | nenhum |
+| hammer 1 | 5.87 / 2 | 1 (1) | 0.009 | 1.50 | 0 | nenhum |
+| hammer 2 | 5.17 / 3 | 0 (1) | 0.008 | 0.60 | 0 | nenhum |
+| hammer 3 | 0.00 / 1 | 0 (1) | 0.056 | 0.50 | 0 | nenhum |
+| hammer 4 | 0.00 / 1 | 0 (1) | 0.009 | 1.55 | 0 | nenhum |
+| hammer 5 | 0.00 / 1 | 0 (1) | 0.013 | 1.45 | 0 | nenhum |
+
+Passam todos os critérios (C1 sem nenhuma ilha violada): blast 0/5, martelo 0/5. Com C1 lido como excesso até 0,05 kg·m: blast 0/5, martelo 2/5.
+
+Antes (T3.8m, 60 rodadas de Jolt): `pipe:run_wall_bathroom_0` e `pipe:run_wall_backyard_outside` acima do limite de C2 em 52 de 60, C3 de 1,0 a 1,36 m, C4 reprovando em boa parte. Agora, nas 10 rodadas: **C2 condicionado: 1 peça acima do limite em 10 rodadas** (um ladrilho de rodapé de 5,3 kg, `baseboard:wall_0_0:0:5`, 13,6 cm no martelo 1; nenhum cano nem soleira na lista), **C3 no máximo 0,064 m** (e 0,014 a 0,056 nas outras), **C4 no máximo 1,75 s**, `fellThrough` 0 e nada abaixo do chão. Uma primeira série de 10 rodadas, com a soleira ainda presa ao chão, deu C2 0 em 10, C3 até 0,062 e C4 até 1,8 s; a diferença entre as séries (C1 de 0,0–0,6 para 4,7–7,4 no blast) é da sequência de sorteios, não de causa que eu tenha achado: 10 rodadas não separam as duas.
+
+Comparação com a T3.8m, configuração (c) (igual à `main` sem D8): blast 0/5, martelo 2/5.
+
+### 5. O que ainda reprova
+- **C1 reprova nas 10 rodadas** (nenhuma passa todos os critérios). No blast, em todas, o poste de 1010 kg (`obj_2`) é a pior ilha (excesso de 4,75 a 7,41 kg·m) e há de 6 a 25 ilhas violadas; no martelo, 1 e 2 por `obj_3`/`obj_5` (43 e 16 kg) e 5,2 a 5,9 kg·m, e 3, 4 e 5 só com 1 ilha violada de excesso 0,00. O poste sem o fuste como colisor é o que a T3.8h deixou, fora do escopo daqui.
+- **C3 acima de 3,5 cm em 4 de 5 de blast** (0,038 a 0,064 m) e em 1 de martelo (0,056 m): subiram as peças de 12 a 16 kg (`worstRises`: `obj_9`, `obj_7`, `obj_12`, 5 a 12 cm), não cano nem soleira. O C3 de 1,0 a 1,36 m da T3.8m sumiu. Não investigado.
+- **C2**: o ladrilho de rodapé do martelo 1 (acima). Rodapé é peça presa à parede; não investigado.
+- Passam todos os critérios menos C1 (C2, C3, C4, fellThrough, fundo): blast 0/5 (C3), martelo 3/5 (rodadas 3 a 5; a 3 reprova também por C3, então só a 4 e a 5 passam com C1 lido por excesso, 2/5). Não há base na spec para ler C1 assim; é só para comparar com o 2/5 da T3.8m, que tem a mesma leitura.
+- O desenho dos trechos de cano hospedados continua ligado nas etapas (ver 1); só o estado `exposed` e o `reveal` seguem o furo.
