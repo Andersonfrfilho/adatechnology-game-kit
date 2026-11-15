@@ -92,6 +92,9 @@ const VERTICES_PER_UPDATE = 3000
 const FEET_BAND = 0.03
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/** Most milliseconds of a frame the boxes fitted ahead of the blow take (`fitBoxesAhead`), whatever the budget the host gives the queue: a house is a few hundred parts, fitted over a few seconds. */
+const PREFIT_SLICE_MS = 1
+
 /** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
 const CONTACT_MESHES = 12
 /** Most meshes of a loose piece other pieces land on one by one (`partBoxes`: a shelf's boards, not the box around the shelf); one with more is landed on by its box. */
@@ -2321,7 +2324,8 @@ class Renderer implements DestructionRenderer {
   private runPrefit(deadline: number, clock: () => number, force: boolean): number {
     let ran = 0
     const frames = new Map<Bound, THREE_NS.Matrix4>()
-    while (this.prefitting.length > 0 && ((force && ran === 0) || clock() < deadline)) {
+    const until = Math.min(deadline, clock() + PREFIT_SLICE_MS)
+    while (this.prefitting.length > 0 && ((force && ran === 0) || clock() < until)) {
       const job = this.prefitting[0]!
       const mv = job.parts[job.next++]
       if (!mv || this.bounds.get(job.b.id) !== job.b) {

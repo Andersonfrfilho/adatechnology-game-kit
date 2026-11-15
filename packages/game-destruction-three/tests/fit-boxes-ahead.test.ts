@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createDestructionRenderer } from '../src/renderer'
-import type { PartBox } from '../src/pieces'
+import type { PartBox } from '../src/internal'
 import { FakeWorld, partState } from './fake-world'
 import { physicsOption } from './setup-physics'
 
