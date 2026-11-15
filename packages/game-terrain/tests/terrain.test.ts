@@ -306,6 +306,48 @@ describe('support', () => {
     expect(regions).toHaveLength(0)
   })
 
+  it('rubble that settles raises the ground and tells the region it raised, batched per update', () => {
+    // no sliding: every rise after the blow is rubble that settled
+    const terrain = make('dirt', { maxSlideCellsPerFrame: 0 })
+    terrain.strike('explosive', { x: 0, z: 0, energy: GRENADE * 4 })
+    const probes: [number, number][] = []
+    // one probe on each vertex of the 0.1 m grid
+    for (let column = 0; column <= 200; column++) for (let row = 0; row <= 200; row++) probes.push([-10 + column * 0.1, -10 + row * 0.1])
+    const before = probes.map(([x, z]) => terrain.heightAt(x, z))
+    const regions: { x: number; z: number; radius: number }[] = []
+    terrain.onDeform((region) => regions.push(region))
+    let updates = 0
+    for (let t = 0; t < 8; t += 1 / 60) {
+      terrain.update(1 / 60)
+      updates++
+    }
+    const raised = probes.filter(([x, z], i) => terrain.heightAt(x, z) > before[i]! + 1e-4)
+    expect(raised.length).toBeGreaterThan(0)
+    for (const [x, z] of raised) expect(regions.some((region) => Math.hypot(region.x - x, region.z - z) <= region.radius)).toBe(true)
+    // at most one per update, never one per vertex
+    expect(regions.length).toBeLessThanOrEqual(updates)
+  })
+
+  it('filling a hole from a heap far away tells where the earth was taken from too', () => {
+    const terrain = make('dirt')
+    terrain.dig({ x: 0, z: 0, size: [0.5, 0.5], depth: 0.2, dump: { x: 6, z: 6 } })
+    const regions: { x: number; z: number; radius: number }[] = []
+    terrain.onDeform((region) => regions.push(region))
+    expect(terrain.fill({ x: 0, z: 0, size: [0.5, 0.5], volume: 0.02, from: { x: 6, z: 6, radius: 1.5 } })).toBeGreaterThan(0)
+    expect(regions.some((region) => Math.hypot(region.x - 6, region.z - 6) <= region.radius)).toBe(true)
+    expect(regions.some((region) => Math.hypot(region.x, region.z) <= region.radius)).toBe(true)
+  })
+
+  it('a reset and a load tell that the whole ground changed', () => {
+    const terrain = make('dirt')
+    const regions: { x: number; z: number; radius: number }[] = []
+    terrain.onDeform((region) => regions.push(region))
+    terrain.reset()
+    terrain.load(terrain.serialize())
+    expect(regions.length).toBeGreaterThanOrEqual(2)
+    expect(regions.every((region) => region.radius >= Math.hypot(20, 20) / 2 - 1e-6)).toBe(true)
+  })
+
   it('a slab that opens says so too', () => {
     const terrain = make('suspended_slab')
     terrain.dug.fill(0.12)
