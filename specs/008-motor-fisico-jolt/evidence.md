@@ -1678,3 +1678,58 @@ OUT=<dir> timeout 900 node specs/008-motor-fisico-jolt/decision/probes/drive.mjs
 ```
 
 T3.8 continua sem ✅.
+
+## T3.8g — D7 instalações em trechos (2026-11-14) — **T3.8 continua SEM ✅: 14 de 20 rodadas passam (eram 8 de 20); a fiação e o cano saíram da lista de C2; sobram o C4 do martelo e um `fellThrough`**
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0. Navegador: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo, com `timeout`, duas pistas ao mesmo tempo (D4 ligada e desligada). Aceite igual ao da T3.8b a T3.8f. Nenhuma tolerância, régua nem teste foi afrouxado ou removido. `dist` de `game-floorplan-three` refeito (`pnpm build`) antes do `examples/test-room/build.mjs`, e conferido por grep (`wiring:grid:` no `dist` do pacote e em `examples/test-room/dist/test-room.html`).
+
+### 1. Causa
+`game-floorplan-three/src/utilities/electrical.ts` e `water.ts` (dono das instalações; `game-floorplan-structure/src/utilities/` só diz *o que* existe, não desenha) punham a fiação da lote inteira (`wiring:grid`: 8 fios de 22 m entre os postes, mais o ramal de ligação) sob **uma só `pieceRecord`**, e o cano `pipe:run_outlet` (0,6 kg, do tanque ao forro) também. O sistema de peças trata uma `pieceRecord` como uma peça só: ao soltar, nasce um corpo rígido de 45 m (o blast o gira a 47 rad/s) ou um cano de 1,78 m que atravessa por desenho a laje do tanque (`tank_slab`, y 4,10–4,22) e nasce dentro de colisor fixo. Era o arame de 0,043–0,122 m e o cano de 0,136 m de C2 da T3.8f.
+
+### 2. Projeto (`utilities/segments.ts`, novo; usado por `water.ts` e `electrical.ts`)
+- **`cutRun(pontos, máximo, sólidos)`**: cada aresta do traçado é cortada onde **entra e onde sai** de uma laje, parede ou divisória (caixa de `structureIndex`, papéis `slab`, `wall`, `partition`; com a destruição ligada os painéis da laje fazem o papel dela) e depois em partes iguais de **no máximo `segmentLimits`**. Cada trecho fica **inteiro dentro ou inteiro fora** de cada sólido: nenhum trecho cruza o sólido em que foi cortado. O trecho dentro de um sólido tem `host`.
+- **Configurável (§2)**: opção de montagem `segmentLimits: { wiring: 3, pipe: 2.5 }` (m; padrão igual ao teto de balanço de 3 m, que continua só como guarda). `Infinity` desenha o traçado inteiro como o time desenhou (como `doors`/`windows: 'visor'`); só o golden do time (`golden-scene.test.ts`) usa isso.
+- **Fiação**: a grade sai em **fatias** de ≤ 3 m em estações fixas ao longo de cada vão (os 4 fios paralelos de cada lado dividem as mesmas estações; as estações cobrem os 1,35 m a mais que a travessa dá, então nenhuma fatia passa do limite): `wiring:grid:<w|e>:<i>`; o ramal em três fios com trechos próprios: `wiring:drop:<0|1|2>:<i>`.
+- **Cano**: `pipe:run_outlet:<i>` (cortado na laje do tanque: 3 trechos); os que já cabem em um trecho mantêm o id (`pipe:run_under_pt1`). As luvas de cada vértice vão com o trecho que começa nele.
+- **Segurar (§12, nada flutua)**: cada trecho tem `holder` (virou um `support` do `structure`, junta `clip`, `bears: false`): a laje/parede onde está; o sólido do trecho vizinho que encosta nele; senão o trecho vizinho já seguro (cadeia sem laço, `holdersOf`). Os trechos da fiação pendem do poste mais próximo. Ao se soltar a laje do tanque, o trecho embutido nela vai junto; cada trecho livre cai como peça com geometria (o colisor é o que o motor ajusta às partes desenhadas, §12: nenhum colisor sem geometria).
+- **Massa conservada**: massa explícita por trecho = densidade (`DENSITY`) x área x comprimento do trecho (cobre maciço no fio; plástico x 0,3 de parede no cano, `PIPE_WALL_FILL`). A soma dos trechos de um traçado é a do traçado inteiro. **A massa total mudou** em relação à regra antiga (caixa x densidade x 0,15, que dava 175 mil kg na caixa de 45 m e 0,58 kg no cano): fios agora pesam o cobre que o desenho tem (1,4 cm de diâmetro) e o cano 0,39 kg.
+
+### 3. Testes (`packages/game-floorplan-three/tests/utility-segments.test.ts`, 58 casos, sem motor, 7 plantas x 2 sementes)
+1. nenhum trecho de fiação ou cano passa do limite (3 m / 2,5 m, mais a luva); com `pipe: 1` nenhum passa de 1 m (configurável);
+2. nenhum trecho cruza laje ou parede (caixa desenhada de cada trecho: ou não toca o sólido, ou está **dentro** dele **e seguro por ele**; tolerância 2 cm = a tampa de um cano inclinado cortado numa face passa um raio dela);
+3. todo trecho está seguro por uma peça que existe e nenhuma cadeia de apoios faz laço; o cano do tanque é cortado na `tank_slab` e todos os seus trechos são seguros;
+4. a massa dos trechos de cada traçado é a do traçado (pelo comprimento do `plumbing.visibleRuns` e do ramal).
+
+### 4. Gates
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `game-floorplan-three` próprio | 817 passam; só os 3 `exact-golden` conhecidos (breach, fracture, spall) |
+| `game-floorplan-three` Jolt (`PIECE_SOLVER=jolt`) | 819 passam; os 3 conhecidos e `bookcase-topple` (pré-existente) |
+| Golden exato | regravadas **só** as 40 entradas `house/*` e `specimen/*` (a fiação e o cano mudaram de peças); as 3 `destruction/*` foram restauradas do `HEAD` e continuam reprovando |
+| `blast-presentation.test.ts` | hash regravado (`281edd1c…` para `3644f34d…`: o conjunto de peças mudou, a regravação é o contrato do teste) |
+| `golden-scene.test.ts` (golden do time) | passa, com `segmentLimits: Infinity` no teste (o desenho do time) |
+| `game-destruction-three` | não foi tocado; `z-fighting.test.ts` passa |
+| Construção (`residential`, `commercial`, `rural`, `post-apocalyptic`) | 21, 13, 11 e 56 passam |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, idêntica à da T3.8f (`worstC2Unconditioned 0,014651`, `worstC4 1,5167`, `fellThrough 0`) |
+| `eslint` nos arquivos mudados | 0 problemas |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos, 11 pendentes conhecidos) |
+
+### 5. Rodadas na sala (5 de blast e 5 de martelo por configuração, código final, uma por processo)
+Peças: blast 63 (eram 52), martelo 42 (eram 34): os trechos.
+
+| Configuração | T3.8f | Agora | C2 cond. (peças > 3,5 cm) | C4 (s) por rodada | `fellThrough` | quadro máx (ms) / despertar (ms) |
+|---|---|---|---|---|---|---|
+| D4 ligada, blast | 4 de 5 | **4 de 5** | 0, 0, 0, 0, 0 | 1,95; 0,7; 1,25; **-1 (uma peça não dorme)**; 0,65 | 0, 0, 0, **119**, 0 | 89–126 / 48–53 |
+| D4 ligada, martelo | 0 de 5 | **3 de 5** | 0, 0, 0, 0, 0 | 1,8; **3,4**; 2,3; 1,75; **3,25** | 0 | 214–258 / 34–40 |
+| D4 desligada, blast | 4 de 5 | **5 de 5** | 0, 0, 0, 0, 0 | 1,1; 0,9; 0,85; 1,1; 1,3 | 0 | 98–173 / 49–53 |
+| D4 desligada, martelo | 0 de 5 | **2 de 5** | 0, 0, 0, 0, 0 | **3,4; 4,2**; 1,5; **3,3**; 1,95 | 0 | 120–248 / 32–36 |
+
+**14 de 20 passam** (eram 8 de 20). **Nenhuma das 20 rodadas tem a fiação nem o cano acima do limite de C2** (`overPieces` vazio em todas; o ganho máximo de C2 por rodada é 0,005–0,019 m, o limite é 0,035 m); o poste de 950 kg também saiu da lista. Cinco rodadas a mais de blast com D4 ligada (r6 a r10): 4 passam; a que reprova tem 1 peça de 45 kg (`plain_27`, não é instalação) com 0,106 m, e nenhuma teve `fellThrough`.
+Quadro da sala contra a T3.8b: máximo do blast 89–173 ms (T3.8b: 98–315), do martelo 120–258 ms (T3.8b: 93–294); quadro de despertar 48–53 ms no blast (T3.8b: 43–88) e 32–40 ms no martelo (T3.8b: 43–88). O custo de ladrilhos do arame de 45 m saiu do despertar; sobra o `Step` do Jolt sobre os colisores de triângulo da casa.
+
+### 6. O que sobra e por quê
+- **C4 do martelo**: 5 das 10 rodadas passam de 3 s (3,25–4,2 s; eram 5,05–6,35 s com D4 ligada). Não é mais o arame nem o cano: a lista de quem sobe é de peças de 12–18 kg e de itens de 0,1 kg a poucos cm/s (`worstRises`: `obj_13` 18 kg 0,093 m; `obj_19` 16,3 kg; `obj_29` 12,3 kg; `obj_42` 0,1 kg a y 0,029 m). **Causa não investigada além disso**; é o critério que mais reprova agora (as 5 rodadas de martelo que reprovam, reprovam só por C4).
+- **`fellThrough` 119 numa rodada de blast com D4 ligada** (r4; peça de 0,1 kg `obj_17` a y -0,048 em (8, -2), fora da casa, uma peça de 0,1 kg não dorme). Nenhuma das outras 24 rodadas de blast com D4 ligada (20 + 5 extras, menos essa) repetiu. Não é peça de instalação (as instalações têm massa de quilos). Não investigado.
+- **Não feito**: os conduítes elétricos (`conduit:*`, plástico, um `pieceRecord` cada) e os canos escondidos na parede (`wall_pipe`, `pipe:run_wall_*`, um grupo escondido de 3 kg cada, desenhados no centro do cômodo) continuam inteiros. O traçado `wire` da grade tem 4 fios **colineares e sobrepostos** (as pontas deslocadas só 1,35 m ao longo do vão): é do desenho do time e já era assim (§13).
+- **Exigência nova do dono (furos de explosão que expõem o esgoto)**: **não construída**. O levantamento (SDK primeiro): (a) **não existe esgoto no kit**: `game-floorplan-structure/src/utilities/plumbing.ts` só planeja água fria (`run_outlet`, `run_under_*`, `run_wall_*`); nenhum pacote tem `sewer`/`esgoto`; (b) existe um mecanismo de cano escondido na parede (`part('wall_pipe', …, { hidden: true })`, `parts[id].opens(1)` o revela), mas **ninguém o chama quando a parede abre**, o traçado vai pelo centro do cômodo e não por dentro da parede, e é uma peça só; (c) a vista de rombos (`breach.standing(partId)` de `game-floorplan-three`) já dá os vãos que restam da parede, o que permite saber onde há furo. O que falta é decisão de modelo (por onde corre o esgoto, diâmetro, saída), dados novos em `game-floorplan-structure`, o desenho dos trechos embutidos (o `cutRun` desta tarefa já corta no sólido e dá `host`, então os trechos embutidos numa parede ou laje existem; falta escondê-los e revelar/soltar os que ficam sob o furo) e os testes (1)–(4) com furo real. Fica para uma tarefa própria.
