@@ -2372,3 +2372,25 @@ T3.8b: blast max 98–315 ms, despertar 43–88 ms. Agora (a) blast max 121–30
 6. O solver próprio (c) reprova C1, C3 e C4 como antes.
 
 Veredito: **a T3.8 continua sem ✅**: (a) passa 1 de 10 rodadas; em (a) só C4 e `fellThrough` fecham 10 de 10 (C2 fecha 10 de 10 em (b)).
+
+## T3.8t — decisão sobre o D8 (2026-11-15)
+
+O D8 (`prelayGround`, montar o chão do motor na construção) **não foi para a main**. O código fica só no branch `feat/chao-ao-construir`, e a decisão foi do Claude, com o dono ciente.
+
+Motivos medidos (T3.8m e T3.8o):
+
+- **O ganho cai num quadro que a medida não lê.** O pré-assento tira cerca de 20 ms do primeiro quadro depois da explosão. Esse quadro não é o lido como despertar, e nada muda no p99 nem no máximo.
+- **O custo vai para a construção.** São 250–330 ms e 504 corpos a mais ao montar a casa.
+- **Na sala o chão é barato.** Ele é plano e as peças acordam aos poucos, ao longo de uns 15 quadros. O ganho da cena sintética (65 → 0,5 ms) vinha de terreno ondulado com tudo acordando no mesmo quadro.
+
+O que a investigação rendeu e já está na main:
+
+- **#306:** o terreno que assenta passa a avisar o motor.
+- **#308:** o chão alterado no lugar, com `SetHeights`.
+
+Os picos de quadro de 100–300 ms vêm de duas fontes:
+
+- o kit cortando a casa em peças: `splitLoose`, `adoptSplit`, `fitPartBoxes`, `rebuildHost`;
+- o passo do Jolt com cerca de 30 peças acordadas.
+
+Esse é o próximo alvo de desempenho.
