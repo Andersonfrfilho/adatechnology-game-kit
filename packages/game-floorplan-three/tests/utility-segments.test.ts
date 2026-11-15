@@ -106,3 +106,37 @@ describe('the wiring and pipe runs detach in segments', () => {
     expect(massOf('wiring:grid') + massOf('wiring:drop')).toBeCloseTo(DENSITY.copper! * (grid + wires), 4)
   })
 })
+
+/** The hidden pipes of the walls, as parts of the structure (a hidden group has no drawn mesh to measure). */
+const wallRuns = (house: House) => house.structure.parts.filter((part) => /^pipe:run_wall/.test(part.id))
+const diagonalOf = (part: House['structure']['parts'][number]): number => Math.hypot(part.aabb[2] - part.aabb[0], part.y1 - part.y0, part.aabb[3] - part.aabb[1])
+
+describe('the pipes hidden in the walls detach in segments too', () => {
+  it.each(CASES)('%s, seed %i: no segment is longer than the limit (a run is not one box across the rooms)', (template, seed) => {
+    const { house } = houseOf(planOf(template, seed))
+    const tooLong = wallRuns(house).filter((part) => diagonalOf(part) > LIMITS.pipe + 2 * SLEEVE)
+    expect(tooLong.map((part) => `${part.id}: ${diagonalOf(part).toFixed(2)} m`)).toEqual([])
+  })
+
+  it.each(CASES)('%s, seed %i: the segments of a run weigh what the run weighed (3 kg) and every holder exists', (template, seed) => {
+    const { house } = houseOf(planOf(template, seed))
+    const ids = new Set(house.structure.parts.map((part) => part.id))
+    const held = new Map(house.structure.supports.map((support) => [support.part, support.on]))
+    const byRun = new Map<string, number>()
+    for (const part of wallRuns(house)) {
+      const run = part.id.replace(/:\d+$/, '')
+      byRun.set(run, (byRun.get(run) ?? 0) + part.mass)
+      const holder = held.get(part.id)
+      if (holder) expect(ids.has(holder) || holder === 'ground', `${part.id} -> ${holder}`).toBe(true)
+    }
+    for (const [run, mass] of byRun) expect(mass, run).toBeCloseTo(3, 6)
+  })
+
+  it('a wall run of 1 m detaches in segments of 1 m when the limit is 1 m, and as the team drew it with no limit', () => {
+    const plan = planOf('casaA', 1)
+    const short = wallRuns(houseOf(plan, {}, { segmentLimits: { pipe: 1 } }).house)
+    for (const part of short) expect(diagonalOf(part), part.id).toBeLessThanOrEqual(1 + 2 * SLEEVE)
+    const whole = wallRuns(houseOf(plan, {}, { segmentLimits: { pipe: Infinity } }).house)
+    expect(whole.map((part) => part.id).sort()).toEqual(['pipe:run_wall_backyard_outside', 'pipe:run_wall_bathroom_0', 'pipe:run_wall_kitchen_0'])
+  })
+})

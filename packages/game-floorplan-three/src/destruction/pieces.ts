@@ -29,7 +29,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           const tp = g.userData.part;
           if (tp === 'water_tank') { const e = shared.ctx.structureIndex.water_tank, L = cap || (g.userData.volume ? Math.round(g.userData.volume * 1000) : 0); tagObject('water_tank', [g], 'plastic', e ? e.role : null, { floor: e ? e.floor : 0, contains: L ? { fluid: 'water', liters: L } : undefined, mass: e ? e.mass : 25, thickness: 0.004, fill: 0.05, tags: ['tank'] }); }
           else if (tp === 'gas_cylinder') tagObject(id, [g], 'steel', null, { mass: 11, form: 'cylinder', thickness: 0.003, fill: 0.03, contains: { fluid: 'gas', liters: 13, pressurized: true }, explodes: { energy: 120000, radius: 5, atC: 300 }, tags: ['gas_bottle'] });
-          else if (tp === 'wall_pipe') tagObject(id, [g], 'plastic', null, { mass: 3, tags: ['pipe'] });
+          else if (tp === 'wall_pipe') tagObject(id, [g], 'plastic', null, { mass: g.userData.mass ?? 3, tags: ['pipe'], ...(g.userData.holder ? { holder: g.userData.holder } : {}) });
           else if (tp === 'shower_door') tagObject(id, [g], 'tempered_glass', null, { mass: 25 });
           else if (tp === 'gate_leaf' || tp === 'mailbox_door') tagObject(id, [g], 'steel', null, { mass: 30 });
         }

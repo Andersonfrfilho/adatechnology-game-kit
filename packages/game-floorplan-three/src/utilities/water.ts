@@ -8,6 +8,8 @@ import type { Vec3 } from './segments.js';
 
 /** Share of a solid cylinder a plastic pipe is: its wall (about a tenth of the diameter), the rest is bore. */
 const PIPE_WALL_FILL = 0.3;
+/** What the team gave the hidden pipe of one run (kg); the run's spans share it by length. */
+const WALL_PIPE_MASS = 3;
 const pipeMass = (diameter: number, length: number): number => DENSITY.plastic! * Math.PI * (diameter / 2) ** 2 * length * PIPE_WALL_FILL;
 
 export function installUtilitiesWater(K: Kernel, shared: Shared): void {
@@ -48,8 +50,18 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
     for (const tr of H.visibleRuns) {
       const pts = tr.points.map(xyz), d = tr.diameter || 0.025;
       if (tr.exposed === 'wall') { // inside the wall: hidden part (vanishes until the wall breaks)
-        const pt = H.points.find(p => p.run === tr.id), com: HouseRoom | undefined = tr.to != null ? shared.ctx.roomById[tr.to] : undefined, g = groupOf(com || (pt && { floor: pt.floor }));
-        part('wall_pipe', [0, 0, 0], () => { for (let i = 0; i + 1 < pts.length; i++) pipe(pts[i], pts[i + 1], d, PIPE_COLOR); for (const p of pts) cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); }, { id: 'pipe:' + tr.id, hidden: true, run: tr.id, to: tr.to, from: tr.from }, g === 'lot' ? 'f0' : g);
+        const pt = H.points.find(p => p.run === tr.id), com: HouseRoom | undefined = tr.to != null ? shared.ctx.roomById[tr.to] : undefined, g = groupOf(com || (pt && { floor: pt.floor })), parent = g === 'lot' ? 'f0' : g;
+        const meta = { hidden: true, run: tr.id, to: tr.to, from: tr.from };
+        if (!Number.isFinite(shared.ctx.segmentLimits.pipe)) { // `segmentLimits.pipe: Infinity`: the run as the team drew it, one part (the golden of the team)
+          part('wall_pipe', [0, 0, 0], () => { for (let i = 0; i + 1 < pts.length; i++) pipe(pts[i], pts[i + 1], d, PIPE_COLOR); for (const p of pts) cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); }, { id: 'pipe:' + tr.id, ...meta }, parent);
+          continue;
+        }
+        // the run detaches in spans like the visible ones (one part, one box of 8 m across a room, was a collider wedged in walls and furniture that the engine pushed out for seconds); the 3 kg of the run are shared by length
+        const spans = cutRun(pts, shared.ctx.segmentLimits.pipe, solidsOf(shared.ctx.structureIndex)), pieceId = (index: number): string => spans.length > 1 ? 'pipe:' + tr.id + ':' + index : 'pipe:' + tr.id, holders = holdersOf(spans, pieceId), total = spans.reduce((sum, span) => sum + span.length, 0);
+        spans.forEach((span, index) => {
+          const sleeves = [span.fromVertex, index === spans.length - 1 && span.toVertex === pts.length - 1 ? span.toVertex : -1].filter(vertex => vertex >= 0);
+          part('wall_pipe', [0, 0, 0], () => { pipe(span.a, span.b, d, PIPE_COLOR); for (const vertex of sleeves) { const p = pts[vertex]; cylBase('plain', p[0], p[1] - d, p[2], d * 0.7, d * 2, PIPE_COLOR); } }, { id: pieceId(index), ...meta, mass: WALL_PIPE_MASS * span.length / total, ...(holders[index] ? { holder: holders[index] } : {}) }, parent);
+        });
         continue;
       }
       let g: string;
