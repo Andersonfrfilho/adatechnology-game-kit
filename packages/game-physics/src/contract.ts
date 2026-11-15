@@ -27,6 +27,14 @@ export type ShapeDesc =
   /** Children placed in the body's frame; `tag` (our part id) comes back on queries and contacts, -1 for a child without one and for a plain shape. */
   | { readonly kind: 'compound'; readonly children: ReadonlyArray<{ readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation?: Quat; readonly tag?: number }> }
 
+/** A rectangle of height field samples: from sample (`x`, `z`), `sizeX` by `sizeZ` of them. */
+export interface HeightRegion {
+  readonly x: number
+  readonly z: number
+  readonly sizeX: number
+  readonly sizeZ: number
+}
+
 export type Motion = 'static' | 'kinematic' | 'dynamic'
 
 /**
@@ -274,6 +282,13 @@ export interface PhysicsWorld {
   createBodies(descs: readonly BodyDesc[]): BodyId[]
   /** A new shape on the same body; a dynamic one keeps the kit's mass (`mass`, else the one it was made with), its inertia from the new shape (or `mass.inertia`). */
   setShape(id: BodyId, shape: ShapeDesc, mass?: { readonly mass: number; readonly inertia?: Vec3 }): void
+  /**
+   * Static height field body only: the field's heights are now `heights` (all of them, as in `ShapeDesc` `heightfield`, origin height included) and only the samples of
+   * `region` differ from what the body holds. The shape is changed in place, so it costs the region and not the field. Returns false and changes nothing when the engine
+   * cannot do it so (not a height field, a region off the field, a height outside the range the field was made with): the caller then gives the body a whole new shape
+   * (`setShape`).
+   */
+  updateHeights(id: BodyId, region: HeightRegion, heights: ArrayLike<number>): boolean
   /** Writes x, y, z then x, y, z, w into `out` at `offset`. */
   readPose(id: BodyId, out: Float32Array | Float64Array, offset: number): void
   readVelocity(id: BodyId, out: Float32Array | Float64Array, offset: number): void

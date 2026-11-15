@@ -1958,6 +1958,75 @@ As duas outras checagens que **já reprovam** na linha de base (`e987bbe4`, conf
 - Os trechos soltos que a explosão deixa caem como peças (colisores de `fitOrientedBoxes` com os triângulos, as caixas abraçam o desenho; conferido no teste 3), mas a conta de custo de uma sala com muitas casas e vários furos não foi medida.
 - A saída de água de laje (`roof/slabs.ts`, bocal pela mureta) segue como estava.
 
+## T3.8q — cratera altera as alturas no lugar (SetHeights) (2026-11-15)
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, Node v24.22.0, worktree `cratera-set-heights` (`perf/cratera-set-heights`, de `6b0e6af4`). Só Node, sem navegador. Mudança de desempenho aprovada pelo dono, sem regra nova: o chão resultante tem de ser o de um ladrilho recém-assentado. Não toquei no `settle` do `game-terrain` (é da `fix/terreno-assenta-avisa-motor`); esta mudança é do lado do motor e se encontra com aquela no merge.
+
+### Desenho
+
+1. **Adaptador** (`game-physics-jolt/src/heights.ts`, contrato em `game-physics`): `world.updateHeights(id, region, heights)`, sobre `HeightFieldShape::SetHeights`. `heights` é o campo inteiro (como no `ShapeDesc`), `region` o retângulo que mudou. Devolve `false`, sem mudar nada, quando a engine não pode: o corpo não é campo de alturas, o retângulo sai do campo, ou uma altura está fora da faixa com que o campo foi feito (o Jolt **trunca** a altura à faixa min/max do campo: medido, 9 vira 1,2994, −9 vira 0,7010). Quem chama dá então uma forma nova (`setShape`).
+   - Contrato do Jolt confirmado por sonda: `x`, `z`, tamanhos em blocos de 4 amostras (`HEIGHT_BLOCK`); o retângulo é alargado ao bloco, e as amostras acrescentadas vêm dos **valores exatos** de `heights`, nunca relidas (releitura dequantiza e requantiza: a primeira versão, com releitura, derivou 6,7 mm em 200 escritas). As amostras de enchimento além do tamanho do campo ficam como buraco (`NO_COLLISION`). `GetMinHeightValue`/`GetMaxHeightValue` já incluem a altura da origem, e `GetHeights` também.
+   - `NotifyShapeChanged` é chamado depois, como o Jolt pede (a faixa de alturas não muda, então a caixa do corpo também não: a chamada é por contrato, não por necessidade medida).
+   - Memória (§8): o `ArrayFloat` de trabalho é destruído em `finally`; o alocador é o do próprio `JoltInterface` (`GetTempAllocator`), que não é nosso. Teste: heap e `bodyCount` idênticos ao byte depois de 200 escritas.
+2. **O que o Jolt faz além disso (achado, medido, não documentado):** `SetHeights` **requantiza os blocos à esquerda e acima dos escritos**, a partir das próprias amostras dequantizadas, e elas descem: até 4,4e-5 m por escrita, **1,8 mm em 50** escritas (linear, sem teto); só esses blocos, nada mais fora do retângulo alargado. Alargar o retângulo não ajuda (o anel vai um bloco mais longe). Por isso o motor **refaz a forma inteira dos valores exatos a cada 4 escritas seguidas** (`MAX_IN_PLACE_WRITES`): o chão fica a no máximo 0,18 mm dos valores exatos e a forma nova zera a conta.
+3. **Caminho de reassentar** (`engine-pieces.ts`, `engine-ground.ts`, `engine-ground-heights.ts`):
+   - `groundChanged` agora guarda o **retângulo** avisado por ladrilho (a caixa do disco mais `GROUND_REACH` = 25 cm, porque `groundAt` interpola entre pontos da grade do terreno, de 10 cm), não só uma marca. `readGround` lê de novo **só as amostras desse retângulo** (as quatro séries de 26 mil amostras por ladrilho inteiro); o resto fica como estava. Ladrilho em que nenhuma amostra mudou: o motor não é tocado (antes: refazia as quatro séries, o height field, os blocos do sólido e comparava).
+   - `shapeGround` (puro das amostras) refaz mapa, alturas e caixas dos degraus; o ladrilho feito de amostras remendadas é **bit a bit** o feito de todas as amostras (teste).
+   - Campo de alturas que continua campo: `changedHeights` acha o menor retângulo que mudou e `updateHeights` o escreve no corpo, que **mantém o id** (o motor continua aquecendo os contatos de quem está em cima). Forma nova (como antes) quando: retângulo maior que metade do campo (medido: escrever custa ~23 ns por amostra contra 0,21 ms de um campo novo de 81 × 81, então acima de ~3/4 a forma nova é mais barata), altura fora da faixa, ou 4 escritas seguidas. Laje que continua laje: só move. Laje ↔ campo: refaz o corpo, como antes.
+   - **O sólido sob o campo** (compostos de caixas e prismas de 0,5 m): é função só das alturas, então **não é refeito se as alturas não mudaram** (antes: refeito e comparado a cada reassentamento) e é refeito inteiro, no mesmo corpo por `setShape`, quando mudaram. **Não o atualizei em blocos, e é a decisão que mais custa**: o composto estático do Jolt não se edita, o composto mutável (`MutableCompoundShape.AddShape/RemoveShape`) mudaria os índices dos filhos (a razão da T3.1 para o sólido ser um corpo à parte do campo) e a criação de cada casco convexo continua custando. Medido num ladrilho de cratera de 30–40 cm: montar os blocos (JS) 1,06 ms, criar o composto (391 prismas + 87 caixas) **3,8 ms**, 45 blocos 1,3 ms. É o grosso do custo quando o chão muda de verdade (ver abaixo). Ficou como **pendência**, com a medida: reaproveitar os cascos que não mudaram, ou um sólido menos detalhado, são decisões de desenho que mudam o que o sólido segura (T3.1, 5 mm de margem; a bacia é sensível a isso).
+
+### Equivalência (`PIECE_SOLVER=jolt`, sem GPU)
+
+| Teste | O que prova |
+|---|---|
+| `game-physics-jolt/tests/heights.test.ts` (4) | região escrita = campo feito direto dos novos valores (`≤ 2 passos`); fora do retângulo alargado e do anel à esquerda/acima, idêntico ao ruído de um raio (5e-6); no anel, ≤ 5e-5; `false` e nada mudado para altura fora da faixa, caixa, região fora do campo ou sobre o enchimento, vetor curto; campo com altura de origem; **200 escritas: `bodyCount` e `memoryInUse` iguais ao byte, superfície longe da região igual** |
+| `game-destruction-three/tests/engine-ground-inplace.test.ts` (7) | (1) segunda cratera na borda da primeira: mesmo corpo, `updateHeights` 1×, **nenhum `setShape` no corpo do campo**, superfície por raios a **1,6e-5 m** do ladrilho feito do zero (tolerância 1,5e-4); (2) leu **menos de 30 %** das 25921 amostras e as alturas entregues ao motor são **iguais bit a bit** às do ladrilho inteiro; (3) aviso sem mudança: nenhuma chamada ao motor, marca limpa; (4) altura fora da faixa: forma nova, chão igual ao novo a 1e-5; (5) quatro escritas e a quinta refaz a forma; (6) **placa em cima do trecho cavado**: acorda, nunca fica sob o chão, `fellThrough` 0, dorme, e termina a < 2 mm de onde termina a mesma cena com `updateHeights` forçado a falhar (forma nova); (7) **200 mudanças do chão**: `bodyCount` igual, heap a < 4 KB (a mesma folga do teste de vazamento da T3.1), > 100 escritas no lugar, e o ladrilho no fim a 1,6e-5 de um novo |
+| os 14 testes de `engine-ground.test.ts` e os 4 de `ground-settlement.test.ts`, de antes | passam sem mudança |
+
+Tolerância dos testes novos: duas formas quantizadas (cada uma a ≈ 5e-5 m da verdade neste chão, medido) mais os 4,4e-5 de uma escrita; **medido 1,6e-5**.
+
+### Números (Node v24.22.0; `tests/engine-ground-relay.bench.test.ts`, `GROUND_BENCH=1 PIECE_SOLVER=jolt`, 90 ladrilhos de 2 m, cada um com cratera de 30 cm no meio e uma segunda na borda, mediana de 9 rodadas, duas séries antes e duas depois no mesmo código de teste; `layTile` no caminho do motor, sem passo do Jolt)
+
+| Cenário | Antes | Depois |
+|---|---|---|
+| uma cavada de 30 cm, 2 ladrilhos avisados (campo + sólido) | 11,8–14,3 ms (5,9–7,1 ms/ladrilho) | **5,0–5,6 ms (2,5–2,8 ms/ladrilho)** |
+| **rajada de 90 ladrilhos**, cada um avisado por um evento de 30 cm, **nada mudou** (campo) | 143–152 ms (1,6–1,7 ms/ladrilho) | **38–40 ms (0,43 ms/ladrilho)** |
+| a mesma rajada, **chão mudou em cada um** (campo + sólido) | 484–500 ms (5,4–5,6 ms/ladrilho) | 405–411 ms (4,5–4,6 ms/ladrilho) |
+| um disco largo sobre os 90, nada mudou (campo) | 136–153 ms | 73–75 ms (lê o ladrilho inteiro: sobra só a leitura) |
+| **a rajada da sala (T3.8o): 90 lajes, cada uma avisada por um evento de 30 cm** | 28,6–30,2 ms (0,32–0,35 ms/ladrilho) | **6,5–7,1 ms (0,073–0,079 ms/ladrilho)** |
+| 90 lajes, disco largo, nada mudou | 30–31 ms | 12,5–12,9 ms |
+
+Leitura honesta: **onde o chão não mudou ou mudou pouco, o ganho é grande (4 a 5 vezes)**, e vem de **ler menos amostras e não refazer o que não mudou**, não da escrita no lugar. A escrita no lugar por si só poupa **~0,2 ms por ladrilho** (região pequena 0,02–0,06 ms, contra 0,21–0,27 ms de um campo novo; região de 79 × 79 custa mais que o campo novo, por isso o limite de metade). **Onde o chão muda de verdade, o sólido domina** (≈ 3,5 ms de 4,5 ms por ladrilho) e a mudança quase não o toca: a rajada de 90 com chão alterado em todos só cai 16 %. Esse caso continua custando ~410 ms e é a pendência do sólido acima.
+
+Medidas de uma peça só (ladrilho de cratera, 20 repetições): ler as amostras todas 0,91 ms, `shapeGround` 0,83 ms, montar os blocos do sólido 1,06 ms, `setShape` do campo 0,21–0,27 ms, `updateHeights` 4 × 4: 0,007 ms, 16 × 16: 0,019 ms, 32 × 32: 0,058 ms, 64 × 64: 0,149 ms.
+
+### Bacia: não é idêntica à da linha de base, e o motivo é este
+
+`PIECE_SOLVER=jolt BOWL_SEEDS=64`: **128/128** nos dois, `worstC1` −0,00766, `worstC2Unconditioned` 0,014651, `worstC4` 1,5167 e `fellThrough` 0 **idênticos**; **`worstC3` 0,012906 depois contra 0,013626 antes** (o pior caso de levantar caiu 5 %). A bacia **aprofunda o chão a cada passo** (é um teste de `groundChanged`), então passa pelo caminho novo, e o Jolt guarda as alturas quantizadas de outro jeito quando escritas no lugar (≤ 1,6e-5 m de diferença no chão, 4,4e-5 no pior bloco vizinho): a trajetória de um corpo que rola diverge no último decimal e um dos 128 casos, o pior de C3, vale 0,0007 m menos. **O chão entregue ao motor é o mesmo (bit a bit); o que difere é o estado interno do Jolt.** Não há mudança de regra nem tolerância tocada; registro porque o dono pediu números idênticos onde o chão é idêntico e isto é a exceção medida.
+
+### Gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `game-physics test` | 9 passam, 0 falham |
+| `game-physics-jolt test` | 68 passam (4 novos), 2 pulados, 0 falham |
+| `game-destruction-three test` (próprio) | **409 passam, 0 falham** (152 pulados) |
+| `PIECE_SOLVER=jolt game-destruction-three test` | 496 passam, **2 falham, as 2 `rolling` conhecidas** (`cans knock each other`, `fifty cans`); os 7 testes novos passam |
+| `game-floorplan-three test` (próprio) | **1068 passam, 0 falham**, `exact-golden` **44/44** |
+| `PIECE_SOLVER=jolt game-floorplan-three test` | 1068 passam, **4 falham, as 4 conhecidas** (os 3 `destruction/*` do `exact-golden`, gravação do solver próprio, e `bookcase-topple`) |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | 128/128, `fellThrough` 0 (números acima) |
+| `eslint` nos arquivos mudados | exit 0, nada impresso |
+| `node tools/kit-audit/audit.mjs --check` | exit 0 (0 novos fora do SDK dono, 11 pendentes conhecidos) |
+| `pnpm check:layers` | sem violações novas |
+| Goldens | nenhum mudou (o `exact-golden` do próprio passa 44/44 sem regravar) |
+
+### O que sobra
+
+- **O sólido sob o campo** (acima): 3,8 ms por ladrilho de cratera é o custo que resta; reaproveitar os cascos convexos que não mudaram é a próxima medida a tentar, e precisa de uma API do adaptador para compostos (o `StaticCompoundShapeSettings` do wasm aceita `ShapeSettings`, não `Shape` pronto).
+- **O retângulo avisado é palavra do host**: amostras fora dele (e dentro do ladrilho) não são mais relidas. Antes o ladrilho inteiro era relido, o que por acaso pegava mudança não avisada na mesma peça de chão; o `settle` que não avisa (T3.8o) é o caso, e a `fix/terreno-assenta-avisa-motor` o resolve avisando. Até lá esse ladrilho fica velho como já ficava quando nenhum aviso o marcava.
+- O anel à esquerda/acima do `SetHeights` do Jolt é um defeito do Jolt 1.1.1 que o motor contorna (4 escritas, depois forma nova); se uma versão futura o consertar, `MAX_IN_PLACE_WRITES` pode subir.
+
 ## T3.8n — canos da parede nas etapas e soleiras (2026-11-15)
 
 Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0, pnpm 10.28.2. Branch `fix/canos-parede-etapas` (sobre a `main` `6b0e6af4`, que já tem #302 a #305; sem a D8 `prelayGround`). Navegador das rodadas: `chrome-headless-shell` do Playwright, GPU Intel Arrow Lake (Mesa), uma rodada por processo. Nenhuma tolerância, régua, critério nem teste foi afrouxado ou removido.
