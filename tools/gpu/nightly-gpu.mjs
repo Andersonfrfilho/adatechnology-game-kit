@@ -143,6 +143,8 @@ async function main() {
     // the frame times against the last main that passed here; the first run, or main unchanged, compares with itself (absolute targets in the report)
     const base = state.lastPassed && state.lastPassed !== sha ? state.lastPassed : sha
     results.push(run({ name: 'perf-gate', command: 'node', args: ['tools/gpu/perf-gate.mjs'], env: { ...quiet, PERF_GATE_BASE: base } }))
+    // spec 008 B6: the physics of the house explosion against its budget, at 1x CPU (blocks) and at 2x, 4x and 6x (reported: the proxy for a weaker machine)
+    results.push(run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: quiet }))
   }
   const failed = results.filter((result) => !result.ok)
   const status = failed.length ? `FAILED ${failed.map((result) => result.name).join(', ')}` : 'PASSED'
