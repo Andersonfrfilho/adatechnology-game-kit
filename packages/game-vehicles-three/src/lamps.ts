@@ -72,6 +72,7 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
   // the kit's lamp materials are shared by every vehicle: this one gets its own copies, given back on dispose
   const originals = new Map<Glazed, Glass>()
   const copies = new Map<Glass, Glass>()
+  const copyOf = new Map<Glazed, Glass>()
   const base = new Map<Glass, number>()
   const own = (mesh: Glazed): Glass | null => {
     const mat = mesh.material
@@ -80,6 +81,7 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
     const copy = mat.clone()
     originals.set(mesh, mat)
     copies.set(copy, mat)
+    copyOf.set(mesh, copy)
     base.set(copy, mat.emissiveIntensity ?? 1)
     mesh.material = copy
     return copy
@@ -228,14 +230,13 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
       for (const a of anchors) a.removeFromParent()
       anchors.length = 0
       const giveBack = (m: Glazed): void => {
-        const copy = m.material
         const original = originals.get(m)
         if (!original) return
         originals.delete(m)
-        // a bulb the shots put out wears the dark material by now: that stays
-        if (!copies.has(copy as Glass)) return
-        m.material = original
-        if (copy && !Array.isArray(copy)) copy.dispose?.()
+        // a bulb the shots put out wears the dark material by now: that stays, but the copy it shed is still ours to free
+        if (copies.has(m.material as Glass)) m.material = original
+        copyOf.get(m)?.dispose?.()
+        copyOf.delete(m)
       }
       for (const b of beacons) giveBack(b.mesh)
       for (const l of lamps) {
@@ -248,6 +249,7 @@ export function createVehicleLamps(THREE: { Object3D: new () => Object3D; Vector
       }
       originals.clear()
       copies.clear()
+      copyOf.clear()
       base.clear()
     },
   }
