@@ -1,11 +1,15 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
+import { fleetVehicleIds } from '../src'
 import { makeFleetKit } from './helpers/kit'
 
 /** A lamp shot to pieces goes dark: nothing the fleet drew inside its box still glows (the extra bulbs, strips and reversing lamps of a cluster, not only the lamp's own list). */
 const AK = { type: 'ballistic', energy: 2100, caliber: 7.62 } as const
-const MODELS = ['compact_hatch', 'midsize_suv', 'fastback_sedan', 'box_truck', 'city_bus', 'ambulance', 'light_4x4', 'monster_truck', 'tractor', 'cruiser', 'scooter', 'armored_car_6x6']
+/** Models whose lamp zone boxes do not sit where the model draws the lamps (the police helicopter's tail zone is built along the wrong axis): known to fail, and the test fails when one is fixed so it leaves this list. */
+const KNOWN_OPEN = new Set(['police_helicopter'])
+/** Models drawn without any lamp part: nothing to shoot out. */
+const NO_LAMPS = new Set<string>(['transport_helicopter'])
 const BOX_MARGIN = 0.03
 const GLOW_MIN = 0.05
 const ROUNDS_TO_BREAK = 12
@@ -28,14 +32,19 @@ function glowingIn(vehicle: THREE.Object3D, box: { center: readonly number[]; si
 }
 
 describe('a lamp that is shot out', () => {
-  for (const key of MODELS) {
-    it(`${key}: no glow is left inside the box of a broken head or tail lamp`, () => {
+  for (const key of fleetVehicleIds) {
+    const run = KNOWN_OPEN.has(key) ? it.fails : it
+    run(`${key}: no glow is left inside the box of a broken head or tail lamp`, () => {
       const kit = makeFleetKit('en')
       const item = buildVehicleItem(kit, key)
       const d = createVehicleDestructible(kit, item.vehicle, { id: key, frame: item.root })
       const vehicle = item.vehicle.vehicle as THREE.Object3D
       const lamps = d.describe().parts.filter((p) => /light|lamp/.test(p.id))
-      expect(lamps.length).toBeGreaterThan(0)
+      if (lamps.length === 0) {
+        expect(NO_LAMPS.has(key), `${key} has no lamp part and is not listed in NO_LAMPS`).toBe(true)
+        return
+      }
+      expect(NO_LAMPS.has(key), `${key} has lamp parts now: take it out of NO_LAMPS`).toBe(false)
       const centres = new Map(lamps.map((p) => [p.id, vehicle.worldToLocal(new THREE.Vector3(...d.partWorldCenter(p.id)))]))
       for (const lamp of lamps) {
         for (let round = 0; round < ROUNDS_TO_BREAK && d.state().parts.find((p) => p.id === lamp.id)?.status !== 'broken'; round++) {

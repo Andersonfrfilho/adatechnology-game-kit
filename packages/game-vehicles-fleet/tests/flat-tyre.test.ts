@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { fleetVehicleIds } from '../src'
 import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
 import type { VehicleDestructible } from '@adatechnology/game-vehicles'
 import { makeFleetKit } from './helpers/kit'
@@ -59,9 +60,18 @@ describe('a flat tyre driven on', () => {
 describe('a rifle round in a tyre', () => {
   const AK = { type: 'ballistic', energy: 2100, caliber: 7.62 } as const
   const BURST = 40
-  const TYRE_KEYS = ['midsize_sedan', 'compact_hatch', 'box_truck', 'city_bus', 'cruiser', 'tractor']
+  const hasTyre = (key: string): boolean => {
+    const kit = makeFleetKit('en')
+    const item = buildVehicleItem(kit, key)
+    return createVehicleDestructible(kit, item.vehicle, { id: key, frame: item.root }).describe().parts.some((p) => p.id.startsWith('tyre'))
+  }
 
-  for (const key of TYRE_KEYS) {
+  const withTyres = fleetVehicleIds.filter(hasTyre)
+  it('most of the fleet has tyres to shoot', () => {
+    expect(withTyres.length).toBeGreaterThan(40)
+  })
+
+  for (const key of withTyres) {
     it(`${key}: punctures it and lets it down, however many rounds, and never tears it off the rim`, () => {
       const kit = makeFleetKit('en')
       const item = buildVehicleItem(kit, key)
@@ -75,3 +85,41 @@ describe('a rifle round in a tyre', () => {
   }
 })
 
+
+describe('a pistol round, fire and a blast on a tyre', () => {
+  const PISTOL = { type: 'ballistic', energy: 500, caliber: 9 } as const
+  const FIRE_SECONDS = 30
+  const BLAST_RADIUS = 4
+  const BLAST_JOULES = 400000
+  const tyreOf = (d: VehicleDestructible): string => d.describe().parts.find((p) => p.id.startsWith('tyre'))!.id
+  const statusOf = (d: VehicleDestructible, tyre: string) => d.state().parts.find((p) => p.id === tyre)?.status
+
+  it('a pistol round only lets the air out slowly: the tyre is not flat at once, goes flat with time and stays on the rim', () => {
+    const d = sedan()
+    const tyre = tyreOf(d)
+    d.hit({ ...PISTOL, point: d.partWorldCenter(tyre), part: tyre, direction: [0, 0, 1] })
+    expect(d.status().flatTyres).not.toContain(tyre)
+    for (let second = 0; second < 3600; second++) d.update!(1)
+    expect(d.status().flatTyres).toContain(tyre)
+    expect(statusOf(d, tyre)).not.toBe('broken')
+  })
+
+  it('fire still burns the tyre away', () => {
+    const d = sedan()
+    const tyre = tyreOf(d)
+    for (let second = 0; second < FIRE_SECONDS; second++) {
+      d.hit({ type: 'fire', point: d.partWorldCenter(tyre), part: tyre, direction: [0, 1, 0], temperature: 900, radius: 0.5, duration: 1 })
+      d.update!(1)
+    }
+    expect(statusOf(d, tyre) === 'broken' || d.detachedParts().includes(tyre)).toBe(true)
+  })
+
+  it('a blast beside the tyre still tears it off', () => {
+    const d = sedan()
+    const tyre = tyreOf(d)
+    const [x, y, z] = d.partWorldCenter(tyre)
+    d.hit({ type: 'explosive', point: [x, y, z + 0.3], energy: BLAST_JOULES, radius: BLAST_RADIUS, direction: [0, 0, 1] })
+    for (let step = 0; step < 120; step++) d.update!(0.016)
+    expect(statusOf(d, tyre) === 'broken' || d.detachedParts().includes(tyre)).toBe(true)
+  })
+})
