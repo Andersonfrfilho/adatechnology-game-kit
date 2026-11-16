@@ -78,8 +78,8 @@ const MIN_FRAGMENTS_PER_SLICE = 8
 /** A loose group waiting its turn to become a piece (`RendererOptions.workBudget`): data only, so it can be saved. */
 interface PendingSplit {
   readonly objectId: string
-  /** The smallest part id of the group when it came loose: the group is the one holding it at its turn. */
-  readonly part: string
+  /** Every part of the group when it came loose, sorted: at its turn the group is the loose one holding any of them still (a part may be shattered meanwhile). */
+  readonly parts: readonly string[]
   readonly torn: ReadonlyArray<readonly [string, string]>
 }
 
@@ -388,6 +388,12 @@ class Renderer implements DestructionRenderer {
   private readonly workCosts: Required<WorkUnitCosts>
   /** The loose groups waiting to become pieces under `workBudget`, as data: the object, a part of the group, and the tearing joints read when it came loose. */
   private readonly splitQueue = new WorkQueue<PendingSplit>('split')
+  /** Objects bound or drawn again under `workBudget` whose loose groups are queued in the next work step (a load drops the queue the save was taken with). */
+  private readonly looseToCheck = new Set<string>()
+  /** Where the player was at the start of this frame's work step: read once per frame. */
+  private workFocus: Vec3 | undefined
+  /** The `WorkBudget` frame an event last split a group in: the first one of a frame goes over the budget, so a blow breaks something at once. */
+  private eventSplitFrame = -1
   /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
   private readonly fittedBoxes = new Map<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
   /** Objects whose ranged parts are still to be fitted ahead of the blow that breaks them, a part per step, only with time left in the frame. */
@@ -400,10 +406,10 @@ class Renderer implements DestructionRenderer {
   private attached = false
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.prefitLeft(),
+    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseToCheck.size + this.prefitLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
-      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseToCheck.size + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
     },
     attach: () => {
       this.attached = true
@@ -592,6 +598,7 @@ class Renderer implements DestructionRenderer {
     this.bounds.set(objectId, bound)
     for (const pv of bound.parts.values()) this.tagPart(pv, objectId)
     if (this.o.fitBoxesAhead !== false) this.prefitPartBoxes(bound)
+    this.checkLoose(objectId)
   }
 
   /**
@@ -669,6 +676,8 @@ class Renderer implements DestructionRenderer {
   unbind(objectId: string): void {
     this.staticDirty.add(objectId)
     this.clipped.delete(objectId)
+    this.looseToCheck.delete(objectId)
+    this.splitQueue.remove((entry) => entry.objectId === objectId)
     const b = this.bounds.get(objectId)
     if (!b) return
     this.restore(objectId)
@@ -1109,6 +1118,7 @@ class Renderer implements DestructionRenderer {
    */
   private runWork(work: WorkBudget, all: boolean): number {
     const batch = this.queue.splice(0, this.queue.length)
+    this.workFocus = this.o.focus?.()
     const outerDeadline = this.sliceDeadline
     // a finite deadline only says "in a drain": under the budget the work stops on units, never on the clock
     this.sliceDeadline = all ? Infinity : 0
@@ -1126,6 +1136,8 @@ class Renderer implements DestructionRenderer {
         }
         ran++
       }
+      // after the events, so a group a blow of this frame looses keeps the split it gets in the event
+      this.queueChecked()
       if (all) ran += this.runSlices(Infinity) + this.runSplits(work, all)
       // the fits ahead take only what the frame left, after everything else (as without the budget)
       if (this.queue.length === 0 && this.slices.length === 0 && this.splitQueue.size === 0 && !all) ran += this.runPrefitWork(work)
@@ -2152,20 +2164,36 @@ class Renderer implements DestructionRenderer {
   }
 
   /**
-   * Under `workBudget`: each loose group of the object not already waiting joins the split queue, ranked by its distance to the player (read now, once) and its smallest part
-   * id, and charged by the size of its work. Until its turn it stays in the object, drawn and solid where it stood.
+   * Under `workBudget`: each loose group of the object none of whose parts is already waiting joins the split queue, ranked by its distance to `focus` (the player at the
+   * start of the frame's work step) and its smallest part id, and charged by the size of its work. Until its turn it stays in the object, drawn and solid where it stood.
    */
-  private queueLoose(b: Bound, st: ObjectState, torn: ReadonlyArray<readonly [string, string]>): void {
-    const focus = this.o.focus?.()
+  private queueLoose(b: Bound, st: ObjectState, torn: ReadonlyArray<readonly [string, string]>, focus: Vec3 | undefined): void {
+    const waiting = new Set<string>()
+    for (const { item } of this.splitQueue.saveState()) if (item.objectId === b.id) for (const id of item.parts) waiting.add(id)
     for (let g = 1; g < st.groups.length; g++) {
       const group = st.groups[g]!
-      const part = [...group].sort()[0]
-      if (part === undefined || group.some((id) => this.splitQueue.has(`${b.id}\0${id}`))) continue
+      const parts = [...group].sort()
+      if (parts.length === 0 || parts.some((id) => waiting.has(id))) continue
       const units = this.splitUnitsOf(b, group, st.parts.length)
       const centre = focus ? this.groupCentre(b, group) : null
       const priority = focus && centre ? Math.hypot(centre.x - focus[0], centre.y - focus[1], centre.z - focus[2]) : 0
-      this.splitQueue.push({ objectId: b.id, part, torn: torn.map(([first, second]) => [first, second] as const) }, priority, `${b.id}\0${part}`, units)
+      this.splitQueue.push({ objectId: b.id, parts, torn: torn.map(([first, second]) => [first, second] as const) }, priority, `${b.id}\0${parts[0]}`, units)
     }
+  }
+
+  /** Under `workBudget`, the object's loose groups join the split queue in the next work step (after a bind, a redraw, or pieces given back). */
+  private checkLoose(objectId: string): void {
+    if (this.work && this.autoSplit) this.looseToCheck.add(objectId)
+  }
+
+  /** The loose groups of the objects `checkLoose` marked join the split queue, unless waiting already: none stays loose in its object for ever. */
+  private queueChecked(): void {
+    for (const objectId of this.looseToCheck) {
+      const b = this.bounds.get(objectId)
+      const st = this.world.state(objectId)
+      if (b && st && st.groups.length > 1) this.queueLoose(b, st, tornPairsOf(st), this.workFocus)
+    }
+    this.looseToCheck.clear()
   }
 
   /**
@@ -2181,7 +2209,7 @@ class Renderer implements DestructionRenderer {
       for (let now: ObjectState | null = st; !waiting && now && now.groups.length > 1; now = this.world.state(b.id)) {
         const units = this.splitUnitsOf(b, now.groups[1]!, now.parts.length)
         if (!work.tryTake('split', units)) {
-          if (work.spent('split') > 0) return
+          if (this.eventSplitFrame === work.frame) return
           work.take('split', units)
         }
         let newId: string
@@ -2191,12 +2219,13 @@ class Renderer implements DestructionRenderer {
           return
         }
         if (newId === b.id) return
+        this.eventSplitFrame = work.frame
         this.adoptSplit(b, newId)
         split++
       }
     })
     const left = this.world.state(b.id)
-    if (left && left.groups.length > 1) this.queueLoose(b, left, torn)
+    if (left && left.groups.length > 1) this.queueLoose(b, left, torn, this.workFocus)
     if (split > 0) this.afterSplit(b, torn)
   }
 
@@ -2226,15 +2255,20 @@ class Renderer implements DestructionRenderer {
   private runSplits(work: WorkBudget, all: boolean): number {
     const turn = all ? this.drainSplits() : this.splitQueue.release(work)
     const touched = new Map<string, ReadonlyArray<readonly [string, string]>>()
+    const lost = new Map<string, ReadonlyArray<readonly [string, string]>>()
     let ran = 0
     this.visuals.batchRebuilds(() => {
     for (const entry of turn) {
       const b = this.bounds.get(entry.objectId)
       const st = this.world.state(entry.objectId)
       if (!b || !st || !this.world.has(entry.objectId)) continue
-      // groups renumber as others split, and may have grown since: the group is the one holding the part now
-      const index = st.groups.findIndex((group, g) => g > 0 && group.includes(entry.part))
-      if (index < 1) continue
+      // groups renumber as others split, and may have grown or lost parts since: the group is the loose one holding any of its parts now
+      const parts = new Set(entry.parts)
+      const index = st.groups.findIndex((group, g) => g > 0 && group.some((id) => parts.has(id)))
+      if (index < 1) {
+        lost.set(entry.objectId, [...(lost.get(entry.objectId) ?? []), ...entry.torn])
+        continue
+      }
       let newId: string
       try {
         newId = this.world.splitGroup(entry.objectId, index)
@@ -2250,6 +2284,12 @@ class Renderer implements DestructionRenderer {
     for (const [objectId, torn] of touched) {
       const b = this.bounds.get(objectId)
       if (b) this.afterSplit(b, torn)
+    }
+    // none of its parts is loose any more (all gone, or now the object's own group): the object's loose groups as they are now take its place
+    for (const [objectId, torn] of lost) {
+      const b = this.bounds.get(objectId)
+      const st = this.world.state(objectId)
+      if (b && st && st.groups.length > 1) this.queueLoose(b, st, [...torn, ...tornPairsOf(st)], this.workFocus)
     }
     return ran
   }
@@ -3105,6 +3145,7 @@ class Renderer implements DestructionRenderer {
     this.restoreHome(objectId)
     b.root.updateWorldMatrix(true, false)
     for (const pv of b.parts.values()) this.drawPartState(b, pv)
+    this.checkLoose(objectId)
   }
 
   private drawPartState(b: Bound, pv: PartVis): void {
@@ -3148,6 +3189,8 @@ class Renderer implements DestructionRenderer {
     const ofFamily = (key: string): boolean => [...family].some((id) => key.startsWith(`${id}|`))
     // an event still waiting would bring an effect of theirs back after they left
     for (let i = this.queue.length - 1; i >= 0; i--) if (family.has(this.queue[i]!.object)) this.queue.splice(i, 1)
+    this.splitQueue.remove((entry) => family.has(entry.objectId))
+    for (const id of family) this.looseToCheck.delete(id)
     for (const [key, a] of [...this.active]) if (family.has(a.object)) this.active.delete(key)
     for (const [key, f] of [...this.fires]) if (family.has(f.object)) this.stopFire(key)
     for (const [key, started] of [...this.burnSounds]) if (family.has(started.object)) this.endBurnSound(key)
@@ -3171,6 +3214,8 @@ class Renderer implements DestructionRenderer {
       if (this.world.has(id)) this.world.remove(id)
     }
     if (pieces.length > 0) this.o.onReleased?.(pieces)
+    // groups of the object still loose in its world go back to the queue in the next work step (`unbind` drops it when the object leaves too)
+    if (this.bounds.has(objectId)) this.checkLoose(objectId)
     return pieces
   }
 
@@ -3219,6 +3264,7 @@ class Renderer implements DestructionRenderer {
     this.queue.length = 0
     this.slices.length = 0
     this.splitQueue.clear()
+    this.looseToCheck.clear()
     this.prefitting.length = 0
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)

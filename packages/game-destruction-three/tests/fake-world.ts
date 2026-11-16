@@ -89,6 +89,10 @@ export class FakeWorld {
     return this.objects.has(id)
   }
 
+  remove(id: string): void {
+    this.objects.delete(id)
+  }
+
   state(id: string): ObjectState | null {
     return this.objects.get(id) ?? null
   }

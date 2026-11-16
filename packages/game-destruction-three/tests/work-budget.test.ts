@@ -36,6 +36,38 @@ function looseRow(options: Partial<RendererOptions>) {
   return { renderer, world, root, meshes, splitParts }
 }
 
+/** An object `o1` whose parts come in the given groups (the first one stays the object), bound, with a detach that left the rest loose. */
+function grouped(groups: string[][], options: Partial<RendererOptions>, objectId = 'o1', at = 0) {
+  const scene = new THREE.Scene()
+  const world = new FakeWorld()
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: 8, ...options })
+  const add = (id: string, parts: string[][], x: number): void => {
+    const ids = parts.flat()
+    world.addObject(id, ids.map((part) => partState(part, 'wood')), parts.map((group) => [...group]))
+    const root = new THREE.Group()
+    const meshes: Record<string, THREE.Mesh> = {}
+    ids.forEach((part, index) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial())
+      mesh.position.set(x + index, 0.1, 0)
+      meshes[part] = mesh
+      root.add(mesh)
+    })
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind(id, root, { parts: meshes })
+  }
+  add(objectId, groups, at)
+  const detach = (id: string): void => {
+    const st = world.state(id)!
+    world.emit({ type: 'detach', object: id, joint: 'j', parts: st.parts.map((part) => part.id), by: 'break', groups: st.groups })
+  }
+  detach(objectId)
+  const partsOf = (newId: string): string[] => world.state(newId)?.parts.map((part) => part.id) ?? []
+  return { renderer, world, add, detach, partsOf }
+}
+
+const splitQueueOf = (renderer: ReturnType<typeof createDestructionRenderer>): { readonly size: number } => (renderer as unknown as { splitQueue: { size: number } }).splitQueue
+
 afterEach(() => {
   vi.restoreAllMocks()
 })
@@ -147,6 +179,116 @@ describe('loose groups under the work budget', () => {
     // 400 units at tier 1: two splits of ~190 a frame (3 frames); 200 at tier 2: one a frame (6 frames)
     expect(frames(1)).toBe(3)
     expect(frames(2)).toBe(6)
+  })
+})
+
+describe('a loose group waiting its turn when the object changes under it', () => {
+  it('its smallest part shattered meanwhile, the rest of the group still becomes a piece at its turn', () => {
+    const { renderer, world, partsOf } = grouped([['a'], ['b1', 'b2'], ['c1', 'c2']], { workBudget: ONE_A_FRAME })
+    renderer.update(FRAME)
+    expect(world.splits).toHaveLength(1)
+    // c1 broke away into fragments: the group left loose holds c2 alone
+    world.state('o1')!.groups[1] = ['c2']
+    renderer.update(FRAME)
+    expect(world.splits).toHaveLength(2)
+    expect(partsOf(world.splits[1]!.newId)).toEqual(['c2'])
+    expect(world.state('o1')?.groups).toHaveLength(1)
+  })
+
+  it('its group now the object itself, the groups loose now take its place in the queue', () => {
+    const { renderer, world, partsOf } = grouped([['a'], ['b'], ['c1', 'c2']], { workBudget: ONE_A_FRAME })
+    renderer.update(FRAME)
+    // what held the object went (the world renumbered): the waiting group is group 0 and `a` hangs loose
+    world.state('o1')!.groups = [['c1', 'c2'], ['a']]
+    renderer.update(FRAME)
+    renderer.update(FRAME)
+    expect(world.splits).toHaveLength(2)
+    expect(partsOf(world.splits[1]!.newId)).toEqual(['a'])
+    expect(world.state('o1')?.groups).toHaveLength(1)
+  })
+
+  it('unbind and release take the object\'s waiting groups out of the queue', () => {
+    const first = grouped([['a'], ['b'], ['c'], ['d']], { workBudget: ONE_A_FRAME })
+    first.renderer.update(FRAME)
+    expect(splitQueueOf(first.renderer).size).toBe(2)
+    first.renderer.unbind('o1')
+    expect(splitQueueOf(first.renderer).size).toBe(0)
+    const second = grouped([['a'], ['b'], ['c'], ['d']], { workBudget: ONE_A_FRAME })
+    second.renderer.update(FRAME)
+    second.renderer.release('o1')
+    expect(splitQueueOf(second.renderer).size).toBe(0)
+    for (let frame = 0; frame < 4; frame++) second.renderer.update(FRAME)
+    expect(second.world.splits).toHaveLength(1)
+  })
+
+  it('a blow in a frame the queue already split in still breaks something at once', () => {
+    const { renderer, world, add, detach, partsOf } = grouped([['a'], ['b'], ['c'], ['d']], { workBudget: ONE_A_FRAME })
+    renderer.update(FRAME)
+    add('o2', [['x'], ['y'], ['z']], 20)
+    detach('o2')
+    // the queue lets `b`'s neighbour out first, then o2's blow splits its first loose group in the same frame
+    renderer.update(FRAME)
+    expect(world.splits.map((split) => partsOf(split.newId)[0])).toEqual(['b', 'c', 'y'])
+  })
+})
+
+describe('a save taken while loose groups wait', () => {
+  /** What a save holds of `o1`: its parts and groups (the split queue is not in it). */
+  const savedMidWait = () => {
+    const first = looseRow({ workBudget: ONE_A_FRAME })
+    first.renderer.update(FRAME)
+    first.renderer.update(FRAME)
+    expect(first.world.splits).toHaveLength(2)
+    const state = structuredClone(first.world.state('o1')!)
+    expect(state.groups).toHaveLength(5)
+    return state
+  }
+
+  it('loaded into a new renderer, every loose group splits within the wait ceiling', () => {
+    const saved = savedMidWait()
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), workBudget: { budgetMs: 0, maxWaitFrames: 3 } })
+    world.addObject('o1', saved.parts, saved.groups)
+    const root = new THREE.Group()
+    const meshes: Record<string, THREE.Mesh> = {}
+    saved.parts.forEach((part, index) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial())
+      mesh.position.set(index, 0.1, 0)
+      meshes[part.id] = mesh
+      root.add(mesh)
+    })
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('o1', root, { parts: meshes })
+    // frame 1 queues the four loose groups; frames 2 and 3 let one out each; frame 4, their third release, the rest
+    const counts: number[] = []
+    for (let frame = 0; frame < 4; frame++) {
+      renderer.update(FRAME)
+      counts.push(world.splits.length)
+    }
+    expect(counts).toEqual([0, 1, 2, 4])
+    expect(world.state('o1')?.groups).toHaveLength(1)
+  })
+
+  it('put back into the same renderer and drawn again, the loose groups split', () => {
+    const { renderer, world } = grouped([['a', 'b', 'c']], { workBudget: ONE_A_FRAME })
+    renderer.update(FRAME)
+    // the world loads the object with two groups loose (`DestructionWorld.loadObject`), the host draws it again
+    world.state('o1')!.groups = [['a'], ['b'], ['c']]
+    renderer.redraw('o1')
+    for (let frame = 0; frame < 3; frame++) renderer.update(FRAME)
+    expect(world.splits).toHaveLength(2)
+    expect(world.state('o1')?.groups).toHaveLength(1)
+  })
+
+  it('without the budget a bind or a redraw queues nothing', () => {
+    const { renderer, world } = grouped([['a', 'b', 'c']], {})
+    renderer.update(FRAME)
+    world.state('o1')!.groups = [['a'], ['b'], ['c']]
+    renderer.redraw('o1')
+    renderer.update(FRAME)
+    expect(world.splits).toHaveLength(0)
   })
 })
 
