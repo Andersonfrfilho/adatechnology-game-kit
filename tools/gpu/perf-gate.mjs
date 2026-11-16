@@ -13,6 +13,9 @@
 //   PERF_GATE_TOLERANCE=0.1     the share a metric may grow before it blocks
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
 //   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
+// The `room-explosion` scenario (spec 008 B6) is a different gate, by hand or in the nightly, never in CI: the physics ms of the house explosion at 1x, 2x, 4x and 6x CPU
+// throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It does not compare with main; see tools/gpu/room-explosion.mjs for the variables.
+//   flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs room-explosion
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -23,6 +26,7 @@ import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
 import { batterySkipReason } from './power.mjs'
+import { runRoomExplosion } from './room-explosion.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
@@ -67,6 +71,8 @@ const hasNvidia = spawnSync('nvidia-smi', ['-L'], { stdio: 'ignore' }).status ==
 const gpuEnv = hasNvidia ? { __NV_PRIME_RENDER_OFFLOAD: '1', __GLX_VENDOR_LIBRARY_NAME: 'nvidia', __VK_LAYER_NV_optimus: 'NVIDIA_only' } : {}
 const chrome = process.env.PERF_CHROME ?? (existsSync(SYSTEM_CHROME) ? SYSTEM_CHROME : undefined)
 Object.assign(process.env, gpuEnv)
+
+if (process.argv[2] === 'room-explosion') process.exit(await runRoomExplosion({ playwright, chrome, root }))
 
 const browser = await playwright.chromium.launch({
   args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'],

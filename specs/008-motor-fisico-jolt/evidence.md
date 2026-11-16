@@ -2796,3 +2796,102 @@ C3 10/10 (todos abaixo de 3,5 cm), C4 10/10, `fellThrough` 0 em 10/10, C2 10/10,
 - O quadro do corte ainda é de 14 a 20 ms frio na máquina rápida, contra o alvo de 5 ms de física: o resto do `splitLoose` (`world.splitGroup` e `pieceSys.create`, 3,6 e 4,2 ms frios) e o `Step` do quadro. O corte por orçamento de relógio (`sliceDeadline`) é o que a sessão `espalhar-explosao` mexe.
 - `runPrefit` anda no relógio de parede (1 ms por quadro); sai da fila em `runBudgeted` sem mudar quando a fila passar para o árbitro único de unidades de trabalho.
 - O portão `perf-gate.mjs room-explosion` não existe nesta branch (o da `perf/medir-maquina-fraca` ainda não foi mesclado); o portão geral esperava máquina quieta (carga 7) e não terminou.
+
+
+## T3.8ac — orçamento da explosão em máquina fraca (proxy)
+
+Máquina: Intel Core Ultra 9 275HX (24 threads), Arch Linux, Node v24.22.0, Chrome 157.0.8103.50 (2026-11-15). Medido sobre `a74a71d1` (main), worktree `medir-maquina-fraca`, branch `perf/medir-maquina-fraca`. Feito por `executor` (sonnet).
+
+**Aviso: o estrangulamento de CPU é um proxy, não hardware AMD.** `Emulation.setCPUThrottlingRate` (CDP) deixa a thread principal N vezes mais lenta de forma uniforme. Ele não reproduz o IPC, o cache, a latência de memória nem o tier-up do wasm de um Ryzen: "6x" é "uma CPU seis vezes mais lenta que esta", não "um notebook AMD". Um resultado dentro do orçamento a 4x é indício forte; um estouro é aviso real; só uma rodada numa máquina AMD fecha a pergunta (regra do dono, `gpu-vendor-agnostic-perf`).
+
+**A máquina não estava quieta.** Outras sessões mediam ao mesmo tempo (a trava `perf-measure.lock` serializa só quem a usa; builds e testes de navegador de outras sessões seguiram rodando): a carga média de cada rodada ficou entre 4,3 e 15,5, mediana 6,1 (campo `load` de cada rodada no JSON). Os valores absolutos podem estar inflados em relação a uma máquina quieta; a ordem de grandeza e a comparação entre solvers e entre estrangulamentos valem, a casa decimal não.
+
+### Método
+- Ferramenta: `tools/gpu/room-explosion.mjs`, chamada por `node tools/gpu/perf-gate.mjs room-explosion`. Reaproveita a montagem da sonda de sala (`decision/probes/room.js`: a casa `single_storey_a` com semente 1, C4 na parede ou 12 golpes de martelo, um por quadro), sem o medidor de energia da T3.4 (ele não mede tempo e só acrescentaria trabalho de JS).
+- Uma página nova por rodada, a casa montada a velocidade normal e o estrangulamento ligado só depois, para o tempo medido ser o da explosão e não o da montagem. O laço de quadros da página é parado e a sonda chama `room.update(1/60)` 660 vezes (11 s simulados): é o quadro de um jogador a 60 Hz (2 passos fixos de 120 Hz), não os quadros de 0,05 s das sondas da T3.8.
+- **Tempo de física por quadro** = o passo do laço de Jolt (`window.__roomPhysics.step`) + o sistema de peças do kit (`pieceSys.update`: o solver próprio, ou a cola que lê as poses do Jolt e aplica as regras do kit, inclusive `createBody` e `layTile`) + a fila de despertar do D4 (`advanceWakes`). Não entra desenho: nada é desenhado. A divisão do espatifamento do kit (`splitLoose`) **não** está nesse tempo (roda em `renderer.update`, fora da física); aparece na tabela de estágios, com o quadro inteiro.
+- O quadro 0 (o que aplica a explosão) fica à parte (`despertar`) e fora do p99 e do máximo, como o B6 do `spec.md` §11 ("fora do quadro de despertar"). O gate: p99 = mediana dos p99 das rodadas, máximo = o pior máximo de uma rodada, como a regra do B6 (mediana das rodadas ≤ 4 ms, nenhuma acima de 5 ms).
+- 5 rodadas de blast e 5 de martelo a 1x, 4x e 6x, Jolt com D4 ligado (`?solver=jolt&blastDebris=1`) e o solver próprio (`?area=floorplan`), intercaladas (a deriva da máquina cai em todas as células por igual). JSON completo, com as rodadas e a carga de cada uma: `decision/t38ac-baseline.json`.
+
+### Linha de base (main `a74a71d1`): física em ms por quadro
+
+p50 e p99: mediana das 5 rodadas. Máx e despertar: a pior rodada. Quadros > 4 ms e > 5 ms: soma das 5 rodadas (de 3295 quadros por célula).
+
+| Solver | CPU | Tipo | p50 | p99 | máx | despertar | quadros > 4 ms | quadros > 5 ms |
+|---|---|---|---|---|---|---|---|---|
+| Jolt + D4 | 1x | blast | 0.4 | 36.9 | 177 | 3.6 | 1165 | 1100 |
+| Jolt + D4 | 1x | hammer | 0.4 | 49.9 | 126.2 | 1 | 1237 | 1156 |
+| Jolt + D4 | 4x | blast | 2.3 | 84.3 | 252.3 | 6.4 | 1477 | 1460 |
+| Jolt + D4 | 4x | hammer | 1.5 | 87.4 | 181.7 | 2.6 | 1476 | 1389 |
+| Jolt + D4 | 6x | blast | 11 | 122 | 301.9 | 7.9 | 2478 | 2471 |
+| Jolt + D4 | 6x | hammer | 5 | 121.8 | 232.5 | 5.4 | 1655 | 1596 |
+| solver próprio | 1x | blast | 0.8 | 11.4 | 19.4 | 0.2 | 983 | 836 |
+| solver próprio | 1x | hammer | 0.7 | 13.8 | 21.1 | 1.6 | 965 | 796 |
+| solver próprio | 4x | blast | 2.2 | 20.4 | 28.7 | 0.4 | 1219 | 1120 |
+| solver próprio | 4x | hammer | 0.8 | 22 | 32.5 | 1.2 | 1102 | 1066 |
+| solver próprio | 6x | blast | 3.2 | 29 | 54.5 | 1 | 1518 | 1341 |
+| solver próprio | 6x | hammer | 1.3 | 30.9 | 44.2 | 2 | 1143 | 1090 |
+
+Leitura: **o orçamento (p99 ≤ 4 ms, máx ≤ 5 ms) não fecha nem a 1x com Jolt + D4**: p99 de 37 ms (blast) e 50 ms (martelo), máximo de 126 a 177 ms, e a terça parte dos quadros passa de 5 ms, contra a cascata de 500 corpos do B6 (T3.6c: média de 1,2 ms fora do despertar). O quadro mediano é barato (0,4 ms, a casa dorme), o problema é a cauda. O solver próprio é bem melhor na cauda (p99 11–14 ms, máximo 19–21 ms), mas também passa de 5 ms em 24 a 28% dos quadros. A 4x e a 6x a cauda cresce de forma mais ou menos linear (p99 84–122 ms no Jolt). O quadro de despertar sozinho (3,6 a 7,9 ms no blast) fica perto do orçamento. Isto vale para a casa inteira na sala, não para os 500 corpos do B6: os dois números não se contradizem, medem cenas diferentes.
+
+### Os piores quadros por estágio
+
+Os 10 quadros mais lentos (quadro inteiro de `room.update`) de cada tipo e estrangulamento, Jolt + D4, 3 rodadas juntas, em ms. Cada estágio é o tempo no próprio método, **sem** os estágios que ele chama (por isso `createBody`, chamado de dentro de `layTile`, não está somado em `layTile`). `física` é o tempo de física acima; `outros` é o quadro inteiro menos os estágios (o que o quadro faz fora deles: eventos do mundo, fogo, fluidos, vfx, `world.update`). `rodada.quadro` = rodada 3, quadro 8 é `3.8`. Estágios: `splitLoose`/`adoptSplit`/`fitBoxes` (`partBoxesOf`, que chama `fitOrientedBoxes`)/`rebuildHost` são o espatifamento do kit; `createBody` a criação de corpo no Jolt; `layGround`/`layTile` o chão do Jolt sob as peças; `joltStep` o `stepFixed` do Jolt; `bridgeReads` `readPose` + `readVelocity`; `readBack` o resto da leitura de volta no kit. Rodada à parte, só com os cronômetros ligados (eles custam um pouco: os percentis acima nunca vêm dela).
+
+| CPU | Tipo | rodada.quadro | quadro inteiro | física | splitLoose | adoptSplit | fitBoxes | rebuildHost | createBody | layGround | layTile | joltStep | bridgeReads | readBack | outros |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1x | blast | 2.8 | 198 | 186.4 | 0 | 0 | 0 | 0 | 75.2 | 0.4 | 60.2 | 24.5 | 0.4 | 3.1 | 34.2 |
+| 1x | blast | 3.8 | 164 | 154.9 | 0 | 0 | 0 | 0 | 59.4 | 0.2 | 55.2 | 20.2 | 0.2 | 2.5 | 26.3 |
+| 1x | blast | 1.8 | 160.1 | 151.4 | 0 | 0 | 0 | 0 | 60.6 | 0.2 | 50.9 | 19.8 | 0.2 | 2.5 | 25.9 |
+| 1x | blast | 3.3 | 118.3 | 0.3 | 23.5 | 11.2 | 46.6 | 11.3 | 0 | 0 | 0 | 0 | 0 | 0 | 25.7 |
+| 1x | blast | 2.3 | 107.9 | 0.2 | 22.6 | 11.4 | 39.8 | 11.8 | 0 | 0 | 0 | 0 | 0 | 0 | 22.3 |
+| 1x | blast | 2.86 | 107.9 | 47.2 | 0 | 0 | 0 | 0 | 4.4 | 0 | 22.7 | 5.1 | 0.1 | 6.5 | 69.1 |
+| 1x | blast | 2.4 | 106.9 | 86.7 | 0 | 0 | 0 | 0 | 8.3 | 1.5 | 22.4 | 17.5 | 0.8 | 1.3 | 55.1 |
+| 1x | blast | 1.3 | 105.8 | 0.3 | 24 | 11.3 | 39 | 11.2 | 0 | 0 | 0 | 0 | 0 | 0 | 20.3 |
+| 1x | blast | 1.4 | 101.7 | 83.1 | 0 | 0 | 0 | 0 | 7.8 | 1.5 | 22 | 16.9 | 0.6 | 1.4 | 51.5 |
+| 1x | blast | 3.4 | 98.6 | 81.1 | 0 | 0 | 0 | 0 | 8.6 | 1.6 | 22.6 | 17.1 | 0.8 | 1.6 | 46.3 |
+| 1x | hammer | 1.3 | 154.9 | 18 | 29.7 | 14.5 | 42.8 | 14.1 | 0 | 0 | 0 | 0 | 0 | 0 | 53.8 |
+| 1x | hammer | 1.4 | 145.2 | 125.1 | 0 | 0 | 0 | 0 | 11.9 | 2.3 | 33.1 | 26.5 | 1.1 | 2.3 | 68.0 |
+| 1x | hammer | 2.6 | 138.7 | 117.5 | 0 | 0 | 0 | 0 | 12.3 | 2.5 | 32.6 | 26 | 1.2 | 2.1 | 62.0 |
+| 1x | hammer | 3.6 | 135.8 | 114.1 | 0 | 0 | 0 | 0 | 12.6 | 2.2 | 33.3 | 26.3 | 1.1 | 2.2 | 58.1 |
+| 1x | hammer | 3.5 | 125.8 | 0.2 | 37.4 | 14.7 | 41.6 | 15.2 | 0 | 0 | 0 | 0 | 0 | 0 | 16.9 |
+| 1x | hammer | 2.5 | 120.8 | 0.3 | 30.7 | 15 | 46.9 | 15.6 | 0 | 0 | 0 | 0 | 0 | 0 | 12.6 |
+| 1x | hammer | 2.137 | 113.7 | 76.4 | 0 | 0 | 0 | 0 | 0.1 | 0.1 | 33.2 | 25.3 | 0.3 | 8 | 46.7 |
+| 1x | hammer | 2.79 | 94.8 | 62 | 0 | 0 | 0 | 0 | 16 | 0.1 | 31 | 3.3 | 0.2 | 4 | 40.2 |
+| 1x | hammer | 3.79 | 83.2 | 62 | 0 | 0 | 0 | 0 | 17.7 | 0.2 | 32.2 | 2.6 | 0 | 4.4 | 26.1 |
+| 1x | hammer | 1.77 | 81.2 | 58.8 | 0 | 0 | 0 | 0 | 16.3 | 0.2 | 30 | 2.5 | 0 | 3.9 | 28.3 |
+| 4x | blast | 3.10 | 286.1 | 264.7 | 0 | 0 | 0 | 0 | 104.3 | 0.4 | 80.7 | 42.3 | 0.4 | 5.7 | 52.3 |
+| 4x | blast | 2.10 | 277.4 | 255.6 | 0 | 0 | 0 | 0 | 105.5 | 1.4 | 76.4 | 36 | 1.1 | 4.8 | 52.2 |
+| 4x | blast | 1.10 | 264.8 | 248 | 0 | 0 | 0 | 0 | 107 | 1.1 | 72.3 | 34.3 | 1.5 | 4 | 44.6 |
+| 4x | blast | 3.17 | 245.8 | 23.8 | 31.3 | 2.7 | 11.9 | 6.5 | 0 | 0.8 | 0 | 11 | 0.7 | 8.3 | 172.6 |
+| 4x | blast | 2.17 | 191.5 | 15.6 | 21.6 | 3.1 | 10.1 | 4.4 | 0 | 0.1 | 0 | 9.8 | 0.7 | 3.5 | 138.2 |
+| 4x | blast | 1.17 | 183 | 16.4 | 17.9 | 3 | 9.7 | 3.9 | 0 | 0 | 0 | 9.9 | 0.8 | 3.2 | 134.6 |
+| 4x | blast | 2.0 | 182.5 | 7.9 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 182.5 |
+| 4x | blast | 3.6 | 182.1 | 139 | 0 | 0 | 0 | 0 | 14.1 | 2.1 | 36.3 | 31 | 1.6 | 3 | 94.0 |
+| 4x | blast | 1.0 | 180.3 | 6.8 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.7 | 0 | 0 | 179.6 |
+| 4x | blast | 3.0 | 178.7 | 6.9 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 178.7 |
+| 4x | hammer | 2.7 | 236.3 | 198.2 | 0 | 0 | 0 | 0 | 23.1 | 4.4 | 54 | 41.8 | 1.4 | 3.9 | 107.7 |
+| 4x | hammer | 3.7 | 232.8 | 197.1 | 0 | 0 | 0 | 0 | 21.1 | 3.8 | 45.9 | 42.3 | 1.2 | 3.9 | 114.6 |
+| 4x | hammer | 1.7 | 218.5 | 182.6 | 0 | 0 | 0 | 0 | 19.2 | 4.5 | 43.3 | 41.4 | 1.1 | 3.9 | 105.1 |
+| 4x | hammer | 1.6 | 211.3 | 0.3 | 59.4 | 29.1 | 68.7 | 20.3 | 0 | 0 | 0 | 0.1 | 0 | 0 | 33.7 |
+| 4x | hammer | 2.6 | 206.8 | 0.4 | 49.4 | 29.7 | 78 | 21.4 | 0 | 0 | 0 | 0.1 | 0 | 0 | 28.2 |
+| 4x | hammer | 3.6 | 204.9 | 0.5 | 49.3 | 30.7 | 77.9 | 20.2 | 0 | 0 | 0 | 0 | 0 | 0 | 26.8 |
+| 4x | hammer | 2.0 | 193.1 | 5.1 | 0 | 0 | 0 | 0 | 0 | 0.8 | 0 | 1.2 | 0 | 0 | 191.1 |
+| 4x | hammer | 2.81 | 185.8 | 140.8 | 0 | 0 | 0 | 0 | 38.2 | 0.3 | 67.6 | 8.8 | 1.5 | 10.5 | 58.9 |
+| 4x | hammer | 3.81 | 180.9 | 127.4 | 0 | 0 | 0 | 0 | 31.4 | 1.2 | 72.5 | 8.3 | 0 | 10.9 | 56.6 |
+| 4x | hammer | 1.0 | 180.3 | 5.5 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 180.3 |
+
+
+Leitura:
+1. **Dois tipos de quadro pior, e nenhum é o passo do Jolt.** (a) Quadros de criação de peças e de chão: `createBody` 60–75 ms e `layTile` 51–60 ms no blast a 1x (8–18 e 22–33 nos outros), enquanto `joltStep` fica em 17–26 ms (2,5–26 no martelo). (b) Quadros de espatifamento: `fitBoxes` 39–47 ms, `splitLoose` 23–37 ms, `adoptSplit` 11–15 ms e `rebuildHost` 11–16 ms (a 4x, no martelo, 69–78 / 49–59 / 29–31 / 20–21); aqui a física é ~0,3 ms: o quadro de 100–155 ms é todo do kit, fora do orçamento de física, mas dentro do quadro do jogador.
+2. `layGround` e as leituras de pose (`bridgeReads`, `readBack`) somam menos de 12 ms em qualquer quadro: o custo da ponte wasm→JS não é o problema agora.
+3. Nos quadros de despertar a 4x (`2.0`, `1.0`, `3.0`), 180 ms ficam em `outros` e quase nada na física: é o que a explosão faz no próprio quadro 0 antes da física (eventos do mundo e dano, fora dos estágios medidos). Esse trecho não foi aberto; é o próximo corte se alguém precisar dele.
+4. O que mover o orçamento: criação de corpos e de ladrilhos do chão (`createBody` + `layTile`, ~70–135 ms por quadro pior a 1x) e o espatifamento do kit (`fitOrientedBoxes` em primeiro lugar) valem mais que qualquer ajuste do passo do Jolt.
+
+### Como rodar o gate
+```bash
+flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs room-explosion
+```
+Só à mão ou na rodada diária (`tools/gpu/nightly-gpu.mjs` roda como etapa `room-explosion`, depois do `perf-gate`); nunca no CI nem no pre-push (§9). Sai com código 1 quando o Jolt + D4 passa do orçamento nos estrangulamentos que bloqueiam (padrão: 1x) ou uma página dá erro; os outros níveis (2x, 4x, 6x) e o solver próprio saem no relatório com o veredito, sem bloquear. Variáveis (todas opcionais): `ROOM_EXPLOSION_THROTTLES=1,2,4,6`, `ROOM_EXPLOSION_GATE_THROTTLES=1` (os que bloqueiam, ex. `1,2,4`), `ROOM_EXPLOSION_VARIANTS=jolt-d4` (`jolt-d4,jolt,own`), `ROOM_EXPLOSION_KINDS=blast,hammer`, `ROOM_EXPLOSION_ROUNDS=5`, `ROOM_EXPLOSION_FRAMES=660`, `ROOM_EXPLOSION_P99_MS=4`, `ROOM_EXPLOSION_MAX_MS=5`, `ROOM_EXPLOSION_STAGE_ROUNDS=3` (0 desliga a tabela de estágios) e `ROOM_EXPLOSION_STAGE_THROTTLES=1,4`, `ROOM_EXPLOSION_OUT=<arquivo.json>`. A linha de base desta seção: `ROOM_EXPLOSION_THROTTLES=1,4,6 ROOM_EXPLOSION_VARIANTS=jolt-d4,own ROOM_EXPLOSION_STAGE_ROUNDS=0` mais uma rodada só de estágios (`ROOM_EXPLOSION_ROUNDS=0`). **Hoje o gate falha a 1x na main: quem o usar para julgar uma mudança compara com a tabela acima (e com a main medida na mesma hora), não espera verde.**
+
+Limites: proxy de CPU, não AMD; máquina com outras sessões (carga 4–15); 5 rodadas por célula (3 de estágios); o D4 é a política do dono (`blastDebris=1`), o solver próprio entra só como referência.
