@@ -641,8 +641,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         if (a.spec.seats?.length) item.seats = a.spec.seats
         const fluid = fluidOf(loc, t.id, a)
         if (fluid) item.fluid = fluid
-        // what hangs on a wall (a wall cabinet, drawn at the height it hangs) is held where it hangs, not let fall (CLAUDE.md §12)
-        if (!t.solid || t.group === 'window' || t.y > 0) item.movable = false
+        if (!t.solid || t.group === 'window') item.movable = false
         if (t.pushable) item.pushable = true
         if (t.sounds) item.sounds = t.sounds
         return item

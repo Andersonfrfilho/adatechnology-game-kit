@@ -28,8 +28,8 @@ const PHASES = {
   areas: { areas: ['Veículos', 'Multidão', 'Casas', 'Explosivos', 'Personagens'] },
   // the other areas: weapons, items, animals, effects, ground, sound, plants, the city and the vehicle proving ground
   more: { areas: ['Armas', 'Itens', 'Animais', 'effects', 'Terreno', 'Som', 'Árvores, plantas e flores', 'Cidade', 'vehicles_proving'] },
-  // the rest of the room: weather, the player, the stories and the furniture
-  world: { areas: ['Clima', 'Jogador', 'Histórias', 'Móveis e objetos'] },
+  // the rest of the room: weather, the player, the stories, the furniture and the kitchen on tables (the whole house needs the wider floor of its own page)
+  world: { areas: ['Clima', 'Jogador', 'Histórias', 'Móveis e objetos', 'house_tables_kitchen'] },
   // the hands: one weapon of each kind taken, fired and put away, in first and third person
   hands: { hands: true },
   // the floorplan bench switching houses, each one blown up and set on fire before the next replaces it: nothing of a replaced house stays

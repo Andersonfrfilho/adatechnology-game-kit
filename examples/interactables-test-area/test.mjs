@@ -310,7 +310,7 @@ if (PART === 'all' || PART === 'shots') {
     const off = onTables.filter((so) => Math.abs(so.root.position.y - top) > 0.06).map((so) => so.itemId)
     const hung = ['kitchen_cabinet_wall', 'electrical_panel', 'wall_switch']
     const wall = spawned.filter((so) => hung.includes(so.itemId)).map((so) => ({ item: so.itemId, y: Math.round(so.root.position.y * 100) / 100 }))
-    return { spawned: spawned.length, skipped: room.log.entries({ type: 'area_skip' }).length, tables: spawned.filter((so) => so.itemId === 'finds_table').length, onTables: onTables.length, off, wall }
+    return { spawned: spawned.length, skipped: room.log.entries({ type: 'area_skip' }).length + room.log.entries({ type: 'house_tables_missing' }).length, tables: spawned.filter((so) => so.itemId === 'finds_table').length, onTables: onTables.length, off, wall }
   })
   check(
     'the house and yard on tables lays every piece (more than 150, none skipped), keeps what is on the tables on their tops and hangs the wall pieces',

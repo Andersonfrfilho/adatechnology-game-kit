@@ -134,6 +134,11 @@ export interface AreaPlacement {
   surface?: { halfSize: [number, number]; height: number }
   /** Starts still: no physics until it is grabbed, hit or pushed. For props laid side by side that would otherwise nudge each other off. */
   asleep?: boolean
+  /**
+   * Held where it is put, with no physics of its own, whatever the item says: a piece hung on a wall (a wall cabinet the catalogue lets fall when it stands
+   * free). It still takes hits and breaks; what breaks off it falls.
+   */
+  fixed?: boolean
 }
 
 /** A rectangle of the floor made of something else: `rect` is `[x0, z0, x1, z1]` in world metres, `surface` a ground profile id of the host. */
