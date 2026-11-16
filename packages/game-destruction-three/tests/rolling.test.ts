@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import { createDestructionRenderer } from '../src/renderer'
+import { createDestructionRenderer, MIN_PIECE_MASS_KG } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
 import { IS_JOLT, physicsOption } from './setup-physics'
@@ -449,5 +449,18 @@ describe('fifty cans', () => {
     // the whole renderer update (pieces, contacts, knocks) for 50 cans: 1.4 ms on the dev machine under load 30. Wall-clock budgets stay out of CI
     // (CLAUDE.md §9: a shared runner measured 6.2 ms); the pre-push on the developer's machine keeps it
     if (!process.env.CI) expect(median).toBeLessThan(6)
+  })
+})
+
+describe('the mass of a can that lost its liquid', () => {
+  it('follows setPieceMass, never goes under the floor, and a round can keeps turning by its own k', () => {
+    const s = scene3()
+    const { piece } = addCan(s, 'can', [0, CAN_RADIUS + 0.001, 0], { mass: CAN_FULL })
+    s.renderer.setPieceMass('can', 0.2)
+    expect(piece.mass).toBeCloseTo(0.2, 6)
+    expect(piece.round?.inertia).toBeGreaterThan(0)
+    s.renderer.setPieceMass('can', 0.001)
+    expect(piece.mass).toBe(MIN_PIECE_MASS_KG)
+    expect(piece.sleeping).toBe(false)
   })
 })

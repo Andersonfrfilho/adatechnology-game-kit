@@ -108,7 +108,7 @@ interface Entry {
   /** Litres the container started with, and litres the player ate or drank out of it: the rest of a loss is a leak. */
   fluidStart?: number
   fluidUsed?: number
-  /** Litres out of the container that the piece's mass already reflects. */
+  /** Kg of liquid out of the container that the piece's mass already reflects. */
   fluidMassLost?: number
   /** Litres in the container when the piece's mass was first weighed. */
   fluidMassStart?: number
@@ -133,9 +133,10 @@ interface BurningStain {
 }
 
 const FIXED_DT = 1 / 60
-/** Litres of liquid lost before the piece's mass is updated (a gulp is a few cl; a drip does not wake the body). */
-const MASS_SYNC_LITERS = 0.002
+/** Kg of liquid gained or lost before the piece's mass is updated (a gulp is a few cl; a drip or a slow pour does not reshape the body every frame). */
+const MASS_SYNC_KG = 0.01
 const WATER_DENSITY_KG_M3 = 1000
+const NO_STATE_PIECE_KG = 0.2
 const LITERS_PER_CUBIC_METRE = 1000
 /** Metres a holder's drawn box may fall short of a point and still hold it (the rim of a top), and how far under its declared top it may end and still be the top (a broken stand's base is not). */
 const HOLDER_EDGE = 0.02
@@ -988,7 +989,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return found
   }
   const makePushPiece = (objectId: string): Piece => {
-    const piece = renderer.makePiece(objectId, { mass: Math.max(MIN_PIECE_MASS_KG, massOfObject(objectId)) })
+    const piece = renderer.makePiece(objectId, { mass: pieceMassOf(objectId) })
     const e = entries.get(objectId)
     if (e) e.piece = piece
     rendererPieces.set(objectId, piece)
@@ -1216,6 +1217,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
   })
 
+  /** What a piece weighs in the physics: its parts in the world (a body the world has no state for weighs `NO_STATE_PIECE_KG`), never under the floor. */
+  const pieceMassOf = (id: string): number => Math.max(MIN_PIECE_MASS_KG, massOfObject(id) || NO_STATE_PIECE_KG)
   const massOfObject = (id: string): number => {
     const st = world.state(id)
     let m = 0
@@ -1253,7 +1256,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     entries.set(objectId, e)
     batchObject(objectId, root)
     if (movable) {
-      e.piece = renderer.makePiece(objectId, { mass: Math.max(MIN_PIECE_MASS_KG, massOfObject(objectId)) })
+      e.piece = renderer.makePiece(objectId, { mass: pieceMassOf(objectId) })
       rendererPieces.set(objectId, e.piece)
     }
     const f = item?.fluid
@@ -2400,7 +2403,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const [objectId, push] of pushes) {
       const e = entries.get(objectId)
       if (!e || e.piece || !e.free) continue
-      const mass = Math.max(MIN_PIECE_MASS_KG, massOfObject(objectId))
+      const mass = pieceMassOf(objectId)
       if (Math.hypot(...push.impulse) / mass < SHOVE_SPEED) continue
       const piece = renderer.makePiece(objectId, { mass })
       e.piece = piece
@@ -4063,25 +4066,30 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** A container that lost liquid (drunk, poured or leaked) weighs less: the piece's physics mass drops by the litres gone at the liquid's density. */
   const syncPieceMass = (e: Entry, c: { liters: number; liquid: string | null }): void => {
-    if (!renderer.piece(e.so.objectId)) return
+    // the liquid may sit in a piece that split off the entry: that piece is the one that gets lighter
+    const hostId = hostOf(e).objectId
+    if (!renderer.piece(hostId)) return
     // the first look at a container is when it was full: what it had at the start
     e.fluidMassStart ??= e.fluidStart ?? c.liters
-    const lost = Math.max(0, e.fluidMassStart - c.liters)
-    if (Math.abs(lost - (e.fluidMassLost ?? 0)) < MASS_SYNC_LITERS) return
-    e.fluidMassLost = lost
     const kgPerLiter = (LIQUIDS.find((liquid) => liquid.id === c.liquid)?.density ?? WATER_DENSITY_KG_M3) / LITERS_PER_CUBIC_METRE
-    renderer.setPieceMass(e.so.objectId, massOfObject(e.so.objectId) - lost * kgPerLiter)
+    // signed: a container filled past what it started with weighs more
+    const lostKg = (e.fluidMassStart - c.liters) * kgPerLiter
+    if (Math.abs(lostKg - (e.fluidMassLost ?? 0)) < MASS_SYNC_KG) return
+    e.fluidMassLost = lostKg
+    renderer.setPieceMass(hostId, pieceMassOf(hostId) - lostKg)
   }
   const syncLiters = (): void => {
     for (const e of entries.values()) {
       if (!e.containerId) continue
       const c = fluids.container(e.containerId)
       if (!c) continue
+      if (e.fluidPart) {
+        const host = hostOf(e)
+        const part = world.part(host.objectId, e.fluidPart)
+        if (part && part.liters !== undefined && Math.abs(part.liters - c.liters) > 1e-4) world.setLiters(host.objectId, e.fluidPart, c.liters)
+      }
+      // after the world has the litres: the inertia of a round piece is fitted from what is left in it
       syncPieceMass(e, c)
-      if (!e.fluidPart) continue
-      const host = hostOf(e)
-      const part = world.part(host.objectId, e.fluidPart)
-      if (part && part.liters !== undefined && Math.abs(part.liters - c.liters) > 1e-4) world.setLiters(host.objectId, e.fluidPart, c.liters)
     }
   }
 

@@ -170,6 +170,8 @@ export interface PieceBody extends Piece {
   round?: PieceRound
   /** k of `round.inertia` as the host gave it (`MakePieceOptions.inertia`), kept over the measure of its walls when the piece is fitted again. */
   inertiaGiven?: number
+  /** Kg the piece weighs less than its parts in the world (the liquid that left it), kept over the refits. */
+  massOffset?: number
   /** Coefficient of restitution of its surface (by its material), mixed with the other surface's by geometric mean; default `SLAM_BOUNCE`. */
   restitution?: number
 }

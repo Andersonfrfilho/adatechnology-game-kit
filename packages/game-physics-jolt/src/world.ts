@@ -361,7 +361,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     const e = this.entry(id)
     const made = this.makeShape(shape, e.centred)
     const dynamic = e.body.IsDynamic()
-    if (mass && dynamic) e.kitMass = mass
+    // a kinematic body (held in a hand) keeps the new mass too: it takes it when it is let go (`setMotion`)
+    if (mass) e.kitMass = mass
     const kit = dynamic ? e.kitMass : null
     this.bi.SetShape(e.id, made, dynamic && !kit, this.J.EActivation_Activate)
     if (kit) this.putMass(e, made, kit)
@@ -504,7 +505,9 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void {
-    this.bi.SetMotionType(this.entry(id).id, motion === 'kinematic' ? this.J.EMotionType_Kinematic : this.J.EMotionType_Dynamic, this.J.EActivation_Activate)
+    const e = this.entry(id)
+    this.bi.SetMotionType(e.id, motion === 'kinematic' ? this.J.EMotionType_Kinematic : this.J.EMotionType_Dynamic, this.J.EActivation_Activate)
+    if (motion === 'dynamic' && e.kitMass) this.putMass(e, e.body.GetShape(), e.kitMass)
   }
 
   contactPoints(id: BodyId, out: Float32Array): number {

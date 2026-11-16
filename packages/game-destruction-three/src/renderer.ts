@@ -756,6 +756,8 @@ class Renderer implements DestructionRenderer {
     const b = this.bounds.get(objectId)
     const body = b?.piece ?? this.pieceSys.get(objectId)
     if (!b || !body) return
+    // what the world's parts weigh minus what the piece weighs now: the liquid that left, kept over the refits a break makes
+    body.massOffset = Math.max(0, this.massOf(objectId) - mass)
     body.mass = Math.max(MIN_PIECE_MASS_KG, mass)
     if (body.round) this.fitSurface(b, body)
     body.sleeping = false
@@ -2057,7 +2059,7 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       old.halfExtents = half
       this.pieceSys.setCenter(old, center)
-      old.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId))
+      old.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId) - (old.massOffset ?? 0))
       // what came off no longer touches the ground for it: its contacts are those of what is left
       // and what others meet it by are the boxes of what is left (`partBoxes`): nothing invisible collides
       if (old.contacts || old.round) {
@@ -2149,7 +2151,7 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, left)
       body.halfExtents = half
       this.pieceSys.setCenter(body, center)
-      body.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId))
+      body.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId) - (body.massOffset ?? 0))
       if (!structural) {
         // what is left may be round (a can's label torn off) or not any more (a stool that lost its legs): its contacts follow
         this.fitSurface(b, body)
