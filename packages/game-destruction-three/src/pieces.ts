@@ -291,6 +291,8 @@ export class PieceSystem {
   private readonly apartKeys = new Set<string>()
   /** Pieces torn apart by a joint that tears (a wire and the pole it hung from): the engine leaves each pair alone for good, by `apartKey`. */
   private readonly tethered = new Set<string>()
+  /** The object ids alive in this update (`apartAll`), kept to make no set per frame. */
+  private readonly presentIds = new Set<string>()
   private readonly seenBorn = new WeakSet<PieceBody>()
   /** The grid's cells by key: each its list (the one in `surfaceGrid`) and how many it holds in this measure. */
   private readonly cellIndex = new Map<number, number>()
@@ -395,7 +397,9 @@ export class PieceSystem {
   private apartAll(dt: number): Set<string> {
     const deep = this.apartDeep(dt)
     if (this.tethered.size === 0) return deep
-    const present = new Set(this.list.map((b) => b.objectId))
+    const present = this.presentIds
+    present.clear()
+    for (const b of this.list) present.add(b.objectId)
     const all = new Set(deep)
     for (const key of this.tethered) {
       const cut = key.indexOf('\u0000')
@@ -524,6 +528,11 @@ export class PieceSystem {
     if (i < 0) return
     // the boxes of the step forget it too: nothing keeps a removed piece's tree alive
     const [gone] = this.list.splice(i, 1)
+    // its torn pairs go with it (§8); a pair whose other side is a fixed object, not a piece, stays until the piece goes: the pole may still fall
+    for (const key of this.tethered) {
+      const cut = key.indexOf('\u0000')
+      if (key.slice(0, cut) === objectId || key.slice(cut + 1) === objectId) this.tethered.delete(key)
+    }
     if (gone) {
       this.forgetSolids(gone)
       this.engine?.remove(gone)

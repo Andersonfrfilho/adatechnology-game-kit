@@ -3,6 +3,26 @@ import type { BodyId, VehicleDesc, VehicleId, VehicleInput } from '@adatechnolog
 import { layerOf } from './constants'
 import type { JoltWorldHost } from './world-host'
 
+/**
+ * The wheels as axles: [left, right] indexes, right -1 for a wheel alone. Wheels are listed left, right per axle; two listed wheels that sit on the same line
+ * (a motorbike's front and rear, no side apart) are not an axle.
+ */
+const axlesOf = (desc: VehicleDesc): Array<[number, number]> => {
+  const out: Array<[number, number]> = []
+  const wheels = desc.wheels
+  for (let i = 0; i < wheels.length; ) {
+    const next = wheels[i + 1]
+    if (next && Math.abs(next.position[0] - wheels[i].position[0]) > 0.1 && Math.abs(next.position[2] - wheels[i].position[2]) < 0.1) {
+      out.push([i, i + 1])
+      i += 2
+    } else {
+      out.push([i, -1])
+      i += 1
+    }
+  }
+  return out
+}
+
 /** A wheeled vehicle: its chassis a body of the world, Jolt's vehicle constraint and controller, stepped by its own step listener. */
 export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId => {
   const J = w.J
@@ -38,23 +58,27 @@ export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId =>
     ws.mMaxHandBrakeTorque = wheel.maxHandBrakeTorque
     vs.mWheels.push_back(ws)
   })
-  // one differential per driven axle (wheels listed left, right per axle)
+  // one differential per driven axle (wheels listed left, right per axle); a wheel with no partner across (a motorbike's, in line) is its own axle
+  const axles = axlesOf(desc)
   controller.mDifferentials.clear()
-  for (let i = 0; i + 1 < desc.wheels.length; i += 2) {
-    if (!desc.wheels[i].driven) continue
+  for (const [left, right] of axles) {
+    if (!desc.wheels[left].driven) continue
     const d = new J.VehicleDifferentialSettings()
-    d.mLeftWheel = i
-    d.mRightWheel = i + 1
+    d.mLeftWheel = left
+    d.mRightWheel = right
+    // all the torque goes to the one wheel that is there
+    if (right < 0) d.mLeftRightSplit = 0
     d.mDifferentialRatio = desc.differentialRatio
     controller.mDifferentials.push_back(d)
     J.destroy(d)
   }
   vs.mController = controller
   if (desc.antiRoll) {
-    for (let i = 0; i + 1 < desc.wheels.length; i += 2) {
+    for (const [left, right] of axles) {
+      if (right < 0) continue
       const bar = new J.VehicleAntiRollBar()
-      bar.mLeftWheel = i
-      bar.mRightWheel = i + 1
+      bar.mLeftWheel = left
+      bar.mRightWheel = right
       bar.mStiffness = desc.antiRoll
       vs.mAntiRollBars.push_back(bar)
       J.destroy(bar)
@@ -82,7 +106,7 @@ export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId =>
   w.system.AddStepListener(listener)
   J.destroy(vs)
   const id = w.nextVehicle++ as VehicleId
-  w.vehicles.set(id, { body, constraint, controller: wheeled, listener, tester })
+  w.vehicles.set(id, { body, constraint, controller: wheeled, listener, tester, wheelCount: desc.wheels.length })
   return id
 }
 
@@ -113,6 +137,6 @@ export const wheelContacts = (w: JoltWorldHost, id: VehicleId): number => {
   const v = w.vehicles.get(id)
   if (!v) return 0
   let n = 0
-  for (let i = 0; i < 4; i++) if (v.constraint.GetWheel(i).HasContact()) n++
+  for (let i = 0; i < v.wheelCount; i++) if (v.constraint.GetWheel(i).HasContact()) n++
   return n
 }

@@ -286,7 +286,16 @@ export class EnginePieces {
       if (Math.hypot(c.x - x, c.z - z) > radius + Math.hypot(...b.halfExtents)) continue
       // lifted, a 1 t pole whose wire tip meets settling rubble would gain its weight times the rise from nowhere
       const under = this.underGround(b)
-      if (under <= ENGINE_CLEARS) continue
+      if (under <= 0) continue
+      if (under <= ENGINE_CLEARS) {
+        // a rise the engine clears by itself, but only an awake body is cleared: one asleep with its centre out of the disc stayed 8 mm in the ground for good
+        if (b.sleeping) {
+          b.sleeping = false
+          b.still = 0
+          b.calmAt = null
+        }
+        continue
+      }
       b.root.position.y += under
       b.root.updateMatrixWorld(true)
       link.groundAtSleep = NaN
