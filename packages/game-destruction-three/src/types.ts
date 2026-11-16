@@ -9,7 +9,7 @@ import type * as THREE_NS from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
-import type { BlastDebrisOptions, DebrisCostOptions } from './blast-debris'
+import type { BlastDebrisOptions, DebrisCostOptions, ExplosionWorkOptions } from './blast-debris'
 import type { PiecePhysics } from './physics-option'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
@@ -88,6 +88,14 @@ export interface RendererOptions {
   fitBoxesAhead?: boolean
   /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
   debrisCost?: DebrisCostOptions
+  /**
+   * The explosion's deferred work in a frame budget of work units, never of time (spec 008, `design/orcamento-da-explosao.md`): the loose groups a blow leaves become pieces
+   * one queue at a time, nearest the player first (`focus`, read when the group comes loose), then by id; until its turn a group stays in its object, drawn and solid as it
+   * stood, and none waits more than `maxWaitFrames`. The events still apply in their frame (their flash, dust and cracks show at once), the fragments still to spawn and the
+   * blast's wake queue draw from the same budget. `eventBudgetMs` and a shared frame budget's clock no longer cut the work: the same session cuts the same pieces in the same
+   * frames on every machine of the same `tier`. Omitted, off: the work is cut by the clock as before.
+   */
+  workBudget?: ExplosionWorkOptions
   /** Where the player is (m): the far and old rule of `blastDebris.far` counts distance from it. Without it, no piece is far. */
   focus?: () => Vec3
   /** A piece faded away (`blastDebris.far.action: 'fade'`, or over `maxLivePieces`) has left the scene: the host owns its geometry and disposes it here. */

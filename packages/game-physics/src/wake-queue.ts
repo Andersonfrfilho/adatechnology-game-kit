@@ -51,14 +51,15 @@ export class WakeQueue<TItem> {
 
   /**
    * One frame of `dt` seconds: `lastStepMs` is what the step of the previous frame cost, `costPerBodyMs` the world's cost of an awake body (aggregate, smoothed). What
-   * waited its maximum, and what passes the queue's bound, comes out whatever the cost.
+   * waited its maximum, and what passes the queue's bound, comes out whatever the cost. `limit` caps the batch the cost sizes (what a shared `WorkBudget` leaves for
+   * waking this frame), never under `minPerFrame`.
    */
-  release(dt: number, lastStepMs: number, costPerBodyMs: number): TItem[] {
+  release(dt: number, lastStepMs: number, costPerBodyMs: number, limit = Infinity): TItem[] {
     if (this.entries.length === 0) return []
     for (const entry of this.entries) entry.waited += dt
     this.entries.sort((a, b) => a.priority - b.priority)
     const room = Math.floor((this.costTargetMs - lastStepMs) / Math.max(costPerBodyMs, 1e-6))
-    const batch = Math.max(this.minPerFrame, room)
+    const batch = Math.max(this.minPerFrame, Math.min(room, limit))
     const out: TItem[] = []
     const kept: Array<Entry<TItem>> = []
     for (const entry of this.entries) {

@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import type { PhysicsLoop, PhysicsWorld } from '@adatechnology/game-physics'
 import type { PhysicsCostMeterState, WakeQueueState } from '@adatechnology/game-physics'
 
-import type { DebrisCostOptions, DebrisCostSample } from '../src/blast-debris'
+import type { BlastWake, DebrisCostOptions, DebrisCostSample } from '../src/blast-debris'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
 import { physicsLoop } from './setup-physics'
@@ -23,13 +23,13 @@ export interface SceneOptions {
 export interface SavedScene {
   readonly world: Uint8Array
   readonly meter: PhysicsCostMeterState
-  readonly wakes: WakeQueueState<() => void>
+  readonly wakes: WakeQueueState<BlastWake>
   readonly frame: number
 }
 
 interface Inside {
   costMeter: { saveState(): PhysicsCostMeterState; restoreState(state: PhysicsCostMeterState): void }
-  blastWakes: { saveState(): WakeQueueState<() => void>; restoreState(state: WakeQueueState<() => void>): void; pending: number }
+  blastWakes: { saveState(): WakeQueueState<BlastWake>; restoreState(state: WakeQueueState<BlastWake>): void; pending: number }
 }
 
 /**

@@ -1,4 +1,4 @@
-import type { WakeQueueState } from '@adatechnology/game-physics'
+import type { WakeQueueState, WorkBudgetOptions } from '@adatechnology/game-physics'
 import { DEFAULT_CHIP_SIZE, DEFAULT_MAX_PHYSICS_PIECES, DEFAULT_MIN_PHYSICS_PIECES, DEFAULT_PHYSICS_COST_TARGET_MS, DEFAULT_MAX_QUEUED_WAKES, DEFAULT_PHYSICS_COST_PER_BODY_MS, DEFAULT_WAKE_COST_PER_BODY_MS, DEFAULT_MAX_WAKE_DELAY, DEFAULT_MIN_WAKES_PER_FRAME, DEFAULT_WAKE_COST_TARGET_MS, WakeQueue } from '@adatechnology/game-physics'
 export type { PhysicsCostMeterState } from '@adatechnology/game-physics'
 export { PhysicsCostMeter, chooseForPhysics, physicsPieceCount } from '@adatechnology/game-physics'
@@ -111,9 +111,16 @@ export type DebrisCostOptions =
   | { readonly source: 'fixed' }
   | { readonly source: 'replay'; readonly samples: readonly DebrisCostSample[] }
 
+/** One push of a blast waiting its turn, as data (never a closure), so a save in the middle of a blast keeps it: the piece, the impulse and where it lands. */
+export interface BlastWake {
+  readonly objectId: string
+  readonly impulse: readonly [number, number, number]
+  readonly point: readonly [number, number, number]
+}
+
 /** The debris waiting to wake: one queue for every blast in flight, nearest the player first. */
 export class BlastWakes {
-  private readonly queue: WakeQueue<() => void>
+  private readonly queue: WakeQueue<BlastWake>
 
   constructor(options: ResolvedBlastDebris) {
     this.queue = new WakeQueue({ costTargetMs: options.wakeCostTargetMs, maxDelay: options.maxWakeDelay, maxQueued: options.maxQueuedWakes, minPerFrame: options.minWakesPerFrame })
@@ -123,24 +130,74 @@ export class BlastWakes {
     return this.queue.size
   }
 
-  push(priority: number, apply: () => void, maxDelay: number): void {
-    this.queue.push(priority, apply, maxDelay)
+  push(priority: number, wake: BlastWake, maxDelay: number): void {
+    this.queue.push(priority, wake, maxDelay)
   }
 
-  advance(dt: number, lastStepMs: number, costPerBodyMs: number): void {
-    for (const apply of this.queue.release(dt, lastStepMs, costPerBodyMs)) apply()
+  /** One frame: hands `apply` what the cost leaves room for (at most `limit`, what a shared work budget leaves) and returns how many woke. */
+  advance(options: { readonly dt: number; readonly lastStepMs: number; readonly costPerBodyMs: number; readonly limit?: number; readonly apply: (wake: BlastWake) => void }): number {
+    const woken = this.queue.release(options.dt, options.lastStepMs, options.costPerBodyMs, options.limit ?? Infinity)
+    for (const wake of woken) options.apply(wake)
+    return woken.length
   }
 
   clear(): void {
     this.queue.clear()
   }
 
-  /** The waiting pieces' priority, delay and `apply` (the host keeps what `apply` stands for saveable). */
-  saveState(): WakeQueueState<() => void> {
+  /** The waiting pushes with their priority and delay: plain data. */
+  saveState(): WakeQueueState<BlastWake> {
     return this.queue.saveState()
   }
 
-  restoreState(state: WakeQueueState<() => void>): void {
+  restoreState(state: WakeQueueState<BlastWake>): void {
     this.queue.restoreState(state)
   }
 }
+
+/**
+ * Work units (`WorkBudget`, 1 unit = 10 µs on the reference machine) each kind of the explosion's deferred work is charged. Every one is an estimate from the size of the work,
+ * never from what a cache holds: a split is charged as if none of its boxes were fitted ahead (spec 008, `design/orcamento-da-explosao.md` §7 D2), so the schedule does not
+ * depend on how far a fit ahead got.
+ */
+export interface WorkUnitCosts {
+  /** Units of one split whatever its size (making the new object, its piece and its bookkeeping). */
+  readonly perSplit?: number
+  /** Units per vertex of the loose group's meshes (its box fits and measure). */
+  readonly perVertex?: number
+  /** Units per vertex of a merged mesh the group is cut out of (the host mesh is rebuilt, normals and all). */
+  readonly perHostVertex?: number
+  /** Units per part of the object it is cut from (the world rebuilds both halves). */
+  readonly perObjectPart?: number
+  /** Units per fragment spawned. */
+  readonly perFragment?: number
+  /** Units charged per event applied (its effects show in the frame it happens, so it never waits; it only leaves less for the rest). */
+  readonly perEvent?: number
+  /** Units per body woken from the blast's wake queue. */
+  readonly perWake?: number
+}
+
+/** The frame budget of the explosion's work (`RendererOptions.workBudget`): the budget, the machine's tier, the frames a loose group may wait, and the unit costs. */
+export interface ExplosionWorkOptions extends WorkBudgetOptions {
+  readonly costs?: WorkUnitCosts
+}
+
+/** First calibration on the main of 2026-11-15 (evidence T3.8aa); to be measured again on top of the box fits ahead, the batched bodies and the ground budget. */
+export const WORK_UNIT_DEFAULTS: Required<WorkUnitCosts> = {
+  perSplit: 120,
+  perVertex: 0.05,
+  perHostVertex: 0.01,
+  perObjectPart: 0.3,
+  perFragment: 4,
+  perEvent: 40,
+  perWake: 2,
+}
+
+export const resolveWorkUnitCosts = (costs: WorkUnitCosts | undefined): Required<WorkUnitCosts> => ({
+  ...WORK_UNIT_DEFAULTS,
+  ...Object.fromEntries(Object.entries(costs ?? {}).filter(([, value]) => value !== undefined)),
+})
+
+/** What a split is estimated to cost, in units, from the sizes of its work. */
+export const splitWorkUnits = (costs: Required<WorkUnitCosts>, size: { readonly vertices: number; readonly hostVertices: number; readonly objectParts: number }): number =>
+  costs.perSplit + costs.perVertex * size.vertices + costs.perHostVertex * size.hostVertices + costs.perObjectPart * size.objectParts
