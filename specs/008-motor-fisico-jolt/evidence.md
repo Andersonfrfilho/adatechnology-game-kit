@@ -2976,6 +2976,88 @@ Só à mão ou na rodada diária (`tools/gpu/nightly-gpu.mjs` roda como etapa `r
 
 Limites: proxy de CPU, não AMD; máquina com outras sessões (carga 4–15); 5 rodadas por célula (3 de estágios); o D4 é a política do dono (`blastDebris=1`), o solver próprio entra só como referência.
 
+## T3.8aa — explosão espalhada por quadros (2026-11-15) — **o árbitro está pronto e desligado por padrão; a medida final e a calibragem ficam para depois do merge de `corte-da-casa`, `passo-jolt-pecas` e `chao-sob-pecas`**
+
+Máquina: Intel Core Ultra 9 275HX (24 threads), Arch Linux, `node --version` = v24.22.0. Worktree `espalhar-explosao`, branch `perf/espalhar-explosao`, sobre a main `a74a71d1`. Desenho revisto pelo `architect`: `design/orcamento-da-explosao.md` (commit `d91291ce`). Sondas e saídas em `decision/probes/t38aa/`. Nenhuma régua, tolerância, teste ou regra foi afrouxado ou removido.
+
+**Aviso de energia (dono, 2026-11-15):** até ~22:44 o notebook estava num carregador USB-C de 100 W e a CPU ficou presa em 1,0–1,4 GHz sob carga; depois, no carregador original, 3,2–4,3 GHz (~3× mais rápido). **Todos os tempos desta seção foram medidos antes das 22:44, a 100 W** (marcados "100 W"). Valem as proporções dentro de uma mesma rodada e o A/B intercalado (os dois lados no mesmo lado das 22:44); os valores absolutos estão inflados. O A/B a plena potência começou e foi parado na fila da trava, porque o coordenador pôs a medida em ordem de merge: este branch mede por último.
+
+### 1. Para onde vai o quadro (100 W, sem navegador)
+Sonda nova `probe-spread.test.ts.txt` (a montagem da T3.8v: `single_storey_a`, semente 1, `build`, blast C4 a `casa - 2,5 m` ou 12 golpes de 8000 J, 240 quadros de 1/60 s). "Física" = a fila adiada do renderizador (eventos e cortes, `deferredQueue().run`) + o passo do laço (`prepare`, `stepFixed`, leitura). Saída por estágio em `stages-main-100W.txt`.
+
+| família | quadros | física | onde |
+|---|---|---|---|
+| corte da casa | f0–f25 | 10–23 ms (2 cortes por quadro) | `splitGroup` (o mundo refaz o objeto inteiro: ~5 ms por corte na casa), `adoptSplit` (`fitPartBoxes`, `measure`, `rebuildHost`) |
+| **chão sob as peças** | f80–f190 | **33–90 ms** (os piores da rodada) | `layGround`/`layTile` 17–65 ms (`setShape` do sólido 16–39 ms), `stepFixed` 5–15 ms; corpo novo quase nenhum |
+| assentado | o resto | 3–6 ms | `stepFixed` |
+
+**Os quadros de 49–64 ms da main não são do corte.** O último corte do blast é no f20–f29; os piores quadros (f88–f190) são o chão que as peças caídas pedem (ladrilhos novos e reassentados) com o passo do Jolt por cima. Mais de 160 dos 240 quadros passam de 5 ms de física na main. Nenhum escalonamento do corte alcança o B6 (p99 ≤ 4, nenhum > 5) nesta cena: o chão é da frente G (`chao-sob-pecas`), o passo e a criação de corpos da frente P (`passo-jolt-pecas`), e um corte da casa sozinho já custa mais que 4 ms (frente C, `corte-da-casa`).
+
+### 2. O quadro 0 e o "outros" de 180 ms a 4× da T3.8ac (100 W, perfil de CPU, `frame0-profile-100W.txt`)
+| quadro 0 (1×, 100 W) | rodada fria (a primeira do processo) | rodadas quentes |
+|---|---|---|
+| blast, total | 46,9 ms | 21,6–22,3 ms |
+| aplicar o evento (`applyEvent`) | 29,1: `onDetach` > `splitLoose` 25,1 (`adoptSplit` 19,5: `fitPartBoxes` 9,0, `measure` ~6; `splitGroup` ~5) | 13,6: `splitLoose` 12,6 (`adoptSplit` 6,5, `splitGroup` 6,0) |
+| `simulate` da sala (laço, `world.update`) | 13,3 | 5,0–7,7 |
+| martelo, total | 39,3 (`splitLoose` 27,2; `fitOrientedBoxes` 9,2) | 15,9–16,4 (`splitLoose` 11,4–12,4; `onDent`/`rebuildHost`/`computeVertexNormals` 5–6) |
+
+Leitura: o "outros" de 180 ms do quadro de despertar a 4× é, a 1×, ~45 ms de **kit aplicando o evento**: o primeiro corte (que a regra do dono manda fazer no próprio quadro: a casa começa a quebrar na hora) mais as marcas do golpe (`onDent`, `rebuildHost`, normais). **Metade dele é JIT frio:** a primeira explosão do processo custa ~2× as seguintes, porque é a primeira vez que esses caminhos (corte, ajuste de caixas, malha do hospedeiro) rodam. Os cronômetros da T3.8ac não pegaram o `splitLoose` do quadro 0 porque ele roda dentro do `applyEvent` da fila adiada, que eles não embrulham. O que daria para atacar aqui, fora do escopo deste branch: aquecer esses caminhos ao carregar (um corte de uma peça de teste invisível, como o `warmUpProbes` faz com os shaders) e o corte mais barato da frente C. O árbitro não tira esse quadro: com o orçamento ligado ele faz o mesmo primeiro corte (forçado) e os eventos (18–23 ms quente, 54–70 ms frio com a ordem nova).
+
+### 3. Desenho (o que entrou)
+- **`WorkBudget`** (`game-physics/src/work-budget.ts`): o orçamento de um quadro em **unidades de trabalho**, nunca em tempo: `budgetMs × unitsPerMs / tier` (padrões 4 ms, 100 unidades por ms, `tier` 1). A faixa da máquina (`tier`) é escolhida uma vez por sessão; nenhum relógio decide um quadro. `WORK_KINDS` fixa a ordem em que as filas tiram: evento, corte, fragmento, ajuste antecipado (`prefit`, para o `runPrefit` da frente C), chão, corpo, despertar.
+- **`WorkQueue`**: trabalho guardado como **dado** (item, prioridade, chave estável, unidades), solta o que cabe em ordem de prioridade e chave, pelo menos um por quadro, e o que esperou `maxWaitFrames` (30) sai de qualquer jeito. `saveState`/`restoreState`.
+- **`RendererOptions.workBudget`** (`ExplosionWorkOptions`), desligado por padrão. Ligado:
+  - os eventos aplicam no próprio quadro (clarão, poeira, trincas, peça escondida) e custam `perEvent`;
+  - os grupos soltos de um evento se cortam **no próprio evento, na ordem do mundo, enquanto cabem** (o primeiro do quadro sempre: a casa quebra na hora); o que não cabe entra na fila, o mais perto do `focus` (lido uma vez, quando soltou) primeiro, desempate pela menor id de parte. Até a vez dele o grupo fica no objeto, desenhado e sólido onde estava (corpo estático do hospedeiro: nunca peça sem corpo);
+  - o custo de um corte é estimado pelo tamanho do trabalho (`splitWorkUnits`: vértices do grupo, vértices da malha do hospedeiro, partes do objeto), **como se nenhuma caixa estivesse ajustada antes** (risco D2 do desenho);
+  - fragmentos e a fila de despertar do D4 tiram do mesmo orçamento; a fila de despertar guarda dados (`BlastWake`: objeto, impulso, ponto), não fechamentos;
+  - com orçamento para tudo, é o mesmo trabalho na mesma ordem de sem ele (os goldens provam, seção 5).
+- Sala: `debris.workBudget` (o jogador é a câmera) e `?workBudget=4` na página.
+- **Não entrou** (dono de outra frente, desenho §6): criação de corpos em lote e o chão antes da ativação (`engine-pieces.ts`, P e G). O árbitro tem os tipos `ground` e `body` para quando eles chegarem.
+- **§12 enquanto espera:** grupo na fila = parte do objeto, desenhado e colidindo como estava; o teto de 30 quadros (0,5 s) limita quanto tempo um grupo sem apoio pode esperar. É a tensão T1 do desenho: um teto curto (3 quadros) devolve o pico; um longo deixa o grupo parado no ar por mais tempo. Fica com o dono.
+
+### 4. Antes e depois (100 W, sem navegador, A/B intercalado: 3 pares × 3 rodadas por lado no blast, 1 par no martelo; o resto foi parado pela mudança de carregador e pela ordem da trava)
+Medianas (intervalo). `headless-ab-100W.txt`.
+
+| | física p50 | física p99 | física máx | quadros > 5 ms | soma dos 240 quadros | último corte | quadros até a última peça |
+|---|---|---|---|---|---|---|---|
+| blast, desligado (9) | 14,7 (9,7–20,0) | 56,5 (38,3–94,5) | 71,3 (42,0–100) | 217 | 4707 (3765–7264) | f27 (f22–f179) | f30 (f23–f180) |
+| blast, `workBudget` 4 ms (9) | 11,2 (10,7–12,0) | 50,8 (45,3–58,3) | 81,8 (70,8–86,7) | 222 | 4376 (4197–4803) | **f32 nas 9** | **f32 nas 9** |
+| martelo, desligado (3) | 7,3 | 48,0 | 56,8 | 161 | 3225 | f18 | f20 |
+| martelo, `workBudget` 4 ms (3) | 10,1 | 40,3 | 64,1 | 202 | 3478 | f32 | f32 |
+
+Leituras:
+1. **O orçamento não baixa o pior quadro nem a soma nesta cena** (blast: máximo 71 → 82, martelo 57 → 64; martelo p50 7,3 → 10,1). Os piores quadros são do chão, que não passa pelo árbitro, e um corte da casa sozinho (5–20 ms) já passa dos 4 ms: com 4 ms o árbitro corta um por quadro, o corte se estende de ~20 para 32 quadros e as peças caem mais tarde (a última peça ganha corpo no f239 contra f186–f211), empurrando o chão para dentro da janela medida. **Não recomendo ligar por padrão hoje.**
+2. **O que ele já entrega: um cronograma que não depende do relógio.** Desligado, o corte termina entre f22 e f179 conforme a carga da máquina (o `eventBudgetMs` de 8 ms da sala é relógio); ligado, o último corte é **f32 nas 9 rodadas** e no martelo f31–f32. É o que o determinismo (T3.7) pede de qualquer espalhamento.
+3. A lacuna do B6 nesta cena é de outra ordem (p99 40–57 ms contra 4): ver seção 1.
+
+### 5. Goldens e critérios
+- **Desligado (o padrão), nada muda:** `game-floorplan-three` próprio **1187 passam, 0 falhas, golden exato 44/44**; Jolt **1188 passam, só as 4 conhecidas** (3 `destruction/*` do golden exato, gravados no solver próprio, e `bookcase-topple`).
+- **Ligado** (cópia local do `exact-golden.test.ts` com `workBudget`, não commitada): com orçamento para tudo (`budgetMs` 1000) os 3 goldens de destruição dão **bit a bit o mesmo hash** (o corte no evento segue a ordem do mundo). Com 4 ms mudam os 3: `destruction/breach` 1073 → 837 objetos, `spall` 1062 → 838, `fracture` 1103 → 862, com 30 ou 19 quadros de espera. A cena roda 20 quadros de 0,05 s; com os cortes espalhados, as peças caem em outra hora e a própria queda (fraturas, fragmentos ao bater) muda: é a mudança de resultado que o dono pediu para relatar, não para entregar. Por isso o padrão fica desligado e nenhum golden foi regravado. Uma versão intermediária (tudo na fila, ordem por distância desde o primeiro corte) mudava os goldens mesmo com orçamento para tudo (1073 / 1061 / 1107, hash diferente): foi trocada pela atual.
+- **Sala (5 blast + 5 martelo, Jolt, D4, `workBudget`): não rodada.** A página foi construída (`pnpm build`, `node examples/test-room/build.mjs`, exit 0; `splitWithin` e `perHostVertex` no `dist/test-room.html`), mas as rodadas também medem tempo e entram na fila da trava depois das outras três frentes, por ordem do coordenador. Fica pendente, junto com as ~30 rodadas por lado que o desenho pede para julgar por distribuição (T2).
+
+### 6. Gates (código final, `f304eaad`)
+| gate | resultado |
+|---|---|
+| `pnpm -r typecheck` / `pnpm typecheck:scripts` | exit 0 / exit 0 |
+| `game-physics` | 14 passam (+5 novos: `work-budget.test.ts`) |
+| `game-destruction-three` próprio | 428 passam, 0 falhas (+10 novos em `work-budget.test.ts`) |
+| `game-destruction-three` Jolt | 519 passam, **só as 2 `rolling` conhecidas**; `determinism.test.ts` passa (dois processos, `fixed`, replay, salvar no meio da fila de despertar com a fila agora em dados) |
+| `game-physics-jolt` (determinismo incluído) | 68 passam, 0 falhas |
+| `game-floorplan-three` próprio / Jolt | 1187, 0 falhas, golden 44/44 / 1188, só as 4 conhecidas |
+| Bacia, `PIECE_SOLVER=jolt BOWL_SEEDS=64` | **128/128**, números idênticos aos da T3.8w (`worstC1` −0,007656, `worstC3` 0,024192, `worstC4` 1,5167, `fellThrough` 0) |
+| `eslint` dos arquivos mudados / `kit-audit --check` / `pnpm check:layers` | 0 erros (o aviso antigo de `max-lines` em `renderer.ts` e `room.ts`) / 0 novos fora do SDK dono / sem violações novas |
+
+Uma rodada do Jolt de `game-floorplan-three` feita com outras suítes em paralelo reprovou `pole-collider.test.ts` ("deitado no chão, dorme em até 3 s"); sozinho passa 2 de 2, e a rodada sequencial passa. É o `eventBudgetMs` de 8 ms (relógio) da sala de teste mudando o resultado com a carga da máquina: o mesmo motivo de a seção 4 querer o cronograma em unidades.
+
+### 7. O que falta, e de quem
+1. **Medir a plena potência, na vez deste branch na trava** (depois de C, P e G): o A/B intercalado (`ab.sh`), o perfil do quadro 0 (`frame0.sh`) e as rodadas da sala, uma por processo (`drive.mjs ww4-<i> "&solver=jolt&blastDebris=1&workBudget=4" 1 <tipo>`), comparadas com a T3.8ac refeita a plena potência e com a main medida na mesma hora.
+2. **Calibrar `WORK_UNIT_DEFAULTS`** em cima dos três branches: os números de hoje (`perSplit` 120, `perVertex` 0,05...) são uma primeira estimativa e não foram ajustados contra os 100 W.
+3. **Ligar `prefit` (C), `ground` (G) e `body` (P) ao mesmo `WorkBudget`** quando eles entrarem; enquanto o chão não passar pelo árbitro, ligar o orçamento só espalha o corte (seção 4).
+4. **Decisões do dono:** o teto `maxWaitFrames` (tensão T1) e se o primeiro corte de uma explosão continua no próprio quadro (hoje sim, pela regra "a casa quebra na hora").
+   **Decidido em 2026-11-16:** `maxWaitFrames` 12 (0,2 s); o primeiro corte continua no próprio quadro; o orçamento entra **desligado por padrão** e só se liga quando o chão (G) e a criação de corpos (P) também tirarem do árbitro.
+
+
 ## T3.8ad — auditoria do motor de física e correções (2026-11-16)
 
 Auditoria de um revisor independente sobre o que entrou na main de #302 a #316. Todo defeito grave foi reproduzido com teste, não por suposição. Cada correção tem um teste que falha sem ela e passa com ela, menos o vazamento do `createBodies` (caminho de erro, só revisado).

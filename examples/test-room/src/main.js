@@ -89,9 +89,11 @@ const room = createTestRoom({
   // ?blastDebris=1: the blast debris policy of the owner's D4 (wake queue by step cost); off by default
   // ?tilesUnderParts=1: the engine's ground under each part of a loose piece, not under the box of the whole piece (T3.8v); off by default
   // ?warmup=0: the JIT warm-up of the destruction renderer off (default on, heating the engine of ?solver=jolt)
+  // ?workBudget=4: the explosion's deferred work in a frame budget of 4 ms of work units, nearest the camera first (T3.8aa); off by default
   debris: {
     ...(params.get('blastDebris') === '1' ? { blast: {} } : {}),
     ...(params.get('tilesUnderParts') === '1' ? { tilesUnderParts: true } : {}),
+    ...(params.get('workBudget') ? { workBudget: { budgetMs: Number(params.get('workBudget')) } } : {}),
     jitWarmUp: params.get('warmup') === '0' ? false : { engine: /** @type {any} */ (window).__joltEngine },
   },
   strikeCombo: PUNCH_COMBO,

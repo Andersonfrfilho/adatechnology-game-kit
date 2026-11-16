@@ -1,0 +1,22 @@
+[SPREAD] blast run 0 budget off | physics p50 9.37 p99 52.12 max 89.70 over5 185 | frame p50 11.44 p99 56.72 max 94.86 sum 3628 | splits 50 lastSplit f24 lastBody f165 queueEmpty f27 pieces 50
+[WORST] f total | drain loop stepFixed splitGroup adoptSplit splitGroup# createBody# layStatics sync layGround layTile layTile# setShape layStatics# outOfStatics finish staticSolids staticNow
+f94 94.9 | 0.0 89.7 9.7 0.0 0.0 0.0 3.0 11.7 0.2 65.1 64.9 14.0 39.1 1.0 0.0 2.6 11.7 0.2 | pending 0 pieces 50
+f93 67.1 | 0.4 60.9 13.4 0.0 0.0 0.0 5.0 0.0 0.1 41.6 41.4 10.0 31.2 1.0 0.0 5.4 0.0 0.0 | pending 0 pieces 50
+f117 56.7 | 0.1 52.0 7.1 0.0 0.0 0.0 0.0 1.2 0.1 41.4 41.3 18.0 30.2 1.0 0.0 1.9 1.2 0.2 | pending 0 pieces 50
+f92 53.1 | 0.1 47.8 8.7 0.0 0.0 0.0 1.0 0.0 0.1 35.8 35.7 7.0 28.1 1.0 0.0 2.7 0.0 0.0 | pending 0 pieces 50
+f96 49.2 | 0.0 45.7 9.6 0.0 0.0 0.0 0.0 0.0 0.1 33.2 33.1 9.0 27.7 1.0 0.0 2.5 0.0 0.0 | pending 0 pieces 50
+f95 49.8 | 0.0 45.7 8.0 0.0 0.0 0.0 0.0 0.0 0.1 33.5 33.4 9.0 27.7 1.0 0.0 3.9 0.0 0.0 | pending 0 pieces 50
+f118 48.1 | 0.1 44.8 6.4 0.0 0.0 0.0 3.0 3.0 0.1 33.3 33.2 15.0 24.2 1.0 0.0 1.7 3.0 0.2 | pending 0 pieces 50
+f164 46.6 | 0.1 43.2 12.6 0.0 0.0 0.0 2.0 0.0 0.1 28.6 28.5 23.0 16.0 1.0 0.0 1.7 0.0 0.0 | pending 0 pieces 50
+[HEAD] 23/1 17/0 17/2 12/1 39/2 11/2 14/2 20/2 15/2 12/1 12/2 15/2 9/1 13/2 12/2 11/3 14/3 14/3 13/3 17/2 12/2 15/3 15/2 16/3 16/2 13/0 14/0 5/0 6/0 6/0
+[SPREAD] blast run 1 budget off | physics p50 8.52 p99 33.71 max 37.97 over5 198 | frame p50 10.55 p99 37.64 max 42.53 sum 3145 | splits 50 lastSplit f19 lastBody f176 queueEmpty f20 pieces 50
+[WORST] f total | drain loop stepFixed splitGroup adoptSplit splitGroup# createBody# layStatics sync layGround layTile layTile# setShape layStatics# outOfStatics finish staticSolids staticNow
+f189 42.5 | 0.0 38.0 10.6 0.0 0.0 0.0 0.0 0.0 0.2 26.0 25.9 57.0 0.9 1.0 0.0 0.8 0.0 0.0 | pending 0 pieces 50
+f112 41.3 | 0.1 36.4 7.2 0.0 0.0 0.0 2.0 1.2 0.1 25.3 25.2 22.0 8.4 1.0 0.0 2.2 1.2 0.1 | pending 0 pieces 50
+f110 37.6 | 0.1 33.6 8.8 0.0 0.0 0.0 1.0 0.0 0.1 22.0 21.9 46.0 2.0 1.0 0.0 2.4 0.0 0.0 | pending 0 pieces 50
+f125 35.5 | 0.0 32.0 7.0 0.0 0.0 0.0 0.0 1.2 0.0 21.6 21.5 36.0 5.1 1.0 0.0 1.9 1.2 0.1 | pending 0 pieces 50
+f161 35.6 | 0.1 31.0 10.0 0.0 0.0 0.0 2.0 0.0 0.1 16.9 16.9 14.0 7.1 1.0 0.0 3.7 0.0 0.0 | pending 0 pieces 50
+f165 33.4 | 0.1 30.4 10.7 0.0 0.0 0.0 0.0 1.4 0.1 16.3 16.2 4.0 12.8 1.0 0.0 1.6 1.4 0.2 | pending 0 pieces 50
+f159 34.2 | 0.1 30.3 10.7 0.0 0.0 0.0 0.0 0.0 0.1 17.6 17.5 13.0 6.8 1.0 0.0 1.6 0.0 0.0 | pending 0 pieces 50
+f123 33.2 | 0.0 29.7 5.5 0.0 0.0 0.0 2.0 1.2 0.1 20.9 20.8 44.0 4.0 1.0 0.0 1.8 1.2 0.1 | pending 0 pieces 50
+[HEAD] 10/2 22/2 27/2 14/3 17/2 16/2 15/2 19/2 12/2 13/2 11/2 12/3 17/3 11/3 14/4 14/3 14/3 14/3 14/3 12/2 12/0 5/0 8/0 4/0 4/0 4/0 3/0 6/0 5/0 3/0

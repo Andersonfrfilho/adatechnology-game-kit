@@ -37,7 +37,11 @@ interface Live {
   box?: RestingBox | undefined
 }
 
+/** The floor area a box covers, seen from above: a shape built from the floor images of its three half edges (x, z of each, in turn), centred on the box. */
+type Shadow = readonly [number, number, number, number, number, number]
+
 interface RestingBox {
+  readonly shadow: Shadow
   readonly x: number
   readonly z: number
   readonly reachX: number
@@ -56,11 +60,34 @@ function rotationOf(q: THREE_NS.Quaternion): readonly number[] {
 }
 
 /** The world box of a resting fragment: its centre, how far it reaches along x and z, and its top. */
+/** The floor images of the half edges of a box turned by the column-major rotation `e`. */
+function shadowOf(e: ArrayLike<number>, half: { readonly x: number; readonly y: number; readonly z: number }): Shadow {
+  return [e[0]! * half.x, e[2]! * half.x, e[4]! * half.y, e[6]! * half.y, e[8]! * half.z, e[10]! * half.z]
+}
+
+/** How far a shadow reaches along (nx, nz): the sum of its three half edges' projections. */
+const reachAlong = (shadow: Shadow, nx: number, nz: number): number => Math.abs(nx * shadow[0] + nz * shadow[1]) + Math.abs(nx * shadow[2] + nz * shadow[3]) + Math.abs(nx * shadow[4] + nz * shadow[5])
+
+/** Whether two shadows, `dx` and `dz` apart, share floor area: the separating axis test on the normals of the six half edges (exact for shapes made of segments). */
+function shadowsOverlap(first: Shadow, second: Shadow, dx: number, dz: number): boolean {
+  for (const shadow of [first, second]) {
+    for (let g = 0; g < 6; g += 2) {
+      const nx = -shadow[g + 1]!
+      const nz = shadow[g]!
+      if (nx * nx + nz * nz < 1e-12) continue
+      if (Math.abs(dx * nx + dz * nz) > reachAlong(first, nx, nz) + reachAlong(second, nx, nz)) return false
+    }
+  }
+  return true
+}
+
+/** The world box of a resting fragment: its centre, how far it reaches along x and z, its top, and the floor area it really covers. */
 function restingBox(f: Live): RestingBox {
   const e = rotationOf(f.mesh.quaternion)
   const { x, y, z } = f.half
   const p = f.mesh.position
   return {
+    shadow: shadowOf(e, f.half),
     x: p.x,
     z: p.z,
     reachX: Math.abs(e[0]) * x + Math.abs(e[4]) * y + Math.abs(e[8]) * z,
@@ -565,12 +592,15 @@ export class FragmentSystem {
     const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
     const reachX = Math.abs(e[0]) * f.half.x + Math.abs(e[4]) * f.half.y + Math.abs(e[8]) * f.half.z
     const reachZ = Math.abs(e[2]) * f.half.x + Math.abs(e[6]) * f.half.y + Math.abs(e[10]) * f.half.z
+    const mine = shadowOf(e, f.half)
     let top = Number.NEGATIVE_INFINITY
     for (const other of this.list) {
       if (other === f || other.dying) continue
       const box = other.asleep ? (other.box ??= restingBox(other)) : restingBox(other)
       if (box.top > bottom + PILE_STEP || box.top <= top) continue
       if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
+      // the wrapping boxes touch: what counts is whether the floor areas the two really cover do (a turned or leaning box wraps far more than it covers)
+      if (!shadowsOverlap(mine, box.shadow, box.x - p.x, box.z - p.z)) continue
       top = box.top
     }
     return top

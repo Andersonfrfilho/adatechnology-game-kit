@@ -1,0 +1,87 @@
+// @vitest-environment happy-dom
+// T3.8aa calibration probe: copy to packages/game-floorplan-three/tests/zz-calibrate.test.ts and run with PIECE_SOLVER=jolt under the shared lock.
+// The budget is on and holds everything (the same work in the same order as off), so each split is timed alone: splitGroup + adoptSplit, with the sizes splitWorkUnits reads.
+// Prints one CSV row per split (kind, run, ms, vertices, hostVertices, objectParts), per fragment slice and per event, for a least-squares fit of the unit costs.
+import * as THREE from 'three'
+import { describe, it } from 'vitest'
+import { engine } from '@adatechnology/game-floorplan'
+
+import { createTestRoom } from '../../game-test-room/src'
+import { stubRenderer } from '../../game-test-room/tests/helpers'
+import { createFloorplanTestModule } from '../src'
+import { planOf } from './helpers/houses'
+import { fakeDocument } from './helpers/fake-document'
+import { IS_JOLT, physicsLoop } from './setup-physics'
+
+type Any = any // probe only
+
+const sizeOf = (b: Any, group: readonly string[]): { vertices: number; hostVertices: number } => {
+  let vertices = 0
+  const hosts = new Set<Any>()
+  for (const id of group) for (const mv of b.parts.get(id)?.meshes ?? []) {
+    vertices += mv.range ? mv.range[1] - mv.range[0] : (mv.mesh.geometry.getAttribute('position')?.count ?? 0)
+    if (mv.host && !mv.loose) hosts.add(mv.host)
+  }
+  let hostVertices = 0
+  for (const host of hosts) hostVertices += host.mesh.geometry.getAttribute('position')?.count ?? 0
+  return { vertices, hostVertices }
+}
+
+const once = (kind: 'blast' | 'hammer', run: number, out: string[]) => {
+  planOf('single_storey_a', 1)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physicsLoop(), worldOptions: { chainLinksPerUpdate: 1 }, debris: { workBudget: { budgetMs: 1e6 } } } as Any) as Any
+  room.loadModule(createFloorplanTestModule({ engine, locale: 'en', world: room.world, renderer: room.renderer, house: { document: fakeDocument } } as Any))
+  room.openArea('floorplan_area')
+  const bench = room.bench('floorplan_area')
+  bench.set('package', 'residential'); bench.set('template', 'single_storey_a'); bench.set('seed', 1)
+  bench.act('build')
+  let guard = 0
+  while (!room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1') && guard++ < 2000) room.update(0.05)
+  for (let i = 0; i < 60; i++) room.update(0.05)
+  const r = room.renderer
+  // a split: the size is read before it (as splitUnitsOf does), the time is splitGroup + adoptSplit
+  let pending: { vertices: number; hostVertices: number; objectParts: number; t0: number } | null = null
+  const splitGroup = room.world.splitGroup.bind(room.world)
+  room.world.splitGroup = (id: string, group: number, newId?: string) => {
+    const st = room.world.state(id)
+    const b = r.bounds.get(id)
+    pending = b && st ? { ...sizeOf(b, st.groups[group] ?? []), objectParts: st.parts.length, t0: performance.now() } : null
+    return splitGroup(id, group, newId)
+  }
+  const adopt = r.adoptSplit.bind(r)
+  r.adoptSplit = (from: Any, newId: string) => {
+    try {
+      return adopt(from, newId)
+    } finally {
+      if (pending) out.push(`split,${kind},${run},${(performance.now() - pending.t0).toFixed(3)},${pending.vertices},${pending.hostVertices},${pending.objectParts}`)
+      pending = null
+    }
+  }
+  const spawn = r.spawnFragments.bind(r)
+  r.spawnFragments = (ev: Any, from: number, look: Any) => {
+    const before = r.stats().fragments
+    const t0 = performance.now()
+    try {
+      return spawn(ev, from, look)
+    } finally {
+      out.push(`fragments,${kind},${run},${(performance.now() - t0).toFixed(3)},${r.stats().fragments - before},0,0`)
+    }
+  }
+  const o = room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1').state.position
+  const spot: [number, number, number] = [o[0] - 2.5, 0.6, o[2]]
+  for (let i = 0; i < 10; i++) room.update(0.05)
+  if (kind === 'blast') room.blastAt('c4', spot)
+  else for (let k = 0; k < 12; k++) room.world.hit('house3d:1', { type: 'blunt', point: [spot[0], 0.5 + 0.5 * (k % 4), spot[2] + ((k % 3) - 1) * 0.6], direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' })
+  for (let f = 0; f < 120; f++) room.update(1 / 60)
+}
+
+describe.skipIf(!IS_JOLT)('probe calibrate', () => {
+  it('times each unit of work with its sizes', () => {
+    const out: string[] = []
+    const runs = Number(process.env.RUNS ?? 4)
+    for (const kind of ['blast', 'hammer'] as const) for (let run = 0; run < runs; run++) once(kind, run, out)
+    console.log('[CALIB]\nwork,kind,run,ms,a,b,c\n' + out.join('\n'))
+  })
+})

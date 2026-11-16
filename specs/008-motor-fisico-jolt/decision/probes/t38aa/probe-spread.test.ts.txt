@@ -1,0 +1,97 @@
+// @vitest-environment happy-dom
+// T3.8aa probe: copy to packages/game-floorplan-three/tests/zz-spread.test.ts and run with PIECE_SOLVER=jolt (after `pnpm build` of the changed packages).
+// SPREAD=<ms> turns on RendererOptions.workBudget with that budget (unset: off); WAIT=<frames> its maxWaitFrames; RUNS, FRAMES, KIND (blast|hammer).
+import * as THREE from 'three'
+import { createHash } from 'node:crypto'
+import { describe, it } from 'vitest'
+import { engine } from '@adatechnology/game-floorplan'
+
+import { createTestRoom } from '../../game-test-room/src'
+import { stubRenderer } from '../../game-test-room/tests/helpers'
+import { createFloorplanTestModule } from '../src'
+import { planOf } from './helpers/houses'
+import { fakeDocument } from './helpers/fake-document'
+import { IS_JOLT, physicsLoop } from './setup-physics'
+
+type Any = any // probe only
+const pct = (xs: number[], p: number): number => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * p))]!
+const ACC: Record<string, number> = {}
+const wrap = (obj: Any, name: string, label: string): void => {
+  const f = obj[name].bind(obj)
+  obj[name] = (...a: unknown[]) => {
+    const s0 = performance.now()
+    ACC[label + '#'] = (ACC[label + '#'] ?? 0) + 1
+    try {
+      return f(...a)
+    } finally {
+      ACC[label] = (ACC[label] ?? 0) + performance.now() - s0
+    }
+  }
+}
+const LABELS = ['drain', 'loop', 'stepFixed', 'splitGroup', 'adoptSplit', 'splitGroup#', 'createBody#', 'layStatics', 'sync', 'layGround', 'layTile', 'layTile#', 'setShape', 'layStatics#', 'outOfStatics', 'finish', 'staticSolids', 'staticNow']
+
+const once = (kind: 'blast' | 'hammer', dt: number, frames: number) => {
+  planOf('single_storey_a', 1)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const spread = process.env.SPREAD ? { budgetMs: Number(process.env.SPREAD), ...(process.env.WAIT ? { maxWaitFrames: Number(process.env.WAIT) } : {}) } : undefined
+  const loop = physicsLoop() as Any
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: loop, worldOptions: { chainLinksPerUpdate: 1 }, ...(spread ? { debris: { workBudget: spread } } : {}) } as Any) as Any
+  room.loadModule(createFloorplanTestModule({ engine, locale: 'en', world: room.world, renderer: room.renderer, house: { document: fakeDocument } } as Any))
+  room.openArea('floorplan_area')
+  const b = room.bench('floorplan_area')
+  b.set('package', 'residential'); b.set('template', 'single_storey_a'); b.set('seed', 1)
+  b.act('build')
+  let guard = 0
+  while (!room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1') && guard++ < 2000) room.update(0.05)
+  for (let i = 0; i < 60; i++) room.update(0.05)
+  const eng = room.renderer.pieceSys.engine
+  const queue = room.renderer.deferredQueue()
+  wrap(queue, 'run', 'drain')
+  wrap(loop, 'step', 'loop')
+  wrap(eng.world, 'stepFixed', 'stepFixed')
+  wrap(eng.world, 'createBody', 'createBody')
+  wrap(room.world, 'splitGroup', 'splitGroup')
+  wrap(room.renderer, 'adoptSplit', 'adoptSplit')
+  for (const n of ['layStatics', 'sync', 'layGround', 'layTile', 'outOfStatics', 'finish']) wrap(eng, n, n)
+  wrap(eng.world, 'setShape', 'setShape')
+  for (const n of ['staticSolids', 'staticNow']) if (room.renderer[n]) wrap(room.renderer, n, n)
+  const o = room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1').state.position
+  const spot: [number, number, number] = [o[0] - 2.5, 0.6, o[2]]
+  for (let i = 0; i < 10; i++) room.update(0.05)
+  if (kind === 'blast') room.blastAt('c4', spot)
+  else for (let k = 0; k < 12; k++) room.world.hit('house3d:1', { type: 'blunt', point: [spot[0], 0.5 + 0.5 * (k % 4), spot[2] + ((k % 3) - 1) * 0.6], direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' })
+  const rows: Array<{ f: number; ms: number; stage: number[]; pending: number; pieces: number }> = []
+  for (let f = 0; f < frames; f++) {
+    const before = LABELS.map((l) => ACC[l] ?? 0)
+    const s = performance.now()
+    room.update(dt)
+    const ms = performance.now() - s
+    rows.push({ f, ms, stage: LABELS.map((l, i) => (ACC[l] ?? 0) - before[i]!), pending: queue.pending(), pieces: room.renderer.pieces().length })
+  }
+  const digest = room.renderer.pieces().map((pc: Any) => `${pc.objectId}:${pc.root.position.x.toFixed(3)},${pc.root.position.y.toFixed(3)},${pc.root.position.z.toFixed(3)}`).sort().join(' ')
+  return { rows, digest }
+}
+
+describe.skipIf(!IS_JOLT)('probe spread', () => {
+  for (const kind of (process.env.KIND ? [process.env.KIND] : ['blast', 'hammer']) as Array<'blast' | 'hammer'>)
+    it(kind, () => {
+      const dt = Number(process.env.DT ?? 1 / 60)
+      const frames = Number(process.env.FRAMES ?? 240)
+      const runs = Number(process.env.RUNS ?? 3)
+      for (let r = 0; r < runs; r++) {
+        const { rows, digest } = once(kind, dt, frames)
+        const total = rows.map((x) => x.ms)
+        const physics = rows.map((x) => x.stage[0]! + x.stage[1]!)
+        const lastSplit = Math.max(-1, ...rows.filter((x) => x.stage[5]! > 0).map((x) => x.f))
+        const lastBody = Math.max(-1, ...rows.filter((x) => x.stage[6]! > 0).map((x) => x.f))
+        const settledAt = rows.findIndex((x, i) => i >= lastSplit && x.pending === 0)
+        const splits = rows.reduce((a, x) => a + x.stage[5]!, 0)
+        console.log(`[SPREAD] ${kind} run ${r} budget ${process.env.SPREAD ?? 'off'} | physics p50 ${pct(physics, 0.5).toFixed(2)} p99 ${pct(physics, 0.99).toFixed(2)} max ${Math.max(...physics).toFixed(2)} over5 ${physics.filter((x) => x > 5).length} | frame p50 ${pct(total, 0.5).toFixed(2)} p99 ${pct(total, 0.99).toFixed(2)} max ${Math.max(...total).toFixed(2)} sum ${total.reduce((a, x) => a + x, 0).toFixed(0)} | splits ${splits} lastSplit f${lastSplit} lastBody f${lastBody} queueEmpty f${settledAt} pieces ${rows[rows.length - 1]!.pieces}`)
+        const worst = [...rows].sort((a, x) => x.stage[0]! + x.stage[1]! - a.stage[0]! - a.stage[1]!).slice(0, 8)
+        console.log('[WORST] f total | ' + LABELS.join(' ') + '\n' + worst.map((w) => `f${w.f} ${w.ms.toFixed(1)} | ${w.stage.map((v) => v.toFixed(1)).join(' ')} | pending ${w.pending} pieces ${w.pieces}`).join('\n'))
+        console.log('[HEAD]', rows.slice(0, 30).map((x) => `${(x.stage[0]! + x.stage[1]!).toFixed(0)}/${x.stage[5]}`).join(' '))
+        console.log('[DIGEST]', kind, createHash('md5').update(digest).digest('hex'), digest.split(' ').length)
+      }
+    })
+})
