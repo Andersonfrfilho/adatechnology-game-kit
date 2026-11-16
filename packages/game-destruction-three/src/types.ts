@@ -15,6 +15,7 @@ import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 import type { FragmentLifeRule } from './fragments'
 import type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
+import type { JitWarmUpOptions } from './jit-warmup'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -102,6 +103,13 @@ export interface RendererOptions {
   focus?: () => Vec3
   /** A piece faded away (`blastDebris.far.action: 'fade'`, or over `maxLivePieces`) has left the scene: the host owns its geometry and disposes it here. */
   onDebrisFaded?: (objectId: string, root: THREE_NS.Object3D) => void
+  /**
+   * Run one explosion on a small throwaway wall once, when the first renderer is made, so the code the first real explosion needs (fracture, split, oriented boxes, engine bodies,
+   * the ground under the pieces) is not cold: the first one costs about twice the later ones without it. Off screen, in a world and a renderer of its own, all freed; the game's
+   * state and random streams are not touched. Default on, once per process and engine; `false` turns it off. Give `{ engine }` (the `PhysicsEngine` the host made its world from)
+   * to heat the engine's own paths too; without it the kit's own solver and the code the engines share are what runs.
+   */
+  jitWarmUp?: boolean | JitWarmUpOptions
   /** Upper bound of live particles (default 2500). */
   maxParticles?: number
   /**

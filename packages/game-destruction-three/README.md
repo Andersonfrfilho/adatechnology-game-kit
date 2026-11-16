@@ -153,6 +153,7 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 - Fragments share one box geometry, six shard geometries, six of each wood shape (sliver, broken board, MDF lump, plywood veneer; 20 to 100 triangles each) and one material per source material id and colour; they shrink away instead of fading.
 - Decals share one disc geometry and one material; a mesh keeps at most 48 and the renderer 600.
 - Heat, char and melt are only read for "active" parts (hot, burning, melting) plus a scan of all parts every 0.4 s.
+- The first renderer runs one blast on a small wall off screen, once per engine (`jitWarmUp`, on by default, about 0.4 s at load), so the first real explosion does not run cold (it cost about twice the later ones). A host on an engine passes the engine it made its world from, `jitWarmUp: { engine }`, or only the kit's own solver and the shared code are warmed; `false` turns it off. A warm-up that fails is skipped with one warning: the game starts without it.
 - The explosion light is created on the first explosion (one light in the scene afterwards, intensity 0 at rest) so plan for the one-time shader recompile.
 - Melt assumes upright meshes (it scales the mesh along its own Y).
 - Debris at rest can cost no simulation and few draws; both are opt-in, so a host that sets nothing simulates and draws exactly as before. Over `maxAwakePieces`

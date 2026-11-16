@@ -31,6 +31,7 @@ import { debrisColor, debrisLook, fragmentTone } from '@adatechnology/game-destr
 import { familyPlay, HitPoints } from './debris-events'
 import type { FamilyPlay } from './debris-events'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
+import { warmUpDestructionJit } from './jit-warmup'
 import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
 import { SettlementView } from './settlement'
@@ -324,6 +325,18 @@ const RNG_SEED = 0xc0ffee
 
 /** The renderer this package makes always has its `deferredQueue`; a third-party `DestructionRenderer` may leave it out. */
 export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer & { deferredQueue(): DeferredQueue } {
+  if (options.jitWarmUp !== false) {
+    // the throwaway renderer takes no number of the game's: the first real one is still `destruction-1`
+    const before = rendererCount
+    try {
+      warmUpDestructionJit(THREE, (inner) => new Renderer(THREE, inner), options.jitWarmUp === true ? {} : options.jitWarmUp)
+    } catch (error) {
+      // the warm-up only saves time: the game starts without it
+      warnOnce('game-destruction-three.jit-warm-up-failed', `game-destruction-three skipped the JIT warm-up: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      rendererCount = before
+    }
+  }
   return new Renderer(THREE, options)
 }
 
