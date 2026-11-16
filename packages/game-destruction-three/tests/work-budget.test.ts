@@ -60,14 +60,14 @@ describe('loose groups under the work budget', () => {
     expect(world.splits).toHaveLength(LOOSE)
   })
 
-  it('become pieces one a frame when one split fills the budget, nearest the player first', () => {
-    // the player stands past the far end of the row: part6 is nearest
+  it('become pieces one a frame when one split fills the budget: the first in the frame of the blow, then nearest the player first', () => {
+    // the player stands past the far end of the row: part6 is nearest; the first group of the frame splits in the event, in the world's order
     const { renderer, world, splitParts } = looseRow({ workBudget: ONE_A_FRAME, focus: () => [10, 0, 0] })
     for (let frame = 1; frame <= LOOSE; frame++) {
       renderer.update(FRAME)
       expect(world.splits).toHaveLength(frame)
     }
-    expect(splitParts()).toEqual(['part6', 'part5', 'part4', 'part3', 'part2', 'part1'])
+    expect(splitParts()).toEqual(['part1', 'part6', 'part5', 'part4', 'part3', 'part2'])
     expect(world.state('o1')?.groups).toHaveLength(1)
   })
 
@@ -77,29 +77,34 @@ describe('loose groups under the work budget', () => {
     expect(splitParts()).toEqual(['part1', 'part2', 'part3', 'part4', 'part5', 'part6'])
   })
 
-  it('a budget that holds them all splits every one in the frame of the event', () => {
-    const { renderer, world } = looseRow({ workBudget: { budgetMs: 100 } })
+  it('a budget that holds them all splits every one in the frame of the event, in the same order as without the budget', () => {
+    const { renderer, world, splitParts } = looseRow({ workBudget: { budgetMs: 100 }, focus: () => [10, 0, 0] })
     renderer.update(FRAME)
     expect(world.splits).toHaveLength(LOOSE)
+    const without = looseRow({ eventBudgetMs: Infinity })
+    without.renderer.update(FRAME)
+    expect(splitParts()).toEqual(without.splitParts())
   })
 
   it('a group waiting its turn stays in its object, drawn where it stood', () => {
     const { renderer, root, meshes } = looseRow({ workBudget: ONE_A_FRAME, focus: () => [10, 0, 0] })
     renderer.update(FRAME)
-    // part6 went first; part1 still waits in the object, drawn, under the object's root, where it was
-    expect(meshes.part6!.parent).not.toBe(root)
-    expect(meshes.part1!.parent).toBe(root)
-    expect(meshes.part1!.visible).toBe(true)
-    expect(meshes.part1!.position.x).toBe(1)
+    // part1 split in the frame of the blow; part2 still waits in the object, drawn, under the object's root, where it was
+    expect(meshes.part1!.parent).not.toBe(root)
+    expect(meshes.part2!.parent).toBe(root)
+    expect(meshes.part2!.visible).toBe(true)
+    expect(meshes.part2!.position.x).toBe(2)
     expect(renderer.pieces().length).toBe(1)
   })
 
   it('none waits past maxWaitFrames, whatever the budget', () => {
     const { renderer, world } = looseRow({ workBudget: { ...ONE_A_FRAME, maxWaitFrames: 2 } })
-    // frame 1: one (the queue always moves); frame 2: one; frame 3: the four that waited 2 frames go together
+    // frame 1: one in the event, five queued; frames 2 and 3: one each (the queue always moves); frame 4: the three that waited 2 frames go together
     renderer.update(FRAME)
     renderer.update(FRAME)
     expect(world.splits).toHaveLength(2)
+    renderer.update(FRAME)
+    expect(world.splits).toHaveLength(3)
     renderer.update(FRAME)
     expect(world.splits).toHaveLength(LOOSE)
   })
@@ -120,7 +125,7 @@ describe('loose groups under the work budget', () => {
     const slow = run(50)
     const fast = run(0.05)
     expect(slow).toEqual(fast)
-    // 250 units a frame, 40 for the event and ~100 per split: two in the first frame, then two a frame
+    // 250 units a frame, 40 for the event and ~103 per split: two in the event's frame, then two a frame
     expect(slow[0]).toBe(2)
   })
 

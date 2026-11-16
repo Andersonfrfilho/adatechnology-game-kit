@@ -1063,8 +1063,8 @@ class Renderer implements DestructionRenderer {
   }
 
   /**
-   * One frame under `workBudget`: the fragments left by earlier frames, then every waiting event (its effects show in the frame it happened; it only leaves less of the
-   * budget), then the loose groups whose turn it is. No clock is read. `all` runs everything (a flush).
+   * One frame under `workBudget`: the work earlier frames left (fragments, then the loose groups whose turn it is), then every waiting event (its effects show in the frame
+   * it happened; it only leaves less of the budget; the groups it looses split in it while they fit, `splitWithin`). No clock is read. `all` runs everything (a flush).
    */
   private runWork(work: WorkBudget, all: boolean): number {
     const batch = this.queue.splice(0, this.queue.length)
@@ -1073,8 +1073,9 @@ class Renderer implements DestructionRenderer {
     this.sliceDeadline = all ? Infinity : 0
     let ran = 0
     try {
-      // the work earlier frames left goes first, as without the budget
+      // the work earlier frames left goes first, as without the budget: the fragments, then the loose groups whose turn it is
       ran += this.runSlices(Infinity)
+      ran += this.runSplits(work, all)
       for (const ev of batch) {
         work.take('event', this.workCosts.perEvent)
         try {
@@ -1084,8 +1085,7 @@ class Renderer implements DestructionRenderer {
         }
         ran++
       }
-      if (all) ran += this.runSlices(Infinity)
-      ran += this.runSplits(work, all)
+      if (all) ran += this.runSlices(Infinity) + this.runSplits(work, all)
     } finally {
       this.sliceDeadline = outerDeadline
     }
@@ -2054,7 +2054,7 @@ class Renderer implements DestructionRenderer {
     const loose = st.groups.length - 1
     const torn = [...tearing, ...tornPairsOf(st)]
     if (this.work) {
-      this.queueLoose(b, st, torn)
+      this.splitWithin(this.work, b, st, torn)
       return
     }
     for (let i = 0; i < loose; i++) {
@@ -2112,25 +2112,64 @@ class Renderer implements DestructionRenderer {
     for (let g = 1; g < st.groups.length; g++) {
       const group = st.groups[g]!
       const part = [...group].sort()[0]
-      if (part === undefined || this.splitQueue.has(`${b.id}\0${part}`)) continue
-      if (group.some((id) => this.splitQueue.has(`${b.id}\0${id}`))) continue
-      let vertices = 0
-      const hosts = new Set<HostVis>()
-      const box = this.box.makeEmpty()
-      for (const id of group) {
-        for (const mv of b.parts.get(id)?.meshes ?? []) {
-          vertices += mv.range ? mv.range[1] - mv.range[0] : (mv.mesh.geometry.getAttribute('position')?.count ?? 0)
-          if (mv.host && !mv.loose) hosts.add(mv.host)
-          if (focus) box.union(this.visuals.worldBox(mv, new this.THREE.Box3()))
-        }
-      }
-      let hostVertices = 0
-      for (const host of hosts) hostVertices += host.mesh.geometry.getAttribute('position')?.count ?? 0
-      const centre = box.isEmpty() ? null : box.getCenter(this.v1)
+      if (part === undefined || group.some((id) => this.splitQueue.has(`${b.id}\0${id}`))) continue
+      const units = this.splitUnitsOf(b, group, st.parts.length)
+      const centre = focus ? this.groupCentre(b, group) : null
       const priority = focus && centre ? Math.hypot(centre.x - focus[0], centre.y - focus[1], centre.z - focus[2]) : 0
-      const units = splitWorkUnits(this.workCosts, { vertices, hostVertices, objectParts: st.parts.length })
       this.splitQueue.push({ objectId: b.id, part, torn: torn.map(([first, second]) => [first, second] as const) }, priority, `${b.id}\0${part}`, units)
     }
+  }
+
+  /**
+   * Under `workBudget`, in the event: the loose groups split now, in the world's order, while their units fit (the first of the frame always does, so a blow breaks something
+   * at once); the rest wait in the queue. With room for all of them it is the same work in the same order as without the budget. An object with groups already waiting
+   * keeps its turn in the queue.
+   */
+  private splitWithin(work: WorkBudget, b: Bound, st: ObjectState, torn: ReadonlyArray<readonly [string, string]>): void {
+    const waiting = this.splitQueue.some((entry) => entry.objectId === b.id)
+    let split = 0
+    // the world makes the object anew on each split: its state is read again each time
+    for (let now: ObjectState | null = st; !waiting && now && now.groups.length > 1; now = this.world.state(b.id)) {
+      const units = this.splitUnitsOf(b, now.groups[1]!, now.parts.length)
+      if (!work.tryTake('split', units)) {
+        if (work.spent('split') > 0) break
+        work.take('split', units)
+      }
+      let newId: string
+      try {
+        newId = this.world.splitGroup(b.id, 1)
+      } catch {
+        break
+      }
+      if (newId === b.id) break
+      this.adoptSplit(b, newId)
+      split++
+    }
+    const left = this.world.state(b.id)
+    if (left && left.groups.length > 1) this.queueLoose(b, left, torn)
+    if (split > 0) this.afterSplit(b, torn)
+  }
+
+  /** The units of cutting `group` off `b` (`splitWorkUnits`): its vertices, the merged meshes it leaves, the parts of the object. */
+  private splitUnitsOf(b: Bound, group: readonly string[], objectParts: number): number {
+    let vertices = 0
+    const hosts = new Set<HostVis>()
+    for (const id of group) {
+      for (const mv of b.parts.get(id)?.meshes ?? []) {
+        vertices += mv.range ? mv.range[1] - mv.range[0] : (mv.mesh.geometry.getAttribute('position')?.count ?? 0)
+        if (mv.host && !mv.loose) hosts.add(mv.host)
+      }
+    }
+    let hostVertices = 0
+    for (const host of hosts) hostVertices += host.mesh.geometry.getAttribute('position')?.count ?? 0
+    return splitWorkUnits(this.workCosts, { vertices, hostVertices, objectParts })
+  }
+
+  /** The centre of the drawn boxes of a group's meshes, in the world; null when none is drawn. */
+  private groupCentre(b: Bound, group: readonly string[]): THREE_NS.Vector3 | null {
+    const box = this.box.makeEmpty()
+    for (const id of group) for (const mv of b.parts.get(id)?.meshes ?? []) box.union(this.visuals.worldBox(mv, new this.THREE.Box3()))
+    return box.isEmpty() ? null : box.getCenter(this.v1)
   }
 
   /** The loose groups whose turn it is this frame become pieces; each object they came off is measured again once after its batch. Returns how many split. */

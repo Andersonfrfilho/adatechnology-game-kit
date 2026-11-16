@@ -142,6 +142,11 @@ export class WorkQueue<TItem> {
     return this.entries.some((entry) => entry.key === key)
   }
 
+  /** Whether any waiting item passes `test`. */
+  some(test: (item: TItem) => boolean): boolean {
+    return this.entries.some((entry) => test(entry.item))
+  }
+
   /** Drops what `drop` says (work that no longer exists). */
   remove(drop: (item: TItem) => boolean): void {
     this.entries = this.entries.filter((entry) => !drop(entry.item))
