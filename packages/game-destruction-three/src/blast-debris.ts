@@ -111,9 +111,16 @@ export type DebrisCostOptions =
   | { readonly source: 'fixed' }
   | { readonly source: 'replay'; readonly samples: readonly DebrisCostSample[] }
 
+/** One push of a blast waiting its turn, as data (never a closure), so a save in the middle of a blast keeps it: the piece, the impulse and where it lands. */
+export interface BlastWake {
+  readonly objectId: string
+  readonly impulse: readonly [number, number, number]
+  readonly point: readonly [number, number, number]
+}
+
 /** The debris waiting to wake: one queue for every blast in flight, nearest the player first. */
 export class BlastWakes {
-  private readonly queue: WakeQueue<() => void>
+  private readonly queue: WakeQueue<BlastWake>
 
   constructor(options: ResolvedBlastDebris) {
     this.queue = new WakeQueue({ costTargetMs: options.wakeCostTargetMs, maxDelay: options.maxWakeDelay, maxQueued: options.maxQueuedWakes, minPerFrame: options.minWakesPerFrame })
@@ -123,14 +130,14 @@ export class BlastWakes {
     return this.queue.size
   }
 
-  push(priority: number, apply: () => void, maxDelay: number): void {
-    this.queue.push(priority, apply, maxDelay)
+  push(priority: number, wake: BlastWake, maxDelay: number): void {
+    this.queue.push(priority, wake, maxDelay)
   }
 
-  /** One frame: wakes what the cost leaves room for (at most `limit`, what a shared work budget leaves) and returns how many woke. */
-  advance(dt: number, lastStepMs: number, costPerBodyMs: number, limit = Infinity): number {
-    const woken = this.queue.release(dt, lastStepMs, costPerBodyMs, limit)
-    for (const apply of woken) apply()
+  /** One frame: hands `apply` what the cost leaves room for (at most `limit`, what a shared work budget leaves) and returns how many woke. */
+  advance(options: { readonly dt: number; readonly lastStepMs: number; readonly costPerBodyMs: number; readonly limit?: number; readonly apply: (wake: BlastWake) => void }): number {
+    const woken = this.queue.release(options.dt, options.lastStepMs, options.costPerBodyMs, options.limit ?? Infinity)
+    for (const wake of woken) options.apply(wake)
     return woken.length
   }
 
@@ -138,12 +145,12 @@ export class BlastWakes {
     this.queue.clear()
   }
 
-  /** The waiting pieces' priority, delay and `apply` (the host keeps what `apply` stands for saveable). */
-  saveState(): WakeQueueState<() => void> {
+  /** The waiting pushes with their priority and delay: plain data. */
+  saveState(): WakeQueueState<BlastWake> {
     return this.queue.saveState()
   }
 
-  restoreState(state: WakeQueueState<() => void>): void {
+  restoreState(state: WakeQueueState<BlastWake>): void {
     this.queue.restoreState(state)
   }
 }

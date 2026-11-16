@@ -9,7 +9,7 @@ import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
-import type { DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
+import type { BlastWake, DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -2559,10 +2559,10 @@ class Renderer implements DestructionRenderer {
     // with a debris policy the shove waits its turn in the wake queue (nearest the player first, else the centre), sized by the measured step cost: not the whole pile in the blast's frame
     const policy = this.blastDebris ? resolveBlastDebris(this.o.blastDebris, options.debris) : null
     const focus = this.o.focus?.()
-    const reach = (distance: number, apply: () => void, at: Vec3): void => {
-      if (!policy || !this.blastWakes) return apply()
+    const reach = (distance: number, wake: BlastWake, at: Vec3): void => {
+      if (!policy || !this.blastWakes) return this.applyWake(wake)
       const priority = focus ? Math.hypot(at[0] - focus[0], at[1] - focus[1], at[2] - focus[2]) : distance
-      this.blastWakes.push(priority, apply, policy.maxWakeDelay)
+      this.blastWakes.push(priority, wake, policy.maxWakeDelay)
     }
     // the wave presses on the whole face it meets, so the push has no lever arm beyond the thinnest side of the body: a thin long piece (a shovel) is not spun by it
     const shove = (pc: PieceBody): void => {
@@ -2576,9 +2576,7 @@ class Renderer implements DestructionRenderer {
       const momentum = hit.speed * pc.mass
       const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
       const point: Vec3 = [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread]
-      reach(distance, () => {
-        if (this.pieceSys.get(pc.objectId) === pc) this.pieceSys.impulse(pc, impulse, point)
-      }, [c.x, c.y, c.z])
+      reach(distance, { objectId: pc.objectId, impulse, point }, [c.x, c.y, c.z])
     }
     for (const pc of [...this.pieceSys.list]) shove(pc)
     if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf, policy, reach)
@@ -2669,7 +2667,7 @@ class Renderer implements DestructionRenderer {
    * policy, how many enter physics is the count the measured cost allows (`physicsPieceCount`): every big one, then the nearest chips while there is room; the chips left
    * over stay where they stand (nothing invisible collides, nothing drawn is taken away) and the blast throws visual chips there instead.
    */
-  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number, policy: ResolvedBlastDebris | null, reach: (distance: number, apply: () => void, at: Vec3) => void): void {
+  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string, at: Vec3) => number, policy: ResolvedBlastDebris | null, reach: (distance: number, wake: BlastWake, at: Vec3) => void): void {
     const shoveable = this.o.shoveable
     if (!shoveable) return
     const candidates: Array<{ b: Bound; world: THREE_NS.Vector3; half: Vec3; mass: number; hit: { direction: Vec3; speed: number }; size: number; distance: number }> = []
@@ -2698,9 +2696,7 @@ class Renderer implements DestructionRenderer {
       const momentum = hit.speed * mass
       const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
       const at: Vec3 = [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread]
-      reach(distance, () => {
-        if (this.pieceSys.get(b.id) === body) this.pieceSys.impulse(body, impulse, at)
-      }, [world.x, world.y, world.z])
+      reach(distance, { objectId: b.id, impulse, point: at }, [world.x, world.y, world.z])
     }
     for (const { world, hit } of chips) this.vfx.burst('chips', [world.x, world.y, world.z], hit.direction, 4, Math.min(6, hit.speed))
   }
@@ -2721,8 +2717,14 @@ class Renderer implements DestructionRenderer {
     const work = this.work
     // under the work budget the wakes draw what the frame's other work left (the cost still sizes the batch below it)
     const limit = work ? work.fits(this.workCosts.perWake) : Infinity
-    const woken = this.blastWakes.advance(dt, this.cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs, limit)
+    const woken = this.blastWakes.advance({ dt, lastStepMs: this.cost?.stepMs ?? 0, costPerBodyMs: this.costMeter.wakeCostPerBodyMs, limit, apply: this.applyWake })
     work?.take('wake', woken * this.workCosts.perWake)
+  }
+
+  /** A blast's push reaching its piece: the piece the object is now (a piece removed or faded since takes nothing). */
+  private readonly applyWake = (wake: BlastWake): void => {
+    const piece = this.pieceSys.get(wake.objectId)
+    if (piece) this.pieceSys.impulse(piece, [wake.impulse[0], wake.impulse[1], wake.impulse[2]], [wake.point[0], wake.point[1], wake.point[2]])
   }
 
   /** Awake bodies in the physics world (what a blast's debris adds to). */
