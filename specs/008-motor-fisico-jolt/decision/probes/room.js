@@ -11,6 +11,19 @@
   b.set('package', 'residential'); b.set('template', 'single_storey_a'); b.set('seed', 1)
   b.act('build')
   await wait(8000)
+  // every variant from the same state (as tools/gpu/room-explosion.mjs): the loose groups the build leaves in the house (poles, mailbox, shower door, wiring) become pieces now
+  // by the renderer's own split, no event, nothing damaged; without workBudget they used to split at the blast and count as its pieces, with it they split when the house was bound
+  const presplit = (() => {
+    const groupsOf = () => (r.world.state('house3d:1') || { groups: [] }).groups
+    const before = groupsOf(), piecesBefore = r.renderer.pieces().length
+    r.renderer.splitLoose('house3d:1')
+    r.renderer.deferredQueue().flush()
+    const after = groupsOf(), made = r.renderer.pieces().length - piecesBefore
+    if (after.length !== 1 || (after[0] || []).length !== (before[0] || []).length || made !== before.length - 1) throw new Error(`room.js: presplit changed more than the loose groups (groups ${before.length} -> ${after.length}, pieces made ${made})`)
+    return made
+  })()
+  // the pieces just made settle under the page's own loop, as the house did
+  if (presplit > 0) await wait(8000)
   window.requestAnimationFrame = () => 0
   await wait(300)
   const THREE = r.camera.position.constructor
@@ -234,5 +247,5 @@
   const quality = (() => { const out = {}; for (const p of r.renderer.pieces()) { if (base.has(p.objectId) || p.mass < 500) continue; const link = glue.links.get(glue.byObject.get(p.objectId)); if (link) out[p.objectId] = glue.world.bi.GetMotionQuality(glue.world.entry(link.id).id) } return out })()
   const oldC3 = Math.max(0, ...[...lifts.values()].map(e => e.total - e.givenPart))
   const oldC1 = rulerWithoutR3.result()
-  return { before: { c1Excess: oldC1.c1Excess, c1Violations: oldC1.c1Violations, c3LiftWithoutR1: oldC3 }, motionQuality: quality, discrete: DISCRETE, kitOps: kitOps.filter(o => o.u >= (KIND === 'blast' ? 10 : 20) && (o.op !== 'setPose' || Math.abs(o.dy) > 3) && (o.op !== 'setVelocity' || o.d > 0.3)).slice(0, 80), kitOpsTotal: kitOps.length, fixedGain: fixedGain.sort((a, b) => b.gain - a.gain).slice(0, 6), fixedSteps: fixedLog.length, c3Offenders: c3List, overPieces, worstIsland, kitEnergy: { updatesWithKitEnergy: kitEnergy.shoves, kgm: +kitEnergy.kgm.toFixed(1) }, kind: KIND, islands: graph ? 'contact graph' : 'bounding spheres', n: pieces.length, asleep: pieces.filter(p => p.sleeping).length, c2Limit: EnergyRuler.C2_LIMIT, ...ruler.result(), worstRises: steps.sort((a, b) => b.rise - a.rise).slice(0, 8), risingSteps: steps.length, frameMs: { p50: +times[110].toFixed(2), p99: +times[Math.floor(times.length * 0.99)].toFixed(2), max: +times[times.length - 1].toFixed(2), wakeFrame: +wakeFrameMs.toFixed(2) } }
+  return { piecesEnd: r.renderer.pieces().length, presplit, before: { c1Excess: oldC1.c1Excess, c1Violations: oldC1.c1Violations, c3LiftWithoutR1: oldC3 }, motionQuality: quality, discrete: DISCRETE, kitOps: kitOps.filter(o => o.u >= (KIND === 'blast' ? 10 : 20) && (o.op !== 'setPose' || Math.abs(o.dy) > 3) && (o.op !== 'setVelocity' || o.d > 0.3)).slice(0, 80), kitOpsTotal: kitOps.length, fixedGain: fixedGain.sort((a, b) => b.gain - a.gain).slice(0, 6), fixedSteps: fixedLog.length, c3Offenders: c3List, overPieces, worstIsland, kitEnergy: { updatesWithKitEnergy: kitEnergy.shoves, kgm: +kitEnergy.kgm.toFixed(1) }, kind: KIND, islands: graph ? 'contact graph' : 'bounding spheres', n: pieces.length, asleep: pieces.filter(p => p.sleeping).length, c2Limit: EnergyRuler.C2_LIMIT, ...ruler.result(), worstRises: steps.sort((a, b) => b.rise - a.rise).slice(0, 8), risingSteps: steps.length, frameMs: { p50: +times[110].toFixed(2), p99: +times[Math.floor(times.length * 0.99)].toFixed(2), max: +times[times.length - 1].toFixed(2), wakeFrame: +wakeFrameMs.toFixed(2) } }
 })()

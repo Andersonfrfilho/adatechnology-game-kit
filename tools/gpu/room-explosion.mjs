@@ -43,7 +43,7 @@ const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
 /** The stages of the worst-frames table (ROOM_EXPLOSION_STAGE_*): each is the time spent in the method itself, without the stages it calls (`other` is the rest of the update). */
 export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'createBody', 'layGround', 'layTile', 'waterAt', 'ripple', 'joltStep', 'bridgeReads', 'readBack']
-export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', jolt: '&solver=jolt', own: '' })
+export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', 'jolt-d4-budget': '&solver=jolt&blastDebris=1&workBudget=4', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
 /** The kinds of explosion one round fires. */
@@ -52,7 +52,7 @@ export const ROOM_EXPLOSION_KINDS = /** @type {const} */ (['blast', 'hammer', 'c
 export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 
 /**
- * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number }} Round
+ * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number, piecesEnd: number, presplit: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number, framep50: number, framep99: number, framemax: number }} Cell
  * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number> }} StageFrame
  */
@@ -64,10 +64,31 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
  */
 async function inPage(job) {
   /** @typedef {{ objectId: string }} Piece */
-  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void }, advanceWakes?: (dt: number) => void }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): { finish?: () => void } }, scene: object, applyCamera?: () => () => void, update(dt: number): void }} Room */
-  const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[] } }} */ (/** @type {unknown} */ (window))
+  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, state(id: string): { groups: string[][] } | null, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], deferredQueue?: () => { flush(): void }, pieceSys: { update(dt: number): void }, advanceWakes?: (dt: number) => void }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): { finish?: () => void } }, scene: object, applyCamera?: () => () => void, update(dt: number): void }} Room */
+  const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[], presplit: number } }} */ (/** @type {unknown} */ (window))
   const room = host.__testRoom
   const wait = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
+  /**
+   * Every variant from the same state: the loose groups the build leaves in the house (the lot's poles, the mailbox, a shower door, wiring) become pieces now. Without
+   * `workBudget` the renderer splits them only at the first event on the house, so they used to split inside the timed window; with it they split when the house is bound.
+   * The renderer's own split (what a detach runs), no event: nothing is damaged, only the loose groups leave the house. Returns how many pieces it made.
+   */
+  const presplitHouse = () => {
+    const groupsOf = () => room.world.state('house3d:1')?.groups ?? []
+    const before = groupsOf()
+    const piecesBefore = room.renderer.pieces().length
+    const renderer = /** @type {{ splitLoose?: (id: string) => void }} */ (/** @type {unknown} */ (room.renderer))
+    if (typeof renderer.splitLoose !== 'function') throw new Error('room-explosion: the renderer has no splitLoose')
+    renderer.splitLoose('house3d:1')
+    room.renderer.deferredQueue?.().flush()
+    const after = groupsOf()
+    const made = room.renderer.pieces().length - piecesBefore
+    // the house keeps exactly its fixed group, and each loose group became one piece
+    if (after.length !== 1 || after[0]?.length !== before[0]?.length || made !== before.length - 1) {
+      throw new Error(`room-explosion: presplit changed more than the loose groups (groups ${before.length} -> ${after.length}, fixed parts ${before[0]?.length} -> ${after[0]?.length}, pieces made ${made})`)
+    }
+    return made
+  }
   if (job.stage === 'prepare') {
     room.openArea('floorplan_area')
     const bench = room.bench('floorplan_area')
@@ -76,13 +97,16 @@ async function inPage(job) {
     bench.set('seed', 1)
     bench.act('build')
     await wait(8000)
+    const house = room.world.serialize().objects.find((object) => object.id === 'house3d:1')
+    if (!house) throw new Error('room-explosion: house3d:1 is not in the world after the build')
+    const presplit = presplitHouse()
+    // the pieces just made settle under the page's own loop, as the house did
+    await wait(presplit > 0 ? 8000 : 0)
     // the page's own loop would call update again between ours: stopped, the probe is the only caller
     window.requestAnimationFrame = () => 0
     await wait(300)
-    const house = room.world.serialize().objects.find((object) => object.id === 'house3d:1')
-    if (!house) throw new Error('room-explosion: house3d:1 is not in the world after the build')
     const [x = 0, , z = 0] = house.state.position
-    host.__roomExplosion = { spot: [x - 2.5, 0.6, z] }
+    host.__roomExplosion = { spot: [x - 2.5, 0.6, z], presplit }
     if (job.weather !== 'none') {
       // the weather module is attached at load: its bench takes the state at once, and its frame callback runs inside room.update
       const weather = room.bench('weather_area')
@@ -174,6 +198,7 @@ async function inPage(job) {
     stage('rebuildHost', renderer.visuals, 'rebuildHost')
     stage('createBody', world, 'createBody')
     stage('layGround', glue, 'layGround')
+    stage('layGround', glue, 'layGroundWithin')
     stage('layTile', glue, 'layTile')
     stage('waterAt', room.terrain, 'waterAt')
     stage('ripple', room.terrain, 'ripple')
@@ -223,7 +248,7 @@ const median = (values) => percentile([...values].sort((a, b) => a - b), 0.5)
 /** @param {number} value */
 const round2 = (value) => Math.round(value * 100) / 100
 
-/** @param {number[][]} frames @param {number} load @returns {Round} */
+/** @param {number[][]} frames @param {number} load @returns {Omit<Round, 'piecesEnd' | 'presplit'>} */
 function summarise(frames, load) {
   // frame 0 is the wake frame: reported apart, out of the percentiles (B6 of spec 008)
   const rest = frames.slice(1).map((frame) => frame[0] ?? 0).sort((a, b) => a - b)
@@ -356,7 +381,11 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered, ...(stageLabels ? { stageLabels } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
       if (!timings) throw new Error('no timings')
-      return { timings, load }
+      const pieces = await page.evaluate(() => {
+        const host = /** @type {{ __testRoom: { renderer: { pieces(): unknown[] } }, __roomExplosion?: { presplit: number } }} */ (/** @type {unknown} */ (window))
+        return { piecesEnd: host.__testRoom.renderer.pieces().length, presplit: host.__roomExplosion?.presplit ?? 0 }
+      }, null)
+      return { timings, load, ...pieces }
     } finally {
       await page.close()
     }
@@ -365,10 +394,10 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   for (let round = 1; round <= rounds; round++) {
     for (const variant of variants) for (const throttle of throttles) for (const kind of kinds) {
       try {
-        const { timings, load } = await measureOne(variant, throttle, kind)
-        const summary = summarise(timings, load)
+        const { timings, load, piecesEnd, presplit } = await measureOne(variant, throttle, kind)
+        const summary = { ...summarise(timings, load), piecesEnd, presplit }
         collected.set(key(variant, throttle, kind), [...(collected.get(key(variant, throttle, kind)) ?? []), summary])
-        console.log(`room-explosion: round ${round} ${variant} ${throttle}x ${kind}: p50 ${summary.p50} p99 ${summary.p99} max ${summary.max} (wake ${summary.wakeFrame}) over5 ${summary.over5} load ${summary.load}`)
+        console.log(`room-explosion: round ${round} ${variant} ${throttle}x ${kind}: p50 ${summary.p50} p99 ${summary.p99} max ${summary.max} (wake ${summary.wakeFrame}) over5 ${summary.over5} pieces ${summary.piecesEnd} (presplit ${summary.presplit}) load ${summary.load}`)
         if (summary.load >= QUIET_LOAD) console.log(`room-explosion: load ${summary.load} is over ${QUIET_LOAD}: this round reads slower than a quiet machine`)
       } catch (error) {
         errors.push(`${variant} ${throttle}x ${kind}: ${error instanceof Error ? error.message : String(error)}`)
