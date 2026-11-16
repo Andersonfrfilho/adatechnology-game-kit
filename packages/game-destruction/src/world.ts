@@ -15,6 +15,7 @@ import {
   spanMoment, spanOf, tensionSteel,
 } from './flexure'
 import type { BendGeometry } from './flexure'
+import { buriedTransmission } from './buried-charge'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
@@ -4641,9 +4642,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const cfg = blastCfg(call)
     const charge = call?.charge ?? options.blast?.charge
+    // a charge under the ground spends most of its energy in the soil: the structures feel only what comes out
+    const transmitted = buriedTransmission((options.groundHeight ?? 0) - point[1], energy)
+    if (transmitted < 1) {
+      energy *= transmitted
+      radius *= Math.cbrt(transmitted)
+    }
     const outer = blastTntPerJoule
     const outerFireball = blastFireball
-    blastTntPerJoule = charge?.tnt !== undefined && energy > 0 ? charge.tnt / energy : TNT_PER_JOULE
+    blastTntPerJoule = charge?.tnt !== undefined && energy > 0 ? (charge.tnt * transmitted) / energy : TNT_PER_JOULE
     blastFireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * blastTntPerJoule)
     try {
       // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
