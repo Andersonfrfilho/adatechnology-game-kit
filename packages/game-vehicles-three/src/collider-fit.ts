@@ -1,5 +1,5 @@
 import type { DrawnCollider } from '@adatechnology/game-contracts'
-import { fitOrientedBox, hugs } from '@adatechnology/game-shapes'
+import { fitOrientedBox, fitOrientedBoxes, hugs } from '@adatechnology/game-shapes'
 import type { OrientedBox } from '@adatechnology/game-shapes'
 
 /** A box fits a drawn piece when each of its eight corners has a vertex within this (m): the same rule as the fixed things of `game-destruction-three`. */
@@ -128,6 +128,9 @@ const tightened = (points: readonly number[], box: OrientedBox): OrientedBox => 
   return { center, half, rotation: box.rotation }
 }
 
+/** Whether the SDK fit (`fitOrientedBoxes`, which reads the surface between the vertices) holds the drawing in one box: a box with a vertex at each corner can still be mostly air inside (a ring, a frame, an X). */
+const isOneBox = (soup: Soup): boolean => fitOrientedBoxes(soup.vertices, soup.indices).length <= 1
+
 /** The box that holds the soup: axis-aligned in the frame where that fits, else along its principal axes where that fits, else the triangles with the box around them. */
 export const colliderOf = (id: string, key: string, soup: Soup): DrawnCollider | null => {
   const points = soup.vertices
@@ -144,9 +147,9 @@ export const colliderOf = (id: string, key: string, soup: Soup): DrawnCollider |
   const center: [number, number, number] = [(low[0]! + high[0]!) / 2, (low[1]! + high[1]!) / 2, (low[2]! + high[2]!) / 2]
   const half: [number, number, number] = [(high[0]! - low[0]!) / 2, (high[1]! - low[1]!) / 2, (high[2]! - low[2]!) / 2]
   const held = half.map((h) => Math.max(MIN_HALF, h)) as [number, number, number]
-  if (hugs(points, { center, half, axes: IDENTITY_AXES, tolerance: [FIT, FIT, FIT] })) return { id, key, center, half: held, rotation: [0, 0, 0, 1] }
+  if (hugs(points, { center, half, axes: IDENTITY_AXES, tolerance: [FIT, FIT, FIT] }) && isOneBox(soup)) return { id, key, center, half: held, rotation: [0, 0, 0, 1] }
   const turned = fitOrientedBox(points)
-  if (turned && hugs(points, { center: turned.center, half: turned.half, axes: axesOf(turned.rotation), tolerance: [FIT, FIT, FIT] })) return { id, key, ...tightened(points, turned) }
+  if (turned && hugs(points, { center: turned.center, half: turned.half, axes: axesOf(turned.rotation), tolerance: [FIT, FIT, FIT] }) && isOneBox(soup)) return { id, key, ...tightened(points, turned) }
   const coarse = soup.indices.length / 3 > COARSEN_ABOVE ? coarsen(soup) : soup
   const kept = coarse.indices.length >= COARSE_MIN_TRIANGLES * 3 ? coarse : soup
   return { id, key, center, half: held, rotation: [0, 0, 0, 1], mesh: { vertices: new Float32Array(kept.vertices), indices: new Uint32Array(kept.indices) } }
