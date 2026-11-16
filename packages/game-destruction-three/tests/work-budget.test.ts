@@ -77,7 +77,7 @@ describe('the work budget defaults (spec 008, evidence T3.8aa)', () => {
     expect(DEFAULT_WORK_BUDGET_MS).toBe(4)
     expect(DEFAULT_WORK_UNITS_PER_MS).toBe(100)
     expect(DEFAULT_MAX_WAIT_FRAMES).toBe(12)
-    expect(WORK_UNIT_DEFAULTS).toEqual({ perSplit: 120, perVertex: 0.05, perHostVertex: 0.01, perObjectPart: 0.3, perFragment: 4, perEvent: 40, perWake: 2 })
+    expect(WORK_UNIT_DEFAULTS).toEqual({ perSplit: 120, perVertex: 0.05, perHostVertex: 0.01, perObjectPart: 0.3, perFragment: 4, perEvent: 40, perWake: 2, perTile: 5, perTileRead: 150, perBody: 10 })
     expect(resolveWorkUnitCosts({ perSplit: 7 }).perSplit).toBe(7)
     expect(resolveWorkUnitCosts({ perSplit: 7 }).perVertex).toBe(WORK_UNIT_DEFAULTS.perVertex)
     // a split is charged by the size of its work: 120 + 0.05 × 1000 vertices + 0.01 × 2000 host vertices + 0.3 × 10 parts
@@ -144,7 +144,7 @@ describe('loose groups under the work budget', () => {
     const run = (msPerCall: number): number[] => {
       let now = 0
       vi.spyOn(performance, 'now').mockImplementation(() => (now += msPerCall))
-      const { renderer, world } = looseRow({ workBudget: { budgetMs: 2.5, costs: { perSplit: 100 } }, focus: () => [10, 0, 0] })
+      const { renderer, world } = looseRow({ workBudget: { budgetMs: 2.5, costs: { perSplit: 100, perBody: 0 } }, focus: () => [10, 0, 0] })
       const counts: number[] = []
       for (let frame = 0; frame < LOOSE; frame++) {
         renderer.update(FRAME)
@@ -160,6 +160,17 @@ describe('loose groups under the work budget', () => {
     expect(slow[0]).toBe(2)
   })
 
+  it('a split needs room for the body its piece gets: with 100 units of body each, one split in the event frame where two fit without', () => {
+    const firstFrame = (perBody: number): number => {
+      const { renderer, world } = looseRow({ workBudget: { budgetMs: 2.5, costs: { perSplit: 100, perBody } }, focus: () => [10, 0, 0] })
+      renderer.update(FRAME)
+      return world.splits.length
+    }
+    // 250 units, 40 for the event: ~103 + 100 for the first leaves 7 free, the second does not fit
+    expect(firstFrame(0)).toBe(2)
+    expect(firstFrame(100)).toBe(1)
+  })
+
   it('a flush splits everything still waiting', () => {
     const { renderer, world } = looseRow({ workBudget: ONE_A_FRAME })
     renderer.deferredQueue().flush()
@@ -168,7 +179,7 @@ describe('loose groups under the work budget', () => {
 
   it('a tier twice as slow holds half the units: the same groups take twice the frames', () => {
     const frames = (tier: number): number => {
-      const { renderer, world } = looseRow({ workBudget: { budgetMs: 4, tier, costs: { perSplit: 190, perEvent: 0 } } })
+      const { renderer, world } = looseRow({ workBudget: { budgetMs: 4, tier, costs: { perSplit: 190, perEvent: 0, perBody: 0 } } })
       let n = 0
       while (world.splits.length < LOOSE && n < 50) {
         renderer.update(FRAME)

@@ -6,6 +6,7 @@ import { clamp } from './math'
 import { boxesAlongGround, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
+import type { GroundGateState, GroundWork } from './engine-ground-gate'
 import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import { resolvePhysics } from './physics-option'
@@ -63,6 +64,8 @@ export interface PieceSystemOptions {
   physics: PiecePhysics
   /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
   staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
+  /** Engine only: the frame budget the ground under the pieces and their bodies draw from (`RendererOptions.workBudget`, `GroundGate`). Default none: all laid at once, as before. */
+  work?: GroundWork
 }
 
 /** Slower than this (m/s) into a wall a piece only stops against it: no blow, no sound. */
@@ -331,6 +334,7 @@ export class PieceSystem {
           onKnock: o.onKnock,
           onHardLanding: o.onHardLanding,
           ...(o.tilesUnderParts ? { tilesUnderParts: true } : {}),
+          ...(o.work ? { work: o.work } : {}),
         })
       : null
     if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)
@@ -377,6 +381,15 @@ export class PieceSystem {
         'rules',
       ),
     )
+  }
+
+  /** The pieces held for their ground under the work budget and how long each has waited, as data (`GroundGate`); empty without it or without an engine. */
+  saveGroundWaits(): GroundGateState {
+    return this.engine?.saveGroundWaits() ?? []
+  }
+
+  restoreGroundWaits(state: GroundGateState): void {
+    this.engine?.restoreGroundWaits(state)
   }
 
   /** Takes the system's phases out of the loop it was handed. */

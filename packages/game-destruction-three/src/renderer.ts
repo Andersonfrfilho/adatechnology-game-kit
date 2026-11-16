@@ -8,6 +8,7 @@ import type { VfxWorld } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
+import type { FollowUpWork } from '@adatechnology/game-physics'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
 import type { BlastWake, DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
 import { FragmentSystem } from './fragments'
@@ -407,6 +408,8 @@ class Renderer implements DestructionRenderer {
   private workFocus: Vec3 | undefined
   /** The `WorkBudget` frame an event last split a group in: the first one of a frame goes over the budget, so a blow breaks something at once. */
   private eventSplitFrame = -1
+  /** Whether this frame's budget has begun (`openWorkFrame`): with a physics loop the engine draws from it before `update`. */
+  private workFrameOpen = false
   /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
   private readonly fittedBoxes = new Map<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
   /** Objects whose ranged parts are still to be fitted ahead of the blow that breaks them, a part per step, only with time left in the frame. */
@@ -532,6 +535,7 @@ class Renderer implements DestructionRenderer {
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
       ...(o.tilesUnderParts ? { tilesUnderParts: true } : {}),
+      ...(this.work ? { work: { budget: this.work, costs: this.workCosts, ...(o.focus ? { focus: o.focus } : {}), openFrame: () => this.openWorkFrame() } } : {}),
       ...(this.blastDebris
         ? { keep: { maxLive: this.blastDebris.maxLivePieces, far: this.blastDebris.far, ...(o.focus ? { focus: o.focus } : {}), onFade: (b: PieceBody) => this.fadePiece(b) } }
         : {}),
@@ -1038,7 +1042,7 @@ class Renderer implements DestructionRenderer {
     if (this.disposed) return
     dt = clamp(dt, 0, 0.1)
     this.time += dt
-    this.work?.beginFrame()
+    this.openWorkFrame()
     if (!this.attached) this.drainQueue()
     this.checkBroken()
     for (const b of this.bounds.values()) b.onFrame?.(dt)
@@ -1059,6 +1063,14 @@ class Renderer implements DestructionRenderer {
     this.ownVfx?.update(dt)
     this.syncTransforms()
     this.settledBatches.update(dt, () => this.restingDebris())
+    this.workFrameOpen = false
+  }
+
+  /** Begins the work budget's frame once: in `update`, or before it when the engine prepares its step first (a physics loop the host steps). */
+  private openWorkFrame(): void {
+    if (this.workFrameOpen) return
+    this.workFrameOpen = true
+    this.work?.beginFrame()
   }
 
   /** An event of the object (a blow, fire, char): its meshes leave the batches before it is drawn (`SettledBatches.release`). */
@@ -2192,7 +2204,7 @@ class Renderer implements DestructionRenderer {
       const units = this.splitUnitsOf(b, group, st.parts.length)
       const centre = focus ? this.groupCentre(b, group) : null
       const priority = focus && centre ? Math.hypot(centre.x - focus[0], centre.y - focus[1], centre.z - focus[2]) : 0
-      this.splitQueue.push({ objectId: b.id, parts, torn: torn.map(([first, second]) => [first, second] as const) }, priority, `${b.id}\0${parts[0]}`, units)
+      this.splitQueue.push({ objectId: b.id, parts, torn: torn.map(([first, second]) => [first, second] as const) }, priority, `${b.id}\0${parts[0]}`, units, this.pieceBody())
     }
   }
 
@@ -2223,9 +2235,10 @@ class Renderer implements DestructionRenderer {
       // the world makes the object anew on each split: its state is read again each time
       for (let now: ObjectState | null = st; !waiting && now && now.groups.length > 1; now = this.world.state(b.id)) {
         const units = this.splitUnitsOf(b, now.groups[1]!, now.parts.length)
-        if (!work.tryTake('split', units)) {
+        if (!work.tryTake('split', units, this.pieceBody())) {
           if (this.eventSplitFrame === work.frame) return
           work.take('split', units)
+          work.reserve(this.pieceBody())
         }
         let newId: string
         try {
@@ -2242,6 +2255,11 @@ class Renderer implements DestructionRenderer {
     const left = this.world.state(b.id)
     if (left && left.groups.length > 1) this.queueLoose(b, left, torn, this.workFocus)
     if (split > 0) this.afterSplit(b, torn)
+  }
+
+  /** The engine body the piece a split makes gets later in the frame: reserved with the split, taken when it is made (`EnginePieces`). */
+  private pieceBody(): FollowUpWork {
+    return { kind: 'body', units: this.workCosts.perBody }
   }
 
   /** The units of cutting `group` off `b` (`splitWorkUnits`): its vertices, the merged meshes it leaves, the parts of the object. */

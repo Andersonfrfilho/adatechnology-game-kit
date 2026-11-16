@@ -177,6 +177,12 @@ export interface WorkUnitCosts {
   readonly perEvent?: number
   /** Units per body woken from the blast's wake queue. */
   readonly perWake?: number
+  /** Units per tile of ground laid under the pieces that the terrain's bounds prove level (a slab body, no samples read). */
+  readonly perTile?: number
+  /** Units more per tile of ground that is not proved level: its samples read, its height field and the solid under it made (a crater, steps). */
+  readonly perTileRead?: number
+  /** Units per engine body made for a piece (a split reserves one for the piece it makes). */
+  readonly perBody?: number
 }
 
 /** The frame budget of the explosion's work (`RendererOptions.workBudget`): the budget, the machine's tier, the frames a loose group may wait, and the unit costs. */
@@ -184,7 +190,11 @@ export interface ExplosionWorkOptions extends WorkBudgetOptions {
   readonly costs?: WorkUnitCosts
 }
 
-/** First calibration on the main of 2026-11-15 (evidence T3.8aa); to be measured again on top of the box fits ahead, the batched bodies and the ground budget. */
+/**
+ * First calibration on the main of 2026-11-15 (evidence T3.8aa); to be measured again on top of the box fits ahead, the batched bodies and the ground budget. `perTile`,
+ * `perTileRead` and `perBody` are first estimates, not measured as units yet (to be calibrated): a level tile about 50 µs, a tile read and shaped about 1.5 ms (0.5 to 3.8 ms
+ * measured, T3.8o and T3.8q), a body about 100 µs.
+ */
 export const WORK_UNIT_DEFAULTS: Required<WorkUnitCosts> = {
   perSplit: 120,
   perVertex: 0.05,
@@ -193,6 +203,9 @@ export const WORK_UNIT_DEFAULTS: Required<WorkUnitCosts> = {
   perFragment: 4,
   perEvent: 40,
   perWake: 2,
+  perTile: 5,
+  perTileRead: 150,
+  perBody: 10,
 }
 
 export const resolveWorkUnitCosts = (costs: WorkUnitCosts | undefined): Required<WorkUnitCosts> => ({
