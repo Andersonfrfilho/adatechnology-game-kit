@@ -1,4 +1,6 @@
 import type * as THREE_NS from 'three'
+import { PARTICLE_USERDATA_KEY } from '../laser-raycast'
+import type { LaserRaycast } from '../models/attachments/types'
 
 type Three = typeof THREE_NS
 
@@ -57,6 +59,11 @@ export interface Particles {
   dispose(): void
 }
 
+/** What the world's surfaces stop. */
+const SOLID_KINDS: ReadonlySet<ParticleKind> = new Set(['casing', 'magazine'])
+/** Shorter than this (m) a step is not probed. */
+const MIN_TRAVEL = 1e-4
+
 const disposeOwned = (object: THREE_NS.Object3D): void => {
   object.traverse((child) => {
     const mesh = child as THREE_NS.Mesh
@@ -65,7 +72,9 @@ const disposeOwned = (object: THREE_NS.Object3D): void => {
 }
 
 /** `limit`: the most bodies the host allows at once (its one budget); without it the own cap of 900 stands (no host lends one yet, so no warning). */
-export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number, limit?: () => number | undefined): Particles {
+export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number, limit?: () => number | undefined, surface?: LaserRaycast): Particles {
+  const from = new THREE.Vector3()
+  const step = new THREE.Vector3()
   let list: Particle[] = []
   const remove = (particle: Particle): void => {
     particle.object.removeFromParent()
@@ -74,8 +83,27 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
     if (particle.fadeFrom !== undefined) ((particle.object as THREE_NS.Mesh).material as THREE_NS.Material).dispose()
     list = list.filter((other) => other !== particle)
   }
+  /** A casing or a magazine does not go through a wall, a ceiling or a post: it stops at the surface the world draws and comes back off it. */
+  const bounceOffSolid = (particle: Particle, origin: THREE_NS.Vector3, travel: THREE_NS.Vector3): void => {
+    const { object } = particle
+    travel.copy(object.position).sub(origin)
+    const length = travel.length()
+    if (length < MIN_TRAVEL) return
+    travel.divideScalar(length)
+    const hit = surface?.(origin, travel, length + Math.max(particle.radius, 0))
+    if (hit === null || hit === undefined) return
+    const impact = particle.velocity.length()
+    object.position.copy(origin).addScaledVector(travel, Math.max(0, hit - Math.max(particle.radius, 0)))
+    particle.velocity.multiplyScalar(-particle.bounce)
+    particle.spin.multiplyScalar(FLOOR_FRICTION)
+    if (particle.bounces < 4) api.onBounce?.(particle.kind, { object, speed: impact, bounce: particle.bounces })
+    particle.bounces++
+  }
   const api: Particles = {
     spawn(object, velocity, options = {}) {
+      object.traverse((node) => {
+        node.userData[PARTICLE_USERDATA_KEY] = true
+      })
       scene.add(object)
       list.push({
         object,
@@ -113,7 +141,9 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
         if (particle.resting) continue
         particle.velocity.y -= particle.gravity * dt
         if (particle.drag) particle.velocity.multiplyScalar(Math.max(0, 1 - particle.drag * dt))
+        if (surface && SOLID_KINDS.has(particle.kind)) from.copy(object.position)
         object.position.addScaledVector(particle.velocity, dt)
+        if (surface && SOLID_KINDS.has(particle.kind)) bounceOffSolid(particle, from, step)
         object.rotation.x += particle.spin.x * dt
         object.rotation.y += particle.spin.y * dt
         object.rotation.z += particle.spin.z * dt

@@ -19,6 +19,29 @@ export const isVisibleInScene = (object: THREE_NS.Object3D): boolean => {
   return true
 }
 
+/** Marks what the fx throw (casings, magazines): a surface probe never lands on them. */
+export const PARTICLE_USERDATA_KEY = 'fxParticle'
+
+const isSolidSurface = (object: THREE_NS.Object3D): boolean => {
+  const mesh = object as THREE_NS.Mesh
+  const material = mesh.material as THREE_NS.Material | undefined
+  return mesh.isMesh && isVisibleInScene(mesh) && material?.transparent !== true && !isHeld(mesh) && mesh.userData[PARTICLE_USERDATA_KEY] !== true
+}
+
+/** The distance along a ray to the first solid surface of the scene, measured on every call (no rate limit, no cache): for what is probed many times a frame, like a casing in flight. */
+export const createSurfaceRaycast = (THREE: typeof THREE_NS, scene: THREE_NS.Object3D): LaserRaycast => {
+  const raycaster = new THREE.Raycaster()
+  raycaster.layers.enableAll()
+  // the sprites of the smoke are tested too (and ignored), and a sprite needs a camera to be tested at all
+  raycaster.camera = new THREE.PerspectiveCamera()
+  return (origin, direction, maxDistance) => {
+    raycaster.set(origin, direction)
+    raycaster.far = maxDistance
+    const hit = raycaster.intersectObjects(scene.children, true).find((entry) => isSolidSurface(entry.object))
+    return hit ? hit.distance : null
+  }
+}
+
 export interface LaserRaycastOptions {
   /** Milliseconds clock (default `performance.now`). */
   readonly now?: () => number
