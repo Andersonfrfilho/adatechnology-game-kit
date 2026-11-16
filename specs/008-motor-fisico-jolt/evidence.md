@@ -2742,3 +2742,57 @@ O dono escolheu medir "deitado" pela altura, e não pelo ângulo. Agora o poste 
 - **Poste em pé:** chega a 7,5 m.
 
 Os 3 s para dormir continuam iguais. Com esse critério, o relógio começa assim que o poste desce, então o teste fica igual ou mais exigente. Resultado: 2/2 no Jolt e 1 passou mais 1 pulado no solver próprio.
+
+## T3.8z — corte da casa sem recálculo
+
+Máquina: Intel Core Ultra 9 275HX, Arch Linux, `node --version` = v24.22.0; 2026-11-15. Worktree `corte-da-casa`, branch `perf/corte-da-casa`, sobre `37a4193a` (main + fios do poste). Sondas e saídas em `decision/probes/t38z/` (`probe-spikes.test.ts.txt`: a sonda da T3.8v com o cronômetro da fase de montagem, a copiar para `packages/game-floorplan-three/tests/`; `run-ab.sh`, `summ.py`, `ab-raw.txt`, `rooms-lines.txt`). **Medidas feitas com o carregador de 100 W (CPU a 1,0-1,4 GHz) estão marcadas; as sem marca foram feitas depois das 22:44, com a máquina a toda a velocidade, sob o trinco `perf-measure.lock`.** Nenhuma régua, tolerância, teste ou critério mudou; nenhum golden mexeu.
+
+### 1. Perfil do quadro do corte (sonda T3.8v, `single_storey_a`, semente 1, `build`, C4 a `casa - 2,5 m` e martelo; perfil V8 de um quadro, processo frio; 100 W, só a proporção vale)
+`splitLoose` 20,7 ms: `adoptSplit` 16,4 (`fitPartBoxes` 8,4, quase tudo `fitOrientedBoxes` 7,8; `extract` 2,9, dele `collapse` > `rebuildHost` 2,0). O mesmo quadro depois de ajustar as caixas antes e reescrever o hospedeiro uma vez: `splitLoose` 11,1; `adoptSplit` 7,2; `fitOrientedBoxes` fora do quadro; `rebuildHost` 1,7 (duas escritas em vez de uma por parte). O quadro tem 6 a 7 ajustes (as folhas `lot/plain` de 456 pontos, 9 caixas cada, e as `lot/wood`); o primeiro, frio, custa 9,4 ms, os seguintes 1,5 a 2.
+
+### 2. Projeto
+- **Caixas ajustadas antes** (`renderer.ts`: `fitRanged`, `prefitPartBoxes`, `runPrefit`): `partBoxesOf` lê o ajuste de uma parte de faixa de malha unida de um cache `fittedBoxes` (por `MeshVis`), guardado **com os pontos e os triângulos de onde saiu**; vale só se os dois são os mesmos números (comparação exata). Não há versão a esquecer de subir: amassado, curvado, derretido mudam os pontos e o ajuste é refeito. Fila `prefitting` (um objeto, as partes uma a uma): roda no fim de `runBudgeted` quando não sobrou evento nem fatia, **no máximo 1 ms por quadro** (`PREFIT_SLICE_MS`), uma parte pelo menos quando nada mais rodou; conta em `pending`, e `flush` a esvazia. Opção `RendererOptions.fitBoxesAhead` (padrão ligado; desligada, o ajuste é feito ao romper, como antes). `runPrefit` é isolada (não toca estado fora da fila e do cache).
+- **Quadro das caixas**: o ajuste de antes e o de agora usam a mesma conta; o cache só devolve o que a mesma entrada já deu. A peça solta fica no quadro do grupo novo, que copia a pose da raiz: o quadro da peça é o da casa **bit a bit** nos 7 a 18 ajustes de cada blast e martelo medidos (`hit` = todos os do corte; `missDiff` 0).
+- **Um reescrever do hospedeiro por lote** (`visual.ts`: `batchRebuilds`, em volta do laço de `splitLoose`): o primeiro `rebuildHost` do lote roda na hora e os seguintes só marcam; ao fim, mais um se houve outro. O primeiro fica porque `extract` da parte seguinte copia as normais que a escrita deixa (a peça solta ganha as normais recalculadas, não as originais); o resultado fica idêntico ao de uma escrita por parte (teste abaixo), para quem lê as faixas de partes que não dividem triângulos.
+- **Liberação (§8)**: `forgetBound` (todo `bounds.delete`) apaga as entradas do cache das partes do objeto; `dispose` passa por `unbind`.
+- Não feito: reaproveitar cascos do chão (T3.8q): não aparece no quadro do corte. `adoptSplit` e `splitLoose` não tinham outro trabalho repetido por peça além dos dois acima (o resto é `world.splitGroup`, 3,6 ms frio, do mundo, fora do alcance).
+
+### 3. Equivalência (testes sem GPU, `game-destruction-three/tests/fit-boxes-ahead.test.ts`, 5; passam no solver próprio e no Jolt)
+(a) corte de um objeto de quatro partes (folha inclinada, placa de 169 vértices, poste, duas águas) posto e girado longe da origem: `partBoxes` de todas as peças com a opção ligada (cache cheio) iguais, com `toEqual` (`Object.is`), às da opção desligada; e o ajuste só foi chamado no corte da desligada. (b) lê de novo quando os pontos mudam (uma folha amassada). (c) `makePiece` depois do ajuste antes não chama `fitOrientedBoxes`. (d) cache frio, meio cheio, cheio e desligado, com e sem amassado antes: mesmas caixas e mesmo desenho (todo atributo e índice de toda malha, bit a bit). (e) cortar todos os grupos de uma vez escreve a malha unida e as soltas como cortar um a um. (f) `unbind` e `dispose` deixam o cache vazio. **Se o cache está cheio na hora do golpe nunca muda o resultado, só o tempo.**
+- Golden exato **44/44** (solver próprio, `exact-golden.test.ts`); bacia B1 Jolt **128/128** (4 processos de 32). `game-destruction-three`: próprio 420 passam, 0 falhas; Jolt 511 passam e só as 2 de `rolling`. `game-floorplan-three`: próprio 1186 passam (a falha única, `test-area > every typology builds`, é estouro de tempo com a máquina cheia: passa sozinho, 17/17); Jolt 1188 passam e só as 4 conhecidas (3 `destruction/*` do golden exato e `bookcase-topple`). `pnpm -r typecheck`, `pnpm typecheck:scripts`: 0 erros; eslint dos arquivos: 0 erros (aviso `max-lines` de `renderer.ts`, que já existia); `kit-audit --check`: 0 novos; `check:layers`: sem violações novas.
+
+### 4. Cache num blast real
+Aos 70 quadros depois da montagem (1 ms por quadro): **244 entradas, 838 KiB** para a casa inteira (308 partes de faixa; as ocas, que `hollowBoxesOf` resolve, não entram). Depois do blast e do martelo, 275 entradas. Acertos no corte: 9 a 11; faltas por pontos diferentes (`missDiff`): **0**, no blast e no martelo (nenhuma parte ajustada foi amassada ou furada antes do corte; uma que fosse seria ajustada de novo, pelo teste (b)). Aos 70 quadros ainda faltavam 20 (mediana; 15 a 105) partes por ajustar quando a máquina estava carregada: o corte delas ajusta ao romper, como antes.
+
+### 5. Antes e depois, sem navegador (sonda T3.8v, 9 execuções por lado intercaladas, um processo cada, sob o trinco, depois das 22:46; "antes" = `37a4193a`, "depois" = o código final; medianas e (intervalo))
+| | f0 (quadro do corte) | f1 | p99 | máximo | soma 240 quadros | montagem: soma / pior quadro (70 quadros) |
+|---|---|---|---|---|---|---|
+| blast antes | 29 (25-70) | 26 | 55,9 (48-80) | 68,4 (57-87) | 4028 | 153 / 23,5 |
+| **blast depois** | **20 (19-28)** | 31 | **49,5 (45-70)** | **60,4 (50-80)** | 3847 | 255 / 25,4 |
+| martelo antes | 19 (17-28) | 24 | 55,9 (36-104) | 64,3 (39-130) | 3296 | 133 / 21,0 |
+| **martelo depois** | **14 (12-18)** | 30 | **49,4 (39-57)** | 62,7 (44-75) | 3514 | 258 / 25,6 |
+- O quadro do corte cai **30% no blast e 26% no martelo** (frio, processo novo). Parte do trabalho que o corte deixa para o quadro seguinte (f1 sobe 26 para 31 e 24 para 30): `splitLoose` corta por orçamento de relógio, e com o quadro 0 mais curto sobra tempo para as fatias seguintes cairem no 1. A soma dos 240 quadros não piora (blast 4028 para 3847). p99 e máximo caem no blast (11% e 12%), no martelo o p99 cai 12% e o máximo fica igual (faixas se sobrepõem: a máquina tinha outras sessões).
+- **Custo adicionado na montagem (medido): +100 a 125 ms de CPU somados em 70 quadros** (as 308 partes, 0,4 ms em média, 8 ms a primeira, fria) e **+2 a 4,6 ms no pior quadro da montagem** (23,5 para 25,4; 21,0 para 25,6), nunca mais de 1 ms por quadro além do primeiro ajuste frio. Pior caso do cache: 838 KiB.
+- Mesmo par, **com o carregador de 100 W** (antes das 22:44; 9 execuções por lado, `ab-raw-100W.txt`; os absolutos estão inflados): f0 blast 27 para 18, martelo 20 para 13; montagem 123 para 241 ms.
+- Por estágio na ponta fraca (a T3.8ac mediu `fitBoxes` 39-47, `splitLoose` 23-37, `adoptSplit` 11-15, `rebuildHost` 11-16 ms a 1×): com este código `fitBoxes` sai do quadro do corte (leitura do cache, cerca de 0,1 ms por parte), `adoptSplit` e `splitLoose` perdem a parte do ajuste (7,8 de 20,7 ms, 38%, na proporção da máquina rápida) e `rebuildHost` roda 2 vezes por lote em vez de uma por parte. **Não medi na máquina fraca.**
+
+### 6. Rodadas da sala (Jolt, D4 ligada, 5 blast e 5 martelo, um processo por rodada, `drive.mjs`, depois das 22:46, sob o trinco; `pnpm build`, `examples/test-room/build.mjs` e o `dist` conferido com `fitBoxesAhead` antes)
+| rodada | C1 (kg·m / violações) | C2 cond. (peças) | C3 (m) | C4 (s) | `fellThrough` | quadro p50 / p99 / máx (ms) | despertar |
+|---|---|---|---|---|---|---|---|
+| blast 1 | 1,945 / 17 | 0 | 0,0134 | 0,55 | 0 | 3,6 / 61,8 / 93,4 | 38,4 |
+| blast 2 | 0,431 / 5 | 0 | 0,0026 | 0,45 | 0 | 1,8 / 58,4 / 76,9 | 25,2 |
+| blast 3 | 0,433 / 4 | 0 | 0,0062 | 0,40 | 0 | 2,1 / 56,2 / 71,2 | 23,8 |
+| blast 4 | 0,216 / 21 | 0 | 0,0148 | 0,45 | 0 | 2,1 / 54,4 / 59,7 | 20,7 |
+| blast 5 | 0,051 / 16 | 0 | 0,0164 | 0,50 | 0 | 2,0 / 46,5 / 75,9 | 23,7 |
+| martelo 1 | 1,940 / 1 | 0 | 0,0108 | 0,65 | 0 | 1,6 / 61,1 / 81,8 | 26,2 |
+| martelo 2 | -0,002 / 0 | 0 | 0,0267 | 0,65 | 0 | 1,5 / 67,5 / 80,1 | 28,3 |
+| martelo 3 | -0,002 / 0 | 0 | 0,0140 | 0,45 | 0 | 1,5 / 59,6 / 67,0 | 27,6 |
+| martelo 4 | -0,002 / 0 | 0 | 0,0044 | 1,55 | 0 | 1,5 / 50,9 / 95,6 | 26,9 |
+| martelo 5 | -0,002 / 0 | 0 | 0,0146 | 0,50 | 0 | 1,5 / 55,5 / 72,4 | 26,8 |
+C3 10/10 (todos abaixo de 3,5 cm), C4 10/10, `fellThrough` 0 em 10/10, C2 10/10, nenhum erro de página. O C1 (poste com energia a mais) aparece em 2 de 5 blast e 1 de 5 martelo; é o critério que a T3.8y já registrava em aberto, e este código não mexe na física (o corte devolve os mesmos números). Os quadros da sala (p99 46 a 68 ms) são os da T3.8y: o teto de ~50 ms por quadro vem do `Step` e do assentamento do chão, fora do corte.
+- Um primeiro conjunto de 10 rodadas, feito com 100 W (antes das 22:44), deu os mesmos C3/C4/`fellThrough` 10/10 e p99 de 46 a 84 ms.
+
+### 7. O que sobra
+- O quadro do corte ainda é de 14 a 20 ms frio na máquina rápida, contra o alvo de 5 ms de física: o resto do `splitLoose` (`world.splitGroup` e `pieceSys.create`, 3,6 e 4,2 ms frios) e o `Step` do quadro. O corte por orçamento de relógio (`sliceDeadline`) é o que a sessão `espalhar-explosao` mexe.
+- `runPrefit` anda no relógio de parede (1 ms por quadro); sai da fila em `runBudgeted` sem mudar quando a fila passar para o árbitro único de unidades de trabalho.
+- O portão `perf-gate.mjs room-explosion` não existe nesta branch (o da `perf/medir-maquina-fraca` ainda não foi mesclado); o portão geral esperava máquina quieta (carga 7) e não terminou.

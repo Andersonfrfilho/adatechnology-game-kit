@@ -1,0 +1,685 @@
+base blast 1 [PRE] sum 223 max 31.6 p99 31.6 frames 70 left -1
+base blast 1 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 1 f82 79.7 | 3.7 | 76.0 createBody 0.3 setShape 2.4 upd 0.2
+base blast 1 f0 70.4 | 0.0 | 70.4 createBody 0.0 setShape 0.0 upd 0.0
+base blast 1 f163 84.4 | 16.9 | 67.5 createBody 0.0 setShape 33.4 upd 0.3
+base blast 1 f195 87.0 | 24.9 | 62.2 createBody 0.0 setShape 25.6 upd 0.3
+base blast 1 f162 73.5 | 16.2 | 57.2 createBody 0.4 setShape 31.9 upd 0.2
+base blast 1 f123 67.7 | 11.3 | 56.4 createBody 0.3 setShape 18.4 upd 0.5
+base blast 1 f220 67.1 | 11.7 | 55.4 createBody 0.1 setShape 35.9 upd 0.1
+base blast 1 f221 62.1 | 9.8 | 52.4 createBody 0.0 setShape 36.0 upd 0.1
+base blast 1 [SPIKE] blast run 0 p50 22.27 p99 79.7 max 87.0 over16 194 sum 6619
+base blast 1 f195 87.0 | 0.6 24.9 0.0 0.0 25.6 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 39 [["debris/d/st11/2",10],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 75 per 1508 add 124
+base blast 1 f163 84.4 | 0.9 16.9 0.0 0.0 33.4 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 39 [["debris/d/st11/2",10],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 96 per 583 add 213
+base blast 1 f82 79.7 | 0.3 3.7 0.3 0.0 2.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 44 [["debris/d/st11/2",15],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 45 per 247 add 12
+base blast 1 f162 73.5 | 1.6 16.2 0.4 0.0 31.9 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26 [["debris/d/st11/2",5],["debris/d/st1/0",13],["debris/d/st9/2",7],["debris/d/st7/1",1]] val 68 per 431 add 146
+base blast 1 f0 70.4 | 3.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 0 [] val 0 per 0 add 0
+base blast 1 f173 68.7 | 1.2 19.6 0.0 0.0 24.1 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 38 [["debris/d/st11/2",9],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 106 per 926 add 124
+base blast 1 [DIGEST] blast 0631baebc8c0f943d223469f5dd0154d 50
+base blast 1 [HEAD] blast 70 41 16 27 18 52 25 20 18 26 23 26
+base hammer 1 [PRE] sum 193 max 30.8 p99 30.8 frames 70 left -1
+base hammer 1 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 1 f115 130.0 | 16.1 | 113.9 createBody 0.0 setShape 52.5 upd 0.2
+base hammer 1 f90 110.5 | 10.5 | 100.1 createBody 0.0 setShape 70.6 upd 0.1
+base hammer 1 f95 103.5 | 9.9 | 93.6 createBody 0.0 setShape 64.4 upd 0.1
+base hammer 1 f96 101.9 | 9.4 | 92.5 createBody 0.2 setShape 68.2 upd 0.0
+base hammer 1 f97 93.4 | 10.3 | 83.0 createBody 0.0 setShape 59.4 upd 0.1
+base hammer 1 f119 91.6 | 16.4 | 75.3 createBody 0.2 setShape 43.8 upd 0.5
+base hammer 1 f135 83.8 | 9.5 | 74.3 createBody 0.0 setShape 49.1 upd 0.4
+base hammer 1 f133 78.9 | 7.5 | 71.5 createBody 0.0 setShape 52.7 upd 0.2
+base hammer 1 [SPIKE] hammer run 0 p50 16.14 p99 103.5 max 130.0 over16 122 sum 5688
+base hammer 1 f115 130.0 | 0.4 16.1 0.0 0.0 52.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42 [["debris/d/st11/2",12],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 66 per 520 add 53
+base hammer 1 f90 110.5 | 3.9 10.5 0.0 0.0 70.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 45 [["debris/d/st11/2",16],["debris/d/st9/2",10],["debris/d/st1/0",18],["debris/d/st7/1",1]] val 48 per 288 add 55
+base hammer 1 f95 103.5 | 0.8 9.9 0.0 0.0 64.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42 [["debris/d/st11/2",12],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 62 per 329 add 53
+base hammer 1 f96 101.9 | 0.8 9.4 0.2 0.0 68.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42 [["debris/d/st11/2",12],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 61 per 331 add 53
+base hammer 1 f97 93.4 | 0.5 10.3 0.0 0.0 59.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42 [["debris/d/st11/2",12],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 65 per 332 add 55
+base hammer 1 f119 91.6 | 1.2 16.4 0.2 0.0 43.8 0.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41 [["debris/d/st11/2",11],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 65 per 533 add 42
+base hammer 1 [DIGEST] hammer 7565df683d0d855b87b9527899542b8d 52
+base hammer 1 [HEAD] hammer 28 34 11 23 21 21 16 23 22 15 24 18
+new blast 1 [PRE] sum 310 max 29.6 p99 29.6 frames 70 left 105
+new blast 1 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 1 f4 42.0 | 4.3 | 37.6 createBody 12.0 setShape 0.0 upd 0.0
+new blast 1 f118 44.6 | 7.1 | 37.5 createBody 0.0 setShape 16.3 upd 0.4
+new blast 1 f116 43.6 | 7.2 | 36.4 createBody 0.1 setShape 12.3 upd 0.3
+new blast 1 f115 44.0 | 8.3 | 35.7 createBody 0.0 setShape 7.4 upd 0.2
+new blast 1 f1 34.8 | 1.5 | 33.3 createBody 1.7 setShape 0.0 upd 0.0
+new blast 1 f69 33.5 | 2.4 | 31.1 createBody 4.6 setShape 1.2 upd 0.4
+new blast 1 f166 50.3 | 19.7 | 30.5 createBody 0.0 setShape 12.5 upd 0.3
+new blast 1 f74 32.9 | 3.2 | 29.6 createBody 0.1 setShape 7.9 upd 0.3
+new blast 1 [SPIKE] blast run 0 p50 16.68 p99 44.6 max 50.3 over16 125 sum 4460
+new blast 1 f166 50.3 | 0.6 19.7 0.0 0.0 12.5 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 117 per 720 add 144
+new blast 1 f173 47.8 | 0.5 18.4 0.0 0.0 1.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49  val 145 per 1266 add 292
+new blast 1 f118 44.6 | 0.6 7.1 0.0 0.0 16.3 0.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 73 per 547 add 19
+new blast 1 f115 44.0 | 0.6 8.3 0.0 0.0 7.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 58 per 459 add 28
+new blast 1 f116 43.6 | 0.6 7.2 0.1 0.0 12.3 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 68 per 464 add 42
+new blast 1 f4 42.0 | 0.3 4.3 12.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 4  val 21 per 41 add 65
+new blast 1 [DIGEST] blast 83ad8b10c897d30c04bf4db6a545ead5 50
+new blast 1 [HEAD] blast 28 35 23 14 42 18 19 25 21 19 18 20
+new hammer 1 [PRE] sum 271 max 26.1 p99 26.1 frames 70 left 31
+new hammer 1 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 1 f114 69.1 | 6.9 | 62.2 createBody 0.1 setShape 25.6 upd 2.0
+new hammer 1 f168 67.1 | 10.5 | 56.5 createBody 0.6 setShape 36.4 upd 0.1
+new hammer 1 f116 56.5 | 5.3 | 51.3 createBody 0.1 setShape 32.5 upd 0.2
+new hammer 1 f94 54.2 | 4.1 | 50.1 createBody 0.5 setShape 26.3 upd 0.2
+new hammer 1 f91 53.5 | 5.0 | 48.5 createBody 0.1 setShape 29.7 upd 0.0
+new hammer 1 f117 51.7 | 5.1 | 46.6 createBody 0.1 setShape 25.7 upd 0.2
+new hammer 1 f90 50.0 | 3.4 | 46.6 createBody 0.0 setShape 31.1 upd 0.0
+new hammer 1 f211 49.8 | 3.7 | 46.1 createBody 0.0 setShape 31.9 upd 0.0
+new hammer 1 [SPIKE] hammer run 0 p50 11.81 p99 56.5 max 69.1 over16 89 sum 4023
+new hammer 1 f114 69.1 | 0.3 6.9 0.1 0.0 25.6 2.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47 [["debris/d/st11/2",16],["debris/d/st9/2",11],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 50 per 433 add 24
+new hammer 1 f168 67.1 | 0.4 10.5 0.6 0.0 36.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29 [["debris/d/st11/2",7],["debris/d/st1/0",13],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 108 per 686 add 126
+new hammer 1 f116 56.5 | 0.4 5.3 0.1 0.0 32.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 46 per 439 add 17
+new hammer 1 f94 54.2 | 0.5 4.1 0.5 0.0 26.3 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49  val 47 per 262 add 50
+new hammer 1 f91 53.5 | 0.7 5.0 0.1 0.0 29.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 32 per 252 add 16
+new hammer 1 f117 51.7 | 0.4 5.1 0.1 0.0 25.7 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 41 per 441 add 16
+new hammer 1 [DIGEST] hammer e293a31bbec0bd71559c8672cf2e1e12 52
+new hammer 1 [HEAD] hammer 17 29 15 15 19 18 18 15 16 18 12 16
+base blast 2 [PRE] sum 140 max 20.1 p99 20.1 frames 70 left -1
+base blast 2 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 2 f90 81.2 | 5.1 | 76.1 createBody 1.5 setShape 52.1 upd 0.1
+base blast 2 f93 68.6 | 10.4 | 58.2 createBody 0.0 setShape 42.4 upd 0.2
+base blast 2 f116 64.3 | 6.4 | 57.9 createBody 0.0 setShape 36.6 upd 0.2
+base blast 2 f91 62.2 | 5.7 | 56.6 createBody 0.0 setShape 40.0 upd 0.1
+base blast 2 f118 60.8 | 5.8 | 55.0 createBody 0.1 setShape 34.5 upd 0.4
+base blast 2 f110 60.0 | 8.1 | 51.9 createBody 0.0 setShape 27.9 upd 0.2
+base blast 2 f92 58.6 | 7.4 | 51.2 createBody 0.0 setShape 37.3 upd 0.1
+base blast 2 f115 53.0 | 6.6 | 46.4 createBody 0.3 setShape 27.8 upd 0.2
+base blast 2 [SPIKE] blast run 0 p50 12.64 p99 64.3 max 81.2 over16 90 sum 4030
+base blast 2 f90 81.2 | 1.6 5.1 1.5 0.0 52.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40 [["debris/d/st11/2",11],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 52 per 205 add 36
+base blast 2 f93 68.6 | 0.6 10.4 0.0 0.0 42.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40 [["debris/d/st11/2",11],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 47 per 240 add 73
+base blast 2 f116 64.3 | 0.9 6.4 0.0 0.0 36.6 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 72 per 428 add 41
+base blast 2 f91 62.2 | 0.5 5.7 0.0 0.0 40.0 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40 [["debris/d/st11/2",11],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 42 per 213 add 4
+base blast 2 f118 60.8 | 0.6 5.8 0.1 0.0 34.5 0.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46 [["debris/d/st11/2",16],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 57 per 449 add 35
+base blast 2 f110 60.0 | 0.5 8.1 0.0 0.0 27.9 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 56 per 428 add 30
+base blast 2 [DIGEST] blast 3e545e33edef43106d2201a1b18021be 50
+base blast 2 [HEAD] blast 31 27 21 15 12 47 18 26 20 17 16 17
+base hammer 2 [PRE] sum 140 max 22.2 p99 22.2 frames 70 left -1
+base hammer 2 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 2 f166 76.0 | 9.6 | 66.4 createBody 0.6 setShape 34.4 upd 0.2
+base hammer 2 f116 63.1 | 6.0 | 57.1 createBody 0.0 setShape 35.5 upd 0.4
+base hammer 2 f167 55.9 | 7.5 | 48.4 createBody 0.0 setShape 34.4 upd 0.1
+base hammer 2 f90 54.3 | 6.5 | 47.8 createBody 0.1 setShape 29.9 upd 0.1
+base hammer 2 f89 54.0 | 7.5 | 46.5 createBody 0.1 setShape 29.9 upd 0.0
+base hammer 2 f106 50.4 | 6.2 | 44.2 createBody 0.0 setShape 27.2 upd 0.2
+base hammer 2 f168 49.7 | 7.8 | 41.9 createBody 0.0 setShape 30.4 upd 0.0
+base hammer 2 f92 49.2 | 7.7 | 41.6 createBody 0.0 setShape 28.1 upd 0.1
+base hammer 2 [SPIKE] hammer run 0 p50 10.26 p99 55.9 max 76.0 over16 69 sum 3536
+base hammer 2 f166 76.0 | 0.6 9.6 0.6 0.0 34.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29 [["debris/d/st11/2",7],["debris/d/st1/0",13],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 99 per 860 add 120
+base hammer 2 f116 63.1 | 0.4 6.0 0.0 0.0 35.5 0.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",17],["debris/d/st9/2",11],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 48 per 387 add 32
+base hammer 2 f167 55.9 | 0.4 7.5 0.0 0.0 34.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 91 per 819 add 92
+base hammer 2 f90 54.3 | 0.6 6.5 0.1 0.0 29.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 55 per 191 add 33
+base hammer 2 f89 54.0 | 2.2 7.5 0.1 0.0 29.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 53 per 176 add 34
+base hammer 2 f106 50.4 | 0.6 6.2 0.0 0.0 27.2 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 50 per 347 add 18
+base hammer 2 [DIGEST] hammer 37a629d8639c6936646991e3be6f7092 52
+base hammer 2 [HEAD] hammer 21 24 15 14 16 19 19 19 18 19 14 11
+new blast 2 [PRE] sum 262 max 25.4 p99 25.4 frames 70 left 22
+new blast 2 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 2 f3 40.7 | 3.7 | 36.9 createBody 10.4 setShape 0.0 upd 0.0
+new blast 2 f132 45.8 | 9.3 | 36.5 createBody 0.0 setShape 12.5 upd 0.1
+new blast 2 f112 44.9 | 8.8 | 36.1 createBody 0.0 setShape 13.7 upd 0.3
+new blast 2 f160 50.6 | 14.9 | 35.7 createBody 1.1 setShape 15.5 upd 0.2
+new blast 2 f1 37.1 | 1.4 | 35.6 createBody 1.4 setShape 0.0 upd 0.0
+new blast 2 f164 46.6 | 13.7 | 32.9 createBody 0.0 setShape 19.1 upd 0.1
+new blast 2 f161 46.1 | 14.3 | 31.8 createBody 0.0 setShape 19.1 upd 0.0
+new blast 2 f208 44.1 | 12.8 | 31.3 createBody 0.7 setShape 17.4 upd 0.1
+new blast 2 [SPIKE] blast run 0 p50 15.50 p99 46.1 max 50.6 over16 114 sum 4234
+new blast 2 f160 50.6 | 0.5 14.9 1.1 0.0 15.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 93 per 681 add 123
+new blast 2 f164 46.6 | 0.9 13.7 0.0 0.0 19.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 30  val 104 per 660 add 204
+new blast 2 f161 46.1 | 0.8 14.3 0.0 0.0 19.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 101 per 701 add 199
+new blast 2 f132 45.8 | 0.4 9.3 0.0 0.0 12.5 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 66 per 565 add 93
+new blast 2 f112 44.9 | 0.4 8.8 0.0 0.0 13.7 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 54 per 524 add 38
+new blast 2 f208 44.1 | 0.4 12.8 0.7 0.0 17.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 23  val 86 per 752 add 112
+new blast 2 [DIGEST] blast 1f7f9fbd5f3e67170dd063c025699f9a 50
+new blast 2 [HEAD] blast 21 37 15 41 14 18 23 14 18 12 15 15
+new hammer 2 [PRE] sum 283 max 23.9 p99 23.9 frames 70 left 20
+new hammer 2 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 2 f114 54.2 | 3.3 | 50.8 createBody 0.0 setShape 30.1 upd 0.2
+new hammer 2 f113 54.6 | 4.5 | 50.0 createBody 0.0 setShape 30.2 upd 0.3
+new hammer 2 f115 52.8 | 3.1 | 49.7 createBody 0.0 setShape 29.8 upd 0.3
+new hammer 2 f90 50.7 | 4.2 | 46.5 createBody 0.1 setShape 29.4 upd 0.1
+new hammer 2 f89 49.4 | 5.5 | 43.8 createBody 0.4 setShape 26.9 upd 0.0
+new hammer 2 f170 50.6 | 8.7 | 42.0 createBody 0.4 setShape 28.0 upd 0.2
+new hammer 2 f116 44.9 | 3.1 | 41.7 createBody 0.1 setShape 20.9 upd 0.2
+new hammer 2 f92 46.5 | 5.0 | 41.6 createBody 0.0 setShape 28.3 upd 0.1
+new hammer 2 [SPIKE] hammer run 0 p50 8.58 p99 52.8 max 54.6 over16 64 sum 3129
+new hammer 2 f113 54.6 | 0.6 4.5 0.0 0.0 30.2 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 48 per 298 add 64
+new hammer 2 f114 54.2 | 0.7 3.3 0.0 0.0 30.1 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 44 per 327 add 44
+new hammer 2 f115 52.8 | 0.5 3.1 0.0 0.0 29.8 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 44 per 361 add 19
+new hammer 2 f90 50.7 | 0.5 4.2 0.1 0.0 29.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 60 per 224 add 51
+new hammer 2 f170 50.6 | 0.1 8.7 0.4 0.0 28.0 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 30  val 101 per 873 add 97
+new hammer 2 f89 49.4 | 1.1 5.5 0.4 0.0 26.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 69 per 219 add 86
+new hammer 2 [DIGEST] hammer d11b6b0e21fceac8bbedd72da72a0678 52
+new hammer 2 [HEAD] hammer 12 31 20 16 18 17 15 17 14 17 12 14
+base blast 3 [PRE] sum 147 max 26.9 p99 26.9 frames 70 left -1
+base blast 3 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 3 f116 65.5 | 7.4 | 58.0 createBody 0.1 setShape 34.3 upd 0.2
+base blast 3 f163 77.7 | 20.4 | 57.3 createBody 0.8 setShape 36.4 upd 0.1
+base blast 3 f89 63.8 | 8.4 | 55.4 createBody 0.7 setShape 29.5 upd 0.0
+base blast 3 f114 61.7 | 9.6 | 52.1 createBody 0.1 setShape 33.1 upd 0.3
+base blast 3 f90 62.8 | 10.7 | 52.1 createBody 0.0 setShape 34.9 upd 0.1
+base blast 3 f91 58.7 | 7.6 | 51.1 createBody 0.3 setShape 31.5 upd 0.0
+base blast 3 f164 65.0 | 15.9 | 49.0 createBody 0.0 setShape 33.6 upd 0.1
+base blast 3 f94 57.2 | 8.2 | 48.9 createBody 0.0 setShape 33.4 upd 0.1
+base blast 3 [SPIKE] blast run 0 p50 12.96 p99 65.0 max 77.7 over16 97 sum 4415
+base blast 3 f163 77.7 | 0.7 20.4 0.8 0.0 36.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28 [["debris/d/st11/2",7],["debris/d/st1/0",13],["debris/d/st9/2",7],["debris/d/st7/1",1]] val 112 per 545 add 194
+base blast 3 f116 65.5 | 0.6 7.4 0.1 0.0 34.3 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 58 per 759 add 35
+base blast 3 f164 65.0 | 0.5 15.9 0.0 0.0 33.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29 [["debris/d/st11/2",7],["debris/d/st1/0",14],["debris/d/st9/2",7],["debris/d/st7/1",1]] val 105 per 491 add 156
+base blast 3 f165 64.2 | 0.4 20.1 0.0 0.0 31.2 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29 [["debris/d/st11/2",7],["debris/d/st1/0",14],["debris/d/st9/2",7],["debris/d/st7/1",1]] val 117 per 597 add 210
+base blast 3 f89 63.8 | 1.6 8.4 0.7 0.0 29.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 63 per 326 add 53
+base blast 3 f90 62.8 | 0.6 10.7 0.0 0.0 34.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 69 per 324 add 107
+base blast 3 [DIGEST] blast 18e6f992a6d01db22f5c64860cad3076 50
+base blast 3 [HEAD] blast 31 25 13 20 43 14 18 24 12 17 15 18
+base hammer 3 [PRE] sum 155 max 24.0 p99 24.0 frames 70 left -1
+base hammer 3 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 3 f115 92.6 | 5.2 | 87.3 createBody 0.1 setShape 36.6 upd 0.3
+base hammer 3 f170 70.7 | 12.3 | 58.5 createBody 0.8 setShape 38.1 upd 0.1
+base hammer 3 f116 57.6 | 3.6 | 54.0 createBody 0.1 setShape 31.1 upd 0.2
+base hammer 3 f90 56.9 | 6.2 | 50.7 createBody 0.9 setShape 31.6 upd 0.1
+base hammer 3 f89 55.3 | 6.2 | 49.1 createBody 0.6 setShape 30.5 upd 0.0
+base hammer 3 f117 52.1 | 3.5 | 48.6 createBody 0.0 setShape 25.9 upd 0.4
+base hammer 3 f110 51.0 | 4.2 | 46.7 createBody 0.0 setShape 32.5 upd 0.1
+base hammer 3 f91 51.2 | 5.4 | 45.8 createBody 0.1 setShape 30.5 upd 0.1
+base hammer 3 [SPIKE] hammer run 0 p50 13.18 p99 57.6 max 92.6 over16 79 sum 3707
+base hammer 3 f115 92.6 | 0.9 5.2 0.1 0.0 36.6 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47 [["debris/d/st11/2",16],["debris/d/st9/2",11],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 53 per 360 add 64
+base hammer 3 f170 70.7 | 0.3 12.3 0.8 0.0 38.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 39 [["debris/d/st11/2",9],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 90 per 949 add 118
+base hammer 3 f116 57.6 | 0.5 3.6 0.1 0.0 31.1 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 57 per 373 add 48
+base hammer 3 f90 56.9 | 0.8 6.2 0.9 0.0 31.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 61 per 201 add 66
+base hammer 3 f89 55.3 | 1.8 6.2 0.6 0.0 30.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 55 per 185 add 70
+base hammer 3 f117 52.1 | 0.5 3.5 0.0 0.0 25.9 0.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 56 per 369 add 39
+base hammer 3 [DIGEST] hammer a5fc16db11cf54feffd885c60fc3838e 52
+base hammer 3 [HEAD] hammer 24 26 16 19 15 15 20 16 18 14 14 15
+new blast 3 [PRE] sum 252 max 25.8 p99 25.8 frames 70 left 20
+new blast 3 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 3 f112 72.0 | 8.9 | 63.1 createBody 0.0 setShape 25.1 upd 0.1
+new blast 3 f130 65.3 | 12.6 | 52.7 createBody 0.1 setShape 38.2 upd 0.4
+new blast 3 f110 58.4 | 8.6 | 49.8 createBody 0.1 setShape 25.1 upd 0.1
+new blast 3 f89 55.4 | 7.4 | 48.0 createBody 0.8 setShape 24.2 upd 0.0
+new blast 3 f92 53.1 | 6.5 | 46.6 createBody 0.1 setShape 29.3 upd 0.0
+new blast 3 f91 50.9 | 6.3 | 44.6 createBody 0.1 setShape 26.0 upd 0.2
+new blast 3 f116 50.9 | 6.6 | 44.3 createBody 0.0 setShape 20.8 upd 0.4
+new blast 3 f90 50.1 | 7.2 | 42.9 createBody 0.0 setShape 27.1 upd 0.1
+new blast 3 [SPIKE] blast run 0 p50 12.27 p99 58.4 max 72.0 over16 81 sum 3779
+new blast 3 f112 72.0 | 0.6 8.9 0.0 0.0 25.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 83 per 586 add 93
+new blast 3 f130 65.3 | 0.4 12.6 0.1 0.0 38.2 0.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",18],["debris/d/st7/1",1]] val 59 per 717 add 18
+new blast 3 f110 58.4 | 0.5 8.6 0.1 0.0 25.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 87 per 580 add 84
+new blast 3 f89 55.4 | 1.4 7.4 0.8 0.0 24.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 57 per 295 add 61
+new blast 3 f92 53.1 | 0.7 6.5 0.1 0.0 29.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 75 per 324 add 51
+new blast 3 f91 50.9 | 0.6 6.3 0.1 0.0 26.0 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 73 per 310 add 92
+new blast 3 [DIGEST] blast b27d3ef1cd877c6809305603d195df27 50
+new blast 3 [HEAD] blast 22 31 14 16 43 19 19 17 15 15 17 16
+new hammer 3 [PRE] sum 256 max 25.6 p99 25.6 frames 70 left 22
+new hammer 3 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 3 f115 49.9 | 5.1 | 44.8 createBody 0.0 setShape 24.2 upd 0.1
+new hammer 3 f112 49.7 | 6.1 | 43.7 createBody 0.0 setShape 25.6 upd 0.3
+new hammer 3 f169 52.0 | 9.0 | 43.0 createBody 1.2 setShape 25.2 upd 0.2
+new hammer 3 f91 48.1 | 7.2 | 40.9 createBody 0.1 setShape 25.9 upd 0.1
+new hammer 3 f90 42.8 | 5.2 | 37.6 createBody 0.3 setShape 24.5 upd 0.1
+new hammer 3 f165 46.0 | 9.0 | 37.0 createBody 0.0 setShape 26.5 upd 0.0
+new hammer 3 f119 39.6 | 2.8 | 36.7 createBody 0.0 setShape 23.5 upd 0.1
+new hammer 3 f211 42.5 | 6.0 | 36.5 createBody 0.0 setShape 24.4 upd 0.1
+new hammer 3 [SPIKE] hammer run 0 p50 13.36 p99 49.7 max 52.0 over16 79 sum 3633
+new hammer 3 f169 52.0 | 0.3 9.0 1.2 0.0 25.2 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 93 per 902 add 116
+new hammer 3 f115 49.9 | 0.5 5.1 0.0 0.0 24.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 50 per 454 add 49
+new hammer 3 f112 49.7 | 0.8 6.1 0.0 0.0 25.6 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49  val 68 per 418 add 50
+new hammer 3 f91 48.1 | 0.3 7.2 0.1 0.0 25.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49  val 63 per 289 add 49
+new hammer 3 f165 46.0 | 0.4 9.0 0.0 0.0 26.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 39  val 87 per 804 add 108
+new hammer 3 f170 42.9 | 0.3 7.3 0.0 0.0 24.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 68 per 782 add 55
+new hammer 3 [DIGEST] hammer ccd5ae15c58c6f01fa9813422df12f62 52
+new hammer 3 [HEAD] hammer 14 30 17 22 17 16 16 16 17 15 18 10
+base blast 4 [PRE] sum 207 max 24.9 p99 24.9 frames 70 left -1
+base blast 4 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 4 f88 58.2 | 8.0 | 50.2 createBody 0.5 setShape 21.1 upd 0.1
+base blast 4 f90 56.7 | 10.3 | 46.4 createBody 0.3 setShape 28.4 upd 0.1
+base blast 4 f89 53.3 | 8.2 | 45.0 createBody 0.0 setShape 23.2 upd 0.1
+base blast 4 f171 55.9 | 13.0 | 42.8 createBody 0.0 setShape 27.4 upd 0.1
+base blast 4 f91 51.3 | 8.9 | 42.5 createBody 0.1 setShape 26.2 upd 0.0
+base blast 4 f110 48.1 | 6.1 | 42.0 createBody 0.0 setShape 20.2 upd 0.2
+base blast 4 f118 45.6 | 8.5 | 37.1 createBody 0.1 setShape 20.6 upd 0.1
+base blast 4 f211 45.7 | 8.6 | 37.1 createBody 0.0 setShape 25.3 upd 0.0
+base blast 4 [SPIKE] blast run 0 p50 15.47 p99 55.9 max 58.2 over16 112 sum 4372
+base blast 4 f88 58.2 | 1.7 8.0 0.5 0.0 21.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 70 per 290 add 62
+base blast 4 f90 56.7 | 0.9 10.3 0.3 0.0 28.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 94 per 312 add 87
+base blast 4 f171 55.9 | 0.5 13.0 0.0 0.0 27.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 24  val 77 per 745 add 147
+base blast 4 f89 53.3 | 1.0 8.2 0.0 0.0 23.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 69 per 293 add 44
+base blast 4 f91 51.3 | 1.7 8.9 0.1 0.0 26.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 86 per 315 add 95
+base blast 4 f161 48.2 | 0.4 13.6 0.1 0.0 22.1 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 86 per 719 add 130
+base blast 4 [DIGEST] blast 52d5380d8ac6da14788df5398177dda0 50
+base blast 4 [HEAD] blast 29 26 18 20 38 16 17 24 24 16 16 16
+base hammer 4 [PRE] sum 133 max 21.2 p99 21.2 frames 70 left -1
+base hammer 4 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 4 f115 59.3 | 4.2 | 55.0 createBody 0.0 setShape 34.7 upd 0.3
+base hammer 4 f162 62.8 | 11.6 | 51.2 createBody 0.1 setShape 31.7 upd 0.3
+base hammer 4 f164 61.3 | 13.1 | 48.1 createBody 0.0 setShape 33.6 upd 0.0
+base hammer 4 f90 54.3 | 6.7 | 47.6 createBody 0.1 setShape 31.8 upd 0.0
+base hammer 4 f117 50.2 | 3.9 | 46.3 createBody 0.0 setShape 31.7 upd 0.1
+base hammer 4 f159 64.3 | 19.0 | 45.3 createBody 0.0 setShape 21.7 upd 0.1
+base hammer 4 f165 58.0 | 13.6 | 44.5 createBody 0.0 setShape 34.9 upd 0.0
+base hammer 4 f89 50.2 | 6.0 | 44.2 createBody 0.5 setShape 28.6 upd 0.0
+base hammer 4 [SPIKE] hammer run 0 p50 11.30 p99 61.3 max 64.3 over16 79 sum 3796
+base hammer 4 f159 64.3 | 0.2 19.0 0.0 0.0 21.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26 [["debris/d/st11/2",6],["debris/d/st1/0",11],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 90 per 418 add 127
+base hammer 4 f162 62.8 | 0.3 11.6 0.1 0.0 31.7 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 27 [["debris/d/st11/2",6],["debris/d/st1/0",12],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 104 per 610 add 123
+base hammer 4 f164 61.3 | 0.4 13.1 0.0 0.0 33.6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28 [["debris/d/st11/2",7],["debris/d/st1/0",12],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 101 per 593 add 180
+base hammer 4 f115 59.3 | 1.4 4.2 0.0 0.0 34.7 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 41 per 279 add 25
+base hammer 4 f165 58.0 | 0.2 13.6 0.0 0.0 34.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 89 per 665 add 130
+base hammer 4 f90 54.3 | 1.1 6.7 0.1 0.0 31.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 63 per 158 add 61
+base hammer 4 [DIGEST] hammer 6a06b293c9e1242a30edbc0f65c8fae5 52
+base hammer 4 [HEAD] hammer 26 25 15 14 16 18 18 18 15 17 13 16
+new blast 4 [PRE] sum 293 max 25.2 p99 25.2 frames 70 left 20
+new blast 4 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 4 f158 64.7 | 14.3 | 50.5 createBody 0.0 setShape 31.8 upd 0.2
+new blast 4 f92 57.3 | 6.9 | 50.4 createBody 0.4 setShape 26.7 upd 0.0
+new blast 4 f160 67.2 | 16.8 | 50.3 createBody 0.3 setShape 30.1 upd 0.4
+new blast 4 f159 64.6 | 15.4 | 49.2 createBody 0.7 setShape 29.6 upd 0.2
+new blast 4 f197 46.8 | 5.1 | 41.7 createBody 0.3 setShape 27.9 upd 0.2
+new blast 4 f93 49.3 | 7.9 | 41.4 createBody 0.1 setShape 26.0 upd 0.1
+new blast 4 f161 57.3 | 16.8 | 40.5 createBody 0.0 setShape 26.9 upd 0.3
+new blast 4 f132 50.5 | 10.1 | 40.4 createBody 0.0 setShape 21.1 upd 0.1
+new blast 4 [SPIKE] blast run 0 p50 12.50 p99 64.6 max 67.2 over16 84 sum 3847
+new blast 4 f160 67.2 | 0.5 16.8 0.3 0.0 30.1 0.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 34 [["debris/d/st11/2",11],["debris/d/st1/0",14],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 126 per 702 add 197
+new blast 4 f158 64.7 | 0.4 14.3 0.0 0.0 31.8 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 34 [["debris/d/st11/2",11],["debris/d/st1/0",14],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 101 per 540 add 137
+new blast 4 f159 64.6 | 0.5 15.4 0.7 0.0 29.6 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 34 [["debris/d/st11/2",11],["debris/d/st1/0",14],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 114 per 607 add 181
+new blast 4 f92 57.3 | 1.4 6.9 0.4 0.0 26.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 54 per 306 add 76
+new blast 4 f161 57.3 | 0.4 16.8 0.0 0.0 26.9 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 34  val 117 per 703 add 177
+new blast 4 f166 52.0 | 0.4 13.0 0.0 0.0 26.7 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 30  val 105 per 888 add 173
+new blast 4 [DIGEST] blast 1f07205103ea5a42ffc1602319f878b0 50
+new blast 4 [HEAD] blast 21 33 19 40 17 21 18 16 19 16 16 15
+new hammer 4 [PRE] sum 254 max 24.8 p99 24.8 frames 70 left 20
+new hammer 4 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 4 f166 56.9 | 16.0 | 40.9 createBody 0.0 setShape 23.2 upd 0.1
+new hammer 4 f165 48.1 | 12.6 | 35.5 createBody 0.6 setShape 21.7 upd 0.1
+new hammer 4 f160 47.6 | 12.7 | 34.9 createBody 0.0 setShape 16.7 upd 0.1
+new hammer 4 f234 39.7 | 4.9 | 34.8 createBody 0.0 setShape 24.8 upd 0.0
+new hammer 4 f202 38.6 | 6.4 | 32.3 createBody 0.3 setShape 21.4 upd 0.0
+new hammer 4 f168 45.9 | 14.3 | 31.6 createBody 0.0 setShape 20.6 upd 0.1
+new hammer 4 f203 35.8 | 5.1 | 30.7 createBody 0.0 setShape 21.2 upd 0.0
+new hammer 4 f161 42.9 | 13.9 | 29.1 createBody 0.0 setShape 12.5 upd 0.3
+new hammer 4 [SPIKE] hammer run 0 p50 12.22 p99 47.6 max 56.9 over16 82 sum 3621
+new hammer 4 f166 56.9 | 0.5 16.0 0.0 0.0 23.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 73 per 523 add 37
+new hammer 4 f165 48.1 | 0.9 12.6 0.6 0.0 21.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29  val 75 per 523 add 64
+new hammer 4 f160 47.6 | 0.3 12.7 0.0 0.0 16.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 100 per 451 add 121
+new hammer 4 f168 45.9 | 0.4 14.3 0.0 0.0 20.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 73 per 603 add 85
+new hammer 4 f161 42.9 | 0.3 13.9 0.0 0.0 12.5 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29  val 111 per 475 add 163
+new hammer 4 f179 40.9 | 0.5 12.0 0.0 0.0 10.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 117 per 982 add 133
+new hammer 4 [DIGEST] hammer 61d38e07372fcbe0a295bfaa6506a6ae 52
+new hammer 4 [HEAD] hammer 15 30 16 18 17 18 14 17 18 14 13 13
+base blast 5 [PRE] sum 133 max 20.4 p99 20.4 frames 70 left -1
+base blast 5 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 5 f113 54.6 | 8.2 | 46.4 createBody 0.0 setShape 24.5 upd 0.2
+base blast 5 f165 57.1 | 14.7 | 42.4 createBody 0.0 setShape 26.5 upd 0.3
+base blast 5 f97 45.6 | 6.0 | 39.6 createBody 0.0 setShape 21.2 upd 0.1
+base blast 5 f95 45.9 | 6.8 | 39.2 createBody 0.0 setShape 24.0 upd 0.1
+base blast 5 f94 45.2 | 6.9 | 38.3 createBody 0.1 setShape 22.5 upd 0.0
+base blast 5 f117 47.2 | 9.0 | 38.2 createBody 0.1 setShape 17.9 upd 0.3
+base blast 5 f169 52.5 | 15.6 | 36.9 createBody 0.0 setShape 24.5 upd 0.0
+base blast 5 f116 43.3 | 7.3 | 36.1 createBody 0.1 setShape 20.6 upd 0.2
+base blast 5 [SPIKE] blast run 0 p50 13.07 p99 52.5 max 57.1 over16 84 sum 3863
+base blast 5 f165 57.1 | 0.6 14.7 0.0 0.0 26.5 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 89 per 809 add 87
+base blast 5 f113 54.6 | 0.9 8.2 0.0 0.0 24.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 74 per 534 add 107
+base blast 5 f169 52.5 | 0.3 15.6 0.0 0.0 24.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 87 per 967 add 83
+base blast 5 f117 47.2 | 0.6 9.0 0.1 0.0 17.9 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 63 per 592 add 63
+base blast 5 f95 45.9 | 0.5 6.8 0.0 0.0 24.0 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 60 per 334 add 70
+base blast 5 f97 45.6 | 0.6 6.0 0.0 0.0 21.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 60 per 346 add 56
+base blast 5 [DIGEST] blast 52581c987ffef92aa03f9e60f3f047a1 50
+base blast 5 [HEAD] blast 25 24 16 21 35 18 17 19 14 18 16 12
+base hammer 5 [PRE] sum 128 max 18.5 p99 18.5 frames 70 left -1
+base hammer 5 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 5 f116 35.9 | 4.6 | 31.3 createBody 0.1 setShape 10.6 upd 0.3
+base hammer 5 f155 38.9 | 8.2 | 30.7 createBody 0.0 setShape 17.7 upd 0.2
+base hammer 5 f113 33.1 | 5.4 | 27.7 createBody 0.1 setShape 12.6 upd 0.2
+base hammer 5 f167 35.6 | 10.2 | 25.4 createBody 0.0 setShape 15.6 upd 0.2
+base hammer 5 f125 30.1 | 6.3 | 23.9 createBody 0.2 setShape 6.7 upd 0.1
+base hammer 5 f154 30.5 | 6.6 | 23.9 createBody 0.0 setShape 14.4 upd 0.1
+base hammer 5 f160 36.3 | 13.1 | 23.2 createBody 0.0 setShape 13.9 upd 0.1
+base hammer 5 f162 37.4 | 14.4 | 22.9 createBody 0.0 setShape 12.6 upd 0.1
+base hammer 5 [SPIKE] hammer run 0 p50 10.17 p99 36.3 max 38.9 over16 57 sum 2851
+base hammer 5 f155 38.9 | 1.1 8.2 0.0 0.0 17.7 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 31  val 77 per 537 add 117
+base hammer 5 f162 37.4 | 1.1 14.4 0.0 0.0 12.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40  val 96 per 872 add 129
+base hammer 5 f160 36.3 | 0.5 13.1 0.0 0.0 13.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 88 per 752 add 147
+base hammer 5 f116 35.9 | 0.3 4.6 0.1 0.0 10.6 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 47 per 231 add 32
+base hammer 5 f167 35.6 | 0.4 10.2 0.0 0.0 15.6 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40  val 95 per 1168 add 152
+base hammer 5 f113 33.1 | 0.4 5.4 0.1 0.0 12.6 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 45 per 240 add 21
+base hammer 5 [DIGEST] hammer cc3559c80916230a093007427e1597d3 52
+base hammer 5 [HEAD] hammer 18 20 12 19 19 21 19 16 13 14 13 15
+new blast 5 [PRE] sum 233 max 22.6 p99 22.6 frames 70 left 15
+new blast 5 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 5 f113 60.0 | 7.5 | 52.5 createBody 0.1 setShape 9.9 upd 0.2
+new blast 5 f168 46.6 | 5.9 | 40.7 createBody 0.0 setShape 29.6 upd 0.0
+new blast 5 f89 47.5 | 7.1 | 40.3 createBody 0.0 setShape 20.1 upd 0.0
+new blast 5 f167 42.9 | 6.5 | 36.4 createBody 1.0 setShape 20.0 upd 0.1
+new blast 5 f212 40.3 | 6.1 | 34.2 createBody 0.0 setShape 25.8 upd 0.0
+new blast 5 f110 40.8 | 7.2 | 33.6 createBody 0.0 setShape 11.8 upd 0.0
+new blast 5 f3 37.0 | 3.4 | 33.6 createBody 9.7 setShape 0.0 upd 0.0
+new blast 5 f90 40.2 | 7.1 | 33.1 createBody 0.0 setShape 21.0 upd 0.1
+new blast 5 [SPIKE] blast run 0 p50 12.74 p99 46.6 max 60.0 over16 89 sum 3700
+new blast 5 f113 60.0 | 0.6 7.5 0.1 0.0 9.9 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 71 per 598 add 43
+new blast 5 f89 47.5 | 0.8 7.1 0.0 0.0 20.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 78 per 306 add 155
+new blast 5 f168 46.6 | 0.8 5.9 0.0 0.0 29.6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 22  val 55 per 604 add 74
+new blast 5 f167 42.9 | 0.3 6.5 1.0 0.0 20.0 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 22  val 68 per 755 add 81
+new blast 5 f110 40.8 | 0.4 7.2 0.0 0.0 11.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 71 per 534 add 56
+new blast 5 f212 40.3 | 0.3 6.1 0.0 0.0 25.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 56 per 1021 add 47
+new blast 5 [DIGEST] blast c181c38bc2a47219331bc8455bbe9681 50
+new blast 5 [HEAD] blast 20 29 19 37 17 21 18 17 15 16 13 16
+new hammer 5 [PRE] sum 266 max 29.1 p99 29.1 frames 70 left 20
+new hammer 5 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 5 f112 70.0 | 6.9 | 63.1 createBody 0.1 setShape 33.5 upd 0.2
+new hammer 5 f161 64.0 | 16.6 | 47.5 createBody 0.0 setShape 31.2 upd 0.2
+new hammer 5 f78 49.4 | 3.8 | 45.7 createBody 0.9 setShape 25.6 upd 0.1
+new hammer 5 f116 48.9 | 5.1 | 43.7 createBody 0.1 setShape 27.8 upd 0.2
+new hammer 5 f217 44.0 | 2.8 | 41.2 createBody 0.0 setShape 30.8 upd 0.1
+new hammer 5 f79 44.2 | 3.1 | 41.1 createBody 0.0 setShape 26.4 upd 0.1
+new hammer 5 f77 43.9 | 3.2 | 40.7 createBody 0.0 setShape 25.0 upd 0.0
+new hammer 5 f113 46.3 | 6.2 | 40.1 createBody 0.1 setShape 13.9 upd 0.2
+new hammer 5 [SPIKE] hammer run 0 p50 10.30 p99 49.4 max 70.0 over16 72 sum 3514
+new hammer 5 f112 70.0 | 0.8 6.9 0.1 0.0 33.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49 [["debris/d/st11/2",18],["debris/d/st9/2",11],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 52 per 268 add 44
+new hammer 5 f161 64.0 | 0.4 16.6 0.0 0.0 31.2 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 34 [["debris/d/st11/2",10],["debris/d/st1/0",13],["debris/d/st9/2",10],["debris/d/st7/1",1]] val 94 per 808 add 154
+new hammer 5 f78 49.4 | 0.5 3.8 0.9 0.0 25.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 41 per 154 add 24
+new hammer 5 f116 48.9 | 0.3 5.1 0.1 0.0 27.8 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 48 per 297 add 43
+new hammer 5 f113 46.3 | 0.5 6.2 0.1 0.0 13.9 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 51 per 297 add 25
+new hammer 5 f100 45.1 | 0.5 5.0 0.0 0.0 23.0 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49  val 57 per 289 add 57
+new hammer 5 [DIGEST] hammer 8f7d570d920a4dad7aaa6216411a72d5 52
+new hammer 5 [HEAD] hammer 14 28 18 19 17 15 15 16 18 15 19 13
+base blast 6 [PRE] sum 162 max 23.5 p99 23.5 frames 70 left -1
+base blast 6 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 6 f115 67.1 | 6.9 | 60.2 createBody 0.0 setShape 24.9 upd 0.2
+base blast 6 f94 58.5 | 8.7 | 49.8 createBody 0.5 setShape 31.4 upd 0.0
+base blast 6 f95 54.8 | 9.1 | 45.6 createBody 0.1 setShape 30.3 upd 0.1
+base blast 6 f120 52.9 | 8.0 | 44.9 createBody 0.7 setShape 24.6 upd 0.1
+base blast 6 f96 55.3 | 11.1 | 44.2 createBody 0.0 setShape 30.9 upd 0.1
+base blast 6 f93 51.4 | 8.2 | 43.2 createBody 0.0 setShape 28.8 upd 0.0
+base blast 6 f5 46.6 | 3.8 | 42.9 createBody 10.3 setShape 0.0 upd 0.0
+base blast 6 f119 50.0 | 9.1 | 40.8 createBody 0.1 setShape 25.3 upd 0.2
+base blast 6 [SPIKE] blast run 0 p50 12.63 p99 55.3 max 67.1 over16 86 sum 3939
+base blast 6 f115 67.1 | 0.7 6.9 0.0 0.0 24.9 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 61 per 578 add 49
+base blast 6 f94 58.5 | 0.6 8.7 0.5 0.0 31.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 70 per 382 add 95
+base blast 6 f96 55.3 | 0.6 11.1 0.0 0.0 30.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 71 per 417 add 93
+base blast 6 f95 54.8 | 0.5 9.1 0.1 0.0 30.3 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 74 per 403 add 124
+base blast 6 f120 52.9 | 0.5 8.0 0.7 0.0 24.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 55 per 694 add 44
+base blast 6 f93 51.4 | 1.3 8.2 0.0 0.0 28.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 77 per 343 add 141
+base blast 6 [DIGEST] blast 74b59968c2b21d2ee017770d02f31f72 50
+base blast 6 [HEAD] blast 31 24 23 16 10 47 15 27 21 19 23 14
+base hammer 6 [PRE] sum 123 max 18.8 p99 18.8 frames 70 left -1
+base hammer 6 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 6 f116 46.3 | 2.8 | 43.4 createBody 0.0 setShape 30.2 upd 0.1
+base hammer 6 f88 45.2 | 4.3 | 40.9 createBody 0.0 setShape 25.4 upd 0.0
+base hammer 6 f89 45.1 | 5.0 | 40.1 createBody 0.0 setShape 24.1 upd 0.0
+base hammer 6 f90 44.7 | 4.6 | 40.0 createBody 0.0 setShape 24.4 upd 0.1
+base hammer 6 f117 41.2 | 2.3 | 38.8 createBody 0.1 setShape 25.1 upd 0.1
+base hammer 6 f107 40.7 | 3.0 | 37.7 createBody 0.0 setShape 26.0 upd 0.1
+base hammer 6 f114 40.9 | 3.3 | 37.6 createBody 0.1 setShape 21.3 upd 0.3
+base hammer 6 f115 40.6 | 3.1 | 37.6 createBody 0.1 setShape 18.8 upd 0.3
+base hammer 6 [SPIKE] hammer run 0 p50 8.94 p99 45.2 max 46.7 over16 55 sum 2972
+base hammer 6 f162 46.7 | 0.3 9.3 0.3 0.0 22.8 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 25  val 112 per 697 add 279
+base hammer 6 f116 46.3 | 0.4 2.8 0.0 0.0 30.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40  val 42 per 393 add 29
+base hammer 6 f88 45.2 | 1.5 4.3 0.0 0.0 25.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 58 per 212 add 81
+base hammer 6 f89 45.1 | 1.0 5.0 0.0 0.0 24.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 69 per 212 add 66
+base hammer 6 f90 44.7 | 0.5 4.6 0.0 0.0 24.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 62 per 229 add 23
+base hammer 6 f93 42.1 | 0.6 5.4 0.0 0.0 24.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 61 per 210 add 69
+base hammer 6 [DIGEST] hammer 33556cfc640a6b34613fcba25fac37da 52
+base hammer 6 [HEAD] hammer 18 20 12 21 16 17 19 15 15 16 13 15
+new blast 6 [PRE] sum 275 max 25.9 p99 25.9 frames 70 left 24
+new blast 6 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 6 f91 51.8 | 6.7 | 45.1 createBody 0.5 setShape 22.8 upd 0.0
+new blast 6 f161 49.4 | 8.6 | 40.8 createBody 0.8 setShape 23.8 upd 0.0
+new blast 6 f169 47.7 | 8.1 | 39.6 createBody 0.0 setShape 24.1 upd 0.1
+new blast 6 f92 45.7 | 6.6 | 39.0 createBody 0.1 setShape 23.1 upd 0.1
+new blast 6 f3 42.4 | 3.4 | 39.0 createBody 10.1 setShape 0.0 upd 0.0
+new blast 6 f110 47.0 | 8.6 | 38.4 createBody 0.0 setShape 19.0 upd 0.1
+new blast 6 f204 41.4 | 3.3 | 38.1 createBody 0.4 setShape 25.1 upd 0.1
+new blast 6 f123 45.8 | 10.2 | 35.6 createBody 0.1 setShape 19.4 upd 0.0
+new blast 6 [SPIKE] blast run 0 p50 11.19 p99 47.7 max 51.8 over16 74 sum 3427
+new blast 6 f91 51.8 | 1.2 6.7 0.5 0.0 22.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 66 per 351 add 138
+new blast 6 f161 49.4 | 0.5 8.6 0.8 0.0 23.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29  val 97 per 608 add 149
+new blast 6 f169 47.7 | 0.4 8.1 0.0 0.0 24.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 30  val 95 per 908 add 131
+new blast 6 f110 47.0 | 0.3 8.6 0.0 0.0 19.0 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 75 per 461 add 137
+new blast 6 f123 45.8 | 0.3 10.2 0.1 0.0 19.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 81 per 581 add 77
+new blast 6 f92 45.7 | 0.5 6.6 0.1 0.0 23.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 52 per 399 add 79
+new blast 6 [DIGEST] blast 5d12296e764958479083b3d878f68d28 50
+new blast 6 [HEAD] blast 19 34 17 42 14 17 22 19 17 12 13 14
+new hammer 6 [PRE] sum 228 max 21.6 p99 21.6 frames 70 left 12
+new hammer 6 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 6 f161 71.5 | 24.9 | 46.6 createBody 0.6 setShape 21.9 upd 0.0
+new hammer 6 f162 54.9 | 17.8 | 37.1 createBody 0.3 setShape 23.9 upd 0.0
+new hammer 6 f211 42.8 | 7.9 | 34.9 createBody 0.1 setShape 23.8 upd 0.1
+new hammer 6 f163 45.8 | 16.4 | 29.4 createBody 0.0 setShape 17.6 upd 0.0
+new hammer 6 f69 32.4 | 3.0 | 29.4 createBody 1.3 setShape 7.1 upd 0.4
+new hammer 6 f1 30.1 | 1.1 | 29.0 createBody 1.3 setShape 0.0 upd 0.0
+new hammer 6 f113 33.4 | 4.8 | 28.6 createBody 0.0 setShape 11.0 upd 0.2
+new hammer 6 f198 38.8 | 10.5 | 28.3 createBody 0.0 setShape 17.1 upd 0.1
+new hammer 6 [SPIKE] hammer run 0 p50 11.67 p99 48.5 max 71.5 over16 71 sum 3399
+new hammer 6 f161 71.5 | 0.8 24.9 0.6 0.0 21.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41 [["debris/d/st11/2",10],["debris/d/st9/2",11],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 121 per 771 add 208
+new hammer 6 f162 54.9 | 0.5 17.8 0.3 0.0 23.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41  val 115 per 724 add 198
+new hammer 6 f160 48.5 | 0.1 23.1 0.4 0.0 10.8 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41  val 137 per 868 add 159
+new hammer 6 f163 45.8 | 0.4 16.4 0.0 0.0 17.6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41  val 112 per 761 add 153
+new hammer 6 f164 43.5 | 0.3 16.7 0.0 0.0 17.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41  val 116 per 767 add 182
+new hammer 6 f211 42.8 | 0.4 7.9 0.1 0.0 23.8 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 25  val 41 per 785 add 143
+new hammer 6 [DIGEST] hammer 0f78a1eb7d0caf27d8be7d64eb0a9b46 52
+new hammer 6 [HEAD] hammer 12 30 20 15 22 14 15 15 16 13 18 17
+base blast 7 [PRE] sum 143 max 21.0 p99 21.0 frames 70 left -1
+base blast 7 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 7 f89 71.6 | 4.7 | 66.9 createBody 0.5 setShape 38.7 upd 0.1
+base blast 7 f92 70.2 | 8.7 | 61.5 createBody 0.1 setShape 44.7 upd 0.1
+base blast 7 f114 65.6 | 8.3 | 57.3 createBody 0.1 setShape 29.5 upd 0.2
+base blast 7 f113 63.3 | 10.7 | 52.6 createBody 0.0 setShape 23.0 upd 0.2
+base blast 7 f164 68.7 | 17.0 | 51.7 createBody 0.0 setShape 35.8 upd 0.2
+base blast 7 f160 66.2 | 14.7 | 51.5 createBody 1.0 setShape 32.3 upd 0.3
+base blast 7 f118 56.3 | 9.0 | 47.3 createBody 0.7 setShape 27.2 upd 0.1
+base blast 7 f91 53.2 | 6.9 | 46.4 createBody 0.0 setShape 31.3 upd 0.1
+base blast 7 [SPIKE] blast run 0 p50 11.48 p99 68.7 max 71.6 over16 84 sum 4028
+base blast 7 f89 71.6 | 1.7 4.7 0.5 0.0 38.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 50 [["debris/d/st11/2",20],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 56 per 280 add 28
+base blast 7 f92 70.2 | 0.6 8.7 0.1 0.0 44.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 50 [["debris/d/st11/2",20],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 50 per 316 add 46
+base blast 7 f164 68.7 | 0.6 17.0 0.0 0.0 35.8 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28 [["debris/d/st11/2",7],["debris/d/st1/0",12],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 105 per 563 add 141
+base blast 7 f160 66.2 | 0.4 14.7 1.0 0.0 32.3 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 31 [["debris/d/st11/2",11],["debris/d/st1/0",11],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 93 per 644 add 122
+base blast 7 f114 65.6 | 1.9 8.3 0.1 0.0 29.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 63 per 559 add 69
+base blast 7 f113 63.3 | 1.0 10.7 0.0 0.0 23.0 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 61 per 534 add 72
+base blast 7 [DIGEST] blast 2232dd4712e2bb4b47303cb8a5f5480c 50
+base blast 7 [HEAD] blast 27 23 17 19 42 14 18 23 13 19 11 15
+base hammer 7 [PRE] sum 125 max 19.5 p99 19.5 frames 70 left -1
+base hammer 7 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 7 f114 46.2 | 4.4 | 41.8 createBody 0.0 setShape 6.9 upd 0.1
+base hammer 7 f115 29.7 | 2.6 | 27.0 createBody 0.0 setShape 9.9 upd 0.3
+base hammer 7 f170 39.2 | 13.8 | 25.4 createBody 0.0 setShape 16.4 upd 0.0
+base hammer 7 f169 36.5 | 11.3 | 25.2 createBody 0.0 setShape 15.3 upd 0.0
+base hammer 7 f206 29.9 | 5.3 | 24.6 createBody 0.0 setShape 15.5 upd 0.0
+base hammer 7 f168 35.7 | 11.1 | 24.6 createBody 0.0 setShape 15.4 upd 0.0
+base hammer 7 f71 26.1 | 1.8 | 24.4 createBody 0.0 setShape 6.0 upd 0.9
+base hammer 7 f90 27.2 | 3.1 | 24.1 createBody 0.8 setShape 8.3 upd 0.0
+base hammer 7 [SPIKE] hammer run 0 p50 9.48 p99 36.5 max 46.2 over16 68 sum 2992
+base hammer 7 f114 46.2 | 0.2 4.4 0.0 0.0 6.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 39 per 234 add 23
+base hammer 7 f170 39.2 | 0.3 13.8 0.0 0.0 16.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 103 per 555 add 151
+base hammer 7 f169 36.5 | 0.7 11.3 0.0 0.0 15.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 99 per 542 add 130
+base hammer 7 f167 35.8 | 0.2 12.5 0.3 0.0 11.3 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 101 per 547 add 164
+base hammer 7 f168 35.7 | 0.6 11.1 0.0 0.0 15.4 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 26  val 97 per 529 add 163
+base hammer 7 f193 33.0 | 0.3 10.0 0.0 0.0 5.5 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40  val 153 per 1161 add 263
+base hammer 7 [DIGEST] hammer a8d2fa3edeb829e736f2fd920e32b356 52
+base hammer 7 [HEAD] hammer 18 22 13 16 16 16 19 14 19 15 13 12
+new blast 7 [PRE] sum 232 max 22.1 p99 22.1 frames 70 left 17
+new blast 7 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 7 f114 60.4 | 7.5 | 52.9 createBody 0.1 setShape 30.7 upd 0.1
+new blast 7 f115 57.8 | 9.8 | 48.0 createBody 0.0 setShape 28.9 upd 0.5
+new blast 7 f110 47.9 | 7.9 | 39.9 createBody 0.1 setShape 17.5 upd 0.0
+new blast 7 f78 40.2 | 2.4 | 37.8 createBody 0.0 setShape 24.5 upd 0.0
+new blast 7 f169 49.5 | 11.9 | 37.6 createBody 0.0 setShape 26.7 upd 0.1
+new blast 7 f3 40.5 | 3.4 | 37.1 createBody 9.6 setShape 0.0 upd 0.0
+new blast 7 f79 41.0 | 3.9 | 37.0 createBody 0.7 setShape 22.9 upd 0.1
+new blast 7 f80 40.2 | 3.6 | 36.5 createBody 0.4 setShape 21.7 upd 0.2
+new blast 7 [SPIKE] blast run 0 p50 12.01 p99 49.5 max 60.4 over16 70 sum 3537
+new blast 7 f114 60.4 | 0.5 7.5 0.1 0.0 30.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 64 per 467 add 58
+new blast 7 f115 57.8 | 0.5 9.8 0.0 0.0 28.9 0.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 66 per 496 add 35
+new blast 7 f169 49.5 | 0.3 11.9 0.0 0.0 26.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 27  val 75 per 884 add 96
+new blast 7 f110 47.9 | 0.3 7.9 0.1 0.0 17.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 67 per 381 add 61
+new blast 7 f160 47.8 | 0.5 11.7 0.0 0.0 25.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 91 per 611 add 197
+new blast 7 f161 45.1 | 0.5 12.5 0.0 0.0 17.6 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29  val 101 per 736 add 142
+new blast 7 [DIGEST] blast e7bf2af76c90719daf185cceb552c690 50
+new blast 7 [HEAD] blast 19 31 17 41 18 21 11 18 16 16 16 13
+new hammer 7 [PRE] sum 231 max 22.4 p99 22.4 frames 70 left 18
+new hammer 7 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 7 f112 62.7 | 3.7 | 59.0 createBody 0.1 setShape 23.2 upd 0.2
+new hammer 7 f90 52.3 | 5.2 | 47.1 createBody 0.1 setShape 27.4 upd 0.1
+new hammer 7 f89 47.2 | 5.1 | 42.1 createBody 0.6 setShape 27.5 upd 0.0
+new hammer 7 f114 43.8 | 2.8 | 41.0 createBody 0.0 setShape 23.8 upd 0.1
+new hammer 7 f88 44.3 | 4.5 | 39.8 createBody 0.0 setShape 26.1 upd 0.0
+new hammer 7 f115 39.0 | 2.6 | 36.4 createBody 0.0 setShape 22.4 upd 0.3
+new hammer 7 f91 40.8 | 4.5 | 36.4 createBody 0.0 setShape 24.5 upd 0.1
+new hammer 7 f170 44.1 | 9.1 | 35.0 createBody 0.3 setShape 24.1 upd 0.1
+new hammer 7 [SPIKE] hammer run 0 p50 7.95 p99 47.2 max 62.7 over16 53 sum 2802
+new hammer 7 f112 62.7 | 0.5 3.7 0.1 0.0 23.2 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40 [["debris/d/st11/2",10],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 45 per 290 add 36
+new hammer 7 f90 52.3 | 0.5 5.2 0.1 0.0 27.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 58 per 190 add 75
+new hammer 7 f89 47.2 | 0.8 5.1 0.6 0.0 27.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 48 per 203 add 47
+new hammer 7 f88 44.3 | 1.8 4.5 0.0 0.0 26.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 42  val 61 per 176 add 63
+new hammer 7 f170 44.1 | 0.1 9.1 0.3 0.0 24.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 24  val 89 per 800 add 139
+new hammer 7 f114 43.8 | 0.7 2.8 0.0 0.0 23.8 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 40  val 42 per 300 add 29
+new hammer 7 [DIGEST] hammer c8830065bd53f53350987315bba37a40 52
+new hammer 7 [HEAD] hammer 12 29 17 16 15 18 16 17 11 15 14 15
+base blast 8 [PRE] sum 153 max 21.5 p99 21.5 frames 70 left -1
+base blast 8 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 8 f114 67.6 | 10.5 | 57.1 createBody 0.0 setShape 20.3 upd 0.3
+base blast 8 f90 52.1 | 8.5 | 43.6 createBody 0.3 setShape 25.9 upd 0.1
+base blast 8 f5 43.3 | 3.5 | 39.8 createBody 11.7 setShape 0.0 upd 0.0
+base blast 8 f115 48.1 | 8.4 | 39.7 createBody 0.0 setShape 22.1 upd 0.3
+base blast 8 f91 45.9 | 7.6 | 38.3 createBody 0.1 setShape 22.9 upd 0.1
+base blast 8 f148 46.3 | 8.9 | 37.4 createBody 0.1 setShape 22.5 upd 0.1
+base blast 8 f92 42.5 | 7.5 | 35.0 createBody 0.1 setShape 20.1 upd 0.0
+base blast 8 f117 43.1 | 8.7 | 34.4 createBody 0.0 setShape 17.3 upd 0.3
+base blast 8 [SPIKE] blast run 0 p50 13.48 p99 48.1 max 67.6 over16 87 sum 3941
+base blast 8 f114 67.6 | 0.7 10.5 0.0 0.0 20.3 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 78 per 455 add 118
+base blast 8 f90 52.1 | 1.3 8.5 0.3 0.0 25.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 67 per 293 add 76
+base blast 8 f115 48.1 | 0.7 8.4 0.0 0.0 22.1 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 72 per 508 add 62
+base blast 8 f148 46.3 | 0.4 8.9 0.1 0.0 22.5 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41  val 42 per 736 add 20
+base blast 8 f170 46.0 | 2.7 12.7 0.0 0.0 21.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 34  val 83 per 1116 add 71
+base blast 8 f91 45.9 | 0.9 7.6 0.1 0.0 22.9 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46  val 67 per 280 add 100
+base blast 8 [DIGEST] blast fd2080e796c80c5fe9a5867c60b398e9 50
+base blast 8 [HEAD] blast 29 26 22 14 13 43 19 24 20 15 20 16
+base hammer 8 [PRE] sum 136 max 21.0 p99 21.0 frames 70 left -1
+base hammer 8 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 8 f116 47.1 | 3.6 | 43.4 createBody 0.0 setShape 28.5 upd 0.2
+base hammer 8 f168 49.3 | 8.1 | 41.2 createBody 0.6 setShape 25.1 upd 0.0
+base hammer 8 f115 45.2 | 4.0 | 41.2 createBody 0.1 setShape 23.0 upd 0.5
+base hammer 8 f114 44.1 | 3.7 | 40.4 createBody 0.1 setShape 21.9 upd 0.3
+base hammer 8 f110 42.6 | 4.5 | 38.1 createBody 0.0 setShape 23.0 upd 0.2
+base hammer 8 f89 42.3 | 5.4 | 36.9 createBody 0.0 setShape 23.4 upd 0.0
+base hammer 8 f167 44.3 | 7.8 | 36.5 createBody 0.1 setShape 23.2 upd 0.1
+base hammer 8 f112 41.5 | 5.1 | 36.3 createBody 0.0 setShape 22.8 upd 0.2
+base hammer 8 [SPIKE] hammer run 0 p50 10.80 p99 45.2 max 49.3 over16 60 sum 3103
+base hammer 8 f168 49.3 | 0.3 8.1 0.6 0.0 25.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 32  val 64 per 646 add 62
+base hammer 8 f116 47.1 | 0.4 3.6 0.0 0.0 28.5 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 64 per 473 add 40
+base hammer 8 f115 45.2 | 0.6 4.0 0.1 0.0 23.0 0.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 51 per 506 add 27
+base hammer 8 f167 44.3 | 0.8 7.8 0.1 0.0 23.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 32  val 85 per 772 add 110
+base hammer 8 f114 44.1 | 0.6 3.7 0.1 0.0 21.9 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 49 per 494 add 42
+base hammer 8 f110 42.6 | 0.5 4.5 0.0 0.0 23.0 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 49  val 63 per 459 add 64
+base hammer 8 [DIGEST] hammer 142d554de7fa89b6d52407cb1a5b8f38 52
+base hammer 8 [HEAD] hammer 19 22 14 17 16 16 21 15 16 13 14 12
+new blast 8 [PRE] sum 255 max 21.6 p99 21.6 frames 70 left 17
+new blast 8 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 8 f112 79.6 | 9.2 | 70.4 createBody 0.0 setShape 39.7 upd 0.6
+new blast 8 f110 74.9 | 8.6 | 66.3 createBody 1.1 setShape 25.0 upd 0.3
+new blast 8 f113 70.1 | 9.1 | 61.0 createBody 0.1 setShape 31.3 upd 0.2
+new blast 8 f104 62.9 | 5.9 | 57.0 createBody 0.0 setShape 32.2 upd 0.3
+new blast 8 f115 62.3 | 7.8 | 54.6 createBody 0.0 setShape 29.1 upd 0.1
+new blast 8 f121 62.8 | 9.8 | 53.0 createBody 0.1 setShape 33.6 upd 0.3
+new blast 8 f79 55.0 | 3.5 | 51.5 createBody 0.5 setShape 31.1 upd 0.3
+new blast 8 f125 59.4 | 10.2 | 49.3 createBody 0.0 setShape 32.4 upd 0.2
+new blast 8 [SPIKE] blast run 0 p50 11.53 p99 70.1 max 79.6 over16 76 sum 3880
+new blast 8 f112 79.6 | 1.1 9.2 0.0 0.0 39.7 0.6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 46 [["debris/d/st11/2",16],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 58 per 409 add 68
+new blast 8 f110 74.9 | 1.7 8.6 1.1 0.0 25.0 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 58 per 390 add 22
+new blast 8 f113 70.1 | 1.8 9.1 0.1 0.0 31.3 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 64 per 384 add 53
+new blast 8 f104 62.9 | 0.4 5.9 0.0 0.0 32.2 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 53 per 398 add 10
+new blast 8 f121 62.8 | 0.4 9.8 0.1 0.0 33.6 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43 [["debris/d/st11/2",14],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 51 per 465 add 60
+new blast 8 f115 62.3 | 1.5 7.8 0.0 0.0 29.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 58 per 456 add 68
+new blast 8 [DIGEST] blast d7951f0996f87cdd86e844efcd37cd83 50
+new blast 8 [HEAD] blast 19 27 18 38 18 17 14 20 11 17 13 15
+new hammer 8 [PRE] sum 275 max 26.8 p99 26.8 frames 70 left 19
+new hammer 8 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 8 f112 75.4 | 6.9 | 68.6 createBody 0.1 setShape 27.2 upd 0.2
+new hammer 8 f169 53.6 | 9.4 | 44.2 createBody 0.1 setShape 30.3 upd 0.1
+new hammer 8 f113 47.6 | 6.0 | 41.6 createBody 0.1 setShape 24.4 upd 0.3
+new hammer 8 f168 50.7 | 9.6 | 41.1 createBody 0.0 setShape 26.6 upd 0.0
+new hammer 8 f141 47.2 | 6.4 | 40.8 createBody 0.0 setShape 24.0 upd 0.1
+new hammer 8 f89 42.0 | 2.4 | 39.5 createBody 0.3 setShape 22.7 upd 0.0
+new hammer 8 f166 51.8 | 13.0 | 38.8 createBody 0.0 setShape 24.8 upd 0.0
+new hammer 8 f125 43.7 | 5.6 | 38.1 createBody 0.2 setShape 15.0 upd 0.1
+new hammer 8 [SPIKE] hammer run 0 p50 12.03 p99 51.8 max 75.4 over16 78 sum 3589
+new hammer 8 f112 75.4 | 0.2 6.9 0.1 0.0 27.2 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 50 [["debris/d/st11/2",19],["debris/d/st9/2",11],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 54 per 264 add 25
+new hammer 8 f169 53.6 | 0.4 9.4 0.1 0.0 30.3 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 74 per 884 add 103
+new hammer 8 f166 51.8 | 0.4 13.0 0.0 0.0 24.8 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 79 per 783 add 91
+new hammer 8 f168 50.7 | 0.3 9.6 0.0 0.0 26.6 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 67 per 809 add 119
+new hammer 8 f113 47.6 | 0.4 6.0 0.1 0.0 24.4 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 45 per 237 add 43
+new hammer 8 f165 47.2 | 0.2 10.6 0.1 0.0 21.8 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 37  val 96 per 819 add 105
+new hammer 8 [DIGEST] hammer aa4f583a6bc962e643d303ba5d0224ca 52
+new hammer 8 [HEAD] hammer 18 22 12 20 17 20 21 17 16 14 14 16
+base blast 9 [PRE] sum 178 max 28.2 p99 28.2 frames 70 left -1
+base blast 9 [KITWORST] blast frame total | jolt step | kit remainder
+base blast 9 f90 68.4 | 4.7 | 63.7 createBody 1.4 setShape 41.5 upd 0.1
+base blast 9 f123 66.5 | 4.2 | 62.2 createBody 0.1 setShape 37.4 upd 0.2
+base blast 9 f118 55.4 | 5.4 | 50.0 createBody 0.0 setShape 32.4 upd 0.2
+base blast 9 f113 52.5 | 5.2 | 47.3 createBody 0.0 setShape 27.8 upd 0.1
+base blast 9 f91 49.5 | 5.7 | 43.8 createBody 0.1 setShape 28.8 upd 0.1
+base blast 9 f109 47.9 | 6.3 | 41.6 createBody 0.0 setShape 21.7 upd 0.2
+base blast 9 f121 45.9 | 4.9 | 41.1 createBody 0.3 setShape 29.1 upd 0.2
+base blast 9 f105 44.2 | 5.4 | 38.8 createBody 0.0 setShape 21.9 upd 0.3
+base blast 9 [SPIKE] blast run 0 p50 9.70 p99 55.4 max 68.4 over16 76 sum 3532
+base blast 9 f90 68.4 | 1.6 4.7 1.4 0.0 41.5 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 44 per 308 add 25
+base blast 9 f123 66.5 | 0.2 4.2 0.1 0.0 37.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 50 per 491 add 27
+base blast 9 f118 55.4 | 0.3 5.4 0.0 0.0 32.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 53 per 545 add 39
+base blast 9 f113 52.5 | 0.7 5.2 0.0 0.0 27.8 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 49 per 485 add 37
+base blast 9 f91 49.5 | 0.3 5.7 0.1 0.0 28.8 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48  val 47 per 310 add 26
+base blast 9 f109 47.9 | 0.2 6.3 0.0 0.0 21.7 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 42 per 424 add 39
+base blast 9 [DIGEST] blast 40d83cfc15871c231f34e0206b79b0b4 50
+base blast 9 [HEAD] blast 26 31 17 18 37 16 17 26 14 19 14 18
+base hammer 9 [PRE] sum 122 max 19.1 p99 19.1 frames 70 left -1
+base hammer 9 [KITWORST] hammer frame total | jolt step | kit remainder
+base hammer 9 f167 70.5 | 15.2 | 55.3 createBody 0.0 setShape 37.1 upd 0.1
+base hammer 9 f168 69.0 | 15.0 | 54.0 createBody 0.0 setShape 38.3 upd 0.1
+base hammer 9 f115 54.1 | 3.2 | 50.9 createBody 0.1 setShape 30.0 upd 0.2
+base hammer 9 f165 62.4 | 11.8 | 50.6 createBody 0.1 setShape 34.6 upd 0.1
+base hammer 9 f114 52.8 | 3.4 | 49.4 createBody 0.0 setShape 28.6 upd 0.5
+base hammer 9 f164 60.3 | 12.0 | 48.3 createBody 0.1 setShape 29.8 upd 0.3
+base hammer 9 f166 59.3 | 12.8 | 46.5 createBody 0.0 setShape 32.4 upd 0.1
+base hammer 9 f215 47.5 | 3.8 | 43.7 createBody 0.1 setShape 31.0 upd 0.1
+base hammer 9 [SPIKE] hammer run 0 p50 8.61 p99 62.4 max 70.5 over16 58 sum 3296
+base hammer 9 f167 70.5 | 0.3 15.2 0.0 0.0 37.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29 [["debris/d/st11/2",7],["debris/d/st1/0",13],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 119 per 522 add 167
+base hammer 9 f168 69.0 | 0.2 15.0 0.0 0.0 38.3 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 29 [["debris/d/st11/2",7],["debris/d/st1/0",13],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 118 per 625 add 128
+base hammer 9 f165 62.4 | 1.1 11.8 0.1 0.0 34.6 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28 [["debris/d/st11/2",7],["debris/d/st1/0",12],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 91 per 468 add 88
+base hammer 9 f164 60.3 | 0.4 12.0 0.1 0.0 29.8 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28 [["debris/d/st11/2",7],["debris/d/st1/0",12],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 103 per 573 add 80
+base hammer 9 f166 59.3 | 0.3 12.8 0.0 0.0 32.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 28  val 100 per 489 add 134
+base hammer 9 f115 54.1 | 0.4 3.2 0.1 0.0 30.0 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 47  val 50 per 289 add 35
+base hammer 9 [DIGEST] hammer 39c5b76141b800f344ea23b25055a704 52
+base hammer 9 [HEAD] hammer 17 32 17 11 14 16 21 16 17 14 16 13
+new blast 9 [PRE] sum 247 max 25.8 p99 25.8 frames 70 left 17
+new blast 9 [KITWORST] blast frame total | jolt step | kit remainder
+new blast 9 f89 77.6 | 5.5 | 72.1 createBody 2.3 setShape 41.7 upd 0.0
+new blast 9 f116 64.9 | 5.4 | 59.5 createBody 0.0 setShape 37.2 upd 0.1
+new blast 9 f121 62.4 | 4.3 | 58.0 createBody 0.0 setShape 26.8 upd 0.1
+new blast 9 f90 64.6 | 7.0 | 57.5 createBody 0.1 setShape 39.7 upd 0.1
+new blast 9 f92 61.2 | 5.0 | 56.2 createBody 0.0 setShape 41.4 upd 0.2
+new blast 9 f110 61.1 | 7.0 | 54.1 createBody 0.0 setShape 29.6 upd 0.2
+new blast 9 f129 61.2 | 7.1 | 54.1 createBody 0.0 setShape 38.9 upd 0.1
+new blast 9 f91 58.0 | 6.3 | 51.6 createBody 0.0 setShape 34.7 upd 0.3
+new blast 9 [SPIKE] blast run 0 p50 12.10 p99 64.6 max 77.6 over16 88 sum 4186
+new blast 9 f89 77.6 | 1.7 5.5 2.3 0.0 41.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 57 per 238 add 47
+new blast 9 f116 64.9 | 0.5 5.4 0.0 0.0 37.2 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 65 per 506 add 48
+new blast 9 f90 64.6 | 0.6 7.0 0.1 0.0 39.7 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 51 per 266 add 49
+new blast 9 f163 62.5 | 0.5 13.4 0.1 0.0 28.4 0.3 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41 [["debris/d/st11/2",10],["debris/d/st1/0",22],["debris/d/st9/2",8],["debris/d/st7/1",1]] val 110 per 852 add 91
+new blast 9 f121 62.4 | 0.3 4.3 0.0 0.0 26.8 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 44 [["debris/d/st11/2",15],["debris/d/st9/2",9],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 48 per 529 add 31
+new blast 9 f92 61.2 | 0.4 5.0 0.0 0.0 41.4 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 48 [["debris/d/st11/2",18],["debris/d/st9/2",10],["debris/d/st1/0",19],["debris/d/st7/1",1]] val 55 per 267 add 60
+new blast 9 [DIGEST] blast 7c24f072dbf850c3e03197d8f232be0d 62
+new blast 9 [HEAD] blast 20 30 17 43 19 19 18 16 21 12 17 11
+new hammer 9 [PRE] sum 258 max 25.8 p99 25.8 frames 70 left 19
+new hammer 9 [KITWORST] hammer frame total | jolt step | kit remainder
+new hammer 9 f93 44.2 | 4.4 | 39.8 createBody 0.3 setShape 21.4 upd 0.1
+new hammer 9 f8 39.4 | 1.4 | 38.0 createBody 0.1 setShape 0.0 upd 0.0
+new hammer 9 f115 35.7 | 2.9 | 32.8 createBody 0.0 setShape 17.2 upd 0.2
+new hammer 9 f168 40.1 | 8.6 | 31.5 createBody 0.0 setShape 19.1 upd 0.1
+new hammer 9 f130 34.0 | 2.5 | 31.5 createBody 0.1 setShape 20.1 upd 0.1
+new hammer 9 f94 35.8 | 4.4 | 31.4 createBody 0.0 setShape 20.3 upd 0.1
+new hammer 9 f1 31.9 | 1.3 | 30.6 createBody 1.4 setShape 0.0 upd 0.0
+new hammer 9 f116 33.1 | 2.8 | 30.3 createBody 0.1 setShape 17.8 upd 0.1
+new hammer 9 [SPIKE] hammer run 0 p50 8.24 p99 39.4 max 44.2 over16 50 sum 2739
+new hammer 9 f93 44.2 | 1.2 4.4 0.3 0.0 21.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 63 per 222 add 95
+new hammer 9 f168 40.1 | 0.2 8.6 0.0 0.0 19.1 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 23  val 83 per 740 add 102
+new hammer 9 f8 39.4 | 0.4 1.4 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 16  val 23 per 76 add 2
+new hammer 9 f169 38.3 | 0.3 8.2 0.1 0.0 21.0 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 23  val 60 per 677 add 79
+new hammer 9 f94 35.8 | 0.4 4.4 0.0 0.0 20.3 0.1 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 43  val 56 per 265 add 38
+new hammer 9 f115 35.7 | 0.5 2.9 0.0 0.0 17.2 0.2 0.0 0.0 0.0 0.0 0.0 0.0 0.0 | active 41  val 35 per 320 add 38
+new hammer 9 [DIGEST] hammer cce96054caf615be4f24737b040775cf 52
+new hammer 9 [HEAD] hammer 13 32 17 19 18 17 16 25 39 13 13 14
+DONE
