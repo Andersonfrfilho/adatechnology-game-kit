@@ -1,0 +1,81 @@
+### kind=blast pair=1 side=off
+[SPREAD] blast run 0 budget off | physics p50 12.06 p99 38.27 max 41.95 over5 197 | frame p50 14.78 p99 42.62 max 56.69 sum 3765 | splits 50 lastSplit f29 lastBody f209 queueEmpty f31 pieces 50
+[HEAD] 24/1 22/0 11/1 19/1 14/2 42/1 14/2 18/2 20/1 13/1 15/2 15/1 15/2 12/1 16/2 10/1 16/2 13/2 15/2 14/3 14/2 13/2 16/3 19/3 16/2 17/2 15/2 16/2 14/1 13/1
+[DIGEST] blast 5967752cb8f159910a2496ef04cc0a1e 50
+[SPREAD] blast run 1 budget off | physics p50 9.70 p99 55.91 max 60.35 over5 189 | frame p50 11.98 p99 61.71 max 67.33 sum 4039 | splits 50 lastSplit f22 lastBody f211 queueEmpty f23 pieces 50
+[HEAD] 14/2 18/1 11/2 27/3 11/1 16/2 19/2 18/2 12/1 14/2 16/2 14/2 8/1 11/2 17/3 17/4 13/3 17/4 16/2 15/3 12/1 15/3 15/2 15/0 6/0 5/0 4/0 6/0 4/0 6/0
+[DIGEST] blast 87544106e1e207a61964b87fbbae0734 50
+[SPREAD] blast run 2 budget off | physics p50 12.18 p99 56.47 max 71.33 over5 187 | frame p50 15.05 p99 60.65 max 77.79 sum 4707 | splits 50 lastSplit f22 lastBody f211 queueEmpty f23 pieces 50
+[HEAD] 12/2 18/1 13/3 27/2 14/2 22/2 13/1 17/2 17/2 9/1 15/2 11/2 13/2 9/2 20/4 10/2 12/3 15/3 15/3 13/2 15/3 12/2 16/2 11/0 5/0 3/0 3/0 5/0 4/0 3/0
+[DIGEST] blast e8280dafd597f6f12e411502df9f52b8 50
+### kind=blast pair=1 side=4
+[SPREAD] blast run 0 budget 4 | physics p50 11.97 p99 53.14 max 86.72 over5 234 | frame p50 15.23 p99 61.95 max 89.52 sum 4803 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 50/1 23/0 8/1 17/1 16/1 10/1 8/1 9/1 8/1 9/1 7/1 10/1 10/1 7/1 8/1 11/1 34/1 9/1 9/1 9/1 8/1 17/1 10/1 9/1 11/1 15/1 15/1 10/1 9/1 11/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+[SPREAD] blast run 1 budget 4 | physics p50 10.78 p99 48.10 max 70.83 over5 216 | frame p50 13.66 p99 53.73 max 73.82 sum 4349 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 22/1 11/0 7/1 16/1 10/1 12/1 8/1 8/1 8/1 8/1 7/1 9/1 13/1 8/1 9/1 13/1 21/1 9/1 10/1 8/1 6/1 14/1 11/1 9/1 10/1 15/1 11/1 10/1 9/1 10/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+[SPREAD] blast run 2 budget 4 | physics p50 11.44 p99 58.26 max 81.75 over5 220 | frame p50 14.80 p99 65.56 max 85.51 sum 4547 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 23/1 10/0 6/1 14/1 10/1 11/1 9/1 6/1 7/1 7/1 8/1 8/1 11/1 10/1 7/1 10/1 26/1 7/1 9/1 11/1 7/1 17/1 11/1 11/1 13/1 13/1 12/1 10/1 9/1 11/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+### kind=blast pair=2 side=off
+[SPREAD] blast run 0 budget off | physics p50 15.04 p99 67.08 max 77.93 over5 217 | frame p50 18.49 p99 81.75 max 91.28 sum 5517 | splits 50 lastSplit f36 lastBody f239 queueEmpty f39 pieces 50
+[HEAD] 30/1 24/0 12/1 20/1 17/2 46/1 17/2 15/1 19/1 15/1 25/1 9/0 15/2 17/1 13/1 11/1 13/1 17/2 13/1 12/1 17/1 11/1 15/2 21/2 16/2 16/2 16/3 15/2 20/2 19/2
+[DIGEST] blast 5da13caf97b16247765f62088d902c82 50
+[SPREAD] blast run 1 budget off | physics p50 13.31 p99 51.65 max 77.97 over5 230 | frame p50 16.12 p99 55.84 max 82.92 sum 4676 | splits 50 lastSplit f24 lastBody f186 queueEmpty f26 pieces 50
+[HEAD] 14/2 23/1 12/2 30/2 13/2 22/2 15/1 16/2 16/1 16/2 15/2 11/1 13/2 10/1 13/3 18/2 14/4 14/3 14/3 14/2 13/2 15/2 20/3 12/1 17/2 16/0 7/0 8/0 5/0 8/0
+[DIGEST] blast 60546a0da62e7de47e67048351fdd351 50
+[SPREAD] blast run 2 budget off | physics p50 14.69 p99 55.88 max 66.43 over5 230 | frame p50 17.32 p99 60.89 max 70.50 sum 4584 | splits 50 lastSplit f27 lastBody f239 queueEmpty f29 pieces 50
+[HEAD] 12/2 19/1 12/2 31/2 15/2 16/1 16/2 13/1 18/2 13/1 14/2 14/1 9/1 15/2 15/2 8/1 17/3 19/3 12/2 19/3 13/1 16/2 16/2 16/2 18/2 12/1 17/2 20/2 14/0 13/0
+[DIGEST] blast d310e7fc6add98ae32bcf4ca2ed3b2d1 50
+### kind=blast pair=2 side=4
+[SPREAD] blast run 0 budget 4 | physics p50 10.70 p99 45.31 max 82.95 over5 222 | frame p50 13.79 p99 52.48 max 86.64 sum 4197 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 40/1 23/0 8/1 16/1 13/1 12/1 9/1 7/1 8/1 8/1 9/1 10/1 10/1 8/1 12/1 11/1 37/1 13/1 11/1 10/1 9/1 21/1 12/1 10/1 12/1 18/1 13/1 13/1 9/1 9/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+[SPREAD] blast run 1 budget 4 | physics p50 10.95 p99 55.41 max 81.92 over5 219 | frame p50 13.93 p99 63.65 max 84.84 sum 4340 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 17/1 10/0 6/1 13/1 10/1 10/1 7/1 6/1 6/1 6/1 6/1 9/1 10/1 7/1 7/1 8/1 25/1 6/1 7/1 9/1 6/1 13/1 9/1 9/1 10/1 14/1 12/1 9/1 8/1 8/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+[SPREAD] blast run 2 budget 4 | physics p50 11.24 p99 50.75 max 78.25 over5 225 | frame p50 14.32 p99 58.23 max 80.95 sum 4537 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 24/1 9/0 6/1 17/1 10/1 12/1 7/1 6/1 7/1 9/1 8/1 8/1 13/1 8/1 8/1 10/1 23/1 8/1 11/1 10/1 8/1 16/1 11/1 9/1 10/1 14/1 11/1 9/1 10/1 11/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+### kind=blast pair=3 side=off
+[SPREAD] blast run 0 budget off | physics p50 16.09 p99 61.62 max 68.88 over5 227 | frame p50 18.77 p99 67.23 max 75.48 sum 5341 | splits 50 lastSplit f27 lastBody f199 queueEmpty f30 pieces 50
+[HEAD] 21/1 22/0 17/2 14/1 40/2 14/2 19/2 18/1 11/1 17/2 13/1 16/2 10/1 17/2 10/1 13/2 11/1 14/3 16/2 14/3 16/3 14/2 17/3 19/2 15/2 17/2 15/2 17/2 17/0 17/0
+[DIGEST] blast bbfd78c2ee23102f30b9100828b87eae 50
+[SPREAD] blast run 1 budget off | physics p50 19.97 p99 94.49 max 100.37 over5 240 | frame p50 23.54 p99 101.49 max 250.23 sum 7264 | splits 53 lastSplit f179 lastBody f239 queueEmpty f180 pieces 53
+[HEAD] 9/1 23/1 14/1 16/2 32/2 12/1 14/1 25/2 21/1 13/1 20/1 14/1 14/1 20/2 18/1 11/1 14/1 12/1 11/1 16/2 20/2 15/2 17/2 13/2 19/3 21/2 13/1 15/2 21/2 19/2
+[DIGEST] blast 19d80d9afb916a23f029258620e1e16b 53
+[SPREAD] blast run 2 budget off | physics p50 16.17 p99 73.69 max 91.62 over5 215 | frame p50 19.42 p99 82.51 max 97.11 sum 5699 | splits 50 lastSplit f35 lastBody f233 queueEmpty f36 pieces 50
+[HEAD] 9/1 19/1 15/1 15/2 33/1 15/2 13/1 25/2 19/1 13/1 23/1 13/1 16/1 13/1 19/1 16/1 15/1 13/1 12/1 13/1 14/1 15/2 19/1 16/2 17/2 15/2 18/2 15/2 18/2 22/2
+[DIGEST] blast 69ef5fff4dbf715349664a579bd84cea 50
+### kind=blast pair=3 side=4
+[SPREAD] blast run 0 budget 4 | physics p50 11.71 p99 46.75 max 77.44 over5 232 | frame p50 14.51 p99 55.17 max 79.98 sum 4357 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 47/1 21/0 7/1 16/1 12/1 9/1 10/1 7/1 8/1 8/1 8/1 11/1 12/1 8/1 9/1 12/1 35/1 9/1 10/1 9/1 8/1 19/1 13/1 9/1 10/1 15/1 12/1 10/1 9/1 10/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+[SPREAD] blast run 1 budget 4 | physics p50 11.21 p99 56.82 max 83.92 over5 225 | frame p50 14.38 p99 61.91 max 87.46 sum 4545 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 21/1 10/0 7/1 16/1 10/1 9/1 7/1 7/1 7/1 7/1 7/1 8/1 13/1 8/1 9/1 11/1 20/1 7/1 10/1 9/1 8/1 15/1 10/1 10/1 10/1 15/1 12/1 10/1 11/1 9/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+[SPREAD] blast run 2 budget 4 | physics p50 11.09 p99 50.00 max 75.41 over5 221 | frame p50 14.34 p99 55.38 max 79.42 sum 4376 | splits 50 lastSplit f32 lastBody f239 queueEmpty f32 pieces 50
+[HEAD] 16/1 9/0 7/1 12/1 12/1 8/1 7/1 9/1 9/1 7/1 7/1 9/1 11/1 8/1 8/1 10/1 25/1 7/1 8/1 9/1 7/1 14/1 10/1 9/1 10/1 14/1 11/1 10/1 11/1 8/1
+[DIGEST] blast 8fd8f6635e3225927625e4658bfd1f26 50
+### kind=hammer pair=1 side=off
+[SPREAD] hammer run 0 budget off | physics p50 8.58 p99 48.01 max 58.35 over5 190 | frame p50 10.58 p99 51.16 max 63.12 sum 3409 | splits 52 lastSplit f20 lastBody f212 queueEmpty f23 pieces 52
+[HEAD] 22/1 19/0 13/2 18/2 14/3 21/3 14/1 13/2 17/2 15/2 15/2 17/3 13/2 11/3 18/4 14/5 16/3 18/4 13/3 15/2 16/3 16/0 16/0 8/0 6/0 4/0 4/0 4/0 11/0 5/0
+[DIGEST] hammer 530099ed216760e49a2662cbbb34a489 52
+[SPREAD] hammer run 1 budget off | physics p50 6.49 p99 50.66 max 56.84 over5 156 | frame p50 8.51 p99 54.68 max 60.89 sum 3225 | splits 52 lastSplit f17 lastBody f173 queueEmpty f19 pieces 52
+[HEAD] 10/2 18/1 12/4 19/3 16/2 16/2 16/2 13/2 13/2 13/2 14/3 13/4 18/5 15/5 16/3 17/4 14/3 15/3 13/0 8/0 5/0 4/0 4/0 4/0 6/0 4/0 7/0 4/0 5/0 4/0
+[DIGEST] hammer 96361a9864f423178eab01ee41615d9a 52
+[SPREAD] hammer run 2 budget off | physics p50 7.33 p99 29.55 max 50.48 over5 161 | frame p50 9.42 p99 33.85 max 54.06 sum 2751 | splits 52 lastSplit f18 lastBody f189 queueEmpty f20 pieces 52
+[HEAD] 10/2 17/2 15/4 20/3 15/1 11/2 17/2 13/2 13/2 16/3 14/2 7/2 17/5 15/4 14/4 17/3 12/3 13/3 16/3 14/0 7/0 5/0 4/0 3/0 4/0 3/0 6/0 4/0 5/0 4/0
+[DIGEST] hammer d96b11e35a37ba8a43dd610a926838f3 52
+### kind=hammer pair=1 side=4
+[SPREAD] hammer run 0 budget 4 | physics p50 11.11 p99 40.32 max 61.84 over5 209 | frame p50 12.89 p99 44.39 max 63.72 sum 3554 | splits 52 lastSplit f32 lastBody f239 queueEmpty f32 pieces 52
+[HEAD] 43/1 20/0 9/1 13/1 13/1 9/1 7/1 6/1 7/1 9/1 6/1 9/1 15/1 7/1 7/1 6/1 10/1 12/1 8/1 7/1 6/1 6/1 8/1 7/1 7/1 6/1 6/1 10/1 11/1 10/1
+[DIGEST] hammer 327be9854ec5643f3e174bb9712570e5 52
+[SPREAD] hammer run 1 budget 4 | physics p50 10.14 p99 38.82 max 64.09 over5 202 | frame p50 12.08 p99 41.49 max 65.94 sum 3329 | splits 52 lastSplit f32 lastBody f239 queueEmpty f32 pieces 52
+[HEAD] 18/1 11/0 7/1 13/1 8/1 7/1 5/1 5/1 5/1 5/1 5/1 6/1 9/1 8/1 6/1 6/1 11/1 9/1 7/1 8/1 6/1 5/1 6/1 5/1 5/1 5/1 6/1 9/1 10/1 8/1
+[DIGEST] hammer 327be9854ec5643f3e174bb9712570e5 52
+[SPREAD] hammer run 2 budget 4 | physics p50 9.45 p99 49.61 max 65.14 over5 195 | frame p50 11.37 p99 55.57 max 68.36 sum 3478 | splits 52 lastSplit f31 lastBody f200 queueEmpty f31 pieces 52
+[HEAD] 16/1 14/1 10/1 8/1 8/1 6/1 5/1 7/1 5/1 5/1 6/1 10/1 6/1 6/1 6/1 12/1 9/1 7/1 6/1 5/1 5/1 5/1 5/1 7/1 5/1 5/1 9/1 13/1 10/1 9/1
+[DIGEST] hammer 2113b45deaa85d75e7656945f3ea2dac 52
+### kind=hammer pair=2 side=off
