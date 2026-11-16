@@ -44,6 +44,8 @@ export interface VehicleEntry {
   readonly controller: JoltNS.WheeledVehicleController
   readonly listener: JoltNS.VehicleConstraintStepListener
   readonly tester: JoltNS.VehicleCollisionTester
+  /** How many wheels it was made with: a motorbike has 2, and Jolt must not be asked for a third. */
+  readonly wheelCount: number
 }
 
 export interface JoltCharacter {
