@@ -2287,8 +2287,8 @@ class Renderer implements DestructionRenderer {
       const b = this.bounds.get(objectId)
       if (b) this.afterSplit(b, torn)
     }
-    // none of its parts is loose any more (all gone, or now the object's own group): the object's loose groups as they are now take its place
-    for (const [objectId, torn] of lost) {
+    // a waiting group may have broken in two before its turn, or none of its parts be loose any more: every loose group not waiting now joins the queue
+    for (const [objectId, torn] of [...touched, ...lost]) {
       const b = this.bounds.get(objectId)
       const st = this.world.state(objectId)
       if (b && st && st.groups.length > 1) this.queueLoose(b, st, [...torn, ...tornPairsOf(st)], this.workFocus)

@@ -207,6 +207,17 @@ describe('a loose group waiting its turn when the object changes under it', () =
     expect(world.state('o1')?.groups).toHaveLength(1)
   })
 
+  it('a waiting group broken in two before its turn becomes two pieces, none left in the object', () => {
+    const { renderer, world, partsOf } = grouped([['a'], ['b'], ['p3', 'p4', 'p5']], { workBudget: { ...ONE_A_FRAME, maxWaitFrames: 3 } })
+    renderer.update(FRAME)
+    expect(world.splits).toHaveLength(1)
+    // a second blow splits the waiting group into two loose groups
+    world.state('o1')!.groups = [['a'], ['p3'], ['p4', 'p5']]
+    for (let frame = 0; frame < 4 && (world.state('o1')?.groups.length ?? 0) > 1; frame++) renderer.update(FRAME)
+    expect(world.splits.map((split) => partsOf(split.newId))).toEqual([['b'], ['p3'], ['p4', 'p5']])
+    expect(world.state('o1')?.groups).toHaveLength(1)
+  })
+
   it('unbind and release take the object\'s waiting groups out of the queue', () => {
     const first = grouped([['a'], ['b'], ['c'], ['d']], { workBudget: ONE_A_FRAME })
     first.renderer.update(FRAME)
