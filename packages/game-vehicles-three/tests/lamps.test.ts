@@ -132,6 +132,7 @@ describe('lamps that were shot out', () => {
     const freed = new Set<THREE.Material>()
     for (const copy of copies) copy.addEventListener('dispose', () => freed.add(copy))
     for (let i = 0; i < ROUNDS; i++) destructible.hit({ type: 'ballistic', energy: 2100, caliber: 7.62, point: destructible.partWorldCenter('taillight_left'), part: 'taillight_left', direction: [0, 0, 1] })
+    expect(destructible.state().parts.find((p) => p.id === 'taillight_left')?.status).toBe('broken')
     lamps.dispose()
     expect(freed.size).toBe(copies.size)
     built.dispose()

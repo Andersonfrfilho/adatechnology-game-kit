@@ -20,7 +20,7 @@ O teste automático cobre: tiro na direção de cada vidro chega no vidro; o ar 
 
 ## Lanternas e pneu depois do tiro (frota inteira)
 
-`lamp-glow.test.ts` e `flat-tyre.test.ts` rodam em todos os modelos de `fleetVehicleIds` (tiro de fuzil apaga o brilho dentro da caixa de cada lanterna quebrada; tiro de fuzil fura o pneu e nunca o arranca; pistola esvazia devagar; fogo e explosão ainda soltam o pneu). Única exceção conhecida: `police_helicopter` (tabela acima).
+`lamp-glow.test.ts` e `flat-tyre.test.ts` rodam em todos os modelos de `fleetVehicleIds` (tiro de fuzil apaga o brilho dentro da caixa de cada lanterna quebrada; tiro de fuzil fura o pneu e nunca o arranca nos modelos com pneu; pistola, fogo e explosão sobre o pneu são testados só no `midsize_sedan`). Única exceção conhecida: `police_helicopter` (tabela acima); modelos sem peça de lanterna ficam em `NO_LAMPS`.
 
 **Pendência:** depois de quebrar todas as peças de lanterna, continuam acesas peças que não têm peça de dano própria e ficam fora das caixas das lanternas: sinaleiras laterais, repetidores, o pisca do retrovisor e o farol de neblina do para-choque em vários carros, as sinaleiras de moto e ônibus, e os indicadores do painel (esses últimos são do painel, não de lanterna). Medido em 2026-11-16 com todas as lanternas quebradas: `compact_hatch` 10 meshes acesos, `scooter` 18, `quad_bike` 19, `armored_truck` 20, `school_bus` 12, `city_bus` 12. Correção: dar peça de dano a cada uma dessas luzes (ou casar por tipo de lâmpada em vez de por caixa).
 

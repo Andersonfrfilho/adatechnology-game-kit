@@ -60,13 +60,18 @@ describe('a flat tyre driven on', () => {
 describe('a rifle round in a tyre', () => {
   const AK = { type: 'ballistic', energy: 2100, caliber: 7.62 } as const
   const BURST = 40
-  const HAS_TYRE = (key: string): boolean => {
+  const hasTyre = (key: string): boolean => {
     const kit = makeFleetKit('en')
     const item = buildVehicleItem(kit, key)
     return createVehicleDestructible(kit, item.vehicle, { id: key, frame: item.root }).describe().parts.some((p) => p.id.startsWith('tyre'))
   }
 
-  for (const key of fleetVehicleIds.filter(HAS_TYRE)) {
+  const withTyres = fleetVehicleIds.filter(hasTyre)
+  it('most of the fleet has tyres to shoot', () => {
+    expect(withTyres.length).toBeGreaterThan(40)
+  })
+
+  for (const key of withTyres) {
     it(`${key}: punctures it and lets it down, however many rounds, and never tears it off the rim`, () => {
       const kit = makeFleetKit('en')
       const item = buildVehicleItem(kit, key)

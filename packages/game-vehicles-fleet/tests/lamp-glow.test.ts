@@ -8,6 +8,8 @@ import { makeFleetKit } from './helpers/kit'
 const AK = { type: 'ballistic', energy: 2100, caliber: 7.62 } as const
 /** Models whose lamp zone boxes do not sit where the model draws the lamps (the police helicopter's tail zone is built along the wrong axis): known to fail, and the test fails when one is fixed so it leaves this list. */
 const KNOWN_OPEN = new Set(['police_helicopter'])
+/** Models drawn without any lamp part: nothing to shoot out. */
+const NO_LAMPS = new Set<string>(['transport_helicopter'])
 const BOX_MARGIN = 0.03
 const GLOW_MIN = 0.05
 const ROUNDS_TO_BREAK = 12
@@ -38,7 +40,11 @@ describe('a lamp that is shot out', () => {
       const d = createVehicleDestructible(kit, item.vehicle, { id: key, frame: item.root })
       const vehicle = item.vehicle.vehicle as THREE.Object3D
       const lamps = d.describe().parts.filter((p) => /light|lamp/.test(p.id))
-      if (lamps.length === 0) return // a vehicle with no lamp part has nothing to shoot out
+      if (lamps.length === 0) {
+        expect(NO_LAMPS.has(key), `${key} has no lamp part and is not listed in NO_LAMPS`).toBe(true)
+        return
+      }
+      expect(NO_LAMPS.has(key), `${key} has lamp parts now: take it out of NO_LAMPS`).toBe(false)
       const centres = new Map(lamps.map((p) => [p.id, vehicle.worldToLocal(new THREE.Vector3(...d.partWorldCenter(p.id)))]))
       for (const lamp of lamps) {
         for (let round = 0; round < ROUNDS_TO_BREAK && d.state().parts.find((p) => p.id === lamp.id)?.status !== 'broken'; round++) {
