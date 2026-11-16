@@ -192,11 +192,26 @@ const worstFrames = (all) => {
   return [...groups.values()].flatMap((group) => group.sort((a, b) => b.updateMs - a.updateMs).slice(0, 10))
 }
 
+/**
+ * The part of Playwright this tool uses (it is loaded by `require` from pnpm's store, so its own types are not in reach).
+ * @typedef {{ send: (method: string, params?: object) => Promise<unknown> }} CdpSession
+ * @typedef {{
+ *   on: (event: 'pageerror', listener: (error: Error) => void) => void,
+ *   goto: (url: string, options?: object) => Promise<unknown>,
+ *   waitForFunction: (fn: () => unknown, arg: null, options?: object) => Promise<unknown>,
+ *   evaluate: <R, A>(fn: (arg: A) => R | Promise<R>, arg: A) => Promise<R>,
+ *   context: () => { newCDPSession: (page: Page) => Promise<CdpSession> },
+ *   close: () => Promise<void>,
+ * }} Page
+ * @typedef {{ newPage: (options?: object) => Promise<Page>, version: () => string, close: () => Promise<void> }} Browser
+ * @typedef {{ chromium: { launch: (options?: object) => Promise<Browser> } }} Playwright
+ */
+
 /** @param {string | undefined} text @param {number[]} fallback */
 const numbers = (text, fallback) => (text ? text.split(',').map(Number).filter((value) => Number.isFinite(value) && value >= 1) : fallback)
 
 /**
- * @param {{ playwright: typeof import('playwright'), chrome?: string, root: string }} context
+ * @param {{ playwright: Playwright, chrome?: string, root: string }} context
  * @returns {Promise<number>} the exit code
  */
 export async function runRoomExplosion({ playwright, chrome, root }) {
