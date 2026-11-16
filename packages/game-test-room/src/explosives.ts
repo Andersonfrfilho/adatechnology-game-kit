@@ -48,7 +48,7 @@ interface Projectile {
   vel: THREE_NS.Vector3
   weapon: string
   /** Metres the fuze needs to arm (0: armed at once): a hit before it is a dud. */
-  armDistance: number
+  armDistance?: number
   fuse: number
   burstOnImpact: boolean
   energy: number
@@ -511,7 +511,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     } else if (!projectile.placed) projectile.mesh.rotation.x += dt * 8
     for (const event of events) {
       if (event.type === 'dud') {
-        action('dud', translate('act.dud', { weapon: context.toolName(projectile.weapon), distance: format(body.travelled, 1), arm: format(projectile.armDistance, 0) }), { data: { weapon: projectile.weapon, point: event.point } })
+        action('dud', translate('act.dud', { weapon: context.toolName(projectile.weapon), distance: format(body.travelled, 1), arm: format(projectile.armDistance ?? 0, 0) }), { data: { weapon: projectile.weapon, point: event.point } })
         lieInert(projectile, body, event.point)
       } else if (event.type === 'detonate') detonate(projectile, event.detonation)
     }
