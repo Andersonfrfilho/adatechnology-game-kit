@@ -97,14 +97,13 @@ describe('loose groups under the work budget', () => {
     expect(renderer.pieces().length).toBe(1)
   })
 
-  it('none waits past maxWaitFrames, whatever the budget', () => {
+  it('none stands loose past maxWaitFrames frames, whatever the budget', () => {
     const { renderer, world } = looseRow({ workBudget: { ...ONE_A_FRAME, maxWaitFrames: 2 } })
-    // frame 1: one in the event, five queued; frames 2 and 3: one each (the queue always moves); frame 4: the three that waited 2 frames go together
+    // frame 1: one in the event, five queued; frame 2: one (the queue always moves); frame 3, their second release: the four left go together
     renderer.update(FRAME)
+    expect(world.splits).toHaveLength(1)
     renderer.update(FRAME)
     expect(world.splits).toHaveLength(2)
-    renderer.update(FRAME)
-    expect(world.splits).toHaveLength(3)
     renderer.update(FRAME)
     expect(world.splits).toHaveLength(LOOSE)
   })
