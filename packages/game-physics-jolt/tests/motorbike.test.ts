@@ -19,7 +19,7 @@ describe('a two-wheeled vehicle', () => {
       maxTorque: 200, minRpm: 1000, maxRpm: 6000, gears: [3, 2, 1.4], reverseGears: [-3], differentialRatio: 3,
     })
     for (let i = 0; i < 60; i++) world.step(1 / 120)
-    expect(world.wheelContacts(bike)).toBeLessThanOrEqual(2)
+    expect(world.wheelContacts(bike)).toBe(2)
     const out = new Float64Array(7)
     for (let i = 0; i < 360; i++) {
       world.driveVehicle(bike, { forward: 1, right: 0, brake: 0, handBrake: 0 })
