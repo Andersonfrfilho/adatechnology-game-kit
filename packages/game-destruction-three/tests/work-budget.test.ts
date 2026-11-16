@@ -44,7 +44,7 @@ describe('the work budget defaults (spec 008, evidence T3.8aa)', () => {
   it('are the numbers the first calibration measured, and each one can be set', () => {
     expect(DEFAULT_WORK_BUDGET_MS).toBe(4)
     expect(DEFAULT_WORK_UNITS_PER_MS).toBe(100)
-    expect(DEFAULT_MAX_WAIT_FRAMES).toBe(30)
+    expect(DEFAULT_MAX_WAIT_FRAMES).toBe(12)
     expect(WORK_UNIT_DEFAULTS).toEqual({ perSplit: 120, perVertex: 0.05, perHostVertex: 0.01, perObjectPart: 0.3, perFragment: 4, perEvent: 40, perWake: 2 })
     expect(resolveWorkUnitCosts({ perSplit: 7 }).perSplit).toBe(7)
     expect(resolveWorkUnitCosts({ perSplit: 7 }).perVertex).toBe(WORK_UNIT_DEFAULTS.perVertex)

@@ -180,7 +180,7 @@ batches still follow the measured step.
 | `budgetMs` | 4 (`DEFAULT_WORK_BUDGET_MS`) | Milliseconds of deferred work a frame may take on the reference machine |
 | `unitsPerMs` | 100 (`DEFAULT_WORK_UNITS_PER_MS`) | Work units in a millisecond on the reference machine (the calibration of the costs below) |
 | `tier` | 1 | How much slower than the reference this machine runs the same work, picked once per session: the frame holds `budgetMs × unitsPerMs / tier` units |
-| `maxWaitFrames` | 30 (`DEFAULT_MAX_WAIT_FRAMES`) | Frames a loose group waits at most, whatever the budget |
+| `maxWaitFrames` | 12 (`DEFAULT_MAX_WAIT_FRAMES`, 0,2 s) | Frames a loose group waits at most, whatever the budget |
 | `costs` | `WORK_UNIT_DEFAULTS`: `perSplit` 120, `perVertex` 0.05, `perHostVertex` 0.01, `perObjectPart` 0.3, `perFragment` 4, `perEvent` 40, `perWake` 2 | Units per unit of work; the first calibration (T3.8aa), to be measured again on top of the fits ahead, the batched bodies and the ground budget |
 
 ### Debris of a blast (`blastDebris`, opt-in)

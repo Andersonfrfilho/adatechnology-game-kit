@@ -25,7 +25,7 @@ export const DEFAULT_WORK_BUDGET_MS = 4
 /** 1 unit = 10 µs on the reference machine ("Intel Core Ultra 9 275HX, Node 24"; evidence T3.8aa): the unit costs are written in it. */
 export const DEFAULT_WORK_UNITS_PER_MS = 100
 /** 0.5 s at 60 Hz: the house of the T3.8aa probe was cut into its 50 pieces over ~20 frames under the room's 8 ms clock budget before this budget existed. */
-export const DEFAULT_MAX_WAIT_FRAMES = 30
+export const DEFAULT_MAX_WAIT_FRAMES = 12
 
 export interface WorkBudgetState {
   readonly left: number
