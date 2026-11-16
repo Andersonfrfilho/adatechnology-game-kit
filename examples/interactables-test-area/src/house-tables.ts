@@ -21,7 +21,7 @@ export const HOUSE_TABLES_KITCHEN_ID = 'house_tables_kitchen'
 export const MISSING_LOG = 'house_tables_missing'
 
 /** The whole house: a strip 36 m wide from z = 19 back to the target wall (the page opens a floor 24 m each way for it). */
-const WHOLE_HOUSE: HousePlan = { sections: SECTIONS, halfX: 18, firstZ: 19, wall: ON_THE_WALL, floorHalf: 24 }
+const WHOLE_HOUSE: HousePlan = { sections: SECTIONS, halfX: 18, firstZ: 19, wall: ON_THE_WALL }
 const KITCHEN_WALL = new Set(['kitchen_cabinet_wall', 'wall_socket', 'wall_switch'])
 /** The kitchen alone: in front of the plain room's scenery (its tables, shelf and tub stand between z = -1 and 4), well inside its 14 m floor so a blast keeps what it throws on it. */
 const KITCHEN: HousePlan = {
@@ -29,13 +29,13 @@ const KITCHEN: HousePlan = {
   halfX: 9,
   firstZ: 10.5,
   wall: ON_THE_WALL.filter((item) => KITCHEN_WALL.has(item)),
-  floorHalf: 14,
 }
 
-/** What the area modules need from the room: its measure of a catalogue item (null for an id it did not load). */
+/** What the area modules need from the room: its measure of a catalogue item (null for an id it did not load) and the z of the front edge of its floor. */
 export interface HouseTablesOptions {
   readonly locale?: string
   readonly measure: (itemId: string) => ItemSize | null
+  readonly floorFront: () => number
 }
 
 const localeOf = (locale: string | undefined): Locale => (locale === 'en' ? 'en' : 'pt-BR')
@@ -158,7 +158,7 @@ function areaModule(options: HouseTablesOptions, spec: { readonly id: string; re
   let host: ModuleHost | null = null
   const layout = (): HouseTablesLayout => {
     if (made) return made
-    made = layHouseTables(options.measure, locale, spec.plan)
+    made = layHouseTables(options.measure, locale, { ...spec.plan, floorFront: options.floorFront() })
     // a piece the room did not load (a module left out, a wrong id) is said once, in the room's log, where the checks look for it
     if (made.missing.length > 0) host?.log(`${name}: ${made.missing.join(', ')}`, { missing: made.missing }, MISSING_LOG)
     return made

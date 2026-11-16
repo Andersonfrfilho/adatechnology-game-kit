@@ -1377,8 +1377,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => spawnPiece(itemId, { position, rotationY })
   // `fixed`: held where it is put, with no physics of its own (an area's piece hung on a wall), whatever the item says
-  const spawn = (itemId: string, position?: Vec3, rotationY?: number, fixed = false): SpawnedObject => {
+  function spawnPiece(itemId: string, { position, rotationY, fixed = false }: { readonly position?: Vec3; readonly rotationY?: number; readonly fixed?: boolean }): SpawnedObject {
     const item = catalogMap.get(itemId)
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
     const root = buildRoot(item)
@@ -4945,7 +4946,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const holders = known.filter((p) => p.surface)
     const rest = known.filter((p) => !p.surface)
     const placed = [...holders, ...rest].map((p) => {
-      const so = spawn(p.item, p.position, p.rotationY ?? 0, p.fixed === true)
+      const so = spawnPiece(p.item, { position: p.position, rotationY: p.rotationY ?? 0, fixed: p.fixed === true })
       if (p.surface) {
         const [hx, hz] = p.surface.halfSize
         restingTops.push({ objectId: so.objectId, minX: p.position[0] - hx, maxX: p.position[0] + hx, minZ: p.position[2] - hz, maxZ: p.position[2] + hz, top: p.surface.height })

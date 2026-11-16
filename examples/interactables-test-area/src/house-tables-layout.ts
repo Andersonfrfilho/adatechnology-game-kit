@@ -19,16 +19,12 @@ const TABLE_EDGE = 0.08
 /** Height the things on a table are let go from above its top, metres. */
 const DROP = 0.01
 
-/**
- * What to lay and where: the rooms, the half width (x) of the strip the lines run in, the z of the front edge of the first line, what goes on the wall, and
- * the half size of the floor of the page the area opens on (the camera starts inside it).
- */
+/** What to lay and where: the rooms, the half width (x) of the strip the lines run in, the z of the front edge of the first line and what goes on the wall. */
 export interface HousePlan {
   readonly sections: readonly HouseSection[]
   readonly halfX: number
   readonly firstZ: number
   readonly wall: readonly string[]
-  readonly floorHalf: number
 }
 
 /** What the layout made: the area, its floor (a zone per room, labelled), and the ids the room's catalogue does not have (left out). */
@@ -171,10 +167,10 @@ function onTheWall(pieces: readonly Piece[]): { placements: AreaPlacement[]; lef
 }
 
 /**
- * Lays `plan`. `measure` is the room's (`TestRoom.measure`): null for an id the room did not load, which is left out and listed in `missing`.
+ * Lays `plan`; `floorFront` is the z of the front edge of the floor the area opens on (the camera starts inside it). `measure` is the room's (`TestRoom.measure`): null for an id the room did not load, which is left out and listed in `missing`.
  * The tables are the items area's finds table, laid with a `surface` so what lies on them rests on their top.
  */
-export function layHouseTables(measure: (itemId: string) => ItemSize | null, locale: Locale, plan: HousePlan): HouseTablesLayout {
+export function layHouseTables(measure: (itemId: string) => ItemSize | null, locale: Locale, plan: HousePlan & { readonly floorFront: number }): HouseTablesLayout {
   const missing: string[] = []
   const pieceOf = (item: string): Piece[] => {
     const size = measure(item)
@@ -247,7 +243,7 @@ export function layHouseTables(measure: (itemId: string) => ItemSize | null, loc
 
   return {
     // the camera starts in front of the first tables, inside the floor (the player is put where the view says, unclamped)
-    area: { placements, view: { eye: [0, 6.5, Math.min(plan.firstZ + 6, plan.floorHalf - 0.7)], target: [0, 0.6, plan.firstZ - 6] } },
+    area: { placements, view: { eye: [0, 6.5, Math.min(plan.firstZ + 6, plan.floorFront - 0.7)], target: [0, 0.6, plan.firstZ - 6] } },
     ground: { surface: GROUND_SURFACE, zones },
     missing,
     onTables,
