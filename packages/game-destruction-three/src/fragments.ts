@@ -37,7 +37,18 @@ interface Live {
   box?: RestingBox | undefined
 }
 
+/** The footprint of an upright box as the oriented rectangle it draws on the floor: the unit axes of its two horizontal sides and their half lengths. */
+interface Footprint {
+  readonly ax: number
+  readonly az: number
+  readonly bx: number
+  readonly bz: number
+  readonly halfA: number
+  readonly halfB: number
+}
+
 interface RestingBox {
+  readonly footprint?: Footprint | undefined
   readonly x: number
   readonly z: number
   readonly reachX: number
@@ -56,11 +67,37 @@ function rotationOf(q: THREE_NS.Quaternion): readonly number[] {
 }
 
 /** The world box of a resting fragment: its centre, how far it reaches along x and z, and its top. */
+/** A box standing on a face (its up axis within about 18 degrees of vertical) lies on the floor as a rectangle; a leaning one keeps the box that wraps it. */
+const UPRIGHT = 0.95
+function footprintOf(e: ArrayLike<number>, half: { readonly x: number; readonly z: number }): Footprint | undefined {
+  if (Math.abs(e[5]!) < UPRIGHT) return undefined
+  const lengthA = Math.hypot(e[0]!, e[2]!)
+  const lengthB = Math.hypot(e[8]!, e[10]!)
+  if (lengthA < 1e-6 || lengthB < 1e-6) return undefined
+  return { ax: e[0]! / lengthA, az: e[2]! / lengthA, bx: e[8]! / lengthB, bz: e[10]! / lengthB, halfA: half.x * lengthA, halfB: half.z * lengthB }
+}
+
+/** Whether two footprints, as oriented rectangles, share floor area (the separating axis test on their four side directions). */
+type Placed = { readonly x: number; readonly z: number; readonly footprint: Footprint }
+function footprintsOverlap(first: Placed, second: Placed): boolean {
+  const dx = second.x - first.x
+  const dz = second.z - first.z
+  const sides = [first.footprint, second.footprint]
+  for (const side of sides) {
+    for (const [nx, nz] of [[side.ax, side.az], [side.bx, side.bz]] as const) {
+      const radius = (r: Footprint): number => Math.abs(nx * r.ax + nz * r.az) * r.halfA + Math.abs(nx * r.bx + nz * r.bz) * r.halfB
+      if (Math.abs(dx * nx + dz * nz) > radius(first.footprint) + radius(second.footprint)) return false
+    }
+  }
+  return true
+}
+
 function restingBox(f: Live): RestingBox {
   const e = rotationOf(f.mesh.quaternion)
   const { x, y, z } = f.half
   const p = f.mesh.position
   return {
+    footprint: footprintOf(e, f.half),
     x: p.x,
     z: p.z,
     reachX: Math.abs(e[0]) * x + Math.abs(e[4]) * y + Math.abs(e[8]) * z,
@@ -565,12 +602,15 @@ export class FragmentSystem {
     const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
     const reachX = Math.abs(e[0]) * f.half.x + Math.abs(e[4]) * f.half.y + Math.abs(e[8]) * f.half.z
     const reachZ = Math.abs(e[2]) * f.half.x + Math.abs(e[6]) * f.half.y + Math.abs(e[10]) * f.half.z
+    const mine = footprintOf(e, f.half)
     let top = Number.NEGATIVE_INFINITY
     for (const other of this.list) {
       if (other === f || other.dying) continue
       const box = other.asleep ? (other.box ??= restingBox(other)) : restingBox(other)
       if (box.top > bottom + PILE_STEP || box.top <= top) continue
       if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
+      // the wrapping boxes touch: when both lie flat, what counts is whether the rectangles they draw on the floor do
+      if (box.footprint && mine && !footprintsOverlap({ x: p.x, z: p.z, footprint: mine }, { x: box.x, z: box.z, footprint: box.footprint })) continue
       top = box.top
     }
     return top
