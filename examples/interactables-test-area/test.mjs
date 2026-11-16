@@ -129,6 +129,14 @@ for (const lang of languages) {
     return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
   })
   check(`[${lang}] the urban module is loaded (17 items, 8 scenarios), and the light budget and the road dashes are green`, city.ok && city.items === 17 && city.scenarios === 8 && city.run.passed === 2 && city.run.failed === 0, city)
+  // the house and the yard on tables: the kitchen alone (it fits the plain room) lays every piece, and a grenade under its table throws what lies on it, leaving nothing in the air
+  const kitchen = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('house_tables_')))
+    room.clear()
+    return { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) }
+  })
+  check(`[${lang}] the kitchen on tables lays every piece and the grenade under its table leaves nothing in the air`, kitchen.passed === 2 && kitchen.failed === 0, kitchen)
   // a wound on a zombie throws drops of blood into the running film, in the colours of its infection age (the body event reaches the film bridge the room lends)
   const gore = await page.evaluate(() => {
     const room = window.__testRoom
@@ -284,6 +292,32 @@ for (const lang of languages) {
   })
   check(`[${lang}] the stories module is loaded too (6 scenarios pass)`, tales.module === 'stories_area' && tales.ok && tales.problems.length === 0 && tales.scenarios === 6 && tales.failed === 0, tales)
 
+  await page.close()
+}
+
+// the whole house and yard on tables (`?area=house_tables`: the page opens a wider floor with only the target wall): every piece is laid, what lies on a table
+// stays on its top, what stands on the floor stays on it, what hangs on a wall stays hung (its model is drawn at its height, its origin on the floor)
+if (PART === 'all' || PART === 'shots') {
+  const page = await open('?lang=pt-BR&ui=0&area=house_tables')
+  // this page loads the modules after the room is made: the area is opened once they are in (?area= gives it the wider floor with only the target wall)
+  await page.evaluate(() => window.__testRoom.openAreaAsync('house_tables'))
+  const house = await page.evaluate(() => {
+    const room = window.__testRoom
+    for (let i = 0; i < 100; i++) room.update(0.02)
+    const spawned = room.spawned()
+    const top = room.measure('finds_table')?.h ?? 0
+    const onTables = spawned.filter((so) => so.itemId.startsWith('item_'))
+    const off = onTables.filter((so) => Math.abs(so.root.position.y - top) > 0.06).map((so) => so.itemId)
+    const hung = ['kitchen_cabinet_wall', 'electrical_panel', 'wall_switch']
+    const wall = spawned.filter((so) => hung.includes(so.itemId)).map((so) => ({ item: so.itemId, y: Math.round(so.root.position.y * 100) / 100 }))
+    return { spawned: spawned.length, skipped: room.log.entries({ type: 'area_skip' }).length, tables: spawned.filter((so) => so.itemId === 'finds_table').length, onTables: onTables.length, off, wall }
+  })
+  check(
+    'the house and yard on tables lays every piece (more than 150, none skipped), keeps what is on the tables on their tops and hangs the wall pieces',
+    house.spawned > 150 && house.skipped === 0 && house.tables >= 6 && house.onTables >= 80 && house.off.length === 0 && house.wall.length === 3 && house.wall.every((w) => Math.abs(w.y) < 0.05),
+    house,
+  )
+  await page.screenshot({ path: join(shots, '05-house-and-yard-on-tables.png'), timeout: 180000 })
   await page.close()
 }
 

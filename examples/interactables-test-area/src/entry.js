@@ -38,6 +38,7 @@ import { createModule as createFloorplanModule } from '../../floorplan-test-area
 import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
+import { createHouseTablesAreas } from './house-tables.js'
 
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
 /** @typedef {import('@adatechnology/game-test-room').ModuleReport} ModuleReport */
@@ -50,7 +51,7 @@ import { createFurnitureArea as create } from './area.js'
 /** @typedef {{ index: number; total: number; key: string; name: string; done?: boolean }} LoadProgress */
 /** @typedef {{ key: string; prepare: () => { name: string; load: () => unknown } }} LoadStep */
 /** The keys the other modules' reports go under in the furniture report (`REPORT_KEYS`). */
-/** @typedef {'weapons' | 'explosives' | 'itemsArea' | 'characters' | 'animals' | 'vfx' | 'terrain' | 'audio' | 'soundCheck' | 'weather' | 'floorplan' | 'vehicles' | 'vehicles_proving' | 'vegetation' | 'urban' | 'player' | 'crowd' | 'stories'} SubReportKey */
+/** @typedef {'weapons' | 'explosives' | 'itemsArea' | 'characters' | 'animals' | 'vfx' | 'terrain' | 'audio' | 'soundCheck' | 'weather' | 'floorplan' | 'vehicles' | 'vehicles_proving' | 'vegetation' | 'urban' | 'player' | 'crowd' | 'stories' | 'houseTables' | 'houseTablesKitchen'} SubReportKey */
 /** @typedef {ModuleReport & { readonly [key in SubReportKey]?: ModuleReport }} FurnitureReport */
 
 /** The pool of the goods catalog each household piece draws its contents from (the key of the house pools, or a container of the catalog). */
@@ -112,7 +113,7 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createSoundCheckModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
+export { createHouseTablesAreas, createTerrainTestModule, createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createSoundCheckModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
@@ -198,6 +199,11 @@ function loadSteps(room, options, lang) {
   mod('crowd', () => createCrowdModule({ locale: lang }))
   // the stories ride along: no 3D, a world of stories and a character sheet for the room's panel
   mod('stories', () => createStoriesModule({ locale: lang }))
+  // the house and the yard on tables (`?area=house_tables`, and the kitchen alone, `?area=house_tables_kitchen`): what every module above brings for a house, laid room by
+  // room, to shoot and blow up side by side. The layout is made when the area opens, by the room's measure of each piece.
+  const [houseTables, houseTablesKitchen] = createHouseTablesAreas({ locale: lang, measure: (itemId) => room.measure(itemId) })
+  mod('houseTables', () => houseTables)
+  mod('houseTablesKitchen', () => houseTablesKitchen)
   // the furniture comes last: its report is the base of the whole one
   steps.push({
     key: 'furniture',

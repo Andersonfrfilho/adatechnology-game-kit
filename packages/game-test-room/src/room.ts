@@ -72,6 +72,7 @@ import type { HudState, InspectInfo, RoomUi } from './ui'
 import type { ToolMenuGroup } from './tool-menu'
 import type {
   AnimationInfo,
+  ItemSize,
   ModuleReport,
   RoomMetricId,
   ScenarioContext,
@@ -4992,7 +4993,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const tableOptions = options.testTable === false ? {} : (options.testTable ?? {})
   const tableScenery = tableOptions.scenery ?? 'test_table'
-  const measured = new Map<string, { w: number; d: number }>()
+  // the footprint of a catalogue item at rotation 0, from its model built once (the table lays rows by it, an area packs its pieces by it)
+  const measured = new Map<string, ItemSize>()
+  const measureItem = (itemId: string): ItemSize | null => {
+    const known = measured.get(itemId)
+    if (known) return known
+    const item = catalogMap.get(itemId)
+    if (!item) return null
+    const box = new THREE.Box3().setFromObject(buildRoot(item))
+    const size = box.isEmpty() ? { w: 0.3, d: 0.3, h: 0.3 } : { w: box.max.x - box.min.x, d: box.max.z - box.min.z, h: box.max.y - box.min.y }
+    measured.set(itemId, size)
+    return size
+  }
   const testTable = createTestTable(
     {
       groups: catalogGroups,
@@ -5000,16 +5012,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         const top = arena.tops.find((x) => x.id === tableScenery)
         return top && topOk(top) ? top : null
       },
-      measure: (itemId) => {
-        let size = measured.get(itemId)
-        if (!size) {
-          const item = catalogMap.get(itemId)
-          const box = item ? new THREE.Box3().setFromObject(buildRoot(item)) : null
-          size = box && !box.isEmpty() ? { w: box.max.x - box.min.x, d: box.max.z - box.min.z } : { w: 0.3, d: 0.3 }
-          measured.set(itemId, size)
-        }
-        return size
-      },
+      measure: (itemId) => measureItem(itemId) ?? { w: 0.3, d: 0.3, h: 0.3 },
       spawn: (itemId, position) => spawn(itemId, position, 0),
       clear,
       resetAll,
@@ -5074,6 +5077,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return allScenarios()
     },
     testTable,
+    measure: measureItem,
     spawn,
     clear,
     resetAll,
