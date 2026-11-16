@@ -132,7 +132,10 @@ export interface RendererOptions {
    */
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   gravity?: number
-  /** Turn a loose group into a separate physical piece automatically (default true). */
+  /**
+   * Turn a loose group into a separate physical piece automatically (default true): the ones a detach or a collapse leaves, and the ones an object already has when it is
+   * bound or drawn again (`redraw`), in the next `update` or drain after it (under `workBudget`, queued in the next work step). Off, they stay in their object.
+   */
   autoSplit?: boolean
   /** Called when a loose piece is created (the bench registers it as grabbable). */
   onPiece?: (piece: Piece) => void

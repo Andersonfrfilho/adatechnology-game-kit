@@ -1481,6 +1481,19 @@ export class PieceSystem {
     }
   }
 
+  /**
+   * A piece made where its parts already stood (a group loose at load) sleeps there when a point of it has the ground, a piece or a fixed top under it, and answers to those
+   * points (`restPoints`) as one the budget put to sleep: it wakes and falls when any of them loses its support. With none it stays awake and falls: nothing loose hangs in
+   * the air. Returns whether it sleeps.
+   */
+  restIfSupported(b: PieceBody): boolean {
+    const points = this.restPointsOf(b)
+    if (points.length === 0) return false
+    this.sleep(b)
+    b.restPoints = points
+    return true
+  }
+
   /** Sleeps sooner than it would by itself, so it answers to every point it lies on (`restPoints`). */
   private sleepByBudget(b: PieceBody): void {
     this.sleep(b)

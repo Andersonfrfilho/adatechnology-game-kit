@@ -401,10 +401,12 @@ class Renderer implements DestructionRenderer {
   private readonly workCosts: Required<WorkUnitCosts>
   /** The loose groups waiting to become pieces under `workBudget`, as data: the object, a part of the group, and the tearing joints read when it came loose. */
   private readonly splitQueue = new WorkQueue<PendingSplit>('split')
-  /** Objects bound or drawn again under `workBudget` whose loose groups are queued in the next work step (a load drops the queue the save was taken with). */
+  /** Objects bound or drawn again whose loose groups become pieces in the next drain: queued under `workBudget` (a load drops the queue the save was taken with), split without it. */
   private readonly looseToCheck = new Set<string>()
   /** Where the player was at the start of this frame's work step: read once per frame. */
   private workFocus: Vec3 | undefined
+  /** True while the loose groups an object was bound or drawn again with are split (`splitChecked`): their pieces start where they stood, asleep when supported. */
+  private splittingAtLoad = false
   /** The `WorkBudget` frame an event last split a group in: the first one of a frame goes over the budget, so a blow breaks something at once. */
   private eventSplitFrame = -1
   /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
@@ -419,10 +421,10 @@ class Renderer implements DestructionRenderer {
   private attached = false
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseToCheck.size + this.prefitLeft(),
+    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() + this.prefitLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
-      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseToCheck.size + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
     },
     attach: () => {
       this.attached = true
@@ -1119,7 +1121,9 @@ class Renderer implements DestructionRenderer {
         }
         ran++
       }
-      if (this.queue.length === 0 && this.slices.length === 0) ran += this.runPrefit(deadline, clock, ran === 0)
+      // after the events, as under the budget: a group a blow of this frame looses keeps the split it gets in the event
+      ran += this.splitChecked(deadline, ran)
+      if (this.queue.length === 0 && this.slices.length === 0 && this.looseToCheck.size === 0) ran += this.runPrefit(deadline, clock, ran === 0)
     } finally {
       this.sliceDeadline = Infinity
       this.drainClock = outerClock
@@ -2128,12 +2132,19 @@ class Renderer implements DestructionRenderer {
       return
     }
     let deferred = false
+    const atLoad = this.splittingAtLoad
     this.visuals.batchRebuilds(() => {
       for (let i = 0; i < loose; i++) {
         if (i > 0 && this.drainClock() >= this.sliceDeadline) {
           this.slices.push(() => {
             this.staticDirty.add(objectId)
-            this.splitLoose(objectId, torn)
+            const outer = this.splittingAtLoad
+            this.splittingAtLoad = atLoad
+            try {
+              this.splitLoose(objectId, torn)
+            } finally {
+              this.splittingAtLoad = outer
+            }
           })
           deferred = true
           return
@@ -2168,9 +2179,10 @@ class Renderer implements DestructionRenderer {
         this.fitSurface(b, old)
         if (!old.round) this.setContacts(b, old, this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
       } else if (old.partBoxes) this.fitPartBoxes(b, old)
-      old.sleeping = false
-    } else if (kitOriginOf(b.root)?.kind === 'furniture') {
-      // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
+      // at load what is left stood as it was: it is not woken
+      if (!this.splittingAtLoad) old.sleeping = false
+    } else if (kitOriginOf(b.root)?.kind === 'furniture' && !this.splittingAtLoad) {
+      // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples; at load it stands as it stood
       const piece = this.makePiece(objectId)
       this.tipIfTopHeavy(b)
       // the host stops keeping the footprint it had where it stood: it is a body that moves now
@@ -2196,9 +2208,42 @@ class Renderer implements DestructionRenderer {
     }
   }
 
-  /** Under `workBudget`, the object's loose groups join the split queue in the next work step (after a bind, a redraw, or pieces given back). */
+  /**
+   * The object's loose groups become pieces in the next drain (after a bind, a redraw, or pieces given back), not inside the call: the world may still be building it. Under
+   * `workBudget` they join the split queue (`queueChecked`); without it they split in the drain (`splitChecked`).
+   */
   private checkLoose(objectId: string): void {
-    if (this.work && this.autoSplit) this.looseToCheck.add(objectId)
+    if (this.autoSplit) this.looseToCheck.add(objectId)
+  }
+
+  /** The objects `checkLoose` marked that have a loose group now: one without any is no work waiting. */
+  private looseLeft(): number {
+    let left = 0
+    for (const objectId of this.looseToCheck) if ((this.world.state(objectId)?.groups.length ?? 0) > 1) left++
+    return left
+  }
+
+  /**
+   * Without `workBudget`: the objects `checkLoose` marked, in the order they were marked, have their loose groups split (`splitLoose`) while the drain has time (with nothing
+   * run before it in the drain, `done`, the first always does); the rest wait for the next drain. One with no loose group costs nothing. Returns how many objects split.
+   */
+  private splitChecked(deadline: number, done: number): number {
+    let ran = 0
+    for (const objectId of [...this.looseToCheck]) {
+      if (done + ran > 0 && this.drainClock() >= deadline) break
+      this.looseToCheck.delete(objectId)
+      const st = this.world.state(objectId)
+      if (!this.bounds.has(objectId) || !st || st.groups.length < 2) continue
+      this.staticDirty.add(objectId)
+      this.splittingAtLoad = true
+      try {
+        this.splitLoose(objectId)
+      } finally {
+        this.splittingAtLoad = false
+      }
+      ran++
+    }
+    return ran
   }
 
   /** The loose groups of the objects `checkLoose` marked join the split queue, unless waiting already: none stays loose in its object for ever. */
@@ -2369,7 +2414,9 @@ class Renderer implements DestructionRenderer {
     this.fitSurface(nb, piece)
     // what lands on it meets its parts as drawn (a board come off with its books), not the box around them all: nothing invisible collides
     this.fitPartBoxes(nb, piece)
-    if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
+    // a group loose at load starts asleep where it stood when something holds it up, so nothing jumps; held by nothing, it falls
+    const resting = this.splittingAtLoad && this.pieceSys.restIfSupported(piece)
+    if (!resting && kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
   }
 
