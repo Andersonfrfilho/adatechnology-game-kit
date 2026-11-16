@@ -395,8 +395,6 @@ export class PieceSystem {
     for (const key of this.tethered) {
       const cut = key.indexOf('\u0000')
       if (present.has(key.slice(0, cut)) && present.has(key.slice(cut + 1))) all.add(key)
-      // a piece that is gone does not come back: its pairs are forgotten (CLAUDE.md §8: what leaves the scene leaves the lists)
-      else this.tethered.delete(key)
     }
     return all
   }
@@ -521,6 +519,11 @@ export class PieceSystem {
     if (i < 0) return
     // the boxes of the step forget it too: nothing keeps a removed piece's tree alive
     const [gone] = this.list.splice(i, 1)
+    // its torn pairs go with it (§8); a pair whose other side is a fixed object, not a piece, stays until the piece goes: the pole may still fall
+    for (const key of this.tethered) {
+      const cut = key.indexOf('\u0000')
+      if (key.slice(0, cut) === objectId || key.slice(cut + 1) === objectId) this.tethered.delete(key)
+    }
     if (gone) {
       this.forgetSolids(gone)
       this.engine?.remove(gone)

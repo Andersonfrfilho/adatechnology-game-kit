@@ -24,4 +24,15 @@ describe.skipIf(!IS_JOLT)('pairs torn apart by a joint (CLAUDE.md §8)', () => {
     system.update(1 / 60)
     expect((system as unknown as Tethers).tethered.size).toBe(0)
   })
+
+  it('a pair with a fixed object (no piece) is kept: the pole may still fall and meet the wire', () => {
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() })
+    const root = new THREE.Object3D()
+    root.position.set(1, 0.1, 0)
+    system.create('wire', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 1)
+    system.tether('wire', 'standing-pole')
+    system.update(1 / 60)
+    system.update(1 / 60)
+    expect((system as unknown as Tethers).tethered.size).toBe(1)
+  })
 })

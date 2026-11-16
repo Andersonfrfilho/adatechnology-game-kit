@@ -316,6 +316,14 @@ describe('audit of #311: the three rules no longer let a real gain pass', () => 
   })
 })
 
+describe('R1 needs the spin to have lost the rise\'s energy (audit review)', () => {
+  it('a 5 cm pop-up while landing, with the spin only 5 -> 4.8 rad/s (about 1e-4 m of energy), still counts', () => {
+    const ruler = new EnergyRuler()
+    ruler.step([sample('box', { mass: 5, y: 0.2, energyHeight: 0.66, velocityY: -3, speed: 3, spin: 5 })], [sample('box', { mass: 5, y: 0.25, energyHeight: 0.3, velocityY: 0.5, speed: 0.5, spin: 4.8 })], 0.05)
+    expect(ruler.result().c3Lift).toBeCloseTo(0.05, 12)
+  })
+})
+
 describe('R2: energy the kit declares is out of C3 as it is out of C1 and C2 (D6)', () => {
   it('a delayed blast shove that lifts a 0.6 kg pipe 2.5 cm is not C3; the engine\'s own rise in a later update still is', () => {
     const ruler = new EnergyRuler()
