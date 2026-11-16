@@ -2,7 +2,7 @@
 // The `room-explosion` scenario of tools/gpu/perf-gate.mjs (spec 008, B6): does the house explosion fit the physics budget, on this machine and on a slower one?
 //   flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs room-explosion
 // Opens the built room (examples/test-room/dist/test-room.html) in a fresh page per round, builds the same house as specs/008-motor-fisico-jolt/decision/probes/room.js, fires
-// a blast (C4 at the wall) or a hammer (12 blunt hits, one per frame), and times, frame by frame, only the physics of the update: the Jolt loop step (`window.__roomPhysics`),
+// a blast (C4 at the wall), a hammer (12 blunt hits, one per frame) or a crater (the same C4 on loose ground beside the house), and times, frame by frame, only the physics of the update: the Jolt loop step (`window.__roomPhysics`),
 // the kit's piece system (`pieceSys.update`: the own solver, or the glue that reads Jolt's poses and applies the kit's rules) and the renderer's wake queue (`advanceWakes`,
 // the D4 policy). Rendering is not in it: the page's own frame loop is stopped, so nothing draws. Frame 0 (the one that applies the explosion, the wake frame) is reported
 // apart and left out of the gate, as spec 008 section 11 words B6 ("fora do quadro de despertar"); `maxWithWake` keeps it in view.
@@ -11,11 +11,18 @@
 // evenly: it does not reproduce a Ryzen's IPC, cache sizes, memory latency or wasm tier-up, so "6x" is "a CPU six times slower than this Core Ultra 9 275HX", not "an AMD
 // laptop". Treat a pass at 4x as strong evidence and a fail as a real warning, but only a run on an AMD machine closes the question (memory gpu-vendor-agnostic-perf).
 //
+// The kinds. `blast`: C4 on the lot's flat slab at the wall (the terrain does not dig: a slab is not loose ground). `hammer`: 12 blunt hits on the wall. `crater`: the same C4,
+// fired on the loose ground (soil, turf: `reposeDegrees` set, the very test the room's `cratersAt` uses) nearest to that wall spot, 0.1 m over the ground, so the terrain digs
+// its bowl (`terrain.strike('explosive')`), `terrain.onDeform` wakes the region, and the engine lays the changed ground again (`pieceSys.layGroundAt` -> `groundChanged`, the
+// crater's solid tiles: `layGround` and `layTile` in the stage table). The terrain bowl has the volume the charge's energy digs out of that material; the slab and house pieces
+// near it take the blast as in `blast`. Frame 0 applies the blast and the dig; the re-laying of the tiles falls in the frames after it.
+//
 // Environment (all optional):
 //   ROOM_EXPLOSION_THROTTLES=1,2,4,6       the CPU slow-down levels measured
 //   ROOM_EXPLOSION_GATE_THROTTLES=1        the levels that block (exit 1); the others are reported with their verdict
 //   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
-//   ROOM_EXPLOSION_KINDS=blast,hammer      ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
+//   ROOM_EXPLOSION_KINDS=blast,hammer      blast, hammer and crater are the kinds; `crater` is opt-in (a third kind is a third more nightly minutes, and main has no base cell for it yet), see below
+//   ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
@@ -32,6 +39,9 @@ export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHos
 export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
+/** The kinds of explosion one round fires. */
+export const ROOM_EXPLOSION_KINDS = /** @type {const} */ (['blast', 'hammer', 'crater'])
+
 /**
  * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, load: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number }} Cell
@@ -45,7 +55,7 @@ export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) i
  */
 async function inPage(job) {
   /** @typedef {{ objectId: string }} Piece */
-  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void }, advanceWakes?: (dt: number) => void }, blastAt(weapon: string, point: number[]): void, update(dt: number): void }} Room */
+  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void }, advanceWakes?: (dt: number) => void }, blastAt(weapon: string, point: number[]): void, terrain: { columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number }, update(dt: number): void }} Room */
   const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[] } }} */ (/** @type {unknown} */ (window))
   const room = host.__testRoom
   const wait = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
@@ -68,6 +78,20 @@ async function inPage(job) {
   }
   const spot = host.__roomExplosion?.spot
   if (!spot) throw new Error('room-explosion: run before prepare')
+  /** The nearest point to the blast spot where the ground is loose over a metre around it, at the height of the ground: where a crater can open. */
+  const craterSpot = () => {
+    const isLoose = (/** @type {number} */ x, /** @type {number} */ z) => room.terrain.material(room.terrain.columnAt(x, z).material).reposeDegrees !== undefined
+    const roomy = (/** @type {number} */ x, /** @type {number} */ z) => [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].every(([dx = 0, dz = 0]) => isLoose(x + dx, z + dz))
+    /** @type {{ point: number[], distance: number } | undefined} */
+    let best
+    for (let dx = -16; dx <= 16; dx += 0.5) for (let dz = -16; dz <= 16; dz += 0.5) {
+      const x = (spot[0] ?? 0) + dx, z = (spot[2] ?? 0) + dz
+      const distance = Math.hypot(dx, dz)
+      if ((!best || distance < best.distance) && roomy(x, z)) best = { point: [x, room.terrain.heightAt(x, z) + 0.1, z], distance }
+    }
+    if (!best) throw new Error('room-explosion: no loose ground within 16 m of the blast spot, so no crater can open')
+    return best.point
+  }
   const acc = { loop: 0, piece: 0, wake: 0 }
   /** @param {'loop' | 'piece' | 'wake'} key @param {object} owner @param {string} name */
   const timed = (key, owner, name) => {
@@ -135,8 +159,8 @@ async function inPage(job) {
     return [acc.loop + acc.piece + acc.wake, acc.loop, acc.piece, acc.wake, whole, ...labels.map((label) => stageMs[label] ?? 0)]
   }
   const frames = []
-  if (job.kind === 'blast') {
-    room.blastAt('c4', spot)
+  if (job.kind === 'blast' || job.kind === 'crater') {
+    room.blastAt('c4', job.kind === 'crater' ? craterSpot() : spot)
     frames.push(frame())
   } else {
     for (let hit = 0; hit < 12; hit++) {
@@ -245,7 +269,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const throttles = numbers(process.env.ROOM_EXPLOSION_THROTTLES, [1, 2, 4, 6])
   const gated = new Set(numbers(process.env.ROOM_EXPLOSION_GATE_THROTTLES, [1]))
   const variants = (process.env.ROOM_EXPLOSION_VARIANTS ?? 'jolt-d4').split(',').filter((name) => name in VARIANTS)
-  const kinds = (process.env.ROOM_EXPLOSION_KINDS ?? 'blast,hammer').split(',').filter((kind) => kind === 'blast' || kind === 'hammer')
+  const kinds = (process.env.ROOM_EXPLOSION_KINDS ?? 'blast,hammer').split(',').filter((kind) => /** @type {readonly string[]} */ (ROOM_EXPLOSION_KINDS).includes(kind))
   const rounds = Number(process.env.ROOM_EXPLOSION_ROUNDS ?? 5)
   const frames = Number(process.env.ROOM_EXPLOSION_FRAMES ?? 660)
   const budget = { p99: Number(process.env.ROOM_EXPLOSION_P99_MS ?? 4), max: Number(process.env.ROOM_EXPLOSION_MAX_MS ?? 5) }
