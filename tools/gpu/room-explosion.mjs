@@ -14,7 +14,7 @@
 // Environment (all optional):
 //   ROOM_EXPLOSION_THROTTLES=1,2,4,6       the CPU slow-down levels measured
 //   ROOM_EXPLOSION_GATE_THROTTLES=1        the levels that block (exit 1); the others are reported with their verdict
-//   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
+//   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
 //   ROOM_EXPLOSION_KINDS=blast,hammer      ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
@@ -29,12 +29,12 @@ const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
 /** The stages of the worst-frames table (ROOM_EXPLOSION_STAGE_*): each is the time spent in the method itself, without the stages it calls (`other` is the rest of the update). */
 export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'createBody', 'layGround', 'layTile', 'joltStep', 'bridgeReads', 'readBack']
-export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', jolt: '&solver=jolt', own: '' })
+export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
 /**
- * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, load: number }} Round
- * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number }} Cell
+ * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, load: number }} Round
+ * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number }} Cell
  * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number> }} StageFrame
  */
 
@@ -170,6 +170,7 @@ function summarise(frames, load) {
     over4: rest.filter((ms) => ms > 4).length,
     over5: rest.filter((ms) => ms > 5).length,
     wakeFrame: round2(wakeFrame),
+    firstSecond: round2(frames.slice(0, 60).reduce((total, frame) => total + (frame[0] ?? 0), 0)),
     maxWithWake: round2(Math.max(wakeFrame, rest[rest.length - 1] ?? 0)),
     loopMs: sum(1),
     pieceMs: sum(2),
@@ -329,12 +330,14 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       over4: list.reduce((total, entry) => total + entry.over4, 0),
       over5: list.reduce((total, entry) => total + entry.over5, 0),
       wakeFrame: round2(Math.max(0, ...list.map((entry) => entry.wakeFrame))),
+      wakeMedian: round2(median(list.map((entry) => entry.wakeFrame))),
+      firstSecond: round2(median(list.map((entry) => entry.firstSecond))),
     })
   }
 
   console.log('')
   console.log('room-explosion: physics ms per frame (p50 and p99: median of rounds; max and wake: worst round; over4/over5: frames summed over the rounds)')
-  console.log(`  ${'variant'.padEnd(8)} ${'cpu'.padEnd(4)} ${'kind'.padEnd(7)} ${'p50'.padStart(6)} ${'p99'.padStart(6)} ${'max'.padStart(6)} ${'wake'.padStart(6)} ${'>4ms'.padStart(5)} ${'>5ms'.padStart(5)}  verdict`)
+  console.log(`  ${'variant'.padEnd(12)} ${'cpu'.padEnd(4)} ${'kind'.padEnd(7)} ${'p50'.padStart(6)} ${'p99'.padStart(6)} ${'max'.padStart(6)} ${'wake'.padStart(6)} ${'wakeMed'.padStart(7)} ${'1st 1s'.padStart(7)} ${'>4ms'.padStart(5)} ${'>5ms'.padStart(5)}  verdict`)
   let blocked = false
   const baseCells = baseCellsOf(process.env.ROOM_EXPLOSION_BASE)
   console.log(baseCells ? `room-explosion: blocks only on a regression over ${Math.round(REGRESSION.tolerance * 100)}% against ${process.env.ROOM_EXPLOSION_BASE}; the absolute budget is a warning` : 'room-explosion: no base report (ROOM_EXPLOSION_BASE): nothing blocks, the absolute budget is a warning')
@@ -344,7 +347,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     const blocks = regressed && cell.variant === 'jolt-d4' && gated.has(cell.throttle)
     blocked ||= blocks
     const verdict = cell.variant !== 'jolt-d4' && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
-    console.log(`  ${cell.variant.padEnd(8)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(7)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
+    console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(7)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
   if (worst.length > 0) {
     console.log('')

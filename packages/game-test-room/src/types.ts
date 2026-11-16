@@ -16,7 +16,7 @@ import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-playe
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
 import type { RoomLoading } from './loading'
-import type { BlastDebrisOptions, DestructionRenderer, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
+import type { BlastDebrisOptions, DestructionRenderer, JitWarmUpOptions, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
 import type { RoomGraphicsOptions } from './graphics'
@@ -355,6 +355,8 @@ export interface TestRoomOptions {
     blast?: BlastDebrisOptions
     /** Lay the engine's ground under each part of a loose piece, not under the box of the whole piece (`RendererOptions.tilesUnderParts`; default off). */
     tilesUnderParts?: boolean
+    /** The destruction renderer's JIT warm-up (`RendererOptions.jitWarmUp`; default on): `false` turns it off, `{ engine }` heats the engine the room's physics runs on. */
+    jitWarmUp?: boolean | JitWarmUpOptions
   }
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions

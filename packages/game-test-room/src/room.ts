@@ -466,6 +466,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.maxAwakePieces !== undefined ? { maxAwakePieces: options.debris.maxAwakePieces } : {}),
     ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
     ...(options.debris?.tilesUnderParts ? { tilesUnderParts: true } : {}),
+    ...(options.debris?.jitWarmUp !== undefined ? { jitWarmUp: options.debris.jitWarmUp } : {}),
     ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
     ...(options.debris?.blast ? { blastDebris: options.debris.blast, focus: (): [number, number, number] => [camera.position.x, camera.position.y, camera.position.z] } : {}),
     onSound: playSound,

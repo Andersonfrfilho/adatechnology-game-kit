@@ -1,6 +1,8 @@
 export { impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
 export { isPhysicsLoop } from '@adatechnology/game-physics'
 export { PhysicsOptionError } from './physics-option'
+export { warmUpDestructionJit } from './jit-warmup'
+export type { JitWarmUpOptions, JitWarmUpReport } from './jit-warmup'
 export type { PiecePhysics } from './physics-option'
 export { BLAST_DEBRIS_DEFAULTS, resolveBlastDebris, physicsPieceCount } from './blast-debris'
 export type { BlastDebrisOptions, DebrisCostOptions, DebrisCostSample, FarDebrisAction, FarDebrisOptions, ResolvedBlastDebris } from './blast-debris'
