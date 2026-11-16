@@ -10,6 +10,9 @@ const G = 9.81
 /** A 350 ml can: 6.6 cm across, 11.5 cm long, a steel wall of a quarter millimetre (7850 kg/m3), 60 g empty and 410 g full. */
 const CAN_RADIUS = 0.033
 const CAN_LENGTH = 0.115
+const SODA_LITERS = 0.35
+/** The share of a solid's moment the soda adds (the renderer's `LIQUID_SPIN_COUPLING`). */
+const LIQUID_SPIN = 0.5
 const CAN_WALL = 0.00025
 const CAN_EMPTY = 2 * Math.PI * CAN_RADIUS * (CAN_LENGTH + CAN_RADIUS) * CAN_WALL * 7850
 const CAN_FULL = 0.41
@@ -38,7 +41,7 @@ const addCan = (s: Setup, id: string, at: Vec3, options: { mass?: number; standi
   mesh.userData.hollow = true
   mesh.userData.destructionThickness = CAN_WALL
   // a full can holds 350 ml of soda; an empty one nothing
-  if ((options.mass ?? CAN_FULL) > CAN_EMPTY * 1.5) mesh.userData.destructionContains = { fluid: 'soda', liters: 0.35 }
+  if ((options.mass ?? CAN_FULL) > CAN_EMPTY * 1.5) mesh.userData.destructionContains = { fluid: 'soda', liters: SODA_LITERS }
   if (!options.standing) mesh.rotation.x = Math.PI / 2
   const root = new THREE.Group()
   root.add(mesh)
@@ -90,8 +93,13 @@ describe('a can rolls down a ramp at g (sin t - C_rr cos t) / (1 + k)', () => {
     return (G * (Math.sin(t) - C_RR * Math.cos(t))) / (1 + k)
   }
 
-  it('a full can (its contents a solid cylinder) rolls at about g sin t / 1.57', () => {
-    const k = (CAN_EMPTY / CAN_FULL) * 1 + (1 - CAN_EMPTY / CAN_FULL) * 0.5
+  it('a full can (its soda lags the walls: half the moment of a solid) rolls faster than a thin shell and slower than a frozen solid', () => {
+    const wall = CAN_EMPTY / CAN_FULL
+    const liquid = SODA_LITERS / CAN_FULL
+    // walls a thin shell, the soda half a solid cylinder's moment (`LIQUID_SPIN_COUPLING`), the rest of the mass a solid
+    const k = wall * 1 + (1 - wall - liquid) * 0.5 + liquid * 0.5 * LIQUID_SPIN
+    expect(k).toBeLessThan(1)
+    expect(k).toBeGreaterThan(0.25)
     const { a, piece } = rollDown(10, CAN_FULL)
     expect(piece.round?.inertia).toBeCloseTo(k, 3)
     expect(a).toBeGreaterThan(expected(10, k) * 0.97)

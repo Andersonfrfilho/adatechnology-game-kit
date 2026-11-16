@@ -138,6 +138,10 @@ const SHELL_SPHERE = 2 / 3
 const SOLID_SPHERE = 0.4
 /** Kg per litre of the liquid inside a round piece when its walls are weighed by what is left (water, soda, juice: about 1). */
 const LIQUID_KG_PER_L = 1
+/** How much of a solid cylinder's moment the liquid in a rolling can adds: a liquid is dragged round by the walls but does not turn as one with them (0 a liquid that never spins, 1 frozen). */
+const LIQUID_SPIN_COUPLING = 0.5
+/** The lightest a piece weighs in the physics (kg): below it the solver's mass ratios against a floor or a foot go wild. An empty can is 50 g, so it keeps its own mass. */
+export const MIN_PIECE_MASS_KG = 0.02
 
 /**
  * The radius of a round piece along its axis, from the points of its drawing (its frame, from the centre of mass): the widest point of each of `PROFILE_RINGS` rings, the end rings
@@ -747,6 +751,16 @@ class Renderer implements DestructionRenderer {
     return m > 0 ? m : 5
   }
 
+  /** The mass of a piece changed (a liquid drunk or leaked out of it): its mass follows, and a round one turns by the moment of what is left in it. */
+  setPieceMass(objectId: string, mass: number): void {
+    const b = this.bounds.get(objectId)
+    const body = b?.piece ?? this.pieceSys.get(objectId)
+    if (!b || !body) return
+    body.mass = Math.max(MIN_PIECE_MASS_KG, mass)
+    if (body.round) this.fitSurface(b, body)
+    body.sleeping = false
+  }
+
   makePiece(objectId: string, options: MakePieceOptions = {}): Piece {
     this.staticDirty.add(objectId)
     const b = this.bounds.get(objectId)
@@ -840,7 +854,9 @@ class Renderer implements DestructionRenderer {
     const area = kind === 'sphere' ? 4 * Math.PI * radius * radius : 2 * Math.PI * radius * 2 * body.halfExtents[axis] + 2 * Math.PI * radius * radius
     const walls = density && thickness > 0 ? area * thickness * density : body.mass - liters * LIQUID_KG_PER_L
     const share = clamp(walls / body.mass, 0, 1)
-    return share * shell + (1 - share) * solid
+    // the liquid inside lags the walls: it carries a part of what a solid of its mass would
+    const liquidShare = clamp((liters * LIQUID_KG_PER_L) / body.mass, 0, 1 - share)
+    return share * shell + (1 - share - liquidShare) * solid + liquidShare * solid * LIQUID_SPIN_COUPLING
   }
 
   /**
@@ -2041,7 +2057,7 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       old.halfExtents = half
       this.pieceSys.setCenter(old, center)
-      old.mass = Math.max(0.05, this.massOf(objectId))
+      old.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId))
       // what came off no longer touches the ground for it: its contacts are those of what is left
       // and what others meet it by are the boxes of what is left (`partBoxes`): nothing invisible collides
       if (old.contacts || old.round) {
@@ -2133,7 +2149,7 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, left)
       body.halfExtents = half
       this.pieceSys.setCenter(body, center)
-      body.mass = Math.max(0.05, this.massOf(objectId))
+      body.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId))
       if (!structural) {
         // what is left may be round (a can's label torn off) or not any more (a stool that lost its legs): its contacts follow
         this.fitSurface(b, body)
