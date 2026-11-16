@@ -16,7 +16,10 @@ export interface WorkBudgetOptions {
    * work spreads over more frames. Picked once per session (from a measurement of the host's, or a setting) and kept in saves and replays: the clock never decides a frame.
    */
   readonly tier?: number
-  /** Frames a queued unit of work waits at most, whatever the budget: past it, it runs (nothing waits for ever, a loose group does not hang for long). Default `DEFAULT_MAX_WAIT_FRAMES`. */
+  /**
+   * Frames a queued unit of work waits at most, whatever the budget: it runs at the latest in the `maxWaitFrames`-th `release` after it was queued (the first for 0 or 1), so
+   * a loose group queued in frame F is a piece by frame F + 12 with 12 and stood loose in at most 12 drawn frames. Default `DEFAULT_MAX_WAIT_FRAMES`.
+   */
   readonly maxWaitFrames?: number
 }
 
@@ -24,8 +27,27 @@ export interface WorkBudgetOptions {
 export const DEFAULT_WORK_BUDGET_MS = 4
 /** 1 unit = 10 µs on the reference machine ("Intel Core Ultra 9 275HX, Node 24"; evidence T3.8aa): the unit costs are written in it. */
 export const DEFAULT_WORK_UNITS_PER_MS = 100
-/** 0.5 s at 60 Hz: the house of the T3.8aa probe was cut into its 50 pieces over ~20 frames under the room's 8 ms clock budget before this budget existed. */
+/** 0.2 s at 60 Hz, the owner's choice (evidence T3.8aa): no loose group stands in its object longer than that, whatever the budget. */
 export const DEFAULT_MAX_WAIT_FRAMES = 12
+
+/** An option of `WorkBudget` that is not a finite number: a NaN or an infinity would silently turn the budget off. */
+export class WorkBudgetOptionError extends Error {
+  readonly code = 'WORK_BUDGET_OPTION'
+  readonly option: keyof WorkBudgetOptions
+  readonly value: number
+  constructor(option: keyof WorkBudgetOptions, value: number) {
+    super(`game-physics: the work budget's \`${option}\` must be a finite number, got ${value}`)
+    this.name = 'WorkBudgetOptionError'
+    this.option = option
+    this.value = value
+  }
+}
+
+const finiteOption = (options: WorkBudgetOptions, option: keyof WorkBudgetOptions, fallback: number): number => {
+  const value = options[option] ?? fallback
+  if (!Number.isFinite(value)) throw new WorkBudgetOptionError(option, value)
+  return value
+}
 
 export interface WorkBudgetState {
   readonly left: number
@@ -46,11 +68,11 @@ export class WorkBudget {
   private readonly spentBy = new Map<WorkKind, number>()
 
   constructor(options: WorkBudgetOptions = {}) {
-    const budgetMs = options.budgetMs ?? DEFAULT_WORK_BUDGET_MS
-    const unitsPerMs = options.unitsPerMs ?? DEFAULT_WORK_UNITS_PER_MS
-    const tier = Math.max(options.tier ?? 1, 1e-3)
+    const budgetMs = finiteOption(options, 'budgetMs', DEFAULT_WORK_BUDGET_MS)
+    const unitsPerMs = finiteOption(options, 'unitsPerMs', DEFAULT_WORK_UNITS_PER_MS)
+    const tier = Math.max(finiteOption(options, 'tier', 1), 1e-3)
     this.unitsPerFrame = Math.max(0, Math.floor((budgetMs * unitsPerMs) / tier))
-    this.maxWaitFrames = Math.max(0, Math.floor(options.maxWaitFrames ?? DEFAULT_MAX_WAIT_FRAMES))
+    this.maxWaitFrames = Math.max(0, Math.floor(finiteOption(options, 'maxWaitFrames', DEFAULT_MAX_WAIT_FRAMES)))
     this.left = this.unitsPerFrame
   }
 
@@ -121,8 +143,8 @@ export interface QueuedWork<TItem> {
 export type WorkQueueState<TItem> = ReadonlyArray<QueuedWork<TItem>>
 
 /**
- * Work waiting its turn under a `WorkBudget`: each frame, what waited `maxWaitFrames` runs whatever the cost, then the rest in priority order while it fits, at least one
- * a frame so the queue always drains.
+ * Work waiting its turn under a `WorkBudget`: each frame, what reaches its `maxWaitFrames`-th release runs whatever the cost, then the rest in priority order while it fits, at
+ * least one a frame so the queue always drains.
  */
 export class WorkQueue<TItem> {
   private entries: Array<QueuedWork<TItem>> = []
@@ -159,7 +181,7 @@ export class WorkQueue<TItem> {
     const out: TItem[] = []
     const kept: Array<QueuedWork<TItem>> = []
     for (const entry of this.entries) {
-      if (entry.waited >= budget.maxWaitFrames) {
+      if (entry.waited + 1 >= budget.maxWaitFrames) {
         budget.take(this.kind, entry.units)
         out.push(entry.item)
       } else kept.push(entry)

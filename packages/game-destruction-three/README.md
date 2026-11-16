@@ -172,16 +172,26 @@ With `workBudget: {}` it is cut by a budget of **work units**, never of time (sp
 `game-physics`) that the events, the splits, the fragments and the blast's wake queue draw from, in that order. The events still apply in their frame (flash, dust, cracks,
 the part hidden), and each is charged `perEvent`. Each loose group joins a queue (`WorkQueue`, data only), ranked by its distance to `focus` (read once, when it came loose),
 then by its smallest part id, and charged by the size of its work (`splitWorkUnits`: as if none of its boxes were fitted ahead, so the schedule never depends on a cache).
-Until its turn the group stays in its object, drawn and solid where it stood; none waits more than `maxWaitFrames`, and the queue moves one a frame at least. No clock is read:
-the same session cuts the same pieces in the same frames on every machine of the same `tier`. With the blast's wake queue on, set `debrisCost: { source: 'fixed' }` too, or its
-batches still follow the measured step.
+Until its turn the group stays in its object, drawn and solid where it stood; none stands loose more than `maxWaitFrames` frames (a group loosened in frame F is a piece by
+F + 12), and the queue moves one a frame at least. The first split an event makes in a frame always runs in it, over the budget if need be. No clock is read: the same session
+cuts the same pieces in the same frames on every machine of the same `tier`. With the blast's wake queue on, set `debrisCost: { source: 'fixed' }` too, or its batches still
+follow the measured step.
+
+**Registering with a frame budget brings the clock back.** When `deferredQueue()` is registered with a game-runtime `FrameBudget`, that budget's clock decides in which frames
+the work step runs at all, so the frames the pieces are cut in follow the machine again: determinism holds only with the queue left unregistered (the renderer drains it in
+its own `update`).
+
+The split queue is not part of a save. After a load, an object bound (`bind`) or drawn again (`redraw`) with more than one group has its loose groups queued in the next work
+step, so none stays loose in its object; a queued group whose parts were shattered meanwhile still splits by the parts it has left, and one whose parts are no longer loose
+gives its place to the object's loose groups as they are then. `unbind`, `release` and `releasePieces` drop the object's waiting groups. Every option must be a finite number,
+or `WorkBudgetOptionError` (`WORK_BUDGET_OPTION`) is thrown.
 
 | Option | Default | What it does |
 |---|---|---|
 | `budgetMs` | 4 (`DEFAULT_WORK_BUDGET_MS`) | Milliseconds of deferred work a frame may take on the reference machine |
 | `unitsPerMs` | 100 (`DEFAULT_WORK_UNITS_PER_MS`) | Work units in a millisecond on the reference machine (the calibration of the costs below) |
 | `tier` | 1 | How much slower than the reference this machine runs the same work, picked once per session: the frame holds `budgetMs × unitsPerMs / tier` units |
-| `maxWaitFrames` | 12 (`DEFAULT_MAX_WAIT_FRAMES`, 0,2 s) | Frames a loose group waits at most, whatever the budget |
+| `maxWaitFrames` | 12 (`DEFAULT_MAX_WAIT_FRAMES`, 0,2 s) | Frames a loose group stands loose at most, whatever the budget: it splits by the `maxWaitFrames`-th work step after it came loose |
 | `costs` | `WORK_UNIT_DEFAULTS`: `perSplit` 120, `perVertex` 0.05, `perHostVertex` 0.01, `perObjectPart` 0.3, `perFragment` 4, `perEvent` 40, `perWake` 2 | Units per unit of work; the first calibration (T3.8aa), to be measured again on top of the fits ahead, the batched bodies and the ground budget |
 
 ### Debris of a blast (`blastDebris`, opt-in)

@@ -5,5 +5,5 @@ export { DEFAULT_CHIP_SIZE, DEFAULT_MAX_PHYSICS_PIECES, DEFAULT_MIN_PHYSICS_PIEC
 export type { DebrisCandidate, PhysicsPieceBudget, WakeQueueOptions } from './wake-queue'
 export { createPhysicsLoop, isPhysicsLoop } from './loop'
 export type { PhaseOrder, PhysicsFrame, PhysicsLoop, PhysicsLoopOptions, PhysicsPhase } from './loop'
-export { DEFAULT_MAX_WAIT_FRAMES, DEFAULT_WORK_BUDGET_MS, DEFAULT_WORK_UNITS_PER_MS, WORK_KINDS, WorkBudget, WorkQueue } from './work-budget'
+export { DEFAULT_MAX_WAIT_FRAMES, DEFAULT_WORK_BUDGET_MS, DEFAULT_WORK_UNITS_PER_MS, WORK_KINDS, WorkBudget, WorkBudgetOptionError, WorkQueue } from './work-budget'
 export type { QueuedWork, WorkBudgetOptions, WorkBudgetState, WorkKind, WorkQueueState } from './work-budget'

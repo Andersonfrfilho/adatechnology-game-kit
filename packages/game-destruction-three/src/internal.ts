@@ -120,6 +120,8 @@ export interface PieceFriction {
 }
 
 export interface PieceBody extends Piece {
+  /** Which body of `objectId` this is (counts up per body made): a push queued for a piece reaches only that body, never one made later under the same id. */
+  readonly generation: number
   /** `localCenter` as a vector (kept in sync with it). */
   centerV: THREE_NS.Vector3
   /** Seconds the piece has been nearly still (sleeps after 0.5). */

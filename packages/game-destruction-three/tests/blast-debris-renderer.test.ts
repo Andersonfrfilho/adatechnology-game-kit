@@ -24,7 +24,7 @@ const crates = (count: number, size: number, options: Partial<RendererOptions>, 
     renderer.bind(id, root, { parts: { box: mesh } })
     if (piece) pieces.push(renderer.makePiece(id))
   }
-  return { renderer, pieces }
+  return { renderer, pieces, scene, world }
 }
 
 // the wave presses on the area a body shows (the release's side-on impulse), so these small crates need more energy than before to be shoved at all
@@ -46,6 +46,26 @@ describe('the debris of a blast (spec 008 D4)', () => {
     expect(moving(pieces)).toBeLessThan(40)
     for (let frame = 0; frame < 8; frame++) renderer.update(1 / 60)
     expect(moving(pieces)).toBeGreaterThan(30)
+  })
+
+  it('a queued shove reaches only the body it was queued for, not one made again under the same id', () => {
+    const { renderer, pieces, scene } = crates(40, 0.3, { blastDebris: { wakeCostTargetMs: 0, minWakesPerFrame: 4, maxWakeDelay: 0.1 } })
+    renderer.explode([0, 0.2, 0], 1000000, 8, { visual: false })
+    // the farthest crate still waits its shove; it leaves and comes back as a new piece of the same id
+    const last = pieces[pieces.length - 1]!
+    expect(Math.hypot(...last.velocity)).toBeLessThan(0.5)
+    renderer.unbind(last.objectId)
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3))
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(-6, 0.15, -6)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind(last.objectId, root, { parts: { box: mesh } })
+    const again = renderer.makePiece(last.objectId)
+    for (let frame = 0; frame < 11; frame++) renderer.update(1 / 60)
+    expect(moving(pieces.slice(0, -1))).toBeGreaterThan(30)
+    expect(Math.hypot(...again.velocity)).toBeLessThan(0.5)
   })
 
   it('a blast can override the numbers of the renderer that are its own (how long its debris waits, how many pieces)', () => {

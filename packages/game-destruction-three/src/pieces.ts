@@ -256,6 +256,7 @@ const turnBetween = (a: readonly [number, number, number, number], q: THREE_NS.Q
 export class PieceSystem {
   readonly list: PieceBody[] = []
   private time = 0
+  private generations = 0
   private readonly p: THREE_NS.Vector3
   private readonly q: THREE_NS.Quaternion
   private readonly dq: THREE_NS.Quaternion
@@ -486,6 +487,7 @@ export class PieceSystem {
     }
     const body: PieceBody = {
       objectId,
+      generation: ++this.generations,
       tipping: null,
       root,
       velocity: velocity ? [...velocity] : [0, 0, 0],

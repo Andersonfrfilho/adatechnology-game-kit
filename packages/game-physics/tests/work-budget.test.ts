@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_MAX_WAIT_FRAMES, DEFAULT_WORK_BUDGET_MS, DEFAULT_WORK_UNITS_PER_MS, WORK_KINDS, WorkBudget, WorkQueue } from '../src/index'
+import { DEFAULT_MAX_WAIT_FRAMES, DEFAULT_WORK_BUDGET_MS, DEFAULT_WORK_UNITS_PER_MS, WORK_KINDS, WorkBudget, WorkBudgetOptionError, WorkQueue } from '../src/index'
 
 describe('WorkBudget', () => {
   it('holds budgetMs × unitsPerMs / tier units a frame, with the measured defaults', () => {
@@ -23,6 +23,15 @@ describe('WorkBudget', () => {
     expect(budget.remaining).toBe(100)
     expect(budget.spent('split')).toBe(0)
     expect(budget.fits(10)).toBe(10)
+  })
+
+  it('refuses an option that is not a finite number instead of turning the budget off', () => {
+    for (const option of ['budgetMs', 'unitsPerMs', 'tier', 'maxWaitFrames'] as const) {
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+        expect(() => new WorkBudget({ [option]: value })).toThrow(WorkBudgetOptionError)
+      }
+    }
+    expect(() => new WorkBudget({ budgetMs: 0, tier: 0.5, maxWaitFrames: 0 })).not.toThrow()
   })
 
   it('saves and restores bit for bit', () => {
@@ -49,17 +58,30 @@ describe('WorkQueue', () => {
     expect(queue.size).toBe(0)
   })
 
-  it('what waited maxWaitFrames goes whatever the budget, and the queue saves as data', () => {
-    const budget = new WorkBudget({ budgetMs: 0, maxWaitFrames: 2 })
+  it('what reaches its maxWaitFrames-th release goes whatever the budget, and the queue saves as data', () => {
+    const budget = new WorkBudget({ budgetMs: 0, maxWaitFrames: 3 })
     const queue = new WorkQueue<{ id: number }>('split')
     for (let i = 0; i < 4; i++) queue.push({ id: i }, i, String(i), 10)
     expect(queue.release(budget).map((x) => x.id)).toEqual([0])
     const saved = queue.saveState()
     expect(JSON.parse(JSON.stringify(saved))).toEqual(saved)
     expect(queue.release(budget).map((x) => x.id)).toEqual([1])
+    // the third release since they were queued: none of them waits longer
     expect(queue.release(budget).map((x) => x.id)).toEqual([2, 3])
     const again = new WorkQueue<{ id: number }>('split')
     again.restoreState(saved)
     expect(again.release(budget).map((x) => x.id)).toEqual([1])
+  })
+
+  it('with the default ceiling an item queued before frame F+1 is out by its 12th release, whatever the budget', () => {
+    const budget = new WorkBudget({ budgetMs: 0 })
+    const queue = new WorkQueue<number>('split')
+    for (let i = 0; i < 20; i++) queue.push(i, i, String(i).padStart(2, '0'), 10)
+    let releases = 0
+    while (queue.size > 0) {
+      queue.release(budget)
+      releases++
+    }
+    expect(releases).toBe(DEFAULT_MAX_WAIT_FRAMES)
   })
 })
