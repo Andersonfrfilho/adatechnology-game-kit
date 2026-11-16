@@ -29,8 +29,17 @@ describe('colliderOf: a box is kept only where the SDK fit holds the drawing in 
     expect(collider?.mesh).toBeUndefined()
   })
 
-  it('two bars at opposite corners touch all eight corners of their box but are mostly air: held by triangles', () => {
+  it('eight separate blocks at the corners touch all eight corners of their box but are mostly air: held by triangles', () => {
     const soup = soupOfBoxes([[[0, 0, 0], [0.05, 0.05, 0.05]], [[1.95, 1.95, 1.95], [2, 2, 2]], [[1.95, 0, 0], [2, 0.05, 0.05]], [[0, 1.95, 0], [0.05, 2, 0.05]], [[0, 0, 1.95], [0.05, 0.05, 2]], [[1.95, 1.95, 0], [2, 2, 0.05]], [[1.95, 0, 1.95], [2, 0.05, 2]], [[0, 1.95, 1.95], [0.05, 2, 2]]])
     expect(colliderOf('cage', 'k', soup)?.mesh).toBeDefined()
+  })
+
+  it('a thin sheet stays a box', () => {
+    expect(colliderOf('sheet', 'k', soupOfBoxes([[[0, 0, 0], [1.4, 0.001, 0.9]]]))?.mesh).toBeUndefined()
+  })
+
+  it('a block with a loose detail 2 mm away is held by triangles', () => {
+    const soup = soupOfBoxes([[[0, 0, 0], [1, 0.5, 2]], [[0.2, 0.502, 0.2], [0.4, 0.51, 0.4]]])
+    expect(colliderOf('badge', 'k', soup)?.mesh).toBeDefined()
   })
 })
