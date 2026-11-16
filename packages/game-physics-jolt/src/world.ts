@@ -34,6 +34,7 @@ import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry }
 import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
 import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
+import { HullSet } from './hull-cache'
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout } from './vec3'
@@ -90,6 +91,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly castSettings: JoltNS.ShapeCastSettings
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
+  /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
+  readonly hulls = new Map<number, HullSet>()
   private readonly objectFilter: JoltNS.ObjectLayerPairFilterTable
   private readonly bpInterface: JoltNS.BroadPhaseLayerInterfaceTable
   private readonly objVsBp: JoltNS.ObjectVsBroadPhaseLayerFilterTable
@@ -186,8 +189,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.system.SetContactListener(this.listener)
   }
 
-  makeShape(shape: ShapeDesc, centred = false): JoltNS.Shape {
-    return centred ? makeCentredShape(this.J, this.v2, shape) : makeShape(this.J, this.v2, shape)
+  makeShape(shape: ShapeDesc, centred = false, hulls?: HullSet): JoltNS.Shape {
+    return centred ? makeCentredShape(this.J, this.v2, shape, hulls) : makeShape(this.J, this.v2, shape, hulls)
   }
 
   // Bodies ------------------------------------------------------------------------------------------------------------------------------
@@ -273,13 +276,15 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   createBody(desc: BodyDesc): BodyId {
-    const shape = this.makeShape(desc.shape, desc.centreAtOrigin === true && desc.motion === 'dynamic' && desc.mass !== undefined)
+    const hulls = desc.shape.kind === 'compound' && desc.shape.reuseHulls ? new HullSet() : undefined
+    const shape = this.shapeWith(desc.shape, desc.centreAtOrigin === true && desc.motion === 'dynamic' && desc.mass !== undefined, hulls)
     const s = this.settingsFor(desc, shape)
     const body = this.bi.CreateBody(s)
     this.J.destroy(s)
     shape.Release()
     this.unscaleInertia(desc, body)
     const key = this.register(desc, body)
+    if (hulls) this.hulls.set(key, hulls)
     this.bi.AddBody(body.GetID(), desc.sleeping || desc.motion === 'static' ? this.J.EActivation_DontActivate : this.J.EActivation_Activate)
     return key
   }
@@ -320,8 +325,34 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.forget(id)
   }
 
+  /** The hulls of a body whose new shape is a compound that reuses them (made on first need); a shape that does not lets the last ones go. */
+  private hullsFor(id: BodyId, shape: ShapeDesc): HullSet | undefined {
+    if (shape.kind !== 'compound' || !shape.reuseHulls) {
+      this.hulls.get(id)?.dispose()
+      this.hulls.delete(id)
+      return undefined
+    }
+    let held = this.hulls.get(id)
+    if (!held) {
+      held = new HullSet()
+      this.hulls.set(id, held)
+    }
+    return held
+  }
+
+  /** The shape made, and the hulls it used kept for the body's next one (`hulls` undefined: none kept). */
+  private shapeWith(shape: ShapeDesc, centred: boolean, hulls: HullSet | undefined): JoltNS.Shape {
+    try {
+      return this.makeShape(shape, centred, hulls)
+    } finally {
+      hulls?.finish()
+    }
+  }
+
   /** What the adapter keeps about a body that went (removed, or its ragdoll destroyed). */
   forget(id: number): void {
+    this.hulls.get(id)?.dispose()
+    this.hulls.delete(id)
     this.bodies.delete(id)
     this.partners.delete(id)
     this.points.delete(id)
@@ -335,7 +366,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
    */
   setShape(id: BodyId, shape: ShapeDesc, mass?: { readonly mass: number; readonly inertia?: Vec3 }): void {
     const e = this.entry(id)
-    const made = this.makeShape(shape, e.centred)
+    const made = this.shapeWith(shape, e.centred, this.hullsFor(id, shape))
     const dynamic = e.body.IsDynamic()
     if (mass && dynamic) e.kitMass = mass
     const kit = dynamic ? e.kitMass : null
