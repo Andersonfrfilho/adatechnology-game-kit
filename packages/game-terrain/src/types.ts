@@ -410,6 +410,12 @@ export interface Terrain {
   setLayout(layout: GroundLayout): void
   /** Height at (x, z) as things stand on it. */
   heightAt(x: number, z: number): number
+  /**
+   * The lowest and the highest `heightAt` can answer over the rectangle, exact bounds (the height between vertices is a blend of the four around it, so no
+   * point is under the lowest or over the highest vertex of the cells the rectangle covers); null when the rectangle is not wholly inside the terrain, where the ground is the
+   * host's `baseHeight` and no bound is known. Costs the vertices the rectangle covers, not a read per sample.
+   */
+  heightRange(minX: number, maxX: number, minZ: number, maxZ: number): { readonly low: number; readonly high: number } | null
   /** Height of vertex (column, row). */
   vertexHeight(column: number, row: number): number
   /** Material exposed at a vertex. */

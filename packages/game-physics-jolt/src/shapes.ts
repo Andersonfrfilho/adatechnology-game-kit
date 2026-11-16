@@ -4,9 +4,10 @@ import type { ShapeDesc } from '@adatechnology/game-physics'
 
 import { HEIGHT_BLOCK, NO_COLLISION, NO_TAG } from './constants'
 import type { Jolt } from './constants'
+import type { HullSet } from './hull-cache'
 
 /** Jolt's settings for a shape of the contract; `scratch` is a vector the caller owns and reuses. */
-export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): JoltNS.ShapeSettings => {
+export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, hulls?: HullSet): JoltNS.ShapeSettings => {
   switch (shape.kind) {
     case 'box': {
       const smallest = Math.min(shape.half[0], shape.half[1], shape.half[2])
@@ -35,6 +36,10 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): 
     case 'compound': {
       const s = new J.StaticCompoundShapeSettings()
       for (const child of shape.children) {
+        if (shape.reuseHulls && hulls && child.shape.kind === 'convex' && child.tag === undefined) {
+          addReusedHull(J, scratch, s, child, hulls)
+          continue
+        }
         const inner = shapeSettings(J, scratch, child.shape)
         // a compound answers a sub-shape's user data with its inner shape's own (the one given to `AddShape` is read back through `GetCompoundUserData`)
         inner.mUserData = (child.tag ?? -1) >>> 0
@@ -48,6 +53,18 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): 
       return s
     }
   }
+}
+
+/** An untagged convex child as the hull the cache holds for its points (made the first time): the compound keeps its own reference to it. */
+const addReusedHull = (J: Jolt, scratch: JoltNS.Vec3, compound: JoltNS.StaticCompoundShapeSettings, child: Extract<ShapeDesc, { kind: 'compound' }>['children'][number], hulls: HullSet): void => {
+  const convex = child.shape as Extract<ShapeDesc, { kind: 'convex' }>
+  const hull = hulls.shapeOf(convex.points, () => makeShape(J, scratch, convex))
+  const r = child.rotation ?? [0, 0, 0, 1]
+  const pos = new J.Vec3(child.position[0], child.position[1], child.position[2])
+  const rot = new J.Quat(r[0], r[1], r[2], r[3])
+  compound.AddShapeShape(pos, rot, hull, NO_TAG)
+  J.destroy(pos)
+  J.destroy(rot)
 }
 
 const trimeshSettings = (J: Jolt, shape: Extract<ShapeDesc, { kind: 'trimesh' }>): JoltNS.ShapeSettings => {
@@ -98,8 +115,8 @@ const heightFieldSettings = (J: Jolt, shape: Extract<ShapeDesc, { kind: 'heightf
 }
 
 /** A shape made from its settings, with one reference the caller owns (`Release` it once a body took its own). */
-export const makeShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): JoltNS.Shape => {
-  const settings = shapeSettings(J, scratch, shape)
+export const makeShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, hulls?: HullSet): JoltNS.Shape => {
+  const settings = shapeSettings(J, scratch, shape, hulls)
   // a plain shape answers its user data as the sub-shape's `tag`: all ones read back as -1 (`| 0`), "no part"
   settings.mUserData = NO_TAG
   const result = settings.Create()
@@ -117,15 +134,15 @@ export const makeShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): Jolt
 }
 
 /** The shape with its centre of mass moved to the origin: Jolt takes a compound's centre of mass from its parts' volumes, the kit puts it where it measured it. */
-export const makeCentredShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc): JoltNS.Shape => {
-  const plain = makeShape(J, scratch, shape)
+export const makeCentredShape = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, hulls?: HullSet): JoltNS.Shape => {
+  const plain = makeShape(J, scratch, shape, hulls)
   const centre = plain.GetCenterOfMass()
   const x = centre.GetX()
   const y = centre.GetY()
   const z = centre.GetZ()
   if (Math.hypot(x, y, z) < 1e-5) return plain
   plain.Release()
-  const inner = shapeSettings(J, scratch, shape)
+  const inner = shapeSettings(J, scratch, shape, hulls)
   inner.mUserData = NO_TAG
   const offset = new J.Vec3(-x, -y, -z)
   const settings = new J.OffsetCenterOfMassShapeSettings(offset, inner)
