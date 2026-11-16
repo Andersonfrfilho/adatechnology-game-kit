@@ -105,6 +105,8 @@ export interface RendererOptions {
    * The lowest and highest `terrainAt` (else `groundAt`) can answer over a rectangle (min x, max x, min z, max z), exact bounds, or null when none is known. With it the engine lays a
    * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
    */
+  /** The most tiles of ground the physics engine lays at a blast, nearest first (default 48; 0 lays none at a blast: the tiles are laid as the pieces reach them). */
+  blastGroundTiles?: number
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   gravity?: number
   /** Turn a loose group into a separate physical piece automatically (default true). */

@@ -27,6 +27,11 @@ export interface EnginePieceOptions {
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
+  /**
+   * The most tiles of ground laid at a blast (`layAhead`), nearest the centre first; 0 turns it off. A blast's pieces come into being in the next update, on tiles not laid yet:
+   * laying the ones the blast reaches at the blast, before any piece needs them, takes that cost out of the frame the pieces appear in. Default `BLAST_TILES`.
+   */
+  readonly blastTiles?: number
   /** Lay the ground under each part box of a piece of several parts, not under the box around all of them (default off: the same tiles as before). */
   readonly tilesUnderParts?: boolean
 }
@@ -51,6 +56,10 @@ const GROUND_REACH = 0.25
  * new field of 81 x 81, so past about three quarters a new shape is the cheaper (measured, T3.8q); half leaves room for the engine's own work around the write.
  */
 const IN_PLACE_SHARE = 0.5
+/** The tiles laid at a blast unless the host says otherwise: a disc of about 5 m around it. A count, not a clock, so the same blast lays the same tiles on any machine. */
+const BLAST_TILES = 48
+/** A blast's radius counts to this far (m) when the tiles it reaches are listed: the nearest ones are laid, and the count caps the rest. */
+const BLAST_REACH = 32
 /** A tile whose ground varies by no more than this (m) over every sample is level (`shapeGround` calls 1e-9 level; half of it leaves room for rounding). */
 const FLAT_SPAN = 5e-10
 /**
@@ -183,6 +192,8 @@ export class EnginePieces {
    */
   fellThrough = 0
   private readonly tiles = new Map<number, Tile>()
+  /** The blasts told since the last `prepare` (`layAhead`). */
+  private readonly blasts: Array<{ x: number; z: number; radius: number }> = []
   /** The host's fixed things (`staticSolids`) as static bodies. */
   readonly statics: EngineStatics
   private readonly ignored = new Set<string>()
@@ -238,6 +249,7 @@ export class EnginePieces {
       if (t.solid !== null) this.world.removeBody(t.solid)
     }
     this.tiles.clear()
+    this.blasts.length = 0
     this.statics.clear()
     this.ignored.clear()
   }
@@ -246,6 +258,12 @@ export class EnginePieces {
    * The ground under the disc changed (the host dug or heaped it): its tiles are laid again before the next step, and what the new ground reaches into is lifted
    * onto it once, as one made in the ground is (`underGround`): the engine pushes a deep one out too slowly and puts it to sleep half way.
    */
+  /** A blast at (x, z): the tiles within `radius` of it that are not laid, or are marked, are laid at the start of the next `prepare`, after the ground the blast changed has been told. */
+  layAhead(x: number, z: number, radius: number): void {
+    if ((this.o.blastTiles ?? BLAST_TILES) <= 0) return
+    this.blasts.push({ x, z, radius: Math.min(radius, BLAST_REACH) })
+  }
+
   groundChanged(x: number, z: number, radius: number): void {
     this.markDirty(x, z, radius)
     for (const [b, link] of this.links) {
@@ -259,6 +277,28 @@ export class EnginePieces {
       b.root.updateMatrixWorld(true)
       link.groundAtSleep = NaN
     }
+  }
+
+  /** The tiles the blasts told since the last update reach, nearest first up to `blastTiles`: made if new, laid again if marked. */
+  private layBlastGround(): void {
+    if (this.blasts.length === 0) return
+    const wanted = new Map<number, { key: number; ix: number; iz: number; distance: number }>()
+    for (const { x, z, radius } of this.blasts) {
+      for (let ix = Math.floor((x - radius) / TILE); ix <= Math.floor((x + radius) / TILE); ix++) {
+        for (let iz = Math.floor((z - radius) / TILE); iz <= Math.floor((z + radius) / TILE); iz++) {
+          const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
+          const tile = this.tiles.get(key)
+          if (tile && tile.dirty === null) continue
+          const distance = Math.hypot(Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE)) - x, Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE)) - z)
+          if (distance > radius) continue
+          const before = wanted.get(key)
+          if (!before || distance < before.distance) wanted.set(key, { key, ix, iz, distance })
+        }
+      }
+    }
+    this.blasts.length = 0
+    const nearest = [...wanted.values()].sort((a, b) => a.distance - b.distance || a.key - b.key)
+    for (const t of nearest.slice(0, this.o.blastTiles ?? BLAST_TILES)) this.layTile(t.key, t.ix, t.iz, this.tiles.get(t.key))
   }
 
   /** The tiles the disc touches are laid again before the next step, reading the ground again where the disc is (and `GROUND_REACH` past it). */
@@ -295,6 +335,7 @@ export class EnginePieces {
     this.groundTurn(list)
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
+    this.layBlastGround()
     for (const b of list) this.sync(b, dt, h)
     this.layGround(list, dt)
     this.keepApart(apart)
@@ -930,7 +971,7 @@ export class EnginePieces {
     return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
   }
 
-  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. */
+  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Its hulls that did not change are the ones made before (`reuseHulls`). */
   private layVolume(t: GroundTile, tile: Tile | undefined): BodyId | null {
     const id = tile?.solid ?? null
     if (t.level !== null) {
@@ -953,7 +994,7 @@ export class EnginePieces {
       for (let k = 0; k < 24; k += 3) points.push(prisms[i + k]! - cx, prisms[i + k + 1]! - cy, prisms[i + k + 2]! - cz)
       children.push({ shape: { kind: 'convex', points }, position: [cx, cy, cz] })
     }
-    return { kind: 'compound', children }
+    return { kind: 'compound', children, reuseHulls: true }
   }
 
   private heightField(t: GroundTile, ix: number, iz: number): ShapeDesc {

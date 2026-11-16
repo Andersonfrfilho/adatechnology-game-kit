@@ -465,6 +465,7 @@ class Renderer implements DestructionRenderer {
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       ...(o.terrainRangeAt ? { terrainRangeAt: o.terrainRangeAt } : {}),
+      ...(o.blastGroundTiles !== undefined ? { blastGroundTiles: o.blastGroundTiles } : {}),
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       staticSolids: () => this.staticSolids(),
       gravity: this.gravity,
@@ -2364,6 +2365,7 @@ class Renderer implements DestructionRenderer {
     const p = ev.point
     if (options.visual !== false) this.playExplosion(ev, options)
     this.vfx.push(p, ev.radius, 4)
+    this.pieceSys.layGroundAt(p[0], p[2], ev.radius)
     // shove pieces and fragments
     const c = this.v1
     const report = options.report

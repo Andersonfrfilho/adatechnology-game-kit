@@ -20,6 +20,8 @@ export interface PieceSystemOptions {
    * The lowest and highest `terrainAt` (else `groundAt`) can answer over a rectangle (min x, max x, min z, max z), exact bounds, or null when none is known. With it the engine lays a
    * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
    */
+  /** The most tiles of ground laid at a blast, nearest first (default 48; 0 lays none at a blast: the tiles are laid as the pieces reach them). Engine physics only. */
+  blastGroundTiles?: number
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   /**
    * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
@@ -318,6 +320,7 @@ export class PieceSystem {
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
           ...(o.terrainRangeAt ? { groundRange: o.terrainRangeAt } : {}),
+          ...(o.blastGroundTiles !== undefined ? { blastTiles: o.blastGroundTiles } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,
           sweep: o.sweep,
@@ -663,6 +666,11 @@ export class PieceSystem {
       v[i] += (j * n[i]) / b.mass
       w[i] += a[i] * j
     }
+  }
+
+  /** A blast at (x, z) of `radius`: the ground within its reach is laid at the next update, before the pieces it makes need it (`EnginePieces.layAhead`). */
+  layGroundAt(x: number, z: number, radius: number): void {
+    this.engine?.layAhead(x, z, radius)
   }
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
