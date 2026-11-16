@@ -130,8 +130,8 @@ export const restoreState = (w: JoltWorldHost, data: Uint8Array): boolean => {
     return bits.getFloat64(0, true)
   }
   w.accumulator = nextFloat()
-  w.ignored.clear()
-  for (let n = next(); n > 0; n--) w.ignored.add(next())
+  w.clearIgnored()
+  for (let n = next(); n > 0; n--) w.addIgnoredKey(next())
   w.rollers.clear()
   for (let n = next(); n > 0; n--) {
     const key = next()

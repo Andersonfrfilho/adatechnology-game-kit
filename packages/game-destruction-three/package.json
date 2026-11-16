@@ -41,7 +41,8 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:jolt": "PIECE_SOLVER=jolt vitest run tests/drawn-solids.test.ts tests/engine-fast-chips.test.ts tests/engine-ground-inplace.test.ts tests/engine-ground.test.ts tests/ground-rise-lift.test.ts tests/loop-mode.test.ts tests/determinism.test.ts tests/engine-remove-wakes.test.ts"
   },
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",

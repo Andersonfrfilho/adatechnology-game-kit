@@ -54,6 +54,8 @@ export interface JoltWorldHost {
   readonly pairLog: number[]
   readonly activeIds: JoltNS.BodyIDVector
   readonly ignored: Set<number>
+  addIgnoredKey(key: number): void
+  clearIgnored(): void
   readonly points: Map<number, { xyz: Float32Array; n: number; step: number }>
   stepCount: number
   readonly rollers: Map<number, Rolling>
