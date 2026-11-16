@@ -314,6 +314,26 @@ export function createTerrain(options: TerrainOptions): Terrain {
     return (h(index) * (1 - tx) + h(index + 1) * tx) * (1 - tz) + (h(index + stride) * (1 - tx) + h(index + stride + 1) * tx) * tz
   }
 
+  function heightRange(minX: number, maxX: number, minZ: number, maxZ: number): { low: number; high: number } | null {
+    if (!contains(minX, minZ) || !contains(maxX, maxZ)) return null
+    const cellOf = (v: number, origin: number, count: number): number => Math.floor(Math.max(0, Math.min(count - 1e-6, (v - origin) / cellSize)))
+    const column0 = cellOf(minX, x0, columns)
+    const column1 = cellOf(maxX, x0, columns) + 1
+    const row0 = cellOf(minZ, z0, rows)
+    const row1 = cellOf(maxZ, z0, rows) + 1
+    let low = Infinity
+    let high = -Infinity
+    for (let row = row0; row <= row1; row++) {
+      for (let column = column0; column <= column1; column++) {
+        const index = row * stride + column
+        const h = base[index]! - dug[index]! + loose[index]!
+        if (h < low) low = h
+        if (h > high) high = h
+      }
+    }
+    return { low, high }
+  }
+
   const vertexOf = (x: number, z: number): { column: number; row: number; index: number } => {
     const column = clampIndex(Math.round((x - x0) / cellSize), columns)
     const row = clampIndex(Math.round((z - z0) / cellSize), rows)
@@ -1205,6 +1225,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       reset()
     },
     heightAt,
+    heightRange,
     footAt,
     walkFactorAt,
     waterAt,

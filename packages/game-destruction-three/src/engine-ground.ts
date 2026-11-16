@@ -30,9 +30,14 @@ export interface GroundTile {
   readonly solid: SolidVolume
   /** The height of a level tile (every sample equal), or null. */
   readonly level: number | null
-  /** Every sample read, to tell whether the ground changed since. */
-  readonly samples: Float64Array
+  /** Every sample read, to tell whether the ground changed since; null for a tile proved level from the terrain's own bounds (`flatTile`), whose samples were never read. */
+  readonly samples: Float64Array | null
 }
+
+const NO_HEIGHTS = new Float32Array(0)
+
+/** The tile of a level `size` at `level`, laid without a sample read: the caller has proved, from the ground's own data, that every sample there is `level` (to 1e-9, as `shapeGround` calls level). */
+export const flatTile = (level: number, size: number): GroundTile => ({ heights: NO_HEIGHTS, cells: Math.round(size / GROUND_CELL), boxes: [], solid: NO_SOLID, level, samples: null })
 
 /** A rectangle of the ground, world x and z. */
 export interface GroundRect {
@@ -83,10 +88,10 @@ export const readGround = (groundAt: (x: number, z: number) => number, samples: 
   return changed
 }
 
-export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: number, z0: number, size: number): GroundTile => {
+export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: number, z0: number, size: number, withSolid = true): GroundTile => {
   const samples = new Float64Array(sampleCount(Math.round(size / GROUND_CELL)))
   readGround(groundAt, samples, x0, z0, size)
-  return shapeGround(samples, x0, z0, size, true)
+  return shapeGround(samples, x0, z0, size, withSolid)
 }
 
 /**

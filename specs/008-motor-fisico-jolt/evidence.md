@@ -3005,3 +3005,30 @@ Medição com a régua apertada, tigela (`bowl-energy.test.ts`, 32 casos no Jolt
 - Job de CI do `game-floorplan-three` no modo Jolt: tem 4 falhas conhecidas de base (3 goldens de `destruction/*` e `bookcase-topple`); entra quando elas forem resolvidas ou listadas.
 - Duas falhas de `rolling.test.ts` no modo Jolt já existiam na main.
 - Perguntas em aberto do revisor: a soma dos tempos do `room-explosion` assume o laço do host (afirmar isso na ferramenta) e a coluna `createBody` da tabela de estágios não cobre `createBodies`.
+
+## T3.8ae — chão sob as peças, sobre a main com a régua apertada (2026-11-16)
+
+Branch `perf/chao-sob-pecas` (frente G do `design/orcamento-da-explosao.md`): `heightRange` no terreno (limites exatos do chão num retângulo), ladrilho que os limites provam plano assentado como laje sem ler as amostras, composto que pede reaproveita os cascos que a forma anterior do corpo tinha (adaptador Jolt), sólido sob cratera reaproveitando cascos, pré-assento no evento da explosão (desligado por padrão). Merge da main `94362513` (#317–#319); o único conflito foi `forget` no adaptador (os dois lados ficaram: liberar os cascos guardados e esquecer as regras de ignorar).
+
+### Medição
+Máquina com outras threads: só se mediu com carga abaixo de 3 (`/proc/loadavg`), uma rodada por processo, main (worktree limpo em `94362513`) e branch intercaladas, sob a trava `perf-measure.lock`. Uma primeira leva com carga de 5 a 29 foi descartada.
+
+**Portão `room-explosion` a 1×, Jolt com D4, 6 pares intercalados** (medianas, intervalo):
+
+| | p99 main | p99 branch | máx. main | máx. branch | quadros > 5 ms main / branch |
+|---|---|---|---|---|---|
+| explosão (6+6) | 17,3 (15,8–18,5) | 16,7 (15,0–19,1) | 28,1 (pior 31,2) | 27,1 (pior 29,6) | 89 / 90 |
+| martelo (6+5) | 17,6 (13,5–19,2) | 15,9 (13,5–17,1) | 27,9 (pior 30,4) | 30,9 (pior 42,1) | 63 / 45 |
+
+Leitura: **sem regressão**; o martelo melhora no p99 e nos quadros acima de 5 ms, a explosão fica no ruído. O pior quadro do martelo da branch (42,1) é uma rodada só; a mediana do máximo fica a 3 ms da main. Longe do B6 (p99 4, máx. 5) nas duas: as opções de escopo vão ao dono depois dos merges.
+
+**Sonda da sala (`drive.mjs`, `&solver=jolt&blastDebris=1`), régua R1–R3 apertada, 11 explosões + 11 martelos por lado:**
+
+| | C2 | C3 | C4 | `fellThrough` 0 |
+|---|---|---|---|---|
+| main `94362513` | 22/22 | **17/22** | 22/22 | 22/22 |
+| branch | 21/22 | **18/22** | 21/22 | 22/22 |
+
+- **C3 reprova também na main** (todas as reprovações em explosão): o ofensor é sempre `pipe:run_wall_kitchen_0:0` (0,6 kg), subida de 0,035 a 0,054 m, boa parte declarada pelo blast. É efeito da régua apertada, não desta branch: **a T3.8 volta a ficar sem ✅** até o dono decidir o cano (enviado ao coordenador).
+- As duas reprovações só da branch caíram na primeira leva (uma rodada cada): C2 de um fio de 16 kg deitado no chão (0,040 contra 0,035) e C4 de um martelo com 25 de 32 peças dormindo ao fim. Não voltaram nas 12 rodadas seguintes. Com 1/22 contra 0/22 não dá para separar de ruído; fica registrado.
+- Testes: `game-physics-jolt` 76 passam, `game-terrain` 110, `game-destruction-three` próprio 428 e Jolt (`test:jolt`) 51, 0 falhas.

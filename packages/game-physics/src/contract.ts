@@ -25,7 +25,15 @@ export type ShapeDesc =
    */
   | { readonly kind: 'heightfield'; readonly origin: Vec3; readonly cell: number; readonly size: number; readonly heights: ArrayLike<number> }
   /** Children placed in the body's frame; `tag` (our part id) comes back on queries and contacts, -1 for a child without one and for a plain shape. */
-  | { readonly kind: 'compound'; readonly children: ReadonlyArray<{ readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation?: Quat; readonly tag?: number }> }
+  | {
+      readonly kind: 'compound'
+      readonly children: ReadonlyArray<{ readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation?: Quat; readonly tag?: number }>
+      /**
+       * An untagged convex child whose points a hull made earlier already has (to the bit) is that hull, not a new one: for a compound made again and again from mostly the same
+       * hulls (the solid under a tile of ground), where building a hull is what a new compound costs. The adapter holds a bounded number of them.
+       */
+      readonly reuseHulls?: boolean
+    }
 
 /** A rectangle of height field samples: from sample (`x`, `z`), `sizeX` by `sizeZ` of them. */
 export interface HeightRegion {

@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
-import { buildGroundTile, readGround, shapeGround } from './engine-ground'
+import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
 import type { GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
 import { NO_SOLID, buildSolidVolume, sameSolid } from './engine-ground-solid'
@@ -15,6 +15,11 @@ export type { StaticSolid } from './engine-statics'
 
 export interface EnginePieceOptions {
   readonly groundAt: (x: number, z: number) => number
+  /**
+   * The exact lowest and highest `groundAt` over a rectangle (min x, max x, min z, max z), or null when unknown. A tile it proves level is laid as a slab without reading its
+   * samples; without it every tile is read. Must be exact: a loose bound lays a slab where there is a crater.
+   */
+  readonly groundRange?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
@@ -22,6 +27,11 @@ export interface EnginePieceOptions {
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
+  /**
+   * The most tiles of ground laid at a blast (`layAhead`), nearest the centre first; 0 turns it off. A blast's pieces come into being in the next update, on tiles not laid yet:
+   * laying the ones the blast reaches at the blast, before any piece needs them, takes that cost out of the frame the pieces appear in, and puts it in the explosion's. Default `BLAST_TILES` (off).
+   */
+  readonly blastTiles?: number
   /** Lay the ground under each part box of a piece of several parts, not under the box around all of them (default off: the same tiles as before). */
   readonly tilesUnderParts?: boolean
 }
@@ -46,6 +56,12 @@ const GROUND_REACH = 0.25
  * new field of 81 x 81, so past about three quarters a new shape is the cheaper (measured, T3.8q); half leaves room for the engine's own work around the write.
  */
 const IN_PLACE_SHARE = 0.5
+/** The tiles laid at a blast unless the host says otherwise: none. Measured (T3.8ad), 48 of them moved about 24 ms into the explosion frame and left the worst frame no better. A count, not a clock, so the same blast lays the same tiles on any machine. */
+const BLAST_TILES = 0
+/** A blast's radius counts to this far (m) when the tiles it reaches are listed: the nearest ones are laid, and the count caps the rest. */
+const BLAST_REACH = 32
+/** A tile whose ground varies by no more than this (m) over every sample is level (`shapeGround` calls 1e-9 level; half of it leaves room for rounding). */
+const FLAT_SPAN = 5e-10
 /**
  * How many times in a row a height field is written in place before a whole new one is made from the exact heights. Jolt's `SetHeights` also requantizes the blocks
  * left of and above the written ones, and a sample requantized from its own dequantized value moves down: up to 4.4e-5 m a write, 1.8 mm over 50 (measured, T3.8q). Four
@@ -151,7 +167,9 @@ interface Tile {
   /** The height field's samples, to find what a change moved (empty under a slab), and how many times in a row it was written in place (`MAX_IN_PLACE_WRITES`). */
   heights: Float32Array
   writes: number
-  samples: Float64Array
+  /** Null for a tile proved level without reading it; its level then is `level`. */
+  samples: Float64Array | null
+  level: number | null
   /** Where the host said the ground changed (world x and z, widened by `GROUND_REACH`): only the samples there are read again. Null when it did not. */
   dirty: GroundRect | null
 }
@@ -176,6 +194,8 @@ export class EnginePieces {
    */
   fellThrough = 0
   private readonly tiles = new Map<number, Tile>()
+  /** The blasts told since the last `prepare` (`layAhead`). */
+  private readonly blasts: Array<{ x: number; z: number; radius: number }> = []
   /** The host's fixed things (`staticSolids`) as static bodies. */
   readonly statics: EngineStatics
   private readonly ignored = new Set<string>()
@@ -243,8 +263,15 @@ export class EnginePieces {
       if (t.solid !== null) this.world.removeBody(t.solid)
     }
     this.tiles.clear()
+    this.blasts.length = 0
     this.statics.clear()
     this.ignored.clear()
+  }
+
+  /** A blast at (x, z): the tiles within `radius` of it that are not laid, or are marked, are laid at the start of the next `prepare`, after the ground the blast changed has been told. */
+  layAhead(x: number, z: number, radius: number): void {
+    if ((this.o.blastTiles ?? BLAST_TILES) <= 0) return
+    this.blasts.push({ x, z, radius: Math.min(radius, BLAST_REACH) })
   }
 
   /**
@@ -273,6 +300,28 @@ export class EnginePieces {
       b.root.updateMatrixWorld(true)
       link.groundAtSleep = NaN
     }
+  }
+
+  /** The tiles the blasts told since the last update reach, nearest first up to `blastTiles`: made if new, laid again if marked. */
+  private layBlastGround(): void {
+    if (this.blasts.length === 0) return
+    const wanted = new Map<number, { key: number; ix: number; iz: number; distance: number }>()
+    for (const { x, z, radius } of this.blasts) {
+      for (let ix = Math.floor((x - radius) / TILE); ix <= Math.floor((x + radius) / TILE); ix++) {
+        for (let iz = Math.floor((z - radius) / TILE); iz <= Math.floor((z + radius) / TILE); iz++) {
+          const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
+          const tile = this.tiles.get(key)
+          if (tile && tile.dirty === null) continue
+          const distance = Math.hypot(Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE)) - x, Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE)) - z)
+          if (distance > radius) continue
+          const before = wanted.get(key)
+          if (!before || distance < before.distance) wanted.set(key, { key, ix, iz, distance })
+        }
+      }
+    }
+    this.blasts.length = 0
+    const nearest = [...wanted.values()].sort((a, b) => a.distance - b.distance || a.key - b.key)
+    for (const t of nearest.slice(0, this.o.blastTiles ?? BLAST_TILES)) this.layTile(t.key, t.ix, t.iz, this.tiles.get(t.key))
   }
 
   /** The tiles the disc touches are laid again before the next step, reading the ground again where the disc is (and `GROUND_REACH` past it). */
@@ -309,6 +358,7 @@ export class EnginePieces {
     this.groundTurn(list)
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
+    this.layBlastGround()
     this.makeBodies(list)
     for (const b of list) this.sync(b, dt, h)
     this.layGround(list, dt)
@@ -895,7 +945,7 @@ export class EnginePieces {
   private layTile(key: number, ix: number, iz: number, tile: Tile | undefined): void {
     const x0 = ix * TILE
     const z0 = iz * TILE
-    const made = tile ? this.readTile(tile, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE)
+    const made = this.flatOrRead(tile, x0, z0)
     if (!made) return
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
@@ -911,17 +961,34 @@ export class EnginePieces {
     // the solid is a function of the heights: the same heights, the same solid
     const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells)
     const laid = { ...made, solid: volume }
-    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, dirty: null })
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, level: made.level, dirty: null })
+  }
+
+  /**
+   * The tile as the ground is now, or null (the mark cleared) when it did not change. A tile the terrain's own bounds prove level costs the vertices under it, not 26 000 samples:
+   * the proof is exact (every sample is a blend of the vertices the tile covers), so a crater of any size under it takes the other way.
+   */
+  private flatOrRead(tile: Tile | undefined, x0: number, z0: number): GroundTile | null {
+    const range = this.o.groundRange?.(x0, x0 + TILE, z0, z0 + TILE)
+    if (range && range.high - range.low <= FLAT_SPAN) {
+      const level = this.o.groundAt(x0 + TILE / 2, z0 + TILE / 2)
+      if (tile?.slab && tile.level === level) {
+        tile.dirty = null
+        return null
+      }
+      return flatTile(level, TILE)
+    }
+    return tile && tile.samples ? this.readTile(tile, tile.samples, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE, false)
   }
 
   /** The tile as the ground is now, its marked samples read again; null (and the mark cleared) when none of them changed. */
-  private readTile(tile: Tile, x0: number, z0: number): GroundTile | null {
-    const changed = readGround(this.o.groundAt, tile.samples, x0, z0, TILE, tile.dirty ?? undefined)
+  private readTile(tile: Tile, held: Float64Array, x0: number, z0: number): GroundTile | null {
+    const changed = readGround(this.o.groundAt, held, x0, z0, TILE, tile.dirty ?? undefined)
     if (!changed) {
       tile.dirty = null
       return null
     }
-    return shapeGround(tile.samples, x0, z0, TILE, false)
+    return shapeGround(held, x0, z0, TILE, false)
   }
 
   /**
@@ -948,7 +1015,7 @@ export class EnginePieces {
     return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
   }
 
-  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. */
+  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Its hulls that did not change are the ones made before (`reuseHulls`). */
   private layVolume(t: GroundTile, tile: Tile | undefined): BodyId | null {
     const id = tile?.solid ?? null
     if (t.level !== null) {
@@ -971,7 +1038,7 @@ export class EnginePieces {
       for (let k = 0; k < 24; k += 3) points.push(prisms[i + k]! - cx, prisms[i + k + 1]! - cy, prisms[i + k + 2]! - cz)
       children.push({ shape: { kind: 'convex', points }, position: [cx, cy, cz] })
     }
-    return { kind: 'compound', children }
+    return { kind: 'compound', children, reuseHulls: true }
   }
 
   private heightField(t: GroundTile, ix: number, iz: number): ShapeDesc {

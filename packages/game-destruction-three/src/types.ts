@@ -106,6 +106,13 @@ export interface RendererOptions {
    * on is this, because every drawn fixed thing is a body of its own there (`staticSolids`) and a top in both would be ground twice. Default `groundAt`; the kit's own solver ignores it.
    */
   terrainAt?: (x: number, z: number) => number
+  /** The most tiles of ground the physics engine lays at a blast, nearest first (default 0: the tiles are laid as the pieces reach them; a count lays that many at a blast, which moves their cost into the explosion's frame). */
+  blastGroundTiles?: number
+  /**
+   * The lowest and highest `terrainAt` (else `groundAt`) can answer over a rectangle (min x, max x, min z, max z), exact bounds, or null when none is known. With it the engine lays a
+   * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
+   */
+  terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   gravity?: number
   /** Turn a loose group into a separate physical piece automatically (default true). */
   autoSplit?: boolean
