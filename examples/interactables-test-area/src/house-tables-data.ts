@@ -74,7 +74,8 @@ export const SECTIONS: readonly HouseSection[] = [
 
 /**
  * What hangs on a wall in a house: it hangs on the room's target wall (the houses' `wallPiece`). The household catalogue draws each one at the height a house
- * hangs it (a wall cabinet's base at 1.4 m), so it is laid with its origin on the floor at the face of the wall.
+ * hangs it (a wall cabinet's base 1.4 m up), so it is laid with its origin on the floor, held where it is put (`fixed`): the wall cabinet, which stands free
+ * elsewhere, would otherwise fall off the wall.
  */
 export const ON_THE_WALL: readonly string[] = ['kitchen_cabinet_wall', 'bathroom_cabinet', 'electrical_panel', 'power_meter', 'wall_socket', 'wall_switch', 'blinds', 'curtain', 'conduit_run']
 

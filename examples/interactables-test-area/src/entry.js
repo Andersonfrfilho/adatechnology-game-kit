@@ -201,7 +201,7 @@ function loadSteps(room, options, lang) {
   mod('stories', () => createStoriesModule({ locale: lang }))
   // the house and the yard on tables (`?area=house_tables`, and the kitchen alone, `?area=house_tables_kitchen`): what every module above brings for a house, laid room by
   // room, to shoot and blow up side by side. The layout is made when the area opens, by the room's measure of each piece.
-  const [houseTables, houseTablesKitchen] = createHouseTablesAreas({ locale: lang, measure: (itemId) => room.measure(itemId) })
+  const [houseTables, houseTablesKitchen] = createHouseTablesAreas({ locale: lang, measure: (itemId) => room.measure(itemId), floorFront: () => room.terrain.bounds[3] })
   mod('houseTables', () => houseTables)
   mod('houseTablesKitchen', () => houseTablesKitchen)
   // the furniture comes last: its report is the base of the whole one

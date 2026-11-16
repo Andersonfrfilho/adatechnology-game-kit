@@ -19,7 +19,7 @@ const TABLE_EDGE = 0.08
 /** Height the things on a table are let go from above its top, metres. */
 const DROP = 0.01
 
-/** What to lay and where: the rooms, the half width (x) of the strip the lines run in, the z of the front edge of the first line, and what goes on the wall. */
+/** What to lay and where: the rooms, the half width (x) of the strip the lines run in, the z of the front edge of the first line and what goes on the wall. */
 export interface HousePlan {
   readonly sections: readonly HouseSection[]
   readonly halfX: number
@@ -146,22 +146,31 @@ function zonesOf(line: Line, z: number, sections: readonly HouseSection[], label
   })
 }
 
-/** What hangs on a wall, side by side on the face of the target wall, centred (each model is drawn at the height it hangs). */
-function onTheWall(pieces: readonly Piece[]): AreaPlacement[] {
+/**
+ * What hangs on a wall, side by side on the face of the target wall, centred (each model is drawn at the height it hangs). What does not fit on the wall is
+ * left out and returned, never hung in the air past its end.
+ */
+function onTheWall(pieces: readonly Piece[]): { placements: AreaPlacement[]; left: string[] } {
   const length = pieces.reduce((sum, piece) => sum + piece.size.w, 0) + WALL_GAP * Math.max(0, pieces.length - 1)
   let x = -Math.min(length, 2 * WALL.halfLength) / 2
-  return pieces.map((piece) => {
-    const placement: AreaPlacement = { item: piece.item, position: [x + piece.size.w / 2, 0, WALL.front + piece.size.d / 2] }
+  const placements: AreaPlacement[] = []
+  const left: string[] = []
+  for (const piece of pieces) {
+    if (x + piece.size.w > WALL.halfLength) {
+      left.push(piece.item)
+      continue
+    }
+    placements.push({ item: piece.item, position: [x + piece.size.w / 2, 0, WALL.front + piece.size.d / 2], fixed: true })
     x += piece.size.w + WALL_GAP
-    return placement
-  })
+  }
+  return { placements, left }
 }
 
 /**
- * Lays `plan`. `measure` is the room's (`TestRoom.measure`): null for an id the room did not load, which is left out and listed in `missing`.
+ * Lays `plan`; `floorFront` is the z of the front edge of the floor the area opens on (the camera starts inside it). `measure` is the room's (`TestRoom.measure`): null for an id the room did not load, which is left out and listed in `missing`.
  * The tables are the items area's finds table, laid with a `surface` so what lies on them rests on their top.
  */
-export function layHouseTables(measure: (itemId: string) => ItemSize | null, locale: Locale, plan: HousePlan): HouseTablesLayout {
+export function layHouseTables(measure: (itemId: string) => ItemSize | null, locale: Locale, plan: HousePlan & { readonly floorFront: number }): HouseTablesLayout {
   const missing: string[] = []
   const pieceOf = (item: string): Piece[] => {
     const size = measure(item)
@@ -228,10 +237,13 @@ export function layHouseTables(measure: (itemId: string) => ItemSize | null, loc
     }
   }
 
-  placements.push(...onTheWall(plan.wall.flatMap(pieceOf)))
+  const wall = onTheWall(plan.wall.flatMap(pieceOf))
+  placements.push(...wall.placements)
+  missing.push(...wall.left)
 
   return {
-    area: { placements, view: { eye: [0, 6.5, plan.firstZ + 6], target: [0, 0.6, plan.firstZ - 6] } },
+    // the camera starts in front of the first tables, inside the floor (the player is put where the view says, unclamped)
+    area: { placements, view: { eye: [0, 6.5, Math.min(plan.firstZ + 6, plan.floorFront - 0.7)], target: [0, 0.6, plan.firstZ - 6] } },
     ground: { surface: GROUND_SURFACE, zones },
     missing,
     onTables,

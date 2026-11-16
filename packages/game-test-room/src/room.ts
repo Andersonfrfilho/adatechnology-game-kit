@@ -1377,7 +1377,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => {
+  const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => spawnPiece(itemId, { position, rotationY })
+  // `fixed`: held where it is put, with no physics of its own (an area's piece hung on a wall), whatever the item says
+  function spawnPiece(itemId: string, { position, rotationY, fixed = false }: { readonly position?: Vec3; readonly rotationY?: number; readonly fixed?: boolean }): SpawnedObject {
     const item = catalogMap.get(itemId)
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
     const root = buildRoot(item)
@@ -1411,7 +1413,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     root.updateMatrixWorld(true)
     const mass = spec.parts.reduce((m, p) => m + (p.mass ?? 0), 0)
     const heavy = (mass || massGuess(spec)) > maxCarry
-    const movable = own ? false : (item.movable ?? !heavy)
+    const movable = own || fixed ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
       // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)
@@ -1426,7 +1428,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     else world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
     // heavy by its mass and not said to be fixed: a blast can still push it
-    if (!own && !movable && item.movable === undefined) e.free = true
+    if (!own && !fixed && !movable && item.movable === undefined) e.free = true
     if (item.pushable) e.pushable = true
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
@@ -4944,7 +4946,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const holders = known.filter((p) => p.surface)
     const rest = known.filter((p) => !p.surface)
     const placed = [...holders, ...rest].map((p) => {
-      const so = spawn(p.item, p.position, p.rotationY ?? 0)
+      const so = spawnPiece(p.item, { position: p.position, rotationY: p.rotationY ?? 0, fixed: p.fixed === true })
       if (p.surface) {
         const [hx, hz] = p.surface.halfSize
         restingTops.push({ objectId: so.objectId, minX: p.position[0] - hx, maxX: p.position[0] + hx, minZ: p.position[2] - hz, maxZ: p.position[2] + hz, top: p.surface.height })

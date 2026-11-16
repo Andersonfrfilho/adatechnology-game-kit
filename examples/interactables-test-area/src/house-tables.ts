@@ -6,7 +6,7 @@
 //   ?area=house_tables           the whole house and yard (the page opens a wider floor for it, with only the target wall)
 //   ?area=house_tables_kitchen   the kitchen alone, small enough for the plain room: the scenarios run on it
 import { FINDS_TABLE_ID } from '@adatechnology/game-items-three'
-import type { GroundLayout, ModuleArea, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
+import type { GroundLayout, ModuleArea, ModuleHost, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 import type { ItemSize, ScenarioContext, SpawnedObject } from '@adatechnology/game-test-room'
 import type * as ThreeNamespace from 'three'
 
@@ -17,22 +17,25 @@ import type { HousePlan, HouseTablesLayout } from './house-tables-layout.js'
 
 export const HOUSE_TABLES_ID = 'house_tables'
 export const HOUSE_TABLES_KITCHEN_ID = 'house_tables_kitchen'
+/** Type of the log entry that names the pieces an area could not lay. */
+export const MISSING_LOG = 'house_tables_missing'
 
 /** The whole house: a strip 36 m wide from z = 19 back to the target wall (the page opens a floor 24 m each way for it). */
 const WHOLE_HOUSE: HousePlan = { sections: SECTIONS, halfX: 18, firstZ: 19, wall: ON_THE_WALL }
 const KITCHEN_WALL = new Set(['kitchen_cabinet_wall', 'wall_socket', 'wall_switch'])
-/** The kitchen alone: in front of the plain room's scenery (its tables, shelf and tub stand between z = -1 and 4), inside its 14 m floor. */
+/** The kitchen alone: in front of the plain room's scenery (its tables, shelf and tub stand between z = -1 and 4), well inside its 14 m floor so a blast keeps what it throws on it. */
 const KITCHEN: HousePlan = {
   sections: SECTIONS.filter((section) => KITCHEN_ONLY.includes(section.id)),
-  halfX: 11,
-  firstZ: 13,
+  halfX: 9,
+  firstZ: 10.5,
   wall: ON_THE_WALL.filter((item) => KITCHEN_WALL.has(item)),
 }
 
-/** What the area modules need from the room: its measure of a catalogue item (null for an id it did not load). */
+/** What the area modules need from the room: its measure of a catalogue item (null for an id it did not load) and the z of the front edge of its floor. */
 export interface HouseTablesOptions {
   readonly locale?: string
   readonly measure: (itemId: string) => ItemSize | null
+  readonly floorFront: () => number
 }
 
 const localeOf = (locale: string | undefined): Locale => (locale === 'en' ? 'en' : 'pt-BR')
@@ -125,7 +128,7 @@ function scenariosOf(locale: Locale, layout: () => HouseTablesLayout, three: () 
         const live = near.filter((so) => ids.has(so.objectId))
         const moved = live.filter((so) => (before.get(so.objectId)?.distanceTo(so.root.position) ?? 0) > 0.2)
         const thrown = moved.length + near.length - live.length
-        expect(thrown >= Math.min(5, near.length), T(`A explosão jogou ou quebrou ${thrown} de ${near.length} itens da mesa`, `The blast threw or broke ${thrown} of ${near.length} items of the table`))
+        expect(near.length >= 5 && thrown >= 5, T(`A explosão jogou ou quebrou ${thrown} de ${near.length} itens da mesa`, `The blast threw or broke ${thrown} of ${near.length} items of the table`))
         // 8 s later what was thrown and stopped lies on something drawn: the floor, a top, another thing
         // still means it stopped: what is still rolling or bouncing is not hanging
         const at8 = new Map(live.map((so) => [so.objectId, so.root.position.clone()]))
@@ -133,7 +136,8 @@ function scenariosOf(locale: Locale, layout: () => HouseTablesLayout, three: () 
         // what the blast threw past the edge of the room's floor has no drawn floor under it: only what is over the floor is judged
         const [x0, z0, x1, z1] = room.terrain.bounds
         const overFloor = (so: SpawnedObject): boolean => so.root.position.x > x0 && so.root.position.x < x1 && so.root.position.z > z0 && so.root.position.z < z1
-        const still = live.filter((so) => ids.has(so.objectId) && overFloor(so) && (at8.get(so.objectId)?.distanceTo(so.root.position) ?? 1) < 0.01)
+        const after = liveIds(room)
+        const still = live.filter((so) => after.has(so.objectId) && overFloor(so) && (at8.get(so.objectId)?.distanceTo(so.root.position) ?? 1) < 0.01)
         const THREE = three()
         const hanging = THREE ? still.filter((so) => !restsOnSomething(THREE, room, so.root)) : still
         expect(hanging.length === 0, T(`Nada parado no ar: tudo o que foi jogado está sobre algo (${hanging.length})`, `Nothing still in the air: everything thrown lies on something (${hanging.length})`), {
@@ -148,13 +152,17 @@ function scenariosOf(locale: Locale, layout: () => HouseTablesLayout, three: () 
 /** One area module over a plan: the layout is made the first time the area opens, when every other module is in the room, and kept. */
 function areaModule(options: HouseTablesOptions, spec: { readonly id: string; readonly name: readonly [string, string]; readonly plan: HousePlan; readonly scenarios: boolean }): TestableModule<ScenarioContext> {
   const locale = localeOf(options.locale)
+  const name = locale === 'en' ? spec.name[1] : spec.name[0]
   let made: HouseTablesLayout | null = null
   let THREE: Three | null = null
+  let host: ModuleHost | null = null
   const layout = (): HouseTablesLayout => {
-    made ??= layHouseTables(options.measure, locale, spec.plan)
+    if (made) return made
+    made = layHouseTables(options.measure, locale, { ...spec.plan, floorFront: options.floorFront() })
+    // a piece the room did not load (a module left out, a wrong id) is said once, in the room's log, where the checks look for it
+    if (made.missing.length > 0) host?.log(`${name}: ${made.missing.join(', ')}`, { missing: made.missing }, MISSING_LOG)
     return made
   }
-  const name = locale === 'en' ? spec.name[1] : spec.name[0]
   return {
     id: spec.id,
     name,
@@ -164,9 +172,11 @@ function areaModule(options: HouseTablesOptions, spec: { readonly id: string; re
     get ground(): GroundLayout {
       return layout().ground
     },
-    attach: (host) => {
-      THREE = host.THREE as Three
+    attach: (lent) => {
+      host = lent
+      THREE = lent.THREE as Three
       return () => {
+        host = null
         THREE = null
       }
     },
