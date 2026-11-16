@@ -91,6 +91,7 @@ import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 window.__joltBoot = () => !/[?&]solver=jolt(&|$)/.test(location.search) ? Promise.resolve() : createJoltEngine().then((engine) => {
   const q = new URLSearchParams(location.search)
   const world = engine.createWorld({ ...KIT_WORLD, velocityIterations: Number(q.get('iterations') ?? KIT_WORLD.velocityIterations), maxPushOut: Number(q.get('pushout') ?? KIT_WORLD.maxPushOut) })
+  window.__joltEngine = engine
   window.__joltWorld = world
   window.__roomPhysics = createPhysicsLoop(world)
 })`,

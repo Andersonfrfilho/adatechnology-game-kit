@@ -38,7 +38,7 @@ describe('a hand grenade beside the shovel of the goods catalog, lying on the fl
     expect(highest).toBeLessThan(3)
     expect(Math.hypot(...(piece.velocity as [number, number, number]))).toBeLessThan(0.1)
     expect(Math.hypot(root.position.x, root.position.z + 2.2)).toBeLessThan(12)
-  })
+  }, 15_000) // the first renderer of the process pays the destruction JIT warm-up (about 0.5 s here, more on a CI runner)
 
   it('0.5 m away, its fragments snap the handle, and the room shows it broken: the handle meshes are hidden and its splinters are drawn, the blade stays', () => {
     const container = document.createElement('div')

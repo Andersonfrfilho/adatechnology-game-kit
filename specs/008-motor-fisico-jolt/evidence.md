@@ -3114,3 +3114,20 @@ Leitura: **sem regressão**; o martelo melhora no p99 e nos quadros acima de 5 m
 - **C3 reprova também na main** (todas as reprovações em explosão): o ofensor é sempre `pipe:run_wall_kitchen_0:0` (0,6 kg), subida de 0,035 a 0,054 m, boa parte declarada pelo blast. É efeito da régua apertada, não desta branch: **a T3.8 volta a ficar sem ✅** até o dono decidir o cano (enviado ao coordenador).
 - As duas reprovações só da branch caíram na primeira leva (uma rodada cada): C2 de um fio de 16 kg deitado no chão (0,040 contra 0,035) e C4 de um martelo com 25 de 32 peças dormindo ao fim. Não voltaram nas 12 rodadas seguintes. Com 1/22 contra 0/22 não dá para separar de ruído; fica registrado.
 - Testes: `game-physics-jolt` 76 passam, `game-terrain` 110, `game-destruction-three` próprio 428 e Jolt (`test:jolt`) 51, 0 falhas.
+
+## T3.8af — aquecer o JIT da explosão no carregamento (2026-11-16)
+
+A primeira explosão de um processo custava cerca de 2× as seguintes (T3.8aa §2): fratura, corte, caixas orientadas, corpos do motor e chão rodavam frios. `createDestructionRenderer` agora roda, uma vez por motor, uma explosão numa parede pequena de 24 tijolos fora da tela, num mundo, numa cena e num renderizador próprios, tudo liberado no fim (`jitWarmUp`, ligado por padrão; `false` desliga; `{ engine }` aquece também os caminhos do motor). A sala passa o motor do `?solver=jolt`; `?warmup=0` desliga. O `room-explosion` ganhou a variante `jolt-d4-cold` e as colunas `wakeMed` e `1st 1s`.
+
+**Medição** (portão `room-explosion` a 1×, Jolt com D4, página nova por rodada, isto é, sempre a primeira explosão do processo; aquecido e frio intercalados, carga < 3, trava de medição; medianas e intervalo):
+
+| | física do 1º segundo | p99 | máx. | quadros > 5 ms |
+|---|---|---|---|---|
+| explosão, aquecido (5) | **184,9** (183,8–194,8) | 14,6 | 26,6 | 59 |
+| explosão, frio (4) | 215,8 (205,7–216,3) | 17,2 | 23,7 | 73 |
+| martelo, aquecido (5) | **163,1** (157,4–167,5) | 14,2 | 23,8 | 63 |
+| martelo, frio (4) | 185,4 (175,2–186,7) | 16,6 | 27,0 | 58 |
+
+Leitura: o primeiro segundo da explosão custa **14% menos** de física (215,8 → 184,9 ms) e o martelo **12% menos** (185,4 → 163,1), sem sobreposição dos intervalos; o p99 cai 2,5 ms nos dois. O máximo fica no ruído. O custo vai para o carregamento: **0,37 s** uma vez (Node, Jolt, `warmUpDestructionJit` medido à parte). O quadro de despertar medido pelo portão (só física, 0,5–0,6 ms) não muda: o que o aquecimento tira é o trabalho dos primeiros quadros depois dele.
+
+**Testes:** `game-destruction-three` próprio 431 e Jolt (`test:jolt`) 51, `game-test-room` 458, `game-floorplan-three` 1187 com o golden exato (o aquecimento não toca o estado nem os sorteios do jogo: mundo e semente próprios, `rendererCount` restaurado), `pnpm typecheck` ok. `jit-warmup.test.ts`: roda uma vez por motor, libera o mundo do motor, desligado com `false`.
