@@ -273,6 +273,8 @@ export interface DestructionRenderer {
   releasePieces(objectId: string): string[]
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: MakePieceOptions): Piece
+  /** The mass of a piece changed (a liquid drunk or leaked out): the physics body follows, and a round one turns by the moment of what is left in it. */
+  setPieceMass(objectId: string, mass: number): void
   pieces(): Piece[]
   /** What lies in the disc looks at the ground again (`groundAt` changed under it: a crater, a heap). */
   wakeRegion(x: number, z: number, radius: number): void

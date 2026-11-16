@@ -123,6 +123,21 @@ describe('lamps that were shot out', () => {
     budget.dispose()
   })
 
+  it('frees the material copy of a lamp the shots put out, not only of the lamps still lit', () => {
+    const built = build('midsize_sedan')
+    const destructible = createVehicleDestructible(kit, built.context!, { id: 'sedan', frame: built.group })
+    const lamps = createVehicleLamps(THREE, built)
+    const copies = new Set<THREE.Material>()
+    for (const l of (built.context as unknown as { lights: Array<{ inner: THREE.Mesh[] }> }).lights) for (const m of l.inner) copies.add(m.material as THREE.Material)
+    const freed = new Set<THREE.Material>()
+    for (const copy of copies) copy.addEventListener('dispose', () => freed.add(copy))
+    for (let i = 0; i < ROUNDS; i++) destructible.hit({ type: 'ballistic', energy: 2100, caliber: 7.62, point: destructible.partWorldCenter('taillight_left'), part: 'taillight_left', direction: [0, 0, 1] })
+    expect(destructible.state().parts.find((p) => p.id === 'taillight_left')?.status).toBe('broken')
+    lamps.dispose()
+    expect(freed.size).toBe(copies.size)
+    built.dispose()
+  })
+
   it('a fog lamp is a lamp of its own: the round puts out it and its side of the beam, and it stays dark through the fog switch', () => {
     const built = build('compact_hatch')
     const scene = new THREE.Scene()

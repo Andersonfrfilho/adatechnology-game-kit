@@ -243,6 +243,25 @@ jobs:
           path: shapes-bench-run.json
           if-no-files-found: ignore
 
+  # The test blocks that only run on the Jolt engine (`PIECE_SOLVER=jolt`: describe.skipIf(!IS_JOLT) in game-destruction-three) were run by hand: nothing in CI read them.
+  # It is physics in wasm on the CPU, no GPU and no browser (CLAUDE.md §9 allows it).
+  jolt-mode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter "@adatechnology/game-destruction-three^..." run build
+
+      - run: pnpm --filter @adatechnology/game-destruction-three run test:jolt
+
   # Layer rules and package.json policy (spec 005). Both read sources only, so no build is needed.
   architecture:
     runs-on: ubuntu-latest
@@ -264,7 +283,7 @@ jobs:
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, build, typecheck, test, goldens-node-24, shapes-bench, architecture]
+    needs: [lint, build, typecheck, test, goldens-node-24, shapes-bench, architecture, jolt-mode]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

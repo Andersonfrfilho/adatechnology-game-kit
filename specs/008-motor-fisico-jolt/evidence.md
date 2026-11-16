@@ -2790,7 +2790,7 @@ Passo da sonda, mediana de 5 execuções (intervalo), mesmo bloco. Bacia: `BOWL_
 | blast | **nova** | 14,6 / 17,6 / 12,3 / 14,5 / 14,5 | **14,5** | 25,4 / 24,5 / 23,5 / 24,5 / 28,9 | 48 / 77 / 68 / 69 / 81 | **69** |
 | martelo | base | 16,0 / 12,1 / 15,5 / 15,1 / 16,2 | **15,5** | 25,2 / 24,7 / 26,7 / 25,1 / 25,6 | 80 / 86 / 81 / 65 / 73 | **80** |
 | martelo | **nova** | 14,6 / 15,0 / 14,7 / 13,5 / 16,2 | **14,7** | 23,5 / 27,8 / 18,7 / 25,7 / 25,0 | 64 / 56 / 42 / 78 / 76 | **64** |
-- p50 0,2 ms nos dois lados. **Quadros acima de 5 ms caem de 89 para 69 (blast, -22%) e de 80 para 64 (martelo, -20%)**; p99 cai ~1 ms; o máximo é igual. Os dois lados continuam **longe do orçamento** (p99 4 ms, máximo 5 ms): o B6 não fecha por alavanca neutra (§4).
+- p50 0,2 ms nos dois lados. **Sem regressão**: os quadros acima de 5 ms vão de 89 para 69 (blast) e de 80 para 64 (martelo), mas a variação entre pares de um mesmo lado é de 48 a 99 e 42 a 86, então a queda de ~20% está dentro do ruído da própria medição e **não é afirmada como ganho** (correção da auditoria); p99 e máximo iguais dentro do ruído. Os dois lados continuam **longe do orçamento** (p99 4 ms, máximo 5 ms): o B6 não fecha por alavanca neutra (§4).
 - **Estágio `createBody` dos piores quadros** (tabela de estágios do gate, média dos quadros de cada tipo a 1x, 5 execuções): blast 3,5 para 3,2 ms, martelo 2,9 para 3,0 ms: **igual**. É esperado: o `createBody` que o gate mede é o dos ladrilhos de chão (`layTile`: 9 a 11 ms), que não é desta tarefa; as peças agora entram por `createBodies` (que o gate não rotula) e o ganho aparece nos quadros acima de 5 ms. `joltStep` dos piores quadros 4,4 para 4,2 (blast) e 4,2 para 3,8 (martelo).
 - Uma primeira passada de um par (23:04, antes de reduzir o acordar de vizinhos a peça que dorme) deu o lado novo pior (p99 19,3 contra 14,4; carga 2 a 10 contra 1,5 a 2 no lado de base): par com cargas diferentes, descartado, e o acordar passou a valer só para peça dormindo (a de acordada está na mesma ilha).
 
@@ -3055,3 +3055,34 @@ Uma rodada do Jolt de `game-floorplan-three` feita com outras suítes em paralel
 2. **Calibrar `WORK_UNIT_DEFAULTS`** em cima dos três branches: os números de hoje (`perSplit` 120, `perVertex` 0,05...) são uma primeira estimativa e não foram ajustados contra os 100 W.
 3. **Ligar `prefit` (C), `ground` (G) e `body` (P) ao mesmo `WorkBudget`** quando eles entrarem; enquanto o chão não passar pelo árbitro, ligar o orçamento só espalha o corte (seção 4).
 4. **Decisões do dono:** o teto `maxWaitFrames` (tensão T1) e se o primeiro corte de uma explosão continua no próprio quadro (hoje sim, pela regra "a casa quebra na hora").
+
+
+## T3.8ad — auditoria do motor de física e correções (2026-11-16)
+
+Auditoria de um revisor independente sobre o que entrou na main de #302 a #316. Todo defeito grave foi reproduzido com teste, não por suposição. Cada correção tem um teste que falha sem ela e passa com ela, menos o vazamento do `createBodies` (caminho de erro, só revisado).
+
+| # | Gravidade | Defeito | Correção | Teste |
+|---|---|---|---|---|
+| #302/#313 | alta | `pairKey` guarda só os 16 bits baixos da chave do corpo e `removeBody` não apagava os pares ignorados: o próximo corpo que reaproveitava o índice do Jolt herdava a regra "não colidir" (um caco caído sobre o poste parou dentro dele; um ladrilho de chão faria o poste atravessar o chão) | `JoltWorld.forget` apaga todo par ignorado do corpo (índice por corpo) | `game-physics-jolt/tests/ignore-reuse.test.ts` |
+| #316 | alta | `remove` só acordava o que estava em cima se a peça dormia para o kit (`b.sleeping`), e esse sinal já é falso quando `wakeRegion` acorda a peça no mesmo quadro: o que dormia em cima ficava no ar (§12) | acorda também quando a peça dormia no último passo do motor (`link.sleeping`) | caso do mesmo quadro em `engine-remove-wakes.test.ts` |
+| #314 | alta | a etapa `room-explosion` bloqueava a rodada noturna pela meta absoluta de 4/5 ms, que a main ainda não cumpre: a rodada falharia todo dia | a meta é aviso; bloqueia só regressão (mais de 25% e acima de piso de 1 ms no p99 e 5 ms no máximo) contra o último relatório que passou, guardado pela rodada | `tools/gpu/tests/room-explosion-verdict.test.mjs` |
+| #309 | média | peça dormindo com o centro fora do disco da cratera ficava até 8 mm dentro do chão para sempre (o motor só limpa corpo acordado); o teste só olhava a posição guardada pelo kit | `groundChanged` acorda a peça com 0 < penetração ≤ `ENGINE_CLEARS` | `ground-rise-lift.test.ts` mede a ponta (≤ 2 mm) |
+| #302 | média | nenhum CI rodava os testes no modo Jolt | job `jolt-mode` (CPU, sem GPU, §9) com `pnpm test:jolt` | job do CI |
+| #316 | média | "-22% de quadros acima de 5 ms" estava dentro do ruído da medição (faixas 73–99 contra 48–81) | reescrito como "sem regressão" na seção 3b e no changeset | texto |
+| #316 | baixa | `createBodies` vazava corpos e o vetor de ids se uma forma falhasse | libera o que criou antes de relançar o erro | revisão |
+| #302 | baixa | `wheelContacts` lia 4 rodas em qualquer veículo; a moto, de 2 rodas em linha, virava um eixo esquerda/direita | conta as rodas do veículo; roda sozinha tem diferencial próprio e não tem barra anti-rolagem | `game-physics-jolt/tests/motorbike.test.ts` (PR #318) |
+| #313 | baixa | `tethered` só crescia (§8) | esquece o par quando uma das peças sai (`remove`); o par com um objeto fixo, que não é peça, fica até a peça sair | `tether-forget.test.ts` |
+| #311 | média | a régua R1–R3 deixava passar ganho real | ver abaixo | `energy-ruler.test.ts` |
+
+### Régua R1–R3 (apertada por decisão do dono: "apertar e medir")
+- **R3** descontava também o poste levantado ao acordar (a correção de penetração do solver), não só o recuo do cast contínuo. Agora só desconta o corpo que ainda desce (`Δy ≤ 0` e velocidade vertical negativa antes e depois). Um poste de 1 t que sobe 2 cm parado volta a contar no C1.
+- **R2** desligava o C3 inteiro quando qualquer energia, por menor que fosse, era declarada. Agora a altura declarada é descontada da subida.
+- **R1** perdoava a subida de uma peça que perde energia. Agora só perdoa quando a energia caiu e a energia de rotação da peça (energia total menos altura e velocidade linear) caiu pelo menos o que a subida custou; uma peça que cai a 3 m/s e é empurrada 5 cm pelo contato conta.
+
+Medição com a régua apertada, tigela (`bowl-energy.test.ts`, 32 casos no Jolt): C1 −0,0195 kg·m, C2 0, C3 0,0270 m (limite 0,035; 0,0242 antes do ajuste do R1 pela energia de rotação), nenhum atravessou o chão. **Passa.** A sonda da sala (`room.js`, navegador) não roda no CI nem aqui (§9): falta rodá-la à mão para confirmar que a T3.8 continua ✅ com a régua apertada. Se não passar, a T3.8 volta a ficar aberta e os números vão ao dono.
+
+### Fica aberto
+- Rodar a sonda da sala com a régua apertada (à mão, na trava de medição).
+- Job de CI do `game-floorplan-three` no modo Jolt: tem 4 falhas conhecidas de base (3 goldens de `destruction/*` e `bookcase-topple`); entra quando elas forem resolvidas ou listadas.
+- Duas falhas de `rolling.test.ts` no modo Jolt já existiam na main.
+- Perguntas em aberto do revisor: a soma dos tempos do `room-explosion` assume o laço do host (afirmar isso na ferramenta) e a coluna `createBody` da tabela de estágios não cobre `createBodies`.

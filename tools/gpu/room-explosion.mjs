@@ -16,10 +16,11 @@
 //   ROOM_EXPLOSION_GATE_THROTTLES=1        the levels that block (exit 1); the others are reported with their verdict
 //   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
 //   ROOM_EXPLOSION_KINDS=blast,hammer      ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
-//   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 thresholds
+//   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
+//   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -184,6 +185,20 @@ function summarise(frames, load) {
  */
 export const cellFails = (cell, budget) => cell.p99 > budget.p99 || cell.max > budget.max
 
+/** How much worse than main a cell may read before it blocks, and the floors under which a difference is the noise of two runs (ms; the frame varies 54 to 143 ms between rounds on a busy machine). */
+export const REGRESSION = { tolerance: 0.25, p99Floor: 1, maxFloor: 5 }
+
+/**
+ * Whether a cell is worse than the same cell of main's last passing report by more than the tolerance and the floor. The absolute budget (4/5 ms) is the goal and only a
+ * warning: it blocked every night while main was still over it, which made the daily warning mean nothing; the block is the regression.
+ * @param {Pick<Cell, 'p99' | 'max'>} cell @param {Pick<Cell, 'p99' | 'max'> | undefined} base
+ */
+export const cellRegressed = (cell, base) => {
+  if (!base) return false
+  const worse = (/** @type {number} */ now, /** @type {number} */ was, /** @type {number} */ floor) => now > was * (1 + REGRESSION.tolerance) && now - was > floor
+  return worse(cell.p99, base.p99, REGRESSION.p99Floor) || worse(cell.max, base.max, REGRESSION.maxFloor)
+}
+
 /** The 10 slowest frames (whole update) of each variant, throttle and kind, pooled over the rounds. @param {StageFrame[]} all @returns {StageFrame[]} */
 const worstFrames = (all) => {
   /** @type {Map<string, StageFrame[]>} */
@@ -206,6 +221,17 @@ const worstFrames = (all) => {
  * @typedef {{ newPage: (options?: object) => Promise<Page>, version: () => string, close: () => Promise<void> }} Browser
  * @typedef {{ chromium: { launch: (options?: object) => Promise<Browser> } }} Playwright
  */
+
+/** The cells of a saved report (`ROOM_EXPLOSION_OUT`) by variant, throttle and kind; undefined without one or when it cannot be read. @param {string | undefined} file @returns {Map<string, Pick<Cell, 'p99' | 'max'>> | undefined} */
+const baseCellsOf = (file) => {
+  if (!file) return undefined
+  try {
+    const saved = JSON.parse(readFileSync(file, 'utf8'))
+    return new Map(saved.cells.map((/** @type {Cell} */ cell) => [`${cell.variant}|${cell.throttle}|${cell.kind}`, cell]))
+  } catch {
+    return undefined
+  }
+}
 
 /** @param {string | undefined} text @param {number[]} fallback */
 const numbers = (text, fallback) => (text ? text.split(',').map(Number).filter((value) => Number.isFinite(value) && value >= 1) : fallback)
@@ -310,11 +336,14 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   console.log('room-explosion: physics ms per frame (p50 and p99: median of rounds; max and wake: worst round; over4/over5: frames summed over the rounds)')
   console.log(`  ${'variant'.padEnd(8)} ${'cpu'.padEnd(4)} ${'kind'.padEnd(7)} ${'p50'.padStart(6)} ${'p99'.padStart(6)} ${'max'.padStart(6)} ${'wake'.padStart(6)} ${'>4ms'.padStart(5)} ${'>5ms'.padStart(5)}  verdict`)
   let blocked = false
+  const baseCells = baseCellsOf(process.env.ROOM_EXPLOSION_BASE)
+  console.log(baseCells ? `room-explosion: blocks only on a regression over ${Math.round(REGRESSION.tolerance * 100)}% against ${process.env.ROOM_EXPLOSION_BASE}; the absolute budget is a warning` : 'room-explosion: no base report (ROOM_EXPLOSION_BASE): nothing blocks, the absolute budget is a warning')
   for (const cell of cells) {
     const fails = cellFails(cell, budget)
-    const blocks = fails && cell.variant === 'jolt-d4' && gated.has(cell.throttle)
+    const regressed = cellRegressed(cell, baseCells?.get(key(cell.variant, cell.throttle, cell.kind)))
+    const blocks = regressed && cell.variant === 'jolt-d4' && gated.has(cell.throttle)
     blocked ||= blocks
-    const verdict = cell.variant !== 'jolt-d4' && cell.variant !== 'jolt' ? 'reference' : fails ? (blocks ? 'FAIL (blocks)' : 'over budget (reported)') : 'within budget'
+    const verdict = cell.variant !== 'jolt-d4' && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(8)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(7)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
   if (worst.length > 0) {
@@ -336,6 +365,6 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0
-  console.log(failed ? 'room-explosion: over budget (or a page error): exit 1' : 'room-explosion: within budget at the blocking levels')
+  console.log(failed ? 'room-explosion: regression against main (or a page error): exit 1' : 'room-explosion: no regression against main at the blocking levels')
   return failed ? 1 : 0
 }

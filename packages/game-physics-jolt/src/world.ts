@@ -105,6 +105,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly pairLog: number[] = []
   readonly activeIds: JoltNS.BodyIDVector
   readonly ignored = new Set<number>()
+  /** Ignored pair keys by each body's low 16 bits: a removed body takes its pairs with it (Jolt hands its index to the next body made). */
+  private readonly ignoredBy = new Map<number, Set<number>>()
   /** Contact points of the last step per body: up to `POINTS_PER_BODY` x y z, and how many. Kept for the bodies asked about (`contactPoints`). */
   readonly points = new Map<number, { xyz: Float32Array; n: number; step: number }>()
   stepCount = 0
@@ -292,15 +294,26 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     ids.resize(descs.length)
     const base = J.getPointer(ids.data()) >> 2
     const out: BodyId[] = []
-    for (let i = 0; i < descs.length; i++) {
-      const shape = this.makeShape(descs[i].shape, descs[i].centreAtOrigin === true && descs[i].motion === 'dynamic' && descs[i].mass !== undefined)
-      const s = this.settingsFor(descs[i], shape)
-      const body = this.bi.CreateBody(s)
-      J.destroy(s)
-      shape.Release()
-      this.unscaleInertia(descs[i], body)
-      out.push(this.register(descs[i], body))
-      J.HEAPU32[base + i] = body.GetID().GetIndexAndSequenceNumber()
+    try {
+      for (let i = 0; i < descs.length; i++) {
+        const shape = this.makeShape(descs[i].shape, descs[i].centreAtOrigin === true && descs[i].motion === 'dynamic' && descs[i].mass !== undefined)
+        const s = this.settingsFor(descs[i], shape)
+        let body: JoltNS.Body
+        try {
+          body = this.bi.CreateBody(s)
+          this.unscaleInertia(descs[i], body)
+        } finally {
+          J.destroy(s)
+          shape.Release()
+        }
+        out.push(this.register(descs[i], body))
+        J.HEAPU32[base + i] = body.GetID().GetIndexAndSequenceNumber()
+      }
+    } catch (error) {
+      // the bodies made so far are not in the world yet (no `RemoveBody`): they are destroyed, and the id array with them
+      for (const id of out) this.discardUnadded(id)
+      J.destroy(ids)
+      throw error
     }
     const ref = J.wrapPointer(J.getPointer(ids.data()), J.BodyIDMemRef)
     const state = this.bi.AddBodiesPrepare(ref, descs.length)
@@ -308,6 +321,16 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     J.destroy(ids)
     for (let i = 0; i < descs.length; i++) if (!descs[i].sleeping && descs[i].motion !== 'static') this.bi.ActivateBody(this.entry(out[i]).id)
     return out
+  }
+
+  /** A body made by `createBodies` that never reached the world: destroyed without `RemoveBody`. */
+  private discardUnadded(id: BodyId): void {
+    const e = this.bodies.get(id)
+    if (!e) return
+    this.byPointer.delete(this.J.getPointer(e.body))
+    this.bi.DestroyBody(e.id)
+    this.J.destroy(e.id)
+    this.forget(id)
   }
 
   removeBody(id: BodyId): void {
@@ -322,6 +345,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
 
   /** What the adapter keeps about a body that went (removed, or its ragdoll destroyed). */
   forget(id: number): void {
+    this.dropIgnoredOf(id)
     this.bodies.delete(id)
     this.partners.delete(id)
     this.points.delete(id)
@@ -337,7 +361,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     const e = this.entry(id)
     const made = this.makeShape(shape, e.centred)
     const dynamic = e.body.IsDynamic()
-    if (mass && dynamic) e.kitMass = mass
+    // a kinematic body (held in a hand) keeps the new mass too: it takes it when it is let go (`setMotion`)
+    if (mass) e.kitMass = mass
     const kit = dynamic ? e.kitMass : null
     this.bi.SetShape(e.id, made, dynamic && !kit, this.J.EActivation_Activate)
     if (kit) this.putMass(e, made, kit)
@@ -480,7 +505,9 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void {
-    this.bi.SetMotionType(this.entry(id).id, motion === 'kinematic' ? this.J.EMotionType_Kinematic : this.J.EMotionType_Dynamic, this.J.EActivation_Activate)
+    const e = this.entry(id)
+    this.bi.SetMotionType(e.id, motion === 'kinematic' ? this.J.EMotionType_Kinematic : this.J.EMotionType_Dynamic, this.J.EActivation_Activate)
+    if (motion === 'dynamic' && e.kitMass) this.putMass(e, e.body.GetShape(), e.kitMass)
   }
 
   contactPoints(id: BodyId, out: Float32Array): number {
@@ -515,10 +542,37 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   ignorePair(a: BodyId, b: BodyId, ignore: boolean): void {
     const key = this.pairKey(a, b)
     if (ignore === this.ignored.has(key)) return
-    if (ignore) this.ignored.add(key)
-    else this.ignored.delete(key)
+    if (ignore) this.addIgnoredKey(key)
+    else this.deleteIgnoredKey(key)
     // the body pair cache would keep the pair's contact: it is looked at again
     this.bi.InvalidateContactCache(this.entry(a).id)
+  }
+
+  /** Puts an ignored pair key in the set and in the per-body index (also what a saved state restores). */
+  addIgnoredKey(key: number): void {
+    this.ignored.add(key)
+    for (const half of [Math.floor(key / 65536), key % 65536]) {
+      let set = this.ignoredBy.get(half)
+      if (!set) this.ignoredBy.set(half, (set = new Set()))
+      set.add(key)
+    }
+  }
+
+  private deleteIgnoredKey(key: number): void {
+    this.ignored.delete(key)
+    for (const half of [Math.floor(key / 65536), key % 65536]) this.ignoredBy.get(half)?.delete(key)
+  }
+
+  clearIgnored(): void {
+    this.ignored.clear()
+    this.ignoredBy.clear()
+  }
+
+  /** The pairs a gone body was in: its index is reused, and the next body made must not inherit a "do not collide" rule. */
+  private dropIgnoredOf(key: number): void {
+    const set = this.ignoredBy.get(key & 0xffff)
+    if (!set) return
+    for (const pair of [...set]) this.deleteIgnoredKey(pair)
   }
 
   get bodyCount(): number {

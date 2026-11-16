@@ -12,10 +12,17 @@ O teste automático cobre: tiro na direção de cada vidro chega no vidro; o ar 
 | `apc_6x6` | o teste do capô mediu 561 mm: provável falso positivo, sem paralama ao lado |
 | `armored_truck` | pane rear_viewport: the shots land on body_rear |
 | `battle_tank` | pane commander_periscope: the shots land on turret |
+| `police_helicopter` | a zona `taillight_right` mede 5 m ao longo do eixo errado e cobre a luz anticolisão do centro: tiro na lanterna direita deixa o brilho dela (teste `lamp-glow.test.ts`, `KNOWN_OPEN`) |
 | `fastback_sedan` | pane windshield: the roof stands past it; pane windshield: the shots land on roof |
 | `fishing_boat` | pane deckhouse_forward_windows: the shots land on deck |
 | `midsize_suv` | pane quarter_glass: the shots land on roof |
 | `single_engine_plane` | pane left_door_window: the fuel_tanks stands past it; pane left_door_window: the shots land on fuel_tanks; pane left_rear_window: the shots land on fuel_tanks; pane right_door_window: the fuel_tanks stands past it; pane  |
+
+## Lanternas e pneu depois do tiro (frota inteira)
+
+`lamp-glow.test.ts` e `flat-tyre.test.ts` rodam em todos os modelos de `fleetVehicleIds` (tiro de fuzil apaga o brilho dentro da caixa de cada lanterna quebrada; tiro de fuzil fura o pneu e nunca o arranca nos modelos com pneu; pistola, fogo e explosão sobre o pneu são testados só no `midsize_sedan`). Única exceção conhecida: `police_helicopter` (tabela acima); modelos sem peça de lanterna ficam em `NO_LAMPS`.
+
+**Pendência:** depois de quebrar todas as peças de lanterna, continuam acesas peças que não têm peça de dano própria e ficam fora das caixas das lanternas: sinaleiras laterais, repetidores, o pisca do retrovisor e o farol de neblina do para-choque em vários carros, as sinaleiras de moto e ônibus, e os indicadores do painel (esses últimos são do painel, não de lanterna). Medido em 2026-11-16 com todas as lanternas quebradas: `compact_hatch` 10 meshes acesos, `scooter` 18, `quad_bike` 19, `armored_truck` 20, `school_bus` 12, `city_bus` 12. Correção: dar peça de dano a cada uma dessas luzes (ou casar por tipo de lâmpada em vez de por caixa).
 
 ## Porta aberta: nada atravessando o vão nem pendurado na porta
 
