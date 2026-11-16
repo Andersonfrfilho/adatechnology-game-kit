@@ -29,7 +29,7 @@ export interface EnginePieceOptions {
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
   /**
    * The most tiles of ground laid at a blast (`layAhead`), nearest the centre first; 0 turns it off. A blast's pieces come into being in the next update, on tiles not laid yet:
-   * laying the ones the blast reaches at the blast, before any piece needs them, takes that cost out of the frame the pieces appear in. Default `BLAST_TILES`.
+   * laying the ones the blast reaches at the blast, before any piece needs them, takes that cost out of the frame the pieces appear in, and puts it in the explosion's. Default `BLAST_TILES` (off).
    */
   readonly blastTiles?: number
   /** Lay the ground under each part box of a piece of several parts, not under the box around all of them (default off: the same tiles as before). */
@@ -56,8 +56,8 @@ const GROUND_REACH = 0.25
  * new field of 81 x 81, so past about three quarters a new shape is the cheaper (measured, T3.8q); half leaves room for the engine's own work around the write.
  */
 const IN_PLACE_SHARE = 0.5
-/** The tiles laid at a blast unless the host says otherwise: a disc of about 5 m around it. A count, not a clock, so the same blast lays the same tiles on any machine. */
-const BLAST_TILES = 48
+/** The tiles laid at a blast unless the host says otherwise: none. Measured (T3.8ad), 48 of them moved about 24 ms into the explosion frame and left the worst frame no better. A count, not a clock, so the same blast lays the same tiles on any machine. */
+const BLAST_TILES = 0
 /** A blast's radius counts to this far (m) when the tiles it reaches are listed: the nearest ones are laid, and the count caps the rest. */
 const BLAST_REACH = 32
 /** A tile whose ground varies by no more than this (m) over every sample is level (`shapeGround` calls 1e-9 level; half of it leaves room for rounding). */

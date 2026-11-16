@@ -23,7 +23,7 @@ const ORIGIN = 32768
 const keyOf = (ix: number, iz: number): number => (ix + ORIGIN) * KEY + (iz + ORIGIN)
 const FRAME = 1 / 60
 
-const lab = (options: { blastGroundTiles?: number } = {}) => {
+const lab = (options: { blastGroundTiles?: number } = { blastGroundTiles: 48 }) => {
   const terrain = createTerrain({ bounds: [-40, -40, 40, 40], cellSize: 0.1, layout: { surface: 'dirt' } })
   const system = new PieceSystem(THREE, {
     physics: physicsOption(),
@@ -77,8 +77,8 @@ describe.skipIf(!IS_JOLT)('the ground a blast reaches is laid at the blast (T3.8
     }
   })
 
-  it('a count of zero lays nothing at a blast', () => {
-    const l = lab({ blastGroundTiles: 0 })
+  it('by default nothing is laid at a blast, and a count of zero lays nothing either', () => {
+    const l = lab({})
     l.system.layGroundAt(0, 0, 10)
     l.system.update(FRAME)
     expect(l.engine.tiles.size).toBe(0)
@@ -108,6 +108,7 @@ describe.skipIf(!IS_JOLT)('the ground a blast reaches is laid at the blast (T3.8
       world: world.asWorld(),
       groundAt: (x, z) => terrain.heightAt(x, z),
       terrainRangeAt: (a, b, c, d) => terrain.heightRange(a, b, c, d),
+      blastGroundTiles: 48,
     })
     const engine = (renderer as unknown as { pieceSys: { engine: Engine } }).pieceSys.engine
     renderer.explode([1, 0.5, 1], 400_000, 4)
