@@ -15,7 +15,7 @@ import {
   spanMoment, spanOf, tensionSteel,
 } from './flexure'
 import type { BendGeometry } from './flexure'
-import { buriedTransmission } from './buried-charge'
+import { buriedTransmission, tntKilogramsOf } from './buried-charge'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
 import { judgeBeam, judgePlate } from './foundation-span'
@@ -4642,11 +4642,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const cfg = blastCfg(call)
     const charge = call?.charge ?? options.blast?.charge
-    // a charge under the ground spends most of its energy in the soil: the structures feel only what comes out
-    const transmitted = buriedTransmission((options.groundHeight ?? 0) - point[1], energy)
+    // a charge under soil spends most of its energy in it: the structures feel only what comes out, and the soil stops the casing fragments
+    const cover = call?.soilCover ?? 0
+    const transmitted = buriedTransmission({ cover, tntKilograms: tntKilogramsOf(energy, charge?.tnt) })
     if (transmitted < 1) {
       energy *= transmitted
       radius *= Math.cbrt(transmitted)
+      if (lethal !== undefined) lethal *= Math.cbrt(transmitted)
     }
     const outer = blastTntPerJoule
     const outerFireball = blastFireball
@@ -4654,7 +4656,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     blastFireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * blastTntPerJoule)
     try {
       // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
-      const fragments = charge?.casing ? withBlow('ballistic', () => throwCasing(point, charge, src))() : []
+      const fragments = charge?.casing && !(cover > 0) ? withBlow('ballistic', () => throwCasing(point, charge, src))() : []
       const wave = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
       const res = fragments.length > 0 ? mergeResults(wave, fragments) : wave
       // a blast is a flame: a container that leaks flammable fluid inside its fireball catches
