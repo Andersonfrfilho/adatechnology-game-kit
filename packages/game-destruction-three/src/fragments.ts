@@ -37,11 +37,11 @@ interface Live {
   box?: RestingBox | undefined
 }
 
-/** The floor area a box covers: the convex hull of its eight corners seen from above, as flat x, z pairs in turn. */
-type Hull = readonly number[]
+/** The floor area a box covers, seen from above: a shape built from the floor images of its three half edges (x, z of each, in turn), centred on the box. */
+type Shadow = readonly [number, number, number, number, number, number]
 
 interface RestingBox {
-  readonly hull: Hull
+  readonly shadow: Shadow
   readonly x: number
   readonly z: number
   readonly reachX: number
@@ -60,67 +60,34 @@ function rotationOf(q: THREE_NS.Quaternion): readonly number[] {
 }
 
 /** The world box of a resting fragment: its centre, how far it reaches along x and z, and its top. */
-const cross = (o: readonly number[], a: readonly number[], b: readonly number[]): number => (a[0]! - o[0]!) * (b[1]! - o[1]!) - (a[1]! - o[1]!) * (b[0]! - o[0]!)
-
-/** The hull (counter-clockwise, monotone chain) of the eight corners of a box with half sizes `half` turned by the column-major rotation `e` about `centre`, on the floor plane. */
-function hullOf(e: ArrayLike<number>, half: { readonly x: number; readonly y: number; readonly z: number }, centre: { readonly x: number; readonly z: number }): Hull {
-  const points: number[][] = []
-  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
-    const lx = sx * half.x
-    const ly = sy * half.y
-    const lz = sz * half.z
-    points.push([centre.x + e[0]! * lx + e[4]! * ly + e[8]! * lz, centre.z + e[2]! * lx + e[6]! * ly + e[10]! * lz])
-  }
-  points.sort((a, b) => a[0]! - b[0]! || a[1]! - b[1]!)
-  const lower: number[][] = []
-  for (const q of points) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, q) <= 0) lower.pop()
-    lower.push(q)
-  }
-  const upper: number[][] = []
-  for (const q of [...points].reverse()) {
-    while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, q) <= 0) upper.pop()
-    upper.push(q)
-  }
-  lower.pop()
-  upper.pop()
-  return [...lower, ...upper].flat()
+/** The floor images of the half edges of a box turned by the column-major rotation `e`. */
+function shadowOf(e: ArrayLike<number>, half: { readonly x: number; readonly y: number; readonly z: number }): Shadow {
+  return [e[0]! * half.x, e[2]! * half.x, e[4]! * half.y, e[6]! * half.y, e[8]! * half.z, e[10]! * half.z]
 }
 
-/** Whether two hulls share floor area: the separating axis test on the sides of both. */
-function hullsOverlap(first: Hull, second: Hull): boolean {
-  for (const hull of [first, second]) {
-    const n = hull.length / 2
-    for (let i = 0; i < n; i++) {
-      const j = (i + 1) % n
-      const nx = hull[2 * j + 1]! - hull[2 * i + 1]!
-      const nz = hull[2 * i]! - hull[2 * j]!
-      let min1 = Infinity
-      let max1 = -Infinity
-      let min2 = Infinity
-      let max2 = -Infinity
-      for (let k = 0; k < first.length; k += 2) {
-        const d = first[k]! * nx + first[k + 1]! * nz
-        min1 = Math.min(min1, d)
-        max1 = Math.max(max1, d)
-      }
-      for (let k = 0; k < second.length; k += 2) {
-        const d = second[k]! * nx + second[k + 1]! * nz
-        min2 = Math.min(min2, d)
-        max2 = Math.max(max2, d)
-      }
-      if (max1 < min2 || max2 < min1) return false
+/** How far a shadow reaches along (nx, nz): the sum of its three half edges' projections. */
+const reachAlong = (shadow: Shadow, nx: number, nz: number): number => Math.abs(nx * shadow[0] + nz * shadow[1]) + Math.abs(nx * shadow[2] + nz * shadow[3]) + Math.abs(nx * shadow[4] + nz * shadow[5])
+
+/** Whether two shadows, `dx` and `dz` apart, share floor area: the separating axis test on the normals of the six half edges (exact for shapes made of segments). */
+function shadowsOverlap(first: Shadow, second: Shadow, dx: number, dz: number): boolean {
+  for (const shadow of [first, second]) {
+    for (let g = 0; g < 6; g += 2) {
+      const nx = -shadow[g + 1]!
+      const nz = shadow[g]!
+      if (nx * nx + nz * nz < 1e-12) continue
+      if (Math.abs(dx * nx + dz * nz) > reachAlong(first, nx, nz) + reachAlong(second, nx, nz)) return false
     }
   }
   return true
 }
 
+/** The world box of a resting fragment: its centre, how far it reaches along x and z, its top, and the floor area it really covers. */
 function restingBox(f: Live): RestingBox {
   const e = rotationOf(f.mesh.quaternion)
   const { x, y, z } = f.half
   const p = f.mesh.position
   return {
-    hull: hullOf(e, f.half, f.mesh.position),
+    shadow: shadowOf(e, f.half),
     x: p.x,
     z: p.z,
     reachX: Math.abs(e[0]) * x + Math.abs(e[4]) * y + Math.abs(e[8]) * z,
@@ -625,7 +592,7 @@ export class FragmentSystem {
     const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
     const reachX = Math.abs(e[0]) * f.half.x + Math.abs(e[4]) * f.half.y + Math.abs(e[8]) * f.half.z
     const reachZ = Math.abs(e[2]) * f.half.x + Math.abs(e[6]) * f.half.y + Math.abs(e[10]) * f.half.z
-    const mine = hullOf(e, f.half, p)
+    const mine = shadowOf(e, f.half)
     let top = Number.NEGATIVE_INFINITY
     for (const other of this.list) {
       if (other === f || other.dying) continue
@@ -633,7 +600,7 @@ export class FragmentSystem {
       if (box.top > bottom + PILE_STEP || box.top <= top) continue
       if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
       // the wrapping boxes touch: what counts is whether the floor areas the two really cover do (a turned or leaning box wraps far more than it covers)
-      if (!hullsOverlap(mine, box.hull)) continue
+      if (!shadowsOverlap(mine, box.shadow, box.x - p.x, box.z - p.z)) continue
       top = box.top
     }
     return top
