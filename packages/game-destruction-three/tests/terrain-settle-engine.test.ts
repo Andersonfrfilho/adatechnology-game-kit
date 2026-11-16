@@ -43,7 +43,7 @@ const highestRise = (): { x: number; z: number } => {
   return best
 }
 
-type EngineTiles = { tiles: Map<number, { samples: Float64Array }> }
+type EngineTiles = { tiles: Map<number, { samples: Float64Array | null; level: number | null }> }
 
 /** How many of the engine's tiles are further than the tolerance from the ground that is drawn, and the worst gap (m). */
 const staleTiles = (renderer: unknown, groundAt: (x: number, z: number) => number): { stale: number; worst: number } => {
@@ -53,9 +53,10 @@ const staleTiles = (renderer: unknown, groundAt: (x: number, z: number) => numbe
   for (const [key, tile] of engine?.tiles ?? []) {
     const ix = Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN
     const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
-    const fresh = buildGroundTile(groundAt, ix * TILE, iz * TILE, TILE).samples
+    const fresh = buildGroundTile(groundAt, ix * TILE, iz * TILE, TILE).samples!
     let gap = 0
-    for (let i = 0; i < fresh.length; i++) gap = Math.max(gap, Math.abs(fresh[i]! - tile.samples[i]!))
+    // a tile proved level holds no samples: every sample the ground has now is held against its level
+    for (let i = 0; i < fresh.length; i++) gap = Math.max(gap, Math.abs(fresh[i]! - (tile.samples ? tile.samples[i]! : tile.level!)))
     worst = Math.max(worst, gap)
     if (gap > TILE_TOLERANCE) stale++
   }

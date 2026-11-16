@@ -17,6 +17,11 @@ export interface PieceSystemOptions {
   /** The terrain alone (no top of furniture or of anything drawn): the ground of an engine, which has every drawn top as a body. Default `groundAt`. */
   terrainAt?: (x: number, z: number) => number
   /**
+   * The lowest and highest `terrainAt` (else `groundAt`) can answer over a rectangle (min x, max x, min z, max z), exact bounds, or null when none is known. With it the engine lays a
+   * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
+   */
+  terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
+  /**
    * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
    * `-Infinity` when none. The ground and the other pieces are added by the system.
    */
@@ -312,6 +317,7 @@ export class PieceSystem {
     this.engine = resolved
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
+          ...(o.terrainRangeAt ? { groundRange: o.terrainRangeAt } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,
           sweep: o.sweep,

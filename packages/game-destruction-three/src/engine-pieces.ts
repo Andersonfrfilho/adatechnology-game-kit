@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
-import { buildGroundTile, readGround, shapeGround } from './engine-ground'
+import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
 import type { GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
 import { NO_SOLID, buildSolidVolume, sameSolid } from './engine-ground-solid'
@@ -15,6 +15,11 @@ export type { StaticSolid } from './engine-statics'
 
 export interface EnginePieceOptions {
   readonly groundAt: (x: number, z: number) => number
+  /**
+   * The exact lowest and highest `groundAt` over a rectangle (min x, max x, min z, max z), or null when unknown. A tile it proves level is laid as a slab without reading its
+   * samples; without it every tile is read. Must be exact: a loose bound lays a slab where there is a crater.
+   */
+  readonly groundRange?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
@@ -46,6 +51,8 @@ const GROUND_REACH = 0.25
  * new field of 81 x 81, so past about three quarters a new shape is the cheaper (measured, T3.8q); half leaves room for the engine's own work around the write.
  */
 const IN_PLACE_SHARE = 0.5
+/** A tile whose ground varies by no more than this (m) over every sample is level (`shapeGround` calls 1e-9 level; half of it leaves room for rounding). */
+const FLAT_SPAN = 5e-10
 /**
  * How many times in a row a height field is written in place before a whole new one is made from the exact heights. Jolt's `SetHeights` also requantizes the blocks
  * left of and above the written ones, and a sample requantized from its own dequantized value moves down: up to 4.4e-5 m a write, 1.8 mm over 50 (measured, T3.8q). Four
@@ -149,7 +156,9 @@ interface Tile {
   /** The height field's samples, to find what a change moved (empty under a slab), and how many times in a row it was written in place (`MAX_IN_PLACE_WRITES`). */
   heights: Float32Array
   writes: number
-  samples: Float64Array
+  /** Null for a tile proved level without reading it; its level then is `level`. */
+  samples: Float64Array | null
+  level: number | null
   /** Where the host said the ground changed (world x and z, widened by `GROUND_REACH`): only the samples there are read again. Null when it did not. */
   dirty: GroundRect | null
 }
@@ -851,7 +860,7 @@ export class EnginePieces {
   private layTile(key: number, ix: number, iz: number, tile: Tile | undefined): void {
     const x0 = ix * TILE
     const z0 = iz * TILE
-    const made = tile ? this.readTile(tile, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE)
+    const made = this.flatOrRead(tile, x0, z0)
     if (!made) return
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
@@ -867,17 +876,34 @@ export class EnginePieces {
     // the solid is a function of the heights: the same heights, the same solid
     const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells)
     const laid = { ...made, solid: volume }
-    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, dirty: null })
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, level: made.level, dirty: null })
+  }
+
+  /**
+   * The tile as the ground is now, or null (the mark cleared) when it did not change. A tile the terrain's own bounds prove level costs the vertices under it, not 26 000 samples:
+   * the proof is exact (every sample is a blend of the vertices the tile covers), so a crater of any size under it takes the other way.
+   */
+  private flatOrRead(tile: Tile | undefined, x0: number, z0: number): GroundTile | null {
+    const range = this.o.groundRange?.(x0, x0 + TILE, z0, z0 + TILE)
+    if (range && range.high - range.low <= FLAT_SPAN) {
+      const level = this.o.groundAt(x0 + TILE / 2, z0 + TILE / 2)
+      if (tile?.slab && tile.level === level) {
+        tile.dirty = null
+        return null
+      }
+      return flatTile(level, TILE)
+    }
+    return tile && tile.samples ? this.readTile(tile, tile.samples, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE, false)
   }
 
   /** The tile as the ground is now, its marked samples read again; null (and the mark cleared) when none of them changed. */
-  private readTile(tile: Tile, x0: number, z0: number): GroundTile | null {
-    const changed = readGround(this.o.groundAt, tile.samples, x0, z0, TILE, tile.dirty ?? undefined)
+  private readTile(tile: Tile, held: Float64Array, x0: number, z0: number): GroundTile | null {
+    const changed = readGround(this.o.groundAt, held, x0, z0, TILE, tile.dirty ?? undefined)
     if (!changed) {
       tile.dirty = null
       return null
     }
-    return shapeGround(tile.samples, x0, z0, TILE, false)
+    return shapeGround(held, x0, z0, TILE, false)
   }
 
   /**
