@@ -36,4 +36,28 @@ describe.skipIf(!IS_JOLT)('ground that rises under a piece that rests on it', ()
     b.system.wakeRegion(5, 0, 3)
     expect(b.root.position.y).toBeGreaterThan(before + 0.05)
   })
+
+  it('the beam asleep on the rising tip ends at most 1 cm inside the ground (measured at the tip, not at the position the kit kept)', () => {
+    const b = beamOnGround()
+    b.ground.raise = 0.008
+    b.system.wakeRegion(5, 0, 3)
+    for (let i = 0; i < 240; i++) b.system.update(FRAME)
+    // the lowest point of the far end (x from 4 m up, over the risen ground) from the piece's own pose
+    const q = b.root.quaternion
+    const low = (sx: number): number => {
+      let lowest = Infinity
+      for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+        const corner = new THREE.Vector3(sx * BEAM[0], sy * BEAM[1], sz * BEAM[2]).applyQuaternion(q).add(b.root.position)
+        if (corner.x > 4) lowest = Math.min(lowest, corner.y)
+      }
+      return lowest
+    }
+    const tipBottom = low(1)
+    expect(Number.isFinite(tipBottom)).toBe(true)
+    const penetration = Math.max(0, b.ground.raise - tipBottom)
+    // measured, not assumed (audit of #309): a rise the kit does not lift leaves the whole rise inside the ground (here 8 mm after 4 s: the engine does not push it out),
+    // so the bound is the rule's own: under 1 cm
+    expect(penetration).toBeLessThanOrEqual(0.01)
+    expect(penetration).toBeGreaterThan(0)
+  })
 })

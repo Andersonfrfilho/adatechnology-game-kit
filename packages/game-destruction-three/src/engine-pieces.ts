@@ -218,8 +218,9 @@ export class EnginePieces {
     const link = this.links.get(b)
     if (!link) return
     this.world.removeBody(link.id)
-    // an awake piece shares its island with what rests on it, so only a sleeping one leaves sleepers behind
-    if (wakeNeighbours && b.sleeping) this.wakeAround(b, link.pos)
+    // an awake piece shares its island with what rests on it, so only a sleeping one leaves sleepers behind: asleep for the kit now, or asleep when the engine last
+    // stepped and woken (a blow, its support looked at again) in this same frame, before the engine could wake what lay on it (CLAUDE.md §12)
+    if (wakeNeighbours && (b.sleeping || link.sleeping)) this.wakeAround(b, link.pos)
     this.byUser.delete(link.user)
     if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
