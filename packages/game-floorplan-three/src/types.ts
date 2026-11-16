@@ -1,4 +1,5 @@
 import type * as THREE from 'three'
+import type { WindowFrame } from '@adatechnology/game-floorplan'
 import type { DeferredQueue, GroundExcavation } from '@adatechnology/game-contracts'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
@@ -182,6 +183,11 @@ export interface BuildOptions {
   constructionStages?: boolean
   /** Initial construction level (`0..8`) when `constructionStages` is enabled. */
   constructionLevel?: number
+  /**
+   * What holds the glass of every window of this house, over the plan's `PlanWindow.frame` and the house's standard: `'wood'` (splinters), `'aluminium'` (dents) or
+   * `'frameless'` (blindex, 8 mm tempered glass). Default: each window's own, else wood in a budget house and aluminium above it.
+   */
+  windowFrame?: WindowFrame
 }
 
 /** Something the player can use, as the house publishes it: where it is, how far it reaches, its prompt and how to use it. */

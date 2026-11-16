@@ -1,9 +1,14 @@
+import type { WindowFrame } from '@adatechnology/game-floorplan'
+
 /** What the houses area opens with, read from the page address. */
 export interface FloorplanAreaParams {
   readonly template?: string
   readonly seed?: number
   readonly state?: string
+  /** `?windowFrame=wood|aluminium|frameless`: every window of the house with that frame (`BuildOptions.windowFrame`). */
+  readonly windowFrame?: WindowFrame
 }
+const FRAMES: readonly WindowFrame[] = ['wood', 'aluminium', 'frameless']
 
 const ID = /^[a-z0-9_]+$/
 
@@ -16,7 +21,9 @@ export function floorplanAreaParams(search: string): FloorplanAreaParams {
   const template = params.get('template') ?? undefined
   const state = params.get('state') ?? undefined
   const seed = Number(params.get('seed'))
+  const frame = FRAMES.find((f) => f === params.get('windowFrame'))
   return {
+    ...(frame ? { windowFrame: frame } : {}),
     ...(template && ID.test(template) ? { template } : {}),
     ...(Number.isInteger(seed) && seed >= 1 && seed <= 999 ? { seed } : {}),
     ...(state && ID.test(state) ? { state } : {}),

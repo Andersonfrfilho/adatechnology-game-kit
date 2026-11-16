@@ -252,6 +252,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         noPerimeter: !lot,
         constructionStages: true,
         constructionLevel: settings.constructionLevel,
+        ...(options.windowFrame ? { windowFrame: options.windowFrame } : {}),
       })
       scene.add(house.group)
       placed.push({ house, plan, seed, ...bounds(plan) })

@@ -1,7 +1,7 @@
 /** The kernel's types of the house's systems and state: materials, mirrors, cars, vegetation, interaction, room lights, the interactables kit and the build. */
 import type { Aabb } from './house/solids.js';
 import type * as THREE_NS from 'three'
-import type { ResultGate } from '@adatechnology/game-floorplan'
+import type { ResultGate, WindowFrame } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
 import type { PanelView } from './destruction/panels.js'
 import type { Kernel } from './kernel-types.js'
@@ -653,6 +653,8 @@ export interface BuildContext {
   showPillars: boolean
   baseboardBand: boolean
   fittedWindows: boolean
+  /** `BuildOptions.windowFrame`: the frame every window of the house gets, over its own. */
+  windowFrame?: WindowFrame | undefined
   /** The longest stretch (m) a wiring or pipe run detaches as one piece. */
   segmentLimits: SegmentLimits
   /** `BuildOptions.gutters === 'visor'`. */

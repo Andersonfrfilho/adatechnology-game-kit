@@ -3,7 +3,7 @@ import type * as THREE_NS from 'three'
 import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/game-contracts'
 import type { Kernel, Shared } from '../kernel-types.js'
 
-import type { BreachViewOptions, HouseStructurePart, StructureRangeItem } from './types.js'
+import type { BreachChange, BreachViewOptions, HouseStructurePart, StructureRangeItem } from './types.js'
 export type { BreachViewOptions }
 
 /**
@@ -68,6 +68,9 @@ interface UnitBox { x: number; y: number; z: number; sx: number; sy: number; sz:
 
 /** A cell of a wall in the plane of its mask: along the wall from its start (`a` to `b`) and up (`y0` to `y1`). */
 interface Span { a: number; b: number; y0: number; y1: number }
+
+/** How far (m) a pillar reaches into a wall's plan box, both ways, to be under that wall's plaster too (a corner pillar in the end of the wall that meets it). */
+const PILLAR_REACH = 0.02
 
 /** What a `chip` took out, in the house's space: its centre and its half extents along the wall and up. */
 interface ChipBox { center: number[]; along: number; up: number }
@@ -230,15 +233,38 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return part.role === 'column' ? wallAround(part) : null
     }
 
+    /**
+     * Every wall that draws `partId`: its host, and for a pillar each drawn wall it stands in. A pillar at a corner is under the plaster of both walls that meet there (each
+     * wall's mesh runs past the other's face to close the corner): what breaks off it opens both faces, and the corner itself goes, not the face of one wall only.
+     */
+    function hostsOf(partId: string): string[] {
+      const part = structure.byId.get(partId)
+      if (part?.role === 'column' && !structure.meshesOf(partId).some((it) => it.mesh)) return wallsAround(part)
+      const host = hostOf(partId)
+      return host ? [host] : []
+    }
+
     /** The drawn wall a pillar stands in (its centre in the wall's plan box, its height along the wall's): the pillar is under that wall's plaster. */
     function wallAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): string | null {
+      return wallsAround(part)[0] ?? null
+    }
+
+    /**
+     * The drawn walls a pillar stands in, along their height: first the one its centre is in (the wall it is laid in), then any other whose plan box it reaches into by more
+     * than `PILLAR_REACH` both ways. A corner pillar (laid along one wall, 30 x 14 cm) reaches into the end of the other wall, which runs over it to close the corner.
+     */
+    function wallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): string[] {
       const cu = (part.aabb[0]! + part.aabb[2]!) / 2, cv = (part.aabb[1]! + part.aabb[3]!) / 2
+      const first: string[] = [], other: string[] = []
       for (const q of structure.parts) {
         if (q.id === part.id || (q.role !== 'wall' && q.role !== 'partition') || !structure.meshesOf(q.id).some((it: { mesh?: unknown }) => it.mesh)) continue
+        if (Math.min(q.y1, part.y1) - Math.max(q.y0, part.y0) <= 0.5) continue
         const inside = cu >= q.aabb[0] - 1e-3 && cu <= q.aabb[2] + 1e-3 && cv >= q.aabb[1] - 1e-3 && cv <= q.aabb[3] + 1e-3
-        if (inside && Math.min(q.y1, part.y1) - Math.max(q.y0, part.y0) > 0.5) return q.id
+        const reaches = Math.min(q.aabb[2], part.aabb[2]!) - Math.max(q.aabb[0], part.aabb[0]!) > PILLAR_REACH && Math.min(q.aabb[3], part.aabb[3]!) - Math.max(q.aabb[1], part.aabb[1]!) > PILLAR_REACH
+        if (inside) first.push(q.id)
+        else if (reaches) other.push(q.id)
       }
-      return null
+      return [...first, ...other]
     }
 
     /**
@@ -246,14 +272,41 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * there, even once the pillar's concrete is gone (its cage is left).
      */
     const pillarSpans = (view: { host: string; mask: { alongU: boolean; start: number } }): { a: number; b: number; y0: number; y1: number }[] =>
-      structure.parts.filter((q: { id: string; role: string; aabb: number[]; y0: number; y1: number }) => q.role === 'column' && wallAround(q) === view.host).map((q: { aabb: number[]; y0: number; y1: number }) => {
+      structure.parts.filter((q: { id: string; role: string; aabb: number[]; y0: number; y1: number }) => q.role === 'column' && wallsAround(q).includes(view.host)).map((q: { aabb: number[]; y0: number; y1: number }) => {
         const a = (view.mask.alongU ? q.aabb[0] : q.aabb[1]) - view.mask.start, b = (view.mask.alongU ? q.aabb[2] : q.aabb[3]) - view.mask.start
         return { a, b, y0: q.y0, y1: q.y1 }
       })
 
+    /**
+     * The window gaps of the host wall, along it (from its start) and up: the plan's openings of that wall. No brick of the wall is drawn in them; a window
+     * stands there (its frame and glass are pieces of their own), and a wall drawn with bricks behind its glass is a wall that was never cut for it.
+     */
+    const windowGaps = (view: { host: string; mask: { start: number } }): Span[] =>
+      ((structure.openings ?? []) as readonly { kind: string; wall: string; from: number; to: number; y0: number; y1: number }[])
+        .filter((o) => o.kind === 'window' && o.wall === view.host)
+        .map((o) => ({ a: Math.min(o.from, o.to) - view.mask.start, b: Math.max(o.from, o.to) - view.mask.start, y0: o.y0, y1: o.y1 }))
+
+    /**
+     * A brick cut at the edges of the window gaps it meets (the courses are laid up to the jamb, the sill and the lintel); nothing when its middle lies in
+     * one. A brick that only reaches into a gap is cut along the side its middle is on.
+     */
+    function outsideGaps<T extends Span>(c: T, gaps: readonly Span[]): T[] {
+      let { a, b, y0, y1 } = c
+      for (const g of gaps) {
+        if (y1 <= g.y0 || y0 >= g.y1 || b <= g.a || a >= g.b) continue
+        const s = (a + b) / 2, y = (y0 + y1) / 2
+        const outS = Math.max(g.a - s, s - g.b, 0), outY = Math.max(g.y0 - y, y - g.y1, 0)
+        if (outS <= 0 && outY <= 0) return []
+        if (outS >= outY) { if (s <= g.a) b = Math.min(b, g.a); else a = Math.max(a, g.b) }
+        else if (y <= g.y0) y1 = Math.min(y1, g.y0)
+        else y0 = Math.max(y0, g.y1)
+      }
+      return b - a > 1e-3 && y1 - y0 > 1e-3 ? [{ ...c, a, b, y0, y1 }] : []
+    }
+
     /** The beams with units the house draws inside the range of `hostId` (see `hostOf`). */
     const riders = (hostId: string): string[] =>
-      structure.parts.filter((q) => q.id !== hostId && specOf(q.id)?.units && hostOf(q.id) === hostId && !structure.meshesOf(q.id).some((it) => it.mesh)).map((q) => q.id)
+      structure.parts.filter((q) => q.id !== hostId && specOf(q.id)?.units && hostsOf(q.id).includes(hostId) && !structure.meshesOf(q.id).some((it) => it.mesh)).map((q) => q.id)
 
     /** The wall's range of the merged mesh as a mesh of its own, same transform, with a clone of its material that discards what the mask cuts. */
     function shell(it: StructureRangeItem, mask: WallMask) {
@@ -411,12 +464,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const shown: { c: Span; part: HouseStructurePart; units: PartUnits; thick: number; mid: number }[] = []
       // the blocks of a cast member (a pillar, a beam) that broke off: lumps of their concrete stay stuck on the bars that ran through them
       const castGone: { c: Span; part: HouseStructurePart; thick: number; mid: number }[] = []
-      const pillars = pillarSpans(view)
+      const pillars = pillarSpans(view), gaps = windowGaps(view)
       for (const id of view.parts) {
         const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
         // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
         const own = cells(part, units, mask)
-        const all = id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own
+        const all = (id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own).flatMap((c) => outsideGaps(c, gaps))
         if (view.fallen.has(id)) { holes.push(...all); view.kept.set(id, []); continue }
         const thick = mask.alongU ? part.aabb[3]! - part.aabb[1]! : part.aabb[2]! - part.aabb[0]!
         const mid = mask.alongU ? (part.aabb[1]! + part.aabb[3]!) / 2 : (part.aabb[0]! + part.aabb[2]!) / 2
@@ -444,6 +497,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           // the wall's units behind a pillar are not drawn (the pillar is cast there): what the world took of them is no crater in the pillar's concrete
           const k = id === view.host ? besidePillars({ a: box.s0, b: box.s1, y0: box.y0, y1: box.y1 }, pillars)[0] : { a: box.s0, b: box.s1, y0: box.y0, y1: box.y1 }
           if (!k) continue
+          // a unit the world knocked out of a window gap was never laid there: no crater in the glass
+          if (outsideGaps(k, gaps).length === 0) continue
           pits.push({ s: (k.a + k.b) / 2, y: (k.y0 + k.y1) / 2, rs: (k.b - k.a) / 2, ry: (k.y1 - k.y0) / 2 })
         }
       }
@@ -496,7 +551,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         // the structure's part reaches past the drawn wall (half the thickness at each end, to close a corner): a unit is drawn only inside the wall drawn
         const at = (s: number, dy: number, d: number, colour: number) => {
           const unit = clipToBox({ x: mask.alongU ? centre : mid, y, z: mask.alongU ? mid : centre, sx: mask.alongU ? s : d, sy: dy, sz: mask.alongU ? d : s, colour }, view.bounds)
-          if (unit) list.push(unit)
+          // cut to the wall drawn, what is left of a unit at the edge of a breach may have its middle in the breach: it went with it
+          if (unit && !discs.some((k) => Math.hypot((mask.alongU ? unit.x : unit.z) - mask.start - k.s, unit.y - k.y) < k.r)) list.push(unit)
         }
         const base = fragmentMaterial(part.material).color.getHex()
         const n = noise2(centre * 3.1, y * 2.7, 0.07)
@@ -646,8 +702,14 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     /** Takes out of the wall of `partId` (or of the wall that draws it) the units the change removed, and draws the damage again. */
     function draw(partId: string, change: { opening?: { center: number[]; radius: number }; chip?: { center: number[]; size: number[]; rotation: number[] }; chips?: { center: number[]; size: number[]; rotation: number[] }[]; spall?: { center: number[]; radius: number } }): boolean {
       if (lod !== 0) return false
-      const hostId = hostOf(partId)
-      if (!hostId || !specOf(partId)?.units) return false
+      if (!specOf(partId)?.units) return false
+      let drawn = false
+      for (const hostId of hostsOf(partId)) drawn = drawIn(hostId, partId, change) || drawn
+      return drawn
+    }
+
+    /** `draw` in the wall `hostId` (one of the walls that draw `partId`). */
+    function drawIn(hostId: string, partId: string, change: BreachChange): boolean {
       const view = views.get(hostId) ?? newView(hostId)
       if (!view || !view.chips.has(partId)) return false
       if (change.opening) {
@@ -748,9 +810,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         paintQueues.add(queue)
         for (const q of opts.spec()?.parts ?? []) {
           if (!q.units) continue
-          const host = hostOf(q.id)
-          if (!host) continue
-          for (const it of structure.meshesOf(host)) {
+          for (const host of hostsOf(q.id)) for (const it of structure.meshesOf(host)) {
             if (!it.mesh) continue
             const list = (it.mesh.userData.drawnSpalls ??= [])
             if (!list.includes(q.id)) list.push(q.id)
@@ -770,23 +830,24 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       },
       /** The part broke or fell: its damage goes (the plain range stays collapsed, the renderer hides the part). */
       drop(partId: string): void {
-        let host: WallView | null | undefined = views.get(partId) ?? [...views.values()].find((view) => view.parts.includes(partId))
+        // every wall that draws it: a pillar at a corner is in the views of both walls
+        const hosts: WallView[] = [...new Set([views.get(partId), ...[...views.values()].filter((view) => view.parts.includes(partId))].filter((v): v is WallView => !!v))]
         // a wall that falls whole before any damage was drawn on it: its pillars and bond beam still stand where it was
-        if (!host && lod === 0 && riders(partId).length > 0) {
-          host = newView(partId)
-          if (host) { cut(host); views.set(partId, host) }
+        if (!hosts.length && lod === 0 && riders(partId).length > 0) {
+          const made = newView(partId)
+          if (made) { cut(made); views.set(partId, made); hosts.push(made) }
         }
-        if (!host) return
-        // the wall or a pillar in it broke or fell: what still stands in the view (the pillars, the bond beam on them) stays drawn, bare where the bricks went
-        host.fallen.add(partId)
-        if (host.parts.some((id: string) => !host.fallen.has(id))) {
-          dirty.delete(host); paint(host); invalidate(); invalidateShadow()
-          return
+        for (const host of hosts) {
+          // the wall or a pillar in it broke or fell: what still stands in the view (the pillars, the bond beam on them) stays drawn, bare where the bricks went
+          host.fallen.add(partId)
+          if (host.parts.some((id: string) => !host.fallen.has(id))) {
+            dirty.delete(host); paint(host); invalidate(); invalidateShadow()
+            continue
+          }
+          dispose(host); views.delete(host.host)
+          // the range stays collapsed (the renderer hides the part); `restore` puts it back
+          if (host.saved) dropped.push(host)
         }
-        const v = host
-        dispose(v); views.delete(v.host)
-        // the range stays collapsed (the renderer hides the part); `restore` puts it back
-        if (v.saved) dropped.push(v)
       },
       /** LOD 0 draws the cut wall; LOD 1 and 2 give the wall its box back. */
       setLod(level: number): void {
