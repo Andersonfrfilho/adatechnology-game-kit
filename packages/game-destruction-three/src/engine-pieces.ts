@@ -268,16 +268,16 @@ export class EnginePieces {
     this.ignored.clear()
   }
 
-  /**
-   * The ground under the disc changed (the host dug or heaped it): its tiles are laid again before the next step, and what the new ground reaches into is lifted
-   * onto it once, as one made in the ground is (`underGround`): the engine pushes a deep one out too slowly and puts it to sleep half way.
-   */
   /** A blast at (x, z): the tiles within `radius` of it that are not laid, or are marked, are laid at the start of the next `prepare`, after the ground the blast changed has been told. */
   layAhead(x: number, z: number, radius: number): void {
     if ((this.o.blastTiles ?? BLAST_TILES) <= 0) return
     this.blasts.push({ x, z, radius: Math.min(radius, BLAST_REACH) })
   }
 
+  /**
+   * The ground under the disc changed (the host dug or heaped it): its tiles are laid again before the next step, and what the new ground reaches into is lifted
+   * onto it once, as one made in the ground is (`underGround`): the engine pushes a deep one out too slowly and puts it to sleep half way.
+   */
   groundChanged(x: number, z: number, radius: number): void {
     this.markDirty(x, z, radius)
     for (const [b, link] of this.links) {
