@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
 import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
 import type { GroundRect, GroundTile } from './engine-ground'
@@ -121,6 +121,8 @@ const far = (a: number, b: number): boolean => Math.abs(a - b) > 1e-6
 const OUT_TRIES = 8
 /** The first step (m) a wedged piece is lifted by (`outOfStatics`). */
 const WEDGE_LIFT = 0.1
+/** How far (m) around a removed piece a sleeping one is woken: what rested on it touched it. */
+const WAKE_MARGIN = 0.1
 /** A lift that leaves more than this share of the depth it had is no way out of that fixed thing: the piece is in two (`outOfStatics`). */
 const NO_PROGRESS = 0.75
 /** How far apart (m) the poses are that a wedge lift is checked at on its way up: about the piece's thinnest half, so it cannot step over a slab it would cross. */
@@ -232,17 +234,28 @@ export class EnginePieces {
     if (link.seen !== this.updates) this.remove(b)
   }
 
-  remove(b: PieceBody): void {
+  remove(b: PieceBody, wakeNeighbours = true): void {
     const link = this.links.get(b)
     if (!link) return
     this.world.removeBody(link.id)
+    // an awake piece shares its island with what rests on it, so only a sleeping one leaves sleepers behind
+    if (wakeNeighbours && b.sleeping) this.wakeAround(b, link.pos)
     this.byUser.delete(link.user)
     if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
   }
 
+  /** What lay on a piece that went is awake again (a sleeping body holds no contact with what is no longer there). */
+  private wakeAround(b: PieceBody, at: readonly number[]): void {
+    const boxes: readonly PartBox[] = b.partBoxes && b.partBoxes.length > 0 ? b.partBoxes : [{ center: [0, 0, 0], half: b.halfExtents }]
+    let reach = 0
+    for (const box of boxes) reach = Math.max(reach, Math.hypot(...box.center) + Math.hypot(...box.half))
+    reach += WAKE_MARGIN
+    this.world.wakeInBox([at[0]! - reach, at[1]! - reach, at[2]! - reach], [at[0]! + reach, at[1]! + reach, at[2]! + reach])
+  }
+
   clear(): void {
-    for (const b of [...this.links.keys()]) this.remove(b)
+    for (const b of [...this.links.keys()]) this.remove(b, false)
     for (const t of this.tiles.values()) {
       this.world.removeBody(t.ground)
       if (t.steps !== null) this.world.removeBody(t.steps)
@@ -336,6 +349,7 @@ export class EnginePieces {
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
     this.layBlastGround()
+    this.makeBodies(list)
     for (const b of list) this.sync(b, dt, h)
     this.layGround(list, dt)
     this.keepApart(apart)
@@ -500,42 +514,28 @@ export class EnginePieces {
     }
   }
 
-  /** Makes the body of a piece, or brings it up to date with what changed on the piece since the last step (moved, pushed, picked up, put to sleep). */
-  private sync(b: PieceBody, dt: number, h: number): void {
-    let c = this.centre(b)
-    const q = b.root.quaternion
-    let link = this.links.get(b)
-    if (!link) {
+  /** The bodies of the pieces that have none yet, made in one batch (one broadphase insert, ids in list order) and then each checked against the fixed things. */
+  private makeBodies(list: readonly PieceBody[]): void {
+    const fresh = list.filter((b) => !this.links.has(b))
+    if (fresh.length === 0) return
+    const users: number[] = []
+    const descs = fresh.map((b) => {
       const under = this.underGround(b)
       if (under > 0) {
         b.root.position.y += under
         b.root.updateMatrixWorld(true)
-        c = this.centre(b)
       }
       const user = this.nextUser++
-      const id = this.world.createBody({
-        shape: this.shapeOf(b),
-        motion: b.held ? 'kinematic' : 'dynamic',
-        position: [c.x, c.y, c.z],
-        rotation: [q.x, q.y, q.z, q.w],
-        mass: b.mass,
-        inertia: this.inertiaOf(b),
-        centreAtOrigin: true,
-        material: this.material(b),
-        layer: 'debris',
-        // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)
-        angularDamping: 0,
-        linearDamping: 0,
-        // swept (Jolt's linear cast) so nothing the engine has is passed through, now that the kit's sweep no longer sets a piece back from it (`sweepOn`); the
-        // engine casts only a body that moves more than most of its own thickness in a step, so one at rest costs nothing more
-        continuous: true,
-        rolling: this.rollingOf(b),
-        sleeping: b.sleeping,
-        user,
-        linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
-        angularVelocity: [b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2]],
-      })
-      link = {
+      users.push(user)
+      return this.bodyDesc(b, user)
+    })
+    const ids = this.world.createBodies(descs)
+    fresh.forEach((b, i) => {
+      const c = this.centre(b)
+      const q = b.root.quaternion
+      const user = users[i] as number
+      const id = ids[i] as BodyId
+      const link: Link = {
         id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity],
         held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1], isSlipping: false,
       }
@@ -543,8 +543,42 @@ export class EnginePieces {
       this.byUser.set(user, b)
       this.byObject.set(b.objectId, b)
       this.outOfStatics(b, link)
-      return
+    })
+  }
+
+  private bodyDesc(b: PieceBody, user: number): BodyDesc {
+    const c = this.centre(b)
+    const q = b.root.quaternion
+    return {
+      shape: this.shapeOf(b),
+      motion: b.held ? 'kinematic' : 'dynamic',
+      position: [c.x, c.y, c.z],
+      rotation: [q.x, q.y, q.z, q.w],
+      mass: b.mass,
+      inertia: this.inertiaOf(b),
+      centreAtOrigin: true,
+      material: this.material(b),
+      layer: 'debris',
+      // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)
+      angularDamping: 0,
+      linearDamping: 0,
+      // swept (Jolt's linear cast) so nothing the engine has is passed through, now that the kit's sweep no longer sets a piece back from it (`sweepOn`); the
+      // engine casts only a body that moves more than most of its own thickness in a step, so one at rest costs nothing more
+      continuous: true,
+      rolling: this.rollingOf(b),
+      sleeping: b.sleeping,
+      user,
+      linearVelocity: [b.velocity[0], b.velocity[1], b.velocity[2]],
+      angularVelocity: [b.angularVelocity[0], b.angularVelocity[1], b.angularVelocity[2]],
     }
+  }
+
+  /** Brings the body of a piece up to date with what changed on the piece since the last step (moved, pushed, picked up, put to sleep). */
+  private sync(b: PieceBody, dt: number, h: number): void {
+    const c = this.centre(b)
+    const q = b.root.quaternion
+    const link = this.links.get(b)
+    if (!link) return
     // by value: the renderer hands new arrays for the same boxes when it measures a piece again, and a new shape wakes the body; the same objects as last time
     // are the same shape, and are not turned into text again (it was a sixth of an update with 200 pieces)
     if (!this.sameFrom(b, link.shapeFrom)) this.reshape(b, link)
