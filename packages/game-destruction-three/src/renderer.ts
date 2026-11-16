@@ -7,8 +7,9 @@ import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
-import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris } from './blast-debris'
-import type { DebrisCostSample, ResolvedBlastDebris } from './blast-debris'
+import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
+import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
+import type { DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -73,6 +74,21 @@ const STRUCTURAL_EVENTS: ReadonlySet<DestructionEventType> = new Set<Destruction
 ])
 /** Fragments of a fracture spawned in one go before the frame budget is looked at, so a small break is never split over frames. */
 const MIN_FRAGMENTS_PER_SLICE = 8
+
+/** A loose group waiting its turn to become a piece (`RendererOptions.workBudget`): data only, so it can be saved. */
+interface PendingSplit {
+  readonly objectId: string
+  /** The smallest part id of the group when it came loose: the group is the one holding it at its turn. */
+  readonly part: string
+  readonly torn: ReadonlyArray<readonly [string, string]>
+}
+
+/** Fragments of a fracture still to spawn from `from` (`RendererOptions.workBudget`): data, not a closure. */
+interface FragmentSlice {
+  readonly ev: Ev<'fracture'>
+  readonly from: number
+  readonly look: { def: MaterialDef | undefined; color: number; opacity: number; transparent: boolean }
+}
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
 const STATIC_REFRESH = 0.5
 /**
@@ -351,8 +367,13 @@ class Renderer implements DestructionRenderer {
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
   /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
   private readonly trickles: Array<{ point: Vec3; normal: Vec3; anchor: EmitterAnchor | null; color: number | undefined; left: number; total: number; next: number; source: string | undefined }> = []
-  /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
-  private readonly slices: Array<() => void> = []
+  /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget; as data under `workBudget`. */
+  private readonly slices: Array<(() => void) | FragmentSlice> = []
+  /** The frame budget of work units the explosion's deferred work draws from (`RendererOptions.workBudget`), null when the clock cuts it as before. */
+  private readonly work: WorkBudget | null
+  private readonly workCosts: Required<WorkUnitCosts>
+  /** The loose groups waiting to become pieces under `workBudget`, as data: the object, a part of the group, and the tearing joints read when it came loose. */
+  private readonly splitQueue = new WorkQueue<PendingSplit>('split')
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
   private sliceDeadline = Infinity
   /** The clock the drain reads; a budget lends its own while it runs the queue. */
@@ -361,10 +382,10 @@ class Renderer implements DestructionRenderer {
   private attached = false
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length,
+    pending: () => this.queue.length + this.slices.length + this.splitQueue.size,
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
-      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length > 0; guard++) this.runBudgeted(Infinity, () => 0)
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
     },
     attach: () => {
       this.attached = true
@@ -429,6 +450,8 @@ class Renderer implements DestructionRenderer {
     const priors = resolveBlastDebris(o.blastDebris)
     this.costMeter = new PhysicsCostMeter(priors.physicsCostPerBodyMs, priors.wakeCostPerBodyMs)
     this.eventBudgetMs = o.eventBudgetMs ?? Infinity
+    this.work = o.workBudget ? new WorkBudget(o.workBudget) : null
+    this.workCosts = resolveWorkUnitCosts(o.workBudget?.costs)
     this.box = new THREE.Box3()
     this.tmpQ = new THREE.Quaternion()
     this.v1 = new THREE.Vector3()
@@ -951,6 +974,7 @@ class Renderer implements DestructionRenderer {
     if (this.disposed) return
     dt = clamp(dt, 0, 0.1)
     this.time += dt
+    this.work?.beginFrame()
     if (!this.attached) this.drainQueue()
     this.checkBroken()
     for (const b of this.bounds.values()) b.onFrame?.(dt)
@@ -1009,7 +1033,8 @@ class Renderer implements DestructionRenderer {
   }
 
   /** Applies the waiting events in order until the deadline, after the slices earlier events left; always at least one unit when something waits. Returns the units run. */
-  private runBudgeted(deadline: number, clock: () => number): number {
+  private runBudgeted(deadline: number, clock: () => number, all = false): number {
+    if (this.work) return this.runWork(this.work, all)
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
     const batch = this.queue.splice(0, this.queue.length)
     const outerClock = this.drainClock
@@ -1037,12 +1062,44 @@ class Renderer implements DestructionRenderer {
     return ran
   }
 
-  /** Runs the work left by earlier frames until the deadline; at least one piece per frame, so it always finishes. */
+  /**
+   * One frame under `workBudget`: the fragments left by earlier frames, then every waiting event (its effects show in the frame it happened; it only leaves less of the
+   * budget), then the loose groups whose turn it is. No clock is read. `all` runs everything (a flush).
+   */
+  private runWork(work: WorkBudget, all: boolean): number {
+    const batch = this.queue.splice(0, this.queue.length)
+    const outerDeadline = this.sliceDeadline
+    // a finite deadline only says "in a drain": under the budget the work stops on units, never on the clock
+    this.sliceDeadline = all ? Infinity : 0
+    let ran = 0
+    try {
+      // the work earlier frames left goes first, as without the budget
+      ran += this.runSlices(Infinity)
+      for (const ev of batch) {
+        work.take('event', this.workCosts.perEvent)
+        try {
+          this.apply(ev)
+        } catch (err) {
+          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ev.type, err)
+        }
+        ran++
+      }
+      if (all) ran += this.runSlices(Infinity)
+      ran += this.runSplits(work, all)
+    } finally {
+      this.sliceDeadline = outerDeadline
+    }
+    return ran
+  }
+
+  /** Runs the work left by earlier frames until the deadline (under `workBudget`, while units are left); at least one piece per frame, so it always finishes. */
   private runSlices(deadline: number): number {
     let ran = 0
-    for (; this.slices.length > 0 && (ran === 0 || this.drainClock() < deadline); ran++) {
+    for (; this.slices.length > 0 && (ran === 0 || (this.work ? this.work.remaining > 0 || this.sliceDeadline === Infinity : this.drainClock() < deadline)); ran++) {
       try {
-        this.slices.shift()!()
+        const slice = this.slices.shift()!
+        if (typeof slice === 'function') slice()
+        else this.spawnFragments(slice.ev, slice.from, slice.look)
       } catch (err) {
         if (typeof console !== 'undefined') console.error('game-destruction-three: failed to run deferred work', err)
       }
@@ -1894,7 +1951,13 @@ class Renderer implements DestructionRenderer {
     const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
     const step = this.low ? 2 : 1
     for (let i = from; i < ev.fragments.length; i += step) {
-      if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && this.drainClock() >= this.sliceDeadline) {
+      if (this.work && this.sliceDeadline !== Infinity) {
+        if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && !this.work.tryTake('fragment', this.workCosts.perFragment)) {
+          this.slices.push({ ev, from: i, look })
+          return
+        }
+        if (i - from < MIN_FRAGMENTS_PER_SLICE * step) this.work.take('fragment', this.workCosts.perFragment)
+      } else if (i - from >= MIN_FRAGMENTS_PER_SLICE * step && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => this.spawnFragments(ev, i, look))
         return
       }
@@ -1990,6 +2053,10 @@ class Renderer implements DestructionRenderer {
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
     const torn = [...tearing, ...tornPairsOf(st)]
+    if (this.work) {
+      this.queueLoose(b, st, torn)
+      return
+    }
     for (let i = 0; i < loose; i++) {
       if (i > 0 && this.drainClock() >= this.sliceDeadline) {
         this.slices.push(() => {
@@ -2007,6 +2074,12 @@ class Renderer implements DestructionRenderer {
       }
       this.adoptSplit(b, newId)
     }
+    this.afterSplit(b, torn)
+  }
+
+  /** What is left of an object after loose groups came off it: its piece takes the box and contacts of what is left, or furniture left without its feet becomes one. */
+  private afterSplit(b: Bound, torn: ReadonlyArray<readonly [string, string]>): void {
+    const objectId = b.id
     this.tetherTorn(torn)
     const old = b.piece
     if (old) {
@@ -2028,6 +2101,73 @@ class Renderer implements DestructionRenderer {
       // the host stops keeping the footprint it had where it stood: it is a body that moves now
       this.o.onLoosened?.(objectId, piece, 'apart')
     }
+  }
+
+  /**
+   * Under `workBudget`: each loose group of the object not already waiting joins the split queue, ranked by its distance to the player (read now, once) and its smallest part
+   * id, and charged by the size of its work. Until its turn it stays in the object, drawn and solid where it stood.
+   */
+  private queueLoose(b: Bound, st: ObjectState, torn: ReadonlyArray<readonly [string, string]>): void {
+    const focus = this.o.focus?.()
+    for (let g = 1; g < st.groups.length; g++) {
+      const group = st.groups[g]!
+      const part = [...group].sort()[0]
+      if (part === undefined || this.splitQueue.has(`${b.id}\0${part}`)) continue
+      if (group.some((id) => this.splitQueue.has(`${b.id}\0${id}`))) continue
+      let vertices = 0
+      const hosts = new Set<HostVis>()
+      const box = this.box.makeEmpty()
+      for (const id of group) {
+        for (const mv of b.parts.get(id)?.meshes ?? []) {
+          vertices += mv.range ? mv.range[1] - mv.range[0] : (mv.mesh.geometry.getAttribute('position')?.count ?? 0)
+          if (mv.host && !mv.loose) hosts.add(mv.host)
+          if (focus) box.union(this.visuals.worldBox(mv, new this.THREE.Box3()))
+        }
+      }
+      let hostVertices = 0
+      for (const host of hosts) hostVertices += host.mesh.geometry.getAttribute('position')?.count ?? 0
+      const centre = box.isEmpty() ? null : box.getCenter(this.v1)
+      const priority = focus && centre ? Math.hypot(centre.x - focus[0], centre.y - focus[1], centre.z - focus[2]) : 0
+      const units = splitWorkUnits(this.workCosts, { vertices, hostVertices, objectParts: st.parts.length })
+      this.splitQueue.push({ objectId: b.id, part, torn: torn.map(([first, second]) => [first, second] as const) }, priority, `${b.id}\0${part}`, units)
+    }
+  }
+
+  /** The loose groups whose turn it is this frame become pieces; each object they came off is measured again once after its batch. Returns how many split. */
+  private runSplits(work: WorkBudget, all: boolean): number {
+    const turn = all ? this.drainSplits() : this.splitQueue.release(work)
+    const touched = new Map<string, ReadonlyArray<readonly [string, string]>>()
+    let ran = 0
+    for (const entry of turn) {
+      const b = this.bounds.get(entry.objectId)
+      const st = this.world.state(entry.objectId)
+      if (!b || !st || !this.world.has(entry.objectId)) continue
+      // groups renumber as others split, and may have grown since: the group is the one holding the part now
+      const index = st.groups.findIndex((group, g) => g > 0 && group.includes(entry.part))
+      if (index < 1) continue
+      let newId: string
+      try {
+        newId = this.world.splitGroup(entry.objectId, index)
+      } catch {
+        continue
+      }
+      this.adoptSplit(b, newId)
+      this.staticDirty.add(entry.objectId)
+      touched.set(entry.objectId, [...(touched.get(entry.objectId) ?? []), ...entry.torn])
+      ran++
+    }
+    for (const [objectId, torn] of touched) {
+      const b = this.bounds.get(objectId)
+      if (b) this.afterSplit(b, torn)
+    }
+    return ran
+  }
+
+  /** Every waiting split, in queue order (a flush). */
+  private drainSplits(): PendingSplit[] {
+    const out = this.splitQueue.saveState().map((entry) => entry.item)
+    this.splitQueue.clear()
+    return out
   }
 
   /** The renderer side of `splitGroup`: a new group holding the meshes of the new object, made a piece. */
@@ -2538,7 +2678,12 @@ class Renderer implements DestructionRenderer {
 
   /** One frame of the wake queue: the step cost of the frames before sizes the batch. */
   private advanceWakes(dt: number): void {
-    this.blastWakes?.advance(dt, this.cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs)
+    if (!this.blastWakes) return
+    const work = this.work
+    // under the work budget the wakes draw what the frame's other work left (the cost still sizes the batch below it)
+    const limit = work ? work.fits(this.workCosts.perWake) : Infinity
+    const woken = this.blastWakes.advance(dt, this.cost?.stepMs ?? 0, this.costMeter.wakeCostPerBodyMs, limit)
+    work?.take('wake', woken * this.workCosts.perWake)
   }
 
   /** Awake bodies in the physics world (what a blast's debris adds to). */
@@ -2918,6 +3063,7 @@ class Renderer implements DestructionRenderer {
     this.staticAll = true
     this.queue.length = 0
     this.slices.length = 0
+    this.splitQueue.clear()
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)
     for (const key of [...this.burnSounds.keys()]) this.endBurnSound(key)
