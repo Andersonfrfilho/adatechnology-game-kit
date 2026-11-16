@@ -308,8 +308,14 @@ export function createDestructionRenderer(THREE: ThreeNamespace, options: Render
   if (options.jitWarmUp !== false) {
     // the throwaway renderer takes no number of the game's: the first real one is still `destruction-1`
     const before = rendererCount
-    warmUpDestructionJit(THREE, (inner) => new Renderer(THREE, inner), options.jitWarmUp === true ? {} : options.jitWarmUp)
-    rendererCount = before
+    try {
+      warmUpDestructionJit(THREE, (inner) => new Renderer(THREE, inner), options.jitWarmUp === true ? {} : options.jitWarmUp)
+    } catch (error) {
+      // the warm-up only saves time: the game starts without it
+      warnOnce('game-destruction-three.jit-warm-up-failed', `game-destruction-three skipped the JIT warm-up: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      rendererCount = before
+    }
   }
   return new Renderer(THREE, options)
 }

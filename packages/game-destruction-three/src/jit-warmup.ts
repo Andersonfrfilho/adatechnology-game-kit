@@ -3,8 +3,9 @@ import type * as THREE_NS from 'three'
 import { createDestruction, inferJoints } from '@adatechnology/game-destruction'
 import type { JointSpec, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
-import type { PhysicsEngine, PhysicsLoop, WorldDesc } from '@adatechnology/game-physics'
+import type { PhysicsEngine, PhysicsLoop, PhysicsWorld, WorldDesc } from '@adatechnology/game-physics'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
+import { createVfx } from '@adatechnology/game-vfx'
 
 import type { DestructionRenderer, RendererOptions, ThreeNamespace } from './types'
 
@@ -33,6 +34,13 @@ const CRATER_DEPTH = 0.3
 const CRATER_RADIUS = 2.5
 // far from where a host puts anything: the throwaway scene never meets the game's
 const ORIGIN: Vec3 = [4000, 0, 4000]
+
+interface BlastAndRunParams {
+  readonly world: ReturnType<typeof createDestruction>
+  readonly loop: PhysicsLoop | undefined
+  readonly renderer: DestructionRenderer
+  readonly onCrater: () => void
+}
 
 const warmed = new WeakSet<object>()
 const OWN_SOLVER = {}
@@ -74,43 +82,54 @@ const brickWall = (THREE: ThreeNamespace): { readonly parts: PartSpec[]; readonl
  * where a crater was dug. Nothing of it touches a game world (own world, own renderer, own random stream) and nothing of it stays.
  */
 const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions) => DestructionRenderer, options: JitWarmUpOptions): JitWarmUpReport => {
-  const engineWorld = options.engine?.createWorld(options.world ?? KIT_WORLD)
-  const loop: PhysicsLoop | undefined = engineWorld ? createPhysicsLoop(engineWorld) : undefined
   const scene = new THREE.Scene()
   const world = createDestruction()
+  // an effects world of its own: without one the renderer makes its own and warns the host, who did lend one
+  const vfx = createVfx({})
   let craterDepth = 0
   const terrainAt = (x: number, z: number): number => -craterDepth * Math.max(0, 1 - Math.hypot(x - ORIGIN[0] - BLAST_AT[0], z - ORIGIN[2] - BLAST_AT[2]) / CRATER_RADIUS)
-  const renderer = makeRenderer({ physics: loop ?? 'own', scene, world, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, jitWarmUp: false })
-  const wall = brickWall(THREE)
-  const id = world.add({ parts: wall.parts, joints: wall.joints }, { position: ORIGIN })
-  const root = new THREE.Group()
-  root.position.set(...ORIGIN)
-  root.add(wall.mesh)
-  scene.add(root)
-  root.updateMatrixWorld(true)
-  renderer.bind(id, root, { parts: Object.fromEntries(wall.parts.map((part, index) => [part.id, { mesh: wall.mesh, range: wall.ranges[index] as [number, number] }])) })
-  const seen = { pieces: 0, fragments: 0 }
+  let engineWorld: PhysicsWorld | undefined
+  let renderer: DestructionRenderer | undefined
+  let bound: string | undefined
   try {
-    const point: Vec3 = [ORIGIN[0] + BLAST_AT[0], ORIGIN[1] + BLAST_AT[1], ORIGIN[2] + BLAST_AT[2]]
-    const report = world.explode(point, BLAST_ENERGY, BLAST_RADIUS, 'warm-up')
-    renderer.explode(point, BLAST_ENERGY, BLAST_RADIUS, { report, visual: false })
-    craterDepth = CRATER_DEPTH
-    renderer.wakeRegion(point[0], point[2], CRATER_RADIUS)
-    for (let frame = 0; frame < FRAMES; frame++) {
-      world.update(FRAME_SECONDS)
-      loop?.step(FRAME_SECONDS)
-      renderer.update(FRAME_SECONDS)
-      const stats = renderer.stats()
-      seen.pieces = Math.max(seen.pieces, stats.pieces)
-      seen.fragments = Math.max(seen.fragments, stats.fragments)
-    }
-    return seen
+    engineWorld = options.engine?.createWorld(options.world ?? KIT_WORLD)
+    const loop: PhysicsLoop | undefined = engineWorld ? createPhysicsLoop(engineWorld) : undefined
+    renderer = makeRenderer({ physics: loop ?? 'own', scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, jitWarmUp: false })
+    const wall = brickWall(THREE)
+    const root = new THREE.Group()
+    root.position.set(...ORIGIN)
+    root.add(wall.mesh)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    bound = world.add({ parts: wall.parts, joints: wall.joints }, { position: ORIGIN })
+    renderer.bind(bound, root, { parts: Object.fromEntries(wall.parts.map((part, index) => [part.id, { mesh: wall.mesh, range: wall.ranges[index] as [number, number] }])) })
+    return blastAndRun({ world, loop, renderer, onCrater: () => (craterDepth = CRATER_DEPTH) })
   } finally {
-    renderer.release(id)
-    renderer.dispose()
+    if (renderer && bound !== undefined) renderer.release(bound)
+    renderer?.dispose()
     discardObject3D(scene.children.slice())
+    vfx.clear()
     engineWorld?.dispose()
   }
+}
+
+/** The blast and the frames after it; the most pieces and fragments seen. */
+const blastAndRun = ({ world, loop, renderer, onCrater }: BlastAndRunParams): JitWarmUpReport => {
+  const seen = { pieces: 0, fragments: 0 }
+  const point: Vec3 = [ORIGIN[0] + BLAST_AT[0], ORIGIN[1] + BLAST_AT[1], ORIGIN[2] + BLAST_AT[2]]
+  const report = world.explode(point, BLAST_ENERGY, BLAST_RADIUS, 'warm-up')
+  renderer.explode(point, BLAST_ENERGY, BLAST_RADIUS, { report, visual: false })
+  onCrater()
+  renderer.wakeRegion(point[0], point[2], CRATER_RADIUS)
+  for (let frame = 0; frame < FRAMES; frame++) {
+    world.update(FRAME_SECONDS)
+    loop?.step(FRAME_SECONDS)
+    renderer.update(FRAME_SECONDS)
+    const stats = renderer.stats()
+    seen.pieces = Math.max(seen.pieces, stats.pieces)
+    seen.fragments = Math.max(seen.fragments, stats.fragments)
+  }
+  return seen
 }
 
 /**

@@ -1,5 +1,7 @@
 import * as THREE from 'three'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+import { resetWarnOnce } from '@adatechnology/game-contracts'
 
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
@@ -49,5 +51,25 @@ describe('the JIT warm-up', () => {
     expect(made).toBe(1)
     createDestructionRenderer(THREE, { ...base, jitWarmUp: { engine: skipped } }).dispose()
     expect(made).toBe(1)
+  })
+
+  it('warns nothing: its renderer has an effects world of its own', async () => {
+    const engine = await createJoltEngine()
+    resetWarnOnce()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    warmUpDestructionJit(THREE, make, { engine: { name: 'quiet', createWorld: (desc?: Parameters<typeof engine.createWorld>[0]) => engine.createWorld(desc) } })
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('a warm-up that fails does not stop the renderer from being made, and says so once', () => {
+    resetWarnOnce()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const broken = { name: 'broken', createWorld: (): never => { throw new Error('no compounds here') } }
+    const renderer = createDestructionRenderer(THREE, { physics: 'own', scene: new THREE.Scene(), world: createDestruction(), jitWarmUp: { engine: broken } })
+    expect(renderer).toBeDefined()
+    expect(warn.mock.calls.some(([message]) => String(message).includes('skipped the JIT warm-up'))).toBe(true)
+    renderer.dispose()
+    warn.mockRestore()
   })
 })
