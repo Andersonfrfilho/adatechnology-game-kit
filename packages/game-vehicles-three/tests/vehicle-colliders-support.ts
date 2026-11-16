@@ -93,7 +93,7 @@ export const isInside = (piece: Piece, x: number, y: number, z: number, slack: n
 }
 
 
-/** The drawn triangles of the meshes in the frame, in a grid of 2 cm cells (a triangle in every cell its box touches): the distance of a point to the drawn surface within 1 cm. */
+/** The drawn triangles of the meshes in the frame, in a grid of 2 cm cells (a triangle in every cell it touches, found by halving long triangles): the distance of a point to the drawn surface within 1 cm. */
 export class Surface {
   /** Cell number to its place in `starts`; the triangles of cell `i` are `members[starts[i] .. starts[i + 1])`. */
   private readonly cellIndex = new Map<number, number>()
@@ -110,6 +110,7 @@ export class Surface {
     const eachCell = (at: number, visit: (cell: number) => void): void => {
       const seen = new Set<number>()
       const walk = (a: number[], b: number[], c: number[], depth: number): void => {
+        if (![...a, ...b, ...c].every(Number.isFinite)) return
         const lo = [0, 1, 2].map((k) => Math.floor(Math.min(a[k]!, b[k]!, c[k]!) / CELL))
         const hi = [0, 1, 2].map((k) => Math.floor(Math.max(a[k]!, b[k]!, c[k]!) / CELL))
         const small = hi[0]! - lo[0]! <= 1 && hi[1]! - lo[1]! <= 1 && hi[2]! - lo[2]! <= 1
