@@ -92,6 +92,9 @@ const VERTICES_PER_UPDATE = 3000
 const FEET_BAND = 0.03
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/** Most milliseconds of a frame the boxes fitted ahead of the blow take (`fitBoxesAhead`), whatever the budget the host gives the queue: a house is a few hundred parts, fitted over a few seconds. */
+const PREFIT_SLICE_MS = 1
+
 /** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
 const CONTACT_MESHES = 12
 /** Most meshes of a loose piece other pieces land on one by one (`partBoxes`: a shelf's boards, not the box around the shelf); one with more is landed on by its box. */
@@ -304,6 +307,13 @@ export function createDestructionRenderer(THREE: ThreeNamespace, options: Render
   return new Renderer(THREE, options)
 }
 
+/** true when both lists hold the very same numbers, in the same order. */
+const sameNumbers = (a: readonly number[], b: readonly number[]): boolean => {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}
+
 class Renderer implements DestructionRenderer {
   private readonly world: RendererOptions['world']
   private readonly scene: THREE_NS.Scene
@@ -353,6 +363,10 @@ class Renderer implements DestructionRenderer {
   private readonly trickles: Array<{ point: Vec3; normal: Vec3; anchor: EmitterAnchor | null; color: number | undefined; left: number; total: number; next: number; source: string | undefined }> = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
+  /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
+  private readonly fittedBoxes = new Map<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
+  /** Objects whose ranged parts are still to be fitted ahead of the blow that breaks them, a part per step, only with time left in the frame. */
+  private readonly prefitting: Array<{ readonly b: Bound; readonly parts: MeshVis[]; next: number }> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
   private sliceDeadline = Infinity
   /** The clock the drain reads; a budget lends its own while it runs the queue. */
@@ -361,10 +375,10 @@ class Renderer implements DestructionRenderer {
   private attached = false
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length,
+    pending: () => this.queue.length + this.slices.length + this.prefitLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
-      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length > 0; guard++) this.runBudgeted(Infinity, () => 0)
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0)
     },
     attach: () => {
       this.attached = true
@@ -552,6 +566,7 @@ class Renderer implements DestructionRenderer {
     }
     this.bounds.set(objectId, bound)
     for (const pv of bound.parts.values()) this.tagPart(pv, objectId)
+    if (this.o.fitBoxesAhead !== false) this.prefitPartBoxes(bound)
   }
 
   /**
@@ -619,6 +634,13 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  /** Drop an object from the bound ones, with the boxes fitted for its parts. */
+  private forgetBound(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (b) for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+    this.bounds.delete(objectId)
+  }
+
   unbind(objectId: string): void {
     this.staticDirty.add(objectId)
     this.clipped.delete(objectId)
@@ -626,7 +648,7 @@ class Renderer implements DestructionRenderer {
     if (!b) return
     this.restore(objectId)
     this.pieceSys.remove(objectId)
-    this.bounds.delete(objectId)
+    this.forgetBound(objectId)
     this.hitPoints.forget(objectId)
   }
 
@@ -1032,6 +1054,7 @@ class Renderer implements DestructionRenderer {
         }
         ran++
       }
+      if (this.queue.length === 0 && this.slices.length === 0) ran += this.runPrefit(deadline, clock, ran === 0)
     } finally {
       this.sliceDeadline = Infinity
       this.drainClock = outerClock
@@ -1992,23 +2015,28 @@ class Renderer implements DestructionRenderer {
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
     const torn = [...tearing, ...tornPairsOf(st)]
-    for (let i = 0; i < loose; i++) {
-      if (i > 0 && this.drainClock() >= this.sliceDeadline) {
-        this.slices.push(() => {
-          this.staticDirty.add(objectId)
-          this.splitLoose(objectId, torn)
-        })
-        return
+    let deferred = false
+    this.visuals.batchRebuilds(() => {
+      for (let i = 0; i < loose; i++) {
+        if (i > 0 && this.drainClock() >= this.sliceDeadline) {
+          this.slices.push(() => {
+            this.staticDirty.add(objectId)
+            this.splitLoose(objectId, torn)
+          })
+          deferred = true
+          return
+        }
+        // the loose groups are always read from index 1: each split renumbers the rest
+        let newId: string
+        try {
+          newId = this.world.splitGroup(objectId, 1)
+        } catch {
+          return
+        }
+        this.adoptSplit(b, newId)
       }
-      // the loose groups are always read from index 1: each split renumbers the rest
-      let newId: string
-      try {
-        newId = this.world.splitGroup(objectId, 1)
-      } catch {
-        break
-      }
-      this.adoptSplit(b, newId)
-    }
+    })
+    if (deferred) return
     this.tetherTorn(torn)
     const old = b.piece
     if (old) {
@@ -2279,6 +2307,51 @@ class Renderer implements DestructionRenderer {
     body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
   }
 
+  /** `fitOrientedBoxes` of a ranged part's points, taken from what it gave before when the points and the triangles are the very same numbers. */
+  private fitRanged(mv: MeshVis, points: number[]): ReturnType<typeof fitOrientedBoxes> {
+    const triangles = this.trianglesOf(mv)
+    const kept = this.fittedBoxes.get(mv)
+    if (kept && sameNumbers(kept.points, points) && sameNumbers(kept.triangles, triangles)) return kept.boxes
+    const boxes = fitOrientedBoxes(points, triangles)
+    this.fittedBoxes.set(mv, { points, triangles, boxes })
+    return boxes
+  }
+
+  /** Queue the ranged parts of a bound object to be fitted while a frame has time to spare, read the way `setContacts` reads them while the object stands where it is. */
+  private prefitPartBoxes(b: Bound): void {
+    const parts = this.meshesOf(b).filter((mv) => mv.range && mv.host && !mv.loose)
+    if (parts.length > 0) this.prefitting.push({ b, parts, next: 0 })
+  }
+
+  private prefitLeft(): number {
+    let left = 0
+    for (const job of this.prefitting) left += job.parts.length - job.next
+    return left
+  }
+
+  /** Fit queued parts one at a time until the deadline (one at least when `force`: nothing else ran). Returns the parts fitted. */
+  private runPrefit(deadline: number, clock: () => number, force: boolean): number {
+    let ran = 0
+    const frames = new Map<Bound, THREE_NS.Matrix4>()
+    const until = Math.min(deadline, clock() + PREFIT_SLICE_MS)
+    while (this.prefitting.length > 0 && ((force && ran === 0) || clock() < until)) {
+      const job = this.prefitting[0]!
+      const mv = job.parts[job.next++]
+      if (!mv || this.bounds.get(job.b.id) !== job.b) {
+        this.prefitting.shift()
+        continue
+      }
+      if (!mv.range || !mv.host || mv.loose) continue
+      let inverse = frames.get(job.b)
+      if (!inverse) frames.set(job.b, (inverse = specFrameInverse(this.THREE, job.b.root)))
+      mv.mesh.updateWorldMatrix(true, false)
+      const m4 = new this.THREE.Matrix4().multiplyMatrices(inverse, mv.mesh.matrixWorld)
+      this.partBoxesOf(mv, { lb: new this.THREE.Box3(), m4, from: [0, 0, 0] }, [])
+      ran++
+    }
+    return ran
+  }
+
   /** The triangles of a ranged part as vertex numbers of its own range (three each): the surface its vertices are joined by. A loose part is read from the buffer itself, not from what the host keeps for the parts that still hang on it. */
   private trianglesOf(mv: MeshVis): number[] {
     const [from, to] = mv.range ?? [0, 0]
@@ -2320,7 +2393,7 @@ class Renderer implements DestructionRenderer {
       }
       const pts: number[] = []
       this.visuals.rangePoints(mv, at.m4, pts)
-      for (const box of fitOrientedBoxes(pts, this.trianglesOf(mv))) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: box.half, rotation: box.rotation })
+      for (const box of this.fitRanged(mv, pts)) out.push({ center: [box.center[0] - cx, box.center[1] - cy, box.center[2] - cz], half: [...box.half], rotation: [...box.rotation] })
       return
     }
     const pos = new this.THREE.Vector3()
@@ -2560,7 +2633,7 @@ class Renderer implements DestructionRenderer {
     if (!bound || this.fading.has(b.objectId)) return
     this.staticDirty.add(b.objectId)
     this.pieceSys.remove(b.objectId)
-    this.bounds.delete(b.objectId)
+    this.forgetBound(b.objectId)
     this.hitPoints.forget(b.objectId)
     this.fading.set(b.objectId, { root: bound.root, age: 0 })
   }
@@ -2867,7 +2940,7 @@ class Renderer implements DestructionRenderer {
     this.restore(objectId)
     for (const id of pieces) {
       this.pieceSys.remove(id)
-      this.bounds.delete(id)
+      this.forgetBound(id)
       this.hitPoints.forget(id)
       this.broken.delete(id)
       this.staticDirty.add(id)
@@ -2907,7 +2980,7 @@ class Renderer implements DestructionRenderer {
       if (b.isSplit && b.parts.size === 0) {
         this.scene.remove(b.root)
         this.pieceSys.remove(b.id)
-        this.bounds.delete(b.id)
+        this.forgetBound(b.id)
         // its box leaves now: the periodic round only walks the objects still bound
         this.staticDirty.add(b.id)
       }
@@ -2921,6 +2994,7 @@ class Renderer implements DestructionRenderer {
     this.staticAll = true
     this.queue.length = 0
     this.slices.length = 0
+    this.prefitting.length = 0
     this.active.clear()
     for (const key of [...this.fires.keys()]) this.stopFire(key)
     for (const key of [...this.burnSounds.keys()]) this.endBurnSound(key)
@@ -2934,7 +3008,7 @@ class Renderer implements DestructionRenderer {
         for (const pv of b.parts.values()) this.visuals.restorePart(pv)
         this.scene.remove(b.root)
         this.pieceSys.remove(b.id)
-        this.bounds.delete(b.id)
+        this.forgetBound(b.id)
       }
     }
     this.fragments.clear()
