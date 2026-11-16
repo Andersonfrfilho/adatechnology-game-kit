@@ -3055,6 +3055,7 @@ Uma rodada do Jolt de `game-floorplan-three` feita com outras suítes em paralel
 2. **Calibrar `WORK_UNIT_DEFAULTS`** em cima dos três branches: os números de hoje (`perSplit` 120, `perVertex` 0,05...) são uma primeira estimativa e não foram ajustados contra os 100 W.
 3. **Ligar `prefit` (C), `ground` (G) e `body` (P) ao mesmo `WorkBudget`** quando eles entrarem; enquanto o chão não passar pelo árbitro, ligar o orçamento só espalha o corte (seção 4).
 4. **Decisões do dono:** o teto `maxWaitFrames` (tensão T1) e se o primeiro corte de uma explosão continua no próprio quadro (hoje sim, pela regra "a casa quebra na hora").
+   **Decidido em 2026-11-16:** `maxWaitFrames` 12 (0,2 s); o primeiro corte continua no próprio quadro; o orçamento entra **desligado por padrão** e só se liga quando o chão (G) e a criação de corpos (P) também tirarem do árbitro.
 
 
 ## T3.8ad — auditoria do motor de física e correções (2026-11-16)
