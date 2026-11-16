@@ -37,7 +37,7 @@ describe.skipIf(!IS_JOLT)('ground that rises under a piece that rests on it', ()
     expect(b.root.position.y).toBeGreaterThan(before + 0.05)
   })
 
-  it('the beam asleep on the rising tip ends at most 1 cm inside the ground (measured at the tip, not at the position the kit kept)', () => {
+  it('the beam asleep on the rising tip is pushed out of the ground, not left in it (measured at the tip, not at the position the kit kept)', () => {
     const b = beamOnGround()
     b.ground.raise = 0.008
     b.system.wakeRegion(5, 0, 3)
@@ -55,9 +55,7 @@ describe.skipIf(!IS_JOLT)('ground that rises under a piece that rests on it', ()
     const tipBottom = low(1)
     expect(Number.isFinite(tipBottom)).toBe(true)
     const penetration = Math.max(0, b.ground.raise - tipBottom)
-    // measured, not assumed (audit of #309): a rise the kit does not lift leaves the whole rise inside the ground (here 8 mm after 4 s: the engine does not push it out),
-    // so the bound is the rule's own: under 1 cm
-    expect(penetration).toBeLessThanOrEqual(0.01)
-    expect(penetration).toBeGreaterThan(0)
+    // measured, not assumed (audit of #309): the beam is woken with the ground and the engine clears the rise; before, it stayed 8 mm in the ground for good
+    expect(penetration).toBeLessThanOrEqual(0.002)
   })
 })

@@ -120,7 +120,11 @@ export const islandsOf = (before: readonly EnergySample[], after: readonly Energ
 
 /** R3: how much less (m) the centre moved than the mean of its vertical speeds over the update says: the part the engine's continuous collision took back. Never negative. */
 const pullBackOf = (from: EnergySample, to: EnergySample, dt: number): number =>
-  Math.max(0, to.centre[1] - from.centre[1] - ((from.velocityY + to.velocityY) / 2) * dt)
+  // audit of #311: only a body that is still coming down is pulled back by the cast; one at rest lifted by the position solver (a wake, a tile laid again) is a real gain
+  to.centre[1] - from.centre[1] <= 0 && from.velocityY < 0 && to.velocityY < 0 ? Math.max(0, to.centre[1] - from.centre[1] - ((from.velocityY + to.velocityY) / 2) * dt) : 0
+
+/** R1: how much less (rad/s) a piece must turn after the update for its lost energy to be taken as spin that paid for the rise. */
+const SPIN_PAYS = 0.1
 
 export class EnergyRuler {
   private time = 0
@@ -153,7 +157,7 @@ export class EnergyRuler {
       const to = after[index] as EnergySample
       const added = given.get(from.id) ?? 0
       this.measureEpisode(from, to, violated.has(islands[index] as number), input === 'energy', added)
-      this.measureLift(from, to, dt, input === 'energy' || added > 0)
+      this.measureLift(from, to, dt, input === 'energy', added)
       this.measureGround(to)
     })
     this.measureSleep(after, input)
@@ -238,11 +242,15 @@ export class EnergyRuler {
     return { conditioned: Math.max(gain?.conditioned ?? 0, episode.violated ? episode.gain : 0), unconditioned: Math.max(gain?.unconditioned ?? 0, episode.gain) }
   }
 
-  /** C3: centre rise beyond its own upward speed, summed per piece, in updates where the piece's energy rose (R1) and the kit gave it none (R2); also the highest upward speed gained. */
-  private measureLift(from: EnergySample, to: EnergySample, dt: number, isOutsideEnergy: boolean): void {
+  /**
+   * C3: centre rise beyond its own upward speed, summed per piece; also the highest upward speed gained. R2 (audit of #311): the energy height the kit declared is taken out of the
+   * rise, not the whole update (a pole under the balancing push declares a little on most updates and would never be read). R1: a rise the piece paid for with its own spin (a pole
+   * turning flat that climbs a ledge) is not a launch, but a rise with the energy falling and the spin not (a piece that lands at 3 m/s and pops up 5 cm) counts.
+   */
+  private measureLift(from: EnergySample, to: EnergySample, dt: number, isOutsideEnergy: boolean, declared: number): void {
     if (isOutsideEnergy) return
-    // R1: a rise the piece paid for with its own energy (a spinning pole climbing a ledge) is not a launch: it counts only in an update where its energy height also rose
-    const rise = to.energyHeight > from.energyHeight ? Math.max(0, to.centre[1] - from.centre[1] - Math.max(0, from.velocityY) * dt) : 0
+    const paidBySpin = to.energyHeight <= from.energyHeight && from.spin - to.spin > SPIN_PAYS
+    const rise = paidBySpin ? 0 : Math.max(0, to.centre[1] - from.centre[1] - Math.max(0, from.velocityY) * dt - declared)
     const total = (this.lift.get(from.id) ?? 0) + rise
     this.lift.set(from.id, total)
     this.c3Lift = Math.max(this.c3Lift, total)
