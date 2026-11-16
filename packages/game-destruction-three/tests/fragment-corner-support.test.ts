@@ -22,8 +22,8 @@ describe('what a resting fragment holds up is the rectangle it covers, not the b
     const look = system.materialFor('brick', 0xb04a30, false)
     const longMesh = system.spawn(chunk('long', [0, 0.1, 0], TURNED_45, LONG_CHUNK) as never, look, 'home', 30)
     for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
-    // beside it, across the strip (the long one runs along x = z): at (+0.3, -0.3) the wrapping box still reaches, the chunk does not
-    const smallMesh = system.spawn(chunk('small', [OFF_STRIP, 0.5, -OFF_STRIP], [0, 0, 0, 1], SMALL_CHUNK) as never, look, 'home', 30)
+    // beside it, across the strip (the long one runs along x = -z): at (+0.3, +0.3) the wrapping box still reaches, the chunk does not
+    const smallMesh = system.spawn(chunk('small', [OFF_STRIP, 0.5, OFF_STRIP], [0, 0, 0, 1], SMALL_CHUNK) as never, look, 'home', 30)
     for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
     expect(longMesh).not.toBeNull()
     const small = new THREE.Box3().setFromObject(smallMesh as THREE.Object3D)
