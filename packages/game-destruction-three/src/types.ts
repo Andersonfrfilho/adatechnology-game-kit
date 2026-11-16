@@ -81,6 +81,11 @@ export interface RendererOptions {
    * all of them, so a piece 23 m across and mostly air gets the tiles (and the solid under each) it touches, not 70. Default off: the same tiles as before (T3.8v).
    */
   tilesUnderParts?: boolean
+  /**
+   * Fit the boxes a part drawn by a range of a merged mesh gets when it comes loose (`fitOrientedBoxes`) ahead of the blow, a part at a time with the time a frame has left, so the frame
+   * that splits a house reads them instead of fitting them. The boxes are the very same numbers either way. Default on; off, they are fitted when the part breaks off.
+   */
+  fitBoxesAhead?: boolean
   /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
   debrisCost?: DebrisCostOptions
   /**
