@@ -2998,7 +2998,7 @@ Auditoria de um revisor independente sobre o que entrou na main de #302 a #316. 
 - **R2** desligava o C3 inteiro quando qualquer energia, por menor que fosse, era declarada. Agora a altura declarada é descontada da subida.
 - **R1** perdoava a subida de uma peça que perde energia. Agora só perdoa quando a energia caiu e a energia de rotação da peça (energia total menos altura e velocidade linear) caiu pelo menos o que a subida custou; uma peça que cai a 3 m/s e é empurrada 5 cm pelo contato conta.
 
-Medição com a régua apertada, tigela (`bowl-energy.test.ts`, 32 casos no Jolt): C1 −0,0195 kg·m, C2 0, C3 0,0242 m (limite 0,035), nenhum atravessou o chão. **Passa.** A sonda da sala (`room.js`, navegador) não roda no CI nem aqui (§9): falta rodá-la à mão para confirmar que a T3.8 continua ✅ com a régua apertada. Se não passar, a T3.8 volta a ficar aberta e os números vão ao dono.
+Medição com a régua apertada, tigela (`bowl-energy.test.ts`, 32 casos no Jolt): C1 −0,0195 kg·m, C2 0, C3 0,0270 m (limite 0,035; 0,0242 antes do ajuste do R1 pela energia de rotação), nenhum atravessou o chão. **Passa.** A sonda da sala (`room.js`, navegador) não roda no CI nem aqui (§9): falta rodá-la à mão para confirmar que a T3.8 continua ✅ com a régua apertada. Se não passar, a T3.8 volta a ficar aberta e os números vão ao dono.
 
 ### Fica aberto
 - Rodar a sonda da sala com a régua apertada (à mão, na trava de medição).
