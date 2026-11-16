@@ -2975,3 +2975,33 @@ flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate
 Só à mão ou na rodada diária (`tools/gpu/nightly-gpu.mjs` roda como etapa `room-explosion`, depois do `perf-gate`); nunca no CI nem no pre-push (§9). Sai com código 1 quando o Jolt + D4 passa do orçamento nos estrangulamentos que bloqueiam (padrão: 1x) ou uma página dá erro; os outros níveis (2x, 4x, 6x) e o solver próprio saem no relatório com o veredito, sem bloquear. Variáveis (todas opcionais): `ROOM_EXPLOSION_THROTTLES=1,2,4,6`, `ROOM_EXPLOSION_GATE_THROTTLES=1` (os que bloqueiam, ex. `1,2,4`), `ROOM_EXPLOSION_VARIANTS=jolt-d4` (`jolt-d4,jolt,own`), `ROOM_EXPLOSION_KINDS=blast,hammer`, `ROOM_EXPLOSION_ROUNDS=5`, `ROOM_EXPLOSION_FRAMES=660`, `ROOM_EXPLOSION_P99_MS=4`, `ROOM_EXPLOSION_MAX_MS=5`, `ROOM_EXPLOSION_STAGE_ROUNDS=3` (0 desliga a tabela de estágios) e `ROOM_EXPLOSION_STAGE_THROTTLES=1,4`, `ROOM_EXPLOSION_OUT=<arquivo.json>`. A linha de base desta seção: `ROOM_EXPLOSION_THROTTLES=1,4,6 ROOM_EXPLOSION_VARIANTS=jolt-d4,own ROOM_EXPLOSION_STAGE_ROUNDS=0` mais uma rodada só de estágios (`ROOM_EXPLOSION_ROUNDS=0`). **Hoje o gate falha a 1x na main: quem o usar para julgar uma mudança compara com a tabela acima (e com a main medida na mesma hora), não espera verde.**
 
 Limites: proxy de CPU, não AMD; máquina com outras sessões (carga 4–15); 5 rodadas por célula (3 de estágios); o D4 é a política do dono (`blastDebris=1`), o solver próprio entra só como referência.
+
+## T3.8ad — auditoria do motor de física e correções (2026-11-16)
+
+Auditoria de um revisor independente sobre o que entrou na main de #302 a #316. Todo defeito grave foi reproduzido com teste, não por suposição. Cada correção tem um teste que falha sem ela e passa com ela, menos o vazamento do `createBodies` (caminho de erro, só revisado).
+
+| # | Gravidade | Defeito | Correção | Teste |
+|---|---|---|---|---|
+| #302/#313 | alta | `pairKey` guarda só os 16 bits baixos da chave do corpo e `removeBody` não apagava os pares ignorados: o próximo corpo que reaproveitava o índice do Jolt herdava a regra "não colidir" (um caco caído sobre o poste parou dentro dele; um ladrilho de chão faria o poste atravessar o chão) | `JoltWorld.forget` apaga todo par ignorado do corpo (índice por corpo) | `game-physics-jolt/tests/ignore-reuse.test.ts` |
+| #316 | alta | `remove` só acordava o que estava em cima se a peça dormia para o kit (`b.sleeping`), e esse sinal já é falso quando `wakeRegion` acorda a peça no mesmo quadro: o que dormia em cima ficava no ar (§12) | acorda também quando a peça dormia no último passo do motor (`link.sleeping`) | caso do mesmo quadro em `engine-remove-wakes.test.ts` |
+| #314 | alta | a etapa `room-explosion` bloqueava a rodada noturna pela meta absoluta de 4/5 ms, que a main ainda não cumpre: a rodada falharia todo dia | a meta é aviso; bloqueia só regressão (mais de 25% e acima de piso de 1 ms no p99 e 5 ms no máximo) contra o último relatório que passou, guardado pela rodada | `tools/gpu/tests/room-explosion-verdict.test.mjs` |
+| #309 | média | peça dormindo com o centro fora do disco da cratera ficava até 8 mm dentro do chão para sempre (o motor só limpa corpo acordado); o teste só olhava a posição guardada pelo kit | `groundChanged` acorda a peça com 0 < penetração ≤ `ENGINE_CLEARS` | `ground-rise-lift.test.ts` mede a ponta (≤ 2 mm) |
+| #302 | média | nenhum CI rodava os testes no modo Jolt | job `jolt-mode` (CPU, sem GPU, §9) com `pnpm test:jolt` | job do CI |
+| #316 | média | "-22% de quadros acima de 5 ms" estava dentro do ruído da medição (faixas 73–99 contra 48–81) | reescrito como "sem regressão" na seção 3b e no changeset | texto |
+| #316 | baixa | `createBodies` vazava corpos e o vetor de ids se uma forma falhasse | libera o que criou antes de relançar o erro | revisão |
+| #302 | baixa | `wheelContacts` lia 4 rodas em qualquer veículo; a moto, de 2 rodas em linha, virava um eixo esquerda/direita | conta as rodas do veículo; roda sozinha tem diferencial próprio e não tem barra anti-rolagem | `game-physics-jolt/tests/motorbike.test.ts` (PR #318) |
+| #313 | baixa | `tethered` só crescia (§8) | esquece o par quando uma das peças sai (`remove`); o par com um objeto fixo, que não é peça, fica até a peça sair | `tether-forget.test.ts` |
+| #311 | média | a régua R1–R3 deixava passar ganho real | ver abaixo | `energy-ruler.test.ts` |
+
+### Régua R1–R3 (apertada por decisão do dono: "apertar e medir")
+- **R3** descontava também o poste levantado ao acordar (a correção de penetração do solver), não só o recuo do cast contínuo. Agora só desconta o corpo que ainda desce (`Δy ≤ 0` e velocidade vertical negativa antes e depois). Um poste de 1 t que sobe 2 cm parado volta a contar no C1.
+- **R2** desligava o C3 inteiro quando qualquer energia, por menor que fosse, era declarada. Agora a altura declarada é descontada da subida.
+- **R1** perdoava a subida de uma peça que perde energia. Agora só perdoa quando a energia caiu e a energia de rotação da peça (energia total menos altura e velocidade linear) caiu pelo menos o que a subida custou; uma peça que cai a 3 m/s e é empurrada 5 cm pelo contato conta.
+
+Medição com a régua apertada, tigela (`bowl-energy.test.ts`, 32 casos no Jolt): C1 −0,0195 kg·m, C2 0, C3 0,0270 m (limite 0,035; 0,0242 antes do ajuste do R1 pela energia de rotação), nenhum atravessou o chão. **Passa.** A sonda da sala (`room.js`, navegador) não roda no CI nem aqui (§9): falta rodá-la à mão para confirmar que a T3.8 continua ✅ com a régua apertada. Se não passar, a T3.8 volta a ficar aberta e os números vão ao dono.
+
+### Fica aberto
+- Rodar a sonda da sala com a régua apertada (à mão, na trava de medição).
+- Job de CI do `game-floorplan-three` no modo Jolt: tem 4 falhas conhecidas de base (3 goldens de `destruction/*` e `bookcase-topple`); entra quando elas forem resolvidas ou listadas.
+- Duas falhas de `rolling.test.ts` no modo Jolt já existiam na main.
+- Perguntas em aberto do revisor: a soma dos tempos do `room-explosion` assume o laço do host (afirmar isso na ferramenta) e a coluna `createBody` da tabela de estágios não cobre `createBodies`.

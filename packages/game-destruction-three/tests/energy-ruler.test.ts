@@ -286,11 +286,41 @@ describe('R1: C3 counts a rise only when the piece\'s energy also rose', () => {
     expect(ruler.result().c3Lift).toBeCloseTo(0.05, 12)
   })
 
-  it('the rise is kept out only in the update that lost energy: a later update that gains counts', () => {
+  it('the rise is kept out only in the update where the spin paid for it: a later update that gains counts', () => {
     const ruler = new EnergyRuler()
-    ruler.step([sample('a', { y: 1, energyHeight: 1.3 })], [sample('a', { y: 1.04, energyHeight: 1.1 })], 0.05)
-    ruler.step([sample('a', { y: 1.04, energyHeight: 1.1 })], [sample('a', { y: 1.06, energyHeight: 1.12 })], 0.05)
+    ruler.step([sample('a', { y: 1, energyHeight: 1.3, spin: 0.74 })], [sample('a', { y: 1.04, energyHeight: 1.1, spin: 0.15 })], 0.05)
+    ruler.step([sample('a', { y: 1.04, energyHeight: 1.1, spin: 0.15 })], [sample('a', { y: 1.06, energyHeight: 1.12, spin: 0.15 })], 0.05)
     expect(ruler.result().c3Lift).toBeCloseTo(0.02, 12)
+  })
+})
+
+describe('audit of #311: the three rules no longer let a real gain pass', () => {
+  it('R3: a 1 t pole at rest lifted 2 cm by the position solver on waking is a C1 gain, with or without a first contact', () => {
+    const still = (y: number): EnergySample => sample('pole', { mass: 1000, y, energyHeight: y })
+    const ruler = new EnergyRuler()
+    ruler.step([still(0.1)], [still(0.12)], 0.05, 'none', { firstContact: new Set(['pole']) })
+    expect(ruler.result().c1Violations).toBe(1)
+    expect(ruler.result().c1Excess).toBeGreaterThan(15)
+  })
+
+  it('R2: a rise of 0.5 m with a declared 1e-6 is still a rise of 0.5 m, not zero', () => {
+    const ruler = new EnergyRuler()
+    ruler.step([sample('pole', { mass: 1000, y: 1, energyHeight: 1 })], [sample('pole', { mass: 1000, y: 1.5, energyHeight: 1.5 })], 0.05, 'none', { given: new Map([['pole', 1e-6]]) })
+    expect(ruler.result().c3Lift).toBeCloseTo(0.5, 5)
+  })
+
+  it('R1: a piece that lands at 3 m/s and is lifted 5 cm by the contact, losing energy and no spin, counts 5 cm', () => {
+    const ruler = new EnergyRuler()
+    ruler.step([sample('box', { mass: 5, y: 0.2, energyHeight: 0.66, velocityY: -3, speed: 3 })], [sample('box', { mass: 5, y: 0.25, energyHeight: 0.3, velocityY: 0.5, speed: 0.5 })], 0.05)
+    expect(ruler.result().c3Lift).toBeCloseTo(0.05, 12)
+  })
+})
+
+describe('R1 needs the spin to have lost the rise\'s energy (audit review)', () => {
+  it('a 5 cm pop-up while landing, with the spin only 5 -> 4.8 rad/s (about 1e-4 m of energy), still counts', () => {
+    const ruler = new EnergyRuler()
+    ruler.step([sample('box', { mass: 5, y: 0.2, energyHeight: 0.66, velocityY: -3, speed: 3, spin: 5 })], [sample('box', { mass: 5, y: 0.25, energyHeight: 0.3, velocityY: 0.5, speed: 0.5, spin: 4.8 })], 0.05)
+    expect(ruler.result().c3Lift).toBeCloseTo(0.05, 12)
   })
 })
 
