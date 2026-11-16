@@ -143,4 +143,43 @@ describe('the boxes of a part drawn by a range are fitted ahead of the blow that
     const b = drawn(stepwise.root)
     expect(a).toEqual(b)
   })
+
+  it('gives the same boxes and the same drawing whether the cache is cold, half full or full when the object splits, with or without a dent first', () => {
+    const groups = PART_IDS.map((id) => [id])
+    const results = ['cold', 'half', 'full', 'off'].flatMap((fill) => [false, true].map((dented) => {
+      const s = house(fill !== 'off', groups.map((g) => [...g]))
+      if (fill === 'half') for (let i = 0; i < 3; i++) s.renderer.update(1 / 60)
+      if (fill === 'full') s.renderer.deferredQueue().flush()
+      if (dented) {
+        const drawing = s.mesh.geometry.getAttribute('position')
+        drawing.setY(30, drawing.getY(30) + 0.2)
+      }
+      s.world.emit({ type: 'detach', object: 'house', joint: 'j', parts: [...PART_IDS], by: 'break', groups: groups.map((g) => [...g]) })
+      s.renderer.deferredQueue().flush()
+      const ids = ['house', ...s.world.splits.map((x) => x.newId)]
+      return { fill, dented, boxes: ids.map((id) => partBoxesOf(s.renderer, id)), drawing: drawn(s.root) }
+    }))
+    for (const dented of [false, true]) {
+      const same = results.filter((r) => r.dented === dented)
+      for (const r of same) {
+        expect(r.boxes).toEqual(same[0]!.boxes)
+        expect(r.drawing).toEqual(same[0]!.drawing)
+      }
+    }
+  })
+
+  it('keeps nothing for an object once it is unbound or the renderer is disposed', () => {
+    const { renderer } = house(true)
+    renderer.deferredQueue().flush()
+    const kept = (renderer as unknown as { fittedBoxes: Map<unknown, unknown> }).fittedBoxes
+    expect(kept.size).toBeGreaterThan(0)
+    renderer.unbind('house')
+    expect(kept.size).toBe(0)
+    const again = house(true)
+    again.renderer.deferredQueue().flush()
+    const second = (again.renderer as unknown as { fittedBoxes: Map<unknown, unknown> }).fittedBoxes
+    expect(second.size).toBeGreaterThan(0)
+    again.renderer.dispose()
+    expect(second.size).toBe(0)
+  })
 })

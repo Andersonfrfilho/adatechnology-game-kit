@@ -363,8 +363,8 @@ class Renderer implements DestructionRenderer {
   private readonly trickles: Array<{ point: Vec3; normal: Vec3; anchor: EmitterAnchor | null; color: number | undefined; left: number; total: number; next: number; source: string | undefined }> = []
   /** Presentation work an event left for later frames (fragments still to spawn, loose groups still to split), run in order within the frame budget. */
   private readonly slices: Array<() => void> = []
-  /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Gone with the part. */
-  private readonly fittedBoxes = new WeakMap<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
+  /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
+  private readonly fittedBoxes = new Map<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
   /** Objects whose ranged parts are still to be fitted ahead of the blow that breaks them, a part per step, only with time left in the frame. */
   private readonly prefitting: Array<{ readonly b: Bound; readonly parts: MeshVis[]; next: number }> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -632,6 +632,13 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  /** Drop an object from the bound ones, with the boxes fitted for its parts. */
+  private forgetBound(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (b) for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+    this.bounds.delete(objectId)
+  }
+
   unbind(objectId: string): void {
     this.staticDirty.add(objectId)
     this.clipped.delete(objectId)
@@ -639,7 +646,7 @@ class Renderer implements DestructionRenderer {
     if (!b) return
     this.restore(objectId)
     this.pieceSys.remove(objectId)
-    this.bounds.delete(objectId)
+    this.forgetBound(objectId)
     this.hitPoints.forget(objectId)
   }
 
@@ -2623,7 +2630,7 @@ class Renderer implements DestructionRenderer {
     if (!bound || this.fading.has(b.objectId)) return
     this.staticDirty.add(b.objectId)
     this.pieceSys.remove(b.objectId)
-    this.bounds.delete(b.objectId)
+    this.forgetBound(b.objectId)
     this.hitPoints.forget(b.objectId)
     this.fading.set(b.objectId, { root: bound.root, age: 0 })
   }
@@ -2930,7 +2937,7 @@ class Renderer implements DestructionRenderer {
     this.restore(objectId)
     for (const id of pieces) {
       this.pieceSys.remove(id)
-      this.bounds.delete(id)
+      this.forgetBound(id)
       this.hitPoints.forget(id)
       this.broken.delete(id)
       this.staticDirty.add(id)
@@ -2970,7 +2977,7 @@ class Renderer implements DestructionRenderer {
       if (b.isSplit && b.parts.size === 0) {
         this.scene.remove(b.root)
         this.pieceSys.remove(b.id)
-        this.bounds.delete(b.id)
+        this.forgetBound(b.id)
         // its box leaves now: the periodic round only walks the objects still bound
         this.staticDirty.add(b.id)
       }
@@ -2998,7 +3005,7 @@ class Renderer implements DestructionRenderer {
         for (const pv of b.parts.values()) this.visuals.restorePart(pv)
         this.scene.remove(b.root)
         this.pieceSys.remove(b.id)
-        this.bounds.delete(b.id)
+        this.forgetBound(b.id)
       }
     }
     this.fragments.clear()
