@@ -31,6 +31,8 @@ interface Live {
   body: LooseBody | null
   /** The `update` count when it was made. */
   born: number
+  /** Times it was moved out of a standing part (`pushOut`). */
+  pushes: number
   /** Seconds it stays at rest before it fades (0 = forever). */
   life: number
   /** Its box in the world while it rests, for what lands on it (`pileUnder`); dropped when it wakes. */
@@ -113,6 +115,11 @@ export interface FragmentSystemOptions {
    * ground (`groundAt`).
    */
   surfaceAt?: (x: number, y: number, z: number) => number
+  /**
+   * Where rubble that comes to rest inside a standing part (a brick lodged in the low courses of a wall) goes: the displacement that takes the point out of it, or null when it is
+   * in the open. `reachX` and `reachZ` are how far the fragment reaches from its centre along x and z. Default: it stays where it lies.
+   */
+  pushOut?: (x: number, y: number, z: number, reachX: number, reachZ: number) => readonly [number, number, number] | null
   /** Whether a material crumbles (`MaterialDef.fracture` 'crumble': brick, block, concrete, plaster): its chunks are drawn broken, not as cut boxes. */
   crumbles?: (materialId: string) => boolean
   /**
@@ -155,6 +162,9 @@ const PILE_STEP = 0.01
 
 /** How many shard shapes there are; a fragment takes one by the hash of its id. */
 const SHARD_SHAPES = 6
+
+/** How many times one fragment is moved out of a standing part before it stays where it lies. */
+const MAX_PUSHES = 3
 
 /** Seconds a fragment stays slow on what is under it before it sleeps. */
 const SETTLE_SECONDS = 0.4
@@ -382,6 +392,7 @@ export class FragmentSystem {
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
       body: null,
       born: this.tick,
+      pushes: 0,
       life: lasting ? 0 : Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
     }
     // a big piece stays where it fell, whatever its shape: a slab of a roof tile is debris as much as a chunk of brick is
@@ -494,6 +505,25 @@ export class FragmentSystem {
     }
   }
 
+  /** A fragment that settled inside a standing part is moved out of it and falls on from there (a few times at most). */
+  private pushedOut(f: Live): boolean {
+    if (!this.o.pushOut || f.pushes >= MAX_PUSHES) return false
+    const e = rotationOf(f.mesh.quaternion)
+    const reachX = Math.abs(e[0]!) * f.half.x + Math.abs(e[4]!) * f.half.y + Math.abs(e[8]!) * f.half.z
+    const reachZ = Math.abs(e[2]!) * f.half.x + Math.abs(e[6]!) * f.half.y + Math.abs(e[10]!) * f.half.z
+    const p = f.mesh.position
+    const push = this.o.pushOut(p.x, p.y, p.z, reachX, reachZ)
+    if (!push) return false
+    p.x += push[0]
+    p.y += push[1]
+    p.z += push[2]
+    f.pushes++
+    f.still = 0
+    f.contact = false
+    f.vel.set(0, 0, 0)
+    return true
+  }
+
   /** The fragment stops where it lies, and its matrix is no longer recomputed every frame. */
   private sleep(f: Live): void {
     f.asleep = true
@@ -577,7 +607,7 @@ export class FragmentSystem {
     f.contact = contact
     if (contact && isSlow(f)) {
       f.still += dt
-      if (f.still > SETTLE_SECONDS) this.sleep(f)
+      if (f.still > SETTLE_SECONDS && !this.pushedOut(f)) this.sleep(f)
     } else {
       f.still = 0
     }

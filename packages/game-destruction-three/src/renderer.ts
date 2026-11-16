@@ -102,6 +102,12 @@ const STATIC_REFRESH_SLICE_MS = 1
 const SURFACE_RAYS = 4
 const SURFACE_INSIDE = 0.005
 const SURFACE_STEP = 0.15
+/** The six directions that tell a point is inside a part, the four sides rubble leaves a wall by, and how far (m) in what steps and with what margin it is looked for. */
+const INSIDE_DIRECTIONS: ReadonlyArray<[number, number, number]> = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+const SIDES: ReadonlyArray<readonly [number, number]> = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+const PUSH_OUT_STEP = 0.04
+const PUSH_OUT_MAX = 0.6
+const PUSH_OUT_MARGIN = 0.01
 const STATIC_SPAN = 3
 /** Vertices of fixed parts measured from scratch per update for an engine (about 2 ms): a house of hundreds of parts is filled in over a few updates, not one frame. */
 const VERTICES_PER_UPDATE = 3000
@@ -516,6 +522,7 @@ class Renderer implements DestructionRenderer {
       crumbles: (id) => this.world.materials.get(id)?.fracture === 'crumble',
       // rubble lands on what is still built (a slab, a wall's top, a floor), not only on the terrain under it
       surfaceAt: (x, y, z) => this.surfaceAt(x, y, z),
+      pushOut: (x, y, z, reachX, reachZ) => this.pushOutOfParts(x, y, z, reachX, reachZ),
       maxAwake: o.maxAwakeFragments ?? Infinity,
     })
     this.cages = new RebarCages(THREE, o.scene)
@@ -2516,6 +2523,37 @@ class Renderer implements DestructionRenderer {
       from -= SURFACE_STEP
     }
     return ground
+  }
+
+  /** Whether (x, y, z) lies inside a standing part of the world: a ray from it, in any of the six directions, starts in a part (a hit at no distance), the ground not counting. */
+  private insideAPart(x: number, y: number, z: number): boolean {
+    for (const d of INSIDE_DIRECTIONS) {
+      const hit = this.world.raycast([x, y, z], d, SURFACE_INSIDE)
+      if (hit && hit.distance < SURFACE_INSIDE && hit.terrain !== true) return true
+    }
+    return false
+  }
+
+  /**
+   * Rubble settled inside a wall or a slab (a brick lodged in the low courses) goes out of it by the nearest side across, with its own reach and a margin, and falls on
+   * from there: null when it is in the open or no side opens within `PUSH_OUT_MAX` metres.
+   */
+  private pushOutOfParts(x: number, y: number, z: number, reachX: number, reachZ: number): readonly [number, number, number] | null {
+    if (typeof this.world.raycast !== 'function' || !this.insideAPart(x, y, z)) return null
+    let best: [number, number, number] | null = null
+    let bestLength = Infinity
+    for (const [dx, dz] of SIDES) {
+      for (let t = PUSH_OUT_STEP; t <= PUSH_OUT_MAX; t += PUSH_OUT_STEP) {
+        if (this.insideAPart(x + dx * t, y, z + dz * t)) continue
+        const length = t + (dx !== 0 ? reachX : reachZ) + PUSH_OUT_MARGIN
+        if (length < bestLength) {
+          bestLength = length
+          best = [dx * length, 0, dz * length]
+        }
+        break
+      }
+    }
+    return best
   }
 
   /** `staticTopAt` without the boxes of `objectId` itself. */
