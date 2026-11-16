@@ -17,7 +17,7 @@ import type { AttachmentModelRegistry, LaserRaycast } from '../models/attachment
 import { rigUnderbarrel } from '../models/attachments/rig-underbarrel'
 import { rigStock } from '../models/rig-stock'
 import { attachmentsKey } from '../attachments-key'
-import { VIEWMODEL_NODE_NAME } from '../laser-raycast'
+import { createSurfaceRaycast, VIEWMODEL_NODE_NAME } from '../laser-raycast'
 import { applyCondition } from '../models/condition'
 import { cartridgeShape } from '../models/cartridge'
 import { modelKit } from '../models/kit'
@@ -177,7 +177,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const random = createRng(options.seed ?? 1)
   const layers = options.layers ?? createLayers()
   const distance = (): number => options.soundDistance?.() ?? 0
-  const particles = createParticles(THREE, scene, groundAt, options.particleLimit)
+  const particles = createParticles(THREE, scene, groundAt, options.particleLimit, createSurfaceRaycast(THREE, scene))
   // the casings and the magazines leave the gun as drawn through its lens, into the world
   const spawnParticle = particles.spawn.bind(particles)
   particles.spawn = (object, velocity, particleOptions) => {

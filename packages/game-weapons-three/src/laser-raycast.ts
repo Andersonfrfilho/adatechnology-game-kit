@@ -19,6 +19,40 @@ export const isVisibleInScene = (object: THREE_NS.Object3D): boolean => {
   return true
 }
 
+/** Marks what the fx throw (casings, magazines): a surface probe never lands on them. */
+export const PARTICLE_USERDATA_KEY = 'fxParticle'
+
+const isSolidSurface = (object: THREE_NS.Object3D): boolean => {
+  const mesh = object as THREE_NS.Mesh
+  const material = mesh.material as THREE_NS.Material | undefined
+  return mesh.isMesh && isVisibleInScene(mesh) && material?.transparent !== true && !isHeld(mesh) && mesh.userData[PARTICLE_USERDATA_KEY] !== true
+}
+
+/** Where a ray meets a solid surface: how far, and the unit normal of the face it hit (world space, pointing out of the surface towards the ray). */
+export type SurfaceHit = { readonly distance: number; readonly normal: THREE_NS.Vector3 }
+export type SurfaceProbe = (origin: THREE_NS.Vector3, direction: THREE_NS.Vector3, maxDistance: number) => SurfaceHit | null
+
+/** The first solid surface of the scene along a ray, measured on every call (no rate limit, no cache): for what is probed many times a frame, like a casing in flight. */
+export const createSurfaceRaycast = (THREE: typeof THREE_NS, scene: THREE_NS.Object3D): SurfaceProbe => {
+  const raycaster = new THREE.Raycaster()
+  raycaster.layers.enableAll()
+  // the sprites of the smoke are tested too (and ignored), and a sprite needs a camera to be tested at all
+  raycaster.camera = new THREE.PerspectiveCamera()
+  const normalMatrix = new THREE.Matrix3()
+  return (origin, direction, maxDistance) => {
+    raycaster.set(origin, direction)
+    raycaster.far = maxDistance
+    const hit = raycaster.intersectObjects(scene.children, true).find((entry) => isSolidSurface(entry.object))
+    if (!hit) return null
+    const normal = new THREE.Vector3()
+    if (hit.face) normal.copy(hit.face.normal).applyMatrix3(normalMatrix.getNormalMatrix(hit.object.matrixWorld)).normalize()
+    else normal.copy(direction).negate()
+    // a face seen from behind (a single plane) faces the ray all the same
+    if (normal.dot(direction) > 0) normal.negate()
+    return { distance: hit.distance, normal }
+  }
+}
+
 export interface LaserRaycastOptions {
   /** Milliseconds clock (default `performance.now`). */
   readonly now?: () => number

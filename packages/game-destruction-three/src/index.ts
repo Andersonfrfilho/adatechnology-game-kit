@@ -1,4 +1,4 @@
-export { impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
+export { MIN_PIECE_MASS_KG, impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
 export { isPhysicsLoop } from '@adatechnology/game-physics'
 export { PhysicsOptionError } from './physics-option'
 export { warmUpDestructionJit } from './jit-warmup'

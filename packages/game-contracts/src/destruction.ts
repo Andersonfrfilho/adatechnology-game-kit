@@ -450,6 +450,8 @@ export interface BlastOptions {
   confinement?: boolean | number | ConfinementOptions
   /** The charge (its TNT equivalent and its case): the wave is read from the first, the fragments thrown from the second. */
   charge?: BlastCharge
+  /** Metres of soil over the charge (a buried mine, a camouflet): the soil takes most of the wave, so only a share of it reaches the structures. Read by `world.explode`. Unset or 0: open air, and a basement or a crater floor is not soil cover. The `explode` event still reports the full charge. */
+  soilCover?: number
 }
 
 /**
