@@ -6,4 +6,4 @@ export type { DebrisCandidate, PhysicsPieceBudget, WakeQueueOptions } from './wa
 export { createPhysicsLoop, isPhysicsLoop } from './loop'
 export type { PhaseOrder, PhysicsFrame, PhysicsLoop, PhysicsLoopOptions, PhysicsPhase } from './loop'
 export { DEFAULT_MAX_WAIT_FRAMES, DEFAULT_WORK_BUDGET_MS, DEFAULT_WORK_UNITS_PER_MS, WORK_KINDS, WorkBudget, WorkBudgetOptionError, WorkQueue } from './work-budget'
-export type { QueuedWork, WorkBudgetOptions, WorkBudgetState, WorkKind, WorkQueueState } from './work-budget'
+export type { FollowUpWork, QueuedWork, WorkBudgetOptions, WorkBudgetState, WorkKind, WorkQueueState } from './work-budget'

@@ -34,6 +34,26 @@ describe('WorkBudget', () => {
     expect(() => new WorkBudget({ budgetMs: 0, tier: 0.5, maxWaitFrames: 0 })).not.toThrow()
   })
 
+  it('work that leads to more needs room for both, and what it leads to is held for its kind until that kind takes it', () => {
+    const budget = new WorkBudget({ budgetMs: 1, unitsPerMs: 100 })
+    expect(budget.tryTake('split', 60, { kind: 'body', units: 50 })).toBe(false)
+    expect(budget.remaining).toBe(100)
+    expect(budget.tryTake('split', 60, { kind: 'body', units: 20 })).toBe(true)
+    // 40 left, 20 of them held for the body: another split of 30 does not fit
+    expect(budget.remaining).toBe(20)
+    expect(budget.tryTake('split', 30)).toBe(false)
+    expect(budget.fits(10)).toBe(2)
+    budget.take('body', 20)
+    expect(budget.remaining).toBe(20)
+    expect(budget.spent('body')).toBe(20)
+    const copy = new WorkBudget({ budgetMs: 1, unitsPerMs: 100 })
+    budget.reserve({ kind: 'body', units: 5 })
+    copy.restoreState(budget.saveState())
+    expect(copy.remaining).toBe(15)
+    budget.beginFrame()
+    expect(budget.remaining).toBe(100)
+  })
+
   it('saves and restores bit for bit', () => {
     const budget = new WorkBudget({ budgetMs: 1, unitsPerMs: 100 })
     budget.beginFrame()
@@ -71,6 +91,19 @@ describe('WorkQueue', () => {
     const again = new WorkQueue<{ id: number }>('split')
     again.restoreState(saved)
     expect(again.release(budget).map((x) => x.id)).toEqual([1])
+  })
+
+  it('an item runs on its fit only with room for the work it leads to, which it reserves; the saved queue keeps it', () => {
+    const budget = new WorkBudget({ budgetMs: 1, unitsPerMs: 100, maxWaitFrames: 10 })
+    const queue = new WorkQueue<string>('split')
+    queue.push('first', 1, 'a', 40, { kind: 'body', units: 20 })
+    queue.push('second', 2, 'b', 40, { kind: 'body', units: 20 })
+    // 40 + 20 fits in 100; then 40 + 20 does not fit in the 40 free (60 left, 20 of them the first one's body)
+    expect(queue.release(budget)).toEqual(['first'])
+    expect(budget.remaining).toBe(40)
+    const saved = queue.saveState()
+    expect(saved).toEqual([{ item: 'second', priority: 2, key: 'b', units: 40, then: { kind: 'body', units: 20 }, waited: 1 }])
+    expect(JSON.parse(JSON.stringify(saved))).toEqual(saved)
   })
 
   it('with the default ceiling an item queued before frame F+1 is out by its 12th release, whatever the budget', () => {

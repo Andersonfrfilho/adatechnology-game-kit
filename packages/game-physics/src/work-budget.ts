@@ -49,10 +49,17 @@ const finiteOption = (options: WorkBudgetOptions, option: keyof WorkBudgetOption
   return value
 }
 
+/** Work that a piece of work leads to later in the same frame under another kind (a split's piece gets its engine body in the `body` draw): reserved when the first runs. */
+export interface FollowUpWork {
+  readonly kind: WorkKind
+  readonly units: number
+}
+
 export interface WorkBudgetState {
   readonly left: number
   readonly frame: number
   readonly spent: ReadonlyArray<readonly [WorkKind, number]>
+  readonly reserved?: ReadonlyArray<readonly [WorkKind, number]>
 }
 
 /**
@@ -66,6 +73,8 @@ export class WorkBudget {
   private left: number
   private frameCount = 0
   private readonly spentBy = new Map<WorkKind, number>()
+  /** Units promised to work that follows in this frame (`FollowUpWork`), by its kind: not free for anything else until that kind takes them, or the frame ends. */
+  private readonly reservedFor = new Map<WorkKind, number>()
 
   constructor(options: WorkBudgetOptions = {}) {
     const budgetMs = finiteOption(options, 'budgetMs', DEFAULT_WORK_BUDGET_MS)
@@ -81,6 +90,7 @@ export class WorkBudget {
     this.left = this.unitsPerFrame
     this.frameCount++
     this.spentBy.clear()
+    this.reservedFor.clear()
   }
 
   /** Frames begun since the budget was made (or restored). */
@@ -88,9 +98,11 @@ export class WorkBudget {
     return this.frameCount
   }
 
-  /** Units left in this frame (negative after forced work went over). */
+  /** Units left in this frame and not reserved for work that follows (negative after forced work went over). */
   get remaining(): number {
-    return this.left
+    let reserved = 0
+    for (const units of this.reservedFor.values()) reserved += units
+    return this.left - reserved
   }
 
   /** Units each kind took this frame. */
@@ -98,26 +110,39 @@ export class WorkBudget {
     return this.spentBy.get(kind) ?? 0
   }
 
-  /** Takes `units` when they fit in what is left of the frame; else takes nothing and says no. */
-  tryTake(kind: WorkKind, units: number): boolean {
-    if (units > this.left) return false
+  /**
+   * Takes `units` when they fit in what is free in the frame together with the work they lead to (`then`), which is reserved for its kind; else takes nothing and says no.
+   */
+  tryTake(kind: WorkKind, units: number, then?: FollowUpWork): boolean {
+    if (units + (then?.units ?? 0) > this.remaining) return false
     this.take(kind, units)
+    if (then) this.reserve(then)
     return true
   }
 
-  /** Takes `units` whatever is left: work that may not wait (an event's effects, a unit past its wait). The frame may go over; what draws after it finds nothing left. */
+  /**
+   * Takes `units` whatever is left: work that may not wait (an event's effects, a unit past its wait). The frame may go over; what draws after it finds nothing left. What was
+   * reserved for this kind is taken first.
+   */
   take(kind: WorkKind, units: number): void {
     this.left -= units
     this.spentBy.set(kind, (this.spentBy.get(kind) ?? 0) + units)
+    const reserved = this.reservedFor.get(kind)
+    if (reserved !== undefined) this.reservedFor.set(kind, Math.max(0, reserved - units))
   }
 
-  /** How many items of `unitsEach` fit in what is left, at least `atLeast`. */
+  /** Holds `then.units` of this frame for work of `then.kind` that follows: nothing else draws them. */
+  reserve(then: FollowUpWork): void {
+    this.reservedFor.set(then.kind, (this.reservedFor.get(then.kind) ?? 0) + then.units)
+  }
+
+  /** How many items of `unitsEach` fit in what is free, at least `atLeast`. */
   fits(unitsEach: number, atLeast = 0): number {
-    return Math.max(atLeast, Math.floor(Math.max(0, this.left) / Math.max(unitsEach, 1e-9)))
+    return Math.max(atLeast, Math.floor(Math.max(0, this.remaining) / Math.max(unitsEach, 1e-9)))
   }
 
   saveState(): WorkBudgetState {
-    return { left: this.left, frame: this.frameCount, spent: [...this.spentBy.entries()] }
+    return { left: this.left, frame: this.frameCount, spent: [...this.spentBy.entries()], reserved: [...this.reservedFor.entries()] }
   }
 
   restoreState(state: WorkBudgetState): void {
@@ -125,6 +150,8 @@ export class WorkBudget {
     this.frameCount = state.frame
     this.spentBy.clear()
     for (const [kind, units] of state.spent) this.spentBy.set(kind, units)
+    this.reservedFor.clear()
+    for (const [kind, units] of state.reserved ?? []) this.reservedFor.set(kind, units)
   }
 }
 
@@ -137,6 +164,8 @@ export interface QueuedWork<TItem> {
   readonly key: string
   /** Units it costs, estimated when it was queued from the size of the work (never from what a cache holds). */
   readonly units: number
+  /** The work it leads to later in the same frame under another kind (`WorkBudget.tryTake`): it runs on its fit only with room for both, and reserves it when it runs. */
+  readonly then?: FollowUpWork
   waited: number
 }
 
@@ -155,8 +184,8 @@ export class WorkQueue<TItem> {
     return this.entries.length
   }
 
-  push(item: TItem, priority: number, key: string, units: number): void {
-    this.entries.push({ item, priority, key, units, waited: 0 })
+  push(item: TItem, priority: number, key: string, units: number, then?: FollowUpWork): void {
+    this.entries.push(then ? { item, priority, key, units, then: { kind: then.kind, units: then.units }, waited: 0 } : { item, priority, key, units, waited: 0 })
   }
 
   /** Whether an entry with this key waits. */
@@ -182,15 +211,15 @@ export class WorkQueue<TItem> {
     const kept: Array<QueuedWork<TItem>> = []
     for (const entry of this.entries) {
       if (entry.waited + 1 >= budget.maxWaitFrames) {
-        budget.take(this.kind, entry.units)
+        this.force(budget, entry)
         out.push(entry.item)
       } else kept.push(entry)
     }
     const waiting: Array<QueuedWork<TItem>> = []
     for (const entry of kept) {
-      const fits = budget.tryTake(this.kind, entry.units)
+      const fits = budget.tryTake(this.kind, entry.units, entry.then)
       if (fits || out.length === 0) {
-        if (!fits) budget.take(this.kind, entry.units)
+        if (!fits) this.force(budget, entry)
         out.push(entry.item)
       } else waiting.push(entry)
     }
@@ -199,15 +228,21 @@ export class WorkQueue<TItem> {
     return out
   }
 
+  /** Runs an entry whatever the budget holds: its units taken, the work it leads to reserved. */
+  private force(budget: WorkBudget, entry: QueuedWork<TItem>): void {
+    budget.take(this.kind, entry.units)
+    if (entry.then) budget.reserve(entry.then)
+  }
+
   clear(): void {
     this.entries = []
   }
 
   saveState(): WorkQueueState<TItem> {
-    return this.entries.map((entry) => ({ ...entry }))
+    return this.entries.map((entry) => ({ ...entry, ...(entry.then ? { then: { ...entry.then } } : {}) }))
   }
 
   restoreState(state: WorkQueueState<TItem>): void {
-    this.entries = state.map((entry) => ({ ...entry }))
+    this.entries = state.map((entry) => ({ ...entry, ...(entry.then ? { then: { ...entry.then } } : {}) }))
   }
 }
