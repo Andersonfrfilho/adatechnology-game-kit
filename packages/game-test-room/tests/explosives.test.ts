@@ -96,6 +96,8 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     room.use()
     run(room, 1)
     expect(room.log.entries({ type: 'dud' })).toHaveLength(1)
+    // the log says how far it flew and how far the fuze needs: the lots of a bench closer than that are never going to go off
+    expect(room.log.entries({ type: 'dud' })[0]!.text).toMatch(/\d+(\.\d)? m of the \d+ m it needs/)
     expect(explosions).toHaveLength(0)
     room.tool.refill()
     run(room, 1)
