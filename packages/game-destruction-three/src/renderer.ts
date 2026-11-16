@@ -2690,7 +2690,7 @@ class Renderer implements DestructionRenderer {
       const momentum = hit.speed * pc.mass
       const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
       const point: Vec3 = [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread]
-      reach(distance, { objectId: pc.objectId, impulse, point }, [c.x, c.y, c.z])
+      reach(distance, { objectId: pc.objectId, generation: pc.generation, impulse, point }, [c.x, c.y, c.z])
     }
     for (const pc of [...this.pieceSys.list]) shove(pc)
     if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf, policy, reach)
@@ -2810,7 +2810,7 @@ class Renderer implements DestructionRenderer {
       const momentum = hit.speed * mass
       const impulse: Vec3 = [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum]
       const at: Vec3 = [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread]
-      reach(distance, { objectId: b.id, impulse, point: at }, [world.x, world.y, world.z])
+      reach(distance, { objectId: b.id, generation: body.generation, impulse, point: at }, [world.x, world.y, world.z])
     }
     for (const { world, hit } of chips) this.vfx.burst('chips', [world.x, world.y, world.z], hit.direction, 4, Math.min(6, hit.speed))
   }
@@ -2835,10 +2835,10 @@ class Renderer implements DestructionRenderer {
     work?.take('wake', woken * this.workCosts.perWake)
   }
 
-  /** A blast's push reaching its piece: the piece the object is now (a piece removed or faded since takes nothing). */
+  /** A blast's push reaching its piece: the very body it was pushed for (a piece removed or faded since, or made again under the same id, takes nothing). */
   private readonly applyWake = (wake: BlastWake): void => {
     const piece = this.pieceSys.get(wake.objectId)
-    if (piece) this.pieceSys.impulse(piece, [wake.impulse[0], wake.impulse[1], wake.impulse[2]], [wake.point[0], wake.point[1], wake.point[2]])
+    if (piece && piece.generation === wake.generation) this.pieceSys.impulse(piece, [wake.impulse[0], wake.impulse[1], wake.impulse[2]], [wake.point[0], wake.point[1], wake.point[2]])
   }
 
   /** Awake bodies in the physics world (what a blast's debris adds to). */

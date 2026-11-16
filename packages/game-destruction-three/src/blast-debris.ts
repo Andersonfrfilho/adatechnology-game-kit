@@ -114,6 +114,8 @@ export type DebrisCostOptions =
 /** One push of a blast waiting its turn, as data (never a closure), so a save in the middle of a blast keeps it: the piece, the impulse and where it lands. */
 export interface BlastWake {
   readonly objectId: string
+  /** The body's `generation` when it was pushed: a piece removed and made again under the same id takes nothing. */
+  readonly generation: number
   readonly impulse: readonly [number, number, number]
   readonly point: readonly [number, number, number]
 }
