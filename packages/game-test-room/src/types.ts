@@ -48,6 +48,13 @@ import type { TestTable, TestTableOptions } from './test-table'
 
 export type ThreeNamespace = typeof THREE_NS
 
+/** The size of a catalogue item's model, metres: `w` along x, `d` along z, `h` up. */
+export interface ItemSize {
+  readonly w: number
+  readonly d: number
+  readonly h: number
+}
+
 /** One entry of the catalogue: something the host can build. */
 export interface TestRoomItem {
   /** snake_case id. */
@@ -433,6 +440,8 @@ export interface TestRoom {
   readonly webgl?: THREE_NS.WebGLRenderer
   /** The test table: lays the catalogue on the `test_table` piece a page at a time and runs the trials (shot, punch, knife, fire, blast) on one item. */
   readonly testTable: TestTable
+  /** Width (x), depth (z) and height of a catalogue item's model at rotation 0, metres; null for an id the catalogue does not have. Built once per item and kept. */
+  measure(itemId: string): ItemSize | null
   /** Spawn a catalogue item at a world position (default in front of the player). */
   spawn(itemId: string, position?: Vec3, rotationY?: number): SpawnedObject
   /** Remove every spawned object, fragment and particle. */

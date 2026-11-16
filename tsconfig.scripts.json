@@ -38,6 +38,7 @@
   "include": [
     "./examples/**/*.js",
     "./examples/**/*.mjs",
+    "./examples/**/*.ts",
     "./tools/**/*.js",
     "./tools/**/*.mjs",
     "./types/scripts-globals.d.ts",

@@ -110,6 +110,8 @@ room.testTable.relay()                // puts the table and the page back as the
 
 A trial equips its tool, puts the player in front of the item, aims at its centre and uses the tool: a 9 mm pistol from 2.5 m, the fists and a knife up close, a flamethrower burst from 1.6 m, and a fragmentation grenade set off just behind the item (`DEFAULT_TRIALS`; `testTable: { trials: { shot: { weapon: 'rifle_5_56' } } }` changes one). What happens goes to the log like any other hit. With the UI on, the **Test table** panel (between the inspector and the log) has the group, the pages, a search that lays the page of an item, the items on the table (a click picks one) and a button per trial plus **Put back**.
 
+`room.measure(itemId)` gives the width (x), depth (z) and height of a catalogue item's model at rotation 0, in metres (built once and kept; null for an id the catalogue does not have), without putting it in the room. The test table lays its rows by it, and an area that packs pieces of several modules side by side (the example's house and yard on tables, `?area=house_tables`) lays them by it too.
+
 ## Models of thrown and placed explosives
 
 The room knows the arsenal's ids, not the weapons' models. `projectileModel({ weapon, explosive, kind })` (`kind`: `grenade`, `molotov`, `rocket` or `charge`) is the host's hook: it answers `{ model, axis? }` (`axis`: the length of the model, default +y; a rocket points it along its flight) or `null`, and the room draws a plain primitive (a sphere, a cylinder, a box) only where it answers nothing. `@adatechnology/game-weapons-three` has one: `projectileModel(THREE, query)`.

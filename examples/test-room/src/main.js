@@ -8,7 +8,7 @@
 //   ?scene=push        pushing furniture: a light piece, one too heavy and one against the wall
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
-//   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
+//   ?area=furniture     open on one catalogue group (the groups the loaded modules add); ?area=house_tables: the house and the yard on tables
 //   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
 //   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
 //                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
@@ -40,7 +40,9 @@ document.documentElement.lang = locale
 document.title = locale === 'en' ? 'Test room' : 'Sala de testes'
 
 const isFloorplan = params.get('area') === 'floorplan_area' || location.pathname.includes('sala-casas')
-const arena = Number(params.get('arena')) || (isFloorplan ? 40 : 0)
+// the house and the yard on tables lays every room of a house in rows: it needs a wider floor and only the target wall (what hangs on a wall hangs on it)
+const isHouseTables = params.get('area') === 'house_tables'
+const arena = Number(params.get('arena')) || (isFloorplan ? 40 : isHouseTables ? 24 : 0)
 const quality = /** @type {import('@adatechnology/game-test-room').TestRoomOptions['quality']} */ (['low', 'medium', 'high'].includes(/** @type {string} */ (params.get('quality'))) ? params.get('quality') : 'medium')
 const items = params.get('items')
 
@@ -58,6 +60,8 @@ const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, 
 /** @type {Record<string, import('@adatechnology/game-test-room').SceneryObject | null>} */
 const scenery = isFloorplan
   ? { target_wall: null, table: null, shelf: null }
+  : isHouseTables
+    ? { target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes } }
   : {
       // follow: the house renderer draws on the wall the bricks that shots and blows knock out (and the opening of a breach)
       target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes },
