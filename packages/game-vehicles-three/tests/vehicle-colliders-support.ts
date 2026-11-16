@@ -106,10 +106,26 @@ export class Surface {
     const v = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]
     const flat: number[] = []
     const counts: number[] = []
+    /** Every cell a point of the triangle lies in: a triangle whose box spans many cells is halved on its longest edge until each piece spans at most two per axis, so a long diagonal sliver does not claim the whole volume of its box. */
     const eachCell = (at: number, visit: (cell: number) => void): void => {
-      const lo = [0, 1, 2].map((k) => Math.floor(Math.min(flat[at * 9 + k]!, flat[at * 9 + 3 + k]!, flat[at * 9 + 6 + k]!) / CELL))
-      const hi = [0, 1, 2].map((k) => Math.floor(Math.max(flat[at * 9 + k]!, flat[at * 9 + 3 + k]!, flat[at * 9 + 6 + k]!) / CELL))
-      for (let x = lo[0]!; x <= hi[0]!; x++) for (let y = lo[1]!; y <= hi[1]!; y++) for (let z = lo[2]!; z <= hi[2]!; z++) visit(cellOf(x, y, z))
+      const seen = new Set<number>()
+      const walk = (a: number[], b: number[], c: number[], depth: number): void => {
+        const lo = [0, 1, 2].map((k) => Math.floor(Math.min(a[k]!, b[k]!, c[k]!) / CELL))
+        const hi = [0, 1, 2].map((k) => Math.floor(Math.max(a[k]!, b[k]!, c[k]!) / CELL))
+        const small = hi[0]! - lo[0]! <= 1 && hi[1]! - lo[1]! <= 1 && hi[2]! - lo[2]! <= 1
+        if (small || depth > 24) {
+          for (let x = lo[0]!; x <= hi[0]!; x++) for (let y = lo[1]!; y <= hi[1]!; y++) for (let z = lo[2]!; z <= hi[2]!; z++) seen.add(cellOf(x, y, z))
+          return
+        }
+        const ab = Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!), bc = Math.hypot(b[0]! - c[0]!, b[1]! - c[1]!, b[2]! - c[2]!), ca = Math.hypot(c[0]! - a[0]!, c[1]! - a[1]!, c[2]! - a[2]!)
+        const mid = (p: number[], q: number[]): number[] => [(p[0]! + q[0]!) / 2, (p[1]! + q[1]!) / 2, (p[2]! + q[2]!) / 2]
+        if (ab >= bc && ab >= ca) { const m = mid(a, b); walk(a, m, c, depth + 1); walk(m, b, c, depth + 1) }
+        else if (bc >= ca) { const m = mid(b, c); walk(a, b, m, depth + 1); walk(a, m, c, depth + 1) }
+        else { const m = mid(c, a); walk(a, b, m, depth + 1); walk(m, b, c, depth + 1) }
+      }
+      const f = flat
+      walk([f[at * 9]!, f[at * 9 + 1]!, f[at * 9 + 2]!], [f[at * 9 + 3]!, f[at * 9 + 4]!, f[at * 9 + 5]!], [f[at * 9 + 6]!, f[at * 9 + 7]!, f[at * 9 + 8]!], 0)
+      seen.forEach(visit)
     }
     for (const object of objects) {
       object.traverse((node) => {
