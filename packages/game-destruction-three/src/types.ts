@@ -90,10 +90,12 @@ export interface RendererOptions {
   debrisCost?: DebrisCostOptions
   /**
    * The explosion's deferred work in a frame budget of work units, never of time (spec 008, `design/orcamento-da-explosao.md`): the loose groups a blow leaves become pieces
-   * one queue at a time, nearest the player first (`focus`, read when the group comes loose), then by id; until its turn a group stays in its object, drawn and solid as it
-   * stood, and none waits more than `maxWaitFrames`. The events still apply in their frame (their flash, dust and cracks show at once), the fragments still to spawn and the
-   * blast's wake queue draw from the same budget. `eventBudgetMs` and a shared frame budget's clock no longer cut the work: the same session cuts the same pieces in the same
-   * frames on every machine of the same `tier`. Omitted, off: the work is cut by the clock as before.
+   * one queue at a time, nearest the player first (`focus`, read once at the start of the frame's work), then by id; until its turn a group stays in its object, drawn and
+   * solid as it stood, and none stands loose more than `maxWaitFrames` frames. The events still apply in their frame (their flash, dust and cracks show at once), the fragments
+   * still to spawn and the blast's wake queue draw from the same budget. `eventBudgetMs` no longer cuts the work: the same session cuts the same pieces in the same frames on
+   * every machine of the same `tier`. That holds only while `deferredQueue()` is not registered with a game-runtime `FrameBudget`: registered, the frame budget's clock decides
+   * again in which frames the work step runs at all. A bound or redrawn object with loose groups (a load) has them queued in the next work step. Omitted, off: the work is cut
+   * by the clock as before.
    */
   workBudget?: ExplosionWorkOptions
   /** Where the player is (m): the far and old rule of `blastDebris.far` counts distance from it. Without it, no piece is far. */
