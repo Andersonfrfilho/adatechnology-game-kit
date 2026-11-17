@@ -141,7 +141,7 @@ async function inPage(job) {
     stage('adoptSplit', renderer, 'adoptSplit')
     stage('fitBoxes', renderer, 'partBoxesOf')
     stage('rebuildHost', renderer.visuals, 'rebuildHost')
-    // one body at a time: the ground under the pieces (height field, steps, the solid net under it) and lone fixed bodies; never a piece
+    // one body at a time: in the room only the ground tiles under the pieces call it (height field or slab, step boxes, the solid net under the field); never a piece
     stage('groundBody', world, 'createBody')
     // a batch: the new pieces of a frame (`EnginePieces.makeBodies`), and the house's fixed colliders when they are laid again
     stage('pieceBodies', world, 'createBodies')
