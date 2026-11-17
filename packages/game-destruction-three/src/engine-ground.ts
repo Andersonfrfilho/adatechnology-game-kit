@@ -91,14 +91,14 @@ export const readGround = (groundAt: (x: number, z: number) => number, samples: 
 export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: number, z0: number, size: number, withSolid = true): GroundTile => {
   const samples = new Float64Array(sampleCount(Math.round(size / GROUND_CELL)))
   readGround(groundAt, samples, x0, z0, size)
-  return shapeGround(samples, x0, z0, size, withSolid)
+  return shapeGround(samples, x0, z0, size, withSolid ? groundAt : null)
 }
 
 /**
- * The tile the samples make: level, or its height field, step boxes and (when `withSolid`; else `NO_SOLID`, for a caller that may not need it) the solid under it.
- * Pure of the samples, so a tile made from samples patched in place is the one made from all of them read again.
+ * The tile the samples make: level, or its height field, step boxes and (given the ground, which it reads past the tile's edges; else `NO_SOLID`, for a caller that may
+ * not need it) the solid under it. Pure of the samples (and that ground), so a tile made from samples patched in place is the one made from all of them read again.
  */
-export const shapeGround = (samples: Float64Array, x0: number, z0: number, size: number, withSolid: boolean): GroundTile => {
+export const shapeGround = (samples: Float64Array, x0: number, z0: number, size: number, solidGround: ((x: number, z: number) => number) | null): GroundTile => {
   const n = Math.round(size / GROUND_CELL)
   const c = size / n
   const m = n + 1
@@ -162,5 +162,5 @@ export const shapeGround = (samples: Float64Array, x0: number, z0: number, size:
       i = end
     }
   }
-  return { heights, cells: n, boxes, solid: withSolid ? buildSolidVolume(heights, n, x0, z0, c) : NO_SOLID, level: null, samples }
+  return { heights, cells: n, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround) : NO_SOLID, level: null, samples }
 }
