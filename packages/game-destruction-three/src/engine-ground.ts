@@ -1,5 +1,6 @@
 import { NO_SOLID, buildSolidVolume } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
+import { holdsStep } from './engine-ground-step'
 
 /**
  * The ground a physics engine stands the pieces on, one tile of `groundAt` at a time: a height field over the cell corners for what is smooth, and solid boxes
@@ -14,8 +15,6 @@ import type { SolidVolume } from './engine-ground-solid'
 
 /** Cells of a tile (m), as Rapier's spike measured good enough for a 4 cm plate. */
 export const GROUND_CELL = 0.025
-/** How far (m) a sample may leave its cell's corners before the cell counts as holding a step. */
-const STEP_TOLERANCE = 0.005
 /** How far (m) under the lowest ground around them the step boxes go, and how far the height field drops under them. */
 const BOX_DEPTH = 0.05
 const UNDER_BOX = 0.01
@@ -35,6 +34,8 @@ export interface GroundTile {
 }
 
 const NO_HEIGHTS = new Float32Array(0)
+/** One cell's nine samples, for `holdsStep`. */
+const cellSamples = new Float64Array(9)
 
 /** The tile of a level `size` at `level`, laid without a sample read: the caller has proved, from the ground's own data, that every sample there is `level` (to 1e-9, as `shapeGround` calls level). */
 export const flatTile = (level: number, size: number): GroundTile => ({ heights: NO_HEIGHTS, cells: Math.round(size / GROUND_CELL), boxes: [], solid: NO_SOLID, level, samples: null })
@@ -115,14 +116,20 @@ export const shapeGround = (samples: Float64Array, x0: number, z0: number, size:
   }
   if (high - low < 1e-9) return { heights: new Float32Array(0), cells: n, boxes: [], solid: NO_SOLID, level: high, samples }
   const corner = (i: number, j: number): number => corners[j * m + i]
-  const off = (a: number, b: number): boolean => Math.abs(a - b) > STEP_TOLERANCE
   // a cell whose centre or an edge's middle leaves its corners holds a step; it and the cells around it become boxes
   const mask = new Uint8Array(n * n)
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
-      const a = corner(i, j), b = corner(i + 1, j), d = corner(i, j + 1), e = corner(i + 1, j + 1)
-      const step = off(centres[j * n + i], (a + b + d + e) / 4) || off(midX[j * n + i], (a + b) / 2) || off(midX[(j + 1) * n + i], (d + e) / 2) || off(midZ[j * m + i], (a + d) / 2) || off(midZ[j * m + i + 1], (b + e) / 2)
-      if (!step) continue
+      cellSamples[0] = corner(i, j)
+      cellSamples[1] = corner(i + 1, j)
+      cellSamples[2] = corner(i, j + 1)
+      cellSamples[3] = corner(i + 1, j + 1)
+      cellSamples[4] = centres[j * n + i]
+      cellSamples[5] = midX[j * n + i]
+      cellSamples[6] = midX[(j + 1) * n + i]
+      cellSamples[7] = midZ[j * m + i]
+      cellSamples[8] = midZ[j * m + i + 1]
+      if (!holdsStep(cellSamples)) continue
       for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) if (i + di >= 0 && j + dj >= 0 && i + di < n && j + dj < n) mask[(j + dj) * n + i + di] = 1
     }
   }

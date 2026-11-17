@@ -13,7 +13,7 @@ import { IS_JOLT, physicsOption } from './setup-physics'
  */
 interface Engine {
   world: PhysicsWorld
-  tiles: Map<number, { ground: BodyId; solid: BodyId | null; heights: Float32Array; writes: number; dirty: unknown }>
+  tiles: Map<number, { ground: BodyId; solid: BodyId | null; heights: Float32Array; writes: number; dirty: unknown; volume: { ring: readonly number[] } }>
   fellThrough: number
   layTile(key: number, ix: number, iz: number, tile: unknown): void
   groundChanged(x: number, z: number, radius: number): void
@@ -114,10 +114,13 @@ describe.skipIf(!IS_JOLT)('a tile whose ground changed is written in place (T3.8
     l.ground.depth = 0.15
     l.engine.groundChanged(SECOND.x, SECOND.z, SECOND.radius)
     l.ground.reads = 0
+    const ringBefore = l.engine.tiles.get(TILE_KEY)!.volume.ring.length / 3
     layAgain(l)
-    // a whole tile reads 25921 samples; a 30 cm crater with its reach is about a sixth of the tile
+    // a whole tile reads 25921 samples; a 30 cm crater with its reach is about a sixth of the tile. The solid also reads the ground past the tile's edge where its
+    // boxes reach (the crater is on the edge): the samples it held, read again to see if they moved, and those it reads anew
+    const ring = ringBefore + l.engine.tiles.get(TILE_KEY)!.volume.ring.length / 3
     expect(l.ground.reads).toBeGreaterThan(0)
-    expect(l.ground.reads).toBeLessThan(25921 * 0.3)
+    expect(l.ground.reads - ring).toBeLessThan(25921 * 0.3)
     const fresh = lab(0.15)
     layFirst(fresh)
     const a = l.engine.tiles.get(TILE_KEY)!.heights

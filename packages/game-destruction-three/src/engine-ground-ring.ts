@@ -1,3 +1,5 @@
+import { holdsStep } from './engine-ground-step'
+
 /**
  * The ground a tile's solid reads around the tile: its own heights inside, and past its edges, as far as `SOLID_RING`, the ground the neighbour tile is made from (`groundAt`),
  * read only where a block of the solid reaches and once each. Every sample read past the edge is kept (`read`): the solid depends on them, so a change there makes it again.
@@ -8,13 +10,13 @@
  * box at least 15 cm deep at any slope (`engine-ground-solid` caps the depth of a box that would lean further). The host's changes this close to a tile make its solid again.
  */
 export const SOLID_RING = 0.2
-/** How far (m) a cell's centre may leave its corners' mean before the cell counts as holding a step: `engine-ground`'s own tolerance. */
-const STEP_TOLERANCE = 0.005
+/** One cell's nine samples, for `holdsStep`. */
+const nine = new Float64Array(9)
 
 export interface GroundRing {
   /** How many cells the ring is wide. */
   readonly cells: number
-  /** The four corners (`(i, j)`, `(i + 1, j)`, `(i, j + 1)`, `(i + 1, j + 1)`) of a cell past the tile's edge into `out`; a cell holding a step has its lowest sample (corners and centre) at all four. */
+  /** The four corners (`(i, j)`, `(i + 1, j)`, `(i, j + 1)`, `(i + 1, j + 1)`) of a cell past the tile's edge into `out`; a cell holding a step (`holdsStep`, as the neighbour builds it) has its lowest of nine samples at all four. */
   cell(i: number, j: number, out: Float64Array): void
   /** The samples read past the edge: x, z and height, three numbers each. */
   readonly read: number[]
@@ -55,7 +57,6 @@ export const createGroundRing = (heights: Float32Array, cells: number, x0: numbe
     read.push(x, z, h)
     return h
   }
-  const off = (a: number, b: number): boolean => Math.abs(a - b) > STEP_TOLERANCE
   return {
     cells: ring,
     read,
@@ -63,12 +64,20 @@ export const createGroundRing = (heights: Float32Array, cells: number, x0: numbe
       const key = (j + ring) * across + i + ring
       if (cellBuild[key] !== mark) {
         const a = 2 * i, b = 2 * j
-        const c00 = half(a, b), c10 = half(a + 2, b), c01 = half(a, b + 2), c11 = half(a + 2, b + 2)
-        const centre = half(a + 1, b + 1)
-        // a step through the cell moves its centre off its corners' mean (a step that cuts off one corner by a quarter of its height); where it runs is not known, so
-        // the ground there is no lower than its lowest sample
-        const step = off(centre, (c00 + c10 + c01 + c11) / 4)
-        const floor = Math.min(c00, c10, c01, c11, centre)
+        nine[0] = half(a, b)
+        nine[1] = half(a + 2, b)
+        nine[2] = half(a, b + 2)
+        nine[3] = half(a + 2, b + 2)
+        nine[4] = half(a + 1, b + 1)
+        nine[5] = half(a + 1, b)
+        nine[6] = half(a + 1, b + 2)
+        nine[7] = half(a, b + 1)
+        nine[8] = half(a + 2, b + 1)
+        // a cell the neighbour builds as a step: where the step runs in it is not known, so the ground there is no lower than its lowest sample
+        const step = holdsStep(nine)
+        let floor = Infinity
+        for (let k = 0; k < 9; k++) floor = Math.min(floor, nine[k]!)
+        const c00 = nine[0]!, c10 = nine[1]!, c01 = nine[2]!, c11 = nine[3]!
         heldCells[4 * key] = step ? floor : c00
         heldCells[4 * key + 1] = step ? floor : c10
         heldCells[4 * key + 2] = step ? floor : c01

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { PieceSystem } from '../src/pieces'
-import { SOLID_MARGIN, SOLID_STRIDE } from '../src/engine-ground-solid'
+import { SOLID_STRIDE } from '../src/engine-ground-solid'
 import { IS_JOLT, physicsOption } from './setup-physics'
 
 /**
@@ -17,8 +17,8 @@ interface Engine {
   groundChanged(x: number, z: number, radius: number): void
 }
 
-/** The deepest (m) a box's top may rest under the wall's surface once the net holds it: on a turned box close under the slope, or in a wedge between two on the tile's floor. */
-const HELD_UNDER = 0.2
+/** How far (m) a box may sink into the floor it rests on in the push-up sweep, squeezed between turned boxes. */
+const SINK = 0.015
 const KEY = 65536
 const ORIGIN = 32768
 const TILE_KEY = ORIGIN * KEY + ORIGIN
@@ -96,17 +96,28 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
   })
 
   /**
-   * Boxes made wholly under the crater's wall (ground raised under them, a tunnel), over a sweep of spots, sizes and depths: the net holds every one (none falls, none rests
-   * further under the surface than `HELD_UNDER`); how many it pushes back up through the surface is measured, not asserted (T3.8ag: the engine pushes a body out its shortest
-   * way, up through a top close under a slope, sideways out of a deeper one). `NET_REPORT=1` prints the rate.
+   * Boxes made wholly under the crater's wall (ground raised under them, a tunnel), over a sweep of spots, sizes and depths: the net holds every one. None falls, and none
+   * rests deeper than on the upright box of a block under it: its top no further under the surface than that block's relief (ground over the block's floor) and its own
+   * size. How many it pushes back up through the surface is measured, not asserted (T3.8ag: the engine pushes a body out its shortest way, up through a top close under a
+   * slope, sideways out of a deeper one). `NET_REPORT=1` prints the rate and the depths.
    */
-  it('a box made under the crater wall, any spot, size or depth, is held by the net: it never falls, and rests close under the surface or above it', () => {
+  it('a box made under the crater wall, any spot, size or depth, is held by the net: it never falls, and rests no deeper than its block\'s floor', () => {
     const ground = groundOf(0.15)
     const l0 = lab(0.15)
     l0.engine.layTile(TILE_KEY, 0, 0, undefined)
+    // the upright boxes (blocks' floors and level blocks): the highest top over a column
+    const b = l0.engine.tiles.get(TILE_KEY)!.volume.boxes
+    const floorAt = (x: number, z: number): number => {
+      let top = -Infinity
+      for (let i = 0; i < b.length; i += SOLID_STRIDE) {
+        if (b[i + 9] !== 1 || Math.abs(x - b[i]!) > b[i + 3]! || Math.abs(z - b[i + 2]!) > b[i + 5]!) continue
+        top = Math.max(top, b[i + 1]! + b[i + 4]!)
+      }
+      return top
+    }
     // on the wall of the big crater (centre (1, 1), radius 0.6, 0.3 deep): its steepest ring, 0.3 m out
     const spots: Array<[number, number]> = [[1.3, 1], [1, 1.3], [0.79, 0.79], [1.25, 0.75]]
-    const rows: Array<{ half: number; depth: number; under: number; bottom: number }> = []
+    const rows: Array<{ half: number; depth: number; under: number; bound: number }> = []
     for (const half of [0.015, 0.04, 0.08]) {
       for (const depth of [0.005, 0.01, 0.02, 0.04]) {
         const l = lab(0.15)
@@ -117,21 +128,18 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
         const pose = new Float64Array(7)
         for (const id of ids) {
           world.readPose(id, pose, 0)
+          const x = pose[0]!, z = pose[2]!
+          // the lowest floor under the box's shadow (it may rest on any of them): how far its top can be under the surface over its centre, resting on that floor
+          const floor = Math.min(floorAt(x - half, z - half), floorAt(x + half, z - half), floorAt(x - half, z + half), floorAt(x + half, z + half))
           // how far the box's top is under the surface over its centre (negative: above it)
-          rows.push({ half, depth, under: ground(pose[0]!, pose[2]!) - (pose[1]! + half), bottom: pose[1]! - half })
+          rows.push({ half, depth, under: ground(x, z) - (pose[1]! + half), bound: ground(x, z) - floor + 2 * half })
         }
       }
     }
     const pushed = rows.filter((r) => r.under < 0).length
-    if (process.env.NET_REPORT) console.log('NET pushed up', `${pushed}/${rows.length}`, JSON.stringify(rows.map((r) => [r.half, r.depth, Math.round(r.under * 1000) / 1000])))
-    // the tile's floor (its lowest ground less SOLID_MARGIN) is the deepest a box goes: none falls through the solid's bottom, and one wedged between two turned boxes
-    // rests with its centre over the floor's top (the 16 cm boxes made 4 cm under sink up to 5.8 cm into it, at rest: the same after 600 frames)
-    const floor = Math.min(...l0.engine.tiles.get(TILE_KEY)!.heights) - SOLID_MARGIN
-    if (process.env.NET_REPORT) console.log('NET under the floor', JSON.stringify(rows.map((r) => [r.half, r.depth, Math.round((floor - r.bottom) * 1000) / 1000]).filter((x) => x[2] > 0)))
-    for (const r of rows) {
-      expect(r.under).toBeLessThan(HELD_UNDER)
-      expect(r.bottom + r.half).toBeGreaterThan(floor)
-    }
+    if (process.env.NET_REPORT) console.log('NET pushed up', `${pushed}/${rows.length}`, JSON.stringify(rows.map((r) => [r.half, r.depth, Math.round(r.under * 1000) / 1000, Math.round(r.bound * 1000) / 1000])))
+    // a box sinks a little into the floor it is squeezed onto (16 cm boxes made 4 cm under: up to 1 cm), at rest
+    for (const r of rows) expect(r.under).toBeLessThan(r.bound + SINK)
   })
 
   it('a dig just past the tile, where its edge boxes lean but none of its own samples are, makes its net again: the one a fresh tile has over the dug ground', () => {
