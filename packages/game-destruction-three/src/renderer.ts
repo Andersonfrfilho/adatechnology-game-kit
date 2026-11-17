@@ -54,6 +54,13 @@ const STEEL_DENSITY = 7850
 /** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
 const CHIP_DECAL_EDGE = 0.05
 /** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
+/**
+ * A round on concrete, stone or brick knocks a cone out of the face around its hole (front-face cratering): about five calibres across (a 7.62 leaves a crater of
+ * 3 to 4 cm, a pistol round 2 to 3 cm), fresh broken material a shade lighter than the weathered face. Radius per hole diameter, its least (m) and the lightening.
+ */
+const CRATER_RADIUS = 2.5
+const CRATER_MIN_RADIUS = 0.012
+const CRATER_LIGHTEN = 0.12
 const WOOD_RIM = 1.5
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
@@ -378,6 +385,8 @@ class Renderer implements DestructionRenderer {
   private readonly rootMatrices = new Map<string, number[]>()
   /** `clipToDrawn` per hosted body: the boxes it was given, the root's world matrix, and the boxes cut to what it draws. */
   private readonly clipped = new Map<string, { from: readonly StaticSolid[]; matrix: number[]; solids: readonly StaticSolid[] }>()
+  /** Each drawn solid with its surface's friction (`withSurface`), by the solid `drawnSolidsOf` gave: weak, so a solid measured anew lets the old one go. */
+  private readonly surfaced = new WeakMap<StaticSolid, StaticSolid>()
   /** What `staticSolids` hands back, refilled each call. */
   private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
@@ -402,10 +411,15 @@ class Renderer implements DestructionRenderer {
   private readonly workCosts: Required<WorkUnitCosts>
   /** The loose groups waiting to become pieces under `workBudget`, as data: the object, a part of the group, and the tearing joints read when it came loose. */
   private readonly splitQueue = new WorkQueue<PendingSplit>('split')
-  /** Objects bound or drawn again under `workBudget` whose loose groups are queued in the next work step (a load drops the queue the save was taken with). */
-  private readonly looseToCheck = new Set<string>()
+  /**
+   * Objects bound or drawn again whose loose groups become pieces in the next drain: queued under `workBudget` (a load drops the queue the save was taken with), split without
+   * it. The value says whether it came with a fresh `bind` (its pieces start where they stood, `splittingAtLoad`); one drawn again or given its pieces back splits as live.
+   */
+  private readonly looseToCheck = new Map<string, boolean>()
   /** Where the player was at the start of this frame's work step: read once per frame. */
   private workFocus: Vec3 | undefined
+  /** True while the loose groups an object was freshly bound with are split (`splitChecked`): their pieces start where they stood, asleep when balanced on a support. */
+  private splittingAtLoad = false
   /** The `WorkBudget` frame an event last split a group in: the first one of a frame goes over the budget, so a blow breaks something at once. */
   private eventSplitFrame = -1
   /** Whether this frame's budget has begun (`openWorkFrame`): with a physics loop the engine draws from it before `update`. */
@@ -422,10 +436,10 @@ class Renderer implements DestructionRenderer {
   private attached = false
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseToCheck.size + this.prefitLeft(),
+    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() + this.prefitLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
-      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseToCheck.size + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
     },
     attach: () => {
       this.attached = true
@@ -519,6 +533,8 @@ class Renderer implements DestructionRenderer {
       crumbles: (id) => this.world.materials.get(id)?.fracture === 'crumble',
       // rubble lands on what is still built (a slab, a wall's top, a floor), not only on the terrain under it
       surfaceAt: (x, y, z) => this.surfaceAt(x, y, z),
+      // and it meets the walls, ceilings and furniture on its way: it stops on their face instead of flying into them
+      sweep: (from, direction, distance) => (typeof this.world.raycast === 'function' ? this.world.raycast([from[0], from[1], from[2]], [direction[0], direction[1], direction[2]], distance) : null),
       maxAwake: o.maxAwakeFragments ?? Infinity,
     })
     this.cages = new RebarCages(THREE, o.scene)
@@ -614,10 +630,15 @@ class Renderer implements DestructionRenderer {
     for (const [pid, meshes] of byPart) {
       if (!bound.parts.has(pid)) bound.parts.set(pid, this.makePartVis(objectId, pid, this.world.part(objectId, pid)?.material ?? '', meshes, hosts))
     }
+    for (const [pid, hostIds] of Object.entries(options.marksOn ?? {})) {
+      const pv = bound.parts.get(pid)
+      const markHosts = hostIds.map((h) => bound.parts.get(h)).filter((h): h is PartVis => !!h && h !== pv)
+      if (pv && markHosts.length) pv.markHosts = markHosts
+    }
     this.bounds.set(objectId, bound)
     for (const pv of bound.parts.values()) this.tagPart(pv, objectId)
     if (this.o.fitBoxesAhead !== false) this.prefitPartBoxes(bound)
-    this.checkLoose(objectId)
+    this.checkLoose(objectId, true)
   }
 
   /**
@@ -1131,7 +1152,9 @@ class Renderer implements DestructionRenderer {
         }
         ran++
       }
-      if (this.queue.length === 0 && this.slices.length === 0) ran += this.runPrefit(deadline, clock, ran === 0)
+      // after the events, as under the budget: a group a blow of this frame looses keeps the split it gets in the event
+      ran += this.splitChecked(deadline, ran)
+      if (this.queue.length === 0 && this.slices.length === 0 && this.looseToCheck.size === 0) ran += this.runPrefit(deadline, clock, ran === 0)
     } finally {
       this.sliceDeadline = Infinity
       this.drainClock = outerClock
@@ -1336,10 +1359,23 @@ class Renderer implements DestructionRenderer {
       const surface = material ? surfaceOf(material, this.world.materials.get(material)) : undefined
       pv.meshes.forEach((mv, k) => {
         if (mv.loose || !this.visuals.shown(mv)) return
-        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(surface ? { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling ?? 0 } } : solid)
+        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(surface ? this.withSurface(solid, surface) : solid)
       })
     }
     return solids
+  }
+
+  /**
+   * The solid with the friction of its surface: the same object as last time for the same solid and the same numbers, so the lists after a re-measure hold the very objects the engine
+   * holds and compare by identity (`sameSolids`, `EngineStatics.fit`), not number by number through every vertex of a mesh.
+   */
+  private withSurface(solid: StaticSolid, surface: { readonly static: number; readonly dynamic: number; readonly rolling?: number }): StaticSolid {
+    const rolling = surface.rolling ?? 0
+    const kept = this.surfaced.get(solid)
+    if (kept?.friction && kept.friction.static === surface.static && kept.friction.dynamic === surface.dynamic && kept.friction.rolling === rolling) return kept
+    const made: StaticSolid = { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling } }
+    this.surfaced.set(solid, made)
+    return made
   }
 
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
@@ -1714,7 +1750,9 @@ class Renderer implements DestructionRenderer {
   private nearestMesh(pv: PartVis, p: THREE_NS.Vector3): PartVis['meshes'][number] | null {
     let best: PartVis['meshes'][number] | null = null
     let bd = Infinity
-    for (const mv of pv.meshes) {
+    // a part drawn by no mesh of its own takes its marks on the meshes it is drawn inside (`BindOptions.marksOn`)
+    const meshes = pv.meshes.length || !pv.markHosts ? pv.meshes : pv.markHosts.flatMap((h) => h.meshes)
+    for (const mv of meshes) {
       if (!this.visuals.shown(mv)) continue
       const d = this.visuals.worldBox(mv, this.box).distanceToPoint(p)
       if (d < bd) {
@@ -1796,6 +1834,9 @@ class Renderer implements DestructionRenderer {
     // wood tears its fibres around the hole: a ragged rim of fresh wood under it
     const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
     if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, diameter * WOOD_RIM), fresh)
+    // masonry and concrete crater around the hole: the patch of fresh broken material under the dark hole
+    const core = look.mark === 'crater' ? def?.visual?.innerColor : undefined
+    if (core !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(CRATER_MIN_RADIUS, diameter * CRATER_RADIUS), lighten(core, CRATER_LIGHTEN))
     this.visuals.addHole(mv, wp, normal, diameter)
   }
 
@@ -2140,12 +2181,19 @@ class Renderer implements DestructionRenderer {
       return
     }
     let deferred = false
+    const atLoad = this.splittingAtLoad
     this.visuals.batchRebuilds(() => {
       for (let i = 0; i < loose; i++) {
         if (i > 0 && this.drainClock() >= this.sliceDeadline) {
           this.slices.push(() => {
             this.staticDirty.add(objectId)
-            this.splitLoose(objectId, torn)
+            const outer = this.splittingAtLoad
+            this.splittingAtLoad = atLoad
+            try {
+              this.splitLoose(objectId, torn)
+            } finally {
+              this.splittingAtLoad = outer
+            }
           })
           deferred = true
           return
@@ -2180,9 +2228,10 @@ class Renderer implements DestructionRenderer {
         this.fitSurface(b, old)
         if (!old.round) this.setContacts(b, old, this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
       } else if (old.partBoxes) this.fitPartBoxes(b, old)
-      old.sleeping = false
-    } else if (kitOriginOf(b.root)?.kind === 'furniture') {
-      // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples
+      // at load what is left stood as it was: it is not woken
+      if (!this.splittingAtLoad) old.sleeping = false
+    } else if (kitOriginOf(b.root)?.kind === 'furniture' && !this.splittingAtLoad) {
+      // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples; at load it stands as it stood
       const piece = this.makePiece(objectId)
       this.tipIfTopHeavy(b)
       // the host stops keeping the footprint it had where it stood: it is a body that moves now
@@ -2208,14 +2257,50 @@ class Renderer implements DestructionRenderer {
     }
   }
 
-  /** Under `workBudget`, the object's loose groups join the split queue in the next work step (after a bind, a redraw, or pieces given back). */
-  private checkLoose(objectId: string): void {
-    if (this.work && this.autoSplit) this.looseToCheck.add(objectId)
+  /**
+   * The object's loose groups become pieces in the next drain (after a bind, a redraw, or pieces given back), not inside the call: the world may still be building it. Under
+   * `workBudget` they join the split queue (`queueChecked`); without it they split in the drain (`splitChecked`).
+   */
+  private checkLoose(objectId: string, bound = false): void {
+    if (this.autoSplit) this.looseToCheck.set(objectId, bound || (this.looseToCheck.get(objectId) ?? false))
+  }
+
+  /** The objects `checkLoose` marked that have a loose group now; one without any is no work waiting and is forgotten (a group that comes loose later comes with an event). */
+  private looseLeft(): number {
+    let left = 0
+    for (const objectId of [...this.looseToCheck.keys()]) {
+      if ((this.world.state(objectId)?.groups.length ?? 0) > 1) left++
+      else this.looseToCheck.delete(objectId)
+    }
+    return left
+  }
+
+  /**
+   * Without `workBudget`: the objects `checkLoose` marked, in the order they were marked, have their loose groups split (`splitLoose`) while the drain has time (with nothing
+   * run before it in the drain, `done`, the first always does); the rest wait for the next drain. One with no loose group costs nothing. Returns how many objects split.
+   */
+  private splitChecked(deadline: number, done: number): number {
+    let ran = 0
+    for (const [objectId, bound] of [...this.looseToCheck]) {
+      if (done + ran > 0 && this.drainClock() >= deadline) break
+      this.looseToCheck.delete(objectId)
+      const st = this.world.state(objectId)
+      if (!this.bounds.has(objectId) || !st || st.groups.length < 2) continue
+      this.staticDirty.add(objectId)
+      this.splittingAtLoad = bound
+      try {
+        this.splitLoose(objectId)
+      } finally {
+        this.splittingAtLoad = false
+      }
+      ran++
+    }
+    return ran
   }
 
   /** The loose groups of the objects `checkLoose` marked join the split queue, unless waiting already: none stays loose in its object for ever. */
   private queueChecked(): void {
-    for (const objectId of this.looseToCheck) {
+    for (const objectId of this.looseToCheck.keys()) {
       const b = this.bounds.get(objectId)
       const st = this.world.state(objectId)
       if (b && st && st.groups.length > 1) this.queueLoose(b, st, tornPairsOf(st), this.workFocus)
@@ -2387,7 +2472,12 @@ class Renderer implements DestructionRenderer {
     this.fitSurface(nb, piece)
     // what lands on it meets its parts as drawn (a board come off with its books), not the box around them all: nothing invisible collides
     this.fitPartBoxes(nb, piece)
-    if (kitOriginOf(from.root)?.kind === 'furniture') this.tipIfTopHeavy(nb)
+    // a group loose at load starts asleep where it stood when something holds it up, so nothing jumps; held by nothing, it falls
+    const resting = this.splittingAtLoad && this.pieceSys.restIfSupported(piece)
+    // what cannot stand where it stood (at load), and furniture come apart, stands on the corners of its parts as drawn (§12), not on its box: a top on one leg tips over it
+    const furniture = kitOriginOf(from.root)?.kind === 'furniture'
+    if (!resting && (this.splittingAtLoad || furniture) && !piece.round) this.setContacts(nb, piece, meshes.filter((mv) => this.visuals.shown(mv)))
+    if (!resting && furniture) this.tipIfTopHeavy(nb)
     this.o.onPiece?.(piece)
   }
 
@@ -3399,4 +3489,13 @@ class Renderer implements DestructionRenderer {
     this.ownVfx?.dispose()
     this.disposed = true
   }
+}
+
+/** `color` (0xRRGGBB) a share `t` of the way to white. */
+function lighten(color: number, t: number): number {
+  const ch = (shift: number) => {
+    const c = (color >> shift) & 0xff
+    return Math.round(c + (255 - c) * t) << shift
+  }
+  return ch(16) | ch(8) | ch(0)
 }

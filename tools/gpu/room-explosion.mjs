@@ -42,7 +42,7 @@ import { pathToFileURL } from 'node:url'
 const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
 /** The stages of the worst-frames table (ROOM_EXPLOSION_STAGE_*): each is the time spent in the method itself, without the stages it calls (`other` is the rest of the update). */
-export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'createBody', 'layGround', 'layTile', 'waterAt', 'ripple', 'joltStep', 'bridgeReads', 'readBack']
+export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'groundBody', 'pieceBodies', 'layGround', 'layTile', 'waterAt', 'ripple', 'joltStep', 'bridgeReads', 'readBack']
 export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', 'jolt-d4-budget': '&solver=jolt&blastDebris=1&workBudget=4', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
@@ -196,7 +196,10 @@ async function inPage(job) {
     stage('adoptSplit', renderer, 'adoptSplit')
     stage('fitBoxes', renderer, 'partBoxesOf')
     stage('rebuildHost', renderer.visuals, 'rebuildHost')
-    stage('createBody', world, 'createBody')
+    // one body at a time: the ground under the pieces (height field, steps, the solid net under it) and lone fixed bodies; never a piece
+    stage('groundBody', world, 'createBody')
+    // a batch: the new pieces of a frame (`EnginePieces.makeBodies`), and the house's fixed colliders when they are laid again
+    stage('pieceBodies', world, 'createBodies')
     stage('layGround', glue, 'layGround')
     stage('layGround', glue, 'layGroundWithin')
     stage('layTile', glue, 'layTile')

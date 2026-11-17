@@ -200,12 +200,12 @@ Everything is plain JSON in `src/data` (bundled): `types.json`, `loot.json`, `lo
 
 ## Destruction
 
-Every type has a default material and joint for its body (`spec.destruction`) and every movable part has its own (`part.destruction`: `material`, `joint`, `piece`), using the ids of `@adatechnology/game-destruction`. Damage, fire and blasts go through that SDK; the pack only tags. Doors are `hinge`, drawers `clip`, MDF bodies `screw`, bricks `mortar`, welded metal `weld`. The `gas_bottle` body also has `explodes` and `contains` (pressurized gas, sized from the region's cylinder). Water fixtures hold no water themselves.
+Every type has a default material and joint for its body (`spec.destruction`) and every movable part has its own (`part.destruction`: `material`, `joint`, `piece`), using the ids of `@adatechnology/game-destruction`. Damage, fire and blasts go through that SDK; the pack only tags. Doors are `hinge`, drawers `slide`, MDF bodies `screw`, bricks `mortar`, welded metal `weld`. The `gas_bottle` body also has `explodes` and `contains` (pressurized gas, sized from the region's cylinder). Water fixtures hold no water themselves.
 
 | Type | Body | Parts |
 | --- | --- | --- |
 | fridge, fridge_compact | steel, weld | doors steel, hinge |
-| kitchen cabinets, pantry, wardrobe, dresser, nightstand, bathroom cabinet | mdf, screw | doors mdf, hinge; drawers mdf, clip |
+| kitchen cabinets, pantry, wardrobe, dresser, nightstand, bathroom cabinet | mdf, screw | doors mdf, hinge; drawers mdf, slide |
 | stove | steel, weld | oven door steel, hinge; knobs plastic, clip |
 | gas_bottle | steel, weld, explodes + contains gas | valve copper, screw |
 | sink_kitchen, sink_bathroom, utility_sink | ceramic, glue | taps steel, screw; cabinet doors mdf, hinge |

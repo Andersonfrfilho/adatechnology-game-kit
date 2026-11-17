@@ -22,6 +22,8 @@ export {
   subgradeModulus,
 } from './soil'
 export type { FoundationSolve, SoilSpring } from './soil'
+export { EMBEDMENT_DEFAULTS, embedmentResistance, embedmentStrength, postEmbedment } from './embedment'
+export type { EmbedmentParams } from './embedment'
 export { vec, quat, quatFromEuler, rotateVec, toLocal, toWorld } from './math'
 export { resolveStrings, locales } from './locale'
 export type { DestructionStrings, DestructionLocale } from './locale'

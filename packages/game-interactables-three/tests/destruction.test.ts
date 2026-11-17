@@ -49,7 +49,7 @@ describe('destruction tags', () => {
     expect(group.children[0].userData.destructionMaterial).toBeUndefined()
   })
 
-  it('tags a real wardrobe: mdf body, hinged mdf doors, clip drawers', () => {
+  it('tags a real wardrobe: mdf body, hinged mdf doors, drawers on slides', () => {
     const hh = createHousehold({ region: 'br', locale: 'en' })
     const mesh = createMeshApi(THREE)
     const spec = hh.build('wardrobe', { seed: 3 }, mesh.api)
@@ -60,7 +60,7 @@ describe('destruction tags', () => {
     expect(parts.door_1.userData.destructionJoint).toBe('hinge')
     expect(parts.drawer_1.userData.destructionPart).toBe('drawer_1')
     expect(parts.drawer_1.userData.destructionPiece).toBe('drawer')
-    expect(parts.drawer_1.userData.destructionJoint).toBe('clip')
+    expect(parts.drawer_1.userData.destructionJoint).toBe('slide')
     for (const g of Object.values(parts)) expect(g.userData.destructionMaterial).toBe('mdf')
   })
 

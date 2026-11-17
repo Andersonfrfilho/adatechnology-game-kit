@@ -504,15 +504,15 @@
   ]
  },
  "household/kitchen_cabinet_base:high": {
-  "hash": "50be8bac",
+  "hash": "2c8300dc",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 7c135064",
    "0/1 Mesh 63f111a7",
-   "0/2 Group 7cec11e3",
-   "0/2/0 Mesh 1efc0236",
-   "0/2/1 Mesh 128eb751",
-   "0/2/2 Mesh 4c4a0997",
+   "0/2 Group 3b4cae40",
+   "0/2/0 Mesh a436d7fb",
+   "0/2/1 Mesh 6eee35aa",
+   "0/2/2 Mesh f41cf752",
    "0/3 Group 64c28fcd",
    "0/3/0 Mesh 3360c75a",
    "0/3/1 Mesh cd744da1",
@@ -556,7 +556,7 @@
   ]
  },
  "household/wardrobe:high": {
-  "hash": "6d694622",
+  "hash": "cdcdb072",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 62eb749e",
@@ -576,54 +576,54 @@
    "0/6/0 Mesh d9837dba",
    "0/6/1 Mesh 879be387",
    "0/6/2 Mesh 4c84e525",
-   "0/7 Group 1f0f1fd8",
-   "0/7/0 Mesh 13bc60dd",
-   "0/7/1 Mesh 86f95e97",
-   "0/7/2 Mesh 74d28490",
-   "0/8 Group 70a871e4",
-   "0/8/0 Mesh f035fa15",
-   "0/8/1 Mesh 6bd57431",
-   "0/8/2 Mesh 2970f4c6",
-   "0/9 Group 8f54530c",
-   "0/9/0 Mesh 6c742699",
-   "0/9/1 Mesh f4591a87",
-   "0/9/2 Mesh d8a38fd8"
+   "0/7 Group 60aa941",
+   "0/7/0 Mesh 1e077756",
+   "0/7/1 Mesh d3cac8b2",
+   "0/7/2 Mesh 6e636f31",
+   "0/8 Group cf6ed507",
+   "0/8/0 Mesh c852c97e",
+   "0/8/1 Mesh 73259fec",
+   "0/8/2 Mesh c4de075f",
+   "0/9 Group 6dcfa90d",
+   "0/9/0 Mesh 7d9c8cb2",
+   "0/9/1 Mesh 30a256d6",
+   "0/9/2 Mesh 54bb8b6d"
   ]
  },
  "household/dresser:high": {
-  "hash": "9a641a28",
+  "hash": "e8a47b08",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 6a8d1a1c",
    "0/1 Mesh 677084a9",
-   "0/2 Group f70ba4b2",
-   "0/2/0 Mesh 48489fdd",
-   "0/2/1 Mesh 3be3008e",
-   "0/2/2 Mesh 12132f15",
-   "0/3 Group cb0bddb2",
-   "0/3/0 Mesh 1f53bbb7",
-   "0/3/1 Mesh d685170e",
-   "0/3/2 Mesh 74c17d19",
-   "0/4 Group b2216ba6",
-   "0/4/0 Mesh e74552a5",
-   "0/4/1 Mesh 5f126a6e",
-   "0/4/2 Mesh 4878e02d",
-   "0/5 Group c51144b2",
-   "0/5/0 Mesh ea20ecd3",
-   "0/5/1 Mesh 2fd0244e",
-   "0/5/2 Mesh 67903401"
+   "0/2 Group 46391ceb",
+   "0/2/0 Mesh 85a0e410",
+   "0/2/1 Mesh 985d0363",
+   "0/2/2 Mesh 56bfc434",
+   "0/3 Group 5cd4ab45",
+   "0/3/0 Mesh 10b8666e",
+   "0/3/1 Mesh abaeba5f",
+   "0/3/2 Mesh 647ec2bc",
+   "0/4 Group 7a275a1d",
+   "0/4/0 Mesh 881b45d0",
+   "0/4/1 Mesh 57a0227f",
+   "0/4/2 Mesh 5c149200",
+   "0/5 Group 8fee4ec3",
+   "0/5/0 Mesh 2008640a",
+   "0/5/1 Mesh d856dcab",
+   "0/5/2 Mesh 3541b3b0"
   ]
  },
  "household/nightstand:high": {
-  "hash": "c8fa8d62",
+  "hash": "fa6368a2",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 3add707",
    "0/1 Mesh 8e1ca059",
-   "0/2 Group c73f4bbf",
-   "0/2/0 Mesh 569925ba",
-   "0/2/1 Mesh 76f407e2",
-   "0/2/2 Mesh d268ec94",
+   "0/2 Group f730940",
+   "0/2/0 Mesh 2eb0d0bd",
+   "0/2/1 Mesh f8df119f",
+   "0/2/2 Mesh ed2b5ee1",
    "0/3 Group d022bcfb",
    "0/3/0 Mesh 25520db7",
    "0/3/1 Mesh 68efb93d",
@@ -1646,12 +1646,12 @@
   ]
  },
  "household/kitchen_cabinet_base:game": {
-  "hash": "b3b8ffe9",
+  "hash": "9375eb7d",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh d975472a",
-   "0/1 Group a3d7f2c6",
-   "0/1/0 Mesh f5c4c889",
+   "0/1 Group 23e35ce3",
+   "0/1/0 Mesh 972c8ada",
    "0/2 Group 52a271e8",
    "0/2/0 Mesh ce234130",
    "0/3 Group dae90e6",
@@ -1681,7 +1681,7 @@
   ]
  },
  "household/wardrobe:game": {
-  "hash": "2a51bbcd",
+  "hash": "b71e300d",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 4135073c",
@@ -1692,36 +1692,36 @@
    "0/2/1 Mesh 7d680b47",
    "0/3 Group 53784c1b",
    "0/3/0 Mesh a009299a",
-   "0/4 Group d7a25df1",
-   "0/4/0 Mesh b18225fd",
-   "0/5 Group 1d93de8f",
-   "0/5/0 Mesh 98a7848d",
-   "0/6 Group 54574e21",
-   "0/6/0 Mesh 9b6bb709"
+   "0/4 Group b8c0d45e",
+   "0/4/0 Mesh 74bec0a8",
+   "0/5 Group 9a1a0fe2",
+   "0/5/0 Mesh 453233b4",
+   "0/6 Group ad7d7c16",
+   "0/6/0 Mesh 45b6cf88"
   ]
  },
  "household/dresser:game": {
-  "hash": "88e7906c",
+  "hash": "2716025c",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 1803b56",
-   "0/1 Group f296dd3f",
-   "0/1/0 Mesh 42483144",
-   "0/2 Group c7118d79",
-   "0/2/0 Mesh b32ae0a",
-   "0/3 Group 6160542b",
-   "0/3/0 Mesh 26066118",
-   "0/4 Group 55d351c5",
-   "0/4/0 Mesh a191d86a"
+   "0/1 Group 22243ae4",
+   "0/1/0 Mesh 97788517",
+   "0/2 Group 60b9cf30",
+   "0/2/0 Mesh 3d419b4d",
+   "0/3 Group ba38060e",
+   "0/3/0 Mesh 9d937c97",
+   "0/4 Group f35e7286",
+   "0/4/0 Mesh f41147a1"
   ]
  },
  "household/nightstand:game": {
-  "hash": "ee1f079a",
+  "hash": "2c358136",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 604419c7",
-   "0/1 Group 5bd56c8a",
-   "0/1/0 Mesh 4a89091a",
+   "0/1 Group 4700b61b",
+   "0/1/0 Mesh e81d190b",
    "0/2 Group 5bc3d2ce",
    "0/2/0 Mesh ceef683b"
   ]
@@ -2133,7 +2133,7 @@
   ]
  },
  "options/wardrobe:materials": {
-  "hash": "e8669e41",
+  "hash": "f3ee55ac",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 5713c573",
@@ -2149,15 +2149,15 @@
    "0/5 Group b46c56e9",
    "0/5/0 Mesh 1acbe6fc",
    "0/5/1 Mesh 91705544",
-   "0/6 Group 506dd2c3",
-   "0/6/0 Mesh 3c7dddf7",
-   "0/6/1 Mesh 3b10f282",
-   "0/7 Group 9ae7aa55",
-   "0/7/0 Mesh 7f202273",
-   "0/7/1 Mesh 729cea76",
-   "0/8 Group 91b984f",
-   "0/8/0 Mesh ace8aedb",
-   "0/8/1 Mesh eaa454e"
+   "0/6 Group 4751b9c4",
+   "0/6/0 Mesh 7137cf56",
+   "0/6/1 Mesh c6983421",
+   "0/7 Group b51dc974",
+   "0/7/0 Mesh f1e0b73e",
+   "0/7/1 Mesh 31fd2d51",
+   "0/8 Group 5a114718",
+   "0/8/0 Mesh 37fbc1f6",
+   "0/8/1 Mesh d03a84a1"
   ]
  },
  "options/fridge:doubleSidedPlanes+shadows": {

@@ -16,6 +16,8 @@ const SHOVEL_SPEC = (): DestructibleSpec => ({
     { id: 'handle', material: 'wood_hard', shape: { kind: 'box', size: [0.9, 0.035, 0.035] }, position: [-0.101, 0.053, 0], mass: 0.9, tags: ['handle'] },
     { id: 'blade', material: 'steel', shape: { kind: 'box', size: [0.301, 0.012, 0.22] }, position: [0.4005, 0.006, 0], mass: 1.1, thickness: 0.002, tags: ['blade'] },
   ],
+  // the handle sits in the blade's socket, above its plate: the boxes do not touch, so the joint is spelled out (unjoined, they would be two loose things from load)
+  joints: [{ id: 'socket', a: 'handle', b: 'blade', kind: 'screw' }],
 })
 const shovel: TestRoomItem = { id: 'item_shovel', name: 'Shovel', group: 'Items', build: (T: typeof THREE_NS) => buildFromSpec(T, SHOVEL_SPEC()), spec: SHOVEL_SPEC, movable: true }
 

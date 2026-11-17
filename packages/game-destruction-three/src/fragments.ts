@@ -113,6 +113,12 @@ export interface FragmentSystemOptions {
    * ground (`groundAt`).
    */
   surfaceAt?: (x: number, y: number, z: number) => number
+  /**
+   * The first face of a standing part of the world on the way from `from` along the unit `direction`, within `distance`: what a flying fragment meets (a wall, a ceiling, a
+   * piece of furniture) before it gets through it. Without it a fragment flies through walls and lands on whatever lies under it inside them (the head of a door in the wall,
+   * the top of a slab), left showing out of the plaster. Default: none (only what is under it stops it).
+   */
+  sweep?: (from: readonly [number, number, number], direction: readonly [number, number, number], distance: number) => { point: readonly number[]; normal: readonly number[] } | null
   /** Whether a material crumbles (`MaterialDef.fracture` 'crumble': brick, block, concrete, plaster): its chunks are drawn broken, not as cut boxes. */
   crumbles?: (materialId: string) => boolean
   /**
@@ -152,9 +158,23 @@ const SUPPORT_CHECKS = 32
 const SUPPORT_GAP = 0.02
 /** How far (m) above a falling fragment's bottom a resting top may be and still be what it lands on: a step it slides up onto rather than sinks into. */
 const PILE_STEP = 0.01
+/** Speed (m/s) across and turn (rad/s) a piece lying with its centre off what holds it gets each step it stays so: it slides and tips off the edge. */
+const TIP_SPEED = 0.6
+const TIP_TURN = 3
+/** No room taken: a point, for whether a centre is over a shadow. */
+const POINT: Shadow = [0, 0, 0, 0, 0, 0]
 
 /** How many shard shapes there are; a fragment takes one by the hash of its id. */
 const SHARD_SHAPES = 6
+
+/**
+ * Slowest fragment (m/s) whose way is swept for walls: a slower one moves a few centimetres a step and only what is under it matters (one lying on a floor falls g dt, a third
+ * of a metre a second at 30 updates a second, into the floor every step, and the floor is the ground contact's).
+ */
+const SWEEP_MIN_SPEED = 1
+/** Share of the speed into a face it keeps bouncing back (brick or glass off plaster: little), and of the speed along it. */
+const WALL_RESTITUTION = 0.25
+const WALL_GLIDE = 0.7
 
 /** Seconds a fragment stays slow on what is under it before it sleeps. */
 const SETTLE_SECONDS = 0.4
@@ -275,7 +295,8 @@ export class FragmentSystem {
     if (f.shape === 'chunk' && form === 'granules') return this.sharedGeometry('lump', seed)
     if (f.shape === 'scrap' && form === 'plies') return this.sharedGeometry('veneer', seed)
     if (f.shape === 'slab' && (form === 'slivers' || form === 'plies')) return this.sharedGeometry('board', seed)
-    if (f.shape === 'chunk' && this.o.crumbles?.(f.material)) return this.sharedGeometry('rubble', seed)
+    // whole bricks and blocks that came out at their joints keep their faces (a laid unit is a brick, not a broken lump); a broken face of it is rubble
+    if (f.shape === 'chunk' && !f.unit && this.o.crumbles?.(f.material)) return this.sharedGeometry('rubble', seed)
     return this.box
   }
 
@@ -516,7 +537,9 @@ export class FragmentSystem {
       // measured afresh: the floor kept from its landing is the top it landed on, which may have broken or been carried off since
       f.floor = null
       const bottom = f.mesh.position.y - ext
-      if (bottom > Math.max(this.floorUnder(f), this.pileUnder(f, bottom)) + SUPPORT_GAP) this.rouse(f)
+      const floor = this.floorUnder(f)
+      const pile = this.pileUnder(f, bottom)
+      if (bottom > Math.max(floor, pile) + SUPPORT_GAP || (pile > floor && this.offEdge)) this.rouse(f)
     }
   }
 
@@ -534,7 +557,7 @@ export class FragmentSystem {
   private step(f: Live, dt: number, g: number): void {
     const mesh = f.mesh
     f.vel.y -= g * dt
-    mesh.position.addScaledVector(f.vel, dt)
+    if (!this.hitWall(f, dt)) mesh.position.addScaledVector(f.vel, dt)
     const w = f.ang.length()
     if (w > 1e-5) {
       this.dq.setFromAxisAngle(this.v.copy(f.ang).multiplyScalar(1 / w), w * dt)
@@ -546,7 +569,11 @@ export class FragmentSystem {
     const h = f.half
     const sc = f.dying ? f.fade : 1
     const ext = (Math.abs(e[1]) * h.x + Math.abs(e[5]) * h.y + Math.abs(e[9]) * h.z) * sc
-    const gy = Math.max(this.floorUnder(f), this.pileUnder(f, mesh.position.y - ext + Math.max(0, -f.vel.y) * dt))
+    const floor = this.floorUnder(f)
+    const pile = this.pileUnder(f, mesh.position.y - ext + Math.max(0, -f.vel.y) * dt)
+    const gy = Math.max(floor, pile)
+    // lying on the pile with its centre past the edge of what holds it: it slides and turns off that edge
+    const tip = pile > floor ? this.offEdge : null
     let contact = false
     if (mesh.position.y - ext < gy) {
       contact = true
@@ -573,7 +600,12 @@ export class FragmentSystem {
       f.ang.multiplyScalar(Math.exp(-0.15 * dt))
       if (f.air > 0) this.flutter(f, dt)
     }
-    if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
+    if (contact && tip) {
+      f.vel.x += tip.x * TIP_SPEED * dt * 10
+      f.vel.z += tip.z * TIP_SPEED * dt * 10
+      f.ang.x += tip.z * TIP_TURN * dt * 10
+      f.ang.z -= tip.x * TIP_TURN * dt * 10
+    } else if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
     f.contact = contact
     if (contact && isSlow(f)) {
       f.still += dt
@@ -581,6 +613,40 @@ export class FragmentSystem {
     } else {
       f.still = 0
     }
+  }
+
+  /**
+   * A fragment meets what stands in its way this step (`FragmentSystemOptions.sweep`): it stops on the face, out of it by its own reach along the face's normal, and bounces off
+   * it, losing most of the speed into the face and some along it. A shard thrown at a wall falls at the foot of the wall, never into it. True when it met a face (it was moved).
+   */
+  private hitWall(f: Live, dt: number): boolean {
+    const sweep = this.o.sweep
+    if (!sweep) return false
+    const speed = f.vel.length()
+    if (speed < SWEEP_MIN_SPEED) return false
+    // one sliding or bouncing on what is under it: that is the ground contact's
+    if (f.contact && f.vel.y <= 0 && Math.hypot(f.vel.x, f.vel.z) < SWEEP_MIN_SPEED) return false
+    const p = f.mesh.position
+    const dir: [number, number, number] = [f.vel.x / speed, f.vel.y / speed, f.vel.z / speed]
+    const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
+    // the fragment's reach along a direction: the half extents of its turned box projected on it
+    const reach = (x: number, y: number, z: number) => (Math.abs(e[0] * x + e[1] * y + e[2] * z) * f.half.x + Math.abs(e[4] * x + e[5] * y + e[6] * z) * f.half.y + Math.abs(e[8] * x + e[9] * y + e[10] * z) * f.half.z) * (f.dying ? f.fade : 1)
+    const ahead = reach(dir[0], dir[1], dir[2])
+    const hit = sweep([p.x, p.y, p.z], dir, speed * dt + ahead)
+    if (!hit) return false
+    const nx = hit.normal[0] ?? 0, ny = hit.normal[1] ?? 0, nz = hit.normal[2] ?? 0
+    const into = f.vel.x * nx + f.vel.y * ny + f.vel.z * nz
+    // a face it is leaving (its normal along the way) does not hold it
+    if (into >= 0) return false
+    const off = reach(nx, ny, nz) + 0.002
+    p.set((hit.point[0] ?? p.x) + nx * off, (hit.point[1] ?? p.y) + ny * off, (hit.point[2] ?? p.z) + nz * off)
+    // the speed into the face turns back at a quarter; what runs along the face keeps most of it
+    const tx = f.vel.x - into * nx, ty = f.vel.y - into * ny, tz = f.vel.z - into * nz
+    f.vel.set(tx * WALL_GLIDE - into * WALL_RESTITUTION * nx, ty * WALL_GLIDE - into * WALL_RESTITUTION * ny, tz * WALL_GLIDE - into * WALL_RESTITUTION * nz)
+    f.ang.multiplyScalar(0.55)
+    // what it lands on is measured again from where it stopped (it was over the far side of the wall)
+    f.floor = null
+    return true
   }
 
   /**
@@ -594,17 +660,35 @@ export class FragmentSystem {
     const reachZ = Math.abs(e[2]) * f.half.x + Math.abs(e[6]) * f.half.y + Math.abs(e[10]) * f.half.z
     const mine = shadowOf(e, f.half)
     let top = Number.NEGATIVE_INFINITY
+    // the pieces it lies on (those whose top is the highest under it) and whether one of them is under its centre
+    const under: RestingBox[] = []
     for (const other of this.list) {
       if (other === f || other.dying) continue
       const box = other.asleep ? (other.box ??= restingBox(other)) : restingBox(other)
-      if (box.top > bottom + PILE_STEP || box.top <= top) continue
+      if (box.top > bottom + PILE_STEP || box.top < top - PILE_STEP) continue
       if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
       // the wrapping boxes touch: what counts is whether the floor areas the two really cover do (a turned or leaning box wraps far more than it covers)
       if (!shadowsOverlap(mine, box.shadow, box.x - p.x, box.z - p.z)) continue
-      top = box.top
+      if (box.top > top + PILE_STEP) under.length = 0
+      under.push(box)
+      top = Math.max(top, box.top)
+    }
+    // a brick on a brick stays only with its centre over it: one standing out past the edge goes over, away from what is under it
+    this.offEdge = null
+    if (under.length > 0 && !under.some((box) => box.top >= top - PILE_STEP && shadowsOverlap(POINT, box.shadow, box.x - p.x, box.z - p.z))) {
+      let x = 0, z = 0
+      for (const box of under) {
+        x += p.x - box.x
+        z += p.z - box.z
+      }
+      const d = Math.hypot(x, z)
+      this.offEdge = d > 1e-6 ? { x: x / d, z: z / d } : { x: 1, z: 0 }
     }
     return top
   }
+
+  /** Set by `pileUnder`: the way off the edge when the fragment's centre is past what it lies on, else null. */
+  private offEdge: { x: number; z: number } | null = null
 
   /** A sheet in the air: drag slows it to a slow fall, and it sways and turns over as it goes. */
   private flutter(f: Live, dt: number): void {

@@ -44,8 +44,9 @@ describe('a hand grenade in the kitchen of single_storey_a', () => {
     const kitchen = spec.parts.filter((part) => /^window:w/.test(part.id) && part.position[0] > -0.3 && part.position[0] < 3.7 && part.position[2] > 4.7 && part.position[2] < 11.3).map((part) => part.id)
     expect(kitchen.length).toBeGreaterThan(0)
     const panes = state.parts.filter((part) => kitchen.includes(part.id))
-    expect(panes.some((part) => part.status === 'broken')).toBe(true)
-    expect(panes.every((part) => part.status === 'broken' || part.cracks.length + part.holes.length > 0)).toBe(true)
+    // every pane of the kitchen breaks: a pane is 4 mm of glass to the wave (its piece says so), not the 12 mm the pane is drawn with, which held 77 kPa and stayed whole 3 m away
+    expect(panes.filter((part) => part.status !== 'broken').map((part) => part.id)).toEqual([])
+    expect(spec.parts.filter((part) => kitchen.includes(part.id)).every((part) => part.thickness === 0.004)).toBe(true)
   }, 600000)
 
   // Its fireball is 1.3 x 0.24^(1/3) = 0.8 m wide and lives 6 ms: 9 kJ/m2 on what it touches, a tenth of what wood needs to light (93 kJ/m2), and nothing it does

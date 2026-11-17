@@ -8,7 +8,7 @@ const MATERIALS = [
   'brick', 'plaster', 'stone', 'plastic', 'rubber', 'fabric', 'foam', 'leather', 'paper', 'foliage', 'green_wood', 'cactus', 'flesh_fruit',
   'wax', 'soil',
 ]
-const JOINTS = ['screw', 'bolt', 'nail', 'weld', 'glue', 'hinge', 'clip', 'tie', 'mortar', 'fused', 'stem']
+const JOINTS = ['screw', 'bolt', 'nail', 'weld', 'glue', 'hinge', 'slide', 'clip', 'tie', 'mortar', 'fused', 'stem']
 const PIECES = ['door', 'drawer', 'leg', 'top', 'glass', 'shelf', 'lid', 'panel', 'handle', 'knob', 'button', 'rocker', 'breaker', 'slat', 'cord', 'curtain', 'flap', 'flag', 'cloth', 'valve', 'bucket']
 const FLUIDS = ['water', 'fuel', 'oil', 'gas', 'sap', 'acid', 'blood']
 
@@ -38,7 +38,7 @@ describe('destruction tags', () => {
     const door = build('wardrobe').spec.parts!.find((p) => p.id === 'door_1')!
     expect(door.destruction).toEqual({ material: 'mdf', joint: 'hinge', piece: 'door' })
     const dr = build('dresser').spec.parts!.find((p) => p.id === 'drawer_1')!
-    expect(dr.destruction).toEqual({ material: 'mdf', joint: 'clip', piece: 'drawer' })
+    expect(dr.destruction).toEqual({ material: 'mdf', joint: 'slide', piece: 'drawer' })
     expect(build('shower').spec.parts!.find((p) => p.id === 'glass_door')!.destruction?.material).toBe('tempered_glass')
     expect(build('curtain').spec.parts![0].destruction?.material).toBe('fabric')
   })

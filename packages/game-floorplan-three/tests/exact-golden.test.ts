@@ -60,6 +60,8 @@ cases.push(['destruction/breach', () => destroyed(({ world, d, centre }) => worl
 // takes 1% of its hit points (the 40 kJ of contact shock, 0.04 x 0.48 kg x 4.184 MJ/kg x half the sphere), cracks it and breaks the three walls standing over the charge;
 // 2.4 kg against wall_0_0 still breaks its window and the baseboard and sidewalk at its foot, and the upper walls over it fall
 // breach, spall and fracture recorded again when the doors and jambs came to be held in their walls (they no longer come off as loose pieces: fewer objects)
+// breach, spall and fracture recorded again when the lot walls, poles, gates, furniture doors and drawers, thresholds and the gas cylinder came to be held where they stand (the house loads as one group: fewer loose pieces)
+// every house recorded again (outside the Visor's scene) when the poles, the lot walls' ground beams and the gate pillars' footings came to be drawn into the terrain, and the gate pillars became pieces of their own set in the ground; breach, spall and fracture with them and the anchors by the buried base
 // and the wave began to load only the solid share of a sloped part's box; the breach still opens wall_0_0, the spall still breaks the three walls over it
 // spall and fracture once more when the heat of a blast became its fireball's, seen in a straight line: the same parts break and fall, nothing catches fire
 cases.push(['destruction/spall', () => destroyed(({ world, d }) => world.hitPart(d.id!, 'slab_1_p0', { type: 'explosive', point: d.spec!.parts.find((p) => p.id === 'slab_1_p0')!.position, energy: 4e5, radius: 1.5 }))])

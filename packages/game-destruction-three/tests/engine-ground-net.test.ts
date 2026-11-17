@@ -7,12 +7,11 @@ import { PieceSystem } from '../src/pieces'
 import { IS_JOLT, physicsOption } from './setup-physics'
 
 /**
- * T3.8ad: the solid under a crater tile is made again when its heights change, from the hulls it already had where the ground did not move. Same solid as one made from nothing;
- * nothing leaks. Jolt only.
+ * T3.8ag: the solid under a crater tile is boxes, no hull: made again when its heights change, the same solid as one made from nothing; nothing leaks. Jolt only.
  */
 interface Engine {
-  world: PhysicsWorld & { hulls: Map<number, { readonly size: number }>; J: { ConvexHullShapeSettings: { prototype: { Create(): unknown } } } }
-  tiles: Map<number, { ground: BodyId; solid: BodyId | null; volume: { prisms: readonly number[]; boxes: readonly number[] } }>
+  world: PhysicsWorld & { J: { ConvexHullShapeSettings: { prototype: { Create(): unknown } } } }
+  tiles: Map<number, { ground: BodyId; solid: BodyId | null; volume: { boxes: readonly number[] } }>
   layTile(key: number, ix: number, iz: number, tile: unknown): void
   groundChanged(x: number, z: number, radius: number): void
 }
@@ -51,25 +50,46 @@ const solidSurface = (l: Lab): number[] => {
   return out
 }
 
-describe.skipIf(!IS_JOLT)('the solid under a crater tile reuses the hulls the ground did not change (T3.8ad)', () => {
-  it('a second crater on the rim makes only the hulls it changed, and the solid is the one a fresh tile has, to the bit', () => {
+describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () => {
+  it('a crater tile and a second crater on its rim make no convex hull, and the solid made again is the one a fresh tile has, to the bit', () => {
+    const probe = lab(0)
+    const made = vi.spyOn(probe.engine.world.J.ConvexHullShapeSettings.prototype, 'Create')
     const l = lab(0)
     l.engine.layTile(TILE_KEY, 0, 0, undefined)
-    const first = l.engine.tiles.get(TILE_KEY)!
-    const prisms = first.volume.prisms.length / 24
-    expect(prisms).toBeGreaterThan(50)
-    expect(l.engine.world.hulls.get(first.solid!)!.size).toBeGreaterThan(0)
-    const made = vi.spyOn(l.engine.world.J.ConvexHullShapeSettings.prototype, 'Create')
+    expect(l.engine.tiles.get(TILE_KEY)!.volume.boxes.length / 6).toBeGreaterThan(50)
     l.state.depth = 0.15
     l.engine.groundChanged(1.9, 1, 0.3)
     l.engine.layTile(TILE_KEY, 0, 0, l.engine.tiles.get(TILE_KEY))
-    const afterPrisms = l.engine.tiles.get(TILE_KEY)!.volume.prisms.length / 24
-    // far fewer hulls made than the solid holds: the rest are the ones from before
-    expect(made.mock.calls.length).toBeLessThan(afterPrisms * 0.5)
+    expect(made.mock.calls.length).toBe(0)
     made.mockRestore()
     const fresh = lab(0.15)
     fresh.engine.layTile(TILE_KEY, 0, 0, undefined)
     expect(solidSurface(l)).toEqual(solidSurface(fresh))
+  })
+
+  it('boxes come to rest on the crater\'s height field, none in the net under it', () => {
+    const l = lab(0.15)
+    l.engine.layTile(TILE_KEY, 0, 0, undefined)
+    const world = l.engine.world as unknown as PhysicsWorld & { partners: Map<number, Map<number, number>> }
+    const solid = l.engine.tiles.get(TILE_KEY)!.solid!
+    const spots: Array<[number, number]> = [[1, 1], [1.3, 1.1], [0.7, 0.8], [1.9, 1], [1.75, 1.15], [1.2, 0.6]]
+    const ids = spots.map(([x, z], i) => world.createBody({ shape: { kind: 'box', half: [0.04, 0.03, 0.05] }, motion: 'dynamic', mass: 0.4, position: [x, groundOf(0.15)(x, z) + 0.12, z], rotation: [0, Math.sin(i / 2), 0, Math.cos(i / 2)], user: i + 1 }))
+    for (let frame = 0; frame < 240; frame++) world.step(1 / 60)
+    const pose = new Float64Array(7)
+    const away = new Float64Array(3)
+    const net = new Set([solid])
+    const sunk: number[] = []
+    for (const id of ids) {
+      world.readPose(id, pose, 0)
+      expect(world.isSleeping(id)).toBe(true)
+      // at rest on the surface: in no block of the net, and its centre above the ground under it
+      expect(world.penetration(id, away, net)).toBe(0)
+      expect(pose[1]! - groundOf(0.15)(pose[0]!, pose[2]!)).toBeGreaterThan(0)
+      sunk.push(world.penetration(id, away))
+    }
+    // how deep each rests in the fixed things (the height field): a contact's sink, a few millimetres at most
+    expect(Math.max(...sunk)).toBeLessThan(0.004)
+    if (process.env.NET_REPORT) console.log('NET sunk', JSON.stringify(sunk))
   })
 
   it('the heap and the body count are the same after 200 changes of the crater', () => {
@@ -83,12 +103,8 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile reuses the hulls the gr
     for (let k = 0; k < 6; k++) round(k)
     const bytes = l.engine.world.memoryInUse()
     const bodies = l.engine.world.bodyCount
-    const solid = l.engine.tiles.get(TILE_KEY)!.solid!
-    const hulls = l.engine.world.hulls.get(solid)!.size
     for (let k = 6; k < 206; k++) round(k)
     expect(l.engine.world.bodyCount).toBe(bodies)
-    // the body holds the hulls of its current shape and no more: the count does not grow with the changes
-    expect(l.engine.world.hulls.get(solid)!.size).toBeLessThanOrEqual(hulls + 40)
     expect(Math.abs(l.engine.world.memoryInUse() - bytes)).toBeLessThan(4096)
   })
 })

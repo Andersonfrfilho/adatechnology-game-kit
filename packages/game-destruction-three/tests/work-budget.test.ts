@@ -304,13 +304,17 @@ describe('a save taken while loose groups wait', () => {
     expect(world.state('o1')?.groups).toHaveLength(1)
   })
 
-  it('without the budget a bind or a redraw queues nothing', () => {
+  it('without the budget a redraw queues nothing: the loose groups split in the next update', () => {
     const { renderer, world } = grouped([['a', 'b', 'c']], {})
     renderer.update(FRAME)
     world.state('o1')!.groups = [['a'], ['b'], ['c']]
     renderer.redraw('o1')
-    renderer.update(FRAME)
+    expect(splitQueueOf(renderer).size).toBe(0)
     expect(world.splits).toHaveLength(0)
+    renderer.update(FRAME)
+    expect(splitQueueOf(renderer).size).toBe(0)
+    expect(world.splits).toHaveLength(2)
+    expect(world.state('o1')?.groups).toHaveLength(1)
   })
 })
 

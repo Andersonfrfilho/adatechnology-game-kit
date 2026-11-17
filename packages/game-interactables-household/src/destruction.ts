@@ -11,7 +11,8 @@ export interface TypeDestruction {
 }
 
 const door = (material: string, joint = 'hinge', piece = 'door'): PartDestruction => ({ material, joint, piece })
-const drawer: PartDestruction = { material: 'mdf', joint: 'clip', piece: 'drawer' }
+// a drawer rides on its pair of runners (`slide`): it comes off when they break or are unscrewed
+const drawer: PartDestruction = { material: 'mdf', joint: 'slide', piece: 'drawer' }
 const knob: PartDestruction = { material: 'plastic', joint: 'clip', piece: 'knob' }
 const tap: PartDestruction = { material: 'steel', joint: 'screw', piece: 'handle' }
 const mdfBody = { material: 'mdf', joint: 'screw' }

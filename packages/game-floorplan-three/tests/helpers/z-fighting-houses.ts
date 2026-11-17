@@ -1,4 +1,5 @@
 import { engine } from '@adatechnology/game-floorplan'
+import type { WindowFrame } from '@adatechnology/game-floorplan'
 import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
 import { postApocalypticStates, register as registerPostApocalyptic } from '@adatechnology/game-floorplan-post-apocalyptic'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
@@ -64,16 +65,22 @@ export function conflictsAt(house: StagedHouse, level: number, cap: number): Coi
 }
 
 /** Builds one plan with the construction stages and walks the levels. A template that cannot be built staged returns the reason. */
-export function houseConflicts(template: string, seed: number, cap: number): { conflicts: HouseConflict[]; skipped?: string } {
+export function houseConflicts(
+  template: string,
+  seed: number,
+  cap: number,
+  variant: { readonly windowFrame?: WindowFrame; readonly levels?: readonly number[] } = {},
+): { conflicts: HouseConflict[]; skipped?: string } {
   const plan = engine.generate(template, { seed, state: 'normal' }) as unknown as HousePlan
   let house: StagedHouse
   try {
-    house = houseOf(plan, {}, { quality: 'game', constructionStages: true, constructionLevel: 8 }).house as StagedHouse
+    const frame = variant.windowFrame ? { windowFrame: variant.windowFrame } : {}
+    house = houseOf(plan, {}, { quality: 'game', constructionStages: true, constructionLevel: 8, ...frame }).house as StagedHouse
   } catch (error) {
     return { conflicts: [], skipped: String((error as Error).message).slice(0, 120) }
   }
   if (!house.setConstructionLevel) return { conflicts: [], skipped: 'no construction stages' }
-  const conflicts = ZFIGHT_LEVELS.flatMap((level) => conflictsAt(house, level, cap).map((hit) => ({ template, seed, level, hit })))
+  const conflicts = (variant.levels ?? ZFIGHT_LEVELS).flatMap((level) => conflictsAt(house, level, cap).map((hit) => ({ template, seed, level, hit })))
   return { conflicts }
 }
 

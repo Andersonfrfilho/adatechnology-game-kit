@@ -29,7 +29,28 @@ function setup(options: { template?: string; seed?: number; onDamage?: (...args:
   const events: DestructionEvent[] = []
   world.on('*', (e: DestructionEvent) => events.push(e))
   const run = (seconds: number): void => { for (let t = 0; t < seconds; t += 0.05) { world.update(0.05); renderer.update(0.05) } }
-  const centre = (id: string): [number, number, number] => { const p = house.structure.byId.get(id); return [(p!.aabb[0] + p!.aabb[2]) / 2, (p!.y0 + p!.y1) / 2, (p!.aabb[1] + p!.aabb[3]) / 2] }
+  /**
+   * The middle of a part, or for a wall the point of its masonry nearest its middle: clear of its window gaps (a wall is not laid there, a hit there is a hit on the glass)
+   * and of the pillars cast in it, by a quarter of a metre.
+   */
+  const centre = (id: string): [number, number, number] => {
+    const p = house.structure.byId.get(id)!
+    const mid: [number, number, number] = [(p.aabb[0] + p.aabb[2]) / 2, (p.y0 + p.y1) / 2, (p.aabb[1] + p.aabb[3]) / 2]
+    if (p.role !== 'wall' && p.role !== 'partition') return mid
+    const alongU = p.aabb[2] - p.aabb[0] >= p.aabb[3] - p.aabb[1], lo = alongU ? p.aabb[0] : p.aabb[1], hi = alongU ? p.aabb[2] : p.aabb[3], m = alongU ? mid[0] : mid[2]
+    const gaps = ((house.structure.openings ?? []) as { kind: string; wall: string; from: number; to: number; y0: number; y1: number }[]).filter((o) => o.kind === 'window' && o.wall === id && mid[1] > o.y0 - 0.25 && mid[1] < o.y1 + 0.25).map((o) => [o.from, o.to])
+    const pillars = house.structure.parts.filter((q) => q.role === 'column' && q.aabb[0] <= p.aabb[2] && q.aabb[2] >= p.aabb[0] && q.aabb[1] <= p.aabb[3] && q.aabb[3] >= p.aabb[1]).map((q) => (alongU ? [q.aabb[0], q.aabb[2]] : [q.aabb[1], q.aabb[3]]))
+    let best = m
+    for (let k = 0, found = false; !found && k < 400; k++) {
+      for (const s of [m + k * 0.02, m - k * 0.02]) {
+        if (s < lo + 0.3 || s > hi - 0.3 || [...gaps, ...pillars].some(([a, b]) => s > a! - 0.25 && s < b! + 0.25)) continue
+        best = s
+        found = true
+        break
+      }
+    }
+    return alongU ? [best, mid[1], mid[2]] : [mid[0], mid[1], best]
+  }
   return { plan, world, scene, renderer, house, d, events, run, centre }
 }
 
@@ -176,10 +197,13 @@ describe('fracture and reset', () => {
     const units = house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
     expect(units.count).toBeGreaterThan(0)
     expect(units.material.userData.breachCore.data.some((x: number) => x > 0)).toBe(false)
-    // the destruction renderer drew no patch of its own on the wall (a patch is a disc in the brick's colour)
+    // the destruction renderer drew no patch of the coat of its own on the wall (the house cuts its plaster): the one disc under the hole is the crater the round
+    // knocked out of the brick, a few centimetres across, not the spall's patch
     const item = house.structure.meshesOf('wall_0_0').find((it) => it.mesh)
     expect(item!.mesh!.userData.drawnSpalls).toContain('wall_0_0')
-    expect(item!.mesh!.children.filter((c) => c.renderOrder === 1)).toHaveLength(0)
+    const under = item!.mesh!.children.filter((c) => c.renderOrder === 1)
+    expect(under.length).toBeLessThanOrEqual(1)
+    for (const crater of under) expect(2 * crater.getWorldScale(new THREE.Vector3()).x).toBeLessThan(Math.min(0.05, 2 * Math.sqrt(spall.area / Math.PI)))
     // the hole sits on the brick laid bare, behind the face of the plaster
     const hole = item!.mesh!.children.find((c) => c.renderOrder === 2)
     expect(hole).toBeDefined()

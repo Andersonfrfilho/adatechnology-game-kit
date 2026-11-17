@@ -57,6 +57,8 @@ export interface Support {
   bears?: false
   /** The joint lets go of a part whose other end is loose (`JointSpec.tears`): a wire on a falling pole comes down alone. */
   tears?: true
+  /** Hit points of the joint (`JointSpec.strength`; default the kind's): a part set in the ground holds as its buried base does (`embedmentStrength`). */
+  strength?: number
 }
 
 export interface RoofPane {

@@ -16,6 +16,8 @@ const SHAFT = 7.4
 const LYING_HEIGHT = SHAFT / 2
 const SLEEP_WITHIN = 3
 const SIMULATED = 14
+/** The C4 at its foot breaks the footing of the first pole; the poles 22 m away stand on theirs (set in the ground, not loose). */
+const POLES_DOWN = 1
 
 type Boxes = { readonly partBoxes?: ReadonlyArray<{ readonly half: readonly number[] }> }
 
@@ -48,7 +50,7 @@ describe('a concrete pole of the lot, loose', () => {
       renderer.update(DT)
     }
     const poles = polesOf(renderer.pieces())
-    expect(poles.length).toBeGreaterThanOrEqual(2)
+    expect(poles.length).toBeGreaterThanOrEqual(POLES_DOWN)
     for (const pole of poles) {
       const longest = Math.max(...((pole as unknown as Boxes).partBoxes ?? []).map((box) => Math.max(...box.half) * 2))
       expect(longest, `piece ${pole.objectId}`).toBeGreaterThanOrEqual(SHAFT)
@@ -72,7 +74,7 @@ describe('a concrete pole of the lot, loose', () => {
       }
     }
     const poles = polesOf(renderer.pieces())
-    expect(lyingSince.size).toBeGreaterThanOrEqual(2)
+    expect(lyingSince.size).toBeGreaterThanOrEqual(POLES_DOWN)
     for (const pole of poles) expect(pole.sleeping, `piece ${pole.objectId} asleep at the end`).toBe(true)
     for (const id of lyingSince.keys()) expect(asleepAfter.get(id) ?? Infinity, `piece ${id}`).toBeLessThanOrEqual(SLEEP_WITHIN)
     expect(physics !== 'own' && 'activeCount' in physics ? physics.activeCount : -1).toBe(0)
