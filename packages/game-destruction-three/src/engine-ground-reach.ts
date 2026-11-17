@@ -83,7 +83,10 @@ const steeperOver = (pyramid: LowPyramid, ia: number, ib: number, ja: number, jb
   steepIb = ib
   steepJa = ja
   steepJb = jb
-  return visit(pyramid.sizes.length - 1, 0, 0)
+  const steeper = visit(pyramid.sizes.length - 1, 0, 0)
+  // the last pyramid is not kept past the call (§8)
+  steepPyramid = null
+  return steeper
 }
 
 /** Where the plane under the block (`bi`, `bj`) of level `l` is in `pyramid.planes[l]`, made now if it was not. */
@@ -260,6 +263,8 @@ export const reachOf = (box: ReachBox, t: ReachTile): Reach => {
     for (let bj = va >> l; bj <= (vb - 1) >> l; bj++) for (let bi = ua >> l; bi <= (ub - 1) >> l; bi++) search(l, bi, bj)
   }
   inTile = searchMost
+  // the last tile (and the host's ground its ring holds) is not kept past the call (§8)
+  searchTile = null
   // past the edges: the ring's cells the shadow's extent reaches
   let inRing = 0
   const r = ring.cells
