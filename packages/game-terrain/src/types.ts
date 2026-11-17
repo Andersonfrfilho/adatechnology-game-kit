@@ -411,6 +411,11 @@ export interface Terrain {
   /** Height at (x, z) as things stand on it. */
   heightAt(x: number, z: number): number
   /**
+   * `heightAt` over a grid, in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what `heightAt` answers there (the same cell, blend and
+   * vertices; past the terrain, the host's `baseHeight`). For a reader of many points on a lattice (a physics engine's ground tile), which saves a call per point.
+   */
+  heightGrid(xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array): void
+  /**
    * The lowest and the highest `heightAt` can answer over the rectangle, exact bounds (the height between vertices is a blend of the four around it, so no
    * point is under the lowest or over the highest vertex of the cells the rectangle covers); null when the rectangle is not wholly inside the terrain, where the ground is the
    * host's `baseHeight` and no bound is known. Costs the vertices the rectangle covers, not a read per sample.
