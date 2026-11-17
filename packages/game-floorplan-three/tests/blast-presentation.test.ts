@@ -27,7 +27,9 @@ const BLAST_RADIUS = 6
 // Recorded again with the wires of the poles detaching as pieces of their own (they hang from the pole by a joint that tears): 21 more objects, the pole's piece keeps only its shaft, crossarm and insulators, and the state of a joint says whether it tears
 // Recorded again when the panes became 4 mm glass of their real mass (they were read as 12 mm and held) and the frame of a budget house wood: the charge still
 // brings wall_0_0 down (41 parts broken, 6 collapsed), the panes of the windows it reaches now break, nothing catches fire
-const RECORDED_BLAST_OUTCOME = 'dcba092300462afae75d7bb75129f8d31f815784'
+// Recorded again when the members cast in a wall (its pillars, lintels, bond beam) took the units out of the wall's grid there and the blows that land on them:
+// the charge still brings wall_0_0 down (41 parts broken), no brick comes out of where the concrete is
+const RECORDED_BLAST_OUTCOME = '7d04ef8523d43728c66d53822643c712a3567fef'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })

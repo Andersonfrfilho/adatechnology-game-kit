@@ -1630,7 +1630,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const grid = gridOf(p)
     const worn = p.rt.chips ?? {}
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
-    const cells = grid.filter((cell, i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius))
+    const cells = grid.filter((cell, i) => laidAt(p, worn, i) && !(op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius))
     const { c } = partXf(o, p)
     const tiles = isTiledCover(p)
     const pieces = cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), tiles ? TILE_CLUMPS : unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true)
@@ -2075,7 +2075,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const worldCenter = toWorld(o.st.position, o.st.rotation, toWorld(p.pos, p.q, lc))
     const [u, v] = planeAxes(p.thin)
     const worn = p.rt.chips
-    const cells = cellsWithin(gridOf(p).filter((_, i) => worn?.[i] !== -1), p.thin, lc, hole.radius)
+    const cells = cellsWithin(gridOf(p).filter((_, i) => laidAt(p, worn, i)), p.thin, lc, hole.radius)
     const removed = Math.min(p.st.mass, (p.st.mass * Math.PI * hole.radius * hole.radius) / (p.dims[u] * p.dims[v]))
     const fragments = cellFragments(o, p, cells, worldCenter, [0, -1, 0], 0.5, removed, 'g')
     p.st.mass = Math.max(0, p.st.mass - removed)
@@ -3084,15 +3084,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const gridOf = (p: PartRT): UnitCell[] => {
     let grid = unitGrids.get(p)
-    if (!grid) {
-      grid = unitGrid(p.dims, p.thin, unitsOf(p), BREACH_GRID_CAP)
-      // no unit is laid where a member is cast in the wall
-      const cast = p.castIn
-      if (cast?.length) grid = grid.filter((cell) => !cast.some((b) => insideBox(cell.center, b)))
-      unitGrids.set(p, grid)
-    }
+    if (!grid) unitGrids.set(p, (grid = unitGrid(p.dims, p.thin, unitsOf(p), BREACH_GRID_CAP)))
     return grid
   }
+
+  /** The cells of the part's grid where a member is cast in it (`PartRT.castIn`): no unit is laid there, so none comes out; the member holds what is beside it. */
+  const castCellSets = new WeakMap<PartRT, Set<number>>()
+  const castCells = (p: PartRT): Set<number> => {
+    let set = castCellSets.get(p)
+    if (!set) {
+      const cast = p.castIn ?? []
+      set = new Set(cast.length ? gridOf(p).flatMap((cell, i) => (cast.some((b) => insideBox(cell.center, b)) ? [i] : [])) : [])
+      castCellSets.set(p, set)
+    }
+    return set
+  }
+  /** A unit of the part's grid is laid there (not where a member is cast) and still in the wall. */
+  const laidAt = (p: PartRT, worn: Readonly<Record<number, number>> | undefined, i: number): boolean => worn?.[i] !== -1 && !castCells(p).has(i)
 
   /** The object-local point falls in a unit that was knocked out of the part (`PartState.chipped`). */
   const insideChip = (p: PartRT, objectPoint: Vec3): boolean => {
@@ -3193,7 +3201,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const shot = kind === 'ballistic'
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i]!
-      if (worn[i] === -1) continue
+      if (!laidAt(p, worn, i)) continue
       const gap = Math.hypot(Math.max(0, Math.abs(lp[u] - cell.center[u]) - cell.size[u] / 2), Math.max(0, Math.abs(lp[v] - cell.center[v]) - cell.size[v] / 2))
       if (gap > radius) continue
       const share = gap === 0 ? 1 : CHIP_SPLASH * (1 - gap / radius)
@@ -3368,7 +3376,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     const worn = p.rt.chips
-    const cells = cellsWithin(gridOf(p).filter((_, i) => worn?.[i] !== -1), p.thin, lc, radius)
+    const cells = cellsWithin(gridOf(p).filter((_, i) => laidAt(p, worn, i)), p.thin, lc, radius)
     const removed = (p.st.mass * cells.reduce((sum, cell) => sum + cell.size[u] * cell.size[v], 0)) / (p.dims[u] * p.dims[v])
     const speed = clamp(Math.sqrt((2 * energy * 0.1) / Math.max(removed, 0.05)), 0.5, 8)
     const fragments = cellFragments(o, p, cells, worldCenter, dir, speed, removed, 'b')
@@ -3419,7 +3427,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const out: number[] = []
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i]!
-      if (worn[i] === -1) continue
+      if (!laidAt(p, worn, i)) continue
       if (op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius) continue
       const du = cell.center[u] - lp[u], dv = cell.center[v] - lp[v]
       const angle = Math.atan2(dv, du)
@@ -3527,7 +3535,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const edge = panelEdge(p, { fromFace, toFace }, seedOf(...Array.from(`${o.id}|${p.spec.id}`, (char) => char.charCodeAt(0) / 1000), from))
     for (let i = 0; i < grid.length; i++) {
       const cell = grid[i]!
-      if (worn[i] === -1) continue
+      if (!laidAt(p, worn, i)) continue
       if (cell.center[u] - cell.size[u] / 2 >= from - 1e-6 && cell.center[u] + cell.size[u] / 2 <= to + 1e-6 && !edge(cell)) out.push(i)
     }
     if (out.length === 0) return false
@@ -3541,10 +3549,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
     const grid = gridOf(p)
     const worn = (p.rt.chips ??= {})
+    const castHere = castCells(p)
+    out = out.filter((i) => !castHere.has(i))
+    if (out.length === 0) return false
     for (const i of out) worn[i] = -1
     // laid units over a gap come down; cast concrete (a pillar, a beam: its units are of its own material) is one piece held by its bars, and stands
     const cast = p.spec.units?.mortar === p.spec.material
-    const loose = cast ? [] : wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius)))
+    const loose = cast ? [] : wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))).filter((i) => !castHere.has(i))
     for (const i of loose) worn[i] = -1
     const blown = out.map((i) => grid[i]!), fallen = loose.map((i) => grid[i]!)
     const volume = (cells: readonly UnitCell[]) => cells.reduce((sum, cell) => sum + cell.size[0] * cell.size[1] * cell.size[2], 0)
@@ -3600,7 +3611,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const worn = (p.rt.chips ??= {})
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
     const opened = (cell: UnitCell): boolean => !!op && !!p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius
-    const loose = wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !opened(grid[i]!)))
+    const castHere = castCells(p)
+    const loose = wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !opened(grid[i]!))).filter((i) => !castHere.has(i))
     if (loose.length === 0) return 0
     for (const i of loose) worn[i] = -1
     const fallen = loose.map((i) => grid[i]!)
