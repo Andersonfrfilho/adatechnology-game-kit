@@ -104,7 +104,6 @@ export function showCollapsedRanges(mesh: THREE_NS.Mesh): void {
   if (!plain || !data.collapsedRanges?.length || !position) return
   const array = position.array as Float32Array
   for (const [v0, v1] of data.collapsedRanges) array.set(plain.subarray(v0 * 3, v1 * 3), v0 * 3)
-  position.needsUpdate = true
   for (const [v0, v1] of data.collapsedRanges) markPositionsWritten(mesh, v0, v1)
   data.collapsedRanges = []
   mesh.geometry.computeBoundingBox()
@@ -196,7 +195,7 @@ export class Visuals {
       host = hosts?.get(mesh) ?? null
       if (!host) {
         const attribute = positionAttr(mesh.geometry)
-        host = { mesh, origGeometry: mesh.geometry, origMaterial: mesh.material, ownGeo: false, work: null, ownMat: false, sharers: [], seen: { attribute, version: attribute?.version ?? 0 } }
+        host = { mesh, origGeometry: mesh.geometry, origMaterial: mesh.material, ownGeo: false, work: null, ownMat: false, sharers: [], seen: { attribute, version: attribute?.version ?? 0 }, collapsedSeen: [] }
         hosts?.set(mesh, host)
       }
     }
@@ -262,15 +261,29 @@ export class Visuals {
   /**
    * The current positions of the mesh the part is drawn by (its dented copy when it has one) and the vertex range of the part in them, with what says they are the same
    * as before without reading them: the same `source` with the same `version` (and the same `shapeVersion` of the part) is the same vertices. A part of a merged mesh
-   * counts its writes in `shapeVersion` (its source is the host); a mesh of its own is its position attribute, whose `version` every write that is drawn bumps (`needsUpdate`).
+   * counts its writes in `shapeVersion` (its source is the host); a mesh of its own is its position attribute and its `version`, so **every write of the positions of a
+   * mesh bound here must set `needsUpdate`** (three.js bumps `version` there; a write that does not is not drawn after the first upload either). A writer of a merged mesh
+   * declares its range with `markPositionsWritten` (game-shapes-three), which flags it.
    */
-  positionsOf(mv: MeshVis): { readonly array: ArrayLike<number>; readonly from: number; readonly to: number; readonly source: object; readonly version: number } | null {
+  positionsOf(mv: MeshVis): {
+    readonly array: ArrayLike<number>
+    readonly from: number
+    readonly to: number
+    readonly source: object
+    readonly version: number
+    /** The ranges another drawing collapses on the mesh (each to its first vertex): drawn so (`rebuildHost`) but not in `work`, so they are applied to what is measured. */
+    readonly collapsed?: ReadonlyArray<readonly [number, number]>
+  } | null {
     if (mv.host) this.follow(mv.host)
     const attribute = positionAttr(mv.mesh.geometry)
-    const array = mv.host?.work ?? (attribute?.array as unknown as ArrayLike<number> | undefined)
+    const work = mv.host?.work
+    const array = work ?? (attribute?.array as unknown as ArrayLike<number> | undefined)
     if (!array) return null
     const source: object = mv.host ?? (attribute as THREE_NS.BufferAttribute)
-    return { array, from: mv.range ? mv.range[0] : 0, to: mv.range ? mv.range[1] : array.length / 3, source, version: mv.host ? 0 : (attribute as THREE_NS.BufferAttribute).version }
+    const from = mv.range ? mv.range[0] : 0
+    const to = mv.range ? mv.range[1] : array.length / 3
+    const collapsed = work ? (mv.mesh.userData.collapsedRanges as ReadonlyArray<readonly [number, number]> | undefined) : undefined
+    return { array, from, to, source, version: mv.host ? 0 : (attribute as THREE_NS.BufferAttribute).version, ...(collapsed?.length ? { collapsed } : {}) }
   }
 
   /**
@@ -278,7 +291,10 @@ export class Visuals {
    * ranges the writes declared (`markPositionsWritten`), or every part when one did not.
    */
   private follow(host: HostVis): void {
-    if (host.work) return
+    if (host.work) {
+      this.followCollapsed(host)
+      return
+    }
     const attribute = positionAttr(host.mesh.geometry)
     const seen = host.seen
     if (seen.attribute === attribute && (!attribute || seen.version === attribute.version)) return
@@ -289,6 +305,30 @@ export class Visuals {
       if (!ranges || ranges.some(([v0, v1]) => v0 < b && v1 > a)) s.shapeVersion++
     }
     host.seen = { attribute, version: attribute?.version ?? 0 }
+  }
+
+  /**
+   * Once the mesh's positions are copied (`work`), what another drawing collapses is applied when measuring (`positionsOf`): a range it collapsed or drew again since the
+   * last look counts on the sharers drawn there. The list is small (the walls of a house drawn with holes), so it is compared whole.
+   */
+  private followCollapsed(host: HostVis): void {
+    const list = (host.mesh.userData.collapsedRanges as ReadonlyArray<readonly [number, number]> | undefined) ?? []
+    const seen = host.collapsedSeen
+    if (seen.length === list.length * 2 && list.every(([v0, v1], i) => seen[i * 2] === v0 && seen[i * 2 + 1] === v1)) return
+    const now = list.flatMap(([v0, v1]) => [v0, v1])
+    const changed: Array<readonly [number, number]> = []
+    const has = (flat: readonly number[], v0: number, v1: number): boolean => {
+      for (let i = 0; i < flat.length; i += 2) if (flat[i] === v0 && flat[i + 1] === v1) return true
+      return false
+    }
+    for (let i = 0; i < now.length; i += 2) if (!has(seen, now[i]!, now[i + 1]!)) changed.push([now[i]!, now[i + 1]!])
+    for (let i = 0; i < seen.length; i += 2) if (!has(now, seen[i]!, seen[i + 1]!)) changed.push([seen[i]!, seen[i + 1]!])
+    for (const s of host.sharers) {
+      if (s.host !== host || !s.range) continue
+      const [a, b] = s.range
+      if (changed.some(([v0, v1]) => v0 < b && v1 > a)) s.shapeVersion++
+    }
+    host.collapsedSeen = now
   }
 
   /** The part's positions changed where it is measured: it, and every part drawn by a range of the same mesh that overlaps its own, measures again (`drawnSolidsOf`). */
@@ -408,8 +448,10 @@ export class Visuals {
     host.mesh.geometry = g
     const base = basePositions(host)
     host.work = new Float32Array(base ?? ((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>))
-    // the parts were measured by the mesh's positions: the first ones differ only where another drawing collapsed a range, and those parts measure again
+    // the parts were measured by the mesh's positions: the first ones differ only where another drawing collapsed a range, and those parts measure again (from now on
+    // with that range collapsed on what is measured, as it is drawn)
     if (base) for (const s of host.sharers) if (s.host === host && s.range && !sameRange(pos.array as ArrayLike<number>, base, s.range)) s.shapeVersion++
+    host.collapsedSeen = ((host.mesh.userData.collapsedRanges as ReadonlyArray<readonly [number, number]> | undefined) ?? []).flatMap(([v0, v1]) => [v0, v1])
     return true
   }
 
@@ -1190,6 +1232,7 @@ export class Visuals {
       ownMat: true,
       sharers: [mv],
       seen: { attribute: lp, version: lp.version },
+      collapsedSeen: [],
     }
     mv.host = lh
     mv.range = [0, count]

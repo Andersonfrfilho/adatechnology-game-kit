@@ -1306,6 +1306,17 @@ class Renderer implements DestructionRenderer {
     const out = this.solidsOut
     out.clear()
     const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false, updated: this.measuredMeshes }
+    try {
+      this.measureEach(now, budget, out)
+    } finally {
+      // holds no mesh past the call (a mesh that leaves the scene is not kept here)
+      this.measuredMeshes.clear()
+    }
+    return out
+  }
+
+  /** `staticSolids` for each fixed object of `now`, into `out`. */
+  private measureEach(now: ReadonlyMap<string, unknown>, budget: MeasureBudget, out: Map<string, readonly StaticSolid[]>): void {
     for (const id of now.keys()) {
       // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
       const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
@@ -1332,9 +1343,6 @@ class Renderer implements DestructionRenderer {
       this.solidCache.set(id, { solids })
       out.set(id, solids)
     }
-    // holds no mesh past the call (a mesh that leaves the scene is not kept here)
-    this.measuredMeshes.clear()
-    return out
   }
 
   /**

@@ -7,14 +7,16 @@ const KEPT = 256
 const declared = new WeakMap<object, Map<number, Array<readonly [number, number]>>>()
 
 /**
- * Declares that the vertices `[v0, v1)` of the mesh's positions were just written, right after the one `needsUpdate = true` of that write: a drawing that shares a
+ * Flags the mesh's positions for upload (`needsUpdate`) and declares that the write changed the vertices `[v0, v1)`: the write and its declaration share one `version`,
+ * so call it once per range written instead of setting `needsUpdate` yourself. A drawing that shares a
  * merged mesh with another that measures its ranges (the house collapsing the range of a wall it draws with holes, under the destruction renderer that measures each
- * part's range as a collider) calls it, so only the parts drawn by that range are measured again, not the whole house (`rangesWrittenSince`). One write over several ranges declares each. A write that sets `needsUpdate` and declares nothing still counts, for
- * every part of the mesh (`CLAUDE.md` §12).
+ * part's range as a collider) calls it, so only the parts drawn by that range are measured again, not the whole house (`rangesWrittenSince`). A write that sets `needsUpdate` and declares nothing still counts, for every part of the mesh (`CLAUDE.md` §12).
  */
 export function markPositionsWritten(mesh: THREE_NS.Mesh, v0: number, v1: number): void {
   const position = mesh.geometry?.getAttribute('position') as THREE_NS.BufferAttribute | undefined
-  if (!position || v1 <= v0) return
+  if (!position) return
+  position.needsUpdate = true
+  if (v1 <= v0) return
   let log = declared.get(position)
   if (!log) {
     log = new Map()

@@ -54,6 +54,8 @@ export interface HostVis {
    * `needsUpdate`) counts against the ranges it declared (`markPositionsWritten`), or against every sharer when it declared none.
    */
   seen: { attribute: THREE_NS.BufferAttribute | null; version: number }
+  /** Once `work` is set: the ranges another drawing collapses on the mesh (`userData.collapsedRanges`, flat `v0, v1, ...`) the sharers' `shapeVersion` account for. */
+  collapsedSeen: number[]
 }
 
 /** Everything the renderer knows about one bound mesh: the original assets (kept to restore) and what has been changed. */

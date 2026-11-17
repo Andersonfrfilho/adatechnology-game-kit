@@ -65,6 +65,27 @@ const counting = (array: Float32Array): { array: Float32Array; reads: () => numb
 
 const partOf = (meshes: MeshVis[]): PartVis => ({ id: 'p', home: 'house', material: 'concrete', meshes, charApplied: 0, glowApplied: 0, meltApplied: 0, gone: 'none' })
 
+/** What the house does to a wall it draws with holes (`collapseRange` of game-floorplan-three): the range collapsed to its first vertex, listed, the first positions kept. */
+const collapseLikeTheHouse = (mesh: THREE.Mesh, v0: number, v1: number): Float32Array => {
+  const a = (mesh.geometry.getAttribute('position') as THREE.BufferAttribute).array as Float32Array
+  const u = mesh.userData as { _p0?: Float32Array; plainPositions?: Float32Array; collapsedRanges?: Array<[number, number]> }
+  u._p0 ??= a.slice()
+  u.plainPositions ??= u._p0
+  ;(u.collapsedRanges ??= []).push([v0, v1])
+  const saved = a.slice(v0 * 3, v1 * 3)
+  for (let k = v0 + 1; k < v1; k++) a.set(a.subarray(v0 * 3, v0 * 3 + 3), k * 3)
+  markPositionsWritten(mesh, v0, v1)
+  return saved
+}
+
+/** And what it does to draw the wall whole again (`restoreRange`). */
+const restoreLikeTheHouse = (mesh: THREE.Mesh, v0: number, saved: Float32Array): void => {
+  ;((mesh.geometry.getAttribute('position') as THREE.BufferAttribute).array as Float32Array).set(saved, v0 * 3)
+  markPositionsWritten(mesh, v0, v0 + saved.length / 3)
+  const u = mesh.userData as { collapsedRanges?: Array<[number, number]> }
+  u.collapsedRanges = (u.collapsedRanges ?? []).filter((r) => r[0] !== v0)
+}
+
 const front = (x: number): THREE.Vector3 => new THREE.Vector3(x, 1, 0.1)
 const inward = new THREE.Vector3(0, 0, -1)
 
@@ -144,7 +165,6 @@ describe('a part is measured again exactly when its positions were written', () 
     const pos = h.mesh.geometry.getAttribute('position') as THREE.BufferAttribute
     const a = pos.array as Float32Array
     for (let k = v0; k < v1; k++) a.set(a.subarray(v0 * 3, v0 * 3 + 3), k * 3)
-    pos.needsUpdate = true
     markPositionsWritten(h.mesh, v0, v1)
     const after = measure(h.visuals, h.parts)
     expect(spent(after.budget)).toBe(v1 - v0 + 24)
@@ -187,7 +207,6 @@ describe('a part is measured again exactly when its positions were written', () 
       a[i] += 3 * t
       a[i + 1] -= t
     }
-    pos.needsUpdate = true
     markPositionsWritten(h.mesh, v0, v1)
     const now = checksum()
     expect(now[0]).toBeCloseTo(was[0], 3)
@@ -197,23 +216,29 @@ describe('a part is measured again exactly when its positions were written', () 
     expect(after.center[1]).toBeCloseTo(first.solids[2]![0]!.center[1] - t, 5)
   })
 
-  it('the house owned after it collapsed a range keeps the collapsed part apart: only that part is measured again (its first positions differ)', () => {
+  it('a range the house keeps collapsed (a wall it draws with holes) has no collider, before and after the renderer owns the mesh, and again once drawn back', () => {
     const h = house()
     const [v0, v1] = h.ranges[1]!
-    const pos = h.mesh.geometry.getAttribute('position') as THREE.BufferAttribute
-    const a = pos.array as Float32Array
-    h.mesh.userData._p0 = a.slice()
-    h.mesh.userData.collapsedRanges = [[v0, v1]]
-    for (let k = v0; k < v1; k++) a.set(a.subarray(v0 * 3, v0 * 3 + 3), k * 3)
-    pos.needsUpdate = true
-    markPositionsWritten(h.mesh, v0, v1)
+    const saved = collapseLikeTheHouse(h.mesh, v0, v1)
     const first = measure(h.visuals, h.parts)
     expect(first.solids[1]).toEqual([])
-    // the first dent owns the house: its work starts from the first positions, where part 1 is whole
+    // the first dent owns the house: its work starts from the first positions (`_p0`), where the wall is whole, but it is drawn collapsed: still nothing collides there
     h.visuals.applyDent(h.parts[4]!, front(8), inward, DENT)
-    const after = measure(h.visuals, h.parts)
-    expect(spent(after.budget)).toBe(v1 - v0 + 24 + h.ranges[4]![1] - h.ranges[4]![0] + 24)
-    expect(after.solids[1]).toHaveLength(1)
+    const owned = measure(h.visuals, h.parts)
+    expect(spent(owned.budget)).toBe(v1 - v0 + 24 + h.ranges[4]![1] - h.ranges[4]![0] + 24)
+    expect(owned.solids[1]).toEqual([])
+    expect(spent(measure(h.visuals, h.parts).budget)).toBe(0)
+    // drawn whole again: only that part is measured, and it collides again
+    restoreLikeTheHouse(h.mesh, v0, saved)
+    const back = measure(h.visuals, h.parts)
+    expect(spent(back.budget)).toBe(v1 - v0 + 24)
+    expect(back.solids[1]).toHaveLength(1)
+    // and collapsed again after the renderer owns it: only that part, and no collider
+    collapseLikeTheHouse(h.mesh, v0, v1)
+    const again = measure(h.visuals, h.parts)
+    expect(spent(again.budget)).toBe(v1 - v0 + 24)
+    expect(again.solids[1]).toEqual([])
+    expect(again.solids[0]).toBe(back.solids[0])
   })
 
   it('a mesh of its own: a dent, a melt, a range drawn again (`showCollapsedRanges`) and a restore are seen by its attribute version', () => {

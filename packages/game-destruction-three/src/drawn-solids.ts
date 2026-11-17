@@ -68,10 +68,15 @@ const axesOfQuat = (x: number, y: number, z: number, w: number): number[] => [
   2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y),
 ]
 
-/** The part's vertices out of the mesh's positions. */
-const readPoints = (array: Points, from: number, to: number): Float64Array => {
+/** The part's vertices out of the mesh's positions, with what another drawing collapses there collapsed as drawn (each range to its first vertex). */
+const readPoints = (array: Points, from: number, to: number, collapsed: ReadonlyArray<readonly [number, number]> = []): Float64Array => {
   const points = new Float64Array((to - from) * 3)
   for (let i = 0; i < points.length; i++) points[i] = array[from * 3 + i]
+  for (const [v0, v1] of collapsed) {
+    for (let k = Math.max(v0 + 1, from); k < Math.min(v1, to); k++) {
+      for (let c = 0; c < 3; c++) points[(k - from) * 3 + c] = array[v0 * 3 + c]
+    }
+  }
   return points
 }
 
@@ -107,7 +112,7 @@ export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: Mesh
     return known?.solids ?? []
   }
   budget.left -= local.to - local.from + PART_COST
-  const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to), matrix, local).map((solid) => ({ ...solid, key }))
+  const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to, local.collapsed), matrix, local).map((solid) => ({ ...solid, key }))
   made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, source, version: local.version, shapeVersion: mv.shapeVersion, solids })
   return solids
 }

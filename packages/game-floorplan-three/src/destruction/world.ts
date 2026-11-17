@@ -31,11 +31,11 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         const hide = (it: StructureMeshItem): void => {
           if (it.obj) { it.obj.visible = false; return; } if (it.whole) { it.mesh.visible = false; return; }
           const pos = it.mesh.geometry.attributes.position, A = pos.array, u = it.mesh.userData; if (!u._p0) u._p0 = A.slice();
-          const x = A[it.v0 * 3], y = A[it.v0 * 3 + 1], z = A[it.v0 * 3 + 2]; for (let k = it.v0; k < it.v1; k++) { A[k * 3] = x; A[k * 3 + 1] = y; A[k * 3 + 2] = z; } pos.needsUpdate = true; markPositionsWritten(it.mesh, it.v0, it.v1);
+          const x = A[it.v0 * 3], y = A[it.v0 * 3 + 1], z = A[it.v0 * 3 + 2]; for (let k = it.v0; k < it.v1; k++) { A[k * 3] = x; A[k * 3 + 1] = y; A[k * 3 + 2] = z; } markPositionsWritten(it.mesh, it.v0, it.v1);
         };
         const show = (it: StructureMeshItem): void => {
           if (it.obj) { it.obj.visible = true; return; } if (it.whole) { it.mesh.visible = true; return; }
-          const u = it.mesh.userData; if (!u._p0) return; const pos = it.mesh.geometry.attributes.position; pos.array.set(u._p0.subarray(it.v0 * 3, it.v1 * 3), it.v0 * 3); pos.needsUpdate = true; markPositionsWritten(it.mesh, it.v0, it.v1);
+          const u = it.mesh.userData; if (!u._p0) return; const pos = it.mesh.geometry.attributes.position; pos.array.set(u._p0.subarray(it.v0 * 3, it.v1 * 3), it.v0 * 3); markPositionsWritten(it.mesh, it.v0, it.v1);
         };
         const extract = (it: StructureRangeItem): THREE_NS.Mesh => { // the piece's slice in a mesh of its own, with the origin at the centre (to fall and spin)
           const g0 = it.mesh.geometry, src = it.mesh.userData._p0 || g0.attributes.position.array, g = new THREE.BufferGeometry();
