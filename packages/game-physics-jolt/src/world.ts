@@ -86,7 +86,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly bodyFilter: JoltNS.BodyFilter
   readonly shapeFilter: JoltNS.ShapeFilter
   readonly layerFilters = new Map<string, JoltNS.ObjectLayerFilterJS>()
-  readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId> } = { filter: null, set: new Set() }
+  readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId>; self: number } = { filter: null, set: new Set(), self: -1 }
   readonly collideSettings: JoltNS.CollideShapeSettings
   readonly collideCollector: JoltNS.CollideShapeAllHitCollisionCollector
   readonly castSettings: JoltNS.ShapeCastSettings
@@ -748,7 +748,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const s of this.sphereShapes.values()) s.Release()
     for (const g of this.groups) g.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
-    if (this.among.filter) J.destroy(this.among.filter)
+    if (this.among.filter) {
+      J.destroy(this.among.filter)
+      this.among.filter = null
+    }
     for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
     J.destroy(this.iface)
     J.destroy(this.listener)
