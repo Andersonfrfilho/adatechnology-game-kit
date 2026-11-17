@@ -125,9 +125,13 @@ export const penetration = (w: JoltWorldHost, id: BodyId, out: Float64Array, amo
   c.Reset()
   w.r1.Set(0, 0, 0)
   // with `among`, a body outside it is left out before the narrow phase, not after: the ground under a thin plate in a crater is thousands of triangle hits otherwise (5 ms)
-  const bodies = among ? amongFilter(w, among) : new J.IgnoreSingleBodyFilter(e.id)
+  const bodies = among ? amongFilter(w, among, id) : new J.IgnoreSingleBodyFilter(e.id)
   w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, STATIC_ONLY), bodies, w.shapeFilter)
-  if (!among) J.destroy(bodies)
+  if (among) {
+    // the set is the caller's: not held past the query (CLAUDE.md §8)
+    w.among.set = NO_BODIES
+    w.among.self = -1
+  } else J.destroy(bodies)
   let depth = 0
   const hits = c.mHits
   for (let i = 0; i < hits.size(); i++) {
@@ -147,13 +151,22 @@ export const penetration = (w: JoltWorldHost, id: BodyId, out: Float64Array, amo
 
 const STATIC_ONLY: QueryFilter = { layers: ['static'] }
 
-/** The world's one body filter that lets through only the bodies of `among` (made once; the set is swapped in per query). A `BodyID` is one uint32 in the heap. */
-const amongFilter = (w: JoltWorldHost, among: ReadonlySet<BodyId>): JoltNS.BodyFilter => {
+const NO_BODIES: ReadonlySet<BodyId> = new Set()
+
+/**
+ * The world's one body filter that lets through only the bodies of `among` but the queried body itself (made once; the set and the body are swapped in per query and cleared
+ * after it). A `BodyID` is one uint32 in the heap. Shared state: only `penetration` uses it, and a query never runs inside another, so it is never reentered.
+ */
+const amongFilter = (w: JoltWorldHost, among: ReadonlySet<BodyId>, self: BodyId): JoltNS.BodyFilter => {
   w.among.set = among
+  w.among.self = self
   if (w.among.filter) return w.among.filter
   const J = w.J
   const filter = new J.BodyFilterJS()
-  filter.ShouldCollide = (id: number) => w.among.set.has(J.HEAPU32[id >> 2] as BodyId)
+  filter.ShouldCollide = (pointer: number) => {
+    const id = J.HEAPU32[pointer >> 2] as BodyId
+    return id !== w.among.self && w.among.set.has(id)
+  }
   filter.ShouldCollideLocked = () => true
   w.among.filter = filter
   return filter

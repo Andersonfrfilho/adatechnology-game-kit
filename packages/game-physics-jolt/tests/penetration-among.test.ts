@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import type { BodyId, PhysicsWorld, Vec3 } from '@adatechnology/game-physics'
+import type { BodyId, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
+import type { JoltWorld } from '../src/index'
 
 /**
  * `penetration(id, out, among)` leaves the bodies outside `among` out before the narrow phase (spec 008: a thin plate in a crater met thousands of triangles of the ground
@@ -22,9 +23,17 @@ const BOXES: Array<{ center: Vec3; half: Vec3; among: boolean }> = [
   { center: [2.2, -0.1, 2.4], half: [1, 0.05, 1], among: false },
 ]
 
+/** The hits the last query's collector holds on bodies outside `among`: what reached the narrow phase without being asked for. */
+const hitsOutside = (world: JoltWorld, among: ReadonlySet<BodyId>): number => {
+  const hits = world.collideCollector.mHits
+  let n = 0
+  for (let i = 0; i < hits.size(); i++) if (!among.has(hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId)) n++
+  return n
+}
+
 /** A world with the ground (a crater as a height field) and the boxes, the ones outside `among` only when `withOthers`; then a thin plate. */
-const build = async (withOthers: boolean): Promise<{ world: PhysicsWorld; plate: BodyId; among: Set<BodyId> }> => {
-  const world = (await createJoltEngine()).createWorld()
+const build = async (withOthers: boolean): Promise<{ world: JoltWorld; plate: BodyId; among: Set<BodyId> }> => {
+  const world = (await createJoltEngine()).createWorld() as JoltWorld
   if (withOthers) world.createBody({ shape: { kind: 'heightfield', origin: [0, 0, 0], cell: CELL, size: SIZE, heights: heights() }, motion: 'static', position: [0, 0, 0], user: 0 })
   const among = new Set<BodyId>()
   for (const box of BOXES) {
@@ -43,8 +52,9 @@ describe('penetration among a set of fixed bodies', () => {
     const a = new Float64Array(3)
     const b = new Float64Array(3)
     let overlapping = 0
-    for (let i = 0; i < 60; i++) {
-      const position: Vec3 = [1.4 + (i % 6) * 0.25, -0.15 + Math.floor(i / 6) * 0.05, 1.6 + (i % 4) * 0.2]
+    // the last poses sit the plate in the crater's ground (a body outside the set that really overlaps it)
+    for (let i = 0; i < 64; i++) {
+      const position: Vec3 = i < 60 ? [1.4 + (i % 6) * 0.25, -0.15 + Math.floor(i / 6) * 0.05, 1.6 + (i % 4) * 0.2] : [2 + (i - 60) * 0.05, -0.25, 2]
       const turn = Math.sin(i) * 0.4
       const rotation: [number, number, number, number] = [0, Math.sin(turn / 2), 0, Math.cos(turn / 2)]
       full.world.setPose(full.plate, position, rotation, false)
@@ -52,6 +62,8 @@ describe('penetration among a set of fixed bodies', () => {
       a.fill(0)
       b.fill(0)
       const depth = full.world.penetration!(full.plate, a, full.among)
+      // nothing outside the set reached the narrow phase (the old query collided with the ground and the other boxes, and threw the hits away after)
+      expect(hitsOutside(full.world, full.among)).toBe(0)
       expect(depth).toBe(only.world.penetration!(only.plate, b))
       expect([...a]).toEqual([...b])
       if (depth > 0) overlapping++
@@ -59,6 +71,30 @@ describe('penetration among a set of fixed bodies', () => {
     expect(overlapping).toBeGreaterThan(10)
     full.world.dispose()
     only.world.dispose()
+  })
+
+  it('a plate in the ground: the ground overlaps it, and only the query without a set meets it', async () => {
+    const full = await build(true)
+    full.world.setPose(full.plate, [2, -0.25, 2], [0, 0, 0, 1], false)
+    full.world.penetration!(full.plate, new Float64Array(3))
+    expect(hitsOutside(full.world, full.among)).toBeGreaterThan(0)
+    full.world.penetration!(full.plate, new Float64Array(3), full.among)
+    expect(hitsOutside(full.world, full.among)).toBe(0)
+    full.world.dispose()
+  })
+
+  it('a fixed body asked about with itself in the set does not meet itself', async () => {
+    const world = (await createJoltEngine()).createWorld() as JoltWorld
+    const a = world.createBody({ shape: { kind: 'box', half: [0.5, 0.5, 0.5] }, motion: 'static', position: [0, 0, 0], user: 0 })
+    const b = world.createBody({ shape: { kind: 'box', half: [0.5, 0.5, 0.5] }, motion: 'static', position: [0.9, 0, 0], user: 0 })
+    const withSet = new Float64Array(3)
+    const without = new Float64Array(3)
+    const depth = world.penetration!(a, withSet, new Set([a, b]))
+    // the old query left the body itself out: the overlap is the 0.1 m with the other box, not the body with itself
+    expect(depth).toBe(world.penetration!(a, without))
+    expect([...withSet]).toEqual([...without])
+    expect(depth).toBeCloseTo(0.1, 3)
+    world.dispose()
   })
 
   it('without a set, still meets every fixed body but itself', async () => {
