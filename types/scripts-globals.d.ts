@@ -463,6 +463,8 @@ declare global {
     __memoryWarnings?: number
     /** What `leak.mjs` counts in the page: live GL objects, canvases, listeners and intervals. */
     __leakCount: () => Record<string, number>
+    /** The room's Jolt world, made by the page's boot with `?solver=jolt` (`examples/test-room/build.mjs`). */
+    __joltWorld?: import('@adatechnology/game-physics-jolt').JoltWorld
     /** The stories area bundle (its `loadContent` takes a game's content). */
     StoriesArea: AreaEntries['stories-test-area']
     // What each area's `loadInto` returned, as its build.mjs boot line keeps it.

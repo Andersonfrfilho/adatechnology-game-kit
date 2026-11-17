@@ -16,8 +16,10 @@ Decidido pelo dono em 2026-11-02, depois da medição que achou vazamento em tod
   sai da cena (ex.: `wounds.untrack`). Listener e `setInterval` têm remoção no `dispose`/teardown.
 - Testes que barram a volta: `packages/game-test-room/tests/memory.test.ts` (o `clear()` libera o que tirou e preserva o cenário) e
   `node examples/test-room/leak.mjs` na rodada diária de GPU (`tools/gpu/nightly-gpu.mjs`; não no CI, ver seção 9): repete explosões, vidro e carros, a troca de áreas, todas as outras áreas (armas, itens, animais, efeitos, terreno, som, plantas, cidade,
-  clima, jogador, histórias e móveis) e a arma na mão, e falha se buffers, texturas,
-  canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Pacote novo que cria e remove coisas na cena ganha teste de
+  clima, jogador, histórias e móveis), a arma na mão, tiros em série (alvos e chão) e crateras no terreno, e falha se buffers, texturas,
+  canvases, listeners, intervals ou o heap crescerem por ciclo além do orçamento. Com `LEAK_SOLVER=jolt` a sala roda sobre o Jolt e conta também os
+  corpos do adaptador, os corpos do próprio Jolt e a memória WASM em uso (alocada menos livre); a rodada diária roda as fases de explosão, tiro,
+  cratera e casas assim. Pacote novo que cria e remove coisas na cena ganha teste de
   `dispose` próprio, e uma área nova entra numa fase do `leak.mjs`.
 - **Aviso na tela**: a sala mostra geometrias, texturas e heap no painel da bancada e, quando a memória sobe a cada limpeza (quatro seguidas na mesma
   área, acima do orçamento), põe uma faixa vermelha sob a ferramenta e um evento `memory_leak` no registro. Faixa vermelha na sala é vazamento a corrigir.
