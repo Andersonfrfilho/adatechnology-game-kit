@@ -5,7 +5,7 @@ import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld
 import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
 import type { GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
-import { NO_SOLID, buildSolidVolume, sameSolid } from './engine-ground-solid'
+import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
@@ -1028,9 +1028,9 @@ export class EnginePieces {
   }
 
   private solidShape(solid: SolidVolume): ShapeDesc {
-    const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
-    const { boxes } = solid
-    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3]!, boxes[i + 4]!, boxes[i + 5]!] }, position: [boxes[i]!, boxes[i + 1]!, boxes[i + 2]!] })
+    const children: Array<{ shape: ShapeDesc; position: Vec3; rotation: Quat }> = []
+    const b = solid.boxes
+    for (let i = 0; i < b.length; i += SOLID_STRIDE) children.push({ shape: { kind: 'box', half: [b[i + 3]!, b[i + 4]!, b[i + 5]!] }, position: [b[i]!, b[i + 1]!, b[i + 2]!], rotation: [b[i + 6]!, b[i + 7]!, b[i + 8]!, b[i + 9]!] })
     return { kind: 'compound', children }
   }
 

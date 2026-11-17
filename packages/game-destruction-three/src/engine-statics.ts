@@ -52,7 +52,10 @@ const sameMesh = (a: StaticMesh | undefined, b: StaticMesh | undefined): boolean
   return a.indices.length === b.indices.length && a.vertices.length === b.vertices.length && near(a.vertices, b.vertices) && a.indices.every((v, i) => v === b.indices[i])
 }
 
-const sameBox = (a: StaticSolid, b: StaticSolid): boolean => a === b || (near(a.center, b.center) && near(a.half, b.half) && near(a.rotation, b.rotation) && sameMesh(a.mesh, b.mesh))
+const sameFriction = (a: StaticSolid['friction'], b: StaticSolid['friction']): boolean => a === b || (a !== undefined && b !== undefined && a.static === b.static && a.dynamic === b.dynamic && a.rolling === b.rolling)
+
+/** The same part as held: the same box or triangles and the same surface (a part whose material changed is laid again with the new friction, `reshape`). */
+const sameBox = (a: StaticSolid, b: StaticSolid): boolean => a === b || (near(a.center, b.center) && near(a.half, b.half) && near(a.rotation, b.rotation) && sameMesh(a.mesh, b.mesh) && sameFriction(a.friction, b.friction))
 
 export const sameSolids = (a: readonly StaticSolid[], b: readonly StaticSolid[]): boolean => a.length === b.length && a.every((s, i) => sameBox(s, b[i]))
 
@@ -168,6 +171,7 @@ export class EngineStatics {
     h.solid = solid
     if (!solid.mesh) this.world.setPose(h.id, solid.center, solid.rotation, false)
     this.world.setShape(h.id, shapeOf(solid))
+    this.world.setMaterial(h.id, this.materialOf(solid))
     this.changed.add(h.id)
   }
 

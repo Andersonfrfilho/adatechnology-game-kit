@@ -5,7 +5,7 @@ import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { GROUND_CELL, buildGroundTile } from '../src/engine-ground'
 import type { GroundTile } from '../src/engine-ground'
-import { SOLID_DEPTH, SOLID_MARGIN } from '../src/engine-ground-solid'
+import { SOLID_DEPTH, SOLID_MARGIN, SOLID_STRIDE } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
 import { IS_JOLT, physicsOption } from './setup-physics'
@@ -74,17 +74,81 @@ describe('engine ground at a tile border', () => {
   })
 })
 
-/** The highest solid top under (x, z), or -Infinity. */
+/** `v` turned by the quaternion `q` (x, y, z, w). */
+const turned = (q: readonly number[], v: readonly number[]): [number, number, number] => {
+  const [x, y, z, w] = q as [number, number, number, number]
+  const [vx, vy, vz] = v as [number, number, number]
+  const tx = 2 * (y * vz - z * vy), ty = 2 * (z * vx - x * vz), tz = 2 * (x * vy - y * vx)
+  return [vx + w * tx + (y * tz - z * ty), vy + w * ty + (z * tx - x * tz), vz + w * tz + (x * ty - y * tx)]
+}
+
+interface Top {
+  readonly t: readonly number[]
+  readonly n: readonly number[]
+  readonly ax: readonly number[]
+  readonly az: readonly number[]
+  readonly hx: number
+  readonly hz: number
+}
+
+/** The top face of every block: its centre, normal, in-plane axes and half sizes (made once per tile: the lattices ask thousands of times). */
+const topsOf = (() => {
+  const made = new WeakMap<GroundTile, Top[]>()
+  return (t: GroundTile): Top[] => {
+    const kept = made.get(t)
+    if (kept) return kept
+    const b = t.solid.boxes
+    const tops: Top[] = []
+    for (let i = 0; i < b.length; i += SOLID_STRIDE) {
+      const q = b.slice(i + 6, i + 10)
+      const n = turned(q, [0, 1, 0])
+      const hy = b[i + 4]!
+      tops.push({ t: [b[i]! + n[0] * hy, b[i + 1]! + n[1] * hy, b[i + 2]! + n[2] * hy], n, ax: turned(q, [1, 0, 0]), az: turned(q, [0, 0, 1]), hx: b[i + 3]!, hz: b[i + 5]! })
+    }
+    made.set(t, tops)
+    return tops
+  }
+})()
+
+/** The highest solid top under (x, z), or -Infinity: where the vertical through it crosses the top face of a block (a box turned to its top's normal). */
 const solidTopAt = (t: GroundTile, x: number, z: number): number => {
   let top = -Infinity
-  const { boxes } = t.solid
-  for (let i = 0; i < boxes.length; i += 6) {
-    if (Math.abs(x - boxes[i]!) <= boxes[i + 3]! + 1e-9 && Math.abs(z - boxes[i + 2]!) <= boxes[i + 5]! + 1e-9) top = Math.max(top, boxes[i + 1]! + boxes[i + 4]!)
+  for (const { t: c, n, ax, az, hx, hz } of topsOf(t)) {
+    const y = c[1]! - (n[0]! * (x - c[0]!) + n[2]! * (z - c[2]!)) / n[1]!
+    const dx = x - c[0]!, dy = y - c[1]!, dz = z - c[2]!
+    if (Math.abs(dx * ax[0]! + dy * ax[1]! + dz * ax[2]!) <= hx + 1e-9 && Math.abs(dx * az[0]! + dy * az[1]! + dz * az[2]!) <= hz + 1e-9 && y > top) top = y
   }
   return top
 }
 
-const lowestSolid = (t: GroundTile): number => Math.min(...t.solid.boxes.filter((_, i) => i % 6 === 1).map((y, k) => y - t.solid.boxes[k * 6 + 4]!))
+/** The lowest corner of any block. */
+const lowestSolid = (t: GroundTile): number => {
+  let low = Infinity
+  const b = t.solid.boxes
+  for (let i = 0; i < b.length; i += SOLID_STRIDE) {
+    const q = b.slice(i + 6, i + 10)
+    for (let k = 0; k < 8; k++) {
+      const c = turned(q, [(k & 1 ? 1 : -1) * b[i + 3]!, (k & 2 ? 1 : -1) * b[i + 4]!, (k & 4 ? 1 : -1) * b[i + 5]!])
+      low = Math.min(low, b[i + 1]! + c[1])
+    }
+  }
+  return low
+}
+
+/** The largest gap from the ground down to the top of the solid over a lattice of the tile, and the smallest (negative: the solid above the ground); NaN where nothing covers. */
+const gapsOf = (t: GroundTile, ground: (x: number, z: number) => number, x0: number, z0: number): { most: number; least: number; holes: number } => {
+  let most = -Infinity, least = Infinity, holes = 0
+  for (let x = x0 + 0.004; x < x0 + 2; x += 0.013) {
+    for (let z = z0 + 0.004; z < z0 + 2; z += 0.017) {
+      const top = solidTopAt(t, x, z)
+      if (top === -Infinity) holes++
+      const gap = ground(x, z) - top
+      most = Math.max(most, gap)
+      least = Math.min(least, gap)
+    }
+  }
+  return { most, least, holes }
+}
 
 describe('solid under the height field', () => {
   const rolling = (x: number, z: number): number => 0.02 * Math.sin(1.7 * x) * Math.cos(1.3 * z) + 0.03 * x
@@ -93,47 +157,55 @@ describe('solid under the height field', () => {
     return d < 1.2 ? -0.45 * (1 - (d / 1.2) ** 2) : 0
   }
 
-  /** Every block of the solid: its top is the lowest height sample over it less `SOLID_MARGIN`, to the bit, and the blocks cover the tile once. */
-  const expectBlocksAtLowest = (t: GroundTile, x0: number, z0: number): void => {
-    const m = t.cells + 1
-    const cell = 2 / t.cells
-    let area = 0
-    for (let i = 0; i < t.solid.boxes.length; i += 6) {
-      const [cx, cy, cz, hx, hy, hz] = t.solid.boxes.slice(i, i + 6) as [number, number, number, number, number, number]
-      const i0 = Math.round((cx - hx - x0) / cell), i1 = Math.round((cx + hx - x0) / cell)
-      const j0 = Math.round((cz - hz - z0) / cell), j1 = Math.round((cz + hz - z0) / cell)
-      let least = Infinity
-      for (let j = j0; j <= j1; j++) for (let k = i0; k <= i1; k++) least = Math.min(least, t.heights[j * m + k]!)
-      expect(cy + hy).toBeCloseTo(least - SOLID_MARGIN, 9)
-      area += 4 * hx * hz
-    }
-    expect(area).toBeCloseTo(4, 9)
+  const crater = (x: number, z: number): number => {
+    const d = Math.hypot(x - 1, z - 1)
+    return d >= 0.6 ? 0 : -0.3 * Math.cos((Math.PI / 2) * (d / 0.6)) ** 2
+  }
+  const planar = (x: number, z: number): number => 0.2 * x + 0.05 * z
+
+  /**
+   * Under the surface by at least `SOLID_MARGIN` everywhere (to the ground's own rounding: its samples are floats and the ground between them is flat), the whole tile
+   * covered, the top within `most` of the surface, and as deep as `SOLID_DEPTH` under the lowest sample.
+   */
+  const expectNet = (t: GroundTile, ground: (x: number, z: number) => number, x0: number, z0: number, most: number): void => {
+    const gaps = gapsOf(t, ground, x0, z0)
+    expect(gaps.holes).toBe(0)
+    expect(gaps.least).toBeGreaterThan(SOLID_MARGIN - 0.0006)
+    expect(gaps.most).toBeLessThan(most)
+    expect(lowestSolid(t)).toBeLessThanOrEqual(Math.min(...t.heights) - SOLID_DEPTH + 1e-9)
   }
 
-  it('is under the surface everywhere, each block topped at its lowest ground, covering the tile, and as deep as SOLID_DEPTH under the lowest corner', () => {
+  // the flat boxes of T3.8ag's first take left 3.5 cm here, 12 cm in the bowl, 7.9 cm on the crater wall and 50 cm under the high side of a plane
+  it('is under the surface everywhere and within 1 cm of it on a gentle ground', () => {
     const t = buildGroundTile(rolling, 0, 0, 2)
     expect(t.solid.boxes.length).toBeGreaterThan(0)
-    for (let x = 0; x <= 2; x += 0.013) for (let z = 0; z <= 2; z += 0.017) expect(rolling(x, z) - solidTopAt(t, x, z)).toBeGreaterThan(SOLID_MARGIN - 0.0006)
-    expectBlocksAtLowest(t, 0, 0)
-    expect(lowestSolid(t)).toBeCloseTo(Math.min(...t.heights) - SOLID_DEPTH, 5)
+    expectNet(t, rolling, 0, 0, 0.01 + 0.0006)
   })
 
-  it('never sticks out above a steep bowl either, and level ground has none (its slab is solid already)', () => {
-    const t = buildGroundTile(bowl, -1, -1, 2)
-    for (let x = -1; x <= 1; x += 0.011) for (let z = -1; z <= 1; z += 0.013) expect(solidTopAt(t, x, z)).toBeLessThanOrEqual(bowl(x, z) - SOLID_MARGIN + 0.0006)
-    expectBlocksAtLowest(t, -1, -1)
+  it('a sloped plane is one block turned to it, its top SOLID_MARGIN under the ground all over', () => {
+    const t = buildGroundTile(planar, 0, 0, 2)
+    expect(t.solid.boxes.length / SOLID_STRIDE).toBe(1)
+    expectNet(t, planar, 0, 0, SOLID_MARGIN + 1e-5)
+  })
+
+  it('never sticks out above a steep bowl or crater wall, and stays close under them; level ground has none (its slab is solid already)', () => {
+    // a block is split until it is SOLID_MIN_CELLS cells wide: the ground's curve over the smallest block (and the cell past it the turned top reaches) is what is left
+    expectNet(buildGroundTile(bowl, -1, -1, 2), bowl, -1, -1, 0.05)
+    expectNet(buildGroundTile(crater, 0, 0, 2), crater, 0, 0, 0.03)
     expect(buildGroundTile(() => 0.3, 0, 0, 2).solid).toEqual({ boxes: [] })
   })
 
-  it('follows the ground when it is dug: made again from the new heights, still under it and topped at each block\'s lowest ground', () => {
+  it('follows the ground when it is dug: made again from the new heights, still under it, within 2 cm over the dig', () => {
     let depth = 0
     const dug = (x: number, z: number): number => rolling(x, z) - depth * Math.cos((Math.PI / 2) * Math.min(1, Math.hypot(x - 1, z - 1) / 0.8)) ** 2
     const before = buildGroundTile(dug, 0, 0, 2)
     depth = 0.3
     const after = buildGroundTile(dug, 0, 0, 2)
     expect(after.solid.boxes).not.toEqual(before.solid.boxes)
-    for (let x = 0; x <= 2; x += 0.02) for (let z = 0; z <= 2; z += 0.02) expect(solidTopAt(after, x, z)).toBeLessThanOrEqual(dug(x, z) - SOLID_MARGIN + 0.0006)
-    expectBlocksAtLowest(after, 0, 0)
+    // a 30 cm dig 1.6 m wide is no gentle ground: its bowl bends under the smallest block, and the turned top reaches a cell past it (so neighbours overlap, see
+    // `sloped`), lowered by the dip there too; 2 cm over the dig, 2.5 cm where its edge bends sharply (0.8 m out). The prisms of before held 1 cm here (each top on its own block's plane, no overlap)
+    expectNet(after, dug, 0, 0, 0.025)
+    for (let x = 0.4; x <= 1.6; x += 0.02) for (let z = 0.4; z <= 1.6; z += 0.02) expect(dug(x, z) - solidTopAt(after, x, z)).toBeLessThan(0.02)
   })
 })
 

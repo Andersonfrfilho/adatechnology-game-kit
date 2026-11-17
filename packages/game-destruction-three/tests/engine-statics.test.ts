@@ -10,6 +10,30 @@ import { PieceSystem } from '../src/pieces'
 const solid = (center: [number, number, number], half: [number, number, number]): StaticSolid => ({ center, half, rotation: [0, 0, 0, 1] })
 
 describe("a fixed object's boxes changing in the engine", () => {
+  it('a part whose material changed (its friction only) keeps its body and takes the new friction', async () => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120 })
+    const materials: Array<{ readonly frictionStatic: number }> = []
+    const counted: PhysicsWorld = Object.create(world) as PhysicsWorld
+    counted.setMaterial = (...a: Parameters<PhysicsWorld['setMaterial']>) => {
+      materials.push(a[1])
+      world.setMaterial(...a)
+    }
+    const floor = (fs: number): StaticSolid => ({ ...solid([0, 0.25, 0], [2, 0.25, 2]), friction: { static: fs, dynamic: fs * 0.8, rolling: 0.01 } })
+    let boxes: StaticSolid[] = [floor(0.6)]
+    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), physics: counted, staticSolids: () => new Map([['house', boxes]]) })
+    system.update(0.05)
+    const bodies = world.bodyCount
+    boxes = [floor(0.6)]
+    system.update(0.05)
+    expect(materials).toHaveLength(0)
+    boxes = [floor(0.2)]
+    system.update(0.05)
+    expect(world.bodyCount).toBe(bodies)
+    expect(materials.map((m) => m.frictionStatic)).toEqual([0.2])
+    world.dispose()
+  })
+
   it('one of its boxes changing every update keeps its body and wakes only what was near that box, not what lies on its others', async () => {
     const engine = await createJoltEngine()
     const world = engine.createWorld({ fixedStep: 1 / 120, velocityIterations: 20, sleepAfter: 0.5, sleepSpeed: 0.08 })
