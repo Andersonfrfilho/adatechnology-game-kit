@@ -1,0 +1,143 @@
+// @vitest-environment happy-dom
+// probe only (not committed): what the Jolt Step costs in the frames after the room's C4, one factor toggled at a time (FACTOR)
+import * as THREE from 'three'
+import { describe, it } from 'vitest'
+import { engine } from '@adatechnology/game-floorplan'
+
+import { createTestRoom } from '../../game-test-room/src'
+import { stubRenderer } from '../../game-test-room/tests/helpers'
+import { createFloorplanTestModule } from '../src'
+import { planOf } from './helpers/houses'
+import { fakeDocument } from './helpers/fake-document'
+import { IS_JOLT, physicsLoop } from './setup-physics'
+import { createJoltEngine } from '@adatechnology/game-physics-jolt'
+const JOLT = IS_JOLT ? await createJoltEngine() : null
+
+type Any = any
+const FACTOR = process.env.FACTOR ?? 'none'
+
+const build = () => {
+  planOf('single_storey_a', 1)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physicsLoop(), worldOptions: { chainLinksPerUpdate: 1 }, ...(process.env.WARM ? { debris: { jitWarmUp: { engine: JOLT } } } : {}) } as Any) as Any
+  room.loadModule(createFloorplanTestModule({ engine, locale: 'en', world: room.world, renderer: room.renderer, house: { document: fakeDocument } } as Any))
+  room.openArea('floorplan_area')
+  const b = room.bench('floorplan_area')
+  b.set('package', 'residential'); b.set('template', 'single_storey_a'); b.set('seed', 1)
+  b.act('build')
+  let guard = 0
+  while (!room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1') && guard++ < 2000) room.update(0.05)
+  for (let i = 0; i < 60; i++) room.update(0.05)
+  return room
+}
+
+describe.skipIf(!IS_JOLT)('probe: Jolt Step after the room C4', () => {
+  it('steps', () => {
+    for (let round = 0; round < Number(process.env.ROUNDS ?? 1); round++) {
+    const room = build()
+    const eng = room.renderer.pieceSys.engine
+    const w = eng.world
+    const J = w.J
+    const o = room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1').state.position
+    const spot: [number, number, number] = [o[0] - 2.5, 0.6, o[2]]
+    for (let i = 0; i < 10; i++) room.update(0.05)
+    const frame = { cb: 0, steps: [] as number[], added: { static: 0, dynamic: 0, children: 0 }, val: 0, add: 0, per: 0, opt: 0 }
+    let dirty = false
+    const farBox = (d: Any): Any => ({ ...d, shape: { kind: 'box', half: [0.1, 0.1, 0.1] }, position: [0, -500, 0], rotation: [0, 0, 0, 1] })
+    const one = w.createBody.bind(w)
+    w.createBody = (d: Any) => {
+      if (FACTOR === 'nonet' && d.motion === 'static' && d.shape.kind === 'compound' && d.shape.children.length > 30) d = { ...d, shape: { kind: 'box', half: [0.1, 0.1, 0.1] }, position: [0, -500, 0] }
+      if (FACTOR === 'nohf' && d.shape.kind === 'heightfield') d = farBox(d)
+      if (d.shape.kind === 'heightfield' && process.env.DECI) {
+        const sh = d.shape
+        const errOf = (k: number): number => {
+          let worst = 0
+          const n = sh.size - 1
+          if (n % k !== 0) return NaN
+          for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) {
+            const i0 = Math.floor(i / k) * k, j0 = Math.floor(j / k) * k, i1 = Math.min(n, i0 + k), j1 = Math.min(n, j0 + k)
+            const u = i1 > i0 ? (i - i0) / (i1 - i0) : 0, v = j1 > j0 ? (j - j0) / (j1 - j0) : 0
+            const h = (a: number, b: number): number => sh.heights[b * sh.size + a]
+            // a coarse cell is two triangles: on either diagonal, the worst of the two
+            const a = h(i0, j0), b = h(i1, j0), c = h(i0, j1), dd = h(i1, j1)
+            const d1 = u >= v ? a + u * (b - a) + v * (dd - b) : a + v * (c - a) + u * (dd - c)
+            const d2 = u + v <= 1 ? a + u * (b - a) + v * (c - a) : dd + (1 - u) * (c - dd) + (1 - v) * (b - dd)
+            const est = Math.abs(d1 - h(i, j)) > Math.abs(d2 - h(i, j)) ? d1 : d2
+            worst = Math.max(worst, Math.abs(est - h(i, j)))
+          }
+          return worst
+        }
+        console.log('DECI', 'size', sh.size, 'k2', errOf(2).toFixed(5), 'k4', errOf(4).toFixed(5), 'k8', errOf(8).toFixed(5), 'k16', errOf(16).toFixed(5), 'range', (Math.max(...sh.heights) - Math.min(...sh.heights)).toFixed(3))
+      }
+      const k = FACTOR === 'hf2' ? 2 : FACTOR === 'hf4' ? 4 : 1
+      if (k > 1 && d.shape.kind === 'heightfield') {
+        const sh = d.shape, size = Math.floor((sh.size - 1) / k) + 1, heights = new Float32Array(size * size)
+        for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) heights[j * size + i] = sh.heights[j * k * sh.size + i * k]
+        d = { ...d, shape: { ...sh, size, cell: sh.cell * k, heights } }
+      }
+      if (d.motion === 'static') frame.added.static++
+      else frame.added.dynamic++
+      if (d.shape.kind === 'compound') frame.added.children += d.shape.children.length
+      dirty = true
+      return one(d)
+    }
+    const far = (d: Any): Any => ({ ...d, shape: { kind: 'box', half: [0.1, 0.1, 0.1] }, position: [0, -500, 0], rotation: [0, 0, 0, 1] })
+    const many = w.createBodies.bind(w)
+    w.createBodies = (ds0: Any[]) => {
+      const ds = ds0.map((d) => (FACTOR === 'notrimesh' && d.motion === 'static' && d.shape.kind === 'trimesh' ? far(d) : d))
+      for (const d of ds) {
+        if (d.motion === 'static') frame.added.static++
+        else frame.added.dynamic++
+        if (d.shape.kind === 'compound') frame.added.children += d.shape.children.length
+      }
+      dirty = true
+      return many(ds)
+    }
+    const step = w.iface.Step.bind(w.iface)
+    w.iface.Step = (h: number, n: number) => {
+      if (FACTOR === 'opt' && dirty) {
+        const s = performance.now()
+        w.system.OptimizeBroadPhase()
+        frame.opt += performance.now() - s
+        dirty = false
+      }
+      if (FACTOR === 'noccd') {
+        const ids = new J.BodyIDVector()
+        w.system.GetActiveBodies(J.EBodyType_RigidBody, ids)
+        for (let i = 0; i < ids.size(); i++) w.bi.SetMotionQuality(ids.at(i), J.EMotionQuality_Discrete)
+        J.destroy(ids)
+      }
+      const s = performance.now()
+      const r = step(h, n)
+      frame.steps.push(performance.now() - s)
+      return r
+    }
+    const L = w.listener
+    const v = L.OnContactValidate, a = L.OnContactAdded, p = L.OnContactPersisted
+    const timed = (fn: Any) => (...x: Any[]) => { const s = performance.now(); try { return fn(...x) } finally { frame.cb += performance.now() - s } }
+    L.OnContactValidate = timed((...x: Any[]) => (frame.val++, v(...x)))
+    L.OnContactAdded = timed((...x: Any[]) => (frame.add++, a(...x)))
+    L.OnContactPersisted = timed((...x: Any[]) => (frame.per++, p(...x)))
+    const rm = L.OnContactRemoved
+    if (rm) L.OnContactRemoved = timed((...x: Any[]) => rm(...x))
+    if (FACTOR === 'nocast') { const ps = w.system.GetPhysicsSettings(); ps.mLinearCastThreshold = 1e9; w.system.SetPhysicsSettings(ps) }
+    room.blastAt('c4', spot)
+    const rows: string[] = []
+    for (let f = 0; f < 6; f++) {
+      frame.steps = []; frame.cb = 0; frame.added = { static: 0, dynamic: 0, children: 0 }; frame.val = 0; frame.add = 0; frame.per = 0; frame.opt = 0
+      const s = performance.now()
+      room.update(1 / 60)
+      const whole = performance.now() - s
+      if (f === 1 && process.env.WHO) {
+        const ids = new J.BodyIDVector()
+        w.system.GetActiveBodies(J.EBodyType_RigidBody, ids)
+        for (let i = 0; i < ids.size(); i++) { const id = ids.at(i); const e = w.bodies.get(id.GetIndexAndSequenceNumber()); const b = e.body; const sh = b.GetShape(); const v = b.GetLinearVelocity(); const bb = b.GetWorldSpaceBounds(); console.log('ACTIVE', e.layer, b.IsKinematic() ? 'kin' : 'dyn', 'st' + sh.GetSubType(), 'v', Math.hypot(v.GetX(), v.GetY(), v.GetZ()).toFixed(2), 'ext', (bb.mMax.GetX() - bb.mMin.GetX()).toFixed(2), (bb.mMax.GetY() - bb.mMin.GetY()).toFixed(2), (bb.mMax.GetZ() - bb.mMin.GetZ()).toFixed(2), 'partners', [...(w.partners.get(e.key)?.keys() ?? [])].map((k: number) => { const o = w.bodies.get(k); return o ? 'st' + o.body.GetShape().GetSubType() : '?' }).join(',')) }
+        J.destroy(ids)
+      }
+      rows.push(`f${f} whole ${whole.toFixed(1)} steps ${frame.steps.map((x) => x.toFixed(2)).join('+')} opt ${frame.opt.toFixed(2)} callbacks ${frame.cb.toFixed(2)} active ${w.activeCount} bodies ${w.bodyCount} added s${frame.added.static}/d${frame.added.dynamic}/ch${frame.added.children} contacts val ${frame.val} add ${frame.add} per ${frame.per}`)
+    }
+    console.log(`[STEP ${FACTOR} round ${round}]\n` + rows.join('\n'))
+    }
+  }, 600000)
+})
