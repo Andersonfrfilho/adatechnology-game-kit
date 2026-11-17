@@ -93,7 +93,16 @@ With `destruction` (a world of `game-destruction`) and `destructionRenderer` (`g
   are bedded on the floor, gates and the mailbox door hang on the lot wall beside them (`hinge`, `slide` for a sliding gate), the shower door on the bathroom
   wall, the doors and drawers of the furniture on the floor the furniture stands on (`hinge`, `slide`), exposed conduits are clamped to the wall they run on,
   the gas cylinder rests on the floor (`resting`), and the wires hang on the poles. A piece declares it on its record (`holder`, or `holdOn: 'floor' | 'wall'`
-  with `holdJoint`); it comes off only when that joint breaks.
+  with `holdJoint`); it comes off only when that joint breaks. A piece that says what holds it and finds nothing (no floor under it, no wall in reach, not on the
+  ground floor, its foot not at or in the terrain) is listed in `house.structure.unheld`; the load test wants it empty for every house of the catalogue. Interactive pieces left open are
+  measured shut.
+- **Set in the ground as deep as it is buried.** A piece set in the ground holds as its buried base does (`embedmentStrength` of game-destruction, by the soil data):
+  a pole declares the usual rule (`postEmbedment`: a tenth of its height and 0.6 m, its 22 cm shaft), a lot wall its ground beam (`GROUND_BEAM_DEPTH`) along its
+  length, and a piece drawn below the terrain counts what is buried (`destruction/hold.ts`). A foot at or below the terrain (read at the lowest corner of the
+  footprint) is anchored, never floating.
+- **Known limit: furniture doors and drawers hang on the floor, not on their cabinet.** The cabinet's carcass is not a part of the destruction world, so its doors and
+  drawers are held by the floor the furniture stands on (the storey's slab, or the ground on the ground floor) until the carcass is a part: today they come off when the
+  hinge or slide breaks or the floor goes, not when the carcass does.
 - **Spall decal and rebar cage** come from the destruction renderer (decals on hits, instanced bars when the concrete is exposed).
 - `house.damage(id, point, type, amount)` keeps the legacy behaviour (hp of the part, `onDamage`) and becomes a hit in the world.
 

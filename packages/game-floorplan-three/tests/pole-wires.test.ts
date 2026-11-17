@@ -14,6 +14,8 @@ const FLOATS_ABOVE = 1.5
 const SUNK_BELOW = -0.05
 /** The C4 at its foot breaks the footing of the first pole; the poles 22 m away stand on theirs (set in the ground, not loose). */
 const POLES_DOWN = 1
+/** A pole's shaft as drawn: 7.5 m above the ground and its buried 1.35 m, with a little to spare (a wire would add metres). */
+const POLE_DRAWN = 7.5 + 1.35 + 0.1
 /** The grid stretches that hung on the pole that came down: four wires each side of it. */
 const STRETCHES_DOWN = 8
 
@@ -71,7 +73,8 @@ describe('the wires of a pole, when the pole is knocked down', () => {
       const poleMass = world.state(id)!.parts.find((part) => part.id.startsWith('pole:'))!.mass
       expect(piece.mass, `object ${id}`).toBeCloseTo(poleMass, 1)
       const longest = Math.max(...((piece as unknown as Frame).partBoxes ?? []).map((box) => Math.max(...box.half) * 2))
-      expect(longest, `object ${id}`).toBeLessThan(8)
+      // its shaft, 7.5 m standing and 1.35 m buried (`postEmbedment`): no wire stretches it
+      expect(longest, `object ${id}`).toBeLessThan(POLE_DRAWN)
     }
   })
 

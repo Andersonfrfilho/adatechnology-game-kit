@@ -17,8 +17,8 @@ export const JOINT_DEFAULTS: Record<JointKind, { strength: number; tools: ToolKi
   weld: { strength: 600, tools: ['cutting_torch', 'saw'], seconds: 8 },
   glue: { strength: 50, tools: ['pry_bar', 'knife'], seconds: 3 },
   hinge: { strength: 120, tools: ['screwdriver'], seconds: 3 },
-  // a drawer's pair of telescopic runners, each screwed with three screws to the carcass: a little under a door's hinges, taken out the same way
-  slide: { strength: 100, tools: ['screwdriver'], seconds: 3 },
+  // a drawer's pair of telescopic runners, each screwed with three screws to the carcass: a little under a door's hinges; the drawer lifts off them by hand, or they come out with a screwdriver
+  slide: { strength: 100, tools: ['hand', 'screwdriver'], seconds: 3 },
   clip: { strength: 20, tools: ['hand'], seconds: 0.6 },
   tie: { strength: 15, tools: ['knife', 'hand'], seconds: 1 },
   mortar: { strength: 400, tools: ['hammer'], seconds: 6 },

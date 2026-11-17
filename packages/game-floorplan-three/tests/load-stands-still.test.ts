@@ -30,6 +30,8 @@ describe('a house just loaded', () => {
       const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
       const { house } = houseOf(planOf(template, seed), { destruction: world, destructionRenderer: renderer }, { quality: 'game' })
       scene.add(house.group)
+      // every piece that says what holds it found it: nothing is set in the ground that does not stand on it
+      expect(house.structure.unheld, 'pieces nothing holds').toEqual([])
       house.destruction.activate()
       const id = house.destruction.id as string
       const loose = (world.state(id)?.groups ?? []).slice(1).map((group) => group.join(', '))

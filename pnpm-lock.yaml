@@ -1031,6 +1031,12 @@ importers:
         specifier: workspace:^
         version: link:../game-shapes-three
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
+      '@adatechnology/game-destruction-three':
+        specifier: workspace:^
+        version: link:../game-destruction-three
       '@adatechnology/game-interactables-household':
         specifier: workspace:^
         version: link:../game-interactables-household
@@ -1139,6 +1145,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-destruction-three':
+        specifier: workspace:^
+        version: link:../game-destruction-three
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods

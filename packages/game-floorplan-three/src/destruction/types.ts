@@ -3,6 +3,7 @@ import type { DeferredQueue, DestructibleSpec, DestructionEvent, PartState, Obje
 import type { DestructionWorld } from '@adatechnology/game-destruction'
 import type { DestructibleSpecOptions, StructurePart, Support } from '@adatechnology/game-floorplan-structure'
 import type { BoundMeshes, HouseDestructionRenderer } from '../adapter-shapes.js'
+import type { PieceHold } from '../kernel-types.js'
 
 /** The pieces of a house the destruction renderer draws; the breach view reads them from the structure the house assembled. */
 export interface BreachViewOptions {
@@ -32,7 +33,7 @@ export type StructureMeshItem =
 export type StructureRangeItem = Extract<StructureMeshItem, { mesh: THREE_NS.Mesh }>
 
 /** A piece of the house's structure: the part of the plan (or a tagged piece the plan does not have), how many meshes draw it, and what it holds. */
-export type HouseStructurePart = StructurePart & {
+export type HouseStructurePart = StructurePart & PieceHold & {
   meshes: number
   extra: boolean
   contains?: unknown
@@ -54,6 +55,8 @@ export interface HouseStructure {
   levels: number[]
   elevation: number
   byId: Map<string, HouseStructurePart>
+  /** Pieces whose maker said what holds them (`holdOn`) and nothing does: no floor under, no wall in reach, not on the ground. They come loose at load; none should. */
+  unheld: string[]
   meshesOf(id: string): StructureMeshItem[]
   /** The piece a raycast hit (object and face index): merged mesh by its ranges, single-piece mesh or loose group by userData. */
   pieceId(obj: THREE_NS.Object3D | null, face?: number | null): string | null

@@ -26,7 +26,8 @@ const BLAST_RADIUS = 6
 // Recorded again with the wall pipes of the house built by stages cut in stretches hosted by their wall, and the door thresholds laid between the posts of their frame, clear of the structure
 // Recorded again with the wires of the poles detaching as pieces of their own (they hang from the pole by a joint that tears): 21 more objects, the pole's piece keeps only its shaft, crossarm and insulators, and the state of a joint says whether it tears
 // Recorded again when what is attached in the real world came to be attached in the world: lot walls and poles set in the ground, gates, doors and drawers on their hinges and slides, the gas cylinder resting on the floor (the house loads as one group)
-const RECORDED_BLAST_OUTCOME = '35845fbbfabf29c5d700ea5e38d7d1ca43d9e9b1'
+// Recorded again when what is set in the ground held as its buried base (poles, lot walls and gate pillars drawn into the terrain, their anchors by `embedmentStrength`), furniture pieces came to stand on their parts' corners, and a loose group at load sleeps only when balanced
+const RECORDED_BLAST_OUTCOME = '64f2147e7757792315952b0798300a7c40111ea1'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })

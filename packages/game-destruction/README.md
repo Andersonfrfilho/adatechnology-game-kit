@@ -132,7 +132,7 @@ A fluid with `contains.outflow` (object-local direction) leaves a hole that way 
 | `weld` | 600 | cutting_torch, saw | 8 |
 | `glue` | 50 | pry_bar, knife | 3 |
 | `hinge` | 120 | screwdriver | 3 |
-| `slide` | 100 | screwdriver | 3 |
+| `slide` | 100 | hand, screwdriver | 3 |
 | `clip` | 20 | hand | 0.6 |
 | `tie` | 15 | knife, hand | 1 |
 | `mortar` | 400 | hammer | 6 |
@@ -144,6 +144,14 @@ A fluid with `contains.outflow` (object-local direction) leaves a hole that way 
 `inferJoints` joins parts whose bounds touch (default tolerance 1 cm) with the kind from `JOINT_BY_MATERIALS`. Joints open when their hit points
 run out (`detach` with `by: 'break'`), when a part is lost (`'part_lost'`) or when a tool finishes the work (`'tool'`). `ObjectState.groups` lists
 the connected pieces; index 0 keeps the object's id (the anchored one, else the heaviest).
+
+### Parts set in the ground
+
+A part set in the ground (a pole, a post, the footing of a lot wall) is held by the soil round its buried base: `embedmentStrength(kind, { depth, width, soil })` gives
+the joint's hit points as the kind's default strength (`JOINT_DEFAULTS`) scaled by `embedmentResistance` (the soil's ultimate bearing, its basic pressure from
+`src/data/soils.json` times `SOIL_DEFAULTS.safety`, on the buried face, layer by layer) over that of the reference base of `EMBEDMENT_DEFAULTS` (20 cm wide, 1 m deep in
+stiff clay). A post that barely touches the ground is weak; a deep one in firm soil is strong. `postEmbedment(height)` is the usual rule for a pole: a tenth of its
+height plus 0.6 m.
 
 ## Structural integrity
 
@@ -390,7 +398,7 @@ world continues with the same events as the original. The loading world must use
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
 `register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, round?)` (`round`: `Hit.penetration`, `piercing`, `incendiary`, `tracer`, `ignition` or a bare piercing factor). `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `sizeRebar`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS`, `bearingWallThickness`, `SOILS`, `SOIL_DEFAULTS`, `pileCapacity`, `pileLength`, `pileStiffness`, `footingSoil`, `subgradeModulus`, `solveFoundation`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `sizeRebar`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS`, `bearingWallThickness`, `SOILS`, `SOIL_DEFAULTS`, `EMBEDMENT_DEFAULTS`, `embedmentResistance`, `embedmentStrength`, `postEmbedment`, `pileCapacity`, `pileLength`, `pileStiffness`, `footingSoil`, `subgradeModulus`, `solveFoundation`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:

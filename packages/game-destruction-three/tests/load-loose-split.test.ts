@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -108,5 +109,80 @@ describe('an object bound with loose groups, without the work budget', () => {
     renderer.unbind('o1')
     renderer.update(FRAME)
     expect(world.splits).toHaveLength(0)
+  })
+})
+
+/** A table `o1` (furniture): a floor slab that stays the object and, loose or not, a 1.2 m top on one leg under its end (§12: a top on one leg always topples). */
+function tableOnOneLeg(looseAtBind: boolean) {
+  const scene = new THREE.Scene()
+  const world = new FakeWorld()
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
+  const all = [['slab', 'top', 'leg']]
+  world.addObject('o1', ['slab', 'top', 'leg'].map((id) => partState(id, 'wood')), looseAtBind ? [['slab'], ['top', 'leg']] : all)
+  const root = new THREE.Group()
+  const box = (w: number, h: number, d: number, x: number, y: number, z: number): THREE.Mesh => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial())
+    mesh.position.set(x, y, z)
+    root.add(mesh)
+    return mesh
+  }
+  const meshes = { slab: box(0.2, 0.2, 0.2, 5, 0.1, 0), top: box(1.2, 0.04, 0.6, 0, 0.74, 0), leg: box(0.05, 0.72, 0.05, -0.55, 0.36, 0) }
+  markKitOrigin(root, { owner: 'game-floorplan-three', kind: 'furniture', id: 'table' })
+  scene.add(root)
+  root.updateMatrixWorld(true)
+  renderer.bind('o1', root, { parts: meshes })
+  const run = (seconds: number): void => {
+    for (let t = 0; t < seconds; t += FRAME) renderer.update(FRAME)
+  }
+  return { renderer, world, meshes, run }
+}
+
+describe('a loose group that cannot stand where it stood', () => {
+  it('bound as a top on one leg: it is not put to sleep there, it topples', () => {
+    const { renderer, meshes, run } = tableOnOneLeg(true)
+    renderer.update(FRAME)
+    expect(renderer.pieces()).toHaveLength(1)
+    expect(renderer.pieces()[0]!.sleeping).toBe(false)
+    run(3)
+    expect(meshes.top.getWorldPosition(new THREE.Vector3()).y).toBeLessThan(0.5)
+  })
+
+  it('drawn again from a world where it broke loose (a restored broken table): it topples as a live one does', () => {
+    const { renderer, world, meshes, run } = tableOnOneLeg(false)
+    run(0.1)
+    expect(renderer.pieces()).toHaveLength(0)
+    world.state('o1')!.groups = [['slab'], ['top', 'leg']]
+    renderer.redraw('o1')
+    renderer.update(FRAME)
+    // live, the furniture left standing is a piece too (the slab here)
+    const table = renderer.pieces().find((piece) => piece.objectId !== 'o1')
+    expect(table?.sleeping).toBe(false)
+    run(3)
+    expect(meshes.top.getWorldPosition(new THREE.Vector3()).y).toBeLessThan(0.5)
+  })
+
+  it('a top on four legs, bound loose, sleeps where it stood', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
+    const ids = ['slab', 'top', 'l0', 'l1', 'l2', 'l3']
+    world.addObject('o1', ids.map((id) => partState(id, 'wood')), [['slab'], ids.slice(1)])
+    const root = new THREE.Group()
+    const parts: Record<string, THREE.Mesh> = {}
+    const box = (id: string, w: number, h: number, d: number, x: number, y: number, z: number): void => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial())
+      mesh.position.set(x, y, z)
+      root.add(mesh)
+      parts[id] = mesh
+    }
+    box('slab', 0.2, 0.2, 0.2, 5, 0.1, 0)
+    box('top', 1.2, 0.04, 0.6, 0, 0.74, 0)
+    ;[[-0.55, -0.25], [0.55, -0.25], [-0.55, 0.25], [0.55, 0.25]].forEach(([x, z], k) => box(`l${k}`, 0.05, 0.72, 0.05, x!, 0.36, z!))
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('o1', root, { parts })
+    renderer.update(FRAME)
+    expect(renderer.pieces()).toHaveLength(1)
+    expect(renderer.pieces()[0]!.sleeping).toBe(true)
   })
 })

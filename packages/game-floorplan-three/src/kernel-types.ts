@@ -7,6 +7,8 @@
  * checked with `strict` by `tsconfig.strict.json`.
  */
 import type * as THREE_NS from 'three'
+import type { JointKind } from '@adatechnology/game-contracts'
+import type { Embedment } from './destruction/hold.js'
 import type { FloorplanResultFields, PlanDoor, PlanWall, PlanWindow, Rect, ResultGate, ResultLot, ResultRoom } from '@adatechnology/game-floorplan'
 import type { Construction, Outbuilding, Structure, PlumbingPoint, PlumbingRun, Utilities, WaterTank } from '@adatechnology/game-floorplan-structure'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
@@ -56,7 +58,22 @@ export interface PieceAperture {
   bars?: { spacing: number; width: number }
 }
 
-export interface PieceRecord {
+/** What a piece the house adds stands or hangs on (`assembleStructure`): the floor under it, or the wall beside it. */
+export type HoldOn = 'floor' | 'wall'
+
+/** How a piece is held where it stands, as its maker declares it: by `holder` (a part id, or `'ground'`), or by what `holdOn` finds. */
+export interface PieceHold {
+  holder?: string
+  holdOn?: HoldOn
+  /** The joint that holds it (default `clip`). */
+  holdJoint?: JointKind
+  /** Metres a `holdOn: 'wall'` piece reaches for its wall (default `HOLD_REACH`). */
+  holdReach?: number
+  /** The base it has in the ground below what is drawn (a pole drawn from the surface up): set in the ground, it holds as that base does. */
+  embedment?: Embedment
+}
+
+export interface PieceRecord extends PieceHold {
   id: string
   mat: string
   role: string | null
