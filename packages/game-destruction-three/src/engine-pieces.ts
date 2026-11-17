@@ -959,7 +959,7 @@ export class EnginePieces {
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
     // the engine's field is the coarser collision grid (`engine-ground-collision`): what it moved there is what is written in place
-    // a tile that went from one field to the other (`collisionStep`) moved all of it: a new shape, not a write in place
+    // a tile that went from one field to the other (`collisionFieldOf`) moved all of it: a new shape, not a write in place
     const fieldSize = made.collisionCells + 1
     const sameField = tile !== undefined && tile.collision.length === made.collision.length
     const movedField = tile && !tile.slab && !slab && moved ? (sameField ? changedHeights(tile.collision, made.collision, fieldSize) : { x: 0, z: 0, sizeX: fieldSize, sizeZ: fieldSize }) : null
@@ -1022,7 +1022,7 @@ export class EnginePieces {
       tile.dirty = null
       return null
     }
-    return shapeGround(held, x0, z0, TILE, null)
+    return shapeGround(held, x0, z0, TILE, null, !tile.slab && tile.collision.length < tile.heights.length)
   }
 
   /**

@@ -167,6 +167,34 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
     expect(after.boxes).toEqual(made(0.4).engine.tiles.get(TILE_KEY)!.volume.boxes)
   })
 
+  it('a smooth tile that stays on the 5 cm field is written in place: the same body, its field\'s moved samples, the ground a fresh tile has (within the quantisation)', () => {
+    const l = lab(0.05)
+    l.engine.layTile(TILE_KEY, 0, 0, undefined)
+    const before = l.engine.tiles.get(TILE_KEY)!
+    expect(before.collision.length).toBeLessThan(before.heights.length)
+    const written = vi.spyOn(l.engine.world, 'updateHeights')
+    l.state.depth = 0.1
+    l.engine.groundChanged(1.9, 1, 0.3)
+    l.engine.layTile(TILE_KEY, 0, 0, l.engine.tiles.get(TILE_KEY))
+    const after = l.engine.tiles.get(TILE_KEY)!
+    expect(after.ground).toBe(before.ground)
+    expect(after.collision.length).toBe(before.collision.length)
+    expect(written.mock.results.some((r) => r.value === true)).toBe(true)
+    const fresh = lab(0.1)
+    fresh.engine.layTile(TILE_KEY, 0, 0, undefined)
+    const top = (world: PhysicsWorld, body: BodyId, x: number, z: number): number => {
+      const hits: RayHit[] = []
+      world.rayAll([x, 5, z], [0, -1, 0], 10, hits)
+      const hit = hits.find((h) => h.body === body)
+      return hit ? 5 - hit.distance : NaN
+    }
+    const freshGround = fresh.engine.tiles.get(TILE_KEY)!.ground
+    let worst = 0
+    for (let x = 0.013; x < 2; x += 0.11) for (let z = 0.017; z < 2; z += 0.13) worst = Math.max(worst, Math.abs(top(l.engine.world, after.ground, x, z) - top(fresh.engine.world, freshGround, x, z)))
+    // an 8 bit step of a block's range, requantized next to the write
+    expect(worst).toBeLessThan(0.002)
+  })
+
   it('a tile whose field goes from 5 cm to 2.5 cm (a sharper crater dug in it) takes a whole new field on its body, the one a fresh tile has', () => {
     const l = lab(0)
     l.engine.layTile(TILE_KEY, 0, 0, undefined)
@@ -205,7 +233,7 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
     for (let k = 0; k < 6; k++) round(k)
     const bytes = l.engine.world.memoryInUse()
     const bodies = l.engine.world.bodyCount
-    // ends on the depth the heap was read at (the tile collides at 5 cm with the shallower second crater, at 2.5 cm with the deepest: `collisionStep`)
+    // ends on the depth the heap was read at (the tile collides at 5 cm with the shallower second crater, at 2.5 cm with the deepest: `collisionFieldOf`)
     for (let k = 6; k < 207; k++) round(k)
     expect(l.engine.world.bodyCount).toBe(bodies)
     expect(Math.abs(l.engine.world.memoryInUse() - bytes)).toBeLessThan(4096)

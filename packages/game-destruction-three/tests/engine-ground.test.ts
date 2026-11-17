@@ -6,6 +6,7 @@ import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 import { GROUND_CELL, buildGroundTile } from '../src/engine-ground'
 import type { GroundTile } from '../src/engine-ground'
 import { SOLID_RING } from '../src/engine-ground-ring'
+import { collisionFieldOf } from '../src/engine-ground-collision'
 import { NO_SOLID, SOLID_DEPTH, SOLID_MARGIN, SOLID_STRIDE } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
@@ -286,8 +287,9 @@ describe('solid under the height field', { timeout: 30000 }, () => {
       ['valley, 7 m radius, steep sides', (x, z) => 0.6 * z + (x - 1.01) ** 2 / 14, true],
       ['sharp ridge', (x) => 1 - 0.8 * Math.abs(x - 1.0137), false],
       ['sharp ravine', (x, z) => 0.3 * x + 0.9 * Math.abs(z - 0.9871), false],
-      // a 0.6 slope meeting a level floor in a crease is within 5 mm at 5 cm; a 0.75 one is not, and is no step either: the bound alone keeps the read grid
-      ['0.6 slope onto a level floor', (x) => 0.6 * Math.max(0, 1.0137 - x), true],
+      // a 0.5 slope meeting a level floor in a crease is within 4.5 mm at 5 cm (a fresh tile's bar, `COLLISION_ENTER`); a 0.75 one is not even within 5 mm, and is no step
+      // either: the bound alone keeps the read grid
+      ['0.5 slope onto a level floor', (x) => 0.5 * Math.max(0, 1.0137 - x), true],
       ['0.75 slope onto a level floor', (x) => 0.75 * Math.max(0, 1.0137 - x), false],
     ]
     const kept: string[] = []
@@ -302,6 +304,22 @@ describe('solid under the height field', { timeout: 30000 }, () => {
       expect(t.collisionCells === t.cells / 2, name).toBe(smooth)
     }
     if (process.env.MOUNTAINS) console.log('MOUNTAINS kept 5 cm:', kept.join(', '))
+  })
+
+  // between the bars a tile keeps the field it had: one near the bound does not change field (a new shape on its body) at every change of its ground
+  it('a tile between 4.5 and 5 mm off at 5 cm keeps the field it had: a fresh one takes the read grid, one that was on 5 cm stays; past 5 mm none keeps 5 cm', () => {
+    const fieldOf = (slope: number, wasCoarse: boolean): number => {
+      const t = buildGroundTile((x) => slope * Math.max(0, 1.0137 - x), 0, 0, 2)
+      return collisionFieldOf(t.heights, t.cells, 2 / t.cells, false, wasCoarse).step
+    }
+    // 4.71 and 4.93 mm off at 5 cm (the bars: COLLISION_ENTER 4.5, COLLISION_TOLERANCE 5)
+    for (const slope of [0.65, 0.68]) {
+      expect(fieldOf(slope, false), `${slope}`).toBe(1)
+      expect(fieldOf(slope, true), `${slope}`).toBe(2)
+    }
+    // 5.07 mm: past the hard bound; 4.35 mm: under the bar a fresh tile takes
+    expect(fieldOf(0.7, true)).toBe(1)
+    expect(fieldOf(0.6, false)).toBe(2)
   })
 
   // a terrace's wall between two read corners, at each place in a cell along x and along z: a coarser field would ramp up the wall (14 cm over the floor and the box) or

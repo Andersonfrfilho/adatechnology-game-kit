@@ -3,12 +3,17 @@
  * grid, so a 5 cm height field. The read grid stays where the steps are found and the solid under the ground is made; the engine's narrow phase meets a quarter of the
  * triangles under a piece (the frame after a blast was mostly a piece resting on 2.5 cm triangles, T3.8ah). Owner decision 2026-11-17. The collision surface is off the drawn
  * ground by the bend of the ground across one of its cells: a tile keeps the coarse field only where that, with the engine's own 8 bit steps, is within 5 mm everywhere
- * on it, and has no step (`collisionStep`); else it collides at the read grid.
+ * on it, and has no step (`collisionFieldOf`); else it collides at the read grid.
  */
 export const GROUND_COLLISION_CELL = 0.05
 
 /** The most (m) the collision surface may be off the drawn ground anywhere on a tile for the tile to collide at `GROUND_COLLISION_CELL` (the owner's bound). */
 export const COLLISION_TOLERANCE = 0.005
+/**
+ * A tile on the read grid goes to the coarse field only under this (m): one near the bound does not change field at every change of its ground (the bound stays hard). Not
+ * lower: a room crater tile is 4.47 mm off at 5 cm, and a piece rests on it the frame after the blast.
+ */
+export const COLLISION_ENTER = 0.0045
 /** Samples a side of the engine's height field blocks (`game-physics-jolt` `HEIGHT_BLOCK`): each block's heights are 8 bit steps of its own range. */
 const ENGINE_BLOCK = 4
 
@@ -18,25 +23,34 @@ export const coarseStep = (cells: number, readCell: number): number => {
   return cells % k === 0 ? k : 1
 }
 
+/** A tile's collision field: every `step`-th corner of its read heights (1: the heights themselves). */
+export interface CollisionField {
+  readonly step: number
+  readonly field: Float32Array
+}
+
 /**
- * The step of a tile's collision field: the coarse one (`GROUND_COLLISION_CELL`) when the tile has no step boxes (a step's edge is between read corners, and a coarser
- * field ramps or grooves across it: 14 cm by a terrace's wall) and the coarse surface, on either diagonal and with the engine's 8 bit steps, is within
- * `COLLISION_TOLERANCE` of the drawn ground at every read corner (both are flat between them); else 1, the read grid itself.
+ * A tile's collision field: the coarse one (`GROUND_COLLISION_CELL`) when the tile has no step boxes (a step's edge is between read corners, and a coarser field ramps or grooves
+ * across it: 14 cm by a terrace's wall) and the coarse surface, on either diagonal and with the engine's 8 bit steps, is within `COLLISION_TOLERANCE` of the drawn ground at
+ * every read corner (both are flat between them); within `COLLISION_ENTER` when the tile was on the read grid before (`wasCoarse` false: a fresh tile is one); else the read
+ * grid itself.
  */
-export const collisionStep = (heights: Float32Array, cells: number, readCell: number, hasSteps: boolean): number => {
+export const collisionFieldOf = (heights: Float32Array, cells: number, readCell: number, hasSteps: boolean, wasCoarse = false): CollisionField => {
   const k = coarseStep(cells, readCell)
-  if (k === 1 || hasSteps || heights.length === 0) return 1
+  const fine = { step: 1, field: heights }
+  if (k === 1 || hasSteps || heights.length === 0) return fine
   const m = cells + 1
   const get = (p: number, q: number): number => heights[q * m + p]!
   let off = 0
   for (let q = 0; q <= cells; q++) {
     for (let p = 0; p <= cells; p++) {
-      const [lo, hi] = collisionBoth(get, p, q, k)
+      collisionBoth(get, p, q, k)
       const h = heights[q * m + p]!
-      off = Math.max(off, h - lo, hi - h)
+      off = Math.max(off, h - both[0]!, both[1]! - h)
     }
   }
-  return off + quantumOf(collisionOf(heights, cells, k), cells / k) <= COLLISION_TOLERANCE ? k : 1
+  const field = collisionOf(heights, cells, k)
+  return off + quantumOf(field, cells / k) <= (wasCoarse ? COLLISION_TOLERANCE : COLLISION_ENTER) ? { step: k, field } : fine
 }
 
 /** The most the engine's 8 bit heights may be off the field's own, over its blocks: half a step of a block's range. */
@@ -72,15 +86,21 @@ export const collisionOf = (heights: Float32Array, cells: number, k: number): Fl
  * The collision surface at the read corner (`p`, `q`) (any integers: past the tile too), from `get` of the corners on the collision grid (multiples of `k`): the lower of the
  * two ways the engine may cut the collision cell into triangles, so whichever it uses is no lower than this.
  */
-export const collisionAt = (get: (p: number, q: number) => number, p: number, q: number, k: number): number => collisionBoth(get, p, q, k)[0]
+export const collisionAt = (get: (p: number, q: number) => number, p: number, q: number, k: number): number => {
+  collisionBoth(get, p, q, k)
+  return both[0]!
+}
 
-/** The collision surface at the read corner (`p`, `q`) on the two ways a collision cell may be cut, the lower then the higher. */
-const collisionBoth = (get: (p: number, q: number) => number, p: number, q: number, k: number): [number, number] => {
+/** Where `collisionBoth` writes, the lower then the higher (one array for the module: no array per corner). */
+const both = new Float64Array(2)
+
+/** The collision surface at the read corner (`p`, `q`) on the two ways a collision cell may be cut, into `both`: the lower then the higher. */
+const collisionBoth = (get: (p: number, q: number) => number, p: number, q: number, k: number): void => {
   const p0 = Math.floor(p / k) * k, q0 = Math.floor(q / k) * k
   const u = (p - p0) / k, v = (q - q0) / k
   if (u === 0 && v === 0) {
-    const h = get(p0, q0)
-    return [h, h]
+    both[0] = both[1] = get(p0, q0)
+    return
   }
   // on a collision cell's edge only that edge's corners are asked for (the tile's last row and column have no cell past them)
   const p1 = u === 0 ? p0 : p0 + k, q1 = v === 0 ? q0 : q0 + k
@@ -88,7 +108,8 @@ const collisionBoth = (get: (p: number, q: number) => number, p: number, q: numb
   // the diagonal from (0, 0) to (1, 1), and the one from (1, 0) to (0, 1)
   const main = u >= v ? h00 + u * (h10 - h00) + v * (h11 - h10) : h00 + v * (h01 - h00) + u * (h11 - h01)
   const cross = u + v <= 1 ? h00 + u * (h10 - h00) + v * (h01 - h00) : h11 + (1 - u) * (h01 - h11) + (1 - v) * (h10 - h11)
-  return main < cross ? [main, cross] : [cross, main]
+  both[0] = Math.min(main, cross)
+  both[1] = Math.max(main, cross)
 }
 
 /**

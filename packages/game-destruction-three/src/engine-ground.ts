@@ -1,6 +1,6 @@
 import { NO_SOLID, buildSolidVolume } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
-import { collisionOf, collisionStep } from './engine-ground-collision'
+import { collisionFieldOf } from './engine-ground-collision'
 import { holdsStep } from './engine-ground-step'
 
 /**
@@ -104,9 +104,10 @@ export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: 
 
 /**
  * The tile the samples make: level, or its height field, step boxes and (given the ground, which it reads past the tile's edges; else `NO_SOLID`, for a caller that may
- * not need it) the solid under it. Pure of the samples (and that ground), so a tile made from samples patched in place is the one made from all of them read again.
+ * not need it) the solid under it. Pure of the samples (and that ground), so a tile made from samples patched in place is the one made from all of them read again, but
+ * for its collision field near the bound, which keeps the coarse one it had (`wasCoarse`, `collisionFieldOf`).
  */
-export const shapeGround = (samples: Float64Array, x0: number, z0: number, size: number, solidGround: ((x: number, z: number) => number) | null): GroundTile => {
+export const shapeGround = (samples: Float64Array, x0: number, z0: number, size: number, solidGround: ((x: number, z: number) => number) | null, wasCoarse = false): GroundTile => {
   const n = Math.round(size / GROUND_CELL)
   const c = size / n
   const m = n + 1
@@ -176,6 +177,6 @@ export const shapeGround = (samples: Float64Array, x0: number, z0: number, size:
       i = end
     }
   }
-  const k = collisionStep(heights, n, c, boxes.length > 0)
-  return { heights, cells: n, collision: collisionOf(heights, n, k), collisionCells: n / k, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround, k) : NO_SOLID, level: null, samples }
+  const { step, field } = collisionFieldOf(heights, n, c, boxes.length > 0, wasCoarse)
+  return { heights, cells: n, collision: field, collisionCells: n / step, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround, step) : NO_SOLID, level: null, samples }
 }
