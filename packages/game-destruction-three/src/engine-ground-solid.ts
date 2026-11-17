@@ -42,13 +42,22 @@ export interface SolidVolume {
 
 export const NO_SOLID: SolidVolume = { boxes: [], ring: [] }
 
-const unit = (x: number, y: number, z: number): [number, number, number] => {
+/** The unit vector along (x, y, z), into `out`. */
+const unitInto = (out: Float64Array, x: number, y: number, z: number): Float64Array => {
   const l = Math.hypot(x, y, z)
-  return [x / l, y / l, z / l]
+  out[0] = x / l
+  out[1] = y / l
+  out[2] = z / l
+  return out
 }
 
+// one block at a time: its corner plane's slopes, and the box the reach is asked about (filled in place, no arrays per block)
+const slopes = new Float64Array(2)
+const reachAxes = [new Float64Array(3), new Float64Array(3), new Float64Array(3)] as const
+const reachBox = { c: new Float64Array(3), axes: [reachAxes[0], reachAxes[1], reachAxes[2]], half: new Float64Array(3) }
+
 /** The quaternion of the turn whose columns are the axes `a` (x), `b` (y) and `c` (z). */
-const quatOfAxes = (a: readonly number[], b: readonly number[], c: readonly number[]): [number, number, number, number] => {
+const quatOfAxes = (a: ArrayLike<number>, b: ArrayLike<number>, c: ArrayLike<number>): [number, number, number, number] => {
   const m00 = a[0]!, m10 = a[1]!, m20 = a[2]!, m01 = b[0]!, m11 = b[1]!, m21 = b[2]!, m02 = c[0]!, m12 = c[1]!, m22 = c[2]!
   const trace = m00 + m11 + m22
   if (trace > 0) {
@@ -90,17 +99,17 @@ export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, 
   const reachTile = { heights, cells, x0, z0, cell, pyramid: buildLowPyramid(heights, cells, cell), ring }
   const outer = ring.cells * cell
   const loX = x0 - outer, hiX = x0 + cells * cell + outer, loZ = z0 - outer, hiZ = z0 + cells * cell + outer
-  const halves = (a: number, b: number): ReadonlyArray<readonly [number, number]> => (b - a < 2 ? [[a, b]] : [[a, (a + b) >> 1], [(a + b) >> 1, b]])
   const at = (i: number, j: number): number => heights[j * m + i]!
-  /** The slopes (per cell) of the plane through the block's corners. */
-  const slopesOf = (i0: number, j0: number, i1: number, j1: number): [number, number] => [
-    (at(i1, j0) - at(i0, j0) + at(i1, j1) - at(i0, j1)) / 2 / (i1 - i0),
-    (at(i0, j1) - at(i0, j0) + at(i1, j1) - at(i1, j0)) / 2 / (j1 - j0),
-  ]
+  /** The slopes (per cell) of the plane through the block's corners, into `slopes` (x then z). */
+  const slopesOf = (i0: number, j0: number, i1: number, j1: number): void => {
+    slopes[0] = (at(i1, j0) - at(i0, j0) + at(i1, j1) - at(i0, j1)) / 2 / (i1 - i0)
+    slopes[1] = (at(i0, j1) - at(i0, j0) + at(i1, j1) - at(i1, j0)) / 2 / (j1 - j0)
+  }
 
   /** How far the surface rises above the plane through the block's corners lowered to its lowest sample: the block is split while it is more. */
   const planeGap = (i0: number, j0: number, i1: number, j1: number): number => {
-    const [sx, sz] = slopesOf(i0, j0, i1, j1)
+    slopesOf(i0, j0, i1, j1)
+    const sx = slopes[0]!, sz = slopes[1]!
     let least = Infinity
     let most = -Infinity
     for (let j = j0; j <= j1; j++) {
@@ -127,32 +136,39 @@ export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, 
    */
   const sloped = (i0: number, j0: number, i1: number, j1: number, least: number, most: number): boolean => {
     const span = Math.max(i1 - i0, j1 - j0)
-    const [sx, sz] = slopesOf(i0, j0, i1, j1)
-    const gx = sx / cell
-    const gz = sz / cell
+    slopesOf(i0, j0, i1, j1)
+    const gx = slopes[0]! / cell
+    const gz = slopes[1]! / cell
     const ox = x0 + i0 * cell
     const oz = z0 + j0 * cell
     const base = at(i0, j0)
-    const plane = (x: number, z: number): number => base + gx * (x - ox) + gz * (z - oz)
-    const n = unit(-gx, 1, -gz)
-    const ax = unit(1, gx, 0)
-    const az: [number, number, number] = [ax[1] * n[2] - ax[2] * n[1], ax[2] * n[0] - ax[0] * n[2], ax[0] * n[1] - ax[1] * n[0]]
+    // the box's axes, in the scratch the reach reads them from: n the normal of its top, ax along x up the slope, az across both
+    const n = unitInto(reachAxes[1]!, -gx, 1, -gz)
+    const ax = unitInto(reachAxes[0]!, 1, gx, 0)
+    const az = reachAxes[2]!
+    az[0] = ax[1]! * n[2]! - ax[2]! * n[1]!
+    az[1] = ax[2]! * n[0]! - ax[0]! * n[2]!
+    az[2] = ax[0]! * n[1]! - ax[1]! * n[0]!
     const xa = ox, xb = x0 + i1 * cell, za = oz, zb = z0 + j1 * cell
-    const cx = (xa + xb) / 2, cz = (za + zb) / 2, cy = plane(cx, cz)
+    const cx = (xa + xb) / 2, cz = (za + zb) / 2, cy = base + gx * (cx - ox) + gz * (cz - oz)
     let hx = 0
     let hz = 0
-    for (const x of [xa, xb]) {
-      for (const z of [za, zb]) {
-        const d = [x - cx, plane(x, z) - cy, z - cz]
-        hx = Math.max(hx, Math.abs(d[0]! * ax[0] + d[1]! * ax[1] + d[2]! * ax[2]))
-        hz = Math.max(hz, Math.abs(d[0]! * az[0] + d[1]! * az[1] + d[2]! * az[2]))
+    for (let a = 0; a < 2; a++) {
+      const x = a === 0 ? xa : xb
+      for (let b = 0; b < 2; b++) {
+        const z = b === 0 ? za : zb
+        const d0 = x - cx, d1 = base + gx * (x - ox) + gz * (z - oz) - cy, d2 = z - cz
+        hx = Math.max(hx, Math.abs(d0 * ax[0]! + d1 * ax[1]! + d2 * ax[2]!))
+        hz = Math.max(hz, Math.abs(d0 * az[0]! + d1 * az[1]! + d2 * az[2]!))
       }
     }
     hx += cell
     hz += cell
     let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, highest = -Infinity
-    for (const su of [-1, 1]) {
-      for (const sw of [-1, 1]) {
+    for (let a = 0; a < 2; a++) {
+      const su = a === 0 ? -1 : 1
+      for (let b = 0; b < 2; b++) {
+        const sw = b === 0 ? -1 : 1
         const qx = cx + su * hx * ax[0] + sw * hz * az[0]
         const qz = cz + su * hx * ax[2] + sw * hz * az[2]
         minX = Math.min(minX, qx)
@@ -173,8 +189,14 @@ export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, 
       return true
     }
     const hy = thick / 2
-    const centre = [cx - n[0] * hy, cy - n[1] * hy, cz - n[2] * hy]
-    const reach = reachOf({ c: centre, axes: [ax, n, az], half: [hx, hy, hz] }, reachTile)
+    const centre = reachBox.c
+    centre[0] = cx - n[0]! * hy
+    centre[1] = cy - n[1]! * hy
+    centre[2] = cz - n[2]! * hy
+    reachBox.half[0] = hx
+    reachBox.half[1] = hy
+    reachBox.half[2] = hz
+    const reach = reachOf(reachBox, reachTile)
     if (reach.ring > reach.tile + SEAM_SPLIT && span > SOLID_MIN_CELLS) return false
     const drop = SOLID_MARGIN + Math.max(reach.tile, reach.ring)
     // lowered further than the block's own relief, its top would be further under the ground than the upright box's
@@ -203,7 +225,18 @@ export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, 
     if (most - least <= SOLID_RELIEF) return level(i0, j0, i1, j1, least)
     const span = Math.max(i1 - i0, j1 - j0)
     if ((planeGap(i0, j0, i1, j1) > SOLID_RELIEF && span > SOLID_MIN_CELLS) || !sloped(i0, j0, i1, j1, least, most)) {
-      for (const [a, b] of halves(i0, i1)) for (const [d, e] of halves(j0, j1)) fill(a, d, b, e)
+      // in halves (a side under two cells stays whole), x's halves first
+      const im = i1 - i0 < 2 ? i1 : (i0 + i1) >> 1
+      const jm = j1 - j0 < 2 ? j1 : (j0 + j1) >> 1
+      for (let a = i0; a < i1; a = im) {
+        const b = a === i0 ? im : i1
+        for (let d = j0; d < j1; d = jm) {
+          const e = d === j0 ? jm : j1
+          fill(a, d, b, e)
+          if (e === j1) break
+        }
+        if (b === i1) break
+      }
     }
   }
   fill(0, 0, cells, cells)
