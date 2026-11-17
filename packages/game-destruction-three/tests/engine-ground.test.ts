@@ -244,22 +244,90 @@ describe('solid under the height field', { timeout: 30000 }, () => {
     expect(lowestSolid(t)).toBeLessThanOrEqual(Math.min(...t.heights) - SOLID_DEPTH + 1e-9)
   }
 
-  // owner decision 2026-11-17: the engine collides with a 5 cm field of the 2.5 cm read grid; the bend of the ground across a 5 cm cell is all it is off the drawn ground
-  it('the engine\'s collision surface is within 5 mm of the drawn ground on a crater\'s wall (13 mm across a bowl\'s crease), and is a 5 cm field of the read corners', () => {
-    // the bowl's rim is a crease (its slope drops from 0.75 to 0 at 1.2 m): across it the 2.5 cm field was 6.2 mm off the drawn ground already, the 5 cm one is 12.4
-    for (const [ground, x0, z0, bound] of [[crater, 0, 0, 0.005], [rolling, 0, 0, 0.005], [bowl, -1, -1, 0.013]] as const) {
+  /**
+   * The most the collision surface (either diagonal) is off the drawn ground, the read grid (`heights`), over the tile: at its corners, since both are flat on each read
+   * triangle (a read cell's triangles lie inside the collision cell's).
+   */
+  const offOf = (t: GroundTile, x0: number, z0: number): number => {
+    let most = 0
+    const m = t.cells + 1, cell = 2 / t.cells
+    for (let j = 0; j <= t.cells; j++) {
+      for (let i = 0; i <= t.cells; i++) {
+        const x = x0 + i * cell, z = z0 + j * cell, drawn = t.heights[j * m + i]!
+        most = Math.max(most, Math.abs(collisionSurface(t, x0, z0, x, z, Math.min) - drawn), Math.abs(collisionSurface(t, x0, z0, x, z, Math.max) - drawn))
+      }
+    }
+    return most
+  }
+
+  // owner decision 2026-11-17: the engine collides with a 5 cm field of the 2.5 cm read grid where that is within 5 mm of the drawn ground over the whole tile (with the
+  // engine's 8 bit steps) and the tile has no step; else with the read grid itself
+  it('a smooth tile collides at a 5 cm field of its read corners, within 5 mm of the drawn ground; one whose coarse field would be further keeps the read grid', () => {
+    for (const [ground, x0, z0] of [[crater, 0, 0], [rolling, 0, 0]] as const) {
       const t = buildGroundTile(ground, x0, z0, 2)
       expect(t.collisionCells).toBe(t.cells / 2)
       expect(2 / t.collisionCells).toBeCloseTo(0.05, 12)
       for (let j = 0; j <= t.collisionCells; j++) for (let i = 0; i <= t.collisionCells; i++) expect(t.collision[j * (t.collisionCells + 1) + i]).toBe(t.heights[2 * j * (t.cells + 1) + 2 * i])
-      let most = 0
-      for (let x = x0 + 0.003; x < x0 + 2; x += 0.0071) {
-        for (let z = z0 + 0.003; z < z0 + 2; z += 0.0083) {
-          const drawn = ground(x, z)
-          most = Math.max(most, Math.abs(collisionSurface(t, x0, z0, x, z, Math.min) - drawn), Math.abs(collisionSurface(t, x0, z0, x, z, Math.max) - drawn))
+      expect(offOf(t, x0, z0)).toBeLessThan(0.005)
+    }
+    // the bowl's rim is a crease (its slope drops from 0.75 to 0 at 1.2 m): a 5 cm field would be 12.4 mm off across it, so the tile keeps the 2.5 cm one
+    const t = buildGroundTile(bowl, -1, -1, 2)
+    expect(t.collisionCells).toBe(t.cells)
+    expect(t.collision).toBe(t.heights)
+  })
+
+  // mountains: a slope is planar however steep, and a mountain's ridge or valley bends over tens of metres, so a 5 cm field is the drawn ground to well under 5 mm; a ridge
+  // or a ravine sharp as a crease bends inside one cell, and its tile keeps the 2.5 cm field
+  it('mountains: steep planes, smooth ridges and valleys keep the 5 cm field within 5 mm; a sharp ridge or ravine keeps the read grid', () => {
+    const cases: ReadonlyArray<readonly [string, (x: number, z: number) => number, boolean]> = [
+      ['plane 0.8 along both axes', (x, z) => 0.8 * x + 0.8 * z, true],
+      ['plane 0.8 along x only', (x) => 0.8 * x, true],
+      ['ridge, 7 m radius', (x, z) => 1.5 + 0.5 * x - (z - 1) ** 2 / 14, true],
+      ['valley, 7 m radius, steep sides', (x, z) => 0.6 * z + (x - 1.01) ** 2 / 14, true],
+      ['sharp ridge', (x) => 1 - 0.8 * Math.abs(x - 1.0137), false],
+      ['sharp ravine', (x, z) => 0.3 * x + 0.9 * Math.abs(z - 0.9871), false],
+      // a 0.6 slope meeting a level floor in a crease is within 5 mm at 5 cm; a 0.75 one is not, and is no step either: the bound alone keeps the read grid
+      ['0.6 slope onto a level floor', (x) => 0.6 * Math.max(0, 1.0137 - x), true],
+      ['0.75 slope onto a level floor', (x) => 0.75 * Math.max(0, 1.0137 - x), false],
+    ]
+    const kept: string[] = []
+    for (const [name, ground, smooth] of cases) {
+      const t = buildGroundTile(ground, 0, 0, 2)
+      // a crease sharp enough is read as a step too (its boxes), which alone keeps the read grid
+      if (smooth) expect(t.boxes, name).toHaveLength(0)
+      if (t.collisionCells === t.cells / 2) {
+        kept.push(name)
+        expect(offOf(t, 0, 0), name).toBeLessThan(0.005)
+      } else expect(t.collision, name).toBe(t.heights)
+      expect(t.collisionCells === t.cells / 2, name).toBe(smooth)
+    }
+    if (process.env.MOUNTAINS) console.log('MOUNTAINS kept 5 cm:', kept.join(', '))
+  })
+
+  // a terrace's wall between two read corners, at each place in a cell along x and along z: a coarser field would ramp up the wall (14 cm over the floor and the box) or
+  // groove beside it (15 cm); a tile with a step keeps the read grid, whose surface is never above the floor or the box's top, nor under the floor where there is no box
+  it('a terrace step anywhere in a cell: the tile keeps the read grid, and its collision surface is neither above the floor and the box nor a groove beside them', () => {
+    for (const along of ['x', 'z'] as const) {
+      for (const offset of [0.006, 0.0113, 0.0187, 0.0013]) {
+        const wall = 1 + offset
+        const ground = (x: number, z: number): number => ((along === 'x' ? x : z) < wall ? 0.3 : 0)
+        const t = buildGroundTile(ground, 0, 0, 2)
+        expect(t.boxes.length).toBeGreaterThan(0)
+        expect(t.collisionCells).toBe(t.cells)
+        const boxTop = (x: number, z: number): number => {
+          let top = -Infinity
+          for (let i = 0; i < t.boxes.length; i += 6) if (Math.abs(x - t.boxes[i]!) <= t.boxes[i + 3]! && Math.abs(z - t.boxes[i + 2]!) <= t.boxes[i + 5]!) top = Math.max(top, t.boxes[i + 1]! + t.boxes[i + 4]!)
+          return top
+        }
+        for (let u = 0.9; u < 1.1; u += 0.0007) {
+          for (const w of [0.5013, 1.2007]) {
+            const [x, z] = along === 'x' ? [u, w] : [w, u]
+            const drawn = ground(x, z), top = boxTop(x, z)
+            expect(collisionSurface(t, 0, 0, x, z, Math.max)).toBeLessThanOrEqual(Math.max(drawn, top) + 0.005)
+            if (top === -Infinity) expect(collisionSurface(t, 0, 0, x, z, Math.min)).toBeGreaterThanOrEqual(drawn - 0.005)
+          }
         }
       }
-      expect(most).toBeLessThan(bound)
     }
   })
 

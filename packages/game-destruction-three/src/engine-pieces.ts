@@ -959,7 +959,10 @@ export class EnginePieces {
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
     // the engine's field is the coarser collision grid (`engine-ground-collision`): what it moved there is what is written in place
-    const movedField = tile && !tile.slab && !slab && moved ? changedHeights(tile.collision, made.collision, made.collisionCells + 1) : null
+    // a tile that went from one field to the other (`collisionStep`) moved all of it: a new shape, not a write in place
+    const fieldSize = made.collisionCells + 1
+    const sameField = tile !== undefined && tile.collision.length === made.collision.length
+    const movedField = tile && !tile.slab && !slab && moved ? (sameField ? changedHeights(tile.collision, made.collision, fieldSize) : { x: 0, z: 0, sizeX: fieldSize, sizeZ: fieldSize }) : null
     const kept = tile !== undefined && tile.slab === slab
     const ground = kept ? tile.ground : this.replaceGround(tile, made, ix, iz)
     const writes = kept ? this.updateGround(tile, made, movedField, ix, iz) : 0
@@ -970,7 +973,7 @@ export class EnginePieces {
       steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
     }
     // the solid is a function of the heights and the ground it read past the edges: the same of both, the same solid
-    const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null && !ringMoved ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells, this.o.groundAt)
+    const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null && !ringMoved ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells, this.o.groundAt, made.cells / made.collisionCells)
     const laid = { ...made, solid: volume }
     this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty: null })
   }
@@ -989,8 +992,9 @@ export class EnginePieces {
   /** The solid of a tile whose own ground did not change, made again for the ground past its edges, which did. */
   private relaySolid(tile: Tile, x0: number, z0: number): void {
     const cells = Math.round(Math.sqrt(tile.heights.length)) - 1
-    const volume = buildSolidVolume(tile.heights, cells, x0, z0, TILE / cells, this.o.groundAt)
-    tile.solid = this.layVolume({ heights: tile.heights, cells, collision: tile.collision, collisionCells: Math.round(Math.sqrt(tile.collision.length)) - 1, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile)
+    const collisionCells = Math.round(Math.sqrt(tile.collision.length)) - 1
+    const volume = buildSolidVolume(tile.heights, cells, x0, z0, TILE / cells, this.o.groundAt, cells / collisionCells)
+    tile.solid = this.layVolume({ heights: tile.heights, cells, collision: tile.collision, collisionCells, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile)
     tile.volume = volume
   }
 

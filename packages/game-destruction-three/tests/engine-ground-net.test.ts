@@ -12,7 +12,7 @@ import { IS_JOLT, physicsOption } from './setup-physics'
  */
 interface Engine {
   world: PhysicsWorld & { J: { ConvexHullShapeSettings: { prototype: { Create(): unknown } } } }
-  tiles: Map<number, { ground: BodyId; solid: BodyId | null; volume: { boxes: readonly number[]; ring: readonly number[] }; heights: Float32Array }>
+  tiles: Map<number, { ground: BodyId; solid: BodyId | null; volume: { boxes: readonly number[]; ring: readonly number[] }; heights: Float32Array; collision: Float32Array }>
   layTile(key: number, ix: number, iz: number, tile: unknown): void
   groundChanged(x: number, z: number, radius: number): void
 }
@@ -167,6 +167,33 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
     expect(after.boxes).toEqual(made(0.4).engine.tiles.get(TILE_KEY)!.volume.boxes)
   })
 
+  it('a tile whose field goes from 5 cm to 2.5 cm (a sharper crater dug in it) takes a whole new field on its body, the one a fresh tile has', () => {
+    const l = lab(0)
+    l.engine.layTile(TILE_KEY, 0, 0, undefined)
+    const before = l.engine.tiles.get(TILE_KEY)!
+    expect(before.collision.length).toBeLessThan(before.heights.length)
+    const written = vi.spyOn(l.engine.world, 'updateHeights')
+    const reshaped = vi.spyOn(l.engine.world, 'setShape')
+    l.state.depth = 0.15
+    l.engine.groundChanged(1.9, 1, 0.3)
+    l.engine.layTile(TILE_KEY, 0, 0, l.engine.tiles.get(TILE_KEY))
+    const after = l.engine.tiles.get(TILE_KEY)!
+    expect(after.ground).toBe(before.ground)
+    expect(after.collision).toBe(after.heights)
+    expect(written).not.toHaveBeenCalled()
+    expect(reshaped.mock.calls.some((call) => call[0] === after.ground)).toBe(true)
+    const fresh = lab(0.15)
+    fresh.engine.layTile(TILE_KEY, 0, 0, undefined)
+    const top = (world: PhysicsWorld, body: BodyId, x: number, z: number): number => {
+      const hits: RayHit[] = []
+      world.rayAll([x, 5, z], [0, -1, 0], 10, hits)
+      const hit = hits.find((h) => h.body === body)
+      return hit ? 5 - hit.distance : NaN
+    }
+    const freshGround = fresh.engine.tiles.get(TILE_KEY)!.ground
+    for (let x = 0.013; x < 2; x += 0.11) for (let z = 0.017; z < 2; z += 0.13) expect(top(l.engine.world, after.ground, x, z)).toBeCloseTo(top(fresh.engine.world, freshGround, x, z), 6)
+  })
+
   it('the heap and the body count are the same after 200 changes of the crater', () => {
     const l = lab(0)
     l.engine.layTile(TILE_KEY, 0, 0, undefined)
@@ -178,7 +205,8 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
     for (let k = 0; k < 6; k++) round(k)
     const bytes = l.engine.world.memoryInUse()
     const bodies = l.engine.world.bodyCount
-    for (let k = 6; k < 206; k++) round(k)
+    // ends on the depth the heap was read at (the tile collides at 5 cm with the shallower second crater, at 2.5 cm with the deepest: `collisionStep`)
+    for (let k = 6; k < 207; k++) round(k)
     expect(l.engine.world.bodyCount).toBe(bodies)
     expect(Math.abs(l.engine.world.memoryInUse() - bytes)).toBeLessThan(4096)
   })

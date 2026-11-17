@@ -176,6 +176,6 @@ export const shapeGround = (samples: Float64Array, x0: number, z0: number, size:
       i = end
     }
   }
-  const k = collisionStep(n, c)
-  return { heights, cells: n, collision: collisionOf(heights, n, k), collisionCells: n / k, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround) : NO_SOLID, level: null, samples }
+  const k = collisionStep(heights, n, c, boxes.length > 0)
+  return { heights, cells: n, collision: collisionOf(heights, n, k), collisionCells: n / k, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround, k) : NO_SOLID, level: null, samples }
 }
