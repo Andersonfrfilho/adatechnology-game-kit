@@ -386,6 +386,8 @@ class Renderer implements DestructionRenderer {
   private readonly clipped = new Map<string, { from: readonly StaticSolid[]; matrix: number[]; solids: readonly StaticSolid[] }>()
   /** Each drawn solid with its surface's friction (`withSurface`), by the solid `drawnSolidsOf` gave: weak, so a solid measured anew lets the old one go. */
   private readonly surfaced = new WeakMap<StaticSolid, StaticSolid>()
+  /** The meshes whose world matrix one `staticSolids` call brought up to date (`MeasureBudget.updated`), emptied at its end. */
+  private readonly measuredMeshes = new Set<object>()
   /** What `staticSolids` hands back, refilled each call. */
   private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
@@ -1303,7 +1305,18 @@ class Renderer implements DestructionRenderer {
     // asked every update: the map and the scratch are kept, the lists are the cached ones
     const out = this.solidsOut
     out.clear()
-    const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false }
+    const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false, updated: this.measuredMeshes }
+    try {
+      this.measureEach(now, budget, out)
+    } finally {
+      // holds no mesh past the call (a mesh that leaves the scene is not kept here)
+      this.measuredMeshes.clear()
+    }
+    return out
+  }
+
+  /** `staticSolids` for each fixed object of `now`, into `out`. */
+  private measureEach(now: ReadonlyMap<string, unknown>, budget: MeasureBudget, out: Map<string, readonly StaticSolid[]>): void {
     for (const id of now.keys()) {
       // a body drawn by a module of its own (a vehicle: no mesh of it is bound here) is the boxes of its parts still on it, as the world holds them
       const hosted = this.drawsNothingHere(id) ? this.world.hostedSolids?.(id) : null
@@ -1330,7 +1343,6 @@ class Renderer implements DestructionRenderer {
       this.solidCache.set(id, { solids })
       out.set(id, solids)
     }
-    return out
   }
 
   /**

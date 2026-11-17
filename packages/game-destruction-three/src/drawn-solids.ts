@@ -19,18 +19,29 @@ const MIN_FACE = 1e-6
 
 type Points = ArrayLike<number>
 
-/** What was made of a part and what it was made from: the same numbers again are the same solids, so nothing is measured twice. */
+/** What was made of a part and what it was made from: the same source at the same versions is the same vertices, so nothing is measured (or read) twice. */
 interface Made {
   readonly matrix: readonly number[]
   readonly from: number
   readonly to: number
-  readonly sum: number
-  readonly spread: number
-  readonly order: number
+  /** The positions' source (`Visuals.positionsOf`) by number, so a source replaced is not kept alive by what was made of it. */
+  readonly source: number
+  readonly version: number
+  readonly shapeVersion: number
   readonly solids: StaticSolid[]
 }
 
 const made = new WeakMap<MeshVis, Made>()
+const sourceIds = new WeakMap<object, number>()
+let lastSourceId = 0
+const sourceIdOf = (source: object): number => {
+  let id = sourceIds.get(source)
+  if (id === undefined) {
+    id = ++lastSourceId
+    sourceIds.set(source, id)
+  }
+  return id
+}
 /** The triangles of each range of a merged mesh, by the index buffer they were found in (one pass over the buffer for all the parts of the host). */
 const triangles = new WeakMap<object, Map<number, number[]>>()
 
@@ -41,6 +52,11 @@ const PART_COST = 24
 export interface MeasureBudget {
   left: number
   incomplete: boolean
+  /**
+   * The meshes whose world matrix this call has brought up to date: every part of a merged house shares its host mesh, and bringing it up to date walks its parents
+   * again. Nothing moves while a call measures, so once per mesh is the same matrix.
+   */
+  readonly updated?: Set<object>
 }
 
 const IDENTITY = [1, 0, 0, 0, 1, 0, 0, 0, 1]
@@ -52,51 +68,52 @@ const axesOfQuat = (x: number, y: number, z: number, w: number): number[] => [
   2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y),
 ]
 
-/**
- * The numbers that say the part's vertices are the same as last time, read in place: nothing is copied for a part that did not change. Two independent sums and the sum of
- * squares: a vertex moved, or two swapped, changes at least one of them.
- */
-const checksumOf = (array: Points, from: number, to: number): { sum: number; spread: number; order: number } => {
-  let sum = 0
-  let spread = 0
-  let order = 0
-  for (let i = from * 3, k = 1; i < to * 3; i += 3, k++) {
-    const s = array[i] + 3 * array[i + 1] + 7 * array[i + 2]
-    sum += s
-    spread += s * s
-    order += k * (5 * array[i] - 2 * array[i + 1] + 11 * array[i + 2])
-  }
-  return { sum, spread, order }
-}
-
-/** The part's vertices out of the mesh's positions. */
-const readPoints = (array: Points, from: number, to: number): Float64Array => {
+/** The part's vertices out of the mesh's positions, with what another drawing collapses there collapsed as drawn (each range to its first vertex). */
+const readPoints = (array: Points, from: number, to: number, collapsed: ReadonlyArray<readonly [number, number]> = []): Float64Array => {
   const points = new Float64Array((to - from) * 3)
   for (let i = 0; i < points.length; i++) points[i] = array[from * 3 + i]
+  for (const [v0, v1] of collapsed) {
+    for (let k = Math.max(v0 + 1, from); k < Math.min(v1, to); k++) {
+      for (let c = 0; c < 3; c++) points[(k - from) * 3 + c] = array[v0 * 3 + c]
+    }
+  }
   return points
 }
 
 /**
  * What a fixed drawn part collides as, in world space, for an engine: one box turned as drawn where a box fits it (every corner has a vertex within `FIT`), else the
  * triangles as drawn (`mesh`, static only). A part drawn by a range of a merged mesh (a wall of the house) is its own vertices only. Nothing is drawn where a part is
- * collapsed to a point, so nothing is made there (`CLAUDE.md` §12). `key` names the part for the engine. The same part in the same place with the same vertices gives the very same list back.
+ * collapsed to a point, so nothing is made there (`CLAUDE.md` §12). `key` names the part for the engine. The same part in the same place with the same vertices gives the very same list back,
+ * told by the versions of its positions (every write counts), not by reading them: a part that did not change costs no pass over its vertices.
  */
 export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: MeshVis, key: string, budget: MeasureBudget): StaticSolid[] => {
   const local = visuals.positionsOf(mv)
   if (!local || local.to <= local.from) return []
-  mv.mesh.updateWorldMatrix(true, false)
+  if (!budget.updated?.has(mv.mesh)) {
+    mv.mesh.updateWorldMatrix(true, false)
+    budget.updated?.add(mv.mesh)
+  }
   const matrix = mv.mesh.matrixWorld.elements
-  const { sum, spread, order } = checksumOf(local.array, local.from, local.to)
+  const source = sourceIdOf(local.source)
   const known = made.get(mv)
-  if (known && known.from === local.from && known.to === local.to && known.sum === sum && known.spread === spread && known.order === order && known.matrix.every((v, k) => v === matrix[k])) return known.solids
+  if (
+    known &&
+    known.source === source &&
+    known.version === local.version &&
+    known.shapeVersion === mv.shapeVersion &&
+    known.from === local.from &&
+    known.to === local.to &&
+    known.matrix.every((v, k) => v === matrix[k])
+  )
+    return known.solids
   // out of turns: what was made before stays (its body is kept), a part never made waits for the next call
   if (budget.left <= 0) {
     budget.incomplete = true
     return known?.solids ?? []
   }
   budget.left -= local.to - local.from + PART_COST
-  const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to), matrix, local).map((solid) => ({ ...solid, key }))
-  made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, sum, spread, order, solids })
+  const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to, local.collapsed), matrix, local).map((solid) => ({ ...solid, key }))
+  made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, source, version: local.version, shapeVersion: mv.shapeVersion, solids })
   return solids
 }
 
