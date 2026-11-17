@@ -418,7 +418,15 @@ export interface PlanWindow {
   side: string
   /** Boarded up (set by a house state). */
   boards?: boolean
+  /**
+   * What holds the glass: a wooden frame (splinters), an aluminium one (dents and bends) or none, a pane of tempered glass fixed by its fittings (`frameless`, blindex:
+   * it holds more and, when it goes, crumbles all at once into small blunt cubes). Default: by the house's standard (wood in a budget house, aluminium above it).
+   */
+  frame?: WindowFrame
 }
+
+/** What holds the glass of a window (`PlanWindow.frame`). */
+export type WindowFrame = 'wood' | 'aluminium' | 'frameless'
 
 /** A gate in the lot boundary (`Plan.gates`). */
 export interface PlanGate {

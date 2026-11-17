@@ -1,7 +1,7 @@
 import type { FurnitureCatalogEntry } from '../furniture/spec.js'
 import type { DestructionWorld } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
-import type { FloorplanResult } from '@adatechnology/game-floorplan'
+import type { FloorplanResult, WindowFrame } from '@adatechnology/game-floorplan'
 import type { HouseRendererOptions } from '../types.js'
 
 /** The part of the floorplan engine (`engine` of `@adatechnology/game-floorplan`, with the content packs the page registered) the test area reads. */
@@ -55,6 +55,8 @@ export interface FloorplanTestOptions {
   template?: string
   seed?: number
   state?: string
+  /** The frame of every window of the houses built (`BuildOptions.windowFrame`); default each window's own. */
+  windowFrame?: WindowFrame
   /** Initial construction level (`0..8`) on the bench. */
   constructionLevel?: number
   /** Specimens of the structural scenarios; default the five of the team's house area, those whose template the engine has. */

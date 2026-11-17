@@ -35,6 +35,11 @@ describe('z-fighting of the houses: no two drawn faces closer than the depth buf
     }, 1_800_000)
   }
 
+  // The frameless (blindex) window draws a thicker pane across the whole opening and no frame: checked at the levels that show windows.
+  it('the frameless windows draw no conflict either (seed 1, levels 6 and 8)', () => {
+    for (const template of templates) found.push(...houseConflicts(template, 1, PER_PAIR_CAP, { windowFrame: 'frameless', levels: [6, 8] }).conflicts)
+  }, 1_800_000)
+
   it('finds no conflict', () => {
     const groups = new Map<string, { hits: number; first: HouseConflict }>()
     for (const conflict of found) {
