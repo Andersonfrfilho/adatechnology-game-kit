@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createVfx, DEBRIS_EFFECT_FAMILIES, effectForEvent, EVENT_EFFECTS, GAME_EFFECTS, locales, VIEWMODEL_EFFECTS, WORKSHOP_EFFECTS } from '../src'
+import { createVfx, DEBRIS_EFFECT_FAMILIES, effectForEvent, EVENT_EFFECTS, GAME_EFFECTS, locales, PIECES_DRAWN_VARIABLE, VIEWMODEL_EFFECTS, WORKSHOP_EFFECTS } from '../src'
 
 describe('event effects', () => {
   it('picks the effect of each Phase 2 event', () => {
@@ -37,6 +37,22 @@ describe('event effects', () => {
       for (let frame = 0; frame < 30; frame++) world.update(1 / 60)
       const engine = world.workshop()
       expect(engine.add.count + engine.normal.count + engine.debris.count + engine.decals.count + engine.streaks.count, effect.id).toBeGreaterThan(0)
+    }
+  })
+
+  // the slabs of a collapse are half a metre to a metre across: beside the real pieces a host draws they are blocks no wall breaks into
+  it('throws no stand-in blocks from a breach or a collapse when the host draws the real pieces, only its dust', () => {
+    const big = (pieces: readonly { on: boolean; sx: number; sy: number; sz: number }[]) => pieces.filter((p) => p.on && Math.max(p.sx, p.sy, p.sz) > 0.05).length
+    for (const id of ['breach_dust_masonry', 'collapse_dust_masonry', 'collapse_dust_wood']) {
+      for (const drawn of [false, true]) {
+        const world = createVfx({ seed: 3 })
+        world.play(id, [1, 0, 2], { direction: [0, 0, 1], ...(drawn ? { values: { [PIECES_DRAWN_VARIABLE]: 1 } } : {}) })
+        for (let frame = 0; frame < 6; frame++) world.update(1 / 60)
+        const engine = world.workshop()
+        if (drawn) expect(engine.debris.count, id).toBe(0)
+        else expect(big(engine.debris.pieces), id).toBeGreaterThan(0)
+        expect(engine.normal.count, `${id}: its dust`).toBeGreaterThan(0)
+      }
     }
   })
 

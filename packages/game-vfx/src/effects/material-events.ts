@@ -1,6 +1,6 @@
-import { cos, local, mul, or, rnd, scaled, sin, variable, vnorm } from './dsl'
+import { cos, local, mul, not, or, rnd, scaled, sin, variable, vnorm } from './dsl'
 import type { Expr } from './expression'
-import { burst, call, debris, repeat, screen, spawn } from './steps'
+import { burst, call, debris, repeat, screen, spawn, when } from './steps'
 import type { EffectDef, EffectStep } from './types'
 
 /**
@@ -13,6 +13,14 @@ export type DebrisEffectFamily = (typeof DEBRIS_EFFECT_FAMILIES)[number]
 /** The variables a host sets (`PlayOptions.values`) to draw the debris and the dust in the colour of the material that broke. */
 export const DEBRIS_COLOR_VARIABLE = 'debrisColor'
 export const DUST_COLOR_VARIABLE = 'dustColor'
+/**
+ * Set (to 1) by a host that draws the pieces of what broke itself (the destruction renderer: its fragments and the loose parts in physics): the breach and
+ * collapse effects then raise only their dust, without the stand-in blocks they throw for a scene that has none, which would lie beside the real pieces
+ * at a size and shape the material does not break into.
+ */
+export const PIECES_DRAWN_VARIABLE = 'piecesDrawn'
+/** The stand-in pieces of an effect, left out when the host draws the real ones. */
+const standIns = (...steps: readonly EffectStep[]): EffectStep => when(not(variable(PIECES_DRAWN_VARIABLE)), steps)
 
 type Vec3 = readonly [number, number, number]
 
@@ -83,7 +91,7 @@ function breachDust(family: DebrisEffectFamily): EffectDef {
       ...sparks(look, 14),
       ...glints(look, 20),
       burst('normal', Math.round(30 * look.cloud), { p: ORIGIN, box: [1.4, 0.8, 0.2], sp: [0.3, 1.2], drag: 1.5, life: [1.5, 2.6], size: [0.4, 0.7], grow: 3, c0: dustTone(look), c1: 0x4a4640, a: 0.45 }),
-      repeat(scaled(16), debris({ p: ORIGIN, box: [1.3, 0.8, 0.1], sp: [1, 3], size: grow(look.piece, 2.2), k: [0.5, 1.5], spin: look.spin, c: debrisTone(look), life: 20 })),
+      standIns(repeat(scaled(16), debris({ p: ORIGIN, box: [1.3, 0.8, 0.1], sp: [1, 3], size: grow(look.piece, 2.2), k: [0.5, 1.5], spin: look.spin, c: debrisTone(look), life: 20 }))),
       repeat(
         scaled(Math.round(60 * look.cloud)),
         spawn('normal', local('angle', rnd(0, 6.283), {
@@ -108,8 +116,10 @@ function collapseDust(family: DebrisEffectFamily): EffectDef {
     timeline: [
       screen({ add: { shake: 0.45 } }),
       ...sparks(look, 20),
-      repeat(6, debris({ p: ORIGIN, box: [2, 0.05, 0.6], v: [rnd(-0.5, 0.5), rnd(-0.5, 0), rnd(0, 0.8)], sp: 0, size: [rnd(0.5, 1.1), look.piece[1] > 0.01 ? 0.25 : 0.03, rnd(0.4, 0.8)], c: debrisTone(look), spin: 3, life: 30, bounce: 0.1 })),
-      repeat(scaled(20), debris({ p: ORIGIN, box: [2.1, 0.1, 0.7], v: [rnd(-1, 1), rnd(-1, 1), rnd(0, 1.5)], sp: 0, size: grow(look.piece, 3.4), k: [0.5, 1.5], spin: look.spin, c: debrisTone(look), life: 30 })),
+      standIns(
+        repeat(6, debris({ p: ORIGIN, box: [2, 0.05, 0.6], v: [rnd(-0.5, 0.5), rnd(-0.5, 0), rnd(0, 0.8)], sp: 0, size: [rnd(0.5, 1.1), look.piece[1] > 0.01 ? 0.25 : 0.03, rnd(0.4, 0.8)], c: debrisTone(look), spin: 3, life: 30, bounce: 0.1 })),
+        repeat(scaled(20), debris({ p: ORIGIN, box: [2.1, 0.1, 0.7], v: [rnd(-1, 1), rnd(-1, 1), rnd(0, 1.5)], sp: 0, size: grow(look.piece, 3.4), k: [0.5, 1.5], spin: look.spin, c: debrisTone(look), life: 30 })),
+      ),
       repeat(
         scaled(Math.round(70 * look.cloud)),
         spawn('normal', local('angle', rnd(-0.4, 3.5), {

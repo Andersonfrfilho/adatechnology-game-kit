@@ -54,7 +54,7 @@ export type BoundMeshes = THREE_NS.Object3D | { mesh: THREE_NS.Mesh; range: [num
 
 /** The destruction renderer the game hands the house (`createDestructionRenderer(THREE, { scene, world })` of game-destruction-three). */
 export interface HouseDestructionRenderer {
-  bind(objectId: string, root: THREE_NS.Object3D, options?: { parts?: Record<string, BoundMeshes | BoundMeshes[]>; onFrame?: (dt: number) => void }): void
+  bind(objectId: string, root: THREE_NS.Object3D, options?: { parts?: Record<string, BoundMeshes | BoundMeshes[]>; marksOn?: Record<string, readonly string[]>; onFrame?: (dt: number) => void }): void
   unbind(objectId: string): void
   restore(objectId: string): void
   /** The object leaves for good: its pieces leave the world and every effect of it and of them goes at once, then it is unbound. */

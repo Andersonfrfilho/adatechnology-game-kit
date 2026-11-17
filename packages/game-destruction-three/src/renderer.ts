@@ -612,6 +612,11 @@ class Renderer implements DestructionRenderer {
     for (const [pid, meshes] of byPart) {
       if (!bound.parts.has(pid)) bound.parts.set(pid, this.makePartVis(objectId, pid, this.world.part(objectId, pid)?.material ?? '', meshes, hosts))
     }
+    for (const [pid, hostIds] of Object.entries(options.marksOn ?? {})) {
+      const pv = bound.parts.get(pid)
+      const markHosts = hostIds.map((h) => bound.parts.get(h)).filter((h): h is PartVis => !!h && h !== pv)
+      if (pv && markHosts.length) pv.markHosts = markHosts
+    }
     this.bounds.set(objectId, bound)
     for (const pv of bound.parts.values()) this.tagPart(pv, objectId)
     if (this.o.fitBoxesAhead !== false) this.prefitPartBoxes(bound)
@@ -1704,7 +1709,9 @@ class Renderer implements DestructionRenderer {
   private nearestMesh(pv: PartVis, p: THREE_NS.Vector3): PartVis['meshes'][number] | null {
     let best: PartVis['meshes'][number] | null = null
     let bd = Infinity
-    for (const mv of pv.meshes) {
+    // a part drawn by no mesh of its own takes its marks on the meshes it is drawn inside (`BindOptions.marksOn`)
+    const meshes = pv.meshes.length || !pv.markHosts ? pv.meshes : pv.markHosts.flatMap((h) => h.meshes)
+    for (const mv of meshes) {
       if (!this.visuals.shown(mv)) continue
       const d = this.visuals.worldBox(mv, this.box).distanceToPoint(p)
       if (d < bd) {

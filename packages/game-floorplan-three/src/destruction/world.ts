@@ -96,11 +96,21 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
           return out;
         };
         D.ranges = rangesOf;
+        // a part no mesh of its own draws (a pillar under the plaster of the walls it is cast in) takes its holes and spalls on the walls that draw it
+        const marksOn = () => {
+          const out: Record<string, string[]> = {};
+          for (const id of structure.byId.keys()) {
+            if (structure.meshesOf(id).some(it => it.mesh || it.obj)) continue;
+            const hosts = breach.hosts(id);
+            if (hosts.length) out[id] = hosts;
+          }
+          return out;
+        };
         D.activate = (world?: DestructionWorld | null, specOptions?: Parameters<HouseStructure['spec']>[0]) => { // specOptions: options of house.structure.spec (e.g. {infill:true} = only pillars, beams, slab and roof carry)
           if (world) D.world = world; if (D.active || !D.world) return D; house.updateMatrixWorld(true);
           const p = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3(); house.matrixWorld.decompose(p, q, sc);
           D.specOptions = specOptions || null; D.spec = structure.spec(specOptions); D.id = D.world.add(D.spec, { id: 'house3d:' + (++shared.destructionSeq), position: [p.x, p.y, p.z], rotation: [q.x, q.y, q.z, q.w] });
-          breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf(), onFrame: () => breach.flush() });
+          breach.claim(); if (R) R.bind(D.id, house, { parts: rangesOf(), marksOn: marksOn(), onFrame: () => breach.flush() });
           off = D.world.on('*', handleEvent); D.active = true; return D;
         };
         // the pieces that came off it and every effect of them go with the house, not left burning and colliding where it stood
