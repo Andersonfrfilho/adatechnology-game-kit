@@ -31,7 +31,8 @@ const crater = (cx: number, cz: number, radius: number, depth: number) => (x: nu
   return d >= radius ? 0 : -depth * Math.cos((Math.PI / 2) * (d / radius)) ** 2
 }
 /** A first crater 30 cm deep, then a second on its rim whose depth `k` changes: the heights stay inside the range the field was made with. */
-const groundOf = (depth: number) => (x: number, z: number): number => rolling(x, z) + crater(1, 1, 0.6, 0.3)(x, z) + crater(1.9, 1, 0.3, depth)(x, z)
+// a third crater, small and sharp, keeps the tile on the 2.5 cm field whatever the second's depth (`collisionFieldOf`): what is written in place is the same field's samples
+const groundOf = (depth: number) => (x: number, z: number): number => rolling(x, z) + crater(1, 1, 0.6, 0.3)(x, z) + crater(1.9, 1, 0.3, depth)(x, z) + crater(0.4, 1.6, 0.2, 0.2)(x, z)
 const SECOND = { x: 1.9, z: 1, radius: 0.3 }
 
 interface Lab {
