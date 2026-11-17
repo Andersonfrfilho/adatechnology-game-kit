@@ -97,7 +97,11 @@ for (const area of areas) if (area !== 'test-room') steps.push({ label: `build $
 for (const area of areas) steps.push({ label: `open ${area}`, args: [`examples/${area}/test.mjs`], env: { EXAMPLE_PART: '' }, needs: `build ${area}` })
 if (chosen.has('scene')) steps.push({ label: 'where every drawn piece comes from', args: ['tools/kit-audit/scene.mjs', '--check'] })
 if (chosen.has('cost')) steps.push({ label: 'what every piece costs to draw', args: ['tools/kit-audit/cost.mjs', '--check'] })
-if (chosen.has('leak')) steps.push({ label: 'nothing stays in memory across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: '' } })
+if (chosen.has('leak')) {
+  steps.push({ label: 'nothing stays in memory across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: '' } })
+  // the room on Jolt: the phases that make and remove the most bodies, counting the Jolt bodies and the wasm heap in use too
+  steps.push({ label: 'nothing stays in Jolt across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: 'explosions,shots,craters,floorplan', LEAK_SOLVER: 'jolt' } })
+}
 const { outcomes, failed, exitCode } = runSteps({ steps, exec, failFast: Boolean(process.env.BROWSER_CHECKS_FAIL_FAST) })
 console.log('browser-checks: summary')
 for (const outcome of outcomes) console.log(summaryLine(outcome))
