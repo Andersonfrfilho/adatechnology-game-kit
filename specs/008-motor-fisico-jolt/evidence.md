@@ -3171,3 +3171,33 @@ Branch `perf/chao-cratera` (sobre `fix/soltos-na-carga`). Sonda em Node `decisio
   - **(MÉDIO) Degrau no anel**: a célula do anel usava só o centro; agora o mesmo teste do `engine-ground` (`holdsStep` em `engine-ground-step.ts`: centro e os meios das quatro arestas, 5 mm), compartilhado pelos dois. Teste: cova de 5 cm, 1,5 × 1 cm, em volta do meio de aresta (2,0125; 1,0): nenhum ponto da rede acima dela (antes 42 mm acima em (2,019; 0,998)).
   - **(3) Tempo de `buildSolidVolume`** (Node, mediana de 15×20, mesma execução; 06e05d340 / a730b5450 / agora, ms): cratera 0,43 / 0,41 / 0,54; cratera da sala 0,43 / 0,43 / 1,04; bacia 0,46 / 0,46 / 2,33; plano 0,09 / 0,19 / 0,37; ondulado 0,18 / 0,19 / 0,44. Perfil da bacia (ladrilho com as quatro bordas inclinadas): ~1,1 ms é leitura do anel (5,6 mil amostras de `groundAt`, 9 por célula para o teste do degrau), ~0,6 ms é avaliar as células do anel sob cada caixa (cada célula do anel fica sob ~5 caixas: 13,6 mil avaliações), 0,3 ms a busca dentro do ladrilho. Não cortei: tornar as caixas da borda rasas para inclinarem menos no anel é o que fez caírem as caixas na varredura; fica como pendência medida.
   - `engine-ground-inplace.test.ts`: o limite de amostras lidas desconta as lidas além da borda (as que o sólido guardou, lidas de novo, e as novas). Testes: próprio 483, `test:jolt` 73, `game-floorplan-three` 1332 com o golden exato, `game-test-room` 464, bacia 32 (`fellThrough` 0, C2 0, C3 0,0332, C4 0,50, deepest −0,0392, C1 −0,0177).
+
+## T3.8ah — o `Step` do Jolt no quadro depois do C4 (2026-11-17)
+
+Branch `perf/passo-jolt` (da main `246aecb4f`). Sonda `decision/probes/t38ah/probe-step.test.ts.txt` (mesma cena da T3.8ag: `single_storey_a` semente 1, C4 em casa − 2,5 m, laço do Jolt), cada `Step` cronometrado, um fator trocado por execução (`FACTOR`), `WARM=1` aquece o motor como a sala (`debris.jitWarmUp: { engine }`); tabela por `step-table.sh`.
+
+- **Frio e quente**: sem o aquecimento do motor (Node) o f1 custa 3,3 + 2,3 ms nos dois passos fixos e cai quadro a quadro (f2 2,5 + 1,2, f3 1,3 + 0,8) com mais corpos ativos, não menos; com o aquecimento, 1,6 + 1,4; numa segunda explosão no mesmo processo, 1,8–2,0 + 1,5–1,8. Parte do f1 é código do wasm rodando a frio; a sala já aquece o motor.
+- **O que custa no f1 aquecido**: 1 a 2 corpos ativos (uma peça de 1,16 × 0,66 m deitada, parada, e uma chapa de 1,2 m), com 23 validações e 80 contatos novos; os retornos de contato em JS custam 0,2–0,6 ms. A peça encosta em dois height fields de cratera, nas redes, em malhas e caixas da casa.
+
+| fator (só ele trocado, aquecido) | `Step` do f1 (ms, 3 rodadas) | contatos novos |
+|---|---|---|
+| nenhum | 4,41 / 4,18 / 4,04 (outra leva de 5: mediana 3,53) | 80 |
+| `OptimizeBroadPhase` antes do passo com corpos novos | 3,24 / 3,67 / 3,88 (leva de 5 intercalada: mediana 3,53 + 0,21 da otimização) | 78 |
+| sem passo linear (CCD) | 3,57 / 3,29 / 3,27 | 80 |
+| sem a rede sob a cratera (compostos > 30 filhos trocados por uma caixa longe) | 3,29 / 3,19 / 3,30 | 64 |
+| sem as malhas fixas da casa feitas depois da explosão | 3,49 / 3,54 / 4,92 | 78 |
+| **sem os height fields novos** | **1,12 / 1,11 / 1,06** | 23 |
+| height field com metade das amostras (5 cm) | 1,95 / 2,15 / 1,94 | 50 |
+| height field com um quarto (10 cm) | 1,50 / 1,56 / 1,47 | 40 |
+
+- **Leitura**: o custo é o par peça grande × height field de 2,5 cm (cerca de 2400 triângulos sob uma peça de 1,2 × 0,7 m, contatos novos a cada passo enquanto ela assenta). Broadphase, CCD, a rede de ~950 filhos e as malhas da casa ficam no ruído (cada um ≤ 0,5 ms, e o `OptimizeBroadPhase` não ganhou nada numa leva intercalada de 5).
+- **Nada implementado**: não achei ganho com o mesmo resultado. O que corta muda o chão físico: as amostras de 2,5 cm são bilineares numa grade de 10 cm (o erro bilinear de dizimar é 0), mas o Jolt corta cada célula em dois triângulos, e dizimar para 5 cm desvia o chão até 4–5 mm (10 cm: 16–21 mm) nos ladrilhos da cratera. Opções para o dono: (a) height field de 5 cm onde o desvio fica abaixo de uma tolerância (o f1 cai de ~3,5 para ~2,0 ms aqui), com a mudança de `goldens` e testes de chão que isso traz; (b) as peças grandes dormirem antes (muda a física); (c) aceitar.
+
+## T3.8ai — o chão do motor a 5 cm (decisão do dono, 2026-11-17)
+
+Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm (degraus, caixas de degrau, a rede sob o chão), e o height field do motor é cada segundo canto, 5 cm (`GROUND_COLLISION_CELL`, `engine-ground-collision.ts`; `GroundTile.collision`/`collisionCells`). O que muda no lugar (`updateHeights`) é calculado no campo do motor. A rede sob o chão é feita sobre a grade lida rebaixada, canto a canto, à superfície de colisão onde ela é mais baixa (as duas maneiras de cortar a célula em triângulos, a mais baixa), e o anel do vizinho do mesmo jeito: fica `SOLID_MARGIN` sob as duas superfícies (teste novo em `expectNet`: sob a superfície de colisão, as duas diagonais).
+
+- **`Step` do f1** (sonda T3.8ah aquecida, mediana de 5): **3,48 → 1,76 ms** (antes 3,23–3,64; depois 1,65–1,91); f2 2,08 → 1,42; contatos novos no f1 80 → 51.
+- **Desvio da colisão para o chão desenhado**: cratera cos² de teste 2,5 mm, chão ondulado < 5 mm; ladrilhos da cratera da sala 1,9 / 1,9 / 4,0 / 5,0 mm. Na dobra da borda de uma bacia (a inclinação cai de 0,75 para 0) 12,4 mm (o campo de 2,5 cm já ficava 6,2 mm fora ali). Limites no teste: 5 mm na cratera e no ondulado, 13 mm na bacia.
+- Bacia com Jolt (16 sementes × 2 passos): `fellThrough` 0, `deepest` −0,0381, C1 −0,0192, C2 0, C3 0,0016, C4 0,50. Limite de distância da rede na parede da cratera de teste 2,7 → 3 cm (ela agora também desce sob a colisão onde a colisão afunda: 2,74 cm).
+- `engine-ground-ahead.test.ts` (só com `PIECE_SOLVER=jolt`, fora do `test:jolt`) "twenty notices ... laid at most once" já falha na main `246aecb4f` (3 de 3); não é desta mudança.
