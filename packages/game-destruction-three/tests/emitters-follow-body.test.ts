@@ -67,7 +67,7 @@ describe('lasting emitters follow the body they broke on', () => {
 
   it('grit follows a piece that came off and fell as a body of its own', () => {
     const ctx = setup()
-    ctx.world.addObject('chair', [partState('seat', 'wood', { mass: 3 }), partState('leg', 'wood', { mass: 1 })], [['seat'], ['leg']])
+    ctx.world.addObject('chair', [partState('seat', 'wood', { mass: 3 }), partState('leg', 'wood', { mass: 1 })])
     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.5))
     seat.position.y = 2
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05))
@@ -82,6 +82,8 @@ describe('lasting emitters follow the body they broke on', () => {
     ctx.world.emit({ type: 'spall', object: 'chair', part: 'leg', layer: 0, point: hit, area: 0.0005 })
     ctx.renderer.update(1 / 60)
     const local = leg.worldToLocal(new THREE.Vector3(...hit))
+    // the leg comes off the seat: the world's groups change with the detach
+    ctx.world.state('chair')!.groups = [['seat'], ['leg']]
     ctx.world.emit({ type: 'detach', object: 'chair', joint: 'j', parts: ['seat', 'leg'], by: 'break', groups: [['seat'], ['leg']] })
     ctx.renderer.update(0)
     expect(leg.parent).not.toBe(root)
@@ -114,7 +116,7 @@ describe('lasting emitters follow the body they broke on', () => {
 
   it('the fire of a burning piece goes on with the piece as it falls, not where the object stood', () => {
     const ctx = setup()
-    ctx.world.addObject('chair', [partState('seat', 'wood', { mass: 3 }), partState('leg', 'wood', { mass: 1, burning: true })], [['seat'], ['leg']])
+    ctx.world.addObject('chair', [partState('seat', 'wood', { mass: 3 }), partState('leg', 'wood', { mass: 1, burning: true })])
     const seat = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.5))
     seat.position.y = 2
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.05))
@@ -139,6 +141,8 @@ describe('lasting emitters follow the body they broke on', () => {
     const follow = 'position' in followed ? followed.position : followed
     expect(follow.y).toBeGreaterThan(1.5)
 
+    // the leg comes off the seat: the world's groups change with the detach
+    ctx.world.state('chair')!.groups = [['seat'], ['leg']]
     ctx.world.emit({ type: 'detach', object: 'chair', joint: 'j', parts: ['seat', 'leg'], by: 'break', groups: [['seat'], ['leg']] })
     for (let i = 0; i < 240; i++) ctx.renderer.update(1 / 60)
     expect(stop).not.toHaveBeenCalled()

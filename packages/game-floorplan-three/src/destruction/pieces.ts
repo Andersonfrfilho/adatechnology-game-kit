@@ -4,9 +4,19 @@ import { DENSITY, MEMBER_CAGE, cageResidualCapacity, toDestructibleSpec, withWin
 import type * as THREE_NS from 'three';
 import type { DestructibleSpecOptions, Opening, StructurePart, Support } from '@adatechnology/game-floorplan-structure';
 import type { PartAperture, PartSpec } from '@adatechnology/game-contracts';
-import type { HouseRecord, Kernel, PieceAperture, PieceRecord, Shared } from '../kernel-types.js';
+import type { HoldOn, HouseRecord, Kernel, PieceAperture, PieceRecord, Shared } from '../kernel-types.js';
 import type { HouseStructure, HouseStructurePart, HouseSupport, StructureMeshItem } from './types.js';
+import { HOLD_TOUCH, groundJointStrength, standsOnGround } from './hold.js';
 import { panelViewOf } from './panels.js';
+
+/** Roles of the house's parts a piece hangs on (`holdOn: 'wall'`); the lot's walls (pieces tagged `wall`) hold too. */
+const WALL_ROLES = new Set(['wall', 'partition', 'column']);
+/** What a piece hangs on when no wall is in reach: a beam or a slab over it. */
+const SPAN_ROLES = new Set(['beam', 'slab']);
+/** Metres between a hung piece and what holds it (a gate leaf's hinge pin, a mailbox door in its box): no farther than that. */
+const HOLD_REACH = 0.2;
+/** A shower's door hangs on its enclosure, fixed to the bathroom wall at most this far from the door. */
+const SHOWER_DOOR_REACH = 1;
 
 export function installDestructionPieces(K: Kernel, shared: Shared): void {
   const { THREE, floorAtY, pieceRecord } = K;
@@ -28,13 +38,13 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
         for (const [id, g] of Object.entries(shared.ctx.parts || {})) {
           const tp = g.userData.part;
           if (tp === 'water_tank') { const e = shared.ctx.structureIndex.water_tank, L = cap || (g.userData.volume ? Math.round(g.userData.volume * 1000) : 0); tagObject('water_tank', [g], 'plastic', e ? e.role : null, { floor: e ? e.floor : 0, contains: L ? { fluid: 'water', liters: L } : undefined, mass: e ? e.mass : 25, thickness: 0.004, fill: 0.05, tags: ['tank'] }); }
-          else if (tp === 'gas_cylinder') tagObject(id, [g], 'steel', null, { mass: 11, form: 'cylinder', thickness: 0.003, fill: 0.03, contains: { fluid: 'gas', liters: 13, pressurized: true }, explodes: { energy: 120000, radius: 5, atC: 300 }, tags: ['gas_bottle'] });
+          else if (tp === 'gas_cylinder') tagObject(id, [g], 'steel', null, { holdOn: 'floor', holdJoint: 'resting', mass: 11, form: 'cylinder', thickness: 0.003, fill: 0.03, contains: { fluid: 'gas', liters: 13, pressurized: true }, explodes: { energy: 120000, radius: 5, atC: 300 }, tags: ['gas_bottle'] });
           else if (tp === 'wall_pipe') tagObject(id, [g], 'plastic', null, { mass: g.userData.mass ?? 3, tags: ['pipe'], ...(g.userData.holder ? { holder: g.userData.holder } : {}), ...(g.userData.chain ? { chain: g.userData.chain } : {}), ...(g.userData.hostedIn ? { hostedIn: g.userData.hostedIn } : {}) });
           else if (tp === 'drain_pipe') tagObject(id, [g], 'plastic', null, { mass: g.userData.mass ?? 1, tags: ['pipe', 'drain'], run: g.userData.run, holder: g.userData.holder, chain: g.userData.chain, ...(g.userData.hostedIn ? { hostedIn: g.userData.hostedIn } : {}) });
-          else if (tp === 'shower_door') tagObject(id, [g], 'tempered_glass', null, { mass: 25 });
-          else if (tp === 'gate_leaf' || tp === 'mailbox_door') tagObject(id, [g], 'steel', null, { mass: 30 });
+          else if (tp === 'shower_door') tagObject(id, [g], 'tempered_glass', null, { holdOn: 'wall', holdJoint: 'hinge', holdReach: SHOWER_DOOR_REACH, mass: 25 });
+          else if (tp === 'gate_leaf' || tp === 'mailbox_door') tagObject(id, [g], 'steel', null, { holdOn: 'wall', holdJoint: 'hinge', mass: 30 });
         }
-        for (const def of shared.inter.defs.values()) { if (!def.outer) continue; if (/^gate/.test(def.kind)) tagObject(def.name, [def.outer], 'steel', null, { mass: 80, tags: ['gate'] }); else if (def.kind === 'swing' || def.kind === 'drawer') tagObject(def.name, [def.outer], 'mdf', null, { mass: 6 }); }
+        for (const def of shared.inter.defs.values()) { if (!def.outer) continue; if (/^gate/.test(def.kind)) tagObject(def.name, [def.outer], 'steel', null, { holdOn: 'wall', holdJoint: def.kind === 'gate_sliding' ? 'slide' : 'hinge', mass: 80, tags: ['gate'] }); else if (def.kind === 'swing' || def.kind === 'drawer') tagObject(def.name, [def.outer], 'mdf', null, { holdOn: 'floor', holdJoint: def.kind === 'drawer' ? 'slide' : 'hinge', mass: 6 }); }
       }
   /** The opening a piece declares in plan coordinates (the glass of a frame, the bay of a grille) as the `aperture` of its part, about the part's centre. */
   function apertureOf(sp: PartSpec, ap: PieceAperture | undefined): PartAperture | null {
@@ -49,6 +59,9 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
 
   function assembleStructure(r0: HouseRecord, root: THREE_NS.Group): HouseStructure {
         const E0 = r0.structure || { parts: [], supports: [], levels: [], elevation: 0 }, meshes = new Map<string, StructureMeshItem[]>(), add = (id: string, it: StructureMeshItem) => { let l = meshes.get(id); if (!l) meshes.set(id, l = []); l.push(it); };
+        // a door, drawer or gate left open is measured shut, where its hinge or slide holds it (as the gates are measured, interaction/fittings)
+        const opened = [...shared.inter.defs.values()].filter(def => def.t !== 0 && def.inner).map(def => ({ def, t: def.t }));
+        for (const { def } of opened) { def.t = 0; K.applyPiece(def); }
         root.updateMatrixWorld(true);
         root.traverse(o0 => { const o = o0 as THREE_NS.Mesh; if (o.isMesh && o.userData.ranges) { const nv = o.geometry.attributes.position.count; for (const f of o.userData.ranges) add(f.id, { mesh: o, v0: f.v0, v1: f.v1, i0: f.i0, i1: f.i1, whole: f.v0 === 0 && f.v1 === nv }); } });
         for (const [id, objs] of shared.ctx.pieceObjects) for (const o of objs) add(id, { obj: o });
@@ -65,19 +78,65 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
           const p: HouseStructurePart = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill as number : 0.15)), meshes: meshes.get(id)!.length, extra: true } as HouseStructurePart;
-          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture', 'holder', 'hostedIn', 'chain', 'tears']) if (pc[k] != null) p[k] = pc[k];
+          for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill', 'units', 'aperture', 'holder', 'holdOn', 'holdJoint', 'holdReach', 'embedment', 'hostedIn', 'chain', 'tears']) if (pc[k] != null) p[k] = pc[k];
           parts.push(p); byId.set(id, p);
         }
+        for (const { def, t } of opened) { def.t = t; K.applyPiece(def); }
+        if (opened.length) root.updateMatrixWorld(true);
         const inside = (p: HouseStructurePart, q: HouseStructurePart, m: number) => { const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2, cy = (p.y0 + p.y1) / 2; return cx >= q.aabb[0] - m && cx <= q.aabb[2] + m && cz >= q.aabb[1] - m && cz <= q.aabb[3] + m && cy >= q.y0 - m && cy <= q.y1 + m; };
         const touches = (p: HouseStructurePart, q: HouseStructurePart, m: number) => p.aabb[0] <= q.aabb[2] + m && q.aabb[0] <= p.aabb[2] + m && p.aabb[1] <= q.aabb[3] + m && q.aabb[1] <= p.aabb[3] + m && p.y0 <= q.y1 + m && q.y0 <= p.y1 + m;
+        // what holds a piece the house adds, as its maker declared it (`holdOn`): the floor under it (the highest slab, ground beam or slab beam whose top is at or
+        // below its foot, over its centre; a stair only when the foot is on its top), or the wall beside it (the house's walls and pillars and the lot's walls, else a
+        // beam or slab) within `holdReach`. With nothing there, the ground holds what stands on it (the ground floor, a foot on the terrain); anything else is `unheld`.
+        const isFloor = (q: HouseStructurePart, foot: number): boolean => {
+          if (q.y1 > foot + HOLD_TOUCH) return false;
+          if (q.role === 'slab') return true;
+          if (q.role === 'beam') return q.beamKind === 'ground_beam' || q.slab !== undefined;
+          return q.role === 'stair' && foot - q.y1 <= HOLD_TOUCH;
+        };
+        const floorUnder = (p: HouseStructurePart): HouseStructurePart | null => {
+          const cx = (p.aabb[0] + p.aabb[2]) / 2, cz = (p.aabb[1] + p.aabb[3]) / 2; let best: HouseStructurePart | null = null;
+          for (const q of parts.slice(0, base)) { if (!isFloor(q, p.y0) || cx < q.aabb[0] - HOLD_TOUCH || cx > q.aabb[2] + HOLD_TOUCH || cz < q.aabb[1] - HOLD_TOUCH || cz > q.aabb[3] + HOLD_TOUCH) continue; if (!best || q.y1 > best.y1 || (q.y1 === best.y1 && q.id < best.id)) best = q; }
+          return best; };
+        const gapOf = (p: HouseStructurePart, q: HouseStructurePart) => Math.hypot(Math.max(0, q.aabb[0] - p.aabb[2], p.aabb[0] - q.aabb[2]), Math.max(0, q.y0 - p.y1, p.y0 - q.y1), Math.max(0, q.aabb[1] - p.aabb[3], p.aabb[1] - q.aabb[3]));
+        const centreGapOf = (p: HouseStructurePart, q: HouseStructurePart) => Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.y0 + p.y1 - q.y0 - q.y1) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2);
+        // a wall, pillar or lot wall first; a beam or slab only when none is in reach (a conduit along the ceiling, not a shower door under it); the nearest, then the
+        // nearest centre, then the id: the same house always gets the same joints
+        const wallBeside = (p: HouseStructurePart, reach: number): HouseStructurePart | null => {
+          for (const roles of [WALL_ROLES, SPAN_ROLES]) {
+            let best: HouseStructurePart | null = null, bd = Infinity, bc = Infinity;
+            for (const q of parts) {
+              if (q === p || !(q.extra ? roles === WALL_ROLES && Array.isArray(q.tags) && q.tags.includes('wall') : roles.has(q.role))) continue;
+              const d = gapOf(p, q); if (d > reach) continue;
+              const c = centreGapOf(p, q);
+              if (d < bd || (d === bd && (c < bc || (c === bc && best !== null && q.id < best.id)))) { best = q; bd = d; bc = c; }
+            }
+            if (best) return best;
+          }
+          return null; };
+        // an outbuilding's walls are drawn but are no part of the structure: they stand on the ground, so what hangs on them (its conduits) is held by the ground
+        const inOutbuilding = (p: HouseStructurePart, reach: number): boolean => (shared.ctx.outbuildingList ?? []).some(e => p.aabb[0] <= e.aabb[2] + reach && e.aabb[0] <= p.aabb[2] + reach && p.aabb[1] <= e.aabb[3] + reach && e.aabb[1] <= p.aabb[3] + reach && p.y0 <= e.ceiling + reach);
+        // the ground floor stands on the ground; above it, only a foot at or in the terrain (or a wall of an outbuilding) sets it in the ground
+        const onGround = (p: HouseStructurePart, how: HoldOn): boolean => (how === 'floor' ? p.floor === 0 : inOutbuilding(p, p.holdReach ?? HOLD_REACH)) || standsOnGround(p);
+        // set in the ground: as strong as the base it has buried there (drawn below the terrain or declared), else the joint's own
+        const toGround = (p: HouseStructurePart): HouseSupport => { const joint = p.holdJoint ?? 'clip', strength = groundJointStrength(p, joint); return { part: p.id, on: 'ground', joint, bears: false, extra: true, ...(strength !== undefined ? { strength } : {}) }; };
+        const unheld: string[] = [];
         for (const p of parts.slice(base)) { // what is fitted into a wall or slab falls with it (a joint that does not carry)
           // a slab of the sidewalk rests on the ground it is cast on
           if (/^sidewalk:/.test(p.id)) { supports.push({ part: p.id, on: 'ground', joint: 'mortar', extra: true }); continue; }
           // a stretch of a wiring or pipe run hangs from what holds it: the solid it lies in, or the stretch beside it that is held
           // (the stretches of one run are also joined to the one before it: one that a hole frees from its host still hangs by them)
           for (const next of Array.isArray(p.chain) ? p.chain as string[] : []) if (byId.has(next)) supports.push({ part: p.id, on: next, joint: 'glue', bears: false, extra: true });
-          if (p.holder === 'ground') { supports.push({ part: p.id, on: 'ground', joint: 'clip', bears: false, extra: true }); continue; }
-          if (typeof p.holder === 'string' && (byId.has(p.holder) || panelIds.has(p.holder))) { supports.push({ part: p.id, on: p.holder, joint: 'clip', bears: false, extra: true, ...(p.tears ? { tears: true as const } : {}) }); continue; }
+          if (p.holder === 'ground') { supports.push(toGround(p)); continue; }
+          if (typeof p.holder === 'string' && (byId.has(p.holder) || panelIds.has(p.holder))) { supports.push({ part: p.id, on: p.holder, joint: p.holdJoint ?? 'clip', bears: false, extra: true, ...(p.tears ? { tears: true as const } : {}) }); continue; }
+          // held where it stands or hangs; with nothing there, the ground when it stands on it (a mailbox on its own post), else it is reported (`unheld`)
+          if (p.holdOn) {
+            const on = p.holdOn === 'floor' ? floorUnder(p) : wallBeside(p, p.holdReach ?? HOLD_REACH);
+            if (on) supports.push({ part: p.id, on: on.id, joint: p.holdJoint ?? 'clip', bears: false, extra: true });
+            else if (onGround(p, p.holdOn)) supports.push(toGround(p));
+            else unheld.push(p.id);
+            continue;
+          }
           if (!/^(window|window_pane|door|jamb|pipe|water_tank|baseboard)/.test(p.id)) continue;
           const target = /^water_tank/.test(p.id) ? ['slab'] : ['wall', 'partition'];
           let m: HouseStructurePart | null = null, md = 1e9; for (const q of parts.slice(0, base)) { if (!target.includes(q.role) || !inside(p, q, 0.2)) continue; const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; } }
@@ -92,6 +151,8 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           // a window or door of a building whose walls are drawn but are no part of the structure (an outbuilding) is held by that wall, which stands on the
           // ground: tied to the ground, it stays in its wall instead of coming loose as a free piece at the first split of the house
           else if (/^(window|door|jamb)/.test(p.id)) supports.push({ part: p.id, on: 'ground', joint: /^door/.test(p.id) ? 'clip' : 'glue', bears: false, extra: true });
+          // a pipe run out of any wall (a riser up to the tank) is clamped to the slab or beam it goes into
+          else if (/^pipe/.test(p.id)) { const on = wallBeside(p, HOLD_TOUCH); if (on) supports.push({ part: p.id, on: on.id, joint: 'clip', bears: false, extra: true }); }
         }
         // The spec is made from the pieces of the plan (the slabs whole), and the structure cuts them into panels; the house is then bound to the panels: a floor, a
         // ceiling and a roof slab are drawn tile by tile in the panel they lie on (house/floors), and the slab they were cut from is not a piece any more.
@@ -104,7 +165,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           supports.splice(0, supports.length, ...supports.filter(s => !gone.has(s.part) && !gone.has(s.on)), ...view.supports.filter(s => byId.has(s.part) && (byId.has(s.on) || s.on === 'ground')).map(a => Object.assign({}, a)));
         }
         const structure: HouseStructure = {
-          ...E0, system: (r0.construction && r0.construction.system) || 'masonry', parts, supports, levels: (E0.levels || []).slice(), elevation: E0.elevation || 0, byId,
+          ...E0, system: (r0.construction && r0.construction.system) || 'masonry', parts, supports, unheld, levels: (E0.levels || []).slice(), elevation: E0.elevation || 0, byId,
           meshesOf: (id: string) => meshes.get(id) || [],
           // raycast hit (object + faceIndex) -> piece id: merged mesh by its ranges, single-piece mesh (or loose group) by userData
           pieceId(obj: THREE_NS.Object3D | null, face?: number | null) { for (let n: THREE_NS.Object3D | null = obj; n; n = n.parent) { const u = n.userData; if (!u) continue; if (u.ranges && face != null) { const ix = face * 3; for (const f of u.ranges) if (ix >= f.i0 && ix < f.i1) return f.id; } if (u.destructionPart) return u.destructionPart; } return null; },

@@ -26,7 +26,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     },
     partStatus: { intact: 'intact', damaged: 'damaged', collapsed: 'collapsed', broken: 'broken', melted: 'melted', ashes: 'ashes' },
     jointKinds: {
-      screw: 'screw', bolt: 'nut and bolt', nail: 'nail', weld: 'weld', glue: 'glue', hinge: 'hinge', clip: 'clip', tie: 'tie', mortar: 'mortar',
+      screw: 'screw', bolt: 'nut and bolt', nail: 'nail', weld: 'weld', glue: 'glue', hinge: 'hinge', slide: 'drawer slide', clip: 'clip', tie: 'tie', mortar: 'mortar',
       fused: 'fused', stem: 'stem', rebar: 'rebar', resting: 'resting',
     },
     toolKinds: {
@@ -50,7 +50,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     },
     partStatus: { intact: 'intacto', damaged: 'danificado', collapsed: 'desabado', broken: 'quebrado', melted: 'derretido', ashes: 'cinzas' },
     jointKinds: {
-      screw: 'parafuso', bolt: 'porca e parafuso', nail: 'prego', weld: 'solda', glue: 'cola', hinge: 'dobradiça', clip: 'encaixe', tie: 'amarração',
+      screw: 'parafuso', bolt: 'porca e parafuso', nail: 'prego', weld: 'solda', glue: 'cola', hinge: 'dobradiça', slide: 'corrediça', clip: 'encaixe', tie: 'amarração',
       mortar: 'argamassa', fused: 'fundido', stem: 'caule', rebar: 'vergalhão', resting: 'apoiado',
     },
     toolKinds: {

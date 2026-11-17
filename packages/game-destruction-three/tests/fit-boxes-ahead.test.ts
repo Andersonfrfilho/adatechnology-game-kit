@@ -46,8 +46,8 @@ const merge = (geos: THREE.BufferGeometry[]): { geo: THREE.BufferGeometry; range
 
 type Scene = { renderer: ReturnType<typeof createDestructionRenderer>; world: FakeWorld; mesh: THREE.Mesh; root: THREE.Group }
 
-/** A house-like object placed away from the origin and turned, its parts ranges of one merged mesh, each its own group. */
-const house = (fitBoxesAhead: boolean, groups?: string[][]): Scene => {
+/** A house-like object placed away from the origin and turned, its parts ranges of one merged mesh, all in one group (it is built whole). */
+const house = (fitBoxesAhead: boolean): Scene => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: Infinity, fitBoxesAhead })
@@ -59,10 +59,16 @@ const house = (fitBoxesAhead: boolean, groups?: string[][]): Scene => {
   root.add(mesh)
   scene.add(root)
   root.updateMatrixWorld(true)
-  world.addObject('house', PART_IDS.map((id) => partState(id, 'wood')), groups ?? [[...PART_IDS]])
+  world.addObject('house', PART_IDS.map((id) => partState(id, 'wood')), [[...PART_IDS]])
   const parts = Object.fromEntries(PART_IDS.map((id, i) => [id, { mesh, range: ranges[i]! }]))
   renderer.bind('house', root, { parts })
   return { renderer, world, mesh, root }
+}
+
+/** A blow tears every joint of the house: the world's groups change with the detach, one per part. */
+const detachAll = (s: Scene, groups: string[][]): void => {
+  s.world.objects.get('house')!.groups = groups.map((g) => [...g])
+  s.world.emit({ type: 'detach', object: 'house', joint: 'j', parts: [...PART_IDS], by: 'break', groups: groups.map((g) => [...g]) })
 }
 
 const partBoxesOf = (renderer: Scene['renderer'], objectId: string): PartBox[] | undefined => (renderer.piece(objectId) as unknown as { partBoxes?: PartBox[] } | null)?.partBoxes
@@ -85,12 +91,12 @@ const drawn = (root: THREE.Object3D): Record<string, number[]> => {
 describe('the boxes of a part drawn by a range are fitted ahead of the blow that breaks it', () => {
   it('splitting an object takes the boxes that were fitted ahead, and they are the very numbers fitting them when it breaks gives', () => {
     const groups = PART_IDS.map((id) => [id])
-    const ahead = house(true, groups.map((g) => [...g]))
-    const late = house(false, groups.map((g) => [...g]))
+    const ahead = house(true)
+    const late = house(false)
     ahead.renderer.deferredQueue().flush()
     const fittedAhead = fitCalls
     expect(fittedAhead).toBeGreaterThan(0)
-    for (const s of [ahead, late]) s.world.emit({ type: 'detach', object: 'house', joint: 'j', parts: [...PART_IDS], by: 'break', groups })
+    for (const s of [ahead, late]) detachAll(s, groups)
     ahead.renderer.deferredQueue().flush()
     late.renderer.deferredQueue().flush()
     // what fitted ahead is all of what the split of `ahead` needed: only `late` fitted at the split
@@ -124,8 +130,8 @@ describe('the boxes of a part drawn by a range are fitted ahead of the blow that
 
   it('splitting every group in one go writes the merged mesh and the loose meshes as splitting them one at a time does', () => {
     const groups = PART_IDS.map((id) => [id])
-    const together = house(true, groups.map((g) => [...g]))
-    together.world.emit({ type: 'detach', object: 'house', joint: 'j', parts: [...PART_IDS], by: 'break', groups })
+    const together = house(true)
+    detachAll(together, groups)
     together.renderer.deferredQueue().flush()
     expect(together.world.splits.length).toBe(PART_IDS.length - 1)
     // the reference: one group at a time, each split its own batch, the way every split was written before
@@ -147,14 +153,14 @@ describe('the boxes of a part drawn by a range are fitted ahead of the blow that
   it('gives the same boxes and the same drawing whether the cache is cold, half full or full when the object splits, with or without a dent first', () => {
     const groups = PART_IDS.map((id) => [id])
     const results = ['cold', 'half', 'full', 'off'].flatMap((fill) => [false, true].map((dented) => {
-      const s = house(fill !== 'off', groups.map((g) => [...g]))
+      const s = house(fill !== 'off')
       if (fill === 'half') for (let i = 0; i < 3; i++) s.renderer.update(1 / 60)
       if (fill === 'full') s.renderer.deferredQueue().flush()
       if (dented) {
         const drawing = s.mesh.geometry.getAttribute('position')
         drawing.setY(30, drawing.getY(30) + 0.2)
       }
-      s.world.emit({ type: 'detach', object: 'house', joint: 'j', parts: [...PART_IDS], by: 'break', groups: groups.map((g) => [...g]) })
+      detachAll(s, groups)
       s.renderer.deferredQueue().flush()
       const ids = ['house', ...s.world.splits.map((x) => x.newId)]
       return { fill, dented, boxes: ids.map((id) => partBoxesOf(s.renderer, id)), drawing: drawn(s.root) }

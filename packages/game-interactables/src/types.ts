@@ -91,7 +91,7 @@ export interface PartSpec {
 }
 
 /** Joint kinds of the destruction SDK (`JointKind`). */
-export type DestructionJoint = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem'
+export type DestructionJoint = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'slide' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem'
 
 /** What a part is made of and how it is attached. Field names and shapes mirror the SDK's `PartSpec`. */
 export interface PartDestruction {

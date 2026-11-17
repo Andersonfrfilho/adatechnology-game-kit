@@ -183,7 +183,9 @@ its own `update`).
 
 The split queue is not part of a save. After a load, an object bound (`bind`) or drawn again (`redraw`) with more than one group has its loose groups queued in the next work
 step, so none stays loose in its object; a queued group whose parts were shattered meanwhile still splits by the parts it has left, and one whose parts are no longer loose
-gives its place to the object's loose groups as they are then. `unbind`, `release` and `releasePieces` drop the object's waiting groups. Every option must be a finite number,
+gives its place to the object's loose groups as they are then. `unbind`, `release` and `releasePieces` drop the object's waiting groups. Without `workBudget` the same holds:
+an object bound or drawn again with loose groups (a house built with loose poles, a mailbox, a door whose wall was taken out) has them split into pieces in the next `update`
+or drain, where they stood, before any event touches it (`autoSplit: false` leaves them in the object). Every option must be a finite number,
 or `WorkBudgetOptionError` (`WORK_BUDGET_OPTION`) is thrown.
 
 | Option | Default | What it does |

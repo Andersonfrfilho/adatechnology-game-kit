@@ -9,6 +9,8 @@ import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import { resolvePhysics } from './physics-option'
+import { isOverSupport } from './support-hull'
+import type { PlanPoint } from './support-hull'
 import type { PiecePhysics } from './physics-option'
 export type { PieceSweepHit } from './internal'
 
@@ -69,6 +71,8 @@ export interface PieceSystemOptions {
 export const SLAM_MIN_SPEED = 2
 /** Share of the speed into a wall a piece keeps, bouncing back, when neither surface says otherwise (`PieceBody.restitution`, `PieceSweepHit.restitution`). */
 const SLAM_BOUNCE = 0.2
+/** Metres the centre of mass may stand off the hull of the points a piece rests on and still be balanced there (the drawing's tolerance). */
+const BALANCE_TOLERANCE = 0.01
 /** Normals steeper than this (y) are a floor or a top: the support of the pieces answers those, not the sweep. */
 const SLAM_FLOOR_NORMAL = 0.7
 
@@ -1479,6 +1483,49 @@ export class PieceSystem {
       keep.onFade(b)
       over--
     }
+  }
+
+  /**
+   * A piece made where its parts already stood (a group loose at load) sleeps there when a point of it has the ground, a piece or a fixed top under it, and answers to those
+   * points (`restPoints`) as one the budget put to sleep: it wakes and falls when any of them loses its support. With none it stays awake and falls: nothing loose hangs in
+   * the air. Returns whether it sleeps.
+   */
+  restIfSupported(b: PieceBody): boolean {
+    const points = this.restPointsOf(b)
+    // balanced on the parts as drawn (a top on one leg stands on the leg, not on the corners of the box around both)
+    if (points.length === 0 || !this.balancedOn(b, this.partCornersOf(b).filter((point) => this.supportsPoint(b, point)))) return false
+    this.sleep(b)
+    b.restPoints = points
+    return true
+  }
+
+  /** The corners of the boxes of its parts (`partBoxes`, about its centre of mass), or the samples of its box when it has none. */
+  private partCornersOf(b: PieceBody): Vec3[] {
+    if (!b.partBoxes) return this.samples(b, false)
+    const out: Vec3[] = []
+    for (const box of b.partBoxes) {
+      const [x, y, z, w] = box.rotation ?? [0, 0, 0, 1]
+      for (let i = 0; i < 8; i++) {
+        const hx = i & 1 ? box.half[0] : -box.half[0]
+        const hy = i & 2 ? box.half[1] : -box.half[1]
+        const hz = i & 4 ? box.half[2] : -box.half[2]
+        // q * h * q^-1
+        const tx = 2 * (y * hz - z * hy)
+        const ty = 2 * (z * hx - x * hz)
+        const tz = 2 * (x * hy - y * hx)
+        out.push([box.center[0] + hx + w * tx + y * tz - z * ty, box.center[1] + hy + w * ty + z * tx - x * tz, box.center[2] + hz + w * tz + x * ty - y * tx])
+      }
+    }
+    return out
+  }
+
+  /** Whether the centre of mass of `b` is over the hull of the points of it (its own frame) that rest on something: off it, the piece tips. */
+  private balancedOn(b: PieceBody, points: readonly Vec3[]): boolean {
+    // the points are about the centre of mass, as `supportsPoint` reads them
+    const c = this.centerOf(b, this.p)
+    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
+    const plan = points.map(([sx, sy, sz]): PlanPoint => [c.x + e[0]! * sx + e[4]! * sy + e[8]! * sz, c.z + e[2]! * sx + e[6]! * sy + e[10]! * sz])
+    return isOverSupport(plan, [c.x, c.z], BALANCE_TOLERANCE)
   }
 
   /** Sleeps sooner than it would by itself, so it answers to every point it lies on (`restPoints`). */

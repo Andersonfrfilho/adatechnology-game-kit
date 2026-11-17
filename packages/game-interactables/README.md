@@ -176,7 +176,7 @@ messages above. Content packs add their keys through `options.strings`; unknown 
 
 Specs carry tags for the shared destruction SDK, `@adatechnology/game-destruction`; this package does not depend on it and only stores plain ids.
 
-- `PartSpec.destruction`: `{ material, joint?, piece?, explodes?, contains? }`. `material` is an SDK material id (`steel`, `mdf`, `glass`...), `joint` an SDK joint kind (`screw`, `bolt`, `nail`, `weld`, `glue`, `hinge`, `clip`, `tie`, `mortar`, `fused`, `stem`), `piece` what the part is (`door`, `drawer`, `lid`...). `explodes` and `contains` have the same shape as in the SDK's `PartSpec`.
+- `PartSpec.destruction`: `{ material, joint?, piece?, explodes?, contains? }`. `material` is an SDK material id (`steel`, `mdf`, `glass`...), `joint` an SDK joint kind (`screw`, `bolt`, `nail`, `weld`, `glue`, `hinge`, `slide`, `clip`, `tie`, `mortar`, `fused`, `stem`), `piece` what the part is (`door`, `drawer`, `lid`...). `explodes` and `contains` have the same shape as in the SDK's `PartSpec`.
 - `ObjectSpec.destruction`: the same tags for the static body (everything that is not a movable part).
 
 The host builds SDK parts from the tags and routes hits, fire and blasts to the SDK. `DamageSpec` and `world.damage` are deprecated: they keep working, but get no new features.

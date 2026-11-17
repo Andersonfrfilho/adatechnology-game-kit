@@ -2,6 +2,7 @@
 import type { HouseRecord, HouseWall, Kernel, KernelHouseBaseboard, Shared } from '../kernel-types.js';
 import { DOOR_JAMB_WIDTH, doorsInWall } from './helpers.js';
 import { FLOOR_OVER_GROUND } from './floors.js';
+import { footingJointOf } from '../destruction/footing.js';
 import { outsideBoxes } from './solids.js';
 import type { Aabb } from './solids.js';
 
@@ -114,7 +115,7 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
       // the threshold: through the wall, its top level with the floor inside
       const top = y0 + (shared.ctx.constructionStages ? FLOOR_OVER_GROUND : 0) + 0.002, t0 = d.pos - th / 2, t1 = d.pos + th / 2;
       const [from, to] = clearSpan({ a: a + DOOR_JAMB_WIDTH, b: b - DOOR_JAMB_WIDTH, au, across: [t0, t1], rise: [y0, top] });
-      cursor.pc = pieceRecord(`threshold:${d.id}`, THRESHOLD.material, null, { floor: 0, mass: Math.round((to - from) * th * (top - y0) * THRESHOLD.density * 100) / 100, tags: ['threshold'] });
+      cursor.pc = pieceRecord(`threshold:${d.id}`, THRESHOLD.material, null, { floor: 0, mass: Math.round((to - from) * th * (top - y0) * THRESHOLD.density * 100) / 100, tags: ['threshold'], holdOn: 'floor', holdJoint: footingJointOf(THRESHOLD.material) }); // bedded in mortar on the ground beam under the door
       if (au) bx('plain', from, y0, t0, to, top, t1, THRESHOLD.color); else bx('plain', t0, y0, from, t1, top, to, THRESHOLD.color);
     }
     cursor.pc = null;
