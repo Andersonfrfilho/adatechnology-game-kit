@@ -52,6 +52,11 @@ const PART_COST = 24
 export interface MeasureBudget {
   left: number
   incomplete: boolean
+  /**
+   * The meshes whose world matrix this call has brought up to date: every part of a merged house shares its host mesh, and bringing it up to date walks its parents
+   * again. Nothing moves while a call measures, so once per mesh is the same matrix.
+   */
+  readonly updated?: Set<object>
 }
 
 const IDENTITY = [1, 0, 0, 0, 1, 0, 0, 0, 1]
@@ -79,7 +84,10 @@ const readPoints = (array: Points, from: number, to: number): Float64Array => {
 export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: MeshVis, key: string, budget: MeasureBudget): StaticSolid[] => {
   const local = visuals.positionsOf(mv)
   if (!local || local.to <= local.from) return []
-  mv.mesh.updateWorldMatrix(true, false)
+  if (!budget.updated?.has(mv.mesh)) {
+    mv.mesh.updateWorldMatrix(true, false)
+    budget.updated?.add(mv.mesh)
+  }
   const matrix = mv.mesh.matrixWorld.elements
   const source = sourceIdOf(local.source)
   const known = made.get(mv)

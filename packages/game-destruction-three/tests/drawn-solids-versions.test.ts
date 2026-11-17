@@ -272,3 +272,53 @@ describe('a part whose friction alone changed', () => {
     expect(statics.changed.size).toBe(1)
   })
 })
+
+describe('one measure brings each mesh up to date once', () => {
+  it('a house under four groups: one `updateWorldMatrix` per distinct mesh per measure, and the very same colliders as one per part', () => {
+    const nested = () => {
+      const h = house()
+      let top: THREE.Object3D = h.root
+      for (let k = 0; k < 4; k++) {
+        const group = new THREE.Group()
+        group.position.set(k + 0.5, 0.25 * k, -k)
+        group.rotation.y = 0.1 * k
+        group.add(top)
+        top = group
+      }
+      top.updateMatrixWorld(true)
+      return h
+    }
+    const once = nested()
+    const each = nested()
+    const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5))
+    once.root.add(crate)
+    each.root.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5)))
+    const parts = [...once.parts, once.visuals.makeMeshVis(crate, 'crate')]
+    const otherParts = [...each.parts, each.visuals.makeMeshVis(each.root.children[1] as THREE.Mesh, 'crate')]
+    const calls = new Map<object, number>()
+    for (const mesh of [once.mesh, crate]) {
+      const update = mesh.updateWorldMatrix.bind(mesh)
+      mesh.updateWorldMatrix = (parents: boolean, children: boolean): void => {
+        calls.set(mesh, (calls.get(mesh) ?? 0) + 1)
+        update(parents, children)
+      }
+    }
+    const shared = (): MeasureBudget => ({ left: 1e9, incomplete: false, updated: new Set() })
+    const perPart = (): MeasureBudget => ({ left: 1e9, incomplete: false })
+    for (let round = 0; round < 2; round++) {
+      calls.clear()
+      if (round === 1) {
+        once.visuals.applyDent(once.parts[2]!, once.mesh.localToWorld(front(4)), new THREE.Vector3(0, 0, -1).transformDirection(once.mesh.matrixWorld), DENT)
+        each.visuals.applyDent(each.parts[2]!, each.mesh.localToWorld(front(4)), new THREE.Vector3(0, 0, -1).transformDirection(each.mesh.matrixWorld), DENT)
+        calls.clear()
+      }
+      const budget = shared()
+      const got = parts.map((mv, k) => drawnSolidsOf(THREE, once.visuals, mv, `p${k}`, budget))
+      const per = perPart()
+      const want = otherParts.map((mv, k) => drawnSolidsOf(THREE, each.visuals, mv, `p${k}`, per))
+      expect(calls.get(once.mesh)).toBe(1)
+      expect(calls.get(crate)).toBe(1)
+      expect(got).toEqual(want)
+    }
+  })
+})
