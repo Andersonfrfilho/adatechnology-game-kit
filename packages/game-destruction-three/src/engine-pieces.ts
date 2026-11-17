@@ -1015,7 +1015,7 @@ export class EnginePieces {
     return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
   }
 
-  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Its hulls that did not change are the ones made before (`reuseHulls`). */
+  /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Boxes only: a box costs nothing to make, a hull did (T3.8ag). */
   private layVolume(t: GroundTile, tile: Tile | undefined): BodyId | null {
     const id = tile?.solid ?? null
     if (t.level !== null) {
@@ -1029,16 +1029,9 @@ export class EnginePieces {
 
   private solidShape(solid: SolidVolume): ShapeDesc {
     const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
-    const { boxes, prisms } = solid
+    const { boxes } = solid
     for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3]!, boxes[i + 4]!, boxes[i + 5]!] }, position: [boxes[i]!, boxes[i + 1]!, boxes[i + 2]!] })
-    for (let i = 0; i < prisms.length; i += 24) {
-      // about the block's own centre, so the hull's points stay small numbers
-      const cx = (prisms[i]! + prisms[i + 3]!) / 2, cy = prisms[i + 13]!, cz = (prisms[i + 2]! + prisms[i + 8]!) / 2
-      const points: number[] = []
-      for (let k = 0; k < 24; k += 3) points.push(prisms[i + k]! - cx, prisms[i + k + 1]! - cy, prisms[i + k + 2]! - cz)
-      children.push({ shape: { kind: 'convex', points }, position: [cx, cy, cz] })
-    }
-    return { kind: 'compound', children, reuseHulls: true }
+    return { kind: 'compound', children }
   }
 
   private heightField(t: GroundTile, ix: number, iz: number): ShapeDesc {

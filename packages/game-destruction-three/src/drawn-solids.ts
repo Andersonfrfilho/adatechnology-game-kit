@@ -51,21 +51,23 @@ const axesOfQuat = (x: number, y: number, z: number, w: number): number[] => [
   2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y),
 ]
 
-/** The part's vertices out of the mesh's positions, and the numbers that say they are the same as last time. */
-const readPoints = (array: Points, from: number, to: number): { points: Float64Array; sum: number; spread: number } => {
-  const points = new Float64Array((to - from) * 3)
+/** The numbers that say the part's vertices are the same as last time, read in place: nothing is copied for a part that did not change. */
+const checksumOf = (array: Points, from: number, to: number): { sum: number; spread: number } => {
   let sum = 0
   let spread = 0
-  for (let i = 0; i < points.length; i += 3) {
-    const x = array[from * 3 + i], y = array[from * 3 + i + 1], z = array[from * 3 + i + 2]
-    points[i] = x
-    points[i + 1] = y
-    points[i + 2] = z
-    const s = x + 3 * y + 7 * z
+  for (let i = from * 3; i < to * 3; i += 3) {
+    const s = array[i] + 3 * array[i + 1] + 7 * array[i + 2]
     sum += s
     spread += s * s
   }
-  return { points, sum, spread }
+  return { sum, spread }
+}
+
+/** The part's vertices out of the mesh's positions. */
+const readPoints = (array: Points, from: number, to: number): Float64Array => {
+  const points = new Float64Array((to - from) * 3)
+  for (let i = 0; i < points.length; i++) points[i] = array[from * 3 + i]
+  return points
 }
 
 /**
@@ -78,7 +80,7 @@ export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: Mesh
   if (!local || local.to <= local.from) return []
   mv.mesh.updateWorldMatrix(true, false)
   const matrix = mv.mesh.matrixWorld.elements
-  const { points, sum, spread } = readPoints(local.array, local.from, local.to)
+  const { sum, spread } = checksumOf(local.array, local.from, local.to)
   const known = made.get(mv)
   if (known && known.from === local.from && known.to === local.to && known.sum === sum && known.spread === spread && known.matrix.every((v, k) => v === matrix[k])) return known.solids
   // out of turns: what was made before stays (its body is kept), a part never made waits for the next call
@@ -87,7 +89,7 @@ export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: Mesh
     return known?.solids ?? []
   }
   budget.left -= local.to - local.from + PART_COST
-  const solids = solidsOfPoints(THREE, mv, points, matrix, local).map((solid) => ({ ...solid, key }))
+  const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to), matrix, local).map((solid) => ({ ...solid, key }))
   made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, sum, spread, solids })
   return solids
 }

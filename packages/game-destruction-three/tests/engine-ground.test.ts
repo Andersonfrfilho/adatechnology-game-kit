@@ -5,7 +5,7 @@ import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { GROUND_CELL, buildGroundTile } from '../src/engine-ground'
 import type { GroundTile } from '../src/engine-ground'
-import { SOLID_DEPTH } from '../src/engine-ground-solid'
+import { SOLID_DEPTH, SOLID_MARGIN } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
 import { IS_JOLT, physicsOption } from './setup-physics'
@@ -74,25 +74,17 @@ describe('engine ground at a tile border', () => {
   })
 })
 
-/** The highest solid top under (x, z), or -Infinity: a level block's top, or a sloped block's plane at that point. */
+/** The highest solid top under (x, z), or -Infinity. */
 const solidTopAt = (t: GroundTile, x: number, z: number): number => {
   let top = -Infinity
-  const { boxes, prisms } = t.solid
+  const { boxes } = t.solid
   for (let i = 0; i < boxes.length; i += 6) {
     if (Math.abs(x - boxes[i]!) <= boxes[i + 3]! + 1e-9 && Math.abs(z - boxes[i + 2]!) <= boxes[i + 5]! + 1e-9) top = Math.max(top, boxes[i + 1]! + boxes[i + 4]!)
-  }
-  for (let i = 0; i < prisms.length; i += 24) {
-    const [x0, x1, z0, z1] = [prisms[i]!, prisms[i + 3]!, prisms[i + 2]!, prisms[i + 8]!]
-    if (x < x0 - 1e-9 || x > x1 + 1e-9 || z < z0 - 1e-9 || z > z1 + 1e-9) continue
-    const u = (x - x0) / (x1 - x0)
-    const v = (z - z0) / (z1 - z0)
-    // the top is a plane: from its x0z0 corner along x and along z
-    top = Math.max(top, prisms[i + 1]! + u * (prisms[i + 4]! - prisms[i + 1]!) + v * (prisms[i + 7]! - prisms[i + 1]!))
   }
   return top
 }
 
-const lowestSolid = (t: GroundTile): number => Math.min(...t.solid.boxes.filter((_, i) => i % 6 === 1).map((y, k) => y - t.solid.boxes[k * 6 + 4]!), ...t.solid.prisms.filter((_, i) => i % 24 === 13))
+const lowestSolid = (t: GroundTile): number => Math.min(...t.solid.boxes.filter((_, i) => i % 6 === 1).map((y, k) => y - t.solid.boxes[k * 6 + 4]!))
 
 describe('solid under the height field', () => {
   const rolling = (x: number, z: number): number => 0.02 * Math.sin(1.7 * x) * Math.cos(1.3 * z) + 0.03 * x
@@ -101,34 +93,47 @@ describe('solid under the height field', () => {
     return d < 1.2 ? -0.45 * (1 - (d / 1.2) ** 2) : 0
   }
 
-  it('is under the surface everywhere, within 1 cm of it on a gentle ground, and as deep as SOLID_DEPTH under the lowest corner', () => {
-    const t = buildGroundTile(rolling, 0, 0, 2)
-    expect(t.solid.boxes.length + t.solid.prisms.length).toBeGreaterThan(0)
-    for (let x = 0; x <= 2; x += 0.013) {
-      for (let z = 0; z <= 2; z += 0.017) {
-        const gap = rolling(x, z) - solidTopAt(t, x, z)
-        expect(gap).toBeGreaterThan(-0.0006)
-        expect(gap).toBeLessThan(0.01 + 0.0006)
-      }
+  /** Every block of the solid: its top is the lowest height sample over it less `SOLID_MARGIN`, to the bit, and the blocks cover the tile once. */
+  const expectBlocksAtLowest = (t: GroundTile, x0: number, z0: number): void => {
+    const m = t.cells + 1
+    const cell = 2 / t.cells
+    let area = 0
+    for (let i = 0; i < t.solid.boxes.length; i += 6) {
+      const [cx, cy, cz, hx, hy, hz] = t.solid.boxes.slice(i, i + 6) as [number, number, number, number, number, number]
+      const i0 = Math.round((cx - hx - x0) / cell), i1 = Math.round((cx + hx - x0) / cell)
+      const j0 = Math.round((cz - hz - z0) / cell), j1 = Math.round((cz + hz - z0) / cell)
+      let least = Infinity
+      for (let j = j0; j <= j1; j++) for (let k = i0; k <= i1; k++) least = Math.min(least, t.heights[j * m + k]!)
+      expect(cy + hy).toBeCloseTo(least - SOLID_MARGIN, 9)
+      area += 4 * hx * hz
     }
+    expect(area).toBeCloseTo(4, 9)
+  }
+
+  it('is under the surface everywhere, each block topped at its lowest ground, covering the tile, and as deep as SOLID_DEPTH under the lowest corner', () => {
+    const t = buildGroundTile(rolling, 0, 0, 2)
+    expect(t.solid.boxes.length).toBeGreaterThan(0)
+    for (let x = 0; x <= 2; x += 0.013) for (let z = 0; z <= 2; z += 0.017) expect(rolling(x, z) - solidTopAt(t, x, z)).toBeGreaterThan(SOLID_MARGIN - 0.0006)
+    expectBlocksAtLowest(t, 0, 0)
     expect(lowestSolid(t)).toBeCloseTo(Math.min(...t.heights) - SOLID_DEPTH, 5)
   })
 
   it('never sticks out above a steep bowl either, and level ground has none (its slab is solid already)', () => {
     const t = buildGroundTile(bowl, -1, -1, 2)
-    for (let x = -1; x <= 1; x += 0.011) for (let z = -1; z <= 1; z += 0.013) expect(solidTopAt(t, x, z)).toBeLessThanOrEqual(bowl(x, z) + 0.0006)
-    expect(buildGroundTile(() => 0.3, 0, 0, 2).solid).toEqual({ boxes: [], prisms: [] })
+    for (let x = -1; x <= 1; x += 0.011) for (let z = -1; z <= 1; z += 0.013) expect(solidTopAt(t, x, z)).toBeLessThanOrEqual(bowl(x, z) - SOLID_MARGIN + 0.0006)
+    expectBlocksAtLowest(t, -1, -1)
+    expect(buildGroundTile(() => 0.3, 0, 0, 2).solid).toEqual({ boxes: [] })
   })
 
-  it('follows the ground when it is dug: made again from the new heights, still within 1 cm', () => {
+  it('follows the ground when it is dug: made again from the new heights, still under it and topped at each block\'s lowest ground', () => {
     let depth = 0
     const dug = (x: number, z: number): number => rolling(x, z) - depth * Math.cos((Math.PI / 2) * Math.min(1, Math.hypot(x - 1, z - 1) / 0.8)) ** 2
     const before = buildGroundTile(dug, 0, 0, 2)
     depth = 0.3
     const after = buildGroundTile(dug, 0, 0, 2)
-    expect(after.solid.prisms).not.toEqual(before.solid.prisms)
-    for (let x = 0.4; x <= 1.6; x += 0.02) for (let z = 0.4; z <= 1.6; z += 0.02) expect(dug(x, z) - solidTopAt(after, x, z)).toBeLessThan(0.01 + 0.0006)
-    for (let x = 0; x <= 2; x += 0.02) expect(dug(x, 0.02) - solidTopAt(after, x, 0.02)).toBeLessThan(0.01 + 0.0006)
+    expect(after.solid.boxes).not.toEqual(before.solid.boxes)
+    for (let x = 0; x <= 2; x += 0.02) for (let z = 0; z <= 2; z += 0.02) expect(solidTopAt(after, x, z)).toBeLessThanOrEqual(dug(x, z) - SOLID_MARGIN + 0.0006)
+    expectBlocksAtLowest(after, 0, 0)
   })
 })
 

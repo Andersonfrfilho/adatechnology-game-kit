@@ -384,6 +384,8 @@ class Renderer implements DestructionRenderer {
   private readonly rootMatrices = new Map<string, number[]>()
   /** `clipToDrawn` per hosted body: the boxes it was given, the root's world matrix, and the boxes cut to what it draws. */
   private readonly clipped = new Map<string, { from: readonly StaticSolid[]; matrix: number[]; solids: readonly StaticSolid[] }>()
+  /** Each drawn solid with its surface's friction (`withSurface`), by the solid `drawnSolidsOf` gave: weak, so a solid measured anew lets the old one go. */
+  private readonly surfaced = new WeakMap<StaticSolid, StaticSolid>()
   /** What `staticSolids` hands back, refilled each call. */
   private readonly solidsOut = new Map<string, readonly StaticSolid[]>()
   /** Objects to measure again; `staticAll` measures every one. */
@@ -1345,10 +1347,23 @@ class Renderer implements DestructionRenderer {
       const surface = material ? surfaceOf(material, this.world.materials.get(material)) : undefined
       pv.meshes.forEach((mv, k) => {
         if (mv.loose || !this.visuals.shown(mv)) return
-        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(surface ? { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling ?? 0 } } : solid)
+        for (const solid of drawnSolidsOf(this.THREE, this.visuals, mv, `${pv.id}:${k}`, budget)) solids.push(surface ? this.withSurface(solid, surface) : solid)
       })
     }
     return solids
+  }
+
+  /**
+   * The solid with the friction of its surface: the same object as last time for the same solid and the same numbers, so the lists after a re-measure hold the very objects the engine
+   * holds and compare by identity (`sameSolids`, `EngineStatics.fit`), not number by number through every vertex of a mesh.
+   */
+  private withSurface(solid: StaticSolid, surface: { readonly static: number; readonly dynamic: number; readonly rolling?: number }): StaticSolid {
+    const rolling = surface.rolling ?? 0
+    const kept = this.surfaced.get(solid)
+    if (kept?.friction && kept.friction.static === surface.static && kept.friction.dynamic === surface.dynamic && kept.friction.rolling === rolling) return kept
+    const made: StaticSolid = { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling } }
+    this.surfaced.set(solid, made)
+    return made
   }
 
   /** The boxes of the fixed objects (per object: the box around them all, then each one), each object measured again when an event touched it (all of them every `STATIC_REFRESH` s). */
