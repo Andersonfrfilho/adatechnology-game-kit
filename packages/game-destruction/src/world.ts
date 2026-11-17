@@ -3057,15 +3057,35 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * lintel or a bond beam inside it. Each is kept on the wall as a part-local box (`PartRT.castIn`).
    */
   function markCastMembers(o: ObjRT): void {
-    const cast = o.parts.filter((q) => q.spec.reinforcement)
+    // the members sorted by their lowest point, so a wall looks only at the ones that start below its top (a tower has thousands of each)
+    const cast = o.parts
+      .filter((q) => q.spec.reinforcement)
+      .map((q) => ({ q, m: aabbOf(q.spec.shape, q.pos, q.q) }))
+      .sort((a, b) => a.m.min[1]! - b.m.min[1]!)
     if (!cast.length) return
+    const tallest = Math.max(...cast.map(({ m }) => m.max[1]! - m.min[1]!))
+    /** The first member that starts at or above `y`. */
+    const firstFrom = (y: number): number => {
+      let lo = 0, hi = cast.length
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1
+        if (cast[mid]!.m.min[1]! < y) lo = mid + 1
+        else hi = mid
+      }
+      return lo
+    }
+    const overlaps = (box: { min: Vec3; max: Vec3 }, m: { min: Vec3; max: Vec3 }): boolean => {
+      for (let k = 0; k < 3; k++) if (Math.min(box.max[k]!, m.max[k]!) - Math.max(box.min[k]!, m.min[k]!) <= CAST_TOLERANCE) return false
+      return true
+    }
     for (const p of o.parts) {
       if (!p.spec.units || p.spec.reinforcement) continue
       const box = aabbOf(p.spec.shape, p.pos, p.q)
       const boxes: { min: Vec3; max: Vec3; part: PartRT }[] = []
-      for (const q of cast) {
-        const m = aabbOf(q.spec.shape, q.pos, q.q)
-        if (![0, 1, 2].every((k) => Math.min(box.max[k]!, m.max[k]!) - Math.max(box.min[k]!, m.min[k]!) > CAST_TOLERANCE)) continue
+      for (let i = firstFrom(box.min[1]! - tallest); i < cast.length; i++) {
+        const { q, m } = cast[i]!
+        if (m.min[1]! >= box.max[1]! - CAST_TOLERANCE) break
+        if (!overlaps(box, m)) continue
         // its corners in the wall's frame
         const min: Vec3 = [Infinity, Infinity, Infinity], max: Vec3 = [-Infinity, -Infinity, -Infinity]
         for (let c = 0; c < 8; c++) {
