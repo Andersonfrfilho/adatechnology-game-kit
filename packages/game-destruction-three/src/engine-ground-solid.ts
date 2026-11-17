@@ -1,4 +1,4 @@
-import { collisionStep, underBoth } from './engine-ground-collision'
+import { coarseStep, underBoth } from './engine-ground-collision'
 import { createGroundRing } from './engine-ground-ring'
 import { buildLowPyramid, reachOf } from './engine-ground-reach'
 
@@ -20,7 +20,11 @@ export const SOLID_DEPTH = 0.5
 /** How far (m) under the surface a block's top may be before the block is split, unless it is already `SOLID_MIN_CELLS` cells wide. */
 const SOLID_RELIEF = 0.005
 const SOLID_MIN_CELLS = 3
-/** A top is this far (m) under the lowest ground it stands for: 2 mm put the solid in the contacts of what rests on the surface and the bowl's seed 18 gained 4 cm. */
+/**
+ * A top is this far (m) under the lowest ground it stands for: 2 mm put the solid in the contacts of what rests on the surface and the bowl's seed 18 gained 4 cm. The engine
+ * holds a height field's samples in 8 bit steps of each 4-sample block's range, up to half a step off (range / 510: 0.15 mm on a 0.75 slope at 2.5 cm, 0.3 mm at 5 cm), well
+ * inside this margin.
+ */
 export const SOLID_MARGIN = 0.005
 /** The thinnest (m) a turned box is made; where that would lean past the ring, the block is split, or (at its smallest) left to its upright box. */
 const SOLID_THINNEST = 0.05
@@ -71,18 +75,18 @@ const thickWithin = (lean: number, low: number, high: number, lo: number, hi: nu
 
 /**
  * The blocks under a tile of `cells` cells of side `cell` from (`x0`, `z0`), over its `read` heights (`(cells + 1)^2`, x fastest) and the engine's coarser collision field of
- * them, and the ground around it (`groundAt`, read only past the tile's edges, up to `SOLID_RING`, and its collision field there too).
+ * them (`step`: every how many corners it is), and the ground around it (`groundAt`, read only past the tile's edges, up to `SOLID_RING`, and its collision field there too).
  */
-export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number): SolidVolume => {
-  // under the drawn ground and the engine's coarser collision field both, whichever is lower at each corner (`engine-ground-collision`)
-  const k = collisionStep(cells, cell)
-  const heights = underBoth(read, cells, k)
+export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number, step = 1): SolidVolume => {
+  // under the drawn ground and the engine's collision field (every `step`-th corner, `engine-ground-collision`) both, whichever is lower at each corner
+  const heights = underBoth(read, cells, step)
   const m = cells + 1
   let low = Infinity
   for (const h of heights) low = Math.min(low, h)
   const bottom = low - SOLID_DEPTH
   const boxes: number[] = []
-  const ring = createGroundRing(heights, cells, x0, z0, cell, groundAt, k)
+  // past the edge, under the neighbour's coarse field too, whichever it collides with
+  const ring = createGroundRing(heights, cells, x0, z0, cell, groundAt, coarseStep(cells, cell))
   const reachTile = { heights, cells, x0, z0, cell, pyramid: buildLowPyramid(heights, cells, cell), ring }
   const outer = ring.cells * cell
   const loX = x0 - outer, hiX = x0 + cells * cell + outer, loZ = z0 - outer, hiZ = z0 + cells * cell + outer

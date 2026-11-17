@@ -31,10 +31,10 @@ let heldCells = new Float64Array(0)
 let cellBuild = new Uint32Array(0)
 
 /**
- * `heights` are the tile's own (already under its collision field), `k` how many read cells a collision cell spans: past the edge a corner is the lower of the ground there and
- * the neighbour's collision field at it.
+ * `heights` are the tile's own (already under its collision field), `fieldStep` how many read cells a neighbour's coarse collision cell spans: past the edge a corner is the lower of
+ * the ground there and that coarse field at it (the neighbour collides with it or with the ground itself).
  */
-export const createGroundRing = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number, k = 1): GroundRing => {
+export const createGroundRing = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number, fieldStep = 1): GroundRing => {
   const ring = Math.round(SOLID_RING / cell)
   const m = cells + 1
   const width = 2 * (cells + 2 * ring) + 1
@@ -84,7 +84,7 @@ export const createGroundRing = (heights: Float32Array, cells: number, x0: numbe
         const step = holdsStep(nine)
         let floor = Infinity
         for (let k = 0; k < 9; k++) floor = Math.min(floor, nine[k]!)
-        const corner = (p: number, q: number, h: number): number => (k === 1 ? h : Math.min(h, collisionAt(fine, p, q, k)))
+        const corner = (p: number, q: number, h: number): number => (fieldStep === 1 ? h : Math.min(h, collisionAt(fine, p, q, fieldStep)))
         const c00 = corner(i, j, nine[0]!), c10 = corner(i + 1, j, nine[1]!), c01 = corner(i, j + 1, nine[2]!), c11 = corner(i + 1, j + 1, nine[3]!)
         heldCells[4 * key] = step ? floor : c00
         heldCells[4 * key + 1] = step ? floor : c10
