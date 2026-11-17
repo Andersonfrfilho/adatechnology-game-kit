@@ -516,6 +516,8 @@ class Renderer implements DestructionRenderer {
       crumbles: (id) => this.world.materials.get(id)?.fracture === 'crumble',
       // rubble lands on what is still built (a slab, a wall's top, a floor), not only on the terrain under it
       surfaceAt: (x, y, z) => this.surfaceAt(x, y, z),
+      // and it meets the walls, ceilings and furniture on its way: it stops on their face instead of flying into them
+      sweep: (from, direction, distance) => (typeof this.world.raycast === 'function' ? this.world.raycast([from[0], from[1], from[2]], [direction[0], direction[1], direction[2]], distance) : null),
       maxAwake: o.maxAwakeFragments ?? Infinity,
     })
     this.cages = new RebarCages(THREE, o.scene)

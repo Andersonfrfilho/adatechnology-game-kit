@@ -25,7 +25,9 @@ const BLAST_RADIUS = 6
 // Recorded again with the drain runs of the house (sewer stretches in its walls and slabs, the downpipes in stretches clamped to the wall): they are parts of the spec the blast meets now, and a hole in a wall shows the ones in it
 // Recorded again with the wall pipes of the house built by stages cut in stretches hosted by their wall, and the door thresholds laid between the posts of their frame, clear of the structure
 // Recorded again with the wires of the poles detaching as pieces of their own (they hang from the pole by a joint that tears): 21 more objects, the pole's piece keeps only its shaft, crossarm and insulators, and the state of a joint says whether it tears
-const RECORDED_BLAST_OUTCOME = '2213024316105c1e34d8a8104fafe1fa29a736f5'
+// Recorded again when the panes became 4 mm glass of their real mass (they were read as 12 mm and held) and the frame of a budget house wood: the charge still
+// brings wall_0_0 down (41 parts broken, 6 collapsed), the panes of the windows it reaches now break, nothing catches fire
+const RECORDED_BLAST_OUTCOME = 'dcba092300462afae75d7bb75129f8d31f815784'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
