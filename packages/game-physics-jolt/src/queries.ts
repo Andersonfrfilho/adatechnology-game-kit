@@ -124,9 +124,10 @@ export const penetration = (w: JoltWorldHost, id: BodyId, out: Float64Array, amo
   const c = w.collideCollector
   c.Reset()
   w.r1.Set(0, 0, 0)
-  const self = new J.IgnoreSingleBodyFilter(e.id)
-  w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, STATIC_ONLY), self, w.shapeFilter)
-  J.destroy(self)
+  // with `among`, a body outside it is left out before the narrow phase, not after: the ground under a thin plate in a crater is thousands of triangle hits otherwise (5 ms)
+  const bodies = among ? amongFilter(w, among) : new J.IgnoreSingleBodyFilter(e.id)
+  w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, STATIC_ONLY), bodies, w.shapeFilter)
+  if (!among) J.destroy(bodies)
   let depth = 0
   const hits = c.mHits
   for (let i = 0; i < hits.size(); i++) {
@@ -145,3 +146,15 @@ export const penetration = (w: JoltWorldHost, id: BodyId, out: Float64Array, amo
 }
 
 const STATIC_ONLY: QueryFilter = { layers: ['static'] }
+
+/** The world's one body filter that lets through only the bodies of `among` (made once; the set is swapped in per query). A `BodyID` is one uint32 in the heap. */
+const amongFilter = (w: JoltWorldHost, among: ReadonlySet<BodyId>): JoltNS.BodyFilter => {
+  w.among.set = among
+  if (w.among.filter) return w.among.filter
+  const J = w.J
+  const filter = new J.BodyFilterJS()
+  filter.ShouldCollide = (id: number) => w.among.set.has(J.HEAPU32[id >> 2] as BodyId)
+  filter.ShouldCollideLocked = () => true
+  w.among.filter = filter
+  return filter
+}
