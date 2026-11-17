@@ -516,10 +516,11 @@ const sectionLoss = (p: PartRT, borne?: BorneAt): number => {
   })
   return Math.min(1, worst)
 }
-/** The places `forEachSection` visits for a list of knocked-out units at the spec's pose: the units only grow (`push`), so their count says the list is the same. */
+/** The places `forEachSection` visits for a list of knocked-out units at the spec's pose: the units only grow (`push`), so their count and last cell say the list is the same. */
 interface SectionsOf {
   readonly spec: PartSpec
   readonly count: number
+  readonly last: object
   readonly along: number
   readonly lying: boolean
   readonly places: ReadonlyArray<{ readonly c: { readonly center: Vec3 }; readonly gone: number }>
@@ -535,14 +536,15 @@ const forEachSection = (p: PartRT, borne: BorneAt | undefined, visit: (c: { read
     return
   }
   let known = sectionsByCells.get(cells)
-  if (!known || known.spec !== p.spec || known.count !== cells.length) {
+  const last = cells[cells.length - 1]!
+  if (!known || known.spec !== p.spec || known.count !== cells.length || known.last !== last) {
     const places: Array<{ c: { readonly center: Vec3 }; gone: number }> = []
     let along = 0
     measureSections(p, cells, undefined, (c, a, gone) => {
       along = a
       places.push({ c, gone })
     })
-    known = { spec: p.spec, count: cells.length, along, lying: sectionLying(p, along), places }
+    known = { spec: p.spec, count: cells.length, last, along, lying: sectionLying(p, along), places }
     sectionsByCells.set(cells, known)
   }
   for (const { c, gone } of known.places) {
@@ -727,7 +729,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return out
   }
 
-  /** What a part's spec and its material alone give (`build`), remembered by the spec: the halves of a split, and an object built again, read it. */
+  /** What a part's spec and its material alone give (`build`), remembered by the spec: the halves of a split, and an object built again, read it (a material is never written once the world has it). */
   const partDerived = new WeakMap<PartSpec, PartDerived>()
   const derivedOf = (ps: PartSpec, mat: MaterialDef): PartDerived => {
     const known = partDerived.get(ps)
@@ -735,7 +737,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const dims = shapeDims(ps.shape)
     const d: PartDerived = {
       mat, mass0: partMass(ps, mat), q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
-      dims, bound: shapeBound(ps.shape), cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0, thin: thinAxisOf(shapeDims(ps.shape)),
+      dims, bound: shapeBound(ps.shape), cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0, thin: thinAxisOf(dims),
       ...(ps.shape.kind === 'box' && isFlexural(ps, mat, flexure) ? { bend: bendGeometry(ps) } : {}),
     }
     partDerived.set(ps, d)

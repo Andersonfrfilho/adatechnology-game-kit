@@ -680,7 +680,10 @@ export interface PartState {
   exposed?: boolean
   /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */
   opening?: { center: Vec3; radius: number }
-  /** Units (`PartSpec.units`) knocked out one by one by shots and blows, in the part's own axes (`chip` events). Raycasts and shots pass through them. */
+  /**
+   * Units (`PartSpec.units`) knocked out one by one by shots and blows, in the part's own axes (`chip` events). Raycasts and shots pass through them. Only
+   * ever appended to (a unit out stays out), never edited: the world remembers what it measured from the list by its length and its last cell.
+   */
   chipped?: Array<{ center: Vec3; size: Vec3 }>
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
