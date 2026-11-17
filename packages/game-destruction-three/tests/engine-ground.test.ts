@@ -195,6 +195,21 @@ const gapsOf = (t: GroundTile, ground: (x: number, z: number) => number, x0: num
   return { most, least, holes }
 }
 
+/**
+ * The engine's collision surface at (x, z) of a tile at (x0, z0): its coarser field (`GroundTile.collision`), flat on each of a cell's two triangles; `pick` the lower or the
+ * higher of the two ways the cell may be cut (the engine uses one of them).
+ */
+const collisionSurface = (t: GroundTile, x0: number, z0: number, x: number, z: number, pick: (a: number, b: number) => number): number => {
+  const n = t.collisionCells
+  const cell = 2 / n
+  const fx = Math.min(n - 1e-9, Math.max(0, (x - x0) / cell)), fz = Math.min(n - 1e-9, Math.max(0, (z - z0) / cell))
+  const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j
+  const h = (a: number, b: number): number => t.collision[(j + b) * (n + 1) + i + a]!
+  const main = u >= v ? h(0, 0) + u * (h(1, 0) - h(0, 0)) + v * (h(1, 1) - h(1, 0)) : h(0, 0) + v * (h(0, 1) - h(0, 0)) + u * (h(1, 1) - h(0, 1))
+  const cross = u + v <= 1 ? h(0, 0) + u * (h(1, 0) - h(0, 0)) + v * (h(0, 1) - h(0, 0)) : h(1, 1) + (1 - u) * (h(0, 1) - h(1, 1)) + (1 - v) * (h(1, 0) - h(1, 1))
+  return pick(main, cross)
+}
+
 describe('solid under the height field', { timeout: 30000 }, () => {
   const rolling = (x: number, z: number): number => 0.02 * Math.sin(1.7 * x) * Math.cos(1.3 * z) + 0.03 * x
   const bowl = (x: number, z: number): number => {
@@ -220,13 +235,33 @@ describe('solid under the height field', { timeout: 30000 }, () => {
     expect(gaps.most).toBeLessThan(gap.most)
     for (let x = x0 + 0.004; x < x0 + 2; x += 0.019) {
       for (let z = z0 + 0.004; z < z0 + 2; z += 0.023) {
-        // a slab's edge or lean is no higher over the ground than its top
+        // a slab's edge or lean is no higher over the ground than its top, and no higher than SOLID_MARGIN under the engine's coarser collision surface either
         expect(ground(x, z) - highestAt(t, x, z)).toBeGreaterThan(SOLID_MARGIN - 0.0006)
+        expect(collisionSurface(t, x0, z0, x, z, Math.min) - highestAt(t, x, z)).toBeGreaterThan(SOLID_MARGIN - 1e-5)
         if (gap.inner !== undefined && Math.min(x - x0, z - z0, x0 + 2 - x, z0 + 2 - z) > 0.4) expect(ground(x, z) - solidTopAt(t, x, z)).toBeLessThan(gap.inner)
       }
     }
     expect(lowestSolid(t)).toBeLessThanOrEqual(Math.min(...t.heights) - SOLID_DEPTH + 1e-9)
   }
+
+  // owner decision 2026-11-17: the engine collides with a 5 cm field of the 2.5 cm read grid; the bend of the ground across a 5 cm cell is all it is off the drawn ground
+  it('the engine\'s collision surface is within 5 mm of the drawn ground on a crater\'s wall (13 mm across a bowl\'s crease), and is a 5 cm field of the read corners', () => {
+    // the bowl's rim is a crease (its slope drops from 0.75 to 0 at 1.2 m): across it the 2.5 cm field was 6.2 mm off the drawn ground already, the 5 cm one is 12.4
+    for (const [ground, x0, z0, bound] of [[crater, 0, 0, 0.005], [rolling, 0, 0, 0.005], [bowl, -1, -1, 0.013]] as const) {
+      const t = buildGroundTile(ground, x0, z0, 2)
+      expect(t.collisionCells).toBe(t.cells / 2)
+      expect(2 / t.collisionCells).toBeCloseTo(0.05, 12)
+      for (let j = 0; j <= t.collisionCells; j++) for (let i = 0; i <= t.collisionCells; i++) expect(t.collision[j * (t.collisionCells + 1) + i]).toBe(t.heights[2 * j * (t.cells + 1) + 2 * i])
+      let most = 0
+      for (let x = x0 + 0.003; x < x0 + 2; x += 0.0071) {
+        for (let z = z0 + 0.003; z < z0 + 2; z += 0.0083) {
+          const drawn = ground(x, z)
+          most = Math.max(most, Math.abs(collisionSurface(t, x0, z0, x, z, Math.min) - drawn), Math.abs(collisionSurface(t, x0, z0, x, z, Math.max) - drawn))
+        }
+      }
+      expect(most).toBeLessThan(bound)
+    }
+  })
 
   // the flat boxes of T3.8ag's first take left 3.5 cm here, 12 cm in the bowl, 7.9 cm on the crater wall and 50 cm under the high side of a plane, everywhere on it
   it('is under the surface everywhere and within 1 cm of it on a gentle ground', () => {
@@ -246,9 +281,10 @@ describe('solid under the height field', { timeout: 30000 }, () => {
   it('never sticks out above a steep bowl or crater wall, and stays close under them; level ground has none (its slab is solid already)', () => {
     // the bowl's edges are its steepest ground (0.74): its boxes there lean furthest past the tile
     expectNet(buildGroundTile(bowl, -1, -1, 2), bowl, -1, -1, { most: 0.05 })
-    // the crater's wall bends under the smallest blocks, and a box is lowered for every cell its top reaches: 2.7 cm, as 06e05d340
+    // the crater's wall bends under the smallest blocks, and a box is lowered for every cell its top reaches (2.7 cm, as 06e05d340), and under the collision field where it
+    // dips under the drawn ground (the 5 cm field: 2.74 cm)
     const t = buildGroundTile(crater, 0, 0, 2)
-    expectNet(t, crater, 0, 0, { most: 0.027 })
+    expectNet(t, crater, 0, 0, { most: 0.03 })
     // a block is one box (06e05d340: 364), and a sloped one has its upright box under its turned one
     const turnedCount = t.solid.boxes.filter((_, k) => k % SOLID_STRIDE === 9 && t.solid.boxes[k] !== 1).length
     expect(t.solid.boxes.length / SOLID_STRIDE).toBe(364 + turnedCount)

@@ -1,3 +1,4 @@
+import { collisionAt } from './engine-ground-collision'
 import { holdsStep } from './engine-ground-step'
 
 /**
@@ -29,7 +30,11 @@ let sampleBuild = new Uint32Array(0)
 let heldCells = new Float64Array(0)
 let cellBuild = new Uint32Array(0)
 
-export const createGroundRing = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number): GroundRing => {
+/**
+ * `heights` are the tile's own (already under its collision field), `k` how many read cells a collision cell spans: past the edge a corner is the lower of the ground there and
+ * the neighbour's collision field at it.
+ */
+export const createGroundRing = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number, k = 1): GroundRing => {
   const ring = Math.round(SOLID_RING / cell)
   const m = cells + 1
   const width = 2 * (cells + 2 * ring) + 1
@@ -57,6 +62,8 @@ export const createGroundRing = (heights: Float32Array, cells: number, x0: numbe
     read.push(x, z, h)
     return h
   }
+  /** The ground at the read corner (`p`, `q`). */
+  const fine = (p: number, q: number): number => half(2 * p, 2 * q)
   return {
     cells: ring,
     read,
@@ -77,7 +84,8 @@ export const createGroundRing = (heights: Float32Array, cells: number, x0: numbe
         const step = holdsStep(nine)
         let floor = Infinity
         for (let k = 0; k < 9; k++) floor = Math.min(floor, nine[k]!)
-        const c00 = nine[0]!, c10 = nine[1]!, c01 = nine[2]!, c11 = nine[3]!
+        const corner = (p: number, q: number, h: number): number => (k === 1 ? h : Math.min(h, collisionAt(fine, p, q, k)))
+        const c00 = corner(i, j, nine[0]!), c10 = corner(i + 1, j, nine[1]!), c01 = corner(i, j + 1, nine[2]!), c11 = corner(i + 1, j + 1, nine[3]!)
         heldCells[4 * key] = step ? floor : c00
         heldCells[4 * key + 1] = step ? floor : c10
         heldCells[4 * key + 2] = step ? floor : c01

@@ -165,8 +165,9 @@ interface Tile {
   /** The solid body under the height field (not under a slab) and the boxes it was made from: a second body, so the height field keeps its own shape across changes. */
   solid: BodyId | null
   volume: SolidVolume
-  /** The height field's samples, to find what a change moved (empty under a slab), and how many times in a row it was written in place (`MAX_IN_PLACE_WRITES`). */
+  /** The read grid's heights, to find what a change moved (empty under a slab); the engine's coarser field of them (`engine-ground-collision`); and how many times in a row it was written in place (`MAX_IN_PLACE_WRITES`). */
   heights: Float32Array
+  collision: Float32Array
   writes: number
   /** Null for a tile proved level without reading it; its level then is `level`. */
   samples: Float64Array | null
@@ -957,9 +958,11 @@ export class EnginePieces {
     }
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
+    // the engine's field is the coarser collision grid (`engine-ground-collision`): what it moved there is what is written in place
+    const movedField = tile && !tile.slab && !slab && moved ? changedHeights(tile.collision, made.collision, made.collisionCells + 1) : null
     const kept = tile !== undefined && tile.slab === slab
     const ground = kept ? tile.ground : this.replaceGround(tile, made, ix, iz)
-    const writes = kept ? this.updateGround(tile, made, moved, ix, iz) : 0
+    const writes = kept ? this.updateGround(tile, made, movedField, ix, iz) : 0
     let steps = tile?.steps ?? null
     const same = tile !== undefined && tile.boxes.length === made.boxes.length && tile.boxes.every((x, i) => x === made.boxes[i])
     if (!same) {
@@ -969,7 +972,7 @@ export class EnginePieces {
     // the solid is a function of the heights and the ground it read past the edges: the same of both, the same solid
     const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null && !ringMoved ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells, this.o.groundAt)
     const laid = { ...made, solid: volume }
-    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, level: made.level, dirty: null })
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty: null })
   }
 
   /** Whether a sample the solid read past the tile's edges, within the marked rectangle, is not the ground there now. */
@@ -987,7 +990,7 @@ export class EnginePieces {
   private relaySolid(tile: Tile, x0: number, z0: number): void {
     const cells = Math.round(Math.sqrt(tile.heights.length)) - 1
     const volume = buildSolidVolume(tile.heights, cells, x0, z0, TILE / cells, this.o.groundAt)
-    tile.solid = this.layVolume({ heights: tile.heights, cells, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile)
+    tile.solid = this.layVolume({ heights: tile.heights, cells, collision: tile.collision, collisionCells: Math.round(Math.sqrt(tile.collision.length)) - 1, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile)
     tile.volume = volume
   }
 
@@ -1028,9 +1031,9 @@ export class EnginePieces {
       return 0
     }
     if (!moved) return tile.writes
-    const size = made.cells + 1
+    const size = made.collisionCells + 1
     const small = moved.sizeX * moved.sizeZ <= IN_PLACE_SHARE * size * size
-    if (small && tile.writes < MAX_IN_PLACE_WRITES && this.world.updateHeights(tile.ground, moved, made.heights)) return tile.writes + 1
+    if (small && tile.writes < MAX_IN_PLACE_WRITES && this.world.updateHeights(tile.ground, moved, made.collision)) return tile.writes + 1
     this.world.setShape(tile.ground, this.heightField(made, ix, iz))
     return 0
   }
@@ -1062,7 +1065,7 @@ export class EnginePieces {
   }
 
   private heightField(t: GroundTile, ix: number, iz: number): ShapeDesc {
-    return { kind: 'heightfield', origin: [ix * TILE, 0, iz * TILE], cell: TILE / t.cells, size: t.cells + 1, heights: t.heights }
+    return { kind: 'heightfield', origin: [ix * TILE, 0, iz * TILE], cell: TILE / t.collisionCells, size: t.collisionCells + 1, heights: t.collision }
   }
 
   private stepBoxes(boxes: readonly number[]): ShapeDesc {

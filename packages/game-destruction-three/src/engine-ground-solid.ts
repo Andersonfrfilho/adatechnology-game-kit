@@ -1,3 +1,4 @@
+import { collisionStep, underBoth } from './engine-ground-collision'
 import { createGroundRing } from './engine-ground-ring'
 import { buildLowPyramid, reachOf } from './engine-ground-reach'
 
@@ -69,16 +70,19 @@ const thickWithin = (lean: number, low: number, high: number, lo: number, hi: nu
 }
 
 /**
- * The blocks under a tile of `cells` cells of side `cell` from (`x0`, `z0`), over its `heights` (`(cells + 1)^2`, x fastest), and the ground around it (`groundAt`, read
- * only past the tile's edges, up to `SOLID_RING`).
+ * The blocks under a tile of `cells` cells of side `cell` from (`x0`, `z0`), over its `read` heights (`(cells + 1)^2`, x fastest) and the engine's coarser collision field of
+ * them, and the ground around it (`groundAt`, read only past the tile's edges, up to `SOLID_RING`, and its collision field there too).
  */
-export const buildSolidVolume = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number): SolidVolume => {
+export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number): SolidVolume => {
+  // under the drawn ground and the engine's coarser collision field both, whichever is lower at each corner (`engine-ground-collision`)
+  const k = collisionStep(cells, cell)
+  const heights = underBoth(read, cells, k)
   const m = cells + 1
   let low = Infinity
   for (const h of heights) low = Math.min(low, h)
   const bottom = low - SOLID_DEPTH
   const boxes: number[] = []
-  const ring = createGroundRing(heights, cells, x0, z0, cell, groundAt)
+  const ring = createGroundRing(heights, cells, x0, z0, cell, groundAt, k)
   const reachTile = { heights, cells, x0, z0, cell, pyramid: buildLowPyramid(heights, cells, cell), ring }
   const outer = ring.cells * cell
   const loX = x0 - outer, hiX = x0 + cells * cell + outer, loZ = z0 - outer, hiZ = z0 + cells * cell + outer

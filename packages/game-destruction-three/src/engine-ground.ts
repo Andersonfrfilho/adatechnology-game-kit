@@ -1,5 +1,6 @@
 import { NO_SOLID, buildSolidVolume } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
+import { collisionOf, collisionStep } from './engine-ground-collision'
 import { holdsStep } from './engine-ground-step'
 
 /**
@@ -11,6 +12,9 @@ import { holdsStep } from './engine-ground-step'
  * Why not triangles: the step-keeping triangle mesh this replaces was one-sided (a thin piece pressed half through a triangle fell through for good) and had to be
  * made again, as a new body, for every change, which threw away the engine's contact cache. A height field of the same tile is made in about 0.3 ms and can be
  * swapped on the same body (`EnginePieces`), so the pieces on it keep their contacts.
+ *
+ * The tile is read at `GROUND_CELL`; the engine collides with every second corner of it, a 5 cm field (`engine-ground-collision`, owner decision 2026-11-17), and the solid
+ * under it stays under both.
  */
 
 /** Cells of a tile (m), as Rapier's spike measured good enough for a 4 cm plate. */
@@ -23,6 +27,9 @@ export interface GroundTile {
   /** Corner heights, `(cells + 1)^2`, x fastest: `heights[iz * (cells + 1) + ix]`. Empty when the tile is level. */
   readonly heights: Float32Array
   readonly cells: number
+  /** The height field the engine collides with (`engine-ground-collision`): every `cells / collisionCells`-th corner of `heights`, `(collisionCells + 1)^2`. Empty when level. */
+  readonly collision: Float32Array
+  readonly collisionCells: number
   /** The step boxes: centre x, y, z and half x, y, z, six numbers each. */
   readonly boxes: readonly number[]
   /** The solid under the height field (`engine-ground-solid`); none when the tile is level (a slab is solid already). */
@@ -38,7 +45,7 @@ const NO_HEIGHTS = new Float32Array(0)
 const cellSamples = new Float64Array(9)
 
 /** The tile of a level `size` at `level`, laid without a sample read: the caller has proved, from the ground's own data, that every sample there is `level` (to 1e-9, as `shapeGround` calls level). */
-export const flatTile = (level: number, size: number): GroundTile => ({ heights: NO_HEIGHTS, cells: Math.round(size / GROUND_CELL), boxes: [], solid: NO_SOLID, level, samples: null })
+export const flatTile = (level: number, size: number): GroundTile => ({ heights: NO_HEIGHTS, cells: Math.round(size / GROUND_CELL), collision: NO_HEIGHTS, collisionCells: 0, boxes: [], solid: NO_SOLID, level, samples: null })
 
 /** A rectangle of the ground, world x and z. */
 export interface GroundRect {
@@ -114,7 +121,7 @@ export const shapeGround = (samples: Float64Array, x0: number, z0: number, size:
     low = Math.min(low, h)
     high = Math.max(high, h)
   }
-  if (high - low < 1e-9) return { heights: new Float32Array(0), cells: n, boxes: [], solid: NO_SOLID, level: high, samples }
+  if (high - low < 1e-9) return { heights: new Float32Array(0), cells: n, collision: NO_HEIGHTS, collisionCells: 0, boxes: [], solid: NO_SOLID, level: high, samples }
   const corner = (i: number, j: number): number => corners[j * m + i]
   // a cell whose centre or an edge's middle leaves its corners holds a step; it and the cells around it become boxes
   const mask = new Uint8Array(n * n)
@@ -169,5 +176,6 @@ export const shapeGround = (samples: Float64Array, x0: number, z0: number, size:
       i = end
     }
   }
-  return { heights, cells: n, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround) : NO_SOLID, level: null, samples }
+  const k = collisionStep(n, c)
+  return { heights, cells: n, collision: collisionOf(heights, n, k), collisionCells: n / k, boxes, solid: solidGround ? buildSolidVolume(heights, n, x0, z0, c, solidGround) : NO_SOLID, level: null, samples }
 }
