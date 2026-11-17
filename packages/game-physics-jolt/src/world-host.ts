@@ -44,6 +44,8 @@ export interface JoltWorldHost {
   readonly bodyFilter: JoltNS.BodyFilter
   readonly shapeFilter: JoltNS.ShapeFilter
   readonly layerFilters: Map<string, JoltNS.ObjectLayerFilterJS>
+  /** The body filter of `penetration` with `among` (made on first use), the set it lets through and the queried body it leaves out, both cleared after each query. */
+  readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId>; self: number }
   readonly collideSettings: JoltNS.CollideShapeSettings
   readonly collideCollector: JoltNS.CollideShapeAllHitCollisionCollector
   readonly castSettings: JoltNS.ShapeCastSettings
