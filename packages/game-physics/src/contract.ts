@@ -30,7 +30,8 @@ export type ShapeDesc =
       readonly children: ReadonlyArray<{ readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation?: Quat; readonly tag?: number }>
       /**
        * An untagged convex child whose points a hull made earlier already has (to the bit) is that hull, not a new one: for a compound made again and again from mostly the same
-       * hulls (the solid under a tile of ground), where building a hull is what a new compound costs. The adapter holds a bounded number of them.
+       * hulls, where building a hull is what a new compound costs. The adapter holds a bounded number of them. Nothing in the kit asks for it since the solid under the ground
+       * became boxes (spec 008 T3.8ag); kept, tested (`game-physics-jolt` `hull-cache.test.ts`), for a host whose compound of hulls is made again often.
        */
       readonly reuseHulls?: boolean
     }

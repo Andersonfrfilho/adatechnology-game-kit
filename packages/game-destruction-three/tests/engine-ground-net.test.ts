@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { PieceSystem } from '../src/pieces'
+import { SOLID_STRIDE } from '../src/engine-ground-solid'
 import { IS_JOLT, physicsOption } from './setup-physics'
 
 /**
@@ -56,7 +57,7 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
     const made = vi.spyOn(probe.engine.world.J.ConvexHullShapeSettings.prototype, 'Create')
     const l = lab(0)
     l.engine.layTile(TILE_KEY, 0, 0, undefined)
-    expect(l.engine.tiles.get(TILE_KEY)!.volume.boxes.length / 6).toBeGreaterThan(50)
+    expect(l.engine.tiles.get(TILE_KEY)!.volume.boxes.length / SOLID_STRIDE).toBeGreaterThan(50)
     l.state.depth = 0.15
     l.engine.groundChanged(1.9, 1, 0.3)
     l.engine.layTile(TILE_KEY, 0, 0, l.engine.tiles.get(TILE_KEY))
@@ -90,6 +91,28 @@ describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () 
     // how deep each rests in the fixed things (the height field): a contact's sink, a few millimetres at most
     expect(Math.max(...sunk)).toBeLessThan(0.004)
     if (process.env.NET_REPORT) console.log('NET sunk', JSON.stringify(sunk))
+  })
+
+  /**
+   * A 3 cm box wholly under the wall, its top 1 cm down (ground raised under it, a tunnel): the net close under the slope pushes it up through the surface. The flat boxes of the
+   * first take (their top at the block's lowest ground) left it buried 1.5 cm down, and the prisms before them let it through to fall for good (42 m); a box this size 2 cm down,
+   * or one of 8 to 16 cm on this 38° wall, is pushed out sideways by the engine (its shortest way out) and stays under on all three.
+   */
+  it('a small box made 1 cm under the surface of the crater wall ends above the surface: the net under the slope pushes it back up', () => {
+    const l = lab(0.15)
+    l.engine.layTile(TILE_KEY, 0, 0, undefined)
+    const world = l.engine.world
+    const ground = groundOf(0.15)
+    // on the wall of the big crater (centre (1, 1), radius 0.6, 0.3 deep): its steepest ring, 0.3 m out
+    const spots: Array<[number, number]> = [[1.3, 1], [1, 1.3], [0.79, 0.79], [1.25, 0.75]]
+    const half = 0.015
+    const ids = spots.map(([x, z], i) => world.createBody({ shape: { kind: 'box', half: [half, half, half] }, motion: 'dynamic', mass: 0.05, position: [x, ground(x, z) - 0.01 - half, z], user: i + 1 }))
+    for (let frame = 0; frame < 180; frame++) world.step(1 / 60)
+    const pose = new Float64Array(7)
+    for (const id of ids) {
+      world.readPose(id, pose, 0)
+      expect(pose[1]! - ground(pose[0]!, pose[2]!)).toBeGreaterThan(0)
+    }
   })
 
   it('the heap and the body count are the same after 200 changes of the crater', () => {
