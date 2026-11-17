@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Dent } from '@adatechnology/game-destruction'
+import { markPositionsWritten, rangesWrittenSince } from '@adatechnology/game-shapes-three'
 import { BEND_SMOOTH_RADIUS, bendPositions } from './bend'
 import { heatColor } from './heat'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
@@ -103,8 +104,9 @@ export function showCollapsedRanges(mesh: THREE_NS.Mesh): void {
   if (!plain || !data.collapsedRanges?.length || !position) return
   const array = position.array as Float32Array
   for (const [v0, v1] of data.collapsedRanges) array.set(plain.subarray(v0 * 3, v1 * 3), v0 * 3)
-  data.collapsedRanges = []
   position.needsUpdate = true
+  for (const [v0, v1] of data.collapsedRanges) markPositionsWritten(mesh, v0, v1)
+  data.collapsedRanges = []
   mesh.geometry.computeBoundingBox()
   mesh.geometry.computeBoundingSphere()
 }
@@ -142,6 +144,12 @@ const collapseForeign = (mesh: Mesh, arr: Float32Array): void => {
       arr[k * 3 + 2] = arr[v0 * 3 + 2]!
     }
   }
+}
+
+/** Whether two position arrays hold the same vertices in the range. */
+const sameRange = (a: ArrayLike<number>, b: ArrayLike<number>, range: readonly [number, number]): boolean => {
+  for (let i = range[0] * 3; i < range[1] * 3; i++) if (a[i] !== b[i]) return false
+  return true
 }
 
 /** Metres along its normal a mark looks for the drawn face under it (`onFace`). */
@@ -187,7 +195,8 @@ export class Visuals {
     if (range) {
       host = hosts?.get(mesh) ?? null
       if (!host) {
-        host = { mesh, origGeometry: mesh.geometry, origMaterial: mesh.material, ownGeo: false, work: null, ownMat: false, sharers: [] }
+        const attribute = positionAttr(mesh.geometry)
+        host = { mesh, origGeometry: mesh.geometry, origMaterial: mesh.material, ownGeo: false, work: null, ownMat: false, sharers: [], seen: { attribute, version: attribute?.version ?? 0 } }
         hosts?.set(mesh, host)
       }
     }
@@ -216,6 +225,7 @@ export class Visuals {
       collapsed: false,
       hidden: false,
       touched: false,
+      shapeVersion: 0,
       charK: 0,
       charHex: 0,
       glowHex: 0,
@@ -249,11 +259,45 @@ export class Visuals {
     return out
   }
 
-  /** The current positions of the mesh the part is drawn by (its dented copy when it has one) and the vertex range of the part in them. */
-  positionsOf(mv: MeshVis): { readonly array: ArrayLike<number>; readonly from: number; readonly to: number } | null {
-    const array = mv.host?.work ?? (positionAttr(mv.mesh.geometry)?.array as unknown as ArrayLike<number> | undefined)
+  /**
+   * The current positions of the mesh the part is drawn by (its dented copy when it has one) and the vertex range of the part in them, with what says they are the same
+   * as before without reading them: the same `source` with the same `version` (and the same `shapeVersion` of the part) is the same vertices. A part of a merged mesh
+   * counts its writes in `shapeVersion` (its source is the host); a mesh of its own is its position attribute, whose `version` every write that is drawn bumps (`needsUpdate`).
+   */
+  positionsOf(mv: MeshVis): { readonly array: ArrayLike<number>; readonly from: number; readonly to: number; readonly source: object; readonly version: number } | null {
+    if (mv.host) this.follow(mv.host)
+    const attribute = positionAttr(mv.mesh.geometry)
+    const array = mv.host?.work ?? (attribute?.array as unknown as ArrayLike<number> | undefined)
     if (!array) return null
-    return { array, from: mv.range ? mv.range[0] : 0, to: mv.range ? mv.range[1] : array.length / 3 }
+    const source: object = mv.host ?? (attribute as THREE_NS.BufferAttribute)
+    return { array, from: mv.range ? mv.range[0] : 0, to: mv.range ? mv.range[1] : array.length / 3, source, version: mv.host ? 0 : (attribute as THREE_NS.BufferAttribute).version }
+  }
+
+  /**
+   * Counts on the sharers' `shapeVersion` what was written to the mesh's own positions since the last look, while the parts are measured by them (`work` is null): the
+   * ranges the writes declared (`markPositionsWritten`), or every part when one did not.
+   */
+  private follow(host: HostVis): void {
+    if (host.work) return
+    const attribute = positionAttr(host.mesh.geometry)
+    const seen = host.seen
+    if (seen.attribute === attribute && (!attribute || seen.version === attribute.version)) return
+    const ranges = attribute && seen.attribute === attribute ? rangesWrittenSince(attribute, seen.version) : null
+    for (const s of host.sharers) {
+      if (s.host !== host || !s.range) continue
+      const [a, b] = s.range
+      if (!ranges || ranges.some(([v0, v1]) => v0 < b && v1 > a)) s.shapeVersion++
+    }
+    host.seen = { attribute, version: attribute?.version ?? 0 }
+  }
+
+  /** The part's positions changed where it is measured: it, and every part drawn by a range of the same mesh that overlaps its own, measures again (`drawnSolidsOf`). */
+  private reshaped(mv: MeshVis): void {
+    mv.shapeVersion++
+    const host = mv.host
+    const range = mv.range
+    if (!host || !range) return
+    for (const s of host.sharers) if (s !== mv && s.host === host && s.range && s.range[0] < range[1] && s.range[1] > range[0]) s.shapeVersion++
   }
 
   /** The part's vertices (a ranged part: its own range only) through `matrix` (from its mesh's space), appended to `out` as x y z. */
@@ -358,10 +402,14 @@ export class Visuals {
     if (host.ownGeo) return true
     const pos = positionAttr(host.mesh.geometry)
     if (!pos) return false
+    this.follow(host)
     host.ownGeo = true
     const g = host.mesh.geometry.clone()
     host.mesh.geometry = g
-    host.work = new Float32Array(basePositions(host) ?? ((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>))
+    const base = basePositions(host)
+    host.work = new Float32Array(base ?? ((positionAttr(g) as THREE_NS.BufferAttribute).array as ArrayLike<number>))
+    // the parts were measured by the mesh's positions: the first ones differ only where another drawing collapsed a range, and those parts measure again
+    if (base) for (const s of host.sharers) if (s.host === host && s.range && !sameRange(pos.array as ArrayLike<number>, base, s.range)) s.shapeVersion++
     return true
   }
 
@@ -411,6 +459,7 @@ export class Visuals {
       work[i + 2] -= ln.z * k
     }
     mv.touched = true
+    this.reshaped(mv)
     this.writePositions(mv, pos)
     return true
   }
@@ -499,7 +548,9 @@ export class Visuals {
         work[i + 2] += displacement.z
         touched = true
       }
-      if (touched) this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
+      if (!touched) continue
+      this.reshaped(mv)
+      this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
     }
   }
 
@@ -522,6 +573,7 @@ export class Visuals {
     const to = mv.range ? mv.range[1] * 3 : work.length
     bendPositions(work, from, to, [point.x, point.y, point.z], [axis.x, axis.y, axis.z], [side.x, side.y, side.z], angle, BEND_SMOOTH_RADIUS / scale)
     mv.touched = true
+    this.reshaped(mv)
     this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
     return true
   }
@@ -783,6 +835,7 @@ export class Visuals {
     }
     for (const decal of mv.decals) decal.obj.position.addScaledVector(down, dropAt(decal.obj.getWorldPosition(point)) / scale)
     mv.touched = true
+    this.reshaped(mv)
     if (write) this.commit(mv)
     return true
   }
@@ -858,6 +911,7 @@ export class Visuals {
         // a range of a shared mesh cannot scale the mesh: squash and widen its own vertices
         mv.meltApplied = m
         mv.touched = true
+        this.reshaped(mv)
         if (!(this.lowQuality && this.vertexCount(mv) > 20000) && this.ownGeometry(mv)) this.rebuildHost(mv.host)
         continue
       }
@@ -882,6 +936,7 @@ export class Visuals {
         mesh.position.copy(mv.origPosition).add(this.a.sub(this.b))
       }
       if (!(this.lowQuality && this.vertexCount(mv) > 20000) && this.ownGeometry(mv)) {
+        this.reshaped(mv)
         this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
       }
     }
@@ -915,6 +970,7 @@ export class Visuals {
     if (!mv.merged || !this.ownHostGeometry(mv.merged.host)) return
     mv.collapsed = true
     mv.touched = true
+    this.reshaped(mv)
     this.rebuildHost(mv.merged.host)
   }
 
@@ -1133,12 +1189,14 @@ export class Visuals {
       work: new Float32Array(lp.array as ArrayLike<number>),
       ownMat: true,
       sharers: [mv],
+      seen: { attribute: lp, version: lp.version },
     }
     mv.host = lh
     mv.range = [0, count]
     mv.mesh = loose
     mv.loose = true
     mv.moved = true
+    this.reshaped(mv)
     group.attach(loose)
     for (const m of materialsOf(loose.material)) m.needsUpdate = true
   }
@@ -1159,6 +1217,7 @@ export class Visuals {
       mv.loose = false
       mv.moved = false
     }
+    this.reshaped(mv)
     mv.collapsed = false
     mv.hidden = false
     mv.meltApplied = 0
@@ -1194,6 +1253,9 @@ export class Visuals {
       }
       host.work = null
       host.ownGeo = false
+      // measured by the mesh's own positions again, from what was just written there
+      host.seen = { attribute: back, version: back?.version ?? 0 }
+      for (const s of host.sharers) if (s.host === host) s.shapeVersion++
       if (host.ownMat) {
         for (const m of materialsOf(host.mesh.material)) m.dispose()
         host.mesh.material = host.origMaterial
@@ -1211,6 +1273,7 @@ export class Visuals {
     const mesh = mv.mesh
     for (const d of mv.decals) this.disposeDecal(d)
     mv.decals.length = 0
+    this.reshaped(mv)
     if (mv.ownGeo) {
       mesh.geometry.dispose()
       mesh.geometry = mv.origGeometry

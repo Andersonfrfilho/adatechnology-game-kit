@@ -49,6 +49,11 @@ export interface HostVis {
   ownMat: boolean
   /** Every MeshVis that draws a range of this mesh, or whose merged binding is this mesh. */
   sharers: MeshVis[]
+  /**
+   * While `work` is null the parts are measured by the mesh's own positions: the attribute and its `version` the sharers' `shapeVersion` account for. A write since (one
+   * `needsUpdate`) counts against the ranges it declared (`markPositionsWritten`), or against every sharer when it declared none.
+   */
+  seen: { attribute: THREE_NS.BufferAttribute | null; version: number }
 }
 
 /** Everything the renderer knows about one bound mesh: the original assets (kept to restore) and what has been changed. */
@@ -91,6 +96,8 @@ export interface MeshVis {
   hidden: boolean
   /** Dents, colours, melt or hiding differ from the original geometry. */
   touched: boolean
+  /** Counts every write of the positions the part is measured by (`Visuals.positionsOf`): the same count is the same vertices, so `drawnSolidsOf` reads none of them. */
+  shapeVersion: number
   charK: number
   charHex: number
   glowHex: number

@@ -19,17 +19,29 @@ const MIN_FACE = 1e-6
 
 type Points = ArrayLike<number>
 
-/** What was made of a part and what it was made from: the same numbers again are the same solids, so nothing is measured twice. */
+/** What was made of a part and what it was made from: the same source at the same versions is the same vertices, so nothing is measured (or read) twice. */
 interface Made {
   readonly matrix: readonly number[]
   readonly from: number
   readonly to: number
-  readonly sum: number
-  readonly spread: number
+  /** The positions' source (`Visuals.positionsOf`) by number, so a source replaced is not kept alive by what was made of it. */
+  readonly source: number
+  readonly version: number
+  readonly shapeVersion: number
   readonly solids: StaticSolid[]
 }
 
 const made = new WeakMap<MeshVis, Made>()
+const sourceIds = new WeakMap<object, number>()
+let lastSourceId = 0
+const sourceIdOf = (source: object): number => {
+  let id = sourceIds.get(source)
+  if (id === undefined) {
+    id = ++lastSourceId
+    sourceIds.set(source, id)
+  }
+  return id
+}
 /** The triangles of each range of a merged mesh, by the index buffer they were found in (one pass over the buffer for all the parts of the host). */
 const triangles = new WeakMap<object, Map<number, number[]>>()
 
@@ -51,18 +63,6 @@ const axesOfQuat = (x: number, y: number, z: number, w: number): number[] => [
   2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y),
 ]
 
-/** The numbers that say the part's vertices are the same as last time, read in place: nothing is copied for a part that did not change. */
-const checksumOf = (array: Points, from: number, to: number): { sum: number; spread: number } => {
-  let sum = 0
-  let spread = 0
-  for (let i = from * 3; i < to * 3; i += 3) {
-    const s = array[i] + 3 * array[i + 1] + 7 * array[i + 2]
-    sum += s
-    spread += s * s
-  }
-  return { sum, spread }
-}
-
 /** The part's vertices out of the mesh's positions. */
 const readPoints = (array: Points, from: number, to: number): Float64Array => {
   const points = new Float64Array((to - from) * 3)
@@ -73,16 +73,26 @@ const readPoints = (array: Points, from: number, to: number): Float64Array => {
 /**
  * What a fixed drawn part collides as, in world space, for an engine: one box turned as drawn where a box fits it (every corner has a vertex within `FIT`), else the
  * triangles as drawn (`mesh`, static only). A part drawn by a range of a merged mesh (a wall of the house) is its own vertices only. Nothing is drawn where a part is
- * collapsed to a point, so nothing is made there (`CLAUDE.md` §12). `key` names the part for the engine. The same part in the same place with the same vertices gives the very same list back.
+ * collapsed to a point, so nothing is made there (`CLAUDE.md` §12). `key` names the part for the engine. The same part in the same place with the same vertices gives the very same list back,
+ * told by the versions of its positions (every write counts), not by reading them: a part that did not change costs no pass over its vertices.
  */
 export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: MeshVis, key: string, budget: MeasureBudget): StaticSolid[] => {
   const local = visuals.positionsOf(mv)
   if (!local || local.to <= local.from) return []
   mv.mesh.updateWorldMatrix(true, false)
   const matrix = mv.mesh.matrixWorld.elements
-  const { sum, spread } = checksumOf(local.array, local.from, local.to)
+  const source = sourceIdOf(local.source)
   const known = made.get(mv)
-  if (known && known.from === local.from && known.to === local.to && known.sum === sum && known.spread === spread && known.matrix.every((v, k) => v === matrix[k])) return known.solids
+  if (
+    known &&
+    known.source === source &&
+    known.version === local.version &&
+    known.shapeVersion === mv.shapeVersion &&
+    known.from === local.from &&
+    known.to === local.to &&
+    known.matrix.every((v, k) => v === matrix[k])
+  )
+    return known.solids
   // out of turns: what was made before stays (its body is kept), a part never made waits for the next call
   if (budget.left <= 0) {
     budget.incomplete = true
@@ -90,7 +100,7 @@ export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: Mesh
   }
   budget.left -= local.to - local.from + PART_COST
   const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to), matrix, local).map((solid) => ({ ...solid, key }))
-  made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, sum, spread, solids })
+  made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, source, version: local.version, shapeVersion: mv.shapeVersion, solids })
   return solids
 }
 

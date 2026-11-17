@@ -1,4 +1,5 @@
 import { DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
+import { markPositionsWritten } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/game-contracts'
 import type { Kernel, Shared } from '../kernel-types.js'
@@ -24,6 +25,7 @@ export function collapseRange(mesh: THREE_NS.Mesh, v0: number, v1: number): Floa
   const x = a[v0 * 3], y = a[v0 * 3 + 1], z = a[v0 * 3 + 2]
   for (let k = v0; k < v1; k++) { a[k * 3] = x; a[k * 3 + 1] = y; a[k * 3 + 2] = z }
   pos.needsUpdate = true
+  markPositionsWritten(mesh, v0, v1)
   return saved
 }
 
@@ -32,6 +34,7 @@ export function restoreRange(mesh: THREE_NS.Mesh, v0: number, saved: Float32Arra
   const pos = mesh.geometry.attributes.position
   ;(pos.array as Float32Array).set(saved, v0 * 3)
   pos.needsUpdate = true
+  markPositionsWritten(mesh, v0, v0 + saved.length / 3)
   const list: Array<[number, number]> | undefined = mesh.userData.collapsedRanges
   if (list) mesh.userData.collapsedRanges = list.filter((r) => r[0] !== v0)
 }
