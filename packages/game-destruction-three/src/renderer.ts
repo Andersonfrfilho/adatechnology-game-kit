@@ -543,6 +543,7 @@ class Renderer implements DestructionRenderer {
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       ...(o.terrainRangeAt ? { terrainRangeAt: o.terrainRangeAt } : {}),
+      ...(o.terrainGridAt ? { terrainGridAt: o.terrainGridAt } : {}),
       ...(o.blastGroundTiles !== undefined ? { blastGroundTiles: o.blastGroundTiles } : {}),
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       staticSolids: () => this.staticSolids(),

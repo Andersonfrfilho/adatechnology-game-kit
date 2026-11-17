@@ -131,6 +131,12 @@ export interface RendererOptions {
    * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
    */
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
+  /**
+   * `terrainAt` (else `groundAt`) over a lattice in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what it answers at each point
+   * (`Terrain.heightGrid` is one). With it the engine reads a ground tile's 26 000 samples in one pass instead of a call each. A reader that is not exact changes the ground:
+   * leave it out if unsure.
+   */
+  terrainGridAt?: (xs: Float64Array, zs: Float64Array, out: Float64Array) => void
   gravity?: number
   /**
    * Turn a loose group into a separate physical piece automatically (default true): the ones a detach or a collapse leaves, and the ones an object already has when it is
