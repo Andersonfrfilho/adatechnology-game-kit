@@ -168,10 +168,11 @@ export class EngineStatics {
   }
 
   private reshape(h: Held, solid: StaticSolid): void {
+    const surfaceChanged = !sameFriction(h.solid.friction, solid.friction)
     h.solid = solid
     if (!solid.mesh) this.world.setPose(h.id, solid.center, solid.rotation, false)
     this.world.setShape(h.id, shapeOf(solid))
-    this.world.setMaterial(h.id, this.materialOf(solid))
+    if (surfaceChanged) this.world.setMaterial(h.id, this.materialOf(solid))
     this.changed.add(h.id)
   }
 

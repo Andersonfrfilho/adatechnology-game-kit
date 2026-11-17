@@ -1,10 +1,11 @@
 /**
  * The solid under a height field. Jolt's height field is a surface: a body that ends up wholly below it (ground raised under a sleeping piece, a piece that
  * tunnelled) has nothing to push it out and falls for good. Under the surface of a tile there are blocks, from the lowest ground of the tile less `SOLID_DEPTH`
- * up to a top close under the surface and never above it (§12). A block is split until a plane through its corners is within `SOLID_RELIEF` of the surface or it is
- * `SOLID_MIN_CELLS` cells wide. A level block is a box topped at its lowest ground less `SOLID_MARGIN`; a sloped block is a box turned to its corner plane, the plane
- * lowered by the ground's deepest dip under it and `SOLID_MARGIN`, so what is under a slope rests close under it too and is pushed back up through it. Every block is
- * a box: a sloped one used to be a prism (a convex hull each), and a crater tile's 400 hulls were most of the frame after the blast (T3.8ag).
+ * up to a top close under the surface and never above it (§12), nor above a neighbour tile's: nothing of it leaves its tile. A block is split until a plane through its
+ * corners is within `SOLID_RELIEF` of the surface or it is `SOLID_MIN_CELLS` cells wide. A level block is a box topped at its lowest ground less `SOLID_MARGIN`; a sloped
+ * block is that box and over it a thin slab turned to the block's slope, close under the surface, so what is under a slope rests close under it, and a body less than about
+ * a centimetre under is pushed back up through it (deeper, the engine pushes it out sideways, its shortest way: the net holds it, it does not lift it). Every block is boxes:
+ * a sloped one used to be a prism (a convex hull each), and a crater tile's 400 hulls were most of the frame after the blast (T3.8ag).
  */
 
 /** How far (m) under the lowest corner of its tile the solid goes. */
@@ -12,8 +13,12 @@ export const SOLID_DEPTH = 0.5
 /** How far (m) under the surface a block's top may be before the block is split, unless it is already `SOLID_MIN_CELLS` cells wide. */
 const SOLID_RELIEF = 0.005
 const SOLID_MIN_CELLS = 3
+/** The widest (cells) a sloped block on the tile's edge may be: its slab is cut back from the edge, and the floor under the sliver is as far under the ground as the block is wide. */
+const SOLID_EDGE_CELLS = 16
 /** A top is this far (m) under the lowest ground it stands for: 2 mm put the solid in the contacts of what rests on the surface and the bowl's seed 18 gained 4 cm. */
 export const SOLID_MARGIN = 0.005
+/** How thick (m) the turned slab over a sloped block is: what a body is pushed up through when it ends a little under a slope. */
+const SLAB_THICKNESS = 0.05
 /** Numbers per block in `SolidVolume.boxes`. */
 export const SOLID_STRIDE = 10
 
@@ -86,10 +91,13 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
   }
 
   /**
-   * A sloped block: a box turned to the plane through its corners, its top the rectangle on that plane over the block (a little past it where both slopes turn it), the plane
-   * lowered by the deepest the ground dips under it over every cell the top reaches and by `SOLID_MARGIN`. The ground is flat between samples, so under no sample is under nowhere.
+   * A sloped block: its upright box topped at its lowest ground (the floor under it all, sides on the block's edges), and over it a slab `SLAB_THICKNESS` thick turned to the
+   * plane through the block's corners. The slab's top is the rectangle on that plane over the block and a cell past it each way (turned slabs side by side lean apart under their
+   * tops: what is pushed out sideways meets the next one), cut to stay, all of it, over this tile (nothing of it under a neighbour tile, whose ground this tile does not know),
+   * then lowered by the ground's deepest dip under the plane over every cell it reaches, and `SOLID_MARGIN`. Where the cut leaves a sliver at the tile's edge the upright box holds.
    */
-  const sloped = (i0: number, j0: number, i1: number, j1: number): void => {
+  const sloped = (i0: number, j0: number, i1: number, j1: number, least: number): void => {
+    level(i0, j0, i1, j1, least)
     const [sx, sz] = slopesOf(i0, j0, i1, j1)
     const gx = sx / cell
     const gz = sz / cell
@@ -102,40 +110,50 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
     const az: [number, number, number] = [ax[1] * n[2] - ax[2] * n[1], ax[2] * n[0] - ax[0] * n[2], ax[0] * n[1] - ax[1] * n[0]]
     const xa = ox, xb = x0 + i1 * cell, za = oz, zb = z0 + j1 * cell
     const cx = (xa + xb) / 2, cz = (za + zb) / 2, cy = plane(cx, cz)
-    let hx = 0
-    let hz = 0
+    let uHi = 0
+    let wHi = 0
     for (const x of [xa, xb]) {
       for (const z of [za, zb]) {
         const d = [x - cx, plane(x, z) - cy, z - cz]
-        hx = Math.max(hx, Math.abs(d[0]! * ax[0] + d[1]! * ax[1] + d[2]! * ax[2]))
-        hz = Math.max(hz, Math.abs(d[0]! * az[0] + d[1]! * az[1] + d[2]! * az[2]))
+        uHi = Math.max(uHi, Math.abs(d[0]! * ax[0] + d[1]! * ax[1] + d[2]! * ax[2]))
+        wHi = Math.max(wHi, Math.abs(d[0]! * az[0] + d[1]! * az[1] + d[2]! * az[2]))
       }
     }
-    // past the block by a cell each way: turned boxes side by side lean apart under their tops, and what is pushed out sideways meets the next one, not a gap
-    hx += cell
-    hz += cell
-    // the cells the top reaches (its corners seen from above), and the deepest dip of the ground under the plane over them
-    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity, highest = -Infinity
-    for (const su of [-1, 1]) {
-      for (const sw of [-1, 1]) {
-        const qx = cx + su * hx * ax[0] + sw * hz * az[0]
-        const qz = cz + su * hx * ax[2] + sw * hz * az[2]
-        minX = Math.min(minX, qx)
-        maxX = Math.max(maxX, qx)
-        minZ = Math.min(minZ, qz)
-        maxZ = Math.max(maxZ, qz)
-        highest = Math.max(highest, cy + su * hx * ax[1] + sw * hz * az[1])
-      }
+    uHi += cell
+    wHi += cell
+    let uLo = -uHi
+    let wLo = -wHi
+    // every corner, the bottom ones too (the slab leans uphill under its top), over the tile: z depends on w only, x on both
+    const hy = SLAB_THICKNESS / 2
+    const lean = [-2 * hy * n[0], -2 * hy * n[2]]
+    const tileX = [x0, x0 + cells * cell], tileZ = [z0, z0 + cells * cell]
+    wLo = Math.max(wLo, (tileZ[0]! - cz - Math.min(0, lean[1]!)) / az[2])
+    wHi = Math.min(wHi, (tileZ[1]! - cz - Math.max(0, lean[1]!)) / az[2])
+    uLo = Math.max(uLo, (tileX[0]! - cx - Math.min(wLo * az[0], wHi * az[0]) - Math.min(0, lean[0]!)) / ax[0])
+    uHi = Math.min(uHi, (tileX[1]! - cx - Math.max(wLo * az[0], wHi * az[0]) - Math.max(0, lean[0]!)) / ax[0])
+    if (uHi - uLo < cell || wHi - wLo < cell) return
+    const um = (uLo + uHi) / 2, wm = (wLo + wHi) / 2
+    const hx = (uHi - uLo) / 2, hz = (wHi - wLo) / 2
+    // the slab with its top on the plane (not lowered yet)
+    const c = [cx + um * ax[0] + wm * az[0] - n[0] * hy, cy + um * ax[1] + wm * az[1] - n[1] * hy, cz + um * ax[2] + wm * az[2] - n[2] * hy]
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity
+    for (let k = 0; k < 8; k++) {
+      const s0 = k & 1 ? 1 : -1, s1 = k & 2 ? 1 : -1, s2 = k & 4 ? 1 : -1
+      const px = c[0]! + s0 * hx * ax[0] + s1 * hy * n[0] + s2 * hz * az[0]
+      const pz = c[2]! + s0 * hx * ax[2] + s1 * hy * n[2] + s2 * hz * az[2]
+      minX = Math.min(minX, px)
+      maxX = Math.max(maxX, px)
+      minZ = Math.min(minZ, pz)
+      maxZ = Math.max(maxZ, pz)
     }
+    // no point of the slab is above its top's plane, and the ground is flat between samples: the plane SOLID_MARGIN under every sample of the cells the slab reaches is enough
+    let dip = 0
     const ia = Math.max(0, Math.floor((minX - x0) / cell)), ib = Math.min(cells, Math.ceil((maxX - x0) / cell))
     const ja = Math.max(0, Math.floor((minZ - z0) / cell)), jb = Math.min(cells, Math.ceil((maxZ - z0) / cell))
-    let dip = 0
     for (let j = ja; j <= jb; j++) for (let i = ia; i <= ib; i++) dip = Math.min(dip, at(i, j) - plane(x0 + i * cell, z0 + j * cell))
     const drop = SOLID_MARGIN - dip
-    // deep enough that the bottom face is under the solid's bottom everywhere
-    const hy = (highest - drop - bottom) / (2 * n[1])
     const q = quatOfAxes(ax, n, az)
-    boxes.push(cx - n[0] * hy, cy - drop - n[1] * hy, cz - n[2] * hy, hx, hy, hz, q[0], q[1], q[2], q[3])
+    boxes.push(c[0]!, c[1]! - drop, c[2]!, hx, hy, hz, q[0], q[1], q[2], q[3])
   }
 
   const fill = (i0: number, j0: number, i1: number, j1: number): void => {
@@ -149,11 +167,14 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
       }
     }
     if (most - least <= SOLID_RELIEF) return level(i0, j0, i1, j1, least)
-    if (planeGap(i0, j0, i1, j1) > SOLID_RELIEF && Math.max(i1 - i0, j1 - j0) > SOLID_MIN_CELLS) {
+    // a sloped block on the tile's edge is split to the smallest: its slab is cut back from the edge (nothing of it under the neighbour), and the sliver is the floor's
+    const atEdge = i0 === 0 || j0 === 0 || i1 === cells || j1 === cells
+    const span = Math.max(i1 - i0, j1 - j0)
+    if (((atEdge && span > SOLID_EDGE_CELLS) || planeGap(i0, j0, i1, j1) > SOLID_RELIEF) && span > SOLID_MIN_CELLS) {
       for (const [a, b] of halves(i0, i1)) for (const [d, e] of halves(j0, j1)) fill(a, d, b, e)
       return
     }
-    sloped(i0, j0, i1, j1)
+    sloped(i0, j0, i1, j1, least)
   }
   fill(0, 0, cells, cells)
   return { boxes }

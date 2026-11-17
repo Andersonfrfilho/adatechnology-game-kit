@@ -31,6 +31,10 @@ describe("a fixed object's boxes changing in the engine", () => {
     system.update(0.05)
     expect(world.bodyCount).toBe(bodies)
     expect(materials.map((m) => m.frictionStatic)).toEqual([0.2])
+    // the box moving with the same surface takes its new shape, not the material again
+    boxes = [{ ...floor(0.2), center: [0, 0.2, 0] }]
+    system.update(0.05)
+    expect(materials).toHaveLength(1)
     world.dispose()
   })
 
