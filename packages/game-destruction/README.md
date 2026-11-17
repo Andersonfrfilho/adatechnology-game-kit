@@ -132,6 +132,7 @@ A fluid with `contains.outflow` (object-local direction) leaves a hole that way 
 | `weld` | 600 | cutting_torch, saw | 8 |
 | `glue` | 50 | pry_bar, knife | 3 |
 | `hinge` | 120 | screwdriver | 3 |
+| `slide` | 100 | screwdriver | 3 |
 | `clip` | 20 | hand | 0.6 |
 | `tie` | 15 | knife, hand | 1 |
 | `mortar` | 400 | hammer | 6 |

@@ -88,6 +88,12 @@ With `destruction` (a world of `game-destruction`) and `destructionRenderer` (`g
   so fracture and collapse hide the range and the renderer lets the fragments fall. `house.destruction.reset()` puts everything back.
 - **Brick courses at LOD 0.** A masonry wall that reaches stage 2 stops being a box: its range collapses and it is drawn again as instanced units (running bond,
   one instance per unit) without the ones inside the opening; the units around the edge show the bare brick. At LOD 1 and 2 the box comes back.
+- **Nothing loose at load.** What is attached in the real world is joined in the destruction world, so the house is one group when it loads: lot walls and
+  poles are set in the ground (`holder: 'ground'`, the joint `JOINT_BY_MATERIALS` gives the material against concrete: brick mortar, steel bolt), thresholds
+  are bedded on the floor, gates and the mailbox door hang on the lot wall beside them (`hinge`, `slide` for a sliding gate), the shower door on the bathroom
+  wall, the doors and drawers of the furniture on the floor the furniture stands on (`hinge`, `slide`), exposed conduits are clamped to the wall they run on,
+  the gas cylinder rests on the floor (`resting`), and the wires hang on the poles. A piece declares it on its record (`holder`, or `holdOn: 'floor' | 'wall'`
+  with `holdJoint`); it comes off only when that joint breaks.
 - **Spall decal and rebar cage** come from the destruction renderer (decals on hits, instanced bars when the concrete is exposed).
 - `house.damage(id, point, type, amount)` keeps the legacy behaviour (hp of the part, `onDamage`) and becomes a hit in the world.
 

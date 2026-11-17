@@ -292,7 +292,7 @@ export type DamageStage = 0 | 1 | 2 | 3
 export type StructureRole = 'foundation' | 'column' | 'beam' | 'slab' | 'wall' | 'partition' | 'roof' | 'stair' | 'none'
 
 /** How two parts are attached. Decides the default strength and the tool that undoes it. */
-export type JointKind = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem' | 'rebar' | 'resting'
+export type JointKind = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'slide' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem' | 'rebar' | 'resting'
 
 /** A tool that can undo joints (`hand` means no tool). */
 export type ToolKind = 'hand' | 'screwdriver' | 'wrench' | 'pry_bar' | 'saw' | 'cutting_torch' | 'knife' | 'hammer'
