@@ -43,6 +43,7 @@ const geometry = toGeometry(THREE, buildPrimitive({ kind: 'torus', radius: 0.3, 
 | `isMesh(object)` | Type guard for a mesh (or a skinned or instanced one) met while walking a tree with `traverse` |
 | `coincidentFacesOf(root, { eps, minArea, includeHidden })` | Faces under `root` that z-fight: triangles on the same plane (within 1 mm), facing the same way, that overlap more than 1 cm². Walks every drawn mesh in world space (instances too; decals with `polygonOffset` are skipped) and names both meshes in each hit. Every package's catalog test runs it on each piece (see `CLAUDE.md` §13) |
 | `markShared(...resources)` | Marks a palette, kit or catalog resource as shared on purpose, so the release never frees it; same as `userData.shared = true` without touching the resource (digests and goldens stay) |
+| `markPositionsWritten(mesh, v0, v1)` / `rangesWrittenSince(attribute, version)` | Declares, right after the one `needsUpdate = true` of a write, which vertex range of a merged mesh it changed, and reads back the ranges written since a `version`. The destruction renderer measures each part's range of a merged mesh as a collider: a declared write re-measures only the parts in that range; a write that flags `needsUpdate` and declares nothing re-measures every part of the mesh |
 
 ## Português
 
