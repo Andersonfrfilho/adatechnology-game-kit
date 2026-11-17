@@ -3,10 +3,11 @@
 // canvases still alive after a forced GC, the event listeners on window, document and the canvas, the intervals still running, and the JS heap
 // (the total of a heap snapshot, so garbage does not count).
 //   node leak.mjs                       every phase
-//   LEAK_PHASE=explosions|glass|areas|more|world|hands|floorplan   one phase (CI runs them in parallel)
+//   LEAK_PHASE=explosions|glass|areas|more|world|hands|floorplan|shots|craters   one phase, or several split by commas
 //   LEAK_SCENARIOS=a;b                  with LEAK_PHASE, only these scenarios
 //   LEAK_ROUNDS=3                       measured cycles
 //   LEAK_WARMUP=2                       warm-up cycles before the first count
+//   LEAK_SOLVER=jolt                    the room on Jolt (?solver=jolt): also counts the Jolt bodies and the wasm heap in use
 // Writes dist/leak.json. Exit code 1 when a budget fails.
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -17,7 +18,7 @@ import { execFileSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
-/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean; floorplans?: string[] }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take, the houses the floorplan bench switches through */
+/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean; floorplans?: string[]; shots?: number; craters?: number }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take, the houses the floorplan bench switches through, rounds fired into the ground, blasts that dig craters */
 /** @type {Record<string, LeakPhase>} */
 const PHASES = {
   // the blasts: the chain of P13 bottles, a grenade among bodies, the gas of a house, a gas bottle under the barbecue
@@ -34,13 +35,22 @@ const PHASES = {
   hands: { hands: true },
   // the floorplan bench switching houses, each one blown up and set on fire before the next replaces it: nothing of a replaced house stays
   floorplan: { floorplans: ['single_storey_a', 'mansion', 'townhouse'] },
+  // the rounds: concrete that stops a bullet, plywood holed by a shotgun, steel holed by a heavy round, then a burst into the ground (holes, dust, casings)
+  shots: { scenarios: ['target_concrete_stops_bullet', 'target_plywood_shotgun_holes', 'target_steel_heavy_through_hole'], shots: 60 },
+  // blasts on open ground: each digs a crater, throws soil and leaves soot, and the next cycle's clear puts the ground back
+  craters: { craters: 6 },
 }
 // What a cycle may leave behind, per measured cycle (above it the room keeps something it removed). Measured after the fixes of 2026-11-02:
 // buffers +0 to +70, textures 0, canvases 0, heap under 0.5 MB.
 const BUDGET = { buffer: 150, vao: 80, texture: 2, framebuffer: 0, program: 2, canvases: 2, listeners: 0, intervals: 0, heapMB: 2 }
+const JOLT = process.env.LEAK_SOLVER === 'jolt'
+// on Jolt: the bodies the adapter holds, the bodies Jolt itself holds (a body removed from the adapter's map but not from Jolt shows here) and the wasm heap
+// in use (allocated minus free: a shape or a settings object never destroyed). The wasm heap never shrinks, so its size says nothing; what is in use does.
+if (JOLT) Object.assign(BUDGET, { joltBodies: 0, joltSystemBodies: 0, wasmMB: 0.25 })
 const ROUNDS = Number(process.env.LEAK_ROUNDS ?? 3)
 const WARMUP = Number(process.env.LEAK_WARMUP ?? 2)
 const ONLY = process.env.LEAK_PHASE
+const ONLY_SET = new Set((ONLY ?? '').split(',').filter(Boolean))
 // LEAK_SCENARIOS=a;b  replaces the scenarios of the phase, to find which one keeps memory
 if (ONLY && process.env.LEAK_SCENARIOS && PHASES[ONLY]) PHASES[ONLY] = { scenarios: process.env.LEAK_SCENARIOS.split(';') }
 
@@ -122,19 +132,48 @@ async function heapMB(cdp) {
 }
 
 for (const [name, phase] of Object.entries(PHASES)) {
-  if (ONLY && ONLY !== name) continue
+  if (ONLY_SET.size && !ONLY_SET.has(name)) continue
   const page = await browser.newPage({ viewport: { width: 640, height: 360 } })
   /** @type {string[]} */
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.addInitScript(INSTRUMENT)
-  await page.goto(`${pathToFileURL(dist).href}?table=0&ui=0`, { timeout: 180000 })
+  await page.goto(`${pathToFileURL(dist).href}?table=0&ui=0${JOLT ? '&solver=jolt' : ''}`, { timeout: 180000 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 300000 })
+  if (JOLT && !(await page.evaluate(() => Boolean(window.__joltWorld)))) throw new Error('leak: LEAK_SOLVER=jolt but the page made no Jolt world')
   const cdp = await page.context().newCDPSession(page)
   const cycle = () =>
     page.evaluate(async (p) => {
       const room = window.__testRoom
-      if (p.scenarios) await room.runScenarios(room.scenarios.filter((s) => /** @type {string[]} */ (p.scenarios).includes(s.id)))
+      if (p.scenarios) {
+        const wanted = /** @type {string[]} */ (p.scenarios)
+        const found = room.scenarios.filter((s) => wanted.includes(s.id))
+        // a renamed scenario would leave the phase measuring nothing
+        const missing = wanted.filter((id) => !found.some((s) => s.id === id))
+        if (missing.length) throw new Error(`leak: the room has no scenario ${missing.join(', ')}`)
+        await room.runScenarios(found)
+      }
+      if (p.shots) {
+        // rounds fired from eye height into the ground around the player, a ring of points, each with a frame between
+        for (let i = 0; i < p.shots; i++) {
+          const angle = (i / p.shots) * Math.PI * 2
+          const reach = 3 + (i % 5)
+          const to = [Math.cos(angle) * reach, 0, Math.sin(angle) * reach]
+          const length = Math.hypot(to[0], 1.6, to[2])
+          room.world.shoot([0, 1.6, 0], [to[0] / length, -1.6 / length, to[2] / length], 3500, 7.62, 'player')
+          room.update(1 / 30)
+        }
+        for (let i = 0; i < 60; i++) room.update(1 / 30)
+      }
+      if (p.craters) {
+        // a grenade's worth of TNT at each point (the floorplan bench uses the same energy per kilo), on the ground away from the player
+        for (let i = 0; i < p.craters; i++) {
+          const angle = (i / p.craters) * Math.PI * 2
+          room.world.explode([Math.cos(angle) * 9, 0.2, Math.sin(angle) * 9], 345600 / 4, 6)
+          for (let f = 0; f < 30; f++) room.update(1 / 30)
+        }
+        for (let i = 0; i < 90; i++) room.update(1 / 30)
+      }
       if (p.hands) {
         const ids = [...room.arsenal.weapons.keys()]
         const kinds = new Map()
@@ -188,7 +227,12 @@ for (const [name, phase] of Object.entries(PHASES)) {
       for (let i = 0; i < 3; i++) await cdp.send('HeapProfiler.collectGarbage')
       await page.waitForTimeout(500)
     }
-    return page.evaluate(() => window.__leakCount())
+    return page.evaluate(() => {
+      const counts = window.__leakCount()
+      const world = window.__joltWorld
+      if (!world) return counts
+      return { ...counts, joltBodies: world.bodyCount, joltSystemBodies: world.system.GetNumBodies(), wasmMB: world.memoryInUse() / 1048576 }
+    })
   }
   // caches that fill once (shaders, sounds, the first build of each model) fill during the warm-up cycles
   for (let w = 0; w < WARMUP; w++) await cycle()
@@ -222,7 +266,7 @@ for (const [name, phase] of Object.entries(PHASES)) {
 }
 
 await browser.close()
-writeFileSync(join(here, ONLY ? `dist/leak-${ONLY}.json` : 'dist/leak.json'), JSON.stringify(report, null, 2))
+writeFileSync(join(here, `dist/leak${ONLY ? `-${ONLY.replaceAll(',', '-')}` : ''}${JOLT ? '-jolt' : ''}.json`), JSON.stringify(report, null, 2))
 if (failed) {
   console.log(`\n${failed} phase(s) keep memory after each cycle: something removed from the scene was not released (releaseObject3D / discardObject3D of game-shapes-three), or a list still holds it.`)
   process.exit(1)
