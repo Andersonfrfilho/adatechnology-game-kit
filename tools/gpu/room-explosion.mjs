@@ -142,6 +142,8 @@ async function inPage(job) {
     stage('fitBoxes', renderer, 'partBoxesOf')
     stage('rebuildHost', renderer.visuals, 'rebuildHost')
     stage('createBody', world, 'createBody')
+    // the pieces come in batches (`EnginePieces.makeBodies`): the same stage, so a piece's body is counted wherever it is made
+    stage('createBody', world, 'createBodies')
     stage('layGround', glue, 'layGround')
     stage('layTile', glue, 'layTile')
     stage('joltStep', world, 'stepFixed')

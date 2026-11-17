@@ -123,6 +123,8 @@ const OUT_TRIES = 8
 const WEDGE_LIFT = 0.1
 /** How far (m) around a removed piece a sleeping one is woken: what rested on it touched it. */
 const WAKE_MARGIN = 0.1
+/** Each glue's own prefix for the owners of the shapes it has made ahead: two renderers on one world may bind the same object id. */
+let glues = 0
 /** A lift that leaves more than this share of the depth it had is no way out of that fixed thing: the piece is in two (`outOfStatics`). */
 const NO_PROGRESS = 0.75
 /** How far apart (m) the poses are that a wedge lift is checked at on its way up: about the piece's thinnest half, so it cannot step over a slab it would cross. */
@@ -182,6 +184,9 @@ interface Tile {
  */
 export class EnginePieces {
   private readonly links = new Map<PieceBody, Link>()
+  /** The objects whose part boxes' shapes were made ahead (`prebuildPartBoxes`), by owner key in the world. */
+  private readonly prebuilt = new Set<string>()
+  private readonly owners = `pieces${++glues}:`
   private readonly byUser = new Map<number, PieceBody>()
   /** The pieces by object id: what the sweep meets that the engine already has (`sweepOn`). */
   private readonly byObject = new Map<string, PieceBody>()
@@ -255,7 +260,27 @@ export class EnginePieces {
     this.world.wakeInBox([at[0]! - reach, at[1]! - reach, at[2]! - reach], [at[0]! + reach, at[1]! + reach, at[2]! + reach])
   }
 
+  /**
+   * The shapes of an object's part boxes, made in the world ahead of the split that makes a piece of them (spec 008 B6): the child a piece's compound gets for a part box
+   * (`shapeOf`) takes one with the very same numbers instead of building it in the frame of the split. Held until `releaseShapes(objectId)` (or `clear`).
+   */
+  prebuildPartBoxes(objectId: string, boxes: readonly PartBox[]): void {
+    if (boxes.length === 0) return
+    const owner = this.owners + objectId
+    this.prebuilt.add(owner)
+    this.world.prebuildShapes(owner, boxes.map((part): ShapeDesc => ({ kind: 'box', half: part.half })))
+  }
+
+  /** What `prebuildPartBoxes` made for the object and no piece took: the object is no longer bound. */
+  releaseShapes(objectId: string): void {
+    const owner = this.owners + objectId
+    if (!this.prebuilt.delete(owner)) return
+    this.world.releaseShapes(owner)
+  }
+
   clear(): void {
+    for (const owner of this.prebuilt) this.world.releaseShapes(owner)
+    this.prebuilt.clear()
     for (const b of [...this.links.keys()]) this.remove(b, false)
     for (const t of this.tiles.values()) {
       this.world.removeBody(t.ground)

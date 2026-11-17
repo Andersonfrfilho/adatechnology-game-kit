@@ -87,6 +87,11 @@ export interface RendererOptions {
    * that splits a house reads them instead of fitting them. The boxes are the very same numbers either way. Default on; off, they are fitted when the part breaks off.
    */
   fitBoxesAhead?: boolean
+  /**
+   * With an engine (Jolt) and `fitBoxesAhead`: the engine shapes of the boxes fitted ahead are made in the same slice too (`PhysicsWorld.prebuildShapes`), and the frame that splits the
+   * object assembles its pieces' compounds from them instead of building every box. The bodies are the same to the bit either way. Default on; off, they are built at the split.
+   */
+  prebuildShapes?: boolean
   /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
   debrisCost?: DebrisCostOptions
   /**

@@ -683,6 +683,16 @@ export class PieceSystem {
     }
   }
 
+  /** With an engine: the shapes of an object's part boxes made ahead of its split (`EnginePieces.prebuildPartBoxes`). */
+  prebuildPartBoxes(objectId: string, boxes: readonly PartBox[]): void {
+    this.engine?.prebuildPartBoxes(objectId, boxes)
+  }
+
+  /** With an engine: what `prebuildPartBoxes` made for the object goes. */
+  releaseShapes(objectId: string): void {
+    this.engine?.releaseShapes(objectId)
+  }
+
   /** A blast at (x, z) of `radius`: the ground within its reach is laid at the next update, before the pieces it makes need it (`EnginePieces.layAhead`). */
   layGroundAt(x: number, z: number, radius: number): void {
     this.engine?.layAhead(x, z, radius)

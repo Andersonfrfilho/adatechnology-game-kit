@@ -704,6 +704,7 @@ class Renderer implements DestructionRenderer {
   private forgetBound(objectId: string): void {
     const b = this.bounds.get(objectId)
     if (b) for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+    this.pieceSys.releaseShapes(objectId)
     this.bounds.delete(objectId)
   }
 
@@ -2696,7 +2697,10 @@ class Renderer implements DestructionRenderer {
     if (!inverse) frames.set(job.b, (inverse = specFrameInverse(this.THREE, job.b.root)))
     mv.mesh.updateWorldMatrix(true, false)
     const m4 = new this.THREE.Matrix4().multiplyMatrices(inverse, mv.mesh.matrixWorld)
-    this.partBoxesOf(mv, { lb: new this.THREE.Box3(), m4, from: [0, 0, 0] }, [])
+    const boxes: PartBox[] = []
+    this.partBoxesOf(mv, { lb: new this.THREE.Box3(), m4, from: [0, 0, 0] }, boxes)
+    // their shapes too, in the same slice: the compound of the piece the split makes takes them (a box's half does not depend on where the piece's centre falls)
+    if (this.o.prebuildShapes !== false) this.pieceSys.prebuildPartBoxes(job.b.id, boxes)
     return true
   }
 
