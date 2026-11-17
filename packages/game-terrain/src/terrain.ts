@@ -300,18 +300,22 @@ export function createTerrain(options: TerrainOptions): Terrain {
     if (decalList.length !== before) decalsVersion++
   }
 
+  // `heightAt` and `heightGrid` are twins: both find a point's cell with `cellCoordinate` and blend its corners with `blendCell`, so the grid answers what the point does, to the bit
+  /** Where `v` falls along an axis of `count` cells from `origin`, in cells, held inside the last cell: its whole part is the cell, the rest the blend across it. */
+  const cellCoordinate = (v: number, origin: number, count: number): number => Math.max(0, Math.min(count - 1e-6, (v - origin) / cellSize))
+  const heightOfVertex = (index: number): number => base[index]! - dug[index]! + loose[index]!
+  /** The ground in the cell whose first corner is vertex `index`, `tx` and `tz` across it. */
+  const blendCell = (index: number, tx: number, tz: number): number =>
+    (heightOfVertex(index) * (1 - tx) + heightOfVertex(index + 1) * tx) * (1 - tz) + (heightOfVertex(index + stride) * (1 - tx) + heightOfVertex(index + stride + 1) * tx) * tz
+
   function heightAt(x: number, z: number): number {
     // beyond the terrain the ground is untouched: no blow can dig it and a piece thrown out lands on it
     if (!contains(x, z)) return options.baseHeight?.(x, z) ?? 0
-    const fx = Math.max(0, Math.min(columns - 1e-6, (x - x0) / cellSize))
-    const fz = Math.max(0, Math.min(rows - 1e-6, (z - z0) / cellSize))
+    const fx = cellCoordinate(x, x0, columns)
+    const fz = cellCoordinate(z, z0, rows)
     const column = fx | 0
     const row = fz | 0
-    const tx = fx - column
-    const tz = fz - row
-    const index = row * stride + column
-    const h = (i: number): number => base[i]! - dug[i]! + loose[i]!
-    return (h(index) * (1 - tx) + h(index + 1) * tx) * (1 - tz) + (h(index + stride) * (1 - tx) + h(index + stride + 1) * tx) * tz
+    return blendCell(row * stride + column, fx - column, fz - row)
   }
 
   // the cell and the blend of each column and row a grid reads, kept between grids so a read costs no new arrays
@@ -335,13 +339,13 @@ export function createTerrain(options: TerrainOptions): Terrain {
     // each column and row as `heightAt` finds it (-1: past the terrain, where the host's `baseHeight` answers), so every height is the one `heightAt` gives, to the bit
     for (let i = 0; i < width; i++) {
       const x = xs[i]!
-      const fx = Math.max(0, Math.min(columns - 1e-6, (x - x0) / cellSize))
+      const fx = cellCoordinate(x, x0, columns)
       gridColumns[i] = x >= x0 && x <= x1 ? fx | 0 : -1
       gridBlendX[i] = fx - (fx | 0)
     }
     for (let j = 0; j < depth; j++) {
       const z = zs[j]!
-      const fz = Math.max(0, Math.min(rows - 1e-6, (z - z0) / cellSize))
+      const fz = cellCoordinate(z, z0, rows)
       gridRows[j] = z >= z0 && z <= z1 ? fz | 0 : -1
       gridBlendZ[j] = fz - (fz | 0)
     }
@@ -354,13 +358,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
           out[j * width + i] = options.baseHeight?.(xs[i]!, zs[j]!) ?? 0
           continue
         }
-        const tx = gridBlendX[i]!
-        const index = row * stride + column
-        const h00 = base[index]! - dug[index]! + loose[index]!
-        const h10 = base[index + 1]! - dug[index + 1]! + loose[index + 1]!
-        const h01 = base[index + stride]! - dug[index + stride]! + loose[index + stride]!
-        const h11 = base[index + stride + 1]! - dug[index + stride + 1]! + loose[index + stride + 1]!
-        out[j * width + i] = (h00 * (1 - tx) + h10 * tx) * (1 - tz) + (h01 * (1 - tx) + h11 * tx) * tz
+        out[j * width + i] = blendCell(row * stride + column, gridBlendX[i]!, tz)
       }
     }
   }

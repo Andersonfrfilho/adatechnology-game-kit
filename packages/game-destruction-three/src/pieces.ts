@@ -26,7 +26,7 @@ export interface PieceSystemOptions {
    * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
    */
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
-  /** `terrainAt` (else `groundAt`) over a lattice in one pass, to the bit (`GroundGrid`; `Terrain.heightGrid` is one). Engine physics only. */
+  /** `terrainAt` over a lattice in one pass, to the bit (`GroundGrid`; `Terrain.heightGrid` is one). Used only with `terrainAt`; engine physics only. */
   terrainGridAt?: GroundGrid
   /**
    * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
@@ -330,7 +330,8 @@ export class PieceSystem {
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
           ...(o.terrainRangeAt ? { groundRange: o.terrainRangeAt } : {}),
-          ...(o.terrainGridAt ? { groundGrid: o.terrainGridAt } : {}),
+          // the grid stands for `terrainAt` alone: without it the tiles read `groundAt`, which the grid may not be (a lot flattened, a slab)
+          ...(o.terrainGridAt && o.terrainAt ? { groundGrid: o.terrainGridAt } : {}),
           ...(o.blastGroundTiles !== undefined ? { blastTiles: o.blastGroundTiles } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,
