@@ -197,10 +197,13 @@ describe('fracture and reset', () => {
     const units = house.group.getObjectByName('breach:wall_0_0') as InstancedMesh<BufferGeometry, MeshLambertMaterial>
     expect(units.count).toBeGreaterThan(0)
     expect(units.material.userData.breachCore.data.some((x: number) => x > 0)).toBe(false)
-    // the destruction renderer drew no patch of its own on the wall (a patch is a disc in the brick's colour)
+    // the destruction renderer drew no patch of the coat of its own on the wall (the house cuts its plaster): the one disc under the hole is the crater the round
+    // knocked out of the brick, a few centimetres across, not the spall's patch
     const item = house.structure.meshesOf('wall_0_0').find((it) => it.mesh)
     expect(item!.mesh!.userData.drawnSpalls).toContain('wall_0_0')
-    expect(item!.mesh!.children.filter((c) => c.renderOrder === 1)).toHaveLength(0)
+    const under = item!.mesh!.children.filter((c) => c.renderOrder === 1)
+    expect(under.length).toBeLessThanOrEqual(1)
+    for (const crater of under) expect(2 * crater.getWorldScale(new THREE.Vector3()).x).toBeLessThan(Math.min(0.05, 2 * Math.sqrt(spall.area / Math.PI)))
     // the hole sits on the brick laid bare, behind the face of the plaster
     const hole = item!.mesh!.children.find((c) => c.renderOrder === 2)
     expect(hole).toBeDefined()

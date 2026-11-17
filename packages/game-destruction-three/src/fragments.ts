@@ -158,6 +158,11 @@ const SUPPORT_CHECKS = 32
 const SUPPORT_GAP = 0.02
 /** How far (m) above a falling fragment's bottom a resting top may be and still be what it lands on: a step it slides up onto rather than sinks into. */
 const PILE_STEP = 0.01
+/** Speed (m/s) across and turn (rad/s) a piece lying with its centre off what holds it gets each step it stays so: it slides and tips off the edge. */
+const TIP_SPEED = 0.6
+const TIP_TURN = 3
+/** No room taken: a point, for whether a centre is over a shadow. */
+const POINT: Shadow = [0, 0, 0, 0, 0, 0]
 
 /** How many shard shapes there are; a fragment takes one by the hash of its id. */
 const SHARD_SHAPES = 6
@@ -290,7 +295,8 @@ export class FragmentSystem {
     if (f.shape === 'chunk' && form === 'granules') return this.sharedGeometry('lump', seed)
     if (f.shape === 'scrap' && form === 'plies') return this.sharedGeometry('veneer', seed)
     if (f.shape === 'slab' && (form === 'slivers' || form === 'plies')) return this.sharedGeometry('board', seed)
-    if (f.shape === 'chunk' && this.o.crumbles?.(f.material)) return this.sharedGeometry('rubble', seed)
+    // whole bricks and blocks that came out at their joints keep their faces (a laid unit is a brick, not a broken lump); a broken face of it is rubble
+    if (f.shape === 'chunk' && !f.unit && this.o.crumbles?.(f.material)) return this.sharedGeometry('rubble', seed)
     return this.box
   }
 
@@ -531,7 +537,9 @@ export class FragmentSystem {
       // measured afresh: the floor kept from its landing is the top it landed on, which may have broken or been carried off since
       f.floor = null
       const bottom = f.mesh.position.y - ext
-      if (bottom > Math.max(this.floorUnder(f), this.pileUnder(f, bottom)) + SUPPORT_GAP) this.rouse(f)
+      const floor = this.floorUnder(f)
+      const pile = this.pileUnder(f, bottom)
+      if (bottom > Math.max(floor, pile) + SUPPORT_GAP || (pile > floor && this.offEdge)) this.rouse(f)
     }
   }
 
@@ -561,7 +569,11 @@ export class FragmentSystem {
     const h = f.half
     const sc = f.dying ? f.fade : 1
     const ext = (Math.abs(e[1]) * h.x + Math.abs(e[5]) * h.y + Math.abs(e[9]) * h.z) * sc
-    const gy = Math.max(this.floorUnder(f), this.pileUnder(f, mesh.position.y - ext + Math.max(0, -f.vel.y) * dt))
+    const floor = this.floorUnder(f)
+    const pile = this.pileUnder(f, mesh.position.y - ext + Math.max(0, -f.vel.y) * dt)
+    const gy = Math.max(floor, pile)
+    // lying on the pile with its centre past the edge of what holds it: it slides and turns off that edge
+    const tip = pile > floor ? this.offEdge : null
     let contact = false
     if (mesh.position.y - ext < gy) {
       contact = true
@@ -588,7 +600,12 @@ export class FragmentSystem {
       f.ang.multiplyScalar(Math.exp(-0.15 * dt))
       if (f.air > 0) this.flutter(f, dt)
     }
-    if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
+    if (contact && tip) {
+      f.vel.x += tip.x * TIP_SPEED * dt * 10
+      f.vel.z += tip.z * TIP_SPEED * dt * 10
+      f.ang.x += tip.z * TIP_TURN * dt * 10
+      f.ang.z -= tip.x * TIP_TURN * dt * 10
+    } else if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
     f.contact = contact
     if (contact && isSlow(f)) {
       f.still += dt
@@ -643,17 +660,35 @@ export class FragmentSystem {
     const reachZ = Math.abs(e[2]) * f.half.x + Math.abs(e[6]) * f.half.y + Math.abs(e[10]) * f.half.z
     const mine = shadowOf(e, f.half)
     let top = Number.NEGATIVE_INFINITY
+    // the pieces it lies on (those whose top is the highest under it) and whether one of them is under its centre
+    const under: RestingBox[] = []
     for (const other of this.list) {
       if (other === f || other.dying) continue
       const box = other.asleep ? (other.box ??= restingBox(other)) : restingBox(other)
-      if (box.top > bottom + PILE_STEP || box.top <= top) continue
+      if (box.top > bottom + PILE_STEP || box.top < top - PILE_STEP) continue
       if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
       // the wrapping boxes touch: what counts is whether the floor areas the two really cover do (a turned or leaning box wraps far more than it covers)
       if (!shadowsOverlap(mine, box.shadow, box.x - p.x, box.z - p.z)) continue
-      top = box.top
+      if (box.top > top + PILE_STEP) under.length = 0
+      under.push(box)
+      top = Math.max(top, box.top)
+    }
+    // a brick on a brick stays only with its centre over it: one standing out past the edge goes over, away from what is under it
+    this.offEdge = null
+    if (under.length > 0 && !under.some((box) => box.top >= top - PILE_STEP && shadowsOverlap(POINT, box.shadow, box.x - p.x, box.z - p.z))) {
+      let x = 0, z = 0
+      for (const box of under) {
+        x += p.x - box.x
+        z += p.z - box.z
+      }
+      const d = Math.hypot(x, z)
+      this.offEdge = d > 1e-6 ? { x: x / d, z: z / d } : { x: 1, z: 0 }
     }
     return top
   }
+
+  /** Set by `pileUnder`: the way off the edge when the fragment's centre is past what it lies on, else null. */
+  private offEdge: { x: number; z: number } | null = null
 
   /** A sheet in the air: drag slows it to a slow fall, and it sways and turns over as it goes. */
   private flutter(f: Live, dt: number): void {

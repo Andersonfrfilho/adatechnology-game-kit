@@ -53,6 +53,13 @@ const STEEL_DENSITY = 7850
 /** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
 const CHIP_DECAL_EDGE = 0.05
 /** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
+/**
+ * A round on concrete, stone or brick knocks a cone out of the face around its hole (front-face cratering): about five calibres across (a 7.62 leaves a crater of
+ * 3 to 4 cm, a pistol round 2 to 3 cm), fresh broken material a shade lighter than the weathered face. Radius per hole diameter, its least (m) and the lightening.
+ */
+const CRATER_RADIUS = 2.5
+const CRATER_MIN_RADIUS = 0.012
+const CRATER_LIGHTEN = 0.12
 const WOOD_RIM = 1.5
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
@@ -1793,6 +1800,9 @@ class Renderer implements DestructionRenderer {
     // wood tears its fibres around the hole: a ragged rim of fresh wood under it
     const fresh = look.mark === 'splintered_hole' ? def?.visual?.innerColor : undefined
     if (fresh !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(0.006, diameter * WOOD_RIM), fresh)
+    // masonry and concrete crater around the hole: the patch of fresh broken material under the dark hole
+    const core = look.mark === 'crater' ? def?.visual?.innerColor : undefined
+    if (core !== undefined) this.visuals.addSpall(mv, wp, normal, Math.max(CRATER_MIN_RADIUS, diameter * CRATER_RADIUS), lighten(core, CRATER_LIGHTEN))
     this.visuals.addHole(mv, wp, normal, diameter)
   }
 
@@ -3390,4 +3400,13 @@ class Renderer implements DestructionRenderer {
     this.ownVfx?.dispose()
     this.disposed = true
   }
+}
+
+/** `color` (0xRRGGBB) a share `t` of the way to white. */
+function lighten(color: number, t: number): number {
+  const ch = (shift: number) => {
+    const c = (color >> shift) & 0xff
+    return Math.round(c + (255 - c) * t) << shift
+  }
+  return ch(16) | ch(8) | ch(0)
 }
