@@ -273,6 +273,30 @@ interface PartRT {
   snap: boolean
   /** A slab or roof the spec lays over supports a resting slab could not stand on (it holds by what the spec does not model): `standsOver` leaves it be. */
   heldAsDesigned?: boolean
+  /** Moved by `setPartPose`: `pos` and `q` are no longer the spec's, so what was measured from the spec does not hold for it. */
+  posed?: boolean
+}
+
+/** What `build` makes of a part's spec and material alone (`derivedOf`). */
+interface PartDerived {
+  readonly mat: MaterialDef
+  readonly mass0: number
+  readonly q: Quat
+  readonly area: number
+  readonly thickness: number
+  readonly cutFactor: number
+  readonly dims: Vec3
+  readonly bound: number
+  readonly cap: number
+  readonly thin: number
+  readonly bend?: BendGeometry
+}
+
+/** A cast member found in a wall's box (`markCastMembers`), by the member's part id: the box is part-local to the wall, and a function of the two specs only. */
+interface CastEntry {
+  readonly member: string
+  readonly min: Vec3
+  readonly max: Vec3
 }
 
 /** A crater in the unit `cell` of `p`, along its axis `a` (`b` is the other axis of the plane), from the hit at `at` (part-local). */
@@ -337,6 +361,8 @@ interface ObjRT {
   loose: boolean
   /** Parts hosted by another part (`PartSpec.hostedIn`) that no hole of it has reached yet. */
   hosted?: PartRT[]
+  /** The cast members of each wall (`markCastMembers`), by wall id: what the halves of a split read instead of looking again (theirs are among these). */
+  cast: Map<string, readonly CastEntry[]>
 }
 
 interface WindRT {
@@ -407,6 +433,8 @@ interface Carry {
   soilSets?: Record<string, number>
   wind?: [number, number, number, number, number]
   loose?: boolean
+  /** The cast members of the object split (`ObjRT.cast`): each half has a subset of its parts, so its walls hold a subset of these. */
+  cast?: ReadonlyMap<string, readonly CastEntry[]>
 }
 
 
@@ -488,10 +516,50 @@ const sectionLoss = (p: PartRT, borne?: BorneAt): number => {
   })
   return Math.min(1, worst)
 }
+/** The places `forEachSection` visits for a list of knocked-out units at the spec's pose: the units only grow (`push`), so their count says the list is the same. */
+interface SectionsOf {
+  readonly spec: PartSpec
+  readonly count: number
+  readonly along: number
+  readonly lying: boolean
+  readonly places: ReadonlyArray<{ readonly c: { readonly center: Vec3 }; readonly gone: number }>
+}
+const sectionsByCells = new WeakMap<object, SectionsOf>()
+
 /** Calls `visit` with each place along a part's length where units were taken out, the axis of its length and the share of the section gone there. */
 const forEachSection = (p: PartRT, borne: BorneAt | undefined, visit: (c: { readonly center: Vec3 }, along: number, gone: number) => void): void => {
   const cells = p.st.chipped
   if (!cells?.length) return
+  if (p.posed) {
+    measureSections(p, cells, borne, visit)
+    return
+  }
+  let known = sectionsByCells.get(cells)
+  if (!known || known.spec !== p.spec || known.count !== cells.length) {
+    const places: Array<{ c: { readonly center: Vec3 }; gone: number }> = []
+    let along = 0
+    measureSections(p, cells, undefined, (c, a, gone) => {
+      along = a
+      places.push({ c, gone })
+    })
+    known = { spec: p.spec, count: cells.length, along, lying: sectionLying(p, along), places }
+    sectionsByCells.set(cells, known)
+  }
+  for (const { c, gone } of known.places) {
+    if (known.lying && borne?.(c.center, known.along)) continue
+    visit(c, known.along, gone)
+  }
+}
+
+/** Is the length of the part (`along`) not the upright one, so where it is borne a section shot away takes nothing from what it carries (`forEachSection`)? */
+const sectionLying = (p: PartRT, along: number): boolean => {
+  const [u, v] = planeAxes(p.thin)
+  const up = rotateVec(p.q, [0, 0, 0].map((_, k) => (k === v ? 1 : 0)) as Vec3)
+  const upright = Math.abs(up[1]) > 0.7 ? v : Math.abs(rotateVec(p.q, [0, 0, 0].map((_, k) => (k === u ? 1 : 0)) as Vec3)[1]) > 0.7 ? u : -1
+  return along !== upright || upright < 0
+}
+
+const measureSections = (p: PartRT, cells: ReadonlyArray<{ readonly center: Vec3; readonly size: Vec3 }>, borne: BorneAt | undefined, visit: (c: { readonly center: Vec3 }, along: number, gone: number) => void): void => {
   const [u, v] = planeAxes(p.thin)
   const role = p.spec.structure?.role
   const up = rotateVec(p.q, [0, 0, 0].map((_, k) => (k === v ? 1 : 0)) as Vec3)
@@ -659,18 +727,47 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return out
   }
 
+  /** What a part's spec and its material alone give (`build`), remembered by the spec: the halves of a split, and an object built again, read it. */
+  const partDerived = new WeakMap<PartSpec, PartDerived>()
+  const derivedOf = (ps: PartSpec, mat: MaterialDef): PartDerived => {
+    const known = partDerived.get(ps)
+    if (known && known.mat === mat) return known
+    const dims = shapeDims(ps.shape)
+    const d: PartDerived = {
+      mat, mass0: partMass(ps, mat), q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
+      dims, bound: shapeBound(ps.shape), cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0, thin: thinAxisOf(shapeDims(ps.shape)),
+      ...(ps.shape.kind === 'box' && isFlexural(ps, mat, flexure) ? { bend: bendGeometry(ps) } : {}),
+    }
+    partDerived.set(ps, d)
+    return d
+  }
+
+  /** The centre of a joint's two parts' overlap at the spec's pose (`build`: the parts are new, posed as their specs), remembered by the joint's spec. */
+  const jointCentres = new WeakMap<JointSpec, Vec3>()
+  const jointCentre = (js: JointSpec, pa: PartRT, pb: PartRT): Vec3 => {
+    const known = jointCentres.get(js)
+    if (known) return [known[0], known[1], known[2]]
+    const A = aabbOf(pa.spec.shape, pa.spec.position, pa.q)
+    const B = aabbOf(pb.spec.shape, pb.spec.position, pb.q)
+    const pos: Vec3 = [0, 0, 0]
+    for (let k = 0; k < 3; k++) pos[k] = (Math.max(A.min[k], B.min[k]) + Math.min(A.max[k], B.max[k])) / 2
+    jointCentres.set(js, [pos[0], pos[1], pos[2]])
+    return pos
+  }
+
   const build = (spec: DestructibleSpec, id: string, pos: Vec3, rot: Quat, carry?: Carry): ObjRT => {
     const st: ObjectState = { id, position: [pos[0], pos[1], pos[2]], rotation: [rot[0], rot[1], rot[2], rot[3]], parts: [], joints: [], groups: [], destroyed: false }
     if (spec.name !== undefined) st.name = spec.name
     const o: ObjRT = {
-      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unanchored: new Set(carry?.unanchored ?? []), unsup: [], anyAnchor: false, order: ++orderCounter, loose: carry?.loose ?? false,
+      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unanchored: new Set(carry?.unanchored ?? []), unsup: [], anyAnchor: false, order: ++orderCounter, loose: carry?.loose ?? false, cast: new Map(),
       base: { pos: [pos[0], pos[1], pos[2]], rot: [rot[0], rot[1], rot[2], rot[3]] },
     }
     for (const ps of spec.parts) {
       if (o.byId.has(ps.id)) throw new Error(`duplicate part id "${ps.id}"`)
       const mat = materials.get(ps.material)
       if (!mat) throw new Error(`unknown material "${ps.material}" on part "${ps.id}"`)
-      const mass0 = partMass(ps, mat)
+      const d = derivedOf(ps, mat)
+      const mass0 = d.mass0
       const maxHp = Math.max(1, ps.hp ?? mass0 * mat.hpPerKg)
       const fuel0 = mat.thermal.ignitionC !== undefined ? mass0 * (mat.thermal.fuelFraction ?? 0) : 0
       const c = carry?.parts.get(ps.id)
@@ -687,11 +784,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       if (!c && ps.contains) pst.liters = ps.contains.liters
       const p: PartRT = {
-        spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
-        dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
-        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0, orphan: false,
-        staged, thin: thinAxisOf(shapeDims(ps.shape)), layers, span: 0, spanKey: '', restMoment: 0, bendLoad: 0, snap: false,
-        ...(ps.shape.kind === 'box' && isFlexural(ps, mat, flexure) ? { bend: bendGeometry(ps) } : {}),
+        spec: ps, mat, st: pst, q: [d.q[0], d.q[1], d.q[2], d.q[3]], pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: d.area, thickness: d.thickness, cutFactor: d.cutFactor,
+        dims: [d.dims[0], d.dims[1], d.dims[2]], bound: d.bound, rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
+        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: d.cap, orphan: false,
+        staged, thin: d.thin, layers, span: 0, spanKey: '', restMoment: 0, bendLoad: 0, snap: false,
+        ...(d.bend ? { bend: d.bend } : {}),
       }
       if (p.structural) o.hasStructure = true
       if (p.rt.chainDue !== undefined && !isLost(p)) primed.set(p, o)
@@ -707,10 +804,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (ia === undefined || ib === undefined) throw new Error(`joint "${r.id}" references an unknown part`)
       if (o.jointMap.has(r.id)) throw new Error(`duplicate joint id "${r.id}"`)
       const pa = o.parts[ia], pb = o.parts[ib]
-      const A = aabbOf(pa.spec.shape, pa.spec.position, pa.q)
-      const B = aabbOf(pb.spec.shape, pb.spec.position, pb.q)
-      const pos: Vec3 = [0, 0, 0]
-      for (let k = 0; k < 3; k++) pos[k] = (Math.max(A.min[k], B.min[k]) + Math.min(A.max[k], B.max[k])) / 2
+      const pos = jointCentre(r, pa, pb)
       const bears: JointRT['bears'] = r.bears ?? (pa.structural && pb.structural)
       const c = carry?.joints.get(r.id)
       const jst: JointState = c?.st ?? { id: r.id, a: r.a, b: r.b, kind: r.kind, hp: r.strength, maxHp: r.strength, progress: 0, open: false, ...(r.tears ? { tears: true } : {}) }
@@ -732,7 +826,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       p.embedded = [0, 1, 2].every((k) => box.min[k]! >= host.min[k]! - HOSTED_TOLERANCE && box.max[k]! <= host.max[k]! + HOSTED_TOLERANCE)
     }
     if (hosted.length > 0) o.hosted = hosted
-    markCastMembers(o)
+    markCastMembers(o, carry?.cast)
     // open joints whose parts are no longer both here (left behind by `splitGroup`) stay listed, inert, so callers still see them open
     for (const [jid, c] of carry?.joints ?? []) if (c.st.open && !o.jointMap.has(jid)) o.st.joints.push(c.st)
     updateBound(o)
@@ -841,12 +935,28 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Where `p` touches `support`, as a box in `p`'s own axes (remembered per pair: the solver asks for the same pairs again at every joint that breaks). */
   const contactBox = (p: PartRT, support: PartRT): [Vec3, Vec3] => {
+    if (!p.posed && !support.posed) return specContactBox(p, support)
     let byTouching = contactMemo.get(p)
     if (!byTouching) contactMemo.set(p, (byTouching = new Map()))
     const known = byTouching.get(support)
     if (known && known.version === poseVersion) return known.box
     const box = measureContact(p, support)
     byTouching.set(support, { version: poseVersion, box })
+    return box
+  }
+
+  /**
+   * Where two parts at their spec's pose touch, remembered by the two specs: it is a function of them alone (`measureContact` reads the shape, `pos` and `q`, which
+   * `build` takes from the spec), so the halves of a split, and the object built again, read it instead of measuring every pair again.
+   */
+  const specContacts = new WeakMap<PartSpec, Map<PartSpec, [Vec3, Vec3]>>()
+  const specContactBox = (p: PartRT, support: PartRT): [Vec3, Vec3] => {
+    let bySupport = specContacts.get(p.spec)
+    if (!bySupport) specContacts.set(p.spec, (bySupport = new Map()))
+    const known = bySupport.get(support.spec)
+    if (known) return known
+    const box = measureContact(p, support)
+    bySupport.set(support.spec, box)
     return box
   }
 
@@ -994,6 +1104,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return best
   }
 
+  /**
+   * `spanOf` the part's bending geometry over where it touches `supports`, remembered by the specs while every contact is the spec's whole one (no part posed, no
+   * support broken along a stretch): then it is a function of the specs alone. `g` is `bendGeometry(p.spec)` (or `p.bend`, made by it), the same numbers either way.
+   */
+  const specSpans = new WeakMap<PartSpec, Map<string, number>>()
+  const spanOver = (p: PartRT, g: BendGeometry, supports: readonly PartRT[]): number => {
+    if (p.posed || supports.some((k) => k.posed || k.rt.broken?.length)) return spanOf(g, supports.flatMap((k) => contactsOf(p, k)))
+    let byKey = specSpans.get(p.spec)
+    if (!byKey) specSpans.set(p.spec, (byKey = new Map()))
+    const key = supports.map((k) => k.spec.id).join('\0')
+    const known = byKey.get(key)
+    if (known !== undefined) return known
+    const span = spanOf(g, supports.flatMap((k) => contactsOf(p, k)))
+    byKey.set(key, span)
+    return span
+  }
+
   /** The section of `p` that bends along `axis`, with its tension steel and moments (a bare cage keeps only the steel's residual). */
   const sectionOf = (p: PartRT, axis: number) => {
     const g = p.bend!
@@ -1008,7 +1135,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const key = lower.join(',')
     if (key !== p.spanKey) {
       p.spanKey = key
-      p.span = spanOf(g, lower.flatMap((k) => contactsOf(p, o.parts[k])))
+      p.span = spanOver(p, g, lower.map((k) => o.parts[k]))
     }
     p.restMoment = 0
     if (g.gravity < 0 || p.span <= 0) return 0
@@ -1090,7 +1217,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (supports.length === 0) return Infinity
     if (p.spec.shape.kind === 'box') {
       const g = bendGeometry(p.spec)
-      if (!g.member) return spanOf(g, supports.flatMap((k) => contactsOf(p, k)))
+      if (!g.member) return spanOver(p, g, supports)
     }
     const d = p.dims
     const L = [0, 1, 2].sort((a, b) => d[b] - d[a])[0]
@@ -3094,7 +3221,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * The cast members (parts with `reinforcement`) set in the box of a part laid in units (`units`, none of its own steel): a pillar closing the end of a wall, a
    * lintel or a bond beam inside it. Each is kept on the wall as a part-local box (`PartRT.castIn`).
    */
-  function markCastMembers(o: ObjRT): void {
+  function markCastMembers(o: ObjRT, known?: ReadonlyMap<string, readonly CastEntry[]>): void {
+    if (known) {
+      castFromKnown(o, known)
+      return
+    }
     // the members sorted by their lowest point, so a wall looks only at the ones that start below its top (a tower has thousands of each)
     const cast = o.parts
       .filter((q) => q.spec.reinforcement)
@@ -3135,8 +3266,32 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
         boxes.push({ min, max, part: q })
       }
-      if (boxes.length) p.castIn = boxes
-      else delete p.castIn
+      if (boxes.length) {
+        p.castIn = boxes
+        o.cast.set(p.spec.id, boxes.map((b) => ({ member: b.part.spec.id, min: b.min, max: b.max })))
+      } else delete p.castIn
+    }
+  }
+
+  /**
+   * `markCastMembers` for a half of a split: the members of its walls are those the whole found that are still in it, in the same order (the order of the whole's
+   * members by their lowest point; the half's parts keep the whole's order, so its own sort is that subsequence). The boxes are the same numbers: both specs are the same.
+   */
+  function castFromKnown(o: ObjRT, known: ReadonlyMap<string, readonly CastEntry[]>): void {
+    for (const p of o.parts) {
+      if (!p.spec.units || p.spec.reinforcement) continue
+      const kept: CastEntry[] = []
+      const boxes: { min: Vec3; max: Vec3; part: PartRT }[] = []
+      for (const entry of known.get(p.spec.id) ?? []) {
+        const part = o.byId.get(entry.member)
+        if (!part) continue
+        kept.push(entry)
+        boxes.push({ min: entry.min, max: entry.max, part })
+      }
+      if (boxes.length) {
+        p.castIn = boxes
+        o.cast.set(p.spec.id, kept)
+      } else delete p.castIn
     }
   }
 
@@ -5287,6 +5442,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p = getPart(o, partId)
       p.pos = [position[0], position[1], position[2]]
       p.q = q
+      p.posed = true
       poseVersion++
       updateBound(o)
     },
@@ -5326,6 +5482,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           ...o.st.joints.filter((st) => st.open && !o.jointMap.has(st.id) && keepOpen(st.a, st.b)).map((st): [string, { st: JointState; step: number }] => [st.id, { st, step: 0 }]),
         ]),
         collapsed: [...o.collapsed].filter(keep),
+        cast: o.cast,
       })
       const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
         // every other field of the spec goes with both halves: the load sharing above all (a house sized for `all` that is solved as `nearest` after its first split
