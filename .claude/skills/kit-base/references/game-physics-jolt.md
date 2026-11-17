@@ -47,6 +47,11 @@ const loop = createPhysicsLoop(world) // um laço por mundo
 - **Massa do kit em `setShape`**: corpo dinâmico mantém a massa dada (em `createBody` ou em `setShape`); a inércia nova é escalada para
   essa massa. Sem isso o Jolt usaria volume × 1000 kg/m³.
 
+- **Formas prontas** (`prebuildShapes(owner, shapes)` / `releaseShapes(owner)`, `ready-shapes.ts`): caixa, esfera, cápsula, cilindro ou
+  casco feitos no tempo ocioso; o filho de composto com os mesmos números (bit a bit) pega uma pronta em vez de construir, com a tag
+  posta nela. Cada uma é usada uma vez; teto `MAX_READY`; o que sobra sai no `releaseShapes` do dono e no `dispose`. O composto centrado
+  (`centreAtOrigin`) é montado uma vez só (`OffsetCenterOfMassShape` sobre a forma já feita). Teste: `tests/prebuilt-shapes.test.ts`.
+
 ## Cuidados
 
 - `saveState()` e `restoreState()` gravam e leem o estado exato (corpos, velocidades, sono, cache de contato, atrito, rolamento, pares

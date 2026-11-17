@@ -35,6 +35,7 @@ import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
 import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { HullSet } from './hull-cache'
+import { ReadyShapes } from './ready-shapes'
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout } from './vec3'
@@ -93,6 +94,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
   /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
   readonly hulls = new Map<number, HullSet>()
+  /** Compound child shapes made ahead in idle time (`prebuildShapes`), by owner: each taken once by the compound that has a child of that very shape. */
+  readonly ready = new ReadyShapes()
   private readonly objectFilter: JoltNS.ObjectLayerPairFilterTable
   private readonly bpInterface: JoltNS.BroadPhaseLayerInterfaceTable
   private readonly objVsBp: JoltNS.ObjectVsBroadPhaseLayerFilterTable
@@ -192,7 +195,16 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   makeShape(shape: ShapeDesc, centred = false, hulls?: HullSet): JoltNS.Shape {
-    return centred ? makeCentredShape(this.J, this.v2, shape, hulls) : makeShape(this.J, this.v2, shape, hulls)
+    const caches = { hulls, ready: this.ready }
+    return centred ? makeCentredShape(this.J, this.v2, shape, caches) : makeShape(this.J, this.v2, shape, caches)
+  }
+
+  prebuildShapes(owner: string, shapes: readonly ShapeDesc[]): number {
+    return this.ready.add(owner, shapes, (shape) => makeShape(this.J, this.v2, shape))
+  }
+
+  releaseShapes(owner: string): void {
+    this.ready.release(owner)
   }
 
   // Bodies ------------------------------------------------------------------------------------------------------------------------------
@@ -744,6 +756,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const id of [...this.ragdolls.keys()]) this.removeRagdoll(id as RagdollId)
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
+    this.ready.dispose()
     for (const s of this.sphereShapes.values()) s.Release()
     for (const g of this.groups) g.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)

@@ -297,6 +297,14 @@ export interface PhysicsWorld {
    * (`setShape`).
    */
   updateHeights(id: BodyId, region: HeightRegion, heights: ArrayLike<number>): boolean
+  /**
+   * Shapes made ahead, in time a frame has to spare (spec 008 B6): one for each of `shapes` that is a box, sphere, capsule, cylinder or convex (the others are skipped), held under
+   * `owner` until `releaseShapes(owner)`. A compound child made later whose shape has the very same numbers (to the bit, never a near match) takes one instead of building it, so the
+   * frame that makes the body does not pay for it; the body is the same either way. Each is taken once. Returns how many it made: 0 past the adapter's bound, or an engine that keeps none.
+   */
+  prebuildShapes(owner: string, shapes: readonly ShapeDesc[]): number
+  /** Lets go of what `prebuildShapes(owner)` made and no shape took: the owner's object is gone (§8). */
+  releaseShapes(owner: string): void
   /** Writes x, y, z then x, y, z, w into `out` at `offset`. */
   readPose(id: BodyId, out: Float32Array | Float64Array, offset: number): void
   readVelocity(id: BodyId, out: Float32Array | Float64Array, offset: number): void

@@ -8,9 +8,9 @@ interface Hull {
 const bits = new Float64Array(1)
 const halves = new Uint32Array(bits.buffer)
 
-/** FNV-1a over the bits of every number: the same points, the same hash. */
-const hashOf = (points: ArrayLike<number>): number => {
-  let hash = 0x811c9dc5
+/** FNV-1a over the bits of every number (from `seed`): the same points, the same hash. */
+export const hashOf = (points: ArrayLike<number>, seed = 0x811c9dc5): number => {
+  let hash = seed
   for (let i = 0; i < points.length; i++) {
     bits[0] = points[i]!
     hash = Math.imul(hash ^ halves[0]!, 0x01000193)
@@ -19,7 +19,7 @@ const hashOf = (points: ArrayLike<number>): number => {
   return hash >>> 0
 }
 
-const sameBits = (a: readonly number[], b: ArrayLike<number>): boolean => {
+export const sameBits = (a: readonly number[], b: ArrayLike<number>): boolean => {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return false
   return true
