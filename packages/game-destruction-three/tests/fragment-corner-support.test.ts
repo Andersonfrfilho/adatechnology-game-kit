@@ -36,9 +36,38 @@ describe('what a resting fragment holds up is the rectangle it covers, not the b
     const look = system.materialFor('brick', 0xb04a30, false)
     system.spawn(chunk('long', [0, 0.1, 0], TURNED_45, LONG_CHUNK) as never, look, 'home', 30)
     for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
-    const smallMesh = system.spawn(chunk('small', [0.1, 0.5, 0.1], [0, 0, 0, 1], SMALL_CHUNK) as never, look, 'home', 30)
+    // its centre over the strip (0.07 m off the long one's axis, inside its 0.1 m half width)
+    const smallMesh = system.spawn(chunk('small', [0.05, 0.5, 0.05], [0, 0, 0, 1], SMALL_CHUNK) as never, look, 'home', 30)
     for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
     const small = new THREE.Box3().setFromObject(smallMesh as THREE.Object3D)
     expect(small.min.y).toBeGreaterThan(0.15)
+  })
+})
+
+describe('a piece lies on another only with its centre over it (the corner of a pier of loose bricks does not stand)', () => {
+  const BRICK = [0.23, 0.075, 0.11]
+  it('a brick whose centre is past the edge of the one under it goes over to the floor', () => {
+    const scene = new THREE.Scene()
+    const system = new FragmentSystem(THREE, { scene, gravity: 9.8, groundAt: () => 0, life: 0 } as unknown as FragmentSystemOptions)
+    const look = system.materialFor('brick', 0xb04a30, false)
+    system.spawn(chunk('under', [0, 0.0375, 0], [0, 0, 0, 1], BRICK) as never, look, 'home', 30)
+    for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
+    // 0.16 m along: it still overlaps the lower brick by 0.07 m, but its centre is 0.045 m past that brick's end
+    const overMesh = system.spawn(chunk('over', [0.16, 0.12, 0], [0, 0, 0, 1], BRICK) as never, look, 'home', 30)
+    for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
+    const over = new THREE.Box3().setFromObject(overMesh as THREE.Object3D)
+    expect(over.min.y).toBeLessThan(0.03)
+  })
+
+  it('a brick laid in bond over the one under it (its centre over it) stays on it', () => {
+    const scene = new THREE.Scene()
+    const system = new FragmentSystem(THREE, { scene, gravity: 9.8, groundAt: () => 0, life: 0 } as unknown as FragmentSystemOptions)
+    const look = system.materialFor('brick', 0xb04a30, false)
+    system.spawn(chunk('under', [0, 0.0375, 0], [0, 0, 0, 1], BRICK) as never, look, 'home', 30)
+    for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
+    const overMesh = system.spawn(chunk('over', [0.08, 0.12, 0], [0, 0, 0, 1], BRICK) as never, look, 'home', 30)
+    for (let frame = 0; frame < SETTLE_FRAMES; frame++) system.update(1 / 60)
+    const over = new THREE.Box3().setFromObject(overMesh as THREE.Object3D)
+    expect(over.min.y).toBeGreaterThan(0.06)
   })
 })

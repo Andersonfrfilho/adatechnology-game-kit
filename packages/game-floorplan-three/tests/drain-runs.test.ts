@@ -154,8 +154,14 @@ describe('a blast at a gutter downpipe', () => {
     const detached = stretches.filter((stretch) => !state.parts.some((part) => part.id === stretch) || state.parts.find((part) => part.id === stretch)!.status === 'broken')
     expect(detached.length).toBeGreaterThan(0)
     expect(detached.length).toBeLessThan(stretches.length)
-    for (const stretch of detached) expect(shown, `${stretch} came off the wall without a hole at it`).toContain(stretch)
-    const clear = stretches.filter((stretch) => !shown.includes(stretch))
+    // a stretch clamped over the corner pillar is clamped to its concrete: the blast that tears it off makes no hole in the pillar's concrete
+    const pillars = scene.house.structure.parts.filter((part) => part.role === 'column')
+    const overPillar = (stretch: string): boolean => {
+      const box = scene.house.structure.byId.get(stretch)?.aabb
+      return !!box && pillars.some((pillar) => box[0] < pillar.aabb[2] + 0.1 && box[2] > pillar.aabb[0] - 0.1 && box[1] < pillar.aabb[3] + 0.1 && box[3] > pillar.aabb[1] - 0.1)
+    }
+    for (const stretch of detached.filter((id) => !overPillar(id))) expect(shown, `${stretch} came off the wall without a hole at it`).toContain(stretch)
+    const clear = stretches.filter((stretch) => !shown.includes(stretch) && !detached.includes(stretch))
     expect(clear.length).toBeGreaterThan(0)
     for (const stretch of clear) expect(isHeld(scene, stretch, 'wall_0_1'), `${stretch} stays clamped`).toBe(true)
   })

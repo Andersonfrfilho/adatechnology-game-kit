@@ -1,6 +1,6 @@
 import { debrisColor, debrisFamily, dustColor } from '@adatechnology/game-destruction'
 import type { DestructionEvent, MaterialDef, Vec3 } from '@adatechnology/game-destruction'
-import { DEBRIS_COLOR_VARIABLE, DUST_COLOR_VARIABLE } from '@adatechnology/game-vfx'
+import { DEBRIS_COLOR_VARIABLE, DUST_COLOR_VARIABLE, PIECES_DRAWN_VARIABLE } from '@adatechnology/game-vfx'
 
 /** How long a hit point stays the place a stage of the same part happens at (s): the stage comes in the same batch as the hit. */
 const HIT_POINT_SECONDS = 1
@@ -11,12 +11,12 @@ export interface FamilyPlay {
   readonly values: Readonly<Record<string, number>>
 }
 
-/** The family of the material and the colours of its debris and dust, for `vfx.play`. */
+/** The family of the material and the colours of its debris and dust, for `vfx.play`. The renderer draws the pieces of what broke itself (fragments, loose parts): the effect throws no stand-ins. */
 export function familyPlay(def: MaterialDef | undefined, partColor?: number): FamilyPlay {
   const dust = dustColor(def, partColor)
   return {
     material: debrisFamily(def),
-    values: { [DEBRIS_COLOR_VARIABLE]: debrisColor(def, partColor), ...(dust !== undefined ? { [DUST_COLOR_VARIABLE]: dust } : {}) },
+    values: { [PIECES_DRAWN_VARIABLE]: 1, [DEBRIS_COLOR_VARIABLE]: debrisColor(def, partColor), ...(dust !== undefined ? { [DUST_COLOR_VARIABLE]: dust } : {}) },
   }
 }
 

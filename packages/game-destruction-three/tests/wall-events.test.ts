@@ -91,6 +91,27 @@ describe('the mark of a round by material', () => {
     expect(mesh.children.some((c) => c.renderOrder === 2)).toBe(true)
   })
 
+  it('masonry and concrete: the round knocks a crater of fresh broken material out of the face around its hole, about five calibres across', () => {
+    const { world, renderer, mesh } = piece('brick', 0xb04a30)
+    world.emit({ type: 'hole', object: 'o1', part: 'p', hole: { point: [0, 0, 0.025], normal: [0, 0, 1], diameter: 0.00762, through: false }, worldPoint: [0, 0, 0.025] })
+    renderer.update(0.016)
+    const crater = mesh.children.find((c) => c.renderOrder === 1) as THREE.Mesh
+    expect(crater).toBeDefined()
+    // a shade lighter than the brick's core (0xb8693f)
+    const color = (crater.material as THREE.MeshBasicMaterial).color
+    const core = new THREE.Color(0xb8693f)
+    expect(color.r).toBeGreaterThan(core.r)
+    expect(color.g).toBeGreaterThan(core.g)
+    expect(2 * crater.scale.x).toBeGreaterThan(0.03)
+    expect(2 * crater.scale.x).toBeLessThan(0.05)
+    expect(mesh.children.some((c) => c.renderOrder === 2)).toBe(true)
+    // a pistol round leaves a smaller one, never under 2.4 cm across
+    const small = piece('brick', 0xb04a30)
+    small.world.emit({ type: 'hole', object: 'o1', part: 'p', hole: { point: [0, 0, 0.025], normal: [0, 0, 1], diameter: 0.004, through: false }, worldPoint: [0, 0, 0.025] })
+    small.renderer.update(0.016)
+    expect(2 * (small.mesh.children.find((c) => c.renderOrder === 1) as THREE.Mesh).scale.x).toBeCloseTo(0.024, 4)
+  })
+
   it('an opaque body draws no crack lines (its damage is chips, holes and dents); glass cracks as far as the event says, in white', () => {
     for (const material of ['ceramic', 'wood', 'concrete']) {
       const body = piece(material, 0xe0ddd6)

@@ -27,10 +27,15 @@ const BLAST_RADIUS = 6
 // Recorded again with the wires of the poles detaching as pieces of their own (they hang from the pole by a joint that tears): 21 more objects, the pole's piece keeps only its shaft, crossarm and insulators, and the state of a joint says whether it tears
 // Recorded again when the panes became 4 mm glass of their real mass (they were read as 12 mm and held) and the frame of a budget house wood: the charge still
 // brings wall_0_0 down (41 parts broken, 6 collapsed), the panes of the windows it reaches now break, nothing catches fire
+// Recorded again when the members cast in a wall (its pillars, lintels, bond beam) took the units out of the wall's grid there and the blows that land on them:
+// the charge still brings wall_0_0 down (41 parts broken), no brick comes out of where the concrete is
+// Recorded again when laid masonry that loses its support goes over about its foot (its bricks leave across the wall): only the speeds of the bricks of a
+// crumble changed, every part ends as it did (checked with the topple taken out: the old record came back)
 // Recorded again when what is attached in the real world came to be attached in the world: lot walls and poles set in the ground, gates, doors and drawers on their hinges and slides, the gas cylinder resting on the floor (the house loads as one group)
 // Recorded again when what is set in the ground held as its buried base (poles, lot walls and gate pillars drawn into the terrain, their anchors by `embedmentStrength`), furniture pieces came to stand on their parts' corners, and a loose group at load sleeps only when balanced
 // Recorded again on the merge of both: the 4 mm panes and the parts held in the ground
-const RECORDED_BLAST_OUTCOME = 'c9294e117fb8326802fa2ca4795f1f07b1034d16'
+// Recorded again on the merge with the moulded members, pier and pillar corners of main: both changes meet in the blast
+const RECORDED_BLAST_OUTCOME = '93a1e0f3c34c88e06bd1dfb2e60359c63c024479'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
