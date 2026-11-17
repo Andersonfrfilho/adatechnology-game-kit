@@ -239,7 +239,7 @@ describe('solid under the height field', { timeout: 30000 }, () => {
   it('a plane, sloped along one axis or both: SOLID_MARGIN under the ground over the whole tile, its edges too', () => {
     const plane = (x: number, z: number): number => 0.6 * x + 0.5 * z
     for (const ground of [planar, plane]) expectNet(buildGroundTile(ground, 0, 0, 2), ground, 0, 0, { most: SOLID_MARGIN + 1e-5 })
-    // one turned box and the tile's floor under it (06e05d340 was one box; the slab and floor of a730b5450 were 104)
+    // one turned box and its block's upright box under it (06e05d340 was one box; the slab and floor of a730b5450 were 104)
     expect(buildGroundTile(planar, 0, 0, 2).solid.boxes.length / SOLID_STRIDE).toBe(2)
   })
 
@@ -249,8 +249,9 @@ describe('solid under the height field', { timeout: 30000 }, () => {
     // the crater's wall bends under the smallest blocks, and a box is lowered for every cell its top reaches: 2.7 cm, as 06e05d340
     const t = buildGroundTile(crater, 0, 0, 2)
     expectNet(t, crater, 0, 0, { most: 0.027 })
-    // one box a block (06e05d340: 364) and the tile's floor
-    expect(t.solid.boxes.length / SOLID_STRIDE).toBe(365)
+    // a block is one box (06e05d340: 364), and a sloped one has its upright box under its turned one
+    const turnedCount = t.solid.boxes.filter((_, k) => k % SOLID_STRIDE === 9 && t.solid.boxes[k] !== 1).length
+    expect(t.solid.boxes.length / SOLID_STRIDE).toBe(364 + turnedCount)
     expect(buildGroundTile(() => 0.3, 0, 0, 2).solid).toEqual(NO_SOLID)
   })
 
@@ -291,6 +292,13 @@ describe('solid under the height field', { timeout: 30000 }, () => {
       expectUnderNeighbours(t, ground)
       expectNet(t, ground, 0, 0, { most: 0.35 })
     }
+  })
+
+  // the ring takes a cell for a step as the neighbour does (`holdsStep`: its centre and the middles of its edges), so a pit only an edge's middle falls in counts
+  it('past the tile, a 5 cm pit 1.5 by 1 cm around the middle of a cell edge: no point of the net above it', () => {
+    const pit = (x: number, z: number): number => 0.5 * x + 0.1 * z - (Math.abs(x - 2.0125) < 0.0075 && Math.abs(z - 1) < 0.005 ? 0.05 : 0)
+    const t = buildGroundTile(pit, 0, 0, 2)
+    for (let x = 2.0001; x < 2.025; x += 0.0007) for (let z = 0.9951; z < 1.005; z += 0.0007) expect(pit(x, z) - highestAt(t, x, z)).toBeGreaterThan(SOLID_MARGIN - 0.0006)
   })
 
   it('a slope with a step down going uphill (step boxes on the tile): no point of the net above the drawn ground', () => {

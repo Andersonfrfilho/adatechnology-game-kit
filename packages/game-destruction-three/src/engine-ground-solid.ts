@@ -8,8 +8,9 @@ import { buildLowPyramid, reachOf } from './engine-ground-reach'
  * `SOLID_MIN_CELLS` cells wide. A level block is a box topped at its lowest ground less `SOLID_MARGIN`; a sloped block is one box turned to its corner plane, its top that
  * plane over the block and a cell past it each way (turned boxes side by side lean apart under their tops: what is pushed out sideways meets the next one), lowered by the
  * most any point of it, top or leaning side, rises over the ground under it (`engine-ground-reach`) and `SOLID_MARGIN`. Where it reaches past the tile, the ground there is
- * the neighbour's (`engine-ground-ring`), read up to `SOLID_RING` out; a box that would lean further is made shallower. Under the turned boxes, one upright box over the
- * whole tile up to its lowest ground holds what slips between them.
+ * the neighbour's (`engine-ground-ring`), read up to `SOLID_RING` out; a box that would lean further is made shallower. Under each turned box is its block's upright box
+ * (topped at the block's lowest ground less `SOLID_MARGIN`): turned boxes side by side part under their tops, and what slips between them rests on it, its top no further
+ * under the ground than the block's relief and its own size.
  * Every block is boxes: a sloped one used to be a prism (a convex hull each), and a crater tile's 400 hulls were most of the frame after the blast (T3.8ag).
  */
 
@@ -20,7 +21,7 @@ const SOLID_RELIEF = 0.005
 const SOLID_MIN_CELLS = 3
 /** A top is this far (m) under the lowest ground it stands for: 2 mm put the solid in the contacts of what rests on the surface and the bowl's seed 18 gained 4 cm. */
 export const SOLID_MARGIN = 0.005
-/** The thinnest (m) a turned box is made where it would lean past the ring: thinner, the block is split, or (at its smallest) left to its upright box. */
+/** The thinnest (m) a turned box is made; where that would lean past the ring, the block is split, or (at its smallest) left to its upright box. */
 const SOLID_THINNEST = 0.05
 /** How much (m) more a block's box must be lowered for the ground past the tile than for its own before the block is split, so a fold at the seam lowers a narrow box only. */
 const SEAM_SPLIT = 0.01
@@ -113,7 +114,7 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
   /**
    * A sloped block: one box turned to the plane through its corners, its top the rectangle on that plane over the block and a cell past it each way, down to under the
    * solid's bottom, lowered by the most it rises over the ground anywhere (`reachOf`) and `SOLID_MARGIN`. A box that would lean past the ring is made as deep as stays in
-   * it (the tile's floor is under it); a box lowered by more than the block's relief is the upright box alone. False when the block should be split instead: its box would not
+   * it (the block's upright box is under it); a box lowered by more than the block's relief is the upright box alone. False when the block should be split instead: its box would not
    * fit the ring, or the ground past the tile lowers it much more than its own.
    */
   const sloped = (i0: number, j0: number, i1: number, j1: number, least: number, most: number): boolean => {
@@ -153,11 +154,12 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
         highest = Math.max(highest, cy + su * hx * ax[1] + sw * hz * az[1])
       }
     }
-    // deep enough that the bottom face is under the solid's bottom everywhere, unless its bottom would lean (uphill: by -n per metre of thickness) past the ring
+    // deep enough that its bottom face is under the solid's bottom everywhere (a box made only as deep as its block's upright box let what it pushed out the bottom through:
+    // 17 of the 48 boxes of the push-up sweep fell, as with a730b5450's slab), unless its bottom would lean (uphill: by -n per metre of thickness) past the ring
     const deep = (highest - bottom) / n[1]
     const fits = Math.min(thickWithin(-n[0], minX, maxX, loX, hiX), thickWithin(-n[2], minZ, maxZ, loZ, hiZ))
-    const thick = Math.min(deep, fits)
-    if (thick < SOLID_THINNEST) {
+    const thick = Math.max(SOLID_THINNEST, Math.min(deep, fits))
+    if (fits < thick) {
       if (span > SOLID_MIN_CELLS) return false
       level(i0, j0, i1, j1, least)
       return true
@@ -172,6 +174,9 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
       level(i0, j0, i1, j1, least)
       return true
     }
+    // and under it the block's upright box: what slips between two turned boxes (they part under their tops; a cell's overlap closes only so deep) rests on it, no
+    // further under the ground than the block's relief
+    level(i0, j0, i1, j1, least)
     const q = quatOfAxes(ax, n, az)
     boxes.push(centre[0]!, centre[1]! - drop, centre[2]!, hx, hy, hz, q[0], q[1], q[2], q[3])
     return true
@@ -194,9 +199,6 @@ export const buildSolidVolume = (heights: Float32Array, cells: number, x0: numbe
     }
   }
   fill(0, 0, cells, cells)
-  // under every turned box, one upright box over the whole tile up to its lowest ground: turned boxes side by side part under their tops (a cell's overlap closes
-  // only so deep), and what is pushed out sideways into such a wedge is held there, not let through the solid's bottom
-  if (boxes.some((_, k) => k % SOLID_STRIDE === 6 && boxes[k] !== 0)) level(0, 0, cells, cells, low)
   return { boxes, ring: ring.read }
 }
 
