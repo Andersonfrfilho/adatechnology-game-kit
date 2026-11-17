@@ -5,7 +5,8 @@ import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { GROUND_CELL, buildGroundTile } from '../src/engine-ground'
 import type { GroundTile } from '../src/engine-ground'
-import { SOLID_DEPTH, SOLID_MARGIN, SOLID_STRIDE } from '../src/engine-ground-solid'
+import { SOLID_RING } from '../src/engine-ground-ring'
+import { NO_SOLID, SOLID_DEPTH, SOLID_MARGIN, SOLID_STRIDE } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
 import { IS_JOLT, physicsOption } from './setup-physics'
@@ -123,15 +124,19 @@ const solidTopAt = (t: GroundTile, x: number, z: number): number => {
 
 /** Every block's centre, axes and half sizes (made once per tile). */
 const blocksOf = (() => {
-  const made = new WeakMap<GroundTile, Array<{ readonly c: readonly number[]; readonly axes: ReadonlyArray<readonly number[]>; readonly h: readonly number[] }>>()
+  const made = new WeakMap<GroundTile, Array<{ readonly c: readonly number[]; readonly axes: ReadonlyArray<readonly number[]>; readonly h: readonly number[]; readonly rx: number; readonly rz: number }>>()
   return (t: GroundTile) => {
     const kept = made.get(t)
     if (kept) return kept
     const b = t.solid.boxes
-    const out: Array<{ c: number[]; axes: number[][]; h: number[] }> = []
+    const out: Array<{ c: number[]; axes: number[][]; h: number[]; rx: number; rz: number }> = []
     for (let i = 0; i < b.length; i += SOLID_STRIDE) {
       const q = b.slice(i + 6, i + 10)
-      out.push({ c: b.slice(i, i + 3), axes: [turned(q, [1, 0, 0]), turned(q, [0, 1, 0]), turned(q, [0, 0, 1])], h: b.slice(i + 3, i + 6) })
+      const axes = [turned(q, [1, 0, 0]), turned(q, [0, 1, 0]), turned(q, [0, 0, 1])]
+      const h = b.slice(i + 3, i + 6)
+      // how far the box reaches from its centre along x and z (its shadow's extent)
+      const rx = axes.reduce((r, a, k) => r + h[k]! * Math.abs(a[0]!), 0), rz = axes.reduce((r, a, k) => r + h[k]! * Math.abs(a[2]!), 0)
+      out.push({ c: b.slice(i, i + 3), axes, h, rx, rz })
     }
     made.set(t, out)
     return out
@@ -141,7 +146,8 @@ const blocksOf = (() => {
 /** The highest point of any block on the vertical through (x, z) (a side or an edge as much as a top), or -Infinity where none is crossed. */
 const highestAt = (t: GroundTile, x: number, z: number): number => {
   let best = -Infinity
-  for (const { c, axes, h } of blocksOf(t)) {
+  for (const { c, axes, h, rx, rz } of blocksOf(t)) {
+    if (Math.abs(x - c[0]!) > rx + 1e-9 || Math.abs(z - c[2]!) > rz + 1e-9) continue
     let low = -Infinity
     let high = Infinity
     for (let k = 0; k < 3 && low <= high; k++) {
@@ -229,30 +235,61 @@ describe('solid under the height field', { timeout: 30000 }, () => {
     expectNet(t, rolling, 0, 0, { most: 0.01 + 0.0006 })
   })
 
-  // the slabs stay over their own tile, so a sloped block on the edge is cut back from it and the floor holds the sliver: further under the ground there, never above it
-  it('a sloped plane: SOLID_MARGIN under the ground inside the tile, the floor under the slivers at its edges', () => {
-    expectNet(buildGroundTile(planar, 0, 0, 2), planar, 0, 0, { most: 0.07, inner: SOLID_MARGIN + 1e-5 })
+  // the turned box reaches past the tile's edges over the neighbour's ground (read up to SOLID_RING out), so a plane is SOLID_MARGIN under the ground at the edges too
+  it('a plane, sloped along one axis or both: SOLID_MARGIN under the ground over the whole tile, its edges too', () => {
+    const plane = (x: number, z: number): number => 0.6 * x + 0.5 * z
+    for (const ground of [planar, plane]) expectNet(buildGroundTile(ground, 0, 0, 2), ground, 0, 0, { most: SOLID_MARGIN + 1e-5 })
+    // one turned box and the tile's floor under it (06e05d340 was one box; the slab and floor of a730b5450 were 104)
+    expect(buildGroundTile(planar, 0, 0, 2).solid.boxes.length / SOLID_STRIDE).toBe(2)
   })
 
   it('never sticks out above a steep bowl or crater wall, and stays close under them; level ground has none (its slab is solid already)', () => {
-    // the bowl's edges are its steepest ground (0.74), where the slabs are cut back most from the tile's edge
-    expectNet(buildGroundTile(bowl, -1, -1, 2), bowl, -1, -1, { most: 0.12, inner: 0.01 })
-    // the crater's wall bends under the smallest blocks, and a slab is lowered for every cell it reaches, its lean uphill included
-    expectNet(buildGroundTile(crater, 0, 0, 2), crater, 0, 0, { most: 0.04 })
-    expect(buildGroundTile(() => 0.3, 0, 0, 2).solid).toEqual({ boxes: [] })
+    // the bowl's edges are its steepest ground (0.74): its boxes there lean furthest past the tile
+    expectNet(buildGroundTile(bowl, -1, -1, 2), bowl, -1, -1, { most: 0.05 })
+    // the crater's wall bends under the smallest blocks, and a box is lowered for every cell its top reaches: 2.7 cm, as 06e05d340
+    const t = buildGroundTile(crater, 0, 0, 2)
+    expectNet(t, crater, 0, 0, { most: 0.027 })
+    // one box a block (06e05d340: 364) and the tile's floor
+    expect(t.solid.boxes.length / SOLID_STRIDE).toBe(365)
+    expect(buildGroundTile(() => 0.3, 0, 0, 2).solid).toEqual(NO_SOLID)
   })
 
-  it('nothing of the net reaches past its tile: over a flat neighbour, or one a step down, no point of it is above that ground', () => {
-    // the ground bends at the tile's edge (x = 2): 0.8 up along x on the tile, flat past it; and with a slope along z too, so the slabs are turned about both axes
-    for (const along of [0, 0.4]) {
-      const ground = (x: number, z: number): number => 0.8 * Math.min(2, x) + along * z
-      const t = buildGroundTile(ground, 0, 0, 2)
-      for (const step of [0, 0.3]) {
-        // past the edge the neighbour's ground, flat, or a step down at the seam
-        const beyond = (x: number, z: number): number => ground(x, z) - (x > 2 ? step : 0)
-        for (let x = 2.0005; x < 2.15; x += 0.003) for (let z = 0.004; z < 2; z += 0.011) expect(beyond(x, z) - highestAt(t, x, z)).toBeGreaterThan(SOLID_MARGIN - 1e-6)
-        for (let x = -0.15; x < -0.0005; x += 0.003) for (let z = 0.004; z < 2; z += 0.011) expect(highestAt(t, x, z)).toBe(-Infinity)
+  // a turned box leans uphill under its top: past a ridge whose far side drops steeper (2.5) than its sides do (1 / 0.6), they are looked for under the ground there too
+  it('a ridge with a steep far side: no leaning side of the boxes on its near slope is above the far side', () => {
+    const ridge = (x: number, z: number): number => (x < 1 ? 0.6 * x : Math.max(-0.2, 0.6 - 2.5 * (x - 1))) + 0.05 * z
+    expectNet(buildGroundTile(ridge, 0, 0, 2), ridge, 0, 0, { most: 0.45 })
+  })
+
+  /**
+   * Over strips past every edge of the tile, `SOLID_RING` wide and 2 cm more: no point of the net, top, edge or leaning side (the highest point of every column, `highestAt`),
+   * is above the ground there less SOLID_MARGIN, and nothing of it is past `SOLID_RING`. Inside the tile, `expectNet`'s check that nothing is above the ground.
+   */
+  const expectUnderNeighbours = (t: GroundTile, ground: (x: number, z: number) => number): void => {
+    const out = SOLID_RING + 0.02
+    for (let x = -out; x < 2 + out; x += 0.0043) {
+      const inside = x > 0 && x < 2
+      for (let z = -out; z < 2 + out; z += inside && z > -0.0001 && z < 2 ? 2 - z + 0.0001 : 0.0127) {
+        const top = highestAt(t, x, z)
+        if (Math.min(x, z, 2 - x, 2 - z) < -SOLID_RING - 1e-6) expect(top).toBe(-Infinity)
+        else expect(ground(x, z) - top).toBeGreaterThan(SOLID_MARGIN - 0.0006)
       }
+    }
+  }
+
+  it('past the tile, over the neighbour\'s ground: flat past a fold, a step down at the seam, a plane turned about both axes, a crater on the edge or the corner', () => {
+    const cases: Array<(x: number, z: number) => number> = []
+    // the ground bends at the tile's edge (x = 2): 0.8 up along x on the tile, flat past it, or a step 30 cm down at the seam; with a slope along z too, so the boxes turn about both axes
+    for (const along of [0, 0.4]) for (const step of [0, 0.3]) cases.push((x, z) => 0.8 * Math.min(2, x) + along * z - (x > 2 ? step : 0))
+    // a plane turned about both axes, flat past every edge; a slope whose low side (x < 0) has a step 30 cm down
+    cases.push((x, z) => 0.6 * Math.min(2, Math.max(0, x)) + 0.5 * Math.min(2, Math.max(0, z)))
+    cases.push((x, z) => 0.5 * x + 0.1 * z - (x < 0 ? 0.3 : 0))
+    // a crater whose middle is on the edge, and one on the corner, on a gentle roll
+    const dent = (cx: number, cz: number) => (x: number, z: number): number => rolling(x, z) - 0.3 * Math.cos((Math.PI / 2) * Math.min(1, Math.hypot(x - cx, z - cz) / 0.6)) ** 2
+    cases.push(dent(2, 1), dent(2, 2), dent(0, 0))
+    for (const ground of cases) {
+      const t = buildGroundTile(ground, 0, 0, 2)
+      expectUnderNeighbours(t, ground)
+      expectNet(t, ground, 0, 0, { most: 0.35 })
     }
   })
 

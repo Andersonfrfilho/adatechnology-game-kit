@@ -5,6 +5,7 @@ import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld
 import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
 import type { GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
+import { SOLID_RING } from './engine-ground-ring'
 import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
@@ -324,7 +325,10 @@ export class EnginePieces {
     for (const t of nearest.slice(0, this.o.blastTiles ?? BLAST_TILES)) this.layTile(t.key, t.ix, t.iz, this.tiles.get(t.key))
   }
 
-  /** The tiles the disc touches are laid again before the next step, reading the ground again where the disc is (and `GROUND_REACH` past it). */
+  /**
+   * The tiles the disc touches are laid again before the next step, reading the ground again where the disc is (and `GROUND_REACH` past it); and those within `SOLID_RING`
+   * of it, whose solid reads the ground that far past their edges (`engine-ground-ring`): a neighbour's dig makes it again when it changed a sample it read.
+   */
   private markDirty(x: number, z: number, radius: number): void {
     const reach = radius + GROUND_REACH
     for (const [key, tile] of this.tiles) {
@@ -332,7 +336,7 @@ export class EnginePieces {
       const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
       const nx = Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE))
       const nz = Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE))
-      if (Math.hypot(nx - x, nz - z) > radius) continue
+      if (Math.hypot(nx - x, nz - z) > radius + SOLID_RING) continue
       const before = tile.dirty
       tile.dirty = {
         minX: Math.min(before?.minX ?? Infinity, x - reach),
@@ -940,13 +944,17 @@ export class EnginePieces {
    * A tile of ground, made or brought up to date on the same bodies. A tile the host marked is read again only where it said (`readGround`) and left alone when nothing
    * there differs; a height field that stays one has just the samples that moved written into its shape (`updateHeights`, the same ground as a new one within the
    * quantisation: the body keeps its id, so the engine still warm-starts the contacts of what lies on it, and the whole field is not made again); a slab is moved; the
-   * solid under a height field and the step boxes are made again only when the heights or the boxes changed.
+   * solid under a height field and the step boxes are made again only when the heights or the boxes changed, or the ground its solid read past the tile's edges did.
    */
   private layTile(key: number, ix: number, iz: number, tile: Tile | undefined): void {
     const x0 = ix * TILE
     const z0 = iz * TILE
+    const ringMoved = tile !== undefined && tile.dirty !== null && this.ringMoved(tile.volume, tile.dirty)
     const made = this.flatOrRead(tile, x0, z0)
-    if (!made) return
+    if (!made) {
+      if (ringMoved && tile) this.relaySolid(tile, x0, z0)
+      return
+    }
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
     const kept = tile !== undefined && tile.slab === slab
@@ -958,10 +966,29 @@ export class EnginePieces {
       if (steps !== null) this.world.removeBody(steps)
       steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
     }
-    // the solid is a function of the heights: the same heights, the same solid
-    const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells)
+    // the solid is a function of the heights and the ground it read past the edges: the same of both, the same solid
+    const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null && !ringMoved ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells, this.o.groundAt)
     const laid = { ...made, solid: volume }
     this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, writes, samples: made.samples, level: made.level, dirty: null })
+  }
+
+  /** Whether a sample the solid read past the tile's edges, within the marked rectangle, is not the ground there now. */
+  private ringMoved(volume: SolidVolume, rect: GroundRect): boolean {
+    const r = volume.ring
+    for (let k = 0; k < r.length; k += 3) {
+      const x = r[k]!, z = r[k + 1]!
+      if (x < rect.minX || x > rect.maxX || z < rect.minZ || z > rect.maxZ) continue
+      if (this.o.groundAt(x, z) !== r[k + 2]) return true
+    }
+    return false
+  }
+
+  /** The solid of a tile whose own ground did not change, made again for the ground past its edges, which did. */
+  private relaySolid(tile: Tile, x0: number, z0: number): void {
+    const cells = Math.round(Math.sqrt(tile.heights.length)) - 1
+    const volume = buildSolidVolume(tile.heights, cells, x0, z0, TILE / cells, this.o.groundAt)
+    tile.solid = this.layVolume({ heights: tile.heights, cells, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile)
+    tile.volume = volume
   }
 
   /**
@@ -988,7 +1015,7 @@ export class EnginePieces {
       tile.dirty = null
       return null
     }
-    return shapeGround(held, x0, z0, TILE, false)
+    return shapeGround(held, x0, z0, TILE, null)
   }
 
   /**
