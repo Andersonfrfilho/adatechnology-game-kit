@@ -33,6 +33,9 @@ function roomWithItems(locale = 'pt-BR', withPerson = true): { room: TestRoom; m
   return { room, module }
 }
 
+/** Milliseconds the test that opens the whole area may take (the default 5 s is what it takes on a busy CI runner). */
+const OPEN_AREA_TIMEOUT = 20_000
+
 describe('shelves layout', () => {
   const items = catalog.list()
   const categories = [...new Set(items.map((item) => item.category))]
@@ -94,7 +97,8 @@ describe('items test area', () => {
     expect(new Set(placed.filter((o) => o.itemId.startsWith(ITEM_PREFIX)).map((o) => o.itemId)).size).toBe(catalog.list().length)
     expect(placed.filter((o) => o.itemId.startsWith(SHOWCASE_PREFIX))).toHaveLength(listItemModels().length)
     for (const id of [SHOWCASE_STAND_ID, RULER_ID, HUMAN_ID, FINDS_TABLE_ID]) expect(placed.some((o) => o.itemId === id), id).toBe(true)
-  })
+    // opening the area builds every item of the catalogue and its models: about 2.5 s alone, 5 s and more on a CI runner sharing the cores
+  }, OPEN_AREA_TIMEOUT)
 
   it('lays an opening tool beside each sealed tin, within reach of whoever picks the tin up', () => {
     const { room } = roomWithItems()

@@ -160,6 +160,9 @@ const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
 /** How fast (m/s) the bricks of a wall that lost its support leave it: they come down where they stand, not thrown. */
 const MASONRY_CRUMBLE_SPEED = 0.6
+/** Share of the speed at the ground of a panel turning over about its foot that its crumbled units leave with, and the lowest masonry (m) that goes over. */
+const MASONRY_TOPPLE = 0.4
+const MASONRY_TOPPLE_MIN_HEIGHT = 0.5
 /** The pieces a fallen roof of tiles breaks into: a roof of 70 m² comes down as handfuls of a few tiles, not as plates. */
 const TILE_CLUMPS = 160
 /** Thickness (m) of a clay or concrete roof tile. */
@@ -1624,6 +1627,41 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * Every unit still in it comes down where it stands as bricks (tiles) and clumps of a few (`clumpUnits`), with the flakes of its plaster, and the part
    * is gone (`partLost`).
    */
+  /**
+   * Laid masonry that lost its support does not come down as a column of bricks standing on each other: without the mortar's bond it goes over, to one side of its
+   * face, about its foot. Each unit leaves with the speed across the wall that a panel turning over about its base gives it at its height (`MASONRY_TOPPLE` of the
+   * speed it has when it reaches the ground, sqrt(3 g / H) per metre up), so the top lands about a wall's height away and the bottom course stays at the foot.
+   * A roof's tiles slide off the slope instead (left as they are).
+   */
+  /** A small unsigned hash of a name (FNV-1a). */
+  function hashOf(name: string): number {
+    let h = 0x811c9dc5
+    for (let i = 0; i < name.length; i++) h = Math.imul(h ^ name.charCodeAt(i), 0x01000193)
+    return h >>> 0
+  }
+
+  function toppled(o: ObjRT, p: PartRT, c: Vec3, pieces: Fragment[], tiles: boolean): Fragment[] {
+    if (tiles || pieces.length === 0) return pieces
+    const box = partWorldAabb(o, p)
+    const height = box.max[1] - box.min[1]
+    if (height < MASONRY_TOPPLE_MIN_HEIGHT) return pieces
+    const local: Vec3 = [0, 0, 0]
+    local[p.thin] = 1
+    const across = vec.sub(toWorld(c, partXf(o, p).q, local), c)
+    const flat = Math.hypot(across[0], across[2])
+    if (flat < 0.5) return pieces
+    // which side and how much each unit leans out come from the part's and the unit's names, not the world's random stream: the rest of the blast stays as it was
+    const side = hashOf(p.spec.id) & 1 ? -1 : 1
+    const nx = (side * across[0]) / flat, nz = (side * across[2]) / flat
+    const spin = Math.sqrt((3 * GRAVITY) / height)
+    const foot = box.min[1]
+    return pieces.map((f) => {
+      const up = Math.max(0, f.center[1] - foot)
+      const k = MASONRY_TOPPLE * spin * up * (0.75 + 0.5 * ((hashOf(f.id) % 1000) / 1000))
+      return { ...f, velocity: [f.velocity[0] + nx * k, f.velocity[1], f.velocity[2] + nz * k], angularVelocity: [f.angularVelocity[0] + nz * spin, f.angularVelocity[1], f.angularVelocity[2] - nx * spin] }
+    })
+  }
+
   const crumbleMasonry = (o: ObjRT, p: PartRT, src?: string) => {
     if (isLost(p)) return
     const [u, v] = planeAxes(p.thin)
@@ -1633,7 +1671,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const cells = grid.filter((cell, i) => laidAt(p, worn, i) && !(op && p.st.opening && Math.hypot(cell.center[u] - op[u], cell.center[v] - op[v]) <= p.st.opening.radius))
     const { c } = partXf(o, p)
     const tiles = isTiledCover(p)
-    const pieces = cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), tiles ? TILE_CLUMPS : unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true)
+    const pieces = toppled(o, p, c, cellFragments(o, p, clumpUnits(cells, p.thin, unitSpan(p), tiles ? TILE_CLUMPS : unitClumps), vec.add(c, [0, 1, 0]), null, MASONRY_CRUMBLE_SPEED, p.st.mass, 'm_', true), tiles)
     // a roof's part is the box around its slope: its tiles are thin plates, not posts as tall as the rise
     const fragments = cells.length === 0 ? [] : tiles
       ? pieces.map((f): Fragment => ({ ...f, shape: 'shard', size: f.size.map((x, k) => (k === p.thin ? Math.min(x, TILE_THICKNESS) : x)) as Vec3 }))
