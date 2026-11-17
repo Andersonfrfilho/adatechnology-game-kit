@@ -94,7 +94,11 @@ const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions
   try {
     engineWorld = options.engine?.createWorld(options.world ?? KIT_WORLD)
     const loop: PhysicsLoop | undefined = engineWorld ? createPhysicsLoop(engineWorld) : undefined
-    renderer = makeRenderer({ physics: loop ?? 'own', scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, jitWarmUp: false })
+    // a grid reader as a host's terrain gives one, so the tiles read their samples down the path the host's do
+    const terrainGridAt = (xs: Float64Array, zs: Float64Array, out: Float64Array): void => {
+      for (let j = 0; j < zs.length; j++) for (let i = 0; i < xs.length; i++) out[j * xs.length + i] = terrainAt(xs[i]!, zs[j]!)
+    }
+    renderer = makeRenderer({ physics: loop ?? 'own', scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, terrainGridAt, jitWarmUp: false })
     const wall = brickWall(THREE)
     const root = new THREE.Group()
     root.position.set(...ORIGIN)

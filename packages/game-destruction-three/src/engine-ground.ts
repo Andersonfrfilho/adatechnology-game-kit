@@ -73,21 +73,55 @@ const seriesOf = (n: number): ReadonlyArray<{ offset: number; width: number; row
 const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (n + 1)
 
 /**
+ * The ground over a lattice in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what the tile's `groundAt` answers at each point
+ * (`Terrain.heightGrid` is one). A tile reads its 26 000 samples through it instead of a call each.
+ */
+export type GroundGrid = (xs: Float64Array, zs: Float64Array, out: Float64Array) => void
+
+// the lattice a grid read asks for and what it answers, kept between reads (one at a time) so a read costs no new arrays
+let latticeX = new Float64Array(0)
+let latticeZ = new Float64Array(0)
+let latticeHeights = new Float64Array(0)
+
+/**
  * Reads the ground of the tile at (x0, z0) into `samples`: every sample, or only those a rectangle reaches (a sample a cell outside it is read too, so what the
  * rectangle's edge touches is not left old). True when a sample read differs from the one held. A crater in a corner of a tile asks `groundAt` for the corner.
+ * With a `grid` the samples are read in one pass over the half-cell lattice they all lie on, each point the one `groundAt` would be asked for, so the same heights.
  */
-export const readGround = (groundAt: (x: number, z: number) => number, samples: Float64Array, x0: number, z0: number, size: number, rect?: GroundRect): boolean => {
+export const readGround = (groundAt: (x: number, z: number) => number, samples: Float64Array, x0: number, z0: number, size: number, rect?: GroundRect, grid?: GroundGrid): boolean => {
   const n = Math.round(size / GROUND_CELL)
   const c = size / n
+  const ranges = seriesOf(n).map(({ offset, width, rows, ox, oz }) => ({
+    offset, width, ox, oz,
+    i0: rect ? Math.max(0, Math.floor((rect.minX - x0) / c - ox)) : 0,
+    i1: rect ? Math.min(width - 1, Math.ceil((rect.maxX - x0) / c - ox)) : width - 1,
+    j0: rect ? Math.max(0, Math.floor((rect.minZ - z0) / c - oz)) : 0,
+    j1: rect ? Math.min(rows - 1, Math.ceil((rect.maxZ - z0) / c - oz)) : rows - 1,
+  }))
+  // the half-cell lattice (index a: x0 + (a / 2) * c) over every series' range: a sample at (i + ox, j + oz) is its point (2i + 2ox, 2j + 2oz)
+  let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity
+  for (const r of ranges) {
+    if (r.i0 > r.i1 || r.j0 > r.j1) continue
+    a0 = Math.min(a0, 2 * (r.i0 + r.ox)); a1 = Math.max(a1, 2 * (r.i1 + r.ox))
+    b0 = Math.min(b0, 2 * (r.j0 + r.oz)); b1 = Math.max(b1, 2 * (r.j1 + r.oz))
+  }
+  const across = a1 - a0 + 1
+  const lattice = grid !== undefined && a1 >= a0 && b1 >= b0
+  if (lattice) {
+    const along = b1 - b0 + 1
+    if (latticeX.length < across) latticeX = new Float64Array(across)
+    if (latticeZ.length < along) latticeZ = new Float64Array(along)
+    if (latticeHeights.length < across * along) latticeHeights = new Float64Array(across * along)
+    // (a / 2) is exactly i + ox, so each point is the one `groundAt` is asked for below
+    for (let a = 0; a < across; a++) latticeX[a] = x0 + ((a0 + a) / 2) * c
+    for (let b = 0; b < along; b++) latticeZ[b] = z0 + ((b0 + b) / 2) * c
+    grid(latticeX.subarray(0, across), latticeZ.subarray(0, along), latticeHeights)
+  }
   let changed = false
-  for (const { offset, width, rows, ox, oz } of seriesOf(n)) {
-    const i0 = rect ? Math.max(0, Math.floor((rect.minX - x0) / c - ox)) : 0
-    const i1 = rect ? Math.min(width - 1, Math.ceil((rect.maxX - x0) / c - ox)) : width - 1
-    const j0 = rect ? Math.max(0, Math.floor((rect.minZ - z0) / c - oz)) : 0
-    const j1 = rect ? Math.min(rows - 1, Math.ceil((rect.maxZ - z0) / c - oz)) : rows - 1
+  for (const { offset, width, ox, oz, i0, i1, j0, j1 } of ranges) {
     for (let j = j0; j <= j1; j++) {
       for (let i = i0; i <= i1; i++) {
-        const h = groundAt(x0 + (i + ox) * c, z0 + (j + oz) * c)
+        const h = lattice ? latticeHeights[(2 * (j + oz) - b0) * across + 2 * (i + ox) - a0]! : groundAt(x0 + (i + ox) * c, z0 + (j + oz) * c)
         if (samples[offset + j * width + i] !== h) changed = true
         samples[offset + j * width + i] = h
       }
@@ -96,9 +130,9 @@ export const readGround = (groundAt: (x: number, z: number) => number, samples: 
   return changed
 }
 
-export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: number, z0: number, size: number, withSolid = true): GroundTile => {
+export const buildGroundTile = (groundAt: (x: number, z: number) => number, x0: number, z0: number, size: number, withSolid = true, grid?: GroundGrid): GroundTile => {
   const samples = new Float64Array(sampleCount(Math.round(size / GROUND_CELL)))
-  readGround(groundAt, samples, x0, z0, size)
+  readGround(groundAt, samples, x0, z0, size, undefined, grid)
   return shapeGround(samples, x0, z0, size, withSolid ? groundAt : null)
 }
 

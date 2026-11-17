@@ -8,6 +8,7 @@ import type { ContactShape, ShapeContact } from './piece-contacts'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
+import type { GroundGrid } from './engine-ground'
 import { resolvePhysics } from './physics-option'
 import { isOverSupport } from './support-hull'
 import type { PlanPoint } from './support-hull'
@@ -25,6 +26,8 @@ export interface PieceSystemOptions {
    * tile it proves level without reading its 26 000 samples (`Terrain.heightRange` is one). A bound that is not exact makes a tile level that is not: leave it out if unsure.
    */
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
+  /** `terrainAt` (else `groundAt`) over a lattice in one pass, to the bit (`GroundGrid`; `Terrain.heightGrid` is one). Engine physics only. */
+  terrainGridAt?: GroundGrid
   /**
    * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
    * `-Infinity` when none. The ground and the other pieces are added by the system.
@@ -327,6 +330,7 @@ export class PieceSystem {
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
           ...(o.terrainRangeAt ? { groundRange: o.terrainRangeAt } : {}),
+          ...(o.terrainGridAt ? { groundGrid: o.terrainGridAt } : {}),
           ...(o.blastGroundTiles !== undefined ? { blastTiles: o.blastGroundTiles } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,

@@ -3,7 +3,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
 import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
-import type { GroundRect, GroundTile } from './engine-ground'
+import type { GroundGrid, GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
 import { SOLID_RING } from './engine-ground-ring'
 import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameSolid } from './engine-ground-solid'
@@ -21,6 +21,8 @@ export interface EnginePieceOptions {
    * samples; without it every tile is read. Must be exact: a loose bound lays a slab where there is a crater.
    */
   readonly groundRange?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
+  /** `groundAt` over a lattice in one pass, to the bit (`GroundGrid`): a tile reads its samples through it instead of a call each. Without it every sample is a call. */
+  readonly groundGrid?: GroundGrid
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
@@ -1012,12 +1014,12 @@ export class EnginePieces {
       }
       return flatTile(level, TILE)
     }
-    return tile && tile.samples ? this.readTile(tile, tile.samples, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE, false)
+    return tile && tile.samples ? this.readTile(tile, tile.samples, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE, false, this.o.groundGrid)
   }
 
   /** The tile as the ground is now, its marked samples read again; null (and the mark cleared) when none of them changed. */
   private readTile(tile: Tile, held: Float64Array, x0: number, z0: number): GroundTile | null {
-    const changed = readGround(this.o.groundAt, held, x0, z0, TILE, tile.dirty ?? undefined)
+    const changed = readGround(this.o.groundAt, held, x0, z0, TILE, tile.dirty ?? undefined, this.o.groundGrid)
     if (!changed) {
       tile.dirty = null
       return null

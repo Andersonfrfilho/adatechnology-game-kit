@@ -314,6 +314,57 @@ export function createTerrain(options: TerrainOptions): Terrain {
     return (h(index) * (1 - tx) + h(index + 1) * tx) * (1 - tz) + (h(index + stride) * (1 - tx) + h(index + stride + 1) * tx) * tz
   }
 
+  // the cell and the blend of each column and row a grid reads, kept between grids so a read costs no new arrays
+  let gridColumns = new Int32Array(0)
+  let gridBlendX = new Float64Array(0)
+  let gridRows = new Int32Array(0)
+  let gridBlendZ = new Float64Array(0)
+
+  function heightGrid(xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array): void {
+    const width = xs.length
+    const depth = zs.length
+    if (out.length < width * depth) throw new RangeError(`heightGrid: out holds ${out.length} heights, the grid has ${width * depth}`)
+    if (gridColumns.length < width) {
+      gridColumns = new Int32Array(width)
+      gridBlendX = new Float64Array(width)
+    }
+    if (gridRows.length < depth) {
+      gridRows = new Int32Array(depth)
+      gridBlendZ = new Float64Array(depth)
+    }
+    // each column and row as `heightAt` finds it (-1: past the terrain, where the host's `baseHeight` answers), so every height is the one `heightAt` gives, to the bit
+    for (let i = 0; i < width; i++) {
+      const x = xs[i]!
+      const fx = Math.max(0, Math.min(columns - 1e-6, (x - x0) / cellSize))
+      gridColumns[i] = x >= x0 && x <= x1 ? fx | 0 : -1
+      gridBlendX[i] = fx - (fx | 0)
+    }
+    for (let j = 0; j < depth; j++) {
+      const z = zs[j]!
+      const fz = Math.max(0, Math.min(rows - 1e-6, (z - z0) / cellSize))
+      gridRows[j] = z >= z0 && z <= z1 ? fz | 0 : -1
+      gridBlendZ[j] = fz - (fz | 0)
+    }
+    for (let j = 0; j < depth; j++) {
+      const row = gridRows[j]!
+      const tz = gridBlendZ[j]!
+      for (let i = 0; i < width; i++) {
+        const column = gridColumns[i]!
+        if (row < 0 || column < 0) {
+          out[j * width + i] = options.baseHeight?.(xs[i]!, zs[j]!) ?? 0
+          continue
+        }
+        const tx = gridBlendX[i]!
+        const index = row * stride + column
+        const h00 = base[index]! - dug[index]! + loose[index]!
+        const h10 = base[index + 1]! - dug[index + 1]! + loose[index + 1]!
+        const h01 = base[index + stride]! - dug[index + stride]! + loose[index + stride]!
+        const h11 = base[index + stride + 1]! - dug[index + stride + 1]! + loose[index + stride + 1]!
+        out[j * width + i] = (h00 * (1 - tx) + h10 * tx) * (1 - tz) + (h01 * (1 - tx) + h11 * tx) * tz
+      }
+    }
+  }
+
   function heightRange(minX: number, maxX: number, minZ: number, maxZ: number): { low: number; high: number } | null {
     if (!contains(minX, minZ) || !contains(maxX, maxZ)) return null
     const cellOf = (v: number, origin: number, count: number): number => Math.floor(Math.max(0, Math.min(count - 1e-6, (v - origin) / cellSize)))
@@ -1225,6 +1276,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
       reset()
     },
     heightAt,
+    heightGrid,
     heightRange,
     footAt,
     walkFactorAt,
