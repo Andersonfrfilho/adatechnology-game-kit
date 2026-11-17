@@ -109,6 +109,8 @@ export interface PartVis {
   gone: 'none' | 'broken' | 'melted' | 'ashes'
   /** The settlement drawn on the part now (object-local line), when the ground under it went down. */
   settled?: PartSettlement
+  /** Parts whose meshes draw this one's marks when it has none of its own (`BindOptions.marksOn`: a pillar under the plaster of its walls). */
+  markHosts?: PartVis[]
 }
 
 /** Coulomb friction coefficients of a piece's surface: what holds it still and what drags it while it slides. */

@@ -75,8 +75,10 @@ describe('a blast hole in a wall reveals only the stretches of the wall pipe tha
     const scene = roomHouse('single_storey_a', 1)
     const run = scene.house.destruction.spec!.parts.filter((part) => /^pipe:run_wall_bathroom_0/.test(part.id) && part.hostedIn !== undefined)
     expect(run.length).toBeGreaterThan(2)
-    const target = run.find((part) => /^wall/.test(String(part.hostedIn)))!
-    const stretch = scene.house.structure.parts.find((part) => part.id === target.id)!
+    // a stretch in the brick of its wall (the lowest: the top one runs up into the bond beam and the slab, cast concrete a 30 kJ blast does not open)
+    const stretchOf = (id: string) => scene.house.structure.parts.find((part) => part.id === id)!
+    const target = run.filter((part) => /^wall/.test(String(part.hostedIn))).sort((a, b) => stretchOf(a.id).y0 - stretchOf(b.id).y0)[0]!
+    const stretch = stretchOf(target.id)
     const centre: [number, number, number] = [(stretch.aabb[0] + stretch.aabb[2]) / 2, (stretch.y0 + stretch.y1) / 2, (stretch.aabb[1] + stretch.aabb[3]) / 2]
     const at = scene.house.group.localToWorld(new THREE.Vector3(...centre))
     scene.room.world.explode([at.x, at.y, at.z], 30000, 15)

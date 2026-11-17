@@ -204,6 +204,11 @@ export interface BindOptions {
    * used; meshes with neither are matched to the part whose box contains the mesh's bounding-box centre.
    */
   parts?: Record<string, Object3D | MeshRange | Array<Object3D | MeshRange>>
+  /**
+   * Part id -> the parts whose meshes draw its marks (holes, spalls, cracks) when it is drawn by none of its own: a pillar cast between the bricks of two walls is
+   * drawn inside their meshes, under their plaster, and the rounds that hit it leave their holes there.
+   */
+  marksOn?: Record<string, readonly string[]>
   /** Keep the world transform in sync from the root's matrixWorld every update (default true). */
   syncTransform?: boolean
   /** Called from every `update`, after the queued events were applied: where the host finishes the drawing of this object that it deferred (a wall repainted once per frame). */

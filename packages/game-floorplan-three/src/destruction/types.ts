@@ -71,6 +71,8 @@ export interface BreachChange {
 
 /** The breach view of a house (`createBreachView`): draws the units that come out of its walls. */
 export interface BreachView {
+  /** The drawn walls that draw `partId` (its host; for a pillar under their plaster, each wall it stands in): where its marks go. */
+  hosts(partId: string): string[]
   stage(event: DestructionEvent): boolean
   spall(event: DestructionEvent): boolean
   claim(): void

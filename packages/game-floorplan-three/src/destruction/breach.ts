@@ -783,6 +783,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     return {
+      /** The drawn walls that draw `partId` (its host; for a pillar under their plaster, each wall it stands in): where its marks go. */
+      hosts(partId: string): string[] { return hostsOf(partId) },
       /**
        * What still stands of the units of `partId` once its wall is cut, as drawn: spans along the wall from `start` (in the house's space, along u when
        * `alongU`) and up. Null while the wall is whole (all of the part stands).
