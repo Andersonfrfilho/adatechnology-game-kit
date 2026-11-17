@@ -166,6 +166,7 @@ export interface MaterialBending {
   absorbed?: number
 }
 
+/** Read as it is when the world is made (`DestructionOptions.materials`) and never written after: the world remembers what it derives from a part's material. */
 export interface MaterialDef {
   id: MaterialId
   /** Density in kg/m³ (used when a part has no `mass`). */
