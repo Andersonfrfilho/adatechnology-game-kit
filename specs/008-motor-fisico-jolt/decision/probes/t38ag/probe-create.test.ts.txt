@@ -1,0 +1,201 @@
+// @vitest-environment happy-dom
+// probe only (not committed): where the frame after the room's C4 goes, by sub-step
+import * as THREE from 'three'
+import { Session } from 'node:inspector'
+import { describe, it } from 'vitest'
+import { engine } from '@adatechnology/game-floorplan'
+
+import { createTestRoom } from '../../game-test-room/src'
+import { stubRenderer } from '../../game-test-room/tests/helpers'
+import { createFloorplanTestModule } from '../src'
+import { planOf } from './helpers/houses'
+import { fakeDocument } from './helpers/fake-document'
+import { IS_JOLT, physicsLoop } from './setup-physics'
+
+type Any = any
+const SELF: Record<string, number> = {}
+const CALLS: Record<string, number> = {}
+const open: Array<{ child: number }> = []
+let on = false
+const wrap = (target: Any, name: string, label: string): void => {
+  const f = target?.[name]
+  if (typeof f !== 'function' || f.__probed) return
+  const w = function (this: unknown, ...a: unknown[]) {
+    if (!on) return f.apply(this, a)
+    const entry = { child: 0 }
+    open.push(entry)
+    const s0 = performance.now()
+    try { return f.apply(this, a) } finally {
+      const spent = performance.now() - s0
+      open.pop()
+      SELF[label] = (SELF[label] ?? 0) + spent - entry.child
+      CALLS[label] = (CALLS[label] ?? 0) + 1
+      const parent = open[open.length - 1]
+      if (parent) parent.child += spent
+    }
+  }
+  ;(w as Any).__probed = true
+  target[name] = w
+}
+
+const build = () => {
+  planOf('single_storey_a', 1)
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physicsLoop(), worldOptions: { chainLinksPerUpdate: 1 } } as Any) as Any
+  room.loadModule(createFloorplanTestModule({ engine, locale: 'en', world: room.world, renderer: room.renderer, house: { document: fakeDocument } } as Any))
+  room.openArea('floorplan_area')
+  const b = room.bench('floorplan_area')
+  b.set('package', 'residential'); b.set('template', 'single_storey_a'); b.set('seed', 1)
+  b.act('build')
+  let guard = 0
+  while (!room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1') && guard++ < 2000) room.update(0.05)
+  for (let i = 0; i < 60; i++) room.update(0.05)
+  return room
+}
+
+const instrument = (room: Any): Any => {
+  const eng = room.renderer.pieceSys.engine
+  const w = eng.world
+  const J = w.J
+  const EP = Object.getPrototypeOf(eng)
+  for (const n of ['prepare', 'makeBodies', 'underGround', 'bodyDesc', 'outOfStatics', 'sync', 'reshape', 'layStatics', 'layBlastGround', 'layGround', 'layTile', 'keepApart', 'finish', 'readBack', 'groundTurn', 'shapeKey', 'shapeFrom', 'wakeAround', 'remove', 'flatOrRead', 'readTile', 'layVolume', 'solidShape', 'heightField', 'replaceGround', 'updateGround', 'stepBoxes', 'layOne', 'tilesFor']) wrap(EP, n, 'glue.' + n)
+  wrap(Object.getPrototypeOf(eng.statics), 'lay', 'statics.lay')
+  wrap(Object.getPrototypeOf(eng.statics), 'update', 'statics.update')
+  const WP = Object.getPrototypeOf(w)
+  for (const n of ['createBody', 'createBodies', 'makeShape', 'settingsFor', 'unscaleInertia', 'register', 'setShape', 'updateHeights', 'removeBody', 'wakeInBox', 'ignorePair', 'stepFixed', 'readPose', 'readVelocity', 'setPose', 'setVelocity', 'contactPoints', 'penetration', 'overlapSphere', 'rayFirst', 'rayAll', 'sphereCastAll', 'moveKinematic', 'setMotion', 'isSleeping', 'wake', 'sleep', 'touching', 'addImpulse', 'setMaterial', 'clearEvents']) wrap(WP, n, 'jolt.' + n)
+  for (const n of ['CreateBody', 'AddBodiesPrepare', 'AddBodiesFinalize', 'AddBody', 'ActivateBody', 'RemoveBody', 'DestroyBody', 'SetShape']) wrap(w.bi, n, 'wasm.bi.' + n)
+  for (const c of ['StaticCompoundShapeSettings', 'ConvexHullShapeSettings', 'HeightFieldShapeSettings', 'BoxShapeSettings', 'MeshShapeSettings', 'OffsetCenterOfMassShapeSettings']) wrap(J[c].prototype, 'Create', `wasm.${c}.Create`)
+  wrap(J.CompoundShapeSettings.prototype, 'AddShape', 'bridge.AddShape')
+  wrap(J.CompoundShapeSettings.prototype, 'AddShapeShape', 'bridge.AddShapeShape')
+  wrap(w.iface, 'Step', 'wasm.Step')
+  const r = room.renderer
+  for (const n of ['splitLoose', 'adoptSplit', 'partBoxesOf', 'setContacts', 'fitPartBoxes', 'fitSurface', 'measure', 'update']) wrap(r, n, 'kit.' + n)
+  wrap(r.visuals, 'rebuildHost', 'kit.rebuildHost')
+  wrap(r.visuals, 'extract', 'kit.extract')
+  wrap(room.renderer.pieceSys, 'update', 'pieces.update')
+  wrap(room.world, 'update', 'world.update')
+  // counts: the pieces' batches
+  const counts = { batches: 0, dynamic: 0, children: [] as number[], kinds: {} as Record<string, number>, createBody: {} as Record<string, number> }
+  const cb = w.createBodies
+  w.createBodies = function (descs: Any[]) {
+    if (on) {
+      counts.batches++
+      for (const d of descs) {
+        if (d.motion !== 'static') counts.dynamic++
+        const k = `${d.motion}/${d.shape.kind}`
+        counts.kinds[k] = (counts.kinds[k] ?? 0) + 1
+        if (d.shape.kind === 'compound' && d.motion !== 'static') counts.children.push(d.shape.children.length)
+      }
+    }
+    return cb.call(this, descs)
+  }
+  const one = w.createBody
+  w.createBody = function (d: Any) {
+    if (!on) return one.call(this, d)
+    const kids = d.shape.kind === 'compound' ? d.shape.children : []
+    const convex = kids.filter((c: Any) => c.shape.kind === 'convex')
+    const distinct = new Set(convex.map((c: Any) => Array.from(c.shape.points).join(','))).size
+    const k = `${d.motion}/${d.shape.kind}${kids.length ? `:${kids.length}(convex ${convex.length}, distinct ${distinct})` : ''}`
+    if (kids.length > (counts as Any).big?.children.length || (!(counts as Any).big && kids.length > 0)) (counts as Any).big = d.shape
+    const s0 = performance.now()
+    try { return one.call(this, d) } finally { const ms = performance.now() - s0; counts.createBody[k] = Math.round(((counts.createBody[k] ?? 0) + ms) * 1000) / 1000 }
+  }
+  return counts
+}
+
+describe.skipIf(!IS_JOLT)('probe: the frames after the room C4', () => {
+  it('timers', () => {
+    const room = build()
+    const counts: Any = process.env.NOWRAP ? { children: [], kinds: {}, createBody: {} } : instrument(room)
+    const o = room.world.serialize().objects.find((x: Any) => x.id === 'house3d:1').state.position
+    const spot: [number, number, number] = [o[0] - 2.5, 0.6, o[2]]
+    for (let i = 0; i < 10; i++) room.update(0.05)
+    const profile = process.env.PROFILE === '1'
+    const session = new Session(); session.connect()
+    const frames = Number(process.env.FRAMES ?? 4)
+    room.blastAt('c4', spot)
+    for (let f = 0; f < frames; f++) {
+      for (const k of Object.keys(SELF)) delete SELF[k]
+      for (const k of Object.keys(CALLS)) delete CALLS[k]
+      counts.batches = 0; counts.dynamic = 0; counts.children = []; counts.kinds = {}; counts.createBody = {}
+      on = !profile
+      if (profile) { session.post('Profiler.enable'); session.post('Profiler.setSamplingInterval', { interval: 50 }); session.post('Profiler.start') }
+      const s = performance.now()
+      room.update(1 / 60)
+      const ms = performance.now() - s
+      on = false
+      if (profile) {
+        let prof: Any = null
+        session.post('Profiler.stop', (_e: Any, res: Any) => { prof = res.profile })
+        const byId = new Map<number, Any>(prof.nodes.map((n: Any) => [n.id, n]))
+        const self = new Map<string, number>()
+        let wasm = 0, total = 0
+        prof.samples.forEach((id: number, i: number) => {
+          const n = byId.get(id); const t = (prof.timeDeltas[i] ?? 0) / 1000; total += t
+          const url = String(n.callFrame.url)
+          const isWasm = url.startsWith('wasm') || /wasm-function|^\$/.test(n.callFrame.functionName)
+          if (isWasm) wasm += t
+          const k = `${isWasm ? 'WASM ' : ''}${n.callFrame.functionName || '(anon)'} ${url.split('/').slice(-2).join('/')}:${n.callFrame.lineNumber}`
+          self.set(k, (self.get(k) ?? 0) + t)
+        })
+        console.log(`[PROF] f${f} ${ms.toFixed(2)}ms sampled ${total.toFixed(2)} wasm ${wasm.toFixed(2)}\n` + [...self.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30).map(([k, v]) => `  ${v.toFixed(2)} ${k}`).join('\n'))
+        continue
+      }
+      const rows = Object.entries(SELF).sort((a, b) => b[1] - a[1]).filter(([, v]) => v > 0.02).map(([k, v]) => `  ${v.toFixed(2).padStart(7)} ${String(CALLS[k]).padStart(5)}x ${k}`)
+      const ch = counts.children
+      console.log(`[FRAME] f${f} whole ${ms.toFixed(2)} ms | batches ${counts.batches} dynamic ${counts.dynamic} kinds ${JSON.stringify(counts.kinds)} children n ${ch.length} sum ${ch.reduce((a, b) => a + b, 0)} max ${Math.max(0, ...ch)} | createBody ${JSON.stringify(counts.createBody)}\n${rows.join('\n')}`)
+    }
+    session.disconnect()
+    const big = (counts as Any).big
+    if (!big) return
+    const w = room.renderer.pieceSys.engine.world
+    const J = w.J
+    const med = (f: () => void): number => { const t: number[] = []; for (let i = 0; i < 7; i++) { const s0 = performance.now(); f(); t.push(performance.now() - s0) } return t.sort((a, b) => a - b)[3]! }
+    const pos = new J.Vec3(0, 0, 0), rot = new J.Quat(0, 0, 0, 1)
+    const hullHeap = (pts: ArrayLike<number>, radius?: number): Any => {
+      const h = new J.ConvexHullShapeSettings()
+      if (radius !== undefined) h.mMaxConvexRadius = radius
+      const n = pts.length / 3
+      h.mPoints.resize(n)
+      const base = J.getPointer(h.mPoints.data()) >> 2
+      for (let i = 0; i < n; i++) { J.HEAPF32[base + i * 4] = pts[i * 3]; J.HEAPF32[base + i * 4 + 1] = pts[i * 3 + 1]; J.HEAPF32[base + i * 4 + 2] = pts[i * 3 + 2]; J.HEAPF32[base + i * 4 + 3] = pts[i * 3 + 2] }
+      return h
+    }
+    const settings = (variant: 'heap' | 'heap0'): Any => {
+      const c = new J.StaticCompoundShapeSettings()
+      for (const ch of big.children) {
+        pos.Set(ch.position[0], ch.position[1], ch.position[2])
+        const r = ch.rotation ?? [0, 0, 0, 1]; rot.Set(r[0], r[1], r[2], r[3])
+        let inner: Any
+        if (ch.shape.kind === 'convex') inner = hullHeap(ch.shape.points, variant === 'heap0' ? 0 : undefined)
+        else { const v = new J.Vec3(ch.shape.half[0], ch.shape.half[1], ch.shape.half[2]); inner = new J.BoxShapeSettings(v, Math.min(0.05, Math.min(...ch.shape.half) * 0.2)); J.destroy(v) }
+        inner.mUserData = 0xffffffff
+        c.AddShape(pos, rot, inner, 0xffffffff)
+      }
+      c.mUserData = 0xffffffff
+      return c
+    }
+    const create = (c: Any): Any => { const r = c.Create(); const sh = r.Get(); sh.AddRef(); J.destroy(r); J.destroy(c); return sh }
+    const digest = (sh: Any): string => { const m = sh.GetCenterOfMass(); const b = sh.GetLocalBounds(); return [m.GetX(), m.GetY(), m.GetZ(), b.mMin.GetX(), b.mMax.GetY(), sh.GetVolume(), sh.GetInnerRadius()].join(',') }
+    const a = w.makeShape(big); const da = digest(a); a.Release()
+    const b = create(settings('heap')); const db = digest(b); b.Release()
+    const tCur = med(() => w.makeShape(big).Release())
+    const tHeap = med(() => create(settings('heap')).Release())
+    const tHeap0 = med(() => create(settings('heap0')).Release())
+    const tJsCur = med(() => { const c = new J.StaticCompoundShapeSettings(); for (const ch of big.children) { if (ch.shape.kind !== 'convex') continue; const h = new J.ConvexHullShapeSettings(); for (let i = 0; i < ch.shape.points.length; i += 3) { w.v2.Set(ch.shape.points[i], ch.shape.points[i + 1], ch.shape.points[i + 2]); h.mPoints.push_back(w.v2) } const p = new J.Vec3(ch.position[0], ch.position[1], ch.position[2]); const q = new J.Quat(0, 0, 0, 1); c.AddShape(p, q, h, 0xffffffff); J.destroy(p); J.destroy(q) } J.destroy(c) })
+    const tJsHeap = med(() => J.destroy(settings('heap')))
+    const hulls = big.children.filter((c: Any) => c.shape.kind === 'convex')
+    const tHullOnly = med(() => { for (const ch of hulls) { const h = hullHeap(ch.shape.points); const r = h.Create(); J.destroy(r); J.destroy(h) } })
+    const tHullOnly0 = med(() => { for (const ch of hulls) { const h = hullHeap(ch.shape.points, 0); const r = h.Create(); J.destroy(r); J.destroy(h) } })
+    const asBoxes = { kind: 'compound', children: big.children.map((ch: Any) => {
+      if (ch.shape.kind !== 'convex') return ch
+      const p = ch.shape.points; let lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity]
+      for (let i = 0; i < p.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k]!, p[i + k]); hi[k] = Math.max(hi[k]!, p[i + k]) }
+      return { shape: { kind: 'box', half: [(hi[0]! - lo[0]!) / 2, (hi[1]! - lo[1]!) / 2, (hi[2]! - lo[2]!) / 2] }, position: [ch.position[0] + (hi[0]! + lo[0]!) / 2, ch.position[1] + (hi[1]! + lo[1]!) / 2, ch.position[2] + (hi[2]! + lo[2]!) / 2] }
+    }) }
+    const tBoxes = med(() => w.makeShape(asBoxes).Release())
+    console.log(`[EXP] same compound with every prism a box: ${tBoxes.toFixed(2)} ms`)
+    console.log(`[EXP] compound ${big.children.length} children (${hulls.length} hulls): same shape heap vs current ${da === db} | makeShape now ${tCur.toFixed(2)} | heap points + scratch pos ${tHeap.toFixed(2)} | heap + convex radius 0 ${tHeap0.toFixed(2)} | JS settings only now ${tJsCur.toFixed(2)} vs heap ${tJsHeap.toFixed(2)} | hulls Create alone ${tHullOnly.toFixed(2)}, radius 0 ${tHullOnly0.toFixed(2)}`)
+  }, 600000)
+})
