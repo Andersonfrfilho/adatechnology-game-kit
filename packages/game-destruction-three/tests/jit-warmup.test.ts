@@ -40,6 +40,22 @@ describe('the JIT warm-up', () => {
     expect(disposed).toBe(1)
   })
 
+  it('lays a crater tile with a solid net of hundreds of blocks and measures the drawn fixed things, then frees them', async () => {
+    const engine = await createJoltEngine()
+    const probe = engine.createWorld()
+    const another = () => ({ name: engine.name, createWorld: (desc?: Parameters<typeof engine.createWorld>[0]) => engine.createWorld(desc) })
+    const report = warmUpDestructionJit(THREE, make, { engine: another() })
+    // the first run is the one that grows the heap (code, tables); what a second run holds again is what stays
+    const first = probe.memoryInUse()
+    warmUpDestructionJit(THREE, make, { engine: another() })
+    expect(report!.groundNets).toBeGreaterThan(0)
+    expect(report!.largestNet).toBeGreaterThanOrEqual(300)
+    expect(report!.staticBodies).toBeGreaterThan(24)
+    expect(probe.bodyCount).toBe(0)
+    expect(probe.memoryInUse() - first).toBeLessThan(1_000_000)
+    probe.dispose()
+  })
+
   it('is off with jitWarmUp: false and on, by default, through the renderer', async () => {
     const engine = await createJoltEngine()
     let made = 0

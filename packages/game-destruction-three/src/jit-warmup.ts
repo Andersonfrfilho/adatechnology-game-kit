@@ -16,22 +16,33 @@ export interface JitWarmUpOptions {
   readonly world?: WorldDesc
 }
 
-/** What the warm-up saw: the loose pieces the blast made at most, and the fragments (so a test can tell the paths ran). */
+/** What the warm-up saw: the loose pieces the blast made at most, the fragments, and what the engine was given of the ground and the drawn statics (so a test can tell the paths ran). */
 export interface JitWarmUpReport {
   readonly pieces: number
   readonly fragments: number
+  /** The static compounds the engine made (a crater tile's solid net, the step boxes) and the most children one had. */
+  readonly groundNets: number
+  readonly largestNet: number
+  /** The static bodies made in a batch for the drawn fixed things (`staticSolids`), so the measuring of drawn solids ran. */
+  readonly staticBodies: number
 }
 
 const COLUMNS = 6
 const ROWS = 4
 const BRICK: Vec3 = [0.5, 0.25, 0.2]
-const FRAMES = 150
+const FRAMES = 90
 const FRAME_SECONDS = 1 / 60
 const BLAST_AT: Vec3 = [0, 0.5, -1.5]
 const BLAST_ENERGY = 4_000_000
 const BLAST_RADIUS = 7
-const CRATER_DEPTH = 0.3
-const CRATER_RADIUS = 2.5
+// a C4's crater: a bowl with a raised rim and the roughness of thrown soil, over several tiles, so a tile's solid net has hundreds of blocks as in the room
+const CRATER_DEPTH = 0.9
+const CRATER_RADIUS = 3
+const CRATER_RIM = 0.25
+const CRATER_ROUGHNESS = 0.015
+const STATIC_AT: Vec3 = [8.5, 0, 0]
+const STATIC_SIZE: Vec3 = [2, 0.6, 1.2]
+const STATIC_NUDGE_FRAME = 20
 // far from where a host puts anything: the throwaway scene never meets the game's
 const ORIGIN: Vec3 = [4000, 0, 4000]
 
@@ -40,7 +51,10 @@ interface BlastAndRunParams {
   readonly loop: PhysicsLoop | undefined
   readonly renderer: DestructionRenderer
   readonly onCrater: () => void
+  readonly fixedRoot: THREE_NS.Object3D
 }
+
+type BodyCounts = { nets: number; largest: number; statics: number }
 
 const warmed = new WeakSet<object>()
 const OWN_SOLVER = {}
@@ -76,6 +90,36 @@ const brickWall = (THREE: ThreeNamespace): { readonly parts: PartSpec[]; readonl
   return { parts, joints: inferJoints(parts), mesh: new THREE.Mesh(merged, new THREE.MeshStandardMaterial()), ranges }
 }
 
+/** A fixed object of its own, drawn by a mesh of its own (not a range of a merged one), far enough from the blast to stand: the engine measures what it draws and makes a static body of it. */
+const fixedSlab = (THREE: ThreeNamespace, world: ReturnType<typeof createDestruction>, renderer: DestructionRenderer): { readonly id: string; readonly root: THREE_NS.Group } => {
+  const part: PartSpec = { id: 'slab', material: 'concrete', shape: { kind: 'box', size: STATIC_SIZE }, position: [0, STATIC_SIZE[1] / 2, 0] }
+  const id = world.add({ parts: [part], joints: [] }, { position: [ORIGIN[0] + STATIC_AT[0], ORIGIN[1], ORIGIN[2] + STATIC_AT[2]] })
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(...STATIC_SIZE).translate(0, STATIC_SIZE[1] / 2, 0), new THREE.MeshStandardMaterial())
+  const root = new THREE.Group()
+  root.position.set(ORIGIN[0] + STATIC_AT[0], ORIGIN[1], ORIGIN[2] + STATIC_AT[2])
+  root.add(mesh)
+  root.updateMatrixWorld(true)
+  renderer.bind(id, root, { parts: { slab: mesh } })
+  return { id, root }
+}
+
+/** Counts what the engine is given: the static compounds made one by one (the crater tile's solid net, step boxes) with the most children, and the static bodies made in a batch (the drawn fixed things). */
+const countBodies = (engineWorld: PhysicsWorld, counts: BodyCounts): void => {
+  const create = engineWorld.createBody.bind(engineWorld)
+  engineWorld.createBody = (desc) => {
+    if (desc.motion === 'static' && desc.shape.kind === 'compound') {
+      counts.nets++
+      counts.largest = Math.max(counts.largest, desc.shape.children.length)
+    }
+    return create(desc)
+  }
+  const createMany = engineWorld.createBodies.bind(engineWorld)
+  engineWorld.createBodies = (descs) => {
+    counts.statics += descs.filter((desc) => desc.motion === 'static').length
+    return createMany(descs)
+  }
+}
+
 /**
  * One blast on a small wall, in a world, a scene and a renderer of its own, all freed at the end. Every path the first real explosion would run cold runs here once: the
  * fracture and the split of the loosened groups, the oriented boxes fitted to the parts, the engine's bodies and compounds, the ground laid under the pieces and written in place
@@ -86,15 +130,30 @@ const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions
   const world = createDestruction()
   // an effects world of its own: without one the renderer makes its own and warns the host, who did lend one
   const vfx = createVfx({})
-  let craterDepth = 0
-  const terrainAt = (x: number, z: number): number => -craterDepth * Math.max(0, 1 - Math.hypot(x - ORIGIN[0] - BLAST_AT[0], z - ORIGIN[2] - BLAST_AT[2]) / CRATER_RADIUS)
+  let isDug = false
+  const terrainAt = (x: number, z: number): number => {
+    if (!isDug) return 0
+    const distance = Math.hypot(x - ORIGIN[0] - BLAST_AT[0], z - ORIGIN[2] - BLAST_AT[2])
+    if (distance >= CRATER_RADIUS * 1.5) return 0
+    const bowl = distance < CRATER_RADIUS ? -CRATER_DEPTH * (1 - (distance / CRATER_RADIUS) ** 2) : CRATER_RIM * Math.sin(((distance - CRATER_RADIUS) / (CRATER_RADIUS * 0.5)) * Math.PI)
+    return bowl + CRATER_ROUGHNESS * Math.sin(x * 9.1) * Math.sin(z * 7.3)
+  }
+  // exact bounds would need the terrain's own data; these hold for the function above and keep the tiles near the crater out of the level proof
+  const terrainRangeAt = (minX: number, maxX: number, minZ: number, maxZ: number): { readonly low: number; readonly high: number } => {
+    const dx = Math.max(minX - ORIGIN[0] - BLAST_AT[0], 0, ORIGIN[0] + BLAST_AT[0] - maxX)
+    const dz = Math.max(minZ - ORIGIN[2] - BLAST_AT[2], 0, ORIGIN[2] + BLAST_AT[2] - maxZ)
+    return !isDug || Math.hypot(dx, dz) >= CRATER_RADIUS * 1.5 ? { low: 0, high: 0 } : { low: -CRATER_DEPTH - CRATER_ROUGHNESS, high: CRATER_RIM + CRATER_ROUGHNESS }
+  }
+  const counts: BodyCounts = { nets: 0, largest: 0, statics: 0 }
   let engineWorld: PhysicsWorld | undefined
   let renderer: DestructionRenderer | undefined
   let bound: string | undefined
+  let fixedId: string | undefined
   try {
     engineWorld = options.engine?.createWorld(options.world ?? KIT_WORLD)
+    if (engineWorld) countBodies(engineWorld, counts)
     const loop: PhysicsLoop | undefined = engineWorld ? createPhysicsLoop(engineWorld) : undefined
-    renderer = makeRenderer({ physics: loop ?? 'own', scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, jitWarmUp: false })
+    renderer = makeRenderer({ physics: loop ?? 'own', scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, terrainRangeAt, jitWarmUp: false })
     const wall = brickWall(THREE)
     const root = new THREE.Group()
     root.position.set(...ORIGIN)
@@ -103,9 +162,14 @@ const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions
     root.updateMatrixWorld(true)
     bound = world.add({ parts: wall.parts, joints: wall.joints }, { position: ORIGIN })
     renderer.bind(bound, root, { parts: Object.fromEntries(wall.parts.map((part, index) => [part.id, { mesh: wall.mesh, range: wall.ranges[index] as [number, number] }])) })
-    return blastAndRun({ world, loop, renderer, onCrater: () => (craterDepth = CRATER_DEPTH) })
+    const fixed = fixedSlab(THREE, world, renderer)
+    fixedId = fixed.id
+    scene.add(fixed.root)
+    const report = blastAndRun({ world, loop, renderer, fixedRoot: fixed.root, onCrater: () => (isDug = true) })
+    return { ...report, groundNets: counts.nets, largestNet: counts.largest, staticBodies: counts.statics }
   } finally {
     if (renderer && bound !== undefined) renderer.release(bound)
+    if (renderer && fixedId !== undefined) renderer.release(fixedId)
     renderer?.dispose()
     discardObject3D(scene.children.slice())
     vfx.clear()
@@ -114,7 +178,7 @@ const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions
 }
 
 /** The blast and the frames after it; the most pieces and fragments seen. */
-const blastAndRun = ({ world, loop, renderer, onCrater }: BlastAndRunParams): JitWarmUpReport => {
+const blastAndRun = ({ world, loop, renderer, onCrater, fixedRoot }: BlastAndRunParams): Pick<JitWarmUpReport, 'pieces' | 'fragments'> => {
   const seen = { pieces: 0, fragments: 0 }
   const point: Vec3 = [ORIGIN[0] + BLAST_AT[0], ORIGIN[1] + BLAST_AT[1], ORIGIN[2] + BLAST_AT[2]]
   const report = world.explode(point, BLAST_ENERGY, BLAST_RADIUS, 'warm-up')
@@ -122,6 +186,8 @@ const blastAndRun = ({ world, loop, renderer, onCrater }: BlastAndRunParams): Ji
   onCrater()
   renderer.wakeRegion(point[0], point[2], CRATER_RADIUS)
   for (let frame = 0; frame < FRAMES; frame++) {
+    // a fixed thing that moved is measured again, as one the blast touched is
+    if (frame === STATIC_NUDGE_FRAME) fixedRoot.position.x += 0.02
     world.update(FRAME_SECONDS)
     loop?.step(FRAME_SECONDS)
     renderer.update(FRAME_SECONDS)
