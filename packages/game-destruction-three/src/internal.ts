@@ -89,6 +89,11 @@ export interface MeshVis {
   collapsed: boolean
   /** The part is not drawn (broken, melted, ash). */
   hidden: boolean
+  /**
+   * The mesh's matrix in its object's frame (`specFrameInverse(root)` times its world matrix), recorded when it was bound: a rigid part keeps it through every split and pose (a
+   * piece's new group stands where its object stood), so the boxes measured from it are the same bits wherever the object stands. Read only; replaced when the part moved in it.
+   */
+  frame?: THREE_NS.Matrix4
   /** Dents, colours, melt or hiding differ from the original geometry. */
   touched: boolean
   charK: number

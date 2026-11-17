@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import type { JoltWorld } from '@adatechnology/game-physics-jolt'
 
@@ -9,6 +9,13 @@ import { IS_JOLT, physicsOption } from './setup-physics'
 
 const PART_IDS = ['sheet', 'plate', 'post', 'gable', 'beam', 'ridge'] as const
 const FRAME = 1 / 60
+
+// the fit is counted through the module the renderer imports it from
+let fitCalls = 0
+vi.mock('@adatechnology/game-shapes', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@adatechnology/game-shapes')>()
+  return { ...actual, fitOrientedBoxes: (...args: Parameters<typeof actual.fitOrientedBoxes>) => (fitCalls++, actual.fitOrientedBoxes(...args)) }
+})
 /** One fitted box per part of this catalogue. */
 const PART_BOXES = 6
 
@@ -43,12 +50,12 @@ const merge = (geos: THREE.BufferGeometry[]): { geo: THREE.BufferGeometry; range
   return { geo, ranges }
 }
 
-/** A house-like object on Jolt, its parts ranges of one merged mesh, bound and fitted ahead; `prebuildShapes` as given; at the origin unturned, or `placed` away and turned. */
-const house = (prebuildShapes: boolean, placed: boolean) => {
+/** A house-like object on Jolt, its parts ranges of one merged mesh; its boxes fitted and their shapes made `ahead` of the blow or not; at the origin unturned, or `placed` away and turned. */
+const house = (ahead: boolean, placed: boolean) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const physics = physicsOption()
-  const renderer = createDestructionRenderer(THREE, { physics, scene, world: world.asWorld(), eventBudgetMs: Infinity, fitBoxesAhead: true, prebuildShapes })
+  const renderer = createDestructionRenderer(THREE, { physics, scene, world: world.asWorld(), eventBudgetMs: Infinity, fitBoxesAhead: ahead, prebuildShapes: ahead })
   const { geo, ranges } = merge(catalogGeometries())
   const root = new THREE.Group()
   if (placed) {
@@ -82,7 +89,7 @@ const hashOf = (bytes: Uint8Array): string => {
 /** The pieces' poses, read off their roots: what the game draws. */
 const poses = (s: ReturnType<typeof house>): number[] => s.renderer.pieces().flatMap((p) => [...p.root.position.toArray(), ...p.root.quaternion.toArray()])
 
-/** Both runs blown apart and stepped 1.5 s; the part boxes the plain run built, and the other made ahead, in the frame that makes the pieces' bodies. */
+/** A run without anything made ahead and one with it, both blown apart and stepped 1.5 s; the boxes fitted and the part boxes built in the frame that makes the pieces' bodies. */
 const blowBoth = (placed: boolean) => {
   const plain = house(false, placed)
   const ahead = house(true, placed)
@@ -91,38 +98,42 @@ const blowBoth = (placed: boolean) => {
   const before = { plain: plain.engine.ready.builtAtAssembly, ahead: ahead.engine.ready.builtAtAssembly }
   plain.renderer.update(FRAME)
   ahead.renderer.update(FRAME)
-  const atSplit = { plain: plain.engine.ready.builtAtAssembly - before.plain, ahead: ahead.engine.ready.builtAtAssembly - before.ahead }
+  const built = { plain: plain.engine.ready.builtAtAssembly - before.plain, ahead: ahead.engine.ready.builtAtAssembly - before.ahead }
   for (let frame = 0; frame < 90; frame++) {
     plain.renderer.update(FRAME)
     ahead.renderer.update(FRAME)
   }
-  return { plain, ahead, atSplit }
+  return { plain, ahead, built }
+}
+
+/** The split alone of a house prepared ahead (its fitting and shapes all done): the fits it ran. */
+const fitsAtSplit = (placed: boolean): number => {
+  const s = house(true, placed)
+  s.renderer.deferredQueue().flush()
+  const before = fitCalls
+  const groups = [['sheet'], ['plate', 'post'], ['gable', 'beam', 'ridge']]
+  s.world.objects.get('house')!.groups = groups.map((g) => [...g])
+  s.world.emit({ type: 'detach', object: 'house', joint: 'j', parts: [...PART_IDS], by: 'break', groups })
+  s.renderer.deferredQueue().flush()
+  return fitCalls - before
 }
 
 describe.skipIf(!IS_JOLT)('the shapes of a house\'s part boxes made ahead of the blow (spec 008 B6)', () => {
-  it('where the split reads the very boxes fitted ahead, the frame that makes the pieces builds no part box, and the run is the same to the bit', () => {
-    const { plain, ahead, atSplit } = blowBoth(false)
-    expect(plain.engine.ready.made).toBe(0)
-    expect(ahead.engine.ready.made).toBe(PART_BOXES)
-    expect(ahead.renderer.pieces().length).toBe(2)
-    expect(atSplit.plain).toBeGreaterThan(0)
-    // every part box the plain run built in that frame the other took made ahead: it built none
-    expect(ahead.engine.ready.taken).toBe(atSplit.plain)
-    expect(atSplit.ahead).toBe(0)
-    expect(poses(ahead)).toEqual(poses(plain))
-    expect(hashOf(ahead.engine.saveState())).toBe(hashOf(plain.engine.saveState()))
-  })
-
-  it('placed away and turned, the split measures the boxes again in the piece\'s own frame (other last bits): nothing made ahead fits, and the run is still the same to the bit', () => {
-    const { plain, ahead, atSplit } = blowBoth(true)
-    expect(ahead.engine.ready.made).toBe(PART_BOXES)
-    expect(atSplit.plain).toBeGreaterThan(0)
-    // the known gap (spec 008 B6): the halves at the split differ from the fitted ones in the last bits, so the exact key misses; a split that reads them frame-free turns this into hits
-    expect(ahead.engine.ready.taken).toBe(0)
-    expect(atSplit.ahead).toBe(atSplit.plain)
-    expect(poses(ahead)).toEqual(poses(plain))
-    expect(hashOf(ahead.engine.saveState())).toBe(hashOf(plain.engine.saveState()))
-  })
+  for (const placed of [false, true]) {
+    it(`${placed ? 'moved and turned' : 'at the origin'}: the split fits no box and builds no part box, and the run is the one with nothing made ahead, to the bit`, () => {
+      const { plain, ahead, built } = blowBoth(placed)
+      expect(plain.engine.ready.made).toBe(0)
+      expect(ahead.engine.ready.made).toBe(PART_BOXES)
+      expect(ahead.renderer.pieces().length).toBe(2)
+      expect(built.plain).toBeGreaterThan(0)
+      // every part box the plain run built in that frame the other took made ahead: it built none
+      expect(ahead.engine.ready.taken).toBe(built.plain)
+      expect(built.ahead).toBe(0)
+      expect(poses(ahead)).toEqual(poses(plain))
+      expect(hashOf(ahead.engine.saveState())).toBe(hashOf(plain.engine.saveState()))
+      expect(fitsAtSplit(placed)).toBe(0)
+    })
+  }
 
   it('what no piece took goes when the object is unbound, and with the renderer', () => {
     const s = house(true, true)

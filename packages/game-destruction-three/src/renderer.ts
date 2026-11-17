@@ -123,6 +123,11 @@ const PREFIT_SLICE_MS = 1
 const CONTACT_MESHES = 12
 /** Most meshes of a loose piece other pieces land on one by one (`partBoxes`: a shelf's boards, not the box around the shelf); one with more is landed on by its box. */
 const PART_BOX_MESHES = 64
+/**
+ * Most a matrix element (rotation, scale, metres) of a mesh in its object's frame may differ from the one recorded (`MeshVis.frame`) and still be it: the rounding of a new group's
+ * pose (1e-15 of the numbers) is far under it, a part that moved in its object (a door on its hinge) far over.
+ */
+const FRAME_DRIFT = 1e-6
 /** Points of the drawing looked at to tell a round piece (per mesh), how alike its two other sides must be (share of the larger) and how far past their circle a point may be. */
 const ROUND_SAMPLES = 400
 const ROUND_SIDES = 0.12
@@ -631,6 +636,7 @@ class Renderer implements DestructionRenderer {
     }
     this.bounds.set(objectId, bound)
     for (const pv of bound.parts.values()) this.tagPart(pv, objectId)
+    this.recordFrames(bound)
     if (this.o.fitBoxesAhead !== false) this.prefitPartBoxes(bound)
     this.checkLoose(objectId, true)
   }
@@ -2620,16 +2626,14 @@ class Renderer implements DestructionRenderer {
       return
     }
     const inv = specFrameInverse(this.THREE, b.root)
-    const m4 = new this.THREE.Matrix4()
     const lb = new this.THREE.Box3()
     const [cx, cy, cz] = body.localCenter
     const points: Vec3[] = []
     const boxes: PartBox[] = []
     for (const mv of meshes) {
-      mv.mesh.updateWorldMatrix(true, false)
       this.visuals.localBox(mv, lb)
       if (lb.isEmpty()) continue
-      m4.multiplyMatrices(inv, mv.mesh.matrixWorld)
+      const m4 = this.frameOf(mv, inv, true)
       this.partBoxesOf(mv, { lb, m4, from: [cx, cy, cz] }, boxes)
       lb.applyMatrix4(m4)
       for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
@@ -2637,6 +2641,29 @@ class Renderer implements DestructionRenderer {
     body.contacts = points.length > 0 && meshes.length <= CONTACT_MESHES ? points : undefined
     // one box turned as drawn (a roof sheet lying askew) is kept too: the box of the piece would be the air around it
     body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
+  }
+
+  /** Every mesh of a newly bound object: its matrix in the object's frame as it stands now, the one its boxes are measured from from here on (`frameOf`). */
+  private recordFrames(b: Bound): void {
+    const inverse = specFrameInverse(this.THREE, b.root)
+    for (const mv of this.meshesOf(b)) {
+      mv.mesh.updateWorldMatrix(true, false)
+      mv.frame = new this.THREE.Matrix4().multiplyMatrices(inverse, mv.mesh.matrixWorld)
+    }
+  }
+
+  /**
+   * The mesh's matrix in its object's frame (`inverse`: `specFrameInverse` of the object's root): the one recorded (`MeshVis.frame`) while the mesh still stands there, to rounding
+   * (`FRAME_DRIFT`), so the boxes of a part are the same bits whichever group or pose it is measured in; else as it stands now, recorded when `record` (a part that moved in its
+   * object). Read only.
+   */
+  private frameOf(mv: MeshVis, inverse: THREE_NS.Matrix4, record: boolean): THREE_NS.Matrix4 {
+    mv.mesh.updateWorldMatrix(true, false)
+    const now = new this.THREE.Matrix4().multiplyMatrices(inverse, mv.mesh.matrixWorld)
+    const kept = mv.frame
+    if (kept && kept.elements.every((value, i) => Math.abs(value - now.elements[i]!) <= FRAME_DRIFT)) return kept
+    if (record) mv.frame = now
+    return now
   }
 
   /** `fitOrientedBoxes` of a ranged part's points, taken from what it gave before when the points and the triangles are the very same numbers. */
@@ -2695,8 +2722,8 @@ class Renderer implements DestructionRenderer {
     if (!mv.range || !mv.host || mv.loose) return false
     let inverse = frames.get(job.b)
     if (!inverse) frames.set(job.b, (inverse = specFrameInverse(this.THREE, job.b.root)))
-    mv.mesh.updateWorldMatrix(true, false)
-    const m4 = new this.THREE.Matrix4().multiplyMatrices(inverse, mv.mesh.matrixWorld)
+    // read, never recorded here: when this runs depends on the time a frame has left
+    const m4 = this.frameOf(mv, inverse, false)
     const boxes: PartBox[] = []
     this.partBoxesOf(mv, { lb: new this.THREE.Box3(), m4, from: [0, 0, 0] }, boxes)
     // their shapes too, in the same slice: the compound of the piece the split makes takes them (a box's half does not depend on where the piece's centre falls)
