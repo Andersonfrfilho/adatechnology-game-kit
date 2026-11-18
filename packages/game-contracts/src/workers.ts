@@ -41,8 +41,14 @@ export interface TaskKind<In, Out> extends WorkerKindSchedule {
   run(input: In): Out
   /** The buffers of the output to transfer back (zero copy). The input is copied, never transferred, when `late` is `sync`: the main thread may still need it. */
   transferOutput?(value: Out): readonly ArrayBuffer[]
-  /** The buffers of the input to transfer when `late` is not `sync`. */
+  /** The buffers of the input to transfer when `late` is not `sync` (and on awaited jobs of a `sync` kind with `transferAwaitedInput`). */
   transferInput?(value: In): readonly ArrayBuffer[]
+  /**
+   * With `late: 'sync'`, transfer the input (`transferInput`) on awaited jobs (`run`) too, instead of copying it: for a caller that keeps its own copy of the input for its
+   * own fallback (the ground tiles). Once sent, such a job is never run on the main thread (its input is gone): a worker that fails it or dies holding it rejects its promise.
+   * Jobs read through `submit`/`collect` still copy their input.
+   */
+  readonly transferAwaitedInput?: boolean
   /** One input each worker runs once at `warm` (the JIT compiles the kernel before the first real job). */
   readonly warmup?: In
 }

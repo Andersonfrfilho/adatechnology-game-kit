@@ -81,6 +81,8 @@ interface Job {
   readonly dueFrame: number
   readonly message: ToWorker
   readonly transfer: readonly ArrayBuffer[]
+  /** A `sync` job whose input is transferred (`transferAwaitedInput`): once sent, it cannot run here nor be sent again. */
+  readonly moved: boolean
   readonly runHere: () => unknown
   readonly resident: Resident | null
   readonly queuedAt: number
@@ -231,7 +233,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
         else job.settle.resolve(job.output)
       } else {
         job.counters.failed++
-        if (job.late === 'sync') runOnMain(job)
+        if (job.late === 'sync' && !job.moved) runOnMain(job)
         else fail(job, new Error(data.error))
       }
     }
@@ -265,10 +267,10 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
     for (const job of [...back, ...waiting]) {
       job.state = 'queued'
       job.slot = null
-      if (job.crashes >= MAX_CRASHES) {
+      if (job.crashes >= MAX_CRASHES || job.moved) {
         job.counters.failed++
-        if (job.late === 'sync') runOnMain(job)
-        else fail(job, new Error(`${job.kindId}: its worker died ${job.crashes} times running it`))
+        if (job.late === 'sync' && !job.moved) runOnMain(job)
+        else fail(job, new Error(job.moved ? `${job.kindId}: its worker died holding its transferred input` : `${job.kindId}: its worker died ${job.crashes} times running it`))
       } else if (job.resident) {
         if (replacement) replacement.own.push(job)
         // no worker for it any more: it is run here when it is collected
@@ -335,6 +337,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
     readonly dueFrame: number
     readonly message: (id: number) => ToWorker
     readonly transfer: readonly ArrayBuffer[]
+    readonly moved?: boolean
     readonly runHere: () => unknown
     readonly resident: Resident | null
   }
@@ -355,6 +358,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
       dueFrame: spec.dueFrame,
       message: spec.message(id),
       transfer: spec.transfer,
+      moved: spec.moved ?? false,
       runHere: spec.runHere,
       resident: spec.resident,
       queuedAt: now(),
@@ -407,15 +411,17 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
 
   const latencyOf = (schedule: WorkerKindSchedule, at?: { readonly latencyFrames?: number }): number => Math.max(1, Math.floor(at?.latencyFrames ?? schedule.latencyFrames ?? 1))
 
-  const taskJob = <In, Out>(kind: TaskKind<In, Out>, input: In, at?: { readonly frame?: number; readonly latencyFrames?: number }): Job => {
+  const taskJob = <In, Out>(kind: TaskKind<In, Out>, input: In, at?: { readonly frame?: number; readonly latencyFrames?: number }, awaited = false): Job => {
     const schedule = scheduleOf(kind as TaskKind<unknown, unknown>)
     const submitted = at?.frame ?? frame
+    const moved = schedule.late === 'sync' && awaited && kind.transferAwaitedInput === true && kind.transferInput !== undefined
     const job = makeJob({
       kind: kind as TaskKind<unknown, unknown>,
       schedule,
       dueFrame: schedule.lane === 'sim' ? submitted + latencyOf(schedule, at) : Number.POSITIVE_INFINITY,
       message: (id) => ({ t: 'task', id, kind: kind.id, input }),
-      transfer: schedule.late === 'sync' ? [] : [...(kind.transferInput?.(input) ?? [])],
+      transfer: schedule.late === 'sync' && !moved ? [] : [...(kind.transferInput?.(input) ?? [])],
+      moved,
       runHere: () => kind.run(input),
       resident: null,
     })
@@ -431,7 +437,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
     },
 
     run<In, Out>(kind: TaskKind<In, Out>, input: In, signal?: AbortSignal): Promise<Out> {
-      const job = taskJob(kind, input)
+      const job = taskJob(kind, input, undefined, true)
       enqueue(job)
       // nobody collects an awaited job: a `sim` kind with no worker to serve it runs here, as the other lanes do (the simulation thread awaits its jobs)
       if (job.lane === 'sim' && job.state === 'queued' && !served('sim')) toMain(job)

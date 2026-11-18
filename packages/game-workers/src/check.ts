@@ -54,6 +54,11 @@ export async function checkTaskKind<In, Out>(kind: TaskKind<In, Out>, samples: r
         if (handle.source !== 'worker') problems.push(`${kind.id} sample ${i}: ${path.name} did not answer (${handle.source ?? 'no result'})`)
         const difference = firstDifference(reference, out)
         if (difference) problems.push(`${kind.id} sample ${i}, ${path.name}: ${difference}`)
+        // an awaited job of a kind that transfers its input goes another way: checked too
+        if (kind.transferAwaitedInput) {
+          const awaited = firstDifference(reference, await coordinator.run(kind, structuredClone(samples[i]) as In))
+          if (awaited) problems.push(`${kind.id} sample ${i}, ${path.name}, awaited: ${awaited}`)
+        }
       }
     } catch (error) {
       problems.push(`${kind.id}, ${path.name}: ${error instanceof Error ? error.message : String(error)}`)
