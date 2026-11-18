@@ -94,3 +94,11 @@ configuração com workers ficou fora desse ruído; 16 workers piorou o pior qua
    vantajoso nesta cena. Para valer a pena seriam necessárias as duas coisas: uma cena em que o passo do Jolt domine o quadro (milhares de corpos
    acordados ao mesmo tempo) **e** o listener de contato nativo (seção 1, item 1). Antes do fork, o ganho maior está em reduzir o custo do lado JS
    (peças, chão, despertar), que é onde o p99 está.
+
+## 4. E a regra dos workers (§14)?
+
+As threads daqui são as pthreads do próprio Jolt (a build `wasm-compat-multithread` as cria dentro do `JobSystemThreadPool`, para um único
+`Step`, com memória compartilhada). Nenhum pacote do kit cria `Worker`: o adaptador só escolhe a build e passa `mMaxWorkerThreads`. Isso é
+diferente do coordenador do `game-workers` (trabalho fora do quadro, resultado num quadro fixo) e fica desligado por padrão. Se um dia for ligado,
+as pthreads do Jolt disputam os mesmos núcleos que o coordenador usa: a repartição automática do `game-workers` teria de contar com elas.
+
