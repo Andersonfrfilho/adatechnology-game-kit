@@ -115,6 +115,13 @@ const STATIC_SPAN = 3
 const VERTICES_PER_UPDATE = 3000
 /** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
 const FEET_BAND = 0.03
+/**
+ * How far the centre of what is left of a piece of furniture must be inside the polygon of its feet to stand (`loosenIfFootless`), per metre of its height: it would have to
+ * lean past atan(0.1), 6°, to go over. Less, it is balanced on an edge (a table on three legs, its centre a few centimetres inside the line between two of them) and goes over.
+ */
+const STAND_LEAN = 0.1
+/** The spin (rad/s) a piece of furniture balanced on an edge of its feet is started over it with. */
+const EDGE_NUDGE = 1
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
 /** What a loose group hangs on (`hingeOf`) stands still when its piece is slower than this (m/s) and turns slower than this (rad/s). */
@@ -2570,21 +2577,31 @@ class Renderer implements DestructionRenderer {
     if (!this.standsOn(objectId, whole.map((one): [number, number, number, number, number, number] => [one.min.x, one.min.y, one.min.z, one.max.x, one.max.y, one.max.z]))) return
     const floor = Math.min(...whole.map((one) => one.min.y))
     const feetOf = (boxes: THREE_NS.Box3[]): THREE_NS.Box3 => boxes.filter((one) => one.min.y < floor + FEET_BAND).reduce((feet, one) => feet.union(one), new this.THREE.Box3())
-    const was = feetOf(whole)
-    const now = feetOf(left.map(boxOf).filter((one) => !one.isEmpty()))
-    const same = !now.isEmpty() && now.min.x <= was.min.x + FEET_BAND && now.max.x >= was.max.x - FEET_BAND && now.min.z <= was.min.z + FEET_BAND && now.max.z >= was.max.z - FEET_BAND
-    if (same) return
+    const leftBoxes = left.map(boxOf).filter((one) => !one.isEmpty())
+    const now = feetOf(leftBoxes)
+    // it stands while the centre of what is left is inside the polygon of its feet by `STAND_MARGIN` (a cupboard with a broken door); a table that lost a leg has its
+    // centre on the line between the two legs beside the gap, balanced on an edge, and goes over toward the gap
+    let away: { x: number; z: number } | null = null
     if (!now.isEmpty()) {
-      const box = left.map(boxOf).reduce((all, one) => all.union(one), new this.THREE.Box3())
-      const centreX = (box.min.x + box.max.x) / 2
-      const centreZ = (box.min.z + box.max.z) / 2
+      const feet = leftBoxes.filter((one) => one.min.y < floor + FEET_BAND)
+      const hull = convexHull(feet.flatMap((one) => [[one.min.x, one.min.z], [one.max.x, one.min.z], [one.max.x, one.max.z], [one.min.x, one.max.z]] as Array<[number, number]>))
+      const centre = centreOfBoxes(leftBoxes)
+      const inside = insideBy(hull, [centre[0], centre[2]])
+      const box = leftBoxes.reduce((all, one) => all.union(one), new this.THREE.Box3())
       const height = box.max.y - box.min.y
       const narrow = height >= TIP_MIN_HEIGHT && Math.min(now.max.x - now.min.x, now.max.z - now.min.z) < TIP_NARROW * height
-      if (!narrow && centreX > now.min.x && centreX < now.max.x && centreZ > now.min.z && centreZ < now.max.z) return
+      if (!narrow && inside.depth > STAND_LEAN * (centre[1] - floor)) return
+      away = hull.length >= 3 ? inside.out : null
     }
     const piece = this.makePiece(objectId)
     this.setContacts(b, b.piece ?? (piece as PieceBody), left)
-    this.tipIfTopHeavy(b)
+    // balanced on an edge it is started over it, and gravity does the rest: turning about (z, 0, -x) moves the top toward (x, z)
+    const loose = b.piece
+    if (away && loose) {
+      loose.angularVelocity[0] += away.z * EDGE_NUDGE
+      loose.angularVelocity[2] -= away.x * EDGE_NUDGE
+      loose.sleeping = false
+    } else this.tipIfTopHeavy(b)
     // the host stops keeping the footprint it had where it stood: it is a body that moves now
     this.o.onLoosened?.(objectId, piece, 'apart')
   }
@@ -3565,4 +3582,58 @@ function lighten(color: number, t: number): number {
     return Math.round(c + (255 - c) * t) << shift
   }
   return ch(16) | ch(8) | ch(0)
+}
+
+/** The convex hull (counter-clockwise) of points on the ground, (x, z). */
+function convexHull(points: Array<[number, number]>): Array<[number, number]> {
+  const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  if (sorted.length < 3) return sorted
+  const cross = (o: [number, number], a: [number, number], b: [number, number]): number => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const half = (list: Array<[number, number]>): Array<[number, number]> => {
+    const out: Array<[number, number]> = []
+    for (const p of list) {
+      while (out.length >= 2 && cross(out[out.length - 2]!, out[out.length - 1]!, p) <= 0) out.pop()
+      out.push(p)
+    }
+    out.pop()
+    return out
+  }
+  return [...half(sorted), ...half([...sorted].reverse())]
+}
+
+/** The centre of a set of boxes weighted by their volumes (x, y, z). */
+function centreOfBoxes(boxes: ReadonlyArray<THREE_NS.Box3>): [number, number, number] {
+  const sum: [number, number, number] = [0, 0, 0]
+  let total = 0
+  for (const one of boxes) {
+    const volume = Math.max(1e-9, (one.max.x - one.min.x) * (one.max.y - one.min.y) * (one.max.z - one.min.z))
+    sum[0] += ((one.min.x + one.max.x) / 2) * volume
+    sum[1] += ((one.min.y + one.max.y) / 2) * volume
+    sum[2] += ((one.min.z + one.max.z) / 2) * volume
+    total += volume
+  }
+  return [sum[0] / total, sum[1] / total, sum[2] / total]
+}
+
+/** How far (m) a point is inside a convex polygon (counter-clockwise; negative outside), and the outward normal of the edge it is nearest. */
+function insideBy(hull: ReadonlyArray<[number, number]>, point: [number, number]): { depth: number; out: { x: number; z: number } } {
+  let depth = Infinity
+  let out = { x: 1, z: 0 }
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i]!
+    const b = hull[(i + 1) % hull.length]!
+    const ex = b[0] - a[0]
+    const ez = b[1] - a[1]
+    const length = Math.hypot(ex, ez)
+    if (length < 1e-9) continue
+    // counter-clockwise in (x, z): the outward normal of an edge is (ez, -ex)
+    const nx = ez / length
+    const nz = -ex / length
+    const d = -((point[0] - a[0]) * nx + (point[1] - a[1]) * nz)
+    if (d < depth) {
+      depth = d
+      out = { x: nx, z: nz }
+    }
+  }
+  return { depth: hull.length < 3 ? -Infinity : depth, out }
 }
