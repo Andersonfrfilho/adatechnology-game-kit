@@ -151,6 +151,11 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 
 - Particles are two fixed-size ring buffers (additive 40 %, normal 60 %), one draw call each; dead particles cost a loop iteration, nothing else.
 - Fragments share one box geometry, six shard geometries, six of each wood shape (sliver, broken board, MDF lump, plywood veneer; 20 to 100 triangles each) and one material per source material id and colour; they shrink away instead of fading.
+- The fragments in flight draw instanced: one `InstancedMesh` (named `fragment-instances`) per shared geometry and material, and one shadow draw, instead of a draw and a shadow draw
+  each (a blast's ~200 fragments were ~400 draw calls). Each fragment keeps its own mesh in the scene (name `fragment`, origin, transform), moved to camera layer 29
+  (`INSTANCED_FRAGMENT_LAYER`) while an instance draws it; glass (transparent, sorted) and a fragment carrying bullet holes draw on their own. At rest a fragment draws on its own
+  again and the settled batches take it; an emptied instanced mesh leaves the scene and its instance buffer is freed. The resting ones look under them only off the ground: one lying
+  on the terrain casts no ray (`surfaceAt`), and the box a fragment lands on is kept until that fragment moves.
 - Decals share one disc geometry and one material; a mesh keeps at most 48 and the renderer 600.
 - Heat, char and melt are only read for "active" parts (hot, burning, melting) plus a scan of all parts every 0.4 s.
 - The first renderer runs one blast on a small wall off screen, once per engine (`jitWarmUp`, on by default, about 0.4 s at load), so the first real explosion does not run cold (it cost about twice the later ones). A host on an engine passes the engine it made its world from, `jitWarmUp: { engine }`, or only the kit's own solver and the shared code are warmed; `false` turns it off. A warm-up that fails is skipped with one warning: the game starts without it.
