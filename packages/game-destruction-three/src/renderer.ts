@@ -127,6 +127,8 @@ const PART_BOX_MESHES = 64
 /** Points of the drawing looked at to tell a round piece (per mesh), how alike its two other sides must be (share of the larger) and how far past their circle a point may be. */
 const ROUND_SAMPLES = 400
 const ROUND_SIDES = 0.12
+/** The least half side (m) of a piece's box, however small what is drawn of it. */
+const MIN_PIECE_HALF = 0.02
 const ROUND_SLACK = 1.12
 /** Points around each rim of a round piece (and around a ball's three great circles). */
 const RIM_POINTS = 12
@@ -747,7 +749,7 @@ class Renderer implements DestructionRenderer {
     }
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
-    return { half: [Math.max(0.02, size.x / 2), Math.max(0.02, size.y / 2), Math.max(0.02, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
+    return { half: [Math.max(MIN_PIECE_HALF, size.x / 2), Math.max(MIN_PIECE_HALF, size.y / 2), Math.max(MIN_PIECE_HALF, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
   }
 
   /**
@@ -959,13 +961,18 @@ class Renderer implements DestructionRenderer {
       }
     }
     if (points.length < 12) return null
+    // what is drawn reaches this far each way: a chip smaller than the least box a piece gets (`MIN_PIECE_HALF`) sits well inside its box, and inside the circle of it
+    // too, square or not (a 1 x 1 cm splinter of a blast rolled like a pencil at 600 rad/s, for good)
+    const drawn = new Float64Array(3)
+    for (const q of points) for (let k = 0; k < 3; k++) drawn[k] = Math.max(drawn[k], Math.abs(q[k]))
     const fits = (axis: 0 | 1 | 2): number | null => {
       const [i, j] = axis === 0 ? [1, 2] : axis === 1 ? [0, 2] : [0, 1]
-      // the two other sides alike, and no point out past the circle they draw
+      // the two other sides alike, and no point out past the circle they draw, both as drawn
       if (Math.abs(half[i] - half[j]) > ROUND_SIDES * Math.max(half[i], half[j])) return null
-      const radius = (half[i] + half[j]) / 2
-      for (const q of points) if (Math.hypot(q[i], q[j]) > radius * ROUND_SLACK) return null
-      return radius
+      if (Math.abs(drawn[i] - drawn[j]) > ROUND_SIDES * Math.max(drawn[i], drawn[j])) return null
+      const reach = (drawn[i] + drawn[j]) / 2
+      for (const q of points) if (Math.hypot(q[i], q[j]) > reach * ROUND_SLACK) return null
+      return (half[i] + half[j]) / 2
     }
     const radii = ([0, 1, 2] as const).map(fits)
     if (radii.every((r) => r !== null)) {

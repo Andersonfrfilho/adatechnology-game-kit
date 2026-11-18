@@ -7,8 +7,8 @@ import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
 import { physicsOption } from './setup-physics'
 
-/** Seconds a heap gets to come to rest, and the last seconds in which nothing may still move. */
-const SETTLE_SECONDS = 10
+/** Seconds a heap gets to come to rest (a can it threw may roll on for 10 s across the floor), and the last seconds in which nothing may still move. */
+const SETTLE_SECONDS = 15
 const WATCH_SECONDS = 1
 /** How far (m) a piece may still travel in the watched seconds: rounding, never a piece shaking between its neighbours. */
 const MOST_PATH = 0.003

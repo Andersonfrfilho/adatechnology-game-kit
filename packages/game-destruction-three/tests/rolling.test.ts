@@ -464,3 +464,39 @@ describe('the mass of a can that lost its liquid', () => {
     expect(piece.sleeping).toBe(false)
   })
 })
+
+describe('only what is drawn round rolls', () => {
+  /** A piece drawn as a box of `size` (m), its box grown to the least a piece gets when it is smaller. */
+  const chip = (size: [number, number, number]): PieceBody => {
+    const s = scene3()
+    s.world.addObject('chip', [partState('body', 'steel', { mass: 0.05 })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size))
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(0, 0.3, 0)
+    s.scene.add(root)
+    root.updateMatrixWorld(true)
+    s.renderer.bind('chip', root, { parts: { body: mesh } })
+    return s.renderer.makePiece('chip') as PieceBody
+  }
+
+  it('a square splinter smaller than the least box of a piece is not taken for a rod: it does not roll', () => {
+    // 1 x 1 cm across and 50 cm long: inside the 2 cm box it gets, its corners sit inside that box's circle too
+    expect(chip([0.5, 0.01, 0.01]).round).toBeUndefined()
+    expect(chip([0.012, 0.012, 0.012]).round).toBeUndefined()
+  })
+
+  it('a can as small as that still rolls', () => {
+    const s = scene3()
+    s.world.addObject('pellet', [partState('body', 'steel', { mass: 0.05 })])
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 24))
+    mesh.rotation.x = Math.PI / 2
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(0, 0.3, 0)
+    s.scene.add(root)
+    root.updateMatrixWorld(true)
+    s.renderer.bind('pellet', root, { parts: { body: mesh } })
+    expect((s.renderer.makePiece('pellet') as PieceBody).round?.kind).toBe('cylinder')
+  })
+})
