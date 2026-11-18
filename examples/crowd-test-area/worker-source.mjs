@@ -5,12 +5,13 @@ import { join } from 'node:path'
 /**
  * @param {{ build: (options: Record<string, unknown>) => Promise<{ outputFiles: { text: string }[] }> }} esbuild
  * @param {string} root the repository root
+ * @param {string} [entry] the worker's file in this example: the coordinator's worker, or `src/sim-worker.js` (the horde's simulation thread)
  * @returns {Promise<string>}
  */
-export async function kitWorkerSource(esbuild, root) {
+export async function kitWorkerSource(esbuild, root, entry = 'src/kit-worker.js') {
   const pkg = (/** @type {string} */ name) => join(root, 'packages', name, 'dist/index.js')
   const result = await esbuild.build({
-    entryPoints: [join(root, 'examples/crowd-test-area/src/kit-worker.js')],
+    entryPoints: [join(root, 'examples/crowd-test-area', entry)],
     bundle: true,
     write: false,
     format: 'iife',

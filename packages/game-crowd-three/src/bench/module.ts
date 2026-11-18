@@ -1,5 +1,5 @@
-import { CROWD_PHYSICS_DEFAULTS, HERD_ROLES, STATE, bindInfection, carrionCenter, createCivilians, createCrowd, createFlock, createHerd, createRng } from '@adatechnology/game-crowd'
-import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdPhysicsOptions, CrowdType, Flock, Herd, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
+import { CROWD_PHYSICS_DEFAULTS, HERD_ROLES, HORDE_COMMAND, STATE, bindInfection, carrionCenter, createCivilians, createCrowd, createFlock, createHerd, createRng, hordeSnapshotBytes, readHordeSnapshot, writeHordeSnapshot } from '@adatechnology/game-crowd'
+import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdPhysicsOptions, CrowdType, Flock, Herd, HordeSimInit, HordeThreadLike, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
 import type { BakeBuilders, BakeSpec, Three } from '@adatechnology/game-characters-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { createPlayer } from '@adatechnology/game-player'
@@ -62,6 +62,13 @@ export type CrowdTestModuleOptions = {
   readonly variety?: CrowdRendererVariety
   /** The physics options of the crowd (personality, contact, balance...): see `CrowdPhysicsOptions`. Default off; the bench's `physics` control turns on the package defaults when this is absent. */
   readonly crowdPhysics?: CrowdPhysicsOptions
+  /**
+   * The horde in a simulation thread (spec 009, T22, experiment): with the physics on, the agents the bench laid out are handed to a thread
+   * that steps them (`hordeSimModule`), and each fixed step here only sends the player's place and copies the newest snapshot into the
+   * crowd the renderer draws. Blasts go to the thread; shots and the civilians' bites still hit the page's copy and are lost at the next
+   * snapshot. `null` from the factory (no shared memory) keeps the crowd here.
+   */
+  readonly hordeThread?: (init: HordeSimInit) => HordeThreadLike | null
   /** Scenes the bench can be born in, by id, over the built-in `dense_wall` and `chain_line`. */
   readonly scenes?: Readonly<Record<string, CrowdBenchScene>>
   /** What the scenes draw with: the host project's wall piece and catalogue item ids. */
@@ -310,9 +317,38 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     nightFactor: settings.night ? 1 : 0,
     ...sceneOf()?.context?.({ cx, cz }),
   })
+  // the horde's simulation thread (options.hordeThread): restarted from the page's agents when the world changes or the page adds or removes
+  // agents itself (the count control, a spawn), seen as a store that no longer holds the last snapshot's count
+  let thread: { handle: HordeThreadLike | null; world: World; n: number } | null = null
+  const stopThread = (): void => {
+    thread?.handle?.dispose()
+    thread = null
+  }
+  const stepInThread = (factory: (init: HordeSimInit) => HordeThreadLike | null): boolean => {
+    if (!thread || thread.world !== world || thread.n !== world.crowd.store.n) {
+      stopThread()
+      const initial = new Uint8Array(hordeSnapshotBytes(CAPACITY))
+      writeHordeSnapshot(world.crowd.store, initial, { frame: 0, kills: 0, hurt: 0 })
+      // the page's coordinator does not cross to the thread: the horde's physics runs there in the step
+      const { workers: _workers, ...physics } = options.crowdPhysics ?? CROWD_PHYSICS_DEFAULTS
+      const { x, z } = world.player.state
+      thread = { world, n: world.crowd.store.n, handle: factory({ pack: options.pack, seed: settings.seed, capacity: CAPACITY, physics, count: 0, spawn: { x: cx, z: cz, radius: 0 }, target: { x, z }, initial }) }
+    }
+    const handle = thread.handle
+    if (!handle) return false
+    const { state } = world.player
+    handle.send([HORDE_COMMAND.TARGET, state.x, state.z, state.yaw, state.alive ? 1 : 0])
+    const snapshot = handle.latest()
+    if (snapshot) thread.n = readHordeSnapshot(world.crowd.store, snapshot.bytes).n
+    return true
+  }
   /** The host's pushable furniture goes into the crowd before the step; after it, what the agents leaned on each piece goes back to the host, which moves it. */
   const stepCrowd = (dt: number): void => {
     const started = performance.now()
+    if (options.hordeThread && world.physics && stepInThread(options.hordeThread)) {
+      frameStepMs += performance.now() - started
+      return
+    }
     const movables = host?.movables?.() ?? []
     world.crowd.setMovables(movables.map((m) => ({ id: m.objectId, minX: m.minX, minZ: m.minZ, maxX: m.maxX, maxZ: m.maxZ, top: m.top })))
     world.crowd.update(dt, updateContext())
@@ -487,6 +523,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     { id: 'max_overlap', name: text.metrics.max_overlap, unit: 'm', digits: 2, read: () => peaks.maxOverlap },
     { id: 'chain_links', name: text.metrics.chain_links, digits: 0, read: () => world.crowd.stats.physics.chainLinks },
     { id: 'crowd_ms_p99', name: text.metrics.crowd_ms_p99, unit: 'ms', digits: 2, read: () => stepMsP99() },
+    { id: 'crowd_ms_mean', name: text.metrics.crowd_ms_mean, unit: 'ms', digits: 2, read: () => (stepTimes.length ? stepTimes.reduce((a, b) => a + b, 0) / stepTimes.length : 0) },
   ]
 
   // each scenario runs its own crowd, so the bench's live one is not touched
@@ -699,6 +736,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       const offBlast = lent.on((event) => {
         if (event.type !== 'explosion') return
         const cover = lent.blastReach
+        if (thread?.handle) thread.handle.send([HORDE_COMMAND.BLAST, event.point[0], event.point[1], event.point[2], event.radius, event.energy])
         world.crowd.blast({
           point: event.point,
           energy: event.energy,
@@ -719,6 +757,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
         offGraphics?.()
         offFixed()
         offBlast()
+        stopThread()
         removeProps?.()
         removeProps = null
         if (renderer) (lent.scene as THREE_NS.Object3D).remove(renderer.group)

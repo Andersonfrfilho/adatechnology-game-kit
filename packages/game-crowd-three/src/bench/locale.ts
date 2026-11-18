@@ -7,7 +7,7 @@ export type CrowdBenchText = {
   readonly controls: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'seed' | 'spawn' | 'noise' | 'hit' | 'kill_all' | 'join' | 'flee' | 'herd' | 'materialize' | 'push' | 'reset'>
   readonly hints: Keys<'scene' | 'physics' | 'count' | 'type' | 'night' | 'noise' | 'hit' | 'join' | 'flee' | 'herd' | 'materialize' | 'push'>
   readonly layers: Keys<'corpses' | 'civilians' | 'animals'>
-  readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message' | 'falls_pressure' | 'falls_chain' | 'falls_landing' | 'climbers' | 'mound_max' | 'thrown_peak' | 'max_overlap' | 'chain_links' | 'crowd_ms_p99' | 'detail_scale' | 'crowd_gpu_ms'>
+  readonly metrics: Keys<'agents' | 'drawn' | 'lod_near' | 'lod_middle' | 'lod_far' | 'draw_calls' | 'bake_ms' | 'active' | 'kills' | 'corpses' | 'civilians' | 'health' | 'grabbed' | 'message' | 'falls_pressure' | 'falls_chain' | 'falls_landing' | 'climbers' | 'mound_max' | 'thrown_peak' | 'max_overlap' | 'chain_links' | 'crowd_ms_p99' | 'crowd_ms_mean' | 'detail_scale' | 'crowd_gpu_ms'>
   readonly sceneNames: Keys<'open' | 'dense_wall' | 'chain_line' | 'furniture_shove'>
   readonly scenarios: Keys<'relevance' | 'lod' | 'attack_pose' | 'corpse_darkens' | 'civilians_flee' | 'herd_calls' | 'vultures' | 'infection' | 'determinism'>
   readonly messages: Keys<'called' | 'burst_hit' | 'swing_knock' | 'pounce_knock' | 'migration' | 'door_broken' | 'alarm' | 'bark' | 'growl' | 'bitten' | 'turned' | 'died'>
@@ -78,6 +78,7 @@ const EN: CrowdBenchText = {
     max_overlap: 'Largest overlap, peak',
     chain_links: 'Chain links',
     crowd_ms_p99: 'Crowd step, p99',
+    crowd_ms_mean: 'Crowd step on this thread, mean',
   },
   sceneNames: { open: 'Open ring', dense_wall: 'Dense wall', chain_line: 'Chain line', furniture_shove: 'Shoving a sofa' },
   scenarios: {
@@ -172,6 +173,7 @@ const PT_BR: CrowdBenchText = {
     max_overlap: 'Maior sobreposição, pico',
     chain_links: 'Elos da cadeia',
     crowd_ms_p99: 'Passo da multidão, p99',
+    crowd_ms_mean: 'Passo da multidão nesta thread, média',
   },
   sceneNames: { open: 'Anel aberto', dense_wall: 'Muro denso', chain_line: 'Rua em cadeia', furniture_shove: 'Empurrando um sofá' },
   scenarios: {

@@ -53,3 +53,23 @@ Leia `spec.md`, `plan.md`, `specs/regras/14-workers.md` e `packages/game-workers
 - T18 Troca de nível de detalhe num quadro marcado: a região que o jogador deixa vira residente; a que ele alcança volta pelo retrato.
 - T19 Faixa `background` pausa com a aba escondida e nunca atrasa o quadro (`late: 'drop'`); sem worker, roda em fatias do orçamento ocioso.
 - T20 Cenário da sala: regiões longe com horda e incêndio, o jogador volta e vê o que mudou; print e medição com a trava.
+
+## Fase G — Electron e a thread de simulação (pedido do dono, 2026-11-18)
+
+O renderer do Electron é Chromium: o `Atomics.wait` continua proibido na thread principal dele. O que o app garante é `SharedArrayBuffer`
+(COOP/COEP sempre), e o processo principal tem `worker_threads` e utility process com as APIs do sistema. Dentro de um worker a espera é
+permitida (navegador e Electron). Combinar com a thread "Empacotar o jogo como app de desktop" (Jolt multithread).
+
+- T21 Backend por plataforma: `electronProfile()` em `game-workers` detecta o app (`crossOriginIsolated` garantido, ponte do preload),
+  liga o transporte `shared` para residentes (sem espera na thread principal: `Atomics.waitAsync` ou leitura no quadro de entrega) e oferece
+  `worker_threads` do processo principal para a faixa `background` e a carga (mundo vivo, arquivos), pelo mesmo protocolo.
+- [x] T22 Thread de simulação (`installSimThread`/`startSimThread`/`runSimInline`, horda em `?sim=thread`; medida no helios a fazer): o passo fixo inteiro (física, multidão, destruição) roda num worker dedicado que **pode esperar** os jobs dos
+  outros workers (`Atomics.wait` permitido em worker), como os motores nativos; a thread principal fica com entrada e desenho e recebe o
+  estado por buffer compartilhado. Começa como experimento atrás de opção, medido na sala (navegador isolado e Electron) contra o modelo de
+  quadro fixo com fallback; decisão do dono com os números.
+- T23 Desenho fora da thread principal: o three.js renderiza num worker com `OffscreenCanvas` (navegador e Electron); a thread principal
+  fica com entrada, interface e áudio. Depois da T22, medido na sala.
+- T24 Documentação e ferramenta (pedido do dono, 2026-11-18): README do `game-workers` com a thread de simulação e a tabela "Choosing a
+  setup by project", regra §14 atualizada, referência da skill, e a ferramenta `kit_workers` do MCP `game-kit` (plataforma, núcleos e
+  trabalho pesado → plano por faixa, categorias, thread de simulação, cabeçalhos, código).
+- T13 (decisão do dono, 2026-11-18): o preset liga o coordenador por padrão; quem usa o kit pode passar o próprio ou desligar (`workers: 0`).

@@ -10,13 +10,20 @@ export { DEFAULT_MAX_WORKERS, hardwareCores, planWorkers } from './plan'
 export type { LaneOptions, WorkerPlan, WorkerPlanOptions } from './plan'
 export type { FromWorker, Spawn, ToWorker, WorkerLike, WorkerScopeLike } from './protocol'
 export { browserSpawn, canSpawnBrowserWorkers, sourceSpawn } from './spawn'
+export { CommandRing, SnapshotReader, SnapshotWriter, canShareMemory, createCommandBuffer, createSnapshotBuffer } from './shared'
+export type { Snapshot } from './shared'
+export { canRunSimThread, installSimThread, runSimInline, startSimThread } from './sim-thread'
+export type { SimLoopOptions, SimThread, SimThreadOptions, SimThreadStats } from './sim-thread'
 export type {
   AnyResidentKind,
+  AnySimModule,
   AnyTaskKind,
   AnyWorkerKind,
   ResidentHandle,
   ResidentInstance,
   ResidentKind,
+  SimInstance,
+  SimModule,
   TaskHandle,
   TaskKind,
   WorkerCoordinator,
