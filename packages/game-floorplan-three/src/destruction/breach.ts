@@ -161,6 +161,18 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     const views = new Map<string, WallView>()
     /** Walls whose damage changed and whose masks and units are repainted at the next `flush`. */
     const dirty = new Set<WallView>()
+    /**
+     * Walls cut since the queue last ran, while a frame budget owns the painting: a blast sends a wall many events (one per part it cuts), and each used to
+     * repaint it. They are painted once each, as the queue's first unit, before the frame draws (the queue runs every frame, `DEFERRED_PRIORITY`).
+     */
+    const cutWalls = new Set<WallView>()
+    const paintCut = (): number => {
+      if (cutWalls.size === 0) return 0
+      for (const view of cutWalls) paint(view)
+      cutWalls.clear()
+      invalidate(); invalidateShadow()
+      return 1
+    }
     const paintBudgetMs = opts.paintBudgetMs ?? Infinity
     /** Views of walls that broke or fell, whose ranges are still collapsed. */
     const dropped: WallView[] = []
@@ -730,7 +742,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       cut(view)
       views.set(hostId, view)
       // the hole a wall gets (an opening, a unit knocked out) shows at once; the plaster chipping around it fills in with the next flush
-      if (opts.deferPaint && change.spall) dirty.add(view)
+      if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) dirty.add(view) }
+      else if (paintState.attached) { dirty.delete(view); cutWalls.add(view) }
       else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
     }
@@ -744,6 +757,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     /** Repaints the walls whose damage changed since the last call, until the budget is spent; the rest wait for the next call. Returns how many walls wait. */
     function flush(budgetMs?: number): number {
+      if (budgetMs !== undefined || !paintState.attached) paintCut()
       if (dirty.size === 0) return 0
       // a frame budget owns the painting: only an explicit budget (the emergency flush, LOD, statistics) paints from here
       if (budgetMs === undefined && paintState.attached) return dirty.size
@@ -760,9 +774,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     const queue: DeferredQueue = {
       id: DEFERRED_QUEUE_ID.BREACH_PAINT,
-      pending: () => dirty.size,
+      pending: () => dirty.size + (cutWalls.size > 0 ? 1 : 0),
       run(deadline, clock) {
-        let ran = 0
+        let ran = paintCut()
+        if (ran > 0 && clock() >= deadline) return ran
         for (const view of dirty) {
           dirty.delete(view)
           paint(view)
@@ -780,6 +795,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     function dispose(view: WallView) {
       dirty.delete(view)
+      cutWalls.delete(view)
       if (view.units) dropUnits(view.units)
       view.unitMaterial.dispose()
       for (const m of view.shells) { m.removeFromParent(); m.geometry.dispose(); m.material.dispose() }

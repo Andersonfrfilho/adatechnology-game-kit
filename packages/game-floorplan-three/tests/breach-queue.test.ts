@@ -19,7 +19,7 @@ function setup() {
   const shoot = (): void => {
     for (const id of ['wall_0_0', 'wall_0_1', 'wall_0_2']) world.hitPart(d.id!, id, { type: 'ballistic', point: centre(id), direction: [0, 0, -1], energy: 500, caliber: 9 })
   }
-  return { d, house, shoot, queue: d.breach.deferredQueue(), houseRenderer }
+  return { d, house, world, shoot, queue: d.breach.deferredQueue(), houseRenderer }
 }
 
 describe('breach paint as a deferred queue', () => {
@@ -71,5 +71,37 @@ describe('breach paint as a deferred queue', () => {
     expect(houseRenderer.renderer.deferredQueue!().pending()).toBe(queue.pending())
     d.breach.flush()
     expect(queue.pending()).toBe(0)
+  })
+
+  it('a wall a burst of rifle rounds cuts many times in one frame is painted once, by the first run of the queue, even with the deadline past', () => {
+    const { d, house, world, queue } = setup()
+    queue.attach?.()
+    const id = 'wall_0_1'
+    const p = house.structure.byId.get(id)!
+    const along = p.aabb[2] - p.aabb[0] > p.aabb[3] - p.aabb[1]
+    const masks = (): Array<{ version: number }> => {
+      const found: Array<{ version: number }> = []
+      house.group.traverse((object) => {
+        const mask = (object.userData as { breachMask?: { texture: { version: number } } }).breachMask
+        if (object.name === 'breach-shell' && mask && !found.includes(mask.texture)) found.push(mask.texture)
+      })
+      return found
+    }
+    // the first round makes the wall's view; the next ones cut it again in the same frame
+    const shot = (k: number) => {
+      const x = along ? p.aabb[0] + 0.6 + k * 0.25 : (p.aabb[0] + p.aabb[2]) / 2
+      const z = along ? (p.aabb[1] + p.aabb[3]) / 2 : p.aabb[1] + 0.6 + k * 0.25
+      world.hitPart(d.id!, id, { type: 'ballistic', point: [x, (p.y0 + p.y1) / 2, z], direction: along ? [0, 0, -1] : [-1, 0, 0], energy: 3500, caliber: 7.62 })
+    }
+    shot(0)
+    queue.run(0, () => 1)
+    const before = masks().map((mask) => mask.version)
+    expect(before.length).toBeGreaterThan(0)
+    for (let k = 1; k <= 5; k++) shot(k)
+    expect(masks().map((mask) => mask.version)).toEqual(before)
+    expect(queue.pending()).toBeGreaterThan(0)
+    queue.run(0, () => 1)
+    const after = masks().map((mask) => mask.version)
+    expect(after.every((version, k) => version === before[k]! + 1)).toBe(true)
   })
 })

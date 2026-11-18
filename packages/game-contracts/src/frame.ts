@@ -52,7 +52,8 @@ export const DEFERRED_QUEUE_ID = {
 /** Default priorities and reserves of the kit's queues; a host may override any of them. */
 export const DEFERRED_PRIORITY = {
   [DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS]: { priority: 300, phase: 'present' },
-  [DEFERRED_QUEUE_ID.BREACH_PAINT]: { priority: 250, phase: 'present' },
+  // every frame: a wall a blast cut waits there to be painted once, and it must show in the frame of the blast
+  [DEFERRED_QUEUE_ID.BREACH_PAINT]: { priority: 250, phase: 'present', minEveryFrames: 1 },
   [DEFERRED_QUEUE_ID.AUDIO_VOICES]: { priority: 200, phase: 'idle', reserveMs: 1 },
   [DEFERRED_QUEUE_ID.VEHICLE_CREASE]: { priority: 100, phase: 'idle' },
 } as const satisfies Readonly<Record<string, DeferredQueueOptions>>
