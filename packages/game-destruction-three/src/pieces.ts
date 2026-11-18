@@ -3,7 +3,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import type { PartBox, PieceBody, PieceFriction, PieceSweepHit } from './internal'
 import { squareBoxOf } from './internal'
 import { clamp } from './math'
-import { boxesAlongGround, shapeContact } from './piece-contacts'
+import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
@@ -169,6 +169,20 @@ const LIFT_DEPTH = STEP
  * for ever; half settles it where the pushes balance, and a single overlap still closes to a millimetre within ten steps.
  */
 const SEPARATE_SHARE = 0.5
+/**
+ * What is left of a piece's push each time it turns back against the last step's (`applyPushes`), and what it grows back by each step it goes on the same way (up to the
+ * whole push). Held between pieces that are asleep (a book in a heap of boards, a fallen case on its books), each pushes it out into the other: it went back and forth by
+ * up to `SEPARATE_SPEED` a step, for good, and never slept. A cycle that turns back at least once in four steps now shrinks (1.2^3 x 0.5 < 1), so it settles where the
+ * pushes balance, as a book wedged in a heap stays where it is held; one put apart the same way step after step keeps its whole push.
+ */
+const TURN_BACK_SHARE = 0.5
+const SAME_WAY_GROWTH = 1.2
+
+/** A piece's push in the last step and the share of its push it is given (`applyPushes`). */
+interface PushStep {
+  readonly push: Vec3
+  share: number
+}
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
 /** Which pieces a step moves and which pairs it meets (`PieceSystem.update` splits only what closes in on a round piece). */
@@ -314,6 +328,9 @@ export class PieceSystem {
   private cellCounts = new Int32Array(64)
   /** How far each piece is put apart from the boxes it overlaps this step (`separatePair`), summed over its pairs and applied once, bounded, at the end of `collide`. */
   private readonly pushes = new Map<PieceBody, Vec3>()
+  /** What each piece was put apart by in the last step, and the share of its push it is given now (`applyPushes`), for the pairs met in `collide` and in `apartDeep` apart. */
+  private readonly collideSteps = new Map<PieceBody, PushStep>()
+  private readonly apartSteps = new Map<PieceBody, PushStep>()
   private supportTurn = 0
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
@@ -455,7 +472,7 @@ export class PieceSystem {
       const imb = b.held || b.sleeping ? 0 : 1 / b.mass
       this.slideApart(a, b, ima, imb, hit)
     }
-    this.applyPushes(dt)
+    this.applyPushes(dt, this.apartSteps)
     return keys
   }
 
@@ -474,7 +491,7 @@ export class PieceSystem {
     const sb = this.measuredShape(b)
     const hit = shapeContact(sa, sb)
     if (!hit || hit.depth <= LIFT_DEPTH) return null
-    return Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? hit : boxesAlongGround(sa, sb)
+    return Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT ? (levelBoxesApart(sa, sb) ?? hit) : boxesApartAlongGround(sa, sb)
   }
 
   /** A box piece's shape as `measure` left it (`surfacesOf`), one object per piece. */
@@ -1699,18 +1716,36 @@ export class PieceSystem {
    * Moves each piece by what its pairs put it apart this step (`pushes`), at most `SEPARATE_SPEED` along the ground and as much up: a chunk in five others is not pushed five
    * times as fast, and nothing is ever moved down (into what holds it). A piece still being put apart is moving, though its speed is nil: it does not fall asleep in the other.
    */
-  private applyPushes(dt: number): void {
+  private applyPushes(dt: number, steps: Map<PieceBody, PushStep> = this.collideSteps): void {
     const most = SEPARATE_SPEED * dt
+    // what was not pushed this step starts again from the whole push
+    for (const body of steps.keys()) if (!this.pushes.has(body)) steps.delete(body)
     for (const [body, push] of this.pushes) {
+      const share = this.pushShare(steps, body, push)
       const level = Math.hypot(push[0], push[2])
-      const k = level > most ? most / level : 1
-      const up = Math.min(most, Math.max(0, push[1]))
+      const k = (level > most ? most / level : 1) * share
+      const up = Math.min(most, Math.max(0, push[1])) * share
       body.root.position.x += push[0] * k
       body.root.position.y += up
       body.root.position.z += push[2] * k
       if (Math.max(level * k, up) > SLOP) body.still = 0
     }
     this.pushes.clear()
+  }
+
+  /** The share of its push a piece is given: `TURN_BACK_SHARE` of it each step it turns back against the last one, `SAME_WAY_GROWTH` more (up to all) each step it goes on the same way. */
+  private pushShare(steps: Map<PieceBody, PushStep>, body: PieceBody, push: Vec3): number {
+    const last = steps.get(body)
+    if (!last) {
+      steps.set(body, { push: [push[0], push[1], push[2]], share: 1 })
+      return 1
+    }
+    const turnsBack = push[0] * last.push[0] + push[1] * last.push[1] + push[2] * last.push[2] < 0
+    last.share = turnsBack ? last.share * TURN_BACK_SHARE : Math.min(1, last.share * SAME_WAY_GROWTH)
+    last.push[0] = push[0]
+    last.push[1] = push[1]
+    last.push[2] = push[2]
+    return last.share
   }
 
   /** The shape a piece meets others by (`ContactShape`), as it stands now: a round one a capsule round its axis, any other the boxes of its parts or its box. */
@@ -1844,7 +1879,7 @@ export class PieceSystem {
    * - One over the other as deep as a contact (`LIFT_DEPTH` and what the closing speed sank them this step): left alone when `resting` (stacked, on a top, leaning on a
    *   part: its support holds it); else only the upper rises, held up by the lower (`propped`), and its point in the lower stops sinking (`contactImpulse`): never a kick up.
    * - One over the other deeper than that: they were made inside each other (chunks of one wall), or stand on one floor side by side. Lifting the upper out would give it
-   *   m g d nothing supplied (a 3 m chunk climbing 5 m through a pile), so they slide apart along the ground by their least level overlap (`boxesAlongGround`).
+   *   m g d nothing supplied (a 3 m chunk climbing 5 m through a pile), so they slide apart along the ground by their least level overlaps (`boxesApartAlongGround`).
    */
   private separatePair(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number, resting: boolean): void {
     const sa = this.contactShape(a, ca)
@@ -1855,7 +1890,7 @@ export class PieceSystem {
     const imb = b.held || b.sleeping ? 0 : 1 / b.mass
     if (ima + imb === 0) return
     if (Math.hypot(hit.normal[0], hit.normal[2]) > KNOCK_FLAT) {
-      this.slideApart(a, b, ima, imb, hit)
+      this.slideApart(a, b, ima, imb, levelBoxesApart(sa, sb) ?? hit)
       return
     }
     const n = hit.normal
@@ -1863,7 +1898,7 @@ export class PieceSystem {
     const vb = b.velocity
     const contact = LIFT_DEPTH + Math.max(0, -((va[0] - vb[0]) * n[0] + (va[1] - vb[1]) * n[1] + (va[2] - vb[2]) * n[2])) * dt
     if (hit.depth > contact) {
-      const level = boxesAlongGround(sa, sb)
+      const level = boxesApartAlongGround(sa, sb)
       if (level) this.slideApart(a, b, ima, imb, level)
       return
     }

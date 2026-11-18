@@ -12,7 +12,7 @@ type Internals = {
   separatePair: (a: Body, b: Body, ca: number[], cb: number[], dt: number, resting: boolean) => void
 }
 
-/** A thin 1.2 x 1.2 m sheet laid over a clutter of slabs and boards that lies asleep on flat ground, by a fixed seed; what separation lifts and how fast it sends anything up. */
+/** A thin 1.2 x 1.2 m sheet laid over a clutter of slabs and boards that lies asleep on flat ground, by a fixed seed; what separation lifts and how much upward speed it gives anything. */
 const dropOnClutter = (seed: number): { lift: number; fastestUp: number } => {
   let state = seed * 9301 + 49297
   const next = (): number => ((state = (state * 1103515245 + 12345) % 2147483648) / 2147483648)
@@ -41,9 +41,12 @@ const dropOnClutter = (seed: number): { lift: number; fastestUp: number } => {
     for (const [body, y] of before) if (body.root.position.y > y) lifted.set(body, (lifted.get(body) ?? 0) + body.root.position.y - y)
   }
   const separatePair = internals.separatePair.bind(internals)
+  // the upward speed separating gives a piece, not what it already had: the sheet landing on a leaning board rocks up by itself (0.18 m/s in seed 41), with or without it;
+  // a fall it stops is no speed up
   internals.separatePair = (a, b, ca, cb, dt, resting) => {
+    const before = [a.velocity[1], b.velocity[1]]
     separatePair(a, b, ca, cb, dt, resting)
-    for (const body of [a, b]) fastestUp = Math.max(fastestUp, body.velocity[1])
+    fastestUp = Math.max(fastestUp, Math.max(0, a.velocity[1]) - Math.max(0, before[0]), Math.max(0, b.velocity[1]) - Math.max(0, before[1]))
   }
   for (let i = 0; i < 4; i++) box(`slab${i}`, [0.5 + next() * 0.7, 0.04 + next() * 0.04, 0.3 + next() * 0.4], [(next() - 0.5) * 1.4, 0.03, (next() - 0.5) * 1.4], [0, next() * 3, 0])
   for (let i = 0; i < 3; i++) box(`board${i}`, [0.64, 0.3, 0.04], [(next() - 0.5) * 1.6, 0.15, (next() - 0.5) * 1.6], [0, next() * 3, (next() - 0.5) * 1.2])
