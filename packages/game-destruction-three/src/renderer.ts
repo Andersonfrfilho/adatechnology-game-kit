@@ -16,6 +16,7 @@ import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound }
 import { isTurned } from './internal'
 import { drawnSolidsOf } from './drawn-solids'
 import { hollowBoxesOf } from './drawn-boxes'
+import { isRigidPose } from './rigid-pose'
 import type { MeasureBudget } from './drawn-solids'
 import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
@@ -423,7 +424,7 @@ class Renderer implements DestructionRenderer {
   private splittingAtLoad = false
   /** The `WorkBudget` frame an event last split a group in: the first one of a frame goes over the budget, so a blow breaks something at once. */
   private eventSplitFrame = -1
-  /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
+  /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh (in its mesh's own space, unless its pose scales), kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
   private readonly fittedBoxes = new Map<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
   /** Objects whose ranged parts are still to be fitted ahead of the blow that breaks them, a part per step, only with time left in the frame. */
   private readonly prefitting: Array<{ readonly b: Bound; readonly parts: MeshVis[]; next: number }> = []
@@ -2766,6 +2767,18 @@ class Renderer implements DestructionRenderer {
           const c = new this.THREE.Vector3((box.low[0]! + box.high[0]!) / 2, (box.low[1]! + box.high[1]!) / 2, (box.low[2]! + box.high[2]!) / 2).applyMatrix4(at.m4)
           const half: Vec3 = [Math.abs((box.high[0]! - box.low[0]!) * scale.x) / 2, Math.abs((box.high[1]! - box.low[1]!) * scale.y) / 2, Math.abs((box.high[2]! - box.low[2]!) * scale.z) / 2]
           out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half, rotation: [quat.x, quat.y, quat.z, quat.w] })
+        }
+        return
+      }
+      // fitted in the mesh's own space, which a split or a move does not change, and carried into the piece by the pose: the same boxes, turned and moved, with no fit
+      if (isRigidPose(at.m4.elements)) {
+        const turn = new this.THREE.Quaternion().setFromRotationMatrix(at.m4)
+        const c = new this.THREE.Vector3()
+        const q = new this.THREE.Quaternion()
+        for (const box of this.fitRanged(mv, own)) {
+          c.set(box.center[0], box.center[1], box.center[2]).applyMatrix4(at.m4)
+          q.set(box.rotation[0], box.rotation[1], box.rotation[2], box.rotation[3]).premultiply(turn)
+          out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [...box.half], rotation: [q.x, q.y, q.z, q.w] })
         }
         return
       }

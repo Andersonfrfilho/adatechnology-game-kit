@@ -85,7 +85,9 @@ export interface RendererOptions {
   tilesUnderParts?: boolean
   /**
    * Fit the boxes a part drawn by a range of a merged mesh gets when it comes loose (`fitOrientedBoxes`) ahead of the blow, a part at a time with the time a frame has left, so the frame
-   * that splits a house reads them instead of fitting them. The boxes are the very same numbers either way. Default on; off, they are fitted when the part breaks off.
+   * that splits a house reads them instead of fitting them. They are fitted in the space of the part's own vertices and carried to where the part is by its pose (a turn and a
+   * move), so a split or a move does not fit them again; a scaled or sheared pose fits the points where they are. The boxes are the very same numbers either way. Default on;
+   * off, they are fitted when the part breaks off.
    */
   fitBoxesAhead?: boolean
   /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
