@@ -76,6 +76,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   /** The kit's contact listener; null when the world runs with `contactCallbacks: 'none'` (Jolt's job threads cannot call JS). */
   readonly listener: JoltNS.ContactListenerJS | null
   readonly threading: JoltThreading
+  private readonly onDispose: (() => void) | undefined
   // scratch objects, made once and destroyed in `dispose`
   readonly v1: JoltNS.Vec3
   readonly v2: JoltNS.Vec3
@@ -122,8 +123,9 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly rollers = new Map<number, Rolling>()
   readonly gravity: number
 
-  constructor(J: Jolt, desc: WorldDesc, threading: JoltThreading = SINGLE_THREAD) {
+  constructor(J: Jolt, desc: WorldDesc, threading: JoltThreading = SINGLE_THREAD, onDispose?: () => void) {
     this.J = J
+    this.onDispose = onDispose
     this.threading = threading
     this.fixedStep = desc.fixedStep ?? 1 / 60
     this.slipSpeed = desc.slipSpeed ?? 0.02
@@ -762,6 +764,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
     J.destroy(this.iface)
     if (this.listener) J.destroy(this.listener)
+    this.onDispose?.()
     J.destroy(this.asserts)
   }
 }

@@ -111,6 +111,8 @@ window.__joltBoot = () => !/[?&]solver=jolt(&|$)/.test(location.search) ? Promis
   console.info('jolt: ' + JSON.stringify(window.__joltInfo))
   const q = new URLSearchParams(location.search)
   const world = engine.createWorld({ ...KIT_WORLD, velocityIterations: Number(q.get('iterations') ?? KIT_WORLD.velocityIterations), maxPushOut: Number(q.get('pushout') ?? KIT_WORLD.maxPushOut) })
+  // what the world got: the build's pthread pool is shared by the page's worlds (the renderer's JIT warm-up makes one more)
+  window.__joltInfo = { ...window.__joltInfo, workerThreads: world.threading.workerThreads }
   window.__joltEngine = engine
   window.__joltWorld = world
   window.__roomPhysics = createPhysicsLoop(world)

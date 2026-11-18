@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { JOLT_THREADING_ERROR, JoltThreadingError, SINGLE_THREAD, createJoltEngine, resolveJoltThreading } from '../src/index'
+import { JOLT_THREADING_ERROR, JoltThreadingError, JoltWorld, SINGLE_THREAD, createJoltEngine, resolveJoltThreading } from '../src/index'
 
 const codeOf = (run: () => unknown): string | undefined => {
   try {
@@ -46,5 +46,20 @@ describe('jolt threading options', () => {
     expect(pose[1]).toBeLessThan(0.15)
     expect(world.contacts.count).toBe(0)
     world.dispose()
+  })
+
+  it('shares the 16 pthreads among the live worlds: a later world gets what is left, and a disposed world gives its threads back', async () => {
+    const engine = await createJoltEngine({ build: 'multithread', workerThreads: 12, contactCallbacks: 'none' })
+    const first = engine.createWorld({}) as JoltWorld
+    const second = engine.createWorld({}) as JoltWorld
+    const third = engine.createWorld({}) as JoltWorld
+    expect([first.threading.workerThreads, second.threading.workerThreads, third.threading.workerThreads]).toEqual([12, 4, 0])
+    third.dispose()
+    second.dispose()
+    first.dispose()
+    const again = engine.createWorld({}) as JoltWorld
+    expect(again.threading.workerThreads).toBe(12)
+    again.step(1 / 60)
+    again.dispose()
   })
 })
