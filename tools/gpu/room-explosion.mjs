@@ -209,6 +209,7 @@ async function inPage(job) {
     }
     return [acc.loop + acc.piece + acc.wake, acc.loop, acc.piece, acc.wake, whole, render, ...labels.map((label) => stageMs[label] ?? 0)]
   }
+  /** @type {number[][]} */
   const frames = []
   const paceMs = job.paceMs ?? 0
   // one frame, then (paced) the rest of its 1/60 s idle, so the worker's answers reach the page between frames as they would under requestAnimationFrame
@@ -375,7 +376,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const paced = process.env.ROOM_EXPLOSION_PACE === '1' || (process.env.ROOM_EXPLOSION_PACE !== '0' && VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)].includes('fitWorker=1'))
       const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered, ...(stageLabels ? { stageLabels } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
-      const fitStats = await page.evaluate(() => /** @type {{ __fitWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__fitWorkerStats)
+      const fitStats = await page.evaluate(() => /** @type {{ __fitWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__fitWorkerStats, undefined)
       if (fitStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: fits ${JSON.stringify(fitStats)}`)
       if (!timings) throw new Error('no timings')
       return { timings, load }
