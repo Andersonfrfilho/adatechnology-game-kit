@@ -37,7 +37,9 @@
 //   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
 //                                          the variants with `groundWorker=1` (back to back, a worker could never answer and every tile would be made on the main thread), `1` for all, `0` for none
 //
-// The stage pass also draws each frame once (outside the update) and prints a second table, the same worst frames split by the rest of the frame (FRAME_LABELS): the update's
+//   ROOM_EXPLOSION_FRAME_PARTS=            1: the stage pass also times the rest of the frame (below); off by default, so the stage table stays comparable with older runs
+//
+// With ROOM_EXPLOSION_FRAME_PARTS=1 the stage pass also draws each frame once (outside the update) and prints a second table, the same worst frames split by the rest of the frame (FRAME_LABELS): the update's
 // modules timed exclusive of their callees with the physics subtracted (`rest` is what no label covers: the room's own closures), then the render call's CPU time, the wait for the
 // GPU (`gl.finish`), the GPU time of the draw (EXT_disjoint_timer_query_webgl2, `n/a` without it), the draw calls and triangles of that render, and the live counts.
 import { execFileSync } from 'node:child_process'
@@ -72,17 +74,17 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 /**
  * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number, framep50: number, framep99: number, framemax: number }} Cell
- * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts: Record<string, number>, extras: Record<string, number> }} StageFrame
+ * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number> }} StageFrame
  */
 
 /**
  * Runs inside the page. Stage `prepare` builds the house and settles it (at full speed: the build is not the measurement); stage `run` fires the explosion and times the physics of each frame.
  * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number }} job
- * @returns {Promise<number[][] | undefined>} per frame: [physics ms, loop step, piece update, wake queue, whole update, render, ...one column per `stageLabels`, ...per `frameLabels`, ...FRAME_EXTRAS]
+ * @returns {Promise<number[][] | undefined>} per frame: [physics ms, loop step, piece update, wake queue, whole update, render, ...one column per `stageLabels`, ...per `frameLabels` and then FRAME_EXTRAS (only with `frameLabels`)]
  */
 export async function inPage(job) {
   /** @typedef {{ objectId: string }} Piece */
-  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number } } }, scene: object, applyCamera?: () => () => void, update(dt: number): void }} Room */
+  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, update(dt: number): void }} Room */
   const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[] } }} */ (/** @type {unknown} */ (window))
   const room = host.__testRoom
   const wait = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
@@ -162,7 +164,7 @@ export async function inPage(job) {
   const physicsStages = new Set(labels)
   /** @type {Record<string, number>} */
   const stageMs = {}
-  /** @type {{ child: number }[]} */
+  /** @type {{ child: number, isPhysicsStage: boolean }[]} */
   const open = []
   // off while the frame draws: the render is timed whole, apart from the update
   let isTiming = true
@@ -178,10 +180,13 @@ export async function inPage(job) {
     const original = target?.[name]
     if (!target || typeof original !== 'function') return
     target[name] = function (...args) {
-      if (!isTiming || (mode === 'outermost' && inside.has(label))) return original.apply(this, args)
+      const isPhysicsStage = physicsStages.has(label)
+      // a frame part inside a physics stage is left in that stage's own time, never taken out of it
+      const isUnderPhysicsStage = !isPhysicsStage && mode !== 'physics' && open[open.length - 1]?.isPhysicsStage === true
+      if (!isTiming || isUnderPhysicsStage || (mode === 'outermost' && inside.has(label))) return original.apply(this, args)
       if (mode === 'outermost') inside.add(label)
       if (mode === 'physics') physicsDepth++
-      const entry = { child: 0 }
+      const entry = { child: 0, isPhysicsStage }
       open.push(entry)
       const started = performance.now()
       try {
@@ -192,7 +197,7 @@ export async function inPage(job) {
         if (mode === 'physics') physicsDepth--
         if (mode === 'outermost') inside.delete(label)
         stageMs[label] = (stageMs[label] ?? 0) + spent - entry.child
-        if (physicsDepth === 0 && mode !== 'physics' && physicsStages.has(label)) stageMs.stagesOut = (stageMs.stagesOut ?? 0) + spent - entry.child
+        if (physicsDepth === 0 && mode !== 'physics' && isPhysicsStage) stageMs.stagesOut = (stageMs.stagesOut ?? 0) + spent - entry.child
         const parent = open[open.length - 1]
         if (parent) parent.child += spent
       }
@@ -267,7 +272,7 @@ export async function inPage(job) {
     stage('matrices', object3d, 'updateWorldMatrix', 'outermost')
   }
   const context = room.webgl.getContext()
-  const timer = job.isRendered ? context.getExtension('EXT_disjoint_timer_query_webgl2') : null
+  const timer = job.isRendered && frameLabels.length > 0 ? context.getExtension('EXT_disjoint_timer_query_webgl2') : null
   /** @type {{ query: WebGLQuery, row: number[] }[]} */
   let queries = []
   const gpuColumn = 6 + labels.length + frameLabels.length + 2
@@ -296,22 +301,31 @@ export async function inPage(job) {
     if (job.isRendered) {
       // the page's own loop is stopped, so nothing draws: draw once per frame as the room's render phase does (camera shake applied), and wait for the GPU to finish it
       isTiming = false
+      room.webgl.info?.reset?.()
       const renderStarted = performance.now()
       const restoreCamera = room.applyCamera?.()
-      if (timer && query) context.beginQuery(timer.TIME_ELAPSED_EXT, query)
-      room.webgl.render(room.scene, room.camera)
-      if (timer && query) context.endQuery(timer.TIME_ELAPSED_EXT)
-      renderCpu = performance.now() - renderStarted
-      restoreCamera?.()
+      try {
+        if (timer && query) context.beginQuery(timer.TIME_ELAPSED_EXT, query)
+        try {
+          room.webgl.render(room.scene, room.camera)
+        } finally {
+          if (timer && query) context.endQuery(timer.TIME_ELAPSED_EXT)
+        }
+        renderCpu = performance.now() - renderStarted
+      } finally {
+        restoreCamera?.()
+        isTiming = true
+      }
       context.finish?.()
       render = performance.now() - renderStarted
-      isTiming = true
     }
     const effects = room.vfx?.stats?.()
     const particles = effects ? effects.puffs + effects.sparks + effects.glows + effects.chunks : 0
     const drawn = room.webgl.info?.render
-    const row = [acc.loop + acc.piece + acc.wake, acc.loop, acc.piece, acc.wake, whole, render, ...labels.map((label) => stageMs[label] ?? 0), ...frameLabels.map((label) => stageMs[label] ?? 0),
-      renderCpu, render - renderCpu, -1, job.isRendered ? drawn?.calls ?? 0 : 0, job.isRendered ? drawn?.triangles ?? 0 : 0, particles, room.renderer.fragments?.count ?? 0, room.renderer.pieceSys.list?.length ?? 0]
+    const row = [acc.loop + acc.piece + acc.wake, acc.loop, acc.piece, acc.wake, whole, render, ...labels.map((label) => stageMs[label] ?? 0)]
+    if (frameLabels.length === 0) return row
+    row.push(...frameLabels.map((label) => stageMs[label] ?? 0),
+      renderCpu, render - renderCpu, -1, job.isRendered ? drawn?.calls ?? 0 : 0, job.isRendered ? drawn?.triangles ?? 0 : 0, particles, room.renderer.fragments?.count ?? 0, room.renderer.pieceSys.list?.length ?? 0)
     if (query && job.isRendered) queries.push({ query, row })
     else if (query) context.deleteQuery(query)
     return row
@@ -340,6 +354,8 @@ export async function inPage(job) {
     await wait(20)
     readQueries()
   }
+  // the answers that never came: their frames keep -1 (n/a)
+  for (const { query } of queries) context.deleteQuery(query)
   // what the ground worker did (`GroundSchedule.stats`): tiles answered in time, made here at their update, answers that came too late
   const groundSchedule = /** @type {{ schedule?: { stats: object } | null } | undefined} */ (/** @type {{ engine?: object }} */ (room.renderer.pieceSys).engine)?.schedule
   const statsHost = /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window))
@@ -453,6 +469,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const weathers = (process.env.ROOM_EXPLOSION_WEATHER ?? 'none').split(',').filter((name) => /** @type {readonly string[]} */ (WEATHERS).includes(name))
   // a kind under weather reads `blast+storm`; without weather it keeps its plain name (and its key in an older report)
   const kinds = baseKinds.flatMap((kind) => weathers.map((weather) => (weather === 'none' ? kind : `${kind}+${weather}`)))
+  const hasFrameParts = process.env.ROOM_EXPLOSION_FRAME_PARTS === '1'
   const isRendered = process.env.ROOM_EXPLOSION_RENDER === '1' || kinds.some((kind) => kind.includes('+'))
   const rounds = Number(process.env.ROOM_EXPLOSION_ROUNDS ?? 5)
   const frames = Number(process.env.ROOM_EXPLOSION_FRAMES ?? 660)
@@ -485,7 +502,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const cdp = await page.context().newCDPSession(page)
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
       const paced = process.env.ROOM_EXPLOSION_PACE === '1' || (process.env.ROOM_EXPLOSION_PACE !== '0' && VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)].includes('groundWorker=1'))
-      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered: isRendered || stageLabels !== undefined, ...(stageLabels ? { stageLabels, frameLabels: [...FRAME_LABELS] } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
+      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
       const groundStats = await page.evaluate(() => /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__groundWorkerStats, undefined)
       if (groundStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: ground tiles ${JSON.stringify(groundStats)}`)
@@ -520,7 +537,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
         const { timings } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
-        timings.forEach((frame, index) => stageFrames.push({ variant: stageVariant, throttle, kind, round, frame: index, updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) }))
+        timings.forEach((frame, index) => stageFrames.push({ variant: stageVariant, throttle, kind, round, frame: index, updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
         console.log(`room-explosion: stage round ${round} ${stageVariant} ${throttle}x ${kind} done`)
       } catch (error) {
         errors.push(`stages ${throttle}x ${kind}: ${error instanceof Error ? error.message : String(error)}`)
@@ -579,15 +596,17 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       console.log(`  ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} ${`${entry.round}.${entry.frame}`.padEnd(7)} ${String(entry.updateMs).padStart(7)} ${String(entry.physicsMs).padStart(7)} ${STAGE_LABELS.map((label) => String(entry.stages[label] ?? 0).padStart(11)).join(' ')} ${other.toFixed(2).padStart(7)}`)
     }
   }
-  if (worst.length > 0) {
+  if (hasFrameParts && worst.length > 0) {
     console.log('')
     console.log(`room-explosion: the 10 worst frames (whole update) by non-physics stage, ms, exclusive of callees, physics subtracted; rest = update - physics - these stages (the room's own closures); then the render drawn after the update: CPU of the render call, wait for the GPU (gl.finish), GPU time (timer query), draw calls, triangles, live particles, fragments, pieces`)
     console.log(`  ${'cpu'.padEnd(4)} ${'kind'.padEnd(13)} ${'rnd.fr'.padEnd(7)} ${'update'.padStart(7)} ${'physics'.padStart(7)} ${FRAME_LABELS.map((label) => label.padStart(Math.max(6, label.length))).join(' ')} ${'rest'.padStart(6)} ${'render'.padStart(6)} ${'gpuWait'.padStart(7)} ${'gpu'.padStart(6)} ${'calls'.padStart(5)} ${'tris'.padStart(8)} ${'partic'.padStart(6)} ${'frags'.padStart(5)} ${'pieces'.padStart(6)}`)
     for (const entry of worst) {
-      const rest = entry.updateMs - entry.physicsMs - FRAME_LABELS.reduce((total, label) => total + (entry.parts[label] ?? 0), 0)
-      const gpu = entry.extras.gpu ?? -1
-      const extras = [String(entry.extras.renderCpu ?? 0).padStart(6), String(entry.extras.gpuWait ?? 0).padStart(7), (gpu < 0 ? 'n/a' : String(gpu)).padStart(6), String(entry.extras.calls ?? 0).padStart(5), String(entry.extras.triangles ?? 0).padStart(8), String(entry.extras.particles ?? 0).padStart(6), String(entry.extras.frags ?? 0).padStart(5), String(entry.extras.pieces ?? 0).padStart(6)]
-      console.log(`  ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} ${`${entry.round}.${entry.frame}`.padEnd(7)} ${String(entry.updateMs).padStart(7)} ${String(entry.physicsMs).padStart(7)} ${FRAME_LABELS.map((label) => String(entry.parts[label] ?? 0).padStart(Math.max(6, label.length))).join(' ')} ${rest.toFixed(2).padStart(6)} ${extras.join(' ')}`)
+      const parts = entry.parts ?? {}
+      const more = entry.extras ?? {}
+      const rest = entry.updateMs - entry.physicsMs - FRAME_LABELS.reduce((total, label) => total + (parts[label] ?? 0), 0)
+      const gpu = more.gpu ?? -1
+      const extras = [String(more.renderCpu ?? 0).padStart(6), String(more.gpuWait ?? 0).padStart(7), (gpu < 0 ? 'n/a' : String(gpu)).padStart(6), String(more.calls ?? 0).padStart(5), String(more.triangles ?? 0).padStart(8), String(more.particles ?? 0).padStart(6), String(more.frags ?? 0).padStart(5), String(more.pieces ?? 0).padStart(6)]
+      console.log(`  ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} ${`${entry.round}.${entry.frame}`.padEnd(7)} ${String(entry.updateMs).padStart(7)} ${String(entry.physicsMs).padStart(7)} ${FRAME_LABELS.map((label) => String(parts[label] ?? 0).padStart(Math.max(6, label.length))).join(' ')} ${rest.toFixed(2).padStart(6)} ${extras.join(' ')}`)
     }
   }
   for (const error of errors) console.log(`PAGE ERROR  ${error}`)
@@ -596,7 +615,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0
