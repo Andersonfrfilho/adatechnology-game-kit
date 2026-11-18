@@ -113,25 +113,34 @@ lists them for `postMessage`; cached results are shared and read-only (`cloneBuf
 
 ## Cache and workers
 
+The pool hands its jobs to the game's worker coordinator (`@adatechnology/game-workers`, CLAUDE.md §14) as the `shapes.generate` kind
+(`shapesGenerateKind`, lane `build`): one set of workers for the whole game, each job by its priority among the game's other work.
+
 ```ts
 import { createShapeCache, createShapePool } from '@adatechnology/game-shapes'
+import { createKitWorkers } from '@adatechnology/game-kit-defaults' // the kit's coordinator, shapes.generate included
 
+const workers = createKitWorkers()
 const cache = createShapeCache({ maxEntries: 512, maxBytes: 128 * 1024 * 1024 }) // LRU by shapeKey, counted in bytes of the arrays
-const pool = createShapePool({ size: 4, spawn: () => new Worker(new URL('./shape-worker.js', import.meta.url), { type: 'module' }), cache })
+const pool = createShapePool({ workers, cache })
 const house = await pool.generateMany(rooms.map((schema) => ({ schema, options: { seed } })))
 
-// shape-worker.js
-import { installShapeWorker } from '@adatechnology/game-shapes/worker'
-installShapeWorker(self, { generators: myGenerators })
+// a game with a worker file of its own lists the kind there, with its custom generators registered globally
+import { installWorkerHost } from '@adatechnology/game-workers'
+import { registerGenerator } from '@adatechnology/game-shapes'
+import { shapesGenerateKind } from '@adatechnology/game-shapes/worker-kinds'
+registerGenerator('my.rocks', rocks)
+installWorkerHost(self, [shapesGenerateKind /* , the game's other kinds */])
 ```
 
-- A cache hit resolves at once; a key already in flight shares its promise; otherwise the job goes to the least busy worker and every array
-  comes back transferred (zero copy). The result is shared: read-only.
-- `spawn` returns anything with `postMessage`, `onmessage` and `terminate` (a browser `Worker`, a `worker_threads` wrapper, a fake). Without it,
-  or with `size: 0`, the pool generates in the calling thread with the same cache and sharing.
-- Custom generators are functions: register them in the worker script too. A job whose options carry `generators` runs in the calling
-  thread. A worker that crashes rejects its jobs and is replaced.
-- A worker result is byte-equal to `generate` in the calling thread for the same key (tested with `worker_threads`).
+- A cache hit resolves at once; a key already in flight shares its promise; otherwise the job goes to the coordinator and every array comes
+  back transferred (zero copy), normals made in the same kernel. The result is shared: read-only.
+- A job a worker cannot make (a custom generator it does not know) is made in the calling thread with the same bytes; a job whose options
+  carry `generators` (functions) always runs there. With no workers (`workers: 0`) every job runs there, with the same cache and sharing.
+- A worker result is byte-equal to `generate` in the calling thread for the same key (tests with `worker_threads`, and in the test room:
+  `examples/test-room/shots/shapes-coordinator.png`).
+- Legacy, before the coordinator: `size` and `spawn` give the pool workers of its own running `installShapeWorker`
+  (`@adatechnology/game-shapes/worker`). They still work; with `workers` they are ignored.
 
 ## LOD and instancing
 
@@ -149,5 +158,5 @@ vertex.
 
 Gerador único de 3D do kit: forma em JSON vira buffers por material, puro, por semente, pronto para worker e cache. Os geradores são portes linha a
 linha do three r160 e o resultado é igual bit a bit, por isso os pacotes migram sem mudar nenhum golden de cena. O desenho em three.js fica no
-`@adatechnology/game-shapes-three`. O `createShapePool` gera em workers (`installShapeWorker` no script do worker) e o `createShapeCache` guarda
+`@adatechnology/game-shapes-three`. O `createShapePool({ workers })` gera nos workers do coordenador do jogo (categoria `shapes.generate`; o `size`/`spawn` antigo continua como legado) e o `createShapeCache` guarda
 os resultados por chave.

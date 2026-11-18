@@ -1,7 +1,10 @@
+import type { WorkerCoordinator } from '@adatechnology/game-contracts'
+
 import type { ShapeCache } from './cache'
 import { generate, shapeKey } from './generate'
 import type { GenerateOptions, ShapeBuffers, ShapeGenerator, ShapeSchema } from './types'
 import type { ShapeJob, ShapeReply } from './worker'
+import { shapesGenerateKind } from './worker-kinds'
 
 /** Anything with `postMessage` / `onmessage` / `terminate`: a browser `Worker`, a `worker_threads` wrapper, an in-thread fake. */
 export interface WorkerLike {
@@ -12,9 +15,15 @@ export interface WorkerLike {
 }
 
 export interface ShapePoolOptions {
-  /** Workers (default 0: generate in the calling thread). */
+  /**
+   * The game's worker coordinator (CLAUDE.md §14): each job is a `shapes.generate` task (`shapesGenerateKind`, lane `build`) in its
+   * workers, by its priority among the other work of the game; a job a worker cannot do (a custom generator it does not know) is made here
+   * with the same bytes. Takes the place of `size` and `spawn`.
+   */
+  readonly workers?: WorkerCoordinator
+  /** Legacy (before the coordinator): workers of the pool's own (default 0: generate in the calling thread). Pass `workers` instead. */
   readonly size?: number
-  /** Makes one worker that runs `installShapeWorker`. Without it the pool generates in the calling thread. */
+  /** Legacy (before the coordinator): makes one worker that runs `installShapeWorker`. Pass `workers` instead. */
   readonly spawn?: () => WorkerLike
   /** Results by `shapeKey`: a hit resolves at once and never reaches a worker. */
   readonly cache?: ShapeCache
@@ -60,7 +69,8 @@ const isRequest = (value: ShapeSchema | ShapeRequest): value is ShapeRequest => 
  * transferred back. With `size: 0` or no `spawn` it generates in the calling thread, with the same cache and in-flight sharing.
  */
 export function createShapePool(options: ShapePoolOptions = {}): ShapePool {
-  const size = options.spawn ? Math.max(0, options.size ?? 0) : 0
+  const coordinator = options.workers ?? null
+  const size = options.spawn && !coordinator ? Math.max(0, options.size ?? 0) : 0
   const cache = options.cache
   const slots: Slot[] = []
   const inFlight = new Map<string, Promise<ShapeBuffers>>()
@@ -98,6 +108,10 @@ export function createShapePool(options: ShapePoolOptions = {}): ShapePool {
 
   const run = (schema: ShapeSchema, generateOptions: GenerateOptions): Promise<ShapeBuffers> => {
     // custom generators passed per call are functions: they cannot reach a worker, so that job runs here
+    if (coordinator && !generateOptions.generators && !options.isolatedGenerators) {
+      const { generators: _none, ...plain } = generateOptions
+      return coordinator.run(shapesGenerateKind, { schema, options: plain })
+    }
     if (slots.length === 0 || generateOptions.generators || options.isolatedGenerators) {
       inThread++
       try {
@@ -149,7 +163,7 @@ export function createShapePool(options: ShapePoolOptions = {}): ShapePool {
     generateMany(list) {
       return Promise.all(list.map((item) => (isRequest(item) ? pool.generate(item.schema, item.options) : pool.generate(item))))
     },
-    stats: () => ({ workers: slots.length, jobs, cacheHits, shared, inThread, busy: slots.reduce((n, s) => n + s.pending.size, 0) }),
+    stats: () => ({ workers: coordinator ? coordinator.stats().workers : slots.length, jobs, cacheHits, shared, inThread, busy: slots.reduce((n, s) => n + s.pending.size, 0) }),
     terminate() {
       terminated = true
       for (const slot of slots) {

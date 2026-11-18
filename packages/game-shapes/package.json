@@ -36,6 +36,10 @@
       "types": "./dist/worker.d.ts",
       "import": "./dist/worker.js"
     },
+    "./worker-kinds": {
+      "types": "./dist/worker-kinds.d.ts",
+      "import": "./dist/worker-kinds.js"
+    },
     "./schema.json": "./schema/shape.schema.json",
     "./global": "./dist/index.global.js"
   },
@@ -52,6 +56,7 @@
     "@adatechnology/game-contracts": "workspace:^"
   },
   "devDependencies": {
+    "@adatechnology/game-workers": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",

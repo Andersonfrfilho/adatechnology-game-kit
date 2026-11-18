@@ -1227,6 +1227,9 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:^
         version: link:../game-floorplan-residential
+      '@adatechnology/game-shapes':
+        specifier: workspace:^
+        version: link:../game-shapes
       '@adatechnology/game-urban':
         specifier: workspace:^
         version: link:../game-urban
@@ -1410,6 +1413,9 @@ importers:
         specifier: workspace:^
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/game-workers':
+        specifier: workspace:^
+        version: link:../game-workers
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

@@ -22,6 +22,8 @@ import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { blastFireSampleBank, createCoordinatorGroundPort } from '@adatechnology/game-destruction-three'
 import { sourceSpawn } from '@adatechnology/game-workers'
+import { createShapePool, generate as generateShape } from '@adatechnology/game-shapes'
+import { toObject3D } from '@adatechnology/game-shapes-three'
 import { applyLocalSoundPack, parseLocalSoundPack } from '@adatechnology/game-audio'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
@@ -48,6 +50,9 @@ const kitWorkers = (() => {
   ;/** @type {{ __kitWorkers?: unknown }} */ (window).__kitWorkers = made
   return made
 })()
+// the page's shape pool through the same coordinator (`shapes.generate`, lane build): `window.__kitShapes` for the checks, with the
+// synchronous `generate` to compare bytes and `toObject3D` to draw what came back
+;/** @type {{ __kitShapes?: unknown }} */ (window).__kitShapes = { pool: createShapePool({ workers: kitWorkers }), generate: generateShape, toObject3D: (/** @type {import('@adatechnology/game-shapes').ShapeBuffers} */ buffers) => toObject3D(THREE, buffers).object }
 // the room itself has no items: the default page loads the SDK modules into it (see build.mjs); the bare room (__ROOM_FULL__ false) is the page the other test areas build over
 const deferred = __ROOM_FULL__
 const BENCH_PARAM_PREFIX = 'bench.'

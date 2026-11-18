@@ -40,7 +40,7 @@ export const WORK = {
   ground: { kind: 'destruction.ground-tiles', from: '@adatechnology/game-destruction-three: groundTilesKind, createCoordinatorGroundPort(workers) for the engine (crater ground tiles)' },
   pieces: { kind: 'destruction.piece-boxes', from: '@adatechnology/game-destruction-three (fitted boxes of the broken parts)' },
   colliders: { kind: 'destruction.static-colliders', from: '@adatechnology/game-destruction (static colliders at load)' },
-  shapes: { kind: 'shapes.generate', from: '@adatechnology/game-shapes (shapes and normals at load)' },
+  shapes: { kind: 'shapes.generate', from: '@adatechnology/game-shapes: shapesGenerateKind, createShapePool({ workers }) (shapes and normals at load)' },
   world: { kind: 'world.region', from: 'your living world: a resident per far region (background lane, late: drop)' },
   physics: { kind: null, from: '@adatechnology/game-physics-jolt: Jolt has its own job threads; give them reserveCores instead of coordinator workers' },
   pathfinding: { kind: null, from: 'your own: a TaskKind (pure function of plain data) in the build or sim lane' },

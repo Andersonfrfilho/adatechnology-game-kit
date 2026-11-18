@@ -24,7 +24,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const names = ['game-audio', 'game-player', 'game-runtime', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-render-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes-three', 'game-weapons-three', 'game-graphics', 'game-graphics-three', 'game-test-room', 'game-workers', 'game-crowd']
+const names = ['game-audio', 'game-player', 'game-runtime', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-render-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes', 'game-shapes-three', 'game-weapons-three', 'game-graphics', 'game-graphics-three', 'game-test-room', 'game-workers', 'game-crowd']
 for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm build at the root first`)
 }
@@ -50,7 +50,7 @@ async function bundleMain(full) {
     legalComments: 'none',
     define: { __ROOM_FULL__: String(full), 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(kitWorkerSource) },
     // the graphics screen is a subpath of game-graphics (`/screen`), named before its package
-    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), '@adatechnology/game-destruction-three/worker-kinds': join(pkg('game-destruction-three'), 'dist/worker-kinds.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
+    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), '@adatechnology/game-destruction-three/worker-kinds': join(pkg('game-destruction-three'), 'dist/worker-kinds.js'), '@adatechnology/game-shapes/worker-kinds': join(pkg('game-shapes'), 'dist/worker-kinds.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
   })
   return result.outputFiles[0].text
 }
