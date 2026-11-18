@@ -4,7 +4,7 @@ import { createTerrain } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, readGround, sampleCount } from '../src/engine-ground'
 import type { GroundGrid } from '../src/engine-ground'
-import { bandLength, readGroundBand } from '../src/engine-ground-job'
+import { bandLength, computeGroundTile, readGroundBand, readGroundPatch } from '../src/engine-ground-job'
 
 /**
  * What reading the ground of a blast's tiles costs on the main thread (`askTile` in `EnginePieces`), split: the terrain's `heightGrid` itself, the rest of `readGround` (the
@@ -41,7 +41,9 @@ describe.skipIf(process.env.GROUND_BENCH !== '1')('reading the ground of a blast
     const rect = { minX: 0.37 - 1.5, maxX: 0.37 + 1.5, minZ: -0.21 - 1.5, maxZ: -0.21 + 1.5 }
     const samples = tiles.map(() => new Float64Array(SAMPLES))
     const bands = tiles.map(() => new Float64Array(bandLength(TILE)))
-    const rows: { whole: number; wholeGrid: number; band: number; bandGrid: number; dirty: number; points: number }[] = []
+    const rows: { whole: number; wholeGrid: number; band: number; bandGrid: number; dirty: number; points: number; patch: number; fromSamples: number; fromPatch: number }[] = []
+    const patchBuffers: Float64Array[] = tiles.map(() => new Float64Array(0))
+    const EMPTY = new Float64Array(0)
     for (let round = 0; round < ROUNDS; round++) {
       Object.assign(split, { grid: 0, gridPoints: 0 })
       let t = performance.now()
@@ -56,12 +58,29 @@ describe.skipIf(process.env.GROUND_BENCH !== '1')('reading the ground of a blast
       const bandGrid = split.grid
       t = performance.now()
       tiles.forEach(([x0, z0], k) => readGround(groundAt, samples[k]!, x0, z0, TILE, rect, terrain.heightGrid))
-      rows.push({ whole, wholeGrid, band, bandGrid, dirty: performance.now() - t, points })
+      const dirty = performance.now() - t
+      // what replaces both reads on the main thread when the tile is asked with a patch
+      t = performance.now()
+      const patches = tiles.map(([x0, z0], k) => {
+        const patch = readGroundPatch(terrain.heightPatch, x0, z0, TILE, patchBuffers[k])!
+        patchBuffers[k] = patch.heights
+        return patch
+      })
+      const patch = performance.now() - t
+      // the tile made from either job (where the worker runs it, or the main thread at its update when the worker did not answer)
+      t = performance.now()
+      tiles.forEach(([x0, z0], k) => computeGroundTile({ id: 1, x0, z0, size: TILE, wasCoarse: false, samples: samples[k]!, band: bands[k]! }))
+      const fromSamples = performance.now() - t
+      t = performance.now()
+      tiles.forEach(([x0, z0], k) => computeGroundTile({ id: 1, x0, z0, size: TILE, wasCoarse: false, samples: EMPTY, band: EMPTY, patch: patches[k]! }))
+      rows.push({ whole, wholeGrid, band, bandGrid, dirty, points, patch, fromSamples, fromPatch: performance.now() - t })
     }
     const m = (k: keyof (typeof rows)[number]): string => median(rows.slice(1).map((r) => r[k])).toFixed(2)
     console.log(`blast of ${blow ? 'one strike' : 'nothing'}: ${tiles.length} tiles not level, ${rows[0]!.points} grid points read whole; median of ${ROUNDS - 1} warm rounds:`)
     console.log(`  readGround whole      ${m('whole')} ms (heightGrid ${m('wholeGrid')} ms)`)
     console.log(`  readGroundBand        ${m('band')} ms (heightGrid ${m('bandGrid')} ms)`)
     console.log(`  readGround dirty rect ${m('dirty')} ms`)
+    console.log(`  readGroundPatch       ${m('patch')} ms (replaces readGround + readGroundBand on the main thread)`)
+    console.log(`  tile from samples     ${m('fromSamples')} ms; from a patch ${m('fromPatch')} ms (worker, or the main thread's fallback)`)
   }, 120_000)
 })
