@@ -177,11 +177,17 @@ const SEPARATE_SHARE = 0.5
  */
 const TURN_BACK_SHARE = 0.5
 const SAME_WAY_GROWTH = 1.2
+/** The least share a push keeps (its most, 2.5 cm a step at 60 Hz, then moves under `SLOP`: the wedged piece sleeps), so a neighbour that clears is left within a few steps. */
+const MIN_PUSH_SHARE = 0.05
+/** How long (s) a piece's last push is remembered: past one frame, so the sub-steps of a split update (`collisionSteps`) that do not reach it keep its share. */
+const PUSH_MEMORY_SECONDS = 0.1
 
 /** A piece's push in the last step and the share of its push it is given (`applyPushes`). */
 interface PushStep {
   readonly push: Vec3
   share: number
+  /** The clock (`time`) of that push. */
+  at: number
 }
 
 /** Box of a piece in the world: centre, rotation columns (`Matrix4.elements`) and half extents. */
@@ -585,14 +591,18 @@ export class PieceSystem {
     this.surfaces = []
     this.solidOf.clear()
     this.surfacesOf.clear()
+    this.collideSteps.clear()
+    this.apartSteps.clear()
     this.surfaceGrid.clear()
     this.cellIndex.clear()
     this.cellLists.length = 0
     this.wideSurfaces.length = 0
   }
 
-  /** Drops a piece from the boxes of the step (`solids`, `surfaces` and their grid). */
+  /** Drops a piece from the boxes of the step (`solids`, `surfaces` and their grid) and from the pushes it is remembered by. */
   private forgetSolids(body: PieceBody): void {
+    this.collideSteps.delete(body)
+    this.apartSteps.delete(body)
     this.solidOf.delete(body)
     this.surfacesOf.delete(body)
     this.solids = this.solids.filter((s) => s.body !== body)
@@ -1718,8 +1728,8 @@ export class PieceSystem {
    */
   private applyPushes(dt: number, steps: Map<PieceBody, PushStep> = this.collideSteps): void {
     const most = SEPARATE_SPEED * dt
-    // what was not pushed this step starts again from the whole push
-    for (const body of steps.keys()) if (!this.pushes.has(body)) steps.delete(body)
+    // what has not been pushed for a while starts again from the whole push
+    for (const [body, step] of steps) if (this.time - step.at > PUSH_MEMORY_SECONDS) steps.delete(body)
     for (const [body, push] of this.pushes) {
       const share = this.pushShare(steps, body, push)
       const level = Math.hypot(push[0], push[2])
@@ -1737,11 +1747,12 @@ export class PieceSystem {
   private pushShare(steps: Map<PieceBody, PushStep>, body: PieceBody, push: Vec3): number {
     const last = steps.get(body)
     if (!last) {
-      steps.set(body, { push: [push[0], push[1], push[2]], share: 1 })
+      steps.set(body, { push: [push[0], push[1], push[2]], share: 1, at: this.time })
       return 1
     }
     const turnsBack = push[0] * last.push[0] + push[1] * last.push[1] + push[2] * last.push[2] < 0
-    last.share = turnsBack ? last.share * TURN_BACK_SHARE : Math.min(1, last.share * SAME_WAY_GROWTH)
+    last.share = turnsBack ? Math.max(MIN_PUSH_SHARE, last.share * TURN_BACK_SHARE) : Math.min(1, last.share * SAME_WAY_GROWTH)
+    last.at = this.time
     last.push[0] = push[0]
     last.push[1] = push[1]
     last.push[2] = push[2]
