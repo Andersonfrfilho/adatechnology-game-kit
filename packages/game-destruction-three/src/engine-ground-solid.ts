@@ -36,9 +36,9 @@ export const SOLID_STRIDE = 10
 
 export interface SolidVolume {
   /** The blocks: centre x, y, z, half x, y, z and turn x, y, z, w (`SOLID_STRIDE` numbers each); the box's own y is the normal of its top. */
-  readonly boxes: readonly number[]
+  readonly boxes: readonly number[] | Float64Array
   /** The ground read past the tile's edges, x, z and height each (`engine-ground-ring`): the blocks are made again when one of these changes. */
-  readonly ring: readonly number[]
+  readonly ring: readonly number[] | Float64Array
 }
 
 export const NO_SOLID: SolidVolume = { boxes: [], ring: [] }
@@ -247,4 +247,11 @@ export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, 
 /** The same blocks. */
 export const sameSolid = (a: SolidVolume, b: SolidVolume): boolean => same(a.boxes, b.boxes)
 
-const same = (a: readonly number[], b: readonly number[]): boolean => a.length === b.length && a.every((x, i) => x === b[i])
+/** The same numbers, in order (plain or typed arrays alike). */
+export const sameNumbers = (a: ArrayLike<number>, b: ArrayLike<number>): boolean => {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+  return true
+}
+
+const same = sameNumbers

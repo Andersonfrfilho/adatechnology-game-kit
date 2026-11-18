@@ -99,7 +99,7 @@ const topsOf = (() => {
   return (t: GroundTile): Top[] => {
     const kept = made.get(t)
     if (kept) return kept
-    const b = t.solid.boxes
+    const b = Array.from(t.solid.boxes)
     const tops: Top[] = []
     for (let i = 0; i < b.length; i += SOLID_STRIDE) {
       const q = b.slice(i + 6, i + 10)
@@ -129,7 +129,7 @@ const blocksOf = (() => {
   return (t: GroundTile) => {
     const kept = made.get(t)
     if (kept) return kept
-    const b = t.solid.boxes
+    const b = Array.from(t.solid.boxes)
     const out: Array<{ c: number[]; axes: number[][]; h: number[]; rx: number; rz: number }> = []
     for (let i = 0; i < b.length; i += SOLID_STRIDE) {
       const q = b.slice(i + 6, i + 10)
@@ -170,7 +170,7 @@ const highestAt = (t: GroundTile, x: number, z: number): number => {
 /** The lowest corner of any block. */
 const lowestSolid = (t: GroundTile): number => {
   let low = Infinity
-  const b = t.solid.boxes
+  const b = Array.from(t.solid.boxes)
   for (let i = 0; i < b.length; i += SOLID_STRIDE) {
     const q = b.slice(i + 6, i + 10)
     for (let k = 0; k < 8; k++) {

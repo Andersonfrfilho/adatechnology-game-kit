@@ -222,18 +222,30 @@ describe.skipIf(!IS_JOLT)('engine ground on a fixed schedule: the physics does n
   it('main thread, inline, a cloned worker answering every update, a slow one answering late or never: every update bit-identical (poses and the world\'s saved bytes)', { timeout: 120000 }, () => {
     const reference = runCrater(createMainThreadGroundPort(), 120)
     expect(reference.engine.fellThrough).toBe(0)
-    expect(runCrater(createInlineGroundPort(), 120).hashes).toEqual(reference.hashes)
+    // every tile made here at its update without a worker; with one that answers at once, every tile from its answer
+    const { asked } = reference.engine.schedule.stats
+    expect(asked).toBeGreaterThan(5)
+    expect(reference.engine.schedule.stats).toEqual({ asked, inTime: 0, fellBack: asked, late: 0 })
+    const inline = runCrater(createInlineGroundPort(), 120)
+    expect(inline.hashes).toEqual(reference.hashes)
+    expect(inline.engine.schedule.stats).toEqual({ asked, inTime: asked, fellBack: 0, late: 0 })
     const worker = clonedWorker()
     expect(runCrater(createWorkerGroundPort(worker), 120, () => worker.flush()).hashes).toEqual(reference.hashes)
     // a slow worker: odd jobs answered two updates late (past their frame: made on the main thread instead), even ones at once, every third one never
     const slow = manualPort()
-    let asked = 0
+    let posted = 0
     const late = new Map<GroundTileJob, number>()
     const run = runCrater(slow, 120, (u) => {
-      for (const job of slow.jobs) if (!late.has(job)) late.set(job, u + ((asked++ % 2) * 3))
+      for (const job of slow.jobs) if (!late.has(job)) late.set(job, u + ((posted++ % 2) * 3))
       slow.deliver((job, i) => job.id % 3 !== 0 && (late.get(job) ?? Infinity) <= u + (i % 2))
     })
     expect(run.hashes).toEqual(reference.hashes)
+    // all three ways happened: answers in time, tiles made here, answers that came after their update
+    const stats = run.engine.schedule.stats
+    expect(stats.inTime).toBeGreaterThan(0)
+    expect(stats.fellBack).toBeGreaterThan(0)
+    expect(stats.late).toBeGreaterThan(0)
+    expect(stats.inTime + stats.fellBack).toBe(asked)
   })
 
   it('a piece over ground not laid yet waits held (kinematic, still) until the update its tile is applied at, then falls; none falls through', { timeout: 60000 }, () => {
@@ -250,6 +262,17 @@ describe.skipIf(!IS_JOLT)('engine ground on a fixed schedule: the physics does n
     const long = runCrater(createMainThreadGroundPort(), 240, undefined, 3)
     expect(long.engine.fellThrough).toBe(0)
     for (const root of long.roots) expect(root.position.y).toBeGreaterThan(long.terrain.heightAt(root.position.x, root.position.z) - 0.02)
+  })
+
+  it('the worker is warmed with a job of its own when the renderer is made, before any tile is asked for; its answer counts as nothing', () => {
+    const worker = clonedWorker()
+    const posted = vi.spyOn(worker, 'postMessage')
+    const run = runCrater(createWorkerGroundPort(worker), 0)
+    expect(posted).toHaveBeenCalledTimes(1)
+    expect((posted.mock.calls[0]![0] as GroundTileJob).id).toBe(0)
+    worker.flush()
+    expect(run.engine.schedule.stats).toEqual({ asked: 0, inTime: 0, fellBack: 0, late: 0 })
+    expect(run.engine.schedule.outstanding).toBe(0)
   })
 
   it('memory (§8): the pool takes every buffer back, the worker is terminated on dispose', { timeout: 60000 }, () => {

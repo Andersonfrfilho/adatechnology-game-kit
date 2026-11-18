@@ -5,12 +5,12 @@ import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld
 import { GROUND_CELL, buildGroundTile, flatTile, readGround, sampleCount, shapeGround } from './engine-ground'
 import type { GroundGrid, GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
-import { readGroundBand } from './engine-ground-job'
+import { bandLength, readGroundBand } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import { GroundSchedule } from './engine-ground-schedule'
 import type { PendingGround } from './engine-ground-schedule'
 import { SOLID_RING } from './engine-ground-ring'
-import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameSolid } from './engine-ground-solid'
+import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameNumbers, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
@@ -183,7 +183,7 @@ interface Tile {
   slab: boolean
   /** The step boxes' body, if the tile has steps, and the boxes it was made from. */
   steps: BodyId | null
-  boxes: readonly number[]
+  boxes: readonly number[] | Float64Array
   /** The solid body under the height field (not under a slab) and the boxes it was made from: a second body, so the height field keeps its own shape across changes. */
   solid: BodyId | null
   volume: SolidVolume
@@ -260,6 +260,17 @@ export class EnginePieces {
     this.partCentre = new THREE.Vector3()
     this.statics = new EngineStatics(world, GROUND)
     this.schedule = o.groundWorker ? new GroundSchedule(o.groundWorker, Math.max(1, Math.round(o.groundWorkerFrames ?? GROUND_WORKER_FRAMES))) : null
+    if (this.schedule) this.warmGround(this.schedule)
+  }
+
+  /** The worker's first job, a sloped tile with steps away from the host's ground (no host call): its code is parsed and hot before the first blast asks for real ones. */
+  private warmGround(schedule: GroundSchedule): void {
+    const warmGround = (x: number, z: number): number => 0.3 * x - 0.2 * z + 0.15 * Math.floor(x / 0.37) + 0.05 * Math.sin(3 * z)
+    const samples = new Float64Array(sampleCount(Math.round(TILE / GROUND_CELL)))
+    readGround(warmGround, samples, 0, 0, TILE)
+    const band = new Float64Array(bandLength(TILE))
+    readGroundBand(warmGround, band, 0, 0, TILE)
+    schedule.warm(samples, band, 0, 0, TILE)
   }
 
   /** A piece not handed in this update goes (`update`; a callback made once, so the walk makes no entry per piece). */
@@ -1135,7 +1146,7 @@ export class EnginePieces {
     const ground = kept ? tile.ground : this.replaceGround(tile, made, ix, iz)
     const writes = kept ? this.updateGround(tile, made, movedField, ix, iz) : 0
     let steps = tile?.steps ?? null
-    const same = tile !== undefined && tile.boxes.length === made.boxes.length && tile.boxes.every((x, i) => x === made.boxes[i])
+    const same = tile !== undefined && sameNumbers(tile.boxes, made.boxes)
     if (!same) {
       if (steps !== null) this.world.removeBody(steps)
       steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
@@ -1244,7 +1255,7 @@ export class EnginePieces {
     return { kind: 'heightfield', origin: [ix * TILE, 0, iz * TILE], cell: TILE / t.collisionCells, size: t.collisionCells + 1, heights: t.collision }
   }
 
-  private stepBoxes(boxes: readonly number[]): ShapeDesc {
+  private stepBoxes(boxes: ArrayLike<number>): ShapeDesc {
     const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
     for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]] }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
     return { kind: 'compound', children }

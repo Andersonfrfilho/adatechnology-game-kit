@@ -33,6 +33,9 @@
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
+//   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4 when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
+//   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
+//                                          the variants with `groundWorker=1` (back to back, a worker could never answer and every tile would be made on the main thread), `1` for all, `0` for none
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
@@ -42,7 +45,7 @@ import { pathToFileURL } from 'node:url'
 const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
 /** The stages of the worst-frames table (ROOM_EXPLOSION_STAGE_*): each is the time spent in the method itself, without the stages it calls (`other` is the rest of the update). */
-export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'groundBody', 'pieceBodies', 'layGround', 'layTile', 'waterAt', 'ripple', 'joltStep', 'bridgeReads', 'readBack']
+export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'groundBody', 'pieceBodies', 'layGround', 'layTile', 'groundAsk', 'groundApply', 'groundFallback', 'groundShape', 'groundRelease', 'waterAt', 'ripple', 'joltStep', 'bridgeReads', 'readBack']
 export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', 'jolt-d4-worker': '&solver=jolt&blastDebris=1&groundWorker=1', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
@@ -59,7 +62,7 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 
 /**
  * Runs inside the page. Stage `prepare` builds the house and settles it (at full speed: the build is not the measurement); stage `run` fires the explosion and times the physics of each frame.
- * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], isRendered?: boolean }} job
+ * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], isRendered?: boolean, paceMs?: number }} job
  * @returns {Promise<number[][] | undefined>} per frame: [physics ms, loop step, piece update, wake queue, whole update, render, ...one column per `stageLabels`]
  */
 async function inPage(job) {
@@ -178,6 +181,14 @@ async function inPage(job) {
     stage('pieceBodies', world, 'createBodies')
     stage('layGround', glue, 'layGround')
     stage('layTile', glue, 'layTile')
+    // the ground worker (`?groundWorker=1`): the samples and band read at the ask, the due tiles applied (their bodies are groundBody and groundShape), the tile made here when
+    // the worker had not answered by its update, and the held pieces let go
+    const schedule = /** @type {{ schedule?: object | null } | undefined} */ (glue)?.schedule ?? undefined
+    stage('groundAsk', glue, 'askTile')
+    stage('groundApply', glue, 'applyDueGround')
+    stage('groundFallback', schedule, 'computeHere')
+    stage('groundShape', world, 'setShape')
+    stage('groundRelease', glue, 'hold')
     stage('waterAt', room.terrain, 'waterAt')
     stage('ripple', room.terrain, 'ripple')
     stage('joltStep', world, 'stepFixed')
@@ -205,17 +216,28 @@ async function inPage(job) {
     return [acc.loop + acc.piece + acc.wake, acc.loop, acc.piece, acc.wake, whole, render, ...labels.map((label) => stageMs[label] ?? 0)]
   }
   const frames = []
+  const paceMs = job.paceMs ?? 0
+  // one frame, then (paced) the rest of its 1/60 s idle, so the worker's answers reach the page between frames as they would under requestAnimationFrame
+  const step = async () => {
+    const started = performance.now()
+    frames.push(frame())
+    if (paceMs > 0) await wait(Math.max(0, paceMs - (performance.now() - started)))
+  }
   if (kindName !== 'hammer') {
     room.blastAt('c4', chargeAt)
-    frames.push(frame())
+    await step()
   } else {
     for (let hit = 0; hit < 12; hit++) {
       const point = [spot[0] ?? 0, 0.5 + 0.5 * (hit % 4), (spot[2] ?? 0) + ((hit % 3) - 1) * 0.6]
       room.world.hit('house3d:1', { type: 'blunt', point, direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' })
-      frames.push(frame())
+      await step()
     }
   }
-  while (frames.length < job.frames) frames.push(frame())
+  while (frames.length < job.frames) await step()
+  // what the ground worker did (`GroundSchedule.stats`): tiles answered in time, made here at their update, answers that came too late
+  const groundSchedule = /** @type {{ schedule?: { stats: object } | null } | undefined} */ (/** @type {{ engine?: object }} */ (room.renderer.pieceSys).engine)?.schedule
+  const statsHost = /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window))
+  statsHost.__groundWorkerStats = groundSchedule ? { ...groundSchedule.stats } : undefined
   return frames
 }
 
@@ -356,8 +378,11 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const load = loadavg()[0] ?? 0
       const cdp = await page.context().newCDPSession(page)
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
-      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered, ...(stageLabels ? { stageLabels } : {}) })
+      const paced = process.env.ROOM_EXPLOSION_PACE === '1' || (process.env.ROOM_EXPLOSION_PACE !== '0' && VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)].includes('groundWorker=1'))
+      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered, ...(stageLabels ? { stageLabels } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
+      const groundStats = await page.evaluate(() => /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__groundWorkerStats)
+      if (groundStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: ground tiles ${JSON.stringify(groundStats)}`)
       if (!timings) throw new Error('no timings')
       return { timings, load }
     } finally {
@@ -384,7 +409,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const stageFrames = []
   const stageThrottles = numbers(process.env.ROOM_EXPLOSION_STAGE_THROTTLES, [1, 4])
   const stageRounds = Number(process.env.ROOM_EXPLOSION_STAGE_ROUNDS ?? 3)
-  const stageVariant = variants.includes('jolt-d4') ? 'jolt-d4' : variants.find((name) => name !== 'own')
+  const stageVariant = process.env.ROOM_EXPLOSION_STAGE_VARIANT ?? (variants.includes('jolt-d4') ? 'jolt-d4' : variants.find((name) => name !== 'own'))
   if (stageVariant && stageRounds > 0) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {

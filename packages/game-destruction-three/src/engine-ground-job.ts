@@ -116,6 +116,6 @@ export const transferOf = (r: GroundTileResult): ArrayBuffer[] => {
 
 /** The tile a result stands for, over the samples the main thread keeps for the tile. */
 export const tileOfResult = (r: GroundTileResult, samples: Float64Array): GroundTile => ({
-  heights: r.heights, cells: r.cells, collision: r.collision, collisionCells: r.collisionCells, boxes: Array.from(r.boxes),
-  solid: r.level === null ? { boxes: Array.from(r.solid), ring: Array.from(r.ring) } : NO_SOLID, level: r.level, samples,
+  heights: r.heights, cells: r.cells, collision: r.collision, collisionCells: r.collisionCells, boxes: r.boxes,
+  solid: r.level === null ? { boxes: r.solid, ring: r.ring } : NO_SOLID, level: r.level, samples,
 })

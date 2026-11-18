@@ -42,6 +42,8 @@ export class GroundSchedule {
   private nextId = 1
   /** Pool buffers out (with a job, or with the worker): back to 0 when every job is applied and every answer came. */
   outstanding = 0
+  /** Tiles asked for; applied from the worker's answer (it came in time); made here at their update (it had not); answers that came after (dropped). */
+  readonly stats = { asked: 0, inTime: 0, fellBack: 0, late: 0 }
 
   constructor(
     private readonly port: GroundWorkerPort,
@@ -55,7 +57,21 @@ export class GroundSchedule {
     return this.take(bandLength(size))
   }
 
+  /**
+   * A first job the worker answers before any tile is asked for (its id 0 is nobody's, so the answer only gives its buffers back): the worker's script is parsed and its code
+   * warm by the first blast, not started by it. Nothing is posted when nothing would answer.
+   */
+  warm(samples: Float64Array, band: Float64Array, x0: number, z0: number, size: number): void {
+    if (this.port.transport === 'none') return
+    const sentSamples = this.take(samples.length)
+    sentSamples.set(samples)
+    const sentBand = this.take(band.length)
+    sentBand.set(band)
+    this.port.postTile({ id: 0, x0, z0, size, wasCoarse: false, samples: sentSamples, band: sentBand })
+  }
+
   ask(job: GroundAsk, band: Float64Array, now: number): void {
+    this.stats.asked++
     const pending: PendingGround = { ...job, band, due: now + this.frames, id: this.nextId++, result: null, dirty: null }
     this.pending.set(job.key, pending)
     this.byId.set(pending.id, pending)
@@ -79,10 +95,17 @@ export class GroundSchedule {
 
   /** The tile of a due job: the worker's answer, or made here from the job; its band goes back to the pool. */
   resolve(p: PendingGround): GroundTile {
-    const result = p.result ?? computeGroundTile({ id: p.id, x0: p.x0, z0: p.z0, size: p.size, wasCoarse: p.wasCoarse, samples: p.samples, band: p.band })
+    if (p.result) this.stats.inTime++
+    else this.stats.fellBack++
+    const result = p.result ?? this.computeHere(p)
     this.give(p.band)
     p.result = null
     return tileOfResult(result, p.samples)
+  }
+
+  /** The tile of a job the worker had not answered by its update, made on this thread from the same job. */
+  computeHere(p: PendingGround): GroundTileResult {
+    return computeGroundTile({ id: p.id, x0: p.x0, z0: p.z0, size: p.size, wasCoarse: p.wasCoarse, samples: p.samples, band: p.band })
   }
 
   /** Every pending job dropped (the ground is cleared); answers still on their way only give their buffers back. */
@@ -110,6 +133,7 @@ export class GroundSchedule {
     this.give(result.band)
     const p = this.byId.get(result.id)
     if (p) p.result = result
+    else if (result.id !== 0) this.stats.late++
   }
 
   private take(length: number): Float64Array {
