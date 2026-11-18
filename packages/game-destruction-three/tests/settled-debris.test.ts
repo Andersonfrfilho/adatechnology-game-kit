@@ -269,3 +269,37 @@ describe('the debris at rest drawn in batches', () => {
     expect(disposed).toBe(geometries.length)
   })
 })
+
+describe('a batched fragment woken without the batch letting it go first', () => {
+  it('flies drawn once and, landed again, is drawn (never left hidden on the batch layer outside a batch)', async () => {
+    const { SettledBatches } = await import('../src/settled-batches')
+    const { INSTANCED_FRAGMENT_LAYER } = await import('../src/fragment-instances')
+    const scene = new THREE.Scene()
+    const system = new FragmentSystem(THREE, { scene, gravity: 9.8, groundAt: () => 0, life: 0, max: 100 } as unknown as FragmentSystemOptions)
+    const batches = new SettledBatches(THREE, scene, { budgetMs: 1000 })
+    const brick = system.materialFor('brick', 0x9a4a3a, false)
+    for (let i = 0; i < 20; i++) {
+      system.spawn({ id: `f${i}`, shape: 'chunk', center: [i * 0.3, 0.5, 0], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], size: [0.1, 0.06, 0.08], material: 'brick', mass: 0.3 } as never, brick, 'h', 100)
+    }
+    const frame = (): void => {
+      system.update(1 / 30)
+      scene.updateMatrixWorld(true)
+      batches.update(1 / 30, () => system.restingMeshes())
+      scene.updateMatrixWorld(true)
+    }
+    for (let k = 0; k < 150; k++) frame()
+    const meshes = system.meshes()
+    expect(meshes.filter((mesh) => mesh.layers.isEnabled(BATCHED_LAYER)).length).toBeGreaterThan(0)
+    system.blast([3, 0, 0], 5, 4)
+    for (let k = 0; k < 6; k++) {
+      frame()
+      // drawn once: by its own mesh (layer 0), by an instance (its mesh hidden) or by the batch, never by its mesh and an instance together
+      for (const mesh of meshes) expect([1, 1 << INSTANCED_FRAGMENT_LAYER, 1 << BATCHED_LAYER]).toContain(mesh.layers.mask)
+    }
+    expect(system.instanceStats().drawn).toBeGreaterThan(0)
+    for (let k = 0; k < 200; k++) frame()
+    const hidden = meshes.filter((mesh) => mesh.layers.mask === 1 << BATCHED_LAYER).length
+    expect(hidden).toBeLessThanOrEqual(batches.stats().batched)
+    expect(meshes.some((mesh) => mesh.layers.mask === 1 << INSTANCED_FRAGMENT_LAYER)).toBe(false)
+  })
+})

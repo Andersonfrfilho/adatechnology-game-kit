@@ -2,8 +2,8 @@ import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
 
 import { FRAGMENT_INSTANCES_NAME, FragmentInstances, INSTANCED_FRAGMENT_LAYER } from '../src/fragment-instances'
-import { FragmentSystem } from '../src/fragments'
-import type { FragmentSystemOptions } from '../src/fragments'
+import { FragmentSystem, restingBox } from '../src/fragments'
+import type { FragmentSystemOptions, Live } from '../src/fragments'
 
 const box = new THREE.BoxGeometry(1, 1, 1)
 const stone = new THREE.MeshLambertMaterial({ color: 0x808080 })
@@ -121,6 +121,38 @@ describe('fragment instances', () => {
     expectDrawnAsMembers(scene, meshes)
   })
 
+  it('a mask set from outside while a member is the one given back, and the mesh is hidden again; one a batch took is left to the batch', () => {
+    const scene = new THREE.Scene()
+    const instances = new FragmentInstances(THREE, scene)
+    const [freed, taken] = [meshAt(0), meshAt(1)]
+    instances.add(freed)
+    instances.add(taken)
+    freed.layers.mask = 1 | (1 << 4)
+    taken.layers.mask = 1 << 30
+    instances.sync()
+    expect(freed.layers.mask).toBe(1 << INSTANCED_FRAGMENT_LAYER)
+    expect(instances.has(taken)).toBe(false)
+    expect(taken.layers.mask).toBe(1 << 30)
+    expect(instances.add(taken)).toBe(false)
+    instances.remove(freed)
+    expect(freed.layers.mask).toBe(1 | (1 << 4))
+  })
+
+  it('the instanced meshes answer no ray: the meshes of the fragments do', () => {
+    const scene = new THREE.Scene()
+    const instances = new FragmentInstances(THREE, scene)
+    const mesh = meshAt(0)
+    scene.add(mesh)
+    instances.add(mesh)
+    instances.sync()
+    scene.updateMatrixWorld(true)
+    const ray = new THREE.Raycaster(new THREE.Vector3(mesh.position.x, 5, mesh.position.z), new THREE.Vector3(0, -1, 0))
+    ray.layers.enableAll()
+    const hits = ray.intersectObject(scene, true)
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits.every((hit) => hit.object === mesh)).toBe(true)
+  })
+
   it('moves a mesh whose material changed to the bucket of its new material', () => {
     const scene = new THREE.Scene()
     const instances = new FragmentInstances(THREE, scene)
@@ -208,6 +240,40 @@ describe('the fragment system draws its fragments in flight by instances', () =>
 })
 
 describe('the fragments at rest look under them only where something could be lost', () => {
+  it('a crater dug under one lying on the terrain: it falls into it (no wakeRegion needed)', () => {
+    let floor = 0
+    const scene = new THREE.Scene()
+    const system = new FragmentSystem(THREE, { scene, gravity: 9.8, groundAt: () => floor, life: 0, max: 100, surfaceAt: () => floor } as unknown as FragmentSystemOptions)
+    const brick = system.materialFor('brick', 0x9a4a3a, false)
+    const lying = system.spawn({ id: 'c', shape: 'chunk', center: [0, 0.03, 0], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], size: [0.1, 0.06, 0.08], material: 'brick', mass: 0.3 } as never, brick, 'a', 100)!
+    for (let frame = 0; frame < 60; frame++) system.update(1 / 60)
+    expect(lying.position.y).toBeCloseTo(0.03, 2)
+    floor = -0.5
+    for (let frame = 0; frame < 120; frame++) system.update(1 / 60)
+    expect(lying.position.y).toBeLessThan(-0.4)
+  })
+
+  it('the box a fragment lands on, kept until it moves, is the box made afresh (fragments piling while awake)', () => {
+    const scene = new THREE.Scene()
+    const system = new FragmentSystem(THREE, { scene, gravity: 9.8, groundAt: () => 0, life: 0, max: 100 } as unknown as FragmentSystemOptions)
+    const brick = system.materialFor('brick', 0x9a4a3a, false)
+    for (let i = 0; i < 12; i++) {
+      system.spawn({ id: `p${i}`, shape: 'slab', center: [0.02 * (i % 3), 0.1 + i * 0.07, 0.01 * i], rotation: [0, 0, 0, 1], velocity: [0, -0.5, 0], angularVelocity: [i * 0.2, 0.3, 0.1], size: [0.3, 0.03, 0.2], material: 'brick', mass: 2 } as never, brick, 'h', 100)
+    }
+    const list = (system as unknown as { list: Live[] }).list
+    let compared = 0
+    for (let frame = 0; frame < 240; frame++) {
+      system.update(1 / 60)
+      for (const f of list) {
+        if (!f.box) continue
+        expect(f.box).toEqual(restingBox(f))
+        compared++
+      }
+    }
+    expect(compared).toBeGreaterThan(100)
+  })
+
+
   const resting = (y: number): never => ({ id: `r${y}`, shape: 'chunk', center: [0, y + 0.03, 0], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], size: [0.1, 0.06, 0.08], material: 'brick', mass: 0.3 }) as never
 
   it('one on the ground casts no ray down; one on a slab still does, and falls when the slab goes', () => {
