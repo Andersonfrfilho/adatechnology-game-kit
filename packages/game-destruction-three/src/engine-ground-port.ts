@@ -89,7 +89,8 @@ export const createWorkerGroundPort = (worker: WorkerLike): GroundWorkerPort => 
  * The tiles through the game's worker coordinator (CLAUDE.md §14): each job is a `destruction.ground-tiles` task the coordinator hands to a
  * worker, awaited (the engine's `GroundSchedule` applies the tile at its update, from the answer if it came, else made here from the same
  * job). A coordinator with no workers is posted nothing (`none`): every tile is made at its update, with no job run twice. The coordinator
- * is the game's: `dispose` lets go of the answers, not of the workers.
+ * is the game's: `dispose` lets go of the answers, not of the workers. The job's arrays are transferred (the kind's `transferAwaitedInput`):
+ * `GroundSchedule` posts copies from its pool and keeps its own for the fallback.
  */
 export const createCoordinatorGroundPort = (workers: WorkerCoordinator): GroundWorkerPort => {
   const handler = oneHandler()

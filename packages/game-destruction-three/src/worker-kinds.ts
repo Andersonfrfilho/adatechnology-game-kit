@@ -16,5 +16,8 @@ export const groundTilesKind: TaskKind<GroundTileJob, GroundTileResult> = Object
   ...WORKER_KIND_DEFAULTS[WORKER_KIND_ID.GROUND_TILES],
   run: computeGroundTile,
   transferOutput: transferOf,
+  // the schedule posts copies from its pool and keeps the job for its own fallback: the samples and band go over without a structured clone, and come back with the answer
+  transferInput: (job: GroundTileJob) => [job.samples.buffer as ArrayBuffer, job.band.buffer as ArrayBuffer],
+  transferAwaitedInput: true,
   // no `warmup`: the engine warms its port with a real tile when the renderer is made (`GroundSchedule.warm`)
 })

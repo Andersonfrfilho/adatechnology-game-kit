@@ -129,6 +129,34 @@ describe('createWorkerCoordinator', () => {
     workers.dispose()
   })
 
+  it('transferAwaitedInput: an awaited sync job transfers its input; collected jobs and other kinds still copy it; a failed one rejects', async () => {
+    const sum = (input: Float64Array): number => input.reduce((a, b) => a + b, 0)
+    const moving = defineTaskKind<Float64Array, number>({ id: 'test.moving', lane: 'sim', priority: 1, late: 'sync', run: sum, transferInput: (input) => [input.buffer as ArrayBuffer], transferAwaitedInput: true })
+    const copying = defineTaskKind<Float64Array, number>({ id: 'test.copying', lane: 'sim', priority: 1, late: 'sync', run: sum, transferInput: (input) => [input.buffer as ArrayBuffer] })
+    const workers = createWorkerCoordinator({ spawn: inThreadSpawn([moving, copying]), workers: 1 })
+    const moved = Float64Array.of(1, 2, 3)
+    await expect(workers.run(moving, moved)).resolves.toBe(6)
+    expect(moved.length).toBe(0)
+    const kept = Float64Array.of(1, 2)
+    await expect(workers.run(copying, kept)).resolves.toBe(3)
+    expect(kept.length).toBe(2)
+    const collected = Float64Array.of(4, 5)
+    const handle = workers.submit(moving, collected, { frame: 0 })
+    await tick(5)
+    expect(handle.collect(1)).toBe(9)
+    expect(collected.length).toBe(2)
+    workers.dispose()
+
+    // a worker that cannot run it: a copied sync job runs here, a transferred one rejects (its input is gone)
+    const unknowing = createWorkerCoordinator({ spawn: inThreadSpawn([]), workers: 1 })
+    await expect(unknowing.run(copying, Float64Array.of(1, 1))).resolves.toBe(2)
+    await expect(unknowing.run(moving, Float64Array.of(1, 1))).rejects.toThrow(/no task kind/)
+    expect(unknowing.stats().kinds.find((k) => k.id === 'test.moving')).toMatchObject({ failed: 1, fallback: 0 })
+    unknowing.dispose()
+    // with no worker it is never sent: it runs here, input and all
+    await expect(createWorkerCoordinator().run(moving, Float64Array.of(2, 2))).resolves.toBe(4)
+  })
+
   it('warm says which kinds a worker does not know', async () => {
     const workers = createWorkerCoordinator({ spawn: inThreadSpawn([wavesKind]), workers: 1 })
     await expect(workers.warm([wavesKind, double])).rejects.toThrow(/test\.double/)
