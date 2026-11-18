@@ -1,6 +1,6 @@
 export { checkTaskKind, firstDifference } from './check'
 export type { KindReport } from './check'
-export { createWorkerCoordinator, WorkerTaskCancelled, WorkerTaskDropped } from './coordinator'
+export { createWorkerCoordinator, IN_FLIGHT_PER_WORKER, WorkerTaskCancelled, WorkerTaskDropped } from './coordinator'
 export type { CoordinatorOptions } from './coordinator'
 export { checkSchedule, defineResidentKind, defineTaskKind, kitScheduleOf } from './define'
 export { installWorkerHost } from './host'

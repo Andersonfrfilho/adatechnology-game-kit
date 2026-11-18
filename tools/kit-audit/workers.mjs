@@ -37,7 +37,7 @@ export const PLATFORMS = {
 /** Heavy work a project may have, the kit kind that does it (when there is one) and what a game writes itself otherwise. */
 export const WORK = {
   crowd: { kind: 'crowd.physics', from: '@adatechnology/game-crowd (crowdPhysicsKind; CrowdOptions.physics.workers)', sim: 'hordeSimModule runs the whole horde in the simulation thread' },
-  ground: { kind: 'destruction.ground-tiles', from: '@adatechnology/game-destruction (crater ground tiles)' },
+  ground: { kind: 'destruction.ground-tiles', from: '@adatechnology/game-destruction-three: groundTilesKind, createCoordinatorGroundPort(workers) for the engine (crater ground tiles)' },
   pieces: { kind: 'destruction.piece-boxes', from: '@adatechnology/game-destruction-three (fitted boxes of the broken parts)' },
   colliders: { kind: 'destruction.static-colliders', from: '@adatechnology/game-destruction (static colliders at load)' },
   shapes: { kind: 'shapes.generate', from: '@adatechnology/game-shapes (shapes and normals at load)' },
@@ -84,6 +84,12 @@ export async function recommendWorkers(root, input) {
   const kitKinds = kinds.filter((k) => k.kind && k.work !== 'world').map((k) => k.kind)
 
   const code = [
+    `// the short way: the kit preset (on by default) builds the page's coordinator with the kit's kinds and its own worker file`,
+    `import { createKitWorkers } from '@adatechnology/game-kit-defaults'`,
+    `const workers = createKitWorkers({ workers: ${JSON.stringify(planOptions.workers)} }) // spawn: null turns workers off`,
+    `engine.groundWorker = createCoordinatorGroundPort(workers) // @adatechnology/game-destruction-three`,
+    ``,
+    `// by hand, when the game has kinds of its own:`,
     `// game-worker.ts: the file every worker loads, with every kind the game hands to workers (the kit's and its own)`,
     `import { installWorkerHost } from '@adatechnology/game-workers'`,
     `installWorkerHost(self, [/* ${kitKinds.join(', ') || 'the kit kinds'} */ ${ownKinds.length ? `, /* your kinds: ${ownKinds.join(', ')} */` : ''}])`,

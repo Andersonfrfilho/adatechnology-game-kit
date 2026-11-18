@@ -1,14 +1,17 @@
+import type { WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { WorkerLike, WorkerScopeLike } from '@adatechnology/game-shapes'
 
 import { computeGroundTile, transferOf } from './engine-ground-job'
 import type { GroundTileJob, GroundTileResult } from './engine-ground-job'
+import { groundTilesKind } from './worker-kinds'
 
 /**
  * Where the engine's ground tiles are made (`RendererOptions.groundWorker`): the main thread posts a job (`GroundTileJob`, plain arrays, transferred) and takes the tile back
  * when it comes. The engine applies a tile exactly `groundWorkerFrames` updates after it asked for it, from the answer if it came, else made on the main thread from the same
  * job: the answer is the same bits either way, so when it comes changes nothing but where the work ran (`GroundSchedule`).
  *
- * - `transfer`: a worker (`createWorkerGroundPort`, over game-shapes' `WorkerLike`); the answer comes whenever its event loop delivers it.
+ * - `transfer`: the game's worker coordinator (`createCoordinatorGroundPort`, the `destruction.ground-tiles` kind, CLAUDE.md §14), or a
+ *   worker of the host's (`createWorkerGroundPort`, over game-shapes' `WorkerLike`); the answer comes whenever its event loop delivers it.
  * - `inline`: this thread, at once when posted (`createInlineGroundPort`): tests, Node.
  * - `none`: never answers and nothing is posted (`createMainThreadGroundPort`): every tile made on the main thread at its frame, the reference the other two match.
  */
@@ -78,6 +81,38 @@ export const createWorkerGroundPort = (worker: WorkerLike): GroundWorkerPort => 
       worker.onmessage = null
       worker.onerror = null
       worker.terminate()
+    },
+  }
+}
+
+/**
+ * The tiles through the game's worker coordinator (CLAUDE.md §14): each job is a `destruction.ground-tiles` task the coordinator hands to a
+ * worker, awaited (the engine's `GroundSchedule` applies the tile at its update, from the answer if it came, else made here from the same
+ * job). A coordinator with no workers is posted nothing (`none`): every tile is made at its update, with no job run twice. The coordinator
+ * is the game's: `dispose` lets go of the answers, not of the workers.
+ */
+export const createCoordinatorGroundPort = (workers: WorkerCoordinator): GroundWorkerPort => {
+  const handler = oneHandler()
+  let disposed = false
+  let failed = false
+  return {
+    get transport() {
+      return failed || workers.stats().workers === 0 ? 'none' : 'transfer'
+    },
+    postTile: (job) => {
+      if (disposed || failed || workers.stats().workers === 0) return
+      workers.run(groundTilesKind, job).then(
+        (result) => {
+          if (!disposed) handler.get()?.(result)
+        },
+        // a job the coordinator gave up (its worker kept dying): the tile is made here at its update, and nothing more is posted
+        () => void (failed = true),
+      )
+    },
+    onTile: handler.set,
+    dispose: () => {
+      disposed = true
+      handler.drop()
     },
   }
 }

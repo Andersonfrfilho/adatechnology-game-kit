@@ -19,9 +19,9 @@ Leia `spec.md`, `plan.md`, `specs/regras/14-workers.md` e `packages/game-workers
 
 ## Fase B — Chão da cratera
 
-- T6 `groundTilesKind` (`destruction.ground-tiles`) em `game-destruction`, construído em cima do worker do chão da thread do desempenho
+- [x] T6 (`groundTilesKind` em `game-destruction-three/worker-kinds`, `createCoordinatorGroundPort`, teste byte a byte) `groundTilesKind` (`destruction.ground-tiles`) em `game-destruction`, construído em cima do worker do chão da thread do desempenho
   (depois que o PR dele entrar na main): o protocolo próprio sai, o quadro fixo +2, o aquecimento e a contagem passam a ser do coordenador.
-- T7 Equivalência (`checkTaskKind` com ladrilhos reais) e a mesma medição da sala; meta: pior quadro da cratera ≤ 5,8 ms, 100% a tempo.
+- [x] T7 (sala da 4280 com o chão pelo coordenador por padrão; `?groundWorker=0` volta ao quadro principal) Equivalência (`checkTaskKind` com ladrilhos reais) e a mesma medição da sala; meta: pior quadro da cratera ≤ 5,8 ms, 100% a tempo.
 
 ## Fase C — Caixas das peças
 
@@ -39,7 +39,7 @@ Leia `spec.md`, `plan.md`, `specs/regras/14-workers.md` e `packages/game-workers
 
 ## Fase E — Preset e ferramentas
 
-- T13 `game-kit-defaults`: `KIT_WORKER_KINDS`, `dist/kit-worker.js`, o texto do worker para página de arquivo único e `createKitWorkers()`
+- [x] T13 (`createKitWorkers` e `KIT_WORKER_KINDS` no `game-kit-defaults`, ligado por padrão, `dist/kit-worker(.global).js`) `game-kit-defaults`: `KIT_WORKER_KINDS`, `dist/kit-worker.js`, o texto do worker para página de arquivo único e `createKitWorkers()`
   ligado ao `game-runtime` (`tick` no início do passo fixo, `warm` na carga). Ligado por padrão (o resultado é o mesmo).
 - T14 Painel do `game-devtools` com os contadores por categoria; `perf-gate` grava a fração a tempo e falha quando ela cai.
 - T15 Reserva de núcleos para o Jolt multithread e o spawn do Electron (combinar com a thread do app desktop).

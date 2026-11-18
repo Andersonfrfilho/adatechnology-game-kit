@@ -22,6 +22,14 @@ export default defineConfig([
     external: ['three'],
     noExternal: [/^@adatechnology\//],
   },
+  // the package's kinds of the worker coordinator (`groundTilesKind`), for a game's worker file: no three.js, the other packages external
+  {
+    entry: { 'worker-kinds': 'src/worker-kinds.ts' },
+    format: ['esm'],
+    dts: true,
+    sourcemap: true,
+    target: 'es2020',
+  },
   // the ground worker (`createWorkerGroundPort`): a module (dist/ground-worker.js) and a classic script (dist/ground-worker.global.js) a host can start from a Blob; no three.js
   {
     entry: { 'ground-worker': 'src/ground-worker.ts' },
