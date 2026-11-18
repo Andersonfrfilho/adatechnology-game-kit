@@ -76,9 +76,9 @@ const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (
  * The ground over a lattice in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what the tile's `groundAt` answers at each point
  * (`Terrain.heightGrid` is one). A tile reads its 26 000 samples through it instead of a call each.
  */
-export type GroundGrid = (xs: Float64Array, zs: Float64Array, out: Float64Array) => void
+export type GroundGrid = (xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array) => void
 
-// the lattice a grid read asks for and what it answers, kept between reads (one at a time) so a read costs no new arrays
+// the lattice a grid read asks for and what it answers, kept between reads (one at a time) so a read does not make them again
 let latticeX = new Float64Array(0)
 let latticeZ = new Float64Array(0)
 let latticeHeights = new Float64Array(0)
@@ -87,6 +87,7 @@ let latticeHeights = new Float64Array(0)
  * Reads the ground of the tile at (x0, z0) into `samples`: every sample, or only those a rectangle reaches (a sample a cell outside it is read too, so what the
  * rectangle's edge touches is not left old). True when a sample read differs from the one held. A crater in a corner of a tile asks `groundAt` for the corner.
  * With a `grid` the samples are read in one pass over the half-cell lattice they all lie on, each point the one `groundAt` would be asked for, so the same heights.
+ * Not reentrant: the lattice is module scratch, so neither reader may read a tile in turn.
  */
 export const readGround = (groundAt: (x: number, z: number) => number, samples: Float64Array, x0: number, z0: number, size: number, rect?: GroundRect, grid?: GroundGrid): boolean => {
   const n = Math.round(size / GROUND_CELL)

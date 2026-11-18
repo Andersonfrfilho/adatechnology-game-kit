@@ -13,9 +13,9 @@ import type { GroundRing } from './engine-ground-ring'
 
 /** A box: its centre, axes (x, y, z: the y axis is the normal of its top) and half sizes. */
 export interface ReachBox {
-  readonly c: readonly number[]
-  readonly axes: ReadonlyArray<readonly number[]>
-  readonly half: readonly number[]
+  readonly c: ArrayLike<number>
+  readonly axes: ReadonlyArray<ArrayLike<number>>
+  readonly half: ArrayLike<number>
 }
 
 /**
@@ -59,19 +59,34 @@ export const buildLowPyramid = (heights: Float32Array, cells: number, cell: numb
 }
 
 /** Whether the ground is steeper than `limit` (m per m) anywhere over the cells `ia`..`ib` (not included) by `ja`..`jb`. */
+// the question `steeperOver` is asking, for `visit` (one at a time)
+let steepPyramid: LowPyramid | null = null
+let steepSquare = 0
+let steepIa = 0, steepIb = 0, steepJa = 0, steepJb = 0
+
+const visit = (l: number, bi: number, bj: number): boolean => {
+  const pyramid = steepPyramid!
+  if (pyramid.steepest[l]![bj * pyramid.sizes[l]! + bi]! <= steepSquare) return false
+  const s = 1 << l
+  const a = bi * s, c = bj * s
+  const b = Math.min(pyramid.cells, a + s), d = Math.min(pyramid.cells, c + s)
+  if (a >= steepIb || b <= steepIa || c >= steepJb || d <= steepJa) return false
+  if (l === 0) return true
+  for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) if (visit(l - 1, 2 * bi + di, 2 * bj + dj)) return true
+  return false
+}
+
 const steeperOver = (pyramid: LowPyramid, ia: number, ib: number, ja: number, jb: number, limit: number): boolean => {
-  const square = limit * limit
-  const visit = (l: number, bi: number, bj: number): boolean => {
-    if (pyramid.steepest[l]![bj * pyramid.sizes[l]! + bi]! <= square) return false
-    const s = 1 << l
-    const a = bi * s, c = bj * s
-    const b = Math.min(pyramid.cells, a + s), d = Math.min(pyramid.cells, c + s)
-    if (a >= ib || b <= ia || c >= jb || d <= ja) return false
-    if (l === 0) return true
-    for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) if (visit(l - 1, 2 * bi + di, 2 * bj + dj)) return true
-    return false
-  }
-  return visit(pyramid.sizes.length - 1, 0, 0)
+  steepPyramid = pyramid
+  steepSquare = limit * limit
+  steepIa = ia
+  steepIb = ib
+  steepJa = ja
+  steepJb = jb
+  const steeper = visit(pyramid.sizes.length - 1, 0, 0)
+  // the last pyramid is not kept past the call (§8)
+  steepPyramid = null
+  return steeper
 }
 
 /** Where the plane under the block (`bi`, `bj`) of level `l` is in `pyramid.planes[l]`, made now if it was not. */
@@ -141,6 +156,46 @@ const over = (xa: number, xb: number, za: number, zb: number): number => {
   return best
 }
 
+// the tile and box `search` walks (one at a time): the top's own extent in cells (from, to along x, then z), and the most found so far
+let searchTile: ReachTile | null = null
+const searchTop = new Int32Array(4)
+let searchMost = 0
+
+/** The cell (`ia`, `ja`): its corners, and how far the box rises over them. */
+const leaf = (ia: number, ja: number): void => {
+  const { heights, cells, x0, z0, cell } = searchTile!
+  const m = cells + 1
+  const xa = x0 + ia * cell, za = z0 + ja * cell
+  corner4[0] = heights[ja * m + ia]!
+  corner4[1] = heights[ja * m + ia + 1]!
+  corner4[2] = heights[(ja + 1) * m + ia]!
+  corner4[3] = heights[(ja + 1) * m + ia + 1]!
+  const e = over(xa, xa + cell, za, za + cell)
+  if (e > searchMost) searchMost = e
+}
+
+/** The block (`bi`, `bj`) of level `l`, skipped when the box is apart from it or no higher over its low plane than the most found already, else its four. */
+const search = (l: number, bi: number, bj: number): void => {
+  const { cells, x0, z0, cell, pyramid } = searchTile!
+  const s = 1 << l
+  const ia = bi * s, ja = bj * s
+  if (ia >= cells || ja >= cells) return
+  const ib = Math.min(cells, ia + s), jb = Math.min(cells, ja + s)
+  if (ia >= searchTop[0]! && ib <= searchTop[1]! && ja >= searchTop[2]! && jb <= searchTop[3]!) return
+  const xa = x0 + ia * cell, xb = x0 + ib * cell, za = z0 + ja * cell, zb = z0 + jb * cell
+  if (apart(xa, xb, za, zb)) return
+  if (l === 0) return leaf(ia, ja)
+  const level = pyramid.planes[l]!
+  const at = planeUnder(pyramid, l, bi, bj)
+  const h = level[at]!, sx = level[at + 1]!, sz = level[at + 2]!
+  corner4[0] = h
+  corner4[1] = h + sx * (ib - ia)
+  corner4[2] = h + sz * (jb - ja)
+  corner4[3] = h + sx * (ib - ia) + sz * (jb - ja)
+  if (over(xa, xb, za, zb) <= searchMost + PRUNE_SLACK) return
+  for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) search(l - 1, 2 * bi + di, 2 * bj + dj)
+}
+
 export const reachOf = (box: ReachBox, t: ReachTile): Reach => {
   const { heights, cells, x0, z0, cell, pyramid, ring } = t
   const m = cells + 1
@@ -194,34 +249,12 @@ export const reachOf = (box: ReachBox, t: ReachTile): Reach => {
   const ja = Math.floor((spans[2]! - z0) / cell), jb = Math.ceil((spans[3]! - z0) / cell)
   const within = ia >= 0 && ja >= 0 && ib <= cells && jb <= cells
   if (within && !steeperOver(pyramid, ia, ib, ja, jb, n[1]! / Math.max(1e-12, Math.hypot(n[0]!, n[2]!)))) return { tile: inTile, ring: 0 }
-  const leaf = (ia: number, ja: number): void => {
-    const xa = x0 + ia * cell, za = z0 + ja * cell
-    corner4[0] = heights[ja * m + ia]!
-    corner4[1] = heights[ja * m + ia + 1]!
-    corner4[2] = heights[(ja + 1) * m + ia]!
-    corner4[3] = heights[(ja + 1) * m + ia + 1]!
-    const e = over(xa, xa + cell, za, za + cell)
-    if (e > inTile) inTile = e
-  }
-  const search = (l: number, bi: number, bj: number): void => {
-    const s = 1 << l
-    const ia = bi * s, ja = bj * s
-    if (ia >= cells || ja >= cells) return
-    const ib = Math.min(cells, ia + s), jb = Math.min(cells, ja + s)
-    if (ia >= ta && ib <= tb && ja >= sa && jb <= sb) return
-    const xa = x0 + ia * cell, xb = x0 + ib * cell, za = z0 + ja * cell, zb = z0 + jb * cell
-    if (apart(xa, xb, za, zb)) return
-    if (l === 0) return leaf(ia, ja)
-    const level = pyramid.planes[l]!
-    const at = planeUnder(pyramid, l, bi, bj)
-    const h = level[at]!, sx = level[at + 1]!, sz = level[at + 2]!
-    corner4[0] = h
-    corner4[1] = h + sx * (ib - ia)
-    corner4[2] = h + sz * (jb - ja)
-    corner4[3] = h + sx * (ib - ia) + sz * (jb - ja)
-    if (over(xa, xb, za, zb) <= inTile + PRUNE_SLACK) return
-    for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) search(l - 1, 2 * bi + di, 2 * bj + dj)
-  }
+  searchTile = t
+  searchTop[0] = ta
+  searchTop[1] = tb
+  searchTop[2] = sa
+  searchTop[3] = sb
+  searchMost = inTile
   // else every cell of its shadow, from the level whose blocks are as wide as the shadow's extent along x and z, over the (at most four) of them it covers
   const ua = Math.max(0, ia), ub = Math.min(cells, ib), va = Math.max(0, ja), vb = Math.min(cells, jb)
   if (ua < ub && va < vb) {
@@ -229,6 +262,9 @@ export const reachOf = (box: ReachBox, t: ReachTile): Reach => {
     while (1 << l < Math.max(ub - ua, vb - va) && l < pyramid.sizes.length - 1) l++
     for (let bj = va >> l; bj <= (vb - 1) >> l; bj++) for (let bi = ua >> l; bi <= (ub - 1) >> l; bi++) search(l, bi, bj)
   }
+  inTile = searchMost
+  // the last tile (and the host's ground its ring holds) is not kept past the call (§8)
+  searchTile = null
   // past the edges: the ring's cells the shadow's extent reaches
   let inRing = 0
   const r = ring.cells

@@ -413,6 +413,7 @@ export interface Terrain {
   /**
    * `heightAt` over a grid, in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what `heightAt` answers there (the same cell, blend and
    * vertices; past the terrain, the host's `baseHeight`). For a reader of many points on a lattice (a physics engine's ground tile), which saves a call per point.
+   * Not reentrant: it keeps its scratch between calls, so a `baseHeight` must not call it back.
    */
   heightGrid(xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array): void
   /**
