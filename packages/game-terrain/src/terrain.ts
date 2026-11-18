@@ -323,6 +323,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
   let gridBlendX = new Float64Array(0)
   let gridRows = new Int32Array(0)
   let gridBlendZ = new Float64Array(0)
+  let gridNear = new Float64Array(0)
+  let gridFar = new Float64Array(0)
 
   function heightGrid(xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array): void {
     const width = xs.length
@@ -349,16 +351,37 @@ export function createTerrain(options: TerrainOptions): Terrain {
       gridRows[j] = z >= z0 && z <= z1 ? fz | 0 : -1
       gridBlendZ[j] = fz - (fz | 0)
     }
+    // `blendCell` blends along x first, then along z: the two x blends of a column depend on its row only, so they are made once per row of cells and
+    // each point is then the same last step `blendCell` takes, on the same numbers (the same bits); a lattice finer than the cells reads each row many times
+    if (gridNear.length < width) {
+      gridNear = new Float64Array(width)
+      gridFar = new Float64Array(width)
+    }
+    let blended = -2
     for (let j = 0; j < depth; j++) {
       const row = gridRows[j]!
       const tz = gridBlendZ[j]!
+      if (row < 0) {
+        for (let i = 0; i < width; i++) out[j * width + i] = options.baseHeight?.(xs[i]!, zs[j]!) ?? 0
+        continue
+      }
+      if (row !== blended) {
+        blended = row
+        for (let i = 0; i < width; i++) {
+          const column = gridColumns[i]!
+          if (column < 0) continue
+          const index = row * stride + column
+          const tx = gridBlendX[i]!
+          gridNear[i] = heightOfVertex(index) * (1 - tx) + heightOfVertex(index + 1) * tx
+          gridFar[i] = heightOfVertex(index + stride) * (1 - tx) + heightOfVertex(index + stride + 1) * tx
+        }
+      }
       for (let i = 0; i < width; i++) {
-        const column = gridColumns[i]!
-        if (row < 0 || column < 0) {
+        if (gridColumns[i]! < 0) {
           out[j * width + i] = options.baseHeight?.(xs[i]!, zs[j]!) ?? 0
           continue
         }
-        out[j * width + i] = blendCell(row * stride + column, gridBlendX[i]!, tz)
+        out[j * width + i] = gridNear[i]! * (1 - tz) + gridFar[i]! * tz
       }
     }
   }
