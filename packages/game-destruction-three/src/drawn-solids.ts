@@ -1,21 +1,13 @@
 import type * as THREE_NS from 'three'
 
+import type { WorkerCoordinator } from '@adatechnology/game-contracts'
+
 import type { StaticSolid } from './engine-statics'
 import type { MeshVis } from './internal'
-import { fitOrientedBox, hugs } from '@adatechnology/game-shapes'
-import type { OrientedBox } from '@adatechnology/game-shapes'
+import { measureStaticPart } from './static-part-job'
+import type { StaticPartJob } from './static-part-job'
 import type { Visuals } from './visual'
-
-/** A box fits a drawn part when each of its eight corners has a vertex within this (m): a box drawn is a box held, a cylinder or a chamfered post is not. */
-const FIT = 0.01
-/** A box holds a part only when the part's own triangles lie in each of its faces and cover at least this share of the face (a raised panel leaves its edge short, a frame leaves most of it open): a door frame (two posts and a lintel) has a box's eight corners and none of its faces. */
-const FILL = 0.5
-/** The thinnest half (m) a drawn plane (a sheet with no thickness) is held by. */
-const MIN_HALF = 0.005
-/** A part whose every side is under this (m) is collapsed to a point (hidden by its host): nothing is drawn there. */
-const COLLAPSED = 0.002
-/** A face of a box under this area (m²) is a plane's edge: it has nothing to cover. */
-const MIN_FACE = 1e-6
+import { staticCollidersKind } from './worker-kinds'
 
 type Points = ArrayLike<number>
 
@@ -32,6 +24,8 @@ interface Made {
 }
 
 const made = new WeakMap<MeshVis, Made>()
+/** A part handed to the workers (`MeasureBudget.workers`) and not answered yet: the same numbers are not handed again. */
+const pending = new WeakMap<MeshVis, Omit<Made, 'solids'>>()
 const sourceIds = new WeakMap<object, number>()
 let lastSourceId = 0
 const sourceIdOf = (source: object): number => {
@@ -57,16 +51,12 @@ export interface MeasureBudget {
    * again. Nothing moves while a call measures, so once per mesh is the same matrix.
    */
   readonly updated?: Set<object>
+  /**
+   * The game's worker coordinator (CLAUDE.md §14): a part measured from scratch is a `destruction.static-colliders` job (lane `build`) and its object waits, as a part
+   * out of turns does (`incomplete`), until the answer comes; a later call takes the part from it. Without it every part is measured here, as before.
+   */
+  readonly workers?: WorkerCoordinator | null
 }
-
-const IDENTITY = [1, 0, 0, 0, 1, 0, 0, 0, 1]
-
-/** The axes (three rows of 3) of a box turned by the quaternion. */
-const axesOfQuat = (x: number, y: number, z: number, w: number): number[] => [
-  1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w),
-  2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w),
-  2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y),
-]
 
 /** The part's vertices out of the mesh's positions, with what another drawing collapses there collapsed as drawn (each range to its first vertex). */
 const readPoints = (array: Points, from: number, to: number, collapsed: ReadonlyArray<readonly [number, number]> = []): Float64Array => {
@@ -106,95 +96,58 @@ export const drawnSolidsOf = (THREE: typeof THREE_NS, visuals: Visuals, mv: Mesh
     known.matrix.every((v, k) => v === matrix[k])
   )
     return known.solids
+  const sig = { matrix: [...matrix], from: local.from, to: local.to, source, version: local.version, shapeVersion: mv.shapeVersion }
+  const waiting = budget.workers ? pending.get(mv) : undefined
+  if (waiting && sameSig(waiting, sig)) {
+    budget.incomplete = true
+    return known?.solids ?? []
+  }
   // out of turns: what was made before stays (its body is kept), a part never made waits for the next call
   if (budget.left <= 0) {
     budget.incomplete = true
     return known?.solids ?? []
   }
   budget.left -= local.to - local.from + PART_COST
-  const solids = solidsOfPoints(THREE, mv, readPoints(local.array, local.from, local.to, local.collapsed), matrix, local).map((solid) => ({ ...solid, key }))
-  made.set(mv, { matrix: [...matrix], from: local.from, to: local.to, source, version: local.version, shapeVersion: mv.shapeVersion, solids })
+  const job = jobOf(THREE, mv, readPoints(local.array, local.from, local.to, local.collapsed), matrix, local)
+  const workers = budget.workers
+  if (workers) {
+    pending.set(mv, sig)
+    budget.incomplete = true
+    workers.run(staticCollidersKind, job).then(
+      (solids) => {
+        if (pending.get(mv) !== sig) return
+        pending.delete(mv)
+        made.set(mv, { ...sig, solids: solids.map((solid) => ({ ...solid, key })) })
+      },
+      () => {
+        if (pending.get(mv) === sig) pending.delete(mv)
+      },
+    )
+    return known?.solids ?? []
+  }
+  const solids = measureStaticPart(job).map((solid) => ({ ...solid, key }))
+  made.set(mv, { ...sig, solids })
   return solids
 }
 
-const solidsOfPoints = (THREE: typeof THREE_NS, mv: MeshVis, points: Float64Array, matrix: readonly number[], local: { readonly from: number; readonly to: number }): StaticSolid[] => {
+const sameSig = (a: Omit<Made, 'solids'>, b: Omit<Made, 'solids'>): boolean =>
+  a.source === b.source && a.version === b.version && a.shapeVersion === b.shapeVersion && a.from === b.from && a.to === b.to && a.matrix.every((v, k) => v === b.matrix[k])
+
+/** The job of a part (`measureStaticPart`): its vertices, the triangles that start in its range and the mesh's world matrix with three's decomposition of it. */
+const jobOf = (THREE: typeof THREE_NS, mv: MeshVis, points: Float64Array, matrix: readonly number[], local: { readonly from: number; readonly to: number }): StaticPartJob => {
   const pos = new THREE.Vector3()
   const quat = new THREE.Quaternion()
   const scale = new THREE.Vector3()
   mv.mesh.matrixWorld.decompose(pos, quat, scale)
-  const low = [Infinity, Infinity, Infinity]
-  const high = [-Infinity, -Infinity, -Infinity]
-  for (let i = 0; i < points.length; i += 3) {
-    for (let k = 0; k < 3; k++) {
-      const v = points[i + k]
-      if (v < low[k]) low[k] = v
-      if (v > high[k]) high[k] = v
-    }
+  return {
+    points,
+    matrix: Float64Array.from(matrix),
+    position: [pos.x, pos.y, pos.z],
+    quaternion: [quat.x, quat.y, quat.z, quat.w],
+    scale: [scale.x, scale.y, scale.z],
+    found: Uint32Array.from(trianglesOfPart(mv, local)),
+    from: local.from,
   }
-  const size = [high[0] - low[0], high[1] - low[1], high[2] - low[2]]
-  const s = [Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z)]
-  if (Math.max(size[0] * s[0], size[1] * s[1], size[2] * s[2]) < COLLAPSED) return []
-  const centre = [(low[0] + high[0]) / 2, (low[1] + high[1]) / 2, (low[2] + high[2]) / 2]
-  const half = [size[0] / 2, size[1] / 2, size[2] / 2]
-  // the box of the geometry in its own frame, turned by the mesh: the drawn box of a wall, a table top, a beam
-  const straight = { center: centre, half, axes: IDENTITY, tolerance: [FIT / s[0], FIT / s[1], FIT / s[2]] }
-  const found = trianglesOfPart(mv, local)
-  if (hugs(points, straight) && fillsFaces(points, found, local.from, straight)) {
-    const c = new THREE.Vector3(centre[0] * scale.x, centre[1] * scale.y, centre[2] * scale.z).applyQuaternion(quat).add(pos)
-    return [{ center: [c.x, c.y, c.z], half: [Math.max(MIN_HALF, half[0] * s[0]), Math.max(MIN_HALF, half[1] * s[1]), Math.max(MIN_HALF, half[2] * s[2])], rotation: [quat.x, quat.y, quat.z, quat.w] }]
-  }
-  const world = new Float64Array(points.length)
-  const e = matrix
-  for (let i = 0; i < points.length; i += 3) {
-    const x = points[i], y = points[i + 1], z = points[i + 2]
-    world[i] = e[0] * x + e[4] * y + e[8] * z + e[12]
-    world[i + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]
-    world[i + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]
-  }
-  const turned = fitOrientedBox(world as unknown as number[])
-  if (turned && fitsTurned(world, turned) && fillsFaces(world, found, local.from, turnedBox(turned))) return [turned]
-  return [trimeshOf(mv, world, local, found)]
-}
-
-type FitBox = { readonly center: readonly number[]; readonly half: readonly number[]; readonly axes: readonly number[]; readonly tolerance: readonly number[] }
-
-const turnedBox = (box: OrientedBox): FitBox => ({ center: box.center, half: box.half, axes: axesOfQuat(box.rotation[0], box.rotation[1], box.rotation[2], box.rotation[3]), tolerance: [FIT, FIT, FIT] })
-
-const fitsTurned = (world: Points, box: OrientedBox): boolean => hugs(world, turnedBox(box))
-
-/** The area of the triangle a, b, c (box frame, three numbers each). */
-const areaOf = (a: ArrayLike<number>, b: ArrayLike<number>, c: ArrayLike<number>): number => {
-  const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2]
-  const vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2]
-  return Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) / 2
-}
-
-/** Whether the part's triangles (`found`: vertex numbers of the host, `from` the first of the part) cover each face of the box that has an area: what a box that fits holds is the part, not the air in it. */
-const fillsFaces = (points: Points, found: readonly number[], from: number, box: FitBox): boolean => {
-  if (found.length === 0) return true
-  const covered = [0, 0, 0, 0, 0, 0]
-  const frame = [new Float64Array(3), new Float64Array(3), new Float64Array(3)]
-  const a = box.axes
-  for (let i = 0; i + 2 < found.length; i += 3) {
-    for (let v = 0; v < 3; v++) {
-      const at = (found[i + v] - from) * 3
-      const dx = points[at] - box.center[0], dy = points[at + 1] - box.center[1], dz = points[at + 2] - box.center[2]
-      for (let k = 0; k < 3; k++) frame[v][k] = dx * a[k * 3] + dy * a[k * 3 + 1] + dz * a[k * 3 + 2]
-    }
-    let area = -1
-    for (let k = 0; k < 3; k++) for (let side = 0; side < 2; side++) {
-      const face = side ? box.half[k] : -box.half[k]
-      if (Math.abs(frame[0][k] - face) > box.tolerance[k] || Math.abs(frame[1][k] - face) > box.tolerance[k] || Math.abs(frame[2][k] - face) > box.tolerance[k]) continue
-      if (area < 0) area = areaOf(frame[0], frame[1], frame[2])
-      covered[k * 2 + side] += area
-    }
-  }
-  for (let k = 0; k < 3; k++) {
-    const area = 4 * box.half[(k + 1) % 3] * box.half[(k + 2) % 3]
-    if (area < MIN_FACE) continue
-    if (covered[k * 2] < area * FILL || covered[k * 2 + 1] < area * FILL) return false
-  }
-  return true
 }
 
 /** The triangles of each range of the host's index buffer, found in one pass for all of them (the parts of a merged mesh are many, its buffer is one). */
@@ -239,23 +192,3 @@ const trianglesOfPart = (mv: MeshVis, local: { readonly from: number; readonly t
   mv.host
     ? trianglesOfRanges(mv, mv.host.sharers.filter((s) => s.range && !s.loose).map((s) => s.range as [number, number])).get(local.from) ?? []
     : trianglesOfRanges(mv, [[0, local.to]]).get(0) ?? []
-
-/** The triangles of the part in world space (its vertices and the triangles of the geometry that start in its range), with the box around them as the box of the solid. */
-const trimeshOf = (mv: MeshVis, world: Float64Array, local: { readonly from: number; readonly to: number }, found: readonly number[]): StaticSolid => {
-  const indices = new Uint32Array(found.length)
-  for (let i = 0; i < found.length; i++) indices[i] = found[i] - local.from
-  const lo = [Infinity, Infinity, Infinity]
-  const hi = [-Infinity, -Infinity, -Infinity]
-  for (let i = 0; i < world.length; i += 3) {
-    for (let k = 0; k < 3; k++) {
-      lo[k] = Math.min(lo[k], world[i + k])
-      hi[k] = Math.max(hi[k], world[i + k])
-    }
-  }
-  return {
-    center: [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2],
-    half: [Math.max(MIN_HALF, (hi[0] - lo[0]) / 2), Math.max(MIN_HALF, (hi[1] - lo[1]) / 2), Math.max(MIN_HALF, (hi[2] - lo[2]) / 2)],
-    rotation: [0, 0, 0, 1],
-    mesh: { vertices: new Float32Array(world), indices },
-  }
-}

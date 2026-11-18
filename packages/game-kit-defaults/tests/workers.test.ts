@@ -6,7 +6,7 @@ import { KIT_WORKER_KINDS, createKitWorkers } from '../src'
 
 describe('the kit worker coordinator (CLAUDE.md §14)', () => {
   it('knows every kit kind, on by default and set by hand through the same options', async () => {
-    expect(KIT_WORKER_KINDS.map((k) => k.id).sort()).toEqual([WORKER_KIND_ID.CROWD_PHYSICS, WORKER_KIND_ID.GROUND_TILES, WORKER_KIND_ID.SHAPES_GENERATE].sort())
+    expect(KIT_WORKER_KINDS.map((k) => k.id).sort()).toEqual([WORKER_KIND_ID.CROWD_PHYSICS, WORKER_KIND_ID.GROUND_TILES, WORKER_KIND_ID.STATIC_COLLIDERS, WORKER_KIND_ID.SHAPES_GENERATE].sort())
     const workers = createKitWorkers({ spawn: inThreadSpawn(KIT_WORKER_KINDS), cores: 8 })
     // the automatic count: 8 cores, one kept for the main thread
     expect(workers.plan.total).toBe(7)

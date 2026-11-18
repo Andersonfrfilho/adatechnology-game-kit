@@ -2,6 +2,6 @@
 import { installWorkerHost } from '@adatechnology/game-workers'
 import { nodeWorkerScope } from '@adatechnology/game-workers/node'
 
-import { groundTilesKind } from '../../dist/worker-kinds.js'
+import { groundTilesKind, staticCollidersKind } from '../../dist/worker-kinds.js'
 
-installWorkerHost(nodeWorkerScope(), [groundTilesKind])
+installWorkerHost(nodeWorkerScope(), [groundTilesKind, staticCollidersKind])

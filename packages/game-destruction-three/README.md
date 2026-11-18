@@ -219,6 +219,24 @@ bounded. **Every number is an option** (per renderer in `RendererOptions.blastDe
 | `far.distance` / `far.age` | 40 m / 30 s | A piece at rest farther than this from `focus` and older than this is far and old |
 | `far.action` | `'sleep'` | `'sleep'` or `'fade'`. `'fade'` removes the body and collider and shrinks the root over `far.fadeSeconds` (0.5), then `onDebrisFaded(id, root)` hands it to the host to dispose. Merged drawing of debris at rest is `settledBatches` |
 
+### Workers (CLAUDE.md §14)
+
+Two kinds of the worker coordinator (`@adatechnology/game-workers`) live here, in the three-free entry `@adatechnology/game-destruction-three/worker-kinds`
+that a game's worker file imports (the kit's preset, `createKitWorkers`, already hosts both):
+
+- `groundTilesKind` (`destruction.ground-tiles`, lane `sim`): the engine's ground tiles under a crater. `groundWorker: createCoordinatorGroundPort(workers)`
+  hands them to the coordinator; each tile is applied at its fixed update, from the worker's answer or made here from the same job.
+- `staticCollidersKind` (`destruction.static-colliders`, lane `build`): the fixed colliders measured from what is drawn (a house at load, a part measured
+  again). `workers` in the renderer's options hands each part to the coordinator; its object waits for the answer as a part out of turns waits for its update,
+  and gets the same boxes (`measureStaticPart` is the kernel on both sides). Opt-in: measured in the test room (a house, `single_storey_a`) the main thread
+  spent more with it (262 ms against 192 ms over 90 updates, worst update 110 ms against 30 ms), since reading and copying a part's vertices costs what
+  measuring them does. It pays where a part is large and the main thread is the bottleneck; measure before turning it on.
+
+```ts
+const workers = createKitWorkers()
+createDestructionRenderer(THREE, { ...options, groundWorker: createCoordinatorGroundPort(workers) /* , workers: opt-in, see above */ })
+```
+
 The world's own solver passes are `WorldDesc.velocityIterations` (default 32 in `KIT_WORLD`, the least that keeps a 20:1 mass stack from making energy).
 
 ## API

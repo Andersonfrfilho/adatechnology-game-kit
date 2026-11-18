@@ -31,7 +31,7 @@ Leia `spec.md`, `plan.md`, `specs/regras/14-workers.md` e `packages/game-workers
 
 ## Fase D — Carga: colisores fixos, formas e normais
 
-- T10 `staticCollidersKind` (`destruction.static-colliders`, faixa `build`): colisores fixos da casa gerados na carga, em fatias, com a
+- [x] T10 (`staticCollidersKind` e `measureStaticPart` em `game-destruction-three`, `RendererOptions.workers`; opt-in, a medida da sala não pagou: ver evidência) `staticCollidersKind` (`destruction.static-colliders`, faixa `build`): colisores fixos da casa gerados na carga, em fatias, com a
   promessa resolvida antes de a casa ficar sólida.
 - [x] T11 (`shapesGenerateKind` em `game-shapes`, entrada `./worker-kinds`; `createShapePool({ workers })`; no `KIT_WORKER_KINDS`; sala: `__kitShapes`, print `shapes-coordinator.png`) `shapesGenerateKind` (`shapes.generate`, faixa `build`): `createShapePool` passa a usar o coordenador quando recebe `workers` (a API
   antiga continua, marcada como legada); normais da malha calculadas dentro do mesmo kernel.

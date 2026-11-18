@@ -119,6 +119,9 @@ const room = createTestRoom({
   // whether a worker answered or not; on with the coordinator (owner, 2026-11-18), ?groundWorker=0 makes every tile on the main thread as before
   debris: {
     ...(params.get('groundWorker') !== '0' && kitWorkers.plan.total > 0 ? { groundWorker: createCoordinatorGroundPort(kitWorkers) } : {}),
+    // ?staticWorker=1: the fixed colliders measured from what is drawn through the same coordinator (`destruction.static-colliders`, lane build). Off by default:
+    // measured in the room (spec 009, T10) it costs the main thread more than measuring here (the job's copy weighs what the measuring does), same boxes either way
+    ...(params.get('staticWorker') === '1' && kitWorkers.plan.total > 0 ? { workers: kitWorkers } : {}),
     ...(params.get('blastDebris') === '1' ? { blast: {} } : {}),
     ...(params.get('tilesUnderParts') === '1' ? { tilesUnderParts: true } : {}),
     ...(params.get('workBudget') ? { workBudget: { budgetMs: Number(params.get('workBudget')) } } : {}),
