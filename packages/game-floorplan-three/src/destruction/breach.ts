@@ -156,23 +156,48 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     detach() { paintState.attached = false },
   }
 
+  /**
+   * The walls cut since the last frame, of every house of this renderer, as one queue for a frame budget: a blast sends a wall many events (one per part
+   * it cuts) and each used to repaint it; each wall cut is painted once, a house per unit, every frame before the render (`DEFERRED_PRIORITY`).
+   */
+  const cutState = { attached: false }
+  const cutPainters = new Set<{ pending(): boolean; run(): void }>()
+  const cutQueue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.BREACH_CUT,
+    pending: () => { let n = 0; for (const painter of cutPainters) if (painter.pending()) n++; return n },
+    run(deadline, clock) {
+      let ran = 0
+      for (const painter of [...cutPainters]) {
+        if (!painter.pending()) continue
+        if (ran > 0 && clock() >= deadline) break
+        painter.run()
+        ran++
+      }
+      return ran
+    },
+    flush() { for (const painter of [...cutPainters]) painter.run() },
+    attach() { cutState.attached = true },
+    detach() {
+      cutState.attached = false
+      for (const painter of [...cutPainters]) painter.run()
+    },
+  }
+
   function createBreachView(opts: BreachViewOptions) {
     const { house, structure } = opts
     const views = new Map<string, WallView>()
     /** Walls whose damage changed and whose masks and units are repainted at the next `flush`. */
     const dirty = new Set<WallView>()
-    /**
-     * Walls cut since the queue last ran, while a frame budget owns the painting: a blast sends a wall many events (one per part it cuts), and each used to
-     * repaint it. They are painted once each, as the queue's first unit, before the frame draws (the queue runs every frame, `DEFERRED_PRIORITY`).
-     */
+    /** Walls cut since the cut queue last ran, while a frame budget owns it (`cutQueue`): painted once each by it. */
     const cutWalls = new Set<WallView>()
-    const paintCut = (): number => {
-      if (cutWalls.size === 0) return 0
+    const paintCut = (): void => {
+      if (cutWalls.size === 0) return
       for (const view of cutWalls) paint(view)
       cutWalls.clear()
       invalidate(); invalidateShadow()
-      return 1
     }
+    const cutPainter = { pending: () => cutWalls.size > 0, run: paintCut }
+    cutPainters.add(cutPainter)
     const paintBudgetMs = opts.paintBudgetMs ?? Infinity
     /** Views of walls that broke or fell, whose ranges are still collapsed. */
     const dropped: WallView[] = []
@@ -743,7 +768,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       views.set(hostId, view)
       // the hole a wall gets (an opening, a unit knocked out) shows at once; the plaster chipping around it fills in with the next flush
       if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) dirty.add(view) }
-      else if (paintState.attached) { dirty.delete(view); cutWalls.add(view) }
+      else if (cutState.attached) { dirty.delete(view); cutWalls.add(view) }
       else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
     }
@@ -757,7 +782,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     /** Repaints the walls whose damage changed since the last call, until the budget is spent; the rest wait for the next call. Returns how many walls wait. */
     function flush(budgetMs?: number): number {
-      if (budgetMs !== undefined || !paintState.attached) paintCut()
+      if (budgetMs !== undefined || !cutState.attached) paintCut()
       if (dirty.size === 0) return 0
       // a frame budget owns the painting: only an explicit budget (the emergency flush, LOD, statistics) paints from here
       if (budgetMs === undefined && paintState.attached) return dirty.size
@@ -774,10 +799,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     const queue: DeferredQueue = {
       id: DEFERRED_QUEUE_ID.BREACH_PAINT,
-      pending: () => dirty.size + (cutWalls.size > 0 ? 1 : 0),
+      pending: () => dirty.size,
       run(deadline, clock) {
-        let ran = paintCut()
-        if (ran > 0 && clock() >= deadline) return ran
+        let ran = 0
         for (const view of dirty) {
           dirty.delete(view)
           paint(view)
@@ -830,6 +854,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
        */
       claim(): void {
         paintQueues.add(queue)
+        cutPainters.add(cutPainter)
         for (const q of opts.spec()?.parts ?? []) {
           if (!q.units) continue
           for (const host of hostsOf(q.id)) for (const it of structure.meshesOf(host)) {
@@ -863,7 +888,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           // the wall or a pillar in it broke or fell: what still stands in the view (the pillars, the bond beam on them) stays drawn, bare where the bricks went
           host.fallen.add(partId)
           if (host.parts.some((id: string) => !host.fallen.has(id))) {
-            dirty.delete(host); paint(host); invalidate(); invalidateShadow()
+            dirty.delete(host); cutWalls.delete(host); paint(host); invalidate(); invalidateShadow()
             continue
           }
           dispose(host); views.delete(host.host)
@@ -895,7 +920,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       },
       flush,
       /** Takes this house's painting out of the renderer's queue (the house goes away) and frees the unit shapes on the GPU; `claim` puts it back (three.js uploads the shapes again when drawn). */
-      release(): void { paintQueues.delete(queue); unitGeometry.dispose(); lumpShape?.dispose() },
+      release(): void { paintQueues.delete(queue); cutPainters.delete(cutPainter); unitGeometry.dispose(); lumpShape?.dispose() },
       /** The painting of this house alone. */
       deferredQueue: (): DeferredQueue => queue,
       /** The wall has damage drawn. */
@@ -911,5 +936,5 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
   }
 
-  Object.assign(K, { createBreachView, breachPaintQueue: paintQueue })
+  Object.assign(K, { createBreachView, breachPaintQueue: paintQueue, breachCutQueue: cutQueue })
 }

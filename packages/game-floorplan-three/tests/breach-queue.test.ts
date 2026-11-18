@@ -73,8 +73,9 @@ describe('breach paint as a deferred queue', () => {
     expect(queue.pending()).toBe(0)
   })
 
-  it('a wall a burst of rifle rounds cuts many times in one frame is painted once, by the first run of the queue, even with the deadline past', () => {
-    const { d, house, world, queue } = setup()
+  it('a wall a burst of rifle rounds cuts many times in one frame is painted once, by one run of the cut queue, even with the deadline past', () => {
+    const { d, house, world, houseRenderer } = setup()
+    const queue = houseRenderer.renderer.cutQueue!()
     queue.attach?.()
     const id = 'wall_0_1'
     const p = house.structure.byId.get(id)!
@@ -103,5 +104,6 @@ describe('breach paint as a deferred queue', () => {
     queue.run(0, () => 1)
     const after = masks().map((mask) => mask.version)
     expect(after.every((version, k) => version === before[k]! + 1)).toBe(true)
+    queue.detach?.()
   })
 })

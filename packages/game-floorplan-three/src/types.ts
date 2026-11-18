@@ -364,6 +364,8 @@ export interface HouseRenderer {
   setNight(night: boolean): void
   /** The painting of the damaged walls of every house as a `DeferredQueue` for a shared frame budget; `budget.register` attaches it and `flush()` stops painting from `onFrame`. */
   deferredQueue?(): DeferredQueue
+  /** The walls the houses cut since the last frame, painted once each before the render: register it on the frame budget too, or each cut paints at once. */
+  cutQueue?(): DeferredQueue
   cars: { model(kind: string, seed?: number): CarModel | null; group(kind: string, w: number, d: number, seed?: number): THREE.Group | null; info(kind: string, seed?: number): { parts: number; tris: number; L: number; W: number; H: number } | null }
   dispose(): void
 }
