@@ -7,6 +7,8 @@ import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
 import { cellsOutside, cellsWithin, clumpUnits, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
 import type { LocalHole, UnitCell } from './breach'
+import { buildPartGrid, PART_GRID_MIN_PARTS } from './part-grid'
+import type { PartGrid } from './part-grid'
 import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
 import type { LayerRT } from './layers'
 import { bendBar, clipBarsToBox, clipBarsToDisc, clipBarsToVolume, isMember, memberStirrups, REBAR_COVER, rebarBars, rebarMass } from './rebar'
@@ -2640,6 +2642,27 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let sweepCounts: { objectVisits: number; partVisits: number; shapeTests: number; shapeTested: Set<string> } | null = null
   let lastSweep: SweepProbe = { objectVisits: 0, partVisits: 0, shapeTests: 0, shapeTested: [] }
 
+  /** The grid over each big object's part spheres, kept until a part is added or posed. */
+  const partGrids = new WeakMap<ObjRT, { readonly count: number; readonly poses: number; readonly grid: PartGrid }>()
+  const gridCandidates: number[] = []
+  // reused by every ray: the loop over them ends before another ray asks (a ray never casts another ray from inside it)
+  const gridParts: PartRT[] = []
+  const partGridOf = (o: ObjRT): PartGrid => {
+    const cached = partGrids.get(o)
+    if (cached && cached.count === o.parts.length && cached.poses === poseVersion) return cached.grid
+    const grid = buildPartGrid(o.parts, PART_BOUND_SLACK)
+    partGrids.set(o, { count: o.parts.length, poses: poseVersion, grid })
+    return grid
+  }
+  /** The parts a ray in the object's frame may meet: on a big object only the ones near it (the same result: the others miss their spheres). */
+  const partsAlong = (o: ObjRT, lo: Vec3, ld: Vec3, maxDist: number): readonly PartRT[] => {
+    if (o.parts.length < PART_GRID_MIN_PARTS) return o.parts
+    partGridOf(o).candidates(lo, ld, maxDist, gridCandidates)
+    gridParts.length = 0
+    for (const index of gridCandidates) gridParts.push(o.parts[index]!)
+    return gridParts
+  }
+
   const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     const minRadius = skip.minObjectRadius ?? 0
@@ -2653,7 +2676,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const qi = quat.conjugate(o.st.rotation)
       const lo = rotateVec(qi, vec.sub(origin, o.st.position))
       const ld = rotateVec(qi, d)
-      for (const p of scope?.parts.get(o) ?? o.parts) {
+      // the sweep's probe counts every part it visits: it keeps the plain scan
+      for (const p of scope?.parts.get(o) ?? (counts ? o.parts : partsAlong(o, lo, ld, maxDist))) {
         if (counts) counts.partVisits++
         if (isLost(p) || ignore?.has(`${o.id}\0${p.spec.id}`)) continue
         if (partSphereMiss(lo, ld, p, maxDist)) continue
