@@ -1385,7 +1385,8 @@ export class EnginePieces {
       moved = true
     }
     if (link.stepped && !b.sleeping) {
-      if (this.o.sweep) moved = this.sweepOn(b, link.before, pos, time)
+      // the lift from under the ground is a move too: a sweep that meets nothing must not undo it
+      if (this.o.sweep) moved = this.sweepOn(b, link.before, pos, time) || moved
       const impact = -link.beforeVy
       if (b.onGround && impact > HARD_LANDING && v[1] > link.beforeVy + impact * 0.5 && time - b.lastHit > 0.15) {
         b.lastHit = time
