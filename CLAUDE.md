@@ -21,6 +21,7 @@ qual). As regras valem inteiras: o resumo não tira nada do texto completo.
 | 11 | **Construção** | Estrutura real (alvenaria confinada, NBR 6118, caminho de carga até o chão); agente `engenheiro-estrutural` e testes de construção do SDK antes do PR. | [11](specs/regras/11-construcao.md) e [T10](specs/001-migracao-entregas-dos-times/design/T10-estrutura-real.md) |
 | 12 | **Objetos quebrados** | Nada quebrado fica no ar; nada invisível colide; teste de catálogo no CI. | [12](specs/regras/12-objetos-quebrados.md) |
 | 13 | **Sem z-fighting** | Nenhuma face no mesmo plano, virada para o mesmo lado e sobreposta: oco é casca, detalhe sai ou entra 2 mm; todo pacote que desenha peças passa o catálogo inteiro por `coincidentFacesOf` (`tests/z-fighting.test.ts`); peça nova tem zero, a dívida antiga só diminui. | [13](specs/regras/13-sem-z-fighting.md) |
+| 14 | **Workers** | Trabalho pesado fora do quadro passa pelo coordenador do `game-workers` como categoria com kernel puro, faixa, prioridade e prazo; nenhum pacote cria `Worker` direto; na faixa `sim` o resultado entra num quadro fixo e o fallback no quadro principal dá os mesmos bytes; teste de equivalência no CI e medição na sala. | [14](specs/regras/14-workers.md) |
 
 Seções citadas no código como `CLAUDE.md §N` ou pelo título ("Memória", "Testes de GPU e navegador") são as desta tabela.
 
@@ -31,7 +32,7 @@ de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin
 
 | Domínio | Pacotes |
 |---|---|
-| Contratos e base | `game-contracts` (destruição, tiro, `TestableModule`), `game-runtime` (quadro), `game-physics` (corpos rígidos, laço de passo fixo), `game-physics-jolt` (adaptador Jolt), `game-render-three` (luzes, shaders), `game-shapes`/`-three` (formas, liberar memória), `game-kit-defaults` (preset) |
+| Contratos e base | `game-contracts` (destruição, tiro, `TestableModule`), `game-runtime` (quadro), `game-physics` (corpos rígidos, laço de passo fixo), `game-physics-jolt` (adaptador Jolt), `game-render-three` (luzes, shaders), `game-shapes`/`-three` (formas, liberar memória), `game-workers` (coordenador de workers), `game-kit-defaults` (preset) |
 | Casas e construção | `game-floorplan` (planta, lote), `-structure` (sistemas construtivos, caminho de carga, validador, instalações), `-three` (desenho, paredes, telhado), `-residential`, `-commercial`, `-rural`, `-post-apocalyptic`, `-interactables` (planta → objetos e redes) |
 | Materiais e destruição | `game-destruction` (materiais, fratura, vergalhão, solo), `game-destruction-three` (furos, lascas, partículas), `game-vfx`/`-three` (explosão, fogo) |
 | Terreno, clima, plantas | `game-terrain`/`-three`, `game-weather`/`-three`, `game-vegetation`/`-species`/`-three` |

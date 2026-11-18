@@ -52,6 +52,7 @@
     "@adatechnology/game-animals-species": "workspace:^",
     "@adatechnology/game-characters-undead": "workspace:^",
     "@adatechnology/game-infection": "workspace:^",
+    "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
