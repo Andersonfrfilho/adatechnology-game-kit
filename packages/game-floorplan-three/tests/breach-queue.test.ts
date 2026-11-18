@@ -106,4 +106,38 @@ describe('breach paint as a deferred queue', () => {
     expect(after.every((version, k) => version === before[k]! + 1)).toBe(true)
     queue.detach?.()
   })
+
+  it('one run of the cut queue with the deadline past paints the walls cut in every house of the renderer, not one house a frame', () => {
+    const { d, house, world, houseRenderer } = setup()
+    const second = houseRenderer.renderer.build(planOf('sobrado', 3), { quality: 'high', night: false })
+    second.group.position.x = 40
+    second.group.updateMatrixWorld(true)
+    house.group.parent!.add(second.group)
+    second.destruction.activate()
+    const queue = houseRenderer.renderer.cutQueue!()
+    queue.attach?.()
+    const versionsOf = (group: typeof house.group): number[] => {
+      const found: Array<{ version: number }> = []
+      group.traverse((object) => {
+        const mask = (object.userData as { breachMask?: { texture: { version: number } } }).breachMask
+        if (object.name === 'breach-shell' && mask && !found.includes(mask.texture)) found.push(mask.texture)
+      })
+      return found.map((texture) => texture.version)
+    }
+    const shoot = (target: typeof house, id: string): void => {
+      const p = target.structure.byId.get(id)!
+      const point: [number, number, number] = [(p.aabb[0] + p.aabb[2]) / 2, (p.y0 + p.y1) / 2, (p.aabb[1] + p.aabb[3]) / 2]
+      const world3 = target.group.localToWorld(new THREE.Vector3(...point))
+      world.hitPart(target.destruction.id!, id, { type: 'ballistic', point: [world3.x, world3.y, world3.z], direction: [0, 0, -1], energy: 3500, caliber: 7.62 })
+    }
+    shoot(house, 'wall_0_1')
+    shoot(second, 'wall_0_1')
+    expect(queue.pending()).toBe(1)
+    expect(queue.run(0, () => 1)).toBe(1)
+    expect(queue.pending()).toBe(0)
+    expect(versionsOf(house.group).some((version) => version > 1)).toBe(true)
+    expect(versionsOf(second.group).some((version) => version > 1)).toBe(true)
+    expect(d.id).not.toBe(second.destruction.id)
+    queue.detach?.()
+  })
 })

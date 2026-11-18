@@ -158,20 +158,20 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
   /**
    * The walls cut since the last frame, of every house of this renderer, as one queue for a frame budget: a blast sends a wall many events (one per part
-   * it cuts) and each used to repaint it; each wall cut is painted once, a house per unit, every frame before the render (`DEFERRED_PRIORITY`).
+   * it cuts) and each used to repaint it; each wall cut is painted once, every house in one unit, every frame before the render (`DEFERRED_PRIORITY`).
    */
   const cutState = { attached: false }
   const cutPainters = new Set<{ pending(): boolean; run(): void }>()
   const cutQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.BREACH_CUT,
-    pending: () => { let n = 0; for (const painter of cutPainters) if (painter.pending()) n++; return n },
-    run(deadline, clock) {
+    // the whole pass is one unit: a forced run (the budget spent by the blast's own events) still paints every house cut in that frame
+    pending: () => { for (const painter of cutPainters) if (painter.pending()) return 1; return 0 },
+    run() {
       let ran = 0
       for (const painter of [...cutPainters]) {
         if (!painter.pending()) continue
-        if (ran > 0 && clock() >= deadline) break
         painter.run()
-        ran++
+        ran = 1
       }
       return ran
     },
