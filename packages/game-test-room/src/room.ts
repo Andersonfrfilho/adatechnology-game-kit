@@ -384,6 +384,35 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const fluids = options.fluids ?? createFluids({ seed: 1, locale, liquids: options.liquids, groundAt })
   const pristineFluids = ownFluids ? fluids.serialize() : null
   for (const s of [...arena.surfaces, ...(options.surfaces ?? [])]) fluids.addSurface(s)
+  /** The scenery tops whose surface left the fluid world: the top broke or came off, and what was spilt on it went with it. */
+  const fallenTops = new Set<string>()
+  /**
+   * A stain lies on the top it was spilt on: when the top breaks, melts or burns away, the stain goes with it, not left in the air where
+   * the top was; a top of boards loses the stains of each board that went. A top that is gone takes no more liquid (it is no surface any more).
+   */
+  const dropStainsOffFallenTops = (): void => {
+    // a top pushed along the floor is still a top (its stains move with it, `pushMoved`): only the board that broke, melted or burnt away is gone
+    const lost = (object: string, part: string): boolean => {
+      const p = world.part(object, part)
+      return !p || p.status === 'broken' || p.status === 'melted' || p.status === 'ashes'
+    }
+    for (const t of arena.tops) {
+      if (fallenTops.has(t.id)) continue
+      if (t.boards ? t.boards.every((b) => lost(t.id, b.part)) : lost(t.id, t.topPart)) {
+        fluids.removeSurface(t.id)
+        fallenTops.add(t.id)
+        continue
+      }
+      if (!t.boards) continue
+      const gone = t.boards.filter((b) => lost(t.id, b.part))
+      if (gone.length === 0) continue
+      for (const st of fluids.stains()) {
+        if (st.surface !== t.id) continue
+        const [x, , z] = st.center
+        if (gone.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ)) fluids.clearStains(st.center, 1e-3)
+      }
+    }
+  }
   const itemUseDefs = [...ITEM_USES, ...(options.itemUses ?? [])]
 
   const quality = options.quality ?? 'medium'
@@ -1710,6 +1739,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (pristineFluids) {
       fluids.load(pristineFluids)
       for (const s of [...arena.surfaces, ...(options.surfaces ?? [])]) fluids.addSurface(s)
+      fallenTops.clear()
     }
     pending = []
     strikes = []
@@ -4152,6 +4182,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     rockPlayer(dt)
     updateLoads(dt)
     if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
+    dropStainsOffFallenTops()
     fluidView.update(dt)
     filmBridge.update(dt)
     film.update(dt)

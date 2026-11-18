@@ -218,4 +218,23 @@ describe('what a push meets and leaves behind', () => {
     const after = room.fluids.stains().find((s) => s.id === before!.id)
     expect(after!.center[2] - before!.center[2]).toBeCloseTo(moved, 2)
   })
+
+  it('a liquid spilled on the table top goes when the top does: no stain is left in the air where the top was', () => {
+    const room = makeRoom({ catalog: CATALOG, scenery: { shelf: null, table: { spec: table(), position: [0, 0, TABLE_AT] as [number, number, number], free: true, pushable: true, top: { part: 'body', y: TOP } } } })
+    room.fluids.splash('water', [0.3, TOP + 0.3, TABLE_AT], 0.2)
+    run(room, 0.5)
+    expect(room.fluids.stains().some((s) => s.surface === 'table')).toBe(true)
+    // blows until the top breaks
+    for (let i = 0; i < 200 && room.world.part('table', 'body')!.status !== 'broken'; i++) {
+      room.world.hit('table', { type: 'blunt', point: [0, TOP, TABLE_AT], direction: [0, -1, 0], energy: 4000, radius: 0.1 })
+      room.update(1 / 60)
+    }
+    expect(room.world.part('table', 'body')!.status).toBe('broken')
+    run(room, 0.2)
+    expect(room.fluids.stains().some((s) => s.surface === 'table')).toBe(false)
+    // and nothing more lands on it
+    room.fluids.splash('water', [0.3, TOP + 0.3, TABLE_AT], 0.2)
+    run(room, 0.5)
+    expect(room.fluids.stains().some((s) => s.surface === 'table')).toBe(false)
+  })
 })

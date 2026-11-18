@@ -577,12 +577,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         || flakes.some((f) => boxDistance(f.s, f.y, c.a, c.b, c.y0, c.y1) <= 2 * f.r)
       const list: UnitBox[] = []
       const tone = (hex: number, k: number) => tmp.c.setHex(hex).multiplyScalar(k).getHex()
+      // the coat closes the wall at its ends and over its top too: a unit stops under it there, as it does under the faces (`COVER`), or its face lies in
+      // the plane of the coat's and the two fight (the grey of a pillar's block over the plaster of the wall's end, CLAUDE.md §13)
+      const b = view.bounds
+      const inner = mask.alongU ? [b[0]! + COVER, b[1]!, b[2]!, b[3]! - COVER, b[4]! - COVER, b[5]!] : [b[0]!, b[1]!, b[2]! + COVER, b[3]!, b[4]! - COVER, b[5]! - COVER]
       for (const { c, part, units, thick, mid } of shown) {
         if (!near(c)) continue
         const centre = mask.start + (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2, len = c.b - c.a, h = c.y1 - c.y0
         // the structure's part reaches past the drawn wall (half the thickness at each end, to close a corner): a unit is drawn only inside the wall drawn
         const at = (s: number, dy: number, d: number, colour: number) => {
-          const unit = clipToBox({ x: mask.alongU ? centre : mid, y, z: mask.alongU ? mid : centre, sx: mask.alongU ? s : d, sy: dy, sz: mask.alongU ? d : s, colour }, view.bounds)
+          const unit = clipToBox({ x: mask.alongU ? centre : mid, y, z: mask.alongU ? mid : centre, sx: mask.alongU ? s : d, sy: dy, sz: mask.alongU ? d : s, colour }, inner)
           // cut to the wall drawn, what is left of a unit at the edge of a breach may have its middle in the breach: it went with it
           if (unit && !discs.some((k) => Math.hypot((mask.alongU ? unit.x : unit.z) - mask.start - k.s, unit.y - k.y) < k.r)) list.push(unit)
         }
