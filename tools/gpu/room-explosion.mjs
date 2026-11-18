@@ -181,13 +181,15 @@ async function inPage(job) {
     stage('pieceBodies', world, 'createBodies')
     stage('layGround', glue, 'layGround')
     stage('layTile', glue, 'layTile')
-    // the ground worker (`?groundWorker=1`): the samples and band read at the ask, the due tiles applied (their bodies are groundBody and groundShape), the tile made here when
+    // the ground worker (`?groundWorker=1`): the samples and band read at the ask, the due tiles applied (their new bodies are groundBody, their fields groundShape), the tile made here when
     // the worker had not answered by its update, and the held pieces let go
     const schedule = /** @type {{ schedule?: object | null } | undefined} */ (glue)?.schedule ?? undefined
     stage('groundAsk', glue, 'askTile')
     stage('groundApply', glue, 'applyDueGround')
     stage('groundFallback', schedule, 'computeHere')
-    stage('groundShape', world, 'setShape')
+    // the tile's own ground body brought up to date (a field written in place or a new shape; a new body is groundBody), not a piece's shape
+    stage('groundShape', glue, 'updateGround')
+    stage('groundShape', glue, 'replaceGround')
     stage('groundRelease', glue, 'hold')
     stage('waterAt', room.terrain, 'waterAt')
     stage('ripple', room.terrain, 'ripple')

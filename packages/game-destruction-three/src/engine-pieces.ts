@@ -224,6 +224,8 @@ export class EnginePieces {
   private readonly due: PendingGround[] = []
   /** Whether a tile the piece being visited needs is not laid yet (`askAt`). */
   private waits = false
+  /** Blast tiles to ask for again once the tile being made there is applied (`askBlastAt`), by key. */
+  private readonly blastAgain = new Set<number>()
   /** The pieces held for their ground in this update (`layGroundLater`). */
   private readonly waiting = new Set<PieceBody>()
   /** The blasts told since the last `prepare` (`layAhead`). */
@@ -308,6 +310,7 @@ export class EnginePieces {
     }
     this.tiles.clear()
     this.schedule?.clear()
+    this.blastAgain.clear()
     this.blasts.length = 0
     this.statics.clear()
     this.ignored.clear()
@@ -355,6 +358,7 @@ export class EnginePieces {
 
   /** The tiles the blasts told since the last update reach, nearest first up to `blastTiles`: made if new, laid again if marked. */
   private layBlastGround(): void {
+    this.askBlastAgain()
     if (this.blasts.length === 0) return
     const wanted = new Map<number, { key: number; ix: number; iz: number; distance: number }>()
     for (const { x, z, radius } of this.blasts) {
@@ -372,8 +376,25 @@ export class EnginePieces {
     }
     this.blasts.length = 0
     const nearest = [...wanted.values()].sort((a, b) => a.distance - b.distance || a.key - b.key)
-    const visit = this.schedule ? this.askAt : this.layAt
+    const visit = this.schedule ? this.askBlastAt : this.layAt
     for (const t of nearest.slice(0, this.o.blastTiles ?? BLAST_TILES)) visit(t.key, t.ix, t.iz)
+  }
+
+  /** Under the ground worker, a blast's tile already being made (from the ground before the blast) is asked for again once it is applied (`askBlastAgain`). */
+  private readonly askBlastAt: TileVisit = (key, ix, iz) => {
+    if ((this.schedule as GroundSchedule).pending.has(key)) this.blastAgain.add(key)
+    else this.askAt(key, ix, iz)
+  }
+
+  /** The blast tiles that were being made when their blast came, asked for again now that they are applied (if their ground changed since). */
+  private askBlastAgain(): void {
+    const schedule = this.schedule
+    if (!schedule || this.blastAgain.size === 0) return
+    for (const key of this.blastAgain) {
+      if (schedule.pending.has(key)) continue
+      this.blastAgain.delete(key)
+      this.askAt(key, Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN, (key % TILE_KEY) - TILE_KEY_ORIGIN)
+    }
   }
 
   /**
@@ -923,8 +944,8 @@ export class EnginePieces {
 
   /** A tile `groundOf` names is asked of the schedule (`askTile`); `waits` when no ground is laid there yet. */
   private readonly askAt: TileVisit = (key, ix, iz) => {
-    const pending = (this.schedule as GroundSchedule).pending.get(key)
-    if (!pending) this.askTile(key, ix, iz, this.tiles.get(key))
+    const tile = this.tiles.get(key)
+    if (!(this.schedule as GroundSchedule).pending.has(key) && (!tile || tile.dirty !== null)) this.askTile(key, ix, iz, tile)
     if (!this.tiles.has(key)) this.waits = true
   }
 
@@ -936,7 +957,8 @@ export class EnginePieces {
     const waiting = this.waiting
     waiting.clear()
     for (const b of list) {
-      if (b.sleeping) continue
+      // one the kit put to sleep while held stays held while its ground is missing: let go asleep, a body landing on it would wake it over nothing
+      if (b.sleeping && !this.links.get(b)?.frozen) continue
       this.waits = false
       this.groundOf(b, dt, this.askAt)
       if (this.waits && !b.held) waiting.add(b)

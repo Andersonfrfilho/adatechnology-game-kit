@@ -13,6 +13,7 @@ import type { GroundTileJob, GroundTileResult } from './engine-ground-job'
  * - `none`: never answers and nothing is posted (`createMainThreadGroundPort`): every tile made on the main thread at its frame, the reference the other two match.
  */
 export interface GroundWorkerPort {
+  /** May turn `none` later (a worker that failed): read it at each job. */
   readonly transport: 'transfer' | 'inline' | 'none'
   /** Takes the job's arrays (they may be transferred: not to be read after). */
   postTile(job: GroundTileJob): void
@@ -22,35 +23,60 @@ export interface GroundWorkerPort {
   dispose(): void
 }
 
-export const createInlineGroundPort = (): GroundWorkerPort => {
+/** The one handler of a port: a port serves one engine, so a second one is an error (it would take the answers of the first). */
+const oneHandler = (): { set(h: (result: GroundTileResult) => void): void; get(): ((result: GroundTileResult) => void) | null; drop(): void } => {
   let handler: ((result: GroundTileResult) => void) | null = null
   return {
-    transport: 'inline',
-    postTile: (job) => handler?.(computeGroundTile(job)),
-    onTile: (h) => {
+    set: (h) => {
+      if (handler) throw new Error('GroundWorkerPort: onTile set twice (a port serves one engine)')
       handler = h
     },
-    dispose: () => {
+    get: () => handler,
+    drop: () => {
       handler = null
     },
   }
 }
 
-export const createMainThreadGroundPort = (): GroundWorkerPort => ({ transport: 'none', postTile: () => undefined, onTile: () => undefined, dispose: () => undefined })
-
-/** A worker running `installGroundWorker` (the package's `ground-worker` entry): jobs and answers cross with their buffers transferred; `dispose` terminates it. */
-export const createWorkerGroundPort = (worker: WorkerLike): GroundWorkerPort => {
-  let handler: ((result: GroundTileResult) => void) | null = null
-  worker.onmessage = (event) => handler?.(event.data as GroundTileResult)
+export const createInlineGroundPort = (): GroundWorkerPort => {
+  const handler = oneHandler()
   return {
-    transport: 'transfer',
-    postTile: (job) => worker.postMessage(job, [job.samples.buffer as ArrayBuffer, job.band.buffer as ArrayBuffer]),
-    onTile: (h) => {
-      handler = h
+    transport: 'inline',
+    postTile: (job) => handler.get()?.(computeGroundTile(job)),
+    onTile: handler.set,
+    dispose: handler.drop,
+  }
+}
+
+export const createMainThreadGroundPort = (): GroundWorkerPort => {
+  const handler = oneHandler()
+  return { transport: 'none', postTile: () => undefined, onTile: handler.set, dispose: handler.drop }
+}
+
+/**
+ * A worker running `installGroundWorker` (the package's `ground-worker` entry): jobs and answers cross with their buffers transferred; `dispose` terminates it. A worker that
+ * fails (`onerror`: its script did not load, it threw) is posted nothing more: the port turns `none` and every tile is made on the main thread at its update, as it would have
+ * been anyway (game-shapes' pool fails its jobs the same way).
+ */
+export const createWorkerGroundPort = (worker: WorkerLike): GroundWorkerPort => {
+  const handler = oneHandler()
+  let failed = false
+  worker.onmessage = (event) => handler.get()?.(event.data as GroundTileResult)
+  worker.onerror = () => {
+    failed = true
+  }
+  return {
+    get transport() {
+      return failed ? 'none' : 'transfer'
     },
+    postTile: (job) => {
+      if (!failed) worker.postMessage(job, [job.samples.buffer as ArrayBuffer, job.band.buffer as ArrayBuffer])
+    },
+    onTile: handler.set,
     dispose: () => {
-      handler = null
+      handler.drop()
       worker.onmessage = null
+      worker.onerror = null
       worker.terminate()
     },
   }

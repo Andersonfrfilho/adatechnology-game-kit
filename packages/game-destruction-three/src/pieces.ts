@@ -277,6 +277,8 @@ export class PieceSystem {
   private solids: Solid[] = []
   /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
   private readonly engine: EnginePieces | null
+  /** The host's ground worker, disposed with the system: by the engine, or here when there is none (the kit's own solver lays no tiles). */
+  private readonly groundWorker: GroundWorkerPort | null
   /** The loop the system steps itself (a world was handed), the loop it only registers on (a loop was handed), or null on `'own'`. */
   private readonly loop: PhysicsLoop | null
   private readonly stepsItself: boolean
@@ -348,6 +350,7 @@ export class PieceSystem {
           ...(o.groundWorkerFrames !== undefined ? { groundWorkerFrames: o.groundWorkerFrames } : {}),
         })
       : null
+    this.groundWorker = o.groundWorker ?? null
     if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)
   }
 
@@ -397,7 +400,8 @@ export class PieceSystem {
   /** Takes the system's phases out of the loop it was handed. */
   dispose(): void {
     for (const leave of this.leaveLoop.splice(0)) leave()
-    this.engine?.dispose()
+    if (this.engine) this.engine.dispose()
+    else this.groundWorker?.dispose()
   }
 
   /**

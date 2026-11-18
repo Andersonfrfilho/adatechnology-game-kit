@@ -32,6 +32,13 @@ import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__, __GROUND_WORKER_SOURCE__ */
 const params = new URLSearchParams(location.search)
+/** The engine's ground worker from its inlined source (`?groundWorker=1`): the Blob URL is let go once the worker has it. */
+const groundWorkerFromSource = () => {
+  const url = URL.createObjectURL(new Blob([__GROUND_WORKER_SOURCE__], { type: 'text/javascript' }))
+  const worker = new Worker(url)
+  URL.revokeObjectURL(url)
+  return worker
+}
 // the room itself has no items: the default page loads the SDK modules into it (see build.mjs); the bare room (__ROOM_FULL__ false) is the page the other test areas build over
 const deferred = __ROOM_FULL__
 const BENCH_PARAM_PREFIX = 'bench.'
@@ -97,7 +104,7 @@ const room = createTestRoom({
   // ?groundWorker=1: the engine's ground tiles made in a worker, applied 2 updates after they are asked for (owner, 2026-11-17); off by default until measured. The page is one
   // file, so the worker is started from its source inlined by build.mjs (a Blob URL)
   debris: {
-    ...(params.get('groundWorker') === '1' ? { groundWorker: createWorkerGroundPort(new Worker(URL.createObjectURL(new Blob([__GROUND_WORKER_SOURCE__], { type: 'text/javascript' })))) } : {}),
+    ...(params.get('groundWorker') === '1' ? { groundWorker: createWorkerGroundPort(groundWorkerFromSource()) } : {}),
     ...(params.get('blastDebris') === '1' ? { blast: {} } : {}),
     ...(params.get('tilesUnderParts') === '1' ? { tilesUnderParts: true } : {}),
     ...(params.get('workBudget') ? { workBudget: { budgetMs: Number(params.get('workBudget')) } } : {}),

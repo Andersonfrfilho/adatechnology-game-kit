@@ -180,7 +180,7 @@ interface Engine {
 }
 
 /** A seeded drop of boxes over the crater and its rim, and a dig under them at update 40; `between` runs before each update (a worker answering, or not). */
-const runCrater = (port: GroundWorkerPort, updates: number, between?: (update: number) => void, frames = 2) => {
+const runCrater = (port: GroundWorkerPort, updates: number, between?: (update: number, system: PieceSystem) => void, frames = 2) => {
   const terrain = craterTerrain()
   const system = new PieceSystem(THREE, {
     physics: physicsOption(), groundAt: (x, z) => terrain.heightAt(x, z), terrainAt: (x, z) => terrain.heightAt(x, z), terrainRangeAt: terrain.heightRange, terrainGridAt: terrain.heightGrid,
@@ -201,7 +201,7 @@ const runCrater = (port: GroundWorkerPort, updates: number, between?: (update: n
   const hashes: string[] = []
   const pose = new Float64Array(7)
   for (let u = 1; u <= updates; u++) {
-    between?.(u)
+    between?.(u, system)
     if (u === 40) {
       terrain.dig({ x: 0.6, z: -0.5, depth: 0.15 })
       system.wakeRegion(0.6, -0.5, 1)
@@ -273,6 +273,71 @@ describe.skipIf(!IS_JOLT)('engine ground on a fixed schedule: the physics does n
     worker.flush()
     expect(run.engine.schedule.stats).toEqual({ asked: 0, inTime: 0, fellBack: 0, late: 0 })
     expect(run.engine.schedule.outstanding).toBe(0)
+  })
+
+  it('a held piece the kit puts to sleep stays held while its ground is missing, and is let go at the update its tile is applied at', () => {
+    const frozen = (engine: Engine): boolean[] => [...(engine as unknown as { links: Map<unknown, { frozen: boolean }> }).links.values()].map((link) => link.frozen)
+    const seen: boolean[][] = []
+    const heights: number[][] = []
+    // frames 3: asked at update 1, applied at 4; the budget puts every piece to sleep before update 2
+    const run = runCrater(createMainThreadGroundPort(), 4, (u, system) => {
+      const engine = (system as unknown as { engine: Engine }).engine
+      if (u === 2) for (const b of (system as unknown as { list: Array<{ sleeping: boolean }> }).list) b.sleeping = true
+      if (u > 1) seen.push(frozen(engine))
+      heights.push((system as unknown as { list: Array<{ root: THREE.Object3D }> }).list.map((b) => b.root.position.y))
+    }, 3)
+    // before updates 2, 3 and 4: held through 2 and 3 although asleep
+    expect(seen[0]!.every(Boolean)).toBe(true)
+    expect(seen[1]!.every(Boolean)).toBe(true)
+    expect(seen[2]!.every(Boolean)).toBe(true)
+    expect(heights[3]).toEqual(heights[1])
+    // let go at update 4
+    expect(frozen(run.engine).some(Boolean)).toBe(false)
+  })
+
+  it('a worker that fails is posted nothing more: the port turns main-thread and the tiles are made here at their update', () => {
+    const worker = clonedWorker()
+    const port = createWorkerGroundPort(worker)
+    const posted = vi.spyOn(worker, 'postMessage')
+    worker.onerror?.(new Error('script failed'))
+    expect(port.transport).toBe('none')
+    const run = runCrater(port, 30)
+    expect(posted).not.toHaveBeenCalled()
+    expect(run.engine.schedule.stats.fellBack).toBe(run.engine.schedule.stats.asked)
+    expect(run.engine.schedule.outstanding).toBe(0)
+  })
+
+  it('a port serves one engine: a second onTile throws; the own solver (no engine) still disposes the port it was handed', () => {
+    const port = createInlineGroundPort()
+    port.onTile(() => undefined)
+    expect(() => port.onTile(() => undefined)).toThrow(/onTile set twice/)
+    const worker = clonedWorker()
+    const own = new PieceSystem(THREE, { physics: 'own', groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), groundWorker: createWorkerGroundPort(worker) })
+    own.dispose()
+    expect(worker.terminated).toBe(true)
+  })
+
+  it('a blast whose tile is being made from the ground before it asks for that tile again once it is applied', () => {
+    const terrain = craterTerrain()
+    const system = new PieceSystem(THREE, {
+      physics: physicsOption(), groundAt: (x, z) => terrain.heightAt(x, z), terrainAt: (x, z) => terrain.heightAt(x, z), terrainRangeAt: terrain.heightRange, terrainGridAt: terrain.heightGrid,
+      gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), groundWorker: createMainThreadGroundPort(), groundWorkerFrames: 2, blastGroundTiles: 1,
+    })
+    const schedule = (system as unknown as { engine: Engine }).engine.schedule
+    system.layGroundAt(0.5, -0.5, 0.5)
+    system.update(1 / 60)
+    expect(schedule.stats.asked).toBe(1)
+    // a second blast on the same tile while it is being made: the ground dug under it
+    terrain.dig({ x: 0.6, z: -0.5, depth: 0.15 })
+    system.wakeRegion(0.6, -0.5, 1)
+    system.layGroundAt(0.5, -0.5, 0.5)
+    system.update(1 / 60)
+    expect(schedule.stats.asked).toBe(1)
+    // applied at update 3, and asked for again in the same update
+    system.update(1 / 60)
+    expect(schedule.stats.fellBack).toBe(1)
+    expect(schedule.stats.asked).toBe(2)
+    expect(schedule.pending.size).toBe(1)
   })
 
   it('memory (§8): the pool takes every buffer back, the worker is terminated on dispose', { timeout: 60000 }, () => {
