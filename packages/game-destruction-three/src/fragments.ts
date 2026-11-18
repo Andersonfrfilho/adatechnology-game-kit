@@ -4,11 +4,12 @@ import type { Fragment, SplitForm } from '@adatechnology/game-destruction'
 
 import { pushFittedBoxes } from './fitted-boxes'
 import { FragmentInstances } from './fragment-instances'
+import type { FragmentInstanceStats } from './fragment-instances'
 import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildRubbleGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
 import { clamp, createRng, hashString } from './math'
 import type { LooseBody } from './types'
 
-interface Live {
+export interface Live {
   mesh: THREE_NS.Mesh
   /** The surface under the fragment (ground or what is built), and where it was measured: measured again once the fragment moves off that spot. */
   floor: { x: number; z: number; y: number } | null
@@ -41,7 +42,7 @@ interface Live {
 /** The floor area a box covers, seen from above: a shape built from the floor images of its three half edges (x, z of each, in turn), centred on the box. */
 type Shadow = readonly [number, number, number, number, number, number]
 
-interface RestingBox {
+export interface RestingBox {
   readonly shadow: Shadow
   readonly x: number
   readonly z: number
@@ -82,8 +83,8 @@ function shadowsOverlap(first: Shadow, second: Shadow, dx: number, dz: number): 
   return true
 }
 
-/** The world box of a resting fragment: its centre, how far it reaches along x and z, its top, and the floor area it really covers. */
-function restingBox(f: Live): RestingBox {
+/** The world box of a resting fragment: its centre, how far it reaches along x and z, its top, and the floor area it really covers. Exported for tests. */
+export function restingBox(f: Live): RestingBox {
   const e = rotationOf(f.mesh.quaternion)
   const { x, y, z } = f.half
   const p = f.mesh.position
@@ -111,7 +112,7 @@ export interface FragmentSystemOptions {
   formOf?: (materialId: string) => SplitForm | undefined
   /**
    * The top of whatever is under (x, z) below height y: the ground, or a slab, a wall, a piece of furniture a piece of rubble lands on. Default: the
-   * ground (`groundAt`).
+   * ground (`groundAt`). Never below `groundAt(x, z)`: a resting fragment lying on the ground under no pile casts no ray at all, since nothing under it could be lost.
    */
   surfaceAt?: (x: number, y: number, z: number) => number
   /**
@@ -227,7 +228,7 @@ export class FragmentSystem {
   }
 
   /** What the instances draw now: their draws and the fragments in them. */
-  instanceStats(): { buckets: number; drawn: number } {
+  instanceStats(): FragmentInstanceStats {
     return this.instances.stats()
   }
 

@@ -154,7 +154,8 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
 - The fragments in flight draw instanced: one `InstancedMesh` (named `fragment-instances`) per shared geometry and material, and one shadow draw, instead of a draw and a shadow draw
   each (a blast's ~200 fragments were ~400 draw calls). Each fragment keeps its own mesh in the scene (name `fragment`, origin, transform), moved to camera layer 29
   (`INSTANCED_FRAGMENT_LAYER`) while an instance draws it; glass (transparent, sorted) and a fragment carrying bullet holes draw on their own. At rest a fragment draws on its own
-  again and the settled batches take it; an emptied instanced mesh leaves the scene and its instance buffer is freed. The resting ones look under them only off the ground: one lying
+  again and the settled batches take it (a batched one woken waits for the batch to give it back its layers); an emptied instanced mesh leaves the scene and its instance
+  buffer is freed. The instanced meshes answer no ray: a raycaster that enables layer 29 finds the fragments' own meshes. The resting ones look under them only off the ground: one lying
   on the terrain casts no ray (`surfaceAt`), and the box a fragment lands on is kept until that fragment moves.
 - Decals share one disc geometry and one material; a mesh keeps at most 48 and the renderer 600.
 - Heat, char and melt are only read for "active" parts (hot, burning, melting) plus a scan of all parts every 0.4 s.

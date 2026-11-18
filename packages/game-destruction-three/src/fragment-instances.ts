@@ -1,9 +1,11 @@
 import type * as THREE_NS from 'three'
 import { kitOriginOf, markKitOrigin } from '@adatechnology/game-contracts'
+import { BATCHED_LAYER } from '@adatechnology/game-render-three'
 
 /**
- * The camera layer a fragment's own mesh moves to while an instance draws it: on no camera, shadow cameras included (they see layer 0), so it is not drawn twice. Its mask is
- * given back when it leaves the instances. Apart from the batches' `BATCHED_LAYER` (30), which the settled batches read as "drawn by a batcher already".
+ * The camera layer a fragment's own mesh moves to while an instance draws it: a layer no camera enables, so neither the colour pass nor the shadow pass draws it (three's
+ * `WebGLShadowMap` tests an object's layers against the viewing camera's, not the light's), and it is not drawn twice. Its mask is given back when it leaves the instances.
+ * Apart from the batches' `BATCHED_LAYER` (30), which the settled batches read as "drawn by a batcher already".
  */
 export const INSTANCED_FRAGMENT_LAYER = 29
 
@@ -22,8 +24,8 @@ interface Bucket {
 interface Slot {
   readonly bucket: Bucket
   index: number
-  /** The layer mask the mesh had before it joined. */
-  readonly mask: number
+  /** The layer mask the mesh gets back when it leaves (what it had when it joined, or what was set on it from outside since). */
+  mask: number
   readonly geometry: THREE_NS.BufferGeometry
   readonly material: THREE_NS.Material
 }
@@ -34,8 +36,16 @@ export interface FragmentInstanceStats {
   readonly drawn: number
 }
 
-/** Whether a fragment's mesh can be drawn by an instance: one opaque material and no marks on it (a bullet hole is a mesh of its own on the fragment). */
-export const isInstanceable = (mesh: THREE_NS.Mesh): boolean => !Array.isArray(mesh.material) && !mesh.material.transparent && mesh.children.length === 0
+const HIDDEN_MASK = 1 << INSTANCED_FRAGMENT_LAYER
+const BATCHED_MASK = 1 << BATCHED_LAYER
+
+/**
+ * Whether a fragment's mesh can be drawn by an instance: one opaque material, no marks on it (a bullet hole is a mesh of its own on the fragment), and not drawn by a batch
+ * now. A batched one woken without the batch letting go of it yet waits until the batcher gives it back its layers (the update after it moved): taking it before would
+ * keep the batch's mask as the one to give back, and it would vanish when it lands.
+ */
+export const isInstanceable = (mesh: THREE_NS.Mesh): boolean =>
+  !Array.isArray(mesh.material) && !mesh.material.transparent && mesh.children.length === 0 && (mesh.layers.mask & BATCHED_MASK) === 0
 
 const keyOf = (geometry: THREE_NS.BufferGeometry, material: THREE_NS.Material): string => `${geometry.uuid}|${material.uuid}`
 
@@ -75,7 +85,7 @@ export class FragmentInstances {
     if (bucket.members.length === bucket.mesh.instanceMatrix.count) this.grow(bucket)
     this.slots.set(mesh, { bucket, index: bucket.members.length, mask: mesh.layers.mask, geometry, material })
     bucket.members.push(mesh)
-    mesh.layers.set(INSTANCED_FRAGMENT_LAYER)
+    mesh.layers.mask = HIDDEN_MASK
     return true
   }
 
@@ -85,11 +95,12 @@ export class FragmentInstances {
     if (!slot) return
     this.slots.delete(mesh)
     const members = slot.bucket.members
-    const last = members.pop()!
+    const last = members.pop()
     const instanced = slot.bucket.mesh
-    if (last !== mesh) {
+    const lastSlot = last === undefined ? undefined : this.slots.get(last)
+    if (last !== undefined && last !== mesh && lastSlot) {
       members[slot.index] = last
-      this.slots.get(last)!.index = slot.index
+      lastSlot.index = slot.index
       // drawn right even before the next sync (a fragment taken away between an update and the render)
       instanced.instanceMatrix.array.copyWithin(slot.index * 16, members.length * 16, members.length * 16 + 16)
     }
@@ -98,9 +109,17 @@ export class FragmentInstances {
     mesh.layers.mask = slot.mask
   }
 
-  /** Copies the members' transforms into the instances and wraps them in their bounds; a member whose geometry, material or marks changed moves to where it now belongs. */
+  /**
+   * Copies the members' transforms into the instances and wraps them in their bounds. A member whose geometry, material or marks changed moves to where it now belongs; one
+   * whose layers were set from outside (a batcher giving back the mask it kept) keeps that mask to get back and is hidden again, and one a batch took draws by the batch.
+   */
   sync(): void {
     for (const [mesh, slot] of this.slots) {
+      const mask = mesh.layers.mask
+      if (mask !== HIDDEN_MASK) {
+        slot.mask = mask
+        if ((mask & BATCHED_MASK) === 0) mesh.layers.mask = HIDDEN_MASK
+      }
       if (mesh.geometry === slot.geometry && mesh.material === slot.material && isInstanceable(mesh)) continue
       this.remove(mesh)
       this.add(mesh)
@@ -141,11 +160,9 @@ export class FragmentInstances {
     const array = mesh.instanceMatrix.array as Float32Array
     const reach = this.reachOf(mesh.geometry)
     let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity
-    for (let i = 0; i < members.length; i++) {
-      const member = members[i]!
+    members.forEach((member, i) => {
       member.updateMatrix()
-      const e = member.matrix.elements
-      array.set(e, i * 16)
+      array.set(member.matrix.elements, i * 16)
       const { x, y, z } = member.position
       if (x < minX) minX = x
       if (y < minY) minY = y
@@ -153,7 +170,7 @@ export class FragmentInstances {
       if (x > maxX) maxX = x
       if (y > maxY) maxY = y
       if (z > maxZ) maxZ = z
-    }
+    })
     const sphere = this.sphere
     sphere.center.set((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2)
     let radius = 0
@@ -188,6 +205,8 @@ export class FragmentInstances {
     mesh.receiveShadow = like.receiveShadow
     // pure visual debris, as each fragment is: a host that picks with a raycast can skip it
     mesh.userData.destructionDebris = true
+    // a ray finds the fragment's own mesh (on its layer, for a raycaster that enables it): walking every instance again would only find the same fragments twice
+    mesh.raycast = () => {}
     const origin = kitOriginOf(like)
     markKitOrigin(mesh, origin ?? { owner: 'game-destruction-three', kind: 'fragment' })
     this.parent.add(mesh)
@@ -201,7 +220,10 @@ export class FragmentInstances {
     bucket.mesh = bigger
   }
 
-  /** Out of the scene, its instance buffer freed; geometry and material stay (shared). */
+  /**
+   * Out of the scene, its instance buffer freed. `dispose()` and not `discardObject3D`: the only resource of its own is the instance buffer, which `releaseObject3D` does not
+   * free; its geometry and material are the fragment system's, shared with the fragments' meshes and freed by the fragment system's `dispose`.
+   */
   private release(mesh: THREE_NS.InstancedMesh): void {
     mesh.removeFromParent()
     mesh.dispose()
