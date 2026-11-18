@@ -250,7 +250,7 @@ specFromObject3D(THREE, root, options?: SpecFromObjectOptions): { spec, parts }
 heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~500, orange ~800, yellow ~1100, white from 1400
 ```
 
-`RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxAwakePieces`, `maxAwakeFragments`, `settledBatches`, `blastDebris`, `workBudget`, `focus`, `onDebrisFaded`, `maxParticles`, `fragmentLife`, `groundAt`, `terrainAt` (the terrain alone, what an engine stands pieces on: every drawn fixed thing is a body of its own there), `gravity`, `autoSplit`, `onPiece`, `onSound`,
+`RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxAwakePieces`, `maxAwakeFragments`, `settledBatches`, `blastDebris`, `workBudget`, `focus`, `onDebrisFaded`, `maxParticles`, `fragmentLife`, `groundAt`, `terrainAt` (the terrain alone, what an engine stands pieces on: every drawn fixed thing is a body of its own there), `terrainRollingAt` (the rolling resistance of the terrain's material at a point, `TerrainMaterial.rolling`: a round piece on soil or sand stops far sooner than on asphalt; read at the middle of each 2 m tile, the same in both solvers), `gravity`, `autoSplit`, `onPiece`, `onSound`,
 `vfx` (shared effects world), `camera` (of the own world, when `vfx` is not given), `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
 
 How long debris stays: `fragmentLife` is the seconds a resting fragment stays before it shrinks away (default 12, `0` = forever), or a `FragmentLifeRule`

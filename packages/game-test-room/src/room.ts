@@ -468,6 +468,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     quality,
     groundAt,
     terrainAt: (x, z) => terrain.heightAt(x, z),
+    // a can or a rod rolls on as the ground under it lets it: much farther on the road than on the lawn or in the sand
+    terrainRollingAt: (x, z) => terrain.rollingAt(x, z),
     terrainRangeAt: (minX, maxX, minZ, maxZ) => terrain.heightRange(minX, maxX, minZ, maxZ),
     terrainGridAt: terrain.heightGrid,
     terrainPatchAt: terrain.heightPatch,

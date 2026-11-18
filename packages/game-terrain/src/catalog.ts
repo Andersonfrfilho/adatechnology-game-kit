@@ -3,9 +3,16 @@ import type { TerrainBlow, TerrainMaterial, TerrainProfile } from './types'
 // Specific energies are what the marks of real blows imply: a 500 J pistol round leaves about 120 cm³ in soil and 3 cm³ in concrete, an 800 kJ grenade a 1.3 m crater in soil and a 25 cm spall on a slab.
 // Cracks run about a metre from a grenade on a slab and half that on asphalt; a contact charge breaks a reinforced slab right through at about 1 kg of TNT (4.2 MJ) for 12 cm,
 // the thickness cubed (the breaching rule of thumb), leaving a hole about one and a half thicknesses wide with the bars across it.
+// Rolling resistance (C_rr) of each ground, for a round thing rolling on it. Tyre tables (Engineering ToolBox "Rolling Resistance", after Gillespie, Fundamentals of Vehicle
+// Dynamics, 1992; Wong, Theory of Ground Vehicles): concrete and new asphalt 0.010-0.015, small new cobbles 0.010-0.015, large worn cobbles 0.03, solid sand, loose gravel and
+// medium hard soil 0.04-0.08, loose sand 0.2-0.4. Grass: a mown golf green 0.07-0.13 (Penner, The physics of putting, Can. J. Phys. 80, 2002), a lawn is longer and slower.
+// A tyre spreads its load; a small rigid roller (a rod, a casing) sinks deeper for its size, so on soft ground the high end of each range is taken. Mud is taken as loose sand
+// (the wheel sinks), dry clay and laterite as medium hard soil at its low end, loose snow (0.3 m, a foot sinks 8 cm) an estimate between packed snow (~0.03) and sand.
+// The hard floors keep the 0.015 the kit has always used (ceramic, wood and mortar say nothing: the host's default, the same).
 export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'turf',
+    rolling: 0.15,
     dig: { effort: 1.3 },
     debris: 'clods',
     rimShare: 0.25,
@@ -22,6 +29,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'soil',
+    rolling: 0.08,
     dig: { effort: 1 },
     debris: 'clods',
     rimShare: 0.35,
@@ -38,6 +46,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'sand',
+    rolling: 0.3,
     dig: { effort: 0.8 },
     debris: 'dust',
     rimShare: 0.5,
@@ -54,6 +63,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'gravel',
+    rolling: 0.08,
     dig: { effort: 1.6 },
     debris: 'chips',
     rimShare: 0.15,
@@ -71,6 +81,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'asphalt',
+    rolling: 0.015,
     debris: 'chips',
     color: [0.05, 0.05, 0.055],
     pattern: 'asphalt',
@@ -85,6 +96,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'concrete',
+    rolling: 0.015,
     debris: 'chips',
     color: [0.33, 0.33, 0.31],
     pattern: 'concrete',
@@ -140,6 +152,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'stone',
+    rolling: 0.015,
     debris: 'chips',
     color: [0.23, 0.22, 0.2],
     pattern: 'stone',
@@ -154,6 +167,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'mud',
+    rolling: 0.3,
     // the shovel lifts it, and the hole fills in behind the blade
     dig: { effort: 1.4, closes: true },
     debris: 'clods',
@@ -174,6 +188,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'clay',
+    rolling: 0.05,
     dig: { effort: 2.2 },
     debris: 'chips',
     color: [0.47, 0.27, 0.14],
@@ -190,6 +205,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     // laterite, a soil baked hard (piçarra): no shovel goes in; only a heavy blow or a charge sinks or cracks it
     id: 'laterite',
+    rolling: 0.05,
     debris: 'chips',
     rimShare: 0.2,
     color: [0.36, 0.17, 0.08],
@@ -203,6 +219,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'snow',
+    rolling: 0.1,
     dig: { effort: 0.6 },
     debris: 'dust',
     rimShare: 0.4,
@@ -220,6 +237,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'cobble',
+    rolling: 0.03,
     debris: 'blocks',
     color: [0.2, 0.19, 0.18],
     pattern: 'cobble',
@@ -234,6 +252,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'paver',
+    rolling: 0.015,
     debris: 'blocks',
     color: [0.36, 0.33, 0.3],
     pattern: 'paver',

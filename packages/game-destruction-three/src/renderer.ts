@@ -545,6 +545,7 @@ class Renderer implements DestructionRenderer {
       physics: o.physics,
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
+      ...(o.terrainRollingAt ? { terrainRollingAt: o.terrainRollingAt } : {}),
       ...(o.terrainRangeAt ? { terrainRangeAt: o.terrainRangeAt } : {}),
       ...(o.terrainGridAt && o.terrainAt ? { terrainGridAt: o.terrainGridAt } : {}),
       ...(o.terrainPatchAt && o.terrainGridAt && o.terrainAt ? { terrainPatchAt: o.terrainPatchAt } : {}),

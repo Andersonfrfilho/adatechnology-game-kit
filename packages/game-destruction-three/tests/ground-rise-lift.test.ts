@@ -59,3 +59,37 @@ describe.skipIf(!IS_JOLT)('ground that rises under a piece that rests on it', ()
     expect(penetration).toBeLessThanOrEqual(0.002)
   })
 })
+
+// the net under the ground (`readBack`): a piece the engine leaves wholly under the ground is put back on it, its body as well as its mesh. With a `sweep` the sweep's answer
+// (it met nothing) overwrote the lift, so only the mesh rose: the body stayed under the ground and was caught again every update (CLAUDE.md §12).
+describe.skipIf(!IS_JOLT)('a piece the engine left under the ground, with a sweep', () => {
+  it('is lifted body and all: caught once, then it stands where it was put, not under the ground again each update', () => {
+    const ground = { level: 0 }
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => ground.level, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), sweep: () => null })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.5, 0)
+    system.create('box', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
+    for (let i = 0; i < 6; i++) system.update(FRAME)
+    const engine = (system as unknown as { engine: { fellThrough: number } }).engine
+    expect(engine.fellThrough).toBe(0)
+    // the ground the host answers jumps 2 m over the box; the engine's tiles are not told (no `wakeRegion`), so its body is left under it
+    ground.level = 2
+    for (let i = 0; i < 4; i++) system.update(FRAME)
+    expect(root.position.y).toBeGreaterThan(1.9)
+    expect(engine.fellThrough).toBe(1)
+  })
+
+  it('a sweep that turns it back (a face over it, facing down) is judged before the lift: the piece still ends on the ground, not back under it', () => {
+    const ground = { level: 0 }
+    const over = { object: 'slab', part: 'body', distance: 0, point: [0, 0, 0] as [number, number, number], normal: [0, -1, 0] as [number, number, number] }
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => ground.level, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), sweep: () => over })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.5, 0)
+    // going up when the ground jumps 2 m over it: lifted first, a face over its way would turn it back to where it was, under the ground
+    system.create('box', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2, [0, 3, 0])
+    ground.level = 2
+    system.update(FRAME)
+    expect(root.position.y).toBeGreaterThan(1.9)
+  })
+})
+

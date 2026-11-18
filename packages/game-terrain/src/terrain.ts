@@ -472,6 +472,16 @@ export function createTerrain(options: TerrainOptions): Terrain {
     return materials.get(stratumMaterialAtDepth(profileList[profileIndex[index]!]!, dug[index]!))!
   }
 
+  /** `material(columnAt(x, z).material).rolling` without building the column: the pieces ask it for every round contact. */
+  function rollingAt(x: number, z: number): number | undefined {
+    const column = clampIndex(Math.round((x - x0) / cellSize), columns)
+    const row = clampIndex(Math.round((z - z0) / cellSize), rows)
+    const index = row * stride + column
+    const which = profileIndex[index]!
+    const depth = Math.min(maxDepthOf[which]!, dug[index]! + marks.depthAt(x, z))
+    return materials.get(stratumMaterialAtDepth(profileList[which]!, depth))!.rolling
+  }
+
   function columnAt(x: number, z: number): TerrainColumn {
     const { index } = vertexOf(x, z)
     const which = profileIndex[index]!
@@ -1330,6 +1340,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     vertexHeight,
     vertexMaterial,
     columnAt,
+    rollingAt,
     contains,
     raycast,
     strike,

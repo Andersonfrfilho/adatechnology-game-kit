@@ -46,6 +46,11 @@ export interface TerrainMaterial {
   readonly breach?: TerrainBreachResponse
   /** What a foot does on it. */
   readonly footing?: TerrainFooting
+  /**
+   * Its rolling resistance (C_rr) to a round thing rolling on it (a can, a rod, a casing): the moment C_rr x weight x radius that slows the roll. Soft ground (sand, mud,
+   * grass) gives under the roller and holds it back far more than a hard one (asphalt, concrete). Left out: the host's default (a hard floor).
+   */
+  readonly rolling?: number
   /** Liquid (of the fluids catalogue) a blow on it throws up. */
   readonly splash?: string
   /** Its pieces do not join the ground where they land: they stay as loose stones. */
@@ -435,6 +440,8 @@ export interface Terrain {
   /** Material exposed at a vertex. */
   vertexMaterial(column: number, row: number): TerrainMaterial
   columnAt(x: number, z: number): TerrainColumn
+  /** The rolling resistance (`TerrainMaterial.rolling`) of the material exposed at (x, z), as `columnAt` reads it, without building the column; undefined: the host's default. */
+  rollingAt(x: number, z: number): number | undefined
   contains(x: number, z: number): boolean
   /** First point of the ground along a ray, or null. */
   raycast(origin: readonly number[], direction: readonly number[], maxDistance: number): { point: [number, number, number]; distance: number; normal: [number, number, number] } | null
