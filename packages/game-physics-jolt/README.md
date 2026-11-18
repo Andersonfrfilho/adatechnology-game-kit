@@ -1,7 +1,7 @@
 # @adatechnology/game-physics-jolt
 
 The adapter of [`@adatechnology/game-physics`](../game-physics) over [Jolt Physics](https://github.com/jrouwe/JoltPhysics.js)
-(`jolt-physics` 1.1.1, the single-threaded `wasm-compat` build). The wasm is inlined in the JavaScript, so Node, vitest and a plain
+(`jolt-physics` 1.1.1, the single-threaded `wasm-compat` build by default; the multithreaded one on request, see Threads). The wasm is inlined in the JavaScript, so Node, vitest and a plain
 page load it with no loader configuration and no `SharedArrayBuffer`.
 
 - **The only package that depends on `jolt-physics`.** Everything else in the kit talks to the contract.
@@ -38,6 +38,20 @@ const loop = createPhysicsLoop(world)
 ```
 
 `createJoltEngine()` returns `{ name: 'jolt', jolt, createWorld }`; `loadJolt()` is the wasm load on its own.
+
+## Threads (multithreaded build)
+
+`createJoltEngine(options)` picks the build: `{ build: 'single' }` (the default, `wasm-compat`) or `{ build: 'multithread' }`
+(`wasm-compat-multithread`, SIMD on), and `workerThreads` (Jolt's `mMaxWorkerThreads`, job threads besides the caller's). The multithreaded build
+needs `SharedArrayBuffer`: a cross-origin isolated page (COOP `same-origin` + COEP `require-corp` or `credentialless`: `pnpm serve:room --isolate`,
+or the desktop app in `apps/desktop`). Its pthreads load `jolt-physics.multithread.wasm-compat.js` by URL, so a bundled page serves that file next
+to itself and passes `moduleUrl` (the test room does: `?joltBuild=multithread`, `?joltThreads=N|auto`).
+
+**Worker threads and the kit's contact rules do not run together.** Jolt calls the contact listener from the job that finds the contact; with
+`workerThreads > 0` that job runs on a worker, where the JS listener (`ContactListenerJS`: contact rows, sensors, friction partners, restitution mix,
+ignored pairs) does not exist, and the step dies (`Cannot read properties of undefined (reading 'hasOwnProperty')`). `resolveJoltThreading` refuses
+the pair with `JoltThreadingError` (`JOLT_WORKERS_WITH_JS_CALLBACKS`); `contactCallbacks: 'none'` drops the listener and exists only to measure the
+step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-multithread.md`](../../docs/medicoes/jolt-multithread.md).
 
 ## What the adapter fixes
 

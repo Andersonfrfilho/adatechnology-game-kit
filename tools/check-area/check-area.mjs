@@ -5,6 +5,7 @@
 //   pnpm check:floorplan --no-browser    build and unit tests only (no GPU, no Chromium)
 //   pnpm check:floorplan --no-unit       build and the page only
 //   pnpm check:floorplan --room          build the test room page again even when it exists (examples/test-room/base/test-room.html)
+//   pnpm check:floorplan --target=desktop   build and unit tests, then the area in the desktop app instead of Chromium (apps/desktop, prints in apps/desktop/shots/)
 //   node tools/check-area/check-area.mjs --list
 // The page test opens a browser, so it never runs on CI or in the pre-push (CLAUDE.md section 9): this command is for the machine with the GPU, by hand.
 import { spawnSync } from 'node:child_process'
@@ -17,7 +18,8 @@ import { listAreas, pagePackages, planCheck, ROOM_ENTRY_FOLDER, ROOM_FOLDER } fr
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const args = process.argv.slice(2)
 const areas = listAreas(root)
-const usage = `usage: pnpm check:<area> [--no-browser] [--no-unit] [--room]\nareas: ${areas.map((area) => area.id).join(', ')}`
+const isDesktop = args.includes('--target=desktop')
+const usage = `usage: pnpm check:<area> [--no-browser] [--no-unit] [--room] [--target=desktop]\nareas: ${areas.map((area) => area.id).join(', ')}`
 
 if (args.includes('--list')) {
   for (const area of areas) console.log(`${area.id.padEnd(18)} examples/${area.folder}`)
@@ -43,8 +45,17 @@ const steps = planCheck({
   packages: area.folder === ROOM_FOLDER ? roomPackages : packagesOf(area.folder),
   roomPackages,
   roomBuilt: existsSync(join(root, 'examples', ROOM_FOLDER, 'base', 'test-room.html')),
-  flags: { unit: !args.includes('--no-unit'), browser: !args.includes('--no-browser'), room: args.includes('--room') },
+  flags: { unit: !args.includes('--no-unit'), browser: !isDesktop && !args.includes('--no-browser'), room: args.includes('--room') },
 })
+// the desktop app opens the same page: the room's build is staged into the app and the app is driven by Playwright's Electron launcher
+if (isDesktop && !args.includes('--no-browser')) {
+  steps.push(
+    { label: 'desktop app: build', command: 'pnpm', args: ['--filter', '@adatechnology/desktop-app', 'run', 'build'] },
+    { label: 'desktop app: stage the room', command: 'node', args: ['apps/desktop/dist/stage.js'] },
+    { label: 'desktop app: electron binary', command: 'node', args: ['apps/desktop/node_modules/electron/install.js'] },
+    { label: `desktop app: open ${area.id}`, command: 'node', args: ['apps/desktop/dist/check-desktop.js', `--area=${area.id}`] },
+  )
+}
 
 // The page tests load Playwright from NODE_PATH; the workspace has playwright-core inside pnpm's store (as tools/gpu/browser-checks.mjs does)
 const nodePath = (() => {
@@ -70,7 +81,7 @@ for (const [index, step] of steps.entries()) {
   console.log(`check-area: ok in ${seconds}s: ${step.label}`)
 }
 
-const shots = join(root, 'examples', area.folder, 'shots')
+const shots = isDesktop ? join(root, 'apps/desktop/shots') : join(root, 'examples', area.folder, 'shots')
 const fresh = existsSync(shots)
   ? readdirSync(shots, { recursive: true, encoding: 'utf8' })
       .map((name) => join(shots, name))

@@ -46,6 +46,11 @@
     "check:layers": "depcruise --config .dependency-cruiser.cjs --ignore-known .dependency-cruiser-known-violations.json packages/*/src",
     "check:layers:baseline": "depcruise --config .dependency-cruiser.cjs --output-type baseline --output-to .dependency-cruiser-known-violations.json packages/*/src",
     "check:packages": "node tools/check-packages.mjs",
+    "check:desktop": "pnpm --filter @adatechnology/desktop-app run check",
+    "serve:room": "pnpm --filter @adatechnology/serve-room-tool run build && node tools/serve-room/dist/cli.js",
+    "desktop": "pnpm --filter @adatechnology/desktop-app run start",
+    "desktop:package": "pnpm --filter @adatechnology/desktop-app run package",
+    "measure:jolt-threads": "pnpm --filter @adatechnology/jolt-threads-tool run build && node tools/jolt-threads/dist/cli.js",
     "verify:push": "sh .githooks/pre-push"
   },
   "devDependencies": {

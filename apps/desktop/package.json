@@ -1,0 +1,31 @@
+{
+  "name": "@adatechnology/desktop-app",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "The test rooms as a desktop app (Electron, the same Chromium as the site and the Playwright tests): the 4280's pages served cross-origin isolated from inside the app, so SharedArrayBuffer and Jolt's multithreaded build are on. A start menu of every room and area, --area=<id> to open one, AppImage on Linux.",
+  "author": "Ada Technology",
+  "type": "module",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "setup": "node node_modules/electron/install.js",
+    "stage": "node dist/stage.js",
+    "start": "pnpm run build && pnpm run stage && node node_modules/electron/install.js && electron .",
+    "package": "pnpm run build && pnpm run stage && pnpm dlx electron-builder@26.18.1 --linux AppImage --config electron-builder.json",
+    "check": "pnpm run build && node node_modules/electron/install.js && node dist/check-desktop.js"
+  },
+  "dependencies": {
+    "@adatechnology/serve-room-tool": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "electron": "45.2.0",
+    "playwright-core": "1.58.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

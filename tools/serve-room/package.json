@@ -1,0 +1,28 @@
+{
+  "name": "@adatechnology/serve-room-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Static server of the test room's build (examples/test-room/dist, the 4280): the same files as before, and behind --isolate the COOP/COEP headers that make the page cross-origin isolated (SharedArrayBuffer, Jolt's multithreaded build). The desktop app serves its pages with it.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "serve": "node dist/cli.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,6 +1,6 @@
 // Inlines three r160, the kit packages (contracts included), the stylesheet and src/main.js into dist/test-room.html (no CDN, no request at all).
 import { createRequire } from 'node:module'
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, cpSync, rmSync, symlinkSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, cpSync, rmSync, symlinkSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
@@ -90,7 +90,24 @@ const joltBoot = (
     stdin: {
       contents: `import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
-window.__joltBoot = () => !/[?&]solver=jolt(&|$)/.test(location.search) ? Promise.resolve() : createJoltEngine().then((engine) => {
+// ?joltBuild=multithread (needs a cross-origin isolated page: the 4280 with --isolate, or the desktop app), ?joltThreads=N|auto job threads besides the main one,
+// ?joltContacts=off the kit's JS contact listener off (only to measure: Jolt calls it from the job threads, where it does not exist). Anything that cannot run here
+// falls back to the single-threaded build, said in the console and in window.__joltInfo
+const threadingOf = (q) => {
+  const raw = q.get('joltThreads')
+  const workerThreads = raw === 'auto' ? Math.max(0, (navigator.hardwareConcurrency || 1) - 1) : Number(raw ?? 0)
+  const build = q.get('joltBuild') === 'multithread' || workerThreads > 0 ? 'multithread' : 'single'
+  return { build, workerThreads, contactCallbacks: q.get('joltContacts') === 'off' ? 'none' : 'js', moduleUrl: new URL('jolt-physics.multithread.wasm-compat.js', location.href).href }
+}
+window.__joltBoot = () => !/[?&]solver=jolt(&|$)/.test(location.search) ? Promise.resolve() : (() => {
+  const asked = threadingOf(new URLSearchParams(location.search))
+  return createJoltEngine(asked).then((engine) => ({ engine, fallback: null })).catch((error) => {
+    console.warn('jolt: ' + (error && error.message) + ' -> single-threaded build')
+    return createJoltEngine().then((engine) => ({ engine, fallback: String(error && (error.code || error.message)) }))
+  })
+})().then(({ engine, fallback }) => {
+  window.__joltInfo = { ...engine.threading, crossOriginIsolated: self.crossOriginIsolated === true, hardwareConcurrency: navigator.hardwareConcurrency, fallback }
+  console.info('jolt: ' + JSON.stringify(window.__joltInfo))
   const q = new URLSearchParams(location.search)
   const world = engine.createWorld({ ...KIT_WORLD, velocityIterations: Number(q.get('iterations') ?? KIT_WORLD.velocityIterations), maxPushOut: Number(q.get('pushout') ?? KIT_WORLD.maxPushOut) })
   window.__joltEngine = engine
@@ -196,6 +213,8 @@ const html = `${fullHtml.slice(0, at)}${sfxScript}<script>${safe(joltBoot)}</scr
 
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)
+// Jolt's multithreaded build beside the page (?joltBuild=multithread): its pthreads load this same file by its URL, so it cannot ride inside the page
+copyFileSync(createRequire(join(pkg('game-physics-jolt'), 'package.json')).resolve('jolt-physics/wasm-compat-multithread'), join(here, 'dist/jolt-physics.multithread.wasm-compat.js'))
 console.log(`dist/test-room.html ${(html.length / 1024).toFixed(0)} KB`)
 
 // 4. the kit's recorded sounds next to the page, where the room's engine fetches them (`./sfx/`); they load on first play, so the page itself does

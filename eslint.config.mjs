@@ -7,7 +7,7 @@ import noBareRemove from './tools/eslint/no-bare-remove.mjs'
 export default tseslint.config(
   {
     // specs/ guarda o código dos times como referência de porte (artefatos e fontes extraídas), não é código do SDK
-    ignores: ['.claude/**', '**/dist/**', '**/node_modules/**', '**/*.mjs', 'specs/**', '**/tests/fixtures/team-golden/**'],
+    ignores: ['.claude/**', '**/dist/**', '**/node_modules/**', '**/*.mjs', 'specs/**', '**/tests/fixtures/team-golden/**', 'apps/desktop/build/**', 'apps/desktop/release/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
