@@ -30,6 +30,7 @@ export const kitScheduleOf = (id: string): WorkerKindSchedule | undefined => (WO
 export function defineTaskKind<In, Out>(kind: Omit<TaskKind<In, Out>, 'kind'>): TaskKind<In, Out> {
   checkId(kind.id)
   checkSchedule(kind.id, kind)
+  if (kind.transferAwaitedInput && !kind.transferInput) throw new Error(`worker kind ${kind.id}: transferAwaitedInput needs transferInput (the buffers to transfer)`)
   return Object.freeze({ ...kind, kind: 'task' as const })
 }
 

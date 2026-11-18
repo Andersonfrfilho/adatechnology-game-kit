@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import { checkTaskKind, createWorkerCoordinator, firstDifference, inThreadSpawn } from '@adatechnology/game-workers'
+import type { WorkerLike } from '@adatechnology/game-workers'
 import { nodeSpawn } from '@adatechnology/game-workers/node'
 import { createTerrain } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, readGround, sampleCount } from '../src/engine-ground'
-import { bandLength, computeGroundTile, readGroundBand } from '../src/engine-ground-job'
+import { bandLength, computeGroundTile, readGroundBand, tileOfResult } from '../src/engine-ground-job'
 import type { GroundTileJob, GroundTileResult } from '../src/engine-ground-job'
 import { createCoordinatorGroundPort } from '../src/engine-ground-port'
+import { GroundSchedule } from '../src/engine-ground-schedule'
+import type { PendingGround } from '../src/engine-ground-schedule'
 import { groundTilesKind } from '../src/worker-kinds'
 
 const SAMPLES = sampleCount(Math.round(2 / GROUND_CELL))
@@ -69,5 +72,46 @@ describe('the ground tiles through the worker coordinator (CLAUDE.md §14)', () 
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(none.stats().kinds.length === 0 || none.stats().kinds.every((k) => k.submitted === 0)).toBe(true)
     expect(answers.length).toBe(posted.length)
+  })
+
+  it('a worker that dies holding ground jobs: those tiles are made here at their update, to the bit; the next ones still go to the (replaced) worker', async () => {
+    const spawned: WorkerLike[] = []
+    const inner = inThreadSpawn([groundTilesKind], { delayMs: 20 })
+    const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
+    const port = createCoordinatorGroundPort(workers)
+    const schedule = new GroundSchedule(port, 2)
+    const askAll = (now: number): GroundTileJob[] => {
+      const list = jobs()
+      list.forEach((job, key) => {
+        const band = schedule.band(job.size)
+        band.set(job.band)
+        schedule.ask({ key, ix: 0, iz: 0, x0: job.x0, z0: job.z0, size: job.size, fresh: true, wasCoarse: job.wasCoarse, samples: job.samples }, band, now)
+      })
+      return list
+    }
+    const due: PendingGround[] = []
+    const applied = (asked: GroundTileJob[], now: number): void => {
+      schedule.takeDue(now, due)
+      expect(due.length).toBe(asked.length)
+      due.forEach((p, i) => {
+        const expected = tileOfResult(computeGroundTile({ ...asked[i]!, samples: Float64Array.from(asked[i]!.samples), band: Float64Array.from(asked[i]!.band) }), p.samples)
+        expect(firstDifference(schedule.resolve(p), expected)).toBeNull()
+      })
+    }
+
+    const lost = askAll(0)
+    spawned[0]!.onerror?.(new Error('killed'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(port.transport).toBe('transfer')
+    applied(lost, 2)
+    expect(schedule.stats).toMatchObject({ inTime: 0, fellBack: lost.length })
+    expect(workers.stats().kinds.find((k) => k.id === 'destruction.ground-tiles')).toMatchObject({ failed: lost.length, fallback: 0 })
+
+    const next = askAll(10)
+    for (let waited = 0; [...schedule.pending.values()].some((p) => !p.result) && waited < 10_000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10))
+    applied(next, 12)
+    expect(schedule.stats).toMatchObject({ inTime: next.length, fellBack: lost.length })
+    schedule.dispose()
+    workers.dispose()
   })
 })
