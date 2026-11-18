@@ -180,6 +180,8 @@ const SWEEP_MIN_SPEED = 1
 const WALL_RESTITUTION = 0.25
 const WALL_GLIDE = 0.7
 
+/** A fragment stays on a face other than its flattest only when that face is at least this fraction of its height across (it would tip past atan(0.6), 31°). */
+const STAND_RATIO = 0.6
 /** Seconds a fragment stays slow on what is under it before it sleeps. */
 const SETTLE_SECONDS = 0.4
 
@@ -754,10 +756,12 @@ export class FragmentSystem {
     let small = 0
     for (let i = 1; i < 3; i++) if (half[i] < half[small]) small = i
     let axis = small
-    // a broken board does not stand on its end
+    // landed on another face, it stays on it only if that face is wide enough for its height: a lump on its side does, a sheet on its edge or a board on its end goes flat
     if (Math.abs(up[small]) < 0.35 && !f.body) {
-      axis = 0
-      for (let i = 1; i < 3; i++) if (Math.abs(up[i]) > Math.abs(up[axis])) axis = i
+      let standing = 0
+      for (let i = 1; i < 3; i++) if (Math.abs(up[i]) > Math.abs(up[standing])) standing = i
+      const across = Math.min(...half.filter((_, i) => i !== standing))
+      if (across >= STAND_RATIO * half[standing]) axis = standing
     }
     const sign = up[axis] >= 0 ? 1 : -1
     this.v.set(e[axis * 4], e[axis * 4 + 1], e[axis * 4 + 2]).multiplyScalar(sign)
