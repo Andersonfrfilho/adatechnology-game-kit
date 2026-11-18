@@ -33,7 +33,7 @@ Leia `spec.md`, `plan.md`, `specs/regras/14-workers.md` e `packages/game-workers
 
 - T10 `staticCollidersKind` (`destruction.static-colliders`, faixa `build`): colisores fixos da casa gerados na carga, em fatias, com a
   promessa resolvida antes de a casa ficar sólida.
-- T11 `shapesGenerateKind` (`shapes.generate`, faixa `build`): `createShapePool` passa a usar o coordenador quando recebe `workers` (a API
+- [x] T11 (`shapesGenerateKind` em `game-shapes`, entrada `./worker-kinds`; `createShapePool({ workers })`; no `KIT_WORKER_KINDS`; sala: `__kitShapes`, print `shapes-coordinator.png`) `shapesGenerateKind` (`shapes.generate`, faixa `build`): `createShapePool` passa a usar o coordenador quando recebe `workers` (a API
   antiga continua, marcada como legada); normais da malha calculadas dentro do mesmo kernel.
 - T12 Medir o tempo de carga da sala e da casa com `?workers=0` e automático.
 

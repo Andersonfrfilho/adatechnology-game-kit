@@ -43,3 +43,11 @@ por quadro num quadro ocupado: a rajada leva vários quadros de ida e volta e pe
 para 16 (`IN_FLIGHT_PER_WORKER`); a prioridade continua valendo para o que fica na fila. Antes desta medida o pacote `game-test-room`
 construído estava velho e a sala nem entregava a porta ao motor: o `room-explosion` anterior (`jolt-d4-worker`) mediu o chão no quadro
 principal. Print: `examples/test-room/shots/ground-coordinator-crater.png` (os destroços da parede assentados no chão feito pelo worker).
+
+## T11: formas pelo coordenador da sala (2026-11-18, contêiner, Chromium com GL por software)
+
+A sala expõe `window.__kitShapes` (`createShapePool({ workers: kitWorkers })`). Um abajur (cilindros e torno), um banquinho (caixas,
+cilindro e toro) e um tambor (torno) gerados pelo pool: 3 jobs de `shapes.generate` na faixa `build`, 3 respondidos pelos workers, 0 no
+quadro principal, 6,3 ms de worker; posições e normais iguais bit a bit ao `generate` da página. Print:
+`examples/test-room/shots/shapes-coordinator.png`. Testes: `packages/game-shapes/tests/pool-coordinator.test.ts` (`checkTaskKind` com
+`worker_threads`, pool com coordenador, gerador que o worker não conhece feito na página com os mesmos bytes).

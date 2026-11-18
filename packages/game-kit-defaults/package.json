@@ -47,6 +47,7 @@
     "@adatechnology/game-crowd": "workspace:^",
     "@adatechnology/game-destruction-three": "workspace:^",
     "@adatechnology/game-floorplan-residential": "workspace:^",
+    "@adatechnology/game-shapes": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-vehicles-fleet": "workspace:^",
