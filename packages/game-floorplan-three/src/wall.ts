@@ -92,6 +92,10 @@ function addTexturedShells(T: Three, root: THREE.Object3D): void {
     twin.position.copy(shell.position)
     twin.quaternion.copy(shell.quaternion)
     twin.scale.copy(shell.scale)
+    // its shadow programs too: the depth and distance materials take the map, so a shell that casts gets programs of its own
+    twin.castShadow = shell.castShadow
+    twin.receiveShadow = shell.receiveShadow
+    twin.renderOrder = shell.renderOrder
     shell.parent?.add(twin)
   }
 }
