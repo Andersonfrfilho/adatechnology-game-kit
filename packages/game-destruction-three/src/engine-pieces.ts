@@ -7,7 +7,7 @@ import type { HeightPatch } from '@adatechnology/game-terrain'
 import { GROUND_CELL, buildGroundTile, flatTile, readGround, sampleCount, shapeGround } from './engine-ground'
 import type { GroundGrid, GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
-import { bandLength, readGroundBand } from './engine-ground-job'
+import { bandLength, latticePatchRead, readGroundBand, readGroundPatch } from './engine-ground-job'
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import { GroundSchedule } from './engine-ground-schedule'
@@ -66,15 +66,8 @@ type TileVisit = (key: number, ix: number, iz: number) => void
 /** Updates from asking for a tile to applying it under `groundWorker` unless the host says otherwise (owner, 2026-11-17: 1 to 3 frames of delay accepted). */
 export const GROUND_WORKER_FRAMES = 2
 
-/** The vertices of a 10 cm terrain from (-10, -10) under the tile at the origin and its ring, at `ground` (the warm job of a patch tile, `warmGround`). */
-const warmPatch = (ground: (x: number, z: number) => number): HeightPatch => {
-  const cell = 0.1
-  const first = 95
-  const side = 32
-  const heights = new Float64Array(side * side)
-  for (let j = 0; j < side; j++) for (let i = 0; i < side; i++) heights[j * side + i] = ground(-10 + (first + i) * cell, -10 + (first + j) * cell)
-  return { cellSize: cell, originX: -10, originZ: -10, columns: 200, rows: 200, column0: first, row0: first, width: side, depth: side, heights }
-}
+/** Whether a tile's engine field is the coarse one (`collisionFieldOf`): a slab never is. */
+const wasCoarseOf = (tile: { readonly slab: boolean; readonly collision: Float32Array; readonly heights: Float32Array }): boolean => !tile.slab && tile.collision.length < tile.heights.length
 
 /** A piece's box seen from above (`EnginePieces.footprint`). */
 interface Footprint {
@@ -294,7 +287,8 @@ export class EnginePieces {
     const band = new Float64Array(bandLength(TILE))
     readGroundBand(warmGround, band, 0, 0, TILE)
     schedule.warm(samples, band, 0, 0, TILE)
-    if (this.o.groundPatch) schedule.warmPatch(warmPatch(warmGround), 0, 0, TILE)
+    // the warm patch is read the way a real one is (`readGroundPatch` over the tile and its ring), so it fits whatever the tile and the ring are
+    if (this.o.groundPatch) schedule.warmPatch(readGroundPatch(latticePatchRead(warmGround), 0, 0, TILE) as HeightPatch, 0, 0, TILE)
   }
 
   /** A piece not handed in this update goes (`update`; a callback made once, so the walk makes no entry per piece). */
@@ -1015,7 +1009,7 @@ export class EnginePieces {
       tile.dirty = null
       if (!changed && !ringMoved) return
       samples = tile.samples
-      wasCoarse = !tile.slab && tile.collision.length < tile.heights.length
+      wasCoarse = wasCoarseOf(tile)
     } else {
       samples = new Float64Array(sampleCount(Math.round(TILE / GROUND_CELL)))
       readGround(this.o.groundAt, samples, x0, z0, TILE, undefined, this.o.groundGrid)
@@ -1037,7 +1031,7 @@ export class EnginePieces {
       schedule.givePatch(patch.heights)
       return
     }
-    const wasCoarse = tile !== undefined && !tile.slab && tile.collision.length < tile.heights.length
+    const wasCoarse = tile !== undefined && wasCoarseOf(tile)
     schedule.ask({ ...at, size: TILE, fresh: tile === undefined, wasCoarse, samples: null, patch }, null, this.updates)
   }
 

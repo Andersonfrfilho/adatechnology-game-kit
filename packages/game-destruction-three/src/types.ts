@@ -144,7 +144,8 @@ export interface RendererOptions {
   /**
    * `terrainAt`'s vertices under a rectangle (`Terrain.heightPatch` is one), to the bit what `terrainGridAt` reads there. Under `groundWorker` a tile it covers is asked for with
    * its patch (about 26 x 26 numbers) instead of its samples and band (about 60 000), which the worker, or the main thread at the tile's update, makes from it; a tile it does not
-   * cover (null: across the terrain's bounds) is read as before. Used only with `terrainAt` and `terrainGridAt`. A reader that is not exact changes the ground: leave it out if unsure.
+   * cover (null: across the terrain's bounds) is read as before. A tile asked again is made again when any vertex of its patch changed, not only where the host told a change
+   * (`wakeRegion`): a change the host did not tell is caught too. Used only with `terrainAt` and `terrainGridAt`. A reader that is not exact changes the ground: leave it out if unsure.
    */
   terrainPatchAt?: GroundPatchRead
   /**

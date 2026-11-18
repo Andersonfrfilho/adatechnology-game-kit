@@ -9,7 +9,7 @@ import type { Terrain } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, readGround, sampleCount, shapeGround } from '../src/engine-ground'
 import type { GroundTile } from '../src/engine-ground'
-import { bandLength, computeGroundTile, jobTransferOf, readGroundBand, readGroundPatch, tileOfResult, transferOf } from '../src/engine-ground-job'
+import { bandLength, computeGroundTile, jobTransferOf, latticePatchRead, readGroundBand, readGroundPatch, tileOfResult, transferOf } from '../src/engine-ground-job'
 import type { GroundTileJob, GroundTileResult } from '../src/engine-ground-job'
 import { createInlineGroundPort, createMainThreadGroundPort, createWorkerGroundPort, installGroundWorker } from '../src/engine-ground-port'
 import type { GroundWorkerPort } from '../src/engine-ground-port'
@@ -115,6 +115,18 @@ describe('ground tiles made from the terrain\'s vertices (patch jobs): the same 
     for (const [x0, z0] of [[-8, 0], [6, 0], [0, -6.1], [4.2, 0], [-6.2, -6.2]] as const) expect(readGroundPatch(terrain.heightPatch, x0, z0, 2), `${x0},${z0}`).toBeNull()
     // just inside: the ring's outermost band points on the bounds or within
     expect(readGroundPatch(terrain.heightPatch, -5.93, -5.85, 2)).not.toBeNull()
+  })
+
+  it('the warm patch (a lattice read through readGroundPatch) fits the tile and its ring whatever their size and place: its job makes a tile, no throw', () => {
+    const warm = (x: number, z: number): number => 0.3 * x - 0.2 * z + 0.15 * Math.floor(x / 0.37) + 0.05 * Math.sin(3 * z)
+    for (const size of [2, 1, 3.3, 4]) {
+      for (const [x0, z0] of [[0, 0], [-7.3, 2.05], [12, -40]] as const) {
+        const patch = readGroundPatch(latticePatchRead(warm), x0, z0, size)!
+        const result = computeGroundTile({ id: 0, x0, z0, size, wasCoarse: false, samples: EMPTY, band: EMPTY, patch })
+        expect(result.cells, `${size} at ${x0},${z0}`).toBe(Math.round(size / GROUND_CELL))
+        expect(result.level).toBeNull()
+      }
+    }
   })
 
   it('the worker of the package answers a patch job with its tile, the patch handed back transferred', () => {
@@ -230,6 +242,30 @@ const runCrater = (port: GroundWorkerPort, updates: number, patches: boolean, be
 }
 
 describe.skipIf(!IS_JOLT)('engine ground asked with patches: the physics is today\'s, with or without the worker', () => {
+  it('the engine warms the worker with a patch job built for its real tile and ring: the inline port runs it in the constructor without a throw, the worker answers it', () => {
+    const terrain = createTerrain({ bounds: [-6, -6, 6, 6], cellSize: 0.1, layout: { surface: 'dirt' } })
+    const options = { physics: physicsOption(), groundAt: (x: number, z: number) => terrain.heightAt(x, z), terrainAt: (x: number, z: number) => terrain.heightAt(x, z), terrainGridAt: terrain.heightGrid, terrainPatchAt: terrain.heightPatch, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() }
+    const inline = createInlineGroundPort()
+    const system = new PieceSystem(THREE, { ...options, groundWorker: inline })
+    const engine = (system as unknown as { engine: Engine }).engine
+    expect(engine.schedule.stats).toEqual({ asked: 0, inTime: 0, fellBack: 0, late: 0 })
+    expect(engine.schedule.outstanding).toBe(0)
+    system.dispose()
+    const worker = clonedWorker()
+    const posted: GroundTileJob[] = []
+    const send = worker.postMessage.bind(worker)
+    worker.postMessage = (message: unknown, transfer?: ArrayBuffer[]) => {
+      posted.push(message as GroundTileJob)
+      send(message, transfer)
+    }
+    const withWorker = new PieceSystem(THREE, { ...options, physics: physicsOption(), groundWorker: createWorkerGroundPort(worker) })
+    worker.flush()
+    // a samples warm job and a patch one, both answered
+    expect(posted.map((job) => [job.id, job.patch !== undefined])).toEqual([[0, false], [0, true]])
+    expect((withWorker as unknown as { engine: Engine }).engine.schedule.outstanding).toBe(0)
+    withWorker.dispose()
+  })
+
   it('main thread, inline, a cloned worker and a slow one: every update bit-identical, and the same as the tiles read from samples', { timeout: 120000 }, () => {
     const samples = runCrater(createMainThreadGroundPort(), 120, false)
     const reference = runCrater(createMainThreadGroundPort(), 120, true)

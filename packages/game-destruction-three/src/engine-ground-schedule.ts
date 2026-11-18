@@ -5,6 +5,9 @@ import { bandLength, computeGroundTile, readGroundPatch, tileOfResult } from './
 import type { GroundPatchRead, GroundTileResult } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 
+/** The most free patches kept (a few blasts' worth of tiles made again): past it a patch let go is left to the collector. */
+const MAX_FREE_PATCHES = 64
+
 /** The samples and band of a patch job (it carries neither): never transferred (`jobTransferOf` skips empty buffers). */
 const EMPTY = new Float64Array(0)
 
@@ -101,7 +104,7 @@ export class GroundSchedule {
 
   /** A patch's heights back for the next read (a tile that let it go, a read not used). */
   givePatch(heights: Float64Array): void {
-    if (heights.length >= this.patchLength) this.freePatches.push(heights)
+    if (heights.length >= this.patchLength && this.freePatches.length < MAX_FREE_PATCHES) this.freePatches.push(heights)
   }
 
   /** A job asked for at update `now`: of samples and a band from the pool (`band`), or of a patch (`job.patch`, band null). */

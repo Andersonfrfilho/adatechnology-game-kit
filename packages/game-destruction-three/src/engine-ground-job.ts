@@ -1,4 +1,4 @@
-import { heightPatchGrid } from '@adatechnology/game-terrain'
+import { cellCoordinate, heightPatchGrid } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, readGround, sampleCount, shapeGround } from './engine-ground'
@@ -121,6 +121,28 @@ export const readGroundPatch = (read: GroundPatchRead, x0: number, z0: number, s
   return read(x0 + (lo / 2) * cell, x0 + (hi / 2) * cell, z0 + (lo / 2) * cell, z0 + (hi / 2) * cell, into)
 }
 
+/** The cell of `latticePatchRead`'s ground (m): a terrain's usual one. */
+const LATTICE_CELL = 0.1
+
+/**
+ * A `GroundPatchRead` of any ground as a terrain would hold it: `ground` sampled at the vertices of a `LATTICE_CELL` lattice laid a metre and more around each rectangle asked,
+ * the patch found with the terrain's own cell rule (`cellCoordinate`). For the warm job of a patch tile, which has no terrain: whatever the tile size and ring are, its patch
+ * covers them, as a real one does.
+ */
+export const latticePatchRead = (ground: (x: number, z: number) => number): GroundPatchRead => (minX, maxX, minZ, maxZ, into) => {
+  const originX = Math.floor(minX) - 1
+  const originZ = Math.floor(minZ) - 1
+  const columns = Math.ceil((maxX - originX) / LATTICE_CELL) + 2
+  const rows = Math.ceil((maxZ - originZ) / LATTICE_CELL) + 2
+  const column0 = cellCoordinate(minX, originX, columns, LATTICE_CELL) | 0
+  const row0 = cellCoordinate(minZ, originZ, rows, LATTICE_CELL) | 0
+  const width = (cellCoordinate(maxX, originX, columns, LATTICE_CELL) | 0) + 2 - column0
+  const depth = (cellCoordinate(maxZ, originZ, rows, LATTICE_CELL) | 0) + 2 - row0
+  const heights = into && into.length >= width * depth ? into : new Float64Array(width * depth)
+  for (let j = 0; j < depth; j++) for (let i = 0; i < width; i++) heights[j * width + i] = ground(originX + (column0 + i) * LATTICE_CELL, originZ + (row0 + j) * LATTICE_CELL)
+  return { cellSize: LATTICE_CELL, originX, originZ, columns, rows, column0, row0, width, depth, heights }
+}
+
 const NO_GROUND = (): number => {
   throw new Error('engine-ground-job: a patch job reads its patch only')
 }
@@ -142,7 +164,10 @@ const groundOfPatch = (job: GroundTileJob, patch: HeightPatch): { samples: Float
   return { samples: patchSamples, band: patchBand }
 }
 
-/** The tile a job makes: `shapeGround` of its samples and, under a height field, its solid over the band (both made from its patch first, in a patch job). Pure of the job. */
+/**
+ * The tile a job makes: `shapeGround` of its samples and, under a height field, its solid over the band (both made from its patch first, in a patch job). Pure of the job.
+ * Not reentrant: a patch job's samples and band, and `readGround`'s lattice, are module scratch (one job at a time per thread, as a worker and the schedule run them).
+ */
 export const computeGroundTile = (job: GroundTileJob): GroundTileResult => {
   const { samples, band } = job.patch ? groundOfPatch(job, job.patch) : job
   const t = shapeGround(samples, job.x0, job.z0, job.size, null, job.wasCoarse)
