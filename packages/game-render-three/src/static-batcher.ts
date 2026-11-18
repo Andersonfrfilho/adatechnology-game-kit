@@ -24,6 +24,18 @@ export type StaticBatcherOptions = {
   readonly materialKey?: (material: Material) => string
   /** Called with each batch as it is made and the meshes it draws (to mark where it comes from, for one). */
   readonly onBatch?: (batch: Mesh, meshes: readonly Mesh[]) => void
+  /**
+   * Batches only the shadow: the meshes keep drawing on their own in the camera's pass and stop casting while batched, and each batch is drawn
+   * only into the shadow maps (positions only, one batch per side the depth pass draws, whatever the material). A mesh whose shadow needs its
+   * own material (a cut-out map, clipping planes, displacement, a custom depth material, wireframe) is left casting on its own. A mesh that
+   * changes casts its own shadow again, of its new shape, the frame it changes.
+   */
+  readonly shadowOnly?: boolean
+  /**
+   * The most vertices one batch holds (default unbounded; 65535 with `shadowOnly`): a larger group is split, in the order of the tree, so each
+   * batch is merged within one `update` of a budget and is culled by the shadow camera by its own part of the object.
+   */
+  readonly maxVertices?: number
 }
 
 export type StaticBatcherStats = { readonly batches: number; readonly batched: number; readonly released: number }
@@ -50,6 +62,8 @@ type Source = {
   /** The mesh's world matrix when last seen unchanged: equal again, nothing moved and the local check is skipped. */
   readonly world: Matrix4
   readonly mask: number
+  /** `shadowOnly`: whether the mesh cast before it was batched. */
+  readonly castShadow: boolean
   readonly batch: Batch
   readonly start: number
   readonly count: number
@@ -76,13 +90,29 @@ const isBatchable = (mesh: Mesh): boolean => {
   return geometry.attributes.position !== undefined && Object.keys(geometry.morphAttributes).length === 0
 }
 
-const signatureOf = (mesh: Mesh, materialKey: (material: Material) => string): string => {
+const signatureOf = (mesh: Mesh, materialKey: (material: Material) => string, shadowOnly: boolean): string => {
+  if (shadowOnly) return shadowSideKey(mesh.material as Material)
   const { attributes } = mesh.geometry
   const present = ATTRIBUTES.filter((name) => attributes[name] !== undefined).map((name) => `${name}${attributes[name]!.itemSize}`)
   return `${materialKey(mesh.material as Material)}|${present.join(',')}|${mesh.castShadow ? 1 : 0}${mesh.receiveShadow ? 1 : 0}`
 }
 
 const uuidOf = (material: Material): string => material.uuid
+
+type DepthLike = Material & { map?: unknown; alphaMap?: unknown; displacementMap?: unknown; displacementScale?: number; wireframe?: boolean }
+
+/** The depth pass draws this mesh with the light's plain depth material: nothing of its material but the side changes its shadow (WebGLShadowMap's `getDepthMaterial`). */
+const castsPlainShadow = (mesh: Mesh): boolean => {
+  const material = mesh.material as DepthLike
+  const custom = mesh as Mesh & { customDepthMaterial?: Material; customDistanceMaterial?: Material }
+  if (!mesh.castShadow || !material.visible || custom.customDepthMaterial || custom.customDistanceMaterial) return false
+  if (material.wireframe === true || (material.clippingPlanes?.length ?? 0) > 0) return false
+  if (material.displacementMap && material.displacementScale !== 0) return false
+  return !(material.alphaTest > 0 && (material.map || material.alphaMap))
+}
+
+/** The sides the depth pass draws a material with: batches of the shadow are made one per pair. */
+const shadowSideKey = (material: Material): string => `${material.side}|${material.shadowSide ?? ''}`
 
 const sameMatrix = (a: Matrix4, b: Matrix4): boolean => a.elements.every((value, index) => Math.abs(value - (b.elements[index] as number)) < MATRIX_EPSILON)
 
@@ -93,37 +123,53 @@ const sameMatrix = (a: Matrix4, b: Matrix4): boolean => a.elements.every((value,
  */
 export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: StaticBatcherOptions = {}): StaticBatcher {
   const include = options.include ?? (() => true)
-  const follow = options.followMeshes === true
+  const shadowOnly = options.shadowOnly === true
+  const follow = options.followMeshes === true && !shadowOnly
   root.updateMatrixWorld(true)
   const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
   const materialKey = options.materialKey ?? uuidOf
   const groups = new Map<string, Mesh[]>()
   root.traverse((object) => {
     const mesh = object as Mesh
-    if (!mesh.isMesh || !isShown(mesh, root) || !isBatchable(mesh) || !include(mesh)) return
-    const key = signatureOf(mesh, materialKey)
+    if (!mesh.isMesh || !isShown(mesh, root) || !isBatchable(mesh) || (shadowOnly && !castsPlainShadow(mesh)) || !include(mesh)) return
+    const key = signatureOf(mesh, materialKey, shadowOnly)
     groups.set(key, [...(groups.get(key) ?? []), mesh])
   })
   const group = new THREE.Group()
   group.name = 'static-batches'
   const sources: Source[] = []
-  const pending = [...groups.entries()].filter(([, meshes]) => meshes.length >= 2)
+  const maxVertices = options.maxVertices ?? (shadowOnly ? 65535 : Number.POSITIVE_INFINITY)
+  const chunks = (meshes: Mesh[]): Mesh[][] => {
+    const out: Mesh[][] = [[]]
+    let vertices = 0
+    for (const mesh of meshes) {
+      const count = (mesh.geometry.attributes.position as BufferAttribute).count
+      if (vertices + count > maxVertices && (out[out.length - 1] as Mesh[]).length > 0) {
+        out.push([])
+        vertices = 0
+      }
+      ;(out[out.length - 1] as Mesh[]).push(mesh)
+      vertices += count
+    }
+    return out
+  }
+  const pending = [...groups.entries()].flatMap(([key, meshes]) => chunks(meshes).map((chunk) => [key, chunk] as [string, Mesh[]])).filter(([, meshes]) => meshes.length >= 2)
   // the layers each waiting mesh had when grouped: one whose layers changed before its group is merged (another drawer took it) is not merged
   const groupedMasks = new Map<Mesh, number>()
   for (const [, meshes] of pending) for (const mesh of meshes) groupedMasks.set(mesh, mesh.layers.mask)
   /**
    * Still as it was grouped: shown, included, the same layers and the same signature (a material swapped or a colour attribute added since would be merged under the
-   * group's material, or copied from an attribute the group does not have).
+   * group's material, or copied from an attribute the group does not have; with `shadowOnly`, a shadow that now needs its own material).
    */
   const isUnchanged = (mesh: Mesh, key: string): boolean =>
-    isShown(mesh, root) && include(mesh) && isBatchable(mesh) && mesh.layers.mask === groupedMasks.get(mesh) && signatureOf(mesh, materialKey) === key
+    isShown(mesh, root) && include(mesh) && isBatchable(mesh) && (!shadowOnly || castsPlainShadow(mesh)) && mesh.layers.mask === groupedMasks.get(mesh) && signatureOf(mesh, materialKey, shadowOnly) === key
   const mergeSome = (deadline: number): void => {
     while (pending.length > 0) {
       const [key, meshes] = pending.shift() as [string, Mesh[]]
       // a mesh that changed while it waited is left as it is; the rest of its group is merged
       const still = meshes.filter((mesh) => isUnchanged(mesh, key))
       for (const mesh of meshes) groupedMasks.delete(mesh)
-      if (still.length >= 2) sources.push(...mergeGroup(THREE, { meshes: still, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, onBatch: options.onBatch }))
+      if (still.length >= 2) sources.push(...mergeGroup(THREE, { meshes: still, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, shadowOnly, onBatch: options.onBatch }))
       if (performance.now() >= deadline) return
     }
   }
@@ -134,7 +180,8 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
 
   const release = (source: Source): void => {
     source.released = true
-    source.mesh.layers.mask = source.mask
+    if (shadowOnly) source.mesh.castShadow = source.castShadow
+    else source.mesh.layers.mask = source.mask
     const { index } = source.batch
     const first = index.array[source.start] as number
     for (let at = source.start; at < source.start + source.count; at++) index.array[at] = first
@@ -165,12 +212,17 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     },
     stats: () => ({ batches: group.children.length, batched: sources.filter((source) => !source.released).length, released }),
     dispose() {
-      for (const source of sources) if (!source.released) source.mesh.layers.mask = source.mask
+      for (const source of sources) {
+        if (source.released) continue
+        if (shadowOnly) source.mesh.castShadow = source.castShadow
+        else source.mesh.layers.mask = source.mask
+      }
       pending.length = 0
       groupedMasks.clear()
       group.removeFromParent()
       for (const child of group.children) {
         ;(child as Mesh).geometry.dispose()
+        if (shadowOnly) ((child as Mesh).material as Material).dispose()
         ;(child as SkinnedMesh).skeleton?.dispose()
       }
     },
@@ -215,6 +267,7 @@ type MergeGroupParams = {
   readonly inverse: Matrix4
   readonly group: Object3D
   readonly follow: boolean
+  readonly shadowOnly: boolean
   readonly onBatch: StaticBatcherOptions['onBatch']
 }
 
@@ -240,11 +293,30 @@ function skinnedBatch(THREE: ThreeLib, merged: BufferGeometry, material: Materia
   return mesh
 }
 
-function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, follow, onBatch }: MergeGroupParams): Source[] {
+/**
+ * A batch drawn only into the shadow maps. The camera's pass and the shadow pass both skip a mesh by the same tests (visible, layers, its
+ * material's `visible`), so the batch is left in the camera's pass with an empty draw range (three returns before the draw call) and given its
+ * whole range only around its own shadow draws.
+ */
+function shadowBatch(THREE: ThreeLib, merged: BufferGeometry, like: Material): Mesh {
+  const material = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: like.side })
+  material.shadowSide = like.shadowSide
+  material.name = 'shadow-batch'
+  const mesh = new THREE.Mesh(merged, material)
+  merged.setDrawRange(0, -1)
+  mesh.onBeforeShadow = () => merged.setDrawRange(0, Number.POSITIVE_INFINITY)
+  mesh.onAfterShadow = () => merged.setDrawRange(0, -1)
+  mesh.castShadow = true
+  mesh.receiveShadow = false
+  return mesh
+}
+
+function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, follow, shadowOnly, onBatch }: MergeGroupParams): Source[] {
   const identity = new THREE.Matrix4()
   const inverse = follow ? identity : rootInverse
   const first = meshes[0] as Mesh
-  const names = ATTRIBUTES.filter((name) => first.geometry.attributes[name] !== undefined)
+  // the depth pass reads positions only
+  const names = shadowOnly ? (['position'] as const) : ATTRIBUTES.filter((name) => first.geometry.attributes[name] !== undefined)
   const pieces = meshes.map((mesh) => {
     const local = new THREE.Matrix4().multiplyMatrices(inverse, mesh.matrixWorld)
     const vertices = (mesh.geometry.attributes.position as BufferAttribute).count
@@ -269,10 +341,12 @@ function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, foll
   const indexArray = totalVertices > 65535 ? new Uint32Array(totalIndices) : new Uint16Array(totalIndices)
   const indexAttribute = new THREE.BufferAttribute(indexArray, 1)
   merged.setIndex(indexAttribute)
-  const mesh = follow ? skinnedBatch(THREE, merged, first.material as Material, meshes) : new THREE.Mesh(merged, first.material)
-  mesh.name = `batch:${(first.material as Material).name || (first.material as Material).type}`
-  mesh.castShadow = first.castShadow
-  mesh.receiveShadow = first.receiveShadow
+  const mesh = shadowOnly ? shadowBatch(THREE, merged, first.material as Material) : follow ? skinnedBatch(THREE, merged, first.material as Material, meshes) : new THREE.Mesh(merged, first.material)
+  mesh.name = shadowOnly ? `shadow-batch:${shadowSideKey(first.material as Material)}` : `batch:${(first.material as Material).name || (first.material as Material).type}`
+  if (!shadowOnly) {
+    mesh.castShadow = first.castShadow
+    mesh.receiveShadow = first.receiveShadow
+  }
   mesh.raycast = () => undefined
   merged.computeBoundingBox()
   merged.computeBoundingSphere()
@@ -294,12 +368,14 @@ function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, foll
       local: piece.local,
       world: piece.mesh.matrixWorld.clone(),
       mask: piece.mesh.layers.mask,
+      castShadow: piece.mesh.castShadow,
       batch,
       start: indexOffset,
       count: piece.indexCount,
       released: false,
     })
-    piece.mesh.layers.set(BATCHED_LAYER)
+    if (shadowOnly) piece.mesh.castShadow = false
+    else piece.mesh.layers.set(BATCHED_LAYER)
     vertexOffset += piece.vertices
     indexOffset += piece.indexCount
   }

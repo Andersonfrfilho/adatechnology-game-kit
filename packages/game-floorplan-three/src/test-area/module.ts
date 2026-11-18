@@ -127,6 +127,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         locale,
         lod: { interior: 48, hide: 220 },
         breachPaintBudgetMs: 4,
+        ...(options.shadowBatches === false ? { shadowBatches: false } : {}),
         ...options.house,
         ...(options.house?.interactives ? { interactives: { effectSink: () => host?.effects, ...options.house.interactives } } : {}),
         quality: settings.quality as 'game',

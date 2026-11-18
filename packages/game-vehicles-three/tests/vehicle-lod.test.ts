@@ -35,20 +35,14 @@ const batches = (root: THREE.Object3D): THREE.Object3D | undefined => root.getOb
 const inBatch = (mesh: THREE.Mesh): boolean => mesh.layers.mask === 1 << BATCHED_LAYER
 
 describe('vehicle-lod: a vehicle hit in play', () => {
-  it('is batched again once nothing has changed on it for the quiet time, and keeps its own shadows', () => {
-    let clock = 0
+  it('batches its still parts right after the hit, and keeps their own shadows', () => {
     const { root, full, meshes } = vehicle()
-    const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => clock })
+    // the clock stands still: no quiet time passes
+    const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => 0 })
     lod.update(30, true)
     drawOnce(full)
     lod.update(30, true)
-    expect(batches(root), 'right after the hit it draws part by part').toBeUndefined()
-    clock += VEHICLE_REBATCH_AFTER_MS - 1
-    lod.update(30, true)
-    expect(batches(root)).toBeUndefined()
-    clock += 1
-    lod.update(30, true)
-    // the batcher merges over the next updates, a material at a time
+    // the batcher merges over the next updates, a material at a time: no quiet time first (a far car hit by a blast drew ~620 calls a frame for 1.5 s)
     lod.update(30, true)
     expect(batches(root)?.children.length).toBe(1)
     expect(meshes.every(inBatch), 'every still part draws in the batch').toBe(true)
@@ -62,7 +56,6 @@ describe('vehicle-lod: a vehicle hit in play', () => {
     const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => clock })
     lod.update(30, true)
     drawOnce(full)
-    clock += VEHICLE_REBATCH_AFTER_MS
     lod.update(30, true)
     lod.update(30, true)
     expect(meshes.every(inBatch)).toBe(true)
@@ -72,13 +65,21 @@ describe('vehicle-lod: a vehicle hit in play', () => {
     lod.update(30, true)
     expect(inBatch(meshes[0]!)).toBe(false)
     expect(meshes.slice(1).every(inBatch)).toBe(true)
+    // the dented panel settles: once the vehicle is quiet it rejoins a batch, in its new shape
+    clock += VEHICLE_REBATCH_AFTER_MS
+    lod.update(30, true)
+    lod.update(30, true)
+    expect(meshes.every(inBatch), 'the dented panel is batched again').toBe(true)
     // the blast moves all of them: the batch empties, and is not made again until the vehicle is quiet
     for (const mesh of meshes) mesh.position.y += 0.05
     root.updateMatrixWorld(true)
     lod.update(30, true)
     lod.update(30, true)
     expect(batches(root)).toBeUndefined()
-    clock += VEHICLE_REBATCH_AFTER_MS
+    clock += VEHICLE_REBATCH_AFTER_MS - 1
+    lod.update(30, true)
+    expect(batches(root), 'an emptied batch waits for the quiet time').toBeUndefined()
+    clock += 1
     lod.update(30, true)
     lod.update(30, true)
     expect(meshes.every(inBatch)).toBe(true)

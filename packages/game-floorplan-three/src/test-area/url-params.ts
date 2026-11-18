@@ -7,6 +7,8 @@ export interface FloorplanAreaParams {
   readonly state?: string
   /** `?windowFrame=wood|aluminium|frameless`: every window of the house with that frame (`BuildOptions.windowFrame`). */
   readonly windowFrame?: WindowFrame
+  /** `?shadowBatches=0`: each mesh of the house casts its own shadow, as before the shadow batches (to compare the two). */
+  readonly shadowBatches?: false
 }
 const FRAMES: readonly WindowFrame[] = ['wood', 'aluminium', 'frameless']
 
@@ -23,6 +25,7 @@ export function floorplanAreaParams(search: string): FloorplanAreaParams {
   const seed = Number(params.get('seed'))
   const frame = FRAMES.find((f) => f === params.get('windowFrame'))
   return {
+    ...(params.get('shadowBatches') === '0' ? { shadowBatches: false as const } : {}),
     ...(frame ? { windowFrame: frame } : {}),
     ...(template && ID.test(template) ? { template } : {}),
     ...(Number.isInteger(seed) && seed >= 1 && seed <= 999 ? { seed } : {}),

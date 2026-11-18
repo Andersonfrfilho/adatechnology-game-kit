@@ -207,4 +207,71 @@ describe('createStaticBatcher following its meshes', () => {
     ;(parts[1]!.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
     expect(batcher.update()).toBe(2)
   })
+
+  it('shadowOnly: one shadow batch per side, the meshes still drawn on their own and not casting while batched', () => {
+    const root = new THREE.Group()
+    const brick = new THREE.MeshLambertMaterial({ color: 0x884422 })
+    const tile = new THREE.MeshStandardMaterial({ color: 0x777777 })
+    const glass = new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.3 })
+    const leaves = new THREE.MeshLambertMaterial({ map: new THREE.Texture(), alphaTest: 0.5 })
+    const cloth = new THREE.MeshLambertMaterial({ side: THREE.DoubleSide })
+    const make = (material: THREE.Material, at: number, casts = true): THREE.Mesh => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material)
+      mesh.position.set(at * 2, 0, 0)
+      mesh.castShadow = casts
+      root.add(mesh)
+      return mesh
+    }
+    const walls = [make(brick, 0), make(tile, 1), make(glass, 2)]
+    const cutOut = [make(leaves, 3), make(leaves, 4)]
+    const sheets = [make(cloth, 5), make(cloth, 6)]
+    const lamp = make(brick, 7, false)
+    const batcher = createStaticBatcher(THREE, root, { shadowOnly: true })
+    // brick, tile and glass draw the same into the depth map (front faces culled): one batch; the double-sided cloth is another
+    expect(batcher.stats()).toEqual({ batches: 2, batched: 5, released: 0 })
+    expect([...walls, ...sheets].every((mesh) => drawn(mesh) && !mesh.castShadow), 'still drawn by the camera, cast by the batch').toBe(true)
+    expect(cutOut.every((mesh) => mesh.castShadow), 'a cut-out map casts its own shadow').toBe(true)
+    expect(lamp.castShadow).toBe(false)
+    const batches = batcher.group.children as THREE.Mesh[]
+    expect(batches.every((batch) => batch.castShadow && !batch.receiveShadow)).toBe(true)
+    expect(batches.every((batch) => Object.keys(batch.geometry.attributes).join() === 'position'), 'positions only').toBe(true)
+    const sides = batches.map((batch) => (batch.material as THREE.Material).side).sort()
+    expect(sides).toEqual([THREE.FrontSide, THREE.DoubleSide].sort())
+    // the camera's pass gets an empty draw range (no draw call); the shadow pass the whole of it (the batch reads none of the arguments)
+    const noArgs = [] as unknown as Parameters<THREE.Mesh['onBeforeShadow']>
+    const batch = batches[0]!
+    expect(batch.geometry.drawRange.count).toBeLessThan(0)
+    batch.onBeforeShadow(...noArgs)
+    expect(batch.geometry.drawRange.count).toBe(Number.POSITIVE_INFINITY)
+    batch.onAfterShadow(...noArgs)
+    expect(batch.geometry.drawRange.count).toBeLessThan(0)
+  })
+
+  it('shadowOnly: a mesh that changes casts its own shadow again, and dispose gives every mesh its shadow back', () => {
+    const root = new THREE.Group()
+    const brick = new THREE.MeshLambertMaterial()
+    const walls = [0, 1, 2].map((at) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), brick)
+      mesh.position.set(at * 2, 0, 0)
+      mesh.castShadow = true
+      root.add(mesh)
+      return mesh
+    })
+    const batcher = createStaticBatcher(THREE, root, { shadowOnly: true })
+    const batch = batcher.group.children[0] as THREE.Mesh
+    // a piece hidden in place (its positions written over) or a wall knocked off its spot
+    ;(walls[0]!.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true
+    walls[1]!.position.y += 0.2
+    root.updateMatrixWorld(true)
+    expect(batcher.update()).toBe(2)
+    expect(walls[0]!.castShadow && walls[1]!.castShadow && !walls[2]!.castShadow).toBe(true)
+    // the released ones leave the batch: their triangles collapse to one vertex
+    const index = batch.geometry.index!
+    const count = walls[0]!.geometry.index!.count
+    expect(new Set(Array.from(index.array).slice(0, count * 2)).size).toBeLessThanOrEqual(2)
+    expect(walls.every((wall) => drawn(wall))).toBe(true)
+    batcher.dispose()
+    expect(walls.every((wall) => wall.castShadow)).toBe(true)
+    expect(batcher.group.parent).toBeNull()
+  })
 })
