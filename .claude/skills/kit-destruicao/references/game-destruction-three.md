@@ -54,6 +54,9 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 
 `specFromObject3D` lê `userData.destructionMaterial`, `destructionPart`, `destructionIgnore`, `destructionTags` e `hollow`.
 
+## Caixas das partes por faixa ajustadas num worker (`fitWorker`, opcional)
+Com `fitWorker` (`createWorkerFitPort(new Worker(...))` sobre `dist/fit-worker.js` ou `dist/fit-worker.global.js`, sem three.js; `createInlineFitPort()` em teste/Node) o ajuste antecipado das caixas das partes desenhadas por faixa de malha mesclada (`fitBoxesAhead`) roda no worker: os pontos vão em arrays transferidos (pool, sem `SharedArrayBuffer`) e a resposta só enche o cache exato que o corte lê. Resposta que não chegou até a parte soltar: ajuste no thread principal com os mesmos números (mesmos bits). No máximo `FIT_IN_FLIGHT` (32) esperando; worker com erro é terminado e não recebe mais nada; `dispose` termina. Na sala: `debris.fitWorker` e `?fitWorker=1`.
+
 ## Trabalho da explosão em orçamento de quadro (`workBudget`, opcional)
 Sem a opção, o corte dos grupos soltos e os fragmentos param pelo relógio (`eventBudgetMs` ou o prazo do orçamento compartilhado), como antes. Com `workBudget: {}` param por **unidades de trabalho** (`WorkBudget` do `game-physics`, T3.8aa): os eventos aplicam no próprio quadro (clarão, poeira, trincas) e custam `perEvent`; cada grupo solto entra numa fila de dados, por distância ao `focus` (lida quando soltou) e depois pela menor id de parte, custando pelo tamanho do trabalho (`splitWorkUnits`, como se nenhuma caixa estivesse ajustada antes). Até a vez dele o grupo fica no objeto, desenhado e sólido; nenhum espera mais que `maxWaitFrames` (30). Nenhum relógio é lido: mesma sessão, mesmos cortes nos mesmos quadros em toda máquina da mesma `tier`. Opções: `budgetMs` 4, `unitsPerMs` 100, `tier` 1, `maxWaitFrames` 30, `costs` (`WORK_UNIT_DEFAULTS`). Na sala: `debris.workBudget` e `?workBudget=4`.
 

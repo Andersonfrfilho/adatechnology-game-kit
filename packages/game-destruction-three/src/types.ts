@@ -6,6 +6,7 @@
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
 import type * as THREE_NS from 'three'
+import type { FitWorkerPort } from './fit-port'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
@@ -87,6 +88,13 @@ export interface RendererOptions {
    * that splits a house reads them instead of fitting them. The boxes are the very same numbers either way. Default on; off, they are fitted when the part breaks off.
    */
   fitBoxesAhead?: boolean
+  /**
+   * Where those boxes are fitted ahead (`FitWorkerPort`: `createWorkerFitPort` over a worker running the package's `fit-worker` entry, or `createInlineFitPort`). Its answers only
+   * fill the cache the split reads, which takes the boxes only for the very same points and triangles: a part whose answer has not come when it breaks off (or whose worker
+   * failed) is fitted on the main thread, the same numbers. The renderer owns the port once handed (`dispose` stops it); a failed worker is stopped and not posted to again.
+   * Default none: fitted ahead on the main thread.
+   */
+  fitWorker?: FitWorkerPort
   /** Where the debris policy's step cost comes from: measured (default), fixed from the configuration, or replayed from a recording. Only `fixed` and `replay` are the same on every machine. */
   debrisCost?: DebrisCostOptions
   /**

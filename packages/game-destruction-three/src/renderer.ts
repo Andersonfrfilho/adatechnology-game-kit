@@ -18,6 +18,8 @@ import { drawnSolidsOf } from './drawn-solids'
 import { hollowBoxesOf } from './drawn-boxes'
 import type { MeasureBudget } from './drawn-solids'
 import { fitOrientedBoxes } from '@adatechnology/game-shapes'
+import type { OrientedBox } from '@adatechnology/game-shapes'
+import { FitRelay } from './fit-relay'
 import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
 import { sameSolids } from './engine-statics'
@@ -425,6 +427,8 @@ class Renderer implements DestructionRenderer {
   private eventSplitFrame = -1
   /** The boxes `fitOrientedBoxes` gave for the points of a part drawn by a range of a merged mesh, kept with the points and triangles they came from: the same drawing is not fitted again. Released with the object (`forgetBound`). */
   private readonly fittedBoxes = new Map<MeshVis, { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: ReturnType<typeof fitOrientedBoxes> }>()
+  /** Where the ranged parts are fitted ahead when the host gave a fit worker (`RendererOptions.fitWorker`): its answers fill `fittedBoxes`, nothing else. */
+  private readonly fitRelay: FitRelay<{ readonly b: Bound; readonly mv: MeshVis }> | undefined
   /** Objects whose ranged parts are still to be fitted ahead of the blow that breaks them, a part per step, only with time left in the frame. */
   private readonly prefitting: Array<{ readonly b: Bound; readonly parts: MeshVis[]; next: number }> = []
   /** When the work of this frame must stop; `Infinity` outside a drain, where a call finishes what it started. */
@@ -567,6 +571,11 @@ class Renderer implements DestructionRenderer {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
       if (this.queue.length < QUEUE_CAP || STRUCTURAL_EVENTS.has(ev.type)) this.queue.push(ev)
     })
+    if (o.fitWorker) {
+      this.fitRelay = new FitRelay(o.fitWorker, (key, fit) => this.takeFitted(key.b, key.mv, fit))
+      // the worker compiles the fit now, not when the first house is bound
+      this.fitRelay.warm()
+    }
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------
@@ -709,6 +718,7 @@ class Renderer implements DestructionRenderer {
   private forgetBound(objectId: string): void {
     const b = this.bounds.get(objectId)
     if (b) for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+    if (b) this.fitRelay?.cancel((key) => key.b === b)
     this.bounds.delete(objectId)
   }
 
@@ -2724,7 +2734,29 @@ class Renderer implements DestructionRenderer {
     if (!inverse) frames.set(job.b, (inverse = specFrameInverse(this.THREE, job.b.root)))
     mv.mesh.updateWorldMatrix(true, false)
     const m4 = new this.THREE.Matrix4().multiplyMatrices(inverse, mv.mesh.matrixWorld)
-    this.partBoxesOf(mv, { lb: new this.THREE.Box3(), m4, from: [0, 0, 0] }, [])
+    if (this.fitRelay?.live && !this.fitRelay.full) this.postFit(job.b, mv, m4)
+    // no worker, or it is behind: fitted here, the same numbers it would give
+    else this.partBoxesOf(mv, { lb: new this.THREE.Box3(), m4, from: [0, 0, 0] }, [])
+    return true
+  }
+
+  /** What `partBoxesOf` would fit for a ranged part standing at `m4`, posted to the fit worker instead (nothing when the part is a hollow box or already fitted from these numbers). */
+  private postFit(b: Bound, mv: MeshVis, m4: THREE_NS.Matrix4): void {
+    const own: number[] = []
+    this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
+    if (hollowBoxesOf(own)) return
+    const points: number[] = []
+    this.visuals.rangePoints(mv, m4, points)
+    const triangles = this.trianglesOf(mv)
+    const kept = this.fittedBoxes.get(mv)
+    if (kept && sameNumbers(kept.points, points) && sameNumbers(kept.triangles, triangles)) return
+    this.fitRelay?.post({ b, mv }, points, triangles)
+  }
+
+  /** A fit worker's answer into the cache, while the part still hangs on the object it was posted for and nothing fitted it since. */
+  private takeFitted(b: Bound, mv: MeshVis, fit: { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: OrientedBox[] }): boolean {
+    if (this.disposed || this.bounds.get(b.id) !== b || mv.loose || !mv.range || this.fittedBoxes.has(mv)) return false
+    this.fittedBoxes.set(mv, fit)
     return true
   }
 
@@ -3482,6 +3514,7 @@ class Renderer implements DestructionRenderer {
     this.pieceSys.dispose()
     this.visuals.dispose()
     this.ownVfx?.dispose()
+    this.fitRelay?.dispose()
     this.disposed = true
   }
 }

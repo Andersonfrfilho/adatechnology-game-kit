@@ -22,4 +22,12 @@ export default defineConfig([
     external: ['three'],
     noExternal: [/^@adatechnology\//],
   },
+  // the fit worker (`createWorkerFitPort`): a module (dist/fit-worker.js) and a classic script (dist/fit-worker.global.js) a host can start from a Blob; no three.js
+  {
+    entry: { 'fit-worker': 'src/fit-worker.ts' },
+    format: ['esm', 'iife'],
+    sourcemap: true,
+    target: 'es2020',
+    noExternal: [/^@adatechnology\//],
+  },
 ])

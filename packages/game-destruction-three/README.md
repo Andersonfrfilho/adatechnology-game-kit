@@ -165,6 +165,23 @@ pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the cent
   vertices draw on their own. `settledBatchStats()` reports the batches. The test room turns the batches on; its awake budget stays off unless
   `debris.maxAwakePieces` / `maxAwakeFragments` are given (`SUGGESTED_MAX_AWAKE_PIECES`, `SUGGESTED_MAX_AWAKE_FRAGMENTS`).
 
+### Boxes of ranged parts fitted in a worker (`fitWorker`, opt-in)
+
+The boxes a part drawn by a range of a merged mesh gets when it comes loose (`fitOrientedBoxes`) are fitted ahead of the blow (`fitBoxesAhead`, default on), into a cache
+the split reads only for the very same points and triangles. With `fitWorker` that fit runs in a worker: the main thread reads the part's points, posts them (pooled typed
+arrays, transferred; no `SharedArrayBuffer`, so no COOP/COEP needed) and the answer fills the same cache. A part whose answer has not come when it breaks off is fitted on the
+main thread from the same numbers, so the boxes never depend on the worker; at most `FIT_IN_FLIGHT` (32) fits wait for an answer, past that the part is fitted here. A
+worker that fails (`onerror`) is terminated and never posted to again; `dispose` terminates it. The worker is `dist/fit-worker.js` (module) or `dist/fit-worker.global.js`
+(classic script, to start from a Blob), with no three.js:
+
+```ts
+import { createWorkerFitPort } from '@adatechnology/game-destruction-three'
+const fitWorker = createWorkerFitPort(new Worker(new URL('@adatechnology/game-destruction-three/fit-worker', import.meta.url), { type: 'module' }))
+createDestructionRenderer(THREE, { ...options, fitWorker })
+```
+
+`createInlineFitPort()` answers in the calling thread (tests, Node). In the test room: `debris.fitWorker` and `?fitWorker=1`.
+
 ### The explosion's work in a frame budget (`workBudget`, opt-in)
 
 Left out, the work a blow leaves (loose groups to cut into pieces, fragments to spawn) is cut by the clock (`eventBudgetMs`, or a shared frame budget's deadline), as before.
