@@ -168,16 +168,31 @@ const riseWhile = (pieces: Piece[], run: (seconds: number) => void, seconds: num
   return rise
 }
 
-/** Whether a piece stands on the ground or on the top of another piece under it (within `gap`): nothing ends in the air. */
+/** The corners of a piece's box, in the world. */
+const cornersOf = (p: Piece): THREE.Vector3[] => {
+  p.root.updateMatrixWorld(true)
+  const [hx, hy, hz] = p.halfExtents
+  const [cx, cy, cz] = p.localCenter
+  const out: THREE.Vector3[] = []
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) out.push(new THREE.Vector3(cx + sx * hx, cy + sy * hy, cz + sz * hz).applyMatrix4(p.root.matrixWorld))
+  return out
+}
+
+/**
+ * Whether a piece stands on the ground or on the top of another piece under it (within `gap`): nothing ends in the air. A tilted piece lying across two others rests by
+ * its corners on their tops, high above its lowest point: any corner on a top counts.
+ */
 const standsOnSomething = (p: Piece, others: Piece[], gap: number): boolean => {
   const own = bounds(p)
   if (own.min.y < gap) return true
-  return others.some((o) => {
-    if (o === p) return false
-    const b = bounds(o)
-    const across = b.min.x < own.max.x && b.max.x > own.min.x && b.min.z < own.max.z && b.max.z > own.min.z
-    return across && Math.abs(b.max.y - own.min.y) < gap
-  })
+  return cornersOf(p).some((corner) =>
+    others.some((o) => {
+      if (o === p) return false
+      const b = bounds(o)
+      const over = b.min.x < corner.x && corner.x < b.max.x && b.min.z < corner.z && corner.z < b.max.z
+      return over && Math.abs(b.max.y - corner.y) < gap
+    }),
+  )
 }
 
 /** A collapse's pile: blocks of a wall dropped on each other from 0.2-1.4 m, many born inside each other, by a fixed seed. */
