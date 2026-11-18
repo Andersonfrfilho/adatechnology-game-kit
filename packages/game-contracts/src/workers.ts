@@ -39,14 +39,16 @@ export interface TaskKind<In, Out> extends WorkerKindSchedule {
   readonly id: string
   readonly kind: 'task'
   run(input: In): Out
-  /** The buffers of the output to transfer back (zero copy). The input is copied, never transferred, when `late` is `sync`: the main thread may still need it. */
+  /** The buffers of the output to transfer back (zero copy). The input is copied, never transferred, when `late` is `sync` (unless `transferAwaitedInput`): the main thread may still need it. */
   transferOutput?(value: Out): readonly ArrayBuffer[]
   /** The buffers of the input to transfer when `late` is not `sync` (and on awaited jobs of a `sync` kind with `transferAwaitedInput`). */
   transferInput?(value: In): readonly ArrayBuffer[]
   /**
    * With `late: 'sync'`, transfer the input (`transferInput`) on awaited jobs (`run`) too, instead of copying it: for a caller that keeps its own copy of the input for its
-   * own fallback (the ground tiles). Once sent, such a job is never run on the main thread (its input is gone): a worker that fails it or dies holding it rejects its promise.
-   * Jobs read through `submit`/`collect` still copy their input.
+   * own fallback (the ground tiles). Once sent, such a job is never run on the main thread (its input is gone): a worker that dies holding it rejects its promise with an
+   * error named `WORKER_INPUT_LOST` (`isWorkerInputLost`: the caller makes it from its own copy), one that answers with an error rejects with that error. Jobs read through
+   * `submit`/`collect` still copy their input.
+   * Needs `transferInput`.
    */
   readonly transferAwaitedInput?: boolean
   /** One input each worker runs once at `warm` (the JIT compiles the kernel before the first real job). */
@@ -172,6 +174,12 @@ export const WORKER_KIND_DEFAULTS = {
   [WORKER_KIND_ID.SHAPES_GENERATE]: { lane: 'build', priority: 100, late: 'sync' },
   [WORKER_KIND_ID.WORLD_REGION]: { lane: 'background', priority: 10, latencyFrames: 10, late: 'drop' },
 } as const satisfies Readonly<Record<string, WorkerKindSchedule>>
+
+/** The name of the error an awaited job with a transferred input (`transferAwaitedInput`) rejects with when its worker died holding it. */
+export const WORKER_INPUT_LOST = 'WorkerTaskInputLost'
+
+/** Whether a rejection is that of a job whose transferred input was lost with its worker (`WORKER_INPUT_LOST`): the caller's own fallback makes it, nothing else is wrong. */
+export const isWorkerInputLost = (error: unknown): boolean => error instanceof Error && error.name === WORKER_INPUT_LOST
 
 /*
  * The simulation thread (spec 009, T22): a game's whole fixed step in one worker that may wait. A package declares its simulation as a

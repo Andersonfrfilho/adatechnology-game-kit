@@ -1,3 +1,4 @@
+import { isWorkerInputLost } from '@adatechnology/game-contracts'
 import type { WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { WorkerLike, WorkerScopeLike } from '@adatechnology/game-shapes'
 
@@ -90,7 +91,9 @@ export const createWorkerGroundPort = (worker: WorkerLike): GroundWorkerPort => 
  * worker, awaited (the engine's `GroundSchedule` applies the tile at its update, from the answer if it came, else made here from the same
  * job). A coordinator with no workers is posted nothing (`none`): every tile is made at its update, with no job run twice. The coordinator
  * is the game's: `dispose` lets go of the answers, not of the workers. The job's arrays are transferred (the kind's `transferAwaitedInput`):
- * `GroundSchedule` posts copies from its pool and keeps its own for the fallback.
+ * `GroundSchedule` posts copies from its pool and keeps its own for the fallback. A job lost with its worker (it died holding it) is made here at
+ * its update and the next ones still go to the workers (the coordinator replaces a dying worker a few times, then lets it go: `none` when none
+ * is left); any other rejection (a worker that cannot run the kind) and nothing more is posted.
  */
 export const createCoordinatorGroundPort = (workers: WorkerCoordinator): GroundWorkerPort => {
   const handler = oneHandler()
@@ -106,8 +109,10 @@ export const createCoordinatorGroundPort = (workers: WorkerCoordinator): GroundW
         (result) => {
           if (!disposed) handler.get()?.(result)
         },
-        // a job the coordinator gave up (its worker kept dying): the tile is made here at its update, and nothing more is posted
-        () => void (failed = true),
+        // the tile is made here at its update; a job lost with its worker leaves the next ones to the workers, anything else posts nothing more
+        (error: unknown) => {
+          if (!isWorkerInputLost(error)) failed = true
+        },
       )
     },
     onTile: handler.set,
