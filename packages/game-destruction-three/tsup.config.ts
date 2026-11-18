@@ -22,4 +22,12 @@ export default defineConfig([
     external: ['three'],
     noExternal: [/^@adatechnology\//],
   },
+  // the ground worker (`createWorkerGroundPort`): a module (dist/ground-worker.js) and a classic script (dist/ground-worker.global.js) a host can start from a Blob; no three.js
+  {
+    entry: { 'ground-worker': 'src/ground-worker.ts' },
+    format: ['esm', 'iife'],
+    sourcemap: true,
+    target: 'es2020',
+    noExternal: [/^@adatechnology\//],
+  },
 ])

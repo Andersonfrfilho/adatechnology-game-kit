@@ -29,6 +29,8 @@ for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm build at the root first`)
 }
 const threeDir = join(pkg('game-test-room'), 'node_modules/three')
+// the engine's ground worker (`?groundWorker=1`) as a classic script: inlined, the page starts it from a Blob (no request)
+const groundWorkerSource = readFileSync(join(pkg('game-destruction-three'), 'dist/ground-worker.global.js'), 'utf8')
 
 // Two bundles of the same src/main.js: the BARE room (an empty room; the page the other test areas load their module into, kept in base/)
 // and the default page (the same room that loads the teams' content, see the end of this file).
@@ -45,7 +47,7 @@ async function bundleMain(full) {
     target: 'es2020',
     minify: process.env.ROOM_MINIFY !== '0',
     legalComments: 'none',
-    define: { __ROOM_FULL__: String(full) },
+    define: { __ROOM_FULL__: String(full), __GROUND_WORKER_SOURCE__: JSON.stringify(groundWorkerSource) },
     // the graphics screen is a subpath of game-graphics (`/screen`), named before its package
     alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
   })

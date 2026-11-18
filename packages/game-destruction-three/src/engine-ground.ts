@@ -70,7 +70,7 @@ const seriesOf = (n: number): ReadonlyArray<{ offset: number; width: number; row
 }
 
 /** The `samples` array of a tile of `n` cells. */
-const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (n + 1)
+export const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (n + 1)
 
 /**
  * The ground over a lattice in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what the tile's `groundAt` answers at each point

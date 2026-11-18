@@ -33,6 +33,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./ground-worker": "./dist/ground-worker.js",
+    "./ground-worker.global": "./dist/ground-worker.global.js",
     "./global": "./dist/index.global.js"
   },
   "files": [
@@ -42,7 +44,7 @@
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:jolt": "PIECE_SOLVER=jolt vitest run tests/drawn-solids.test.ts tests/engine-fast-chips.test.ts tests/engine-ground-inplace.test.ts tests/engine-ground.test.ts tests/ground-rise-lift.test.ts tests/loop-mode.test.ts tests/determinism.test.ts tests/engine-remove-wakes.test.ts tests/tether-forget.test.ts tests/load-loose-split.test.ts tests/engine-ground-net.test.ts"
+    "test:jolt": "PIECE_SOLVER=jolt vitest run tests/drawn-solids.test.ts tests/engine-fast-chips.test.ts tests/engine-ground-inplace.test.ts tests/engine-ground.test.ts tests/ground-rise-lift.test.ts tests/loop-mode.test.ts tests/determinism.test.ts tests/engine-remove-wakes.test.ts tests/tether-forget.test.ts tests/load-loose-split.test.ts tests/engine-ground-net.test.ts tests/engine-ground-worker.test.ts"
   },
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",

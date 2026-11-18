@@ -14,6 +14,12 @@ export const SOLID_RING = 0.2
 /** One cell's nine samples, for `holdsStep`. */
 const nine = new Float64Array(9)
 
+/**
+ * Where the ring reads the ground past the tile's edges: the host's `groundAt`, or a band read ahead of time (`engine-ground-job` `readGroundBand`), one height per half cell
+ * `(a, b)` at `(b + 2 * ring) * width + a + 2 * ring` (`width` = `2 * (cells + 2 * ring) + 1`), each the very height `groundAt` answers there. A worker has no `groundAt`.
+ */
+export type GroundSource = ((x: number, z: number) => number) | Float64Array
+
 export interface GroundRing {
   /** How many cells the ring is wide. */
   readonly cells: number
@@ -34,7 +40,8 @@ let cellBuild = new Uint32Array(0)
  * `heights` are the tile's own (already under its collision field), `fieldStep` how many read cells a neighbour's coarse collision cell spans: past the edge a corner is the lower of
  * the ground there and that coarse field at it (the neighbour collides with it or with the ground itself).
  */
-export const createGroundRing = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number, fieldStep = 1): GroundRing => {
+export const createGroundRing = (heights: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: GroundSource, fieldStep = 1): GroundRing => {
+  const band = typeof groundAt === 'function' ? null : groundAt
   const ring = Math.round(SOLID_RING / cell)
   const m = cells + 1
   const width = 2 * (cells + 2 * ring) + 1
@@ -56,7 +63,7 @@ export const createGroundRing = (heights: Float32Array, cells: number, x0: numbe
     if (sampleBuild[key] === mark) return heldSamples[key]!
     const x = x0 + (a / 2) * cell
     const z = z0 + (b / 2) * cell
-    const h = groundAt(x, z)
+    const h = band === null ? (groundAt as (x: number, z: number) => number)(x, z) : band[key]!
     heldSamples[key] = h
     sampleBuild[key] = mark
     read.push(x, z, h)

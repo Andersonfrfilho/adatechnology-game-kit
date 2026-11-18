@@ -1,5 +1,6 @@
 import { coarseStep, underBoth } from './engine-ground-collision'
 import { createGroundRing } from './engine-ground-ring'
+import type { GroundSource } from './engine-ground-ring'
 import { buildLowPyramid, reachOf } from './engine-ground-reach'
 
 /**
@@ -86,7 +87,7 @@ const thickWithin = (lean: number, low: number, high: number, lo: number, hi: nu
  * The blocks under a tile of `cells` cells of side `cell` from (`x0`, `z0`), over its `read` heights (`(cells + 1)^2`, x fastest) and the engine's coarser collision field of
  * them (`step`: every how many corners it is), and the ground around it (`groundAt`, read only past the tile's edges, up to `SOLID_RING`, and its collision field there too).
  */
-export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: (x: number, z: number) => number, step = 1): SolidVolume => {
+export const buildSolidVolume = (read: Float32Array, cells: number, x0: number, z0: number, cell: number, groundAt: GroundSource, step = 1): SolidVolume => {
   // under the drawn ground and the engine's collision field (every `step`-th corner, `engine-ground-collision`) both, whichever is lower at each corner
   const heights = underBoth(read, cells, step)
   const m = cells + 1

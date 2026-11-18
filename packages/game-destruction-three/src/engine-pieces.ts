@@ -2,9 +2,13 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
-import { buildGroundTile, flatTile, readGround, shapeGround } from './engine-ground'
+import { GROUND_CELL, buildGroundTile, flatTile, readGround, sampleCount, shapeGround } from './engine-ground'
 import type { GroundGrid, GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
+import { readGroundBand } from './engine-ground-job'
+import type { GroundWorkerPort } from './engine-ground-port'
+import { GroundSchedule } from './engine-ground-schedule'
+import type { PendingGround } from './engine-ground-schedule'
 import { SOLID_RING } from './engine-ground-ring'
 import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
@@ -37,7 +41,21 @@ export interface EnginePieceOptions {
   readonly blastTiles?: number
   /** Lay the ground under each part box of a piece of several parts, not under the box around all of them (default off: the same tiles as before). */
   readonly tilesUnderParts?: boolean
+  /**
+   * Where the tiles that read the ground are made (`GroundWorkerPort`; `RendererOptions.groundWorker`): with it, a tile asked for at update N is applied at N + `groundWorkerFrames`
+   * (`GroundSchedule`), the same tile whether the worker answered or not; a piece whose ground is not laid yet waits held still. Left out (the default), every tile is made in
+   * the update it is needed, as before. The engine owns the port once handed: `dispose` stops it.
+   */
+  readonly groundWorker?: GroundWorkerPort
+  /** Updates from asking for a tile to applying it under `groundWorker` (default `GROUND_WORKER_FRAMES`, at least 1). */
+  readonly groundWorkerFrames?: number
 }
+
+/** What is done with a tile a piece needs (`EnginePieces.groundOf`): laid at once, or asked of the schedule. */
+type TileVisit = (key: number, ix: number, iz: number) => void
+
+/** Updates from asking for a tile to applying it under `groundWorker` unless the host says otherwise (owner, 2026-11-17: 1 to 3 frames of delay accepted). */
+export const GROUND_WORKER_FRAMES = 2
 
 /** A piece's box seen from above (`EnginePieces.footprint`). */
 interface Footprint {
@@ -148,6 +166,8 @@ interface Link {
   sleeping: boolean
   /** The update it was last handed in (`update`): one not handed any more is removed. */
   seen: number
+  /** Held still while its ground is being made (`hold`): kinematic at rest in the engine, the piece's own pose and speeds kept for when it goes. */
+  frozen: boolean
   /** Its centre and vertical speed before the step, when it was awake (`readBack`). */
   readonly before: Vec3
   beforeVy: number
@@ -198,6 +218,14 @@ export class EnginePieces {
    */
   fellThrough = 0
   private readonly tiles = new Map<number, Tile>()
+  /** The tiles made off the main thread on a fixed schedule (`EnginePieceOptions.groundWorker`), or null. */
+  readonly schedule: GroundSchedule | null
+  /** The due tiles `applyDueGround` takes (kept, so an update makes no list). */
+  private readonly due: PendingGround[] = []
+  /** Whether a tile the piece being visited needs is not laid yet (`askAt`). */
+  private waits = false
+  /** The pieces held for their ground in this update (`layGroundLater`). */
+  private readonly waiting = new Set<PieceBody>()
   /** The blasts told since the last `prepare` (`layAhead`). */
   private readonly blasts: Array<{ x: number; z: number; radius: number }> = []
   /** The host's fixed things (`staticSolids`) as static bodies. */
@@ -231,6 +259,7 @@ export class EnginePieces {
     this.partQuaternion = new THREE.Quaternion()
     this.partCentre = new THREE.Vector3()
     this.statics = new EngineStatics(world, GROUND)
+    this.schedule = o.groundWorker ? new GroundSchedule(o.groundWorker, Math.max(1, Math.round(o.groundWorkerFrames ?? GROUND_WORKER_FRAMES))) : null
   }
 
   /** A piece not handed in this update goes (`update`; a callback made once, so the walk makes no entry per piece). */
@@ -267,9 +296,16 @@ export class EnginePieces {
       if (t.solid !== null) this.world.removeBody(t.solid)
     }
     this.tiles.clear()
+    this.schedule?.clear()
     this.blasts.length = 0
     this.statics.clear()
     this.ignored.clear()
+  }
+
+  /** Everything cleared and the ground worker stopped (`EnginePieceOptions.groundWorker`). */
+  dispose(): void {
+    this.clear()
+    this.schedule?.dispose()
   }
 
   /** A blast at (x, z): the tiles within `radius` of it that are not laid, or are marked, are laid at the start of the next `prepare`, after the ground the blast changed has been told. */
@@ -325,7 +361,8 @@ export class EnginePieces {
     }
     this.blasts.length = 0
     const nearest = [...wanted.values()].sort((a, b) => a.distance - b.distance || a.key - b.key)
-    for (const t of nearest.slice(0, this.o.blastTiles ?? BLAST_TILES)) this.layTile(t.key, t.ix, t.iz, this.tiles.get(t.key))
+    const visit = this.schedule ? this.askAt : this.layAt
+    for (const t of nearest.slice(0, this.o.blastTiles ?? BLAST_TILES)) visit(t.key, t.ix, t.iz)
   }
 
   /**
@@ -333,20 +370,24 @@ export class EnginePieces {
    * of it, whose solid reads the ground that far past their edges (`engine-ground-ring`): a neighbour's dig makes it again when it changed a sample it read.
    */
   private markDirty(x: number, z: number, radius: number): void {
+    for (const [key, tile] of this.tiles) tile.dirty = this.markOf(key, tile.dirty, x, z, radius)
+    // a fresh tile being made has no record yet: its mark waits on the schedule and goes onto the tile when applied
+    if (this.schedule) for (const [key, p] of this.schedule.pending) if (p.fresh) p.dirty = this.markOf(key, p.dirty, x, z, radius)
+  }
+
+  /** The tile's mark widened by the change at (x, z) when it reaches the tile or its ring, else as it was. */
+  private markOf(key: number, before: GroundRect | null, x: number, z: number, radius: number): GroundRect | null {
     const reach = radius + GROUND_REACH
-    for (const [key, tile] of this.tiles) {
-      const ix = Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN
-      const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
-      const nx = Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE))
-      const nz = Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE))
-      if (Math.hypot(nx - x, nz - z) > radius + SOLID_RING) continue
-      const before = tile.dirty
-      tile.dirty = {
-        minX: Math.min(before?.minX ?? Infinity, x - reach),
-        maxX: Math.max(before?.maxX ?? -Infinity, x + reach),
-        minZ: Math.min(before?.minZ ?? Infinity, z - reach),
-        maxZ: Math.max(before?.maxZ ?? -Infinity, z + reach),
-      }
+    const ix = Math.floor(key / TILE_KEY) - TILE_KEY_ORIGIN
+    const iz = (key % TILE_KEY) - TILE_KEY_ORIGIN
+    const nx = Math.max(ix * TILE, Math.min(x, (ix + 1) * TILE))
+    const nz = Math.max(iz * TILE, Math.min(z, (iz + 1) * TILE))
+    if (Math.hypot(nx - x, nz - z) > radius + SOLID_RING) return before
+    return {
+      minX: Math.min(before?.minX ?? Infinity, x - reach),
+      maxX: Math.max(before?.maxX ?? -Infinity, x + reach),
+      minZ: Math.min(before?.minZ ?? Infinity, z - reach),
+      maxZ: Math.max(before?.maxZ ?? -Infinity, z + reach),
     }
   }
 
@@ -365,15 +406,18 @@ export class EnginePieces {
     this.groundTurn(list)
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
+    // the tiles asked for `frames` updates ago, before anything asks again: at this update whatever the worker did
+    this.applyDueGround()
     this.layBlastGround()
     this.makeBodies(list)
     for (const b of list) this.sync(b, dt, h)
-    this.layGround(list, dt)
+    if (this.schedule) this.layGroundLater(list, dt)
+    else this.layGround(list, dt)
     this.keepApart(apart)
     for (const b of list) {
       const link = this.links.get(b)
       if (!link) continue
-      link.stepped = !b.held && !b.sleeping
+      link.stepped = !b.held && !b.sleeping && !link.frozen
       if (!link.stepped) continue
       const c = this.centre(b)
       link.before[0] = c.x
@@ -554,7 +598,7 @@ export class EnginePieces {
       const id = ids[i] as BodyId
       const link: Link = {
         id, groundAtSleep: NaN, user, shapeKey: this.shapeKey(b), shapeFrom: this.shapeFrom(b), pos: [c.x, c.y, c.z], quat: [q.x, q.y, q.z, q.w], vel: [...b.velocity], ang: [...b.angularVelocity],
-        held: b.held, sleeping: b.sleeping, seen: this.updates, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1], isSlipping: false,
+        held: b.held, sleeping: b.sleeping, seen: this.updates, frozen: false, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1], isSlipping: false,
       }
       this.links.set(b, link)
       this.byUser.set(user, b)
@@ -610,6 +654,7 @@ export class EnginePieces {
     // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved
     const moved = far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
     if (moved) this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
+    if (link.frozen) return this.keepFrozen(b, link, moved)
     // `tip` is the kit solver's push for a piece whose feet are thinner than its box; here the engine stands it on its parts as drawn, so it goes over by itself
     b.tipping = null
     if (!b.round && b.onGround && !b.sleeping) this.topple(b, dt)
@@ -841,30 +886,145 @@ export class EnginePieces {
    * circle around it (a 480 ms update in the room).
    */
   private layGround(list: readonly PieceBody[], dt: number): void {
-    for (const b of list) {
-      if (b.sleeping) continue
-      const c = this.centre(b)
-      const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
-      const swing = Math.hypot(b.angularVelocity[0] as number, b.angularVelocity[1] as number, b.angularVelocity[2] as number) * reach * Math.max(dt, 1 / 60)
-      // a 45 m wire the blast spun to 47 rad/s swings 53 m a frame: the circle around it was 4290 tiles (2.4 s), and it is 4 m up; past a few metres the next update lays what it reached
-      const margin = TILE_MARGIN + Math.min(swing, MAX_SWING)
-      // a fast one (a blast's chip) moves further than the margin in an update, and would land on ground not laid yet: the tiles are laid along its path too, a tile apart
-      const travel = Math.hypot(b.velocity[0] as number, b.velocity[1] as number, b.velocity[2] as number) * dt
-      const stops = travel > TILE_MARGIN ? Math.min(MAX_PATH_STOPS, Math.ceil(travel / TILE)) : 0
-      const x0 = c.x, y0 = c.y, z0 = c.z
-      for (let stop = 0; stop <= stops; stop++) {
-        const fraction = stops === 0 ? 0 : stop / stops
-        const at = stop === 0 ? c : this.u.set(x0 + (b.velocity[0] as number) * dt * fraction, y0, z0 + (b.velocity[2] as number) * dt * fraction)
-        this.layBeneath(b, at, margin)
-      }
+    for (const b of list) if (!b.sleeping) this.groundOf(b, dt, this.layAt)
+  }
+
+  /** Hands `visit` the tiles an awake piece needs in this update, in scan order: under and around it, and along its path when it is fast. */
+  private groundOf(b: PieceBody, dt: number, visit: TileVisit): void {
+    const c = this.centre(b)
+    const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
+    const swing = Math.hypot(b.angularVelocity[0] as number, b.angularVelocity[1] as number, b.angularVelocity[2] as number) * reach * Math.max(dt, 1 / 60)
+    // a 45 m wire the blast spun to 47 rad/s swings 53 m a frame: the circle around it was 4290 tiles (2.4 s), and it is 4 m up; past a few metres the next update lays what it reached
+    const margin = TILE_MARGIN + Math.min(swing, MAX_SWING)
+    // a fast one (a blast's chip) moves further than the margin in an update, and would land on ground not laid yet: the tiles are laid along its path too, a tile apart
+    const travel = Math.hypot(b.velocity[0] as number, b.velocity[1] as number, b.velocity[2] as number) * dt
+    const stops = travel > TILE_MARGIN ? Math.min(MAX_PATH_STOPS, Math.ceil(travel / TILE)) : 0
+    const x0 = c.x, y0 = c.y, z0 = c.z
+    for (let stop = 0; stop <= stops; stop++) {
+      const fraction = stops === 0 ? 0 : stop / stops
+      const at = stop === 0 ? c : this.u.set(x0 + (b.velocity[0] as number) * dt * fraction, y0, z0 + (b.velocity[2] as number) * dt * fraction)
+      this.beneath(b, at, margin, visit)
     }
   }
 
+  /** A tile `groundOf` names is laid now (without the ground worker). */
+  private readonly layAt: TileVisit = (key, ix, iz) => this.layTile(key, ix, iz, this.tiles.get(key))
+
+  /** A tile `groundOf` names is asked of the schedule (`askTile`); `waits` when no ground is laid there yet. */
+  private readonly askAt: TileVisit = (key, ix, iz) => {
+    const pending = (this.schedule as GroundSchedule).pending.get(key)
+    if (!pending) this.askTile(key, ix, iz, this.tiles.get(key))
+    if (!this.tiles.has(key)) this.waits = true
+  }
+
+  /**
+   * Under the ground worker: the tiles each awake piece needs are asked for (`askTile`); a piece with a tile that has no ground yet waits held still (`hold`) until the update the
+   * tile is applied at, then goes on (CLAUDE.md §12: never falling through ground that is not there). One whose tile is being made again stands on the old ground meanwhile.
+   */
+  private layGroundLater(list: readonly PieceBody[], dt: number): void {
+    const waiting = this.waiting
+    waiting.clear()
+    for (const b of list) {
+      if (b.sleeping) continue
+      this.waits = false
+      this.groundOf(b, dt, this.askAt)
+      if (this.waits && !b.held) waiting.add(b)
+    }
+    for (const b of list) this.hold(b, waiting.has(b))
+    waiting.clear()
+  }
+
+  /**
+   * A tile asked of the schedule: a level one the terrain's bounds prove is laid at once (it reads nothing); else its samples are read now (all of them, or again where it was
+   * marked) with the band its solid reads past its edges, and the tile is made from them off the main thread and applied `frames` updates on (`applyDueGround`).
+   */
+  private askTile(key: number, ix: number, iz: number, tile: Tile | undefined): void {
+    const schedule = this.schedule as GroundSchedule
+    const x0 = ix * TILE
+    const z0 = iz * TILE
+    const flat = this.flatAt(tile, x0, z0)
+    if (flat !== undefined) {
+      if (flat) this.install(key, ix, iz, tile, flat, () => NO_SOLID, null)
+      return
+    }
+    let samples: Float64Array
+    let wasCoarse = false
+    if (tile && tile.samples) {
+      const ringMoved = tile.dirty !== null && this.ringMoved(tile.volume, tile.dirty)
+      const changed = readGround(this.o.groundAt, tile.samples, x0, z0, TILE, tile.dirty ?? undefined, this.o.groundGrid)
+      tile.dirty = null
+      if (!changed && !ringMoved) return
+      samples = tile.samples
+      wasCoarse = !tile.slab && tile.collision.length < tile.heights.length
+    } else {
+      samples = new Float64Array(sampleCount(Math.round(TILE / GROUND_CELL)))
+      readGround(this.o.groundAt, samples, x0, z0, TILE, undefined, this.o.groundGrid)
+      if (tile) tile.dirty = null
+    }
+    const band = schedule.band(TILE)
+    readGroundBand(this.o.groundAt, band, x0, z0, TILE, this.o.groundGrid)
+    schedule.ask({ key, ix, iz, x0, z0, size: TILE, fresh: tile === undefined, wasCoarse, samples }, band, this.updates)
+  }
+
+  /** The tiles due at this update, laid in the order they were asked for: the worker's answer or the same tile made here (`GroundSchedule.resolve`). */
+  private applyDueGround(): void {
+    const schedule = this.schedule
+    if (!schedule) return
+    schedule.takeDue(this.updates, this.due)
+    for (const p of this.due) {
+      const made = schedule.resolve(p)
+      const tile = this.tiles.get(p.key)
+      this.install(p.key, p.ix, p.iz, tile, made, () => made.solid, tile ? tile.dirty : p.dirty)
+    }
+    this.due.length = 0
+  }
+
+  /**
+   * A piece held still while its ground is made (kinematic at rest: what falls on it lands on it, it does not fall), or let go when the ground is laid: dynamic again with the
+   * speeds the piece kept, awake or asleep as the piece is. A piece in a hand is never held for its ground (it is kinematic anyway).
+   */
+  private hold(b: PieceBody, wait: boolean): void {
+    const link = this.links.get(b)
+    if (!link || link.frozen === wait) return
+    link.frozen = wait
+    if (wait) {
+      this.world.setMotion(link.id, 'kinematic')
+      this.world.setVelocity(link.id, [0, 0, 0], [0, 0, 0])
+      return
+    }
+    if (b.held) return
+    this.world.setMotion(link.id, 'dynamic')
+    const v = b.velocity
+    const w = b.angularVelocity
+    this.world.setVelocity(link.id, [v[0], v[1], v[2]], [w[0], w[1], w[2]])
+    for (let i = 0; i < 3; i++) {
+      link.vel[i] = v[i]
+      link.ang[i] = w[i]
+    }
+    if (b.sleeping) this.world.sleep(link.id)
+    else this.world.wake(link.id)
+    link.sleeping = b.sleeping
+  }
+
+  /** A held piece the kit or the host moved (lifted out of risen ground, put out of a fixed thing) keeps that pose as the one to compare against; its speeds wait with it. */
+  private keepFrozen(b: PieceBody, link: Link, moved: boolean): void {
+    if (!moved) return
+    const c = this.centre(b)
+    const q = b.root.quaternion
+    link.pos[0] = c.x
+    link.pos[1] = c.y
+    link.pos[2] = c.z
+    link.quat[0] = q.x
+    link.quat[1] = q.y
+    link.quat[2] = q.z
+    link.quat[3] = q.w
+  }
+
   /** The tiles under what the piece is made of: with `tilesUnderParts`, its parts' boxes where it has them (a pole with its wires is 23 m across and mostly air); else its one box. */
-  private layBeneath(b: PieceBody, at: THREE_NS.Vector3, margin: number): void {
+  private beneath(b: PieceBody, at: THREE_NS.Vector3, margin: number, visit: TileVisit): void {
     const parts = b.partBoxes
     if (!this.o.tilesUnderParts || b.round || !parts || parts.length === 0) {
-      this.layAround(this.footprint(b, at), margin)
+      this.tilesAround(this.footprint(b, at), margin, visit)
       return
     }
     const q = b.root.quaternion
@@ -872,19 +1032,19 @@ export class EnginePieces {
       this.partCentre.set(part.center[0], part.center[1], part.center[2]).applyQuaternion(q).add(at)
       this.partQuaternion.copy(q)
       if (part.rotation) this.partQuaternion.multiply(this.turn3.set(part.rotation[0], part.rotation[1], part.rotation[2], part.rotation[3]))
-      this.layAround(this.footprintOf(part.half, this.partQuaternion, this.partCentre), margin)
+      this.tilesAround(this.footprintOf(part.half, this.partQuaternion, this.partCentre), margin, visit)
     }
   }
 
-  /** The tiles within `margin` of the footprint are laid, or laid again when their ground changed. */
-  private layAround(foot: Footprint, margin: number): void {
+  /** The tiles within `margin` of the footprint that are not laid, or whose ground changed, handed to `visit`. */
+  private tilesAround(foot: Footprint, margin: number, visit: TileVisit): void {
     for (let ix = Math.floor((foot.minX - margin) / TILE); ix <= Math.floor((foot.maxX + margin) / TILE); ix++) {
       for (let iz = Math.floor((foot.minZ - margin) / TILE); iz <= Math.floor((foot.maxZ + margin) / TILE); iz++) {
         const key = (ix + TILE_KEY_ORIGIN) * TILE_KEY + (iz + TILE_KEY_ORIGIN)
         const tile = this.tiles.get(key)
         if (tile && tile.dirty === null) continue
         if (!this.footprintReaches(foot, ix * TILE, iz * TILE, margin)) continue
-        this.layTile(key, ix, iz, tile)
+        visit(key, ix, iz)
       }
     }
   }
@@ -958,6 +1118,12 @@ export class EnginePieces {
       if (ringMoved && tile) this.relaySolid(tile, x0, z0)
       return
     }
+    // the solid is a function of the heights and the ground it read past the edges: the same of both, the same solid
+    this.install(key, ix, iz, tile, made, (moved) => (made.level !== null ? NO_SOLID : tile && !tile.slab && moved === null && !ringMoved ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells, this.o.groundAt, made.cells / made.collisionCells)), null)
+  }
+
+  /** The bodies of a tile brought to `made` (`layTile`): its solid from `volumeOf` the heights that moved (null: none); `dirty` the mark the new record keeps. */
+  private install(key: number, ix: number, iz: number, tile: Tile | undefined, made: GroundTile, volumeOf: (moved: HeightRegion | null) => SolidVolume, dirty: GroundRect | null): void {
     const slab = made.level !== null
     const moved = tile && !tile.slab && !slab ? changedHeights(tile.heights, made.heights, made.cells + 1) : null
     // the engine's field is the coarser collision grid (`engine-ground-collision`): what it moved there is what is written in place
@@ -974,10 +1140,9 @@ export class EnginePieces {
       if (steps !== null) this.world.removeBody(steps)
       steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
     }
-    // the solid is a function of the heights and the ground it read past the edges: the same of both, the same solid
-    const volume = slab ? NO_SOLID : tile && !tile.slab && moved === null && !ringMoved ? tile.volume : buildSolidVolume(made.heights, made.cells, x0, z0, TILE / made.cells, this.o.groundAt, made.cells / made.collisionCells)
+    const volume = volumeOf(moved)
     const laid = { ...made, solid: volume }
-    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty: null })
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty })
   }
 
   /** Whether a sample the solid read past the tile's edges, within the marked rectangle, is not the ground there now. */
@@ -1005,16 +1170,21 @@ export class EnginePieces {
    * the proof is exact (every sample is a blend of the vertices the tile covers), so a crater of any size under it takes the other way.
    */
   private flatOrRead(tile: Tile | undefined, x0: number, z0: number): GroundTile | null {
-    const range = this.o.groundRange?.(x0, x0 + TILE, z0, z0 + TILE)
-    if (range && range.high - range.low <= FLAT_SPAN) {
-      const level = this.o.groundAt(x0 + TILE / 2, z0 + TILE / 2)
-      if (tile?.slab && tile.level === level) {
-        tile.dirty = null
-        return null
-      }
-      return flatTile(level, TILE)
-    }
+    const flat = this.flatAt(tile, x0, z0)
+    if (flat !== undefined) return flat
     return tile && tile.samples ? this.readTile(tile, tile.samples, x0, z0) : buildGroundTile(this.o.groundAt, x0, z0, TILE, false, this.o.groundGrid)
+  }
+
+  /** The level tile the terrain's bounds prove, null (the mark cleared) when it is the slab laid there already, undefined when they do not prove it level. */
+  private flatAt(tile: Tile | undefined, x0: number, z0: number): GroundTile | null | undefined {
+    const range = this.o.groundRange?.(x0, x0 + TILE, z0, z0 + TILE)
+    if (!range || range.high - range.low > FLAT_SPAN) return undefined
+    const level = this.o.groundAt(x0 + TILE / 2, z0 + TILE / 2)
+    if (tile?.slab && tile.level === level) {
+      tile.dirty = null
+      return null
+    }
+    return flatTile(level, TILE)
   }
 
   /** The tile as the ground is now, its marked samples read again; null (and the mark cleared) when none of them changed. */
@@ -1112,7 +1282,7 @@ export class EnginePieces {
   /** Writes the body back to the piece, then the kit's rules: the sweep against walls, hard landings, `still` for the budget. */
   private readBack(b: PieceBody, dt: number, time: number): void {
     const link = this.links.get(b)
-    if (!link || b.held) return
+    if (!link || b.held || link.frozen) return
     // asleep on both sides since the last update: the engine has not moved it, there is nothing to read
     if (link.sleeping && b.sleeping && this.world.isSleeping(link.id)) {
       b.still = 0

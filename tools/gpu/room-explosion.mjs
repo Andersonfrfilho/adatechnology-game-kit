@@ -26,7 +26,7 @@
 // Environment (all optional):
 //   ROOM_EXPLOSION_THROTTLES=1,2,4,6       the CPU slow-down levels measured
 //   ROOM_EXPLOSION_GATE_THROTTLES=1        the levels that block (exit 1); the others are reported with their verdict
-//   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
+//   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt-d4-worker (the same with the engine's ground tiles made in a worker, `?groundWorker=1`), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
 //   ROOM_EXPLOSION_KINDS=blast,hammer      blast, hammer and crater are the kinds; `crater` is opt-in (a third kind is a third more nightly minutes, and main has no base cell for it yet), see below
 //   ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_WEATHER=none            none, storm (60 mm/h rain, wind) and/or fog (60 m): comma list; each kind then runs once per weather as `blast+storm`. Weather or ROOM_EXPLOSION_RENDER=1 also times one render per frame
@@ -43,7 +43,7 @@ const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
 /** The stages of the worst-frames table (ROOM_EXPLOSION_STAGE_*): each is the time spent in the method itself, without the stages it calls (`other` is the rest of the update). */
 export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHost', 'groundBody', 'pieceBodies', 'layGround', 'layTile', 'waterAt', 'ripple', 'joltStep', 'bridgeReads', 'readBack']
-export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', jolt: '&solver=jolt', own: '' })
+export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0', 'jolt-d4-worker': '&solver=jolt&blastDebris=1&groundWorker=1', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
 /** The kinds of explosion one round fires. */
