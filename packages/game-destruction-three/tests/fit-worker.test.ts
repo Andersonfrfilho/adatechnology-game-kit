@@ -130,7 +130,8 @@ describe('the fit worker: the boxes of ranged parts fitted off the main thread',
       expect(worker.posted).toBe(1 + withWorker.partIds.length)
       worker.deliver()
       const relay = internals(withWorker).fitRelay!
-      expect(relay.stats).toMatchObject({ posted: 4, answered: 4, taken: 4, stale: 0, failed: 0 })
+      const parts = withWorker.partIds.length
+      expect(relay.stats).toMatchObject({ posted: parts, answered: parts, taken: parts, stale: 0, failed: 0 })
       const boxes = splitBoxes(withWorker)
       expect(mainFits - before).toBe(referenceSplitFits)
       expect(bitsOf(boxes)).toEqual(bitsOf(referenceBoxes))
@@ -170,6 +171,69 @@ describe('the fit worker: the boxes of ranged parts fitted off the main thread',
     expect(worker.posted).toBe(posted)
     expect(mainFits - before).toBe(4)
     expect(bitsOf(splitBoxes(crashing))).toEqual(bitsOf(splitBoxes(reference)))
+  })
+
+  it('replaces a kept fit of other numbers with the answer when the part moved between the post and the answer, and keeps one of the same numbers', () => {
+    const worker = fakeWorker()
+    const house = rangedHouse({ renderer: { fitWorker: createWorkerFitPort(worker) } })
+    const kept = internals(house).fittedBoxes
+    // fitted on the main thread where it stands now (the whole object made a piece reads every part)
+    house.renderer.makePiece('house')
+    const atFirst = new Map(kept)
+    expect(atFirst.size).toBe(house.partIds.length)
+    // the drawing moves in its object: the parts are other numbers, so the queued prefit posts them all
+    house.mesh.position.x += 0.75
+    house.mesh.updateMatrixWorld(true)
+    house.renderer.deferredQueue().flush()
+    const relay = internals(house).fitRelay!
+    expect(relay.stats.posted).toBe(house.partIds.length)
+    worker.deliver()
+    expect(relay.stats.taken).toBe(house.partIds.length)
+    for (const [mv, entry] of kept) {
+      expect(entry).not.toBe(atFirst.get(mv))
+      expect(bitsOf(entry.boxes)).toEqual(bitsOf(fitOrientedBoxes(entry.points, entry.triangles)))
+    }
+    // what the split reads now is the moved drawing: no fit on the main thread
+    const before = mainFits
+    house.renderer.makePiece('house')
+    expect(mainFits).toBe(before)
+    // an answer of the very numbers kept leaves the kept fit alone
+    const [mv, entry] = [...kept][0]!
+    const take = (internals(house).fitRelay as unknown as { take: (key: unknown, fit: unknown) => boolean }).take
+    expect(take({ b: (house.renderer as unknown as { bounds: Map<string, unknown> }).bounds.get('house'), mv }, { ...entry, boxes: [] })).toBe(false)
+    expect(kept.get(mv)).toBe(entry)
+  })
+
+  it('counts the fits in flight as failed when the worker fails, takes nothing that comes after, and fits them on the main thread', () => {
+    const worker = fakeWorker()
+    const house = rangedHouse({ renderer: { fitWorker: createWorkerFitPort(worker) } })
+    const reference = rangedHouse({ renderer: { fitBoxesAhead: false } })
+    house.renderer.deferredQueue().flush()
+    const relay = internals(house).fitRelay!
+    expect(relay.inFlight).toBe(house.partIds.length + 1)
+    worker.onerror?.({ message: 'lost' })
+    expect(relay.stats.failed).toBe(house.partIds.length)
+    expect(relay.inFlight).toBe(0)
+    expect(relay.live).toBe(false)
+    expect(worker.terminated).toBe(true)
+    worker.deliver()
+    expect(relay.stats.taken).toBe(0)
+    expect(internals(house).fittedBoxes.size).toBe(0)
+    expect(bitsOf(splitBoxes(house))).toEqual(bitsOf(splitBoxes(reference)))
+  })
+
+  it.each(['messageerror', 'not an answer'] as const)('treats a %s from the worker as a failure: terminated, never posted to again', (kind) => {
+    const worker = fakeWorker()
+    const house = rangedHouse({ renderer: { fitWorker: createWorkerFitPort(worker) } })
+    if (kind === 'messageerror') worker.onmessageerror?.({ data: null })
+    else worker.onmessage?.({ data: { id: 'x', ok: true, points: [], triangles: [] } })
+    const relay = internals(house).fitRelay!
+    expect(relay.live).toBe(false)
+    expect(worker.terminated).toBe(true)
+    const posted = worker.posted
+    house.renderer.deferredQueue().flush()
+    expect(worker.posted).toBe(posted)
+    expect(internals(house).fittedBoxes.size).toBe(house.partIds.length)
   })
 
   it('takes nothing from an answer that failed in the worker: the part is fitted at the split', () => {

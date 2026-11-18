@@ -2753,9 +2753,14 @@ class Renderer implements DestructionRenderer {
     this.fitRelay?.post({ b, mv }, points, triangles)
   }
 
-  /** A fit worker's answer into the cache, while the part still hangs on the object it was posted for and nothing fitted it since. */
+  /**
+   * A fit worker's answer into the cache, while the part still hangs on the object it was posted for. A kept fit of the very same numbers stays (the answer is the same bits);
+   * one of other numbers (the part moved or was dented since) is replaced, as `fitRanged` replaces it: the cache holds one fit per part, and the next read compares exactly.
+   */
   private takeFitted(b: Bound, mv: MeshVis, fit: { readonly points: readonly number[]; readonly triangles: readonly number[]; readonly boxes: OrientedBox[] }): boolean {
-    if (this.disposed || this.bounds.get(b.id) !== b || mv.loose || !mv.range || this.fittedBoxes.has(mv)) return false
+    if (this.disposed || this.bounds.get(b.id) !== b || mv.loose || !mv.range) return false
+    const kept = this.fittedBoxes.get(mv)
+    if (kept && sameNumbers(kept.points, fit.points) && sameNumbers(kept.triangles, fit.triangles)) return false
     this.fittedBoxes.set(mv, fit)
     return true
   }

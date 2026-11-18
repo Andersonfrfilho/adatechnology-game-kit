@@ -7,6 +7,8 @@ import type { ShapeJob, ShapeReply } from './worker'
 export interface WorkerLike {
   onmessage: ((event: { data: unknown }) => void) | null
   onerror?: ((event: unknown) => void) | null
+  /** A message that could not be read on arrival (a browser `Worker`'s `messageerror`): a user that cannot do without its answers treats it as a failure. */
+  onmessageerror?: ((event: unknown) => void) | null
   postMessage(message: unknown, transfer?: ArrayBuffer[]): void
   terminate(): unknown
 }
