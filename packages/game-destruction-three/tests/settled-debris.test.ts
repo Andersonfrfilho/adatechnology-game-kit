@@ -281,9 +281,9 @@ describe('a batched fragment woken without the batch letting it go first', () =>
     for (let i = 0; i < 20; i++) {
       system.spawn({ id: `f${i}`, shape: 'chunk', center: [i * 0.3, 0.5, 0], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], size: [0.1, 0.06, 0.08], material: 'brick', mass: 0.3 } as never, brick, 'h', 100)
     }
+    // the renderer's order: the fragments, then the batches, then the render's matrices
     const frame = (): void => {
       system.update(1 / 30)
-      scene.updateMatrixWorld(true)
       batches.update(1 / 30, () => system.restingMeshes())
       scene.updateMatrixWorld(true)
     }
@@ -301,5 +301,39 @@ describe('a batched fragment woken without the batch letting it go first', () =>
     const hidden = meshes.filter((mesh) => mesh.layers.mask === 1 << BATCHED_LAYER).length
     expect(hidden).toBeLessThanOrEqual(batches.stats().batched)
     expect(meshes.some((mesh) => mesh.layers.mask === 1 << INSTANCED_FRAGMENT_LAYER)).toBe(false)
+  })
+})
+
+describe('a fragment woken while its batch waits to be merged (a merge budget)', () => {
+  it('is not merged under the instance layer, and nothing at rest is left hidden on it', async () => {
+    const { SettledBatches } = await import('../src/settled-batches')
+    const { INSTANCED_FRAGMENT_LAYER } = await import('../src/fragment-instances')
+    const scene = new THREE.Scene()
+    const system = new FragmentSystem(THREE, { scene, gravity: 9.8, groundAt: () => 0, life: 0, max: 100 } as unknown as FragmentSystemOptions)
+    const batches = new SettledBatches(THREE, scene, { budgetMs: 2 })
+    const brick = system.materialFor('brick', 0x9a4a3a, false)
+    for (let i = 0; i < 20; i++) {
+      system.spawn({ id: `f${i}`, shape: 'chunk', center: [i * 0.3, 0.5, 0], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], size: [0.1, 0.06, 0.08], material: 'brick', mass: 0.3 } as never, brick, 'h', 100)
+    }
+    for (let k = 0; k < 150; k++) {
+      system.update(1 / 30)
+      scene.updateMatrixWorld(true)
+    }
+    const meshes = system.meshes()
+    // made: the meshes are grouped, nothing merged yet (the merge waits for the next update's budget)
+    batches.update(1 / 30, () => system.restingMeshes())
+    expect(meshes.some((mesh) => mesh.layers.isEnabled(BATCHED_LAYER))).toBe(false)
+    system.blast([3, 0, 0], 5, 4)
+    const frame = (): void => {
+      system.update(1 / 30)
+      batches.update(1 / 30, () => system.restingMeshes())
+      scene.updateMatrixWorld(true)
+    }
+    frame()
+    expect(system.instanceStats().drawn).toBeGreaterThan(0)
+    for (let k = 0; k < 300; k++) frame()
+    expect(system.restingMeshes()).toHaveLength(20)
+    expect(meshes.some((mesh) => mesh.layers.mask === 1 << INSTANCED_FRAGMENT_LAYER)).toBe(false)
+    expect(meshes.filter((mesh) => mesh.layers.mask === 1 << BATCHED_LAYER).length).toBeLessThanOrEqual(batches.stats().batched)
   })
 })

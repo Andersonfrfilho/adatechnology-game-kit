@@ -97,11 +97,14 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   root.updateMatrixWorld(true)
   const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
   const groups = new Map<string, Mesh[]>()
+  // the layers each mesh had when grouped: one whose layers changed before its group is merged (another drawer took it) is not merged
+  const groupedMasks = new Map<Mesh, number>()
   root.traverse((object) => {
     const mesh = object as Mesh
     if (!mesh.isMesh || !isShown(mesh, root) || !isBatchable(mesh) || !include(mesh)) return
     const key = signatureOf(mesh, options.materialKey ?? uuidOf)
     groups.set(key, [...(groups.get(key) ?? []), mesh])
+    groupedMasks.set(mesh, mesh.layers.mask)
   })
   const group = new THREE.Group()
   group.name = 'static-batches'
@@ -110,8 +113,9 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   const mergeSome = (deadline: number): void => {
     while (pending.length > 0) {
       const meshes = pending.shift() as Mesh[]
-      // a mesh that changed while it waited is left to draw on its own
-      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, { meshes, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, onBatch: options.onBatch }))
+      // a mesh that changed while it waited (hidden, no longer included, its layers set by another drawer) is left as it is; the rest of its group is merged
+      const still = meshes.filter((mesh) => isShown(mesh, root) && include(mesh) && mesh.layers.mask === groupedMasks.get(mesh))
+      if (still.length >= 2) sources.push(...mergeGroup(THREE, { meshes: still, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, onBatch: options.onBatch }))
       if (performance.now() >= deadline) return
     }
   }
@@ -154,6 +158,8 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     stats: () => ({ batches: group.children.length, batched: sources.filter((source) => !source.released).length, released }),
     dispose() {
       for (const source of sources) if (!source.released) source.mesh.layers.mask = source.mask
+      pending.length = 0
+      groupedMasks.clear()
       group.removeFromParent()
       for (const child of group.children) {
         ;(child as Mesh).geometry.dispose()

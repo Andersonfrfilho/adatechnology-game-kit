@@ -97,8 +97,10 @@ export class FragmentInstances {
     const members = slot.bucket.members
     const last = members.pop()
     const instanced = slot.bucket.mesh
-    const lastSlot = last === undefined ? undefined : this.slots.get(last)
-    if (last !== undefined && last !== mesh && lastSlot) {
+    if (last === undefined) throw new Error('FragmentInstances: a member has a slot in an empty bucket')
+    if (last !== mesh) {
+      const lastSlot = this.slots.get(last)
+      if (!lastSlot) throw new Error('FragmentInstances: the last member of a bucket has no slot')
       members[slot.index] = last
       lastSlot.index = slot.index
       // drawn right even before the next sync (a fragment taken away between an update and the render)
@@ -110,8 +112,8 @@ export class FragmentInstances {
   }
 
   /**
-   * Copies the members' transforms into the instances and wraps them in their bounds. A member whose geometry, material or marks changed moves to where it now belongs; one
-   * whose layers were set from outside (a batcher giving back the mask it kept) keeps that mask to get back and is hidden again, and one a batch took draws by the batch.
+   * Copies the members' transforms into the instances and wraps them in their bounds. A member whose geometry, material or marks changed moves to where it now belongs.
+   * A member whose layers were set from outside (a batcher handing back the mask it kept for it) gets that mask back when it leaves, and is hidden again now.
    */
   sync(): void {
     for (const [mesh, slot] of this.slots) {
@@ -160,7 +162,8 @@ export class FragmentInstances {
     const array = mesh.instanceMatrix.array as Float32Array
     const reach = this.reachOf(mesh.geometry)
     let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity
-    members.forEach((member, i) => {
+    for (let i = 0; i < members.length; i++) {
+      const member = members[i] as THREE_NS.Mesh
       member.updateMatrix()
       array.set(member.matrix.elements, i * 16)
       const { x, y, z } = member.position
@@ -170,7 +173,7 @@ export class FragmentInstances {
       if (x > maxX) maxX = x
       if (y > maxY) maxY = y
       if (z > maxZ) maxZ = z
-    })
+    }
     const sphere = this.sphere
     sphere.center.set((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2)
     let radius = 0

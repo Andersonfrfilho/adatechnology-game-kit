@@ -118,6 +118,25 @@ describe('createStaticBatcher with a budget', () => {
     expect(batcher.stats().batches).toBe(2)
     expect(drawn(parts[0]!)).toBe(false)
   })
+  it('leaves out of a waiting group a mesh another drawer took (its layers changed) or that was hidden, and merges the rest', () => {
+    const { root, parts } = car()
+    const extra = new THREE.Mesh(parts[0]!.geometry, parts[0]!.material)
+    root.add(extra)
+    const batcher = createStaticBatcher(THREE, root, { budgetMs: 0 })
+    parts[1]!.layers.set(29)
+    parts[2]!.visible = false
+    batcher.update()
+    batcher.update()
+    // the taken mesh keeps the layer it was given and is not batched; it never gets the grouped layers back from a dispose
+    expect(parts[1]!.layers.mask).toBe(1 << 29)
+    expect(drawn(parts[0]!)).toBe(false)
+    expect(drawn(extra)).toBe(false)
+    // the two paint meshes left and the two panes
+    expect(batcher.stats().batched).toBe(4)
+    batcher.dispose()
+    expect(parts[1]!.layers.mask).toBe(1 << 29)
+    expect(drawn(parts[0]!) && drawn(extra)).toBe(true)
+  })
 })
 
 describe('createStaticBatcher with every mesh of a batch released', () => {
