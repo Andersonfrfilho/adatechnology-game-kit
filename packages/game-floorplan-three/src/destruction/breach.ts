@@ -187,7 +187,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     /** A world point in the house's own space (the space of the structure's parts). */
     const local = (p: number[]): number[] => {
-      house.updateMatrixWorld(true)
+      // only the house itself (and its parents): the point needs its matrix, not the ~1,300 parts under it
+      house.updateWorldMatrix(true, false)
       const v = house.worldToLocal(tmp.p.set(p[0]!, p[1]!, p[2]!))
       return [v.x, v.y, v.z]
     }
@@ -352,7 +353,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       }
       mesh.position.copy(it.mesh.position); mesh.quaternion.copy(it.mesh.quaternion); mesh.scale.copy(it.mesh.scale)
       mesh.castShadow = it.mesh.castShadow; mesh.receiveShadow = it.mesh.receiveShadow; mesh.renderOrder = it.mesh.renderOrder
-      mesh.onBeforeRender = () => { house.updateMatrixWorld(); toHouse.value.copy(house.matrixWorld).invert().multiply(mesh.matrixWorld) }
+      mesh.onBeforeRender = () => { house.updateWorldMatrix(true, false); toHouse.value.copy(house.matrixWorld).invert().multiply(mesh.matrixWorld) }
       it.mesh.parent!.add(mesh)
       mesh.updateMatrixWorld(true)
       toHouse.value.copy(house.matrixWorld).invert().multiply(mesh.matrixWorld)
@@ -391,9 +392,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     /** The box, in the house's space, of what the merged mesh draws of a wall (its ranges, as the house built them): no unit of its damage goes past it. */
     function drawnBounds(items: StructureRangeItem[]): number[] {
-      house.updateMatrixWorld(true)
+      // the house and the chain over each mesh, not the whole tree under the house
+      house.updateWorldMatrix(true, false)
       const box = new THREE.Box3(), toHouse = new THREE.Matrix4().copy(house.matrixWorld).invert()
       for (const it of items) {
+        it.mesh.updateWorldMatrix(true, false)
         const a = it.mesh.userData._p0 || it.mesh.geometry.attributes.position.array
         tmp.m.multiplyMatrices(toHouse, it.mesh.matrixWorld)
         for (let k = it.v0; k < it.v1; k++) box.expandByPoint(tmp.p.set(a[k * 3], a[k * 3 + 1], a[k * 3 + 2]).applyMatrix4(tmp.m))
@@ -594,7 +597,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * axes turned by its world rotation.
      */
     function chipBox(chip: { center: number[]; size: number[]; rotation: number[] }, alongU: boolean) {
-      house.updateMatrixWorld(true)
+      house.updateWorldMatrix(true, false)
       const q = tmp.q.set(chip.rotation[0]!, chip.rotation[1]!, chip.rotation[2]!, chip.rotation[3]!).premultiply(house.getWorldQuaternion(new THREE.Quaternion()).invert())
       let a = 0, u = 0
       for (let k = 0; k < 3; k++) {
