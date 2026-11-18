@@ -5,6 +5,7 @@ import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/
 import type { Kernel, Shared } from '../kernel-types.js'
 
 import type { BreachChange, BreachViewOptions, HouseStructurePart, StructureRangeItem } from './types.js'
+import { stampMask } from './stamp-mask.js'
 export type { BreachViewOptions }
 
 /**
@@ -548,17 +549,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const ragged = (s: number, y: number) => 0.6 * noise2(s, y, 0.03) + 0.4 * noise2(s + 7.3, y - 3.1, 0.011)
       mask.data.fill(0)
       core.data.fill(0)
-      const stamp = (m: WallMask, s0: number, s1: number, y0: number, y1: number, inside: (s: number, y: number) => boolean) => {
-        const i0 = Math.max(0, Math.floor((s0 - reach) / m.len * m.w)), i1 = Math.min(m.w - 1, Math.ceil((s1 + reach) / m.len * m.w))
-        const j0 = Math.max(0, Math.floor((y0 - reach - m.y0) / m.height * m.h)), j1 = Math.min(m.h - 1, Math.ceil((y1 + reach - m.y0) / m.height * m.h))
-        for (let j = j0; j <= j1; j++) {
-          const y = m.y0 + (j + 0.5) / m.h * m.height
-          for (let i = i0; i <= i1; i++) {
-            const s = (i + 0.5) / m.w * m.len
-            if (inside(s, y)) m.data[j * m.w + i] = 255
-          }
-        }
-      }
+      const stamp = (m: WallMask, s0: number, s1: number, y0: number, y1: number, inside: (s: number, y: number) => boolean) => stampMask(m, { s0, s1, y0, y1, reach }, inside)
       const plaster = (d: number, s: number, y: number) => d <= SPALL_MIN + SPALL_RAGGED * ragged(s, y)
       for (const c of holes) stamp(mask, c.a, c.b, c.y0, c.y1, (s, y) => plaster(boxDistance(s, y, c.a, c.b, c.y0, c.y1), s, y))
       for (const d of discs) stamp(mask, d.s - d.r, d.s + d.r, d.y - d.r, d.y + d.r, (s, y) => plaster(Math.max(0, Math.hypot(s - d.s, y - d.y) - d.r), s, y))
