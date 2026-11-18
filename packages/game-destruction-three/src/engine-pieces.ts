@@ -27,6 +27,11 @@ export interface EnginePieceOptions {
   readonly groundRange?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   /** `groundAt` over a lattice in one pass, to the bit (`GroundGrid`): a tile reads its samples through it instead of a call each. Without it every sample is a call. */
   readonly groundGrid?: GroundGrid
+  /**
+   * The rolling resistance (C_rr) of the ground's surface at (x, z), from its material (`TerrainMaterial.rolling`), or undefined for the default (`ROLLING_RESISTANCE`, a hard
+   * floor). A tile of ground has the one at its middle (`tileRollingAt`): a round piece on it rolls by the larger of its own and that one.
+   */
+  readonly groundRollingAt?: (x: number, z: number) => number | undefined
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
@@ -100,6 +105,13 @@ const MU_STATIC = 0.7
 const ROLLING_RESISTANCE = 0.015
 const MU_DYNAMIC = 0.6
 const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE }
+
+/**
+ * The rolling resistance of the ground at (x, z) as both solvers read it: the surface at the middle of the tile it falls in (the engine's ground is one body a tile), so
+ * a tile across a road's edge is all road or all verge, the same in the kit's solver and the engine's. Undefined: the default.
+ */
+export const tileRollingAt = (rollingAt: (x: number, z: number) => number | undefined, x: number, z: number): number | undefined =>
+  rollingAt((Math.floor(x / TILE) + 0.5) * TILE, (Math.floor(z / TILE) + 0.5) * TILE)
 const STILL_SPEED = 0.12
 const STILL_SPIN = 0.45
 const HARD_LANDING = 3
@@ -196,6 +208,8 @@ interface Tile {
   level: number | null
   /** Where the host said the ground changed (world x and z, widened by `GROUND_REACH`): only the samples there are read again. Null when it did not. */
   dirty: GroundRect | null
+  /** The surface its bodies have (`groundMaterial`): set again on them when the ground there turns to another (a blast takes the asphalt off the soil). */
+  material: Material
 }
 
 /**
@@ -218,6 +232,8 @@ export class EnginePieces {
    */
   fellThrough = 0
   private readonly tiles = new Map<number, Tile>()
+  /** The ground's surfaces by rolling resistance (`groundMaterial`): one object each, so a tile tells a change of surface by identity. */
+  private readonly groundMaterials = new Map<number, Material>()
   /** The tiles made off the main thread on a fixed schedule (`EnginePieceOptions.groundWorker`), or null. */
   readonly schedule: GroundSchedule | null
   /** The due tiles `applyDueGround` takes (kept, so an update makes no list). */
@@ -1165,17 +1181,36 @@ export class EnginePieces {
     const sameField = tile !== undefined && tile.collision.length === made.collision.length
     const movedField = tile && !tile.slab && !slab && moved ? (sameField ? changedHeights(tile.collision, made.collision, fieldSize) : { x: 0, z: 0, sizeX: fieldSize, sizeZ: fieldSize }) : null
     const kept = tile !== undefined && tile.slab === slab
-    const ground = kept ? tile.ground : this.replaceGround(tile, made, ix, iz)
+    const material = this.groundMaterial(ix, iz)
+    const ground = kept ? tile.ground : this.replaceGround(tile, made, ix, iz, material)
     const writes = kept ? this.updateGround(tile, made, movedField, ix, iz) : 0
     let steps = tile?.steps ?? null
     const same = tile !== undefined && sameNumbers(tile.boxes, made.boxes)
     if (!same) {
       if (steps !== null) this.world.removeBody(steps)
-      steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+      steps = made.boxes.length === 0 ? null : this.world.createBody({ shape: this.stepBoxes(made.boxes), motion: 'static', position: [0, 0, 0], material, user: 0 })
     }
     const volume = volumeOf(moved)
     const laid = { ...made, solid: volume }
-    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid: this.layVolume(laid, tile), volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty })
+    const solid = this.layVolume(laid, tile, material)
+    if (tile && tile.material !== material) {
+      this.world.setMaterial(ground, material)
+      if (steps !== null) this.world.setMaterial(steps, material)
+      if (solid !== null) this.world.setMaterial(solid, material)
+    }
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid, volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty, material })
+  }
+
+  /** The surface of the tile's bodies: the ground's own rolling resistance at its middle (`tileRollingAt`), one shared object per value; `GROUND` without the host's. */
+  private groundMaterial(ix: number, iz: number): Material {
+    const rolling = this.o.groundRollingAt ? tileRollingAt(this.o.groundRollingAt, ix * TILE, iz * TILE) : undefined
+    if (rolling === undefined || rolling === ROLLING_RESISTANCE) return GROUND
+    let material = this.groundMaterials.get(rolling)
+    if (!material) {
+      material = { ...GROUND, rolling }
+      this.groundMaterials.set(rolling, material)
+    }
+    return material
   }
 
   /** Whether a sample the solid read past the tile's edges, within the marked rectangle, is not the ground there now. */
@@ -1194,7 +1229,7 @@ export class EnginePieces {
     const cells = Math.round(Math.sqrt(tile.heights.length)) - 1
     const collisionCells = Math.round(Math.sqrt(tile.collision.length)) - 1
     const volume = buildSolidVolume(tile.heights, cells, x0, z0, TILE / cells, this.o.groundAt, cells / collisionCells)
-    tile.solid = this.layVolume({ heights: tile.heights, cells, collision: tile.collision, collisionCells, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile)
+    tile.solid = this.layVolume({ heights: tile.heights, cells, collision: tile.collision, collisionCells, boxes: tile.boxes, solid: volume, level: null, samples: tile.samples }, tile, tile.material)
     tile.volume = volume
   }
 
@@ -1248,20 +1283,20 @@ export class EnginePieces {
   }
 
   /** A tile that is new, or went from a slab to a height field or back: its ground body made anew. */
-  private replaceGround(tile: Tile | undefined, made: GroundTile, ix: number, iz: number): BodyId {
+  private replaceGround(tile: Tile | undefined, made: GroundTile, ix: number, iz: number, material: Material): BodyId {
     if (tile) this.world.removeBody(tile.ground)
-    if (made.level === null) return this.world.createBody({ shape: this.heightField(made, ix, iz), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
-    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material: GROUND, user: 0 })
+    if (made.level === null) return this.world.createBody({ shape: this.heightField(made, ix, iz), motion: 'static', position: [0, 0, 0], material, user: 0 })
+    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
   }
 
   /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Boxes only: a box costs nothing to make, a hull did (T3.8ag). */
-  private layVolume(t: GroundTile, tile: Tile | undefined): BodyId | null {
+  private layVolume(t: GroundTile, tile: Tile | undefined, material: Material): BodyId | null {
     const id = tile?.solid ?? null
     if (t.level !== null) {
       if (id !== null) this.world.removeBody(id)
       return null
     }
-    if (id === null) return this.world.createBody({ shape: this.solidShape(t.solid), motion: 'static', position: [0, 0, 0], material: GROUND, user: 0 })
+    if (id === null) return this.world.createBody({ shape: this.solidShape(t.solid), motion: 'static', position: [0, 0, 0], material, user: 0 })
     if (tile && t.solid !== tile.volume && !sameSolid(tile.volume, t.solid)) this.world.setShape(id, this.solidShape(t.solid))
     return id
   }

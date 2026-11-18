@@ -44,6 +44,11 @@ export interface TerrainMaterial {
   readonly breach?: TerrainBreachResponse
   /** What a foot does on it. */
   readonly footing?: TerrainFooting
+  /**
+   * Its rolling resistance (C_rr) to a round thing rolling on it (a can, a rod, a casing): the moment C_rr x weight x radius that slows the roll. Soft ground (sand, mud,
+   * grass) gives under the roller and holds it back far more than a hard one (asphalt, concrete). Left out: the host's default (a hard floor).
+   */
+  readonly rolling?: number
   /** Liquid (of the fluids catalogue) a blow on it throws up. */
   readonly splash?: string
   /** Its pieces do not join the ground where they land: they stay as loose stones. */

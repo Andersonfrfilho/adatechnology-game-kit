@@ -127,6 +127,12 @@ export interface RendererOptions {
    * on is this, because every drawn fixed thing is a body of its own there (`staticSolids`) and a top in both would be ground twice. Default `groundAt`; the kit's own solver ignores it.
    */
   terrainAt?: (x: number, z: number) => number
+  /**
+   * The rolling resistance (C_rr) of the terrain's surface at (x, z), from its material (`TerrainMaterial.rolling`: grass, soil and sand hold a rolling can or rod back far
+   * more than asphalt), or undefined for the default (0.015, a hard floor). Read at the middle of the 2 m tile the point is in, the same in both solvers; only where a round
+   * piece stands on the terrain itself (not on a top, a fixed thing or another piece). A round piece rolls by the larger of its own and this one.
+   */
+  terrainRollingAt?: (x: number, z: number) => number | undefined
   /** The most tiles of ground the physics engine lays at a blast, nearest first (default 0: the tiles are laid as the pieces reach them; a count lays that many at a blast, which moves their cost into the explosion's frame). */
   blastGroundTiles?: number
   /**
