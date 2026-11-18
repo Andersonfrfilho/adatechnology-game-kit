@@ -29,6 +29,15 @@ export function buildPartGrid(parts: readonly PartSphere[], slack: number): Part
       max[k] = Math.max(max[k]!, part.pos[k]! + r)
     }
   }
+  // a part posed at NaN (a degenerate matrix): every part is a candidate, as in the plain scan, instead of a grid of NaN cells
+  if (![...min, ...max].every(Number.isFinite)) {
+    return {
+      candidates(_origin, _direction, _maxDistance, out) {
+        out.length = 0
+        for (let index = 0; index < parts.length; index++) out.push(index)
+      },
+    }
+  }
   const side = Math.max(1, Math.min(MAX_CELLS_PER_AXIS, Math.ceil(Math.cbrt(parts.length))))
   const size: Vec3 = [0, 0, 0]
   for (let k = 0; k < 3; k++) size[k] = Math.max((max[k]! - min[k]!) / side, 1e-6)

@@ -62,4 +62,12 @@ describe('the grid in the world', () => {
     expect(world.raycast([2, 0.1, -2], [0, 0, 1])?.object).toBe('wall')
     expect(world.raycast([Number.NaN, 0.1, -2], [0, 0, 1])).toBeNull()
   })
+
+  it('a part posed at NaN keeps every part a candidate, in order, instead of throwing', () => {
+    const parts: PartSphere[] = Array.from({ length: 70 }, (_, k) => ({ pos: [k * 0.2, 0, 0] as Vec3, bound: 0.1 }))
+    parts[5] = { pos: [Number.NaN, 0, 0], bound: 0.1 }
+    const out: number[] = []
+    buildPartGrid(parts, 1e-6).candidates([1, 0, -1], [0, 0, 1], 5, out)
+    expect(out).toEqual(parts.map((_, index) => index))
+  })
 })
