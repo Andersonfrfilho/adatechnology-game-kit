@@ -2582,6 +2582,10 @@ class Renderer implements DestructionRenderer {
     // it stands while the centre of what is left is inside the polygon of its feet by `STAND_MARGIN` (a cupboard with a broken door); a table that lost a leg has its
     // centre on the line between the two legs beside the gap, balanced on an edge, and goes over toward the gap
     let away: { x: number; z: number } | null = null
+    const was = feetOf(whole)
+    const same = !now.isEmpty() && now.min.x <= was.min.x + FEET_BAND && now.max.x >= was.max.x - FEET_BAND && now.min.z <= was.min.z + FEET_BAND && now.max.z >= was.max.z - FEET_BAND
+    // what is not furniture (a frame, a stand) keeps standing while its feet still span the same floor: its own load path answers for it
+    if (same && kitOriginOf(b.root)?.kind !== 'furniture') return
     if (!now.isEmpty()) {
       const feet = leftBoxes.filter((one) => one.min.y < floor + FEET_BAND)
       const hull = convexHull(feet.flatMap((one) => [[one.min.x, one.min.z], [one.max.x, one.min.z], [one.max.x, one.max.z], [one.min.x, one.max.z]] as Array<[number, number]>))
