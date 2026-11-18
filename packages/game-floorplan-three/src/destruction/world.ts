@@ -86,7 +86,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
             default: break;
           }
         };
-        D.sync = () => { if (!D.active) return; house.updateMatrixWorld(true); const p = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3(); house.matrixWorld.decompose(p, q, sc); D.world.setTransform(D.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w]); };
+        D.sync = () => { if (!D.active) return; house.updateWorldMatrix(true, false); const p = new THREE.Vector3(), q = new THREE.Quaternion(), sc = new THREE.Vector3(); house.matrixWorld.decompose(p, q, sc); D.world.setTransform(D.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w]); };
         // part id -> what draws it: a loose group, a whole mesh, or the vertex range of a merged mesh (the renderer's bind option)
         const rangesOf = () => {
           const out: Record<string, BoundMeshes[]> = {};
