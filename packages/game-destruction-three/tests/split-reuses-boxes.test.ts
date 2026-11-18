@@ -48,8 +48,18 @@ const merge = (geos: THREE.BufferGeometry[]): { geo: THREE.BufferGeometry; range
 
 type Scene = { renderer: ReturnType<typeof createDestructionRenderer>; world: FakeWorld; mesh: THREE.Mesh; root: THREE.Group }
 
+/** Turns about all three axes: a pose made of these and the inverse of the root's frame is rigid only within the last bits (its bottom row too). */
+const TURNS: ReadonlyArray<readonly [number, number, number]> = [
+  [0, 0.37, 0],
+  [0.3, 1.2, -0.7],
+  [1.0, 0.5, 2.0],
+  [-0.45, 2.9, 0.8],
+  [2.2, -1.3, -2.6],
+  [0.05, -0.6, 1.4],
+]
+
 /** A house-like object placed away from the origin and turned (and scaled when asked), its parts ranges of one merged mesh. */
-const house = (scale = 1): Scene => {
+const house = (scale = 1, turn: readonly [number, number, number] = [0.3, 1.2, -0.7]): Scene => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), eventBudgetMs: Infinity, fitBoxesAhead: true })
@@ -57,7 +67,7 @@ const house = (scale = 1): Scene => {
   const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial())
   const root = new THREE.Group()
   root.position.set(12.3, 0.4, -7.1)
-  root.rotation.y = 0.37
+  root.rotation.set(turn[0], turn[1], turn[2])
   root.scale.setScalar(scale)
   root.add(mesh)
   scene.add(root)
@@ -157,17 +167,41 @@ const holdsTheDrawing = (s: Scene, id: string): boolean => {
   })
 }
 
+/** The total volume of the boxes the old way gave: the part's points carried into the piece's frame first, then fitted. */
+const volumeFittedInPieceFrame = (s: Scene, id: string): number => {
+  const piece = pieceOf(s, id)
+  const position = new THREE.Vector3()
+  const turn = new THREE.Quaternion()
+  piece.root.matrixWorld.decompose(position, turn, new THREE.Vector3())
+  const toPiece = new THREE.Matrix4().compose(position, turn, new THREE.Vector3(1, 1, 1)).invert()
+  let volume = 0
+  for (const { mesh, world } of meshesOf(s, id)) {
+    const points: number[] = []
+    const v = new THREE.Vector3()
+    for (let i = 0; i < world.length; i += 3) {
+      v.set(world[i]!, world[i + 1]!, world[i + 2]!).applyMatrix4(toPiece)
+      points.push(v.x, v.y, v.z)
+    }
+    for (const box of fitExactly(points, Array.from(mesh.geometry.getIndex()!.array))) volume += 8 * box.half[0] * box.half[1] * box.half[2]
+  }
+  return volume
+}
+
+const volumeOf = (boxes: readonly PartBox[]): number => boxes.reduce((sum, box) => sum + 8 * box.half[0] * box.half[1] * box.half[2], 0)
+
 /** Every box of `a` has a box in `b` with the same eight corners (in any order), within `TOLERANCE`. */
 const sameBoxes = (a: number[][][], b: number[][][]): boolean =>
   a.length === b.length &&
   a.every((corners) => b.some((other) => corners.every((p) => other.some((r) => Math.hypot(p[0]! - r[0]!, p[1]! - r[1]!, p[2]! - r[2]!) < TOLERANCE))))
 
 describe('a split carries the boxes fitted ahead into the loose piece instead of fitting them again', () => {
-  it('takes no fit on the main thread at the split when every part was fitted ahead', () => {
-    const s = house()
-    s.renderer.deferredQueue().flush()
-    expect(splitAll(s)).toBe(0)
-    expect(s.world.splits.length).toBe(PART_IDS.length - 1)
+  it('takes no fit on the main thread at the split when every part was fitted ahead, however the house is turned', () => {
+    for (const turn of TURNS) {
+      const s = house(1, turn)
+      s.renderer.deferredQueue().flush()
+      expect(splitAll(s), `turned ${turn.join(', ')}`).toBe(0)
+      expect(s.world.splits.length).toBe(PART_IDS.length - 1)
+    }
   })
 
   it('gives each loose piece the boxes fitted to its vertices in the mesh\'s own space, turned and moved as the mesh is: none bigger or smaller, and they hold every drawn vertex', () => {
@@ -180,6 +214,10 @@ describe('a split carries the boxes fitted ahead into the loose piece instead of
       if (carried.length === 0) continue
       expect(sameBoxes(carried, worldCornersFitted(s, id))).toBe(true)
       expect(holdsTheDrawing(s, id)).toBe(true)
+      // the fit is frame-sensitive at its sampling boundaries: what it gives in the mesh's space may differ from the piece's frame, by a few per cent at most
+      const ratio = volumeOf(pieceOf(s, id).partBoxes!) / volumeFittedInPieceFrame(s, id)
+      expect(ratio).toBeLessThanOrEqual(1.05)
+      expect(ratio).toBeGreaterThanOrEqual(1 / 1.05)
       compared++
     }
     expect(compared).toBeGreaterThan(0)
@@ -239,5 +277,21 @@ describe('isRigidPose', () => {
     expect(isRigidPose(new THREE.Matrix4().multiplyMatrices(turned, new THREE.Matrix4().makeScale(1.01, 1.01, 1.01)).elements)).toBe(false)
     expect(isRigidPose(new THREE.Matrix4().makeShear(0.1, 0, 0, 0, 0, 0).elements)).toBe(false)
     expect(isRigidPose(new THREE.Matrix4().makeScale(-1, 1, 1).elements)).toBe(false)
+  })
+
+  it('takes the inverse of one pose times another, rigid within the last bits of every entry, bottom row included', () => {
+    const poseOf = (turn: readonly [number, number, number], at: readonly [number, number, number]): THREE.Matrix4 =>
+      new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(...turn)), new THREE.Vector3(1, 1, 1))
+    let offBottom = 0
+    for (const [i, turn] of TURNS.entries()) {
+      for (const other of TURNS) {
+        const product = poseOf(turn, [12.3 + i, 0.4, -7.1]).invert().multiply(poseOf(other, [3.1, -2.2 * i, 9.7]))
+        if (product.elements[15] !== 1 || product.elements[3] !== 0 || product.elements[7] !== 0 || product.elements[11] !== 0) offBottom++
+        expect(isRigidPose(product.elements)).toBe(true)
+        expect(isRigidPose(product.clone().multiply(new THREE.Matrix4().makeScale(1.5, 1.5, 1.5)).elements)).toBe(false)
+      }
+    }
+    // the case the tolerance is for shows up among these products
+    expect(offBottom).toBeGreaterThan(0)
   })
 })

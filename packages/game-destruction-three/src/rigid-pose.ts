@@ -9,7 +9,8 @@ const RIGID_TOLERANCE = 1e-6
  * carries a set of boxes into is the same boxes, turned and moved; a scale or a shear makes them other boxes (or no boxes at all).
  */
 export const isRigidPose = (e: ArrayLike<number>): boolean => {
-  if (e[3] !== 0 || e[7] !== 0 || e[11] !== 0 || e[15] !== 1) return false
+  // the bottom row of an inverse times a pose is 0 0 0 1 give or take the last bit (three.js inverts it by another expansion)
+  if (Math.abs(e[3]!) > RIGID_TOLERANCE || Math.abs(e[7]!) > RIGID_TOLERANCE || Math.abs(e[11]!) > RIGID_TOLERANCE || Math.abs(e[15]! - 1) > RIGID_TOLERANCE) return false
   const xx = e[0]! * e[0]! + e[1]! * e[1]! + e[2]! * e[2]!
   const yy = e[4]! * e[4]! + e[5]! * e[5]! + e[6]! * e[6]!
   const zz = e[8]! * e[8]! + e[9]! * e[9]! + e[10]! * e[10]!

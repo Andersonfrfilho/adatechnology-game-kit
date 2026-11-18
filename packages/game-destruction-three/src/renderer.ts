@@ -2777,7 +2777,7 @@ class Renderer implements DestructionRenderer {
         const q = new this.THREE.Quaternion()
         for (const box of this.fitRanged(mv, own)) {
           c.set(box.center[0], box.center[1], box.center[2]).applyMatrix4(at.m4)
-          q.set(box.rotation[0], box.rotation[1], box.rotation[2], box.rotation[3]).premultiply(turn)
+          q.set(box.rotation[0], box.rotation[1], box.rotation[2], box.rotation[3]).premultiply(turn).normalize()
           out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [...box.half], rotation: [q.x, q.y, q.z, q.w] })
         }
         return
