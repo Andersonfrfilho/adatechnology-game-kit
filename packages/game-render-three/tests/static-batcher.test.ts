@@ -137,6 +137,37 @@ describe('createStaticBatcher with a budget', () => {
     expect(parts[1]!.layers.mask).toBe(1 << 29)
     expect(drawn(parts[0]!) && drawn(extra)).toBe(true)
   })
+
+  it('leaves out of a waiting group a mesh whose material was swapped or that gained a colour attribute, and merges the rest without throwing', () => {
+    const { root, parts } = car()
+    const extra = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), parts[0]!.material)
+    root.add(extra)
+    const batcher = createStaticBatcher(THREE, root, { budgetMs: 0 })
+    // the first of the group gains a colour attribute (a charred piece): copied first, the others have none to copy
+    const tinted = parts[0]!.geometry.clone()
+    tinted.setAttribute('color', new THREE.BufferAttribute(new Float32Array(tinted.getAttribute('position').count * 3).fill(0.2), 3))
+    parts[0]!.geometry = tinted
+    parts[1]!.material = new THREE.MeshStandardMaterial({ color: 0x220000 })
+    expect(() => {
+      batcher.update()
+      batcher.update()
+    }).not.toThrow()
+    expect(drawn(parts[0]!)).toBe(true)
+    expect(drawn(parts[1]!)).toBe(true)
+    expect(drawn(parts[2]!)).toBe(false)
+    expect(drawn(extra)).toBe(false)
+  })
+
+  it('leaves out of a waiting group a mesh its include() no longer takes', () => {
+    const { root, parts } = car()
+    const refused = new Set<THREE.Object3D>()
+    const batcher = createStaticBatcher(THREE, root, { budgetMs: 0, include: (mesh) => !refused.has(mesh) })
+    refused.add(parts[1]!)
+    batcher.update()
+    batcher.update()
+    expect(drawn(parts[1]!)).toBe(true)
+    expect(drawn(parts[0]!) || drawn(parts[2]!)).toBe(false)
+  })
 })
 
 describe('createStaticBatcher with every mesh of a batch released', () => {

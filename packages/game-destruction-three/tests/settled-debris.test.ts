@@ -333,6 +333,8 @@ describe('a fragment woken while its batch waits to be merged (a merge budget)',
     expect(system.instanceStats().drawn).toBeGreaterThan(0)
     for (let k = 0; k < 300; k++) frame()
     expect(system.restingMeshes()).toHaveLength(20)
+    // landed again, they are batched again
+    expect(batches.stats().batched).toBeGreaterThan(0)
     expect(meshes.some((mesh) => mesh.layers.mask === 1 << INSTANCED_FRAGMENT_LAYER)).toBe(false)
     expect(meshes.filter((mesh) => mesh.layers.mask === 1 << BATCHED_LAYER).length).toBeLessThanOrEqual(batches.stats().batched)
   })
