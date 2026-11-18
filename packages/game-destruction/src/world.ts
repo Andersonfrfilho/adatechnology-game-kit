@@ -2654,6 +2654,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (p.st.opening && insideOpening(o, p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
         if (p.spec.apertures && throughAperture(p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
         if (p.st.chipped && insideChip(p, objLocal(o, vec.madd(origin, d, r.t0)))) continue
+        // where a block came out of the part's face the ray goes on through the gap to the concrete that is left (or out of the part)
+        const gap = p.st.chipped?.length ? pastChips(o, p, origin, d, r.t0, r.t1) : null
+        if (gap === 'through') continue
+        if (gap) {
+          r.t0 = gap.t
+          r.n = gap.n
+        }
         if (!best || r.t0 < best.distance) {
           const point = vec.madd(origin, d, r.t0)
           // on a member cast in the wall the ray meets the member (`castIn`)
@@ -3316,6 +3323,46 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
   /** A unit of the part's grid is laid there (not where a member is cast) and still in the wall. */
   const laidAt = (p: PartRT, worn: Readonly<Record<number, number>> | undefined, i: number): boolean => worn?.[i] !== -1 && !castCells(p).has(i)
+
+  /**
+   * A ray that meets the box of a part where units came out of it (`PartState.chipped`): it goes on through the cells that are gone to the face of what
+   * is left, which it meets there (the side of the gap it reaches, its normal facing the ray), or out of the part (`through`). Null when the ray meets the
+   * part's box on material still there. Without it a round fired into the corner a burst took off a pillar strikes the corner's old face in the air, and
+   * its mark hangs there (the hole the house renderer draws is where the concrete was).
+   */
+  const pastChips = (o: ObjRT, p: PartRT, origin: Vec3, d: Vec3, t0: number, t1: number): { t: number; n: Vec3 } | 'through' | null => {
+    const cells = p.st.chipped
+    if (!cells?.length) return null
+    const toPart = quat.conjugate(p.q)
+    const lo = toLocal(p.pos, p.q, objLocal(o, origin))
+    const ld = rotateVec(toPart, objLocalDir(o, d))
+    const EPS = 1e-4
+    let t = t0
+    let axis = -1
+    for (let step = 0; step < cells.length + 1; step++) {
+      const at = vec.madd(lo, ld, t + EPS)
+      const cell = cells.find((c) => Math.abs(at[0] - c.center[0]) <= c.size[0] / 2 && Math.abs(at[1] - c.center[1]) <= c.size[1] / 2 && Math.abs(at[2] - c.center[2]) <= c.size[2] / 2)
+      if (!cell) break
+      // where the ray leaves this cell: the nearest of the three far faces
+      let out = Infinity
+      for (let a = 0; a < 3; a++) {
+        if (Math.abs(ld[a]) < 1e-9) continue
+        const face = cell.center[a] + Math.sign(ld[a]) * cell.size[a] / 2
+        const ta = (face - lo[a]) / ld[a]
+        if (ta < out) {
+          out = ta
+          axis = a
+        }
+      }
+      if (!Number.isFinite(out) || out >= t1 - EPS) return 'through'
+      // just past the face, in what is left (a point on it would still count as in the gap)
+      t = out + 2 * EPS
+    }
+    if (axis < 0) return null
+    const local: Vec3 = [0, 0, 0]
+    local[axis] = -Math.sign(ld[axis])
+    return { t, n: rotateVec(o.st.rotation, rotateVec(p.q, local)) }
+  }
 
   /** The object-local point falls in a unit that was knocked out of the part (`PartState.chipped`). */
   const insideChip = (p: PartRT, objectPoint: Vec3): boolean => {

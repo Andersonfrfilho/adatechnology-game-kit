@@ -133,6 +133,28 @@ describe('concrete under fire: a material answers each kind of blow its own way'
     expect(p.of('chip')).toHaveLength(0)
   })
 
+  it('a round into the gap a block left meets the concrete beside it there, not the old face in the air (its mark goes on what is left)', () => {
+    const b = beamWorld()
+    for (let i = 0; i < 80 && b.of('chip').length === 0; i++) b.fire(3300, 7.62, 1)
+    const cell = b.world.part('b', 'beam')!.chipped![0]!
+    // the block's side toward +x, in the world (the beam is not turned)
+    const side = cell.center[0] + cell.size[0] / 2
+    const front = cell.center[2] + cell.size[2] / 2
+    // a ray slanted toward +x that enters the gap through the old face, 2 cm in from the block's side
+    const target: [number, number, number] = [side - 0.02, 2.9 + cell.center[1], front]
+    const dir: [number, number, number] = [0.5, 0, -1]
+    const origin: [number, number, number] = [target[0] - dir[0] * 4, target[1], target[2] - dir[2] * 4]
+    const hit = b.world.raycast(origin, dir)!
+    expect(hit.part).toBe('beam')
+    // on the side of the gap, behind the old face, its normal facing back along -x
+    expect(hit.point[0]).toBeCloseTo(side, 3)
+    expect(hit.point[2]).toBeLessThan(front - 0.01)
+    expect(hit.normal[0]).toBeCloseTo(-1, 5)
+    // straight into the gap the round goes through the block that is gone and out of the beam
+    const straight = b.world.raycast([cell.center[0], 2.9 + cell.center[1], 5], [0, 0, -1])
+    expect(straight === null || straight.part !== 'beam' || straight.point[2] < cell.center[2] - cell.size[2] / 2).toBe(true)
+  })
+
   it('concentrated fire on one place cuts its section there, and only there: the band of the cut comes out, the rest of the beam stays', () => {
     const b = beamWorld()
     let shots = 0
