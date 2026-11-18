@@ -2644,19 +2644,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** The grid over each big object's part spheres, kept until a part is added or posed. */
   const partGrids = new WeakMap<ObjRT, { readonly count: number; readonly poses: number; readonly grid: PartGrid }>()
+  /** How many times each object had a part posed: its grid only, not every big object's, is made again while a door swings. */
+  const objectPoses = new WeakMap<ObjRT, number>()
   const gridCandidates: number[] = []
   // reused by every ray: the loop over them ends before another ray asks (a ray never casts another ray from inside it)
   const gridParts: PartRT[] = []
   const partGridOf = (o: ObjRT): PartGrid => {
     const cached = partGrids.get(o)
-    if (cached && cached.count === o.parts.length && cached.poses === poseVersion) return cached.grid
+    const poses = objectPoses.get(o) ?? 0
+    if (cached && cached.count === o.parts.length && cached.poses === poses) return cached.grid
     const grid = buildPartGrid(o.parts, PART_BOUND_SLACK)
-    partGrids.set(o, { count: o.parts.length, poses: poseVersion, grid })
+    partGrids.set(o, { count: o.parts.length, poses, grid })
     return grid
   }
   /** The parts a ray in the object's frame may meet: on a big object only the ones near it (the same result: the others miss their spheres). */
   const partsAlong = (o: ObjRT, lo: Vec3, ld: Vec3, maxDist: number): readonly PartRT[] => {
-    if (o.parts.length < PART_GRID_MIN_PARTS) return o.parts
+    // a ray of NaN (a body that blew up) keeps the plain scan, which answers nothing without throwing
+    if (o.parts.length < PART_GRID_MIN_PARTS || !lo.every(Number.isFinite) || !ld.every(Number.isFinite)) return o.parts
     partGridOf(o).candidates(lo, ld, maxDist, gridCandidates)
     gridParts.length = 0
     for (const index of gridCandidates) gridParts.push(o.parts[index]!)
@@ -5569,6 +5573,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       p.q = q
       p.posed = true
       poseVersion++
+      objectPoses.set(o, (objectPoses.get(o) ?? 0) + 1)
       updateBound(o)
     },
     remove(id) {

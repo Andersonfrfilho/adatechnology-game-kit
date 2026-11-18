@@ -52,3 +52,14 @@ describe('the grid over the part spheres of a big object', () => {
     expect(out.length).toBeLessThan(parts.length / 10)
   })
 })
+
+describe('the grid in the world', () => {
+  it('a ray of NaN answers nothing on a big object, as the plain scan did, instead of throwing', async () => {
+    const { createDestruction } = await import('../src')
+    const world = createDestruction({ seed: 1 })
+    const parts = Array.from({ length: 80 }, (_, k) => ({ id: `b${k}`, material: 'brick', shape: { kind: 'box' as const, size: [0.2, 0.06, 0.1] as [number, number, number] }, position: [(k % 20) * 0.2, Math.floor(k / 20) * 0.06, 0] as [number, number, number] }))
+    world.add({ name: 'wall', parts, joints: [] }, { id: 'wall' })
+    expect(world.raycast([2, 0.1, -2], [0, 0, 1])?.object).toBe('wall')
+    expect(world.raycast([Number.NaN, 0.1, -2], [0, 0, 1])).toBeNull()
+  })
+})
