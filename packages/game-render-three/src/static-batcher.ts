@@ -96,22 +96,34 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   const follow = options.followMeshes === true
   root.updateMatrixWorld(true)
   const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
+  const materialKey = options.materialKey ?? uuidOf
   const groups = new Map<string, Mesh[]>()
   root.traverse((object) => {
     const mesh = object as Mesh
     if (!mesh.isMesh || !isShown(mesh, root) || !isBatchable(mesh) || !include(mesh)) return
-    const key = signatureOf(mesh, options.materialKey ?? uuidOf)
+    const key = signatureOf(mesh, materialKey)
     groups.set(key, [...(groups.get(key) ?? []), mesh])
   })
   const group = new THREE.Group()
   group.name = 'static-batches'
   const sources: Source[] = []
-  const pending = [...groups.values()].filter((meshes) => meshes.length >= 2)
+  const pending = [...groups.entries()].filter(([, meshes]) => meshes.length >= 2)
+  // the layers each waiting mesh had when grouped: one whose layers changed before its group is merged (another drawer took it) is not merged
+  const groupedMasks = new Map<Mesh, number>()
+  for (const [, meshes] of pending) for (const mesh of meshes) groupedMasks.set(mesh, mesh.layers.mask)
+  /**
+   * Still as it was grouped: shown, included, the same layers and the same signature (a material swapped or a colour attribute added since would be merged under the
+   * group's material, or copied from an attribute the group does not have).
+   */
+  const isUnchanged = (mesh: Mesh, key: string): boolean =>
+    isShown(mesh, root) && include(mesh) && isBatchable(mesh) && mesh.layers.mask === groupedMasks.get(mesh) && signatureOf(mesh, materialKey) === key
   const mergeSome = (deadline: number): void => {
     while (pending.length > 0) {
-      const meshes = pending.shift() as Mesh[]
-      // a mesh that changed while it waited is left to draw on its own
-      if (meshes.every((mesh) => isShown(mesh, root))) sources.push(...mergeGroup(THREE, { meshes, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, onBatch: options.onBatch }))
+      const [key, meshes] = pending.shift() as [string, Mesh[]]
+      // a mesh that changed while it waited is left as it is; the rest of its group is merged
+      const still = meshes.filter((mesh) => isUnchanged(mesh, key))
+      for (const mesh of meshes) groupedMasks.delete(mesh)
+      if (still.length >= 2) sources.push(...mergeGroup(THREE, { meshes: still, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, onBatch: options.onBatch }))
       if (performance.now() >= deadline) return
     }
   }
@@ -154,6 +166,8 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     stats: () => ({ batches: group.children.length, batched: sources.filter((source) => !source.released).length, released }),
     dispose() {
       for (const source of sources) if (!source.released) source.mesh.layers.mask = source.mask
+      pending.length = 0
+      groupedMasks.clear()
       group.removeFromParent()
       for (const child of group.children) {
         ;(child as Mesh).geometry.dispose()

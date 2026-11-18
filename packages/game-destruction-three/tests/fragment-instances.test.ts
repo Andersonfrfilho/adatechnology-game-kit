@@ -273,7 +273,6 @@ describe('the fragments at rest look under them only where something could be lo
     expect(compared).toBeGreaterThan(100)
   })
 
-
   const resting = (y: number): never => ({ id: `r${y}`, shape: 'chunk', center: [0, y + 0.03, 0], rotation: [0, 0, 0, 1], velocity: [0, 0, 0], angularVelocity: [0, 0, 0], size: [0.1, 0.06, 0.08], material: 'brick', mass: 0.3 }) as never
 
   it('one on the ground casts no ray down; one on a slab still does, and falls when the slab goes', () => {

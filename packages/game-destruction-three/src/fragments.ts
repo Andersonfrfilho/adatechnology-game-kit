@@ -9,6 +9,7 @@ import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, b
 import { clamp, createRng, hashString } from './math'
 import type { LooseBody } from './types'
 
+/** @internal */
 export interface Live {
   mesh: THREE_NS.Mesh
   /** The surface under the fragment (ground or what is built), and where it was measured: measured again once the fragment moves off that spot. */
@@ -42,6 +43,7 @@ export interface Live {
 /** The floor area a box covers, seen from above: a shape built from the floor images of its three half edges (x, z of each, in turn), centred on the box. */
 type Shadow = readonly [number, number, number, number, number, number]
 
+/** @internal */
 export interface RestingBox {
   readonly shadow: Shadow
   readonly x: number
