@@ -32,12 +32,13 @@ import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__, __GROUND_WORKER_SOURCE__ */
 const params = new URLSearchParams(location.search)
-/** The engine's ground worker from its inlined source (`?groundWorker=1`): the Blob URL is let go once the worker has it. */
+/** The engine's ground worker from its inlined source (`?groundWorker=1`): the Blob URL is let go once the worker has it. @returns {import('@adatechnology/game-shapes').WorkerLike} */
 const groundWorkerFromSource = () => {
   const url = URL.createObjectURL(new Blob([__GROUND_WORKER_SOURCE__], { type: 'text/javascript' }))
   const worker = new Worker(url)
   URL.revokeObjectURL(url)
-  return worker
+  // the DOM Worker's handlers take a full MessageEvent; the port reads only `data`
+  return /** @type {import('@adatechnology/game-shapes').WorkerLike} */ (/** @type {unknown} */ (worker))
 }
 // the room itself has no items: the default page loads the SDK modules into it (see build.mjs); the bare room (__ROOM_FULL__ false) is the page the other test areas build over
 const deferred = __ROOM_FULL__
