@@ -6,7 +6,7 @@ import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
-import { EnginePieces, tileRollingAt } from './engine-pieces'
+import { EnginePieces, groundTileKey, tileRollingAt } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import type { GroundGrid } from './engine-ground'
 import type { GroundWorkerPort } from './engine-ground-port'
@@ -20,7 +20,10 @@ export interface PieceSystemOptions {
   groundAt: (x: number, z: number) => number
   /** The terrain alone (no top of furniture or of anything drawn): the ground of an engine, which has every drawn top as a body. Default `groundAt`. */
   terrainAt?: (x: number, z: number) => number
-  /** The rolling resistance of the terrain's surface at (x, z), undefined for the default (`RendererOptions.terrainRollingAt`). */
+  /**
+   * The rolling resistance of the terrain's surface at (x, z), undefined for the default (`RendererOptions.terrainRollingAt`). The kit's solver takes a contact to be on the
+   * terrain where `groundAt` answers exactly `terrainAt` (or there is no `terrainAt`): `groundAt` must return the terrain's own value, to the bit, where nothing is on it.
+   */
   terrainRollingAt?: (x: number, z: number) => number | undefined
   /** The most tiles of ground laid at a blast, nearest first (default 0: the tiles are laid as the pieces reach them; a count lays that many at a blast, which moves their cost into the explosion's frame). Engine physics only. */
   blastGroundTiles?: number
@@ -345,6 +348,8 @@ export class PieceSystem {
   private supportFriction: PieceFriction | null = null
   /** The terrain's surfaces by rolling resistance (`terrainSurface`), one object each. */
   private readonly terrainSurfaces = new Map<number, PieceFriction>()
+  /** The terrain's rolling resistance by ground tile (`groundTileKey`) this update, NaN for the default: read once per tile, not per contact per substep. */
+  private readonly rollingByTile = new Map<number, number>()
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -824,6 +829,7 @@ export class PieceSystem {
 
   /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
   private step(dt: number, only?: StepFilter): void {
+    this.rollingByTile.clear()
     this.measure()
     this.wakeUnsupported()
     for (const b of this.list) {
@@ -1053,16 +1059,21 @@ export class PieceSystem {
     return false
   }
 
-  /** Where a corner of `self` at `(x, y, z)` lands: the ground, the top of another piece or of something fixed under it. */
   /**
-   * The terrain's own surface under a round piece's contact at (x, z) that stands at `y` (`terrainRollingAt`, read as the engine does: `tileRollingAt`), when `y` is the
-   * terrain there and not a top above it; null otherwise (the default surface). One object per value, so a substep makes none.
+   * The terrain's own surface under a round piece's contact at (x, z) that stands at `y` on the ground `raw` (`groundAt` there), when it is the terrain and not a top above it
+   * (`terrainAt`, which `groundAt` equals to the bit where nothing is on it); null otherwise (the default surface). Read as the engine reads it (`tileRollingAt`), once per tile
+   * per update, and one object per value, so a substep makes none.
    */
-  private terrainSurface(x: number, y: number, z: number): PieceFriction | null {
+  private terrainSurface(x: number, y: number, z: number, raw: number): PieceFriction | null {
     const rollingAt = this.o.terrainRollingAt
-    if (!rollingAt || y !== (this.o.terrainAt ?? this.o.groundAt)(x, z)) return null
-    const rolling = tileRollingAt(rollingAt, x, z)
-    if (rolling === undefined) return null
+    if (!rollingAt || y !== raw || (this.o.terrainAt && y !== this.o.terrainAt(x, z))) return null
+    const key = groundTileKey(x, z)
+    let rolling = this.rollingByTile.get(key)
+    if (rolling === undefined) {
+      rolling = tileRollingAt(rollingAt, x, z) ?? Number.NaN
+      this.rollingByTile.set(key, rolling)
+    }
+    if (Number.isNaN(rolling)) return null
     let surface = this.terrainSurfaces.get(rolling)
     if (!surface) {
       surface = { static: MU_STATIC, dynamic: MU_DYNAMIC, rolling }
@@ -1071,6 +1082,7 @@ export class PieceSystem {
     return surface
   }
 
+  /** Where a corner of `self` at `(x, y, z)` lands: the ground, the top of another piece or of something fixed under it. */
   private supportAt(self: PieceBody, x: number, y: number, z: number, step: number): number {
     let top = this.o.groundAt(x, z)
     let on: Solid | null = null
@@ -1226,7 +1238,7 @@ export class PieceSystem {
               rs.push(r)
               ids.push(i)
               ns.push(UP)
-              mus.push(pairFriction(b.friction, b.round ? this.terrainSurface(px, floor, pz) : null))
+              mus.push(pairFriction(b.friction, b.round ? this.terrainSurface(px, floor, pz, floor) : null))
               maxPen = Math.max(maxPen, floor - cy)
             }
             continue
@@ -1257,7 +1269,7 @@ export class PieceSystem {
           rs.push(r)
           ids.push(i)
           ns.push(this.supportNormal)
-          mus.push(pairFriction(b.friction, this.supportFriction ?? (b.round ? this.terrainSurface(px, gy, pz) : null)))
+          mus.push(pairFriction(b.friction, this.supportFriction ?? (b.round ? this.terrainSurface(px, gy, pz, raw) : null)))
           if (pen > maxPen) {
             maxPen = pen
             penNormal = this.supportNormal

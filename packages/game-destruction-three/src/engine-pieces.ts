@@ -29,7 +29,8 @@ export interface EnginePieceOptions {
   readonly groundGrid?: GroundGrid
   /**
    * The rolling resistance (C_rr) of the ground's surface at (x, z), from its material (`TerrainMaterial.rolling`), or undefined for the default (`ROLLING_RESISTANCE`, a hard
-   * floor). A tile of ground has the one at its middle (`tileRollingAt`): a round piece on it rolls by the larger of its own and that one.
+   * floor). A tile of ground has the one at its middle (`tileRollingAt`): a round piece on it rolls by the larger of its own and that one. A tile reads it when it is laid and
+   * again when the host marks its ground changed (`groundChanged`, through `wakeRegion`), as for its heights: a surface that changes is marked like a height that does.
    */
   readonly groundRollingAt?: (x: number, z: number) => number | undefined
   readonly gravity: number
@@ -106,6 +107,8 @@ const ROLLING_RESISTANCE = 0.015
 const MU_DYNAMIC = 0.6
 const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE }
 
+/** The key of the ground tile (x, z) falls in, the engine's own (`tiles`). */
+export const groundTileKey = (x: number, z: number): number => (Math.floor(x / TILE) + TILE_KEY_ORIGIN) * TILE_KEY + (Math.floor(z / TILE) + TILE_KEY_ORIGIN)
 /**
  * The rolling resistance of the ground at (x, z) as both solvers read it: the surface at the middle of the tile it falls in (the engine's ground is one body a tile), so
  * a tile across a road's edge is all road or all verge, the same in the kit's solver and the engine's. Undefined: the default.
@@ -994,6 +997,7 @@ export class EnginePieces {
     const flat = this.flatAt(tile, x0, z0)
     if (flat !== undefined) {
       if (flat) this.install(key, ix, iz, tile, flat, () => NO_SOLID, null)
+      else if (tile) this.refreshMaterial(tile, ix, iz)
       return
     }
     let samples: Float64Array
@@ -1002,7 +1006,7 @@ export class EnginePieces {
       const ringMoved = tile.dirty !== null && this.ringMoved(tile.volume, tile.dirty)
       const changed = readGround(this.o.groundAt, tile.samples, x0, z0, TILE, tile.dirty ?? undefined, this.o.groundGrid)
       tile.dirty = null
-      if (!changed && !ringMoved) return
+      if (!changed && !ringMoved) return this.refreshMaterial(tile, ix, iz)
       samples = tile.samples
       wasCoarse = !tile.slab && tile.collision.length < tile.heights.length
     } else {
@@ -1165,6 +1169,8 @@ export class EnginePieces {
     const made = this.flatOrRead(tile, x0, z0)
     if (!made) {
       if (ringMoved && tile) this.relaySolid(tile, x0, z0)
+      // the heights did not change, but the surface may have (a mark over the same ground): the kit's solver reads it live, the bodies follow
+      if (tile) this.refreshMaterial(tile, ix, iz)
       return
     }
     // the solid is a function of the heights and the ground it read past the edges: the same of both, the same solid
@@ -1193,12 +1199,23 @@ export class EnginePieces {
     const volume = volumeOf(moved)
     const laid = { ...made, solid: volume }
     const solid = this.layVolume(laid, tile, material)
+    // the bodies made here have it already; the ones kept get it when the surface changed
     if (tile && tile.material !== material) {
-      this.world.setMaterial(ground, material)
-      if (steps !== null) this.world.setMaterial(steps, material)
-      if (solid !== null) this.world.setMaterial(solid, material)
+      if (kept) this.world.setMaterial(ground, material)
+      if (same && steps !== null) this.world.setMaterial(steps, material)
+      if (solid !== null && solid === tile.solid) this.world.setMaterial(solid, material)
     }
     this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid, volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty, material })
+  }
+
+  /** A tile whose ground did not change: its bodies take the surface there now (`groundMaterial`) if it is another. */
+  private refreshMaterial(tile: Tile, ix: number, iz: number): void {
+    const material = this.groundMaterial(ix, iz)
+    if (material === tile.material) return
+    tile.material = material
+    this.world.setMaterial(tile.ground, material)
+    if (tile.steps !== null) this.world.setMaterial(tile.steps, material)
+    if (tile.solid !== null) this.world.setMaterial(tile.solid, material)
   }
 
   /** The surface of the tile's bodies: the ground's own rolling resistance at its middle (`tileRollingAt`), one shared object per value; `GROUND` without the host's. */
@@ -1375,7 +1392,8 @@ export class EnginePieces {
       b.steady = undefined
       if (b.onGround && !b.round) this.topple(b, 0)
     }
-    let moved = false
+    // the sweep judges the engine's own move; the net under the ground comes after it, so nothing the sweep does (a face that turns it back) leaves it under the ground
+    let moved = link.stepped && !b.sleeping && this.o.sweep !== undefined && this.sweepOn(b, link.before, pos, time)
     const reach = Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])
     const floor = this.o.groundAt(pos[0], pos[2])
     if (pos[1] + reach < floor - 0.05) {
@@ -1385,8 +1403,6 @@ export class EnginePieces {
       moved = true
     }
     if (link.stepped && !b.sleeping) {
-      // the lift from under the ground is a move too: a sweep that meets nothing must not undo it
-      if (this.o.sweep) moved = this.sweepOn(b, link.before, pos, time) || moved
       const impact = -link.beforeVy
       if (b.onGround && impact > HARD_LANDING && v[1] > link.beforeVy + impact * 0.5 && time - b.lastHit > 0.15) {
         b.lastHit = time

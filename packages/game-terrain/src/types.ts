@@ -432,6 +432,8 @@ export interface Terrain {
   /** Material exposed at a vertex. */
   vertexMaterial(column: number, row: number): TerrainMaterial
   columnAt(x: number, z: number): TerrainColumn
+  /** The rolling resistance (`TerrainMaterial.rolling`) of the material exposed at (x, z), as `columnAt` reads it, without building the column; undefined: the host's default. */
+  rollingAt(x: number, z: number): number | undefined
   contains(x: number, z: number): boolean
   /** First point of the ground along a ray, or null. */
   raycast(origin: readonly number[], direction: readonly number[], maxDistance: number): { point: [number, number, number]; distance: number; normal: [number, number, number] } | null

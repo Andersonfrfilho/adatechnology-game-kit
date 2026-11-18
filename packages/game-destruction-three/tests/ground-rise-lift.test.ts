@@ -78,4 +78,18 @@ describe.skipIf(!IS_JOLT)('a piece the engine left under the ground, with a swee
     expect(root.position.y).toBeGreaterThan(1.9)
     expect(engine.fellThrough).toBe(1)
   })
+
+  it('a sweep that turns it back (a face over it, facing down) is judged before the lift: the piece still ends on the ground, not back under it', () => {
+    const ground = { level: 0 }
+    const over = { object: 'slab', part: 'body', distance: 0, point: [0, 0, 0] as [number, number, number], normal: [0, -1, 0] as [number, number, number] }
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => ground.level, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), sweep: () => over })
+    const root = new THREE.Object3D()
+    root.position.set(0, 0.5, 0)
+    // going up when the ground jumps 2 m over it: lifted first, a face over its way would turn it back to where it was, under the ground
+    system.create('box', root, [0.1, 0.1, 0.1], new THREE.Vector3(), 2, [0, 3, 0])
+    ground.level = 2
+    system.update(FRAME)
+    expect(root.position.y).toBeGreaterThan(1.9)
+  })
 })
+
