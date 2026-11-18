@@ -117,6 +117,9 @@ const VERTICES_PER_UPDATE = 3000
 const FEET_BAND = 0.03
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/** What a loose group hangs on (`hingeOf`) stands still when its piece is slower than this (m/s) and turns slower than this (rad/s). */
+const HINGE_STILL_SPEED = 0.2
+const HINGE_STILL_SPIN = 0.5
 /** Most milliseconds of a frame the boxes fitted ahead of the blow take (`fitBoxesAhead`), whatever the budget the host gives the queue: a house is a few hundred parts, fitted over a few seconds. */
 const PREFIT_SLICE_MS = 1
 
@@ -2213,12 +2216,15 @@ class Renderer implements DestructionRenderer {
         }
         // the loose groups are always read from index 1: each split renumbers the rest
         let newId: string
+        let hinge: Vec3 | null
         try {
+          hinge = this.hingeOf(objectId, 1)
           newId = this.world.splitGroup(objectId, 1)
         } catch {
           return
         }
         this.adoptSplit(b, newId)
+        this.hangOnHinge(newId, hinge)
       }
     })
     if (deferred) return
@@ -2338,6 +2344,7 @@ class Renderer implements DestructionRenderer {
           work.take('split', units)
         }
         let newId: string
+        const hinge = this.hingeOf(b.id, 1)
         try {
           newId = this.world.splitGroup(b.id, 1)
         } catch {
@@ -2346,6 +2353,7 @@ class Renderer implements DestructionRenderer {
         if (newId === b.id) return
         this.eventSplitFrame = work.frame
         this.adoptSplit(b, newId)
+        this.hangOnHinge(newId, hinge)
         split++
       }
     })
@@ -2395,12 +2403,14 @@ class Renderer implements DestructionRenderer {
         continue
       }
       let newId: string
+      const hinge = this.hingeOf(entry.objectId, index)
       try {
         newId = this.world.splitGroup(entry.objectId, index)
       } catch {
         continue
       }
       this.adoptSplit(b, newId)
+      this.hangOnHinge(newId, hinge)
       this.staticDirty.add(entry.objectId)
       touched.set(entry.objectId, [...(touched.get(entry.objectId) ?? []), ...entry.torn])
       ran++
@@ -2427,6 +2437,44 @@ class Renderer implements DestructionRenderer {
   }
 
   /** The renderer side of `splitGroup`: a new group holding the meshes of the new object, made a piece. */
+  /**
+   * Where a loose group still hangs on what stands (a shelf that lost the side at one end, still screwed to the other): the middle of the overlap of the two parts of the
+   * one joint that holds and joins it to a structural part of the object's first group, which stands, in the world. Null when it hangs on nothing, or on more than one.
+   */
+  private hingeOf(objectId: string, group: number): Vec3 | null {
+    const st = this.world.state(objectId)
+    const loose = st?.groups[group]
+    const standing = st?.groups[0]
+    if (!st || !loose || !standing || group === 0) return null
+    // what stands must stand still: a hinge is a point fixed in the world (a case knocked over carries its shelves with it)
+    const piece = this.bounds.get(objectId)?.piece
+    if (piece && !piece.sleeping && (Math.hypot(...piece.velocity) > HINGE_STILL_SPEED || Math.hypot(...piece.angularVelocity) > HINGE_STILL_SPIN)) return null
+    const inLoose = new Set(loose)
+    const inStanding = new Set(standing)
+    const structural = new Set(st.parts.filter((p) => p.load !== undefined).map((p) => p.id))
+    const holds = st.joints.filter((j) => {
+      if (j.open || j.tears || j.kind === 'resting') return false
+      const [own, other] = inLoose.has(j.a) ? [j.a, j.b] : [j.b, j.a]
+      return inLoose.has(own) && inStanding.has(other) && structural.has(own) && structural.has(other)
+    })
+    if (holds.length !== 1) return null
+    const joint = holds[0]!
+    const boxOf = (partId: string): number[] | null =>
+      this.shownBoxes(objectId, partId).reduce<number[] | null>((all, one) => (all ? all.map((value, k) => (k < 3 ? Math.min(value, one[k]!) : Math.max(value, one[k]!))) : [...one]), null)
+    const a = boxOf(joint.a)
+    const c = boxOf(joint.b)
+    if (!a || !c) return null
+    const point: Vec3 = [0, 0, 0]
+    for (let k = 0; k < 3; k++) point[k] = (Math.max(a[k]!, c[k]!) + Math.min(a[k + 3]!, c[k + 3]!)) / 2
+    return point
+  }
+
+  /** The piece of a group split off hangs on its hinge (`hingeOf`), when it had one. */
+  private hangOnHinge(newId: string, hinge: Vec3 | null): void {
+    const piece = hinge && this.bounds.get(newId)?.piece
+    if (piece && hinge) this.pieceSys.hinge(piece, hinge)
+  }
+
   private adoptSplit(from: Bound, newId: string): void {
     const state = this.world.state(newId)
     const root = from.root
