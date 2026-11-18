@@ -51,3 +51,16 @@ cilindro e toro) e um tambor (torno) gerados pelo pool: 3 jobs de `shapes.genera
 quadro principal, 6,3 ms de worker; posições e normais iguais bit a bit ao `generate` da página. Print:
 `examples/test-room/shots/shapes-coordinator.png`. Testes: `packages/game-shapes/tests/pool-coordinator.test.ts` (`checkTaskKind` com
 `worker_threads`, pool com coordenador, gerador que o worker não conhece feito na página com os mesmos bytes).
+
+## T22 no helios (2026-11-18, GPU, 4280 com `pnpm serve:room --isolate`, carga 3,83, trava `perf-measure.lock`)
+
+`node examples/crowd-test-area/sim-thread.mjs 1500` na main 18bd23f, 40 quadros medidos em cada modo, as 5 checagens passam:
+
+| | Horda nesta thread | Horda na thread de simulação |
+|---|---|---|
+| Passo da multidão na thread principal, média | 4,46 ms | 0,18 ms |
+| p99 | 69,9 ms | 3,5 ms |
+| Passo na thread de simulação | n/a | 2,57 ms de média, máximo 52,4 ms, 0 atrasos descartados |
+
+Com GPU a horda começa e termina com os 1500 agentes desenhados do retrato. A primeira rodada mediu uma página de 5/11 (a sala não
+rebuilda a área da multidão): o `sim-thread.mjs` agora roda o `build.mjs` da área antes (`--no-build` mantém a página).

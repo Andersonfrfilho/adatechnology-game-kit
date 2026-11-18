@@ -1,6 +1,8 @@
 // The horde in the simulation thread (spec 009, T22), in the real room: the page served cross-origin isolated (COOP/COEP, as Electron always
 // is), the same horde with the step on this thread and with `?sim=thread`, the main-thread cost of the crowd's fixed step in each, the
-// thread's own step time, and a print of each. `node examples/crowd-test-area/sim-thread.mjs [count]` after `node build.mjs`.
+// thread's own step time, and a print of each. `node examples/crowd-test-area/sim-thread.mjs [count]` (rebuilds the page first, so a pull is
+// never measured on an old page; `--no-build` keeps the page as it is).
+import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -8,11 +10,12 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const page = join(here, 'dist/sala-multidao.html')
+if (!process.argv.includes('--no-build')) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'ignore' })
 if (!existsSync(page)) throw new Error('dist/sala-multidao.html missing: run node build.mjs')
 const require = createRequire(import.meta.url)
 const playwright = /** @type {typeof import('playwright')} */ (['playwright', 'playwright-core', '/opt/node-tools/node_modules/playwright'].map((id) => { try { return require(id) } catch { return null } }).find(Boolean))
 if (!playwright) throw new Error('no playwright')
-const count = Number(process.argv[2] ?? 1500)
+const count = Number(process.argv.slice(2).find((arg) => !arg.startsWith('--')) ?? 1500)
 const FRAMES = Number(process.env.FRAMES ?? 40)
 const shots = join(here, 'shots')
 mkdirSync(shots, { recursive: true })
