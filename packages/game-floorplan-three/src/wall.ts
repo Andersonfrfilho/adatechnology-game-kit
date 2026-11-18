@@ -70,6 +70,32 @@ const isTexture = (value: unknown): value is ProbeTexture => typeof value === 'o
 const PLASTER = 0xe8e2d4
 const WALL_ID = 'wall_0_0'
 
+/**
+ * Beside each shell of the cut wall, its twin with a texture: a house wall that carries a map gets a shell program of its own (three keys the program by
+ * the map), and without the twin that program was linked in the frame of the first blast on such a wall (~10 ms).
+ */
+function addTexturedShells(T: Three, root: THREE.Object3D): void {
+  const shells: THREE.Mesh[] = []
+  root.traverse((node) => {
+    const mesh = node as THREE.Mesh
+    if (mesh.isMesh === true && mesh.name === 'breach-shell' && !Array.isArray(mesh.material) && !(mesh.material as THREE.MeshLambertMaterial).map) shells.push(mesh)
+  })
+  for (const shell of shells) {
+    const base = shell.material as THREE.MeshLambertMaterial
+    const material = base.clone()
+    material.map = new T.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
+    material.map.needsUpdate = true
+    material.onBeforeCompile = base.onBeforeCompile
+    material.customProgramCacheKey = base.customProgramCacheKey
+    const twin = new T.Mesh(shell.geometry, material)
+    twin.name = 'breach-shell-textured'
+    twin.position.copy(shell.position)
+    twin.quaternion.copy(shell.quaternion)
+    twin.scale.copy(shell.scale)
+    shell.parent?.add(twin)
+  }
+}
+
 /** The plan of a free-standing wall, with its construction and structure. */
 export type WallPlan = HouseRecord & { construction: Construction; structure: Structure }
 
@@ -141,6 +167,7 @@ export function wallPiece(THREE: Three, options: WallPieceOptions): WallPiece {
       }
       // paint all of it now: in a room the breach paints within the frame budget, and the probe is drawn before any frame runs
       for (let guard = 0; guard < WARM_UP_FRAMES && (destruction?.breach?.flush?.(Infinity) ?? 0) > 0; guard++);
+      addTexturedShells(T as Three, root as unknown as THREE.Object3D)
       // drawn whatever the camera: the breach hides its bricks from afar (its level of detail), and an object that is not drawn builds no program
       root.traverse((node) => {
         node.visible = true

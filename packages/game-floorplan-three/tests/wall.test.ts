@@ -475,6 +475,22 @@ describe('wallPiece', () => {
     probes.dispose()
   })
 
+  it('the warm-up probe also draws the shell of a textured wall, so its program is linked at load and not in the first blast on such a wall', () => {
+    const probes = make().warmUpProbes(THREE)
+    type Shell = { name?: string; isMesh?: boolean; material?: { map?: unknown; customProgramCacheKey(): string } }
+    const shells: Shell[] = []
+    ;(probes.group as { traverse(fn: (object: Shell) => void): void }).traverse((object) => {
+      if (object.isMesh && object.name?.startsWith('breach-shell')) shells.push(object)
+    })
+    const keyOf = (shell: Shell): string => shell.material!.customProgramCacheKey()
+    const plain = shells.filter((shell) => !shell.material?.map)
+    const textured = shells.filter((shell) => shell.material?.map)
+    expect(plain.length).toBeGreaterThan(0)
+    expect(textured.length).toBe(plain.length)
+    expect(textured.every((shell) => keyOf(shell).startsWith('breachMask'))).toBe(true)
+    probes.dispose()
+  })
+
   it('a bond beam shot through at one end stays on its wall: the concrete goes there, its bars show there, the rest of it is whole', () => {
     const { spec } = make()
     const world = createDestruction({ seed: 1 })
