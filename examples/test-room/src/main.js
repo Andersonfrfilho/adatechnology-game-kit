@@ -42,7 +42,9 @@ const kitWorkers = (() => {
   const source = /** @type {{ __KIT_WORKER_SOURCE__?: unknown }} */ (globalThis).__KIT_WORKER_SOURCE__
   const raw = params.get('workers')
   const workers = raw === null || raw === 'auto' ? 'auto' : Math.max(0, Number(raw) || 0)
-  const made = createKitWorkers({ spawn: typeof source === 'string' && typeof Worker !== 'undefined' ? sourceSpawn(source, { type: 'classic', name: 'kit-worker' }) : null, workers })
+  // ?inFlight=N: jobs a worker holds at once (the coordinator's `inFlightPerWorker`)
+  const inFlight = Number(params.get('inFlight')) || 0
+  const made = createKitWorkers({ spawn: typeof source === 'string' && typeof Worker !== 'undefined' ? sourceSpawn(source, { type: 'classic', name: 'kit-worker' }) : null, workers, ...(inFlight > 0 ? { inFlightPerWorker: inFlight } : {}) })
   ;/** @type {{ __kitWorkers?: unknown }} */ (window).__kitWorkers = made
   return made
 })()

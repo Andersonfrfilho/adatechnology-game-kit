@@ -20,12 +20,19 @@ import type { WorkerPlan, WorkerPlanOptions } from './plan'
 import { isFromWorker } from './protocol'
 import type { Spawn, ToWorker, WorkerLike } from './protocol'
 
+/** Jobs a worker holds at once unless `CoordinatorOptions.inFlightPerWorker` says otherwise (room measurement, spec 009 T7). */
+export const IN_FLIGHT_PER_WORKER = 16
+
 export interface CoordinatorOptions extends WorkerPlanOptions {
   /** Makes one worker (`browserSpawn`, `sourceSpawn`, `nodeSpawn`, `inThreadSpawn`). Without it every job runs on the main thread. */
   readonly spawn?: Spawn
   /** The game's overrides of a kind's schedule, by kind id. */
   readonly kinds?: Readonly<Record<string, Partial<WorkerKindSchedule>>>
-  /** Jobs a worker holds at once (default 2): the rest wait in the coordinator's queue, where a more urgent one can pass them. */
+  /**
+   * Jobs a worker holds at once (default `IN_FLIGHT_PER_WORKER`, 16): the rest wait in the coordinator's queue, where a more urgent one can pass them. A job only leaves that
+   * queue when the main thread reads a worker's answer, which on a busy frame is once per frame: a burst (a blast asks for dozens of ground tiles at once) with a small cap
+   * needs several frames of round trips and misses its due frame. Measured in the room (crater, 4 threads): 2 left 139 of 163 tiles late, 16 none.
+   */
   readonly inFlightPerWorker?: number
   /** The machine's cores for the automatic count (default `navigator.hardwareConcurrency`). */
   readonly cores?: number
@@ -122,7 +129,7 @@ const insertSorted = (queue: Job[], job: Job): void => {
  */
 export function createWorkerCoordinator(options: CoordinatorOptions = {}): WorkerCoordinator & { readonly plan: WorkerPlan } {
   const now = options.now ?? defaultNow
-  const perWorker = Math.max(1, Math.floor(options.inFlightPerWorker ?? 2))
+  const perWorker = Math.max(1, Math.floor(options.inFlightPerWorker ?? IN_FLIGHT_PER_WORKER))
   const overrides = options.kinds ?? {}
   const plan: WorkerPlan = options.spawn ? planWorkers(options, options.cores) : { total: 0, lanes: { sim: 0, build: 0, background: 0 }, homes: [], serves: [] }
   const queues: Record<WorkerLane, Job[]> = { sim: [], build: [], background: [] }
