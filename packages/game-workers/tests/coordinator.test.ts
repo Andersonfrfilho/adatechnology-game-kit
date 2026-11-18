@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { checkTaskKind, createWorkerCoordinator, defineResidentKind, defineTaskKind, inThreadSpawn, WorkerTaskCancelled, WorkerTaskDropped } from '../src'
+import { isWorkerInputLost } from '@adatechnology/game-contracts'
+import { checkTaskKind, createWorkerCoordinator, defineResidentKind, defineTaskKind, inThreadSpawn, WorkerTaskCancelled, WorkerTaskDropped, WorkerTaskInputLost } from '../src'
 import type { Spawn, WorkerLike } from '../src'
 import { nodeSpawn } from '../src/node'
 // @ts-expect-error -- a plain JS fixture (the worker_threads worker loads the same file), typed by its use below
@@ -154,7 +155,42 @@ describe('createWorkerCoordinator', () => {
     expect(unknowing.stats().kinds.find((k) => k.id === 'test.moving')).toMatchObject({ failed: 1, fallback: 0 })
     unknowing.dispose()
     // with no worker it is never sent: it runs here, input and all
-    await expect(createWorkerCoordinator().run(moving, Float64Array.of(2, 2))).resolves.toBe(4)
+    const none = createWorkerCoordinator()
+    await expect(none.run(moving, Float64Array.of(2, 2))).resolves.toBe(4)
+    none.dispose()
+    expect(() => defineTaskKind<Float64Array, number>({ id: 'test.nothing-to-move', lane: 'sim', priority: 1, late: 'sync', run: sum, transferAwaitedInput: true })).toThrow(/transferInput/)
+  })
+
+  it('a worker that dies holding a transferred input: that job rejects WorkerTaskInputLost (not run here), a copied one goes back in line to the replacement', async () => {
+    const sum = (input: Float64Array): number => input.reduce((a, b) => a + b, 0)
+    const moving = defineTaskKind<Float64Array, number>({ id: 'test.moving', lane: 'sim', priority: 1, late: 'sync', run: sum, transferInput: (input) => [input.buffer as ArrayBuffer], transferAwaitedInput: true })
+    const copying = defineTaskKind<Float64Array, number>({ id: 'test.copying', lane: 'sim', priority: 1, late: 'sync', run: sum })
+    const spawned: WorkerLike[] = []
+    const inner = inThreadSpawn([moving, copying], { delayMs: 20 })
+    const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
+    const lost = workers.run(moving, Float64Array.of(1, 2))
+    const requeued = workers.run(copying, Float64Array.of(3, 4))
+    spawned[0]!.onerror?.(new Error('killed'))
+    const error = await lost.catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(WorkerTaskInputLost)
+    expect(isWorkerInputLost(error)).toBe(true)
+    await expect(requeued).resolves.toBe(7)
+    expect(workers.stats().kinds.find((k) => k.id === 'test.moving')).toMatchObject({ failed: 1, fallback: 0 })
+    expect(workers.stats().kinds.find((k) => k.id === 'test.copying')).toMatchObject({ failed: 0, fallback: 0, answered: 1 })
+    // the replacement takes the next transferred job
+    await expect(workers.run(moving, Float64Array.of(5, 5))).resolves.toBe(10)
+    workers.dispose()
+  })
+
+  it('a message that cannot be posted is no throw from run: a sync job runs here, another fails', async () => {
+    const triple = defineTaskKind<number, number>({ id: 'test.triple', lane: 'build', priority: 1, late: 'sync', run: (n) => n * 3 })
+    const far = defineTaskKind<number, number>({ id: 'test.far', lane: 'build', priority: 1, late: 'drop', run: (n) => n })
+    const refusing: Spawn = () => ({ onmessage: null, onerror: null, postMessage: () => { throw new Error('DataCloneError') }, terminate: () => undefined })
+    const workers = createWorkerCoordinator({ spawn: refusing, workers: 1 })
+    await expect(workers.run(triple, 2)).resolves.toBe(6)
+    await expect(workers.run(far, 1)).rejects.toThrow(/DataCloneError/)
+    expect(workers.stats().running).toBe(0)
+    workers.dispose()
   })
 
   it('warm says which kinds a worker does not know', async () => {

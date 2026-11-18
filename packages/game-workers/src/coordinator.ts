@@ -1,4 +1,4 @@
-import { WORKER_LANES } from '@adatechnology/game-contracts'
+import { WORKER_INPUT_LOST, WORKER_LANES } from '@adatechnology/game-contracts'
 import type {
   AnyWorkerKind,
   ResidentHandle,
@@ -53,6 +53,17 @@ export class WorkerTaskCancelled extends Error {
   constructor(kind: string) {
     super(`worker job of ${kind} cancelled`)
     this.name = 'WorkerTaskCancelled'
+  }
+}
+
+/**
+ * The promise of an awaited job whose input was transferred (`transferAwaitedInput`) rejects with it when its worker died holding it: the input went with the worker, so the
+ * coordinator cannot run it here; the caller makes it from its own copy (`isWorkerInputLost`). A worker that answers with an error rejects with that error instead.
+ */
+export class WorkerTaskInputLost extends Error {
+  constructor(kind: string) {
+    super(`worker job of ${kind}: its worker died holding its transferred input`)
+    this.name = WORKER_INPUT_LOST
   }
 }
 
@@ -196,7 +207,16 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
     job.slot = slot
     job.counters.queueMs += now() - job.queuedAt
     slot.running.set(job.id, job)
-    slot.worker.postMessage(job.message, job.transfer)
+    try {
+      slot.worker.postMessage(job.message, job.transfer)
+    } catch (error) {
+      // a message that cannot be posted (an input that does not clone) is not the caller's synchronous throw: a sync job runs here (nothing was transferred), any other fails
+      slot.running.delete(job.id)
+      job.slot = null
+      job.counters.failed++
+      if (job.late === 'sync') runOnMain(job)
+      else fail(job, error instanceof Error ? error : new Error(String(error)))
+    }
   }
 
   const dispatch = (): void => {
@@ -233,6 +253,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
         else job.settle.resolve(job.output)
       } else {
         job.counters.failed++
+        // a transferred input cannot run here: the worker's own error (the kernel threw, or the worker does not host the kind)
         if (job.late === 'sync' && !job.moved) runOnMain(job)
         else fail(job, new Error(data.error))
       }
@@ -269,8 +290,9 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
       job.slot = null
       if (job.crashes >= MAX_CRASHES || job.moved) {
         job.counters.failed++
-        if (job.late === 'sync' && !job.moved) runOnMain(job)
-        else fail(job, new Error(job.moved ? `${job.kindId}: its worker died holding its transferred input` : `${job.kindId}: its worker died ${job.crashes} times running it`))
+        if (job.moved) fail(job, new WorkerTaskInputLost(job.kindId))
+        else if (job.late === 'sync') runOnMain(job)
+        else fail(job, new Error(`${job.kindId}: its worker died ${job.crashes} times running it`))
       } else if (job.resident) {
         if (replacement) replacement.own.push(job)
         // no worker for it any more: it is run here when it is collected
