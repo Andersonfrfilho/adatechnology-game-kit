@@ -45,6 +45,7 @@ A new piece of the kit marks its root in its builder; a host that draws somethin
 | `kit_owner { piece }` | Which SDK gives a car, a wall, a table... and how to build it from there |
 | `kit_origin { text, path? }` | The first commit that brought a name or a piece of code, its author, date, subject, PR and files |
 | `kit_audit { package?, domain?, all? }` | The hand-drawn pieces outside their SDK (new, pending and, with `all`, allowed) |
+| `kit_workers { platform?, cores?, work?, workers?, reserveCores?, maxWorkers? }` | How a project sets up the worker coordinator (`game-workers`, CLAUDE.md §14): workers per lane from `planWorkers`, the kit kinds that apply with their schedule, the simulation thread or not, what the host must serve (COOP/COEP) and the code to start it (`workers.mjs`) |
 
 The words are a heuristic: a piece whose code names nothing (a bare `BoxGeometry` in a helper) is not seen, so review still looks at what a
 test area or a bench draws.

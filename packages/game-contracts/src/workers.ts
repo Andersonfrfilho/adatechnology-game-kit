@@ -130,7 +130,10 @@ export interface WorkerCoordinatorStats {
 export interface WorkerCoordinator {
   /** A `sim` job submitted in `at.frame` (default: the last `tick`), due `latencyFrames` later. The input is the coordinator's from here on: do not change it. */
   submit<In, Out>(kind: TaskKind<In, Out>, input: In, at?: { readonly frame?: number; readonly latencyFrames?: number }): TaskHandle<Out>
-  /** A `build` or `background` job: a promise, cancelled through `signal`. */
+  /**
+   * A job awaited instead of collected: a `build` or `background` job, or a `sim` job in the simulation thread (which may wait; with no worker
+   * it runs on this thread). A promise, cancelled through `signal`.
+   */
   run<In, Out>(kind: TaskKind<In, Out>, input: In, signal?: AbortSignal): Promise<Out>
   /** An instance of a resident kind on one worker (or on the main thread when there is none). */
   resident<Init, Step, Result>(kind: ResidentKind<Init, Step, Result>, init: Init): ResidentHandle<Step, Result>
@@ -163,3 +166,28 @@ export const WORKER_KIND_DEFAULTS = {
   [WORKER_KIND_ID.SHAPES_GENERATE]: { lane: 'build', priority: 100, late: 'sync' },
   [WORKER_KIND_ID.WORLD_REGION]: { lane: 'background', priority: 10, latencyFrames: 10, late: 'drop' },
 } as const satisfies Readonly<Record<string, WorkerKindSchedule>>
+
+/*
+ * The simulation thread (spec 009, T22): a game's whole fixed step in one worker that may wait. A package declares its simulation as a
+ * `SimModule`; `@adatechnology/game-workers` runs it (`installSimThread`, `startSimThread`, `runSimInline`).
+ */
+
+/** One running simulation, built in the simulation thread from the start message's `init`. */
+export interface SimInstance {
+  /**
+   * One fixed step. It may return a promise: the loop waits for it (jobs handed to the coordinator are awaited, not raced against a frame),
+   * so the result never depends on how fast the other workers were.
+   */
+  step(frame: number, dt: number, commands: readonly Float64Array[]): void | Promise<void>
+  /** Writes the state the page draws into `out` (the snapshot's bytes, `snapshotBytes` long). */
+  write(out: Uint8Array, frame: number): void
+  dispose?(): void
+}
+
+/** What the simulation thread can build, by id (the worker's file registers every module the game starts). */
+export interface SimModule<Init> {
+  /** `package.thing`: `crowd.horde`. */
+  readonly id: string
+  create(init: Init): SimInstance | Promise<SimInstance>
+}
+export type AnySimModule = SimModule<unknown>

@@ -20,6 +20,12 @@
 - D3. Worker que cai é recriado até 5 vezes; tarefa que derruba 2 workers roda no quadro principal.
 - D4. Mundo vivo: a residente guarda o estado da região no worker (`late: 'drop'`), recebe eventos e devolve mudanças; perto do jogador a
   região volta para a simulação completa por um retrato aplicado num quadro marcado.
+- D5. Código nativo novo é Rust compilado para WebAssembly (`wasm-pack`, threads com `SharedArrayBuffer`), nunca C++ (decisão do dono,
+  2026-11-18). Entra no coordenador como qualquer categoria (o `run` chama o módulo WASM) e passa pelo mesmo teste de equivalência contra o
+  kernel em TypeScript. No Electron, o mesmo crate pode virar addon nativo, chamado só do processo principal ou de um worker. Exceção:
+  bibliotecas C++ prontas que já usamos (Jolt) continuam como estão; a física fica só no Jolt, sem segundo adaptador (Rapier avaliado e descartado pelo dono). Só vira WASM o que a medição na sala mostrar que vale.
+- D6. A thread de simulação (T22) espera de verdade: o passo aguarda os jobs que mandou aos workers (`await`) e dorme até o próximo passo com
+  `Atomics.wait`; a página só empurra comandos num anel e lê o retrato mais novo de um buffer triplo, sem trava e sem espera.
 
 ## Medição
 

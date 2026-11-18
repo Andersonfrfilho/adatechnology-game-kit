@@ -5,12 +5,14 @@
 //   kit_owner   { piece }                       which package gives a car, a wall, a table... and how to use it
 //   kit_origin  { text, path? }                 the commit (and PR) that brought a name or a piece of code into the repository
 //   kit_audit   { package?, domain?, all? }     the hand-drawn pieces outside their SDK (tools/kit-audit/audit.mjs)
+//   kit_workers { platform?, cores?, work?, ... } how a project sets up the worker coordinator: plan, kinds, simulation thread, code (workers.mjs)
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { createInterface } from 'node:readline'
 import { fileURLToPath } from 'node:url'
 import { audit, group, wordsOf } from './audit.mjs'
+import { PLATFORMS, WORK, recommendWorkers } from './workers.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -80,13 +82,30 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: { package: { type: 'string' }, domain: { type: 'string', enum: Object.keys(rules.domains) }, all: { type: 'boolean' } } },
     run: auditTool,
   },
+  {
+    name: 'kit_workers',
+    description:
+      'How a project should use the worker coordinator (@adatechnology/game-workers): for its platform (browser, electron, node, mobile), cores and heavy work, the workers per lane, the kit kinds that apply with their schedule, whether to run the simulation thread, what the host must serve (COOP/COEP), and the code to start it. Use before adding any heavy work or any worker.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', enum: Object.keys(PLATFORMS), description: 'Where the game runs (default browser).' },
+        cores: { type: 'number', description: 'Cores of the target machine (default 8).' },
+        work: { type: 'array', items: { type: 'string', enum: Object.keys(WORK) }, description: 'The heavy work of the project (default crowd, ground, pieces, colliders, shapes).' },
+        workers: { description: '"auto" (default) or a fixed number of workers (0: all on the main thread).' },
+        reserveCores: { type: 'number', description: 'Cores left free for others (Jolt job threads); default 2 with physics, else 0.' },
+        maxWorkers: { type: 'number', description: 'Ceiling of the automatic count (default 8, 3 on mobile).' },
+      },
+    },
+    run: (input) => recommendWorkers(root, input),
+  },
 ]
 
 /** @param {Record<string, unknown>} message */
 const send = (message) => process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', ...message })}\n`)
 
 /** @param {{ id?: number | string, method?: string, params?: { protocolVersion?: string, name?: string, arguments?: Record<string, unknown> } }} request */
-function handle(request) {
+async function handle(request) {
   const { id, method, params } = request
   if (id === undefined) return // a notification (initialized, cancelled): nothing to answer
   if (method === 'initialize') {
@@ -98,7 +117,7 @@ function handle(request) {
     const tool = TOOLS.find((t) => t.name === params?.name)
     if (!tool) return send({ id, error: { code: -32602, message: `unknown tool ${params?.name}` } })
     try {
-      const result = tool.run(params?.arguments ?? {})
+      const result = await tool.run(params?.arguments ?? {})
       return send({ id, result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } })
     } catch (error) {
       return send({ id, result: { content: [{ type: 'text', text: String(/** @type {Error | undefined} */ (error)?.message ?? error) }], isError: true } })
@@ -115,5 +134,5 @@ createInterface({ input: process.stdin }).on('line', (line) => {
   } catch {
     return send({ id: null, error: { code: -32700, message: 'parse error' } })
   }
-  handle(request)
+  void handle(request)
 })

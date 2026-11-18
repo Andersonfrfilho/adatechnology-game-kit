@@ -37,7 +37,10 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
-  define: { 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(await kitWorkerSource(esbuild, root)) },
+  define: {
+    'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(await kitWorkerSource(esbuild, root)),
+    'globalThis.__KIT_SIM_SOURCE__': JSON.stringify(await kitWorkerSource(esbuild, root, 'src/sim-worker.js')),
+  },
   alias: {
     ...Object.fromEntries([...packages, 'game-contracts', 'game-floorplan-three'].map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     '@adatechnology/game-crowd-three/testing': join(pkg('game-crowd-three'), 'dist/testing.js'),

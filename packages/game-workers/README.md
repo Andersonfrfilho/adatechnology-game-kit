@@ -82,6 +82,47 @@ Every kind passes `checkTaskKind(kind, samples, [nodeSpawn(url)])` in CI: each s
 
 `stats()`: workers per lane, queued, running, respawned, and per kind `submitted`, `onTime`, `fallback`, `dropped`, `cancelled`, `failed`, `workerMs`, `mainMs`, `queueMs`. The test room and `perf-gate` read them: a kind with many fallbacks needs more latency, a higher priority, or more `sim` workers.
 
+## The simulation thread
+
+The main thread of a page may not wait, so in the plain coordinator a late `sim` job is computed again on the main thread. The simulation thread removes that limit the way native engines do: the whole fixed step runs in one dedicated worker, which **may wait** for the jobs it hands to other workers and sleeps until its next step (`Atomics.wait` is allowed in a worker). The page only pushes input and draws.
+
+```ts
+// sim-worker.ts: the simulation thread's file, with every module the game may start
+import { installSimThread } from '@adatechnology/game-workers'
+import { hordeSimModule } from '@adatechnology/game-crowd'
+installSimThread(self, [hordeSimModule])
+
+// the page
+if (canRunSimThread()) {
+  const sim = startSimThread(browserSpawn(new URL('./sim-worker.js', import.meta.url)), { module: 'crowd.horde', init, snapshotBytes: hordeSnapshotBytes(capacity) })
+  // every frame: input in, the newest whole snapshot out; neither ever waits
+  sim.send([HORDE_COMMAND.TARGET, player.x, player.z, player.yaw, 1])
+  const snapshot = sim.latest()
+  if (snapshot) readHordeSnapshot(crowd.store, snapshot.bytes)
+}
+```
+
+- A module is a `SimModule` (`game-contracts`): `create(init)` gives `step(frame, dt, commands)` and `write(out, frame)`. `step` may return a promise: the loop awaits the jobs it handed to a coordinator of its own (`workers.run`), so the result never depends on how fast those workers were.
+- The state reaches the page through a triple buffer of snapshots (`SnapshotWriter` / `SnapshotReader`): the writer never waits, the reader always gets the newest whole snapshot. Input goes the other way through a ring of fixed-width commands (`CommandRing`): a full ring refuses a command instead of waiting.
+- `runSimInline(module, init, { steps, commands })` runs the same loop on this thread: the reference the thread must match byte for byte, and the fallback where memory cannot be shared.
+- It needs shared memory: `canShareMemory()` is true in Node, in Electron (always cross-origin isolated) and in a page served with `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`. Without it, keep the plain coordinator.
+- The paced loop counts its own steps (`stats()`: steps, mean and max step ms, stalls dropped); `stop()` wakes it from its sleep.
+
+## Choosing a setup by project
+
+| Project | Coordinator | Simulation thread | Notes |
+|---|---|---|---|
+| Browser game, page not isolated | `'auto'` (on in the kit preset) | no | `sim` jobs collected at their due frame, fallback here |
+| Browser game, served with COOP/COEP | `'auto'` | yes, when the fixed step is busy (horde, crater ground, AI) | the page keeps input and drawing |
+| Electron app | `'auto'`, `reserveCores` for Jolt | yes | `nodeSpawn` in the main process for the far world and loading; native code as a Rust addon only from the main process or a worker |
+| Node server or tool | `nodeSpawn`, `'auto'` | optional (`paced: false` for a server tick or a replay) | the main thread may wait in Node |
+| Phone or webview | `maxWorkers: 2` to `3` | no | measure on the device before raising it |
+| Tests | `inThreadSpawn` or `nodeSpawn` | `runSimInline` | `checkTaskKind` byte for byte |
+
+The `kit_workers` tool of the repository's `game-kit` MCP answers this for a given platform, core count and set of heavy work: the plan per lane, the kit kinds that apply with their schedule, whether to run the simulation thread, what the host must serve, and the code to start it.
+
+Native code, when a measurement shows a kernel is worth it, is Rust compiled to WebAssembly and run inside a kind, with the same equivalence test against the TypeScript kernel (spec 009, D5). Physics stays on Jolt, which runs its own job threads: leave them cores with `reserveCores`.
+
 ## Inspirations
 
 Naughty Dog's fiber job system (everything heavy is a job, frames in a pipeline), Unity's Job System (data-only jobs, handles, `Complete()` that forces the end: here the fallback), Unreal's TaskGraph (priority classes, named pools), Frostbite (jobs by frame phase) and Bevy's task pools (pools by the nature of the work, each a share of the cores with a floor and a ceiling). What does not carry over to the browser: fibers, waiting on the main thread, thread affinity. The design document is linked from `specs/regras/14-workers.md`.

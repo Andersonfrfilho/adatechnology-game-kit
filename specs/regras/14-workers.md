@@ -25,5 +25,15 @@ um coordenador de workers configurável ou automático, que todo pacote e todo j
 - **Arquivo do worker do jogo**: um só, com `installWorkerHost(self, [...kinds do kit, ...kinds do jogo])`; página de arquivo único usa
   `sourceSpawn` com o bundle do worker embutido.
 
+- **Ligado por padrão, configurável à mão**: o preset do kit cria o coordenador automático; quem usa o kit passa o seu
+  (`createWorkerCoordinator` com número de workers, faixas e categorias) ou `workers: 0` para rodar tudo no quadro principal.
+- **Thread de simulação** (T22): o passo fixo inteiro pode rodar num worker que espera os jobs que mandou (`installSimThread`,
+  `startSimThread`); a página só empurra comandos num anel e lê o retrato mais novo, sem esperar. Precisa de memória compartilhada
+  (COOP/COEP no navegador, sempre no Electron). Todo módulo de simulação tem teste byte a byte contra `runSimInline`.
+- **Código nativo é Rust em WASM**, dentro de uma categoria e com o mesmo teste de equivalência; só quando a medição mostrar que vale.
+  A física fica no Jolt (com `reserveCores` para as threads dele).
+- **Na dúvida sobre como configurar um projeto**: ferramenta `kit_workers` do MCP `game-kit` (plataforma, núcleos e trabalho pesado do
+  projeto) e a tabela "Choosing a setup by project" do README.
+
 Guia completo, API e tabela da repartição automática: `packages/game-workers/README.md`. Desenho com as inspirações (Naughty Dog, Unity,
 Unreal, Frostbite, Bevy) e o mundo vivo em segundo plano: https://claude.ai/artifact/37JV3UkwhMtqz1mAHWeCEf.

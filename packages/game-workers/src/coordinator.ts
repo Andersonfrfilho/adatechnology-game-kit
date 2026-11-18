@@ -400,26 +400,35 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
 
   const latencyOf = (schedule: WorkerKindSchedule, at?: { readonly latencyFrames?: number }): number => Math.max(1, Math.floor(at?.latencyFrames ?? schedule.latencyFrames ?? 1))
 
+  const taskJob = <In, Out>(kind: TaskKind<In, Out>, input: In, at?: { readonly frame?: number; readonly latencyFrames?: number }): Job => {
+    const schedule = scheduleOf(kind as TaskKind<unknown, unknown>)
+    const submitted = at?.frame ?? frame
+    const job = makeJob({
+      kind: kind as TaskKind<unknown, unknown>,
+      schedule,
+      dueFrame: schedule.lane === 'sim' ? submitted + latencyOf(schedule, at) : Number.POSITIVE_INFINITY,
+      message: (id) => ({ t: 'task', id, kind: kind.id, input }),
+      transfer: schedule.late === 'sync' ? [] : [...(kind.transferInput?.(input) ?? [])],
+      runHere: () => kind.run(input),
+      resident: null,
+    })
+    return job
+  }
+
   const coordinator: WorkerCoordinator & { readonly plan: WorkerPlan } = {
     plan,
     submit<In, Out>(kind: TaskKind<In, Out>, input: In, at?: { readonly frame?: number; readonly latencyFrames?: number }): TaskHandle<Out> {
-      const schedule = scheduleOf(kind as TaskKind<unknown, unknown>)
-      const submitted = at?.frame ?? frame
-      const job = makeJob({
-        kind: kind as TaskKind<unknown, unknown>,
-        schedule,
-        dueFrame: schedule.lane === 'sim' ? submitted + latencyOf(schedule, at) : Number.POSITIVE_INFINITY,
-        message: (id) => ({ t: 'task', id, kind: kind.id, input }),
-        transfer: schedule.late === 'sync' ? [] : [...(kind.transferInput?.(input) ?? [])],
-        runHere: () => kind.run(input),
-        resident: null,
-      })
+      const job = taskJob(kind, input, at)
       enqueue(job)
       return handleOf<Out>(job)
     },
 
     run<In, Out>(kind: TaskKind<In, Out>, input: In, signal?: AbortSignal): Promise<Out> {
-      const handle = coordinator.submit(kind, input)
+      const job = taskJob(kind, input)
+      enqueue(job)
+      // nobody collects an awaited job: a `sim` kind with no worker to serve it runs here, as the other lanes do (the simulation thread awaits its jobs)
+      if (job.lane === 'sim' && job.state === 'queued' && !served('sim')) toMain(job)
+      const handle = handleOf<Out>(job)
       if (signal) {
         if (signal.aborted) handle.cancel()
         else signal.addEventListener('abort', () => handle.cancel(), { once: true })

@@ -1,6 +1,6 @@
 ---
 name: game-kit
-description: Use quando for criar ou mudar qualquer coisa de jogo no adatechnology-game-kit ou num jogo que o usa (ZombiAdA ou outro) — arma, casa, móvel, item, veículo, zumbi, personagem, animal, planta, efeito, som, mapa, ambiente de teste. Diz qual pacote do kit já faz aquilo, como eles se compõem e as regras para não refazer do zero. Também: de onde vem uma peça que está na tela, SDK dono, peça desenhada à mão, kit-audit, kit_owner, kit_origin.
+description: Use quando for criar ou mudar qualquer coisa de jogo no adatechnology-game-kit ou num jogo que o usa (ZombiAdA ou outro) — arma, casa, móvel, item, veículo, zumbi, personagem, animal, planta, efeito, som, mapa, ambiente de teste. Diz qual pacote do kit já faz aquilo, como eles se compõem e as regras para não refazer do zero. Também: de onde vem uma peça que está na tela, SDK dono, peça desenhada à mão, kit-audit, kit_owner, kit_origin, kit_workers (como configurar os workers de um projeto).
 ---
 
 # AdA Technology Game Kit — mapa dos SDKs
@@ -52,6 +52,12 @@ Regra §1 do `CLAUDE.md`: cada peça vem do SDK dono, importada, nunca copiada.
 2. Monte a peça pelo pacote dono. Num pacote que não pode depender do dono, receba o construtor por opção (ex.: `createWeatherVisual({ vehicles })`
    recebe `createVehiclesThree(THREE, { kit })`; o exemplo passa o construtor). Sem o construtor, não desenhe a peça: nada de caixa no lugar.
 3. A peça não existe no dono? Ela entra primeiro no pacote dono e só depois é usada. Não sabe se existe? Pergunte.
+
+### Antes de pôr trabalho pesado fora do quadro
+
+Pergunte ao MCP `game-kit`: `kit_workers { platform: "electron", cores: 12, work: ["crowd", "ground", "physics"] }` devolve quantos workers
+por faixa, as categorias do kit que valem com prazo e prioridade, se vale a thread de simulação, o que o servidor precisa mandar
+(COOP/COEP) e o código para ligar. A regra é a §14 (`specs/regras/14-workers.md`): tudo pelo coordenador do `game-workers`.
 
 ### Achar de onde veio uma peça que está na tela
 

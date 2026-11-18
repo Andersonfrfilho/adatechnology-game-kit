@@ -12,7 +12,7 @@ import { createRng, CROWD_PHYSICS_DEFAULTS } from '@adatechnology/game-crowd'
 import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { CROWD_AREA_ID, createCrowdTestModule } from '@adatechnology/game-crowd-three/testing'
 import { create } from '@adatechnology/game-infection'
-import { roomWorkers } from './workers.js'
+import { roomHordeThread, roomWorkers } from './workers.js'
 
 export { createCrowdTestModule }
 
@@ -97,6 +97,8 @@ export function createModule(options = {}) {
     infection: { create: town, region: 'town', active: (model) => /** @type {ReturnType<typeof town>} the model `create` made */ (model).region('town').active },
     props: SCENE_PROPS,
     crowdPhysics: roomPhysics(),
+    // ?sim=thread: the horde steps in the simulation thread and the page only draws it (spec 009, T22)
+    ...((hordeThread) => (hordeThread ? { hordeThread } : {}))(roomHordeThread()),
     // identity, accessories, near shadows, blobs and the impostor: the economy ladder of the horde
     variety: { ...(budget === undefined ? {} : { budget }), ...(query.get('prepass') === '0' ? { nearDepthPrepass: false } : {}), ...(query.get('clips') === '1' ? { segmentClips: true } : {}) },
     eager: true,

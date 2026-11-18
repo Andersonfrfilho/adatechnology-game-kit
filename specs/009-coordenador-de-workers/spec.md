@@ -23,8 +23,9 @@ Todo trabalho pesado do kit e dos jogos sai do quadro principal pelo mesmo coord
 - R7. Teste de equivalência por categoria no CI; medição na sala com a trava `perf-measure.lock` antes do merge de cada migração.
 - R8. Todas as categorias do desenho entram nesta spec: chão da cratera, física da multidão, caixas das peças, colisores fixos, formas e
   normais, reserva de núcleos para o Jolt, preset do kit e o mundo vivo em segundo plano.
+- R9. Backend por plataforma (navegador, Electron, Node) e a thread de simulação em worker, com espera permitida dentro dela (fase G).
 
 ## Fora do escopo
 
-- Transporte `shared` (SharedArrayBuffer) no coordenador: exige espera ou `Atomics.waitAsync`; fica a avaliar depois de medir o `transfer`.
+- Nada: o transporte `shared` entrou na fase G (T21).
 - Threads do próprio Jolt: decididas na thread do app desktop; aqui só a reserva de núcleos.

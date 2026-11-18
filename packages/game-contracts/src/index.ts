@@ -155,4 +155,4 @@ export {
 } from './foley'
 export type { BlowId, BlowTarget, BodyFoleyId, BodySoundId, FootstepSoundId, GaitId, LandSoundId, LandingId, SurfaceId } from './foley'
 export { WORKER_KIND_DEFAULTS, WORKER_KIND_ID, WORKER_LANES, WORKER_LATE_RULES } from './workers'
-export type { AnyResidentKind, AnyTaskKind, AnyWorkerKind, ResidentHandle, ResidentInstance, ResidentKind, TaskHandle, TaskKind, WorkerCoordinator, WorkerCoordinatorStats, WorkerKindSchedule, WorkerKindStats, WorkerLane, WorkerLateRule, WorkerResultSource } from './workers'
+export type { AnyResidentKind, AnySimModule, AnyTaskKind, AnyWorkerKind, ResidentHandle, ResidentInstance, ResidentKind, SimInstance, SimModule, TaskHandle, TaskKind, WorkerCoordinator, WorkerCoordinatorStats, WorkerKindSchedule, WorkerKindStats, WorkerLane, WorkerLateRule, WorkerResultSource } from './workers'
