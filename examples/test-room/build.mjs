@@ -89,7 +89,8 @@ const joltBoot = (
   await esbuild.build({
     stdin: {
       contents: `import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
-import { createJoltEngine } from '@adatechnology/game-physics-jolt'
+import { MAX_WORKER_THREADS, createJoltEngine } from '@adatechnology/game-physics-jolt'
+// ?joltThreads=auto: the machine's threads but the page's own, at most the build's pthread pool (MAX_WORKER_THREADS)
 // ?joltBuild=multithread (needs a cross-origin isolated page: the 4280 with --isolate, or the desktop app), ?joltThreads=N|auto job threads besides the main one,
 // ?joltContacts=off the kit's JS contact listener off (only to measure: Jolt calls it from the job threads, where it does not exist). Anything that cannot run here
 // falls back to the single-threaded build, said in the console and in window.__joltInfo
