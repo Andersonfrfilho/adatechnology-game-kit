@@ -4032,6 +4032,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
   let moduleFrameCount = 0
+  // the module being attached: its frame callbacks carry its id, so a frame's time can be read per module
+  let attachingModule: string | undefined
   // the modules' frame callbacks by system id: the performance probe (tools/gpu/room-explosion.mjs) times them in place
   const moduleFrames = new Map<string, { update: (dt: number) => void }>()
   // the room's frame: 0.05 s is the clamp the loop always had, and 8 ms is the biggest budget of the loose queues of today
@@ -4677,7 +4679,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     defer: (queue, queueOptions) => scheduler.budget.register(queue, queueOptions),
     onFrame(update, frameOptions) {
-      const id = `module.frame#${moduleFrameCount++}`
+      const id = `module.frame#${moduleFrameCount++}${attachingModule === undefined ? '' : `:${attachingModule}`}`
       const frameEntry = { update }
       moduleFrames.set(id, frameEntry)
       const remove = scheduler.add(
@@ -4924,7 +4926,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       })
       if (!activeBench || !benches.has(activeBench)) activeBench = mod.id
     } else if (activeBench === mod.id) activeBench = lastBench()
-    if (mod.attach) detachers.set(mod.id, mod.attach(bench ? { ...host, bench: lendBench(bench) } : host))
+    if (mod.attach) {
+      const attach = mod.attach
+      attachingModule = mod.id
+      try {
+        detachers.set(mod.id, attach(bench ? { ...host, bench: lendBench(bench) } : host))
+      } finally {
+        attachingModule = undefined
+      }
+    }
     sendingInitial = true
     try {
       bench?.sendInitial()

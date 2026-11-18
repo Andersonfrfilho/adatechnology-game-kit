@@ -19,7 +19,7 @@ function setup() {
   const shoot = (): void => {
     for (const id of ['wall_0_0', 'wall_0_1', 'wall_0_2']) world.hitPart(d.id!, id, { type: 'ballistic', point: centre(id), direction: [0, 0, -1], energy: 500, caliber: 9 })
   }
-  return { d, house, shoot, queue: d.breach.deferredQueue(), houseRenderer }
+  return { d, house, world, shoot, queue: d.breach.deferredQueue(), houseRenderer }
 }
 
 describe('breach paint as a deferred queue', () => {
@@ -71,5 +71,73 @@ describe('breach paint as a deferred queue', () => {
     expect(houseRenderer.renderer.deferredQueue!().pending()).toBe(queue.pending())
     d.breach.flush()
     expect(queue.pending()).toBe(0)
+  })
+
+  it('a wall a burst of rifle rounds cuts many times in one frame is painted once, by one run of the cut queue, even with the deadline past', () => {
+    const { d, house, world, houseRenderer } = setup()
+    const queue = houseRenderer.renderer.cutQueue!()
+    queue.attach?.()
+    const id = 'wall_0_1'
+    const p = house.structure.byId.get(id)!
+    const along = p.aabb[2] - p.aabb[0] > p.aabb[3] - p.aabb[1]
+    const masks = (): Array<{ version: number }> => {
+      const found: Array<{ version: number }> = []
+      house.group.traverse((object) => {
+        const mask = (object.userData as { breachMask?: { texture: { version: number } } }).breachMask
+        if (object.name === 'breach-shell' && mask && !found.includes(mask.texture)) found.push(mask.texture)
+      })
+      return found
+    }
+    // the first round makes the wall's view; the next ones cut it again in the same frame
+    const shot = (k: number) => {
+      const x = along ? p.aabb[0] + 0.6 + k * 0.25 : (p.aabb[0] + p.aabb[2]) / 2
+      const z = along ? (p.aabb[1] + p.aabb[3]) / 2 : p.aabb[1] + 0.6 + k * 0.25
+      world.hitPart(d.id!, id, { type: 'ballistic', point: [x, (p.y0 + p.y1) / 2, z], direction: along ? [0, 0, -1] : [-1, 0, 0], energy: 3500, caliber: 7.62 })
+    }
+    shot(0)
+    queue.run(0, () => 1)
+    const before = masks().map((mask) => mask.version)
+    expect(before.length).toBeGreaterThan(0)
+    for (let k = 1; k <= 5; k++) shot(k)
+    expect(masks().map((mask) => mask.version)).toEqual(before)
+    expect(queue.pending()).toBeGreaterThan(0)
+    queue.run(0, () => 1)
+    const after = masks().map((mask) => mask.version)
+    expect(after.every((version, k) => version === before[k]! + 1)).toBe(true)
+    queue.detach?.()
+  })
+
+  it('one run of the cut queue with the deadline past paints the walls cut in every house of the renderer, not one house a frame', () => {
+    const { d, house, world, houseRenderer } = setup()
+    const second = houseRenderer.renderer.build(planOf('sobrado', 3), { quality: 'high', night: false })
+    second.group.position.x = 40
+    second.group.updateMatrixWorld(true)
+    house.group.parent!.add(second.group)
+    second.destruction.activate()
+    const queue = houseRenderer.renderer.cutQueue!()
+    queue.attach?.()
+    const versionsOf = (group: typeof house.group): number[] => {
+      const found: Array<{ version: number }> = []
+      group.traverse((object) => {
+        const mask = (object.userData as { breachMask?: { texture: { version: number } } }).breachMask
+        if (object.name === 'breach-shell' && mask && !found.includes(mask.texture)) found.push(mask.texture)
+      })
+      return found.map((texture) => texture.version)
+    }
+    const shoot = (target: typeof house, id: string): void => {
+      const p = target.structure.byId.get(id)!
+      const point: [number, number, number] = [(p.aabb[0] + p.aabb[2]) / 2, (p.y0 + p.y1) / 2, (p.aabb[1] + p.aabb[3]) / 2]
+      const world3 = target.group.localToWorld(new THREE.Vector3(...point))
+      world.hitPart(target.destruction.id!, id, { type: 'ballistic', point: [world3.x, world3.y, world3.z], direction: [0, 0, -1], energy: 3500, caliber: 7.62 })
+    }
+    shoot(house, 'wall_0_1')
+    shoot(second, 'wall_0_1')
+    expect(queue.pending()).toBe(1)
+    expect(queue.run(0, () => 1)).toBe(1)
+    expect(queue.pending()).toBe(0)
+    expect(versionsOf(house.group).some((version) => version > 1)).toBe(true)
+    expect(versionsOf(second.group).some((version) => version > 1)).toBe(true)
+    expect(d.id).not.toBe(second.destruction.id)
+    queue.detach?.()
   })
 })

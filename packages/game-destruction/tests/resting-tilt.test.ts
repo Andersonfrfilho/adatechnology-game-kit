@@ -27,9 +27,24 @@ describe('resting joints and tilt', () => {
   it('a small lean keeps the books on the shelf', () => {
     const world = createDestruction()
     const id = world.add(shelf(), { id: 'case' })
-    world.setTransform(id, [0, 0, 0], tiltZ(15))
+    world.setTransform(id, [0, 0, 0], tiltZ(8))
     expect(world.state(id)!.joints.every((j) => !j.open)).toBe(true)
     expect(world.state(id)!.groups).toHaveLength(1)
+  })
+
+  it('leaning along the shelf past atan(thickness / height) (11°), an upright book goes over', () => {
+    const world = createDestruction()
+    const id = world.add(shelf(), { id: 'case' })
+    world.setTransform(id, [0, 0, 0], tiltZ(15))
+    expect(world.state(id)!.joints.filter((j) => j.open)).toHaveLength(2)
+  })
+
+  it('leaning as much toward its spine, where it is as deep as it is tall, an upright book stays until it slides (30°)', () => {
+    const world = createDestruction()
+    const id = world.add(shelf(), { id: 'case' })
+    const half = (15 * Math.PI) / 360
+    world.setTransform(id, [0, 0, 0], [Math.sin(half), 0, 0, Math.cos(half)])
+    expect(world.state(id)!.joints.every((j) => !j.open)).toBe(true)
   })
 
   it('a toppled case lets every book fall off on its own, while the screwed board stays', () => {

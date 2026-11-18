@@ -149,6 +149,8 @@ export interface PieceBody extends Piece {
   /** Time of the last hard-landing report. */
   lastHit: number
   onGround: boolean
+  /** Hung on a hinge (`PieceSystem.hinge`): a shelf swinging down on the screw left at one end. */
+  hinge?: PieceHinge
   /** Falling over (`tip`): the spin it is given per second on the ground, about x and z, and the seconds it may still take; null when it lies or never had to fall. */
   tipping: { x: number; z: number; seconds: number } | null
   /** The contact impulses each point of the box gave in the last substep (normal, friction x, friction z per point), to start the next one from. */
@@ -187,6 +189,14 @@ export interface PieceBody extends Piece {
   massOffset?: number
   /** Coefficient of restitution of its surface (by its material), mixed with the other surface's by geometric mean; default `SLAM_BOUNCE`. */
   restitution?: number
+}
+
+/** A hinge a piece hangs on (`PieceBody.hinge`): the point it turns about (world), that point in its frame from its centre of mass, its rotation when hung and the seconds left. */
+export interface PieceHinge {
+  readonly point: Vec3
+  readonly local: Vec3
+  readonly from: readonly [number, number, number, number]
+  seconds: number
 }
 
 /** How a round piece is round (`PieceBody.round`). */

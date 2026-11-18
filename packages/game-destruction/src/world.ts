@@ -225,6 +225,19 @@ const CAST_TOLERANCE = 1e-3
 const CAST_REACH = 2e-3
 const cutFactorOf = (shape: PartSpec['shape']): number => clamp(Math.max(...shapeDims(shape)) / CUT_SLICE, 1, 50)
 
+/** How a part that lies on another stands (`restingStance`): half its height and its level axes (in the object's frame) with their half-widths. */
+interface RestingStance {
+  readonly halfHeight: number
+  readonly across: ReadonlyArray<{ readonly x: number; readonly z: number; readonly half: number }>
+}
+
+/** How an object leans: the cosine of its up axis to the world's, and the level direction (its own frame) its top leans toward. */
+interface ObjectTilt {
+  readonly upY: number
+  readonly towardX: number
+  readonly towardZ: number
+}
+
 interface PartRT {
   spec: PartSpec
   mat: MaterialDef
@@ -2855,11 +2868,50 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const j of opened) emit({ ...base(o, src), type: 'detach', joint: j.spec.id, parts: [j.spec.a, j.spec.b], by, groups: o.st.groups.map((g) => [...g]) })
   }
 
-  /** Gravity is all that holds a `resting` joint: tipped past `RESTING_HOLD_COS` (the object's up axis leaning away from the world's), what lay on a part falls off. */
+  /**
+   * How what lies on a part over a `resting` joint stands, in the object's frame: half its height and its half-widths across (the level axes of its box), or null when it
+   * is not a box (it only slides). Remembered per joint.
+   */
+  const restingStances = new WeakMap<JointRT, RestingStance | null>()
+  const restingStance = (o: ObjRT, j: JointRT): RestingStance | null => {
+    const known = restingStances.get(j)
+    if (known !== undefined) return known
+    const a = o.parts[j.ia]
+    const b = o.parts[j.ib]
+    const upper = a.pos[1] >= b.pos[1] ? a : b
+    let stance: RestingStance | null = null
+    if (upper.spec.shape.kind === 'box') {
+      const axes = [0, 1, 2].map((k) => rotateVec(upper.q, [k === 0 ? 1 : 0, k === 1 ? 1 : 0, k === 2 ? 1 : 0]))
+      const up = axes.reduce((best, axis, k) => (Math.abs(axis[1]) > Math.abs(axes[best][1]) ? k : best), 0)
+      const level = [0, 1, 2].filter((k) => k !== up)
+      stance = { halfHeight: upper.dims[up] / 2, across: level.map((k) => ({ x: axes[k][0], z: axes[k][2], half: upper.dims[k] / 2 })) }
+    }
+    restingStances.set(j, stance)
+    return stance
+  }
+
+  /**
+   * Whether what lies on a part over a `resting` joint goes, with the object tilted so that its up axis leans by `upY` toward (`towardX`, `towardZ`) of its own frame: it
+   * slides off past `RESTING_HOLD_COS`, or goes over sooner when it stands narrower that way than it is tall (a book upright on a shelf tipped along the shelf goes at
+   * atan(thickness / height), about 10°; tipped toward its spine, only when it slides).
+   */
+  const restingLetsGo = (o: ObjRT, j: JointRT, tilt: ObjectTilt): boolean => {
+    if (tilt.upY < RESTING_HOLD_COS) return true
+    const stance = restingStance(o, j)
+    if (!stance) return false
+    const width = stance.across.reduce((sum, axis) => sum + Math.abs(axis.x * tilt.towardX + axis.z * tilt.towardZ) * axis.half, 0)
+    return tilt.upY < Math.cos(Math.atan2(width, stance.halfHeight))
+  }
+
+  /** Gravity is all that holds a `resting` joint: tipped past its hold (`restingLetsGo`: the object's up axis leaning away from the world's), what lay on a part falls off. */
   const slideOffResting = (o: ObjRT, rotation: Quat) => {
     const upY = 1 - 2 * (rotation[0] * rotation[0] + rotation[2] * rotation[2])
-    if (upY >= RESTING_HOLD_COS) return
-    const opened = o.joints.filter((j) => j.spec.kind === 'resting' && !j.st.open)
+    if (upY >= 1 - 1e-9) return
+    // the world's up in the object's frame: its level part is where the object leans away from
+    const worldUp = rotateVec(quat.conjugate(rotation), [0, 1, 0])
+    const level = Math.hypot(worldUp[0], worldUp[2])
+    const tilt: ObjectTilt = { upY, towardX: -worldUp[0] / level, towardZ: -worldUp[2] / level }
+    const opened = o.joints.filter((j) => j.spec.kind === 'resting' && !j.st.open && restingLetsGo(o, j, tilt))
     if (opened.length === 0) return
     run(() => {
       for (const j of opened) {

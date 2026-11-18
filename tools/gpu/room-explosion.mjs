@@ -74,7 +74,7 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 /**
  * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number, framep50: number, framep99: number, framemax: number }} Cell
- * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number> }} StageFrame
+ * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number> }} StageFrame
  */
 
 /**
@@ -171,6 +171,9 @@ export async function inPage(job) {
   let physicsDepth = 0
   /** @type {Set<string>} */
   const inside = new Set()
+  /** @type {string[]} */
+  const moduleIds = []
+  ;/** @type {{ __roomExplosionModules?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionModules = moduleIds
   /**
    * `physics`: a root of the physics column (timed so its parents subtract it, and a physics stage under it is not `stagesOut`); `outermost`: only the outer call of a recursive method.
    * @param {string} label @param {object | undefined | null} owner @param {string} name @param {'' | 'physics' | 'outermost'} [mode]
@@ -262,7 +265,11 @@ export async function inPage(job) {
     stage('fluidView', room.fluidRenderer, 'update')
     stage('film', room.film, 'update')
     stage('audio', room.audio?.deferredQueue?.(), 'run')
-    for (const entry of parts?.moduleFrames.values() ?? []) stage('modules', entry, 'update')
+    // one label per module, so a worst frame names the module (`modules` is their sum)
+    for (const [id, entry] of parts?.moduleFrames ?? []) {
+      moduleIds.push(id)
+      stage(`module:${id}`, entry, 'update')
+    }
     stage('lights', room.lights, 'present')
     // three's Object3D, up the scene's prototype chain: matrices are updated over the tree, so only the outer call is timed
     /** @type {object | null} */
@@ -324,8 +331,10 @@ export async function inPage(job) {
     const drawn = room.webgl.info?.render
     const row = [acc.loop + acc.piece + acc.wake, acc.loop, acc.piece, acc.wake, whole, render, ...labels.map((label) => stageMs[label] ?? 0)]
     if (frameLabels.length === 0) return row
+    stageMs.modules = moduleIds.reduce((total, id) => total + (stageMs[`module:${id}`] ?? 0), 0)
     row.push(...frameLabels.map((label) => stageMs[label] ?? 0),
       renderCpu, render - renderCpu, -1, job.isRendered ? drawn?.calls ?? 0 : 0, job.isRendered ? drawn?.triangles ?? 0 : 0, particles, room.renderer.fragments?.count ?? 0, room.renderer.pieceSys.list?.length ?? 0)
+    row.push(...moduleIds.map((id) => stageMs[`module:${id}`] ?? 0))
     if (query && job.isRendered) queries.push({ query, row })
     else if (query) context.deleteQuery(query)
     return row
@@ -507,7 +516,8 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const groundStats = await page.evaluate(() => /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__groundWorkerStats, undefined)
       if (groundStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: ground tiles ${JSON.stringify(groundStats)}`)
       if (!timings) throw new Error('no timings')
-      return { timings, load }
+      const moduleIds = await page.evaluate(() => /** @type {{ __roomExplosionModules?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionModules ?? [], undefined)
+      return { timings, load, moduleIds }
     } finally {
       await page.close()
     }
@@ -536,8 +546,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   if (stageVariant && stageRounds > 0) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
-        const { timings } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
-        timings.forEach((frame, index) => stageFrames.push({ variant: stageVariant, throttle, kind, round, frame: index, updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
+        const { timings, moduleIds } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
+        const moduleColumn = 6 + STAGE_LABELS.length + FRAME_LABELS.length + FRAME_EXTRAS.length
+        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, frame: index, updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
         console.log(`room-explosion: stage round ${round} ${stageVariant} ${throttle}x ${kind} done`)
       } catch (error) {
         errors.push(`stages ${throttle}x ${kind}: ${error instanceof Error ? error.message : String(error)}`)
@@ -607,6 +618,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const gpu = more.gpu ?? -1
       const extras = [String(more.renderCpu ?? 0).padStart(6), String(more.gpuWait ?? 0).padStart(7), (gpu < 0 ? 'n/a' : String(gpu)).padStart(6), String(more.calls ?? 0).padStart(5), String(more.triangles ?? 0).padStart(8), String(more.particles ?? 0).padStart(6), String(more.frags ?? 0).padStart(5), String(more.pieces ?? 0).padStart(6)]
       console.log(`  ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} ${`${entry.round}.${entry.frame}`.padEnd(7)} ${String(entry.updateMs).padStart(7)} ${String(entry.physicsMs).padStart(7)} ${FRAME_LABELS.map((label) => String(parts[label] ?? 0).padStart(Math.max(6, label.length))).join(' ')} ${rest.toFixed(2).padStart(6)} ${extras.join(' ')}`)
+      // the modules behind `modules`, slowest first: the ones over 0.5 ms
+      const slowModules = Object.entries(entry.modules ?? {}).filter(([, ms]) => ms >= 0.5).sort((left, right) => right[1] - left[1])
+      if (slowModules.length > 0) console.log(`       modules: ${slowModules.map(([id, ms]) => `${id} ${ms}`).join(', ')}`)
     }
   }
   for (const error of errors) console.log(`PAGE ERROR  ${error}`)

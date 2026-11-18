@@ -72,18 +72,47 @@ describe('what lay on a support that is gone falls', () => {
     expect(bottom(root)).toBeLessThan(0.06)
   })
 
-  it('a table missing one leg still stands, and what is on it stays', () => {
+  it('a table missing one leg goes over toward the gap: its centre stands on the line between the two legs beside it, balanced on an edge', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
     const { top, breakLeg } = table(world, scene, renderer)
-    const { root } = can(world, scene, renderer, 'can', [0.2, 0.79, 0])
     run(renderer, 3)
     breakLeg(0)
+    run(renderer, 4)
+    expect(renderer.piece('table')).not.toBeNull()
+    // the corner over the gap (leg 0 at -x, -z) comes down to the floor; the one across stays up
+    top.updateMatrixWorld(true)
+    const gap = new THREE.Vector3(-0.75, 0, -0.35).applyMatrix4(top.matrixWorld)
+    const across = new THREE.Vector3(0.75, 0, 0.35).applyMatrix4(top.matrixWorld)
+    expect(gap.y).toBeLessThan(0.15)
+    expect(across.y).toBeGreaterThan(gap.y + 0.3)
+  })
+
+  it('a cupboard-wide table that lost a leg in the middle of a long side, with its centre well inside the other feet, still stands', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
+    world.addObject('bench', ['top', 'leg_0', 'leg_1', 'leg_2', 'leg_3', 'leg_4', 'leg_5'].map((id) => partState(id, 'wood', { mass: id === 'top' ? 12 : 1.5 })))
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.8))
+    top.position.y = 0.76
+    const legs = [0, 1, 2, 3, 4, 5].map((i) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.74, 0.05))
+      leg.position.set([-0.75, 0, 0.75][i % 3]!, 0.37, i < 3 ? -0.35 : 0.35)
+      return leg
+    })
+    const root = new THREE.Group()
+    root.add(top, ...legs)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('bench', root, { parts: { top, ...Object.fromEntries(legs.map((leg, i) => [`leg_${i}`, leg])) } })
+    run(renderer, 1)
+    const part = world.part('bench', 'leg_1')
+    if (part) part.status = 'broken'
+    world.emit({ type: 'fracture', object: 'bench', part: 'leg_1', point: [0, 0.3, -0.35], style: 'splinter', fragments: [] })
     run(renderer, 3)
-    expect(renderer.piece('table')).toBeNull()
+    expect(renderer.piece('bench')).toBeNull()
     expect(bottom(top)).toBeGreaterThan(0.73)
-    expect(bottom(root)).toBeGreaterThan(0.77)
   })
 
   it('with both legs of one end broken the table goes over', () => {

@@ -205,8 +205,11 @@ engineOnly('every drawn fixed thing collides in the engine', () => {
     if (part) part.status = 'broken'
     s.world.emit({ type: 'fracture', object: 'table', part: legIds[1]!, point: [legs[1]!.position.x, 0.3, legs[1]!.position.z], style: 'splinter', fragments: [] })
     s.run(0.5)
-    expect(s.statics().bodies.get('table')!.held.has('leg_1:0')).toBe(false)
-    expect(s.statics().bodies.get('table')!.held.has('leg_0:0')).toBe(true)
+    // on three legs it is balanced on the line between two of them and goes over (`loosenIfFootless`): a loose piece, no fixed body left at all
+    const body = s.statics().bodies.get('table')
+    expect(body?.held.has('leg_1:0') ?? false).toBe(false)
+    if (body) expect(body.held.has('leg_0:0')).toBe(true)
+    else expect(s.renderer.piece('table')).not.toBeNull()
   })
 })
 

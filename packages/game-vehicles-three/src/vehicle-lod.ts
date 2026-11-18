@@ -1,5 +1,5 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
-import { createStaticBatcher } from '@adatechnology/game-render-three'
+import { BATCHED_LAYER, createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type * as THREE_NS from 'three'
@@ -95,6 +95,12 @@ export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, ro
   let isLocked = false
   // near, the full model draws its still parts in batches by material; a part that moves, dents or falls draws on its own again
   let batcher: StaticBatcher | null = null
+  // the parts a hit vehicle gave back, batched again once it is quiet: one more batcher per quiet time, over those parts alone (never the whole
+  // vehicle again: dropping its batches to make them anew drew every part on its own, ~590 calls, for the frames of the merge)
+  const rejoined: StaticBatcher[] = []
+  // parts given back so far, and how many of them were already offered to a batcher of `rejoined`
+  let givenBack = 0
+  let offered = 0
   let shadow: Mesh | null = null
   const castsShadow = new Set<Mesh>()
   /** One mesh with the shape of the fused body, drawn only into the shadow map. */
@@ -125,13 +131,23 @@ export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, ro
     root.add(proxy)
     return proxy
   }
-  const batchLocked = (): void => {
+  /** A batcher of the hit vehicle's parts that draw on their own now (`include`): none already in a batch, nor a batch itself. */
+  const lockedBatcher = (include?: (mesh: Mesh) => boolean): StaticBatcher => {
     // the parts keep their own shadows (the proxy has the shape of the vehicle before the hit); the batches cast for the still ones
-    batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS, maxVertices: HIT_BATCH_VERTICES })
-    batcher.group.traverse((object) => (object.userData.skipLite = true))
+    const made = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS, maxVertices: HIT_BATCH_VERTICES, ...(include ? { include } : {}) })
+    made.group.traverse((object) => (object.userData.skipLite = true))
     // the batches copy the parts' triangles: a hit test reads the parts (`surfaceRay`), never the copy
-    batcher.group.userData.noSurfaceRay = true
-    markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
+    made.group.userData.noSurfaceRay = true
+    markKitOrigin(made.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
+    return made
+  }
+  const batchLocked = (): void => {
+    batcher = lockedBatcher()
+  }
+  const isOnItsOwn = (mesh: Mesh): boolean => mesh.layers.mask !== 1 << BATCHED_LAYER && mesh.parent?.name !== 'static-batches'
+  const disposeRejoined = (): void => {
+    for (const made of rejoined) made.dispose()
+    rejoined.length = 0
   }
   const drawFull = (): void => {
     // a vehicle hit in play: its still parts are batched at once (a hit dents a few parts; the rest would draw one call each, with a shadow
@@ -163,17 +179,23 @@ export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, ro
       return
     }
     if (!batcher) return
-    if (batcher.update() > 0) changedAt = now()
+    let changed = batcher.update()
+    for (const made of rejoined) changed += made.update()
+    givenBack += changed
+    if (changed > 0) changedAt = now()
     // every part changed (the model was rebuilt, or all of it dented): batch what stands now (a hit vehicle, once it is quiet again)
     const { batched, released } = batcher.stats()
-    if (batched === 0 && released > 0) {
+    const rejoinedBatched = rejoined.reduce((sum, made) => sum + made.stats().batched, 0)
+    if (batched === 0 && released > 0 && rejoinedBatched === 0) {
       batcher.dispose()
       batcher = null
+      disposeRejoined()
+      givenBack = offered = 0
       isRestless = true
-    } else if (isLocked && released > 0 && now() - changedAt >= VEHICLE_REBATCH_AFTER_MS) {
-      // the parts the hit dented or moved settled: batched again with the rest, in their new shape (left out, they drew one call each for good)
-      batcher.dispose()
-      batchLocked()
+    } else if (isLocked && givenBack - offered >= 2 && now() - changedAt >= VEHICLE_REBATCH_AFTER_MS) {
+      // the parts the hit dented or moved settled: batched again, in their new shape (left out, they drew one call each for good)
+      offered = givenBack
+      rejoined.push(lockedBatcher(isOnItsOwn))
     }
   }
   const build = (): Group => {
@@ -240,6 +262,8 @@ export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, ro
       show(false)
       batcher?.dispose()
       batcher = null
+      disposeRejoined()
+      givenBack = offered = 0
       for (const mesh of castsShadow) mesh.castShadow = true
       castsShadow.clear()
       shadow?.removeFromParent()

@@ -115,8 +115,18 @@ const STATIC_SPAN = 3
 const VERTICES_PER_UPDATE = 3000
 /** What counts as a foot of a piece (m above its lowest point); from what height (m) it can fall over and how close its feet are for that (share of the height). */
 const FEET_BAND = 0.03
+/**
+ * How far the centre of what is left of a piece of furniture must be inside the polygon of its feet to stand (`loosenIfFootless`), per metre of its height: it would have to
+ * lean past atan(0.1), 6°, to go over. Less, it is balanced on an edge (a table on three legs, its centre a few centimetres inside the line between two of them) and goes over.
+ */
+const STAND_LEAN = 0.1
+/** The spin (rad/s) a piece of furniture balanced on an edge of its feet is started over it with. */
+const EDGE_NUDGE = 1
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/** What a loose group hangs on (`hingeOf`) stands still when its piece is slower than this (m/s) and turns slower than this (rad/s). */
+const HINGE_STILL_SPEED = 0.2
+const HINGE_STILL_SPIN = 0.5
 /** Most milliseconds of a frame the boxes fitted ahead of the blow take (`fitBoxesAhead`), whatever the budget the host gives the queue: a house is a few hundred parts, fitted over a few seconds. */
 const PREFIT_SLICE_MS = 1
 
@@ -2213,12 +2223,15 @@ class Renderer implements DestructionRenderer {
         }
         // the loose groups are always read from index 1: each split renumbers the rest
         let newId: string
+        let hinge: Vec3 | null
         try {
+          hinge = this.hingeOf(objectId, 1)
           newId = this.world.splitGroup(objectId, 1)
         } catch {
           return
         }
         this.adoptSplit(b, newId)
+        this.hangOnHinge(newId, hinge)
       }
     })
     if (deferred) return
@@ -2338,6 +2351,7 @@ class Renderer implements DestructionRenderer {
           work.take('split', units)
         }
         let newId: string
+        const hinge = this.hingeOf(b.id, 1)
         try {
           newId = this.world.splitGroup(b.id, 1)
         } catch {
@@ -2346,6 +2360,7 @@ class Renderer implements DestructionRenderer {
         if (newId === b.id) return
         this.eventSplitFrame = work.frame
         this.adoptSplit(b, newId)
+        this.hangOnHinge(newId, hinge)
         split++
       }
     })
@@ -2395,12 +2410,14 @@ class Renderer implements DestructionRenderer {
         continue
       }
       let newId: string
+      const hinge = this.hingeOf(entry.objectId, index)
       try {
         newId = this.world.splitGroup(entry.objectId, index)
       } catch {
         continue
       }
       this.adoptSplit(b, newId)
+      this.hangOnHinge(newId, hinge)
       this.staticDirty.add(entry.objectId)
       touched.set(entry.objectId, [...(touched.get(entry.objectId) ?? []), ...entry.torn])
       ran++
@@ -2427,6 +2444,44 @@ class Renderer implements DestructionRenderer {
   }
 
   /** The renderer side of `splitGroup`: a new group holding the meshes of the new object, made a piece. */
+  /**
+   * Where a loose group still hangs on what stands (a shelf that lost the side at one end, still screwed to the other): the middle of the overlap of the two parts of the
+   * one joint that holds and joins it to a structural part of the object's first group, which stands, in the world. Null when it hangs on nothing, or on more than one.
+   */
+  private hingeOf(objectId: string, group: number): Vec3 | null {
+    const st = this.world.state(objectId)
+    const loose = st?.groups[group]
+    const standing = st?.groups[0]
+    if (!st || !loose || !standing || group === 0) return null
+    // what stands must stand still: a hinge is a point fixed in the world (a case knocked over carries its shelves with it)
+    const piece = this.bounds.get(objectId)?.piece
+    if (piece && !piece.sleeping && (Math.hypot(...piece.velocity) > HINGE_STILL_SPEED || Math.hypot(...piece.angularVelocity) > HINGE_STILL_SPIN)) return null
+    const inLoose = new Set(loose)
+    const inStanding = new Set(standing)
+    const structural = new Set(st.parts.filter((p) => p.load !== undefined).map((p) => p.id))
+    const holds = st.joints.filter((j) => {
+      if (j.open || j.tears || j.kind === 'resting') return false
+      const [own, other] = inLoose.has(j.a) ? [j.a, j.b] : [j.b, j.a]
+      return inLoose.has(own) && inStanding.has(other) && structural.has(own) && structural.has(other)
+    })
+    if (holds.length !== 1) return null
+    const joint = holds[0]!
+    const boxOf = (partId: string): number[] | null =>
+      this.shownBoxes(objectId, partId).reduce<number[] | null>((all, one) => (all ? all.map((value, k) => (k < 3 ? Math.min(value, one[k]!) : Math.max(value, one[k]!))) : [...one]), null)
+    const a = boxOf(joint.a)
+    const c = boxOf(joint.b)
+    if (!a || !c) return null
+    const point: Vec3 = [0, 0, 0]
+    for (let k = 0; k < 3; k++) point[k] = (Math.max(a[k]!, c[k]!) + Math.min(a[k + 3]!, c[k + 3]!)) / 2
+    return point
+  }
+
+  /** The piece of a group split off hangs on its hinge (`hingeOf`), when it had one. */
+  private hangOnHinge(newId: string, hinge: Vec3 | null): void {
+    const piece = hinge && this.bounds.get(newId)?.piece
+    if (piece && hinge) this.pieceSys.hinge(piece, hinge)
+  }
+
   private adoptSplit(from: Bound, newId: string): void {
     const state = this.world.state(newId)
     const root = from.root
@@ -2522,21 +2577,35 @@ class Renderer implements DestructionRenderer {
     if (!this.standsOn(objectId, whole.map((one): [number, number, number, number, number, number] => [one.min.x, one.min.y, one.min.z, one.max.x, one.max.y, one.max.z]))) return
     const floor = Math.min(...whole.map((one) => one.min.y))
     const feetOf = (boxes: THREE_NS.Box3[]): THREE_NS.Box3 => boxes.filter((one) => one.min.y < floor + FEET_BAND).reduce((feet, one) => feet.union(one), new this.THREE.Box3())
+    const leftBoxes = left.map(boxOf).filter((one) => !one.isEmpty())
+    const now = feetOf(leftBoxes)
+    // it stands while the centre of what is left is inside the polygon of its feet by `STAND_MARGIN` (a cupboard with a broken door); a table that lost a leg has its
+    // centre on the line between the two legs beside the gap, balanced on an edge, and goes over toward the gap
+    let away: { x: number; z: number } | null = null
     const was = feetOf(whole)
-    const now = feetOf(left.map(boxOf).filter((one) => !one.isEmpty()))
     const same = !now.isEmpty() && now.min.x <= was.min.x + FEET_BAND && now.max.x >= was.max.x - FEET_BAND && now.min.z <= was.min.z + FEET_BAND && now.max.z >= was.max.z - FEET_BAND
-    if (same) return
+    // what is not furniture (a frame, a stand) keeps standing while its feet still span the same floor: its own load path answers for it
+    if (same && kitOriginOf(b.root)?.kind !== 'furniture') return
     if (!now.isEmpty()) {
-      const box = left.map(boxOf).reduce((all, one) => all.union(one), new this.THREE.Box3())
-      const centreX = (box.min.x + box.max.x) / 2
-      const centreZ = (box.min.z + box.max.z) / 2
+      const feet = leftBoxes.filter((one) => one.min.y < floor + FEET_BAND)
+      const hull = convexHull(feet.flatMap((one) => [[one.min.x, one.min.z], [one.max.x, one.min.z], [one.max.x, one.max.z], [one.min.x, one.max.z]] as Array<[number, number]>))
+      const centre = centreOfBoxes(leftBoxes)
+      const inside = insideBy(hull, [centre[0], centre[2]])
+      const box = leftBoxes.reduce((all, one) => all.union(one), new this.THREE.Box3())
       const height = box.max.y - box.min.y
       const narrow = height >= TIP_MIN_HEIGHT && Math.min(now.max.x - now.min.x, now.max.z - now.min.z) < TIP_NARROW * height
-      if (!narrow && centreX > now.min.x && centreX < now.max.x && centreZ > now.min.z && centreZ < now.max.z) return
+      if (!narrow && inside.depth > STAND_LEAN * (centre[1] - floor)) return
+      away = hull.length >= 3 ? inside.out : null
     }
     const piece = this.makePiece(objectId)
     this.setContacts(b, b.piece ?? (piece as PieceBody), left)
-    this.tipIfTopHeavy(b)
+    // balanced on an edge it is started over it, and gravity does the rest: turning about (z, 0, -x) moves the top toward (x, z)
+    const loose = b.piece
+    if (away && loose) {
+      loose.angularVelocity[0] += away.z * EDGE_NUDGE
+      loose.angularVelocity[2] -= away.x * EDGE_NUDGE
+      loose.sleeping = false
+    } else this.tipIfTopHeavy(b)
     // the host stops keeping the footprint it had where it stood: it is a body that moves now
     this.o.onLoosened?.(objectId, piece, 'apart')
   }
@@ -3517,4 +3586,58 @@ function lighten(color: number, t: number): number {
     return Math.round(c + (255 - c) * t) << shift
   }
   return ch(16) | ch(8) | ch(0)
+}
+
+/** The convex hull (counter-clockwise) of points on the ground, (x, z). */
+function convexHull(points: Array<[number, number]>): Array<[number, number]> {
+  const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  if (sorted.length < 3) return sorted
+  const cross = (o: [number, number], a: [number, number], b: [number, number]): number => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const half = (list: Array<[number, number]>): Array<[number, number]> => {
+    const out: Array<[number, number]> = []
+    for (const p of list) {
+      while (out.length >= 2 && cross(out[out.length - 2]!, out[out.length - 1]!, p) <= 0) out.pop()
+      out.push(p)
+    }
+    out.pop()
+    return out
+  }
+  return [...half(sorted), ...half([...sorted].reverse())]
+}
+
+/** The centre of a set of boxes weighted by their volumes (x, y, z). */
+function centreOfBoxes(boxes: ReadonlyArray<THREE_NS.Box3>): [number, number, number] {
+  const sum: [number, number, number] = [0, 0, 0]
+  let total = 0
+  for (const one of boxes) {
+    const volume = Math.max(1e-9, (one.max.x - one.min.x) * (one.max.y - one.min.y) * (one.max.z - one.min.z))
+    sum[0] += ((one.min.x + one.max.x) / 2) * volume
+    sum[1] += ((one.min.y + one.max.y) / 2) * volume
+    sum[2] += ((one.min.z + one.max.z) / 2) * volume
+    total += volume
+  }
+  return [sum[0] / total, sum[1] / total, sum[2] / total]
+}
+
+/** How far (m) a point is inside a convex polygon (counter-clockwise; negative outside), and the outward normal of the edge it is nearest. */
+function insideBy(hull: ReadonlyArray<[number, number]>, point: [number, number]): { depth: number; out: { x: number; z: number } } {
+  let depth = Infinity
+  let out = { x: 1, z: 0 }
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i]!
+    const b = hull[(i + 1) % hull.length]!
+    const ex = b[0] - a[0]
+    const ez = b[1] - a[1]
+    const length = Math.hypot(ex, ez)
+    if (length < 1e-9) continue
+    // counter-clockwise in (x, z): the outward normal of an edge is (ez, -ex)
+    const nx = ez / length
+    const nz = -ex / length
+    const d = -((point[0] - a[0]) * nx + (point[1] - a[1]) * nz)
+    if (d < depth) {
+      depth = d
+      out = { x: nx, z: nz }
+    }
+  }
+  return { depth: hull.length < 3 ? -Infinity : depth, out }
 }

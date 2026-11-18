@@ -384,3 +384,27 @@ describe('a wall cut where its units came out, at full detail', () => {
     expect(s.d.statistics().breached.walls).toBe(0)
   })
 })
+
+describe('the cost of damage on a house', () => {
+  it('a shot and a blow on a wall never make the damage code of the house update the matrices of the whole house', () => {
+    const s = setup()
+    const sizeOf = (o: Object3D): number => { let n = 0; o.traverse(() => void n++); return n }
+    const proto = THREE.Object3D.prototype
+    const original = proto.updateMatrixWorld
+    let wholeTrees = 0
+    proto.updateMatrixWorld = function (this: Object3D, force?: boolean): void {
+      // the house's own damage code (the destruction renderer prefits pieces from the tree once per root and frame, apart)
+      if (force && sizeOf(this) > 100 && new Error().stack?.includes('game-floorplan-three/src/')) wholeTrees++
+      original.call(this, force)
+    }
+    try {
+      s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'ballistic', point: s.centre('wall_0_0'), direction: [0, 0, -1], energy: 2100, caliber: 7.62, source: 'test' })
+      s.world.hitPart(s.d.id!, 'wall_0_0', { type: 'blunt', point: s.centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' })
+      s.run(0.5)
+    } finally {
+      proto.updateMatrixWorld = original
+    }
+    expect(s.events.some((e: DestructionEvent) => e.type === 'chip')).toBe(true)
+    expect(wholeTrees).toBe(0)
+  })
+})

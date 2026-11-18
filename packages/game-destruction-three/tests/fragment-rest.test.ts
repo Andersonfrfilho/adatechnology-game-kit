@@ -52,3 +52,27 @@ describe('a fragment sliding on the floor', () => {
     expect(mesh.position.x).toBeLessThan(slid * 1.1)
   })
 })
+
+describe('a fragment that lands on its edge', () => {
+  const landOnEdge = (size: [number, number, number]): number => {
+    const { system } = makeSystem()
+    const material = system.materialFor('paper', 0xf0f0e8, false)
+    // let down slowly with its thinnest axis level: it comes to the floor on an edge
+    const mesh = system.spawn({ ...fragment, shape: 'scrap', size, center: [0, size[1] / 2 + 0.005, 0], material: 'paper', mass: 0.005 } as never, material, 'home', 10)!
+    for (let frame = 0; frame < 240; frame++) system.update(1 / 60)
+    mesh.updateMatrixWorld(true)
+    return new THREE.Box3().setFromObject(mesh).getSize(new THREE.Vector3()).y
+  }
+
+  it('a sheet of paper lies down flat, it does not stay standing on its edge', () => {
+    expect(landOnEdge([0.12, 0.09, 0.002])).toBeLessThan(0.02)
+  })
+
+  it('a splinter does not stand on its end', () => {
+    expect(landOnEdge([0.03, 0.15, 0.012])).toBeLessThan(0.04)
+  })
+
+  it('a lump nearly as wide as it is tall stays on the side it landed on', () => {
+    expect(landOnEdge([0.07, 0.08, 0.06])).toBeGreaterThan(0.07)
+  })
+})

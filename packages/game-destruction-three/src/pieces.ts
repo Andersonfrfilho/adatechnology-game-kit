@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { PartBox, PieceBody, PieceFriction, PieceSweepHit } from './internal'
+import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
 import { squareBoxOf } from './internal'
 import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
@@ -162,6 +162,14 @@ const MAX_COLLISION_STEPS = 8
 const MIN_ROUND_RADIUS = 0.005
 /** Two pieces closing slower than this (m/s) only stop against each other; faster, they bounce by their restitution. */
 const BOUNCE_MIN_SPEED = 0.1
+/**
+ * A piece hung on a hinge (`hinge`: a shelf that lost the side at one end swings on the screw at the other) lets go once it has turned this far (rad) or after
+ * `HINGE_SECONDS`: the screw tears out of the board.
+ */
+const HINGE_RELEASE = (40 * Math.PI) / 180
+const HINGE_SECONDS = 1.5
+/** Two boxes closing faster than this (m/s) hit each other (`boxImpact`): a fall of 11 cm. Slower, they only rest on or lean against each other. */
+const BOX_IMPACT_SPEED = 1.5
 /** A contact normal at least this level (its share along the ground) puts two pieces apart along the ground only. */
 const KNOCK_FLAT = 0.5
 /** Fastest (m/s) a piece is put apart from the boxes it overlaps (`separatePair`, all its pairs of a step together): a deep overlap opens over a few frames instead of in a jump. */
@@ -191,6 +199,16 @@ const MIN_PUSH_SHARE = 0.05
 const PUSH_MEMORY_SECONDS = 0.1
 
 /** A piece's push in the last step and the share of its push it is given (`applyPushes`). */
+interface ImpactParams {
+  readonly a: PieceBody
+  readonly b: PieceBody
+  readonly ca: Vec3
+  readonly cb: Vec3
+  readonly hit: ShapeContact
+  readonly apart: boolean
+  readonly above: number
+}
+
 interface PushStep {
   readonly push: Vec3
   share: number
@@ -301,6 +319,7 @@ export class PieceSystem {
   private readonly dq: THREE_NS.Quaternion
   private readonly nextQ: THREE_NS.Quaternion
   private readonly m: THREE_NS.Matrix4
+  private readonly hingeM: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
   private solids: Solid[] = []
   /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
@@ -363,6 +382,7 @@ export class PieceSystem {
     this.dq = new THREE.Quaternion()
     this.nextQ = new THREE.Quaternion()
     this.m = new THREE.Matrix4()
+    this.hingeM = new THREE.Matrix4()
     this.ax = new THREE.Vector3()
     const resolved = resolvePhysics(o.physics)
     this.loop = resolved?.loop ?? null
@@ -528,6 +548,19 @@ export class PieceSystem {
   /** Sets a piece falling over, about the world axes x and z (a unit axis): its feet are thinner than the box that stands for it, so the box alone would hold it up. */
   tip(body: PieceBody, x: number, z: number): void {
     body.tipping = { x, z, seconds: TIP_SECONDS }
+    body.sleeping = false
+  }
+
+  /**
+   * Hangs a piece on a hinge at `point` (world): that point of it stays where it is while the rest swings down about it, as a shelf that lost the side at one end swings on
+   * the screw at the other and pours what lay on it off its free end. It lets go past `HINGE_RELEASE` or `HINGE_SECONDS`. The kit's own solver only (`physics` swings nothing).
+   */
+  hinge(body: PieceBody, point: Vec3): void {
+    if (this.engine) return
+    const c = this.centerOf(body, this.p)
+    const q = body.root.quaternion
+    const local = this.ax.set(point[0] - c.x, point[1] - c.y, point[2] - c.z).applyQuaternion(this.dq.copy(q).invert())
+    body.hinge = { point: [point[0], point[1], point[2]], local: [local.x, local.y, local.z], from: [q.x, q.y, q.z, q.w], seconds: HINGE_SECONDS }
     body.sleeping = false
   }
 
@@ -1133,6 +1166,47 @@ export class PieceSystem {
     }
   }
 
+  /**
+   * The impulse that stops the hinge point of a piece: the point's velocity v + w x r goes to zero through J = -K^-1 (v + w x r), with K = 1/m - [r]x I^-1 [r]x, so what
+   * gravity gave the centre turns into a swing about the hinge.
+   */
+  private holdOnHinge(b: PieceBody, hinge: PieceHinge, q: THREE_NS.Quaternion): void {
+    const e = this.hingeM.makeRotationFromQuaternion(q).elements
+    const [lx, ly, lz] = hinge.local
+    const r: Vec3 = [e[0] * lx + e[4] * ly + e[8] * lz, e[1] * lx + e[5] * ly + e[9] * lz, e[2] * lx + e[6] * ly + e[10] * lz]
+    const v = b.velocity
+    const w = b.angularVelocity
+    const point: Vec3 = [v[0] + w[1] * r[2] - w[2] * r[1], v[1] + w[2] * r[0] - w[0] * r[2], v[2] + w[0] * r[1] - w[1] * r[0]]
+    // the columns of K: what a unit impulse along each axis does to the point's velocity
+    const k: Vec3[] = [0, 1, 2].map((i) => {
+      const d: Vec3 = [i === 0 ? 1 : 0, i === 1 ? 1 : 0, i === 2 ? 1 : 0]
+      const t = this.mulInvInertiaWith(b, e, r[1] * d[2] - r[2] * d[1], r[2] * d[0] - r[0] * d[2], r[0] * d[1] - r[1] * d[0])
+      return [d[0] / b.mass + t[1] * r[2] - t[2] * r[1], d[1] / b.mass + t[2] * r[0] - t[0] * r[2], d[2] / b.mass + t[0] * r[1] - t[1] * r[0]]
+    })
+    const j = solve3(k, [-point[0], -point[1], -point[2]])
+    if (!j) return
+    for (let i = 0; i < 3; i++) v[i] += j[i] / b.mass
+    const dw = this.mulInvInertiaWith(b, e, r[1] * j[2] - r[2] * j[1], r[2] * j[0] - r[0] * j[2], r[0] * j[1] - r[1] * j[0])
+    for (let i = 0; i < 3; i++) w[i] += dw[i]
+  }
+
+  /** Puts the hinge point back where it hangs (what the step's rounding moved it by), moving the centre. */
+  private keepOnHinge(hinge: PieceHinge, pos: Vec3, q: THREE_NS.Quaternion): void {
+    const e = this.hingeM.makeRotationFromQuaternion(q).elements
+    const [lx, ly, lz] = hinge.local
+    pos[0] = hinge.point[0] - (e[0] * lx + e[4] * ly + e[8] * lz)
+    pos[1] = hinge.point[1] - (e[1] * lx + e[5] * ly + e[9] * lz)
+    pos[2] = hinge.point[2] - (e[2] * lx + e[6] * ly + e[10] * lz)
+  }
+
+  /** The screw tears out: past `HINGE_RELEASE` of turn, or after `HINGE_SECONDS`, the piece falls free. */
+  private wearHinge(b: PieceBody, hinge: PieceHinge, q: THREE_NS.Quaternion, dt: number): void {
+    hinge.seconds -= dt
+    const [x, y, z, w] = hinge.from
+    const turned = 2 * Math.acos(Math.min(1, Math.abs(q.x * x + q.y * y + q.z * z + q.w * w)))
+    if (turned >= HINGE_RELEASE || hinge.seconds <= 0) b.hinge = undefined
+  }
+
   private integrate(b: PieceBody, dt: number): void {
     const c = this.centerOf(b, this.p)
     const pos: Vec3 = [c.x, c.y, c.z]
@@ -1190,6 +1264,7 @@ export class PieceSystem {
         prev[i][2] = pos[2] + e0[2] * sx + e0[6] * sy + e0[10] * sz
       }
       v[1] -= this.o.gravity * h
+      if (b.hinge) this.holdOnHinge(b, b.hinge, q)
       // what holds it up through their overlap pushes back what gravity drives into it, as a corner's support does
       if (propped) {
         const into = v[0] * propped[0] + v[1] * propped[1] + v[2] * propped[2]
@@ -1203,6 +1278,7 @@ export class PieceSystem {
         this.dq.setFromAxisAngle(this.ax.set(w[0] / wl, w[1] / wl, w[2] / wl), wl * h)
         q.premultiply(this.dq).normalize()
       }
+      if (b.hinge) this.keepOnHinge(b.hinge, pos, q)
       // the air slows a box's spin a little; a round piece keeps rolling, held back only by its rolling resistance on the ground
       const damp = b.round ? 1 : Math.exp(-0.15 * h)
       w[0] *= damp
@@ -1468,6 +1544,7 @@ export class PieceSystem {
       }
     }
 
+    if (b.hinge) this.wearHinge(b, b.hinge, q, dt)
     // what stands in the way (a wall, a car): the piece stops against it, bounces a little and both take the blow
     if (this.o.sweep && !b.held) this.sweepOn(b, start, pos)
 
@@ -1490,7 +1567,7 @@ export class PieceSystem {
     this.keepsTilt(b, q, dt)
     // held up through its overlap with what is under it (`propped`) it touches too: it may sleep where it stays, as a piece on its corners does
     const held = (touched || propped !== undefined) && !b.tipping
-    if (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt)) this.sleep(b)
+    if (!b.hinge && (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt))) this.sleep(b)
   }
 
   /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
@@ -1754,7 +1831,9 @@ export class PieceSystem {
         }
         // two boxes when a part of one is in a part of the other (a book lying in the hollow of a case on its back is inside its box, not in its boards); lying on each
         // other, or one leaning on the other's part (a board on a bench's seat), the support holds them while they only touch: beside each other or deeper, they go apart
-        if (this.partsOverlap(a, b)) this.separatePair(a, b, ca, cb, dt, stacked || onTop || this.restsOn(a, b, false) || this.restsOn(b, a, false))
+        if (!this.partsOverlap(a, b)) continue
+        this.boxImpact(a, b, ca, cb, dt)
+        this.separatePair(a, b, ca, cb, dt, stacked || onTop || this.restsOn(a, b, false) || this.restsOn(b, a, false))
       }
     }
     this.applyPushes(dt)
@@ -1828,9 +1907,31 @@ export class PieceSystem {
   private knock(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3): void {
     const hit = shapeContact(this.contactShape(a, ca), this.contactShape(b, cb))
     if (!hit) return
-    const n = hit.normal
     // one on the other (a can rolling down a board, off its end): the support of the pieces holds it, as it does on the floor
-    if (Math.abs(n[1]) > SLAM_FLOOR_NORMAL) return
+    if (Math.abs(hit.normal[1]) > SLAM_FLOOR_NORMAL) return
+    this.impact({ a, b, ca, cb, hit, apart: true, above: 0 })
+  }
+
+  /**
+   * Two boxes that hit each other (a book falling on the top edge of one standing, a board swinging into a row): they exchange the impulse of `knock` at the point they meet,
+   * so the one hit turns about that point as well as moving, and a sleeping one wakes. Only a hit faster than `BOX_IMPACT_SPEED`, and no deeper than a contact: pieces resting on each other, or
+   * made inside each other, are left to `separatePair`, which holds or slides them without a kick.
+   */
+  private boxImpact(a: PieceBody, b: PieceBody, ca: Vec3, cb: Vec3, dt: number): void {
+    const hit = shapeContact(this.contactShape(a, ca), this.contactShape(b, cb))
+    if (!hit) return
+    // deeper than this step's closing could sink them, they were made inside each other (chunks of one wall): `separatePair` slides them apart, no blow
+    const n = hit.normal
+    const va = a.velocity
+    const vb = b.velocity
+    const closing = (va[0] - vb[0]) * n[0] + (va[1] - vb[1]) * n[1] + (va[2] - vb[2]) * n[2]
+    if (hit.depth > LIFT_DEPTH + 2 * Math.max(0, -closing) * dt) return
+    this.impact({ a, b, ca, cb, hit, apart: false, above: BOX_IMPACT_SPEED })
+  }
+
+  /** The impulse two pieces that met exchange (`knock`), put apart first when `apart`, and only when they close faster than `above` (m/s). */
+  private impact({ a, b, ca, cb, hit, apart, above }: ImpactParams): void {
+    const n = hit.normal
     const ra: Vec3 = [hit.point[0] - ca[0], hit.point[1] - ca[1], hit.point[2] - ca[2]]
     const rb: Vec3 = [hit.point[0] - cb[0], hit.point[1] - cb[1], hit.point[2] - cb[2]]
     const pointV = (body: PieceBody, r: Vec3): Vec3 => {
@@ -1845,6 +1946,7 @@ export class PieceSystem {
     }
     const vn0 = relative()
     const closing = vn0[0] * n[0] + vn0[1] * n[1] + vn0[2] * n[2]
+    if (closing >= -above) return
     // a sleeping piece stays put for a touch (cans asleep side by side); knocked, it wakes
     const wake = (body: PieceBody): void => {
       body.sleeping = false
@@ -1865,7 +1967,7 @@ export class PieceSystem {
     const out: Vec3 = flat > KNOCK_FLAT ? [n[0] / flat, 0, n[2] / flat] : n
     const depth = Math.max(0, hit.depth - SLOP) / (flat > KNOCK_FLAT ? flat : 1)
     for (const [body, share, sign] of [[a, ima, 1], [b, imb, -1]] as const) {
-      if (share === 0) continue
+      if (share === 0 || !apart) continue
       const move = (depth * share * sign) / (ima + imb)
       body.root.position.x += out[0] * move
       body.root.position.y += out[1] * move
@@ -1891,7 +1993,7 @@ export class PieceSystem {
       }
     }
     // a touch slower than `BOUNCE_MIN_SPEED` only stops (two cans resting together do not chatter)
-    const bounce = -closing > BOUNCE_MIN_SPEED ? pairRestitution(a.restitution, b.restitution) : 0
+    const bounce = apart && -closing > BOUNCE_MIN_SPEED ? pairRestitution(a.restitution, b.restitution) : 0
     const j = (-(1 + bounce) * closing) / resist(n)
     give([n[0] * j, n[1] * j, n[2] * j])
     // the friction of the two surfaces across the normal, up to mu times the push (Coulomb)
@@ -2002,4 +2104,12 @@ export class PieceSystem {
     }
   }
 
+}
+
+/** The solution x of the 3x3 system with columns `k` (K x = rhs), by Cramer's rule; null when K is singular. */
+function solve3(k: readonly Vec3[], rhs: Vec3): Vec3 | null {
+  const det = (a: Vec3, b: Vec3, c: Vec3): number => a[0] * (b[1] * c[2] - b[2] * c[1]) - b[0] * (a[1] * c[2] - a[2] * c[1]) + c[0] * (a[1] * b[2] - a[2] * b[1])
+  const d = det(k[0], k[1], k[2])
+  if (Math.abs(d) < 1e-12) return null
+  return [det(rhs, k[1], k[2]) / d, det(k[0], rhs, k[2]) / d, det(k[0], k[1], rhs) / d]
 }
