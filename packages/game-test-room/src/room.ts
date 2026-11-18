@@ -479,6 +479,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
     ...(options.debris?.tilesUnderParts ? { tilesUnderParts: true } : {}),
     ...(options.debris?.groundWorker ? { groundWorker: options.debris.groundWorker } : {}),
+    ...(options.debris?.workers ? { workers: options.debris.workers } : {}),
     ...(options.debris?.jitWarmUp !== undefined ? { jitWarmUp: options.debris.jitWarmUp } : {}),
     ...(options.debris?.workBudget ? { workBudget: options.debris.workBudget } : {}),
     ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),

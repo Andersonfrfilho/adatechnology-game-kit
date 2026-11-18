@@ -1309,7 +1309,7 @@ class Renderer implements DestructionRenderer {
     // asked every update: the map and the scratch are kept, the lists are the cached ones
     const out = this.solidsOut
     out.clear()
-    const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false, updated: this.measuredMeshes }
+    const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false, updated: this.measuredMeshes, workers: this.o.workers ?? null }
     try {
       this.measureEach(now, budget, out)
     } finally {

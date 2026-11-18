@@ -23,7 +23,7 @@ import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
-import type { EffectSink, GroundLayout, Knock } from '@adatechnology/game-contracts'
+import type { EffectSink, GroundLayout, Knock, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
@@ -364,6 +364,8 @@ export interface TestRoomOptions {
     tilesUnderParts?: boolean
     /** Where the engine's ground tiles are made, on the fixed schedule (`RendererOptions.groundWorker`, e.g. `createWorkerGroundPort`); the renderer owns it once handed. Default none. */
     groundWorker?: GroundWorkerPort
+    /** The game's worker coordinator for the fixed colliders measured from what is drawn (`RendererOptions.workers`, `destruction.static-colliders`). Default none: measured here. */
+    workers?: WorkerCoordinator
     /** The destruction renderer's JIT warm-up (`RendererOptions.jitWarmUp`; default on): `false` turns it off, `{ engine }` heats the engine the room's physics runs on. */
     jitWarmUp?: boolean | JitWarmUpOptions
     /** The explosion's deferred work in a frame budget of work units, nearest the player first (`RendererOptions.workBudget`; the player is the camera); omitted, off: the clock cuts it as before. */

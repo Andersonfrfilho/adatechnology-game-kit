@@ -64,3 +64,21 @@ quadro principal, 6,3 ms de worker; posições e normais iguais bit a bit ao `ge
 
 Com GPU a horda começa e termina com os 1500 agentes desenhados do retrato. A primeira rodada mediu uma página de 5/11 (a sala não
 rebuilda a área da multidão): o `sim-thread.mjs` agora roda o `build.mjs` da área antes (`--no-build` mantém a página).
+
+## T10: colisores fixos pelo coordenador (2026-11-18, contêiner, 4 threads, Chromium com GL por software)
+
+Sala `?area=floorplan&solver=jolt`, casa `single_storey_a` construída, depois 90 atualizações tocadas pela medida; tempo de
+`renderer.staticSolids` na thread principal:
+
+| | Medido aqui (`?staticWorker=0`, padrão) | Pelo coordenador (`?staticWorker=1`) |
+|---|---|---|
+| Soma nas 90 atualizações | 192 ms | 262 ms |
+| Pior atualização | 30 ms | 110 ms |
+| Colisores no fim | 298 caixas e 416 malhas, hash 3320418972 | os mesmos (mesmo hash) |
+| Jobs | n/a | 861 respondidos pelos workers, 111 ms de worker, 0 no quadro principal |
+
+A medida de uma peça custa pouco (0,13 ms de worker em média); ler as posições, decompor a matriz e copiar vértices e triângulos para o job
+custa o mesmo na thread principal, e a cópia estruturada da rajada fica no quadro. Por isso a categoria fica pronta e testada (mesmos bytes no
+quadro principal, no worker na thread e no `worker_threads`; mesmos colisores na sala) mas desligada por padrão: `RendererOptions.workers`
+liga, `?staticWorker=1` na sala. Print: `examples/test-room/shots/static-colliders-coordinator.png`. Um objeto da sala fica sempre por medir
+de novo nos dois modos (`solidStale` nunca esvazia): igual antes desta mudança.

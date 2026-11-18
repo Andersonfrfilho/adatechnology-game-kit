@@ -7,7 +7,7 @@
  */
 import type { GroundWorkerPort } from './engine-ground-port'
 import type * as THREE_NS from 'three'
-import type { DeferredQueue } from '@adatechnology/game-contracts'
+import type { DeferredQueue, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { BlastDebrisOptions, DebrisCostOptions, ExplosionWorkOptions } from './blast-debris'
@@ -149,6 +149,11 @@ export interface RendererOptions {
   groundWorker?: GroundWorkerPort
   /** Updates from asking for a ground tile to applying it under `groundWorker` (default 2, at least 1). */
   groundWorkerFrames?: number
+  /**
+   * The game's worker coordinator (CLAUDE.md §14): the fixed colliders measured from what is drawn (a house at load, a part measured again) are
+   * `destruction.static-colliders` jobs in its workers; an object waits for its answers as it waits for its turn, the same boxes either way. Default none: measured here.
+   */
+  workers?: WorkerCoordinator
   gravity?: number
   /**
    * Turn a loose group into a separate physical piece automatically (default true): the ones a detach or a collapse leaves, and the ones an object already has when it is
