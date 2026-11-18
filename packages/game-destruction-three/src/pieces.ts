@@ -9,6 +9,7 @@ import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import type { GroundGrid } from './engine-ground'
+import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import { resolvePhysics } from './physics-option'
 import { isOverSupport } from './support-hull'
@@ -29,6 +30,8 @@ export interface PieceSystemOptions {
   terrainRangeAt?: (minX: number, maxX: number, minZ: number, maxZ: number) => { readonly low: number; readonly high: number } | null
   /** `terrainAt` over a lattice in one pass, to the bit (`GroundGrid`; `Terrain.heightGrid` is one). Used only with `terrainAt`; engine physics only. */
   terrainGridAt?: GroundGrid
+  /** `terrainAt`'s vertices under a rectangle, to the bit (`GroundPatchRead`; `Terrain.heightPatch` is one): tiles asked of `groundWorker` carry them, not their samples. Used only with `terrainGridAt`. */
+  terrainPatchAt?: GroundPatchRead
   /**
    * The highest top of what does not move (furniture, scenery) under `(x, z)` that a corner at height `y` can land on (at most `step` above it),
    * `-Infinity` when none. The ground and the other pieces are added by the system.
@@ -338,6 +341,7 @@ export class PieceSystem {
           ...(o.terrainRangeAt ? { groundRange: o.terrainRangeAt } : {}),
           // the grid stands for `terrainAt` alone: without it the tiles read `groundAt`, which the grid may not be (a lot flattened, a slab)
           ...(o.terrainGridAt && o.terrainAt ? { groundGrid: o.terrainGridAt } : {}),
+          ...(o.terrainPatchAt && o.terrainGridAt && o.terrainAt ? { groundPatch: o.terrainPatchAt } : {}),
           ...(o.blastGroundTiles !== undefined ? { blastTiles: o.blastGroundTiles } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,

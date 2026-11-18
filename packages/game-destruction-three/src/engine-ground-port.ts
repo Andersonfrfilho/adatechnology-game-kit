@@ -2,7 +2,7 @@ import { isWorkerInputLost } from '@adatechnology/game-contracts'
 import type { WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { WorkerLike, WorkerScopeLike } from '@adatechnology/game-shapes'
 
-import { computeGroundTile, transferOf } from './engine-ground-job'
+import { computeGroundTile, jobTransferOf, transferOf } from './engine-ground-job'
 import type { GroundTileJob, GroundTileResult } from './engine-ground-job'
 import { groundTilesKind } from './worker-kinds'
 
@@ -74,7 +74,7 @@ export const createWorkerGroundPort = (worker: WorkerLike): GroundWorkerPort => 
       return failed ? 'none' : 'transfer'
     },
     postTile: (job) => {
-      if (!failed) worker.postMessage(job, [job.samples.buffer as ArrayBuffer, job.band.buffer as ArrayBuffer])
+      if (!failed) worker.postMessage(job, jobTransferOf(job))
     },
     onTile: handler.set,
     dispose: () => {

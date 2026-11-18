@@ -225,7 +225,10 @@ Two kinds of the worker coordinator (`@adatechnology/game-workers`) live here, i
 that a game's worker file imports (the kit's preset, `createKitWorkers`, already hosts both):
 
 - `groundTilesKind` (`destruction.ground-tiles`, lane `sim`): the engine's ground tiles under a crater. `groundWorker: createCoordinatorGroundPort(workers)`
-  hands them to the coordinator; each tile is applied at its fixed update, from the worker's answer or made here from the same job.
+  hands them to the coordinator; each tile is applied at its fixed update, from the worker's answer or made here from the same job. With `terrainPatchAt`
+  (`Terrain.heightPatch`, next to `terrainGridAt`) a tile inside the terrain is asked for with the vertices under it and its ring (~26 x 26 numbers) instead of
+  its samples and band (~60 000); the samples are made from them with the terrain's own blend (`heightPatchGrid`), the same bits, and a change is told by
+  comparing patches. A tile across the terrain's bounds is read as before.
 - `staticCollidersKind` (`destruction.static-colliders`, lane `build`): the fixed colliders measured from what is drawn (a house at load, a part measured
   again). `workers` in the renderer's options hands each part to the coordinator; its object waits for the answer as a part out of turns waits for its update,
   and gets the same boxes (`measureStaticPart` is the kernel on both sides). Opt-in: measured in the test room (a house, `single_storey_a`) the main thread

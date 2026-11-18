@@ -470,6 +470,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     terrainAt: (x, z) => terrain.heightAt(x, z),
     terrainRangeAt: (minX, maxX, minZ, maxZ) => terrain.heightRange(minX, maxX, minZ, maxZ),
     terrainGridAt: terrain.heightGrid,
+    terrainPatchAt: terrain.heightPatch,
     pointScale,
     ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
     ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),

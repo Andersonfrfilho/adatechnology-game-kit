@@ -512,6 +512,9 @@ importers:
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
+      '@adatechnology/game-terrain':
+        specifier: workspace:^
+        version: link:../game-terrain
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx
@@ -522,9 +525,6 @@ importers:
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt
-      '@adatechnology/game-terrain':
-        specifier: workspace:^
-        version: link:../game-terrain
       '@adatechnology/game-workers':
         specifier: workspace:^
         version: link:../game-workers

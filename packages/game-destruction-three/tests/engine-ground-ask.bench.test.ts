@@ -57,7 +57,7 @@ const timed = (port: GroundWorkerPort, split: Split): GroundWorkerPort => ({
 })
 
 describe.skipIf(process.env.GROUND_BENCH !== '1')('asking for a blast of ground tiles on the main thread (bench)', () => {
-  it(`${SIDE * SIDE} tiles of ${TILE} m over a crater, through the coordinator (4 worker_threads)`, async () => {
+  it.each(['samples', 'patch'] as const)(`${SIDE * SIDE} tiles of ${TILE} m over a crater, through the coordinator (4 worker_threads), asked with %s`, async (mode) => {
     const terrain = craterTerrain()
     const groundAt = (x: number, z: number): number => terrain.heightAt(x, z)
     const workers = createWorkerCoordinator({ spawn: nodeSpawn(new URL('./fixtures/coordinator-worker.mjs', import.meta.url)), workers: 4 })
@@ -75,6 +75,15 @@ describe.skipIf(process.env.GROUND_BENCH !== '1')('asking for a blast of ground 
           const x0 = ix * TILE
           const z0 = iz * TILE
           let t = performance.now()
+          if (mode === 'patch') {
+            // the engine's `askPatch`: the vertices under the tile and its ring, sent instead of the samples and band
+            const patch = schedule.readPatch(terrain.heightPatch, x0, z0, TILE)!
+            split.read += performance.now() - t
+            t = performance.now()
+            schedule.ask({ key: key++, ix, iz, x0, z0, size: TILE, fresh: true, wasCoarse: false, samples: null, patch }, null, round * 10)
+            split.ask += performance.now() - t
+            continue
+          }
           const samples = new Float64Array(SAMPLES)
           readGround(groundAt, samples, x0, z0, TILE, undefined, terrain.heightGrid)
           split.read += performance.now() - t
@@ -96,14 +105,17 @@ describe.skipIf(process.env.GROUND_BENCH !== '1')('asking for a blast of ground 
       t = performance.now()
       while ([...schedule.pending.values()].some((p) => !p.result) && performance.now() - t < 20_000) await new Promise((resolve) => setTimeout(resolve, 5))
       schedule.takeDue(round * 10 + 2, due)
-      for (const p of due) schedule.resolve(p)
+      for (const p of due) {
+        schedule.resolve(p)
+        if (p.patch) schedule.givePatch(p.patch.heights)
+      }
     }
     console.log(`  in time ${schedule.stats.inTime}, fell back ${schedule.stats.fellBack}, pooled ${schedule.pooled}`)
     schedule.dispose()
     workers.dispose()
     const keys = ['read', 'band', 'ask', 'post', 'transport', 'stats', 'total'] as const
-    const labels = { read: 'readGround', band: 'readGroundBand', ask: 'pool copy', post: 'coordinator.run', transport: 'transport (stats)', stats: `${SIDE * SIDE * 2} stats()`, total: 'askTile total' }
-    console.log(`ground ask, ${SIDE * SIDE} tiles, median of ${ROUNDS} rounds (first is cold):`)
+    const labels = { read: mode === 'patch' ? 'readPatch' : 'readGround', band: 'readGroundBand', ask: 'pool copy', post: 'coordinator.run', transport: 'transport (stats)', stats: `${SIDE * SIDE * 2} stats()`, total: 'askTile total' }
+    console.log(`ground ask (${mode}), ${SIDE * SIDE} tiles, median of ${ROUNDS} rounds (first is cold):`)
     for (const k of keys) console.log(`  ${labels[k].padEnd(20)} ${median(rows.slice(1).map((r) => r[k])).toFixed(2)} ms   (cold ${rows[0]![k].toFixed(2)} ms)`)
   }, 120_000)
 })
