@@ -23,5 +23,22 @@ toRoomAvatar(avatar, { ...defaultCharacterClips() })
 | `defaultPlantSpec(id)` | the generator spec of a species (`toSpec`) | `toSpec` of `createPlantResolver` and `plantSpec` of `createUrbanTestModule` of `game-urban-three` | `game-vegetation-species` |
 | `defaultVegetationSpecies()` | the species pack | `GameVegetationSpecies` of `createVegetationTestModule` of `game-vegetation-three` | `game-vegetation-species` |
 | `defaultCharacterClips()` | `{ strikeClips, firstPersonClips }` | `toRoomAvatar` of `game-characters-three` | `game-characters-people` |
+| `createKitWorkers(options?)` | the kit's worker coordinator (`game-workers`), on by default | `crowdPhysics.workers` of `game-crowd`, `createCoordinatorGroundPort(workers)` for `groundWorker` of `game-destruction-three` | `KIT_WORKER_KINDS`: `crowd.physics`, `destruction.ground-tiles` |
 
 
+
+## Workers (CLAUDE.md §14)
+
+`createKitWorkers()` is the kit's worker coordinator, on by default: the automatic number of workers by the machine's cores (one core kept for the main thread, at most 8), every kind of the kit (`KIT_WORKER_KINDS`) with its own schedule. Every module of the game takes the same one.
+
+```ts
+import { createKitWorkers } from '@adatechnology/game-kit-defaults'
+import { createCoordinatorGroundPort } from '@adatechnology/game-destruction-three'
+
+const workers = createKitWorkers() // module workers of this package's dist/kit-worker.js
+await workers.warm(KIT_WORKER_KINDS)
+createDestructionRenderer(THREE, { groundWorker: createCoordinatorGroundPort(workers) })
+createCrowd({ pack, physics: { ...CROWD_PHYSICS_DEFAULTS, workers } })
+```
+
+By hand, with the same options as `createWorkerCoordinator`: `createKitWorkers({ workers: 4, lanes: { sim: { workers: 2 } }, reserveCores: 2, kinds: { 'destruction.ground-tiles': { latencyFrames: 3 } } })`. Off: `workers: 0` or `spawn: null` (every job on the main thread, the same results). A page of one file passes `spawn: sourceSpawn(text of dist/kit-worker.global.js, { type: 'classic' })`, as `examples/test-room` does; Node passes `nodeSpawn(url)` of a file that calls `installWorkerHost(nodeWorkerScope(), KIT_WORKER_KINDS)`. A game with kinds of its own writes its worker file with them after the kit's: `installWorkerHost(self, [...KIT_WORKER_KINDS, ...mine])`.

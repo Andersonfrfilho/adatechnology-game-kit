@@ -24,13 +24,14 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const names = ['game-audio', 'game-player', 'game-runtime', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-render-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes-three', 'game-weapons-three', 'game-graphics', 'game-graphics-three', 'game-test-room']
+const names = ['game-audio', 'game-player', 'game-runtime', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-render-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes-three', 'game-weapons-three', 'game-graphics', 'game-graphics-three', 'game-test-room', 'game-workers', 'game-crowd']
 for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm build at the root first`)
 }
 const threeDir = join(pkg('game-test-room'), 'node_modules/three')
-// the engine's ground worker (`?groundWorker=1`) as a classic script: inlined, the page starts it from a Blob (no request)
-const groundWorkerSource = readFileSync(join(pkg('game-destruction-three'), 'dist/ground-worker.global.js'), 'utf8')
+// the kit's worker (game-kit-defaults' kit-worker.global.js, every kind of the kit) as a classic script: inlined, the page's coordinator
+// starts its workers from a Blob (`sourceSpawn`, no request; CLAUDE.md §14)
+const kitWorkerSource = readFileSync(join(pkg('game-kit-defaults'), 'dist/kit-worker.global.js'), 'utf8')
 
 // Two bundles of the same src/main.js: the BARE room (an empty room; the page the other test areas load their module into, kept in base/)
 // and the default page (the same room that loads the teams' content, see the end of this file).
@@ -47,9 +48,9 @@ async function bundleMain(full) {
     target: 'es2020',
     minify: process.env.ROOM_MINIFY !== '0',
     legalComments: 'none',
-    define: { __ROOM_FULL__: String(full), __GROUND_WORKER_SOURCE__: JSON.stringify(groundWorkerSource) },
+    define: { __ROOM_FULL__: String(full), 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(kitWorkerSource) },
     // the graphics screen is a subpath of game-graphics (`/screen`), named before its package
-    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
+    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), '@adatechnology/game-destruction-three/worker-kinds': join(pkg('game-destruction-three'), 'dist/worker-kinds.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
   })
   return result.outputFiles[0].text
 }

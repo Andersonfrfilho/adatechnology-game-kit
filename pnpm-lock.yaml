@@ -500,6 +500,9 @@ importers:
       '@adatechnology/game-terrain':
         specifier: workspace:^
         version: link:../game-terrain
+      '@adatechnology/game-workers':
+        specifier: workspace:^
+        version: link:../game-workers
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -1187,6 +1190,15 @@ importers:
       '@adatechnology/game-characters-people':
         specifier: workspace:^
         version: link:../game-characters-people
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
+      '@adatechnology/game-crowd':
+        specifier: workspace:^
+        version: link:../game-crowd
+      '@adatechnology/game-destruction-three':
+        specifier: workspace:^
+        version: link:../game-destruction-three
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:^
         version: link:../game-floorplan-residential
@@ -1199,6 +1211,9 @@ importers:
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:^
         version: link:../game-vehicles-fleet
+      '@adatechnology/game-workers':
+        specifier: workspace:^
+        version: link:../game-workers
     devDependencies:
       '@adatechnology/game-stories':
         specifier: workspace:^

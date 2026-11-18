@@ -33,6 +33,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./worker-kinds": {
+      "types": "./dist/worker-kinds.d.ts",
+      "import": "./dist/worker-kinds.js"
+    },
     "./ground-worker": "./dist/ground-worker.js",
     "./ground-worker.global": "./dist/ground-worker.global.js",
     "./global": "./dist/index.global.js"
@@ -61,14 +65,15 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-terrain": "workspace:^",
+    "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4",
-    "@adatechnology/game-physics-jolt": "workspace:^"
+    "vitest": "^3.2.4"
   }
 }

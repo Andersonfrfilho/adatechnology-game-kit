@@ -21,12 +21,17 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/kit-worker.js",
+    "./dist/kit-worker.global.js"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./kit-worker": "./dist/kit-worker.js",
+    "./kit-worker.global": "./dist/kit-worker.global.js"
   },
   "files": [
     "dist"
@@ -38,10 +43,14 @@
   },
   "dependencies": {
     "@adatechnology/game-characters-people": "workspace:^",
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-crowd": "workspace:^",
+    "@adatechnology/game-destruction-three": "workspace:^",
     "@adatechnology/game-floorplan-residential": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
-    "@adatechnology/game-vehicles-fleet": "workspace:^"
+    "@adatechnology/game-vehicles-fleet": "workspace:^",
+    "@adatechnology/game-workers": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-stories": "workspace:^",

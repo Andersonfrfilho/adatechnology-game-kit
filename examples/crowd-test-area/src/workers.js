@@ -10,6 +10,9 @@ let shared
 /** The coordinator of this page, made once (`window.__kitWorkers`, for the checks and the stats); `null` when the build embeds no worker. */
 export function roomWorkers() {
   if (shared !== undefined) return shared
+  // the room page the area loads into has its coordinator already (examples/test-room: createKitWorkers): one per page
+  const page = /** @type {{ __kitWorkers?: import('@adatechnology/game-workers').WorkerCoordinator }} */ (globalThis).__kitWorkers
+  if (page) return (shared = page)
   // replaced by the build's `define`; absent, it reads undefined
   const embedded = /** @type {{ __KIT_WORKER_SOURCE__?: unknown }} */ (globalThis).__KIT_WORKER_SOURCE__
   const source = typeof embedded === 'string' ? embedded : null

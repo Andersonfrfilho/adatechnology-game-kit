@@ -20,26 +20,32 @@
 //   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table (default: the goods, Itens; ?table=0 leaves it empty)
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
-import { blastFireSampleBank, createWorkerGroundPort } from '@adatechnology/game-destruction-three'
+import { blastFireSampleBank, createCoordinatorGroundPort } from '@adatechnology/game-destruction-three'
+import { sourceSpawn } from '@adatechnology/game-workers'
 import { applyLocalSoundPack, parseLocalSoundPack } from '@adatechnology/game-audio'
 import { furnitureSpec, wallPiece } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { terrainLotsGround } from '@adatechnology/game-terrain-three'
 import { createFirstPersonArms, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
-import { defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
+import { createKitWorkers, defaultCharacterClips, defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
-/* global __ROOM_FULL__, __GROUND_WORKER_SOURCE__ */
+/* global __ROOM_FULL__ */
 const params = new URLSearchParams(location.search)
-/** The engine's ground worker from its inlined source (`?groundWorker=1`): the Blob URL is let go once the worker has it. @returns {import('@adatechnology/game-shapes').WorkerLike} */
-const groundWorkerFromSource = () => {
-  const url = URL.createObjectURL(new Blob([__GROUND_WORKER_SOURCE__], { type: 'text/javascript' }))
-  const worker = new Worker(url)
-  URL.revokeObjectURL(url)
-  // the DOM Worker's handlers take a full MessageEvent; the port reads only `data`
-  return /** @type {import('@adatechnology/game-shapes').WorkerLike} */ (/** @type {unknown} */ (worker))
-}
+/**
+ * The page's one worker coordinator (CLAUDE.md §14), on by default (owner, 2026-11-18): the automatic count by the machine's cores, the kit's
+ * kinds in workers made from the kit worker inlined by build.mjs. `?workers=0` runs every job on the main thread, `?workers=N` takes N. Every
+ * module of the page (the destruction's ground tiles, the crowd area's horde) takes this one (`window.__kitWorkers`).
+ */
+const kitWorkers = (() => {
+  const source = /** @type {{ __KIT_WORKER_SOURCE__?: unknown }} */ (globalThis).__KIT_WORKER_SOURCE__
+  const raw = params.get('workers')
+  const workers = raw === null || raw === 'auto' ? 'auto' : Math.max(0, Number(raw) || 0)
+  const made = createKitWorkers({ spawn: typeof source === 'string' && typeof Worker !== 'undefined' ? sourceSpawn(source, { type: 'classic', name: 'kit-worker' }) : null, workers })
+  ;/** @type {{ __kitWorkers?: unknown }} */ (window).__kitWorkers = made
+  return made
+})()
 // the room itself has no items: the default page loads the SDK modules into it (see build.mjs); the bare room (__ROOM_FULL__ false) is the page the other test areas build over
 const deferred = __ROOM_FULL__
 const BENCH_PARAM_PREFIX = 'bench.'
@@ -102,10 +108,10 @@ const room = createTestRoom({
   // ?tilesUnderParts=1: the engine's ground under each part of a loose piece, not under the box of the whole piece (T3.8v); off by default
   // ?warmup=0: the JIT warm-up of the destruction renderer off (default on, heating the engine of ?solver=jolt)
   // ?workBudget=4: the explosion's deferred work in a frame budget of 4 ms of work units, nearest the camera first (T3.8aa); off by default
-  // ?groundWorker=1: the engine's ground tiles made in a worker, applied 2 updates after they are asked for (owner, 2026-11-17); off by default until measured. The page is one
-  // file, so the worker is started from its source inlined by build.mjs (a Blob URL)
+  // the engine's ground tiles through the page's coordinator (`destruction.ground-tiles`), applied 2 updates after they are asked for (owner, 2026-11-17), the same tile
+  // whether a worker answered or not; on with the coordinator (owner, 2026-11-18), ?groundWorker=0 makes every tile on the main thread as before
   debris: {
-    ...(params.get('groundWorker') === '1' ? { groundWorker: createWorkerGroundPort(groundWorkerFromSource()) } : {}),
+    ...(params.get('groundWorker') !== '0' && kitWorkers.plan.total > 0 ? { groundWorker: createCoordinatorGroundPort(kitWorkers) } : {}),
     ...(params.get('blastDebris') === '1' ? { blast: {} } : {}),
     ...(params.get('tilesUnderParts') === '1' ? { tilesUnderParts: true } : {}),
     ...(params.get('workBudget') ? { workBudget: { budgetMs: Number(params.get('workBudget')) } } : {}),
