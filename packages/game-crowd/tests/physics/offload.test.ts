@@ -182,4 +182,33 @@ describe('an empty crowd', () => {
     offload.dispose()
     scene.crowd.dispose()
   })
+
+  it('a crowd that empties stops handing over even with two steps of latency, and a new agent starts without the shove of the ones gone', async () => {
+    const { createOffload } = await import('../../src/physics/offload/offload')
+    const { createContactView } = await import('../../src/physics/contact')
+    const { createPhysicsStats } = await import('../../src/physics/context')
+    const scene = createWall(0, physicsOptions())
+    const shape = { capacity: 1200, cells: scene.grid.occ.length }
+    const inline = createInlineRunner(kernelSetup(1200, scene.grid.size), shape, 2)
+    let submitted = 0
+    const counting: StepRunner = { transport: inline.transport, frame: () => inline.frame(), submit: () => (submitted++, inline.submit()), get inFlight() { return inline.inFlight }, settle: () => inline.settle(), dispose: () => inline.dispose() }
+    const contact = createContactView(scene.crowd.store, scene.grid)
+    const offload = createOffload(counting, { store: scene.crowd.store, grid: scene.grid, stats: createPhysicsStats(), contact, addDoorLoad: () => undefined }, 2)
+    scene.crowd.spawn(0, -1.5, 0)
+    for (let step = 0; step < 5; step++) offload.step(1 / 60, { x: 0, z: 4 })
+    contact.workspace.shove[0] = 9
+    scene.crowd.kill(0)
+    scene.crowd.update(1 / 60, scene.context)
+    const store = scene.crowd.store
+    for (let i = store.n - 1; i >= 0; i--) scene.crowd.kill(i)
+    while (store.n > 0) scene.crowd.update(1 / 60, scene.context)
+    for (let step = 0; step < 3; step++) offload.step(1 / 60, { x: 0, z: 4 })
+    const before = submitted
+    for (let step = 0; step < 20; step++) offload.step(1 / 60, { x: 0, z: 4 })
+    expect(submitted).toBe(before)
+    expect(inline.inFlight).toBe(0)
+    expect(contact.workspace.shove[0]).toBe(0)
+    offload.dispose()
+    scene.crowd.dispose()
+  })
 })

@@ -95,7 +95,8 @@ export function createOffload(runner: StepRunner, host: OffloadHost, latency = 1
 
   const step = (h: number, player: { readonly x: number; readonly z: number } | undefined): OffloadStepResult => {
     result.playerLoad = 0
-    if (queue.length >= latency) {
+    // an empty crowd drains what is in flight without waiting for the latency to fill again
+    if (queue.length >= latency || (store.n === 0 && queue.length > 0)) {
       const frame = runner.settle()
       if (frame) {
         const pending = queue.shift()!
@@ -104,9 +105,11 @@ export function createOffload(runner: StepRunner, host: OffloadHost, latency = 1
         spare.push(pending)
       }
     }
-    // nothing to hand over: an empty crowd with nothing in flight gives an empty result, so the frame (the agents and the whole grid) is not copied to the worker
-    if (store.n === 0 && queue.length === 0) {
-      clearStats(stats)
+    // nothing to hand over: an empty crowd gives an empty result, so the frame (the agents and the whole grid) is not copied to the worker; the shove of
+    // the agents gone is cleared, as an applied empty frame would, so an agent spawned later starts without it
+    if (store.n === 0) {
+      contact.workspace.shove.fill(0)
+      if (queue.length === 0) clearStats(stats)
       return result
     }
     const frame = runner.frame()
