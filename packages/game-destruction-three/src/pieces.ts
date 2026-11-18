@@ -9,6 +9,7 @@ import type { PhysicsLoop } from '@adatechnology/game-physics'
 import { EnginePieces } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import type { GroundGrid } from './engine-ground'
+import type { GroundWorkerPort } from './engine-ground-port'
 import { resolvePhysics } from './physics-option'
 import { isOverSupport } from './support-hull'
 import type { PlanPoint } from './support-hull'
@@ -55,6 +56,9 @@ export interface PieceSystemOptions {
   maxAwake?: number
   /** Engine only: lay the ground under each part box of a piece of several parts, not under the box around all of them (default off; `RendererOptions.tilesUnderParts`). */
   tilesUnderParts?: boolean
+  /** Engine only: where the ground tiles are made, on a fixed schedule (`RendererOptions.groundWorker`); default none. */
+  groundWorker?: GroundWorkerPort
+  groundWorkerFrames?: number
   /**
    * The far and old rule and the cap of pieces alive (`BlastDebrisOptions`): a piece at rest, older than `far.age` seconds and farther than `far.distance` from `focus`, sleeps or is
    * handed to `onFade`; over `maxLive` pieces the far and old ones at rest go first, then the oldest, by `onFade`. Default: none.
@@ -273,6 +277,8 @@ export class PieceSystem {
   private solids: Solid[] = []
   /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
   private readonly engine: EnginePieces | null
+  /** The host's ground worker, disposed with the system: by the engine, or here when there is none (the kit's own solver lays no tiles). */
+  private readonly groundWorker: GroundWorkerPort | null
   /** The loop the system steps itself (a world was handed), the loop it only registers on (a loop was handed), or null on `'own'`. */
   private readonly loop: PhysicsLoop | null
   private readonly stepsItself: boolean
@@ -340,8 +346,11 @@ export class PieceSystem {
           onKnock: o.onKnock,
           onHardLanding: o.onHardLanding,
           ...(o.tilesUnderParts ? { tilesUnderParts: true } : {}),
+          ...(o.groundWorker ? { groundWorker: o.groundWorker } : {}),
+          ...(o.groundWorkerFrames !== undefined ? { groundWorkerFrames: o.groundWorkerFrames } : {}),
         })
       : null
+    this.groundWorker = o.groundWorker ?? null
     if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)
   }
 
@@ -391,6 +400,8 @@ export class PieceSystem {
   /** Takes the system's phases out of the loop it was handed. */
   dispose(): void {
     for (const leave of this.leaveLoop.splice(0)) leave()
+    if (this.engine) this.engine.dispose()
+    else this.groundWorker?.dispose()
   }
 
   /**

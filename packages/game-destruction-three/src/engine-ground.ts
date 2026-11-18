@@ -30,8 +30,8 @@ export interface GroundTile {
   /** The height field the engine collides with (`engine-ground-collision`): every `cells / collisionCells`-th corner of `heights`, `(collisionCells + 1)^2`. Empty when level. */
   readonly collision: Float32Array
   readonly collisionCells: number
-  /** The step boxes: centre x, y, z and half x, y, z, six numbers each. */
-  readonly boxes: readonly number[]
+  /** The step boxes: centre x, y, z and half x, y, z, six numbers each (a typed array when the tile came from a worker, `engine-ground-job`). */
+  readonly boxes: readonly number[] | Float64Array
   /** The solid under the height field (`engine-ground-solid`); none when the tile is level (a slab is solid already). */
   readonly solid: SolidVolume
   /** The height of a level tile (every sample equal), or null. */
@@ -70,7 +70,7 @@ const seriesOf = (n: number): ReadonlyArray<{ offset: number; width: number; row
 }
 
 /** The `samples` array of a tile of `n` cells. */
-const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (n + 1)
+export const sampleCount = (n: number): number => (n + 1) * (n + 1) + n * n + 2 * n * (n + 1)
 
 /**
  * The ground over a lattice in one pass: the height at (`xs[i]`, `zs[j]`) into `out[j * xs.length + i]`, to the bit what the tile's `groundAt` answers at each point

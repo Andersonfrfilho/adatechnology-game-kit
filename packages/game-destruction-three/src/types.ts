@@ -5,6 +5,7 @@
  * reports on the host's meshes: vertex dents, hole and crack decals, char and heat glow through vertex colours / emissive, melting (sag and
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
+import type { GroundWorkerPort } from './engine-ground-port'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
@@ -137,6 +138,15 @@ export interface RendererOptions {
    * it the engine's ground is `groundAt`, which a grid of the terrain may not be). A reader that is not exact changes the ground: leave it out if unsure.
    */
   terrainGridAt?: (xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array) => void
+  /**
+   * Where the physics engine's ground tiles are made (`GroundWorkerPort`: `createWorkerGroundPort` over a worker running the package's `ground-worker` entry, `createInlineGroundPort`,
+   * `createMainThreadGroundPort`). With it a tile asked for at update N is applied at N + `groundWorkerFrames`, the same tile whether the worker answered in time or not (made on
+   * the main thread from the same data if not), so the physics does not depend on the worker; a piece with no ground laid under it yet waits held still. The renderer owns the
+   * port once handed (`dispose` stops it). Default none: every tile is made in the update it is needed.
+   */
+  groundWorker?: GroundWorkerPort
+  /** Updates from asking for a ground tile to applying it under `groundWorker` (default 2, at least 1). */
+  groundWorkerFrames?: number
   gravity?: number
   /**
    * Turn a loose group into a separate physical piece automatically (default true): the ones a detach or a collapse leaves, and the ones an object already has when it is
