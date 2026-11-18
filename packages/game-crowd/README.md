@@ -120,7 +120,7 @@ crowd.stats.physics // falls by cause, fallsBeyondBlast, climbers, moundMax, thr
 
 ### The contact and the pressure in a worker
 
-`physics.worker` is `'off'` by default (the step runs where it always did). `'auto'` moves the contact and the pressure to a worker when one can be made and stays in the step when it cannot; `'on'` throws instead of staying.
+`physics.worker` is `'auto'` by default: it moves the contact and the pressure to a worker when one can be made and stays in the step when it cannot; `'on'` throws instead of staying; `'off'` forces the step, never a worker.
 The worker is **one step behind**: it is handed the state at the end of step *k*, and step *k + 1* (`workerLatency: 1`, default) or *k + 2* (`workerLatency: 2`) adds what it computed as deltas of position, push and velocity and replaces the pressure field. With the same inputs per step the answer is the same whichever thread computed it: `inline` (the same kernel on the calling thread) is the reference, and the tests compare it with a worker byte for byte. Balance, mound, thrown bodies and blasts stay on the main thread.
 
 ```ts

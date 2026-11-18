@@ -131,9 +131,9 @@ describe('the crowd with the physics in a worker', () => {
     expect(inline).not.toBe(runWall(STEPS, physicsOptions({ worker: 'on', workerTransport: 'inline', workerLatency: 1 })))
   })
 
-  it("'off' is the in-thread path and 'auto' with no worker to make falls back to it", () => {
+  it("'off' is the in-thread path, 'auto' is the default and falls back to it when no worker can be made", () => {
     const off = runWall(STEPS, physicsOptions({ worker: 'off' }))
-    expect(runWall(STEPS, physicsOptions())).toBe(off)
+    expect(runWall(STEPS, physicsOptions())).toBe(off) // default is 'auto', no factory → same as 'off'
     expect(runWall(STEPS, physicsOptions({ worker: 'auto' }))).toBe(off)
   })
 

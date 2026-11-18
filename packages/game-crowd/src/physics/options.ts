@@ -158,8 +158,9 @@ export type CrowdPhysicsOptions = {
   /** Flow budget in cells per step, `attackPose` in the simulation, positions kept for interpolation. */
   readonly deterministic?: boolean
   /**
-   * Where the contact and the pressure run. `'off'` (default): in the step, exactly as before. `'on'`: in a worker, one step behind (the main thread applies what the worker
-   * computed from the previous step), and an error when no worker can be made. `'auto'`: the same when a worker can be made, `'off'` when it cannot. Needs `contact`.
+   * Where the contact and the pressure run. `'auto'` (default): in a worker when one can be made, `'off'` when it cannot (e.g. no `Worker`, no `import.meta.url`, or the IIFE
+   * build). `'off'`: always in the step, never in a worker. `'on'`: in a worker, one step behind (the main thread applies what the worker computed from the previous step), and
+   * an error when no worker can be made. Needs `contact`.
    */
   readonly worker?: 'off' | 'auto' | 'on'
   /** Makes the worker (default: a module worker that loads `physics-worker.js` next to the bundle). A host that bundles its own worker gives the factory and calls `attachPhysicsWorker` in it. */
@@ -276,7 +277,7 @@ export function resolvePhysics(physics: CrowdPhysicsOptions = {}): ResolvedPhysi
     doorPressureDamage: physics.door?.pressureDamage ?? DOOR_PRESSURE_DAMAGE,
     playerPressure,
     deterministic: physics.deterministic ?? false,
-    worker: physics.worker ?? 'off',
+    worker: physics.worker ?? 'auto',
     workerFactory: physics.workerFactory,
     workerTransport: physics.workerTransport,
     workerLatency: physics.workerLatency ?? 1,

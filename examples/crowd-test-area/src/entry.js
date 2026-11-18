@@ -63,11 +63,11 @@ const SCENE_PROPS = {
 
 /**
  * The physics of the room's horde (D13): contact, pressure, balance, mounds, thrown bodies, blasts and personality at the package defaults, with the pressure on the player on.
- * The contact and the pressure go to a worker only in a page that is cross-origin isolated; a `file://` page is not, and the iife bundle has no worker file beside it,
- * so there the physics runs inline in the fixed step (the package falls back by itself).
+ * The contact and the pressure go to a worker by default (`'auto'`); a page without `Worker` or `import.meta.url` (the iife build on `file://`) runs inline — the package
+ * falls back by itself.
  */
 /** @type {() => import('@adatechnology/game-crowd').CrowdPhysicsOptions} */
-const roomPhysics = () => ({ ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true }, worker: globalThis.crossOriginIsolated ? 'auto' : 'off' })
+const roomPhysics = () => ({ ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true } })
 
 const sizeOf = (/** @type {import('@adatechnology/game-animals').AnimalSpecies} */ species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
 
