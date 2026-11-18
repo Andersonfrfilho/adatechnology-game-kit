@@ -59,6 +59,7 @@ describe('desktop areas', () => {
     expect(html).toContain('href="/test-room.html?area=floorplan_area&amp;solver=jolt&amp;joltBuild=multithread"')
     expect(html).toContain('Casas &lt;&amp;&gt;')
     expect(html).toContain('href="/vehicles-test-area/vehicles.html"')
+    expect(html).not.toContain('href="/test-room/test-room.html"')
     expect(html).toContain('Ainda não construídas: weather')
     expect(renderMenuPage({ manifest, roomAreas: undefined, options: DEFAULT_LAUNCH, isIsolated: true })).toContain('Lendo as áreas da sala')
   })

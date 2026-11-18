@@ -1,11 +1,44 @@
 {
   "appId": "com.adatechnology.gamekit.desktop",
   "productName": "AdA Game Kit",
-  "directories": { "output": "release", "buildResources": "resources" },
-  "files": ["dist/main.cjs", "package.json"],
-  "extraResources": [{ "from": "build/room", "to": "room" }],
+  "directories": {
+    "output": "release",
+    "buildResources": "resources"
+  },
+  "files": [
+    "dist/main.cjs",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "build/room",
+      "to": "room"
+    }
+  ],
   "asar": true,
-  "linux": { "target": ["AppImage"], "category": "Game", "artifactName": "ada-game-kit-${version}-${arch}.AppImage" },
-  "mac": { "target": ["dmg"], "category": "public.app-category.games" },
-  "win": { "target": ["nsis"] }
+  "linux": {
+    "target": [
+      "AppImage"
+    ],
+    "category": "Game",
+    "artifactName": "ada-game-kit-${version}-${arch}.AppImage",
+    "executableName": "ada-game-kit",
+    "desktop": {
+      "entry": {
+        "StartupWMClass": "ada-game-kit"
+      }
+    }
+  },
+  "mac": {
+    "target": [
+      "dmg"
+    ],
+    "category": "public.app-category.games"
+  },
+  "win": {
+    "target": [
+      "nsis"
+    ]
+  },
+  "executableName": "ada-game-kit"
 }

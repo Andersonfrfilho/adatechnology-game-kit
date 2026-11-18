@@ -2,6 +2,9 @@
 import { ROOM_PAGE, pathOf, physicsQuery } from './areas'
 import type { DesktopManifest, LaunchOptions, RoomArea } from './areas'
 
+/** The room itself has its own card above the areas. */
+const ROOM_FOLDER = 'test-room'
+
 const escapeHtml = (text: string): string => text.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char)
 
 export type MenuPageInput = {
@@ -20,7 +23,7 @@ export const renderMenuPage = ({ manifest, roomAreas, options, isIsolated }: Men
   const roomCards = roomAreas === undefined
     ? '<p class="note">Lendo as áreas da sala… (a primeira abertura monta a sala uma vez; esta tela se atualiza sozinha)</p>'
     : roomAreas.map((area) => card(pathOf({ kind: 'room', area: area.id }, options), area.name, area.group ? `${area.group} · ?area=${area.id}` : `?area=${area.id}`)).join('')
-  const built = manifest.examples.filter((entry) => entry.page !== null)
+  const built = manifest.examples.filter((entry) => entry.page !== null && entry.folder !== ROOM_FOLDER)
   const missing = manifest.examples.filter((entry) => entry.page === null)
   const exampleCards = built.map((entry) => card(pathOf({ kind: 'example', entry }, options), entry.id, entry.description)).join('')
   return `<!doctype html>
