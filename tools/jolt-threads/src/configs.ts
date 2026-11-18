@@ -16,7 +16,7 @@ export const THREAD_CONFIGS: readonly ThreadConfig[] = [
   { id: 'mt0-off', label: 'multithread build, 0 workers, sem listener', query: '&joltBuild=multithread&joltContacts=off', isGameValid: false },
   { id: 'mt2-off', label: 'multithread, 2 workers, sem listener', query: '&joltThreads=2&joltContacts=off', isGameValid: false },
   { id: 'mt4-off', label: 'multithread, 4 workers, sem listener', query: '&joltThreads=4&joltContacts=off', isGameValid: false },
-  { id: 'mtN-off', label: 'multithread, hardwareConcurrency-1 workers, sem listener', query: '&joltThreads=auto&joltContacts=off', isGameValid: false },
+  { id: 'mtN-off', label: 'multithread, auto = min(hardwareConcurrency-1, 16) workers, sem listener', query: '&joltThreads=auto&joltContacts=off', isGameValid: false },
 ]
 
 export const configById = (id: string): ThreadConfig | undefined => THREAD_CONFIGS.find((config) => config.id === id)

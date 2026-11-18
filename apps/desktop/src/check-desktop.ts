@@ -102,7 +102,13 @@ const shootRoom = async (): Promise<void> => {
     const point = await buildHouseAndBlast(page)
     await page.waitForTimeout(350)
     await page.screenshot({ path: join(shots, 'desktop-crater-explosion.png') })
-    await page.waitForTimeout(5000)
+    await page.waitForTimeout(6000)
+    // the blast pushes the player (and so the camera): aim again, higher, at the bowl
+    await page.evaluate((at) => {
+      const [x = 0, y = 0, z = 0] = at
+      ;(window as unknown as { __testRoom: { look(eye: number[], target: number[]): void } }).__testRoom.look([x + 5, y + 9, z + 5], [x, y - 0.5, z])
+    }, point)
+    await page.waitForTimeout(800)
     await page.screenshot({ path: join(shots, 'desktop-crater-after.png') })
     console.log(`check-desktop: C4 at ${point.map((value) => value.toFixed(1)).join(', ')}, prints in ${shots}`)
   }

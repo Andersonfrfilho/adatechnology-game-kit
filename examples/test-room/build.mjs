@@ -95,7 +95,7 @@ import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 // falls back to the single-threaded build, said in the console and in window.__joltInfo
 const threadingOf = (q) => {
   const raw = q.get('joltThreads')
-  const workerThreads = raw === 'auto' ? Math.max(0, (navigator.hardwareConcurrency || 1) - 1) : Number(raw ?? 0)
+  const workerThreads = raw === 'auto' ? Math.min(MAX_WORKER_THREADS, Math.max(0, (navigator.hardwareConcurrency || 1) - 1)) : Number(raw ?? 0)
   const build = q.get('joltBuild') === 'multithread' || workerThreads > 0 ? 'multithread' : 'single'
   return { build, workerThreads, contactCallbacks: q.get('joltContacts') === 'off' ? 'none' : 'js', moduleUrl: new URL('jolt-physics.multithread.wasm-compat.js', location.href).href }
 }

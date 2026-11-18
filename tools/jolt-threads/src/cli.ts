@@ -84,7 +84,7 @@ const probeCallbacks = async (): Promise<void> => {
   await new Promise<void>((done) => server.listen(0, '127.0.0.1', done))
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
   const browser = await chromium.launch({ args: ['--no-sandbox'] })
-  for (const [threads, listener] of [[0, 'on'], [1, 'on'], [4, 'on'], [4, 'off']] as const) {
+  for (const [threads, listener] of [[0, 'on'], [1, 'on'], [4, 'on'], [4, 'off'], [16, 'off']] as const) {
     const page = await browser.newPage()
     const workerErrors: string[] = []
     page.on('console', (message) => message.text().includes('worker sent an error') && workerErrors.push(message.text()))

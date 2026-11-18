@@ -38,8 +38,12 @@ export type JoltThreading = {
 }
 
 export const SINGLE_THREAD: JoltThreading = { build: 'single', workerThreads: 0, contactCallbacks: 'js' }
-/** Jolt's own ceiling for job threads is the machine; this keeps a typo from asking for thousands of workers. */
-export const MAX_WORKER_THREADS = 64
+/**
+ * The multithreaded build of jolt-physics 1.1.1 starts 16 pthreads with the module (emscripten's PTHREAD_POOL_SIZE). Jolt makes its job threads in the
+ * `JoltInterface` constructor, on the page's main thread, which cannot wait for a new worker to boot: asking for more than the pool hangs the page for
+ * good (measured: 23 on a 24-thread machine, no room after 10 minutes). So 16 is the ceiling, whatever the machine has.
+ */
+export const MAX_WORKER_THREADS = 16
 export const MULTITHREAD_MODULE = 'jolt-physics/wasm-compat-multithread'
 
 export const JOLT_THREADING_ERROR = {

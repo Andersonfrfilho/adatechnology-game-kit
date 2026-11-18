@@ -24,7 +24,7 @@ describe('jolt threading options', () => {
     expect(codeOf(() => resolveJoltThreading({ build: 'multithread' }, false))).toBe(JOLT_THREADING_ERROR.MULTITHREAD_NEEDS_SHARED_MEMORY)
     expect(codeOf(() => resolveJoltThreading({ workerThreads: 1, contactCallbacks: 'none' }, true))).toBe(JOLT_THREADING_ERROR.WORKERS_NEED_MULTITHREAD_BUILD)
     expect(codeOf(() => resolveJoltThreading({ build: 'multithread', workerThreads: 1.5, contactCallbacks: 'none' }, true))).toBe(JOLT_THREADING_ERROR.BAD_WORKER_COUNT)
-    expect(codeOf(() => resolveJoltThreading({ build: 'multithread', workerThreads: 65, contactCallbacks: 'none' }, true))).toBe(JOLT_THREADING_ERROR.BAD_WORKER_COUNT)
+    expect(codeOf(() => resolveJoltThreading({ build: 'multithread', workerThreads: 17, contactCallbacks: 'none' }, true))).toBe(JOLT_THREADING_ERROR.BAD_WORKER_COUNT)
   })
 
   it('accepts the multithreaded build on the caller thread with the JS listener, and worker threads without it', () => {
