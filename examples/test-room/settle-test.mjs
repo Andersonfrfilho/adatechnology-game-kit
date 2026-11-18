@@ -105,7 +105,9 @@ for (let round = 1; round <= rounds; round++) {
     while (performance.now() - start < watchMs) {
       await new Promise((resolve) => requestAnimationFrame(resolve))
       for (const p of pieces) {
-        const at = [p.root.position.x, p.root.position.y, p.root.position.z]
+        // by the centre of mass: the root is the origin of the object the piece came from, up to 2 m off a chip, and swings round with it
+        const centre = /** @type {any} */ (p).centerV.clone().applyQuaternion(p.root.quaternion).add(p.root.position)
+        const at = [centre.x, centre.y, centre.z]
         const s = seen.get(p) ?? { path: 0, awake: 0, frames: 0, last: at, first: at, low: Infinity }
         s.low = Math.min(s.low, at[1] - r.terrain.heightAt(at[0], at[2]))
         s.path += Math.hypot(at[0] - s.last[0], at[1] - s.last[1], at[2] - s.last[2])
@@ -123,7 +125,7 @@ for (let round = 1; round <= rounds; round++) {
       const s = seen.get(p) ?? { path: 0, awake: 0, frames: 1, last: [0, 0, 0], first: [0, 0, 0], low: 0 }
       const net = Math.hypot(s.last[0] - s.first[0], s.last[1] - s.first[1], s.last[2] - s.first[2])
       const v = Math.hypot(...p.velocity)
-      return { id: p.objectId, material: materialOf(p.objectId), mass: p.mass, path: s.path, net, speed: v, low: s.low, half: p.halfExtents, alwaysAwake: s.awake === s.frames, at: [p.root.position.x, p.root.position.y, p.root.position.z].map((x) => +x.toFixed(2)) }
+      return { id: p.objectId, material: materialOf(p.objectId), mass: p.mass, path: s.path, net, speed: v, low: s.low, half: p.halfExtents, alwaysAwake: s.awake === s.frames, at: s.last.map((x) => +x.toFixed(2)) }
     })
   }, WATCH_MS)
   await page.screenshot({ path: join(shots, `settle-round${round}.png`) })
@@ -135,7 +137,7 @@ for (let round = 1; round <= rounds; round++) {
   for (const p of shaking) {
     // shaking in place travels far and gets nowhere; one that gets somewhere is still sliding, rolling or flying
     const kind = p.net < p.path * 0.25 ? 'shaking in place' : 'never stops moving'
-    const line = `round ${round}: ${p.id} (${p.material}, ${p.mass.toFixed(2)} kg, half ${p.half.map((x) => x.toFixed(3)).join('x')}) ${kind} at ${p.at.join(', ')}: ${(p.path * 1000).toFixed(0)} mm travelled, ${(p.net * 1000).toFixed(0)} mm from where it was, ${p.speed.toFixed(2)} m/s, lowest ${(p.low * 1000).toFixed(0)} mm over the ground`
+    const line = `round ${round}: ${p.id} (${p.material}, ${p.mass.toFixed(2)} kg, half ${p.half.map((x) => x.toFixed(3)).join('x')}) ${kind} at ${p.at.join(', ')}: ${(p.path * 1000).toFixed(0)} mm travelled, ${(p.net * 1000).toFixed(0)} mm from where it was, ${p.speed.toFixed(2)} m/s, centre at least ${(p.low * 1000).toFixed(0)} mm over the ground`
     console.log(`  FAIL ${line}`)
     failures.push(line)
   }
