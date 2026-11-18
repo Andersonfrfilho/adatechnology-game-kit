@@ -12,6 +12,7 @@ import { createRng, CROWD_PHYSICS_DEFAULTS } from '@adatechnology/game-crowd'
 import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { CROWD_AREA_ID, createCrowdTestModule } from '@adatechnology/game-crowd-three/testing'
 import { create } from '@adatechnology/game-infection'
+import { roomWorkers } from './workers.js'
 
 export { createCrowdTestModule }
 
@@ -63,11 +64,15 @@ const SCENE_PROPS = {
 
 /**
  * The physics of the room's horde (D13): contact, pressure, balance, mounds, thrown bodies, blasts and personality at the package defaults, with the pressure on the player on.
- * The contact and the pressure go to a worker only in a page that is cross-origin isolated; a `file://` page is not, and the iife bundle has no worker file beside it,
- * so there the physics runs inline in the fixed step (the package falls back by itself).
+ * The contact and the pressure run as the `crowd.physics` resident of the page's worker coordinator (CLAUDE.md §14): one step behind, in a worker made from the
+ * embedded worker source, and on the main thread in a step the worker has not answered by then, so the horde moves the same with or without workers.
+ * A build that embeds no worker source keeps the package's own path (in the step).
  */
 /** @type {() => import('@adatechnology/game-crowd').CrowdPhysicsOptions} */
-const roomPhysics = () => ({ ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true }, worker: globalThis.crossOriginIsolated ? 'auto' : 'off' })
+const roomPhysics = () => {
+  const workers = roomWorkers()
+  return { ...CROWD_PHYSICS_DEFAULTS, playerPressure: { ...CROWD_PHYSICS_DEFAULTS.playerPressure, enabled: true }, ...(workers ? { workers } : { worker: 'off' }) }
+}
 
 const sizeOf = (/** @type {import('@adatechnology/game-animals').AnimalSpecies} */ species) => (species.body.kind === 'quadruped' ? quadrupedLayout(species.body).size : species.body.kind === 'bird' ? birdSize(species.body) : 1)
 

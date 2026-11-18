@@ -20,6 +20,7 @@ function findEsbuild() {
   throw new Error('esbuild not found in node_modules/.pnpm (run pnpm install)')
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
+const { kitWorkerSource } = await import('../crowd-test-area/worker-source.mjs')
 
 const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
 // the houses: the plans of every package, their structure and the drawing in three.js
@@ -28,7 +29,7 @@ const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three',
 const vegetation = ['game-vegetation', 'game-vegetation-species', 'game-vegetation-three']
 const urban = ['game-kit-defaults', 'game-urban', 'game-urban-three']
   // the crowd: the horde, its drawing on the baked variants and the region model it comes from
-  const crowd = ['game-crowd', 'game-crowd-three', 'game-infection']
+  const crowd = ['game-workers', 'game-crowd', 'game-crowd-three', 'game-infection']
   // the stories: casting, beats, the life simulation and the character sheet (no 3D)
   const stories = ['game-stories']
 for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-terrain', 'game-terrain-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-weather-three', ...people, ...houses, ...vehicles, ...vegetation, ...urban, 'game-player', ...crowd, ...stories]) {
@@ -45,6 +46,8 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
+  // the room's worker coordinator makes its workers from this text (examples/crowd-test-area/src/workers.js)
+  define: { 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(await kitWorkerSource(esbuild, root)) },
   alias: {
     '@adatechnology/game-vegetation-three/testing': join(pkg('game-vegetation-three'), 'dist/testing.js'),
     '@adatechnology/game-urban-three/testing': join(pkg('game-urban-three'), 'dist/testing.js'),

@@ -1,4 +1,4 @@
-import type { BlastShoveOptions } from '@adatechnology/game-contracts'
+import type { BlastShoveOptions, WorkerCoordinator } from '@adatechnology/game-contracts'
 
 import type { OffloadTransport, PhysicsWorkerFactory } from './offload/types'
 
@@ -168,6 +168,13 @@ export type CrowdPhysicsOptions = {
   readonly workerTransport?: OffloadTransport
   /** Steps between the state the worker is handed and the step that applies its answer (default 1). 2 gives the worker a whole step to finish in, so the main thread never waits for it, and costs one more step of lag in the contact. */
   readonly workerLatency?: 1 | 2
+  /**
+   * The game's worker coordinator (`@adatechnology/game-workers`, CLAUDE.md §14). Given, the contact and the pressure run as its
+   * `crowd.physics` resident, one step behind (`workerLatency`), with no wait on the main thread: a step the worker has not answered by then is
+   * computed here, so the state is the same with or without workers. It turns `worker` to `'auto'` unless `worker` says otherwise;
+   * `workerFactory` and `workerTransport` are then not used.
+   */
+  readonly workers?: WorkerCoordinator
 }
 
 export const CONTACT_DEFAULTS: Required<CrowdContactOptions> = { radius: 0.25, iterations: 2, friction: 6, maxPush: 3, maxCorrection: 0.1, relaxation: 1, baseMass: 70, separationMax: 1.5 }
@@ -239,6 +246,7 @@ export type ResolvedPhysics = {
   readonly workerFactory: PhysicsWorkerFactory | undefined
   readonly workerTransport: OffloadTransport | undefined
   readonly workerLatency: 1 | 2
+  readonly workers: WorkerCoordinator | undefined
 }
 
 const part = <T extends object>(option: T | boolean | undefined, defaults: Required<T>): Required<T> | null => {
@@ -276,9 +284,10 @@ export function resolvePhysics(physics: CrowdPhysicsOptions = {}): ResolvedPhysi
     doorPressureDamage: physics.door?.pressureDamage ?? DOOR_PRESSURE_DAMAGE,
     playerPressure,
     deterministic: physics.deterministic ?? false,
-    worker: physics.worker ?? 'off',
+    worker: physics.worker ?? (physics.workers ? 'auto' : 'off'),
     workerFactory: physics.workerFactory,
     workerTransport: physics.workerTransport,
     workerLatency: physics.workerLatency ?? 1,
+    workers: physics.workers,
   }
 }

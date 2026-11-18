@@ -13,6 +13,7 @@ import { createMound } from './mound'
 import type { Mound } from './mound'
 import type { ResolvedPhysics } from './options'
 import { createDefaultWorkerFactory } from './offload/default-worker'
+import { createCoordinatorRunner } from './offload/kind'
 import { createOffload } from './offload/offload'
 import type { Offload } from './offload/offload'
 import { createInlineRunner, createSharedRunner, createTransferRunner, isSharedAvailable } from './offload/runner'
@@ -86,8 +87,9 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     const gridCells = grid.occ.length
     const shape = { capacity: store.capacity, cells: gridCells }
     const setup = { capacity: store.capacity, gridSize: grid.size, gridCell: grid.cell, contact: options.contact!, pressure: options.pressure, driveForceOfType: Array.from(driveForceOfType) }
-    const transport = options.workerTransport ?? (isSharedAvailable() ? 'shared' : 'transfer')
     const slots = options.workerLatency
+    if (options.workers) return createCoordinatorRunner(setup, shape, options.workers, slots)
+    const transport = options.workerTransport ?? (isSharedAvailable() ? 'shared' : 'transfer')
     if (transport === 'inline') return createInlineRunner(setup, shape, slots)
     const factory = options.workerFactory ?? createDefaultWorkerFactory()
     if (!factory) {
