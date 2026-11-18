@@ -30,6 +30,13 @@ const isOpen = (grid: NavGrid, x: number, z: number): boolean => {
   return cell >= 0 && (grid.occ[cell] === 0 || grid.occ[cell] === 3)
 }
 
+const clearStats = (stats: PhysicsStats): void => {
+  stats.contacts = 0
+  stats.maxOverlap = 0
+  stats.meanOverlap = 0
+  stats.fieldMax = 0
+}
+
 /** The inputs of one step, copied from the store and the grid into the frame. */
 export function writeSnapshot(frame: PhysicsFrame, source: { readonly store: CrowdStore; readonly grid: NavGrid }, h: number, player: { readonly x: number; readonly z: number } | undefined): void {
   const { store, grid } = source
@@ -96,6 +103,11 @@ export function createOffload(runner: StepRunner, host: OffloadHost, latency = 1
         pending.origin = null
         spare.push(pending)
       }
+    }
+    // nothing to hand over: an empty crowd with nothing in flight gives an empty result, so the frame (the agents and the whole grid) is not copied to the worker
+    if (store.n === 0 && queue.length === 0) {
+      clearStats(stats)
+      return result
     }
     const frame = runner.frame()
     if (frame && spare.length) {

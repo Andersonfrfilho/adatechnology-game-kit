@@ -160,3 +160,26 @@ describe('the crowd with the physics in a worker', () => {
     expect(crowd.store.field[1]).toBe(0)
   })
 })
+
+describe('an empty crowd', () => {
+  it('hands nothing to the runner while no agent is out and nothing is in flight, and hands over again once an agent appears', async () => {
+    const { createOffload } = await import('../../src/physics/offload/offload')
+    const { createContactView } = await import('../../src/physics/contact')
+    const { createPhysicsStats } = await import('../../src/physics/context')
+    const scene = createWall(0, physicsOptions())
+    const shape = { capacity: 1200, cells: scene.grid.occ.length }
+    const inline = createInlineRunner(kernelSetup(1200, scene.grid.size), shape)
+    let submitted = 0
+    const counting: StepRunner = { transport: inline.transport, frame: () => inline.frame(), submit: () => (submitted++, inline.submit()), get inFlight() { return inline.inFlight }, settle: () => inline.settle(), dispose: () => inline.dispose() }
+    const stats = { ...createPhysicsStats(), contacts: 7, maxOverlap: 1, meanOverlap: 1, fieldMax: 3 }
+    const offload = createOffload(counting, { store: scene.crowd.store, grid: scene.grid, stats, contact: createContactView(scene.crowd.store, scene.grid), addDoorLoad: () => undefined })
+    for (let step = 0; step < 30; step++) expect(offload.step(1 / 60, { x: 0, z: 4 }).playerLoad).toBe(0)
+    expect(submitted).toBe(0)
+    expect([stats.contacts, stats.maxOverlap, stats.meanOverlap, stats.fieldMax]).toEqual([0, 0, 0, 0])
+    scene.crowd.spawn(0, -1.5, 0)
+    offload.step(1 / 60, { x: 0, z: 4 })
+    expect(submitted).toBe(1)
+    offload.dispose()
+    scene.crowd.dispose()
+  })
+})
