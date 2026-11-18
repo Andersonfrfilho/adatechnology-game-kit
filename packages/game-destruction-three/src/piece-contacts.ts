@@ -239,6 +239,70 @@ export function boxesAlongGround(a: ContactShape, b: ContactShape): ShapeContact
   return best
 }
 
+/** A box pair whose way out has more than this share along the ground meets side by side (`levelBoxesApart`). */
+const LEVEL_NORMAL = 0.5
+
+/** How one overlapping box pair goes apart along the ground, or null when it is not to be counted. */
+type LevelWay = (a: Box, b: Box) => ShapeContact | null
+
+/** The pair's own contact, when its way out is mostly level (side by side); null for a pair one on the other. */
+const sideBySide: LevelWay = (a, b) => {
+  const hit = boxBox(a, b)
+  return hit && Math.hypot(hit.normal[0], hit.normal[2]) > LEVEL_NORMAL ? hit : null
+}
+
+/**
+ * Every pair's way out (`way`) as the move along the ground it asks for (its normal laid flat, by its depth over its share along the ground, as `slideApart` moves), the
+ * deepest each way along x and along z, added: wedged between two parts of the other (a book between two boards of a fallen case), the ways out cancel and it stays
+ * held there. By the deepest pair alone it was pushed out of one board into the other, and back, every step, and never slept. When the sum is the deepest pair's own move
+ * (one pair, or all on its side) that pair's contact comes back as it is; else a level normal (from `b` to `a`) and depth of the sum, no depth when it is nothing. Null
+ * when no pair counts.
+ */
+const apartAlongGround = (a: ContactShape, b: ContactShape, way: LevelWay): ShapeContact | null => {
+  if (a.kind !== 'boxes' || b.kind !== 'boxes') return null
+  let deepest: ShapeContact | null = null
+  let deepestX = 0, deepestZ = 0
+  let xPlus = 0, xMinus = 0, zPlus = 0, zMinus = 0
+  for (const boxA of a.boxes) {
+    for (const boxB of b.boxes) {
+      const hit = way(boxA, boxB)
+      if (!hit) continue
+      const flat = Math.hypot(hit.normal[0], hit.normal[2])
+      const x = (hit.normal[0] * hit.depth) / (flat * flat)
+      const z = (hit.normal[2] * hit.depth) / (flat * flat)
+      if (!deepest || hit.depth > deepest.depth) {
+        deepest = hit
+        deepestX = x
+        deepestZ = z
+      }
+      xPlus = Math.max(xPlus, x)
+      xMinus = Math.min(xMinus, x)
+      zPlus = Math.max(zPlus, z)
+      zMinus = Math.min(zMinus, z)
+    }
+  }
+  if (!deepest) return null
+  const x = xPlus + xMinus
+  const z = zPlus + zMinus
+  if (x === deepestX && z === deepestZ) return deepest
+  const depth = Math.hypot(x, z)
+  if (depth < 1e-9) {
+    const flat = Math.hypot(deepest.normal[0], deepest.normal[2])
+    return { point: deepest.point, normal: [deepest.normal[0] / flat, 0, deepest.normal[2] / flat], depth: 0 }
+  }
+  return { point: deepest.point, normal: [x / depth, 0, z / depth], depth }
+}
+
+/** Two box shapes side by side put apart along the ground by all their side-by-side part pairs (`apartAlongGround`); a pair one on the other is its support, not counted. */
+export function levelBoxesApart(a: ContactShape, b: ContactShape): ShapeContact | null {
+  return apartAlongGround(a, b, sideBySide)
+}
+
+/** Two box shapes made inside each other put apart along the ground by all their overlapping part pairs (`boxBoxAlongGround`, then `apartAlongGround`). */
+export function boxesApartAlongGround(a: ContactShape, b: ContactShape): ShapeContact | null {
+  return apartAlongGround(a, b, boxBoxAlongGround)
+}
+
 /** Where shape `a` meets shape `b` (the normal from `b` to `a`), the deepest of their boxes; null when they do not touch. */
 export function shapeContact(a: ContactShape, b: ContactShape): ShapeContact | null {
   if (a.kind === 'capsule' && b.kind === 'capsule') {
