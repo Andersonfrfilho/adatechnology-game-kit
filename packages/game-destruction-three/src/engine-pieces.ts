@@ -1,11 +1,14 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
+import { samePatch } from '@adatechnology/game-terrain'
+import type { HeightPatch } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, buildGroundTile, flatTile, readGround, sampleCount, shapeGround } from './engine-ground'
 import type { GroundGrid, GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
-import { bandLength, readGroundBand } from './engine-ground-job'
+import { bandLength, latticePatchRead, readGroundBand, readGroundPatch } from './engine-ground-job'
+import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import { GroundSchedule } from './engine-ground-schedule'
 import type { PendingGround } from './engine-ground-schedule'
@@ -33,6 +36,12 @@ export interface EnginePieceOptions {
    * again when the host marks its ground changed (`groundChanged`, through `wakeRegion`), as for its heights: a surface that changes is marked like a height that does.
    */
   readonly groundRollingAt?: (x: number, z: number) => number | undefined
+  /**
+   * `groundAt`'s vertices under a rectangle (`GroundPatchRead`; `Terrain.heightPatch` is one), to the bit what `groundGrid` reads there. Under `groundWorker`, a tile it covers
+   * (with its ring) is asked for with its patch, about 26 x 26 numbers, not its 60 000 samples and band: the samples are made where the tile is, and a change is told by
+   * comparing patches. A tile it does not cover (across the terrain's bounds) is read as before.
+   */
+  readonly groundPatch?: GroundPatchRead
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
@@ -62,6 +71,9 @@ type TileVisit = (key: number, ix: number, iz: number) => void
 
 /** Updates from asking for a tile to applying it under `groundWorker` unless the host says otherwise (owner, 2026-11-17: 1 to 3 frames of delay accepted). */
 export const GROUND_WORKER_FRAMES = 2
+
+/** Whether a tile's engine field is the coarse one (`collisionFieldOf`): a slab never is. */
+const wasCoarseOf = (tile: { readonly slab: boolean; readonly collision: Float32Array; readonly heights: Float32Array }): boolean => !tile.slab && tile.collision.length < tile.heights.length
 
 /** A piece's box seen from above (`EnginePieces.footprint`). */
 interface Footprint {
@@ -206,8 +218,10 @@ interface Tile {
   heights: Float32Array
   collision: Float32Array
   writes: number
-  /** Null for a tile proved level without reading it; its level then is `level`. */
+  /** Null for a tile proved level without reading it (its level then is `level`), and for one made from a patch (`patch`). */
   samples: Float64Array | null
+  /** The terrain's vertices a tile was made from (`EnginePieceOptions.groundPatch`), the schedule's to take back when the tile is made again; null when it was read. */
+  patch: HeightPatch | null
   level: number | null
   /** Where the host said the ground changed (world x and z, widened by `GROUND_REACH`): only the samples there are read again. Null when it did not. */
   dirty: GroundRect | null
@@ -292,6 +306,8 @@ export class EnginePieces {
     const band = new Float64Array(bandLength(TILE))
     readGroundBand(warmGround, band, 0, 0, TILE)
     schedule.warm(samples, band, 0, 0, TILE)
+    // the warm patch is read the way a real one is (`readGroundPatch` over the tile and its ring), so it fits whatever the tile and the ring are
+    if (this.o.groundPatch) schedule.warmPatch(readGroundPatch(latticePatchRead(warmGround), 0, 0, TILE) as HeightPatch, 0, 0, TILE)
   }
 
   /** A piece not handed in this update goes (`update`; a callback made once, so the walk makes no entry per piece). */
@@ -1000,6 +1016,11 @@ export class EnginePieces {
       else if (tile) this.refreshMaterial(tile, ix, iz)
       return
     }
+    const patch = this.o.groundPatch ? schedule.readPatch(this.o.groundPatch, x0, z0, TILE) : null
+    if (patch) {
+      this.askPatch({ key, ix, iz, x0, z0 }, tile, patch)
+      return
+    }
     let samples: Float64Array
     let wasCoarse = false
     if (tile && tile.samples) {
@@ -1008,7 +1029,7 @@ export class EnginePieces {
       tile.dirty = null
       if (!changed && !ringMoved) return this.refreshMaterial(tile, ix, iz)
       samples = tile.samples
-      wasCoarse = !tile.slab && tile.collision.length < tile.heights.length
+      wasCoarse = wasCoarseOf(tile)
     } else {
       samples = new Float64Array(sampleCount(Math.round(TILE / GROUND_CELL)))
       readGround(this.o.groundAt, samples, x0, z0, TILE, undefined, this.o.groundGrid)
@@ -1016,7 +1037,24 @@ export class EnginePieces {
     }
     const band = schedule.band(TILE)
     readGroundBand(this.o.groundAt, band, x0, z0, TILE, this.o.groundGrid)
-    schedule.ask({ key, ix, iz, x0, z0, size: TILE, fresh: tile === undefined, wasCoarse, samples }, band, this.updates)
+    schedule.ask({ key, ix, iz, x0, z0, size: TILE, fresh: tile === undefined, wasCoarse, samples, patch: null }, band, this.updates)
+  }
+
+  /**
+   * A tile asked for with the terrain's vertices under it and its ring (`groundPatch`): left as it is when they are the ones it was made from (the samples and the band it would
+   * read are then the same, to the bit), else the tile is made from them where the schedule makes it. Nothing of its 60 000 samples is read here.
+   */
+  private askPatch(at: { key: number; ix: number; iz: number; x0: number; z0: number }, tile: Tile | undefined, patch: HeightPatch): void {
+    const schedule = this.schedule as GroundSchedule
+    if (tile) tile.dirty = null
+    if (tile?.patch && samePatch(tile.patch, patch)) {
+      schedule.givePatch(patch.heights)
+      // the same heights, maybe another surface (a fill, a paint): its bodies take it now
+      this.refreshMaterial(tile, at.ix, at.iz)
+      return
+    }
+    const wasCoarse = tile !== undefined && wasCoarseOf(tile)
+    schedule.ask({ ...at, size: TILE, fresh: tile === undefined, wasCoarse, samples: null, patch }, null, this.updates)
   }
 
   /** The tiles due at this update, laid in the order they were asked for: the worker's answer or the same tile made here (`GroundSchedule.resolve`). */
@@ -1205,7 +1243,10 @@ export class EnginePieces {
       if (same && steps !== null) this.world.setMaterial(steps, material)
       if (solid !== null && solid === tile.solid) this.world.setMaterial(solid, material)
     }
-    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid, volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, level: made.level, dirty, material })
+    const patch = made.patch ?? null
+    // the patch the tile was made from before goes back for the next read (§8: one patch per tile, no more)
+    if (tile?.patch && tile.patch !== patch) this.schedule?.givePatch(tile.patch.heights)
+    this.tiles.set(key, { ground, slab, steps, boxes: made.boxes, solid, volume, heights: made.heights, collision: made.collision, writes, samples: made.samples, patch, level: made.level, dirty, material })
   }
 
   /** A tile whose ground did not change: its bodies take the surface there now (`groundMaterial`) if it is another. */

@@ -6,7 +6,7 @@ import { nodeSpawn } from '@adatechnology/game-workers/node'
 import { createTerrain } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, readGround, sampleCount } from '../src/engine-ground'
-import { bandLength, computeGroundTile, readGroundBand, tileOfResult } from '../src/engine-ground-job'
+import { bandLength, computeGroundTile, readGroundBand, readGroundPatch, tileOfResult } from '../src/engine-ground-job'
 import type { GroundTileJob, GroundTileResult } from '../src/engine-ground-job'
 import { createCoordinatorGroundPort } from '../src/engine-ground-port'
 import { GroundSchedule } from '../src/engine-ground-schedule'
@@ -41,6 +41,19 @@ const jobs = (): GroundTileJob[] => {
 describe('the ground tiles through the worker coordinator (CLAUDE.md §14)', () => {
   it('destruction.ground-tiles gives the same tile, byte for byte, on the main thread, in the in-thread worker and in worker_threads', async () => {
     const report = await checkTaskKind(groundTilesKind, jobs(), [nodeSpawn(new URL('./fixtures/coordinator-worker.mjs', import.meta.url))])
+    expect(report.problems).toEqual([])
+  }, 60_000)
+
+  it('a patch job (the terrain\'s vertices, not its samples) gives the same tile byte for byte everywhere, and the tile today\'s job gives', async () => {
+    const terrain = createTerrain({ bounds: [-6, -6, 6, 6], cellSize: 0.1, layout: { surface: 'dirt' }, baseHeight: (x, z) => 0.04 * Math.sin(2 * x + z) })
+    terrain.strike('explosive', { x: 0.37, z: -0.21, energy: 4e6 })
+    for (let k = 0; k < 4; k++) terrain.dig({ x: -2.43, z: 1.2, depth: 0.2 })
+    const groundAt: Ground = (x, z) => terrain.heightAt(x, z)
+    const patchJobs = ([[0, -2], [-2, 0], [2, 0]] as const).map(([x0, z0], k): GroundTileJob => ({
+      id: k + 1, x0, z0, size: 2, wasCoarse: k === 1, samples: new Float64Array(0), band: new Float64Array(0), patch: readGroundPatch(terrain.heightPatch, x0, z0, 2)!,
+    }))
+    for (const job of patchJobs) expect(firstDifference(tileOfResult(computeGroundTile(job), null), tileOfResult(computeGroundTile(jobOf(groundAt, job.x0, job.z0, terrain.heightGrid, job.wasCoarse, job.id)), null))).toBeNull()
+    const report = await checkTaskKind(groundTilesKind, patchJobs, [nodeSpawn(new URL('./fixtures/coordinator-worker.mjs', import.meta.url))])
     expect(report.problems).toEqual([])
   }, 60_000)
 
@@ -111,6 +124,44 @@ describe('the ground tiles through the worker coordinator (CLAUDE.md §14)', () 
     for (let waited = 0; [...schedule.pending.values()].some((p) => !p.result) && waited < 10_000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10))
     applied(next, 12)
     expect(schedule.stats).toMatchObject({ inTime: next.length, fellBack: lost.length })
+    schedule.dispose()
+    workers.dispose()
+  })
+  it('patch jobs through the coordinator: transferred, the main thread keeps its own patch; lost with a dying worker they are made here at their update, to the bit', async () => {
+    const terrain = createTerrain({ bounds: [-6, -6, 6, 6], cellSize: 0.1, layout: { surface: 'dirt' } })
+    terrain.strike('explosive', { x: 0.37, z: -0.21, energy: 4e6 })
+    const spawned: WorkerLike[] = []
+    const inner = inThreadSpawn([groundTilesKind], { delayMs: 20 })
+    const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
+    const schedule = new GroundSchedule(createCoordinatorGroundPort(workers), 2)
+    const tiles = [[0, -2], [-2, 0], [0, 0]] as const
+    const expected = tiles.map(([x0, z0]) => tileOfResult(computeGroundTile(jobOf((x, z) => terrain.heightAt(x, z), x0, z0, terrain.heightGrid)), null))
+    const askAll = (now: number): void => tiles.forEach(([x0, z0], key) => {
+      const patch = schedule.readPatch(terrain.heightPatch, x0, z0, 2)!
+      schedule.ask({ key, ix: 0, iz: 0, x0, z0, size: 2, fresh: true, wasCoarse: false, samples: null, patch }, null, now)
+    })
+    const due: PendingGround[] = []
+    const applied = (now: number): void => {
+      schedule.takeDue(now, due)
+      expect(due.length).toBe(tiles.length)
+      due.forEach((p, i) => {
+        const tile = schedule.resolve(p)
+        expect(tile.patch).toBe(p.patch)
+        expect(firstDifference({ ...tile, patch: undefined }, { ...expected[i]!, patch: undefined })).toBeNull()
+        schedule.givePatch(p.patch!.heights)
+      })
+    }
+    askAll(0)
+    spawned[0]!.onerror?.(new Error('killed'))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    applied(2)
+    expect(schedule.stats).toMatchObject({ inTime: 0, fellBack: tiles.length })
+    askAll(10)
+    for (let waited = 0; [...schedule.pending.values()].some((p) => !p.result) && waited < 10_000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10))
+    applied(12)
+    expect(schedule.stats).toMatchObject({ inTime: tiles.length, fellBack: tiles.length })
+    // the copies the dead worker held never come back (the pool makes new ones); every other one did
+    expect(schedule.outstanding).toBe(tiles.length)
     schedule.dispose()
     workers.dispose()
   })

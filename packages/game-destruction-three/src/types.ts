@@ -5,6 +5,7 @@
  * reports on the host's meshes: vertex dents, hole and crack decals, char and heat glow through vertex colours / emissive, melting (sag and
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
+import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue, WorkerCoordinator } from '@adatechnology/game-contracts'
@@ -146,6 +147,13 @@ export interface RendererOptions {
    * it the engine's ground is `groundAt`, which a grid of the terrain may not be). A reader that is not exact changes the ground: leave it out if unsure.
    */
   terrainGridAt?: (xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array) => void
+  /**
+   * `terrainAt`'s vertices under a rectangle (`Terrain.heightPatch` is one), to the bit what `terrainGridAt` reads there. Under `groundWorker` a tile it covers is asked for with
+   * its patch (about 26 x 26 numbers) instead of its samples and band (about 60 000), which the worker, or the main thread at the tile's update, makes from it; a tile it does not
+   * cover (null: across the terrain's bounds) is read as before. A tile asked again is made again when any vertex of its patch changed, not only where the host told a change
+   * (`wakeRegion`): a change the host did not tell is caught too. Used only with `terrainAt` and `terrainGridAt`. A reader that is not exact changes the ground: leave it out if unsure.
+   */
+  terrainPatchAt?: GroundPatchRead
   /**
    * Where the physics engine's ground tiles are made (`GroundWorkerPort`: `createWorkerGroundPort` over a worker running the package's `ground-worker` entry, `createInlineGroundPort`,
    * `createMainThreadGroundPort`). With it a tile asked for at update N is applied at N + `groundWorkerFrames`, the same tile whether the worker answered in time or not (made on

@@ -1,7 +1,7 @@
 import { WORKER_KIND_DEFAULTS, WORKER_KIND_ID } from '@adatechnology/game-contracts'
 import type { TaskKind } from '@adatechnology/game-contracts'
 
-import { computeGroundTile, transferOf } from './engine-ground-job'
+import { computeGroundTile, jobTransferOf, transferOf } from './engine-ground-job'
 import type { GroundTileJob, GroundTileResult } from './engine-ground-job'
 import type { StaticSolid } from './engine-statics'
 import { measureStaticPart, staticSolidsTransfer } from './static-part-job'
@@ -19,15 +19,8 @@ export const groundTilesKind: TaskKind<GroundTileJob, GroundTileResult> = Object
   ...WORKER_KIND_DEFAULTS[WORKER_KIND_ID.GROUND_TILES],
   run: computeGroundTile,
   transferOutput: transferOf,
-  // the schedule posts copies from its pool and keeps the job for its own fallback: the samples and band go over without a structured clone, and come back with the answer
-  transferInput: (job: GroundTileJob) => {
-    const out: ArrayBuffer[] = []
-    for (const array of [job.samples, job.band]) {
-      const buffer = array.buffer as ArrayBuffer
-      if (buffer.byteLength > 0 && !out.includes(buffer)) out.push(buffer)
-    }
-    return out
-  },
+  // the schedule posts copies from its pool and keeps the job for its own fallback: the samples and band (or the patch) go over without a structured clone, and come back with the answer
+  transferInput: jobTransferOf,
   transferAwaitedInput: true,
   // no `warmup`: the engine warms its port with a real tile when the renderer is made (`GroundSchedule.warm`)
 })

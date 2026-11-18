@@ -48,7 +48,7 @@
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:jolt": "PIECE_SOLVER=jolt vitest run tests/drawn-solids.test.ts tests/engine-fast-chips.test.ts tests/engine-ground-inplace.test.ts tests/engine-ground.test.ts tests/ground-rise-lift.test.ts tests/loop-mode.test.ts tests/determinism.test.ts tests/engine-remove-wakes.test.ts tests/tether-forget.test.ts tests/load-loose-split.test.ts tests/engine-ground-net.test.ts tests/engine-ground-worker.test.ts tests/terrain-rolling.test.ts"
+    "test:jolt": "PIECE_SOLVER=jolt vitest run tests/drawn-solids.test.ts tests/engine-fast-chips.test.ts tests/engine-ground-inplace.test.ts tests/engine-ground.test.ts tests/ground-rise-lift.test.ts tests/loop-mode.test.ts tests/determinism.test.ts tests/engine-remove-wakes.test.ts tests/tether-forget.test.ts tests/load-loose-split.test.ts tests/engine-ground-net.test.ts tests/engine-ground-worker.test.ts tests/engine-ground-patch.test.ts tests/terrain-rolling.test.ts"
   },
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",
@@ -59,14 +59,14 @@
     "@adatechnology/game-shapes-three": "workspace:^",
     "@adatechnology/game-vfx": "workspace:^",
     "@adatechnology/game-vfx-three": "workspace:^",
-    "@adatechnology/game-physics": "workspace:^"
+    "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-terrain": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
     "@adatechnology/game-physics-jolt": "workspace:^",
-    "@adatechnology/game-terrain": "workspace:^",
     "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

@@ -4,6 +4,8 @@ import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
 import { createDebrisStore } from './debris'
 import { lossOf, SLIDE_LOSS_MIN_LOWERING, tallyLowered, voidUnder } from './ground-loss'
 import type { HeightGrid, LossTally } from './ground-loss'
+import { blendHeights, cellCoordinate as cellCoordinateOf } from './height-patch'
+import type { HeightPatch } from './height-patch'
 import { createMarkStore } from './marks'
 import { createRandom } from './random'
 import type { GroundExcavation, GroundLayout, Terrain, TerrainDig, TerrainDigResult, TerrainFill, TerrainBlow, TerrainBlowResult, TerrainBudget, TerrainChunk, TerrainColumn, TerrainDebris, TerrainDecal, TerrainLoad, TerrainMark, TerrainMaterial, TerrainOptions, TerrainProfile, TerrainRegion, TerrainSnapshot, TerrainStratum, TerrainStrike } from './types'
@@ -302,11 +304,12 @@ export function createTerrain(options: TerrainOptions): Terrain {
 
   // `heightAt` and `heightGrid` are twins: both find a point's cell with `cellCoordinate` and blend its corners with `blendCell`, so the grid answers what the point does, to the bit
   /** Where `v` falls along an axis of `count` cells from `origin`, in cells, held inside the last cell: its whole part is the cell, the rest the blend across it. */
-  const cellCoordinate = (v: number, origin: number, count: number): number => Math.max(0, Math.min(count - 1e-6, (v - origin) / cellSize))
+  // the blend and the cell are `height-patch`'s, so a patch read anywhere (`heightPatchGrid`) answers what these do
+  const cellCoordinate = (v: number, origin: number, count: number): number => cellCoordinateOf(v, origin, count, cellSize)
   const heightOfVertex = (index: number): number => base[index]! - dug[index]! + loose[index]!
   /** The ground in the cell whose first corner is vertex `index`, `tx` and `tz` across it. */
   const blendCell = (index: number, tx: number, tz: number): number =>
-    (heightOfVertex(index) * (1 - tx) + heightOfVertex(index + 1) * tx) * (1 - tz) + (heightOfVertex(index + stride) * (1 - tx) + heightOfVertex(index + stride + 1) * tx) * tz
+    blendHeights(blendHeights(heightOfVertex(index), heightOfVertex(index + 1), tx), blendHeights(heightOfVertex(index + stride), heightOfVertex(index + stride + 1), tx), tz)
 
   function heightAt(x: number, z: number): number {
     // beyond the terrain the ground is untouched: no blow can dig it and a piece thrown out lands on it
@@ -372,8 +375,8 @@ export function createTerrain(options: TerrainOptions): Terrain {
           if (column < 0) continue
           const index = row * stride + column
           const tx = gridBlendX[i]!
-          gridNear[i] = heightOfVertex(index) * (1 - tx) + heightOfVertex(index + 1) * tx
-          gridFar[i] = heightOfVertex(index + stride) * (1 - tx) + heightOfVertex(index + stride + 1) * tx
+          gridNear[i] = blendHeights(heightOfVertex(index), heightOfVertex(index + 1), tx)
+          gridFar[i] = blendHeights(heightOfVertex(index + stride), heightOfVertex(index + stride + 1), tx)
         }
       }
       for (let i = 0; i < width; i++) {
@@ -381,9 +384,24 @@ export function createTerrain(options: TerrainOptions): Terrain {
           out[j * width + i] = options.baseHeight?.(xs[i]!, zs[j]!) ?? 0
           continue
         }
-        out[j * width + i] = gridNear[i]! * (1 - tz) + gridFar[i]! * tz
+        out[j * width + i] = blendHeights(gridNear[i]!, gridFar[i]!, tz)
       }
     }
+  }
+
+  function heightPatch(minX: number, maxX: number, minZ: number, maxZ: number, into?: Float64Array): HeightPatch | null {
+    // the same test `heightGrid` makes of each point: a rectangle wholly inside reads no `baseHeight`
+    if (!(minX >= x0 && maxX <= x1 && minZ >= z0 && maxZ <= z1)) return null
+    const column0 = cellCoordinate(minX, x0, columns) | 0
+    const row0 = cellCoordinate(minZ, z0, rows) | 0
+    const width = (cellCoordinate(maxX, x0, columns) | 0) + 2 - column0
+    const depth = (cellCoordinate(maxZ, z0, rows) | 0) + 2 - row0
+    const heights = into && into.length >= width * depth ? into : new Float64Array(width * depth)
+    for (let j = 0; j < depth; j++) {
+      const from = (row0 + j) * stride + column0
+      for (let i = 0; i < width; i++) heights[j * width + i] = heightOfVertex(from + i)
+    }
+    return { cellSize, originX: x0, originZ: z0, columns, rows, column0, row0, width, depth, heights }
   }
 
   function heightRange(minX: number, maxX: number, minZ: number, maxZ: number): { low: number; high: number } | null {
@@ -1308,6 +1326,7 @@ export function createTerrain(options: TerrainOptions): Terrain {
     },
     heightAt,
     heightGrid,
+    heightPatch,
     heightRange,
     footAt,
     walkFactorAt,

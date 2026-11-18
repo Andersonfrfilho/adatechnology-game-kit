@@ -1,5 +1,7 @@
 import type { GroundLayout, GroundLoss, Hit } from '@adatechnology/game-contracts'
 
+import type { HeightPatch } from './height-patch'
+
 export type { GroundExcavation, GroundLayout, GroundZone } from '@adatechnology/game-contracts'
 
 /** The blows that remove ground. Fire and heat char it instead (`TerrainMaterial.fire`). */
@@ -421,6 +423,12 @@ export interface Terrain {
    * Not reentrant: it keeps its scratch between calls, so a `baseHeight` must not call it back.
    */
   heightGrid(xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array): void
+  /**
+   * The vertex heights under a rectangle (the cells `heightGrid` reads for any point in it), as plain numbers a worker can read the ground from (`heightPatchGrid`, to the
+   * bit what `heightGrid` answers there); null when the rectangle is not wholly inside the terrain (past it the host's `baseHeight` answers). Writes into `into` when it is
+   * long enough, else a new array. A 2.4 m square at 10 cm cells is 26 x 26 numbers.
+   */
+  heightPatch(minX: number, maxX: number, minZ: number, maxZ: number, into?: Float64Array): HeightPatch | null
   /**
    * The lowest and the highest `heightAt` can answer over the rectangle, exact bounds (the height between vertices is a blend of the four around it, so no
    * point is under the lowest or over the highest vertex of the cells the rectangle covers); null when the rectangle is not wholly inside the terrain, where the ground is the

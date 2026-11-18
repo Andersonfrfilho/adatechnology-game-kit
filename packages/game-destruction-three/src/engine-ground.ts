@@ -1,3 +1,5 @@
+import type { HeightPatch } from '@adatechnology/game-terrain'
+
 import { NO_SOLID, buildSolidVolume } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
 import { collisionFieldOf } from './engine-ground-collision'
@@ -38,6 +40,8 @@ export interface GroundTile {
   readonly level: number | null
   /** Every sample read, to tell whether the ground changed since; null for a tile proved level from the terrain's own bounds (`flatTile`), whose samples were never read. */
   readonly samples: Float64Array | null
+  /** The terrain's vertices the tile was made from (`readGroundPatch`; its samples are then null): what tells whether the ground changed since. */
+  readonly patch?: HeightPatch
 }
 
 const NO_HEIGHTS = new Float32Array(0)
