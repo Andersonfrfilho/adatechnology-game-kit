@@ -101,6 +101,8 @@ export interface WorkerKindStats {
   readonly id: string
   readonly lane: WorkerLane
   readonly submitted: number
+  /** Answers that came back from a worker, on time or late. */
+  readonly answered: number
   /** Results that came from a worker before they were needed. */
   readonly onTime: number
   /** Results the main thread computed (late worker, crash, no worker). */
@@ -108,7 +110,7 @@ export interface WorkerKindStats {
   readonly dropped: number
   readonly cancelled: number
   readonly failed: number
-  /** Milliseconds inside the worker, summed. */
+  /** Milliseconds inside the worker, summed over `answered`. */
   readonly workerMs: number
   /** Milliseconds on the main thread, summed (fallbacks). */
   readonly mainMs: number

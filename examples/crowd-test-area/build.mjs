@@ -20,8 +20,9 @@ function findEsbuild() {
   throw new Error('esbuild not found in node_modules/.pnpm (run pnpm install)')
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
+const { kitWorkerSource } = await import('./worker-source.mjs')
 
-const packages = ['game-crowd', 'game-crowd-three', 'game-floorplan-three', 'game-characters', 'game-characters-three', 'game-characters-undead', 'game-player', 'game-audio', 'game-animals', 'game-animals-species', 'game-animals-three', 'game-props3d', 'game-infection']
+const packages = ['game-workers', 'game-crowd', 'game-crowd-three', 'game-floorplan-three', 'game-characters', 'game-characters-three', 'game-characters-undead', 'game-player', 'game-audio', 'game-animals', 'game-animals-species', 'game-animals-three', 'game-props3d', 'game-infection']
 for (const p of [...packages, 'game-contracts']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
@@ -36,6 +37,7 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
+  define: { 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(await kitWorkerSource(esbuild, root)) },
   alias: {
     ...Object.fromEntries([...packages, 'game-contracts', 'game-floorplan-three'].map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     '@adatechnology/game-crowd-three/testing': join(pkg('game-crowd-three'), 'dist/testing.js'),

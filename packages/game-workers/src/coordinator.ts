@@ -140,7 +140,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
 
   const countersOf = (kind: AnyWorkerKind, lane: WorkerLane): KindCounters => {
     let c = counters.get(kind.id)
-    if (!c) counters.set(kind.id, (c = { id: kind.id, lane, submitted: 0, onTime: 0, fallback: 0, dropped: 0, cancelled: 0, failed: 0, workerMs: 0, mainMs: 0, queueMs: 0 }))
+    if (!c) counters.set(kind.id, (c = { id: kind.id, lane, submitted: 0, answered: 0, onTime: 0, fallback: 0, dropped: 0, cancelled: 0, failed: 0, workerMs: 0, mainMs: 0, queueMs: 0 }))
     return c
   }
 
@@ -213,6 +213,7 @@ export function createWorkerCoordinator(options: CoordinatorOptions = {}): Worke
     if (!job) return
     slot.running.delete(data.id)
     job.counters.workerMs += data.ms
+    job.counters.answered++
     if (job.state === 'running') {
       if (data.ok) {
         job.state = 'done'

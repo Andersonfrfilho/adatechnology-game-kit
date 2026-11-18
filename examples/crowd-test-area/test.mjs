@@ -64,6 +64,34 @@ if (!playwright || !existsSync(page)) {
       const big = /** @type {NumericMetrics} */ (room.metrics().module)
       return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), hit, big }
     })
+    // the horde's contact and pressure through the room's worker coordinator (CLAUDE.md §14): frames paced as the game's, so the workers answer between them
+    const workers = await tab.evaluate(async () => {
+      const room = window.__testRoom
+      const coordinator = /** @type {import('@adatechnology/game-workers').WorkerCoordinator | undefined} */ (/** @type {{ __kitWorkers?: unknown }} */ (window).__kitWorkers)
+      if (!coordinator) return null
+      // the workers are up and know the room's kinds (a worker that failed to load would never answer)
+      const known = await Promise.race([coordinator.warm([]).then(() => true), new Promise((resolve) => setTimeout(() => resolve(false), 30000))])
+      // software GL draws a frame in seconds here: 20 steps are enough to see where each one was computed
+      for (let i = 0; i < 20; i++) {
+        room.update(1 / 60)
+        await new Promise((resolve) => setTimeout(resolve, 16))
+      }
+      const stats = coordinator.stats()
+      const crowd = stats.kinds.find((k) => k.id === 'crowd.physics')
+      const note = document.createElement('pre')
+      note.id = 'kit-workers-stats'
+      note.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;margin:0;padding:10px 12px;background:rgba(0,0,0,.78);color:#e8f5e9;font:13px/1.45 monospace;border-radius:6px'
+      note.textContent = crowd
+        ? `game-workers: ${stats.workers} workers (sim ${stats.lanes.sim}, build ${stats.lanes.build}, background ${stats.lanes.background})\ncrowd.physics: ${crowd.submitted} steps, ${crowd.onTime} from the worker on time, ${crowd.fallback} on the main thread\nworker ${(crowd.workerMs / Math.max(1, crowd.answered)).toFixed(2)} ms/step (${crowd.answered} answers), main fallback ${(crowd.mainMs / Math.max(1, crowd.fallback)).toFixed(2)} ms/step`
+        : `game-workers: ${stats.workers} workers, no crowd.physics job`
+      document.body.appendChild(note)
+      return { known, workers: stats.workers, crowd: crowd ?? null }
+    })
+    await tab.waitForTimeout(200)
+    await tab.screenshot({ path: join(shots, `crowd-workers-${lang}.png`), timeout: 120000 })
+    // on time needs the event loop free between frames: with software GL a frame takes a second here and every step falls back to the main thread (same result);
+    // the share on time is measured on the machine with the GPU (CLAUDE.md §14), this check only proves the room's workers are up and answer
+    check(`[${lang}] the room's workers are up and the horde's physics goes through them`, workers !== null && workers.known === true && workers.workers > 0 && workers.crowd !== null && workers.crowd.submitted > 0 && workers.crowd.workerMs > 0, workers)
     check(`[${lang}] contract report is clean, 9 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 9 && state.failed === 0, state)
     check(`[${lang}] 300 agents drawn at the three levels, at most one draw call per variant and level`, drawn.agents === 300 && drawn.drawn > 0 && drawn.lod_near > 0 && drawn.lod_far > 0 && drawn.draw_calls > 0 && drawn.draw_calls <= 66 && drawn.bake_ms > 0, drawn)
     check(`[${lang}] a headshot leaves a body on the ground`, state.hit.kills >= 1 && state.hit.bodies >= 1, state.hit)
