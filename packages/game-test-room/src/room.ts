@@ -4002,6 +4002,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
   let moduleFrameCount = 0
+  // the modules' frame callbacks by system id, with the module that added each: the performance probe (tools/gpu/room-explosion.mjs) times them in place
+  const moduleFrames = new Map<string, { module: string; update: (dt: number) => void }>()
+  let attachingModule = ''
   // the room's frame: 0.05 s is the clamp the loop always had, and 8 ms is the biggest budget of the loose queues of today
   // a system that throws: the display loop logs each id once and keeps going; a headless frame (room.update, a scenario step) holds the errors and throws them after the frame, as the loose loops did
   const headlessErrors = new Map<string, unknown>()
@@ -4644,7 +4647,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     defer: (queue, queueOptions) => scheduler.budget.register(queue, queueOptions),
     onFrame(update, frameOptions) {
-      return scheduler.add((ctx) => update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id: `module.frame#${moduleFrameCount++}` })
+      const id = `module.frame#${moduleFrameCount++}`
+      const frameEntry = { module: attachingModule, update }
+      moduleFrames.set(id, frameEntry)
+      const remove = scheduler.add((ctx) => frameEntry.update(ctx.dt), { phase: frameOptions?.phase ?? 'lateSimulate', order: frameOptions?.order ?? 0, id })
+      return () => {
+        moduleFrames.delete(id)
+        remove()
+      }
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
     reachFor(reach) {
@@ -4877,7 +4887,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       })
       if (!activeBench || !benches.has(activeBench)) activeBench = mod.id
     } else if (activeBench === mod.id) activeBench = lastBench()
-    if (mod.attach) detachers.set(mod.id, mod.attach(bench ? { ...host, bench: lendBench(bench) } : host))
+    if (mod.attach) {
+      attachingModule = mod.id
+      try {
+        detachers.set(mod.id, mod.attach(bench ? { ...host, bench: lendBench(bench) } : host))
+      } finally {
+        attachingModule = ''
+      }
+    }
     sendingInitial = true
     try {
       bench?.sendInitial()
@@ -5067,6 +5084,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     readonly scenarios: TestRoomScenario[]
     readonly fluidRenderer: FluidRenderer
     inspectInfo(): InspectInfo | null
+    /** The parts of the frame that are not on the room's surface, for the performance probe (tools/gpu/room-explosion.mjs), which times their methods in place. */
+    readonly frameParts: { readonly terrainView: object; readonly water: object; readonly waterView: object; readonly explosives: object; readonly footprints: object; readonly moduleFrames: ReadonlyMap<string, { module: string; update: (dt: number) => void }> }
   } = {
     world,
     renderer,
@@ -5313,6 +5332,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     frameStats: () => scheduler.stats(),
     lights,
     webgl: gl,
+    frameParts: { terrainView, water, waterView, explosives, footprints, moduleFrames },
     dispose() {
       destructionSound?.dispose()
       if (ownAudio) audio?.dispose()
