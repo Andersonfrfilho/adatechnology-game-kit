@@ -59,17 +59,21 @@ describe('vehicle-lod: a vehicle hit in play', () => {
     lod.update(30, true)
     lod.update(30, true)
     expect(meshes.every(inBatch)).toBe(true)
-    // a dent moves one panel
+    // a dent moves two panels
     meshes[0]!.position.y += 0.05
+    meshes[1]!.position.y += 0.05
     root.updateMatrixWorld(true)
     lod.update(30, true)
-    expect(inBatch(meshes[0]!)).toBe(false)
-    expect(meshes.slice(1).every(inBatch)).toBe(true)
-    // the dented panel settles: once the vehicle is quiet it rejoins a batch, in its new shape
+    expect(inBatch(meshes[0]!) || inBatch(meshes[1]!)).toBe(false)
+    expect(meshes.slice(2).every(inBatch)).toBe(true)
+    const first = batches(root)!.children[0] as THREE.Mesh
+    // the dented panels settle: once the vehicle is quiet they rejoin a batch of their own, in their new shape; the first batch stays as it is
     clock += VEHICLE_REBATCH_AFTER_MS
     lod.update(30, true)
     lod.update(30, true)
-    expect(meshes.every(inBatch), 'the dented panel is batched again').toBe(true)
+    expect(meshes.every(inBatch), 'the dented panels are batched again').toBe(true)
+    expect(first.parent, 'the batch of the still parts is kept, not made anew').not.toBeNull()
+    expect(full.children.filter((child) => child.name === 'static-batches')).toHaveLength(2)
     // the blast moves all of them: the batch empties, and is not made again until the vehicle is quiet
     for (const mesh of meshes) mesh.position.y += 0.05
     root.updateMatrixWorld(true)
