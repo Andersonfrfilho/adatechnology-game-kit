@@ -776,6 +776,8 @@ export interface KernelDestruction {
   createBreachView(opts: BreachViewOptions): BreachView
   /** The painting of every house's breach, as one queue for a frame budget. */
   breachPaintQueue: DeferredQueue
+  /** The walls every house cut since the last frame, painted once each: a queue that runs every frame. */
+  breachCutQueue: DeferredQueue
 }
 
 /** What `build/build` puts on the kernel: `build(result, options)` draws a house and returns it (`House`). */

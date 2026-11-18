@@ -136,7 +136,10 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       })
       houseRendererKey = key
       const paintQueue = houseRenderer.deferredQueue?.()
-      stopPaintQueue = paintQueue ? host?.defer?.(paintQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT]) : undefined
+      const stopPaint = paintQueue ? host?.defer?.(paintQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT]) : undefined
+      const cutQueue = houseRenderer.cutQueue?.()
+      const stopCut = cutQueue ? host?.defer?.(cutQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_CUT]) : undefined
+      stopPaintQueue = stopPaint || stopCut ? () => { stopPaint?.(); stopCut?.() } : undefined
     }
     return houseRenderer
   }

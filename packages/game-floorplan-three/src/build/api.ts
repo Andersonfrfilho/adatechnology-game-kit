@@ -12,6 +12,8 @@ export function buildApi(K: Kernel, shared: Shared): HouseRendererInternal {
         setNight(n: boolean) { const glass = shared.mats.glass as THREE_NS.MeshPhongMaterial; glass.emissive.set(n ? 0x8a5a20 : 0x000000); glass.opacity = n ? 0.4 : 0.24; },
         /** The chipped-plaster painting of every house of this renderer as a `DeferredQueue` for a frame budget (id `floorplan.breach-paint`); asking for it changes nothing. */
         deferredQueue: () => K.breachPaintQueue as DeferredQueue, /* the destruction side is typed with the breach */
+        /** The walls cut since the last frame, of every house of this renderer, painted once each (id `floorplan.breach-cut`): register it so each runs every frame. */
+        cutQueue: () => K.breachCutQueue as DeferredQueue,
         cars: { model: carModel, group: carGroup, info: (k: string, seed?: number) => { const m = carModel(k, seed); return m && { parts: m.parts.length, tris: m.tris, L: m.L, W: m.W, H: m.H }; } },
         dispose() { if (shared.vegMaterials) { shared.vegMaterials.dispose(); shared.vegMaterials = null; } for (const m of Object.values(shared.mats)) { if (m && m.dispose) m.dispose(); } for (const [k, t] of Object.entries(TEX)) if (t && t.dispose && !(cfg.textures && cfg.textures[k as keyof typeof cfg.textures])) t.dispose(); for (const t of Object.values(ATLAS)) if (t && t.dispose) t.dispose(); },
       };
