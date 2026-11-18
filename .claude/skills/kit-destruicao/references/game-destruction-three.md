@@ -79,6 +79,7 @@ Sem a opção, o blast empurra, acorda e solta tudo no próprio quadro. Com `bla
 - `three` é peer (`^0.160.0`) usado só por tipos: **você passa o seu `THREE`** em `createDestructionRenderer`.
 - Chame `renderer.update` depois de `world.update`, uma vez por quadro.
 - Em `low`, orçamentos de partículas e fragmentos caem à metade e dentes em malhas com mais de 20 mil vértices são pulados.
+- Fragmentos em voo desenham instanciados (`FragmentInstances`): um `InstancedMesh` `fragment-instances` por geometria e material compartilhados, uma chamada e uma de sombra no lugar de uma por fragmento. A malha de cada fragmento continua na cena (nome `fragment`, origem, transformação) na camada 29 (`INSTANCED_FRAGMENT_LAYER`) enquanto a instância a desenha; vidro e fragmento com furo desenham sozinhos; em repouso volta a desenhar sozinho e entra nos lotes assentados. Fragmento parado no chão do terreno não lança raio para baixo (`surfaceAt`).
 - Derretimento supõe malhas em pé (escala o Y da própria malha).
 - Explosão e fogo de peça queimando vêm do mundo de efeitos (`game-vfx`): passe o `vfx` que o jogo compartilha (e passe o `update` dele uma vez por quadro, pelo `VfxRenderer`); sem `vfx` o renderizador cria o próprio mundo e a própria camada three e os atualiza em `update`. A luz da explosão é do mundo de efeitos (a opção `explosionLight` saiu).
 - Detritos, faíscas, gotas e vazamentos ainda usam o pool de pontos do pacote (`particles.ts`): ele sai quando o `game-vfx` ganhar o pool de sprites compartilhado (T5.2a).

@@ -3,6 +3,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Fragment, SplitForm } from '@adatechnology/game-destruction'
 
 import { pushFittedBoxes } from './fitted-boxes'
+import { FragmentInstances } from './fragment-instances'
 import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildRubbleGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
 import { clamp, createRng, hashString } from './math'
 import type { LooseBody } from './types'
@@ -202,6 +203,12 @@ export class FragmentSystem {
   private readonly v: THREE_NS.Vector3
   private readonly w: THREE_NS.Vector3
   private rng = createRng(FRAGMENT_SEED)
+  /** The fragments in flight drawn by instances, a draw per shared geometry and material (`FragmentInstances`). */
+  private readonly instances: FragmentInstances
+  /** The instanced probe of the last `warmMeshes` (a new one each call, as the other probes are new meshes), freed by the next call or by `dispose`. */
+  private warmInstanced: THREE_NS.InstancedMesh | null = null
+  /** The pieces a fragment lies on (`pileUnder`), kept between calls. */
+  private readonly under: RestingBox[] = []
   /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
   private tick = 0
   private supportTurn = 0
@@ -216,6 +223,17 @@ export class FragmentSystem {
     this.m = new THREE.Matrix4()
     this.v = new THREE.Vector3()
     this.w = new THREE.Vector3()
+    this.instances = new FragmentInstances(THREE, o.scene)
+  }
+
+  /** What the instances draw now: their draws and the fragments in them. */
+  instanceStats(): { buckets: number; drawn: number } {
+    return this.instances.stats()
+  }
+
+  /** The instanced meshes that draw the fragments in flight (tests). */
+  instancedMeshes(): THREE_NS.InstancedMesh[] {
+    return this.instances.instancedMeshes()
   }
 
   get count(): number {
@@ -319,10 +337,15 @@ export class FragmentSystem {
     const geometries = [this.box, ...Array.from({ length: SHARD_SHAPES }, (_, index) => this.shardGeometry(index))]
     const shaped = (['sliver', 'lump', 'veneer', 'board', 'rubble'] as const).flatMap((shape) => Array.from({ length: FRAGMENT_SHAPE_VARIANTS }, (_, index) => this.sharedGeometry(shape, index)))
     const { geometry, material } = this.markParts()
+    // the fragments in flight draw instanced: that program (and its shadow's) is made at load too
+    this.warmInstanced?.dispose()
+    this.warmInstanced = new this.THREE.InstancedMesh(this.box, opaque, 1)
+    this.warmInstanced.castShadow = true
     return [
       ...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass)]),
       ...shaped.map((shared) => new this.THREE.Mesh(shared, opaque)),
       new this.THREE.Mesh(geometry, material),
+      this.warmInstanced,
     ]
   }
 
@@ -482,6 +505,7 @@ export class FragmentSystem {
         f.mesh.matrixAutoUpdate = true
         f.fade -= dt / 0.6
         if (f.fade <= 0) {
+          this.instances.remove(f.mesh)
           this.o.scene.remove(f.mesh)
           this.list.splice(i, 1)
           continue
@@ -499,6 +523,16 @@ export class FragmentSystem {
       this.step(f, dt, g)
     }
     this.keepBudget()
+    this.drawInstanced()
+  }
+
+  /** The fragments in flight are drawn by the instances, those at rest on their own (the settled batches take them): then the instances take the transforms of this update. */
+  private drawInstanced(): void {
+    for (const f of this.list) {
+      if (f.asleep) this.instances.remove(f.mesh)
+      else this.instances.add(f.mesh)
+    }
+    this.instances.sync()
   }
 
   /** Over `maxAwake` fragments moving, the oldest at rest on what is under them sleep where they lie (`FragmentSystemOptions.maxAwake`). */
@@ -537,9 +571,13 @@ export class FragmentSystem {
       // measured afresh: the floor kept from its landing is the top it landed on, which may have broken or been carried off since
       f.floor = null
       const bottom = f.mesh.position.y - ext
-      const floor = this.floorUnder(f)
       const pile = this.pileUnder(f, bottom)
-      if (bottom > Math.max(floor, pile) + SUPPORT_GAP || (pile > floor && this.offEdge)) this.rouse(f)
+      const offEdge = this.offEdge
+      // lying on the ground itself and on no pile above it: nothing it could lose is under it (what is built is never below the ground), so no ray is cast
+      const ground = this.o.groundAt(f.mesh.position.x, f.mesh.position.z)
+      if (bottom <= ground + SUPPORT_GAP && pile <= ground) continue
+      const floor = this.floorUnder(f)
+      if (bottom > Math.max(floor, pile) + SUPPORT_GAP || (pile > floor && offEdge)) this.rouse(f)
     }
   }
 
@@ -556,6 +594,8 @@ export class FragmentSystem {
 
   private step(f: Live, dt: number, g: number): void {
     const mesh = f.mesh
+    // it moves now: the box others land on is made again from where it ends up
+    f.box = undefined
     f.vel.y -= g * dt
     if (!this.hitWall(f, dt)) mesh.position.addScaledVector(f.vel, dt)
     const w = f.ang.length()
@@ -661,10 +701,12 @@ export class FragmentSystem {
     const mine = shadowOf(e, f.half)
     let top = Number.NEGATIVE_INFINITY
     // the pieces it lies on (those whose top is the highest under it) and whether one of them is under its centre
-    const under: RestingBox[] = []
+    const under = this.under
+    under.length = 0
     for (const other of this.list) {
       if (other === f || other.dying) continue
-      const box = other.asleep ? (other.box ??= restingBox(other)) : restingBox(other)
+      // kept until it moves again (`step`, `rouse`, `sleep` drop it)
+      const box = (other.box ??= restingBox(other))
       if (box.top > bottom + PILE_STEP || box.top < top - PILE_STEP) continue
       if (Math.abs(box.x - p.x) >= box.reachX + reachX || Math.abs(box.z - p.z) >= box.reachZ + reachZ) continue
       // the wrapping boxes touch: what counts is whether the floor areas the two really cover do (a turned or leaning box wraps far more than it covers)
@@ -726,6 +768,7 @@ export class FragmentSystem {
   removeHome(home: string): void {
     for (let i = this.list.length - 1; i >= 0; i--) {
       if (this.list[i].home === home) {
+        this.instances.remove(this.list[i].mesh)
         this.o.scene.remove(this.list[i].mesh)
         this.list.splice(i, 1)
       }
@@ -733,6 +776,7 @@ export class FragmentSystem {
   }
 
   clear(): void {
+    this.instances.clear()
     for (const f of this.list) this.o.scene.remove(f.mesh)
     this.list.length = 0
   }
@@ -746,6 +790,9 @@ export class FragmentSystem {
 
   dispose(): void {
     this.clear()
+    this.instances.dispose()
+    this.warmInstanced?.dispose()
+    this.warmInstanced = null
     this.box.dispose()
     this.markGeometry?.dispose()
     this.markMaterial?.dispose()
