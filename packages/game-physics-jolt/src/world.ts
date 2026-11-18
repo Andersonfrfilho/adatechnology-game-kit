@@ -38,6 +38,8 @@ import { HullSet } from './hull-cache'
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout } from './vec3'
+import { SINGLE_THREAD } from './threading'
+import type { JoltThreading } from './threading'
 import type { JoltWorldHost } from './world-host'
 import { createVehicle, driveVehicle, removeVehicle, vehicleBody, wheelContacts } from './vehicles'
 
@@ -71,7 +73,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly slipSpeed: number
   readonly reportSpeed: number
   readonly maxContacts: number
-  readonly listener: JoltNS.ContactListenerJS
+  /** The kit's contact listener; null when the world runs with `contactCallbacks: 'none'` (Jolt's job threads cannot call JS). */
+  readonly listener: JoltNS.ContactListenerJS | null
+  readonly threading: JoltThreading
+  private readonly onDispose: (() => void) | undefined
   // scratch objects, made once and destroyed in `dispose`
   readonly v1: JoltNS.Vec3
   readonly v2: JoltNS.Vec3
@@ -118,8 +123,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly rollers = new Map<number, Rolling>()
   readonly gravity: number
 
-  constructor(J: Jolt, desc: WorldDesc) {
+  constructor(J: Jolt, desc: WorldDesc, threading: JoltThreading = SINGLE_THREAD, onDispose?: () => void) {
     this.J = J
+    this.onDispose = onDispose
+    this.threading = threading
     this.fixedStep = desc.fixedStep ?? 1 / 60
     this.slipSpeed = desc.slipSpeed ?? 0.02
     this.reportSpeed = desc.contactReportSpeed ?? 0.5
@@ -127,6 +134,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     checkVec3Layout(J)
     const settings = new J.JoltSettings()
     settings.mMaxBodies = desc.maxBodies ?? 16384
+    // the single-threaded build has no job threads to give; the multithreaded one starts this many besides the caller's
+    if (threading.build === 'multithread') settings.mMaxWorkerThreads = threading.workerThreads
     settings.mMaxBodyPairs = 32768
     settings.mMaxContactConstraints = 16384
     this.objectFilter = new J.ObjectLayerPairFilterTable(NUM_OBJECT_LAYERS)
@@ -188,8 +197,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.castSettings = new J.ShapeCastSettings()
     this.castCollector = new J.CastShapeAllHitCollisionCollector()
     this.activeIds = new J.BodyIDVector()
-    this.listener = makeListener(this)
-    this.system.SetContactListener(this.listener)
+    this.listener = threading.contactCallbacks === 'js' ? makeListener(this) : null
+    if (this.listener) this.system.SetContactListener(this.listener)
   }
 
   makeShape(shape: ShapeDesc, centred = false, hulls?: HullSet): JoltNS.Shape {
@@ -754,7 +763,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     }
     for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
     J.destroy(this.iface)
-    J.destroy(this.listener)
+    if (this.listener) J.destroy(this.listener)
+    this.onDispose?.()
     J.destroy(this.asserts)
   }
 }

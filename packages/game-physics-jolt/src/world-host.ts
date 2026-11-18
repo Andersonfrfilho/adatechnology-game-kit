@@ -30,7 +30,7 @@ export interface JoltWorldHost {
   readonly slipSpeed: number
   readonly reportSpeed: number
   readonly maxContacts: number
-  readonly listener: JoltNS.ContactListenerJS
+  readonly listener: JoltNS.ContactListenerJS | null
   readonly v1: JoltNS.Vec3
   readonly v2: JoltNS.Vec3
   readonly r1: JoltNS.RVec3

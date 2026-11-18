@@ -1,0 +1,25 @@
+{
+  "name": "@adatechnology/jolt-threads-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Measures Jolt's step in the test room's crater explosion on the single-threaded build and on the multithreaded one with 0, 2, 4 and all-but-one job threads (a cross-origin isolated page, Chromium with the GPU; never in CI). One round per process, under the perf-measure lock.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "round": "node dist/cli.js round",
+    "report": "node dist/cli.js report"
+  },
+  "dependencies": {
+    "@adatechnology/serve-room-tool": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "playwright-core": "1.58.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

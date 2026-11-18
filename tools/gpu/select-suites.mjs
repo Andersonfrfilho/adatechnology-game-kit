@@ -62,10 +62,10 @@ export const BASE_SHARE = 0.75
 
 /** Files every page stands on: the gate itself, the hooks, the workspace and its lockfile, the base compiler options and the room's own page. */
 const BASE_PATHS = [/^\.githooks\//, /^tools\/gpu\//, /^package\.json$/, /^pnpm-lock\.yaml$/, /^pnpm-workspace\.yaml$/, /^tsconfig\.base\.json$/, /^examples\/test-room\//]
-/** Files no page reads: docs, specs, changesets, CI, lint and search settings, unit tests, the site, the per-area check command. */
+/** Files no page reads: docs, specs, changesets, CI, lint and search settings, unit tests, the site, the per-area check command, the 4280 server, the Jolt thread probe and the desktop app (they serve or drive the pages, never change them). */
 const PAGELESS_PATHS = [
   /\.md$/,
-  /^(docs|specs|site|test-support|\.changeset|\.github|tools\/check-area)\//,
+  /^(docs|specs|site|test-support|\.changeset|\.github|tools\/check-area|tools\/serve-room|tools\/jolt-threads|apps\/desktop)\//,
   /^packages\/[^/]+\/tests\//,
   /^(LICENSE|\.gitignore|\.ignore|\.dockerignore|compose\.yaml|railway\.json|eslint\.config\.mjs|eslint-suppressions\.json|\.dependency-cruiser.*)$/,
 ]

@@ -65,6 +65,8 @@ de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin
   página no navegador, que grava os prints em `examples/<pasta>/shots/` (lista os novos no fim). Áreas: `pnpm check:area --list`
   (`floorplan`, `interactables`, `room`, `vehicles`, `weapons`, ...). `--no-browser` pula o navegador, `--no-unit` os testes, `--room` refaz a página da sala.
 - Suítes de navegador da branch: `node tools/gpu/browser-checks.mjs`; desempenho: `node tools/gpu/perf-gate.mjs` (§9).
+- **4280 e app de desktop**: `pnpm serve:room [--isolate]` serve a sala (com `--isolate`, COOP/COEP e `crossOriginIsolated`); `pnpm desktop [--area=<id>]`
+  abre as salas no app Electron (`apps/desktop`, AppImage com `pnpm desktop:package`); `pnpm check:desktop` e `pnpm check:<área> --target=desktop` testam no app (fora do CI, §9).
 
 ## Buscas
 
