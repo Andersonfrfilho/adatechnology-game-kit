@@ -182,7 +182,9 @@ function loadSteps(room, options, lang) {
   mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(/** @type {ThreeLib} */ (THREE), { w: 4, h: 2.6 }).build(/** @type {ThreeLib} */ (THREE)) }))
   mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(/** @type {ThreeLib} */ (THREE), lang, room.effects), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
-  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
+  // ?shadowBatches=0: each mesh of the house casts its own shadow, as before the shadow batches (to compare the two)
+  const shadowBatches = new URLSearchParams(globalThis.location?.search ?? '').get('shadowBatches') === '0' ? { shadowBatches: false } : {}
+  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang, ...shadowBatches }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
   // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
   const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')

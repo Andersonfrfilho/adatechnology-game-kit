@@ -14,6 +14,7 @@ import { buildStructuralStageGroups } from '../construction-stages/structural-st
 import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
 import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
 import { gutterKeepOut } from '../roof/gutters.js';
+import { createHouseShadowBatches } from '../house/shadow-batches.js';
 import { WALL_BOX, wallBehindOf, wallBoxExtent } from '../utilities/wall-box.js';
 import type { Aabb } from '../house/solids.js';
 
@@ -275,6 +276,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           return { hp: d.hp, destroyed: d.hp <= 0 && before > 0 };
         };
 
+        // the still meshes cast from a few shadow-only batches; what changes casts its own shadow again (house/shadow-batches.ts)
+        const shadowBatches = cfg.shadowBatches === false ? null : createHouseShadowBatches(THREE, root);
         const res: House = {
           version: VERSION, r: r0, name: r.name, quality: h.quality, group: root, house, groups: gs,
           floors: r.floors.map((a, i) => gs['f' + i] || new THREE.Group()), ceilings: r.floors.map((a, i) => gs['t' + i] || null), roof: gs.roof || null, lot: gs.lot || null, ground: gs.ground || null, building: gs.building || null,
@@ -288,6 +291,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           update(dt: number, time?: number, focus?: { x: number; y: number; z: number }) {
             enter(h); animateDoors(dt); animateInteractive(dt); water.step(dt); if (destruction.active || destruction.statistics().falling || destruction.statistics().fragments) destruction.animate(dt); if (h.IV) ivUpdate(h, dt, time, focus); if (time != null) animateClotheslines(time); if (shared.vegMaterials) { shared.vegMaterials.update((time != null ? time : performance.now()) / 1000); shared.vegMaterials.setActors(focus ? [{ x: focus.x, y: focus.y, z: focus.z, radius: 0.9 }] : []); }
             if (focus && cfg.lod !== false) { const L = Object.assign({ interior: 45, hide: 220 }, cfg.lod), d = distance(focus), at = h.lodCurrent; let n = d > L.hide ? 2 : d > L.interior ? 1 : 0; if (n < at) n = d < (at === 2 ? L.hide : L.interior) * 0.92 ? n : at; applyLod(Math.max(n, h.lodMin)); }
+            shadowBatches?.update();
           },
           show(options?: { floor?: number; cut?: boolean; lot?: boolean }) { // visibility per floor: {floor: -1 all, cut: bool, lot: bool}
             enter(h); const o = options || {}; const rr = shared.ctx.r, nA = rr.floors.length, a = o.floor == null ? -1 : o.floor, sel = a >= nA ? -1 : a, cut = !!o.cut;
@@ -331,7 +335,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           structure, destruction,
           partOf(obj: THREE_NS.Object3D | null | undefined): HousePart | null { for (let n: THREE_NS.Object3D | null | undefined = obj; n; n = n.parent) { const id = n.userData && n.userData.partId; if (id && parts[id]) return parts[id]; const pc = n.userData && n.userData.piece; if (pc && parts[pc.name]) return parts[pc.name]; } return null; },
           partAt(p: Point, tolerance?: number): HousePart | null { const tol = tolerance || 0.05; let m: HousePart | null = null; for (const k in parts) { const part = parts[k] as HousePart, a = part.aabb; if (a && p.x >= a[0] - tol && p.x <= a[3] + tol && p.y >= a[1] - tol && p.y <= a[4] + tol && p.z >= a[2] - tol && p.z <= (a[5] as number) + tol) { m = part; break; } } return m; },
-          dispose() { enter(h); destruction.deactivate(); if (h.IV) ivDispose(h);  root.traverse(o => { if (isMesh(o) && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.type === 'Reflector' && 'dispose' in o && typeof o.dispose === 'function') o.dispose(); }); root.removeFromParent(); },
+          dispose() { enter(h); shadowBatches?.dispose(); destruction.deactivate(); if (h.IV) ivDispose(h);  root.traverse(o => { if (isMesh(o) && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.type === 'Reflector' && 'dispose' in o && typeof o.dispose === 'function') o.dispose(); }); root.removeFromParent(); },
           internal: { h, ctx: shared.ctx, inter: shared.inter, partState: shared.partState, doorState: shared.doorState, mirrors: shared.mirrors },
         };
         return res;

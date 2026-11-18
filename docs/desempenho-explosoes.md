@@ -171,3 +171,18 @@ a diferença para o CI não vinha do tamanho da janela, e sim de o CI não ter G
 O primeiro estouro perto do carro na `chain_horde` ainda tem um quadro de ~100 ms. O tempo é CPU do dano no veículo, não da GPU: `tearOff` e
 `panelBand` montam a geometria da faixa arrancada copiando os arrays num quadro só (~72 ms), o amassado percorre os vértices, o `smoothLater`
 chama `toNonIndexed`, e o lixo dessas cópias custa ~25 ms de coleta logo depois. É o trabalho da fase 4 da spec 006 (dano do carro em fatias).
+
+## Desenhos do carro atingido e sombra da casa (2026-11-18)
+
+Medido na sala (`?area=floorplan`, variante `jolt-d4-worker`, worker do chão ligado como na sala de verdade, cratera ao lado da casa), contando
+as chamadas de desenho de cada `render` por dono (`kitOrigin`) e por passe (câmera ou sombra), em GL por software num contêiner de 4 núcleos:
+os tempos dessa máquina não valem, as contagens sim (dependem da cena e do enquadramento, não da GPU).
+
+| Causa | Onde | Correção |
+|---|---|---|
+| O carro longe (desenhado fundido) atingido pela explosão da casa passava a desenhar peça por peça, com a sombra de cada uma, até ficar 1,5 s quieto: 428 + 194 de sombra, ~620 chamadas por quadro, e depois juntava os lotes de uma vez (16 a 22 ms num quadro no sedã de 320 mil vértices) | `game-vehicles-three/src/vehicle-lod.ts` | Lotes já no golpe, em pedaços de até 16 mil vértices (`maxVertices`), e só a peça que muda sai; as que saíram voltam a um lote novo, amassadas, depois de 1,5 s quietas. Sedã a 60 qps com relógio simulado: 95 quadros acima de 300 chamadas antes, ~10 agora; nenhuma atualização acima de ~6 ms; 70 + 37 de sombra no fim (eram 67 + 34) |
+| Cada uma das ~276 malhas da estrutura da casa tinha o próprio desenho no mapa de sombra do sol (231 chamadas por quadro) | `game-floorplan-three/src/house/shadow-batches.ts`, `game-render-three/src/static-batcher.ts` | Lotes só de sombra (`shadowOnly`): as malhas continuam desenhadas para a câmera e as paradas projetam a sombra de poucos lotes (só posições, mesmos triângulos). A peça que quebra, cai, abre ou é escondida volta a projetar a própria sombra no quadro em que muda. Sombra da estrutura: 231 → 16 chamadas. `?shadowBatches=0` volta ao antigo para comparar |
+
+Fica para depois: os 40 móveis destrutíveis da casa (cada um com a própria sombra) são objetos do mundo de destruição, desenhados pelo
+`game-destruction-three`, e a casa ainda tem ~276 chamadas no passe da câmera (um lote por material como o do carro, com o corte por andar e
+a máscara de luz dos cômodos, é outra frente).

@@ -57,6 +57,8 @@ export interface FloorplanTestOptions {
   state?: string
   /** The frame of every window of the houses built (`BuildOptions.windowFrame`); default each window's own. */
   windowFrame?: WindowFrame
+  /** `false`: each mesh of the houses casts its own shadow (`HouseRendererOptions.shadowBatches`), to compare with the batched shadow. */
+  shadowBatches?: boolean
   /** Initial construction level (`0..8`) on the bench. */
   constructionLevel?: number
   /** Specimens of the structural scenarios; default the five of the team's house area, those whose template the engine has. */

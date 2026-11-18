@@ -106,6 +106,8 @@ export interface HouseRendererOptions {
   /** Distance (m) beyond which the interior (`interior`) and the house (`hide`) are drawn no more, or `false` to switch distance LOD off. */
   lod?: false | { interior?: number; hide?: number }
   drawCallBudget?: number
+  /** The still meshes cast their shadow from a few shadow-only batches (`createHouseShadowBatches`), made over the first frames of `update`. Default true; false: each mesh casts its own. */
+  shadowBatches?: boolean
   onChange?: (change: { shadow: boolean }) => void
   /** A collider opened or closed (a door, a gate, a piece of furniture moved). */
   onCollider?: (collider: HouseBoxCollider | HouseFurnitureCollider) => void
