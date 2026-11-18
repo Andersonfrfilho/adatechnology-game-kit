@@ -114,6 +114,8 @@ declare global {
   var __kitSfx: { readonly manifest: NonNullable<NonNullable<Parameters<typeof import('@adatechnology/game-weapons-three/testing').createWeaponsTestModule>[0]>['samples']>['manifest']; readonly files: Readonly<Record<string, string>> } | undefined
   /** The room page's build flag (`examples/test-room/build.mjs` defines it): true on the default page, false on the bare room the areas build over. */
   const __ROOM_FULL__: boolean
+  /** The fit worker's bundled source the room page inlines (`examples/test-room/build.mjs`), started from a Blob URL with `?fitWorker=1`. */
+  const __FIT_WORKER_SOURCE__: string
   /** The furniture builders the house renderer takes (`window.Moveis3DSDK`). */
   var Moveis3DSDK: unknown
   /** What the recorder cut out of the sources for the capture (`tools/characters-catalog/src/golden/chrome-goldens.ts`). */

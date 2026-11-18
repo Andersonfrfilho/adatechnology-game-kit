@@ -32,6 +32,14 @@ import { PUNCH_COMBO } from '@adatechnology/game-characters-people'
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__, __FIT_WORKER_SOURCE__ */
 const params = new URLSearchParams(location.search)
+/** The fit worker from its inlined source (`?fitWorker=1`): the Blob URL is let go once the worker has it. @returns {import('@adatechnology/game-shapes').WorkerLike} */
+const fitWorkerFromSource = () => {
+  const url = URL.createObjectURL(new Blob([__FIT_WORKER_SOURCE__], { type: 'text/javascript' }))
+  const worker = new Worker(url)
+  URL.revokeObjectURL(url)
+  // the DOM Worker's handlers take a full MessageEvent; the port reads only `data`
+  return /** @type {import('@adatechnology/game-shapes').WorkerLike} */ (/** @type {unknown} */ (worker))
+}
 // the room itself has no items: the default page loads the SDK modules into it (see build.mjs); the bare room (__ROOM_FULL__ false) is the page the other test areas build over
 const deferred = __ROOM_FULL__
 const BENCH_PARAM_PREFIX = 'bench.'
@@ -101,7 +109,7 @@ const room = createTestRoom({
     jitWarmUp: params.get('warmup') === '0' ? false : { engine: /** @type {any} */ (window).__joltEngine },
     // ?fitWorker=1: the boxes of the parts drawn by ranges of merged meshes (the house's roof sheets) fitted ahead in a worker, filling the cache the split reads; off by default
     // until measured. The page is one file, so the worker is started from its source inlined by build.mjs (a Blob URL)
-    ...(params.get('fitWorker') === '1' ? { fitWorker: createWorkerFitPort(new Worker(URL.createObjectURL(new Blob([__FIT_WORKER_SOURCE__], { type: 'text/javascript' })))) } : {}),
+    ...(params.get('fitWorker') === '1' ? { fitWorker: createWorkerFitPort(fitWorkerFromSource()) } : {}),
   },
   strikeCombo: PUNCH_COMBO,
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
