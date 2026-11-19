@@ -24,10 +24,10 @@
 ## Fase 2 — Baratear o `explode` e classes de evento
 > 🤖 Modelo: `sonnet`
 
-- **T2.0** Perfil no navegador (régua, sondas temporárias sem commit) do `blastScene`, de `action`, de `stagesOut` e de `destruction.events`
-  por tipo de evento. Tabela no `evidence.md`. Decide a ordem da T2.1.
-- **T2.1** Etapa B do desenho: `reachAt` com a grade de peças, `emit` com cópia só quando os ouvintes mudam, `lightLeaksNear` só no alcance.
-  Mesma saída: goldens e fixture sem diff.
+- **T2.0 (feita, 2026-11-19)** Perfil no navegador: a sala usa `blastPlain` (o `reachAt` roda 0 vezes); `stagesOut` é parte do evento
+  `fracture`; eventos adiáveis somam ~4 a 5 ms. Tabelas no `evidence.md`.
+- **T2.1** Etapa B do desenho (§4), pelos alvos medidos: `knockOutUnits` (perfil por dentro primeiro), `blastPlain`, `spallOuter`, o evento
+  `fracture` e a cópia de ouvintes do `emit`. Um alvo por commit, com tabela antes/depois na régua. Mesma saída: goldens e fixture sem diff.
 - **T2.2** `destruction.events` em duas classes (lista no `design-tiques.md` §3): estrutural no quadro do golpe; visual (`hole`, `crack`,
   `debris`, `ricochet`) numa fila de prazo com espera máxima de 3 tiques.
 - **T2.3** Golpe no meio da janela: parede ou peça com trabalho pendente entra no `mustDrain` do golpe novo (teste).

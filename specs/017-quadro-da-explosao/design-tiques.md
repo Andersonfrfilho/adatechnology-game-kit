@@ -92,23 +92,26 @@ ouvinte (`breach.ts:793-805`), e `paint()` refaz tudo a partir delas.
 **Erro de hoje que entra na T1.2:** sem `workBudget`, `splitLoose` separa um grupo quando o relógio passou do prazo (`renderer.ts:2306`).
 É uma decisão pelo relógio que muda a simulação (contra a §15 e os mesmos bytes). Corrigir: o caminho do prazo separa todos.
 
-Ganho esperado no f0: ~16 a 20 ms certos (as duas filas da casa menos as paredes do impacto, e o áudio), mais a parte de `hole`/`crack`/`debris`
-que a T2.0 medir. De ~84 para ~60–65 ms. **Não fecha a C1.**
+Ganho esperado no f0: ~16 a 20 ms (as duas filas da casa menos as paredes do impacto, e o áudio) mais ~4 a 5 ms dos eventos adiáveis
+(T2.0: `crack` + `debris`; `hole` e `ricochet` têm 0 eventos na régua). De ~84 para ~60–65 ms. **Não fecha a C1.**
 
 ## 4. Etapa B — baratear o `explode` sem mudar o resultado
 
-Mesma saída, goldens sem diff. Candidatos, a confirmar na T2.0 com perfil do navegador por dentro do `blastScene` antes de escrever código:
+> **Corrigido pela T2.0 (2026-11-19, `evidence.md`):** a primeira versão desta seção supunha, sem medir, que o `reachAt` (abrigo) era o maior
+> item do `explode`. **Está errado: a sala usa `blastPlain`, nunca `blastScene`; `reachAt` e `rayPart` rodam 0 vezes.** A grade de peças no
+> `reachAt` não tira nada do f0 da régua (continua valendo para um jogo que ligue `shelter`, fora desta spec).
 
-1. **`reachAt` é quadrático** (`world.ts:4838-4871`): para cada alvo, testa o raio contra todas as peças de todos os objetos no alcance.
-   A grade de peças do #390 (`part-grid.ts:120`) devolve os índices em ordem crescente, então `t *= ti`, as listas de `shields` e a ordem de
-   inserção ficam iguais bit a bit. Condições: consultar o trecho [0, L]; manter a varredura simples para NaN; `minPath = 0` pode perder um
-   raspão de comprimento zero por arredondamento (teste dedicado).
-2. `emit` copia a lista de ouvintes a cada evento (`world.ts:675-677`). Trocar por cópia só quando o conjunto de ouvintes mudou (um ouvinte
-   pode se inscrever durante o `emit`; a semântica de hoje fica).
-3. `lightLeaksNear` (`world.ts:4376`) varre todas as peças de todos os objetos, dentro ou fora do alcance.
-4. `action` (~9 ms) e `stagesOut` (~7 ms): não medidos por dentro.
+Mesma saída, goldens sem diff. Alvos pela T2.0 (ms, blast / crater; carga acima de 1,5, valem por proporção):
 
-Ganho esperado: desconhecido até a T2.0.
+1. **`knockOutUnits`** 5,5 / 7,7: o maior item do `explode`. Não foi repartido por dentro; a T2.1 começa por esse perfil.
+2. **`blastPlain` próprio** 3,0 / 4,3 e **`spallOuter`** 2,9 / 3,3.
+3. **Evento `fracture`** 10,2 / 13,0 em só 11 eventos (~1 ms cada): é onde rodam `splitLoose`, `adoptSplit` e `rebuildHost`. O `stagesOut` da
+   tabela da seção 1 **é este mesmo custo**, não um item à parte: o f0 tem ~7 ms a menos de trabalho distinto do que a seção 1 somava.
+4. **`action`**: `effects.explosion` 3,5 / 4,3 e `renderer.explode` 2,6 / 3,3.
+5. `emit` com cópia da lista de ouvintes por evento (`world.ts:675-677`; 559 eventos `damage` por explosão): cópia só quando o conjunto de
+   ouvintes mudou.
+
+Nenhum desses é grande sozinho: o `explode` é uma soma de itens de 3 a 8 ms. Ganho esperado da etapa B: poucos ms por item, a medir um a um.
 
 ## 5. Etapa C — dividir o que muda a simulação (só com a D5)
 
@@ -149,7 +152,7 @@ Recomendação: **(a) agora; decidir entre (b) e (c) com a régua de A + B na m�
 - **T1.2:** mesmos bytes da janela, mais: caso a 30 Hz (2 tiques antes de um dreno); "pintura adiada = mesma máscara"; ordem visual antes do
   estrutural na mesma peça; correção do `splitLoose` pelo relógio (`renderer.ts:2306`).
 - **T2.0 (nova, `sonnet`):** perfil no navegador do `blastScene`, de `action`, de `stagesOut` e de `destruction.events` por tipo de evento.
-- **T2.1 = etapa B** (`reachAt` com a grade, `emit`, `lightLeaksNear`), goldens sem diff.
+- **T2.1 = etapa B** pelos alvos da T2.0 (`knockOutUnits`, `blastPlain`, `spallOuter`, `fracture`, `emit`), um por commit com tabela, goldens sem diff.
 - **T2.2 =** classes de `destruction.events` (estrutural no f0, visual na fila de prazo). **T2.3 =** golpe no meio da janela.
 - **T3.1 =** `breach-cut` e `breach-paint` por parede.
 - **T3.2 = etapa C e gerador próprio dos visuais**, bloqueada pela D5.
