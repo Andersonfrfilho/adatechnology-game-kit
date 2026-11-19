@@ -741,6 +741,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     } finally {
       runDepth--
       cur = prev
+      // an operation that threw must not hand its half-done structure and detaches to the next one
+      if (runDepth === 0) {
+        pendingStructure.clear()
+        pendingDetaches.length = 0
+      }
     }
   }
 

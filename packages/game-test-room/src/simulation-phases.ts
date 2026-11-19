@@ -30,6 +30,8 @@ export function resolveSimulationTick(loopStep: number | undefined, nominalTick:
 export function registerSimulationPhases(scheduler: Scheduler, tick: number, hooks: SimulationHooks): SimulationPhases {
   let isLegacyStep = false
   let isSynchronousFrame = false
+  // before `input`: the player's actions (push, carry, doors) write on the step pose, never on last frame's blend
+  scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'input', order: -100000, id: 'room.pose-restore-input' })
   scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'fixedSimulate', order: -100000, id: 'room.pose-restore' })
   scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'lateSimulate', order: -100000, id: 'room.pose-restore-late' })
   scheduler.add(

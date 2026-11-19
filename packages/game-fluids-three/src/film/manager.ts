@@ -454,6 +454,7 @@ export class FilmManager {
     if (at < 0) return
     this.grids.splice(at, 1)
     this.empties.delete(grid)
+    this.owed.delete(grid)
     this.group.remove(grid.group)
     grid.dispose()
   }

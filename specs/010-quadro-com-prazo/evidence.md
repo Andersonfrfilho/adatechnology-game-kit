@@ -408,3 +408,18 @@ eventos e no corte da parede, com o fixture da T3.2 regravado (decisão do dono)
   a causa e a conta estão acima. O quadro da explosão vai para a spec 017.
 - Sonda da física da régua consertada: `tools/gpu/room-explosion.mjs` mede também `__roomPhysics.stepFixed` (a sala passa por ele desde a fase 3).
   Conferência curta (blast 1x, 1 rodada, `/tmp`): física p99 5,5 ms, max 6,4 ms (antes da correção: 0,1). `node --test tools/gpu/tests/*.test.mjs` 42 passam.
+
+## Revisão final (`code-reviewer`, 2026-11-19)
+
+Seis achados; corrigidos os que se confirmaram no código:
+
+- **Pose restaurada depois da fase `input`** (empurrar/carregar escreviam no desenho misturado e eram apagados): `game-test-room/src/simulation-phases.ts` restaura a pose do passo também no começo da fase `input`.
+- **Peça segurada e dormindo ficava com a raiz congelada**: `game-destruction-three/src/renderer.ts` (`syncTransforms`) lê a peça `held` mesmo dormindo.
+- **Estrutura e `detach` pela metade passavam para a operação seguinte quando uma lançava exceção**: `game-destruction/src/world.ts` (`run`) limpa `pendingStructure`/`pendingDetaches` quando a profundidade volta a 0. Sem teste próprio: não há caminho de exceção depois de um `loosened` que se provoque de forma estável num teste (pendência).
+- **`FilmManager.owed` retinha grids liberados** (§8): `free()` apaga a entrada.
+- **Changesets que faltavam**: `.changeset/passo-fixo-e-filas-no-prazo.md` (`readActiveBodies` obrigatório em `PhysicsWorld` é quebra para quem implementa).
+- Não corrigido (gravidade baixa): closures por tique em `engine-pieces.ts` (`prepare`, `moveHeld`, `finish`).
+
+Testes: `game-destruction` 581, `game-fluids-three` 38 passam; `game-destruction-three` 650 passam e 1 falha por tempo (`awake-pieces.test.ts`, 5.000 peças em 5 s, com carga 6 a 7; falha igual sem a correção); typecheck dos quatro pacotes limpo.
+
+**Achado que bloqueia o PR:** `game-test-room/tests/step-equivalence.test.ts` (T3.2, roda no CI) falha na `spec/010-pr` desde o merge da fase 3, com ou sem estas correções. O fixture foi gravado em `4e78c92df`, sem a T2.1 (fase 2). Regravando numa cópia: no quadro 30 (a explosão) em diante diferem os eventos (18 quadros no solver próprio, 3 no Jolt) **e o estado** (150 quadros nos dois). O fixture não foi regravado.

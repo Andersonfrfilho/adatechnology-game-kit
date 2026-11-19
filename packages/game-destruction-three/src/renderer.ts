@@ -1312,7 +1312,8 @@ class Renderer implements DestructionRenderer {
    */
   private syncTransforms(): void {
     for (const b of this.bounds.values()) {
-      if (b.piece?.sleeping && !b.moved) {
+      // a held piece is moved by its host (push, carry) even while the engine still has it asleep
+      if (b.piece?.sleeping && !b.piece.held && !b.moved) {
         if (!b.frozen) this.freezeRoot(b)
         continue
       }
