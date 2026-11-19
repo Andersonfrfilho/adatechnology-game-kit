@@ -161,7 +161,8 @@ describe('opening and eating a can in the room', () => {
     const food: THREE.Object3D[] = []
     tin.root.getObjectByName(OPENING_NAME)!.traverse((o) => o.userData.itemFood && food.push(o))
     expect(food.every((o) => !o.visible)).toBe(true)
-  })
+    // the first room of the file pays its cold start and steps the room for seconds: about 4 s on CI, past the 5 s default on a busy runner
+  }, 30_000)
 
   it('a jar of honey has its cap turned off by the other hand before the first spoonful, then is eaten', () => {
     const r = room()
