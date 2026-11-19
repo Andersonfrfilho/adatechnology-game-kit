@@ -41,6 +41,7 @@ Leia `spec.md`, `plan.md`, `specs/regras/14-workers.md` e `packages/game-workers
 
 - [x] T13 (`createKitWorkers` e `KIT_WORKER_KINDS` no `game-kit-defaults`, ligado por padrão, `dist/kit-worker(.global).js`) `game-kit-defaults`: `KIT_WORKER_KINDS`, `dist/kit-worker.js`, o texto do worker para página de arquivo único e `createKitWorkers()`
   ligado ao `game-runtime` (`tick` no início do passo fixo, `warm` na carga). Ligado por padrão (o resultado é o mesmo).
+- (Nota, fechado/obsoleto pela spec 010 (data 2026-11-19): o `tick` da T13 roda no passo fixo do agendador, agora o único acumulador, e o portão `room-explosion` que o `perf-gate` chama mede `jolt-d4-worker` por padrão.)
 - T14 Painel do `game-devtools` com os contadores por categoria; `perf-gate` grava a fração a tempo e falha quando ela cai.
 - T15 Reserva de núcleos para o Jolt multithread e o spawn do Electron (combinar com a thread do app desktop).
 

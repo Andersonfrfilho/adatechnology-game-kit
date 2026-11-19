@@ -1,9 +1,10 @@
+import { checkDeferredQueue } from '@adatechnology/game-contracts'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import type { Mesh, Object3D } from 'three'
-import { HOUSE_SHADOW_REBATCH_AFTER_MS, createHouseShadowBatches } from '../src/house/shadow-batches'
+import { HOUSE_SHADOW_REBATCH_AFTER_MS, createHouseShadowBatches, createHouseShadowQueue } from '../src/house/shadow-batches'
 import { THREE, houseOf, planOf } from './helpers/houses'
 import { physicsOption } from './setup-physics'
 
@@ -107,5 +108,47 @@ describe('house shadow batches', () => {
     expect(walls.every((wall) => !wall.castShadow)).toBe(true)
     batches.dispose()
     expect(walls.every((wall) => wall.castShadow)).toBe(true)
+  })
+})
+
+describe('house shadow batches as an owner queue', () => {
+  const rootOf = (): Object3D => {
+    const root = new THREE.Group()
+    const material = new THREE.MeshLambertMaterial()
+    // ~45k vertices in meshes of ~5k: three to a chunk of HOUSE_SHADOW_BATCH_VERTICES, so three chunks of at least two meshes (a chunk of one is not merged)
+    for (let at = 0; at < 9; at++) {
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 70, 70), material)
+      mesh.position.x = at * 2
+      mesh.castShadow = true
+      root.add(mesh)
+    }
+    return root
+  }
+
+  it('is made by the factory and keeps the DeferredQueue contract', () => {
+    const queue = createHouseShadowQueue()
+    const batches = createHouseShadowBatches(THREE, rootOf(), { queue })
+    batches.update()
+    expect(queue.deferredQueue().id).toBe('floorplan.shadow-batch')
+    expect(createHouseShadowQueue()).not.toBe(queue)
+    expect(checkDeferredQueue(queue.deferredQueue(), () => {})).toEqual({ ok: true, problems: [] })
+    batches.dispose()
+  })
+
+  it('leaves the chunks to the budget once attached, and merges them in update without one', () => {
+    const queue = createHouseShadowQueue()
+    const batches = createHouseShadowBatches(THREE, rootOf(), { queue })
+    queue.deferredQueue().attach?.()
+    batches.update()
+    batches.update()
+    expect(queue.deferredQueue().pending(1)).toBeGreaterThan(0)
+    queue.deferredQueue().flush()
+    expect(queue.deferredQueue().pending(2)).toBe(0)
+    batches.dispose()
+
+    const alone = createHouseShadowBatches(THREE, rootOf())
+    for (let frame = 0; frame < 50; frame++) alone.update()
+    expect(alone.batcher!.stats().batches).toBeGreaterThan(1)
+    alone.dispose()
   })
 })

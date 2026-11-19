@@ -128,7 +128,7 @@ Nada muda no three.js. As correções valem sozinhas para quem atualizar os paco
 - **`pinPrograms` é um contorno.** A correção de verdade é o pool de materiais das partículas do veículo e de `game-weapons-three/src/fx/heavy.ts`, que cria geometria e material a cada gota. Isso é o item 11 de [arquitetura-plug-sdks.md](arquitetura-plug-sdks.md).
 - **Luz por lâmpada da casa** (`game-interactables-three/src/mesh.ts:155`). Quebrar uma lâmpada muda o número de luzes e recompila tudo. Precisa do orçamento único de luzes (item 10 da análise de arquitetura).
 - **Nós estáticos do sedã de alta qualidade.** São ~800 nós que recalculam a matriz todo quadro. Congelá-los exige a lista dos nós que nunca se movem.
-- **A ordem do quadro não tem dono** (item 9 da análise). Os orçamentos de tempo (áudio 2 ms, eventos 8 ms, `crease` 2,5 ms) foram postos cada um no seu pacote. O `game-runtime` proposto deve juntá-los num orçamento único por quadro.
+- ~~**A ordem do quadro não tem dono** (item 9 da análise). Os orçamentos de tempo (áudio 2 ms, eventos 8 ms, `crease` 2,5 ms) foram postos cada um no seu pacote. O `game-runtime` proposto deve juntá-los num orçamento único por quadro.~~ **Resolvida pela spec 010 (2026-11-19):** o `game-runtime` é o dono do prazo do quadro e do passo fixo; ver a seção "Spec 010 — quadro com prazo" no fim deste arquivo.
 
 ## Gate do pre-push: comparação com a main na mesma máquina (2026-11-03)
 
@@ -186,3 +186,53 @@ os tempos dessa máquina não valem, as contagens sim (dependem da cena e do enq
 Fica para depois: os 40 móveis destrutíveis da casa (cada um com a própria sombra) são objetos do mundo de destruição, desenhados pelo
 `game-destruction-three`, e a casa ainda tem ~276 chamadas no passe da câmera (um lote por material como o do carro, com o corte por andar e
 a máscara de luz dos cômodos, é outra frente).
+
+## Spec 010 — quadro com prazo (2026-11-19)
+
+Regra em vigor: [`specs/regras/15-quadro-e-desempenho.md`](../specs/regras/15-quadro-e-desempenho.md). Spec, plano e evidência:
+[`specs/010-quadro-com-prazo/`](../specs/010-quadro-com-prazo/). A análise de 2026-11-18 achou que os ~30 PRs `perf(...)` mais recentes atacavam
+sintomas (pintura de parede, lotes, sombra) e que o pior quadro vinha de três causas de estrutura, nenhuma com número gravado.
+
+### As três causas
+
+| # | Causa | O que acontecia |
+|---|---|---|
+| P1 | Relógios próprios e orçamentos somados | O `FrameBudget` começava todo quadro com 8 ms cheios, sem descontar a simulação, e por fora dele corriam relógios próprios (lotes da sala 1 ms, sombra da casa 2 ms, lotes do veículo 2 ms, destroços assentados 2 ms, filme de fluido 1,2 ms, oclusão do áudio 1 ms, caixas estáticas 1 ms, `prefit` 1 ms, amassado 2,5 ms). Cada um somava no pior quadro sem ninguém ver |
+| P2 | Dois relógios de simulação, desenho sem interpolação | O agendador e o `PhysicsLoop` tinham acumulador e `alpha` próprios; a sala simulava tudo em `lateSimulate` com o `dt` do quadro; ninguém lia nenhum `alpha` |
+| P3 | Custo por peça viva, estrutura refeita por parte perdida | `prepare`, `measure`, `readBack` e `syncTransforms` percorriam todas as peças (dormindo também), `readPose`/`readVelocity` cruzavam o wasm ~17 vezes por corpo, e `partLost` chamava `solveStructure` + `recomputeGroups` no objeto inteiro a cada parte |
+
+### Os números da régua (T0.2 e T0.4; helios, variante `jolt-d4-worker`, com a trava)
+
+- **T0.2** (`specs/010-quadro-com-prazo/medicoes/regua-feb400220.json`): a 1x o p99 do update fica em 4,7 a 6,1 ms; o pior quadro sem o f0 em 14 a 19 ms.
+  P1+P2+P3 explicam 84 a 86% dele (P3 37 a 57%, P1 27 a 44%, P2 2 a 3% a 1x e 12 a 20% a 4x). O quadro 0 (f0) dá 28 a 34 ms de update.
+- **T0.4** (a régua passou a abrir o relógio do f0 antes de `blastAt`/`world.hit`): o update do f0 inteiro é **71 a 72 ms a 1x** (260 a 287 ms a 4x).
+  Metade disso é a chamada síncrona: `world.explode` leva **36 a 38 ms** a 1x (140 a 148 ms a 4x), com 33 a 39 chamadas de `solveStructure` por explosão
+  que a T0.2 não via. O `rest` sem dono do f0 era, na maior parte, a fila `floorplan.breach-cut` (10 a 12 ms) e `action` (6 ms), não o `flush()`.
+- **Depois da T2.1 (indicativo, Node, mediana de 7, máquina com outras sessões):** `solveStructure` por `explode` de 4 MJ no sobrado **174 → 39**; CPU do
+  `world.explode` **112,6 → ~33 ms**. Não é tempo de quadro na GPU; o número que fecha a meta é o da T4.1.
+
+### O que cada fase mudou
+
+- **Fase 1 (P1), orçamento único pelo prazo.** `game-runtime` ganhou o modo de prazo opcional por quadro (`targetMs` + `frameStartMs`): o trabalho adiado
+  recebe o que sobra até `frameStartMs + targetMs`, menos a estimativa do render, com piso de 1 ms e sem dívida. Todo relógio próprio virou uma
+  `DeferredQueue` registrada no `scheduler.budget` da sala (lotes por dono, sombra da casa, lotes do veículo, destroços assentados, filme, oclusão,
+  `prefit`, amassado); `destruction.events` e `floorplan.breach-cut` são `mustDrain` (aparecem no quadro do golpe, fora do prazo, contadas à parte).
+  Sem host a fila drena por `drainDetached` (`game-contracts`), a única exceção sancionada. O campo de fluxo da multidão passou a unidades
+  (`cellsPerStep`). A regra `own-frame-clock` do `kit-audit` barra relógio novo (`--strict-clocks` é o portão da C3).
+- **Fase 2 (P3), estrutura adiada e custo por peça acordada.** A estrutura é resolvida uma vez por objeto por `run()` (`loosened`, não uma vez por parte
+  perdida) e todo `detach` sai no fim da operação com os grupos finais; `solveStructure` e `recomputeGroups` sem alocação por chamada; lista de peças
+  acordadas (`prepare`/`readBack`/`measure` só nelas); `readPose`/`readVelocity` do Jolt lidas do heap; `syncTransforms` só do que mudou.
+- **Fase 3 (P2), um passo fixo só e desenho interpolado.** O acumulador é o do agendador (tique de 1/60 = 2 passos de física de 1/120, no máximo 3 tiques
+  por quadro); `PhysicsLoop.stepFixed(steps)`; a sala simula em `fixedSimulate`; peças e fragmentos guardam a pose do passo anterior e o desenho
+  interpola pelo `alpha`; o banco de provas deixou de ter acumulador próprio. O valor é correção (60, 120 e 144 Hz dão o mesmo estado por passo), não ms.
+
+### Régua final
+
+régua final: ver T4.1 no `evidence.md` da spec 010 (ainda não medida; as medições por fase foram trocadas por uma só, por decisão do dono).
+
+### O que a spec deixou aberto
+
+- A física na fase `input` (empurrar, objeto na mão, portas, ferramentas) ainda integra com o `dt` do quadro: spec própria.
+- Eventos da explosão que criam peças entram na fila do quadro, não no tique; o teste C5 depende de aquecimento por isso.
+- A regra `own-frame-clock` não enxerga relógio injetado (recebido por parâmetro).
+

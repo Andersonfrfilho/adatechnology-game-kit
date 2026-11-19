@@ -5,6 +5,8 @@
  * It only uses the kit (`kit._` helpers such as `fling`, `cutPanel`, `pivotOf`), so a part that comes off is flung with the same ballistic
  * animation the explosion uses, and a vehicle that is rebuilt (`reset`) gets a fresh set of meshes.
  */
+import { DEFERRED_QUEUE_ID, drainDetached } from '@adatechnology/game-contracts'
+import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from '../three-types'
 
 import type { BuildContext, KitShared, SceneNode, Three } from '../types'
@@ -216,7 +218,7 @@ export class VehicleVisuals implements CreaseWork {
   private holdArmed = false
   private holdFrame = -1
   /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
-  private readonly smoothing = new Map<Obj, { geo: BufferGeometry; step: (deadline: number) => boolean }>()
+  private readonly smoothing = new Map<Obj, { geo: BufferGeometry; step: (deadline: number, clock?: () => number) => boolean }>()
   /** The bullet holes of one carrier and material, drawn as one instanced batch each (a door full of holes still draws as one). */
   private readonly holes = new Map<string, InstancedMesh[]>()
   readonly hood: { id: string; open: number; sign: number } | null
@@ -1378,12 +1380,23 @@ export class VehicleVisuals implements CreaseWork {
     }
     if (this.queued) return
     if (!this.smoothing.size && !this.warming) return
-    const deadline = performance.now() + budgetMs
-    for (const [msh, task] of this.smoothing) {
-      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
-      if (performance.now() >= deadline) return
-    }
-    this.warmIndexes(deadline)
+    drainDetached(this.pumpQueue, budgetMs)
+  }
+  /** What `pump` drains when no shared queue owns the smoothing: the same steps, timed by `drainDetached`. */
+  private readonly pumpQueue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.VEHICLE_CREASE,
+    pending: () => this.smoothing.size + (this.warming ? 1 : 0),
+    run: (deadline, clock) => {
+      let ran = 0
+      for (const [msh, task] of this.smoothing) {
+        if (msh.geometry !== task.geo || task.step(deadline, clock)) this.smoothing.delete(msh)
+        ran++
+        if (clock() >= deadline) return ran
+      }
+      this.warmIndexes(deadline, clock)
+      return ran + 1
+    },
+    flush: () => this.finishAll(),
   }
   setQueued(isQueued: boolean): void {
     this.queued = isQueued
@@ -1399,24 +1412,24 @@ export class VehicleVisuals implements CreaseWork {
     return this.smoothing.size + (this.warming ? 1 : 0)
   }
   /** One slice of the pending work, for the shared queue. */
-  runStep(deadline: number): boolean {
+  runStep(deadline: number, clock?: () => number): boolean {
     const next = this.smoothing.entries().next()
     if (!next.done) {
       const [msh, task] = next.value
-      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
+      if (msh.geometry !== task.geo || task.step(deadline, clock)) this.smoothing.delete(msh)
       return true
     }
     if (!this.warming) return false
-    this.warmIndexes(deadline)
+    this.warmIndexes(deadline, clock)
     return true
   }
   finishAll(): void {
     while (this.runStep(Infinity));
   }
   /** Measures the triangles of the heavy body meshes once, a slice per frame, so the first panel torn off finds them ready (see `triIndexOf`). */
-  private warmIndexes(deadline: number): void {
+  private warmIndexes(deadline: number, clock?: () => number): void {
     if (!this.warming) return
-    this.warming = this.warming.filter((msh) => !warmTriIndex(msh.geometry, deadline))
+    this.warming = this.warming.filter((msh) => !warmTriIndex(msh.geometry, deadline, clock))
     if (!this.warming.length) this.warming = null
   }
   /** Moves the panel of a lost zone out of the body (the kit's torn-off look). */
@@ -1579,7 +1592,7 @@ export class VehicleVisuals implements CreaseWork {
     const mg = Math.min(0.05, (u1 - u0) * 0.08, (v1 - v0) * 0.08)
     const dirty = new Set<Obj>()
     let pcs: Array<{ mesh?: Obj }> = []
-    const pieceTasks = new Map<Obj, { geo: BufferGeometry; step: (deadline: number) => boolean }>()
+    const pieceTasks = new Map<Obj, { geo: BufferGeometry; step: (deadline: number, clock?: () => number) => boolean }>()
     try {
       pcs = I.cutPanel(this.c, z, [u0 + mg, u1 - mg, v0 + mg, v1 - mg], true, dirty, { pieceTasks }) as Array<{ mesh?: Obj }>
     } catch {

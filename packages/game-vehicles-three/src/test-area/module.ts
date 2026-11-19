@@ -11,7 +11,7 @@ import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from
 
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createVehicleColliders } from '../colliders'
-import { createVehicleLod } from '../vehicle-lod'
+import { createVehicleLod, createVehicleLodQueue } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
 import { createCabinSmoke } from '../cabin-smoke'
 import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
@@ -497,10 +497,12 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
 
   // one crease queue for every vehicle of the area; a host with a frame budget runs it, any other leaves each vehicle smoothing in its own update
   const creaseQueue = createCreaseQueue()
+  // and one for the batches of their level of detail
+  const lodQueue = createVehicleLodQueue()
 
   const updateLod = (entry: Placed): void => {
     if (!host || settings.quality === 'lite') return
-    entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0])
+    entry.lod ??= createVehicleLod(entry.root.userData.kit, entry.item.vehicle, entry.root, entry.root.children[0], { queue: lodQueue })
     const at = host.player().position
     const distance = Math.hypot(at[0] - entry.root.position.x, at[2] - entry.root.position.z)
     // rolling over and blowing up move the body without a part pose: the fused copy would stay upright where the car was
@@ -623,6 +625,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const stopFrame = lent.onFrame(frame)
       const stopBlocker = lent.addBlocker?.(blocked)
       const stopCrease = lent.defer?.(creaseQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_CREASE])
+      const stopLodBatch = lent.defer?.(lodQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_LOD_BATCH])
       if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three!, new three!.DataTexture(new Uint8Array(4), 1, 1)))
       // the engine loop and the horn live in the library bank of game-audio, which the room's engine does not carry on its own
       lent.audio?.register?.(LIBRARY_BANK)
@@ -634,6 +637,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         stopFrame()
         stopBlocker?.()
         stopCrease?.()
+        stopLodBatch?.()
         cabins.clear(effects())
         clearHelpers()
         clearLane()

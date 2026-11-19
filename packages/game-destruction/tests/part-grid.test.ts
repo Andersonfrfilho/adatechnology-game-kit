@@ -53,6 +53,36 @@ describe('the grid over the part spheres of a big object', () => {
   })
 })
 
+describe('the grid over a wall one brick thick', () => {
+  it('still offers every part a ray can meet, for random rays across a wall of eight thousand bricks', () => {
+    const next = random(11)
+    const parts: PartSphere[] = []
+    for (let i = 0; i < 100; i++) for (let j = 0; j < 80; j++) parts.push({ pos: [i * 0.2, j * 0.06, 0], bound: 0.12 })
+    const grid = buildPartGrid(parts, 1e-6)
+    const out: number[] = []
+    for (let ray = 0; ray < 400; ray++) {
+      const origin: Vec3 = [next() * 24 - 2, next() * 6 - 0.5, next() * 4 - 2]
+      const raw: Vec3 = [next() - 0.5, next() - 0.5, next() - 0.5]
+      const length = Math.hypot(...raw)
+      const direction: Vec3 = [raw[0] / length, raw[1] / length, raw[2] / length]
+      const maxDistance = ray % 3 === 0 ? Infinity : next() * 10
+      grid.candidates(origin, direction, maxDistance, out)
+      const met = parts.flatMap((part, index) => (sphereMiss(origin, direction, part, maxDistance, 1e-6) ? [] : [index]))
+      expect(met.every((index) => out.includes(index))).toBe(true)
+      expect([...out].sort((a, b) => a - b)).toEqual(out)
+    }
+  })
+
+  it('offers a ray straight through one brick only the bricks near it', () => {
+    const parts: PartSphere[] = []
+    for (let i = 0; i < 100; i++) for (let j = 0; j < 80; j++) parts.push({ pos: [i * 0.2, j * 0.06, 0], bound: 0.12 })
+    const out: number[] = []
+    buildPartGrid(parts, 1e-6).candidates([10, 2, -3], [0, 0, 1], 6, out)
+    expect(out.length).toBeGreaterThan(0)
+    expect(out.length).toBeLessThan(parts.length / 10)
+  })
+})
+
 describe('the grid in the world', () => {
   it('a ray of NaN answers nothing on a big object, as the plain scan did, instead of throwing', async () => {
     const { createDestruction } = await import('../src')

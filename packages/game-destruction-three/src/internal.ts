@@ -233,6 +233,12 @@ export interface Bound {
   onFrame?: (dt: number) => void
   /** Node between the root and its children that carries the settlement and tilt of the soil (`settle` events), made on the first one. */
   soilNode?: THREE_NS.Object3D
+  /** The root's world matrix when it was last read for the world: an object whose matrix did not change is not decomposed again. */
+  lastWorld?: Float64Array
+  /** The root of a piece asleep stops recomputing its matrix (`matrixAutoUpdate = false`) until something moves it. */
+  frozen?: boolean
+  /** Moved by something that does not wake the piece (`DestructionRenderer.markMoved`): synced and thawed on the next `update`. */
+  moved?: boolean
 }
 
 /** What a moving piece ran into (`PieceSystemOptions.sweep`). */

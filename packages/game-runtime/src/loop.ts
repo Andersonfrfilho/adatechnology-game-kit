@@ -17,7 +17,7 @@ export function startLoop(scheduler: Scheduler, options: LoopOptions = {}): () =
     const realSeconds = (nowMs - last) / 1000
     last = nowMs
     options.onFrame?.(realSeconds)
-    scheduler.frame(realSeconds, options.skipSimulation?.() ? { simulate: false } : undefined)
+    scheduler.frame(realSeconds, options.skipSimulation?.() ? { simulate: false, frameStartMs: nowMs } : { frameStartMs: nowMs })
   }
 
   const onVisibility = (): void => {

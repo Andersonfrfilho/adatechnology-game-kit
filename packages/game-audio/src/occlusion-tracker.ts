@@ -1,4 +1,5 @@
-import type { Vec3 } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, drainDetached } from '@adatechnology/game-contracts'
+import type { DeferredQueue, Vec3 } from '@adatechnology/game-contracts'
 
 import { OCCLUSION_DEFAULTS, occlusionState, totalLossDb } from './occlusion'
 import type { OcclusionSetup, OcclusionState } from './occlusion'
@@ -26,9 +27,15 @@ export type OcclusionTracker = {
   state(id: number): OcclusionState | undefined
   /**
    * Opens a new window, measures the pending voices (oldest first), then re-queries the ones that are due, the stalest first, at most `budget` queries in
-   * all and while `budgetMs` lasts (the first query always runs); returns the ones whose state moved. A pending voice takes its measure exactly.
+   * all and while `budgetMs` lasts (the first query always runs, as a queue always runs one unit); returns the ones whose state moved. A pending voice takes its measure exactly.
    */
   update(listener: Vec3, now: number): readonly OcclusionChange[]
+  /**
+   * The measuring as a `DeferredQueue` (one unit = one query) for a shared frame budget. Asking for it changes nothing: with no budget attached, `update` drains it
+   * itself within `budgetMs`, as before. Once a budget attaches it, no query is obligatory: `add` always starts at the guess, `update` only opens the window (at most `budget`
+   * queries) and returns what the queue measured since the last one, and the budget runs the queries.
+   */
+  deferredQueue(): DeferredQueue
   readonly size: number
 }
 
@@ -54,6 +61,13 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
   // the running cost of one query (ms); undefined until the first one, so the first query of the session runs
   let costMs: number | undefined
   const remembered = new Map<string, OcclusionState>()
+  // the work of this update window: the voices still to measure, then the due ones, stalest first
+  let work: number[] = []
+  let queries = 0
+  let listenerAt: Vec3 | undefined
+  let windowNow = 0
+  let changes: OcclusionChange[] = []
+  let attached = false
   const interval = setup.interval ?? OCCLUSION_DEFAULTS.interval
   const budget = Math.max(1, setup.budget ?? OCCLUSION_DEFAULTS.budget)
   const audibleLevel = setup.audibleLevel ?? OCCLUSION_DEFAULTS.audibleLevel
@@ -82,14 +96,70 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
     return nearest?.state ?? remembered.get(keyOf(source)) ?? occlusionState(0, setup)
   }
 
+  const step = (): void => {
+    const id = work.shift() as number
+    const voice = entries.get(id)
+    if (!voice) return
+    const at = listenerAt ?? voice.checkedFrom
+    if (voice.pending) {
+      queries++
+      const state = measure(voice.source, at)
+      voice.pending = false
+      voice.checkedAt = windowNow
+      voice.checkedFrom = at
+      voice.served = served++
+      // the exact measure, not the guess within `CHANGED_DB`: a voice measured late ends where one measured on `add` would be
+      if (state.lossDb === voice.state.lossDb) return
+      voice.state = state
+      changes.push({ id, state })
+      return
+    }
+    if (distance(voice.checkedFrom, at) < MOVED) {
+      voice.checkedAt = windowNow
+      return
+    }
+    queries++
+    const state = measure(voice.source, at)
+    voice.checkedAt = windowNow
+    voice.checkedFrom = at
+    voice.served = served++
+    if (Math.abs(state.lossDb - voice.state.lossDb) < CHANGED_DB) return
+    voice.state = state
+    changes.push({ id, state })
+  }
+
+  const queue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.AUDIO_OCCLUSION,
+    pending: () => (queries >= budget ? 0 : work.length),
+    run(deadline, clock) {
+      let ran = 0
+      while (work.length > 0 && (ran === 0 || queries < budget)) {
+        step()
+        ran++
+        if (clock() >= deadline) break
+      }
+      return ran
+    },
+    flush() {
+      while (work.length > 0) step()
+    },
+    attach() {
+      attached = true
+    },
+    detach() {
+      attached = false
+    },
+  }
+
   return {
     add({ id, source, level, listener, now }) {
       const from = copy(source)
       const at = copy(listener)
-      // a query is made here only when what one has been costing fits in what is left of the frame: an expensive one waits for `update`
-      if (spent >= budget || spentMs >= budgetMs || spentMs + (costMs ?? 0) > budgetMs) {
+      // a query is made here only when what one has been costing fits in what is left of the frame: an expensive one waits for the queue
+      if (attached || spent >= budget || spentMs >= budgetMs || spentMs + (costMs ?? 0) > budgetMs) {
         const provisional = guess(from)
         entries.set(id, { source: from, level, state: provisional, pending: true, checkedAt: now, checkedFrom: at, served: served++ })
+        if (!work.includes(id)) work.push(id)
         return provisional
       }
       spent++
@@ -101,26 +171,15 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
     has: (id) => entries.has(id),
     state: (id) => entries.get(id)?.state,
     update(listener, now) {
+      const carried = attached ? changes : []
+      if (attached) changes = []
       spent = 0
       spentMs = 0
-      const at = copy(listener)
-      const changes: OcclusionChange[] = []
-      let queries = 0
-      const canQuery = (): boolean => queries < budget && (queries === 0 || spentMs < budgetMs)
-      for (const [id, voice] of entries) {
-        if (!voice.pending) continue
-        if (!canQuery()) break
-        queries++
-        const state = measure(voice.source, at)
-        voice.pending = false
-        voice.checkedAt = now
-        voice.checkedFrom = at
-        voice.served = served++
-        // the exact measure, not the guess within `CHANGED_DB`: a voice measured late ends where one measured on `add` would be
-        if (state.lossDb === voice.state.lossDb) continue
-        voice.state = state
-        changes.push({ id, state })
-      }
+      queries = 0
+      listenerAt = copy(listener)
+      windowNow = now
+      work = []
+      for (const [id, voice] of entries) if (voice.pending) work.push(id)
       const due: [number, Entry][] = []
       for (const entry of entries) {
         const [, voice] = entry
@@ -128,23 +187,14 @@ export function createOcclusionTracker(setup: OcclusionSetup): OcclusionTracker 
         due.push(entry)
       }
       due.sort((a, b) => a[1].checkedAt - b[1].checkedAt || a[1].served - b[1].served)
-      for (const [id, voice] of due) {
-        if (distance(voice.checkedFrom, at) < MOVED) {
-          voice.checkedAt = now
-          continue
-        }
-        if (!canQuery()) break
-        queries++
-        const state = measure(voice.source, at)
-        voice.checkedAt = now
-        voice.checkedFrom = at
-        voice.served = served++
-        if (Math.abs(state.lossDb - voice.state.lossDb) < CHANGED_DB) continue
-        voice.state = state
-        changes.push({ id, state })
-      }
-      return changes
+      for (const [id] of due) work.push(id)
+      if (attached) return carried
+      drainDetached(queue, budgetMs, clock)
+      const moved = changes
+      changes = []
+      return moved
     },
+    deferredQueue: () => queue,
     get size() {
       return entries.size
     },

@@ -325,3 +325,24 @@ describe('exact frames and scenario frames', () => {
     expect(simulatedPhases).toBe(0)
   })
 })
+
+describe('systemProbe', () => {
+  it('is off by default and, when set, is told around every system, also when the system throws', () => {
+    const scheduler = createScheduler({ onError: () => undefined })
+    expect(scheduler.systemProbe).toBeUndefined()
+    const log: string[] = []
+    scheduler.add(() => log.push('a'), { phase: 'input', id: 'a' })
+    scheduler.add(() => {
+      throw new Error('boom')
+    }, { phase: 'present', id: 'b' })
+    scheduler.frame(H)
+    expect(log).toEqual(['a'])
+    const seen: string[] = []
+    scheduler.systemProbe = { enter: (id) => seen.push(`+${id}`), leave: (id) => seen.push(`-${id}`) }
+    scheduler.frame(H)
+    expect(seen).toEqual(['+a', '-a', '+b', '-b'])
+    scheduler.systemProbe = undefined
+    scheduler.frame(H)
+    expect(seen).toHaveLength(4)
+  })
+})

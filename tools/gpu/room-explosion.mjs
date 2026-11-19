@@ -26,22 +26,32 @@
 // Environment (all optional):
 //   ROOM_EXPLOSION_THROTTLES=1,2,4,6       the CPU slow-down levels measured
 //   ROOM_EXPLOSION_GATE_THROTTLES=1        the levels that block (exit 1); the others are reported with their verdict
-//   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt-d4-worker (the same with the engine's ground tiles through the room's worker coordinator, the default page; `groundWorker=1` marks it paced), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
+//   ROOM_EXPLOSION_VARIANTS=jolt-d4-worker jolt-d4-worker (the default page: Jolt, owner's D4 blast policy, the engine's ground tiles through the room's worker coordinator, `groundWorker=1` marks it paced: the gated one), jolt-d4 (the same with the ground tiles on the main thread), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4-worker is gated
 //   ROOM_EXPLOSION_KINDS=blast,hammer      blast, hammer and crater are the kinds; `crater` is opt-in (a third kind is a third more nightly minutes, and main has no base cell for it yet), see below
 //   ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_WEATHER=none            none, storm (60 mm/h rain, wind) and/or fog (60 m): comma list; each kind then runs once per weather as `blast+storm`. Weather or ROOM_EXPLOSION_RENDER=1 also times one render per frame
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
-//   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4 when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
+//   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
 //   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
 //                                          the variants with `groundWorker=1` (back to back, a worker could never answer and every tile would be made on the main thread), `1` for all, `0` for none
 //
+//   ROOM_EXPLOSION_F0_CLOCK=               late: the frame clock of frame 0 opens after the explosion call, as in the T0.2 ruler (default: before it)
 //   ROOM_EXPLOSION_FRAME_PARTS=            1: the stage pass also times the rest of the frame (below); off by default, so the stage table stays comparable with older runs
 //
 // With ROOM_EXPLOSION_FRAME_PARTS=1 the stage pass also draws each frame once (outside the update) and prints a second table, the same worst frames split by the rest of the frame (FRAME_LABELS): the update's
 // modules timed exclusive of their callees with the physics subtracted (`rest` is what no label covers: the room's own closures), then the render call's CPU time, the wait for the
 // GPU (`gl.finish`), the GPU time of the draw (EXT_disjoint_timer_query_webgl2, `n/a` without it), the draw calls and triangles of that render, and the live counts.
+//
+// Frame 0 whole (spec 010 T0.4). The frame clock of frame 0 opens BEFORE the explosion call (`room.blastAt`, or the first `room.world.hit` of a hammer), so the synchronous `world.explode`/`hit`
+// (and its `solveStructure` calls) are inside the update of that frame, as they are in the game. The T0.2 ruler opened it after: `ROOM_EXPLOSION_F0_CLOCK=late` restores that, and with either clock
+// the stage frames carry `actionMs` (the wall time of the explosion call), so the old column is `updateMs - actionMs`. The physics column and the percentiles (frame 0 apart) do not change.
+// The `rest` of the frame has owners: the labels `action` (the explosion call without `explode`), `explode` (`world.explode`/`world.hit`, solveStructure inside), `vfxPresent`, and one label per scheduler
+// system, its own time without the labels called under it: `sysInput`, `sysSimulate` (`room.simulate`: the room's closures before the modules), `sysSimulateEnd` (`room.simulate-end`: tracers and the
+// end-of-frame `flush()` with the narrator and the event handlers), `sysPresent` (`room.present`: the DOM log and the HUD), `sysLights`, `sysOther` (any other system, the modules' dispatcher).
+// They come from `scheduler.systemProbe` (game-runtime), a hook that times nothing unless this tool sets it. `queues` is the frame budget's deferred queues that no label above covers (the
+// destruction events and the audio voices have theirs): the change of each queue's `spentMs` in `room.frameStats().budget`, per queue in the `queues` of a stage frame.
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
@@ -58,11 +68,20 @@ export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHos
  * (particle simulation, then the layers and marks synced from it), the terrain mesh (rebuilt after a crater), water, footprints, the fluid view, the film, the audio voices,
  * the modules' frame callbacks, the lights, three's matrix updates (outermost call), and the physics table's stages called outside the physics (`stagesOut`: a blast's lay, waterAt).
  */
-export const FRAME_LABELS = ['world', 'fluids', 'explosives', 'destrEvents', 'fragments', 'settled', 'syncXform', 'partFx', 'destrOwn', 'vfxSim', 'vfxLayers', 'terrainMesh', 'water', 'footprints', 'fluidView', 'film', 'audio', 'modules', 'lights', 'matrices', 'stagesOut']
+export const FRAME_LABELS = ['world', 'fluids', 'explosives', 'destrEvents', 'fragments', 'settled', 'syncXform', 'partFx', 'destrOwn', 'vfxSim', 'vfxLayers', 'terrainMesh', 'water', 'footprints', 'fluidView', 'film', 'audio', 'modules', 'lights', 'matrices', 'stagesOut', 'action', 'explode', 'vfxPresent', 'sysInput', 'sysSimulate', 'sysSimulateEnd', 'sysPresent', 'sysLights', 'sysOther', 'queues']
+/** The scheduler systems of the room that get a label of their own; any other system id reads `sysOther`. */
+/** The deferred queues whose time a frame label already holds (`destrEvents`, `audio`): `queues` leaves them out. */
+export const LABELLED_QUEUES = ['destruction.events', 'audio.voices']
+export const SYSTEM_LABELS = /** @type {const} */ ({ 'room.input': 'sysInput', 'room.simulate': 'sysSimulate', 'room.simulate-end': 'sysSimulateEnd', 'room.present': 'sysPresent', 'room.lights': 'sysLights' })
+/** @param {string} id the scheduler system id @returns {string} its frame label */
+export const systemLabelOf = (id) => (/** @type {Record<string, string>} */ (SYSTEM_LABELS))[id] ?? 'sysOther'
+/** Whether frame 0's clock opens after the explosion call (`late`, the T0.2 ruler) instead of before it (the default). @param {string | undefined} text */
+export const isF0Late = (text) => text === 'late'
 /** The render columns appended to every frame row: render call CPU ms, GPU wait ms, GPU ms (-1: no timer), draw calls, triangles, live particles, fragments, pieces. */
 export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles', 'particles', 'frags', 'pieces']
-// the room's ground tiles go through its worker coordinator by default (2026-11-18): the gated variants keep them on the main thread
-// (`groundWorker=0`, unpaced back to back a worker never answers in time), `jolt-d4-worker` is the default page, paced
+// the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
+// (`groundWorker=0`, unpaced back to back a worker never answers in time), `jolt-d4-worker` is the default page, paced: it is the default and the gated variant, so the gate measures the page
+export const DEFAULT_VARIANT = 'jolt-d4-worker'
 export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1&groundWorker=0', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0&groundWorker=0', 'jolt-d4-worker': '&solver=jolt&blastDebris=1&groundWorker=1', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
@@ -74,17 +93,17 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 /**
  * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number, framep50: number, framep99: number, framemax: number }} Cell
- * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number> }} StageFrame
+ * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number>, actionMs?: number, queues?: Record<string, number> }} StageFrame
  */
 
 /**
  * Runs inside the page. Stage `prepare` builds the house and settles it (at full speed: the build is not the measurement); stage `run` fires the explosion and times the physics of each frame.
- * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number }} job
+ * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number, isF0Late?: boolean, systemLabels?: Record<string, string>, labelledQueues?: string[] }} job
  * @returns {Promise<number[][] | undefined>} per frame: [physics ms, loop step, piece update, wake queue, whole update, render, ...one column per `stageLabels`, ...per `frameLabels` and then FRAME_EXTRAS (only with `frameLabels`)]
  */
 export async function inPage(job) {
   /** @typedef {{ objectId: string }} Piece */
-  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, update(dt: number): void }} Room */
+  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { scheduler?: { systemProbe: { enter(id: string): void, leave(id: string): void } | undefined }, terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, frameStats?: () => { budget: { queues: { id: string, spentMs: number }[] } }, update(dt: number): void }} Room */
   const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[] } }} */ (/** @type {unknown} */ (window))
   const room = host.__testRoom
   const wait = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
@@ -155,7 +174,8 @@ export async function inPage(job) {
       acc[key] += performance.now() - started
     }
   }
-  if (host.__roomPhysics) timed('loop', host.__roomPhysics, 'step')
+  // the room steps by `stepFixed` on its fixed tick (spec 010 fase 3) and by `step` otherwise; `step` calls its own `stepFixed` closure, so the two never count twice
+  if (host.__roomPhysics) for (const name of ['step', 'stepFixed']) timed('loop', host.__roomPhysics, name)
   timed('piece', room.renderer.pieceSys, 'update')
   timed('wake', room.renderer, 'advanceWakes')
   // stage timing (a separate pass: a timer around a call made hundreds of times per frame is not free): exclusive times, a stage's callees subtracted
@@ -240,6 +260,7 @@ export async function inPage(job) {
   if (frameLabels.length > 0) {
     // the physics column's roots, so the modules that call them (the destruction renderer's update) read without them
     stage('physicsRoot', host.__roomPhysics, 'step', 'physics')
+    stage('physicsRoot', host.__roomPhysics, 'stepFixed', 'physics')
     stage('physicsRoot', room.renderer.pieceSys, 'update', 'physics')
     stage('physicsRoot', room.renderer, 'advanceWakes', 'physics')
     const destruction = /** @type {Record<string, object | undefined>} */ (/** @type {unknown} */ (room.renderer))
@@ -256,6 +277,9 @@ export async function inPage(job) {
     stage('partFx', destruction.ground, 'update')
     stage('destrOwn', destruction, 'update')
     stage('vfxSim', room.vfx, 'update')
+    stage('vfxPresent', room.vfx, 'present')
+    stage('explode', room.world, 'explode')
+    stage('explode', room.world, 'hit')
     stage('vfxLayers', room.effects, 'update')
     stage('vfxLayers', room.effects, 'present')
     stage('terrainMesh', parts?.terrainView, 'sync')
@@ -277,6 +301,27 @@ export async function inPage(job) {
     while (object3d && !Object.prototype.hasOwnProperty.call(object3d, 'updateMatrixWorld')) object3d = Object.getPrototypeOf(object3d)
     stage('matrices', object3d, 'updateMatrixWorld', 'outermost')
     stage('matrices', object3d, 'updateWorldMatrix', 'outermost')
+    // every scheduler system, its own time (the labels called under it subtracted): what the room's closures spend that no label above names
+    /** @type {({ entry: { child: number, isPhysicsStage: boolean }, started: number } | undefined)[]} */
+    const systemOpen = []
+    if (parts?.scheduler) parts.scheduler.systemProbe = {
+      enter() {
+        if (!isTiming) return void systemOpen.push(undefined)
+        const entry = { child: 0, isPhysicsStage: false }
+        open.push(entry)
+        systemOpen.push({ entry, started: performance.now() })
+      },
+      leave(/** @type {string} */ id) {
+        const item = systemOpen.pop()
+        if (!item) return
+        const spent = performance.now() - item.started
+        open.pop()
+        const label = job.systemLabels?.[id] ?? 'sysOther'
+        stageMs[label] = (stageMs[label] ?? 0) + spent - item.entry.child
+        const parent = open[open.length - 1]
+        if (parent) parent.child += spent
+      },
+    }
   }
   const context = room.webgl.getContext()
   const timer = job.isRendered && frameLabels.length > 0 ? context.getExtension('EXT_disjoint_timer_query_webgl2') : null
@@ -295,13 +340,51 @@ export async function inPage(job) {
     })
   }
   /** @returns {number[]} */
-  const frame = () => {
+  /** The wall time of the explosion call of each frame that fires one (frame index = array index), for the T0.2 comparison. */
+  /** @type {number[]} */
+  const actionMs = []
+  const actionHost = /** @type {{ __roomExplosionActions?: number[] }} */ (/** @type {unknown} */ (window))
+  actionHost.__roomExplosionActions = actionMs
+  /** The explosion call, timed as the `action` label: its own time, `explode` and the labels under it subtracted. @param {() => void} fire */
+  const timedAction = (fire) => {
+    const entry = { child: 0, isPhysicsStage: false }
+    open.push(entry)
+    const started = performance.now()
+    try {
+      fire()
+    } finally {
+      const spent = performance.now() - started
+      open.pop()
+      stageMs.action = (stageMs.action ?? 0) + spent - entry.child
+      actionMs.push(spent)
+    }
+  }
+  // the frame budget's queues: the time each spent in a frame is the change of its running `spentMs`
+  const queueIds = (room.frameStats?.().budget.queues ?? []).map((queue) => queue.id)
+  ;/** @type {{ __roomExplosionQueues?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionQueues = queueIds
+  const queueSpent = () => {
+    const spent = new Map((room.frameStats?.().budget.queues ?? []).map((queue) => [queue.id, queue.spentMs]))
+    return queueIds.map((id) => spent.get(id) ?? 0)
+  }
+  /** @param {(() => void) | undefined} [fire] the explosion call this frame fires, inside the frame clock unless `job.isF0Late` @returns {number[]} */
+  const frame = (fire) => {
     readQueries()
     acc.loop = acc.piece = acc.wake = 0
     for (const label of Object.keys(stageMs)) stageMs[label] = 0
+    if (fire && job.isF0Late) {
+      const lateStart = performance.now()
+      fire()
+      actionMs.push(performance.now() - lateStart)
+    }
+    const queuesBefore = frameLabels.length > 0 ? queueSpent() : []
     const started = performance.now()
+    if (fire && !job.isF0Late) timedAction(fire)
     room.update(job.frameSeconds)
     const whole = performance.now() - started
+    const queuesAfter = frameLabels.length > 0 ? queueSpent() : []
+    const queueMs = queuesAfter.map((spent, column) => Math.max(0, spent - (queuesBefore[column] ?? 0)))
+    const labelled = new Set(job.labelledQueues ?? [])
+    stageMs.queues = queueIds.reduce((total, id, column) => total + (labelled.has(id) ? 0 : (queueMs[column] ?? 0)), 0)
     let render = 0
     let renderCpu = 0
     const query = timer ? context.createQuery() : null
@@ -334,7 +417,7 @@ export async function inPage(job) {
     stageMs.modules = moduleIds.reduce((total, id) => total + (stageMs[`module:${id}`] ?? 0), 0)
     row.push(...frameLabels.map((label) => stageMs[label] ?? 0),
       renderCpu, render - renderCpu, -1, job.isRendered ? drawn?.calls ?? 0 : 0, job.isRendered ? drawn?.triangles ?? 0 : 0, particles, room.renderer.fragments?.count ?? 0, room.renderer.pieceSys.list?.length ?? 0)
-    row.push(...moduleIds.map((id) => stageMs[`module:${id}`] ?? 0))
+    row.push(...moduleIds.map((id) => stageMs[`module:${id}`] ?? 0), ...queueMs)
     if (query && job.isRendered) queries.push({ query, row })
     else if (query) context.deleteQuery(query)
     return row
@@ -343,19 +426,17 @@ export async function inPage(job) {
   const frames = []
   const paceMs = job.paceMs ?? 0
   // one frame, then (paced) the rest of its 1/60 s idle, so the worker's answers reach the page between frames as they would under requestAnimationFrame
-  const step = async () => {
+  const step = async (/** @type {(() => void) | undefined} */ fire = undefined) => {
     const started = performance.now()
-    frames.push(frame())
+    frames.push(frame(fire))
     if (paceMs > 0) await wait(Math.max(0, paceMs - (performance.now() - started)))
   }
   if (kindName !== 'hammer') {
-    room.blastAt('c4', chargeAt)
-    await step()
+    await step(() => room.blastAt('c4', chargeAt))
   } else {
     for (let hit = 0; hit < 12; hit++) {
       const point = [spot[0] ?? 0, 0.5 + 0.5 * (hit % 4), (spot[2] ?? 0) + ((hit % 3) - 1) * 0.6]
-      room.world.hit('house3d:1', { type: 'blunt', point, direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' })
-      await step()
+      await step(() => room.world.hit('house3d:1', { type: 'blunt', point, direction: [1, 0, 0], energy: 8000, radius: 0.5, source: 'player' }))
     }
   }
   while (frames.length < job.frames) await step()
@@ -473,7 +554,7 @@ const numbers = (text, fallback) => (text ? text.split(',').map(Number).filter((
 export async function runRoomExplosion({ playwright, chrome, root }) {
   const throttles = numbers(process.env.ROOM_EXPLOSION_THROTTLES, [1, 2, 4, 6])
   const gated = new Set(numbers(process.env.ROOM_EXPLOSION_GATE_THROTTLES, [1]))
-  const variants = (process.env.ROOM_EXPLOSION_VARIANTS ?? 'jolt-d4').split(',').filter((name) => name in VARIANTS)
+  const variants = (process.env.ROOM_EXPLOSION_VARIANTS ?? DEFAULT_VARIANT).split(',').filter((name) => name in VARIANTS)
   const baseKinds = (process.env.ROOM_EXPLOSION_KINDS ?? 'blast,hammer').split(',').filter((kind) => /** @type {readonly string[]} */ (ROOM_EXPLOSION_KINDS).includes(kind))
   const weathers = (process.env.ROOM_EXPLOSION_WEATHER ?? 'none').split(',').filter((name) => /** @type {readonly string[]} */ (WEATHERS).includes(name))
   // a kind under weather reads `blast+storm`; without weather it keeps its plain name (and its key in an older report)
@@ -511,13 +592,15 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const cdp = await page.context().newCDPSession(page)
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
       const paced = process.env.ROOM_EXPLOSION_PACE === '1' || (process.env.ROOM_EXPLOSION_PACE !== '0' && VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)].includes('groundWorker=1'))
-      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
+      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(isF0Late(process.env.ROOM_EXPLOSION_F0_CLOCK) ? { isF0Late: true } : {}), systemLabels: { ...SYSTEM_LABELS }, labelledQueues: LABELLED_QUEUES, ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
       const groundStats = await page.evaluate(() => /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__groundWorkerStats, undefined)
       if (groundStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: ground tiles ${JSON.stringify(groundStats)}`)
       if (!timings) throw new Error('no timings')
       const moduleIds = await page.evaluate(() => /** @type {{ __roomExplosionModules?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionModules ?? [], undefined)
-      return { timings, load, moduleIds }
+      const actions = await page.evaluate(() => /** @type {{ __roomExplosionActions?: number[] }} */ (/** @type {unknown} */ (window)).__roomExplosionActions ?? [], undefined)
+      const queueIds = await page.evaluate(() => /** @type {{ __roomExplosionQueues?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionQueues ?? [], undefined)
+      return { timings, load, moduleIds, queueIds, actions }
     } finally {
       await page.close()
     }
@@ -542,13 +625,13 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const stageFrames = []
   const stageThrottles = numbers(process.env.ROOM_EXPLOSION_STAGE_THROTTLES, [1, 4])
   const stageRounds = Number(process.env.ROOM_EXPLOSION_STAGE_ROUNDS ?? 3)
-  const stageVariant = process.env.ROOM_EXPLOSION_STAGE_VARIANT ?? (variants.includes('jolt-d4') ? 'jolt-d4' : variants.find((name) => name !== 'own'))
+  const stageVariant = process.env.ROOM_EXPLOSION_STAGE_VARIANT ?? (variants.includes(DEFAULT_VARIANT) ? DEFAULT_VARIANT : variants.find((name) => name !== 'own'))
   if (stageVariant && stageRounds > 0) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
-        const { timings, moduleIds } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
+        const { timings, moduleIds, queueIds, actions } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
         const moduleColumn = 6 + STAGE_LABELS.length + FRAME_LABELS.length + FRAME_EXTRAS.length
-        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, frame: index, updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
+        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, frame: index, ...(actions[index] === undefined ? {} : { actionMs: round2(actions[index] ?? 0) }), ...(hasFrameParts ? { queues: Object.fromEntries(queueIds.map((id, column) => [id, round2(frame[moduleColumn + moduleIds.length + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
         console.log(`room-explosion: stage round ${round} ${stageVariant} ${throttle}x ${kind} done`)
       } catch (error) {
         errors.push(`stages ${throttle}x ${kind}: ${error instanceof Error ? error.message : String(error)}`)
@@ -587,9 +670,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   for (const cell of cells) {
     const fails = cellFails(cell, budget)
     const regressed = cellRegressed(cell, baseCells?.get(key(cell.variant, cell.throttle, cell.kind)))
-    const blocks = regressed && cell.variant === 'jolt-d4' && gated.has(cell.throttle)
+    const blocks = regressed && cell.variant === DEFAULT_VARIANT && gated.has(cell.throttle)
     blocked ||= blocks
-    const verdict = cell.variant !== 'jolt-d4' && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
+    const verdict = cell.variant !== DEFAULT_VARIANT && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(13)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
   if (isRendered) {
@@ -624,7 +707,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     }
   }
   for (const error of errors) console.log(`PAGE ERROR  ${error}`)
-  console.log(`room-explosion: blocking levels: ${[...gated].map((level) => `${level}x`).join(', ')} on jolt-d4 only; ${PROXY_NOTE}`)
+  console.log(`room-explosion: blocking levels: ${[...gated].map((level) => `${level}x`).join(', ')} on ${DEFAULT_VARIANT} only; ${PROXY_NOTE}`)
 
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {

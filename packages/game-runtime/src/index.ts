@@ -23,4 +23,5 @@ export type {
   SchedulerStats,
   SystemFn,
   SystemOptions,
+  SystemProbe,
 } from './types'

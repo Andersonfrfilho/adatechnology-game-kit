@@ -69,7 +69,7 @@ function boxTriangle(geo: BufferGeometry, ti: TriIndex, t: number): void {
     ti.boxes[j + 3 + k] = Math.max(P[a + k], P[b + k], P[c + k])
   }
 }
-function advance(geo: BufferGeometry, ti: TriIndex, deadline: number): boolean {
+function advance(geo: BufferGeometry, ti: TriIndex, deadline: number, clock: () => number): boolean {
   const total = blockCount(ti.triangles)
   while (ti.builtBlocks < total) {
     const block = ti.builtBlocks
@@ -77,7 +77,7 @@ function advance(geo: BufferGeometry, ti: TriIndex, deadline: number): boolean {
     for (let t = block * TRI_BLOCK; t < t1; t++) boxTriangle(geo, ti, t)
     boxBlock(ti, block)
     ti.builtBlocks++
-    if (deadline !== Infinity && performance.now() >= deadline) break
+    if (deadline !== Infinity && clock() >= deadline) break
   }
   return ti.builtBlocks === total
 }
@@ -103,16 +103,16 @@ export function triIndexOf(geo: BufferGeometry): TriIndex | undefined {
   if (!supports(geo)) return undefined
   let ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo)
-  advance(geo, ti, Infinity)
+  advance(geo, ti, Infinity, performance.now.bind(performance))
   return ti
 }
 
 /** Builds the index of a geometry a slice at a time; true once it is complete and current. */
-export function warmTriIndex(geo: BufferGeometry, deadline: number): boolean {
+export function warmTriIndex(geo: BufferGeometry, deadline: number, clock: () => number = performance.now.bind(performance)): boolean {
   if (!supports(geo)) return true
   let ti = cache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo)
-  return advance(geo, ti, deadline)
+  return advance(geo, ti, deadline, clock)
 }
 
 /** Keeps the index of the result of a cut: `boxes` are the boxes of its triangles in order. */
@@ -169,7 +169,7 @@ function rayIndexOf(geo: BufferGeometry): TriIndex | undefined {
   if (shared && isCurrent(geo, shared) && shared.builtBlocks === blockCount(shared.triangles)) return shared
   let ti = rayCache.get(geo)
   if (!ti || !isCurrent(geo, ti)) ti = start(geo, rayCache)
-  advance(geo, ti, Infinity)
+  advance(geo, ti, Infinity, performance.now.bind(performance))
   return ti
 }
 

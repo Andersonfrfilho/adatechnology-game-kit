@@ -8,7 +8,7 @@ import { CABIN_BANK, LIBRARY_BANK, RADIO_BANK } from '@adatechnology/game-audio'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
 import { createSemiSimDriver } from '@adatechnology/game-vehicles-driving'
 import type { SemiDriver, StorageStack } from '@adatechnology/game-vehicles-driving'
-import { certify, createProvingTests, startRun, statusOf, subjectSpec, withResult } from '@adatechnology/game-vehicles-proving'
+import { certify, createProvingTests, startRun, STEPS_PER_TICK, statusOf, subjectSpec, withResult } from '@adatechnology/game-vehicles-proving'
 import type { ProvingCertificate, ProvingResult, ProvingRun, ProvingSubject, ProvingTestRegistry } from '@adatechnology/game-vehicles-proving'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 
@@ -119,6 +119,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
   let misted = false
   let lastGear: number | null = null
   let driveClock = 0
+  let boardHalfSecond = 0
   let queue: string[] = []
   /** True while the room has this area open: nothing is built or simulated otherwise, so loading the module costs nothing elsewhere in the room. */
   let open = false
@@ -408,6 +409,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     if (!car) return
     parking = null
     run = startRun(test, car.subject)
+    boardHalfSecond = 0
     setSurface(run.surface)
     // the turning circle needs room on the left: start it at the right edge
     if (id === 'turn_circle') run.driver.place(0, TRACK.start, 0)
@@ -740,7 +742,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
         adjust[ADJUST_KEYS[change.id]] = Number(change.value)
         break
       case 'time_scale':
-        settings.timeScale = Number(change.value)
+        settings.timeScale = Math.max(1, Math.round(Number(change.value)))
         break
       case 'gearbox':
         gearbox = change.value === 'manual' ? 'manual' : 'automatic'
@@ -764,7 +766,6 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
     let speed = 0
     let steer = 0
     if (run) {
-      run.step(dt * settings.timeScale)
       const s = run.driver.state
       pose(s, s.steerAngle)
       speed = s.u
@@ -824,7 +825,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       lastGear = geared.gear
       drawBoard()
     } else if (!geared) lastGear = null
-    if ((run && Math.floor(run.time * 2) !== Math.floor((run.time - dt * settings.timeScale) * 2)) || (driving && Math.floor(driveClock * 2) !== Math.floor((driveClock - dt) * 2))) drawBoard()
+    if ((run && Math.floor(run.time * 2) !== boardHalfSecond) || (driving && Math.floor(driveClock * 2) !== Math.floor((driveClock - dt) * 2))) drawBoard()
+    if (run) boardHalfSecond = Math.floor(run.time * 2)
     if (driving) driveClock += dt
   }
 
@@ -917,6 +919,8 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       lent.audio?.preload?.(VEHICLE_PRELOAD_SOUNDS)
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
+      // the run owns no clock: the room's tick steps it, `time_scale` is how many ticks' worth of steps each tick runs (a fast-forward of the test, not of the room)
+      const stopRunTick = lent.onFrame(() => run?.stepFixed(STEPS_PER_TICK * settings.timeScale), { phase: 'fixedSimulate' })
       const stopClear = lent.onClear?.(() => {
         // the room cleared its area (another area opens, or this one again): the track and the car go until `area()` is asked again
         open = false
@@ -926,6 +930,7 @@ export function createProvingModule(options: ProvingModuleOptions): TestableModu
       return () => {
         stopChange?.()
         stopFrame()
+        stopRunTick()
         stopClear?.()
         teardown()
         lent.setViewCamera?.(null)

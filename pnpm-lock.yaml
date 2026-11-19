@@ -1368,6 +1368,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-render-three:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -1604,6 +1608,12 @@ importers:
         specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1901,6 +1911,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-runtime':
+        specifier: workspace:^
+        version: link:../game-runtime
       '@adatechnology/game-vehicles-driving':
         specifier: workspace:^
         version: link:../game-vehicles-driving

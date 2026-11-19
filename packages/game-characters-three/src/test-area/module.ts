@@ -1,5 +1,6 @@
 import { createCharacters, createRng } from '@adatechnology/game-characters'
 import type { CharacterKit, DamageCharacter, GaitProfile } from '@adatechnology/game-characters'
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 
 import { createCharacterSound } from '../audio/sound'
@@ -9,7 +10,7 @@ import type { Eyes } from '../eyes'
 import { createRigAnimator } from '../rich/animator'
 import { createBestBuilder } from '../rich/best-builder'
 import type { BestBuilder } from '../rich/best-builder'
-import { createStaticBatcher, isLightBudget } from '@adatechnology/game-render-three'
+import { createStaticBatchQueue, createStaticBatcher, isLightBudget } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import { createPersonBuilder } from '../rich/person-builder'
 import type { PersonBuilder } from '../rich/person-builder'
@@ -56,9 +57,6 @@ type Entry = {
   batcher?: StaticBatcher
 }
 
-/** Milliseconds a frame the batches of a new body may take to be made. */
-const BATCH_BUDGET_MS = 1
-
 const MOMENTS_WITH_LIMP = new Set(['limp', 'crawl'])
 
 /**
@@ -94,6 +92,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
   let lastCrossed = 0
   let lastEnergy = 1
   const entries = new Map<string, Entry>()
+  const batchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.CHARACTERS_STATIC_BATCH })
   const builtOf = new WeakMap<object, { kind: 'zombie' | 'person'; cardId: string; built: unknown }>()
   const overlays = new Map<string, THREE_NS.Object3D>()
   const gaits: Record<string, GaitProfile> = Object.fromEntries(undeadTypes.map((card) => [card.name['pt-BR'] ?? card.id, card.gait as unknown as GaitProfile]))
@@ -196,7 +195,8 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       const age = made.kind === 'zombie' ? undead?.traitsOf(character)?.age : undefined
       const blood = age !== undefined ? options.bloodOf?.(age) : undefined
       if (entry.body && blood) entry.body.blood = blood
-      if (three) entry.batcher = createStaticBatcher(three, object, { followMeshes: true, budgetMs: BATCH_BUDGET_MS })
+      // the milliseconds only apply while no host budget has registered the owner's queue
+      if (three) entry.batcher = createStaticBatcher(three, object, { followMeshes: true, queue: batchQueue, budgetMs: 1 })
       entries.set(id, entry)
       selected ??= entry
       trackEntry(entry)
@@ -484,6 +484,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
           if (knock) entry.knock = entry.knock ? { ...knock, lying: entry.knock.lying } : knock
         }
       })
+      const stopBatches = lent.defer?.(batchQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.CHARACTERS_STATIC_BATCH])
       const stopFrame = lent.onFrame((dt) => {
         time += dt
         for (const [id, entry] of entries) {
@@ -508,6 +509,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
         stopReset?.()
         stopEvents()
         stopFrame()
+        stopBatches?.()
         clearOverlays()
         wounds?.dispose()
         wounds = null

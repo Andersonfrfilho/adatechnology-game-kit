@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, ObjectState, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
-import { DEFERRED_QUEUE_ID, blastShove, warnOnce } from '@adatechnology/game-contracts'
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, blastShove, drainDetached, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
 import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -33,7 +33,7 @@ import { familyPlay, HitPoints } from './debris-events'
 import type { FamilyPlay } from './debris-events'
 import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import { warmUpDestructionJit } from './jit-warmup'
-import type { DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
+import type { DeferredQueueRegistration, DestructionRenderer, BindOptions, MakePieceOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, SolidBox, SoundDetail, ThreeNamespace } from './types'
 import { showCollapsedRanges, Visuals } from './visual'
 import { SettlementView } from './settlement'
 import { SettledBatches } from './settled-batches'
@@ -101,10 +101,11 @@ interface FragmentSlice {
 /** Seconds the boxes of the fixed objects the pieces land on are kept without an event (a host may move a root). */
 const STATIC_REFRESH = 0.5
 /**
- * Milliseconds of the periodic re-measure per call: the refresh walks the objects a slice at a time (the dirty ones are measured at once).
- * Measuring every object in one call cost up to 88 ms in a frame of the horde chain (perf.mjs, software GL, 2026-11-03).
+ * Objects the periodic re-measure takes per call: the refresh walks the objects a slice at a time (the dirty ones are measured at once). A count, not a clock: the boxes feed
+ * the physics (`staticSolids`, `staticTopAt`), so what is measured when cannot depend on the machine. Measuring every object in one call cost up to 88 ms in a frame of the
+ * horde chain (perf.mjs, software GL, 2026-11-03); a round of 8 a call covers 240 objects in the 0.5 s of `STATIC_REFRESH`.
  */
-const STATIC_REFRESH_SLICE_MS = 1
+const STATIC_REFRESH_PER_UPDATE = 8
 /** Widest mesh (m, along x or z) a piece lands on by its box: furniture and things; a wider one (a roof, a merged room) would hold it on air. */
 /** Rays down `surfaceAt` casts at most, the distance under which a hit is the part it starts inside, and how far below such a hit it looks again (m). */
 const SURFACE_RAYS = 4
@@ -127,7 +128,7 @@ const TIP_NARROW = 0.3
 /** What a loose group hangs on (`hingeOf`) stands still when its piece is slower than this (m/s) and turns slower than this (rad/s). */
 const HINGE_STILL_SPEED = 0.2
 const HINGE_STILL_SPIN = 0.5
-/** Most milliseconds of a frame the boxes fitted ahead of the blow take (`fitBoxesAhead`), whatever the budget the host gives the queue: a house is a few hundred parts, fitted over a few seconds. */
+/** Milliseconds the boxes fitted ahead of the blow take per events drain when no budget runs the `destruction.prefit` queue (`fitBoxesAhead`): a house is a few hundred parts, fitted over a few seconds. */
 const PREFIT_SLICE_MS = 1
 
 /** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
@@ -344,7 +345,7 @@ function isMeshRange(v: Object3D | MeshRange): v is MeshRange {
 const RNG_SEED = 0xc0ffee
 
 /** The renderer this package makes always has its `deferredQueue`; a third-party `DestructionRenderer` may leave it out. */
-export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer & { deferredQueue(): DeferredQueue } {
+export function createDestructionRenderer(THREE: ThreeNamespace, options: RendererOptions): DestructionRenderer & { deferredQueue(): DeferredQueue; deferredQueues(): readonly DeferredQueueRegistration[] } {
   if (options.jitWarmUp !== false) {
     // the throwaway renderer takes no number of the game's: the first real one is still `destruction-1`
     const before = rendererCount
@@ -448,16 +449,33 @@ class Renderer implements DestructionRenderer {
   private attached = false
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() + this.prefitLeft(),
+    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
-      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() + this.prefitLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
+      for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
+      if (!this.prefitAttached) this.prefitQueue.flush()
     },
     attach: () => {
       this.attached = true
     },
     detach: () => {
       this.attached = false
+    },
+  }
+  /** true once a frame budget owns the fitting ahead: the events drain no longer does it. */
+  private prefitAttached = false
+  private readonly prefitQueue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.DESTRUCTION_PREFIT,
+    pending: () => this.prefitLeft(),
+    run: (deadline, clock) => this.runPrefit(deadline, clock),
+    flush: () => {
+      this.runPrefit(Infinity, () => 0)
+    },
+    attach: () => {
+      this.prefitAttached = true
+    },
+    detach: () => {
+      this.prefitAttached = false
     },
   }
   private readonly unsubscribe: () => void
@@ -548,11 +566,13 @@ class Renderer implements DestructionRenderer {
       // and it meets the walls, ceilings and furniture on its way: it stops on their face instead of flying into them
       sweep: (from, direction, distance) => (typeof this.world.raycast === 'function' ? this.world.raycast([from[0], from[1], from[2]], [direction[0], direction[1], direction[2]], distance) : null),
       maxAwake: o.maxAwakeFragments ?? Infinity,
+      ...(o.interpolate ? { interpolate: true } : {}),
     })
     this.cages = new RebarCages(THREE, o.scene)
     this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
       physics: o.physics,
+      ...(o.interpolate ? { interpolate: true } : {}),
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       ...(o.terrainRollingAt ? { terrainRollingAt: o.terrainRollingAt } : {}),
@@ -726,7 +746,10 @@ class Renderer implements DestructionRenderer {
   /** Drop an object from the bound ones, with the boxes fitted for its parts. */
   private forgetBound(objectId: string): void {
     const b = this.bounds.get(objectId)
-    if (b) for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+    if (b) {
+      for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+      if (b.frozen) this.thawRoot(b)
+    }
     this.bounds.delete(objectId)
   }
 
@@ -1081,8 +1104,20 @@ class Renderer implements DestructionRenderer {
   // Update
   // ----------------------------------------------------------------------------------------------------------------------------------
 
+  restoreStepPose(): void {
+    this.pieceSys.restoreStepPose()
+    this.fragments.restoreStepPose()
+  }
+
+  present(alpha: number): void {
+    if (this.disposed) return
+    this.pieceSys.presentPose(alpha)
+    this.fragments.presentPose(alpha)
+  }
+
   update(dt: number): void {
     if (this.disposed) return
+    this.restoreStepPose()
     dt = clamp(dt, 0, 0.1)
     this.time += dt
     this.work?.beginFrame()
@@ -1094,6 +1129,7 @@ class Renderer implements DestructionRenderer {
     this.settlement.update(dt)
     this.cost = this.sampleCost()
     this.advanceWakes(dt)
+    this.thawWoken()
     this.pieceSys.update(dt)
     this.measureCost()
     this.updateFading(dt)
@@ -1139,8 +1175,17 @@ class Renderer implements DestructionRenderer {
     return this.eventQueue
   }
 
+  /** Every queue of the renderer with the options a frame budget registers it with: the blow's own effect drains whole (`mustDrain`), the rest obeys the deadline. */
+  deferredQueues(): readonly DeferredQueueRegistration[] {
+    return [
+      { queue: this.eventQueue, options: { ...DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS], mustDrain: true } },
+      { queue: this.prefitQueue, options: DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_PREFIT] },
+      { queue: this.settledBatches.queue, options: DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.SETTLED_BATCH] },
+    ]
+  }
+
   private drainQueue(): void {
-    this.runBudgeted(performance.now() + this.eventBudgetMs, () => performance.now())
+    drainDetached(this.eventQueue, this.eventBudgetMs)
   }
 
   /** Applies the waiting events in order until the deadline, after the slices earlier events left; always at least one unit when something waits. Returns the units run. */
@@ -1168,7 +1213,7 @@ class Renderer implements DestructionRenderer {
       }
       // after the events, as under the budget: a group a blow of this frame looses keeps the split it gets in the event
       ran += this.splitChecked(deadline, ran)
-      if (this.queue.length === 0 && this.slices.length === 0 && this.looseToCheck.size === 0) ran += this.runPrefit(deadline, clock, ran === 0)
+      if (this.queue.length === 0 && this.slices.length === 0 && this.looseToCheck.size === 0) ran += this.runPrefitDetached(deadline, clock, ran === 0)
     } finally {
       this.sliceDeadline = Infinity
       this.drainClock = outerClock
@@ -1261,8 +1306,47 @@ class Renderer implements DestructionRenderer {
     this.settlement.follow(b.soilNode ?? b.root, parts)
   }
 
+  /**
+   * The roots the world is told about: a piece asleep is not read (its root stops recomputing its matrix) until it wakes or a host calls
+   * `markMoved`; every other root is read, and only decomposed when its world matrix changed.
+   */
   private syncTransforms(): void {
-    for (const b of this.bounds.values()) this.syncOne(b)
+    for (const b of this.bounds.values()) {
+      // a held piece is moved by its host (push, carry) even while the engine still has it asleep
+      if (b.piece?.sleeping && !b.piece.held && !b.moved) {
+        if (!b.frozen) this.freezeRoot(b)
+        continue
+      }
+      if (b.frozen) this.thawRoot(b)
+      b.moved = false
+      this.syncOne(b)
+    }
+  }
+
+  private freezeRoot(b: Bound): void {
+    this.syncOne(b)
+    b.root.updateMatrix()
+    b.root.matrixAutoUpdate = false
+    b.frozen = true
+  }
+
+  private thawRoot(b: Bound): void {
+    b.root.matrixAutoUpdate = true
+    b.frozen = false
+    b.root.updateMatrixWorld(true)
+  }
+
+  /** A piece woken before the step (a blow, the host) has its matrix back before the engine writes its pose to the root. */
+  private thawWoken(): void {
+    for (const b of this.bounds.values()) if (b.frozen && !b.piece?.sleeping) this.thawRoot(b)
+  }
+
+  /** The host moved the root of an object by hand (a teleport): its transform goes to the world on the next `update`, even if it is a piece asleep. */
+  markMoved(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (!b) return
+    b.moved = true
+    if (b.frozen) this.thawRoot(b)
   }
 
   /** Push the current transform of one bound object to the world right now (used before a landing hit). */
@@ -1276,6 +1360,19 @@ class Renderer implements DestructionRenderer {
     const p = this.v1
     const q = this.tmpQ
     b.root.updateWorldMatrix(true, false)
+    const elements = b.root.matrixWorld.elements
+    const world = b.lastWorld
+    if (world) {
+      let same = true
+      for (let i = 0; i < 16; i++) {
+        if (world[i] === elements[i]) continue
+        same = false
+        world[i] = elements[i] as number
+      }
+      if (same && b.lastPos) return
+    } else {
+      b.lastWorld = Float64Array.from(elements)
+    }
     b.root.matrixWorld.decompose(p, q, this.v2)
     const last = b.lastPos
     const lq = b.lastQuat
@@ -1453,11 +1550,7 @@ class Renderer implements DestructionRenderer {
       this.staticRound = []
     } else {
       for (const id of this.staticDirty) measureId(id, true)
-      const until = performance.now() + STATIC_REFRESH_SLICE_MS
-      while (this.staticRound.length > 0) {
-        measureId(this.staticRound.pop() as string, false)
-        if (performance.now() >= until) break
-      }
+      for (let taken = 0; taken < STATIC_REFRESH_PER_UPDATE && this.staticRound.length > 0; taken++) measureId(this.staticRound.pop() as string, false)
     }
     this.staticAll = false
     this.staticDirty.clear()
@@ -2064,6 +2157,9 @@ class Renderer implements DestructionRenderer {
       this.visuals.hide(pv, 'broken')
     }
     this.spawnFragments(ev, 0, { def, color, opacity, transparent })
+    // the groups the operation left loose come off first (the world's state is that of the end of the operation, whatever order its events arrive in): only
+    // what is left of the object can have lost its footing
+    this.splitLoose(ev.object)
     this.loosenIfFootless(ev.object)
     const up: Vec3 = [0, 1, 0]
     const sizeK = clamp(ev.fragments.length / 10, 0.5, 2)
@@ -2771,13 +2867,23 @@ class Renderer implements DestructionRenderer {
     return left
   }
 
-  /** Fit queued parts one at a time until the deadline (one at least when `force`: nothing else ran). Returns the parts fitted. */
-  private runPrefit(deadline: number, clock: () => number, force: boolean): number {
+  /** Fit queued parts one at a time until the deadline, one at least. Returns the parts taken off the queue. */
+  private runPrefit(deadline: number, clock: () => number): number {
     let ran = 0
     const frames = new Map<Bound, THREE_NS.Matrix4>()
-    const until = Math.min(deadline, clock() + PREFIT_SLICE_MS)
-    while (this.prefitting.length > 0 && ((force && ran === 0) || clock() < until)) if (this.prefitOne(frames)) ran++
+    while (this.prefitting.length > 0 && (ran === 0 || clock() < deadline)) {
+      this.prefitOne(frames)
+      ran++
+    }
     return ran
+  }
+
+  /** With no budget running the fitting ahead (`prefitQueue`): inside the events drain, for `PREFIT_SLICE_MS` or what is left of `deadline` (one part at least when `force`: nothing else ran). */
+  private runPrefitDetached(deadline: number, clock: () => number, force: boolean): number {
+    if (this.prefitAttached) return 0
+    const left = deadline - clock()
+    if (left <= 0 && !force) return 0
+    return drainDetached(this.prefitQueue, Math.min(left, PREFIT_SLICE_MS), clock)
   }
 
   /** Under `workBudget`: the queued parts fitted ahead while their units fit in what the frame left (`perVertex` of the part's range), never by the clock. */
@@ -2798,8 +2904,9 @@ class Renderer implements DestructionRenderer {
   private prefitOne(frames: Map<Bound, THREE_NS.Matrix4>): boolean {
     const job = this.prefitting[0]!
     const mv = job.parts[job.next++]
+    if (job.next >= job.parts.length) this.prefitting.shift()
     if (!mv || this.bounds.get(job.b.id) !== job.b) {
-      this.prefitting.shift()
+      if (this.prefitting[0] === job) this.prefitting.shift()
       return false
     }
     if (!mv.range || !mv.host || mv.loose) return false

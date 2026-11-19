@@ -1,3 +1,5 @@
+import { DEFERRED_QUEUE_ID, drainDetached } from '@adatechnology/game-contracts'
+import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { Bone, BufferAttribute, BufferGeometry, Material, Matrix3, Matrix4, Mesh, Object3D, SkinnedMesh } from 'three'
 
 import type { ThreeLib } from './three-lib'
@@ -7,11 +9,93 @@ export const BATCHED_LAYER = 30
 
 const MATRIX_EPSILON = 1e-6
 
+/** What a batcher gives its queue: the chunks still to merge. One unit is one chunk (at most `maxVertices` vertices). */
+export type StaticBatchWork = {
+  pendingUnits(): number
+  /** Merges the next chunk. */
+  runUnit(): void
+  /** Merges every chunk left. */
+  finishAll(): void
+}
+
+export type StaticBatchQueue = {
+  /** The queue for a frame budget (`budget.register`); asking for it changes nothing. Its `id` is the one given to `createStaticBatchQueue`. */
+  deferredQueue(): DeferredQueue
+  /** A batcher joins (`createStaticBatcher` does it for the `queue` option); returns the function that takes it out. */
+  join(work: StaticBatchWork): () => void
+  /** Whether a budget registered the queue: from then on the batchers leave their chunks to it instead of merging in `update`. */
+  isAttached(): boolean
+}
+
+export type StaticBatchQueueOptions = {
+  /** Default `DEFERRED_QUEUE_ID.STATIC_BATCH`; an owner passes its own id from `DEFERRED_QUEUE_ID`. */
+  readonly id?: string
+}
+
+/**
+ * One queue for every batcher of an owner (the room, the animals area, one house), run round robin over the batchers with chunks waiting so the
+ * first one does not take the whole budget. Until a budget attaches it, each batcher keeps merging in its own `update`, as before.
+ */
+export function createStaticBatchQueue({ id = DEFERRED_QUEUE_ID.STATIC_BATCH }: StaticBatchQueueOptions = {}): StaticBatchQueue {
+  const members: StaticBatchWork[] = []
+  let cursor = 0
+  let attached = false
+  const deferred: DeferredQueue = {
+    id,
+    pending() {
+      let units = 0
+      for (const work of members) units += work.pendingUnits()
+      return units
+    },
+    run(deadline, clock) {
+      let ran = 0
+      let skipped = 0
+      while (members.length > 0 && skipped < members.length) {
+        if (ran > 0 && clock() >= deadline) break
+        const work = members[cursor % members.length] as StaticBatchWork
+        cursor = (cursor + 1) % members.length
+        if (work.pendingUnits() > 0) {
+          work.runUnit()
+          ran++
+          skipped = 0
+        } else skipped++
+      }
+      return ran
+    },
+    flush() {
+      for (const work of [...members]) work.finishAll()
+    },
+    attach() {
+      attached = true
+    },
+    detach() {
+      attached = false
+    },
+  }
+  return {
+    deferredQueue: () => deferred,
+    isAttached: () => attached,
+    join(work) {
+      members.push(work)
+      return () => {
+        const at = members.indexOf(work)
+        if (at >= 0) members.splice(at, 1)
+      }
+    },
+  }
+}
+
 export type StaticBatcherOptions = {
   /** Which meshes may be batched (default every shown mesh with one material and no instancing, skinning or morphing). */
   readonly include?: (mesh: Mesh) => boolean
-  /** Milliseconds of merging per `update` (default all at once, in the call): batches are made a material at a time over the next frames. */
+  /** Milliseconds of merging per `update` (default all at once, in the call): batches are made a chunk at a time over the next frames. Used only while no budget has registered `queue`. */
   readonly budgetMs?: number
+  /**
+   * The owner's queue: the chunks are merged by it, within the frame budget it is registered with, instead of in `update` (see `createStaticBatchQueue`).
+   * Not registered with any budget, the batcher drains it in `update` with `budgetMs` (default all at once), so nothing becomes asynchronous by a host's absence;
+   * the first merge is then in the first `update`, not in the call.
+   */
+  readonly queue?: StaticBatchQueue
   /**
    * The meshes move on their own (a body posed bone by bone): each batch is skinned to its meshes, so a mesh carries its part of the batch
    * wherever it goes, and only a new geometry, material, dent or hiding gives it its own draw back.
@@ -114,7 +198,12 @@ const castsPlainShadow = (mesh: Mesh): boolean => {
 /** The sides the depth pass draws a material with: batches of the shadow are made one per pair. */
 const shadowSideKey = (material: Material): string => `${material.side}|${material.shadowSide ?? ''}`
 
-const sameMatrix = (a: Matrix4, b: Matrix4): boolean => a.elements.every((value, index) => Math.abs(value - (b.elements[index] as number)) < MATRIX_EPSILON)
+const sameMatrix = (a: Matrix4, b: Matrix4): boolean => {
+  const left = a.elements
+  const right = b.elements
+  for (let at = 0; at < 16; at++) if (Math.abs((left[at] as number) - (right[at] as number)) >= MATRIX_EPSILON) return false
+  return true
+}
 
 /**
  * Draws the still, undamaged meshes of an object (a vehicle, a piece of furniture) as one batch per material, and gives each mesh its own draw
@@ -133,7 +222,9 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
     const mesh = object as Mesh
     if (!mesh.isMesh || !isShown(mesh, root) || !isBatchable(mesh) || (shadowOnly && !castsPlainShadow(mesh)) || !include(mesh)) return
     const key = signatureOf(mesh, materialKey, shadowOnly)
-    groups.set(key, [...(groups.get(key) ?? []), mesh])
+    const waiting = groups.get(key)
+    if (waiting) waiting.push(mesh)
+    else groups.set(key, [mesh])
   })
   const group = new THREE.Group()
   group.name = 'static-batches'
@@ -163,17 +254,25 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
    */
   const isUnchanged = (mesh: Mesh, key: string): boolean =>
     isShown(mesh, root) && include(mesh) && isBatchable(mesh) && (!shadowOnly || castsPlainShadow(mesh)) && mesh.layers.mask === groupedMasks.get(mesh) && signatureOf(mesh, materialKey, shadowOnly) === key
-  const mergeSome = (deadline: number): void => {
-    while (pending.length > 0) {
-      const [key, meshes] = pending.shift() as [string, Mesh[]]
-      // a mesh that changed while it waited is left as it is; the rest of its group is merged
-      const still = meshes.filter((mesh) => isUnchanged(mesh, key))
-      for (const mesh of meshes) groupedMasks.delete(mesh)
-      if (still.length >= 2) sources.push(...mergeGroup(THREE, { meshes: still, inverse: new THREE.Matrix4().copy(root.matrixWorld).invert(), group, follow, shadowOnly, onBatch: options.onBatch }))
-      if (performance.now() >= deadline) return
-    }
+  const mergeNext = (): void => {
+    const [key, meshes] = pending.shift() as [string, Mesh[]]
+    // a mesh that changed while it waited is left as it is; the rest of its group is merged
+    const still = meshes.filter((mesh) => isUnchanged(mesh, key))
+    for (const mesh of meshes) groupedMasks.delete(mesh)
+    if (still.length < 2) return
+    inverse.copy(root.matrixWorld).invert()
+    for (const source of mergeGroup(THREE, { meshes: still, inverse, group, follow, shadowOnly, onBatch: options.onBatch })) sources.push(source)
   }
-  if (options.budgetMs === undefined) mergeSome(Number.POSITIVE_INFINITY)
+  const queue = options.queue ?? createStaticBatchQueue()
+  const leaveQueue = queue.join({
+    pendingUnits: () => pending.length,
+    runUnit: mergeNext,
+    finishAll() {
+      while (pending.length > 0) mergeNext()
+    },
+  })
+  // nobody asked for the merge to wait: made in the call, as ever
+  if (options.budgetMs === undefined && options.queue === undefined) while (pending.length > 0) mergeNext()
   root.add(group)
   const scratch = new THREE.Matrix4()
   let released = 0
@@ -204,7 +303,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   return {
     group,
     update() {
-      if (pending.length > 0) mergeSome(performance.now() + (options.budgetMs ?? Number.POSITIVE_INFINITY))
+      if (pending.length > 0 && !queue.isAttached()) drainDetached(queue.deferredQueue(), options.budgetMs ?? Number.POSITIVE_INFINITY)
       const before = released
       inverse.copy(root.matrixWorld).invert()
       for (const source of sources) if (!source.released && hasChanged(source)) release(source)
@@ -217,6 +316,7 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
         if (shadowOnly) source.mesh.castShadow = source.castShadow
         else source.mesh.layers.mask = source.mask
       }
+      leaveQueue()
       pending.length = 0
       groupedMasks.clear()
       group.removeFromParent()
@@ -229,22 +329,26 @@ export function createStaticBatcher(THREE: ThreeLib, root: Object3D, options: St
   }
 }
 
+/** Whether the attribute's array is read as it is stored: no interleaving, no normalization (`getX` would then return the same numbers as the array). */
+const isPlain = (attribute: BufferAttribute): boolean => !(attribute as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute && !attribute.normalized
+
 /** Copies `attribute` into `target` at `offset` vertices: positions through `matrix`, normals through its normal matrix, the rest as they are. */
-function copyAttribute(name: string, attribute: BufferAttribute, target: Float32Array, offset: number, matrix: Matrix4, normalMatrix: Matrix3): void {
+function copyAttribute(name: string, attribute: BufferAttribute, target: Float32Array, offset: number, matrix: Matrix4 | Matrix3): void {
   const size = attribute.itemSize
+  const count = attribute.count
   const source = attribute.array as ArrayLike<number>
-  const flat = !(attribute as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute && source.length === attribute.count * size
+  const plain = isPlain(attribute)
   if (name !== 'position' && name !== 'normal') {
-    if (flat) target.set(source as Float32Array, offset * size)
-    else for (let at = 0; at < attribute.count; at++) for (let k = 0; k < size; k++) target[(offset + at) * size + k] = attribute.getComponent(at, k)
+    if (!(attribute as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute && source.length === count * size) target.set(source as Float32Array, offset * size)
+    else for (let at = 0; at < count; at++) for (let k = 0; k < size; k++) target[(offset + at) * size + k] = attribute.getComponent(at, k)
     return
   }
-  const e = (name === 'position' ? matrix : normalMatrix).elements
+  const e = matrix.elements
   const isNormal = name === 'normal'
-  for (let at = 0; at < attribute.count; at++) {
-    const x = attribute.getX(at)
-    const y = attribute.getY(at)
-    const z = attribute.getZ(at)
+  for (let at = 0; at < count; at++) {
+    const x = plain ? (source[at * size] as number) : attribute.getX(at)
+    const y = plain ? (source[at * size + 1] as number) : attribute.getY(at)
+    const z = plain ? (source[at * size + 2] as number) : attribute.getZ(at)
     const out = (offset + at) * 3
     if (isNormal) {
       const nx = e[0]! * x + e[3]! * y + e[6]! * z
@@ -326,14 +430,14 @@ function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, foll
   const totalVertices = pieces.reduce((sum, piece) => sum + piece.vertices, 0)
   const totalIndices = pieces.reduce((sum, piece) => sum + piece.indexCount, 0)
   const merged = new THREE.BufferGeometry()
-  const normalMatrix = new THREE.Matrix3()
+  const normalMatrices = (names as readonly string[]).includes('normal') ? pieces.map((piece) => new THREE.Matrix3().getNormalMatrix(follow ? identity : piece.local)) : []
   for (const name of names) {
     const size = first.geometry.attributes[name]!.itemSize
     const array = new Float32Array(totalVertices * size)
     let offset = 0
-    for (const piece of pieces) {
-      const matrix = follow ? identity : piece.local
-      copyAttribute(name, piece.mesh.geometry.attributes[name] as BufferAttribute, array, offset, matrix, normalMatrix.getNormalMatrix(matrix))
+    for (const [at, piece] of pieces.entries()) {
+      const matrix = name === 'normal' ? (normalMatrices[at] as Matrix3) : follow ? identity : piece.local
+      copyAttribute(name, piece.mesh.geometry.attributes[name] as BufferAttribute, array, offset, matrix)
       offset += piece.vertices
     }
     merged.setAttribute(name, new THREE.BufferAttribute(array, size))
@@ -358,7 +462,10 @@ function mergeGroup(THREE: ThreeLib, { meshes, inverse: rootInverse, group, foll
   let indexOffset = 0
   for (const piece of pieces) {
     const index = piece.mesh.geometry.index
-    if (index) for (let at = 0; at < piece.indexCount; at++) indexArray[indexOffset + at] = index.getX(at) + vertexOffset
+    if (index) {
+      const indices = index.array as ArrayLike<number>
+      for (let at = 0; at < piece.indexCount; at++) indexArray[indexOffset + at] = (indices[at] as number) + vertexOffset
+    }
     else for (let at = 0; at < piece.indexCount; at++) indexArray[indexOffset + at] = at + vertexOffset
     sources.push({
       mesh: piece.mesh,

@@ -8,7 +8,7 @@
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import type * as THREE_NS from 'three'
-import type { DeferredQueue, WorkerCoordinator } from '@adatechnology/game-contracts'
+import type { DeferredQueue, DeferredQueueOptions, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { BlastDebrisOptions, DebrisCostOptions, ExplosionWorkOptions } from './blast-debris'
@@ -62,6 +62,11 @@ export interface RendererOptions {
   maxAwakePieces?: number
   /** Most fragments moving at once (default no limit; `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64): over it the oldest at rest on what is under them sleep where they lie. */
   maxAwakeFragments?: number
+  /**
+   * Keep the pose of the step before the last for the pieces and fragments that are awake, to draw them between it and the step's (`present`). Default off: they are drawn at
+   * the step's pose, as always. The simulation never reads a drawn pose: `update` (and `restoreStepPose`) give the step pose back first.
+   */
+  interpolate?: boolean
   /**
    * Draw the debris at rest in batches, a draw per material (`SettledBatchOptions`; `{}` for the defaults). Omitted, every debris mesh draws on its own, as before. Only the
    * drawing changes: the collision is each piece's own.
@@ -326,6 +331,12 @@ export interface MakePieceOptions {
   inertia?: number
 }
 
+/** A queue and the options a frame budget registers it with (`DestructionRenderer.deferredQueues`). */
+export interface DeferredQueueRegistration {
+  readonly queue: DeferredQueue
+  readonly options: DeferredQueueOptions
+}
+
 export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
@@ -340,6 +351,8 @@ export interface DestructionRenderer {
   releasePieces(objectId: string): string[]
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: MakePieceOptions): Piece
+  /** The host moved the root of a bound object by hand (a teleport): its transform goes to the world on the next `update`, even for a piece asleep. */
+  markMoved(objectId: string): void
   /** The mass of a piece changed (a liquid drunk or leaked out): the physics body follows, and a round one turns by the moment of what is left in it. */
   setPieceMass(objectId: string, mass: number): void
   pieces(): Piece[]
@@ -362,11 +375,20 @@ export interface DestructionRenderer {
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */
   update(dt: number): void
+  /** With `interpolate`: the awake pieces and fragments drawn `alpha` (0 to 1) of the way from the pose before the last step to the step's. Call in the present phase; 1 draws the step's pose. */
+  present(alpha: number): void
+  /** With `interpolate`: gives the step pose back to what `present` drew between. `update` does it first; call it before reading a piece's root between `present` and `update`. */
+  restoreStepPose(): void
   /**
    * The waiting events and the presentation slices they left, as a `DeferredQueue` for a shared frame budget (id `destruction.events`). `budget.register`
    * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.
    */
   deferredQueue?(): DeferredQueue
+  /**
+   * Every queue of the renderer with the options to register it with, for a shared frame budget: `destruction.events` (`mustDrain`: a hit shows in its own frame),
+   * `destruction.prefit` and `destruction.settled-batch`. Registering one attaches it: its work leaves `update`; unregistering gives it back. Asking changes nothing.
+   */
+  deferredQueues?(): readonly DeferredQueueRegistration[]
   /** Emit particles directly (muzzle flashes, extinguisher foam, tool sparks). */
   emit(kind: DebrisKind | 'fire' | 'flash' | 'foam', point: Vec3, normal: Vec3, count: number, speed?: number): void
   /**

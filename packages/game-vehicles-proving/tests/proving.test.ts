@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { certify, createProvingTests, gateVehicles, runTest, startRun, subjectFromCard, withResult } from '../src'
+import { certify, createProvingTests, gateVehicles, runTest, startRun, STEPS_PER_TICK, subjectFromCard, withResult } from '../src'
 import type { ProvingCertificate } from '../src'
 
 // cards of the kit's fleet (game-vehicles-fleet data), written out so the core is tested without its content pack
@@ -53,13 +53,47 @@ describe('measured tests', () => {
     expect(runTest(tests.get('mud_traction')!, hatch).value).toBeLessThan(5)
   })
 
+  it('the scheduler tick and the old private accumulator give the same trajectory over 20 s at 60 Hz', () => {
+    for (const id of ['accel_0_100', 'brake_100_0', 'turn_circle']) {
+      const test = tests.get(id)!
+      const reference = startRun(test, hatch)
+      let carry = 0
+      const live = startRun(test, hatch)
+      for (let frame = 0; frame < 1200; frame++) {
+        // the removed accumulator of run.ts, kept here as the reference
+        carry += 1 / 60
+        while (!reference.done && carry >= reference.fixedStep) {
+          carry -= reference.fixedStep
+          reference.stepFixed(1)
+        }
+        live.advance(1 / 60)
+      }
+      expect(live.time).toBe(reference.time)
+      expect(live.done).toBe(reference.done)
+      expect(JSON.stringify(live.driver.state)).toBe(JSON.stringify(reference.driver.state))
+      expect(JSON.stringify(live.trace)).toBe(JSON.stringify(reference.trace))
+      expect(JSON.stringify(live.result())).toBe(JSON.stringify(reference.result()))
+    }
+  })
+
+  it('stepFixed runs whole steps with no clock of its own and stops at the end of the run', () => {
+    const run = startRun(tests.get('accel_0_100')!, hatch)
+    run.stepFixed(STEPS_PER_TICK * 30)
+    expect(run.time).toBeCloseTo(60 * run.fixedStep, 9)
+    run.stepFixed(1_000_000)
+    expect(run.done).toBe(true)
+    const end = run.time
+    run.stepFixed(5)
+    expect(run.time).toBe(end)
+  })
+
   it('steps live with the frame and keeps a trace for the chart', () => {
     const run = startRun(tests.get('accel_0_100')!, hatch)
-    run.step(1)
+    run.advance(1)
     expect(run.done).toBe(false)
     expect(run.result().verdict).toBe('pending')
     expect(run.driver.state.u).toBeGreaterThan(1)
-    for (let i = 0; i < 40 && !run.done; i++) run.step(0.5)
+    for (let i = 0; i < 40 && !run.done; i++) run.advance(0.5)
     expect(run.done).toBe(true)
     expect(run.trace.length).toBeGreaterThan(20)
   })
@@ -67,10 +101,10 @@ describe('measured tests', () => {
   it('tells what the procedure asks of the controls, so the host plays a brake test on the brakes', () => {
     const run = startRun(tests.get('brake_100_0')!, hatch)
     expect(run.input).toEqual({ throttle: 0, brake: 0, steer: 0, handbrake: false })
-    run.step(1)
+    run.advance(1)
     expect(run.input.throttle).toBe(1)
     expect(run.input.brake).toBe(0)
-    for (let i = 0; i < 80 && run.input.brake === 0 && !run.done; i++) run.step(0.25)
+    for (let i = 0; i < 80 && run.input.brake === 0 && !run.done; i++) run.advance(0.25)
     expect(run.input.brake).toBe(1)
     expect(run.input.throttle).toBe(0)
   })

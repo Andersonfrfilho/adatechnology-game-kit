@@ -19,6 +19,14 @@ numbers fixed after boot.
 - `createFog(THREE, scene, { stable: true })`: `clear()` leaves a neutral linear fog (near 6.0e4, far 6.4e4) instead of `null`.
 - `createGeometryPool()` / `createMaterialPool()`: keys, use counts, `retain`/`register`, `own` for per-frame materials, `trim` at load
   points, and a development warning when a pooled resource is disposed directly.
+- `createStaticBatcher(THREE, root, options)`: draws the still meshes of an object as one batch per material. The merge copies typed arrays
+  (positions and normals through the mesh matrix, the rest as stored) and allocates nothing per mesh frame.
+- `createStaticBatchQueue({ id })` (spec 010): one `DeferredQueue` per **owner**, not per batcher, rotating between the batchers that join it with
+  `createStaticBatcher(THREE, root, { queue })`. One unit is one chunk (`maxVertices`); no chunk is cut by vertex. The owner registers
+  `queue.deferredQueue()` with the frame budget using its id from `DEFERRED_QUEUE_ID` and the options from `DEFERRED_PRIORITY`
+  (`budget.register(queue.deferredQueue(), DEFERRED_PRIORITY[id])`). Not registered, each batcher drains the queue in its own `update` with
+  `budgetMs` (default all at once, through `drainDetached`). Only the merge waits: `update()` still releases a changed mesh every frame. A batcher
+  leaves the queue in `dispose()`. A batcher given `queue` merges its first chunks in `update()`, not in the call.
 
 ```ts
 import * as THREE from 'three'

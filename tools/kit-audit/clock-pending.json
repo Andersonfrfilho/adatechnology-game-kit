@@ -1,0 +1,1 @@
+{"$comment":"Hits of the own-frame-clock rule (clock.mjs) that a later task of spec 010 removes: match is a piece of the line, task the one that removes it. Empty since C3 (end of phase 1); a new entry needs the task that removes it.","pending":[]}

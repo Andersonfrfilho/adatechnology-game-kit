@@ -7,6 +7,7 @@ import { FragmentInstances } from './fragment-instances'
 import type { FragmentInstanceStats } from './fragment-instances'
 import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildRubbleGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
 import { clamp, createRng, hashString } from './math'
+import { PoseTrail } from './pose-trail'
 import type { LooseBody } from './types'
 
 /** @internal */
@@ -38,6 +39,14 @@ export interface Live {
   life: number
   /** Its box in the world while it rests, for what lands on it (`pileUnder`); dropped when it wakes. */
   box?: RestingBox | undefined
+  /** Creation order: the order the fragments are stepped in, kept by the awake list. */
+  seq: number
+  /** The `clock` after which a fragment asleep fades away (Infinity: not asleep, or it never fades). */
+  deadline: number
+  /** In the awake list (`FragmentSystem.active`). */
+  isActive: boolean
+  /** In the list of the mortal sleepers (`FragmentSystem.mortal`; entries that woke are dropped at the next scan). */
+  isMortal: boolean
 }
 
 /** The floor area a box covers, seen from above: a shape built from the floor images of its three half edges (x, z of each, in turn), centred on the box. */
@@ -104,6 +113,8 @@ export function restingBox(f: Live): RestingBox {
 export type FragmentLifeRule = (fragment: Fragment, objectId: string) => number
 
 export interface FragmentSystemOptions {
+  /** Keep the pose of the step before the last, to draw between it and the step's (`presentPose`). Default off: the meshes are always the step's. */
+  interpolate?: boolean
   scene: THREE_NS.Scene
   groundAt: (x: number, z: number) => number
   gravity: number
@@ -196,6 +207,13 @@ const isBig = (size: readonly number[]): boolean => {
 /** Light physics for fracture debris: gravity, ground bounce and friction, spin damping, settling flat, sleep, shrink-away and removal. */
 export class FragmentSystem {
   private readonly list: Live[] = []
+  /** What `update` steps, in creation order: the fragments awake or fading. A fragment asleep costs nothing per frame. */
+  private readonly active: Live[] = []
+  /** The fragments asleep that fade away after their `life`; looked at only once the clock passes `nextDeadline`. */
+  private mortal: Live[] = []
+  private clock = 0
+  private nextDeadline = Infinity
+  private nextSeq = 0
   private readonly box: THREE_NS.BoxGeometry
   /** The mesh box of a fragment before its scale. */
   private readonly unitBox = { min: { x: -0.5, y: -0.5, z: -0.5 }, max: { x: 0.5, y: 0.5, z: 0.5 } }
@@ -217,6 +235,8 @@ export class FragmentSystem {
   /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
   private tick = 0
   private supportTurn = 0
+  /** The pose before the last update and after it, of the fragments that were awake (`interpolate`); null when the option is off. */
+  private readonly trail: PoseTrail | null
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -229,6 +249,7 @@ export class FragmentSystem {
     this.v = new THREE.Vector3()
     this.w = new THREE.Vector3()
     this.instances = new FragmentInstances(THREE, o.scene)
+    this.trail = o.interpolate ? new PoseTrail() : null
   }
 
   /** What the instances draw now: their draws and the fragments in them. */
@@ -398,6 +419,7 @@ export class FragmentSystem {
       if (alive >= maxAllowed) {
         if (!oldest || oldest.born === this.tick) return null
         oldest.dying = true
+        this.activate(oldest)
       }
     }
     const geo = this.geometryOf(f)
@@ -432,6 +454,10 @@ export class FragmentSystem {
       body: null,
       born: this.tick,
       life: lasting ? 0 : Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
+      seq: this.nextSeq++,
+      deadline: Infinity,
+      isActive: true,
+      isMortal: false,
     }
     // a big piece stays where it fell, whatever its shape: a slab of a roof tile is debris as much as a chunk of brick is
     if (lasting || isBig(f.size)) {
@@ -446,6 +472,7 @@ export class FragmentSystem {
       }
     }
     this.list.push(live)
+    this.active.push(live)
     this.addMarks(mesh, f)
     return mesh
   }
@@ -487,9 +514,51 @@ export class FragmentSystem {
     f.asleep = false
     f.box = undefined
     f.rest = 0
+    f.deadline = Infinity
     // what it lay on may be gone: the floor is measured again where it lies
     f.floor = null
     f.mesh.matrixAutoUpdate = true
+    this.activate(f)
+  }
+
+  /** Into the awake list, at the place of its creation order (the order the fragments were always stepped in). */
+  private activate(f: Live): void {
+    if (f.isActive) return
+    f.isActive = true
+    let at = this.active.length
+    while (at > 0 && this.active[at - 1].seq > f.seq) at--
+    this.active.splice(at, 0, f)
+  }
+
+  private deactivate(f: Live): void {
+    if (!f.isActive) return
+    f.isActive = false
+    this.active.splice(this.active.indexOf(f), 1)
+  }
+
+  /** The sleepers whose time at rest passed their life start to fade; the ones that woke since leave the list. */
+  private expireSleepers(): void {
+    if (this.clock <= this.nextDeadline) return
+    let next = Infinity
+    let kept = 0
+    for (let i = 0; i < this.mortal.length; i++) {
+      const f = this.mortal[i]
+      if (f.deadline === Infinity || f.dying) {
+        f.isMortal = false
+        continue
+      }
+      if (this.clock > f.deadline) {
+        f.isMortal = false
+        f.dying = true
+        f.mesh.matrixAutoUpdate = true
+        this.activate(f)
+        continue
+      }
+      if (f.deadline < next) next = f.deadline
+      this.mortal[kept++] = f
+    }
+    this.mortal.length = kept
+    this.nextDeadline = next
   }
 
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
@@ -502,38 +571,57 @@ export class FragmentSystem {
 
   update(dt: number): void {
     this.tick++
+    this.clock += dt
     this.wakeUnsupported()
+    this.beginTick()
     const g = this.o.gravity
-    for (let i = this.list.length - 1; i >= 0; i--) {
-      const f = this.list[i]
+    for (let i = this.active.length - 1; i >= 0; i--) {
+      const f = this.active[i]
       if (f.dying) {
         f.mesh.matrixAutoUpdate = true
         f.fade -= dt / 0.6
         if (f.fade <= 0) {
           this.instances.remove(f.mesh)
           this.o.scene.remove(f.mesh)
-          this.list.splice(i, 1)
+          f.isActive = false
+          this.active.splice(i, 1)
+          this.list.splice(this.list.indexOf(f), 1)
           continue
         }
         f.mesh.scale.copy(f.baseScale).multiplyScalar(f.fade)
       }
-      if (f.asleep) {
-        f.rest += dt
-        if (f.life > 0 && f.rest > f.life && !f.body) {
-          f.dying = true
-          f.mesh.matrixAutoUpdate = true
-        }
-        continue
-      }
+      if (f.asleep) continue
       this.step(f, dt, g)
     }
+    this.expireSleepers()
     this.keepBudget()
+    this.trail?.commit()
     this.drawInstanced()
+  }
+
+  /** The meshes go back to the step's pose and the ones awake are recorded as the previous one (`interpolate`). */
+  private beginTick(): void {
+    const trail = this.trail
+    if (!trail) return
+    trail.begin()
+    for (const f of this.active) if (!f.asleep) trail.record(f.mesh)
+  }
+
+  /** The meshes get the step pose back, before anything reads them. The instances take it at the next `update`. */
+  restoreStepPose(): void {
+    this.trail?.restore()
+  }
+
+  /** The fragments awake drawn `alpha` of the way from their pose before the last update to the step's (1: the step's); the instances take the new transforms. */
+  presentPose(alpha: number): void {
+    if (!this.trail) return
+    this.trail.blend(alpha)
+    this.instances.sync()
   }
 
   /** The fragments in flight are drawn by the instances, those at rest on their own (the settled batches take them): then the instances take the transforms of this update. */
   private drawInstanced(): void {
-    for (const f of this.list) {
+    for (const f of this.active) {
       if (f.asleep) this.instances.remove(f.mesh)
       else this.instances.add(f.mesh)
     }
@@ -545,11 +633,14 @@ export class FragmentSystem {
     const most = this.o.maxAwake
     if (most === undefined || !Number.isFinite(most)) return
     let awake = 0
-    for (const f of this.list) if (!f.asleep && !f.dying) awake++
-    for (const f of this.list) {
+    for (const f of this.active) if (!f.asleep && !f.dying) awake++
+    if (awake <= most) return
+    for (let i = 0; i < this.active.length; i++) {
+      const f = this.active[i]
       if (awake <= most) return
       if (f.asleep || f.dying || !f.contact || !isSlow(f)) continue
       this.sleep(f)
+      i--
       awake--
     }
   }
@@ -562,6 +653,17 @@ export class FragmentSystem {
     f.mesh.matrixAutoUpdate = false
     f.vel.set(0, 0, 0)
     f.ang.set(0, 0, 0)
+    if (f.dying) return
+    this.instances.remove(f.mesh)
+    this.deactivate(f)
+    if (f.life > 0 && !f.body) {
+      f.deadline = this.clock + f.life - f.rest
+      this.nextDeadline = Math.min(this.nextDeadline, f.deadline)
+      if (!f.isMortal) {
+        f.isMortal = true
+        this.mortal.push(f)
+      }
+    }
   }
 
   /** A few fragments asleep each update (`SUPPORT_CHECKS`, in turn) look at the ground under them again: one left over air falls. */
@@ -777,15 +879,21 @@ export class FragmentSystem {
       if (this.list[i].home === home) {
         this.instances.remove(this.list[i].mesh)
         this.o.scene.remove(this.list[i].mesh)
+        this.deactivate(this.list[i])
+        this.list[i].deadline = Infinity
         this.list.splice(i, 1)
       }
     }
   }
 
   clear(): void {
+    this.trail?.clear()
     this.instances.clear()
     for (const f of this.list) this.o.scene.remove(f.mesh)
     this.list.length = 0
+    this.active.length = 0
+    this.mortal.length = 0
+    this.nextDeadline = Infinity
   }
 
   /** `clear`, the random stream back to its seed and the tick to 0: what comes next flies as on a new system. */

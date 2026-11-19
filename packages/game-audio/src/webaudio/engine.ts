@@ -195,6 +195,8 @@ export type AudioEngine = {
    * without `deferredStart`. Asking for it changes nothing.
    */
   deferredQueue?(): DeferredQueue | null
+  /** The occlusion measuring as a `DeferredQueue` for a shared frame budget (`audio.occlusion`), or `null` without an `occlusion` setup. Asking for it changes nothing: until a budget attaches it, the listener update measures within `budgetMs` as before. */
+  occlusionQueue?(): DeferredQueue | null
   dispose(): void
 }
 
@@ -730,6 +732,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       return Math.sqrt(sum / meter.data.length)
     },
     deferredQueue: () => startQueue?.deferredQueue() ?? null,
+    occlusionQueue: () => occluders?.deferredQueue() ?? null,
     stats() {
       advance()
       const voiceStats = voices.stats()

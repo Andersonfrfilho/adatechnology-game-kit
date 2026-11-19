@@ -6,6 +6,7 @@ import { create } from '../create.js'
 import { CONSTRUCTION_LEVEL_MAX, clampConstructionLevel, constructionLevelInfo } from '../construction-stages/apply-level.js'
 import { renderBlueprintDataUrl } from '../construction-stages/blueprint.js'
 import { checkConstructionStages } from '../construction-stages/check.js'
+import { createHouseShadowQueue } from '../house/shadow-batches.js'
 import { groundLayoutOfPlans } from '../lot/ground-layout.js'
 import { planLod, rectsOf } from '../statics.js'
 import { createHouseScenarios, SPECIMEN_AT } from './scenarios.js'
@@ -86,6 +87,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   let houseRendererKey = ''
   // the breach paint of the current house renderer, run by the host's frame budget when it has one
   let stopPaintQueue: (() => void) | undefined
+  let stopShadowQueue: (() => void) | undefined
+  const shadowQueue = createHouseShadowQueue()
   // the room lights of the `room_lights` layer: the house's own lamps, masked by the walls, leased from the host's light budget
   let roomLights: RoomLighting | null = null
   const placed: Placed[] = []
@@ -121,13 +124,14 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     const key = `${settings.quality}|${locale}`
     if (!houseRenderer || houseRendererKey !== key) {
       stopPaintQueue?.()
+      stopShadowQueue?.()
       dropRoomLights()
       houseRenderer?.dispose?.()
       houseRenderer = create(THREE as Three, {
         locale,
         lod: { interior: 48, hide: 220 },
         breachPaintBudgetMs: 4,
-        ...(options.shadowBatches === false ? { shadowBatches: false } : {}),
+        ...(options.shadowBatches === false ? { shadowBatches: false } : { shadowQueue }),
         ...options.house,
         ...(options.house?.interactives ? { interactives: { effectSink: () => host?.effects, ...options.house.interactives } } : {}),
         quality: settings.quality as 'game',
@@ -138,7 +142,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       const paintQueue = houseRenderer.deferredQueue?.()
       const stopPaint = paintQueue ? host?.defer?.(paintQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT]) : undefined
       const cutQueue = houseRenderer.cutQueue?.()
-      const stopCut = cutQueue ? host?.defer?.(cutQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_CUT]) : undefined
+      const stopCut = cutQueue ? host?.defer?.(cutQueue, { ...DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_CUT], mustDrain: true }) : undefined
+      stopShadowQueue = host?.defer?.(shadowQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.HOUSE_SHADOW_BATCH])
       stopPaintQueue = stopPaint || stopCut ? () => { stopPaint?.(); stopCut?.() } : undefined
     }
     return houseRenderer
@@ -735,6 +740,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         clearHouses()
         stopPaintQueue?.()
         stopPaintQueue = undefined
+        stopShadowQueue?.()
+        stopShadowQueue = undefined
         houseRenderer?.dispose?.()
         houseRenderer = null
         host = null

@@ -332,6 +332,8 @@ export interface TestRoomOptions {
    * queues had; 4 is the library default of `@adatechnology/game-runtime`, for a room whose `maxFramesWaiting` stays under 15 (see `frameStats()`).
    */
   frameBudgetMs?: number
+  /** Frame deadline in ms for the deferred queues (they get what is left of it after the frame's other work). Default: the player's FPS cap, else 1000 / 60. */
+  frameTargetMs?: number
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /**
@@ -528,8 +530,8 @@ export interface TestRoom {
   /** Everything the inspector panel shows for the aimed part (state, joints and the tools that undo them), or null. */
   inspectInfo(): InspectInfo | null
   spawned(): SpawnedObject[]
-  /** Advance one frame, and throw what a system threw in it. The host that owns the loop must call it every frame: the deferred queues lent to the room's budget (sound voices, destruction events) drain only inside a frame. */
-  update(dt: number): void
+  /** Advance one frame, and throw what a system threw in it. `live: true` feeds `dt` to the scheduler's clock as a display frame does (whole ticks, a remainder carried, the frame cap) instead of the exact frame a script wants. The host that owns the loop must call it every frame: the deferred queues lent to the room's budget (sound voices, destruction events) drain only inside a frame. */
+  update(dt: number, options?: { readonly live?: boolean }): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
   /** `footfall`: a foot of the player's body touched the ground (`{ foot, gait, time }`), the moment its footstep sounds. */

@@ -3,6 +3,7 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { DEFAULT_FRAME_TARGET_MS, frameTargetOf, registerFrameQueues, workBudgetOf } from './frame-queues'
 import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { DESTRUCTION_SOUND_KEYS, MIN_PIECE_MASS_KG, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
@@ -19,12 +20,12 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, WATER_SHOT_BY_CALIBER, createVfx, createWaterEffects, explosionEffectIds, patchSpriteKinds, waterShotClassOf } from '@adatechnology/game-vfx'
 import { createVfxRenderer, createWaterEffectsLayer } from '@adatechnology/game-vfx-three'
-import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, shadowCasterProbes, spriteProbes } from '@adatechnology/game-render-three'
+import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatchQueue, createStaticBatcher, shadowCasterProbes, spriteProbes } from '@adatechnology/game-render-three'
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
-import { createScheduler, startLoop } from '@adatechnology/game-runtime'
+import { createScheduler, startLoop, type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
@@ -51,6 +52,8 @@ import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
+import { stepWalkPlan } from './walk-plan'
+import { MAX_TICKS_PER_FRAME, STEPS_PER_TICK, registerSimulationPhases, resolveSimulationTick } from './simulation-phases'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
@@ -158,8 +161,6 @@ const ROOM_LIGHT_SIZES = { point: 16, spot: 4, pointShadows: 0, hemisphere: 1 } 
 const SOLID_SPAN = 3
 /** Meshes an object needs before the room draws its still ones in batches (a bookcase, a shelf of books): fewer cost less than the batch check. */
 const BATCH_MIN_MESHES = 8
-/** Milliseconds a frame the batches of a new object may take to be made. */
-const BATCH_BUDGET_MS = 1
 /** Owners that draw their own batches or move every frame (a vehicle batches itself; people and animals are posed each frame). */
 const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
 /** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
@@ -491,6 +492,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const physicsLoop = physics !== 'own' && isPhysicsLoop(physics) ? physics : null
   const renderer = createDestructionRenderer(THREE, {
     physics,
+    interpolate: true,
     scene,
     world,
     vfx: vfx.world,
@@ -514,7 +516,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.groundWorker ? { groundWorker: options.debris.groundWorker } : {}),
     ...(options.debris?.workers ? { workers: options.debris.workers } : {}),
     ...(options.debris?.jitWarmUp !== undefined ? { jitWarmUp: options.debris.jitWarmUp } : {}),
-    ...(options.debris?.workBudget ? { workBudget: options.debris.workBudget } : {}),
+    ...(options.debris?.workBudget ? { workBudget: workBudgetOf(options.debris.workBudget, options.frameBudgetMs ?? 8) } : {}),
     ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
     ...(options.debris?.blast || options.debris?.workBudget ? { focus: (): [number, number, number] => [camera.position.x, camera.position.y, camera.position.z] } : {}),
     ...(options.debris?.blast ? { blastDebris: options.debris.blast } : {}),
@@ -1269,6 +1271,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // the still meshes of an object draw in one batch per material; a mesh that is hit, moved or swung draws on its own again (createStaticBatcher)
   const batchers = new Map<string, StaticBatcher>()
+  const staticBatchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.STATIC_BATCH })
   const batchObject = (objectId: string, root: THREE_NS.Object3D): void => {
     let meshes = 0
     let unbatched = false
@@ -1277,7 +1280,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if ((object as THREE_NS.Mesh).isMesh) meshes++
       if (UNBATCHED_OWNERS.test((object.userData.kitOrigin as { owner?: string } | undefined)?.owner ?? '')) unbatched = true
     })
-    if (!unbatched && meshes >= BATCH_MIN_MESHES) batchers.set(objectId, createStaticBatcher(THREE, root, { budgetMs: BATCH_BUDGET_MS }))
+    if (!unbatched && meshes >= BATCH_MIN_MESHES) batchers.set(objectId, createStaticBatcher(THREE, root, { queue: staticBatchQueue }))
   }
   const registerEntry = (
     objectId: string,
@@ -4076,11 +4079,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     headlessErrors.clear()
     throw errors.length === 1 ? errors[0] : new AggregateError(errors, `${errors.length} systems threw in one frame`)
   }
-  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, onError: reportFrameError })
-  // the deferred queues share the scheduler's budget: the voices of the sound engine and the events of the destruction renderer
-  const audioQueue = audio?.deferredQueue?.()
-  if (audioQueue) scheduler.budget.register(audioQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.AUDIO_VOICES])
-  scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS])
+  const simulationTick = resolveSimulationTick(physicsLoop?.world.fixedStep, FIXED_DT)
+  const scheduler = createScheduler({ fixedDt: simulationTick, maxSubsteps: MAX_TICKS_PER_FRAME, maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError })
+  registerFrameQueues({ budget: scheduler.budget, destruction: renderer, audio, film, staticBatchQueue, hasWorkBudget: options.debris?.workBudget !== undefined })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
@@ -4152,18 +4153,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   let walkPlan: { x: number; z: number; remaining: number } | null = null
-  const stepWalk = (dt: number): void => {
-    if (!walkPlan) return
-    const f = walkPlan.remaining <= dt ? 1 : dt / walkPlan.remaining
-    player.moveBy((walkPlan.x - camera.position.x) * f, (walkPlan.z - camera.position.z) * f)
-    walkPlan.remaining -= dt
-    if (walkPlan.remaining <= 1e-9) walkPlan = null
-  }
-
-  // lateSimulate, before the modules' frame callbacks: `dt` is simulated seconds; real time only drives input
-  const simulateBeforeModules = (dt: number): void => {
+  // fixedSimulate, once per tick (`dt` is one tick of simulated seconds): what changes the world's state
+  const simulateFixed = (dt: number, isTick: boolean): void => {
     simTime += dt
-    stepWalk(dt)
+    walkPlan = stepWalkPlan({ plan: walkPlan, dt, player, camera })
     stepStrikes(dt)
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
@@ -4177,23 +4170,29 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     simulationStamp++
-    physicsLoop?.step(dt)
-    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
+    if (isTick) physicsLoop?.stepFixed(STEPS_PER_TICK)
+    else physicsLoop?.step(dt)
     renderer.update(dt)
-    destructionSound?.update(dt)
-    for (const e of entries.values()) e.follower?.update?.()
-    terrainView.sync(camera.position)
     showGroundFire(dt)
-    vfx.update(dt)
     water.setCamera([camera.position.x, camera.position.y, camera.position.z])
     water.update(dt)
-    waterView.sync()
     updateImpacts()
     updateWater(dt)
     rockPlayer(dt)
     updateLoads(dt)
-    if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     dropStainsOffFallenTops()
+    flush()
+  }
+
+  // lateSimulate, before the modules' frame callbacks: what only draws, sounds or follows the frame; `dt` is simulated seconds, real time only drives input
+  const simulateFrame = (dt: number): void => {
+    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
+    destructionSound?.update(dt)
+    for (const e of entries.values()) e.follower?.update?.()
+    terrainView.sync(camera.position)
+    vfx.update(dt)
+    waterView.sync()
+    if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     fluidView.update(dt)
     filmBridge.update(dt)
     film.update(dt)
@@ -4962,7 +4961,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let scenarioRunning = false
 
   // a scenario steps the world through the scheduler: input and present know they are scripted (ctx.scripted) and keep to what the step always did
-  const step = (seconds: number): void => runHeadless(() => scheduler.advance(seconds, { dt: seconds > 6 ? 1 / 30 : FIXED_DT }))
+  const step = (seconds: number): void => phases.runAt(seconds > 6 ? 1 / 30 : FIXED_DT, (dt) => runHeadless(() => scheduler.advance(seconds, { dt })))
 
   const runScenarios = async (list?: TestRoomScenario[]): Promise<ScenarioReport> => {
     const all = list ?? allScenarios()
@@ -5137,7 +5136,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     readonly fluidRenderer: FluidRenderer
     inspectInfo(): InspectInfo | null
     /** The parts of the frame that are not on the room's surface, for the performance probe (tools/gpu/room-explosion.mjs), which times their methods in place. */
-    readonly frameParts: { readonly terrainView: object; readonly water: object; readonly waterView: object; readonly explosives: object; readonly footprints: object; readonly moduleFrames: ReadonlyMap<string, { update: (dt: number) => void }> }
+    readonly frameParts: { readonly terrainView: object; readonly water: object; readonly waterView: object; readonly explosives: object; readonly footprints: object; readonly moduleFrames: ReadonlyMap<string, { update: (dt: number) => void }>; readonly scheduler: Scheduler }
   } = {
     world,
     renderer,
@@ -5234,7 +5233,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update: (dt: number): void => runHeadless(() => scheduler.frame(dt, { render: false, exact: true })),
+    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true })), options?.live),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
@@ -5384,7 +5383,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     frameStats: () => scheduler.stats(),
     lights,
     webgl: gl,
-    frameParts: { terrainView, water, waterView, explosives, footprints, moduleFrames },
+    frameParts: { terrainView, water, waterView, explosives, footprints, moduleFrames, scheduler },
     dispose() {
       destructionSound?.dispose()
       if (ownAudio) audio?.dispose()
@@ -5542,8 +5541,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  scheduler.add((ctx) => simulateBeforeModules(ctx.dt), { phase: 'lateSimulate', order: -1000, id: 'room.simulate' })
-  scheduler.add((ctx) => simulateAfterModules(ctx.dt), { phase: 'lateSimulate', order: 1000, id: 'room.simulate-end' })
+  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
@@ -5567,6 +5565,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (warmedUp && (state.ok || state.actual === warnedState)) return
         warnedState = state.actual
         warmUp()
+        scheduler.budget.skipRenderSample()
       },
       { phase: 'render', order: -1000, id: 'room.lights-check' },
     )
@@ -5575,7 +5574,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     disposePacer = () => pacer.dispose()
     scheduler.add(
       (ctx) => {
-        if (!ctx.scripted && !pacer.ready()) return
+        if (!ctx.scripted && !pacer.ready()) return scheduler.budget.skipRenderSample()
         for (const batcher of batchers.values()) batcher.update()
         const restoreCamera = room.applyCamera()
         graphics?.beforeRender(camera)
@@ -5595,6 +5594,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       stopLoop = startLoop(scheduler, {
         onFrame: (realSeconds) => {
           graphics?.frameStart()
+          scheduler.budget.targetMs = frameTargetOf(options.frameTargetMs, graphics?.controller.minFrameMs())
           roomMetrics.frame(realSeconds)
         },
         skipSimulation: () => scenarioRunning,

@@ -55,8 +55,8 @@ export type CrowdOptions = {
   readonly water?: (x: number, z: number) => boolean
   readonly numbers?: Partial<CrowdNumbers>
   readonly bands?: readonly CrowdBand[]
-  /** Flow field: half window in cells (192), and the clock its time budget reads (default `performance.now`; pass `() => 0` to finish every field in one frame). */
-  readonly flow?: { readonly radius?: number; readonly clock?: () => number; /** Flow budget in cells per step instead of the clock: the same field at any frame rate (`physics.deterministic` sets 20000). */ readonly cellsPerStep?: number }
+  /** Flow field: half window in cells (192). `cellsPerStep` is the budget in fixed units per step (default 20000, about 1 ms on a desktop): the same field at any frame rate and on any machine. `clock` is the legacy time budget, used only when passed without `cellsPerStep` and without `physics.deterministic` (`() => 0` finishes every field in one frame). */
+  readonly flow?: { readonly radius?: number; readonly clock?: () => number; readonly cellsPerStep?: number }
   readonly plugins?: readonly CrowdPlugin[]
   readonly target?: CrowdTarget | null
   /** Contact, pressure, balance, mounds, thrown bodies and personality: all off by default, and then the horde is the game's, bit for bit. */
@@ -156,7 +156,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
   const GC = grid.cell
   const FW = grid.n
   const physics = resolvePhysics(options.physics)
-  const flowCells = options.flow?.cellsPerStep ?? (physics.deterministic ? DETERMINISTIC_FLOW_CELLS : undefined)
+  const flowCells = options.flow?.cellsPerStep ?? (physics.deterministic || !options.flow?.clock ? DETERMINISTIC_FLOW_CELLS : undefined)
   const seed32 = (options.seed ?? 1) >>> 0
   let serial = 0
   const moundHeight = new Uint16Array(physics.mound ? FW * FW : 0)
@@ -378,7 +378,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
   }
   const flowStep = (budget: number, cellsPerStep?: number): void => {
     if (!flow.phase) return
-    const t0 = clock()
+    const t0 = cellsPerStep === undefined ? clock() : 0
     let cellsLeft = cellsPerStep ?? Infinity
     const D = flow.dist
     const Q = flow.q
@@ -427,7 +427,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
         flow.win = W
         flow.winB = tw
         flow.phase = 0
-        flow.ms = flow.t + clock() - t0
+        flow.ms = cellsPerStep === undefined ? flow.t + clock() - t0 : 0
         return
       }
       const cx = W[0]! + (j % ww)
