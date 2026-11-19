@@ -85,6 +85,7 @@ task fecha com os gates do fim deste arquivo e com um commit isolado.
   - Regra para a Fase 4b: os elos da reação em cadeia são contados em ticks dentro de `fixedSimulate`, com teto determinístico de elos
     por tick; só a apresentação de cada elo (efeito, luz, som, furo) passa pelo `scheduler.budget`. Uma `DeferredQueue` nunca carrega
     simulação (`design-runtime.md` §3.4).
+  - **Passos 6 e 7 da migração do laço (`design-runtime.md` §8): fechado/obsoleto pela spec 010 (data 2026-11-19).** O passo fixo único (tique 1/60 = 2 passos de 1/120, `fixedSimulate` na sala, `PhysicsLoop.stepFixed`) e o orçamento por prazo (`targetMs`/`frameStartMs`, no lugar do teto de 4 ms) são da spec 010 (T1.2, T1.6, T3.3, T3.4). Resta da 6 só a física da fase `input` (spec própria).
   - T4.6 (âncoras do `ProgramWarmup`) entra **antes** da T4.5c (saída do `pinPrograms`); a T4.6 mede, antes e depois, se os quadros
     de 36 ms são envio de buffer ou variante de shader do driver (`design-render-three.md` §6.2).
 
