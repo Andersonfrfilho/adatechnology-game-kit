@@ -3,6 +3,7 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
+import { DEFAULT_FRAME_TARGET_MS, frameTargetOf, registerFrameQueues, workBudgetOf } from './frame-queues'
 import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import { DESTRUCTION_SOUND_KEYS, MIN_PIECE_MASS_KG, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
@@ -19,10 +20,10 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { SPRITE_KINDS, WATER_SHOT_BY_CALIBER, createVfx, createWaterEffects, explosionEffectIds, patchSpriteKinds, waterShotClassOf } from '@adatechnology/game-vfx'
 import { createVfxRenderer, createWaterEffectsLayer } from '@adatechnology/game-vfx-three'
-import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatcher, shadowCasterProbes, spriteProbes } from '@adatechnology/game-render-three'
+import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatchQueue, createStaticBatcher, shadowCasterProbes, spriteProbes } from '@adatechnology/game-render-three'
 import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createScheduler, startLoop, type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
@@ -158,8 +159,6 @@ const ROOM_LIGHT_SIZES = { point: 16, spot: 4, pointShadows: 0, hemisphere: 1 } 
 const SOLID_SPAN = 3
 /** Meshes an object needs before the room draws its still ones in batches (a bookcase, a shelf of books): fewer cost less than the batch check. */
 const BATCH_MIN_MESHES = 8
-/** Milliseconds a frame the batches of a new object may take to be made. */
-const BATCH_BUDGET_MS = 1
 /** Owners that draw their own batches or move every frame (a vehicle batches itself; people and animals are posed each frame). */
 const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
 /** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
@@ -513,7 +512,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(options.debris?.groundWorker ? { groundWorker: options.debris.groundWorker } : {}),
     ...(options.debris?.workers ? { workers: options.debris.workers } : {}),
     ...(options.debris?.jitWarmUp !== undefined ? { jitWarmUp: options.debris.jitWarmUp } : {}),
-    ...(options.debris?.workBudget ? { workBudget: options.debris.workBudget } : {}),
+    ...(options.debris?.workBudget ? { workBudget: workBudgetOf(options.debris.workBudget, options.frameBudgetMs ?? 8) } : {}),
     ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
     ...(options.debris?.blast || options.debris?.workBudget ? { focus: (): [number, number, number] => [camera.position.x, camera.position.y, camera.position.z] } : {}),
     ...(options.debris?.blast ? { blastDebris: options.debris.blast } : {}),
@@ -1268,6 +1267,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // the still meshes of an object draw in one batch per material; a mesh that is hit, moved or swung draws on its own again (createStaticBatcher)
   const batchers = new Map<string, StaticBatcher>()
+  const staticBatchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.STATIC_BATCH })
   const batchObject = (objectId: string, root: THREE_NS.Object3D): void => {
     let meshes = 0
     let unbatched = false
@@ -1276,7 +1276,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if ((object as THREE_NS.Mesh).isMesh) meshes++
       if (UNBATCHED_OWNERS.test((object.userData.kitOrigin as { owner?: string } | undefined)?.owner ?? '')) unbatched = true
     })
-    if (!unbatched && meshes >= BATCH_MIN_MESHES) batchers.set(objectId, createStaticBatcher(THREE, root, { budgetMs: BATCH_BUDGET_MS }))
+    if (!unbatched && meshes >= BATCH_MIN_MESHES) batchers.set(objectId, createStaticBatcher(THREE, root, { queue: staticBatchQueue }))
   }
   const registerEntry = (
     objectId: string,
@@ -4075,11 +4075,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     headlessErrors.clear()
     throw errors.length === 1 ? errors[0] : new AggregateError(errors, `${errors.length} systems threw in one frame`)
   }
-  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, onError: reportFrameError })
-  // the deferred queues share the scheduler's budget: the voices of the sound engine and the events of the destruction renderer
-  const audioQueue = audio?.deferredQueue?.()
-  if (audioQueue) scheduler.budget.register(audioQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.AUDIO_VOICES])
-  scheduler.budget.register(renderer.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS])
+  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError })
+  registerFrameQueues({ budget: scheduler.budget, destruction: renderer, audio, film, staticBatchQueue, hasWorkBudget: options.debris?.workBudget !== undefined })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
@@ -5566,6 +5563,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (warmedUp && (state.ok || state.actual === warnedState)) return
         warnedState = state.actual
         warmUp()
+        scheduler.budget.skipRenderSample()
       },
       { phase: 'render', order: -1000, id: 'room.lights-check' },
     )
@@ -5574,7 +5572,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     disposePacer = () => pacer.dispose()
     scheduler.add(
       (ctx) => {
-        if (!ctx.scripted && !pacer.ready()) return
+        if (!ctx.scripted && !pacer.ready()) return scheduler.budget.skipRenderSample()
         for (const batcher of batchers.values()) batcher.update()
         const restoreCamera = room.applyCamera()
         graphics?.beforeRender(camera)
@@ -5594,6 +5592,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       stopLoop = startLoop(scheduler, {
         onFrame: (realSeconds) => {
           graphics?.frameStart()
+          scheduler.budget.targetMs = frameTargetOf(options.frameTargetMs, graphics?.controller.minFrameMs())
           roomMetrics.frame(realSeconds)
         },
         skipSimulation: () => scenarioRunning,

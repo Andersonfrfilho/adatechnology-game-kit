@@ -332,6 +332,8 @@ export interface TestRoomOptions {
    * queues had; 4 is the library default of `@adatechnology/game-runtime`, for a room whose `maxFramesWaiting` stays under 15 (see `frameStats()`).
    */
   frameBudgetMs?: number
+  /** Frame deadline in ms for the deferred queues (they get what is left of it after the frame's other work). Default: the player's FPS cap, else 1000 / 60. */
+  frameTargetMs?: number
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /**
