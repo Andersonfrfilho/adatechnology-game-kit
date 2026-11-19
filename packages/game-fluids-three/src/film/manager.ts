@@ -1,7 +1,8 @@
 import type * as THREE_NS from 'three'
 import { FILM_PROFILES, filmProfileOf, layoutFromSurfaces } from '@adatechnology/game-fluids'
 import type { FilmLayout, FilmProfile, FilmRandom, FluidWorld, LiquidId, StainTint, SurfaceSpec, Vec3 } from '@adatechnology/game-fluids'
-import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, drainDetached } from '@adatechnology/game-contracts'
+import type { DeferredQueue, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { ThreeLib } from '../types'
 import { createFilmDrops } from './drops'
 import type { FilmDrops } from './drops'
@@ -164,6 +165,13 @@ export class FilmManager {
   private bakedCount = 0
   private last: FilmStats = { grids: 0, drops: 0, wetCells: 0, simMs: 0, starved: 0, baked: 0, uploadedTexels: 0 }
   private empties = new Map<FilmGrid, number>()
+  /** The grids to advance, nearest first, and the seconds each still owes: a grid the budget left out keeps its time while a host's budget runs the queue. */
+  private waiting: FilmGrid[] = []
+  private readonly owed = new Map<FilmGrid, number>()
+  private attached = false
+  private simMs = 0
+  private uploadedTexels = 0
+  private readonly queue: DeferredQueue
   /** A film material and a set of drops of the manager's own, drawn by the host's warm-up and kept until `dispose`: see `warmUpProbes`. */
   private keeper: { readonly material: FilmMaterial; readonly drops: FilmDrops; readonly texture: THREE_NS.DataTexture } | null = null
 
@@ -176,6 +184,39 @@ export class FilmManager {
     options.scene.add(this.group)
     this.profiles = options.profiles ?? Object.fromEntries(FILM_PROFILES.map((profile) => [profile.id, profile]))
     this.now = options.now ?? (() => (typeof performance === 'undefined' ? Date.now() : performance.now()))
+    this.queue = {
+      id: DEFERRED_QUEUE_ID.FLUID_FILM,
+      pending: () => this.waiting.length,
+      run: (deadline, clock) => {
+        const started = clock()
+        let ran = 0
+        while (this.waiting.length > 0) {
+          this.advance(this.waiting.shift() as FilmGrid)
+          ran++
+          if (clock() >= deadline) break
+        }
+        this.simMs += clock() - started
+        return ran
+      },
+      flush: () => {
+        while (this.waiting.length > 0) this.advance(this.waiting.shift() as FilmGrid)
+      },
+      attach: () => {
+        this.attached = true
+      },
+      detach: () => {
+        this.attached = false
+      },
+    }
+  }
+
+  /**
+   * The grids' simulation as a `DeferredQueue` for a shared frame budget (one unit = one grid, nearest first). Asking for it changes nothing: until a budget
+   * attaches it, `update` runs it itself within `budgetMs`, and a grid it leaves out loses that frame's time, as before. Attached, `update` only opens the
+   * frame and the queue advances each grid by the time it owes, so a grid the budget left out catches up.
+   */
+  deferredQueue(): DeferredQueue {
+    return this.queue
   }
 
   get gridCount(): number {
@@ -246,26 +287,25 @@ export class FilmManager {
     this.time += dt
     const viewer = this.viewer()
     const range = this.options.range ?? DEFAULT_RANGE
-    const budget = this.options.budgetMs ?? DEFAULT_BUDGET_MS
-    const drying = dt * (this.options.dryingSpeed ?? 1)
     const order = [...this.grids].sort((a, b) => (viewer ? distance(viewer.position, a.center) - distance(viewer.position, b.center) : 0))
-    const start = this.now()
-    let starved = 0
-    let uploaded = 0
+    const starvedBefore = this.attached ? this.waiting.length : 0
+    this.waiting = []
     for (const grid of order) {
       if (viewer && distance(viewer.position, grid.center) > range * BAKE_RANGE_FACTOR) {
         this.release(grid, 'range')
         continue
       }
-      if (this.now() - start > budget) {
-        starved++
-        continue
-      }
-      if (viewer) grid.setView(viewer.position, viewer.forward, this.time)
-      const rect = grid.update(dt, drying)
-      grid.syncDrops()
-      if (rect) uploaded += this.upload(grid, rect)
-      if (this.emptyFor(grid, dt) || grid.idle > (this.options.settleSeconds ?? DEFAULT_SETTLE_SECONDS)) this.release(grid, 'settled')
+      this.owed.set(grid, (this.attached ? (this.owed.get(grid) ?? 0) : 0) + dt)
+      this.waiting.push(grid)
+    }
+    let starved = starvedBefore
+    if (!this.attached) {
+      this.simMs = 0
+      this.uploadedTexels = 0
+      drainDetached(this.queue, this.options.budgetMs ?? DEFAULT_BUDGET_MS, this.now)
+      starved = this.waiting.length
+      this.waiting = []
+      this.owed.clear()
     }
     let drops = 0
     let wet = 0
@@ -274,8 +314,25 @@ export class FilmManager {
       for (let i = 0; i < active.length; i++) drops += active[i]!
       wet += grid.film.wetCells()
     }
-    this.last = { grids: this.grids.length, drops, wetCells: wet, simMs: this.now() - start, starved, baked: this.bakedCount, uploadedTexels: uploaded }
+    this.last = { grids: this.grids.length, drops, wetCells: wet, simMs: this.simMs, starved, baked: this.bakedCount, uploadedTexels: this.uploadedTexels }
+    if (this.attached) {
+      this.simMs = 0
+      this.uploadedTexels = 0
+    }
     return this.last
+  }
+
+  /** One unit of the queue: a grid steps by the time it owes, uploads what changed and is baked when it is empty or has settled. */
+  private advance(grid: FilmGrid): void {
+    const seconds = this.owed.get(grid)
+    this.owed.delete(grid)
+    if (seconds === undefined || !this.grids.includes(grid)) return
+    const viewer = this.viewer()
+    if (viewer) grid.setView(viewer.position, viewer.forward, this.time)
+    const rect = grid.update(seconds, seconds * (this.options.dryingSpeed ?? 1))
+    grid.syncDrops()
+    if (rect) this.uploadedTexels += this.upload(grid, rect)
+    if (this.emptyFor(grid, seconds) || grid.idle > (this.options.settleSeconds ?? DEFAULT_SETTLE_SECONDS)) this.release(grid, 'settled')
   }
 
   stats(): FilmStats {
