@@ -313,3 +313,8 @@ Commit do mundo: ver `git log` (`perf(destruction): solveStructure e grupos sem 
 
 - **Mesmo hash:** `exact-golden`, `blast-presentation`, `structure-solves` (39), `split-rebuild-identity` 51/51 sem regravar nada; `game-destruction` `vitest run` 578/578; `tsc --noEmit` do pacote limpo; eslint sem erro.
 - **Medição (indicativa, Node em `vitest`, `world.explode` 4 MJ no sobrado, mediana de 7, load médio 6 a 8 com outras sessões):** antes 386 ms, depois 324 a 387 ms em 3 rodadas (dentro do ruído; o 33,4 ms da T2.1 foi medido por outro caminho e não é comparável). `heapUsed` por `explode`: 44,3 MB antes, 32 a 39 MB depois.
+
+## T4.2 e T4.3 — documentação e regra
+
+- `9c5c7287e`: `docs/desempenho-explosoes.md` (seção da spec 010, pendência "a ordem do quadro não tem dono" riscada), README do `game-runtime` (filas, passo fixo, interpolação), referência da skill `kit-base`, regra §15 (exceção única `drainDetached`, gate `--strict-clocks`, `mustDrain`, R2), `tasks.md` das specs 005, 008, 009 e 010 (pendências listadas). Só documentação; sem build nem teste.
+- A ligação task → commit no `tasks.md` da 010 foi tirada do log (mensagens com o número da task), não auditada.
