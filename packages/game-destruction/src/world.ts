@@ -688,6 +688,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
+  /** Changes to the structure of an object inside the operation being run (`loosened`) whose solution waits for `settleStructure`, in the order they happened. */
+  const pendingStructure = new Map<ObjRT, Array<{ opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string }>>()
+  let structureSolves = 0
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
@@ -703,8 +706,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const value = fn()
       drainBlasts()
       if (runDepth === 1) {
+        settleAllStructure()
         flushCollapse()
-        if (revealHostedIn(objects.values())) flushCollapse()
+        settleAllStructure()
+        if (revealHostedIn(objects.values())) {
+          settleAllStructure()
+          flushCollapse()
+          settleAllStructure()
+        }
       }
       return { value, events: mine }
     } finally {
@@ -1170,6 +1179,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * snaps; a reinforced one yields and fails when its plastic rotation (`(U(M) - U(Mu)) / (2 Mu)` per blast, added up) reaches `failRotationDeg`.
    */
   const bendByBlast = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, reach: number, src?: string) => {
+    if (p.bend) settleStructure(o)
     const g = p.bend
     if (!g || p.span <= 0 || isLost(p) || p.st.stripped || reach <= 0) return
     const s = p.mat.strength!
@@ -1257,6 +1267,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * the load goes down and how it is shared are the load path rule of `game-load-path` (the structure that sized the building uses the same one).
    */
   const solveStructure = (o: ObjRT) => {
+    structureSolves++
     o.maxStress = 0
     if (!o.hasStructure) return
     const parts = o.parts
@@ -1489,6 +1500,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Moves the top of the building with the gust (the first mode and the damper, integrated together) and reports `sway` when it changes. */
   const stepWind = (o: ObjRT, dt: number) => {
+    settleStructure(o)
     const w = o.wind!
     const a = w.analysis
     const st = o.st.wind
@@ -1736,6 +1748,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   const stepSoil = (o: ObjRT, dt: number) => {
+    settleStructure(o)
     const so = o.soil!
     if (o.st.soil?.status === 'toppled') return
     if (!so.dirty && o.st.soil?.status !== 'yielding') return
@@ -1834,6 +1847,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const [o, src] of [...pendingCollapse]) {
       pendingCollapse.delete(o)
       if (!objects.has(o.id) || objects.get(o.id) !== o) continue
+      settleStructure(o)
       const crumbling: PartRT[] = []
       for (const g of [...o.st.groups]) {
         const ps = g.map((id) => o.byId.get(id)!).filter((p) => !isLost(p) && !o.collapsed.has(p.spec.id))
@@ -2406,6 +2420,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Ground taken away under an object: each part that bears over it settles, bridges, breaks over the void or loses its support; the structure is solved again. */
   const undermine = (o: ObjRT, loss: GroundLoss) => {
+    settleStructure(o)
     if (!o.hasStructure || !o.anyAnchor || o.st.soil?.status === 'toppled') return
     const src = loss.source ?? 'ground'
     const opened: JointRT[] = []
@@ -2455,9 +2470,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const { b, fp } of settled) crackOver(o, b, fp, src)
     o.active = true
     if (!lost) return
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'break', src)
+    loosened(o, opened, 'break', src)
     collapseCheck(o, src)
   }
 
@@ -2936,6 +2949,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
+   * The structure of `o` changed (a part lost, joints opened). Inside an operation (`run`) it is solved once, when something reads it (`settleStructure`) or when the
+   * operation ends, and the detach events of every change come out then, in the order the changes happened; outside one, at once.
+   */
+  const loosened = (o: ObjRT, opened: JointRT[], by: 'break' | 'tool' | 'part_lost', src?: string) => {
+    if (runDepth === 0) {
+      solveStructure(o)
+      recomputeGroups(o)
+      detachEvents(o, opened, by, src)
+      return
+    }
+    let changes = pendingStructure.get(o)
+    if (!changes) pendingStructure.set(o, (changes = []))
+    changes.push({ opened, by, ...(src === undefined ? {} : { src }) })
+  }
+
+  /** Solves `o` if a change waits (`loosened`), before what reads its loads, stresses or groups. */
+  const settleStructure = (o: ObjRT) => {
+    const changes = pendingStructure.get(o)
+    if (!changes) return
+    pendingStructure.delete(o)
+    solveStructure(o)
+    recomputeGroups(o)
+    for (const c of changes) detachEvents(o, c.opened, c.by, c.src)
+  }
+
+  const settleAllStructure = () => {
+    while (pendingStructure.size > 0) for (const o of [...pendingStructure.keys()]) settleStructure(o)
+  }
+
+  /**
    * How what lies on a part over a `resting` joint stands, in the object's frame: half its height and its half-widths across (the level axes of its box), or null when it
    * is not a box (it only slides). Remembered per joint.
    */
@@ -2985,9 +3028,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         j.st.open = true
         j.st.openedBy = 'break'
       }
-      solveStructure(o)
-      recomputeGroups(o)
-      detachEvents(o, opened, 'break')
+      loosened(o, opened, 'break')
       collapseCheck(o)
     })
   }
@@ -3042,9 +3083,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // it shows before it comes off, so what draws the piece that detaches finds it drawn
     for (const p of shown) emit({ ...base(o), type: 'reveal', part: p.spec.id, host: p.spec.hostedIn! })
     if (opened.length > 0) {
-      solveStructure(o)
-      recomputeGroups(o)
-      detachEvents(o, opened, 'break')
+      loosened(o, opened, 'break')
       collapseCheck(o)
     }
     return true
@@ -3064,9 +3103,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       j.st.openedBy = 'part_lost'
       opened.push(j)
     }
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'part_lost', src)
+    loosened(o, opened, 'part_lost', src)
     collapseCheck(o, src)
     checkDestroyed(o, src)
   }
@@ -3165,9 +3202,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         j.st.hp = 0
         j.st.open = true
         j.st.openedBy = 'break'
-        solveStructure(o)
-        recomputeGroups(o)
-        detachEvents(o, [j], 'break', src)
+        loosened(o, [j], 'break', src)
         collapseCheck(o, src)
       }
     }
@@ -3714,6 +3749,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * every bar that shows, so a renderer can replace the part's cage with it.
    */
   const exposeRebar = (o: ObjRT, p: PartRT, src?: string) => {
+    settleStructure(o)
     const r = p.spec.reinforcement
     if (!r) return
     const [u, v] = planeAxes(p.thin)
@@ -4040,9 +4076,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (opened.length === 0) return false
     p.st.hp = Math.max(p.st.hp, p.st.maxHp * GIVE_AT_CUT_HP)
     markDamaged(p)
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'break', src)
+    loosened(o, opened, 'break', src)
     exposeRebar(o, p, src)
     collapseCheck(o, src)
     return true
@@ -4100,9 +4134,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     p.st.cracked = true
     markDamaged(p)
     debris(o, p, p.mat.breakDebris, partXf(o, p).c, [0, -1, 0], 12, 2, src)
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'break', src)
+    loosened(o, opened, 'break', src)
     collapseCheck(o, src)
   }
 
@@ -4113,6 +4145,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       loseCage(o, p, src)
       return
     }
+    if (p.bend) settleStructure(o)
     if (!force && p.bend && (p.st.flexure ?? 0) > 1 && sectionOf(p, p.bend.gravity).reinforced) {
       hingeDrop(o, p, src)
       return
@@ -5402,12 +5435,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (s.burning || p.rt.jet || s.temperature > ambient + 0.5) hot = true
     }
     if (o.hasStructure) {
+      settleStructure(o)
       if (o.dirty) {
         o.dirty = false
         solveStructure(o)
       }
       for (const p of parts) {
         if (!p.structural || isLost(p)) continue
+        // a part the overload broke just now changed what the next ones carry
+        settleStructure(o)
         const stress = p.st.stress ?? 0
         p.rt.stressT = Math.max(0, (p.rt.stressT ?? 0) - dt)
         if (stress > 1) {
@@ -5425,6 +5461,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           addCrack(o, p, toWorld(c, q, sp.point), rotateVec(q, sp.normal), 0.1 + (stress - 0.8) * 0.5)
         }
       }
+      settleStructure(o)
       if (o.maxStress > 0.8) hot = true
     }
     o.active = hot
@@ -5528,11 +5565,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
-  /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
+  /** Collapse events, and the detach events of a structure solved after its object's part of the operation (`loosened`), come after it: the result carries them. */
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
     if (!last) return r.value
-    for (const e of r.events) if (e.type === 'collapse' && !r.value.some((h) => h.events.includes(e))) last.events.push(e)
+    for (const e of r.events) {
+      if ((e.type !== 'collapse' && e.type !== 'detach') || r.value.some((h) => h.events.includes(e))) continue
+      const into = (e.type === 'detach' ? r.value.find((h) => h.object === e.object) : undefined) ?? last
+      into.events.push(e)
+    }
     return r.value
   }
 
@@ -5678,6 +5719,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     blastProbe() {
       return { ...blastProbe }
     },
+    structureProbe() {
+      return { solves: structureSolves }
+    },
     blastReach(point, target, options = {}) {
       const L = vec.distance(point, target)
       if (L < 1e-4) return 1
@@ -5791,9 +5835,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (j.st.progress >= 1) {
           j.st.open = true
           j.st.openedBy = 'tool'
-          solveStructure(o)
-          recomputeGroups(o)
-          detachEvents(o, [j], 'tool')
+          loosened(o, [j], 'tool')
           collapseCheck(o)
         }
         return j.st.progress
