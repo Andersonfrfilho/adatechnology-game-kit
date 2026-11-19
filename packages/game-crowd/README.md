@@ -16,8 +16,8 @@ number is in `src/data/defaults.json` with its source line, and the golden `game
 - **The normal world comes first.** With no target (`target: null`) nobody chases: agents wander and pause. The target is anything with the
   `CrowdTarget` shape; `game-player`'s `Player` is one as it is.
 - **The world** is a `NavGrid` (`createNavGrid`, the game's 0.5 m grid with occupancy codes and heights) and `water(x, z)`; doors are `createDoors`.
-- **Every draw is in the game's order** on the stream you pass (`random`); the flow field's time budget reads `flow.clock` (pass `() => 0` to finish
-  each field in one frame, as the golden does).
+- **Every draw is in the game's order** on the stream you pass (`random`); the flow field's budget is `flow.cellsPerStep` (default 20000 cells per step, the same field on any machine);
+  `flow.clock` is the legacy time budget, used only when passed alone (`() => 0` finishes each field in one frame, as the golden does).
 
 ## Install
 

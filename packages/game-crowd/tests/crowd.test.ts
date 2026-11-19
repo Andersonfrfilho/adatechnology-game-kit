@@ -76,6 +76,19 @@ describe('createCrowd', () => {
     expect(run()).toEqual(run())
   })
 
+  it('builds the same flow field under two different clocks when the budget is in cells', () => {
+    const run = (clock: () => number) => {
+      const { target } = makeTarget()
+      const crowd = createCrowd({ pack, seed: 9, capacity: 40, grid: createNavGrid({ size: 128 }), flow: { clock, cellsPerStep: 2000 }, target })
+      for (let k = 0; k < 20; k++) crowd.spawn(Math.cos(k) * 12, Math.sin(k) * 12)
+      for (let f = 0; f < 120; f++) crowd.update(1 / 60)
+      return Array.from(crowd.store.x.slice(0, 20))
+    }
+    let slowTicks = 0
+    const slowClock = () => (slowTicks += 7)
+    expect(run(() => 0)).toEqual(run(slowClock))
+  })
+
   it('walks in the normal world: with no target nobody chases, agents wander and pause', () => {
     const crowd = createCrowd({ pack, seed: 4, capacity: 20, grid: createNavGrid({ size: 128 }), flow: { clock: () => 0 } })
     for (let k = 0; k < 10; k++) crowd.spawn(k * 3 - 15, 0, 0)
