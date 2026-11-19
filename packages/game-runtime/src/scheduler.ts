@@ -35,7 +35,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
       reportedErrors.add(system.id)
       console.error(`game-runtime: system ${system.id} (${system.phase}) threw`, error)
     })
-  const budget = createFrameBudget({ ms: options.budgetMs ?? 4, clock, onError: (error, queue) => reportError(error, { id: `queue:${queue.id}`, phase: queue.phase }) })
+  const budget = createFrameBudget({ ms: options.budgetMs ?? 4, targetMs: options.targetMs, minMs: options.minBudgetMs, clock, onError: (error, queue) => reportError(error, { id: `queue:${queue.id}`, phase: queue.phase }) })
   const runner = createPhaseRunner({ clock, ctx, lists, reportError, fixedDt, probe: () => systemProbe })
   const { runPhase, runFixed } = runner
 
@@ -43,9 +43,9 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     for (const phase of FRAME_PHASES) lists[phase].settle()
   }
 
-  const begin = (): void => {
+  const begin = (frameStartMs?: number): void => {
     running = true
-    budget.beginFrame()
+    budget.beginFrame(frameStartMs)
     ctx.frame++
     ctx.paused = paused
     ctx.scripted = scripted
@@ -82,7 +82,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     const time = resolveFrameTime(realSeconds, run.exact === true, residual, timeConfig)
     residual = time.residual
     const seconds = time.seconds
-    begin()
+    begin(run.frameStartMs)
     try {
       ctx.simulated = run.simulate !== false
       ctx.realDt = seconds
@@ -92,7 +92,10 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
       ctx.alpha = accumulator / fixedMicros
       runPhase('present', paused ? 0 : seconds * timeScale)
       budget.drain('present')
-      if (run.render !== false) runPhase('render', seconds)
+      if (run.render !== false) {
+        runPhase('render', seconds)
+        budget.recordRender(runner.phaseMs.render)
+      }
       runPhase('idle', seconds)
       budget.drain('idle')
     } finally {

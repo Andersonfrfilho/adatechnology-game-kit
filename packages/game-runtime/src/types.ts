@@ -43,8 +43,12 @@ export interface SchedulerOptions {
   readonly maxFrameSeconds?: number
   /** A frame time within this many ms of a whole number of fixed steps is snapped to it. Default 0.25. 0 turns it off. */
   readonly snapMs?: number
-  /** Frame budget for the deferred queues, ms. Default 4. */
+  /** Frame budget for the deferred queues, ms. Default 4. With `targetMs` it is the ceiling of a frame that has a deadline. */
   readonly budgetMs?: number
+  /** Frame deadline, ms (16.6 at 60 Hz): turns on the deadline mode for the frames that carry `frameStartMs`. Absent: the quota of today. */
+  readonly targetMs?: number
+  /** Floor of the deadline mode, ms: the queues get at least this much of a frame. Default 1. */
+  readonly minBudgetMs?: number
   /** Milliseconds clock; default `performance.now` (or `Date.now`). Tests inject a fake. */
   readonly clock?: () => number
   /** A system that throws: default logs once per system id and keeps the frame going. */
@@ -61,6 +65,12 @@ export interface FrameRunOptions {
    * accumulator, nothing goes to `droppedSeconds`), one `input` with `dt = realSeconds` and one `lateSimulate` with `dt = realSeconds * scale`.
    */
   readonly exact?: boolean
+  /**
+   * Start of this display frame, the `requestAnimationFrame` timestamp (`startLoop` fills it). With it, and a budget `targetMs`, the frame is run in the
+   * deadline mode: the queues get what is left until `frameStartMs + targetMs`. A value that is not within one `targetMs` before the scheduler clock (another
+   * time base, or a callback a whole frame late) is read as "now". Absent (headless, `advance`, tests): the quota of today.
+   */
+  readonly frameStartMs?: number
 }
 
 export interface Command {
@@ -83,16 +93,36 @@ export interface QueueStats {
   readonly pending: number
   readonly ranUnits: number
   readonly spentMs: number
+  /** Milliseconds this queue spent in the last frame. */
+  readonly lastSpentMs: number
+  /** Registered with `mustDrain`: its time is counted in `mustDrainSpentMs`, outside the deadline. */
+  readonly mustDrain: boolean
   readonly framesWaiting: number
   readonly maxFramesWaiting: number
   readonly forced: number
 }
 
 export interface BudgetStats {
+  /** Mode of the last frame: `deadline` only with a `targetMs` and a `frameStartMs`. */
+  readonly mode: 'quota' | 'deadline'
+  /** Ceiling (deadline) or quota (quota) per frame. */
   readonly ms: number
-  /** Milliseconds spent by the queues in the last frame. */
+  /** Deadline of the last frame; undefined in the quota mode. */
+  readonly targetMs: number | undefined
+  /** What the queues could spend in the last frame: the deadline's `A` (between the floor and `ms`), or `ms` minus the debt in the quota mode. */
+  readonly allowanceMs: number
+  /** Moving average of the render phase used to reserve its time. */
+  readonly renderEstimateMs: number
+  /** Milliseconds spent in the last frame by the queues that are not `mustDrain`. */
   readonly spentMs: number
-  /** Milliseconds the last frame went over; repaid by the next one (capped at one budget). */
+  /** Milliseconds spent in the last frame by the `mustDrain` queues (outside the deadline). */
+  readonly mustDrainSpentMs: number
+  /** `max(0, spentMs - max(allowanceMs, floor))`: the excess the frame spent. At most one unit that crosses the deadline plus the forced units. */
+  readonly overMs: number
+  /** Units the starvation guard forced in the last frame, and the cost of each. */
+  readonly forcedThisFrame: number
+  readonly forcedMs: readonly number[]
+  /** Milliseconds the last frame went over; repaid by the next one (capped at one budget). Quota mode only. */
   readonly debtMs: number
   readonly queues: readonly QueueStats[]
 }
@@ -102,8 +132,19 @@ export interface FrameBudget {
   ms: number
   /** Calls `queue.attach?.()`; the returned function calls `queue.detach?.()` and takes it out. */
   register(queue: DeferredQueue, options: DeferredQueueOptions): () => void
-  /** Starts a frame: counter, reserves and debt. The scheduler calls it; `drain('present')` starts one by itself when none is open. */
-  beginFrame(): void
+  /** Frame deadline, ms (mutable: the host changes it with the monitor or the frame cap). Undefined: the quota mode. */
+  targetMs: number | undefined
+  /** Mode of the frame in course (or the last one): `deadline` only with a `targetMs` and a `frameStartMs`. */
+  readonly mode: 'quota' | 'deadline'
+  /**
+   * Starts a frame: counter, reserves and debt. The scheduler calls it; `drain('present')` starts one by itself when none is open (quota mode).
+   * With `frameStartMs` (the clock's time base) and a `targetMs` the frame has a deadline and no debt.
+   */
+  beginFrame(frameStartMs?: number): void
+  /** The scheduler reports the milliseconds of the render phase of a frame; it feeds the estimate (clamped to `[0, targetMs]`). */
+  recordRender(ms: number): void
+  /** Called by a system of the frame whose render was not a typical one (frame pacer skipped it, warm-up ran): the frame's render sample is dropped. */
+  skipRenderSample(): void
   /** Drains the queues of one phase; the scheduler calls it, a host without the scheduler may too. */
   drain(phase: 'present' | 'idle'): void
   /** Every queue to empty, now (synchronous step, clear). */

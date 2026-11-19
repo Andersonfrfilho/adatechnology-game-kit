@@ -39,6 +39,8 @@ export interface DeferredQueueOptions {
   readonly minEveryFrames?: number
   /** Milliseconds of every frame kept for this queue before the others share the rest (when it has work). Default 0. */
   readonly reserveMs?: number
+  /** The queue runs to empty in the drain of its phase, outside the frame deadline and the budget (the blow's visible effect). Counted apart. Default false. */
+  readonly mustDrain?: boolean
 }
 
 /** The ids of the kit's queues: what `DeferredQueue.id` says and what `DEFERRED_PRIORITY` is keyed by. */

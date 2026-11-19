@@ -9,11 +9,13 @@ export interface QueueEntry {
   readonly priority: number
   readonly minEveryFrames: number
   readonly reserveMs: number
+  readonly mustDrain: boolean
   reserveLeft: number
   waitingFrames: number
   maxWaitingFrames: number
   ranUnits: number
   spentMs: number
+  lastSpentMs: number
   forced: number
   lastPending: number
 }
@@ -25,11 +27,13 @@ export function createQueueEntry(queue: DeferredQueue, options: DeferredQueueOpt
     priority: options.priority,
     minEveryFrames: options.minEveryFrames ?? DEFAULT_MIN_EVERY_FRAMES,
     reserveMs: options.reserveMs ?? 0,
+    mustDrain: options.mustDrain === true,
     reserveLeft: 0,
     waitingFrames: 0,
     maxWaitingFrames: 0,
     ranUnits: 0,
     spentMs: 0,
+    lastSpentMs: 0,
     forced: 0,
     lastPending: 0,
   }
@@ -48,6 +52,8 @@ export function queueStats(entry: QueueEntry): QueueStats {
     pending: entry.lastPending,
     ranUnits: entry.ranUnits,
     spentMs: entry.spentMs,
+    lastSpentMs: entry.lastSpentMs,
+    mustDrain: entry.mustDrain,
     framesWaiting: entry.waitingFrames,
     maxFramesWaiting: entry.maxWaitingFrames,
     forced: entry.forced,

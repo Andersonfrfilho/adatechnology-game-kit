@@ -26,6 +26,10 @@ const stop = startLoop(scheduler)
 
 `scheduler.budget.register(queue, { priority, phase, reserveMs, minEveryFrames })` takes a `DeferredQueue` (a contract of `@adatechnology/game-contracts`) and calls its `attach()`: from then on the owner stops draining on its own. Queues of one phase run by priority inside a shared time budget (4 ms by default); a unit that goes over becomes debt for the next frame; a queue with work never waits more than `minEveryFrames`; `reserveMs` keeps time for a queue the others must not starve. A queue that was never registered keeps its own draining.
 
+### Frame deadline (opt-in per frame)
+
+With `targetMs` (scheduler option or `budget.targetMs`, mutable) a frame that carries `frameStartMs` (`startLoop` passes the `requestAnimationFrame` timestamp) runs in the deadline mode: `budgetMs` becomes the ceiling and the queues get what is left until `frameStartMs + targetMs`, minus a moving average of the render phase, never under the floor (`minBudgetMs`, default 1 ms). There is no debt: the real clock charges the next frame. Reserves come out of the floor (their sum may not pass it). A frame without `frameStartMs` (headless, `advance`, tests) is the quota of today, with debt. A timestamp more than one `targetMs` behind the clock (another time base, or a callback a whole frame late) is read as "now". A system of the render phase calls `budget.skipRenderSample()` in a frame whose render was not a typical one. A queue registered with `mustDrain` runs to empty in the drain of its phase, outside the deadline, and is counted in `mustDrainSpentMs`. `budget.stats()` has `mode`, `allowanceMs`, `renderEstimateMs`, `overMs`, `forcedThisFrame` and `forcedMs`.
+
 ## Errors, bad times and teardown
 
 - A system or a queue that throws is reported (`onError`, default: logged once per id; a queue's id is `queue:<id>`) and the frame goes on; a queue that threw counts 0 units. If a frame fails outside any system the scheduler is left usable: the next frame runs.
