@@ -1,3 +1,5 @@
+import { createScheduler } from '@adatechnology/game-runtime'
+import type { Scheduler } from '@adatechnology/game-runtime'
 import { createSemiSimDriver, createSurfaces, semiSpecFromStats } from '@adatechnology/game-vehicles-driving'
 import type { SemiDriver, SemiInput, SemiSimSpec, SurfaceRegistry } from '@adatechnology/game-vehicles-driving'
 
@@ -7,7 +9,13 @@ import type { ProvingMemo, ProvingResult, ProvingSubject, ProvingTest } from './
 /** The semi-simulation spec the runner drives a subject with: from the card's ratings and the body, with the subject's own overrides. */
 export const subjectSpec = (subject: ProvingSubject): SemiSimSpec => ({ ...semiSpecFromStats(subject.stats, subject.body), ...subject.spec })
 
-/** One measured test in progress. A host steps it with the frame's seconds and draws `driver.state`; `runTest` steps it to the end in one go. */
+/** Physics steps of one scheduler tick (1/60 s): the proving run steps its driver at twice the tick, as the room's physics loop does. */
+export const STEPS_PER_TICK = 2
+
+/**
+ * One measured test in progress. It owns no clock: a host registers `stepFixed(STEPS_PER_TICK)` in its scheduler's `fixedSimulate` and draws `driver.state`;
+ * standalone (tests, CLI) the caller drives `stepFixed` or the thin `advance(seconds)`. `runTest` steps it to the end in one go.
+ */
 export interface ProvingRun {
   readonly test: ProvingTest
   readonly subject: ProvingSubject
@@ -20,7 +28,12 @@ export interface ProvingRun {
   readonly memo: ProvingMemo
   /** What the procedure asked of the controls on the last step (all zero before the first): a host plays the brakes and the engine from it. */
   readonly input: SemiInput
-  step(dt: number): void
+  /** Seconds of one physics step (`RunOptions.fixedStep`, default 1/120). */
+  readonly fixedStep: number
+  /** Runs `steps` physics steps now (stops at the end of the run); no accumulator, no time scale: the caller's scheduler decides how many. */
+  stepFixed(steps: number): void
+  /** Standalone helper: feeds `seconds` to a private `game-runtime` scheduler (exact, no render) whose fixed tick runs `STEPS_PER_TICK` steps; the remainder waits for the next call. */
+  advance(seconds: number): void
   /** The result so far; pending while the run has not ended. */
   result(): ProvingResult
 }
@@ -29,7 +42,7 @@ export interface RunOptions {
   surfaces?: SurfaceRegistry
   /** Seconds between two trace samples (default 0.1). */
   sampleEvery?: number
-  /** Fixed step of the simulation (default 1/120 s); `step(dt)` splits the frame into steps this long. */
+  /** Fixed step of the simulation (default 1/120 s): the seconds one `stepFixed` step integrates. */
   fixedStep?: number
 }
 
@@ -48,7 +61,7 @@ export function startRun(test: ProvingTest, subject: ProvingSubject, options: Ru
   let time = 0
   let done = false
   let nextSample = 0
-  let carry = 0
+  let scheduler: Scheduler | undefined
   let last: SemiInput = { throttle: 0, brake: 0, steer: 0, handbrake: false }
   const tick = (h: number): void => {
     const input = procedure.input(driver.state, time, memo)
@@ -79,12 +92,16 @@ export function startRun(test: ProvingTest, subject: ProvingSubject, options: Ru
     get input() {
       return last
     },
-    step(dt) {
-      carry += dt
-      while (!done && carry >= fixed) {
-        carry -= fixed
-        tick(fixed)
+    fixedStep: fixed,
+    stepFixed(steps) {
+      for (let i = 0; i < steps && !done; i++) tick(fixed)
+    },
+    advance(seconds) {
+      if (!scheduler) {
+        scheduler = createScheduler({ fixedDt: fixed * STEPS_PER_TICK })
+        scheduler.add(() => this.stepFixed(STEPS_PER_TICK), { phase: 'fixedSimulate', id: 'proving.run' })
       }
+      scheduler.frame(seconds, { exact: true, render: false })
     },
     result() {
       const range = test.range?.(subject) ?? {}
@@ -102,7 +119,6 @@ export function startRun(test: ProvingTest, subject: ProvingSubject, options: Ru
 /** Runs a measured test to its end and returns the result. */
 export function runTest(test: ProvingTest, subject: ProvingSubject, options: RunOptions = {}): ProvingResult {
   const run = startRun(test, subject, options)
-  const fixed = options.fixedStep ?? 1 / 120
-  while (!run.done) run.step(fixed * 60)
+  while (!run.done) run.stepFixed(STEPS_PER_TICK)
   return run.result()
 }
