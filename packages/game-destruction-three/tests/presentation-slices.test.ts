@@ -86,12 +86,8 @@ describe('presentation work spread over frames', () => {
     expect(world.splits).toHaveLength(LOOSE_GROUP_COUNT)
   })
 
-  it('splits the loose groups one per frame at 0 ms, every one of them in the end', () => {
+  it('splits every loose group in the first frame even at 0 ms: the clock does not decide what comes off', () => {
     const { renderer, world } = looseParts({ eventBudgetMs: 0 })
-    for (let frame = 1; frame <= LOOSE_GROUP_COUNT; frame++) {
-      renderer.update(0.016)
-      expect(world.splits).toHaveLength(frame)
-    }
     renderer.update(0.016)
     expect(world.splits).toHaveLength(LOOSE_GROUP_COUNT)
     expect(world.state('o1')?.groups).toHaveLength(1)

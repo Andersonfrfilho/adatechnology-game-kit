@@ -2301,17 +2301,15 @@ class Renderer implements DestructionRenderer {
       this.splitWithin(this.work, b, st, torn)
       return
     }
-    // every loose group at once, while the frame has time: the world builds what is left once, not once per group (a blast tears several off a house of
-    // hundreds of parts); out of time, one now and the rest in the next slice, as before
-    const now = this.drainClock() >= this.sliceDeadline ? 1 : loose
-    const atLoad = this.splittingAtLoad
+    // every loose group at once, whatever the clock says: the world builds what is left once, not once per group (a blast tears several off a house of
+    // hundreds of parts), and what comes off in a frame must not depend on how long the frame took
     this.visuals.batchRebuilds(() => {
       // the hinges are read before, while the groups still hang on what stands
       let hinges: (Vec3 | null)[]
       let newIds: string[]
       try {
-        hinges = Array.from({ length: now }, (_, i) => this.hingeOf(objectId, i + 1))
-        newIds = this.world.splitGroups(objectId, Array.from({ length: now }, (_, i) => i + 1))
+        hinges = Array.from({ length: loose }, (_, i) => this.hingeOf(objectId, i + 1))
+        newIds = this.world.splitGroups(objectId, Array.from({ length: loose }, (_, i) => i + 1))
       } catch {
         return
       }
@@ -2320,19 +2318,6 @@ class Renderer implements DestructionRenderer {
         this.hangOnHinge(newId, hinges[i] ?? null)
       })
     })
-    if (now < loose) {
-      this.slices.push(() => {
-        this.staticDirty.add(objectId)
-        const outer = this.splittingAtLoad
-        this.splittingAtLoad = atLoad
-        try {
-          this.splitLoose(objectId, torn)
-        } finally {
-          this.splittingAtLoad = outer
-        }
-      })
-      return
-    }
     this.afterSplit(b, torn)
   }
 
