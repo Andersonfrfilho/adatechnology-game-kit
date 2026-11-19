@@ -26,6 +26,18 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
   `test-area` nem `bench`.
 - **T1.5** A sala monta o mundo pelo `createKitWorld`. Só tira código do `room.ts`; testes e checagens da sala iguais (`pnpm check:room`).
 
+## Fase 1b — Ação do jogador no SDK
+> 🤖 Modelo: `sonnet` (T1.6 é 🧠 — `opus`, validar com `architect`)
+
+Achado da T1.1 (`design-host.md` §6): tiro, golpe, explosivos, item na mão, uso de item e recipientes (~1.500 linhas) moram no `room.ts`.
+Sem esta fase a cena só anda e olha.
+
+- **T1.6 🧠** Desenho do `createPlayerActions(world, { player, arsenal, hands })`: dono de cada parte pelo `kit_owner` (regra no núcleo,
+  desenho no `-three`), o que é escolha de jogo (teclas, inventário), e a ordem de extração para não quebrar a sala.
+- **T1.7** Extrair explosivos e tiro (`createExplosives` 2932, `fireShots` 2527) para o pacote dono; a sala passa a usar. Goldens e hash iguais.
+- **T1.8** Extrair golpe, item na mão e uso de item (`stepStrikes` 2791, `followHeld` 3417, `updateItemUse` 3585).
+- **T1.9** Extrair andar, empurrar e recipientes (`stepWalk` 4154, `footing` 858, `syncContainers` 4108). A sala só tira linhas (§15).
+
 ## Fase 2 — Esqueleto da cena só com o que já existe
 > 🤖 Modelo: `sonnet` (T2.1 é 🧠 — `opus`; T2.5 → `haiku`)
 
@@ -86,7 +98,8 @@ na sala da área dela (gates 1 e 2, com print) e só então troca o seu `missing
 /oh-my-claudecode:autopilot Execute a spec specs/011-cena-de-referencia/ (leia spec.md, plan.md, tasks.md, cartas.md e as regras
 §1, §2, §5, §11, §13, §14 e §15 antes). Ordem com a spec 010 conforme plan.md: a Fase 1 e a 2 daqui começam depois da T0.2 da 010.
 Uma task por vez, na ordem do tasks.md, num worktree próprio; kit_owner antes de criar qualquer peça.
-Modelos: Fase 1 → executor model=sonnet · T1.1 🧠 → opus (validar com architect) · Fase 2 → executor model=sonnet · T2.1 🧠 → opus ·
+Modelos: Fase 1 → executor model=sonnet · T1.1 🧠 → opus (validar com architect) · Fase 1b → executor model=sonnet ·
+T1.6 🧠 → opus (validar com architect) · Fase 2 → executor model=sonnet · T2.1 🧠 → opus ·
 T2.5 → executor model=haiku · Fase 3 → executor model=sonnet · T3.1 e T3.3 🧠 → opus (validar com engenheiro-estrutural) ·
 T3.9 e T3.10 → executor model=haiku · Fase 4 → executor model=sonnet · T4.1 🧠 → opus · revisão final → code-reviewer model=sonnet.
 Escalada: gate falhou 2x → sobe um nível (haiku→sonnet→opus) e registra em evidence.md.
