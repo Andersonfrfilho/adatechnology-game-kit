@@ -42,6 +42,9 @@
   "peerDependencies": {
     "three": "^0.160.0"
   },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:^"
+  },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

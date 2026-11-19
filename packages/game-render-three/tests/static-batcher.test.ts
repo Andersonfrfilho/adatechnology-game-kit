@@ -1,6 +1,8 @@
+import { DEFERRED_QUEUE_ID, checkDeferredQueue } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 
-import { BATCHED_LAYER, createStaticBatcher } from '../src'
+import { BATCHED_LAYER, createStaticBatchQueue, createStaticBatcher } from '../src'
+import type { StaticBatcher } from '../src'
 import { THREE } from './helpers'
 
 function car() {
@@ -273,5 +275,187 @@ describe('createStaticBatcher following its meshes', () => {
     batcher.dispose()
     expect(walls.every((wall) => wall.castShadow)).toBe(true)
     expect(batcher.group.parent).toBeNull()
+  })
+})
+
+type Reference = { position: number[]; normal: number[]; uv: number[]; index: number[] }
+
+/** The copy the batcher did before the typed-array loop: `getX` per vertex, one normal matrix per attribute. */
+function referenceMerge(meshes: THREE.Mesh[], root: THREE.Object3D): Reference {
+  root.updateMatrixWorld(true)
+  const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
+  const out: Reference = { position: [], normal: [], uv: [], index: [] }
+  let vertexOffset = 0
+  for (const mesh of meshes) {
+    const matrix = new THREE.Matrix4().multiplyMatrices(inverse, mesh.matrixWorld)
+    const normalMatrix = new THREE.Matrix3().getNormalMatrix(matrix)
+    const { position, normal, uv } = mesh.geometry.attributes as Record<string, THREE.BufferAttribute>
+    const target = { position: new Float32Array(position!.count * 3), normal: new Float32Array(position!.count * 3) }
+    for (let at = 0; at < position!.count; at++) {
+      const e = matrix.elements
+      const x = position!.getX(at)
+      const y = position!.getY(at)
+      const z = position!.getZ(at)
+      target.position.set([e[0]! * x + e[4]! * y + e[8]! * z + e[12]!, e[1]! * x + e[5]! * y + e[9]! * z + e[13]!, e[2]! * x + e[6]! * y + e[10]! * z + e[14]!], at * 3)
+      const n = normalMatrix.elements
+      const nx = normal!.getX(at)
+      const ny = normal!.getY(at)
+      const nz = normal!.getZ(at)
+      const vx = n[0]! * nx + n[3]! * ny + n[6]! * nz
+      const vy = n[1]! * nx + n[4]! * ny + n[7]! * nz
+      const vz = n[2]! * nx + n[5]! * ny + n[8]! * nz
+      const length = Math.hypot(vx, vy, vz) || 1
+      target.normal.set([vx / length, vy / length, vz / length], at * 3)
+    }
+    out.position.push(...target.position)
+    out.normal.push(...target.normal)
+    for (let at = 0; at < uv!.count; at++) out.uv.push(uv!.getComponent(at, 0), uv!.getComponent(at, 1))
+    const index = mesh.geometry.index!
+    for (let at = 0; at < index.count; at++) out.index.push(index.getX(at) + vertexOffset)
+    vertexOffset += position!.count
+  }
+  return out
+}
+
+describe('createStaticBatcher merge copy', () => {
+  const merged = (batcher: ReturnType<typeof createStaticBatcher>): Reference => {
+    const { attributes, index } = (batcher.group.children[0] as THREE.Mesh).geometry
+    return {
+      position: [...(attributes.position!.array as Float32Array)],
+      normal: [...(attributes.normal!.array as Float32Array)],
+      uv: [...(attributes.uv!.array as Float32Array)],
+      index: [...(index!.array as Uint16Array)],
+    }
+  }
+  const moved = () => {
+    const root = new THREE.Group()
+    root.position.set(3, -1, 2)
+    root.rotation.set(0.2, 0.5, 0.1)
+    const material = new THREE.MeshStandardMaterial()
+    const meshes = [new THREE.BoxGeometry(1, 2, 3), new THREE.SphereGeometry(1, 8, 6), new THREE.CylinderGeometry(1, 0.5, 2, 7)].map((geometry, at) => {
+      const mesh = new THREE.Mesh(geometry, material)
+      mesh.position.set(at, at * 2, -at)
+      mesh.rotation.set(at * 0.3, 0.1, at)
+      mesh.scale.set(1 + at * 0.2, 1, 2 - at * 0.3)
+      root.add(mesh)
+      return mesh
+    })
+    return { root, meshes }
+  }
+
+  it('gives the same bytes as the per-vertex copy for positions, normals, uvs and indexes', () => {
+    const { root, meshes } = moved()
+    const expected = referenceMerge(meshes, root)
+    const actual = merged(createStaticBatcher(THREE, root))
+    expect(actual.position).toEqual([...new Float32Array(expected.position)])
+    expect(actual.normal).toEqual([...new Float32Array(expected.normal)])
+    expect(actual.uv).toEqual(expected.uv)
+    expect(actual.index).toEqual(expected.index)
+  })
+
+  it('reads an interleaved or normalized attribute through its accessors, as before', () => {
+    const root = new THREE.Group()
+    const material = new THREE.MeshBasicMaterial()
+    const plain = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material)
+    const odd = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material)
+    const source = odd.geometry.attributes.position as THREE.BufferAttribute
+    const stride = new THREE.InterleavedBuffer(new Float32Array(source.count * 4), 4)
+    const interleaved = new THREE.InterleavedBufferAttribute(stride, 3, 1)
+    for (let at = 0; at < source.count; at++) interleaved.setXYZ(at, source.getX(at), source.getY(at), source.getZ(at))
+    odd.geometry.setAttribute('position', interleaved as unknown as THREE.BufferAttribute)
+    odd.position.set(2, 0, 0)
+    root.add(plain, odd)
+    const batcher = createStaticBatcher(THREE, root, { materialKey: () => 'same' })
+    const position = (batcher.group.children[0] as THREE.Mesh).geometry.attributes.position as THREE.BufferAttribute
+    expect(position.count).toBe(2 * source.count)
+    expect(position.getX(source.count)).toBeCloseTo(source.getX(0) + 2)
+  })
+})
+
+describe('createStaticBatchQueue', () => {
+  const scene = (count: number) => Array.from({ length: count }, () => car().root)
+
+  it('honours the DeferredQueue contract', () => {
+    const queue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.STATIC_BATCH })
+    const report = checkDeferredQueue(queue.deferredQueue(), () => scene(2).forEach((root) => createStaticBatcher(THREE, root, { queue })))
+    expect(report.problems).toEqual([])
+  })
+
+  it('carries the id it was given and the static-batch default', () => {
+    expect(createStaticBatchQueue({ id: 'animals.static-batch' }).deferredQueue().id).toBe('animals.static-batch')
+    expect(createStaticBatchQueue().deferredQueue().id).toBe(DEFERRED_QUEUE_ID.STATIC_BATCH)
+  })
+
+  it('merges nothing in the call, one chunk per unit, rotating between the batchers', () => {
+    const queue = createStaticBatchQueue()
+    const [first, second] = scene(2).map((root) => createStaticBatcher(THREE, root, { queue })) as [StaticBatcher, StaticBatcher]
+    const deferred = queue.deferredQueue()
+    expect(first.stats().batches + second.stats().batches).toBe(0)
+    // each car has two groups (paint, glass): four chunks
+    expect(deferred.pending()).toBe(4)
+    expect(deferred.run(0, () => 1)).toBe(1)
+    expect([first.stats().batches, second.stats().batches]).toEqual([1, 0])
+    expect(deferred.run(0, () => 1)).toBe(1)
+    expect([first.stats().batches, second.stats().batches]).toEqual([1, 1])
+  })
+
+  it('runs units until the deadline and at least one when it has passed', () => {
+    const queue = createStaticBatchQueue()
+    scene(2).forEach((root) => createStaticBatcher(THREE, root, { queue }))
+    let now = 0
+    expect(queue.deferredQueue().run(2, () => now++)).toBe(2)
+    expect(queue.deferredQueue().pending()).toBe(2)
+  })
+
+  it('leaves the merging to a registered queue: update releases changes but merges nothing', () => {
+    const queue = createStaticBatchQueue()
+    queue.deferredQueue().attach?.()
+    const { root, parts } = car()
+    const batcher = createStaticBatcher(THREE, root, { queue })
+    batcher.update()
+    expect(batcher.stats().batches).toBe(0)
+    queue.deferredQueue().flush()
+    expect(batcher.stats()).toEqual({ batches: 2, batched: 5, released: 0 })
+    parts[0]!.position.x += 1
+    parts[0]!.updateMatrixWorld(true)
+    expect(batcher.update()).toBe(1)
+  })
+
+  it('drains inside update with budgetMs when no budget registered it, as before', () => {
+    const queue = createStaticBatchQueue()
+    const { root } = car()
+    const batcher = createStaticBatcher(THREE, root, { queue })
+    expect(batcher.stats().batches).toBe(0)
+    batcher.update()
+    expect(batcher.stats().batches).toBe(2)
+    queue.deferredQueue().detach?.()
+    const { root: other } = car()
+    const slow = createStaticBatcher(THREE, other, { queue, budgetMs: 0 })
+    slow.update()
+    expect(slow.stats().batches).toBe(1)
+    slow.update()
+    expect(slow.stats().batches).toBe(2)
+  })
+
+  it('forgets a disposed batcher and its waiting chunks', () => {
+    const queue = createStaticBatchQueue()
+    const { root } = car()
+    const batcher = createStaticBatcher(THREE, root, { queue })
+    expect(queue.deferredQueue().pending()).toBe(2)
+    batcher.dispose()
+    expect(queue.deferredQueue().pending()).toBe(0)
+    expect(queue.deferredQueue().run(0, () => 1)).toBe(0)
+  })
+
+  it('splits a group into chunks of maxVertices and merges one chunk per unit', () => {
+    const queue = createStaticBatchQueue()
+    const root = new THREE.Group()
+    const material = new THREE.MeshBasicMaterial()
+    for (let at = 0; at < 6; at++) root.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material))
+    const batcher = createStaticBatcher(THREE, root, { queue, maxVertices: 48 })
+    // a box has 24 vertices: two per chunk
+    expect(queue.deferredQueue().pending()).toBe(3)
+    queue.deferredQueue().run(0, () => 1)
+    expect(batcher.stats()).toEqual({ batches: 1, batched: 2, released: 0 })
   })
 })
