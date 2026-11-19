@@ -1368,6 +1368,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-render-three:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:^
+        version: link:../game-contracts
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
