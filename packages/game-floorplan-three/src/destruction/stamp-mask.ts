@@ -28,3 +28,16 @@ export function stampMask(grid: StampGrid, box: StampBox, inside: (s: number, y:
     }
   }
 }
+
+/** The plaster that breaks off around a hole: `least` metres always, and up to `band` metres more where its ragged edge (noise in [0, 1)) reaches. */
+export type SpallReach = { readonly least: number; readonly band: number }
+
+/**
+ * Whether the plaster is gone at distance `d` from a hole. The noise is asked only inside the ragged band: within `least` it is gone and past `least + band` it
+ * stays whatever the noise says, and those are most of the texels a hole stamps (the same answer as asking the noise everywhere).
+ */
+export function isPlasterGone(d: number, reach: SpallReach, ragged: () => number): boolean {
+  if (d <= reach.least) return true
+  if (d > reach.least + reach.band) return false
+  return d <= reach.least + reach.band * ragged()
+}
