@@ -1,6 +1,6 @@
-import { markKitOrigin } from '@adatechnology/game-contracts'
-import { createStaticBatcher } from '@adatechnology/game-render-three'
-import type { StaticBatcher, ThreeLib } from '@adatechnology/game-render-three'
+import { DEFERRED_QUEUE_ID, markKitOrigin } from '@adatechnology/game-contracts'
+import { createStaticBatchQueue, createStaticBatcher } from '@adatechnology/game-render-three'
+import type { StaticBatchQueue, StaticBatcher, ThreeLib } from '@adatechnology/game-render-three'
 import type { Object3D } from 'three'
 
 /**
@@ -10,6 +10,8 @@ import type { Object3D } from 'three'
  * of its new shape, the frame it changes (`createStaticBatcher` with `shadowOnly`).
  */
 export const HOUSE_SHADOW_BUDGET_MS = 2
+/** The one queue of the shadow batches of every house (the floorplan package is its owner): the room registers `houseShadowQueue.deferredQueue()` with its frame budget. Not registered, each house drains it in its `update` with `HOUSE_SHADOW_BUDGET_MS`. */
+export const houseShadowQueue: StaticBatchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.HOUSE_SHADOW_BATCH })
 /** The most vertices per shadow batch: one batch is merged in one frame (~3 ms for 16k on a laptop core; 65k took 5 to 10 ms), and the shadow camera culls each by its own part of the house. */
 export const HOUSE_SHADOW_BATCH_VERTICES = 16384
 /** Once this share of the batched meshes cast on their own again (a blast took a wall, the cut view hid a floor), the batches are made again from what stands, after this quiet time. */
@@ -26,16 +28,19 @@ export type HouseShadowBatches = {
 export type HouseShadowBatchesOptions = {
   /** The clock (ms) the quiet time is read from (default `performance.now`). */
   readonly now?: () => number
+  /** The queue the chunks are merged by (default `houseShadowQueue`, shared by every house). */
+  readonly queue?: StaticBatchQueue
 }
 
 /** Shadow-only batches of the still meshes under `root`, made over the frames (`HOUSE_SHADOW_BUDGET_MS` each) on the first `update`. */
 export function createHouseShadowBatches(THREE: ThreeLib, root: Object3D, options: HouseShadowBatchesOptions = {}): HouseShadowBatches {
   const now = options.now ?? (() => performance.now())
+  const queue = options.queue ?? houseShadowQueue
   let batcher: StaticBatcher | null = null
   let changedAt = Number.NEGATIVE_INFINITY
   const make = (): StaticBatcher => {
     // a mesh the house marks as its own (a pivot that swings, a piece that falls) may still be batched: it leaves the batch when it moves
-    const made = createStaticBatcher(THREE, root, { shadowOnly: true, budgetMs: HOUSE_SHADOW_BUDGET_MS, maxVertices: HOUSE_SHADOW_BATCH_VERTICES, include: (mesh) => mesh.userData.noShadowBatch !== true })
+    const made = createStaticBatcher(THREE, root, { shadowOnly: true, queue, budgetMs: HOUSE_SHADOW_BUDGET_MS, maxVertices: HOUSE_SHADOW_BATCH_VERTICES, include: (mesh) => mesh.userData.noShadowBatch !== true })
     made.group.name = 'house-shadow-batches'
     // the batches copy the pieces' triangles: a hit test reads the pieces, never the copy
     made.group.userData.noSurfaceRay = true

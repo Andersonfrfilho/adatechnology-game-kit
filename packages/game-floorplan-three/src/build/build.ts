@@ -277,7 +277,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         };
 
         // the still meshes cast from a few shadow-only batches; what changes casts its own shadow again (house/shadow-batches.ts)
-        const shadowBatches = cfg.shadowBatches === false ? null : createHouseShadowBatches(THREE, root);
+        const shadowBatches = cfg.shadowBatches === false ? null : createHouseShadowBatches(THREE, root, { queue: cfg.shadowQueue });
         const res: House = {
           version: VERSION, r: r0, name: r.name, quality: h.quality, group: root, house, groups: gs,
           floors: r.floors.map((a, i) => gs['f' + i] || new THREE.Group()), ceilings: r.floors.map((a, i) => gs['t' + i] || null), roof: gs.roof || null, lot: gs.lot || null, ground: gs.ground || null, building: gs.building || null,

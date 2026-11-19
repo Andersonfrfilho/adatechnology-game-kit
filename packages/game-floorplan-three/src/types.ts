@@ -1,7 +1,7 @@
 import type * as THREE from 'three'
 import type { WindowFrame } from '@adatechnology/game-floorplan'
 import type { DeferredQueue, GroundExcavation } from '@adatechnology/game-contracts'
-import type { LightBudget } from '@adatechnology/game-render-three'
+import type { LightBudget, StaticBatchQueue } from '@adatechnology/game-render-three'
 import type { Messages } from './locale.js'
 import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-props3d'
 import type { DestructionEvent, DestructionWorld } from '@adatechnology/game-destruction'
@@ -108,6 +108,8 @@ export interface HouseRendererOptions {
   drawCallBudget?: number
   /** The still meshes cast their shadow from a few shadow-only batches (`createHouseShadowBatches`), made over the first frames of `update`. Default true; false: each mesh casts its own. */
   shadowBatches?: boolean
+  /** The queue the shadow batches are merged by (default `houseShadowQueue`, one for every house; the room registers it with its frame budget). */
+  shadowQueue?: StaticBatchQueue
   onChange?: (change: { shadow: boolean }) => void
   /** A collider opened or closed (a door, a gate, a piece of furniture moved). */
   onCollider?: (collider: HouseBoxCollider | HouseFurnitureCollider) => void

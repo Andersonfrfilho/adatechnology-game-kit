@@ -1,9 +1,11 @@
+import { checkDeferredQueue } from '@adatechnology/game-contracts'
+import { createStaticBatchQueue } from '@adatechnology/game-render-three'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import type { Mesh, Object3D } from 'three'
-import { HOUSE_SHADOW_REBATCH_AFTER_MS, createHouseShadowBatches } from '../src/house/shadow-batches'
+import { HOUSE_SHADOW_REBATCH_AFTER_MS, createHouseShadowBatches, houseShadowQueue } from '../src/house/shadow-batches'
 import { THREE, houseOf, planOf } from './helpers/houses'
 import { physicsOption } from './setup-physics'
 
@@ -107,5 +109,49 @@ describe('house shadow batches', () => {
     expect(walls.every((wall) => !wall.castShadow)).toBe(true)
     batches.dispose()
     expect(walls.every((wall) => wall.castShadow)).toBe(true)
+  })
+})
+
+describe('house shadow batches as an owner queue', () => {
+  const rootOf = (): Object3D => {
+    const root = new THREE.Group()
+    const material = new THREE.MeshLambertMaterial()
+    // ~40k vertices: more than one chunk of HOUSE_SHADOW_BATCH_VERTICES
+    for (let at = 0; at < 4; at++) {
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 100, 100), material)
+      mesh.position.x = at * 2
+      mesh.castShadow = true
+      root.add(mesh)
+    }
+    return root
+  }
+
+  it('is the shared queue by default and keeps the DeferredQueue contract', () => {
+    const queue = createStaticBatchQueue({ id: 'floorplan.shadow-batch' })
+    const batches = createHouseShadowBatches(THREE, rootOf(), { queue })
+    batches.update()
+    expect(queue.deferredQueue().id).toBe('floorplan.shadow-batch')
+    expect(houseShadowQueue.deferredQueue().id).toBe('floorplan.shadow-batch')
+    expect(checkDeferredQueue(queue.deferredQueue(), () => {})).toEqual({ ok: true, problems: [] })
+    batches.dispose()
+  })
+
+  it('leaves the chunks to the budget once attached, and merges them in update without one', () => {
+    const queue = createStaticBatchQueue({ id: 'floorplan.shadow-batch' })
+    const batches = createHouseShadowBatches(THREE, rootOf(), { queue })
+    queue.deferredQueue().attach?.()
+    batches.update()
+    batches.update()
+    expect(queue.deferredQueue().pending(1)).toBeGreaterThan(0)
+    queue.deferredQueue().flush()
+    expect(queue.deferredQueue().pending(2)).toBe(0)
+    batches.dispose()
+
+    const detached = createStaticBatchQueue({ id: 'floorplan.shadow-batch' })
+    const alone = createHouseShadowBatches(THREE, rootOf(), { queue: detached })
+    alone.update()
+    for (let frame = 0; frame < 50 && detached.deferredQueue().pending(frame) > 0; frame++) alone.update()
+    expect(detached.deferredQueue().pending(99)).toBe(0)
+    alone.dispose()
   })
 })
