@@ -50,7 +50,7 @@ num número fixo de tiques, de modo que nenhum quadro passe do prazo.
 
 | # | Decisão | Estado |
 |---|---|---|
-| D1 | **Janela da explosão:** em quantos tiques de 1/120 s o trabalho pode se espalhar. Recomendação: até 6 tiques (50 ms, 3 quadros a 60 Hz), com o efeito visível do impacto no primeiro. | [NEEDS CLARIFICATION] dono |
-| D2 | **Fixture da T3.2 regravado** (`game-test-room/tests/fixtures/step-equivalence.json`) e os goldens de explosão que mudarem de quadro (`RECORDED_BLAST_OUTCOME`, `exact-floorplan` `destruction/*`). O estado final igual; só muda em que tique cada evento entra. | [NEEDS CLARIFICATION] dono |
+| D1 | **Janela da explosão:** até 6 tiques de 1/120 s (50 ms, 3 quadros a 60 Hz); clarão, empurrão, furo do impacto e som no primeiro. | decidida pelo dono, 2026-11-19 |
+| D2 | **Regravar** o fixture da T3.2 (`game-test-room/tests/fixtures/step-equivalence.json`) e os goldens de explosão que mudarem só de tique (`RECORDED_BLAST_OUTCOME`, `exact-floorplan` `destruction/*`), **só se o estado no fim da janela for idêntico** ao de antes, com a comparação no `evidence.md`. Estado final diferente: parar e perguntar. | decidida pelo dono, 2026-11-19 |
 | D3 | **Caminho do `world.explode`:** dividir em passos por tique dentro do mundo (recomendado: mesmo processo, determinístico, unidades) antes de pensar em worker. | proposta, valida na T1.1 |
 | D4 | **Unidade do teto** em `destruction.events` e `floorplan.breach-cut`: número de eventos/cortes por tique, fixo por `tier`, como o `WorkBudget` (spec 008 E2). | proposta, valida na T1.1 |
