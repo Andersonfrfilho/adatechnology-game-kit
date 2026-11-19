@@ -139,11 +139,22 @@ function auditModel(key: string): string[] {
       return marks[0]
     }
     if (hit.part === id && !mark()) problems.push(`${id}: the hole is not on the door`)
-    const before = mark()?.getWorldPosition(new THREE.Vector3())
+    // where the hole sits in the world: a batched mark draws its holes as instances, so the hole is the last instance, not the batch's origin
+    const markAt = (): THREE.Vector3 | undefined => {
+      const o = mark()
+      if (!o) return undefined
+      if (o instanceof THREE.InstancedMesh && o.count > 0) {
+        const local = new THREE.Matrix4()
+        o.getMatrixAt(o.count - 1, local)
+        return new THREE.Vector3().setFromMatrixPosition(local).applyMatrix4(o.matrixWorld)
+      }
+      return o.getWorldPosition(new THREE.Vector3())
+    }
+    const before = markAt()
     const edgeClosed = pos.clone()
     piv.rotation.set(...(rotation as [number, number, number]))
     item.root.updateMatrixWorld(true)
-    const after = mark()?.getWorldPosition(new THREE.Vector3())
+    const after = markAt()
     if (before && after && before.distanceTo(after) < 0.02) problems.push(`${id}: the hole did not swing with the door`)
     let openOut = false
     piv.traverse((o: THREE.Mesh) => {

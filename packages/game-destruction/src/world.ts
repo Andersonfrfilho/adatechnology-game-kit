@@ -2667,6 +2667,45 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return gridParts
   }
 
+  /**
+   * Each `moved` set of `o`'s parts becomes an object of its own (`id`), and what is left is built once as `o` again. One cut is `splitGroup`; several give
+   * the objects, ids and part states of cutting them one after another (an open joint goes with a new object only when both its parts do), with the rest built
+   * once; only the order of the open joints the rest keeps for show (`state().joints`, not simulated) may differ.
+   */
+  const splitInto = (o: ObjRT, cuts: readonly { readonly moved: ReadonlySet<string>; id: string }[]): string[] => {
+    // an open joint between the two objects stays with the original
+    const carryFor = (keep: (pid: string) => boolean, keepOpen: (a: string, b: string) => boolean = () => false): Carry => ({
+      parts: new Map(o.parts.filter((p) => keep(p.spec.id)).map((p) => [p.spec.id, { st: p.st, rt: p.rt }])),
+      joints: new Map([
+        ...o.joints.filter((j) => (keep(j.spec.a) && keep(j.spec.b)) || (j.st.open && keepOpen(j.spec.a, j.spec.b))).map((j): [string, { st: JointState; step: number }] => [j.spec.id, { st: j.st, step: j.step }]),
+        ...o.st.joints.filter((st) => st.open && !o.jointMap.has(st.id) && keepOpen(st.a, st.b)).map((st): [string, { st: JointState; step: number }] => [st.id, { st, step: 0 }]),
+      ]),
+      collapsed: [...o.collapsed].filter(keep),
+      cast: o.cast,
+    })
+    const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
+      // every other field of the spec goes with both halves: the load sharing above all (a house sized for `all` that is solved as `nearest` after its first split
+      // piece puts twice the load on the columns by the doors and crushes them), and the wind exposure
+      const s: DestructibleSpec = { ...o.spec, parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
+      if (o.spec.tags) s.tags = [...o.spec.tags]
+      // the part and joint specs are never written after `add`, so the halves share them instead of deep-copying a whole house twice
+      return s
+    }
+    const pos = o.st.position, rot = o.st.rotation
+    const fresh = cuts.map(({ moved, id: nid }) => {
+      const inNew = (pid: string) => moved.has(pid)
+      return [nid, build(sub(inNew), nid, pos, rot, { ...carryFor(inNew, (a, b) => inNew(a) && inNew(b)), loose: true })] as const
+    })
+    const inOld = (pid: string) => cuts.every(({ moved }) => !moved.has(pid))
+    const restCarry = carryFor(inOld, (a, b) => !cuts.some(({ moved }) => moved.has(a) && moved.has(b)))
+    if (o.st.soil) restCarry.soil = o.st.soil
+    if (o.soil?.sets.size) restCarry.soilSets = Object.fromEntries(o.soil.sets)
+    const rest = build(sub(inOld), o.id, o.soil ? o.base.pos : pos, o.soil ? o.base.rot : rot, restCarry)
+    objects.set(o.id, rest)
+    for (const [nid, object] of fresh) objects.set(nid, object)
+    return fresh.map(([nid]) => nid)
+  }
+
   const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     const minRadius = skip.minObjectRadius ?? 0
@@ -5603,38 +5642,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (o.st.groups.length < 2) return id
       const names = o.st.groups[group]
       if (!names) throw new Error(`object "${id}" has no group ${group}`)
-      const moved = new Set(names)
       const nid = newId ?? nextId()
       if (objects.has(nid)) throw new Error(`object "${nid}" already exists`)
-      // an open joint between the two objects stays with the original
-      const carryFor = (keep: (pid: string) => boolean, keepOpen: (a: string, b: string) => boolean = () => false): Carry => ({
-        parts: new Map(o.parts.filter((p) => keep(p.spec.id)).map((p) => [p.spec.id, { st: p.st, rt: p.rt }])),
-        joints: new Map([
-          ...o.joints.filter((j) => (keep(j.spec.a) && keep(j.spec.b)) || (j.st.open && keepOpen(j.spec.a, j.spec.b))).map((j): [string, { st: JointState; step: number }] => [j.spec.id, { st: j.st, step: j.step }]),
-          ...o.st.joints.filter((st) => st.open && !o.jointMap.has(st.id) && keepOpen(st.a, st.b)).map((st): [string, { st: JointState; step: number }] => [st.id, { st, step: 0 }]),
-        ]),
-        collapsed: [...o.collapsed].filter(keep),
-        cast: o.cast,
+      return splitInto(o, [{ moved: new Set(names), id: nid }])[0]!
+    },
+    splitGroups(id, groups) {
+      if (impls.has(id)) throw new Error(`object "${id}" is a registered DestructibleImpl and cannot be split; its module owns its pieces`)
+      const o = getObj(id)
+      if (o.st.groups.length < 2 || groups.length === 0) return []
+      if (new Set(groups).size !== groups.length) throw new Error(`object "${id}": a group is given twice to split`)
+      const cuts = groups.map((group) => {
+        const names = o.st.groups[group]
+        if (!names || group < 1) throw new Error(`object "${id}" has no loose group ${group}`)
+        return { moved: new Set(names), id: '' }
       })
-      const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
-        // every other field of the spec goes with both halves: the load sharing above all (a house sized for `all` that is solved as `nearest` after its first split
-        // piece puts twice the load on the columns by the doors and crushes them), and the wind exposure
-        const s: DestructibleSpec = { ...o.spec, parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
-        if (o.spec.tags) s.tags = [...o.spec.tags]
-        // the part and joint specs are never written after `add`, so the halves share them instead of deep-copying a whole house twice
-        return s
+      for (const cut of cuts) {
+        cut.id = nextId()
+        if (objects.has(cut.id)) throw new Error(`object "${cut.id}" already exists`)
       }
-      const inNew = (pid: string) => moved.has(pid)
-      const inOld = (pid: string) => !moved.has(pid)
-      const pos = o.st.position, rot = o.st.rotation
-      const fresh = build(sub(inNew), nid, pos, rot, { ...carryFor(inNew, (a, b) => inNew(a) && inNew(b)), loose: true })
-      const restCarry = carryFor(inOld, (a, b) => !(inNew(a) && inNew(b)))
-      if (o.st.soil) restCarry.soil = o.st.soil
-      if (o.soil?.sets.size) restCarry.soilSets = Object.fromEntries(o.soil.sets)
-      const rest = build(sub(inOld), id, o.soil ? o.base.pos : pos, o.soil ? o.base.rot : rot, restCarry)
-      objects.set(id, rest)
-      objects.set(nid, fresh)
-      return nid
+      return splitInto(o, cuts)
     },
     hit(objectId, h) {
       const im = impls.get(objectId)

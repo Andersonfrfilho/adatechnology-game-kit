@@ -124,6 +124,13 @@ export class FakeWorld {
     return newId
   }
 
+  /** The world's batch: the groups as they are now, each split in order (each split renumbers the rest, so the groups are taken by their parts). */
+  splitGroups(id: string, groups: readonly number[]): string[] {
+    const st = this.objects.get(id) as ObjectState
+    const named = groups.map((group) => st.groups[group]![0]!)
+    return named.map((part) => this.splitGroup(id, st.groups.findIndex((group) => group.includes(part))))
+  }
+
   asWorld(): DestructionWorld {
     return this as unknown as DestructionWorld
   }
