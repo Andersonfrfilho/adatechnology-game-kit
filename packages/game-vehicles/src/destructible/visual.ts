@@ -5,7 +5,7 @@
  * It only uses the kit (`kit._` helpers such as `fling`, `cutPanel`, `pivotOf`), so a part that comes off is flung with the same ballistic
  * animation the explosion uses, and a vehicle that is rebuilt (`reset`) gets a fresh set of meshes.
  */
-import type { BufferGeometry, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from '../three-types'
+import type { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from '../three-types'
 
 import type { BuildContext, KitShared, SceneNode, Three } from '../types'
 import type { DamageZone, VehicleContext, VehicleKit, VehicleLamp } from '../api'
@@ -28,6 +28,8 @@ export interface DetachOptions {
 
 /** A hole's mark is wider than the bore: the chipped paint and bare metal around it. */
 const HOLE_DECAL_SCALE = 2.4
+/** How many holes one instanced batch draws before a new batch starts (a door full of holes still draws as one). */
+const HOLE_BATCH_CAPACITY = 64
 /** From a door's skin to its inner card, metres. */
 const DOOR_DEPTH = 0.07
 /** What a door's cut keeps of the body: its skin and what lies within this of it (the card sits at `DOOR_DEPTH`); deeper is the body behind the door, metres. */
@@ -215,6 +217,8 @@ export class VehicleVisuals implements CreaseWork {
   private holdFrame = -1
   /** Normal smoothing still running, by mesh: a mesh cut again gets a new task and the old one is dropped. */
   private readonly smoothing = new Map<Obj, { geo: BufferGeometry; step: (deadline: number) => boolean }>()
+  /** The bullet holes of one carrier and material, drawn as one instanced batch each (a door full of holes still draws as one). */
+  private readonly holes = new Map<string, InstancedMesh[]>()
   readonly hood: { id: string; open: number; sign: number } | null
 
   constructor(kit: VehicleKit, c: VehicleContext, model: VehicleModel) {
@@ -1179,19 +1183,45 @@ export class VehicleVisuals implements CreaseWork {
     const pane = part?.role === 'glass' ? this.panesOf(part).find((g) => g.visible) : undefined
     if (part?.role === 'glass' && (!pane || pane.userData.glass?.broken)) return
     const radius = Math.max(0.006, diameter / 2) * HOLE_DECAL_SCALE
-    const m = new THREE.Mesh(holeDiscGeometry(THREE), holeMaterial(this.kit, part?.material ?? 'steel'))
-    m.scale.set(radius, radius, 1)
     const n = new THREE.Vector3(...normal)
-    m.position.set(...point).addScaledVector(n, 0.003)
-    this.c.vehicle.add(m)
-    m.lookAt(this.c.vehicle.localToWorld(m.position.clone().add(n)))
-    m.userData.decal = true
-    m.userData.noFollow = true
-    m.renderOrder = 3
-    m.raycast = () => {}
     // the mark is on the panel, so it goes where the panel goes (a door that swings, a pane on it)
     const carrier = (part && (this.plates.get(part.id) ?? (part.id === this.hood?.id ? this.c.hood?.piv : undefined))) ?? (pane && pane.parent !== this.c.vehicle ? pane.parent : null)
-    if (carrier) carrier.attach(m)
+    const parent = carrier ?? this.c.vehicle
+    const material = holeMaterial(this.kit, part?.material ?? 'steel')
+    const key = `${parent.uuid}|${material.uuid}`
+    let batches = this.holes.get(key)
+    let batch = batches?.[batches.length - 1]
+    if (!batch || batch.count >= HOLE_BATCH_CAPACITY) {
+      batch = new THREE.InstancedMesh(holeDiscGeometry(THREE), material, HOLE_BATCH_CAPACITY)
+      batch.count = 0
+      batch.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
+      batch.castShadow = false
+      batch.receiveShadow = false
+      batch.userData.decal = true
+      batch.userData.noFollow = true
+      batch.renderOrder = 3
+      batch.raycast = () => {}
+      batch.frustumCulled = false
+      parent.add(batch)
+      if (!batches) {
+        batches = []
+        this.holes.set(key, batches)
+      }
+      batches.push(batch)
+    }
+    // the world pose of the disc (the same a single mesh had: scaled by the bore, its +z along the surface normal, lifted off the panel)
+    const at = this.c.vehicle.localToWorld(new THREE.Vector3(...point).addScaledVector(n, 0.003))
+    const toward = this.c.vehicle.localToWorld(new THREE.Vector3(...point).addScaledVector(n, 1.003))
+    const pose = new THREE.Object3D()
+    pose.position.copy(at)
+    pose.scale.set(radius, radius, 1)
+    pose.lookAt(toward)
+    pose.updateMatrix()
+    parent.updateWorldMatrix(true, false)
+    const instance = new THREE.Matrix4().copy(parent.matrixWorld).invert().multiply(pose.matrix)
+    batch.setMatrixAt(batch.count, instance)
+    batch.count += 1
+    batch.instanceMatrix.needsUpdate = true
   }
   /** The door or lid a hinge group stands for. */
   /** The part a separately drawn piece stands for (a mirror on the door, a battery under the hood), so a shot at it lands on that part. */
