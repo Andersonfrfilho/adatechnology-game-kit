@@ -118,6 +118,16 @@ describe('vehicle-lod: the owner queue', () => {
     lod.update(30, true)
     drawOnce(full)
     lod.update(30, true)
-    expect(checkDeferredQueue(queue.deferredQueue(), () => 0)).toEqual({ ok: true, problems: [] })
+    // a second car on the queue: the contract needs two units waiting
+    const other = vehicle()
+    const otherLod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, other.root, other.full, { now: () => 0, queue })
+    const fill = (): void => {
+      otherLod.update(30, true)
+      drawOnce(other.full)
+      otherLod.update(30, true)
+    }
+    expect(checkDeferredQueue(queue.deferredQueue(), fill)).toEqual({ ok: true, problems: [] })
+    otherLod.dispose()
+    lod.dispose()
   })
 })
