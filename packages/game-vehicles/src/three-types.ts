@@ -14,6 +14,7 @@ export type {
   ExtrudeGeometryOptions,
   Group,
   HSL,
+  InstancedMesh,
   InterleavedBufferAttribute,
   Intersection,
   Material,
