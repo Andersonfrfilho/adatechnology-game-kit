@@ -5,7 +5,7 @@ import { createCommandBuffer } from './commands'
 import { resolveFrameTime, sanitizeSeconds, sanitizeTimeScale } from './frame-time'
 import { createPhaseRunner, type MutableContext } from './phase-runner'
 import { createSystemList, type SystemEntry, type SystemList } from './phases'
-import type { FrameRunOptions, Scheduler, SchedulerOptions, SchedulerStats, SystemFn, SystemOptions } from './types'
+import type { FrameRunOptions, Scheduler, SchedulerOptions, SchedulerStats, SystemFn, SystemOptions, SystemProbe } from './types'
 
 export function createScheduler(options: SchedulerOptions = {}): Scheduler {
   const fixedDt = options.fixedDt ?? 1 / 60
@@ -22,6 +22,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
   let paused = false
   let scripted = false
   let timeScale = 1
+  let systemProbe: SystemProbe | undefined
   let nextSystem = 0
   const reportedErrors = new Set<string>()
   const lists = Object.fromEntries(FRAME_PHASES.map((phase) => [phase, createSystemList(() => running)])) as Record<FramePhase, SystemList>
@@ -35,7 +36,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
       console.error(`game-runtime: system ${system.id} (${system.phase}) threw`, error)
     })
   const budget = createFrameBudget({ ms: options.budgetMs ?? 4, clock, onError: (error, queue) => reportError(error, { id: `queue:${queue.id}`, phase: queue.phase }) })
-  const runner = createPhaseRunner({ clock, ctx, lists, reportError, fixedDt })
+  const runner = createPhaseRunner({ clock, ctx, lists, reportError, fixedDt, probe: () => systemProbe })
   const { runPhase, runFixed } = runner
 
   const settleAll = (): void => {
@@ -177,6 +178,12 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     resetClock() {
       accumulator = 0
       residual = 0
+    },
+    get systemProbe() {
+      return systemProbe
+    },
+    set systemProbe(value: SystemProbe | undefined) {
+      systemProbe = value
     },
     budget,
     commands: createCommandBuffer(() => runner.tick),

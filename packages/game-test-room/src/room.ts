@@ -24,7 +24,7 @@ import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@ada
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
-import { createScheduler, startLoop } from '@adatechnology/game-runtime'
+import { createScheduler, startLoop, type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
@@ -5136,7 +5136,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     readonly fluidRenderer: FluidRenderer
     inspectInfo(): InspectInfo | null
     /** The parts of the frame that are not on the room's surface, for the performance probe (tools/gpu/room-explosion.mjs), which times their methods in place. */
-    readonly frameParts: { readonly terrainView: object; readonly water: object; readonly waterView: object; readonly explosives: object; readonly footprints: object; readonly moduleFrames: ReadonlyMap<string, { update: (dt: number) => void }> }
+    readonly frameParts: { readonly terrainView: object; readonly water: object; readonly waterView: object; readonly explosives: object; readonly footprints: object; readonly moduleFrames: ReadonlyMap<string, { update: (dt: number) => void }>; readonly scheduler: Scheduler }
   } = {
     world,
     renderer,
@@ -5383,7 +5383,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     frameStats: () => scheduler.stats(),
     lights,
     webgl: gl,
-    frameParts: { terrainView, water, waterView, explosives, footprints, moduleFrames },
+    frameParts: { terrainView, water, waterView, explosives, footprints, moduleFrames, scheduler },
     dispose() {
       destructionSound?.dispose()
       if (ownAudio) audio?.dispose()

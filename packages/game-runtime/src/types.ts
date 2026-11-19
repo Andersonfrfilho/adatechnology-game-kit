@@ -125,6 +125,12 @@ export interface SchedulerStats {
   readonly budget: BudgetStats
 }
 
+/** Measurement hook around every system of every phase (set by a probe, never by a game); without one the cost is a property read per system. */
+export interface SystemProbe {
+  enter(id: string): void
+  leave(id: string): void
+}
+
 export interface Scheduler {
   add(system: SystemFn, options: SystemOptions): () => void
   /** Runs one frame with `realSeconds` of wall time. */
@@ -142,6 +148,8 @@ export interface Scheduler {
   /** Forgets the accumulator and the snap residue (after the tab comes back, after a reset). */
   resetClock(): void
   readonly budget: FrameBudget
+  /** Set by a measuring tool to time each system; undefined (the default) times nothing. */
+  systemProbe: SystemProbe | undefined
   /** Commands the input phase leaves for the next fixed tick. */
   readonly commands: CommandBuffer
   stats(): SchedulerStats
