@@ -232,3 +232,13 @@ Commits `0ab57d2c9` (mundo), `3297b8875` (renderer), `e3a9ee846` (contrato e cha
 - **Regravados** (`48a6c6afe`): `house-scenarios` e `gate-rpg-collapse` (mesmos eventos, outra ordem); `split-cache-identity` `c7802280…f0c8` → `290b168b…a5d7` (serialize, raios, splits e eventos iguais); `exact-floorplan` `destruction/breach` `f510262a` → `2ef1cab7`, `destruction/fracture` `a81d197b` → `b2fd7663`; `RECORDED_BLAST_OUTCOME` `e7110381…c659` → `6a4a72aa533489232b4094f3b1ec417c65652e9d`.
 - **Não regravado:** `exact-floorplan` `destruction/spall` (`3454857a`, dá `dd89703c` na rodada completa): o dono pede comparação nó a nó da cena com a base antes. Até lá o `exact-golden` falha só nesse caso.
 
+### T2.1 — terceira revisão estrutural (2026-11-19)
+
+- **TEST_NOT_GUARDING:** `ground-loss-drop.test.ts` refeito. A parede de tijolos fica sobre duas vigas baldrame em linha (`gb_a` e `gb_c`); a laje que cai por `hingeDrop` pesava sobre as duas. `gb_c` é julgada na mesma perda com a carga depois da queda (1,35 t, não cerca de 5,4 t). Afunda 0,81843 mm, como no código de `1cb39c001`. Sem o `settleStructure` no começo da volta de `undermine`, afunda 0,81865 mm, e o teste falha (diferença de 2,2e-7 m contra a tolerância de 5e-11).
+- **CONTRACT_MISMATCH:** o doc do `detach` em `game-contracts` e o changeset dizem que a garantia vale para o mundo do `createDestruction`. Os outros `DestructibleImpl` continuam com um `detach` por junta: veículos com os grupos daquele momento, personagens só com a peça que saiu (`[[segmento, ...caídos]]`).
+- **TEST_GAP:** `structure-solves.test.ts` ganhou um `hitPart` e uma perda de solo aplicada no `update`, com a mesma checagem de grupos e de ordem da explosão.
+- **Spall regravado** (decisão do dono): `exact-floorplan` `destruction/spall` `3454857a` → `dd89703c` (rodada completa do golden). O renderer recebe os eventos do golpe antes de separar as peças e passa a desenhar o amassado de 25 mm do conduíte e as cores dos lascados.
+- **Pendências anteriores, fora desta spec:**
+  - `conduit:conduit_outlet19` (plástico) com 1445,8 kg de massa e 86749 de vida máxima, já em `1cb39c001`. Ponto de partida: `game-floorplan-three/src/utilities/electrical.ts:113` (`pieceRecord`).
+  - As juntas que `openOver`/`loseGround` abrem numa volta de `undermine` só entram no `loosened` no fim do laço (`world.ts:2484`). A base faz o mesmo.
+
