@@ -38,15 +38,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "one_pillar",
-    "time": 0,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "one_pillar",
@@ -100,6 +91,15 @@
     "time": 0,
     "part": "c0",
     "stage": 3
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
    }
   },
   {
@@ -665,15 +665,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 0,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -727,6 +718,15 @@
     "time": 0,
     "part": "c0",
     "stage": 3
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
    }
   },
   {
@@ -785,15 +785,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 0,
-    "joint": "wall_back~c1",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -847,6 +838,15 @@
     "time": 0,
     "part": "c1",
     "stage": 3
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "joint": "wall_back~c1",
+    "by": "break"
    }
   },
   {
@@ -5839,24 +5839,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "partition",
-    "time": 0,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "partition",
-    "time": 0,
-    "joint": "wall_back~c1",
-    "by": "break"
-   }
-  },
-  {
    "type": "spall",
    "data": {
     "scenario": "partition",
@@ -5935,6 +5917,24 @@
     "time": 0,
     "part": "wall_back",
     "stage": 3
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "joint": "wall_back~c1",
+    "by": "break"
    }
   },
   {
