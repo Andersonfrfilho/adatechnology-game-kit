@@ -265,3 +265,7 @@ Nada: `rest` do f0 cai de 14 a 15 ms (1x) e 56 a 57 ms (4x) para entre −0,4 e 
 ## T1.2
 
 `game-runtime`: modo de prazo opcional por quadro (`targetMs` + `frameStartMs`, sem dívida, estimativa do render, reservas do piso, classe `mustDrain` contada à parte, campos novos em `stats()`); `startLoop` passa o `nowMs` do rAF. `DeferredQueueOptions.mustDrain` entrou em `game-contracts` só porque o `game-runtime` não compila sem ele (o resto é T1.4). Base de tempo: o orçamento aceita `frameStartMs` até um `targetMs` antes do relógio (conta o atraso do callback); fora disso (outra base) lê como "agora". Aceite: `pnpm --filter @adatechnology/game-runtime test` → 61 passam (20 novos em `tests/deadline.test.ts`, com a C2 em 1.000 quadros); `game-contracts` 115 e `game-test-room` 465 passam; typecheck, lint, `check:layers` e `kit-audit --check` sem novidade; `room.ts` segue com 5.620 linhas.
+
+## T1.4
+
+`game-contracts/src/frame.ts`: 9 ids e prioridades novos da tabela da seção 3 (`minEveryFrames` incluído), `drainDetached` (seção 4c) exportado pelo `index.ts`, 4 testes em `tests/frame.test.ts`. Comandos: `pnpm --filter @adatechnology/game-contracts build`, `... typecheck`, `... test`, `npx eslint` nos 3 arquivos, `pnpm check:layers`, `node tools/kit-audit/audit.mjs --check`. Resultado: build ok; typecheck sem erro; test 119 passam (115 antes, +4); eslint sem problema; check:layers sem violação nova; kit-audit 0 novos fora do SDK dono. Commit `bd8d087af`.
