@@ -320,6 +320,11 @@ export interface PhysicsWorld {
   contactPoints(id: BodyId, out: Float32Array): number
   /** Whether the body touched anything in the last step. */
   touching(id: BodyId): boolean
+  /**
+   * The bodies this one touched in the last step, into `out` (emptied first); returns how many. A host that puts a body to sleep by its own rule asks it first: put to
+   * sleep while what it touches is awake, the engine wakes it at the next step.
+   */
+  touchingBodies(id: BodyId, out: BodyId[]): number
   /** The two bodies stop meeting (true) or meet again (false): our rule handles the pair (chunks born inside each other go apart along the ground). */
   ignorePair(a: BodyId, b: BodyId, ignore: boolean): void
   createJoint(desc: JointDesc): JointId

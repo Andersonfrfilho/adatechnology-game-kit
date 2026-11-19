@@ -569,6 +569,14 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return this.partners.has(id)
   }
 
+  touchingBodies(id: BodyId, out: BodyId[]): number {
+    out.length = 0
+    const near = this.partners.get(id)
+    if (!near) return 0
+    for (const other of near.keys()) out.push(other as BodyId)
+    return out.length
+  }
+
   touch(key: number, other: number, by: number): void {
     touch(this, key, other, by)
   }

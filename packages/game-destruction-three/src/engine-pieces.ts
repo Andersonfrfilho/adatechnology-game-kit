@@ -18,6 +18,7 @@ import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
 import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
+import { SLEEP_AFTER, STEADY_SECONDS, STEADY_TURN, isSlow, putToSleep, staysInPlace } from './piece-rest'
 
 export type { StaticSolid } from './engine-statics'
 
@@ -127,15 +128,6 @@ export const groundTileKey = (x: number, z: number): number => (Math.floor(x / T
  */
 export const tileRollingAt = (rollingAt: (x: number, z: number) => number | undefined, x: number, z: number): number | undefined =>
   rollingAt((Math.floor(x / TILE) + 0.5) * TILE, (Math.floor(z / TILE) + 0.5) * TILE)
-const STILL_SPEED = 0.12
-const STILL_SPIN = 0.45
-const SLEEP_AFTER = 0.5
-const CALM_DRIFT = 0.01
-const CALM_TURN = 0.05
-const CALM_SLEEP_AFTER = 1.5
-
-const turnBetween = (a: readonly [number, number, number, number], q: THREE_NS.Quaternion): number =>
-  2 * Math.acos(Math.min(1, Math.abs(a[0] * q.x + a[1] * q.y + a[2] * q.z + a[3] * q.w)))
 const HARD_LANDING = 3
 const SLAM_MIN_SPEED = 2
 const SLAM_BOUNCE = 0.2
@@ -159,8 +151,6 @@ const SIDE_DEAD = 0.01
 /** The strong push stops once it has turned a column this fast (rad/s): a 5 cm leg tips from it; measured on the bowl, 0.1 made 4.2 cm in seed 57 and 1 made 31 cm in seed 61, 0.3 is clean in all 128. */
 const PUSH_SPIN = 0.3
 /** Corners this close (m) to the lowest one are what it stands on. */
-const STEADY_TURN = 0.1
-const STEADY_SECONDS = 1.5
 /** A piece on a narrow support that has not turned for this long (s) is propped by something its contact points do not read as support (a tent of two plates on their edges). */
 const PROPPED_SECONDS = 0.3
 /** What is left of its friction while propped: it slips, and gravity, not the kit's push, brings it down. */
@@ -245,6 +235,12 @@ interface Tile {
 export class EnginePieces {
   private readonly links = new Map<PieceBody, Link>()
   private readonly byUser = new Map<number, PieceBody>()
+  /** The pieces by body: what a piece touches, as the engine names it (`restsAmongSleepers`). */
+  private readonly byBody = new Map<BodyId, PieceBody>()
+  /** Pieces that came to rest in this update (`readBack`), put to sleep together once all are read (`sleepReady`). */
+  private readonly ready: PieceBody[] = []
+  private readonly readySet = new Set<PieceBody>()
+  private readonly near: BodyId[] = []
   /** The pieces by object id: what the sweep meets that the engine already has (`sweepOn`). */
   private readonly byObject = new Map<string, PieceBody>()
   private nextUser = 1
@@ -330,6 +326,7 @@ export class EnginePieces {
     // stepped and woken (a blow, its support looked at again) in this same frame, before the engine could wake what lay on it (CLAUDE.md §12)
     if (wakeNeighbours && (b.sleeping || link.sleeping)) this.wakeAround(b, link.pos)
     this.byUser.delete(link.user)
+    this.byBody.delete(link.id)
     if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
   }
@@ -515,6 +512,7 @@ export class EnginePieces {
   /** After the frame's fixed steps: each piece read back with the kit's rules on it, then the knock sounds from the frame's contact rows. */
   finish(list: readonly PieceBody[], dt: number, time: number): void {
     for (const b of list) this.readBack(b, dt, time)
+    this.sleepReady()
     this.knock(time)
   }
 
@@ -676,6 +674,7 @@ export class EnginePieces {
       }
       this.links.set(b, link)
       this.byUser.set(user, b)
+      this.byBody.set(id, b)
       this.byObject.set(b.objectId, b)
       this.outOfStatics(b, link)
     })
@@ -1462,17 +1461,13 @@ export class EnginePieces {
     b.root.position.set(pos[0] - off.x, pos[1] - off.y, pos[2] - off.z)
     b.root.updateMatrixWorld(true)
     if (!b.sleeping) {
-      const still = b.onGround && !b.tipping && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
-      b.still = still ? b.still + dt : 0
-      if (!b.hinge && (b.still >= SLEEP_AFTER || this.staysInPlace(b, b.onGround, pos, b.root.quaternion, dt))) {
-        b.sleeping = true
-        b.still = 0
-        b.calmAt = null
-        v[0] = v[1] = v[2] = 0
-        w[0] = w[1] = w[2] = 0
-        this.world.setVelocity(link.id, [0, 0, 0], [0, 0, 0])
-        this.world.sleep(link.id)
-      }
+      // the kit solver's rule (`piece-rest`): what the engine keeps awake by a tremble of a few mm/s comes to rest as a piece of the kit's own would (`sleepReady`)
+      // not while the kit's balancing push still works on it (`topple`): a lone leg stands quite still for the first frames of its fall, as the kit solver's `unstable`
+      const pushed = b.balancing === true && (b.steady?.seconds ?? 0) < STEADY_SECONDS
+      const held = b.onGround && !b.tipping && !pushed
+      b.still = held && isSlow(b) ? b.still + dt : 0
+      const atRest = b.still >= SLEEP_AFTER || staysInPlace({ body: b, held, center: pos, quaternion: b.root.quaternion, dt })
+      if (!b.hinge && !moved && atRest) this.ready.push(b)
     } else {
       b.still = 0
       b.calmAt = null
@@ -1500,17 +1495,55 @@ export class EnginePieces {
     link.sleeping = b.sleeping
   }
 
-  /** Whether the piece has kept to the same spot on the ground for `CALM_SLEEP_AFTER` (see `CALM_DRIFT`). */
-  private staysInPlace(b: PieceBody, touched: boolean, center: Vec3, q: THREE_NS.Quaternion, dt: number): boolean {
-    const at = b.calmAt
-    const turned = at ? turnBetween(at.quaternion, q) : Infinity
-    if (!touched || !at || Math.hypot(center[0] - at.center[0], center[1] - at.center[1], center[2] - at.center[2]) > CALM_DRIFT || turned > CALM_TURN) {
-      b.calmAt = touched ? { center: [center[0], center[1], center[2]], quaternion: [q.x, q.y, q.z, q.w] } : null
-      b.calm = 0
-      return false
+  /**
+   * The pieces that came to rest in this update sleep in the engine too, those only that touch nothing awake but each other: one put to sleep against an awake body
+   * (a piece still settling, a car, the player) is woken by it at the next step and starts its rest again, so two debris chunks side by side would take turns for
+   * ever. The engine's own rule sleeps such a pile as one island; this does the same.
+   */
+  private sleepReady(): void {
+    const set = this.readySet
+    set.clear()
+    for (const b of this.ready) set.add(b)
+    this.ready.length = 0
+    let dropped = set.size > 0
+    while (dropped) {
+      dropped = false
+      for (const b of set) {
+        if (this.restsAmongSleepers(b, set)) continue
+        set.delete(b)
+        dropped = true
+      }
     }
-    b.calm += dt
-    return b.calm >= CALM_SLEEP_AFTER
+    for (const b of set) this.sleepNow(b)
+    set.clear()
+  }
+
+  /** Whether all the piece touches is asleep or is a piece in `set`, about to sleep with it. */
+  private restsAmongSleepers(b: PieceBody, set: ReadonlySet<PieceBody>): boolean {
+    const link = this.links.get(b)
+    if (!link) return false
+    this.world.touchingBodies(link.id, this.near)
+    for (const other of this.near) {
+      if (!this.world.has(other) || this.world.isSleeping(other)) continue
+      const piece = this.byBody.get(other)
+      if (!piece || !set.has(piece)) return false
+    }
+    return true
+  }
+
+  /** The piece sleeps where it lies, in the kit and in the engine, and what the next update compares against says so. */
+  private sleepNow(b: PieceBody): void {
+    const link = this.links.get(b)
+    if (!link) return
+    putToSleep(b)
+    b.still = 0
+    this.world.setVelocity(link.id, [0, 0, 0], [0, 0, 0])
+    this.world.sleep(link.id)
+    link.vel.fill(0)
+    link.ang.fill(0)
+    const c = this.centre(b)
+    link.groundAtSleep = this.o.groundAt(c.x, c.z)
+    link.sleeping = true
   }
 
   /**

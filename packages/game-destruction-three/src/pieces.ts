@@ -12,6 +12,7 @@ import type { GroundGrid } from './engine-ground'
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import { resolvePhysics } from './physics-option'
+import { SLEEP_AFTER, STEADY_SECONDS, STEADY_TURN, isSlow, putToSleep, staysInPlace, turnBetween } from './piece-rest'
 import { isOverSupport } from './support-hull'
 import type { PlanPoint } from './support-hull'
 import type { PiecePhysics } from './physics-option'
@@ -101,23 +102,6 @@ const SLIP_SPEED = 0.02
 const ROLLING_RESISTANCE = 0.015
 /** A round piece whose axis leans more than 45 degrees from upright lies on its side (the share of the world's down across its axis). */
 const ROUND_LYING = Math.SQRT1_2
-const SLEEP_AFTER = 0.5
-/** A piece on the ground slower than this (m/s) and turning slower than this (rad/s) is still: it sleeps after `SLEEP_AFTER`, or at once over `maxAwake`. */
-const STILL_SPEED = 0.12
-const STILL_SPIN = 0.45
-/**
- * A piece on the ground that neither moves farther than `CALM_DRIFT` (m) nor turns more than `CALM_TURN` (rad) in `CALM_SLEEP_AFTER` seconds sleeps, however
- * its speed flickers: a book propped on another, or trembling where its corners rest on two pieces, stays in place; a fall or a slide leaves the window sooner.
- */
-const CALM_DRIFT = 0.01
-const CALM_TURN = 0.05
-const CALM_SLEEP_AFTER = 1.5
-/**
- * A piece held up at an angle (on its edge, leant on something) that turns less than `STEADY_TURN` (rad) in `STEADY_SECONDS` keeps its tilt: over `maxAwake` it may sleep. One
- * going over turns past it sooner: the topple alone (`TOPPLE`) turns even a low piece 0.17 rad in that time.
- */
-const STEADY_TURN = 0.1
-const STEADY_SECONDS = 1.5
 const HARD_LANDING = 3
 /** Contact tolerance in metres: corners this close to the ground count as touching, which keeps the contact set (and a resting box) stable. */
 const SLOP = 0.002
@@ -299,8 +283,6 @@ const pairFriction = (a: PieceFriction | undefined, b: PieceFriction | null): Pi
 /** The coefficient of restitution of two surfaces against each other: the geometric mean of each one's. */
 const pairRestitution = (a: number | undefined, b: number | undefined): number => Math.sqrt((a ?? SLAM_BOUNCE) * (b ?? SLAM_BOUNCE))
 
-/** The angle (rad) between the rotation `a` and `q`. */
-const turnBetween = (a: readonly [number, number, number, number], q: THREE_NS.Quaternion): number => 2 * Math.acos(Math.min(1, Math.abs(a[0] * q.x + a[1] * q.y + a[2] * q.z + a[3] * q.w)))
 
 /**
  * Light rigid-body physics for loose pieces: gravity, the 8 corners of the local box against the ground with an impulse (restitution, friction,
@@ -1560,24 +1542,19 @@ export class PieceSystem {
       this.o.onHardLanding(b, landPoint, landing)
     }
 
-    const still = touched && !unstable && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
+    const still = touched && !unstable && isSlow(b)
     if (still) b.still += dt
     else b.still = 0
     b.balancing = unstable
     this.keepsTilt(b, q, dt)
     // held up through its overlap with what is under it (`propped`) it touches too: it may sleep where it stays, as a piece on its corners does
     const held = (touched || propped !== undefined) && !b.tipping
-    if (!b.hinge && (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt))) this.sleep(b)
+    if (!b.hinge && (b.still >= SLEEP_AFTER || staysInPlace({ body: b, held, center: pos, quaternion: q, dt }))) this.sleep(b)
   }
 
   /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
   private sleep(b: PieceBody): void {
-    b.restPoints = undefined
-    b.sleeping = true
-    b.calmAt = null
-    b.steady = null
-    b.velocity[0] = b.velocity[1] = b.velocity[2] = 0
-    b.angularVelocity[0] = b.angularVelocity[1] = b.angularVelocity[2] = 0
+    putToSleep(b)
   }
 
   /** How long the piece has kept its tilt (within `STEADY_TURN`): one going over leaves it within a moment, one held up at an angle keeps it. */
@@ -1693,9 +1670,7 @@ export class PieceSystem {
   }
 
   private hasComeToRest(b: PieceBody): boolean {
-    const v = b.velocity
-    const w = b.angularVelocity
-    if (!b.onGround || b.tipping || Math.hypot(v[0], v[1], v[2]) >= STILL_SPEED || Math.hypot(w[0], w[1], w[2]) >= STILL_SPIN) return false
+    if (!b.onGround || b.tipping || !isSlow(b)) return false
     return !b.balancing || (b.steady?.seconds ?? 0) >= STEADY_SECONDS
   }
 
@@ -1711,19 +1686,6 @@ export class PieceSystem {
     const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
     const y = c.y + e[1] * sx + e[5] * sy + e[9] * sz
     return this.supportAt(b, c.x + e[0] * sx + e[4] * sy + e[8] * sz, y, c.z + e[2] * sx + e[6] * sy + e[10] * sz, STEP) >= y - SUPPORT_GAP
-  }
-
-  /** Whether the piece has kept to the same spot on the ground for `CALM_SLEEP_AFTER` (see `CALM_DRIFT`). */
-  private staysInPlace(b: PieceBody, touched: boolean, center: Vec3, q: THREE_NS.Quaternion, dt: number): boolean {
-    const at = b.calmAt
-    const turned = at ? turnBetween(at.quaternion, q) : Infinity
-    if (!touched || !at || Math.hypot(center[0] - at.center[0], center[1] - at.center[1], center[2] - at.center[2]) > CALM_DRIFT || turned > CALM_TURN) {
-      b.calmAt = touched ? { center: [center[0], center[1], center[2]], quaternion: [q.x, q.y, q.z, q.w] } : null
-      b.calm = 0
-      return false
-    }
-    b.calm += dt
-    return b.calm >= CALM_SLEEP_AFTER
   }
 
   /** Whether the centre `c` of `upper` is over the top of `lower`'s box (as it was at the start of the update). */
