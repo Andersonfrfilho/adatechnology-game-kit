@@ -8,7 +8,7 @@
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import type * as THREE_NS from 'three'
-import type { DeferredQueue, WorkerCoordinator } from '@adatechnology/game-contracts'
+import type { DeferredQueue, DeferredQueueOptions, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { BlastDebrisOptions, DebrisCostOptions, ExplosionWorkOptions } from './blast-debris'
@@ -321,6 +321,12 @@ export interface MakePieceOptions {
   inertia?: number
 }
 
+/** A queue and the options a frame budget registers it with (`DestructionRenderer.deferredQueues`). */
+export interface DeferredQueueRegistration {
+  readonly queue: DeferredQueue
+  readonly options: DeferredQueueOptions
+}
+
 export interface DestructionRenderer {
   /** Attach a world object to its three.js root. */
   bind(objectId: string, root: Object3D, options?: BindOptions): void
@@ -362,6 +368,11 @@ export interface DestructionRenderer {
    * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.
    */
   deferredQueue?(): DeferredQueue
+  /**
+   * Every queue of the renderer with the options to register it with, for a shared frame budget: `destruction.events` (`mustDrain`: a hit shows in its own frame),
+   * `destruction.prefit` and `destruction.settled-batch`. Registering one attaches it: its work leaves `update`; unregistering gives it back. Asking changes nothing.
+   */
+  deferredQueues?(): readonly DeferredQueueRegistration[]
   /** Emit particles directly (muzzle flashes, extinguisher foam, tool sparks). */
   emit(kind: DebrisKind | 'fire' | 'flash' | 'foam', point: Vec3, normal: Vec3, count: number, speed?: number): void
   /**

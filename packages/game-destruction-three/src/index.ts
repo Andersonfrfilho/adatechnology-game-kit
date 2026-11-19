@@ -33,6 +33,7 @@ export type {
   Object3D,
   Piece,
   LooseBody,
+  DeferredQueueRegistration,
   MakePieceOptions,
   SolidBox,
   Quality,
