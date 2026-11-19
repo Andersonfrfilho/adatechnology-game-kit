@@ -855,9 +855,11 @@ export type DestructionEvent =
   | (EventBase & { type: 'debris'; part: string; kind: DebrisKind; point: Vec3; normal: Vec3; count: number; speed: number; material?: MaterialId })
   | (EventBase & { type: 'fracture'; part: string; style: FractureStyle; fragments: Fragment[]; point: Vec3 })
   /**
-   * A joint opened. `groups` are the object's groups after the whole operation that opened it (the `hit`, `explode` or `update` call), not right after this joint: the
-   * world solves its structure once per object per operation and gives every detach of the operation at its end, in the order the joints opened, after the operation's
-   * other events (its `collapse` too).
+   * A joint opened. In the world of `createDestruction` (`@adatechnology/game-destruction`), `groups` are the object's groups after the whole operation that opened it
+   * (the `hit`, `explode` or `update` call), not right after this joint: that world solves its structure once per object per operation and gives every detach of the
+   * operation at its end, in the order the joints opened, after the operation's other events (its `collapse` too). Other implementers of `DestructibleImpl` give it
+   * per joint, with the groups of that moment: a vehicle (`game-vehicles`) its groups right after the joint, a character (`game-characters`) only the piece that came
+   * off (`[[segment, ...fallen]]`). A consumer that must not depend on which reads the object's state when it handles the events.
    */
   | (EventBase & { type: 'detach'; joint: string; parts: [string, string]; by: 'break' | 'tool' | 'part_lost'; groups: string[][] })
   | (EventBase & { type: 'disassemble_progress'; joint: string; tool: ToolKind; progress: number })
