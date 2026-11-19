@@ -269,3 +269,9 @@ Nada: `rest` do f0 cai de 14 a 15 ms (1x) e 56 a 57 ms (4x) para entre −0,4 e 
 ## T1.4
 
 `game-contracts/src/frame.ts`: 9 ids e prioridades novos da tabela da seção 3 (`minEveryFrames` incluído), `drainDetached` (seção 4c) exportado pelo `index.ts`, 4 testes em `tests/frame.test.ts`. Comandos: `pnpm --filter @adatechnology/game-contracts build`, `... typecheck`, `... test`, `npx eslint` nos 3 arquivos, `pnpm check:layers`, `node tools/kit-audit/audit.mjs --check`. Resultado: build ok; typecheck sem erro; test 119 passam (115 antes, +4); eslint sem problema; check:layers sem violação nova; kit-audit 0 novos fora do SDK dono. Commit `bd8d087af`.
+
+## Decisão do dono (2026-11-19): medir só no fim
+
+- As medições de tempo por fase (T1.8, T2.6, T3.7) passam para uma régua única na T4.1, nas mesmas condições da T0.2/T0.4, comparada com as duas.
+- Cada fase entra na branch da spec como merge próprio; se a régua final não fechar a C8 ou piorar algo, mede-se nos merges de fase para achar a causa.
+- Por fase continuam as contagens que não dependem de máquina quieta: chamadas de `solveStructure` (C7), chamadas ao wasm por peça dormindo (C6), `kit-audit --strict-clocks` (C3) e o tempo de CPU indicativo de `world.explode` (base da decisão da meta do f0).
