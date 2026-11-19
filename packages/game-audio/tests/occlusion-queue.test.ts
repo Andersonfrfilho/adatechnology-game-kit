@@ -21,7 +21,7 @@ const fill = (tracker: ReturnType<typeof createOcclusionTracker>): void => {
 
 describe('the occlusion queue', () => {
   it('keeps the DeferredQueue contract, with no budget attached', () => {
-    const tracker = createOcclusionTracker({ query: layered, budget: 1, interval: 10 })
+    const tracker = createOcclusionTracker({ query: layered, budget: 2, interval: 10 })
     const queue = tracker.deferredQueue()
     expect(queue.id).toBe(DEFERRED_QUEUE_ID.AUDIO_OCCLUSION)
     const report = checkDeferredQueue(queue, () => fill(tracker))
