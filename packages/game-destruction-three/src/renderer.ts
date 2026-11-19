@@ -2062,6 +2062,9 @@ class Renderer implements DestructionRenderer {
       this.visuals.hide(pv, 'broken')
     }
     this.spawnFragments(ev, 0, { def, color, opacity, transparent })
+    // the groups the operation left loose come off first (the world's state is that of the end of the operation, whatever order its events arrive in): only
+    // what is left of the object can have lost its footing
+    this.splitLoose(ev.object)
     this.loosenIfFootless(ev.object)
     const up: Vec3 = [0, 1, 0]
     const sizeK = clamp(ev.fragments.length / 10, 0.5, 2)
