@@ -424,7 +424,7 @@ export async function inPage(job) {
   const frames = []
   const paceMs = job.paceMs ?? 0
   // one frame, then (paced) the rest of its 1/60 s idle, so the worker's answers reach the page between frames as they would under requestAnimationFrame
-  const step = async (/** @type {(() => void) | undefined} */ fire) => {
+  const step = async (/** @type {(() => void) | undefined} */ fire = undefined) => {
     const started = performance.now()
     frames.push(frame(fire))
     if (paceMs > 0) await wait(Math.max(0, paceMs - (performance.now() - started)))
