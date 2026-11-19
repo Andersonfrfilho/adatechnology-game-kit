@@ -9,7 +9,8 @@ import type { DestructibleSpec, DestructionWorld, JointSpec, PartSpec, Vec3 } fr
  * A split builds its halves from what the world remembers of the specs (contacts, spans, cast members, sections shot away, what a part's spec gives). This
  * walks the ways that memory must be left aside or measured again between splits: a slab and later its bond beam moved (`setPartPose`), a pillar shot so
  * the units out of it grow across two splits, a bond beam broken along a stretch over a void, and a half set back as it was (`reset`). The hash was
- * recorded on the code that measured everything again at every split.
+ * recorded on the code that measured everything again at every split, and again when every detach of an operation came at its end (the same events and
+ * world, the detach events of an update after the others).
  */
 const LENGTH = 10
 const DEPTH = 4
@@ -114,6 +115,6 @@ describe('split caches: the same world as measuring everything again', () => {
   it('poses, sections shot across splits, a broken bond beam and a reset half', () => {
     const { hash, log } = scenario()
     if (process.env.PRINT_SPLIT_HASH) console.log(`[HASH] ${hash}\n[LOG] ${log.filter((l) => l.startsWith('split')).join('\n')}`)
-    expect(hash).toBe('c7802280ec74529876a29f526126f4e6df23e56ca4f43de92d05814f5999f0c8')
+    expect(hash).toBe('290b168b728facdfbe23f8ef35f13cda1a65d6a1148bb697438a04fcb4f7a5d7')
   })
 })

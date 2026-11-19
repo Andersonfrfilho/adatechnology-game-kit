@@ -382,22 +382,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "time": 1.7,
-    "joint": "c0~f_c0",
-    "by": "part_lost"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "time": 1.7,
-    "joint": "slab~c0",
-    "by": "part_lost"
-   }
-  },
-  {
    "type": "stress",
    "data": {
     "time": 1.7,
@@ -433,6 +417,22 @@
     "amount": 225.9416,
     "hp": 8468.0584,
     "damageType": "blunt"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "time": 1.7,
+    "joint": "c0~f_c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "time": 1.7,
+    "joint": "slab~c0",
+    "by": "part_lost"
    }
   },
   {
@@ -1795,14 +1795,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "time": 7.1,
-    "joint": "c1~f_c1",
-    "by": "part_lost"
-   }
-  },
-  {
    "type": "stage",
    "data": {
     "time": 7.1,
@@ -1820,6 +1812,14 @@
      "roof"
     ],
     "mass": 5213.4719
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "time": 7.1,
+    "joint": "c1~f_c1",
+    "by": "part_lost"
    }
   }
  ],

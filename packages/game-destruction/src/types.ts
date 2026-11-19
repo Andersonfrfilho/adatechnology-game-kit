@@ -658,6 +658,8 @@ export interface DestructionWorld {
   blastReach(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[]; readonly shelter?: ShelterOptions }): number
   /** Cost of the last `explode`: parts in range of the broad phase (`partsTested`) and those whose bounding sphere the blast reached (`partsNear`). */
   blastProbe(): { partsTested: number; partsNear: number }
+  /** Times the world has solved the load path of an object (`solveStructure`) since it was made: inside an operation, once per object it changed and at each read of it. */
+  structureProbe(): { solves: number }
   /** Cost of the last `sweepBox` (`SweepProbe`). */
   sweepProbe(): SweepProbe
   /**

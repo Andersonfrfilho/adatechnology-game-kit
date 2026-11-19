@@ -38,15 +38,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "one_pillar",
-    "time": 0,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "one_pillar",
@@ -121,6 +112,15 @@
       -1.89
      ]
     ]
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
    }
   },
   {
@@ -665,15 +665,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 0,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -751,6 +742,15 @@
    }
   },
   {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
    "type": "crack",
    "data": {
     "scenario": "two_pillars",
@@ -782,15 +782,6 @@
     "part": "c1",
     "kind": "chips",
     "count": 10
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 0,
-    "joint": "wall_back~c1",
-    "by": "break"
    }
   },
   {
@@ -916,6 +907,15 @@
    }
   },
   {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "joint": "wall_back~c1",
+    "by": "break"
+   }
+  },
+  {
    "type": "stress",
    "data": {
     "scenario": "two_pillars",
@@ -1482,6 +1482,121 @@
     "part": "c0",
     "kind": "sparks",
     "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c1",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c1",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 6103.4321,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 8560.0742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 6103.4321,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 8560.0742,
+    "damageType": "blunt"
    }
   },
   {
@@ -1503,37 +1618,6 @@
    }
   },
   {
-   "type": "damage",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c1",
-    "amount": 521.64,
-    "hp": 0,
-    "damageType": "blunt"
-   }
-  },
-  {
-   "type": "expose",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c1",
-    "bars": 0,
-    "first": null
-   }
-  },
-  {
-   "type": "debris",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c1",
-    "kind": "sparks",
-    "count": 6
-   }
-  },
-  {
    "type": "detach",
    "data": {
     "scenario": "two_pillars",
@@ -1549,90 +1633,6 @@
     "time": 1.7,
     "joint": "slab~c1",
     "by": "part_lost"
-   }
-  },
-  {
-   "type": "stress",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "f_c2",
-    "stress": 1.0097,
-    "load": 8186.5
-   }
-  },
-  {
-   "type": "damage",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "f_c2",
-    "amount": 78.9679,
-    "hp": 6103.4321,
-    "damageType": "blunt"
-   }
-  },
-  {
-   "type": "stress",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c2",
-    "stress": 1.0426,
-    "load": 7744.9
-   }
-  },
-  {
-   "type": "damage",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c2",
-    "amount": 133.9258,
-    "hp": 8560.0742,
-    "damageType": "blunt"
-   }
-  },
-  {
-   "type": "stress",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "f_c3",
-    "stress": 1.0097,
-    "load": 8186.5
-   }
-  },
-  {
-   "type": "damage",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "f_c3",
-    "amount": 78.9679,
-    "hp": 6103.4321,
-    "damageType": "blunt"
-   }
-  },
-  {
-   "type": "stress",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c3",
-    "stress": 1.0426,
-    "load": 7744.9
-   }
-  },
-  {
-   "type": "damage",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 1.7,
-    "part": "c3",
-    "amount": 133.9258,
-    "hp": 8560.0742,
-    "damageType": "blunt"
    }
   },
   {
@@ -5643,33 +5643,6 @@
    }
   },
   {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "joint": "c2~f_c2",
-    "by": "part_lost"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "joint": "slab~c2",
-    "by": "part_lost"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "joint": "wall_front~c2",
-    "by": "part_lost"
-   }
-  },
-  {
    "type": "damage",
    "data": {
     "scenario": "two_pillars",
@@ -5709,33 +5682,6 @@
     "part": "c3",
     "kind": "sparks",
     "count": 6
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "joint": "c3~f_c3",
-    "by": "part_lost"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "joint": "slab~c3",
-    "by": "part_lost"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "two_pillars",
-    "time": 9.8,
-    "joint": "wall_front~c3",
-    "by": "part_lost"
    }
   },
   {
@@ -5805,6 +5751,60 @@
    }
   },
   {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "c2~f_c2",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "slab~c2",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "wall_front~c2",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "c3~f_c3",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "slab~c3",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "wall_front~c3",
+    "by": "part_lost"
+   }
+  },
+  {
    "type": "crack",
    "data": {
     "scenario": "partition",
@@ -5836,24 +5836,6 @@
     "part": "wall_back",
     "kind": "chips",
     "count": 10
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "partition",
-    "time": 0,
-    "joint": "wall_back~c0",
-    "by": "break"
-   }
-  },
-  {
-   "type": "detach",
-   "data": {
-    "scenario": "partition",
-    "time": 0,
-    "joint": "wall_back~c1",
-    "by": "break"
    }
   },
   {
@@ -5935,6 +5917,24 @@
     "time": 0,
     "part": "wall_back",
     "stage": 3
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "joint": "wall_back~c1",
+    "by": "break"
    }
   },
   {

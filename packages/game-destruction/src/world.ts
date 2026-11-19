@@ -1,5 +1,5 @@
 import { SUPPORT_TOLERANCE, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
-import type { PlanePoint, SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
+import type { PlanePoint, SupportGraph } from '@adatechnology/game-load-path'
 import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
@@ -688,6 +688,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
+  /** Changes to the structure of an object inside the operation being run (`loosened`) whose solution waits for `settleStructure`, in the order they happened. */
+  const pendingStructure = new Map<ObjRT, Array<{ opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }>>()
+  /** The detach events of the operation being run, in the order the joints opened: they come out at its end, with the groups it left (`emitDetaches`). */
+  const pendingDetaches: Array<{ o: ObjRT; opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }> = []
+  let structureSolves = 0
+
+  // Scratch for `recomputeGroups` and `solveStructure`: sized by part count, grown when needed, rewritten on each call (neither runs inside the other)
+  let ufParent = new Int32Array(0)
+  let supportedRoot = new Uint8Array(0)
+  let bendingScratch = new Float64Array(0)
+  const edgeLists: Array<Array<{ on: number; directed: boolean }>> = []
+  const edgePool: Array<{ on: number; directed: boolean }> = []
+  const throughLists: Array<Array<{ at: Vec3; mass: number; over: number }>> = []
+  const throughPool: Array<{ at: Vec3; mass: number; over: number }> = []
+  const ufFind = (i: number): number => {
+    while (ufParent[i] !== i) {
+      ufParent[i] = ufParent[ufParent[i]]
+      i = ufParent[i]
+    }
+    return i
+  }
+  const ufUnion = (a: number, b: number) => {
+    ufParent[ufFind(a)] = ufFind(b)
+  }
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
@@ -703,8 +727,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const value = fn()
       drainBlasts()
       if (runDepth === 1) {
+        settleAllStructure()
         flushCollapse()
-        if (revealHostedIn(objects.values())) flushCollapse()
+        settleAllStructure()
+        if (revealHostedIn(objects.values())) {
+          settleAllStructure()
+          flushCollapse()
+          settleAllStructure()
+        }
+        emitDetaches()
       }
       return { value, events: mine }
     } finally {
@@ -882,30 +913,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const recomputeGroups = (o: ObjRT) => {
     const n = o.parts.length
-    const parent = Array.from({ length: n }, (_, i) => i)
-    const find = (i: number): number => {
-      while (parent[i] !== i) {
-        parent[i] = parent[parent[i]]
-        i = parent[i]
-      }
-      return i
+    if (ufParent.length < n) {
+      ufParent = new Int32Array(n)
+      supportedRoot = new Uint8Array(n)
     }
-    const union = (a: number, b: number) => {
-      parent[find(a)] = find(b)
-    }
+    for (let i = 0; i < n; i++) ufParent[i] = i
+    const find = ufFind, union = ufUnion
     const live = (j: JointRT) => !j.st.open && !isLost(o.parts[j.ia]) && !isLost(o.parts[j.ib]) && !j.spec.tears
     if (o.unsup.some(Boolean)) {
       // parts that lost every support fall: cut them from the supported pieces; loose non-structural parts follow the part they hang on
       for (const j of o.joints) if (live(j) && !o.unsup[j.ia] && !o.unsup[j.ib]) union(j.ia, j.ib)
-      const supported = new Set<number>()
-      for (let i = 0; i < n; i++) if (!isLost(o.parts[i]) && !o.unsup[i] && (o.parts[i].structural || o.parts[i].anchored)) supported.add(find(i))
+      supportedRoot.fill(0, 0, n)
+      for (let i = 0; i < n; i++) if (!isLost(o.parts[i]) && !o.unsup[i] && (o.parts[i].structural || o.parts[i].anchored)) supportedRoot[find(i)] = 1
       for (const j of o.joints) {
         if (!live(j) || !(o.unsup[j.ia] || o.unsup[j.ib])) continue
         if (o.unsup[j.ia] && o.unsup[j.ib]) union(j.ia, j.ib)
         else {
           const u = o.unsup[j.ia] ? j.ia : j.ib
           const other = u === j.ia ? j.ib : j.ia
-          if (!o.parts[other].structural && !supported.has(find(other))) union(u, other)
+          if (!o.parts[other].structural && supportedRoot[find(other)] === 0) union(u, other)
         }
       }
     } else for (const j of o.joints) if (live(j)) union(j.ia, j.ib)
@@ -1170,6 +1196,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * snaps; a reinforced one yields and fails when its plastic rotation (`(U(M) - U(Mu)) / (2 Mu)` per blast, added up) reaches `failRotationDeg`.
    */
   const bendByBlast = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, reach: number, src?: string) => {
+    if (p.bend) settleStructure(o)
     const g = p.bend
     if (!g || p.span <= 0 || isLost(p) || p.st.stripped || reach <= 0) return
     const s = p.mat.strength!
@@ -1257,6 +1284,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * the load goes down and how it is shared are the load path rule of `game-load-path` (the structure that sized the building uses the same one).
    */
   const solveStructure = (o: ObjRT) => {
+    structureSolves++
     o.maxStress = 0
     if (!o.hasStructure) return
     const parts = o.parts
@@ -1264,15 +1292,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
     const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
     // what each part rests on through its bearing joints that hold
-    const edges: SupportEdge[][] = parts.map((p, i) => {
-      const out: SupportEdge[] = []
-      for (const j of o.byPart.get(p.spec.id)!) {
+    const edges = edgeLists
+    let edgesUsed = 0
+    for (let i = 0; i < n; i++) {
+      const list = (edges[i] ??= [])
+      list.length = 0
+      for (const j of o.byPart.get(parts[i].spec.id)!) {
         if (j.st.open || !j.bears) continue
         const k = restsOn(o, j, i)
-        if (k >= 0) out.push({ on: k, directed: directed(j) })
+        if (k < 0) continue
+        const edge = (edgePool[edgesUsed] ??= { on: 0, directed: false })
+        edgesUsed++
+        edge.on = k
+        edge.directed = directed(j)
+        list.push(edge)
       }
-      return out
-    })
+    }
     // a part whose supports leave it a longer span than it holds (`structure.maxSpan`) is out, and so is what stood on it only through it
     const out = new Set<number>()
     const graph: SupportGraph = {
@@ -1303,12 +1338,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
     // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
     // and bends that one only if it is away from its own supports
-    const bending = new Array<number>(n).fill(0)
-    const through: Array<Array<{ at: Vec3; mass: number; over: number }>> = parts.map(() => [])
+    if (bendingScratch.length < n) bendingScratch = new Float64Array(n)
+    const bending = bendingScratch
+    bending.fill(0, 0, n)
+    const through = throughLists
+    let throughUsed = 0
+    for (let i = 0; i < n; i++) (through[i] ??= []).length = 0
     const pass = (k: number, at: Vec3, mass: number) => {
       const over = overSupportAt(o, parts[k], at, lowerOf(k))
       if (over < 0) bending[k] += mass
-      else through[k].push({ at, mass, over })
+      else {
+        const item = (throughPool[throughUsed] ??= { at, mass, over })
+        throughUsed++
+        item.at = at
+        item.mass = mass
+        item.over = over
+        through[k].push(item)
+      }
     }
     distributeLoads(solution, (i) => parts[i].st.mass, {
       settled: (i, load) => {
@@ -1489,6 +1535,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Moves the top of the building with the gust (the first mode and the damper, integrated together) and reports `sway` when it changes. */
   const stepWind = (o: ObjRT, dt: number) => {
+    settleStructure(o)
     const w = o.wind!
     const a = w.analysis
     const st = o.st.wind
@@ -1736,6 +1783,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   const stepSoil = (o: ObjRT, dt: number) => {
+    settleStructure(o)
     const so = o.soil!
     if (o.st.soil?.status === 'toppled') return
     if (!so.dirty && o.st.soil?.status !== 'yielding') return
@@ -1834,6 +1882,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const [o, src] of [...pendingCollapse]) {
       pendingCollapse.delete(o)
       if (!objects.has(o.id) || objects.get(o.id) !== o) continue
+      settleStructure(o)
       const crumbling: PartRT[] = []
       for (const g of [...o.st.groups]) {
         const ps = g.map((id) => o.byId.get(id)!).filter((p) => !isLost(p) && !o.collapsed.has(p.spec.id))
@@ -2168,6 +2217,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const length = opening[1] - opening[0]
     let lost = false
     for (const j of [...(o.byPart.get(q.spec.id) ?? [])]) {
+      // a slab that dropped at the turn before changed what the next one carries
+      settleStructure(o)
       const ri = j.ia === qi ? j.ib : j.ia
       const r = o.parts[ri]!
       if (j.st.open || isLost(r) || restsOn(o, j, ri) !== qi || !r.structural) continue
@@ -2227,6 +2278,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     emit({ ...base(o, src), type: 'subside', part: r.spec.id, drop: r.st.subsidence, share: (stretch[1] - stretch[0]) / Math.max(1e-6, box.max[axis] - box.min[axis]), point: toWorld(o.st.position, o.st.rotation, middle), status: 'opened' })
     let lost = false
     for (const j of [...(o.byPart.get(r.spec.id) ?? [])]) {
+      settleStructure(o)
       const ki = j.ia === ri ? j.ib : j.ia
       const k = o.parts[ki]!
       if (j.st.open || isLost(k) || restsOn(o, j, ki) !== ri) continue
@@ -2406,6 +2458,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Ground taken away under an object: each part that bears over it settles, bridges, breaks over the void or loses its support; the structure is solved again. */
   const undermine = (o: ObjRT, loss: GroundLoss) => {
+    settleStructure(o)
     if (!o.hasStructure || !o.anyAnchor || o.st.soil?.status === 'toppled') return
     const src = loss.source ?? 'ground'
     const opened: JointRT[] = []
@@ -2418,6 +2471,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const order = [...touched].sort((x, y) => pillarFirst(x.b) - pillarFirst(y.b))
     const standing = new Set(bearers.map((b) => b.i))
     for (const { b, fp } of order) {
+      // what an earlier bearer of this loss dropped (`hingeDrop`) changed the loads the next one is judged with
+      settleStructure(o)
       const bearing = bearLoss(o, b, fp, standing)
       if (bearing.status === 'unsupported') standing.delete(b.i)
       if (bearing.status !== 'unsupported' && !bendGeometry(b.p.spec).member) {
@@ -2452,12 +2507,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       b.p.st.subsidence = drop
       emit({ ...base(o, src), type: 'subside', part: b.p.spec.id, drop, share: fp.share, point: fp.deepest, status: bearing.status })
     }
-    for (const { b, fp } of settled) crackOver(o, b, fp, src)
+    for (const { b, fp } of settled) {
+      settleStructure(o)
+      crackOver(o, b, fp, src)
+    }
     o.active = true
     if (!lost) return
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'break', src)
+    loosened(o, opened, 'break', src)
     collapseCheck(o, src)
   }
 
@@ -2936,6 +2992,48 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
+   * The structure of `o` changed (a part lost, joints opened). Inside an operation (`run`) it is solved once, when something reads it (`settleStructure`) or when the
+   * operation ends, and the detach events of every change come out then, in the order the changes happened; outside one, at once.
+   */
+  const loosened = (o: ObjRT, opened: JointRT[], by: 'break' | 'tool' | 'part_lost', src?: string) => {
+    if (runDepth === 0) {
+      solveStructure(o)
+      recomputeGroups(o)
+      detachEvents(o, opened, by, src)
+      return
+    }
+    let changes = pendingStructure.get(o)
+    if (!changes) pendingStructure.set(o, (changes = []))
+    changes.push({ opened, by, ...(src === undefined ? {} : { src }), ...(blow === undefined ? {} : { blow }) })
+  }
+
+  /** Solves `o` if a change waits (`loosened`), before what reads its loads, stresses or groups. */
+  const settleStructure = (o: ObjRT) => {
+    const changes = pendingStructure.get(o)
+    if (!changes) return
+    pendingStructure.delete(o)
+    solveStructure(o)
+    recomputeGroups(o)
+    for (const c of changes) if (c.opened.length > 0) pendingDetaches.push({ o, ...c })
+  }
+
+  const emitDetaches = () => {
+    const outer = blow
+    try {
+      for (const d of pendingDetaches.splice(0)) {
+        blow = d.blow
+        detachEvents(d.o, d.opened, d.by, d.src)
+      }
+    } finally {
+      blow = outer
+    }
+  }
+
+  const settleAllStructure = () => {
+    while (pendingStructure.size > 0) for (const o of [...pendingStructure.keys()]) settleStructure(o)
+  }
+
+  /**
    * How what lies on a part over a `resting` joint stands, in the object's frame: half its height and its half-widths across (the level axes of its box), or null when it
    * is not a box (it only slides). Remembered per joint.
    */
@@ -2985,9 +3083,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         j.st.open = true
         j.st.openedBy = 'break'
       }
-      solveStructure(o)
-      recomputeGroups(o)
-      detachEvents(o, opened, 'break')
+      loosened(o, opened, 'break')
       collapseCheck(o)
     })
   }
@@ -3042,17 +3138,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // it shows before it comes off, so what draws the piece that detaches finds it drawn
     for (const p of shown) emit({ ...base(o), type: 'reveal', part: p.spec.id, host: p.spec.hostedIn! })
     if (opened.length > 0) {
-      solveStructure(o)
-      recomputeGroups(o)
-      detachEvents(o, opened, 'break')
+      loosened(o, opened, 'break')
       collapseCheck(o)
     }
     return true
   }
 
+  const revealScratch: ObjRT[] = []
+  const updateScratch: ObjRT[] = []
   const revealHostedIn = (all: Iterable<ObjRT>): boolean => {
     let any = false
-    for (const o of [...all]) if (o.hosted && revealHosted(o)) any = true
+    revealScratch.length = 0
+    for (const o of all) revealScratch.push(o)
+    for (let i = 0; i < revealScratch.length; i++) {
+      const o = revealScratch[i]
+      if (o.hosted && revealHosted(o)) any = true
+    }
+    revealScratch.length = 0
     return any
   }
 
@@ -3064,9 +3166,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       j.st.openedBy = 'part_lost'
       opened.push(j)
     }
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'part_lost', src)
+    loosened(o, opened, 'part_lost', src)
     collapseCheck(o, src)
     checkDestroyed(o, src)
   }
@@ -3165,9 +3265,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         j.st.hp = 0
         j.st.open = true
         j.st.openedBy = 'break'
-        solveStructure(o)
-        recomputeGroups(o)
-        detachEvents(o, [j], 'break', src)
+        loosened(o, [j], 'break', src)
         collapseCheck(o, src)
       }
     }
@@ -3714,6 +3812,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * every bar that shows, so a renderer can replace the part's cage with it.
    */
   const exposeRebar = (o: ObjRT, p: PartRT, src?: string) => {
+    settleStructure(o)
     const r = p.spec.reinforcement
     if (!r) return
     const [u, v] = planeAxes(p.thin)
@@ -4040,9 +4139,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (opened.length === 0) return false
     p.st.hp = Math.max(p.st.hp, p.st.maxHp * GIVE_AT_CUT_HP)
     markDamaged(p)
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'break', src)
+    loosened(o, opened, 'break', src)
     exposeRebar(o, p, src)
     collapseCheck(o, src)
     return true
@@ -4100,9 +4197,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     p.st.cracked = true
     markDamaged(p)
     debris(o, p, p.mat.breakDebris, partXf(o, p).c, [0, -1, 0], 12, 2, src)
-    solveStructure(o)
-    recomputeGroups(o)
-    detachEvents(o, opened, 'break', src)
+    loosened(o, opened, 'break', src)
     collapseCheck(o, src)
   }
 
@@ -4113,6 +4208,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       loseCage(o, p, src)
       return
     }
+    if (p.bend) settleStructure(o)
     if (!force && p.bend && (p.st.flexure ?? 0) > 1 && sectionOf(p, p.bend.gravity).reinforced) {
       hingeDrop(o, p, src)
       return
@@ -5402,12 +5498,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (s.burning || p.rt.jet || s.temperature > ambient + 0.5) hot = true
     }
     if (o.hasStructure) {
+      settleStructure(o)
       if (o.dirty) {
         o.dirty = false
         solveStructure(o)
       }
       for (const p of parts) {
         if (!p.structural || isLost(p)) continue
+        // a part the overload broke just now changed what the next ones carry
+        settleStructure(o)
         const stress = p.st.stress ?? 0
         p.rt.stressT = Math.max(0, (p.rt.stressT ?? 0) - dt)
         if (stress > 1) {
@@ -5425,6 +5524,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           addCrack(o, p, toWorld(c, q, sp.point), rotateVec(q, sp.normal), 0.1 + (stress - 0.8) * 0.5)
         }
       }
+      settleStructure(o)
       if (o.maxStress > 0.8) hot = true
     }
     o.active = hot
@@ -5528,11 +5628,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
-  /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
+  /** Collapse and detach events come at the end of the operation (`flushCollapse`, `emitDetaches`): the result carries them. */
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
     if (!last) return r.value
-    for (const e of r.events) if (e.type === 'collapse' && !r.value.some((h) => h.events.includes(e))) last.events.push(e)
+    for (const e of r.events) {
+      if ((e.type !== 'collapse' && e.type !== 'detach') || r.value.some((h) => h.events.includes(e))) continue
+      const into = (e.type === 'detach' ? r.value.find((h) => h.object === e.object) : undefined) ?? last
+      into.events.push(e)
+    }
     return r.value
   }
 
@@ -5678,6 +5782,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     blastProbe() {
       return { ...blastProbe }
     },
+    structureProbe() {
+      return { solves: structureSolves }
+    },
     blastReach(point, target, options = {}) {
       const L = vec.distance(point, target)
       if (L < 1e-4) return 1
@@ -5791,9 +5898,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (j.st.progress >= 1) {
           j.st.open = true
           j.st.openedBy = 'tool'
-          solveStructure(o)
-          recomputeGroups(o)
-          detachEvents(o, [j], 'tool')
+          loosened(o, [j], 'tool')
           collapseCheck(o)
         }
         return j.st.progress
@@ -5916,9 +6021,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         time += dt
         applyGroundLosses()
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
-        for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
-        for (const o of [...objects.values()]) if (o.soil && objects.get(o.id) === o) stepSoil(o, dt)
-        for (const o of [...objects.values()]) if (o.wind && objects.get(o.id) === o) stepWind(o, dt)
+        // a snapshot per pass: objects born during a pass wait for the next, ones removed are skipped
+        const all = updateScratch
+        all.length = 0
+        for (const o of objects.values()) all.push(o)
+        for (let i = 0; i < all.length; i++) if (all[i].active) stepObject(all[i], dt, sources)
+        all.length = 0
+        for (const o of objects.values()) all.push(o)
+        for (let i = 0; i < all.length; i++) if (all[i].soil && objects.get(all[i].id) === all[i]) stepSoil(all[i], dt)
+        all.length = 0
+        for (const o of objects.values()) all.push(o)
+        for (let i = 0; i < all.length; i++) if (all[i].wind && objects.get(all[i].id) === all[i]) stepWind(all[i], dt)
+        all.length = 0
         if (sources.length) {
           spread(sources, dt)
           igniteLeaksNearFire(sources, dt)
