@@ -1905,6 +1905,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-runtime':
+        specifier: workspace:^
+        version: link:../game-runtime
       '@adatechnology/game-vehicles-driving':
         specifier: workspace:^
         version: link:../game-vehicles-driving
