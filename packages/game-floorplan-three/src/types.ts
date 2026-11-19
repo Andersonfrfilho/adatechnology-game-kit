@@ -108,7 +108,7 @@ export interface HouseRendererOptions {
   drawCallBudget?: number
   /** The still meshes cast their shadow from a few shadow-only batches (`createHouseShadowBatches`), made over the first frames of `update`. Default true; false: each mesh casts its own. */
   shadowBatches?: boolean
-  /** The queue the shadow batches are merged by (default `houseShadowQueue`, one for every house; the room registers it with its frame budget). */
+  /** The queue the shadow batches are merged by (`createHouseShadowQueue`, one for every house of the room, registered with its frame budget; default: each house drains its own in `update`). */
   shadowQueue?: StaticBatchQueue
   onChange?: (change: { shadow: boolean }) => void
   /** A collider opened or closed (a door, a gate, a piece of furniture moved). */

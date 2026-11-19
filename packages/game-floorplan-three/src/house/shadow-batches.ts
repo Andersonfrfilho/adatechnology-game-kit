@@ -10,8 +10,10 @@ import type { Object3D } from 'three'
  * of its new shape, the frame it changes (`createStaticBatcher` with `shadowOnly`).
  */
 export const HOUSE_SHADOW_BUDGET_MS = 2
-/** The one queue of the shadow batches of every house (the floorplan package is its owner): the room registers `houseShadowQueue.deferredQueue()` with its frame budget. Not registered, each house drains it in its `update` with `HOUSE_SHADOW_BUDGET_MS`. */
-export const houseShadowQueue: StaticBatchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.HOUSE_SHADOW_BATCH })
+/** A queue for the shadow batches of an owner's houses (the room makes one, registers `deferredQueue()` with its frame budget and passes it as `shadowQueue` to every house). */
+export function createHouseShadowQueue(): StaticBatchQueue {
+  return createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.HOUSE_SHADOW_BATCH })
+}
 /** The most vertices per shadow batch: one batch is merged in one frame (~3 ms for 16k on a laptop core; 65k took 5 to 10 ms), and the shadow camera culls each by its own part of the house. */
 export const HOUSE_SHADOW_BATCH_VERTICES = 16384
 /** Once this share of the batched meshes cast on their own again (a blast took a wall, the cut view hid a floor), the batches are made again from what stands, after this quiet time. */
@@ -28,14 +30,14 @@ export type HouseShadowBatches = {
 export type HouseShadowBatchesOptions = {
   /** The clock (ms) the quiet time is read from (default `performance.now`). */
   readonly now?: () => number
-  /** The queue the chunks are merged by (default `houseShadowQueue`, shared by every house). */
+  /** The queue the chunks are merged by (`createHouseShadowQueue`, shared by the houses of an owner). Default: a queue of its own that this house drains in `update` with `HOUSE_SHADOW_BUDGET_MS`. */
   readonly queue?: StaticBatchQueue
 }
 
 /** Shadow-only batches of the still meshes under `root`, made over the frames (`HOUSE_SHADOW_BUDGET_MS` each) on the first `update`. */
 export function createHouseShadowBatches(THREE: ThreeLib, root: Object3D, options: HouseShadowBatchesOptions = {}): HouseShadowBatches {
   const now = options.now ?? (() => performance.now())
-  const queue = options.queue ?? houseShadowQueue
+  const queue = options.queue ?? createHouseShadowQueue()
   let batcher: StaticBatcher | null = null
   let changedAt = Number.NEGATIVE_INFINITY
   const make = (): StaticBatcher => {

@@ -84,6 +84,7 @@ With `destruction` (a world of `game-destruction`) and `destructionRenderer` (`g
 (`house.destruction.activate()`, or the first hit through `house.damage`):
 
 - **One part per wall**, with the assembly of its masonry (units, breach, layers) and **the rebar of reinforced concrete on slabs, beams, pillars and stairs**.
+- **Shadow batches in a frame-budget queue (spec 010).** The still meshes cast from shadow-only batches. An owner (the room) makes one `createHouseShadowQueue()`, registers its `deferredQueue()` with the frame budget and passes it as `shadowQueue` to every house; without it each house merges its own chunks in `update` with 2 ms.
 - **A vertex range per piece.** Every wall, slab, window, door... knows its range in the merged mesh (`house.structure.meshesOf(id)`); the renderer's `bind` gets them,
   so fracture and collapse hide the range and the renderer lets the fragments fall. `house.destruction.reset()` puts everything back.
 - **Brick courses at LOD 0.** A masonry wall that reaches stage 2 stops being a box: its range collapses and it is drawn again as instanced units (running bond,
