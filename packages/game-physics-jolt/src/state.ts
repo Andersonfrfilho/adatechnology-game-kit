@@ -45,6 +45,7 @@ export const saveState = (w: JoltWorldHost): Uint8Array => {
     own.push(key)
     pushFloat(rolling?.coefficient ?? 0)
     pushFloat(rolling?.radius ?? 0)
+    pushFloat(rolling?.damping ?? 0)
   }
   pushFloat(w.stepCount)
   const joltBytes = chunks.reduce((n, c) => n + c.length, 0)
@@ -136,7 +137,9 @@ export const restoreState = (w: JoltWorldHost, data: Uint8Array): boolean => {
   for (let n = next(); n > 0; n--) {
     const key = next()
     const coefficient = nextFloat()
-    w.rollers.set(key, { coefficient, radius: nextFloat() })
+    const radius = nextFloat()
+    const damping = nextFloat()
+    w.rollers.set(key, damping > 0 ? { coefficient, radius, damping } : { coefficient, radius })
   }
   w.stepCount = nextFloat()
   return true

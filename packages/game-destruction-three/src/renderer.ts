@@ -556,6 +556,7 @@ class Renderer implements DestructionRenderer {
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       ...(o.terrainRollingAt ? { terrainRollingAt: o.terrainRollingAt } : {}),
+      ...(o.terrainRollingDampingAt ? { terrainRollingDampingAt: o.terrainRollingDampingAt } : {}),
       ...(o.terrainRangeAt ? { terrainRangeAt: o.terrainRangeAt } : {}),
       ...(o.terrainGridAt && o.terrainAt ? { terrainGridAt: o.terrainGridAt } : {}),
       ...(o.terrainPatchAt && o.terrainGridAt && o.terrainAt ? { terrainPatchAt: o.terrainPatchAt } : {}),
@@ -892,7 +893,7 @@ class Renderer implements DestructionRenderer {
       }
     }
     const surface = material ? surfaceOf(material, this.world.materials.get(material)) : undefined
-    body.friction = surface && { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling }
+    body.friction = surface && { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling, rollingDamping: surface.rollingDamping }
     body.restitution = surface?.restitution
     const wasRound = body.round !== undefined
     if (inertia !== undefined) body.inertiaGiven = inertia
@@ -1392,11 +1393,12 @@ class Renderer implements DestructionRenderer {
    * The solid with the friction of its surface: the same object as last time for the same solid and the same numbers, so the lists after a re-measure hold the very objects the engine
    * holds and compare by identity (`sameSolids`, `EngineStatics.fit`), not number by number through every vertex of a mesh.
    */
-  private withSurface(solid: StaticSolid, surface: { readonly static: number; readonly dynamic: number; readonly rolling?: number }): StaticSolid {
+  private withSurface(solid: StaticSolid, surface: { readonly static: number; readonly dynamic: number; readonly rolling?: number; readonly rollingDamping?: number }): StaticSolid {
     const rolling = surface.rolling ?? 0
+    const rollingDamping = surface.rollingDamping ?? 0
     const kept = this.surfaced.get(solid)
-    if (kept?.friction && kept.friction.static === surface.static && kept.friction.dynamic === surface.dynamic && kept.friction.rolling === rolling) return kept
-    const made: StaticSolid = { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling } }
+    if (kept?.friction && kept.friction.static === surface.static && kept.friction.dynamic === surface.dynamic && kept.friction.rolling === rolling && kept.friction.rollingDamping === rollingDamping) return kept
+    const made: StaticSolid = { ...solid, friction: { static: surface.static, dynamic: surface.dynamic, rolling, rollingDamping } }
     this.surfaced.set(solid, made)
     return made
   }

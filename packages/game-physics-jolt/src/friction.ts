@@ -101,18 +101,30 @@ export const updateFriction = (w: JoltWorldHost): void => {
   foot.ground = null
 }
 
-/** The largest rolling resistance among the surfaces a rolling body touches so far, and the world it is read in. */
-const surface = { world: null as JoltWorldHost | null, rolling: 0 }
+/** The largest rolling resistance and rolling damping among the surfaces a rolling body touches so far, and the world it is read in. */
+const surface = { world: null as JoltWorldHost | null, rolling: 0, damping: 0 }
 
 const softest = (_count: number, other: number): void => {
   const o = surface.world?.bodies.get(other)
-  if (o?.material.rolling !== undefined && o.material.rolling > surface.rolling) surface.rolling = o.material.rolling
+  if (!o) return
+  if (o.material.rolling !== undefined && o.material.rolling > surface.rolling) surface.rolling = o.material.rolling
+  if (o.material.rollingDamping !== undefined && o.material.rollingDamping > surface.damping) surface.damping = o.material.rollingDamping
 }
 
 /**
- * Rolling resistance, after each fixed step: a body that touches something loses the angular impulse C_rr m g r dt against its spin, through its own inverse
- * inertia, and never more than stops the spin. C_rr is the larger of the body's own and of what it touches (`Material.rolling`: the softer surface decides). Its
- * contact's friction carries the change to its speed, as a rolling body's does.
+ * The angular impulse that slows a rolling body's spin in one step of `dt`: C_rr m g r dt (Coulomb rolling resistance) plus the spin `1 - exp(-d dt)` takes away (its
+ * rolling damping d, 1/s), each through its own inverse inertia `per` (spin taken away per unit of impulse), never more than stops the spin.
+ */
+export const rollingImpulse = (o: { readonly spin: number; readonly per: number; readonly mass: number; readonly gravity: number; readonly coefficient: number; readonly radius: number; readonly damping: number; readonly dt: number }): number => {
+  const coulomb = o.coefficient * o.gravity * o.radius * o.dt * o.mass
+  const damped = (o.spin * (1 - Math.exp(-o.damping * o.dt))) / o.per
+  return Math.min(coulomb + damped, o.spin / o.per)
+}
+
+/**
+ * Rolling resistance, after each fixed step: a body that touches something loses the angular impulse of `rollingImpulse` against its spin. C_rr is the larger of the body's own
+ * and of what it touches (`Material.rolling`: the softer surface decides); the damping is the body's own (`Rolling.damping`) plus the largest of what it touches
+ * (`Material.rollingDamping`: both surfaces lose energy). Its contact's friction carries the change to its speed, as a rolling body's does.
  */
 export const roll = (w: JoltWorldHost, dt: number): void => {
   surface.world = w
@@ -129,8 +141,9 @@ export const roll = (w: JoltWorldHost, dt: number): void => {
     const per = (iw.GetX() * wx + iw.GetY() * wy + iw.GetZ() * wz) / spin
     if (per <= 0) continue
     surface.rolling = rolling.coefficient
+    surface.damping = 0
     w.partners.get(key)?.forEach(softest)
-    const impulse = Math.min((surface.rolling * w.gravity * rolling.radius * dt) / e.invMass, spin / per)
+    const impulse = rollingImpulse({ spin, per, mass: 1 / e.invMass, gravity: w.gravity, coefficient: surface.rolling, radius: rolling.radius, damping: (rolling.damping ?? 0) + surface.damping, dt })
     w.v2.Set((-wx / spin) * impulse, (-wy / spin) * impulse, (-wz / spin) * impulse)
     w.bi.AddAngularImpulse(e.id, w.v2)
   }

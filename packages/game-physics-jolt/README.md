@@ -61,8 +61,9 @@ step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-mu
   applies on `setShape`.
 - **Per-body friction.** Jolt mixes friction by geometric mean, as the kit does, but each body holds its own coefficient: static until it
   slides, dynamic while it does. A sensor is never touched.
-- **Rolling resistance.** Engines have none, so a round body (`BodyDesc.rolling`) gets a moment opposing its spin while it touches
-  something: a can rolls to a stop, and the spin never reverses.
+- **Rolling resistance and damping.** Engines have none, so a round body (`BodyDesc.rolling`) gets a moment opposing its spin while it touches
+  something, plus its rolling damping (`Rolling.damping` + the surface's `Material.rollingDamping`, a share of the spin per second): a can rolls to
+  a stop, sooner on grass than on tile, and the spin never reverses.
 - **The kit's mass on `setShape`.** A dynamic body keeps its kit mass (given to `createBody` or to `setShape`) and its inertia is scaled
   to that mass from the new shape; Jolt would otherwise take the shape's volume times 1000 kg/m^3.
 
