@@ -566,11 +566,13 @@ class Renderer implements DestructionRenderer {
       // and it meets the walls, ceilings and furniture on its way: it stops on their face instead of flying into them
       sweep: (from, direction, distance) => (typeof this.world.raycast === 'function' ? this.world.raycast([from[0], from[1], from[2]], [direction[0], direction[1], direction[2]], distance) : null),
       maxAwake: o.maxAwakeFragments ?? Infinity,
+      ...(o.interpolate ? { interpolate: true } : {}),
     })
     this.cages = new RebarCages(THREE, o.scene)
     this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
       physics: o.physics,
+      ...(o.interpolate ? { interpolate: true } : {}),
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       ...(o.terrainRollingAt ? { terrainRollingAt: o.terrainRollingAt } : {}),
@@ -743,7 +745,10 @@ class Renderer implements DestructionRenderer {
   /** Drop an object from the bound ones, with the boxes fitted for its parts. */
   private forgetBound(objectId: string): void {
     const b = this.bounds.get(objectId)
-    if (b) for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+    if (b) {
+      for (const pv of b.parts.values()) for (const mv of pv.meshes) this.fittedBoxes.delete(mv)
+      if (b.frozen) this.thawRoot(b)
+    }
     this.bounds.delete(objectId)
   }
 
@@ -1098,8 +1103,20 @@ class Renderer implements DestructionRenderer {
   // Update
   // ----------------------------------------------------------------------------------------------------------------------------------
 
+  restoreStepPose(): void {
+    this.pieceSys.restoreStepPose()
+    this.fragments.restoreStepPose()
+  }
+
+  present(alpha: number): void {
+    if (this.disposed) return
+    this.pieceSys.presentPose(alpha)
+    this.fragments.presentPose(alpha)
+  }
+
   update(dt: number): void {
     if (this.disposed) return
+    this.restoreStepPose()
     dt = clamp(dt, 0, 0.1)
     this.time += dt
     this.work?.beginFrame()
@@ -1287,8 +1304,40 @@ class Renderer implements DestructionRenderer {
     this.settlement.follow(b.soilNode ?? b.root, parts)
   }
 
+  /**
+   * The roots the world is told about: a piece asleep is not read (its root stops recomputing its matrix) until it wakes or a host calls
+   * `markMoved`; every other root is read, and only decomposed when its world matrix changed.
+   */
   private syncTransforms(): void {
-    for (const b of this.bounds.values()) this.syncOne(b)
+    for (const b of this.bounds.values()) {
+      if (b.piece?.sleeping && !b.moved) {
+        if (!b.frozen) this.freezeRoot(b)
+        continue
+      }
+      if (b.frozen) this.thawRoot(b)
+      b.moved = false
+      this.syncOne(b)
+    }
+  }
+
+  private freezeRoot(b: Bound): void {
+    this.syncOne(b)
+    b.root.updateMatrix()
+    b.root.matrixAutoUpdate = false
+    b.frozen = true
+  }
+
+  private thawRoot(b: Bound): void {
+    b.root.matrixAutoUpdate = true
+    b.frozen = false
+  }
+
+  /** The host moved the root of an object by hand (a teleport): its transform goes to the world on the next `update`, even if it is a piece asleep. */
+  markMoved(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (!b) return
+    b.moved = true
+    if (b.frozen) this.thawRoot(b)
   }
 
   /** Push the current transform of one bound object to the world right now (used before a landing hit). */
@@ -1302,6 +1351,19 @@ class Renderer implements DestructionRenderer {
     const p = this.v1
     const q = this.tmpQ
     b.root.updateWorldMatrix(true, false)
+    const elements = b.root.matrixWorld.elements
+    const world = b.lastWorld
+    if (world) {
+      let same = true
+      for (let i = 0; i < 16; i++) {
+        if (world[i] === elements[i]) continue
+        same = false
+        world[i] = elements[i] as number
+      }
+      if (same && b.lastPos) return
+    } else {
+      b.lastWorld = Float64Array.from(elements)
+    }
     b.root.matrixWorld.decompose(p, q, this.v2)
     const last = b.lastPos
     const lq = b.lastQuat

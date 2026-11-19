@@ -1,5 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
+import { AwakeList } from './awake-list'
+import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
 import { squareBoxOf } from './internal'
 import { clamp } from './math'
@@ -18,6 +20,8 @@ import type { PiecePhysics } from './physics-option'
 export type { PieceSweepHit } from './internal'
 
 export interface PieceSystemOptions {
+  /** Keep the pose of the step before the last, to draw between it and the step's (`presentPose`). Default off: the roots are always the step's. */
+  interpolate?: boolean
   groundAt: (x: number, z: number) => number
   /** The terrain alone (no top of furniture or of anything drawn): the ground of an engine, which has every drawn top as a body. Default `groundAt`. */
   terrainAt?: (x: number, z: number) => number
@@ -332,6 +336,13 @@ export class PieceSystem {
   /** The phases' way out of the loop, and whether this frame's `prepare` ran (it runs once, in the first fixed step). */
   private readonly leaveLoop: Array<() => void> = []
   private prepared = false
+  /** The pose before the last step and after it, of the pieces that were awake (`interpolate`); null when the option is off. */
+  private readonly trail: PoseTrail | null
+  /** The pieces the loops walk (`AwakeList`): the rest are asleep on both sides and measured, and cost nothing per update. */
+  private readonly awake = new AwakeList()
+  /** `solids` and `surfaces` must be written again from the list: a piece came, went, or changed its parts. */
+  private layoutDirty = true
+  private reshaped = false
   /** The time each piece was made (`keepFar`: how old it is). */
   private readonly bornAt = new WeakMap<PieceBody, number>()
   private keptAt = -Infinity
@@ -387,6 +398,7 @@ export class PieceSystem {
     const resolved = resolvePhysics(o.physics)
     this.loop = resolved?.loop ?? null
     this.stepsItself = resolved?.stepsItself ?? false
+    this.trail = o.interpolate ? new PoseTrail() : null
     this.engine = resolved
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
@@ -421,11 +433,12 @@ export class PieceSystem {
       loop.add(
         {
           beforeStep: (step, frame) => {
-            if (this.prepared) return engine.moveHeld(this.list, step)
+            if (this.prepared) return engine.moveHeld(this.list, step, this.awake)
             this.prepared = true
+            this.beginTick()
             this.measure()
             this.wakeUnsupported(true)
-            engine.prepare(this.list, frame.steps * h, step, this.apartAll(frame.steps * h))
+            engine.prepare(this.list, frame.steps * h, step, this.apartAll(frame.steps * h), this.awake)
           },
         },
         'actors',
@@ -434,7 +447,7 @@ export class PieceSystem {
         {
           afterSteps: (dt, frame) => {
             // a frame too short for a step has no events and nothing moved: nothing to read back
-            if (frame.steps > 0) engine.finish(this.list, dt, frame.time)
+            if (frame.steps > 0) engine.finish(this.list, dt, frame.time, this.awake)
           },
         },
         'contacts',
@@ -445,6 +458,7 @@ export class PieceSystem {
             const ran = this.prepared
             this.prepared = false
             if (!ran) return
+            this.trail?.commit()
             this.measure()
             this.keepBudget()
           },
@@ -456,6 +470,7 @@ export class PieceSystem {
 
   /** Takes the system's phases out of the loop it was handed. */
   dispose(): void {
+    this.trail?.clear()
     for (const leave of this.leaveLoop.splice(0)) leave()
     if (this.engine) this.engine.dispose()
     else this.groundWorker?.dispose()
@@ -575,6 +590,9 @@ export class PieceSystem {
       existing.sleeping = false
       return existing
     }
+    const awake = this.awake
+    let asleep = false
+    let inHand = false
     const body: PieceBody = {
       objectId,
       generation: ++this.generations,
@@ -584,8 +602,21 @@ export class PieceSystem {
       angularVelocity: angular ? [...angular] : [0, 0, 0],
       halfExtents: [Math.max(0.01, halfExtents[0]), Math.max(0.01, halfExtents[1]), Math.max(0.01, halfExtents[2])],
       mass: Math.max(0.05, mass),
-      sleeping: false,
-      held: false,
+      // asleep or held is read and written as a plain flag; waking or taking it in hand puts the piece among the awake ones
+      get sleeping() {
+        return asleep
+      },
+      set sleeping(value: boolean) {
+        asleep = value
+        if (!value) awake.enter(body)
+      },
+      get held() {
+        return inHand
+      },
+      set held(value: boolean) {
+        inHand = value
+        if (value) awake.enter(body)
+      },
       localCenter: [localCenter.x, localCenter.y, localCenter.z],
       centerV: localCenter.clone(),
       still: 0,
@@ -595,6 +626,8 @@ export class PieceSystem {
       onGround: false,
     }
     this.list.push(body)
+    awake.enter(body)
+    this.layoutDirty = true
     this.bornAt.set(body, this.time)
     return body
   }
@@ -613,6 +646,7 @@ export class PieceSystem {
   setCenter(b: PieceBody, c: THREE_NS.Vector3): void {
     b.centerV.copy(c)
     b.localCenter = [c.x, c.y, c.z]
+    this.awake.enter(b)
   }
 
   remove(objectId: string): void {
@@ -620,6 +654,8 @@ export class PieceSystem {
     if (i < 0) return
     // the boxes of the step forget it too: nothing keeps a removed piece's tree alive
     const [gone] = this.list.splice(i, 1)
+    if (gone) this.awake.leave(gone)
+    this.layoutDirty = true
     // its torn pairs go with it (§8); a pair whose other side is a fixed object, not a piece, stays until the piece goes: the pole may still fall
     for (const key of this.tethered) {
       const cut = key.indexOf('\u0000')
@@ -632,8 +668,11 @@ export class PieceSystem {
   }
 
   clear(): void {
+    this.trail?.clear()
     this.engine?.clear()
     this.list.length = 0
+    this.awake.clear()
+    this.layoutDirty = true
     this.solids = []
     this.surfaces = []
     this.solidOf.clear()
@@ -789,7 +828,35 @@ export class PieceSystem {
     }
   }
 
+  /** A step is about to move the pieces: the roots go back to the step's pose and the awake ones are recorded as the previous one (`interpolate`). */
+  private beginTick(): void {
+    const trail = this.trail
+    if (!trail) return
+    trail.begin()
+    for (const body of this.awake.items) if (!body.sleeping) trail.record(body.root)
+  }
+
+  /** The roots get the step pose back, before anything reads them (the start of a tick; a host calls it first when it reads a root between `presentPose` and the step). */
+  restoreStepPose(): void {
+    this.trail?.restore()
+  }
+
+  /** The awake pieces drawn `alpha` of the way from their pose before the last step to the step's (1: the step's). Pieces asleep, and without `interpolate`, are left as they are. */
+  presentPose(alpha: number): void {
+    this.trail?.blend(alpha)
+  }
+
   update(dt: number): void {
+    if (this.trail && !(this.engine && this.loop && !this.stepsItself)) {
+      this.beginTick()
+      this.advance(dt)
+      this.trail.commit()
+      return
+    }
+    this.advance(dt)
+  }
+
+  private advance(dt: number): void {
     if (this.engine && this.loop) {
       // under a loop the host stepped it already, and its time is the one that counts
       if (!this.stepsItself) {
@@ -803,9 +870,9 @@ export class PieceSystem {
       // itself when what holds it moves; a fixed thing removed or the ground changed wakes what was there (`EnginePieces`)
       this.wakeUnsupported(true)
       if (dt > 0) {
-        this.engine.prepare(this.list, dt, dt, this.apartAll(dt))
+        this.engine.prepare(this.list, dt, dt, this.apartAll(dt), this.awake)
         this.loop.step(dt)
-        this.engine.finish(this.list, dt, this.time)
+        this.engine.finish(this.list, dt, this.time, this.awake)
       }
       this.measure()
       this.keepBudget()
@@ -890,36 +957,59 @@ export class PieceSystem {
     this.keepFar()
   }
 
-  /** The boxes of the pieces as they stand (`solids`, `surfaces` and their grid): what a point lands on and what `topAt` answers. */
+  /**
+   * The boxes of the pieces as they stand (`solids`, `surfaces` and their grid): the boxes of the awake pieces are worked out again, the others kept as they were measured (a
+   * piece leaves the awake list only after the measure that has its last pose). With none awake and no piece come or gone, nothing is done.
+   */
   private measure(): void {
     // each piece's boxes are its own objects from one update to the next, written over in place: two measures an update over 200 pieces made a Vector3, a Matrix4,
     // its elements twice and the surfaces anew for each (90 MB in 200 updates of the debris bench, most of the collector's pauses)
     this.measures++
-    // written over by index and cut to length at the end: emptied and pushed again, each list was made anew twice an update
+    this.reshaped = this.layoutDirty
+    this.awake.walk(this.measureAwake)
+    if (this.reshaped) this.writeLayout()
+    else if (this.awake.items.length > 0) this.gridSurfaces()
+    this.awake.settle(this.isSettled)
+  }
+
+  /** A piece is asleep on both sides (the engine's too) or, on the kit's own solver, asleep and not held: nothing of it changes until it wakes. */
+  private readonly isSettled = (body: PieceBody): boolean => (this.engine ? this.engine.isSettled(body) : body.sleeping && !body.held)
+
+  private readonly measureAwake = (body: PieceBody): void => {
+    const rec = this.measured(body)
+    const from = rec.from
+    const count = rec.list.length
+    const first = rec.list[0]
+    const w = rec.whole
+    const c = this.centerOf(body, this.p)
+    w.c[0] = c.x
+    w.c[1] = c.y
+    w.c[2] = c.z
+    const el = this.m.makeRotationFromQuaternion(body.root.quaternion).elements
+    for (let k = 0; k < 16; k++) w.e[k] = el[k]
+    const h = body.halfExtents
+    w.half = h
+    w.r = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2])
+    // what lands on a piece lands on its parts (a shelf's boards, a table's top), not on the box around them all
+    const parts = body.partBoxes
+    if (!parts) {
+      rec.list[0] = w
+      if (rec.list.length !== 1) rec.list.length = 1
+    } else this.measureParts(rec, parts)
+    if (rec.from !== from || rec.list.length !== count || rec.list[0] !== first) this.reshaped = true
+  }
+
+  /** `solids`, `surfaces` and the maps by body written from the pieces' records, in the order of the list. */
+  private writeLayout(): void {
+    this.layoutDirty = false
     let solids = 0
     let surfaces = 0
     for (const body of this.list) {
       const rec = this.measured(body)
-      const w = rec.whole
-      const c = this.centerOf(body, this.p)
-      w.c[0] = c.x
-      w.c[1] = c.y
-      w.c[2] = c.z
-      const el = this.m.makeRotationFromQuaternion(body.root.quaternion).elements
-      for (let k = 0; k < 16; k++) w.e[k] = el[k]
-      const h = body.halfExtents
-      w.half = h
-      w.r = Math.sqrt(h[0] * h[0] + h[1] * h[1] + h[2] * h[2])
-      this.solids[solids++] = w
-      // what lands on a piece lands on its parts (a shelf's boards, a table's top), not on the box around them all
-      const parts = body.partBoxes
-      if (!parts) {
-        rec.list[0] = w
-        if (rec.list.length !== 1) rec.list.length = 1
-      } else this.measureParts(rec, parts)
+      this.solids[solids++] = rec.whole
       for (const one of rec.list) this.surfaces[surfaces++] = one
       rec.stamp = this.measures
-      this.solidOf.set(body, w)
+      this.solidOf.set(body, rec.whole)
       this.surfacesOf.set(body, rec.list)
     }
     this.solids.length = solids
