@@ -539,10 +539,27 @@ export class EnginePieces {
     }
   }
 
+  /** The host moved the piece's root or changed what its shape is made from since `sync` last looked: its body is not up to date. */
+  private isPending(b: PieceBody, link: Link): boolean {
+    if (!this.sameFrom(b, link.shapeFrom)) return true
+    const c = this.centre(b)
+    const q = b.root.quaternion
+    return far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
+  }
+
+  /** Before the measure: a settled piece the host moved or reshaped by hand is among the awake ones again, so its `sync` runs as it did when every piece was synced. */
+  wakePending(list: readonly PieceBody[], awake: AwakeList): void {
+    for (const b of list) {
+      if (awake.has(b)) continue
+      const link = this.links.get(b)
+      if (link && this.isPending(b, link)) awake.enter(b)
+    }
+  }
+
   /** Asleep on both sides (as `finish` last read the engine's) and not waiting for its ground: nothing of it is read or written until it wakes. */
   isSettled(b: PieceBody): boolean {
     const link = this.links.get(b)
-    if (!link || !b.sleeping || b.held || !link.sleeping || link.frozen || this.active.has(b)) return false
+    if (!link || !b.sleeping || b.held || !link.sleeping || link.frozen || this.active.has(b) || this.isPending(b, link)) return false
     // the grip a propped piece lost is back before it sleeps unread: waking it (a blow) steps it with its own friction, as when its sync ran each update
     this.slip(b, link, false)
     link.stepped = false
@@ -764,6 +781,16 @@ export class EnginePieces {
     // the centre comes back through the root (position minus the turned centre, then plus it again): equal within rounding is not moved
     const moved = far(c.x, link.pos[0]) || far(c.y, link.pos[1]) || far(c.z, link.pos[2]) || far(q.x, link.quat[0]) || far(q.y, link.quat[1]) || far(q.z, link.quat[2]) || far(q.w, link.quat[3])
     if (moved) this.world.setPose(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], !b.sleeping)
+    if (moved && b.sleeping) {
+      // nothing reads it back while it sleeps: where it was put is where it is, or it would look moved on every update
+      link.pos[0] = c.x
+      link.pos[1] = c.y
+      link.pos[2] = c.z
+      link.quat[0] = q.x
+      link.quat[1] = q.y
+      link.quat[2] = q.z
+      link.quat[3] = q.w
+    }
     if (link.frozen) return this.keepFrozen(b, link, moved)
     // `tip` is the kit solver's push for a piece whose feet are thinner than its box; here the engine stands it on its parts as drawn, so it goes over by itself
     b.tipping = null

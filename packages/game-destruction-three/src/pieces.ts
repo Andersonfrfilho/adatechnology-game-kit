@@ -429,6 +429,7 @@ export class PieceSystem {
           beforeStep: (step, frame) => {
             if (this.prepared) return engine.moveHeld(this.list, step, this.awake)
             this.prepared = true
+            engine.wakePending(this.list, this.awake)
             this.measure()
             this.wakeUnsupported(true)
             engine.prepare(this.list, frame.steps * h, step, this.apartAll(frame.steps * h), this.awake)
@@ -827,6 +828,7 @@ export class PieceSystem {
         return
       }
       this.time += dt
+      this.engine.wakePending(this.list, this.awake)
       this.measure()
       // what the budget put to sleep (the engine did not) wakes when a point it lay on loses its support: the kit's rule. What the engine put to sleep it wakes
       // itself when what holds it moves; a fixed thing removed or the ground changed wakes what was there (`EnginePieces`)
