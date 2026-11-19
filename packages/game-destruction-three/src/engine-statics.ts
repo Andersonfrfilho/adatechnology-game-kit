@@ -16,7 +16,7 @@ export interface StaticSolid {
   /** Names the part across lists (a part measured again is the same part): without it, the place in the list. */
   readonly key?: string
   /** The Coulomb friction and rolling resistance of the part's material; without it the body has the ground's. */
-  readonly friction?: { readonly static: number; readonly dynamic: number; readonly rolling: number }
+  readonly friction?: { readonly static: number; readonly dynamic: number; readonly rolling: number; readonly rollingDamping?: number }
 }
 
 interface Held {
@@ -53,7 +53,7 @@ const sameMesh = (a: StaticMesh | undefined, b: StaticMesh | undefined): boolean
 }
 
 const sameFriction = (a: StaticSolid['friction'], b: StaticSolid['friction']): boolean =>
-  a === b || (a !== undefined && b !== undefined && a.static === b.static && a.dynamic === b.dynamic && a.rolling === b.rolling)
+  a === b || (a !== undefined && b !== undefined && a.static === b.static && a.dynamic === b.dynamic && a.rolling === b.rolling && a.rollingDamping === b.rollingDamping)
 
 const sameShape = (a: StaticSolid, b: StaticSolid): boolean => near(a.center, b.center) && near(a.half, b.half) && near(a.rotation, b.rotation) && sameMesh(a.mesh, b.mesh)
 
@@ -186,7 +186,7 @@ export class EngineStatics {
   }
 
   private materialOf(solid: StaticSolid): Material {
-    return solid.friction ? { ...this.material, frictionStatic: solid.friction.static, frictionDynamic: solid.friction.dynamic, rolling: solid.friction.rolling } : this.material
+    return solid.friction ? { ...this.material, frictionStatic: solid.friction.static, frictionDynamic: solid.friction.dynamic, rolling: solid.friction.rolling, rollingDamping: solid.friction.rollingDamping ?? 0 } : this.material
   }
 
   private release(h: Held, wake: boolean): void {

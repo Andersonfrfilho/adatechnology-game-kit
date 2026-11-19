@@ -396,6 +396,8 @@ declare global {
     /** The room of a deferred page, before its areas are open. */
     __bootRoom?: TestRoom
     __THREE: typeof THREE
+    /** Seconds the renderer has stepped the pieces by since `rolling-test.mjs` wrapped its `update` (the world's clock, not the wall's). */
+    __simSeconds: number
     // What the room page (`examples/test-room/src/main.js`) publishes as its sounds load and its scenarios run
     __sfxReport?: import('@adatechnology/game-audio').SampleLoadReport
     __localSoundPack?: ReturnType<typeof import('@adatechnology/game-audio').applyLocalSoundPack>

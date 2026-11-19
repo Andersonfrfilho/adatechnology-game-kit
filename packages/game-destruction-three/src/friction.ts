@@ -15,17 +15,20 @@ export interface SurfaceDef extends PieceFriction {
  * fabric and foam 0.5-0.8, paper 0.4. Rolling resistance (The Engineering ToolBox, "Rolling Resistance"): steel on steel 0.001-0.002, a hard wheel on concrete 0.01-0.02, on
  * wood 0.01, a carpet or foam 0.05-0.1. Restitution of a body bouncing on the material (drop tests): rubber 0.8, glass 0.7, steel 0.6, wood and plastic 0.5, concrete 0.4,
  * fabric and paper 0.2.
+ * Rolling damping (1/s, `rollingDamping`): the share of its spin a roller made of the material loses per second against any surface, from its own give and roughness on top of
+ * C_rr: a smooth hard glass or steel roller almost none (0.02), a wooden log with its bark and knots 0.4, plastic 0.1, rubber and cardboard 0.3, foam and cloth 1. It adds to the
+ * ground's (`TerrainMaterial.rollingDamping`), so the pair decides: a bottle on glazed tile rolls on, a log on grass stops at once. Estimates, not a published table.
  */
 const SURFACE_BY_KEY: ReadonlyArray<readonly [RegExp, SurfaceDef]> = [
-  [/rubber|tire|tyre/, { static: 1.0, dynamic: 0.8, rolling: 0.03, restitution: 0.8 }],
-  [/foam|sponge|fabric|cloth|leather|textile|carpet/, { static: 0.6, dynamic: 0.5, rolling: 0.08, restitution: 0.2 }],
-  [/concrete|brick|stone|masonry|cement|asphalt|plaster/, { static: 0.7, dynamic: 0.6, rolling: 0.012, restitution: 0.4 }],
-  [/steel|iron|metal|alumin|copper|brass|tin/, { static: 0.6, dynamic: 0.4, rolling: 0.002, restitution: 0.6 }],
-  [/glass/, { static: 0.4, dynamic: 0.35, rolling: 0.002, restitution: 0.7 }],
-  [/ceramic|porcelain|tile/, { static: 0.5, dynamic: 0.4, rolling: 0.005, restitution: 0.5 }],
-  [/wood|mdf|plywood|board|cork/, { static: 0.4, dynamic: 0.3, rolling: 0.01, restitution: 0.5 }],
-  [/plastic|polycarbonate|acrylic|nylon|pvc/, { static: 0.4, dynamic: 0.3, rolling: 0.01, restitution: 0.5 }],
-  [/paper|cardboard|carton/, { static: 0.4, dynamic: 0.3, rolling: 0.02, restitution: 0.2 }],
+  [/rubber|tire|tyre/, { static: 1.0, dynamic: 0.8, rolling: 0.03, rollingDamping: 0.3, restitution: 0.8 }],
+  [/foam|sponge|fabric|cloth|leather|textile|carpet/, { static: 0.6, dynamic: 0.5, rolling: 0.08, rollingDamping: 1.0, restitution: 0.2 }],
+  [/concrete|brick|stone|masonry|cement|asphalt|plaster/, { static: 0.7, dynamic: 0.6, rolling: 0.012, rollingDamping: 0.1, restitution: 0.4 }],
+  [/steel|iron|metal|alumin|copper|brass|tin/, { static: 0.6, dynamic: 0.4, rolling: 0.002, rollingDamping: 0.02, restitution: 0.6 }],
+  [/glass/, { static: 0.4, dynamic: 0.35, rolling: 0.002, rollingDamping: 0.02, restitution: 0.7 }],
+  [/ceramic|porcelain|tile/, { static: 0.5, dynamic: 0.4, rolling: 0.005, rollingDamping: 0.03, restitution: 0.5 }],
+  [/wood|mdf|plywood|board|cork/, { static: 0.4, dynamic: 0.3, rolling: 0.01, rollingDamping: 0.4, restitution: 0.5 }],
+  [/plastic|polycarbonate|acrylic|nylon|pvc/, { static: 0.4, dynamic: 0.3, rolling: 0.01, rollingDamping: 0.1, restitution: 0.5 }],
+  [/paper|cardboard|carton/, { static: 0.4, dynamic: 0.3, rolling: 0.02, rollingDamping: 0.3, restitution: 0.2 }],
 ]
 
 /** The surface of a material by its id and tags (see `SURFACE_BY_KEY`), or undefined when nothing matches (the pieces' defaults then). */
@@ -37,5 +40,10 @@ export function surfaceOf(materialId: string, def?: MaterialDef): SurfaceDef | u
 /** The friction of a material by its id and tags (see `SURFACE_BY_KEY`), or undefined when nothing matches (the pieces' default then). */
 export function frictionOf(materialId: string, def?: MaterialDef): PieceFriction | undefined {
   const surface = surfaceOf(materialId, def)
-  return surface && { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling }
+  return surface && { static: surface.static, dynamic: surface.dynamic, rolling: surface.rolling, rollingDamping: surface.rollingDamping }
 }
+
+/** Rolling damping (1/s) of a piece whose material says nothing (`PieceFriction.rollingDamping`): a hard roller. */
+export const PIECE_ROLLING_DAMPING = 0.05
+/** Rolling damping (1/s) of the ground when the host says nothing (a hard floor, as `ROLLING_RESISTANCE`). */
+export const GROUND_ROLLING_DAMPING = 0.3

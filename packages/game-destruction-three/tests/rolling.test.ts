@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import type { Vec3 } from '@adatechnology/game-destruction'
+import { surfaceOf } from '../src/friction'
 import { createDestructionRenderer, MIN_PIECE_MASS_KG } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
@@ -71,8 +72,8 @@ const addRamp = (s: Setup, degrees: number): number => {
   return root.position.y
 }
 
-/** The acceleration (m/s2) along the slope of a can let go across a ramp of `degrees`, measured between 0.2 s and 0.7 s of rolling. */
-const rollDown = (degrees: number, mass: number): { a: number; piece: PieceBody } => {
+/** The acceleration (m/s2) along the slope of a can let go across a ramp of `degrees`, measured between 0.2 s and 0.7 s of rolling, and its mean speed then. */
+const rollDown = (degrees: number, mass: number): { a: number; v: number; piece: PieceBody } => {
   const s = scene3()
   const top = addRamp(s, degrees)
   const angle = (degrees * Math.PI) / 180
@@ -82,15 +83,16 @@ const rollDown = (degrees: number, mass: number): { a: number; piece: PieceBody 
   run(s.renderer, 0.2)
   const v0 = along()
   run(s.renderer, 0.5)
-  return { a: (along() - v0) / 0.5, piece }
+  return { a: (along() - v0) / 0.5, v: (along() + v0) / 2, piece }
 }
 
-describe('a can rolls down a ramp at g (sin t - C_rr cos t) / (1 + k)', () => {
-  // steel on the wooden board: the wood is the softer, C_rr 0.01
+describe('a can rolls down a ramp at (g (sin t - C_rr cos t) - k d v) / (1 + k)', () => {
+  // steel on the wooden board: the wood is the softer, C_rr 0.01; the rolling damping d is the steel's and the wood's added
   const C_RR = 0.01
-  const expected = (degrees: number, k: number): number => {
+  const DAMPING = (surfaceOf('steel')?.rollingDamping ?? 0) + (surfaceOf('wood')?.rollingDamping ?? 0)
+  const expected = (degrees: number, k: number, v: number): number => {
     const t = (degrees * Math.PI) / 180
-    return (G * (Math.sin(t) - C_RR * Math.cos(t))) / (1 + k)
+    return (G * (Math.sin(t) - C_RR * Math.cos(t)) - k * DAMPING * v) / (1 + k)
   }
 
   it('a full can (its soda lags the walls: half the moment of a solid) rolls faster than a thin shell and slower than a frozen solid', () => {
@@ -100,23 +102,25 @@ describe('a can rolls down a ramp at g (sin t - C_rr cos t) / (1 + k)', () => {
     const k = wall * 1 + (1 - wall - liquid) * 0.5 + liquid * 0.5 * LIQUID_SPIN
     expect(k).toBeLessThan(1)
     expect(k).toBeGreaterThan(0.25)
-    const { a, piece } = rollDown(10, CAN_FULL)
+    const { a, v, piece } = rollDown(10, CAN_FULL)
     expect(piece.round?.inertia).toBeCloseTo(k, 3)
-    expect(a).toBeGreaterThan(expected(10, k) * 0.97)
-    expect(a).toBeLessThan(expected(10, k) * 1.03)
+    expect(a).toBeGreaterThan(expected(10, k, v) * 0.97)
+    expect(a).toBeLessThan(expected(10, k, v) * 1.03)
   })
 
   it('an empty can (a thin shell, k = 1) rolls at g sin t / 2: slower than the full one', () => {
-    const { a, piece } = rollDown(10, CAN_EMPTY)
+    const { a, v, piece } = rollDown(10, CAN_EMPTY)
     expect(piece.round?.inertia).toBeCloseTo(1, 3)
-    expect(a).toBeGreaterThan(expected(10, 1) * 0.97)
-    expect(a).toBeLessThan(expected(10, 1) * 1.03)
+    expect(a).toBeGreaterThan(expected(10, 1, v) * 0.97)
+    expect(a).toBeLessThan(expected(10, 1, v) * 1.03)
     expect(a).toBeLessThan(rollDown(10, CAN_FULL).a * 0.85)
   })
 
   it('rolls, not slides: the speed of its centre is its spin times its radius', () => {
     const { piece } = rollDown(15, CAN_FULL)
-    expect(Math.hypot(piece.velocity[0], piece.velocity[1])).toBeCloseTo(Math.abs(piece.angularVelocity[2]) * CAN_RADIUS, 2)
+    // within 1 %: the rolling damping takes its share of the spin after the contact, which the next step's contact gives back
+    const rim = Math.abs(piece.angularVelocity[2]) * CAN_RADIUS
+    expect(Math.abs(Math.hypot(piece.velocity[0], piece.velocity[1]) - rim)).toBeLessThan(rim * 0.01)
   })
 })
 

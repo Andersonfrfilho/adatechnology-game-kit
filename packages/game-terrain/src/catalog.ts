@@ -8,11 +8,15 @@ import type { TerrainBlow, TerrainMaterial, TerrainProfile } from './types'
 // medium hard soil 0.04-0.08, loose sand 0.2-0.4. Grass: a mown golf green 0.07-0.13 (Penner, The physics of putting, Can. J. Phys. 80, 2002), a lawn is longer and slower.
 // A tyre spreads its load; a small rigid roller (a rod, a casing) sinks deeper for its size, so on soft ground the high end of each range is taken. Mud is taken as loose sand
 // (the wheel sinks), dry clay and laterite as medium hard soil at its low end, loose snow (0.3 m, a foot sinks 8 cm) an estimate between packed snow (~0.03) and sand.
-// The hard floors keep the 0.015 the kit has always used (ceramic, wood and mortar say nothing: the host's default, the same).
+// The rough hard floors keep the 0.015 the kit has always used; a smooth one (glazed tile 0.008, a hardwood floor 0.01) holds a small roller back less, so a bottle rolls farther on it.
+// Rolling damping (1/s, `rollingDamping`): the share of its spin a roller loses per second on top of C_rr, from what drags more the faster it rolls (grass blades, ploughed sand
+// and mud, crunched gravel and snow). Rough hard floors lose 0.3 a second (grit, joints, the floor's own give), glazed tile and hardwood about a third of that; grass 1.5, so a can rolling onto a lawn stops within a metre
+// or two, as one does; loose sand and mud the most. Estimates from the stop distances of a ball or a can on each ground, not a table: no standard publishes them.
 export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'turf',
     rolling: 0.15,
+    rollingDamping: 1.5,
     dig: { effort: 1.3 },
     debris: 'clods',
     rimShare: 0.25,
@@ -30,6 +34,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'soil',
     rolling: 0.08,
+    rollingDamping: 0.6,
     dig: { effort: 1 },
     debris: 'clods',
     rimShare: 0.35,
@@ -47,6 +52,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'sand',
     rolling: 0.3,
+    rollingDamping: 2.0,
     dig: { effort: 0.8 },
     debris: 'dust',
     rimShare: 0.5,
@@ -64,6 +70,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'gravel',
     rolling: 0.08,
+    rollingDamping: 1.0,
     dig: { effort: 1.6 },
     debris: 'chips',
     rimShare: 0.15,
@@ -82,6 +89,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'asphalt',
     rolling: 0.015,
+    rollingDamping: 0.35,
     debris: 'chips',
     color: [0.05, 0.05, 0.055],
     pattern: 'asphalt',
@@ -97,6 +105,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'concrete',
     rolling: 0.015,
+    rollingDamping: 0.3,
     debris: 'chips',
     color: [0.33, 0.33, 0.31],
     pattern: 'concrete',
@@ -112,6 +121,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'mortar',
+    rollingDamping: 0.3,
     debris: 'chips',
     color: [0.42, 0.4, 0.36],
     pattern: 'plain',
@@ -125,6 +135,8 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'ceramic',
+    rolling: 0.008,
+    rollingDamping: 0.1,
     debris: 'shards',
     color: [0.72, 0.7, 0.66],
     pattern: 'tile',
@@ -139,6 +151,8 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   },
   {
     id: 'wood_hard',
+    rolling: 0.01,
+    rollingDamping: 0.12,
     debris: 'splinters',
     color: [0.3, 0.16, 0.07],
     pattern: 'planks',
@@ -153,6 +167,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'stone',
     rolling: 0.015,
+    rollingDamping: 0.3,
     debris: 'chips',
     color: [0.23, 0.22, 0.2],
     pattern: 'stone',
@@ -168,6 +183,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'mud',
     rolling: 0.3,
+    rollingDamping: 3.0,
     // the shovel lifts it, and the hole fills in behind the blade
     dig: { effort: 1.4, closes: true },
     debris: 'clods',
@@ -189,6 +205,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'clay',
     rolling: 0.05,
+    rollingDamping: 0.4,
     dig: { effort: 2.2 },
     debris: 'chips',
     color: [0.47, 0.27, 0.14],
@@ -206,6 +223,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
     // laterite, a soil baked hard (piçarra): no shovel goes in; only a heavy blow or a charge sinks or cracks it
     id: 'laterite',
     rolling: 0.05,
+    rollingDamping: 0.4,
     debris: 'chips',
     rimShare: 0.2,
     color: [0.36, 0.17, 0.08],
@@ -220,6 +238,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'snow',
     rolling: 0.1,
+    rollingDamping: 1.2,
     dig: { effort: 0.6 },
     debris: 'dust',
     rimShare: 0.4,
@@ -238,6 +257,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'cobble',
     rolling: 0.03,
+    rollingDamping: 0.6,
     debris: 'blocks',
     color: [0.2, 0.19, 0.18],
     pattern: 'cobble',
@@ -253,6 +273,7 @@ export const TERRAIN_MATERIALS: readonly TerrainMaterial[] = [
   {
     id: 'paver',
     rolling: 0.015,
+    rollingDamping: 0.3,
     debris: 'blocks',
     color: [0.36, 0.33, 0.3],
     pattern: 'paver',
