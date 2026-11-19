@@ -257,14 +257,33 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return out
     }
 
-    const specOf = (id: string) => opts.spec()?.parts?.find((q) => q.id === id)
+    // the riders of a wall ask for the spec of every part of the house on every hit: an index per spec object, not a scan per id
+    const specIndex = new WeakMap<object, Map<string, NonNullable<ReturnType<typeof opts.spec>>['parts'][number]>>()
+    const specOf = (id: string) => {
+      const spec = opts.spec()
+      if (!spec?.parts) return undefined
+      let index = specIndex.get(spec.parts)
+      if (!index) {
+        index = new Map()
+        for (const q of spec.parts) if (!index.has(q.id)) index.set(q.id, q)
+        specIndex.set(spec.parts, index)
+      }
+      return index.get(id)
+    }
     const same = (a: number[], b: number[]) => a.every((x, k) => Math.abs(x - b[k]!) < 1e-3)
 
     /**
      * The part whose mesh draws `partId`: itself, or for a beam the house draws inside the wall under it (a bond beam behind the wall's plaster), that
      * wall.
      */
+    // the structure's parts and their meshes are fixed once the house is built (`pieces.ts`): who draws a part never changes, so each answer is kept
+    const hostOfCache = new Map<string, string | null>()
     function hostOf(partId: string): string | null {
+      let host = hostOfCache.get(partId)
+      if (host === undefined) hostOfCache.set(partId, (host = findHostOf(partId)))
+      return host
+    }
+    function findHostOf(partId: string): string | null {
       if (structure.meshesOf(partId).some((it) => it.mesh)) return partId
       const part = structure.byId.get(partId)
       if (!part) return null
@@ -278,7 +297,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * Every wall that draws `partId`: its host, and for a pillar each drawn wall it stands in. A pillar at a corner is under the plaster of both walls that meet there (each
      * wall's mesh runs past the other's face to close the corner): what breaks off it opens both faces, and the corner itself goes, not the face of one wall only.
      */
-    function hostsOf(partId: string): string[] {
+    const hostsOfCache = new Map<string, readonly string[]>()
+    function hostsOf(partId: string): readonly string[] {
+      let hosts = hostsOfCache.get(partId)
+      if (!hosts) hostsOfCache.set(partId, (hosts = findHostsOf(partId)))
+      return hosts
+    }
+    function findHostsOf(partId: string): readonly string[] {
       const part = structure.byId.get(partId)
       if (part?.role === 'column' && !structure.meshesOf(partId).some((it) => it.mesh)) return wallsAround(part)
       const host = hostOf(partId)
@@ -294,7 +319,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * The drawn walls a pillar stands in, along their height: first the one its centre is in (the wall it is laid in), then any other whose plan box it reaches into by more
      * than `PILLAR_REACH` both ways. A corner pillar (laid along one wall, 30 x 14 cm) reaches into the end of the other wall, which runs over it to close the corner.
      */
-    function wallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): string[] {
+    const wallsAroundCache = new Map<string, readonly string[]>()
+    function wallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): readonly string[] {
+      let walls = wallsAroundCache.get(part.id)
+      if (!walls) wallsAroundCache.set(part.id, (walls = findWallsAround(part)))
+      return walls
+    }
+    function findWallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): readonly string[] {
       const cu = (part.aabb[0]! + part.aabb[2]!) / 2, cv = (part.aabb[1]! + part.aabb[3]!) / 2
       const first: string[] = [], other: string[] = []
       for (const q of structure.parts) {
@@ -346,7 +377,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /** The beams with units the house draws inside the range of `hostId` (see `hostOf`). */
-    const riders = (hostId: string): string[] =>
+    const ridersCache = new Map<string, readonly string[]>()
+    const riders = (hostId: string): readonly string[] => {
+      const cached = ridersCache.get(hostId)
+      if (cached) return cached
+      const found = findRiders(hostId)
+      // the units come from the spec: before the house has one, the answer is not kept
+      if (opts.spec()) ridersCache.set(hostId, found)
+      return found
+    }
+    const findRiders = (hostId: string): readonly string[] =>
       structure.parts.filter((q) => q.id !== hostId && specOf(q.id)?.units && hostsOf(q.id).includes(hostId) && !structure.meshesOf(q.id).some((it) => it.mesh)).map((q) => q.id)
 
     /** The wall's range of the merged mesh as a mesh of its own, same transform, with a clone of its material that discards what the mask cuts. */
@@ -820,7 +860,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     return {
       /** The drawn walls that draw `partId` (its host; for a pillar under their plaster, each wall it stands in): where its marks go. */
-      hosts(partId: string): string[] { return hostsOf(partId) },
+      hosts(partId: string): string[] { return [...hostsOf(partId)] },
       /**
        * What still stands of the units of `partId` once its wall is cut, as drawn: spans along the wall from `start` (in the house's space, along u when
        * `alongU`) and up. Null while the wall is whole (all of the part stands).
