@@ -55,6 +55,11 @@ papiro, capim alto; varal; `garden_bed`.
 - **D5. Teste como as outras áreas.** `examples/reference-district`, área `district` no `tools/check-area`, servida na 4280; cenário por `?cena=`,
   câmera por `?camera=third|first`; medição pelo `room-explosion`/`perf.mjs` apontado para a página da cena (variável nova `PERF_PAGE`).
 
+- **D6. A sala valida, a cena compõe** (dono, 2026-11-18). A sala e as áreas continuam sendo onde cada peça é feita e provada sozinha:
+  21 critérios de física, estrutura, z-fighting, pose nas duas câmeras, cenários repetíveis. A cena só recebe peça já validada e prova o que
+  a sala não prova: o kit inteiro montado pela API pública, na densidade de um lugar real, medido como o jogo vai sentir. Problema que só
+  aparece na cena volta para a sala como cenário novo da área dona, para ficar coberto onde dá para isolar a causa.
+
 ## Riscos
 
 - **O host vira um segundo `room.ts`.** Mitigação: limite de linhas por arquivo (200, padrão do repositório), cada ligação num arquivo, e a sala

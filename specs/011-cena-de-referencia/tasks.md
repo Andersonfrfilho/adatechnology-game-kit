@@ -42,7 +42,8 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
 ## Fase 3 — Peças que faltam, cada uma no pacote dono
 > 🤖 Modelo: `sonnet` (T3.1 e T3.3 são 🧠 — `opus`, validar com `engenheiro-estrutural`; T3.9 e T3.10 → `haiku` se o padrão do catálogo bastar)
 
-Ordem: o que é jogável primeiro, o que é cenário depois. Cada peça troca o seu `missing` no JSON e entra na sala da área dela com print.
+Ordem: o que é jogável primeiro, o que é cenário depois. **A sala valida, a cena compõe (D6):** cada peça é feita no pacote dono, validada
+na sala da área dela (gates 1 e 2, com print) e só então troca o seu `missing` no JSON da cena. Peça que não passou na sala não entra na cena.
 
 - **T3.1 🧠** Prédio de 4 a 8 andares com planta e loja no térreo (`game-floorplan-residential`), enterável e destrutível, com estrutura NBR 6118.
 - **T3.2** Sobrado de uso misto (loja + moradia), usando as zonas `mixed` que já existem.
