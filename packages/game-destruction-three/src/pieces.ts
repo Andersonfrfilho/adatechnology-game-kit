@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import { AwakeList } from './awake-list'
+import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
 import { squareBoxOf } from './internal'
 import { clamp } from './math'
@@ -19,6 +20,8 @@ import type { PiecePhysics } from './physics-option'
 export type { PieceSweepHit } from './internal'
 
 export interface PieceSystemOptions {
+  /** Keep the pose of the step before the last, to draw between it and the step's (`presentPose`). Default off: the roots are always the step's. */
+  interpolate?: boolean
   groundAt: (x: number, z: number) => number
   /** The terrain alone (no top of furniture or of anything drawn): the ground of an engine, which has every drawn top as a body. Default `groundAt`. */
   terrainAt?: (x: number, z: number) => number
@@ -333,6 +336,8 @@ export class PieceSystem {
   /** The phases' way out of the loop, and whether this frame's `prepare` ran (it runs once, in the first fixed step). */
   private readonly leaveLoop: Array<() => void> = []
   private prepared = false
+  /** The pose before the last step and after it, of the pieces that were awake (`interpolate`); null when the option is off. */
+  private readonly trail: PoseTrail | null
   /** The pieces the loops walk (`AwakeList`): the rest are asleep on both sides and measured, and cost nothing per update. */
   private readonly awake = new AwakeList()
   /** `solids` and `surfaces` must be written again from the list: a piece came, went, or changed its parts. */
@@ -393,6 +398,7 @@ export class PieceSystem {
     const resolved = resolvePhysics(o.physics)
     this.loop = resolved?.loop ?? null
     this.stepsItself = resolved?.stepsItself ?? false
+    this.trail = o.interpolate ? new PoseTrail() : null
     this.engine = resolved
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
@@ -430,6 +436,7 @@ export class PieceSystem {
             if (this.prepared) return engine.moveHeld(this.list, step, this.awake)
             this.prepared = true
             engine.wakePending(this.list, this.awake)
+            this.beginTick()
             this.measure()
             this.wakeUnsupported(true)
             engine.prepare(this.list, frame.steps * h, step, this.apartAll(frame.steps * h), this.awake)
@@ -452,6 +459,7 @@ export class PieceSystem {
             const ran = this.prepared
             this.prepared = false
             if (!ran) return
+            this.trail?.commit()
             this.measure()
             this.keepBudget()
           },
@@ -463,6 +471,7 @@ export class PieceSystem {
 
   /** Takes the system's phases out of the loop it was handed. */
   dispose(): void {
+    this.trail?.clear()
     for (const leave of this.leaveLoop.splice(0)) leave()
     if (this.engine) this.engine.dispose()
     else this.groundWorker?.dispose()
@@ -660,6 +669,7 @@ export class PieceSystem {
   }
 
   clear(): void {
+    this.trail?.clear()
     this.engine?.clear()
     this.list.length = 0
     this.awake.clear()
@@ -819,7 +829,35 @@ export class PieceSystem {
     }
   }
 
+  /** A step is about to move the pieces: the roots go back to the step's pose and the awake ones are recorded as the previous one (`interpolate`). */
+  private beginTick(): void {
+    const trail = this.trail
+    if (!trail) return
+    trail.begin()
+    for (const body of this.awake.items) if (!body.sleeping) trail.record(body.root)
+  }
+
+  /** The roots get the step pose back, before anything reads them (the start of a tick; a host calls it first when it reads a root between `presentPose` and the step). */
+  restoreStepPose(): void {
+    this.trail?.restore()
+  }
+
+  /** The awake pieces drawn `alpha` of the way from their pose before the last step to the step's (1: the step's). Pieces asleep, and without `interpolate`, are left as they are. */
+  presentPose(alpha: number): void {
+    this.trail?.blend(alpha)
+  }
+
   update(dt: number): void {
+    if (this.trail && !(this.engine && this.loop && !this.stepsItself)) {
+      this.beginTick()
+      this.advance(dt)
+      this.trail.commit()
+      return
+    }
+    this.advance(dt)
+  }
+
+  private advance(dt: number): void {
     if (this.engine && this.loop) {
       // under a loop the host stepped it already, and its time is the one that counts
       if (!this.stepsItself) {

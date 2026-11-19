@@ -7,6 +7,7 @@ import { FragmentInstances } from './fragment-instances'
 import type { FragmentInstanceStats } from './fragment-instances'
 import { FRAGMENT_SHAPE_VARIANTS, buildBrokenBoardGeometry, buildLumpGeometry, buildRubbleGeometry, buildSliverGeometry, buildVeneerGeometry } from './fragment-shapes'
 import { clamp, createRng, hashString } from './math'
+import { PoseTrail } from './pose-trail'
 import type { LooseBody } from './types'
 
 /** @internal */
@@ -112,6 +113,8 @@ export function restingBox(f: Live): RestingBox {
 export type FragmentLifeRule = (fragment: Fragment, objectId: string) => number
 
 export interface FragmentSystemOptions {
+  /** Keep the pose of the step before the last, to draw between it and the step's (`presentPose`). Default off: the meshes are always the step's. */
+  interpolate?: boolean
   scene: THREE_NS.Scene
   groundAt: (x: number, z: number) => number
   gravity: number
@@ -232,6 +235,8 @@ export class FragmentSystem {
   /** Count of `update` calls: what makes the fragments of one burst tell apart from older ones. */
   private tick = 0
   private supportTurn = 0
+  /** The pose before the last update and after it, of the fragments that were awake (`interpolate`); null when the option is off. */
+  private readonly trail: PoseTrail | null
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -244,6 +249,7 @@ export class FragmentSystem {
     this.v = new THREE.Vector3()
     this.w = new THREE.Vector3()
     this.instances = new FragmentInstances(THREE, o.scene)
+    this.trail = o.interpolate ? new PoseTrail() : null
   }
 
   /** What the instances draw now: their draws and the fragments in them. */
@@ -567,6 +573,7 @@ export class FragmentSystem {
     this.tick++
     this.clock += dt
     this.wakeUnsupported()
+    this.beginTick()
     const g = this.o.gravity
     for (let i = this.active.length - 1; i >= 0; i--) {
       const f = this.active[i]
@@ -588,7 +595,28 @@ export class FragmentSystem {
     }
     this.expireSleepers()
     this.keepBudget()
+    this.trail?.commit()
     this.drawInstanced()
+  }
+
+  /** The meshes go back to the step's pose and the ones awake are recorded as the previous one (`interpolate`). */
+  private beginTick(): void {
+    const trail = this.trail
+    if (!trail) return
+    trail.begin()
+    for (const f of this.active) if (!f.asleep) trail.record(f.mesh)
+  }
+
+  /** The meshes get the step pose back, before anything reads them. The instances take it at the next `update`. */
+  restoreStepPose(): void {
+    this.trail?.restore()
+  }
+
+  /** The fragments awake drawn `alpha` of the way from their pose before the last update to the step's (1: the step's); the instances take the new transforms. */
+  presentPose(alpha: number): void {
+    if (!this.trail) return
+    this.trail.blend(alpha)
+    this.instances.sync()
   }
 
   /** The fragments in flight are drawn by the instances, those at rest on their own (the settled batches take them): then the instances take the transforms of this update. */
@@ -859,6 +887,7 @@ export class FragmentSystem {
   }
 
   clear(): void {
+    this.trail?.clear()
     this.instances.clear()
     for (const f of this.list) this.o.scene.remove(f.mesh)
     this.list.length = 0

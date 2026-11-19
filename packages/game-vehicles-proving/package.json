@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-runtime": "workspace:^",
     "@adatechnology/game-vehicles-driving": "workspace:^"
   }
 }
