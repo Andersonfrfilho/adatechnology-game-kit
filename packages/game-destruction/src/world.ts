@@ -2182,6 +2182,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const length = opening[1] - opening[0]
     let lost = false
     for (const j of [...(o.byPart.get(q.spec.id) ?? [])]) {
+      // a slab that dropped at the turn before changed what the next one carries
+      settleStructure(o)
       const ri = j.ia === qi ? j.ib : j.ia
       const r = o.parts[ri]!
       if (j.st.open || isLost(r) || restsOn(o, j, ri) !== qi || !r.structural) continue
@@ -2241,6 +2243,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     emit({ ...base(o, src), type: 'subside', part: r.spec.id, drop: r.st.subsidence, share: (stretch[1] - stretch[0]) / Math.max(1e-6, box.max[axis] - box.min[axis]), point: toWorld(o.st.position, o.st.rotation, middle), status: 'opened' })
     let lost = false
     for (const j of [...(o.byPart.get(r.spec.id) ?? [])]) {
+      settleStructure(o)
       const ki = j.ia === ri ? j.ib : j.ia
       const k = o.parts[ki]!
       if (j.st.open || isLost(k) || restsOn(o, j, ki) !== ri) continue
@@ -2433,6 +2436,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const order = [...touched].sort((x, y) => pillarFirst(x.b) - pillarFirst(y.b))
     const standing = new Set(bearers.map((b) => b.i))
     for (const { b, fp } of order) {
+      // what an earlier bearer of this loss dropped (`hingeDrop`) changed the loads the next one is judged with
+      settleStructure(o)
       const bearing = bearLoss(o, b, fp, standing)
       if (bearing.status === 'unsupported') standing.delete(b.i)
       if (bearing.status !== 'unsupported' && !bendGeometry(b.p.spec).member) {
@@ -2467,7 +2472,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       b.p.st.subsidence = drop
       emit({ ...base(o, src), type: 'subside', part: b.p.spec.id, drop, share: fp.share, point: fp.deepest, status: bearing.status })
     }
-    for (const { b, fp } of settled) crackOver(o, b, fp, src)
+    for (const { b, fp } of settled) {
+      settleStructure(o)
+      crackOver(o, b, fp, src)
+    }
     o.active = true
     if (!lost) return
     loosened(o, opened, 'break', src)
