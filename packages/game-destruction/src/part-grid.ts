@@ -10,7 +10,7 @@ export type PartGrid = {
 
 /** Objects with fewer parts are scanned whole: the grid only pays off on a house of hundreds of parts. */
 export const PART_GRID_MIN_PARTS = 64
-const MAX_CELLS_PER_AXIS = 24
+const MAX_CELLS_PER_AXIS = 64
 /** Each sphere is entered a hair larger than it is, so a ray that grazes it at a cell boundary still finds it. */
 const PAD = 1e-4
 
@@ -38,17 +38,40 @@ export function buildPartGrid(parts: readonly PartSphere[], slack: number): Part
       },
     }
   }
-  const side = Math.max(1, Math.min(MAX_CELLS_PER_AXIS, Math.ceil(Math.cbrt(parts.length))))
+  // cubic cells about as wide as a part is: a wall one brick thick gets one layer of cells, not twenty (a sphere would be entered in all twenty)
+  let radiusSum = 0
+  for (const part of parts) radiusSum += part.bound + slack + PAD
+  const volume = Math.max(max[0]! - min[0]!, 1e-6) * Math.max(max[1]! - min[1]!, 1e-6) * Math.max(max[2]! - min[2]!, 1e-6)
+  const edge = Math.max(Math.cbrt(volume / Math.max(parts.length, 1)), (2 * radiusSum) / Math.max(parts.length, 1))
+  const sides: Vec3 = [0, 0, 0]
   const size: Vec3 = [0, 0, 0]
-  for (let k = 0; k < 3; k++) size[k] = Math.max((max[k]! - min[k]!) / side, 1e-6)
-  const cells: number[][] = Array.from({ length: side * side * side }, () => [])
-  const cellIndex = (k: number, value: number): number => Math.min(side - 1, Math.max(0, Math.floor((value - min[k]!) / size[k]!)))
-  parts.forEach((part, index) => {
+  for (let k = 0; k < 3; k++) {
+    sides[k] = Math.max(1, Math.min(MAX_CELLS_PER_AXIS, Math.ceil((max[k]! - min[k]!) / edge)))
+    size[k] = Math.max((max[k]! - min[k]!) / sides[k]!, 1e-6)
+  }
+  const [sideX, sideY, sideZ] = sides as [number, number, number]
+  const cellCount = sideX * sideY * sideZ
+  const cellIndex = (k: number, value: number): number => Math.min(sides[k]! - 1, Math.max(0, Math.floor((value - min[k]!) / size[k]!)))
+  // the cells of each part in two flat passes (count, then fill) instead of a list per cell: a big object is made again whenever a blast splits it, and the first ray after pays for it
+  const ranges = new Int32Array(parts.length * 6)
+  const starts = new Uint32Array(cellCount + 1)
+  for (let index = 0; index < parts.length; index++) {
+    const part = parts[index]!
     const r = part.bound + slack + PAD
-    const lo = [0, 1, 2].map((k) => cellIndex(k, part.pos[k]! - r))
-    const hi = [0, 1, 2].map((k) => cellIndex(k, part.pos[k]! + r))
-    for (let x = lo[0]!; x <= hi[0]!; x++) for (let y = lo[1]!; y <= hi[1]!; y++) for (let z = lo[2]!; z <= hi[2]!; z++) cells[(z * side + y) * side + x]!.push(index)
-  })
+    const at = index * 6
+    for (let k = 0; k < 3; k++) {
+      ranges[at + k] = cellIndex(k, part.pos[k]! - r)
+      ranges[at + 3 + k] = cellIndex(k, part.pos[k]! + r)
+    }
+    for (let z = ranges[at + 2]!; z <= ranges[at + 5]!; z++) for (let y = ranges[at + 1]!; y <= ranges[at + 4]!; y++) for (let x = ranges[at]!; x <= ranges[at + 3]!; x++) starts[(z * sideY + y) * sideX + x + 1]!++
+  }
+  for (let cell = 0; cell < cellCount; cell++) starts[cell + 1]! += starts[cell]!
+  const items = new Uint32Array(starts[cellCount]!)
+  const fill = starts.slice(0, cellCount)
+  for (let index = 0; index < parts.length; index++) {
+    const at = index * 6
+    for (let z = ranges[at + 2]!; z <= ranges[at + 5]!; z++) for (let y = ranges[at + 1]!; y <= ranges[at + 4]!; y++) for (let x = ranges[at]!; x <= ranges[at + 3]!; x++) items[fill[(z * sideY + y) * sideX + x]!++] = index
+  }
   const seen = new Uint32Array(parts.length)
   let stamp = 0
 
@@ -84,9 +107,9 @@ export function buildPartGrid(parts: readonly PartSphere[], slack: number): Part
       let nz = dz === 0 ? Infinity : (min[2]! + (cz + (dz > 0 ? 1 : 0)) * size[2]! - origin[2]!) / dz
       const ex = dx === 0 ? Infinity : size[0]! / Math.abs(dx), ey = dy === 0 ? Infinity : size[1]! / Math.abs(dy), ez = dz === 0 ? Infinity : size[2]! / Math.abs(dz)
       for (;;) {
-        const list = cells[(cz * side + cy) * side + cx]!
-        for (let k = 0; k < list.length; k++) {
-          const index = list[k]!
+        const cell = (cz * sideY + cy) * sideX + cx
+        for (let k = starts[cell]!; k < starts[cell + 1]!; k++) {
+          const index = items[k]!
           if (seen[index] === stamp) continue
           seen[index] = stamp
           out.push(index)
@@ -94,17 +117,17 @@ export function buildPartGrid(parts: readonly PartSphere[], slack: number): Part
         if (nx <= ny && nx <= nz) {
           if (nx > t1) break
           cx += sx
-          if (cx < 0 || cx >= side) break
+          if (cx < 0 || cx >= sideX) break
           nx += ex
         } else if (ny <= nz) {
           if (ny > t1) break
           cy += sy
-          if (cy < 0 || cy >= side) break
+          if (cy < 0 || cy >= sideY) break
           ny += ey
         } else {
           if (nz > t1) break
           cz += sz
-          if (cz < 0 || cz >= side) break
+          if (cz < 0 || cz >= sideZ) break
           nz += ez
         }
       }
