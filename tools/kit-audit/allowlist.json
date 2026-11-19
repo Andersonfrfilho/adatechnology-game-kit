@@ -79,11 +79,6 @@
   ],
   "pending": [
     {
-      "file": "examples/interactables-showroom/src/showroom.js",
-      "domain": "plants",
-      "fix": "the yard trees from game-vegetation-species (game-vegetation-three)"
-    },
-    {
       "file": "packages/game-characters-three/src/rich/accessories/extras.ts",
       "domain": "items",
       "fix": "the radio from game-items-goods (portable_radio) drawn by game-items-three"

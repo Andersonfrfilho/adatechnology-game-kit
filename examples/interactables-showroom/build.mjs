@@ -20,7 +20,7 @@ function findEsbuild() {
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
 const threeDir = join(pkg('game-interactables-three'), 'node_modules/three')
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-terrain', 'game-terrain-three']) {
+for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-terrain', 'game-terrain-three', 'game-vegetation', 'game-vegetation-species']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -40,6 +40,9 @@ const result = await esbuild.build({
     '@adatechnology/game-interactables-three': join(pkg('game-interactables-three'), 'dist/index.js'),
     '@adatechnology/game-terrain': join(pkg('game-terrain'), 'dist/index.js'),
     '@adatechnology/game-terrain-three': join(pkg('game-terrain-three'), 'dist/index.js'),
+    '@adatechnology/game-vegetation/three': join(pkg('game-vegetation'), 'dist/three.js'),
+    '@adatechnology/game-vegetation': join(pkg('game-vegetation'), 'dist/index.js'),
+    '@adatechnology/game-vegetation-species': join(pkg('game-vegetation-species'), 'dist/index.js'),
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
     '@adatechnology/game-destruction': join(pkg('game-destruction'), 'dist/index.js'),
   },

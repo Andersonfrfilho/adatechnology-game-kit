@@ -44,7 +44,7 @@ As origens são o PR que trouxe o arquivo. Todos foram escritos por sessões do 
 | Figura de 1,80 m da área de itens (cilindros e caixa) | `game-items-three/src/area.ts` | pessoas | PR #27 | **Feita no PR da trava**: a página do kit passa uma pessoa do `game-characters-three` (opção `person`), levada a 1,80 m |
 | Caixa de som num poste (bancada de som) | `game-audio/src/bench/module.ts` | itens | PR #31 | **Feita no PR da trava**: a página do kit passa o rádio portátil (`portable_radio`) do catálogo de bens (opção `probe`) |
 | Rádio e garrafa na mão dos personagens | `game-characters-three/src/rich/accessories/` | itens | PR #28 (porte literal do Bestiário v17 do time) | rádio (`portable_radio`) e garrafa do catálogo de bens, com as medidas do time |
-| Árvores do quintal do showroom | `examples/interactables-showroom/src/showroom.js` | plantas | PR #5 | espécies do `game-vegetation-species` |
+| Árvores do quintal do showroom | `examples/interactables-showroom/src/showroom.js` | plantas | PR #5 | **Feita**: espécies do `game-vegetation-species` (`buildLot` + `createLotObject` do `game-vegetation`) |
 
 ### Fora do alcance do audit, achados à mão
 

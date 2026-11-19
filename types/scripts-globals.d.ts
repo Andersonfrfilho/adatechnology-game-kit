@@ -108,6 +108,9 @@ declare global {
   const GameInteractablesThree: typeof import('@adatechnology/game-interactables-three')
   const GameTerrain: typeof import('@adatechnology/game-terrain')
   const GameTerrainThree: typeof import('@adatechnology/game-terrain-three')
+  const GameVegetation: typeof import('@adatechnology/game-vegetation')
+  const GameVegetationThree: typeof import('@adatechnology/game-vegetation/three')
+  const GameVegetationSpecies: typeof import('@adatechnology/game-vegetation-species')
   const Reflector: typeof import('three/examples/jsm/objects/Reflector.js').Reflector
   const RoomEnvironment: typeof import('three/examples/jsm/environments/RoomEnvironment.js').RoomEnvironment
   /** The recorded sfx the test room page inlines (`examples/test-room/build.mjs`): the manifest and each file as a `data:` url. */
