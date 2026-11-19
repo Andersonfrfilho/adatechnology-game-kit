@@ -354,3 +354,32 @@ Commit do mundo: ver `git log` (`perf(destruction): solveStructure e grupos sem 
 1. Repetir a régua com a máquina quieta (Antigravity fechado), para separar ruído de regressão.
 2. Se confirmar: medir nos merges de fase (`6ccd4c48a` fase 2, `50b823924` fase 3 e o merge da fase 1) para achar qual piorou o f0.
 3. Consertar a sonda da física (`physicsMs` não vê o passo do agendador).
+
+## T4.1 — segunda tomada e medição por fase
+
+### Segunda tomada (máquina quieta)
+
+- Mesmo código (`5c233b0f5` = `b03516f37` + docs), mesma configuração, Antigravity fechado; início 13:13 com carga 1,22, fim 13:52; carga no fim das rodadas 1,42 a 3,43 (a máquina tem uma base de ~2 com Docker e o desktop). JSON: `medicoes/regua-t41-b03516f37-r2.json`.
+- **A piora se confirma.** f0 inteiro a 1x (update + renderCpu, média dos 3 piores): blast 92,0, crater 98,4 (T0.4: 80,5 / 79,3). Pior quadro sem f0 a 1x: blast 22,7, crater 25,2, hammer f1 56,4. 4x: `framep99` 35,2 / 24,4 / 28,8; `framemax` 75,5 / 161 / 59,5. A C8 não fecha em nenhum degrau.
+
+### f0 a 1x por fase (ms, média dos 3 piores f0; régua curta: `blast,crater`, 1x, 3 rodadas de estágios, carga 1,37 a 1,47 no início de cada)
+
+| ponto | blast f0 (+render) | crater f0 (+render) | `explode` b / c | `destrEvents` b / c | `queues` b / c | `audio` b / c | `stagesOut` b / c |
+|---|---|---|---|---|---|---|---|
+| T0.4 `f7de1ecfa` (antes) | 80,5 | 79,3 | 35,8 / 37,6 | 3,5 / 7,4 | 11,6 / 9,8 | 0,9 / 1,0 | 4,9 / 0 |
+| fim da fase 1 `7c0f3bf15` | **106,3** | **99,2** | 40,5 / 35,9 | **11,5 / 12,5** | 16,4 / 15,8 | 3,6 / 2,4 | 6,5 / 7,2 |
+| fase 2 `6ccd4c48a` | 91,2 | 93,6 | 28,9 / 30,6 | 12,8 / 12,3 | 17,0 / 15,5 | 3,0 / 4,1 | 5,8 / 5,8 |
+| fase 3 `50b823924` | 91,5 | 89,2 | 28,9 / 28,6 | 11,5 / 12,3 | 16,8 / 15,5 | 2,5 / 2,6 | 7,4 / 6,4 |
+| final `b03516f37` (2ª tomada) | 92,0 | 98,4 | 29,8 / 33,2 | 12,6 / 13,1 | 14,5 / 15,7 | 3,6 / 1,9 | 5,9 / 7,4 |
+
+JSONs: `medicoes/bisect-f0-<commit>.json`.
+
+### Causa
+
+- **A piora entra na fase 1** (+20 a +26 ms no f0). A fase 2 tira 6 a 15 ms (`explode` −11 ms: a T2.1 aparece aqui, bem menos que no Node). A fase 3 não muda o f0.
+- O que a fase 1 mudou no f0: `destrEvents` ×3 (blast) e ×1,7 (crater), `queues` +5 ms, `audio` +2 ms, `stagesOut` aparece na cratera. Leitura do código: a fase 1 registra `destruction.events` com `mustDrain: true` (`game-destruction-three/src/renderer.ts:1181`, "a hit shows in its own frame"), e `floorplan.breach-cut` também (`game-floorplan-three/src/test-area/module.ts:145`). Antes, a fila de eventos obedecia ao orçamento e espalhava os ~900 eventos da explosão por vários quadros; agora todos rodam no f0, fora do prazo, e o resto (áudio das vozes, cortes) vem junto. Isso é inferência do código mais o rótulo, não teste isolado.
+- Ou seja: a regra "o golpe aparece no próprio quadro" (D da T1.1) está certa para um tiro, mas numa explosão ela põe a explosão inteira num quadro só.
+
+### Decisão pendente do dono
+
+O `mustDrain` da `destruction.events` precisa de um limite para explosões. Opções: (a) `mustDrain` só para os eventos do ponto de impacto (furo, lasca, primeira peça), o resto da explosão volta ao prazo; (b) `mustDrain` com teto por quadro (ms ou número de eventos), o que sobra vai ao prazo; (c) manter e aceitar o f0 alto. Sem isso a C8 não fecha; a fase 2 sozinha não basta (`explode` ainda 29 a 33 ms a 1x).
