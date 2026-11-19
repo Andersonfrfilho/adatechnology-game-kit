@@ -1,9 +1,10 @@
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { lineUpLength, visualStateOf } from '@adatechnology/game-animals'
 import type { AnimalSpecies, AnimalVisualState } from '@adatechnology/game-animals'
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 import type { NodeSkin } from '@adatechnology/game-props3d'
-import { createStaticBatcher } from '@adatechnology/game-render-three'
+import { createStaticBatchQueue, createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 
@@ -25,8 +26,6 @@ const DEFAULT_TIME_SCALE = 60
 
 type Fate = NonNullable<ReturnType<OutbreakLike['bite']>>
 type Placed = { readonly id: string; readonly rig: AnimalRig; fate?: Fate; counted?: 'turned' | 'dead'; batcher?: StaticBatcher }
-/** Milliseconds a frame the batches of a new animal may take to be made. */
-const BATCH_BUDGET_MS = 1
 
 /**
  * The animals test area as a `TestableModule`: the species of the pack in a row, each drawn by the Bichos do Vale builders, with the alive / infected / dead looks, the gait,
@@ -49,6 +48,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   let skins: { rig: AnimalRig; skin: NodeSkin }[] = []
   let rings: THREE_NS.Object3D[] = []
   const placed = new Map<string, Placed>()
+  const batchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.ANIMALS_STATIC_BATCH })
   const random = (): number => 0.5
   const drawSeed = options.seed ?? 7
   const bitten = () => ({ turned: [...placed.values()].filter((p) => p.counted === 'turned').length, dead: [...placed.values()].filter((p) => p.counted === 'dead').length })
@@ -66,7 +66,8 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   /** Draws the animal's parts one batch per material, posed with it; a new look (other materials) makes the batches again. */
   const batch = (entry: Placed): void => {
     entry.batcher?.dispose()
-    if (three) entry.batcher = createStaticBatcher(three, entry.rig.root, { followMeshes: true, budgetMs: BATCH_BUDGET_MS })
+    // the milliseconds only apply while no host budget has registered the owner's queue
+    if (three) entry.batcher = createStaticBatcher(three, entry.rig.root, { followMeshes: true, queue: batchQueue, budgetMs: 1 })
   }
 
   const look = (entry: Placed, state: AnimalVisualState): void => {
@@ -296,9 +297,11 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
       sound = lent.audio && options.sound !== false ? createAnimalSound(lent.audio, options.sound ?? {}) : null
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
+      const stopBatches = lent.defer?.(batchQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.ANIMALS_STATIC_BATCH])
       return () => {
         stopChange?.()
         stopFrame()
+        stopBatches?.()
         clearRings()
         clearSkins()
         sound?.dispose()
