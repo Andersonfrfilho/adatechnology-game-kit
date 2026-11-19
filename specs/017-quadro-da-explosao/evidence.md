@@ -61,3 +61,35 @@ de fechamento.** f0 inteiro nesta rodada: blast 101,6 / crater 100,0 ms (rodada 
 
 **Push:** a primeira tentativa de `git push` caiu ("Connection to github.com closed by remote host") depois de 15 min 47 s de pre-push
 (suíte do `game-floorplan-three` em série, o que o PR #406 corrige).
+
+## T1.2 — testes escritos antes da Fase 2 (2026-11-19)
+
+Commits: `b917192ef` (item 1), `fa625d7a5` (item 2), `ec7706283` (item 3), `bc45b82c1` (item 4). Fixture `step-equivalence.json` e goldens do
+`game-floorplan-three` (`exact-golden`, `blast-presentation`): **sem diff**, nenhuma regravação.
+
+| Item | Teste | O que cobre | Estado |
+|---|---|---|---|
+| 1. Mesmos bytes da janela (C4) | `game-test-room/tests/step-equivalence-window.test.ts` | Cena do `step-equivalence` pelo caminho de quadro de exibição (`update(dt, { live: true })`), ações disparadas dentro do `fixedSimulate` por índice de tique, hash no fim de cada tique, sem entrada do jogador. Taxas 30, 120, 144 Hz e tempo de quadro aleatório de semente fixa (em torno de 30, 60 e 144 Hz) contra a de 60 Hz | **passa** até o tique do golpe (tique 30) com o solver próprio e com Jolt; **`it.fails`** do tique 31 em diante (própria e Jolt) |
+| 2. Visual antes do estrutural | `game-destruction-three/tests/event-class-order.test.ts` | `hole` emitido antes do `detach` da mesma peça é desenhado (som `shot_*` antes do `detach`); `hole` emitido depois do `detach` deve ser aplicado antes | controle **passa**; o segundo é **`it.fails`** até a T2.2 (hoje aplica na ordem de emissão e a peça já é de outro objeto: o furo se perde) |
+| 3. Pintura adiada = mesma máscara | `game-floorplan-three/tests/breach-deferred-mask.test.ts` | Texels (`DataTexture.image.data`) de todas as máscaras da casa depois de `flush(Infinity)` síncrono contra filas anexadas drenadas uma unidade por vez (prazo já passado); um golpe, e dois golpes com o segundo no meio da pintura pendente | **passa** (o caminho adiado de hoje já dá a mesma máscara) |
+| 4. `splitLoose` pelo relógio | `game-destruction-three/tests/split-without-clock.test.ts` | Um `run` da fila de eventos com relógio injetado: prazo longe e prazo já passado separam os mesmos grupos | vermelho antes da correção (`[['pole']]` contra 3 grupos), **verde depois**. Correção em `renderer.ts` (`splitLoose`): o ramo `now < loose` e a fatia que o continuava saíram |
+
+**Falha esperada do item 1 (o que a Fase 2/3 precisa fechar).** Os eventos do golpe são aplicados na fila `destruction.events` (fase `present`), depois do
+último tique do quadro que contém o golpe. A 30 Hz (2 tiques por quadro) o tique 31 roda com a cena de antes da explosão (1 peça; 15 depois da
+drenagem) e o `world.serialize()` já difere. A 120 Hz as 15 peças já existem no tique 31, mas com outras poses e outro estado do mundo
+(causa não isolada nesta task; candidatas: filas contadas em quadros, e não em tiques, e algo que ainda lê o `dt` do quadro). Tudo depois do tique 31
+decorre disso. Primeiro tique diferente medido: 31 em 30, 120 e 144 Hz e nos três aleatórios. O `it.fails` sai quando a janela deixar o hash por tique
+independente de onde o quadro termina.
+
+**Mudança de teste existente (item 4).** `game-destruction-three/tests/presentation-slices.test.ts`, "splits the loose groups one per frame at 0 ms":
+afirmava justamente o comportamento do relógio (um grupo por quadro com `eventBudgetMs: 0`). Passou a afirmar que todos saem no primeiro quadro.
+`work-budget.test.ts` (o caminho em unidades do `WorkBudget`) não mudou e passa.
+
+**Gates (2026-11-19).**
+
+- `pnpm --filter @adatechnology/game-test-room typecheck`, `...game-destruction-three typecheck`, `...game-floorplan-three typecheck` (inclui `tsconfig.strict.json`): sem erro.
+- `game-destruction-three`: suíte inteira, 85 arquivos passam, 654 testes (195 pulados já eram pulados), 0 falhas.
+- `game-test-room`: `step-equivalence.test.ts` (2) e `step-equivalence-window.test.ts` (4, dois deles `it.fails`) passam.
+- `game-floorplan-three` (só os arquivos relacionados; a suíte inteira leva ~15 min e não foi rodada): `blast-presentation`, `exact-golden` (44), `breach-queue` (7), `breach-deferred-mask` (2), `destruction` (21), `stamp-mask` (3): 81 testes passam.
+- `pnpm check:layers`: sem violação nova (294 conhecidas ignoradas).
+- `node tools/kit-audit/audit.mjs --check --strict-clocks`: 0 novos fora do SDK dono; `own-frame-clock: 0 novos, 0 pendentes`.
