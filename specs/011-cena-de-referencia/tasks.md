@@ -20,8 +20,10 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
   464–467, 492–514, 612, 631–639, 925, 4068–4072, 4511, 4788–4827, 5562–5583), o que vira opção, o que o jogo pluga, um arquivo por ligação,
   e onde mora a oclusão de áudio. Inclui como ele registra as filas da spec 010.
 - **T1.2** Oclusão de áudio do mundo (`game-test-room/src/world-occlusion.ts`) vai para o pacote decidido na T1.1; a sala importa de lá.
-- **T1.3** `createKitWorld` no `game-kit-defaults`, conforme a T1.1, com teste sem GPU (mundo montado com THREE de teste, um passo, `dispose`
-  sem sobra pelo `leak.mjs`).
+- **T1.3** `createKitWorld` no `game-kit-defaults` (entrada `./world`), conforme o `design-host.md`. **Só começa depois da T1.1 e da T2.1 da
+  spec 010** (assinatura do orçamento e classificação do passo). Inclui: mapear `/world` no tsconfig do dependency-cruiser e no `dts` do tsup;
+  teste de ordem dos pontos de registro; teste sem GPU (mundo montado com THREE de teste, um passo, `reset`, `dispose` sem sobra pelo
+  `leak.mjs`).
 - **T1.4** Regra de camada `scene-not-testing` no `.dependency-cruiser.cjs`: `examples/reference-district` não importa `game-test-room`,
   `test-area` nem `bench`.
 - **T1.5** A sala monta o mundo pelo `createKitWorld`. Só tira código do `room.ts`; testes e checagens da sala iguais (`pnpm check:room`).
@@ -29,11 +31,15 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
 ## Fase 1b — Ação do jogador no SDK
 > 🤖 Modelo: `sonnet` (T1.6 é 🧠 — `opus`, validar com `architect`)
 
-Achado da T1.1 (`design-host.md` §6): tiro, golpe, explosivos, item na mão, uso de item e recipientes (~1.500 linhas) moram no `room.ts`.
-Sem esta fase a cena só anda e olha.
+Achado da T1.1 (`design-host.md` §6): tiro, golpe, explosivos, pegar, segurar, arremessar, item na mão, uso de item e recipientes moram no
+`room.ts` e em arquivos irmãos da sala: **3.000 a 4.000 linhas**, presas à lista de objetos da sala. Sem esta fase a cena só anda e olha. Se
+passar de 2 semanas, a Fase 2 começa com explosivos roteirizados pelo cenário e o tiro do jogador vem depois.
 
-- **T1.6 🧠** Desenho do `createPlayerActions(world, { player, arsenal, hands })`: dono de cada parte pelo `kit_owner` (regra no núcleo,
-  desenho no `-three`), o que é escolha de jogo (teclas, inventário), e a ordem de extração para não quebrar a sala.
+- **T1.6a** Registro de objetos do mundo (`world.objects`: entrar, sair, segurar, soltar, achar por id e por ponto) e porto de relato
+  (`onEvent` tipado no lugar de `action`/`log`). A sala passa a registrar os objetos dela ali; nada mais muda. Goldens e hash iguais.
+- **T1.6 🧠** Desenho do `createPlayerActions(world, { player, arsenal, hands })`: regra no núcleo dono (`kit_owner`), desenho em L5
+  (`game-kit-defaults/player`, porque compõe fluids, terrain e destruction-three), o que é escolha de jogo (teclas, inventário) e a ordem de
+  extração para não quebrar a sala.
 - **T1.7** Extrair explosivos e tiro (`createExplosives` 2932, `fireShots` 2527) para o pacote dono; a sala passa a usar. Goldens e hash iguais.
 - **T1.8** Extrair golpe, item na mão e uso de item (`stepStrikes` 2791, `followHeld` 3417, `updateItemUse` 3585).
 - **T1.9** Extrair andar, empurrar e recipientes (`stepWalk` 4154, `footing` 858, `syncContainers` 4108). A sala só tira linhas (§15).
