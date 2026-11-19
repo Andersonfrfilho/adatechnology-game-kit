@@ -134,8 +134,8 @@ comportamento da física e os goldens não mudam. O valor desta fase é correç�
 - **T4.1** ✅ medida, **C8 não cumprida** (`evidence.md`, "T4.1"): régua final em duas tomadas (`regua-t41-b03516f37*.json`), medição por
   fase (`bisect-f0-*.json`) e duas tentativas de teto por quadro. O f0 a 1x ficou em ~90 ms (T0.4: ~80; meta 33,3): a fase 1 o piorou
   (`destruction.events` `mustDrain`), a fase 2 recuperou parte, a fase 3 não mexeu. Teto em ms quebra o determinismo; `workBudget` não o
-  reduz. O f0 vai para a spec 013. A sonda da física da régua foi consertada (`stepFixed`), e a rodada `PERF_MODE=gpu` do `perf.mjs` (tempestade,
-  hordas) fica para a 013, junto da régua dela.
+  reduz. O f0 vai para a spec 017. A sonda da física da régua foi consertada (`stepFixed`), e a rodada `PERF_MODE=gpu` do `perf.mjs` (tempestade,
+  hordas) fica para a 017, junto da régua dela.
 - **T4.2** ✅ (commit `docs(spec-010): T4.2 e T4.3`) Documentação: `docs/desempenho-explosoes.md` (seção nova com as três causas e os números), README do `game-runtime` (prazo, filas,
   passo fixo, interpolação) e a referência da skill `kit-base`. Riscar em `docs/desempenho-explosoes.md` a pendência "a ordem do quadro não
   tem dono".
@@ -144,7 +144,7 @@ comportamento da física e os goldens não mudam. O valor desta fase é correç�
 
 ## Pendências que a spec deixou (fora do escopo, uma spec ou task própria cada)
 
-- **Quadro da explosão (f0) e C8:** spec 013 (`world.explode` fora do quadro, teto por unidades em `destruction.events` e `floorplan.breach-cut`, fixture da T3.2 regravado com aprovação do dono).
+- **Quadro da explosão (f0) e C8:** spec 017 (`world.explode` fora do quadro, teto por unidades em `destruction.events` e `floorplan.breach-cut`, fixture da T3.2 regravado com aprovação do dono).
 
 - **Física da fase `input`** (empurrar, objeto na mão, portas, ferramentas) ainda integra com o `dt` do quadro: spec própria (`design-passo-fixo.md` §7).
 - **`conduit:conduit_outlet19`** (plástico) com 1445,8 kg de massa e 86749 de vida máxima, já em `1cb39c001` (`game-floorplan-three/src/utilities/electrical.ts:113`, `pieceRecord`).
