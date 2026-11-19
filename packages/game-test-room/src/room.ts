@@ -2404,7 +2404,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * it stopped; through a thin shell, only what the wall and the liquid inside took), along the inward normal of that surface plus a little along it. So a round on the
    * right of a can pushes it away and to the left and spins it, as a real one does.
    */
-  const shotPush = (s: Shot, objectId: string, results: readonly { readonly object: string; readonly penetrated: boolean; readonly exitEnergy: number }[], fallback: Vec3): { impulse: Vec3; point: Vec3 } => {
+  const shotPush = (s: Shot, objectId: string, results: readonly { readonly object: string; readonly point?: Vec3; readonly normal?: Vec3; readonly penetrated: boolean; readonly exitEnergy: number }[], fallback: Vec3): { impulse: Vec3; point: Vec3 } => {
     const e = entries.get(objectId)
     const speed = Math.max(80, s.speed)
     const onIt = results.filter((r) => r.object === objectId)
@@ -2413,16 +2413,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     let point = fallback
     let inward: Vec3 = [s.direction[0], s.direction[1], s.direction[2]]
     if (e) {
-      shotRay.set(new THREE.Vector3(...s.origin), new THREE.Vector3(...s.direction).normalize())
-      shotRay.far = 60
-      // sprites (labels, effects) under the object raycast against the camera
-      shotRay.camera = camera
-      const hit = shotRay.intersectObject(e.so.root, true).find((h) => (h.object as THREE_NS.Mesh).isMesh && !h.object.userData.destructionDebris && h.face)
-      if (hit?.face) {
-        point = [hit.point.x, hit.point.y, hit.point.z]
-        const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
-        if (n.x * s.direction[0] + n.y * s.direction[1] + n.z * s.direction[2] > 0) n.negate()
-        inward = [-n.x, -n.y, -n.z]
+      // a hosted body (a vehicle) already traced its drawn surface in `world.shoot` (surfaceRay): reuse the entry normal instead of
+      // raycasting every triangle of the whole body again — that second traversal was the shot's frame spike
+      const n = onIt[0]?.normal
+      if (n) {
+        point = onIt[0]!.point ?? fallback
+        // the contract says it faces the round; a body that answers its box (no drawn surface) may not, so face it the same way the raycast below does
+        const back = n[0] * s.direction[0] + n[1] * s.direction[1] + n[2] * s.direction[2] > 0
+        inward = back ? [n[0], n[1], n[2]] : [-n[0], -n[1], -n[2]]
+      } else {
+        shotRay.set(new THREE.Vector3(...s.origin), new THREE.Vector3(...s.direction).normalize())
+        shotRay.far = 60
+        // sprites (labels, effects) under the object raycast against the camera
+        shotRay.camera = camera
+        const hit = shotRay.intersectObject(e.so.root, true).find((h) => (h.object as THREE_NS.Mesh).isMesh && !h.object.userData.destructionDebris && h.face)
+        if (hit?.face) {
+          point = [hit.point.x, hit.point.y, hit.point.z]
+          const hn = hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
+          if (hn.x * s.direction[0] + hn.y * s.direction[1] + hn.z * s.direction[2] > 0) hn.negate()
+          inward = [-hn.x, -hn.y, -hn.z]
+        }
       }
       // the liquid inside slows the round down along the chord it crosses
       const c = kept > 0 && e.containerId ? fluids.container(e.containerId) : null
@@ -4816,8 +4826,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
   const catalogIds = vfx.catalog?.() ?? []
-  // every explosion of the effects catalogue (the world's P13, barrel and car tank, the rockets...): a new explosive is warmed without a list here
-  for (const id of [...explosionEffectIds(), ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1)]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
+  // every explosion of the effects catalogue (the world's P13, barrel and car tank, the rockets...): a new explosive is warmed without a list here,
+  // and every impact (the spark of a bullet on metal, wood, glass...) so a shot never pays for its first streak, sprite or decal buffers in play
+  for (const id of [...explosionEffectIds(), ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1), ...catalogIds.filter((id) => /^impact_/.test(id))]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
   let warmedUp = false
   const warmUp = (): void => {
     warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES, materials: pools.materials.registeredMaterials?.() ?? [] })

@@ -947,6 +947,11 @@ export interface HitResult {
   part?: string
   /** World point where it landed. */
   point?: Vec3
+  /**
+   * The surface normal at the hit, facing the incoming projectile (toward the shooter), where the world traced it on the drawn surface
+   * (`DestructibleImpl.surfaceRay`). Absent for a hit that did not trace the surface (a box-only hit, a blast), which is why it is optional.
+   */
+  normal?: Vec3
   /** Damage dealt in total (all parts). */
   damage: number
   /** Ballistic: the projectile came out the other side with `exitEnergy` left. */
