@@ -1,11 +1,24 @@
-import type * as ThreeNamespace from 'three'
 import type { DevtoolsLocale, DevtoolsStrings } from './locale'
 
-/** The only three.js member the devtools need at runtime. Pass your own `THREE` instance. */
-export type ThreeLib = Pick<typeof ThreeNamespace, 'Vector3'>
+/** Minimal 3D vector surface needed by the devtools (structurally compatible with `THREE.Vector3`). */
+export interface Vector3Like {
+  x: number
+  y: number
+  z: number
+  set(x: number, y: number, z: number): this
+  project(camera: ProjectionCamera): this
+}
 
-/** A camera that can project world points to the screen. */
-export type ProjectionCamera = ThreeNamespace.Camera
+/** The only three.js member the devtools need at runtime. Pass your own `THREE` instance. */
+export interface ThreeLib {
+  readonly Vector3: new (x?: number, y?: number, z?: number) => Vector3Like
+}
+
+/** A camera that can project world points to the screen (structurally compatible with `THREE.Camera`). */
+export interface ProjectionCamera {
+  readonly position: { set(x: number, y: number, z: number): unknown }
+  lookAt(x: number, y: number, z: number): void
+}
 
 /** Where the player is. Yaw 0 looks toward -z (north); positive pitch looks down. */
 export interface PlayerPosition {
