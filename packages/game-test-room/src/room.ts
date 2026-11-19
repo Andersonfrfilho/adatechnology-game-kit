@@ -52,6 +52,8 @@ import { createRoomPush, PUSH_REACH } from './furniture-push'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
+import { stepWalkPlan } from './walk-plan'
+import { MAX_TICKS_PER_FRAME, STEPS_PER_TICK, registerSimulationPhases, resolveSimulationTick } from './simulation-phases'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
@@ -490,6 +492,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const physicsLoop = physics !== 'own' && isPhysicsLoop(physics) ? physics : null
   const renderer = createDestructionRenderer(THREE, {
     physics,
+    interpolate: true,
     scene,
     world,
     vfx: vfx.world,
@@ -4075,7 +4078,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     headlessErrors.clear()
     throw errors.length === 1 ? errors[0] : new AggregateError(errors, `${errors.length} systems threw in one frame`)
   }
-  const scheduler = createScheduler({ maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError })
+  const simulationTick = resolveSimulationTick(physicsLoop?.world.fixedStep, FIXED_DT)
+  const scheduler = createScheduler({ fixedDt: simulationTick, maxSubsteps: MAX_TICKS_PER_FRAME, maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError })
   registerFrameQueues({ budget: scheduler.budget, destruction: renderer, audio, film, staticBatchQueue, hasWorkBudget: options.debris?.workBudget !== undefined })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
@@ -4148,18 +4152,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   let walkPlan: { x: number; z: number; remaining: number } | null = null
-  const stepWalk = (dt: number): void => {
-    if (!walkPlan) return
-    const f = walkPlan.remaining <= dt ? 1 : dt / walkPlan.remaining
-    player.moveBy((walkPlan.x - camera.position.x) * f, (walkPlan.z - camera.position.z) * f)
-    walkPlan.remaining -= dt
-    if (walkPlan.remaining <= 1e-9) walkPlan = null
-  }
-
-  // lateSimulate, before the modules' frame callbacks: `dt` is simulated seconds; real time only drives input
-  const simulateBeforeModules = (dt: number): void => {
+  // fixedSimulate, once per tick (`dt` is one tick of simulated seconds): what changes the world's state
+  const simulateFixed = (dt: number, isTick: boolean): void => {
     simTime += dt
-    stepWalk(dt)
+    walkPlan = stepWalkPlan({ plan: walkPlan, dt, player, camera })
     stepStrikes(dt)
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
@@ -4173,23 +4169,29 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     simulationStamp++
-    physicsLoop?.step(dt)
-    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
+    if (isTick) physicsLoop?.stepFixed(STEPS_PER_TICK)
+    else physicsLoop?.step(dt)
     renderer.update(dt)
-    destructionSound?.update(dt)
-    for (const e of entries.values()) e.follower?.update?.()
-    terrainView.sync(camera.position)
     showGroundFire(dt)
-    vfx.update(dt)
     water.setCamera([camera.position.x, camera.position.y, camera.position.z])
     water.update(dt)
-    waterView.sync()
     updateImpacts()
     updateWater(dt)
     rockPlayer(dt)
     updateLoads(dt)
-    if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     dropStainsOffFallenTops()
+    flush()
+  }
+
+  // lateSimulate, before the modules' frame callbacks: what only draws, sounds or follows the frame; `dt` is simulated seconds, real time only drives input
+  const simulateFrame = (dt: number): void => {
+    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
+    destructionSound?.update(dt)
+    for (const e of entries.values()) e.follower?.update?.()
+    terrainView.sync(camera.position)
+    vfx.update(dt)
+    waterView.sync()
+    if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
     fluidView.update(dt)
     filmBridge.update(dt)
     film.update(dt)
@@ -4958,7 +4960,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let scenarioRunning = false
 
   // a scenario steps the world through the scheduler: input and present know they are scripted (ctx.scripted) and keep to what the step always did
-  const step = (seconds: number): void => runHeadless(() => scheduler.advance(seconds, { dt: seconds > 6 ? 1 / 30 : FIXED_DT }))
+  const step = (seconds: number): void => phases.runAt(seconds > 6 ? 1 / 30 : FIXED_DT, (dt) => runHeadless(() => scheduler.advance(seconds, { dt })))
 
   const runScenarios = async (list?: TestRoomScenario[]): Promise<ScenarioReport> => {
     const all = list ?? allScenarios()
@@ -5230,7 +5232,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update: (dt: number): void => runHeadless(() => scheduler.frame(dt, { render: false, exact: true })),
+    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true })), options?.live),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
@@ -5538,8 +5540,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  scheduler.add((ctx) => simulateBeforeModules(ctx.dt), { phase: 'lateSimulate', order: -1000, id: 'room.simulate' })
-  scheduler.add((ctx) => simulateAfterModules(ctx.dt), { phase: 'lateSimulate', order: 1000, id: 'room.simulate-end' })
+  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)

@@ -26,8 +26,10 @@ export interface PhysicsLoop {
   readonly frame: PhysicsFrame
   /** Order inside one `PhaseOrder` is registration order; the call returns the way to take the phase out again. */
   add(phase: PhysicsPhase, order: PhaseOrder): () => void
-  /** One frame of `dt` seconds, limited to `maxDt`. The only thing that steps the world. */
+  /** One frame of `dt` seconds, limited to `maxDt`: its own accumulator turns it into whole steps, then `stepFixed` runs them. For a host with no clock of its own. */
   step(dt: number): void
+  /** Exactly `steps` fixed steps (a whole number, 0 or more), no accumulator and no `maxDt`: the caller's clock already decided. `frame.alpha` is 0 (the caller's clock has the leftover). */
+  stepFixed(steps: number): void
 }
 
 export interface PhysicsLoopOptions {
@@ -66,13 +68,8 @@ export const createPhysicsLoop = (world: PhysicsWorld, options: PhysicsLoopOptio
     }
   }
 
-  const step = (dt: number): void => {
-    const clamped = Math.min(Math.max(dt, 0), maxDt)
-    accumulator += clamped
-    const steps = Math.floor((accumulator + STEP_EPSILON) / h)
-    accumulator = Math.max(0, accumulator - steps * h)
+  const run = (steps: number, afterDt: number): void => {
     frame.steps = steps
-    frame.alpha = accumulator / h
     world.clearEvents()
     const started = performance.now()
     for (let i = 0; i < steps; i++) {
@@ -81,10 +78,24 @@ export const createPhysicsLoop = (world: PhysicsWorld, options: PhysicsLoopOptio
       frame.time += h
     }
     frame.stepMs = performance.now() - started
-    for (const order of AFTER_ORDER) for (const phase of phases[order]) phase.afterSteps?.(clamped, frame)
+    for (const order of AFTER_ORDER) for (const phase of phases[order]) phase.afterSteps?.(afterDt, frame)
   }
 
-  return { world, frame, add, step }
+  const step = (dt: number): void => {
+    const clamped = Math.min(Math.max(dt, 0), maxDt)
+    accumulator += clamped
+    const steps = Math.floor((accumulator + STEP_EPSILON) / h)
+    accumulator = Math.max(0, accumulator - steps * h)
+    frame.alpha = accumulator / h
+    run(steps, clamped)
+  }
+
+  const stepFixed = (steps: number): void => {
+    frame.alpha = 0
+    run(steps, steps * h)
+  }
+
+  return { world, frame, add, step, stepFixed }
 }
 
 /** A `PhysicsLoop` told from a world (a seam is handed either): only the loop has `frame` and `add`. */

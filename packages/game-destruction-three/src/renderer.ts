@@ -566,11 +566,13 @@ class Renderer implements DestructionRenderer {
       // and it meets the walls, ceilings and furniture on its way: it stops on their face instead of flying into them
       sweep: (from, direction, distance) => (typeof this.world.raycast === 'function' ? this.world.raycast([from[0], from[1], from[2]], [direction[0], direction[1], direction[2]], distance) : null),
       maxAwake: o.maxAwakeFragments ?? Infinity,
+      ...(o.interpolate ? { interpolate: true } : {}),
     })
     this.cages = new RebarCages(THREE, o.scene)
     this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
     this.pieceSys = new PieceSystem(THREE, {
       physics: o.physics,
+      ...(o.interpolate ? { interpolate: true } : {}),
       groundAt: this.groundAt,
       ...(o.terrainAt ? { terrainAt: o.terrainAt } : {}),
       ...(o.terrainRollingAt ? { terrainRollingAt: o.terrainRollingAt } : {}),
@@ -1101,8 +1103,20 @@ class Renderer implements DestructionRenderer {
   // Update
   // ----------------------------------------------------------------------------------------------------------------------------------
 
+  restoreStepPose(): void {
+    this.pieceSys.restoreStepPose()
+    this.fragments.restoreStepPose()
+  }
+
+  present(alpha: number): void {
+    if (this.disposed) return
+    this.pieceSys.presentPose(alpha)
+    this.fragments.presentPose(alpha)
+  }
+
   update(dt: number): void {
     if (this.disposed) return
+    this.restoreStepPose()
     dt = clamp(dt, 0, 0.1)
     this.time += dt
     this.work?.beginFrame()

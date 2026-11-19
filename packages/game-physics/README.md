@@ -32,6 +32,9 @@ const loop = createPhysicsLoop(world)
 
 // one frame, from the game's own loop:
 loop.step(deltaSeconds)
+
+// or, when the host owns the clock (the scheduler's fixed tick): exactly that many steps of `world.fixedStep`
+loop.stepFixed(2)
 ```
 
 Systems register phases instead of stepping the world:

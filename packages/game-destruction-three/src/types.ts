@@ -63,6 +63,11 @@ export interface RendererOptions {
   /** Most fragments moving at once (default no limit; `SUGGESTED_MAX_AWAKE_FRAGMENTS`, 64): over it the oldest at rest on what is under them sleep where they lie. */
   maxAwakeFragments?: number
   /**
+   * Keep the pose of the step before the last for the pieces and fragments that are awake, to draw them between it and the step's (`present`). Default off: they are drawn at
+   * the step's pose, as always. The simulation never reads a drawn pose: `update` (and `restoreStepPose`) give the step pose back first.
+   */
+  interpolate?: boolean
+  /**
    * Draw the debris at rest in batches, a draw per material (`SettledBatchOptions`; `{}` for the defaults). Omitted, every debris mesh draws on its own, as before. Only the
    * drawing changes: the collision is each piece's own.
    */
@@ -365,6 +370,10 @@ export interface DestructionRenderer {
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */
   update(dt: number): void
+  /** With `interpolate`: the awake pieces and fragments drawn `alpha` (0 to 1) of the way from the pose before the last step to the step's. Call in the present phase; 1 draws the step's pose. */
+  present(alpha: number): void
+  /** With `interpolate`: gives the step pose back to what `present` drew between. `update` does it first; call it before reading a piece's root between `present` and `update`. */
+  restoreStepPose(): void
   /**
    * The waiting events and the presentation slices they left, as a `DeferredQueue` for a shared frame budget (id `destruction.events`). `budget.register`
    * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.
