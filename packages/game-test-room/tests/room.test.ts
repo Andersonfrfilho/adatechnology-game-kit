@@ -411,7 +411,7 @@ describe('frame budget', () => {
     run(room, 0.1)
     const stats = room.frameStats!()
     expect(stats.budget.ms).toBe(8)
-    expect(stats.budget.queues.map((queue) => queue.id).sort()).toEqual(['audio.voices', 'destruction.events'])
+    expect(stats.budget.queues.map((queue) => queue.id).sort()).toEqual(['audio.occlusion', 'audio.voices', 'destruction.events', 'destruction.prefit', 'destruction.settled-batch', 'fluids.film', 'render.static-batch'])
     expect(stats.frame).toBeGreaterThan(0)
     expect(makeRoom({ frameBudgetMs: 4 }).frameStats!().budget.ms).toBe(4)
   })
