@@ -2418,7 +2418,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const n = onIt[0]?.normal
       if (n) {
         point = onIt[0]!.point ?? fallback
-        inward = [-n[0], -n[1], -n[2]]
+        // the contract says it faces the round; a body that answers its box (no drawn surface) may not, so face it the same way the raycast below does
+        const back = n[0] * s.direction[0] + n[1] * s.direction[1] + n[2] * s.direction[2] > 0
+        inward = back ? [n[0], n[1], n[2]] : [-n[0], -n[1], -n[2]]
       } else {
         shotRay.set(new THREE.Vector3(...s.origin), new THREE.Vector3(...s.direction).normalize())
         shotRay.far = 60
