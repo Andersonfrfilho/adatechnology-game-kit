@@ -50,6 +50,15 @@ export const DEFERRED_QUEUE_ID = {
   BREACH_CUT: 'floorplan.breach-cut',
   AUDIO_VOICES: 'audio.voices',
   VEHICLE_CREASE: 'vehicles.crease',
+  AUDIO_OCCLUSION: 'audio.occlusion',
+  FLUID_FILM: 'fluids.film',
+  VEHICLE_LOD_BATCH: 'vehicles.lod-batch',
+  SETTLED_BATCH: 'destruction.settled-batch',
+  STATIC_BATCH: 'render.static-batch',
+  ANIMALS_STATIC_BATCH: 'animals.static-batch',
+  CHARACTERS_STATIC_BATCH: 'characters.static-batch',
+  HOUSE_SHADOW_BATCH: 'floorplan.shadow-batch',
+  DESTRUCTION_PREFIT: 'destruction.prefit',
 } as const
 
 /** Default priorities and reserves of the kit's queues; a host may override any of them. */
@@ -59,7 +68,16 @@ export const DEFERRED_PRIORITY = {
   [DEFERRED_QUEUE_ID.BREACH_CUT]: { priority: 260, phase: 'present', minEveryFrames: 1 },
   [DEFERRED_QUEUE_ID.BREACH_PAINT]: { priority: 250, phase: 'present' },
   [DEFERRED_QUEUE_ID.AUDIO_VOICES]: { priority: 200, phase: 'idle', reserveMs: 1 },
+  [DEFERRED_QUEUE_ID.AUDIO_OCCLUSION]: { priority: 190, phase: 'idle', minEveryFrames: 8 },
+  [DEFERRED_QUEUE_ID.FLUID_FILM]: { priority: 120, phase: 'idle', minEveryFrames: 2 },
   [DEFERRED_QUEUE_ID.VEHICLE_CREASE]: { priority: 100, phase: 'idle' },
+  [DEFERRED_QUEUE_ID.VEHICLE_LOD_BATCH]: { priority: 90, phase: 'idle', minEveryFrames: 4 },
+  [DEFERRED_QUEUE_ID.SETTLED_BATCH]: { priority: 70, phase: 'idle', minEveryFrames: 8 },
+  [DEFERRED_QUEUE_ID.STATIC_BATCH]: { priority: 60, phase: 'idle', minEveryFrames: 8 },
+  [DEFERRED_QUEUE_ID.ANIMALS_STATIC_BATCH]: { priority: 60, phase: 'idle', minEveryFrames: 8 },
+  [DEFERRED_QUEUE_ID.CHARACTERS_STATIC_BATCH]: { priority: 60, phase: 'idle', minEveryFrames: 8 },
+  [DEFERRED_QUEUE_ID.HOUSE_SHADOW_BATCH]: { priority: 50, phase: 'idle', minEveryFrames: 8 },
+  [DEFERRED_QUEUE_ID.DESTRUCTION_PREFIT]: { priority: 40, phase: 'idle', minEveryFrames: 30 },
 } as const satisfies Readonly<Record<string, DeferredQueueOptions>>
 
 export interface DeferredQueueReport {
@@ -92,4 +110,9 @@ export function checkDeferredQueue(queue: DeferredQueue, fill: () => void): Defe
   if (queue.pending(3) !== 0) problems.push(`flush must leave nothing pending (pending is ${queue.pending(3)})`)
   if (queue.run(0, () => 1) !== 0) problems.push('run on an empty queue must run no unit')
   return { ok: problems.length === 0, problems }
+}
+
+/** Drains a queue no budget registered (D2): runs it until `budgetMs` from now. The one place outside game-runtime that times deferred work. */
+export function drainDetached(queue: DeferredQueue, budgetMs: number, clock: () => number = () => performance.now()): number {
+  return queue.run(clock() + budgetMs, clock)
 }
