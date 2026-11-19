@@ -1576,6 +1576,9 @@ importers:
       '@adatechnology/game-items':
         specifier: workspace:^
         version: link:../game-items
+      '@adatechnology/game-kit-defaults':
+        specifier: workspace:^
+        version: link:../game-kit-defaults
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player

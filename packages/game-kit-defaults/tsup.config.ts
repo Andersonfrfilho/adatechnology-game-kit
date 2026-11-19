@@ -5,9 +5,9 @@ import { defineConfig } from 'tsup'
 // (dist/kit-worker.global.js), the text a one-file page hands to `sourceSpawn`.
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/kit-worker.ts'],
+    entry: { index: 'src/index.ts', 'kit-worker': 'src/kit-worker.ts', 'world/index': 'src/world/index.ts' },
     format: ['esm'],
-    dts: { entry: 'src/index.ts' },
+    dts: { entry: { index: 'src/index.ts', 'world/index': 'src/world/index.ts' } },
     splitting: false,
     sourcemap: true,
     clean: true,
