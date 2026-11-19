@@ -383,3 +383,20 @@ JSONs: `medicoes/bisect-f0-<commit>.json`.
 ### Decisão pendente do dono
 
 O `mustDrain` da `destruction.events` precisa de um limite para explosões. Opções: (a) `mustDrain` só para os eventos do ponto de impacto (furo, lasca, primeira peça), o resto da explosão volta ao prazo; (b) `mustDrain` com teto por quadro (ms ou número de eventos), o que sobra vai ao prazo; (c) manter e aceitar o f0 alto. Sem isso a C8 não fecha; a fase 2 sozinha não basta (`explode` ainda 29 a 33 ms a 1x).
+
+### Teto por quadro: duas tentativas (decisão do dono: "teto por quadro")
+
+1. **Teto em ms no `mustDrain`** (`mustDrainMs`, o que passa do teto volta ao prazo): implementado e desfeito, sem commit. O teste de
+   equivalência da T3.2 (`game-test-room/tests/step-equivalence.test.ts`) passa a divergir no quadro 30, o da explosão: os eventos aplicados
+   criam peças e mudam a simulação, e um teto pelo relógio faz o quadro em que cada evento entra depender da velocidade da máquina. Quebra os
+   "mesmos bytes" (C5, §14). Teto que vale tem de ser em unidades.
+2. **`WorkBudget` ligado** (`workBudget=4`, já existe e é por unidades; variante temporária do portão, sem commit; JSON
+   `medicoes/teste-workbudget4-59a08a920.json`): f0 a 1x blast 99,3 / crater 103,0 (sem ele: 91,5 / 89,2), `destrEvents` 14 / 16, e o
+   quadro seguinte sobe para 31 ms. Ele divide fragmentos e grupos soltos, mas aplica todo evento no quadro dele: não resolve o f0.
+
+### Conta do f0 a 1x hoje (média blast/crater, ms)
+
+`explode` ~30 (chamada síncrona do mundo) + `queues`/`breach-cut` ~16 + `destrEvents` ~12 + `action` ~6 + `stagesOut` ~6 + o resto do quadro
+~10 + `renderCpu` ~9 = ~90. Mesmo espalhando por inteiro `destrEvents` e `breach-cut`, o f0 fica perto de 60 ms. **A C8 (f0 ≤ 33,3) não cabe
+nesta spec:** pede tirar o `world.explode` do quadro (dividir em passos ou levar a um worker, §14) e um teto por unidades na aplicação dos
+eventos e no corte da parede, com o fixture da T3.2 regravado (decisão do dono).
