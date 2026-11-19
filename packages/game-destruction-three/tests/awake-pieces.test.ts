@@ -71,7 +71,8 @@ describe('the piece loops walk the awake pieces only', () => {
     expect(small.active).toBe(UPDATES)
     expect(large.active).toBe(UPDATES)
     expect(large.total).toBe(small.total)
-  })
+    // counts calls, not time: 5,500 Jolt bodies take longer than the 5 s default to create on a loaded machine
+  }, 30_000)
 
   it('a sleeping piece the engine wakes with a blow is read back in the same step', async () => {
     const base = await newWorld()

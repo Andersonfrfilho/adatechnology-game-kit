@@ -433,3 +433,10 @@ Comparação do estado bruto da cena (teste descartável, solver próprio) entre
 - **Diferentes:** só trincas. No sobrado, o ponto, a normal e os raios de algumas trincas (`parts[13]`, `parts[38]`). Numa parte do objeto 6, uma trinca a mais (log `crack` 73 contra 72), com a `flexure` caindo de 0,52 para 0,08. O `rng` muda por causa dessa trinca extra.
 - Causa: a T2.1 resolve as cargas no fim da operação, então a flexão lida por quem trinca muda. É a mesma classe de mudança dos goldens que a T2.1 já regravou com aprovação (`exact-floorplan` `destruction/*`).
 - `game-test-room/tests/fixtures/step-equivalence.json` regravado na `spec/010-pr`; o teste passa (2/2).
+
+### Goldens `exact-floorplan` `destruction/*` regravados (mesmo critério)
+
+- Quebraram na integração: gravados na branch da T2.1; a **T2.5** (`spec/010-t25-transforms`, raiz de peça dormindo congelada) muda o hash. Medido por branch: T2.1, T2.2 e T2.3 passam 44/44; T2.5 falha nos três casos de destruição.
+- Diferença, comparada linha a linha (T2.3 contra T2.5): a raiz congelada sai com `auto=false` (`matrixAutoUpdate`, o objetivo da T2.5), e as matrizes das instâncias de fragmentos (`fragment-instances`) mudam de **ordem**. O conjunto de matrizes desenhadas é idêntico nos três casos (breach 64 e 17, spall 74, fracture 111 instâncias); o que difere fora do `count` não é desenhado.
+- `destruction/breach` `2ef1cab7` → `9b868261`, `destruction/spall` `dd89703c` → `ef17cc25`, `destruction/fracture` `b2fd7663` → `26df38a4`; os outros 41 casos não mudam; `exact-golden` 44/44.
+- `awake-pieces.test.ts`: prazo de 30 s no teste de 5.500 corpos (conta chamadas, não mede tempo; ~10 s com carga 4).
