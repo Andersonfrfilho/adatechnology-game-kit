@@ -28,7 +28,7 @@ export type DentOptions = {
 }
 /** A piece `cutPanel` made: the whole mesh (`whole`), a cut piece hung on the vehicle (`mesh`), or a cut whose piece was dropped (`cut` alone). */
 export type PanelPiece = { mesh?: Mesh; whole?: boolean; cut?: boolean }
-export type CutPanelOptions = { anyN?: boolean; pieceTasks?: Map<Mesh, { geo: BufferGeometry; step: (deadline: number) => boolean }> }
+export type CutPanelOptions = { anyN?: boolean; pieceTasks?: Map<Mesh, { geo: BufferGeometry; step: (deadline: number, clock?: () => number) => boolean }> }
 
 export function installZoneDent(kit: Kit) {
   const THREE = kit.THREE

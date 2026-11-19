@@ -129,7 +129,7 @@ export function installGeometry(kit: Kit) {
     return g
   }
   const latestCrease = new WeakMap<object, object>()
-  /* The smoothing of `crease` as slices: `step(deadline)` works until the clock passes it and returns whether it finished.
+  /* The smoothing of `crease` as slices: `step(deadline, clock)` works until `clock()` (default `performance.now`, the budget's clock when a queue runs it) passes it and returns whether it finished.
      The normals start as flat face normals, so the mesh draws right between the slices; the end result is the same as one call. */
   function creaseTask(geo: BufferGeometry, deg: number) {
     if (geo.index) {
@@ -201,9 +201,9 @@ export function installGeometry(kit: Kit) {
     const cs = Math.cos((deg * PI) / 180)
     let phase = 0
     let at = 0
-    function hashSlice(deadline: number) {
+    function hashSlice(deadline: number, clock: () => number) {
       for (; at < n; at++) {
-        if ((at & 1023) === 0 && performance.now() > deadline) return false
+        if ((at & 1023) === 0 && clock() > deadline) return false
         const x = Math.round(P[3 * at] * 2000) | 0
         const y = Math.round(P[3 * at + 1] * 2000) | 0
         const z = Math.round(P[3 * at + 2] * 2000) | 0
@@ -233,9 +233,9 @@ export function installGeometry(kit: Kit) {
       members = new Int32Array(n)
       for (let i = 0; i < n; i++) members[fill[groupOf[i]]++] = (i / 3) | 0
     }
-    function smoothSlice(deadline: number) {
+    function smoothSlice(deadline: number, clock: () => number) {
       for (; at < n; at++) {
-        if ((at & 1023) === 0 && performance.now() > deadline) return false
+        if ((at & 1023) === 0 && clock() > deadline) return false
         const fi = ((at / 3) | 0) * 3
         const g = groupOf[at]
         let sx = 0
@@ -261,16 +261,16 @@ export function installGeometry(kit: Kit) {
       }
       return true
     }
-    function step(deadline: number) {
+    function step(deadline: number, clock: () => number = performance.now.bind(performance)) {
       if (latestCrease.get(geo) !== token) return true
       if (phase === 0) {
-        if (!hashSlice(deadline)) return false
+        if (!hashSlice(deadline, clock)) return false
         gather()
         phase = 1
         at = 0
       }
       if (phase === 1) {
-        const done = smoothSlice(deadline)
+        const done = smoothSlice(deadline, clock)
         /* a one-shot crease replaces the normals before anything could draw them; only sliced work follows an upload of the flat ones */
         if (deadline !== Infinity) normal.needsUpdate = true
         if (!done) return false
