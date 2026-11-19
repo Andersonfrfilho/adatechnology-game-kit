@@ -1,4 +1,4 @@
-import type { Vec3 } from '@adatechnology/game-contracts'
+import type { DeferredQueue, Vec3 } from '@adatechnology/game-contracts'
 
 import { OCCLUSION_DEFAULTS } from '../occlusion'
 import type { OcclusionSetup, OcclusionState } from '../occlusion'
@@ -25,6 +25,8 @@ export type EngineOcclusion = {
   update(listener: Vec3, alive: (id: number) => boolean): void
   /** Releases the voices `alive` no longer holds. */
   prune(alive: (id: number) => boolean): void
+  /** The tracker's measuring as a `DeferredQueue` for a shared frame budget (see `OcclusionTracker.deferredQueue`). */
+  deferredQueue(): DeferredQueue
   voices(): readonly OccludedVoiceInfo[]
   clear(): void
 }
@@ -100,6 +102,7 @@ export function createEngineOcclusion(setup: OcclusionSetup, context: () => Base
       }
     },
     prune,
+    deferredQueue: () => tracker.deferredQueue(),
     voices() {
       return [...nodes].flatMap(([id, voice]) => {
         const state = voice.releasedAt === undefined ? tracker.state(id) : undefined
