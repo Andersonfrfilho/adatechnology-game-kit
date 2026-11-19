@@ -115,9 +115,9 @@ describe('house shadow batches as an owner queue', () => {
   const rootOf = (): Object3D => {
     const root = new THREE.Group()
     const material = new THREE.MeshLambertMaterial()
-    // ~40k vertices: more than one chunk of HOUSE_SHADOW_BATCH_VERTICES
-    for (let at = 0; at < 4; at++) {
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 100, 100), material)
+    // ~45k vertices in meshes of ~5k: three to a chunk of HOUSE_SHADOW_BATCH_VERTICES, so three chunks of at least two meshes (a chunk of one is not merged)
+    for (let at = 0; at < 9; at++) {
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1, 70, 70), material)
       mesh.position.x = at * 2
       mesh.castShadow = true
       root.add(mesh)
