@@ -2203,38 +2203,38 @@ class Renderer implements DestructionRenderer {
       this.splitWithin(this.work, b, st, torn)
       return
     }
-    let deferred = false
+    // every loose group at once, while the frame has time: the world builds what is left once, not once per group (a blast tears several off a house of
+    // hundreds of parts); out of time, one now and the rest in the next slice, as before
+    const now = this.drainClock() >= this.sliceDeadline ? 1 : loose
     const atLoad = this.splittingAtLoad
     this.visuals.batchRebuilds(() => {
-      for (let i = 0; i < loose; i++) {
-        if (i > 0 && this.drainClock() >= this.sliceDeadline) {
-          this.slices.push(() => {
-            this.staticDirty.add(objectId)
-            const outer = this.splittingAtLoad
-            this.splittingAtLoad = atLoad
-            try {
-              this.splitLoose(objectId, torn)
-            } finally {
-              this.splittingAtLoad = outer
-            }
-          })
-          deferred = true
-          return
-        }
-        // the loose groups are always read from index 1: each split renumbers the rest
-        let newId: string
-        let hinge: Vec3 | null
-        try {
-          hinge = this.hingeOf(objectId, 1)
-          newId = this.world.splitGroup(objectId, 1)
-        } catch {
-          return
-        }
-        this.adoptSplit(b, newId)
-        this.hangOnHinge(newId, hinge)
+      // the hinges are read before, while the groups still hang on what stands
+      let hinges: (Vec3 | null)[]
+      let newIds: string[]
+      try {
+        hinges = Array.from({ length: now }, (_, i) => this.hingeOf(objectId, i + 1))
+        newIds = this.world.splitGroups(objectId, Array.from({ length: now }, (_, i) => i + 1))
+      } catch {
+        return
       }
+      newIds.forEach((newId, i) => {
+        this.adoptSplit(b, newId)
+        this.hangOnHinge(newId, hinges[i] ?? null)
+      })
     })
-    if (deferred) return
+    if (now < loose) {
+      this.slices.push(() => {
+        this.staticDirty.add(objectId)
+        const outer = this.splittingAtLoad
+        this.splittingAtLoad = atLoad
+        try {
+          this.splitLoose(objectId, torn)
+        } finally {
+          this.splittingAtLoad = outer
+        }
+      })
+      return
+    }
     this.afterSplit(b, torn)
   }
 
