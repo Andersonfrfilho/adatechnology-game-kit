@@ -64,6 +64,8 @@ cases.push(['destruction/breach', () => destroyed(({ world, d, centre }) => worl
 // every house recorded again (outside the Visor's scene) when the poles, the lot walls' ground beams and the gate pillars' footings came to be drawn into the terrain, and the gate pillars became pieces of their own set in the ground; breach, spall and fracture with them and the anchors by the buried base
 // and the wave began to load only the solid share of a sloped part's box; the breach still opens wall_0_0, the spall still breaks the three walls over it
 // spall and fracture once more when the heat of a blast became its fireball's, seen in a straight line: the same parts break and fall, nothing catches fire
+// breach, spall and fracture once more when every detach of an operation came at its end with the groups it left (spec 010 T2.1, owner's decision 2026-11-19): the
+// renderer now gets the events of the hit before it separates the pieces, so the spall draws the 25 mm dent of the conduit and the colours of the chips it missed before
 cases.push(['destruction/spall', () => destroyed(({ world, d }) => world.hitPart(d.id!, 'slab_1_p0', { type: 'explosive', point: d.spec!.parts.find((p) => p.id === 'slab_1_p0')!.position, energy: 4e5, radius: 1.5 }))])
 cases.push(['destruction/fracture', () => destroyed(({ world, d, centre }) => world.hitPart(d.id!, 'wall_0_0', { type: 'explosive', point: centre('wall_0_0'), energy: 2e6, radius: 2.5, source: 'test' }))])
 // the specimens include rural typologies: their pack is registered when the first specimen is drawn (after the houses)
