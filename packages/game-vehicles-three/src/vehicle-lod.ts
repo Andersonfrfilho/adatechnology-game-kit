@@ -1,6 +1,6 @@
-import { markKitOrigin } from '@adatechnology/game-contracts'
-import { BATCHED_LAYER, createStaticBatcher } from '@adatechnology/game-render-three'
-import type { StaticBatcher } from '@adatechnology/game-render-three'
+import { DEFERRED_QUEUE_ID, markKitOrigin } from '@adatechnology/game-contracts'
+import { BATCHED_LAYER, createStaticBatchQueue, createStaticBatcher } from '@adatechnology/game-render-three'
+import type { StaticBatchQueue, StaticBatcher } from '@adatechnology/game-render-three'
 import type { VehicleContext } from '@adatechnology/game-vehicles'
 import type * as THREE_NS from 'three'
 import type { Group, Material, Mesh, Object3D, Texture } from 'three'
@@ -10,7 +10,6 @@ import { primaryPaint } from './build'
 
 /** Past this distance (m) an untouched vehicle draws fused: nobody sees a door seam from here, and the full model costs hundreds of draw calls. */
 export const VEHICLE_LOD_DISTANCE = 14
-const BATCH_BUDGET_MS = 2
 /**
  * The most vertices per batch of a hit vehicle: its batches are made in the frames of the blast, and one batch is merged within one update (the
  * sedan, 320k vertices: its largest material merged in one piece took 16 to 22 ms in one frame; in 16k pieces no update passed ~6 ms, for ~6
@@ -27,7 +26,12 @@ const HIT_BATCH_VERTICES = 16384
  */
 export const VEHICLE_REBATCH_AFTER_MS = 1500
 
+/** The one queue of an owner's vehicles (`vehicles.lod-batch`): pass it as `queue` to every `createVehicleLod` and register `queue.deferredQueue()` with the frame budget. */
+export const createVehicleLodQueue = (): StaticBatchQueue => createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.VEHICLE_LOD_BATCH })
+
 export type VehicleLodOptions = {
+  /** The queue the batches are merged by, within a frame budget (`createVehicleLodQueue`). Not registered with a budget (or not given), each update merges for up to 2 ms, as ever. */
+  readonly queue?: StaticBatchQueue
   /** The clock (ms) the quiet time is read from (default `performance.now`). */
   readonly now?: () => number
 }
@@ -55,6 +59,7 @@ const isShown = (object: Object3D, top: Object3D): boolean => {
 export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, root: Object3D, full: Object3D, options: VehicleLodOptions = {}): VehicleLod {
   const THREE = kit.THREE
   const now = options.now ?? (() => performance.now())
+  const queue = options.queue ?? createVehicleLodQueue()
   // when the vehicle last changed (hit, rebuilt, a batched part given back): a hit one whose batch emptied is batched again only after a quiet time
   let changedAt = Number.NEGATIVE_INFINITY
   // a batch that emptied (every part changed) or a model rebuilt in play: the next batch waits for the quiet time, or it would empty as fast as it is made
@@ -134,7 +139,7 @@ export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, ro
   /** A batcher of the hit vehicle's parts that draw on their own now (`include`): none already in a batch, nor a batch itself. */
   const lockedBatcher = (include?: (mesh: Mesh) => boolean): StaticBatcher => {
     // the parts keep their own shadows (the proxy has the shape of the vehicle before the hit); the batches cast for the still ones
-    const made = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS, maxVertices: HIT_BATCH_VERTICES, ...(include ? { include } : {}) })
+    const made = createStaticBatcher(THREE, full, { queue, budgetMs: 2, maxVertices: HIT_BATCH_VERTICES, ...(include ? { include } : {}) })
     made.group.traverse((object) => (object.userData.skipLite = true))
     // the batches copy the parts' triangles: a hit test reads the parts (`surfaceRay`), never the copy
     made.group.userData.noSurfaceRay = true
@@ -171,8 +176,8 @@ export function createVehicleLod(kit: VehicleLodKit, context: VehicleContext, ro
         castsShadow.add(object)
         object.castShadow = false
       })
-      // merged a material at a time over the next frames (BATCH_BUDGET_MS each), never in one frame
-      batcher = createStaticBatcher(THREE, full, { budgetMs: BATCH_BUDGET_MS })
+      // merged a chunk at a time over the next frames, never in one frame
+      batcher = createStaticBatcher(THREE, full, { queue, budgetMs: 2 })
       batcher.group.traverse((object) => (object.userData.skipLite = true))
       batcher.group.userData.noSurfaceRay = true
       markKitOrigin(batcher.group, { owner: 'game-vehicles-three', kind: 'vehicle', id: root.name })
