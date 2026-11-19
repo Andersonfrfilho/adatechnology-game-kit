@@ -634,8 +634,9 @@ export interface DestructionWorld {
    */
   splitGroup(id: string, group: number, newId?: string): string
   /**
-   * `splitGroup` for several loose groups at once (`groups`: indices into the object's groups now, each > 0): each becomes its own object, in the order given,
-   * with the ids `splitGroup` would have given one after another, and what is left is built once instead of once per group. Returns the new ids.
+   * `splitGroup` for several loose groups at once (`groups`: distinct indices into the object's groups now, each > 0): each becomes its own object, in the
+   * order given, with the ids and part states `splitGroup` would have given one after another, and what is left is built once instead of once per group (the
+   * open joints it keeps for show may come in another order). Returns the new ids.
    */
   splitGroups(id: string, groups: readonly number[]): string[]
   /** Apply a hit to one object (to the part it lands on, or for `explosive`/`fire`/`heat`, to every part in `radius`). */

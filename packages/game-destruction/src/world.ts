@@ -2668,8 +2668,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /**
-   * Each `moved` set of `o`'s parts becomes an object of its own (`id`), and what is left is built once as `o` again. One cut is `splitGroup`; several are the
-   * same as cutting them one after another (an open joint goes with a new object only when both its parts do), with the rest built once.
+   * Each `moved` set of `o`'s parts becomes an object of its own (`id`), and what is left is built once as `o` again. One cut is `splitGroup`; several give
+   * the objects, ids and part states of cutting them one after another (an open joint goes with a new object only when both its parts do), with the rest built
+   * once; only the order of the open joints the rest keeps for show (`state().joints`, not simulated) may differ.
    */
   const splitInto = (o: ObjRT, cuts: readonly { readonly moved: ReadonlySet<string>; id: string }[]): string[] => {
     // an open joint between the two objects stays with the original
@@ -5647,6 +5648,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (impls.has(id)) throw new Error(`object "${id}" is a registered DestructibleImpl and cannot be split; its module owns its pieces`)
       const o = getObj(id)
       if (o.st.groups.length < 2 || groups.length === 0) return []
+      if (new Set(groups).size !== groups.length) throw new Error(`object "${id}": a group is given twice to split`)
       const cuts = groups.map((group) => {
         const names = o.st.groups[group]
         if (!names || group < 1) throw new Error(`object "${id}" has no loose group ${group}`)

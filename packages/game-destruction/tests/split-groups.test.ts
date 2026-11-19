@@ -43,5 +43,6 @@ describe('several loose groups split at once', () => {
     const { world, id } = worldWithYard()
     expect(() => world.splitGroups(id, [0])).toThrow()
     expect(() => world.splitGroups(id, [99])).toThrow()
+    expect(() => world.splitGroups(id, [1, 1])).toThrow()
   })
 })
