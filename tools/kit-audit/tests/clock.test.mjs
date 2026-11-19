@@ -68,3 +68,16 @@ test('ownFrameClock splits known pending hits (with their task) from open ones a
   assert.equal(split.open.length, all.hits.length - split.pending.length)
   assert.deepEqual(split.stale.map((entry) => entry.task), ['T9.8'])
 })
+
+test('a budget constant used in a performance.now() deadline stays flagged, even next to a drainDetached use', () => {
+  const text = 'const SLICE_MS = 1\nconst end = performance.now() + SLICE_MS\ndrainDetached(queue, SLICE_MS)'
+  assert.deepEqual(scan(OWNER, text), ['constant:1', 'deadline:2'])
+  assert.deepEqual(scan(OWNER, 'const SLICE_MS = 1\nif (ms > SLICE_MS) stop()'), ['constant:1'])
+})
+
+test('exempt by usage: a budget constant only passed to drainDetached, or used as a budgetMs option or default', () => {
+  assert.deepEqual(scan(OWNER, 'const DEFAULT_BUDGET_MS = 1.2\ndrainDetached(queue, options.budgetMs ?? DEFAULT_BUDGET_MS, now)'), [])
+  assert.deepEqual(scan(OWNER, 'const PREFIT_SLICE_MS = 1\nreturn drainDetached(queue, Math.min(left, PREFIT_SLICE_MS), clock)'), [])
+  assert.deepEqual(scan(OWNER, '/** made over frames (`HOUSE_BUDGET_MS` each) */\nexport const HOUSE_BUDGET_MS = 2\nmake({ queue, budgetMs: HOUSE_BUDGET_MS })'), [])
+  assert.deepEqual(scan(OWNER, 'const DEFAULT_BUDGET_MS = 2\nfunction pump(budgetMs = DEFAULT_BUDGET_MS) {}'), [])
+})

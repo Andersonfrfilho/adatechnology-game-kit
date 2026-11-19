@@ -27,9 +27,12 @@ budget (`>= deadline`, `> until`, `+ budgetMs`). `audit.mjs --check` runs it; th
 Exempt by class, not by list: `game-runtime`; `game-workers` (§14); `bench/` code; `game-physics/src/work-budget.ts` (turns ms into units, reads no
 clock); `drainDetached` in `game-contracts/src/frame.ts` (the one sanctioned clock of deferred work); timers and waits (the compared operand
 names a wait, interval, cooldown, timeout... or is a stored expiry such as `msg.until`); and measurement or animation (a clock that is only
-subtracted or used as a phase is never compared with a deadline).
+subtracted or used as a phase is never compared with a deadline). A `*_BUDGET_MS` / `*_SLICE_MS` constant is exempt by its uses, not its name:
+when every use in its file is (part of) the arguments of a `drainDetached(...)` call or a `budgetMs: X` / `budgetMs = X` option or default, it is
+only the budget of a detached drain. One other use (a `performance.now() + X` deadline, a comparison) keeps it flagged, and so does a constant
+never used; fix the code (go through `drainDetached`) instead of listing it.
 
-`clock-pending.json` lists the hits a later task of spec 010 still removes (`file`, `match` on the line, `task`). `--check` prints them with
+`clock-pending.json` (empty since C3) lists the hits a later task of spec 010 still removes (`file`, `match` on the line, `task`). `--check` prints them with
 `file:line` and the pending count, and fails only on a hit that is in neither place; entries that no longer match are printed as `VELHA`.
 `--strict-clocks` also fails while the list is not empty: that is the C3 gate at the end of phase 1.
 

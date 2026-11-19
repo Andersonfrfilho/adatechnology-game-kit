@@ -5,6 +5,8 @@
  * It only uses the kit (`kit._` helpers such as `fling`, `cutPanel`, `pivotOf`), so a part that comes off is flung with the same ballistic
  * animation the explosion uses, and a vehicle that is rebuilt (`reset`) gets a fresh set of meshes.
  */
+import { DEFERRED_QUEUE_ID, drainDetached } from '@adatechnology/game-contracts'
+import type { DeferredQueue } from '@adatechnology/game-contracts'
 import type { BufferGeometry, InstancedMesh, Material, Matrix4, Mesh, MeshStandardMaterial, Object3D, Raycaster, Vector3 } from '../three-types'
 
 import type { BuildContext, KitShared, SceneNode, Three } from '../types'
@@ -1378,12 +1380,23 @@ export class VehicleVisuals implements CreaseWork {
     }
     if (this.queued) return
     if (!this.smoothing.size && !this.warming) return
-    const deadline = performance.now() + budgetMs
-    for (const [msh, task] of this.smoothing) {
-      if (msh.geometry !== task.geo || task.step(deadline)) this.smoothing.delete(msh)
-      if (performance.now() >= deadline) return
-    }
-    this.warmIndexes(deadline)
+    drainDetached(this.pumpQueue, budgetMs)
+  }
+  /** What `pump` drains when no shared queue owns the smoothing: the same steps, timed by `drainDetached`. */
+  private readonly pumpQueue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.VEHICLE_CREASE,
+    pending: () => this.smoothing.size + (this.warming ? 1 : 0),
+    run: (deadline, clock) => {
+      let ran = 0
+      for (const [msh, task] of this.smoothing) {
+        if (msh.geometry !== task.geo || task.step(deadline, clock)) this.smoothing.delete(msh)
+        ran++
+        if (clock() >= deadline) return ran
+      }
+      this.warmIndexes(deadline, clock)
+      return ran + 1
+    },
+    flush: () => this.finishAll(),
   }
   setQueued(isQueued: boolean): void {
     this.queued = isQueued

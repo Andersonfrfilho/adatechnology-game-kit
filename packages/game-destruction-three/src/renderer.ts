@@ -1166,7 +1166,7 @@ class Renderer implements DestructionRenderer {
   }
 
   private drainQueue(): void {
-    this.runBudgeted(performance.now() + this.eventBudgetMs, () => performance.now())
+    drainDetached(this.eventQueue, this.eventBudgetMs)
   }
 
   /** Applies the waiting events in order until the deadline, after the slices earlier events left; always at least one unit when something waits. Returns the units run. */
@@ -2806,9 +2806,9 @@ class Renderer implements DestructionRenderer {
   /** With no budget running the fitting ahead (`prefitQueue`): inside the events drain, for `PREFIT_SLICE_MS` or what is left of `deadline` (one part at least when `force`: nothing else ran). */
   private runPrefitDetached(deadline: number, clock: () => number, force: boolean): number {
     if (this.prefitAttached) return 0
-    const left = Math.min(deadline - clock(), PREFIT_SLICE_MS)
+    const left = deadline - clock()
     if (left <= 0 && !force) return 0
-    return drainDetached(this.prefitQueue, left, clock)
+    return drainDetached(this.prefitQueue, Math.min(left, PREFIT_SLICE_MS), clock)
   }
 
   /** Under `workBudget`: the queued parts fitted ahead while their units fit in what the frame left (`perVertex` of the part's range), never by the clock. */
