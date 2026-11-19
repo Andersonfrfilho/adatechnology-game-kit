@@ -400,3 +400,11 @@ O `mustDrain` da `destruction.events` precisa de um limite para explosões. Opç
 ~10 + `renderCpu` ~9 = ~90. Mesmo espalhando por inteiro `destrEvents` e `breach-cut`, o f0 fica perto de 60 ms. **A C8 (f0 ≤ 33,3) não cabe
 nesta spec:** pede tirar o `world.explode` do quadro (dividir em passos ou levar a um worker, §14) e um teto por unidades na aplicação dos
 eventos e no corte da parede, com o fixture da T3.2 regravado (decisão do dono).
+
+## Fechamento (decisão do dono, 2026-11-19)
+
+- A 010 fecha com o que entregou: prazo único para as filas (fase 1), estrutura resolvida uma vez por objeto por operação (fase 2, 174 → 39
+  `solveStructure`), passo fixo único e desenho interpolado (fase 3, C4/C5). **A C8 não foi cumprida** e o f0 a 1x piorou de ~80 para ~90 ms;
+  a causa e a conta estão acima. O quadro da explosão vai para a spec 013.
+- Sonda da física da régua consertada: `tools/gpu/room-explosion.mjs` mede também `__roomPhysics.stepFixed` (a sala passa por ele desde a fase 3).
+  Conferência curta (blast 1x, 1 rodada, `/tmp`): física p99 5,5 ms, max 6,4 ms (antes da correção: 0,1). `node --test tools/gpu/tests/*.test.mjs` 42 passam.

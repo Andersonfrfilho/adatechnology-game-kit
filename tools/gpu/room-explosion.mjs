@@ -174,7 +174,8 @@ export async function inPage(job) {
       acc[key] += performance.now() - started
     }
   }
-  if (host.__roomPhysics) timed('loop', host.__roomPhysics, 'step')
+  // the room steps by `stepFixed` on its fixed tick (spec 010 fase 3) and by `step` otherwise; `step` calls its own `stepFixed` closure, so the two never count twice
+  if (host.__roomPhysics) for (const name of ['step', 'stepFixed']) timed('loop', host.__roomPhysics, name)
   timed('piece', room.renderer.pieceSys, 'update')
   timed('wake', room.renderer, 'advanceWakes')
   // stage timing (a separate pass: a timer around a call made hundreds of times per frame is not free): exclusive times, a stage's callees subtracted
@@ -259,6 +260,7 @@ export async function inPage(job) {
   if (frameLabels.length > 0) {
     // the physics column's roots, so the modules that call them (the destruction renderer's update) read without them
     stage('physicsRoot', host.__roomPhysics, 'step', 'physics')
+    stage('physicsRoot', host.__roomPhysics, 'stepFixed', 'physics')
     stage('physicsRoot', room.renderer.pieceSys, 'update', 'physics')
     stage('physicsRoot', room.renderer, 'advanceWakes', 'physics')
     const destruction = /** @type {Record<string, object | undefined>} */ (/** @type {unknown} */ (room.renderer))
