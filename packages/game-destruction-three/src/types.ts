@@ -341,6 +341,8 @@ export interface DestructionRenderer {
   releasePieces(objectId: string): string[]
   /** Make a bound object a physical piece (bench items that can be thrown). */
   makePiece(objectId: string, options?: MakePieceOptions): Piece
+  /** The host moved the root of a bound object by hand (a teleport): its transform goes to the world on the next `update`, even for a piece asleep. */
+  markMoved(objectId: string): void
   /** The mass of a piece changed (a liquid drunk or leaked out): the physics body follows, and a round one turns by the moment of what is left in it. */
   setPieceMass(objectId: string, mass: number): void
   pieces(): Piece[]
