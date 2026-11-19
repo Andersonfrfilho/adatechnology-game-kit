@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
-import { kitOriginOf, markKitOrigin } from '@adatechnology/game-contracts'
-import type { KitOrigin } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, drainDetached, kitOriginOf, markKitOrigin } from '@adatechnology/game-contracts'
+import type { DeferredQueue, KitOrigin } from '@adatechnology/game-contracts'
 import { BATCHED_LAYER, createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 
@@ -12,7 +12,7 @@ export interface SettledBatchOptions {
   readonly minMeshes?: number
   /** Seconds at least between two makings of the batches (default 1). */
   readonly intervalSeconds?: number
-  /** Milliseconds of merging per update while the batches are made (default 2): what is not merged yet draws on its own meanwhile. */
+  /** Milliseconds of merging per update while the batches are made, with no frame budget running the queue (default 2): what is not merged yet draws on its own meanwhile. */
   readonly budgetMs?: number
   /** Vertices of the largest mesh a batch takes (default 4000): a bigger one (a slab come down whole) draws on its own. */
   readonly maxVertices?: number
@@ -102,14 +102,43 @@ export const isBatchableDebris = (mesh: THREE_NS.Mesh, maxVertices: number): boo
 /**
  * The debris at rest (pieces and fragments asleep) drawn as a batch per material instead of a draw each (`createStaticBatcher` of game-render-three). Only the drawing changes:
  * every mesh stays where it lies, with its collision, and the moment one moves, is hit, dented, hidden or removed it draws on its own again. The batches are made again,
- * from all the debris at rest, once enough of it lies outside them; the old ones are disposed.
+ * from all the debris at rest, once enough of it lies outside them; the old ones are disposed. Making them is a `DeferredQueue` (`queue`, id `destruction.settled-batch`),
+ * a unit being the merge of the meshes of one material; with no frame budget registered, `update` drains it for `budgetMs`.
  */
 export class SettledBatches {
   private readonly options: Required<SettledBatchOptions>
-  private batcher: StaticBatcher | null = null
-  /** The meshes given to the batcher when it was made. */
+  /** The batches made so far: one batcher per unit of the queue that ran. */
+  private batchers: StaticBatcher[] = []
+  /** The units still to merge, one per material key. */
+  private waiting: THREE_NS.Mesh[][] = []
+  /** The meshes given to the batchers when they were planned. */
   private members = new Set<THREE_NS.Mesh>()
   private sinceMade = Infinity
+  /** true once a frame budget owns the draining: `update` no longer drains by itself. */
+  private attached = false
+
+  /** The merges still waiting, for a shared frame budget; asking for it changes nothing. */
+  readonly queue: DeferredQueue = {
+    id: DEFERRED_QUEUE_ID.SETTLED_BATCH,
+    pending: () => this.waiting.length,
+    run: (deadline, clock) => {
+      let ran = 0
+      while (this.waiting.length > 0 && (ran === 0 || clock() < deadline)) {
+        this.mergeNext()
+        ran++
+      }
+      return ran
+    },
+    flush: () => {
+      while (this.waiting.length > 0) this.mergeNext()
+    },
+    attach: () => {
+      this.attached = true
+    },
+    detach: () => {
+      this.attached = false
+    },
+  }
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -121,18 +150,20 @@ export class SettledBatches {
 
   /** Gives back to its own draw whatever changed, and makes the batches again when `atRest` (the debris meshes at rest) has enough outside them. Once per frame, after the bodies moved. */
   update(dt: number, atRest: () => THREE_NS.Mesh[]): void {
-    this.batcher?.update()
+    if (!this.attached) drainDetached(this.queue, this.options.budgetMs)
+    for (const batcher of this.batchers) batcher.update()
     this.sinceMade += dt
     if (!this.options.enabled || this.sinceMade < this.options.intervalSeconds) return
     const meshes = atRest().filter((mesh) => isBatchableDebris(mesh, this.options.maxVertices) || this.batched(mesh))
-    const outside = meshes.length - (this.batcher?.stats().batched ?? 0)
+    const outside = meshes.length - this.batchedCount()
     if (outside < this.options.minMeshes) return
     this.make(meshes)
   }
 
   stats(): SettledBatchStats {
-    const stats = this.batcher?.stats()
-    return { batches: this.batcher ? this.batcher.group.children.filter((child) => child.visible).length : 0, batched: stats?.batched ?? 0 }
+    let batches = 0
+    for (const batcher of this.batchers) batches += batcher.group.children.filter((child) => child.visible).length
+    return { batches, batched: this.batchedCount() }
   }
 
   /**
@@ -147,10 +178,17 @@ export class SettledBatches {
 
   /** Every debris mesh draws on its own again and the batches are disposed. */
   clear(): void {
-    this.batcher?.dispose()
-    this.batcher = null
+    for (const batcher of this.batchers) batcher.dispose()
+    this.batchers = []
+    this.waiting = []
     this.members = new Set()
     this.sinceMade = Infinity
+  }
+
+  private batchedCount(): number {
+    let count = 0
+    for (const batcher of this.batchers) count += batcher.stats().batched
+    return count
   }
 
   /** Drawn by one of these batches now (given to it, and not given back). */
@@ -158,13 +196,27 @@ export class SettledBatches {
     return this.members.has(mesh) && mesh.layers.isEnabled(BATCHED_LAYER)
   }
 
+  /** Disposes the old batches and plans the new ones: the meshes by material key, a unit each (a lone mesh has no one to batch with). */
   private make(meshes: THREE_NS.Mesh[]): void {
-    this.batcher?.dispose()
-    const take = new Set(meshes)
-    this.members = take
-    this.batcher = createStaticBatcher(this.THREE, this.scene, { include: (mesh) => take.has(mesh), budgetMs: this.options.budgetMs, materialKey, onBatch: markBatch })
-    this.batcher.group.name = 'settled-debris-batches'
-    markKitOrigin(this.batcher.group, SETTLED_BATCH_ORIGIN)
+    for (const batcher of this.batchers) batcher.dispose()
+    this.batchers = []
+    const byKey = new Map<string, THREE_NS.Mesh[]>()
+    for (const mesh of meshes) {
+      const key = materialKey(mesh.material as THREE_NS.Material)
+      const group = byKey.get(key)
+      if (group) group.push(mesh)
+      else byKey.set(key, [mesh])
+    }
+    this.waiting = [...byKey.values()].filter((group) => group.length >= 2)
+    this.members = new Set(meshes)
     this.sinceMade = 0
+  }
+
+  private mergeNext(): void {
+    const take = new Set(this.waiting.shift())
+    const batcher = createStaticBatcher(this.THREE, this.scene, { include: (mesh) => take.has(mesh), materialKey, onBatch: markBatch })
+    batcher.group.name = 'settled-debris-batches'
+    markKitOrigin(batcher.group, SETTLED_BATCH_ORIGIN)
+    this.batchers.push(batcher)
   }
 }
