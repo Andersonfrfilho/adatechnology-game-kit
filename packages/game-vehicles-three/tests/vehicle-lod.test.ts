@@ -1,8 +1,9 @@
+import { DEFERRED_QUEUE_ID, checkDeferredQueue } from '@adatechnology/game-contracts'
 import { BATCHED_LAYER } from '@adatechnology/game-render-three'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { VEHICLE_REBATCH_AFTER_MS, createVehicleLod } from '../src/vehicle-lod'
+import { VEHICLE_REBATCH_AFTER_MS, createVehicleLod, createVehicleLodQueue } from '../src/vehicle-lod'
 import type { VehicleLodKit } from '../src/vehicle-lod'
 import type { VehicleContext } from '@adatechnology/game-vehicles'
 
@@ -89,5 +90,34 @@ describe('vehicle-lod: a vehicle hit in play', () => {
     expect(meshes.every(inBatch)).toBe(true)
     lod.dispose()
     expect(meshes.some(inBatch)).toBe(false)
+  })
+})
+
+describe('vehicle-lod: the owner queue', () => {
+  it('merges through the queue once a budget attaches it', () => {
+    const queue = createVehicleLodQueue()
+    expect(queue.deferredQueue().id).toBe(DEFERRED_QUEUE_ID.VEHICLE_LOD_BATCH)
+    const { root, full } = vehicle()
+    const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => 0, queue })
+    lod.update(30, true)
+    drawOnce(full)
+    lod.update(30, true)
+    queue.deferredQueue().attach?.()
+    lod.update(30, true)
+    expect(batches(root)?.children.length ?? 0, 'attached: update leaves the merge to the budget').toBe(0)
+    expect(queue.deferredQueue().pending()).toBeGreaterThan(0)
+    queue.deferredQueue().run(Number.POSITIVE_INFINITY, () => 0)
+    expect(batches(root)?.children.length).toBe(1)
+    lod.dispose()
+  })
+
+  it('keeps the DeferredQueue contract', () => {
+    const queue = createVehicleLodQueue()
+    const { root, full } = vehicle()
+    const lod = createVehicleLod({ THREE } as unknown as VehicleLodKit, {} as VehicleContext, root, full, { now: () => 0, queue })
+    lod.update(30, true)
+    drawOnce(full)
+    lod.update(30, true)
+    expect(checkDeferredQueue(queue.deferredQueue(), () => 0)).toEqual({ ok: true, problems: [] })
   })
 })

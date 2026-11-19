@@ -77,3 +77,16 @@ describe('crease queue', () => {
     expect(queue.deferredQueue().pending(1)).toBe(0)
   })
 })
+
+describe('crease queue clock', () => {
+  it('hands the budget clock to the work, not performance.now', () => {
+    const seen: Array<(() => number) | undefined> = []
+    let left = 1
+    const work = { ...fakeWork(1, [], 'a'), pendingUnits: () => left, runStep: (_deadline: number, clock?: () => number) => (seen.push(clock), left--, true) }
+    const queue = createCreaseQueue()
+    queue.track(work)
+    const clock = (): number => 0
+    queue.deferredQueue().run(10, clock)
+    expect(seen[0]).toBe(clock)
+  })
+})

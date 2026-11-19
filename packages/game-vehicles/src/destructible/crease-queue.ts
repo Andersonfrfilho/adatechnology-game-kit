@@ -5,8 +5,8 @@ import type { DeferredQueue } from '@adatechnology/game-contracts'
 export interface CreaseWork {
   /** Units waiting; 0 in the frame a panel was torn (that frame already paid for the cut). `frame` is the budget's frame counter. */
   pendingUnits(frame?: number): number
-  /** Runs one slice of the work (a smoothing step or a piece of the index warm-up) until `deadline` on `performance.now()`; false when there was nothing to run. */
-  runStep(deadline: number): boolean
+  /** Runs one slice of the work (a smoothing step or a piece of the index warm-up) until `clock()` reaches `deadline` (`clock` is the budget's; default `performance.now`); false when there was nothing to run. */
+  runStep(deadline: number, clock?: () => number): boolean
   /** Finishes everything now. */
   finishAll(): void
   /** While true the vehicle's own update leaves the work to the queue. */
@@ -45,7 +45,7 @@ export function createCreaseQueue(): CreaseQueue {
         if (ran > 0 && clock() >= deadline) break
         const work = tracked[cursor % tracked.length] as CreaseWork
         cursor = (cursor + 1) % tracked.length
-        if (work.pendingUnits(lastFrame) > 0 && work.runStep(deadline)) {
+        if (work.pendingUnits(lastFrame) > 0 && work.runStep(deadline, clock)) {
           ran++
           skipped = 0
         } else skipped++
