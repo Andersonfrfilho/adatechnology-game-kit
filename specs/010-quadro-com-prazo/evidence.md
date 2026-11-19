@@ -242,3 +242,11 @@ Commits `0ab57d2c9` (mundo), `3297b8875` (renderer), `e3a9ee846` (contrato e cha
   - `conduit:conduit_outlet19` (plástico) com 1445,8 kg de massa e 86749 de vida máxima, já em `1cb39c001`. Ponto de partida: `game-floorplan-three/src/utilities/electrical.ts:113` (`pieceRecord`).
   - As juntas que `openOver`/`loseGround` abrem numa volta de `undermine` só entram no `loosened` no fim do laço (`world.ts:2484`). A base faz o mesmo.
 
+- **Comandos (sob `flock ~/.cache/adatechnology-game-kit/cpu.lock`):** `game-destruction` `vitest run` 578/578; `game-destruction-three` `vitest run` 607 passed / 195 skipped e `pnpm test:jolt` 102 passed / 3 skipped (inclui `shelf-swings-on-hinge`, sem mudar o teste); `game-floorplan-three` `exact-golden`, `blast-presentation`, `split-rebuild-identity`, `z-fighting-houses`, `structure-solves` 82/82; `construction.test.ts` residential 21, commercial 13, rural 11, post-apocalyptic 56; `typecheck` de contracts, destruction, destruction-three e floorplan-three; eslint dos arquivos mudados sem erro; `pnpm check:layers` sem violação nova; `node tools/kit-audit/audit.mjs --check` 0 novos. `room.ts` intacto.
+
+## T2.2 — `solveStructure` e `recomputeGroups` sem alocação por chamada
+
+Commit do mundo: ver `git log` (`perf(destruction): solveStructure e grupos sem alocação por chamada`). `world.ts`: rascunho do mundo (`ufParent`, `supportedRoot`, `bendingScratch`, listas e peças de `edges`/`through` reaproveitadas), `find`/`union` no nível do mundo, `revealHostedIn` e as três passadas de `world.update` com vetor reaproveitado (instantâneo por passada, igual à cópia de antes). Sobram as alocações de `solveSupports`/`distributeLoads` (pacote `game-load-path`) e as do resultado (`o.st.groups`).
+
+- **Mesmo hash:** `exact-golden`, `blast-presentation`, `structure-solves` (39), `split-rebuild-identity` 51/51 sem regravar nada; `game-destruction` `vitest run` 578/578; `tsc --noEmit` do pacote limpo; eslint sem erro.
+- **Medição (indicativa, Node em `vitest`, `world.explode` 4 MJ no sobrado, mediana de 7, load médio 6 a 8 com outras sessões):** antes 386 ms, depois 324 a 387 ms em 3 rodadas (dentro do ruído; o 33,4 ms da T2.1 foi medido por outro caminho e não é comparável). `heapUsed` por `explode`: 44,3 MB antes, 32 a 39 MB depois.
