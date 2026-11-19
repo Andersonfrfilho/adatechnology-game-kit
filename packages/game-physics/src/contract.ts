@@ -307,6 +307,8 @@ export interface PhysicsWorld {
   moveKinematic(id: BodyId, position: Vec3, rotation: Quat, dt: number): void
   addImpulse(id: BodyId, impulse: Vec3, point?: Vec3): void
   isSleeping(id: BodyId): boolean
+  /** The ids of the awake rigid bodies in one crossing, into `out` (its length is set to the count; reused); returns the count. */
+  readActiveBodies(out: BodyId[]): number
   wake(id: BodyId): void
   sleep(id: BodyId): void
   /** Wakes every dynamic body whose bounds touch the box (ground dug, a support removed). */

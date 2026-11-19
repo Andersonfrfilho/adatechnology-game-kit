@@ -5,6 +5,7 @@ import { samePatch } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
 
 import { GROUND_CELL, buildGroundTile, flatTile, readGround, sampleCount, shapeGround } from './engine-ground'
+import type { AwakeList } from './awake-list'
 import type { GroundGrid, GroundRect, GroundTile } from './engine-ground'
 import { changedHeights } from './engine-ground-heights'
 import { bandLength, latticePatchRead, readGroundBand, readGroundPatch } from './engine-ground-job'
@@ -204,6 +205,9 @@ interface Link {
   isSlipping: boolean
 }
 
+/** A walk over the pieces an update looks at: the awake ones, or all of them. */
+type Each = (visit: (b: PieceBody) => void) => void
+
 interface Tile {
   /** The ground body: a slab when the tile is level, else a height field; kept across changes so what lies on it keeps its contacts. */
   ground: BodyId
@@ -240,6 +244,10 @@ export class EnginePieces {
   private readonly byUser = new Map<number, PieceBody>()
   /** The pieces by object id: what the sweep meets that the engine already has (`sweepOn`). */
   private readonly byObject = new Map<string, PieceBody>()
+  private readonly byBody = new Map<BodyId, PieceBody>()
+  /** The engine's awake bodies as `finish` last read them (one crossing), and the pieces they are. */
+  private readonly activeIds: BodyId[] = []
+  private readonly active = new Set<PieceBody>()
   private nextUser = 1
   private updates = 0
   private turn = 0
@@ -323,6 +331,8 @@ export class EnginePieces {
     // stepped and woken (a blow, its support looked at again) in this same frame, before the engine could wake what lay on it (CLAUDE.md §12)
     if (wakeNeighbours && (b.sleeping || link.sleeping)) this.wakeAround(b, link.pos)
     this.byUser.delete(link.user)
+    this.byBody.delete(link.id)
+    this.active.delete(b)
     if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
   }
@@ -462,53 +472,80 @@ export class EnginePieces {
    * Before the frame's fixed steps: the pairs in `apart` (by object id, `a\0b`) do not meet in the engine; the kit puts them apart along the ground. `dt` is the frame's
    * time, `h` the fixed step a kinematic target is reached in.
    */
-  prepare(list: readonly PieceBody[], dt: number, h: number, apart: ReadonlySet<string>): void {
+  prepare(list: readonly PieceBody[], dt: number, h: number, apart: ReadonlySet<string>, awake?: AwakeList): void {
     // nothing here is made anew per piece per update (the collector's pauses were the worst frames: gate 0 B5)
     const n = ++this.updates
-    for (const b of list) {
+    // handed the awake pieces only, the walks are over them and a piece goes by `remove`, not by being left out of the list
+    const each: Each = awake ? awake.walk.bind(awake) : (visit) => list.forEach(visit)
+    each((b) => {
       const link = this.links.get(b)
       if (link) link.seen = n
-    }
-    this.links.forEach(this.removeUnseen)
+    })
+    if (!awake) this.links.forEach(this.removeUnseen)
     this.groundTurn(list)
     // the fixed things first: a piece made or put this update is checked against them (`outOfStatics`)
     this.layStatics()
     // the tiles asked for `frames` updates ago, before anything asks again: at this update whatever the worker did
     this.applyDueGround()
     this.layBlastGround()
-    this.makeBodies(list)
-    for (const b of list) this.sync(b, dt, h)
-    if (this.schedule) this.layGroundLater(list, dt)
-    else this.layGround(list, dt)
+    this.makeBodies(each)
+    each((b) => this.sync(b, dt, h))
+    if (this.schedule) this.layGroundLater(each, dt)
+    else this.layGround(each, dt)
     this.keepApart(apart)
-    for (const b of list) {
+    each((b) => {
       const link = this.links.get(b)
-      if (!link) continue
+      if (!link) return
       link.stepped = !b.held && !b.sleeping && !link.frozen
-      if (!link.stepped) continue
+      if (!link.stepped) return
       const c = this.centre(b)
       link.before[0] = c.x
       link.before[1] = c.y
       link.before[2] = c.z
       link.beforeVy = b.velocity[1]
-    }
+    })
   }
 
   /** Before each fixed step after the first of a frame: a held piece's target again, so it moves by `h`, not by the frame's `dt`. */
-  moveHeld(list: readonly PieceBody[], h: number): void {
-    for (const b of list) {
+  moveHeld(list: readonly PieceBody[], h: number, awake?: AwakeList): void {
+    const each: Each = awake ? awake.walk.bind(awake) : (visit) => list.forEach(visit)
+    each((b) => {
       const link = this.links.get(b)
-      if (!link || !b.held) continue
+      if (!link || !b.held) return
       const c = this.centre(b)
       const q = b.root.quaternion
       this.world.moveKinematic(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], h)
-    }
+    })
   }
 
   /** After the frame's fixed steps: each piece read back with the kit's rules on it, then the knock sounds from the frame's contact rows. */
-  finish(list: readonly PieceBody[], dt: number, time: number): void {
-    for (const b of list) this.readBack(b, dt, time)
+  finish(list: readonly PieceBody[], dt: number, time: number, awake?: AwakeList): void {
+    if (awake) {
+      this.readActive(awake)
+      awake.walk((b) => this.readBack(b, dt, time, this.active))
+    } else for (const b of list) this.readBack(b, dt, time, null)
     this.knock(time)
+  }
+
+  /** The engine's awake bodies in one crossing: a sleeping piece one of them wakes (a blow) is among the awake pieces from now on, and read back in this same step. */
+  private readActive(awake: AwakeList): void {
+    this.active.clear()
+    const n = this.world.readActiveBodies(this.activeIds)
+    for (let i = 0; i < n; i++) {
+      const b = this.byBody.get(this.activeIds[i] as BodyId)
+      if (!b) continue
+      this.active.add(b)
+      awake.enter(b)
+    }
+  }
+
+  /** Asleep on both sides (as `finish` last read the engine's) and not waiting for its ground: nothing of it is read or written until it wakes. */
+  isSettled(b: PieceBody): boolean {
+    const link = this.links.get(b)
+    if (!link || !b.sleeping || b.held || !link.sleeping || link.frozen || this.active.has(b)) return false
+    link.stepped = false
+    b.still = 0
+    return true
   }
 
   /**
@@ -643,8 +680,11 @@ export class EnginePieces {
   }
 
   /** The bodies of the pieces that have none yet, made in one batch (one broadphase insert, ids in list order) and then each checked against the fixed things. */
-  private makeBodies(list: readonly PieceBody[]): void {
-    const fresh = list.filter((b) => !this.links.has(b))
+  private makeBodies(each: Each): void {
+    const fresh: PieceBody[] = []
+    each((b) => {
+      if (!this.links.has(b)) fresh.push(b)
+    })
     if (fresh.length === 0) return
     const users: number[] = []
     const descs = fresh.map((b) => {
@@ -669,6 +709,7 @@ export class EnginePieces {
       }
       this.links.set(b, link)
       this.byUser.set(user, b)
+      this.byBody.set(id, b)
       this.byObject.set(b.objectId, b)
       this.outOfStatics(b, link)
     })
@@ -952,8 +993,10 @@ export class EnginePieces {
    * (its box as it stands now, seen from above) plus `TILE_MARGIN` and how far its tips swing in this update (up to `MAX_SWING`): a 45 m wire that fell lies on 23 tiles, not under the 625 of the
    * circle around it (a 480 ms update in the room).
    */
-  private layGround(list: readonly PieceBody[], dt: number): void {
-    for (const b of list) if (!b.sleeping) this.groundOf(b, dt, this.layAt)
+  private layGround(each: Each, dt: number): void {
+    each((b) => {
+      if (!b.sleeping) this.groundOf(b, dt, this.layAt)
+    })
   }
 
   /** Hands `visit` the tiles an awake piece needs in this update, in scan order: under and around it, and along its path when it is fast. */
@@ -988,17 +1031,17 @@ export class EnginePieces {
    * Under the ground worker: the tiles each awake piece needs are asked for (`askTile`); a piece with a tile that has no ground yet waits held still (`hold`) until the update the
    * tile is applied at, then goes on (CLAUDE.md §12: never falling through ground that is not there). One whose tile is being made again stands on the old ground meanwhile.
    */
-  private layGroundLater(list: readonly PieceBody[], dt: number): void {
+  private layGroundLater(each: Each, dt: number): void {
     const waiting = this.waiting
     waiting.clear()
-    for (const b of list) {
+    each((b) => {
       // one the kit put to sleep while held stays held while its ground is missing: let go asleep, a body landing on it would wake it over nothing
-      if (b.sleeping && !this.links.get(b)?.frozen) continue
+      if (b.sleeping && !this.links.get(b)?.frozen) return
       this.waits = false
       this.groundOf(b, dt, this.askAt)
       if (this.waits && !b.held) waiting.add(b)
-    }
-    for (const b of list) this.hold(b, waiting.has(b))
+    })
+    each((b) => this.hold(b, waiting.has(b)))
     waiting.clear()
   }
 
@@ -1406,11 +1449,11 @@ export class EnginePieces {
   }
 
   /** Writes the body back to the piece, then the kit's rules: the sweep against walls, hard landings, `still` for the budget. */
-  private readBack(b: PieceBody, dt: number, time: number): void {
+  private readBack(b: PieceBody, dt: number, time: number, active: ReadonlySet<PieceBody> | null): void {
     const link = this.links.get(b)
     if (!link || b.held || link.frozen) return
     // asleep on both sides since the last update: the engine has not moved it, there is nothing to read
-    if (link.sleeping && b.sleeping && this.world.isSleeping(link.id)) {
+    if (link.sleeping && b.sleeping && (active ? !active.has(b) : this.world.isSleeping(link.id))) {
       b.still = 0
       return
     }
