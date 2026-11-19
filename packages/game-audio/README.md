@@ -102,7 +102,10 @@ engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
   and the next `setListener`s measure them first, oldest first, within the same budgets (at least one per call), gliding to the exact measure. A stopped or ended voice keeps its nodes for 0.1 s so a fade is not cut. The reverb send goes through the same lowpass and gain.
   A recipe with `falloff.model: 'none'` (interface, own steps) is never occluded.
 - Sounds without a `position` and loops are not occluded. The older `occlusion: (point) => 0..1` callback still works (one value when the sound plays).
-- Pure parts: `hitLossDb`, `totalLossDb`, `occlusionState`, `createOcclusionTracker`. The test room (`game-test-room`) builds the query from its destruction world.
+- Pure parts: `hitLossDb`, `totalLossDb`, `occlusionState`, `createOcclusionTracker`.
+- `createRaycastOcclusion(world, { maxHits, step, minObjectRadius })` builds the query from any world that answers rays and names a part's material (a
+  `game-destruction` world is one; the filter of the ray is a structural type, so this package depends on no other core). Loose pieces and objects under
+  `OCCLUDER_MIN_RADIUS` (0.25 m) are left out; from inside a part the next layer is found with that part ignored.
 
 ## Burst cap
 
