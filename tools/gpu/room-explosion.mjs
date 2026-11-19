@@ -26,14 +26,14 @@
 // Environment (all optional):
 //   ROOM_EXPLOSION_THROTTLES=1,2,4,6       the CPU slow-down levels measured
 //   ROOM_EXPLOSION_GATE_THROTTLES=1        the levels that block (exit 1); the others are reported with their verdict
-//   ROOM_EXPLOSION_VARIANTS=jolt-d4        jolt-d4 (Jolt, owner's D4 blast policy: the gated one), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt-d4-worker (the same with the engine's ground tiles through the room's worker coordinator, the default page; `groundWorker=1` marks it paced), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4 is gated
+//   ROOM_EXPLOSION_VARIANTS=jolt-d4-worker jolt-d4-worker (the default page: Jolt, owner's D4 blast policy, the engine's ground tiles through the room's worker coordinator, `groundWorker=1` marks it paced: the gated one), jolt-d4 (the same with the ground tiles on the main thread), jolt-d4-cold (the same with the JIT warm-up off: `wakeMed` and `1st 1s` show what it saves), jolt (Jolt, no D4), own (the kit's own solver); only jolt-d4-worker is gated
 //   ROOM_EXPLOSION_KINDS=blast,hammer      blast, hammer and crater are the kinds; `crater` is opt-in (a third kind is a third more nightly minutes, and main has no base cell for it yet), see below
 //   ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_WEATHER=none            none, storm (60 mm/h rain, wind) and/or fog (60 m): comma list; each kind then runs once per weather as `blast+storm`. Weather or ROOM_EXPLOSION_RENDER=1 also times one render per frame
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
-//   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4 when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
+//   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
 //   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
 //                                          the variants with `groundWorker=1` (back to back, a worker could never answer and every tile would be made on the main thread), `1` for all, `0` for none
 //
@@ -61,8 +61,9 @@ export const STAGE_LABELS = ['splitLoose', 'adoptSplit', 'fitBoxes', 'rebuildHos
 export const FRAME_LABELS = ['world', 'fluids', 'explosives', 'destrEvents', 'fragments', 'settled', 'syncXform', 'partFx', 'destrOwn', 'vfxSim', 'vfxLayers', 'terrainMesh', 'water', 'footprints', 'fluidView', 'film', 'audio', 'modules', 'lights', 'matrices', 'stagesOut']
 /** The render columns appended to every frame row: render call CPU ms, GPU wait ms, GPU ms (-1: no timer), draw calls, triangles, live particles, fragments, pieces. */
 export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles', 'particles', 'frags', 'pieces']
-// the room's ground tiles go through its worker coordinator by default (2026-11-18): the gated variants keep them on the main thread
-// (`groundWorker=0`, unpaced back to back a worker never answers in time), `jolt-d4-worker` is the default page, paced
+// the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
+// (`groundWorker=0`, unpaced back to back a worker never answers in time), `jolt-d4-worker` is the default page, paced: it is the default and the gated variant, so the gate measures the page
+export const DEFAULT_VARIANT = 'jolt-d4-worker'
 export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1&groundWorker=0', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0&groundWorker=0', 'jolt-d4-worker': '&solver=jolt&blastDebris=1&groundWorker=1', jolt: '&solver=jolt', own: '' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
@@ -473,7 +474,7 @@ const numbers = (text, fallback) => (text ? text.split(',').map(Number).filter((
 export async function runRoomExplosion({ playwright, chrome, root }) {
   const throttles = numbers(process.env.ROOM_EXPLOSION_THROTTLES, [1, 2, 4, 6])
   const gated = new Set(numbers(process.env.ROOM_EXPLOSION_GATE_THROTTLES, [1]))
-  const variants = (process.env.ROOM_EXPLOSION_VARIANTS ?? 'jolt-d4').split(',').filter((name) => name in VARIANTS)
+  const variants = (process.env.ROOM_EXPLOSION_VARIANTS ?? DEFAULT_VARIANT).split(',').filter((name) => name in VARIANTS)
   const baseKinds = (process.env.ROOM_EXPLOSION_KINDS ?? 'blast,hammer').split(',').filter((kind) => /** @type {readonly string[]} */ (ROOM_EXPLOSION_KINDS).includes(kind))
   const weathers = (process.env.ROOM_EXPLOSION_WEATHER ?? 'none').split(',').filter((name) => /** @type {readonly string[]} */ (WEATHERS).includes(name))
   // a kind under weather reads `blast+storm`; without weather it keeps its plain name (and its key in an older report)
@@ -542,7 +543,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const stageFrames = []
   const stageThrottles = numbers(process.env.ROOM_EXPLOSION_STAGE_THROTTLES, [1, 4])
   const stageRounds = Number(process.env.ROOM_EXPLOSION_STAGE_ROUNDS ?? 3)
-  const stageVariant = process.env.ROOM_EXPLOSION_STAGE_VARIANT ?? (variants.includes('jolt-d4') ? 'jolt-d4' : variants.find((name) => name !== 'own'))
+  const stageVariant = process.env.ROOM_EXPLOSION_STAGE_VARIANT ?? (variants.includes(DEFAULT_VARIANT) ? DEFAULT_VARIANT : variants.find((name) => name !== 'own'))
   if (stageVariant && stageRounds > 0) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
@@ -587,9 +588,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   for (const cell of cells) {
     const fails = cellFails(cell, budget)
     const regressed = cellRegressed(cell, baseCells?.get(key(cell.variant, cell.throttle, cell.kind)))
-    const blocks = regressed && cell.variant === 'jolt-d4' && gated.has(cell.throttle)
+    const blocks = regressed && cell.variant === DEFAULT_VARIANT && gated.has(cell.throttle)
     blocked ||= blocks
-    const verdict = cell.variant !== 'jolt-d4' && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
+    const verdict = cell.variant !== DEFAULT_VARIANT && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(13)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
   if (isRendered) {
@@ -624,7 +625,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     }
   }
   for (const error of errors) console.log(`PAGE ERROR  ${error}`)
-  console.log(`room-explosion: blocking levels: ${[...gated].map((level) => `${level}x`).join(', ')} on jolt-d4 only; ${PROXY_NOTE}`)
+  console.log(`room-explosion: blocking levels: ${[...gated].map((level) => `${level}x`).join(', ')} on ${DEFAULT_VARIANT} only; ${PROXY_NOTE}`)
 
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
