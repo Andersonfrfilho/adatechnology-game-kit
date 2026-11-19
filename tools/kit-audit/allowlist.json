@@ -114,11 +114,6 @@
       "fix": "the nursery's house, walls and street from game-floorplan and game-urban"
     },
     {
-      "file": "packages/game-vehicles-three/src/test-area/module.ts",
-      "domain": "structure",
-      "fix": "the crash wall of the vehicles area from game-floorplan-structure (buildWallSpecimen)"
-    },
-    {
       "file": "packages/game-weapons-three/src/world-explosives.ts",
       "domain": "vehicles",
       "fix": "the car fuel tank inside a fleet car (the fuel_tank zone of game-vehicles), not a loose box"
