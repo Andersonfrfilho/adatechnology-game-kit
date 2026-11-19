@@ -12,7 +12,6 @@ import type { Density } from './density'
 import { createMound } from './mound'
 import type { Mound } from './mound'
 import type { ResolvedPhysics } from './options'
-import { createDefaultWorkerFactory } from './offload/default-worker'
 import { createCoordinatorRunner } from './offload/kind'
 import { createOffload } from './offload/offload'
 import type { Offload } from './offload/offload'
@@ -91,9 +90,9 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     if (options.workers) return createCoordinatorRunner(setup, shape, options.workers, slots)
     const transport = options.workerTransport ?? (isSharedAvailable() ? 'shared' : 'transfer')
     if (transport === 'inline') return createInlineRunner(setup, shape, slots)
-    const factory = options.workerFactory ?? createDefaultWorkerFactory()
+    const factory = options.workerFactory
     if (!factory) {
-      if (options.worker === 'on') throw new Error('crowd physics: worker "on" but no Worker can be made here (give physics.workerFactory)')
+      if (options.worker === 'on') throw new Error('crowd physics: worker "on" but no Worker was provided (give physics.workers or physics.workerFactory)')
       return null
     }
     return transport === 'shared' ? createSharedRunner(setup, shape, factory, slots) : createTransferRunner(setup, shape, factory, slots)

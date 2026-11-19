@@ -162,7 +162,7 @@ export type CrowdPhysicsOptions = {
    * computed from the previous step), and an error when no worker can be made. `'auto'`: the same when a worker can be made, `'off'` when it cannot. Needs `contact`.
    */
   readonly worker?: 'off' | 'auto' | 'on'
-  /** Makes the worker (default: a module worker that loads `physics-worker.js` next to the bundle). A host that bundles its own worker gives the factory and calls `attachPhysicsWorker` in it. */
+  /** Optional host-provided worker factory (used only when `workers` is not given; the package never spawns a `Worker` on its own, CLAUDE.md §14). A host that bundles its own worker gives the factory and calls `attachPhysicsWorker` in it. */
   readonly workerFactory?: PhysicsWorkerFactory
   /** `'shared'` (a `SharedArrayBuffer`, deterministic, needs `crossOriginIsolated`), `'transfer'` (`postMessage`, any host, the answer is as late as the event loop makes it), `'inline'` (no worker: the same protocol on the main thread, the reference). Default: `'shared'` when it is available, else `'transfer'`. */
   readonly workerTransport?: OffloadTransport
