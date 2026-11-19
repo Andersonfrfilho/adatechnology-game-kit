@@ -122,3 +122,83 @@ Tiradas por outra sessão na mesma página (`?solver=jolt&blastDebris=1&groundWo
 ### Verificação
 
 - `node tools/kit-audit/audit.mjs --check` e `node --test tools/gpu/tests/*.test.mjs`: `audit`: 0 novos, 11 pendentes conhecidos, 15 permitidos; testes de `tools/gpu`: 40 passam, 0 falham.
+
+## T0.3 — leitura da régua contra P1, P2 e P3
+
+Fonte: `medicoes/regua-feb400220.json` (T0.2, `worstFrames`, 10 piores quadros por célula nas 3 rodadas da passagem dos estágios) e as contagens da T0.2. Código lido só para dar dono a um rótulo. Script da conta na pasta de rascunho da sessão (não commitado).
+
+### Como cada rótulo vira causa
+
+| Causa | Rótulos e estágios | Base |
+|---|---|---|
+| P1 (orçamentos se somam, relógios próprios) | `destrEvents`, `audio`, `settled`, `film` | **Atribuição:** `destrEvents` é o `run` da `DeferredQueue` do renderer e `audio` o da fila de vozes, as duas no `FrameBudget` de 8 ms cheios (`room.ts:4081-4082`); `settled` (2 ms) e `film` (1,2 ms) são relógios próprios da tabela P1. Os relógios próprios sem rótulo (lotes da sala, `vehicleHit`, `staticBoxes`, oclusão) caem em `rest`/`modules` e não dá para separá-los na régua. |
+| P2 (dois relógios, sem interpolação) | metade do `joltStep` | **Inferência:** o `PhysicsLoop` dá 2 passos de 1/120 por quadro de 1/60 (T0.2); um passo só de 1/60 custaria ~metade. A régua usa `dt` fixo de 1/60, então a outra parte de P2 (recuperar passos depois de quadro lento, falta de interpolação) **não aparece em ms**: é correção (C4, C5), não tempo. A outra metade do `joltStep` é o próprio Jolt e fica em "fora". |
+| P3 (custo por peça viva, estrutura por parte perdida) | `physics − joltStep − estágios de chão` (`prepare`/`measure`/`readBack`/`bridgeReads`), `stagesOut` (`splitLoose`, `adoptSplit`, `rebuildHost`, `fitBoxes` fora da física), `syncXform`, `matrices`, `fragments`, `partFx`, `destrOwn`, `world` | **Atribuição** para `readBack`, `bridgeReads`, `syncXform`, `fragments.update` (citados no P3 e na T3.3–T3.5). **Inferência** para `stagesOut`: o renderer chama `splitLoose(objeto)` a cada evento `detach`/`collapse` (`renderer.ts:1570`, `:2120`), o espelho no desenho da estrutura refeita por parte perdida; nenhuma task da fase 3 cobre esse lado. **Inferência** para `matrices` e `world` (laços por objeto vivo, T3.2/T3.5), teto do que P3 pode tirar. |
+| Fora | `rest` (closures da sala sem rótulo), `modules`, `vfxSim`, `vfxLayers`, `terrainMesh`, `water`, `lights`, `fluids`, `fluidView`, `explosives`, estágios de chão, metade própria do `joltStep` | `rest` no quadro 0 é o que nenhum rótulo cobre. **Inferência** (não medida): o `flush()` do fim do quadro (`room.ts:770`, narrador e um tratador por evento da explosão) e o `updatePresent` (log no DOM, HUD), mais os lotes com relógio próprio e o GC. |
+
+**Buraco da régua (atribuição, lido no código):** o portão chama `room.blastAt` e `room.world.hit` **antes** de abrir o relógio do quadro (`tools/gpu/room-explosion.mjs:352-360`), e `world.explode`/`world.hit` rodam síncronos (`game-destruction/src/world.ts:5665`, `:5721`, `explosives.ts:429`). As 33 a 39 chamadas de `solveStructure` por explosão **não entram em nenhum quadro medido**. No jogo elas caem no quadro do clique ou do pavio. A régua subestima P3 no lado do mundo, e a C7 não aparece nela sem mudar o portão.
+
+### Quanto cada causa explica (média dos 3 piores quadros da célula, ms e % do update)
+
+| tipo | trava | quadros | update | P1 | P2 | P3 | fora (dos quais `rest`) | P1+P2+P3 |
+|---|---|---|---|---|---|---|---|---|
+| blast | 1x | f0 ×3 | 28,5 | 4,1 (14%) | 0,0 (0%) | 7,8 (27%) | 16,5 (58%; `rest` 15,0 = 53%) | **42%** |
+| blast | 1x | sem f0 (r1 f2, r2 f1, r1 f1) | 16,1 | 6,6 (41%) | 0,4 (2%) | 6,7 (42%) | 2,4 (15%) | 85% |
+| hammer | 1x | f2 ×3 (o f0 não está entre os 10 piores) | 13,1 | 3,5 (27%) | 0,3 (2%) | 7,5 (57%) | 1,8 (14%) | 86% |
+| crater | 1x | f0 ×3 | 28,9 | 8,0 (28%) | 0,0 (0%) | 4,9 (17%) | 16,1 (56%; `rest` 14,1 = 49%) | **44%** |
+| crater | 1x | sem f0 (r3 f2, r2 f3, r1 f2) | 16,6 | 7,2 (44%) | 0,5 (3%) | 6,2 (37%) | 2,7 (16%) | 84% |
+| blast | 4x | f0 ×3 | 106,5 | 8,6 (8%) | 0,0 (0%) | 32,4 (30%) | 65,5 (62%; `rest` 57,4 = 54%) | **38%** |
+| blast | 4x | sem f0 (r1 f15, r3 f2, r1 f17) | 38,9 | 3,0 (8%) | 7,7 (20%) | 12,5 (32%) | 15,7 (40%) | 60% |
+| hammer | 4x | r3 f3, r1 f1, r3 f1 | 37,3 | 6,1 (16%) | 0,3 (1%) | 24,4 (65%) | 6,6 (18%) | 82% |
+| crater | 4x | f0 ×3 | 91,0 | 16,4 (18%) | 0,0 (0%) | 11,3 (12%) | 63,2 (69%; `rest` 55,9 = 61%) | **31%** |
+| crater | 4x | sem f0 (r2 f16, r2 f1, r3 f3) | 43,9 | 6,4 (15%) | 5,1 (12%) | 21,1 (48%) | 11,4 (26%) | 74% |
+
+Detalhes que pesam:
+
+- **Maior rótulo de P3 no golpe:** `stagesOut` (`splitLoose` + `adoptSplit` + `rebuildHost`): 4,7 a 6,9 ms a 1x (f0 de `blast`/`crater`, f1 de `hammer`) e 19 a 23 ms a 4x. Depois vêm `fragments` (2,4 a 5,4 ms a 1x, 12 ms a 4x) e `matrices` (~1 ms a 1x, 3 a 5,5 ms a 4x).
+- **P2 só pesa a 4x:** nos quadros de assentamento (f14 a f21) o `joltStep` vai a 17–28 ms (1,1 a 1,5 ms a 1x). Metade disso é o teto de P2. **O ganho existe só se o passo único for de 1/60.** Se o agendador adotar 1/120 (o `fixedStep` de hoje do `KIT_WORLD`), P2 não tira nenhum ms.
+- **p99 do update** (a régua não divide o p99 por rótulo; os p99 da física e do update não são do mesmo quadro, então é teto): a física é 3,0 de 5,3 ms (57%) em `blast`, 2,1 de 4,7 (45%) em `hammer` e 4,0 de 6,1 (66%) em `crater` a 1x. Com o passo do Jolt em 0,25–0,55 ms (medição de 2026-11-17), quase toda essa física é P3 e P2 fica em ≤0,3 ms (inferência). A 4x a física é 18,6/29,8 (62%), 8,6/21,1 (41%) e 17,5/33,6 (52%), com P2 até ~40% dela nos quadros de assentamento (inferência). O resto do p99 (1,3 a 2,6 ms a 1x) não tem dono na régua.
+
+### Surpresas das contagens
+
+- **`vehicleHit` 6,3 ms num quadro de explosão de casa** (f55–f57 de `blast`, carga de 5 a 10, ms indicativo). É o lote do LOD do veículo (`static-batcher` com `maxVertices`, relógio próprio de 2 ms) juntando de novo o carro parado que a explosão acertou. Passou 3× do próprio orçamento: uma junção é uma unidade só, maior que o relógio. Migrar para fila (T1.5) não divide a unidade. Pela §15 ("trabalho pesado e pontual"), precisa ser fatiada ou ir para worker. Na régua (carga baixa) esses quadros não estão entre os 10 piores de nenhuma célula a 1x (o 10º de `blast` é 9,9 ms), então não mexem no pior quadro a 1x.
+- **`audioOcclusion` 9,2 ms em `crater`** (f0 e f10 da contagem). A primeira consulta de cada `add`/`update` do rastreador sempre roda (`occlusion-tracker.ts:90` com `costMs` indefinido, `:109` com `queries === 0`). Ela é um raio pelo mundo da destruição depois da cratera, e o `budgetMs` de 1 ms não limita uma unidade. Na régua, o rótulo `audio` (a fila de vozes; que o início da voz chama `tracker.add` é inferência, via `engine-occlusion.ts:84`) dá **5,5 a 7,9 ms nos piores quadros sem f0 de `blast` e `crater` a 1x**: é o maior rótulo isolado do quadro que a C8 mede. Contei em P1, mas o orçamento único sozinho não o reduz, porque a guarda de fome ainda roda uma unidade. Contado como "fora", só o r2 f3 de `crater` (`audio` 7,9 de 16,6 ms, 48%) passa de um terço.
+
+### C8 contra a régua
+
+- **A 1x a C8 como está escrita já está quase cumprida.** p99 do update: 5,3, 4,7 e 6,1 ms (meta 8): **cumprida nos três**. Pior quadro do update sem f0: `blast` 16,1 (cumprida, folga de 0,5), `hammer` 14,1 (cumprida), `crater` 19,1 (não cumprida: uma rodada de cinco; a mediana dos máximos por rodada é 16,5). Do jeito que está, a meta a 1x vale quase nada para a spec.
+- O que o jogador sente a 1x e a C8 não mede:
+  - o quadro 0 (update de 28 a 34 ms, mais 7,4 a 8,1 ms de `renderCpu`);
+  - o quadro inteiro sem f0 (update mais `renderCpu`): `blast` 16,3 + 5,7 = 22,0, `hammer` 14,2 + 4,5 = 18,7, `crater` 17,2 + 6,2 = 23,4 ms.
+- **Proposta de C8** (decisão do dono):
+  1. a 1x, pior quadro inteiro (update mais `renderCpu`) sem f0 ≤ 16,6 ms, mantendo o p99 do update ≤ 8 ms como não regressão;
+  2. a 4x, p99 do update ≤ 16,6 ms (hoje 21,1 a 33,6) e pior quadro não pior que a T0.2 (54,1 / 54,1 / 50,4);
+  3. se o dono quiser o f0 na meta, update do f0 ≤ 16,6 ms a 1x (hoje 28 a 34), o que exige antes dar dono ao `rest` do f0.
+
+### Ordem das fases
+
+Proposta: **1 orçamento único (P1), 2 estrutura adiada e custo por peça acordada (P3), 3 passo fixo e interpolação (P2).** Hoje a ordem é 1 P1, 2 P2, 3 P3.
+
+- **P1 fica em primeiro.** `destrEvents` mais `audio` são 27 a 44% do pior quadro sem f0 a 1x, e o prazo é a base onde a D9 apoia o adiamento. Ressalva: o ganho do `audio` exige mudar a regra da primeira consulta da oclusão, que não está em nenhuma task.
+- **P3 sobe para segundo.** É a maior causa em todas as células sem f0 (37 a 57% a 1x, 32 a 65% a 4x). Proposta de escopo: a T3.1 (ou uma T3.x nova) também passa a juntar `splitLoose`/`adoptSplit`/`rebuildHost` uma vez por objeto por drenagem, em vez de uma vez por evento `detach`, que é o maior rótulo de P3 (`stagesOut`).
+- **P2 desce para terceiro.** Explica 2 a 3% a 1x, e os 12 a 20% a 4x dependem de escolher `h` = 1/60, decisão de qualidade da física que a D5 não toma. O valor de P2 é correção (C4, C5, 144 Hz), não ms.
+- **Tarefa de régua antes da fase 1 (proposta T0.4).**
+  - Rotular o `rest` do quadro 0: `flush()`, `updatePresent`, os lotes com relógio próprio sem rótulo.
+  - Abrir o relógio do f0 antes do `blastAt`/`world.hit`, para o `solveStructure` aparecer.
+  - Manter a coluna antiga para comparar com a T0.2.
+
+### Veredito
+
+**Parar e perguntar ao dono.** No pior quadro de verdade (f0 de `blast` e `crater`) as duas condições de parada valem:
+
+- **(a)** algo fora de P1/P2/P3 explica mais de um terço do pior quadro: o `rest` sem rótulo dá 53% em `blast` e 49% em `crater` a 1x.
+- **(b)** P1+P2+P3 juntos explicam menos da metade: 42% em `blast` e 44% em `crater` a 1x; 38% e 31% a 4x.
+
+No quadro que a C8 mede (sem f0), nenhuma das duas vale: P1+P2+P3 dão 84 a 86% a 1x. Mesmo assim a C8 já está quase cumprida a 1x, e o `audio` sozinho passa de um terço num quadro de `crater`.
+
+Decisões pedidas ao dono:
+
+1. O f0 entra na meta, ou a spec segue só com os quadros sem f0?
+2. Qual C8 vale: a proposta acima ou outra?
+3. A ordem P1 → P3 → P2 e a T0.4 de régua.
+4. O `h` do passo único: 1/60 ou 1/120.
