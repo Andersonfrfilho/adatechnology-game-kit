@@ -4933,6 +4933,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}) })
         r.part = rh.part
         r.point = rh.point
+        // the world already traced the drawn surface (surfaceRay): hand its normal back so the host never re-raycasts the body for the push
+        r.normal = rh.normal
         // the part says what the round keeps (a sheet takes little, a block all of it); else half, as before
         const left = r.events.find((e) => e.type === 'hole' && (e as { energyLeft?: number }).energyLeft !== undefined) as { energyLeft?: number } | undefined
         r.exitEnergy = r.penetrated ? (left?.energyLeft ?? E * 0.5) : 0
