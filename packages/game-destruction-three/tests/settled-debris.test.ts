@@ -225,7 +225,7 @@ describe('the debris at rest drawn in batches', () => {
     const meshes = Array.from({ length: 4 }, (_, index) => box(`crate_${index}`, [index * 0.6, 0.3, 0]))
     run(2)
     expect(meshes.every((mesh) => mesh.layers.isEnabled(BATCHED_LAYER))).toBe(true)
-    world.emit({ type: 'crack', object: 'crate_2', part: 'body', point: [1.2, 0.2, 0], normal: [0, 1, 0], length: 0.1 })
+    world.emit({ type: 'crack', object: 'crate_2', part: 'body', crack: { point: [0, 0.2, 0], normal: [0, 1, 0], length: 0.1, rays: 4 }, worldPoint: [1.2, 0.2, 0] })
     run(DT)
     expect(meshes[2]!.layers.isEnabled(0)).toBe(true)
   })

@@ -130,6 +130,7 @@ const walk = (dir, out = []) => {
  * @param {{ pending?: { file: string, match: string, task: string }[] }} [override] pending list for tests
  */
 export function ownFrameClock(override) {
+  /** @type {{ file: string, match: string, task: string }[]} */
   const pendingList = override?.pending ?? JSON.parse(readFileSync(join(here, 'clock-pending.json'), 'utf8')).pending
   /** @type {ReturnType<typeof scanOwnFrameClock>} */
   const hits = []
