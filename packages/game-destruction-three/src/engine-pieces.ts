@@ -543,6 +543,8 @@ export class EnginePieces {
   isSettled(b: PieceBody): boolean {
     const link = this.links.get(b)
     if (!link || !b.sleeping || b.held || !link.sleeping || link.frozen || this.active.has(b)) return false
+    // the grip a propped piece lost is back before it sleeps unread: waking it (a blow) steps it with its own friction, as when its sync ran each update
+    this.slip(b, link, false)
     link.stepped = false
     b.still = 0
     return true
