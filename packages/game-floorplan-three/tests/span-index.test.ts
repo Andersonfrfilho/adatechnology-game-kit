@@ -4,21 +4,23 @@ import { indexSpansAlong } from '../src/destruction/span-index'
 import { isCoreThrough } from '../src/destruction/stamp-mask'
 
 describe('the holes of a wall bucketed along it', () => {
-  it('gives every span within the pad of a point along the wall, for random spans and points', () => {
+  it('gives every span within the pad of a stretch along the wall, once each, for random spans and stretches (negative ones too)', () => {
     let seed = 11
     const next = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296)
     const spans = Array.from({ length: 300 }, () => {
-      const a = next() * 12
+      const a = next() * 14 - 2
       return { a, b: a + next() * 0.4 }
     })
     const pad = 0.17
     const at = indexSpansAlong(spans, pad)
     for (let k = 0; k < 2000; k++) {
-      const s = next() * 13 - 0.5
-      const near = spans.filter((span) => s >= span.a - pad && s <= span.b + pad)
-      const offered = at(s)
+      const from = next() * 15 - 2.5
+      const to = from + (k % 10 === 0 ? next() * 6 : next() * 0.3)
+      const near = spans.filter((span) => to >= span.a - pad && from <= span.b + pad)
+      const offered = at(from, to)
       expect(near.every((span) => offered.includes(span))).toBe(true)
-      expect(offered.length).toBeLessThan(spans.length / 4)
+      expect(new Set(offered).size).toBe(offered.length)
+      if (to - from < 0.3) expect(offered.length).toBeLessThan(spans.length / 4)
     }
   })
 })
