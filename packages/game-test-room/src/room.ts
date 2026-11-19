@@ -492,6 +492,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const physicsLoop = physics !== 'own' && isPhysicsLoop(physics) ? physics : null
   const renderer = createDestructionRenderer(THREE, {
     physics,
+    interpolate: true,
     scene,
     world,
     vfx: vfx.world,
@@ -5539,7 +5540,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules })
+  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)

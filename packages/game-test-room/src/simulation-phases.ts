@@ -11,6 +11,8 @@ export type SimulationHooks = {
   readonly fixed: (dt: number, isTick: boolean) => void
   readonly frame: (dt: number) => void
   readonly frameEnd: (dt: number) => void
+  /** What draws the simulation between two ticks: the step pose back at the start of a tick, the blend at `present`. */
+  readonly pose: { readonly restoreStepPose: () => void; readonly present: (alpha: number) => void }
 }
 
 export type SimulationPhases = {
@@ -27,6 +29,16 @@ export function resolveSimulationTick(loopStep: number | undefined, nominalTick:
 
 export function registerSimulationPhases(scheduler: Scheduler, tick: number, hooks: SimulationHooks): SimulationPhases {
   let isLegacyStep = false
+  let isSynchronousFrame = false
+  scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'fixedSimulate', order: -100000, id: 'room.pose-restore' })
+  scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'lateSimulate', order: -100000, id: 'room.pose-restore-late' })
+  scheduler.add(
+    (ctx) => {
+      // a frame drawn at the step pose changes nothing: the host may have moved a root since (a held piece) and a blend would write the old step pose over it
+      if (!isSynchronousFrame && !ctx.scripted) hooks.pose.present(ctx.alpha)
+    },
+    { phase: 'present', order: -1000, id: 'room.pose-present' },
+  )
   scheduler.add((ctx) => {
     if (!isLegacyStep) hooks.fixed(ctx.dt, true)
   }, { phase: 'fixedSimulate', order: 1000, id: 'room.simulate' })
@@ -38,10 +50,12 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
   return {
     runAt(dt, run, isLive = false) {
       isLegacyStep = !isLive && Math.abs(dt - tick) > TICK_TOLERANCE_SECONDS
+      isSynchronousFrame = !isLive
       try {
         run(dt)
       } finally {
         isLegacyStep = false
+        isSynchronousFrame = false
       }
     },
   }
