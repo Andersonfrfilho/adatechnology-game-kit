@@ -318,3 +318,39 @@ Commit do mundo: ver `git log` (`perf(destruction): solveStructure e grupos sem 
 
 - `9c5c7287e`: `docs/desempenho-explosoes.md` (seção da spec 010, pendência "a ordem do quadro não tem dono" riscada), README do `game-runtime` (filas, passo fixo, interpolação), referência da skill `kit-base`, regra §15 (exceção única `drainDetached`, gate `--strict-clocks`, `mustDrain`, R2), `tasks.md` das specs 005, 008, 009 e 010 (pendências listadas). Só documentação; sem build nem teste.
 - A ligação task → commit no `tasks.md` da 010 foi tirada do log (mensagens com o número da task), não auditada.
+
+## T4.1 — régua final (primeira tomada)
+
+### Condições
+
+- Commit medido `b03516f37` (`spec/010-pr`: fases 1 a 3, T4.2/T4.3 e `origin/main` com os PRs #398 a #402). `pnpm install --frozen-lockfile` e `pnpm build` limpos antes; `git status` limpo; nenhuma instrumentação.
+- Mesma configuração da T0.2/T0.4: `blast,hammer,crater`, 1x e 4x, `FRAME_PARTS=1`, 5 rodadas, `jolt-d4-worker`, sob `flock perf-measure.lock`, na tomada. JSON: `medicoes/regua-t41-b03516f37.json`. Portão: "no regression against main" (o portão só olha a física; ver abaixo).
+- Das 12:34 às 13:11. Carga de 1 minuto no fim das rodadas: 1,59 a 3,9 (T0.4: 1,69 no início). **Ruído conhecido:** o Antigravity (IDE de outra ferramenta) ficou aberto, com 30 a 40% de um núcleo no renderer o tempo todo; a primeira rodada começou com carga 4,64, logo depois do build.
+
+### A régua perdeu a coluna da física
+
+`cells[].p99/max` (física por quadro) caiu de 2 a 17 ms para 0,1 a 1,6 ms. Não é ganho: depois da fase 3 o passo do Jolt roda em `fixedSimulate` pelo agendador, e a sonda `physicsMs` da sala não o vê mais. A Tabela A e o bloqueio do portão (que usa essa coluna) **não valem nesta régua**. O que segue usa só o quadro inteiro (`framep99`/`framemax`: `room.update` + um desenho) e os piores quadros por estágio (`updateMs`, `parts`, `extras.renderCpu`). Consertar a sonda é task própria antes de qualquer nova comparação da física.
+
+### C8 contra a T0.4 (mesmos campos; ms)
+
+| | T0.4 | T4.1 | C8 |
+|---|---|---|---|
+| 1x f0 inteiro (update + renderCpu, média dos 3 piores), blast / crater | 80,5 / 79,3 | **97,1 / 111,9** | ≤ 33,3 ❌ |
+| 1x f0 `explode`, blast / crater | 35,8 / 37,6 | 33,1 / 47,7 | |
+| 1x f0 `destrEvents`, blast / crater | 3,5 / 7,4 | **12,7 / 15,0** | |
+| 1x pior quadro sem f0 (update + renderCpu), blast / crater / hammer (f1 = 2ª pancada) | 24,8 / 24,0 / 45,3 | 22,8 / 37,2 / 56,0 | ≤ 16,6 ❌ |
+| 1x quadro inteiro p99 (`framep99`), blast / hammer / crater | 6,2 / 4,5 / 5,2 | 7,6 / 4,8 / 9,8 | |
+| 4x quadro inteiro p99, blast / hammer / crater | 32 / 22,6 / 31,6 | 34,5 / 24,1 / 33,8 | update p99 ≤ 16,6: sem coluna |
+| 4x pior quadro (`framemax`), blast / hammer / crater | 42,5 / 148,6 / 52,5 | 60,5 / 193,6 / 74,3 | não pior que 54,1 / 54,1 / 50,4 ❌ |
+
+### Leitura
+
+- **A C8 não fecha em nenhum degrau, e o quadro da explosão piorou contra a T0.4** (f0 a 1x +17 a +33 ms). O ganho da T2.1 no `world.explode` (174 → 39 `solveStructure`, 112,6 → 33,4 ms no Node) **não aparece no navegador**: `explode` fica igual em `blast` e sobe 10 ms em `crater`.
+- O que mais cresceu no f0 foi `destrEvents` (×3,6 em `blast`, ×2 em `crater`): coerente com a T2.1, que passou todo `detach` para o fim do `run()` e entrega os grupos de uma vez no quadro da explosão. É inferência; a causa se acha medindo nos merges de fase, como manda a decisão "medir só no fim".
+- O ruído do Antigravity e a carga um pouco maior explicam parte da diferença, não o `destrEvents` triplicado (tempo de um rótulo só, no mesmo quadro).
+
+### Próximo passo (decisão do dono)
+
+1. Repetir a régua com a máquina quieta (Antigravity fechado), para separar ruído de regressão.
+2. Se confirmar: medir nos merges de fase (`6ccd4c48a` fase 2, `50b823924` fase 3 e o merge da fase 1) para achar qual piorou o f0.
+3. Consertar a sonda da física (`physicsMs` não vê o passo do agendador).
