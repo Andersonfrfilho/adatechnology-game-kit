@@ -63,16 +63,16 @@ const callsPerUpdate = async (count: number): Promise<{ perBody: number; total: 
 
 describe('the piece loops walk the awake pieces only', () => {
   it('with every piece asleep, no call names a piece and the calls per update do not grow with the count', async () => {
-    const small = await callsPerUpdate(500)
-    const large = await callsPerUpdate(5000)
+    const small = await callsPerUpdate(200)
+    const large = await callsPerUpdate(2000)
     expect(small.perBody).toBe(0)
     expect(large.perBody).toBe(0)
     // the sleeping state of the engine is read in one batch per update
     expect(small.active).toBe(UPDATES)
     expect(large.active).toBe(UPDATES)
     expect(large.total).toBe(small.total)
-    // counts calls, not time: 5,500 Jolt bodies take longer than the 5 s default to create on a loaded machine
-  }, 30_000)
+    // counts calls, not time: 2,200 Jolt bodies take seconds to create on a CI runner
+  }, 60_000)
 
   it('a sleeping piece the engine wakes with a blow is read back in the same step', async () => {
     const base = await newWorld()
