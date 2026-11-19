@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Build context is the repo root (see railway.json).
+# Build context is the repo root (see railway.json.disabled; the Railway deploy is off).
 FROM node:22-alpine AS build
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PUPPETEER_SKIP_DOWNLOAD=1 \
