@@ -1,11 +1,5 @@
 {
   "excluded": [
-    "game-destruction",
-    "game-destruction-three",
-    "game-shapes*",
-    "game-floorplan",
-    "game-floorplan-*",
-    "game-contracts",
     "game-test-room",
     "examples/floorplan-test-area",
     "examples/test-room"
@@ -43,7 +37,22 @@
     "LOD 0",
     "LOD 1",
     "LOD 2",
-    "≤ 120 sprites"
+    "≤ 120 sprites",
+    "MDF",
+    "ZI – Industrial",
+    "Cinema",
+    "Gourmet",
+    "Hall",
+    "Off-white",
+    "Greige",
+    "Draw calls",
+    "Katana",
+    "Item",
+    "normal",
+    "ABS",
+    "Manual",
+    "Crash test",
+    "metal"
   ],
   "keys": [],
   "keyPatterns": [
