@@ -35,8 +35,8 @@ const BLAST_RADIUS = 6
 // Recorded again when what is set in the ground held as its buried base (poles, lot walls and gate pillars drawn into the terrain, their anchors by `embedmentStrength`), furniture pieces came to stand on their parts' corners, and a loose group at load sleeps only when balanced
 // Recorded again on the merge of both: the 4 mm panes and the parts held in the ground
 // Recorded again on the merge with the moulded members, pier and pillar corners of main: both changes meet in the blast
-// Recorded again when the world came to solve the structure once per operation: the detach events come when it is solved, with the groups of the end of the blast; every part ends as it did
-const RECORDED_BLAST_OUTCOME = 'e71103813d3baabcf1bb8820b65333fbe9ebc659'
+// Recorded again when the world came to solve the structure once per operation: every detach comes at the end of the blast, with the groups it left; every part ends as it did
+const RECORDED_BLAST_OUTCOME = '6a4a72aa533489232b4094f3b1ec417c65652e9d'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })
