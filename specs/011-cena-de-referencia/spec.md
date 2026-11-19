@@ -42,6 +42,7 @@ são os tipos de bairro do `game-urban` (`downtown` e `working_class`); "Santa A
 | R5 | A cena é a segunda régua da spec 010: tabela por módulo nos dois cenários, gravada | `evidence.md` |
 | R6 | Visual perto da referência no mesmo enquadramento (rua, horda vindo de frente, câmera no ombro) | print `shots/visual-alvo.png` ao lado de `referencias/visual-alvo.png`; veredito visual registrado por fase |
 | R7 | Sem travamento: no `pior`, 0 quadros acima de 33,4 ms na RTX e na Intel integrada (com o tuner ligado); uma rodada em AMD antes de fechar | `evidence.md` com o JSON |
+| R9 | A cena é o exemplo de como um jogo usa o kit: `src/game/` só com escolhas de jogo, sem nada de teste, e um README que leva do zero a um mundo rodando | regra de camada: `src/game/` não importa `src/test/`; `wc -l examples/reference-district/src/game/**/*.ts` ≤ 200 por arquivo e ≤ 1.500 no total; README seguido do zero por alguém (ou um agente) sem contexto, até a página abrir |
 | R8 | Peças novas passam pelas regras do pacote dono: 21 critérios de física (§6), z-fighting (§13), estrutura (§11) para ponte e prédio, objetos quebrados (§12), memória (§8) | testes do pacote dono e os agentes `engenheiro-estrutural` e `revisor-z-fighting` |
 
 ## Fora do escopo

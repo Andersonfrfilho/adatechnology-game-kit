@@ -60,6 +60,12 @@ papiro, capim alto; varal; `garden_bed`.
   a sala não prova: o kit inteiro montado pela API pública, na densidade de um lugar real, medido como o jogo vai sentir. Problema que só
   aparece na cena volta para a sala como cenário novo da área dona, para ficar coberto onde dá para isolar a causa.
 
+- **D7. A cena é o exemplo de como um jogo usa o kit** (dono, 2026-11-18). O ZombiAdA começa copiando ela, nunca o `room.ts`. Por isso:
+  (1) o encanamento que todo jogo faria igual mora no `createKitWorld`; no exemplo ficam só as escolhas de jogo (traçado, conteúdo, câmera,
+  clima, entrada); (2) `src/game/` é o exemplo e `src/test/` é o que só serve para validar e medir (cenários roteirizados, sondas, ganchos de
+  print), e `src/game/` não importa nada de `src/test/`; (3) segue os padrões do repositório (tipado, arquivos de até 200 linhas), porque
+  exemplo é o código mais copiado. O README da pasta é o guia "como montar o seu jogo com o kit".
+
 ## Riscos
 
 - **O host vira um segundo `room.ts`.** Mitigação: limite de linhas por arquivo (200, padrão do repositório), cada ligação num arquivo, e a sala

@@ -33,6 +33,8 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
   pontos de explosão do cenário `pior`. Onde falta peça (tabela do `plan.md`), um marcador `missing` com o dono, desenhado como caixa de aviso.
 - **T2.2** `examples/reference-district`: página, `build.mjs`, montador que lê o JSON e chama `createKitWorld` e os pacotes; câmera de 3ª e
   1ª pessoa (`?camera=`); cenários `tipico` e `pior` (`?cena=`). Área `district` no `tools/check-area`.
+  Estrutura do D7: `src/game/` (montagem, o exemplo que o jogo copia) e `src/test/` (cenários roteirizados, sondas, prints); regra de camada
+  `src/game/` não importa `src/test/`.
 - **T2.3** Teste de cobertura sem GPU no CI (R2): lista de pacotes instanciados contra `packages/`, menos as duas exceções; os `missing`
   aparecem como pendência com o dono, e o teste falha quando a lista fica com pacote sem uso.
 - **T2.4** Cenário `pior` roteirizado e determinístico (semente, horários das explosões, caminho do jogador), para medir sempre igual.
@@ -74,7 +76,8 @@ na sala da área dela (gates 1 e 2, com print) e só então troca o seu `missing
 
 - **T5.1** Régua final nos dois cenários, RTX e Intel integrada, com o tuner ligado (R7). AMD: pedir a alguém com Radeon uma rodada de
   `pnpm check:district` e anexar o JSON.
-- **T5.2** README do `game-kit-defaults` (como um jogo monta um mundo), referência na skill `game-kit`, e a §15 conferida.
+- **T5.2** README de `examples/reference-district` como guia "como montar o seu jogo com o kit" (R9), conferido por um agente sem
+  contexto que o segue do zero até a página abrir; README do `game-kit-defaults` (como um jogo monta um mundo), referência na skill `game-kit`, e a §15 conferida.
 - **T5.3** Transformar a carta da cena 2 em spec completa com o que esta cena ensinou (em sessão própria).
 
 ## Prompt de execução
