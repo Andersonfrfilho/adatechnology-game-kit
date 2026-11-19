@@ -41,28 +41,49 @@ Cada task responde: **Mecânica?** (o que fazer está todo descrito) e **Aceite 
   `medicoes/regua-t04-<commit>.json`, com o f0 dividido por rótulo no `evidence.md`.
 
 ## Fase 1 — Orçamento único pelo prazo do quadro
-> 🤖 Modelo: `sonnet` (T1.1 é 🧠 — `opus`, validar com `architect` antes de implementar; T1.4 → `haiku`)
+> 🤖 Modelo: `sonnet` (T1.1 é 🧠 — `opus`, **validada pelo `architect` em 2026-11-19**; T1.4 → `haiku`; T1.9 → `sonnet`; T1.10 → `sonnet`)
 
 - **T1.1 🧠** Desenho do prazo (D1, D3, D4) em `specs/010-quadro-com-prazo/design-prazo.md`: assinatura nova de `createFrameBudget` e do
   `createScheduler` (`targetMs`, estimativa do render, teto), como o `WorkBudget` desconta, e a tabela de todas as filas com fase,
   prioridade, `minEveryFrames` e reserva. Inclui a lista fechada dos relógios próprios (os do P1 mais o que
   `rg -n "performance\.now\(\)" packages/*/src` mostrar usado como prazo de trabalho adiado).
-- **T1.2** `game-runtime`: prazo do quadro em `budget.ts` e `scheduler.ts` conforme a T1.1. Teste com relógio falso: simulação que gasta 10 ms
-  de um alvo de 16,6 deixa no máximo o que sobra; `stats()` mostra o prazo e o gasto; a guarda de fome ainda roda uma unidade. API antiga
-  (`budgetMs`) continua valendo como teto. Aceite: `pnpm --filter @adatechnology/game-runtime test`.
-- **T1.3** `createStaticBatcher` (`game-render-three/src/static-batcher.ts`) expõe `deferredQueue()` com `attach`/`detach`; sem registro,
-  drena por dentro com `budgetMs` como hoje. `checkDeferredQueue` no teste. De passagem, a comparação de matriz por malha juntada
-  (`static-batcher.ts:211-217`) deixa de criar closure por quadro.
+- **T1.2** `game-runtime`: prazo do quadro em `budget.ts`, `scheduler.ts` e `loop.ts` conforme a T1.1. `startLoop` passa o `nowMs` do rAF como
+  `FrameRunOptions.frameStartMs`; o modo deadline é **opt-in por quadro** (só com `targetMs` e `frameStartMs`), todo outro quadro (headless,
+  `advance()`, ~170 testes) fica na cota de hoje, com dívida; no deadline não há dívida. Classe `mustDrain` (`destruction.events`,
+  `floorplan.breach-cut`): drena inteira fora do prazo, contada à parte (`mustDrainSpentMs`). Reservas saem do piso no `drain('present')` e
+  `register` recusa Σ reservas > `minMs`. Estimativa do render com amostra grampeada em `[0, targetMs]`, pulando quadro em que o pacer pulou o
+  render ou o aquecimento rodou. Testes com relógio falso: os 19 casos da seção 7 do `design-prazo.md`, incluindo a C2 reescrita
+  (`spent ≤ max(restante, piso) + 1 unidade que cruza + Σ forçadas`, sem `mustDrain`; emenda da seção 9). API antiga (`budgetMs`) continua
+  como teto. Aceite: `pnpm --filter @adatechnology/game-runtime test`.
+- **T1.3** Filas de lote **uma por dono**, não por instância: `static-batcher.ts` (`game-render-three`) ganha
+  `createStaticBatchQueue({ id })` (rodízio entre os batchers, como `createCreaseQueue`) e `createStaticBatcher(…, { queue })`. Unidade = o
+  chunk que já existe (`maxVertices`, `:142-155`), **sem fatiar por vértice**. Medir o lote do veículo na régua e tentar, nesta ordem: laço de
+  cópia mais rápido (`copyAttribute` por `getX` por vértice, `:240-260`; alocações por grupo, `:315-329`) e `HIT_BATCH_VERTICES` menor. Fatiar
+  só se a régua com carga baixa ainda mostrar a unidade acima do orçamento (então as 4 garantias do `design-prazo.md` seção 5). Sem fila, drena
+  por `drainDetached` com `budgetMs` como hoje. `checkDeferredQueue` no teste. De passagem, a comparação de matriz por malha juntada
+  (`:211-217`) deixa de criar closure por quadro.
 - **T1.4** Ids e prioridades novos em `game-contracts/src/frame.ts` (lotes estáticos, sombra da casa, lotes do veículo, destroços assentados,
-  filme de fluido, oclusão do áudio, caixas estáticas, `prefit`), exatamente os da tabela da T1.1. Mecânica.
+  filme de fluido, oclusão do áudio, caixas estáticas, `prefit`), exatamente os da tabela da T1.1, mais `drainDetached` e o campo `mustDrain` das opções de registro. Mecânica.
 - **T1.5** Migrar para fila, um commit por dono, cada um com `checkDeferredQueue`: `house/shadow-batches.ts`, `vehicle-lod.ts`,
   `settled-batches.ts`, `renderer.ts` (`STATIC_REFRESH_SLICE_MS`, `PREFIT_SLICE_MS`), `film/manager.ts`, `occlusion-tracker.ts`, a
-  suavização do amassado do veículo, e os `BATCH_BUDGET_MS` das áreas de teste (animais, personagens).
+  suavização do amassado do veículo, e os `BATCH_BUDGET_MS` das áreas de teste (animais, personagens). Toda fila nova tem o padrão sem host
+  por `drainDetached` (D2). `STATIC_REFRESH_SLICE_MS` vira contagem fixa por `update` (decisão D: não é fila; **parar e perguntar** se um
+  hash de eventos mudar). Quando o `prefit` tiver fila própria, `destruction.events` para de somar `prefitLeft()` no `pending` (`renderer.ts:451`).
 - **T1.6** A sala registra todas as filas no `scheduler.budget` e passa o `alvoMs` do monitor; `BATCH_BUDGET_MS` sai do `room.ts`. O
-  `WorkBudget` recebe `tier` e teto do host (D4).
+  `WorkBudget` recebe `tier` e teto do host (D4). `destruction.events` e `floorplan.breach-cut` registradas como `mustDrain` (decisão A).
 - **T1.7** Guarda: regra `own-frame-clock` no `tools/kit-audit` (constante `*_BUDGET_MS`/`*_SLICE_MS` ou `performance.now()` comparado com
-  prazo fora de `game-runtime`), com lista de exceções vazia. Aceite: `node tools/kit-audit/audit.mjs --check` (C3).
-- **T1.8** Medir (gate 5) e conferir a C2 na tempestade do `perf.mjs` (`budget.stats()` por quadro). Print da sala com os contadores.
+  prazo fora de `game-runtime`), com lista de exceções vazia (aceita `drainDetached`; classifica os `Date.now` de `crowd/offload/runner.ts`,
+  `nursery.ts` e `zone-layer.ts` como espera de worker, medição e animação). Aceite: `node tools/kit-audit/audit.mjs --check` (C3).
+- **T1.8** Medir (gate 5) e conferir a C2 (texto emendado) na tempestade do `perf.mjs` (`budget.stats()` por quadro: `overMs`, `forcedThisFrame`,
+  `mustDrainSpentMs`). Print da sala com os contadores.
+- **T1.9** (decisão C do dono) Achar por que uma consulta de oclusão do áudio custa até 9,2 ms depois da cratera (o raio atravessa o mundo da
+  destruição; `occlusion-tracker.ts:90`, `:109`): perfilar a `query` na régua, achar o dono do custo (índice refeito, travessia de objetos) e
+  dividir o custo nele (trabalho fatiado ou incremental no dono). Só se não der, `nextUnitMs` opcional em `DeferredQueue` (guarda de fome o
+  ignora; filas do `WorkBudget` não o implementam). Aceite: medição (gate 5) com a consulta p99 abaixo de 1 ms em `crater`; testes do dono.
+- **T1.10** (decisão B do dono) Campo de fluxo da multidão em unidades por padrão: `cellsPerStep` no lugar de `flowBudgetMs`/`clock() − t0`
+  (`game-crowd/src/crowd.ts:413`, `:457`; `data/defaults.json:29`). **Parar e perguntar** se algum golden ou hash da multidão mudar. Aceite:
+  testes do `game-crowd` e dos pacotes que o usam, goldens sem diff, e o relógio do fluxo fora da tabela P1.
+
 
 ## Fase 2 — Estrutura adiada e custo por peça acordada
 > 🤖 Modelo: `sonnet` (T2.1 é 🧠 — `opus`, validar com `engenheiro-estrutural`)
