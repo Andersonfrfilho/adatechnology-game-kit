@@ -38,6 +38,7 @@ type Entry = { readonly key: string; readonly id: string; readonly scenario?: st
 /** Triangles of collider work per update when a vehicle is placed: a car fills in over about ten updates. */
 const COLLIDER_BUDGET = 25000
 const LANE = { z: 11, from: -12, wall: 13 }
+const CRASH_WALL = { length: 6, height: 2, thickness: 0.15 } as const
 /** A rim on the road throws a burst of sparks this often. */
 const SPARK_EVERY_S = 0.08
 /** The lane damages of a tyre. */
@@ -99,7 +100,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   let axes: THREE_NS.Object3D[] = []
   let lane: Lane | null = null
 
-  type Lane = { car: ReturnType<ReturnType<typeof createVehiclesThree>['build']>; group: THREE_NS.Object3D; wall: THREE_NS.Mesh<THREE_NS.BoxGeometry, THREE_NS.MeshStandardMaterial>; mode: 'arcade' | 'semi'; step(dt: number): void; speed(): number; distance(): number; done: boolean; stopped: number }
+  type Lane = { car: ReturnType<ReturnType<typeof createVehiclesThree>['build']>; group: THREE_NS.Object3D; wall: THREE_NS.Object3D | null; mode: 'arcade' | 'semi'; step(dt: number): void; speed(): number; distance(): number; done: boolean; stopped: number }
 
   const effects = (): EffectsLike | undefined => host?.effects
   // the sounds are asked of the host's shared engine by id (the sink may be absent, and then the module is silent)
@@ -346,7 +347,10 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     stopEngine()
     if (!lane) return
     lane.group.parent?.remove(lane.group)
-    lane.wall.parent?.remove(lane.wall)
+    if (lane.wall) {
+      lane.wall.parent?.remove(lane.wall)
+      discardObject3D(lane.wall)
+    }
     lane = null
   }
   const startLane = (): void => {
@@ -356,10 +360,14 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     const vehicles = createVehiclesThree(three, { kit, fleet })
     // damage needs the parts drawn: the car is built in full only then
     const built = vehicles.build('compact_hatch', { quality: settings.damage === 'none' ? 'lite' : 'high', seed: settings.seed })
-    const wall = new three.Mesh(new three.BoxGeometry(0.6, 2, 6), new three.MeshStandardMaterial({ color: 0x777777 }))
-    wall.position.set(LANE.wall + 0.3, 1, LANE.z)
+    const wall = options.wall ? (options.wall(three, CRASH_WALL) as THREE_NS.Object3D) : null
     const scene = host.scene as THREE_NS.Object3D
-    scene.add(built.group, wall)
+    scene.add(built.group)
+    if (wall) {
+      wall.rotation.y = Math.PI / 2
+      wall.position.set(LANE.wall + CRASH_WALL.thickness / 2, 0, LANE.z)
+      scene.add(wall)
+    }
     // damage acts through the semi driver's condition
     const mode = settings.driving === 'semi' || settings.damage !== 'none' ? 'semi' : 'arcade'
     const damage = settings.damage === 'none' || !built.context ? null : createLaneDamage({ kit, context: built.context as VehicleContext, frame: built.group, damage: settings.damage })

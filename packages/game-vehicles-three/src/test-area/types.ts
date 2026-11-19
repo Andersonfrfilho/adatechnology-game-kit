@@ -73,6 +73,8 @@ export type VehiclesTestOptions = {
   readonly effects?: Partial<VehicleEffectIds>
   /** Sound ids requested through `host.audio` (the defaults: the vehicle bank of this package). */
   readonly sounds?: Partial<VehicleSoundIds>
+  /** Crash wall builder for the driving lane (`wallPiece` from `@adatechnology/game-floorplan-three`, base at origin along x). Omitted: no wall mesh drawn. */
+  readonly wall?: (three: unknown, spec: { readonly length: number; readonly height: number; readonly thickness: number }) => unknown
 }
 
 /** The part of the test room the scenarios use (the room's `ScenarioContext.room` has all of it). */
