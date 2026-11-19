@@ -202,3 +202,12 @@ Decisões pedidas ao dono:
 2. Qual C8 vale: a proposta acima ou outra?
 3. A ordem P1 → P3 → P2 e a T0.4 de régua.
 4. O `h` do passo único: 1/60 ou 1/120.
+
+## Decisões do dono (2026-11-19)
+
+Respostas às quatro perguntas da T0.3:
+
+1. **Quadro 0 conta na meta.** Nova task de régua T0.4 antes da fase 1: relógio do f0 aberto antes do `blastAt`/`world.hit` e `rest` com dono.
+2. **C8 nova** (a proposta da T0.3): a 1x, pior quadro inteiro (update mais `renderCpu`) sem f0 ≤ 16,6 ms e update do f0 ≤ 16,6 ms; a 4x, p99 do update ≤ 16,6 ms e pior quadro não pior que a T0.2 (54,1 / 54,1 / 50,4); p99 do update ≤ 8 ms a 1x fica como não regressão.
+3. **Ordem P1 → P3 → P2.** Fase 2 vira estrutura adiada e custo por peça acordada, com a T2.1 estendida a `splitLoose`/`adoptSplit`/`rebuildHost` uma vez por objeto por drenagem (mantida a parada se o hash de eventos mudar); fase 3 vira passo fixo e desenho interpolado.
+4. **Passo único `h = 1/120`:** o agendador adota o `fixedStep` do `KIT_WORLD`; física e goldens não mudam; o valor de P2 é correção (C4, C5, 144 Hz), não ms. D5 e D6 do `plan.md` atualizadas.

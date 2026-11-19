@@ -17,7 +17,7 @@ Cada task responde: **Mecânica?** (o que fazer está todo descrito) e **Aceite 
 7. `wc -l packages/game-test-room/src/room.ts` não cresce (5.620 em 2026-11-18).
 
 ## Fase 0 — Régua
-> 🤖 Modelo: `sonnet` (T0.3 é 🧠 — `opus`)
+> 🤖 Modelo: `sonnet` (T0.3 é 🧠 — `opus`; T0.4 → `sonnet`)
 
 - **T0.1** Variante padrão no portão. Em `tools/gpu/room-explosion.mjs`, a variante usada quando `ROOM_EXPLOSION_VARIANTS` não vem passa a ser
   a que a página usa por padrão (`jolt-d4-worker`, ritmada); `jolt-d4` continua disponível pelo nome. Atualizar o cabeçalho do arquivo e o
@@ -29,7 +29,16 @@ Cada task responde: **Mecânica?** (o que fazer está todo descrito) e **Aceite 
   relógios próprios da tabela P1 do `spec.md`.
 - **T0.3 🧠** Ler a régua contra P1, P2 e P3. Escrever no `evidence.md` quanto do pior quadro cada causa explica e confirmar ou trocar a ordem
   das fases e a meta C8. **Parar e perguntar ao dono** se um módulo fora da lista explicar mais de um terço do pior quadro, ou se P1, P2 e P3
-  juntos explicarem menos da metade.
+  juntos explicarem menos da metade. **Fechada em 2026-11-19** com as decisões do dono (`evidence.md`, "Decisões do dono"): C8 nova, ordem
+  P1 → P3 → P2, passo `h = 1/120`, f0 na meta (T0.4).
+
+- **T0.4** A régua cobre o quadro 0 inteiro (decisão do dono, 2026-11-19: o f0 entra na meta). Em `tools/gpu/room-explosion.mjs`, abrir o
+  relógio do f0 antes de `room.blastAt`/`room.world.hit`, para o `world.explode`/`hit` síncrono (e os `solveStructure`) caírem nele, mantendo
+  a coluna antiga (`wakeFrame`) para comparar com a T0.2. Dar dono ao `rest` do f0 com `FRAME_LABELS` novos: `flush()` do fim do quadro
+  (`room.ts:770`), `updatePresent`, o próprio `explode`/`hit` e os relógios próprios sem rótulo (lotes da sala, `vehicleHit`, caixas estáticas,
+  oclusão do áudio), medidos pelo lado da sonda; gancho em `packages/` só se inevitável, sem custo fora da medição, e sem crescer
+  `room.ts`. Nenhum padrão síncrono muda. Aceite: `node --check`, testes de `tools/gpu/tests`, gates e uma medição igual à da T0.2 gravada em
+  `medicoes/regua-t04-<commit>.json`, com o f0 dividido por rótulo no `evidence.md`.
 
 ## Fase 1 — Orçamento único pelo prazo do quadro
 > 🤖 Modelo: `sonnet` (T1.1 é 🧠 — `opus`, validar com `architect` antes de implementar; T1.4 → `haiku`)
@@ -55,41 +64,47 @@ Cada task responde: **Mecânica?** (o que fazer está todo descrito) e **Aceite 
   prazo fora de `game-runtime`), com lista de exceções vazia. Aceite: `node tools/kit-audit/audit.mjs --check` (C3).
 - **T1.8** Medir (gate 5) e conferir a C2 na tempestade do `perf.mjs` (`budget.stats()` por quadro). Print da sala com os contadores.
 
-## Fase 2 — Um passo fixo só e desenho interpolado
-> 🤖 Modelo: `sonnet` (T2.1 é 🧠 — `opus`)
+## Fase 2 — Estrutura adiada e custo por peça acordada
+> 🤖 Modelo: `sonnet` (T2.1 é 🧠 — `opus`, validar com `engenheiro-estrutural`)
 
-- **T2.1 🧠** Lista fechada (D6) em `design-passo-fixo.md`: cada chamada de `simulateBeforeModules` e `simulateAfterModules`
-  (`room.ts:4153` em diante) classificada como passo fixo ou quadro, com o motivo; o mesmo para os módulos de área que simulam.
-  Decide o que acontece com `fastForward` (10 repetições) e com os cenários síncronos (`run.exact`).
-- **T2.2** Teste de equivalência antes de mover: a mesma cena (explosão no sobrado, fogo, fluido derramado) simulada com `dt = 1/60` por
-  quadro hoje e depois da mudança dá o mesmo hash de eventos e de estado. Fica no CI.
-- **T2.3** `PhysicsLoop.stepFixed(steps)` em `game-physics/src/loop.ts` (D5); `step(dt)` passa a ser `stepFixed` com o próprio acumulador,
-  para quem usa o laço sozinho. Teste: os dois caminhos dão a mesma sequência de `beforeStep`/`afterSteps`.
-- **T2.4** A sala registra a simulação da T2.1 em `fixedSimulate` e o resto em `lateSimulate`; o `physicsLoop` é passado pelo agendador.
-  Aceite: T2.2 verde, teste da ordem das fases (C4).
-- **T2.5** Pose anterior e interpolação (D7) em `game-destruction-three`: peças (`pieces.ts`, `engine-pieces.ts`) e fragmentos
-  (`fragments.ts`), atrás da opção `interpolate`. Teste: com `alpha` 0 e 1 a pose desenhada é a do passo anterior e a do atual; nenhuma
-  alocação por quadro; a simulação não lê a pose desenhada.
-- **T2.6** A sala liga `interpolate`. Teste C5 (60, 120 e 144 Hz, mesmo hash por passo). Regra §5 quando o que se move é o jogador ou a arma:
-  conferir primeira e terceira pessoa com print.
-- **T2.7** Medir (gate 5) e registrar também o histograma de passos por quadro a 60 e a 144 Hz.
-
-## Fase 3 — Estrutura adiada e custo por peça acordada
-> 🤖 Modelo: `sonnet` (T3.1 é 🧠 — `opus`, validar com `engenheiro-estrutural`)
-
-- **T3.1 🧠** Estrutura adiada (D9) em `game-destruction/src/world.ts`: `partLost` (`:3020`) marca `o.dirty` e acumula as juntas abertas;
+- **T2.1 🧠** Estrutura adiada (D9) em `game-destruction/src/world.ts`: `partLost` (`:3020`) marca `o.dirty` e acumula as juntas abertas;
   a solução e os eventos de soltura saem uma vez por objeto no fim do `run()` (`:697-707`). Contador de `solveStructure` no teste da explosão
-  de 4 MJ no sobrado (C7). **Parar e perguntar** se o hash de eventos de algum teste mudar: não regravar golden.
-- **T3.2** `solveStructure` (`world.ts:1259-1310`) e `recomputeGroups` (`:883`) sem alocação por chamada: `edges`, `through`, `bending` e o
+  de 4 MJ no sobrado (C7). **Mesma regra no desenho** (decisão do dono, 2026-11-19): `splitLoose`, `adoptSplit` e `rebuildHost` do
+  `game-destruction-three/src/renderer.ts` (`:1570`, `:2120`, rótulo `stagesOut`) rodam uma vez por objeto por drenagem de eventos, não uma vez
+  por evento `detach`/`collapse`; é o maior rótulo de P3 no golpe (4,7 a 6,9 ms a 1x). **Parar e perguntar** se o hash de eventos de algum teste
+  mudar: não regravar golden.
+- **T2.2** `solveStructure` (`world.ts:1259-1310`) e `recomputeGroups` (`:883`) sem alocação por chamada: `edges`, `through`, `bending` e o
   union-find reaproveitados por objeto. Mesmo hash. De passagem: as três cópias de `objects` por `world.update` (`:5891-5893`) e a de
   `revealHostedIn` (`:3016`).
-- **T3.3** Lista `awake` no sistema de peças (D8): `prepare` (`engine-pieces.ts:472-502`), `finish`/`readBack` (`:517`, `:1416`) e
+- **T2.3** Lista `awake` no sistema de peças (D8): `prepare` (`engine-pieces.ts:472-502`), `finish`/`readBack` (`:517`, `:1416`) e
   `measure` (`pieces.ts`) percorrem só as acordadas; o sono do motor lido em lote. Teste C6 com `world` falso que conta chamadas.
-- **T3.4** `readPose` e `readVelocity` do adaptador (`game-physics-jolt/src/world.ts:459-482`) lendo do heap como `friction.ts` (`vec3At`),
+- **T2.4** `readPose` e `readVelocity` do adaptador (`game-physics-jolt/src/world.ts:459-482`) lendo do heap como `friction.ts` (`vec3At`),
   uma travessia por corpo. Teste: mesmos bytes do caminho antigo em 1.000 corpos.
-- **T3.5** `syncTransforms` e os laços por objeto do `renderer.ts` (`:1083-1108`, `:1263-1296`) e do `fragments.update`
+- **T2.5** `syncTransforms` e os laços por objeto do `renderer.ts` (`:1083-1108`, `:1263-1296`) e do `fragments.update`
   (`fragments.ts:503-555`) só no que mudou no passo; `matrixAutoUpdate = false` em peça e objeto parado (com `discardObject3D` intacto, §8).
-- **T3.6** Medir (gate 5) e a bancada da C6 (500 e 5.000 peças dormindo).
+- **T2.6** Medir (gate 5) e a bancada da C6 (500 e 5.000 peças dormindo).
+
+## Fase 3 — Um passo fixo só e desenho interpolado
+> 🤖 Modelo: `sonnet` (T3.1 é 🧠 — `opus`, validar com `engenheiro-estrutural`)
+
+Passo único `h = 1/120` (decisão do dono, 2026-11-19): o agendador adota o `fixedStep` do `KIT_WORLD` (`game-physics/src/contract.ts:266`); o
+comportamento da física e os goldens não mudam. O valor desta fase é correção (C4, C5, 144 Hz), não ms.
+
+- **T3.1 🧠** Lista fechada (D6) em `design-passo-fixo.md`: cada chamada de `simulateBeforeModules` e `simulateAfterModules`
+  (`room.ts:4153` em diante) classificada como passo fixo ou quadro, com o motivo; o mesmo para os módulos de área que simulam.
+  Decide o que acontece com `fastForward` (10 repetições) e com os cenários síncronos (`run.exact`). Fixa `h = 1/120` no agendador.
+- **T3.2** Teste de equivalência antes de mover: a mesma cena (explosão no sobrado, fogo, fluido derramado) simulada com `dt = 1/60` por
+  quadro (dois passos de 1/120) hoje e depois da mudança dá o mesmo hash de eventos e de estado. Fica no CI.
+- **T3.3** `PhysicsLoop.stepFixed(steps)` em `game-physics/src/loop.ts` (D5); `step(dt)` passa a ser `stepFixed` com o próprio acumulador,
+  para quem usa o laço sozinho. Teste: os dois caminhos dão a mesma sequência de `beforeStep`/`afterSteps`.
+- **T3.4** A sala registra a simulação da T3.1 em `fixedSimulate` e o resto em `lateSimulate`; o `physicsLoop` é passado pelo agendador.
+  Aceite: T3.2 verde, teste da ordem das fases (C4).
+- **T3.5** Pose anterior e interpolação (D7) em `game-destruction-three`: peças (`pieces.ts`, `engine-pieces.ts`) e fragmentos
+  (`fragments.ts`), atrás da opção `interpolate`. Teste: com `alpha` 0 e 1 a pose desenhada é a do passo anterior e a do atual; nenhuma
+  alocação por quadro; a simulação não lê a pose desenhada.
+- **T3.6** A sala liga `interpolate`. Teste C5 (60, 120 e 144 Hz, mesmo hash por passo). Regra §5 quando o que se move é o jogador ou a arma:
+  conferir primeira e terceira pessoa com print.
+- **T3.7** Medir (gate 5) e registrar também o histograma de passos por quadro a 60 e a 144 Hz.
 
 ## Fase 4 — Fechamento
 > 🤖 Modelo: `sonnet` (revisão final → `code-reviewer` `sonnet`)
@@ -107,12 +122,13 @@ Cada task responde: **Mecânica?** (o que fazer está todo descrito) e **Aceite 
 ```text
 /oh-my-claudecode:autopilot Execute a spec specs/010-quadro-com-prazo/ (leia spec.md, plan.md, tasks.md e
 specs/regras/15-quadro-e-desempenho.md antes de começar). Uma task por vez, na ordem do tasks.md, num worktree próprio.
-Modelos: Fase 0 → executor model=sonnet · T0.3 🧠 → opus · Fase 1 → executor model=sonnet · T1.1 🧠 → opus (validar com architect) ·
-T1.4 → executor model=haiku · Fase 2 → executor model=sonnet · T2.1 🧠 → opus · Fase 3 → executor model=sonnet ·
-T3.1 🧠 → opus (validar com engenheiro-estrutural) · Fase 4 → executor model=sonnet · revisão final → code-reviewer model=sonnet.
+Modelos: Fase 0 → executor model=sonnet (T0.4 incluída) · T0.3 🧠 → opus · Fase 1 → executor model=sonnet · T1.1 🧠 → opus (validar com architect) ·
+T1.4 → executor model=haiku · Fase 2 → executor model=sonnet · T2.1 🧠 → opus (validar com engenheiro-estrutural) · Fase 3 → executor model=sonnet ·
+T3.1 🧠 → opus · Fase 4 → executor model=sonnet · revisão final → code-reviewer model=sonnet.
 Escalada: gate falhou 2x → sobe um nível (haiku→sonnet→opus) e registra em evidence.md.
 Cada task fecha com typecheck + testes + check:layers + kit-audit + commit isolado, evidência em evidence.md.
 Medição de tempo só com flock ~/.cache/adatechnology-game-kit/perf-measure.lock, carga abaixo de 4, na variante padrão; nunca no CI.
+Ordem das fases: 1 (P1) → 2 (estrutura e peça acordada, P3) → 3 (passo 1/120 e interpolação, P2).
 Pare e pergunte antes de: seguir depois da T0.3 se a régua desmentir a ordem, regravar qualquer golden ou hash de eventos,
 mudar um padrão que hoje é síncrono, push e abertura de PR.
 ```
