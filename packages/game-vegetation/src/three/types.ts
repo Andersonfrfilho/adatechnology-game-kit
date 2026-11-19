@@ -3,6 +3,7 @@ import type { MaterialIds } from '../destruction'
 
 /** The THREE namespace is passed in by the host at runtime (r160). This package only imports its types. */
 export type ThreeNS = typeof ThreeTypes
+export type BufferGeometry = ThreeTypes.BufferGeometry
 export type Material = ThreeTypes.Material
 
 export const MAX_ACTORS = 4

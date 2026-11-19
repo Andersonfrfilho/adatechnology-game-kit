@@ -108,6 +108,9 @@ declare global {
   const GameInteractablesThree: typeof import('@adatechnology/game-interactables-three')
   const GameTerrain: typeof import('@adatechnology/game-terrain')
   const GameTerrainThree: typeof import('@adatechnology/game-terrain-three')
+  const GameVegetation: typeof import('@adatechnology/game-vegetation')
+  const GameVegetationThree: typeof import('@adatechnology/game-vegetation/three')
+  const GameVegetationSpecies: typeof import('@adatechnology/game-vegetation-species')
   const Reflector: typeof import('three/examples/jsm/objects/Reflector.js').Reflector
   const RoomEnvironment: typeof import('three/examples/jsm/environments/RoomEnvironment.js').RoomEnvironment
   /** The recorded sfx the test room page inlines (`examples/test-room/build.mjs`): the manifest and each file as a `data:` url. */
@@ -396,6 +399,8 @@ declare global {
     /** The room of a deferred page, before its areas are open. */
     __bootRoom?: TestRoom
     __THREE: typeof THREE
+    /** Seconds the renderer has stepped the pieces by since `rolling-test.mjs` wrapped its `update` (the world's clock, not the wall's). */
+    __simSeconds: number
     // What the room page (`examples/test-room/src/main.js`) publishes as its sounds load and its scenarios run
     __sfxReport?: import('@adatechnology/game-audio').SampleLoadReport
     __localSoundPack?: ReturnType<typeof import('@adatechnology/game-audio').applyLocalSoundPack>

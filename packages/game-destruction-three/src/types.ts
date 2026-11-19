@@ -139,6 +139,11 @@ export interface RendererOptions {
    * piece stands on the terrain itself (not on a top, a fixed thing or another piece). A round piece rolls by the larger of its own and this one.
    */
   terrainRollingAt?: (x: number, z: number) => number | undefined
+  /**
+   * The rolling damping (1/s) of the terrain's surface at (x, z), from its material (`TerrainMaterial.rollingDamping`: grass and sand drag a rolling thing more the faster it
+   * rolls), or undefined for the default (`GROUND_ROLLING_DAMPING`, a hard floor). Read where `terrainRollingAt` is.
+   */
+  terrainRollingDampingAt?: (x: number, z: number) => number | undefined
   /** The most tiles of ground the physics engine lays at a blast, nearest first (default 0: the tiles are laid as the pieces reach them; a count lays that many at a blast, which moves their cost into the explosion's frame). */
   blastGroundTiles?: number
   /**

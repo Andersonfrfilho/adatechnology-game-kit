@@ -51,6 +51,11 @@ export interface TerrainMaterial {
    * grass) gives under the roller and holds it back far more than a hard one (asphalt, concrete). Left out: the host's default (a hard floor).
    */
   readonly rolling?: number
+  /**
+   * Its rolling damping (1/s): the share of its spin a round thing rolling on it loses per second on top of `rolling`, from what drags more the faster it rolls (grass
+   * blades, ploughed sand). Added to the roller's own. Left out: the host's default (a hard floor).
+   */
+  readonly rollingDamping?: number
   /** Liquid (of the fluids catalogue) a blow on it throws up. */
   readonly splash?: string
   /** Its pieces do not join the ground where they land: they stay as loose stones. */
@@ -442,6 +447,8 @@ export interface Terrain {
   columnAt(x: number, z: number): TerrainColumn
   /** The rolling resistance (`TerrainMaterial.rolling`) of the material exposed at (x, z), as `columnAt` reads it, without building the column; undefined: the host's default. */
   rollingAt(x: number, z: number): number | undefined
+  /** The rolling damping (`TerrainMaterial.rollingDamping`) of the material exposed at (x, z), read as `rollingAt`; undefined: the host's default. */
+  rollingDampingAt(x: number, z: number): number | undefined
   contains(x: number, z: number): boolean
   /** First point of the ground along a ray, or null. */
   raycast(origin: readonly number[], direction: readonly number[], maxDistance: number): { point: [number, number, number]; distance: number; normal: [number, number, number] } | null

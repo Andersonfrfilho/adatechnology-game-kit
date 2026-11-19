@@ -1,4 +1,4 @@
-/* global THREE, Reflector, RoomEnvironment, GameInteractables, GameInteractablesHousehold, GameInteractablesThree, GameTerrain, GameTerrainThree */
+/* global THREE, Reflector, RoomEnvironment, GameInteractables, GameInteractablesHousehold, GameInteractablesThree, GameTerrain, GameTerrainThree, GameVegetation, GameVegetationThree, GameVegetationSpecies */
 // Walkable showroom of every household interactive object. Plain browser JS on top of the globals set by src/entry.js.
 // Generic example of @adatechnology/game-interactables (+ household pack + three adapter): nothing here is specific to a game.
 ;(function () {
@@ -292,33 +292,6 @@
       m.receiveShadow = receive !== false
       return m
     }
-  }
-  /**
-     * Merges non-indexed copies of geometries (with per-geometry vertex color) into one.
-     * @param {({ geo: THREE.CylinderGeometry; matrix: THREE.Matrix4; color: number; } | { geo: THREE.IcosahedronGeometry; matrix: THREE.Matrix4; color: number; })[]} list
-     */
-  function mergeColored(list) {
-    const pos = []
-    const nor = []
-    const col = []
-    const c = new T.Color()
-    for (const { geo, matrix, color } of list) {
-      const g = geo.index ? geo.toNonIndexed() : geo.clone()
-      g.applyMatrix4(matrix)
-      c.setHex(color)
-      const p = g.getAttribute('position').array
-      const n = g.getAttribute('normal').array
-      for (let i = 0; i < p.length; i++) {
-        pos.push(p[i])
-        nor.push(n[i])
-      }
-      for (let i = 0; i < p.length / 3; i++) col.push(c.r, c.g, c.b)
-    }
-    const out = new T.BufferGeometry()
-    out.setAttribute('position', new T.Float32BufferAttribute(pos, 3))
-    out.setAttribute('normal', new T.Float32BufferAttribute(nor, 3))
-    out.setAttribute('color', new T.Float32BufferAttribute(col, 3))
-    return out
   }
   /**
      * @param {number} x0
@@ -637,28 +610,21 @@
     return env
   }
 
-  // trees (instanced, one draw call)
+  // yard trees from the vegetation SDK (merged into 2 meshes: wood + foliage)
   function buildTrees() {
-    const parts = []
-    const m = new T.Matrix4()
-    parts.push({ geo: new T.CylinderGeometry(0.16, 0.24, 2.2, 7), matrix: m.clone().makeTranslation(0, 1.1, 0), color: 0x6b4a2f })
-    for (const [y, r] of [[2.6, 1.5], [3.7, 1.15], [4.6, 0.75]]) parts.push({ geo: new T.IcosahedronGeometry(r, 0), matrix: m.clone().makeTranslation(0, y, 0), color: 0x3f7a42 })
-    const geo = mergeColored(parts)
-    const mat = state.quality === 'game' ? new T.MeshLambertMaterial({ vertexColors: true }) : new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 })
-    const spots = [[-4, -6, 1.3], [3, -8, 1.6], [10, -7, 1.2], [17, -3, 1.5], [18, 6, 1.1], [19, 14, 1.4], [16, 20, 1.2], [8, 22, 1.5], [0, 21, 1.3], [-6, 17, 1.6], [-8, 7, 1.2], [-7, -1, 1.4], [14, -9, 1.7], [-12, 12, 1.5]]
-    const inst = new T.InstancedMesh(geo, mat, spots.length)
-    const o = new T.Object3D()
-    spots.forEach((s, i) => {
-      o.position.set(s[0], 0, s[1])
-      o.scale.setScalar(s[2] * 0.62)
-      o.rotation.y = i * 1.7
-      o.updateMatrix()
-      inst.setMatrixAt(i, o.matrix)
+    const yardSpecies = ['sidewalk_ficus', 'oak_like', 'eucalyptus']
+    const spots = [[-4, -6, 0.9], [3, -8, 1.0], [10, -7, 0.85], [17, -3, 0.95], [18, 6, 0.85], [19, 14, 0.95], [16, 20, 0.85], [8, 22, 1.0], [0, 21, 0.9], [-6, 17, 1.0], [-8, 7, 0.85], [-7, -1, 0.95], [14, -9, 1.0], [-12, 12, 0.95]]
+    const placements = spots.map((s, i) => ({ species: yardSpecies[i % yardSpecies.length], x: s[0], z: s[1], ry: i * 1.7, scale: s[2], seed: 100 + i }))
+    const lot = GameVegetation.buildLot(placements, (id) => GameVegetationSpecies.toSpec(id), { seed: 'showroom', quality: state.quality === 'game' ? 'game' : 'high' })
+    const mats = GameVegetationThree.createVegetationMaterials(T)
+    const group = GameVegetationThree.createLotObject(T, lot, mats)
+    group.traverse((node) => {
+      if ('isMesh' in node && node.isMesh) {
+        node.castShadow = false
+        node.receiveShadow = true
+      }
     })
-    inst.castShadow = true
-    inst.receiveShadow = true
-    inst.frustumCulled = false
-    return inst
+    return group
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------

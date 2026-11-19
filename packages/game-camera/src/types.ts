@@ -1,11 +1,39 @@
-import type * as ThreeNamespace from 'three'
 import type { CameraLocale } from './locale'
 
+/** Minimal 3D vector surface needed by the rig (structurally compatible with `THREE.Vector3`). */
+export interface Vector3Like {
+  x: number
+  y: number
+  z: number
+  set(x: number, y: number, z: number): this
+  copy(v: Vector3Like): this
+  add(v: Vector3Like): this
+  applyQuaternion(q: QuaternionLike): this
+}
+
+/** Minimal quaternion surface needed by the rig (structurally compatible with `THREE.Quaternion`). */
+export interface QuaternionLike {
+  x: number
+  y: number
+  z: number
+  w: number
+  setFromAxisAngle(axis: Vector3Like, angle: number): this
+  copy(q: QuaternionLike): this
+  multiply(q: QuaternionLike): this
+}
+
 /** The only three.js members the rig needs at runtime. Pass your own `THREE` instance. */
-export type ThreeLib = Pick<typeof ThreeNamespace, 'Vector3' | 'Quaternion'>
+export interface ThreeLib {
+  readonly Vector3: new (x?: number, y?: number, z?: number) => Vector3Like
+  readonly Quaternion: new (x?: number, y?: number, z?: number, w?: number) => QuaternionLike
+}
 
 /** Anything that behaves like a `THREE.Camera` for the rig. */
-export type CameraLike = Pick<ThreeNamespace.Camera, 'position' | 'quaternion' | 'lookAt' | 'updateMatrixWorld'> & {
+export interface CameraLike {
+  readonly position: Vector3Like
+  readonly quaternion: QuaternionLike
+  lookAt(vector: Vector3Like): void
+  updateMatrixWorld(force?: boolean): void
   /** Vertical field of view in degrees (a `PerspectiveCamera` has it): the rig drives it when the target gives a `zoom`. */
   fov?: number
   /** Called after the rig changes `fov`. */
@@ -13,7 +41,10 @@ export type CameraLike = Pick<ThreeNamespace.Camera, 'position' | 'quaternion' |
 }
 
 /** The weapon/hand group glued to the camera in first person (barrel along local +z). */
-export type ViewmodelTarget = Pick<ThreeNamespace.Object3D, 'position' | 'quaternion'>
+export interface ViewmodelTarget {
+  readonly position: Vector3Like
+  readonly quaternion: QuaternionLike
+}
 
 export type CameraMode = 'shoulder' | 'third' | 'first'
 

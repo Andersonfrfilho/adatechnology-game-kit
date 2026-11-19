@@ -1,54 +1,6 @@
 [
   {
     "type": "dependency",
-    "from": "packages/game-camera/src/types.ts",
-    "to": "node_modules/.pnpm/three@0.160.1/node_modules/three/build/three.module.js",
-    "unresolvedTo": "three",
-    "dependencyTypes": [
-      "npm-peer",
-      "npm-dev",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-no-three"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-devtools/src/types.ts",
-    "to": "node_modules/.pnpm/three@0.160.1/node_modules/three/build/three.module.js",
-    "unresolvedTo": "three",
-    "dependencyTypes": [
-      "npm-peer",
-      "npm-dev",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-no-three"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/game-vegetation/src/three/objects.ts",
-    "to": "node_modules/.pnpm/three@0.160.1/node_modules/three/build/three.module.js",
-    "unresolvedTo": "three",
-    "dependencyTypes": [
-      "npm-peer",
-      "npm-dev",
-      "type-only",
-      "import"
-    ],
-    "rule": {
-      "severity": "error",
-      "name": "core-no-three"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/game-vegetation/src/three/types.ts",
     "to": "node_modules/.pnpm/three@0.160.1/node_modules/three/build/three.module.js",
     "unresolvedTo": "three",

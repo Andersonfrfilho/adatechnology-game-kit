@@ -7,6 +7,9 @@ import * as GameInteractablesHousehold from '@adatechnology/game-interactables-h
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import * as GameTerrain from '@adatechnology/game-terrain'
 import * as GameTerrainThree from '@adatechnology/game-terrain-three'
+import * as GameVegetation from '@adatechnology/game-vegetation'
+import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
+import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 
 Object.assign(window, { THREE, Reflector, RoomEnvironment, GameInteractables, GameInteractablesHousehold, GameInteractablesThree })
-Object.assign(window, { GameTerrain, GameTerrainThree })
+Object.assign(window, { GameTerrain, GameTerrainThree, GameVegetation, GameVegetationThree, GameVegetationSpecies })

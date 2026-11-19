@@ -70,6 +70,11 @@ export interface Material {
   readonly restitution: number
   /** The surface's rolling resistance (C_rr): a round body rolling on it takes the larger of its own (`Rolling.coefficient`) and the surface's, as the softer surface decides. */
   readonly rolling?: number
+  /**
+   * The surface's rolling damping (1/s): a round body rolling on it loses this share of its spin per second, on top of `rolling`, as grass blades, sand and a soft body
+   * drag more the faster it rolls. Added to the body's own (`Rolling.damping`): both surfaces lose energy in the contact.
+   */
+  readonly rollingDamping?: number
 }
 
 export const DEFAULT_MATERIAL: Material = { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0.2 }
@@ -110,6 +115,8 @@ export interface BodyDesc {
 export interface Rolling {
   readonly coefficient: number
   readonly radius: number
+  /** The body's own rolling damping (1/s, `Material.rollingDamping`): while it touches something its spin decays by exp(-(own + surface's) t). Default 0. */
+  readonly damping?: number
 }
 
 /** An opaque handle; the adapter owns what it points to. */

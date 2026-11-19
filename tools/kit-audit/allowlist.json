@@ -79,11 +79,6 @@
   ],
   "pending": [
     {
-      "file": "examples/interactables-showroom/src/showroom.js",
-      "domain": "plants",
-      "fix": "the yard trees from game-vegetation-species (game-vegetation-three)"
-    },
-    {
       "file": "packages/game-characters-three/src/rich/accessories/extras.ts",
       "domain": "items",
       "fix": "the radio from game-items-goods (portable_radio) drawn by game-items-three"
@@ -117,11 +112,6 @@
       "file": "packages/game-vegetation-three/src/test-area/nursery.ts",
       "domain": "structure",
       "fix": "the nursery's house, walls and street from game-floorplan and game-urban"
-    },
-    {
-      "file": "packages/game-vehicles-three/src/test-area/module.ts",
-      "domain": "structure",
-      "fix": "the crash wall of the vehicles area from game-floorplan-structure (buildWallSpecimen)"
     },
     {
       "file": "packages/game-weapons-three/src/world-explosives.ts",

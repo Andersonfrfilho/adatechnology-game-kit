@@ -4,6 +4,7 @@ import { AwakeList } from './awake-list'
 import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
 import { squareBoxOf } from './internal'
+import { GROUND_ROLLING_DAMPING, PIECE_ROLLING_DAMPING } from './friction'
 import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
@@ -30,6 +31,8 @@ export interface PieceSystemOptions {
    * terrain where `groundAt` answers exactly `terrainAt` (or there is no `terrainAt`): `groundAt` must return the terrain's own value, to the bit, where nothing is on it.
    */
   terrainRollingAt?: (x: number, z: number) => number | undefined
+  /** The rolling damping (1/s) of the terrain's surface at (x, z), undefined for the default (`RendererOptions.terrainRollingDampingAt`); read where `terrainRollingAt` is. */
+  terrainRollingDampingAt?: (x: number, z: number) => number | undefined
   /** The most tiles of ground laid at a blast, nearest first (default 0: the tiles are laid as the pieces reach them; a count lays that many at a blast, which moves their cost into the explosion's frame). Engine physics only. */
   blastGroundTiles?: number
   /**
@@ -298,6 +301,8 @@ const pairFriction = (a: PieceFriction | undefined, b: PieceFriction | null): Pi
   dynamic: Math.sqrt((a?.dynamic ?? MU_DYNAMIC) * (b?.dynamic ?? MU_DYNAMIC)),
   // the softer of the two sets how much a round thing rolling on the other sinks in and is held back
   rolling: Math.max(a?.rolling ?? 0, b?.rolling ?? ROLLING_RESISTANCE),
+  // both lose energy in the contact: a log on grass is held by its bark and by the blades
+  rollingDamping: (a?.rollingDamping ?? PIECE_ROLLING_DAMPING) + (b?.rollingDamping ?? GROUND_ROLLING_DAMPING),
 })
 
 /** The coefficient of restitution of two surfaces against each other: the geometric mean of each one's. */
@@ -379,10 +384,10 @@ export class PieceSystem {
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
   private supportFriction: PieceFriction | null = null
-  /** The terrain's surfaces by rolling resistance (`terrainSurface`), one object each. */
-  private readonly terrainSurfaces = new Map<number, PieceFriction>()
-  /** The terrain's rolling resistance by ground tile (`groundTileKey`) this update, NaN for the default: read once per tile, not per contact per substep. */
-  private readonly rollingByTile = new Map<number, number>()
+  /** The terrain's surfaces by rolling resistance and damping (`terrainSurface`), one object each. */
+  private readonly terrainSurfaces = new Map<string, PieceFriction>()
+  /** The terrain's surface by ground tile (`groundTileKey`) this update, null for the default: read once per tile, not per contact per substep. */
+  private readonly surfaceByTile = new Map<number, PieceFriction | null>()
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -935,7 +940,7 @@ export class PieceSystem {
 
   /** A step of `dt`: the pieces `only.moves` takes move (all when absent) and the pairs `only.meets` takes meet, so each pair meets in one of the steps of an update. */
   private step(dt: number, only?: StepFilter): void {
-    this.rollingByTile.clear()
+    this.surfaceByTile.clear()
     this.measure()
     this.wakeUnsupported()
     for (const b of this.list) {
@@ -1197,16 +1202,25 @@ export class PieceSystem {
     const rollingAt = this.o.terrainRollingAt
     if (!rollingAt || y !== raw || (this.o.terrainAt && y !== this.o.terrainAt(x, z))) return null
     const key = groundTileKey(x, z)
-    let rolling = this.rollingByTile.get(key)
-    if (rolling === undefined) {
-      rolling = tileRollingAt(rollingAt, x, z) ?? Number.NaN
-      this.rollingByTile.set(key, rolling)
+    let surface = this.surfaceByTile.get(key)
+    if (surface === undefined) {
+      surface = this.tileSurface(rollingAt, x, z)
+      this.surfaceByTile.set(key, surface)
     }
-    if (Number.isNaN(rolling)) return null
-    let surface = this.terrainSurfaces.get(rolling)
+    return surface
+  }
+
+  /** The terrain's surface of the tile at (x, z) (`tileRollingAt`), or null when it says nothing (the default surface). */
+  private tileSurface(rollingAt: (x: number, z: number) => number | undefined, x: number, z: number): PieceFriction | null {
+    const dampingAt = this.o.terrainRollingDampingAt
+    const rolling = tileRollingAt(rollingAt, x, z)
+    const rollingDamping = dampingAt ? tileRollingAt(dampingAt, x, z) : undefined
+    if (rolling === undefined && rollingDamping === undefined) return null
+    const id = `${rolling ?? ROLLING_RESISTANCE}|${rollingDamping ?? GROUND_ROLLING_DAMPING}`
+    let surface = this.terrainSurfaces.get(id)
     if (!surface) {
-      surface = { static: MU_STATIC, dynamic: MU_DYNAMIC, rolling }
-      this.terrainSurfaces.set(rolling, surface)
+      surface = { static: MU_STATIC, dynamic: MU_DYNAMIC, rolling: rolling ?? ROLLING_RESISTANCE, rollingDamping: rollingDamping ?? GROUND_ROLLING_DAMPING }
+      this.terrainSurfaces.set(id, surface)
     }
     return surface
   }
@@ -1623,8 +1637,12 @@ export class PieceSystem {
       // (a deceleration of C_RR g / r about the axis it rolls on) and a little spin about the others
       if (b.round) {
         let rolling = 0
-        for (const mu of mus) rolling = Math.max(rolling, mu.rolling ?? ROLLING_RESISTANCE)
-        this.rollingResistance(b, q, w, h, rolling)
+        let damping = 0
+        for (const mu of mus) {
+          rolling = Math.max(rolling, mu.rolling ?? ROLLING_RESISTANCE)
+          damping = Math.max(damping, mu.rollingDamping ?? 0)
+        }
+        this.rollingResistance(b, q, w, h, { rolling, damping })
       } else {
         const rd = Math.exp((rs.length >= 3 ? -3 : -1.5) * h)
         w[0] *= rd
@@ -1860,9 +1878,10 @@ export class PieceSystem {
   /**
    * Slows the spin of a round piece on the ground by its rolling resistance: a torque C_rr N r about the axis it rolls on (N = m g n_y on a surface of normal n), so with
    * I = k m r^2 the spin loses C_rr g n_y / (k r) per second, and down a slope of angle t it rolls at g (sin t - C_rr cos t) / (1 + k). Standing on its rim, a can's spin
-   * about the rest dies down; lying, it keeps turning about the line it touches by (a tapered bottle rounds its narrow end).
+   * about the rest dies down; lying, it keeps turning about the line it touches by (a tapered bottle rounds its narrow end). Its rolling damping (`PieceFriction.rollingDamping`,
+   * the pair's) then takes exp(-d h) of what is left, as the grass or the sand drag more the faster it rolls.
    */
-  private rollingResistance(b: PieceBody, q: THREE_NS.Quaternion, w: Vec3, h: number, rolling: number): void {
+  private rollingResistance(b: PieceBody, q: THREE_NS.Quaternion, w: Vec3, h: number, { rolling, damping }: { readonly rolling: number; readonly damping: number }): void {
     const round = b.round
     if (!round) return
     const e = this.m.makeRotationFromQuaternion(q).elements
@@ -1873,7 +1892,7 @@ export class PieceSystem {
     const rest: Vec3 = [w[0] - roll[0], w[1] - roll[1], w[2] - roll[2]]
     const spin = Math.hypot(roll[0], roll[1], roll[2])
     const upright = b.surfaceNormal?.[1] ?? 1
-    const slow = spin > 0 ? Math.max(0, spin - (rolling * this.o.gravity * upright * h) / (round.inertia * round.radius)) / spin : 0
+    const slow = spin > 0 ? (Math.max(0, spin - (rolling * this.o.gravity * upright * h) / (round.inertia * round.radius)) / spin) * Math.exp(-damping * h) : 0
     const lying = cylinder && Math.abs(a[1]) < ROUND_LYING
     const damp = lying ? 1 : Math.exp(-3 * h)
     for (let i = 0; i < 3; i++) w[i] = roll[i] * slow + rest[i] * damp

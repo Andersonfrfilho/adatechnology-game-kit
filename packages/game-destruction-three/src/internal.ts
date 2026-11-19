@@ -128,6 +128,8 @@ export interface PieceFriction {
   readonly dynamic: number
   /** Rolling resistance coefficient of the surface, C_rr (a round thing rolling on it is held back by C_rr N); the softer of two surfaces sets it. */
   readonly rolling?: number
+  /** Rolling damping of the surface (1/s): the share of its spin a round thing rolling on it loses per second on top of `rolling`; two surfaces add theirs. */
+  readonly rollingDamping?: number
 }
 
 export interface PieceBody extends Piece {

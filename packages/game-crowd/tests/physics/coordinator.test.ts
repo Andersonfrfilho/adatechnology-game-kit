@@ -65,4 +65,30 @@ describe('the crowd physics through the worker coordinator', () => {
       workers.dispose()
     }
   }, 120_000)
+
+  it('never spawns a Worker directly without physics.workers or physics.workerFactory (CLAUDE.md §14)', () => {
+    const scope = globalThis as { Worker?: unknown }
+    const previous = scope.Worker
+    let spawned = 0
+    scope.Worker = class {
+      constructor() {
+        spawned++
+      }
+    }
+    try {
+      const grid = createNavGrid({ size: 32, border: true })
+      const { target } = makeTarget(0, 4)
+      const crowd = createCrowd({ pack: packWithBalance(), seed: 21, grid, capacity: 32, target, physics: physicsOptions({ worker: 'auto' }) })
+      crowd.spawn(0, -1, 0)
+      crowd.update(1 / 60, { target, bandCentre: [0, 0] })
+      crowd.dispose()
+      expect(spawned).toBe(0)
+
+      expect(() => createCrowd({ pack: packWithBalance(), seed: 21, grid, capacity: 32, target, physics: physicsOptions({ worker: 'on' }) })).toThrow(/physics\.workers/)
+      expect(spawned).toBe(0)
+    } finally {
+      if (previous === undefined) delete scope.Worker
+      else scope.Worker = previous
+    }
+  })
 })
