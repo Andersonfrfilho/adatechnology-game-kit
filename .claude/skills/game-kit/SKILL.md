@@ -74,6 +74,9 @@ por faixa, as categorias do kit que valem com prazo e prioridade, se vale a thre
 ### Manter documentado
 
 - `node tools/kit-audit/audit.mjs --check` roda no CI. Uma peça nova desenhada fora do dono quebra o build.
+- A mesma `audit.mjs --check` roda a regra `own-frame-clock` (§15): constante `*_BUDGET_MS`/`*_SLICE_MS` ou `performance.now()` contra prazo fora do
+  `game-runtime` quebra o build. Trabalho adiado vai numa `DeferredQueue`; sem host, `drainDetached` (`game-contracts`). Pendentes da spec 010 em
+  `tools/kit-audit/clock-pending.json`.
 - `node tools/kit-audit/scene.mjs --check` também roda no CI: abre cada área da sala de teste e falha em qualquer coisa desenhada sem a marca
   de origem (`markKitOrigin` do `game-contracts`) de um construtor do kit. Peça nova do kit marca a raiz no construtor; quem hospeda não desenha,
   usa a peça do kit. Os conhecidos ficam em `drawn` do `tools/kit-audit/allowlist.json`.

@@ -5,10 +5,12 @@
 //
 //   node tools/kit-audit/audit.mjs [--check] [--json] [--package game-weather-three]... [--domain vehicles]...
 //
-// --check exits 1 when a finding is neither allowed nor a known pending one in allowlist.json. The owners and the words of each domain live in rules.json (see README.md).
+// --check exits 1 when a finding is neither allowed nor a known pending one in allowlist.json, or an own-frame-clock hit is not in clock-pending.json (--strict-clocks: also when that list is not empty, the C3 gate). The owners and the words of each domain live in rules.json (see README.md).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { ownFrameClock } from './clock.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -140,5 +142,13 @@ if (isMain) {
     }
     console.log(`\n${open.length} novos fora do SDK dono, ${known.length} pendentes conhecidos, ${grouped.length - open.length - known.length} permitidos (allowlist.json)`)
   }
-  if (args.includes('--check') && open.length > 0) process.exit(1)
+  const clocks = ownFrameClock()
+  if (!args.includes('--json')) {
+    for (const hit of clocks.open) console.log(`FORA  own-frame-clock ${hit.file}:${hit.line}  ${hit.code}`)
+    for (const hit of clocks.pending) console.log(`PEND  own-frame-clock ${hit.file}:${hit.line}  (${hit.pending})  ${hit.code}`)
+    for (const entry of clocks.stale) console.log(`VELHA own-frame-clock ${entry.file}: "${entry.match}" (${entry.task}) nao casa mais: tire de clock-pending.json`)
+    console.log(`own-frame-clock: ${clocks.open.length} novos, ${clocks.pending.length} pendentes (C3 exige 0 no fim da fase 1), ${clocks.stale.length} entradas velhas`)
+  }
+  if (args.includes('--check') && (open.length > 0 || clocks.open.length > 0)) process.exit(1)
+  if (args.includes('--strict-clocks') && (clocks.open.length > 0 || clocks.pending.length > 0 || clocks.stale.length > 0)) process.exit(1)
 }
