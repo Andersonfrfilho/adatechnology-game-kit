@@ -129,6 +129,13 @@ export const tileRollingAt = (rollingAt: (x: number, z: number) => number | unde
   rollingAt((Math.floor(x / TILE) + 0.5) * TILE, (Math.floor(z / TILE) + 0.5) * TILE)
 const STILL_SPEED = 0.12
 const STILL_SPIN = 0.45
+const SLEEP_AFTER = 0.5
+const CALM_DRIFT = 0.01
+const CALM_TURN = 0.05
+const CALM_SLEEP_AFTER = 1.5
+
+const turnBetween = (a: readonly [number, number, number, number], q: THREE_NS.Quaternion): number =>
+  2 * Math.acos(Math.min(1, Math.abs(a[0] * q.x + a[1] * q.y + a[2] * q.z + a[3] * q.w)))
 const HARD_LANDING = 3
 const SLAM_MIN_SPEED = 2
 const SLAM_BOUNCE = 0.2
@@ -1457,8 +1464,18 @@ export class EnginePieces {
     if (!b.sleeping) {
       const still = b.onGround && !b.tipping && Math.hypot(v[0], v[1], v[2]) < STILL_SPEED && Math.hypot(w[0], w[1], w[2]) < STILL_SPIN
       b.still = still ? b.still + dt : 0
+      if (!b.hinge && (b.still >= SLEEP_AFTER || this.staysInPlace(b, b.onGround, pos, b.root.quaternion, dt))) {
+        b.sleeping = true
+        b.still = 0
+        b.calmAt = null
+        v[0] = v[1] = v[2] = 0
+        w[0] = w[1] = w[2] = 0
+        this.world.setVelocity(link.id, [0, 0, 0], [0, 0, 0])
+        this.world.sleep(link.id)
+      }
     } else {
       b.still = 0
+      b.calmAt = null
     }
     // only what the kit changed goes back: writing the pose wakes the body and starts its sleep timer again
     if (moved) this.world.setPose(link.id, pos, [this.pose[3], this.pose[4], this.pose[5], this.pose[6]], true)
@@ -1481,6 +1498,19 @@ export class EnginePieces {
       link.groundAtSleep = this.o.groundAt(c.x, c.z)
     }
     link.sleeping = b.sleeping
+  }
+
+  /** Whether the piece has kept to the same spot on the ground for `CALM_SLEEP_AFTER` (see `CALM_DRIFT`). */
+  private staysInPlace(b: PieceBody, touched: boolean, center: Vec3, q: THREE_NS.Quaternion, dt: number): boolean {
+    const at = b.calmAt
+    const turned = at ? turnBetween(at.quaternion, q) : Infinity
+    if (!touched || !at || Math.hypot(center[0] - at.center[0], center[1] - at.center[1], center[2] - at.center[2]) > CALM_DRIFT || turned > CALM_TURN) {
+      b.calmAt = touched ? { center: [center[0], center[1], center[2]], quaternion: [q.x, q.y, q.z, q.w] } : null
+      b.calm = 0
+      return false
+    }
+    b.calm += dt
+    return b.calm >= CALM_SLEEP_AFTER
   }
 
   /**
