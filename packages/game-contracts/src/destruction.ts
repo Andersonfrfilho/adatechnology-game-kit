@@ -854,6 +854,11 @@ export type DestructionEvent =
   /** Bits thrown off a part; `material` is what they are made of when it is not the part's own (the plaster coat over a brick wall). */
   | (EventBase & { type: 'debris'; part: string; kind: DebrisKind; point: Vec3; normal: Vec3; count: number; speed: number; material?: MaterialId })
   | (EventBase & { type: 'fracture'; part: string; style: FractureStyle; fragments: Fragment[]; point: Vec3 })
+  /**
+   * A joint opened. `groups` are the object's groups after the whole operation that opened it (the `hit`, `explode` or `update` call), not right after this joint: the
+   * world solves its structure once per object per operation, so the detach events of one operation carry the same groups and may come after the events that followed
+   * the joint opening.
+   */
   | (EventBase & { type: 'detach'; joint: string; parts: [string, string]; by: 'break' | 'tool' | 'part_lost'; groups: string[][] })
   | (EventBase & { type: 'disassemble_progress'; joint: string; tool: ToolKind; progress: number })
   | (EventBase & { type: 'ignite'; part: string; point: Vec3 })
