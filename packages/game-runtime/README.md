@@ -30,6 +30,20 @@ const stop = startLoop(scheduler)
 
 With `targetMs` (scheduler option or `budget.targetMs`, mutable) a frame that carries `frameStartMs` (`startLoop` passes the `requestAnimationFrame` timestamp) runs in the deadline mode: `budgetMs` becomes the ceiling and the queues get what is left until `frameStartMs + targetMs`, minus a moving average of the render phase, never under the floor (`minBudgetMs`, default 1 ms). There is no debt: the real clock charges the next frame. Reserves come out of the floor (their sum may not pass it). A frame without `frameStartMs` (headless, `advance`, tests) is the quota of today, with debt. A timestamp more than one `targetMs` behind the clock (another time base, or a callback a whole frame late) is read as "now". A system of the render phase calls `budget.skipRenderSample()` in a frame whose render was not a typical one. A queue registered with `mustDrain` runs to empty in the drain of its phase, outside the deadline, and is counted in `mustDrainSpentMs`. `budget.stats()` has `mode`, `allowanceMs`, `renderEstimateMs`, `overMs`, `forcedThisFrame` and `forcedMs`.
 
+### Queues
+
+- Every deferred work of the kit is a `DeferredQueue` registered by the host (`scheduler.budget.register`), with its id in `DEFERRED_QUEUE_ID` and its priority in `DEFERRED_PRIORITY` (`@adatechnology/game-contracts`). One queue per owner, not per instance (the batchers share one queue per owner).
+- With no host (direct API, tests, goldens) the owner drains the queue itself by `drainDetached(queue, budgetMs)` from `game-contracts`: the single sanctioned place outside this package that times deferred work. The default stays synchronous where it always was.
+- A queue carries presentation only. What changes physics or seeded state does not depend on a clock: it runs in units (`WorkBudget` of `game-physics`) or in the fixed step.
+- `node tools/kit-audit/audit.mjs --check` fails on a new own frame clock (`*_BUDGET_MS`, `*_SLICE_MS`, `performance.now()` against a deadline outside this package); `--strict-clocks` is the gate that the pending list is empty.
+
+## Fixed step and interpolation
+
+- The scheduler's accumulator is the only one: nobody else keeps a second clock. A host passes `fixedDt`; the room's tick is 1/60, which runs 2 physics steps of 1/120 (`PhysicsLoop.stepFixed(2)` from a `fixedSimulate` system). `maxSubsteps` caps the ticks of one frame (the room uses 3, as many as the 0.05 s clamp allows); the rest goes to `stats().droppedSeconds`.
+- Everything that moves by time and enters physics or seeded state runs in `fixedSimulate`, never with the frame `dt`. The frame `dt` is for camera, animation, sound and visual effects (`lateSimulate`).
+- Drawing interpolates: in `present` a system reads `ctx.alpha` (accumulator / `fixedDt`, in [0, 1)) and blends the previous pose with the current one; the simulation never reads the drawn pose. `advance` and scripted frames have `alpha = 0`/`scripted = true` and draw the step pose.
+- Not yet in the fixed step: what the `input` phase does to physics (pushing, held objects, doors, tools) still integrates with the frame `dt` (its own spec).
+
 ## Errors, bad times and teardown
 
 - A system or a queue that throws is reported (`onError`, default: logged once per id; a queue's id is `queue:<id>`) and the frame goes on; a queue that threw counts 0 units. If a frame fails outside any system the scheduler is left usable: the next frame runs.

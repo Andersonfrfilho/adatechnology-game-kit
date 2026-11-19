@@ -131,6 +131,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   rede `fellThrough` em 0, nas 5 rodadas de cada. Falhou: parar e levar ao dono com os números (não ajustar regra do kit para passar).
   **Status 2026-11-14: reprovada no Jolt (C2 e C4 em 20/20 rodadas; `fellThrough` 0), levada ao dono; não ✅, ver `evidence.md` T3.8.**
   ✅ **2026-11-15, Jolt com D4, 5 de explosão e 5 de martelo (`evidence.md` T3.8w):** C2 condicionado 10/10, C4 10/10 (máximo de 1,75 s), `fellThrough` 0 em 10/10 e C3 10/10 com a régua R1–R3 aprovada pelo dono. As correções estão em T3.8b–T3.8w (PRs #302–#310 e este). **Limite conhecido, registrado por decisão do dono:** o C1, que fica fora do aceite desta tarefa, falha em 8/10 rodadas. A causa é o poste de 1 t, que ganha cerca de 0,4 mm por passo fixo a 120 Hz (0,38–1,35 kg·m por atualização nas explosões), mais resíduos abaixo de 0,1 mm. O solver próprio passa 0/10 na mesma sala.
+  Nota (fechado/obsoleto pela spec 010 (data 2026-11-19)): o portão `tools/gpu/room-explosion.mjs` mede por padrão `jolt-d4-worker` (a variante que a página usa), não mais `jolt-d4`; `jolt-d4` segue por nome como linha de referência (T0.1). Medições de sala novas comparam com a régua da spec 010.
   Mecânica? sim · Aceite por comando? não (sondas à mão) · `sonnet`.
 - **T3.9 Goldens dos destroços** (`plan.md` D4), num commit só, por último, comparados com o `origin/main` atual.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-floorplan-three test` · `haiku`.
