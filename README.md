@@ -95,7 +95,7 @@ Releases use [changesets](https://github.com/changesets/changesets): `pnpm chang
 
 ## Demo site
 
-A static demo of the examples is built from `site/Dockerfile` and served by Caddy. Railway builds that Dockerfile on every push to `main` (see `railway.json`). The image runs `pnpm install --frozen-lockfile`, `pnpm build` and `node site/build-site.mjs`, which copies each example's self-contained HTML to `site/dist/<example>/index.html` and writes a landing page listing the examples and packages. To build it locally: `pnpm install && pnpm build && node site/build-site.mjs`, then serve `site/dist`.
+A static demo of the examples is built from `site/Dockerfile` and served by Caddy. The Railway deploy is off for now: its config sits in `railway.json.disabled` and the service is stopped. To turn it back on, rename the file to `railway.json` and start the service again. The image runs `pnpm install --frozen-lockfile`, `pnpm build` and `node site/build-site.mjs`, which copies each example's self-contained HTML to `site/dist/<example>/index.html` and writes a landing page listing the examples and packages. To build it locally: `pnpm install && pnpm build && node site/build-site.mjs`, then serve `site/dist`.
 
 ## License
 
