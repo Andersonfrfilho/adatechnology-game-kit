@@ -41,3 +41,14 @@ export function isPlasterGone(d: number, reach: SpallReach, ragged: () => number
   if (d > reach.least + reach.band) return false
   return d <= reach.least + reach.band * ragged()
 }
+
+/**
+ * Whether a shot broke through the unit at a texel of its crater: `distance` is the texel's signed distance to the crater's ellipse (negative inside), and
+ * the hole runs up to `depth` metres in from it, as deep there as `noise` (in [0, 1]) says. Outside the ellipse it never does and deeper than `depth` it
+ * always does, so only the ring between asks the noise (the same answer as asking it everywhere).
+ */
+export function isCoreThrough(distance: number, depth: number, noise: () => number): boolean {
+  if (distance > 0) return false
+  if (distance <= -depth) return true
+  return distance <= -depth * noise()
+}

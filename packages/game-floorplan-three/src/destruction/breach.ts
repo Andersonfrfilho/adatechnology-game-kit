@@ -5,7 +5,8 @@ import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/
 import type { Kernel, Shared } from '../kernel-types.js'
 
 import type { BreachChange, BreachViewOptions, HouseStructurePart, StructureRangeItem } from './types.js'
-import { isPlasterGone, stampMask } from './stamp-mask.js'
+import { indexSpansAlong } from './span-index.js'
+import { isCoreThrough, isPlasterGone, stampMask } from './stamp-mask.js'
 export type { BreachViewOptions }
 
 /**
@@ -560,7 +561,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       for (const p of pits) {
         stamp(mask, p.s - p.rs, p.s + p.rs, p.y - p.ry, p.y + p.ry, (s, y) => plaster(Math.max(0, ellipseDistance(s, y, p.s, p.y, p.rs, p.ry)), s, y))
         // the hole through the unit: a little inside the crater, with a broken edge
-        stamp(core, p.s - p.rs, p.s + p.rs, p.y - p.ry, p.y + p.ry, (s, y) => ellipseDistance(s, y, p.s, p.y, p.rs, p.ry) <= -0.35 * Math.min(p.rs, p.ry) * noise2(s * 1.7, y * 1.3, 0.012))
+        stamp(core, p.s - p.rs, p.s + p.rs, p.y - p.ry, p.y + p.ry, (s, y) => isCoreThrough(ellipseDistance(s, y, p.s, p.y, p.rs, p.ry), 0.35 * Math.min(p.rs, p.ry), () => noise2(s * 1.7, y * 1.3, 0.012)))
       }
       // the plaster over a pillar is one sheet: torn off at both of its edges by the masonry that went beside it, it comes off the whole face between them
       for (const q of pillars) {
@@ -571,7 +572,10 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       mask.texture.needsUpdate = true
       core.texture.needsUpdate = true
       // the units the cut lays bare: those within reach of a hole or a crater
-      const near = (c: Span) => holes.some((h) => boxDistance((c.a + c.b) / 2, (c.y0 + c.y1) / 2, h.a - (c.b - c.a) / 2, h.b + (c.b - c.a) / 2, h.y0 - (c.y1 - c.y0) / 2, h.y1 + (c.y1 - c.y0) / 2) <= reach)
+      // the holes near a unit along the wall: one within `reach` of it is within half the widest unit and `reach` of its middle along the wall
+      const widest = shown.reduce((most, { c }) => Math.max(most, (c.b - c.a) / 2), 0)
+      const holesAt = indexSpansAlong(holes, widest + reach + 1e-6)
+      const near = (c: Span) => holesAt((c.a + c.b) / 2).some((h) => boxDistance((c.a + c.b) / 2, (c.y0 + c.y1) / 2, h.a - (c.b - c.a) / 2, h.b + (c.b - c.a) / 2, h.y0 - (c.y1 - c.y0) / 2, h.y1 + (c.y1 - c.y0) / 2) <= reach)
         || discs.some((d) => boxDistance(d.s, d.y, c.a, c.b, c.y0, c.y1) <= d.r + reach)
         || pits.some((p) => boxDistance(p.s, p.y, c.a, c.b, c.y0, c.y1) <= Math.max(p.rs, p.ry) + reach)
         || flakes.some((f) => boxDistance(f.s, f.y, c.a, c.b, c.y0, c.y1) <= 2 * f.r)
