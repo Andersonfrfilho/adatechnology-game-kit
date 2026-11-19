@@ -1114,6 +1114,7 @@ class Renderer implements DestructionRenderer {
     this.settlement.update(dt)
     this.cost = this.sampleCost()
     this.advanceWakes(dt)
+    this.thawWoken()
     this.pieceSys.update(dt)
     this.measureCost()
     this.updateFading(dt)
@@ -1316,6 +1317,12 @@ class Renderer implements DestructionRenderer {
   private thawRoot(b: Bound): void {
     b.root.matrixAutoUpdate = true
     b.frozen = false
+    b.root.updateMatrixWorld(true)
+  }
+
+  /** A piece woken before the step (a blow, the host) has its matrix back before the engine writes its pose to the root. */
+  private thawWoken(): void {
+    for (const b of this.bounds.values()) if (b.frozen && !b.piece?.sleeping) this.thawRoot(b)
   }
 
   /** The host moved the root of an object by hand (a teleport): its transform goes to the world on the next `update`, even if it is a piece asleep. */

@@ -69,7 +69,10 @@ describe('the transforms of the bound objects follow only what changed', () => {
     r.step(4)
     expect(r.root.matrixAutoUpdate).toBe(false)
     const piece = r.renderer.piece(r.id)
-    if (piece) piece.sleeping = false
+    if (piece) {
+      piece.sleeping = false
+      piece.velocity[1] = 2
+    }
     r.step(1 / 60)
     expect(r.root.matrixAutoUpdate).toBe(true)
     r.step(4)
