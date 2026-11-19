@@ -211,3 +211,53 @@ Respostas às quatro perguntas da T0.3:
 2. **C8 nova** (a proposta da T0.3): a 1x, pior quadro inteiro (update mais `renderCpu`) sem f0 ≤ 16,6 ms e update do f0 ≤ 16,6 ms; a 4x, p99 do update ≤ 16,6 ms e pior quadro não pior que a T0.2 (54,1 / 54,1 / 50,4); p99 do update ≤ 8 ms a 1x fica como não regressão.
 3. **Ordem P1 → P3 → P2.** Fase 2 vira estrutura adiada e custo por peça acordada, com a T2.1 estendida a `splitLoose`/`adoptSplit`/`rebuildHost` uma vez por objeto por drenagem (mantida a parada se o hash de eventos mudar); fase 3 vira passo fixo e desenho interpolado.
 4. **Passo único `h = 1/120`:** o agendador adota o `fixedStep` do `KIT_WORLD`; física e goldens não mudam; o valor de P2 é correção (C4, C5, 144 Hz), não ms. D5 e D6 do `plan.md` atualizadas.
+
+## T0.4 — a régua cobre o quadro 0 inteiro
+
+### O que mudou
+
+- `tools/gpu/room-explosion.mjs`: o relógio do f0 abre **antes** de `room.blastAt` (ou do `room.world.hit` do martelo), então `world.explode`/`hit` e seus `solveStructure` entram no `update` do quadro. `ROOM_EXPLOSION_F0_CLOCK=late` volta ao relógio da T0.2. O quadro de cada chamada leva `actionMs` (tempo de parede da chamada): a coluna da T0.2 é `updateMs − actionMs`. Física, percentis e a Tabela A não mudam (o quadro 0 fica fora deles).
+- Rótulos novos em `FRAME_LABELS`: `action` (a chamada sem `explode`), `explode` (`world.explode`/`world.hit`, com os `solveStructure` dentro), `vfxPresent`, `queues` (filas do orçamento do quadro sem rótulo próprio: o delta de `spentMs` de cada uma em `frameStats().budget.queues`; por fila no campo `queues` do quadro) e um por sistema do agendador, tempo próprio sem os rótulos chamados por baixo: `sysInput`, `sysSimulate`, `sysSimulateEnd` (tracers e o `flush()` do fim do quadro), `sysPresent` (`updatePresent`: log no DOM e HUD), `sysLights`, `sysOther`.
+- Gancho em `packages/`: `scheduler.systemProbe` (`game-runtime`, `enter(id)`/`leave(id)` em volta de cada sistema; sem sonda custa uma leitura de propriedade por sistema, teste em `scheduler.test.ts`, changeset `regua-cobre-o-quadro-zero.md`) e `frameParts.scheduler` na sala, **na mesma linha** que já existia: `room.ts` continua com 5.620 linhas (`origin/main` 5.621). Nenhum padrão síncrono mudou.
+- Testes: `node --test tools/gpu/tests/*.test.mjs` 42 passam (2 novos); `node --check` nos dois scripts; `pnpm --filter @adatechnology/game-runtime test` 41 passam; typecheck de `game-runtime` e `game-test-room`; `pnpm check:layers` sem violação nova; `node tools/kit-audit/audit.mjs --check` 0 novos; `pnpm build` ok; nenhum golden tocado.
+
+### Condições
+
+- Commit medido `f7de1ecfa` (código desta task; a página foi refeita pelo próprio portão no início da corrida, às 08:28, antes de qualquer edição de outra sessão em `game-runtime`). Pacotes iguais aos da T0.2 fora o gancho. Na tomada, carga de 1 minuto 1,69 no início, sob `flock`, mesma configuração da T0.2 (`blast,hammer,crater`, 1x e 4x, `FRAME_PARTS=1`, 5 rodadas, `jolt-d4-worker`). JSON: `medicoes/regua-t04-f7de1ecfa.json`. Portão: sem regressão, 0 erros de página.
+
+### Quadro 0 por rótulo (ms; média dos 3 piores quadros 0 de cada célula; `rest` = update − física − rótulos)
+
+| tipo | trava | update f0 inteiro | chamada (`actionMs`) | update sem a chamada | T0.2 update f0 | `rest` T0.2 → agora |
+|---|---|---|---|---|---|---|
+| blast | 1x | 72,1 | 42,4 | 29,7 | 28,5 | 15,0 → −0,1 |
+| crater | 1x | 71,2 | 44,5 | 26,7 | 28,9 | 14,1 → 0,0 |
+| blast | 4x | 287,2 | 178,3 | 108,9 | 106,5 | 57,4 → −0,4 |
+| crater | 4x | 260,7 | 164,8 | 95,9 | 91,0 | 55,9 → 0,1 |
+
+Coluna "update sem a chamada" bate com a T0.2 (26,7 a 29,7 contra 28,5 e 28,9 a 1x): as duas réguas são comparáveis.
+
+| rótulo | blast 1x | crater 1x | blast 4x | crater 4x |
+|---|---|---|---|---|
+| `explode` (`world.explode`, `solveStructure` dentro) | **35,8** | **37,6** | **148,1** | **139,6** |
+| `queues` (filas sem rótulo; só `floorplan.breach-cut`) | 11,6 | 9,8 | 45,4 | 37,7 |
+| `action` (resto da chamada, `explosives.blastAt`) | 5,9 | 6,4 | 27,0 | 22,4 |
+| `stagesOut` | 4,9 | 0 | 15,5 | 0 |
+| `destrEvents` | 3,5 | 7,4 | 6,2 | 20,8 |
+| `matrices` | 1,7 | 1,5 | 8,6 | 6,4 |
+| `sysSimulate` / `sysSimulateEnd` / `sysInput` / `sysPresent` | 1,4 / 1,0 / 1,3 / 0,5 | 1,4 / 1,0 / 0,8 / 0,5 | 6,8 / 4,5 / 3,5 / 1,9 | 5,8 / 4,5 / 3,9 / 1,9 |
+| `world`, `modules`, `audio`, `terrainMesh` | 1,2, 1,2, 0,9, 0,5 | 1,1, 1,3, 1,0, 0,4 | 5,2, 5,3, 2,8, 1,2 | 4,7, 5,0, 2,4, 1,4 |
+
+Filas no f0 (ms): `floorplan.breach-cut` 11,6 / 9,8 / 45,4 / 37,7, `destruction.events` 8,4 / 7,4 / 21,7 / 20,9, `audio.voices` 0,9 / 1,0 / 2,8 / 2,4 (as duas últimas já estão em `destrEvents` e `audio`).
+
+Martelo (f0 = primeira pancada, fora dos 10 piores; o pior é o f1, a segunda pancada): 1x `explode` 26 a 29 ms de 38 a 41 ms de update, `stagesOut` 5,5 a 6,1; 4x `explode` 89 a 97 de 123 a 138, `stagesOut` 20 a 24.
+
+### O que sobra em `rest`
+
+Nada: `rest` do f0 cai de 14 a 15 ms (1x) e 56 a 57 ms (4x) para entre −0,4 e 0,1 ms. O `rest` da T0.2 era, a 1x: `breach-cut` 10 a 12 ms (fila do `floorplan`, drenada pelo orçamento do quadro fora de qualquer sistema), o resto da chamada `action` (6 ms) e a própria sobra dos sistemas (`sysSimulate`, `sysSimulateEnd`, `sysInput`, `sysPresent`: 3 a 4,5 ms no total). O `flush()` e o `updatePresent` que a T0.3 apontou são só ~1 ms e ~0,5 ms a 1x. Os relógios próprios dos lotes (sala, `vehicleHit`, caixas estáticas, oclusão) **não têm rótulo próprio**: ficam dentro de `sysSimulate`/`sysSimulateEnd`/`modules`, que juntos dão 3 a 4 ms a 1x, e nada na régua os separa sem gancho por objeto (a sala os guarda em closures). Não afetam a conclusão: nenhum passa de 1,5 ms no f0.
+
+### Surpresas
+
+- **A chamada síncrona domina o f0: `explode` é 50% do update do quadro (35 a 38 ms a 1x, 140 a 148 ms a 4x), maior que tudo que a T0.3 tinha como causa.** Com o `solveStructure` dentro, o update do f0 inteiro vai de 28 para **71 a 72 ms a 1x** (260 a 287 ms a 4x). Contra a C8 nova (f0 ≤ 16,6 ms a 1x) a meta é 4,3 vezes menor que o número de hoje.
+- `floorplan.breach-cut` (10 a 12 ms no f0, 38 a 45 a 4x) era o grosso do `rest` da T0.2 e fica fora das fases P1/P2/P3 como escritas: é fila `mustDrain` (a T1.1 já a trata à parte), mas seu custo por unidade é do `floorplan`, não do orçamento.
+- `action` (6 ms a 1x, 22 a 30 a 4x) é o que `explosives.blastAt` faz além de `world.explode`; sem dono nas fases.
+- Tabela A (física) não muda: o portão fechou sem regressão contra a mesma `origin/main`.
