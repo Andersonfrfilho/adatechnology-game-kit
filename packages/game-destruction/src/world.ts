@@ -689,7 +689,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
   /** Changes to the structure of an object inside the operation being run (`loosened`) whose solution waits for `settleStructure`, in the order they happened. */
-  const pendingStructure = new Map<ObjRT, Array<{ opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string }>>()
+  const pendingStructure = new Map<ObjRT, Array<{ opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }>>()
+  /** The detach events of the operation being run, in the order the joints opened: they come out at its end, with the groups it left (`emitDetaches`). */
+  const pendingDetaches: Array<{ o: ObjRT; opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }> = []
   let structureSolves = 0
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
@@ -714,6 +716,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           flushCollapse()
           settleAllStructure()
         }
+        emitDetaches()
       }
       return { value, events: mine }
     } finally {
@@ -2969,7 +2972,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     let changes = pendingStructure.get(o)
     if (!changes) pendingStructure.set(o, (changes = []))
-    changes.push({ opened, by, ...(src === undefined ? {} : { src }) })
+    changes.push({ opened, by, ...(src === undefined ? {} : { src }), ...(blow === undefined ? {} : { blow }) })
   }
 
   /** Solves `o` if a change waits (`loosened`), before what reads its loads, stresses or groups. */
@@ -2979,7 +2982,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     pendingStructure.delete(o)
     solveStructure(o)
     recomputeGroups(o)
-    for (const c of changes) detachEvents(o, c.opened, c.by, c.src)
+    for (const c of changes) if (c.opened.length > 0) pendingDetaches.push({ o, ...c })
+  }
+
+  const emitDetaches = () => {
+    const outer = blow
+    try {
+      for (const d of pendingDetaches.splice(0)) {
+        blow = d.blow
+        detachEvents(d.o, d.opened, d.by, d.src)
+      }
+    } finally {
+      blow = outer
+    }
   }
 
   const settleAllStructure = () => {
@@ -5573,7 +5588,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
-  /** Collapse events, and the detach events of a structure solved after its object's part of the operation (`loosened`), come after it: the result carries them. */
+  /** Collapse and detach events come at the end of the operation (`flushCollapse`, `emitDetaches`): the result carries them. */
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
     if (!last) return r.value

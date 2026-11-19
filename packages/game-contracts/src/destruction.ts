@@ -856,8 +856,8 @@ export type DestructionEvent =
   | (EventBase & { type: 'fracture'; part: string; style: FractureStyle; fragments: Fragment[]; point: Vec3 })
   /**
    * A joint opened. `groups` are the object's groups after the whole operation that opened it (the `hit`, `explode` or `update` call), not right after this joint: the
-   * world solves its structure once per object per operation, so the detach events of one operation carry the same groups and may come after the events that followed
-   * the joint opening.
+   * world solves its structure once per object per operation and gives every detach of the operation at its end, in the order the joints opened, after the operation's
+   * other events (its `collapse` too).
    */
   | (EventBase & { type: 'detach'; joint: string; parts: [string, string]; by: 'break' | 'tool' | 'part_lost'; groups: string[][] })
   | (EventBase & { type: 'disassemble_progress'; joint: string; tool: ToolKind; progress: number })
