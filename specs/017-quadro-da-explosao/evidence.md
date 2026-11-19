@@ -31,3 +31,33 @@ spec; `hosts()` devolve cópia. Mesma saída: suíte inteira do `game-floorplan-
 **O que sobra no furo:** `paint()` redesenha a máscara inteira da parede a cada passada (zera e carimba todos os furos texel por texel, com ruído
 `noise2` por texel): o custo cresce com o dano acumulado. Torná-lo incremental é o próximo corte (`queues` ~14 ms), e muda goldens só se a
 ordem de carimbo mudar o resultado (D2).
+
+## T1.1 (parte 2) — o f0 repartido no navegador e o desenho
+
+Sondas temporárias (sem commit) em `world.emit`, no ouvinte da casa e no `cut`/`paint` do furo, mais quatro rótulos na régua. Régua curta:
+`ROOM_EXPLOSION_KINDS=blast,crater ROOM_EXPLOSION_THROTTLES=1 ROOM_EXPLOSION_STAGE_THROTTLES=1 ROOM_EXPLOSION_STAGE_ROUNDS=3 ROOM_EXPLOSION_ROUNDS=1
+ROOM_EXPLOSION_FRAME_PARTS=1`, sob `flock perf-measure.lock`, commit `c2953d167`, 2026-11-19 19:11. JSON: `medicoes/perfil-f0-sondas-c2953d167.json`.
+
+**Carga de 2,31 no início e 3,75 no fim (acima do 1,5 da spec; uma aba do Chrome a ~100% de um núcleo). Vale pelas proporções; não é número
+de fechamento.** f0 inteiro nesta rodada: blast 101,6 / crater 100,0 ms (rodada quieta do cache: 84,1 / 85,2).
+
+| Parte do f0 (ms) | blast | crater |
+|---|---|---|
+| `explode`, só o mundo | 22,9 | 21,8 |
+| ouvintes do `emit`: resto / casa / `cut` / `paint` do `drop` | 0,9 / 2,6 / 1,4 / 0,0 | 1,0 / 2,8 / 1,5 / 0,0 |
+| fila `destruction.events` (inteira) | 22,1 | 21,3 |
+| dentro dela: `splitLoose` / `adoptSplit` / `rebuildHost` | 2,3 / 1,4 / 3,2 | 2,4 / 1,7 / 2,7 |
+| fila `floorplan.breach-cut` | 11,3 | 10,6 |
+| fila `floorplan.breach-paint` | 5,5 | 5,2 |
+| fila `audio.voices` | 3,0 | 3,5 |
+| `action` | 7,9 | 9,7 |
+| `stagesOut` | 6,9 | 6,9 |
+| `renderCpu` | 11,9 | 10,6 |
+
+- No navegador o `explode` é o mundo (~22 ms); os ouvintes síncronos somam ~5 ms. O perfil do Node da parte 1 incluía a pintura porque o teste
+  não tem fila de quadro.
+- ~34 ms do f0 são só apresentação (as duas filas da casa, o áudio e a parte visual dos eventos).
+- Desenho, a razão de a D3 não caber com a D2 e a decisão pedida (D5): `design-tiques.md`.
+
+**Push:** a primeira tentativa de `git push` caiu ("Connection to github.com closed by remote host") depois de 15 min 47 s de pre-push
+(suíte do `game-floorplan-three` em série, o que o PR #406 corrige).

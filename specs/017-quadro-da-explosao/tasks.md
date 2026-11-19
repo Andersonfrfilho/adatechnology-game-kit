@@ -15,22 +15,29 @@
 ## Fase 1 — Desenho
 > 🤖 Modelo: `sonnet` (T1.1 é 🧠 — `opus`, validar com `architect` e `engenheiro-estrutural`)
 
-- **T1.1 🧠** `design-tiques.md`: perfil por dentro do `world.explode` e do `breach-cut` (instrumentação temporária, sem commit); o que fica no
-  tique 0; unidade e ordem de cada parte; tique de saída de cada evento; mudança no `mustDrain`; golpe no meio da janela; estrutura no último tique.
-- **T1.2** Teste de mesmos bytes da janela (C4): a cena do `step-equivalence` com tempo de quadro aleatório (semente fixa) e a 60, 120 e 144 Hz dá o
-  mesmo hash por tique. Escrito antes da Fase 2, falha só onde a Fase 2 ainda não existe.
+- **T1.1 🧠 (feita, 2026-11-19)** `design-tiques.md`: f0 repartido no navegador, por que a D3 não cabe com a D2, etapas A, B e C, decisão D5.
+  Validado com mudanças pelos dois revisores.
+- **T1.2** Teste de mesmos bytes da janela (C4): a cena do `step-equivalence` com tempo de quadro aleatório (semente fixa) e a 30, 60, 120 e
+  144 Hz dá o mesmo hash por tique. Mais: pintura adiada dá a mesma máscara que a pintura no f0; evento visual de uma peça aplica antes do
+  estrutural dela; `splitLoose` sem `workBudget` deixa de decidir pelo relógio (`renderer.ts:2306`). Escrito antes da Fase 2.
 
-## Fase 2 — Explosão em tiques
+## Fase 2 — Baratear o `explode` e classes de evento
 > 🤖 Modelo: `sonnet`
 
-- **T2.1** Mundo (`game-destruction`): `explode` agenda o trabalho e devolve o resultado do tique 0; o resto anda no passo fixo, por unidades. Opção desligada por padrão.
-- **T2.2** Eventos (`game-destruction-three`): `destruction.events` drena o que o tique entregou; teto por unidades (D4).
-- **T2.3** Golpe no meio da janela força o resto (teste).
+- **T2.0** Perfil no navegador (régua, sondas temporárias sem commit) do `blastScene`, de `action`, de `stagesOut` e de `destruction.events`
+  por tipo de evento. Tabela no `evidence.md`. Decide a ordem da T2.1.
+- **T2.1** Etapa B do desenho: `reachAt` com a grade de peças, `emit` com cópia só quando os ouvintes mudam, `lightLeaksNear` só no alcance.
+  Mesma saída: goldens e fixture sem diff.
+- **T2.2** `destruction.events` em duas classes (lista no `design-tiques.md` §3): estrutural no quadro do golpe; visual (`hole`, `crack`,
+  `debris`, `ricochet`) numa fila de prazo com espera máxima de 3 tiques.
+- **T2.3** Golpe no meio da janela: parede ou peça com trabalho pendente entra no `mustDrain` do golpe novo (teste).
 
-## Fase 3 — Corte da parede por unidades
+## Fase 3 — Pintura da parede por unidades
 > 🤖 Modelo: `sonnet`
 
-- **T3.1** `floorplan.breach-cut` por unidades por tique (D4), o furo do ponto de impacto no tique 0 (C5).
+- **T3.1** `floorplan.breach-cut`: `mustDrain` só para as paredes do impacto e as que têm `fallen` novo; o resto numa fila de prazo, 1 unidade =
+  1 parede. `floorplan.breach-paint`: 1 unidade = 1 parede.
+- **T3.2 (bloqueada pela D5)** Etapa C (teto da janela no `splitWithin`, saída de cima para baixo) e gerador próprio de `spall`/`drip`/`leak`.
 
 ## Fase 4 — Ligar e medir
 > 🤖 Modelo: `sonnet` (revisão final → `code-reviewer` `sonnet`)
@@ -42,14 +49,15 @@
 ## Prompt de execução
 
 ```text
-/oh-my-claudecode:autopilot Execute a spec specs/017-quadro-da-explosao/ (leia spec.md, plan.md e tasks.md antes de começar; leia também
-specs/010-quadro-com-prazo/evidence.md, seções T4.1, e specs/regras/15-quadro-e-desempenho.md). Uma task por vez, na ordem do tasks.md,
-num worktree próprio (branch spec/017-quadro-da-explosao).
-Modelos: Fase 0 → executor model=haiku · Fases 1 a 4 → executor model=sonnet · T1.1 🧠 → opus, validar com architect e
-engenheiro-estrutural antes da Fase 2 · revisão final → code-reviewer model=sonnet.
+/oh-my-claudecode:autopilot Execute a spec specs/017-quadro-da-explosao/ (leia spec.md, plan.md, tasks.md e design-tiques.md antes de
+começar; leia também specs/010-quadro-com-prazo/evidence.md, seções T4.1, e specs/regras/15-quadro-e-desempenho.md). Uma task por vez, na
+ordem do tasks.md, num worktree próprio (branch spec/017-quadro-da-explosao). A T1.1 está feita. Escopo desta rodada: T0.1, T1.2, T2.0 a
+T2.3, T3.1 e a régua da T4.2. NÃO faça a T3.2: ela depende da decisão D5 do dono.
+Modelos: Fase 0 → executor model=haiku · Fases 1 a 4 → executor model=sonnet · revisão final → code-reviewer model=sonnet.
 Escalada: gate falhou 2x → sobe um nível (haiku→sonnet→opus) e registra em evidence.md.
-Cada task fecha com typecheck + testes dos pacotes tocados + check:layers + kit-audit --check + commit isolado, evidência em evidence.md.
-Medições de tempo só com carga < 1,5 e sob flock perf-measure.lock; nada de teto pelo relógio no que muda a simulação (mesmos bytes, C4).
-Pare e pergunte antes de: regravar golden cujo estado no fim da janela não seja idêntico (D2), mudar a janela de 6 tiques (D1), levar o
-mundo para um worker, push ou PR.
+Cada task fecha com typecheck + testes dos pacotes tocados + check:layers + kit-audit --check --strict-clocks + commit isolado, evidência em
+evidence.md com tabela antes/depois e o JSON ao lado.
+Medições de tempo só com carga < 1,5 e sob flock perf-measure.lock, com pnpm build e a página da sala refeitos; nada de teto pelo relógio no
+que muda a simulação (mesmos bytes, C4). Nas T2.1, T2.2 e T3.1 os goldens e o fixture do step-equivalence não podem mudar.
+Pare e pergunte antes de: qualquer golden ou fixture com diff, mudar a janela (D1), a T3.2/D5, levar o mundo para um worker, PR.
 ```
