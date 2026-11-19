@@ -1,5 +1,5 @@
 import { SUPPORT_TOLERANCE, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
-import type { PlanePoint, SupportEdge, SupportGraph } from '@adatechnology/game-load-path'
+import type { PlanePoint, SupportGraph } from '@adatechnology/game-load-path'
 import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
@@ -694,6 +694,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const pendingDetaches: Array<{ o: ObjRT; opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }> = []
   let structureSolves = 0
 
+  // Scratch for `recomputeGroups` and `solveStructure`: sized by part count, grown when needed, rewritten on each call (neither runs inside the other)
+  let ufParent = new Int32Array(0)
+  let supportedRoot = new Uint8Array(0)
+  let bendingScratch = new Float64Array(0)
+  const edgeLists: Array<Array<{ on: number; directed: boolean }>> = []
+  const edgePool: Array<{ on: number; directed: boolean }> = []
+  const throughLists: Array<Array<{ at: Vec3; mass: number; over: number }>> = []
+  const throughPool: Array<{ at: Vec3; mass: number; over: number }> = []
+  const ufFind = (i: number): number => {
+    while (ufParent[i] !== i) {
+      ufParent[i] = ufParent[ufParent[i]]
+      i = ufParent[i]
+    }
+    return i
+  }
+  const ufUnion = (a: number, b: number) => {
+    ufParent[ufFind(a)] = ufFind(b)
+  }
+
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
     for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, blast.fuel ? { charge: { fuel: blast.fuel } } : undefined, undefined, blast.lethalRadius)
@@ -894,30 +913,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const recomputeGroups = (o: ObjRT) => {
     const n = o.parts.length
-    const parent = Array.from({ length: n }, (_, i) => i)
-    const find = (i: number): number => {
-      while (parent[i] !== i) {
-        parent[i] = parent[parent[i]]
-        i = parent[i]
-      }
-      return i
+    if (ufParent.length < n) {
+      ufParent = new Int32Array(n)
+      supportedRoot = new Uint8Array(n)
     }
-    const union = (a: number, b: number) => {
-      parent[find(a)] = find(b)
-    }
+    for (let i = 0; i < n; i++) ufParent[i] = i
+    const find = ufFind, union = ufUnion
     const live = (j: JointRT) => !j.st.open && !isLost(o.parts[j.ia]) && !isLost(o.parts[j.ib]) && !j.spec.tears
     if (o.unsup.some(Boolean)) {
       // parts that lost every support fall: cut them from the supported pieces; loose non-structural parts follow the part they hang on
       for (const j of o.joints) if (live(j) && !o.unsup[j.ia] && !o.unsup[j.ib]) union(j.ia, j.ib)
-      const supported = new Set<number>()
-      for (let i = 0; i < n; i++) if (!isLost(o.parts[i]) && !o.unsup[i] && (o.parts[i].structural || o.parts[i].anchored)) supported.add(find(i))
+      supportedRoot.fill(0, 0, n)
+      for (let i = 0; i < n; i++) if (!isLost(o.parts[i]) && !o.unsup[i] && (o.parts[i].structural || o.parts[i].anchored)) supportedRoot[find(i)] = 1
       for (const j of o.joints) {
         if (!live(j) || !(o.unsup[j.ia] || o.unsup[j.ib])) continue
         if (o.unsup[j.ia] && o.unsup[j.ib]) union(j.ia, j.ib)
         else {
           const u = o.unsup[j.ia] ? j.ia : j.ib
           const other = u === j.ia ? j.ib : j.ia
-          if (!o.parts[other].structural && !supported.has(find(other))) union(u, other)
+          if (!o.parts[other].structural && supportedRoot[find(other)] === 0) union(u, other)
         }
       }
     } else for (const j of o.joints) if (live(j)) union(j.ia, j.ib)
@@ -1278,15 +1292,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
     const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
     // what each part rests on through its bearing joints that hold
-    const edges: SupportEdge[][] = parts.map((p, i) => {
-      const out: SupportEdge[] = []
-      for (const j of o.byPart.get(p.spec.id)!) {
+    const edges = edgeLists
+    let edgesUsed = 0
+    for (let i = 0; i < n; i++) {
+      const list = (edges[i] ??= [])
+      list.length = 0
+      for (const j of o.byPart.get(parts[i].spec.id)!) {
         if (j.st.open || !j.bears) continue
         const k = restsOn(o, j, i)
-        if (k >= 0) out.push({ on: k, directed: directed(j) })
+        if (k < 0) continue
+        const edge = (edgePool[edgesUsed] ??= { on: 0, directed: false })
+        edgesUsed++
+        edge.on = k
+        edge.directed = directed(j)
+        list.push(edge)
       }
-      return out
-    })
+    }
     // a part whose supports leave it a longer span than it holds (`structure.maxSpan`) is out, and so is what stood on it only through it
     const out = new Set<number>()
     const graph: SupportGraph = {
@@ -1317,12 +1338,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
     // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
     // and bends that one only if it is away from its own supports
-    const bending = new Array<number>(n).fill(0)
-    const through: Array<Array<{ at: Vec3; mass: number; over: number }>> = parts.map(() => [])
+    if (bendingScratch.length < n) bendingScratch = new Float64Array(n)
+    const bending = bendingScratch
+    bending.fill(0, 0, n)
+    const through = throughLists
+    let throughUsed = 0
+    for (let i = 0; i < n; i++) (through[i] ??= []).length = 0
     const pass = (k: number, at: Vec3, mass: number) => {
       const over = overSupportAt(o, parts[k], at, lowerOf(k))
       if (over < 0) bending[k] += mass
-      else through[k].push({ at, mass, over })
+      else {
+        const item = (throughPool[throughUsed] ??= { at, mass, over })
+        throughUsed++
+        item.at = at
+        item.mass = mass
+        item.over = over
+        through[k].push(item)
+      }
     }
     distributeLoads(solution, (i) => parts[i].st.mass, {
       settled: (i, load) => {
@@ -3112,9 +3144,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return true
   }
 
+  const revealScratch: ObjRT[] = []
+  const updateScratch: ObjRT[] = []
   const revealHostedIn = (all: Iterable<ObjRT>): boolean => {
     let any = false
-    for (const o of [...all]) if (o.hosted && revealHosted(o)) any = true
+    revealScratch.length = 0
+    for (const o of all) revealScratch.push(o)
+    for (let i = 0; i < revealScratch.length; i++) {
+      const o = revealScratch[i]
+      if (o.hosted && revealHosted(o)) any = true
+    }
+    revealScratch.length = 0
     return any
   }
 
@@ -5981,9 +6021,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         time += dt
         applyGroundLosses()
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
-        for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
-        for (const o of [...objects.values()]) if (o.soil && objects.get(o.id) === o) stepSoil(o, dt)
-        for (const o of [...objects.values()]) if (o.wind && objects.get(o.id) === o) stepWind(o, dt)
+        // a snapshot per pass: objects born during a pass wait for the next, ones removed are skipped
+        const all = updateScratch
+        all.length = 0
+        for (const o of objects.values()) all.push(o)
+        for (let i = 0; i < all.length; i++) if (all[i].active) stepObject(all[i], dt, sources)
+        all.length = 0
+        for (const o of objects.values()) all.push(o)
+        for (let i = 0; i < all.length; i++) if (all[i].soil && objects.get(all[i].id) === all[i]) stepSoil(all[i], dt)
+        all.length = 0
+        for (const o of objects.values()) all.push(o)
+        for (let i = 0; i < all.length; i++) if (all[i].wind && objects.get(all[i].id) === all[i]) stepWind(all[i], dt)
+        all.length = 0
         if (sources.length) {
           spread(sources, dt)
           igniteLeaksNearFire(sources, dt)
