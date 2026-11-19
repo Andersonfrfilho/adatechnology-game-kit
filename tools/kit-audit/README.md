@@ -18,6 +18,21 @@ node tools/kit-audit/audit.mjs --package game-weapons-three --domain vehicles
   the real findings already listed in `docs/pecas-fora-do-sdk.md`, each with its fix. `--check` fails only on a finding in neither list. When a
   pending piece is fixed, take its entry out.
 
+## The own-frame-clock rule
+
+CLAUDE.md §15 ("Um dono do tempo do quadro", spec 010): outside `game-runtime`, nothing times deferred work with its own clock. `clock.mjs`
+flags (a) a new constant named `*_BUDGET_MS` / `*_SLICE_MS` and (b) `performance.now()` / `Date.now()` compared with, or added to, a deadline or
+budget (`>= deadline`, `> until`, `+ budgetMs`). `audit.mjs --check` runs it; the tests are `node --test tools/kit-audit/tests/`.
+
+Exempt by class, not by list: `game-runtime`; `game-workers` (§14); `bench/` code; `game-physics/src/work-budget.ts` (turns ms into units, reads no
+clock); `drainDetached` in `game-contracts/src/frame.ts` (the one sanctioned clock of deferred work); timers and waits (the compared operand
+names a wait, interval, cooldown, timeout... or is a stored expiry such as `msg.until`); and measurement or animation (a clock that is only
+subtracted or used as a phase is never compared with a deadline).
+
+`clock-pending.json` lists the hits a later task of spec 010 still removes (`file`, `match` on the line, `task`). `--check` prints them with
+`file:line` and the pending count, and fails only on a hit that is in neither place; entries that no longer match are printed as `VELHA`.
+`--strict-clocks` also fails while the list is not empty: that is the C3 gate at the end of phase 1.
+
 ## The scene check
 
 The words miss a box whose code names nothing, so `scene.mjs` reads the screen instead. Every builder of the kit marks the root it returns
