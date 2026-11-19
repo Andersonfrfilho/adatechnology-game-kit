@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { checkTaskKind, createWorkerCoordinator, firstDifference, inThreadSpawn } from '@adatechnology/game-workers'
 import type { WorkerLike } from '@adatechnology/game-workers'
@@ -58,112 +58,127 @@ describe('the ground tiles through the worker coordinator (CLAUDE.md §14)', () 
   }, 60_000)
 
   it('the port hands each answer to the engine; with no workers it posts nothing and the engine makes every tile at its update', async () => {
-    const workers = createWorkerCoordinator({ spawn: inThreadSpawn([groundTilesKind]), workers: 2 })
-    const port = createCoordinatorGroundPort(workers)
-    expect(port.transport).toBe('transfer')
-    const answers: GroundTileResult[] = []
-    port.onTile((result) => answers.push(result))
-    const posted = jobs()
-    const expected = jobs().map(computeGroundTile)
-    for (const job of posted) port.postTile(job)
-    // wait for the answers, not a fixed time: on a busy runner the in-thread workers can take longer than a few ms (the timeout still fails a lost answer)
-    for (let waited = 0; answers.length < posted.length && waited < 10_000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10))
-    expect(answers.map((a) => a.id).sort()).toEqual(expected.map((e) => e.id).sort())
-    for (const answer of answers) expect(firstDifference(answer, expected.find((e) => e.id === answer.id))).toBeNull()
-    expect(workers.stats().kinds.find((k) => k.id === 'destruction.ground-tiles')).toMatchObject({ submitted: posted.length, answered: posted.length, fallback: 0 })
-    // a disposed port lets the late answers go
-    port.postTile(jobs()[0]!)
-    port.dispose()
-    await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(answers.length).toBe(posted.length)
-    workers.dispose()
+    vi.useFakeTimers()
+    try {
+      const workers = createWorkerCoordinator({ spawn: inThreadSpawn([groundTilesKind]), workers: 2 })
+      const port = createCoordinatorGroundPort(workers)
+      expect(port.transport).toBe('transfer')
+      const answers: GroundTileResult[] = []
+      port.onTile((result) => answers.push(result))
+      const posted = jobs()
+      const expected = jobs().map(computeGroundTile)
+      for (const job of posted) port.postTile(job)
+      await vi.advanceTimersByTimeAsync(50)
+      expect(answers.map((a) => a.id).sort()).toEqual(expected.map((e) => e.id).sort())
+      for (const answer of answers) expect(firstDifference(answer, expected.find((e) => e.id === answer.id))).toBeNull()
+      expect(workers.stats().kinds.find((k) => k.id === 'destruction.ground-tiles')).toMatchObject({ submitted: posted.length, answered: posted.length, fallback: 0 })
+      // a disposed port lets the late answers go
+      port.postTile(jobs()[0]!)
+      port.dispose()
+      await vi.advanceTimersByTimeAsync(20)
+      expect(answers.length).toBe(posted.length)
+      workers.dispose()
 
-    const none = createWorkerCoordinator({ workers: 0 })
-    const idle = createCoordinatorGroundPort(none)
-    expect(idle.transport).toBe('none')
-    idle.onTile(() => answers.push(null as unknown as GroundTileResult))
-    idle.postTile(jobs()[0]!)
-    await new Promise((resolve) => setTimeout(resolve, 20))
-    expect(none.stats().kinds.length === 0 || none.stats().kinds.every((k) => k.submitted === 0)).toBe(true)
-    expect(answers.length).toBe(posted.length)
+      const none = createWorkerCoordinator({ workers: 0 })
+      const idle = createCoordinatorGroundPort(none)
+      expect(idle.transport).toBe('none')
+      idle.onTile(() => answers.push(null as unknown as GroundTileResult))
+      idle.postTile(jobs()[0]!)
+      await vi.advanceTimersByTimeAsync(20)
+      expect(none.stats().kinds.length === 0 || none.stats().kinds.every((k) => k.submitted === 0)).toBe(true)
+      expect(answers.length).toBe(posted.length)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('a worker that dies holding ground jobs: those tiles are made here at their update, to the bit; the next ones still go to the (replaced) worker', async () => {
-    const spawned: WorkerLike[] = []
-    const inner = inThreadSpawn([groundTilesKind], { delayMs: 20 })
-    const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
-    const port = createCoordinatorGroundPort(workers)
-    const schedule = new GroundSchedule(port, 2)
-    const askAll = (now: number): GroundTileJob[] => {
-      const list = jobs()
-      list.forEach((job, key) => {
-        const band = schedule.band(job.size)
-        band.set(job.band)
-        schedule.ask({ key, ix: 0, iz: 0, x0: job.x0, z0: job.z0, size: job.size, fresh: true, wasCoarse: job.wasCoarse, samples: job.samples }, band, now)
-      })
-      return list
-    }
-    const due: PendingGround[] = []
-    const applied = (asked: GroundTileJob[], now: number): void => {
-      schedule.takeDue(now, due)
-      expect(due.length).toBe(asked.length)
-      due.forEach((p, i) => {
-        const expected = tileOfResult(computeGroundTile({ ...asked[i]!, samples: Float64Array.from(asked[i]!.samples), band: Float64Array.from(asked[i]!.band) }), p.samples)
-        expect(firstDifference(schedule.resolve(p), expected)).toBeNull()
-      })
-    }
+    vi.useFakeTimers()
+    try {
+      const spawned: WorkerLike[] = []
+      const inner = inThreadSpawn([groundTilesKind], { delayMs: 20 })
+      const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
+      const port = createCoordinatorGroundPort(workers)
+      const schedule = new GroundSchedule(port, 2)
+      const askAll = (now: number): GroundTileJob[] => {
+        const list = jobs()
+        list.forEach((job, key) => {
+          const band = schedule.band(job.size)
+          band.set(job.band)
+          schedule.ask({ key, ix: 0, iz: 0, x0: job.x0, z0: job.z0, size: job.size, fresh: true, wasCoarse: job.wasCoarse, samples: job.samples }, band, now)
+        })
+        return list
+      }
+      const due: PendingGround[] = []
+      const applied = (asked: GroundTileJob[], now: number): void => {
+        schedule.takeDue(now, due)
+        expect(due.length).toBe(asked.length)
+        due.forEach((p, i) => {
+          const expected = tileOfResult(computeGroundTile({ ...asked[i]!, samples: Float64Array.from(asked[i]!.samples), band: Float64Array.from(asked[i]!.band) }), p.samples)
+          expect(firstDifference(schedule.resolve(p), expected)).toBeNull()
+        })
+      }
 
-    const lost = askAll(0)
-    spawned[0]!.onerror?.(new Error('killed'))
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(port.transport).toBe('transfer')
-    applied(lost, 2)
-    expect(schedule.stats).toMatchObject({ inTime: 0, fellBack: lost.length })
-    expect(workers.stats().kinds.find((k) => k.id === 'destruction.ground-tiles')).toMatchObject({ failed: lost.length, fallback: 0 })
+      const lost = askAll(0)
+      spawned[0]!.onerror?.(new Error('killed'))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(port.transport).toBe('transfer')
+      applied(lost, 2)
+      expect(schedule.stats).toMatchObject({ inTime: 0, fellBack: lost.length })
+      expect(workers.stats().kinds.find((k) => k.id === 'destruction.ground-tiles')).toMatchObject({ failed: lost.length, fallback: 0 })
 
-    const next = askAll(10)
-    for (let waited = 0; [...schedule.pending.values()].some((p) => !p.result) && waited < 10_000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10))
-    applied(next, 12)
-    expect(schedule.stats).toMatchObject({ inTime: next.length, fellBack: lost.length })
-    schedule.dispose()
-    workers.dispose()
+      const next = askAll(10)
+      await vi.advanceTimersByTimeAsync(20)
+      applied(next, 12)
+      expect(schedule.stats).toMatchObject({ inTime: next.length, fellBack: lost.length })
+      schedule.dispose()
+      workers.dispose()
+    } finally {
+      vi.useRealTimers()
+    }
   })
+
   it('patch jobs through the coordinator: transferred, the main thread keeps its own patch; lost with a dying worker they are made here at their update, to the bit', async () => {
-    const terrain = createTerrain({ bounds: [-6, -6, 6, 6], cellSize: 0.1, layout: { surface: 'dirt' } })
-    terrain.strike('explosive', { x: 0.37, z: -0.21, energy: 4e6 })
-    const spawned: WorkerLike[] = []
-    const inner = inThreadSpawn([groundTilesKind], { delayMs: 20 })
-    const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
-    const schedule = new GroundSchedule(createCoordinatorGroundPort(workers), 2)
-    const tiles = [[0, -2], [-2, 0], [0, 0]] as const
-    const expected = tiles.map(([x0, z0]) => tileOfResult(computeGroundTile(jobOf((x, z) => terrain.heightAt(x, z), x0, z0, terrain.heightGrid)), null))
-    const askAll = (now: number): void => tiles.forEach(([x0, z0], key) => {
-      const patch = schedule.readPatch(terrain.heightPatch, x0, z0, 2)!
-      schedule.ask({ key, ix: 0, iz: 0, x0, z0, size: 2, fresh: true, wasCoarse: false, samples: null, patch }, null, now)
-    })
-    const due: PendingGround[] = []
-    const applied = (now: number): void => {
-      schedule.takeDue(now, due)
-      expect(due.length).toBe(tiles.length)
-      due.forEach((p, i) => {
-        const tile = schedule.resolve(p)
-        expect(tile.patch).toBe(p.patch)
-        expect(firstDifference({ ...tile, patch: undefined }, { ...expected[i]!, patch: undefined })).toBeNull()
-        schedule.givePatch(p.patch!.heights)
+    vi.useFakeTimers()
+    try {
+      const terrain = createTerrain({ bounds: [-6, -6, 6, 6], cellSize: 0.1, layout: { surface: 'dirt' } })
+      terrain.strike('explosive', { x: 0.37, z: -0.21, energy: 4e6 })
+      const spawned: WorkerLike[] = []
+      const inner = inThreadSpawn([groundTilesKind], { delayMs: 20 })
+      const workers = createWorkerCoordinator({ spawn: () => spawned[spawned.push(inner()) - 1]!, workers: 1 })
+      const schedule = new GroundSchedule(createCoordinatorGroundPort(workers), 2)
+      const tiles = [[0, -2], [-2, 0], [0, 0]] as const
+      const expected = tiles.map(([x0, z0]) => tileOfResult(computeGroundTile(jobOf((x, z) => terrain.heightAt(x, z), x0, z0, terrain.heightGrid)), null))
+      const askAll = (now: number): void => tiles.forEach(([x0, z0], key) => {
+        const patch = schedule.readPatch(terrain.heightPatch, x0, z0, 2)!
+        schedule.ask({ key, ix: 0, iz: 0, x0, z0, size: 2, fresh: true, wasCoarse: false, samples: null, patch }, null, now)
       })
+      const due: PendingGround[] = []
+      const applied = (now: number): void => {
+        schedule.takeDue(now, due)
+        expect(due.length).toBe(tiles.length)
+        due.forEach((p, i) => {
+          const tile = schedule.resolve(p)
+          expect(tile.patch).toBe(p.patch)
+          expect(firstDifference({ ...tile, patch: undefined }, { ...expected[i]!, patch: undefined })).toBeNull()
+          schedule.givePatch(p.patch!.heights)
+        })
+      }
+      askAll(0)
+      spawned[0]!.onerror?.(new Error('killed'))
+      await vi.advanceTimersByTimeAsync(0)
+      applied(2)
+      expect(schedule.stats).toMatchObject({ inTime: 0, fellBack: tiles.length })
+      askAll(10)
+      await vi.advanceTimersByTimeAsync(20)
+      applied(12)
+      expect(schedule.stats).toMatchObject({ inTime: tiles.length, fellBack: tiles.length })
+      // the copies the dead worker held never come back (the pool makes new ones); every other one did
+      expect(schedule.outstanding).toBe(tiles.length)
+      schedule.dispose()
+      workers.dispose()
+    } finally {
+      vi.useRealTimers()
     }
-    askAll(0)
-    spawned[0]!.onerror?.(new Error('killed'))
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    applied(2)
-    expect(schedule.stats).toMatchObject({ inTime: 0, fellBack: tiles.length })
-    askAll(10)
-    for (let waited = 0; [...schedule.pending.values()].some((p) => !p.result) && waited < 10_000; waited += 10) await new Promise((resolve) => setTimeout(resolve, 10))
-    applied(12)
-    expect(schedule.stats).toMatchObject({ inTime: tiles.length, fellBack: tiles.length })
-    // the copies the dead worker held never come back (the pool makes new ones); every other one did
-    expect(schedule.outstanding).toBe(tiles.length)
-    schedule.dispose()
-    workers.dispose()
   })
 })

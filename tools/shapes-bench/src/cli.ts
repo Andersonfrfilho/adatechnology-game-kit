@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { benchEntries } from './entries'
-import { best, CALIBRATION, compare, compareGroups, summary, timeEntry, toBaseline } from './timing'
+import { best, CALIBRATION, compare, compareGroups, median, relativeNoise, summary, timeEntry, toBaseline } from './timing'
 import type { Baseline, BenchEntry, Timing, TimingOptions } from './timing'
 
 const HELP = `shapes-bench: times the kit's 3D builders.
@@ -35,6 +35,7 @@ function timed(entry: BenchEntry, options?: TimingOptions): Timing {
 
 const CONFIRM_ROUNDS = 5
 const CALIBRATION_RUN: TimingOptions = { warmup: 1, targetMs: 60, maxRuns: 80, minRuns: 10 }
+const ENTRY_RUN: TimingOptions = { warmup: 3, targetMs: 120, minRuns: 7 }
 
 function main(): void {
   const args = process.argv.slice(2)
@@ -66,29 +67,47 @@ function main(): void {
   const calibrations: number[] = []
   for (let round = 0; round < rounds; round++) {
     const timings: Timing[] = []
+    const roundCalibs: number[] = []
     entries.forEach((entry, index) => {
-      if (index % 20 === 0) calibrations.push(timed(CALIBRATION, CALIBRATION_RUN).ms)
-      timings.push(timed(entry))
+      if (index % 20 === 0) {
+        const c = timed(CALIBRATION, CALIBRATION_RUN).ms
+        roundCalibs.push(c)
+        calibrations.push(c)
+      }
+      timings.push(timed(entry, ENTRY_RUN))
     })
-    calibrations.push(timed(CALIBRATION, CALIBRATION_RUN).ms)
-    byRound.push(timings)
+    const c = timed(CALIBRATION, CALIBRATION_RUN).ms
+    roundCalibs.push(c)
+    calibrations.push(c)
+    const roundCalib = median(roundCalibs)
+    byRound.push(timings.map((t) => ({ ...t, ratio: t.ms / roundCalib })))
   }
   let timings = best(byRound)
-  const calibrationMs = Math.min(...calibrations)
+  let calibrationMs = median(calibrations)
+  let noise = relativeNoise(calibrations)
   const against = filter && baseline ? { ...baseline, entries: Object.fromEntries(Object.entries(baseline.entries).filter(([id]) => id.includes(filter))) } : baseline
-  let comparisons = compare(timings, calibrationMs, against)
+  let comparisons = compare(timings, calibrationMs, against, noise)
   // a builder over the budget is timed again, alone, a few more rounds before it fails (all of a group over its budget too): one slow round on a busy machine is not a regression
-  const slowGroups0 = new Set(compareGroups(comparisons, against).filter((g) => g.verdict === 'slower').map((g) => g.group))
+  const slowGroups0 = new Set(compareGroups(comparisons, against, noise).filter((g) => g.verdict === 'slower').map((g) => g.group))
   const suspects = new Set(comparisons.filter((c) => c.verdict === 'slower' || c.verdict === 'warn' || slowGroups0.has(c.id.split('/')[0] as string)).map((c) => c.id))
   if (suspects.size) {
     const again = entries.filter((e) => suspects.has(e.id))
     const extra: Timing[][] = []
-    for (let round = 0; round < CONFIRM_ROUNDS; round++) extra.push(again.map((entry) => timed(entry)))
+    for (let round = 0; round < CONFIRM_ROUNDS; round++) {
+      const confirmCalib = timed(CALIBRATION, CALIBRATION_RUN).ms
+      calibrations.push(confirmCalib)
+      extra.push(again.map((entry) => {
+        const t = timed(entry, ENTRY_RUN)
+        return { ...t, ratio: t.ms / confirmCalib }
+      }))
+    }
     timings = best([timings, ...extra])
-    comparisons = compare(timings, calibrationMs, against)
-    console.log(`re-timed ${suspects.size} builder(s) over the warning, ${CONFIRM_ROUNDS} more rounds each\n`)
+    calibrationMs = median(calibrations)
+    noise = relativeNoise(calibrations)
+    comparisons = compare(timings, calibrationMs, against, noise)
+    console.log(`re-timed ${suspects.size} builder(s) over the warning, ${CONFIRM_ROUNDS} more rounds each (control median ${calibrationMs.toFixed(3)} ms, noise ${(noise * 100).toFixed(1)}%)\n`)
   }
-  const groups = compareGroups(comparisons, against)
+  const groups = compareGroups(comparisons, against, noise)
   const table = summary(comparisons, timings, calibrationMs, groups)
   console.log(table)
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## Shapes bench\n\n${table}\n`)

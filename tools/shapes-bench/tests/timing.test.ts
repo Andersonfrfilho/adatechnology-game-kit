@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { compare, compareGroups, median, summary, timeEntry, toBaseline } from '../src/timing'
+import { best, compare, compareGroups, median, relativeNoise, summary, timeEntry, toBaseline } from '../src/timing'
 import type { Baseline } from '../src/timing'
 
 const clock = (steps: number[]): (() => number) => {
@@ -79,5 +79,35 @@ describe('compare with the baseline', () => {
     // one entry is under minGroupSize: the group gets the entry budget
     expect(text).toContain('| a | 1 | 3.20 | ×1.60 | ok |')
     expect(text).toContain('| a/slow | 3.200 | 1.600 | 1.000 | ×1.60 | warn |')
+  })
+
+  it('measures runner noise from calibration samples and expands margin accordingly', () => {
+    // 0 noise on constant calibration
+    expect(relativeNoise([1, 1, 1, 1])).toBe(0)
+    // relative IQR
+    const noise = relativeNoise([0.8, 0.9, 1.0, 1.1, 1.2])
+    expect(noise).toBeGreaterThan(0)
+    expect(noise).toBeLessThan(1)
+
+    // With noise, an entry that would have been slightly over baseline budget is absorbed
+    const timings = [{ id: 'a/same', ms: 4.1, runs: 5 }] // ratio 2.05 on calibration 2, change 2.05 > 2.0
+    const strictVerdict = compare(timings, 2, baseline, 0)[0]!.verdict
+    expect(strictVerdict).toBe('slower')
+    const noisyVerdict = compare(timings, 2, baseline, 0.2)[0]!.verdict
+    expect(noisyVerdict).toBe('warn')
+
+    // But a real 3x regression still fails past any noise margin
+    const regression = [{ id: 'a/same', ms: 6.0, runs: 5 }] // ratio 3.0 on calibration 2, change 3.0
+    const failVerdict = compare(regression, 2, baseline, 0.5)[0]!.verdict
+    expect(failVerdict).toBe('slower')
+  })
+
+  it('best combines rounds using per-round ratio when available', () => {
+    const round1 = [{ id: 'a/same', ms: 3.0, runs: 5, ratio: 1.5 }]
+    const round2 = [{ id: 'a/same', ms: 2.5, runs: 5, ratio: 1.2 }]
+    const merged = best([round1, round2])
+    expect(merged).toHaveLength(1)
+    expect(merged[0]!.ratio).toBe(1.2)
+    expect(merged[0]!.ms).toBe(2.5)
   })
 })

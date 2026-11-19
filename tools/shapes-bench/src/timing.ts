@@ -23,6 +23,8 @@ export interface Timing {
   /** Median of the timed runs, ms. */
   readonly ms: number
   readonly runs: number
+  /** Ratio to the control item measured in the same round, when available. */
+  readonly ratio?: number
 }
 
 export const median = (values: readonly number[]): number => {
@@ -59,17 +61,36 @@ export function timeEntry(entry: BenchEntry, options: TimingOptions = {}): Timin
   return { id: entry.id, ms: median(samples), runs: samples.length }
 }
 
-/** Per entry, the best (lowest) median of several rounds over the whole list: a collection or a recompilation in one round does not count. */
+/** Per entry, the best (lowest) median or ratio of several rounds over the whole list: a collection or a recompilation in one round does not count. */
 export function best(rounds: readonly (readonly Timing[])[]): Timing[] {
   const by = new Map<string, Timing>()
   for (const round of rounds) {
     for (const t of round) {
       const kept = by.get(t.id)
       if (!kept) by.set(t.id, t)
-      else by.set(t.id, { id: t.id, ms: Math.min(kept.ms, t.ms), runs: kept.runs + t.runs })
+      else {
+        const bestRatio = kept.ratio !== undefined && t.ratio !== undefined ? Math.min(kept.ratio, t.ratio) : (kept.ratio ?? t.ratio)
+        by.set(t.id, {
+          id: t.id,
+          ms: Math.min(kept.ms, t.ms),
+          runs: kept.runs + t.runs,
+          ...(bestRatio !== undefined ? { ratio: bestRatio } : {}),
+        })
+      }
     }
   }
   return [...by.values()]
+}
+
+/** Relative interquartile range (IQR / median) of a sample set, as a robust measure of runner noise/jitter. */
+export function relativeNoise(values: readonly number[]): number {
+  if (values.length < 2) return 0
+  const med = median(values)
+  if (med <= 0) return 0
+  const sorted = [...values].sort((a, b) => a - b)
+  const q25 = sorted[Math.floor(sorted.length * 0.25)] ?? med
+  const q75 = sorted[Math.floor(sorted.length * 0.75)] ?? med
+  return (q75 - q25) / med
 }
 
 /**
@@ -139,23 +160,27 @@ export interface Comparison {
  * Compares a run with the baseline. An entry fails (`slower`) when its ratio is above `baseline × (1 + budget)` and its median is above the noise
  * floor; under the floor it is reported (`noise`), never failed. Past `baseline × (1 + warn)` it is reported (`warn`); `faster` marks a ratio under
  * `baseline / (1 + warn)`.
+ * A measured runner noise adds a proportional margin to the fail budget so noisy runners do not trigger false positives on innocent PRs.
  */
-export function compare(timings: readonly Timing[], calibrationMs: number, baseline: Baseline | null): Comparison[] {
+export function compare(timings: readonly Timing[], calibrationMs: number, baseline: Baseline | null, noise = 0): Comparison[] {
   const out: Comparison[] = []
   const seen = new Set<string>()
+  const noiseMargin = Math.min(0.5, Math.max(0, noise))
   for (const t of timings) {
     seen.add(t.id)
-    const ratio = t.ms / calibrationMs
+    const ratio = t.ratio ?? t.ms / calibrationMs
     const base = baseline?.entries[t.id]
     if (!baseline || !base) {
       out.push({ id: t.id, ms: t.ms, ratio, baseline: null, change: null, verdict: 'new' })
       continue
     }
-    const budget = baseline.overrides[t.id] ?? baseline.budget
-    const warn = Math.min(baseline.warn, budget)
+    const baseBudget = baseline.overrides[t.id] ?? baseline.budget
+    const budget = baseBudget + noiseMargin
+    const warn = Math.min(baseline.warn + noiseMargin * 0.5, budget)
     const change = ratio / base.ratio
+    const floor = Math.max(baseline.noiseFloorMs, 0.1)
     let verdict: Verdict = 'ok'
-    if (change > 1 + warn && t.ms < baseline.noiseFloorMs) verdict = 'noise'
+    if (change > 1 + warn && t.ms < floor) verdict = 'noise'
     else if (change > 1 + budget) verdict = 'slower'
     else if (change > 1 + warn) verdict = 'warn'
     else if (change < 1 / (1 + warn)) verdict = 'faster'
@@ -192,9 +217,10 @@ export interface GroupComparison {
 }
 
 /** Per group, the sum of the ratios of the entries in both the run and the baseline, against the baseline's sum. */
-export function compareGroups(comparisons: readonly Comparison[], baseline: Baseline | null): GroupComparison[] {
+export function compareGroups(comparisons: readonly Comparison[], baseline: Baseline | null, noise = 0): GroupComparison[] {
   if (!baseline) return []
   const by = new Map<string, { ratio: number; baseline: number; count: number }>()
+  const noiseMargin = Math.min(0.3, Math.max(0, noise * 0.5))
   for (const c of comparisons) {
     if (c.ratio === null || c.baseline === null) continue
     const group = c.id.split('/')[0] as string
@@ -206,7 +232,8 @@ export function compareGroups(comparisons: readonly Comparison[], baseline: Base
   }
   return [...by.entries()].map(([group, row]) => {
     const change = row.ratio / row.baseline
-    const budget = row.count >= baseline.minGroupSize ? baseline.groupBudget : baseline.budget
+    const baseBudget = row.count >= baseline.minGroupSize ? baseline.groupBudget : baseline.budget
+    const budget = baseBudget + noiseMargin
     const verdict = change > 1 + budget ? 'slower' : change < 1 / (1 + budget) ? 'faster' : 'ok'
     return { group, ratio: row.ratio, baseline: row.baseline, change, verdict }
   })
