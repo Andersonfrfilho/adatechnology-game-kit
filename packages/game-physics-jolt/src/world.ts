@@ -37,7 +37,7 @@ import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './q
 import { HullSet } from './hull-cache'
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
-import { checkVec3Layout } from './vec3'
+import { checkVec3Layout, vec3At } from './vec3'
 import { SINGLE_THREAD } from './threading'
 import type { JoltThreading } from './threading'
 import type { JoltWorldHost } from './world-host'
@@ -455,29 +455,43 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return e
   }
 
+  /** Position and rotation in seven floats: two crossings into the wasm (GetPosition, GetRotation), the rest read from the heap. */
   readPose(id: BodyId, out: Float32Array | Float64Array, offset: number): void {
     const b = this.entry(id).body
-    const p = b.GetPosition()
-    const q = b.GetRotation()
-    out[offset] = p.GetX()
-    out[offset + 1] = p.GetY()
-    out[offset + 2] = p.GetZ()
-    out[offset + 3] = q.GetX()
-    out[offset + 4] = q.GetY()
-    out[offset + 5] = q.GetZ()
-    out[offset + 6] = q.GetW()
+    const heap = this.J.HEAPF32
+    let at = vec3At(this.J, b.GetPosition())
+    out[offset] = heap[at] as number
+    out[offset + 1] = heap[at + 1] as number
+    out[offset + 2] = heap[at + 2] as number
+    at = vec3At(this.J, b.GetRotation())
+    out[offset + 3] = heap[at] as number
+    out[offset + 4] = heap[at + 1] as number
+    out[offset + 5] = heap[at + 2] as number
+    out[offset + 6] = heap[at + 3] as number
   }
 
+  /** Linear and angular velocity in six floats: two crossings into the wasm, the rest read from the heap. */
   readVelocity(id: BodyId, out: Float32Array | Float64Array, offset: number): void {
     const b = this.entry(id).body
-    const v = b.GetLinearVelocity()
-    out[offset] = v.GetX()
-    out[offset + 1] = v.GetY()
-    out[offset + 2] = v.GetZ()
-    const w = b.GetAngularVelocity()
-    out[offset + 3] = w.GetX()
-    out[offset + 4] = w.GetY()
-    out[offset + 5] = w.GetZ()
+    const heap = this.J.HEAPF32
+    let at = vec3At(this.J, b.GetLinearVelocity())
+    out[offset] = heap[at] as number
+    out[offset + 1] = heap[at + 1] as number
+    out[offset + 2] = heap[at + 2] as number
+    at = vec3At(this.J, b.GetAngularVelocity())
+    out[offset + 3] = heap[at] as number
+    out[offset + 4] = heap[at + 1] as number
+    out[offset + 5] = heap[at + 2] as number
+  }
+
+  /** The ids of the awake rigid bodies, in one crossing, into `out` (its length is set to the count; reused, nothing allocated once it has grown). */
+  readActiveBodies(out: BodyId[]): number {
+    const ids = this.activeIds
+    this.system.GetActiveBodies(this.J.EBodyType_RigidBody, ids)
+    const n = ids.size()
+    out.length = n
+    for (let i = 0; i < n; i++) out[i] = ids.at(i).GetIndexAndSequenceNumber() as BodyId
+    return n
   }
 
   setPose(id: BodyId, position: Vec3, rotation: Quat, wake: boolean): void {
