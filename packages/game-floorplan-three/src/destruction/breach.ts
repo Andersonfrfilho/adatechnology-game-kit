@@ -5,7 +5,7 @@ import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/
 import type { Kernel, Shared } from '../kernel-types.js'
 
 import type { BreachChange, BreachViewOptions, HouseStructurePart, StructureRangeItem } from './types.js'
-import { stampMask } from './stamp-mask.js'
+import { isPlasterGone, stampMask } from './stamp-mask.js'
 export type { BreachViewOptions }
 
 /**
@@ -550,7 +550,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       mask.data.fill(0)
       core.data.fill(0)
       const stamp = (m: WallMask, s0: number, s1: number, y0: number, y1: number, inside: (s: number, y: number) => boolean) => stampMask(m, { s0, s1, y0, y1, reach }, inside)
-      const plaster = (d: number, s: number, y: number) => d <= SPALL_MIN + SPALL_RAGGED * ragged(s, y)
+      const plaster = (d: number, s: number, y: number) => isPlasterGone(d, { least: SPALL_MIN, band: SPALL_RAGGED }, () => ragged(s, y))
       for (const c of holes) stamp(mask, c.a, c.b, c.y0, c.y1, (s, y) => plaster(boxDistance(s, y, c.a, c.b, c.y0, c.y1), s, y))
       for (const d of discs) stamp(mask, d.s - d.r, d.s + d.r, d.y - d.r, d.y + d.r, (s, y) => plaster(Math.max(0, Math.hypot(s - d.s, y - d.y) - d.r), s, y))
       for (const f of flakes) {
