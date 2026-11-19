@@ -93,3 +93,117 @@ afirmava justamente o comportamento do relógio (um grupo por quadro com `eventB
 - `game-floorplan-three` (só os arquivos relacionados; a suíte inteira leva ~15 min e não foi rodada): `blast-presentation`, `exact-golden` (44), `breach-queue` (7), `breach-deferred-mask` (2), `destruction` (21), `stamp-mask` (3): 81 testes passam.
 - `pnpm check:layers`: sem violação nova (294 conhecidas ignoradas).
 - `node tools/kit-audit/audit.mjs --check --strict-clocks`: 0 novos fora do SDK dono; `own-frame-clock: 0 novos, 0 pendentes`.
+
+## T2.0 — o f0 repartido por dentro: `explode`, `action`, `stagesOut`, `destruction.events` (2026-11-19)
+
+Commit de base `b0b5de1e5`, sondas temporárias (nenhuma commitada; `git status` limpo e `grep -c __probe017 test-room.html` = 0 depois). Régua curta:
+`ROOM_EXPLOSION_KINDS=blast,crater ROOM_EXPLOSION_THROTTLES=1 ROOM_EXPLOSION_STAGE_THROTTLES=1 ROOM_EXPLOSION_STAGE_ROUNDS=3 ROOM_EXPLOSION_ROUNDS=1
+ROOM_EXPLOSION_FRAME_PARTS=1`, sob `flock perf-measure.lock`. Média dos 3 f0 por tipo. Duas rodadas (sondas diferentes, para não distorcer):
+
+| Rodada | Hora | Carga antes / depois | JSON |
+|---|---|---|---|
+| a (sondas largas: `explode` em 14 rótulos) | 20:28 a 20:33 | 1,61 / 2,66 | `medicoes/perfil-t20-b0b5de1e5.json` |
+| b (a mais `blastPart`, `blastObject`, `blastPlain`, `knockOutUnits`, `gridOf`, `panelEdge`, `waveWork`) | 20:38 a 20:44 | 1,53 / 2,25 | `medicoes/perfil-t20-b-b0b5de1e5.json` |
+
+Contagens e tempos por tipo de evento (snapshot ao fim do f0, 3 páginas por tipo): `medicoes/perfil-t20-contagens-b0b5de1e5.json`.
+
+**A carga ficou acima de 1,5 no fim de cada rodada (o ferramental da própria medição: Chrome + build). Vale pelas proporções, não é número de fechamento.**
+A rodada b do crater pegou carga pior (f0 98 ms contra 80 do blast): os números do crater são mais ruidosos. Resolução do relógio do Chrome nesta página: 0,1 ms;
+item abaixo de ~0,3 ms não é confiável, e as médias de 3 páginas só repartem o que passa de 0,3 ms.
+
+### Qual caminho a sala usa (a pergunta de fundo)
+
+- A sala chama `blastAt` com a configuração padrão: **`blastPlain`, nunca `blastScene`** (`plain: 1, scene: 0` nas seis páginas). Sem `shelter`, sem `frag`,
+  sem `confinement`: **`reachAt` roda 0 vezes, `rayPart` 0 vezes, `confinementOf`, `items`/`distToPart` e a ordenação não rodam**.
+- `blastWorld` roda **1 vez** por explosão (nenhuma carga em cadeia no cenário; `casing` ausente no `c4`, `throwCasing` 0).
+
+### A. `explode` (só o mundo), ms
+
+Soma dos rótulos: blast 23,6 / crater 30,5 (rodada b; na rodada a, 23,1 no blast). Cada rótulo é o tempo próprio (filhos descontados).
+
+| Item | blast | crater | Nota |
+|---|---|---|---|
+| `knockOutUnits` (tira as unidades do tijolo/bloco, chamado por `blastPanel` e `blastUnits`) | 5,5 | 7,7 | maior |
+| `blastPlain` (próprio: laço dos objetos e dos `impls`, resto de `blastWorld`) | 3,0 | 4,3 | composição não repartida |
+| `spallOuter` | 2,9 | 3,3 | |
+| `wearJoints` | 2,2 | 2,4 | |
+| `blastPart` (próprio) | 1,7 | 2,8 | |
+| `failPart` | 1,5 | 2,1 | |
+| `blastPanel` (próprio) | 1,4 | 1,3 | na rodada a, com `knockOutUnits` dentro, dava 4,7 |
+| `waveWork` | 1,3 | 0,7 | |
+| `bendByBlast` | 1,3 | 2,0 | |
+| `applyDamage` (próprio) | 0,8 | 1,1 | |
+| `addDent`/`addCrack`/`debris` | 0,4 | 0,5 | |
+| `blastUnits` (próprio) / `blastObject` / `blastCandidates` | 0,3 / 0,2 / 0,1 | 0,4 / 0,3 / 0,2 | |
+| `lightLeaksNear` | 0,1 | 0,2 | |
+| `settleAllStructure` + `flushCollapse` + `emitDetaches` + `revealHostedIn` (fecho do `run()`) | 0,5 | 0,8 | |
+| `partLost`, `seesFireball`, `gridOf`, `panelEdge`, `withCollapses` | <0,15 cada | <0,25 cada | |
+| `reachAt` | **0 (0 chamadas, 0 `rayPart`)** | **0** | |
+| `confinementOf`, montagem e ordenação de `items`, `throwCasing`, fragmentos lançados | **0 (não rodam no `blastPlain`)** | **0** | |
+
+Três maiores: `knockOutUnits`, `blastPlain` (próprio), `spallOuter`.
+
+### B. `action` (o que `detonate` faz fora do `world.explode`), ms
+
+O rótulo `action` inteiro some na repartição: o que sobra dele depois de tirar os filhos é 0,3 / 0,5 ms. Antes, os 8 a 10 ms eram estes:
+
+| Item | blast | crater |
+|---|---|---|
+| `context.effects.explosion` (a explosão do vfx: faíscas, fumaça, luz) | 3,5 | 4,3 |
+| `renderer.explode` (o desenho: marcas e queimadura) | 2,6 | 3,3 |
+| `context.water(detonation)` | 0,8 | 1,1 |
+| `context.emitHost('explosion')` | 0,5 | 0,6 |
+| `told` (relatório) | 0,1 | 0,1 |
+| `action(...)` e narrate (as linhas do log) | <0,1 | <0,1 |
+| próprio de `blastAt`/`detonate`/`ExplosiveBody` | 0,3 | 0,5 |
+
+Três maiores: `effects.explosion`, `renderer.explode`, `water`.
+
+### C. `stagesOut`, ms
+
+Quem são e quem chama (pilha capturada na primeira chamada fora da física): só os estágios que **a fila `destruction.events` aplica**, todos dentro de
+`onFracture` de um evento `fracture`, que `runBudgeted` → `apply` → `applyEvent` chama. Nenhum é da física, e `waterAt` (12 chamadas) pesa 0 ms.
+
+| Estágio | chamadas (blast / crater) | blast | crater | quem chama |
+|---|---|---|---|---|
+| `rebuildHost` | 19 / 21 | 2,7 | 2,8 | `onFracture` → `hide` → `collapse` |
+| `splitLoose` | 32 / 32 | 2,1 | 3,7 | `onFracture` |
+| `adoptSplit` | 8 / 10 | 1,7 | 1,8 | `splitLoose` → `batchRebuilds` |
+| `fitBoxes` | 9 / 11 | 0,1 | 0,3 | `adoptSplit` → `fitPartBoxes` → `setContacts` |
+| `waterAt` | 12 / 12 | 0,0 | 0,0 | `context.water` (do `detonate`) |
+| **`stagesOut`** | | **6,6** | **8,6** | |
+
+Não é custo à parte: é uma parte do `destruction.events` da seção D (o `destrEvents` do quadro, 14,1 / 17,6 ms, já vem sem estes filhos).
+
+### D. `destruction.events` (fila inteira: blast 20,8 / crater 26,3 ms) por tipo de evento
+
+Tempo inclusivo de `apply` por tipo (soma dos tipos: blast 20,0 / crater 25,1 ms; o resto da fila é `runSlices`/`runSplits`/`queueChecked`).
+
+| Tipo | eventos (blast / crater) | blast ms | crater ms | dos quais `splitLoose` / `adoptSplit` / `rebuildHost` |
+|---|---|---|---|---|
+| `fracture` | 11 / 10 | 10,2 | 13,0 | 2,1 / 1,7 / 2,7 (blast); 3,6 / 1,8 / 2,8 (crater) |
+| `crack` | 20 / 22 | 2,9 | 3,6 | |
+| `damage` | 559 / 561 | 2,2 | 2,1 | |
+| `chip` | 2 / 3 | 1,4 | 2,7 | |
+| `debris` | 68 / 68 | 1,2 | 1,2 | |
+| `stage` | 10 / 11 | 0,9 | 1,3 | |
+| `spall` | 7 / 7 | 0,6 | 0,8 | |
+| `detach` | 21 / 22 | 0,4 | 0,5 | |
+| `dent` / `expose` | 2 / 2 e 0 / 1 | 0,2 / 0 | 0,4 / 0,4 | |
+| `hole`, `ricochet`, `bend` | 0 | 0 | 0 | |
+
+Três maiores: `fracture` (metade da fila; 6,5 ms dela são os três estágios com rótulo), `crack`, `damage`.
+
+### Leitura
+
+1. **O desenho supôs errado: `reachAt` não é o maior item do `explode`, é zero.** A sala usa `blastPlain`, que não faz abrigo. A etapa B da T2.1 (grade de
+   peças para o `reachAt`) e o "`lightLeaksNear` só no alcance" não têm o que cortar neste cenário (`lightLeaksNear` pesa 0,1 a 0,2 ms). O que pesa no
+   `explode` é a quebra por unidades (`knockOutUnits` 5,5 a 7,7 ms, com `spallOuter`, `wearJoints`, `failPart`, `bendByBlast` ao lado): o custo de ter
+   muitos eventos de dano, não de busca. O `reachAt` só entra se a sala (ou o jogo) ligar `shelter`; isso não foi medido.
+2. **Dos 22 ms de `destruction.events`, só 4,1 ms (blast; 4,8 ms no crater) são tipos que o desenho deixa adiar**: `crack` 2,9 + `debris` 1,2; `hole` e `ricochet`
+   não ocorrem neste cenário (0 eventos). É 20% da fila, ~5% do f0 de 80 ms. A classe estrutural (`fracture` 10,2 + `stage` + `detach` + `damage`) fica
+   no quadro do golpe e é ~75% da fila: a T2.2 sozinha tira pouco do f0 deste cenário. O maior bloco continua `fracture` com seus estágios (~6,5 ms), que o desenho trata como estrutural.
+3. `stagesOut` não é custo novo: é `fracture` visto de outro ângulo. `action` (8 a 10 ms) é quase todo vfx e desenho (`effects.explosion` + `renderer.explode` ~6 a 7 ms) e `context.water` ~1 ms,
+   nada de narrate nem do log.
+4. **Limites:** `blastPlain` (próprio) 3,0 a 4,3 ms e `knockOutUnits` não foram repartidos por dentro (laço dos `impls` com `describe()`, o resto de `blastWorld`;
+   o que `knockOutUnits` faz por unidade). Se a T2.1 for tocar nisso, a próxima rodada é por dentro deles. A carga acima de 1,5 e o relógio de 0,1 ms limitam tudo abaixo de ~0,3 ms.

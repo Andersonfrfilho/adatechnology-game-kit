@@ -1,0 +1,703 @@
+{
+ "nota": "contagens e tempos por tipo de evento do f0 (sondas temporarias, commit b0b5de1e5); rodada a = perfil-t20-b0b5de1e5.json, rodada b = perfil-t20-b-b0b5de1e5.json; um item por pagina (3 por tipo)",
+ "a": [
+  {
+   "kind": "blast",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 19,
+     "splitLoose": 32,
+     "adoptSplit": 8,
+     "fitBoxes": 9
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Fs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at mE0.collapse (<anonymous>:3834:236115) < at mE0.hide (<anonymous>:3834:235990) < at XX.onFracture (<anonymous>:3834:290543) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at XX.onFracture (<anonymous>:3834:290630) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at mE0.batchRebuilds (<anonymous>:3834:236229) < at XX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at XX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at XX.setContacts (<anonymous>:3834:304307) < at XX.fitPartBoxes (<anonymous>:3834:262322) < at XX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.6999999284744263,
+     "fitBoxes": 0,
+     "adoptSplit": 1.4000000953674316,
+     "splitLoose": 2.200000047683716
+    },
+    "evMs": {
+     "debris": 1.0000001192092896,
+     "spall": 0.7999999523162842,
+     "stage": 0.8000000715255737,
+     "damage": 1.2000000476837158,
+     "crack": 3.200000286102295,
+     "chip": 1.399999976158142,
+     "dent": 0.19999992847442627,
+     "fracture": 10.299999713897705,
+     "detach": 0.2999999523162842
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 10,
+     "damage": 559,
+     "crack": 20,
+     "chip": 2,
+     "dent": 2,
+     "fracture": 11,
+     "detach": 21
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.6999999284744263,
+     "fracture:adoptSplit": 1.4000000953674316,
+     "fracture:splitLoose": 2.200000047683716,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "crater",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 21,
+     "splitLoose": 32,
+     "adoptSplit": 10,
+     "fitBoxes": 11
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Fs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at mE0.collapse (<anonymous>:3834:236115) < at mE0.hide (<anonymous>:3834:235990) < at XX.onFracture (<anonymous>:3834:290543) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at XX.onFracture (<anonymous>:3834:290630) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at mE0.batchRebuilds (<anonymous>:3834:236229) < at XX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at XX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at XX.setContacts (<anonymous>:3834:304307) < at XX.fitPartBoxes (<anonymous>:3834:262322) < at XX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.5999999046325684,
+     "fitBoxes": 0.10000002384185791,
+     "adoptSplit": 2.0000001192092896,
+     "splitLoose": 2.299999952316284
+    },
+    "evMs": {
+     "debris": 0.8999998569488525,
+     "spall": 0.6999999284744263,
+     "stage": 1.0999999046325684,
+     "damage": 1.3000003099441528,
+     "crack": 3.4000000953674316,
+     "chip": 1.5,
+     "expose": 0.2999999523162842,
+     "dent": 0.20000004768371582,
+     "fracture": 10.399999856948853,
+     "detach": 0.3999999761581421
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 11,
+     "damage": 561,
+     "crack": 22,
+     "chip": 3,
+     "expose": 1,
+     "dent": 2,
+     "fracture": 10,
+     "detach": 22
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.5999999046325684,
+     "fracture:adoptSplit": 2.0000001192092896,
+     "fracture:splitLoose": 2.299999952316284,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "blast",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 19,
+     "splitLoose": 32,
+     "adoptSplit": 8,
+     "fitBoxes": 9
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Fs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at mE0.collapse (<anonymous>:3834:236115) < at mE0.hide (<anonymous>:3834:235990) < at XX.onFracture (<anonymous>:3834:290543) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at XX.onFracture (<anonymous>:3834:290630) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at mE0.batchRebuilds (<anonymous>:3834:236229) < at XX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at XX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at XX.setContacts (<anonymous>:3834:304307) < at XX.fitPartBoxes (<anonymous>:3834:262322) < at XX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.9000000953674316,
+     "fitBoxes": 0,
+     "adoptSplit": 2.100000023841858,
+     "splitLoose": 2.600000023841858
+    },
+    "evMs": {
+     "debris": 0.8999999761581421,
+     "spall": 0.7999999523162842,
+     "stage": 1.2000000476837158,
+     "damage": 1.8999998569488525,
+     "crack": 2.700000047683716,
+     "chip": 1.600000023841858,
+     "dent": 0.19999992847442627,
+     "fracture": 13.00000011920929,
+     "detach": 0.30000007152557373
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 10,
+     "damage": 559,
+     "crack": 20,
+     "chip": 2,
+     "dent": 2,
+     "fracture": 11,
+     "detach": 21
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.9000000953674316,
+     "fracture:adoptSplit": 2.100000023841858,
+     "fracture:splitLoose": 2.600000023841858,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "crater",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 21,
+     "splitLoose": 32,
+     "adoptSplit": 10,
+     "fitBoxes": 11
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Fs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at mE0.collapse (<anonymous>:3834:236115) < at mE0.hide (<anonymous>:3834:235990) < at XX.onFracture (<anonymous>:3834:290543) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at XX.onFracture (<anonymous>:3834:290630) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at mE0.batchRebuilds (<anonymous>:3834:236229) < at XX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at XX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at XX.setContacts (<anonymous>:3834:304307) < at XX.fitPartBoxes (<anonymous>:3834:262322) < at XX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.5,
+     "fitBoxes": 0.19999992847442627,
+     "adoptSplit": 1.399999976158142,
+     "splitLoose": 2
+    },
+    "evMs": {
+     "debris": 0.8000000715255737,
+     "spall": 0.6999999284744263,
+     "stage": 0.8999999761581421,
+     "damage": 1.399999976158142,
+     "crack": 2.6999999284744263,
+     "chip": 1.600000023841858,
+     "expose": 0.20000004768371582,
+     "dent": 0.20000004768371582,
+     "fracture": 9.200000047683716,
+     "detach": 0.2999999523162842
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 11,
+     "damage": 561,
+     "crack": 22,
+     "chip": 3,
+     "expose": 1,
+     "dent": 2,
+     "fracture": 10,
+     "detach": 22
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.5,
+     "fracture:adoptSplit": 1.399999976158142,
+     "fracture:splitLoose": 2,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "blast",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 19,
+     "splitLoose": 32,
+     "adoptSplit": 8,
+     "fitBoxes": 9
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Fs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at mE0.collapse (<anonymous>:3834:236115) < at mE0.hide (<anonymous>:3834:235990) < at XX.onFracture (<anonymous>:3834:290543) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at XX.onFracture (<anonymous>:3834:290630) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at mE0.batchRebuilds (<anonymous>:3834:236229) < at XX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at XX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at XX.setContacts (<anonymous>:3834:304307) < at XX.fitPartBoxes (<anonymous>:3834:262322) < at XX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0.10000002384185791,
+     "rebuildHost": 2.4000000953674316,
+     "fitBoxes": 0.10000002384185791,
+     "adoptSplit": 1.5999999046325684,
+     "splitLoose": 2.399999976158142
+    },
+    "evMs": {
+     "debris": 0.8000000715255737,
+     "spall": 0.6000001430511475,
+     "stage": 1.1999998092651367,
+     "damage": 1.6000001430511475,
+     "crack": 3.200000047683716,
+     "chip": 1.3000000715255737,
+     "dent": 0.19999992847442627,
+     "fracture": 10.199999928474426,
+     "detach": 0.19999992847442627
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 10,
+     "damage": 559,
+     "crack": 20,
+     "chip": 2,
+     "dent": 2,
+     "fracture": 11,
+     "detach": 21
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.4000000953674316,
+     "fracture:adoptSplit": 1.5999999046325684,
+     "fracture:splitLoose": 2.399999976158142,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "crater",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 21,
+     "splitLoose": 32,
+     "adoptSplit": 10,
+     "fitBoxes": 11
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Fs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at mE0.collapse (<anonymous>:3834:236115) < at mE0.hide (<anonymous>:3834:235990) < at XX.onFracture (<anonymous>:3834:290543) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at XX.onFracture (<anonymous>:3834:290630) < at XX.applyEvent (<anonymous>:3834:277238) < at XX.apply (<anonymous>:3834:276095) < at XX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at mE0.batchRebuilds (<anonymous>:3834:236229) < at XX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at XX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at XX.setContacts (<anonymous>:3834:304307) < at XX.fitPartBoxes (<anonymous>:3834:262322) < at XX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 3.2000001668930054,
+     "fitBoxes": 0.30000007152557373,
+     "adoptSplit": 1.9999998807907104,
+     "splitLoose": 3
+    },
+    "evMs": {
+     "debris": 3.5,
+     "spall": 0.7999998331069946,
+     "stage": 0.8999998569488525,
+     "damage": 2.0000003576278687,
+     "crack": 3.799999475479126,
+     "chip": 1.899999976158142,
+     "expose": 0.30000007152557373,
+     "dent": 0.20000004768371582,
+     "fracture": 12.700000405311584,
+     "detach": 0.2999999523162842
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 11,
+     "damage": 561,
+     "crack": 22,
+     "chip": 3,
+     "expose": 1,
+     "dent": 2,
+     "fracture": 10,
+     "detach": 22
+    },
+    "lab": {
+     "fracture:rebuildHost": 3.2000001668930054,
+     "fracture:adoptSplit": 1.9999998807907104,
+     "fracture:splitLoose": 3,
+     "detach:splitLoose": 0
+    }
+   }
+  }
+ ],
+ "b": [
+  {
+   "kind": "blast",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 19,
+     "splitLoose": 32,
+     "adoptSplit": 8,
+     "fitBoxes": 9
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Bs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at gE0.collapse (<anonymous>:3834:236115) < at gE0.hide (<anonymous>:3834:235990) < at KX.onFracture (<anonymous>:3834:290543) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at KX.onFracture (<anonymous>:3834:290630) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at gE0.batchRebuilds (<anonymous>:3834:236229) < at KX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at KX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at KX.setContacts (<anonymous>:3834:304307) < at KX.fitPartBoxes (<anonymous>:3834:262322) < at KX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.3999998569488525,
+     "fitBoxes": 0,
+     "adoptSplit": 1.8000000715255737,
+     "splitLoose": 2.200000047683716
+    },
+    "evMs": {
+     "debris": 1.2000000476837158,
+     "spall": 0.6999999284744263,
+     "stage": 0.6999998092651367,
+     "damage": 2.799999952316284,
+     "crack": 2.900000214576721,
+     "chip": 1.399999976158142,
+     "dent": 0.20000004768371582,
+     "fracture": 10.099999904632568,
+     "detach": 0.3999999761581421
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 10,
+     "damage": 559,
+     "crack": 20,
+     "chip": 2,
+     "dent": 2,
+     "fracture": 11,
+     "detach": 21
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.3999998569488525,
+     "fracture:adoptSplit": 1.8000000715255737,
+     "fracture:splitLoose": 2.200000047683716,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "crater",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 21,
+     "splitLoose": 32,
+     "adoptSplit": 10,
+     "fitBoxes": 11
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Bs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at gE0.collapse (<anonymous>:3834:236115) < at gE0.hide (<anonymous>:3834:235990) < at KX.onFracture (<anonymous>:3834:290543) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at KX.onFracture (<anonymous>:3834:290630) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at gE0.batchRebuilds (<anonymous>:3834:236229) < at KX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at KX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at KX.setContacts (<anonymous>:3834:304307) < at KX.fitPartBoxes (<anonymous>:3834:262322) < at KX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 3.1999998092651367,
+     "fitBoxes": 0.20000004768371582,
+     "adoptSplit": 1.9999998807907104,
+     "splitLoose": 5.100000023841858
+    },
+    "evMs": {
+     "debris": 1.4999998807907104,
+     "spall": 0.8000000715255737,
+     "stage": 1.5999999046325684,
+     "damage": 2.100000023841858,
+     "crack": 3.6999999284744263,
+     "chip": 2.200000047683716,
+     "expose": 0.40000009536743164,
+     "dent": 0.5,
+     "fracture": 15.399999976158142,
+     "detach": 0.5999999046325684
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 11,
+     "damage": 561,
+     "crack": 22,
+     "chip": 3,
+     "expose": 1,
+     "dent": 2,
+     "fracture": 10,
+     "detach": 22
+    },
+    "lab": {
+     "fracture:rebuildHost": 3.1999998092651367,
+     "fracture:adoptSplit": 1.9999998807907104,
+     "fracture:splitLoose": 5.100000023841858,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "blast",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 19,
+     "splitLoose": 32,
+     "adoptSplit": 8,
+     "fitBoxes": 9
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Bs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at gE0.collapse (<anonymous>:3834:236115) < at gE0.hide (<anonymous>:3834:235990) < at KX.onFracture (<anonymous>:3834:290543) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at KX.onFracture (<anonymous>:3834:290630) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at gE0.batchRebuilds (<anonymous>:3834:236229) < at KX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at KX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at KX.setContacts (<anonymous>:3834:304307) < at KX.fitPartBoxes (<anonymous>:3834:262322) < at KX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.599999785423279,
+     "fitBoxes": 0.30000007152557373,
+     "adoptSplit": 1.600000023841858,
+     "splitLoose": 2.1999999284744263
+    },
+    "evMs": {
+     "debris": 1.500000238418579,
+     "spall": 0.5999999046325684,
+     "stage": 1,
+     "damage": 1.7000000476837158,
+     "crack": 2.8999996185302734,
+     "chip": 1.5,
+     "dent": 0.19999992847442627,
+     "fracture": 10.500000238418579,
+     "detach": 0.3999999761581421
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 10,
+     "damage": 559,
+     "crack": 20,
+     "chip": 2,
+     "dent": 2,
+     "fracture": 11,
+     "detach": 21
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.599999785423279,
+     "fracture:adoptSplit": 1.600000023841858,
+     "fracture:splitLoose": 2.1999999284744263,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "crater",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 21,
+     "splitLoose": 32,
+     "adoptSplit": 10,
+     "fitBoxes": 11
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Bs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at gE0.collapse (<anonymous>:3834:236115) < at gE0.hide (<anonymous>:3834:235990) < at KX.onFracture (<anonymous>:3834:290543) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at KX.onFracture (<anonymous>:3834:290630) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at gE0.batchRebuilds (<anonymous>:3834:236229) < at KX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at KX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at KX.setContacts (<anonymous>:3834:304307) < at KX.fitPartBoxes (<anonymous>:3834:262322) < at KX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.6000001430511475,
+     "fitBoxes": 0.3999999761581421,
+     "adoptSplit": 1.6999999284744263,
+     "splitLoose": 2.799999952316284
+    },
+    "evMs": {
+     "debris": 1.2000001668930054,
+     "spall": 0.6999999284744263,
+     "stage": 0.9999997615814209,
+     "damage": 1.7000001668930054,
+     "crack": 3.399999737739563,
+     "chip": 1.8000000715255737,
+     "expose": 0.3999999761581421,
+     "dent": 0.2999999523162842,
+     "fracture": 11.40000033378601,
+     "detach": 0.40000009536743164
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 11,
+     "damage": 561,
+     "crack": 22,
+     "chip": 3,
+     "expose": 1,
+     "dent": 2,
+     "fracture": 10,
+     "detach": 22
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.6000001430511475,
+     "fracture:adoptSplit": 1.6999999284744263,
+     "fracture:splitLoose": 2.6999999284744263,
+     "detach:splitLoose": 0.10000002384185791
+    }
+   }
+  },
+  {
+   "kind": "blast",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 19,
+     "splitLoose": 32,
+     "adoptSplit": 8,
+     "fitBoxes": 9
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Bs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at gE0.collapse (<anonymous>:3834:236115) < at gE0.hide (<anonymous>:3834:235990) < at KX.onFracture (<anonymous>:3834:290543) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at KX.onFracture (<anonymous>:3834:290630) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at gE0.batchRebuilds (<anonymous>:3834:236229) < at KX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at KX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at KX.setContacts (<anonymous>:3834:304307) < at KX.fitPartBoxes (<anonymous>:3834:262322) < at KX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.9999998807907104,
+     "fitBoxes": 0,
+     "adoptSplit": 1.7000000476837158,
+     "splitLoose": 2
+    },
+    "evMs": {
+     "debris": 0.9999998807907104,
+     "spall": 0.5,
+     "stage": 0.9000000953674316,
+     "damage": 2.100000023841858,
+     "crack": 3,
+     "chip": 1.2000000476837158,
+     "dent": 0.19999992847442627,
+     "fracture": 10.100000023841858,
+     "detach": 0.3999999761581421
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 10,
+     "damage": 559,
+     "crack": 20,
+     "chip": 2,
+     "dent": 2,
+     "fracture": 11,
+     "detach": 21
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.9999998807907104,
+     "fracture:adoptSplit": 1.7000000476837158,
+     "fracture:splitLoose": 2,
+     "detach:splitLoose": 0
+    }
+   }
+  },
+  {
+   "kind": "crater",
+   "snap": {
+    "on": false,
+    "blastWorld": 1,
+    "plain": 1,
+    "outN": {
+     "waterAt": 12,
+     "rebuildHost": 21,
+     "splitLoose": 32,
+     "adoptSplit": 10,
+     "fitBoxes": 11
+    },
+    "outStack": {
+     "waterAt": "at Object._0 [as water] (<anonymous>:4159:17060) < at <anonymous>:4048:48945 < at probe17.<computed> (eval at evaluate (:290:30), <anonymous>:190:117) < at target.<computed> [as b_water] (eval at evaluate (:290:30), <anonymous>:120:25) < at Bs (<anonymous>:4048:41296) < at I (<anonymous>:4048:48906) < at Object.W [as blastAt] (<anonymous>:4048:50396)",
+     "rebuildHost": "at gE0.collapse (<anonymous>:3834:236115) < at gE0.hide (<anonymous>:3834:235990) < at KX.onFracture (<anonymous>:3834:290543) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25)",
+     "splitLoose": "at KX.onFracture (<anonymous>:3834:290630) < at KX.applyEvent (<anonymous>:3834:277238) < at KX.apply (<anonymous>:3834:276095) < at KX.runBudgeted (<anonymous>:3834:268688) < at target.<computed> [as runBudgeted] (eval at evaluate (:290:30), <anonymous>:120:25) < at Object.run (<anonymous>:3834:251112) < at M (<anonymous>:3907:17095)",
+     "adoptSplit": "at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230 < at gE0.batchRebuilds (<anonymous>:3834:236229) < at KX.splitLoose (<anonymous>:3834:294070) < at target.<computed> [as splitLoose] (eval at evaluate (:290:30), <anonymous>:120:25) < at KX.onFracture (<anonymous>:3834:290630)",
+     "fitBoxes": "at KX.setContacts (<anonymous>:3834:304307) < at KX.fitPartBoxes (<anonymous>:3834:262322) < at KX.adoptSplit (<anonymous>:3834:300223) < at target.<computed> [as adoptSplit] (eval at evaluate (:290:30), <anonymous>:120:25) < at <anonymous>:3834:294251 < at Array.forEach (<anonymous>) < at <anonymous>:3834:294230"
+    },
+    "outMs": {
+     "waterAt": 0,
+     "rebuildHost": 2.5999999046325684,
+     "fitBoxes": 0.20000004768371582,
+     "adoptSplit": 1.7999998331069946,
+     "splitLoose": 3.100000023841858
+    },
+    "evMs": {
+     "debris": 1.0000001192092896,
+     "spall": 0.7999998331069946,
+     "stage": 1.399999976158142,
+     "damage": 2.4000003337860107,
+     "crack": 3.8000000715255737,
+     "chip": 4.100000023841858,
+     "expose": 0.5,
+     "dent": 0.2999999523162842,
+     "fracture": 12.199999809265137,
+     "detach": 0.3999999761581421
+    },
+    "evN": {
+     "debris": 68,
+     "spall": 7,
+     "stage": 11,
+     "damage": 561,
+     "crack": 22,
+     "chip": 3,
+     "expose": 1,
+     "dent": 2,
+     "fracture": 10,
+     "detach": 22
+    },
+    "lab": {
+     "fracture:rebuildHost": 2.5999999046325684,
+     "fracture:adoptSplit": 1.7999998331069946,
+     "fracture:splitLoose": 3.100000023841858,
+     "detach:splitLoose": 0
+    }
+   }
+  }
+ ]
+}
