@@ -1,13 +1,20 @@
 import type { RayHit, Vec3 } from '@adatechnology/game-contracts'
-import type { OcclusionHit, OcclusionQuery } from '@adatechnology/game-audio'
-import type { RaycastOptions } from '@adatechnology/game-destruction'
 
-export type OcclusionWorld = {
-  raycast(origin: Vec3, direction: Vec3, maxDistance?: number, options?: RaycastOptions): RayHit | null
+import type { OcclusionHit, OcclusionQuery } from './occlusion'
+
+/** What the rays leave out: the same fields as `RaycastOptions` of `game-destruction`, kept structural so the audio core depends on no other core. */
+export type OcclusionRayFilter = {
+  readonly skipLoose?: boolean
+  readonly minObjectRadius?: number
+}
+
+/** A world that answers rays with the part hit and tells a part's material: a `game-destruction` world is one. */
+export type RaycastOcclusionWorld = {
+  raycast(origin: Vec3, direction: Vec3, maxDistance?: number, options?: OcclusionRayFilter): RayHit | null
   part(objectId: string, partId: string): { readonly material: string } | null
 }
 
-export type WorldOcclusionOptions = {
+export type RaycastOcclusionOptions = {
   /** Most things counted on one path. Default 6. */
   readonly maxHits?: number
   /** Metres stepped past a hit before looking for the next: small enough not to skip a thin layer behind it (4 mm glass). Default 0.001. */
@@ -27,7 +34,7 @@ export const OCCLUDER_MIN_RADIUS = 0.25
 
 const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance]
 
-function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
+function hitsAlong(world: RaycastOcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: OcclusionRayFilter): RayHit[] {
   const found: RayHit[] = []
   let travelled = 0
   while (found.length < maxHits && travelled < length) {
@@ -47,10 +54,10 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
  * (a ray from the source) and the way out (a ray from the listener). A part already broken or holed is not hit by the world's ray, so it lets sound by.
  * Only what stands occludes: the rays leave out loose pieces and objects under `minObjectRadius` before reading their shapes (a blast leaves hundreds).
  */
-export function createWorldOcclusion(world: OcclusionWorld, options: WorldOcclusionOptions = {}): OcclusionQuery {
+export function createRaycastOcclusion(world: RaycastOcclusionWorld, options: RaycastOcclusionOptions = {}): OcclusionQuery {
   const maxHits = options.maxHits ?? 6
   const step = options.step ?? 0.001
-  const skip: RaycastOptions = { skipLoose: true, minObjectRadius: options.minObjectRadius ?? OCCLUDER_MIN_RADIUS }
+  const skip: OcclusionRayFilter = { skipLoose: true, minObjectRadius: options.minObjectRadius ?? OCCLUDER_MIN_RADIUS }
   return (from, to) => {
     const dx = to[0] - from[0]
     const dy = to[1] - from[1]
