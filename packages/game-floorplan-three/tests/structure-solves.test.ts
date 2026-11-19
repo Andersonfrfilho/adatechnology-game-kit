@@ -1,5 +1,5 @@
 import { createDestruction } from '@adatechnology/game-destruction'
-import type { DestructionEvent } from '@adatechnology/game-destruction'
+import type { DestructionEvent, DestructionWorld } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
 import { houseOf, planOf } from './helpers/houses'
@@ -13,8 +13,18 @@ const sobrado = () => {
   const { house } = houseOf(planOf('sobrado', 3), { destruction: world })
   house.destruction.activate()
   const wall = house.structure.byId.get('wall_0_0')!
-  const point: [number, number, number] = [(wall.aabb[0] + wall.aabb[2]) / 2, (wall.y0 + wall.y1) / 2, (wall.aabb[1] + wall.aabb[3]) / 2 + 0.4]
-  return { world, point }
+  const centre: [number, number, number] = [(wall.aabb[0] + wall.aabb[2]) / 2, (wall.y0 + wall.y1) / 2, (wall.aabb[1] + wall.aabb[3]) / 2]
+  const point: [number, number, number] = [centre[0], centre[1], centre[2] + 0.4]
+  return { world, id: house.destruction.id!, centre, point }
+}
+
+/** The detach events of one operation carry the groups it left, and close it: nothing of it comes after the first of them. */
+const expectDetachesAtEnd = (world: DestructionWorld, events: readonly DestructionEvent[], least: number): void => {
+  const detaches = events.filter((e): e is Extract<DestructionEvent, { type: 'detach' }> => e.type === 'detach')
+  expect(detaches.length).toBeGreaterThanOrEqual(least)
+  for (const e of detaches) expect(e.groups).toEqual(world.state(e.object)!.groups)
+  const first = events.indexOf(detaches[0]!)
+  expect(events.slice(first).every((e) => e.type === 'detach')).toBe(true)
 }
 
 describe('the structure of a house in a blast (C7)', () => {
@@ -34,11 +44,19 @@ describe('the structure of a house in a blast (C7)', () => {
     const events: DestructionEvent[] = []
     world.on('*', (event) => events.push(event))
     world.explode(point, 4e6, 6)
-    const detaches = events.filter((e): e is Extract<DestructionEvent, { type: 'detach' }> => e.type === 'detach')
-    expect(detaches.length).toBeGreaterThan(100)
-    for (const e of detaches) expect(e.groups).toEqual(world.state(e.object)!.groups)
-    // they close the operation: nothing of it comes after the first of them
-    const first = events.indexOf(detaches[0]!)
-    expect(events.slice(first).every((e) => e.type === 'detach')).toBe(true)
+    expectDetachesAtEnd(world, events, 100)
+  })
+
+  it('does so for a hit on one part too', () => {
+    const { world, id, centre } = sobrado()
+    const events = world.hitPart(id, 'wall_0_0', { type: 'explosive', point: centre, energy: 2e6, radius: 2.5, source: 'test' }).events
+    expectDetachesAtEnd(world, events, 1)
+  })
+
+  it('and for the ground lost under the house, in the update that applies it', () => {
+    const { world, centre } = sobrado()
+    world.groundLoss({ x: centre[0], z: centre[2], radius: 3, depth: 1.5, source: 'crater' })
+    const events = world.update(1 / 60)
+    expectDetachesAtEnd(world, events, 1)
   })
 })
