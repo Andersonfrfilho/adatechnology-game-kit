@@ -1,4 +1,4 @@
-import { DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
+import { DEFERRED_QUEUE_ID, drainDetached } from '@adatechnology/game-contracts'
 import { markPositionsWritten } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue, DestructionEvent, PartUnits } from '@adatechnology/game-contracts'
@@ -782,13 +782,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       // a frame budget owns the painting: only an explicit budget (the emergency flush, LOD, statistics) paints from here
       if (budgetMs === undefined && paintState.attached) return dirty.size
       budgetMs ??= paintBudgetMs
-      const deadline = performance.now() + budgetMs
-      for (const view of dirty) {
-        dirty.delete(view)
-        paint(view)
-        if (performance.now() >= deadline) break
-      }
-      invalidate(); invalidateShadow()
+      drainDetached(queue, budgetMs)
       return dirty.size
     }
 
