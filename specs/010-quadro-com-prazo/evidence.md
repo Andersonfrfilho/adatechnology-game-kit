@@ -423,3 +423,13 @@ Seis achados; corrigidos os que se confirmaram no código:
 Testes: `game-destruction` 581, `game-fluids-three` 38 passam; `game-destruction-three` 650 passam e 1 falha por tempo (`awake-pieces.test.ts`, 5.000 peças em 5 s, com carga 6 a 7; falha igual sem a correção); typecheck dos quatro pacotes limpo.
 
 **Achado que bloqueia o PR:** `game-test-room/tests/step-equivalence.test.ts` (T3.2, roda no CI) falha na `spec/010-pr` desde o merge da fase 3, com ou sem estas correções. O fixture foi gravado em `4e78c92df`, sem a T2.1 (fase 2). Regravando numa cópia: no quadro 30 (a explosão) em diante diferem os eventos (18 quadros no solver próprio, 3 no Jolt) **e o estado** (150 quadros nos dois). O fixture não foi regravado.
+
+### Fixture da T3.2 regravado (decisão do dono: investigar e regravar se for só efeito da T2.1)
+
+Comparação do estado bruto da cena (teste descartável, solver próprio) entre `4e78c92df` (onde o fixture foi gravado, sem a fase 2) e a
+`spec/010-pr`, nos quadros 31 e 179:
+
+- **Iguais:** contagem de eventos por tipo; as 15/16 peças, com os mesmos ids e as mesmas posições (mm); nenhuma parte perdida a mais; manchas.
+- **Diferentes:** só trincas. No sobrado, o ponto, a normal e os raios de algumas trincas (`parts[13]`, `parts[38]`). Numa parte do objeto 6, uma trinca a mais (log `crack` 73 contra 72), com a `flexure` caindo de 0,52 para 0,08. O `rng` muda por causa dessa trinca extra.
+- Causa: a T2.1 resolve as cargas no fim da operação, então a flexão lida por quem trinca muda. É a mesma classe de mudança dos goldens que a T2.1 já regravou com aprovação (`exact-floorplan` `destruction/*`).
+- `game-test-room/tests/fixtures/step-equivalence.json` regravado na `spec/010-pr`; o teste passa (2/2).
