@@ -2,12 +2,11 @@ import type { MeshData, PartKind, Vec3, Placement, PlantMesh, PlantSpec, Generat
 import type { Lot } from '../lot'
 import { extractPlant, hideLotPlant } from '../lot'
 import { generate } from '../generate'
-import type { ThreeNS, VegetationMaterials } from './types'
+import type { BufferGeometry as Geo, ThreeNS, VegetationMaterials } from './types'
 import { createVegetationMaterials } from './materials'
 import { materialKeyForPart, resolveMaterialIds, type MaterialIds } from '../destruction'
 import type { Condition } from '../types'
 
-import type { BufferGeometry as Geo } from 'three'
 type Obj = InstanceType<ThreeNS['Object3D']>
 
 const PART_ORDER: PartKind[] = ['wood', 'foliage', 'flowers', 'fruit', 'spines']
