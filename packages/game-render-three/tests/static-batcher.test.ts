@@ -403,7 +403,7 @@ describe('createStaticBatchQueue', () => {
     const queue = createStaticBatchQueue()
     scene(2).forEach((root) => createStaticBatcher(THREE, root, { queue }))
     let now = 0
-    expect(queue.deferredQueue().run(2, () => now++)).toBe(2)
+    expect(queue.deferredQueue().run(1, () => now++)).toBe(2)
     expect(queue.deferredQueue().pending()).toBe(2)
   })
 
