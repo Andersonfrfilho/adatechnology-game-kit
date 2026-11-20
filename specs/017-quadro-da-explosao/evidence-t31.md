@@ -49,3 +49,11 @@ Gates: typecheck `game-floorplan-three` e `game-contracts` ok; 98 testes de brea
 5. **Teste com o orçamento real.** `game-floorplan-three` não depende de `game-runtime`; o teste importa `../../game-runtime/src` por caminho relativo (o `check:layers` olha só `packages/*/src`, não os testes; sem violação nova). Nota do orçamento: o contador de quadros só avança com `drain('idle')` depois do `drain('present')`.
 
 Gates: typecheck ok; 104 testes de breach/máscara/golden (exact-golden sem diff, `breach-deferred-mask` intocado), contracts 119, runtime 61; `check:layers` e `kit-audit --check --strict-clocks` sem violação nova.
+
+## Ajuste depois da régua
+
+A régua do navegador (4 rodadas alternadas, carga ~1,3) mostrou: `breach-cut` no quadro do golpe de ~8,4 ms para 0, mas `breach-paint` no mesmo quadro de ~5,0 para ~8,0 ms. Causa: a cota mínima `owedWalls` (um terço das pendentes) valia já no quadro em que as paredes entram na fila, que é o quadro do golpe, o único sem folga.
+
+Mudança (`breach.ts`, `owedWalls` e `ageOf`): o quadro do golpe pinta só 1 parede (o mínimo do contrato), a mais perto do golpe; só entram na cota as paredes de quadros anteriores. A idade passou a contar "quadros desde o quadro cujo dreno viu a parede" (`tick - entrada - 1`: o tique avança antes do `run`, então a parede que entrou na simulação do quadro tem idade 0 ao ser drenada). Resultado: 21 paredes de uma vez saem 1, 10, 10, e a janela continua de 3 quadros contando o do golpe (`PAINT_WINDOW_TICKS - 1` é a idade em que a parede vence). Com folga de prazo continua pintando enquanto couber (um tiro isolado pinta no próprio quadro); idades misturadas: a cota conta só as de idade >= 1.
+
+Testes: `breach-paint-queues.test.ts` (21): 21 paredes dão [1, 10, 10, 0]; idades misturadas (a cota é `ceil(antigas / 2)`, as novas ficam fora); tiro isolado com folga pinta no quadro; escalonado (parede do quadro 2 sai até o quadro 4). Gates: typecheck, 105 testes de breach/máscara/golden (exact-golden sem diff, `breach-deferred-mask` intocado), `check:layers` e `kit-audit --check --strict-clocks` sem violação nova. O ganho do ajuste NÃO foi medido; a régua é de outra sessão.
