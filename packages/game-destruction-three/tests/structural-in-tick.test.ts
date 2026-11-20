@@ -80,3 +80,64 @@ describe('structural events apply at the end of the tick when the host asks (spe
     expect(sounds).toContain('detach')
   })
 })
+
+describe('the queue cap keeps what changes the simulation (spec 017 T2.2)', () => {
+  const CAP = 4000
+
+  it('past the cap a chip, a dent and a spall are kept and a hole is dropped', () => {
+    const { world, renderer } = scene()
+    const base = renderer.deferredQueue().pending()
+    const pending = (): number => renderer.deferredQueue().pending() - base
+    for (let i = 0; i < CAP; i++) world.emit({ type: 'damage', object: 'o1', part: 'b', amount: 1, hp: 99, damageType: 'blunt', time: 0 })
+    expect(pending()).toBe(CAP)
+    emitHole(world)
+    expect(pending()).toBe(CAP)
+    world.emit({ type: 'dent', object: 'o1', part: 'b', time: 0 } as never)
+    world.emit({ type: 'chip', object: 'o1', part: 'b', time: 0 } as never)
+    world.emit({ type: 'spall', object: 'o1', part: 'b', time: 0 } as never)
+    expect(pending()).toBe(CAP + 3)
+  })
+})
+
+describe('a structural event never waits for ever for a tick (spec 017 T2.2)', () => {
+  it('with no tick it applies by the eighth frame', () => {
+    const { world, renderer, sounds } = scene()
+    const queue = renderer.deferredQueue()
+    renderer.setStructuralInTick(true)
+    emitDetach(world)
+    let appliedAt = 0
+    for (let frame = 1; frame <= 12 && appliedAt === 0; frame++) {
+      if (queue.pending(frame) > 0) queue.run(Infinity, () => 0)
+      if (sounds.includes('detach')) appliedAt = frame
+    }
+    expect(appliedAt).toBeGreaterThan(0)
+    expect(appliedAt).toBeLessThanOrEqual(8)
+  })
+
+  it('at 144 Hz, with ticks every other frame, the watch never fires', () => {
+    const { world, renderer, sounds } = scene()
+    const queue = renderer.deferredQueue()
+    renderer.setStructuralInTick(true)
+    for (let frame = 1; frame <= 40; frame++) {
+      if (frame % 20 === 1) emitDetach(world)
+      if (queue.pending(frame) > 0) queue.run(Infinity, () => 0)
+      expect(sounds, `frame ${frame}`).not.toContain('detach')
+      if (frame % 2 === 0) renderer.applyStructuralEvents()
+      if (frame % 2 === 0) sounds.length = 0
+    }
+  })
+})
+
+describe('dispose with events waiting (spec 017 T2.2)', () => {
+  it('empties the queue and takes no more', () => {
+    const { world, renderer } = scene()
+    renderer.setStructuralInTick(true)
+    emitHole(world)
+    emitDetach(world)
+    renderer.dispose?.()
+    expect(renderer.deferredQueue().pending()).toBe(0)
+    emitDetach(world)
+    expect(renderer.deferredQueue().pending()).toBe(0)
+    expect(() => renderer.applyStructuralEvents()).not.toThrow()
+  })
+})

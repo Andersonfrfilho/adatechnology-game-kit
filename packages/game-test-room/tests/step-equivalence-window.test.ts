@@ -68,8 +68,8 @@ const stateOf = (room: TestRoom, loop: PhysicsLoop | null): string => {
 }
 
 /** The hash of every tick `0..TICKS-1`, with the frame time `frameTimes` gives: the actions are by tick index, the hash is the state when the tick ends. */
-const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null }, frameTimes: FrameTimes): string[] => {
-  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, ...(variant.loop ? { physics: variant.loop } : {}) })
+const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly hasWorkBudget?: boolean }, frameTimes: FrameTimes): string[] => {
+  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, ...(variant.loop ? { physics: variant.loop } : {}), ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
   const { scheduler } = (room as unknown as SchedulerHolder).frameParts
   const sobrado = room.spawn('sobrado', [0, 0, -9]).objectId
   const hashes: string[] = []
@@ -142,6 +142,13 @@ describe('the same scene gives the same bytes per tick at any frame rate (spec 0
       }
     }
     expectSameAsReference(run(steadyAt(60)), run, TICKS)
+  }, 120_000)
+
+  // Pending (spec 017 T2.2, evidence-120hz): under `workBudget` the structural events stay in the frame's drain (the work is paced by frame), so they still read the drawn pose.
+  it.fails('with workBudget on, 120 Hz matches the 60 Hz run tick by tick (fails: the workBudget path still applies its events in present, on the drawn pose)', () => {
+    const run = (frameTimes: FrameTimes): string[] => hashesPerTick({ loop: null, hasWorkBudget: true }, frameTimes)
+    const reference = run(steadyAt(60))
+    expect(firstDifferentTick(run(steadyAt(120)), reference)).toBe(-1)
   }, 120_000)
 
   it('up to the tick of the strike on the Jolt loop: the same runs match', async () => {

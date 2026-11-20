@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, ObjectState, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { Crack, DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, ObjectState, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, blastShove, drainDetached, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -75,13 +75,8 @@ const QUEUE_CAP = 4000
 const TRICKLE_SECONDS: readonly [number, number] = [2, 5]
 const TRICKLE_EVERY = 0.25
 const TRICKLE_MAX = 24
-/**
- * Events the queue takes past `QUEUE_CAP`: what changes what is drawn (a part breaking off, a storey coming down, a fire starting or going out). A blast
- * floods the queue with damage, melt and drip events; dropping a collapse behind them leaves a fallen wall drawn standing.
- */
-const STRUCTURAL_EVENTS: ReadonlySet<DestructionEventType> = new Set<DestructionEventType>([
-  'fracture', 'detach', 'collapse', 'settle', 'destroyed', 'expose', 'stage', 'hole', 'ignite', 'primed', 'extinguish', 'burnout', 'leak', 'explode',
-])
+/** Frames in a row with a structural event waiting and no tick to apply it in, after which a frame drain applies everything (a paused or skipped simulation). */
+const STALLED_FRAMES = 8
 /** Fragments of a fracture spawned in one go before the frame budget is looked at, so a small break is never split over frames. */
 const MIN_FRAGMENTS_PER_SLICE = 8
 
@@ -415,7 +410,7 @@ class Renderer implements DestructionRenderer {
   /** Objects broken since the last update: `checkBroken` looks at what is left of them. */
   private readonly broken = new Set<string>()
   private staticAt = 0
-  private readonly queue: DestructionEvent[] = []
+  private queue: DestructionEvent[] = []
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
   /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
@@ -451,9 +446,11 @@ class Renderer implements DestructionRenderer {
   /** true while the host applies the structural events itself, at the end of each tick (`applyStructuralEvents`): a frame drain leaves them, and what waits behind them, for the next tick. */
   private structuralInTick = false
   private readonly eventOrder = new EventOrder()
+  private stalledFrames = 0
+  private watchedFrame = -1
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.appliableEvents() + this.slices.length + this.splitQueue.size + this.looseLeft(),
+    pending: (frame) => this.watchStall(frame) + this.appliableEvents() + this.slices.length + this.splitQueue.size + this.looseLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
       for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
@@ -607,7 +604,8 @@ class Renderer implements DestructionRenderer {
     })
     this.unsubscribe = this.world.on('*', (ev) => {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
-      if (this.queue.length < QUEUE_CAP || STRUCTURAL_EVENTS.has(ev.type)) this.queue.push(ev)
+      // past the cap only what changes the simulation is kept: a blast floods the queue with damage and marks, and a dropped collapse leaves a fallen wall drawn standing
+      if (this.queue.length < QUEUE_CAP || isStructuralEvent(ev)) this.queue.push(ev)
     })
   }
 
@@ -1190,6 +1188,7 @@ class Renderer implements DestructionRenderer {
 
   /** The host applies the structural events itself at the end of each tick (`applyStructuralEvents`) from now on, or no longer; not under `workBudget`, whose events are paced by the frame. */
   setStructuralInTick(isInTick: boolean): void {
+    // pending: under `workBudget` the mode stays off, so the events there still read the drawn pose (spec 017, evidence-120hz T2.2)
     this.structuralInTick = isInTick && !this.work
   }
 
@@ -1199,13 +1198,14 @@ class Renderer implements DestructionRenderer {
    */
   applyStructuralEvents(): void {
     if (this.disposed || this.work) return
+    this.stalledFrames = 0
     let last = -1
     for (let i = this.queue.length - 1; i >= 0 && last < 0; i--) if (isStructuralEvent(this.queue[i]!)) last = i
     if (last < 0) return
     const ordered = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
     let end = ordered.length
     while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
-    this.queue.unshift(...ordered.slice(end))
+    this.requeue(ordered, end)
     for (let i = 0; i < end; i++) {
       try {
         this.apply(ordered[i]!)
@@ -1215,9 +1215,23 @@ class Renderer implements DestructionRenderer {
     }
   }
 
+  /** Puts `events` from `from` on, back at the front of the queue, in order (no spread: a blast leaves tens of thousands). */
+  private requeue(events: readonly DestructionEvent[], from: number): void {
+    if (from >= events.length) return
+    this.queue = events.slice(from).concat(this.queue)
+  }
+
+  /** Counts the frames (once each) a structural event has waited with no tick to apply it; always 0, for `pending`'s sum. */
+  private watchStall(frame: number | undefined): number {
+    if (!this.structuralInTick || frame === undefined || frame === this.watchedFrame) return 0
+    this.watchedFrame = frame
+    this.stalledFrames = this.queue.some(isStructuralEvent) ? this.stalledFrames + 1 : 0
+    return 0
+  }
+
   /** How many events a drain may apply now: all, or (the host applies the structural ones in the tick) only those ahead of the first structural one. */
   private appliableEvents(all = false): number {
-    if (all || !this.structuralInTick) return this.queue.length
+    if (all || !this.structuralInTick || this.stalledFrames >= STALLED_FRAMES) return this.queue.length
     let count = 0
     while (count < this.queue.length && !isStructuralEvent(this.queue[count]!)) count++
     return count
@@ -1232,6 +1246,7 @@ class Renderer implements DestructionRenderer {
     if (this.work) return this.runWork(this.work, all)
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
     const batch = this.eventOrder.arrange(this.queue.splice(0, this.appliableEvents(all)))
+    if (this.stalledFrames >= STALLED_FRAMES) this.stalledFrames = 0
     const outerClock = this.drainClock
     this.drainClock = clock
     this.sliceDeadline = deadline
@@ -1240,7 +1255,7 @@ class Renderer implements DestructionRenderer {
       ran = this.runSlices(deadline)
       for (let i = 0; i < batch.length; i++) {
         if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
-          this.queue.unshift(...batch.slice(i))
+          this.requeue(batch, i)
           return ran
         }
         try {

@@ -112,10 +112,21 @@ levantar o visual do objeto para antes do estrutural dele (`EventOrder`), també
 | `blast-presentation`, `golden-scene`, `team-golden-house-area` | todas | nada | - |
 | `exact-floorplan.json` | `destruction/breach` | hash (838 nós) | 3 `Points` + 1 `Mesh` por hash (sementes das partículas); posições de todos os 519 meshes idênticas (0) |
 | `exact-floorplan.json` | `destruction/spall` | hash (846 nós) | 2 `Points` + 1 `Mesh`; posições idênticas (0) |
-| `exact-floorplan.json` | `destruction/fracture` | hash, 928 -> 927 nós | 3 `Points`; 1 `LineSegments` invisível (gaiola de vergalhão, `visible=false`) a menos; posições dos demais 588 meshes idênticas (<1e-9) |
+| `exact-floorplan.json` | `destruction/fracture` | hash, 928 -> 927 nós | 3 `Points`; 1 `LineSegments` invisível a menos (a marca de trinca em estrela do vidro, `addCrack`, evento `crack` em `f0/glass`; ver correção abaixo); posições dos demais 588 meshes idênticas (<1e-9) |
 
 Estado final (último quadro, 1 s) nos três casos: `world.serialize()` idêntico, mesmas peças (11/6/31) com posição e rotação idênticas, mesmos grupos. Causa: o `debris` aplica
-na ordem nova e sorteia partículas em outra sequência; o `hole` agora marca o ponto de golpe antes do `stage` da peça. A gaiola ausente no `fracture` é o ponto a conferir.
+na ordem nova e sorteia partículas em outra sequência; o `hole` agora marca o ponto de golpe antes do `stage` da peça. 
+**Correção (revisão):** o objeto que some em `destruction/fracture` não é gaiola de vergalhão (as 3 `rebar-cage` existem nos dois casos). É a marca de trinca em estrela do vidro
+(`visual.ts`, `addCrack`): na ordem antiga o `chip` rodava antes do `crack`, o `clearDecals` não a pegava e ela ficava órfã, `visible=false`, em trecho escondido, contando no
+`decalCap`; na ordem nova o `crack` vem antes e o `chip` a limpa. Inofensivo. As diferenças de `Points`/`Mesh` em breach/spall são só a ordem de sorteio das partículas (gerador do vfx).
+A regravação de `exact-floorplan` `destruction/*` com estado final idêntico está autorizada pela D2 da spec.
+
+**Revisão da T2.2 (itens).** (1) `STRUCTURAL_EVENTS` apagado: o teto da fila usa `isStructuralEvent`. (2) Vigia: 8 quadros seguidos com estrutural esperando e sem tique, e a drenagem
+do quadro aplica tudo (`STALLED_FRAMES`, contado em `pending(frame)`, sem relógio). (4) Nenhum evento estrutural reescreve a raiz de peça já na trilha no cenário da janela (peça
+empurrada pelo `explode`, colapso do sobrado): o empurrão é impulso (velocidade), não pose; `structural-events-trail.test.ts` prova que o que `present(1)` desenha (pose commitada) é igual
+às raízes depois dos eventos, nos tiques 30 a 36. Sem mudança de código. (5) `unshift(...spread)` virou `requeue` sem spread. (6) teste de `dispose` com eventos pendentes.
+**Pendência (3):** com `workBudget` o modo tique fica desligado e os eventos ainda leem a pose desenhada; `it.fails` em `step-equivalence-window.test.ts` (120 Hz com `workBudget`, primeiro tique diferente: 31).
+
 
 **Gates.** typecheck game-destruction-three e game-test-room limpos; game-destruction-three 87 arquivos / 664 testes ok; game-test-room 65 / 479 ok; game-floorplan-three (blast,
 breach, destruction, exact-golden, golden-scene, team-golden) ok com a regravação; `pnpm check:layers` ok; `kit-audit --check --strict-clocks`: 0 novos, 0 pendentes de relógio.
