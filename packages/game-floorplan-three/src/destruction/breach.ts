@@ -147,12 +147,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     id: DEFERRED_QUEUE_ID.BREACH_PAINT,
     pending: (frame) => { advanceTick(frame); let n = 0; for (const q of paintQueues) n += q.pending(); return n },
     run(deadline, clock) {
+      // no frame number polled since the last run: this run is the frame, so the window still counts down
+      if (!strike.polled) strike.tick++
+      strike.polled = false
       let ran = 0
-      for (const q of [...paintQueues]) {
-        if (q.pending() === 0) continue
-        if (ran > 0 && clock() >= deadline) break
-        ran += q.run(deadline, clock)
-      }
+      // each house keeps its own quota of walls (`owedWalls`): one house spending the deadline cannot starve the walls of another
+      for (const q of [...paintQueues]) if (q.pending() > 0) ran += q.run(deadline, clock)
       return ran
     },
     flush() { for (const q of [...paintQueues]) q.flush() },
@@ -166,9 +166,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
    */
   const cutState = { attached: false }
   /** Frames the budget has polled the breach queues: `tick` advances once per new `pending(frame)`; a wall queued at tick `n` is overdue from `n + PAINT_WINDOW_TICKS`. */
-  const strike = { tick: 0, frame: undefined as number | undefined }
+  const strike = { tick: 0, frame: undefined as number | undefined, polled: false }
   const advanceTick = (frame: number | undefined): void => {
-    if (frame === undefined || frame === strike.frame) return
+    if (frame === undefined) return
+    strike.polled = true
+    if (frame === strike.frame) return
     strike.frame = frame
     strike.tick++
   }
@@ -228,6 +230,21 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       for (const view of dirty.keys()) if (best === undefined || comesBefore(view, best)) best = view
       return best
     }
+    /**
+     * How many walls the next run must paint whatever the deadline says: the walls past their window, else enough to empty the queue by the window of the
+     * oldest (a 20-wall queue with a window of 3 frames paints 7, 7 and 6) so the work spreads over the frames instead of piling up on the last one.
+     */
+    const owedWalls = (): number => {
+      if (!paintState.attached) return 1
+      let oldest = 0, overdue = 0
+      for (const queuedAt of dirty.values()) {
+        const age = strike.tick - queuedAt
+        if (age >= PAINT_WINDOW_TICKS) overdue++
+        oldest = Math.max(oldest, age)
+      }
+      if (overdue > 0) return overdue
+      return Math.ceil(dirty.size / (PAINT_WINDOW_TICKS - oldest + 1))
+    }
     const queueForPaint = (view: WallView): void => { if (!dirty.has(view)) dirty.set(view, strike.tick) }
     /** Walls cut since the cut queue last ran, while a frame budget owns it (`cutQueue`): painted once each by it. */
     const cutWalls = new Set<WallView>()
@@ -272,6 +289,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     const markStrike = (point: number[]): void => {
+      if (!paintState.attached) return
       house.updateWorldMatrix(true, false)
       const v = house.worldToLocal(tmp.p.set(point[0]!, point[1]!, point[2]!))
       lastStrike[0] = v.x; lastStrike[1] = v.y; lastStrike[2] = v.z
@@ -885,9 +903,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       pending: () => dirty.size,
       run(deadline, clock) {
         let ran = 0
-        // a wall past its window is painted whatever the deadline says: the budget runs this queue every frame, so the wait is bounded
+        const owed = owedWalls()
         for (let view = nextDirty(); view; view = nextDirty()) {
-          if (ran > 0 && clock() >= deadline && !isOverdue(view)) break
+          if (ran >= owed && clock() >= deadline) break
           dirty.delete(view)
           paint(view)
           ran++
@@ -998,7 +1016,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           dispose(v)
           if (lod === 0) plain(v, true)
         }
-        views.clear()
+        views.clear(); hasStrike = false
         for (const v of dropped) plain(v, true)
         dropped.length = 0
       },
