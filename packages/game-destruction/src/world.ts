@@ -1298,6 +1298,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     structureSolves++
     o.maxStress = 0
     if (!o.hasStructure) return
+    probe.enter('ssGraph')
     const parts = o.parts
     const n = parts.length
     const ok = (i: number) => parts[i].structural && !isLost(parts[i])
@@ -1319,14 +1320,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         list.push(edge)
       }
     }
+    probe.leave('ssGraph')
     // a part whose supports leave it a longer span than it holds (`structure.maxSpan`) is out, and so is what stood on it only through it
     const out = new Set<number>()
     const graph: SupportGraph = {
       size: n, sharing: o.spec.loadSharing ?? 'nearest', anchored: (i) => parts[i].anchored, active: (i) => ok(i) && !out.has(i), partition: isPartition,
       supportsOf: (i) => edges[i],
     }
+    probe.enter('ssSolve')
     let solution = solveSupports(graph)
+    probe.leave('ssSolve')
     const lowerOf = (i: number): readonly number[] => solution.carriers.get(i) ?? []
+    probe.enter('ssSpan')
     for (;;) {
       let dropped = false
       for (const i of solution.reached) {
@@ -1343,8 +1348,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
       if (!dropped) break
+      probe.enter('ssSolve')
       solution = solveSupports(graph)
+      probe.leave('ssSolve')
     }
+    probe.leave('ssSpan')
     const dist = solution.distance
     // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
     // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
@@ -1367,6 +1375,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         through[k].push(item)
       }
     }
+    probe.enter('ssLoads')
     distributeLoads(solution, (i) => parts[i].st.mass, {
       settled: (i, load) => {
         parts[i].st.load = load
@@ -1378,6 +1387,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         pass(k, contactCentre(parts[k], parts[i]), bulk / lowerOf(i).length)
       },
     })
+    probe.leave('ssLoads')
+    probe.enter('ssApply')
     for (let i = 0; i < n; i++) {
       const p = parts[i]
       o.unsup[i] = false
@@ -1404,6 +1415,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (o.wind) applyWind(o)
     if (o.maxStress > 0.8) o.active = true
     if (o.soil) o.soil.dirty = true
+    probe.leave('ssApply')
   }
 
   // -------------------------------------------------------------------------------------------------------------------------------------------
@@ -2857,7 +2869,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (hit.direction) h.direction = rotateVec(im.rotation, hit.direction)
     }
     const start = cur.length
-    for (const e of im.impl.hit(h) ?? []) emit(e.time === undefined ? { ...e, time } : e)
+    probe.enter(`impl:${im.impl.id}`)
+    const produced = im.impl.hit(h) ?? []
+    probe.leave(`impl:${im.impl.id}`)
+    for (const e of produced) emit(e.time === undefined ? { ...e, time } : e)
     const mine = cur.slice(start)
     const res: HitResult = { object: im.impl.id, damage: 0, penetrated: false, exitEnergy: 0, events: mine, point: hit.point }
     for (const e of mine) {
@@ -4042,19 +4057,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Takes the units `out` (indices of the part's grid) out of a wall of units: they fly from `wp` as clumps, what they leave with nothing under it comes down, and one `chip` says so. */
   let knockOutUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, out: readonly number[], src?: string): boolean => {
+    probe.enter('koGrid')
     const [u, v] = planeAxes(p.thin)
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
     const grid = gridOf(p)
     const worn = (p.rt.chips ??= {})
     const castHere = castCells(p)
     out = out.filter((i) => !castHere.has(i))
-    if (out.length === 0) return false
+    if (out.length === 0) {
+      probe.leave('koGrid')
+      return false
+    }
     probe.count('unitsKnocked', out.length)
     for (const i of out) worn[i] = -1
     // laid units over a gap come down; cast concrete (a pillar, a beam: its units are of its own material) is one piece held by its bars, and stands
     const cast = p.spec.units?.mortar === p.spec.material
     const loose = cast ? [] : wedgedUnder(o, p, unsupportedCells(grid, p.thin, p.dims, (i) => worn[i] !== -1 && !(op && p.st.opening && Math.hypot(grid[i]!.center[u] - op[u], grid[i]!.center[v] - op[v]) <= p.st.opening.radius))).filter((i) => !castHere.has(i))
     for (const i of loose) worn[i] = -1
+    probe.leave('koGrid')
+    probe.enter('koFragments')
     const blown = out.map((i) => grid[i]!), fallen = loose.map((i) => grid[i]!)
     const volume = (cells: readonly UnitCell[]) => cells.reduce((sum, cell) => sum + cell.size[0] * cell.size[1] * cell.size[2], 0)
     const blownMass = Math.min(p.st.mass, p.mat.density * volume(blown))
@@ -4073,6 +4094,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     ]
     const cells = [...blown, ...fallen]
     p.st.holes = p.st.holes.filter((_, k) => !cells.some((cell) => holeInBox(cell.center, cell.size, holes[k]!)))
+    probe.leave('koFragments')
     const lo: Vec3 = [Infinity, Infinity, Infinity], hi: Vec3 = [-Infinity, -Infinity, -Infinity]
     for (const cell of cells) {
       chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
@@ -4092,7 +4114,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.spec.reinforcement) exposeRebar(o, p, src)
     if (p.structural && !isLost(p)) {
       solveStructure(o)
+      probe.enter('koCollapse')
       collapseCheck(o, src)
+      probe.leave('koCollapse')
     }
     return true
   }
@@ -4840,7 +4864,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     })
 
   let implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => {
-    for (const ps of im.impl.describe().parts) {
+    probe.enter('implDescribe')
+    const described = im.impl.describe().parts
+    probe.leave('implDescribe')
+    for (const ps of described) {
       const ov = im.poses.get(ps.id)
       const c = toWorld(im.position, im.rotation, ov?.pos ?? ps.position)
       const q = quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
@@ -5881,8 +5908,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     solveStructure = probe.wrap('solveStructure', solveStructure)
     flushCollapse = probe.wrap('flushCollapse', flushCollapse)
     raycastInternal = probe.wrap('raycast', raycastInternal)
-    implHit = probe.wrap('impls', implHit)
-    implInRange = probe.wrap('impls', implInRange)
+    implHit = probe.wrap('implHit', implHit)
+    implInRange = probe.wrap('implInRange', implInRange)
     addDent = probe.wrap('marks', addDent)
     addCrack = probe.wrap('marks', addCrack)
     debris = probe.wrap('marks', debris)

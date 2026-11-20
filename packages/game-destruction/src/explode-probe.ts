@@ -32,7 +32,7 @@ export type ExplodeProbe = {
 }
 
 /** The labels the coarse mode keeps: under ~100 calls per explosion (the per-part ones are left out), so their timers cost nothing measurable. */
-const COARSE_LABELS = new Set(['knockOutUnits', 'solveStructure', 'groups', 'flushCollapse', 'impls', 'detachEvents'])
+const COARSE_LABELS = new Set(['knockOutUnits', 'solveStructure', 'groups', 'flushCollapse', 'detachEvents', 'implHit', 'implInRange', 'implDescribe', 'koGrid', 'koFragments', 'koCollapse', 'ssGraph', 'ssSolve', 'ssSpan', 'ssLoads', 'ssApply'])
 
 const OFF: ExplodeProbe = {
   isOn: false,
@@ -52,7 +52,7 @@ export function createExplodeProbe(): ExplodeProbe {
   const host: unknown = (globalThis as { __destructionExplodeProbe?: unknown }).__destructionExplodeProbe
   if (!isProbeHost(host)) return OFF
   const { mode, now } = host
-  const isKept = (label: string): boolean => mode === 'fine' || COARSE_LABELS.has(label)
+  const isKept = (label: string): boolean => mode === 'fine' || COARSE_LABELS.has(label) || label.startsWith('impl:')
   const open: OpenFrame[] = []
   let labels: Record<string, number> = {}
   let calls: Record<string, number> = {}
