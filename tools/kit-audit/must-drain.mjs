@@ -72,6 +72,8 @@ export function scanMustDrain(path, text, allowed) {
     if (value !== 'true') hits.push(hit(match.index, `mustDrain has a value the audit cannot read (${value || 'empty'}): write the literal true for an allowed queue, or false`))
     else if (!namesAllowedQueue(literalAround(code, match.index), owner, allowed)) hits.push(hit(match.index, 'mustDrain: true for a queue that is not in must-drain-allowed.json (or not named in the same object)'))
   }
+  // the option that swaps the runtime's list: only game-runtime (exempt above) and its tests may spell it
+  for (const match of code.matchAll(/\bmustDrainIds\b/g)) hits.push(hit(match.index, 'mustDrainIds replaces the runtime list of must-drain queues: only game-runtime and its tests may use it'))
   for (const match of code.matchAll(SHORTHAND)) hits.push(hit(match.index, 'mustDrain as a shorthand property: its value cannot be read'))
   return hits.sort((left, right) => left.line - right.line)
 }
