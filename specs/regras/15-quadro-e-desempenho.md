@@ -16,7 +16,13 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **Ataque o maior módulo da tabela.** Se o que você vai otimizar não está entre os três maiores do pior quadro, escreva por que mesmo assim
   vale. Otimização que a régua não mostra não é ganho.
 - **Build velho mede outra coisa:** `pnpm build` e a página da sala refeita antes de medir (já houve rodada que mediu o chão no quadro
-  principal por causa disso).
+  principal por causa disso). As pastas de `examples/` não estão no workspace do pnpm: `pnpm --filter @adatechnology/test-room-example build` não
+  acha nada e sai com código 0. A página se refaz com `(cd examples/test-room && node build.mjs)`.
+- **Comparação de dois builds confere que são dois.** Para medir antes × depois, guarde as duas páginas (`examples/test-room/dist/test-room.html`) e passe
+  cada uma por `PERF_PAGE=`; antes da primeira rodada, `cmp` de uma contra a outra, e **se forem iguais o script para**, não só avisa (em
+  2026-11-20 seis rodadas mediram a página velha dos dois lados por causa disso).
+- **Antes de medir, veja quem está usando a máquina** (`ps -eo pcpu,etimes,args --sort=-pcpu | head`): uma aba de navegador esquecida já prendeu um
+  núcleo inteiro por mais de seis horas durante as medições da spec 017, e a carga nunca descia de 1,5.
 - **A régua mede no modo de prazo** (`ROOM_EXPLOSION_BUDGET=deadline`, o padrão desde a spec 017). Número em modo de cota não vale para o f0: sem
   `frameStartMs` as filas recebem os 8 ms em todo quadro, até no que já estourou, e o f0 sai maior que no jogo. Uma base gravada em outro modo não é comparada.
 - **Ganho menor que ~3 ms não se lê no total**, só no rótulo da tabela: a mesma versão varia ±2 ms entre sessões. Meça a base na mesma sessão, em
