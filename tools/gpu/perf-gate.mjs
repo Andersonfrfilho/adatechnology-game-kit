@@ -12,6 +12,10 @@
 //   PERF_GATE_BASE=<ref>        compare against another commit (default origin/main)
 //   PERF_GATE_TOLERANCE=0.1     the share a metric may grow before it blocks
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
+//   PERF_GATE_MAX_MIN=<min>    stop with exit 3 and a message (nothing blocked, nothing passed) when the estimated steps ahead do not fit; unset: no limit
+//   PERF_GATE_PROBE=1           read the GPU name with a Chrome page again (the probe is kept 1 day, per Chrome version, in the cache dir)
+// The cache dir (~/.cache/adatechnology-game-kit/perf) also holds main's second run (<key>-again.json, reused), the sha the base worktree was built at
+// (base-built.sha: main is built there before any measure of it) and times.ndjson, one line per round with the minutes of each step, printed at the end too.
 //   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
 // The `room-explosion` scenario (spec 008 B6) is a different gate, by hand or in the nightly, never in CI: the physics ms of the house explosion at 1x, 2x, 4x and 6x CPU
 // throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It does not compare with main; see tools/gpu/room-explosion.mjs for the variables and the kinds (blast, hammer; opt-in crater: C4 digging loose ground). The default and gated variant is jolt-d4-worker (the page default, paced); jolt-d4 stays available by name.
