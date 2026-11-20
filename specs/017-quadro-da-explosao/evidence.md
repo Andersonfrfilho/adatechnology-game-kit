@@ -254,3 +254,27 @@ Não foi impresso. A última linha do log antes do corte é `pre-push: waiting f
 
 - Bloqueio: o portão inteiro (duas medições de cada lado, mais a repetição quando há regressão de mais de 10%) não cabe em 25 min nesta máquina com a carga atual. A carga ficou acima de 4 durante a medição, e o portão espera máquina tranquila antes de cada passagem.
 - Não foi feito: veredito do portão; medição em janela sem carga; medição de `dense_horde`/`chain_horde` com `PERF_SHARD` separado. Próximo passo sugerido, fora desta task: rodar com a máquina ociosa (sem outra sessão pesada) e limite de pelo menos 40 min, ou fixar `PERF_BASE` num resultado de `origin/main` já cacheado.
+
+## T3.1 — régua antes e depois (2026-11-19, 21:57 a 22:23)
+
+Régua curta (`blast,crater`, 1x, 3 rodadas de estágios, `FRAME_PARTS=1`, `jolt-d4-worker`, sob `flock`), quatro rodadas alternadas com a página
+refeita em cada commit: antes `3bdbc8c1c`, depois `7c3c373bc`. Carga de 1 minuto no início de cada rodada: 1,39 / 1,30 / 1,34 / 1,34; no fim:
+2,33 / 2,54 / 1,94 / 1,49 (a própria régua sobe a carga). JSONs: `medicoes/regua-t31-{antes,depois,antes2,depois2}-<commit>.json`.
+
+| f0 a 1x (média de 2 rodadas × 3 piores f0, ms) | antes, blast / crater | depois, blast / crater |
+|---|---|---|
+| f0 inteiro (update + `renderCpu`) | 83,6 / 81,2 | 78,5 / 74,8 |
+| f0 sem o `explode` | 62,5 / 59,9 | 55,0 / 53,6 |
+| fila `floorplan.breach-cut` | 8,9 / 7,9 | 0,0 / 0,0 |
+| fila `floorplan.breach-paint` | 5,0 / 5,1 | 7,5 / 8,6 |
+| `explode` (a T3.1 não toca) | 21,1 / 21,2 | 23,5 / 21,1 |
+| fila `destruction.events` | 18,7 / 18,6 | 18,8 / 18,2 |
+| pior quadro dos 7 seguintes | 22,0 / 22,6 | 27,2 / 23,6 |
+
+- **Ganho medido: ~5 a 7 ms no f0** (~6 a 7 ms sem o `explode`, que variou 19,6 a 27,4 ms entre rodadas do mesmo código: o ruído é do tamanho
+  do efeito). A estimativa do desenho era ~16 ms; não se confirmou.
+- **Por que menos:** o `breach-cut` zerou, mas a fila de prazo passou a pintar mais no próprio f0 (5 → 8 ms), porque a cota mínima por quadro
+  (um terço das pendentes) vale já no quadro em que as paredes entram. Ajuste pedido: no quadro do golpe sem folga, só 1 parede; o resto se
+  divide nos dois quadros seguintes.
+- **Quadro seguinte:** um quadro 1 do `blast` foi a 32,8 ms com 12,3 ms de pintura (pior caso visto); a média dos piores subiu de 22,0 para 27,2.
+- **Não explicado:** a fila `audio.voices` caiu de ~3,7 para ~1,2 ms no f0 sem a T3.1 tocar em áudio. Em investigação (importa para a C5).
