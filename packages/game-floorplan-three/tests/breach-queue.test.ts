@@ -53,13 +53,16 @@ describe('breach paint as a deferred queue', () => {
     expect(attached.d.breach.statistics()).toEqual(expected)
   })
 
-  it('paints one wall per call with a deadline already past, in order', () => {
+  it('starts no wall of the frame of the strike with a deadline already past, and paints the walls of the next call within the window', () => {
     const { shoot, queue } = setup()
     queue.attach?.()
     shoot()
     const waiting = queue.pending()
-    expect(queue.run(0, () => 1)).toBe(1)
-    expect(queue.pending()).toBe(waiting - 1)
+    expect(queue.run(0, () => 1)).toBe(0)
+    expect(queue.pending()).toBe(waiting)
+    expect(queue.run(0, () => 1)).toBeGreaterThan(0)
+    queue.run(0, () => 1)
+    expect(queue.pending()).toBe(0)
   })
 
   it('goes back to painting from flush() on detach, and the renderer queue covers every house', () => {
