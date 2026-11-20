@@ -303,3 +303,33 @@ JSONs: `medicoes/regua-t31-{ajuste,ajuste2}-858d64862.json`, `regua-t31-antes3-3
   superestima o trabalho das filas de prazo no f0, e subestimou o ganho da T3.1 e do ajuste. O `audio.voices` em 1,1 ms é o mesmo efeito:
   a pintura gasta a cota comum e sobra ao áudio a reserva de 1 ms.
 - **Próximo passo:** a régua ganha o modo de prazo (o `frameStartMs` passado à sala) e as rodadas antes/depois são refeitas nele.
+
+## T3.1 — régua no modo de prazo (2026-11-19, 22:55 a 23:20)
+
+A régua ganhou `ROOM_EXPLOSION_BUDGET=deadline` (`54853aff6`): a sala recebe o início do quadro (o instante antes da ação do golpe) e o
+orçamento das filas fica no modo que o jogo usa. O relatório grava o modo e, por quadro, a cota e o gasto `mustDrain`; no f0 a cota das filas
+foi de 1 ms (o piso), como no jogo. Padrão da régua inalterado (`quota`).
+
+Quatro rodadas alternadas, régua curta, carga no início 1,38 / 1,42 / 1,33 / 1,37 e no fim 1,47 / 1,69 / 0,95 / 1,37. "Antes" = `3bdbc8c1c` mais
+só o commit da régua (`7e3c262c5`, não publicado); "depois" = `54853aff6` (T3.1 com o ajuste). JSONs: `medicoes/regua-prazo-*.json`.
+
+| f0 a 1x, modo de prazo (média de 2 rodadas × 3 piores f0, ms) | antes, blast / crater | depois, blast / crater |
+|---|---|---|
+| f0 inteiro (update + `renderCpu`) | 76,0 / 80,2 | **68,0 / 67,8** |
+| f0 sem o `explode` | 54,9 / 57,0 | 47,9 / 47,3 |
+| `mustDrain` gasto no quadro | 28,4 / 29,4 | 18,1 / 18,0 |
+| fila `floorplan.breach-cut` | 9,1 / 9,2 | 0,0 / 0,0 |
+| fila `floorplan.breach-paint` | 0,0 / 0,0 | 4,4 / 4,0 |
+| fila `destruction.events` | 19,3 / 20,1 | 18,1 / 18,0 |
+| `explode` | 21,1 / 23,2 | 20,1 / 20,4 |
+| `action` / `renderCpu` | 7,1 / 8,5 e 6,9 / 9,6 | 6,5 / 8,9 e 6,5 / 8,4 |
+| pior quadro dos 7 seguintes | 20,9 / 20,1 | 24,1 / 23,3 |
+
+- **Ganho da T3.1 no modo do jogo: ~8 a 12 ms no f0** (78 → 68 ms na média; 56 → 47,6 sem o `explode`). Uma rodada "antes" do `crater` saiu em
+  85,2 e a outra em 75,3: o intervalo honesto é 8 a 12.
+- **Resto na fila de prazo:** 4 ms no f0 para "uma parede". Uma parede custa ~4 ms (a casa da régua tem poucas paredes cortadas, não vinte), e o
+  piso de 1 ms deixa a fila começar uma. Ajuste seguinte: não começar parede que não cabe no que sobra do quadro, salvo se venceu a janela.
+- **Quadros seguintes:** o pior sobe de ~20,5 para ~23,7 ms (a pintura adiada cai no quadro 1: ~8 ms). Dentro dos 33,3.
+- **Base da spec no modo de prazo:** f0 ~78 ms antes da T3.1 (a base de 84 a 92 ms da 010 e da parte 1 foi medida em modo de cota).
+- `audio.voices` gasta ~1,1 ms no f0 nos dois lados: no modo de prazo as vozes só têm a reserva de 1 ms no quadro do golpe. Se o som do golpe
+  sai no f0 (C5) precisa de conferência própria.
