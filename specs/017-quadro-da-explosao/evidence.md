@@ -467,3 +467,23 @@ JSONs: `medicoes/regua-r5-*.json`.
 
 f0 hoje: **~64 a 66 ms** (meta C1: 33,3). O que sobra de grande é o laço por peça do `explode` (~17,6 ms, 521 peças) e a aplicação dos eventos
 estruturais (~17 ms, dos quais ~2,3 são mundo e corpo e o resto é malha, marcas, efeitos e som espalhados por muitos itens pequenos).
+
+## C8 — portão completo contra a `main` (2026-11-20, `29a9fc82d` × `origin/main` `0161749d`)
+
+Log: `medicoes/perf-gate-c8-29a9fc82d.log`. **Resultado: o portão barrou a branch**, numa fase só.
+
+A medição saiu com a máquina ocupada (carga 8 a 14: a rodada noturna de GPU rodou junto e o portão desistiu de esperar a
+máquina livre). Os números absolutos estão inflados; o que vale é a comparação, medida duas vezes de cada lado.
+
+| Fase | `main` → branch | Leitura |
+|---|---|---|
+| explosões a frio (9 armas) | p99 17–33 → 14–17 ms; pior quadro menor em 8 de 9 | melhor |
+| `warm_all` | p99 39,5 → 28,2 ms | melhor |
+| `storm` | p99 44,1 → 34,4 ms; pior quadro 1216 → 250 ms | melhor |
+| `dense_horde` / `chain_horde` | p99 36,2 → 28,6 / 57,4 → 35,4 ms | melhor |
+| **`after_storm`** | p99 17,5 → 25,6 ms; pior quadro 31,6 → 154,6 ms; tarefa longa 0 → 130 ms; desenhos 401 → 454 | **pior, barra** |
+
+`after_storm` nas duas medições de cada lado: branch com 2 e 3 engasgos (154,6 e 164,3 ms), `main` com nenhum (14,3 e
+31,6 ms). Dois em dois contra zero em dois: tratado como regressão real até prova em contrário, não como ruído. Causa em
+investigação (suspeitas: pintura de parede com prazo acumulando durante a tempestade; eventos estruturais no tique).
+Alvos absolutos perdidos: 52 na branch, 55 na `main`.
