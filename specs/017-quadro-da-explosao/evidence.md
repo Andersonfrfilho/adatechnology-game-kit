@@ -278,3 +278,28 @@ refeita em cada commit: antes `3bdbc8c1c`, depois `7c3c373bc`. Carga de 1 minuto
   divide nos dois quadros seguintes.
 - **Quadro seguinte:** um quadro 1 do `blast` foi a 32,8 ms com 12,3 ms de pintura (pior caso visto); a média dos piores subiu de 22,0 para 27,2.
 - **Não explicado:** a fila `audio.voices` caiu de ~3,7 para ~1,2 ms no f0 sem a T3.1 tocar em áudio. Em investigação (importa para a C5).
+
+## T3.1 — ajuste medido, e a régua mede em modo de cota (2026-11-19, 22:30 a 22:49)
+
+Três rodadas alternadas, mesma régua curta, carga 1,27 / 1,43 / 1,30 no início: ajuste `858d64862`, antes `3bdbc8c1c`, ajuste de novo.
+JSONs: `medicoes/regua-t31-{ajuste,ajuste2}-858d64862.json`, `regua-t31-antes3-3bdbc8c1c.json`.
+
+| f0 a 1x (ms; antes = média de 3 rodadas, T3.1 e ajuste = 2 cada) | antes, blast / crater | T3.1 `7c3c373bc` | ajuste `858d64862` |
+|---|---|---|---|
+| f0 inteiro | 84,4 / 81,4 | 78,5 / 74,8 | 74,0 / 76,8 |
+| f0 sem o `explode` | 62,5 / 60,2 | 55,0 / 53,6 | 53,5 / 55,3 |
+| `breach-cut` | 8,8 / 7,9 | 0,0 / 0,0 | 0,0 / 0,0 |
+| `breach-paint` | 5,2 / 5,1 | 7,5 / 8,6 | 8,4 / 10,8 |
+| `audio.voices` | 3,5 / 3,5 | 1,2 / 1,1 | 1,1 / 1,1 |
+| pior quadro dos 7 seguintes | 22,1 / 23,3 | 27,2 / 23,6 | 22,6 / 23,9 |
+
+- **O ajuste não mudou o f0 na régua** (~54 ms sem o `explode`, igual à T3.1 sem ajuste): a fila de prazo continua gastando 8 a 11 ms no f0.
+- **Causa, lida no código:** a régua move a sala com `room.update(dt)` (`tools/gpu/room-explosion.mjs:382`), que chama
+  `scheduler.frame(dt, { render: false, exact })` **sem `frameStartMs`** (`room.ts`, `update`). Sem ele o orçamento fica em **modo de cota**
+  (`budget.ts`, `beginFrame`): as filas recebem os 8 ms da sala em todo quadro, por mais atrasado que ele esteja. No jogo (laço `startLoop`,
+  modo de prazo) um quadro que já estourou dá às filas só o piso de 1 ms. Na régua a fila de pintura sempre tem "folga" e pinta enquanto
+  cabe nos 8 ms; o ajuste (1 parede no quadro sem folga) nunca é exercitado.
+- **Consequência:** a régua não mede o f0 na configuração que a página usa (§15, "na configuração que a página usa por padrão"). Ela
+  superestima o trabalho das filas de prazo no f0, e subestimou o ganho da T3.1 e do ajuste. O `audio.voices` em 1,1 ms é o mesmo efeito:
+  a pintura gasta a cota comum e sobra ao áudio a reserva de 1 ms.
+- **Próximo passo:** a régua ganha o modo de prazo (o `frameStartMs` passado à sala) e as rodadas antes/depois são refeitas nele.
