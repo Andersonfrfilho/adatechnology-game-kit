@@ -19,7 +19,7 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
   principal por causa disso). As pastas de `examples/` não estão no workspace do pnpm: `pnpm --filter @adatechnology/test-room-example build` não
   acha nada e sai com código 0. A página se refaz com `(cd examples/test-room && node build.mjs)`.
 - **Comparação de dois builds confere que são dois.** Para medir antes × depois, guarde as duas páginas (`examples/test-room/dist/test-room.html`) e passe
-  cada uma por `PERF_PAGE=`; antes da primeira rodada, `cmp` de uma contra a outra, e **se forem iguais o script para**, não só avisa (em
+  cada uma por `PERF_PAGE=`, com a outra em `PERF_OTHER_PAGE=`: **o `perf.mjs` para se as duas forem iguais** e grava `pageSha256` no JSON (em
   2026-11-20 seis rodadas mediram a página velha dos dois lados por causa disso).
 - **Antes de medir, veja quem está usando a máquina** (`ps -eo pcpu,etimes,args --sort=-pcpu | head`): uma aba de navegador esquecida já prendeu um
   núcleo inteiro por mais de seis horas durante as medições da spec 017, e a carga nunca descia de 1,5.

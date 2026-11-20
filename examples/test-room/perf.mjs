@@ -12,12 +12,14 @@
 //   PERF_QUERY='&framesInFlight=2'     extra page parameters
 //   PERF_OUT=/path/perf.json   where the report goes (default dist/perf.json)
 //   PERF_PAGE=/path/to/test-room.html   drive another build of the page (to compare two builds)
+//   PERF_OTHER_PAGE=/path/to/test-room.html   the other build of a before/after pair: the run stops when both pages are the same bytes
 //   PERF_ONLY=light_slots   only the phase that checks pointLights[slot] and spotLights[slot] against the lights of the budget
 //   PERF_STACKS=1                      also lists, per phase, the attributes uploaded to the GPU during play (kind, element count, item size, array type)
 //   PERF_PROFILE=cold_molotov          also saves dist/perf-<phase>.cpuprofile of that phase (open it in Chrome DevTools)
 // Writes dist/perf.json with every phase. Exit code 1 when any budget fails.
 import { createRequire } from 'node:module'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -113,6 +115,12 @@ function loadPlaywright() {
 
 const dist = process.env.PERF_PAGE ?? join(here, 'dist/test-room.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
+const sha256Of = (/** @type {string} */ path) => createHash('sha256').update(readFileSync(path)).digest('hex')
+const pageSha256 = sha256Of(dist)
+const otherPage = process.env.PERF_OTHER_PAGE
+if (otherPage && sha256Of(otherPage) === pageSha256) {
+  throw new Error(`PERF_PAGE and PERF_OTHER_PAGE are the same page (sha256 ${pageSha256.slice(0, 12)}): the page was not rebuilt, so this pair would compare a build with itself`)
+}
 const outDir = join(here, 'dist')
 mkdirSync(outDir, { recursive: true })
 
@@ -205,7 +213,7 @@ if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterSt
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) hard(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ pageSha256, mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
 const REPORT_TARGETS = process.env.PERF_TARGETS === 'report'
 for (const { text, kind } of failures) console.log(`${kind === 'hard' || !REPORT_TARGETS ? 'FAIL ' : 'TARGET'}  ${text}`)
 const blocking = failures.filter((failure) => failure.kind === 'hard' || !REPORT_TARGETS)
