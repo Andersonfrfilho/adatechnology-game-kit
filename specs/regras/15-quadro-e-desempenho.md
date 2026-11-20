@@ -39,8 +39,9 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **O orçamento é o que sobra do quadro**, não uma cota fixa: quem gasta mais na simulação deixa menos para as filas. É o modo de prazo do
   `game-runtime` (`targetMs` e `frameStartMs`, piso de 1 ms, sem dívida); quadro sem `frameStartMs` (headless, `advance`, testes) fica na cota.
 - **Fila `mustDrain`** (`destruction.events`, `floorplan.breach-cut`) é só para o que precisa aparecer no quadro do golpe: drena por inteiro
-  fora do prazo e é contada à parte (`mustDrainSpentMs`). Fila nova não entra nessa classe sem decisão do dono: a auditoria barra `mustDrain: true`
-  fora de `tools/kit-audit/must-drain-allowed.json`.
+  fora do prazo e é contada à parte (`mustDrainSpentMs`). Fila nova não entra nessa classe sem decisão do dono: o lugar onde isso é imposto é
+  `budget.register`, que lança erro para `mustDrain: true` de id fora de `MUST_DRAIN_QUEUE_IDS` (`game-contracts`; um host com outra fila decidida pelo dono passa
+  `mustDrainIds` ao orçamento ou ao agendador), e a auditoria avisa cedo (`tools/kit-audit/must-drain-allowed.json`).
 - **Apresentação pesada** (pintura da parede, malha, marcas) vai numa fila de prazo com janela, no modelo da pintura da parede: unidade pequena
   (uma parede), não começa a que não cabe no que sobra do quadro, e a vencida pinta de qualquer jeito.
 - **Fila só carrega apresentação.** O que muda a física ou estado semeado não depende de relógio: usa o `WorkBudget` em unidades
