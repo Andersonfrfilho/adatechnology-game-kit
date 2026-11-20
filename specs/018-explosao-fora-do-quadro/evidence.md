@@ -346,3 +346,118 @@ explosão (ligada 21,4: ~+1) e 20,2–20,6 na cratera (ligada 20,1–26,5, uma r
   segunda série (a cratera do total teve duas rodadas altas, 24,2 e 26,5 ms; as medianas dela têm ±2 ms de ruído). Não foi analisado `afterMs` (quadros 1–7): sem protótipo, sem
   comparação.
 - **Não foi construído** o protótipo do passo 3 (entrada plana, kernel, aplicação em N + 1), pela regra de parar do passo 2.
+
+## T0.4 — Teto do caminho C (2026-11-20)
+
+**Veredito: o kernel não foi construído.** O que é puro no `rebuildHost` e na extração do `adoptSplit` soma **~2,0–2,4 ms** de ~17–18 ms medidos no tique do impacto; descontada a
+fronteira (~0,2–0,9 ms) o teto líquido é **~1,1–2,2 ms (central ~1,5)**, abaixo do que a régua lê (±2 ms entre sessões). O grosso dos "~14 ms" não é `rebuildHost`: são os
+**handlers dos ~700 eventos** (`apply(ev)`), ~12–13 ms, que não são puros.
+
+### O que foi medido e como
+
+- **Código medido:** série 1 em `ca18530d5` (rótulos de `rebuildHost`/`splitLoose`/`adoptSplit`, `applyEvent` inteiro), série 2 em `18811e5e1` (o `applyEvent` repartido por tipo de evento).
+  Os dois commits são protótipo descartável, só nesta branch, sobre `305737d6f`. JSONs: `medicoes/eventos-estruturais-ca18530d5.json` e `medicoes/eventos-por-tipo-18811e5e1.json`
+  (campo `explodeProbe[].applyRecords`).
+- **Sonda** (`packages/game-destruction-three/src/apply-probe.ts`, `renderer.ts`, `visual.ts`; `createExplodeProbe` ganhou a chave do global e foi exportada de `game-destruction`):
+  desligada por padrão (lê `globalThis.__destructionApplyProbe` ao carregar o módulo; a régua a liga com `ROOM_EXPLOSION_EXPLODE_PROBE=apply`). Uma raiz por chamada de
+  `applyStructuralEvents` que aplica evento estrutural; rótulos **exclusivos** que fecham com o total por construção: `whCollapse` (em `writeHost`: `arr.set`, `collapseForeign`, laço de
+  `collapseRange`/`meltRange`), `whNormals` (`geo.computeVertexNormals()`), `exSlice` (em `extract`: fatiar atributos e filtrar o índice), `splitGroups` (`world.splitGroups`), `hingeOf`,
+  `adoptThree` (o resto de `adoptSplit`, incluindo o `extract` fora de `exSlice`), `afterSplit`, `applyEvent` (série 1) ou `ev:<tipo>` (série 2), e `explodeRest` (resto: `arrange`, `requeue`).
+  Contagens: eventos, hosts escritos, vértices e triângulos dos hosts, splits, extrações. Poucas dezenas de timers por tique, exceto um par por evento (~700).
+  Suíte do `game-destruction` 591/591 e do `game-destruction-three` 674 passam (195 pulados, como antes) com a sonda desligada; `typecheck` dos dois limpo.
+- **Régua:** `ROOM_EXPLOSION_BUDGET=deadline`, `KINDS=blast,crater`, 1x, `STAGE_THROTTLES=1`, `ROUNDS=1`, `FRAME_PARTS=1`. Série 1: `STAGE_ROUNDS=6`, `apply,off` (rodadas 1, 3, 5 ligadas; 2, 4, 6
+  desligadas). Série 2: `STAGE_ROUNDS=3`, só ligada. Dentro da trava, num único comando: `pnpm build`, `node examples/test-room/build.mjs` (sha da página `3752a8a9b29f` -> `2ff547c137df`, e
+  `8b2be5a4834b` na série 2; a página contém a sonda), espera até carga < 1,5 e mediana de 5 leituras de `Package id 0` < 75 °C, só então a régua.
+- **Condições.** Série 1: a espera durou ~13 min (a outra sessão e meu `build` deixaram carga 2–13 e 51–94 °C; a trava foi segurada, prazo de 15 min não estourou); **início da régua: carga 1,06,
+  48 °C; fim: carga 1,78, 62 °C.** Série 2: **início carga 1,14, 49 °C; fim carga 1,57, 63 °C.** Nenhuma passagem de 88 °C durante a régua.
+- **Descartes:** nenhuma rodada com a página travada (nenhum quadro ~10x). Na série 2 a rodada 1 saiu mais lenta (f0 `update` 69,3 e 64,4 ms contra 54–57 nas outras): mantida na tabela, a mediana a absorve.
+- **Só um tique tem evento estrutural no impacto:** cada rodada registra 5 chamadas; as quatro primeiras (0,3–2,0 ms, 3–15 eventos) são da preparação, antes do impacto; a quinta é o quadro do impacto
+  (700 eventos na explosão, 707 na cratera). Nenhum tique posterior aplica evento estrutural na janela.
+
+### Divisão dos eventos no quadro do impacto (ms; mediana de 3 rodadas, série 1; sonda ligada)
+
+| Rótulo | O que cobre | Explosão | Cratera | Natureza |
+|---|---|---|---|---|
+| `applyEvent` | `apply(ev)` de ~700 eventos, exclusivo (sem `writeHost`, `splitLoose`) | **12,1** | **12,1** | estado do desenho, three.js, `emit`; **não puro** |
+| `whNormals` | `computeVertexNormals` dos hosts reescritos | 1,7 | 1,7 | **puro** (índice + posições -> normais), código do three.js |
+| `whCollapse` | `arr.set`, colapso e derretimento de faixas | 0,2 | 0,0 | **puro** |
+| `exSlice` | fatiar atributos e filtrar índice na extração | 0,4 | 0,4 | **puro** |
+| `splitGroups` | `world.splitGroups` | 1,5 | 1,5 | **muda o mundo**, não é kernel |
+| `hingeOf` | dobradiça antes do split | 0,3 | 0,4 | lê o mundo e o desenho |
+| `adoptThree` | resto de `adoptSplit` (grupo, `attach`, `measure`, `pieceSys.create`, `fitSurface`...) | 1,0 | 1,1 | three.js |
+| `afterSplit` | | 0,0 | 0,0 | |
+| `explodeRest` | `arrange`, `requeue` | 0,1 | 0,4 | |
+| **total** | **ms no tique do impacto (da sonda)** | **18,4** | **18,4** | |
+
+Contagens iguais nas 3 rodadas: explosão 700 eventos, 10 hosts escritos (23.336 vértices, 11.740 triângulos), 8 splits, 8 extrações (624 vértices); cratera 707 eventos, 9 hosts (18.408 vértices,
+8.920 triângulos), 10 splits, 10 extrações (672 vértices).
+
+Medianas por rodada (explosão / cratera): total 18,7-18,4-16,8 / 17,2-20,7-18,4; `applyEvent` 12,1-13,5-11,6 / 12,1-14,8-11,8; `whNormals` 3,3-1,7-1,4 / 1,1-1,7-2,7 (varia mais que os outros).
+
+### O `applyEvent` por tipo de evento (série 2; ms mediana de 3 rodadas; chamadas)
+
+| Tipo | Explosão | Cratera | Chamadas (expl. / crat.) |
+|---|---|---|---|
+| `fracture` | **3,4** | **2,9** | 11 / 10 |
+| `crack` | **2,9** | **3,1** | 20 / 22 |
+| `damage` | 1,7 | 2,0 | 559 / 561 |
+| `chip` | 1,4 | 1,7 | 2 / 3 |
+| `stage` | 1,0 | 1,0 | 10 / 11 |
+| `debris` | 1,0 | 0,8 | 68 |
+| `spall` | 0,7 | 0,6 | 7 |
+| `detach` | 0,3 | 0,5 | 21 / 22 |
+| `dent` | 0,2 | 0,3 | 2 |
+| `expose` | — | 0,3 | 1 |
+| **soma dos `ev:`** | **~12,7** | **~13,2** | |
+
+Rótulos fora dos eventos nessa série (medianas): `whNormals` 1,7 / 1,3, `splitGroups` 1,6 / 1,6, `adoptThree` 0,9 / 0,9, `exSlice` 0,4 / 0,5, `whCollapse` 0,3 / 0,2. Total mediano: 17,2 / 17,8 ms.
+
+### Custo da sonda (série 1; `update` do f0 em pares alternados na mesma sessão, medianas de 3)
+
+| | Ligada | Desligada | Diferença |
+|---|---|---|---|
+| Explosão | 55,3 | 54,1 | ~+1,2 |
+| Cratera | 56,6 | 54,6 | ~+2,0 (uma rodada ligada em 65,8, com `explode` em 24,2: ruído) |
+
+O total da sonda (17–18 ms) está acima dos "~14 ms" da spec em ~1–2 ms, que é o custo dos ~1.400 relógios por tique (um par por evento). A divisão por rótulo é proporcional; o `applyEvent` e os
+rótulos por evento são os que mais carregam essa inflação.
+
+### Conta do teto do caminho C (ms; explosão / cratera, medianas)
+
+| Linha | Explosão | Cratera | Fonte |
+|---|---|---|---|
+| `whNormals` | 1,7 | 1,7 (série 2: 1,3) | medido |
+| `whCollapse` | 0,2 | 0,0 (série 2: 0,2) | medido |
+| `exSlice` (extração de geometria pura do `adoptSplit`) | 0,4 | 0,4 (série 2: 0,5) | medido |
+| **Teto puro bruto** | **2,3** (série 2: 2,4) | **2,1** (série 2: 2,0) | soma |
+| Fronteira: copiar posições + índice para o kernel e normais + posições de volta | −0,2 a −0,9 | −0,2 a −0,8 | **estimativa**, ver abaixo |
+| **Teto líquido** | **~1,4 a 2,1** | **~1,2 a 1,9** | |
+| Critério da task | ≥ ~2 | ≥ ~2 | |
+
+- **Tamanho dos arrays (derivado das contagens, não do `byteLength` medido; o tipo do índice, 16 ou 32 bits, não foi lido):** explosão, 23.336 vértices: posições 280.032 B, normais 280.032 B, índice
+  70.440 B (16 bits) a 140.880 B (32 bits), ~0,63–0,70 MB no total de ida (posições + índice, ~0,35–0,42 MB) e volta (posições + normais, ~0,56 MB). Cratera, 18.408 vértices: ~0,22 MB de posições, ~0,06–0,11 MB de índice.
+- **Fronteira, estimativa pela T0.2:** `structuredClone` de 203 KB custou 0,18 ms (~0,9 ms/MB); ida ~0,4 MB ≈ 0,35 ms, volta ~0,56 MB ≈ 0,5 ms, mais o `set` de volta nos atributos (~0,1 ms), total ~0,9 ms;
+  com `transfer` dos buffers a cópia some (T0.2: 0,004–0,012 ms) e sobra ~0,2 ms. **Não medi a fronteira dos hosts**; o intervalo cobre os dois extremos. O custo de ida e volta por `postMessage` a
+  um `Worker` (latência entre threads) também não foi medido e atrasaria o resultado em pelo menos 1 quadro.
+
+### Leitura
+
+**Fatos:**
+- No quadro do impacto o tique de eventos estruturais (sonda ligada) leva ~17–18 ms. A reescrita dos hosts (`writeHost`) é ~1,9 ms (normais 1,7 + colapso 0,2) em 9–10 hosts de até 23 mil vértices no total; a
+  extração de geometria do `adoptSplit` é ~0,4 ms; o `splitGroups` é ~1,5 ms e muda o mundo.
+- O pedaço que a spec chama de caminho C ("`rebuildHost` como kernel") é então **~2 ms de ~18**. A maior parte do tique (~12–13 ms) é `apply(ev)` de ~700 eventos, dos quais `fracture` (~3 ms, 10–11 eventos), `crack`
+  (~3 ms, 20–22) e `damage` (~1,7–2 ms, 559–561 chamadas) são os maiores; todos mexem no estado de desenho e no three.js.
+- O teto líquido do kernel, ~1,1–2,2 ms, não passa dos ~2 ms que a régua consegue ler; a regra da task foi não construir.
+
+**Palpites (não medidos):**
+- O que há de ganho no desenho está no `apply(ev)` (~12 ms), não no `rebuildHost`; baratear `fracture`/`crack`/`damage` por tipo, ou adiar seu desenho, seria outra frente. Isso muda o que o jogador vê (a
+  lasca, a trinca e o fragmento aparecem depois), então é fato para a D2, não decisão.
+- Como a fronteira do kernel e a latência de volta ficam do mesmo tamanho do ganho, a combinação com o caminho A (a soma de ~2 ms do C com ~3 ms do A) continuaria longe dos ~30 ms que faltam.
+
+### Descartes e o que NÃO foi medido
+
+- **Protótipo do passo 3 não construído**, pela regra de parar do passo 2: não há tabela de pares sem/com, `afterMs` nem quadros seguintes; não há o que o jogador veria (host com a malha velha 1 quadro) a medir.
+- Não medido: a fronteira real dos hosts (tamanho de `byteLength`, tipo do índice, `structuredClone`/`transfer` desses arrays); a latência de um `Worker` real; o custo do `needsUpdate` e do envio à GPU
+  (cai no `renderCpu`, fora do tique); outras casas; 4x; sem a sonda, o `applyStructuralEvents` por inteiro (só a diferença do `update` do f0, ±2 ms de ruído); uma segunda série da divisão por rótulo (3 rodadas
+  por série, com `whNormals` variando de 1,1 a 3,3 ms entre rodadas).
+- A sonda por evento infla o `applyEvent`; os valores dos tipos são um limite superior.
