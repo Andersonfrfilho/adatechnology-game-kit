@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { cellRegressed, DEFAULT_VARIANT, FRAME_LABELS, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
+import { budgetModeOf, cellRegressed, DEFAULT_VARIANT, FRAME_LABELS, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
 
 test('no base report: nothing is a regression, however far over the 5 ms goal', () => {
   assert.equal(cellRegressed({ p99: 53, max: 71 }, undefined), false)
@@ -42,4 +42,11 @@ test('every scheduler system of the room reads a frame label, the others read sy
   assert.ok(FRAME_LABELS.includes('sysOther'))
   for (const label of ['action', 'explode', 'vfxPresent']) assert.ok(FRAME_LABELS.includes(label), label)
   assert.equal(new Set(FRAME_LABELS).size, FRAME_LABELS.length)
+})
+
+test('the frame budget mode is quota unless the variable says deadline', () => {
+  assert.equal(budgetModeOf(undefined), 'quota')
+  assert.equal(budgetModeOf('quota'), 'quota')
+  assert.equal(budgetModeOf('anything'), 'quota')
+  assert.equal(budgetModeOf('deadline'), 'deadline')
 })
