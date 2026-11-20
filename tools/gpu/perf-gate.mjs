@@ -29,7 +29,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
-import { againReportPath, estimateMs, EXIT_OVER_BUDGET, fitsBudget, formatMinutes, formatSteps, needsBuild, parseHistory, parseMaxMinutes, plannedSteps, probeUsable, QUIET_LOAD, QUIET_LOG_EVERY, QUIET_POLL_MS, repetitionSteps, shouldKeepWaiting, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
+import { againReportPath, formatSteps, needsBuild, probeUsable, QUIET_LOAD, QUIET_LOG_EVERY, QUIET_POLL_MS, shouldKeepWaiting, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -79,7 +79,7 @@ Object.assign(process.env, gpuEnv)
 
 if (process.argv[2] === 'room-explosion') process.exit(await runRoomExplosion({ playwright, chrome, root }))
 
-const gateStarted = Date.now()
+const probeStarted = Date.now()
 /** @type {import('./perf-gate-plan.mjs').Step[]} where the time of this round goes, printed at the end and added to times.ndjson */
 const steps = []
 /** @param {string} name @param {number} started */
@@ -129,7 +129,7 @@ if (probeUsable({ entry: savedProbe, now: Date.now(), chromeVersion, force: proc
   // a software renderer is never saved: the day the driver works again, the next push must see it
   if (!SOFTWARE_RENDERERS.test(renderer) && chromeVersion !== '') writeFileSync(probeFile, JSON.stringify({ renderer, chromeVersion, at: Date.now() }))
 }
-record('probe', gateStarted)
+record('probe', probeStarted)
 if (SOFTWARE_RENDERERS.test(renderer)) skip(`no GPU (WebGL draws on ${renderer})`)
 
 const tier = /nvidia|radeon|amd/i.test(renderer) && !/intel/i.test(renderer) ? 'discrete' : 'integrated'
@@ -215,54 +215,14 @@ const buildBase = () => {
   record('build-base', buildStarted)
 }
 
-const baseNeedsBuild = () => {
-  const builtSha = existsSync(baseBuiltMarker) ? readFileSync(baseBuiltMarker, 'utf8').trim() : undefined
-  const hasOutput = existsSync(join(baseTree, 'examples/test-room/dist/test-room.html'))
-  return needsBuild({ builtSha, expectedSha: baseSha, hasOutput })
-}
-
 /** The base worktree, built at `baseSha`: before measuring main on any pass, whatever an earlier pass or push left in it. */
 const ensureBase = () => {
-  if (baseNeedsBuild()) buildBase()
+  const builtSha = existsSync(baseBuiltMarker) ? readFileSync(baseBuiltMarker, 'utf8').trim() : undefined
+  const hasOutput = existsSync(join(baseTree, 'examples/test-room/dist/test-room.html'))
+  if (needsBuild({ builtSha, expectedSha: baseSha, hasOutput })) buildBase()
   return baseTree
 }
 
-const budgetMinutes = parseMaxMinutes(process.env.PERF_GATE_MAX_MIN)
-const budgetMs = budgetMinutes === undefined ? undefined : budgetMinutes * 60000
-const timesFile = join(cacheDir, 'times.ndjson')
-const history = (() => {
-  try {
-    return parseHistory(readFileSync(timesFile, 'utf8'))
-  } catch {
-    return []
-  }
-})()
-
-/** Prints where the time went, adds the round to times.ndjson and leaves. @param {string} outcome @param {number} code @returns {never} */
-const finish = (outcome, code) => {
-  console.log('pre-push: where the time went')
-  for (const line of formatSteps(steps)) console.log(line)
-  try {
-    appendFileSync(timesFile, `${JSON.stringify(timesRecord({ at: Date.now(), renderer, outcome, steps }))}\n`)
-  } catch {
-    /* the timings are a convenience, never a reason to fail the push */
-  }
-  process.exit(code)
-}
-
-/** Stops the round, with its own exit code, when the steps ahead do not fit PERF_GATE_MAX_MIN. @param {string[]} ahead @param {string} what */
-const requireTime = (ahead, what) => {
-  const remainingMs = estimateMs(history, ahead)
-  if (fitsBudget({ budgetMs, elapsedMs: Date.now() - gateStarted, remainingMs })) return
-  console.log(`pre-push: ${what} needs ~${formatMinutes(remainingMs)} more, past PERF_GATE_MAX_MIN=${budgetMinutes} min (${formatMinutes(Date.now() - gateStarted)} spent): stopping, exit ${EXIT_OVER_BUDGET}, nothing was blocked or passed`)
-  finish('over-budget', EXIT_OVER_BUDGET)
-}
-
-const needsBaseRun = baseSha !== '' && !sameTree && !existsSync(baseReport)
-const roundSteps = plannedSteps({ needsBaseRun, needsBaseBuild: needsBaseRun && baseNeedsBuild() })
-const repetition = repetitionSteps({ needsBaseBuild: !needsBaseRun && baseNeedsBuild(), hasSavedAgain: baseSha !== '' && existsSync(againReportPath(baseReport)) })
-console.log(`pre-push: this round takes ~${formatMinutes(estimateMs(history, roundSteps))} (~${formatMinutes(estimateMs(history, [...roundSteps, ...repetition]))} if a metric needs the repetition; estimated, not measured)`)
-requireTime(roundSteps, 'this round')
 const branchBuildStarted = Date.now()
 execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'inherit' })
 record('build-branch', branchBuildStarted)
@@ -296,7 +256,6 @@ let regressions = base ? compare(base, branch, TOLERANCE) : []
 if (base && regressions.length > 0) {
   // one more run of each side before blocking: one frame of the GPU clock dropping is not a regression
   console.log(`pre-push: ${regressions.length} metric(s) over ${Math.round(TOLERANCE * 100)}% worse: measuring both sides again`)
-  requireTime(repetitionSteps({ needsBaseBuild: baseNeedsBuild(), hasSavedAgain: existsSync(againReportPath(baseReport)) }), 'the repetition')
   branch = bestOf(branch, await measure(root, join(cacheDir, 'branch-again.json'), 'this branch again', 'measure-branch-again'))
   // the better run of the branch against the worse run of main: it blocks only when every run of the branch is worse than every run of main
   base = worstOf(base, await baseAgain())
@@ -325,5 +284,12 @@ for (const failure of hardFailures) console.log(`FAIL  ${failure.text}`)
 for (const { phase, metric, base: was, branch: now } of regressions) console.log(`FAIL  ${phase}: ${metric} ${was} -> ${now} (more than ${Math.round(TOLERANCE * 100)}% worse than ${baseRef} on this machine)`)
 
 const blocked = hardFailures.length > 0 || regressions.length > 0 || (process.env.PERF_GATE_ABSOLUTE === '1' && targets.length > 0)
+console.log('pre-push: where the time went')
+for (const line of formatSteps(steps)) console.log(line)
+try {
+  appendFileSync(join(cacheDir, 'times.ndjson'), `${JSON.stringify(timesRecord({ at: Date.now(), renderer, outcome: blocked ? 'blocked' : 'passed', steps }))}\n`)
+} catch {
+  /* the timings are a convenience, never a reason to fail the push */
+}
 console.log(blocked ? 'pre-push: perf blocks the push' : 'pre-push: perf passes')
-finish(blocked ? 'blocked' : 'passed', blocked ? 1 : 0)
+process.exit(blocked ? 1 : 0)
