@@ -84,7 +84,7 @@ const paintOrder = (scene: Scene): string[] => {
   }
   for (let guard = 0; guard < 1000 && scene.paintQueue.pending() > 0; guard++) {
     scene.paintQueue.pending(1)
-    expect(scene.paintQueue.run(0, () => 1)).toBe(1)
+    expect(scene.paintQueue.run(2.5, ticking())).toBe(1)
     for (const name of unitMeshes()) if (!order.includes(name)) order.push(name)
   }
   return order
@@ -105,6 +105,9 @@ const queueWalls = (scene: Scene, count: number, from = 0): number => {
   while (scene.paintQueue.pending() < count && used < ids.length) burstOn(scene, ids[used++]!, 3, 800)
   return used
 }
+
+/** A clock that moves by `step` every time it is read: a wall costs two readings, so with a deadline of `1.5 * step` one wall fits. */
+const ticking = (step = 1): (() => number) => { let now = 0; return () => { const at = now; now += step; return at } }
 
 /** The walls the queue paints in each frame, the budget spent every frame (a deadline already past). */
 const paintedPerFrame = (scene: Scene, frames: number, firstFrame = 1): number[] => {
@@ -156,7 +159,7 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     attach(s)
     chipsOnly(s)
     const waiting = s.paintQueue.pending(1)
-    expect(s.paintQueue.run(0, () => 1)).toBe(1)
+    expect(s.paintQueue.run(2.5, ticking())).toBe(1)
     expect(s.paintQueue.pending()).toBe(waiting - 1)
     expect(paintedWalls(s)).toHaveLength(1)
     detach(s)
@@ -202,8 +205,7 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     for (const id of s.house.structure.parts.filter((part) => part.role === 'wall').map((part) => part.id)) burstOn(s, id, 3, 800)
     const waiting = s.paintQueue.pending()
     s.paintQueue.pending(1)
-    let now = 0
-    const ran = s.paintQueue.run(3, () => now++)
+    const ran = s.paintQueue.run(6, ticking())
     expect(ran).toBeGreaterThan(1)
     expect(ran).toBeLessThan(waiting)
     detach(s)
@@ -275,12 +277,12 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     expect(s.paintQueue.pending()).toBe(0)
   })
 
-  it('21 walls queued in one frame (the walls hit and the pillars in them) with the deadline always past are painted 1, 10 and 10 in the next three frames', () => {
+  it('21 walls queued in one frame (the walls hit and the pillars in them) with the deadline always past are painted 0, 11 and 10 in the next three frames', () => {
     const s = setup()
     attach(s)
     queueWalls(s, 20)
     expect(s.paintQueue.pending()).toBe(21)
-    expect(paintedPerFrame(s, 4)).toEqual([1, 10, 10, 0])
+    expect(paintedPerFrame(s, 4)).toEqual([0, 11, 10, 0])
     detach(s)
   })
 
@@ -288,7 +290,7 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     const s = setup()
     attach(s)
     const used = queueWalls(s, 6)
-    expect(paintedPerFrame(s, 1)).toEqual([1])
+    expect(paintedPerFrame(s, 1)).toEqual([0])
     const older = s.paintQueue.pending()
     // the next frame's strike lands before its drain polls the queue
     burstOn(s, wallIds(s)[used]!, 3, 800)
@@ -302,8 +304,7 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     burstOn(lone, 'wall_0_1', 3, 800)
     expect(lone.paintQueue.pending()).toBeGreaterThan(0)
     lone.paintQueue.pending(1)
-    let now = 0
-    lone.paintQueue.run(1e9, () => now++)
+    lone.paintQueue.run(1e9, ticking())
     expect(lone.paintQueue.pending()).toBe(0)
     detach(lone)
   })
@@ -312,7 +313,7 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     const s = setup()
     attach(s)
     const used = queueWalls(s, 12)
-    expect(paintedPerFrame(s, 1)).toEqual([1])
+    expect(paintedPerFrame(s, 1)).toEqual([0])
     const before = s.paintQueue.pending()
     burstOn(s, wallIds(s)[used]!, 3, 800)
     const late = s.paintQueue.pending() - before
@@ -320,6 +321,35 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     const counts = paintedPerFrame(s, 3, 2)
     expect(s.paintQueue.pending()).toBe(0)
     expect(counts.reduce((sum, n) => sum + n, 0)).toBe(before + late)
+  })
+
+  it('a wall that is not overdue is not started when the last wall cost more than what is left of the deadline', () => {
+    const s = setup()
+    attach(s)
+    queueWalls(s, 12)
+    s.paintQueue.pending(1)
+    // the first wall takes 4 ms by the budget's clock: that is the estimate from then on
+    expect(s.paintQueue.run(5, ticking(4))).toBe(1)
+    s.paintQueue.pending(1)
+    expect(s.paintQueue.run(3, () => 0)).toBe(0)
+    expect(s.paintQueue.pending()).toBeGreaterThan(0)
+    s.paintQueue.pending(1)
+    expect(s.paintQueue.run(5, () => 0)).toBeGreaterThan(0)
+    detach(s)
+  })
+
+  it('with no history the queue starts a wall only when 1 ms or more is left, and an overdue wall is painted with nothing left', () => {
+    const s = setup()
+    attach(s)
+    queueWalls(s, 4)
+    s.paintQueue.pending(1)
+    expect(s.paintQueue.run(0.5, () => 0)).toBe(0)
+    s.paintQueue.pending(2)
+    s.paintQueue.run(0, () => 0)
+    s.paintQueue.pending(3)
+    s.paintQueue.run(0, () => 0)
+    expect(s.paintQueue.pending()).toBe(0)
+    detach(s)
   })
 
   it('a house that keeps being hit does not hold back the overdue walls of another house of the renderer', () => {
@@ -364,7 +394,8 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
       left.push(s.paintQueue.pending())
     }
     expect(left[2]).toBe(0)
-    expect(left[0]).toBeLessThan(21)
+    expect(left[0]).toBe(21)
+    expect(left[1]).toBeLessThan(21)
     stopPaint()
     stopCut()
   })

@@ -147,12 +147,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     id: DEFERRED_QUEUE_ID.BREACH_PAINT,
     pending: (frame) => { advanceTick(frame); let n = 0; for (const q of paintQueues) n += q.pending(); return n },
     run(deadline, clock) {
-      // no frame number polled since the last run: this run is the frame, so the window still counts down
-      if (!strike.polled) strike.tick++
-      strike.polled = false
+      countRunAsFrame()
+      strike.inRenderer = true
       let ran = 0
       // each house keeps its own quota of walls (`owedWalls`): one house spending the deadline cannot starve the walls of another
       for (const q of [...paintQueues]) if (q.pending() > 0) ran += q.run(deadline, clock)
+      strike.inRenderer = false
       return ran
     },
     flush() { for (const q of [...paintQueues]) q.flush() },
@@ -166,7 +166,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
    */
   const cutState = { attached: false }
   /** Frames the budget has polled the breach queues: `tick` advances once per new `pending(frame)`; a wall queued at tick `n` is overdue from tick `n + PAINT_WINDOW_TICKS`. */
-  const strike = { tick: 0, frame: undefined as number | undefined, polled: false }
+  const strike = { tick: 0, frame: undefined as number | undefined, polled: false, inRenderer: false }
+  /** No frame number polled since the last run: the run is the frame, so the window still counts down. */
+  const countRunAsFrame = (): void => {
+    if (!strike.polled) strike.tick++
+    strike.polled = false
+  }
   const advanceTick = (frame: number | undefined): void => {
     if (frame === undefined) return
     strike.polled = true
@@ -233,8 +238,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return best
     }
     /**
-     * How many walls the next run must paint whatever the deadline says: the walls past their window; else one (the strike frame has no room: the walls
-     * that entered in this frame wait) plus enough of the older ones to empty the queue by the window (21 walls queued at once: 1, 10, 10).
+     * How many walls the next run must paint whatever the deadline says: the walls past their window; else enough of the walls of earlier frames to empty
+     * the queue by the window, none for the walls that entered in this frame (21 queued at once: 0, 11, 10). Without a frame budget: one.
      */
     const owedWalls = (): number => {
       if (!paintState.attached) return 1
@@ -246,7 +251,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         oldest = Math.max(oldest, age)
       }
       if (overdue > 0) return overdue
-      return older === 0 ? 1 : Math.ceil(older / (PAINT_WINDOW_TICKS - oldest))
+      return older === 0 ? 0 : Math.ceil(older / (PAINT_WINDOW_TICKS - oldest))
     }
     const queueForPaint = (view: WallView): void => { if (!dirty.has(view)) dirty.set(view, strike.tick) }
     /** Walls cut since the cut queue last ran, while a frame budget owns it (`cutQueue`): painted once each by it. */
@@ -901,16 +906,26 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return dirty.size
     }
 
+    /** How long the last wall took to paint, by the budget's clock (the walls are alike): a wall that does not fit what is left of the deadline waits. */
+    let lastPaintMs: number | undefined
+    const fitsDeadline = (deadline: number, clock: () => number): boolean => {
+      const left = deadline - clock()
+      return left > 0 && left >= (lastPaintMs ?? 1)
+    }
+    // with a frame budget this queue may run no wall (`run` returns 0 with walls waiting): the window forces the ones past it, which is what keeps it moving
     const queue: DeferredQueue = {
       id: DEFERRED_QUEUE_ID.BREACH_PAINT,
       pending: () => dirty.size,
       run(deadline, clock) {
+        if (!strike.inRenderer) countRunAsFrame()
         let ran = 0
         const owed = owedWalls()
         for (let view = nextDirty(); view; view = nextDirty()) {
-          if (ran >= owed && clock() >= deadline) break
+          if (ran >= owed && (paintState.attached ? !fitsDeadline(deadline, clock) : clock() >= deadline)) break
+          const started = clock()
           dirty.delete(view)
           paint(view)
+          lastPaintMs = clock() - started
           ran++
         }
         if (ran > 0) { invalidate(); invalidateShadow() }
