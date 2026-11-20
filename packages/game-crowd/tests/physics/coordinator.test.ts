@@ -47,6 +47,37 @@ const openGap = (grid: ReturnType<typeof createNavGrid>, step: number): void => 
   if (step === 100) grid.fillRect(-2, -0.5, 2, 0.5, CELL.FREE, 0)
 }
 
+type Grid = ReturnType<typeof createNavGrid>
+const editsOf = (...rects: readonly (readonly [number, number, number, number, number, number, number])[]) => (grid: Grid, step: number): void => {
+  for (const [at, x0, z0, x1, z1, kind, height] of rects) if (step === at) grid.fillRect(x0, z0, x1, z1, kind, height)
+}
+// two edits in consecutive steps; two edits between the same two steps; an edit that changes only the heights of the wall
+const EDIT_SCENARIOS = {
+  consecutive: editsOf([100, -2, -0.5, 0, 0.5, CELL.FREE, 0], [101, 0, -0.5, 2, 0.5, CELL.FREE, 0]),
+  sameGap: editsOf([100, -2, -0.5, 0, 0.5, CELL.FREE, 0], [100, 8, -0.5, 10, 0.5, CELL.FREE, 0]),
+  heightOnly: editsOf([100, -15, -0.5, 15, 0.5, CELL.SOLID, 1]),
+} as const
+
+/** The real coordinator, counting the residents opened and the ones disposed. */
+function countResidents(inner: WorkerCoordinator, counts: { opened: number; disposed: number }): WorkerCoordinator {
+  return {
+    ...inner,
+    resident: <Init, Step, Result>(kind: ResidentKind<Init, Step, Result>, init: Init) => {
+      const resident = inner.resident(kind, init)
+      counts.opened++
+      let isDisposed = false
+      return {
+        ...resident,
+        dispose: () => {
+          if (!isDisposed) counts.disposed++
+          isDisposed = true
+          resident.dispose()
+        },
+      }
+    },
+  } as WorkerCoordinator
+}
+
 const yieldToWorkers = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 5))
 
 describe('the crowd physics through the worker coordinator', () => {
@@ -93,6 +124,40 @@ describe('the crowd physics through the worker coordinator', () => {
     const late = createWorkerCoordinator({ spawn: inThreadSpawn([crowdPhysicsKind]), workers: 1 })
     expect(await runWall(physicsOptions({ workers: late }), undefined, openGap)).toBe(inline)
     late.dispose()
+  }, 60_000)
+
+  it('several edits, in consecutive steps, between two steps or only of the heights, give the inline state on time or late', async () => {
+    for (const edit of Object.values(EDIT_SCENARIOS)) {
+      const inline = await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline' }), undefined, edit)
+
+      const onTime = createWorkerCoordinator({ spawn: inThreadSpawn([crowdPhysicsKind]), workers: 1 })
+      expect(await runWall(physicsOptions({ workers: onTime }), yieldToWorkers, edit)).toBe(inline)
+      onTime.dispose()
+
+      const late = createWorkerCoordinator({ spawn: inThreadSpawn([crowdPhysicsKind]), workers: 1 })
+      expect(await runWall(physicsOptions({ workers: late }), undefined, edit)).toBe(inline)
+      late.dispose()
+    }
+    const inlineBase = await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline' }))
+    expect(await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline' }), undefined, EDIT_SCENARIOS.consecutive)).not.toBe(inlineBase)
+  }, 120_000)
+
+  it('keeps at most the current resident and the ones in flight across many grid changes, and none after dispose', async () => {
+    const counts = { opened: 0, disposed: 0 }
+    const slots = 2
+    const workers = createWorkerCoordinator({ spawn: inThreadSpawn([crowdPhysicsKind]), workers: 1 })
+    const coordinator = countResidents(workers, counts)
+    let peak = 0
+    // a write every 10 steps; the first one rewrites the solid wall as solid, so 28 of the 29 change a cell
+    const edit = (grid: Grid, step: number): void => {
+      if (step > 0 && step % 10 === 0) grid.fillRect(-2, -0.5, 2, 0.5, step % 20 === 0 ? CELL.FREE : CELL.SOLID, 3)
+      peak = Math.max(peak, counts.opened - counts.disposed)
+    }
+    await runWall(physicsOptions({ workers: coordinator, workerLatency: slots }), yieldToWorkers, edit)
+    expect(counts.opened).toBe(29)
+    expect(peak).toBeLessThanOrEqual(slots + 1)
+    expect(counts.disposed).toBe(counts.opened)
+    workers.dispose()
   }, 60_000)
 
   it('a worker_threads worker gives the same state, with two steps of latency too', async () => {
