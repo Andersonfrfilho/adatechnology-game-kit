@@ -19,7 +19,7 @@ function setup() {
   scene.add(house.group)
   const d = house.destruction
   d.activate()
-  return { d, house, world, paintQueue: d.breach.deferredQueue(), cutQueue: houseRenderer.renderer.cutQueue!() }
+  return { d, house, world, paintQueue: houseRenderer.renderer.deferredQueue!(), cutQueue: houseRenderer.renderer.cutQueue!() }
 }
 
 const attach = (scene: Scene): void => {
@@ -73,13 +73,17 @@ const masksOf = (scene: Scene): Map<string, string> => {
 
 const paintedWalls = (scene: Scene): string[] => [...masksOf(scene)].filter(([, texels]) => texels.includes('255')).map(([key]) => key)
 
-/** The walls in the order the paint queue paints them: one unit per call (a deadline already past). */
+/** The walls in the order the paint queue paints them (a painted wall has a units mesh named for it): one unit per call (a deadline already past). */
 const paintOrder = (scene: Scene): string[] => {
   const order: string[] = []
-  const seen = new Set(paintedWalls(scene))
+  const unitMeshes = (): string[] => {
+    const names: string[] = []
+    scene.house.group.traverse((object) => { if (object.name.startsWith('breach:')) names.push(object.name) })
+    return names
+  }
   for (let guard = 0; guard < 1000 && scene.paintQueue.pending() > 0; guard++) {
     expect(scene.paintQueue.run(0, () => 1)).toBe(1)
-    for (const key of paintedWalls(scene)) if (!seen.has(key)) { seen.add(key); order.push(key) }
+    for (const name of unitMeshes()) if (!order.includes(name)) order.push(name)
   }
   return order
 }
@@ -134,47 +138,81 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     detach(s)
   })
 
-  it('the paint queue paints the wall nearest to the last strike first, and the order is the same in every run', () => {
-    const run = (): string[] => {
-      const s = setup()
-      attach(s)
-      burstOn(s, 'wall_0_0', 3, 800)
-      burstOn(s, 'wall_0_1', 3, 800)
-      burstOn(s, 'wall_0_2', 3, 800)
-      const order = paintOrder(s)
-      detach(s)
-      return order
-    }
-    const first = run()
-    expect(first.length).toBeGreaterThan(1)
-    expect(run()).toEqual(first)
-
-    const lastOnly = setup()
-    attach(lastOnly)
-    burstOn(lastOnly, 'wall_0_2', 3, 800)
-    lastOnly.paintQueue.run(0, () => 1)
-    expect(paintedWalls(lastOnly)).toContain(first[0])
-    detach(lastOnly)
+  it('the paint queue paints the last-struck wall first and then the others from the nearest to the farthest, not in the order they were queued', () => {
+    const s = setup()
+    const centre = (id: string): number[] => { const p = s.house.structure.byId.get(id)!; return [(p.aabb[0] + p.aabb[2]) / 2, (p.y0 + p.y1) / 2, (p.aabb[1] + p.aabb[3]) / 2] }
+    const distanceFromLast = (id: string): number => Math.hypot(...centre(id).map((v, i) => v - centre('wall_0_1')[i]!) as [number, number, number])
+    attach(s)
+    // queued farthest first and the struck wall last
+    for (const id of ['wall_0_2', 'wall_0_0', 'wall_0_1']) burstOn(s, id, 3, 800)
+    const others = ['wall_0_0', 'wall_0_2'].sort((a, b) => distanceFromLast(a) - distanceFromLast(b) || (a < b ? -1 : 1))
+    expect(paintOrder(s).filter((name) => ['wall_0_0', 'wall_0_1', 'wall_0_2'].includes(name.slice('breach:'.length)))).toEqual(['wall_0_1', ...others].map((id) => `breach:${id}`))
+    detach(s)
   })
 
-  it('the paint queue asks the budget to run it at least every 3 frames', () => {
-    expect(DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT].minEveryFrames).toBe(3)
+  it('the paint queue asks the budget to run it every frame and keeps it out of the mustDrain', () => {
+    expect(DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT].minEveryFrames).toBe(1)
     expect(DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT]).not.toHaveProperty('mustDrain')
   })
 
-  it('a strike on a wall whose paint waits from an earlier frame moves it to the cut queue', () => {
+  it('with the budget spent every frame, every waiting wall is painted within 3 frames of the strike', () => {
     const s = setup()
     attach(s)
-    burstOn(s, 'wall_0_1', 3, 800)
+    const walls = s.house.structure.parts.filter((part) => part.role === 'wall').map((part) => part.id)
+    for (const id of walls) burstOn(s, id, 3, 800)
+    const waiting = s.paintQueue.pending()
+    expect(waiting).toBeGreaterThan(5)
+    let frames = 0
+    while (s.paintQueue.pending() > 0 && frames < 100) {
+      frames++
+      s.paintQueue.pending(frames)
+      s.paintQueue.run(0, () => 1)
+    }
+    expect(frames).toBeLessThanOrEqual(3)
+    detach(s)
+  })
+
+  it('with room in the frame deadline the queue paints more than one wall in a frame, and stops at the deadline', () => {
+    const s = setup()
+    attach(s)
+    for (const id of s.house.structure.parts.filter((part) => part.role === 'wall').map((part) => part.id)) burstOn(s, id, 3, 800)
+    const waiting = s.paintQueue.pending()
+    s.paintQueue.pending(1)
+    let now = 0
+    const ran = s.paintQueue.run(3, () => now++)
+    expect(ran).toBeGreaterThan(1)
+    expect(ran).toBeLessThan(waiting)
+    detach(s)
+  })
+
+  it('a wall is painted even when the distance to the last strike is not a number', () => {
+    const s = setup()
+    attach(s)
+    chipsOnly(s)
+    const point = [Number.NaN, Number.NaN, Number.NaN]
+    s.d.breach.spall({ type: 'spall', part: 'wall_0_1', point, area: 0.05 } as Parameters<typeof s.d.breach.spall>[0])
     expect(s.paintQueue.pending()).toBeGreaterThan(0)
-    expect(s.cutQueue.pending()).toBe(0)
-    // a later frame: the budget polls the cut queue with the next frame number
+    paintOrder(s)
+    expect(s.paintQueue.pending()).toBe(0)
+    detach(s)
+  })
+
+  it('a blow that opens a wall whose paint was waiting moves it to the cut queue, but later chips and spalls do not', () => {
+    const s = setup()
+    attach(s)
+    chipsOnly(s)
+    expect(s.paintQueue.pending()).toBeGreaterThan(1)
     s.cutQueue.pending(1)
     s.cutQueue.pending(2)
     burstOn(s, 'wall_0_1', 6, 800)
-    expect(s.cutQueue.pending()).toBe(1)
-    s.cutQueue.run(0, () => 1)
-    expect(paintedWalls(s).length).toBeGreaterThan(0)
+    expect(s.cutQueue.pending()).toBe(0)
+    expect(s.paintQueue.pending()).toBeGreaterThan(0)
+    // the age of the waiting walls did not start over: at tick 3 they are all overdue
+    s.paintQueue.pending(3)
+    expect(s.paintQueue.run(0, () => 1)).toBeGreaterThan(1)
+    expect(s.paintQueue.pending()).toBe(0)
+    const opened = openingOn(s, 'wall_0_0')
+    expect(opened.cutPending).toBe(1)
     detach(s)
   })
 
@@ -183,6 +221,17 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     attach(s)
     burstOn(s, 'wall_0_1', 3, 800)
     burstOn(s, 'wall_0_1', 2, 800)
+    expect(s.cutQueue.pending()).toBe(0)
+    detach(s)
+  })
+
+  it('dropping a wall or restoring the house leaves both queues clean', () => {
+    const s = setup()
+    attach(s)
+    chipsOnly(s)
+    s.d.breach.drop('wall_0_1')
+    s.d.breach.restore()
+    expect(s.paintQueue.pending()).toBe(0)
     expect(s.cutQueue.pending()).toBe(0)
     detach(s)
   })
