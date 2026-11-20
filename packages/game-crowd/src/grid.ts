@@ -20,8 +20,11 @@ export type NavGrid = {
   readonly cell: number
   /** Cells per side. */
   readonly n: number
-  readonly occ: Uint8Array
-  readonly occH: Float32Array
+  /** Only `fillRect` writes `occ` and `occH`: a direct write does not bump `version`, so it never reaches a worker's copy. The type stops a write by index, not `fill` or `set`. */
+  readonly occ: Readonly<Uint8Array>
+  /** Counts the `fillRect` calls that changed a cell: a reader that keeps a copy of the occupancy knows by it when the copy is stale. */
+  readonly version: number
+  readonly occH: Readonly<Float32Array>
   cellOf(x: number, z: number): number
   /** Solid for a body at height `y` (default 0.5): outside the world, or an occupied cell that is not an open door and is taller than `y`. */
   solidAt(x: number, z: number, y?: number): boolean
@@ -60,17 +63,22 @@ export function createNavGrid(options: NavGridOptions = {}): NavGrid {
     const c = cellOf(x, z)
     return c < 0 || (occ[c] !== 0 && occ[c] !== 3 && occH[c]! > y)
   }
+  let version = 0
   const fillRect = (x0: number, z0: number, x1: number, z1: number, kind: number, h: number): void => {
     const a = Math.floor((x0 + half) / cell)
     const b = Math.ceil((x1 + half) / cell)
     const c = Math.floor((z0 + half) / cell)
     const d = Math.ceil((z1 + half) / cell)
+    let changed = false
     for (let gz = Math.max(0, c); gz < Math.min(n, d); gz++)
       for (let gx = Math.max(0, a); gx < Math.min(n, b); gx++) {
         const i = gz * n + gx
+        if (occ[i] === kind && occH[i] === Math.fround(h)) continue
         occ[i] = kind
         occH[i] = h
+        changed = true
       }
+    if (changed) version++
   }
   if (options.border ?? true) {
     fillRect(-half, -half, half, -half + BORDER_WIDTH, 1, BORDER_HEIGHT)
@@ -84,6 +92,9 @@ export function createNavGrid(options: NavGridOptions = {}): NavGrid {
     cell,
     n,
     occ,
+    get version() {
+      return version
+    },
     occH,
     cellOf,
     solidAt,

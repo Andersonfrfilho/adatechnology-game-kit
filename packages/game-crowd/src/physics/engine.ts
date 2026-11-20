@@ -87,7 +87,7 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     const shape = { capacity: store.capacity, cells: gridCells }
     const setup = { capacity: store.capacity, gridSize: grid.size, gridCell: grid.cell, contact: options.contact!, pressure: options.pressure, driveForceOfType: Array.from(driveForceOfType) }
     const slots = options.workerLatency
-    if (options.workers) return createCoordinatorRunner(setup, shape, options.workers, slots)
+    if (options.workers) return createCoordinatorRunner(setup, shape, options.workers, slots, grid)
     const transport = options.workerTransport ?? (isSharedAvailable() ? 'shared' : 'transfer')
     if (transport === 'inline') return createInlineRunner(setup, shape, slots)
     const factory = options.workerFactory
