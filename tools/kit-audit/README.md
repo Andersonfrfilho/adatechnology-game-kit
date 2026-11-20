@@ -39,10 +39,13 @@ never used; fix the code (go through `drainDetached`) instead of listing it.
 ## The must-drain rule
 
 CLAUDE.md §15 ("Fila `mustDrain`", spec 017 trava 2): a queue registered with `mustDrain: true` drains whole, outside the frame deadline, so each one adds to the
-worst frame by construction, and "a new queue does not enter that class without the owner's decision". `must-drain.mjs` flags every `mustDrain: true` in
-`packages/*/src` that is not an entry of `must-drain-allowed.json` (`queue`, `constant` in `DEFERRED_QUEUE_ID`, the only `package` that may, `reason`): today
-`destruction.events` in `game-destruction-three` and `floorplan.breach-cut` in `game-floorplan-three`. The queue is read from the same line; a line that does not
-name it is a violation too. `audit.mjs --check` runs it; a new entry is the owner's decision, written in `reason`. Tests: `tests/must-drain.test.mjs`.
+worst frame by construction, and "a new queue does not enter that class without the owner's decision". The lock that no spelling bypasses is at run time
+(`MUST_DRAIN_QUEUE_IDS` in `game-contracts`, checked by `budget.register` of `game-runtime`); `must-drain.mjs` is the early warning in the audit. It reads
+`packages/*/src`, `examples/*` and `apps/*` (`.ts`, `.tsx`, `.js`, `.mjs`; not tests) and flags every `mustDrain` key whose value is not the literal `false`: a `true` for a
+queue that is not an entry of `must-drain-allowed.json` (`queue`, `constant` in `DEFERRED_QUEUE_ID`, the only `package` that may, `reason`; the queue is read, exactly, from the
+object literal around the key), and any value the rule cannot read (variable, ternary, shorthand, quoted or computed key, value on the next line). Comments (block ones included),
+types (`mustDrain?: boolean`) and the plumbing of `game-runtime` are not registrations. `audit.mjs --check` runs it; a new entry is the owner's decision, written in `reason`.
+Tests: `tests/must-drain.test.mjs`.
 
 ## The scene check
 
