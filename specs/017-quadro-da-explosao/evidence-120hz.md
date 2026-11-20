@@ -87,3 +87,35 @@ Duas, e a segunda é a da T2.2:
    (a drenagem passa de depois do `renderer.update` do quadro para dentro dele). Os `it.fails` de 30 e 120 Hz saem juntos.
 
 Verificação do conserto da T2.2: tirar os dois `it.fails` do `step-equivalence-window.test.ts` e rodar com `restoreStepPose` fora do caminho.
+
+## T2.2 — eventos estruturais dentro do tique (2026-11-19)
+
+**O que mudou.** `packages/game-destruction-three/src/event-class.ts`: tabela `EVENT_CLASS` (`satisfies Record<DestructionEventType, ...>`: tipo novo não compila sem classe) e `EventOrder`
+(evento visual de um objeto com estrutural no lote vai antes do primeiro estrutural dele). `renderer.ts`: `applyStructuralEvents()` (aplica a fila até o último estrutural, na ordem
+de emissão, sobre a pose do passo) e `setStructuralInTick()` (com o host no modo tique, a drenagem do quadro só aplica o que vem antes do primeiro estrutural; `flush` aplica tudo).
+`game-test-room/src/simulation-phases.ts`: sistema `fixedSimulate` ordem 2000 chama `applyStructuralEvents` no fim do tique; sistema `input` liga o modo (desligado no caminho
+legado). `room.ts` não cresceu (5621 linhas, igual). Sem host (`renderer.update` direto) o comportamento é o de antes. Com `workBudget` o modo tique fica desligado (a cota é por quadro).
+
+Classes: estrutural = detach, collapse, fracture, expose, settle, subside, burnout, destroyed, explode, chip, stage, dent, bend, spall, drip, leak, ignite, primed, extinguish
+(os três últimos por dúvida). Visual = hole, crack, ricochet, debris, damage, melt, disassemble_progress, reveal, stress, sway, blast, body, fragment_hit.
+
+**Desvio do desenho.** "Aplicar a fila em ordem até o último estrutural" não fecha o `it.fails` de `event-class-order` (o `hole` vem DEPOIS do `detach` na emissão): foi preciso
+levantar o visual do objeto para antes do estrutural dele (`EventOrder`), também no caminho sem host.
+
+**Resultado.** `step-equivalence-window`: 4 de 4 passam (30/120/144 Hz e tempos aleatórios 30/60/144, solver próprio e Jolt, 120 tiques inteiros). `step-equivalence.json` não mudou.
+
+**(b) O que muda nos goldens** (antes = só o `arrange` desligado; mesmo código no resto):
+
+| Arquivo | Entrada | Mudou | Tamanho |
+|---|---|---|---|
+| `step-equivalence.json` | todas | nada | - |
+| `blast-presentation`, `golden-scene`, `team-golden-house-area` | todas | nada | - |
+| `exact-floorplan.json` | `destruction/breach` | hash (838 nós) | 3 `Points` + 1 `Mesh` por hash (sementes das partículas); posições de todos os 519 meshes idênticas (0) |
+| `exact-floorplan.json` | `destruction/spall` | hash (846 nós) | 2 `Points` + 1 `Mesh`; posições idênticas (0) |
+| `exact-floorplan.json` | `destruction/fracture` | hash, 928 -> 927 nós | 3 `Points`; 1 `LineSegments` invisível (gaiola de vergalhão, `visible=false`) a menos; posições dos demais 588 meshes idênticas (<1e-9) |
+
+Estado final (último quadro, 1 s) nos três casos: `world.serialize()` idêntico, mesmas peças (11/6/31) com posição e rotação idênticas, mesmos grupos. Causa: o `debris` aplica
+na ordem nova e sorteia partículas em outra sequência; o `hole` agora marca o ponto de golpe antes do `stage` da peça. A gaiola ausente no `fracture` é o ponto a conferir.
+
+**Gates.** typecheck game-destruction-three e game-test-room limpos; game-destruction-three 87 arquivos / 664 testes ok; game-test-room 65 / 479 ok; game-floorplan-three (blast,
+breach, destruction, exact-golden, golden-scene, team-golden) ok com a regravação; `pnpm check:layers` ok; `kit-audit --check --strict-clocks`: 0 novos, 0 pendentes de relógio.
