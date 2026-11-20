@@ -11,6 +11,8 @@
 > 🤖 Modelo: `haiku`
 
 - **T0.1** Rodada `PERF_MODE=gpu` do `perf.mjs` (tempestade, `dense_horde`, `chain_horde`) na `spec/010-pr` e na `origin/main`; tabela no `evidence.md` (base da C8).
+  **Adiada para a régua final (T4.2) por decisão do dono em 2026-11-19:** duas tentativas morreram no tempo limite com a máquina carregada
+  (`evidence.md`, T0.1); os números parciais são só indicativos.
 
 ## Fase 1 — Desenho
 > 🤖 Modelo: `sonnet` (T1.1 é 🧠 — `opus`, validar com `architect` e `engenheiro-estrutural`)
