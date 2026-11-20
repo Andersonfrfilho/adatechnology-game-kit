@@ -12,19 +12,22 @@
 //   PERF_GATE_BASE=<ref>        compare against another commit (default origin/main)
 //   PERF_GATE_TOLERANCE=0.1     the share a metric may grow before it blocks
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
+// The cache dir (~/.cache/adatechnology-game-kit/perf) also holds the sha the base worktree was built at (base-built.sha: main is built there, at a clean
+// checkout of that sha, before any measure of it) and times.ndjson, one line per round with the minutes of each step, printed at the end too.
 //   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
 // The `room-explosion` scenario (spec 008 B6) is a different gate, by hand or in the nightly, never in CI: the physics ms of the house explosion at 1x, 2x, 4x and 6x CPU
 // throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It blocks only on a regression against the base report ROOM_EXPLOSION_BASE (the nightly keeps the best of its passing nights); see tools/gpu/room-explosion.mjs for the variables and the kinds (blast, hammer; opt-in crater: C4 digging loose ground). The default and gated variant is jolt-d4-worker (the page default, paced); jolt-d4 stays available by name.
 //   flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs room-explosion
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { homedir, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
+import { buildSequence, describeRound, formatSteps, needsBuild, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -74,6 +77,15 @@ Object.assign(process.env, gpuEnv)
 
 if (process.argv[2] === 'room-explosion') process.exit(await runRoomExplosion({ playwright, chrome, root }))
 
+const probeStarted = Date.now()
+/** @type {import('./perf-gate-plan.mjs').Step[]} where the time of this round goes, printed at the end and added to times.ndjson */
+const steps = []
+/** @param {string} name @param {number} started */
+const record = (name, started) => void steps.push({ name, ms: Date.now() - started })
+
+const cacheDir = join(process.env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'adatechnology-game-kit', 'perf')
+mkdirSync(cacheDir, { recursive: true })
+
 const browser = await playwright.chromium.launch({
   args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'],
   ...(chrome ? { executablePath: chrome } : {}),
@@ -84,6 +96,7 @@ const renderer = await (await browser.newPage()).evaluate(() => {
   return info ? String(gl?.getParameter(info.UNMASKED_RENDERER_WEBGL)) : 'unknown'
 })
 await browser.close()
+record('probe', probeStarted)
 if (SOFTWARE_RENDERERS.test(renderer)) skip(`no GPU (WebGL draws on ${renderer})`)
 
 const tier = /nvidia|radeon|amd/i.test(renderer) && !/intel/i.test(renderer) ? 'discrete' : 'integrated'
@@ -101,29 +114,28 @@ const baseSha = (() => {
 })()
 const sameTree = baseSha !== '' && git(['rev-parse', 'HEAD^{tree}']) === git(['rev-parse', `${baseSha}^{tree}`])
 
-const cacheDir = join(process.env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'adatechnology-game-kit', 'perf')
-mkdirSync(cacheDir, { recursive: true })
 const harness = createHash('sha1').update(readFileSync(join(root, 'examples/test-room/perf.mjs'))).digest('hex').slice(0, 10)
 const slug = createHash('sha1').update(`${renderer}|${VIEWPORT}|${tier}`).digest('hex').slice(0, 10)
 const baseReport = baseSha ? join(cacheDir, `${baseSha.slice(0, 12)}-${slug}-${harness}.json`) : ''
 
 // the budgets hold for a quiet machine: other work on the CPU reads as a slow frame
 const QUIET_LOAD = 4
-const WAIT_FOR_QUIET_MS = 10 * 60 * 1000
 const waitForQuiet = async () => {
+  const waitStarted = Date.now()
   const until = Date.now() + WAIT_FOR_QUIET_MS
   while (loadavg()[0] >= QUIET_LOAD && Date.now() < until) {
     console.log(`pre-push: waiting for a quiet machine (load ${loadavg()[0].toFixed(1)}, under ${QUIET_LOAD} wanted)`)
     await new Promise((done) => setTimeout(done, 30000))
   }
+  record('wait-quiet', waitStarted)
   if (loadavg()[0] >= QUIET_LOAD) console.log(`pre-push: the machine is still busy (load ${loadavg()[0].toFixed(1)}): the frame times below read slower than a player sees`)
 }
 
 /**
  * Runs perf.mjs (this checkout's harness) on the page of `pageRoot`, and returns its report. The harness is the same for both sides, so only the page differs.
- * @param {string} pageRoot @param {string} out @param {string} label @returns {Promise<Report>}
+ * @param {string} pageRoot @param {string} out @param {string} label @param {string} step the name of the step in the timings @returns {Promise<Report>}
  */
-const measure = async (pageRoot, out, label) => {
+const measure = async (pageRoot, out, label, step) => {
   await waitForQuiet()
   console.log(`pre-push: measuring ${label}`)
   const started = Date.now()
@@ -144,29 +156,64 @@ const measure = async (pageRoot, out, label) => {
       ...(storeModules ? { NODE_PATH: [process.env.NODE_PATH, storeModules].filter(Boolean).join(':') } : {}),
     },
   })
+  record(step, started)
   console.log(`pre-push: ${label} took ${((Date.now() - started) / 60000).toFixed(1)} min`)
   // perf.mjs exits 1 on a hard failure and still writes its report; with no report (a crash, a closed browser) the run did not happen
   if (!existsSync(out)) throw new Error(`perf.mjs wrote no report for ${label} (exit ${run.status ?? run.signal}): the run did not finish`)
   return JSON.parse(readFileSync(out, 'utf8'))
 }
 
+const baseTree = join(cacheDir, 'base-worktree')
+// the sha of the last complete build of the base worktree: a cache hit on the first pass builds nothing, so the worktree can hold an older commit
+const baseBuiltMarker = join(cacheDir, 'base-built.sha')
+
 /** A worktree of the base commit, kept between pushes (pnpm links its packages from the store, so a second install is quick), built in place. */
 const buildBase = () => {
-  const tree = join(cacheDir, 'base-worktree')
-  if (!existsSync(join(tree, '.git'))) git(['worktree', 'add', '--force', '--detach', tree, baseSha])
-  else git(['checkout', '--force', '--detach', baseSha], tree)
+  const buildStarted = Date.now()
   /** @param {string} command @param {string[]} args */
-  const run = (command, args) => execFileSync(command, args, { cwd: tree, stdio: ['ignore', 'ignore', 'inherit'] })
-  console.log(`pre-push: building ${baseRef} (${baseSha.slice(0, 8)}) in ${tree}`)
-  run('pnpm', ['install', '--frozen-lockfile', '--prefer-offline'])
-  run('pnpm', ['-s', 'build'])
-  run(process.execPath, ['examples/test-room/build.mjs'])
-  return tree
+  const run = (command, args) => execFileSync(command, args, { cwd: baseTree, stdio: ['ignore', 'ignore', 'inherit'] })
+  console.log(`pre-push: building ${baseRef} (${baseSha.slice(0, 8)}) in ${baseTree}`)
+  buildSequence({
+    clearMarker: () => rmSync(baseBuiltMarker, { force: true }),
+    checkout: () => (existsSync(join(baseTree, '.git')) ? git(['checkout', '--force', '--detach', baseSha], baseTree) : git(['worktree', 'add', '--force', '--detach', baseTree, baseSha])),
+    install: () => run('pnpm', ['install', '--frozen-lockfile', '--prefer-offline']),
+    build: () => run('pnpm', ['-s', 'build']),
+    buildRoom: () => run(process.execPath, ['examples/test-room/build.mjs']),
+    writeMarker: () => writeFileSync(baseBuiltMarker, baseSha),
+  })
+  record('build-base', buildStarted)
 }
 
+/** What the base worktree is on now: its commit and whether it has edits. A missing or broken worktree reads as neither. */
+const baseWorktreeState = () => {
+  try {
+    return { headSha: git(['rev-parse', 'HEAD'], baseTree), isClean: git(['status', '--porcelain'], baseTree) === '' }
+  } catch {
+    return { headSha: '', isClean: false }
+  }
+}
+
+const baseNeedsBuild = () =>
+  needsBuild({
+    builtSha: existsSync(baseBuiltMarker) ? readFileSync(baseBuiltMarker, 'utf8').trim() : undefined,
+    expectedSha: baseSha,
+    ...baseWorktreeState(),
+    hasOutput: existsSync(join(baseTree, 'examples/test-room/dist/test-room.html')),
+  })
+
+/** The base worktree, built at `baseSha`: before measuring main on any pass, whatever an earlier pass, push or the nightly left in it. */
+const ensureBase = () => {
+  if (baseNeedsBuild()) buildBase()
+  return baseTree
+}
+
+const needsBaseRun = baseSha !== '' && !sameTree && !existsSync(baseReport)
+console.log(`pre-push: ${describeRound({ needsBaseRun, needsBaseBuild: needsBaseRun && baseNeedsBuild() })}`)
+const branchBuildStarted = Date.now()
 execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'inherit' })
+record('build-branch', branchBuildStarted)
 const branchOut = join(root, 'examples/test-room/dist/perf.json')
-let branch = await measure(root, branchOut, 'this branch')
+let branch = await measure(root, branchOut, 'this branch', 'measure-branch')
 
 /** @type {Report | undefined} */
 let base
@@ -178,18 +225,16 @@ else if (sameTree) {
   console.log(`pre-push: ${baseRef} (${baseSha.slice(0, 8)}) measured before on this machine (${baseReport})`)
   base = JSON.parse(readFileSync(baseReport, 'utf8'))
 } else {
-  const tree = buildBase()
-  base = await measure(tree, baseReport, `${baseRef} (${baseSha.slice(0, 8)})`)
+  base = await measure(ensureBase(), baseReport, `${baseRef} (${baseSha.slice(0, 8)})`, 'measure-base')
 }
 
 let regressions = base ? compare(base, branch, TOLERANCE) : []
 if (base && regressions.length > 0) {
   // one more run of each side before blocking: one frame of the GPU clock dropping is not a regression
   console.log(`pre-push: ${regressions.length} metric(s) over ${Math.round(TOLERANCE * 100)}% worse: measuring both sides again`)
-  branch = bestOf(branch, await measure(root, join(cacheDir, 'branch-again.json'), 'this branch again'))
-  const tree = existsSync(join(cacheDir, 'base-worktree', '.git')) ? join(cacheDir, 'base-worktree') : buildBase()
+  branch = bestOf(branch, await measure(root, join(cacheDir, 'branch-again.json'), 'this branch again', 'measure-branch-again'))
   // the better run of the branch against the worse run of main: it blocks only when every run of the branch is worse than every run of main
-  base = worstOf(base, await measure(tree, join(cacheDir, 'base-again.json'), `${baseRef} again`))
+  base = worstOf(base, await measure(ensureBase(), join(cacheDir, 'base-again.json'), `${baseRef} again`, 'measure-base-again'))
   regressions = compare(base, branch, TOLERANCE)
 }
 
@@ -215,5 +260,12 @@ for (const failure of hardFailures) console.log(`FAIL  ${failure.text}`)
 for (const { phase, metric, base: was, branch: now } of regressions) console.log(`FAIL  ${phase}: ${metric} ${was} -> ${now} (more than ${Math.round(TOLERANCE * 100)}% worse than ${baseRef} on this machine)`)
 
 const blocked = hardFailures.length > 0 || regressions.length > 0 || (process.env.PERF_GATE_ABSOLUTE === '1' && targets.length > 0)
+console.log('pre-push: where the time went')
+for (const line of formatSteps(steps)) console.log(line)
+try {
+  appendFileSync(join(cacheDir, 'times.ndjson'), `${JSON.stringify(timesRecord({ at: Date.now(), renderer, outcome: blocked ? 'blocked' : 'passed', steps }))}\n`)
+} catch {
+  /* the timings are a convenience, never a reason to fail the push */
+}
 console.log(blocked ? 'pre-push: perf blocks the push' : 'pre-push: perf passes')
 process.exit(blocked ? 1 : 0)
