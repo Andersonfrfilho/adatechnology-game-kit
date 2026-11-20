@@ -1,7 +1,7 @@
 # Spec 017 — a explosão como frente de onda (D5, opção b)
 
-> Estado: **validada com mudanças** por `architect` e `engenheiro-estrutural` (2026-11-20); as mudanças já estão neste texto (§8 lista
-> de onde veio cada uma). **Ainda não medida nesta forma**: o critério de entrada do §6 decide se a fase é construída.
+> Estado: **validada com mudanças** por `architect` e `engenheiro-estrutural` (2026-11-20), e **reprovada no critério de entrada do §6**:
+> a velocidades físicas a frente de onda tira só 3 a 6 ms do quadro do impacto (§9). A Fase 5 não foi construída.
 > Decisão D5 = (b), dada pelo dono em 2026-11-20 com a condição: protótipo medido primeiro; menos de 15 ms de ganho no quadro do
 > impacto, não entra.
 
@@ -182,3 +182,27 @@ C-c: parar e levar os números ao dono.
 | Campo `waves` no snapshot sem subir a versão | architect |
 | Critérios C-b e C-c; constante única ligada no `makeRoom` | architect |
 | Invariantes I1 e I2 e a lista de testes | engenheiro-estrutural |
+
+## 9. Resultado do critério de entrada (T5.0, 2026-11-20)
+
+Protótipo `08f2015c8` (`spec/017-d5b-prototipo`), regra do §2.1, `waveStart` 0 (primeiro anel = bola de fogo, ~1 m). Pares alternados,
+modo de prazo, 1x, carga 1,8–2,0 no começo; rodadas com quadro acima de 300 ms descartadas. Processador entre 90 e 100 °C durante a série.
+
+| Velocidade | f0 explosão | f0 cratera | contra o par desligado anterior | f1 | soma da janela |
+|---|---|---|---|---|---|
+| desligado (3 rodadas) | 64,2 / 63,5 / 67,1 | 66,7 / 63,6 / 70,8 | | ~20,5 | |
+| 520 m/s | 60,6 | 63,0 | −3,6 / −3,7 | 22,1 / 21,3 | a onda acaba no f0 |
+| 343 m/s (som) | 57,1 | 60,7 (uma rodada) | −6,4 / −2,9 | 26,0 / 27,6 | 103% / 105% |
+| 255 m/s (abaixo do som) | 51,0 | 53,7 | −16,1 / −17,1 (−14 / −13 contra a média dos desligados) | 27,6 / 25,9 | 87% / 87% |
+
+- **C-a falha** nas velocidades físicas. **C-b e C-c passam** em todas.
+- **Por quê:** o quadro da régua (e a meta de 33,3 ms) é um quadro de 1/30 s, que roda **dois** `world.update` de 1/60 s. A 343 m/s a frente
+  anda 11,4 m por quadro; a casa vai até 18 m, e ~87% das peças de longe caem no próprio f0. E o que sobra para mover é pouco: fora do
+  primeiro anel (13–15 peças, 10–17 ms, quase tudo a parede encostada na carga), as outras ~505 peças somam 8–10 ms mais os eventos delas.
+- O protótipo por pesos tirou ~15 ms porque empurrava as ~500 peças de longe para o quadro seguinte **sem olhar a distância**. A regra
+  mínima que reproduz isso sem pesos é "primeiro anel no tique T, todo o resto no quadro seguinte": determinística e independente da cena,
+  mas não é uma onda; é um adiamento fixo justificado só por desempenho.
+
+**Leitura:** a divisão da explosão compra ~15 ms só com uma regra não física (adiamento fixo ou onda mais lenta que o som), leva o f0 a
+~50 ms (não a 33,3) e custa a Fase 5 inteira (§2.2 a §2.6, §3 e os testes do §5, que valem para qualquer regra de divisão). O desenho e as
+validações deste documento ficam como entrada para uma spec de worker (D5 d), onde a mesma divisão por tempo do mundo volta a ser necessária.
