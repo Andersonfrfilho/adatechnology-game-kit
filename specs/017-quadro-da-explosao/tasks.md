@@ -52,6 +52,35 @@
 - **T4.2 (adiada)** Régua final (C1, C2, C3, C6) nas condições da T4.1 da 010 e `perf.mjs` (C8); `room.ts` (C7).
 - **T4.3** Documentação (`docs/desempenho-explosoes.md`, README do `game-destruction`, regra §15 se o `mustDrain` mudar).
 
+## Fase 5 — A explosão como frente de onda (D5 b)
+> 🤖 Modelo: `sonnet` (T5.0 e T5.1 são 🧠 — desenho validado em `design-onda.md`; T5.9 → `code-reviewer` `sonnet` + `engenheiro-estrutural`)
+>
+> **Não construída.** A T5.0 foi feita em 2026-11-20 e não passou em C-a a velocidades físicas (`design-onda.md` §9); o dono fechou a D5
+> como (a). As tasks abaixo ficam como registro do que a divisão da explosão exigiria, para a spec do worker (018).
+>
+> Só começa se o critério de entrada do `design-onda.md` §6 passar (C-a, C-b, C-c). Branch `spec/017-onda`, a partir da `main`.
+> Com a onda desligada (padrão do kit) nenhum golden, fixture ou `serialize()` pode mudar, em nenhuma task.
+
+- **T5.0 🧠** Critério de entrada: protótipo com a regra do §2.1, três pares alternados, 3 combinações de `waveSpeed`/`waveStart`.
+  Números em `evidence.md`. Não passou em C-a: fechar a D5 como (a) e parar a fase.
+- **T5.1 🧠** Mundo, o núcleo: `BlastOptions.waveSpeed`/`waveStart`, frente por tempo do mundo, conjunto por onda em `p.rt`, ordem por
+  distância e ids, `NaN`, fim exato no raio, primeiro anel cobrindo a bola de fogo, ordem fixa dentro do `update` (§2.1, §2.2, §3 item 3).
+  Testes 1, 2, 5, 6 e 11 do §5.
+- **T5.2** Estrutura: peça em `o.collapsed` não flete entre apoios; invariante I1 por tique na casa da sala e na torre. Testes 3, 4 e 8.
+- **T5.3** Uma frente só: `blastFrontSpeed`/`frontQueue` absorvidos (§2.4); `lightLeaksNear` por anel. Testes 9 e 12.
+- **T5.4** Salvar no meio: campo `waves` no snapshot, só quando não vazio, versão 1 (§2.6). Teste 10.
+- **T5.5** Evento `blast_front` (`game-contracts`, `EVENT_CLASS: structural`) e o empurrão dos pedaços e da alvenaria esfarelada nos anéis
+  seguintes (`game-destruction-three`, §2.5 e §3 item 2); I2: grupo colapsado em T+1 separado no quadro de T+1; nenhum `broken_floating`
+  em nenhum tique. Teste 7 e os três de `game-destruction-three`.
+- **T5.6** Ligar: `DEFAULT_BLAST_WAVE` no `game-destruction`, padrão no `makeRoom` e no `game-kit-defaults`; o teste do fixture de 60 Hz
+  passa `waveSpeed: Infinity`; fixture novo com a onda ligada; `step-equivalence-window` nos dois modos; log quando `blastScene` desliga a
+  onda (§2.7, §4). Retorno do `explode`: `n` do log e quem lê `withCollapses` (§2.3).
+- **T5.7** Régua e travas: variante do portão no mesmo PR (§15), `room-explosion.mjs` mede o padrão da sala, C-a/C-b/C-c com a implementação
+  final (não com o protótipo), `perf.mjs` contra a `main` com a máquina quieta.
+- **T5.8** Sala, à mão: explosão e cratera em primeira e terceira pessoa (§5 das regras); o atraso da parede de fora e o voo dos pedaços.
+- **T5.9** Revisão (`code-reviewer` e `engenheiro-estrutural`), documentação (`docs/desempenho-explosoes.md`, README do `game-destruction`,
+  regra §15), PR. Depois do merge: semear a base da rodada noturna.
+
 ## Prompt de execução
 
 ```text
@@ -66,4 +95,21 @@ evidence.md com tabela antes/depois e o JSON ao lado.
 Medições de tempo só com carga < 1,5 e sob flock perf-measure.lock, com pnpm build e a página da sala refeitos; nada de teto pelo relógio no
 que muda a simulação (mesmos bytes, C4). Nas T2.1, T2.2 e T3.1 os goldens e o fixture do step-equivalence não podem mudar.
 Pare e pergunte antes de: qualquer golden ou fixture com diff, mudar a janela (D1), a T3.2/D5, levar o mundo para um worker, PR.
+```
+
+### Fase 5 (frente de onda)
+
+```text
+/oh-my-claudecode:autopilot Execute a Fase 5 da spec specs/017-quadro-da-explosao/ (leia spec.md, tasks.md e design-onda.md inteiro antes
+de começar; leia também specs/regras/15-quadro-e-desempenho.md e a seção C8 do evidence.md). Uma task por vez, na ordem do tasks.md, no
+worktree da branch spec/017-onda. A T5.0 decide se a fase existe: sem C-a, pare e registre.
+Modelos: T5.0 e T5.1 🧠 → executor model=opus, seguindo o design-onda.md já validado por architect e engenheiro-estrutural ·
+T5.2 a T5.8 → executor model=sonnet · T5.9 → code-reviewer model=sonnet e engenheiro-estrutural.
+Escalada: gate falhou 2x → sobe um nível (sonnet→opus) e registra em evidence.md.
+Cada task fecha com typecheck + testes dos pacotes tocados + check:layers + kit-audit --check --strict-clocks + commit isolado, evidência em
+evidence.md. Com a onda desligada nenhum golden, fixture ou serialize() muda: rode os testes de golden do pacote em toda task.
+Medições só com carga < 1,5 no começo, sob flock ~/.cache/adatechnology-game-kit/perf-measure.lock, pares alternados na mesma sessão, com
+pnpm build e a página da sala refeitos; descarte rodada com a página travada (quadro ~10x) e diga que descartou.
+Pare e pergunte antes de: regravar qualquer golden ou fixture existente, C-b ou C-c falhando com C-a passando, mudar o padrão do kit para
+ligado, levar o mundo para um worker, merge do PR.
 ```
