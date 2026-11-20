@@ -3253,8 +3253,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
-    const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
-    if (split && mine.length) amount /= mine.length
+    const mine = o.byPart.get(p.spec.id)
+    if (!mine) return
+    if (split) {
+      let closed = 0
+      for (const j of mine) if (!j.st.open) closed++
+      if (closed > 0) amount /= closed
+    }
     for (const j of mine) {
       if (j.st.open) continue
       // the rebar of a reinforced part (a cage, or the tension steel of `structure.rebar`) ties it to the next one: blows do not wear it, only a torch
@@ -4596,6 +4601,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a part embedded in its host takes no wave while the host stands round it: the wall is what the blast meets, and only a hole of it lets the blast to the pipe
     if (p.embedded === true && p.st.exposed !== true) return null
     const { c, q } = partXf(o, p)
+    const objectRotation = o.st.rotation, partQuat = p.q
     const lp = toLocal(c, q, point)
     const dist = distanceToShape(p.spec.shape, lp)
     if (dist >= radius) return null
@@ -4656,7 +4662,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
       return reach
     }
-    if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
+    // `q` still holds when nothing moved the object or the part since it was read; otherwise the pose is measured again
+    if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, o.st.rotation === objectRotation && p.q === partQuat ? (rotateVec(quat.conjugate(q), wn)[p.thin] >= 0 ? 1 : -1) : faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
     const breachReach = BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)
     // a reinforced member (a pillar, a beam) is never blown away whole: its stirrups confine the core and its bars hold it, so a blast keeps its floor of hit
     // points and takes the concrete out only where it reaches (a charge at contact cuts a band a couple of sections tall, the bars and stirrups bared there)
