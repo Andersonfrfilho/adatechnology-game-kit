@@ -119,7 +119,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         // follow: an object some other code added to the world with this house's spec (a free-standing wall in a test room) is drawn by its renderer; the house
         // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
         D.follow = (world: DestructionWorld, id: string, spec: NonNullable<HouseDestruction['spec']>) => {
-          D.spec = spec; breach.claim();
+          D.spec = spec; breach.claim(); breach.waitForFlush();
           let fallback: ReturnType<typeof setTimeout> | null = null;
           const offFollow = world.on('*', e => {
             if (e.object !== id) return;

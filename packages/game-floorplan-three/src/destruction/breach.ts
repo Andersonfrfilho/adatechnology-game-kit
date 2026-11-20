@@ -273,6 +273,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     /** Views of walls that broke or fell, whose ranges are still collapsed. */
     const dropped: WallView[] = []
     let lod = 0
+    let paintsWaitForFlush = false
     const unitGeometry = new THREE.BoxGeometry(1, 1, 1)
     let lumpShape: THREE_NS.BufferGeometry | null = null
     /** A broken stone of unit size: an icosahedron with its corners pushed in and out, flat-shaded so its facets read as fractures. */
@@ -912,6 +913,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       else if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) queueForPaint(view) }
       else if (cutState.attached && paintState.attached && !cutWalls.has(view)) queueForPaint(view)
       else if (cutState.attached) { dirty.delete(view); cutWalls.add(view) }
+      else if (paintsWaitForFlush) queueForPaint(view)
       else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
     }
@@ -997,6 +999,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const r = Math.sqrt(Math.max(0, event.area) / Math.PI)
         return r > 0 ? draw(event.part, { spall: { center: event.point, radius: r } }) : false
       },
+      /** The host flushes every frame: chips wait for it, one repaint per wall instead of one per event. */
+      waitForFlush(): void { paintsWaitForFlush = true },
       /**
        * Marks the meshes that draw a wall of units as drawing its spalls itself (`userData.drawnSpalls`, the part ids): the destruction renderer then
        * throws the bits and leaves its patch out. Call it once the spec is known.
