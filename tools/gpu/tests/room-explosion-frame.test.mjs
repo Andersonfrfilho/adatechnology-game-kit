@@ -11,7 +11,8 @@ const row = (round, frame, updateMs, renderCpu, kind = 'blast') => ({ variant: V
 const metric = (/** @type {number} */ f0Ms, /** @type {number} */ afterMs, /** @type {string} */ kind = 'blast', /** @type {number} */ throttle = 1) => ({ variant: VARIANT, throttle, kind, f0Ms, afterMs })
 /** A realistic round: frame 0 and 660 frames, the 7 after it with `after` ms at the worst. @param {number} round @param {number} f0 @param {number} after @param {string} [kind] */
 const roundOf = (round, f0, after, kind = 'blast') => Array.from({ length: 661 }, (_, frame) => row(round, frame, frame === 0 ? f0 - 8 : frame === 4 ? after - 1 : 3, frame === 0 ? 8 : 1, kind))
-const measureOf = (/** @type {ReturnType<typeof metric>[]} */ metrics, problems = []) => ({ metrics, problems })
+/** @typedef {import('../room-explosion-frame.mjs').FrameProblem} FrameProblem */
+const measureOf = (/** @type {ReturnType<typeof metric>[]} */ metrics, /** @type {FrameProblem[]} */ problems = []) => ({ metrics, problems })
 const gate = (/** @type {ReturnType<typeof metric>[]} */ now, /** @type {object | undefined} */ base, mode = 'deadline') => frameGate({ measure: measureOf(now), base, mode, variant: VARIANT, gated: GATED })
 
 test('f0Ms is the mean of the 3 worst f0 (update + render) and afterMs the worst of the 7 frames after, in those rounds', () => {
