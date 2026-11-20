@@ -1,6 +1,6 @@
 // @ts-check
 // The decisions of tools/gpu/perf-gate.mjs that need no browser, git or disk: whether the base worktree must be built, where the second run of main is kept,
-// when to stop waiting for a quiet machine, whether the renderer probe is still good, and how long a round takes. Pure, so tests/perf-gate-plan.test.mjs can hold them.
+// when to stop waiting for a quiet machine, and how long a round takes. Pure, so tests/perf-gate-plan.test.mjs can hold them.
 
 /** @param {{ builtSha: string | undefined, expectedSha: string, hasOutput: boolean }} state the sha written after the last complete build, and whether the page it built is still there */
 export const needsBuild = ({ builtSha, expectedSha, hasOutput }) => !hasOutput || builtSha !== expectedSha
@@ -16,19 +16,6 @@ export const QUIET_LOG_EVERY = 6
 
 /** @param {{ load: number, now: number, until: number }} state */
 export const shouldKeepWaiting = ({ load, now, until }) => load >= QUIET_LOAD && now < until
-
-export const PROBE_MAX_AGE_MS = 24 * 60 * 60 * 1000
-
-/**
- * @typedef {{ renderer: string, chromeVersion: string, at: number }} ProbeEntry
- * A saved probe stands in for opening Chrome when it is recent, from the same Chrome, and nobody forced a new one (PERF_GATE_PROBE=1).
- * @param {{ entry: ProbeEntry | undefined, now: number, chromeVersion: string, force: boolean }} state
- */
-export const probeUsable = ({ entry, now, chromeVersion, force }) => {
-  if (force || !entry || chromeVersion === '') return false
-  if (entry.chromeVersion !== chromeVersion) return false
-  return now - entry.at >= 0 && now - entry.at < PROBE_MAX_AGE_MS
-}
 
 /** @typedef {{ name: string, ms: number }} Step */
 

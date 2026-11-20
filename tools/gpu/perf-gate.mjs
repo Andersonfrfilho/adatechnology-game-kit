@@ -13,7 +13,6 @@
 //   PERF_GATE_TOLERANCE=0.1     the share a metric may grow before it blocks
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
 //   PERF_GATE_MAX_MIN=<min>    stop with exit 3 and a message (nothing blocked, nothing passed) when the estimated steps ahead do not fit; unset: no limit
-//   PERF_GATE_PROBE=1           read the GPU name with a Chrome page again (the probe is kept 1 day, per Chrome version, in the cache dir)
 // The cache dir (~/.cache/adatechnology-game-kit/perf) also holds main's second run (<key>-again.json, reused), the sha the base worktree was built at
 // (base-built.sha: main is built there before any measure of it) and times.ndjson, one line per round with the minutes of each step, printed at the end too.
 //   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
@@ -29,7 +28,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
-import { againReportPath, formatSteps, needsBuild, probeUsable, QUIET_LOAD, QUIET_LOG_EVERY, QUIET_POLL_MS, shouldKeepWaiting, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
+import { againReportPath, formatSteps, needsBuild, QUIET_LOAD, QUIET_LOG_EVERY, QUIET_POLL_MS, shouldKeepWaiting, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -88,47 +87,16 @@ const record = (name, started) => void steps.push({ name, ms: Date.now() - start
 const cacheDir = join(process.env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'adatechnology-game-kit', 'perf')
 mkdirSync(cacheDir, { recursive: true })
 
-/** The GPU name WebGL reports, read by opening a Chrome page. */
-const probeRenderer = async () => {
-  const browser = await playwright.chromium.launch({
-    args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'],
-    ...(chrome ? { executablePath: chrome } : {}),
-  })
-  const name = await (await browser.newPage()).evaluate(() => {
-    const gl = document.createElement('canvas').getContext('webgl2')
-    const info = gl?.getExtension('WEBGL_debug_renderer_info')
-    return info ? String(gl?.getParameter(info.UNMASKED_RENDERER_WEBGL)) : 'unknown'
-  })
-  await browser.close()
-  return name
-}
-
-// the saved probe is good while Chrome (and the PRIME offload choice) is the same; PERF_GATE_PROBE=1 probes again
-const chromeVersion = (() => {
-  try {
-    const version = execFileSync(chrome ?? playwright.chromium.executablePath(), ['--version'], { encoding: 'utf8', timeout: 10000 }).trim()
-    return version === '' ? '' : `${version}|nvidia=${hasNvidia}`
-  } catch {
-    return ''
-  }
-})()
-const probeFile = join(cacheDir, 'renderer-probe.json')
-const savedProbe = (() => {
-  try {
-    return JSON.parse(readFileSync(probeFile, 'utf8'))
-  } catch {
-    return undefined
-  }
-})()
-/** @type {string} */
-let renderer
-if (probeUsable({ entry: savedProbe, now: Date.now(), chromeVersion, force: process.env.PERF_GATE_PROBE === '1' })) {
-  renderer = savedProbe.renderer
-} else {
-  renderer = await probeRenderer()
-  // a software renderer is never saved: the day the driver works again, the next push must see it
-  if (!SOFTWARE_RENDERERS.test(renderer) && chromeVersion !== '') writeFileSync(probeFile, JSON.stringify({ renderer, chromeVersion, at: Date.now() }))
-}
+const browser = await playwright.chromium.launch({
+  args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'],
+  ...(chrome ? { executablePath: chrome } : {}),
+})
+const renderer = await (await browser.newPage()).evaluate(() => {
+  const gl = document.createElement('canvas').getContext('webgl2')
+  const info = gl?.getExtension('WEBGL_debug_renderer_info')
+  return info ? String(gl?.getParameter(info.UNMASKED_RENDERER_WEBGL)) : 'unknown'
+})
+await browser.close()
 record('probe', probeStarted)
 if (SOFTWARE_RENDERERS.test(renderer)) skip(`no GPU (WebGL draws on ${renderer})`)
 
