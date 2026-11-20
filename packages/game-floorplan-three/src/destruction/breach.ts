@@ -118,6 +118,8 @@ interface WallView {
   fallen: Set<string>
   /** The units of each part still drawn at the last paint, along the wall from its start: what a body bumps into. */
   kept: Map<string, Span[]>
+  /** The world recorded damage (chips, an opening) that `kept` does not show yet: `standing` works it out when asked, the paint may come later. */
+  keptStale: boolean
 }
 
 /** The part of `unit` inside `box` (house space, `[minX, minY, minZ, maxX, maxY, maxZ]`), or null when nothing of it is. */
@@ -607,6 +609,41 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /**
+     * The bricks of `id` the world took (its chips, its opening) and the ones left, along the wall: all of it from what the world recorded in the view,
+     * never from what is painted, so what a body bumps into does not wait for the paint.
+     */
+    function splitUnits(view: WallView, id: string, around: { pillars: readonly { a: number; b: number; y0: number; y1: number }[]; gaps: readonly Span[] }) {
+      const { mask } = view
+      const along = (p: number[]) => (mask.alongU ? p[0]! : p[2]!) - mask.start
+      const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id)
+      // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
+      const own = cells(part, units, mask)
+      const all = (id === view.host ? own.flatMap((c) => besidePillars(c, around.pillars)) : own).flatMap((c) => outsideGaps(c, around.gaps))
+      const holes: typeof all = [], kept: typeof all = []
+      if (view.fallen.has(id)) return { all, kept, holes: all, boxes: [] }
+      const boxes = chips.map((k) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1]! - k.up, y1: k.center[1]! + k.up }))
+      // the world's units and the drawn bricks do not share joints (its units are merged and shifted by bond): a brick goes when the world took most
+      // of it and the unit under its middle, or it is drawn hanging where the world has nothing
+      const gone = (c: Span) => {
+        const over = boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)
+        const share = covered(c, over)
+        if (share >= 0.9) return true
+        const s = (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2
+        return share >= 0.5 && over.some((k) => s >= k.s0 && s <= k.s1 && y >= k.y0 && y <= k.y1)
+      }
+      const open = (c: Span) => gone(c) || (opening !== undefined && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
+      for (const c of all) (open(c) ? holes : kept).push(c)
+      return { all, kept, holes, boxes }
+    }
+
+    /** `kept` of every part of the view from what the world recorded, without painting. */
+    function refreshKept(view: WallView): void {
+      const around = { pillars: pillarSpans(view), gaps: windowGaps(view) }
+      for (const id of view.parts) view.kept.set(id, splitUnits(view, id, around).kept)
+      view.keptStale = false
+    }
+
+    /**
      * The damage of the view, drawn again: which units of each part are gone, where shots broke through the units that stay (a crater: an irregular
      * hole through the unit, the plaster broken off around it), the masks (what is gone or broken through, plus a ragged edge of plaster around it,
      * and the opening) and the units seen inside the edge of the cut.
@@ -623,29 +660,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       // the blocks of a cast member (a pillar, a beam) that broke off: lumps of their concrete stay stuck on the bars that ran through them
       const castGone: { c: Span; part: HouseStructurePart; thick: number; mid: number }[] = []
       const pillars = pillarSpans(view), gaps = windowGaps(view)
+      view.keptStale = false
       for (const id of view.parts) {
-        const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
-        // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
-        const own = cells(part, units, mask)
-        const all = (id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own).flatMap((c) => outsideGaps(c, gaps))
+        const part = structure.byId.get(id)!, units = specOf(id)!.units!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
+        const { all, kept, holes: lost, boxes } = splitUnits(view, id, { pillars, gaps })
         if (view.fallen.has(id)) { holes.push(...all); view.kept.set(id, []); continue }
         const thick = mask.alongU ? part.aabb[3]! - part.aabb[1]! : part.aabb[2]! - part.aabb[0]!
         const mid = mask.alongU ? (part.aabb[1]! + part.aabb[3]!) / 2 : (part.aabb[0]! + part.aabb[2]!) / 2
         if (opening) discs.push({ s: along(opening.center), y: opening.center[1]!, r: opening.radius })
         for (const k of spalls) flakes.push({ s: along(k.center), y: k.center[1]!, r: k.radius })
-        const boxes = chips.map((k) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1]! - k.up, y1: k.center[1]! + k.up }))
-        // the world's units and the drawn bricks do not share joints (its units are merged and shifted by bond): a brick goes when the world took most
-        // of it and the unit under its middle, or it is drawn hanging where the world has nothing
-        const gone = (c: Span) => {
-          const over = boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)
-          const share = covered(c, over)
-          if (share >= 0.9) return true
-          const s = (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2
-          return share >= 0.5 && over.some((k) => s >= k.s0 && s <= k.s1 && y >= k.y0 && y <= k.y1)
-        }
-        const open = (c: Span) => gone(c) || (opening !== undefined && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
-        const kept: typeof all = []
-        for (const c of all) (open(c) ? holes : kept).push(c)
+        holes.push(...lost)
         view.kept.set(id, kept)
         if (units.mortar === part.material) for (const c of all) if (!kept.includes(c)) castGone.push({ c, part, thick, mid })
         for (const c of kept) shown.push({ c, part, units, thick, mid })
@@ -767,7 +791,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
       return {
         host: hostId, parts, items, mask, core, unitMaterial: withMask(unitsMaterial(core), mask), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
-        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(), kept: new Map<string, Span[]>(),
+        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(), kept: new Map<string, Span[]>(), keptStale: false,
       }
     }
 
@@ -879,6 +903,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         if (list.length > MAX_FLAKES) list.shift()
       }
       cut(view)
+      view.keptStale = true
       views.set(hostId, view)
       const point = change.opening?.center ?? change.spall?.center ?? change.chip?.center ?? change.chips?.[0]?.center
       if (point) markStrike(point)
@@ -958,6 +983,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
        */
       standing(partId: string): { spans: readonly Span[]; alongU: boolean; start: number } | null {
         const hostId = hostOf(partId), view = hostId ? views.get(hostId) : undefined
+        if (view?.keptStale) refreshKept(view)
         const spans = view?.saved ? view.kept.get(partId) : undefined
         return view && spans ? { spans, alongU: view.mask.alongU, start: view.mask.start } : null
       },
