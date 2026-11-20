@@ -275,27 +275,51 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     expect(s.paintQueue.pending()).toBe(0)
   })
 
-  it('21 walls queued in one frame (the walls hit and the pillars in them) with the deadline always past are painted 7, 7 and 7 in the next three frames', () => {
+  it('21 walls queued in one frame (the walls hit and the pillars in them) with the deadline always past are painted 1, 10 and 10 in the next three frames', () => {
     const s = setup()
     attach(s)
     queueWalls(s, 20)
     expect(s.paintQueue.pending()).toBe(21)
-    expect(paintedPerFrame(s, 4)).toEqual([7, 7, 7, 0])
+    expect(paintedPerFrame(s, 4)).toEqual([1, 10, 10, 0])
     detach(s)
   })
 
-  it('a wall queued in frame 2 is painted by frame 5, and the walls queued before it keep their own window', () => {
+  it('with mixed ages the quota counts only the walls of earlier frames, and a lone shot with room in the deadline is painted in its own frame', () => {
+    const s = setup()
+    attach(s)
+    const used = queueWalls(s, 6)
+    expect(paintedPerFrame(s, 1)).toEqual([1])
+    const older = s.paintQueue.pending()
+    // the next frame's strike lands before its drain polls the queue
+    burstOn(s, wallIds(s)[used]!, 3, 800)
+    expect(s.paintQueue.pending()).toBeGreaterThan(older)
+    s.paintQueue.pending(2)
+    expect(s.paintQueue.run(0, () => 1)).toBe(Math.ceil(older / 2))
+    detach(s)
+
+    const lone = setup()
+    attach(lone)
+    burstOn(lone, 'wall_0_1', 3, 800)
+    expect(lone.paintQueue.pending()).toBeGreaterThan(0)
+    lone.paintQueue.pending(1)
+    let now = 0
+    lone.paintQueue.run(1e9, () => now++)
+    expect(lone.paintQueue.pending()).toBe(0)
+    detach(lone)
+  })
+
+  it('a wall queued in frame 2 is painted by frame 4, and the walls queued before it keep their own window', () => {
     const s = setup()
     attach(s)
     const used = queueWalls(s, 12)
-    expect(paintedPerFrame(s, 1)).toEqual([4])
-    s.paintQueue.pending(2)
+    expect(paintedPerFrame(s, 1)).toEqual([1])
+    const before = s.paintQueue.pending()
     burstOn(s, wallIds(s)[used]!, 3, 800)
-    const late = s.paintQueue.pending() - 8
+    const late = s.paintQueue.pending() - before
     expect(late).toBeGreaterThan(0)
-    const counts = [...paintedPerFrame(s, 4, 2)]
+    const counts = paintedPerFrame(s, 3, 2)
     expect(s.paintQueue.pending()).toBe(0)
-    expect(counts.reduce((sum, n) => sum + n, 0)).toBe(8 + late)
+    expect(counts.reduce((sum, n) => sum + n, 0)).toBe(before + late)
   })
 
   it('a house that keeps being hit does not hold back the overdue walls of another house of the renderer', () => {

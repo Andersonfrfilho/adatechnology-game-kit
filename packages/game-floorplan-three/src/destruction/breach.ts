@@ -65,7 +65,7 @@ const EDGE_LUMP_MIN = 0.04
 const EDGE_LUMP_MAX = 0.08
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
 const MAX_FLAKES = 64
-/** Frames a wall may wait in the paint queue before it is painted whatever the frame deadline says. */
+/** Frames, the strike frame included, a wall may wait in the paint queue before it is painted whatever the frame deadline says. */
 const PAINT_WINDOW_TICKS = 3
 
 /** A unit laid bare in a wall, a box in the house's space (centre and size) with its colour. */
@@ -165,7 +165,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
    * it cuts) and each used to repaint it; each wall cut is painted once, every house in one unit, every frame before the render (`DEFERRED_PRIORITY`).
    */
   const cutState = { attached: false }
-  /** Frames the budget has polled the breach queues: `tick` advances once per new `pending(frame)`; a wall queued at tick `n` is overdue from `n + PAINT_WINDOW_TICKS`. */
+  /** Frames the budget has polled the breach queues: `tick` advances once per new `pending(frame)`; a wall queued at tick `n` is overdue from tick `n + PAINT_WINDOW_TICKS`. */
   const strike = { tick: 0, frame: undefined as number | undefined, polled: false }
   const advanceTick = (frame: number | undefined): void => {
     if (frame === undefined) return
@@ -215,7 +215,9 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const distance = dx * dx + dy * dy + dz * dz
       return Number.isFinite(distance) ? distance : Infinity
     }
-    const isOverdue = (view: WallView): boolean => strike.tick - dirty.get(view)! >= PAINT_WINDOW_TICKS
+    /** Frames since the frame whose drain first saw the wall: 0 in the strike frame (the tick advances before the run). */
+    const ageOf = (queuedAt: number): number => strike.tick - queuedAt - 1
+    const isOverdue = (view: WallView): boolean => ageOf(dirty.get(view)!) >= PAINT_WINDOW_TICKS - 1
     /** `view` goes before `best`: overdue walls first, then the nearest to the last strike, then by id (a total order that does not depend on the order they were queued). */
     const comesBefore = (view: WallView, best: WallView): boolean => {
       const overdue = isOverdue(view)
@@ -231,19 +233,20 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return best
     }
     /**
-     * How many walls the next run must paint whatever the deadline says: the walls past their window, else enough to empty the queue by the window of the
-     * oldest (a 20-wall queue with a window of 3 frames paints 7, 7 and 6) so the work spreads over the frames instead of piling up on the last one.
+     * How many walls the next run must paint whatever the deadline says: the walls past their window; else one (the strike frame has no room: the walls
+     * that entered in this frame wait) plus enough of the older ones to empty the queue by the window (21 walls queued at once: 1, 10, 10).
      */
     const owedWalls = (): number => {
       if (!paintState.attached) return 1
-      let oldest = 0, overdue = 0
+      let oldest = 0, overdue = 0, older = 0
       for (const queuedAt of dirty.values()) {
-        const age = strike.tick - queuedAt
-        if (age >= PAINT_WINDOW_TICKS) overdue++
+        const age = ageOf(queuedAt)
+        if (age >= PAINT_WINDOW_TICKS - 1) overdue++
+        if (age >= 1) older++
         oldest = Math.max(oldest, age)
       }
       if (overdue > 0) return overdue
-      return Math.ceil(dirty.size / (PAINT_WINDOW_TICKS - oldest + 1))
+      return older === 0 ? 1 : Math.ceil(older / (PAINT_WINDOW_TICKS - oldest))
     }
     const queueForPaint = (view: WallView): void => { if (!dirty.has(view)) dirty.set(view, strike.tick) }
     /** Walls cut since the cut queue last ran, while a frame budget owns it (`cutQueue`): painted once each by it. */
