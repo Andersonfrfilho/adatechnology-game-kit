@@ -4,12 +4,20 @@ import { test } from 'node:test'
 
 import {
   againReportPath,
+  DEFAULT_STEP_MS,
+  estimateMs,
+  fitsBudget,
   formatSteps,
   needsBuild,
+  parseHistory,
+  parseMaxMinutes,
+  plannedSteps,
   PROBE_MAX_AGE_MS,
   probeUsable,
   QUIET_POLL_MS,
+  repetitionSteps,
   shouldKeepWaiting,
+  stepEstimateMs,
   sumSteps,
   timesRecord,
   WAIT_FOR_QUIET_MS,
@@ -59,3 +67,35 @@ test('the times.ndjson record', () => {
   const record = timesRecord({ at: 0, renderer: 'GPU', outcome: 'pass', steps: [{ name: 'probe', ms: 10 }, { name: 'probe', ms: 5 }] })
   assert.deepEqual(record, { at: '1970-01-01T00:00:00.000Z', renderer: 'GPU', outcome: 'pass', totalMs: 15, steps: { probe: 15 } })
 })
+
+test('the history is read back from times.ndjson, a damaged line skipped', () => {
+  const record = timesRecord({ at: 0, renderer: 'GPU', outcome: 'pass', steps: [{ name: 'probe', ms: 15 }] })
+  const history = parseHistory(`${JSON.stringify(record)}\nnot json\n\n${JSON.stringify({ steps: { probe: 20 } })}\n`)
+  assert.deepEqual(history, [{ probe: 15 }, { probe: 20 }])
+})
+
+test('the estimate is the median of the last runs, the default for a step never seen', () => {
+  assert.equal(stepEstimateMs([], 'measure-branch'), DEFAULT_STEP_MS['measure-branch'])
+  assert.equal(stepEstimateMs([], 'unknown-step'), 0)
+  assert.equal(stepEstimateMs([{ 'measure-branch': 100 }, { 'measure-branch': 300 }, { 'measure-branch': 200 }], 'measure-branch'), 200)
+  assert.equal(estimateMs([{ a: 10, b: 5 }], ['a', 'b']), 15)
+})
+
+test('what a round plans before and after the first comparison', () => {
+  assert.deepEqual(plannedSteps({ needsBaseRun: false, needsBaseBuild: false }), ['build-branch', 'measure-branch'])
+  assert.deepEqual(plannedSteps({ needsBaseRun: true, needsBaseBuild: true }), ['build-branch', 'measure-branch', 'build-base', 'measure-base'])
+  assert.deepEqual(repetitionSteps({ needsBaseBuild: true, hasSavedAgain: false }), ['measure-branch-again', 'build-base', 'measure-base-again'])
+  assert.deepEqual(repetitionSteps({ needsBaseBuild: true, hasSavedAgain: true }), ['measure-branch-again'])
+})
+
+test('PERF_GATE_MAX_MIN: unset or invalid means no limit, a round that does not fit is refused', () => {
+  assert.equal(parseMaxMinutes(undefined), undefined)
+  assert.equal(parseMaxMinutes(''), undefined)
+  assert.equal(parseMaxMinutes('abc'), undefined)
+  assert.equal(parseMaxMinutes('-5'), undefined)
+  assert.equal(parseMaxMinutes('30'), 30)
+  assert.equal(fitsBudget({ budgetMs: undefined, elapsedMs: 1e9, remainingMs: 1e9 }), true)
+  assert.equal(fitsBudget({ budgetMs: 100, elapsedMs: 40, remainingMs: 60 }), true)
+  assert.equal(fitsBudget({ budgetMs: 100, elapsedMs: 40, remainingMs: 61 }), false)
+})
+
