@@ -105,25 +105,4 @@ describe('the painting of a wall put off to the frame queues gives the same mask
     deferred.cutQueue.detach?.()
     deferred.paintQueue.detach?.()
   })
-
-  it('a wall that only takes spalls and chips, never cut before, is cut with its paint and gives the same mask', () => {
-    const lightStrike = (scene: Scene): void => {
-      for (const id of ['wall_0_0', 'wall_0_1', 'wall_0_2']) scene.world.hitPart(scene.d.id!, id, { type: 'ballistic', point: centreOf(scene, id), direction: [0, 0, -1], energy: 500, caliber: 9 })
-    }
-    const immediate = setup()
-    lightStrike(immediate)
-    immediate.d.breach.flush(Infinity)
-    const expected = masksOf(immediate)
-    expect(expected.length).toBeGreaterThan(0)
-
-    const deferred = setup()
-    attach(deferred)
-    lightStrike(deferred)
-    expect(masksOf(deferred)).toEqual([])
-    expect(deferred.paintQueue.pending()).toBeGreaterThan(0)
-    drainInUnits(deferred)
-    expect(masksOf(deferred)).toEqual(expected)
-    deferred.cutQueue.detach?.()
-    deferred.paintQueue.detach?.()
-  })
 })
