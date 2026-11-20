@@ -27,29 +27,34 @@ export const frameKey = (entry) => `${entry.variant}|${entry.throttle}|${entry.k
  * @typedef {{ metrics: FrameMetric[], problems: FrameProblem[] }} FrameMeasure
  */
 
-/** The rows of one round, or why they cannot give a number: frame 0 (with the render time) and each of frames 1..AFTER_FRAMES (with it) must be there. @param {FrameRow[]} frames */
+/**
+ * @typedef {{ isOk: false, status: 'missing-hit-frame' | 'missing-after-frames' }} RoundMissing
+ * @typedef {{ isOk: true, hit: FrameRow, f0: number, after: number }} RoundRead
+ */
+
+/** The rows of one round, or why they cannot give a number: frame 0 (with the render time) and each of frames 1..AFTER_FRAMES (with it) must be there. @param {FrameRow[]} frames @returns {RoundRead | RoundMissing} */
 const roundOf = (frames) => {
   const timed = frames.filter((row) => row.extras?.renderCpu !== undefined)
-  const first = timed.find((row) => row.frame === 0)
-  if (!first) return { status: /** @type {const} */ ('missing-hit-frame') }
+  const hit = timed.find((row) => row.frame === 0)
+  if (!hit) return { isOk: false, status: 'missing-hit-frame' }
   const after = timed.filter((row) => row.frame >= 1 && row.frame <= AFTER_FRAMES).map(wholeFrameMs)
-  if (after.length < AFTER_FRAMES) return { status: /** @type {const} */ ('missing-after-frames') }
-  return { first, f0: wholeFrameMs(first), after: Math.max(...after) }
+  if (after.length < AFTER_FRAMES) return { isOk: false, status: 'missing-after-frames' }
+  return { isOk: true, hit, f0: wholeFrameMs(hit), after: Math.max(...after) }
 }
 
-/** One group's metric, or its problem: the first rounds that cannot be read stop it, so a hole in the data is never averaged over. @param {FrameRow[][]} rounds */
-const metricOf = (rounds) => {
+/** @param {RoundRead | RoundMissing} entry @returns {entry is RoundRead} */
+const isRead = (entry) => entry.isOk
+
+/** One group's metric, or its problem: a round that cannot be read stops it, so a hole in the data is never averaged over. @param {string} key @param {FrameRow[][]} rounds @returns {{ metric: FrameMetric } | { problem: FrameProblem }} */
+const metricOf = (key, rounds) => {
   const read = rounds.map(roundOf)
-  const key = frameKey(/** @type {FrameRow} */ (rounds[0]?.[0]))
-  const bad = read.find((entry) => 'status' in entry)
-  if (bad && 'status' in bad) return { problem: { key, status: bad.status } }
-  const good = read.flatMap((entry) => ('first' in entry ? [entry] : []))
-  if (good.length < WORST_F0_COUNT) return { problem: { key, status: /** @type {const} */ ('too-few-rounds') } }
-  const worst = good.sort((left, right) => right.f0 - left.f0).slice(0, WORST_F0_COUNT)
-  const { variant, throttle, kind } = /** @type {NonNullable<typeof worst[0]>} */ (worst[0]).first
-  const f0Ms = round2(mean(worst.map((entry) => entry.f0)))
-  const afterMs = round2(mean(worst.map((entry) => entry.after)))
-  return { metric: { variant, throttle, kind, f0Ms, afterMs } }
+  const missing = read.find((entry) => !entry.isOk)
+  if (missing && !missing.isOk) return { problem: { key, status: missing.status } }
+  const worst = read.filter(isRead).sort((left, right) => right.f0 - left.f0).slice(0, WORST_F0_COUNT)
+  const first = worst[0]
+  if (worst.length < WORST_F0_COUNT || !first) return { problem: { key, status: 'too-few-rounds' } }
+  const { variant, throttle, kind } = first.hit
+  return { metric: { variant, throttle, kind, f0Ms: round2(mean(worst.map((entry) => entry.f0))), afterMs: round2(mean(worst.map((entry) => entry.after))) } }
 }
 
 /**
@@ -67,8 +72,8 @@ export const frameMetricsOf = (rows) => {
     rounds.set(row.round, [...(rounds.get(row.round) ?? []), row])
     groups.set(frameKey(row), rounds)
   }
-  const results = [...groups.values()].map((rounds) => metricOf([...rounds.values()]))
-  return { metrics: results.flatMap((entry) => (entry.metric ? [entry.metric] : [])), problems: results.flatMap((entry) => (entry.problem ? [entry.problem] : [])) }
+  const results = [...groups.entries()].map(([key, rounds]) => metricOf(key, [...rounds.values()]))
+  return { metrics: results.flatMap((entry) => ('metric' in entry ? [entry.metric] : [])), problems: results.flatMap((entry) => ('problem' in entry ? [entry.problem] : [])) }
 }
 
 /** Whether a value is worse than the base by more than the tolerance and the floor (`rule` only for tests). @param {number} now @param {number} was @param {{ tolerance: number, floorMs: number }} [rule] */
