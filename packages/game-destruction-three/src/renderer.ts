@@ -1206,13 +1206,15 @@ class Renderer implements DestructionRenderer {
     let end = ordered.length
     while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
     this.requeue(ordered, end)
-    for (let i = 0; i < end; i++) {
-      try {
-        this.apply(ordered[i]!)
-      } catch (err) {
-        if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
+    this.visuals.batchRebuilds(() => {
+      for (let i = 0; i < end; i++) {
+        try {
+          this.apply(ordered[i]!)
+        } catch (err) {
+          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
+        }
       }
-    }
+    })
   }
 
   /** Puts `events` from `from` on, back at the front of the queue, in order (no spread: a blast leaves tens of thousands). */
@@ -1253,18 +1255,23 @@ class Renderer implements DestructionRenderer {
     let ran = 0
     try {
       ran = this.runSlices(deadline)
-      for (let i = 0; i < batch.length; i++) {
-        if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
-          this.requeue(batch, i)
-          return ran
+      let isOutOfTime = false
+      this.visuals.batchRebuilds(() => {
+        for (let i = 0; i < batch.length; i++) {
+          if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
+            this.requeue(batch, i)
+            isOutOfTime = true
+            return
+          }
+          try {
+            this.apply(batch[i]!)
+          } catch (err) {
+            if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
+          }
+          ran++
         }
-        try {
-          this.apply(batch[i]!)
-        } catch (err) {
-          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
-        }
-        ran++
-      }
+      })
+      if (isOutOfTime) return ran
       // after the events, as under the budget: a group a blow of this frame looses keeps the split it gets in the event
       ran += this.splitChecked(deadline, ran)
       if (this.queue.length === 0 && this.slices.length === 0 && this.looseToCheck.size === 0) ran += this.runPrefitDetached(deadline, clock, ran === 0)
