@@ -13,6 +13,8 @@ export type SimulationHooks = {
   readonly frameEnd: (dt: number) => void
   /** What draws the simulation between two ticks: the step pose back at the start of a tick, the blend at `present`. */
   readonly pose: { readonly restoreStepPose: () => void; readonly present: (alpha: number) => void }
+  /** The destruction events that change the simulation apply at the end of each tick, on the step pose, never in the frame's `present`. */
+  readonly structural: { readonly setStructuralInTick: (isInTick: boolean) => void; readonly applyStructuralEvents: () => void }
 }
 
 export type SimulationPhases = {
@@ -32,6 +34,8 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
   let isSynchronousFrame = false
   // before `input`: the player's actions (push, carry, doors) write on the step pose, never on last frame's blend
   scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'input', order: -100000, id: 'room.pose-restore-input' })
+  // a frame of the legacy path has no tick to apply them in: its drain applies them
+  scheduler.add(() => hooks.structural.setStructuralInTick(!isLegacyStep), { phase: 'input', order: -100000, id: 'room.structural-mode' })
   scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'fixedSimulate', order: -100000, id: 'room.pose-restore' })
   scheduler.add(() => hooks.pose.restoreStepPose(), { phase: 'lateSimulate', order: -100000, id: 'room.pose-restore-late' })
   scheduler.add(
@@ -44,6 +48,9 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
   scheduler.add((ctx) => {
     if (!isLegacyStep) hooks.fixed(ctx.dt, true)
   }, { phase: 'fixedSimulate', order: 1000, id: 'room.simulate' })
+  scheduler.add(() => {
+    if (!isLegacyStep) hooks.structural.applyStructuralEvents()
+  }, { phase: 'fixedSimulate', order: 2000, id: 'room.structural-events' })
   scheduler.add((ctx) => {
     if (isLegacyStep) hooks.fixed(ctx.dt, false)
     hooks.frame(ctx.dt)

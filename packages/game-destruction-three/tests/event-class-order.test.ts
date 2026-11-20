@@ -42,9 +42,7 @@ describe('the visual event of a part applies before the structural event of the 
     expect(sounds.at(-1)).toBe('detach')
   })
 
-  // Expected failure, closed by T2.2: events apply in emission order today, and after the `detach` the part belongs to a new object, so the hole finds no part and is lost.
-  // T2.2 sends the visual events to a deadline queue and must apply the ones of a part that has a structural event in the same strike first.
-  it.fails('a hole emitted after the detach is still applied before it', () => {
+  it('a hole emitted after the detach is still applied before it', () => {
     const sounds = strikeSounds(['detach', 'hole'])
     expect(sounds.filter((key) => key.startsWith('shot_'))).toHaveLength(1)
     expect(sounds.indexOf('detach')).toBeGreaterThan(sounds.findIndex((key) => key.startsWith('shot_')))

@@ -68,8 +68,8 @@ const stateOf = (room: TestRoom, loop: PhysicsLoop | null): string => {
 }
 
 /** The hash of every tick `0..TICKS-1`, with the frame time `frameTimes` gives: the actions are by tick index, the hash is the state when the tick ends. */
-const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null }, frameTimes: FrameTimes): string[] => {
-  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, ...(variant.loop ? { physics: variant.loop } : {}) })
+const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly hasWorkBudget?: boolean }, frameTimes: FrameTimes): string[] => {
+  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, ...(variant.loop ? { physics: variant.loop } : {}), ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
   const { scheduler } = (room as unknown as SchedulerHolder).frameParts
   const sobrado = room.spawn('sobrado', [0, 0, -9]).objectId
   const hashes: string[] = []
@@ -126,15 +126,12 @@ describe('the same scene gives the same bytes per tick at any frame rate (spec 0
     expectSameAsReference(reference, runOwn, STRIKE_TICK + 1)
   }, 120_000)
 
-  // Expected failure, closed by the explosion window (phases 2 and 3 of spec 017): the events of a strike apply in `present`, after the LAST tick of the frame that holds it. At 30 Hz (2 ticks a frame)
-  // tick 31 still runs with the scene as it was before the blast (1 piece, 15 after the drain); at 120 Hz the pieces are there at tick 31 but with other poses and a different world state.
-  // Everything after tick 31 follows from it. Drop `.fails` when the window makes the hash per tick independent of where the frame ends.
-  it.fails('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (kit own solver)', () => {
+  // The structural events of a strike apply at the end of the tick that emitted them, on the step pose (spec 017 T2.2), so the hash per tick does not depend on where the frame ends.
+  it('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (kit own solver)', () => {
     expectSameAsReference(runOwn(steadyAt(60)), runOwn, TICKS)
   }, 120_000)
 
-  // Expected failure, same cause as above, on the Jolt loop (30 Hz differs from tick 31 on).
-  it.fails('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (Jolt loop of 1/120 s steps)', async () => {
+  it('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (Jolt loop of 1/120 s steps)', async () => {
     const engine = await createJoltEngine()
     const run = (frameTimes: FrameTimes): string[] => {
       const world = engine.createWorld({ ...KIT_WORLD })
@@ -145,6 +142,13 @@ describe('the same scene gives the same bytes per tick at any frame rate (spec 0
       }
     }
     expectSameAsReference(run(steadyAt(60)), run, TICKS)
+  }, 120_000)
+
+  // Pending (spec 017 T2.2, evidence-120hz): under `workBudget` the structural events stay in the frame's drain (the work is paced by frame), so they still read the drawn pose.
+  it.fails('with workBudget on, 120 Hz matches the 60 Hz run tick by tick (fails: the workBudget path still applies its events in present, on the drawn pose)', () => {
+    const run = (frameTimes: FrameTimes): string[] => hashesPerTick({ loop: null, hasWorkBudget: true }, frameTimes)
+    const reference = run(steadyAt(60))
+    expect(firstDifferentTick(run(steadyAt(120)), reference)).toBe(-1)
   }, 120_000)
 
   it('up to the tick of the strike on the Jolt loop: the same runs match', async () => {

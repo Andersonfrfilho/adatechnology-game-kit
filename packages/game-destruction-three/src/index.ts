@@ -1,5 +1,7 @@
 export { MIN_PIECE_MASS_KG, impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
 export { isPhysicsLoop } from '@adatechnology/game-physics'
+export { EVENT_CLASS } from './event-class'
+export type { EventClass } from './event-class'
 export { PhysicsOptionError } from './physics-option'
 export { warmUpDestructionJit } from './jit-warmup'
 export { createCoordinatorGroundPort, createInlineGroundPort, createMainThreadGroundPort, createWorkerGroundPort, installGroundWorker } from './engine-ground-port'
