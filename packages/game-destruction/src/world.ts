@@ -4818,7 +4818,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return { ps, c: toWorld(im.position, im.rotation, ov?.pos ?? ps.position), q: quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0]))) }
     })
 
-  const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => implParts(im).some(({ ps, c, q }) => distanceToShape(ps.shape, toLocal(c, q, point)) < radius)
+  const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => {
+    for (const ps of im.impl.describe().parts) {
+      const ov = im.poses.get(ps.id)
+      const c = toWorld(im.position, im.rotation, ov?.pos ?? ps.position)
+      const q = quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
+      if (distanceToShape(ps.shape, toLocal(c, q, point)) < radius) return true
+    }
+    return false
+  }
 
   /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
   const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
