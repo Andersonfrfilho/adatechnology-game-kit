@@ -50,3 +50,27 @@ describe('event listeners', () => {
     expect(order.every((entry) => entry === 'b')).toBe(true)
   })
 })
+
+describe('event listeners, nested and mixed', () => {
+  it('delivers an event started from inside a listener to every listener before the outer event goes on', () => {
+    const { world, id } = worldWithTank()
+    const log: Array<{ name: string; event: DestructionEvent }> = []
+    let hasNested = false
+    world.on('*', (event) => {
+      log.push({ name: 'a', event })
+      if (hasNested) return
+      hasNested = true
+      shoot(world, id)
+    })
+    world.on('*', (event) => log.push({ name: 'b', event }))
+    world.on('damage', (event) => log.push({ name: 'typed', event }))
+    shoot(world, id)
+    const outer = log[0]!.event
+    const outerB = log.findIndex((entry) => entry.name === 'b' && entry.event === outer)
+    expect(outerB).toBeGreaterThan(1)
+    expect(log.slice(1, outerB).some((entry) => entry.event !== outer)).toBe(true)
+    const names = new Map<DestructionEvent, string[]>()
+    for (const entry of log) names.set(entry.event, [...(names.get(entry.event) ?? []), entry.name])
+    for (const [event, seen] of names) expect(seen, event.type).toEqual(event.type === 'damage' ? ['a', 'b', 'typed'] : ['a', 'b'])
+  })
+})

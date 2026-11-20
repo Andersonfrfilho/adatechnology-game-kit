@@ -1,0 +1,14 @@
+{
+  "events": 62,
+  "byType": {
+    "spall": 11,
+    "debris": 27,
+    "stage": 1,
+    "hole": 5,
+    "damage": 7,
+    "chip": 9,
+    "crack": 2
+  },
+  "eventsHash": "e63c535aa7bec82b00bd0794d1add5e04b03d103d3a34c413f9f5cc5d5e830ff",
+  "stateHash": "48914ba123db546200627c6fff714cc1884c78b06359de5e5468bafe8a09ccc2"
+}

@@ -36,11 +36,18 @@ os `bearBeam`/`judgePlate` do solo (`st.load`; chamam `settleStructure` no laço
 e no assentamento). Nenhum desses é `blastPart`, `failPart` nem `bendByBlast`. Pela leitura nada deveria mudar, mas mudou: a causa não foi isolada
 (candidatas: `solveStructure` não é idempotente, por `o.seeding`/`heldAsDesigned`; ou `recomputeGroups` que o assentamento chama a mais). Fica para análise com sonda.
 
-## F. Corte da parede adiado para o pintar (`a86a7464a`)
-`packages/game-floorplan-three/src/destruction/breach.ts`. Com a fila de corte ligada e a pintura em fila (ou `deferPaint` com `spall`), um evento sem
-`opening` numa parede sem visão cria a visão "preguiçosa": `mask`, `core`, material e `bounds` só são feitos no primeiro uso (getters), e `cut` fica para
-o início de `paint`. As listas de dano (`chips`, `spalls`, teto 64) são atualizadas na hora, na ordem dos eventos (a visão é a mesma de sempre).
-`opening` continua cortando na hora. `drop` corta antes de descartar uma parede nunca cortada (o intervalo de vértices fica recolhido como antes),
-`plain` e `dispose` toleram visão não cortada. A ordem das cascas na cena passa a seguir a ordem em que a parede foi atingida (`seatShell`, em um
-`WeakMap`, não em `userData`: o `exactSnapshot` hasheia `userData`). Sem host (filas desligadas), caminho idêntico ao antigo (goldens `exact-golden` iguais).
-Teste novo em `tests/breach-deferred-mask.test.ts`: parede só com spall/chip, nunca cortada, sem cascas antes do dreno e máscara igual à síncrona depois.
+## F. Corte da parede adiado para o pintar: RETIRADO (`a86a7464a` revertido)
+Feito e revertido (`git diff 49eee5cc2 -- packages/game-floorplan-three` vazio; o teste de máscara que ele acrescentou saiu junto). Motivo: sem ganho
+mensurável na régua, e o adiamento tem um defeito: se o renderer amassa a malha entre o golpe e a pintura, o amassado entra na casca (a cópia de
+`_p0` passa a ser lida tarde). A correção (guardar a cópia das posições por parede com corte pendente) foi escrita e testada, mas não vale manter
+um item sem ganho.
+
+## Testes acrescentados depois da revisão (B, C, D)
+- B: `tests/event-listeners.test.ts`: evento emitido de dentro de um ouvinte e ordem `'*'`, `'*'`, tipado em cada evento.
+- C: `tests/blast-moved-object.test.ts`: `setTransform` entre duas explosões; a segunda usa a pose nova.
+- D: `tests/knock-out-units-fixture.test.ts` com `tests/fixtures/knock-out-units.json`, gravado com `world.ts`/`breach.ts` do commit anterior ao D
+  (`fa27e0b43`): 62 eventos, hash dos eventos e do estado serializado iguais na versão nova.
+
+## Medição e decisão (6 rodadas, modo de prazo, máquina quieta)
+f0: 64,6 / 64,1 ms → 63,8 / 62,9 ms; rótulo `explode`: 20,5 → 19,4 e 20,2 → 19,8 ms. Os cortes A a D e F juntos tiram cerca de 1 ms do f0,
+dentro do ruído de ±1,5 ms entre rodadas. A a D ficam (mesma saída, sem custo de manutenção); F sai. O ganho de A a D não é distinguível do ruído.
