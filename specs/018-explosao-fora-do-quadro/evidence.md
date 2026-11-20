@@ -250,3 +250,99 @@ medido**: o abrigo (`reachAt`, raios contra outras peças) e o raio de `seesFire
 - Abrigo (`reachAt`) e raio de `seesFireball`.
 - Outras casas, 4x, a região de gatilho com o processador quente (a série foi a ~63–72 °C).
 - O custo do `structuredClone` com `transfer` **incluindo** a cópia de preparo dos buffers (ficou fora do relógio, por construção).
+
+## T0.3 — Teto do caminho A (2026-11-20)
+
+**Veredito: não passou. O kernel não foi construído.** O critério da T0.3 (tirar pelo menos 15 ms do quadro do impacto) não é atingível nem com kernel de custo
+zero: a conta do teto (passo 2 da task) deu 5 ms de teto puro e ~10,5 ms com tudo que se queira chamar de movível, contra ~21 ms de `explode` e 15 ms exigidos
+mais a fronteira.
+
+### O que foi medido e como
+
+- **Código medido:** `39bfcd4f0` (protótipo descartável, só nesta branch), sobre `b6392e75f`. JSON: `medicoes/divisao-interna-39bfcd4f0.json` (campo `explodeProbe`).
+- **Sonda estendida** (`explode-probe.ts` + `world.ts`; desligada por padrão, mesma regra da T0.1; suíte do `game-destruction` 591/591 com ela desligada). Rótulos
+  exclusivos novos, todos de poucas chamadas (modo grosso, sem inflar): dentro de `knockOutUnits`: `koGrid` (`gridOf`, `castCells`, `unsupportedCells`, `wedgedUnder`),
+  `koFragments` (`clumpUnits`, `cellFragments`, `plasterFlakes`, filtro de furos), `koCollapse` (`collapseCheck`), e o resto próprio (escrita de estado, `setStage`,
+  `exposeRebar`, massa); dentro de `solveStructure`: `ssGraph` (listas de apoio), `ssSolve` (`solveSupports`), `ssSpan` (laço de vão e `standsOver`),
+  `ssLoads` (`distributeLoads`), `ssApply` (laço final: carga, tensão, flexão, vento); `impls` aberto em `implInRange`, `implDescribe`, `implHit` e `impl:<id>`
+  (a chamada `impl.hit`). `emit` não é rótulo no modo grosso: cai em `explodeRest`.
+- **Régua:** `ROOM_EXPLOSION_BUDGET=deadline`, `KINDS=blast,crater`, 1x, `ROUNDS=1`, `STAGE_ROUNDS=6`, `FRAME_PARTS=1`, `ROOM_EXPLOSION_EXPLODE_PROBE=coarse,off` (rodadas 1, 3, 5
+  ligadas; 2, 4, 6 desligadas), a mesma da T0.1 grossa. Tudo sob `flock ~/.cache/adatechnology-game-kit/perf-measure.lock`, num único comando: `pnpm build`, página da sala
+  refeita (`node examples/test-room/build.mjs`; sha mudou de `8b1872d6…` e a página contém `ssGraph`), espera até carga < 1,5 e mediana de 5 leituras do `Package id 0` < 75 °C,
+  só então a régua. A régua ainda refaz a página sozinha (passos de `perf-gate`), sem efeito na carga medida.
+- **Condições:** entrada na trava 17:23:09, carga 2,43, 68 °C. Fim do build 17:23:51, carga 4,46. Espera (5 leituras, ~1,7 min) até 17:25:37. **Início da régua: carga 0,97, 51 °C.**
+  **Fim: 17:34:30, carga 1,60, 59 °C.** Nenhuma passagem de 88 °C. A régua levou ~9 min.
+- **Rodadas descartadas: nenhuma** (nenhum quadro ~10x; f0 do `explode` 19,5–26,5 ms). Quadros seguintes não foram analisados: não há protótipo para compará-los.
+- Soma dos rótulos fecha com o total por construção. Medianas de 3 rodadas, ms exclusivos no `explode` do f0. Resolução do relógio de 0,1 ms (página `file://`): rótulos
+  de 1 a 2 chamadas leem bem.
+
+### Tabela da divisão interna (ms; 3 rodadas; mediana)
+
+| Bloco | Rótulo | Explosão r1 / r3 / r5 | mediana | Cratera r1 / r3 / r5 | mediana | Chamadas (expl. / crat.) |
+|---|---|---|---|---|---|---|
+| `knockOutUnits` | `koGrid` (conta de grade) | 2,3 / 2,1 / 2,1 | **2,1** | 2,4 / 2,3 / 2,2 | **2,3** | 2 / 3 |
+| | `koFragments` | 0,5 / 0,5 / 0,5 | 0,5 | 0,5 / 0,6 / 0,6 | 0,6 | 2 / 3 |
+| | `koCollapse` | 0 | 0 | 0 | 0 | 2 / 3 |
+| | próprio (escrita de estado) | 0,8 / 0,9 / 0,7 | 0,8 | 2,0 / 1,9 / 1,4 | 1,9 | 2 / 3 |
+| `solveStructure` | `ssGraph` | 0,2 / 0,4 / 0,4 | 0,4 | 0,5 / 2,2 / 0,5 | 0,5 | 5 / 6 |
+| | `ssSolve` (`solveSupports`) | 0,4 / 0,3 / 0,3 | 0,3 | 0,5 / 0,6 / 0,2 | 0,5 | 5 / 6 |
+| | `ssSpan` | 0,2 / 0 / 0,1 | 0,1 | 0,2 / 0,2 / 0,2 | 0,2 | 5 / 6 |
+| | `ssLoads` (`distributeLoads`) | 0,3 / 0,5 / 0,3 | 0,3 | 0,4 / 0,4 / 0,5 | 0,4 | 5 / 6 |
+| | `ssApply` | 3,3 / 1,6 / 2,1 | **2,1** | 1,4 / 1,5 / 0,8 | 1,4 | 5 / 6 |
+| `impls` | `impl:sedan_scenery_1` (`impl.hit`) | 2,3 / 2,3 / 2,3 | **2,3** | 2,7 / 2,7 / 2,2 | **2,7** | 1 / 1 |
+| | `impl:room_ground` (`impl.hit`) | 0,5 / 0,5 / 0,6 | 0,5 | 0,7 / 0,6 / 0,6 | 0,6 | 1 / 1 |
+| | `implInRange`, `implDescribe`, `implHit` próprios | ~0,1 | 0,1 | ~0,1 | 0,1 | 2 / 2 |
+| — | `groups` | 0,3 / 0,3 / 0,4 | 0,3 | 0,5 / 0,4 / 0,4 | 0,4 | 3 / 3 |
+| — | `detachEvents`, `flushCollapse` | 0,1 | 0,1 | 0,2 | 0,2 | 20 / 21, 1 |
+| — | `explodeRest` (laço por peça, `emit`, o resto) | 10,3 / 11,9 / 11,1 | **11,1** | 12,7 / 13,3 / 10,7 | **12,7** | |
+| | **total do `explode`** | 21,8 / 21,4 / 21,1 | **21,4** | 24,8 / 27,0 / 20,7 | **24,8** | |
+
+Somas dos blocos (medianas): `knockOutUnits` 3,4 (cratera 4,8); `solveStructure` 3,2 (3,0); `impls` 2,9 (3,3). Batem com a T0.1 grossa (3,4–4,2; 2,9; 2,8–3,0).
+Contagens iguais nas 3 rodadas: 506 peças dentro do raio, 1360 juntas, 136 unidades (cratera 508, 1479, 142). Custo da sonda grossa: `explode` desligada 19,5–20,4 ms na
+explosão (ligada 21,4: ~+1) e 20,2–20,6 na cratera (ligada 20,1–26,5, uma rodada em 26,5: ruído de sessão; o total mediano da cratera, 24,8, vem de duas rodadas altas).
+
+### Conta do teto (mediana, ms; explosão / cratera)
+
+| Linha | Explosão | Cratera | Fonte |
+|---|---|---|---|
+| (a) `partGeometry` (onda e geometria por peça) | 1,9 | 1,3 | T0.1 fino, **inflado** pelos ~3000 timers; sem sonda ~0,6–1,1 (palpite da T0.1) |
+| (b) `koGrid`: conta de grade pura | 2,1 | 2,3 | medido agora |
+| (c) `ssSolve` + `ssLoads` + `ssSpan` + `ssGraph` | 1,1 | 1,6 | medido agora (o grafo é leitura pura; entra na entrada) |
+| **Teto puro bruto** (a+b+c) | **5,1** | **5,2** | |
+| + `ssApply` (laço final: estresse, flexão; escreve `p.st`) | 2,1 | 1,4 | medido; **não é puro** (escreve), entra só no teto folgado |
+| + `koFragments` (usa `rnd`, cria fragmentos) | 0,5 | 0,6 | medido; **não é puro** |
+| + `impls` (`sedan_scenery_1` e `room_ground`) | 2,9 | 3,3 | medido; trabalho de `DestructibleImpl` fora do `game-destruction`, **não verificado se é puro** |
+| **Teto folgado** (tudo acima) | **10,6** | **10,5** | |
+| Fronteira (T0.2): montar entrada plana de ~506 peças | −0,8 | −0,8 | medido (T0.2) |
+| Fronteira: `structuredClone` da entrada (ou ~0,01 com `transfer`) | −0,18 | −0,19 | medido (T0.2) |
+| Fronteira: aplicar o plano na volta | −1,0 | −1,0 | **estimativa declarada** (palpite): ~metade de `applyDamage` (1,1–1,9 ms em 506 chamadas); a entrada de `koGrid`/`ss*` (grade e grafo) também não está na entrada plana da T0.2 e **não foi medida**, então a fronteira real é maior |
+| **Teto líquido, puro** | **~3,1** | **~3,2** | 5,1 − 2,0; 5,2 − 2,0 |
+| **Teto líquido, folgado** | **~8,6** | **~8,5** | 10,6 − 2,0; 10,5 − 2,0 |
+| Critério da T0.3 | ≥ 15 | ≥ 15 | |
+
+### Leitura
+
+**Fatos:**
+- O teto líquido é **~3 ms** (só o puro) e **~8,5 ms** (contando como movível tudo o que se mediu, inclusive o que escreve estado e o que é de impl). Os dois ficam
+  **abaixo de 15 ms**. A conclusão não depende da estimativa de 1,0 ms para aplicar o plano: com fronteira zero o teto folgado seria 10,6 ms, ainda abaixo.
+- Mesmo movendo **tudo que tem rótulo** do `explode` (`koGrid`, `ss*`, `impls`, `groups`, `detachEvents`, `flushCollapse`: ~10,3 ms na explosão e ~12,1 na cratera), sobra
+  `explodeRest` ~11–13 ms, que é o laço por peça (`emit` e ouvintes ~3,5–4,6 ms, `applyDamage`, `wearJoints`, `units`, `bend`, `marks`): lê e escreve estado e chama ouvintes.
+- A maior peça pura é `koGrid` (~2,1–2,3 ms em 2–3 chamadas), seguida de `partGeometry` (≤ 1,9 ms) e `solveSupports` + `distributeLoads` (~0,6–0,9 ms). Cada uma é menor que a
+  fronteira da T0.2 (snapshot 7,3 ms) e a mesma ordem de grandeza da montagem plana (0,8 ms).
+- `ssApply` (~1,4–2,1 ms, a maior parte do `solveStructure`) **escreve** estado (`p.st.load`, `stress`, `flexure`, `unsup`): não é kernel puro. O `solveSupports` em si é ~0,3–0,5 ms.
+- `impls` (~2,9–3,3 ms) é quase todo `impl:sedan_scenery_1` (2,3–2,7 ms, 1 chamada de `impl.hit`) mais `impl:room_ground` (0,5–0,6 ms); o código do mundo ao redor (`implInRange`,
+  `implDescribe`, `implHit`) custa ~0,1 ms. É o veículo da cena (e o chão) respondendo à explosão: trabalho de um `DestructibleImpl` registrado fora do pacote.
+
+**Palpites (não medidos):**
+- O que bastaria para chegar perto de 15 ms seria tirar o `emit`/ouvintes do quadro (a parte "(f)") e o laço por peça, o que muda *quando* os ouvintes rodam e o que o quadro seguinte
+  recebe. Isso é outro caminho (B ou C da spec), não um kernel puro; a decisão é da D1.
+- Se o `impl.hit` do sedã for puro e movível, o teto folgado já o inclui (2,3–2,7 ms); seguiria abaixo de 15 ms.
+
+### Descartes e o que NÃO foi medido
+
+- Descartes: nenhuma rodada. Não houve protótipo de kernel, então não há régua em pares sem/com nem quadros seguintes a olhar (nada a descartar nem a comparar).
+- Não medido: `partGeometry` sem timer (usa-se o valor inflado do modo fino da T0.1, que só enfraquece o argumento a favor do caminho A); a entrada de `koGrid` e do grafo
+  (`unitGrid`, `wedgedUnder`, `edgeLists`) montada e copiada; o custo real de aplicar o plano na volta (1,0 ms é estimativa); o abrigo (`reachAt`); outras casas; 4x; uma
+  segunda série (a cratera do total teve duas rodadas altas, 24,2 e 26,5 ms; as medianas dela têm ±2 ms de ruído). Não foi analisado `afterMs` (quadros 1–7): sem protótipo, sem
+  comparação.
+- **Não foi construído** o protótipo do passo 3 (entrada plana, kernel, aplicação em N + 1), pela regra de parar do passo 2.
