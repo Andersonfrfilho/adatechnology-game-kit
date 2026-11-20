@@ -91,14 +91,12 @@ systemctl --user list-timers game-kit-nightly-gpu.timer   # when it runs next
 `NIGHTLY_MAX_LOAD`, `NIGHTLY_WAIT_MIN`, `NIGHTLY_REF` and `NIGHTLY_REPORTS` change the load it waits below, how long it waits, the ref it measures and
 where the reports go.
 
-`tools/gpu/perf-gate.mjs` compares the frame times of the branch with `origin/main` measured on the same machine; a round is about four runs of
-`perf.mjs` of ~7.7 min when a metric needs the repetition. Its variables (the cache is `~/.cache/adatechnology-game-kit/perf`):
-
-- `PERF_GATE_BASE` (another commit than `origin/main`), `PERF_GATE_TOLERANCE` (default 0.1), `PERF_GATE_ABSOLUTE=1` (block on the absolute targets).
-- `PERF_GATE_MAX_MIN=<min>`: when the steps still ahead (estimated from `times.ndjson`) do not fit, it exits with code 3 and a message instead of being
-  killed by an outer `timeout`. Unset, there is no limit.
-- `PERF_GATE_PROBE=1`: read the GPU name again; otherwise it is kept for a day per Chrome version.
-- `times.ndjson` in the cache gets one line per round with the minutes of each step (probe, builds, measures, waits, repetitions), also printed at the end.
+`tools/gpu/perf-gate.mjs` compares the frame times of the branch with `origin/main` measured on the same machine. A round is two runs of `perf.mjs`
+of ~7.7 min (one when main's run is cached), four when a metric needs the repetition, plus up to 10 min of waiting for a quiet machine before each; it
+prints that estimate (fixed, not measured) when it starts. Its variables: `PERF_GATE_BASE` (another commit than `origin/main`), `PERF_GATE_TOLERANCE`
+(default 0.1) and `PERF_GATE_ABSOLUTE=1` (block on the absolute targets). In `~/.cache/adatechnology-game-kit/perf`, main is built in `base-worktree` before
+any measure of it unless `base-built.sha` matches the expected commit and the worktree is on it with no edits; `times.ndjson` gets one line per round
+with the minutes of each step, also printed at the end.
 
 ## Changesets and commits
 

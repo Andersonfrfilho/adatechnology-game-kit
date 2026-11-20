@@ -3,18 +3,60 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  buildSequence,
+  describeRound,
   formatSteps,
   needsBuild,
   sumSteps,
   timesRecord,
 } from '../perf-gate-plan.mjs'
 
-test('the base worktree builds unless it was built at the expected sha and its page is there', () => {
-  assert.equal(needsBuild({ builtSha: 'aaa', expectedSha: 'aaa', hasOutput: true }), false)
+test('the base worktree builds unless marker, commit, tree and page all agree', () => {
+  const ready = { builtSha: 'aaa', expectedSha: 'aaa', headSha: 'aaa', isClean: true, hasOutput: true }
+  assert.equal(needsBuild(ready), false)
   // a cache hit on the first pass left an older commit built: the repetition must build
-  assert.equal(needsBuild({ builtSha: 'old', expectedSha: 'aaa', hasOutput: true }), true)
-  assert.equal(needsBuild({ builtSha: undefined, expectedSha: 'aaa', hasOutput: true }), true)
-  assert.equal(needsBuild({ builtSha: 'aaa', expectedSha: 'aaa', hasOutput: false }), true)
+  assert.equal(needsBuild({ ...ready, builtSha: 'old' }), true)
+  assert.equal(needsBuild({ ...ready, builtSha: undefined }), true)
+  // another session or the nightly moved the worktree after the marker was written
+  assert.equal(needsBuild({ ...ready, headSha: 'bbb' }), true)
+  assert.equal(needsBuild({ ...ready, isClean: false }), true)
+  assert.equal(needsBuild({ ...ready, hasOutput: false }), true)
+})
+
+/** @param {string[]} log @param {string} [failAt] */
+const stepsThat = (log, failAt) =>
+  Object.fromEntries(
+    ['clearMarker', 'checkout', 'install', 'build', 'buildRoom', 'writeMarker'].map((name) => [
+      name,
+      () => {
+        log.push(name)
+        if (name === failAt) throw new Error(`${name} failed`)
+      },
+    ]),
+  )
+
+test('the marker is cleared first and written last', () => {
+  const log = /** @type {string[]} */ ([])
+  buildSequence(/** @type {Parameters<typeof buildSequence>[0]} */ (stepsThat(log)))
+  assert.deepEqual(log, ['clearMarker', 'checkout', 'install', 'build', 'buildRoom', 'writeMarker'])
+})
+
+test('a step that fails leaves no marker', () => {
+  for (const failAt of ['checkout', 'install', 'build', 'buildRoom']) {
+    const log = /** @type {string[]} */ ([])
+    assert.throws(() => buildSequence(/** @type {Parameters<typeof buildSequence>[0]} */ (stepsThat(log, failAt))), new RegExp(`${failAt} failed`))
+    assert.equal(log[0], 'clearMarker')
+    assert.equal(log.includes('writeMarker'), false)
+  }
+})
+
+test('the round estimate grows with the runs it needs and warns about the waits', () => {
+  const minutesOf = (/** @type {string} */ text) => Number(/about (\d+) min/.exec(text)?.[1])
+  const cached = describeRound({ needsBaseRun: false, needsBaseBuild: false })
+  const cold = describeRound({ needsBaseRun: true, needsBaseBuild: true })
+  assert.ok(minutesOf(cold) > minutesOf(cached))
+  assert.match(cached, /if a metric needs the repetition/)
+  assert.match(cached, /waiting for a quiet machine/)
 })
 
 test('steps of one name are summed and printed with a total', () => {

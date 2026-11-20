@@ -12,9 +12,8 @@
 //   PERF_GATE_BASE=<ref>        compare against another commit (default origin/main)
 //   PERF_GATE_TOLERANCE=0.1     the share a metric may grow before it blocks
 //   PERF_GATE_ABSOLUTE=1        also block on the absolute targets (the old gate)
-//   PERF_GATE_MAX_MIN=<min>    stop with exit 3 and a message (nothing blocked, nothing passed) when the estimated steps ahead do not fit; unset: no limit
-// The cache dir (~/.cache/adatechnology-game-kit/perf) also holds main's second run (<key>-again.json, reused), the sha the base worktree was built at
-// (base-built.sha: main is built there before any measure of it) and times.ndjson, one line per round with the minutes of each step, printed at the end too.
+// The cache dir (~/.cache/adatechnology-game-kit/perf) also holds the sha the base worktree was built at (base-built.sha: main is built there, at a clean
+// checkout of that sha, before any measure of it) and times.ndjson, one line per round with the minutes of each step, printed at the end too.
 //   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
 // The `room-explosion` scenario (spec 008 B6) is a different gate, by hand or in the nightly, never in CI: the physics ms of the house explosion at 1x, 2x, 4x and 6x CPU
 // throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It does not compare with main; see tools/gpu/room-explosion.mjs for the variables and the kinds (blast, hammer; opt-in crater: C4 digging loose ground). The default and gated variant is jolt-d4-worker (the page default, paced); jolt-d4 stays available by name.
@@ -28,7 +27,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
-import { formatSteps, needsBuild, timesRecord } from './perf-gate-plan.mjs'
+import { buildSequence, describeRound, formatSteps, needsBuild, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -121,7 +120,6 @@ const baseReport = baseSha ? join(cacheDir, `${baseSha.slice(0, 12)}-${slug}-${h
 
 // the budgets hold for a quiet machine: other work on the CPU reads as a slow frame
 const QUIET_LOAD = 4
-const WAIT_FOR_QUIET_MS = 10 * 60 * 1000
 const waitForQuiet = async () => {
   const waitStarted = Date.now()
   const until = Date.now() + WAIT_FOR_QUIET_MS
@@ -172,27 +170,45 @@ const baseBuiltMarker = join(cacheDir, 'base-built.sha')
 /** A worktree of the base commit, kept between pushes (pnpm links its packages from the store, so a second install is quick), built in place. */
 const buildBase = () => {
   const buildStarted = Date.now()
-  rmSync(baseBuiltMarker, { force: true })
-  if (!existsSync(join(baseTree, '.git'))) git(['worktree', 'add', '--force', '--detach', baseTree, baseSha])
-  else git(['checkout', '--force', '--detach', baseSha], baseTree)
   /** @param {string} command @param {string[]} args */
   const run = (command, args) => execFileSync(command, args, { cwd: baseTree, stdio: ['ignore', 'ignore', 'inherit'] })
   console.log(`pre-push: building ${baseRef} (${baseSha.slice(0, 8)}) in ${baseTree}`)
-  run('pnpm', ['install', '--frozen-lockfile', '--prefer-offline'])
-  run('pnpm', ['-s', 'build'])
-  run(process.execPath, ['examples/test-room/build.mjs'])
-  writeFileSync(baseBuiltMarker, baseSha)
+  buildSequence({
+    clearMarker: () => rmSync(baseBuiltMarker, { force: true }),
+    checkout: () => (existsSync(join(baseTree, '.git')) ? git(['checkout', '--force', '--detach', baseSha], baseTree) : git(['worktree', 'add', '--force', '--detach', baseTree, baseSha])),
+    install: () => run('pnpm', ['install', '--frozen-lockfile', '--prefer-offline']),
+    build: () => run('pnpm', ['-s', 'build']),
+    buildRoom: () => run(process.execPath, ['examples/test-room/build.mjs']),
+    writeMarker: () => writeFileSync(baseBuiltMarker, baseSha),
+  })
   record('build-base', buildStarted)
 }
 
-/** The base worktree, built at `baseSha`: before measuring main on any pass, whatever an earlier pass or push left in it. */
+/** What the base worktree is on now: its commit and whether it has edits. A missing or broken worktree reads as neither. */
+const baseWorktreeState = () => {
+  try {
+    return { headSha: git(['rev-parse', 'HEAD'], baseTree), isClean: git(['status', '--porcelain'], baseTree) === '' }
+  } catch {
+    return { headSha: '', isClean: false }
+  }
+}
+
+const baseNeedsBuild = () =>
+  needsBuild({
+    builtSha: existsSync(baseBuiltMarker) ? readFileSync(baseBuiltMarker, 'utf8').trim() : undefined,
+    expectedSha: baseSha,
+    ...baseWorktreeState(),
+    hasOutput: existsSync(join(baseTree, 'examples/test-room/dist/test-room.html')),
+  })
+
+/** The base worktree, built at `baseSha`: before measuring main on any pass, whatever an earlier pass, push or the nightly left in it. */
 const ensureBase = () => {
-  const builtSha = existsSync(baseBuiltMarker) ? readFileSync(baseBuiltMarker, 'utf8').trim() : undefined
-  const hasOutput = existsSync(join(baseTree, 'examples/test-room/dist/test-room.html'))
-  if (needsBuild({ builtSha, expectedSha: baseSha, hasOutput })) buildBase()
+  if (baseNeedsBuild()) buildBase()
   return baseTree
 }
 
+const needsBaseRun = baseSha !== '' && !sameTree && !existsSync(baseReport)
+console.log(`pre-push: ${describeRound({ needsBaseRun, needsBaseBuild: needsBaseRun && baseNeedsBuild() })}`)
 const branchBuildStarted = Date.now()
 execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'inherit' })
 record('build-branch', branchBuildStarted)
