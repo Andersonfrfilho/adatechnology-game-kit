@@ -461,3 +461,18 @@ rótulos por evento são os que mais carregam essa inflação.
   (cai no `renderCpu`, fora do tique); outras casas; 4x; sem a sonda, o `applyStructuralEvents` por inteiro (só a diferença do `update` do f0, ±2 ms de ruído); uma segunda série da divisão por rótulo (3 rodadas
   por série, com `whNormals` variando de 1,1 a 3,3 ms entre rodadas).
 - A sonda por evento infla o `applyEvent`; os valores dos tipos são um limite superior.
+
+## T0.5 — Relatório e recomendação para a D1 (2026-11-20)
+
+Relatório completo: [`relatorio-fase-0.md`](relatorio-fase-0.md). Sem medição nova; só leitura de T0.1 a T0.4 e da evidência da 017.
+
+- **Resposta:** A e C não levam o quadro do impacto a 33,3 ms, nem somados: teto líquido de A ~3,1 (puro) a ~8,5 ms (folgado), de C ~1,1–2,2 ms,
+  de A + C ≤ ~10,8 ms; f0 de ~64 ms cai no máximo para ~53 ms. B não foi prototipado; a conta com os números medidos põe o pico em ~37–42 ms
+  (estimativa) no quadro que recebe os ~700 eventos.
+- **Recomendação (não é decisão):** desistir da meta de 33,3 ms para o pior caso (C4 na casa inteira) e decidir a D3 medindo antes o caso típico.
+  O que a contraria e o custo de cada opção estão no §5 do relatório.
+- **Desvio registrado:** os kernels de T0.3 e T0.4 não foram construídos (as duas pararam na conta do teto).
+- **Conferência das somas desta evidência:** T0.3, `impls` da cratera soma 2,7 + 0,6 + 0,1 = 3,4 (a tabela diz 3,3; o teto folgado da cratera
+  iria a 10,6). T0.4, o teto líquido da cratera no extremo baixo é 2,1 − 0,8 = 1,3 (a tabela diz 1,2; bate se usar 2,0 da série 2). T0.4 cita
+  "critério da task ≥ ~2", que não está no `tasks.md`. T0.2, ~7,3 ms do snapshot é ~32–37% dos 20–23 ms do `explode`, não ~30%. T0.1 diz que
+  nenhum rótulo passa de ~4 ms, mas a mediana do `emit` da explosão é 4,6 (inflada pela sonda). Nenhuma muda conclusão.
