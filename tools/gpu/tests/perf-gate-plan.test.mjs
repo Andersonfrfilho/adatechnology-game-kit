@@ -3,7 +3,6 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
-  againReportPath,
   formatSteps,
   needsBuild,
   sumSteps,
@@ -16,10 +15,6 @@ test('the base worktree builds unless it was built at the expected sha and its p
   assert.equal(needsBuild({ builtSha: 'old', expectedSha: 'aaa', hasOutput: true }), true)
   assert.equal(needsBuild({ builtSha: undefined, expectedSha: 'aaa', hasOutput: true }), true)
   assert.equal(needsBuild({ builtSha: 'aaa', expectedSha: 'aaa', hasOutput: false }), true)
-})
-
-test('the second run of main is kept under the key of the first', () => {
-  assert.equal(againReportPath('/c/abc-1-2.json'), '/c/abc-1-2-again.json')
 })
 
 test('steps of one name are summed and printed with a total', () => {

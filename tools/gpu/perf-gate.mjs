@@ -28,7 +28,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
-import { againReportPath, formatSteps, needsBuild, timesRecord } from './perf-gate-plan.mjs'
+import { formatSteps, needsBuild, timesRecord } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -212,23 +212,13 @@ else if (sameTree) {
   base = await measure(ensureBase(), baseReport, `${baseRef} (${baseSha.slice(0, 8)})`, 'measure-base')
 }
 
-/** The second run of main, kept under the key of the first so the next repetition of this commit, GPU, window and harness does not pay it again. @returns {Promise<Report>} */
-const baseAgain = async () => {
-  const saved = againReportPath(baseReport)
-  if (existsSync(saved)) {
-    console.log(`pre-push: ${baseRef} measured again before on this machine (${saved})`)
-    return JSON.parse(readFileSync(saved, 'utf8'))
-  }
-  return measure(ensureBase(), saved, `${baseRef} again`, 'measure-base-again')
-}
-
 let regressions = base ? compare(base, branch, TOLERANCE) : []
 if (base && regressions.length > 0) {
   // one more run of each side before blocking: one frame of the GPU clock dropping is not a regression
   console.log(`pre-push: ${regressions.length} metric(s) over ${Math.round(TOLERANCE * 100)}% worse: measuring both sides again`)
   branch = bestOf(branch, await measure(root, join(cacheDir, 'branch-again.json'), 'this branch again', 'measure-branch-again'))
   // the better run of the branch against the worse run of main: it blocks only when every run of the branch is worse than every run of main
-  base = worstOf(base, await baseAgain())
+  base = worstOf(base, await measure(ensureBase(), join(cacheDir, 'base-again.json'), `${baseRef} again`, 'measure-base-again'))
   regressions = compare(base, branch, TOLERANCE)
 }
 
