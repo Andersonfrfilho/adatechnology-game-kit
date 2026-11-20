@@ -38,20 +38,42 @@ const burst = (scene: Scene, id: string, rounds: number): void => {
 
 const standingOf = (scene: Scene): string => JSON.stringify(scene.house.structure.parts.map((part) => scene.d.breach.standing(part.id)))
 
+const bothScenes = (immediate: Scene, waiting: Scene, step: (scene: Scene) => void): void => {
+  for (const scene of [immediate, waiting]) step(scene)
+}
+
+const tick = (immediate: Scene, waiting: Scene): void => bothScenes(immediate, waiting, (scene) => scene.world.update(0.05))
+
 describe('what a body bumps into does not depend on when the wall is repainted (spec 017)', () => {
-  it('the same rounds leave the same standing units at every tick, the repaint waiting or not', () => {
+  it('hit, read, hit the same wall again, read: the same standing units, the repaint waiting or not', () => {
     const immediate = setup(false)
     const waiting = setup(true)
-    const seen = new Set<string>()
-    for (const scene of [immediate, waiting]) burst(scene, 'wall_0_0', 8)
+    bothScenes(immediate, waiting, (scene) => burst(scene, 'wall_0_0', 4))
     expect(waiting.paintQueue.pending()).toBeGreaterThan(0)
-    for (let tick = 0; tick < 6; tick++) {
+    const first = standingOf(immediate)
+    expect(standingOf(waiting)).toBe(first)
+    bothScenes(immediate, waiting, (scene) => burst(scene, 'wall_0_0', 8))
+    for (let step = 0; step < 6; step++) {
       expect(standingOf(waiting)).toBe(standingOf(immediate))
-      seen.add(standingOf(immediate))
-      for (const scene of [immediate, waiting]) scene.world.update(0.05)
+      tick(immediate, waiting)
     }
     expect(waiting.paintQueue.pending()).toBeGreaterThan(0)
-    expect(seen.size).toBeGreaterThan(0)
-    expect(standingOf(immediate)).toContain('"spans"')
+    expect(standingOf(immediate)).not.toBe(first)
+  })
+
+  it('the paint queue draining between two reads changes nothing', () => {
+    const immediate = setup(false)
+    const waiting = setup(true)
+    bothScenes(immediate, waiting, (scene) => burst(scene, 'wall_0_0', 6))
+    const before = standingOf(waiting)
+    expect(before).toBe(standingOf(immediate))
+    for (let guard = 0; guard < 100 && waiting.paintQueue.pending() > 0; guard++) {
+      waiting.paintQueue.pending(1)
+      waiting.paintQueue.run(1e9, () => 0)
+    }
+    expect(waiting.paintQueue.pending()).toBe(0)
+    expect(standingOf(waiting)).toBe(before)
+    bothScenes(immediate, waiting, (scene) => burst(scene, 'wall_0_0', 6))
+    expect(standingOf(waiting)).toBe(standingOf(immediate))
   })
 })
