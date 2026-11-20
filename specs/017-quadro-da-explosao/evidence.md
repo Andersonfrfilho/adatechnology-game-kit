@@ -552,3 +552,13 @@ Pendências conhecidas que a revisão levantou e ficam fora deste PR: (1) parede
 registra o dano na vista, então `standing()` ainda depende do histórico de LOD (anterior à spec); (2) o portão do quadro do
 impacto só roda na rodada noturna (§9), então uma regressão chega à `main` e é vista na noite seguinte; (3) `hole` deixou
 de sobreviver ao teto da fila de eventos (`QUEUE_CAP`).
+
+## Depois do merge do #408 (`a8239e972`, 2026-11-20)
+
+**Base da rodada noturna no modo de prazo: não gravada.** A régua completa rodou 48 min com carga 1,9 no começo (`f0dfb7417`), mas a página
+travou em rodadas isoladas: explosão a 1x com f0 de 66 e 82 ms em duas rodadas e 475 ms na terceira; a 4x, 235, 243 e 1565 ms. Como
+`f0Ms` olha os piores quadros, o relatório deu 248 ms a 1x, que não é o quadro do impacto. Gravar isso como base deixaria passar qualquer
+regressão até uma noite limpa. As mesmas travadas (quadros de 400–700 ms, tudo ~10x mais lento num quadro só) apareceram hoje nas medições
+dos dois lados de todo par, desde as 9 h. Causa não provada; o processador estava a 90 °C depois de ~7 h de medição seguida, e
+estrangulamento térmico é a hipótese. Fica: rodar o comando de `docs/desempenho-explosoes.md` com a máquina fria e conferir que as três
+rodadas de explosão a 1x ficam entre 60 e 75 ms antes de copiar.
