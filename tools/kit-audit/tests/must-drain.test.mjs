@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
 import { mustDrainMessage, mustDrainViolations, scanMustDrain } from '../must-drain.mjs'
@@ -63,6 +64,20 @@ test('negative: comments never match, a block comment of many lines included', (
   assert.deepEqual(scan(OWNER, '// registered with mustDrain: true\n/** `mustDrain: true` drains whole */\nconst x = 1 // mustDrain: true'), [])
   assert.deepEqual(scan(OWNER, '/*\n * the queue has\n * mustDrain: true\n * and more\n */\nconst x = 1'), [])
   assert.deepEqual(scan(OWNER, '/* a */ const y = { mustDrain: true } /* b */'), [1])
+})
+
+test('positive: mustDrainIds outside game-runtime is a violation, in game-runtime it is the mechanism', () => {
+  assert.deepEqual(scan(OWNER, "createFrameBudget({ mustDrainIds: new Set(['fluids.film']) })"), [1])
+  assert.deepEqual(scan('examples/test-room/src/room.ts', 'const a = 1\ncreateScheduler({ mustDrainIds })'), [2])
+  assert.deepEqual(scan('packages/game-runtime/src/scheduler.ts', 'mustDrainIds: options.mustDrainIds'), [])
+  assert.deepEqual(scan(OWNER, '// mustDrainIds is documented here'), [])
+})
+
+test('the runtime list MUST_DRAIN_QUEUE_IDS and must-drain-allowed.json name the same queues', async () => {
+  const { DEFERRED_QUEUE_ID, MUST_DRAIN_QUEUE_IDS } = await import('../../../packages/game-contracts/src/frame.ts')
+  const { allowed } = JSON.parse(readFileSync(new URL('../must-drain-allowed.json', import.meta.url), 'utf8'))
+  assert.deepEqual([...MUST_DRAIN_QUEUE_IDS].sort(), allowed.map((entry) => entry.queue).sort())
+  for (const entry of allowed) assert.equal(DEFERRED_QUEUE_ID[entry.constant], entry.queue)
 })
 
 test('the message cites section 15', () => {
