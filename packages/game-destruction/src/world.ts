@@ -653,7 +653,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let time = 0
   let counter = 0
   const objects = new Map<string, ObjRT>()
-  const listeners = new Map<string, Set<(e: DestructionEvent) => void>>()
+  // copy-on-write: `on`/`off` swap the array, so an `emit` walks the list it found even if a listener subscribes or leaves meanwhile
+  const listeners = new Map<string, readonly ((e: DestructionEvent) => void)[]>()
   let cur: DestructionEvent[] = []
   const blasts: Blast[] = []
   /** Glass the blast front has not reached yet: the damage lands when it does (`blastFrontSpeed`). */
@@ -673,9 +674,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     cur.push(e)
     options.onEvent?.(e)
     const all = listeners.get('*')
-    if (all) for (const fn of [...all]) fn(e)
+    if (all) for (const fn of all) fn(e)
     const typed = listeners.get(e.type)
-    if (typed) for (const fn of [...typed]) fn(e)
+    if (typed) for (const fn of typed) fn(e)
   }
   // the kind of the hit being resolved now (`doHit`): every event it emits carries it as `blow`
   let blow: DamageType | undefined
@@ -6074,11 +6075,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       objects.set(id, build(o.spec, id, o.base.pos, o.base.rot))
     },
     on(type: DestructionEventType | '*', fn) {
-      let set = listeners.get(type)
-      if (!set) listeners.set(type, (set = new Set()))
-      set.add(fn)
+      const known = listeners.get(type) ?? []
+      if (!known.includes(fn)) listeners.set(type, [...known, fn])
       return () => {
-        set!.delete(fn)
+        const current = listeners.get(type)
+        if (current) listeners.set(type, current.filter((other) => other !== fn))
       }
     },
     serialize(): DestructionSnapshot {
