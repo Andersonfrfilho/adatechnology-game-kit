@@ -4,6 +4,7 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
+import { createFrameBudget } from '../../game-runtime/src'
 import { THREE, houseOf, planOf } from './helpers/houses'
 import { physicsOption } from './setup-physics'
 
@@ -19,7 +20,7 @@ function setup() {
   scene.add(house.group)
   const d = house.destruction
   d.activate()
-  return { d, house, world, paintQueue: houseRenderer.renderer.deferredQueue!(), cutQueue: houseRenderer.renderer.cutQueue!() }
+  return { d, house, world, scene, houseRenderer, paintQueue: houseRenderer.renderer.deferredQueue!(), cutQueue: houseRenderer.renderer.cutQueue!() }
 }
 
 const attach = (scene: Scene): void => {
@@ -33,7 +34,7 @@ const detach = (scene: Scene): void => {
 }
 
 /** Rifle rounds along the length of a wall: chips and spalls, no opening. */
-const burstOn = (scene: Scene, id: string, rounds: number, energy = 3500): void => {
+const burstOn = (scene: Pick<Scene, 'house' | 'd' | 'world'>, id: string, rounds: number, energy = 3500): void => {
   const p = scene.house.structure.byId.get(id)!
   const along = p.aabb[2] - p.aabb[0] > p.aabb[3] - p.aabb[1]
   for (let k = 0; k < rounds; k++) {
@@ -82,6 +83,7 @@ const paintOrder = (scene: Scene): string[] => {
     return names
   }
   for (let guard = 0; guard < 1000 && scene.paintQueue.pending() > 0; guard++) {
+    scene.paintQueue.pending(1)
     expect(scene.paintQueue.run(0, () => 1)).toBe(1)
     for (const name of unitMeshes()) if (!order.includes(name)) order.push(name)
   }
@@ -92,6 +94,28 @@ const chipsOnly = (scene: Scene): void => {
   burstOn(scene, 'wall_0_0', 3, 800)
   burstOn(scene, 'wall_0_1', 3, 800)
   burstOn(scene, 'wall_0_2', 3, 800)
+}
+
+const wallIds = (scene: Scene): string[] => scene.house.structure.parts.filter((part) => part.role === 'wall').map((part) => part.id)
+
+/** Walls hit one by one, until `count` of them wait in the paint queue. */
+const queueWalls = (scene: Scene, count: number, from = 0): number => {
+  const ids = wallIds(scene)
+  let used = from
+  while (scene.paintQueue.pending() < count && used < ids.length) burstOn(scene, ids[used++]!, 3, 800)
+  return used
+}
+
+/** The walls the queue paints in each frame, the budget spent every frame (a deadline already past). */
+const paintedPerFrame = (scene: Scene, frames: number, firstFrame = 1): number[] => {
+  const counts: number[] = []
+  for (let frame = firstFrame; frame < firstFrame + frames; frame++) {
+    scene.paintQueue.pending(frame)
+    const before = scene.paintQueue.pending()
+    scene.paintQueue.run(0, () => 1)
+    counts.push(before - scene.paintQueue.pending())
+  }
+  return counts
 }
 
 describe('the cut queue gets the impact and the paint queue the rest, one wall a unit (spec 017, T3.1)', () => {
@@ -131,7 +155,7 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     const s = setup()
     attach(s)
     chipsOnly(s)
-    const waiting = s.paintQueue.pending()
+    const waiting = s.paintQueue.pending(1)
     expect(s.paintQueue.run(0, () => 1)).toBe(1)
     expect(s.paintQueue.pending()).toBe(waiting - 1)
     expect(paintedWalls(s)).toHaveLength(1)
@@ -249,5 +273,82 @@ describe('the cut queue gets the impact and the paint queue the rest, one wall a
     s.d.breach.flush(Infinity)
     expect(paintedWalls(s).length).toBeGreaterThan(0)
     expect(s.paintQueue.pending()).toBe(0)
+  })
+
+  it('21 walls queued in one frame (the walls hit and the pillars in them) with the deadline always past are painted 7, 7 and 7 in the next three frames', () => {
+    const s = setup()
+    attach(s)
+    queueWalls(s, 20)
+    expect(s.paintQueue.pending()).toBe(21)
+    expect(paintedPerFrame(s, 4)).toEqual([7, 7, 7, 0])
+    detach(s)
+  })
+
+  it('a wall queued in frame 2 is painted by frame 5, and the walls queued before it keep their own window', () => {
+    const s = setup()
+    attach(s)
+    const used = queueWalls(s, 12)
+    expect(paintedPerFrame(s, 1)).toEqual([4])
+    s.paintQueue.pending(2)
+    burstOn(s, wallIds(s)[used]!, 3, 800)
+    const late = s.paintQueue.pending() - 8
+    expect(late).toBeGreaterThan(0)
+    const counts = [...paintedPerFrame(s, 4, 2)]
+    expect(s.paintQueue.pending()).toBe(0)
+    expect(counts.reduce((sum, n) => sum + n, 0)).toBe(8 + late)
+  })
+
+  it('a house that keeps being hit does not hold back the overdue walls of another house of the renderer', () => {
+    const a = setup()
+    const houseB = a.houseRenderer.renderer.build(planOf('sobrado', 4), { quality: 'high', night: false })
+    a.scene.add(houseB.group)
+    houseB.destruction.activate()
+    const b: Scene = { ...a, house: houseB, d: houseB.destruction }
+    attach(a)
+    queueWalls(b, 5)
+    expect(b.d.breach.deferredQueue().pending()).toBe(5)
+    const ids = wallIds(a)
+    for (let frame = 1; frame <= 3; frame++) {
+      a.paintQueue.pending(frame)
+      burstOn(a, ids[frame - 1]!, 3, 800)
+      a.paintQueue.run(0, () => 1)
+    }
+    expect(b.d.breach.deferredQueue().pending()).toBe(0)
+    detach(a)
+  })
+
+  it('a queue run with no frame number counts as a frame: the window still closes', () => {
+    const s = setup()
+    attach(s)
+    queueWalls(s, 9)
+    for (let run = 0; run < 3 && s.paintQueue.pending() > 0; run++) s.paintQueue.run(0, () => 1)
+    expect(s.paintQueue.pending()).toBe(0)
+    detach(s)
+  })
+
+  it('the real frame budget, spent every frame, paints every waiting wall within 3 frames', () => {
+    const s = setup()
+    const budget = createFrameBudget({ ms: 0, clock: () => 0 })
+    const stopCut = budget.register(s.cutQueue, { ...DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_CUT], mustDrain: true })
+    const stopPaint = budget.register(s.paintQueue, DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.BREACH_PAINT])
+    queueWalls(s, 20)
+    expect(s.paintQueue.pending()).toBe(21)
+    const left: number[] = []
+    for (let frame = 0; frame < 3; frame++) {
+      budget.drain('present')
+      budget.drain('idle')
+      left.push(s.paintQueue.pending())
+    }
+    expect(left[2]).toBe(0)
+    expect(left[0]).toBeLessThan(21)
+    stopPaint()
+    stopCut()
+  })
+
+  it('no strike point is kept while no frame budget owns the paint queue', () => {
+    const s = setup()
+    chipsOnly(s)
+    s.d.breach.flush(Infinity)
+    expect(paintedWalls(s).length).toBeGreaterThan(0)
   })
 })
