@@ -10,6 +10,7 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
 import type { BlastWake, DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
+import { EventOrder, isStructuralEvent } from './event-class'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -447,9 +448,12 @@ class Renderer implements DestructionRenderer {
   private drainClock: () => number = () => performance.now()
   /** true once a frame budget owns the draining: `update` no longer drains by itself. */
   private attached = false
+  /** true while the host applies the structural events itself, at the end of each tick (`applyStructuralEvents`): a frame drain leaves them, and what waits behind them, for the next tick. */
+  private structuralInTick = false
+  private readonly eventOrder = new EventOrder()
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft(),
+    pending: () => this.appliableEvents() + this.slices.length + this.splitQueue.size + this.looseLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
       for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
@@ -1184,6 +1188,41 @@ class Renderer implements DestructionRenderer {
     ]
   }
 
+  /** The host applies the structural events itself at the end of each tick (`applyStructuralEvents`) from now on, or no longer; not under `workBudget`, whose events are paced by the frame. */
+  setStructuralInTick(isInTick: boolean): void {
+    this.structuralInTick = isInTick && !this.work
+  }
+
+  /**
+   * At the end of a tick, on the step pose: applies the structural events that wait, with every visual event before the last of them, in the order of emission (a visual event of
+   * an object with a structural one goes before it). What follows the last structural event is the frame's.
+   */
+  applyStructuralEvents(): void {
+    if (this.disposed || this.work) return
+    let last = -1
+    for (let i = this.queue.length - 1; i >= 0 && last < 0; i--) if (isStructuralEvent(this.queue[i]!)) last = i
+    if (last < 0) return
+    const ordered = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
+    let end = ordered.length
+    while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
+    this.queue.unshift(...ordered.slice(end))
+    for (let i = 0; i < end; i++) {
+      try {
+        this.apply(ordered[i]!)
+      } catch (err) {
+        if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
+      }
+    }
+  }
+
+  /** How many events a drain may apply now: all, or (the host applies the structural ones in the tick) only those ahead of the first structural one. */
+  private appliableEvents(all = false): number {
+    if (all || !this.structuralInTick) return this.queue.length
+    let count = 0
+    while (count < this.queue.length && !isStructuralEvent(this.queue[count]!)) count++
+    return count
+  }
+
   private drainQueue(): void {
     drainDetached(this.eventQueue, this.eventBudgetMs)
   }
@@ -1192,7 +1231,7 @@ class Renderer implements DestructionRenderer {
   private runBudgeted(deadline: number, clock: () => number, all = false): number {
     if (this.work) return this.runWork(this.work, all)
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
-    const batch = this.queue.splice(0, this.queue.length)
+    const batch = this.eventOrder.arrange(this.queue.splice(0, this.appliableEvents(all)))
     const outerClock = this.drainClock
     this.drainClock = clock
     this.sliceDeadline = deadline
@@ -1226,7 +1265,7 @@ class Renderer implements DestructionRenderer {
    * it happened; it only leaves less of the budget; the groups it looses split in it while they fit, `splitWithin`). No clock is read. `all` runs everything (a flush).
    */
   private runWork(work: WorkBudget, all: boolean): number {
-    const batch = this.queue.splice(0, this.queue.length)
+    const batch = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
     this.workFocus = this.o.focus?.()
     const outerDeadline = this.sliceDeadline
     // a finite deadline only says "in a drain": under the budget the work stops on units, never on the clock

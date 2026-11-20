@@ -5541,7 +5541,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer })
+  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer, structural: renderer })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)

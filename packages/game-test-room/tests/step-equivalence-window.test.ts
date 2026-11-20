@@ -126,15 +126,12 @@ describe('the same scene gives the same bytes per tick at any frame rate (spec 0
     expectSameAsReference(reference, runOwn, STRIKE_TICK + 1)
   }, 120_000)
 
-  // Expected failure, closed by the explosion window (phases 2 and 3 of spec 017): the events of a strike apply in `present`, after the LAST tick of the frame that holds it. At 30 Hz (2 ticks a frame)
-  // tick 31 still runs with the scene as it was before the blast (1 piece, 15 after the drain); at 120 Hz the pieces are there at tick 31 but with other poses and a different world state.
-  // Everything after tick 31 follows from it. Drop `.fails` when the window makes the hash per tick independent of where the frame ends.
-  it.fails('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (kit own solver)', () => {
+  // The structural events of a strike apply at the end of the tick that emitted them, on the step pose (spec 017 T2.2), so the hash per tick does not depend on where the frame ends.
+  it('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (kit own solver)', () => {
     expectSameAsReference(runOwn(steadyAt(60)), runOwn, TICKS)
   }, 120_000)
 
-  // Expected failure, same cause as above, on the Jolt loop (30 Hz differs from tick 31 on).
-  it.fails('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (Jolt loop of 1/120 s steps)', async () => {
+  it('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (Jolt loop of 1/120 s steps)', async () => {
     const engine = await createJoltEngine()
     const run = (frameTimes: FrameTimes): string[] => {
       const world = engine.createWorld({ ...KIT_WORLD })
