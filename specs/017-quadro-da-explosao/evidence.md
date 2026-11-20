@@ -377,3 +377,33 @@ JSONs: `medicoes/regua-visual-*.json`.
 - **A régua perdeu o rótulo dos eventos:** desde a T2.2 a fila `destruction.events` gasta 0 ms no f0 e o `mustDrain` do quadro é 0; o custo
   (~18 ms) passou para o tique e aparece em `sysOther` (~14 ms) sem nome. A régua ganhou o rótulo `destrEvents` também para
   `applyStructuralEvents`, para as próximas rodadas.
+
+## Rodada 3 — eventos visuais adiados e cortes do `explode` (2026-11-20, 01:13 a 01:51)
+
+Seis rodadas alternadas, modo de prazo, carga no início 1,30 a 1,47 e no fim 1,10 a 1,50. Base `49eee5cc2`; eventos visuais adiados por peça
+`68019e19a` (branch `spec/017-visual`); cortes do `explode` A–D+F `b244d1323` (branch `spec/017-explode`). JSONs: `medicoes/regua-r3-*.json`.
+
+| f0 a 1x, modo de prazo (ms, 2 rodadas cada) | base, blast / crater | visuais adiados | cortes do `explode` |
+|---|---|---|---|
+| f0 inteiro | 64,6 / 64,1 | 63,8 / 63,0 | 63,8 / 62,9 |
+| `explode` | 20,5 / 20,2 | 20,6 / 20,7 | 19,4 / 19,8 |
+| eventos aplicados no tique | 11,8 / 12,1 | 12,0 / 12,5 (sem rótulo: em `sysOther`) | 12,4 / 11,9 |
+| pior quadro dos 7 seguintes | 25,3 / 24,7 | 26,4 / 26,0 | 25,1 / 24,5 |
+
+- **Eventos visuais adiados: ~1 ms, dentro do ruído (±1,5 ms entre rodadas do mesmo código).** O custo dos eventos no tique não cai (12 ms nos
+  dois lados): ele é dos estruturais (`fracture` e o que ela chama), não das 647 marcas. A estimativa de ~6 ms (T2.0) não se confirmou.
+  **Decisão: não entra.** Três rodadas de revisão, uma fila nova e um conjunto de peças tocadas para um ganho que a régua não mostra.
+  A branch `spec/017-visual` fica guardada.
+- **Cortes do `explode` (A–D+F): ~1 ms, também dentro do ruído.** A–D (parar na primeira peça do `implInRange`, ouvintes copiados só na
+  escrita, pose reaproveitada, `knockOutUnits` sem trabalho repetido) foram aprovados na revisão, não mudam nenhum bit e tiram alocação:
+  entram. O F (corte da parede adiado) não mostra ganho e tem um defeito achado na revisão (amassado gravado na casca): sai.
+- **O item E** (a resolução estrutural dentro do `knockOutUnits`) foi desfeito: trocar por pendência mudou `blast-presentation` e
+  `exact-golden destruction/fracture`, sem causa isolada.
+
+### O f0 hoje (base `49eee5cc2`, média de 12 quadros, ms)
+
+`explode` 20,4 · eventos estruturais no tique 11,9 + o que eles chamam na física (`rebuildHost` 2,8, `splitLoose` 1,9, `adoptSplit` 1,3) 6,1 ·
+`renderCpu` 8,4 · `action` 6,3 · matrizes 1,8 · sistemas e módulos ~5 · mundo 1,2 · áudio 1,2. Total ~64,4 (update 56,0 + desenho 8,4).
+
+**O que não muda a simulação já saiu do quadro do golpe** (pintura da casa: 9 → 0,2 ms). O que sobra de grande (`explode` ~20 e eventos
+estruturais ~18) é trabalho que muda a simulação: é a fronteira da decisão D5.
