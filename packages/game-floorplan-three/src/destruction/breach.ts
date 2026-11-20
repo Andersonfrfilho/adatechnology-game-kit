@@ -908,12 +908,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       views.set(hostId, view)
       const point = change.opening?.center ?? change.spall?.center ?? change.chip?.center ?? change.chips?.[0]?.center
       if (point) markStrike(point)
-      // only an opening shows at once; the plaster chipping and the units knocked out fill in later, and a wall already waiting keeps its age
+      // an opening shows at once, on every path; the plaster chipping and the units knocked out fill in later, and a wall already waiting keeps its age
       if (cutState.attached && change.opening) { dirty.delete(view); cutWalls.add(view) }
       else if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) queueForPaint(view) }
       else if (cutState.attached && paintState.attached && !cutWalls.has(view)) queueForPaint(view)
       else if (cutState.attached) { dirty.delete(view); cutWalls.add(view) }
-      else if (paintsWaitForFlush) queueForPaint(view)
+      else if (paintsWaitForFlush && !change.opening) queueForPaint(view)
       else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
     }
@@ -999,8 +999,8 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         const r = Math.sqrt(Math.max(0, event.area) / Math.PI)
         return r > 0 ? draw(event.part, { spall: { center: event.point, radius: r } }) : false
       },
-      /** The host flushes every frame: chips wait for it, one repaint per wall instead of one per event. */
-      waitForFlush(): void { paintsWaitForFlush = true },
+      /** While on, chips wait for the host's flush: one repaint per wall instead of one per event. */
+      waitForFlush(on: boolean): void { paintsWaitForFlush = on },
       /**
        * Marks the meshes that draw a wall of units as drawing its spalls itself (`userData.drawnSpalls`, the part ids): the destruction renderer then
        * throws the bits and leaves its patch out. Call it once the spec is known.

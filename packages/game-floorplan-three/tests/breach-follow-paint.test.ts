@@ -82,18 +82,24 @@ describe('a followed wall paints once per flush (not once per chip)', () => {
     scene.follower.dispose()
   })
 
-  // Today an opening waits for the flush like a chip: the code comment in `drawIn` still says "only an opening shows at once", which holds for the cut queues, not here.
-  it('an opening (stage 2) is drawn at the next flush, not at once', () => {
+  it('an opening (stage 2) is drawn at once, without waiting for the flush', () => {
     const scene = setup()
-    const seen: { opening: boolean; repaints: number }[] = []
-    scene.world.on('stage', (event) => {
-      if (event.type === 'stage' && event.stage === 2) seen.push({ opening: !!event.opening, repaints: scene.repaints() })
-    })
+    let openings = 0
+    scene.world.on('stage', (event) => { if (event.type === 'stage' && event.stage === 2 && event.opening) openings++ })
     scene.world.hitPart('target', 'wall_0_0', { type: 'ballistic', point: [0, 1.5, 0.1], direction: [0, 0, -1], energy: 400000, caliber: 40 })
-    expect(seen).toEqual([{ opening: true, repaints: 0 }])
-    expect(scene.repaints()).toBe(0)
-    scene.follower.update()
+    expect(openings).toBe(1)
     expect(scene.repaints()).toBe(1)
     scene.follower.dispose()
+  })
+
+  it('dispose cancels the fallback timer', () => {
+    vi.useFakeTimers()
+    try {
+      const scene = setup()
+      scene.rifle(0)
+      expect(vi.getTimerCount()).toBe(1)
+      scene.follower.dispose()
+      expect(vi.getTimerCount()).toBe(0)
+    } finally { vi.useRealTimers() }
   })
 })
