@@ -531,7 +531,7 @@ export interface TestRoom {
   inspectInfo(): InspectInfo | null
   spawned(): SpawnedObject[]
   /** Advance one frame, and throw what a system threw in it. `live: true` feeds `dt` to the scheduler's clock as a display frame does (whole ticks, a remainder carried, the frame cap) instead of the exact frame a script wants. The host that owns the loop must call it every frame: the deferred queues lent to the room's budget (sound voices, destruction events) drain only inside a frame. */
-  update(dt: number, options?: { readonly live?: boolean }): void
+  update(dt: number, options?: { readonly live?: boolean; readonly frameStartMs?: number }): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
   /** `footfall`: a foot of the player's body touched the ground (`{ foot, gait, time }`), the moment its footstep sounds. */
