@@ -31,14 +31,21 @@
 //   ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_WEATHER=none            none, storm (60 mm/h rain, wind) and/or fog (60 m): comma list; each kind then runs once per weather as `blast+storm`. Weather or ROOM_EXPLOSION_RENDER=1 also times one render per frame
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
-//   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION)
+//   ROOM_EXPLOSION_BASE=<file.json>        the base report (the nightly keeps, per metric, the best of its passing ROOM_EXPLOSION_OUT reports: room-explosion-base.mjs): the gated cells block only when worse than it (REGRESSION), and so does the explosion frame (below).
+//                                          A base measured in another frame budget mode (or without `budgetMode`) is not compared: the run says so, does not block, and becomes the new base
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
 //   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
 //   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
 //                                          the variants with `groundWorker=1` (back to back, a worker could never answer and every tile would be made on the main thread), `1` for all, `0` for none
 //
+//   ROOM_EXPLOSION_BUDGET=deadline         deadline (default since spec 017: the mode the page's loop runs in, the queues get what is left of the frame) or quota (the old default: in quota the deadline queues get
+//                                          8 ms in every frame, even one that already overran, so the f0 reads more than in the game). In deadline the frame starts at the `performance.now()` taken before the strike's action
 //   ROOM_EXPLOSION_F0_CLOCK=               late: the frame clock of frame 0 opens after the explosion call, as in the T0.2 ruler (default: before it)
-//   ROOM_EXPLOSION_FRAME_PARTS=            1: the stage pass also times the rest of the frame (below); off by default, so the stage table stays comparable with older runs
+//   ROOM_EXPLOSION_FRAME_PARTS=            1: the stage pass also times the rest of the frame (below); off by default, so the stage table stays comparable with older runs. It also arms the explosion-frame gate (below);
+//                                          the nightly run sets it. Cost: the stage pass draws and waits for the GPU once per frame, about 5 s per page at 1x and 20 s at 4x (660 frames), a few minutes in all
+//
+// The explosion frame (spec 017, tools/gpu/room-explosion-frame.mjs). With FRAME_PARTS=1 the report carries `frameMetrics`, per variant, throttle and kind: `f0Ms` (mean of the 3 worst frame-0 times of update + renderCpu) and
+// `afterMs` (mean of the worst of the 7 frames after the strike). At the blocking level (gated throttles, default variant) either one worse than the base by over 15% AND over 3 ms blocks, in the same mode only.
 //
 // With ROOM_EXPLOSION_FRAME_PARTS=1 the stage pass also draws each frame once (outside the update) and prints a second table, the same worst frames split by the rest of the frame (FRAME_LABELS): the update's
 // modules timed exclusive of their callees with the physics subtracted (`rest` is what no label covers: the room's own closures), then the render call's CPU time, the wait for the
@@ -57,6 +64,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
 import { dirname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+
+import { frameGate, frameKey, frameMetricsOf } from './room-explosion-frame.mjs'
 
 const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
@@ -77,6 +86,8 @@ export const SYSTEM_LABELS = /** @type {const} */ ({ 'room.input': 'sysInput', '
 export const systemLabelOf = (id) => (/** @type {Record<string, string>} */ (SYSTEM_LABELS))[id] ?? 'sysOther'
 /** Whether frame 0's clock opens after the explosion call (`late`, the T0.2 ruler) instead of before it (the default). @param {string | undefined} text */
 export const isF0Late = (text) => text === 'late'
+/** The frame budget's mode the ruler runs `room.update` in: `deadline` (the page's mode) unless `quota` is asked for. @param {string | undefined} text @returns {'quota' | 'deadline'} */
+export const budgetModeOf = (text) => (text === 'quota' ? 'quota' : 'deadline')
 /** The render columns appended to every frame row: render call CPU ms, GPU wait ms, GPU ms (-1: no timer), draw calls, triangles, live particles, fragments, pieces. */
 export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles', 'particles', 'frags', 'pieces']
 // the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
@@ -93,17 +104,17 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 /**
  * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number, framep50: number, framep99: number, framemax: number }} Cell
- * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number>, actionMs?: number, queues?: Record<string, number> }} StageFrame
+ * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number>, actionMs?: number, budget?: { mode: string, allowanceMs: number, mustDrainSpentMs: number }, queues?: Record<string, number> }} StageFrame
  */
 
 /**
  * Runs inside the page. Stage `prepare` builds the house and settles it (at full speed: the build is not the measurement); stage `run` fires the explosion and times the physics of each frame.
- * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number, isF0Late?: boolean, systemLabels?: Record<string, string>, labelledQueues?: string[] }} job
+ * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number, isF0Late?: boolean, budgetMode?: 'quota' | 'deadline', systemLabels?: Record<string, string>, labelledQueues?: string[] }} job
  * @returns {Promise<number[][] | undefined>} per frame: [physics ms, loop step, piece update, wake queue, whole update, render, ...one column per `stageLabels`, ...per `frameLabels` and then FRAME_EXTRAS (only with `frameLabels`)]
  */
 export async function inPage(job) {
   /** @typedef {{ objectId: string }} Piece */
-  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { scheduler?: { systemProbe: { enter(id: string): void, leave(id: string): void } | undefined }, terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, frameStats?: () => { budget: { queues: { id: string, spentMs: number }[] } }, update(dt: number): void }} Room */
+  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { scheduler?: { systemProbe: { enter(id: string): void, leave(id: string): void } | undefined }, terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, frameStats?: () => { budget: { mode: string, allowanceMs: number, mustDrainSpentMs: number, queues: { id: string, spentMs: number }[] } }, update(dt: number, options?: { frameStartMs?: number }): void }} Room */
   const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[] } }} */ (/** @type {unknown} */ (window))
   const room = host.__testRoom
   const wait = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
@@ -269,6 +280,8 @@ export async function inPage(job) {
     stage('fluids', room.fluids, 'update')
     stage('explosives', parts?.explosives, 'update')
     stage('destrEvents', destruction, 'runBudgeted')
+    // since the structural events are applied in the fixed tick (spec 017 T2.2), most of an explosion's events run here, not in the frame queue
+    stage('destrEvents', destruction, 'applyStructuralEvents')
     stage('fragments', destruction.fragments, 'update')
     stage('settled', destruction.settledBatches, 'update')
     stage('syncXform', destruction, 'syncTransforms')
@@ -343,8 +356,11 @@ export async function inPage(job) {
   /** The wall time of the explosion call of each frame that fires one (frame index = array index), for the T0.2 comparison. */
   /** @type {number[]} */
   const actionMs = []
+  /** @type {{ mode: string, allowanceMs: number, mustDrainSpentMs: number }[]} */
+  const budgetFrames = []
   const actionHost = /** @type {{ __roomExplosionActions?: number[] }} */ (/** @type {unknown} */ (window))
   actionHost.__roomExplosionActions = actionMs
+  ;/** @type {{ __roomExplosionBudgets?: unknown }} */ (/** @type {unknown} */ (window)).__roomExplosionBudgets = budgetFrames
   /** The explosion call, timed as the `action` label: its own time, `explode` and the labels under it subtracted. @param {() => void} fire */
   const timedAction = (fire) => {
     const entry = { child: 0, isPhysicsStage: false }
@@ -371,15 +387,20 @@ export async function inPage(job) {
     readQueries()
     acc.loop = acc.piece = acc.wake = 0
     for (const label of Object.keys(stageMs)) stageMs[label] = 0
+    let frameStartMs = 0
     if (fire && job.isF0Late) {
       const lateStart = performance.now()
+      frameStartMs = lateStart
       fire()
       actionMs.push(performance.now() - lateStart)
     }
     const queuesBefore = frameLabels.length > 0 ? queueSpent() : []
     const started = performance.now()
+    if (!(fire && job.isF0Late)) frameStartMs = started
     if (fire && !job.isF0Late) timedAction(fire)
-    room.update(job.frameSeconds)
+    room.update(job.frameSeconds, job.budgetMode === 'deadline' ? { frameStartMs } : undefined)
+    const budgetNow = room.frameStats?.().budget
+    if (budgetNow) budgetFrames.push({ mode: budgetNow.mode, allowanceMs: Math.round(budgetNow.allowanceMs * 100) / 100, mustDrainSpentMs: Math.round(budgetNow.mustDrainSpentMs * 100) / 100 })
     const whole = performance.now() - started
     const queuesAfter = frameLabels.length > 0 ? queueSpent() : []
     const queueMs = queuesAfter.map((spent, column) => Math.max(0, spent - (queuesBefore[column] ?? 0)))
@@ -500,7 +521,7 @@ export const cellFails = (cell, budget) => cell.p99 > budget.p99 || cell.max > b
 export const REGRESSION = { tolerance: 0.25, p99Floor: 1, maxFloor: 5 }
 
 /**
- * Whether a cell is worse than the same cell of main's last passing report by more than the tolerance and the floor. The absolute budget (4/5 ms) is the goal and only a
+ * Whether a cell is worse than the same cell of the base report (the best of the passing nights) by more than the tolerance and the floor. The absolute budget (4/5 ms) is the goal and only a
  * warning: it blocked every night while main was still over it, which made the daily warning mean nothing; the block is the regression.
  * @param {Pick<Cell, 'p99' | 'max'>} cell @param {Pick<Cell, 'p99' | 'max'> | undefined} base
  */
@@ -516,6 +537,16 @@ const worstFrames = (all) => {
   const groups = new Map()
   for (const entry of all) groups.set(`${entry.variant}|${entry.throttle}|${entry.kind}`, [...(groups.get(`${entry.variant}|${entry.throttle}|${entry.kind}`) ?? []), entry])
   return [...groups.values()].flatMap((group) => group.sort((a, b) => b.updateMs - a.updateMs).slice(0, 10))
+}
+
+/** Prints the explosion-frame numbers and what the gate did with them; a round that compared nothing says so loudly. @param {ReturnType<typeof frameMetricsOf>} measure @param {ReturnType<typeof frameGate>} verdict @param {boolean} isPhysicsCompared */
+const logFrameGate = (measure, verdict, isPhysicsCompared) => {
+  if (measure.metrics.length > 0) console.log('room-explosion: explosion frame, ms (f0Ms: mean of the 3 worst f0 of update + renderCpu; afterMs: mean over those rounds of the worst of the 7 frames after)')
+  for (const entry of measure.metrics) console.log(`  ${entry.variant.padEnd(12)} ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} f0Ms ${String(entry.f0Ms).padStart(7)} afterMs ${String(entry.afterMs).padStart(7)}`)
+  for (const entry of verdict.problems) console.log(`room-explosion: explosion frame ${entry.key}: ${entry.status} (no number, nothing blocks from it)`)
+  for (const entry of verdict.skipped) console.log(`room-explosion: explosion frame not compared: ${entry}`)
+  if (!verdict.compared) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosion frame (${verdict.status}): ${verdict.reason}${isPhysicsCompared ? '' : '; physics cells not compared either (no base in this mode)'}`)
+  for (const entry of verdict.regressions) console.log(`  FAIL: explosion frame ${entry.key} ${entry.field} ${entry.now} against ${entry.was} in the base (blocks)`)
 }
 
 /**
@@ -535,10 +566,15 @@ const worstFrames = (all) => {
 
 /** The cells of a saved report (`ROOM_EXPLOSION_OUT`) by variant, throttle and kind; undefined without one or when it cannot be read. @param {string | undefined} file @returns {Map<string, Pick<Cell, 'p99' | 'max'>> | undefined} */
 const baseCellsOf = (file) => {
+  const saved = baseReportOf(file)
+  return saved ? new Map(saved.cells.map((/** @type {Cell} */ cell) => [frameKey(cell), cell])) : undefined
+}
+
+/** The saved report itself; undefined without one or when it cannot be read. @param {string | undefined} file @returns {(import('./room-explosion-frame.mjs').SavedReport & { cells: Cell[] }) | undefined} */
+const baseReportOf = (file) => {
   if (!file) return undefined
   try {
-    const saved = JSON.parse(readFileSync(file, 'utf8'))
-    return new Map(saved.cells.map((/** @type {Cell} */ cell) => [`${cell.variant}|${cell.throttle}|${cell.kind}`, cell]))
+    return JSON.parse(readFileSync(file, 'utf8'))
   } catch {
     return undefined
   }
@@ -573,6 +609,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   console.log(`room-explosion: ${machine.cpu} (${machine.cores} threads), node ${machine.node}, chrome ${machine.chrome}`)
   console.log(`room-explosion: ${PROXY_NOTE}`)
   if (isRendered) console.log('room-explosion: render timed per frame (weather or ROOM_EXPLOSION_RENDER=1); the physics columns and the gate stay physics only')
+  console.log(`room-explosion: frame budget mode ${budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)}`)
   console.log(`room-explosion: budget p99 <= ${budget.p99} ms (median of rounds), max <= ${budget.max} ms (worst round), wake frame apart; ${rounds} rounds x ${frames} frames of 1/60 s`)
 
   /** @type {Map<string, Round[]>} */
@@ -592,7 +629,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const cdp = await page.context().newCDPSession(page)
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
       const paced = process.env.ROOM_EXPLOSION_PACE === '1' || (process.env.ROOM_EXPLOSION_PACE !== '0' && VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)].includes('groundWorker=1'))
-      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(isF0Late(process.env.ROOM_EXPLOSION_F0_CLOCK) ? { isF0Late: true } : {}), systemLabels: { ...SYSTEM_LABELS }, labelledQueues: LABELLED_QUEUES, ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
+      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, budgetMode: budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET), isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(isF0Late(process.env.ROOM_EXPLOSION_F0_CLOCK) ? { isF0Late: true } : {}), systemLabels: { ...SYSTEM_LABELS }, labelledQueues: LABELLED_QUEUES, ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
       const groundStats = await page.evaluate(() => /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__groundWorkerStats, undefined)
       if (groundStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: ground tiles ${JSON.stringify(groundStats)}`)
@@ -600,7 +637,8 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const moduleIds = await page.evaluate(() => /** @type {{ __roomExplosionModules?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionModules ?? [], undefined)
       const actions = await page.evaluate(() => /** @type {{ __roomExplosionActions?: number[] }} */ (/** @type {unknown} */ (window)).__roomExplosionActions ?? [], undefined)
       const queueIds = await page.evaluate(() => /** @type {{ __roomExplosionQueues?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionQueues ?? [], undefined)
-      return { timings, load, moduleIds, queueIds, actions }
+      const budgets = await page.evaluate(() => /** @type {{ __roomExplosionBudgets?: { mode: string, allowanceMs: number, mustDrainSpentMs: number }[] }} */ (/** @type {unknown} */ (window)).__roomExplosionBudgets ?? [], undefined)
+      return { timings, load, moduleIds, queueIds, actions, budgets }
     } finally {
       await page.close()
     }
@@ -629,9 +667,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   if (stageVariant && stageRounds > 0) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
-        const { timings, moduleIds, queueIds, actions } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
+        const { timings, moduleIds, queueIds, actions, budgets } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
         const moduleColumn = 6 + STAGE_LABELS.length + FRAME_LABELS.length + FRAME_EXTRAS.length
-        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, frame: index, ...(actions[index] === undefined ? {} : { actionMs: round2(actions[index] ?? 0) }), ...(hasFrameParts ? { queues: Object.fromEntries(queueIds.map((id, column) => [id, round2(frame[moduleColumn + moduleIds.length + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
+        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, frame: index, ...(actions[index] === undefined ? {} : { actionMs: round2(actions[index] ?? 0) }), ...(budgets[index] === undefined ? {} : { budget: budgets[index] }), ...(hasFrameParts ? { queues: Object.fromEntries(queueIds.map((id, column) => [id, round2(frame[moduleColumn + moduleIds.length + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
         console.log(`room-explosion: stage round ${round} ${stageVariant} ${throttle}x ${kind} done`)
       } catch (error) {
         errors.push(`stages ${throttle}x ${kind}: ${error instanceof Error ? error.message : String(error)}`)
@@ -665,7 +703,11 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   console.log('room-explosion: physics ms per frame (p50 and p99: median of rounds; max and wake: worst round; over4/over5: frames summed over the rounds)')
   console.log(`  ${'variant'.padEnd(12)} ${'cpu'.padEnd(4)} ${'kind'.padEnd(13)} ${'p50'.padStart(6)} ${'p99'.padStart(6)} ${'max'.padStart(6)} ${'wake'.padStart(6)} ${'wakeMed'.padStart(7)} ${'1st 1s'.padStart(7)} ${'>4ms'.padStart(5)} ${'>5ms'.padStart(5)}  verdict`)
   let blocked = false
-  const baseCells = baseCellsOf(process.env.ROOM_EXPLOSION_BASE)
+  const mode = budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)
+  const savedBase = baseReportOf(process.env.ROOM_EXPLOSION_BASE)
+  const isBaseInMode = savedBase !== undefined && savedBase.budgetMode === mode
+  if (savedBase && !isBaseInMode) console.log(`room-explosion: base em outro modo (${savedBase.budgetMode ?? 'sem modo'}, esta rodada ${mode}): regravando a referência; nada é comparado nem bloqueia`)
+  const baseCells = isBaseInMode ? baseCellsOf(process.env.ROOM_EXPLOSION_BASE) : undefined
   console.log(baseCells ? `room-explosion: blocks only on a regression over ${Math.round(REGRESSION.tolerance * 100)}% against ${process.env.ROOM_EXPLOSION_BASE}; the absolute budget is a warning` : 'room-explosion: no base report (ROOM_EXPLOSION_BASE): nothing blocks, the absolute budget is a warning')
   for (const cell of cells) {
     const fails = cellFails(cell, budget)
@@ -675,6 +717,10 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     const verdict = cell.variant !== DEFAULT_VARIANT && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(13)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
+  const frameMeasure = frameMetricsOf(stageFrames)
+  const frameVerdict = frameGate({ measure: frameMeasure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated })
+  logFrameGate(frameMeasure, frameVerdict, isBaseInMode)
+  blocked ||= frameVerdict.regressions.length > 0
   if (isRendered) {
     console.log('')
     console.log('room-explosion: whole frame = room.update + one render of the scene (webgl.render, then GL finish: the CPU wait for the GPU is in it), ms; p50/p99: median of rounds, max: worst round; wake frame left out')
@@ -712,7 +758,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0

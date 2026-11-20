@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Crack, DamageType, DebrisKind, DestructionEvent, DestructionEventType, Fragment, MaterialDef, ObjectState, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { Crack, DamageType, DebrisKind, DestructionEvent, Fragment, MaterialDef, ObjectState, PartSettlement, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { breakSoundKeys, impactSoundKeys, ricochetSoundKeys } from './audio/impact-keys'
 import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, blastShove, drainDetached, warnOnce } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
@@ -10,6 +10,7 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
 import type { BlastWake, DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
+import { EventOrder, isStructuralEvent } from './event-class'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -74,13 +75,8 @@ const QUEUE_CAP = 4000
 const TRICKLE_SECONDS: readonly [number, number] = [2, 5]
 const TRICKLE_EVERY = 0.25
 const TRICKLE_MAX = 24
-/**
- * Events the queue takes past `QUEUE_CAP`: what changes what is drawn (a part breaking off, a storey coming down, a fire starting or going out). A blast
- * floods the queue with damage, melt and drip events; dropping a collapse behind them leaves a fallen wall drawn standing.
- */
-const STRUCTURAL_EVENTS: ReadonlySet<DestructionEventType> = new Set<DestructionEventType>([
-  'fracture', 'detach', 'collapse', 'settle', 'destroyed', 'expose', 'stage', 'hole', 'ignite', 'primed', 'extinguish', 'burnout', 'leak', 'explode',
-])
+/** Frames in a row with a structural event waiting and no tick to apply it in, after which a frame drain applies everything (a paused or skipped simulation). */
+const STALLED_FRAMES = 8
 /** Fragments of a fracture spawned in one go before the frame budget is looked at, so a small break is never split over frames. */
 const MIN_FRAGMENTS_PER_SLICE = 8
 
@@ -414,7 +410,7 @@ class Renderer implements DestructionRenderer {
   /** Objects broken since the last update: `checkBroken` looks at what is left of them. */
   private readonly broken = new Set<string>()
   private staticAt = 0
-  private readonly queue: DestructionEvent[] = []
+  private queue: DestructionEvent[] = []
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
   private readonly coverWhenWentOff = new WeakMap<DestructionEvent, Map<string, number>>()
   /** Places a blow broke a hard face at: grit and dust keep coming off them for a few seconds, less and less (`TRICKLE_SECONDS`). */
@@ -447,9 +443,14 @@ class Renderer implements DestructionRenderer {
   private drainClock: () => number = () => performance.now()
   /** true once a frame budget owns the draining: `update` no longer drains by itself. */
   private attached = false
+  /** true while the host applies the structural events itself, at the end of each tick (`applyStructuralEvents`): a frame drain leaves them, and what waits behind them, for the next tick. */
+  private structuralInTick = false
+  private readonly eventOrder = new EventOrder()
+  private stalledFrames = 0
+  private watchedFrame = -1
   private readonly eventQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS,
-    pending: () => this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft(),
+    pending: (frame) => this.watchStall(frame) + this.appliableEvents() + this.slices.length + this.splitQueue.size + this.looseLeft(),
     run: (deadline, clock) => this.runBudgeted(deadline, clock),
     flush: () => {
       for (let guard = 0; guard < 16 && this.queue.length + this.slices.length + this.splitQueue.size + this.looseLeft() > 0; guard++) this.runBudgeted(Infinity, () => 0, true)
@@ -603,7 +604,8 @@ class Renderer implements DestructionRenderer {
     })
     this.unsubscribe = this.world.on('*', (ev) => {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
-      if (this.queue.length < QUEUE_CAP || STRUCTURAL_EVENTS.has(ev.type)) this.queue.push(ev)
+      // past the cap only what changes the simulation is kept: a blast floods the queue with damage and marks, and a dropped collapse leaves a fallen wall drawn standing
+      if (this.queue.length < QUEUE_CAP || isStructuralEvent(ev)) this.queue.push(ev)
     })
   }
 
@@ -796,6 +798,8 @@ class Renderer implements DestructionRenderer {
   private clipToDrawn(id: string, hosted: readonly StaticSolid[]): readonly StaticSolid[] {
     const b = this.bounds.get(id)
     if (!b) return hosted
+    // the root's meshes are measured by their bounds: a merged mesh with a write pending in the batch must show them
+    this.visuals.flushPendingRebuilds()
     b.root.updateWorldMatrix(true, true)
     const m = b.root.matrixWorld.elements
     const known = this.clipped.get(id)
@@ -1184,6 +1188,59 @@ class Renderer implements DestructionRenderer {
     ]
   }
 
+  /** The host applies the structural events itself at the end of each tick (`applyStructuralEvents`) from now on, or no longer; not under `workBudget`, whose events are paced by the frame. */
+  setStructuralInTick(isInTick: boolean): void {
+    // pending: under `workBudget` the mode stays off, so the events there still read the drawn pose (spec 017, evidence-120hz T2.2)
+    this.structuralInTick = isInTick && !this.work
+  }
+
+  /**
+   * At the end of a tick, on the step pose: applies the structural events that wait, with every visual event before the last of them, in the order of emission (a visual event of
+   * an object with a structural one goes before it). What follows the last structural event is the frame's.
+   */
+  applyStructuralEvents(): void {
+    if (this.disposed || this.work) return
+    this.stalledFrames = 0
+    let last = -1
+    for (let i = this.queue.length - 1; i >= 0 && last < 0; i--) if (isStructuralEvent(this.queue[i]!)) last = i
+    if (last < 0) return
+    const ordered = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
+    let end = ordered.length
+    while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
+    this.requeue(ordered, end)
+    this.visuals.batchRebuilds(() => {
+      for (let i = 0; i < end; i++) {
+        try {
+          this.apply(ordered[i]!)
+        } catch (err) {
+          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
+        }
+      }
+    })
+  }
+
+  /** Puts `events` from `from` on, back at the front of the queue, in order (no spread: a blast leaves tens of thousands). */
+  private requeue(events: readonly DestructionEvent[], from: number): void {
+    if (from >= events.length) return
+    this.queue = events.slice(from).concat(this.queue)
+  }
+
+  /** Counts the frames (once each) a structural event has waited with no tick to apply it; always 0, for `pending`'s sum. */
+  private watchStall(frame: number | undefined): number {
+    if (!this.structuralInTick || frame === undefined || frame === this.watchedFrame) return 0
+    this.watchedFrame = frame
+    this.stalledFrames = this.queue.some(isStructuralEvent) ? this.stalledFrames + 1 : 0
+    return 0
+  }
+
+  /** How many events a drain may apply now: all, or (the host applies the structural ones in the tick) only those ahead of the first structural one. */
+  private appliableEvents(all = false): number {
+    if (all || !this.structuralInTick || this.stalledFrames >= STALLED_FRAMES) return this.queue.length
+    let count = 0
+    while (count < this.queue.length && !isStructuralEvent(this.queue[count]!)) count++
+    return count
+  }
+
   private drainQueue(): void {
     drainDetached(this.eventQueue, this.eventBudgetMs)
   }
@@ -1192,25 +1249,31 @@ class Renderer implements DestructionRenderer {
   private runBudgeted(deadline: number, clock: () => number, all = false): number {
     if (this.work) return this.runWork(this.work, all)
     // events produced while applying (a hard landing calls `hit`) wait for the next frame
-    const batch = this.queue.splice(0, this.queue.length)
+    const batch = this.eventOrder.arrange(this.queue.splice(0, this.appliableEvents(all)))
+    if (this.stalledFrames >= STALLED_FRAMES) this.stalledFrames = 0
     const outerClock = this.drainClock
     this.drainClock = clock
     this.sliceDeadline = deadline
     let ran = 0
     try {
       ran = this.runSlices(deadline)
-      for (let i = 0; i < batch.length; i++) {
-        if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
-          this.queue.unshift(...batch.slice(i))
-          return ran
+      let isOutOfTime = false
+      this.visuals.batchRebuilds(() => {
+        for (let i = 0; i < batch.length; i++) {
+          if ((i > 0 || (ran > 0 && this.attached)) && clock() >= deadline) {
+            this.requeue(batch, i)
+            isOutOfTime = true
+            return
+          }
+          try {
+            this.apply(batch[i]!)
+          } catch (err) {
+            if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
+          }
+          ran++
         }
-        try {
-          this.apply(batch[i]!)
-        } catch (err) {
-          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', batch[i]!.type, err)
-        }
-        ran++
-      }
+      })
+      if (isOutOfTime) return ran
       // after the events, as under the budget: a group a blow of this frame looses keeps the split it gets in the event
       ran += this.splitChecked(deadline, ran)
       if (this.queue.length === 0 && this.slices.length === 0 && this.looseToCheck.size === 0) ran += this.runPrefitDetached(deadline, clock, ran === 0)
@@ -1226,7 +1289,7 @@ class Renderer implements DestructionRenderer {
    * it happened; it only leaves less of the budget; the groups it looses split in it while they fit, `splitWithin`). No clock is read. `all` runs everything (a flush).
    */
   private runWork(work: WorkBudget, all: boolean): number {
-    const batch = this.queue.splice(0, this.queue.length)
+    const batch = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
     this.workFocus = this.o.focus?.()
     const outerDeadline = this.sliceDeadline
     // a finite deadline only says "in a drain": under the budget the work stops on units, never on the clock
@@ -2301,17 +2364,15 @@ class Renderer implements DestructionRenderer {
       this.splitWithin(this.work, b, st, torn)
       return
     }
-    // every loose group at once, while the frame has time: the world builds what is left once, not once per group (a blast tears several off a house of
-    // hundreds of parts); out of time, one now and the rest in the next slice, as before
-    const now = this.drainClock() >= this.sliceDeadline ? 1 : loose
-    const atLoad = this.splittingAtLoad
+    // every loose group at once, whatever the clock says: the world builds what is left once, not once per group (a blast tears several off a house of
+    // hundreds of parts), and what comes off in a frame must not depend on how long the frame took
     this.visuals.batchRebuilds(() => {
       // the hinges are read before, while the groups still hang on what stands
       let hinges: (Vec3 | null)[]
       let newIds: string[]
       try {
-        hinges = Array.from({ length: now }, (_, i) => this.hingeOf(objectId, i + 1))
-        newIds = this.world.splitGroups(objectId, Array.from({ length: now }, (_, i) => i + 1))
+        hinges = Array.from({ length: loose }, (_, i) => this.hingeOf(objectId, i + 1))
+        newIds = this.world.splitGroups(objectId, Array.from({ length: loose }, (_, i) => i + 1))
       } catch {
         return
       }
@@ -2320,19 +2381,6 @@ class Renderer implements DestructionRenderer {
         this.hangOnHinge(newId, hinges[i] ?? null)
       })
     })
-    if (now < loose) {
-      this.slices.push(() => {
-        this.staticDirty.add(objectId)
-        const outer = this.splittingAtLoad
-        this.splittingAtLoad = atLoad
-        try {
-          this.splitLoose(objectId, torn)
-        } finally {
-          this.splittingAtLoad = outer
-        }
-      })
-      return
-    }
     this.afterSplit(b, torn)
   }
 
@@ -3080,6 +3128,7 @@ class Renderer implements DestructionRenderer {
   private shownArea(objectId: string, point: Vec3): number | undefined {
     const b = this.bounds.get(objectId)
     if (!b) return undefined
+    this.visuals.flushPendingRebuilds()
     const seen = new Set<THREE_NS.Object3D>()
     const size = new this.THREE.Vector3()
     const scale = new this.THREE.Vector3()

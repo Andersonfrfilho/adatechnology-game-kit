@@ -82,6 +82,27 @@ export const marksInBox = (center: Vec3, size: Vec3, rotation: Quat | undefined,
   return marks
 }
 
+type RowLayout = { readonly thin: number; readonly bottom: number; readonly count: number; readonly keys: readonly number[]; readonly alongOrder: readonly number[] }
+const rowLayouts = new WeakMap<readonly UnitCell[], RowLayout>()
+
+/** The course each unit is laid in and the units in order along the wall, which depend only on the grid: kept for the grid. */
+const rowLayoutOf = (cells: readonly UnitCell[], thin: number, bottom: number): RowLayout => {
+  const known = rowLayouts.get(cells)
+  if (known && known.thin === thin && known.bottom === bottom && known.count === cells.length) return known
+  const [u, v] = planeAxes(thin)
+  const keys = cells.map((cell) => Math.round((cell.center[v] - cell.size[v] / 2 - bottom) * 1e4))
+  const alongOrder = cells.map((_, i) => i).sort((a, b) => cells[a]!.center[u] - cells[b]!.center[u])
+  const layout = { thin, bottom, count: cells.length, keys, alongOrder }
+  rowLayouts.set(cells, layout)
+  return layout
+}
+
+/** Whether `hole` falls inside the box of a fragment: `marksInBox` for one hole, with no rotation and no allocation. */
+export const holeInBox = (center: Vec3, size: Vec3, hole: LocalHole): boolean => {
+  for (let k = 0; k < 3; k++) if (!(Math.abs(hole.point[k]! - center[k]!) <= size[k]! / 2 + hole.diameter / 2)) return false
+  return true
+}
+
 const JOINT_GAP = 1e-4
 /** Share of the shorter of two units their bed has to overlap for one to bear on the other: a unit held by a corner does not stand. */
 const MIN_BEARING_SHARE = 0.25
@@ -99,16 +120,18 @@ export const unsupportedCells = (cells: readonly UnitCell[], thin: number, dims:
   if (thin === 1) return []
   const [u, v] = planeAxes(thin)
   const bottom = -dims[v] / 2
-  const rowOf = (y: number): number => Math.round((y - bottom) * 1e4)
+  const layout = rowLayoutOf(cells, thin, bottom)
   const rows = new Map<number, number[]>()
+  const isStanding = new Uint8Array(cells.length)
   for (let i = 0; i < cells.length; i++) {
     if (!standing(i)) continue
-    const cell = cells[i]!
-    const key = rowOf(cell.center[v] - cell.size[v] / 2)
-    const row = rows.get(key)
-    if (row) row.push(i)
-    else rows.set(key, [i])
+    isStanding[i] = 1
+    const key = layout.keys[i]!
+    if (!rows.has(key)) rows.set(key, [])
   }
+  // the units of each course in order along the wall, walked in the order the layout keeps them
+  for (const i of layout.alongOrder) if (isStanding[i] === 1) rows.get(layout.keys[i]!)!.push(i)
+  const rowOf = (y: number): number => Math.round((y - bottom) * 1e4)
   const held = new Set<number>()
   const queue: number[] = []
   for (const i of rows.get(0) ?? []) {
@@ -128,9 +151,8 @@ export const unsupportedCells = (cells: readonly UnitCell[], thin: number, dims:
       }
     }
   }
-  // the units of each course in order along the wall: a unit between two that stand is wedged between them by its head joints (it bridges a gap of
-  // two units under it); one held on one side only would hang from its mortar, which does not hold the moment
-  for (const row of rows.values()) row.sort((a, b) => cells[a]!.center[u] - cells[b]!.center[u])
+  // a unit between two that stand in its course is wedged between them by its head joints (it bridges a gap of two units under it); one held on one side
+  // only would hang from its mortar, which does not hold the moment
   const touching = (a: UnitCell, b: UnitCell): boolean => Math.abs(a.center[u] + a.size[u] / 2 - (b.center[u] - b.size[u] / 2)) <= 1e-3
   for (let wedged = true; wedged;) {
     climb()

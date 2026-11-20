@@ -49,6 +49,8 @@ export interface SchedulerOptions {
   readonly targetMs?: number
   /** Floor of the deadline mode, ms: the queues get at least this much of a frame. Default 1. */
   readonly minBudgetMs?: number
+  /** The queue ids that may register with `mustDrain: true` (see `FrameBudgetOptions.mustDrainIds`). Default `MUST_DRAIN_QUEUE_IDS` of game-contracts. */
+  readonly mustDrainIds?: ReadonlySet<string>
   /** Milliseconds clock; default `performance.now` (or `Date.now`). Tests inject a fake. */
   readonly clock?: () => number
   /** A system that throws: default logs once per system id and keeps the frame going. */

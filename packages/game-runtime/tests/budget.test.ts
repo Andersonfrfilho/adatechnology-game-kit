@@ -183,3 +183,28 @@ describe('loop', () => {
     expect(pendingCallback).toBeUndefined()
   })
 })
+
+describe('mustDrain is a closed class (CLAUDE.md §15)', () => {
+  const idle = (id: string): DeferredQueue => ({ id, pending: () => 0, run: () => 0, flush: () => 0 })
+
+  it('register throws for a mustDrain queue that is not in MUST_DRAIN_QUEUE_IDS, and says why', () => {
+    const budget = createFrameBudget()
+    expect(() => budget.register(idle('fluids.film'), { priority: 1, mustDrain: true })).toThrow(/mustDrain is only for destruction\.events, floorplan\.breach-cut.*§15/)
+  })
+
+  it('the two queues of the kit register, and a queue that is not mustDrain never needs the list', () => {
+    const budget = createFrameBudget()
+    expect(() => budget.register(idle('destruction.events'), { priority: 300, mustDrain: true })).not.toThrow()
+    expect(() => budget.register(idle('floorplan.breach-cut'), { priority: 260, mustDrain: true })).not.toThrow()
+    expect(() => budget.register(idle('fluids.film'), { priority: 1 })).not.toThrow()
+    expect(() => budget.register(idle('fluids.other'), { priority: 1, mustDrain: false })).not.toThrow()
+  })
+
+  it('a host that has another queue passes its own list, which replaces the default; the scheduler forwards it', () => {
+    const budget = createFrameBudget({ mustDrainIds: new Set(['game.special']) })
+    expect(() => budget.register(idle('game.special'), { priority: 1, mustDrain: true })).not.toThrow()
+    expect(() => budget.register(idle('destruction.events'), { priority: 300, mustDrain: true })).toThrow(/mustDrain is only for game\.special/)
+    const scheduler = createScheduler({ mustDrainIds: new Set(['game.other']) })
+    expect(() => scheduler.budget.register(idle('game.other'), { priority: 1, mustDrain: true })).not.toThrow()
+  })
+})

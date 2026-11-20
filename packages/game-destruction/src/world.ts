@@ -5,7 +5,7 @@ import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
-import { cellsOutside, cellsWithin, clumpUnits, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
+import { cellsOutside, cellsWithin, clumpUnits, holeInBox, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
 import type { LocalHole, UnitCell } from './breach'
 import { buildPartGrid, PART_GRID_MIN_PARTS } from './part-grid'
 import type { PartGrid } from './part-grid'
@@ -653,7 +653,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let time = 0
   let counter = 0
   const objects = new Map<string, ObjRT>()
-  const listeners = new Map<string, Set<(e: DestructionEvent) => void>>()
+  // copy-on-write: `on`/`off` swap the array, so an `emit` walks the list it found even if a listener subscribes or leaves meanwhile
+  const listeners = new Map<string, readonly ((e: DestructionEvent) => void)[]>()
   let cur: DestructionEvent[] = []
   const blasts: Blast[] = []
   /** Glass the blast front has not reached yet: the damage lands when it does (`blastFrontSpeed`). */
@@ -673,9 +674,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     cur.push(e)
     options.onEvent?.(e)
     const all = listeners.get('*')
-    if (all) for (const fn of [...all]) fn(e)
+    if (all) for (const fn of all) fn(e)
     const typed = listeners.get(e.type)
-    if (typed) for (const fn of [...typed]) fn(e)
+    if (typed) for (const fn of typed) fn(e)
   }
   // the kind of the hit being resolved now (`doHit`): every event it emits carries it as `blow`
   let blow: DamageType | undefined
@@ -3252,8 +3253,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
-    const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
-    if (split && mine.length) amount /= mine.length
+    const mine = o.byPart.get(p.spec.id)
+    if (!mine) return
+    if (split) {
+      let closed = 0
+      for (const j of mine) if (!j.st.open) closed++
+      if (closed > 0) amount /= closed
+    }
     for (const j of mine) {
       if (j.st.open) continue
       // the rebar of a reinforced part (a cage, or the tension steel of `structure.rebar`) ties it to the next one: blows do not wear it, only a torch
@@ -3357,9 +3363,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * Unit-sized fragments of `cells` (part-local), thrown from `hitW`; the holes that fell on a unit stay on it as `marks`. `inner`: drawn in the colour of
    * the inside of the material (a brick knocked out of its plaster), not the part's paint.
    */
-  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string, inner = false): Fragment[] => {
+  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string, inner = false, knownHoles?: readonly LocalHole[]): Fragment[] => {
     const { c, q } = partXf(o, p)
-    const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
+    const holes = knownHoles ?? (p.st.holes.length > 0 ? localHolesOf(p) : [])
     const [u, v] = planeAxes(p.thin)
     const faceArea = (cell: UnitCell) => cell.size[u] * cell.size[v]
     const total = cells.reduce((sum, cell) => sum + faceArea(cell), 0) || 1
@@ -4052,14 +4058,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const { c, q } = partXf(o, p)
     const chipped = (p.st.chipped ??= [])
     const tag = `x${chipped.length}_`
+    const holes = localHolesOf(p)
     const fragments = [
-      ...cellFragments(o, p, clumpUnits(blown, p.thin, unitSpan(p), unitClumps), wp, null, speed, blownMass, tag, true),
-      ...(fallen.length > 0 ? cellFragments(o, p, clumpUnits(fallen, p.thin, unitSpan(p), fallenClumps), wp, null, 0.3, fallenMass, `${tag}f`, true) : []),
+      ...cellFragments(o, p, clumpUnits(blown, p.thin, unitSpan(p), unitClumps), wp, null, speed, blownMass, tag, true, holes),
+      ...(fallen.length > 0 ? cellFragments(o, p, clumpUnits(fallen, p.thin, unitSpan(p), fallenClumps), wp, null, 0.3, fallenMass, `${tag}f`, true, holes) : []),
       ...plasterFlakes(o, p, blown, wp, speed, `${tag}p`),
     ]
     const cells = [...blown, ...fallen]
-    const holes = localHolesOf(p)
-    p.st.holes = p.st.holes.filter((_, k) => !cells.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length > 0))
+    p.st.holes = p.st.holes.filter((_, k) => !cells.some((cell) => holeInBox(cell.center, cell.size, holes[k]!)))
     const lo: Vec3 = [Infinity, Infinity, Infinity], hi: Vec3 = [-Infinity, -Infinity, -Infinity]
     for (const cell of cells) {
       chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
@@ -4595,6 +4601,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a part embedded in its host takes no wave while the host stands round it: the wall is what the blast meets, and only a hole of it lets the blast to the pipe
     if (p.embedded === true && p.st.exposed !== true) return null
     const { c, q } = partXf(o, p)
+    const objectRotation = o.st.rotation, partQuat = p.q
     const lp = toLocal(c, q, point)
     const dist = distanceToShape(p.spec.shape, lp)
     if (dist >= radius) return null
@@ -4655,7 +4662,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
       return reach
     }
-    if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
+    // `q` still holds when nothing moved the object or the part since it was read; otherwise the pose is measured again
+    if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, o.st.rotation === objectRotation && p.q === partQuat ? (rotateVec(quat.conjugate(q), wn)[p.thin] >= 0 ? 1 : -1) : faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
     const breachReach = BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)
     // a reinforced member (a pillar, a beam) is never blown away whole: its stirrups confine the core and its bars hold it, so a blast keeps its floor of hit
     // points and takes the concrete out only where it reaches (a charge at contact cuts a band a couple of sections tall, the bars and stirrups bared there)
@@ -4818,7 +4826,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return { ps, c: toWorld(im.position, im.rotation, ov?.pos ?? ps.position), q: quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0]))) }
     })
 
-  const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => implParts(im).some(({ ps, c, q }) => distanceToShape(ps.shape, toLocal(c, q, point)) < radius)
+  const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => {
+    for (const ps of im.impl.describe().parts) {
+      const ov = im.poses.get(ps.id)
+      const c = toWorld(im.position, im.rotation, ov?.pos ?? ps.position)
+      const q = quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
+      if (distanceToShape(ps.shape, toLocal(c, q, point)) < radius) return true
+    }
+    return false
+  }
 
   /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
   const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
@@ -6066,11 +6082,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       objects.set(id, build(o.spec, id, o.base.pos, o.base.rot))
     },
     on(type: DestructionEventType | '*', fn) {
-      let set = listeners.get(type)
-      if (!set) listeners.set(type, (set = new Set()))
-      set.add(fn)
+      const known = listeners.get(type) ?? []
+      if (!known.includes(fn)) listeners.set(type, [...known, fn])
       return () => {
-        set!.delete(fn)
+        const current = listeners.get(type)
+        if (current) listeners.set(type, current.filter((other) => other !== fn))
       }
     },
     serialize(): DestructionSnapshot {

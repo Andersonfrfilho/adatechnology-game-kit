@@ -1,4 +1,4 @@
-import type { DeferredQueueOptions } from '@adatechnology/game-contracts'
+import { MUST_DRAIN_QUEUE_IDS, type DeferredQueueOptions } from '@adatechnology/game-contracts'
 import { createQueueEntry, insertByPriority, queueStats, type QueueEntry } from './budget-entry'
 import { defaultClock } from './clock'
 import { createRenderEstimate } from './render-estimate'
@@ -16,6 +16,8 @@ export interface FrameBudgetOptions {
   /** Floor of the deadline mode, ms. Default 1. */
   readonly minMs?: number | undefined
   readonly clock?: () => number
+  /** The queue ids that may register with `mustDrain: true`; replaces `MUST_DRAIN_QUEUE_IDS` (game-contracts) for a host that has another queue the owner decided on. */
+  readonly mustDrainIds?: ReadonlySet<string> | undefined
   /** A queue that throws in `run`: default logs once per queue id. The frame goes on and the queue counts 0 units. */
   readonly onError?: (error: unknown, queue: { readonly id: string; readonly phase: 'present' | 'idle' }) => void
 }
@@ -39,6 +41,7 @@ export function createFrameBudget(options: FrameBudgetOptions = {}): FrameBudget
   let isRenderSkipped = false
   const forcedMs: number[] = []
   const minMs = options.minMs ?? DEFAULT_MIN_MS
+  const mustDrainIds = options.mustDrainIds ?? MUST_DRAIN_QUEUE_IDS
   const renderEstimate = createRenderEstimate()
 
   const reservedTotal = (): number => entries.reduce((sum, entry) => sum + entry.reserveMs, 0)
@@ -173,6 +176,9 @@ export function createFrameBudget(options: FrameBudgetOptions = {}): FrameBudget
     ms: options.ms ?? DEFAULT_MS,
     register(queue, queueOptions: DeferredQueueOptions) {
       if (entries.some((candidate) => candidate.queue === queue)) throw new Error(`budget.register(${queue.id}): this queue is already registered`)
+      if (queueOptions.mustDrain === true && !mustDrainIds.has(queue.id)) {
+        throw new Error(`budget.register(${queue.id}): mustDrain is only for ${[...mustDrainIds].join(', ')} (CLAUDE.md §15: a new queue does not enter the mustDrain class without the owner's decision; a host passes its own list as the budget's mustDrainIds)`)
+      }
       const reserveMs = queueOptions.reserveMs ?? 0
       if (reservedTotal() + reserveMs > budget.ms * MAX_RESERVE_SHARE) {
         throw new Error(`budget.register(${queue.id}): the reserves would pass half of the ${budget.ms} ms budget`)

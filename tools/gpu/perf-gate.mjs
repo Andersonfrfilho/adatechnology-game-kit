@@ -16,7 +16,7 @@
 // checkout of that sha, before any measure of it) and times.ndjson, one line per round with the minutes of each step, printed at the end too.
 //   on battery it skips with a message (tools/gpu/power.mjs); PRE_PUSH_ON_BATTERY=1 runs it anyway
 // The `room-explosion` scenario (spec 008 B6) is a different gate, by hand or in the nightly, never in CI: the physics ms of the house explosion at 1x, 2x, 4x and 6x CPU
-// throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It does not compare with main; see tools/gpu/room-explosion.mjs for the variables and the kinds (blast, hammer; opt-in crater: C4 digging loose ground). The default and gated variant is jolt-d4-worker (the page default, paced); jolt-d4 stays available by name.
+// throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It blocks only on a regression against the base report ROOM_EXPLOSION_BASE (the nightly keeps the best of its passing nights); see tools/gpu/room-explosion.mjs for the variables and the kinds (blast, hammer; opt-in crater: C4 digging loose ground). The default and gated variant is jolt-d4-worker (the page default, paced); jolt-d4 stays available by name.
 //   flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs room-explosion
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'

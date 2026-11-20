@@ -379,6 +379,10 @@ export interface DestructionRenderer {
   present(alpha: number): void
   /** With `interpolate`: gives the step pose back to what `present` drew between. `update` does it first; call it before reading a piece's root between `present` and `update`. */
   restoreStepPose(): void
+  /** The host applies the structural events itself at the end of each tick (`applyStructuralEvents`); a frame drain leaves them for the next tick. */
+  setStructuralInTick(isInTick: boolean): void
+  /** At the end of a tick, on the step pose: applies the structural events that wait and the visual ones of their objects, in the order of emission. */
+  applyStructuralEvents(): void
   /**
    * The waiting events and the presentation slices they left, as a `DeferredQueue` for a shared frame budget (id `destruction.events`). `budget.register`
    * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.

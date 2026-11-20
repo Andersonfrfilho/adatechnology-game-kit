@@ -65,6 +65,8 @@ const EDGE_LUMP_MIN = 0.04
 const EDGE_LUMP_MAX = 0.08
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
 const MAX_FLAKES = 64
+/** Frames, the strike frame included, a wall may wait in the paint queue before it is painted whatever the frame deadline says. */
+const PAINT_WINDOW_TICKS = 3
 
 /** A unit laid bare in a wall, a box in the house's space (centre and size) with its colour. */
 interface UnitBox { x: number; y: number; z: number; sx: number; sy: number; sz: number; colour: number }
@@ -116,6 +118,8 @@ interface WallView {
   fallen: Set<string>
   /** The units of each part still drawn at the last paint, along the wall from its start: what a body bumps into. */
   kept: Map<string, Span[]>
+  /** The world recorded damage (chips, an opening) that `kept` does not show yet: `standing` works it out when asked, the paint may come later. */
+  keptStale: boolean
 }
 
 /** The part of `unit` inside `box` (house space, `[minX, minY, minZ, maxX, maxY, maxZ]`), or null when nothing of it is. */
@@ -143,13 +147,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   const paintQueues = new Set<DeferredQueue>()
   const paintQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.BREACH_PAINT,
-    pending: () => { let n = 0; for (const q of paintQueues) n += q.pending(); return n },
+    pending: (frame) => { advanceTick(frame); let n = 0; for (const q of paintQueues) n += q.pending(); return n },
     run(deadline, clock) {
+      countRunAsFrame()
+      strike.inRenderer = true
       let ran = 0
-      for (const q of [...paintQueues]) {
-        if (q.pending() === 0) continue
-        if (ran > 0 && clock() >= deadline) break
-        ran += q.run(deadline, clock)
+      try {
+        // each house keeps its own quota of walls (`owedWalls`): one house spending the deadline cannot starve the walls of another
+        for (const q of [...paintQueues]) if (q.pending() > 0) ran += q.run(deadline, clock)
+      } finally {
+        strike.inRenderer = false
       }
       return ran
     },
@@ -163,11 +170,29 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
    * it cuts) and each used to repaint it; each wall cut is painted once, every house in one unit, every frame before the render (`DEFERRED_PRIORITY`).
    */
   const cutState = { attached: false }
+  /** Frames the budget has polled the breach queues: `tick` advances once per new `pending(frame)`; a wall queued at tick `n` is overdue from tick `n + PAINT_WINDOW_TICKS`. */
+  const strike = { tick: 0, frame: undefined as number | undefined, polled: false, inRenderer: false }
+  /** No frame number polled since the last run: the run is the frame, so the window still counts down. */
+  const countRunAsFrame = (): void => {
+    if (!strike.polled) strike.tick++
+    strike.polled = false
+  }
+  const advanceTick = (frame: number | undefined): void => {
+    if (frame === undefined) return
+    strike.polled = true
+    if (frame === strike.frame) return
+    strike.frame = frame
+    strike.tick++
+  }
   const cutPainters = new Set<{ pending(): boolean; run(): void }>()
   const cutQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.BREACH_CUT,
     // the whole pass is one unit: a forced run (the budget spent by the blast's own events) still paints every house cut in that frame
-    pending: () => { for (const painter of cutPainters) if (painter.pending()) return 1; return 0 },
+    pending: (frame) => {
+      advanceTick(frame)
+      for (const painter of cutPainters) if (painter.pending()) return 1
+      return 0
+    },
     run() {
       let ran = 0
       for (const painter of [...cutPainters]) {
@@ -188,8 +213,52 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   function createBreachView(opts: BreachViewOptions) {
     const { house, structure } = opts
     const views = new Map<string, WallView>()
-    /** Walls whose damage changed and whose masks and units are repainted at the next `flush`. */
-    const dirty = new Set<WallView>()
+    /** Walls whose damage changed and whose masks and units are repainted at the next `flush` or by the paint queue (value: the tick they were queued at). */
+    const dirty = new Map<WallView, number>()
+    /** Where the last damage event of this house landed (its space; the events carry no blast centre): the paint queue takes the walls nearest to it first. */
+    const lastStrike = [0, 0, 0]
+    let hasStrike = false
+    const strikeDistance = (view: WallView): number => {
+      if (!hasStrike) return 0
+      const b = view.bounds
+      const dx = (b[0]! + b[3]!) / 2 - lastStrike[0]!, dy = (b[1]! + b[4]!) / 2 - lastStrike[1]!, dz = (b[2]! + b[5]!) / 2 - lastStrike[2]!
+      const distance = dx * dx + dy * dy + dz * dz
+      return Number.isFinite(distance) ? distance : Infinity
+    }
+    /** Frames since the frame whose drain first saw the wall: 0 in the strike frame (the tick advances before the run). */
+    const ageOf = (queuedAt: number): number => strike.tick - queuedAt - 1
+    const isOverdue = (view: WallView): boolean => ageOf(dirty.get(view)!) >= PAINT_WINDOW_TICKS - 1
+    /** `view` goes before `best`: overdue walls first, then the nearest to the last strike, then by id (a total order that does not depend on the order they were queued). */
+    const comesBefore = (view: WallView, best: WallView): boolean => {
+      const overdue = isOverdue(view)
+      if (overdue !== isOverdue(best)) return overdue
+      const distance = strikeDistance(view), bestDistance = strikeDistance(best)
+      return distance !== bestDistance ? distance < bestDistance : view.host < best.host
+    }
+    /** The next wall to paint. Without a frame budget: the order they were queued (the house keeps that child order of its unit meshes). */
+    const nextDirty = (): WallView | undefined => {
+      if (!paintState.attached) return dirty.keys().next().value
+      let best: WallView | undefined
+      for (const view of dirty.keys()) if (best === undefined || comesBefore(view, best)) best = view
+      return best
+    }
+    /**
+     * How many walls the next run must paint whatever the deadline says: the walls past their window; else enough of the walls of earlier frames to empty
+     * the queue by the window, none for the walls that entered in this frame (21 queued at once: 0, 11, 10). Without a frame budget: one.
+     */
+    const owedWalls = (): number => {
+      if (!paintState.attached) return 1
+      let oldest = 0, overdue = 0, older = 0
+      for (const queuedAt of dirty.values()) {
+        const age = ageOf(queuedAt)
+        if (age >= PAINT_WINDOW_TICKS - 1) overdue++
+        if (age >= 1) older++
+        oldest = Math.max(oldest, age)
+      }
+      if (overdue > 0) return overdue
+      return older === 0 ? 0 : Math.ceil(older / (PAINT_WINDOW_TICKS - oldest))
+    }
+    const queueForPaint = (view: WallView): void => { if (!dirty.has(view)) dirty.set(view, strike.tick) }
     /** Walls cut since the cut queue last ran, while a frame budget owns it (`cutQueue`): painted once each by it. */
     const cutWalls = new Set<WallView>()
     const paintCut = (): void => {
@@ -232,6 +301,14 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return [v.x, v.y, v.z]
     }
 
+    const markStrike = (point: number[]): void => {
+      if (!paintState.attached) return
+      house.updateWorldMatrix(true, false)
+      const v = house.worldToLocal(tmp.p.set(point[0]!, point[1]!, point[2]!))
+      lastStrike[0] = v.x; lastStrike[1] = v.y; lastStrike[2] = v.z
+      hasStrike = true
+    }
+
     /**
      * The units of a part: one cell per unit of its courses (running or stack bond), up from `y0`, along the host wall (`mask`) from the wall's start: a beam
      * on the wall starts where the wall does, a pillar in the wall where it stands along it.
@@ -257,14 +334,33 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return out
     }
 
-    const specOf = (id: string) => opts.spec()?.parts?.find((q) => q.id === id)
+    // the riders of a wall ask for the spec of every part of the house on every hit: an index per spec object, not a scan per id
+    const specIndex = new WeakMap<object, Map<string, NonNullable<ReturnType<typeof opts.spec>>['parts'][number]>>()
+    const specOf = (id: string) => {
+      const spec = opts.spec()
+      if (!spec?.parts) return undefined
+      let index = specIndex.get(spec.parts)
+      if (!index) {
+        index = new Map()
+        for (const q of spec.parts) if (!index.has(q.id)) index.set(q.id, q)
+        specIndex.set(spec.parts, index)
+      }
+      return index.get(id)
+    }
     const same = (a: number[], b: number[]) => a.every((x, k) => Math.abs(x - b[k]!) < 1e-3)
 
     /**
      * The part whose mesh draws `partId`: itself, or for a beam the house draws inside the wall under it (a bond beam behind the wall's plaster), that
      * wall.
      */
+    // the structure's parts and their meshes are fixed once the house is built (`pieces.ts`): who draws a part never changes, so each answer is kept
+    const hostOfCache = new Map<string, string | null>()
     function hostOf(partId: string): string | null {
+      let host = hostOfCache.get(partId)
+      if (host === undefined) hostOfCache.set(partId, (host = findHostOf(partId)))
+      return host
+    }
+    function findHostOf(partId: string): string | null {
       if (structure.meshesOf(partId).some((it) => it.mesh)) return partId
       const part = structure.byId.get(partId)
       if (!part) return null
@@ -278,7 +374,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * Every wall that draws `partId`: its host, and for a pillar each drawn wall it stands in. A pillar at a corner is under the plaster of both walls that meet there (each
      * wall's mesh runs past the other's face to close the corner): what breaks off it opens both faces, and the corner itself goes, not the face of one wall only.
      */
-    function hostsOf(partId: string): string[] {
+    const hostsOfCache = new Map<string, readonly string[]>()
+    function hostsOf(partId: string): readonly string[] {
+      let hosts = hostsOfCache.get(partId)
+      if (!hosts) hostsOfCache.set(partId, (hosts = findHostsOf(partId)))
+      return hosts
+    }
+    function findHostsOf(partId: string): readonly string[] {
       const part = structure.byId.get(partId)
       if (part?.role === 'column' && !structure.meshesOf(partId).some((it) => it.mesh)) return wallsAround(part)
       const host = hostOf(partId)
@@ -294,7 +396,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
      * The drawn walls a pillar stands in, along their height: first the one its centre is in (the wall it is laid in), then any other whose plan box it reaches into by more
      * than `PILLAR_REACH` both ways. A corner pillar (laid along one wall, 30 x 14 cm) reaches into the end of the other wall, which runs over it to close the corner.
      */
-    function wallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): string[] {
+    const wallsAroundCache = new Map<string, readonly string[]>()
+    function wallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): readonly string[] {
+      let walls = wallsAroundCache.get(part.id)
+      if (!walls) wallsAroundCache.set(part.id, (walls = findWallsAround(part)))
+      return walls
+    }
+    function findWallsAround(part: { id: string; aabb: readonly number[]; y0: number; y1: number }): readonly string[] {
       const cu = (part.aabb[0]! + part.aabb[2]!) / 2, cv = (part.aabb[1]! + part.aabb[3]!) / 2
       const first: string[] = [], other: string[] = []
       for (const q of structure.parts) {
@@ -346,7 +454,16 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /** The beams with units the house draws inside the range of `hostId` (see `hostOf`). */
-    const riders = (hostId: string): string[] =>
+    const ridersCache = new Map<string, readonly string[]>()
+    const riders = (hostId: string): readonly string[] => {
+      const cached = ridersCache.get(hostId)
+      if (cached) return cached
+      const found = findRiders(hostId)
+      // the units come from the spec: before the house has one, the answer is not kept
+      if (opts.spec()) ridersCache.set(hostId, found)
+      return found
+    }
+    const findRiders = (hostId: string): readonly string[] =>
       structure.parts.filter((q) => q.id !== hostId && specOf(q.id)?.units && hostsOf(q.id).includes(hostId) && !structure.meshesOf(q.id).some((it) => it.mesh)).map((q) => q.id)
 
     /** The wall's range of the merged mesh as a mesh of its own, same transform, with a clone of its material that discards what the mask cuts. */
@@ -492,6 +609,41 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
     }
 
     /**
+     * The bricks of `id` the world took (its chips, its opening) and the ones left, along the wall: all of it from what the world recorded in the view,
+     * never from what is painted, so what a body bumps into does not wait for the paint.
+     */
+    function splitUnits(view: WallView, id: string, around: { pillars: readonly { a: number; b: number; y0: number; y1: number }[]; gaps: readonly Span[] }) {
+      const { mask } = view
+      const along = (p: number[]) => (mask.alongU ? p[0]! : p[2]!) - mask.start
+      const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id)
+      // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
+      const own = cells(part, units, mask)
+      const all = (id === view.host ? own.flatMap((c) => besidePillars(c, around.pillars)) : own).flatMap((c) => outsideGaps(c, around.gaps))
+      const holes: typeof all = [], kept: typeof all = []
+      if (view.fallen.has(id)) return { all, kept, holes: all, boxes: [] }
+      const boxes = chips.map((k) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1]! - k.up, y1: k.center[1]! + k.up }))
+      // the world's units and the drawn bricks do not share joints (its units are merged and shifted by bond): a brick goes when the world took most
+      // of it and the unit under its middle, or it is drawn hanging where the world has nothing
+      const gone = (c: Span) => {
+        const over = boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)
+        const share = covered(c, over)
+        if (share >= 0.9) return true
+        const s = (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2
+        return share >= 0.5 && over.some((k) => s >= k.s0 && s <= k.s1 && y >= k.y0 && y <= k.y1)
+      }
+      const open = (c: Span) => gone(c) || (opening !== undefined && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
+      for (const c of all) (open(c) ? holes : kept).push(c)
+      return { all, kept, holes, boxes }
+    }
+
+    /** `kept` of every part of the view from what the world recorded, without painting. */
+    function refreshKept(view: WallView): void {
+      const around = { pillars: pillarSpans(view), gaps: windowGaps(view) }
+      for (const id of view.parts) view.kept.set(id, splitUnits(view, id, around).kept)
+      view.keptStale = false
+    }
+
+    /**
      * The damage of the view, drawn again: which units of each part are gone, where shots broke through the units that stay (a crater: an irregular
      * hole through the unit, the plaster broken off around it), the masks (what is gone or broken through, plus a ragged edge of plaster around it,
      * and the opening) and the units seen inside the edge of the cut.
@@ -509,28 +661,14 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const castGone: { c: Span; part: HouseStructurePart; thick: number; mid: number }[] = []
       const pillars = pillarSpans(view), gaps = windowGaps(view)
       for (const id of view.parts) {
-        const part = structure.byId.get(id)!, units = specOf(id)!.units!, chips = view.chips.get(id)!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
-        // the bricks stop at the pillars standing in the wall (the concrete is cast between them); a part that broke or fell has none left
-        const own = cells(part, units, mask)
-        const all = (id === view.host ? own.flatMap((c) => besidePillars(c, pillars)) : own).flatMap((c) => outsideGaps(c, gaps))
+        const part = structure.byId.get(id)!, units = specOf(id)!.units!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
+        const { all, kept, holes: lost, boxes } = splitUnits(view, id, { pillars, gaps })
         if (view.fallen.has(id)) { holes.push(...all); view.kept.set(id, []); continue }
         const thick = mask.alongU ? part.aabb[3]! - part.aabb[1]! : part.aabb[2]! - part.aabb[0]!
         const mid = mask.alongU ? (part.aabb[1]! + part.aabb[3]!) / 2 : (part.aabb[0]! + part.aabb[2]!) / 2
         if (opening) discs.push({ s: along(opening.center), y: opening.center[1]!, r: opening.radius })
         for (const k of spalls) flakes.push({ s: along(k.center), y: k.center[1]!, r: k.radius })
-        const boxes = chips.map((k) => ({ s0: along(k.center) - k.along, s1: along(k.center) + k.along, y0: k.center[1]! - k.up, y1: k.center[1]! + k.up }))
-        // the world's units and the drawn bricks do not share joints (its units are merged and shifted by bond): a brick goes when the world took most
-        // of it and the unit under its middle, or it is drawn hanging where the world has nothing
-        const gone = (c: Span) => {
-          const over = boxes.filter((k) => k.s1 > c.a && k.s0 < c.b && k.y1 > c.y0 && k.y0 < c.y1)
-          const share = covered(c, over)
-          if (share >= 0.9) return true
-          const s = (c.a + c.b) / 2, y = (c.y0 + c.y1) / 2
-          return share >= 0.5 && over.some((k) => s >= k.s0 && s <= k.s1 && y >= k.y0 && y <= k.y1)
-        }
-        const open = (c: Span) => gone(c) || (opening !== undefined && Math.hypot((c.a + c.b) / 2 - along(opening.center), (c.y0 + c.y1) / 2 - opening.center[1]!) < opening.radius)
-        const kept: typeof all = []
-        for (const c of all) (open(c) ? holes : kept).push(c)
+        holes.push(...lost)
         view.kept.set(id, kept)
         if (units.mortar === part.material) for (const c of all) if (!kept.includes(c)) castGone.push({ c, part, thick, mid })
         for (const c of kept) shown.push({ c, part, units, thick, mid })
@@ -545,6 +683,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           pits.push({ s: (k.a + k.b) / 2, y: (k.y0 + k.y1) / 2, rs: (k.b - k.a) / 2, ry: (k.y1 - k.y0) / 2 })
         }
       }
+      view.keptStale = false
       // the masks: what came out or was broken through goes through, the plaster breaks off around it with a ragged edge
       const reach = SPALL_MIN + SPALL_RAGGED
       const ragged = (s: number, y: number) => 0.6 * noise2(s, y, 0.03) + 0.4 * noise2(s + 7.3, y - 3.1, 0.011)
@@ -620,6 +759,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       units.receiveShadow = true
       units.visible = lod === 0
       if (lumps.length > 0) units.add(lumpMesh(lumps, view.unitMaterial))
+      // painted in the order the queue picks, so the order of the house's unit meshes follows it (draw order only; nothing reads it)
       house.add(units)
       view.units = units
       view.gone = holes.length
@@ -651,7 +791,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       const mask = maskOf(hostId, parts), core = maskOf(hostId, parts)
       return {
         host: hostId, parts, items, mask, core, unitMaterial: withMask(unitsMaterial(core), mask), shells: [], saved: null, units: null, gone: 0, pits: 0, bounds: drawnBounds(items),
-        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(), kept: new Map<string, Span[]>(),
+        chips: new Map(parts.map((id) => [id, [] as ChipBox[]])), spalls: new Map(parts.map((id) => [id, [] as Disc[]])), openings: new Map<string, Disc>(), flakes: 0, fallen: new Set<string>(), kept: new Map<string, Span[]>(), keptStale: false,
       }
     }
 
@@ -763,9 +903,14 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
         if (list.length > MAX_FLAKES) list.shift()
       }
       cut(view)
+      view.keptStale = true
       views.set(hostId, view)
-      // the hole a wall gets (an opening, a unit knocked out) shows at once; the plaster chipping around it fills in with the next flush
-      if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) dirty.add(view) }
+      const point = change.opening?.center ?? change.spall?.center ?? change.chip?.center ?? change.chips?.[0]?.center
+      if (point) markStrike(point)
+      // only an opening shows at once; the plaster chipping and the units knocked out fill in later, and a wall already waiting keeps its age
+      if (cutState.attached && change.opening) { dirty.delete(view); cutWalls.add(view) }
+      else if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) queueForPaint(view) }
+      else if (cutState.attached && paintState.attached && !cutWalls.has(view)) queueForPaint(view)
       else if (cutState.attached) { dirty.delete(view); cutWalls.add(view) }
       else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
@@ -789,16 +934,27 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       return dirty.size
     }
 
+    /** How long the last wall took to paint, by the budget's clock (the walls are alike): a wall that does not fit what is left of the deadline waits. */
+    let lastPaintMs: number | undefined
+    const fitsDeadline = (deadline: number, clock: () => number): boolean => {
+      const left = deadline - clock()
+      return left > 0 && left >= (lastPaintMs ?? 1)
+    }
+    // with a frame budget this queue may run no wall (`run` returns 0 with walls waiting): the window forces the ones past it, which is what keeps it moving
     const queue: DeferredQueue = {
       id: DEFERRED_QUEUE_ID.BREACH_PAINT,
       pending: () => dirty.size,
       run(deadline, clock) {
+        if (!strike.inRenderer) countRunAsFrame()
         let ran = 0
-        for (const view of dirty) {
+        const owed = owedWalls()
+        for (let view = nextDirty(); view; view = nextDirty()) {
+          if (ran >= owed && (paintState.attached ? !fitsDeadline(deadline, clock) : clock() >= deadline)) break
+          const started = clock()
           dirty.delete(view)
           paint(view)
+          lastPaintMs = clock() - started
           ran++
-          if (clock() >= deadline) break
         }
         if (ran > 0) { invalidate(); invalidateShadow() }
         return ran
@@ -820,13 +976,14 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
 
     return {
       /** The drawn walls that draw `partId` (its host; for a pillar under their plaster, each wall it stands in): where its marks go. */
-      hosts(partId: string): string[] { return hostsOf(partId) },
+      hosts(partId: string): string[] { return [...hostsOf(partId)] },
       /**
        * What still stands of the units of `partId` once its wall is cut, as drawn: spans along the wall from `start` (in the house's space, along u when
        * `alongU`) and up. Null while the wall is whole (all of the part stands).
        */
       standing(partId: string): { spans: readonly Span[]; alongU: boolean; start: number } | null {
         const hostId = hostOf(partId), view = hostId ? views.get(hostId) : undefined
+        if (view?.keptStale) refreshKept(view)
         const spans = view?.saved ? view.kept.get(partId) : undefined
         return view && spans ? { spans, alongU: view.mask.alongU, start: view.mask.start } : null
       },
@@ -906,7 +1063,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           dispose(v)
           if (lod === 0) plain(v, true)
         }
-        views.clear()
+        views.clear(); hasStrike = false
         for (const v of dropped) plain(v, true)
         dropped.length = 0
       },

@@ -1,0 +1,1769 @@
+{
+ "nota": "contagens, tempos inclusivos (ms) e por ouvinte/por som do f0 (sondas temporarias sobre 6751c2d9f); uma entrada por pagina (3 por tipo); a=sondas do world, b2=emit/ouvintes/casa, d=action, f=renderer (eventos, fracture, sons)",
+ "rodadas": {
+  "a": [
+   {
+    "kind": "blast",
+    "counts": {
+     "blastWorld": 1,
+     "blastPlain": 1,
+     "blastObject": 14,
+     "blastCandidates": 14,
+     "blastPart": 521,
+     "blastPanel": 25,
+     "blastUnits": 83,
+     "bendByBlast": 22,
+     "collapseCheck": 26,
+     "knockOutUnits": 2,
+     "solve@knockOutUnits": 2,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 11,
+     "lightLeaksNear": 1,
+     "closeRun": 2,
+     "settleAllStructure": 4,
+     "solve@closeRun": 1,
+     "groups@closeRun": 1,
+     "flushCollapse": 2,
+     "revealHostedIn": 2,
+     "emitDetaches": 2,
+     "solve@none": 9,
+     "groups@none": 9
+    },
+    "incl": {
+     "blastCandidates": 0.30000007152557373,
+     "blastPanel": 4.4999998807907104,
+     "blastUnits": 2.5,
+     "blastPart": 16.899999976158142,
+     "bendByBlast": 1.3000000715255737,
+     "blastObject": 17.399999976158142,
+     "collapseCheck": 0,
+     "solve@knockOutUnits": 2,
+     "knockOutUnits": 5.599999904632568,
+     "solve@bendByBlast": 0.6999999284744263,
+     "groups@bendByBlast": 0.10000002384185791,
+     "failPart": 1.2999998331069946,
+     "blastPlain": 20.200000047683716,
+     "lightLeaksNear": 0.19999992847442627,
+     "blastWorld": 20.399999976158142,
+     "solve@closeRun": 0.20000004768371582,
+     "groups@closeRun": 0,
+     "settleAllStructure": 0.30000007152557373,
+     "flushCollapse": 0.09999990463256836,
+     "revealHostedIn": 0.10000002384185791,
+     "emitDetaches": 0,
+     "closeRun": 0.5,
+     "solve@none": 0.19999992847442627,
+     "groups@none": 0.20000004768371582
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "blastWorld": 1,
+     "blastPlain": 1,
+     "blastObject": 14,
+     "blastCandidates": 14,
+     "blastPart": 523,
+     "blastPanel": 25,
+     "blastUnits": 84,
+     "bendByBlast": 22,
+     "knockOutUnits": 3,
+     "exposeRebar": 1,
+     "solve@knockOutUnits": 3,
+     "collapseCheck": 28,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 10,
+     "lightLeaksNear": 1,
+     "closeRun": 2,
+     "settleAllStructure": 4,
+     "solve@closeRun": 1,
+     "groups@closeRun": 1,
+     "flushCollapse": 2,
+     "revealHostedIn": 2,
+     "emitDetaches": 2,
+     "solve@none": 11,
+     "groups@none": 11
+    },
+    "incl": {
+     "blastCandidates": 0.30000007152557373,
+     "blastPanel": 3.799999952316284,
+     "blastUnits": 5.699999928474426,
+     "blastPart": 18.99999988079071,
+     "bendByBlast": 1.2000000476837158,
+     "blastObject": 19.600000023841858,
+     "exposeRebar": 0.6000000238418579,
+     "solve@knockOutUnits": 3.600000023841858,
+     "collapseCheck": 0,
+     "knockOutUnits": 7.800000071525574,
+     "solve@bendByBlast": 0.5999999046325684,
+     "groups@bendByBlast": 0.10000002384185791,
+     "failPart": 1.7999999523162842,
+     "blastPlain": 22.399999976158142,
+     "lightLeaksNear": 0.10000002384185791,
+     "blastWorld": 22.5,
+     "solve@closeRun": 0.19999992847442627,
+     "groups@closeRun": 0.10000002384185791,
+     "settleAllStructure": 0.3999999761581421,
+     "flushCollapse": 0,
+     "revealHostedIn": 0,
+     "emitDetaches": 0.10000002384185791,
+     "closeRun": 0.5,
+     "solve@none": 0.20000004768371582,
+     "groups@none": 0
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "blastWorld": 1,
+     "blastPlain": 1,
+     "blastObject": 14,
+     "blastCandidates": 14,
+     "blastPart": 521,
+     "blastPanel": 25,
+     "blastUnits": 83,
+     "bendByBlast": 22,
+     "collapseCheck": 26,
+     "knockOutUnits": 2,
+     "solve@knockOutUnits": 2,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 11,
+     "lightLeaksNear": 1,
+     "closeRun": 2,
+     "settleAllStructure": 4,
+     "solve@closeRun": 1,
+     "groups@closeRun": 1,
+     "flushCollapse": 2,
+     "revealHostedIn": 2,
+     "emitDetaches": 2,
+     "solve@none": 9,
+     "groups@none": 9
+    },
+    "incl": {
+     "blastCandidates": 0.10000002384185791,
+     "blastPanel": 4.800000071525574,
+     "blastUnits": 3.8999998569488525,
+     "blastPart": 18.299999952316284,
+     "bendByBlast": 1.4000000953674316,
+     "blastObject": 18.399999976158142,
+     "collapseCheck": 0.10000002384185791,
+     "solve@knockOutUnits": 3.5,
+     "knockOutUnits": 6.8999998569488525,
+     "solve@bendByBlast": 0.6999999284744263,
+     "groups@bendByBlast": 0.10000002384185791,
+     "failPart": 1.6999999284744263,
+     "blastPlain": 21.5,
+     "lightLeaksNear": 0.10000002384185791,
+     "blastWorld": 21.600000023841858,
+     "solve@closeRun": 0.19999992847442627,
+     "groups@closeRun": 0.10000002384185791,
+     "settleAllStructure": 0.2999999523162842,
+     "flushCollapse": 0,
+     "revealHostedIn": 0.10000002384185791,
+     "emitDetaches": 0,
+     "closeRun": 0.3999999761581421,
+     "solve@none": 0.20000004768371582,
+     "groups@none": 0.10000002384185791
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "blastWorld": 1,
+     "blastPlain": 1,
+     "blastObject": 14,
+     "blastCandidates": 14,
+     "blastPart": 523,
+     "blastPanel": 25,
+     "blastUnits": 84,
+     "bendByBlast": 22,
+     "knockOutUnits": 3,
+     "exposeRebar": 1,
+     "solve@knockOutUnits": 3,
+     "collapseCheck": 28,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 10,
+     "lightLeaksNear": 1,
+     "closeRun": 2,
+     "settleAllStructure": 4,
+     "solve@closeRun": 1,
+     "groups@closeRun": 1,
+     "flushCollapse": 2,
+     "revealHostedIn": 2,
+     "emitDetaches": 2,
+     "solve@none": 11,
+     "groups@none": 11
+    },
+    "incl": {
+     "blastCandidates": 0.10000002384185791,
+     "blastPanel": 3.200000047683716,
+     "blastUnits": 3.899999976158142,
+     "blastPart": 17.59999990463257,
+     "bendByBlast": 1.2999999523162842,
+     "blastObject": 18,
+     "exposeRebar": 0.6999999284744263,
+     "solve@knockOutUnits": 1.9000000953674316,
+     "collapseCheck": 0,
+     "knockOutUnits": 6.199999928474426,
+     "solve@bendByBlast": 0.6000001430511475,
+     "groups@bendByBlast": 0.09999990463256836,
+     "failPart": 1.3999998569488525,
+     "blastPlain": 22.399999976158142,
+     "lightLeaksNear": 0.20000004768371582,
+     "blastWorld": 22.600000023841858,
+     "solve@closeRun": 0.20000004768371582,
+     "groups@closeRun": 0.09999990463256836,
+     "settleAllStructure": 0.2999999523162842,
+     "flushCollapse": 0,
+     "revealHostedIn": 0.20000004768371582,
+     "emitDetaches": 0,
+     "closeRun": 0.5,
+     "solve@none": 0.19999992847442627,
+     "groups@none": 0.10000002384185791
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "blastWorld": 1,
+     "blastPlain": 1,
+     "blastObject": 14,
+     "blastCandidates": 14,
+     "blastPart": 521,
+     "blastPanel": 25,
+     "blastUnits": 83,
+     "bendByBlast": 22,
+     "collapseCheck": 26,
+     "knockOutUnits": 2,
+     "solve@knockOutUnits": 2,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 11,
+     "lightLeaksNear": 1,
+     "closeRun": 2,
+     "settleAllStructure": 4,
+     "solve@closeRun": 1,
+     "groups@closeRun": 1,
+     "flushCollapse": 2,
+     "revealHostedIn": 2,
+     "emitDetaches": 2,
+     "solve@none": 9,
+     "groups@none": 9
+    },
+    "incl": {
+     "blastCandidates": 0.30000007152557373,
+     "blastPanel": 4.700000166893005,
+     "blastUnits": 4,
+     "blastPart": 17.699999928474426,
+     "bendByBlast": 0.8999999761581421,
+     "blastObject": 18.299999952316284,
+     "collapseCheck": 0,
+     "solve@knockOutUnits": 3.4000000953674316,
+     "knockOutUnits": 6.800000071525574,
+     "solve@bendByBlast": 0.5000001192092896,
+     "groups@bendByBlast": 0.19999992847442627,
+     "failPart": 1.100000023841858,
+     "blastPlain": 21.199999928474426,
+     "lightLeaksNear": 0.10000002384185791,
+     "blastWorld": 21.299999952316284,
+     "solve@closeRun": 0.20000004768371582,
+     "groups@closeRun": 0.19999992847442627,
+     "settleAllStructure": 0.3999999761581421,
+     "flushCollapse": 0,
+     "revealHostedIn": 0,
+     "emitDetaches": 0,
+     "closeRun": 0.3999999761581421,
+     "solve@none": 0.20000004768371582,
+     "groups@none": 0.09999990463256836
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "blastWorld": 1,
+     "blastPlain": 1,
+     "blastObject": 14,
+     "blastCandidates": 14,
+     "blastPart": 523,
+     "blastPanel": 25,
+     "blastUnits": 84,
+     "bendByBlast": 22,
+     "knockOutUnits": 3,
+     "exposeRebar": 1,
+     "solve@knockOutUnits": 3,
+     "collapseCheck": 28,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 10,
+     "lightLeaksNear": 1,
+     "closeRun": 2,
+     "settleAllStructure": 4,
+     "solve@closeRun": 1,
+     "groups@closeRun": 1,
+     "flushCollapse": 2,
+     "revealHostedIn": 2,
+     "emitDetaches": 2,
+     "solve@none": 11,
+     "groups@none": 11
+    },
+    "incl": {
+     "blastCandidates": 0.10000002384185791,
+     "blastPanel": 3.5999999046325684,
+     "blastUnits": 3.900000214576721,
+     "blastPart": 16.59999990463257,
+     "bendByBlast": 1.1999999284744263,
+     "blastObject": 17.100000023841858,
+     "exposeRebar": 0.6000000238418579,
+     "solve@knockOutUnits": 1.7999999523162842,
+     "collapseCheck": 0,
+     "knockOutUnits": 5.800000071525574,
+     "solve@bendByBlast": 0.5999999046325684,
+     "groups@bendByBlast": 0.30000007152557373,
+     "failPart": 1.3999998569488525,
+     "blastPlain": 20.09999990463257,
+     "lightLeaksNear": 0.10000002384185791,
+     "blastWorld": 20.199999928474426,
+     "solve@closeRun": 0.20000004768371582,
+     "groups@closeRun": 0.19999992847442627,
+     "settleAllStructure": 0.3999999761581421,
+     "flushCollapse": 0,
+     "revealHostedIn": 0,
+     "emitDetaches": 0.10000002384185791,
+     "closeRun": 0.5,
+     "solve@none": 0.19999992847442627,
+     "groups@none": 0.20000004768371582
+    }
+   }
+  ],
+  "b2": [
+   {
+    "kind": "blast",
+    "counts": {
+     "blastPart": 521,
+     "emit": 700,
+     "onEvent": 700,
+     "listenAll": 700,
+     "applyDamage": 506,
+     "blastPanel": 25,
+     "blastUnits": 83,
+     "bendByBlast": 22,
+     "houseOnWreck": 474,
+     "houseListeners": 474,
+     "houseStage": 9,
+     "collapseCheck": 26,
+     "houseSpall": 6,
+     "houseDamage": 337,
+     "knockOutUnits": 2,
+     "houseChip": 2,
+     "solve@knockOutUnits": 2,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 11,
+     "partLost": 11,
+     "solve@none": 10,
+     "groups@none": 10
+    },
+    "incl": {
+     "onEvent": 0.20000004768371582,
+     "listenAll": 5.300000190734863,
+     "emit": 6.400000214576721,
+     "applyDamage": 4.099999904632568,
+     "blastPanel": 4.100000023841858,
+     "blastUnits": 2.3000000715255737,
+     "blastPart": 18.40000009536743,
+     "bendByBlast": 1,
+     "houseOnWreck": 0.09999990463256836,
+     "houseListeners": 0.09999990463256836,
+     "houseStage": 0.10000002384185791,
+     "collapseCheck": 0,
+     "houseSpall": 2.4999998807907104,
+     "houseDamage": 0.10000002384185791,
+     "houseChip": 0.5000001192092896,
+     "solve@knockOutUnits": 1.899999976158142,
+     "knockOutUnits": 5.100000023841858,
+     "solve@bendByBlast": 0.5,
+     "groups@bendByBlast": 0.20000004768371582,
+     "partLost": 0.10000002384185791,
+     "failPart": 1.3000000715255737,
+     "solve@none": 0.5,
+     "groups@none": 0
+    },
+    "byFn": {
+     "o=>{o.type===\"explode\"&&this.coverWhenWentOff.set(o,this.coverAround(o)),(this.queue.lengt": {
+      "n": 700,
+      "ms": 0.19999992847442627
+     },
+     "R=>{ve.push(R)}": {
+      "n": 700,
+      "ms": 0.10000002384185791
+     },
+     "n0=>{if(n0.object===W){switch(n0.type){case\"stage\":C.stage(n0);break;case\"chip\":C.chip(n0)": {
+      "n": 700,
+      "ms": 0.30000007152557373
+     },
+     "Z=>{let le=h.get(Z.object);if(!(!le||!(\"part\"in Z)||Z.part!==\"tank\")){if(Z.type===\"leak\"){": {
+      "n": 700,
+      "ms": 0.10000002384185791
+     },
+     "G=>{if(G.object===b.id)switch(cd(\"houseOnWreck\",()=>{if(a.onWreck)try{a.onWreck(G,m)}catch": {
+      "n": 700,
+      "ms": 4.300000071525574
+     }
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "blastPart": 523,
+     "emit": 707,
+     "onEvent": 707,
+     "listenAll": 707,
+     "applyDamage": 508,
+     "blastPanel": 25,
+     "blastUnits": 84,
+     "bendByBlast": 22,
+     "houseOnWreck": 481,
+     "houseListeners": 481,
+     "houseStage": 10,
+     "houseDamage": 339,
+     "knockOutUnits": 3,
+     "houseChip": 3,
+     "exposeRebar": 1,
+     "solve@knockOutUnits": 3,
+     "collapseCheck": 28,
+     "houseSpall": 6,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 10,
+     "partLost": 10,
+     "solve@none": 12,
+     "groups@none": 12
+    },
+    "incl": {
+     "onEvent": 0.19999992847442627,
+     "listenAll": 4.000000238418579,
+     "emit": 5.300000071525574,
+     "applyDamage": 3.699999690055847,
+     "blastPanel": 4.099999904632568,
+     "blastUnits": 3.5999999046325684,
+     "blastPart": 19.200000047683716,
+     "bendByBlast": 1.1999999284744263,
+     "houseOnWreck": 0.10000002384185791,
+     "houseListeners": 0,
+     "houseStage": 0,
+     "houseDamage": 0.10000002384185791,
+     "houseChip": 0.40000009536743164,
+     "exposeRebar": 0.8000000715255737,
+     "solve@knockOutUnits": 1.5999999046325684,
+     "collapseCheck": 0,
+     "knockOutUnits": 5.800000071525574,
+     "houseSpall": 1.9000002145767212,
+     "solve@bendByBlast": 0.40000009536743164,
+     "groups@bendByBlast": 0.19999992847442627,
+     "partLost": 0,
+     "failPart": 1.1999999284744263,
+     "solve@none": 0.7000000476837158,
+     "groups@none": 0
+    },
+    "byFn": {
+     "o=>{o.type===\"explode\"&&this.coverWhenWentOff.set(o,this.coverAround(o)),(this.queue.lengt": {
+      "n": 707,
+      "ms": 0.10000002384185791
+     },
+     "R=>{ve.push(R)}": {
+      "n": 707,
+      "ms": 0
+     },
+     "n0=>{if(n0.object===W){switch(n0.type){case\"stage\":C.stage(n0);break;case\"chip\":C.chip(n0)": {
+      "n": 707,
+      "ms": 0.39999985694885254
+     },
+     "Z=>{let le=h.get(Z.object);if(!(!le||!(\"part\"in Z)||Z.part!==\"tank\")){if(Z.type===\"leak\"){": {
+      "n": 707,
+      "ms": 0
+     },
+     "G=>{if(G.object===b.id)switch(cd(\"houseOnWreck\",()=>{if(a.onWreck)try{a.onWreck(G,m)}catch": {
+      "n": 707,
+      "ms": 3.0000003576278687
+     }
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "blastPart": 521,
+     "emit": 700,
+     "onEvent": 700,
+     "listenAll": 700,
+     "applyDamage": 506,
+     "blastPanel": 25,
+     "blastUnits": 83,
+     "bendByBlast": 22,
+     "houseOnWreck": 474,
+     "houseListeners": 474,
+     "houseStage": 9,
+     "collapseCheck": 26,
+     "houseSpall": 6,
+     "houseDamage": 337,
+     "knockOutUnits": 2,
+     "houseChip": 2,
+     "solve@knockOutUnits": 2,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 11,
+     "partLost": 11,
+     "solve@none": 10,
+     "groups@none": 10
+    },
+    "incl": {
+     "onEvent": 0,
+     "listenAll": 4.799999952316284,
+     "emit": 5.5,
+     "applyDamage": 4.099999904632568,
+     "blastPanel": 4.300000071525574,
+     "blastUnits": 2.299999952316284,
+     "blastPart": 18.600000023841858,
+     "bendByBlast": 1.3000000715255737,
+     "houseOnWreck": 0,
+     "houseListeners": 0,
+     "houseStage": 0,
+     "collapseCheck": 0,
+     "houseSpall": 1.9999998807907104,
+     "houseDamage": 0.10000002384185791,
+     "houseChip": 0.6000000238418579,
+     "solve@knockOutUnits": 1.899999976158142,
+     "knockOutUnits": 5,
+     "solve@bendByBlast": 0.3999999761581421,
+     "groups@bendByBlast": 0.30000007152557373,
+     "partLost": 0.10000002384185791,
+     "failPart": 1.6999998092651367,
+     "solve@none": 0.5,
+     "groups@none": 0.10000002384185791
+    },
+    "byFn": {
+     "o=>{o.type===\"explode\"&&this.coverWhenWentOff.set(o,this.coverAround(o)),(this.queue.lengt": {
+      "n": 700,
+      "ms": 0.30000007152557373
+     },
+     "R=>{ve.push(R)}": {
+      "n": 700,
+      "ms": 0
+     },
+     "n0=>{if(n0.object===W){switch(n0.type){case\"stage\":C.stage(n0);break;case\"chip\":C.chip(n0)": {
+      "n": 700,
+      "ms": 0.3999999761581421
+     },
+     "Z=>{let le=h.get(Z.object);if(!(!le||!(\"part\"in Z)||Z.part!==\"tank\")){if(Z.type===\"leak\"){": {
+      "n": 700,
+      "ms": 0.10000002384185791
+     },
+     "G=>{if(G.object===b.id)switch(cd(\"houseOnWreck\",()=>{if(a.onWreck)try{a.onWreck(G,m)}catch": {
+      "n": 700,
+      "ms": 3.4999998807907104
+     }
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "blastPart": 523,
+     "emit": 707,
+     "onEvent": 707,
+     "listenAll": 707,
+     "applyDamage": 508,
+     "blastPanel": 25,
+     "blastUnits": 84,
+     "bendByBlast": 22,
+     "houseOnWreck": 481,
+     "houseListeners": 481,
+     "houseStage": 10,
+     "houseDamage": 339,
+     "knockOutUnits": 3,
+     "houseChip": 3,
+     "exposeRebar": 1,
+     "solve@knockOutUnits": 3,
+     "collapseCheck": 28,
+     "houseSpall": 6,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 10,
+     "partLost": 10,
+     "solve@none": 12,
+     "groups@none": 12
+    },
+    "incl": {
+     "onEvent": 0.10000002384185791,
+     "listenAll": 5.5,
+     "emit": 6.299999952316284,
+     "applyDamage": 4.300000071525574,
+     "blastPanel": 4.1000001430511475,
+     "blastUnits": 5.400000095367432,
+     "blastPart": 21.50000023841858,
+     "bendByBlast": 1.1999998092651367,
+     "houseOnWreck": 0,
+     "houseListeners": 0,
+     "houseStage": 0,
+     "houseDamage": 0,
+     "houseChip": 0.6000001430511475,
+     "exposeRebar": 0.6000000238418579,
+     "solve@knockOutUnits": 3.3999998569488525,
+     "collapseCheck": 0,
+     "knockOutUnits": 8,
+     "houseSpall": 2.5000001192092896,
+     "solve@bendByBlast": 0.5,
+     "groups@bendByBlast": 0.19999992847442627,
+     "partLost": 0,
+     "failPart": 1.5999999046325684,
+     "solve@none": 0.5,
+     "groups@none": 0.10000002384185791
+    },
+    "byFn": {
+     "o=>{o.type===\"explode\"&&this.coverWhenWentOff.set(o,this.coverAround(o)),(this.queue.lengt": {
+      "n": 707,
+      "ms": 0.10000002384185791
+     },
+     "R=>{ve.push(R)}": {
+      "n": 707,
+      "ms": 0
+     },
+     "n0=>{if(n0.object===W){switch(n0.type){case\"stage\":C.stage(n0);break;case\"chip\":C.chip(n0)": {
+      "n": 707,
+      "ms": 0.6999999284744263
+     },
+     "Z=>{let le=h.get(Z.object);if(!(!le||!(\"part\"in Z)||Z.part!==\"tank\")){if(Z.type===\"leak\"){": {
+      "n": 707,
+      "ms": 0.10000002384185791
+     },
+     "G=>{if(G.object===b.id)switch(cd(\"houseOnWreck\",()=>{if(a.onWreck)try{a.onWreck(G,m)}catch": {
+      "n": 707,
+      "ms": 4
+     }
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "blastPart": 521,
+     "emit": 700,
+     "onEvent": 700,
+     "listenAll": 700,
+     "applyDamage": 506,
+     "blastPanel": 25,
+     "blastUnits": 83,
+     "bendByBlast": 22,
+     "houseOnWreck": 474,
+     "houseListeners": 474,
+     "houseStage": 9,
+     "collapseCheck": 26,
+     "houseSpall": 6,
+     "houseDamage": 337,
+     "knockOutUnits": 2,
+     "houseChip": 2,
+     "solve@knockOutUnits": 2,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 11,
+     "partLost": 11,
+     "solve@none": 10,
+     "groups@none": 10
+    },
+    "incl": {
+     "onEvent": 0.10000002384185791,
+     "listenAll": 5.699999809265137,
+     "emit": 6.199999809265137,
+     "applyDamage": 3.6999998092651367,
+     "blastPanel": 5.500000238418579,
+     "blastUnits": 2.299999952316284,
+     "blastPart": 20.299999833106995,
+     "bendByBlast": 1.1999998092651367,
+     "houseOnWreck": 0,
+     "houseListeners": 0.10000002384185791,
+     "houseStage": 0,
+     "collapseCheck": 0,
+     "houseSpall": 2.4999998807907104,
+     "houseDamage": 0.10000002384185791,
+     "houseChip": 0.5000001192092896,
+     "solve@knockOutUnits": 1.9999998807907104,
+     "knockOutUnits": 5.099999904632568,
+     "solve@bendByBlast": 0.3999999761581421,
+     "groups@bendByBlast": 0.2999999523162842,
+     "partLost": 0,
+     "failPart": 1.3999998569488525,
+     "solve@none": 0.40000009536743164,
+     "groups@none": 0.3999999761581421
+    },
+    "byFn": {
+     "o=>{o.type===\"explode\"&&this.coverWhenWentOff.set(o,this.coverAround(o)),(this.queue.lengt": {
+      "n": 700,
+      "ms": 0
+     },
+     "R=>{ve.push(R)}": {
+      "n": 700,
+      "ms": 0
+     },
+     "n0=>{if(n0.object===W){switch(n0.type){case\"stage\":C.stage(n0);break;case\"chip\":C.chip(n0)": {
+      "n": 700,
+      "ms": 0.29999983310699463
+     },
+     "Z=>{let le=h.get(Z.object);if(!(!le||!(\"part\"in Z)||Z.part!==\"tank\")){if(Z.type===\"leak\"){": {
+      "n": 700,
+      "ms": 0
+     },
+     "G=>{if(G.object===b.id)switch(cd(\"houseOnWreck\",()=>{if(a.onWreck)try{a.onWreck(G,m)}catch": {
+      "n": 700,
+      "ms": 4.700000047683716
+     }
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "blastPart": 523,
+     "emit": 707,
+     "onEvent": 707,
+     "listenAll": 707,
+     "applyDamage": 508,
+     "blastPanel": 25,
+     "blastUnits": 84,
+     "bendByBlast": 22,
+     "houseOnWreck": 481,
+     "houseListeners": 481,
+     "houseStage": 10,
+     "houseDamage": 339,
+     "knockOutUnits": 3,
+     "houseChip": 3,
+     "exposeRebar": 1,
+     "solve@knockOutUnits": 3,
+     "collapseCheck": 28,
+     "houseSpall": 6,
+     "solve@bendByBlast": 2,
+     "groups@bendByBlast": 2,
+     "failPart": 10,
+     "partLost": 10,
+     "solve@none": 12,
+     "groups@none": 12
+    },
+    "incl": {
+     "onEvent": 0.19999992847442627,
+     "listenAll": 4.5000001192092896,
+     "emit": 5.4999998807907104,
+     "applyDamage": 3.6999998092651367,
+     "blastPanel": 3.799999952316284,
+     "blastUnits": 3.600000023841858,
+     "blastPart": 20.99999988079071,
+     "bendByBlast": 2.8000000715255737,
+     "houseOnWreck": 0.10000002384185791,
+     "houseListeners": 0,
+     "houseStage": 0.10000002384185791,
+     "houseDamage": 0.10000002384185791,
+     "houseChip": 0.39999985694885254,
+     "exposeRebar": 0.7000000476837158,
+     "solve@knockOutUnits": 1.8000000715255737,
+     "collapseCheck": 0.09999990463256836,
+     "knockOutUnits": 5.900000095367432,
+     "houseSpall": 2.0999999046325684,
+     "solve@bendByBlast": 1.9000000953674316,
+     "groups@bendByBlast": 0.29999983310699463,
+     "partLost": 0.10000002384185791,
+     "failPart": 1.2999999523162842,
+     "solve@none": 0.5999999046325684,
+     "groups@none": 0.10000002384185791
+    },
+    "byFn": {
+     "o=>{o.type===\"explode\"&&this.coverWhenWentOff.set(o,this.coverAround(o)),(this.queue.lengt": {
+      "n": 707,
+      "ms": 0.20000004768371582
+     },
+     "R=>{ve.push(R)}": {
+      "n": 707,
+      "ms": 0.20000004768371582
+     },
+     "n0=>{if(n0.object===W){switch(n0.type){case\"stage\":C.stage(n0);break;case\"chip\":C.chip(n0)": {
+      "n": 707,
+      "ms": 0.20000004768371582
+     },
+     "Z=>{let le=h.get(Z.object);if(!(!le||!(\"part\"in Z)||Z.part!==\"tank\")){if(Z.type===\"leak\"){": {
+      "n": 707,
+      "ms": 0
+     },
+     "G=>{if(G.object===b.id)switch(cd(\"houseOnWreck\",()=>{if(a.onWreck)try{a.onWreck(G,m)}catch": {
+      "n": 707,
+      "ms": 3.4999998807907104
+     }
+    }
+   }
+  ],
+  "c": [
+   {
+    "kind": "blast",
+    "counts": {
+     "ev_debris": 68,
+     "ev_damage": 559,
+     "ev_spall": 7,
+     "ev_stage": 10,
+     "ev_crack": 20,
+     "ev_chip": 2,
+     "ev_dent": 2,
+     "ev_fracture": 11,
+     "ev_detach": 21
+    },
+    "incl": {
+     "ev_debris": 0.7000000476837158,
+     "ev_damage": 1.4000002145767212,
+     "ev_spall": 0.5000001192092896,
+     "ev_stage": 0.8999998569488525,
+     "ev_crack": 2.899999737739563,
+     "ev_chip": 1.399999976158142,
+     "ev_dent": 0.20000004768371582,
+     "ev_fracture": 8.899999976158142,
+     "ev_detach": 0.3999999761581421
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "ev_debris": 68,
+     "ev_damage": 561,
+     "ev_spall": 7,
+     "ev_stage": 11,
+     "ev_crack": 22,
+     "ev_chip": 3,
+     "ev_expose": 1,
+     "ev_dent": 2,
+     "ev_fracture": 10,
+     "ev_detach": 22
+    },
+    "incl": {
+     "ev_debris": 0.7999999523162842,
+     "ev_damage": 2.4999998807907104,
+     "ev_spall": 0.5,
+     "ev_stage": 0.9000000953674316,
+     "ev_crack": 3.1000001430511475,
+     "ev_chip": 1.5999999046325684,
+     "ev_expose": 0.3999999761581421,
+     "ev_dent": 0.20000004768371582,
+     "ev_fracture": 8.49999988079071,
+     "ev_detach": 0.2999999523162842
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "ev_debris": 68,
+     "ev_damage": 559,
+     "ev_spall": 7,
+     "ev_stage": 10,
+     "ev_crack": 20,
+     "ev_chip": 2,
+     "ev_dent": 2,
+     "ev_fracture": 11,
+     "ev_detach": 21
+    },
+    "incl": {
+     "ev_debris": 0.7000000476837158,
+     "ev_damage": 1.6999999284744263,
+     "ev_spall": 0.7000000476837158,
+     "ev_stage": 0.8999999761581421,
+     "ev_crack": 2.799999952316284,
+     "ev_chip": 1.5,
+     "ev_dent": 0.20000004768371582,
+     "ev_fracture": 10.5,
+     "ev_detach": 0.3999999761581421
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "ev_debris": 68,
+     "ev_damage": 561,
+     "ev_spall": 7,
+     "ev_stage": 11,
+     "ev_crack": 22,
+     "ev_chip": 3,
+     "ev_expose": 1,
+     "ev_dent": 2,
+     "ev_fracture": 10,
+     "ev_detach": 22
+    },
+    "incl": {
+     "ev_debris": 0.9000002145767212,
+     "ev_damage": 1.2999999523162842,
+     "ev_spall": 0.6000001430511475,
+     "ev_stage": 0.6999999284744263,
+     "ev_crack": 3.2999998331069946,
+     "ev_chip": 1.600000023841858,
+     "ev_expose": 0.2999999523162842,
+     "ev_dent": 0.2999999523162842,
+     "ev_fracture": 8.299999952316284,
+     "ev_detach": 0.30000007152557373
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "ev_debris": 68,
+     "ev_damage": 559,
+     "ev_spall": 7,
+     "ev_stage": 10,
+     "ev_crack": 20,
+     "ev_chip": 2,
+     "ev_dent": 2,
+     "ev_fracture": 11,
+     "ev_detach": 21
+    },
+    "incl": {
+     "ev_debris": 0.7999999523162842,
+     "ev_damage": 1.2000001668930054,
+     "ev_spall": 0.6000001430511475,
+     "ev_stage": 0.8999998569488525,
+     "ev_crack": 3.1999999284744263,
+     "ev_chip": 1.5,
+     "ev_dent": 0.19999992847442627,
+     "ev_fracture": 9.5,
+     "ev_detach": 0.3999999761581421
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "ev_debris": 68,
+     "ev_damage": 561,
+     "ev_spall": 7,
+     "ev_stage": 11,
+     "ev_crack": 22,
+     "ev_chip": 3,
+     "ev_expose": 1,
+     "ev_dent": 2,
+     "ev_fracture": 10,
+     "ev_detach": 22
+    },
+    "incl": {
+     "ev_debris": 0.9000000953674316,
+     "ev_damage": 1.600000023841858,
+     "ev_spall": 0.5000001192092896,
+     "ev_stage": 1.1999999284744263,
+     "ev_crack": 2.4999998807907104,
+     "ev_chip": 1.6999999284744263,
+     "ev_expose": 0.30000007152557373,
+     "ev_dent": 0.19999992847442627,
+     "ev_fracture": 8.700000047683716,
+     "ev_detach": 0.2999999523162842
+    }
+   }
+  ],
+  "d": [
+   {
+    "kind": "blast",
+    "counts": {
+     "actTold": 1,
+     "actWater": 1,
+     "actEffects": 1,
+     "actRExplode": 1,
+     "actNarrate": 1,
+     "actEmitHost": 1
+    },
+    "incl": {
+     "actTold": 0.10000002384185791,
+     "actWater": 0,
+     "actEffects": 2.799999952316284,
+     "actRExplode": 2.3000000715255737,
+     "actNarrate": 0,
+     "actEmitHost": 0.5
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "actTold": 1,
+     "actWater": 1,
+     "actEffects": 1,
+     "actRExplode": 1,
+     "actNarrate": 1,
+     "actEmitHost": 1
+    },
+    "incl": {
+     "actTold": 0.10000002384185791,
+     "actWater": 0,
+     "actEffects": 2.8000000715255737,
+     "actRExplode": 2.3000000715255737,
+     "actNarrate": 0.10000002384185791,
+     "actEmitHost": 0.3999999761581421
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "actTold": 1,
+     "actWater": 1,
+     "actEffects": 1,
+     "actRExplode": 1,
+     "actNarrate": 1,
+     "actEmitHost": 1
+    },
+    "incl": {
+     "actTold": 0,
+     "actWater": 0.10000002384185791,
+     "actEffects": 2.700000047683716,
+     "actRExplode": 3.5999999046325684,
+     "actNarrate": 0.10000002384185791,
+     "actEmitHost": 0.5
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "actTold": 1,
+     "actWater": 1,
+     "actEffects": 1,
+     "actRExplode": 1,
+     "actNarrate": 1,
+     "actEmitHost": 1
+    },
+    "incl": {
+     "actTold": 0.10000002384185791,
+     "actWater": 0.10000002384185791,
+     "actEffects": 2.600000023841858,
+     "actRExplode": 2.299999952316284,
+     "actNarrate": 0.10000002384185791,
+     "actEmitHost": 0.5
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "actTold": 1,
+     "actWater": 1,
+     "actEffects": 1,
+     "actRExplode": 1,
+     "actNarrate": 1,
+     "actEmitHost": 1
+    },
+    "incl": {
+     "actTold": 0,
+     "actWater": 0.10000002384185791,
+     "actEffects": 2.799999952316284,
+     "actRExplode": 2.299999952316284,
+     "actNarrate": 0.10000002384185791,
+     "actEmitHost": 0.3999999761581421
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "actTold": 1,
+     "actWater": 1,
+     "actEffects": 1,
+     "actRExplode": 1,
+     "actNarrate": 1,
+     "actEmitHost": 1
+    },
+    "incl": {
+     "actTold": 0,
+     "actWater": 0.10000002384185791,
+     "actEffects": 2.700000047683716,
+     "actRExplode": 2.299999952316284,
+     "actNarrate": 0.10000002384185791,
+     "actEmitHost": 0.3999999761581421
+    }
+   }
+  ],
+  "e": [
+   {
+    "kind": "blast"
+   },
+   {
+    "kind": "crater"
+   },
+   {
+    "kind": "blast"
+   },
+   {
+    "kind": "crater"
+   },
+   {
+    "kind": "blast"
+   },
+   {
+    "kind": "crater"
+   }
+  ],
+  "f": [
+   {
+    "kind": "blast",
+    "counts": {
+     "rOnExplode": 1,
+     "rVfxPush": 1,
+     "rLayGround": 1,
+     "rLoosen": 1,
+     "r_measure": 10,
+     "rFragBlast": 1,
+     "rSound": 56,
+     "ev_debris": 68,
+     "ev_damage": 559,
+     "ev_spall": 7,
+     "ev_stage": 10,
+     "ev_crack": 20,
+     "ev_chip": 2,
+     "ev_dent": 2,
+     "ev_fracture": 11,
+     "onFracture": 11,
+     "r_hide": 11,
+     "rebuildHost": 19,
+     "spawnFragments": 11,
+     "splitLoose": 32,
+     "r_batch": 1,
+     "splitGroups": 1,
+     "adoptSplit": 8,
+     "r_extract": 8,
+     "r_tagPart": 8,
+     "r_followSplit": 8,
+     "r_create": 8,
+     "r_fitSurface": 8,
+     "r_fitPartBoxes": 8,
+     "r_setContacts": 8,
+     "fitBoxes": 9,
+     "r_onPiece": 8,
+     "hangOnHinge": 8,
+     "afterSplit": 1,
+     "tetherTorn": 1,
+     "loosenIfFootless": 11,
+     "ev_detach": 21
+    },
+    "incl": {
+     "rVfxPush": 0,
+     "rLayGround": 0,
+     "r_measure": 0.10000002384185791,
+     "rLoosen": 0.6000000238418579,
+     "rFragBlast": 0,
+     "rSound": 3.9000000953674316,
+     "rOnExplode": 2.399999976158142,
+     "ev_debris": 0.7999999523162842,
+     "ev_damage": 1.7000001668930054,
+     "ev_spall": 0.6000000238418579,
+     "ev_stage": 0.7999999523162842,
+     "ev_crack": 2.6000001430511475,
+     "ev_chip": 1.5,
+     "ev_dent": 0.30000007152557373,
+     "rebuildHost": 2.4999998807907104,
+     "r_hide": 2,
+     "spawnFragments": 0.30000007152557373,
+     "splitGroups": 1.5,
+     "r_extract": 1.4999998807907104,
+     "r_tagPart": 0,
+     "r_followSplit": 0,
+     "r_create": 0.10000002384185791,
+     "r_fitSurface": 0.10000002384185791,
+     "fitBoxes": 0,
+     "r_setContacts": 0,
+     "r_fitPartBoxes": 0.20000004768371582,
+     "r_onPiece": 0,
+     "adoptSplit": 2.200000047683716,
+     "hangOnHinge": 0,
+     "r_batch": 4.299999952316284,
+     "tetherTorn": 0,
+     "afterSplit": 0,
+     "splitLoose": 4.299999952316284,
+     "loosenIfFootless": 0.3999999761581421,
+     "onFracture": 8.800000071525574,
+     "ev_fracture": 8.899999976158142,
+     "ev_detach": 0.5
+    },
+    "sub": {
+     "rSound:explode": {
+      "n": 1,
+      "ms": 0.3999999761581421
+     },
+     "rSound:impact_masonry": {
+      "n": 12,
+      "ms": 0.6999999284744263
+     },
+     "rSound:impact_glass": {
+      "n": 10,
+      "ms": 1.0000001192092896
+     },
+     "rSound:impact_wood": {
+      "n": 2,
+      "ms": 0.20000004768371582
+     },
+     "rSound:shatter_glass": {
+      "n": 8,
+      "ms": 1.2000000476837158
+     },
+     "rSound:crumble": {
+      "n": 2,
+      "ms": 0.20000004768371582
+     },
+     "rSound:detach": {
+      "n": 21,
+      "ms": 0.19999992847442627
+     }
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "rOnExplode": 1,
+     "rVfxPush": 1,
+     "rLayGround": 1,
+     "rLoosen": 1,
+     "r_measure": 12,
+     "rFragBlast": 1,
+     "rSound": 59,
+     "ev_debris": 68,
+     "ev_damage": 561,
+     "ev_spall": 7,
+     "ev_stage": 11,
+     "ev_crack": 22,
+     "ev_chip": 3,
+     "ev_expose": 1,
+     "ev_dent": 2,
+     "ev_fracture": 10,
+     "onFracture": 10,
+     "r_hide": 10,
+     "rebuildHost": 21,
+     "spawnFragments": 10,
+     "splitLoose": 32,
+     "r_batch": 1,
+     "splitGroups": 1,
+     "adoptSplit": 10,
+     "r_extract": 10,
+     "r_tagPart": 10,
+     "r_followSplit": 10,
+     "r_create": 10,
+     "r_fitSurface": 10,
+     "r_fitPartBoxes": 10,
+     "r_setContacts": 10,
+     "fitBoxes": 11,
+     "r_onPiece": 10,
+     "hangOnHinge": 10,
+     "afterSplit": 1,
+     "tetherTorn": 1,
+     "loosenIfFootless": 10,
+     "ev_detach": 22
+    },
+    "incl": {
+     "rVfxPush": 0,
+     "rLayGround": 0,
+     "r_measure": 0.09999990463256836,
+     "rLoosen": 0.6000000238418579,
+     "rFragBlast": 0,
+     "rSound": 3.9000000953674316,
+     "rOnExplode": 2.299999952316284,
+     "ev_debris": 0.899999737739563,
+     "ev_damage": 1.6999999284744263,
+     "ev_spall": 0.39999985694885254,
+     "ev_stage": 1.0999999046325684,
+     "ev_crack": 2.700000286102295,
+     "ev_chip": 1.600000023841858,
+     "ev_expose": 0.30000007152557373,
+     "ev_dent": 0.20000004768371582,
+     "rebuildHost": 2.299999952316284,
+     "r_hide": 1.399999976158142,
+     "spawnFragments": 0.10000002384185791,
+     "splitGroups": 1.7000000476837158,
+     "r_extract": 1.7000000476837158,
+     "r_tagPart": 0.09999990463256836,
+     "r_followSplit": 0,
+     "r_create": 0,
+     "r_fitSurface": 0.20000004768371582,
+     "fitBoxes": 0.19999992847442627,
+     "r_setContacts": 0.2999999523162842,
+     "r_fitPartBoxes": 0.2999999523162842,
+     "r_onPiece": 0,
+     "adoptSplit": 2.399999976158142,
+     "hangOnHinge": 0,
+     "r_batch": 5.100000023841858,
+     "tetherTorn": 0,
+     "afterSplit": 0,
+     "splitLoose": 5.100000023841858,
+     "loosenIfFootless": 0.10000002384185791,
+     "onFracture": 8.600000023841858,
+     "ev_fracture": 8.600000023841858,
+     "ev_detach": 0.30000007152557373
+    },
+    "sub": {
+     "rSound:explode": {
+      "n": 1,
+      "ms": 0.3999999761581421
+     },
+     "rSound:impact_masonry": {
+      "n": 14,
+      "ms": 0.9999998807907104
+     },
+     "rSound:impact_glass": {
+      "n": 11,
+      "ms": 0.9000002145767212
+     },
+     "rSound:impact_wood": {
+      "n": 2,
+      "ms": 0.10000002384185791
+     },
+     "rSound:shatter_glass": {
+      "n": 8,
+      "ms": 1
+     },
+     "rSound:crumble": {
+      "n": 1,
+      "ms": 0.3999999761581421
+     },
+     "rSound:detach": {
+      "n": 22,
+      "ms": 0.20000004768371582
+     }
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "rOnExplode": 1,
+     "rVfxPush": 1,
+     "rLayGround": 1,
+     "rLoosen": 1,
+     "r_measure": 10,
+     "rFragBlast": 1,
+     "rSound": 56,
+     "ev_debris": 68,
+     "ev_damage": 559,
+     "ev_spall": 7,
+     "ev_stage": 10,
+     "ev_crack": 20,
+     "ev_chip": 2,
+     "ev_dent": 2,
+     "ev_fracture": 11,
+     "onFracture": 11,
+     "r_hide": 11,
+     "rebuildHost": 19,
+     "spawnFragments": 11,
+     "splitLoose": 32,
+     "r_batch": 1,
+     "splitGroups": 1,
+     "adoptSplit": 8,
+     "r_extract": 8,
+     "r_tagPart": 8,
+     "r_followSplit": 8,
+     "r_create": 8,
+     "r_fitSurface": 8,
+     "r_fitPartBoxes": 8,
+     "r_setContacts": 8,
+     "fitBoxes": 9,
+     "r_onPiece": 8,
+     "hangOnHinge": 8,
+     "afterSplit": 1,
+     "tetherTorn": 1,
+     "loosenIfFootless": 11,
+     "ev_detach": 21
+    },
+    "incl": {
+     "rVfxPush": 0.10000002384185791,
+     "rLayGround": 0,
+     "r_measure": 0.10000002384185791,
+     "rLoosen": 0.5999999046325684,
+     "rFragBlast": 0,
+     "rSound": 4.300000309944153,
+     "rOnExplode": 3.600000023841858,
+     "ev_debris": 0.5999997854232788,
+     "ev_damage": 1.4999998807907104,
+     "ev_spall": 0.6000000238418579,
+     "ev_stage": 0.9000000953674316,
+     "ev_crack": 2.9000003337860107,
+     "ev_chip": 1.399999976158142,
+     "ev_dent": 0.19999992847442627,
+     "rebuildHost": 2.5000001192092896,
+     "r_hide": 2.0000001192092896,
+     "spawnFragments": 0.19999992847442627,
+     "splitGroups": 1.399999976158142,
+     "r_extract": 1.7999999523162842,
+     "r_tagPart": 0.10000002384185791,
+     "r_followSplit": 0.10000002384185791,
+     "r_create": 0,
+     "r_fitSurface": 0,
+     "fitBoxes": 0.10000002384185791,
+     "r_setContacts": 0.20000004768371582,
+     "r_fitPartBoxes": 0.20000004768371582,
+     "r_onPiece": 0,
+     "adoptSplit": 2.200000047683716,
+     "hangOnHinge": 0,
+     "r_batch": 4.300000071525574,
+     "tetherTorn": 0,
+     "afterSplit": 0,
+     "splitLoose": 4.300000071525574,
+     "loosenIfFootless": 0.30000007152557373,
+     "onFracture": 8.5,
+     "ev_fracture": 8.5,
+     "ev_detach": 0.2999999523162842
+    },
+    "sub": {
+     "rSound:explode": {
+      "n": 1,
+      "ms": 0.30000007152557373
+     },
+     "rSound:impact_masonry": {
+      "n": 12,
+      "ms": 0.8000001907348633
+     },
+     "rSound:impact_glass": {
+      "n": 10,
+      "ms": 1.4000002145767212
+     },
+     "rSound:impact_wood": {
+      "n": 2,
+      "ms": 0.2999999523162842
+     },
+     "rSound:shatter_glass": {
+      "n": 8,
+      "ms": 0.7999998331069946
+     },
+     "rSound:crumble": {
+      "n": 2,
+      "ms": 0.5
+     },
+     "rSound:detach": {
+      "n": 21,
+      "ms": 0.20000004768371582
+     }
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "rOnExplode": 1,
+     "rVfxPush": 1,
+     "rLayGround": 1,
+     "rLoosen": 1,
+     "r_measure": 12,
+     "rFragBlast": 1,
+     "rSound": 59,
+     "ev_debris": 68,
+     "ev_damage": 561,
+     "ev_spall": 7,
+     "ev_stage": 11,
+     "ev_crack": 22,
+     "ev_chip": 3,
+     "ev_expose": 1,
+     "ev_dent": 2,
+     "ev_fracture": 10,
+     "onFracture": 10,
+     "r_hide": 10,
+     "rebuildHost": 21,
+     "spawnFragments": 10,
+     "splitLoose": 32,
+     "r_batch": 1,
+     "splitGroups": 1,
+     "adoptSplit": 10,
+     "r_extract": 10,
+     "r_tagPart": 10,
+     "r_followSplit": 10,
+     "r_create": 10,
+     "r_fitSurface": 10,
+     "r_fitPartBoxes": 10,
+     "r_setContacts": 10,
+     "fitBoxes": 11,
+     "r_onPiece": 10,
+     "hangOnHinge": 10,
+     "afterSplit": 1,
+     "tetherTorn": 1,
+     "loosenIfFootless": 10,
+     "ev_detach": 22
+    },
+    "incl": {
+     "rVfxPush": 0.10000002384185791,
+     "rLayGround": 0,
+     "r_measure": 0.20000004768371582,
+     "rLoosen": 0.6000000238418579,
+     "rFragBlast": 0,
+     "rSound": 5.09999942779541,
+     "rOnExplode": 3.799999952316284,
+     "ev_debris": 0.8000001907348633,
+     "ev_damage": 1.8000001907348633,
+     "ev_spall": 0.7999999523162842,
+     "ev_stage": 0.8999998569488525,
+     "ev_crack": 2.799999713897705,
+     "ev_chip": 1.5000001192092896,
+     "ev_expose": 0.2999999523162842,
+     "ev_dent": 0.20000004768371582,
+     "rebuildHost": 2.1000001430511475,
+     "r_hide": 1.2000000476837158,
+     "spawnFragments": 0.3999999761581421,
+     "splitGroups": 1.600000023841858,
+     "r_extract": 1.6999999284744263,
+     "r_tagPart": 0,
+     "r_followSplit": 0.10000002384185791,
+     "r_create": 0.10000002384185791,
+     "r_fitSurface": 0,
+     "fitBoxes": 0,
+     "r_setContacts": 0.10000002384185791,
+     "r_fitPartBoxes": 0.10000002384185791,
+     "r_onPiece": 0,
+     "adoptSplit": 2.100000023841858,
+     "hangOnHinge": 0,
+     "r_batch": 4.5,
+     "tetherTorn": 0,
+     "afterSplit": 0,
+     "splitLoose": 4.600000023841858,
+     "loosenIfFootless": 0.20000004768371582,
+     "onFracture": 7.800000071525574,
+     "ev_fracture": 8,
+     "ev_detach": 0.3999999761581421
+    },
+    "sub": {
+     "rSound:explode": {
+      "n": 1,
+      "ms": 1.6999999284744263
+     },
+     "rSound:impact_masonry": {
+      "n": 14,
+      "ms": 0.6999996900558472
+     },
+     "rSound:impact_glass": {
+      "n": 11,
+      "ms": 1.2999999523162842
+     },
+     "rSound:impact_wood": {
+      "n": 2,
+      "ms": 0.20000004768371582
+     },
+     "rSound:shatter_glass": {
+      "n": 8,
+      "ms": 0.7999998331069946
+     },
+     "rSound:crumble": {
+      "n": 1,
+      "ms": 0.10000002384185791
+     },
+     "rSound:detach": {
+      "n": 22,
+      "ms": 0.2999999523162842
+     }
+    }
+   },
+   {
+    "kind": "blast",
+    "counts": {
+     "rOnExplode": 1,
+     "rVfxPush": 1,
+     "rLayGround": 1,
+     "rLoosen": 1,
+     "r_measure": 10,
+     "rFragBlast": 1,
+     "rSound": 56,
+     "ev_debris": 68,
+     "ev_damage": 559,
+     "ev_spall": 7,
+     "ev_stage": 10,
+     "ev_crack": 20,
+     "ev_chip": 2,
+     "ev_dent": 2,
+     "ev_fracture": 11,
+     "onFracture": 11,
+     "r_hide": 11,
+     "rebuildHost": 19,
+     "spawnFragments": 11,
+     "splitLoose": 32,
+     "r_batch": 1,
+     "splitGroups": 1,
+     "adoptSplit": 8,
+     "r_extract": 8,
+     "r_tagPart": 8,
+     "r_followSplit": 8,
+     "r_create": 8,
+     "r_fitSurface": 8,
+     "r_fitPartBoxes": 8,
+     "r_setContacts": 8,
+     "fitBoxes": 9,
+     "r_onPiece": 8,
+     "hangOnHinge": 8,
+     "afterSplit": 1,
+     "tetherTorn": 1,
+     "loosenIfFootless": 11,
+     "ev_detach": 21
+    },
+    "incl": {
+     "rVfxPush": 0,
+     "rLayGround": 0,
+     "r_measure": 0.30000007152557373,
+     "rLoosen": 0.6000000238418579,
+     "rFragBlast": 0,
+     "rSound": 4.699999928474426,
+     "rOnExplode": 2.200000047683716,
+     "ev_debris": 0.6999999284744263,
+     "ev_damage": 1.0999997854232788,
+     "ev_spall": 0.7999999523162842,
+     "ev_stage": 0.7000001668930054,
+     "ev_crack": 3.100000262260437,
+     "ev_chip": 1.5,
+     "ev_dent": 0.2999999523162842,
+     "rebuildHost": 4.299999952316284,
+     "r_hide": 1.9000000953674316,
+     "spawnFragments": 0.30000007152557373,
+     "splitGroups": 1.600000023841858,
+     "r_extract": 1.5,
+     "r_tagPart": 0,
+     "r_followSplit": 0,
+     "r_create": 0,
+     "r_fitSurface": 0.20000004768371582,
+     "fitBoxes": 0,
+     "r_setContacts": 0,
+     "r_fitPartBoxes": 0,
+     "r_onPiece": 0,
+     "adoptSplit": 2.100000023841858,
+     "hangOnHinge": 0,
+     "r_batch": 5.899999976158142,
+     "tetherTorn": 0,
+     "afterSplit": 0,
+     "splitLoose": 5.899999976158142,
+     "loosenIfFootless": 0.2999999523162842,
+     "onFracture": 10.399999976158142,
+     "ev_fracture": 10.5,
+     "ev_detach": 0.2999999523162842
+    },
+    "sub": {
+     "rSound:explode": {
+      "n": 1,
+      "ms": 0.20000004768371582
+     },
+     "rSound:impact_masonry": {
+      "n": 12,
+      "ms": 1.0000001192092896
+     },
+     "rSound:impact_glass": {
+      "n": 10,
+      "ms": 1.2000000476837158
+     },
+     "rSound:impact_wood": {
+      "n": 2,
+      "ms": 0.5999999046325684
+     },
+     "rSound:shatter_glass": {
+      "n": 8,
+      "ms": 1.0999999046325684
+     },
+     "rSound:crumble": {
+      "n": 2,
+      "ms": 0.2999999523162842
+     },
+     "rSound:detach": {
+      "n": 21,
+      "ms": 0.2999999523162842
+     }
+    }
+   },
+   {
+    "kind": "crater",
+    "counts": {
+     "rOnExplode": 1,
+     "rVfxPush": 1,
+     "rLayGround": 1,
+     "rLoosen": 1,
+     "r_measure": 12,
+     "rFragBlast": 1,
+     "rSound": 59,
+     "ev_debris": 68,
+     "ev_damage": 561,
+     "ev_spall": 7,
+     "ev_stage": 11,
+     "ev_crack": 22,
+     "ev_chip": 3,
+     "ev_expose": 1,
+     "ev_dent": 2,
+     "ev_fracture": 10,
+     "onFracture": 10,
+     "r_hide": 10,
+     "rebuildHost": 21,
+     "spawnFragments": 10,
+     "splitLoose": 32,
+     "r_batch": 1,
+     "splitGroups": 1,
+     "adoptSplit": 10,
+     "r_extract": 10,
+     "r_tagPart": 10,
+     "r_followSplit": 10,
+     "r_create": 10,
+     "r_fitSurface": 10,
+     "r_fitPartBoxes": 10,
+     "r_setContacts": 10,
+     "fitBoxes": 11,
+     "r_onPiece": 10,
+     "hangOnHinge": 10,
+     "afterSplit": 1,
+     "tetherTorn": 1,
+     "loosenIfFootless": 10,
+     "ev_detach": 22
+    },
+    "incl": {
+     "rVfxPush": 0.10000002384185791,
+     "rLayGround": 0,
+     "r_measure": 0.5000001192092896,
+     "rLoosen": 0.5999999046325684,
+     "rFragBlast": 0,
+     "rSound": 4.300000190734863,
+     "rOnExplode": 3.600000023841858,
+     "ev_debris": 0.6000000238418579,
+     "ev_damage": 1.7999998331069946,
+     "ev_spall": 0.5,
+     "ev_stage": 0.9999998807907104,
+     "ev_crack": 3.0000001192092896,
+     "ev_chip": 1.5,
+     "ev_expose": 0.30000007152557373,
+     "ev_dent": 0.20000004768371582,
+     "rebuildHost": 2.399999976158142,
+     "r_hide": 1.5,
+     "spawnFragments": 0.29999983310699463,
+     "splitGroups": 1.5,
+     "r_extract": 1.8000000715255737,
+     "r_tagPart": 0,
+     "r_followSplit": 0,
+     "r_create": 0,
+     "r_fitSurface": 0,
+     "fitBoxes": 0.10000002384185791,
+     "r_setContacts": 0.10000002384185791,
+     "r_fitPartBoxes": 0.10000002384185791,
+     "r_onPiece": 0,
+     "adoptSplit": 2.3000000715255737,
+     "hangOnHinge": 0,
+     "r_batch": 4.799999952316284,
+     "tetherTorn": 0,
+     "afterSplit": 0,
+     "splitLoose": 4.799999952316284,
+     "loosenIfFootless": 0.10000002384185791,
+     "onFracture": 8.5,
+     "ev_fracture": 8.5,
+     "ev_detach": 0.19999992847442627
+    },
+    "sub": {
+     "rSound:explode": {
+      "n": 1,
+      "ms": 0.40000009536743164
+     },
+     "rSound:impact_masonry": {
+      "n": 14,
+      "ms": 1
+     },
+     "rSound:impact_glass": {
+      "n": 11,
+      "ms": 1.100000023841858
+     },
+     "rSound:impact_wood": {
+      "n": 2,
+      "ms": 0.20000004768371582
+     },
+     "rSound:shatter_glass": {
+      "n": 8,
+      "ms": 1.2000000476837158
+     },
+     "rSound:crumble": {
+      "n": 1,
+      "ms": 0.20000004768371582
+     },
+     "rSound:detach": {
+      "n": 22,
+      "ms": 0.19999992847442627
+     }
+    }
+   }
+  ]
+ }
+}

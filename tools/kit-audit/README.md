@@ -36,6 +36,17 @@ never used; fix the code (go through `drainDetached`) instead of listing it.
 `file:line` and the pending count, and fails only on a hit that is in neither place; entries that no longer match are printed as `VELHA`.
 `--strict-clocks` also fails while the list is not empty: that is the C3 gate at the end of phase 1.
 
+## The must-drain rule
+
+CLAUDE.md §15 ("Fila `mustDrain`", spec 017 trava 2): a queue registered with `mustDrain: true` drains whole, outside the frame deadline, so each one adds to the
+worst frame by construction, and "a new queue does not enter that class without the owner's decision". The lock that no spelling bypasses is at run time
+(`MUST_DRAIN_QUEUE_IDS` in `game-contracts`, checked by `budget.register` of `game-runtime`); `must-drain.mjs` is the early warning in the audit. It reads
+`packages/*/src`, `examples/*` and `apps/*` (`.ts`, `.tsx`, `.js`, `.mjs`; not tests) and flags every `mustDrain` key whose value is not the literal `false`: a `true` for a
+queue that is not an entry of `must-drain-allowed.json` (`queue`, `constant` in `DEFERRED_QUEUE_ID`, the only `package` that may, `reason`; the queue is read, exactly, from the
+object literal around the key), and any value the rule cannot read (variable, ternary, shorthand, quoted or computed key, value on the next line). Comments (block ones included),
+types (`mustDrain?: boolean`) and the plumbing of `game-runtime` are not registrations. `audit.mjs --check` runs it; a new entry is the owner's decision, written in `reason`.
+Tests: `tests/must-drain.test.mjs`.
+
 ## The scene check
 
 The words miss a box whose code names nothing, so `scene.mjs` reads the screen instead. Every builder of the kit marks the root it returns

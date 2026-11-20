@@ -5233,7 +5233,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true })), options?.live),
+    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true, ...(options?.frameStartMs === undefined ? {} : { frameStartMs: options.frameStartMs }) })), options?.live),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
@@ -5541,7 +5541,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer })
+  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer, structural: renderer })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
