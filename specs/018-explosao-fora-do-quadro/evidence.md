@@ -152,3 +152,101 @@ Contagens iguais nas 3 rodadas (a simulação é determinística): explosão 521
 - Qual `DestructibleImpl` responde pelos ~3 ms de `impls`, e o que dentro dele.
 - A divisão interna de `knockOutUnits` e `solveStructure` (grade × eventos; `solveSupports` × montagem do grafo).
 - Rodadas a 4x ou com outras casas.
+
+## T0.2 — Custo da fronteira (2026-11-20)
+
+### O que foi medido e como
+
+- **Código medido:** `ebfe8c577` (protótipo descartável, só nesta branch), sobre `4ac00cb6a`. JSON: `medicoes/fronteira-ebfe8c577.json` (campo `explodeProbe[].boundary`).
+- **Onde:** dentro da página da sala, no mesmo ponto da régua: `world.explode` chama a sonda (`packages/game-destruction/src/boundary-probe.ts` +
+  `measureBoundary` em `world.ts`) **antes** de aplicar a explosão do f0, com a casa montada e inteira. Não foi Node. Régua: `ROOM_EXPLOSION_BOUNDARY=1`,
+  `BUDGET=deadline`, `KINDS=blast,crater`, 1x, `ROUNDS=1`, `STAGE_ROUNDS=3`, `FRAME_PARTS=1`; `pnpm build` antes. Tudo sob a trava, num único comando.
+- **Resolução:** `performance.now` em passos de 0,1 ms (página `file://`). Cada operação roda em lote de K repetições (K dobrado de 4 em 4 até o lote
+  passar de ~3 ms), 15 amostras por operação; a primeira chamada é cronometrada à parte. Tabela: mediana das 3 rodadas de cada medida por chamada
+  (mediana das 15 amostras da rodada), mín e máx de todas as amostras. N = 3 rodadas x 15 amostras.
+- **O mundo:** 15 objetos, **552 peças**, 794 juntas, 2 `impls` (não a conta de 521: os 521 do T0.1 eram as peças que o `blastPart` visitou). Na explosão: 506
+  peças dentro do raio, 12 embutidas (saem da entrada: `blastPart` as devolve sem tocar), **1360 juntas** nas peças da entrada (cratera: 508 peças, 1479 juntas).
+  Cada página grava dois registros: o 1º é o aquecimento do JIT (mundo de 24 peças), o 2º é a casa. As tabelas usam só o 2º.
+- **Primeiro anel:** peças a até **1 m** do centro (a bola de fogo da 017): **12** na explosão, **15** na cratera. As outras: **494** e **493**. (A 1,5 m:
+  16 e 18; a 2 m: 20 e 20; a 3 m: 44 e 41.)
+- **Quem é "serialize":** `world.serialize()` (o mesmo que o mundo faz: `clone` do spec, do estado e do `rt` de cada peça). Repliquei a expressão na sonda para
+  chamá-la por dentro do mundo.
+
+### Entrada plana (a mínima que o kernel puro de `blastPart` precisa ler)
+
+Três `Float64Array`: peças (27 números por peça), juntas (9 por junta) e tabela de materiais (7 por material, 13 materiais). Pose já em espaço do mundo.
+
+| Bloco | Campos |
+|---|---|
+| peça | objeto, índice da peça, forma (0 caixa, 1 cilindro, 2 esfera), tamanho (3), centro no mundo (3), quaternion no mundo (4), índice do material, bits (ancorada, tem espessura, tem unidades, tem armadura, papel estrutural, flexiona, queimando, tem camadas), massa, hp, hp máx, combustível, temperatura, espessura, dims (3), distância ao centro, 1ª junta, nº de juntas |
+| junta | peça a, peça b, tipo (código), hp, hp máx, bits (vergalhão de peça armada, `holdsEmbedded`, `fixesTrim`, `onFoundation`), alcance até o centro (`jointReach`), limite (`jointReachLimit`), comprimento (`jointLength`); junta aberta leva só os 5 primeiros |
+| material | densidade, `failureMPa`, ductilidade, `hpPerKg`, `ignitionC`, escala de dano explosivo, é vidro |
+
+Fora da entrada (fica no mundo, na volta): `rt` (rachaduras, esfarelamento), camadas e grade de unidades, escrita de `st`, eventos. Não está na entrada e **não foi
+medido**: o abrigo (`reachAt`, raios contra outras peças) e o raio de `seesFireball` (1 por explosão, ~0,1–0,4 ms no T0.1).
+
+### Tabela (casa da sala, 2º registro)
+
+| Operação | Explosão: ms mediana (mín–máx) | Cratera: ms mediana (mín–máx) | 1ª chamada, 3 rodadas (ms) | K |
+|---|---|---|---|---|
+| `world.serialize()` | **4,0** (3,7–6,7) | **4,0** (3,7–6,0) | 4,4 / 6,8 / 5,5 | 1 |
+| `structuredClone(snapshot)` | **3,3** (3,1–5,5) | **3,2** (3,1–4,9) | 6,2 / 5,8 / 4,9 | 1 |
+| `JSON.stringify(snapshot)` (extra) | 2,28 (2,0–2,7) | 2,28 (2,0–2,7) | ~2,8–3,2 | 4 |
+| escolher peças da explosão (`blastCandidates` + distância) | 0,064 | 0,067 | 0,2–0,5 | 64 |
+| tabela de materiais | 0,0024 | 0,0025 | ~0 | 256–1024 |
+| montar entrada: primeiro anel (12 / 15 peças) | **0,018** (0,015–0,031) | **0,078** (0,066–0,105) | 0,1 / 0,1 / 0,1 (e 0,2–0,3) | 64–256 |
+| montar entrada: as de fora (494 / 493 peças) | **0,80** (0,70–1,40) | **0,75** (0,68–1,30) | 0,9–1,1 | 4 |
+| montar entrada: todas (506 / 508) | **0,78** (0,75–1,23) | **0,83** (0,73–1,30) | 0,8 | 4–16 |
+| `structuredClone` da entrada: anel | 0,006 | 0,019 | 0,0–0,1 | 256–1024 |
+| `structuredClone` da entrada: de fora | 0,175 (0,16–0,24) | 0,173 (0,16–0,25) | 0,1–0,3 | 64 |
+| `structuredClone` da entrada: todas | 0,177 (0,16–0,49) | 0,189 (0,16–0,43) | 0,1–0,2 | 16–64 |
+| `structuredClone` com `transfer` dos buffers: anel / de fora / todas | 0,003 / 0,004 / 0,012 | 0,003 / 0,004 / 0,006 | 0,0–0,1 (veja abaixo) | 256 |
+
+| Tamanho (bytes) | Explosão | Cratera |
+|---|---|---|
+| snapshot em JSON (UTF-8; o JSON é ASCII, chars = bytes) | 893.423–897.285 | 897.285 |
+| entrada plana: anel (peças + juntas + materiais) | 5.408 (12 peças, 29 juntas) | 14.696 (15 peças, 149 juntas) |
+| entrada plana: de fora | 203.264 (1331 juntas) | 202.976 (1330 juntas) |
+| entrada plana: todas | 207.944 (1360 juntas) | 216.944 (1479 juntas) |
+| tabela de materiais | 728 | 728 |
+
+### Condições e descartes
+
+- **Máquina:** a espera foi dentro da trava (a outra sessão parou enquanto a trava estava comigo). Porta de entrada: 17:09:34, carga 1,13, mediana de 5 leituras
+  do pacote 55 °C. Início da régua 17:10:10: carga 3,28 (a cauda do meu próprio `pnpm build`, 63 °C). Fim 17:15:45: carga 2,33, 72 °C. **A carga no começo da régua
+  ficou acima de 1,5**: o build roda dentro da trava, e a régua o segue. A carga não é da outra sessão (parada pela trava), mas não pude separar o quanto
+  é do build. Os números de operações de 3–5 ms por chamada (`serialize`, `structuredClone`) tiveram mín–máx estreito (3,7–6,7), então não vejo travada.
+- **Antes disso, duas tentativas minhas de esperar fora da trava** (16:14–17:05) não mediram nada. Defeito meu: o leitor de temperatura pegava o valor
+  `crit` do sensor (105 °C) em vez do real; só a carga era confiável e ficou em ~2,3 até o coordenador mandar pegar a trava primeiro.
+- **Rodadas descartadas: nenhuma.** O f0 de cada rodada marca `explode` ~2.000–2.200 ms: é a **própria sonda** (centenas de lotes de cronômetro antes de aplicar
+  a explosão). Não é página travada; os `f0`, `explode` e quadros deste JSON **não valem** como medida de quadro. Só vale o bloco `boundary`.
+- `transferRing` da cratera, rodada 1: a 1ª chamada levou 10,1 ms (e na rodada 3, 11,6 ms), o lote de calibração saiu com K = 1 e a mediana dessa rodada
+  saiu 0,0000: **inválida**; a tabela usa as outras duas rodadas e as da explosão (0,003 ms). Essas duas chamadas frias de 10–12 ms são um fato sem causa
+  conhecida (palpite: coleta de lixo ou primeira transferência de buffer).
+- Os dois `ERROR: Can't get value of subfeature temp1_*_alarm` do `sensors` são do próprio comando, sem efeito.
+
+### Leitura
+
+**Fatos:**
+- Mandar a **casa inteira** pelo caminho do snapshot custa, só para sair da thread principal: `serialize` ~4,0 ms + `structuredClone` ~3,3 ms = **~7,3 ms**
+  (sem contar a volta, nem o `loadObject` do outro lado), com ~0,9 MB. Isso é mais do que cada rótulo medido na T0.1 (o maior, `emit`, ~3,9–4,6 ms; a parte
+  pura (a) ~1,3–1,9 ms) e ~30% dos ~20–23 ms do `explode`.
+- A **entrada plana** das ~500 peças de fora custa **~0,8 ms** para montar e ~0,18 ms para copiar (ou ~0,004–0,012 ms com `transfer`, medido dentro da mesma
+  thread); o primeiro anel, 0,02–0,08 ms. A fronteira "entrada plana" é uma ordem de grandeza menor que a do snapshot (0,2 MB contra 0,9 MB; ~1 ms contra ~7 ms).
+- A montagem plana (~0,8 ms) já é **maior que o kernel que ela alimentaria**: o rótulo (a) `partGeometry` do T0.1 custou ~1,3–1,9 ms nas 509 peças
+  (com a sonda fina; menos sem ela). Ou seja, o custo de montar a entrada é da mesma ordem do trabalho puro que se quer mover.
+
+**Palpites (não medidos):**
+- O que sobra de ganho no caminho A é o kernel puro (a), ~1–2 ms, menos ~0,8 ms de montagem, menos a aplicação na volta: ganho líquido perto de zero ou
+  negativo, longe dos 15 ms da T0.3. Quem mudaria isso é mover blocos maiores (`knockOutUnits`, `solveStructure`, ~6–7 ms), cuja entrada (grade de
+  unidades, grafo de apoios) **não está nesta entrada plana** e não foi medida.
+- O snapshot inteiro por quadro é inviável como entrada de um worker por explosão (~7 ms só de ida) a menos que ele fique no worker e a ida seja só um delta.
+
+### O que NÃO foi medido
+
+- A ida e volta real por `postMessage` a um `Worker` (a latência entre threads, o `loadObject` do snapshot do outro lado, o tempo do kernel no worker, a aplicação
+  do resultado na volta); só o custo do lado da thread principal e `structuredClone`/`transfer` dentro dela.
+- A entrada de `knockOutUnits`/`solveStructure` (grade de unidades, juntas e apoios do grafo) e a de `emit` (ouvintes).
+- Abrigo (`reachAt`) e raio de `seesFireball`.
+- Outras casas, 4x, a região de gatilho com o processador quente (a série foi a ~63–72 °C).
+- O custo do `structuredClone` com `transfer` **incluindo** a cópia de preparo dos buffers (ficou fora do relógio, por construção).
