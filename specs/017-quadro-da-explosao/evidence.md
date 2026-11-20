@@ -407,3 +407,24 @@ Seis rodadas alternadas, modo de prazo, carga no início 1,30 a 1,47 e no fim 1,
 
 **O que não muda a simulação já saiu do quadro do golpe** (pintura da casa: 9 → 0,2 ms). O que sobra de grande (`explode` ~20 e eventos
 estruturais ~18) é trabalho que muda a simulação: é a fronteira da decisão D5.
+
+## Rodada 4 — malha da casa uma vez por lote e som fora do tique (2026-11-20, 03:02 a 03:40)
+
+Seis rodadas alternadas, modo de prazo, carga no início 1,31 a 1,46 e no fim 1,17 a 1,76. Base `6751c2d9f` (com os cortes A–D do `explode`);
+malha `6676e2c74`; malha + som `11f04e48c` (branch `spec/017-explode`, versões ANTES das correções da revisão). JSONs: `medicoes/regua-r4-*.json`.
+Perfil que apontou os dois itens: `evidence-perfil2.md` (~85% dos ~18 ms dos eventos estruturais é apresentação).
+
+| f0 a 1x, modo de prazo (ms, 2 rodadas cada) | base, blast / crater | malha por lote | malha + som na fila |
+|---|---|---|---|
+| f0 inteiro | 66,9 / 66,7 | 64,0 / 66,7 | 63,8 / 62,5 |
+| eventos estruturais no tique | 12,4 / 12,3 | 11,9 / 13,1 | 10,8 / 10,6 |
+| `rebuildHost` | 2,7 / 2,8 | 2,0 / 1,3 | 1,7 / 1,4 |
+| `explode` | 21,2 / 21,5 | 20,4 / 22,4 | 21,0 / 20,8 |
+| pior quadro dos 7 seguintes | 25,3 / 25,3 | 25,4 / 25,4 | 25,4 / 25,0 |
+
+- **Malha por lote: ~1 ms** (`rebuildHost` 2,7 → 1,3 a 2,0). Menos que os ~2,5 esperados; a revisão achou o motivo provável: cada marca
+  desenhada força a reescrita de todos os hosts pendentes (`onFace` → `flushRebuilds`). Correção em andamento.
+- **Som montado pela fila: ~1,5 a 2 ms** nos eventos do tique (12,4 → 10,7). A versão medida tinha o teto de 4 sons por tipo, que a revisão
+  mandou retirar (mantinha os primeiros, não os mais próximos); a versão corrigida precisa ser medida de novo.
+- **Os dois juntos: ~3 a 4 ms; f0 em ~63 ms.** A base desta rodada saiu ~2 ms acima da base da rodada 3 (66,8 contra 64,4) com código que
+  só difere pelos cortes A–D: é a deriva entre sessões de medição, e é por isso que cada rodada mede a própria base.
