@@ -624,6 +624,8 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     page.on('pageerror', (error) => errors.push(`${variant} ${throttle}x ${kind}: ${error.message}`))
     try {
       // PROTÓTIPO (spec 018 T0.1): the explode probe of game-destruction reads this global once, when the world is made
+      // PROTÓTIPO (spec 018 T0.2): the boundary probe of game-destruction reads this global once, when the world is made
+      if (process.env.ROOM_EXPLOSION_BOUNDARY === '1') await page.addInitScript(() => { /** @type {{ __destructionBoundaryProbe?: object }} */ (/** @type {unknown} */ (window)).__destructionBoundaryProbe = { now: () => performance.now(), records: [] } })
       if (probeMode !== 'off') await page.addInitScript((mode) => { /** @type {{ __destructionExplodeProbe?: object }} */ (/** @type {unknown} */ (window)).__destructionExplodeProbe = { mode, now: () => performance.now(), records: [] } }, probeMode)
       await page.goto(`${pageUrl}?area=floorplan${VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)]}`, { timeout: 180000 })
       await page.waitForFunction(() => /** @type {{ __testRoom?: unknown }} */ (/** @type {unknown} */ (window)).__testRoom, null, { timeout: 600000 })
@@ -641,8 +643,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const actions = await page.evaluate(() => /** @type {{ __roomExplosionActions?: number[] }} */ (/** @type {unknown} */ (window)).__roomExplosionActions ?? [], undefined)
       const queueIds = await page.evaluate(() => /** @type {{ __roomExplosionQueues?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionQueues ?? [], undefined)
       const budgets = await page.evaluate(() => /** @type {{ __roomExplosionBudgets?: { mode: string, allowanceMs: number, mustDrainSpentMs: number }[] }} */ (/** @type {unknown} */ (window)).__roomExplosionBudgets ?? [], undefined)
+      const boundary = await page.evaluate(() => /** @type {{ __destructionBoundaryProbe?: { records: unknown[] } }} */ (/** @type {unknown} */ (window)).__destructionBoundaryProbe?.records ?? [], undefined)
       const probe = await page.evaluate(() => ({ isolated: globalThis.crossOriginIsolated, records: /** @type {{ __destructionExplodeProbe?: { records: unknown[] } }} */ (/** @type {unknown} */ (window)).__destructionExplodeProbe?.records ?? [] }), undefined)
-      return { timings, load, moduleIds, queueIds, actions, budgets, probe }
+      return { timings, load, moduleIds, queueIds, actions, budgets, probe, boundary }
     } finally {
       await page.close()
     }
@@ -676,11 +679,11 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
         const probeMode = probeModes[(round - 1) % probeModes.length] ?? 'off'
-        const { timings, moduleIds, queueIds, actions, budgets, probe } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS], probeMode)
+        const { timings, moduleIds, queueIds, actions, budgets, probe, boundary } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS], probeMode)
         const hitFrame = timings[0] ?? []
         const partColumn = (/** @type {string} */ label) => round2(hitFrame[6 + STAGE_LABELS.length + FRAME_LABELS.indexOf(label)] ?? 0)
         const f0 = { updateMs: round2(hitFrame[4] ?? 0), actionMs: round2(actions[0] ?? 0), ...(hasFrameParts ? { explode: partColumn('explode'), action: partColumn('action'), renderCpu: round2(hitFrame[6 + STAGE_LABELS.length + FRAME_LABELS.length] ?? 0) } : {}) }
-        explodeProbe.push({ round, kind, throttle, mode: probeMode, isolated: probe.isolated, f0, records: probe.records })
+        explodeProbe.push({ round, kind, throttle, mode: probeMode, isolated: probe.isolated, f0, records: probe.records, ...(boundary.length > 0 ? { boundary } : {}) })
         const moduleColumn = 6 + STAGE_LABELS.length + FRAME_LABELS.length + FRAME_EXTRAS.length
         timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, probeMode, frame: index, ...(actions[index] === undefined ? {} : { actionMs: round2(actions[index] ?? 0) }), ...(budgets[index] === undefined ? {} : { budget: budgets[index] }), ...(hasFrameParts ? { queues: Object.fromEntries(queueIds.map((id, column) => [id, round2(frame[moduleColumn + moduleIds.length + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
         console.log(`room-explosion: stage round ${round} ${stageVariant} ${throttle}x ${kind} done`)

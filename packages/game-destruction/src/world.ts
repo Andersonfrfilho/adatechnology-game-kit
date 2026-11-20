@@ -3,6 +3,7 @@ import type { PlanePoint, SupportGraph } from '@adatechnology/game-load-path'
 import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
+import { benchmark, noInput, readBoundaryHost, type BoundaryRecord } from './boundary-probe'
 import { createExplodeProbe } from './explode-probe'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
@@ -651,6 +652,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const rng = createRng(options.seed ?? 1)
   // PROTÓTIPO (spec 018 T0.1): sonda do `explode`, desligada sem o global do host
   const probe = createExplodeProbe()
+  const boundaryHost = readBoundaryHost()
   const rnd = () => rng.next()
 
   let time = 0
@@ -5718,6 +5720,160 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return build(clone(e.spec), id, pos, rot, carry)
   }
 
+
+  // PROTÓTIPO DESCARTÁVEL (spec 018 T0.2): the cost of the boundary to a worker, measured right before the blast is applied (the house is whole).
+  // Flat input of the kernel of `blastPart`: one row of PART_STRIDE numbers per part in range and one of JOINT_STRIDE per joint of those parts, plus a
+  // material table. The pose is already in world space (`partXf`), the joint facts that need the object (`jointReach`...) are computed here.
+  //   part  0 object index in the blast, 1 part index, 2 shape (0 box, 1 cylinder, 2 sphere), 3-5 shape size (box xyz; cylinder radius, height; sphere radius),
+  //         6-8 world centre, 9-12 world quaternion, 13 material index, 14 flags (bit 0 anchored, 1 thickness given, 2 has units, 3 has reinforcement,
+  //         4 structure role other than none, 5 bends, 6 burning, 7 has layers), 15 mass, 16 hp, 17 max hp, 18 fuel, 19 temperature, 20 thickness,
+  //         21-23 dims, 24 distance to the blast, 25 first joint row, 26 joint count
+  //   joint 0 part a, 1 part b (object-local indices), 2 kind code, 3 hp, 4 max hp, 5 flags (bit 0 rebar of a reinforced part, 1 holds embedded,
+  //         2 fixes trim, 3 on foundation), 6 reach to the blast, 7 reach limit, 8 length
+  //   material 0 density, 1 failureMPa (NaN: none), 2 ductility, 3 hpPerKg, 4 ignitionC (NaN: none), 5 explosive damage scale, 6 is glass
+  const PART_STRIDE = 27
+  const JOINT_STRIDE = 9
+  const MATERIAL_STRIDE = 7
+  const RING_METRES = 1
+  type FlatBlast = { parts: Float64Array; joints: Float64Array; materials: Float64Array; partCount: number; jointCount: number }
+  const shapeCodes = { box: 0, cylinder: 1, sphere: 2 } as const
+  const measureBoundary = (point: Vec3, radius: number): void => {
+    if (!boundaryHost) return
+    const host = boundaryHost
+    const snapshotOf = (): DestructionSnapshot => ({
+      version: 1,
+      time,
+      rng: rng.state(),
+      counter,
+      objects: [...objects.values()].map(serializeObject),
+      ...(impls.size ? { impls: [...impls.values()].map((im) => ({ id: im.impl.id, position: [...im.position] as Vec3, rotation: [...im.rotation] as Quat, data: im.impl.serialize?.() })) } : {}),
+    })
+    const saved = { tested: blastProbe.partsTested, near: blastProbe.partsNear }
+    const inRange: ObjRT[] = []
+    for (const o of objects.values()) if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br < radius) inRange.push(o)
+    type Item = { o: ObjRT; objectIndex: number; p: PartRT; dist: number }
+    const select = (): { items: Item[]; embedded: number } => {
+      const items: Item[] = []
+      let embedded = 0
+      inRange.forEach((o, objectIndex) => {
+        for (const p of blastCandidates(o, point, radius)) {
+          if (isLost(p)) continue
+          if (p.embedded === true && p.st.exposed !== true) {
+            embedded++
+            continue
+          }
+          const dist = distToPart(o, p, point)
+          if (dist < radius) items.push({ o, objectIndex, p, dist })
+        }
+      })
+      return { items, embedded }
+    }
+    const selected = select()
+    blastProbe.partsTested = saved.tested
+    blastProbe.partsNear = saved.near
+    const items = selected.items
+    const ring = items.filter((item) => item.dist <= RING_METRES)
+    const outer = items.filter((item) => item.dist > RING_METRES)
+    const materialIndex = new Map<string, number>()
+    const kindCodes = new Map<string, number>()
+    const buildMaterials = (): Float64Array => {
+      const rows: MaterialDef[] = []
+      for (const item of items) if (!materialIndex.has(item.p.mat.id)) {
+        materialIndex.set(item.p.mat.id, rows.length)
+        rows.push(item.p.mat)
+      }
+      const table = new Float64Array(rows.length * MATERIAL_STRIDE)
+      rows.forEach((m, row) => {
+        table.set([m.density, m.failureMPa ?? NaN, m.ductility, m.hpPerKg, m.thermal.ignitionC ?? NaN, m.damageScale?.explosive ?? 1, m.tags?.includes('glass') === true ? 1 : 0], row * MATERIAL_STRIDE)
+      })
+      return table
+    }
+    const materials = buildMaterials()
+    const assemble = (chosen: Item[]): FlatBlast => {
+      const parts = new Float64Array(chosen.length * PART_STRIDE)
+      let jointRows = 0
+      for (const item of chosen) jointRows += item.o.byPart.get(item.p.spec.id)?.length ?? 0
+      const joints = new Float64Array(jointRows * JOINT_STRIDE)
+      let jointAt = 0
+      chosen.forEach((item, row) => {
+        const { o, p } = item
+        const { c, q } = partXf(o, p)
+        const shape = p.spec.shape
+        const base = row * PART_STRIDE
+        const flags = (p.anchored ? 1 : 0) | (p.spec.thickness !== undefined ? 2 : 0) | (p.spec.units ? 4 : 0) | (p.spec.reinforcement ? 8 : 0) | (p.spec.structure && p.spec.structure.role !== 'none' ? 16 : 0) | (p.bend ? 32 : 0) | (p.st.burning ? 64 : 0) | (p.layers.length > 0 ? 128 : 0)
+        parts[base] = item.objectIndex
+        parts[base + 1] = o.idx.get(p.spec.id) ?? 0
+        parts[base + 2] = shapeCodes[shape.kind]
+        if (shape.kind === 'box') { parts[base + 3] = shape.size[0]; parts[base + 4] = shape.size[1]; parts[base + 5] = shape.size[2] }
+        else if (shape.kind === 'cylinder') { parts[base + 3] = shape.radius; parts[base + 4] = shape.height }
+        else parts[base + 3] = shape.radius
+        parts.set(c, base + 6)
+        parts.set(q, base + 9)
+        parts[base + 13] = materialIndex.get(p.mat.id) ?? 0
+        parts[base + 14] = flags
+        parts[base + 15] = p.st.mass
+        parts[base + 16] = p.st.hp
+        parts[base + 17] = p.st.maxHp
+        parts[base + 18] = p.st.fuel
+        parts[base + 19] = p.st.temperature
+        parts[base + 20] = p.thickness
+        parts.set(p.dims, base + 21)
+        parts[base + 24] = item.dist
+        const mine = o.byPart.get(p.spec.id) ?? []
+        parts[base + 25] = jointAt
+        parts[base + 26] = mine.length
+        for (const j of mine) {
+          const at = jointAt++ * JOINT_STRIDE
+          let kindCode = kindCodes.get(j.spec.kind)
+          if (kindCode === undefined) kindCodes.set(j.spec.kind, (kindCode = kindCodes.size))
+          joints[at] = j.ia
+          joints[at + 1] = j.ib
+          joints[at + 2] = kindCode
+          joints[at + 3] = j.st.hp
+          joints[at + 4] = j.st.maxHp
+          if (j.st.open) continue
+          joints[at + 5] = (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec)) ? 1 : 0) | (holdsEmbedded(o, j) ? 2 : 0) | (fixesTrim(o, j) ? 4 : 0) | (onFoundation(o, j) ? 8 : 0)
+          joints[at + 6] = jointReach(o, j, point)
+          joints[at + 7] = jointReachLimit(o, j)
+          joints[at + 8] = jointLength(o, j)
+        }
+      })
+      return { parts, joints, materials, partCount: chosen.length, jointCount: jointAt }
+    }
+    const flatAll = assemble(items)
+    const flatRing = assemble(ring)
+    const flatOuter = assemble(outer)
+    const snapshot = snapshotOf()
+    const bytesOf = (flat: FlatBlast): number => flat.parts.byteLength + flat.joints.byteLength + flat.materials.byteLength
+    const json = JSON.stringify(snapshot)
+    const within = (limit: number): number => items.filter((item) => item.dist <= limit).length
+    const cloneFlat = (flat: FlatBlast): FlatBlast => ({ ...flat, parts: flat.parts.slice(), joints: flat.joints.slice(), materials: flat.materials.slice() })
+    const bufferOf = (flat: FlatBlast): ArrayBuffer[] => [flat.parts.buffer as ArrayBuffer, flat.joints.buffer as ArrayBuffer, flat.materials.buffer as ArrayBuffer]
+    const timings: BoundaryRecord['timings'] = {
+      serialize: benchmark(host, noInput, snapshotOf, 1000),
+      cloneSnapshot: benchmark(host, noInput, () => structuredClone(snapshot), 1000),
+      stringifySnapshot: benchmark(host, noInput, () => JSON.stringify(snapshot), 1000),
+      select: benchmark(host, noInput, select, 1000),
+      materials: benchmark(host, noInput, buildMaterials, 100000),
+      assembleRing: benchmark(host, noInput, () => assemble(ring), 100000),
+      assembleOuter: benchmark(host, noInput, () => assemble(outer), 100000),
+      assembleAll: benchmark(host, noInput, () => assemble(items), 100000),
+      cloneRing: benchmark(host, noInput, () => structuredClone(flatRing), 100000),
+      cloneOuter: benchmark(host, noInput, () => structuredClone(flatOuter), 100000),
+      cloneAll: benchmark(host, noInput, () => structuredClone(flatAll), 100000),
+      transferRing: benchmark(host, (count) => Array.from({ length: count }, () => cloneFlat(flatRing)), (flat) => structuredClone(flat, { transfer: bufferOf(flat) }), 200),
+      transferOuter: benchmark(host, (count) => Array.from({ length: count }, () => cloneFlat(flatOuter)), (flat) => structuredClone(flat, { transfer: bufferOf(flat) }), 200),
+      transferAll: benchmark(host, (count) => Array.from({ length: count }, () => cloneFlat(flatAll)), (flat) => structuredClone(flat, { transfer: bufferOf(flat) }), 200),
+    }
+    blastProbe.partsTested = saved.tested
+    blastProbe.partsNear = saved.near
+    host.records.push({
+      counts: { objects: objects.size, partsInWorld: [...objects.values()].reduce((sum, o) => sum + o.parts.length, 0), jointsInWorld: [...objects.values()].reduce((sum, o) => sum + o.joints.length, 0), inRangeObjects: inRange.length, items: items.length, embeddedSkipped: selected.embedded, ring: ring.length, outer: outer.length, within1_5: within(1.5), within2: within(2), within3: within(3), ringJoints: flatRing.jointCount, outerJoints: flatOuter.jointCount, allJoints: flatAll.jointCount, materials: materialIndex.size, impls: impls.size },
+      bytes: { jsonUtf8: new TextEncoder().encode(json).length, jsonChars: json.length, flatRing: bytesOf(flatRing), flatOuter: bytesOf(flatOuter), flatAll: bytesOf(flatAll), materialsTable: materials.byteLength },
+      timings,
+    })
+  }
+
   if (probe.isOn) {
     emit = probe.wrap('emit', emit)
     recomputeGroups = probe.wrap('groups', recomputeGroups)
@@ -5885,6 +6041,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     explode(point, energy, radius, source, blast) {
       blastProbe.partsTested = 0
       blastProbe.partsNear = 0
+      measureBoundary(point, radius)
       return probe.root(() => withCollapses(run(() => blastWorld(point, energy, radius, source, blast))))
     },
     groundLoss(loss) {
