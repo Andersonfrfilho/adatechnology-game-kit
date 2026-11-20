@@ -5,7 +5,7 @@ import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
-import { cellsOutside, cellsWithin, clumpUnits, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
+import { cellsOutside, cellsWithin, clumpUnits, holeInBox, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
 import type { LocalHole, UnitCell } from './breach'
 import { buildPartGrid, PART_GRID_MIN_PARTS } from './part-grid'
 import type { PartGrid } from './part-grid'
@@ -3363,9 +3363,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * Unit-sized fragments of `cells` (part-local), thrown from `hitW`; the holes that fell on a unit stay on it as `marks`. `inner`: drawn in the colour of
    * the inside of the material (a brick knocked out of its plaster), not the part's paint.
    */
-  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string, inner = false): Fragment[] => {
+  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string, inner = false, knownHoles?: readonly LocalHole[]): Fragment[] => {
     const { c, q } = partXf(o, p)
-    const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
+    const holes = knownHoles ?? (p.st.holes.length > 0 ? localHolesOf(p) : [])
     const [u, v] = planeAxes(p.thin)
     const faceArea = (cell: UnitCell) => cell.size[u] * cell.size[v]
     const total = cells.reduce((sum, cell) => sum + faceArea(cell), 0) || 1
@@ -4058,14 +4058,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const { c, q } = partXf(o, p)
     const chipped = (p.st.chipped ??= [])
     const tag = `x${chipped.length}_`
+    const holes = localHolesOf(p)
     const fragments = [
-      ...cellFragments(o, p, clumpUnits(blown, p.thin, unitSpan(p), unitClumps), wp, null, speed, blownMass, tag, true),
-      ...(fallen.length > 0 ? cellFragments(o, p, clumpUnits(fallen, p.thin, unitSpan(p), fallenClumps), wp, null, 0.3, fallenMass, `${tag}f`, true) : []),
+      ...cellFragments(o, p, clumpUnits(blown, p.thin, unitSpan(p), unitClumps), wp, null, speed, blownMass, tag, true, holes),
+      ...(fallen.length > 0 ? cellFragments(o, p, clumpUnits(fallen, p.thin, unitSpan(p), fallenClumps), wp, null, 0.3, fallenMass, `${tag}f`, true, holes) : []),
       ...plasterFlakes(o, p, blown, wp, speed, `${tag}p`),
     ]
     const cells = [...blown, ...fallen]
-    const holes = localHolesOf(p)
-    p.st.holes = p.st.holes.filter((_, k) => !cells.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length > 0))
+    p.st.holes = p.st.holes.filter((_, k) => !cells.some((cell) => holeInBox(cell.center, cell.size, holes[k]!)))
     const lo: Vec3 = [Infinity, Infinity, Infinity], hi: Vec3 = [-Infinity, -Infinity, -Infinity]
     for (const cell of cells) {
       chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
