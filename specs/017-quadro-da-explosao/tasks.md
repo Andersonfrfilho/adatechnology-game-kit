@@ -55,6 +55,9 @@
 ## Fase 5 — A explosão como frente de onda (D5 b)
 > 🤖 Modelo: `sonnet` (T5.0 e T5.1 são 🧠 — desenho validado em `design-onda.md`; T5.9 → `code-reviewer` `sonnet` + `engenheiro-estrutural`)
 >
+> **Não construída.** A T5.0 foi feita em 2026-11-20 e não passou em C-a a velocidades físicas (`design-onda.md` §9); o dono fechou a D5
+> como (a). As tasks abaixo ficam como registro do que a divisão da explosão exigiria, para a spec do worker (018).
+>
 > Só começa se o critério de entrada do `design-onda.md` §6 passar (C-a, C-b, C-c). Branch `spec/017-onda`, a partir da `main`.
 > Com a onda desligada (padrão do kit) nenhum golden, fixture ou `serialize()` pode mudar, em nenhuma task.
 

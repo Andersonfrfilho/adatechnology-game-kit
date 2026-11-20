@@ -562,3 +562,19 @@ regressão até uma noite limpa. As mesmas travadas (quadros de 400–700 ms, tu
 dos dois lados de todo par, desde as 9 h. Causa não provada; o processador estava a 90 °C depois de ~7 h de medição seguida, e
 estrangulamento térmico é a hipótese. Fica: rodar o comando de `docs/desempenho-explosoes.md` com a máquina fria e conferir que as três
 rodadas de explosão a 1x ficam entre 60 e 75 ms antes de copiar.
+
+## Fecho da spec (2026-11-20)
+
+| Critério | Resultado |
+|---|---|
+| C1, quadro do impacto ≤ 33,3 ms | **não atingido**: ~78 → ~65 ms (modo de prazo, 1x, explosão e cratera) |
+| C4, mesmos bytes fora de 60 Hz | atingido: 30/60/120/144 Hz e tempo de quadro aleatório, nos dois motores |
+| C8, sem regressão contra a `main` | atingido: portão completo passa com a máquina quieta |
+| Travas | `mustDrain` por lista (execução e auditoria), portão do quadro do impacto na rodada noturna |
+
+D5 fechada como (a). O que foi tentado depois do #408 e não entrou: explosão em fatias por pesos (~15 ms, calibrada numa casa só) e
+frente de onda física (3 a 6 ms), em `design-onda.md` §1 e §9. Branch do protótipo: `spec/017-d5b-prototipo` (local, não enviada).
+
+Pendências que saem desta spec: gravar a base da rodada noturna no modo de prazo com a máquina fria; o caminho `workBudget` ainda lê a
+pose desenhada (`it.fails` documentado); `standing()` depende do histórico de LOD; `hole` não sobrevive ao teto da fila de eventos; a
+causa do item E (trocar o `solveStructure` de dentro do `knockOutUnits` por pendente) não foi isolada.
