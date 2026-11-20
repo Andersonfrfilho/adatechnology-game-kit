@@ -25,7 +25,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
-import { againReportPath, needsBuild } from './perf-gate-plan.mjs'
+import { againReportPath, needsBuild, QUIET_LOAD, QUIET_LOG_EVERY, QUIET_POLL_MS, shouldKeepWaiting, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -109,13 +109,11 @@ const slug = createHash('sha1').update(`${renderer}|${VIEWPORT}|${tier}`).digest
 const baseReport = baseSha ? join(cacheDir, `${baseSha.slice(0, 12)}-${slug}-${harness}.json`) : ''
 
 // the budgets hold for a quiet machine: other work on the CPU reads as a slow frame
-const QUIET_LOAD = 4
-const WAIT_FOR_QUIET_MS = 10 * 60 * 1000
 const waitForQuiet = async () => {
   const until = Date.now() + WAIT_FOR_QUIET_MS
-  while (loadavg()[0] >= QUIET_LOAD && Date.now() < until) {
-    console.log(`pre-push: waiting for a quiet machine (load ${loadavg()[0].toFixed(1)}, under ${QUIET_LOAD} wanted)`)
-    await new Promise((done) => setTimeout(done, 30000))
+  for (let poll = 0; shouldKeepWaiting({ load: loadavg()[0], now: Date.now(), until }); poll++) {
+    if (poll % QUIET_LOG_EVERY === 0) console.log(`pre-push: waiting for a quiet machine (load ${loadavg()[0].toFixed(1)}, under ${QUIET_LOAD} wanted)`)
+    await new Promise((done) => setTimeout(done, QUIET_POLL_MS))
   }
   if (loadavg()[0] >= QUIET_LOAD) console.log(`pre-push: the machine is still busy (load ${loadavg()[0].toFixed(1)}): the frame times below read slower than a player sees`)
 }
