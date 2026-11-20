@@ -73,11 +73,17 @@ test('positive: mustDrainIds outside game-runtime is a violation, in game-runtim
   assert.deepEqual(scan(OWNER, '// mustDrainIds is documented here'), [])
 })
 
-test('the runtime list MUST_DRAIN_QUEUE_IDS and must-drain-allowed.json name the same queues', async () => {
-  const { DEFERRED_QUEUE_ID, MUST_DRAIN_QUEUE_IDS } = await import('../../../packages/game-contracts/src/frame.ts')
+test('the runtime list MUST_DRAIN_QUEUE_IDS and must-drain-allowed.json name the same queues', () => {
+  // read as text: the audit tests must not depend on the Node version stripping types
+  const frame = readFileSync(new URL('../../../packages/game-contracts/src/frame.ts', import.meta.url), 'utf8')
+  const ids = Object.fromEntries([...frame.matchAll(/^\s+([A-Z_]+): '([\w.-]+)',$/gm)].map((match) => [match[1], match[2]]))
+  const listed = /MUST_DRAIN_QUEUE_IDS[^=]*=\s*new Set\(\[([^\]]*)\]\)/.exec(frame)
+  assert.ok(listed, 'MUST_DRAIN_QUEUE_IDS not found in frame.ts')
+  const runtime = [...listed[1].matchAll(/DEFERRED_QUEUE_ID\.([A-Z_]+)/g)].map((match) => ids[match[1]])
   const { allowed } = JSON.parse(readFileSync(new URL('../must-drain-allowed.json', import.meta.url), 'utf8'))
-  assert.deepEqual([...MUST_DRAIN_QUEUE_IDS].sort(), allowed.map((entry) => entry.queue).sort())
-  for (const entry of allowed) assert.equal(DEFERRED_QUEUE_ID[entry.constant], entry.queue)
+  assert.ok(runtime.length > 0 && runtime.every(Boolean))
+  assert.deepEqual([...runtime].sort(), allowed.map((entry) => entry.queue).sort())
+  for (const entry of allowed) assert.equal(ids[entry.constant], entry.queue)
 })
 
 test('the message cites section 15', () => {

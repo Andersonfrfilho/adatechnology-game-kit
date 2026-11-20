@@ -660,7 +660,6 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       // the blocks of a cast member (a pillar, a beam) that broke off: lumps of their concrete stay stuck on the bars that ran through them
       const castGone: { c: Span; part: HouseStructurePart; thick: number; mid: number }[] = []
       const pillars = pillarSpans(view), gaps = windowGaps(view)
-      view.keptStale = false
       for (const id of view.parts) {
         const part = structure.byId.get(id)!, units = specOf(id)!.units!, opening = view.openings.get(id), spalls = view.spalls.get(id)!
         const { all, kept, holes: lost, boxes } = splitUnits(view, id, { pillars, gaps })
@@ -684,6 +683,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
           pits.push({ s: (k.a + k.b) / 2, y: (k.y0 + k.y1) / 2, rs: (k.b - k.a) / 2, ry: (k.y1 - k.y0) / 2 })
         }
       }
+      view.keptStale = false
       // the masks: what came out or was broken through goes through, the plaster breaks off around it with a ragged edge
       const reach = SPALL_MIN + SPALL_RAGGED
       const ragged = (s: number, y: number) => 0.6 * noise2(s, y, 0.03) + 0.4 * noise2(s + 7.3, y - 3.1, 0.011)
