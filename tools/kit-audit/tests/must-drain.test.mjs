@@ -80,6 +80,7 @@ test('the runtime list MUST_DRAIN_QUEUE_IDS and must-drain-allowed.json name the
   const listed = /MUST_DRAIN_QUEUE_IDS[^=]*=\s*new Set\(\[([^\]]*)\]\)/.exec(frame)
   assert.ok(listed, 'MUST_DRAIN_QUEUE_IDS not found in frame.ts')
   const runtime = [...listed[1].matchAll(/DEFERRED_QUEUE_ID\.([A-Z_]+)/g)].map((match) => ids[match[1]])
+  /** @type {{ allowed: { queue: string, constant: string }[] }} */
   const { allowed } = JSON.parse(readFileSync(new URL('../must-drain-allowed.json', import.meta.url), 'utf8'))
   assert.ok(runtime.length > 0 && runtime.every(Boolean))
   assert.deepEqual([...runtime].sort(), allowed.map((entry) => entry.queue).sort())
