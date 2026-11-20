@@ -531,3 +531,24 @@ Log: `medicoes/perf-gate-c8-9498ddda3-quieta.log` (carga 1,97 no começo). `perf
 Alvos absolutos perdidos: 46 na branch, 44 na `main` (o alvo, não o portão). Sobre a fase `storm`: esta passada mostra
 ganho, a série alternada da seção anterior mostrou empate; o pior quadro dessa fase varia de 200 a 450 ms entre medições
 do mesmo lado, então **não se afirma ganho em `storm`**, só que não há regressão.
+
+### Revisão do conjunto (PR #408) e correções
+
+A revisão da branch inteira não achou nada crítico; três correções entraram:
+
+- **Colisão lia a pintura** (bug real, introduzido pela pintura com prazo): `breach.standing()`, que alimenta o que o corpo
+  encontra na parede, vinha de `view.kept`, escrito só por `paint()`. Com a pintura atrasando até 3 quadros, o jogador podia
+  ser barrado por um vão já aberto, em tique diferente conforme o orçamento do quadro. Agora vem do dano registrado
+  (`splitUnits`, refeito sob demanda). Teste: `breach-standing-timing.test.ts`.
+- **Trava do `mustDrain`**: a auditoria passa a enxergar `mustDrainIds`; um teste liga `MUST_DRAIN_QUEUE_IDS` a
+  `must-drain-allowed.json`.
+- `strike.inRenderer` volta em `finally`.
+
+Régua com as correções (`abda41ce4`, carga 1,8–1,9): explosão 68,1 / 63,8 ms; cratera 72,9 / 68,4 ms. Base sem elas, na
+mesma manhã: 65,7–69,0 e 60,0–67,3. Explosão igual; cratera ~3 ms acima, no limite do ruído da régua (±2 ms), sem rótulo
+novo nas partes do quadro. Lido como sem regressão clara, não como prova de custo zero.
+
+Pendências conhecidas que a revisão levantou e ficam fora deste PR: (1) parede atingida com a casa em LOD 1 ou 2 não
+registra o dano na vista, então `standing()` ainda depende do histórico de LOD (anterior à spec); (2) o portão do quadro do
+impacto só roda na rodada noturna (§9), então uma regressão chega à `main` e é vista na noite seguinte; (3) `hole` deixou
+de sobreviver ao teto da fila de eventos (`QUEUE_CAP`).
