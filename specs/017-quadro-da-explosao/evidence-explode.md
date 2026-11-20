@@ -1,53 +1,65 @@
-# T2.1: baratear o `world.explode` sem mudar a saída (2026-11-20)
+# Cortes de apresentação dentro dos eventos da explosão (spec 017)
 
-Branch `spec/017-explode`. Um commit por item. Ganho em ms não medido aqui; régua do navegador depois (para todos os itens).
-Guardas de cada item (rodados depois dele, nesta ordem): `game-destruction` (suíte inteira, mais `tsc`), `game-floorplan-three` (`blast-presentation`,
-`exact-golden*`, `breach-*`, `structure-solves`, mais `tsc`), `game-test-room` (`step-equivalence`, `step-equivalence-window`). Todos verdes em A, B, C, D e F.
-No fim: `pnpm check:layers` ok, `kit-audit --check --strict-clocks` ok (0 novos), eslint sem erro nos arquivos tocados.
+Base: perfil em `evidence-perfil2.md` (seções A, B, C). Nenhum corte muda a simulação: `step-equivalence*`, `exact-golden` e `blast-presentation` passam sem regravar nada.
 
-## A. `implInRange` preguiçoso (`1d1eaf17a`)
-`world.ts` `implInRange`: laço que para na primeira peça no alcance, sem montar o array de `implParts`; mesmas operações por peça, mesma ordem.
-Rejeição por `implBoundsOf` não usada: os limites têm folga e a prova de mesma resposta não é trivial. Teste: `tests/blast-impl-range.test.ts`.
+## Item 1 — `rebuildHost` uma vez por lote (feito, 6676e2c74)
 
-## B. `emit` com lista copiada só na escrita (`86f12a2e2`)
-`listeners` guarda arrays imutáveis; `on`/`off` trocam o array. Mantida a semântica antiga: quem entra ou sai dentro de um `emit` não muda a lista
-daquele `emit`; a lista tipada é lida depois dos ouvintes `'*'` (como antes). Inscrição repetida da mesma função continua ignorada. `base()` e o
-spread por evento não foram tocados (a serialização do evento define o hash dos goldens). Teste `tests/event-listeners.test.ts` (passa também na versão antiga).
+`applyStructuralEvents` e `runBudgeted` envolvem o lote inteiro em `batchRebuilds` (o mecanismo que já existia, agora reentrante em volta do lote). Cada host da malha
+fundida escreve na primeira mudança do lote e uma vez no fim, em vez de duas por fratura.
 
-## C. `blastPart` e `wearJoints` (`fa27e0b43`)
-`wearJoints` percorre `byPart` no lugar (o divisor continua o número de juntas fechadas no início). `blastPart` reaproveita `q` no lugar de
-`faceOf` quando `o.st.rotation` e `p.q` são os mesmos objetos de quando foram lidos (ambos só são trocados por `applySoilPose`/`setPartPose`, nunca
-alterados no lugar); senão chama `faceOf`. Nada que sorteia ou soma em ponto flutuante mudou de ordem.
+Quem lê a malha no meio do lote:
+- `extract` lê as posições de `plainPositions`/`host.work` (não da geometria reescrita) e as normais da geometria. Normais de uma faixa só mudam com os vértices dela
+  (amassado, derretimento, dobra): essas mudanças marcam o host como `urgent` e `extract` descarrega antes de ler. O colapso de outra peça não marca.
+- `measureSolids`/`fitBoxes`/`fitSurface`/`positionsOf`: leem `host.work` mais a lista `collapsedRanges`, nunca a geometria reescrita; não dependem da escrita.
+- Decals: `onFace` faz raycast na geometria; descarrega todos os hosts pendentes antes.
+- `partColor`: escreve o atributo de cor, independente das posições.
 
-## D. `knockOutUnits` e `unsupportedCells` (`da8c9f991`)
-- `localHolesOf` calculado uma vez e passado a `cellFragments` (novo último parâmetro opcional `knownHoles`).
-- filtro de furos por `holeInBox` (`breach.ts`), a mesma conta de `marksInBox` para um furo sem rotação, sem arrays.
-- `unsupportedCells`: as linhas NÃO dependem só da grade (`rows` só tem as células de pé). O que depende só da grade, e agora fica guardado por
-  grade (WeakMap, conferindo `thin`, a base e o número de células): a chave de linha de cada célula e a ordem das células ao longo da parede
-  (ordenação estável uma vez). A ordem de criação das linhas (que define a de `loose`) segue a primeira célula de pé por índice.
-Testes: `tests/unsupported-cells-layout.test.ts` (cópia da versão antiga como referência, bond running e stack, 320 máscaras aleatórias, grade nova vs repetida,
-altura trocada) e `holeInBox` contra `marksInBox`.
+Teste novo `packages/game-destruction-three/tests/batched-host-writes.test.ts`: mesma malha final (posições e normais) e 2 escritas em vez de 4; peça extraída no meio do lote
+sai com as mesmas normais. Ganho em ms não medido aqui.
 
-## E. `solveStructure` dentro de `knockOutUnits`: DESFEITO, nada commitado
-Troquei por `loosened(o, [], 'break', src)` (com `solveStructure` direto fora de operação). Os guardas mudaram: `blast-presentation`
-(`RECORDED_BLAST_OUTCOME`, hash `6a4a72aa...` virou `ec4337d9...`) e `exact-golden` `destruction/fracture`. Desfeito.
-Quem lê o estresse entre essa chamada e o fim do `run()`: `exposeRebar` (`p.st.stress` para o arqueamento das barras; chama `settleStructure` antes),
-os `bearBeam`/`judgePlate` do solo (`st.load`; chamam `settleStructure` no laço), `applyWind`, `soilWeight` e `recomputeGroups` (`o.unsup`; só no `update`
-e no assentamento). Nenhum desses é `blastPart`, `failPart` nem `bendByBlast`. Pela leitura nada deveria mudar, mas mudou: a causa não foi isolada
-(candidatas: `solveStructure` não é idempotente, por `o.seeding`/`heldAsDesigned`; ou `recomputeGroups` que o assentamento chama a mais). Fica para análise com sonda.
+## Item 2 — sons sem custo no tique (feito, 3c90bc389)
 
-## F. Corte da parede adiado para o pintar: RETIRADO (`a86a7464a` revertido)
-Feito e revertido (`git diff 49eee5cc2 -- packages/game-floorplan-three` vazio; o teste de máscara que ele acrescentou saiu junto). Motivo: sem ganho
-mensurável na régua, e o adiamento tem um defeito: se o renderer amassa a malha entre o golpe e a pintura, o amassado entra na casca (a cópia de
-`_p0` passa a ser lida tarde). A correção (guardar a cópia das posições por parede com corte pendente) foi escrita e testada, mas não vale manter
-um item sem ganho.
+Causa: `playSample` (game-audio `webaudio/engine.ts`) montava os nós do Web Audio (fontes, ganhos, panner, rota de oclusão) e emitia o evento dentro da chamada de `play`, no tique.
+Só a receita passava pela fila `audio.voices`; as gravações (todos os `impact_*`, `shatter_glass`, `detach`) não. Agora, com `deferredStart`, a amostra é reservada em `play`
+(limitador, escolha da tomada, vida da voz, choke) e construída pela fila; `urgent` continua síncrono, parar a voz na espera cancela, o início nunca fica no passado.
 
-## Testes acrescentados depois da revisão (B, C, D)
-- B: `tests/event-listeners.test.ts`: evento emitido de dentro de um ouvinte e ordem `'*'`, `'*'`, tipado em cada evento.
-- C: `tests/blast-moved-object.test.ts`: `setTransform` entre duas explosões; a segunda usa a pose nova.
-- D: `tests/knock-out-units-fixture.test.ts` com `tests/fixtures/knock-out-units.json`, gravado com `world.ts`/`breach.ts` do commit anterior ao D
-  (`fa27e0b43`): 62 eventos, hash dos eventos e do estado serializado iguais na versão nova.
+Teto: o game-audio não tem teto por quadro por som (só `maxConcurrent`/`cooldown` por grupo e `choke`, que mantém os últimos e não os primeiros). `createDestructionSound` ganhou
+`samePerFrame` (constante `SAME_SOUND_PER_FRAME = 4`, ligada na sala sem aumentar `room.ts`, 5621 linhas); `update` abre o próximo quadro. Explosão e laços de fogo ficam de fora.
+O som não entra no hash de `step-equivalence` (nem o `log`: a sala não registra `onSound`); o `onSound` do renderer e o `options.onSound` do host continuam sendo chamados para todos.
 
-## Medição e decisão (6 rodadas, modo de prazo, máquina quieta)
-f0: 64,6 / 64,1 ms → 63,8 / 62,9 ms; rótulo `explode`: 20,5 → 19,4 e 20,2 → 19,8 ms. Os cortes A a D e F juntos tiram cerca de 1 ms do f0,
-dentro do ruído de ±1,5 ms entre rodadas. A a D ficam (mesma saída, sem custo de manutenção); F sai. O ganho de A a D não é distinguível do ruído.
+Testes novos: `game-audio/tests/sample.test.ts` (voz reservada e construída pela fila, parada na espera) e `game-destruction-three/tests/same-sound-per-frame.test.ts`. Ganho em ms não medido aqui.
+
+## Item 3 — `case 'damage'` da casa (não feito)
+
+Dois motivos, ambos por leitura:
+1. O custo já é pequeno: `evidence-perfil2.md` A3 mede `houseDamage` em 0,10 ms para 337 eventos; o resto dos ouvintes da casa é `breach.spall`/`chip`.
+2. Leem `Damageable.hp` na hora: o `case 'fracture'` do mesmo `handleEvent` (`before = d.hp`; `before > 0` decide chamar `cfg.onDamage`; adiar o dano muda quando `onDamage`
+   dispara), `strikePiece` em `build/build.ts:257-261` (`hp <= 0 && before > 0` dispara a quebra no mundo) e o contrato público "o jogo lê `hp`" (`types.ts`, `colliderDamage`).
+Sem ponto único de descarga garantido antes dessas leituras, não mudei.
+
+## Gates
+
+typecheck: game-audio, game-destruction-three, game-test-room. Suítes: game-audio (279), game-destruction-three (673), game-test-room (481), game-floorplan-three só
+`blast-presentation`, `exact-golden`, `breach-*`, `destruction`, `test-area` (118). `pnpm check:layers` e `kit-audit --check --strict-clocks`: limpos.
+
+## Revisão
+
+Malha (item 1):
+- M1: `onFace` e `extract` descarregam só o host da malha lida (`host.mesh === mesh`); `flushPendingRebuilds` (todos) só em `shownArea` e `clipToDrawn`. Teste: duas malhas, marcas intercaladas com `hide`: 6 escritas contra 8 sem lote, malhas e marcas iguais.
+- M2: `afterSplit`, `measure`, `groupCentre`, `worldBox`, `localBox` de peça com host leem `host.work` (nunca a geometria reescrita): sem estado velho. Liam a caixa da geometria da malha fundida
+  (`boundingBox`, anulada só na escrita) `shownArea` (renderer.ts, no evento `explode`) e `clipToDrawn`: ganharam o descarregamento antes da leitura.
+- M3: `collapseRange`/`restoreRange` da casa (breach.ts) escrevem no array e em `userData.collapsedRanges`; a escrita do fim do lote refaz `arr.set(work)` + `collapseForeign` com a lista do momento, então o fim é o mesmo
+  do caminho sem lote; a restauração por `plainPositions` (`showCollapsedRanges`, ao pegar a peça inteira) roda em `adoptSplit` e escreve direto, sem `rebuildHost`. Não provei que a casa nunca chame isso
+  de dentro de um lote da destruição; o teste cobre o colapso/restauração direto no array no meio do lote e dá o mesmo resultado.
+- M4: cada escrita do fim do lote em try/catch; a primeira falha é relançada depois de todos os hosts, e o erro do trabalho nunca é trocado. Teste incluído.
+- M5: `extract` depois de amassado e derretimento com colapsos pendentes de outras peças: posição, normal, uv e cor iguais. Teste incluído.
+
+Som (item 2):
+- S1: `explode` (e a cauda interna), `shot_*` e as chaves `*_ballistic` saem com `urgent: true`; teste com a fila cheia e orçamento zero.
+- S2: a rota de oclusão e a posição (copiada em `routed`) voltam a ser lidas no `play`; só `realizeSample` espera a fila.
+- S3: `announce` e `requestedAt` voltaram para o `play`; a voz construída tarde começa em `max(instante pedido, currentTime)`; descartes por latência em `stats().lateDrops` (receita e amostra; `dispose` não conta).
+  `stats().voices` conta as reservadas na fila: o `maxVoices` (32) e o `maxConcurrent` são avaliados no `play` como antes, então o limite de vozes não muda.
+- S4: `samePerFrame`/`SAME_SOUND_PER_FRAME`, a opção na sala e o teste dele foram retirados; `room.ts` segue com 5621 linhas.
+- S5: testes de descarte por `maxLatencyMs`, `stop`/`choke` em voz reservada, `dispose` com pendentes e `stats().voices`.
+
+Gates: game-audio (282), game-destruction-three (675), game-test-room (481), game-floorplan-three (118, só os guardas), typecheck, `check:layers`, `kit-audit --check --strict-clocks`: limpos.

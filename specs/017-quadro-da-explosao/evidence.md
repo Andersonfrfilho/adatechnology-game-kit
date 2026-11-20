@@ -428,3 +428,42 @@ Perfil que apontou os dois itens: `evidence-perfil2.md` (~85% dos ~18 ms dos eve
   mandou retirar (mantinha os primeiros, não os mais próximos); a versão corrigida precisa ser medida de novo.
 - **Os dois juntos: ~3 a 4 ms; f0 em ~63 ms.** A base desta rodada saiu ~2 ms acima da base da rodada 3 (66,8 contra 64,4) com código que
   só difere pelos cortes A–D: é a deriva entre sessões de medição, e é por isso que cada rodada mede a própria base.
+
+## Rodada 5 — versões corrigidas da malha por lote e do som (2026-11-20, 03:47 a 04:12)
+
+Quatro rodadas alternadas, modo de prazo, carga no início 1,43 a 1,47 e no fim 1,18 a 1,55. Base `6751c2d9f`; versão com as correções da
+revisão `670f2fd78` (malha por lote com descarga só da malha lida; som com o golpe urgente, rota lida no pedido e SEM o teto de 4 por tipo).
+JSONs: `medicoes/regua-r5-*.json`.
+
+| f0 a 1x, modo de prazo (ms, 2 rodadas cada) | base, blast / crater | malha + som corrigidos |
+|---|---|---|
+| f0 inteiro | 67,0 / 66,1 | 64,2 / 67,4 |
+| `rebuildHost` | 3,0 / 2,4 | 1,1 / 0,9 |
+| o que os eventos chamam na física (`stagesOut`) | 6,2 / 6,0 | 4,3 / 4,6 |
+| eventos estruturais no tique | 12,0 / 12,6 | 12,6 / 13,1 |
+| `action` | 6,7 / 6,6 | 7,2 / 7,5 |
+| `explode` | 21,6 / 21,2 | 20,1 / 21,5 |
+
+- **Malha por lote: ganho confirmado, ~1,7 ms** (`rebuildHost` 2,7 → 1,0, depois de a marca descarregar só a malha que lê). **Entra**
+  (`3897188ee`, `1ebf68716`).
+- **Som montado pela fila: sem ganho na versão correta.** O 1,5 a 2 ms da rodada 4 vinha do teto de 4 sons por tipo, que descartava sons e
+  saiu na revisão; com o som do golpe de volta à montagem na hora (C5), os eventos no tique e o `action` voltam ao que eram. **Não entra**; os
+  commits ficam na branch `spec/017-explode`.
+- **f0 inteiro:** 66,6 → 65,8 na média dos dois tipos; o `blast` da base variou de 63,4 a 70,7 entre as duas rodadas. Um ganho de ~1,7 ms não
+  aparece com segurança no total; aparece no rótulo.
+
+### Fecho da frente "sem mudar a simulação" (o que foi medido nesta spec)
+
+| Mudança | Ganho medido no f0 (modo de prazo) | Estado |
+|---|---|---|
+| T3.1 pintura da casa fora do quadro do golpe | ~13 ms (78 → 65) | na branch |
+| Malha da casa reescrita uma vez por lote | ~1,7 ms no rótulo | na branch |
+| Cortes A–D do `explode` | ~1 ms (dentro do ruído) | na branch |
+| T2.2 eventos estruturais no tique | 0 (é correção de determinismo) | na branch |
+| Eventos visuais adiados (3 revisões) | ~1 ms (dentro do ruído) | não entrou |
+| Som montado pela fila | 0 na versão correta | não entrou |
+| Corte da parede adiado (item F) | 0 | não entrou |
+| Cache do furo (parte 1) | 8 a 13 ms no modo de cota, antes desta série | na branch |
+
+f0 hoje: **~64 a 66 ms** (meta C1: 33,3). O que sobra de grande é o laço por peça do `explode` (~17,6 ms, 521 peças) e a aplicação dos eventos
+estruturais (~17 ms, dos quais ~2,3 são mundo e corpo e o resto é malha, marcas, efeitos e som espalhados por muitos itens pequenos).
