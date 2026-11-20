@@ -1,0 +1,239 @@
+pre-push: perf on ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Laptop GPU/PCIe/SSE2, OpenGL ES 3.2) (discrete), window 1600x900
+▲ [WARNING] "import.meta" is not available with the "iife" output format and will be empty [empty-import-meta]
+
+    packages/game-kit-defaults/dist/index.js:65:118:
+      65 │ ...ew URL("./kit-worker.js", import.meta.url), { name: "kit-worker...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] Ignoring this import because "packages/game-shapes/dist/chunk-E3X7UDDV.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-shapes/dist/worker-kinds.js:4:7:
+      4 │ import "./chunk-E3X7UDDV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-shapes/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "iife" output format and will be empty [empty-import-meta]
+
+    packages/game-kit-defaults/dist/index.js:65:118:
+      65 │ ...ew URL("./kit-worker.js", import.meta.url), { name: "kit-worker...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] Ignoring this import because "packages/game-audio/dist/chunk-TXGRBRE6.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-audio/dist/testing.js:10:7:
+      10 │ import "./chunk-TXGRBRE6.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-audio/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "packages/game-shapes/dist/chunk-E3X7UDDV.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-shapes/dist/worker-kinds.js:4:7:
+      4 │ import "./chunk-E3X7UDDV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-shapes/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+dist/furniture-area.js 4870 KB
+dist/sala-moveis.html 12445 KB
+▲ [WARNING] "import.meta" is not available with the "iife" output format and will be empty [empty-import-meta]
+
+    packages/game-kit-defaults/dist/index.js:65:118:
+      65 │ ...ew URL("./kit-worker.js", import.meta.url), { name: "kit-worker...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] Ignoring this import because "packages/game-shapes/dist/chunk-E3X7UDDV.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-shapes/dist/worker-kinds.js:4:7:
+      4 │ import "./chunk-E3X7UDDV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-shapes/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+jolt boot: 4060414 bytes
+sfx: 1192 recorded takes from /home/miyazaki/Documents/personal/adatechnology-game-kit-wt/spec-017/packages/game-audio/assets/sfx
+dist/test-room.html 20785 KB
+dist/sfx: manifest and links to veiculos, ambiente, personagem, itens-portas, armas, impactos, explosoes-fogo
+dist/weapon-svg copied
+dist/index.html: 18 examples, 2 built
+pre-push: measuring this branch
+PERF  mode=gpu  viewport=1600x900  tier=discrete  pixelRatio=default  gpu=ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)
+PHASE {"name":"idle","frames":720,"overTwiceMedian":0,"p50":2.4,"p95":17.2,"p99":17.7,"max":17.9,"hitches":0,"worstLongTask":0,"programs":0,"buffers":0,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":134,"slowFrames":[],"maxFramesWaiting":4,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"audio.occlusion":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":9},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"light_slots","frames":0,"overTwiceMedian":0,"p50":0,"p95":0,"p99":0,"max":0,"hitches":0,"worstLongTask":0,"programs":0,"buffers":0,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":151,"slowFrames":[],"maxFramesWaiting":4,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"audio.occlusion":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":9},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+SLOTS {"point":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],"spot":[0,1,2,3],"problems":[]}
+PHASE {"name":"cold_frag_grenade","frames":5639,"overTwiceMedian":3,"p50":3.2,"p95":17.1,"p99":17.7,"max":86.7,"hitches":3,"worstLongTask":94,"programs":0,"buffers":470,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":327,"slowFrames":[{"at":1275,"ms":66,"render":62,"scripts":["s@5801791 60ms"]},{"at":2192,"ms":110,"render":93,"scripts":["s@5801791 89ms"]}],"maxFramesWaiting":7,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1123},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":114},"audio.occlusion":{"maxFramesWaiting":7,"forced":0,"ranUnits":4121},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":57},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_molotov","frames":5018,"overTwiceMedian":0,"p50":3.7,"p95":8.7,"p99":11.1,"max":27.6,"hitches":0,"worstLongTask":0,"programs":0,"buffers":335,"programNames":[],"firstUses":4,"firstUseNames":["USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA,uW,uC}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:sedan MeshBasicMaterial:-","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:sedan MeshBasicMaterial:-"],"drawsPerFrame":466,"slowFrames":[],"maxFramesWaiting":7,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1580},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":451},"audio.occlusion":{"maxFramesWaiting":7,"forced":0,"ranUnits":5738},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":112},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_pipe_bomb","frames":4646,"overTwiceMedian":3,"p50":3.8,"p95":9.3,"p99":11.7,"max":453.2,"hitches":3,"worstLongTask":458,"programs":0,"buffers":212,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":492,"slowFrames":[{"at":12683,"ms":458,"render":457,"scripts":["s@5801791 455ms"]},{"at":12683,"ms":64,"render":20,"scripts":["s@5801791 17ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":2321},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":876},"audio.occlusion":{"maxFramesWaiting":8,"forced":1,"ranUnits":6814},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":130},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_m79","frames":4704,"overTwiceMedian":2,"p50":4,"p95":8.5,"p99":11,"max":35.3,"hitches":2,"worstLongTask":51,"programs":0,"buffers":274,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":604,"slowFrames":[{"at":16606,"ms":50,"render":49,"scripts":["s@5801791 47ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":3161},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":1316},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":7918},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":146},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_rpg_7","frames":4373,"overTwiceMedian":3,"p50":4.2,"p95":9.4,"p99":12.5,"max":125.4,"hitches":3,"worstLongTask":107,"programs":0,"buffers":201,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":584,"slowFrames":[{"at":21279,"ms":128,"render":21,"scripts":["s@5801791 18ms"]},{"at":25467,"ms":61,"render":6,"scripts":["s@5801791 6ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":3350},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":1615},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":8892},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":163},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_at4","frames":4397,"overTwiceMedian":1,"p50":4.3,"p95":9.2,"p99":11.6,"max":41.1,"hitches":1,"worstLongTask":0,"programs":0,"buffers":133,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":571,"slowFrames":[],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":3541},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":1916},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":9844},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":179},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_dynamite","frames":4530,"overTwiceMedian":1,"p50":4.2,"p95":9,"p99":11,"max":58.3,"hitches":1,"worstLongTask":0,"programs":0,"buffers":136,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":535,"slowFrames":[{"at":31802,"ms":53,"render":10,"scripts":["s@5801791 7ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":3740},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":2218},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":10870},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":195},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_c4","frames":4725,"overTwiceMedian":1,"p50":4,"p95":8.6,"p99":11,"max":42.8,"hitches":1,"worstLongTask":0,"programs":0,"buffers":146,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":431,"slowFrames":[],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":3929},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":2523},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":11856},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":211},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_claymore","frames":4903,"overTwiceMedian":1,"p50":3.8,"p95":8.7,"p99":12.4,"max":58.8,"hitches":1,"worstLongTask":51,"programs":0,"buffers":45,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":329,"slowFrames":[{"at":39666,"ms":62,"render":11,"scripts":["s@5801791 8ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":3950},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":2838},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":12904},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":225},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":6},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"warm_all","frames":7661,"overTwiceMedian":8,"p50":4.7,"p95":11.1,"p99":16.3,"max":351.8,"hitches":8,"worstLongTask":350,"programs":0,"buffers":994,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":480,"slowFrames":[{"at":45058,"ms":308,"render":308,"scripts":["s@5801791 305ms"]},{"at":45381,"ms":349,"render":348,"scripts":["s@5801791 343ms"]},{"at":45648,"ms":98,"render":12,"scripts":["s@5801791 11ms"]},{"at":48415,"ms":72,"render":10,"scripts":["s@5801791 8ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":7865},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":3777},"audio.occlusion":{"maxFramesWaiting":8,"forced":7,"ranUnits":16338},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":7,"ranUnits":267},"destruction.settled-batch":{"maxFramesWaiting":1,"forced":0,"ranUnits":103},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"storm","frames":12505,"overTwiceMedian":55,"p50":5.3,"p95":12.1,"p99":20.3,"max":593.6,"hitches":55,"worstLongTask":592,"programs":0,"buffers":2897,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":604,"slowFrames":[{"at":51983,"ms":72,"render":7,"scripts":["s@5801791 7ms"]},{"at":52576,"ms":76,"render":75,"scripts":["s@5801791 73ms"]},{"at":52594,"ms":112,"render":111,"scripts":["s@5801791 109ms"]},{"at":52650,"ms":591,"render":591,"scripts":["s@5801791 589ms"]},{"at":54661,"ms":250,"render":250,"scripts":["s@5801791 247ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":29558},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":6660},"audio.occlusion":{"maxFramesWaiting":8,"forced":39,"ranUnits":22147},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":7,"ranUnits":294},"destruction.settled-batch":{"maxFramesWaiting":8,"forced":11,"ranUnits":352},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"after_storm","frames":546,"overTwiceMedian":0,"p50":4.9,"p95":10.4,"p99":15,"max":17.6,"hitches":0,"worstLongTask":0,"programs":0,"buffers":0,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":412,"slowFrames":[],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":29561},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":6685},"audio.occlusion":{"maxFramesWaiting":8,"forced":39,"ranUnits":22243},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":7,"ranUnits":294},"destruction.settled-batch":{"maxFramesWaiting":8,"forced":11,"ranUnits":352},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"dense_horde","frames":4159,"overTwiceMedian":0,"p50":6.6,"p95":16.8,"p99":17.7,"max":31.7,"hitches":0,"worstLongTask":0,"programs":0,"buffers":4,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":412,"slowFrames":[],"maxFramesWaiting":4,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":21},"audio.occlusion":{"maxFramesWaiting":0,"forced":0,"ranUnits":214},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":31},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":2},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+HORDE dense_horde {"agents":1109,"drawn":1489,"lod_near":221,"lod_middle":474,"lod_far":794,"draw_calls":71,"bake_ms":184.40000009536743,"detail_scale":1,"crowd_gpu_ms":2.5510100800132944,"active":1109,"kills":891,"bodies":400,"civilians_alive":4,"health":0,"grabbed":"não","message":"Um gritador chamou a multidão","falls_pressure":91,"falls_chain":0,"falls_landing":0,"climbers":703,"mound_max":1.6,"thrown_peak":0,"max_overlap":0.5338898003101349,"chain_links":0,"crowd_ms_p99":5.399999976158142,"crowd_ms_mean":2.730000001192093}
+ADAPT dense_horde {"finalDetailScale":1,"settleSeconds":2,"swing":0.04}
+PHASE {"name":"chain_horde","frames":5471,"overTwiceMedian":12,"p50":6.4,"p95":13.7,"p99":21.9,"max":99.4,"hitches":12,"worstLongTask":102,"programs":0,"buffers":1293,"programNames":[],"firstUses":6,"firstUseNames":["USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA,uW,uC}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA,uW,uC}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:sedan MeshBasicMaterial:-","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:sedan MeshBasicMaterial:-"],"drawsPerFrame":398,"slowFrames":[{"at":1627,"ms":53,"render":53,"scripts":["s@5801791 51ms"]},{"at":1664,"ms":101,"render":101,"scripts":["s@5801791 99ms"]},{"at":1741,"ms":64,"render":63,"scripts":["s@5801791 61ms"]},{"at":1830,"ms":73,"render":73,"scripts":["s@5801791 71ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1288},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":328},"audio.occlusion":{"maxFramesWaiting":8,"forced":5,"ranUnits":1082},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":4,"forced":11,"ranUnits":92},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":4,"ranUnits":123},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":4},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+CHAIN buffers created before the first blast: 164, after: 1129
+HORDE chain_horde {"agents":1590,"drawn":1491,"lod_near":203,"lod_middle":512,"lod_far":776,"draw_calls":69,"bake_ms":153.10000002384186,"detail_scale":1,"crowd_gpu_ms":2.5131324993736044,"active":679,"kills":410,"bodies":400,"civilians_alive":4,"health":0,"grabbed":"não","message":"Um gritador chamou a multidão","falls_pressure":3788,"falls_chain":7,"falls_landing":1,"climbers":356,"mound_max":1.6,"thrown_peak":32,"max_overlap":0.3572340601482837,"chain_links":8,"crowd_ms_p99":4.399999976158142,"crowd_ms_mean":2.5516666676600774}
+ADAPT chain_horde {"finalDetailScale":1,"settleSeconds":1,"swing":0.02}
+TARGET  cold_frag_grenade: 3 frames over twice the median (3.2 ms, from 16.7 ms up)
+TARGET  cold_frag_grenade: 3 frames over 33.4 ms (worst 86.7 ms)
+TARGET  cold_frag_grenade: long task of 94 ms
+TARGET  cold_pipe_bomb: 3 frames over twice the median (3.8 ms, from 16.7 ms up)
+TARGET  cold_pipe_bomb: 3 frames over 33.4 ms (worst 453.2 ms)
+TARGET  cold_pipe_bomb: long task of 458 ms
+TARGET  cold_m79: 2 frames over twice the median (4 ms, from 16.7 ms up)
+TARGET  cold_m79: 2 frames over 33.4 ms (worst 35.3 ms)
+TARGET  cold_m79: long task of 51 ms
+TARGET  cold_rpg_7: 3 frames over twice the median (4.2 ms, from 16.7 ms up)
+TARGET  cold_rpg_7: 3 frames over 33.4 ms (worst 125.4 ms)
+TARGET  cold_rpg_7: long task of 107 ms
+TARGET  cold_at4: 1 frames over twice the median (4.3 ms, from 16.7 ms up)
+TARGET  cold_at4: 1 frames over 33.4 ms (worst 41.1 ms)
+TARGET  cold_dynamite: 1 frames over twice the median (4.2 ms, from 16.7 ms up)
+TARGET  cold_dynamite: 1 frames over 33.4 ms (worst 58.3 ms)
+TARGET  cold_c4: 1 frames over twice the median (4 ms, from 16.7 ms up)
+TARGET  cold_c4: 1 frames over 33.4 ms (worst 42.8 ms)
+TARGET  cold_claymore: 1 frames over twice the median (3.8 ms, from 16.7 ms up)
+TARGET  cold_claymore: 1 frames over 33.4 ms (worst 58.8 ms)
+TARGET  cold_claymore: long task of 51 ms
+TARGET  warm_all: 8 frames over twice the median (4.7 ms, from 16.7 ms up)
+TARGET  warm_all: 8 frames over 33.4 ms (worst 351.8 ms)
+TARGET  warm_all: long task of 350 ms
+TARGET  storm: 55 frames over twice the median (5.3 ms, from 16.7 ms up)
+TARGET  storm: 55 frames over 33.4 ms (worst 593.6 ms)
+TARGET  storm: p99 20.3 ms (budget 20 ms)
+TARGET  storm: long task of 592 ms
+TARGET  chain_horde: 12 frames over twice the median (6.4 ms, from 16.7 ms up)
+TARGET  chain_horde: 12 frames over 33.4 ms (worst 99.4 ms)
+TARGET  chain_horde: p99 21.9 ms (budget 20 ms)
+TARGET  chain_horde: long task of 102 ms
+TARGET  warm_all: 110 GPU buffers created per explosion (budget 40)
+TARGET  after_storm: 412 draws per frame, idle was 134: the explosions left drawn things behind
+TARGET  dense_horde: 412 draws per frame, idle was 134
+TARGET  dense_horde: crowd step p99 5.399999976158142 ms (budget 4 ms)
+TARGET  chain_horde: 1293 GPU buffers created during play
+TARGET  chain_horde: crowd step p99 4.399999976158142 ms (budget 4 ms)
+PERF  38 budget(s) broken (0 hard, the rest are targets)
+pre-push: this branch took 7.6 min
+Previous HEAD position was d5b0f7ddf Merge pull request #314 from Andersonfrfilho/perf/medir-maquina-fraca
+HEAD is now at 443527b47 Merge pull request #405 from Andersonfrfilho/fix/ci-main-apos-404
+pre-push: building origin/main (443527b4) in /home/miyazaki/.cache/adatechnology-game-kit/perf/base-worktree
+▲ [WARNING] "import.meta" is not available with the "iife" output format and will be empty [empty-import-meta]
+
+    packages/game-kit-defaults/dist/index.js:65:118:
+      65 │ ...ew URL("./kit-worker.js", import.meta.url), { name: "kit-worker...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] Ignoring this import because "packages/game-shapes/dist/chunk-E3X7UDDV.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-shapes/dist/worker-kinds.js:4:7:
+      4 │ import "./chunk-E3X7UDDV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-shapes/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "iife" output format and will be empty [empty-import-meta]
+
+    packages/game-kit-defaults/dist/index.js:65:118:
+      65 │ ...ew URL("./kit-worker.js", import.meta.url), { name: "kit-worker...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] Ignoring this import because "packages/game-audio/dist/chunk-TXGRBRE6.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-audio/dist/testing.js:10:7:
+      10 │ import "./chunk-TXGRBRE6.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-audio/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "packages/game-shapes/dist/chunk-E3X7UDDV.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-shapes/dist/worker-kinds.js:4:7:
+      4 │ import "./chunk-E3X7UDDV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-shapes/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "iife" output format and will be empty [empty-import-meta]
+
+    packages/game-kit-defaults/dist/index.js:65:118:
+      65 │ ...ew URL("./kit-worker.js", import.meta.url), { name: "kit-worker...
+         ╵                              ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] Ignoring this import because "packages/game-shapes/dist/chunk-E3X7UDDV.js" was marked as having no side effects [ignored-bare-import]
+
+    packages/game-shapes/dist/worker-kinds.js:4:7:
+      4 │ import "./chunk-E3X7UDDV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    packages/game-shapes/package.json:29:2:
+      29 │   "sideEffects": false,
+         ╵   ~~~~~~~~~~~~~
+
+pre-push: waiting for a quiet machine (load 5.8, under 4 wanted)
+pre-push: measuring origin/main (443527b4)
+PERF  mode=gpu  viewport=1600x900  tier=discrete  pixelRatio=default  gpu=ANGLE (NVIDIA Corporation, NVIDIA GeForce RTX 5070 Laptop GPU/PCIe/SSE2, OpenGL 4.5.0)
+PHASE {"name":"idle","frames":700,"overTwiceMedian":0,"p50":2.5,"p95":17.4,"p99":17.8,"max":17.9,"hitches":0,"worstLongTask":0,"programs":0,"buffers":0,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":135,"slowFrames":[],"maxFramesWaiting":4,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"audio.occlusion":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":7},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"light_slots","frames":0,"overTwiceMedian":0,"p50":0,"p95":0,"p99":0,"max":0,"hitches":0,"worstLongTask":0,"programs":0,"buffers":0,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":151,"slowFrames":[],"maxFramesWaiting":4,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"audio.occlusion":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":7},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+SLOTS {"point":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],"spot":[0,1,2,3],"problems":[]}
+PHASE {"name":"cold_frag_grenade","frames":6255,"overTwiceMedian":3,"p50":3.1,"p95":10,"p99":17.6,"max":86.5,"hitches":3,"worstLongTask":98,"programs":0,"buffers":470,"programNames":[],"firstUses":0,"firstUseNames":[],"drawsPerFrame":337,"slowFrames":[{"at":1373,"ms":55,"render":51,"scripts":["s@5802032 49ms"]},{"at":1373,"ms":52,"render":27,"scripts":["s@5802032 23ms"]},{"at":2404,"ms":97,"render":97,"scripts":["s@5802032 93ms"]}],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1123},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":114},"audio.occlusion":{"maxFramesWaiting":8,"forced":1,"ranUnits":4114},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":55},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+PHASE {"name":"cold_molotov","frames":4678,"overTwiceMedian":0,"p50":3.9,"p95":9.5,"p99":14.6,"max":28,"hitches":0,"worstLongTask":0,"programs":0,"buffers":361,"programNames":[],"firstUses":4,"firstUseNames":["USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA,uW,uC}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:Group<Group ShaderMaterial:-{uA}","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:sedan MeshBasicMaterial:-","USE_SHADOWMAP SHADOWMAP_TYPE_PCF_SOFT <- Mesh:sedan MeshBasicMaterial:-"],"drawsPerFrame":461,"slowFrames":[],"maxFramesWaiting":8,"queues":{"destruction.events":{"maxFramesWaiting":0,"forced":0,"ranUnits":1580},"audio.voices":{"maxFramesWaiting":0,"forced":0,"ranUnits":451},"audio.occlusion":{"maxFramesWaiting":8,"forced":2,"ranUnits":5730},"fluids.film":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"vehicles.crease":{"maxFramesWaiting":0,"forced":0,"ranUnits":23},"vehicles.lod-batch":{"maxFramesWaiting":4,"forced":2,"ranUnits":110},"destruction.settled-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":1},"render.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":18},"characters.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"animals.static-batch":{"maxFramesWaiting":0,"forced":0,"ranUnits":0},"destruction.prefit":{"maxFramesWaiting":0,"forced":0,"ranUnits":0}}}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.evaluate: Target page, context or browser has been closed
+    at pause (/home/miyazaki/Documents/personal/adatechnology-game-kit-wt/spec-017/examples/test-room/perf.mjs:220:15)
+    at fireAndSettle (/home/miyazaki/Documents/personal/adatechnology-game-kit-wt/spec-017/examples/test-room/perf.mjs:244:9)
+    at async phase (/home/miyazaki/Documents/personal/adatechnology-game-kit-wt/spec-017/examples/test-room/perf.mjs:370:3)
+    at async file:///home/miyazaki/Documents/personal/adatechnology-game-kit-wt/spec-017/examples/test-room/perf.mjs:171:57
+
+Node.js v24.22.0

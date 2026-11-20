@@ -207,3 +207,50 @@ Três maiores: `fracture` (metade da fila; 6,5 ms dela são os três estágios c
    nada de narrate nem do log.
 4. **Limites:** `blastPlain` (próprio) 3,0 a 4,3 ms e `knockOutUnits` não foram repartidos por dentro (laço dos `impls` com `describe()`, o resto de `blastWorld`;
    o que `knockOutUnits` faz por unidade). Se a T2.1 for tocar nisso, a próxima rodada é por dentro deles. A carga acima de 1,5 e o relógio de 0,1 ms limitam tudo abaixo de ~0,3 ms.
+
+## T0.1 — Régua de partida (medição, sem mudança de código)
+
+- **Comando:** `flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs` (o próprio portão define `PERF_MODE=gpu`, `tools/gpu/perf-gate.mjs:136`; não foi preciso passar a variável). Sala refeita antes com `pnpm build` e `pnpm check:area room --no-browser --no-unit --room`.
+- **Commits:** branch `spec/017-quadro-da-explosao` = `95f0539bb`; `origin/main` = `443527b47` (base medida pelo portão).
+- **Máquina:** ANGLE, NVIDIA GeForce RTX 5070 Laptop GPU (discreta), janela 1600x900, tier `discrete`. Não houve pulo por GPU de software nem por bateria.
+- **Horário:** build e sala às 20:46 a 20:50. Tentativa 1: 20:50:20 a 21:00:20. Tentativa 2: 21:00:42 a 21:25:42.
+- **Carga (1 min):** antes da tentativa 1: 1,49 (após espera). Antes da tentativa 2: 1,83. Depois da tentativa 2: 3,78. O portão imprimiu `waiting for a quiet machine (load 5.8/7.2/4.9/4.3, under 4 wanted)` em vários pontos, ou seja, a carga ficou acima do limite durante boa parte da medição: os números valem só como indicativos.
+
+### O que aconteceu
+
+1. **Tentativa 1 (morta pelo tempo limite de 10 min).** Passou pela medição do branch (fases tempestade, `dense_horde`, `chain_horde`) e foi interrompida pelo `timeout 600` na medição da `origin/main`, depois de `cold_molotov`. Nenhum veredito. Log: `specs/017-quadro-da-explosao/medicoes/perf-gate-t01-95f0539bb-try1-killed-at-10min.log` (`Target page, context or browser has been closed`, `exit 124`).
+2. **Tentativa 2 (morta pelo tempo limite de 25 min).** Ampliei o limite porque a instrução dizia que a rodada pode passar de 10 min. O portão fez três passagens: branch, `origin/main` (completa) e branch de novo (`17 metric(s) over 10% worse: measuring both sides again`). Foi interrompido por `timeout 1500` (`EXIT=124`) enquanto esperava máquina tranquila antes da repetição. **Não imprimiu o veredito.** Log final: `specs/017-quadro-da-explosao/medicoes/perf-gate-t01-95f0539bb.log`.
+3. Pelo critério do enunciado (mesmo passo falhou 2 vezes pelo mesmo motivo: a rodada não termina dentro do limite), registrei o bloqueio e parei. Não houve terceira tentativa.
+
+### Números brutos do portão (sem interpretação)
+
+Valores de frame p99, pior quadro e quadros acima de 33 ms, lidos das linhas `PHASE` do log. "passagem 1/2" são as duas medições do branch na tentativa 2.
+
+| Fase | Lado | p99 (ms) | Pior quadro (ms) | Quadros > 33 ms |
+|---|---|---|---|---|
+| tempestade | origin/main (tentativa 2) | 19,7 | 527,2 | 57 |
+| tempestade | branch (tentativa 1, morta no meio do main) | 20,3 | 593,6 | 55 |
+| tempestade | branch, passagem 1 (tentativa 2) | 35,4 | 595,9 | 110 |
+| tempestade | branch, passagem 2 (tentativa 2) | 27,6 | 319,8 | 61 |
+| `dense_horde` | origin/main (tentativa 2) | 17,7 | 25,6 | 0 |
+| `dense_horde` | branch (tentativa 1) | 17,7 | 31,7 | 0 |
+| `dense_horde` | branch, passagem 1 (tentativa 2) | 21,3 | 72,9 | 4 |
+| `dense_horde` | branch, passagem 2 (tentativa 2) | 17,7 | 41,5 | 1 |
+| `chain_horde` | origin/main (tentativa 2) | 24,3 | 105,7 | 18 |
+| `chain_horde` | branch (tentativa 1) | 21,9 | 99,4 | 12 |
+| `chain_horde` | branch, passagem 1 (tentativa 2) | 30,4 | 122,9 | 25 |
+| `chain_horde` | branch, passagem 2 (tentativa 2) | 33,0 | 125,2 | 33 |
+
+### Veredito do portão
+
+Não foi impresso. A última linha do log antes do corte é `pre-push: waiting for a quiet machine (load 4.3, under 4 wanted)`, seguida de `EXIT=124`. Linhas do portão que saíram antes do corte, copiadas como estão:
+
+- `PERF  43 budget(s) broken (0 hard, the rest are targets)` (branch, passagem 1, tentativa 2)
+- `PERF  37 budget(s) broken (0 hard, the rest are targets)` (origin/main)
+- `pre-push: 17 metric(s) over 10% worse: measuring both sides again`
+- `PERF  42 budget(s) broken (0 hard, the rest are targets)` (branch, passagem 2)
+
+### Bloqueio e próximo passo
+
+- Bloqueio: o portão inteiro (duas medições de cada lado, mais a repetição quando há regressão de mais de 10%) não cabe em 25 min nesta máquina com a carga atual. A carga ficou acima de 4 durante a medição, e o portão espera máquina tranquila antes de cada passagem.
+- Não foi feito: veredito do portão; medição em janela sem carga; medição de `dense_horde`/`chain_horde` com `PERF_SHARD` separado. Próximo passo sugerido, fora desta task: rodar com a máquina ociosa (sem outra sessão pesada) e limite de pelo menos 40 min, ou fixar `PERF_BASE` num resultado de `origin/main` já cacheado.
