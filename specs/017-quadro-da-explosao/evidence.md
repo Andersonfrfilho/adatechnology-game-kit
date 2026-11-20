@@ -514,3 +514,20 @@ Lições para a régua: (1) o portão mede mesmo com a máquina ocupada depois d
 bloqueio falso passou; (2) a base compartilhada em `~/.cache/adatechnology-game-kit/perf/base-worktree` foi movida por
 outra sessão no meio da série, então comparar contra ela não é seguro com mais de uma sessão medindo.
 Falta: uma passada do portão completo com a máquina quieta, para o veredito formal do C8 (hordas incluídas).
+
+### C8 — veredito formal: o portão passa com a máquina quieta (`9498ddda3` × `origin/main` `0161749d`)
+
+Log: `medicoes/perf-gate-c8-9498ddda3-quieta.log` (carga 1,97 no começo). `perf passes`, 0 `FAIL`. `main` → branch:
+
+| Fase | p99 | pior quadro | tarefa longa |
+|---|---|---|---|
+| explosões a frio (9 armas) | 16,9–25,4 → 11,6–13,9 ms | menor nas 9 (ex.: m79 166 → 86, at4 56 → 32, dinamite 126 → 59) | menor ou igual nas 9 |
+| `warm_all` | 28,5 → 18,1 | 370 → 348 | 366 → 347 |
+| `storm` | 44,1 → 26,9 | 974 → 196 | 980 → 205 |
+| `after_storm` | 13,2 → 13,1 | 16,8 → 14,2 | 0 → 0 |
+| `dense_horde` | 34,5 → 17,7 | 44,3 → 34,1 | 0 → 0 |
+| `chain_horde` | 34,4 → 28,0 | 212 → 119 | 210 → 113 |
+
+Alvos absolutos perdidos: 46 na branch, 44 na `main` (o alvo, não o portão). Sobre a fase `storm`: esta passada mostra
+ganho, a série alternada da seção anterior mostrou empate; o pior quadro dessa fase varia de 200 a 450 ms entre medições
+do mesmo lado, então **não se afirma ganho em `storm`**, só que não há regressão.
