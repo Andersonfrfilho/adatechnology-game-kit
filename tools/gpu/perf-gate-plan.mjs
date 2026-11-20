@@ -29,3 +29,35 @@ export const probeUsable = ({ entry, now, chromeVersion, force }) => {
   if (entry.chromeVersion !== chromeVersion) return false
   return now - entry.at >= 0 && now - entry.at < PROBE_MAX_AGE_MS
 }
+
+/** @typedef {{ name: string, ms: number }} Step */
+
+/** One entry per name, summed, in the order the names first appeared. @param {Step[]} steps @returns {Step[]} */
+export const sumSteps = (steps) => {
+  /** @type {Map<string, number>} */
+  const totals = new Map()
+  for (const { name, ms } of steps) totals.set(name, (totals.get(name) ?? 0) + ms)
+  return [...totals].map(([name, ms]) => ({ name, ms }))
+}
+
+/** @param {number} ms */
+export const formatMinutes = (ms) => `${(ms / 60000).toFixed(1)} min`
+
+/** One line per step, and the total. @param {Step[]} steps @returns {string[]} */
+export const formatSteps = (steps) => {
+  const summed = sumSteps(steps)
+  const total = summed.reduce((sum, step) => sum + step.ms, 0)
+  return [...summed.map(({ name, ms }) => `  ${name.padEnd(22)} ${formatMinutes(ms)}`), `  ${'total'.padEnd(22)} ${formatMinutes(total)}`]
+}
+
+/** The line a round adds to times.ndjson. @param {{ at: number, renderer: string, outcome: string, steps: Step[] }} round */
+export const timesRecord = ({ at, renderer, outcome, steps }) => {
+  const summed = sumSteps(steps)
+  return {
+    at: new Date(at).toISOString(),
+    renderer,
+    outcome,
+    totalMs: summed.reduce((sum, step) => sum + step.ms, 0),
+    steps: Object.fromEntries(summed.map(({ name, ms }) => [name, ms])),
+  }
+}

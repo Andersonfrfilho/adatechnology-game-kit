@@ -4,11 +4,14 @@ import { test } from 'node:test'
 
 import {
   againReportPath,
+  formatSteps,
   needsBuild,
   PROBE_MAX_AGE_MS,
   probeUsable,
   QUIET_POLL_MS,
   shouldKeepWaiting,
+  sumSteps,
+  timesRecord,
   WAIT_FOR_QUIET_MS,
 } from '../perf-gate-plan.mjs'
 
@@ -41,4 +44,18 @@ test('the renderer probe is reused when recent, from the same Chrome and not for
   assert.equal(probeUsable({ ...fresh, chromeVersion: '' }), false)
   assert.equal(probeUsable({ ...fresh, now: 1000 + PROBE_MAX_AGE_MS }), false)
   assert.equal(probeUsable({ ...fresh, entry: undefined }), false)
+})
+
+test('steps of one name are summed and printed with a total', () => {
+  const steps = [{ name: 'measure-branch', ms: 60000 }, { name: 'wait-quiet', ms: 30000 }, { name: 'wait-quiet', ms: 30000 }]
+  assert.deepEqual(sumSteps(steps), [{ name: 'measure-branch', ms: 60000 }, { name: 'wait-quiet', ms: 60000 }])
+  const lines = formatSteps(steps)
+  assert.equal(lines.length, 3)
+  assert.match(lines[1] ?? '', /wait-quiet\s+1\.0 min/)
+  assert.match(lines[2] ?? '', /total\s+2\.0 min/)
+})
+
+test('the times.ndjson record', () => {
+  const record = timesRecord({ at: 0, renderer: 'GPU', outcome: 'pass', steps: [{ name: 'probe', ms: 10 }, { name: 'probe', ms: 5 }] })
+  assert.deepEqual(record, { at: '1970-01-01T00:00:00.000Z', renderer: 'GPU', outcome: 'pass', totalMs: 15, steps: { probe: 15 } })
 })
