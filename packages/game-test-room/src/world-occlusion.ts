@@ -25,6 +25,9 @@ export type WorldOcclusionOptions = {
  */
 export const OCCLUDER_MIN_RADIUS = 0.25
 
+/** 0.25 m: the widest air the walk out of a solid may step over. Narrower than any gap that holds something `OCCLUDER_MIN_RADIUS` lets occlude. */
+const LEAVE_MAX_STRIDE = OCCLUDER_MIN_RADIUS
+
 const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance]
 
 function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
@@ -35,13 +38,14 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
     const hit = rayFrom(travelled)
     return hit !== null && hit.object === last.object && hit.part === last.part && hit.distance <= step
   }
-  // Doubling strides to a point outside the layer, then halving back to its edge: a source buried in the ground answers 0 for every millimetre of the way out.
+  // Growing strides to a point outside the layer, then halving back to its edge: a source buried in the ground answers 0 for every millimetre of the way out.
+  // The stride stops growing at LEAVE_MAX_STRIDE, so the air between two rises of the same ground is never stepped over.
   const leave = (from: number, last: RayHit): number => {
     let inside = from
-    let stride = step * 2
+    let stride = Math.min(step * 2, LEAVE_MAX_STRIDE)
     while (inside + stride < length && isStillInside(inside + stride, last)) {
       inside += stride
-      stride *= 2
+      stride = Math.min(stride * 2, LEAVE_MAX_STRIDE)
     }
     let outside = Math.min(inside + stride, length)
     while (outside - inside > step) {

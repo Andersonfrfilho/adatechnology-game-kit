@@ -169,3 +169,56 @@ describe('createWorldOcclusion over a destruction world after a blast', () => {
     expect(totalLossDb(through.slice(0, 1))).toBe(totalLossDb(before))
   })
 })
+
+describe('createWorldOcclusion walking out of a solid matches the walk of one millimetre at a time', () => {
+  type Vec = [number, number, number]
+  type Layer = { part: string; near: number; far: number }
+  const worldOf = (layers: readonly Layer[]) => {
+    const counter = { rays: 0 }
+    const world = {
+      raycast(origin: Vec, direction: Vec, maxDistance = Infinity) {
+        counter.rays++
+        const z = origin[2]
+        let best: { part: string; distance: number } | null = null
+        for (const layer of layers) {
+          const isInside = z >= layer.near && z <= layer.far
+          const distance = isInside ? 0 : ((direction[2] > 0 ? layer.near : layer.far) - z) / direction[2]
+          if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
+          best = { part: layer.part, distance }
+        }
+        return best && { object: 'scene', part: best.part, point: [origin[0], origin[1], z + direction[2] * best.distance] as Vec, normal: [0, 0, 1] as Vec, distance: best.distance }
+      },
+      part: (_object: string, part: string) => ({ material: part }),
+    }
+    return { world, counter }
+  }
+  /** The walk before the stride: one millimetre past every hit, the same layer counted once in a row. */
+  const millimetreWalk = (layers: readonly Layer[], from: number, to: number): string[] => {
+    const { world } = worldOf(layers)
+    const found: string[] = []
+    let travelled = 0
+    const length = to - from
+    while (found.length < 6 && travelled < length) {
+      const hit = world.raycast([0, 0, from + travelled], [0, 0, 1], length - travelled)
+      if (!hit) break
+      if (found.at(-1) !== hit.part) found.push(hit.part)
+      travelled += hit.distance + 0.001
+    }
+    return found
+  }
+  const CASES: readonly { name: string; layers: readonly Layer[]; from: number; to: number }[] = [
+    { name: 'a wall in the valley between two rises of the same ground', layers: [{ part: 'ground', near: -10, far: -2 }, { part: 'wall', near: -1.8, far: -1.65 }, { part: 'ground', near: -1.4, far: 6 }], from: -9, to: 8 },
+    { name: 'a valley half a metre wide with nothing in it', layers: [{ part: 'ground', near: -10, far: 0 }, { part: 'ground', near: 0.5, far: 6 }, { part: 'glass', near: 6.002, far: 6.006 }], from: -9, to: 8 },
+    { name: 'source and listener both inside the ground', layers: [{ part: 'ground', near: -10, far: 10 }], from: -9, to: 8 },
+    { name: 'a layer thinner than the step right at the source', layers: [{ part: 'film', near: -9, far: -8.9995 }, { part: 'wall', near: -5, far: -4.8 }], from: -9, to: 8 },
+  ]
+  for (const scene of CASES) {
+    it(scene.name, async () => {
+      const { createWorldOcclusion } = await import('../src/world-occlusion')
+      const { world, counter } = worldOf(scene.layers)
+      const hits = createWorldOcclusion(world)([0, 0, scene.from], [0, 0, scene.to])
+      expect(hits.map((hit) => hit.material)).toEqual(millimetreWalk(scene.layers, scene.from, scene.to))
+      expect(counter.rays).toBeLessThan(400)
+    })
+  }
+})
