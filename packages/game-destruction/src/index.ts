@@ -1,6 +1,9 @@
 export type * from './types'
 export type { HostedSolid } from './hosted-solids'
 export { createDestruction, SHELTER_DEFAULTS, FRAGMENT_HIT_DEFAULTS, CONFINEMENT_DEFAULTS } from './world'
+// PROTÓTIPO DESCARTÁVEL (spec 018 T0.4): the apply-side probe reuses the explode probe
+export { createExplodeProbe } from './explode-probe'
+export type { ExplodeProbe } from './explode-probe'
 export { explosivePart, FIRE_PRIME_C } from './chain'
 export { casingFlight, failureWork, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, reflectedLoad, waveWork } from './blast-wave'
 export type { FailureInput, FailureWork, WaveLoad, WaveWork, WaveWorkInput } from './blast-wave'

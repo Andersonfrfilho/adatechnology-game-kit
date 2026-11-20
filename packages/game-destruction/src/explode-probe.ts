@@ -48,8 +48,8 @@ const isProbeHost = (value: unknown): value is ExplodeProbeHost =>
 
 type OpenFrame = { label: string; started: number; child: number }
 
-export function createExplodeProbe(): ExplodeProbe {
-  const host: unknown = (globalThis as { __destructionExplodeProbe?: unknown }).__destructionExplodeProbe
+export function createExplodeProbe(globalKey = '__destructionExplodeProbe'): ExplodeProbe {
+  const host: unknown = (globalThis as Record<string, unknown>)[globalKey]
   if (!isProbeHost(host)) return OFF
   const { mode, now } = host
   const isKept = (label: string): boolean => mode === 'fine' || COARSE_LABELS.has(label) || label.startsWith('impl:')

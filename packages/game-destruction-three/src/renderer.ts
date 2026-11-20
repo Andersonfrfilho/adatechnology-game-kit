@@ -10,6 +10,7 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
 import type { BlastWake, DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
+import { applyProbe } from './apply-probe'
 import { EventOrder, isStructuralEvent } from './event-class'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
@@ -1208,14 +1209,19 @@ class Renderer implements DestructionRenderer {
     let end = ordered.length
     while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
     this.requeue(ordered, end)
-    this.visuals.batchRebuilds(() => {
-      for (let i = 0; i < end; i++) {
-        try {
-          this.apply(ordered[i]!)
-        } catch (err) {
-          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
+    applyProbe.root(() => {
+      applyProbe.count('events', end)
+      this.visuals.batchRebuilds(() => {
+        for (let i = 0; i < end; i++) {
+          try {
+            applyProbe.enter('applyEvent')
+            this.apply(ordered[i]!)
+            applyProbe.leave('applyEvent')
+          } catch (err) {
+            if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
+          }
         }
-      }
+      })
     })
   }
 
@@ -2371,17 +2377,26 @@ class Renderer implements DestructionRenderer {
       let hinges: (Vec3 | null)[]
       let newIds: string[]
       try {
+        applyProbe.enter('hingeOf')
         hinges = Array.from({ length: loose }, (_, i) => this.hingeOf(objectId, i + 1))
+        applyProbe.leave('hingeOf')
+        applyProbe.enter('splitGroups')
         newIds = this.world.splitGroups(objectId, Array.from({ length: loose }, (_, i) => i + 1))
+        applyProbe.leave('splitGroups')
+        applyProbe.count('splits', newIds.length)
       } catch {
         return
       }
       newIds.forEach((newId, i) => {
+        applyProbe.enter('adoptThree')
         this.adoptSplit(b, newId)
+        applyProbe.leave('adoptThree')
         this.hangOnHinge(newId, hinges[i] ?? null)
       })
     })
+    applyProbe.enter('afterSplit')
     this.afterSplit(b, torn)
+    applyProbe.leave('afterSplit')
   }
 
   /** What is left of an object after loose groups came off it: its piece takes the box and contacts of what is left, or furniture left without its feet becomes one. */

@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Dent } from '@adatechnology/game-destruction'
 import { markPositionsWritten, rangesWrittenSince } from '@adatechnology/game-shapes-three'
+import { applyProbe } from './apply-probe'
 import { BEND_SMOOTH_RADIUS, bendPositions } from './bend'
 import { heatColor } from './heat'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
@@ -1087,6 +1088,7 @@ export class Visuals {
     const work = host.work
     if (!pos || !work) return
     const arr = pos.array as unknown as Float32Array
+    applyProbe.enter('whCollapse')
     arr.set(work)
     collapseForeign(host.mesh, arr)
     for (const s of host.sharers) {
@@ -1095,8 +1097,14 @@ export class Visuals {
         else if (s.meltApplied > 0 && !s.loose) this.meltRange(arr, work, s.merged.range, s.meltApplied)
       } else if (s.host === host && s.range && s.meltApplied > 0) this.meltRange(arr, work, s.range, s.meltApplied)
     }
+    applyProbe.leave('whCollapse')
     pos.needsUpdate = true
+    applyProbe.count('hostsWritten')
+    applyProbe.count('hostVertices', pos.count)
+    applyProbe.count('hostTriangles', Math.round((geo.getIndex()?.count ?? pos.count) / 3))
+    applyProbe.enter('whNormals')
     geo.computeVertexNormals()
+    applyProbe.leave('whNormals')
     geo.boundingBox = null
     geo.boundingSphere = null
   }
@@ -1215,6 +1223,7 @@ export class Visuals {
     this.flushRebuilds(true, host.mesh)
     const [v0, v1] = mv.range
     const src = host.mesh.geometry
+    applyProbe.enter('exSlice')
     const geo = new this.THREE.BufferGeometry()
     const count = v1 - v0
     for (const name of Object.keys(src.attributes)) {
@@ -1237,6 +1246,9 @@ export class Visuals {
       }
       geo.setIndex(count > 65535 ? new this.THREE.Uint32BufferAttribute(out, 1) : new this.THREE.Uint16BufferAttribute(out, 1))
     }
+    applyProbe.leave('exSlice')
+    applyProbe.count('extracts')
+    applyProbe.count('extractVertices', count)
     const mats = materialsOf(host.mesh.material).map((m) => m.clone())
     const loose = new this.THREE.Mesh(geo, mats[0])
     loose.name = `${host.mesh.name || 'mesh'}:${v0}-${v1}`
