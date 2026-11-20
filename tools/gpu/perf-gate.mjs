@@ -25,6 +25,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
+import { needsBuild } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -150,18 +151,30 @@ const measure = async (pageRoot, out, label) => {
   return JSON.parse(readFileSync(out, 'utf8'))
 }
 
+const baseTree = join(cacheDir, 'base-worktree')
+// the sha of the last complete build of the base worktree: a cache hit on the first pass builds nothing, so the worktree can hold an older commit
+const baseBuiltMarker = join(cacheDir, 'base-built.sha')
+
 /** A worktree of the base commit, kept between pushes (pnpm links its packages from the store, so a second install is quick), built in place. */
 const buildBase = () => {
-  const tree = join(cacheDir, 'base-worktree')
-  if (!existsSync(join(tree, '.git'))) git(['worktree', 'add', '--force', '--detach', tree, baseSha])
-  else git(['checkout', '--force', '--detach', baseSha], tree)
+  rmSync(baseBuiltMarker, { force: true })
+  if (!existsSync(join(baseTree, '.git'))) git(['worktree', 'add', '--force', '--detach', baseTree, baseSha])
+  else git(['checkout', '--force', '--detach', baseSha], baseTree)
   /** @param {string} command @param {string[]} args */
-  const run = (command, args) => execFileSync(command, args, { cwd: tree, stdio: ['ignore', 'ignore', 'inherit'] })
-  console.log(`pre-push: building ${baseRef} (${baseSha.slice(0, 8)}) in ${tree}`)
+  const run = (command, args) => execFileSync(command, args, { cwd: baseTree, stdio: ['ignore', 'ignore', 'inherit'] })
+  console.log(`pre-push: building ${baseRef} (${baseSha.slice(0, 8)}) in ${baseTree}`)
   run('pnpm', ['install', '--frozen-lockfile', '--prefer-offline'])
   run('pnpm', ['-s', 'build'])
   run(process.execPath, ['examples/test-room/build.mjs'])
-  return tree
+  writeFileSync(baseBuiltMarker, baseSha)
+}
+
+/** The base worktree, built at `baseSha`: before measuring main on any pass, whatever an earlier pass or push left in it. */
+const ensureBase = () => {
+  const builtSha = existsSync(baseBuiltMarker) ? readFileSync(baseBuiltMarker, 'utf8').trim() : undefined
+  const hasOutput = existsSync(join(baseTree, 'examples/test-room/dist/test-room.html'))
+  if (needsBuild({ builtSha, expectedSha: baseSha, hasOutput })) buildBase()
+  return baseTree
 }
 
 execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'inherit' })
@@ -178,8 +191,7 @@ else if (sameTree) {
   console.log(`pre-push: ${baseRef} (${baseSha.slice(0, 8)}) measured before on this machine (${baseReport})`)
   base = JSON.parse(readFileSync(baseReport, 'utf8'))
 } else {
-  const tree = buildBase()
-  base = await measure(tree, baseReport, `${baseRef} (${baseSha.slice(0, 8)})`)
+  base = await measure(ensureBase(), baseReport, `${baseRef} (${baseSha.slice(0, 8)})`)
 }
 
 let regressions = base ? compare(base, branch, TOLERANCE) : []
@@ -187,9 +199,8 @@ if (base && regressions.length > 0) {
   // one more run of each side before blocking: one frame of the GPU clock dropping is not a regression
   console.log(`pre-push: ${regressions.length} metric(s) over ${Math.round(TOLERANCE * 100)}% worse: measuring both sides again`)
   branch = bestOf(branch, await measure(root, join(cacheDir, 'branch-again.json'), 'this branch again'))
-  const tree = existsSync(join(cacheDir, 'base-worktree', '.git')) ? join(cacheDir, 'base-worktree') : buildBase()
   // the better run of the branch against the worse run of main: it blocks only when every run of the branch is worse than every run of main
-  base = worstOf(base, await measure(tree, join(cacheDir, 'base-again.json'), `${baseRef} again`))
+  base = worstOf(base, await measure(ensureBase(), join(cacheDir, 'base-again.json'), `${baseRef} again`))
   regressions = compare(base, branch, TOLERANCE)
 }
 
