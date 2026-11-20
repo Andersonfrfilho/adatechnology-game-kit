@@ -119,7 +119,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
         // follow: an object some other code added to the world with this house's spec (a free-standing wall in a test room) is drawn by its renderer; the house
         // keeps only what that renderer cannot draw on it, the units of a wall that come out (chips and breach). Returns what undoes it.
         D.follow = (world: DestructionWorld, id: string, spec: NonNullable<HouseDestruction['spec']>) => {
-          D.spec = spec; breach.claim();
+          D.spec = spec; breach.claim(); breach.waitForFlush(true);
           let fallback: ReturnType<typeof setTimeout> | null = null;
           const offFollow = world.on('*', e => {
             if (e.object !== id) return;
@@ -169,7 +169,7 @@ export function installDestructionWorld(K: Kernel, shared: Shared): void {
             return false;
           };
           const owns = (objectId: string): boolean => objectId === id || [...holders.values()].includes(objectId);
-          return { restore: () => breach.restore(), dispose: () => { offFollow(); breach.restore(); breach.release(); }, update: () => { breach.flush(); }, blocks, owns };
+          return { restore: () => breach.restore(), dispose: () => { offFollow(); if (fallback) { clearTimeout(fallback); fallback = null; } breach.waitForFlush(false); breach.restore(); breach.release(); }, update: () => { breach.flush(); }, blocks, owns };
         };
         D.piece = (id: string) => (D.active ? D.world.part(D.id, id) : null);
         D.state = () => (D.active ? D.world.state(D.id) : null);

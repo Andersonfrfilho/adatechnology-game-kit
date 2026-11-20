@@ -78,6 +78,8 @@ export interface BreachView {
   hosts(partId: string): string[]
   stage(event: DestructionEvent): boolean
   spall(event: DestructionEvent): boolean
+  /** While on, chips are painted once per wall at the host's flush, not once per event. */
+  waitForFlush(on: boolean): void
   claim(): void
   chip(event: DestructionEvent): boolean
   drop(partId: string): void
