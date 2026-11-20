@@ -236,3 +236,60 @@ régua final: ver T4.1 no `evidence.md` da spec 010 (ainda não medida; as medi�
 - Eventos da explosão que criam peças entram na fila do quadro, não no tique; o teste C5 depende de aquecimento por isso.
 - A regra `own-frame-clock` não enxerga relógio injetado (recebido por parâmetro).
 
+
+## Como medir o quadro da explosão (spec 017)
+
+Regra: [`specs/regras/15-quadro-e-desempenho.md`](../specs/regras/15-quadro-e-desempenho.md). Evidência completa: [`specs/017-quadro-da-explosao/evidence.md`](../specs/017-quadro-da-explosao/evidence.md).
+
+**Régua curta, no modo de prazo** (o modo do jogo; é o padrão da régua desde a 017), com a página da sala refeita (`pnpm build`) antes:
+
+```bash
+flock ~/.cache/adatechnology-game-kit/perf-measure.lock env \
+  ROOM_EXPLOSION_KINDS=blast,crater ROOM_EXPLOSION_THROTTLES=1 ROOM_EXPLOSION_STAGE_THROTTLES=1 \
+  ROOM_EXPLOSION_STAGE_ROUNDS=3 ROOM_EXPLOSION_ROUNDS=1 ROOM_EXPLOSION_FRAME_PARTS=1 \
+  ROOM_EXPLOSION_OUT=/tmp/regua.json node tools/gpu/perf-gate.mjs room-explosion
+```
+
+- **Ler `f0Ms` e `afterMs`** (no relatório, em `frameMetrics`, por tipo): `f0Ms` é a média dos 3 piores quadros 0 de `update + renderCpu`; `afterMs` é a média, sobre
+  essas 3 piores rodadas, do pior quadro dos 7 seguintes ao golpe de cada rodada. Menos de 3 rodadas, quadro 0 ou quadros 1 a 7 sem `renderCpu` não dão número: o
+  log diz o motivo (`too-few-rounds`, `missing-hit-frame`, `missing-after-frames`) e nada bloqueia. O portão do `room-explosion` bloqueia quando um dos dois piora mais de 15% e mais de 3 ms contra a
+  base, só a 1x, na variante padrão e com base no mesmo modo de orçamento. Quando nada é comparado (base em outro modo ou sem `frameMetrics`, rodada sem as partes
+  do quadro, estágio sem nível que bloqueia) o log imprime `SEM COMPARAÇÃO NESTA RODADA: <motivo>` e o relatório grava `gate.compared: false` com o motivo. A rodada
+  diária liga `FRAME_PARTS=1`.
+- **A base só melhora:** depois de uma noite que passou, a rodada diária grava `min(base, noite)` por métrica (`tools/gpu/room-explosion-base.mjs`); copiar a
+  noite por cima deixava uma piora lenta (65, 68, 71...) passar para sempre.
+- **Modo de cota não serve para o f0:** sem `frameStartMs` as filas ganham 8 ms em todo quadro e o f0 sai maior que no jogo. Números da 010 e da primeira
+  metade da 017 (84 a 92 ms) são de cota; no modo de prazo a base antes da T3.1 era ~78 ms.
+- **Rodadas alternadas:** antes, depois, antes, depois, cada uma com a página refeita no commit medido; a mesma versão varia ±2 ms entre sessões, então um
+  ganho menor que ~3 ms não se lê no total, só no rótulo (`rebuildHost`, `breach-cut`...).
+- **Carga de 1 minuto abaixo de 1,5** no início e no fim; rodada com outra sessão pesada junto se descarta (uma saiu com carga 16,8 e o quadro seguinte em 43 ms).
+
+### O fecho da frente "sem mudar a simulação" (f0 de ~78 para ~64 ms; meta 33,3)
+
+| Tentativa | Ganho medido no f0 (modo de prazo) | Estado |
+|---|---|---|
+| Pintura da casa fora do quadro do golpe (T3.1) | ~13 ms (78 → 65) | entrou |
+| Malha da casa reescrita uma vez por lote | ~1,7 ms, no rótulo `rebuildHost` | entrou |
+| Cortes A–D do `explode` (para na primeira peça, pose reaproveitada, menos alocação) | ~1 ms (dentro do ruído) | entrou, não muda nenhum bit |
+| Cache do furo (`specOf`/`hostsOf`/`riders` por id) | 8 a 13 ms, mas em modo de cota | entrou |
+| Eventos estruturais no tique (T2.2) | 0 (é correção de determinismo) | entrou |
+| Eventos visuais adiados (3 revisões) | ~1 ms (ruído) | não entrou |
+| Som montado pela fila | 0 na versão correta (o ganho vinha do teto de 4 sons) | não entrou |
+| Corte da parede adiado (item F) | 0, e gravava o amassado na casca | não entrou |
+| `reachAt` / grade de peças | 0: a sala usa `blastPlain`, o `reachAt` roda 0 vezes | sem o que cortar |
+
+O que sobra é o laço por peça do `explode` (~17,6 ms, 521 peças) e a aplicação dos eventos estruturais (~17 ms, a maior parte malha, marcas, efeitos e som
+espalhados em itens pequenos): trabalho que muda a simulação, a fronteira da decisão D5. Não repita as tentativas marcadas "não entrou" sem uma razão nova.
+
+### Depois de mergear as travas: gravar a base no modo de prazo (uma vez, à mão)
+
+A base guardada pela rodada diária (`~/.cache/adatechnology-game-kit/room-explosion-base.json`, ver `cacheDir` em `tools/gpu/nightly-gpu.mjs`) foi medida em modo
+de cota e não é comparável: a primeira rodada depois da mudança não compara nada (`SEM COMPARAÇÃO NESTA RODADA`). Para a base nascer de uma rodada conferida e não da
+primeira noite que acontecer, rode uma vez, com a máquina quieta (carga < 1,5), a página refeita e o relatório lido antes de gravar:
+
+```bash
+pnpm build && flock ~/.cache/adatechnology-game-kit/perf-measure.lock env ROOM_EXPLOSION_FRAME_PARTS=1 \
+  ROOM_EXPLOSION_OUT=/tmp/room-explosion-prazo.json node tools/gpu/perf-gate.mjs room-explosion
+# confira /tmp/room-explosion-prazo.json (budgetMode "deadline", frameMetrics sem problemas, gate.compared) e então:
+cp /tmp/room-explosion-prazo.json ~/.cache/adatechnology-game-kit/room-explosion-base.json
+```

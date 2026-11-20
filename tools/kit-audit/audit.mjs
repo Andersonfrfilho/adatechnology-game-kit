@@ -5,12 +5,13 @@
 //
 //   node tools/kit-audit/audit.mjs [--check] [--json] [--package game-weather-three]... [--domain vehicles]...
 //
-// --check exits 1 when a finding is neither allowed nor a known pending one in allowlist.json, or an own-frame-clock hit is not in clock-pending.json (--strict-clocks: also when that list is not empty, the C3 gate). The owners and the words of each domain live in rules.json (see README.md).
+// --check exits 1 when a finding is neither allowed nor a known pending one in allowlist.json, an own-frame-clock hit is not in clock-pending.json, or a `mustDrain: true` is not in must-drain-allowed.json (--strict-clocks: also when that list is not empty, the C3 gate). The owners and the words of each domain live in rules.json (see README.md).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { ownFrameClock } from './clock.mjs'
+import { mustDrainMessage, mustDrainViolations } from './must-drain.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -149,6 +150,11 @@ if (isMain) {
     for (const entry of clocks.stale) console.log(`VELHA own-frame-clock ${entry.file}: "${entry.match}" (${entry.task}) nao casa mais: tire de clock-pending.json`)
     console.log(`own-frame-clock: ${clocks.open.length} novos, ${clocks.pending.length} pendentes (C3 exige 0 no fim da fase 1), ${clocks.stale.length} entradas velhas`)
   }
-  if (args.includes('--check') && (open.length > 0 || clocks.open.length > 0)) process.exit(1)
+  const drains = mustDrainViolations()
+  if (!args.includes('--json')) {
+    for (const hit of drains) console.log(`FORA  must-drain ${mustDrainMessage(hit)}  ${hit.code}`)
+    console.log(`must-drain: ${drains.length} novas filas mustDrain fora de must-drain-allowed.json`)
+  }
+  if (args.includes('--check') && (open.length > 0 || clocks.open.length > 0 || drains.length > 0)) process.exit(1)
   if (args.includes('--strict-clocks') && (clocks.open.length > 0 || clocks.pending.length > 0 || clocks.stale.length > 0)) process.exit(1)
 }

@@ -44,9 +44,9 @@ test('every scheduler system of the room reads a frame label, the others read sy
   assert.equal(new Set(FRAME_LABELS).size, FRAME_LABELS.length)
 })
 
-test('the frame budget mode is quota unless the variable says deadline', () => {
-  assert.equal(budgetModeOf(undefined), 'quota')
-  assert.equal(budgetModeOf('quota'), 'quota')
-  assert.equal(budgetModeOf('anything'), 'quota')
+test('the frame budget mode is deadline (the page) unless the variable says quota', () => {
+  assert.equal(budgetModeOf(undefined), 'deadline')
   assert.equal(budgetModeOf('deadline'), 'deadline')
+  assert.equal(budgetModeOf('anything'), 'deadline')
+  assert.equal(budgetModeOf('quota'), 'quota')
 })

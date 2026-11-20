@@ -113,7 +113,7 @@ export function scanOwnFrameClock(path, text) {
 }
 
 /** @param {string} dir @param {string[]} out */
-const walk = (dir, out = []) => {
+export const walk = (dir, out = []) => {
   if (!existsSync(dir)) return out
   for (const name of readdirSync(dir)) {
     if (['node_modules', 'dist', 'tests', 'assets', 'generated'].includes(name)) continue

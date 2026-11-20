@@ -80,6 +80,9 @@ export const DEFERRED_PRIORITY = {
   [DEFERRED_QUEUE_ID.DESTRUCTION_PREFIT]: { priority: 40, phase: 'idle', minEveryFrames: 30 },
 } as const satisfies Readonly<Record<string, DeferredQueueOptions>>
 
+/** The queues that may register with `mustDrain: true`: a new one needs the owner's decision (CLAUDE.md §15), and `budget.register` throws for any other. */
+export const MUST_DRAIN_QUEUE_IDS: ReadonlySet<string> = new Set([DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS, DEFERRED_QUEUE_ID.BREACH_CUT])
+
 export interface DeferredQueueReport {
   readonly ok: boolean
   readonly problems: readonly string[]

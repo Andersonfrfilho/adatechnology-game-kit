@@ -11,13 +11,14 @@
 //   NIGHTLY_MAX_LOAD=2  NIGHTLY_WAIT_MIN=240    the 1-minute load it waits below, and for how long at most
 //   NIGHTLY_STALE_PUSH_MIN=90                   a `git push` older than this, or only waiting on a lock, or running while nobody holds gpu.lock, does not hold the run back
 import { execFileSync, spawnSync } from 'node:child_process'
-import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, homedir, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
 import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
+import { mergeBase } from './room-explosion-base.mjs'
 import { parseSummaryLines } from './suite-runner.mjs'
 
 /** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string }} NightlyState */
@@ -105,6 +106,13 @@ function checkout(sha) {
   }
 }
 
+/** Saves the room-explosion base after a night that passed: the best of the base and the night per metric (nothing rises), the night itself when there is no base or it is in another mode. @param {string} reportFile @param {string} baseFile */
+function saveExplosionBase(reportFile, baseFile) {
+  const report = JSON.parse(readFileSync(reportFile, 'utf8'))
+  const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
+  writeFileSync(baseFile, JSON.stringify(mergeBase(base, report), null, 1))
+}
+
 /** Waits for an idle machine without the lock (a push in the queue would keep the load up and never get it), then runs again under the lock. */
 async function underLock() {
   writeFileSync(summary, `# GPU daily run ${today}\n\n`)
@@ -144,12 +152,14 @@ async function main() {
     const base = state.lastPassed && state.lastPassed !== sha ? state.lastPassed : sha
     results.push(run({ name: 'perf-gate', command: 'node', args: ['tools/gpu/perf-gate.mjs'], env: { ...quiet, PERF_GATE_BASE: base } }))
     // spec 008 B6: the physics of the house explosion against its budget, at 1x CPU (blocks) and at 2x, 4x and 6x (reported: the proxy for a weaker machine)
+    // FRAME_PARTS=1 arms the explosion-frame gate (f0 and the frames after it, in the page's deadline mode) at the cost of a render per frame in the stage pass; a base in another mode is not compared and is rewritten
+    // the base keeps the best of the passing nights (room-explosion-base.mjs): copying each night over it let a slow drift pass forever
     // the 5 ms goal is only a warning (main is still over it, so blocking on it failed every night): it blocks on a regression against the last report that passed
     const explosionOut = join(reportDir, 'room-explosion.json')
     const explosionBase = join(cacheDir, 'room-explosion-base.json')
-    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
+    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
     results.push(explosion)
-    if (explosion.ok && existsSync(explosionOut)) copyFileSync(explosionOut, explosionBase)
+    if (explosion.ok && existsSync(explosionOut)) saveExplosionBase(explosionOut, explosionBase)
   }
   const failed = results.filter((result) => !result.ok)
   const status = failed.length ? `FAILED ${failed.map((result) => result.name).join(', ')}` : 'PASSED'
