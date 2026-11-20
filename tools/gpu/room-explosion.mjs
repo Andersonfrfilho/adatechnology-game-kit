@@ -104,7 +104,7 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 /**
  * @typedef {{ frames: number, p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, firstSecond: number, maxWithWake: number, loopMs: number, pieceMs: number, wakeMs: number, updateMs: number, renderMs: number, framep50: number, framep99: number, framemax: number, load: number }} Round
  * @typedef {{ variant: string, throttle: number, kind: string, rounds: Round[], p50: number, p99: number, max: number, over4: number, over5: number, wakeFrame: number, wakeMedian: number, firstSecond: number, framep50: number, framep99: number, framemax: number }} Cell
- * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number>, actionMs?: number, budget?: { mode: string, allowanceMs: number, mustDrainSpentMs: number }, queues?: Record<string, number> }} StageFrame
+ * @typedef {{ variant: string, throttle: number, kind: string, round: number, probeMode?: string, frame: number, updateMs: number, physicsMs: number, stages: Record<string, number>, parts?: Record<string, number>, extras?: Record<string, number>, modules?: Record<string, number>, actionMs?: number, budget?: { mode: string, allowanceMs: number, mustDrainSpentMs: number }, queues?: Record<string, number> }} StageFrame
  */
 
 /**
@@ -554,6 +554,7 @@ const logFrameGate = (measure, verdict, isPhysicsCompared) => {
  * @typedef {{ send: (method: string, params?: object) => Promise<unknown> }} CdpSession
  * @typedef {{
  *   on: (event: 'pageerror', listener: (error: Error) => void) => void,
+ *   addInitScript: <A>(fn: (arg: A) => void, arg: A) => Promise<void>,
  *   goto: (url: string, options?: object) => Promise<unknown>,
  *   waitForFunction: (fn: () => unknown, arg: null, options?: object) => Promise<unknown>,
  *   evaluate: <R, A>(fn: (arg: A) => R | Promise<R>, arg: A) => Promise<R>,
@@ -618,10 +619,12 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   /** @type {string[]} */
   const errors = []
   /** One round in a fresh page: the house built at full speed, then the explosion timed at `throttle`; the stage pass passes the labels and draws every frame. @param {string} variant @param {number} throttle @param {string} kind @param {string[]} [stageLabels] */
-  const measureOne = async (variant, throttle, kind, stageLabels) => {
+  const measureOne = async (variant, throttle, kind, stageLabels, probeMode = 'off') => {
     const page = await browser.newPage({ viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1 })
     page.on('pageerror', (error) => errors.push(`${variant} ${throttle}x ${kind}: ${error.message}`))
     try {
+      // PROTÓTIPO (spec 018 T0.1): the explode probe of game-destruction reads this global once, when the world is made
+      if (probeMode !== 'off') await page.addInitScript((mode) => { /** @type {{ __destructionExplodeProbe?: object }} */ (/** @type {unknown} */ (window)).__destructionExplodeProbe = { mode, now: () => performance.now(), records: [] } }, probeMode)
       await page.goto(`${pageUrl}?area=floorplan${VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)]}`, { timeout: 180000 })
       await page.waitForFunction(() => /** @type {{ __testRoom?: unknown }} */ (/** @type {unknown} */ (window)).__testRoom, null, { timeout: 600000 })
       await page.evaluate(inPage, { stage: /** @type {const} */ ('prepare'), weather: kind.split('+')[1] ?? 'none' })
@@ -638,7 +641,8 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const actions = await page.evaluate(() => /** @type {{ __roomExplosionActions?: number[] }} */ (/** @type {unknown} */ (window)).__roomExplosionActions ?? [], undefined)
       const queueIds = await page.evaluate(() => /** @type {{ __roomExplosionQueues?: string[] }} */ (/** @type {unknown} */ (window)).__roomExplosionQueues ?? [], undefined)
       const budgets = await page.evaluate(() => /** @type {{ __roomExplosionBudgets?: { mode: string, allowanceMs: number, mustDrainSpentMs: number }[] }} */ (/** @type {unknown} */ (window)).__roomExplosionBudgets ?? [], undefined)
-      return { timings, load, moduleIds, queueIds, actions, budgets }
+      const probe = await page.evaluate(() => ({ isolated: globalThis.crossOriginIsolated, records: /** @type {{ __destructionExplodeProbe?: { records: unknown[] } }} */ (/** @type {unknown} */ (window)).__destructionExplodeProbe?.records ?? [] }), undefined)
+      return { timings, load, moduleIds, queueIds, actions, budgets, probe }
     } finally {
       await page.close()
     }
@@ -663,13 +667,22 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const stageFrames = []
   const stageThrottles = numbers(process.env.ROOM_EXPLOSION_STAGE_THROTTLES, [1, 4])
   const stageRounds = Number(process.env.ROOM_EXPLOSION_STAGE_ROUNDS ?? 3)
+  // PROTÓTIPO (spec 018 T0.1): the probe mode of each stage round, cycled (`fine,off` alternates on and off in the same session)
+  const probeModes = (process.env.ROOM_EXPLOSION_EXPLODE_PROBE ?? 'off').split(',').filter((mode) => ['fine', 'coarse', 'off'].includes(mode))
+  /** @type {{ round: number, kind: string, throttle: number, mode: string, isolated: boolean, f0: Record<string, number>, records: unknown[] }[]} */
+  const explodeProbe = []
   const stageVariant = process.env.ROOM_EXPLOSION_STAGE_VARIANT ?? (variants.includes(DEFAULT_VARIANT) ? DEFAULT_VARIANT : variants.find((name) => name !== 'own'))
   if (stageVariant && stageRounds > 0) {
     for (let round = 1; round <= stageRounds; round++) for (const throttle of stageThrottles) for (const kind of kinds) {
       try {
-        const { timings, moduleIds, queueIds, actions, budgets } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS])
+        const probeMode = probeModes[(round - 1) % probeModes.length] ?? 'off'
+        const { timings, moduleIds, queueIds, actions, budgets, probe } = await measureOne(stageVariant, throttle, kind, [...STAGE_LABELS], probeMode)
+        const hitFrame = timings[0] ?? []
+        const partColumn = (/** @type {string} */ label) => round2(hitFrame[6 + STAGE_LABELS.length + FRAME_LABELS.indexOf(label)] ?? 0)
+        const f0 = { updateMs: round2(hitFrame[4] ?? 0), actionMs: round2(actions[0] ?? 0), ...(hasFrameParts ? { explode: partColumn('explode'), action: partColumn('action'), renderCpu: round2(hitFrame[6 + STAGE_LABELS.length + FRAME_LABELS.length] ?? 0) } : {}) }
+        explodeProbe.push({ round, kind, throttle, mode: probeMode, isolated: probe.isolated, f0, records: probe.records })
         const moduleColumn = 6 + STAGE_LABELS.length + FRAME_LABELS.length + FRAME_EXTRAS.length
-        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, frame: index, ...(actions[index] === undefined ? {} : { actionMs: round2(actions[index] ?? 0) }), ...(budgets[index] === undefined ? {} : { budget: budgets[index] }), ...(hasFrameParts ? { queues: Object.fromEntries(queueIds.map((id, column) => [id, round2(frame[moduleColumn + moduleIds.length + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
+        timings.forEach((frame, index) => stageFrames.push({ ...(hasFrameParts ? { modules: Object.fromEntries(moduleIds.map((id, column) => [id, round2(frame[moduleColumn + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), variant: stageVariant, throttle, kind, round, probeMode, frame: index, ...(actions[index] === undefined ? {} : { actionMs: round2(actions[index] ?? 0) }), ...(budgets[index] === undefined ? {} : { budget: budgets[index] }), ...(hasFrameParts ? { queues: Object.fromEntries(queueIds.map((id, column) => [id, round2(frame[moduleColumn + moduleIds.length + column] ?? 0)]).filter(([, ms]) => Number(ms) > 0)) } : {}), updateMs: round2(frame[4] ?? 0), physicsMs: round2(frame[0] ?? 0), stages: Object.fromEntries(STAGE_LABELS.map((label, column) => [label, round2(frame[6 + column] ?? 0)])), ...(hasFrameParts ? { parts: Object.fromEntries(FRAME_LABELS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + column] ?? 0)])), extras: Object.fromEntries(FRAME_EXTRAS.map((label, column) => [label, round2(frame[6 + STAGE_LABELS.length + FRAME_LABELS.length + column] ?? 0)])) } : {}) }))
         console.log(`room-explosion: stage round ${round} ${stageVariant} ${throttle}x ${kind} done`)
       } catch (error) {
         errors.push(`stages ${throttle}x ${kind}: ${error instanceof Error ? error.message : String(error)}`)
@@ -758,7 +771,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, ...(explodeProbe.length > 0 ? { explodeProbe } : {}), gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0

@@ -3,6 +3,7 @@ import type { PlanePoint, SupportGraph } from '@adatechnology/game-load-path'
 import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
+import { createExplodeProbe } from './explode-probe'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
 import { cellsOutside, cellsWithin, clumpUnits, holeInBox, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
@@ -648,6 +649,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const broadPhase = options.broadPhase ?? true
   const chainLinkCap = options.chainLinksPerUpdate !== undefined && options.chainLinksPerUpdate >= 1 ? Math.floor(options.chainLinksPerUpdate) : Infinity
   const rng = createRng(options.seed ?? 1)
+  // PROTÓTIPO (spec 018 T0.1): sonda do `explode`, desligada sem o global do host
+  const probe = createExplodeProbe()
   const rnd = () => rng.next()
 
   let time = 0
@@ -670,7 +673,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // Events
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
-  const emit = (e: DestructionEvent) => {
+  let emit = (e: DestructionEvent) => {
     cur.push(e)
     options.onEvent?.(e)
     const all = listeners.get('*')
@@ -917,7 +920,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
-  const recomputeGroups = (o: ObjRT) => {
+  let recomputeGroups = (o: ObjRT) => {
     const n = o.parts.length
     if (ufParent.length < n) {
       ufParent = new Int32Array(n)
@@ -1201,7 +1204,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * rest when the blast pushes along the weight. Past the cracking moment the tension face cracks; a section whose steel does not hold more than that
    * snaps; a reinforced one yields and fails when its plastic rotation (`(U(M) - U(Mu)) / (2 Mu)` per blast, added up) reaches `failRotationDeg`.
    */
-  const bendByBlast = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, reach: number, src?: string) => {
+  let bendByBlast = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, reach: number, src?: string) => {
     if (p.bend) settleStructure(o)
     const g = p.bend
     if (!g || p.span <= 0 || isLost(p) || p.st.stripped || reach <= 0) return
@@ -1289,7 +1292,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. What carries what, the order
    * the load goes down and how it is shared are the load path rule of `game-load-path` (the structure that sized the building uses the same one).
    */
-  const solveStructure = (o: ObjRT) => {
+  let solveStructure = (o: ObjRT) => {
     structureSolves++
     o.maxStress = 0
     if (!o.hasStructure) return
@@ -1884,7 +1887,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** Report the groups of remaining structural parts that lost every anchor (each part is reported once). */
-  const flushCollapse = () => {
+  let flushCollapse = () => {
     for (const [o, src] of [...pendingCollapse]) {
       pendingCollapse.delete(o)
       if (!objects.has(o.id) || objects.get(o.id) !== o) continue
@@ -2768,7 +2771,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return fresh.map(([nid]) => nid)
   }
 
-  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
+  let raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     const minRadius = skip.minObjectRadius ?? 0
     let best: (RayHit & { pathLen: number }) | null = null
@@ -2845,7 +2848,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   // impl hosting
-  const implHit = (im: ImplRT, hit: Hit): HitResult => {
+  let implHit = (im: ImplRT, hit: Hit): HitResult => {
     let h = hit
     if (hit.space === 'local') {
       h = { ...hit, space: 'world', point: toWorld(im.position, im.rotation, hit.point) }
@@ -2946,7 +2949,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.st.status === 'intact') p.st.status = 'damaged'
   }
 
-  const addDent = (o: ObjRT, p: PartRT, wp: Vec3, wn: Vec3, radius: number, depth: number, src?: string) => {
+  let addDent = (o: ObjRT, p: PartRT, wp: Vec3, wn: Vec3, radius: number, depth: number, src?: string) => {
     const dent: Dent = { point: objLocal(o, wp), normal: objLocalDir(o, wn), radius, depth }
     const arr = p.st.dents
     let ni = -1, nd = Infinity
@@ -2975,7 +2978,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return hole
   }
 
-  const addCrack = (o: ObjRT, p: PartRT, wp: Vec3, wn: Vec3, length: number, src?: string, stair?: Crack['stair']) => {
+  let addCrack = (o: ObjRT, p: PartRT, wp: Vec3, wn: Vec3, length: number, src?: string, stair?: Crack['stair']) => {
     const crack: Crack = { point: objLocal(o, wp), normal: objLocalDir(o, wn), length: Math.min(length, Math.max(p.bound, 0.05)), rays: 5 + Math.floor(rnd() * 5), ...(stair ? { stair } : {}) }
     p.st.cracks.push(crack)
     if (p.st.cracks.length > 16) p.st.cracks.shift()
@@ -2984,7 +2987,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     setStage(o, p, 1, {}, src)
   }
 
-  const debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string, material?: MaterialId) =>
+  let debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string, material?: MaterialId) =>
     emit({ ...base(o, src), type: 'debris', part: p.spec.id, kind, point, normal, count, speed, ...(material && material !== p.spec.material ? { material } : {}) })
 
   const holeRate = (hole: Hole, pressurized: boolean) => (pressurized ? 0.5 : 0.1) * (hole.diameter / 0.009)
@@ -2993,7 +2996,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // Failure, joints
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
-  const detachEvents = (o: ObjRT, opened: JointRT[], by: 'break' | 'tool' | 'part_lost', src?: string) => {
+  let detachEvents = (o: ObjRT, opened: JointRT[], by: 'break' | 'tool' | 'part_lost', src?: string) => {
     for (const j of opened) emit({ ...base(o, src), type: 'detach', joint: j.spec.id, parts: [j.spec.a, j.spec.b], by, groups: o.st.groups.map((g) => [...g]) })
   }
 
@@ -3251,7 +3254,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return (a.embedded === true && a.spec.hostedIn === b.spec.id && a.st.exposed !== true) || (b.embedded === true && b.spec.hostedIn === a.spec.id && b.st.exposed !== true)
   }
 
-  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
+  let wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false, span?: number, blast?: { point: Vec3; reach: number }) => {
     if (amount <= 0) return
     const mine = o.byPart.get(p.spec.id)
     if (!mine) return
@@ -3261,6 +3264,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (closed > 0) amount /= closed
     }
     for (const j of mine) {
+      probe.count('jointsVisited')
       if (j.st.open) continue
       // the rebar of a reinforced part (a cage, or the tension steel of `structure.rebar`) ties it to the next one: blows do not wear it, only a torch
       // or a saw cuts it (or the part itself giving way)
@@ -3295,7 +3299,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   /** `1` when the outward normal points along the part's local +thin axis, else `-1`. */
   const faceOf = (o: ObjRT, p: PartRT, worldNormal: Vec3): number => (rotateVec(quat.conjugate(partXf(o, p).q), worldNormal)[p.thin] >= 0 ? 1 : -1)
 
-  const spallOuter = (o: ObjRT, p: PartRT, wp: Vec3, face: number, normal: Vec3, radius: number, src?: string) => {
+  let spallOuter = (o: ObjRT, p: PartRT, wp: Vec3, face: number, normal: Vec3, radius: number, src?: string) => {
     if (p.layers.length === 0) return
     const lp = objLocal(o, wp)
     const layer = outerLayer(p.layers, p.rt.spalls, face, lp)
@@ -3428,7 +3432,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** A blow that made through damage of `area` m² at `wp` (world): adds up with the earlier ones within the breach radius, and opens the part past its threshold. */
-  const addBreach = (o: ObjRT, p: PartRT, wp: Vec3, area: number, energy: number, dir: Vec3 | null, src?: string) => {
+  let addBreach = (o: ObjRT, p: PartRT, wp: Vec3, area: number, energy: number, dir: Vec3 | null, src?: string) => {
     if (!p.staged || area <= 0 || (p.st.stage ?? 0) >= 2 || p.st.stripped || isLost(p)) return
     const lp = objLocal(o, wp)
     const list = (p.rt.breach ??= [])
@@ -3903,7 +3907,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * of the wall stands. Everything that came out is one `chip` with `units`, and it adds up in `PartState.chipped`, so later shots and blasts go on
    * cutting the same wall. Returns whether any unit came out.
    */
-  const blastUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, dist: number, src?: string): boolean => {
+  let blastUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, dist: number, src?: string): boolean => {
     if (!p.staged || p.st.stripped || isLost(p) || chipEnergy <= 0) return false
     const reach = blastReachOf(p, energy)
     if (dist >= reach) return false
@@ -3983,7 +3987,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * pillars around it, or the ends of the wall) decide whether that panel fails. A failed panel comes out whole into the side away from the charge; the
    * pillars and the bond beam around it are parts of their own and stay. Returns whether the panel came out.
    */
-  const blastPanel = (o: ObjRT, p: PartRT, point: Vec3, energy: number, src?: string): boolean => {
+  let blastPanel = (o: ObjRT, p: PartRT, point: Vec3, energy: number, src?: string): boolean => {
     if (!p.staged || p.st.stripped || isLost(p) || !p.spec.units || p.spec.units.mortar === p.spec.material || p.spec.reinforcement) return false
     const [u, v] = planeAxes(p.thin)
     const lp = toLocal(p.pos, p.q, objLocal(o, point))
@@ -4035,7 +4039,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** Takes the units `out` (indices of the part's grid) out of a wall of units: they fly from `wp` as clumps, what they leave with nothing under it comes down, and one `chip` says so. */
-  const knockOutUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, out: readonly number[], src?: string): boolean => {
+  let knockOutUnits = (o: ObjRT, p: PartRT, wp: Vec3, energy: number, out: readonly number[], src?: string): boolean => {
     const [u, v] = planeAxes(p.thin)
     const op = p.st.opening ? toLocal(p.pos, p.q, p.st.opening.center) : null
     const grid = gridOf(p)
@@ -4043,6 +4047,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const castHere = castCells(p)
     out = out.filter((i) => !castHere.has(i))
     if (out.length === 0) return false
+    probe.count('unitsKnocked', out.length)
     for (const i of out) worn[i] = -1
     // laid units over a gap come down; cast concrete (a pillar, a beam: its units are of its own material) is one piece held by its bars, and stands
     const cast = p.spec.units?.mortar === p.spec.material
@@ -4323,7 +4328,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return clamp(Math.floor((along + L / 2) / SEVER_BAND), 0, Math.ceil(L / SEVER_BAND) - 1)
   }
 
-  const applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string): number => {
+  let applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string): number => {
     if (isLost(p) || amount <= 0) return 0
     const prev = p.st.hp
     p.st.hp -= amount
@@ -4596,15 +4601,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * What one part takes of a blast: dents, cracks, debris, heat, joint wear and the hit points. `reach` is the share of the blast that gets to the
    * part (`blast.shelter`; 1 without it) and it comes back, so a caller can report it. It is computed from the point of the part nearest to the centre.
    */
-  const blastPart = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, src: string | undefined, res: HitResult, reachAt?: (wp: Vec3, p: PartRT) => number): number | null => {
+  let blastPart = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, src: string | undefined, res: HitResult, reachAt?: (wp: Vec3, p: PartRT) => number): number | null => {
     if (isLost(p)) return null
     // a part embedded in its host takes no wave while the host stands round it: the wall is what the blast meets, and only a hole of it lets the blast to the pipe
     if (p.embedded === true && p.st.exposed !== true) return null
+    probe.enter('partGeometry')
     const { c, q } = partXf(o, p)
     const objectRotation = o.st.rotation, partQuat = p.q
     const lp = toLocal(c, q, point)
     const dist = distanceToShape(p.spec.shape, lp)
-    if (dist >= radius) return null
+    if (dist >= radius) {
+      probe.leave('partGeometry')
+      return null
+    }
+    probe.count('partsInRange')
     const sp = surfacePoint(p.spec.shape, lp)
     const wp = toWorld(c, q, sp.point)
     const reach = reachAt ? reachAt(wp, p) : 1
@@ -4630,6 +4640,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (share === 0) Ein = wave.shock
       else if (share === 1) Ein = Math.max(Ein, p.st.maxHp / DMG_PER_J)
     }
+    probe.leave('partGeometry')
     const wn = rotateVec(q, sp.normal)
     if (!res.part) {
       res.part = p.spec.id
@@ -4702,7 +4713,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * Whether the straight line from the centre of the fireball to the point `wp` of the part crosses nothing else: radiant heat does not go through a wall, and the hot
    * gases are held by it too (their flow round a wall is not modelled, so a part behind one stays cool even inside the fireball).
    */
-  const seesFireball = (point: Vec3, o: ObjRT, p: PartRT, wp: Vec3): boolean => {
+  let seesFireball = (point: Vec3, o: ObjRT, p: PartRT, wp: Vec3): boolean => {
     const L = vec.distance(point, wp)
     if (L < 0.03) return true
     const hit = raycastInternal(point, vec.sub(wp, point), L - 0.02)
@@ -4712,7 +4723,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const blastProbe = { partsTested: 0, partsNear: 0 }
 
   /** Broad phase: the blast centre in object space against each part's bounding sphere, so a part out of reach costs three subtractions and no allocation. */
-  const blastCandidates = (o: ObjRT, point: Vec3, radius: number): PartRT[] => {
+  let blastCandidates = (o: ObjRT, point: Vec3, radius: number): PartRT[] => {
     const local = toLocal(o.st.position, o.st.rotation, point)
     const near: PartRT[] = []
     for (const p of o.parts) {
@@ -4826,7 +4837,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return { ps, c: toWorld(im.position, im.rotation, ov?.pos ?? ps.position), q: quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0]))) }
     })
 
-  const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => {
+  let implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => {
     for (const ps of im.impl.describe().parts) {
       const ov = im.poses.get(ps.id)
       const c = toWorld(im.position, im.rotation, ov?.pos ?? ps.position)
@@ -5707,6 +5718,31 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return build(clone(e.spec), id, pos, rot, carry)
   }
 
+  if (probe.isOn) {
+    emit = probe.wrap('emit', emit)
+    recomputeGroups = probe.wrap('groups', recomputeGroups)
+    bendByBlast = probe.wrap('bend', bendByBlast)
+    solveStructure = probe.wrap('solveStructure', solveStructure)
+    flushCollapse = probe.wrap('flushCollapse', flushCollapse)
+    raycastInternal = probe.wrap('raycast', raycastInternal)
+    implHit = probe.wrap('impls', implHit)
+    implInRange = probe.wrap('impls', implInRange)
+    addDent = probe.wrap('marks', addDent)
+    addCrack = probe.wrap('marks', addCrack)
+    debris = probe.wrap('marks', debris)
+    spallOuter = probe.wrap('marks', spallOuter)
+    detachEvents = probe.wrap('detachEvents', detachEvents)
+    wearJoints = probe.wrap('wearJoints', wearJoints)
+    addBreach = probe.wrap('units', addBreach)
+    blastUnits = probe.wrap('units', blastUnits)
+    blastPanel = probe.wrap('units', blastPanel)
+    knockOutUnits = probe.wrap('knockOutUnits', knockOutUnits)
+    applyDamage = probe.wrap('applyDamage', applyDamage)
+    seesFireball = probe.wrap('seesFireball', seesFireball)
+    blastCandidates = probe.wrap('candidates', blastCandidates)
+    blastPart = probe.wrap('blastPart', blastPart)
+  }
+
   const world: DestructionWorld = {
     materials,
     get time() {
@@ -5849,7 +5885,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     explode(point, energy, radius, source, blast) {
       blastProbe.partsTested = 0
       blastProbe.partsNear = 0
-      return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
+      return probe.root(() => withCollapses(run(() => blastWorld(point, energy, radius, source, blast))))
     },
     groundLoss(loss) {
       if (!(loss.radius > 0) || !(loss.depth > 0) || !Number.isFinite(loss.x) || !Number.isFinite(loss.z)) return
