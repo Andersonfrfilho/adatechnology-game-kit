@@ -150,9 +150,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       countRunAsFrame()
       strike.inRenderer = true
       let ran = 0
-      // each house keeps its own quota of walls (`owedWalls`): one house spending the deadline cannot starve the walls of another
-      for (const q of [...paintQueues]) if (q.pending() > 0) ran += q.run(deadline, clock)
-      strike.inRenderer = false
+      try {
+        // each house keeps its own quota of walls (`owedWalls`): one house spending the deadline cannot starve the walls of another
+        for (const q of [...paintQueues]) if (q.pending() > 0) ran += q.run(deadline, clock)
+      } finally {
+        strike.inRenderer = false
+      }
       return ran
     },
     flush() { for (const q of [...paintQueues]) q.flush() },
