@@ -222,3 +222,11 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
     })
   }
 })
+
+describe('createWorldOcclusion step', () => {
+  it('refuses a step that would never advance', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const world = { raycast: () => null, part: () => null }
+    for (const step of [0, -0.001, Number.NaN, Number.POSITIVE_INFINITY]) expect(() => createWorldOcclusion(world, { step })).toThrow(RangeError)
+  })
+})

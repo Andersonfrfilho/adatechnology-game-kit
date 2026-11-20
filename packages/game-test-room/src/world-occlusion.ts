@@ -25,7 +25,11 @@ export type WorldOcclusionOptions = {
  */
 export const OCCLUDER_MIN_RADIUS = 0.25
 
-/** 0.25 m: the widest air the walk out of a solid may step over. Narrower than any gap that holds something `OCCLUDER_MIN_RADIUS` lets occlude. */
+/**
+ * 0.25 m: the longest stride of the walk out of a solid. An approximation, not the walk of one millimetre: air narrower than this between two stretches
+ * of the SAME part (a ray grazing rolling ground) can be stepped over with what stands in it. The path already crosses that part twice, and a
+ * stretch of 100 m inside a solid costs ~420 rays instead of 100 000.
+ */
 const LEAVE_MAX_STRIDE = OCCLUDER_MIN_RADIUS
 
 const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance]
@@ -77,6 +81,7 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
 export function createWorldOcclusion(world: OcclusionWorld, options: WorldOcclusionOptions = {}): OcclusionQuery {
   const maxHits = options.maxHits ?? 6
   const step = options.step ?? 0.001
+  if (!(step > 0) || !Number.isFinite(step)) throw new RangeError(`world occlusion: step must be a positive length, got ${step}`)
   const skip: RaycastOptions = { skipLoose: true, minObjectRadius: options.minObjectRadius ?? OCCLUDER_MIN_RADIUS }
   return (from, to) => {
     const dx = to[0] - from[0]
