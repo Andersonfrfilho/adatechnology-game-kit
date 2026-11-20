@@ -20,7 +20,7 @@ export type NavGrid = {
   readonly cell: number
   /** Cells per side. */
   readonly n: number
-  /** Only `fillRect` writes `occ` and `occH`: a direct write does not bump `version`, so it never reaches a worker's copy. */
+  /** Only `fillRect` writes `occ` and `occH`: a direct write does not bump `version`, so it never reaches a worker's copy. The type stops a write by index, not `fill` or `set`. */
   readonly occ: Readonly<Uint8Array>
   /** Counts the `fillRect` calls that changed a cell: a reader that keeps a copy of the occupancy knows by it when the copy is stale. */
   readonly version: number
