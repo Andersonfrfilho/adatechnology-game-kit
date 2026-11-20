@@ -118,6 +118,7 @@ if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')],
 const sha256Of = (/** @type {string} */ path) => createHash('sha256').update(readFileSync(path)).digest('hex')
 const pageSha256 = sha256Of(dist)
 const otherPage = process.env.PERF_OTHER_PAGE
+if (otherPage && !existsSync(otherPage)) throw new Error(`PERF_OTHER_PAGE does not exist: ${otherPage}`)
 if (otherPage && sha256Of(otherPage) === pageSha256) {
   throw new Error(`PERF_PAGE and PERF_OTHER_PAGE are the same page (sha256 ${pageSha256.slice(0, 12)}): the page was not rebuilt, so this pair would compare a build with itself`)
 }

@@ -92,6 +92,21 @@ describe('a followed wall paints once per flush (not once per chip)', () => {
     scene.follower.dispose()
   })
 
+  it('an opening paints the chips already waiting on the wall, and leaves nothing for the flush to repaint', () => {
+    const scene = setup()
+    scene.rifle(0)
+    expect(scene.repaints()).toBe(0)
+    scene.world.hitPart('target', 'wall_0_0', { type: 'ballistic', point: [0, 1.5, 0.1], direction: [0, 0, -1], energy: 400000, caliber: 40 })
+    expect(scene.repaints()).toBe(1)
+    scene.follower.update()
+    expect(scene.repaints()).toBe(1)
+    scene.rifle(0.6)
+    expect(scene.repaints()).toBe(1)
+    scene.follower.update()
+    expect(scene.repaints()).toBe(2)
+    scene.follower.dispose()
+  })
+
   it('dispose cancels the fallback timer', () => {
     vi.useFakeTimers()
     try {
