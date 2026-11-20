@@ -1,0 +1,56 @@
+// @ts-check
+import assert from 'node:assert/strict'
+import { test } from 'node:test'
+
+import { mergeBase } from '../room-explosion-base.mjs'
+import { frameGate, isFrameWorse } from '../room-explosion-frame.mjs'
+
+const VARIANT = 'jolt-d4-worker'
+const metric = (/** @type {number} */ f0Ms, /** @type {number} */ afterMs, kind = 'blast') => ({ variant: VARIANT, throttle: 1, kind, f0Ms, afterMs })
+const cell = (/** @type {number} */ p99, /** @type {number} */ max, kind = 'blast') => ({ variant: VARIANT, throttle: 1, kind, p99, max })
+const night = (/** @type {number} */ f0Ms, mode = 'deadline') => ({ budgetMode: mode, cells: [cell(5, 20)], frameMetrics: [metric(f0Ms, 25)] })
+const blocks = (/** @type {number} */ f0Ms, /** @type {ReturnType<typeof night>} */ base) => frameGate({ measure: { metrics: [metric(f0Ms, 25)], problems: [] }, base, mode: 'deadline', variant: VARIANT, gated: new Set([1]) }).regressions.length > 0
+
+test('the base only improves: a worse night leaves it where it was, a better one lowers it', () => {
+  const worse = mergeBase(night(65), night(68))
+  assert.equal(worse.frameMetrics?.[0]?.f0Ms, 65)
+  assert.equal(mergeBase(night(65), night(60)).frameMetrics?.[0]?.f0Ms, 60)
+  const cells = mergeBase({ budgetMode: 'deadline', cells: [cell(5, 20)] }, { budgetMode: 'deadline', cells: [cell(7, 15)] }).cells?.[0]
+  assert.deepEqual([cells?.p99, cells?.max], [5, 15])
+})
+
+test('a new key enters, a key only the base has stays, and a 0 never lowers the base', () => {
+  const merged = mergeBase({ budgetMode: 'deadline', frameMetrics: [metric(65, 25), metric(70, 25, 'hammer')] }, { budgetMode: 'deadline', frameMetrics: [metric(0, 0), metric(80, 30, 'crater')] })
+  assert.deepEqual(merged.frameMetrics?.map((entry) => [entry.kind, entry.f0Ms]), [['blast', 65], ['hammer', 70], ['crater', 80]])
+})
+
+test('no base, or a base in another mode, makes the night the base', () => {
+  assert.deepEqual(mergeBase(undefined, night(68)), night(68))
+  assert.deepEqual(mergeBase(night(65, 'quota'), night(68)), night(68))
+})
+
+test('a drift of 3 ms a night: the sliding base never blocks, the best-of base blocks once the drift passes the tolerance', () => {
+  const nights = [65, 68, 71, 74, 77]
+  let sliding = night(nights[0] ?? 0)
+  let best = night(nights[0] ?? 0)
+  let slidingBlocked = false
+  /** @type {number | undefined} */
+  let blockedOn
+  for (const value of nights.slice(1)) {
+    slidingBlocked ||= blocks(value, sliding)
+    sliding = night(value)
+    if (blockedOn === undefined && blocks(value, best)) blockedOn = value
+    if (blockedOn === undefined) best = mergeBase(best, night(value))
+  }
+  assert.equal(slidingBlocked, false)
+  assert.equal(blockedOn, 77)
+})
+
+test('with the floor alone (tolerance 3%), 65, 68, 71 blocks on the third night', () => {
+  const rule = { tolerance: 0.03, floorMs: 3 }
+  let base = night(65)
+  assert.equal(isFrameWorse(68, 65, rule), false)
+  base = mergeBase(base, night(68))
+  assert.equal(base.frameMetrics?.[0]?.f0Ms, 65)
+  assert.equal(isFrameWorse(71, base.frameMetrics?.[0]?.f0Ms ?? 0, rule), true)
+})

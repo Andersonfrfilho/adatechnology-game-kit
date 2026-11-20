@@ -31,7 +31,7 @@
 //   ROOM_EXPLOSION_ROUNDS=5      ROOM_EXPLOSION_FRAMES=660 (frames of 1/60 s after the explosion, 11 s)
 //   ROOM_EXPLOSION_WEATHER=none            none, storm (60 mm/h rain, wind) and/or fog (60 m): comma list; each kind then runs once per weather as `blast+storm`. Weather or ROOM_EXPLOSION_RENDER=1 also times one render per frame
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
-//   ROOM_EXPLOSION_BASE=<file.json>        main's last passing report (ROOM_EXPLOSION_OUT of that run): the gated cells block only when worse than it (REGRESSION), and so does the explosion frame (below).
+//   ROOM_EXPLOSION_BASE=<file.json>        the base report (the nightly keeps, per metric, the best of its passing ROOM_EXPLOSION_OUT reports: room-explosion-base.mjs): the gated cells block only when worse than it (REGRESSION), and so does the explosion frame (below).
 //                                          A base measured in another frame budget mode (or without `budgetMode`) is not compared: the run says so, does not block, and becomes the new base
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
 //   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
@@ -521,7 +521,7 @@ export const cellFails = (cell, budget) => cell.p99 > budget.p99 || cell.max > b
 export const REGRESSION = { tolerance: 0.25, p99Floor: 1, maxFloor: 5 }
 
 /**
- * Whether a cell is worse than the same cell of main's last passing report by more than the tolerance and the floor. The absolute budget (4/5 ms) is the goal and only a
+ * Whether a cell is worse than the same cell of the base report (the best of the passing nights) by more than the tolerance and the floor. The absolute budget (4/5 ms) is the goal and only a
  * warning: it blocked every night while main was still over it, which made the daily warning mean nothing; the block is the regression.
  * @param {Pick<Cell, 'p99' | 'max'>} cell @param {Pick<Cell, 'p99' | 'max'> | undefined} base
  */
@@ -539,12 +539,13 @@ const worstFrames = (all) => {
   return [...groups.values()].flatMap((group) => group.sort((a, b) => b.updateMs - a.updateMs).slice(0, 10))
 }
 
-/** Prints the explosion-frame numbers and what the gate did with them. @param {ReturnType<typeof frameMetricsOf>} metrics @param {ReturnType<typeof frameGate>} verdict */
-const logFrameGate = (metrics, verdict) => {
-  if (metrics.length === 0) return console.log('room-explosion: explosion frame not measured (ROOM_EXPLOSION_FRAME_PARTS=1 and a stage pass are needed): that gate did not run')
-  console.log('room-explosion: explosion frame, ms (f0Ms: mean of the 3 worst f0 of update + renderCpu; afterMs: worst of the 7 frames after, same rounds)')
-  for (const entry of metrics) console.log(`  ${entry.variant.padEnd(12)} ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} f0Ms ${String(entry.f0Ms).padStart(7)} afterMs ${String(entry.afterMs).padStart(7)}`)
-  if (verdict.status !== 'compared') return console.log(`room-explosion: explosion frame gate did not compare (${verdict.status}): nothing blocks from it`)
+/** Prints the explosion-frame numbers and what the gate did with them; a round that compared nothing says so loudly. @param {ReturnType<typeof frameMetricsOf>} measure @param {ReturnType<typeof frameGate>} verdict @param {boolean} isPhysicsCompared */
+const logFrameGate = (measure, verdict, isPhysicsCompared) => {
+  if (measure.metrics.length > 0) console.log('room-explosion: explosion frame, ms (f0Ms: mean of the 3 worst f0 of update + renderCpu; afterMs: mean over those rounds of the worst of the 7 frames after)')
+  for (const entry of measure.metrics) console.log(`  ${entry.variant.padEnd(12)} ${`${entry.throttle}x`.padEnd(4)} ${entry.kind.padEnd(13)} f0Ms ${String(entry.f0Ms).padStart(7)} afterMs ${String(entry.afterMs).padStart(7)}`)
+  for (const entry of verdict.problems) console.log(`room-explosion: explosion frame ${entry.key}: ${entry.status} (no number, nothing blocks from it)`)
+  for (const entry of verdict.skipped) console.log(`room-explosion: explosion frame not compared: ${entry}`)
+  if (!verdict.compared) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosion frame (${verdict.status}): ${verdict.reason}${isPhysicsCompared ? '' : '; physics cells not compared either (no base in this mode)'}`)
   for (const entry of verdict.regressions) console.log(`  FAIL: explosion frame ${entry.key} ${entry.field} ${entry.now} against ${entry.was} in the base (blocks)`)
 }
 
@@ -716,10 +717,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     const verdict = cell.variant !== DEFAULT_VARIANT && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(13)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
-  const frameMetrics = frameMetricsOf(stageFrames)
-  const blockingMetrics = frameMetrics.filter((entry) => entry.variant === DEFAULT_VARIANT && gated.has(entry.throttle))
-  const frameVerdict = frameGate({ now: blockingMetrics, base: savedBase, mode })
-  logFrameGate(frameMetrics, frameVerdict)
+  const frameMeasure = frameMetricsOf(stageFrames)
+  const frameVerdict = frameGate({ measure: frameMeasure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated })
+  logFrameGate(frameMeasure, frameVerdict, isBaseInMode)
   blocked ||= frameVerdict.regressions.length > 0
   if (isRendered) {
     console.log('')
@@ -758,7 +758,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0

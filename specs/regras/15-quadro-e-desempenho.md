@@ -21,7 +21,9 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
   `frameStartMs` as filas recebem os 8 ms em todo quadro, até no que já estourou, e o f0 sai maior que no jogo. Uma base gravada em outro modo não é comparada.
 - **Ganho menor que ~3 ms não se lê no total**, só no rótulo da tabela: a mesma versão varia ±2 ms entre sessões. Meça a base na mesma sessão, em
   rodadas alternadas (antes, depois, antes, depois), com a carga de 1 minuto abaixo de 1,5.
-- O portão da régua (`room-explosion`) bloqueia o quadro da explosão: `f0Ms` ou `afterMs` pior que a base em mais de 15% e 3 ms (`ROOM_EXPLOSION_FRAME_PARTS=1`).
+- O portão da régua (`room-explosion`) bloqueia o quadro da explosão: `f0Ms` ou `afterMs` pior que a base em mais de 15% e mais de 3 ms, **só a 1x, na variante
+  padrão, com a base no mesmo modo** e com `ROOM_EXPLOSION_FRAME_PARTS=1`; sem isso ele diz `SEM COMPARAÇÃO NESTA RODADA` e não bloqueia. A base da rodada diária só
+  melhora (`min` por métrica). Depois de mergear a mudança de modo, grave a base no modo de prazo com uma rodada conferida à mão (comando em `docs/desempenho-explosoes.md`).
 - Continua valendo a §9: nada disso roda no CI nem no pre-push.
 
 ## Um dono do tempo do quadro
