@@ -798,6 +798,8 @@ class Renderer implements DestructionRenderer {
   private clipToDrawn(id: string, hosted: readonly StaticSolid[]): readonly StaticSolid[] {
     const b = this.bounds.get(id)
     if (!b) return hosted
+    // the root's meshes are measured by their bounds: a merged mesh with a write pending in the batch must show them
+    this.visuals.flushPendingRebuilds()
     b.root.updateWorldMatrix(true, true)
     const m = b.root.matrixWorld.elements
     const known = this.clipped.get(id)
@@ -3126,6 +3128,7 @@ class Renderer implements DestructionRenderer {
   private shownArea(objectId: string, point: Vec3): number | undefined {
     const b = this.bounds.get(objectId)
     if (!b) return undefined
+    this.visuals.flushPendingRebuilds()
     const seen = new Set<THREE_NS.Object3D>()
     const size = new this.THREE.Vector3()
     const scale = new this.THREE.Vector3()

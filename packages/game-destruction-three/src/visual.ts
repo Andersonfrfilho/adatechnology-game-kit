@@ -664,7 +664,7 @@ export class Visuals {
    */
   private onFace(mesh: Mesh, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3): THREE_NS.Vector3 {
     if (!(mesh as { isMesh?: boolean }).isMesh || !mesh.geometry?.attributes?.position) return worldPoint
-    this.flushRebuilds(false)
+    this.flushRebuilds(false, mesh)
     const n = worldNormal.clone().normalize()
     this.ray.set(worldPoint.clone().addScaledVector(n, DECAL_SNAP), n.clone().negate())
     this.ray.near = 0
@@ -1030,12 +1030,22 @@ export class Visuals {
       return
     }
     const hosts = (this.rebuildBatch = new Map<HostVis, { stale: boolean; urgent: boolean }>())
+    let failure: { readonly error: unknown } | undefined
     try {
       work()
     } finally {
       this.rebuildBatch = null
-      for (const [host, state] of hosts) if (state.stale) this.rebuildHost(host)
+      // a host that fails to write neither skips the others nor replaces the error `work` threw
+      for (const [host, state] of hosts) {
+        if (!state.stale) continue
+        try {
+          this.writeHost(host)
+        } catch (error) {
+          failure ??= { error }
+        }
+      }
     }
+    if (failure) throw failure.error
   }
 
   /** Write `work` into the geometry again with the melt of ranged parts and the collapsed ranges applied. */
@@ -1055,15 +1065,20 @@ export class Visuals {
   }
 
   /** Within a batch: writes the merged meshes with a pending change (only the `urgent` ones, or every stale one), so a read of the geometry sees what a write per change would have left. */
-  private flushRebuilds(onlyUrgent: boolean, host?: HostVis): void {
+  private flushRebuilds(onlyUrgent: boolean, mesh?: Mesh): void {
     const batch = this.rebuildBatch
     if (!batch) return
     for (const [key, state] of batch) {
-      if (!state.stale || (onlyUrgent && !state.urgent) || (host && key !== host)) continue
+      if (!state.stale || (onlyUrgent && !state.urgent) || (mesh && key.mesh !== mesh)) continue
       state.stale = false
       state.urgent = false
       this.writeHost(key)
     }
+  }
+
+  /** Within a batch: writes every merged mesh with a pending change, for a reader of the geometry's bounds that is not tied to one mesh (`shownArea`, `clipToDrawn`). */
+  flushPendingRebuilds(): void {
+    this.flushRebuilds(false)
   }
 
   private writeHost(host: HostVis): void {
@@ -1197,7 +1212,7 @@ export class Visuals {
   extract(mv: MeshVis, group: THREE_NS.Object3D): void {
     if (!mv.host || !mv.range || !mv.merged || mv.loose) return
     const host = mv.host
-    this.flushRebuilds(true, host)
+    this.flushRebuilds(true, host.mesh)
     const [v0, v1] = mv.range
     const src = host.mesh.geometry
     const geo = new this.THREE.BufferGeometry()
