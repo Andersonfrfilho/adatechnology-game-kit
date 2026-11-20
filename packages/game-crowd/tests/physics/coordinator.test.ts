@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
+import type { ResidentKind, WorkerCoordinator } from '@adatechnology/game-contracts'
 import { createWorkerCoordinator, inThreadSpawn } from '@adatechnology/game-workers'
 import { nodeSpawn } from '@adatechnology/game-workers/node'
 
 import { CELL, STATE, createCrowd, createNavGrid, crowdPhysicsKind } from '../../src'
+import { frameBytes } from '../../src/physics/offload/frame'
 import { makeTarget, packWithBalance, physicsOptions } from './scenes'
 import { hashCrowdState } from './state-hash'
 
@@ -11,7 +13,7 @@ const WORKER_FILE = new URL('../fixtures/node-coordinator-worker.mjs', import.me
 const STEPS = 300
 
 /** The wall of the offload tests: 600 agents pressing into a wall, stepped `steps` times; `between` runs between steps (a worker answers then). */
-async function runWall(physics: ReturnType<typeof physicsOptions>, between?: () => Promise<void>): Promise<string> {
+async function runWall(physics: ReturnType<typeof physicsOptions>, between?: () => Promise<void>, edit?: (grid: ReturnType<typeof createNavGrid>, step: number) => void): Promise<string> {
   const grid = createNavGrid({ size: 128, border: true })
   grid.fillRect(-15, -0.5, 15, 0.5, CELL.SOLID, 3)
   const { target } = makeTarget(0, 4)
@@ -23,11 +25,26 @@ async function runWall(physics: ReturnType<typeof physicsOptions>, between?: () 
   }
   const context = { target, bandCentre: [0, -12] as [number, number] }
   for (let step = 0; step < STEPS; step++) {
+    edit?.(grid, step)
     crowd.update(1 / 60, context)
     if (between) await between()
   }
   crowd.dispose()
   return hashCrowdState(crowd)
+}
+
+/** A coordinator that records the byte length of every step it is handed, and otherwise is the real one. */
+function spyOnSteps(inner: WorkerCoordinator, sizes: number[]): WorkerCoordinator {
+  return {
+    ...inner,
+    resident: <Init, Step, Result>(kind: ResidentKind<Init, Step, Result>, init: Init) => {
+      const resident = inner.resident(kind, init)
+      return { ...resident, step: (input: Step, at?: { readonly frame?: number; readonly latencyFrames?: number }) => (sizes.push((input as unknown as ArrayBuffer).byteLength), resident.step(input, at)) }
+    },
+  } as WorkerCoordinator
+}
+const openGap = (grid: ReturnType<typeof createNavGrid>, step: number): void => {
+  if (step === 100) grid.fillRect(-2, -0.5, 2, 0.5, CELL.FREE, 0)
 }
 
 const yieldToWorkers = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 5))
@@ -54,6 +71,30 @@ describe('the crowd physics through the worker coordinator', () => {
     late.dispose()
   }, 60_000)
 
+  it('hands the worker the agents of the step, not the whole grid, and the same bytes come out of it', async () => {
+    const sizes: number[] = []
+    const real = createWorkerCoordinator()
+    await runWall(physicsOptions({ workers: spyOnSteps(real, sizes) }))
+    const cells = createNavGrid({ size: 128, border: true }).occ.length
+    expect(sizes).toHaveLength(STEPS)
+    expect(Math.max(...sizes)).toBeLessThan(frameBytes({ capacity: 1200, cells }))
+    expect(Math.max(...sizes)).toBe(frameBytes({ capacity: 1200, cells: 0 }))
+  }, 60_000)
+
+  it('a wall opened in the middle of the run gives the same state as the inline protocol, on time or late', async () => {
+    const inline = await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline' }), undefined, openGap)
+    const closed = await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline' }))
+    expect(inline).not.toBe(closed)
+
+    const onTime = createWorkerCoordinator({ spawn: inThreadSpawn([crowdPhysicsKind]), workers: 1 })
+    expect(await runWall(physicsOptions({ workers: onTime }), yieldToWorkers, openGap)).toBe(inline)
+    onTime.dispose()
+
+    const late = createWorkerCoordinator({ spawn: inThreadSpawn([crowdPhysicsKind]), workers: 1 })
+    expect(await runWall(physicsOptions({ workers: late }), undefined, openGap)).toBe(inline)
+    late.dispose()
+  }, 60_000)
+
   it('a worker_threads worker gives the same state, with two steps of latency too', async () => {
     for (const latency of [1, 2] as const) {
       const inline = await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline', workerLatency: latency }))
@@ -61,6 +102,8 @@ describe('the crowd physics through the worker coordinator', () => {
       await workers.warm([crowdPhysicsKind])
       const real = await runWall(physicsOptions({ workers, workerLatency: latency }), () => new Promise((resolve) => setTimeout(resolve, 4)))
       expect(real).toBe(inline)
+      const inlineEdited = await runWall(physicsOptions({ worker: 'on', workerTransport: 'inline', workerLatency: latency }), undefined, openGap)
+      expect(await runWall(physicsOptions({ workers, workerLatency: latency }), () => new Promise((resolve) => setTimeout(resolve, 4)), openGap)).toBe(inlineEdited)
       expect(workers.stats().kinds.find((k) => k.id === 'crowd.physics')!.onTime).toBeGreaterThan(0)
       workers.dispose()
     }

@@ -26,7 +26,8 @@ const align8 = (bytes: number): number => Math.ceil(bytes / 8) * 8
 /** Bytes of a frame; the arrays follow the header in the order of the lists above. */
 export const frameBytes = ({ capacity, cells }: FrameShape): number => HEADER.size * 8 + (F32_INPUTS.length + F32_OUTPUTS.length + 2) * align8(capacity * 4) + U8_INPUTS.length * align8(capacity) + align8(cells)
 
-export function createFrame(buffer: ArrayBufferLike, shape: FrameShape): PhysicsFrame {
+/** `occupancy` stands in for the grid bytes at the end of the buffer when the frame travels without them (`shape.cells` 0). */
+export function createFrame(buffer: ArrayBufferLike, shape: FrameShape, occupancy?: Uint8Array): PhysicsFrame {
   const { capacity, cells } = shape
   let offset = 0
   const take = <T>(make: (buffer: ArrayBufferLike, offset: number, length: number) => T, bytesPerElement: number, length: number): T => {
@@ -44,7 +45,7 @@ export function createFrame(buffer: ArrayBufferLike, shape: FrameShape): Physics
   const doorCell = take((b, o, l) => new Int32Array(b, o, l), 4, capacity)
   const bytes = {} as Record<string, Uint8Array>
   for (const key of U8_INPUTS) bytes[key] = take(u8, 1, capacity)
-  const occ = take(u8, 1, cells)
+  const occ = occupancy ?? take(u8, 1, cells)
   return { header, f32: floats as PhysicsFrame['f32'], u8: bytes as PhysicsFrame['u8'], identity, doorCell, occ }
 }
 

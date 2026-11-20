@@ -44,7 +44,7 @@ export function writeSnapshot(frame: PhysicsFrame, source: { readonly store: Cro
   for (const key of INPUT_KEYS.f32) frame.f32[key].set(store[key].subarray(0, n))
   for (const key of INPUT_KEYS.u8) frame.u8[key].set(store[key].subarray(0, n))
   frame.identity.set(store.identity.subarray(0, n))
-  frame.occ.set(grid.occ)
+  if (frame.occ.length > 0) frame.occ.set(grid.occ)
   frame.header[HEADER.n] = n
   frame.header[HEADER.h] = h
   frame.header[HEADER.playerOn] = player ? 1 : 0
