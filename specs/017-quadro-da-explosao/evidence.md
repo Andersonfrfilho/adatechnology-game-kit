@@ -333,3 +333,29 @@ só o commit da régua (`7e3c262c5`, não publicado); "depois" = `54853aff6` (T3
 - **Base da spec no modo de prazo:** f0 ~78 ms antes da T3.1 (a base de 84 a 92 ms da 010 e da parte 1 foi medida em modo de cota).
 - `audio.voices` gasta ~1,1 ms no f0 nos dois lados: no modo de prazo as vozes só têm a reserva de 1 ms no quadro do golpe. Se o som do golpe
   sai no f0 (C5) precisa de conferência própria.
+
+## T3.1 — ajuste 2 medido no modo de prazo (2026-11-19 23:41 a 2026-11-20 00:00)
+
+A fila de prazo não começa parede não vencida que não cabe no que resta do quadro (`f35e64ce4`). Régua curta, `ROOM_EXPLOSION_BUDGET=deadline`.
+Rodadas válidas (carga no início / fim): `depois3-54853aff6` 1,34 / 1,22; `ajuste2b-f35e64ce4` 1,47 / 1,36; `ajuste2c-f35e64ce4` 1,43 / 1,57.
+**Descartada:** `ajuste2-f35e64ce4` (23:33), terminou com carga 16,84 (testes de outra task rodando junto; crater em 83 ms, quadro seguinte em 43 ms).
+
+| f0 a 1x, modo de prazo (ms) | antes da T3.1 (2 rodadas) | T3.1 `54853aff6` (3 rodadas) | ajuste 2 `f35e64ce4` (2 rodadas) |
+|---|---|---|---|
+| f0 inteiro, blast / crater | 76,0 / 80,2 | 68,1 / 67,8 | 65,7 / 64,2 |
+| f0 sem o `explode` | 54,9 / 57,0 | 47,8 / 47,2 | 44,7 / 43,1 |
+| `breach-cut` + `breach-paint` | 9,1 / 9,2 | 4,4 / 4,2 | 0,2 / 0,1 |
+| `destruction.events` | 19,3 / 20,1 | 18,1 / 17,7 | 18,6 / 18,4 |
+| `explode` | 21,1 / 23,2 | 20,3 / 20,6 | 21,1 / 21,1 |
+| pior quadro dos 7 seguintes | 20,9 / 20,1 | 24,2 / 23,6 | 25,3 / 24,5 |
+
+- **T3.1 inteira: f0 de ~78 para ~65 ms (−13), e a pintura da casa sai do quadro do golpe** (9 → 0,2 ms). As duas rodadas do ajuste deram
+  62,4 / 63,3 e 69,0 / 65,1: o `explode` e os eventos variam ±1,5 ms entre rodadas do mesmo código.
+- **Quadros seguintes:** ~25 ms no pior (a pintura adiada, ~10 ms, cai no quadro 1), abaixo de 33,3.
+- **O que sobra no f0 (~65 ms):** `explode` ~21, `destruction.events` ~18,5, `renderCpu` ~8,5, `action` ~6,5, resto ~10.
+
+## Push barrado em 2026-11-19 23:30 — teste lento sob carga
+
+`tests/test-area.test.ts › every typology of the engine builds` (game-floorplan-three) falhou no pre-push depois de 142 s, com a máquina em
+carga 13 (pre-push e testes de outra task ao mesmo tempo). Sozinho, com a máquina quieta: passa em 52 s (arquivo inteiro: 17 testes, 95 s).
+É estouro de tempo por carga, não erro do código.
