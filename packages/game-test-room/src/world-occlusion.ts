@@ -29,15 +29,38 @@ const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin
 
 function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
   const found: RayHit[] = []
+  const rayFrom = (travelled: number): RayHit | null => world.raycast(along(origin, direction, travelled), direction, length - travelled, skip)
+  // a point inside a solid answers with a hit on the surface it stands in, at distance 0: from the part the last hit counted, that is still the same layer
+  const isStillInside = (travelled: number, last: RayHit): boolean => {
+    const hit = rayFrom(travelled)
+    return hit !== null && hit.object === last.object && hit.part === last.part && hit.distance <= step
+  }
+  // Doubling strides to a point outside the layer, then halving back to its edge: a source buried in the ground answers 0 for every millimetre of the way out.
+  const leave = (from: number, last: RayHit): number => {
+    let inside = from
+    let stride = step * 2
+    while (inside + stride < length && isStillInside(inside + stride, last)) {
+      inside += stride
+      stride *= 2
+    }
+    let outside = Math.min(inside + stride, length)
+    while (outside - inside > step) {
+      const middle = (inside + outside) / 2
+      if (isStillInside(middle, last)) inside = middle
+      else outside = middle
+    }
+    return outside
+  }
   let travelled = 0
   while (found.length < maxHits && travelled < length) {
-    const start = along(origin, direction, travelled)
-    const hit = world.raycast(start, direction, length - travelled, skip)
+    const hit = rayFrom(travelled)
     if (!hit) break
     const last = found.at(-1)
     // standing just inside a part that answers with a hit of its own (an impl's surface), not a second layer
-    if (!(last && last.object === hit.object && last.part === hit.part)) found.push({ ...hit, distance: travelled + hit.distance })
+    const isSameLayer = last !== undefined && last.object === hit.object && last.part === hit.part
+    if (!isSameLayer) found.push({ ...hit, distance: travelled + hit.distance })
     travelled += hit.distance + step
+    if (isSameLayer && hit.distance <= step) travelled = leave(travelled, last)
   }
   return found
 }

@@ -92,6 +92,43 @@ describe('createWorldOcclusion with layers side by side', () => {
   })
 })
 
+describe('createWorldOcclusion from a source buried in the ground', () => {
+  type Vec = [number, number, number]
+  // the terrain answers a point inside it with a hit on its own surface at distance 0, as the ground impl does
+  const GROUND = { near: -10, far: 3 }
+  const GLASS = { near: 3.002, far: 3.006 }
+  let rays = 0
+  const world = {
+    raycast(origin: Vec, direction: Vec, maxDistance = Infinity) {
+      rays++
+      const z = origin[2]
+      const forward = direction[2] > 0
+      const layers = [
+        { part: 'ground', ...GROUND },
+        { part: 'glass', ...GLASS },
+      ]
+      let best: { part: string; distance: number } | null = null
+      for (const layer of layers) {
+        const isInside = z >= layer.near && z <= layer.far
+        const entering = forward ? layer.near : layer.far
+        const distance = isInside ? 0 : (entering - z) / direction[2]
+        if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
+        best = { part: layer.part, distance }
+      }
+      return best && { object: 'scene', part: best.part, point: [origin[0], origin[1], z + direction[2] * best.distance] as Vec, normal: [0, 0, 1] as Vec, distance: best.distance }
+    },
+    part: (_object: string, part: string) => ({ material: part === 'glass' ? 'glass' : 'dirt' }),
+  }
+
+  it('leaves the ground in a few rays, not one per millimetre, and still finds the glass right behind it', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    rays = 0
+    const hits = createWorldOcclusion(world)([0, -0.5, -9], [0, -0.5, 8])
+    expect(hits.map((hit) => hit.material)).toEqual(['dirt', 'glass'])
+    expect(rays).toBeLessThan(200)
+  })
+})
+
 describe('createWorldOcclusion over a destruction world after a blast', () => {
   const wallSpec = (): DestructibleSpec => ({ name: 'wall', parts: [{ id: 'bricks', material: 'brick', shape: { kind: 'box', size: [4, 2.6, 0.12] }, position: [0, 0, 0] }] })
   const brickSpec = (): DestructibleSpec => ({ name: 'brick', parts: [{ id: 'unit', material: 'brick', shape: { kind: 'box', size: [0.19, 0.09, 0.057] }, position: [0, 0, 0] }] })
