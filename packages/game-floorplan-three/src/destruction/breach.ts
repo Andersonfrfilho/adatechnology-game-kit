@@ -65,6 +65,8 @@ const EDGE_LUMP_MIN = 0.04
 const EDGE_LUMP_MAX = 0.08
 /** Patches of plaster off a wall a view keeps (the oldest goes). */
 const MAX_FLAKES = 64
+/** Frames a wall may wait in the paint queue before it is painted whatever the frame deadline says. */
+const PAINT_WINDOW_TICKS = 3
 
 /** A unit laid bare in a wall, a box in the house's space (centre and size) with its colour. */
 interface UnitBox { x: number; y: number; z: number; sx: number; sy: number; sz: number; colour: number }
@@ -143,7 +145,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   const paintQueues = new Set<DeferredQueue>()
   const paintQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.BREACH_PAINT,
-    pending: () => { let n = 0; for (const q of paintQueues) n += q.pending(); return n },
+    pending: (frame) => { advanceTick(frame); let n = 0; for (const q of paintQueues) n += q.pending(); return n },
     run(deadline, clock) {
       let ran = 0
       for (const q of [...paintQueues]) {
@@ -163,19 +165,23 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
    * it cuts) and each used to repaint it; each wall cut is painted once, every house in one unit, every frame before the render (`DEFERRED_PRIORITY`).
    */
   const cutState = { attached: false }
-  /** A strike is what happens between two polls of the cut queue: a wall waiting from an earlier epoch is hit by a new strike. */
-  const strike = { epoch: 0, frame: undefined as number | undefined }
+  /** Frames the budget has polled the breach queues: `tick` advances once per new `pending(frame)`; a wall queued at tick `n` is overdue from `n + PAINT_WINDOW_TICKS`. */
+  const strike = { tick: 0, frame: undefined as number | undefined }
+  const advanceTick = (frame: number | undefined): void => {
+    if (frame === undefined || frame === strike.frame) return
+    strike.frame = frame
+    strike.tick++
+  }
   const cutPainters = new Set<{ pending(): boolean; run(): void }>()
   const cutQueue: DeferredQueue = {
     id: DEFERRED_QUEUE_ID.BREACH_CUT,
     // the whole pass is one unit: a forced run (the budget spent by the blast's own events) still paints every house cut in that frame
     pending: (frame) => {
-      if (frame !== undefined && frame !== strike.frame) { strike.frame = frame; strike.epoch++ }
+      advanceTick(frame)
       for (const painter of cutPainters) if (painter.pending()) return 1
       return 0
     },
     run() {
-      strike.epoch++
       let ran = 0
       for (const painter of [...cutPainters]) {
         if (!painter.pending()) continue
@@ -195,26 +201,34 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
   function createBreachView(opts: BreachViewOptions) {
     const { house, structure } = opts
     const views = new Map<string, WallView>()
-    /** Walls whose damage changed and whose masks and units are repainted at the next `flush` or by the paint queue (value: the strike epoch they were queued in). */
+    /** Walls whose damage changed and whose masks and units are repainted at the next `flush` or by the paint queue (value: the tick they were queued at). */
     const dirty = new Map<WallView, number>()
-    /** Where the last damage of this house landed (its space): the paint queue takes the walls nearest to it first. */
-    let lastStrike: number[] | null = null
+    /** Where the last damage event of this house landed (its space; the events carry no blast centre): the paint queue takes the walls nearest to it first. */
+    const lastStrike = [0, 0, 0]
+    let hasStrike = false
     const strikeDistance = (view: WallView): number => {
-      if (!lastStrike) return 0
+      if (!hasStrike) return 0
       const b = view.bounds
       const dx = (b[0]! + b[3]!) / 2 - lastStrike[0]!, dy = (b[1]! + b[4]!) / 2 - lastStrike[1]!, dz = (b[2]! + b[5]!) / 2 - lastStrike[2]!
-      return dx * dx + dy * dy + dz * dz
+      const distance = dx * dx + dy * dy + dz * dz
+      return Number.isFinite(distance) ? distance : Infinity
     }
-    /** The waiting wall nearest to the last strike, ties by id: a total order that does not depend on the order walls were queued. Without a frame budget: the order they were queued (the scene keeps that child order). */
+    const isOverdue = (view: WallView): boolean => strike.tick - dirty.get(view)! >= PAINT_WINDOW_TICKS
+    /** `view` goes before `best`: overdue walls first, then the nearest to the last strike, then by id (a total order that does not depend on the order they were queued). */
+    const comesBefore = (view: WallView, best: WallView): boolean => {
+      const overdue = isOverdue(view)
+      if (overdue !== isOverdue(best)) return overdue
+      const distance = strikeDistance(view), bestDistance = strikeDistance(best)
+      return distance !== bestDistance ? distance < bestDistance : view.host < best.host
+    }
+    /** The next wall to paint. Without a frame budget: the order they were queued (the house keeps that child order of its unit meshes). */
     const nextDirty = (): WallView | undefined => {
       if (!paintState.attached) return dirty.keys().next().value
-      let best: WallView | undefined, bestDistance = Infinity
-      for (const view of dirty.keys()) {
-        const distance = strikeDistance(view)
-        if (distance < bestDistance || (distance === bestDistance && best !== undefined && view.host < best.host)) { best = view; bestDistance = distance }
-      }
+      let best: WallView | undefined
+      for (const view of dirty.keys()) if (best === undefined || comesBefore(view, best)) best = view
       return best
     }
+    const queueForPaint = (view: WallView): void => { if (!dirty.has(view)) dirty.set(view, strike.tick) }
     /** Walls cut since the cut queue last ran, while a frame budget owns it (`cutQueue`): painted once each by it. */
     const cutWalls = new Set<WallView>()
     const paintCut = (): void => {
@@ -255,6 +269,13 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       house.updateWorldMatrix(true, false)
       const v = house.worldToLocal(tmp.p.set(p[0]!, p[1]!, p[2]!))
       return [v.x, v.y, v.z]
+    }
+
+    const markStrike = (point: number[]): void => {
+      house.updateWorldMatrix(true, false)
+      const v = house.worldToLocal(tmp.p.set(point[0]!, point[1]!, point[2]!))
+      lastStrike[0] = v.x; lastStrike[1] = v.y; lastStrike[2] = v.z
+      hasStrike = true
     }
 
     /**
@@ -685,6 +706,7 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       units.receiveShadow = true
       units.visible = lod === 0
       if (lumps.length > 0) units.add(lumpMesh(lumps, view.unitMaterial))
+      // painted in the order the queue picks, so the order of the house's unit meshes follows it (draw order only; nothing reads it)
       house.add(units)
       view.units = units
       view.gone = holes.length
@@ -830,12 +852,11 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       cut(view)
       views.set(hostId, view)
       const point = change.opening?.center ?? change.spall?.center ?? change.chip?.center ?? change.chips?.[0]?.center
-      if (point) lastStrike = local(point)
-      // the opening shows at once, and so does a wall a new strike hit while its painting waited; the plaster chipping and the units knocked out fill in later
-      const queuedBefore = dirty.get(view)
-      if (cutState.attached && (change.opening || (queuedBefore !== undefined && queuedBefore !== strike.epoch))) { dirty.delete(view); cutWalls.add(view) }
-      else if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) dirty.set(view, strike.epoch) }
-      else if (cutState.attached && paintState.attached && !cutWalls.has(view)) dirty.set(view, strike.epoch)
+      if (point) markStrike(point)
+      // only an opening shows at once; the plaster chipping and the units knocked out fill in later, and a wall already waiting keeps its age
+      if (cutState.attached && change.opening) { dirty.delete(view); cutWalls.add(view) }
+      else if (opts.deferPaint && change.spall) { if (!cutWalls.has(view)) queueForPaint(view) }
+      else if (cutState.attached && paintState.attached && !cutWalls.has(view)) queueForPaint(view)
       else if (cutState.attached) { dirty.delete(view); cutWalls.add(view) }
       else { dirty.delete(view); paint(view); invalidate(); invalidateShadow() }
       return true
@@ -864,11 +885,12 @@ export function installDestructionBreach(K: Kernel, _shared: Shared): void {
       pending: () => dirty.size,
       run(deadline, clock) {
         let ran = 0
+        // a wall past its window is painted whatever the deadline says: the budget runs this queue every frame, so the wait is bounded
         for (let view = nextDirty(); view; view = nextDirty()) {
+          if (ran > 0 && clock() >= deadline && !isOverdue(view)) break
           dirty.delete(view)
           paint(view)
           ran++
-          if (clock() >= deadline) break
         }
         if (ran > 0) { invalidate(); invalidateShadow() }
         return ran
