@@ -487,3 +487,30 @@ máquina livre). Os números absolutos estão inflados; o que vale é a compara�
 31,6 ms). Dois em dois contra zero em dois: tratado como regressão real até prova em contrário, não como ruído. Causa em
 investigação (suspeitas: pintura de parede com prazo acumulando durante a tempestade; eventos estruturais no tique).
 Alvos absolutos perdidos: 52 na branch, 55 na `main`.
+
+### C8 — conferência com a máquina quieta: não há regressão em `after_storm`
+
+Medições alternadas branch × `main` (`0161749d`, build própria, não a base compartilhada), carga 1,6 a 1,9 no começo de
+cada uma, com as fases a frio rodando antes da tempestade como no portão:
+
+| Medição | pior quadro de `after_storm` | tarefa longa | p99 | desenhos por quadro |
+|---|---|---|---|---|
+| só tempestade, branch (2) | 16,1 / 17,5 ms | 0 / 0 | 13,7 / 14,8 | 431 / 413 |
+| completa, branch (2) | 15,7 / 17,2 ms | 0 / 0 | 13,5 / 13,0 | 557 / 385 |
+| completa, `main` (2) | 13,4 / 17,8 ms | 0 / 0 | 11,0 / 10,9 | 479 / 458 |
+
+Branch limpa em 6 de 6 (contando as duas medições só de tempestade da primeira série). O engasgo de ~150 ms do portão foi
+a carga da rodada noturna: o quadro lento tinha 13 ms de desenho e 13 ms de script, e os outros ~147 ms ficaram antes do
+desenho, sem script acima de 5 ms. `applyStructuralEvents` cronometrado em `after_storm`: ~182 chamadas, máximo 0 ms, fila
+vazia. `floorplan.breach-paint` nem existe na área `vfx`. A queda de `ranUnits` de `destruction.events` (~30 mil → ~4 mil)
+é contabilidade: os eventos estruturais rodam no tique, que a fila não conta.
+
+**O ganho na fase `storm` que o portão mostrou (1216 → 250 ms) também era carga, e não vale como ganho da spec.** Com a
+máquina quieta, medições completas: pior quadro 267,6 / 379,2 ms na branch contra 441,5 / 216,6 ms na `main`; p99 34,1 /
+34,9 contra 35,3 / 32,0. Empate. A `main` cabe um pouco mais de quadros nos 3 s de `after_storm` (615 / 622 contra 487 /
+600), sem engasgo em nenhum dos lados.
+
+Lições para a régua: (1) o portão mede mesmo com a máquina ocupada depois de 10 minutos de espera, e foi assim que o
+bloqueio falso passou; (2) a base compartilhada em `~/.cache/adatechnology-game-kit/perf/base-worktree` foi movida por
+outra sessão no meio da série, então comparar contra ela não é seguro com mais de uma sessão medindo.
+Falta: uma passada do portão completo com a máquina quieta, para o veredito formal do C8 (hordas incluídas).
