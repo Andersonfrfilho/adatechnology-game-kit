@@ -81,9 +81,13 @@ export function createCoordinatorRunner(setup: KernelSetup, shape: FrameShape, c
       const next = handles.shift()
       if (!next) return null
       settled++
-      const out = next.handle.collect(next.handle.dueFrame)
-      next.owner.pending--
-      release(next.owner)
+      let out: ArrayBuffer
+      try {
+        out = next.handle.collect(next.handle.dueFrame)
+      } finally {
+        next.owner.pending--
+        release(next.owner)
+      }
       let view = views.get(out)
       if (!view) views.set(out, (view = createFrame(out, frameShape)))
       return view
