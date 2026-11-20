@@ -16,3 +16,16 @@ export const QUIET_LOG_EVERY = 6
 
 /** @param {{ load: number, now: number, until: number }} state */
 export const shouldKeepWaiting = ({ load, now, until }) => load >= QUIET_LOAD && now < until
+
+export const PROBE_MAX_AGE_MS = 24 * 60 * 60 * 1000
+
+/**
+ * @typedef {{ renderer: string, chromeVersion: string, at: number }} ProbeEntry
+ * A saved probe stands in for opening Chrome when it is recent, from the same Chrome, and nobody forced a new one (PERF_GATE_PROBE=1).
+ * @param {{ entry: ProbeEntry | undefined, now: number, chromeVersion: string, force: boolean }} state
+ */
+export const probeUsable = ({ entry, now, chromeVersion, force }) => {
+  if (force || !entry || chromeVersion === '') return false
+  if (entry.chromeVersion !== chromeVersion) return false
+  return now - entry.at >= 0 && now - entry.at < PROBE_MAX_AGE_MS
+}

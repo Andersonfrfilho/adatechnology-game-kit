@@ -5,6 +5,8 @@ import { test } from 'node:test'
 import {
   againReportPath,
   needsBuild,
+  PROBE_MAX_AGE_MS,
+  probeUsable,
   QUIET_POLL_MS,
   shouldKeepWaiting,
   WAIT_FOR_QUIET_MS,
@@ -28,4 +30,15 @@ test('waiting for a quiet machine: same threshold, same deadline, a poll every 5
   assert.equal(shouldKeepWaiting({ load: 4, now: 0, until: 10 }), true)
   assert.equal(shouldKeepWaiting({ load: 3.9, now: 0, until: 10 }), false)
   assert.equal(shouldKeepWaiting({ load: 8, now: 10, until: 10 }), false)
+})
+
+test('the renderer probe is reused when recent, from the same Chrome and not forced', () => {
+  const entry = { renderer: 'NVIDIA', chromeVersion: 'Chrome 140', at: 1000 }
+  const fresh = { entry, now: 1000 + 60000, chromeVersion: 'Chrome 140', force: false }
+  assert.equal(probeUsable(fresh), true)
+  assert.equal(probeUsable({ ...fresh, force: true }), false)
+  assert.equal(probeUsable({ ...fresh, chromeVersion: 'Chrome 141' }), false)
+  assert.equal(probeUsable({ ...fresh, chromeVersion: '' }), false)
+  assert.equal(probeUsable({ ...fresh, now: 1000 + PROBE_MAX_AGE_MS }), false)
+  assert.equal(probeUsable({ ...fresh, entry: undefined }), false)
 })
