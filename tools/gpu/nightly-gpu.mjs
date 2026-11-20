@@ -144,10 +144,11 @@ async function main() {
     const base = state.lastPassed && state.lastPassed !== sha ? state.lastPassed : sha
     results.push(run({ name: 'perf-gate', command: 'node', args: ['tools/gpu/perf-gate.mjs'], env: { ...quiet, PERF_GATE_BASE: base } }))
     // spec 008 B6: the physics of the house explosion against its budget, at 1x CPU (blocks) and at 2x, 4x and 6x (reported: the proxy for a weaker machine)
+    // FRAME_PARTS=1 arms the explosion-frame gate (f0 and the frames after it, in the page's deadline mode) at the cost of a render per frame in the stage pass; a base in another mode is not compared and is rewritten
     // the 5 ms goal is only a warning (main is still over it, so blocking on it failed every night): it blocks on a regression against the last report that passed
     const explosionOut = join(reportDir, 'room-explosion.json')
     const explosionBase = join(cacheDir, 'room-explosion-base.json')
-    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
+    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
     results.push(explosion)
     if (explosion.ok && existsSync(explosionOut)) copyFileSync(explosionOut, explosionBase)
   }
