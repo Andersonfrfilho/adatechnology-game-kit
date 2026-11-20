@@ -17,6 +17,11 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
   vale. Otimização que a régua não mostra não é ganho.
 - **Build velho mede outra coisa:** `pnpm build` e a página da sala refeita antes de medir (já houve rodada que mediu o chão no quadro
   principal por causa disso).
+- **A régua mede no modo de prazo** (`ROOM_EXPLOSION_BUDGET=deadline`, o padrão desde a spec 017). Número em modo de cota não vale para o f0: sem
+  `frameStartMs` as filas recebem os 8 ms em todo quadro, até no que já estourou, e o f0 sai maior que no jogo. Uma base gravada em outro modo não é comparada.
+- **Ganho menor que ~3 ms não se lê no total**, só no rótulo da tabela: a mesma versão varia ±2 ms entre sessões. Meça a base na mesma sessão, em
+  rodadas alternadas (antes, depois, antes, depois), com a carga de 1 minuto abaixo de 1,5.
+- O portão da régua (`room-explosion`) bloqueia o quadro da explosão: `f0Ms` ou `afterMs` pior que a base em mais de 15% e 3 ms (`ROOM_EXPLOSION_FRAME_PARTS=1`).
 - Continua valendo a §9: nada disso roda no CI nem no pre-push.
 
 ## Um dono do tempo do quadro
@@ -32,7 +37,10 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **O orçamento é o que sobra do quadro**, não uma cota fixa: quem gasta mais na simulação deixa menos para as filas. É o modo de prazo do
   `game-runtime` (`targetMs` e `frameStartMs`, piso de 1 ms, sem dívida); quadro sem `frameStartMs` (headless, `advance`, testes) fica na cota.
 - **Fila `mustDrain`** (`destruction.events`, `floorplan.breach-cut`) é só para o que precisa aparecer no quadro do golpe: drena por inteiro
-  fora do prazo e é contada à parte (`mustDrainSpentMs`). Fila nova não entra nessa classe sem decisão do dono.
+  fora do prazo e é contada à parte (`mustDrainSpentMs`). Fila nova não entra nessa classe sem decisão do dono: a auditoria barra `mustDrain: true`
+  fora de `tools/kit-audit/must-drain-allowed.json`.
+- **Apresentação pesada** (pintura da parede, malha, marcas) vai numa fila de prazo com janela, no modelo da pintura da parede: unidade pequena
+  (uma parede), não começa a que não cabe no que sobra do quadro, e a vencida pinta de qualquer jeito.
 - **Fila só carrega apresentação.** O que muda a física ou estado semeado não depende de relógio: usa o `WorkBudget` em unidades
   (`game-physics`) ou roda no passo fixo.
 
@@ -46,6 +54,10 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **Ainda fora do passo fixo:** o que a fase `input` faz na física (empurrar, objeto na mão, portas, ferramentas) integra com o `dt` do quadro e
   não dá o mesmo estado a 144 Hz. Passa para o tique numa spec própria; até lá o teste de 60/120/144 Hz roda sem entrada do jogador.
 - **O desenho interpola** pela pose do passo anterior e o `alpha`; a simulação nunca lê a pose desenhada.
+- **Evento que muda a simulação** é aplicado no fim do tique, sobre a pose do passo (`applyStructuralEvents`, `game-destruction-three`), e todo tipo de
+  evento tem classe em `EVENT_CLASS` (`structural` ou `visual`; na dúvida, estrutural; tipo novo não compila sem classe). O teste de mesmos bytes
+  (`step-equivalence-window.test.ts`) roda a 30, 60, 120 e 144 Hz e com tempo de quadro aleatório. Pendência conhecida: o caminho com `workBudget`
+  desliga o modo tique e ainda lê a pose desenhada.
 - Código novo de simulação testa o mesmo hash de estado a 60, 120 e 144 Hz.
 
 ## Custo pelo que se mexe
@@ -72,7 +84,7 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 
 ## Antes do PR
 
-1. Tabela antes e depois no `evidence.md` (se o PR mexe em tempo de quadro).
+1. Tabela antes e depois no `evidence.md` (se o PR mexe em tempo de quadro): régua com `ROOM_EXPLOSION_FRAME_PARTS=1` no modo de prazo, antes e depois, alternando.
 2. `node tools/kit-audit/audit.mjs --check --strict-clocks` (relógio próprio, `Worker` direto) e `pnpm check:layers`.
 3. Goldens sem diff; hash de eventos igual, ou a mudança levada ao dono antes.
 4. `wc -l packages/game-test-room/src/room.ts` não maior que na `origin/main`.

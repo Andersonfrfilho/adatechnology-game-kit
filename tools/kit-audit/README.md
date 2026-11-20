@@ -36,6 +36,14 @@ never used; fix the code (go through `drainDetached`) instead of listing it.
 `file:line` and the pending count, and fails only on a hit that is in neither place; entries that no longer match are printed as `VELHA`.
 `--strict-clocks` also fails while the list is not empty: that is the C3 gate at the end of phase 1.
 
+## The must-drain rule
+
+CLAUDE.md §15 ("Fila `mustDrain`", spec 017 trava 2): a queue registered with `mustDrain: true` drains whole, outside the frame deadline, so each one adds to the
+worst frame by construction, and "a new queue does not enter that class without the owner's decision". `must-drain.mjs` flags every `mustDrain: true` in
+`packages/*/src` that is not an entry of `must-drain-allowed.json` (`queue`, `constant` in `DEFERRED_QUEUE_ID`, the only `package` that may, `reason`): today
+`destruction.events` in `game-destruction-three` and `floorplan.breach-cut` in `game-floorplan-three`. The queue is read from the same line; a line that does not
+name it is a violation too. `audit.mjs --check` runs it; a new entry is the owner's decision, written in `reason`. Tests: `tests/must-drain.test.mjs`.
+
 ## The scene check
 
 The words miss a box whose code names nothing, so `scene.mjs` reads the screen instead. Every builder of the kit marks the root it returns
