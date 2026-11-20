@@ -1214,9 +1214,11 @@ class Renderer implements DestructionRenderer {
       this.visuals.batchRebuilds(() => {
         for (let i = 0; i < end; i++) {
           try {
-            applyProbe.enter('applyEvent')
+            const label = `ev:${ordered[i]!.type}`
+            applyProbe.enter(label)
+            applyProbe.count(label)
             this.apply(ordered[i]!)
-            applyProbe.leave('applyEvent')
+            applyProbe.leave(label)
           } catch (err) {
             if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ordered[i]!.type, err)
           }
