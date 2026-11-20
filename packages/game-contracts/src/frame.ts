@@ -66,7 +66,7 @@ export const DEFERRED_PRIORITY = {
   [DEFERRED_QUEUE_ID.DESTRUCTION_EVENTS]: { priority: 300, phase: 'present' },
   // every frame: the walls cut since the last frame are painted once each, and a hole must show in the frame of the blast
   [DEFERRED_QUEUE_ID.BREACH_CUT]: { priority: 260, phase: 'present', minEveryFrames: 1 },
-  [DEFERRED_QUEUE_ID.BREACH_PAINT]: { priority: 250, phase: 'present' },
+  [DEFERRED_QUEUE_ID.BREACH_PAINT]: { priority: 250, phase: 'present', minEveryFrames: 1 },
   [DEFERRED_QUEUE_ID.AUDIO_VOICES]: { priority: 200, phase: 'idle', reserveMs: 1 },
   [DEFERRED_QUEUE_ID.AUDIO_OCCLUSION]: { priority: 190, phase: 'idle', minEveryFrames: 8 },
   [DEFERRED_QUEUE_ID.FLUID_FILM]: { priority: 120, phase: 'idle', minEveryFrames: 2 },
