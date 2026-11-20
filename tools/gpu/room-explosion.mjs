@@ -273,6 +273,8 @@ export async function inPage(job) {
     stage('fluids', room.fluids, 'update')
     stage('explosives', parts?.explosives, 'update')
     stage('destrEvents', destruction, 'runBudgeted')
+    // since the structural events are applied in the fixed tick (spec 017 T2.2), most of an explosion's events run here, not in the frame queue
+    stage('destrEvents', destruction, 'applyStructuralEvents')
     stage('fragments', destruction.fragments, 'update')
     stage('settled', destruction.settledBatches, 'update')
     stage('syncXform', destruction, 'syncTransforms')

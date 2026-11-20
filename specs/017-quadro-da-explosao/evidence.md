@@ -359,3 +359,21 @@ Rodadas válidas (carga no início / fim): `depois3-54853aff6` 1,34 / 1,22; `aju
 `tests/test-area.test.ts › every typology of the engine builds` (game-floorplan-three) falhou no pre-push depois de 142 s, com a máquina em
 carga 13 (pre-push e testes de outra task ao mesmo tempo). Sozinho, com a máquina quieta: passa em 52 s (arquivo inteiro: 17 testes, 95 s).
 É estouro de tempo por carga, não erro do código.
+
+## Eventos visuais adiados, primeira versão (`083277451`) — sem ganho (2026-11-20, 00:23 a 00:48)
+
+Quatro rodadas alternadas, modo de prazo, carga 1,31 a 1,46 no início e 0,90 a 1,50 no fim. Antes `91aa9ee8a` (T3.1 + T2.2), depois `083277451`.
+JSONs: `medicoes/regua-visual-*.json`.
+
+| f0 a 1x, modo de prazo (ms, 2 rodadas cada) | antes, blast / crater | depois, blast / crater |
+|---|---|---|
+| f0 inteiro | 65,7 / 63,6 | 65,3 / 63,7 |
+| f0 sem o `explode` | 44,8 / 43,4 | 44,8 / 43,5 |
+| pior quadro dos 7 seguintes | 24,9 / 26,1 | 24,4 / 25,5 |
+
+- **Nenhum ganho medido.** Bate com a revisão de código, que reprovou a versão: no laço real o tique roda antes do dreno do quadro, e
+  `applyStructuralEvents` aplicava no tique todos os visuais que vêm antes do último estrutural, sem adiar. Os testes rodavam na ordem inversa.
+- **A T2.2 não mudou o f0:** 65,7 / 63,6 aqui contra 65,7 / 64,2 antes dela (ajuste 2 da T3.1).
+- **A régua perdeu o rótulo dos eventos:** desde a T2.2 a fila `destruction.events` gasta 0 ms no f0 e o `mustDrain` do quadro é 0; o custo
+  (~18 ms) passou para o tique e aparece em `sysOther` (~14 ms) sem nome. A régua ganhou o rótulo `destrEvents` também para
+  `applyStructuralEvents`, para as próximas rodadas.
