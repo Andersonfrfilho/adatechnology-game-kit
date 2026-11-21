@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { budgetModeOf, cellRegressed, DEFAULT_VARIANT, FRAME_LABELS, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
+import { budgetModeOf, cellRegressed, DEFAULT_VARIANT, explosionGateOf, explosiveOf, FRAME_LABELS, isBlastingExplosive, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
 
 test('no base report: nothing is a regression, however far over the 5 ms goal', () => {
   assert.equal(cellRegressed({ p99: 53, max: 71 }, undefined), false)
@@ -49,4 +49,35 @@ test('the frame budget mode is deadline (the page) unless the variable says quot
   assert.equal(budgetModeOf('deadline'), 'deadline')
   assert.equal(budgetModeOf('anything'), 'deadline')
   assert.equal(budgetModeOf('quota'), 'quota')
+})
+
+test('the explosive is c4 unless the variable names another', () => {
+  assert.equal(explosiveOf(undefined), 'c4')
+  assert.equal(explosiveOf(''), 'c4')
+  assert.equal(explosiveOf('dynamite'), 'dynamite')
+})
+
+const METRIC = { variant: DEFAULT_VARIANT, throttle: 1, kind: 'blast', f0Ms: 200, afterMs: 90 }
+const GATE = { measure: { metrics: [METRIC], problems: [] }, mode: 'deadline', gated: new Set([1]) }
+const C4_BASE = { budgetMode: 'deadline', frameMetrics: [{ ...METRIC, f0Ms: 65, afterMs: 25 }] }
+
+test('the gate decision carries the explosive: c4 compares with a c4 base, another explosive compares with nothing', () => {
+  const c4 = explosionGateOf({ ...GATE, savedBase: C4_BASE, explosive: 'c4' })
+  assert.equal(c4.isBaseInMode, true)
+  assert.equal(c4.frameVerdict.compared, true)
+  const dynamite = explosionGateOf({ ...GATE, savedBase: C4_BASE, explosive: 'dynamite' })
+  assert.equal(dynamite.isBaseInMode, false)
+  assert.equal(dynamite.frameVerdict.status, 'other-explosive')
+  assert.deepEqual(dynamite.frameVerdict.regressions, [])
+  const other = explosionGateOf({ ...GATE, savedBase: { ...C4_BASE, explosive: 'dynamite' }, explosive: 'c4' })
+  assert.equal(other.isBaseInMode, false)
+  assert.equal(other.frameVerdict.status, 'other-explosive')
+  assert.equal(explosionGateOf({ ...GATE, savedBase: { ...C4_BASE, budgetMode: 'quota', explosive: 'dynamite' }, explosive: 'c4' }).frameVerdict.status, 'other-mode')
+})
+
+test('an explosive blasts the house only with energy, no smoke and no cone', () => {
+  assert.equal(isBlastingExplosive({ energy: 345600 }), true)
+  assert.equal(isBlastingExplosive({ energy: 0 }), false)
+  assert.equal(isBlastingExplosive({ energy: 0, smoke: {} }), false)
+  assert.equal(isBlastingExplosive({ energy: 102400, cone: {} }), false)
 })

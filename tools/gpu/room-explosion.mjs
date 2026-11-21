@@ -33,6 +33,8 @@
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        the base report (the nightly keeps, per metric, the best of its passing ROOM_EXPLOSION_OUT reports: room-explosion-base.mjs): the gated cells block only when worse than it (REGRESSION), and so does the explosion frame (below).
 //                                          A base measured in another frame budget mode (or without `budgetMode`) is not compared: the run says so, does not block, and becomes the new base
+//   ROOM_EXPLOSION_EXPLOSIVE=c4            the explosive the blast, crater and water kinds detonate (`hammer` ignores it; an id of the arsenal, packages/game-weapons/src/data/explosives.json; an unknown id, or one that does not blast the house (no energy, smoke, cone), stops the run). Only c4 is
+//                                          compared with a base: any other explosive is for reading the typical case, prints SEM COMPARAÇÃO NESTA RODADA, never blocks, and is never saved as the base
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
 //   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
 //   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
@@ -62,10 +64,10 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { frameGate, frameKey, frameMetricsOf } from './room-explosion-frame.mjs'
+import { DEFAULT_EXPLOSIVE, frameGate, frameKey, frameMetricsOf, isBaseComparable } from './room-explosion-frame.mjs'
 
 const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
@@ -88,6 +90,19 @@ export const systemLabelOf = (id) => (/** @type {Record<string, string>} */ (SYS
 export const isF0Late = (text) => text === 'late'
 /** The frame budget's mode the ruler runs `room.update` in: `deadline` (the page's mode) unless `quota` is asked for. @param {string | undefined} text @returns {'quota' | 'deadline'} */
 export const budgetModeOf = (text) => (text === 'quota' ? 'quota' : 'deadline')
+/** The explosive the blast and crater kinds detonate: `c4` unless the variable names another. @param {string | undefined} text */
+export const explosiveOf = (text) => (text === undefined || text === '' ? DEFAULT_EXPLOSIVE : text)
+/** Whether an explosive's blast reaches the house through `blastAt`: the room (explosives.ts, `detonate`) applies `world.explode` at the point only with energy, no smoke and no cone (a claymore blasts the objects in front of it). @param {{ energy: number, smoke?: unknown, cone?: unknown }} def */
+export const isBlastingExplosive = (def) => def.energy > 0 && !def.smoke && !def.cone
+
+/**
+ * What the run does with its saved base: whether it is comparable (same mode and explosive, a c4 run) and the explosion-frame verdict; the explosive must reach both.
+ * @param {{ measure: ReturnType<typeof frameMetricsOf>, savedBase: import('./room-explosion-frame.mjs').SavedReport | undefined, mode: string, explosive: string, gated: Set<number> }} params
+ */
+export const explosionGateOf = ({ measure, savedBase, mode, explosive, gated }) => ({
+  isBaseInMode: isBaseComparable(savedBase, mode, explosive),
+  frameVerdict: frameGate({ measure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated, explosive }),
+})
 /** The render columns appended to every frame row: render call CPU ms, GPU wait ms, GPU ms (-1: no timer), draw calls, triangles, live particles, fragments, pieces. */
 export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles', 'particles', 'frags', 'pieces']
 // the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
@@ -109,12 +124,12 @@ export const WEATHERS = /** @type {const} */ (['none', 'storm', 'fog'])
 
 /**
  * Runs inside the page. Stage `prepare` builds the house and settles it (at full speed: the build is not the measurement); stage `run` fires the explosion and times the physics of each frame.
- * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number, isF0Late?: boolean, budgetMode?: 'quota' | 'deadline', systemLabels?: Record<string, string>, labelledQueues?: string[] }} job
+ * @param {{ stage: 'prepare', weather: string } | { stage: 'run', kind: string, frames: number, frameSeconds: number, stageLabels?: string[], frameLabels?: string[], isRendered?: boolean, paceMs?: number, isF0Late?: boolean, budgetMode?: 'quota' | 'deadline', explosive?: string, systemLabels?: Record<string, string>, labelledQueues?: string[] }} job
  * @returns {Promise<number[][] | undefined>} per frame: [physics ms, loop step, piece update, wake queue, whole update, render, ...one column per `stageLabels`, ...per `frameLabels` and then FRAME_EXTRAS (only with `frameLabels`)]
  */
 export async function inPage(job) {
   /** @typedef {{ objectId: string }} Piece */
-  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { scheduler?: { systemProbe: { enter(id: string): void, leave(id: string): void } | undefined }, terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(weapon: string, point: number[]): void, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, frameStats?: () => { budget: { mode: string, allowanceMs: number, mustDrainSpentMs: number, queues: { id: string, spentMs: number }[] } }, update(dt: number, options?: { frameStartMs?: number }): void }} Room */
+  /** @typedef {{ openArea(id: string): void, bench(id: string): { set(key: string, value: unknown): void, act(name: string): void }, camera: { position: object }, world: { serialize(): { objects: { id: string, state: { position: number[] } }[] }, hit(id: string, hit: Record<string, unknown>): void }, renderer: { pieces(): Piece[], pieceSys: { update(dt: number): void, list?: unknown[] }, advanceWakes?: (dt: number) => void, fragments?: { count: number } }, fluids?: object, fluidRenderer?: object, film?: object, lights?: object, audio?: { deferredQueue?: () => object } | null, vfx?: { stats?: () => { puffs: number, sparks: number, glows: number, chunks: number } }, effects?: object, frameParts?: { scheduler?: { systemProbe: { enter(id: string): void, leave(id: string): void } | undefined }, terrainView: object, water: object, waterView: object, explosives: object, footprints: object, moduleFrames: Map<string, { update(dt: number): void }> }, blastAt(explosive: string, point: number[]): boolean, terrain: { bounds: number[], columnAt(x: number, z: number): { material: string }, material(id: string): { reposeDegrees?: number }, heightAt(x: number, z: number): number, waterAt(x: number, z: number): object | null, layout(): { zones?: object[] }, setLayout(layout: object): void }, webgl: { render(scene: object, camera: object): void, getContext(): WebGL2RenderingContext, info?: { render?: { calls: number, triangles: number }, reset?: () => void } }, scene: object, applyCamera?: () => () => void, frameStats?: () => { budget: { mode: string, allowanceMs: number, mustDrainSpentMs: number, queues: { id: string, spentMs: number }[] } }, update(dt: number, options?: { frameStartMs?: number }): void }} Room */
   const host = /** @type {{ __testRoom: Room, __roomPhysics?: { step(dt: number): void }, __roomExplosion?: { spot: number[] } }} */ (/** @type {unknown} */ (window))
   const room = host.__testRoom
   const wait = (/** @type {number} */ ms) => new Promise((done) => setTimeout(done, ms))
@@ -453,7 +468,9 @@ export async function inPage(job) {
     if (paceMs > 0) await wait(Math.max(0, paceMs - (performance.now() - started)))
   }
   if (kindName !== 'hammer') {
-    await step(() => room.blastAt('c4', chargeAt))
+    let isBlasted = false
+    await step(() => { isBlasted = room.blastAt(job.explosive ?? 'c4', chargeAt) })
+    if (!isBlasted) throw new Error(`room.blastAt did not detonate ${job.explosive ?? 'c4'}: nothing was measured`)
   } else {
     for (let hit = 0; hit < 12; hit++) {
       const point = [spot[0] ?? 0, 0.5 + 0.5 * (hit % 4), (spot[2] ?? 0) + ((hit % 3) - 1) * 0.6]
@@ -597,6 +614,14 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const kinds = baseKinds.flatMap((kind) => weathers.map((weather) => (weather === 'none' ? kind : `${kind}+${weather}`)))
   const hasFrameParts = process.env.ROOM_EXPLOSION_FRAME_PARTS === '1'
   const isRendered = process.env.ROOM_EXPLOSION_RENDER === '1' || kinds.some((kind) => kind.includes('+'))
+  const explosive = explosiveOf(process.env.ROOM_EXPLOSION_EXPLOSIVE)
+  const arsenal = /** @type {{ id: string, energy: number, smoke?: unknown, cone?: unknown }[]} */ (JSON.parse(readFileSync(join(root, 'packages/game-weapons/src/data/explosives.json'), 'utf8')))
+  const known = arsenal.find((entry) => entry.id === explosive)
+  if (!known) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} is not an explosive of the arsenal (${arsenal.map((entry) => entry.id).join(', ')})`)
+  if (!isBlastingExplosive(known)) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} does not blast the house (no energy, a smoke or a cone): nothing would be measured`)
+  const reportOut = process.env.ROOM_EXPLOSION_OUT
+  const baseFile = process.env.ROOM_EXPLOSION_BASE
+  if (explosive !== DEFAULT_EXPLOSIVE && reportOut && baseFile && resolve(reportOut) === resolve(baseFile)) throw new Error(`room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`)
   const rounds = Number(process.env.ROOM_EXPLOSION_ROUNDS ?? 5)
   const frames = Number(process.env.ROOM_EXPLOSION_FRAMES ?? 660)
   const budget = { p99: Number(process.env.ROOM_EXPLOSION_P99_MS ?? 4), max: Number(process.env.ROOM_EXPLOSION_MAX_MS ?? 5) }
@@ -609,7 +634,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   console.log(`room-explosion: ${machine.cpu} (${machine.cores} threads), node ${machine.node}, chrome ${machine.chrome}`)
   console.log(`room-explosion: ${PROXY_NOTE}`)
   if (isRendered) console.log('room-explosion: render timed per frame (weather or ROOM_EXPLOSION_RENDER=1); the physics columns and the gate stay physics only')
-  console.log(`room-explosion: frame budget mode ${budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)}`)
+  console.log(`room-explosion: frame budget mode ${budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)}, explosive ${explosive}`)
   console.log(`room-explosion: budget p99 <= ${budget.p99} ms (median of rounds), max <= ${budget.max} ms (worst round), wake frame apart; ${rounds} rounds x ${frames} frames of 1/60 s`)
 
   /** @type {Map<string, Round[]>} */
@@ -629,7 +654,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
       const cdp = await page.context().newCDPSession(page)
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle })
       const paced = process.env.ROOM_EXPLOSION_PACE === '1' || (process.env.ROOM_EXPLOSION_PACE !== '0' && VARIANTS[/** @type {keyof typeof VARIANTS} */ (variant)].includes('groundWorker=1'))
-      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, budgetMode: budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET), isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(isF0Late(process.env.ROOM_EXPLOSION_F0_CLOCK) ? { isF0Late: true } : {}), systemLabels: { ...SYSTEM_LABELS }, labelledQueues: LABELLED_QUEUES, ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
+      const timings = await page.evaluate(inPage, { stage: /** @type {const} */ ('run'), kind, frames, frameSeconds: FRAME_SECONDS, budgetMode: budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET), explosive, isRendered: isRendered || (stageLabels !== undefined && hasFrameParts), ...(isF0Late(process.env.ROOM_EXPLOSION_F0_CLOCK) ? { isF0Late: true } : {}), systemLabels: { ...SYSTEM_LABELS }, labelledQueues: LABELLED_QUEUES, ...(stageLabels ? { stageLabels, ...(hasFrameParts ? { frameLabels: [...FRAME_LABELS] } : {}) } : {}), ...(paced ? { paceMs: 1000 / 60 } : {}) })
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 })
       const groundStats = await page.evaluate(() => /** @type {{ __groundWorkerStats?: object }} */ (/** @type {unknown} */ (window)).__groundWorkerStats, undefined)
       if (groundStats) console.log(`room-explosion: ${variant} ${throttle}x ${kind}${stageLabels ? ' (stages)' : ''}${paced ? ' paced' : ''}: ground tiles ${JSON.stringify(groundStats)}`)
@@ -705,8 +730,11 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   let blocked = false
   const mode = budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)
   const savedBase = baseReportOf(process.env.ROOM_EXPLOSION_BASE)
-  const isBaseInMode = savedBase !== undefined && savedBase.budgetMode === mode
-  if (savedBase && !isBaseInMode) console.log(`room-explosion: base em outro modo (${savedBase.budgetMode ?? 'sem modo'}, esta rodada ${mode}): regravando a referência; nada é comparado nem bloqueia`)
+  const frameMeasure = frameMetricsOf(stageFrames)
+  const { isBaseInMode, frameVerdict } = explosionGateOf({ measure: frameMeasure, savedBase, mode, explosive, gated })
+  if (explosive !== DEFAULT_EXPLOSIVE) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosivo ${explosive} (a referência é c4): nada é comparado, não bloqueia nem vira a referência`)
+  else if (savedBase && (savedBase.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) console.log(`room-explosion: base com outro explosivo (${savedBase.explosive}, esta rodada ${explosive}): nada é comparado nem bloqueia`)
+  else if (savedBase && !isBaseInMode) console.log(`room-explosion: base em outro modo (${savedBase.budgetMode ?? 'sem modo'}, esta rodada ${mode}): regravando a referência; nada é comparado nem bloqueia`)
   const baseCells = isBaseInMode ? baseCellsOf(process.env.ROOM_EXPLOSION_BASE) : undefined
   console.log(baseCells ? `room-explosion: blocks only on a regression over ${Math.round(REGRESSION.tolerance * 100)}% against ${process.env.ROOM_EXPLOSION_BASE}; the absolute budget is a warning` : 'room-explosion: no base report (ROOM_EXPLOSION_BASE): nothing blocks, the absolute budget is a warning')
   for (const cell of cells) {
@@ -717,8 +745,6 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     const verdict = cell.variant !== DEFAULT_VARIANT && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(13)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
-  const frameMeasure = frameMetricsOf(stageFrames)
-  const frameVerdict = frameGate({ measure: frameMeasure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated })
   logFrameGate(frameMeasure, frameVerdict, isBaseInMode)
   blocked ||= frameVerdict.regressions.length > 0
   if (isRendered) {
@@ -758,7 +784,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0

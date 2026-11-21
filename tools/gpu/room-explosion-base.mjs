@@ -5,8 +5,12 @@
 /**
  * @typedef {{ variant: string, throttle: number, kind: string, p99: number, max: number }} BaseCell
  * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} BaseMetric
- * @typedef {{ budgetMode?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[] }} BaseReport
+ * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[] }} BaseReport
  */
+
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+
+import { DEFAULT_EXPLOSIVE } from './room-explosion-frame.mjs'
 
 const keyOf = (/** @type {{ variant: string, throttle: number, kind: string }} */ entry) => `${entry.variant}|${entry.throttle}|${entry.kind}`
 /** The smaller of two readings; a reading that is 0 or missing is not a reading. @param {number} was @param {number} now */
@@ -28,15 +32,28 @@ const mergeEntries = (base, now, fields) => {
 }
 
 /**
- * The base to save after a night that passed. Without a base, or with one measured in another mode, the night is the base; otherwise nothing rises.
+ * The base to save after a night that passed. Without a base, or with one measured in another mode or with another explosive, the night is the base; otherwise nothing rises.
+ * A report with an explosive other than c4 is never the base nor merged into it: the base stays as it was (undefined when there was none).
  * @template {BaseReport} TReport
- * @param {BaseReport | undefined} base @param {TReport} report @returns {TReport}
+ * @param {BaseReport | undefined} base @param {TReport} report @returns {TReport | undefined}
  */
 export const mergeBase = (base, report) => {
-  if (!base || base.budgetMode !== report.budgetMode) return report
+  if ((report.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return /** @type {TReport | undefined} */ (base)
+  if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return report
   return {
     ...report,
     cells: mergeEntries(base.cells ?? [], report.cells ?? [], ['p99', 'max']),
     frameMetrics: mergeEntries(base.frameMetrics ?? [], report.frameMetrics ?? [], ['f0Ms', 'afterMs']),
   }
+}
+
+/**
+ * Saves the base after a night that passed: `mergeBase` of the file's base and the night's report. Writes nothing when `mergeBase` gives nothing (a non-c4 report and no base).
+ * @param {string} reportFile @param {string} baseFile
+ */
+export const saveBase = (reportFile, baseFile) => {
+  const report = JSON.parse(readFileSync(reportFile, 'utf8'))
+  const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
+  const merged = mergeBase(base, report)
+  if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))
 }
