@@ -156,3 +156,57 @@ describe('the pieces of a case are seeded', () => {
     expect(run()).toBe(first)
   })
 })
+
+/** `count` directions spread evenly over the sphere (Fibonacci lattice): a deterministic way to measure the share of the sphere a set of shapes covers. */
+const evenDirections = (count: number): Vec3[] => {
+  const golden = Math.PI * (3 - Math.sqrt(5))
+  return Array.from({ length: count }, (_, i) => {
+    const y = 1 - (2 * (i + 0.5)) / count
+    const ring = Math.sqrt(1 - y * y)
+    return [Math.cos(golden * i) * ring, y, Math.sin(golden * i) * ring] as Vec3
+  })
+}
+
+/** The share of the directions from `from` whose line meets one of the axis-aligned `boxes` (slab test). */
+const shareOfBoxes = (from: Vec3, boxes: readonly { centre: Vec3; size: Vec3 }[], directions: readonly Vec3[]): number => {
+  const meets = (d: Vec3) => boxes.some(({ centre, size }) => {
+    let near = 0
+    let far = Infinity
+    for (let k = 0; k < 3; k++) {
+      const lo = centre[k]! - size[k]! / 2 - from[k]!
+      const hi = centre[k]! + size[k]! / 2 - from[k]!
+      if (Math.abs(d[k]!) < 1e-12) {
+        if (lo > 0 || hi < 0) return false
+        continue
+      }
+      const a = lo / d[k]!, b = hi / d[k]!
+      near = Math.max(near, Math.min(a, b))
+      far = Math.min(far, Math.max(a, b))
+    }
+    return near <= far
+  })
+  return directions.filter(meets).length / directions.length
+}
+
+describe('a hosted body is aimed at part by part', () => {
+  // a long body of four 2 m sections, its side 3 m from the charge: the sphere round the whole body (radius 4.2 m) holds the charge, the sphere of each section does not
+  const SECTIONS = [-3, -1, 1, 3].map((z) => ({ centre: [3.9, 0.75, z] as Vec3, size: [1.8, 1.5, 2] as Vec3 }))
+  const longBody = () => witness('long', SECTIONS.map((section, index) => panel(`s${index}`, section.size, section.centre)))
+
+  it('takes the pieces its own parts cover from the charge, not a cut share of every piece of the case', () => {
+    const pieces = M67.charge.casing!.fragments
+    const share = shareOfBoxes([0, 0.75, 0], SECTIONS, evenDirections(200_000))
+    const expected = pieces * share
+    const sigma = Math.sqrt(pieces * share * (1 - share))
+    const counts = SEEDS.map((seed) => {
+      const world = createDestruction({ seed })
+      const body = longBody()
+      world.register(body.impl)
+      world.explode([0, 0.75, 0], M67.energy, 15, 'test', { charge: M67.charge })
+      return body.fragments().length
+    })
+    for (const count of counts) expect(Math.abs(count - expected)).toBeLessThan(4 * sigma)
+    const mean = counts.reduce((sum, count) => sum + count, 0) / counts.length
+    expect(Math.abs(mean - expected)).toBeLessThan((4 * sigma) / Math.sqrt(counts.length))
+  })
+})
