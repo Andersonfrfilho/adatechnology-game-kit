@@ -27,7 +27,7 @@ const loudestFirst = (a: Slot, b: Slot): number => b.score - a.score || a.order 
 /**
  * One frame of impacts can ask for hundreds of voices of one group, and each costs its nodes. The cap keeps the `limit` loudest per group as they
  * come (a bounded list, no growth with the burst), and `schedule`'s settle job builds them when the engine's start queue reaches it: the window is
- * the one the host already owns, with no clock and no extra frame.
+ * the one the host already owns, with no extra frame. The only clock is the queue's own (`clock`, the one its latency check reads); the cap makes none.
  */
 export function createBurstCap(
   schedule: () => void,
@@ -134,7 +134,7 @@ export function createBurstCap(
         late += bucket.slots.length - fresh.length
         for (const slot of bucket.slots) if (!fresh.includes(slot)) release1(bucket, slot)
         bucket.slots.splice(0, bucket.slots.length, ...fresh)
-        bucket.asked = fresh.length
+        bucket.asked -= bucket.slots.length - fresh.length
         survivors += fresh.length
       }
       if (survivors === 0) return

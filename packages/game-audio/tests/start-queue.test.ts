@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { checkDeferredQueue } from '@adatechnology/game-contracts'
 import { createAudioEngine } from '../src'
 import { createStartQueue } from '../src/webaudio/engine-queue'
@@ -70,5 +70,29 @@ describe('voice start queue as a deferred queue', () => {
   it('exposes the queue on the engine only with deferredStart', () => {
     expect(createAudioEngine().deferredQueue?.()).toBeNull()
     expect(createAudioEngine({ deferredStart: {} }).deferredQueue?.()?.id).toBe('audio.voices')
+  })
+
+  it('a job that throws does not wedge the queue: the jobs after it keep their own age', () => {
+    let clock = 0
+    const spy = vi.spyOn(performance, 'now').mockImplementation(() => clock)
+    try {
+      const queue = createStartQueue({ maxLatencyMs: 100 })
+      const handle = queue.deferredQueue()
+      handle.attach?.()
+      queue.push({
+        run: () => {
+          throw new Error('boom')
+        },
+        drop: () => undefined,
+      })
+      expect(() => handle.flush?.()).toThrow('boom')
+      clock = 500
+      const log: string[] = []
+      queue.pushFront([{ run: () => log.push('ran'), drop: () => log.push('dropped') }])
+      handle.flush?.()
+      expect(log).toEqual(['ran'])
+    } finally {
+      spy.mockRestore()
+    }
   })
 })

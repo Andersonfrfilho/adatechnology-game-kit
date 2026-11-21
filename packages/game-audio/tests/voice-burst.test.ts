@@ -296,6 +296,59 @@ describe('the voice cap and the queue clock', () => {
     expect(engine.stats().dropped).toBe(8)
   })
 
+  it('does not resume the context for a held sample too quiet to play', async () => {
+    const resume = vi.fn(() => Promise.resolve())
+    const { engine, started, flush } = setup({}, { state: 'suspended', resume, close: () => Promise.resolve() })
+    await engine.loadSamples(['hit_file'])
+    expect(engine.play('hit_file', { distance: 5000, group: 'crowd' })).toBeNull()
+    flush()
+    expect(resume).not.toHaveBeenCalled()
+    expect(started).toHaveLength(0)
+  })
+
+  it('keeps the boost honest when a late settle drops some of the burst: the survivors still count the requests that lost to louder ones', () => {
+    freezeTime()
+    const level = (group: string, asked: number, expire: boolean): number => {
+      const { engine, started, flush } = setup({ deferredStart: { maxLatencyMs: 100 } })
+      for (let index = 0; index < asked; index++) engine.play('sfx_pistol', { distance: 20 + (index % 10), group })
+      if (expire) clock = 150
+      for (let index = 0; index < 2; index++) engine.play('sfx_pistol', { distance: 5, group })
+      flush()
+      clock = 0
+      return (started.find((event) => event.distance === 5) as VoiceStartEvent).level
+    }
+    const plain = level('crowd', 100, false)
+    const survivors = level('boosted', 100, true)
+    expect(survivors).toBeGreaterThan(plain * 1.4)
+    expect(survivors).toBeLessThanOrEqual(plain * 1.5 + 1e-9)
+  })
+
+  it('does not count a closed engine as late', () => {
+    freezeTime()
+    const { engine, flush } = setup()
+    for (let index = 0; index < 10; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'crowd' })
+    budgeted(engine, 1)
+    expect(engine.deferredQueue?.()?.pending()).toBe(LIMIT)
+    engine.dispose()
+    flush()
+    expect(engine.stats().dropped).toBe(0)
+  })
+
+  it('drops a kept voice whose turn comes just past the limit, once, though its settle ran just under it', () => {
+    freezeTime()
+    const { engine, started } = setup({ deferredStart: { maxLatencyMs: 250 } })
+    for (let index = 0; index < 10; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'crowd' })
+    clock = 249
+    budgeted(engine, 1)
+    expect(engine.deferredQueue?.()?.pending()).toBe(LIMIT)
+    clock = 251
+    budgeted(engine, 20)
+    budgeted(engine, 20)
+    expect(started).toHaveLength(0)
+    expect(engine.stats().dropped).toBe(LIMIT)
+    expect(engine.stats().capped).toBe(10 - LIMIT)
+  })
+
   it('a late settle drops only the requests that are themselves late; the fresh ones get a new settle', () => {
     freezeTime()
     const { engine, started, flush } = setup({ deferredStart: { maxLatencyMs: 100 } })

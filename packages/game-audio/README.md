@@ -113,8 +113,11 @@ engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
   The engine keeps the `maxPerBurst` loudest per group as they come (a bounded list; a request that cannot win is counted in `stats().capped` at once).
   The first held request puts a settle job in the start queue. When the queue reaches it (the host's audio stage of the frame, or its own task), the kept
   sounds go in front of the queue, one job each, so none waits behind a later sound and each is charged to the queue's budget. No clock, no extra frame.
-- **Late.** If the queue does not reach the settle job within its `maxLatencyMs`, the held sounds are dropped as late, the queue's policy for any voice, and
-  counted in `stats().dropped`, not in `capped`.
+- **Late.** The cap reads the queue's own clock (the one its latency check uses) and makes none. If the queue does not reach the settle job within its
+  `maxLatencyMs`, the held requests that are themselves past the limit are dropped as late (the queue's policy for any voice), counted in `stats().dropped`
+  and not in `capped`; the rest get a new settle job, stamped when it is re-armed. A kept voice inherits the age of the settle job that built it, which is the
+  age of the FIRST request of the burst, not its own; one whose turn comes past the limit is dropped as late, once. So in the worst case a surviving
+  request can wait about twice `maxLatencyMs` (once for the old settle, once for the re-armed one). Closing the engine drops what is held without counting it.
 - **Loudest** = volume x sound gain x distance curve, no occlusion rays. Ties keep the order asked. `urgent` plays are never held.
 - **Random draws.** The plan's draws (pitch, takes, noise start) happen at settle, loudest first; the set variant and the rate are drawn when asked.
 - **`burstBoost`** (default 1: none): the kept voices are `1 + (burstBoost - 1) x share dropped` louder, so 200 impacts cut to 16 are not thin. Recorded sounds go

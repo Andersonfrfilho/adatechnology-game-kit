@@ -57,9 +57,12 @@ export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue
   const runNext = (): void => {
     const job = jobs.shift() as StartJob
     running = job.queuedAt
-    if (nowMs() - job.queuedAt > maxLatencyMs) job.drop()
-    else job.run()
-    running = undefined
+    try {
+      if (nowMs() - job.queuedAt > maxLatencyMs) job.drop()
+      else job.run()
+    } finally {
+      running = undefined
+    }
   }
 
   const drain = (): void => {

@@ -373,6 +373,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   // the cap settles as a job of the start queue (the window is the one the host owns). The kept voices go in front of the queue, one job each, so a
   // later sound never builds before them and every build is charged to the queue's budget
   const settled: Omit<StartJob, 'queuedAt'>[] = []
+  // `dispose` empties the queue: what it drops is not late
+  let closing = false
   const burst = startQueue
     ? createBurstCap(
         () =>
@@ -385,7 +387,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
             },
             drop: () => (burst as BurstCap).expire(),
           }),
-        (run, boost) => settled.push({ run: () => run(boost), drop: () => (burst as BurstCap).lost() }),
+        (run, boost) => settled.push({ run: () => run(boost), drop: () => closing || (burst as BurstCap).lost() }),
         { now: startQueue.now, stale: startQueue.stale },
       )
     : null
@@ -518,14 +520,15 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     }
     const group = sample.group ?? playOptions.group
     const rule = burstRule(group, playOptions)
+    const score = rule ? falloffGain(sample.falloff ?? DEFAULT_SAMPLE_FALLOFF, (playOptions.volume ?? 1) * (sample.gain ?? 1), distanceOf(playOptions)) : 0
     if (rule) {
-      // like a recipe: the context is made and resumed inside `play`, where the user's gesture is, not in a queue task
+      // a sound too quiet to play does not start the context, as a recipe's; an audible one makes and resumes it inside `play`, where the user's gesture is
+      if (score <= 0 || isSilent(sample.falloff ?? DEFAULT_SAMPLE_FALLOFF, score)) return null
       const audio = ready()
       if (!audio) return null
       unlockContext(audio)
       advance()
     }
-    const score = rule ? falloffGain(sample.falloff ?? DEFAULT_SAMPLE_FALLOFF, (playOptions.volume ?? 1) * (sample.gain ?? 1), distanceOf(playOptions)) : 0
     if (rule?.maxPerBurst !== undefined && !(burst as BurstCap).offer(group as string, rule.maxPerBurst, rule.burstBoost ?? 1, score)) return null
     const launch = (boost: number): VoiceHandle | null => {
       const louder = boost === 1 ? playOptions : { ...playOptions, volume: (playOptions.volume ?? 1) * boost }
@@ -812,7 +815,9 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     dispose() {
       // closing the context ends every voice; they only leave the limiter
       burst?.clear()
+      closing = true
       startQueue?.clear()
+      closing = false
       for (const id of active.keys()) voices.release(id)
       for (const loop of [...loops]) loop.stop()
       occluders?.clear()
