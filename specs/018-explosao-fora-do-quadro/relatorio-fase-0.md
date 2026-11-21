@@ -2,6 +2,7 @@
 
 > T0.5, 2026-11-20. Fonte dos números: `evidence.md` desta spec (T0.1 a T0.4) e, onde dito, a evidência da 017. Este relatório **recomenda**;
 > D1, D2 e D3 continuam abertas no `spec.md` e são do dono.
+> D1 e D3 foram decididas em 2026-11-21, ver §8; o texto abaixo é mantido como foi escrito.
 
 ## 1. Resposta
 
@@ -199,7 +200,7 @@ exemplo), os commits ficam na branch para serem reaplicados.
 > Esta seção é essa medição e o que ela muda.
 
 **O que se assumia:** que o C4 contra a casa inteira (63–65 ms) era o pior caso, e que um explosivo menor seria mais barato (§5, "O que a D3 muda").
-**O que foi medido:** os explosivos de fragmentação custam 2 a 3 vezes mais que o C4.
+**O que foi medido:** os explosivos de fragmentação custam cerca de 2 vezes (M67) e cerca de 3 vezes (bomba de cano) o C4.
 
 Condições: régua `room-explosion`, modo de prazo, 1x, cena da casa, NVIDIA, sob `flock`, páginas guardadas e conferidas por hash. Quadro da explosão
 (`f0Ms`), `main` depois do #417 (página `b4a1ac7e07c1`). As sessões diferem ~20% em valor absoluto; só vale comparar dentro da mesma sessão.
@@ -224,8 +225,8 @@ As tabelas completas estão nas descrições dos PRs #417 e #419. Os JSONs bruto
 são citados aqui.
 
 **O que isso muda na recomendação do §5** (o texto do §5 não foi reescrito):
-- A recomendação de "desistir da meta para o pior caso" assumia que o C4 era o pior caso. Não era. O pior caso real é bem maior que o C4, e a M67 é
-  o caso comum de fragmentação, não um caso raro.
+- A recomendação de "desistir da meta para o pior caso" assumia que o C4 era o pior caso. Não era. O pior caso real é bem maior que o C4, e o dono escolheu a M67 como
+  caso de referência (2026-11-21). Com que frequência cada explosivo aparece num jogo não foi medido.
 - A conta do §2 (A, C e A+C tiram no máximo ~11 ms) foi feita sobre o C4. Para a M67, em ~120 ms, o mesmo teto é ainda menor em proporção.
   Não foi refeita para a M67.
 - O dono decidiu em 2026-11-21: **D3** = o caso de referência da meta é a M67; **D1** = nenhum caminho de worker agora, atacar os explosivos de

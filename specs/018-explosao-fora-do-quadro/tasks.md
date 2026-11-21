@@ -30,23 +30,25 @@ código de simulação. Esta fase não altera código.
 
 - **T1.1** Proposta de cortes (só leitura e análise, nenhum código de simulação muda). Para o `explode` (M67 ~43–55 ms) e o `destrEvents`
   (M67 ~44–49 ms) do pior quadro, listar as opções de corte e, de cada uma: o que corta, o ganho esperado em ms (com a conta e o que é palpite),
-  **quais goldens e hashes de eventos mudam** (ler os goldens, não supor), o que o jogador vê de diferente e se depende da D2. Incluir o corte
+  **quais goldens e hashes de eventos mudam** (ler os goldens, não supor), o que o jogador vê de diferente e se depende da D2 (marcar quais opções dependem: só as que atrasam o dano em relação ao clarão; as que mantêm o dano no tique da explosão não esperam a D2). A T1.1 em si não depende da D2. Incluir o corte
   "espalhar os impactos dos fragmentos por 2 ou 3 tiques" e dizer quantos quadros de latência ele cria. Medir o que faltar com a régua
   (`room-explosion`, M67, modo de prazo, pares alternados na mesma sessão). Entregar em `evidence.md` e levar ao dono.
-- **T1.2 🧠** Escolha dos cortes. **Depende do dono:** nenhuma task de implementação nasce antes de ele escolher entre as opções da T1.1 e, para
-  qualquer corte que adie o dano, de fechar a D2.
+  Comandos: worktree próprio por sessão; `pnpm build` e depois `(cd examples/test-room && node build.mjs)` (a régua recusa `dist` velho, #418); régua, no modo de prazo (padrão):
+  `flock ~/.cache/adatechnology-game-kit/perf-measure.lock env ROOM_EXPLOSION_PAGE=<página> ROOM_EXPLOSION_OTHER_PAGE=<outra> ROOM_EXPLOSION_EXPLOSIVE=<m67|pipe_bomb|c4|molotov> ROOM_EXPLOSION_KINDS=blast ROOM_EXPLOSION_THROTTLES=1 ROOM_EXPLOSION_STAGE_THROTTLES=1 ROOM_EXPLOSION_STAGE_ROUNDS=3 ROOM_EXPLOSION_ROUNDS=1 ROOM_EXPLOSION_FRAME_PARTS=1 ROOM_EXPLOSION_OUT=<json> node tools/gpu/perf-gate.mjs room-explosion`.
+- **T1.2 🧠** Escolha dos cortes. **Depende do dono:** nenhuma task de implementação nasce antes de ele escolher entre as opções da T1.1 e, só
+  para corte que atrasa o dano em relação ao clarão, de fechar a D2. Corte que mantém o dano no tique da explosão não espera a D2.
 
 Fases de implementação: só existem depois da escolha da T1.2.
 
 ## Fases seguintes
 
-Só existem depois da T1.2 (e da D2). O que qualquer caminho herda da 017 está em
+Só existem depois da T1.2 (e da D2, para os cortes que atrasam o dano). O que qualquer caminho herda da 017 está em
 `specs/017-quadro-da-explosao/design-onda.md` (§2.2 a §2.6, §3 e a lista de testes do §5).
 
 ## Prompt de execução
 
-Não há prompt de execução: a spec tem [NEEDS CLARIFICATION] aberto (D2) e a T1.2 depende da escolha do dono. O prompt da Fase 0 já foi
+Não há prompt de execução: a spec tem [NEEDS CLARIFICATION] aberto (D2) e a T1.2 depende da escolha do dono. A D2 só bloqueia cortes que atrasam o dano. O prompt da Fase 0 já foi
 executado e está no histórico do git. Perguntas pendentes:
 
-- **D2:** quantos quadros de latência entre o clarão e o dano são aceitáveis? (o dono decide vendo na sala)
+- **D2:** quantos quadros de latência entre o clarão e o dano são aceitáveis? (o dono decide vendo na sala; só para cortes que atrasam o dano)
 - **T1.2:** qual dos cortes propostos na T1.1 entra, e com que latência.
