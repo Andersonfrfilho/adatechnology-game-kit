@@ -40,14 +40,19 @@ describe('world.raycast ignoreParts where a member is cast in a wall (current be
     expect(ray(AT_BRICKS)).toMatchObject({ object: 'w', part: 'wall' })
   })
 
-  // the list is compared with the part the ray tests (the wall), which then hands the hit to the member cast in it
-  it('ignoring the member the ray named does not let the ray through: the wall still answers with that member', () => {
+  // Known limitation, not the contract `ignoreParts` reads as: the list is compared with the part the ray tests (the wall), which then hands the hit to the
+  // member cast in it. A caller that ignores the part the ray just named gets that part again.
+  it('known limitation: ignoring a cast-in member returns it again, while the same member standing alone is passed through', () => {
     const { ray } = setup([wall, pillar])
     const plain = ray(AT_PILLAR)
     expect(plain?.part).toBe('pillar')
     expect(ray(AT_PILLAR, [PILLAR])).toEqual(plain)
     // beside the member the wall answers as it does with nothing ignored
     expect(ray(AT_BRICKS, [PILLAR])).toEqual(ray(AT_BRICKS))
+    // the control: with no wall around it the same entry takes the pillar out of the ray's way, so the answer above comes from the wall and not from a list that does nothing
+    const alone = setup([pillar])
+    expect(alone.ray(AT_PILLAR)).toEqual(plain)
+    expect(alone.ray(AT_PILLAR, [PILLAR])).toMatchObject({ object: 'far', part: 'slab' })
   })
 
   it('ignoring the wall leaves the member standing: it is a part of its own and still answers', () => {
@@ -80,8 +85,16 @@ describe('world.raycast ignoreParts where a member is cast in a wall (current be
     expect(ray(AT_PILLAR, [WALL, PILLAR])).toMatchObject({ object: 'far' })
   })
 
-  it('a ray that starts one millimetre inside the wall and the member meets neither: an ordinary part answers only at its entry', () => {
+  it('a part or an object that does not exist is ignored to no effect, alone or next to an entry that does exist', () => {
     const { ray } = setup([wall, pillar])
-    expect(ray([1.35, 1.2, 0.064])).toMatchObject({ object: 'far', part: 'slab' })
+    const strangers: readonly RaycastPartRef[] = [{ object: 'w', part: 'lintel' }, { object: 'nobody', part: 'wall' }, { object: 'nobody', part: 'lintel' }]
+    for (const stranger of strangers) {
+      expect(ray(AT_PILLAR, [stranger]), JSON.stringify(stranger)).toEqual(ray(AT_PILLAR))
+      expect(ray(AT_BRICKS, [stranger]), JSON.stringify(stranger)).toEqual(ray(AT_BRICKS))
+      // the entry that does exist still counts whichever side of the stranger it stands on
+      expect(ray(AT_BRICKS, [stranger, WALL]), JSON.stringify(stranger)).toMatchObject({ object: 'far', part: 'slab' })
+      expect(ray(AT_BRICKS, [WALL, stranger]), JSON.stringify(stranger)).toMatchObject({ object: 'far', part: 'slab' })
+    }
+    expect(ray(AT_PILLAR, [...strangers, WALL, PILLAR])).toMatchObject({ object: 'far', part: 'slab' })
   })
 })

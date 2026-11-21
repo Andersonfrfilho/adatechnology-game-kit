@@ -3,12 +3,32 @@ import type { AudioEngineOptions } from '@adatechnology/game-audio'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createTerrain, createTerrainImpl } from '@adatechnology/game-terrain'
 import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
-import type { DestructibleImpl, DestructibleSpec, ObjectState, RaycastOptions } from '@adatechnology/game-destruction'
+import type { DestructibleImpl, DestructibleSpec, ObjectState, PartSpec, RaycastOptions } from '@adatechnology/game-destruction'
 import { OCCLUDER_MIN_RADIUS } from '../src/world-occlusion'
 import { makeRoom } from './helpers'
 
 /** Where two parts overlap, each end of the path places the face between them within the default step of 1 mm. */
 const WITHIN_ONE_STEP = 0.0011
+
+type Point = [number, number, number]
+/** The reference walk over a real world: one millimetre past every hit, the same part counted once in a row. `rays` is what it costs. */
+const worldMillimetreWalk = (world: ReturnType<typeof createDestruction>, from: Point, to: Point): { keys: string[]; rays: number } => {
+  const length = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2])
+  const direction: Point = [(to[0] - from[0]) / length, (to[1] - from[1]) / length, (to[2] - from[2]) / length]
+  const skip: RaycastOptions = { skipLoose: true, minObjectRadius: OCCLUDER_MIN_RADIUS }
+  const keys: string[] = []
+  let travelled = 0
+  let rays = 0
+  while (keys.length < 6 && travelled < length) {
+    rays++
+    const hit = world.raycast([from[0] + direction[0] * travelled, from[1] + direction[1] * travelled, from[2] + direction[2] * travelled], direction, length - travelled, skip)
+    if (!hit) break
+    const key = `${hit.object}/${hit.part}`
+    if (keys.at(-1) !== key) keys.push(key)
+    travelled += hit.distance + 0.001
+  }
+  return { keys, rays }
+}
 
 const captured: AudioEngineOptions[] = []
 
@@ -351,22 +371,6 @@ describe('createWorldOcclusion over a destruction world with the real terrain', 
     walls.forEach((position, index) => world.add(wallSpec(heights[index] ?? 2), { position }))
     return world
   }
-  /** The walk of one millimetre at a time, the part of the same layer counted once in a row. */
-  const millimetreWalk = (world: ReturnType<typeof createDestruction>, from: Vec, to: Vec): string[] => {
-    const length = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2])
-    const direction: Vec = [(to[0] - from[0]) / length, (to[1] - from[1]) / length, (to[2] - from[2]) / length]
-    const skip: RaycastOptions = { skipLoose: true, minObjectRadius: OCCLUDER_MIN_RADIUS }
-    const found: string[] = []
-    let travelled = 0
-    while (found.length < 6 && travelled < length) {
-      const hit = world.raycast([from[0] + direction[0] * travelled, from[1] + direction[1] * travelled, from[2] + direction[2] * travelled], direction, length - travelled, skip)
-      if (!hit) break
-      const key = `${hit.object}/${hit.part}`
-      if (found.at(-1) !== key) found.push(key)
-      travelled += hit.distance + 0.001
-    }
-    return found
-  }
   const CASES: readonly { name: string; walls: readonly Vec[]; heights?: readonly number[]; from: Vec; to: Vec }[] = [
     { name: 'a source buried in the ground looking up at a wall standing on it', walls: [[0, 1, 0]], from: [-8, -1, 0], to: [8, 1.5, 0] },
     { name: 'a path inside the ground with a wall buried across it', walls: [[0, -1.2, 0]], heights: [1], from: [-8, -1, 0], to: [8, -1, 0] },
@@ -377,7 +381,7 @@ describe('createWorldOcclusion over a destruction world with the real terrain', 
       const { createWorldOcclusion } = await import('../src/world-occlusion')
       const world = sceneWith(scene.walls, scene.heights ?? [])
       const counted = createWorldOcclusion(world)(scene.from, scene.to).length
-      const reference = millimetreWalk(world, scene.from, scene.to)
+      const reference = worldMillimetreWalk(world, scene.from, scene.to).keys
       expect(counted, JSON.stringify(reference)).toBe(reference.length)
     })
   }
@@ -591,5 +595,80 @@ describe('createWorldOcclusion over a destruction world with an impl of several 
     // the overlap is the soil's from both ends (it answers first), within one step
     expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 7)).toBeLessThan(WITHIN_ONE_STEP)
     expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 4)).toBeLessThan(WITHIN_ONE_STEP)
+  })
+})
+
+// What the occlusion reads today where a pillar is cast in a wall, next to the walk of one millimetre. Reported as found: nothing here says it is what it should read.
+describe('createWorldOcclusion over a destruction world with a pillar cast in a wall', () => {
+  const REBAR = { material: 'steel', spacing: 0.15, diameter: 0.01, residualCapacity: 0.15 } as const
+  const wall: PartSpec = {
+    id: 'wall', material: 'brick', shape: { kind: 'box', size: [3, 2.4, 0.13] }, position: [0, 1.2, 0], thickness: 0.13, mass: 1400,
+    units: { size: [0.23, 0.075, 0.11], bond: 'running', mortar: 'plaster' }, breach: { area: 0.25 },
+  }
+  // the same wall plastered over its faces and the pillar: its box stands 2 cm proud of the pillar on each side
+  const coated: PartSpec = { ...wall, shape: { kind: 'box', size: [3, 2.4, 0.17] }, thickness: 0.17, layers: [{ material: 'plaster', thickness: 0.02, faces: 'both' }] }
+  // the pillar at the wall's right end (x from 1.2 to 1.5), inside its box: the wall keeps it as a cast member
+  const pillar: PartSpec = { id: 'pillar', material: 'concrete', shape: { kind: 'box', size: [0.3, 2.4, 0.13] }, position: [1.35, 1.2, 0], structure: { role: 'column' }, reinforcement: REBAR, breach: { area: 0.25 } }
+
+  /** `sunk`: metres the wall is lowered into the real terrain (its top stays above it); without it there is no ground at all. */
+  const sceneOf = (parts: readonly PartSpec[], sunk?: number) => {
+    const world = createDestruction({ seed: 1 })
+    if (sunk !== undefined) world.register(createTerrainImpl(createTerrain({ bounds: [-20, -20, 20, 20], layout: { surface: 'dirt' } }), { id: 'ground' }))
+    world.add({ parts: [...parts] }, { id: 'w', position: [0, -(sunk ?? 0), 0] })
+    const counter = { rays: 0 }
+    const counted = { raycast: (...args: Parameters<typeof world.raycast>) => (counter.rays++, world.raycast(...args)), part: (object: string, part: string) => world.part(object, part) }
+    return { world, counted, counter }
+  }
+  const WALLS = [
+    { label: 'bare', parts: [wall, pillar] },
+    { label: 'plastered', parts: [coated, pillar] },
+  ] as const
+  const ACROSS = [
+    { where: 'the pillar', x: 1.35 },
+    { where: 'the pillar 1 cm from its edge', x: 1.21 },
+    { where: 'the seam between the bricks and the pillar', x: 1.2 },
+    { where: 'the bricks', x: 0.5 },
+  ] as const
+  const PATHS: readonly { how: string; sunk?: number; from: (x: number) => Point; to: (x: number) => Point }[] = [
+    { how: 'in the open', from: (x) => [x, 1.2, 5], to: (x) => [x, 1.2, -5] },
+    { how: 'standing on the ground', sunk: 0, from: (x) => [x, 1.2, 5], to: (x) => [x, 1.2, -5] },
+    { how: 'on a path inside the ground', sunk: 1.6, from: (x) => [x, -0.8, 5], to: (x) => [x, -0.8, -5] },
+    { how: 'from a source buried in the ground to an ear above it', sunk: 1.2, from: (x) => [x, -1, 5], to: (x) => [x, 2, -2.5] },
+  ]
+
+  /** Both walks of one query: the worst scene here (plastered, across the pillar, inside the ground) takes 18. */
+  const RAY_CEILING = 20
+
+  for (const { label, parts } of WALLS) {
+    for (const { where, x } of ACROSS) {
+      for (const path of PATHS) {
+        it(`${label} wall, across ${where}, ${path.how}: the parts the walk of one millimetre counts, in a handful of rays`, async () => {
+          const { createWorldOcclusion } = await import('../src/world-occlusion')
+          const { world, counted, counter } = sceneOf(parts, path.sunk)
+          const hits = createWorldOcclusion(counted)(path.from(x), path.to(x))
+          const reference = worldMillimetreWalk(world, path.from(x), path.to(x))
+          const materials = reference.keys.map((key) => world.part(...(key.split('/') as [string, string]))?.material)
+          expect(hits.map((hit) => hit.material), JSON.stringify(reference.keys)).toEqual(materials)
+          expect(counter.rays, `reference: ${reference.rays} rays`).toBeLessThan(RAY_CEILING)
+        })
+      }
+    }
+  }
+  it('reads the pillar under the plaster as bare concrete 13 cm thick: the 2 cm of plaster on each side is not counted there, and is counted over the bricks', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { counted } = sceneOf([coated, pillar])
+    expect(createWorldOcclusion(counted)([1.35, 1.2, 5], [1.35, 1.2, -5])).toEqual([{ material: 'concrete', thickness: expect.closeTo(0.13, 6) }])
+    expect(createWorldOcclusion(counted)([0.5, 1.2, 5], [0.5, 1.2, -5])).toEqual([{ material: 'brick', thickness: expect.closeTo(0.17, 6) }])
+  })
+
+  it('along the wall the bricks and the pillar are both counted and neither gets a thickness: the way back meets the pillar alone, the wall never answers from inside', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const FROM: Point = [-4, 1.2, 0.01]
+    const TO: Point = [4, 1.2, 0.01]
+    const cast = sceneOf([wall, pillar])
+    expect(createWorldOcclusion(cast.counted)(FROM, TO)).toEqual([{ material: 'brick' }, { material: 'concrete' }])
+    expect(worldMillimetreWalk(cast.world, FROM, TO).keys).toEqual(['w/wall', 'w/pillar'])
+    // the wall alone, end to end, is paired
+    expect(createWorldOcclusion(sceneOf([wall]).counted)(FROM, TO)).toEqual([{ material: 'brick', thickness: expect.closeTo(3, 6) }])
   })
 })
