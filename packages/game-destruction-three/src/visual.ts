@@ -3,6 +3,7 @@ import type { Dent } from '@adatechnology/game-destruction'
 import { markPositionsWritten, rangesWrittenSince } from '@adatechnology/game-shapes-three'
 import { BEND_SMOOTH_RADIUS, bendPositions } from './bend'
 import { heatColor } from './heat'
+import { MeshRayProbe } from './mesh-ray-probe'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
 import { clamp, createRng, lerp } from './math'
 import { shellDisplacementAt, type ShellSnapshot } from './skin-dent'
@@ -163,6 +164,7 @@ export class Visuals {
   private readonly b: THREE_NS.Vector3
   private readonly m4: THREE_NS.Matrix4
   private readonly q: THREE_NS.Quaternion
+  private readonly meshRays: MeshRayProbe
   private readonly ray: THREE_NS.Raycaster
   private readonly box: THREE_NS.Box3
   private readonly t: THREE_NS.Vector3
@@ -180,6 +182,7 @@ export class Visuals {
     this.b = tmpV(THREE)
     this.m4 = new THREE.Matrix4()
     this.q = new THREE.Quaternion()
+    this.meshRays = new MeshRayProbe(THREE)
     this.ray = new THREE.Raycaster()
     // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
     this.ray.layers.enableAll()
@@ -672,7 +675,7 @@ export class Visuals {
     this.ray.near = 0
     this.ray.far = 2 * DECAL_SNAP
     const hits: THREE_NS.Intersection[] = []
-    mesh.raycast(this.ray, hits)
+    this.meshRays.raycast(mesh, this.ray, hits)
     // a wall the house cut where it was shot is drawn by a mesh of its own next to the merged one (`breach-shell` of the house renderer); where it is
     // cut (`userData.cutAt`), the mark goes on what shows through (`userData.behind`: the bricks)
     for (const c of mesh.parent?.children ?? []) {
