@@ -1,6 +1,6 @@
 import type { RayHit, Vec3 } from '@adatechnology/game-contracts'
 import type { OcclusionHit, OcclusionQuery } from '@adatechnology/game-audio'
-import type { RaycastOptions } from '@adatechnology/game-destruction'
+import type { RaycastOptions, RaycastPartRef } from '@adatechnology/game-destruction'
 
 export type OcclusionWorld = {
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number, options?: RaycastOptions): RayHit | null
@@ -29,7 +29,7 @@ const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin
 
 function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
   const found: RayHit[] = []
-  const rayFrom = (travelled: number, ignoreParts?: readonly { readonly object: string; readonly part: string }[]): RayHit | null =>
+  const rayFrom = (travelled: number, ignoreParts?: readonly RaycastPartRef[]): RayHit | null =>
     world.raycast(along(origin, direction, travelled), direction, length - travelled, ignoreParts ? { ...skip, ignoreParts } : skip)
   let travelled = 0
   while (found.length < maxHits && travelled < length) {
@@ -53,6 +53,7 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
     if (!past) break
     const entry = travelled + past.distance
     // Past answers at its entry from a point inside the part we are in: the walk of one millimetre never saw it, since that part answered first.
+    // air thinner than one step in front of it reads as buried: the resolution the walk of one millimetre has too
     const probe = past.distance <= step ? hit : rayFrom(entry - step)
     const isBuried = probe !== null && probe.object === last.object && probe.part === last.part && probe.distance <= step
     if (!isBuried) {

@@ -197,7 +197,7 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
     }
     return { world, counter }
   }
-  /** The walk before the stride: one millimetre past every hit, the same layer counted once in a row. */
+  /** The reference walk: one millimetre past every hit, the same layer counted once in a row. */
   const millimetreWalk = (layers: readonly Layer[], from: number, to: number): string[] => {
     const { world } = worldOf(layers)
     const found: string[] = []
