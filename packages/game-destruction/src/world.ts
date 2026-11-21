@@ -5114,22 +5114,21 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return results
   }
 
-  /** A fragment target: a part's bounding sphere seen from the charge, with the share of the fragments that fly into it. */
+  /** A fragment target: a part's bounding sphere seen from the charge. */
   interface FragmentTarget {
     readonly centre: Vec3
     readonly radius: number
     readonly distance: number
-    readonly expected: number
-    /** The target's own name, which seeds its stream so what it draws does not depend on the other targets. */
-    readonly id: string
   }
 
   /**
    * The fragments of a case, thrown as gun rounds. The case breaks into `fragments` pieces (Mott), flying evenly in all directions at Gurney's speed and slowing in the air
-   * (`exp(-k d)`). Only the pieces that can reach something are cast: each part in range takes the pieces that fly into its bounding sphere (`fragments * (1 - cos(theta)) / 2`,
-   * theta the half angle of the sphere seen from the charge), so the cost follows what is near, not the count of the case; the total is capped at `maxRays` (the rest is cut evenly).
-   * Each target draws from a stream seeded from the world seed, the charge and the target's own name, so a blast throws the same pieces every time and a piece's flight does not change when other parts are added elsewhere. Each piece is a ballistic round of its own energy and calibre
-   * through the same path as a shot (`shootRay`): penetration by material, ricochet, holes. Pieces aimed at several overlapping spheres are counted in each (a small overcount).
+   * (`exp(-k d)`). Every piece gets a direction drawn evenly over the sphere and a Mott mass from one stream seeded by the world seed and the charge, so a blast throws the same
+   * pieces every time and the parts round it only decide which of them are cast: a piece is cast when its line meets the bounding sphere of a part within its reach. A piece that
+   * meets several overlapping spheres is one piece, so the rays cast are never more than the pieces of the case, and never more than `maxRays` (when more qualify, an even pick of
+   * them by their order in the case). One ray is one piece, with its own mass, calibre and energy (a piece's penetration cannot be summed over a bundle): when the cap cuts, the
+   * pieces left out are not cast and their energy is not delivered. The masses drawn are scaled down when they add up to more than the case, so what the pieces deliver never
+   * exceeds half the case's mass times the square of its first speed. Each piece is a ballistic round through the same path as a shot (`shootRay`): penetration by material, ricochet, holes.
    */
   const throwCasing = (point: Vec3, charge: BlastCharge, src: string | undefined): HitResult[] => {
     const casing = charge.casing
@@ -5142,7 +5141,6 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (ignored) for (const p of ignored.parts) skip.add(`${ignored.id}\0${p.spec.id}`)
     }
     const targets: FragmentTarget[] = []
-    let total = 0
     for (const o of objects.values()) {
       if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= farthest) continue
       for (const p of o.parts) {
@@ -5150,10 +5148,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const centre = toWorld(o.st.position, o.st.rotation, p.pos)
         const distance = vec.distance(centre, point)
         if (distance - p.bound >= farthest) continue
-        const half = Math.asin(Math.min(1, p.bound / Math.max(distance, 1e-6)))
-        const expected = (casing.fragments * (1 - Math.cos(half))) / 2
-        targets.push({ centre, radius: p.bound, distance, expected, id: `${o.id}|${p.spec.id}` })
-        total += expected
+        targets.push({ centre, radius: p.bound, distance })
       }
     }
     // a registered body (a vehicle) is a target too, as one sphere round all its parts (its parts overlap: a sphere per part would count the pieces that fly at a door
@@ -5175,37 +5170,56 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const bound = vec.distance(lo, hi) / 2
       const distance = vec.distance(centre, point)
       if (distance - bound >= farthest) continue
-      const half = Math.asin(Math.min(1, bound / Math.max(distance, 1e-6)))
-      const expected = (casing.fragments * (1 - Math.cos(half))) / 2
-      targets.push({ centre, radius: bound, distance, expected, id: im.impl.id })
-      total += expected
+      targets.push({ centre, radius: bound, distance })
     }
-    const cap = Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS))
-    const keep = total > cap ? cap / total : 1
+    if (targets.length === 0) return []
+    const pieces = Math.max(1, Math.floor(casing.fragments))
+    const cap = Math.min(pieces, Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS)))
+    const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments))
+    const directions = new Float64Array(pieces * 3)
+    const masses = new Float64Array(pieces)
+    let drawn = 0
+    for (let i = 0; i < pieces; i++) {
+      const z = 1 - 2 * rng.next()
+      const phi = rng.next() * Math.PI * 2
+      const ring = Math.sqrt(Math.max(0, 1 - z * z))
+      directions[i * 3] = ring * Math.cos(phi)
+      directions[i * 3 + 1] = z
+      directions[i * 3 + 2] = ring * Math.sin(phi)
+      masses[i] = mottMass(rng.next(), mottScale, casing.fragments)
+      drawn += masses[i]!
+    }
+    // Mott's draws of a case can add up to more than the case (a few heavy pieces): scaled down to it, so the pieces never carry more than the case's energy
+    const massScale = drawn > casing.mass ? casing.mass / drawn : 1
+    const reach = Math.log(speed / FRAGMENT_MIN_SPEED)
+    const cast: number[] = []
+    for (let i = 0; i < pieces; i++) {
+      const range = reach / fragmentDrag(masses[i]! * massScale)
+      const dx = directions[i * 3]!, dy = directions[i * 3 + 1]!, dz = directions[i * 3 + 2]!
+      for (const t of targets) {
+        if (t.distance - t.radius >= range) continue
+        if (t.distance <= t.radius) {
+          cast.push(i)
+          break
+        }
+        const along = (t.centre[0] - point[0]) * dx + (t.centre[1] - point[1]) * dy + (t.centre[2] - point[2]) * dz
+        if (along > 0 && t.distance * t.distance - along * along <= t.radius * t.radius) {
+          cast.push(i)
+          break
+        }
+      }
+    }
     const out: HitResult[] = []
     const ignore = skip.size > 0 ? skip : undefined
-    for (const t of targets) {
-      const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments, ...Array.from(t.id, (char) => char.charCodeAt(0) / 1000)))
-      const count = Math.floor(t.expected * keep + rng.next())
-      if (count === 0) continue
-      const axis = vec.scale(vec.sub(t.centre, point), 1 / Math.max(t.distance, 1e-6))
-      const side = Math.abs(axis[1]) < 0.9 ? vec.normalize(vec.cross(axis, [0, 1, 0])) : vec.normalize(vec.cross(axis, [1, 0, 0]))
-      const up = vec.cross(axis, side)
-      const cosMax = Math.cos(Math.asin(Math.min(1, t.radius / Math.max(t.distance, 1e-6))))
-      for (let i = 0; i < count; i++) {
-        const mass = mottMass(rng.next(), mottScale, casing.fragments)
-        const cos = 1 - rng.next() * (1 - cosMax)
-        const sin = Math.sqrt(Math.max(0, 1 - cos * cos))
-        const phi = rng.next() * Math.PI * 2
-        const dir: Vec3 = [
-          axis[0] * cos + (side[0] * Math.cos(phi) + up[0] * Math.sin(phi)) * sin,
-          axis[1] * cos + (side[1] * Math.cos(phi) + up[1] * Math.sin(phi)) * sin,
-          axis[2] * cos + (side[2] * Math.cos(phi) + up[2] * Math.sin(phi)) * sin,
-        ]
-        const drag = fragmentDrag(mass)
-        const slowed = (distance: number): number => (speed * Math.exp(-drag * distance) < FRAGMENT_MIN_SPEED ? 0 : Math.exp(-2 * drag * distance))
-        out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, slowed, ignore))
-      }
+    for (let j = 0; j < cast.length; j++) {
+      // more pieces than the cap: an even pick by their order in the case, exactly `cap` of them
+      if (cast.length > cap && Math.floor(((j + 1) * cap) / cast.length) === Math.floor((j * cap) / cast.length)) continue
+      const i = cast[j]!
+      const mass = masses[i]! * massScale
+      const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
+      const drag = fragmentDrag(mass)
+      const slowed = (distance: number): number => (speed * Math.exp(-drag * distance) < FRAGMENT_MIN_SPEED ? 0 : Math.exp(-2 * drag * distance))
+      out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, slowed, ignore))
     }
     return out
   }

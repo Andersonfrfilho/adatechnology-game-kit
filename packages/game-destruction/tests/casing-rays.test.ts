@@ -93,7 +93,8 @@ describe('the rays of a case', () => {
       for (const seed of SEEDS) {
         const delivered = fragmentsInRoom(seed, strike).reduce((sum, hit) => sum + (hit.energy ?? 0), 0)
         expect(delivered).toBeGreaterThan(0)
-        expect(delivered).toBeLessThanOrEqual(budget)
+        // all of a closed room's pieces can land: then the sum is the budget itself, up to the rounding of a float sum
+        expect(delivered).toBeLessThanOrEqual(budget * (1 + 1e-12))
       }
     }
   })
