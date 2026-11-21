@@ -1,0 +1,2886 @@
+{
+ "date": "2026-11-20T21:01:02.328Z",
+ "note": "CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.",
+ "machine": {
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "cores": 24,
+  "node": "v24.22.0",
+  "chrome": "157.0.8103.50",
+  "platform": "linux"
+ },
+ "budget": {
+  "p99": 4,
+  "max": 5
+ },
+ "rounds": 1,
+ "frames": 660,
+ "frameSeconds": 0.016666666666666666,
+ "budgetMode": "deadline",
+ "gatedThrottles": [
+  1
+ ],
+ "errors": [],
+ "cells": [
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "rounds": [
+    {
+     "frames": 659,
+     "p50": 0.1,
+     "p99": 5.9,
+     "max": 8.9,
+     "over4": 27,
+     "over5": 9,
+     "wakeFrame": 0.5,
+     "firstSecond": 219.4,
+     "maxWithWake": 8.9,
+     "loopMs": 257.5,
+     "pieceMs": 0.5,
+     "wakeMs": 0.8,
+     "updateMs": 1179.8,
+     "renderMs": 0,
+     "framep50": 1.2,
+     "framep99": 8.9,
+     "framemax": 18.4,
+     "load": 1.43
+    }
+   ],
+   "p50": 0.1,
+   "p99": 5.9,
+   "max": 8.9,
+   "over4": 27,
+   "over5": 9,
+   "wakeFrame": 0.5,
+   "wakeMedian": 0.5,
+   "firstSecond": 219.4,
+   "framep50": 1.2,
+   "framep99": 8.9,
+   "framemax": 18.4
+  },
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "rounds": [
+    {
+     "frames": 659,
+     "p50": 0,
+     "p99": 6.5,
+     "max": 7,
+     "over4": 23,
+     "over5": 19,
+     "wakeFrame": 0.5,
+     "firstSecond": 163.7,
+     "maxWithWake": 7,
+     "loopMs": 315.3,
+     "pieceMs": 0.5,
+     "wakeMs": 0.6,
+     "updateMs": 1112.8,
+     "renderMs": 0,
+     "framep50": 1,
+     "framep99": 8.2,
+     "framemax": 18.4,
+     "load": 1.61
+    }
+   ],
+   "p50": 0,
+   "p99": 6.5,
+   "max": 7,
+   "over4": 23,
+   "over5": 19,
+   "wakeFrame": 0.5,
+   "wakeMedian": 0.5,
+   "firstSecond": 163.7,
+   "framep50": 1,
+   "framep99": 8.2,
+   "framemax": 18.4
+  }
+ ],
+ "stageLabels": [
+  "splitLoose",
+  "adoptSplit",
+  "fitBoxes",
+  "rebuildHost",
+  "groundBody",
+  "pieceBodies",
+  "layGround",
+  "layTile",
+  "groundAsk",
+  "groundApply",
+  "groundFallback",
+  "groundShape",
+  "groundRelease",
+  "waterAt",
+  "ripple",
+  "joltStep",
+  "bridgeReads",
+  "readBack"
+ ],
+ "frameLabels": [
+  "world",
+  "fluids",
+  "explosives",
+  "destrEvents",
+  "fragments",
+  "settled",
+  "syncXform",
+  "partFx",
+  "destrOwn",
+  "vfxSim",
+  "vfxLayers",
+  "terrainMesh",
+  "water",
+  "footprints",
+  "fluidView",
+  "film",
+  "audio",
+  "modules",
+  "lights",
+  "matrices",
+  "stagesOut",
+  "action",
+  "explode",
+  "vfxPresent",
+  "sysInput",
+  "sysSimulate",
+  "sysSimulateEnd",
+  "sysPresent",
+  "sysLights",
+  "sysOther",
+  "queues"
+ ],
+ "frameExtras": [
+  "renderCpu",
+  "gpuWait",
+  "gpu",
+  "calls",
+  "triangles",
+  "particles",
+  "frags",
+  "pieces"
+ ],
+ "frameMetrics": [
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "f0Ms": 63.37,
+   "afterMs": 24.53
+  },
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "f0Ms": 67.73,
+   "afterMs": 26.57
+  }
+ ],
+ "explodeProbe": [
+  {
+   "round": 1,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "apply",
+   "isolated": false,
+   "f0": {
+    "updateMs": 56,
+    "actionMs": 27.1,
+    "explode": 20.5,
+    "action": 6.1,
+    "renderCpu": 7.9
+   },
+   "records": [],
+   "applyRecords": [
+    {
+     "mode": "fine",
+     "totalMs": 1.899999976158142,
+     "labels": {
+      "applyEvent": 1.4000000953674316,
+      "whCollapse": 0.10000002384185791,
+      "whNormals": 0.2999999523162842,
+      "explodeRest": 0.09999990463256836
+     },
+     "calls": {
+      "applyEvent": 15,
+      "whCollapse": 5,
+      "whNormals": 5
+     },
+     "counts": {
+      "events": 15,
+      "hostsWritten": 5,
+      "hostVertices": 1520,
+      "hostTriangles": 960
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.30000007152557373,
+     "labels": {
+      "applyEvent": 0.20000004768371582,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.3999999761581421,
+     "labels": {
+      "applyEvent": 0.2999999523162842,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.40000009536743164,
+     "labels": {
+      "applyEvent": 0.30000007152557373,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 18.700000047683716,
+     "labels": {
+      "applyEvent": 12.100000023841858,
+      "whCollapse": 0,
+      "whNormals": 3.3000000715255737,
+      "hingeOf": 0.3999999761581421,
+      "splitGroups": 1.399999976158142,
+      "exSlice": 0.39999985694885254,
+      "adoptThree": 1.0000001192092896,
+      "afterSplit": 0,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 700,
+      "whCollapse": 10,
+      "whNormals": 10,
+      "hingeOf": 1,
+      "splitGroups": 1,
+      "exSlice": 8,
+      "adoptThree": 8,
+      "afterSplit": 1
+     },
+     "counts": {
+      "events": 700,
+      "hostsWritten": 10,
+      "hostVertices": 23336,
+      "hostTriangles": 11740,
+      "splits": 8,
+      "extracts": 8,
+      "extractVertices": 624
+     }
+    }
+   ]
+  },
+  {
+   "round": 1,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "apply",
+   "isolated": false,
+   "f0": {
+    "updateMs": 55,
+    "actionMs": 28,
+    "explode": 20.4,
+    "action": 7.1,
+    "renderCpu": 8.3
+   },
+   "records": [],
+   "applyRecords": [
+    {
+     "mode": "fine",
+     "totalMs": 1.7999999523162842,
+     "labels": {
+      "applyEvent": 1.5,
+      "whCollapse": 0,
+      "whNormals": 0.19999992847442627,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 15,
+      "whCollapse": 5,
+      "whNormals": 5
+     },
+     "counts": {
+      "events": 15,
+      "hostsWritten": 5,
+      "hostVertices": 1520,
+      "hostTriangles": 960
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.40000009536743164,
+     "labels": {
+      "applyEvent": 0.30000007152557373,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.3999999761581421,
+     "labels": {
+      "applyEvent": 0.3999999761581421,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.6000000238418579,
+     "labels": {
+      "applyEvent": 0.6000000238418579,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 17.200000047683716,
+     "labels": {
+      "applyEvent": 12.100000023841858,
+      "whCollapse": 0.19999980926513672,
+      "whNormals": 1.1000001430511475,
+      "hingeOf": 0.3999999761581421,
+      "splitGroups": 1.5,
+      "exSlice": 0.40000009536743164,
+      "adoptThree": 1.100000023841858,
+      "afterSplit": 0,
+      "explodeRest": 0.3999999761581421
+     },
+     "calls": {
+      "applyEvent": 707,
+      "whCollapse": 9,
+      "whNormals": 9,
+      "hingeOf": 1,
+      "splitGroups": 1,
+      "exSlice": 10,
+      "adoptThree": 10,
+      "afterSplit": 1
+     },
+     "counts": {
+      "events": 707,
+      "hostsWritten": 9,
+      "hostVertices": 18408,
+      "hostTriangles": 8920,
+      "splits": 10,
+      "extracts": 10,
+      "extractVertices": 672
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 54.1,
+    "actionMs": 26.7,
+    "explode": 20.1,
+    "action": 5.9,
+    "renderCpu": 8.5
+   },
+   "records": []
+  },
+  {
+   "round": 2,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 54.1,
+    "actionMs": 27.5,
+    "explode": 20.1,
+    "action": 6.8,
+    "renderCpu": 8.2
+   },
+   "records": []
+  },
+  {
+   "round": 3,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "apply",
+   "isolated": false,
+   "f0": {
+    "updateMs": 55.1,
+    "actionMs": 26.1,
+    "explode": 19.2,
+    "action": 6.2,
+    "renderCpu": 7.8
+   },
+   "records": [],
+   "applyRecords": [
+    {
+     "mode": "fine",
+     "totalMs": 1.899999976158142,
+     "labels": {
+      "applyEvent": 1.4999998807907104,
+      "whCollapse": 0,
+      "whNormals": 0.30000007152557373,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 15,
+      "whCollapse": 5,
+      "whNormals": 5
+     },
+     "counts": {
+      "events": 15,
+      "hostsWritten": 5,
+      "hostVertices": 1520,
+      "hostTriangles": 960
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.7000000476837158,
+     "labels": {
+      "applyEvent": 0.7000000476837158,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.30000007152557373,
+     "labels": {
+      "applyEvent": 0.30000007152557373,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.6000000238418579,
+     "labels": {
+      "applyEvent": 0.5,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 18.40000009536743,
+     "labels": {
+      "applyEvent": 13.50000011920929,
+      "whCollapse": 0.19999992847442627,
+      "whNormals": 1.7000001668930054,
+      "hingeOf": 0.19999992847442627,
+      "splitGroups": 1.600000023841858,
+      "exSlice": 0.3999999761581421,
+      "adoptThree": 0.6999999284744263,
+      "afterSplit": 0,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 700,
+      "whCollapse": 10,
+      "whNormals": 10,
+      "hingeOf": 1,
+      "splitGroups": 1,
+      "exSlice": 8,
+      "adoptThree": 8,
+      "afterSplit": 1
+     },
+     "counts": {
+      "events": 700,
+      "hostsWritten": 10,
+      "hostVertices": 23336,
+      "hostTriangles": 11740,
+      "splits": 8,
+      "extracts": 8,
+      "extractVertices": 624
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "apply",
+   "isolated": false,
+   "f0": {
+    "updateMs": 65.8,
+    "actionMs": 33,
+    "explode": 24.2,
+    "action": 8,
+    "renderCpu": 8.8
+   },
+   "records": [],
+   "applyRecords": [
+    {
+     "mode": "fine",
+     "totalMs": 2,
+     "labels": {
+      "applyEvent": 1.7000000476837158,
+      "whCollapse": 0,
+      "whNormals": 0.2999999523162842,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 15,
+      "whCollapse": 5,
+      "whNormals": 5
+     },
+     "counts": {
+      "events": 15,
+      "hostsWritten": 5,
+      "hostVertices": 1520,
+      "hostTriangles": 960
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.5,
+     "labels": {
+      "applyEvent": 0.3999999761581421,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.20000004768371582,
+     "labels": {
+      "applyEvent": 0.10000002384185791,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.20000004768371582,
+     "labels": {
+      "applyEvent": 0.10000002384185791,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 20.699999928474426,
+     "labels": {
+      "applyEvent": 14.799999952316284,
+      "whCollapse": 0,
+      "whNormals": 1.7000000476837158,
+      "hingeOf": 0.3999999761581421,
+      "splitGroups": 2,
+      "exSlice": 0.3999999761581421,
+      "adoptThree": 1.100000023841858,
+      "afterSplit": 0,
+      "explodeRest": 0.2999999523162842
+     },
+     "calls": {
+      "applyEvent": 707,
+      "whCollapse": 9,
+      "whNormals": 9,
+      "hingeOf": 1,
+      "splitGroups": 1,
+      "exSlice": 10,
+      "adoptThree": 10,
+      "afterSplit": 1
+     },
+     "counts": {
+      "events": 707,
+      "hostsWritten": 9,
+      "hostVertices": 18408,
+      "hostTriangles": 8920,
+      "splits": 10,
+      "extracts": 10,
+      "extractVertices": 672
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 52.9,
+    "actionMs": 26.9,
+    "explode": 19.5,
+    "action": 6.7,
+    "renderCpu": 7.9
+   },
+   "records": []
+  },
+  {
+   "round": 4,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 54.6,
+    "actionMs": 27.8,
+    "explode": 21.4,
+    "action": 5.8,
+    "renderCpu": 8
+   },
+   "records": []
+  },
+  {
+   "round": 5,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "apply",
+   "isolated": false,
+   "f0": {
+    "updateMs": 55.3,
+    "actionMs": 27.4,
+    "explode": 19.7,
+    "action": 7.5,
+    "renderCpu": 8
+   },
+   "records": [],
+   "applyRecords": [
+    {
+     "mode": "fine",
+     "totalMs": 1.7000000476837158,
+     "labels": {
+      "applyEvent": 1.2999999523162842,
+      "whCollapse": 0,
+      "whNormals": 0.40000009536743164,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 15,
+      "whCollapse": 5,
+      "whNormals": 5
+     },
+     "counts": {
+      "events": 15,
+      "hostsWritten": 5,
+      "hostVertices": 1520,
+      "hostTriangles": 960
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.3999999761581421,
+     "labels": {
+      "applyEvent": 0.3999999761581421,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.2999999523162842,
+     "labels": {
+      "applyEvent": 0.2999999523162842,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.3999999761581421,
+     "labels": {
+      "applyEvent": 0.3999999761581421,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 16.800000071525574,
+     "labels": {
+      "applyEvent": 11.600000262260437,
+      "whCollapse": 0.19999992847442627,
+      "whNormals": 1.4000000953674316,
+      "hingeOf": 0.2999999523162842,
+      "splitGroups": 1.5,
+      "exSlice": 0.30000007152557373,
+      "adoptThree": 1.1999998092651367,
+      "afterSplit": 0,
+      "explodeRest": 0.2999999523162842
+     },
+     "calls": {
+      "applyEvent": 700,
+      "whCollapse": 10,
+      "whNormals": 10,
+      "hingeOf": 1,
+      "splitGroups": 1,
+      "exSlice": 8,
+      "adoptThree": 8,
+      "afterSplit": 1
+     },
+     "counts": {
+      "events": 700,
+      "hostsWritten": 10,
+      "hostVertices": 23336,
+      "hostTriangles": 11740,
+      "splits": 8,
+      "extracts": 8,
+      "extractVertices": 624
+     }
+    }
+   ]
+  },
+  {
+   "round": 5,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "apply",
+   "isolated": false,
+   "f0": {
+    "updateMs": 56.6,
+    "actionMs": 27.7,
+    "explode": 21.4,
+    "action": 5.9,
+    "renderCpu": 8.2
+   },
+   "records": [],
+   "applyRecords": [
+    {
+     "mode": "fine",
+     "totalMs": 1.7999999523162842,
+     "labels": {
+      "applyEvent": 1.2999998331069946,
+      "whCollapse": 0,
+      "whNormals": 0.40000009536743164,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 15,
+      "whCollapse": 5,
+      "whNormals": 5
+     },
+     "counts": {
+      "events": 15,
+      "hostsWritten": 5,
+      "hostVertices": 1520,
+      "hostTriangles": 960
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.3999999761581421,
+     "labels": {
+      "applyEvent": 0.2999999523162842,
+      "whCollapse": 0,
+      "whNormals": 0.10000002384185791,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.30000007152557373,
+     "labels": {
+      "applyEvent": 0.20000004768371582,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0.10000002384185791
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 0.40000009536743164,
+     "labels": {
+      "applyEvent": 0.40000009536743164,
+      "whCollapse": 0,
+      "whNormals": 0,
+      "explodeRest": 0
+     },
+     "calls": {
+      "applyEvent": 3,
+      "whCollapse": 1,
+      "whNormals": 1
+     },
+     "counts": {
+      "events": 3,
+      "hostsWritten": 1,
+      "hostVertices": 304,
+      "hostTriangles": 192
+     }
+    },
+    {
+     "mode": "fine",
+     "totalMs": 18.399999976158142,
+     "labels": {
+      "applyEvent": 11.799999833106995,
+      "whCollapse": 0,
+      "whNormals": 2.700000047683716,
+      "hingeOf": 0.5,
+      "splitGroups": 1.5,
+      "exSlice": 0.5999999046325684,
+      "adoptThree": 0.9000000953674316,
+      "afterSplit": 0,
+      "explodeRest": 0.40000009536743164
+     },
+     "calls": {
+      "applyEvent": 707,
+      "whCollapse": 9,
+      "whNormals": 9,
+      "hingeOf": 1,
+      "splitGroups": 1,
+      "exSlice": 10,
+      "adoptThree": 10,
+      "afterSplit": 1
+     },
+     "counts": {
+      "events": 707,
+      "hostsWritten": 9,
+      "hostVertices": 18408,
+      "hostTriangles": 8920,
+      "splits": 10,
+      "extracts": 10,
+      "extractVertices": 672
+     }
+    }
+   ]
+  },
+  {
+   "round": 6,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 54.6,
+    "actionMs": 27.4,
+    "explode": 19.9,
+    "action": 7,
+    "renderCpu": 8
+   },
+   "records": []
+  },
+  {
+   "round": 6,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 55.7,
+    "actionMs": 27.6,
+    "explode": 21.2,
+    "action": 5.7,
+    "renderCpu": 8.1
+   },
+   "records": []
+  }
+ ],
+ "gate": {
+  "compared": false,
+  "status": "no-base",
+  "reason": "no base report",
+  "physicsCompared": false,
+  "problems": [],
+  "skipped": []
+ },
+ "worstFrames": [
+  {
+   "modules": {
+    "module.frame#0:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.5,
+    "module.frame#13:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 1,
+   "probeMode": "apply",
+   "frame": 0,
+   "actionMs": 27.1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.1
+   },
+   "updateMs": 56,
+   "physicsMs": 0.6,
+   "stages": {
+    "splitLoose": 1.8,
+    "adoptSplit": 1.2,
+    "fitBoxes": 0.2,
+    "rebuildHost": 1.6,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 14,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.4,
+    "vfxLayers": 0,
+    "terrainMesh": 0.3,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0.1,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.4,
+    "lights": 0,
+    "matrices": 1.3,
+    "stagesOut": 4.8,
+    "action": 6.1,
+    "explode": 20.5,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.6,
+    "sysLights": 0,
+    "sysOther": 1.7,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 7.9,
+    "gpuWait": 0,
+    "gpu": 1.16,
+    "calls": 970,
+    "triangles": 381499,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#6:characters_area": 0.1,
+    "module.frame#12:floorplan_area": 0.5,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 5,
+   "probeMode": "apply",
+   "frame": 0,
+   "actionMs": 27.4,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.2,
+    "audio.voices": 1.3
+   },
+   "updateMs": 55.3,
+   "physicsMs": 0.5,
+   "stages": {
+    "splitLoose": 1.8,
+    "adoptSplit": 1.4,
+    "fitBoxes": 0.1,
+    "rebuildHost": 1.2,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12.3,
+    "fragments": 0.1,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.4,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 1.2,
+    "lights": 0,
+    "matrices": 1.2,
+    "stagesOut": 4.5,
+    "action": 7.5,
+    "explode": 19.7,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 1,
+    "sysLights": 0,
+    "sysOther": 1.8,
+    "queues": 0.2
+   },
+   "extras": {
+    "renderCpu": 8,
+    "gpuWait": 0,
+    "gpu": 1.34,
+    "calls": 971,
+    "triangles": 381851,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#1:weapons_area": 0.1,
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.5,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 3,
+   "probeMode": "apply",
+   "frame": 0,
+   "actionMs": 26.1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.1
+   },
+   "updateMs": 55.1,
+   "physicsMs": 0.6,
+   "stages": {
+    "splitLoose": 1.9,
+    "adoptSplit": 1.1,
+    "fitBoxes": 0,
+    "rebuildHost": 1.4,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.3,
+    "fluids": 0,
+    "explosives": 0.1,
+    "destrEvents": 13.8,
+    "fragments": 0.1,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.5,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.3,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.4,
+    "lights": 0,
+    "matrices": 1.8,
+    "stagesOut": 4.4,
+    "action": 6.2,
+    "explode": 19.2,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 1.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 1.8,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 7.8,
+    "gpuWait": 0,
+    "gpu": 2.19,
+    "calls": 957,
+    "triangles": 379159,
+    "particles": 363,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.1,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 6,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 27.4,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1
+   },
+   "updateMs": 54.6,
+   "physicsMs": 0.6,
+   "stages": {
+    "splitLoose": 1.9,
+    "adoptSplit": 1.1,
+    "fitBoxes": 0.1,
+    "rebuildHost": 1.5,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.3,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12,
+    "fragments": 0,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.5,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.5,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1,
+    "modules": 1.2,
+    "lights": 0,
+    "matrices": 1.5,
+    "stagesOut": 4.6,
+    "action": 7,
+    "explode": 19.9,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 0.9,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 1.7,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8,
+    "gpuWait": 0,
+    "gpu": 1.48,
+    "calls": 971,
+    "triangles": 381851,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#18:urban": 0.1,
+    "module.frame#20:crowd_area": 0.1,
+    "module.frame#21:crowd_area": 0.3
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 26.7,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.2,
+    "audio.voices": 1.1
+   },
+   "updateMs": 54.1,
+   "physicsMs": 0.8,
+   "stages": {
+    "splitLoose": 2,
+    "adoptSplit": 1.2,
+    "fitBoxes": 0,
+    "rebuildHost": 1.6,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 11.9,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0.1,
+    "destrOwn": 0,
+    "vfxSim": 0.5,
+    "vfxLayers": 0,
+    "terrainMesh": 0.4,
+    "water": 0.1,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.3,
+    "lights": 0,
+    "matrices": 2,
+    "stagesOut": 4.8,
+    "action": 5.9,
+    "explode": 20.1,
+    "vfxPresent": 0,
+    "sysInput": 0.7,
+    "sysSimulate": 0.9,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.4,
+    "sysLights": 0,
+    "sysOther": 1.9,
+    "queues": 0.2
+   },
+   "extras": {
+    "renderCpu": 8.5,
+    "gpuWait": 0,
+    "gpu": 1.46,
+    "calls": 962,
+    "triangles": 381011,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#18:urban": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 4,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 26.9,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 1.2
+   },
+   "updateMs": 52.9,
+   "physicsMs": 0.6,
+   "stages": {
+    "splitLoose": 1.7,
+    "adoptSplit": 1.1,
+    "fitBoxes": 0.1,
+    "rebuildHost": 1.4,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 11.7,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.4,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.2,
+    "modules": 1.4,
+    "lights": 0,
+    "matrices": 1.7,
+    "stagesOut": 4.3,
+    "action": 6.7,
+    "explode": 19.5,
+    "vfxPresent": 0,
+    "sysInput": 0.7,
+    "sysSimulate": 1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.4,
+    "sysLights": 0,
+    "sysOther": 1.3,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 7.9,
+    "gpuWait": 0.1,
+    "gpu": 1.91,
+    "calls": 962,
+    "triangles": 381011,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#18:urban": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 6,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 4.81,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 9.3,
+    "audio.voices": 1.3
+   },
+   "updateMs": 19.6,
+   "physicsMs": 4.3,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0.1,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.5,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.1,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.6,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.2,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 9.3
+   },
+   "extras": {
+    "renderCpu": 6,
+    "gpuWait": 0,
+    "gpu": 1.3,
+    "calls": 817,
+    "triangles": 382547,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#20:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 4.89,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 9.2,
+    "audio.voices": 1.4
+   },
+   "updateMs": 19.5,
+   "physicsMs": 4.3,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.3
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.6,
+    "settled": 0,
+    "syncXform": 0.1,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.4,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.6,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.3,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.1,
+    "sysLights": 0,
+    "sysOther": 0,
+    "queues": 9.2
+   },
+   "extras": {
+    "renderCpu": 5.8,
+    "gpuWait": 0,
+    "gpu": 1.36,
+    "calls": 819,
+    "triangles": 384051,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 5,
+   "probeMode": "apply",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 4.89,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 9.1,
+    "audio.voices": 1.3
+   },
+   "updateMs": 19.3,
+   "physicsMs": 2.3,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.3
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 4.2,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0.1,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 0.6,
+    "lights": 0,
+    "matrices": 0.7,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.1,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0.1,
+    "sysOther": 0.3,
+    "queues": 9.1
+   },
+   "extras": {
+    "renderCpu": 5.9,
+    "gpuWait": 0,
+    "gpu": 1.11,
+    "calls": 817,
+    "triangles": 382547,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#4:explosives_area": 0.1,
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 3,
+   "probeMode": "apply",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 7.13,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 10.8,
+    "audio.voices": 1.3
+   },
+   "updateMs": 18.8,
+   "physicsMs": 2.1,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.4,
+    "bridgeReads": 0,
+    "readBack": 0.1
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.6,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.1,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.7,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 10.8
+   },
+   "extras": {
+    "renderCpu": 5.7,
+    "gpuWait": 0,
+    "gpu": 1.11,
+    "calls": 820,
+    "triangles": 384217,
+    "particles": 378,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.6,
+    "module.frame#13:floorplan_area": 0.4,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#18:urban": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.3
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 3,
+   "probeMode": "apply",
+   "frame": 0,
+   "actionMs": 33,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.2
+   },
+   "updateMs": 65.8,
+   "physicsMs": 0.7,
+   "stages": {
+    "splitLoose": 2.5,
+    "adoptSplit": 1.3,
+    "fitBoxes": 0.1,
+    "rebuildHost": 1.1,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0.1,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.2,
+    "fluids": 0.1,
+    "explosives": 0,
+    "destrEvents": 15.7,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.5,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.5,
+    "water": 0.1,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.2,
+    "modules": 1.7,
+    "lights": 0,
+    "matrices": 1.9,
+    "stagesOut": 5.1,
+    "action": 8,
+    "explode": 24.2,
+    "vfxPresent": 0,
+    "sysInput": 0.9,
+    "sysSimulate": 1.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 2.1,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8.8,
+    "gpuWait": 0.2,
+    "gpu": 1.6,
+    "calls": 960,
+    "triangles": 380907,
+    "particles": 363,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 5,
+   "probeMode": "apply",
+   "frame": 0,
+   "actionMs": 27.7,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1
+   },
+   "updateMs": 56.6,
+   "physicsMs": 0.5,
+   "stages": {
+    "splitLoose": 2,
+    "adoptSplit": 1.3,
+    "fitBoxes": 0.2,
+    "rebuildHost": 2.3,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.4,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12.5,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.4,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1,
+    "modules": 1.3,
+    "lights": 0,
+    "matrices": 1.7,
+    "stagesOut": 5.8,
+    "action": 5.9,
+    "explode": 21.4,
+    "vfxPresent": 0,
+    "sysInput": 0.6,
+    "sysSimulate": 1.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.4,
+    "sysLights": 0,
+    "sysOther": 1.8,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8.2,
+    "gpuWait": 0,
+    "gpu": 0.35,
+    "calls": 971,
+    "triangles": 381743,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 6,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 27.6,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.1
+   },
+   "updateMs": 55.7,
+   "physicsMs": 0.5,
+   "stages": {
+    "splitLoose": 1.9,
+    "adoptSplit": 1.2,
+    "fitBoxes": 0.2,
+    "rebuildHost": 0.8,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12.5,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 1.8,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.3,
+    "water": 0.1,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1,
+    "modules": 1,
+    "lights": 0.1,
+    "matrices": 1.7,
+    "stagesOut": 4.1,
+    "action": 5.7,
+    "explode": 21.2,
+    "vfxPresent": 0,
+    "sysInput": 0.7,
+    "sysSimulate": 1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 1.8,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8.1,
+    "gpuWait": 0,
+    "gpu": 2.31,
+    "calls": 974,
+    "triangles": 383599,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#19:player_area": 0.1,
+    "module.frame#20:crowd_area": 0.1,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 1,
+   "probeMode": "apply",
+   "frame": 0,
+   "actionMs": 28,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.1
+   },
+   "updateMs": 55,
+   "physicsMs": 0.5,
+   "stages": {
+    "splitLoose": 1.9,
+    "adoptSplit": 1.5,
+    "fitBoxes": 0,
+    "rebuildHost": 0.9,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.4,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12.8,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.3,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.1,
+    "lights": 0,
+    "matrices": 1.6,
+    "stagesOut": 4.3,
+    "action": 7.1,
+    "explode": 20.4,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 0.9,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 1.4,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8.3,
+    "gpuWait": 0,
+    "gpu": 1.41,
+    "calls": 960,
+    "triangles": 381095,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#7:animals_area": 0.1,
+    "module.frame#12:floorplan_area": 0.5,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 4,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 27.8,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.2,
+    "audio.voices": 1.1
+   },
+   "updateMs": 54.6,
+   "physicsMs": 0.6,
+   "stages": {
+    "splitLoose": 1.8,
+    "adoptSplit": 1.8,
+    "fitBoxes": 0,
+    "rebuildHost": 0.6,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12.6,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0.2,
+    "destrOwn": 0,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.4,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.2,
+    "lights": 0,
+    "matrices": 1.4,
+    "stagesOut": 4.2,
+    "action": 5.8,
+    "explode": 21.4,
+    "vfxPresent": 0,
+    "sysInput": 0.9,
+    "sysSimulate": 1.2,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 1.3,
+    "queues": 0.2
+   },
+   "extras": {
+    "renderCpu": 8,
+    "gpuWait": 0,
+    "gpu": 1.32,
+    "calls": 966,
+    "triangles": 382771,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.5,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 27.5,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.1
+   },
+   "updateMs": 54.1,
+   "physicsMs": 0.6,
+   "stages": {
+    "splitLoose": 1.9,
+    "adoptSplit": 1.1,
+    "fitBoxes": 0.3,
+    "rebuildHost": 0.9,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 12.4,
+    "fragments": 0,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.3,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1,
+    "modules": 1.3,
+    "lights": 0,
+    "matrices": 1.9,
+    "stagesOut": 4.2,
+    "action": 6.8,
+    "explode": 20.1,
+    "vfxPresent": 0,
+    "sysInput": 0.7,
+    "sysSimulate": 0.8,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.4,
+    "sysLights": 0,
+    "sysOther": 1.7,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8.2,
+    "gpuWait": 0,
+    "gpu": 1.78,
+    "calls": 974,
+    "triangles": 383599,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#1:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.3,
+    "module.frame#20:crowd_area": 0.3,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 4,
+   "probeMode": "off",
+   "frame": 33,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {},
+   "updateMs": 29.5,
+   "physicsMs": 2.2,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 1.3,
+    "bridgeReads": 0,
+    "readBack": 0.6
+   },
+   "parts": {
+    "world": 23.5,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 0.5,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 0,
+    "modules": 1.1,
+    "lights": 0,
+    "matrices": 0.8,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.1,
+    "sysSimulate": 0.2,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.6,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 5.1,
+    "gpuWait": 0,
+    "gpu": 1.08,
+    "calls": 818,
+    "triangles": 389439,
+    "particles": 295,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#7:animals_area": 0.1,
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 3,
+   "probeMode": "apply",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1.55,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 9.9,
+    "audio.voices": 1.4
+   },
+   "updateMs": 22.8,
+   "physicsMs": 3.1,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.4,
+    "bridgeReads": 0,
+    "readBack": 0.3
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 3.6,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 2.1,
+    "terrainMesh": 0.1,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.4,
+    "modules": 0.6,
+    "lights": 0,
+    "matrices": 0.7,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.3,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.1,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 9.9
+   },
+   "extras": {
+    "renderCpu": 6.8,
+    "gpuWait": 0,
+    "gpu": 5.14,
+    "calls": 829,
+    "triangles": 385545,
+    "particles": 378,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 1,
+   "probeMode": "apply",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 3.87,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 8.6,
+    "audio.voices": 1.4
+   },
+   "updateMs": 20,
+   "physicsMs": 2.5,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0.1,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.2,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.3,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 5.1,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.4,
+    "modules": 0.4,
+    "lights": 0,
+    "matrices": 0.7,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.3,
+    "queues": 8.6
+   },
+   "extras": {
+    "renderCpu": 6.1,
+    "gpuWait": 0,
+    "gpu": 1.2,
+    "calls": 829,
+    "triangles": 385731,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#6:characters_area": 0.1,
+    "module.frame#12:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 5,
+   "probeMode": "apply",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 5.13,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 10.1,
+    "audio.voices": 1.2
+   },
+   "updateMs": 20,
+   "physicsMs": 2.8,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.2,
+    "bridgeReads": 0,
+    "readBack": 0.3
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.9,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.1,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.2,
+    "modules": 0.7,
+    "lights": 0,
+    "matrices": 1,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.5,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0,
+    "queues": 10.1
+   },
+   "extras": {
+    "renderCpu": 5.8,
+    "gpuWait": 0,
+    "gpu": 1.46,
+    "calls": 818,
+    "triangles": 384159,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 19
+   }
+  }
+ ]
+}
