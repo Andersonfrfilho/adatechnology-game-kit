@@ -101,6 +101,7 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
       const actual: THREE.Intersection[] = []
       probe.raycast(mesh, raycaster, actual)
       expect(expected.length).toBeGreaterThan(0)
+      // Equal hits are a sanity check (both sides ran mesh.raycast); boxBuildCount === 0 is the assertion that can fail.
       expect(summary(actual)).toEqual(summary(expected))
       expect(probe.boxBuildCount).toBe(0)
       return actual
@@ -148,6 +149,13 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
       mesh.setMatrixAt(1, new THREE.Matrix4().makeTranslation(0, 0, -2))
       const hits = expectFallback(mesh, throughCenter())
       expect(new Set(hits.map((hit) => hit.instanceId)).size).toBe(2)
+    })
+
+    it('a non-finite raycaster.far', () => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), doubleSided())
+      const raycaster = throughCenter()
+      raycaster.far = Infinity
+      expectFallback(mesh, raycaster)
     })
 
     it('a mesh with its own raycast', () => {
@@ -236,13 +244,67 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
       expect(backFacesOnly).toBeLessThan(all)
       expect(hitsAt(1)).toBe(0)
     })
+  })
 
-    it('raycaster.far = Infinity', () => {
-      const { mesh } = row()
-      const rays = shortRays(mesh, 50)
-      for (const raycaster of rays) raycaster.far = Infinity
-      const hits = expectSameHits(mesh, rays)
-      expect(hits.some((count) => count > 0)).toBe(true)
+  describe('the candidate buffers grow without losing or corrupting hits', () => {
+    const SPACING = 0.01
+
+    /** Parallel double-sided quads stacked along z (2 triangles each): a ray down -z has both triangles of every quad in its segment box, and hits one per quad. */
+    const stack = (quads: number): THREE.Mesh => {
+      const position: number[] = []
+      const index: number[] = []
+      for (let i = 0; i < quads; i++) {
+        const base = i * 4
+        const z = -i * SPACING
+        position.push(-1, -1, z, 1, -1, z, 1, 1, z, -1, 1, z)
+        index.push(base, base + 1, base + 2, base, base + 2, base + 3)
+      }
+      const geometry = new THREE.BufferGeometry()
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(position, 3))
+      geometry.setIndex(index)
+      const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }))
+      mesh.updateMatrixWorld(true)
+      return mesh
+    }
+
+    /** A ray down -z whose segment box covers the first `quads` quads of the stack. */
+    const downThrough = (quads: number): THREE.Raycaster => new THREE.Raycaster(new THREE.Vector3(0.1, 0.2, 0.5), new THREE.Vector3(0, 0, -1), 0, 0.5 + (quads - 0.5) * SPACING)
+
+    /** Probes the ray on `probe`, checks the hits against mesh.raycast, and returns how many candidate triangles the stand-in tested. */
+    const probeAndCompare = (probe: MeshRayProbe, mesh: THREE.Mesh, raycaster: THREE.Raycaster): number => {
+      const expected: THREE.Intersection[] = []
+      mesh.raycast(raycaster, expected)
+      const spy = vi.spyOn(THREE.Ray.prototype, 'intersectTriangle')
+      const actual: THREE.Intersection[] = []
+      probe.raycast(mesh, raycaster, actual)
+      const candidates = spy.mock.calls.length
+      spy.mockRestore()
+      expect(actual.length).toBeGreaterThan(0)
+      expect(actual.map((hit) => hit.faceIndex)).toEqual(expected.map((hit) => hit.faceIndex))
+      expect(summary(actual)).toEqual(summary(expected))
+      return candidates
+    }
+
+    it.each([
+      ['the first growth', 12, 21],
+      ['a second doubling', 25, 42],
+      ['a third doubling', 50, 85],
+      ['one large jump on a fresh probe', 200, 300],
+    ])('%s', (_name, quads, threshold) => {
+      const mesh = stack(quads)
+      const candidates = probeAndCompare(new MeshRayProbe(THREE), mesh, downThrough(quads))
+      expect(candidates).toBeGreaterThan(threshold)
+    })
+
+    it('a small ray, then a large one, then a small one again on the same probe', () => {
+      const mesh = stack(200)
+      const probe = new MeshRayProbe(THREE)
+      const small = probeAndCompare(probe, mesh, downThrough(5))
+      const large = probeAndCompare(probe, mesh, downThrough(200))
+      const smallAgain = probeAndCompare(probe, mesh, downThrough(5))
+      expect(small).toBeLessThan(21)
+      expect(large).toBeGreaterThan(300)
+      expect(smallAgain).toBe(small)
     })
   })
 
