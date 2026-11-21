@@ -281,6 +281,10 @@ ROOM_EXPLOSION_PAGE=/tmp/depois.html ROOM_EXPLOSION_OTHER_PAGE=/tmp/antes.html n
 
 - **A régua para se as duas páginas tiverem os mesmos bytes**, e o relatório JSON e o log trazem `pageSha256` da página medida: confira que o hash muda entre o antes e o depois.
 - **Copiar uma página por cima de `dist/test-room.html` não funciona**: sem `ROOM_EXPLOSION_PAGE` a régua refaz essa página (`build.mjs`) antes de medir, e a cópia some. Foi assim que pares antes × depois mediram um build contra ele mesmo.
+- **A página leva um carimbo** (`<meta name="kit-build">` no `<head>`, escrito pelo `build.mjs`): commit inteiro, `dirty` (arquivos rastreados diferentes do commit) e hora do build. A régua grava `pageBuild: {commit, dirty, builtAt}` no JSON e imprime o carimbo. Página guardada sem carimbo vira `pageBuild: null` com um aviso, e segue.
+- **`pageSha256` não conta o carimbo** (o hash é da página sem a tag, que muda a cada build): mesmo hash continua querendo dizer mesmo código.
+- **Build velho para a régua antes do navegador.** Quando ela refaz a própria página, confere cada `packages/*` com `src` e script `build` (não há lista confiável do que a página junta): `src` mais novo que o `dist`, ou `dist` faltando, e ela para dizendo os pacotes e o comando (`pnpm --filter <pacote> build` ou `pnpm build`). O carimbo da página refeita tem de ser o `HEAD`. Não há variável para pular.
+- **A base só aceita relatório de build limpo do commit gravado**: sem `pageBuild`, com `dirty` ou de outro commit, `saveBase` recusa. A base mesclada não guarda `pageBuild` (mistura noites de commits diferentes).
 - **A rodada diária recusa essas variáveis**: `nightly-gpu.mjs` para antes de rodar qualquer passo se `ROOM_EXPLOSION_PAGE` ou `ROOM_EXPLOSION_OTHER_PAGE` estiver definida (vazia conta como não definida), porque a base da noite tem de vir do build do próprio commit.
 - **Uma corrida com página guardada não grava a base**: se `ROOM_EXPLOSION_OUT` for o mesmo arquivo de `ROOM_EXPLOSION_BASE` junto com `ROOM_EXPLOSION_PAGE`, a régua para. A base só é gravada pela rodada diária (`saveBase`), e essa recusa a página guardada.
 

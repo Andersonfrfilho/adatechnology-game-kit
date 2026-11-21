@@ -5,7 +5,7 @@
 /**
  * @typedef {{ variant: string, throttle: number, kind: string, p99: number, max: number }} BaseCell
  * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} BaseMetric
- * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[], pageSha256?: string }} BaseReport
+ * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[], pageSha256?: string, pageBuild?: { commit: string, dirty: boolean, builtAt: string } | null }} BaseReport
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -40,7 +40,8 @@ const mergeEntries = (base, now, fields) => {
 export const mergeBase = (base, report) => {
   if ((report.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return /** @type {TReport | undefined} */ (base)
   if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return report
-  const { pageSha256: _lastNightPage, ...reportWithoutPage } = report
+  // the merged numbers come from several nights and commits, so no single stamp or hash describes them
+  const { pageSha256: _lastNightPage, pageBuild: _lastNightBuild, ...reportWithoutPage } = report
   return /** @type {TReport} */ ({
     ...reportWithoutPage,
     cells: mergeEntries(base.cells ?? [], report.cells ?? [], ['p99', 'max']),
@@ -65,11 +66,23 @@ export const assertNightlyBuildsItsOwnPage = (env) => {
 }
 
 /**
- * Saves the base after a night that passed: `mergeBase` of the file's base and the night's report. Writes nothing when `mergeBase` gives nothing (a non-c4 report and no base).
- * @param {string} reportFile @param {string} baseFile
+ * The base only takes a report of a clean build of the commit being saved: a stale, dirty or unstamped page would put other code's numbers in it.
+ * @param {BaseReport} report @param {string} head
  */
-export const saveBase = (reportFile, baseFile) => {
+export const assertReportIsOfHead = (report, head) => {
+  const build = report.pageBuild
+  if (!build) throw new Error('base: the report has no pageBuild (the page carried no build stamp): refusing to save it as the base')
+  if (build.dirty) throw new Error(`base: the report's page was built from a dirty tree (commit ${build.commit.slice(0, 12)}): refusing to save it as the base`)
+  if (build.commit !== head) throw new Error(`base: the report's page was built at ${build.commit.slice(0, 12)} but HEAD is ${head.slice(0, 12)}: refusing to save it as the base`)
+}
+
+/**
+ * Saves the base after a night that passed: `mergeBase` of the file's base and the night's report, which must be of a clean build of `head`. Writes nothing when `mergeBase` gives nothing (a non-c4 report and no base).
+ * @param {string} reportFile @param {string} baseFile @param {string} head
+ */
+export const saveBase = (reportFile, baseFile, head) => {
   const report = JSON.parse(readFileSync(reportFile, 'utf8'))
+  assertReportIsOfHead(report, head)
   const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
   const merged = mergeBase(base, report)
   if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))

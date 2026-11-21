@@ -154,7 +154,7 @@ async function main() {
     const explosionBase = join(cacheDir, 'room-explosion-base.json')
     const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_EXPLOSIVE: 'c4', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
     results.push(explosion)
-    if (explosion.ok && existsSync(explosionOut)) saveBase(explosionOut, explosionBase)
+    if (explosion.ok && existsSync(explosionOut)) saveBase(explosionOut, explosionBase, sha)
   }
   const failed = results.filter((result) => !result.ok)
   const status = failed.length ? `FAILED ${failed.map((result) => result.name).join(', ')}` : 'PASSED'

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
 import { mergeUserSfxManifests } from '../../packages/game-audio/scripts/sfx-merge.mjs'
 import { writeLocalIndex } from '../../site/local-index.mjs'
+import { stampMarkupOf } from '../../tools/gpu/page-stamp.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -216,7 +217,10 @@ const sfxScript = sfxManifest ? `<script>window.__kitSfx=${safe(JSON.stringify({
 const html = `${fullHtml.slice(0, at)}${sfxScript}<script>${safe(joltBoot)}</script>\n<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`
 
 mkdirSync(join(here, 'dist'), { recursive: true })
-writeFileSync(join(here, 'dist/test-room.html'), html)
+// the stamp the gauge reads back (tools/gpu/page-stamp.mjs): the commit, whether tracked files differ from it, and when
+const git = (/** @type {string[]} */ args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim()
+const stamp = stampMarkupOf({ commit: git(['rev-parse', 'HEAD']), dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '', builtAt: new Date().toISOString() })
+writeFileSync(join(here, 'dist/test-room.html'), html.replace('</head>', () => `${stamp}</head>`))
 // Jolt's multithreaded build beside the page (?joltBuild=multithread): its pthreads load this same file by its URL, so it cannot ride inside the page
 copyFileSync(createRequire(join(pkg('game-physics-jolt'), 'package.json')).resolve('jolt-physics/wasm-compat-multithread'), join(here, 'dist/jolt-physics.multithread.wasm-compat.js'))
 console.log(`dist/test-room.html ${(html.length / 1024).toFixed(0)} KB`)
