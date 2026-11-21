@@ -41,3 +41,7 @@ node tools/shapes-bench/dist/cli.js --baseline-from run.json  # baseline from an
 
 Refresh the baseline (`--update`, or `--baseline-from` the CI artifact) in the commit that makes a builder faster or accepts a slower one, and
 say why in the commit message.
+
+## Baseline provenance
+
+`houses/*` entries (2026-11-21): the median calibrated ratio of 20 CI runs (`shapes-bench-run` artifacts of runs 44853823865 to 44944445756, 2026-11-21, commits at or after `cd5113c71`; ids in `~/.cache/adatechnology-game-kit/medicoes/2026-11-21-shapes-bench-casas/ci-houses.json`), replacing the single fast CI sample of 2026-11-13 that made `pharmacy` and `apartment_basic` fail about one run in three. The houses are about 15% slower than on 2026-11-13 (local A/B, 5 alternated runs, group sum of ratios 387 to 444, every builder +9% to +26%) because wiring, pipe and drain runs became one piece per stretch (`ced4a5ed3`, `c69a17747`, `cd5113c71`); this was accepted on 2026-11-21 as the cost of new content. Known small waste left as a follow-up: `solidsOf` is rebuilt per run in `drains.ts`, `water.ts` and `electrical.ts`. Every other entry is unchanged.
