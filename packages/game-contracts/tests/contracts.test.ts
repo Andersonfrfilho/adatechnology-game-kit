@@ -42,6 +42,14 @@ describe('impact contract', () => {
     expect(checkHit({ type: 'nope' as Hit['type'], point: [0, 0, 0] })[0]).toMatch(/unknown damage type/)
   })
 
+  it('takes `pieces` (the fragments a ray stands for) only as a finite number of at least 1', () => {
+    const shot: Hit = { type: 'ballistic', point: [0, 0, 0], direction: [0, 0, 1], energy: 500, caliber: 3 }
+    expect(IMPACT_CONTRACT.ballistic.optional).toContain('pieces')
+    expect(checkHit({ ...shot, pieces: 1 })).toEqual([])
+    expect(checkHit({ ...shot, pieces: 4.5 })).toEqual([])
+    for (const pieces of [0, -2, 0.5, Number.NaN, Number.POSITIVE_INFINITY]) expect(checkHit({ ...shot, pieces })).toEqual(['ballistic hit "pieces" must be a finite number of at least 1'])
+  })
+
   it('the cost contract: opt-in, passes a cached impl and reports one that rebuilds its state on every read', () => {
     const cached = panelImpl()
     const state = cached.state()

@@ -93,7 +93,7 @@ export interface ImpactContract {
 }
 
 export const IMPACT_CONTRACT: Record<DamageType, ImpactContract> = {
-  ballistic: { required: ['type', 'point', 'direction', 'energy', 'caliber'], optional: ['space', 'source'], note: 'bullets and pellets: joules and diameter in millimetres' },
+  ballistic: { required: ['type', 'point', 'direction', 'energy', 'caliber'], optional: ['space', 'source', 'pieces'], note: 'bullets and pellets: joules and diameter in millimetres' },
   blunt: { required: ['type', 'point', 'energy'], optional: ['direction', 'radius', 'space', 'source'], note: 'contact radius in metres (default 3 cm)' },
   slash: { required: ['type', 'point', 'energy'], optional: ['direction', 'radius', 'space', 'source'], note: 'axes, knives, machetes' },
   explosive: { required: ['type', 'point', 'energy', 'radius'], optional: ['lethalRadius', 'space', 'source'], note: 'point is the centre of the blast, radius the range in metres' },
@@ -110,6 +110,7 @@ export const checkHit = (hit: Hit): string[] => {
     const v = (hit as unknown as Record<string, unknown>)[f]
     if (v === undefined || (Array.isArray(v) ? v.some((n) => !Number.isFinite(n)) : typeof v === 'number' && !Number.isFinite(v))) out.push(`${hit.type} hit needs "${f}"`)
   }
+  if (hit.pieces !== undefined && !(Number.isFinite(hit.pieces) && hit.pieces >= 1)) out.push(`${hit.type} hit "pieces" must be a finite number of at least 1`)
   return out
 }
 
