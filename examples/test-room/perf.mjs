@@ -1,9 +1,10 @@
 // Explosion frame budget of the test room: opens dist/test-room.html?area=vfx, lets the room's own loop run (real frames, real renders) and fires every explosive of the
-// arsenal, first one at a time (cold), then again (warm), then all of them at once with a burst of grenades (storm), and checks the budget below in every phase.
+// arsenal, first one at a time (cold), then again (warm), then all of them at once with a burst of grenades (burst), and checks the budget below in every phase.
 //   node perf.mjs                      counters only (CI, software GL): shaders compiled after load, GPU buffers created per warm explosion, draw calls back to idle
 //   PERF_MODE=gpu node perf.mjs        also frame times and long tasks (a machine with a real GPU; on a PRIME laptop run it with the NVIDIA offload env, see README)
 //   PERF_CHROME=/usr/bin/google-chrome-stable   a Chrome to drive instead of Playwright's Chromium
-//   PERF_SHARD=cold[:K/N] | warm | storm | horde   one share: the first uses (the K-th of N slices), warm_all, storm + after_storm, or the horde phases (PERF_PHASES picks which)
+//   PERF_SHARD=cold[:K/N] | warm | burst | horde   one share: the first uses (the K-th of N slices), warm_all, burst + after_burst, or the horde phases (PERF_PHASES picks which);
+//                                      `storm` is the old name of `burst` (it read as weather): still taken, with a warning
 //   PERF_HORDE=2000                    agents of the horde phases (default 2000 in gpu mode, 300 in counters mode, where software GL pays per agent)
 //   PERF_TIER=integrated | discrete    the GPU tier of the plan's D12 (crowd step budget); PERF_GPU=intel|nvidia is its deprecated alias
 //   PERF_PIXEL_RATIO=0.5               the resolution scale of the run: separates pixel cost from vertex cost
@@ -24,6 +25,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
+import { BURST_SHARD, shardOf } from '../../tools/gpu/perf-shard.mjs'
+
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
 /** @typedef {NonNullable<TestRoom['webgl']>} WebGL */
 /** @typedef {NonNullable<TestRoom['lights']>} LightBudget */
@@ -43,9 +46,10 @@ const require = createRequire(import.meta.url)
 const EXPLOSIVES = ['frag_grenade', 'molotov', 'pipe_bomb', 'm79', 'rpg_7', 'at4', 'dynamite', 'c4', 'claymore']
 const sliceOf = (/** @type {string[]} */ list) => list.filter((_, at) => at % SLICE_COUNT === SLICE_AT - 1)
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
-// PERF_SHARD=cold|warm|storm|horde runs one share (CI runs them in parallel); cold:K/N runs the K-th of N slices of the explosives; unset runs everything
-const [SHARD, SLICE] = (process.env.PERF_SHARD ?? 'all').split(':')
-const runs = (/** @type {string} */ part) => SHARD === 'all' || SHARD === part || (part === 'warm' && SHARD === 'storm')
+// PERF_SHARD=cold|warm|burst|horde runs one share (CI runs them in parallel); cold:K/N runs the K-th of N slices of the explosives; unset runs everything
+const { shard: SHARD, slice: SLICE, warning: SHARD_WARNING } = shardOf(process.env.PERF_SHARD)
+if (SHARD_WARNING) console.warn(`perf: ${SHARD_WARNING}`)
+const runs = (/** @type {string} */ part) => SHARD === 'all' || SHARD === part || (part === 'warm' && SHARD === BURST_SHARD)
 const [SLICE_AT, SLICE_COUNT] = (SLICE ?? '1/1').split('/').map(Number)
 // A hitch is a frame that misses two 60 Hz refreshes; a long task blocks input for more than 50 ms.
 const BUDGET = {
@@ -56,8 +60,8 @@ const BUDGET = {
   maxFramesWaiting: 15,
   programsAfterLoad: 0,
   buffersPerWarmExplosion: Number(process.env.PERF_BUFFERS_PER_EXPLOSION ?? 40),
-  drawGrowthAfterStorm: 1.1,
-  // what the blasts dent or tear off draws on its own again, out of its batch: the car's parts and the room's furniture (~56 measured after the storm)
+  drawGrowthAfterBurst: 1.1,
+  // what the blasts dent or tear off draws on its own again, out of its batch: the car's parts and the room's furniture (~56 measured after the burst)
   releasedParts: 60,
 }
 const HORDE = Number(process.env.PERF_HORDE ?? (GPU_MODE ? 2000 : 300))
@@ -180,9 +184,9 @@ if (process.env.PERF_ONLY === 'light_slots') {
 if (runs('cold')) for (const id of sliceOf(EXPLOSIVES)) await phase(`cold_${id}`, () => fireAndSettle([id], { settleMs: FIRST_USE_SETTLE_MS }))
 // the warm shard alone first uses every explosive once, unmeasured, so warm_all measures second uses as in a full run
 if (!runs('cold') && runs('warm')) await fireAndSettle(EXPLOSIVES, { gapMs: 300, settleMs: FIRST_USE_SETTLE_MS })
-const warm = runs('warm') && SHARD !== 'storm' ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, { gapMs: 1200 })) : undefined
-const storm = runs('warm') && SHARD !== 'warm' ? await phase('storm', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], { gapMs: 120 })) : undefined
-const after = runs('warm') && SHARD !== 'warm' ? await phase('after_storm', () => pause(3000)) : undefined
+const warm = runs('warm') && SHARD !== BURST_SHARD ? await phase('warm_all', () => fireAndSettle(EXPLOSIVES, { gapMs: 1200 })) : undefined
+const burst = runs('warm') && SHARD !== 'warm' ? await phase('burst', () => fireAndSettle([...EXPLOSIVES, ...EXPLOSIVES, ...EXPLOSIVES, ...Array(20).fill('frag_grenade')], { gapMs: 120 })) : undefined
+const after = runs('warm') && SHARD !== 'warm' ? await phase('after_burst', () => pause(3000)) : undefined
 
 // the horde phases reload the page on their own bench state (seed, scene, physics, count: applied in that order whatever the URL says)
 /** @type {Record<string, HordeResult>} */
@@ -210,11 +214,11 @@ if (slots) for (const problem of lightSlotReport.problems) hard(`light_slots: ${
 if (slots && slots.programs > 0) hard(`light_slots: ${slots.programs} shader programs linked while the slots were lit one by one`)
 const warmBuffers = warm ? warm.buffers / EXPLOSIVES.length : 0
 if (warmBuffers > BUDGET.buffersPerWarmExplosion) fail(`warm_all: ${warmBuffers.toFixed(0)} GPU buffers created per explosion (budget ${BUDGET.buffersPerWarmExplosion})`)
-if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterStorm + BUDGET.releasedParts) fail(`after_storm: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
+if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterBurst + BUDGET.releasedParts) fail(`after_burst: ${after.drawsPerFrame} draws per frame, idle was ${idle.drawsPerFrame}: the explosions left drawn things behind`)
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) hard(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ pageSha256, mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, storm: storm?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ pageSha256, mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, burst: burst?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
 const REPORT_TARGETS = process.env.PERF_TARGETS === 'report'
 for (const { text, kind } of failures) console.log(`${kind === 'hard' || !REPORT_TARGETS ? 'FAIL ' : 'TARGET'}  ${text}`)
 const blocking = failures.filter((failure) => failure.kind === 'hard' || !REPORT_TARGETS)
@@ -255,7 +259,7 @@ async function fireAndSettle(ids, { gapMs = 0, aim = ROOM_AIM, settleMs = SETTLE
 
 // `tool.phase` turns null in the frame that ends the draw, and that frame is the trigger's too: a pull before the next frame still answers `drawing` and throws nothing.
 // Software GL draws a frame in 0.3–1.3 s, longer than DRAW_MS, so the pull waits for frames until the trigger takes it (as a player clicking again would).
-// Before UseStatus the second use of each launcher (warm_all, storm) answered `empty` and fired nothing, unnoticed: the other blasts hid it.
+// Before UseStatus the second use of each launcher (warm_all, burst) answered `empty` and fired nothing, unnoticed: the other blasts hid it.
 /** @param {string} id @param {PerfAim} aim */
 async function pullUntilItGoes(id, aim) {
   const deadline = Date.now() + SETTLE_TIMEOUT_MS

@@ -22,8 +22,8 @@ test('a small number does not block on noise under the floor (one more draw on 4
 })
 
 test('better than main never blocks, and a phase only the branch has is not compared', () => {
-  const base = report([phase({ name: 'after_storm', drawsPerFrame: 555 })])
-  assert.deepEqual(compare(base, report([phase({ name: 'after_storm', drawsPerFrame: 150 }), phase({ name: 'new_phase', p99: 99 })]), 0.1), [])
+  const base = report([phase({ name: 'after_burst', drawsPerFrame: 555 })])
+  assert.deepEqual(compare(base, report([phase({ name: 'after_burst', drawsPerFrame: 150 }), phase({ name: 'new_phase', p99: 99 })]), 0.1), [])
 })
 
 test('the horde metrics are compared by phase id', () => {
