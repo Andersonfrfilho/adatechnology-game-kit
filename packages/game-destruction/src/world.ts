@@ -81,11 +81,11 @@ const DMG_PER_J = 0.02
 /** Most fragment rays cast by one blast when the charge does not say. */
 const FRAGMENT_RAYS = 256
 /**
- * The most pieces of a case one ray may stand for past the cap (`throwCasing`). With half the default cap kept for the pieces not at a registered body, the largest case in
- * the data (the M67's 1000 pieces) stands at most 1000 / 128 = 7.8 a ray, so the bound binds only when a charge lowers `maxRays`; past it the excess is dropped, not piled
- * on a few rays whose weighted damage would go into one part each.
+ * The most pieces of a case one ray may stand for past the cap (`throwCasing`; `DestructionOptions.fragmentMaxWeight`). With half the default cap kept for the pieces not at a
+ * registered body, the largest case in the data (the M67's 1000 pieces) stands at most 1000 / 128 = 7.8 a ray; past the bound the excess is dropped, not piled on a few rays
+ * whose weighted damage would go into one part each.
  */
-const MAX_FRAGMENT_WEIGHT = 8
+const FRAGMENT_MAX_WEIGHT = 8
 /**
  * Blast options (all off until asked for). Shelter: a part the line from the blast to the target crosses lets through `exp(-r / k)`, `r` being the
  * hit points of the slab it crosses per square metre (`hpPerKg * density * path * damageScale.shelter`). Fragment hits: up to 24 fragments, half their
@@ -4337,7 +4337,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string, weight = 1): number => {
     if (isLost(p) || amount <= 0) return 0
     const prev = p.st.hp
-    p.st.hp -= amount * weight
+    // the pieces a ray stands for add hit points until the part fails, not past it: a pane one piece breaks is not broken four times by a ray that stands for four
+    p.st.hp -= weight > 1 ? Math.min(amount * weight, Math.max(amount, prev)) : amount
     const axis = origin && type !== 'fire' && type !== 'heat' ? severAxis(p) : -1
     if (axis >= 0 && p.st.hp > 0) {
       const band = bandOf(o, p, axis, origin!)
@@ -5128,7 +5129,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (im) {
         // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
         const scaled = extras.penetration && E < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (E / energy)])) } : extras
-        const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}) })
+        const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}), ...(flight && flight.weight > 1 ? { pieces: flight.weight } : {}) })
         r.part = rh.part
         r.point = rh.point
         // the world already traced the drawn surface (surfaceRay): hand its normal back so the host never re-raycasts the body for the push
@@ -5223,7 +5224,29 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const casing = charge.casing
     if (!casing || !(casing.mass > 0) || !(casing.fragments > 0)) return []
     const { mottScale, speed } = casingFlight(casing)
-    const farthest = Math.log(speed / FRAGMENT_MIN_SPEED) / fragmentDrag(mottMass(0, mottScale, casing.fragments))
+    const pieces = Math.max(1, Math.floor(casing.fragments))
+    const cap = Math.min(pieces, Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS)))
+    const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments))
+    const directions = new Float64Array(pieces * 3)
+    const masses = new Float64Array(pieces)
+    let drawn = 0
+    for (let i = 0; i < pieces; i++) {
+      const z = 1 - 2 * rng.next()
+      const phi = rng.next() * Math.PI * 2
+      const ring = Math.sqrt(Math.max(0, 1 - z * z))
+      directions[i * 3] = ring * Math.cos(phi)
+      directions[i * 3 + 1] = z
+      directions[i * 3 + 2] = ring * Math.sin(phi)
+      masses[i] = mottMass(rng.next(), mottScale, casing.fragments)
+      drawn += masses[i]!
+    }
+    // Mott's draws add up to the case only on average (a few heavy pieces make a heavy draw; the cut tail of the distribution makes it some 3% light): scaled to the case
+    // both ways, so the pieces carry exactly the case's energy, half its mass times the square of its first speed
+    const massScale = casing.mass / drawn
+    let heaviest = 0
+    for (let i = 0; i < pieces; i++) heaviest = Math.max(heaviest, masses[i]!)
+    // the reach of the heaviest piece drawn, after the scale (which can make it heavier than Mott's heaviest)
+    const farthest = Math.log(speed / FRAGMENT_MIN_SPEED) / fragmentDrag(heaviest * massScale)
     const skip = new Set<string>()
     for (const id of charge.ignore ?? []) {
       const ignored = objects.get(id)
@@ -5272,25 +5295,6 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return parts
     }
     if (groups.length === 0) return []
-    const pieces = Math.max(1, Math.floor(casing.fragments))
-    const cap = Math.min(pieces, Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS)))
-    const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments))
-    const directions = new Float64Array(pieces * 3)
-    const masses = new Float64Array(pieces)
-    let drawn = 0
-    for (let i = 0; i < pieces; i++) {
-      const z = 1 - 2 * rng.next()
-      const phi = rng.next() * Math.PI * 2
-      const ring = Math.sqrt(Math.max(0, 1 - z * z))
-      directions[i * 3] = ring * Math.cos(phi)
-      directions[i * 3 + 1] = z
-      directions[i * 3 + 2] = ring * Math.sin(phi)
-      masses[i] = mottMass(rng.next(), mottScale, casing.fragments)
-      drawn += masses[i]!
-    }
-    // Mott's draws add up to the case only on average (a few heavy pieces make a heavy draw; the cut tail of the distribution makes it some 3% light): scaled to the case
-    // both ways, so the pieces carry exactly the case's energy, half its mass times the square of its first speed
-    const massScale = casing.mass / drawn
     const reach = Math.log(speed / FRAGMENT_MIN_SPEED)
     const cast: number[] = []
     const atBody: boolean[] = []
@@ -5317,20 +5321,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     const out: HitResult[] = []
     const ignore = skip.size > 0 ? skip : undefined
-    // More pieces than the cap. The pieces at a registered body are cast one ray one piece (a body takes its hits through its own `hit`, which knows nothing of a weight),
-    // up to what the rest leaves them: the rest keeps at least half the cap (or all of its pieces, if fewer), so a car beside the charge cannot take the whole cap and leave
-    // the room round it a ray or two of enormous weight. Body pieces past their share are picked evenly among themselves and the others left out, unweighted. The rest share
-    // their part of the cap by an even pick in their order in the case, each cast one standing for `rest / picked` of them (Horvitz-Thompson: every piece is in the pick at
-    // most once, so the hit points and joint wear the room takes are, on average, those of all its pieces), never for more than `MAX_FRAGMENT_WEIGHT`: past that the excess
-    // is left out instead of piled on a few rays. The order of the case is already random, so the pick draws nothing. What is cast is deterministic for a world state and
-    // a charge, but not local: a part added anywhere in reach changes which pieces qualify, and so which of them the pick keeps near the charge.
+    // More pieces than the cap. The pieces at a registered body take what the rest leaves them: the rest keeps at least half the cap (or all of its pieces, if fewer), so a
+    // car beside the charge cannot take the whole cap and leave the room round it a ray or two of enormous weight. Each stratum (the body pieces, the rest) is picked evenly
+    // in its order in the case, and each cast ray stands for `qualifying / picked` of its stratum (Horvitz-Thompson: every piece is in the pick at most once, so what adds up
+    // over a part, its hit points, the wear of its joints, is on average that of all its pieces). A body learns it through `Hit.pieces`; the world's own parts through the
+    // ray's weight. A ray never stands for more than `fragmentMaxWeight` (default 8): past that the excess is left out instead of piled on a few rays. The order of the case
+    // is already random, so the pick draws nothing. What is cast is deterministic for a world state and a charge, but not local: a part added anywhere in reach changes
+    // which pieces qualify, and so which of them the pick keeps near the charge.
     const over = cast.length > cap
     const bodyPieces = over ? atBody.filter(Boolean).length : 0
     const rest = cast.length - bodyPieces
     const bodyCap = Math.min(bodyPieces, cap - Math.min(rest, Math.floor(cap / 2)))
     const restCap = over ? Math.min(rest, cap - bodyCap) : rest
-    const restWeight = restCap > 0 && rest > restCap ? Math.min(MAX_FRAGMENT_WEIGHT, rest / restCap) : 1
-    const nose = casing.noseFactor
+    const maxWeight = Math.max(1, options.fragmentMaxWeight ?? FRAGMENT_MAX_WEIGHT)
+    const weightOf = (count: number, kept: number): number => (kept > 0 && count > kept ? Math.min(maxWeight, count / kept) : 1)
+    const picked: number[] = []
+    // the initial energy the cast rays carry, by stratum: [unweighted, body, rest]
+    let plain = 0
+    let bodyEnergy = 0
+    let restEnergy = 0
     let bodySeen = 0
     let restSeen = 0
     for (let j = 0; j < cast.length; j++) {
@@ -5339,10 +5348,27 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const count = body ? bodyPieces : rest
       const kept = body ? bodyCap : restCap
       if (over && Math.floor(((seen + 1) * kept) / count) === Math.floor((seen * kept) / count)) continue
+      picked.push(j)
+      const energy = 0.5 * masses[cast[j]!]! * massScale * speed * speed
+      if (!over) plain += energy
+      else if (body) bodyEnergy += energy
+      else restEnergy += energy
+    }
+    // By construction the weighted rays never carry more than the case: a draw that picked heavy pieces among the weighted ones has the weights above 1 shrunk until the
+    // cast energy, weighted, is at most half the case's mass times its first speed squared (the cast pieces are distinct real pieces, so with every weight at 1 it fits)
+    const budget = 0.5 * casing.mass * speed * speed
+    const bodyWeight = weightOf(bodyPieces, bodyCap)
+    const restWeight = weightOf(rest, restCap)
+    const excess = (bodyWeight - 1) * bodyEnergy + (restWeight - 1) * restEnergy
+    const room = budget - plain - bodyEnergy - restEnergy
+    const shrink = excess > room ? Math.max(0, room) / excess : 1
+    const nose = casing.noseFactor
+    for (const j of picked) {
       const i = cast[j]!
       const mass = masses[i]! * massScale
       const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
-      const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED, mass, nose, weight: body ? 1 : restWeight }
+      const weight = 1 + ((atBody[j]! ? bodyWeight : restWeight) - 1) * shrink
+      const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED, mass, nose, weight }
       out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
     }
     return out

@@ -1,3 +1,4 @@
+import { checkHit } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
 
@@ -303,13 +304,15 @@ describe('pieces past the cap stand for the ones left out', () => {
     const world = createDestruction({ seed: 2 })
     objectRoom(world, { half: 3, split: 3, material: 'brick', thickness: 0.2 })
     const events = world.explode(ORIGIN, M67.energy, 15, 'test', { charge: M67.charge }).map((result) => result.events)
-    expect(hashOf(JSON.stringify(events))).toBe('7a32aad62c84c')
+    // changes with: the pick past the cap, the weights and their energy bound, the drawn pieces (seed stream, mass scale), anything a ray does in brick
+    expect(hashOf(JSON.stringify(events))).toBe('1c368a5d18429')
   })
 
   it('under the cap nothing is weighted: the event stream of a pipe bomb in a closed room, pinned (the weights never reach it; it changed once, when the drawn masses were scaled to the case both ways)', () => {
     const world = createDestruction({ seed: 2 })
     objectRoom(world, { half: 3, split: 3, material: 'brick', thickness: 0.2 })
     const events = world.explode(ORIGIN, PIPE_BOMB.energy, 10, 'test', { charge: PIPE_BOMB.charge }).map((result) => result.events)
+    // changes with: the drawn pieces (seed stream, mass scale), drag and reach, anything a ray does in brick; never with the weights (nothing here is over the cap)
     expect(hashOf(JSON.stringify(events))).toBe('898ce0ab96724')
   })
 })
@@ -332,7 +335,7 @@ describe('a car in a room past the cap', () => {
     return { damage, carHits: car.fragments().length }
   }
 
-  it('the car takes its own pieces, the room on average the damage of all of its, and no throw puts more than twice the case energy into the room', () => {
+  it('the car takes its own pieces, the room on average the damage of all of its, and no throw puts more than the case energy into the room (by construction)', () => {
     const pieces = M67.charge.casing!.fragments
     const share = shareOfBoxes(ORIGIN, [CAR], evenDirections(200_000))
     const sigma = Math.sqrt(pieces * share * (1 - share))
@@ -341,13 +344,26 @@ describe('a car in a room past the cap', () => {
     for (const seed of SEEDS_20) {
       const run = throwIn(seed)
       expect(Math.abs(run.carHits - pieces * share), `seed ${seed}`).toBeLessThan(4 * sigma)
-      // the room's weighted damage, as energy: one throw may draw heavy pieces among the weighted ones, but never more than twice the case
-      expect(run.damage / DAMAGE_PER_JOULE, `seed ${seed}`).toBeLessThan(2 * budget)
+      // the room's weighted damage, as energy (concrete takes a stopped piece's energy at DAMAGE_PER_JOULE): the weights shrink when a throw draws heavy pieces among the
+      // weighted ones, so the cast energy, weighted, never passes the case's
+      expect(run.damage / DAMAGE_PER_JOULE, `seed ${seed}`).toBeLessThanOrEqual(budget * (1 + 1e-9))
       capped += run.damage
       all += throwIn(seed, pieces).damage
     }
     expect(all).toBeGreaterThan(0)
     expect(Math.abs(capped - all) / all).toBeLessThan(0.1)
+  })
+
+  it('in a room of 6 mm glass the weights never make a throw report more damage than all the pieces do: a pane one piece breaks is not broken again by its weight', () => {
+    const glassRoom = (seed: number, maxRays: number) => {
+      const world = createDestruction({ seed })
+      objectRoom(world, { half: 3, split: 6, material: 'glass', thickness: 0.006 })
+      return world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67, maxRays) }).reduce((sum, result) => sum + result.damage, 0)
+    }
+    const all = SEEDS_20.map((seed) => glassRoom(seed, 1000))
+    const capped = SEEDS_20.map((seed) => glassRoom(seed, 256))
+    expect(Math.max(...capped)).toBeLessThanOrEqual(Math.max(...all))
+    expect(Math.min(...capped)).toBeGreaterThan(0)
   })
 
   it('a ray never stands for more than eight pieces: with a cap of 12 the room takes some 8 x 12 of its 1000 pieces, not all of them', () => {
@@ -362,20 +378,60 @@ describe('a car in a room past the cap', () => {
     expect(capped).toBeGreaterThan(0)
   })
 
-  it('a car right beside the charge gets half the cap, and the other half is kept for the room', () => {
-    // a 4 m long single-part car 0.8 m off: its sphere holds the charge, its box takes a quarter of the sphere, some 250 pieces. A body part is tested as its box, so
-    // those are the car's pieces; past the cap the room keeps half of it, and the car's 128 rays all land on it
-    const CLOSE = { centre: [0.8, 0, 0] as Vec3, size: [0.6, 1.4, 4] as Vec3 }
-    expect(shareOfBoxes(ORIGIN, [CLOSE], evenDirections(200_000)) * M67.charge.casing!.fragments).toBeGreaterThan(128)
-    for (const seed of [1, 2, 3, 4]) {
-      const world = createDestruction({ seed })
+  // the pieces at a car stand, through `Hit.pieces`, for all the car's pieces: beside the charge (its one part's sphere holds the charge, its box takes a quarter of the
+  // sphere) and with the charge under it. The car's rays are at most what the rest leaves (half the cap), and each says how many it stands for
+  for (const [name, CLOSE, at] of [
+    ['beside the charge', { centre: [0.8, 0, 0] as Vec3, size: [0.6, 1.4, 4] as Vec3 }, ORIGIN],
+    ['over the charge', { centre: [0, 0.55, 0] as Vec3, size: [4, 0.5, 1.8] as Vec3 }, ORIGIN],
+  ] as const) {
+    it(`a car ${name}: the pieces its hits stand for add up to the pieces that fly at it`, () => {
+      const pieces = M67.charge.casing!.fragments
+      const share = shareOfBoxes(at, [CLOSE], evenDirections(200_000))
+      const physical = pieces * share
+      expect(physical).toBeGreaterThan(128)
+      for (const seed of [1, 2, 3, 4]) {
+        const world = createDestruction({ seed })
+        objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
+        const car = witness('car', [panel('p', CLOSE.size, [0, 0, 0])], CLOSE.centre)
+        world.register(car.impl, { position: car.position })
+        world.explode(at, 1, 15, 'test', { charge: caseOnly(M67) })
+        const hits = car.fragments()
+        expect(hits.length, `seed ${seed}`).toBeLessThanOrEqual(128)
+        const standsFor = hits.reduce((sum, hit) => sum + (hit.pieces ?? 1), 0)
+        // binomial spread of the pieces that fly at it (4 sigma), plus the rays at the edge of the box
+        expect(Math.abs(standsFor - physical), `seed ${seed}: ${standsFor.toFixed(1)} for ${physical.toFixed(1)}`).toBeLessThan(4 * Math.sqrt(physical * (1 - share)) + 4)
+        for (const hit of hits) expect(checkHit(hit)).toEqual([])
+      }
+    })
+  }
+
+  it('under the cap no hit carries `pieces`, and a gun round never does', () => {
+    const world = createDestruction({ seed: 1 })
+    const car = witness('car', [panel('p', [0.6, 1.2, 1.6], [0, 0, 0])], [2, 0, 0])
+    world.register(car.impl, { position: car.position })
+    world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67) })
+    world.shoot([0, 0, 0], [1, 0, 0], 3500, 7.62, 'rifle')
+    world.shoot([0, 0, 0], [1, 0, 0], 3500, 7.62, 'rifle', { penetration: { steel: 5, concrete: 120 } })
+    const hits = car.fragments()
+    expect(hits.length).toBeGreaterThan(2)
+    expect(hits.filter((hit) => hit.pieces !== undefined)).toEqual([])
+  })
+})
+
+describe('the bound of a weight is a world option', () => {
+  it('with `fragmentMaxWeight: 1` a ray stands for itself: the room takes about a quarter of what all 1000 pieces do with the cap of 256', () => {
+    const room = (seed: number, fragmentMaxWeight: number | undefined, maxRays: number) => {
+      const world = createDestruction({ seed, ...(fragmentMaxWeight !== undefined ? { fragmentMaxWeight } : {}) })
       objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
-      const car = witness('car', [panel('p', CLOSE.size, [0, 0, 0])], CLOSE.centre)
-      world.register(car.impl, { position: car.position })
-      const damage = world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67) }).reduce((sum, result) => sum + result.damage, 0)
-      expect(car.fragments().length, `seed ${seed}`).toBeLessThanOrEqual(128)
-      expect(car.fragments().length, `seed ${seed}`).toBeGreaterThanOrEqual(124)
-      expect(damage).toBeGreaterThan(0)
+      return world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67, maxRays) }).reduce((sum, result) => sum + result.damage, 0)
     }
+    let unweighted = 0
+    let all = 0
+    for (const seed of SEEDS) {
+      unweighted += room(seed, 1, 256)
+      all += room(seed, undefined, 1000)
+    }
+    expect(unweighted / all).toBeGreaterThan(0.2)
+    expect(unweighted / all).toBeLessThan(0.32)
   })
 })

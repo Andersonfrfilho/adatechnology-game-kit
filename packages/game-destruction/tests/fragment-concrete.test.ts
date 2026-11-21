@@ -162,6 +162,7 @@ describe('a gun round against concrete and brick is what it was', () => {
       world.add({ parts: [{ id: 'wall', material, shape: { kind: 'box', size: [3, 3, thickness] }, position: [0, 0, 0], thickness, anchored: true }] }, { id: 'wall', position: [0, 1.5, 2] })
       return world.shoot([0, 1.4, 0], [0, 0, 1], 3500, 7.62, 'rifle', round)
     }))
+    // changes only if a gun round's path changes (shootRay without a flight, ballistic without a piece): it is origin/main's
     expect(hashOf(JSON.stringify(shots))).toBe('fe7623f3dbe3f')
   })
 })

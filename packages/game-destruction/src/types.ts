@@ -479,6 +479,11 @@ export interface SweepProbe {
 export interface DestructionOptions {
   /** Extra or overriding materials (merged over `MATERIALS` by id). */
   materials?: MaterialDef[]
+  /**
+   * The most fragments of a case one cast ray may stand for when a blast qualifies more than `BlastCharge.maxRays` (default 8). Past it the fragments are left out: a case
+   * with more than `maxRays x fragmentMaxWeight` qualifying pieces in a stratum delivers `fragmentMaxWeight x picked / qualifying` of their hit points.
+   */
+  fragmentMaxWeight?: number
   /** Seed for every random choice (default 1). */
   seed?: number
   /** Ambient temperature (default 20). */
