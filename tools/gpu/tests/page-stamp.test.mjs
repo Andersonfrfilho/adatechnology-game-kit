@@ -13,7 +13,7 @@ import { distFilesOf } from '../../../examples/test-room/page-packages.mjs'
 import { assertDistsAreFresh, stalePackagesAt, stalePackagesOf } from '../stale-dist.mjs'
 
 // a git hook exports these, and the temp repo below would then commit into the real one
-for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete process.env[key]
+for (const key of Object.keys(process.env)) if (key.startsWith('GIT_')) delete process.env[key]
 
 const HEAD = 'b'.repeat(40)
 const BUILD = { commit: HEAD, dirty: false, builtAt: '2026-11-21T10:00:00.000Z' }
