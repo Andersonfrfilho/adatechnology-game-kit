@@ -162,6 +162,7 @@ export class Visuals {
   private readonly a: THREE_NS.Vector3
   private readonly b: THREE_NS.Vector3
   private readonly m4: THREE_NS.Matrix4
+  private readonly q: THREE_NS.Quaternion
   private readonly ray: THREE_NS.Raycaster
   private readonly box: THREE_NS.Box3
   private readonly t: THREE_NS.Vector3
@@ -178,6 +179,7 @@ export class Visuals {
     this.a = tmpV(THREE)
     this.b = tmpV(THREE)
     this.m4 = new THREE.Matrix4()
+    this.q = new THREE.Quaternion()
     this.ray = new THREE.Raycaster()
     // batched meshes leave the camera layer (createStaticBatcher), not the world: rays still find them
     this.ray.layers.enableAll()
@@ -721,11 +723,14 @@ export class Visuals {
    * marked is gone (a unit came out of the wall with its bullet holes and spalls).
    */
   clearDecals(mv: MeshVis, center: THREE_NS.Vector3, half: THREE_NS.Vector3, rotation: THREE_NS.Quaternion): void {
-    const inv = rotation.clone().invert()
-    const p = new this.THREE.Vector3()
+    if (mv.decals.length === 0) return
+    // every decal is a child of the mesh: its world position is the mesh's matrix applied to its own, so the chain up to the root is walked once, not once per decal
+    mv.mesh.updateWorldMatrix(true, false)
+    const inv = this.q.copy(rotation).invert()
+    const p = this.a
     for (let i = mv.decals.length - 1; i >= 0; i--) {
       const d = mv.decals[i]!
-      d.obj.getWorldPosition(p).sub(center).applyQuaternion(inv)
+      p.copy(d.obj.position).applyMatrix4(mv.mesh.matrixWorld).sub(center).applyQuaternion(inv)
       if (Math.abs(p.x) > half.x || Math.abs(p.y) > half.y || Math.abs(p.z) > half.z) continue
       this.disposeDecal(d)
       mv.decals.splice(i, 1)
