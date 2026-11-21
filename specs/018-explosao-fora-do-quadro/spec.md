@@ -13,7 +13,7 @@ eventos e 521 peças:
 | Parte do quadro do impacto | ms |
 |---|---|
 | `world.explode` (laço `blastPart` por peça, `wearJoints`, `knockOutUnits`, `solveStructure`) | 20–22 (T0.1, T0.3) |
-| eventos estruturais aplicados no tique (`applyStructuralEvents`: `rebuildHost`, `splitLoose`, `adoptSplit`) | ~16–17 (17–18 com a sonda, T0.4) |
+| eventos estruturais aplicados no tique (`applyStructuralEvents`: `rebuildHost`, `splitLoose`, `adoptSplit`) | 17–18 medido com a sonda (T0.4); ~16–17 descontando o custo estimado dela, que é conta e não medição |
 | `action` (efeito, `renderer.explode`) | ~7 (017; não remedido na 018) |
 | desenho (`renderCpu`) | ~8,4 (017; não remedido na 018) |
 | resto (matrizes, módulos, saída das etapas) | ~10–11 (por diferença) |
@@ -63,7 +63,7 @@ pedaços que nascem depois, invariantes estruturais por tique).
 |---|---|---|
 | D1 | [NEEDS CLARIFICATION] A, B ou C, ou desistir da meta de 33,3 ms para explosão grande em casa inteira | Fase 0 |
 | D2 | [NEEDS CLARIFICATION] Quantos quadros de latência entre o clarão e o dano são aceitáveis para o jogo (a 017 fixou clarão, som e empurrão no primeiro tique; o dano no mundo 1–2 quadros depois muda a sensação) | o dono, vendo na sala |
-| D3 | [NEEDS CLARIFICATION] A meta vale para o pior caso (casa inteira, 521 peças) ou para um caso típico a definir | o dono |
+| D3 | [NEEDS CLARIFICATION] A meta vale para o pior caso (casa inteira, 552 peças) ou para um caso típico a definir | o dono |
 
 ## 5. Critérios de aceite (provisórios, fecham com D1–D3)
 
