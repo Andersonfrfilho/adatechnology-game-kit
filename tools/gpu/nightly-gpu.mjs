@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
 import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
-import { assertNightlyBuildsItsOwnPage, saveBase } from './room-explosion-base.mjs'
+import { assertNightlyBuildsItsOwnPage, trySaveBase } from './room-explosion-base.mjs'
 import { parseSummaryLines } from './suite-runner.mjs'
 
 /** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string }} NightlyState */
@@ -154,7 +154,13 @@ async function main() {
     const explosionBase = join(cacheDir, 'room-explosion-base.json')
     const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_EXPLOSIVE: 'c4', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
     results.push(explosion)
-    if (explosion.ok && existsSync(explosionOut)) saveBase(explosionOut, explosionBase, sha)
+    if (explosion.ok && existsSync(explosionOut)) {
+      const saved = trySaveBase(explosionOut, explosionBase, sha)
+      if (!saved.ok) {
+        note(`- room-explosion-base: FAILED, the base was not saved: ${saved.reason}`)
+        results.push({ name: 'room-explosion-base', ok: false, log: explosionOut, seconds: 0 })
+      }
+    }
   }
   const failed = results.filter((result) => !result.ok)
   const status = failed.length ? `FAILED ${failed.map((result) => result.name).join(', ')}` : 'PASSED'

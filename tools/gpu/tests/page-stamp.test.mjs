@@ -1,13 +1,15 @@
 // @ts-check
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { after, test } from 'node:test'
 
-import { assertStampIsHead, pageHashOf, parsePageStamp, stampMarkupOf, stripPageStamp } from '../page-stamp.mjs'
-import { assertReportIsOfHead, saveBase } from '../room-explosion-base.mjs'
+import { assertStampIsHead, dirtyStateOf, hasRelevantChange, isPageRelevantPath, pageHashOf, parsePageStamp, stampMarkupOf, stripPageStamp } from '../page-stamp.mjs'
+import { assertReportIsOfHead, saveBase, trySaveBase } from '../room-explosion-base.mjs'
+import { distFilesOf } from '../../../examples/test-room/page-packages.mjs'
 import { assertDistsAreFresh, stalePackagesAt, stalePackagesOf } from '../stale-dist.mjs'
 
 const HEAD = 'b'.repeat(40)
@@ -43,45 +45,140 @@ test('assertStampIsHead: the same commit passes, another or a missing stamp thro
   assert.throws(() => assertStampIsHead({ stamp: null, head: HEAD }), /no build stamp/)
 })
 
-test('stalePackagesOf: src newer than dist, a missing dist, fresh and src-less packages', () => {
+test('stalePackagesOf: src newer than a dist entry, a missing entry, fresh and src-less packages', () => {
   assert.deepEqual(
     stalePackagesOf([
-      { name: 'newer-src', srcNewestMs: 200, distNewestMs: 100 },
-      { name: 'no-dist', srcNewestMs: 200, distNewestMs: undefined },
-      { name: 'fresh', srcNewestMs: 100, distNewestMs: 200 },
-      { name: 'same-time', srcNewestMs: 100, distNewestMs: 100 },
-      { name: 'no-src', srcNewestMs: undefined, distNewestMs: undefined },
+      { name: 'newer-src', srcNewestMs: 200, distEntryMs: [100] },
+      { name: 'no-dist', srcNewestMs: 200, distEntryMs: [undefined] },
+      { name: 'one-entry-stale', srcNewestMs: 200, distEntryMs: [300, 100] },
+      { name: 'fresh', srcNewestMs: 100, distEntryMs: [200, 300] },
+      { name: 'same-time', srcNewestMs: 100, distEntryMs: [100] },
+      { name: 'no-src', srcNewestMs: undefined, distEntryMs: [undefined] },
     ]),
-    ['newer-src', 'no-dist'],
+    ['newer-src', 'no-dist', 'one-entry-stale'],
   )
 })
 
-/** A fake repo root with one package. @param {string} name @param {{ src: number, dist?: number, build?: boolean }} times */
-const fakePackage = (name, { src, dist, build = true }) => {
+/** A fake repo root with one package. @param {string} name @param {string} packageName @param {{ src: number, dist?: number }} times */
+const fakePackage = (name, packageName, { src, dist }) => {
   const root = join(directory, name)
-  const folder = join(root, 'packages', 'game-x')
+  const folder = join(root, 'packages', packageName)
   mkdirSync(join(folder, 'src', 'deep'), { recursive: true })
-  writeFileSync(join(folder, 'package.json'), JSON.stringify({ scripts: build ? { build: 'tsup' } : {} }))
   writeFileSync(join(folder, 'src', 'deep', 'a.ts'), '')
   utimesSync(join(folder, 'src', 'deep', 'a.ts'), src, src)
+  utimesSync(join(folder, 'src', 'deep'), src, src)
+  utimesSync(join(folder, 'src'), src, src)
   if (dist !== undefined) {
     mkdirSync(join(folder, 'dist'), { recursive: true })
-    writeFileSync(join(folder, 'dist', 'index.js'), '')
-    utimesSync(join(folder, 'dist', 'index.js'), dist, dist)
+    for (const file of distFilesOf(packageName)) {
+      writeFileSync(join(folder, file), '')
+      utimesSync(join(folder, file), dist, dist)
+    }
   }
   return root
 }
 
-test('stalePackagesAt: reads the mtimes of nested src files and of dist', () => {
-  assert.deepEqual(stalePackagesAt(fakePackage('stale', { src: 2000, dist: 1000 })), ['game-x'])
-  assert.deepEqual(stalePackagesAt(fakePackage('missing', { src: 2000 })), ['game-x'])
-  assert.deepEqual(stalePackagesAt(fakePackage('fresh', { src: 1000, dist: 2000 })), [])
-  assert.deepEqual(stalePackagesAt(fakePackage('no-build-script', { src: 2000, build: false })), [])
+test('stalePackagesAt: nested src files against the dist entry; a package bundled from src is ignored', () => {
+  assert.deepEqual(stalePackagesAt(fakePackage('stale', 'game-audio', { src: 2000, dist: 1000 })), ['game-audio'])
+  assert.deepEqual(stalePackagesAt(fakePackage('missing', 'game-audio', { src: 2000 })), ['game-audio'])
+  assert.deepEqual(stalePackagesAt(fakePackage('fresh', 'game-audio', { src: 1000, dist: 2000 })), [])
+  assert.deepEqual(stalePackagesAt(fakePackage('from-src', 'game-physics', { src: 2000 })), [])
+  assert.deepEqual(stalePackagesAt(fakePackage('not-bundled', 'game-vehicles', { src: 2000 })), [])
+})
+
+test('stalePackagesAt: a newer unrelated file in dist does not hide a stale entry', () => {
+  const root = fakePackage('unrelated', 'game-audio', { src: 2000, dist: 1000 })
+  const other = join(root, 'packages', 'game-audio', 'dist', 'other-script-output.json')
+  writeFileSync(other, '')
+  utimesSync(other, 3000, 3000)
+  assert.deepEqual(stalePackagesAt(root), ['game-audio'])
+})
+
+test('stalePackagesAt: a subpath entry the page resolves counts (game-audio/fitted)', () => {
+  const root = fakePackage('subpath', 'game-audio', { src: 2000, dist: 3000 })
+  assert.deepEqual(stalePackagesAt(root), [])
+  utimesSync(join(root, 'packages', 'game-audio', 'dist', 'fitted.js'), 1000, 1000)
+  assert.deepEqual(stalePackagesAt(root), ['game-audio'])
+})
+
+test('stalePackagesAt: a file deleted from src (only its folder mtime moves) is stale', () => {
+  const root = fakePackage('deleted', 'game-audio', { src: 1000, dist: 2000 })
+  assert.deepEqual(stalePackagesAt(root), [])
+  const deep = join(root, 'packages', 'game-audio', 'src', 'deep')
+  writeFileSync(join(deep, 'b.ts'), '')
+  utimesSync(join(deep, 'b.ts'), 1000, 1000)
+  utimesSync(deep, 1000, 1000)
+  unlinkSync(join(deep, 'b.ts'))
+  utimesSync(deep, 3000, 3000)
+  assert.deepEqual(stalePackagesAt(root), ['game-audio'])
 })
 
 test('assertDistsAreFresh: throws naming the package and the rebuild command, passes when fresh', () => {
-  assert.throws(() => assertDistsAreFresh(fakePackage('throws', { src: 2000, dist: 1000 })), /game-x.*pnpm --filter @adatechnology\/game-x build/)
-  assert.doesNotThrow(() => assertDistsAreFresh(fakePackage('passes', { src: 1000, dist: 2000 })))
+  assert.throws(() => assertDistsAreFresh(fakePackage('throws', 'game-audio', { src: 2000, dist: 1000 })), /game-audio.*pnpm --filter @adatechnology\/game-audio build/)
+  assert.doesNotThrow(() => assertDistsAreFresh(fakePackage('passes', 'game-audio', { src: 1000, dist: 2000 })))
+})
+
+test('isPageRelevantPath: sources count, screenshots and unrelated folders do not', () => {
+  assert.equal(isPageRelevantPath('packages/game-audio/src/a.ts'), true)
+  assert.equal(isPageRelevantPath('tools/gpu/room-explosion.mjs'), true)
+  assert.equal(isPageRelevantPath('examples/test-room/src/main.js'), true)
+  assert.equal(isPageRelevantPath('examples/test-room/shots/burning-sofa.png'), false)
+  assert.equal(isPageRelevantPath('docs/a.md'), false)
+  assert.equal(isPageRelevantPath('package.json'), false)
+})
+
+test('hasRelevantChange: only screenshots is clean, a source (or a rename into one) is dirty', () => {
+  assert.equal(hasRelevantChange(' M examples/audio-test-area/shots/audio-en.png\n M examples/x/shots/b.png\n'), false)
+  assert.equal(hasRelevantChange(''), false)
+  assert.equal(hasRelevantChange(' M examples/x/shots/b.png\n M packages/game-audio/src/a.ts\n'), true)
+  assert.equal(hasRelevantChange('R  docs/a.md -> packages/p/src/a.ts\n'), true)
+})
+
+/** A temp git repo with a screenshot, a package source and a clean commit. @returns {{ root: string, head: string }} */
+const gitRepo = () => {
+  const root = mkdtempSync(join(directory, 'repo-'))
+  const git = (/** @type {string[]} */ ...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...args], { cwd: root, encoding: 'utf8' }).trim()
+  git('init', '-q')
+  mkdirSync(join(root, 'examples/x/shots'), { recursive: true })
+  mkdirSync(join(root, 'packages/x/src'), { recursive: true })
+  writeFileSync(join(root, 'examples/x/shots/a.png'), 'one')
+  writeFileSync(join(root, 'packages/x/src/a.ts'), 'one')
+  git('add', '-A')
+  git('commit', '-q', '-m', 'init')
+  return { root, head: git('rev-parse', 'HEAD') }
+}
+
+test('dirtyStateOf with real git: a rewritten screenshot is clean, a changed source is dirty, and saveBase follows the stamp', () => {
+  const { root, head } = gitRepo()
+  const report = join(directory, 'git-report.json')
+  const baseFile = join(directory, 'git-base.json')
+  const reportOf = () => JSON.stringify({ budgetMode: 'deadline', pageBuild: parsePageStamp(page(stampMarkupOf({ commit: head, dirty: dirtyStateOf(root), builtAt: 'now' }))) })
+
+  writeFileSync(join(root, 'examples/x/shots/a.png'), 'two')
+  assert.equal(dirtyStateOf(root), false)
+  writeFileSync(report, reportOf())
+  saveBase(report, baseFile, head)
+  assert.equal(JSON.parse(readFileSync(baseFile, 'utf8')).budgetMode, 'deadline')
+
+  rmSync(baseFile)
+  writeFileSync(join(root, 'packages/x/src/a.ts'), 'two')
+  assert.equal(dirtyStateOf(root), true)
+  writeFileSync(report, reportOf())
+  assert.throws(() => saveBase(report, baseFile, head), /dirty tree/)
+  assert.equal(existsSync(baseFile), false)
+})
+
+test('trySaveBase: a refusal comes back as a reason and writes nothing, an accepted report saves', () => {
+  const report = join(directory, 'try-report.json')
+  const baseFile = join(directory, 'try-base.json')
+  writeFileSync(report, JSON.stringify({ budgetMode: 'deadline', pageBuild: { ...BUILD, dirty: true } }))
+  const refused = trySaveBase(report, baseFile, HEAD)
+  assert.equal(refused.ok, false)
+  assert.match(String('reason' in refused ? refused.reason : ''), /dirty tree/)
+  assert.equal(existsSync(baseFile), false)
+  writeFileSync(report, JSON.stringify({ budgetMode: 'deadline', pageBuild: BUILD }))
+  assert.deepEqual(trySaveBase(report, baseFile, HEAD), { ok: true })
+  assert.equal(existsSync(baseFile), true)
 })
 
 test('assertReportIsOfHead: a missing, dirty or other-commit pageBuild is refused, a clean one of HEAD passes', () => {

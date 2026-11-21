@@ -87,3 +87,16 @@ export const saveBase = (reportFile, baseFile, head) => {
   const merged = mergeBase(base, report)
   if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))
 }
+
+/**
+ * `saveBase` that reports a refusal (or any failure) instead of throwing, for a caller that must record it and go on.
+ * @param {string} reportFile @param {string} baseFile @param {string} head @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+export const trySaveBase = (reportFile, baseFile, head) => {
+  try {
+    saveBase(reportFile, baseFile, head)
+    return { ok: true }
+  } catch (error) {
+    return { ok: false, reason: error instanceof Error ? error.message : String(error) }
+  }
+}

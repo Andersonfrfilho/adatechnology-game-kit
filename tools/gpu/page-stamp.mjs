@@ -2,6 +2,7 @@
 // The build stamp of the test-room page: the commit, the dirty flag and the build time, in a <meta> the gauge reads back from a saved html file.
 // The hash that tells two pages apart ignores the stamp (it changes on every build), so "same hash" still means "same code".
 
+import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 
 /**
@@ -40,3 +41,23 @@ export const assertStampIsHead = ({ stamp, head }) => {
   if (stamp === null) throw new Error('room-explosion: the page this run built has no build stamp (examples/test-room/build.mjs did not write it)')
   if (stamp.commit !== head) throw new Error(`room-explosion: the page was built at ${stamp.commit.slice(0, 12)} but HEAD is ${head.slice(0, 12)}: the build is not of this commit`)
 }
+
+/**
+ * Whether a tracked change at this path can change the page or the gauge: anything under `packages/` or `tools/gpu/`, and under `examples/` except `shots/` folders
+ * (the browser checks rewrite those screenshots before the gauge builds the page, so counting them would make every night dirty).
+ * @param {string} path relative to the repository root
+ */
+export const isPageRelevantPath = (path) => {
+  if (path.startsWith('packages/') || path.startsWith('tools/gpu/')) return true
+  return path.startsWith('examples/') && !path.split('/').includes('shots')
+}
+
+/**
+ * Whether `git status --porcelain` output has a change that counts (see `isPageRelevantPath`); a rename counts by either side.
+ * @param {string} porcelain @returns {boolean}
+ */
+export const hasRelevantChange = (porcelain) =>
+  porcelain.split('\n').filter((line) => line.length > 3).some((line) => line.slice(3).split(' -> ').some((path) => isPageRelevantPath(path.replaceAll('"', ''))))
+
+/** The `dirty` flag of the stamp: tracked changes that count, in the repository at `root`. @param {string} root @returns {boolean} */
+export const dirtyStateOf = (root) => hasRelevantChange(execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { cwd: root, encoding: 'utf8' }))

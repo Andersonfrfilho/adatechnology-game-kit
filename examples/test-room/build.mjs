@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url'
 import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
 import { mergeUserSfxManifests } from '../../packages/game-audio/scripts/sfx-merge.mjs'
 import { writeLocalIndex } from '../../site/local-index.mjs'
-import { stampMarkupOf } from '../../tools/gpu/page-stamp.mjs'
+import { dirtyStateOf, stampMarkupOf } from '../../tools/gpu/page-stamp.mjs'
+import { DIST_PACKAGES, DIST_SUBPATHS } from './page-packages.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -25,7 +26,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const names = ['game-audio', 'game-player', 'game-runtime', 'game-contracts', 'game-destruction', 'game-destruction-three', 'game-weapons', 'game-fluids', 'game-fluids-three', 'game-vfx', 'game-vfx-three', 'game-render-three', 'game-terrain', 'game-terrain-three', 'game-characters', 'game-characters-people', 'game-characters-three', 'game-kit-defaults', 'game-floorplan', 'game-floorplan-structure', 'game-floorplan-residential', 'game-floorplan-interactables', 'game-floorplan-three', 'game-props3d', 'game-shapes', 'game-shapes-three', 'game-weapons-three', 'game-graphics', 'game-graphics-three', 'game-test-room', 'game-workers', 'game-crowd']
+const names = DIST_PACKAGES
 for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm build at the root first`)
 }
@@ -51,7 +52,7 @@ async function bundleMain(full) {
     legalComments: 'none',
     define: { __ROOM_FULL__: String(full), 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(kitWorkerSource) },
     // the graphics screen is a subpath of game-graphics (`/screen`), named before its package
-    alias: { three: threeDir, '@adatechnology/game-graphics/screen': join(pkg('game-graphics'), 'dist/screen.js'), '@adatechnology/game-audio/fitted': join(pkg('game-audio'), 'dist/fitted.js'), '@adatechnology/game-destruction-three/worker-kinds': join(pkg('game-destruction-three'), 'dist/worker-kinds.js'), '@adatechnology/game-shapes/worker-kinds': join(pkg('game-shapes'), 'dist/worker-kinds.js'), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
+    alias: { three: threeDir, ...Object.fromEntries(Object.entries(DIST_SUBPATHS).flatMap(([p, subpaths]) => subpaths.map((subpath) => [`@adatechnology/${p}/${subpath}`, join(pkg(p), `dist/${subpath}.js`)]))), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
   })
   return result.outputFiles[0].text
 }
@@ -219,7 +220,7 @@ const html = `${fullHtml.slice(0, at)}${sfxScript}<script>${safe(joltBoot)}</scr
 mkdirSync(join(here, 'dist'), { recursive: true })
 // the stamp the gauge reads back (tools/gpu/page-stamp.mjs): the commit, whether tracked files differ from it, and when
 const git = (/** @type {string[]} */ args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim()
-const stamp = stampMarkupOf({ commit: git(['rev-parse', 'HEAD']), dirty: git(['status', '--porcelain', '--untracked-files=no']) !== '', builtAt: new Date().toISOString() })
+const stamp = stampMarkupOf({ commit: git(['rev-parse', 'HEAD']), dirty: dirtyStateOf(root), builtAt: new Date().toISOString() })
 writeFileSync(join(here, 'dist/test-room.html'), html.replace('</head>', () => `${stamp}</head>`))
 // Jolt's multithreaded build beside the page (?joltBuild=multithread): its pthreads load this same file by its URL, so it cannot ride inside the page
 copyFileSync(createRequire(join(pkg('game-physics-jolt'), 'package.json')).resolve('jolt-physics/wasm-compat-multithread'), join(here, 'dist/jolt-physics.multithread.wasm-compat.js'))
