@@ -110,7 +110,8 @@ function checkout(sha) {
 function saveExplosionBase(reportFile, baseFile) {
   const report = JSON.parse(readFileSync(reportFile, 'utf8'))
   const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
-  writeFileSync(baseFile, JSON.stringify(mergeBase(base, report), null, 1))
+  const merged = mergeBase(base, report)
+  if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))
 }
 
 /** Waits for an idle machine without the lock (a push in the queue would keep the load up and never get it), then runs again under the lock. */

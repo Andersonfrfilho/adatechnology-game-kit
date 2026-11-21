@@ -107,3 +107,24 @@ test('a kind only in the base, or only in the run, is listed and not compared', 
 test('a base with an afterMs of 0 would block everything: the compare still reads it, so the base must never get one (see mergeBase)', () => {
   assert.equal(isFrameWorse(25, 0), true)
 })
+
+test('a run with another explosive than c4 is never compared, and a base with another explosive is not comparable', () => {
+  const now = [metric(200, 90)]
+  const base = { budgetMode: 'deadline', frameMetrics: [metric(65, 25)] }
+  const other = frameGate({ measure: measureOf(now), base, mode: 'deadline', variant: VARIANT, gated: GATED, explosive: 'dynamite' })
+  assert.equal(other.status, 'other-explosive')
+  assert.equal(other.compared, false)
+  assert.deepEqual(other.regressions, [])
+  assert.equal(frameGate({ measure: measureOf(now), base: undefined, mode: 'deadline', variant: VARIANT, gated: GATED, explosive: 'dynamite' }).status, 'other-explosive')
+  assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'dynamite' }, 'deadline'), false)
+  assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'dynamite' }, 'deadline', 'dynamite'), false)
+  assert.equal(gate(now, { budgetMode: 'deadline', explosive: 'dynamite', frameMetrics: [metric(65, 25)] }).status, 'other-explosive')
+})
+
+test('the default explosive is c4: a base without the field, or with it, compares as before', () => {
+  const now = [metric(200, 90)]
+  assert.equal(isBaseComparable({ budgetMode: 'deadline' }, 'deadline'), true)
+  assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'c4' }, 'deadline', 'c4'), true)
+  assert.equal(gate(now, { budgetMode: 'deadline', frameMetrics: [metric(65, 25)] }).compared, true)
+  assert.equal(gate(now, { budgetMode: 'deadline', explosive: 'c4', frameMetrics: [metric(65, 25)] }).regressions.length, 2)
+})

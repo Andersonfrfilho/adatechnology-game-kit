@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { budgetModeOf, cellRegressed, DEFAULT_VARIANT, FRAME_LABELS, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
+import { budgetModeOf, cellRegressed, DEFAULT_VARIANT, explosiveOf, FRAME_LABELS, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
 
 test('no base report: nothing is a regression, however far over the 5 ms goal', () => {
   assert.equal(cellRegressed({ p99: 53, max: 71 }, undefined), false)
@@ -49,4 +49,10 @@ test('the frame budget mode is deadline (the page) unless the variable says quot
   assert.equal(budgetModeOf('deadline'), 'deadline')
   assert.equal(budgetModeOf('anything'), 'deadline')
   assert.equal(budgetModeOf('quota'), 'quota')
+})
+
+test('the explosive is c4 unless the variable names another', () => {
+  assert.equal(explosiveOf(undefined), 'c4')
+  assert.equal(explosiveOf(''), 'c4')
+  assert.equal(explosiveOf('dynamite'), 'dynamite')
 })

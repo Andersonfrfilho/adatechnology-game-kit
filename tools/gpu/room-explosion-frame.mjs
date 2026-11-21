@@ -3,6 +3,9 @@
 // The physics column of the ruler (p99/max per cell) never saw frame 0 as a whole: the f0 could double without blocking. Here, per kind, two numbers
 // from the stage pass (`ROOM_EXPLOSION_FRAME_PARTS=1`, so the render time is in the rows): `f0Ms` and `afterMs`, compared with the base report.
 
+/** The explosive every saved base is measured with; a report without the field was measured with it. */
+export const DEFAULT_EXPLOSIVE = 'c4'
+
 /** How many of the worst f0 (one per stage round) `f0Ms` averages. */
 export const WORST_F0_COUNT = 3
 /** How many frames after the strike's frame `afterMs` looks at (its worst one). */
@@ -13,7 +16,7 @@ export const FRAME_REGRESSION = { tolerance: 0.15, floorMs: 3 }
 /**
  * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, extras?: Record<string, number> }} FrameRow
  * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} FrameMetric
- * @typedef {{ budgetMode?: string, frameMetrics?: FrameMetric[] }} SavedReport
+ * @typedef {{ budgetMode?: string, explosive?: string, frameMetrics?: FrameMetric[] }} SavedReport
  */
 
 const round2 = (/** @type {number} */ value) => Math.round(value * 100) / 100
@@ -80,27 +83,31 @@ export const frameMetricsOf = (rows) => {
 export const isFrameWorse = (now, was, rule = FRAME_REGRESSION) => now > was * (1 + rule.tolerance) + 1e-9 && now - was > rule.floorMs + 1e-9
 
 /**
- * Whether a saved base can be compared with a run: only if it was measured in the same frame budget mode (a quota number is not a deadline number). A missing mode counts as different.
- * @param {SavedReport | undefined} base @param {string} mode
+ * Whether a saved base can be compared with a run: only if it was measured in the same frame budget mode (a quota number is not a deadline number) and with the same explosive.
+ * A missing mode counts as different; a missing explosive counts as c4. A run with another explosive than c4 is never comparable.
+ * @param {SavedReport | undefined} base @param {string} mode @param {string} [explosive]
  */
-export const isBaseComparable = (base, mode) => base !== undefined && base.budgetMode === mode
+export const isBaseComparable = (base, mode, explosive = DEFAULT_EXPLOSIVE) =>
+  base !== undefined && base.budgetMode === mode && explosive === DEFAULT_EXPLOSIVE && (base.explosive ?? DEFAULT_EXPLOSIVE) === explosive
 
-/** @typedef {'compared' | 'no-frame-parts' | 'unmeasurable' | 'no-blocking-level' | 'no-base' | 'other-mode' | 'base-without-metrics'} GateStatus */
+/** @typedef {'compared' | 'no-frame-parts' | 'unmeasurable' | 'no-blocking-level' | 'no-base' | 'other-mode' | 'other-explosive' | 'base-without-metrics'} GateStatus */
 
 /**
  * The gate of the explosion frame: the metrics that got worse than the base, or why nothing was compared. Only the metrics of the blocking level (default variant, a gated throttle) count;
  * the kinds that are in one side and not in the other are listed in `skipped`.
- * @param {{ measure: FrameMeasure, base: SavedReport | undefined, mode: string, variant: string, gated: Set<number> }} params
+ * @param {{ measure: FrameMeasure, base: SavedReport | undefined, mode: string, variant: string, gated: Set<number>, explosive?: string }} params
  * @returns {{ status: GateStatus, compared: boolean, reason: string, regressions: { key: string, field: 'f0Ms' | 'afterMs', now: number, was: number }[], problems: FrameProblem[], skipped: string[] }}
  */
-export const frameGate = ({ measure, base, mode, variant, gated }) => {
+export const frameGate = ({ measure, base, mode, variant, gated, explosive = DEFAULT_EXPLOSIVE }) => {
   const blocking = measure.metrics.filter((entry) => entry.variant === variant && gated.has(entry.throttle))
   const none = (/** @type {GateStatus} */ status, /** @type {string} */ reason) => ({ status, compared: false, reason, regressions: [], problems: measure.problems, skipped: /** @type {string[]} */ ([]) })
   if (measure.metrics.length === 0 && measure.problems.length === 0) return none('no-frame-parts', 'the run has no frame parts (ROOM_EXPLOSION_FRAME_PARTS=1 and a stage pass are needed)')
   if (measure.metrics.length === 0) return none('unmeasurable', `no kind gave a number: ${measure.problems.map((entry) => `${entry.key} ${entry.status}`).join(', ')}`)
   if (blocking.length === 0) return none('no-blocking-level', `there are metrics but none at the blocking level (${variant}, ${[...gated].map((level) => `${level}x`).join(', ')}): check ROOM_EXPLOSION_STAGE_THROTTLES`)
+  if (explosive !== DEFAULT_EXPLOSIVE) return none('other-explosive', `this run detonated ${explosive}, the base is c4: a run with another explosive is never compared`)
   if (!base) return none('no-base', 'no base report')
-  if (!isBaseComparable(base, mode)) return none('other-mode', `the base was measured in ${base.budgetMode ?? 'no mode'}, this run in ${mode}`)
+  if ((base.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) return none('other-explosive', `the base was measured with ${base.explosive}, this run with ${explosive}`)
+  if (!isBaseComparable(base, mode, explosive)) return none('other-mode', `the base was measured in ${base.budgetMode ?? 'no mode'}, this run in ${mode}`)
   if (!base.frameMetrics || base.frameMetrics.length === 0) return none('base-without-metrics', 'the base has no frameMetrics')
   const was = new Map(base.frameMetrics.map((entry) => [frameKey(entry), entry]))
   const regressions = blocking.flatMap((entry) => {

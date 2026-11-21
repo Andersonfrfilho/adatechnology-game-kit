@@ -54,3 +54,12 @@ test('with the floor alone (tolerance 3%), 65, 68, 71 blocks on the third night'
   assert.equal(base.frameMetrics?.[0]?.f0Ms, 65)
   assert.equal(isFrameWorse(71, base.frameMetrics?.[0]?.f0Ms ?? 0, rule), true)
 })
+
+test('a report with another explosive than c4 never becomes the base nor enters it', () => {
+  const dynamite = { ...night(10), explosive: 'dynamite' }
+  assert.equal(mergeBase(undefined, dynamite), undefined)
+  const base = night(65)
+  assert.equal(mergeBase(base, dynamite), base)
+  assert.deepEqual(mergeBase(base, { ...night(60), explosive: 'c4' }).frameMetrics?.[0]?.f0Ms, 60)
+  assert.deepEqual(mergeBase({ ...night(65), explosive: 'dynamite' }, night(68)), night(68))
+})
