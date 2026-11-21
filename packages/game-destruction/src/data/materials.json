@@ -471,6 +471,7 @@
     "compressive": 444000,
     "strength": {
       "compressiveMPa": 25,
+      "ndrc": true,
       "tensileMPa": 2.56,
       "elasticGPa": 28
     },

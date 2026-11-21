@@ -2,6 +2,7 @@ import { createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
 
 import { createDestruction } from '../src'
+import { MATERIALS } from '../src/materials'
 import { casingFlight, concretePerforation, fragmentCaliberMm, mottMass } from '../src/blast-wave'
 import type { BlastCharge, DestructibleImpl, Hit, Vec3 } from '../src'
 
@@ -120,6 +121,32 @@ describe('the pieces of a case against a concrete slab', () => {
       for (const seed of [1, 2, 3, 4]) through += underSlab(charge, seed, 0.05).through
       expect(through).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('the pieces of a case against brick', () => {
+  // NDRC is fitted on concrete; a masonry wall's 2.35 MPa would make brick stronger against heavy fast pieces than the linear rule says. Only materials flagged
+  // `strength.ndrc` (concrete) take it: brick keeps the linear rule, as before
+  const brick = MATERIALS.find((material) => material.id === 'brick')!
+  const throughBrick = (material: string, seed: number) => {
+    const world = createDestruction({ seed, materials: [{ ...brick, id: 'brick_ndrc', strength: { ...brick.strength!, ndrc: true } }] })
+    world.add({ parts: [{ id: 'wall', material, shape: { kind: 'box', size: [4, 0.2, 4] }, position: [0, 0, 0], thickness: 0.2, anchored: true }] }, { id: 'wall', position: [0, 0.4, 0] })
+    return world.explode([0, 0.75, 0], 1, 15, 'test', { charge: PIPE_BOMB }).flatMap((result) => result.events).filter((event) => event.type === 'hole' && (event as { hole: { through: boolean } }).hole.through).length
+  }
+
+  it('brick is not flagged for NDRC; concrete is', () => {
+    expect(brick.strength?.ndrc).toBeUndefined()
+    expect(MATERIALS.find((material) => material.id === 'concrete')!.strength?.ndrc).toBe(true)
+  })
+
+  it('a 200 mm brick wall lets through the heavy pieces of a pipe bomb that the linear rule lets through, more than NDRC would', () => {
+    let linear = 0
+    let ndrc = 0
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+      linear += throughBrick('brick', seed)
+      ndrc += throughBrick('brick_ndrc', seed)
+    }
+    expect(linear).toBeGreaterThan(ndrc)
   })
 })
 

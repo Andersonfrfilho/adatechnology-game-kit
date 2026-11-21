@@ -4470,9 +4470,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const penMm = penetrationOf(mat, round.penetration)
     const Ep = penMm !== undefined ? penMm * mat.penetration : piercing === 1 || !hard ? E : E * piercing
     // a piece of a case gets through concrete only if the modified NDRC lets it as well (`concretePerforation`, at its speed now): the linear rule alone let a 2.45 g piece of an
-    // M67 through 297 mm. Never more than the linear rule. Every material with a compressive strength takes it: for brick (2.35 MPa) NDRC is the looser rule for the light pieces
-    // and stricter only for heavy fast ones (a 4.5 g piece at 1200 m/s: 179 mm against the linear 231 mm), outside the concrete the formula was fitted on
-    const strength = fragmentMass > 0 ? mat.strength?.compressiveMPa : undefined
+    // M67 through 297 mm. Never more than the linear rule, and only for materials flagged `strength.ndrc` (concrete, which the formula was fitted on): masonry keeps the
+    // linear rule (a wall's 2.35 MPa in a concrete formula would make brick stronger than it is against heavy fast pieces)
+    const strength = fragmentMass > 0 && mat.strength?.ndrc ? mat.strength.compressiveMPa : undefined
     const path = strength === undefined ? 0 : (p.thickness + layersThickness(p.layers, face) + layersThickness(p.layers, -face)) / slant
     const penetrated = Ep > thr && (strength === undefined || concretePerforation({ mass: fragmentMass, caliber: caliber / 1000, speed: Math.sqrt((2 * E) / fragmentMass), compressiveMPa: strength }).perforation > path)
     // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same

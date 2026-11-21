@@ -268,6 +268,11 @@ export interface MaterialStrength {
    * Default true for materials tagged `masonry` that are not reinforced.
    */
   slender?: boolean
+  /**
+   * A piece of a case (`BlastCasing`) goes through this material only if the modified NDRC formula (`concretePerforation`) lets it as well as the linear rule. Set on
+   * concrete, which the formula was fitted on; masonry stays on the linear rule.
+   */
+  ndrc?: boolean
 }
 
 /** Bending of beams, slabs, roofs and stairs (`DestructionOptions.structure.flexure`). Every number is configurable; the defaults are real values. */
