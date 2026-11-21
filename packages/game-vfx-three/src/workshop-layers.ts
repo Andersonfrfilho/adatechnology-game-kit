@@ -283,7 +283,8 @@ function decalLayer(THREE: ThreeLib, pool: WorkshopEngine['decals']): Drawn {
 
 function ringLayer(THREE: ThreeLib, pool: WorkshopEngine['rings']): Drawn {
   const geometry = new THREE.RingGeometry(0.86, 1, 40)
-  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
+  // flat additive ring: three would draw transparent + DoubleSide twice and rebuild the program on every draw
+  const material = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true })
   const mesh = new THREE.InstancedMesh(geometry, material, RING_CAPACITY)
   mesh.frustumCulled = false
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
