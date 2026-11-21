@@ -25,39 +25,35 @@ export type WorldOcclusionOptions = {
  */
 export const OCCLUDER_MIN_RADIUS = 0.25
 
-/**
- * 0.25 m: the longest stride of the walk out of a solid. An approximation, not the walk of one millimetre: air narrower than this between two stretches
- * of the SAME part (a ray grazing rolling ground) can be stepped over with what stands in it. The path already crosses that part twice, and a
- * stretch of 100 m inside a solid costs ~420 rays instead of 100 000.
- */
-const LEAVE_MAX_STRIDE = OCCLUDER_MIN_RADIUS
-
 const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance]
+
+/** Most parts buried inside one solid that are looked past in a row: each costs a ray, and a path never has this many stacked in the same ground. */
+const MAX_BURIED_PARTS = 64
+
+type PartRef = { readonly object: string; readonly part: string }
+
+const isPart = (hit: RayHit, ref: PartRef): boolean => hit.object === ref.object && hit.part === ref.part
 
 function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
   const found: RayHit[] = []
-  const rayFrom = (travelled: number): RayHit | null => world.raycast(along(origin, direction, travelled), direction, length - travelled, skip)
-  // a point inside a solid answers with a hit on the surface it stands in, at distance 0: from the part the last hit counted, that is still the same layer
-  const isStillInside = (travelled: number, last: RayHit): boolean => {
-    const hit = rayFrom(travelled)
-    return hit !== null && hit.object === last.object && hit.part === last.part && hit.distance <= step
-  }
-  // Growing strides to a point outside the layer, then halving back to its edge: a source buried in the ground answers 0 for every millimetre of the way out.
-  // The stride stops growing at LEAVE_MAX_STRIDE, so the air between two rises of the same ground is never stepped over.
-  const leave = (from: number, last: RayHit): number => {
-    let inside = from
-    let stride = Math.min(step * 2, LEAVE_MAX_STRIDE)
-    while (inside + stride < length && isStillInside(inside + stride, last)) {
-      inside += stride
-      stride = Math.min(stride * 2, LEAVE_MAX_STRIDE)
+  const rayFrom = (travelled: number, ignoreParts?: readonly PartRef[]): RayHit | null =>
+    world.raycast(along(origin, direction, travelled), direction, length - travelled, ignoreParts ? { ...skip, ignoreParts } : skip)
+  /**
+   * Standing inside `inside` (a part that answers a hit at distance 0 from any point in it): the next thing past it that the walk of one millimetre would
+   * have seen, found by casting with the parts looked past ignored. What starts inside a part never answers while the ray is in it, so it is looked past too.
+   * Null when nothing is left on the path.
+   */
+  const pastSolid = (travelled: number, inside: PartRef): { readonly hit: RayHit; readonly distance: number } | null => {
+    const ignored: PartRef[] = [inside]
+    while (ignored.length <= MAX_BURIED_PARTS) {
+      const hit = rayFrom(travelled, ignored)
+      if (!hit) return null
+      const probe = rayFrom(travelled + Math.max(0, hit.distance - step))
+      const isBuried = probe !== null && isPart(probe, inside) && probe.distance <= step
+      if (!isBuried) return { hit, distance: travelled + hit.distance }
+      ignored.push({ object: hit.object, part: hit.part })
     }
-    let outside = Math.min(inside + stride, length)
-    while (outside - inside > step) {
-      const middle = (inside + outside) / 2
-      if (isStillInside(middle, last)) inside = middle
-      else outside = middle
-    }
-    return outside
+    return null
   }
   let travelled = 0
   while (found.length < maxHits && travelled < length) {
@@ -65,10 +61,16 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
     if (!hit) break
     const last = found.at(-1)
     // standing just inside a part that answers with a hit of its own (an impl's surface), not a second layer
-    const isSameLayer = last !== undefined && last.object === hit.object && last.part === hit.part
+    const isSameLayer = last !== undefined && isPart(hit, last)
+    if (isSameLayer && hit.distance <= step) {
+      const past = pastSolid(travelled, last)
+      if (!past) break
+      found.push({ ...past.hit, distance: past.distance })
+      travelled = past.distance + step
+      continue
+    }
     if (!isSameLayer) found.push({ ...hit, distance: travelled + hit.distance })
     travelled += hit.distance + step
-    if (isSameLayer && hit.distance <= step) travelled = leave(travelled, last)
   }
   return found
 }
