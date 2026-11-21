@@ -1,5 +1,6 @@
 // @ts-check
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
 import { budgetModeOf, cellRegressed, DEFAULT_VARIANT, explosionGateOf, explosiveOf, FRAME_LABELS, isBlastingExplosive, isF0Late, SYSTEM_LABELS, systemLabelOf, VARIANTS } from '../room-explosion.mjs'
@@ -80,4 +81,21 @@ test('an explosive blasts the house only with energy, no smoke and no cone', () 
   assert.equal(isBlastingExplosive({ energy: 0 }), false)
   assert.equal(isBlastingExplosive({ energy: 0, smoke: {} }), false)
   assert.equal(isBlastingExplosive({ energy: 102400, cone: {} }), false)
+})
+
+test('over the arsenal as it is on disk: the c4, the M67 and the pipe bomb blast the house; the smoke grenade, the flashbang and the claymore do not', () => {
+  /** @type {{ id: string, energy: number, smoke?: unknown, cone?: unknown }[]} */
+  const arsenal = JSON.parse(readFileSync(new URL('../../../packages/game-weapons/src/data/explosives.json', import.meta.url), 'utf8'))
+  /** @param {string} id */
+  const blasts = (id) => {
+    const entry = arsenal.find((candidate) => candidate.id === id)
+    assert.ok(entry, `${id} is not in explosives.json`)
+    return isBlastingExplosive(entry)
+  }
+  // the default of the ruler, and the two fragmentation charges: energy, no smoke, no cone
+  for (const id of ['c4', 'm67', 'pipe_bomb']) assert.equal(blasts(id), true, id)
+  // no energy with smoke, no energy at all, and a cone (it blasts what is in front of it, not the point)
+  for (const id of ['smoke_grenade', 'flashbang', 'claymore']) assert.equal(blasts(id), false, id)
+  // the split is not all one way: the file must keep both kinds for the refusal of the ruler to mean anything
+  assert.ok(arsenal.some(isBlastingExplosive) && !arsenal.every(isBlastingExplosive))
 })
