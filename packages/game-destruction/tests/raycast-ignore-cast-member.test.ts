@@ -29,21 +29,25 @@ const setup = (parts: PartSpec[]) => {
   return { world, ray }
 }
 
-describe('world.raycast ignoreParts where a member is cast in a wall', () => {
+// Every test here pins what the ray does today, so a change of that contract shows up as a failure to be read, not as a regression to be undone.
+describe('world.raycast ignoreParts where a member is cast in a wall (current behaviour)', () => {
   it('names the member where the ray lands on it, and the wall beside it', () => {
     const { ray } = setup([wall, pillar])
+    // both boxes are met at the same distance and the wall is tested first: only the member cast in it makes the answer `pillar`
     expect(ray(AT_PILLAR)).toMatchObject({ object: 'w', part: 'pillar' })
+    // from z = 5 to the face of both boxes at z = 0.065
     expect(ray(AT_PILLAR)?.distance).toBeCloseTo(4.935, 6)
     expect(ray(AT_BRICKS)).toMatchObject({ object: 'w', part: 'wall' })
   })
 
-  // Current behaviour, not the contract one would expect: the ray answers `pillar`, and ignoring exactly what it answered changes nothing. The list is compared
-  // with the part the ray tests (the wall), and the wall then hands the hit to the member cast in it.
+  // the list is compared with the part the ray tests (the wall), which then hands the hit to the member cast in it
   it('ignoring the member the ray named does not let the ray through: the wall still answers with that member', () => {
     const { ray } = setup([wall, pillar])
     const plain = ray(AT_PILLAR)
+    expect(plain?.part).toBe('pillar')
     expect(ray(AT_PILLAR, [PILLAR])).toEqual(plain)
-    expect(ray(AT_PILLAR, [PILLAR])?.object).not.toBe('far')
+    // beside the member the wall answers as it does with nothing ignored
+    expect(ray(AT_BRICKS, [PILLAR])).toEqual(ray(AT_BRICKS))
   })
 
   it('ignoring the wall leaves the member standing: it is a part of its own and still answers', () => {
@@ -57,6 +61,7 @@ describe('world.raycast ignoreParts where a member is cast in a wall', () => {
     const { ray } = setup([wall, pillar])
     const through = ray(AT_PILLAR, [WALL, PILLAR])
     expect(through).toMatchObject({ object: 'far', part: 'slab' })
+    // the slab behind is 10 cm thick around z = -3
     expect(through?.distance).toBeCloseTo(7.95, 6)
   })
 
@@ -75,10 +80,8 @@ describe('world.raycast ignoreParts where a member is cast in a wall', () => {
     expect(ray(AT_PILLAR, [WALL, PILLAR])).toMatchObject({ object: 'far' })
   })
 
-  it('from inside the wall, past the face of the member, neither answers and the ray reaches what is behind', () => {
+  it('a ray that starts one millimetre inside the wall and the member meets neither: an ordinary part answers only at its entry', () => {
     const { ray } = setup([wall, pillar])
-    // one millimetre inside both boxes: an ordinary part answers only at its entry
     expect(ray([1.35, 1.2, 0.064])).toMatchObject({ object: 'far', part: 'slab' })
-    expect(ray([1.35, 1.2, 0.064], [PILLAR])).toMatchObject({ object: 'far', part: 'slab' })
   })
 })

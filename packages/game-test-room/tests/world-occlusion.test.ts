@@ -7,6 +7,9 @@ import type { DestructibleImpl, DestructibleSpec, ObjectState, RaycastOptions } 
 import { OCCLUDER_MIN_RADIUS } from '../src/world-occlusion'
 import { makeRoom } from './helpers'
 
+/** Where two parts overlap, each end of the path places the face between them within the default step of 1 mm. */
+const WITHIN_ONE_STEP = 0.0011
+
 const captured: AudioEngineOptions[] = []
 
 vi.mock('@adatechnology/game-audio', async (importOriginal) => {
@@ -252,16 +255,34 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
     })
   const mirrored = (layers: readonly Layer[]): Layer[] => layers.map((layer) => ({ ...layer, near: SCENE.from + SCENE.to - layer.far, far: SCENE.from + SCENE.to - layer.near }))
 
+  const overlap = (a: Layer, b: Layer): boolean => a.near < b.far && b.near < a.far
+  /** Two layers that both answer from inside and overlap: the stretch the walk still crosses one millimetre at a time. */
+  const hasSolidOverlap = (layers: readonly Layer[]): boolean => layers.some((a, i) => !a.ordinary && layers.some((b, j) => j > i && !b.ordinary && overlap(a, b)))
+  /** An ordinary layer wholly inside one that answers from inside: the buried part the walk must not count. */
+  const hasBuriedOrdinary = (layers: readonly Layer[]): boolean => layers.some((a) => a.ordinary && layers.some((b) => !b.ordinary && b.near < a.near && a.far < b.far))
+
   it('counts the same layers as the walk of one millimetre over 300 seeded random scenes, each read both ways', async () => {
     const { createWorldOcclusion } = await import('../src/world-occlusion')
     const random = seeded(20261120)
+    let solidOverlaps = 0
+    let buriedOrdinary = 0
+    let mostRays = 0
     for (let index = 0; index < 300; index++) {
       const scene = randomScene(random)
+      if (hasSolidOverlap(scene)) solidOverlaps++
+      if (hasBuriedOrdinary(scene)) buriedOrdinary++
       for (const layers of [scene, mirrored(scene)]) {
-        const hits = createWorldOcclusion(worldOf(layers).world)([0, 0, SCENE.from], [0, 0, SCENE.to])
+        const { world, counter } = worldOf(layers)
+        const hits = createWorldOcclusion(world)([0, 0, SCENE.from], [0, 0, SCENE.to])
         expect(hits.map((hit) => hit.material), `scene ${index}: ${JSON.stringify(layers)}`).toEqual(millimetreWalk(layers, SCENE.from, SCENE.to))
+        mostRays = Math.max(mostRays, counter.rays)
       }
     }
+    // the seed must keep reaching the hard branches, or the comparison above says little
+    expect(solidOverlaps).toBeGreaterThan(20)
+    expect(buriedOrdinary).toBeGreaterThan(20)
+    // both walks of a query on 2.5 m: crossing all of it one millimetre at a time with a second ray per step would be 10 000; the worst scene here takes about 2 300
+    expect(mostRays).toBeLessThan(5000)
   })
 })
 
@@ -440,7 +461,7 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
     for (const list of ignoredLists) expect(list.map(({ object, part }) => ({ object, part }))).toEqual([{ object: 'ground', part: 'body' }])
   })
 
-  it('stops at maxHits when the last one counted is found by the ray that ignores the part it is in', async () => {
+  it('stops at maxHits, the last one counted found by the ray that ignores the part it is in (2) or by a plain ray (3 and up)', async () => {
     const { createWorldOcclusion } = await import('../src/world-occlusion')
     const layers: Layer[] = [
       { object: 'ground', part: 'body', near: -10, far: 0 },
@@ -465,12 +486,12 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
       { object: 'first', part: 'slab', near: 0.5, far: 0.6, ordinary: true },
       { object: 'second', part: 'slab', near: 1, far: 1.1, ordinary: true },
     ])
-    // in: ground, first. Out (from the listener): second, first. Paired by place, only `first` would match the wrong layer, so nothing is measured
+    // in: ground, first. Out, in the order of the way in: first, second. The lists are as long as each other but no place holds the same layer
     const hits = createWorldOcclusion(world, { maxHits: 2 })(FROM, TO)
     expect(hits).toEqual([{ material: 'ground/body' }, { material: 'first/slab' }])
   })
 
-  it('walks back the same way: an ordinary part buried in the ground is counted from neither end, and the ground and the glass keep their thickness', async () => {
+  it('an ordinary part buried in the ground is counted from neither end, and the ground and the glass are paired with their thickness', async () => {
     const { createWorldOcclusion } = await import('../src/world-occlusion')
     const { world } = sceneOf([
       { object: 'ground', part: 'body', near: -10, far: 6 },
@@ -484,7 +505,7 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
     expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
   })
 
-  it('walks back the same way: a part that answers from inside, buried in the ground, is counted from neither end', async () => {
+  it('a part that answers from inside, buried in the ground, is counted from neither end, and the thickness is paired past it', async () => {
     const { createWorldOcclusion } = await import('../src/world-occlusion')
     const { world } = sceneOf([
       { object: 'ground', part: 'body', near: -10, far: 6 },
@@ -502,11 +523,8 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
     const { world } = sceneOf([{ object: 'ground', part: 'body', near: -10, far: 2 }, { object: 'rock', part: 'body', near: 1, far: 2.5 }])
     const hits = createWorldOcclusion(world)(FROM, TO)
     expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'rock/body'])
-    // each end finds the face of the ground within one step (1 mm)
-    expect(hits[0]?.thickness).toBeGreaterThan(11 - 0.0011)
-    expect(hits[0]?.thickness).toBeLessThan(11 + 0.0011)
-    expect(hits[1]?.thickness).toBeGreaterThan(0.5 - 0.0011)
-    expect(hits[1]?.thickness).toBeLessThan(0.5 + 0.0011)
+    expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 11)).toBeLessThan(WITHIN_ONE_STEP)
+    expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 0.5)).toBeLessThan(WITHIN_ONE_STEP)
   })
 })
 
@@ -560,6 +578,7 @@ describe('createWorldOcclusion over a destruction world with an impl of several 
     expect(world.raycast(IN_BOTH, AHEAD, undefined, { ignoreParts: [{ object: 'strata', part: 'rock' }] })).toMatchObject({ object: 'strata', part: 'soil', distance: 0 })
     const past = world.raycast(IN_BOTH, AHEAD, undefined, { ignoreParts: [{ object: 'strata', part: 'soil' }, { object: 'strata', part: 'rock' }] })
     expect(past).toMatchObject({ object: wall, part: 'slab' })
+    // from z = 1.5 to the face of the wall at z = 6.95
     expect(past?.distance).toBeCloseTo(5.45, 6)
   })
 
@@ -570,7 +589,7 @@ describe('createWorldOcclusion over a destruction world with an impl of several 
     const hits = createWorldOcclusion(world)([0, 0, -8], [0, 0, 9])
     expect(hits.map((hit) => hit.material)).toEqual(['dirt', 'concrete'])
     // the overlap is the soil's from both ends (it answers first), within one step
-    expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 7)).toBeLessThan(0.0011)
-    expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 4)).toBeLessThan(0.0011)
+    expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 7)).toBeLessThan(WITHIN_ONE_STEP)
+    expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 4)).toBeLessThan(WITHIN_ONE_STEP)
   })
 })
