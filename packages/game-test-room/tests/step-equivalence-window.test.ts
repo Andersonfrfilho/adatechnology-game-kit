@@ -1,8 +1,10 @@
 import { buildFrame } from '@adatechnology/game-destruction'
+import { createArsenal } from '@adatechnology/game-weapons'
 import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 import { describe, expect, it } from 'vitest'
 
+import type { BlastCharge } from '@adatechnology/game-destruction'
 import type { Scheduler } from '@adatechnology/game-runtime'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
 
@@ -59,6 +61,14 @@ const jitteredAt = (hertz: number, seed: number): FrameTimes => {
   return () => (0.6 + 0.8 * next()) / hertz
 }
 
+/** A charge with a case: its fragments are cast in the tick of the strike, so they are under the same-bytes guarantee too. */
+type CasedStrike = { readonly energy: number; readonly radius: number; readonly charge: BlastCharge }
+
+const casedStrike = (id: string): CasedStrike => {
+  const explosive = createArsenal().explosives.get(id)!
+  return { energy: explosive.energy, radius: explosive.injuryRadius, charge: { tnt: explosive.tnt!, casing: explosive.casing! } }
+}
+
 type SchedulerHolder = { readonly frameParts: { readonly scheduler: Scheduler } }
 
 const stateOf = (room: TestRoom, loop: PhysicsLoop | null): string => {
@@ -68,7 +78,7 @@ const stateOf = (room: TestRoom, loop: PhysicsLoop | null): string => {
 }
 
 /** The hash of every tick `0..TICKS-1`, with the frame time `frameTimes` gives: the actions are by tick index, the hash is the state when the tick ends. */
-const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly hasWorkBudget?: boolean }, frameTimes: FrameTimes): string[] => {
+const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly hasWorkBudget?: boolean; readonly strike?: CasedStrike }, frameTimes: FrameTimes): string[] => {
   const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, ...(variant.loop ? { physics: variant.loop } : {}), ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
   const { scheduler } = (room as unknown as SchedulerHolder).frameParts
   const sobrado = room.spawn('sobrado', [0, 0, -9]).objectId
@@ -83,7 +93,10 @@ const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly ha
         room.fluids.splash('water', [-3, 0.02, -4], 0.4)
       }
       if (tick >= 20 && tick < 60 && tick % 5 === 0) room.world.hit(crate, { type: 'fire', point: [4, 0.4, -5], temperature: 900, radius: 0.8, duration: 2, source: 'fire' })
-      if (tick === STRIKE_TICK) room.world.explode([0, 1, -6.4], BLAST_JOULES, BLAST_RADIUS, 'c4')
+      if (tick === STRIKE_TICK) {
+        if (variant.strike) room.world.explode([0, 1, -6.4], variant.strike.energy, variant.strike.radius, 'cased', { charge: variant.strike.charge })
+        else room.world.explode([0, 1, -6.4], BLAST_JOULES, BLAST_RADIUS, 'c4')
+      }
     },
     { phase: 'fixedSimulate', order: FIRST_ORDER, id: 'window-actions' },
   )
@@ -143,6 +156,15 @@ describe('the same scene gives the same bytes per tick at any frame rate (spec 0
     }
     expectSameAsReference(run(steadyAt(60)), run, TICKS)
   }, 120_000)
+
+  // A charge with a case (an M67, a pipe bomb) casts its fragments in the strike's tick: the same bytes per tick at every rate, past the strike
+  for (const id of ['m67', 'pipe_bomb']) {
+    it(`the whole run with a cased charge (${id}): every rate matches the 60 Hz run tick by tick (kit own solver)`, () => {
+      const strike = casedStrike(id)
+      const run = (frameTimes: FrameTimes): string[] => hashesPerTick({ loop: null, strike }, frameTimes)
+      expectSameAsReference(run(steadyAt(60)), run, TICKS)
+    }, 240_000)
+  }
 
   // Pending (spec 017 T2.2, evidence-120hz): under `workBudget` the structural events stay in the frame's drain (the work is paced by frame), so they still read the drawn pose.
   it.fails('with workBudget on, 120 Hz matches the 60 Hz run tick by tick (fails: the workBudget path still applies its events in present, on the drawn pose)', () => {
