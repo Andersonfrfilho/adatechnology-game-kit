@@ -18,11 +18,13 @@ import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
 import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
-import { saveBase } from './room-explosion-base.mjs'
+import { assertNightlyBuildsItsOwnPage, saveBase } from './room-explosion-base.mjs'
 import { parseSummaryLines } from './suite-runner.mjs'
 
 /** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string }} NightlyState */
 /** @typedef {{ name: string, ok: boolean, log: string, seconds: number }} StepResult */
+
+assertNightlyBuildsItsOwnPage(process.env)
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const cacheDir = join(process.env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'adatechnology-game-kit')

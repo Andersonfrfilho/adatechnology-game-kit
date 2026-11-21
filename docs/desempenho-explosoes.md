@@ -281,6 +281,8 @@ ROOM_EXPLOSION_PAGE=/tmp/depois.html ROOM_EXPLOSION_OTHER_PAGE=/tmp/antes.html n
 
 - **A régua para se as duas páginas tiverem os mesmos bytes**, e o relatório JSON e o log trazem `pageSha256` da página medida: confira que o hash muda entre o antes e o depois.
 - **Copiar uma página por cima de `dist/test-room.html` não funciona**: sem `ROOM_EXPLOSION_PAGE` a régua refaz essa página (`build.mjs`) antes de medir, e a cópia some. Foi assim que pares antes × depois mediram um build contra ele mesmo.
+- **A rodada diária recusa essas variáveis**: `nightly-gpu.mjs` para antes de rodar qualquer passo se `ROOM_EXPLOSION_PAGE` ou `ROOM_EXPLOSION_OTHER_PAGE` estiver definida (vazia conta como não definida), porque a base da noite tem de vir do build do próprio commit.
+- **Uma corrida com página guardada não grava a base**: se `ROOM_EXPLOSION_OUT` for o mesmo arquivo de `ROOM_EXPLOSION_BASE` junto com `ROOM_EXPLOSION_PAGE`, a régua para. A base só é gravada pela rodada diária (`saveBase`), e essa recusa a página guardada.
 
 ### O fecho da frente "sem mudar a simulação" (f0 de ~78 para ~64 ms; meta 33,3)
 

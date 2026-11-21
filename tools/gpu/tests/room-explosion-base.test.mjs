@@ -88,3 +88,8 @@ test('saveBase: a non-c4 night leaves the base file as it was, and writes nothin
   saveBase(report, baseFile)
   assert.equal(JSON.parse(readFileSync(baseFile, 'utf8')).frameMetrics[0].f0Ms, 60)
 })
+
+test('the merged base does not carry the last night\'s pageSha256', () => {
+  const merged = mergeBase(night(65), { ...night(60), pageSha256: 'abc123' })
+  assert.equal('pageSha256' in merged, false)
+})

@@ -70,6 +70,7 @@ import { cpus, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { savedPagesOf } from './room-explosion-base.mjs'
 import { DEFAULT_EXPLOSIVE, frameGate, frameKey, frameMetricsOf, isBaseComparable } from './room-explosion-frame.mjs'
 
 const FRAME_SECONDS = 1 / 60
@@ -104,6 +105,28 @@ export const pagePairOf = ({ page, otherPage }) => {
   if (sha256Of(otherPage) === pageSha256) throw new Error(`room-explosion: the page and ROOM_EXPLOSION_OTHER_PAGE are the same bytes (sha256 ${pageSha256.slice(0, 12)}): this pair would compare a build with itself`)
   return { pageSha256 }
 }
+
+/**
+ * Why this run may not write ROOM_EXPLOSION_OUT over the base file, or undefined when it may.
+ * @param {{ explosive: string, savedPage: string | undefined, reportOut: string | undefined, baseFile: string | undefined }} run
+ * @returns {string | undefined}
+ */
+export const baseOverwriteError = ({ explosive, savedPage, reportOut, baseFile }) => {
+  if (!reportOut || !baseFile || resolve(reportOut) !== resolve(baseFile)) return undefined
+  if (explosive !== DEFAULT_EXPLOSIVE) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`
+  if (savedPage !== undefined) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with a saved page (ROOM_EXPLOSION_PAGE) would overwrite the base with another build's numbers`
+  return undefined
+}
+
+/**
+ * Which page file a run opens and whether it builds that page first (only the worktree's own page is rebuilt, never a saved one).
+ * @param {{ savedPage: string | undefined, root: string }} run
+ * @returns {{ pageFile: string, shouldBuild: boolean }}
+ */
+export const pageSelectionOf = ({ savedPage, root }) =>
+  savedPage === undefined
+    ? { pageFile: resolve(join(root, 'examples/test-room/dist/test-room.html')), shouldBuild: true }
+    : { pageFile: resolve(savedPage), shouldBuild: false }
 
 /** @param {string} file */
 const sha256Of = (file) => createHash('sha256').update(readFileSync(file)).digest('hex')
@@ -641,16 +664,17 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   if (!isBlastingExplosive(known)) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} does not blast the house (no energy, a smoke or a cone): nothing would be measured`)
   const reportOut = process.env.ROOM_EXPLOSION_OUT
   const baseFile = process.env.ROOM_EXPLOSION_BASE
-  if (explosive !== DEFAULT_EXPLOSIVE && reportOut && baseFile && resolve(reportOut) === resolve(baseFile)) throw new Error(`room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`)
+  const { page: savedPage, otherPage } = savedPagesOf(process.env)
+  const overwriteError = baseOverwriteError({ explosive, savedPage, reportOut, baseFile })
+  if (overwriteError) throw new Error(overwriteError)
   const rounds = Number(process.env.ROOM_EXPLOSION_ROUNDS ?? 5)
   const frames = Number(process.env.ROOM_EXPLOSION_FRAMES ?? 660)
   const budget = { p99: Number(process.env.ROOM_EXPLOSION_P99_MS ?? 4), max: Number(process.env.ROOM_EXPLOSION_MAX_MS ?? 5) }
   if (variants.length === 0 || kinds.length === 0 || throttles.length === 0) throw new Error('room-explosion: nothing to measure (check the ROOM_EXPLOSION_* variables)')
 
-  const savedPage = process.env.ROOM_EXPLOSION_PAGE
-  if (!savedPage) execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'ignore' })
-  const pageFile = resolve(savedPage ?? join(root, 'examples/test-room/dist/test-room.html'))
-  const pageSha256 = pagePairOf({ page: pageFile, otherPage: process.env.ROOM_EXPLOSION_OTHER_PAGE }).pageSha256
+  const { pageFile, shouldBuild } = pageSelectionOf({ savedPage, root })
+  if (shouldBuild) execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'ignore' })
+  const pageSha256 = pagePairOf({ page: pageFile, otherPage }).pageSha256
   console.log(`room-explosion: page ${pageFile} (sha256 ${pageSha256.slice(0, 12)})`)
   const pageUrl = pathToFileURL(pageFile).href
   const browser = await playwright.chromium.launch({ args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'], ...(chrome ? { executablePath: chrome } : {}) })
