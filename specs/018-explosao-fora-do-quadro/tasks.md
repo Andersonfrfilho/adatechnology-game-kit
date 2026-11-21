@@ -22,24 +22,31 @@
 - **T0.4** Protótipo descartável do caminho C (`rebuildHost` como kernel na faixa `build`): quanto dos ~14 ms de eventos sai.
 - **T0.5 🧠** Relatório com os números e a recomendação para a D1 (A, B, C, combinação ou desistir da meta), para o dono decidir.
 
+## Fase 1 — Proposta de cortes na simulação de fragmentos
+> 🤖 Modelo: `sonnet` (análise só de leitura; T1.2 é 🧠 — validar com `opus` antes de implementar, pois a escolha define cortes que outras tasks herdam)
+
+Contexto: D1 e D3 decididas em 2026-11-21 (`spec.md` §4). O caso de referência é a M67; o dono pediu a proposta **antes** de qualquer mudança no
+código de simulação. Esta fase não altera código.
+
+- **T1.1** Proposta de cortes (só leitura e análise, nenhum código de simulação muda). Para o `explode` (M67 ~43–55 ms) e o `destrEvents`
+  (M67 ~44–49 ms) do pior quadro, listar as opções de corte e, de cada uma: o que corta, o ganho esperado em ms (com a conta e o que é palpite),
+  **quais goldens e hashes de eventos mudam** (ler os goldens, não supor), o que o jogador vê de diferente e se depende da D2. Incluir o corte
+  "espalhar os impactos dos fragmentos por 2 ou 3 tiques" e dizer quantos quadros de latência ele cria. Medir o que faltar com a régua
+  (`room-explosion`, M67, modo de prazo, pares alternados na mesma sessão). Entregar em `evidence.md` e levar ao dono.
+- **T1.2 🧠** Escolha dos cortes. **Depende do dono:** nenhuma task de implementação nasce antes de ele escolher entre as opções da T1.1 e, para
+  qualquer corte que adie o dano, de fechar a D2.
+
+Fases de implementação: só existem depois da escolha da T1.2.
+
 ## Fases seguintes
 
-Só existem depois das decisões D1 a D3 do `spec.md`. O que qualquer caminho herda da 017 está em
+Só existem depois da T1.2 (e da D2). O que qualquer caminho herda da 017 está em
 `specs/017-quadro-da-explosao/design-onda.md` (§2.2 a §2.6, §3 e a lista de testes do §5).
 
 ## Prompt de execução
 
-Só a Fase 0 pode ser executada: as fases seguintes dependem de D1, D2 e D3, que estão abertas.
+Não há prompt de execução: a spec tem [NEEDS CLARIFICATION] aberto (D2) e a T1.2 depende da escolha do dono. O prompt da Fase 0 já foi
+executado e está no histórico do git. Perguntas pendentes:
 
-```text
-/oh-my-claudecode:autopilot Execute a Fase 0 da spec specs/018-explosao-fora-do-quadro/ (leia spec.md e tasks.md; leia também
-specs/017-quadro-da-explosao/design-onda.md, specs/regras/14-workers.md e specs/regras/15-quadro-e-desempenho.md). Uma task por vez, num
-worktree próprio (branch spec/018-explosao-fora-do-quadro, a partir da main). Tudo desta fase é protótipo descartável: nada de código vai
-para a main, só a evidência.
-Modelos: T0.1 e T0.5 🧠 → executor model=opus · T0.2 a T0.4 → executor model=sonnet.
-Medições: máquina fria e quieta (carga < 1,5, processador longe do limite térmico), sob flock
-~/.cache/adatechnology-game-kit/perf-measure.lock, pares alternados na mesma sessão, pnpm build e a página da sala refeitos; descarte rodada
-com a página travada e diga que descartou. Régua: o comando de docs/desempenho-explosoes.md com ROOM_EXPLOSION_BUDGET=deadline.
-Cada task fecha com typecheck dos pacotes tocados e os números em evidence.md.
-Pare e pergunte antes de: qualquer coisa além da Fase 0, regravar golden ou fixture, abrir PR de código, decidir D1, D2 ou D3.
-```
+- **D2:** quantos quadros de latência entre o clarão e o dano são aceitáveis? (o dono decide vendo na sala)
+- **T1.2:** qual dos cortes propostos na T1.1 entra, e com que latência.
