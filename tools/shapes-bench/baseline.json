@@ -381,32 +381,32 @@
       "ms": 0.4209
     },
     "houses/apartment_basic": {
-      "ratio": 37.3752,
-      "ms": 36.132
+      "ratio": 43.335,
+      "ms": 41.8936
     },
     "houses/apartment_modern": {
-      "ratio": 68.1904,
-      "ms": 65.9224
+      "ratio": 59.2014,
+      "ms": 57.2324
     },
     "houses/market": {
-      "ratio": 36.945,
-      "ms": 35.7162
+      "ratio": 40.4165,
+      "ms": 39.0722
     },
     "houses/mid_modern_single_storey": {
-      "ratio": 113.392,
-      "ms": 109.6205
+      "ratio": 116.2721,
+      "ms": 112.4048
     },
     "houses/pharmacy": {
-      "ratio": 26.3289,
-      "ms": 25.4532
+      "ratio": 34.3042,
+      "ms": 33.1632
     },
     "houses/single_storey_a": {
-      "ratio": 60.533,
-      "ms": 58.5197
+      "ratio": 64.5787,
+      "ms": 62.4308
     },
     "houses/townhouse": {
-      "ratio": 123.5692,
-      "ms": 119.4592
+      "ratio": 131.3366,
+      "ms": 126.9683
     },
     "items/model:activated_charcoal": {
       "ratio": 0.0955,
