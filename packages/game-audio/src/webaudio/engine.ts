@@ -385,7 +385,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
             },
             drop: () => (burst as BurstCap).expire(),
           }),
-        (run, boost) => settled.push({ run: () => run(boost), drop: () => undefined }),
+        (run, boost) => settled.push({ run: () => run(boost), drop: () => (burst as BurstCap).lost() }),
+        { now: startQueue.now, stale: startQueue.stale },
       )
     : null
   // the rule of a capped group for this play, or undefined when it is not held (no group, no cap, or `urgent`)
@@ -517,6 +518,13 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     }
     const group = sample.group ?? playOptions.group
     const rule = burstRule(group, playOptions)
+    if (rule) {
+      // like a recipe: the context is made and resumed inside `play`, where the user's gesture is, not in a queue task
+      const audio = ready()
+      if (!audio) return null
+      unlockContext(audio)
+      advance()
+    }
     const score = rule ? falloffGain(sample.falloff ?? DEFAULT_SAMPLE_FALLOFF, (playOptions.volume ?? 1) * (sample.gain ?? 1), distanceOf(playOptions)) : 0
     if (rule?.maxPerBurst !== undefined && !(burst as BurstCap).offer(group as string, rule.maxPerBurst, rule.burstBoost ?? 1, score)) return null
     const launch = (boost: number): VoiceHandle | null => {

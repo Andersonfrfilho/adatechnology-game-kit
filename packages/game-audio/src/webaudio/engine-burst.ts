@@ -1,5 +1,5 @@
 /** A slot of a group's top list; slots are reused, so a request that cannot win allocates nothing. */
-type Slot = { score: number; order: number; run: ((boost: number) => void) | undefined }
+type Slot = { score: number; order: number; at: number; run: ((boost: number) => void) | undefined }
 
 type Bucket = { limit: number; boost: number; asked: number; weakest: number; readonly slots: Slot[]; readonly spare: Slot[] }
 
@@ -10,8 +10,10 @@ export type BurstCap = {
   place(group: string, score: number, run: (boost: number) => void): void
   /** Hands the loudest of every group to `deliver`, loudest first (ties by request order), and empties the lists. Nothing held is a no-op. */
   settle(): void
-  /** The settle job waited too long: what is held is dropped as late, counted apart from `capped`. */
+  /** The settle job waited too long: the held requests that are themselves past the latency limit are dropped as late (counted apart from `capped`); the rest get a new settle job. */
   expire(): void
+  /** A kept voice that waited past the limit in the queue. */
+  lost(): void
   /** The engine closed: forgets what is held without counting it. */
   clear(): void
   /** Requests that lost to louder ones, before any node. */
@@ -27,7 +29,11 @@ const loudestFirst = (a: Slot, b: Slot): number => b.score - a.score || a.order 
  * come (a bounded list, no growth with the burst), and `schedule`'s settle job builds them when the engine's start queue reaches it: the window is
  * the one the host already owns, with no clock and no extra frame.
  */
-export function createBurstCap(schedule: () => void, deliver: (run: (boost: number) => void, boost: number) => void): BurstCap {
+export function createBurstCap(
+  schedule: () => void,
+  deliver: (run: (boost: number) => void, boost: number) => void,
+  clock: { readonly now: () => number; readonly stale: (stamp: number) => boolean },
+): BurstCap {
   const buckets = new Map<string, Bucket>()
   let order = 0
   let scheduled = false
@@ -41,6 +47,11 @@ export function createBurstCap(schedule: () => void, deliver: (run: (boost: numb
     }
     bucket.slots.length = 0
     bucket.asked = 0
+  }
+
+  const release1 = (bucket: Bucket, slot: Slot): void => {
+    slot.run = undefined
+    bucket.spare.push(slot)
   }
 
   const forget = (): number => {
@@ -90,7 +101,7 @@ export function createBurstCap(schedule: () => void, deliver: (run: (boost: numb
       const level = score > 0 ? score : 0
       let slot: Slot
       if (bucket.slots.length < bucket.limit) {
-        slot = bucket.spare.pop() ?? { score: 0, order: 0, run: undefined }
+        slot = bucket.spare.pop() ?? { score: 0, order: 0, at: 0, run: undefined }
         bucket.slots.push(slot)
       } else {
         slot = bucket.slots[bucket.weakest] as Slot
@@ -98,6 +109,7 @@ export function createBurstCap(schedule: () => void, deliver: (run: (boost: numb
       }
       slot.score = level
       slot.order = order++
+      slot.at = clock.now()
       slot.run = run
       if (scheduled) return
       scheduled = true
@@ -115,7 +127,22 @@ export function createBurstCap(schedule: () => void, deliver: (run: (boost: numb
       }
     },
     expire() {
-      late += forget()
+      scheduled = false
+      let survivors = 0
+      for (const bucket of buckets.values()) {
+        const fresh = bucket.slots.filter((slot) => !clock.stale(slot.at))
+        late += bucket.slots.length - fresh.length
+        for (const slot of bucket.slots) if (!fresh.includes(slot)) release1(bucket, slot)
+        bucket.slots.splice(0, bucket.slots.length, ...fresh)
+        bucket.asked = fresh.length
+        survivors += fresh.length
+      }
+      if (survivors === 0) return
+      scheduled = true
+      schedule()
+    },
+    lost() {
+      late++
     },
     clear() {
       forget()

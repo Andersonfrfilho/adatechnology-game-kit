@@ -1,5 +1,5 @@
 import { createAudioRecorder } from '@adatechnology/golden-tool'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { GAME_SFX_BANK, VOICE_GROUPS, createAudioEngine, createVoiceManager } from '../src'
 import type { SampleSound, VoiceGroup, VoiceStartEvent } from '../src'
@@ -9,12 +9,14 @@ const GROUPS: Readonly<Record<string, VoiceGroup>> = {
   crowd: { maxPerBurst: LIMIT },
   boosted: { maxPerBurst: LIMIT, burstBoost: 1.5 },
   other: { maxPerBurst: LIMIT },
+  wide: { maxPerBurst: 8 },
 }
 const SAMPLE: SampleSound = { id: 'hit_file', bus: 'world', close: [{ url: 'h1.ogg' }, { url: 'h2.ogg' }], sources: ['sdk: test'] }
 
-const setup = (options: Parameters<typeof createAudioEngine>[0] = {}) => {
+const setup = (options: Parameters<typeof createAudioEngine>[0] = {}, contextProps: object = {}) => {
   const recorder = createAudioRecorder()
   const context = recorder.context as unknown as AudioContext
+  for (const [key, value] of Object.entries(contextProps)) Object.defineProperty(context, key, { value, configurable: true })
   Object.assign(context, {
     createWaveShaper: () => context.createGain(),
     decodeAudioData: (_bytes: ArrayBuffer, done: (buffer: AudioBuffer) => void) => {
@@ -235,5 +237,75 @@ describe('the manager', () => {
     const manager = createVoiceManager({ groups: GROUPS })
     expect(manager.groupRule('crowd')).toEqual({ maxPerBurst: LIMIT })
     expect(manager.groupRule('none')).toBeUndefined()
+  })
+})
+
+describe('the voice cap and the queue clock', () => {
+  let clock = 0
+  const freezeTime = (): void => void vi.spyOn(performance, 'now').mockImplementation(() => clock)
+  afterEach(() => {
+    vi.restoreAllMocks()
+    clock = 0
+  })
+  const budgeted = (engine: ReturnType<typeof setup>['engine'], builds: number): void => {
+    const queue = engine.deferredQueue?.() as NonNullable<ReturnType<NonNullable<typeof engine.deferredQueue>>>
+    let spent = 0
+    queue.run(builds, () => ++spent)
+  }
+
+  it('resumes a suspended context inside play for a held sample, not in the queue', async () => {
+    const resume = vi.fn(() => Promise.resolve())
+    const { engine, flush } = setup({}, { state: 'suspended', resume, close: () => Promise.resolve() })
+    await engine.loadSamples(['hit_file'])
+    expect(resume).not.toHaveBeenCalled()
+    engine.play('hit_file', { distance: 1, group: 'crowd' })
+    expect(resume).toHaveBeenCalledTimes(1)
+    flush()
+  })
+
+  it('under a barrage with a budget below the cap, an ordinary sound asked behind the first settle is built before the next bursts and is never dropped', () => {
+    freezeTime()
+    const { engine, started } = setup()
+    const frames = 10
+    let ordinaryAt = -1
+    for (let frame = 0; frame < frames; frame++) {
+      for (let index = 0; index < 100; index++) engine.play('sfx_pistol', { distance: 1 + index * 0.1, group: 'wide' })
+      if (frame === 0) engine.play('sfx_pistol', { distance: 1, delay: 100 })
+      budgeted(engine, 3)
+      if (ordinaryAt < 0 && started.some((event) => event.startAt > 50)) ordinaryAt = frame
+      clock += 16
+    }
+    expect(ordinaryAt).toBeGreaterThanOrEqual(0)
+    expect(ordinaryAt).toBeLessThanOrEqual(3)
+    expect(engine.stats().dropped).toBe(0)
+    // the kept voices of the first burst were built ahead of the ordinary sound
+    const order = started.map((event) => event.startAt > 50)
+    expect(order.indexOf(true)).toBe(8)
+  })
+
+  it('a kept voice is as old as its settle job: it expires honestly instead of getting a fresh age', () => {
+    freezeTime()
+    const { engine, started } = setup({ deferredStart: { maxLatencyMs: 250 } })
+    for (let index = 0; index < 20; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'wide' })
+    clock = 200
+    budgeted(engine, 1)
+    expect(engine.deferredQueue?.()?.pending()).toBe(8)
+    clock = 300
+    budgeted(engine, 20)
+    expect(started).toHaveLength(0)
+    expect(engine.stats().dropped).toBe(8)
+  })
+
+  it('a late settle drops only the requests that are themselves late; the fresh ones get a new settle', () => {
+    freezeTime()
+    const { engine, started, flush } = setup({ deferredStart: { maxLatencyMs: 100 } })
+    for (let index = 0; index < LIMIT; index++) engine.play('sfx_pistol', { distance: 20 + index, group: 'crowd' })
+    clock = 150
+    for (let index = 0; index < 2; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'crowd' })
+    flush()
+    expect(started).toHaveLength(2)
+    expect(started.every((event) => event.distance < 3)).toBe(true)
+    expect(engine.stats().dropped).toBe(2)
+    expect(engine.deferredQueue?.()?.pending()).toBe(0)
   })
 })
