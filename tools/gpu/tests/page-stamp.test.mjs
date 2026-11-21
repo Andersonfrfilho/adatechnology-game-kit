@@ -12,6 +12,9 @@ import { assertReportIsOfHead, saveBase, trySaveBase } from '../room-explosion-b
 import { distFilesOf } from '../../../examples/test-room/page-packages.mjs'
 import { assertDistsAreFresh, stalePackagesAt, stalePackagesOf } from '../stale-dist.mjs'
 
+// a git hook exports these, and the temp repo below would then commit into the real one
+for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX', 'GIT_COMMON_DIR', 'GIT_OBJECT_DIRECTORY']) delete process.env[key]
+
 const HEAD = 'b'.repeat(40)
 const BUILD = { commit: HEAD, dirty: false, builtAt: '2026-11-21T10:00:00.000Z' }
 const page = (/** @type {string} */ stamp) => `<html><head><title>x</title>${stamp}</head><body>room</body></html>`
@@ -142,7 +145,7 @@ test('stalePackagesAt: reads package.json dependencies; a workspace dependency e
 })
 
 test('assertDistsAreFresh: throws naming the package and the rebuild command, passes when fresh', () => {
-  assert.throws(() => assertDistsAreFresh(fakePackage('throws', 'game-audio', { src: 2000, dist: 1000 })), /game-audio.*pnpm --filter @adatechnology\/game-audio build/)
+  assert.throws(() => assertDistsAreFresh(fakePackage('throws', 'game-audio', { src: 2000, dist: 1000 })), /game-audio.*pnpm --filter "@adatechnology\/game-audio\.\.\." build/)
   assert.doesNotThrow(() => assertDistsAreFresh(fakePackage('passes', 'game-audio', { src: 1000, dist: 2000 })))
 })
 

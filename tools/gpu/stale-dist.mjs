@@ -94,6 +94,7 @@ const describeStale = ({ name, isMissing, newerSources }) => {
 export const assertDistsAreFresh = (root, names = DIST_PACKAGES) => {
   const stale = stalePackagesAt(root, names)
   if (stale.length === 0) return
-  const filters = stale.map(({ name }) => `--filter @adatechnology/${name}`).join(' ')
+  // `name...` also rebuilds the workspace dependencies: a dependent rebuilt alone would inline the dependency's old dist and pass
+  const filters = stale.map(({ name }) => `--filter "@adatechnology/${name}..."`).join(' ')
   throw new Error(`room-explosion: the dist of ${stale.length} package(s) is older than its src or a workspace dependency's, or missing: ${stale.map(describeStale).join(', ')}: the page would bundle old code. Rebuild: pnpm ${filters} build (or pnpm build)`)
 }
