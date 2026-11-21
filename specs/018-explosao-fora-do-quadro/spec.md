@@ -1,21 +1,23 @@
 # Spec 018 — a explosão fora do quadro principal
 
-> Estado: **rascunho para decisão** (2026-11-20). Nasce do fecho da spec 017: o quadro do impacto de uma explosão grande ficou em ~65 ms
+> Estado: **Fase 0 concluída, D1 a D3 abertas** (2026-11-20; números e recomendação em `relatorio-fase-0.md`). Nasce do fecho da spec 017: o quadro do impacto de uma explosão grande ficou em ~65 ms
 > contra a meta de 33,3 ms, e as duas formas de dividir o trabalho no tempo foram medidas e não bastam (`specs/017-quadro-da-explosao/
 > design-onda.md` §1 e §9). Esta spec **não promete 33,3 ms**: a Fase 0 é um experimento que mede se o caminho existe.
 
 ## 1. Problema
 
-Modo de prazo, 1x, casa da sala (521 peças), explosão e cratera (régua `tools/gpu/room-explosion.mjs`):
+Modo de prazo, 1x, casa da sala (552 peças no mundo; 521 visitadas pelo `blastPart`), explosão e cratera (régua `tools/gpu/room-explosion.mjs`).
+Números corrigidos pela Fase 0 (`relatorio-fase-0.md` §2.1 e §6); a primeira versão desta tabela dizia 24–26 ms para o `explode`, ~14 para os
+eventos e 521 peças:
 
 | Parte do quadro do impacto | ms |
 |---|---|
-| `world.explode` (laço `blastPart` por peça, `wearJoints`, `knockOutUnits`, `solveStructure`) | 24–26 |
-| eventos estruturais aplicados no tique (`applyStructuralEvents`: `rebuildHost`, `splitLoose`, `adoptSplit`) | ~14 |
-| `action` (efeito, `renderer.explode`) | ~7 |
-| desenho (`renderCpu`) | ~8 |
-| resto (matrizes, módulos, saída das etapas) | ~10 |
-| **total** | **~65** |
+| `world.explode` (laço `blastPart` por peça, `wearJoints`, `knockOutUnits`, `solveStructure`) | 20–22 (T0.1, T0.3) |
+| eventos estruturais aplicados no tique (`applyStructuralEvents`: `rebuildHost`, `splitLoose`, `adoptSplit`) | ~16–17 (17–18 com a sonda, T0.4) |
+| `action` (efeito, `renderer.explode`) | ~7 (017; não remedido na 018) |
+| desenho (`renderCpu`) | ~8,4 (017; não remedido na 018) |
+| resto (matrizes, módulos, saída das etapas) | ~10–11 (por diferença) |
+| **total** | **63–65** (T0.1) |
 
 O que já se sabe que não resolve: baratear o `explode` sem mudar o resultado (feito, 017 etapa B); adiar apresentação (feito, 017 etapa A);
 dividir a explosão em tiques (017 D5: ~15 ms só com regra não física, 3–6 ms com a regra física; piso de ~40 ms porque a parede encostada

@@ -1,0 +1,3770 @@
+{
+ "date": "2026-11-20T20:15:45.855Z",
+ "note": "CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.",
+ "machine": {
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "cores": 24,
+  "node": "v24.22.0",
+  "chrome": "157.0.8103.50",
+  "platform": "linux"
+ },
+ "budget": {
+  "p99": 4,
+  "max": 5
+ },
+ "rounds": 1,
+ "frames": 660,
+ "frameSeconds": 0.016666666666666666,
+ "budgetMode": "deadline",
+ "gatedThrottles": [
+  1
+ ],
+ "errors": [],
+ "cells": [
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "rounds": [
+    {
+     "frames": 659,
+     "p50": 0.1,
+     "p99": 5.8,
+     "max": 9.2,
+     "over4": 21,
+     "over5": 14,
+     "wakeFrame": 0.6,
+     "firstSecond": 135.1,
+     "maxWithWake": 9.2,
+     "loopMs": 359.8,
+     "pieceMs": 1.4,
+     "wakeMs": 0.7,
+     "updateMs": 3291.6,
+     "renderMs": 0,
+     "framep50": 1.2,
+     "framep99": 8.3,
+     "framemax": 18.9,
+     "load": 2.63
+    }
+   ],
+   "p50": 0.1,
+   "p99": 5.8,
+   "max": 9.2,
+   "over4": 21,
+   "over5": 14,
+   "wakeFrame": 0.6,
+   "wakeMedian": 0.6,
+   "firstSecond": 135.1,
+   "framep50": 1.2,
+   "framep99": 8.3,
+   "framemax": 18.9
+  },
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "rounds": [
+    {
+     "frames": 659,
+     "p50": 0.1,
+     "p99": 4.8,
+     "max": 5.2,
+     "over4": 19,
+     "over5": 4,
+     "wakeFrame": 0.4,
+     "firstSecond": 177.3,
+     "maxWithWake": 5.2,
+     "loopMs": 221.9,
+     "pieceMs": 1,
+     "wakeMs": 0.6,
+     "updateMs": 2768,
+     "renderMs": 0,
+     "framep50": 1.1,
+     "framep99": 6.8,
+     "framemax": 18.7,
+     "load": 2.05
+    }
+   ],
+   "p50": 0.1,
+   "p99": 4.8,
+   "max": 5.2,
+   "over4": 19,
+   "over5": 4,
+   "wakeFrame": 0.4,
+   "wakeMedian": 0.4,
+   "firstSecond": 177.3,
+   "framep50": 1.1,
+   "framep99": 6.8,
+   "framemax": 18.7
+  }
+ ],
+ "stageLabels": [
+  "splitLoose",
+  "adoptSplit",
+  "fitBoxes",
+  "rebuildHost",
+  "groundBody",
+  "pieceBodies",
+  "layGround",
+  "layTile",
+  "groundAsk",
+  "groundApply",
+  "groundFallback",
+  "groundShape",
+  "groundRelease",
+  "waterAt",
+  "ripple",
+  "joltStep",
+  "bridgeReads",
+  "readBack"
+ ],
+ "frameLabels": [
+  "world",
+  "fluids",
+  "explosives",
+  "destrEvents",
+  "fragments",
+  "settled",
+  "syncXform",
+  "partFx",
+  "destrOwn",
+  "vfxSim",
+  "vfxLayers",
+  "terrainMesh",
+  "water",
+  "footprints",
+  "fluidView",
+  "film",
+  "audio",
+  "modules",
+  "lights",
+  "matrices",
+  "stagesOut",
+  "action",
+  "explode",
+  "vfxPresent",
+  "sysInput",
+  "sysSimulate",
+  "sysSimulateEnd",
+  "sysPresent",
+  "sysLights",
+  "sysOther",
+  "queues"
+ ],
+ "frameExtras": [
+  "renderCpu",
+  "gpuWait",
+  "gpu",
+  "calls",
+  "triangles",
+  "particles",
+  "frags",
+  "pieces"
+ ],
+ "frameMetrics": [
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "f0Ms": 2191.67,
+   "afterMs": 26.77
+  },
+  {
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "f0Ms": 2108.5,
+   "afterMs": 29.1
+  }
+ ],
+ "explodeProbe": [
+  {
+   "round": 1,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 2195.6,
+    "actionMs": 2165,
+    "explode": 2158,
+    "action": 6.1,
+    "renderCpu": 10
+   },
+   "records": [],
+   "boundary": [
+    {
+     "counts": {
+      "objects": 1,
+      "partsInWorld": 24,
+      "jointsInWorld": 53,
+      "inRangeObjects": 1,
+      "items": 24,
+      "embeddedSkipped": 0,
+      "ring": 0,
+      "outer": 24,
+      "within1_5": 12,
+      "within2": 24,
+      "within3": 24,
+      "ringJoints": 0,
+      "outerJoints": 106,
+      "allJoints": 106,
+      "materials": 1,
+      "impls": 0
+     },
+     "bytes": {
+      "jsonUtf8": 25523,
+      "jsonChars": 25523,
+      "flatRing": 56,
+      "flatOuter": 12872,
+      "flatAll": 12872,
+      "materialsTable": 56
+     },
+     "timings": {
+      "serialize": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.12031249888241291,
+       "min": 0.10625000111758709,
+       "max": 0.13906250149011612
+      },
+      "cloneSnapshot": {
+       "first": 0.19999992847442627,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.09843749925494194,
+       "min": 0.09531250037252903,
+       "max": 0.12187499925494194
+      },
+      "stringifySnapshot": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.0625,
+       "min": 0.05937499925494194,
+       "max": 0.0859375
+      },
+      "select": {
+       "first": 0.10000002384185791,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.0015625000232830644,
+       "min": 0.001171874930150807,
+       "max": 0.002148437430150807
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00008087158130365424,
+       "min": 0.00007934570203360636,
+       "max": 0.00010528564416745212
+      },
+      "assembleRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00005950927697995212,
+       "min": 0.00003967285192629788,
+       "max": 0.00007019043005129788
+      },
+      "assembleOuter": {
+       "first": 0.3999999761581421,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05156250111758709,
+       "min": 0.04374999925494194,
+       "max": 0.07968749850988388
+      },
+      "assembleAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.04921875009313226,
+       "min": 0.046093749813735485,
+       "max": 0.05312500009313226
+      },
+      "cloneRing": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.001757812569849193,
+       "min": 0.00146484375,
+       "max": 0.0020507812732830644
+      },
+      "cloneOuter": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.013671875,
+       "min": 0.012890625279396772,
+       "max": 0.014453125186264515
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.01171875,
+       "min": 0.010156250093132257,
+       "max": 0.023828125093132257
+      },
+      "transferRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.0027343747206032276,
+       "max": 0.00390625
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.0027343747206032276,
+       "max": 0.00937500037252903
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0035156249068677425,
+       "min": 0.0027343747206032276,
+       "max": 0.010937499813735485
+      }
+     }
+    },
+    {
+     "counts": {
+      "objects": 15,
+      "partsInWorld": 552,
+      "jointsInWorld": 794,
+      "inRangeObjects": 14,
+      "items": 506,
+      "embeddedSkipped": 12,
+      "ring": 12,
+      "outer": 494,
+      "within1_5": 16,
+      "within2": 20,
+      "within3": 44,
+      "ringJoints": 29,
+      "outerJoints": 1331,
+      "allJoints": 1360,
+      "materials": 13,
+      "impls": 2
+     },
+     "bytes": {
+      "jsonUtf8": 897284,
+      "jsonChars": 897284,
+      "flatRing": 5408,
+      "flatOuter": 203264,
+      "flatAll": 207944,
+      "materialsTable": 728
+     },
+     "timings": {
+      "serialize": {
+       "first": 4.400000095367432,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 4.600000023841858,
+       "min": 4.099999904632568,
+       "max": 6.399999976158142
+      },
+      "cloneSnapshot": {
+       "first": 6.199999928474426,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.399999976158142,
+       "min": 3.1999999284744263,
+       "max": 4.600000023841858
+      },
+      "stringifySnapshot": {
+       "first": 2.899999976158142,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 2.274999976158142,
+       "min": 2,
+       "max": 2.4249999821186066
+      },
+      "select": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.0625,
+       "min": 0.05937499925494194,
+       "max": 0.07656249962747097
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0027343747206032276,
+       "min": 0.001953125,
+       "max": 0.008203125093132257
+      },
+      "assembleRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.017578125,
+       "min": 0.015625,
+       "max": 0.021875000093132257
+      },
+      "assembleOuter": {
+       "first": 0.8999999761581421,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.800000011920929,
+       "min": 0.75,
+       "max": 1.25
+      },
+      "assembleAll": {
+       "first": 0.8000000715255737,
+       "repetitions": 16,
+       "samples": 15,
+       "median": 0.7749999985098839,
+       "min": 0.75,
+       "max": 0.8875000029802322
+      },
+      "cloneRing": {
+       "first": 0.09999990463256836,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.00634765625,
+       "min": 0.005566406180150807,
+       "max": 0.02392578125
+      },
+      "cloneOuter": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.17500000074505806,
+       "min": 0.16093749925494194,
+       "max": 0.23593750037252903
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.17343750037252903,
+       "min": 0.15625,
+       "max": 0.2546875011175871
+      },
+      "transferRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0027343747206032276,
+       "min": 0.00234374962747097,
+       "max": 0.003124999813735485
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.00429687462747097,
+       "min": 0.0023437500931322575,
+       "max": 0.07578125037252903
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.011328124906867743,
+       "min": 0.002734375186264515,
+       "max": 0.049999999813735485
+      }
+     }
+    }
+   ]
+  },
+  {
+   "round": 1,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 2109.4,
+    "actionMs": 2078.1,
+    "explode": 2071.1,
+    "action": 6.1,
+    "renderCpu": 8.4
+   },
+   "records": [],
+   "boundary": [
+    {
+     "counts": {
+      "objects": 1,
+      "partsInWorld": 24,
+      "jointsInWorld": 53,
+      "inRangeObjects": 1,
+      "items": 24,
+      "embeddedSkipped": 0,
+      "ring": 0,
+      "outer": 24,
+      "within1_5": 12,
+      "within2": 24,
+      "within3": 24,
+      "ringJoints": 0,
+      "outerJoints": 106,
+      "allJoints": 106,
+      "materials": 1,
+      "impls": 0
+     },
+     "bytes": {
+      "jsonUtf8": 25523,
+      "jsonChars": 25523,
+      "flatRing": 56,
+      "flatOuter": 12872,
+      "flatAll": 12872,
+      "materialsTable": 56
+     },
+     "timings": {
+      "serialize": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.10312500037252903,
+       "min": 0.09999999962747097,
+       "max": 0.15937500074505806
+      },
+      "cloneSnapshot": {
+       "first": 0.5,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.09999999962747097,
+       "min": 0.09843749925494194,
+       "max": 0.1296875011175871
+      },
+      "stringifySnapshot": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.0625,
+       "min": 0.06093749962747097,
+       "max": 0.09218749962747097
+      },
+      "select": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.0016601562965661287,
+       "min": 0.0011718750465661287,
+       "max": 0.0033203124767169356
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00008239746057370212,
+       "min": 0.00007934570385259576,
+       "max": 0.00011138916124764364
+      },
+      "assembleRing": {
+       "first": 0,
+       "repetitions": 262144,
+       "samples": 15,
+       "median": 0.000049591064453125,
+       "min": 0.00003738403302122606,
+       "max": 0.00006637573278567288
+      },
+      "assembleOuter": {
+       "first": 0.3999999761581421,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05624999850988388,
+       "min": 0.04218749888241291,
+       "max": 0.10468749888241291
+      },
+      "assembleAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05000000074505806,
+       "min": 0.04218750074505806,
+       "max": 0.078125
+      },
+      "cloneRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 4096,
+       "samples": 15,
+       "median": 0.0015380859258584678,
+       "min": 0.00146484375,
+       "max": 0.0019042968924622983
+      },
+      "cloneOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.01406249962747097,
+       "min": 0.012499999720603228,
+       "max": 0.01953125
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.01171875,
+       "min": 0.009765625,
+       "max": 0.019140624906867743
+      },
+      "transferRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.003124999813735485,
+       "min": 0.0027343747206032276,
+       "max": 0.00390625
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.00390625,
+       "min": 0.002734375186264515,
+       "max": 0.03554687509313226
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.002734375186264515,
+       "min": 0.00234374962747097,
+       "max": 0.0031250002793967724
+      }
+     }
+    },
+    {
+     "counts": {
+      "objects": 15,
+      "partsInWorld": 552,
+      "jointsInWorld": 794,
+      "inRangeObjects": 14,
+      "items": 508,
+      "embeddedSkipped": 12,
+      "ring": 15,
+      "outer": 493,
+      "within1_5": 18,
+      "within2": 20,
+      "within3": 41,
+      "ringJoints": 149,
+      "outerJoints": 1330,
+      "allJoints": 1479,
+      "materials": 13,
+      "impls": 2
+     },
+     "bytes": {
+      "jsonUtf8": 897284,
+      "jsonChars": 897284,
+      "flatRing": 14696,
+      "flatOuter": 202976,
+      "flatAll": 216944,
+      "materialsTable": 728
+     },
+     "timings": {
+      "serialize": {
+       "first": 4,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 4.199999928474426,
+       "min": 3.899999976158142,
+       "max": 6
+      },
+      "cloneSnapshot": {
+       "first": 5.5,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.5,
+       "min": 3.5,
+       "max": 4.700000047683716
+      },
+      "stringifySnapshot": {
+       "first": 3.200000047683716,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 2.4500000178813934,
+       "min": 2.1749999821186066,
+       "max": 2.7249999940395355
+      },
+      "select": {
+       "first": 0.30000007152557373,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.0625,
+       "min": 0.06093749962747097,
+       "max": 0.10000000149011612
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.00244140625,
+       "min": 0.0023437499767169356,
+       "max": 0.0025390625232830644
+      },
+      "assembleRing": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.078125,
+       "min": 0.06874999962747097,
+       "max": 0.1015625
+      },
+      "assembleOuter": {
+       "first": 1.100000023841858,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.75,
+       "min": 0.6749999821186066,
+       "max": 0.875
+      },
+      "assembleAll": {
+       "first": 0.7999999523162842,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.824999988079071,
+       "min": 0.75,
+       "max": 0.875
+      },
+      "cloneRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.019140624906867743,
+       "min": 0.014453124720603228,
+       "max": 0.10664062527939677
+      },
+      "cloneOuter": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.17343749850988388,
+       "min": 0.15781250037252903,
+       "max": 0.25
+      },
+      "cloneAll": {
+       "first": 0.19999992847442627,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.19218749925494194,
+       "min": 0.16718750074505806,
+       "max": 0.40625
+      },
+      "transferRing": {
+       "first": 10.100000023841858,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 0,
+       "min": 0,
+       "max": 0
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.00390625,
+       "min": 0.0027343747206032276,
+       "max": 0.04843749990686774
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0054687499068677425,
+       "min": 0.0023437500931322575,
+       "max": 0.03125
+      }
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 2265.9,
+    "actionMs": 2236.7,
+    "explode": 2229.8,
+    "action": 6.3,
+    "renderCpu": 8.9
+   },
+   "records": [],
+   "boundary": [
+    {
+     "counts": {
+      "objects": 1,
+      "partsInWorld": 24,
+      "jointsInWorld": 53,
+      "inRangeObjects": 1,
+      "items": 24,
+      "embeddedSkipped": 0,
+      "ring": 0,
+      "outer": 24,
+      "within1_5": 12,
+      "within2": 24,
+      "within3": 24,
+      "ringJoints": 0,
+      "outerJoints": 106,
+      "allJoints": 106,
+      "materials": 1,
+      "impls": 0
+     },
+     "bytes": {
+      "jsonUtf8": 25523,
+      "jsonChars": 25523,
+      "flatRing": 56,
+      "flatOuter": 12872,
+      "flatAll": 12872,
+      "materialsTable": 56
+     },
+     "timings": {
+      "serialize": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.10468750074505806,
+       "min": 0.09999999962747097,
+       "max": 0.2062499988824129
+      },
+      "cloneSnapshot": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.09687499888241291,
+       "min": 0.09375,
+       "max": 0.1015625
+      },
+      "stringifySnapshot": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.06093749962747097,
+       "min": 0.06093749962747097,
+       "max": 0.06562500074505806
+      },
+      "select": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.001660156180150807,
+       "min": 0.0011718750465661287,
+       "max": 0.0023437500931322575
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00008087158312264364,
+       "min": 0.00007934570385259576,
+       "max": 0.00010375976489740424
+      },
+      "assembleRing": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00005035400317865424,
+       "min": 0.00003662109338620212,
+       "max": 0.00007324218677240424
+      },
+      "assembleOuter": {
+       "first": 0.3999999761581421,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05312499962747097,
+       "min": 0.0390625,
+       "max": 0.07343750074505806
+      },
+      "assembleAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05000000074505806,
+       "min": 0.03593749925494194,
+       "max": 0.05781250074505806
+      },
+      "cloneRing": {
+       "first": 0,
+       "repetitions": 4096,
+       "samples": 15,
+       "median": 0.0015136718866415322,
+       "min": 0.00146484375,
+       "max": 0.0018798827950377017
+      },
+      "cloneOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.013671875,
+       "min": 0.012890624813735485,
+       "max": 0.019921875093132257
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.011328124906867743,
+       "min": 0.010546875186264515,
+       "max": 0.021484375
+      },
+      "transferRing": {
+       "first": 0.09999990463256836,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0035156249068677425,
+       "min": 0.002734375186264515,
+       "max": 0.0042968750931322575
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.0027343747206032276,
+       "max": 0.008984375279396772
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.0027343747206032276,
+       "max": 0.0062500000931322575
+      }
+     }
+    },
+    {
+     "counts": {
+      "objects": 15,
+      "partsInWorld": 552,
+      "jointsInWorld": 794,
+      "inRangeObjects": 14,
+      "items": 506,
+      "embeddedSkipped": 12,
+      "ring": 12,
+      "outer": 494,
+      "within1_5": 16,
+      "within2": 20,
+      "within3": 44,
+      "ringJoints": 29,
+      "outerJoints": 1331,
+      "allJoints": 1360,
+      "materials": 13,
+      "impls": 2
+     },
+     "bytes": {
+      "jsonUtf8": 897285,
+      "jsonChars": 897285,
+      "flatRing": 5408,
+      "flatOuter": 203264,
+      "flatAll": 207944,
+      "materialsTable": 728
+     },
+     "timings": {
+      "serialize": {
+       "first": 6.799999952316284,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 4,
+       "min": 3.799999952316284,
+       "max": 6.699999928474426
+      },
+      "cloneSnapshot": {
+       "first": 5.800000071525574,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.299999952316284,
+       "min": 3.100000023841858,
+       "max": 5.5
+      },
+      "stringifySnapshot": {
+       "first": 3,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 2.324999988079071,
+       "min": 2,
+       "max": 2.7249999940395355
+      },
+      "select": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.06718749925494194,
+       "min": 0.06406250037252903,
+       "max": 0.0859375
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.00244140625,
+       "min": 0.0023437499767169356,
+       "max": 0.0025390625232830644
+      },
+      "assembleRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.017187499906867743,
+       "min": 0.015234374906867743,
+       "max": 0.03125
+      },
+      "assembleOuter": {
+       "first": 1,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.824999988079071,
+       "min": 0.7000000178813934,
+       "max": 1.399999976158142
+      },
+      "assembleAll": {
+       "first": 0.7999999523162842,
+       "repetitions": 16,
+       "samples": 15,
+       "median": 0.78125,
+       "min": 0.75,
+       "max": 0.9937499985098839
+      },
+      "cloneRing": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.005761718726716936,
+       "min": 0.004199218703433871,
+       "max": 0.006152343819849193
+      },
+      "cloneOuter": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.17500000074505806,
+       "min": 0.1640625,
+       "max": 0.21250000037252903
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.1843750011175871,
+       "min": 0.16718750074505806,
+       "max": 0.49062499962747097
+      },
+      "transferRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0027343747206032276,
+       "min": 0.0023437500931322575,
+       "max": 0.00390625
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.00390625,
+       "min": 0.0023437500931322575,
+       "max": 0.049609375186264515
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.012109375093132257,
+       "min": 0.0027343747206032276,
+       "max": 0.039843750186264515
+      }
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 2027.9,
+    "actionMs": 1985.5,
+    "explode": 1978.5,
+    "action": 6.6,
+    "renderCpu": 11.1
+   },
+   "records": [],
+   "boundary": [
+    {
+     "counts": {
+      "objects": 1,
+      "partsInWorld": 24,
+      "jointsInWorld": 53,
+      "inRangeObjects": 1,
+      "items": 24,
+      "embeddedSkipped": 0,
+      "ring": 0,
+      "outer": 24,
+      "within1_5": 12,
+      "within2": 24,
+      "within3": 24,
+      "ringJoints": 0,
+      "outerJoints": 106,
+      "allJoints": 106,
+      "materials": 1,
+      "impls": 0
+     },
+     "bytes": {
+      "jsonUtf8": 25523,
+      "jsonChars": 25523,
+      "flatRing": 56,
+      "flatOuter": 12872,
+      "flatAll": 12872,
+      "materialsTable": 56
+     },
+     "timings": {
+      "serialize": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.12031250074505806,
+       "min": 0.09999999962747097,
+       "max": 0.15625
+      },
+      "cloneSnapshot": {
+       "first": 0.09999990463256836,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.1015625,
+       "min": 0.09843749925494194,
+       "max": 0.10781250149011612
+      },
+      "stringifySnapshot": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.06562499888241291,
+       "min": 0.06406249850988388,
+       "max": 0.06874999962747097
+      },
+      "select": {
+       "first": 0.10000002384185791,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.0015625000232830644,
+       "min": 0.0012695312034338713,
+       "max": 0.0021484375465661287
+      },
+      "materials": {
+       "first": 0.10000002384185791,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00008087158130365424,
+       "min": 0.00007934570385259576,
+       "max": 0.00012054443504894152
+      },
+      "assembleRing": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00004119873119634576,
+       "min": 0.00003662109338620212,
+       "max": 0.00005493164098879788
+      },
+      "assembleOuter": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05156249925494194,
+       "min": 0.04531249962747097,
+       "max": 0.07500000111758709
+      },
+      "assembleAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.04257812490686774,
+       "min": 0.04023437527939677,
+       "max": 0.051562500186264515
+      },
+      "cloneRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 4096,
+       "samples": 15,
+       "median": 0.0015869140625,
+       "min": 0.001489257818320766,
+       "max": 0.0021728515857830644
+      },
+      "cloneOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.014062500093132257,
+       "min": 0.013281249906867743,
+       "max": 0.015234374906867743
+      },
+      "cloneAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.01210937462747097,
+       "min": 0.00937500037252903,
+       "max": 0.018359375186264515
+      },
+      "transferRing": {
+       "first": 0.20000004768371582,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0035156249068677425,
+       "min": 0.002734375186264515,
+       "max": 0.009765625
+      },
+      "transferOuter": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.0027343747206032276,
+       "max": 0.009374999906867743
+      },
+      "transferAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.003124999813735485,
+       "min": 0.0027343747206032276,
+       "max": 0.0035156249068677425
+      }
+     }
+    },
+    {
+     "counts": {
+      "objects": 15,
+      "partsInWorld": 552,
+      "jointsInWorld": 794,
+      "inRangeObjects": 14,
+      "items": 508,
+      "embeddedSkipped": 12,
+      "ring": 15,
+      "outer": 493,
+      "within1_5": 18,
+      "within2": 20,
+      "within3": 41,
+      "ringJoints": 149,
+      "outerJoints": 1330,
+      "allJoints": 1479,
+      "materials": 13,
+      "impls": 2
+     },
+     "bytes": {
+      "jsonUtf8": 897285,
+      "jsonChars": 897285,
+      "flatRing": 14696,
+      "flatOuter": 202976,
+      "flatAll": 216944,
+      "materialsTable": 728
+     },
+     "timings": {
+      "serialize": {
+       "first": 6.700000047683716,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 4,
+       "min": 3.700000047683716,
+       "max": 5.800000071525574
+      },
+      "cloneSnapshot": {
+       "first": 6.100000023841858,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.1999999284744263,
+       "min": 3.0999999046325684,
+       "max": 3.200000047683716
+      },
+      "stringifySnapshot": {
+       "first": 2.700000047683716,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 2.25,
+       "min": 1.9749999940395355,
+       "max": 2.375
+      },
+      "select": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.07187500037252903,
+       "min": 0.06562500074505806,
+       "max": 0.08125000074505806
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.0027343749534338713,
+       "min": 0.0025390624068677425,
+       "max": 0.0031250000465661287
+      },
+      "assembleRing": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.08124999888241291,
+       "min": 0.06562500074505806,
+       "max": 0.10468750074505806
+      },
+      "assembleOuter": {
+       "first": 0.8999999761581421,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.8499999940395355,
+       "min": 0.75,
+       "max": 1.2999999821186066
+      },
+      "assembleAll": {
+       "first": 0.7999999523162842,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.875,
+       "min": 0.7999999821186066,
+       "max": 1.0750000178813934
+      },
+      "cloneRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.01953125,
+       "min": 0.013671875,
+       "max": 0.1171875
+      },
+      "cloneOuter": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.17812499962747097,
+       "min": 0.1640625,
+       "max": 0.23593750037252903
+      },
+      "cloneAll": {
+       "first": 0.20000004768371582,
+       "repetitions": 16,
+       "samples": 15,
+       "median": 0.17500000447034836,
+       "min": 0.16250000149011612,
+       "max": 0.29375000298023224
+      },
+      "transferRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.002734375186264515,
+       "min": 0.00234374962747097,
+       "max": 0.0031250002793967724
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.005078125279396772,
+       "min": 0.002734375186264515,
+       "max": 0.05859375
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.012499999720603228,
+       "min": 0.003124999813735485,
+       "max": 0.060546875
+      }
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "kind": "blast",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 2086.1,
+    "actionMs": 2057.2,
+    "explode": 2050.1,
+    "action": 6.6,
+    "renderCpu": 8.5
+   },
+   "records": [],
+   "boundary": [
+    {
+     "counts": {
+      "objects": 1,
+      "partsInWorld": 24,
+      "jointsInWorld": 53,
+      "inRangeObjects": 1,
+      "items": 24,
+      "embeddedSkipped": 0,
+      "ring": 0,
+      "outer": 24,
+      "within1_5": 12,
+      "within2": 24,
+      "within3": 24,
+      "ringJoints": 0,
+      "outerJoints": 106,
+      "allJoints": 106,
+      "materials": 1,
+      "impls": 0
+     },
+     "bytes": {
+      "jsonUtf8": 25523,
+      "jsonChars": 25523,
+      "flatRing": 56,
+      "flatOuter": 12872,
+      "flatAll": 12872,
+      "materialsTable": 56
+     },
+     "timings": {
+      "serialize": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.11875000037252903,
+       "min": 0.10624999925494194,
+       "max": 0.16874999925494194
+      },
+      "cloneSnapshot": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.10625000111758709,
+       "min": 0.09687500074505806,
+       "max": 0.11406249925494194
+      },
+      "stringifySnapshot": {
+       "first": 0,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.06093749962747097,
+       "min": 0.05937499925494194,
+       "max": 0.0703125
+      },
+      "select": {
+       "first": 0.20000004768371582,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.001953125,
+       "min": 0.0015625000232830644,
+       "max": 0.0025390625232830644
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.000091552734375,
+       "min": 0.00008850097583490424,
+       "max": 0.00009613037036615424
+      },
+      "assembleRing": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00005035400317865424,
+       "min": 0.00003662109338620212,
+       "max": 0.00007324218677240424
+      },
+      "assembleOuter": {
+       "first": 0.30000007152557373,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05312499962747097,
+       "min": 0.0390625,
+       "max": 0.08437499962747097
+      },
+      "assembleAll": {
+       "first": 0,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.046875,
+       "min": 0.03437499888241291,
+       "max": 0.0546875
+      },
+      "cloneRing": {
+       "first": 0,
+       "repetitions": 4096,
+       "samples": 15,
+       "median": 0.001562499994179234,
+       "min": 0.0014160156133584678,
+       "max": 0.001928710931679234
+      },
+      "cloneOuter": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.014062500093132257,
+       "min": 0.012890624813735485,
+       "max": 0.020703124813735485
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.012109375093132257,
+       "min": 0.010546874720603228,
+       "max": 0.017578125
+      },
+      "transferRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.003124999813735485,
+       "min": 0.003124999813735485,
+       "max": 0.00390625
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.003124999813735485,
+       "min": 0.0027343747206032276,
+       "max": 0.010937499813735485
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0035156249068677425,
+       "min": 0.0027343747206032276,
+       "max": 0.0042968750931322575
+      }
+     }
+    },
+    {
+     "counts": {
+      "objects": 15,
+      "partsInWorld": 552,
+      "jointsInWorld": 794,
+      "inRangeObjects": 14,
+      "items": 506,
+      "embeddedSkipped": 12,
+      "ring": 12,
+      "outer": 494,
+      "within1_5": 16,
+      "within2": 20,
+      "within3": 44,
+      "ringJoints": 29,
+      "outerJoints": 1331,
+      "allJoints": 1360,
+      "materials": 13,
+      "impls": 2
+     },
+     "bytes": {
+      "jsonUtf8": 893423,
+      "jsonChars": 893423,
+      "flatRing": 5408,
+      "flatOuter": 203264,
+      "flatAll": 207944,
+      "materialsTable": 728
+     },
+     "timings": {
+      "serialize": {
+       "first": 5.5,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.9000000953674316,
+       "min": 3.6999999284744263,
+       "max": 5.600000023841858
+      },
+      "cloneSnapshot": {
+       "first": 4.899999976158142,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.3000000715255737,
+       "min": 3.200000047683716,
+       "max": 4.600000023841858
+      },
+      "stringifySnapshot": {
+       "first": 2.8000000715255737,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 2.2750000059604645,
+       "min": 2.199999988079071,
+       "max": 2.6500000059604645
+      },
+      "select": {
+       "first": 0.5,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.06406250037252903,
+       "min": 0.06093749962747097,
+       "max": 0.09062500111758709
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.00244140625,
+       "min": 0.0023437499767169356,
+       "max": 0.0025390625232830644
+      },
+      "assembleRing": {
+       "first": 0.09999990463256836,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.018359375186264515,
+       "min": 0.016015625093132257,
+       "max": 0.024218749720603228
+      },
+      "assembleOuter": {
+       "first": 1,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.7750000059604645,
+       "min": 0.699999988079071,
+       "max": 0.8250000178813934
+      },
+      "assembleAll": {
+       "first": 0.7999999523162842,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.875,
+       "min": 0.75,
+       "max": 1.2249999940395355
+      },
+      "cloneRing": {
+       "first": 0,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.005664062569849193,
+       "min": 0.004199218819849193,
+       "max": 0.008007812430150807
+      },
+      "cloneOuter": {
+       "first": 0.09999990463256836,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.1796875,
+       "min": 0.15781249850988388,
+       "max": 0.22500000149011612
+      },
+      "cloneAll": {
+       "first": 0.19999992847442627,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.17656249925494194,
+       "min": 0.16093749925494194,
+       "max": 0.4765625
+      },
+      "transferRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0027343747206032276,
+       "min": 0.00234374962747097,
+       "max": 0.009765625
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0042968750931322575,
+       "min": 0.0027343747206032276,
+       "max": 0.00937500037252903
+      },
+      "transferAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.012890625279396772,
+       "min": 0.0027343747206032276,
+       "max": 0.02968749962747097
+      }
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "kind": "crater",
+   "throttle": 1,
+   "mode": "off",
+   "isolated": false,
+   "f0": {
+    "updateMs": 2160.2,
+    "actionMs": 2123.9,
+    "explode": 2117.4,
+    "action": 6,
+    "renderCpu": 8.5
+   },
+   "records": [],
+   "boundary": [
+    {
+     "counts": {
+      "objects": 1,
+      "partsInWorld": 24,
+      "jointsInWorld": 53,
+      "inRangeObjects": 1,
+      "items": 24,
+      "embeddedSkipped": 0,
+      "ring": 0,
+      "outer": 24,
+      "within1_5": 12,
+      "within2": 24,
+      "within3": 24,
+      "ringJoints": 0,
+      "outerJoints": 106,
+      "allJoints": 106,
+      "materials": 1,
+      "impls": 0
+     },
+     "bytes": {
+      "jsonUtf8": 25523,
+      "jsonChars": 25523,
+      "flatRing": 56,
+      "flatOuter": 12872,
+      "flatAll": 12872,
+      "materialsTable": 56
+     },
+     "timings": {
+      "serialize": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.10625000111758709,
+       "min": 0.10312499850988388,
+       "max": 0.14375000074505806
+      },
+      "cloneSnapshot": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.09999999962747097,
+       "min": 0.09843749925494194,
+       "max": 0.10312500037252903
+      },
+      "stringifySnapshot": {
+       "first": 0.19999992847442627,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.0625,
+       "min": 0.06093749962747097,
+       "max": 0.0859375
+      },
+      "select": {
+       "first": 0.10000002384185791,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.0015625000232830644,
+       "min": 0.001171874930150807,
+       "max": 0.0020507811568677425
+      },
+      "materials": {
+       "first": 0,
+       "repetitions": 65536,
+       "samples": 15,
+       "median": 0.00008239746057370212,
+       "min": 0.00007934570385259576,
+       "max": 0.00011444091796875
+      },
+      "assembleRing": {
+       "first": 0,
+       "repetitions": 262144,
+       "samples": 15,
+       "median": 0.00004997253381588962,
+       "min": 0.00003852844247376197,
+       "max": 0.00005989074725221144
+      },
+      "assembleOuter": {
+       "first": 0.3999999761581421,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.05312499962747097,
+       "min": 0.04374999925494194,
+       "max": 0.078125
+      },
+      "assembleAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.046875,
+       "min": 0.03281250037252903,
+       "max": 0.05000000074505806
+      },
+      "cloneRing": {
+       "first": 0.10000002384185791,
+       "repetitions": 4096,
+       "samples": 15,
+       "median": 0.0015380859549622983,
+       "min": 0.00146484375,
+       "max": 0.0019042968633584678
+      },
+      "cloneOuter": {
+       "first": 0.10000002384185791,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.013671875,
+       "min": 0.013281249906867743,
+       "max": 0.020312500186264515
+      },
+      "cloneAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.01171875,
+       "min": 0.008593750186264515,
+       "max": 0.017578125
+      },
+      "transferRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.0027343747206032276,
+       "max": 0.0042968750931322575
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0031250002793967724,
+       "min": 0.002734375186264515,
+       "max": 0.010546875186264515
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0035156249068677425,
+       "min": 0.002734375186264515,
+       "max": 0.00351562537252903
+      }
+     }
+    },
+    {
+     "counts": {
+      "objects": 15,
+      "partsInWorld": 552,
+      "jointsInWorld": 794,
+      "inRangeObjects": 14,
+      "items": 508,
+      "embeddedSkipped": 12,
+      "ring": 15,
+      "outer": 493,
+      "within1_5": 18,
+      "within2": 20,
+      "within3": 41,
+      "ringJoints": 149,
+      "outerJoints": 1330,
+      "allJoints": 1479,
+      "materials": 13,
+      "impls": 2
+     },
+     "bytes": {
+      "jsonUtf8": 897285,
+      "jsonChars": 897285,
+      "flatRing": 14696,
+      "flatOuter": 202976,
+      "flatAll": 216944,
+      "materialsTable": 728
+     },
+     "timings": {
+      "serialize": {
+       "first": 4,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 4,
+       "min": 3.8000000715255737,
+       "max": 6
+      },
+      "cloneSnapshot": {
+       "first": 4.899999976158142,
+       "repetitions": 1,
+       "samples": 15,
+       "median": 3.200000047683716,
+       "min": 3.0999999046325684,
+       "max": 4.899999976158142
+      },
+      "stringifySnapshot": {
+       "first": 2.899999976158142,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 2.274999976158142,
+       "min": 1.9749999940395355,
+       "max": 2.4000000059604645
+      },
+      "select": {
+       "first": 0.20000004768371582,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.06718750111758709,
+       "min": 0.06406249850988388,
+       "max": 0.09218749962747097
+      },
+      "materials": {
+       "first": 0.10000002384185791,
+       "repetitions": 1024,
+       "samples": 15,
+       "median": 0.0025390625232830644,
+       "min": 0.0023437499767169356,
+       "max": 0.0026367187965661287
+      },
+      "assembleRing": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.07187500037252903,
+       "min": 0.06562499888241291,
+       "max": 0.09531250037252903
+      },
+      "assembleOuter": {
+       "first": 0.7999999523162842,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.75,
+       "min": 0.699999988079071,
+       "max": 0.8250000178813934
+      },
+      "assembleAll": {
+       "first": 0.7999999523162842,
+       "repetitions": 4,
+       "samples": 15,
+       "median": 0.8250000178813934,
+       "min": 0.7249999940395355,
+       "max": 1.2999999821186066
+      },
+      "cloneRing": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.016406249720603228,
+       "min": 0.013281249906867743,
+       "max": 0.103515625
+      },
+      "cloneOuter": {
+       "first": 0.2999999523162842,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.171875,
+       "min": 0.15937500074505806,
+       "max": 0.20937499962747097
+      },
+      "cloneAll": {
+       "first": 0.10000002384185791,
+       "repetitions": 64,
+       "samples": 15,
+       "median": 0.18906250037252903,
+       "min": 0.17031250149011612,
+       "max": 0.42656249925494194
+      },
+      "transferRing": {
+       "first": 11.599999904632568,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0027343747206032276,
+       "min": 0.0023437500931322575,
+       "max": 0.00351562537252903
+      },
+      "transferOuter": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.0042968750931322575,
+       "min": 0.0027343747206032276,
+       "max": 0.048046874813735485
+      },
+      "transferAll": {
+       "first": 0,
+       "repetitions": 256,
+       "samples": 15,
+       "median": 0.005078125279396772,
+       "min": 0.002734375186264515,
+       "max": 0.046875
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "gate": {
+  "compared": false,
+  "status": "no-base",
+  "reason": "no base report",
+  "physicsCompared": false,
+  "problems": [],
+  "skipped": []
+ },
+ "worstFrames": [
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.1,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 2236.7,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.2,
+    "audio.voices": 1.1
+   },
+   "updateMs": 2265.9,
+   "physicsMs": 0.7,
+   "stages": {
+    "splitLoose": 2.9,
+    "adoptSplit": 1.5,
+    "fitBoxes": 0,
+    "rebuildHost": 1.1,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 13.1,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.5,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.2,
+    "lights": 0,
+    "matrices": 1.6,
+    "stagesOut": 5.5,
+    "action": 6.3,
+    "explode": 2229.8,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 1.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.5,
+    "sysLights": 0,
+    "sysOther": 1.6,
+    "queues": 0.2
+   },
+   "extras": {
+    "renderCpu": 8.9,
+    "gpuWait": 0,
+    "gpu": 1.56,
+    "calls": 968,
+    "triangles": 379995,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.6,
+    "module.frame#13:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.3,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 2165,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.1
+   },
+   "updateMs": 2195.6,
+   "physicsMs": 0.7,
+   "stages": {
+    "splitLoose": 3.8,
+    "adoptSplit": 1.2,
+    "fitBoxes": 0,
+    "rebuildHost": 0.9,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 13.4,
+    "fragments": 0,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.3,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.5,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1,
+    "modules": 1.5,
+    "lights": 0.1,
+    "matrices": 2.3,
+    "stagesOut": 5.9,
+    "action": 6.1,
+    "explode": 2158,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 0.9,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.6,
+    "sysLights": 0,
+    "sysOther": 1.8,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 10,
+    "gpuWait": 0,
+    "gpu": 2.22,
+    "calls": 970,
+    "triangles": 381499,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.3,
+    "module.frame#13:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 2057.2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 1.3
+   },
+   "updateMs": 2086.1,
+   "physicsMs": 0.8,
+   "stages": {
+    "splitLoose": 1.8,
+    "adoptSplit": 1.4,
+    "fitBoxes": 0.1,
+    "rebuildHost": 1.2,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.3,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 13.6,
+    "fragments": 0,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.4,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 1.2,
+    "lights": 0,
+    "matrices": 1.4,
+    "stagesOut": 4.5,
+    "action": 6.6,
+    "explode": 2050.1,
+    "vfxPresent": 0,
+    "sysInput": 1,
+    "sysSimulate": 1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.6,
+    "sysLights": 0,
+    "sysOther": 1.7,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 8.5,
+    "gpuWait": 0.1,
+    "gpu": 1.55,
+    "calls": 970,
+    "triangles": 381499,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 3.95,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 11.9,
+    "audio.voices": 1.2
+   },
+   "updateMs": 21.5,
+   "physicsMs": 2,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 1.7,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.2,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0.1,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.2,
+    "modules": 0.7,
+    "lights": 0,
+    "matrices": 0.8,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 11.9
+   },
+   "extras": {
+    "renderCpu": 6.6,
+    "gpuWait": 0,
+    "gpu": 1.02,
+    "calls": 813,
+    "triangles": 382159,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#8:vfx": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 4.15,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 10.7,
+    "audio.voices": 1
+   },
+   "updateMs": 20.2,
+   "physicsMs": 2.5,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.4,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.3,
+    "settled": 0,
+    "syncXform": 0.1,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.1,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.1,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1,
+    "modules": 0.7,
+    "lights": 0,
+    "matrices": 1,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.5,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.3,
+    "queues": 10.7
+   },
+   "extras": {
+    "renderCpu": 6,
+    "gpuWait": 0,
+    "gpu": 0.89,
+    "calls": 809,
+    "triangles": 382831,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#1:weapons_area": 0.1,
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.1,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 6.41,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 11,
+    "audio.voices": 1.3
+   },
+   "updateMs": 19.2,
+   "physicsMs": 2.1,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.6,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.1,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.1,
+    "water": 0.1,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 0.6,
+    "lights": 0,
+    "matrices": 0.7,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 11
+   },
+   "extras": {
+    "renderCpu": 6.8,
+    "gpuWait": 0.1,
+    "gpu": 1.72,
+    "calls": 813,
+    "triangles": 382159,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#1:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#19:player_area": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 50,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {},
+   "updateMs": 15.2,
+   "physicsMs": 12.7,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 2.7,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 9.5,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 0.7,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.2,
+    "vfxLayers": 0,
+    "terrainMesh": 0.3,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 0,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.2,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.1,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 4.3,
+    "gpuWait": 0,
+    "gpu": 1.11,
+    "calls": 809,
+    "triangles": 395551,
+    "particles": 222,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#1:weapons_area": 0.1,
+    "module.frame#20:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 6.6,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 7.6
+   },
+   "updateMs": 14.3,
+   "physicsMs": 3.3,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 2.4,
+    "bridgeReads": 0,
+    "readBack": 0.6
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 1.3,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 7.6,
+    "modules": 0.3,
+    "lights": 0,
+    "matrices": 0.8,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.1,
+    "sysLights": 0,
+    "sysOther": 0,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 6.2,
+    "gpuWait": 0,
+    "gpu": 1.09,
+    "calls": 819,
+    "triangles": 384231,
+    "particles": 387,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 6.88,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 7.6
+   },
+   "updateMs": 13.2,
+   "physicsMs": 1.8,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 1.1,
+    "bridgeReads": 0,
+    "readBack": 0.4
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 1.5,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 7.6,
+    "modules": 0.3,
+    "lights": 0,
+    "matrices": 0.9,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 5.6,
+    "gpuWait": 0,
+    "gpu": 1.23,
+    "calls": 816,
+    "triangles": 382375,
+    "particles": 387,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#19:player_area": 0.1,
+    "module.frame#20:crowd_area": 0.1,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "blast",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 6.64,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 7
+   },
+   "updateMs": 12.5,
+   "physicsMs": 1.2,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.6,
+    "bridgeReads": 0,
+    "readBack": 0.3
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.4,
+    "settled": 0,
+    "syncXform": 0.1,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 7,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.6,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 4.9,
+    "gpuWait": 0.1,
+    "gpu": 1.14,
+    "calls": 819,
+    "triangles": 384231,
+    "particles": 387,
+    "frags": 160,
+    "pieces": 17
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.5,
+    "module.frame#13:floorplan_area": 0.3,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#20:crowd_area": 0.3,
+    "module.frame#21:crowd_area": 0.3
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 2123.9,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.1,
+    "audio.voices": 1.5
+   },
+   "updateMs": 2160.2,
+   "physicsMs": 0.8,
+   "stages": {
+    "splitLoose": 2,
+    "adoptSplit": 1.2,
+    "fitBoxes": 0.1,
+    "rebuildHost": 1.1,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 17.4,
+    "fragments": 0.1,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0.1,
+    "destrOwn": 0,
+    "vfxSim": 0.4,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.5,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.5,
+    "modules": 1.7,
+    "lights": 0,
+    "matrices": 4,
+    "stagesOut": 4.4,
+    "action": 6,
+    "explode": 2117.4,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 1.3,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.6,
+    "sysLights": 0,
+    "sysOther": 1.6,
+    "queues": 0.1
+   },
+   "extras": {
+    "renderCpu": 8.5,
+    "gpuWait": 0,
+    "gpu": 1.74,
+    "calls": 966,
+    "triangles": 382771,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.4,
+    "module.frame#13:floorplan_area": 0.4,
+    "module.frame#14:vehicles_area": 0.2,
+    "module.frame#19:player_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 2078.1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.2,
+    "audio.voices": 1.3
+   },
+   "updateMs": 2109.4,
+   "physicsMs": 0.7,
+   "stages": {
+    "splitLoose": 2.2,
+    "adoptSplit": 1.3,
+    "fitBoxes": 0,
+    "rebuildHost": 1,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.1,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 14.5,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0.1,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.5,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0.6,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 1.5,
+    "lights": 0,
+    "matrices": 2,
+    "stagesOut": 4.5,
+    "action": 6.1,
+    "explode": 2071.1,
+    "vfxPresent": 0,
+    "sysInput": 0.8,
+    "sysSimulate": 1.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.4,
+    "sysLights": 0,
+    "sysOther": 2.5,
+    "queues": 0.2
+   },
+   "extras": {
+    "renderCpu": 8.4,
+    "gpuWait": 0,
+    "gpu": 1.61,
+    "calls": 974,
+    "triangles": 383599,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#7:animals_area": 0.1,
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.3,
+    "module.frame#13:floorplan_area": 0.4,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 0,
+   "actionMs": 1985.5,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 0.2,
+    "audio.voices": 1.3
+   },
+   "updateMs": 2027.9,
+   "physicsMs": 0.8,
+   "stages": {
+    "splitLoose": 2.4,
+    "adoptSplit": 1.4,
+    "fitBoxes": 0,
+    "rebuildHost": 1,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0,
+    "bridgeReads": 0,
+    "readBack": 0
+   },
+   "parts": {
+    "world": 1.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 16.3,
+    "fragments": 0,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0.1,
+    "vfxSim": 0.4,
+    "vfxLayers": 5.6,
+    "terrainMesh": 0.4,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.3,
+    "modules": 1.4,
+    "lights": 0,
+    "matrices": 1.9,
+    "stagesOut": 4.8,
+    "action": 6.6,
+    "explode": 1978.5,
+    "vfxPresent": 0,
+    "sysInput": 0.6,
+    "sysSimulate": 1.2,
+    "sysSimulateEnd": 0,
+    "sysPresent": 4.6,
+    "sysLights": 0,
+    "sysOther": 2.2,
+    "queues": 0.2
+   },
+   "extras": {
+    "renderCpu": 11.1,
+    "gpuWait": 0,
+    "gpu": 2.06,
+    "calls": 974,
+    "triangles": 383599,
+    "particles": 361,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 2.11,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 12.3,
+    "audio.voices": 1.4
+   },
+   "updateMs": 23.5,
+   "physicsMs": 2.4,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.2,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.3,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 4.7,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0.1,
+    "destrOwn": 0,
+    "vfxSim": 0.3,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.4,
+    "modules": 0.6,
+    "lights": 0,
+    "matrices": 0.8,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.1,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 12.3
+   },
+   "extras": {
+    "renderCpu": 7.1,
+    "gpuWait": 0,
+    "gpu": 1.57,
+    "calls": 826,
+    "triangles": 383875,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.2,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 3.97,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 12.5,
+    "audio.voices": 1.4
+   },
+   "updateMs": 23.4,
+   "physicsMs": 2.3,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 4.6,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 1.4,
+    "modules": 0.7,
+    "lights": 0,
+    "matrices": 0.5,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.3,
+    "queues": 12.5
+   },
+   "extras": {
+    "renderCpu": 6.9,
+    "gpuWait": 0,
+    "gpu": 1.13,
+    "calls": 828,
+    "triangles": 385379,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.2
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 1,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 5.89,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "floorplan.breach-paint": 9.8,
+    "audio.voices": 1.1
+   },
+   "updateMs": 18.4,
+   "physicsMs": 2.4,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0.1,
+    "ripple": 0,
+    "joltStep": 0.3,
+    "bridgeReads": 0,
+    "readBack": 0.2
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.7,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.2,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0.1,
+    "film": 0,
+    "audio": 1.1,
+    "modules": 0.7,
+    "lights": 0,
+    "matrices": 0.7,
+    "stagesOut": 0.1,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 9.8
+   },
+   "extras": {
+    "renderCpu": 8,
+    "gpuWait": 0,
+    "gpu": 1.49,
+    "calls": 826,
+    "triangles": 383875,
+    "particles": 375,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#13:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 1,
+   "probeMode": "off",
+   "frame": 2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 7.85,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 8.7
+   },
+   "updateMs": 13.9,
+   "physicsMs": 2,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 1.1,
+    "bridgeReads": 0,
+    "readBack": 0.6
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 1.2,
+    "settled": 0,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 8.7,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.6,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 5.2,
+    "gpuWait": 0,
+    "gpu": 1.44,
+    "calls": 828,
+    "triangles": 385559,
+    "particles": 387,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#3:weapons_area": 0.1,
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.3,
+    "module.frame#17:vegetation": 0.1,
+    "module.frame#20:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 2,
+   "probeMode": "off",
+   "frame": 2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 4.62,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 6.2
+   },
+   "updateMs": 13.4,
+   "physicsMs": 2.2,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 1.2,
+    "bridgeReads": 0.1,
+    "readBack": 0.6
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 2.2,
+    "settled": 0.1,
+    "syncXform": 0,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0,
+    "terrainMesh": 0.1,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 6.2,
+    "modules": 0.7,
+    "lights": 0,
+    "matrices": 0.9,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.1,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.3,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 5.8,
+    "gpuWait": 0,
+    "gpu": 0.95,
+    "calls": 828,
+    "triangles": 385559,
+    "particles": 387,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#11:weather_area": 0.1,
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.2,
+    "module.frame#21:crowd_area": 0.1
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 2,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 7.07,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {
+    "audio.voices": 7.6
+   },
+   "updateMs": 13.1,
+   "physicsMs": 2,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 1.1,
+    "bridgeReads": 0,
+    "readBack": 0.7
+   },
+   "parts": {
+    "world": 0.1,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 1,
+    "settled": 0,
+    "syncXform": 0.1,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.2,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 7.6,
+    "modules": 0.6,
+    "lights": 0,
+    "matrices": 0.6,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0.1,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.2,
+    "sysLights": 0,
+    "sysOther": 0.1,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 8.4,
+    "gpuWait": 0,
+    "gpu": 1.21,
+    "calls": 827,
+    "triangles": 385207,
+    "particles": 387,
+    "frags": 160,
+    "pieces": 19
+   }
+  },
+  {
+   "modules": {
+    "module.frame#12:floorplan_area": 0.1,
+    "module.frame#14:vehicles_area": 0.1,
+    "module.frame#20:crowd_area": 0.3
+   },
+   "variant": "jolt-d4-worker",
+   "throttle": 1,
+   "kind": "crater",
+   "round": 3,
+   "probeMode": "off",
+   "frame": 26,
+   "budget": {
+    "mode": "deadline",
+    "allowanceMs": 1,
+    "mustDrainSpentMs": 0
+   },
+   "queues": {},
+   "updateMs": 12.5,
+   "physicsMs": 8.5,
+   "stages": {
+    "splitLoose": 0,
+    "adoptSplit": 0,
+    "fitBoxes": 0,
+    "rebuildHost": 0,
+    "groundBody": 0,
+    "pieceBodies": 0,
+    "layGround": 0,
+    "layTile": 0,
+    "groundAsk": 0,
+    "groundApply": 0,
+    "groundFallback": 0,
+    "groundShape": 0,
+    "groundRelease": 0,
+    "waterAt": 0,
+    "ripple": 0,
+    "joltStep": 7.9,
+    "bridgeReads": 0,
+    "readBack": 0.4
+   },
+   "parts": {
+    "world": 0.2,
+    "fluids": 0,
+    "explosives": 0,
+    "destrEvents": 0,
+    "fragments": 1.3,
+    "settled": 0,
+    "syncXform": 0.1,
+    "partFx": 0,
+    "destrOwn": 0,
+    "vfxSim": 0.1,
+    "vfxLayers": 0.1,
+    "terrainMesh": 0.1,
+    "water": 0,
+    "footprints": 0,
+    "fluidView": 0,
+    "film": 0,
+    "audio": 0,
+    "modules": 0.5,
+    "lights": 0,
+    "matrices": 0.8,
+    "stagesOut": 0,
+    "action": 0,
+    "explode": 0,
+    "vfxPresent": 0,
+    "sysInput": 0.2,
+    "sysSimulate": 0,
+    "sysSimulateEnd": 0,
+    "sysPresent": 0.4,
+    "sysLights": 0,
+    "sysOther": 0.2,
+    "queues": 0
+   },
+   "extras": {
+    "renderCpu": 5.4,
+    "gpuWait": 0,
+    "gpu": 1.15,
+    "calls": 806,
+    "triangles": 388431,
+    "particles": 265,
+    "frags": 160,
+    "pieces": 19
+   }
+  }
+ ]
+}
