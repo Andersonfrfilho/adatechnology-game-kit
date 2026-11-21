@@ -81,6 +81,12 @@ const DMG_PER_J = 0.02
 /** Most fragment rays cast by one blast when the charge does not say. */
 const FRAGMENT_RAYS = 256
 /**
+ * The most pieces of a case one ray may stand for past the cap (`throwCasing`). With half the default cap kept for the pieces not at a registered body, the largest case in
+ * the data (the M67's 1000 pieces) stands at most 1000 / 128 = 7.8 a ray, so the bound binds only when a charge lowers `maxRays`; past it the excess is dropped, not piled
+ * on a few rays whose weighted damage would go into one part each.
+ */
+const MAX_FRAGMENT_WEIGHT = 8
+/**
  * Blast options (all off until asked for). Shelter: a part the line from the blast to the target crosses lets through `exp(-r / k)`, `r` being the
  * hit points of the slab it crosses per square metre (`hpPerKg * density * path * damageScale.shelter`). Fragment hits: up to 24 fragments, half their
  * kinetic energy lands as a blunt hit, thrown at most 6 m (and `speed * 0.4 s`) within 10 degrees of their aim. Confinement: 26 rays reaching
@@ -4323,10 +4329,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return clamp(Math.floor((along + L / 2) / SEVER_BAND), 0, Math.ceil(L / SEVER_BAND) - 1)
   }
 
-  const applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string): number => {
+  /**
+   * `weight` (a piece of a case standing for several, `throwCasing`) multiplies what adds up over the whole part: its hit points and the energy of the pieces it breaks into
+   * when it fails (the momentum of the pieces the ray stands for). The cut where the blow lands (`cuts`, the sever band) takes one blow's worth: the pieces a ray stands for
+   * land all over the part, not in one band.
+   */
+  const applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string, weight = 1): number => {
     if (isLost(p) || amount <= 0) return 0
     const prev = p.st.hp
-    p.st.hp -= amount
+    p.st.hp -= amount * weight
     const axis = origin && type !== 'fire' && type !== 'heat' ? severAxis(p) : -1
     if (axis >= 0 && p.st.hp > 0) {
       const band = bandOf(o, p, axis, origin!)
@@ -4347,7 +4358,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.st.hp <= 0 && type === 'ballistic' && wornLocally(p)) p.st.hp = Math.min(prev, 1)
     const done = prev - p.st.hp
     if (done > 0) emit({ ...base(o, src), type: 'damage', part: p.spec.id, amount: done, hp: Math.max(0, p.st.hp), damageType: type })
-    if (p.st.hp <= 0) failPart(o, p, origin, dir, fragEnergy, cap, src)
+    if (p.st.hp <= 0) failPart(o, p, origin, dir, fragEnergy * weight, cap, src)
     else if (chained && (trigger === 'explosion' || 1 - p.st.hp / p.st.maxHp >= shotDamageFractionOf(p.spec))) prime(o, p, trigger, src)
     return done
   }
@@ -4438,18 +4449,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
+  /** What a round carries into `ballistic`: a gun's extras, and for a piece of a case its flight (mass, nose, weight). Internal: a registered body never sees `piece`. */
+  type FragmentRound = BallisticExtras & { readonly piece?: FragmentFlight }
 
-  /**
-   * How many pieces of a case the round in flight stands for (`throwCasing`, past its cap); 1 for every other round. It scales only what adds up over the whole part: the hit
-   * points it takes (`applyDamage`, and so `HitResult.damage`) and the wear of its joints. Never what happens where the round lands (penetration, the exit, holes, cracks,
-   * dents, craters, spalls, units, breaches, torn pieces): four pieces are not one piece four times as hard.
-   */
-  let fragmentWeight = 1
-  /** kg: the mass of the piece of a case in flight (`throwCasing`); 0 for every other round, which keeps its own rule against concrete. */
-  let fragmentMass = 0
-
-  const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: BallisticExtras = {}): BallisticOut => {
+  const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: FragmentRound = {}): BallisticOut => {
     const mat = p.mat
+    const piece = round.piece
+    const weight = piece?.weight ?? 1
     const piercing = round.piercing ?? 1
     // a bare cage and an opening do not stop a bullet
     if (p.st.stripped || (p.st.opening && insideOpening(o, p, objLocal(o, entry))) || insideChip(p, objLocal(o, entry))) {
@@ -4472,9 +4478,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a piece of a case gets through concrete only if the modified NDRC lets it as well (`concretePerforation`, at its speed now): the linear rule alone let a 2.45 g piece of an
     // M67 through 297 mm. Never more than the linear rule, and only for materials flagged `strength.ndrc` (concrete, which the formula was fitted on): masonry keeps the
     // linear rule (a wall's 2.35 MPa in a concrete formula would make brick stronger than it is against heavy fast pieces)
-    const strength = fragmentMass > 0 && mat.strength?.ndrc ? mat.strength.compressiveMPa : undefined
+    const strength = piece && mat.strength?.ndrc ? mat.strength.compressiveMPa : undefined
     const path = strength === undefined ? 0 : (p.thickness + layersThickness(p.layers, face) + layersThickness(p.layers, -face)) / slant
-    const penetrated = Ep > thr && (strength === undefined || concretePerforation({ mass: fragmentMass, caliber: caliber / 1000, speed: Math.sqrt((2 * E) / fragmentMass), compressiveMPa: strength }).perforation > path)
+    const penetrated = Ep > thr && (strength === undefined || !piece || concretePerforation({ mass: piece.mass, caliber: caliber / 1000, speed: Math.sqrt((2 * E) / piece.mass), compressiveMPa: strength, nose: piece.nose }).perforation > path)
     // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
     // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
     const scale = (mat.damageScale?.ballistic ?? 1) * (mat.fracture === 'shatter' ? fragility(mat.ductility, p.thickness) : 1)
@@ -4483,7 +4489,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const r = vec.sub(d, vec.scale(n, 2 * vec.dot(d, n)))
       emit({ ...base(o, src), type: 'ricochet', part: id, point: entry, direction: vec.normalize(r), energy: E * 0.4 })
       debris(o, p, mat.hitDebris, entry, n, 3, 3, src)
-      const dmg = applyDamage(o, p, E * DMG_PER_J * scale * 0.2 * fragmentWeight, 'ballistic', entry, d, E * 0.1, 12, src)
+      const dmg = applyDamage(o, p, E * DMG_PER_J * scale * 0.2, 'ballistic', entry, d, E * 0.1, 12, src, weight)
       return { penetrated: false, exitEnergy: 0, damage: dmg }
     }
     if (p.layers.length > 0) spallOuter(o, p, entry, face, n, Math.max(0.03, (caliber / 1000) * 4), src)
@@ -4521,13 +4527,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little), and only along
     // the stretch of each joint it shakes
-    wearJoints(o, p, (penetrated ? thr : E) * 0.02 * fragmentWeight, undefined, 0, src, true, BULLET_JOINT_SPAN)
+    wearJoints(o, p, (penetrated ? thr : E) * 0.02 * weight, undefined, 0, src, true, BULLET_JOINT_SPAN)
     // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
     // 3 mm plastic bin leaves 24 of its 500 J. So does a hollow shell of a material that tears (a cardboard box, a carton): the round punches through its thin wall and
     // leaves a hole, it does not shred the box. Brittle, fibrous and layered materials (glass, wood, a solid stack of paper, masonry) take the whole shock, as before.
     const hollowTear = mat.fracture === 'tear' && p.spec.fill !== undefined && p.spec.fill < 0.5
     const absorbed = penetrated && ((mat.ductility >= 0.5 && mat.fracture !== 'tear') || hollowTear) ? Math.min(E, thr) : E
-    const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale * fragmentWeight, 'ballistic', entry, d, absorbed * 0.1, 12, src)
+    const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src, weight)
     if (!isLost(p)) tearAt(o, p, 'ballistic', entry, penetrated ? exitPoint : undefined, d, E, caliber / 1000, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
     if (!wearMember(o, p, entry, d, E, caliber, penMm, src)) chipUnits(o, p, 'ballistic', entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
@@ -5087,6 +5093,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   interface FragmentFlight {
     readonly drag: number
     readonly minEnergy: number
+    /** kg */
+    readonly mass: number
+    /** Nose factor of the piece against concrete (`BlastCasing.noseFactor`). */
+    readonly nose: number | undefined
+    /**
+     * How many pieces of the case this ray stands for (`throwCasing`, past its cap; 1 otherwise). It scales only what adds up over the whole part (`applyDamage`: hit
+     * points and the energy of the pieces of a part that fails; the wear of its joints), never what happens where the ray lands (penetration, the exit, holes, cracks,
+     * dents, craters, spalls, units, breaches, torn pieces, the sever band): four pieces are not one piece four times as hard.
+     */
+    readonly weight: number
   }
 
   /**
@@ -5100,6 +5116,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const ignore = new Set<string>(ignored)
     let org = origin
     let E = energy
+    const round: FragmentRound = flight ? { ...extras, piece: flight } : extras
     for (let i = 0; i < 4 && E > 0; i++) {
       // E exp(-2 k d) = minEnergy: the distance this leg can fly before the piece is too slow to do anything
       const reach = flight ? (E > flight.minEnergy ? Math.log(E / flight.minEnergy) / (2 * flight.drag) : 0) : Infinity
@@ -5129,7 +5146,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const o = getObj(rh.object)
       const p = getPart(o, rh.part)
       const start = cur.length
-      const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, extras)
+      const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, round)
       results.push({ object: o.id, part: p.spec.id, point: rh.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy, events: cur.slice(start) })
       ignore.add(`${o.id}\0${p.spec.id}`)
       if (!out.penetrated || !out.exitPoint) break
@@ -5139,11 +5156,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return results
   }
 
-  /** A fragment target: a part's bounding sphere seen from the charge. */
+  /** A fragment target: a part's bounding sphere seen from the charge; a registered body's box part is also tested as its box (`box`). */
   interface FragmentTarget {
     readonly centre: Vec3
     readonly radius: number
     readonly distance: number
+    /** A box part of a registered body: the charge in the box's frame, the inverse of its rotation and its half size. */
+    readonly box?: { readonly origin: Vec3; readonly inverse: Quat; readonly half: Vec3 }
   }
 
   /** The parts of one object or registered body as fragment targets, behind the sphere round all of them: a piece is tested against the parts only when it meets that sphere. */
@@ -5156,12 +5175,40 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** The line from `point` along the unit `d` meets the sphere of `t` (or starts inside it), and the sphere is within `range`. */
-  const lineMeets = (t: FragmentTarget, point: Vec3, d: Vec3, range: number): boolean => {
+  const lineMeetsSphere = (t: FragmentTarget, point: Vec3, d: Vec3, range: number): boolean => {
     if (t.distance - t.radius >= range) return false
     if (t.distance <= t.radius) return true
     const along = (t.centre[0] - point[0]) * d[0] + (t.centre[1] - point[1]) * d[1] + (t.centre[2] - point[2]) * d[2]
     return along > 0 && t.distance * t.distance - along * along <= t.radius * t.radius
   }
+
+  const boxDirection: Vec3 = [0, 0, 0]
+  /** The line from the charge along the unit `d` enters the box of `t` within `range` (slab test in the box's frame). */
+  const lineMeetsBox = (box: NonNullable<FragmentTarget['box']>, d: Vec3, range: number): boolean => {
+    const q = box.inverse
+    const tx = 2 * (q[1] * d[2] - q[2] * d[1]), ty = 2 * (q[2] * d[0] - q[0] * d[2]), tz = 2 * (q[0] * d[1] - q[1] * d[0])
+    boxDirection[0] = d[0] + q[3] * tx + (q[1] * tz - q[2] * ty)
+    boxDirection[1] = d[1] + q[3] * ty + (q[2] * tx - q[0] * tz)
+    boxDirection[2] = d[2] + q[3] * tz + (q[0] * ty - q[1] * tx)
+    let near = 0
+    let far = range
+    for (let k = 0; k < 3; k++) {
+      const lo = -box.half[k]! - box.origin[k]!, hi = box.half[k]! - box.origin[k]!
+      const dk = boxDirection[k]!
+      if (Math.abs(dk) < 1e-12) {
+        if (lo > 0 || hi < 0) return false
+        continue
+      }
+      const a = lo / dk, b = hi / dk
+      near = Math.max(near, Math.min(a, b))
+      far = Math.min(far, Math.max(a, b))
+      if (near > far) return false
+    }
+    return true
+  }
+
+  /** The line of a piece meets the target: its box, for a registered body's box part (a car's sphere holds a charge set off beside it, its box does not), else its sphere. */
+  const lineMeets = (t: FragmentTarget, point: Vec3, d: Vec3, range: number): boolean => lineMeetsSphere(t, point, d, range) && (!t.box || lineMeetsBox(t.box, d, range))
 
   /**
    * The fragments of a case, thrown as gun rounds. The case breaks into `fragments` pieces (Mott), flying evenly in all directions at Gurney's speed and slowing in the air
@@ -5190,11 +5237,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const im of impls.values()) {
       if (charge.ignore?.includes(im.impl.id)) continue
       const parts: FragmentTarget[] = []
-      for (const { ps, c } of implParts(im)) {
+      for (const { ps, c, q } of implParts(im)) {
         const bound = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
         const distance = vec.distance(c, point)
         if (distance - bound >= farthest) continue
-        parts.push({ centre: c, radius: bound, distance })
+        const box = ps.shape.kind === 'box' ? { origin: toLocal(c, q, point), inverse: [-q[0], -q[1], -q[2], q[3]] as Quat, half: vec.scale(ps.shape.size, 0.5) } : undefined
+        parts.push(box ? { centre: c, radius: bound, distance, box } : { centre: c, radius: bound, distance })
       }
       if (parts.length === 0) continue
       const centre: Vec3 = [0, 0, 0]
@@ -5240,8 +5288,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       masses[i] = mottMass(rng.next(), mottScale, casing.fragments)
       drawn += masses[i]!
     }
-    // Mott's draws of a case can add up to more than the case (a few heavy pieces): scaled down to it, so the pieces never carry more than the case's energy
-    const massScale = drawn > casing.mass ? casing.mass / drawn : 1
+    // Mott's draws add up to the case only on average (a few heavy pieces make a heavy draw; the cut tail of the distribution makes it some 3% light): scaled to the case
+    // both ways, so the pieces carry exactly the case's energy, half its mass times the square of its first speed
+    const massScale = casing.mass / drawn
     const reach = Math.log(speed / FRAGMENT_MIN_SPEED)
     const cast: number[] = []
     const atBody: boolean[] = []
@@ -5254,7 +5303,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       d[2] = directions[i * 3 + 2]!
       let body: boolean | undefined
       for (const g of groups) {
-        if (!lineMeets(g, point, d, range)) continue
+        if (!lineMeetsSphere(g, point, d, range)) continue
         for (const t of partsOf(g)) {
           if (!lineMeets(t, point, d, range)) continue
           body = g.body
@@ -5268,34 +5317,33 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     const out: HitResult[] = []
     const ignore = skip.size > 0 ? skip : undefined
-    // More pieces than the cap: the pieces at a registered body are all cast, one ray one piece (a body takes its hits through its own `hit`, which knows nothing of a
-    // weight); the rest share what is left of the cap by an even pick in their order in the case, each cast one standing for `rest / picked` of them (Horvitz-Thompson: every
-    // piece is in the pick at most once, so the hit points and joint wear the room takes are, on average, those of all its pieces). The order of the case is already random, so the
-    // pick draws nothing. If the body pieces alone are more than the cap they are picked evenly among themselves and the rest is left out, unweighted, as before.
-    const bodyPieces = cast.length > cap ? atBody.filter(Boolean).length : 0
-    const bodyCap = Math.min(bodyPieces, cap)
+    // More pieces than the cap. The pieces at a registered body are cast one ray one piece (a body takes its hits through its own `hit`, which knows nothing of a weight),
+    // up to what the rest leaves them: the rest keeps at least half the cap (or all of its pieces, if fewer), so a car beside the charge cannot take the whole cap and leave
+    // the room round it a ray or two of enormous weight. Body pieces past their share are picked evenly among themselves and the others left out, unweighted. The rest share
+    // their part of the cap by an even pick in their order in the case, each cast one standing for `rest / picked` of them (Horvitz-Thompson: every piece is in the pick at
+    // most once, so the hit points and joint wear the room takes are, on average, those of all its pieces), never for more than `MAX_FRAGMENT_WEIGHT`: past that the excess
+    // is left out instead of piled on a few rays. The order of the case is already random, so the pick draws nothing. What is cast is deterministic for a world state and
+    // a charge, but not local: a part added anywhere in reach changes which pieces qualify, and so which of them the pick keeps near the charge.
+    const over = cast.length > cap
+    const bodyPieces = over ? atBody.filter(Boolean).length : 0
     const rest = cast.length - bodyPieces
-    const restCap = cast.length > cap ? cap - bodyCap : rest
-    const restWeight = restCap > 0 && rest > restCap ? rest / restCap : 1
+    const bodyCap = Math.min(bodyPieces, cap - Math.min(rest, Math.floor(cap / 2)))
+    const restCap = over ? Math.min(rest, cap - bodyCap) : rest
+    const restWeight = restCap > 0 && rest > restCap ? Math.min(MAX_FRAGMENT_WEIGHT, rest / restCap) : 1
+    const nose = casing.noseFactor
     let bodySeen = 0
     let restSeen = 0
-    try {
-      for (let j = 0; j < cast.length; j++) {
-        const body = atBody[j]!
-        const seen = body ? bodySeen++ : restSeen++
-        const [count, kept] = body ? [bodyPieces, bodyCap] : [rest, restCap]
-        if (cast.length > cap && Math.floor(((seen + 1) * kept) / count) === Math.floor((seen * kept) / count)) continue
-        const i = cast[j]!
-        const mass = masses[i]! * massScale
-        const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
-        const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED }
-        fragmentWeight = body ? 1 : restWeight
-        fragmentMass = mass
-        out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
-      }
-    } finally {
-      fragmentWeight = 1
-      fragmentMass = 0
+    for (let j = 0; j < cast.length; j++) {
+      const body = atBody[j]!
+      const seen = body ? bodySeen++ : restSeen++
+      const count = body ? bodyPieces : rest
+      const kept = body ? bodyCap : restCap
+      if (over && Math.floor(((seen + 1) * kept) / count) === Math.floor((seen * kept) / count)) continue
+      const i = cast[j]!
+      const mass = masses[i]! * massScale
+      const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
+      const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED, mass, nose, weight: body ? 1 : restWeight }
+      out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
     }
     return out
   }

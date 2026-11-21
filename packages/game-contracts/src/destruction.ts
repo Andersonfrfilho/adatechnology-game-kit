@@ -471,6 +471,8 @@ export interface BlastCasing {
   readonly gurneyVelocity: number
   /** `sphere` (default: a grenade, `v = sqrt(2E) / sqrt(M/C + 3/5)`) or `cylinder` (a pipe, `M/C + 1/2`). */
   readonly geometry?: 'sphere' | 'cylinder'
+  /** Nose factor of its fragments in the modified NDRC formula against concrete (0.72 flat, 0.84 blunt and irregular, the default; 1.0 round; 1.14 very sharp). */
+  readonly noseFactor?: number
 }
 
 /** The charge behind a blast, when the host knows it: its TNT equivalent for the blast wave, and its case for the fragments. */

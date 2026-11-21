@@ -266,18 +266,21 @@ describe('pieces past the cap stand for the ones left out', () => {
     expect(Math.abs(capped - all) / all).toBeLessThan(0.1)
   })
 
-  it('a piece that stands for four goes through what it would alone: the same holes, through or not, with the same exits', () => {
-    const holesOf = (maxRays: number) => {
+  it('a piece that stands for four goes through what it would alone: the same holes and dents where it lands, with the same exits', () => {
+    const marksOf = (maxRays: number) => {
       const world = createDestruction({ seed: 5 })
-      objectRoom(world, { half: 3, split: 6, material: 'steel', thickness: 0.002 })
-      const holes = world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(PIPE_BOMB, maxRays) }).flatMap((result) => result.events).filter((event) => event.type === 'hole')
-      return new Map(holes.map((event) => [`${event.object}|${(event as { worldPoint: Vec3 }).worldPoint.join(',')}`, JSON.stringify([(event as { hole: { through: boolean } }).hole.through, (event as { exitPoint?: Vec3 }).exitPoint ?? null])]))
+      objectRoom(world, { half: 3, split: 6, material: 'steel', thickness: 0.025 })
+      const marks = world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(PIPE_BOMB, maxRays) }).flatMap((result) => result.events).filter((event) => event.type === 'hole' || event.type === 'dent')
+      return new Map(marks.map((event) => [`${event.object}|${(event as { worldPoint: Vec3 }).worldPoint.join(',')}`, JSON.stringify([event.type, (event as { exitPoint?: Vec3 }).exitPoint ?? null])]))
     }
-    // 60 pieces in the room, 15 cast: each stands for four
-    const weighted = holesOf(15)
-    const alone = holesOf(60)
-    expect(weighted.size).toBeGreaterThan(0)
-    for (const [where, hole] of weighted) expect({ where, hole: alone.get(where) }).toEqual({ where, hole })
+    // 60 pieces in the room, 15 cast: each stands for four. 25 mm of steel holds some 2.7 kJ, the energy of a heavy piece: some go through (a hole) and some stay (a
+    // dent), so a weight that leaked into the energy of the round would turn some dents into holes
+    const weighted = marksOf(15)
+    const alone = marksOf(60)
+    const kinds = [...weighted.values()].map((mark) => (JSON.parse(mark) as [string])[0])
+    expect(kinds).toContain('hole')
+    expect(kinds).toContain('dent')
+    for (const [where, mark] of weighted) expect({ where, mark: alone.get(where) }).toEqual({ where, mark })
   })
 
   it('a hosted body takes every piece that flies at it, however many the cap leaves out round it', () => {
@@ -296,10 +299,83 @@ describe('pieces past the cap stand for the ones left out', () => {
     for (const seed of SEEDS) expect(fragmentsInRoom(seed, { energy: M67.energy, charge: { ...M67.charge, maxRays: 40 } }, 3).length).toBeLessThanOrEqual(40)
   })
 
-  it('under the cap nothing is weighted: the event stream of a pipe bomb in a closed room is the one before the weights', () => {
+  it('over the cap the weighted path is what it is: the event stream of an M67 in a closed brick room, pinned', () => {
+    const world = createDestruction({ seed: 2 })
+    objectRoom(world, { half: 3, split: 3, material: 'brick', thickness: 0.2 })
+    const events = world.explode(ORIGIN, M67.energy, 15, 'test', { charge: M67.charge }).map((result) => result.events)
+    expect(hashOf(JSON.stringify(events))).toBe('7a32aad62c84c')
+  })
+
+  it('under the cap nothing is weighted: the event stream of a pipe bomb in a closed room, pinned (the weights never reach it; it changed once, when the drawn masses were scaled to the case both ways)', () => {
     const world = createDestruction({ seed: 2 })
     objectRoom(world, { half: 3, split: 3, material: 'brick', thickness: 0.2 })
     const events = world.explode(ORIGIN, PIPE_BOMB.energy, 10, 'test', { charge: PIPE_BOMB.charge }).map((result) => result.events)
-    expect(hashOf(JSON.stringify(events))).toBe('463065b090161')
+    expect(hashOf(JSON.stringify(events))).toBe('898ce0ab96724')
+  })
+})
+
+/** The world's hit points per joule of a round (`DMG_PER_J` in `world.ts`): concrete takes a stopped round's whole energy at this rate. */
+const DAMAGE_PER_JOULE = 0.02
+const SEEDS_20 = Array.from({ length: 20 }, (_, index) => index + 1)
+
+describe('a car in a room past the cap', () => {
+  const { speed } = casingFlight(M67.charge.casing!)
+  const budget = 0.5 * M67.charge.casing!.mass * speed * speed
+  // a car-sized body 2 m from the charge in a closed concrete room: some 60 pieces fly at the car, the other 940 at the room
+  const CAR = { centre: [2, 0, 0] as Vec3, size: [0.6, 1.2, 1.6] as Vec3 }
+  const throwIn = (seed: number, maxRays?: number) => {
+    const world = createDestruction({ seed })
+    objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
+    const car = witness('car', [panel('p', CAR.size, [0, 0, 0])], CAR.centre)
+    world.register(car.impl, { position: car.position })
+    const damage = world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67, maxRays) }).reduce((sum, result) => sum + result.damage, 0)
+    return { damage, carHits: car.fragments().length }
+  }
+
+  it('the car takes its own pieces, the room on average the damage of all of its, and no throw puts more than twice the case energy into the room', () => {
+    const pieces = M67.charge.casing!.fragments
+    const share = shareOfBoxes(ORIGIN, [CAR], evenDirections(200_000))
+    const sigma = Math.sqrt(pieces * share * (1 - share))
+    let capped = 0
+    let all = 0
+    for (const seed of SEEDS_20) {
+      const run = throwIn(seed)
+      expect(Math.abs(run.carHits - pieces * share), `seed ${seed}`).toBeLessThan(4 * sigma)
+      // the room's weighted damage, as energy: one throw may draw heavy pieces among the weighted ones, but never more than twice the case
+      expect(run.damage / DAMAGE_PER_JOULE, `seed ${seed}`).toBeLessThan(2 * budget)
+      capped += run.damage
+      all += throwIn(seed, pieces).damage
+    }
+    expect(all).toBeGreaterThan(0)
+    expect(Math.abs(capped - all) / all).toBeLessThan(0.1)
+  })
+
+  it('a ray never stands for more than eight pieces: with a cap of 12 the room takes some 8 x 12 of its 1000 pieces, not all of them', () => {
+    let capped = 0
+    let all = 0
+    for (const seed of SEEDS_20) {
+      capped += throwIn(seed, 12).damage
+      all += throwIn(seed, 1000).damage
+    }
+    // 12 rays (the car's dozen pieces get at most half the cap) each standing for at most 8: under a tenth of the room's 940 pieces, never all of them
+    expect(capped / all).toBeLessThan(0.15)
+    expect(capped).toBeGreaterThan(0)
+  })
+
+  it('a car right beside the charge gets half the cap, and the other half is kept for the room', () => {
+    // a 4 m long single-part car 0.8 m off: its sphere holds the charge, its box takes a quarter of the sphere, some 250 pieces. A body part is tested as its box, so
+    // those are the car's pieces; past the cap the room keeps half of it, and the car's 128 rays all land on it
+    const CLOSE = { centre: [0.8, 0, 0] as Vec3, size: [0.6, 1.4, 4] as Vec3 }
+    expect(shareOfBoxes(ORIGIN, [CLOSE], evenDirections(200_000)) * M67.charge.casing!.fragments).toBeGreaterThan(128)
+    for (const seed of [1, 2, 3, 4]) {
+      const world = createDestruction({ seed })
+      objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
+      const car = witness('car', [panel('p', CLOSE.size, [0, 0, 0])], CLOSE.centre)
+      world.register(car.impl, { position: car.position })
+      const damage = world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67) }).reduce((sum, result) => sum + result.damage, 0)
+      expect(car.fragments().length, `seed ${seed}`).toBeLessThanOrEqual(128)
+      expect(car.fragments().length, `seed ${seed}`).toBeGreaterThanOrEqual(124)
+      expect(damage).toBeGreaterThan(0)
+    }
   })
 })

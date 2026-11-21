@@ -116,7 +116,7 @@ export function fragmentDrag(mass: number): number {
   return (AIR_DENSITY * DRAG_AREA_FACTOR * sphereArea) / (2 * mass)
 }
 
-/** Nose factor of the modified NDRC formula for a blunt, irregular steel fragment (0.72 flat, 0.84 blunt, 1.0 round, 1.14 very sharp). */
+/** Nose factor of the modified NDRC formula for a blunt, irregular steel fragment (0.72 flat, 0.84 blunt, 1.0 round, 1.14 very sharp): the default of `BlastCasing.noseFactor`. */
 const BLUNT_FRAGMENT_NOSE = 0.84
 /** The modified NDRC constant in SI units: `G = 3.8e-5 N M / (d sqrt(f'c)) (V / d)^1.8`, M in kg, d in m, V in m/s, f'c in Pa. */
 const NDRC_CONSTANT = 3.8e-5
@@ -130,8 +130,8 @@ export interface ConcretePerforationInput {
   readonly speed: number
   /** MPa: the concrete's compressive strength (`MaterialDef.strength.compressiveMPa`). */
   readonly compressiveMPa: number
-  /** Nose factor, `BLUNT_FRAGMENT_NOSE` when not given. */
-  readonly nose?: number
+  /** Nose factor (`BlastCasing.noseFactor`); 0.84, a blunt irregular fragment, when not given. */
+  readonly nose?: number | undefined
 }
 
 /** Depth a projectile goes into concrete and the thickness it goes through, in metres. */
