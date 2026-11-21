@@ -319,8 +319,8 @@ describe('the voice cap and the queue clock', () => {
     }
     const plain = level('crowd', 100, false)
     const survivors = level('boosted', 100, true)
-    expect(survivors).toBeGreaterThan(plain * 1.4)
-    expect(survivors).toBeLessThanOrEqual(plain * 1.5 + 1e-9)
+    // 102 asked, 2 played: the 100 that lost or came late are the share made up for
+    expect(survivors).toBeCloseTo(plain * (1 + 0.5 * (100 / 102)), 6)
   })
 
   it('does not count a closed engine as late', () => {

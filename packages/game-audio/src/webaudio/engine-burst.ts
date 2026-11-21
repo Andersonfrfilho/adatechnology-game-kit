@@ -133,8 +133,8 @@ export function createBurstCap(
         const fresh = bucket.slots.filter((slot) => !clock.stale(slot.at))
         late += bucket.slots.length - fresh.length
         for (const slot of bucket.slots) if (!fresh.includes(slot)) release1(bucket, slot)
+        // `asked` stays: a request dropped as late was not played either, so it still counts in the share the survivors make up for
         bucket.slots.splice(0, bucket.slots.length, ...fresh)
-        bucket.asked -= bucket.slots.length - fresh.length
         survivors += fresh.length
       }
       if (survivors === 0) return
