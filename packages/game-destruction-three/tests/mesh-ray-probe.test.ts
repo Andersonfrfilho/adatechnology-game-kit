@@ -473,6 +473,7 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
         if (expected.length > 0) withHits++
       }
       expect(withHits).toBeGreaterThan(10)
-    })
+      // 300 full-mesh raycasts per mesh: past the 5 s default on a loaded CI runner
+    }, 30_000)
   })
 })
