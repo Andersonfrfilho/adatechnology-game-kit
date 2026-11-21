@@ -1,10 +1,13 @@
 # Spec 018 — a explosão fora do quadro principal
 
-> Estado: **Fase 0 concluída, D1 a D3 abertas** (2026-11-20; números e recomendação em `relatorio-fase-0.md`). Nasce do fecho da spec 017: o quadro do impacto de uma explosão grande ficou em ~65 ms
+> Estado: **Fase 0 concluída; D1 e D3 decididas em 2026-11-21, D2 aberta** (números da Fase 0 e recomendação em `relatorio-fase-0.md`; a medição que mudou o caso de referência está na seção "Depois da Fase 0" do mesmo arquivo). Nasce do fecho da spec 017: o quadro do impacto de uma explosão grande ficou em ~65 ms
 > contra a meta de 33,3 ms, e as duas formas de dividir o trabalho no tempo foram medidas e não bastam (`specs/017-quadro-da-explosao/
 > design-onda.md` §1 e §9). Esta spec **não promete 33,3 ms**: a Fase 0 é um experimento que mede se o caminho existe.
 
 ## 1. Problema
+
+> **Correção de 2026-11-21:** a tabela abaixo é a do C4 contra a casa inteira, que esta spec tratou como o pior caso. A medição de 2026-11-21 mostrou
+> que não é: a M67 e a bomba de cano custam mais que o C4 no quadro da explosão (cerca de 2 vezes e cerca de 3 vezes) (ver §4.1). O texto original fica como foi escrito.
 
 Modo de prazo, 1x, casa da sala (552 peças no mundo; 521 visitadas pelo `blastPart`), explosão e cratera (régua `tools/gpu/room-explosion.mjs`).
 Números corrigidos pela Fase 0 (`relatorio-fase-0.md` §2.1 e §6); a primeira versão desta tabela dizia 24–26 ms para o `explode`, ~14 para os
@@ -57,18 +60,40 @@ Qualquer um dos três muda quando o resultado entra, então herda da 017: result
 exigências do `design-onda.md` §2.2 a §2.6 e §3 para trabalho que atravessa tiques (quem pertence à explosão, salvar no meio, empurrão dos
 pedaços que nascem depois, invariantes estruturais por tique).
 
-## 4. Decisões abertas
+## 4. Decisões
 
-| # | Decisão | Depende de |
+| # | Decisão | Estado |
 |---|---|---|
-| D1 | [NEEDS CLARIFICATION] A, B ou C, ou desistir da meta de 33,3 ms para explosão grande em casa inteira | Fase 0 |
-| D2 | [NEEDS CLARIFICATION] Quantos quadros de latência entre o clarão e o dano são aceitáveis para o jogo (a 017 fixou clarão, som e empurrão no primeiro tique; o dano no mundo 1–2 quadros depois muda a sensação) | o dono, vendo na sala |
-| D3 | [NEEDS CLARIFICATION] A meta vale para o pior caso (casa inteira, 552 peças) ou para um caso típico a definir | o dono |
+| D1 | A, B ou C, ou desistir da meta de 33,3 ms | **Decidida em 2026-11-21:** não abrir caminho de worker (A, B ou C) agora. Primeiro se ataca, na thread principal, o custo dos explosivos de fragmentação. O dono pediu antes uma **proposta de cortes na simulação de fragmentos** (quanto cada corte rende e quais goldens mudam), antes de qualquer mudança de código de simulação. A proposta está pendente (T1.1 em `tasks.md`). Ver §4.1 |
+| D2 | [NEEDS CLARIFICATION] Quantos quadros de latência entre o clarão e o dano são aceitáveis (a 017 fixou clarão, som e empurrão no primeiro tique; o dano no mundo 1–2 quadros depois muda a sensação). **Pesa mais agora:** espalhar os impactos dos fragmentos por 2 ou 3 tiques é um dos cortes candidatos da T1.1 e é exatamente latência entre clarão e dano | o dono, vendo na sala; exigida só para cortes que atrasam o dano (§4.1) |
+| D3 | A meta vale para o pior caso ou para um caso típico | **Decidida em 2026-11-21:** o caso de referência da meta passa a ser a **granada M67** (o explosivo de fragmentação comum), não o C4 contra a casa inteira. Ver §4.1 |
 
-## 5. Critérios de aceite (provisórios, fecham com D1–D3)
+### 4.1 O que a medição de 2026-11-21 mudou
 
-- C1. Quadro do impacto ≤ 33,3 ms na régua da 017 (modo de prazo, 1x, explosão e cratera), ou o número que a D3 fixar.
-- C2. Mesmos bytes com 0, 1 e 8 workers e a 30/60/120/144 Hz (`checkTaskKind`, `step-equivalence-window`).
-- C3. Nenhum quadro da janela acima de 33,3 ms; soma da janela ≤ 110% da de hoje.
+Esta spec partiu da premissa de que o C4 contra a casa inteira era o pior caso (63–65 ms na Fase 0). A premissa era errada. Medido em 2026-11-21 na
+régua `room-explosion` (modo de prazo, 1x, casa da sala, NVIDIA), na `main` depois do #417, quadro da explosão (`f0Ms`):
+
+| Explosivo | `f0Ms` (ms) |
+|---|---|
+| molotov | 22–26 |
+| C4 | 63–67 |
+| M67 | 117–138 entre sessões (120,5 e 120,6 na última) |
+| bomba de cano | 177–227 entre sessões (186,2 e 186,3 na última) |
+
+Os explosivos de fragmentação custam cerca de 2 vezes (M67) e cerca de 3 vezes (bomba de cano) o C4. Os maiores módulos do pior quadro são `explode` (simulação dos fragmentos) e `destrEvents`.
+A tabela completa e as condições estão em `relatorio-fase-0.md`, seção "Depois da Fase 0", e nas descrições dos PRs #417 e #419.
+
+- **D3:** a meta passa a ser medida na M67. Fato da ferramenta: o explosivo padrão da régua da rodada diária é o C4 e a base gravada em 2026-11-21 é a do C4. Isso não é decisão; o caso que define a meta é a M67.
+- **D1:** o próximo passo é cortar o custo da simulação de fragmentos na thread principal. O dono decidiu apenas que nenhum caminho de worker é aberto agora; se um worker volta à mesa depois é pergunta aberta para ele.
+  Nenhum corte entra sem a proposta aprovada pelo dono (T1.1).
+- **Regra da D2:** a D2 é exigida só para corte que atrasa o dano em relação ao clarão (por exemplo, espalhar impactos de fragmentos por tiques). Corte que mantém o dano no tique da explosão não espera a D2.
+
+## 5. Critérios de aceite (provisórios, fecham com a D2, para os cortes que atrasam o dano)
+
+- C1. Quadro do impacto da **granada M67** ≤ 33,3 ms na régua `room-explosion` (modo de prazo, 1x, casa da sala), conforme a D3 de 2026-11-21.
+  **Este número ainda não é alcançável com a evidência que existe:** o valor medido hoje é ~120 ms (120,5 e 120,6 na última sessão), contra 33,3 ms.
+  Está longe, e nenhum corte medido até agora aproxima a M67 da meta. O critério fica escrito como alvo, não como previsão.
+- C2. Mesmos bytes a 30/60/120/144 Hz (`step-equivalence-window`); com 0, 1 e 8 workers (`checkTaskKind`) só se algum caminho de worker for aberto (D1 de 2026-11-21 não abre nenhum agora).
+- C3. Nenhum quadro da janela acima de 33,3 ms (mesmo caso de referência do C1, a M67); soma da janela ≤ 110% da de hoje.
 - C4. Portão completo contra a `main` sem regressão, com a máquina quieta.
 - C5. Nenhum golden ou fixture existente regravado sem decisão do dono.

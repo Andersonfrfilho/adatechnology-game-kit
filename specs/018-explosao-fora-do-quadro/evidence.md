@@ -476,3 +476,16 @@ Relatório completo: [`relatorio-fase-0.md`](relatorio-fase-0.md). Sem medição
   iria a 10,6). T0.4, o teto líquido da cratera no extremo baixo é 2,1 − 0,8 = 1,3 (a tabela diz 1,2; bate se usar 2,0 da série 2). T0.4 cita
   "critério da task ≥ ~2", que não está no `tasks.md`. T0.2, ~7,3 ms do snapshot é ~32–37% dos 20–23 ms do `explode`, não ~30%. T0.1 diz que
   nenhum rótulo passa de ~4 ms, mas a mediana do `emit` da explosão é 4,6 (inflada pela sonda). Nenhuma muda conclusão.
+
+## Decisões D1 e D3 (2026-11-21)
+
+Sem medição nova nesta entrada: registra a decisão do dono e de onde vêm os números.
+
+- **D3:** o caso de referência da meta passa a ser a granada M67, não o C4 contra a casa inteira.
+- **D1:** nenhum caminho de worker (A, B ou C) agora. Atacar os explosivos de fragmentação na thread principal; antes de mudar a simulação, o dono quer
+  a proposta de cortes (ganho de cada um, goldens afetados). Pendente: T1.1.
+- **D2** segue aberta (decisão do dono, vendo na sala); pesa mais porque espalhar impactos por 2–3 tiques é um corte candidato.
+- **Origem dos números:** medições de 2026-11-21 na régua `room-explosion` (modo de prazo, 1x, casa da sala, NVIDIA, `flock`, páginas conferidas por
+  hash), `main` depois do #417 (página `b4a1ac7e07c1`). `f0Ms`: molotov 22–26, C4 63–67, M67 117–138, bomba de cano 177–227 ms. As tabelas estão nas
+  descrições dos PRs #417 e #419; os JSONs brutos ficaram numa pasta de rascunho não durável e não são citados.
+- Resumo e o que muda na recomendação: `relatorio-fase-0.md`, seção "Depois da Fase 0".
