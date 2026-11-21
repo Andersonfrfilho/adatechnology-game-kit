@@ -22,6 +22,8 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
   cada uma por `PERF_PAGE=`, com a outra em `PERF_OTHER_PAGE=`: **o `perf.mjs` para se as duas forem iguais** e grava `pageSha256` no JSON (em
   2026-11-20 seis rodadas mediram a página velha dos dois lados por causa disso).
   A régua da explosão tem a mesma conferência do par por `ROOM_EXPLOSION_PAGE=` e `ROOM_EXPLOSION_OTHER_PAGE=` (e grava `pageSha256`); sem elas ela refaz a página.
+  A régua também recusa `dist` mais velho que o `src` dos pacotes que a página junta do `dist` antes de refazer a página, e a página leva o commit, o `dirty` e a hora
+  (`pageBuild` no JSON; o `pageSha256` ignora esse carimbo). A base da rodada diária só aceita relatório de build limpo do commit gravado.
 - **Antes de medir, veja quem está usando a máquina** (`ps -eo pcpu,etimes,args --sort=-pcpu | head`): uma aba de navegador esquecida já prendeu um
   núcleo inteiro por mais de seis horas durante as medições da spec 017, e a carga nunca descia de 1,5.
 - **A régua mede no modo de prazo** (`ROOM_EXPLOSION_BUDGET=deadline`, o padrão desde a spec 017). Número em modo de cota não vale para o f0: sem

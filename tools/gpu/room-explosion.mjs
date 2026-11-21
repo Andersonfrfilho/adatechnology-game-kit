@@ -64,13 +64,14 @@
 // They come from `scheduler.systemProbe` (game-runtime), a hook that times nothing unless this tool sets it. `queues` is the frame budget's deferred queues that no label above covers (the
 // destruction events and the audio voices have theirs): the change of each queue's `spentMs` in `room.frameStats().budget`, per queue in the `queues` of a stage frame.
 import { execFileSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { savedPagesOf } from './room-explosion-base.mjs'
+import { assertStampIsHead, pageHashOf, parsePageStamp } from './page-stamp.mjs'
+import { assertDistsAreFresh } from './stale-dist.mjs'
 import { DEFAULT_EXPLOSIVE, frameGate, frameKey, frameMetricsOf, isBaseComparable } from './room-explosion-frame.mjs'
 
 const FRAME_SECONDS = 1 / 60
@@ -128,8 +129,11 @@ export const pageSelectionOf = ({ savedPage, root }) =>
     ? { pageFile: resolve(join(root, 'examples/test-room/dist/test-room.html')), shouldBuild: true }
     : { pageFile: resolve(savedPage), shouldBuild: false }
 
-/** @param {string} file */
-const sha256Of = (file) => createHash('sha256').update(readFileSync(file)).digest('hex')
+/** The build stamp of a page file, or null when it has none. @param {string} file */
+const pageBuildOf = (file) => parsePageStamp(readFileSync(file, 'utf8'))
+
+/** The page's sha256 without its build stamp (the stamp changes on every build). @param {string} file */
+const sha256Of = (file) => pageHashOf(readFileSync(file, 'utf8'))
 
 /** The frame budget's mode the ruler runs `room.update` in: `deadline` (the page's mode) unless `quota` is asked for. @param {string | undefined} text @returns {'quota' | 'deadline'} */
 export const budgetModeOf = (text) => (text === 'quota' ? 'quota' : 'deadline')
@@ -673,9 +677,15 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   if (variants.length === 0 || kinds.length === 0 || throttles.length === 0) throw new Error('room-explosion: nothing to measure (check the ROOM_EXPLOSION_* variables)')
 
   const { pageFile, shouldBuild } = pageSelectionOf({ savedPage, root })
-  if (shouldBuild) execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'ignore' })
+  if (shouldBuild) {
+    assertDistsAreFresh(root)
+    execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'ignore' })
+  }
   const pageSha256 = pagePairOf({ page: pageFile, otherPage }).pageSha256
-  console.log(`room-explosion: page ${pageFile} (sha256 ${pageSha256.slice(0, 12)})`)
+  const pageBuild = pageBuildOf(pageFile)
+  if (shouldBuild) assertStampIsHead({ stamp: pageBuild, head: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() })
+  console.log(`room-explosion: page ${pageFile} (sha256 ${pageSha256.slice(0, 12)}${pageBuild ? `, built ${pageBuild.builtAt} at ${pageBuild.commit.slice(0, 12)}${pageBuild.dirty ? ' DIRTY' : ''}` : ''})`)
+  if (pageBuild === null) console.warn('room-explosion: WARNING the page has no build stamp: its commit is unknown')
   const pageUrl = pathToFileURL(pageFile).href
   const browser = await playwright.chromium.launch({ args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'], ...(chrome ? { executablePath: chrome } : {}) })
   const machine = { cpu: cpus()[0]?.model ?? 'unknown', cores: cpus().length, node: process.version, chrome: browser.version(), platform: process.platform }
@@ -832,7 +842,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, pageSha256, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, pageSha256, pageBuild, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0
