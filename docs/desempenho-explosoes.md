@@ -12,15 +12,17 @@ Ele dispara os nove explosivos do arsenal em três fases:
 |---|---|
 | **frio** | um de cada vez, na primeira vez que aparecem: `cold_frag_grenade`, `cold_molotov`, `cold_pipe_bomb`, `cold_m79`, `cold_rpg_7`, `cold_at4`, `cold_dynamite`, `cold_c4`, `cold_claymore` |
 | **quente** (`warm_all`) | todos de novo |
-| **tempestade** (`storm`) | os nove três vezes seguidas e mais 20 granadas, 47 explosões em poucos segundos |
+| **rajada de explosões** (`burst`, depois `after_burst`) | os nove três vezes seguidas e mais 20 granadas, 47 explosões em poucos segundos |
 
 A C4 vai pelo detonador (tecla Y) e a claymore pelo fio, com o jogador passando por ele.
+
+A rajada se chamava `storm` ("tempestade"), nome que se confundia com o clima da sala (`ROOM_EXPLOSION_WEATHER=storm` é chuva de verdade). `PERF_SHARD=storm` ainda roda a rajada, com um aviso; as fases saem como `burst` e `after_burst`. Medições antigas em `specs/` guardam o nome da época.
 
 | Orçamento | Valor | Modo |
 |---|---|---|
 | Shaders compilados durante o jogo | 0 | sempre |
 | Buffers de GPU criados por explosão quente | ≤ 40 | sempre |
-| Draws por quadro depois da tempestade | ≤ 110% do repouso | sempre |
+| Draws por quadro depois da rajada | ≤ 110% do repouso | sempre |
 | Quadro acima de 33,4 ms (perde dois refresh de 60 Hz) | 0 | `PERF_MODE=gpu` |
 | p99 do quadro | ≤ 20 ms | `PERF_MODE=gpu` |
 | Long task (bloqueio da thread principal) | ≤ 50 ms | `PERF_MODE=gpu` |
@@ -50,10 +52,10 @@ O teste falhava em **43 orçamentos**.
 | repouso | 12 ms | 14 ms | 0 |
 | primeira granada | 16 ms | 177 ms | 0 |
 | primeiro molotov | 45 ms | 266 ms | 2 |
-| tempestade | 356 ms | **1.207 ms** | **595** |
-| repouso depois da tempestade | 50 ms | 53 ms | **135** (recompilando parado) |
+| rajada | 356 ms | **1.207 ms** | **595** |
+| repouso depois da rajada | 50 ms | 53 ms | **135** (recompilando parado) |
 
-- **Draws por quadro:** iam de 856 em repouso para 2.015 depois da tempestade e não voltavam mais.
+- **Draws por quadro:** iam de 856 em repouso para 2.015 depois da rajada e não voltavam mais.
 - **Buffers de GPU:** cada explosão quente criava 154 em média.
 
 ## Causas e correções
@@ -72,7 +74,7 @@ Foram três rodadas de especialistas em paralelo, cada um num worktree e numa br
 | Geometria do pedaço de terreno refeita a cada cratera | `game-terrain-three/src/chunk-geometry.ts`, `rebar.ts` | Buffers reescritos no lugar |
 | Destroço parado recalculando a matriz todo quadro | `game-destruction-three/src/fragments.ts` | `matrixAutoUpdate = false` ao dormir |
 | O renderer da destruição lia `part()` por parte e por quadro, e o veículo remontava o estado inteiro a cada leitura | `game-vehicles/src/destructible/impl.ts` | Cache do `state()` invalidado só quando o dano muda (1.369 ms → 6 ms no perfil) |
-| O painel de log criava um nó do DOM por evento; a tempestade gera centenas | `game-test-room/src/ui.ts` | Um lote por quadro, no máximo 200 linhas, nada com o painel fechado |
+| O painel de log criava um nó do DOM por evento; a rajada gera centenas | `game-test-room/src/ui.ts` | Um lote por quadro, no máximo 200 linhas, nada com o painel fechado |
 | `history.replaceState` em todo quadro | `game-test-room/src/room.ts`, `examples/test-room/src/main.js` | Só quando o estado muda |
 | Objeto novo por zumbi por quadro | `game-crowd/src/crowd.ts` | Objeto vazio compartilhado |
 | ~74 sons de uma granada montados no mesmo quadro (~18 ms) | `game-audio` (`realize`) | `deferredStart`: as vozes são montadas em fatias de 2 ms entre quadros, com no máximo 250 ms de atraso, e o motor é pré-aquecido no `warmUp` |
@@ -104,12 +106,12 @@ Resultado: os arquivos de golden estão idênticos aos do `main`, e todos os pac
 | primeiro molotov | 45 ms | **7,7 ms** | 266 ms | **36 ms** | 2 → **0** |
 | primeiro RPG-7 | 236 ms | **7,5 ms** | 565 ms | **18 ms** | 0 |
 | todos de novo (quente) | 120 ms | **7,2 ms** | 234 ms | **23 ms** | 0 |
-| tempestade (47 explosões) | 356 ms | **7,8 ms** | **1.207 ms** | **14,6 ms** | 595 → **0** |
-| depois da tempestade | 50 ms | **6,3 ms** | 53 ms | **7,8 ms** | 135 → **0** |
+| rajada (47 explosões) | 356 ms | **7,8 ms** | **1.207 ms** | **14,6 ms** | 595 → **0** |
+| depois da rajada | 50 ms | **6,3 ms** | 53 ms | **7,8 ms** | 135 → **0** |
 
 - **Orçamentos:** de 43 estourados para **2**.
 - **Long tasks:** nenhuma acima de 50 ms em fase nenhuma (antes chegavam a 619 ms).
-- **Draws depois da tempestade:** 630, abaixo do repouso (886); antes eram 2.015.
+- **Draws depois da rajada:** 630, abaixo do repouso (886); antes eram 2.015.
 - **Buffers de GPU por explosão quente:** 21 em média (orçamento 40; antes 154).
 - **O que sobra:** a primeira granada (2 quadros de 36,4 ms) e o primeiro molotov (1 quadro de 36 ms), 3 ms acima do limite e só na primeira vez. Nesses quadros não há long task nem quadro de animação longo: a thread principal nunca ficou presa por mais de 33 ms. O tempo vem do lado da GPU, no primeiro envio dos buffers do efeito (210 na primeira granada). A correção é pré-carregar esses buffers no carregamento, junto do pré-aquecimento dos shaders, e é a T4.6 da spec 005 (`ProgramWarmup` e pools no `game-render-three`).
 
