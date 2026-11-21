@@ -5162,26 +5162,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         targets.push({ centre, radius: p.bound, distance })
       }
     }
-    // a registered body (a vehicle) is a target too, as one sphere round all its parts (its parts overlap: a sphere per part would count the pieces that fly at a door
-    // once for the door, once for its window and once for the fender); its pieces are rounds to it as a gun's are (`shootRay` takes them through its `surfaceRay`)
+    // a registered body (a vehicle) is a target part by part, as the parts of an object are: one sphere round the whole body holds the charge when it goes off beside it, and
+    // then every piece of the case would qualify and the cap would cut the ones that do fly at it. Its parts overlap (a door, its window, the fender), but a piece is cast once
+    // whatever spheres it meets; its pieces are rounds to it as a gun's are (`shootRay` takes them through its `surfaceRay`)
     for (const im of impls.values()) {
       if (charge.ignore?.includes(im.impl.id)) continue
-      const parts = implParts(im)
-      if (parts.length === 0) continue
-      const lo: Vec3 = [Infinity, Infinity, Infinity]
-      const hi: Vec3 = [-Infinity, -Infinity, -Infinity]
-      for (const { ps, c } of parts) {
-        const r = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
-        for (let k = 0; k < 3; k++) {
-          lo[k] = Math.min(lo[k], c[k] - r)
-          hi[k] = Math.max(hi[k], c[k] + r)
-        }
+      for (const { ps, c } of implParts(im)) {
+        const bound = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
+        const distance = vec.distance(c, point)
+        if (distance - bound >= farthest) continue
+        targets.push({ centre: c, radius: bound, distance })
       }
-      const centre: Vec3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2]
-      const bound = vec.distance(lo, hi) / 2
-      const distance = vec.distance(centre, point)
-      if (distance - bound >= farthest) continue
-      targets.push({ centre, radius: bound, distance })
     }
     if (targets.length === 0) return []
     const pieces = Math.max(1, Math.floor(casing.fragments))
