@@ -51,6 +51,8 @@ export class MeshRayProbe {
       mesh.raycast(raycaster, hits)
       return
     }
+    // `mesh.raycast` computes a missing bounding sphere on every call, a ray that misses it included: the sphere keeps the vertices of that moment, and the golden scenes read it later
+    if (mesh.material !== undefined && geometry.boundingSphere === null) geometry.computeBoundingSphere()
     const triangleBoxes = this.boxesOf(geometry, position)
     const found = this.collect(mesh, raycaster, triangleBoxes)
     if (found === 0) return
@@ -63,7 +65,6 @@ export class MeshRayProbe {
       if (attribute) standGeometry.setAttribute(name, attribute)
       else standGeometry.deleteAttribute(name)
     }
-    if (geometry.boundingSphere === null) geometry.computeBoundingSphere()
     standGeometry.boundingSphere = geometry.boundingSphere
     standGeometry.boundingBox = geometry.boundingBox
     stand.material = mesh.material

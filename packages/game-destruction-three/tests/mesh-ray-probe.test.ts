@@ -396,6 +396,17 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
     expect(fresh[0]!.point.z).toBeCloseTo(5, 6)
   })
 
+  it('a ray that meets no triangle still leaves the bounding sphere computed, as mesh.raycast does', () => {
+    const missRay = () => new THREE.Raycaster(new THREE.Vector3(500, 500, 0.1), new THREE.Vector3(0, 0, -1), 0, 0.06)
+    const plainMesh = row().mesh
+    plainMesh.raycast(missRay(), [])
+    const probedMesh = row().mesh
+    new MeshRayProbe(THREE).raycast(probedMesh, missRay(), [])
+    expect(plainMesh.geometry.boundingSphere).not.toBeNull()
+    expect(probedMesh.geometry.boundingSphere).not.toBeNull()
+    expect(probedMesh.geometry.boundingSphere!.radius).toBe(plainMesh.geometry.boundingSphere!.radius)
+  })
+
   it('probes against the same unchanged geometry build the boxes once', () => {
     const { mesh } = row()
     const probe = new MeshRayProbe(THREE)
