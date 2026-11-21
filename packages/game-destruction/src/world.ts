@@ -1,6 +1,6 @@
 import { SUPPORT_TOLERANCE, distributeLoads, restsOver, solveSupports } from '@adatechnology/game-load-path'
 import type { PlanePoint, SupportGraph } from '@adatechnology/game-load-path'
-import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
+import { failureWork, FRAGMENT_MIN_SPEED, TNT_PER_JOULE, casingFlight, concretePerforation, fragmentCaliberMm, fragmentDrag, mottMass, projectedArea, waveWork } from './blast-wave'
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
@@ -4445,6 +4445,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * dents, craters, spalls, units, breaches, torn pieces): four pieces are not one piece four times as hard.
    */
   let fragmentWeight = 1
+  /** kg: the mass of the piece of a case in flight (`throwCasing`); 0 for every other round, which keeps its own rule against concrete. */
+  let fragmentMass = 0
 
   const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: BallisticExtras = {}): BallisticOut => {
     const mat = p.mat
@@ -4467,7 +4469,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a round that carries its penetration (mm by material class) goes through a part as thick as that, whatever the energy says; else the energy rule with `piercing`
     const penMm = penetrationOf(mat, round.penetration)
     const Ep = penMm !== undefined ? penMm * mat.penetration : piercing === 1 || !hard ? E : E * piercing
-    const penetrated = Ep > thr
+    // a piece of a case gets through concrete only if the modified NDRC lets it as well (`concretePerforation`, at its speed now): the linear rule alone let a 2.45 g piece of an
+    // M67 through 297 mm. Never more than the linear rule. Every material with a compressive strength takes it: for brick (2.35 MPa) NDRC is the looser rule for the light pieces
+    // and stricter only for heavy fast ones (a 4.5 g piece at 1200 m/s: 179 mm against the linear 231 mm), outside the concrete the formula was fitted on
+    const strength = fragmentMass > 0 ? mat.strength?.compressiveMPa : undefined
+    const path = strength === undefined ? 0 : (p.thickness + layersThickness(p.layers, face) + layersThickness(p.layers, -face)) / slant
+    const penetrated = Ep > thr && (strength === undefined || concretePerforation({ mass: fragmentMass, caliber: caliber / 1000, speed: Math.sqrt((2 * E) / fragmentMass), compressiveMPa: strength }).perforation > path)
     // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
     // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
     const scale = (mat.damageScale?.ballistic ?? 1) * (mat.fracture === 'shatter' ? fragility(mat.ductility, p.thickness) : 1)
@@ -5241,10 +5248,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
         const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED }
         fragmentWeight = body ? 1 : restWeight
+        fragmentMass = mass
         out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
       }
     } finally {
       fragmentWeight = 1
+      fragmentMass = 0
     }
     return out
   }

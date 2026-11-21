@@ -298,8 +298,8 @@ describe('pieces past the cap stand for the ones left out', () => {
 
   it('under the cap nothing is weighted: the event stream of a pipe bomb in a closed room is the one before the weights', () => {
     const world = createDestruction({ seed: 2 })
-    objectRoom(world, { half: 3, split: 3, material: 'brick', thickness: 0.2 })
+    objectRoom(world, { half: 3, split: 3, material: 'steel', thickness: 0.004 })
     const events = world.explode(ORIGIN, PIPE_BOMB.energy, 10, 'test', { charge: PIPE_BOMB.charge }).map((result) => result.events)
-    expect(hashOf(JSON.stringify(events))).toBe('463065b090161')
+    expect(hashOf(JSON.stringify(events))).toBe('11cf3a2ddf9b7')
   })
 })
