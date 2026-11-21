@@ -50,6 +50,8 @@ export class DecalKit {
       polygonOffsetFactor: -4,
       polygonOffsetUnits: -4,
       side: this.THREE.DoubleSide,
+      // flat disc: three would draw transparent + DoubleSide twice and rebuild the program on every draw
+      forceSinglePass: true,
     }))
   }
 
