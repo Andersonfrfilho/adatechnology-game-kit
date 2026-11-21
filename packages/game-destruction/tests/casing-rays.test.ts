@@ -210,3 +210,96 @@ describe('a hosted body is aimed at part by part', () => {
     expect(Math.abs(mean - expected)).toBeLessThan((4 * sigma) / Math.sqrt(counts.length))
   })
 })
+
+/** cyrb53: a 53-bit hash of a string, to pin an event stream. */
+const hashOf = (text: string): string => {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i)
+    h1 = Math.imul(h1 ^ code, 2654435761)
+    h2 = Math.imul(h2 ^ code, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)
+}
+
+/** A closed box room of world objects round the charge (`split x split` panels a face): more pieces qualify than the cap casts. */
+const objectRoom = (world: ReturnType<typeof createDestruction>, options: { half: number; split: number; material: string; thickness: number }): string[] => {
+  const ids: string[] = []
+  const step = (2 * options.half) / options.split
+  for (let axis = 0; axis < 3; axis++) {
+    for (const sign of [-1, 1]) {
+      for (let i = 0; i < options.split; i++) {
+        for (let j = 0; j < options.split; j++) {
+          const at: Vec3 = [0, 0, 0]
+          const size: Vec3 = [step, step, step]
+          at[axis] = sign * (options.half + options.thickness / 2)
+          size[axis] = options.thickness
+          at[(axis + 1) % 3] = -options.half + step * (i + 0.5)
+          at[(axis + 2) % 3] = -options.half + step * (j + 0.5)
+          ids.push(world.add({ parts: [{ id: 'p', material: options.material, shape: { kind: 'box', size }, position: [0, 0, 0], thickness: options.thickness, anchored: true }] }, { id: `o${axis}${sign}-${i}-${j}`, position: at }))
+        }
+      }
+    }
+  }
+  return ids
+}
+
+/** The case alone: a charge of no wave (1 J, a microgram of TNT), so what the room takes is what the pieces bring. */
+const caseOnly = (strike: { charge: BlastCharge }, maxRays?: number): BlastCharge => ({ tnt: 1e-9, casing: strike.charge.casing!, ...(maxRays !== undefined ? { maxRays } : {}) })
+
+describe('pieces past the cap stand for the ones left out', () => {
+  const damageInRoom = (seed: number, maxRays: number): number => {
+    const world = createDestruction({ seed })
+    objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
+    return world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67, maxRays) }).reduce((sum, result) => sum + result.damage, 0)
+  }
+
+  it('the damage of a closed room with the cap of 256 is the damage of all its pieces, on average over 20 throws (within 10%)', () => {
+    const seeds = Array.from({ length: 20 }, (_, index) => index + 1)
+    const mean = (maxRays: number) => seeds.reduce((sum, seed) => sum + damageInRoom(seed, maxRays), 0) / seeds.length
+    const capped = mean(256)
+    const all = mean(1000)
+    expect(all).toBeGreaterThan(0)
+    expect(Math.abs(capped - all) / all).toBeLessThan(0.1)
+  })
+
+  it('a piece that stands for four goes through what it would alone: the same holes, through or not, with the same exits', () => {
+    const holesOf = (maxRays: number) => {
+      const world = createDestruction({ seed: 5 })
+      objectRoom(world, { half: 3, split: 6, material: 'steel', thickness: 0.002 })
+      const holes = world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(PIPE_BOMB, maxRays) }).flatMap((result) => result.events).filter((event) => event.type === 'hole')
+      return new Map(holes.map((event) => [`${event.object}|${(event as { worldPoint: Vec3 }).worldPoint.join(',')}`, JSON.stringify([(event as { hole: { through: boolean } }).hole.through, (event as { exitPoint?: Vec3 }).exitPoint ?? null])]))
+    }
+    // 60 pieces in the room, 15 cast: each stands for four
+    const weighted = holesOf(15)
+    const alone = holesOf(60)
+    expect(weighted.size).toBeGreaterThan(0)
+    for (const [where, hole] of weighted) expect({ where, hole: alone.get(where) }).toEqual({ where, hole })
+  })
+
+  it('a hosted body takes every piece that flies at it, however many the cap leaves out round it', () => {
+    const hitsOnBody = (maxRays: number) => {
+      const world = createDestruction({ seed: 3 })
+      objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
+      const body = witness('body', [panel('p', [1, 1.6, 0.4], [0, 0, 0])], [1.5, 0, 0])
+      world.register(body.impl, { position: body.position })
+      world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67, maxRays) })
+      return body.fragments().map((hit) => JSON.stringify([hit.point, hit.energy, hit.caliber]))
+    }
+    expect(hitsOnBody(256)).toEqual(hitsOnBody(1000))
+  })
+
+  it('never casts more than the cap, weighted or not', () => {
+    for (const seed of SEEDS) expect(fragmentsInRoom(seed, { energy: M67.energy, charge: { ...M67.charge, maxRays: 40 } }, 3).length).toBeLessThanOrEqual(40)
+  })
+
+  it('under the cap nothing is weighted: the event stream of a pipe bomb in a closed room is the one before the weights', () => {
+    const world = createDestruction({ seed: 2 })
+    objectRoom(world, { half: 3, split: 3, material: 'brick', thickness: 0.2 })
+    const events = world.explode(ORIGIN, PIPE_BOMB.energy, 10, 'test', { charge: PIPE_BOMB.charge }).map((result) => result.events)
+    expect(hashOf(JSON.stringify(events))).toBe('463065b090161')
+  })
+})
