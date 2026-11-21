@@ -13,6 +13,8 @@ weather), and this package holds the machinery plus the two team mixing chains.
 - **Occlusion** only when the host passes a callback: gain × (1 − 0.5 × o), lowpass cutoffs × (1 − 0.6 × o).
 - **Voice limiter**: groups with `maxConcurrent`, `cooldown`, `maxDistance` and `steal`; a global cap of 32 that drops the lowest `priority × gain`
   (weapons > voices > world > ambience).
+- **Burst cap**: a group with `maxPerBurst` builds only its N loudest sounds of a burst (a blast with fragments asks for hundreds in one frame); the rest
+  never create a node. Needs `deferredStart` (an engine given such a group without it throws). See "Burst cap" below.
 - **Loops**: nodes only once the volume reaches 0.002, then `setTargetAtTime` with 0.15 s (volume) and 0.08 s (frequency), as in the game.
 
 ## Install
@@ -101,6 +103,25 @@ engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
   A recipe with `falloff.model: 'none'` (interface, own steps) is never occluded.
 - Sounds without a `position` and loops are not occluded. The older `occlusion: (point) => 0..1` callback still works (one value when the sound plays).
 - Pure parts: `hitLossDb`, `totalLossDb`, `occlusionState`, `createOcclusionTracker`. The test room (`game-test-room`) builds the query from its destruction world.
+
+## Burst cap
+
+`VoiceGroup.maxPerBurst` (with `burstBoost`) and `PlayOptions.group` (used when the sound names no group of its own). The destruction package ships a ready one:
+`DESTRUCTION_VOICE_GROUPS` (`impact_burst`: 16, x1.4), which a host passes as the engine's `groups`.
+
+- **Held, then settled.** A play of a capped group builds nothing and returns `null`: no handle, so a loop or a sound the caller stops must not use a capped group.
+  The engine keeps the `maxPerBurst` loudest per group as they come (a bounded list; a request that cannot win is counted in `stats().capped` at once).
+  The first held request puts a settle job in the start queue. When the queue reaches it (the host's audio stage of the frame, or its own task), the kept
+  sounds go in front of the queue, one job each, so none waits behind a later sound and each is charged to the queue's budget. No clock, no extra frame.
+- **Late.** The cap reads the queue's own clock (the one its latency check uses) and makes none. If the queue does not reach the settle job within its
+  `maxLatencyMs`, the held requests that are themselves past the limit are dropped as late (the queue's policy for any voice), counted in `stats().dropped`
+  and not in `capped`; the rest get a new settle job, stamped when it is re-armed. A kept voice inherits the age of the settle job that built it, which is the
+  age of the FIRST request of the burst, not its own; one whose turn comes past the limit is dropped as late, once. So in the worst case a surviving
+  request can wait about twice `maxLatencyMs` (once for the old settle, once for the re-armed one). Closing the engine drops what is held without counting it.
+- **Loudest** = volume x sound gain x distance curve, no occlusion rays. Ties keep the order asked. `urgent` plays are never held.
+- **Random draws.** The plan's draws (pitch, takes, noise start) happen at settle, loudest first; the set variant and the rate are drawn when asked.
+- **`burstBoost`** (default 1: none): the kept voices are `1 + (burstBoost - 1) x share dropped` louder, so 200 impacts cut to 16 are not thin. Recorded sounds go
+  through their bus limiter; recipes rely on the mix chain (the kit chain has a compressor and a −1 dBFS limiter; the `game` mix has neither, so keep the boost low there).
 
 ## Shipped data
 

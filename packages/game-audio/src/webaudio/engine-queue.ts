@@ -13,6 +13,12 @@ export type StartQueueOptions = {
 
 export type StartQueue = {
   push(job: Omit<StartJob, 'queuedAt'>): void
+  /** Puts jobs in front of everything waiting, in the order given: each is still one job of the queue's budget, and none waits behind later sounds. */
+  pushFront?(batch: readonly Omit<StartJob, 'queuedAt'>[]): void
+  /** The queue's own clock, in milliseconds, so a caller can stamp a request without a clock of its own. */
+  now?(): number
+  /** Whether something stamped at `stamp` has waited past the latency limit. */
+  stale?(stamp: number): boolean
   clear(): void
   readonly size: number
   /** The same queue as a `DeferredQueue` for a shared frame budget. Asking for it changes nothing: the queue drains by itself until a budget attaches it. */
@@ -36,7 +42,7 @@ function scheduleTask(task: () => void): void {
 
 /** Builds voices in small timed slices between frames, so a burst (an explosion's debris, glass and metal) never lands inside one frame. */
 /** The queue this package makes always has its `deferredQueue`; a third-party `StartQueue` may leave it out. */
-export type OwnStartQueue = StartQueue & { deferredQueue(): DeferredQueue }
+export type OwnStartQueue = StartQueue & { deferredQueue(): DeferredQueue; pushFront(batch: readonly Omit<StartJob, 'queuedAt'>[]): void; now(): number; stale(stamp: number): boolean }
 
 export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue {
   const budgetMs = options.budgetMs ?? 2
@@ -46,10 +52,17 @@ export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue
   // true once a frame budget owns the draining: nothing schedules a task by itself
   let attached = false
 
+  // the age of the job that is running: jobs it puts in front are as old as it is
+  let running: number | undefined
   const runNext = (): void => {
     const job = jobs.shift() as StartJob
-    if (nowMs() - job.queuedAt > maxLatencyMs) job.drop()
-    else job.run()
+    running = job.queuedAt
+    try {
+      if (nowMs() - job.queuedAt > maxLatencyMs) job.drop()
+      else job.run()
+    } finally {
+      running = undefined
+    }
   }
 
   const drain = (): void => {
@@ -74,6 +87,11 @@ export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue
       jobs.push({ ...job, queuedAt: nowMs() })
       schedule()
     },
+    pushFront(batch) {
+      const queuedAt = running ?? nowMs()
+      jobs.splice(0, 0, ...batch.map((job) => ({ ...job, queuedAt })))
+      schedule()
+    },
     clear() {
       for (const job of jobs) job.drop()
       jobs = []
@@ -81,6 +99,8 @@ export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue
     get size() {
       return jobs.length
     },
+    now: nowMs,
+    stale: (stamp) => nowMs() - stamp > maxLatencyMs,
     deferredQueue: () => deferredQueue,
   }
 

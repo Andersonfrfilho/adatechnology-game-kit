@@ -22,7 +22,8 @@ const plano = planSound(receita, { random: createRng(7), distance: 12 }) // null
 | `planSound(receita, { random, volume, distance \| position, listener, params, occlusion })` | O plano resolvido; ordem de sorteio: `vars`, `duration`, cada camada na ordem dos campos, início do ruído por último |
 | `DISTANCE_CURVES`, `falloffGain`, `isSilent`, `cutoffDivisor` | Curvas dos times (jogo 0.004/0.006/0.01/0.002, Cena 0.008, bichos 70 m) |
 | `panFor`, `listenerDistance` | Pan da Cena (±0.85, mínimo 2 m), distância no chão ou 3D |
-| `createVoiceManager({ groups, maxVoices })` | Limite de vozes: grupos (concorrência, recarga, distância, roubo) e teto global 32 |
+| `createVoiceManager({ groups, maxVoices })` | Limite de vozes: grupos (concorrência, recarga, distância, roubo, `maxPerBurst`) e teto global 32 |
+| `VoiceGroup.maxPerBurst`, `burstBoost`, `PlayOptions.group`, `IMPACT_BURST_GROUP` | Teto por rajada (precisa de `deferredStart`; sem ele o motor lança erro): das jogadas do grupo pedidas antes de a fila de início rodar, só as N mais altas (volume × curva de distância, sem raio de oclusão; empate pela ordem) criam nós; as outras não. `burstBoost` sobe as mantidas só na proporção do que caiu. `play` devolve `null` para som retido (sem handle: laço ou som que o chamador para não usa grupo com teto); `engine.stats().capped` conta os que perderam para outros mais altos, e o que a fila não alcançou a tempo (`maxLatencyMs`) entra em `dropped`. O grupo pronto `impact_burst` (16, ×1,4) vem de `DESTRUCTION_VOICE_GROUPS` (`game-destruction-three`), que o host passa em `groups` |
 | `createLoopState(receita)` | Laço do jogo: nós a partir de 0.002, suavização 0.15 / 0.08 |
 | `createSoundRegistry(bancos)`, `resolveMix` | Catálogo com `register`, `patch`, `remove`; perfil de mixagem |
 | `GAME_SFX_CLASSES`, `noiseClassRecipe`, `GAME_SFX_BANK` | As 12 classes de ruído do jogo (tabela `P`) e a receita `burst` de cada uma |

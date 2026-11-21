@@ -2,6 +2,7 @@ import type { Vec3 } from '@adatechnology/game-contracts'
 import { FOLEY_BANK, GAME_SFX_BANK } from '@adatechnology/game-audio'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
+import { IMPACT_BURST_GROUP } from './voice-groups'
 import { BIG_BLAST_RADIUS, BLAST_FAR_DISTANCE, BLAST_KIND_OF, BLAST_SOUND_OF, FIRE_CRACKLE_OF, FIRE_FUEL_OF, FIRE_LOOP_OF } from './blast-fire'
 import type { BlastKind, FireFuel } from './blast-fire'
 import { DESTRUCTION_SOUND_BANK } from './recipes'
@@ -388,7 +389,7 @@ export function createDestructionSound(engine: AudioEngine, options: Destruction
       const wanted = rule.above && volume >= rule.above.volume ? rule.above.sound : rule.sound
       const sound = rule.fallback && !engine.registry.sound(wanted) ? rule.fallback : wanted
       const params = detail?.seconds === undefined ? rule.params : { ...rule.params, seconds: detail.seconds }
-      engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), intensity: Math.min(1, Math.max(0, volume)), ...(params ? { params } : {}) })
+      engine.play(sound, { position: point, volume: volume * (rule.volumeScale ?? 1), intensity: Math.min(1, Math.max(0, volume)), group: IMPACT_BURST_GROUP, ...(params ? { params } : {}) })
     },
     update(dt) {
       for (let i = fading.length - 1; i >= 0; i--) {
