@@ -41,3 +41,13 @@ node tools/shapes-bench/dist/cli.js --baseline-from run.json  # baseline from an
 
 Refresh the baseline (`--update`, or `--baseline-from` the CI artifact) in the commit that makes a builder faster or accepts a slower one, and
 say why in the commit message.
+
+## Baseline provenance
+
+`houses/*` entries (2026-11-21): the 25th percentile of the calibrated ratio over 20 CI runs (`shapes-bench-run` artifacts of runs 44853823865 to 44944445756, commits at or after `cd5113c71`; ids and values in `~/.cache/adatechnology-game-kit/medicoes/2026-11-21-shapes-bench-casas/ci-houses.json` on the measuring machine). The 25th percentile and not the median: CI is noisy on houses (`apartment_basic` ran from 38 to 81 on the same code), and a baseline at the median would move the fail line further than the slowdown justifies.
+
+Why it moved: the houses are about 15% slower than on 2026-11-13 (local A/B of `337fcdedb` against main, 5 alternated runs, group sum of ratios 387 to 444, every builder +9% to +26%). The bisect puts it in two steps, around `ced4a5ed3`/`c69a17747` (wiring and pipe runs cut into one piece per stretch) and `cd5113c71` (drain and downpipe runs as pieces). That the cost is those extra pieces comes from reading the commits, not from timing each function. The owner accepted it on 2026-11-21 as the cost of new content.
+
+What it does to the gate: the fail line (twice the baseline) moves from 74.8 to 86.7 for `apartment_basic` and from 52.7 to 68.6 for `pharmacy`, so a real slowdown of up to about 16% and 30% over the old baseline now passes there. Replayed over the 20 runs: the old baseline fails 2 runs and warns 13 times, this one fails 1 (`apartment_modern` at 139, which the old one failed too) and warns 7 times. `apartment_modern` goes down (68.2 to 59.2): its old value was a slow sample.
+
+Known small waste left as a follow-up: `solidsOf` is rebuilt per run in `drains.ts`, `water.ts` and `electrical.ts`. Every other entry is unchanged.
