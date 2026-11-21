@@ -5069,19 +5069,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     rep.fragmentHits++
   }
 
+  /** A piece of a case in the air: its speed falls as `exp(-drag d)` (`fragmentDrag`, 1/m), so its energy as `exp(-2 drag d)`; under `minEnergy` (J) it does nothing. */
+  interface FragmentFlight {
+    readonly drag: number
+    readonly minEnergy: number
+  }
+
   /**
-   * One projectile through the world: the first part it reaches, then what it keeps after going through, up to four parts. `flight` scales the energy at the first hit by the distance
-   * flown (a fragment slowed by the air); a gun round keeps its muzzle energy.
+   * One projectile through the world: the first part it reaches, then what it keeps after going through, up to four parts. With `flight` (a piece of a case) every leg in the
+   * air costs it `exp(-2 drag d)` of the energy it started the leg with, from the charge to the first part and from each exit to the next part (inside a part the part takes what
+   * it takes, `exitEnergy`), and a leg reaches only as far as that leaves it `minEnergy`: past that the piece does nothing. A gun round keeps its muzzle energy and has no end.
    */
-  const shootRay = (origin: Vec3, direction: Vec3, energy: number, caliber: number, source: string | undefined, extras: BallisticExtras, flight?: (distance: number) => number, ignored?: ReadonlySet<string>): HitResult[] => {
+  const shootRay = (origin: Vec3, direction: Vec3, energy: number, caliber: number, source: string | undefined, extras: BallisticExtras, flight?: FragmentFlight, ignored?: ReadonlySet<string>): HitResult[] => {
     const results: HitResult[] = []
     const d = vec.normalize(direction)
     const ignore = new Set<string>(ignored)
     let org = origin
     let E = energy
     for (let i = 0; i < 4 && E > 0; i++) {
-      const rh = raycastInternal(org, d, Infinity, ignore, false, true)
+      // E exp(-2 k d) = minEnergy: the distance this leg can fly before the piece is too slow to do anything
+      const reach = flight ? (E > flight.minEnergy ? Math.log(E / flight.minEnergy) / (2 * flight.drag) : 0) : Infinity
+      if (!(reach > 0)) break
+      const rh = raycastInternal(org, d, reach, ignore, false, true)
       if (!rh) break
+      if (flight) E *= Math.exp(-2 * flight.drag * vec.distance(org, rh.point))
       const im = impls.get(rh.object)
       if (im) {
         // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
@@ -5123,7 +5134,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /**
    * The fragments of a case, thrown as gun rounds. The case breaks into `fragments` pieces (Mott), flying evenly in all directions at Gurney's speed and slowing in the air
-   * (`exp(-k d)`). Every piece gets a direction drawn evenly over the sphere and a Mott mass from one stream seeded by the world seed and the charge, so a blast throws the same
+   * (`exp(-k d)`, `shootRay` with its `FragmentFlight`) until they are slower than `FRAGMENT_MIN_SPEED`, where their reach ends. Every piece gets a direction drawn evenly over the sphere and a Mott mass from one stream seeded by the world seed and the charge, so a blast throws the same
    * pieces every time and the parts round it only decide which of them are cast: a piece is cast when its line meets the bounding sphere of a part within its reach. A piece that
    * meets several overlapping spheres is one piece, so the rays cast are never more than the pieces of the case, and never more than `maxRays` (when more qualify, an even pick of
    * them by their order in the case). One ray is one piece, with its own mass, calibre and energy (a piece's penetration cannot be summed over a bundle): when the cap cuts, the
@@ -5217,9 +5228,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const i = cast[j]!
       const mass = masses[i]! * massScale
       const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
-      const drag = fragmentDrag(mass)
-      const slowed = (distance: number): number => (speed * Math.exp(-drag * distance) < FRAGMENT_MIN_SPEED ? 0 : Math.exp(-2 * drag * distance))
-      out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, slowed, ignore))
+      const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED }
+      out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
     }
     return out
   }
