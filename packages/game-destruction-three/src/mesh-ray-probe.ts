@@ -20,6 +20,8 @@ const SEGMENT_PADDING = 1e-6
 export class MeshRayProbe {
   private readonly cache = new WeakMap<THREE_NS.BufferGeometry, TriangleBoxes>()
   private readonly stand: THREE_NS.Mesh
+  private readonly idleMaterial: THREE_NS.Material
+  private builds = 0
   private readonly inverse: THREE_NS.Matrix4
   private readonly from: THREE_NS.Vector3
   private readonly to: THREE_NS.Vector3
@@ -28,12 +30,18 @@ export class MeshRayProbe {
   private triangles = new Uint32Array(64)
 
   constructor(private readonly THREE: typeof THREE_NS) {
-    this.stand = new THREE.Mesh(new THREE.BufferGeometry())
+    this.idleMaterial = new THREE.MeshBasicMaterial()
+    this.stand = new THREE.Mesh(new THREE.BufferGeometry(), this.idleMaterial)
     this.stand.matrixAutoUpdate = false
     this.inverse = new THREE.Matrix4()
     this.from = new THREE.Vector3()
     this.to = new THREE.Vector3()
     this.candidateIndex = new THREE.BufferAttribute(this.candidates, 1)
+  }
+
+  /** How many times the per-triangle boxes were (re)built. */
+  get boxBuildCount(): number {
+    return this.builds
   }
 
   raycast(mesh: THREE_NS.Mesh, raycaster: THREE_NS.Raycaster, hits: THREE_NS.Intersection[]): void {
@@ -62,11 +70,22 @@ export class MeshRayProbe {
     stand.matrixWorld.copy(mesh.matrixWorld)
     const first = hits.length
     stand.raycast(raycaster, hits)
+    this.release()
     for (let i = first; i < hits.length; i++) {
       const hit = hits[i]!
       hit.object = mesh
       hit.faceIndex = this.triangles[hit.faceIndex ?? 0]!
     }
+  }
+
+  /** The stand-in lives as long as the probe: it must not keep the geometry or material of a mesh that is later discarded. */
+  private release(): void {
+    const stand = this.stand
+    const standGeometry = stand.geometry
+    for (const name of ['position', 'normal', 'uv', 'uv1'] as const) standGeometry.deleteAttribute(name)
+    standGeometry.boundingSphere = null
+    standGeometry.boundingBox = null
+    stand.material = this.idleMaterial
   }
 
   private canStandIn(mesh: THREE_NS.Mesh): boolean {
@@ -75,6 +94,7 @@ export class MeshRayProbe {
     if (mesh.raycast !== this.THREE.Mesh.prototype.raycast || Array.isArray(mesh.material) || geometry.groups.length > 0) return false
     if ((mesh as { isSkinnedMesh?: boolean }).isSkinnedMesh || mesh.morphTargetInfluences || geometry.morphAttributes.position) return false
     if (!position || (position as { isInterleavedBufferAttribute?: boolean }).isInterleavedBufferAttribute) return false
+    if (position.normalized || !(position.array instanceof Float32Array)) return false
     return geometry.drawRange.start % 3 === 0
   }
 
@@ -84,6 +104,7 @@ export class MeshRayProbe {
     const count = Math.floor((index ? index.count : position.count) / 3)
     const seen = this.cache.get(geometry)
     if (seen && seen.array === position.array && seen.positionVersion === position.version && seen.indexArray === (index?.array ?? null) && seen.indexVersion === (index?.version ?? 0) && seen.count === count) return seen
+    this.builds++
     const boxes = seen && seen.boxes.length === count * 6 ? seen.boxes : new Float32Array(count * 6)
     const vertices = position.array
     const ids = index?.array
