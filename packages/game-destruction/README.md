@@ -83,7 +83,7 @@ makes a through hole, through 5 cm concrete it only cracks and lodges. Grazing h
 Brittle materials that `shatter` (glass, ceramic) take blunt and ballistic damage multiplied by `fragility(ductility, thickness)` (x1 from 2 cm up, to x118
 for 3 mm glass), so a 9 mm shatters a window pane in one shot while a 5 cm block of glass takes several.
 
-`hit(objectId, hit)` finds the part along `direction`; `hitPart` targets a known part; `shoot` and `raycast` work in world space.
+`hit(objectId, hit)` finds the part along `direction`; `hitPart` targets a known part; `shoot` and `raycast` work in world space. `raycast` takes `RaycastOptions`: `skipLoose` and `minObjectRadius` leave things out before testing them; `ignoreParts` (`{ object, part }[]`) lets the ray pass through those parts, an impl's too, as if absent.
 
 ## Fire, melting and leaks
 

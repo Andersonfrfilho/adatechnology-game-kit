@@ -796,6 +796,14 @@ export interface RaycastOptions {
   readonly skipLoose?: boolean
   /** Leaves out every object whose bounding sphere has a smaller radius (metres). The parts of a larger object always count. Registered impls are never left out. */
   readonly minObjectRadius?: number
+  /** Parts the ray passes through as if absent (an impl's part too): from inside one it answers what is past it. */
+  readonly ignoreParts?: readonly RaycastPartRef[]
+}
+
+/** One part of one object, as a ray hit names it. */
+export interface RaycastPartRef {
+  readonly object: string
+  readonly part: string
 }
 
 export interface ObjectRuntime {

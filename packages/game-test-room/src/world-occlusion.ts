@@ -1,6 +1,6 @@
 import type { RayHit, Vec3 } from '@adatechnology/game-contracts'
 import type { OcclusionHit, OcclusionQuery } from '@adatechnology/game-audio'
-import type { RaycastOptions } from '@adatechnology/game-destruction'
+import type { RaycastOptions, RaycastPartRef } from '@adatechnology/game-destruction'
 
 export type OcclusionWorld = {
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number, options?: RaycastOptions): RayHit | null
@@ -29,15 +29,42 @@ const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin
 
 function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
   const found: RayHit[] = []
+  const rayFrom = (travelled: number, ignoreParts?: readonly RaycastPartRef[]): RayHit | null =>
+    world.raycast(along(origin, direction, travelled), direction, length - travelled, ignoreParts ? { ...skip, ignoreParts } : skip)
   let travelled = 0
   while (found.length < maxHits && travelled < length) {
-    const start = along(origin, direction, travelled)
-    const hit = world.raycast(start, direction, length - travelled, skip)
+    const hit = rayFrom(travelled)
     if (!hit) break
     const last = found.at(-1)
     // standing just inside a part that answers with a hit of its own (an impl's surface), not a second layer
-    if (!(last && last.object === hit.object && last.part === hit.part)) found.push({ ...hit, distance: travelled + hit.distance })
-    travelled += hit.distance + step
+    const isSameLayer = last !== undefined && last.object === hit.object && last.part === hit.part
+    if (!isSameLayer) {
+      found.push({ ...hit, distance: travelled + hit.distance })
+      travelled += hit.distance + step
+      continue
+    }
+    if (hit.distance > step) {
+      travelled += hit.distance + step
+      continue
+    }
+    // Inside the last counted part: the next thing past it, found with that part ignored. Only that one part is ever ignored, so a part that overlaps it
+    // is never lost for good.
+    const past = rayFrom(travelled, [last])
+    if (!past) break
+    const entry = travelled + past.distance
+    // Past answers at its entry from a point inside the part we are in: the walk of one millimetre never saw it, since that part answered first.
+    // air thinner than one step in front of it reads as buried: the resolution the walk of one millimetre has too
+    const probe = past.distance <= step ? hit : rayFrom(entry - step)
+    const isBuried = probe !== null && probe.object === last.object && probe.part === last.part && probe.distance <= step
+    if (!isBuried) {
+      found.push({ ...past, distance: entry })
+      travelled = entry + step
+    }
+    // half a step past the entry face: on the face itself the buried part and the one we are in both answer 0, and which one wins is a tie
+    else if (past.distance > step) travelled = entry + step / 2
+    // The millimetre walk still happens here, and only here: through an overlap of two parts that both answer from inside (an impl on an impl), where
+    // the part we are in can end while the buried one goes on and must then be counted. An ordinary part answers only at its entry, so it is jumped to.
+    else travelled += step
   }
   return found
 }
@@ -50,6 +77,7 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
 export function createWorldOcclusion(world: OcclusionWorld, options: WorldOcclusionOptions = {}): OcclusionQuery {
   const maxHits = options.maxHits ?? 6
   const step = options.step ?? 0.001
+  if (!(step > 0) || !Number.isFinite(step)) throw new RangeError(`world occlusion: step must be a positive length, got ${step}`)
   const skip: RaycastOptions = { skipLoose: true, minObjectRadius: options.minObjectRadius ?? OCCLUDER_MIN_RADIUS }
   return (from, to) => {
     const dx = to[0] - from[0]
