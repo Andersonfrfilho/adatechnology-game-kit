@@ -5139,12 +5139,28 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return results
   }
 
-  /** A fragment target: a part's bounding sphere seen from the charge; `body` when the part is a registered body's (a vehicle, a character). */
+  /** A fragment target: a part's bounding sphere seen from the charge. */
   interface FragmentTarget {
     readonly centre: Vec3
     readonly radius: number
     readonly distance: number
+  }
+
+  /** The parts of one object or registered body as fragment targets, behind the sphere round all of them: a piece is tested against the parts only when it meets that sphere. */
+  interface FragmentGroup extends FragmentTarget {
+    /** A registered body's (`world.register`: a vehicle). */
     readonly body: boolean
+    /** The parts as targets; an object's are listed the first time a piece meets its sphere, so the objects no piece meets cost one sphere test each. */
+    parts: FragmentTarget[] | undefined
+    readonly object?: ObjRT
+  }
+
+  /** The line from `point` along the unit `d` meets the sphere of `t` (or starts inside it), and the sphere is within `range`. */
+  const lineMeets = (t: FragmentTarget, point: Vec3, d: Vec3, range: number): boolean => {
+    if (t.distance - t.radius >= range) return false
+    if (t.distance <= t.radius) return true
+    const along = (t.centre[0] - point[0]) * d[0] + (t.centre[1] - point[1]) * d[1] + (t.centre[2] - point[2]) * d[2]
+    return along > 0 && t.distance * t.distance - along * along <= t.radius * t.radius
   }
 
   /**
@@ -5166,30 +5182,48 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const ignored = objects.get(id)
       if (ignored) for (const p of ignored.parts) skip.add(`${ignored.id}\0${p.spec.id}`)
     }
-    const targets: FragmentTarget[] = []
-    // a registered body (a vehicle) is a target part by part, and first: a piece that meets one of its spheres is the body's (see the cap below), as the parts of an object are: one sphere round the whole body holds the charge when it goes off beside it, and
-    // then every piece of the case would qualify and the cap would cut the ones that do fly at it. Its parts overlap (a door, its window, the fender), but a piece is cast once
-    // whatever spheres it meets; its pieces are rounds to it as a gun's are (`shootRay` takes them through its `surfaceRay`)
+    // Targets part by part, grouped behind the sphere of their object or body. A registered body (a vehicle) is aimed at part by part too: one sphere round the whole
+    // body holds the charge when it goes off beside it, and then every piece of the case would qualify and the cap would cut the ones that do fly at it. Bodies come first:
+    // a piece that meets one of their parts is the body's (see the cap below). Parts overlap (a door, its window, the fender), but a piece is cast once whatever spheres it
+    // meets; its pieces are rounds to a body as a gun's are (`shootRay` takes them through its `surfaceRay`)
+    const groups: FragmentGroup[] = []
     for (const im of impls.values()) {
       if (charge.ignore?.includes(im.impl.id)) continue
+      const parts: FragmentTarget[] = []
       for (const { ps, c } of implParts(im)) {
         const bound = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
         const distance = vec.distance(c, point)
         if (distance - bound >= farthest) continue
-        targets.push({ centre: c, radius: bound, distance, body: true })
+        parts.push({ centre: c, radius: bound, distance })
       }
+      if (parts.length === 0) continue
+      const centre: Vec3 = [0, 0, 0]
+      for (const t of parts) for (let k = 0; k < 3; k++) centre[k] += t.centre[k]! / parts.length
+      let radius = 0
+      for (const t of parts) radius = Math.max(radius, vec.distance(centre, t.centre) + t.radius)
+      groups.push({ centre, radius, distance: vec.distance(centre, point), body: true, parts })
     }
     for (const o of objects.values()) {
-      if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= farthest) continue
+      const centre = toWorld(o.st.position, o.st.rotation, o.bc)
+      const distance = vec.distance(centre, point)
+      if (distance - o.br >= farthest) continue
+      groups.push({ centre, radius: o.br, distance, body: false, parts: undefined, object: o })
+    }
+    const partsOf = (g: FragmentGroup): FragmentTarget[] => {
+      if (g.parts) return g.parts
+      const o = g.object!
+      const parts: FragmentTarget[] = []
       for (const p of o.parts) {
         if (isLost(p) || p.spec.tags?.includes('terrain') || skip.has(`${o.id}\0${p.spec.id}`)) continue
         const centre = toWorld(o.st.position, o.st.rotation, p.pos)
         const distance = vec.distance(centre, point)
         if (distance - p.bound >= farthest) continue
-        targets.push({ centre, radius: p.bound, distance, body: false })
+        parts.push({ centre, radius: p.bound, distance })
       }
+      g.parts = parts
+      return parts
     }
-    if (targets.length === 0) return []
+    if (groups.length === 0) return []
     const pieces = Math.max(1, Math.floor(casing.fragments))
     const cap = Math.min(pieces, Math.max(0, Math.floor(charge.maxRays ?? FRAGMENT_RAYS)))
     const rng = createRng(seedOf(options.seed ?? 1, point[0], point[1], point[2], casing.mass * 1e4, casing.fragments))
@@ -5211,18 +5245,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const reach = Math.log(speed / FRAGMENT_MIN_SPEED)
     const cast: number[] = []
     const atBody: boolean[] = []
+    // O(pieces x groups + pieces x parts of the groups each piece meets): a piece looks into an object only when its line meets the object's sphere within its reach
+    const d: Vec3 = [0, 0, 0]
     for (let i = 0; i < pieces; i++) {
       const range = reach / fragmentDrag(masses[i]! * massScale)
-      const dx = directions[i * 3]!, dy = directions[i * 3 + 1]!, dz = directions[i * 3 + 2]!
-      for (const t of targets) {
-        if (t.distance - t.radius >= range) continue
-        const along = (t.centre[0] - point[0]) * dx + (t.centre[1] - point[1]) * dy + (t.centre[2] - point[2]) * dz
-        if (t.distance <= t.radius || (along > 0 && t.distance * t.distance - along * along <= t.radius * t.radius)) {
-          cast.push(i)
-          atBody.push(t.body)
+      d[0] = directions[i * 3]!
+      d[1] = directions[i * 3 + 1]!
+      d[2] = directions[i * 3 + 2]!
+      let body: boolean | undefined
+      for (const g of groups) {
+        if (!lineMeets(g, point, d, range)) continue
+        for (const t of partsOf(g)) {
+          if (!lineMeets(t, point, d, range)) continue
+          body = g.body
           break
         }
+        if (body !== undefined) break
       }
+      if (body === undefined) continue
+      cast.push(i)
+      atBody.push(body)
     }
     const out: HitResult[] = []
     const ignore = skip.size > 0 ? skip : undefined
