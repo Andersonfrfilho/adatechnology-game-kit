@@ -45,6 +45,12 @@ describe('a member cast in a wall of units', () => {
     expect(chips.filter((c) => c.part === 'wall' && Math.abs(c.center[0] - 1.35) < 0.14)).toEqual([])
   })
 
+  it('a ray that starts one millimetre inside the wall and the member meets neither: an ordinary part answers only at its entry', () => {
+    const { world } = setup([wall, pillar])
+    expect(world.raycast([1.35, 1.2, 0.066], [0, 0, -1], 10)).toMatchObject({ part: 'pillar' })
+    expect(world.raycast([1.35, 1.2, 0.064], [0, 0, -1], 10)).toBeNull()
+  })
+
   it('still chips the bricks beside it, and the wall alone keeps its bricks there', () => {
     const both = setup([wall, pillar])
     for (let i = 0; i < 40 && both.chips.length === 0; i++) both.world.shoot([1.05, 1.2, 5], [0, 0, -1], 2100, 7.62, 'test')
