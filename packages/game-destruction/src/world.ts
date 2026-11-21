@@ -4439,6 +4439,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
 
+  /**
+   * How many pieces of a case the round in flight stands for (`throwCasing`, past its cap); 1 for every other round. It scales only what adds up over the whole part: the hit
+   * points it takes (`applyDamage`, and so `HitResult.damage`) and the wear of its joints. Never what happens where the round lands (penetration, the exit, holes, cracks,
+   * dents, craters, spalls, units, breaches, torn pieces): four pieces are not one piece four times as hard.
+   */
+  let fragmentWeight = 1
+
   const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: BallisticExtras = {}): BallisticOut => {
     const mat = p.mat
     const piercing = round.piercing ?? 1
@@ -4469,7 +4476,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const r = vec.sub(d, vec.scale(n, 2 * vec.dot(d, n)))
       emit({ ...base(o, src), type: 'ricochet', part: id, point: entry, direction: vec.normalize(r), energy: E * 0.4 })
       debris(o, p, mat.hitDebris, entry, n, 3, 3, src)
-      const dmg = applyDamage(o, p, E * DMG_PER_J * scale * 0.2, 'ballistic', entry, d, E * 0.1, 12, src)
+      const dmg = applyDamage(o, p, E * DMG_PER_J * scale * 0.2 * fragmentWeight, 'ballistic', entry, d, E * 0.1, 12, src)
       return { penetrated: false, exitEnergy: 0, damage: dmg }
     }
     if (p.layers.length > 0) spallOuter(o, p, entry, face, n, Math.max(0.03, (caliber / 1000) * 4), src)
@@ -4507,13 +4514,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little), and only along
     // the stretch of each joint it shakes
-    wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true, BULLET_JOINT_SPAN)
+    wearJoints(o, p, (penetrated ? thr : E) * 0.02 * fragmentWeight, undefined, 0, src, true, BULLET_JOINT_SPAN)
     // a round that goes through a ductile shell (sheet metal, a plastic wall) punches a clean hole and leaves in it only the energy it took to cross it: a 9 mm through a
     // 3 mm plastic bin leaves 24 of its 500 J. So does a hollow shell of a material that tears (a cardboard box, a carton): the round punches through its thin wall and
     // leaves a hole, it does not shred the box. Brittle, fibrous and layered materials (glass, wood, a solid stack of paper, masonry) take the whole shock, as before.
     const hollowTear = mat.fracture === 'tear' && p.spec.fill !== undefined && p.spec.fill < 0.5
     const absorbed = penetrated && ((mat.ductility >= 0.5 && mat.fracture !== 'tear') || hollowTear) ? Math.min(E, thr) : E
-    const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale, 'ballistic', entry, d, absorbed * 0.1, 12, src)
+    const dmg = applyDamage(o, p, absorbed * DMG_PER_J * scale * fragmentWeight, 'ballistic', entry, d, absorbed * 0.1, 12, src)
     if (!isLost(p)) tearAt(o, p, 'ballistic', entry, penetrated ? exitPoint : undefined, d, E, caliber / 1000, src)
     // a wall of units: the unit hit takes what the bullet left in it (all of it when the bullet stopped), and comes out when it took enough
     if (!wearMember(o, p, entry, d, E, caliber, penMm, src)) chipUnits(o, p, 'ballistic', entry, penetrated ? Math.min(E, Math.max(thr, E * 0.5)) : E, d, Math.max(0.05, (caliber / 1000) * 8), src)
@@ -5125,11 +5132,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return results
   }
 
-  /** A fragment target: a part's bounding sphere seen from the charge. */
+  /** A fragment target: a part's bounding sphere seen from the charge; `body` when the part is a registered body's (a vehicle, a character). */
   interface FragmentTarget {
     readonly centre: Vec3
     readonly radius: number
     readonly distance: number
+    readonly body: boolean
   }
 
   /**
@@ -5152,17 +5160,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (ignored) for (const p of ignored.parts) skip.add(`${ignored.id}\0${p.spec.id}`)
     }
     const targets: FragmentTarget[] = []
-    for (const o of objects.values()) {
-      if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= farthest) continue
-      for (const p of o.parts) {
-        if (isLost(p) || p.spec.tags?.includes('terrain') || skip.has(`${o.id}\0${p.spec.id}`)) continue
-        const centre = toWorld(o.st.position, o.st.rotation, p.pos)
-        const distance = vec.distance(centre, point)
-        if (distance - p.bound >= farthest) continue
-        targets.push({ centre, radius: p.bound, distance })
-      }
-    }
-    // a registered body (a vehicle) is a target part by part, as the parts of an object are: one sphere round the whole body holds the charge when it goes off beside it, and
+    // a registered body (a vehicle) is a target part by part, and first: a piece that meets one of its spheres is the body's (see the cap below), as the parts of an object are: one sphere round the whole body holds the charge when it goes off beside it, and
     // then every piece of the case would qualify and the cap would cut the ones that do fly at it. Its parts overlap (a door, its window, the fender), but a piece is cast once
     // whatever spheres it meets; its pieces are rounds to it as a gun's are (`shootRay` takes them through its `surfaceRay`)
     for (const im of impls.values()) {
@@ -5171,7 +5169,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const bound = ps.shape.kind === 'box' ? Math.hypot(ps.shape.size[0], ps.shape.size[1], ps.shape.size[2]) / 2 : ps.shape.kind === 'cylinder' ? Math.hypot(ps.shape.radius, ps.shape.height / 2) : ps.shape.radius
         const distance = vec.distance(c, point)
         if (distance - bound >= farthest) continue
-        targets.push({ centre: c, radius: bound, distance })
+        targets.push({ centre: c, radius: bound, distance, body: true })
+      }
+    }
+    for (const o of objects.values()) {
+      if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= farthest) continue
+      for (const p of o.parts) {
+        if (isLost(p) || p.spec.tags?.includes('terrain') || skip.has(`${o.id}\0${p.spec.id}`)) continue
+        const centre = toWorld(o.st.position, o.st.rotation, p.pos)
+        const distance = vec.distance(centre, point)
+        if (distance - p.bound >= farthest) continue
+        targets.push({ centre, radius: p.bound, distance, body: false })
       }
     }
     if (targets.length === 0) return []
@@ -5195,32 +5203,48 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const massScale = drawn > casing.mass ? casing.mass / drawn : 1
     const reach = Math.log(speed / FRAGMENT_MIN_SPEED)
     const cast: number[] = []
+    const atBody: boolean[] = []
     for (let i = 0; i < pieces; i++) {
       const range = reach / fragmentDrag(masses[i]! * massScale)
       const dx = directions[i * 3]!, dy = directions[i * 3 + 1]!, dz = directions[i * 3 + 2]!
       for (const t of targets) {
         if (t.distance - t.radius >= range) continue
-        if (t.distance <= t.radius) {
-          cast.push(i)
-          break
-        }
         const along = (t.centre[0] - point[0]) * dx + (t.centre[1] - point[1]) * dy + (t.centre[2] - point[2]) * dz
-        if (along > 0 && t.distance * t.distance - along * along <= t.radius * t.radius) {
+        if (t.distance <= t.radius || (along > 0 && t.distance * t.distance - along * along <= t.radius * t.radius)) {
           cast.push(i)
+          atBody.push(t.body)
           break
         }
       }
     }
     const out: HitResult[] = []
     const ignore = skip.size > 0 ? skip : undefined
-    for (let j = 0; j < cast.length; j++) {
-      // more pieces than the cap: an even pick by their order in the case, exactly `cap` of them
-      if (cast.length > cap && Math.floor(((j + 1) * cap) / cast.length) === Math.floor((j * cap) / cast.length)) continue
-      const i = cast[j]!
-      const mass = masses[i]! * massScale
-      const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
-      const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED }
-      out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
+    // More pieces than the cap: the pieces at a registered body are all cast, one ray one piece (a body takes its hits through its own `hit`, which knows nothing of a
+    // weight); the rest share what is left of the cap by an even pick in their order in the case, each cast one standing for `rest / picked` of them (Horvitz-Thompson: every
+    // piece is in the pick at most once, so the hit points and joint wear the room takes are, on average, those of all its pieces). The order of the case is already random, so the
+    // pick draws nothing. If the body pieces alone are more than the cap they are picked evenly among themselves and the rest is left out, unweighted, as before.
+    const bodyPieces = cast.length > cap ? atBody.filter(Boolean).length : 0
+    const bodyCap = Math.min(bodyPieces, cap)
+    const rest = cast.length - bodyPieces
+    const restCap = cast.length > cap ? cap - bodyCap : rest
+    const restWeight = restCap > 0 && rest > restCap ? rest / restCap : 1
+    let bodySeen = 0
+    let restSeen = 0
+    try {
+      for (let j = 0; j < cast.length; j++) {
+        const body = atBody[j]!
+        const seen = body ? bodySeen++ : restSeen++
+        const [count, kept] = body ? [bodyPieces, bodyCap] : [rest, restCap]
+        if (cast.length > cap && Math.floor(((seen + 1) * kept) / count) === Math.floor((seen * kept) / count)) continue
+        const i = cast[j]!
+        const mass = masses[i]! * massScale
+        const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
+        const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED }
+        fragmentWeight = body ? 1 : restWeight
+        out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
+      }
+    } finally {
+      fragmentWeight = 1
     }
     return out
   }
