@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
 import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
-import { mergeBase } from './room-explosion-base.mjs'
+import { saveBase } from './room-explosion-base.mjs'
 import { parseSummaryLines } from './suite-runner.mjs'
 
 /** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string }} NightlyState */
@@ -106,14 +106,6 @@ function checkout(sha) {
   }
 }
 
-/** Saves the room-explosion base after a night that passed: the best of the base and the night per metric (nothing rises), the night itself when there is no base or it is in another mode. @param {string} reportFile @param {string} baseFile */
-function saveExplosionBase(reportFile, baseFile) {
-  const report = JSON.parse(readFileSync(reportFile, 'utf8'))
-  const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
-  const merged = mergeBase(base, report)
-  if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))
-}
-
 /** Waits for an idle machine without the lock (a push in the queue would keep the load up and never get it), then runs again under the lock. */
 async function underLock() {
   writeFileSync(summary, `# GPU daily run ${today}\n\n`)
@@ -158,9 +150,9 @@ async function main() {
     // the 5 ms goal is only a warning (main is still over it, so blocking on it failed every night): it blocks on a regression against the last report that passed
     const explosionOut = join(reportDir, 'room-explosion.json')
     const explosionBase = join(cacheDir, 'room-explosion-base.json')
-    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
+    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_EXPLOSIVE: 'c4', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
     results.push(explosion)
-    if (explosion.ok && existsSync(explosionOut)) saveExplosionBase(explosionOut, explosionBase)
+    if (explosion.ok && existsSync(explosionOut)) saveBase(explosionOut, explosionBase)
   }
   const failed = results.filter((result) => !result.ok)
   const status = failed.length ? `FAILED ${failed.map((result) => result.name).join(', ')}` : 'PASSED'

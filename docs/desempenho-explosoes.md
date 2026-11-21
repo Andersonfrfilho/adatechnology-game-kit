@@ -257,8 +257,8 @@ flock ~/.cache/adatechnology-game-kit/perf-measure.lock env \
   do quadro, estágio sem nível que bloqueia) o log imprime `SEM COMPARAÇÃO NESTA RODADA: <motivo>` e o relatório grava `gate.compared: false` com o motivo. A rodada
   diária liga `FRAME_PARTS=1`.
 - **Outro explosivo (`ROOM_EXPLOSION_EXPLOSIVE`):** por padrão a régua detona C4 (`c4`). A variável troca a carga dos tipos `blast`, `crater` e `water` por
-  outro id do arsenal (`packages/game-weapons/src/data/explosives.json`, por exemplo `dynamite`), para ler o caso típico na mesma casa; id desconhecido para a
-  rodada antes de abrir o navegador, e uma carga que não detona também. O relatório e o log trazem o explosivo usado. Uma rodada com outro explosivo serve só para
+  outro id do arsenal (`packages/game-weapons/src/data/explosives.json`, por exemplo `dynamite`; o `hammer` ignora a variável), para ler o caso típico na mesma casa; id desconhecido, ou carga que não explode a casa (sem energia, fumaça ou cone: `flashbang`, `smoke_grenade`, `claymore`), para a
+  rodada antes de abrir o navegador. O relatório e o log trazem o explosivo usado. Uma rodada com outro explosivo serve só para
   leitura: nunca é comparada com a base nem bloqueia (o log imprime `SEM COMPARAÇÃO NESTA RODADA`), e nunca vira a base nem entra nela; uma base de outro explosivo
   (sem o campo vale `c4`) também não é comparada.
 - **A base só melhora:** depois de uma noite que passou, a rodada diária grava `min(base, noite)` por métrica (`tools/gpu/room-explosion-base.mjs`); copiar a

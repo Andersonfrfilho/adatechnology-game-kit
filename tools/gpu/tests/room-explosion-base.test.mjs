@@ -1,9 +1,19 @@
 // @ts-check
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { mkdtempSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
-import { mergeBase } from '../room-explosion-base.mjs'
+import { mergeBase as mergeBaseOrNothing, saveBase } from '../room-explosion-base.mjs'
 import { frameGate, isFrameWorse } from '../room-explosion-frame.mjs'
+
+/** The merge of a report that always gives one (c4 or no explosive). @template {import('../room-explosion-base.mjs').BaseReport} TReport @param {import('../room-explosion-base.mjs').BaseReport | undefined} base @param {TReport} report @returns {TReport} */
+const mergeBase = (base, report) => {
+  const merged = mergeBaseOrNothing(base, report)
+  assert.ok(merged)
+  return merged
+}
 
 const VARIANT = 'jolt-d4-worker'
 const metric = (/** @type {number} */ f0Ms, /** @type {number} */ afterMs, kind = 'blast') => ({ variant: VARIANT, throttle: 1, kind, f0Ms, afterMs })
@@ -57,9 +67,24 @@ test('with the floor alone (tolerance 3%), 65, 68, 71 blocks on the third night'
 
 test('a report with another explosive than c4 never becomes the base nor enters it', () => {
   const dynamite = { ...night(10), explosive: 'dynamite' }
-  assert.equal(mergeBase(undefined, dynamite), undefined)
+  assert.equal(mergeBaseOrNothing(undefined, dynamite), undefined)
   const base = night(65)
-  assert.equal(mergeBase(base, dynamite), base)
+  assert.equal(mergeBaseOrNothing(base, dynamite), base)
   assert.deepEqual(mergeBase(base, { ...night(60), explosive: 'c4' }).frameMetrics?.[0]?.f0Ms, 60)
   assert.deepEqual(mergeBase({ ...night(65), explosive: 'dynamite' }, night(68)), night(68))
+})
+
+test('saveBase: a non-c4 night leaves the base file as it was, and writes nothing when there is none', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'room-explosion-base-'))
+  const report = join(dir, 'report.json')
+  const baseFile = join(dir, 'base.json')
+  writeFileSync(report, JSON.stringify({ ...night(10), explosive: 'dynamite' }))
+  saveBase(report, baseFile)
+  assert.equal(existsSync(baseFile), false)
+  writeFileSync(baseFile, JSON.stringify(night(65)))
+  saveBase(report, baseFile)
+  assert.deepEqual(JSON.parse(readFileSync(baseFile, 'utf8')), night(65))
+  writeFileSync(report, JSON.stringify(night(60)))
+  saveBase(report, baseFile)
+  assert.equal(JSON.parse(readFileSync(baseFile, 'utf8')).frameMetrics[0].f0Ms, 60)
 })

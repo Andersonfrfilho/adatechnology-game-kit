@@ -33,7 +33,7 @@
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        the base report (the nightly keeps, per metric, the best of its passing ROOM_EXPLOSION_OUT reports: room-explosion-base.mjs): the gated cells block only when worse than it (REGRESSION), and so does the explosion frame (below).
 //                                          A base measured in another frame budget mode (or without `budgetMode`) is not compared: the run says so, does not block, and becomes the new base
-//   ROOM_EXPLOSION_EXPLOSIVE=c4            the explosive the blast, crater and water kinds detonate (an id of the arsenal, packages/game-weapons/src/data/explosives.json; an unknown id stops the run). Only c4 is
+//   ROOM_EXPLOSION_EXPLOSIVE=c4            the explosive the blast, crater and water kinds detonate (`hammer` ignores it; an id of the arsenal, packages/game-weapons/src/data/explosives.json; an unknown id, or one that does not blast the house (no energy, smoke, cone), stops the run). Only c4 is
 //                                          compared with a base: any other explosive is for reading the typical case, prints SEM COMPARAÇÃO NESTA RODADA, never blocks, and is never saved as the base
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
 //   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
@@ -64,7 +64,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { DEFAULT_EXPLOSIVE, frameGate, frameKey, frameMetricsOf, isBaseComparable } from './room-explosion-frame.mjs'
@@ -92,6 +92,17 @@ export const isF0Late = (text) => text === 'late'
 export const budgetModeOf = (text) => (text === 'quota' ? 'quota' : 'deadline')
 /** The explosive the blast and crater kinds detonate: `c4` unless the variable names another. @param {string | undefined} text */
 export const explosiveOf = (text) => (text === undefined || text === '' ? DEFAULT_EXPLOSIVE : text)
+/** Whether an explosive's blast reaches the house through `blastAt`: the room (explosives.ts, `detonate`) applies `world.explode` at the point only with energy, no smoke and no cone (a claymore blasts the objects in front of it). @param {{ energy: number, smoke?: unknown, cone?: unknown }} def */
+export const isBlastingExplosive = (def) => def.energy > 0 && !def.smoke && !def.cone
+
+/**
+ * What the run does with its saved base: whether it is comparable (same mode and explosive, a c4 run) and the explosion-frame verdict; the explosive must reach both.
+ * @param {{ measure: ReturnType<typeof frameMetricsOf>, savedBase: import('./room-explosion-frame.mjs').SavedReport | undefined, mode: string, explosive: string, gated: Set<number> }} params
+ */
+export const explosionGateOf = ({ measure, savedBase, mode, explosive, gated }) => ({
+  isBaseInMode: isBaseComparable(savedBase, mode, explosive),
+  frameVerdict: frameGate({ measure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated, explosive }),
+})
 /** The render columns appended to every frame row: render call CPU ms, GPU wait ms, GPU ms (-1: no timer), draw calls, triangles, live particles, fragments, pieces. */
 export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles', 'particles', 'frags', 'pieces']
 // the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
@@ -604,8 +615,13 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const hasFrameParts = process.env.ROOM_EXPLOSION_FRAME_PARTS === '1'
   const isRendered = process.env.ROOM_EXPLOSION_RENDER === '1' || kinds.some((kind) => kind.includes('+'))
   const explosive = explosiveOf(process.env.ROOM_EXPLOSION_EXPLOSIVE)
-  const knownExplosives = /** @type {{ id: string }[]} */ (JSON.parse(readFileSync(join(root, 'packages/game-weapons/src/data/explosives.json'), 'utf8'))).map((entry) => entry.id)
-  if (!knownExplosives.includes(explosive)) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} is not an explosive of the arsenal (${knownExplosives.join(', ')})`)
+  const arsenal = /** @type {{ id: string, energy: number, smoke?: unknown, cone?: unknown }[]} */ (JSON.parse(readFileSync(join(root, 'packages/game-weapons/src/data/explosives.json'), 'utf8')))
+  const known = arsenal.find((entry) => entry.id === explosive)
+  if (!known) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} is not an explosive of the arsenal (${arsenal.map((entry) => entry.id).join(', ')})`)
+  if (!isBlastingExplosive(known)) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} does not blast the house (no energy, a smoke or a cone): nothing would be measured`)
+  const reportOut = process.env.ROOM_EXPLOSION_OUT
+  const baseFile = process.env.ROOM_EXPLOSION_BASE
+  if (explosive !== DEFAULT_EXPLOSIVE && reportOut && baseFile && resolve(reportOut) === resolve(baseFile)) throw new Error(`room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`)
   const rounds = Number(process.env.ROOM_EXPLOSION_ROUNDS ?? 5)
   const frames = Number(process.env.ROOM_EXPLOSION_FRAMES ?? 660)
   const budget = { p99: Number(process.env.ROOM_EXPLOSION_P99_MS ?? 4), max: Number(process.env.ROOM_EXPLOSION_MAX_MS ?? 5) }
@@ -714,8 +730,9 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   let blocked = false
   const mode = budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)
   const savedBase = baseReportOf(process.env.ROOM_EXPLOSION_BASE)
-  const isBaseInMode = isBaseComparable(savedBase, mode, explosive)
-  if (explosive !== DEFAULT_EXPLOSIVE) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosivo ${explosive} (a referência é c4): nada é comparado, bloqueia nem vira a referência`)
+  const frameMeasure = frameMetricsOf(stageFrames)
+  const { isBaseInMode, frameVerdict } = explosionGateOf({ measure: frameMeasure, savedBase, mode, explosive, gated })
+  if (explosive !== DEFAULT_EXPLOSIVE) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosivo ${explosive} (a referência é c4): nada é comparado, não bloqueia nem vira a referência`)
   else if (savedBase && (savedBase.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) console.log(`room-explosion: base com outro explosivo (${savedBase.explosive}, esta rodada ${explosive}): nada é comparado nem bloqueia`)
   else if (savedBase && !isBaseInMode) console.log(`room-explosion: base em outro modo (${savedBase.budgetMode ?? 'sem modo'}, esta rodada ${mode}): regravando a referência; nada é comparado nem bloqueia`)
   const baseCells = isBaseInMode ? baseCellsOf(process.env.ROOM_EXPLOSION_BASE) : undefined
@@ -728,8 +745,6 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
     const verdict = cell.variant !== DEFAULT_VARIANT && cell.variant !== 'jolt' ? 'reference' : blocks ? 'FAIL: regression (blocks)' : regressed ? 'regression (reported)' : fails ? 'over budget (warning)' : 'within budget'
     console.log(`  ${cell.variant.padEnd(12)} ${`${cell.throttle}x`.padEnd(4)} ${cell.kind.padEnd(13)} ${String(cell.p50).padStart(6)} ${String(cell.p99).padStart(6)} ${String(cell.max).padStart(6)} ${String(cell.wakeFrame).padStart(6)} ${String(cell.wakeMedian).padStart(7)} ${String(cell.firstSecond).padStart(7)} ${String(cell.over4).padStart(5)} ${String(cell.over5).padStart(5)}  ${verdict}`)
   }
-  const frameMeasure = frameMetricsOf(stageFrames)
-  const frameVerdict = frameGate({ measure: frameMeasure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated, explosive })
   logFrameGate(frameMeasure, frameVerdict, isBaseInMode)
   blocked ||= frameVerdict.regressions.length > 0
   if (isRendered) {

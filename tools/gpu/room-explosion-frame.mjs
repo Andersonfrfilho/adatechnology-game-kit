@@ -106,8 +106,10 @@ export const frameGate = ({ measure, base, mode, variant, gated, explosive = DEF
   if (blocking.length === 0) return none('no-blocking-level', `there are metrics but none at the blocking level (${variant}, ${[...gated].map((level) => `${level}x`).join(', ')}): check ROOM_EXPLOSION_STAGE_THROTTLES`)
   if (explosive !== DEFAULT_EXPLOSIVE) return none('other-explosive', `this run detonated ${explosive}, the base is c4: a run with another explosive is never compared`)
   if (!base) return none('no-base', 'no base report')
-  if ((base.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) return none('other-explosive', `the base was measured with ${base.explosive}, this run with ${explosive}`)
-  if (!isBaseComparable(base, mode, explosive)) return none('other-mode', `the base was measured in ${base.budgetMode ?? 'no mode'}, this run in ${mode}`)
+  if (!isBaseComparable(base, mode, explosive)) {
+    if (base.budgetMode !== mode) return none('other-mode', `the base was measured in ${base.budgetMode ?? 'no mode'}, this run in ${mode}`)
+    return none('other-explosive', `the base was measured with ${base.explosive}, this run with ${explosive}`)
+  }
   if (!base.frameMetrics || base.frameMetrics.length === 0) return none('base-without-metrics', 'the base has no frameMetrics')
   const was = new Map(base.frameMetrics.map((entry) => [frameKey(entry), entry]))
   const regressions = blocking.flatMap((entry) => {
