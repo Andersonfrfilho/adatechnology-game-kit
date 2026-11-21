@@ -22,12 +22,13 @@ const plano = planSound(receita, { random: createRng(7), distance: 12 }) // null
 | `planSound(receita, { random, volume, distance \| position, listener, params, occlusion })` | O plano resolvido; ordem de sorteio: `vars`, `duration`, cada camada na ordem dos campos, início do ruído por último |
 | `DISTANCE_CURVES`, `falloffGain`, `isSilent`, `cutoffDivisor` | Curvas dos times (jogo 0.004/0.006/0.01/0.002, Cena 0.008, bichos 70 m) |
 | `panFor`, `listenerDistance` | Pan da Cena (±0.85, mínimo 2 m), distância no chão ou 3D |
-| `createVoiceManager({ groups, maxVoices })` | Limite de vozes: grupos (concorrência, recarga, distância, roubo) e teto global 32 |
+| `createVoiceManager({ groups, maxVoices })` | Limite de vozes: grupos (concorrência, recarga, distância, roubo, `maxPerBurst`) e teto global 32 |
+| `VoiceGroup.maxPerBurst`, `burstBoost`, `PlayOptions.group`, `IMPACT_BURST_GROUP` | Teto por rajada (precisa de `deferredStart`): das jogadas do grupo pedidas antes de a fila de início rodar, só as N mais altas (volume × curva de distância, sem raio de oclusão; empate pela ordem) criam nós; as outras não. `burstBoost` sobe as mantidas só na proporção do que caiu. `play` devolve `null` para som retido; `engine.stats().capped` conta os descartados |
 | `createLoopState(receita)` | Laço do jogo: nós a partir de 0.002, suavização 0.15 / 0.08 |
 | `createSoundRegistry(bancos)`, `resolveMix` | Catálogo com `register`, `patch`, `remove`; perfil de mixagem |
 | `GAME_SFX_CLASSES`, `noiseClassRecipe`, `GAME_SFX_BANK` | As 12 classes de ruído do jogo (tabela `P`) e a receita `burst` de cada uma |
 | `MIX_PROFILES`, `DEFAULT_MIX` | `game` (mestre 0.5) e `art_scene` (compressor, reverb; padrão do kit, Q1) |
-| `VOICE_GROUPS` | `undead_voice`: 5 ao mesmo tempo, um a cada 0,25 s, só a menos de 40 m |
+| `VOICE_GROUPS` | `undead_voice`: 5 ao mesmo tempo, um a cada 0,25 s, só a menos de 40 m; `impact_burst`: as 16 impactos mais altos da rajada, ×1,4 se houve descarte |
 | `createAudioEngine({ seed, mix, banks, maxVoices, createContext })` | Motor WebAudio preguiçoso (sem `AudioContext` até o primeiro som; no Node tudo menos `plan` é no-op): `play`, `plan`, `loop`, `channel`, `setMix`, `setMaster`, `setBus`, `setListener`, `unlock`, `stats`, `level(bus)`, `dispose` |
 | `createAudioSink(engine)` | `AudioSink` do contrato (`host.audio`) que carrega o motor em `.engine`: quem recebe o sink usa o motor do anfitrião |
 | `createAudioTestModule(options?)` | `TestableModule` `audio_area`: toca qualquer som a uma distância e direção (ou da sonda na área), laços, tempestade de 20 vozes, mixagem e camadas (reverb, compressor, pan, abafamento), nível de cada barramento e o plano do som. `BENCH_BANK` tem os dois sons de prova do próprio módulo |

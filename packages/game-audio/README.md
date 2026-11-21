@@ -13,6 +13,8 @@ weather), and this package holds the machinery plus the two team mixing chains.
 - **Occlusion** only when the host passes a callback: gain × (1 − 0.5 × o), lowpass cutoffs × (1 − 0.6 × o).
 - **Voice limiter**: groups with `maxConcurrent`, `cooldown`, `maxDistance` and `steal`; a global cap of 32 that drops the lowest `priority × gain`
   (weapons > voices > world > ambience).
+- **Burst cap**: a group with `maxPerBurst` builds only its N loudest sounds of a burst (a blast with fragments asks for hundreds in one frame); the rest
+  never create a node. Needs `deferredStart`. See "Burst cap" below.
 - **Loops**: nodes only once the volume reaches 0.002, then `setTargetAtTime` with 0.15 s (volume) and 0.08 s (frequency), as in the game.
 
 ## Install
@@ -102,13 +104,24 @@ engine.occludedVoices() // [{ id, lossDb: 42, gain: 0.008, cutoff: 800 }]
 - Sounds without a `position` and loops are not occluded. The older `occlusion: (point) => 0..1` callback still works (one value when the sound plays).
 - Pure parts: `hitLossDb`, `totalLossDb`, `occlusionState`, `createOcclusionTracker`. The test room (`game-test-room`) builds the query from its destruction world.
 
+## Burst cap
+
+`VoiceGroup.maxPerBurst` (with `burstBoost`) and `PlayOptions.group` (used when the sound names no group of its own; the shipped `IMPACT_BURST_GROUP`).
+
+- **Held, then settled.** With `deferredStart`, a play of a capped group builds nothing and returns `null`. The first one puts a settle job in the start queue; when
+  the queue reaches it (the host's audio stage of the frame, or its own task) the `maxPerBurst` loudest are built and the others are forgotten.
+  The window is the queue's drain, so there is no clock and no extra frame; the kept sounds start when they would have started anyway.
+- **Loudest** = volume x sound gain x distance curve, no occlusion rays. Ties keep the order asked. `urgent` plays are never held.
+- **`burstBoost`** (default 1: none): the kept voices are `1 + (burstBoost - 1) x share dropped` louder, so 200 impacts cut to 16 are not thin. It is bounded by `burstBoost`.
+- Without `deferredStart` the option is ignored. `engine.stats().capped` counts the requests dropped before any node.
+
 ## Shipped data
 
 | Data | What it is | Source |
 |---|---|---|
 | `GAME_SFX_CLASSES`, `GAME_SFX_FALLBACK`, `noiseClassRecipe`, `GAME_SFX_BANK` (`src/data/game-sfx.json`) | The game's 12 noise classes (pistol to explosion) and its fallback, as rows and as `burst` recipes `sfx_<id>` | jogo L62089–62107 |
 | `MIX_PROFILES` (`src/data/mix-profiles.json`), `DEFAULT_MIX` | `game` (master 0.5, noise 1.5 s made on demand) and `art_scene` (compressor −12 dB ratio 5, master 0.85, reverb 2.2 s with decay 3.4 and wet 0.4, noise 2 s made with the chain). The kit default is `art_scene` (Q1) | jogo L62077–62088, cena L1305–1313 |
-| `VOICE_GROUPS` (`src/data/voice-groups.json`) | `undead_voice`: five at once, one every 0.25 s, nearer than 40 m | cena L1342, jogo L66986, L70472 |
+| `VOICE_GROUPS` (`src/data/voice-groups.json`) | `undead_voice`: five at once, one every 0.25 s, nearer than 40 m; `impact_burst`: the 16 loudest impacts of a burst, 1.4x louder when others were dropped | cena L1342, jogo L66986, L70472 |
 | `LIBRARY_BANK` (`src/library/*.json`) | Sounds whose subject has no package yet (Q12): loops `engine_saw`, `rotor_blades`, `crowd_rumble`; sounds `horn`, `radio_static`, `siren` | jogo L62109–62127, L69998–70004, L70272–70276; cena L1369 |
 
 The subject banks (weapons, destruction, characters, animals, weather) live in their own packages.

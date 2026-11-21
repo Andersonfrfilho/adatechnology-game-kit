@@ -25,6 +25,7 @@ import { createSampleLoopHandle } from './sample-loop'
 import { createNoiseStore, noiseBuffer, prepareNoise } from './engine-noise'
 import type { NoiseStore } from './engine-noise'
 import type { RealizedVoice } from './nodes'
+import { createBurstCap } from './engine-burst'
 import { createStartQueue } from './engine-queue'
 import type { StartQueueOptions } from './engine-queue'
 import { realize } from './realize'
@@ -58,6 +59,11 @@ export type PlayOptions = {
   readonly intensity?: number
   /** 0 (clear) to 1 (behind a wall) for this play, over the engine's `occlusion` (a test bench puts a wall in between). Sample sounds only. */
   readonly occlusion?: number
+  /**
+   * The voice group of this play when the sound names none of its own (a group with `maxPerBurst` caps a burst, see `VoiceGroup`). A held sound
+   * returns `null` from `play`: it is built, or dropped, when the start queue next runs. Ignored by `urgent` plays.
+   */
+  readonly group?: string
 }
 
 /** A playing voice: a recipe (`kind: 'recipe'`, the plan of the synthesized sound) or files (`kind: 'sample'`). */
@@ -115,6 +121,8 @@ export type AudioStats = {
   readonly peak: number
   readonly dropped: number
   readonly maxVoices: number
+  /** Requests of a `maxPerBurst` group dropped before any node was made. */
+  readonly capped: number
   readonly loops: number
 }
 
@@ -356,6 +364,14 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   })
 
   const startQueue = options.deferredStart ? createStartQueue(options.deferredStart) : null
+  // the cap settles as a job of the start queue: the window is the one the host already owns, and the kept voices are built in the same drain
+  const burst = startQueue ? createBurstCap((settle, cancel) => startQueue.push({ run: () => (advance(), settle()), drop: cancel })) : null
+  const holdBurst = (group: string | undefined, playOptions: PlayOptions, score: number, launch: (boost: number) => unknown): boolean => {
+    const rule = burst && group !== undefined && !playOptions.urgent ? voices.groupRule(group) : undefined
+    if (!burst || !group || rule?.maxPerBurst === undefined) return false
+    burst.hold(group, rule.maxPerBurst, rule.burstBoost ?? 1, score, launch)
+    return true
+  }
 
   const build = (plan: SoundPlan, store: NoiseStore, delay: number, requestedAt: number, fallbackOf?: string, route?: OcclusionRoute): RealizedVoice => {
     const audio = context as BaseAudioContext
@@ -428,8 +444,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     }
   }
 
-  const admit = (recipe: Admission, gain: number, distance: number): number | null => {
-    const decision = voices.request({ ...(recipe.group ? { group: recipe.group } : {}), priority: recipe.priority ?? busPriority(recipe.bus), gain, distance, length: 0 })
+  const admit = (recipe: Admission, gain: number, distance: number, group = recipe.group): number | null => {
+    const decision = voices.request({ ...(group ? { group } : {}), priority: recipe.priority ?? busPriority(recipe.bus), gain, distance, length: 0 })
     if (!decision.accepted) return null
     for (const id of decision.evicted) {
       active.get(id)?.stop()
@@ -471,6 +487,9 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
         : {}),
   })
 
+  // the kept voices of a burst that dropped others: the plan at a higher level (the layers carry the level)
+  const boostedSample = (plan: SamplePlan, boost: number): SamplePlan => ({ ...plan, level: plan.level * boost, layers: plan.layers.map((layer) => ({ ...layer, gain: layer.gain * boost })) })
+
   // undefined: the files are not ready and there is no fallback, so the recipe of the same id (if any) plays
   const playSample = (sample: SampleSound, playOptions: PlayOptions, random: () => number, store: NoiseStore): VoiceHandle | null | undefined => {
     if (busSettings.get(sample.bus)?.muted) return null
@@ -485,48 +504,53 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     if (!audio) return null
     unlockContext(audio)
     advance()
-    const voiceId = admit(plan, plan.level, plan.distance)
-    if (voiceId === null) return null
-    const requestedAt = audio.currentTime
-    const time = requestedAt + (playOptions.delay ?? 0)
-    const chokeList = sample.choke ? choked(sample.id) : undefined
-    const realized = realizeSample(plan, { context: audio, output: sampleRoute(voiceId, sample, playOptions, plan.level, plan.bus), buffer: (url) => sampleStore.buffer(url), time })
-    const sampleBank = registry.bankOf(plan.id)
-    announce({
-      id: plan.id,
-      kind: 'sample',
-      ...(sampleBank ? { bank: sampleBank } : {}),
-      requestedAt,
-      startAt: time,
-      outputLatency: latencyOf(audio),
-      level: plan.level,
-      distance: plan.distance,
-      ...(plan.pan === undefined ? {} : { pan: plan.pan }),
-      layers: plan.layers.map((layer) => ({ role: layer.role, url: layer.url, take: layer.take, rate: layer.rate })),
-      ...(plan.tier ? { tier: plan.tier } : {}),
-    })
-    voices.setLength(voiceId, sampleLength(plan, (url) => sampleStore.seconds(url)) + (playOptions.delay ?? 0))
-    active.set(voiceId, realized)
-    if (chokeList && sample.choke) {
-      chokeList.push({ id: voiceId, voice: realized })
-      while (chokeList.length > Math.max(1, sample.choke.voices)) {
-        const oldest = chokeList.shift()
-        if (!oldest) break
-        oldest.voice.fade(time, sample.choke.fade ?? 0.03)
-        voices.release(oldest.id)
-        active.delete(oldest.id)
+    const group = plan.group ?? playOptions.group
+    const launch = (boost: number): VoiceHandle | null => {
+      const planned = boost === 1 ? plan : boostedSample(plan, boost)
+      const voiceId = admit(planned, planned.level, planned.distance, group)
+      if (voiceId === null) return null
+      const requestedAt = audio.currentTime
+      const time = requestedAt + (playOptions.delay ?? 0)
+      const chokeList = sample.choke ? choked(sample.id) : undefined
+      const realized = realizeSample(planned, { context: audio, output: sampleRoute(voiceId, sample, playOptions, planned.level, planned.bus), buffer: (url) => sampleStore.buffer(url), time })
+      const sampleBank = registry.bankOf(planned.id)
+      announce({
+        id: planned.id,
+        kind: 'sample',
+        ...(sampleBank ? { bank: sampleBank } : {}),
+        requestedAt,
+        startAt: time,
+        outputLatency: latencyOf(audio),
+        level: planned.level,
+        distance: planned.distance,
+        ...(planned.pan === undefined ? {} : { pan: planned.pan }),
+        layers: planned.layers.map((layer) => ({ role: layer.role, url: layer.url, take: layer.take, rate: layer.rate })),
+        ...(planned.tier ? { tier: planned.tier } : {}),
+      })
+      voices.setLength(voiceId, sampleLength(planned, (url) => sampleStore.seconds(url)) + (playOptions.delay ?? 0))
+      active.set(voiceId, realized)
+      if (chokeList && sample.choke) {
+        chokeList.push({ id: voiceId, voice: realized })
+        while (chokeList.length > Math.max(1, sample.choke.voices)) {
+          const oldest = chokeList.shift()
+          if (!oldest) break
+          oldest.voice.fade(time, sample.choke.fade ?? 0.03)
+          voices.release(oldest.id)
+          active.delete(oldest.id)
+        }
+      }
+      return {
+        id: voiceId,
+        kind: 'sample',
+        plan: planned,
+        stop() {
+          realized.stop()
+          voices.release(voiceId)
+          active.delete(voiceId)
+        },
       }
     }
-    return {
-      id: voiceId,
-      kind: 'sample',
-      plan,
-      stop() {
-        realized.stop()
-        voices.release(voiceId)
-        active.delete(voiceId)
-      },
-    }
+    return holdBurst(group, playOptions, plan.level, launch) ? null : launch(1)
   }
 
   const playWith = (asked: string, playOptions: PlayOptions, streamRandom: () => number, store: NoiseStore, fallbackOf?: string): VoiceHandle | null => {
@@ -549,11 +573,16 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     if (!audio) return null
     unlockContext(audio)
     advance()
-    const voiceId = silent ? undefined : admit(recipe, level, distance)
-    if (voiceId === null) return null
-    if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
-    const plan = planSound(recipe, inputFor(recipe, playOptions, random))
-    return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent, recipe.falloff?.model === 'none' ? undefined : playOptions.position) : null
+    const group = recipe.group ?? playOptions.group
+    const launch = (boost: number): VoiceHandle | null => {
+      const voiceId = silent ? undefined : admit(recipe, level * boost, distance, group)
+      if (voiceId === null) return null
+      if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
+      const louder = boost === 1 ? playOptions : { ...playOptions, volume: (playOptions.volume ?? 1) * boost }
+      const plan = planSound(recipe, inputFor(recipe, louder, random))
+      return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent, recipe.falloff?.model === 'none' ? undefined : playOptions.position) : null
+    }
+    return !silent && holdBurst(group, playOptions, level, launch) ? null : launch(1)
   }
 
   const randomFor = (playOptions: PlayOptions): (() => number) => {
@@ -742,12 +771,14 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
         peak: voiceStats.peak,
         dropped: voiceStats.dropped,
         maxVoices: voiceStats.maxVoices,
+        capped: burst?.dropped ?? 0,
         loops: [...loops].filter((loop) => loop.created).length,
       }
     },
     dispose() {
       // closing the context ends every voice; they only leave the limiter
       startQueue?.clear()
+      burst?.cancel()
       for (const id of active.keys()) voices.release(id)
       for (const loop of [...loops]) loop.stop()
       occluders?.clear()

@@ -6,12 +6,19 @@ import type { BusId } from './recipe'
  * - `maxConcurrent`: at most this many of the group play at once (`steal` replaces the group's oldest instead of refusing);
  * - `cooldown`: seconds after an accepted voice before the next one (the game's `groanBudget`, jogo L66986 and L70472);
  * - `maxDistance`: only voices nearer than this (the game's `d < 40`).
+ *
+ * `maxPerBurst` is different: it is not checked per request but when a burst settles (see `engine-burst.ts`). Of the sounds of the group asked
+ * before the engine's start queue next runs (a frame's events), only the `maxPerBurst` loudest are built; the rest never touch a node. It needs
+ * `deferredStart`; without it the engine has nowhere to hold the requests and the option is ignored.
  */
 export type VoiceGroup = {
   readonly maxConcurrent?: number
   readonly cooldown?: number
   readonly maxDistance?: number
   readonly steal?: boolean
+  readonly maxPerBurst?: number
+  /** Amplitude multiplier for the kept voices of a burst that dropped others, reached when all but one were dropped (default 1: none). Scaled by the share dropped. */
+  readonly burstBoost?: number
   readonly sources?: readonly string[]
 }
 
@@ -21,6 +28,9 @@ export const VOICE_GROUPS: Readonly<Record<string, VoiceGroup>> = voiceGroupsJso
 /** Q7: weapons > voices > world > ambience; the interface above all, weather with the ambience. */
 export const BUS_PRIORITY: Readonly<Record<BusId, number>> = { ui: 5, weapons: 4, voices: 3, world: 2, weather: 1, ambience: 1 }
 export const DEFAULT_MAX_VOICES = 32
+
+/** The shipped `VOICE_GROUPS` entry that caps a burst of impacts (a blast with fragments); a host passes it as `PlayOptions.group`. */
+export const IMPACT_BURST_GROUP = 'impact_burst'
 
 export function busPriority(bus: BusId): number {
   return BUS_PRIORITY[bus]
@@ -53,6 +63,7 @@ export type VoiceManager = {
   /** Moves time on: cooldowns count down and finished voices leave. Returns the ids that ended. */
   advance(dt: number): number[]
   setGroup(id: string, group: VoiceGroup | undefined): void
+  groupRule(id: string): VoiceGroup | undefined
   stats(): VoiceStats
 }
 
@@ -132,6 +143,7 @@ export function createVoiceManager(options: VoiceManagerOptions = {}): VoiceMana
       if (group) groups.set(id, group)
       else groups.delete(id)
     },
+    groupRule: (id) => groups.get(id),
     stats: () => ({ active: voices.length, peak, dropped, maxVoices }),
   }
 }
