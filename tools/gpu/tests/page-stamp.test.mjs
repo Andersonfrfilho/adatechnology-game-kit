@@ -45,25 +45,43 @@ test('assertStampIsHead: the same commit passes, another or a missing stamp thro
   assert.throws(() => assertStampIsHead({ stamp: null, head: HEAD }), /no build stamp/)
 })
 
+/** @param {string} root */
+const staleAt = (root) => stalePackagesAt(root).map(({ name }) => name)
+/** @param {string} name @param {number | undefined} srcNewestMs @param {(number | undefined)[]} distEntryMs @param {string[]} [dependencies] @returns {import('../stale-dist.mjs').PackageTimes} */
+const times = (name, srcNewestMs, distEntryMs, dependencies = []) => ({ name, srcNewestMs, distEntryMs, dependencies })
+/** @param {import('../stale-dist.mjs').PackageTimes[]} packages @param {string[]} [checked] */
+const staleNames = (packages, checked = packages.map(({ name }) => name)) => stalePackagesOf(packages, checked).map(({ name }) => name)
+
 test('stalePackagesOf: src newer than a dist entry, a missing entry, fresh and src-less packages', () => {
   assert.deepEqual(
-    stalePackagesOf([
-      { name: 'newer-src', srcNewestMs: 200, distEntryMs: [100] },
-      { name: 'no-dist', srcNewestMs: 200, distEntryMs: [undefined] },
-      { name: 'one-entry-stale', srcNewestMs: 200, distEntryMs: [300, 100] },
-      { name: 'fresh', srcNewestMs: 100, distEntryMs: [200, 300] },
-      { name: 'same-time', srcNewestMs: 100, distEntryMs: [100] },
-      { name: 'no-src', srcNewestMs: undefined, distEntryMs: [undefined] },
-    ]),
+    staleNames([times('newer-src', 200, [100]), times('no-dist', 200, [undefined]), times('one-entry-stale', 200, [300, 100]), times('fresh', 100, [200, 300]), times('same-time', 100, [100]), times('no-src', undefined, [undefined])]),
     ['newer-src', 'no-dist', 'one-entry-stale'],
   )
 })
 
-/** A fake repo root with one package. @param {string} name @param {string} packageName @param {{ src: number, dist?: number }} times */
-const fakePackage = (name, packageName, { src, dist }) => {
+test('stalePackagesOf: a dependency whose src is newer makes the dependent stale and is named', () => {
+  const graph = [times('app', 100, [200], ['lib']), times('lib', 300, [400])]
+  assert.deepEqual(stalePackagesOf(graph, ['app']), [{ name: 'app', isMissing: false, newerSources: ['lib'] }])
+  assert.deepEqual(staleNames([times('app', 100, [200], ['lib']), times('lib', 150, [400])]), [])
+})
+
+test('stalePackagesOf: dependencies count transitively (A -> B -> C, C changed)', () => {
+  const graph = [times('a', 100, [200], ['b']), times('b', 100, [500], ['c']), times('c', 300, [500])]
+  assert.deepEqual(stalePackagesOf(graph, ['a']), [{ name: 'a', isMissing: false, newerSources: ['c'] }])
+})
+
+test('stalePackagesOf: a dependency cycle ends and a dependency outside the graph is ignored', () => {
+  const cycle = [times('a', 100, [200], ['b']), times('b', 100, [200], ['a', 'not-in-packages'])]
+  assert.deepEqual(staleNames(cycle), [])
+  assert.deepEqual(staleNames([times('a', 300, [200], ['b']), times('b', 100, [200], ['a'])]), ['a', 'b'])
+})
+
+/** A fake repo root with one package. @param {string} name @param {string} packageName @param {{ src: number, dist?: number }} timestamps @param {string[]} [dependencies] */
+const fakePackage = (name, packageName, { src, dist }, dependencies = []) => {
   const root = join(directory, name)
   const folder = join(root, 'packages', packageName)
   mkdirSync(join(folder, 'src', 'deep'), { recursive: true })
+  writeFileSync(join(folder, 'package.json'), JSON.stringify({ dependencies: Object.fromEntries(dependencies.map((dependency) => [`@adatechnology/${dependency}`, 'workspace:*'])) }))
   writeFileSync(join(folder, 'src', 'deep', 'a.ts'), '')
   utimesSync(join(folder, 'src', 'deep', 'a.ts'), src, src)
   utimesSync(join(folder, 'src', 'deep'), src, src)
@@ -79,11 +97,11 @@ const fakePackage = (name, packageName, { src, dist }) => {
 }
 
 test('stalePackagesAt: nested src files against the dist entry; a package bundled from src is ignored', () => {
-  assert.deepEqual(stalePackagesAt(fakePackage('stale', 'game-audio', { src: 2000, dist: 1000 })), ['game-audio'])
-  assert.deepEqual(stalePackagesAt(fakePackage('missing', 'game-audio', { src: 2000 })), ['game-audio'])
-  assert.deepEqual(stalePackagesAt(fakePackage('fresh', 'game-audio', { src: 1000, dist: 2000 })), [])
-  assert.deepEqual(stalePackagesAt(fakePackage('from-src', 'game-physics', { src: 2000 })), [])
-  assert.deepEqual(stalePackagesAt(fakePackage('not-bundled', 'game-vehicles', { src: 2000 })), [])
+  assert.deepEqual(staleAt(fakePackage('stale', 'game-audio', { src: 2000, dist: 1000 })), ['game-audio'])
+  assert.deepEqual(staleAt(fakePackage('missing', 'game-audio', { src: 2000 })), ['game-audio'])
+  assert.deepEqual(staleAt(fakePackage('fresh', 'game-audio', { src: 1000, dist: 2000 })), [])
+  assert.deepEqual(staleAt(fakePackage('from-src', 'game-physics', { src: 2000 })), [])
+  assert.deepEqual(staleAt(fakePackage('not-bundled', 'game-vehicles', { src: 2000 })), [])
 })
 
 test('stalePackagesAt: a newer unrelated file in dist does not hide a stale entry', () => {
@@ -91,26 +109,36 @@ test('stalePackagesAt: a newer unrelated file in dist does not hide a stale entr
   const other = join(root, 'packages', 'game-audio', 'dist', 'other-script-output.json')
   writeFileSync(other, '')
   utimesSync(other, 3000, 3000)
-  assert.deepEqual(stalePackagesAt(root), ['game-audio'])
+  assert.deepEqual(staleAt(root), ['game-audio'])
 })
 
 test('stalePackagesAt: a subpath entry the page resolves counts (game-audio/fitted)', () => {
   const root = fakePackage('subpath', 'game-audio', { src: 2000, dist: 3000 })
-  assert.deepEqual(stalePackagesAt(root), [])
+  assert.deepEqual(staleAt(root), [])
   utimesSync(join(root, 'packages', 'game-audio', 'dist', 'fitted.js'), 1000, 1000)
-  assert.deepEqual(stalePackagesAt(root), ['game-audio'])
+  assert.deepEqual(staleAt(root), ['game-audio'])
 })
 
 test('stalePackagesAt: a file deleted from src (only its folder mtime moves) is stale', () => {
   const root = fakePackage('deleted', 'game-audio', { src: 1000, dist: 2000 })
-  assert.deepEqual(stalePackagesAt(root), [])
+  assert.deepEqual(staleAt(root), [])
   const deep = join(root, 'packages', 'game-audio', 'src', 'deep')
   writeFileSync(join(deep, 'b.ts'), '')
   utimesSync(join(deep, 'b.ts'), 1000, 1000)
   utimesSync(deep, 1000, 1000)
   unlinkSync(join(deep, 'b.ts'))
   utimesSync(deep, 3000, 3000)
-  assert.deepEqual(stalePackagesAt(root), ['game-audio'])
+  assert.deepEqual(staleAt(root), ['game-audio'])
+})
+
+test('stalePackagesAt: reads package.json dependencies; a workspace dependency edited after the dependent was built makes it stale', () => {
+  const root = fakePackage('deps', 'game-floorplan-three', { src: 1000, dist: 2000 }, ['game-destruction', 'not-a-workspace-folder'])
+  fakePackage('deps', 'game-destruction', { src: 1000, dist: 2000 })
+  assert.deepEqual(staleAt(root), [])
+  const source = join(root, 'packages', 'game-destruction', 'src', 'deep', 'a.ts')
+  utimesSync(source, 3000, 3000)
+  assert.deepEqual(staleAt(root), ['game-destruction', 'game-floorplan-three'])
+  assert.throws(() => assertDistsAreFresh(root), /game-floorplan-three \(src of game-destruction is newer\)/)
 })
 
 test('assertDistsAreFresh: throws naming the package and the rebuild command, passes when fresh', () => {
