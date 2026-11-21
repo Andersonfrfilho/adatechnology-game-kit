@@ -36,6 +36,8 @@
 //   ROOM_EXPLOSION_EXPLOSIVE=c4            the explosive the blast, crater and water kinds detonate (`hammer` ignores it; an id of the arsenal, packages/game-weapons/src/data/explosives.json; an unknown id, or one that does not blast the house (no energy, smoke, cone), stops the run). Only c4 is
 //                                          compared with a base: any other explosive is for reading the typical case, prints SEM COMPARAÇÃO NESTA RODADA, never blocks, and is never saved as the base
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
+//   ROOM_EXPLOSION_PAGE=<test-room.html>   a saved page to open instead of the one this run builds (the run rebuilds examples/test-room/dist/test-room.html before opening it, so a page copied over it is lost)
+//   ROOM_EXPLOSION_OTHER_PAGE=<file.html>  the other build of a before/after pair: the run stops when both pages are the same bytes. The report carries `pageSha256`
 //   ROOM_EXPLOSION_STAGE_VARIANT=          the variant of the stage pass (default jolt-d4-worker when measured, else the first engine variant): jolt-d4-worker times the ground worker's stages
 //   ROOM_EXPLOSION_PACE=                   frames paced at 1/60 s of wall time (the worker's answers are delivered between frames, as under requestAnimationFrame): on by default for
 //                                          the variants with `groundWorker=1` (back to back, a worker could never answer and every tile would be made on the main thread), `1` for all, `0` for none
@@ -62,11 +64,13 @@
 // They come from `scheduler.systemProbe` (game-runtime), a hook that times nothing unless this tool sets it. `queues` is the frame budget's deferred queues that no label above covers (the
 // destruction events and the audio voices have theirs): the change of each queue's `spentMs` in `room.frameStats().budget`, per queue in the `queues` of a stage frame.
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { cpus, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { savedPagesOf } from './room-explosion-base.mjs'
 import { DEFAULT_EXPLOSIVE, frameGate, frameKey, frameMetricsOf, isBaseComparable } from './room-explosion-frame.mjs'
 
 const FRAME_SECONDS = 1 / 60
@@ -88,6 +92,45 @@ export const SYSTEM_LABELS = /** @type {const} */ ({ 'room.input': 'sysInput', '
 export const systemLabelOf = (id) => (/** @type {Record<string, string>} */ (SYSTEM_LABELS))[id] ?? 'sysOther'
 /** Whether frame 0's clock opens after the explosion call (`late`, the T0.2 ruler) instead of before it (the default). @param {string | undefined} text */
 export const isF0Late = (text) => text === 'late'
+/**
+ * The page a run opens, by its bytes. A before × after pair names the other build too: the same bytes on both sides would compare a build with itself.
+ * @param {{ page: string, otherPage?: string | undefined }} files
+ * @returns {{ pageSha256: string }}
+ */
+export const pagePairOf = ({ page, otherPage }) => {
+  if (!existsSync(page)) throw new Error(`room-explosion: the page does not exist: ${page}`)
+  const pageSha256 = sha256Of(page)
+  if (otherPage === undefined) return { pageSha256 }
+  if (!existsSync(otherPage)) throw new Error(`room-explosion: ROOM_EXPLOSION_OTHER_PAGE does not exist: ${otherPage}`)
+  if (sha256Of(otherPage) === pageSha256) throw new Error(`room-explosion: the page and ROOM_EXPLOSION_OTHER_PAGE are the same bytes (sha256 ${pageSha256.slice(0, 12)}): this pair would compare a build with itself`)
+  return { pageSha256 }
+}
+
+/**
+ * Why this run may not write ROOM_EXPLOSION_OUT over the base file, or undefined when it may.
+ * @param {{ explosive: string, savedPage: string | undefined, reportOut: string | undefined, baseFile: string | undefined }} run
+ * @returns {string | undefined}
+ */
+export const baseOverwriteError = ({ explosive, savedPage, reportOut, baseFile }) => {
+  if (!reportOut || !baseFile || resolve(reportOut) !== resolve(baseFile)) return undefined
+  if (explosive !== DEFAULT_EXPLOSIVE) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`
+  if (savedPage !== undefined) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with a saved page (ROOM_EXPLOSION_PAGE) would overwrite the base with another build's numbers`
+  return undefined
+}
+
+/**
+ * Which page file a run opens and whether it builds that page first (only the worktree's own page is rebuilt, never a saved one).
+ * @param {{ savedPage: string | undefined, root: string }} run
+ * @returns {{ pageFile: string, shouldBuild: boolean }}
+ */
+export const pageSelectionOf = ({ savedPage, root }) =>
+  savedPage === undefined
+    ? { pageFile: resolve(join(root, 'examples/test-room/dist/test-room.html')), shouldBuild: true }
+    : { pageFile: resolve(savedPage), shouldBuild: false }
+
+/** @param {string} file */
+const sha256Of = (file) => createHash('sha256').update(readFileSync(file)).digest('hex')
+
 /** The frame budget's mode the ruler runs `room.update` in: `deadline` (the page's mode) unless `quota` is asked for. @param {string | undefined} text @returns {'quota' | 'deadline'} */
 export const budgetModeOf = (text) => (text === 'quota' ? 'quota' : 'deadline')
 /** The explosive the blast and crater kinds detonate: `c4` unless the variable names another. @param {string | undefined} text */
@@ -621,14 +664,19 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   if (!isBlastingExplosive(known)) throw new Error(`room-explosion: ROOM_EXPLOSION_EXPLOSIVE=${explosive} does not blast the house (no energy, a smoke or a cone): nothing would be measured`)
   const reportOut = process.env.ROOM_EXPLOSION_OUT
   const baseFile = process.env.ROOM_EXPLOSION_BASE
-  if (explosive !== DEFAULT_EXPLOSIVE && reportOut && baseFile && resolve(reportOut) === resolve(baseFile)) throw new Error(`room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`)
+  const { page: savedPage, otherPage } = savedPagesOf(process.env)
+  const overwriteError = baseOverwriteError({ explosive, savedPage, reportOut, baseFile })
+  if (overwriteError) throw new Error(overwriteError)
   const rounds = Number(process.env.ROOM_EXPLOSION_ROUNDS ?? 5)
   const frames = Number(process.env.ROOM_EXPLOSION_FRAMES ?? 660)
   const budget = { p99: Number(process.env.ROOM_EXPLOSION_P99_MS ?? 4), max: Number(process.env.ROOM_EXPLOSION_MAX_MS ?? 5) }
   if (variants.length === 0 || kinds.length === 0 || throttles.length === 0) throw new Error('room-explosion: nothing to measure (check the ROOM_EXPLOSION_* variables)')
 
-  execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'ignore' })
-  const pageUrl = pathToFileURL(join(root, 'examples/test-room/dist/test-room.html')).href
+  const { pageFile, shouldBuild } = pageSelectionOf({ savedPage, root })
+  if (shouldBuild) execFileSync(process.execPath, [join(root, 'examples/test-room/build.mjs')], { stdio: 'ignore' })
+  const pageSha256 = pagePairOf({ page: pageFile, otherPage }).pageSha256
+  console.log(`room-explosion: page ${pageFile} (sha256 ${pageSha256.slice(0, 12)})`)
+  const pageUrl = pathToFileURL(pageFile).href
   const browser = await playwright.chromium.launch({ args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'], ...(chrome ? { executablePath: chrome } : {}) })
   const machine = { cpu: cpus()[0]?.model ?? 'unknown', cores: cpus().length, node: process.version, chrome: browser.version(), platform: process.platform }
   console.log(`room-explosion: ${machine.cpu} (${machine.cores} threads), node ${machine.node}, chrome ${machine.chrome}`)
@@ -784,7 +832,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, pageSha256, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0

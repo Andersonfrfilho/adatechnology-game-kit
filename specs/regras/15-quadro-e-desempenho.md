@@ -21,6 +21,7 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **Comparação de dois builds confere que são dois.** Para medir antes × depois, guarde as duas páginas (`examples/test-room/dist/test-room.html`) e passe
   cada uma por `PERF_PAGE=`, com a outra em `PERF_OTHER_PAGE=`: **o `perf.mjs` para se as duas forem iguais** e grava `pageSha256` no JSON (em
   2026-11-20 seis rodadas mediram a página velha dos dois lados por causa disso).
+  A régua da explosão tem a mesma conferência do par por `ROOM_EXPLOSION_PAGE=` e `ROOM_EXPLOSION_OTHER_PAGE=` (e grava `pageSha256`); sem elas ela refaz a página.
 - **Antes de medir, veja quem está usando a máquina** (`ps -eo pcpu,etimes,args --sort=-pcpu | head`): uma aba de navegador esquecida já prendeu um
   núcleo inteiro por mais de seis horas durante as medições da spec 017, e a carga nunca descia de 1,5.
 - **A régua mede no modo de prazo** (`ROOM_EXPLOSION_BUDGET=deadline`, o padrão desde a spec 017). Número em modo de cota não vale para o f0: sem

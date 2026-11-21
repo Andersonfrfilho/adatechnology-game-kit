@@ -5,7 +5,7 @@
 /**
  * @typedef {{ variant: string, throttle: number, kind: string, p99: number, max: number }} BaseCell
  * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} BaseMetric
- * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[] }} BaseReport
+ * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[], pageSha256?: string }} BaseReport
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -40,11 +40,28 @@ const mergeEntries = (base, now, fields) => {
 export const mergeBase = (base, report) => {
   if ((report.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return /** @type {TReport | undefined} */ (base)
   if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return report
-  return {
-    ...report,
+  const { pageSha256: _lastNightPage, ...reportWithoutPage } = report
+  return /** @type {TReport} */ ({
+    ...reportWithoutPage,
     cells: mergeEntries(base.cells ?? [], report.cells ?? [], ['p99', 'max']),
     frameMetrics: mergeEntries(base.frameMetrics ?? [], report.frameMetrics ?? [], ['f0Ms', 'afterMs']),
-  }
+  })
+}
+
+/**
+ * The saved-page variables of an environment; an empty variable is an unset one.
+ * @param {Record<string, string | undefined>} env @returns {{ page: string | undefined, otherPage: string | undefined }}
+ */
+export const savedPagesOf = (env) => ({ page: env.ROOM_EXPLOSION_PAGE || undefined, otherPage: env.ROOM_EXPLOSION_OTHER_PAGE || undefined })
+
+/**
+ * The nightly's base comes from the commit's own build: a saved page would put another build's numbers in it.
+ * @param {Record<string, string | undefined>} env
+ */
+export const assertNightlyBuildsItsOwnPage = (env) => {
+  const { page, otherPage } = savedPagesOf(env)
+  if (page === undefined && otherPage === undefined) return
+  throw new Error('nightly: ROOM_EXPLOSION_PAGE and ROOM_EXPLOSION_OTHER_PAGE are set: the nightly measures the build of its own commit, never a saved page (unset them)')
 }
 
 /**

@@ -269,6 +269,21 @@ flock ~/.cache/adatechnology-game-kit/perf-measure.lock env \
   ganho menor que ~3 ms não se lê no total, só no rótulo (`rebuildHost`, `breach-cut`...).
 - **Carga de 1 minuto abaixo de 1,5** no início e no fim; rodada com outra sessão pesada junto se descarta (uma saiu com carga 16,8 e o quadro seguinte em 43 ms).
 
+### Antes × depois com a régua: duas páginas guardadas
+
+Guarde as duas páginas da sala (`examples/test-room/dist/test-room.html` de cada versão, depois de `pnpm build` no commit medido) e passe cada uma por
+`ROOM_EXPLOSION_PAGE=`, com a outra em `ROOM_EXPLOSION_OTHER_PAGE=`:
+
+```bash
+ROOM_EXPLOSION_PAGE=/tmp/antes.html ROOM_EXPLOSION_OTHER_PAGE=/tmp/depois.html node tools/gpu/perf-gate.mjs room-explosion
+ROOM_EXPLOSION_PAGE=/tmp/depois.html ROOM_EXPLOSION_OTHER_PAGE=/tmp/antes.html node tools/gpu/perf-gate.mjs room-explosion
+```
+
+- **A régua para se as duas páginas tiverem os mesmos bytes**, e o relatório JSON e o log trazem `pageSha256` da página medida: confira que o hash muda entre o antes e o depois.
+- **Copiar uma página por cima de `dist/test-room.html` não funciona**: sem `ROOM_EXPLOSION_PAGE` a régua refaz essa página (`build.mjs`) antes de medir, e a cópia some. Foi assim que pares antes × depois mediram um build contra ele mesmo.
+- **A rodada diária recusa essas variáveis**: `nightly-gpu.mjs` para antes de rodar qualquer passo se `ROOM_EXPLOSION_PAGE` ou `ROOM_EXPLOSION_OTHER_PAGE` estiver definida (vazia conta como não definida), porque a base da noite tem de vir do build do próprio commit.
+- **Uma corrida com página guardada não grava a base**: se `ROOM_EXPLOSION_OUT` for o mesmo arquivo de `ROOM_EXPLOSION_BASE` junto com `ROOM_EXPLOSION_PAGE`, a régua para. A base só é gravada pela rodada diária (`saveBase`), e essa recusa a página guardada.
+
 ### O fecho da frente "sem mudar a simulação" (f0 de ~78 para ~64 ms; meta 33,3)
 
 | Tentativa | Ganho medido no f0 (modo de prazo) | Estado |
