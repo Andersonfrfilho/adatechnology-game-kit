@@ -47,7 +47,7 @@ const shortRays = (mesh: THREE.Mesh, count: number): THREE.Raycaster[] => {
   })
 }
 
-const summary = (hits: THREE.Intersection[]): unknown[] => hits.map((hit) => ({ distance: hit.distance, point: hit.point.toArray(), faceIndex: hit.faceIndex, face: hit.face && { a: hit.face.a, b: hit.face.b, c: hit.face.c, normal: hit.face.normal.toArray() }, object: hit.object.uuid }))
+const summary = (hits: THREE.Intersection[]): unknown[] => hits.map((hit) => ({ distance: hit.distance, point: hit.point.toArray(), faceIndex: hit.faceIndex, face: hit.face && { a: hit.face.a, b: hit.face.b, c: hit.face.c, materialIndex: hit.face.materialIndex, normal: hit.face.normal.toArray() }, instanceId: hit.instanceId, object: hit.object.uuid }))
 
 describe('the probe gives the hits of mesh.raycast without visiting every triangle', () => {
   it('equals mesh.raycast on a lot of short rays, before and after the mesh is written', () => {
@@ -90,14 +90,180 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
     expect(tested).toBeLessThan(HOLES * 40)
   })
 
-  it('a mesh with several materials goes to mesh.raycast itself', () => {
+  describe('a mesh the stand-in cannot copy goes to mesh.raycast: same hits, no boxes built', () => {
+    const throughCenter = (): THREE.Raycaster => new THREE.Raycaster(new THREE.Vector3(0.1, 0.2, 3), new THREE.Vector3(0, 0, -1), 0, 6)
+
+    const expectFallback = (mesh: THREE.Mesh, raycaster: THREE.Raycaster): THREE.Intersection[] => {
+      mesh.updateMatrixWorld(true)
+      const expected: THREE.Intersection[] = []
+      mesh.raycast(raycaster, expected)
+      const probe = new MeshRayProbe(THREE)
+      const actual: THREE.Intersection[] = []
+      probe.raycast(mesh, raycaster, actual)
+      expect(expected.length).toBeGreaterThan(0)
+      expect(summary(actual)).toEqual(summary(expected))
+      expect(probe.boxBuildCount).toBe(0)
+      return actual
+    }
+
+    const doubleSided = (): THREE.MeshBasicMaterial => new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })
+
+    it('several materials on a grouped geometry (face.materialIndex kept)', () => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), Array.from({ length: 6 }, doubleSided))
+      const hits = expectFallback(mesh, throughCenter())
+      expect(new Set(hits.map((hit) => hit.face!.materialIndex)).size).toBe(2)
+    })
+
+    it('a skinned mesh', () => {
+      const geometry = new THREE.BoxGeometry(2, 2, 2)
+      const count = geometry.getAttribute('position').count
+      geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(new Uint16Array(count * 4), 4))
+      geometry.setAttribute('skinWeight', new THREE.Float32BufferAttribute(Array.from({ length: count * 4 }, (_, i) => (i % 4 === 0 ? 1 : 0)), 4))
+      const mesh = new THREE.SkinnedMesh(geometry, doubleSided())
+      const bone = new THREE.Bone()
+      mesh.add(bone)
+      mesh.bind(new THREE.Skeleton([bone]))
+      expectFallback(mesh, throughCenter())
+    })
+
+    it('morph targets', () => {
+      const geometry = new THREE.BoxGeometry(2, 2, 2)
+      const shifted = Float32Array.from(geometry.getAttribute('position').array, (value, i) => (i % 3 === 2 ? value + 0.5 : value))
+      geometry.morphAttributes.position = [new THREE.Float32BufferAttribute(shifted, 3)]
+      const mesh = new THREE.Mesh(geometry, doubleSided())
+      mesh.morphTargetInfluences![0] = 0.8
+      expectFallback(mesh, throughCenter())
+    })
+
+    it('an interleaved position attribute', () => {
+      const geometry = new THREE.BoxGeometry(2, 2, 2)
+      const interleaved = new THREE.InterleavedBuffer(Float32Array.from(geometry.getAttribute('position').array), 3)
+      geometry.setAttribute('position', new THREE.InterleavedBufferAttribute(interleaved, 3, 0))
+      expectFallback(new THREE.Mesh(geometry, doubleSided()), throughCenter())
+    })
+
+    it('an InstancedMesh', () => {
+      const mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(2, 2, 2), doubleSided(), 2)
+      mesh.setMatrixAt(0, new THREE.Matrix4().makeTranslation(0, 0, 0))
+      mesh.setMatrixAt(1, new THREE.Matrix4().makeTranslation(0, 0, -2))
+      const hits = expectFallback(mesh, throughCenter())
+      expect(new Set(hits.map((hit) => hit.instanceId)).size).toBe(2)
+    })
+
+    it('a mesh with its own raycast', () => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), doubleSided())
+      mesh.raycast = function (this: THREE.Mesh, raycaster, hits) {
+        THREE.Mesh.prototype.raycast.call(this, raycaster, hits)
+        hits.length = Math.min(hits.length, 1)
+      }
+      expect(expectFallback(mesh, throughCenter())).toHaveLength(1)
+    })
+  })
+
+  describe('draw range and ray limits give the hits of mesh.raycast', () => {
+    const FIRST = 100
+    const COUNT = 50
+
+    /** A ray along the inward normal of triangle `t`, starting 0.03 in front of its centroid. */
+    const aimedAt = (mesh: THREE.Mesh, t: number): THREE.Raycaster => {
+      const position = mesh.geometry.getAttribute('position')
+      const index = mesh.geometry.index
+      const corner = (k: number): THREE.Vector3 => new THREE.Vector3().fromBufferAttribute(position, index ? index.getX(t * 3 + k) : t * 3 + k)
+      const triangle = new THREE.Triangle(corner(0), corner(1), corner(2))
+      const normal = triangle.getNormal(new THREE.Vector3())
+      const origin = mesh.localToWorld(triangle.getMidpoint(new THREE.Vector3()).addScaledVector(normal, 0.03))
+      return new THREE.Raycaster(origin, normal.negate().transformDirection(mesh.matrixWorld), 0, 0.06)
+    }
+
+    const doubleSided = (mesh: THREE.Mesh): THREE.Mesh => {
+      mesh.material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })
+      return mesh
+    }
+
+    const expectSameHits = (mesh: THREE.Mesh, raycasters: THREE.Raycaster[]): number[] => {
+      const probe = new MeshRayProbe(THREE)
+      return raycasters.map((raycaster) => {
+        const expected: THREE.Intersection[] = []
+        mesh.raycast(raycaster, expected)
+        const actual: THREE.Intersection[] = []
+        probe.raycast(mesh, raycaster, actual)
+        expect(summary(actual)).toEqual(summary(expected))
+        return expected.length
+      })
+    }
+
+    it.each([
+      ['an indexed mesh', (): THREE.Mesh => doubleSided(row().mesh)],
+      ['a non-indexed mesh', (): THREE.Mesh => doubleSided(new THREE.Mesh(row().mesh.geometry.toNonIndexed()))],
+    ])('setDrawRange on %s: triangles inside and outside the range', (_name, build) => {
+      const mesh = build()
+      const parent = new THREE.Group()
+      parent.scale.set(1.5, 0.8, 1.1)
+      parent.add(mesh)
+      parent.updateMatrixWorld(true)
+      mesh.geometry.setDrawRange(FIRST * 3, COUNT * 3)
+      const inside = Array.from({ length: COUNT }, (_, i) => FIRST + i)
+      const outside = [0, 7, FIRST - 3, FIRST - 1, FIRST + COUNT, FIRST + COUNT + 1, FIRST + COUNT + 40, 600]
+      const insideHits = expectSameHits(mesh, inside.map((t) => aimedAt(mesh, t)))
+      const outsideHits = expectSameHits(mesh, outside.map((t) => aimedAt(mesh, t)))
+      expect(insideHits.every((hits) => hits > 0)).toBe(true)
+      expect(outsideHits.every((hits) => hits === 0)).toBe(true)
+    })
+
+    it('a parent with negative scale', () => {
+      const { mesh } = row()
+      mesh.parent!.scale.set(-1.5, 0.8, 1.1)
+      mesh.parent!.updateMatrixWorld(true)
+      const hits = expectSameHits(mesh, shortRays(mesh, 200))
+      expect(hits.filter((count) => count > 0).length).toBeGreaterThan(10)
+    })
+
+    it('raycaster.near above zero', () => {
+      const { mesh } = row()
+      doubleSided(mesh)
+      const rays = shortRays(mesh, 200)
+      for (const raycaster of rays) {
+        raycaster.ray.origin.addScaledVector(raycaster.ray.direction, -0.1)
+        raycaster.far = 0.5
+      }
+      const hitsAt = (near: number): number => {
+        for (const raycaster of rays) raycaster.near = near
+        return expectSameHits(mesh, rays).reduce((sum, count) => sum + count, 0)
+      }
+      const all = hitsAt(0)
+      const backFacesOnly = hitsAt(0.2)
+      expect(backFacesOnly).toBeGreaterThan(0)
+      expect(backFacesOnly).toBeLessThan(all)
+      expect(hitsAt(1)).toBe(0)
+    })
+
+    it('raycaster.far = Infinity', () => {
+      const { mesh } = row()
+      const rays = shortRays(mesh, 50)
+      for (const raycaster of rays) raycaster.far = Infinity
+      const hits = expectSameHits(mesh, rays)
+      expect(hits.some((count) => count > 0)).toBe(true)
+    })
+  })
+
+  it('releases the stand-in even when its raycast throws', () => {
     const { mesh } = row()
-    mesh.geometry.addGroup(0, 30, 0)
-    mesh.material = [new THREE.MeshBasicMaterial(), new THREE.MeshBasicMaterial()] as unknown as THREE.MeshBasicMaterial
     const probe = new MeshRayProbe(THREE)
-    const spy = vi.spyOn(mesh, 'raycast')
-    probe.raycast(mesh, shortRays(mesh, 1)[0]!, [])
+    const stand = (probe as unknown as { stand: THREE.Mesh }).stand
+    const spy = vi.spyOn(stand, 'raycast').mockImplementation(() => {
+      throw new Error('stand-in raycast failed')
+    })
+    const raycaster = shortRays(mesh, 50).find((candidate) => {
+      const hits: THREE.Intersection[] = []
+      mesh.raycast(candidate, hits)
+      return hits.length > 0
+    })!
+    expect(() => probe.raycast(mesh, raycaster, [])).toThrow('stand-in raycast failed')
     expect(spy).toHaveBeenCalledTimes(1)
+    expect(stand.material).not.toBe(mesh.material)
+    expect(stand.geometry.getAttribute('position')).toBeUndefined()
+    expect(stand.geometry.boundingSphere).toBeNull()
+    expect(stand.geometry.boundingBox).toBeNull()
   })
 
   it('addHole on a big merged mesh visits a few triangles per mark', () => {
@@ -143,6 +309,7 @@ describe('the probe gives the hits of mesh.raycast without visiting every triang
     expect(stand.geometry.boundingBox).toBeNull()
   })
 
+  // Pins the needsUpdate contract documented in visual.ts, not a robustness goal.
   it('the boxes follow the position attribute version: stale without needsUpdate, rebuilt with it', () => {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 1, 0, 0, 0, 1, 0], 3))

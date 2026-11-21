@@ -39,7 +39,7 @@ export class MeshRayProbe {
     this.candidateIndex = new THREE.BufferAttribute(this.candidates, 1)
   }
 
-  /** How many times the per-triangle boxes were (re)built. */
+  /** How many times the per-triangle boxes were (re)built. @internal */
   get boxBuildCount(): number {
     return this.builds
   }
@@ -69,8 +69,11 @@ export class MeshRayProbe {
     stand.material = mesh.material
     stand.matrixWorld.copy(mesh.matrixWorld)
     const first = hits.length
-    stand.raycast(raycaster, hits)
-    this.release()
+    try {
+      stand.raycast(raycaster, hits)
+    } finally {
+      this.release()
+    }
     for (let i = first; i < hits.length; i++) {
       const hit = hits[i]!
       hit.object = mesh
@@ -159,7 +162,7 @@ export class MeshRayProbe {
     const grown = new Uint32Array(size)
     grown.set(this.candidates)
     this.candidates = grown
-    const numbers = new Uint32Array(Math.ceil(size / 3))
+    const numbers = new Uint32Array(Math.max(this.triangles.length, Math.ceil(size / 3)))
     numbers.set(this.triangles)
     this.triangles = numbers
     this.candidateIndex = new this.THREE.BufferAttribute(this.candidates, 1)
