@@ -1,16 +1,24 @@
-import { VOICE_GROUPS, createAudioEngine } from '@adatechnology/game-audio'
+import { createAudioEngine } from '@adatechnology/game-audio'
 import type { VoiceStartEvent } from '@adatechnology/game-audio'
 import { createAudioRecorder } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
 
-import { DESTRUCTION_SOUND_BANK, createDestructionSound } from '../src'
+import { DESTRUCTION_SOUND_BANK, DESTRUCTION_VOICE_GROUPS, IMPACT_BURST_GROUP, createDestructionSound } from '../src'
 
 const HITS = 200
+const CAP = DESTRUCTION_VOICE_GROUPS[IMPACT_BURST_GROUP]?.maxPerBurst as number
 
-function burst(deferredStart: boolean): { started: VoiceStartEvent[]; capped: number } {
+function burst(withGroups: boolean): { started: VoiceStartEvent[]; capped: number } {
   const recorder = createAudioRecorder()
   const started: VoiceStartEvent[] = []
-  const engine = createAudioEngine({ mix: 'art_scene', banks: [DESTRUCTION_SOUND_BANK], createContext: () => recorder.context, onVoiceStart: (event) => started.push(event), ...(deferredStart ? { deferredStart: {} } : {}) })
+  const engine = createAudioEngine({
+    mix: 'art_scene',
+    banks: [DESTRUCTION_SOUND_BANK],
+    createContext: () => recorder.context,
+    onVoiceStart: (event) => started.push(event),
+    deferredStart: {},
+    ...(withGroups ? { groups: DESTRUCTION_VOICE_GROUPS } : {}),
+  })
   engine.warmUp()
   const sound = createDestructionSound(engine, {})
   for (let index = 0; index < HITS; index++) sound.onSound('impact_metal_ballistic', [1 + (index % 20), 0, 1], 1, { keys: ['impact_metal_ballistic'] })
@@ -21,13 +29,15 @@ function burst(deferredStart: boolean): { started: VoiceStartEvent[]; capped: nu
 describe('impacts share one capped voice group', () => {
   it('a burst of impacts builds only the cap of voices, the loudest ones', () => {
     const { started, capped } = burst(true)
-    const cap = VOICE_GROUPS.impact_burst?.maxPerBurst as number
-    expect(started).toHaveLength(cap)
-    expect(capped).toBe(HITS - cap)
+    expect(CAP).toBe(16)
+    expect(started).toHaveLength(CAP)
+    expect(capped).toBe(HITS - CAP)
     expect(Math.max(...started.map((event) => event.distance))).toBeLessThan(5)
   })
 
-  it('without the deferred start queue nothing is held, as before', () => {
-    expect(burst(false).started.length).toBeGreaterThan(VOICE_GROUPS.impact_burst?.maxPerBurst ?? 0)
+  it('an engine built without the groups plays every impact, as before', () => {
+    const { started, capped } = burst(false)
+    expect(started.length).toBeGreaterThan(CAP)
+    expect(capped).toBe(0)
   })
 })

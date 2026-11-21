@@ -13,6 +13,8 @@ export type StartQueueOptions = {
 
 export type StartQueue = {
   push(job: Omit<StartJob, 'queuedAt'>): void
+  /** Puts jobs in front of everything waiting, in the order given: each is still one job of the queue's budget, and none waits behind later sounds. */
+  pushFront?(batch: readonly Omit<StartJob, 'queuedAt'>[]): void
   clear(): void
   readonly size: number
   /** The same queue as a `DeferredQueue` for a shared frame budget. Asking for it changes nothing: the queue drains by itself until a budget attaches it. */
@@ -36,7 +38,7 @@ function scheduleTask(task: () => void): void {
 
 /** Builds voices in small timed slices between frames, so a burst (an explosion's debris, glass and metal) never lands inside one frame. */
 /** The queue this package makes always has its `deferredQueue`; a third-party `StartQueue` may leave it out. */
-export type OwnStartQueue = StartQueue & { deferredQueue(): DeferredQueue }
+export type OwnStartQueue = StartQueue & { deferredQueue(): DeferredQueue; pushFront(batch: readonly Omit<StartJob, 'queuedAt'>[]): void }
 
 export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue {
   const budgetMs = options.budgetMs ?? 2
@@ -72,6 +74,11 @@ export function createStartQueue(options: StartQueueOptions = {}): OwnStartQueue
   const queue: OwnStartQueue = {
     push(job) {
       jobs.push({ ...job, queuedAt: nowMs() })
+      schedule()
+    },
+    pushFront(batch) {
+      const queuedAt = nowMs()
+      jobs.splice(0, 0, ...batch.map((job) => ({ ...job, queuedAt })))
       schedule()
     },
     clear() {

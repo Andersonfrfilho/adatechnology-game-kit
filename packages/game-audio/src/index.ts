@@ -83,7 +83,7 @@ export { DISTANCE_CURVES, cutoffDivisor, falloffGain, isSilent } from './falloff
 export type { DistanceCurveName } from './falloff'
 export { DEFAULT_LISTENER, PAN_LIMIT, PAN_MIN_DISTANCE, listenerDistance, panFor } from './listener'
 export type { DistanceMode, Listener } from './listener'
-export { BUS_PRIORITY, DEFAULT_MAX_VOICES, IMPACT_BURST_GROUP, VOICE_GROUPS, busPriority, createVoiceManager } from './voices'
+export { BUS_PRIORITY, DEFAULT_MAX_VOICES, VOICE_GROUPS, busPriority, createVoiceManager } from './voices'
 export type { VoiceDecision, VoiceGroup, VoiceManager, VoiceManagerOptions, VoiceRefusal, VoiceRequest, VoiceStats } from './voices'
 export { LOOP_SMOOTHING, LOOP_START_ABOVE, createLoopState } from './loops'
 export type { LoopAction, LoopState } from './loops'

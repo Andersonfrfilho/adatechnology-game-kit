@@ -2,7 +2,7 @@ import { createAudioRecorder } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
 
 import { GAME_SFX_BANK, VOICE_GROUPS, createAudioEngine, createVoiceManager } from '../src'
-import type { VoiceGroup, VoiceStartEvent } from '../src'
+import type { SampleSound, VoiceGroup, VoiceStartEvent } from '../src'
 
 const LIMIT = 4
 const GROUPS: Readonly<Record<string, VoiceGroup>> = {
@@ -10,24 +10,37 @@ const GROUPS: Readonly<Record<string, VoiceGroup>> = {
   boosted: { maxPerBurst: LIMIT, burstBoost: 1.5 },
   other: { maxPerBurst: LIMIT },
 }
+const SAMPLE: SampleSound = { id: 'hit_file', bus: 'world', close: [{ url: 'h1.ogg' }, { url: 'h2.ogg' }], sources: ['sdk: test'] }
 
 const setup = (options: Parameters<typeof createAudioEngine>[0] = {}) => {
   const recorder = createAudioRecorder()
+  const context = recorder.context as unknown as AudioContext
+  Object.assign(context, {
+    createWaveShaper: () => context.createGain(),
+    decodeAudioData: (_bytes: ArrayBuffer, done: (buffer: AudioBuffer) => void) => {
+      const buffer = context.createBuffer(1, 24000, 48000)
+      done(buffer)
+      return Promise.resolve(buffer)
+    },
+  })
   const started: VoiceStartEvent[] = []
   const engine = createAudioEngine({
-    banks: [GAME_SFX_BANK],
+    banks: [GAME_SFX_BANK, { id: 'files', samples: [SAMPLE] }],
     mix: 'game',
     maxVoices: 500,
     groups: GROUPS,
     deferredStart: {},
-    createContext: () => recorder.context,
+    createContext: () => context,
+    samples: { loader: async () => new ArrayBuffer(8) },
     onVoiceStart: (event) => started.push(event),
     ...options,
   })
   engine.warmUp()
-  const nodes = (): number => ['createGain', 'createBiquadFilter', 'createBufferSource', 'createOscillator'].reduce((sum, name) => sum + JSON.stringify(recorder.trace().entries).split(`"${name}"`).length - 1, 0)
+  const trace = (): string => JSON.stringify(recorder.trace().entries)
+  const count = (kind: string): number => trace().split(`"kind":"${kind}"`).length - 1
+  const nodes = (): number => trace().split('"op":"create","node"').length - 1
   const flush = (): void => engine.deferredQueue?.()?.flush?.()
-  return { engine, recorder, started, nodes, flush }
+  return { engine, recorder, started, nodes, count, flush }
 }
 
 describe('the voice cap per burst', () => {
@@ -43,8 +56,16 @@ describe('the voice cap per burst', () => {
     const referenceBefore = reference.nodes()
     for (let index = 0; index < LIMIT; index++) reference.engine.play('sfx_pistol', { distance: 1 + index * 0.3 })
     reference.flush()
+    expect(capped.nodes() - before).toBeGreaterThan(0)
     expect(capped.nodes() - before).toBe(reference.nodes() - referenceBefore)
     expect(capped.engine.stats().capped).toBe(276 - LIMIT)
+  })
+
+  it('keeps only what can win: the losers are counted at once and the queue holds one settle job, not 276', () => {
+    const { engine } = setup()
+    for (let index = 0; index < 276; index++) engine.play('sfx_pistol', { distance: 1 + index * 0.3, group: 'crowd' })
+    expect(engine.stats().capped).toBe(276 - LIMIT)
+    expect(engine.deferredQueue?.()?.pending()).toBe(1)
   })
 
   it('keeps the loudest, whatever order they were asked in', () => {
@@ -55,11 +76,11 @@ describe('the voice cap per burst', () => {
     expect(started.map((event) => event.distance).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
   })
 
-  it('breaks a tie by the order the sounds were asked in', () => {
+  it('breaks a tie by the order the sounds were asked in: a later request never evicts an earlier one', () => {
     const { engine, started, flush } = setup()
     for (let index = 0; index < 12; index++) engine.play('sfx_pistol', { distance: 5, delay: index, group: 'crowd' })
     flush()
-    const delays = started.map((event) => event.startAt - (started[0] as VoiceStartEvent).startAt).sort((a, b) => a - b)
+    const delays = started.map((event) => event.startAt - (started[0] as VoiceStartEvent).startAt)
     expect(delays).toEqual([0, 1, 2, 3])
   })
 
@@ -76,20 +97,26 @@ describe('the voice cap per burst', () => {
 
   it('changes nothing for a caller that does not opt in', () => {
     const plain = setup({ groups: undefined })
-    for (let index = 0; index < 50; index++) plain.engine.play('sfx_pistol', { distance: 1 })
+    for (let index = 0; index < 50; index++) plain.engine.play('sfx_pistol', { distance: 1, group: 'crowd' })
     plain.flush()
     expect(plain.started).toHaveLength(50)
     expect(plain.engine.stats().capped).toBe(0)
-
-    const withoutQueue = setup({ deferredStart: undefined })
-    for (let index = 0; index < 50; index++) withoutQueue.engine.play('sfx_pistol', { distance: 1 + index * 0.3, group: 'crowd' })
-    expect(withoutQueue.started).toHaveLength(50)
+    expect(Object.values(VOICE_GROUPS).some((group) => group.maxPerBurst !== undefined)).toBe(false)
   })
 
-  it('an urgent play is never held', () => {
-    const { engine, started } = setup()
+  it('refuses a capped group on an engine with no start queue, rather than ignoring it', () => {
+    expect(() => setup({ deferredStart: undefined })).toThrow(/maxPerBurst.*deferredStart/)
+    expect(() => setup({ deferredStart: undefined, groups: { plain: { maxConcurrent: 2 } } })).not.toThrow()
+  })
+
+  it('an urgent play of a capped group is built now, while a normal one waits', () => {
+    const { engine, started, flush } = setup()
     for (let index = 0; index < 10; index++) expect(engine.play('sfx_pistol', { distance: 1, group: 'crowd', urgent: true })).not.toBeNull()
     expect(started).toHaveLength(10)
+    expect(engine.play('sfx_pistol', { distance: 1, group: 'crowd' })).toBeNull()
+    expect(started).toHaveLength(10)
+    flush()
+    expect(started).toHaveLength(11)
   })
 
   it('flushing with nothing held is a no-op', () => {
@@ -112,13 +139,28 @@ describe('the voice cap per burst', () => {
     }
   })
 
-  it('adds no wait of its own: the kept voices are built by the same drain that settles the burst', () => {
-    const { engine, started, flush } = setup()
+  it('builds the kept voices ahead of a sound asked after them, under a budgeted drain', () => {
+    const { engine, started } = setup()
     for (let index = 0; index < 10; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'crowd' })
-    expect(started).toHaveLength(0)
+    engine.play('sfx_pistol', { distance: 1, delay: 100 })
+    const queue = engine.deferredQueue?.() as NonNullable<ReturnType<NonNullable<typeof engine.deferredQueue>>>
+    // a clock already past the deadline: one job per call, as a frame with no time left
+    let calls = 0
+    while (queue.pending() > 0 && calls++ < 50) queue.run(0, () => 1)
+    expect(started).toHaveLength(LIMIT + 1)
+    expect(started.slice(0, LIMIT).every((event) => event.startAt < 50)).toBe(true)
+    expect((started[LIMIT] as VoiceStartEvent).startAt).toBeGreaterThan(50)
+    expect(calls).toBeGreaterThan(LIMIT)
+  })
+
+  it('drops the held burst as late, not as capped, when the queue does not reach it in time', () => {
+    const { engine, started, flush } = setup({ deferredStart: { maxLatencyMs: -1 } })
+    for (let index = 0; index < 10; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'crowd' })
     flush()
-    expect(started).toHaveLength(LIMIT)
-    expect(engine.deferredQueue?.()?.pending()).toBe(0)
+    expect(started).toHaveLength(0)
+    const stats = engine.stats()
+    expect(stats.capped).toBe(10 - LIMIT)
+    expect(stats.dropped).toBe(LIMIT)
   })
 
   it('raises the kept voices only as far as others were dropped', () => {
@@ -143,23 +185,53 @@ describe('the voice cap per burst', () => {
     expect(started).toHaveLength(2)
   })
 
-  it('drops what is held when the engine closes', () => {
-    const { engine, started, flush } = setup()
+  it('releases what is held when the engine closes, and builds nothing from a queue drained after', () => {
+    const { engine, started, nodes, flush } = setup()
     for (let index = 0; index < 10; index++) engine.play('sfx_pistol', { distance: 1 + index, group: 'crowd' })
+    const before = nodes()
     engine.dispose()
     flush()
+    expect(nodes()).toBe(before)
     expect(started).toHaveLength(0)
+    expect(engine.stats().dropped).toBe(0)
+    expect(engine.stats().capped).toBe(10 - LIMIT)
   })
 })
 
-describe('the shipped impact group and the manager', () => {
-  it('names the group of impacts, with a cap below the global one', () => {
-    expect(VOICE_GROUPS.impact_burst?.maxPerBurst).toBe(16)
-    expect(VOICE_GROUPS.impact_burst?.burstBoost).toBeGreaterThan(1)
-    expect(createVoiceManager().stats().maxVoices).toBeGreaterThan(VOICE_GROUPS.impact_burst?.maxPerBurst ?? Infinity)
+describe('the voice cap with occlusion routes and with files', () => {
+  it('makes no occlusion node for a request that is dropped, and the kept ones get theirs', () => {
+    const at = (index: number) => ({ position: [1 + index * 0.3, 0, 0] as [number, number, number] })
+    const capped = setup({ occlusion: { query: () => [] } })
+    const before = capped.count('biquadFilter')
+    for (let index = 0; index < 100; index++) capped.engine.play('sfx_pistol', { ...at(index), group: 'crowd' })
+    expect(capped.count('biquadFilter')).toBe(before)
+    capped.flush()
+
+    const reference = setup({ occlusion: { query: () => [] } })
+    const referenceBefore = reference.count('biquadFilter')
+    for (let index = 0; index < LIMIT; index++) reference.engine.play('sfx_pistol', at(index))
+    reference.flush()
+    const made = capped.count('biquadFilter') - before
+    expect(made).toBeGreaterThan(0)
+    expect(made).toBe(reference.count('biquadFilter') - referenceBefore)
+    expect(capped.engine.occludedVoices()).toHaveLength(LIMIT)
   })
 
-  it('the manager hands out the rule of a group', () => {
+  it('caps recorded sounds the same way: the loudest LIMIT are built, in the queue', async () => {
+    const { engine, started, nodes, flush } = setup()
+    await engine.loadSamples(['hit_file'])
+    const before = nodes()
+    for (let index = 0; index < 60; index++) engine.play('hit_file', { distance: 1 + ((index * 7) % 60), group: 'crowd' })
+    expect(nodes()).toBe(before)
+    flush()
+    expect(started).toHaveLength(LIMIT)
+    expect(started.every((event) => event.kind === 'sample')).toBe(true)
+    expect(started.map((event) => event.distance).sort((a, b) => a - b)).toEqual([1, 2, 3, 4])
+  })
+})
+
+describe('the manager', () => {
+  it('hands out the rule of a group', () => {
     const manager = createVoiceManager({ groups: GROUPS })
     expect(manager.groupRule('crowd')).toEqual({ maxPerBurst: LIMIT })
     expect(manager.groupRule('none')).toBeUndefined()

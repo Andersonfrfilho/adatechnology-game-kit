@@ -26,11 +26,13 @@ import { createNoiseStore, noiseBuffer, prepareNoise } from './engine-noise'
 import type { NoiseStore } from './engine-noise'
 import type { RealizedVoice } from './nodes'
 import { createBurstCap } from './engine-burst'
+import type { BurstCap } from './engine-burst'
 import { createStartQueue } from './engine-queue'
+import type { StartJob } from './engine-queue'
 import type { StartQueueOptions } from './engine-queue'
 import { realize } from './realize'
 import { createSetPicker, retunePlan } from '../variation'
-import { planSample, sampleUrls } from '../sample'
+import { DEFAULT_SAMPLE_FALLOFF, planSample, sampleUrls } from '../sample'
 import type { SampleEnvironment, SampleMemory, SamplePlan, SampleSound } from '../sample'
 import { createSampleStore, fetchLoader } from './sample-store'
 import type { SampleLoadReport, SampleLoader, SampleStatus } from './sample-store'
@@ -61,7 +63,8 @@ export type PlayOptions = {
   readonly occlusion?: number
   /**
    * The voice group of this play when the sound names none of its own (a group with `maxPerBurst` caps a burst, see `VoiceGroup`). A held sound
-   * returns `null` from `play`: it is built, or dropped, when the start queue next runs. Ignored by `urgent` plays.
+   * returns `null` from `play` (no handle: a loop or a sound the caller stops must not use a capped group): it is built, or dropped, when the start
+   * queue next runs. The plan's random draws happen then, loudest first; the set variant and the rate are drawn when asked. Ignored by `urgent` plays.
    */
   readonly group?: string
 }
@@ -232,6 +235,9 @@ const planUsesNoise = (plan: SoundPlan): boolean => plan.layers.some((layer) => 
  */
 export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine {
   const seed = options.seed ?? 1
+  for (const [name, group] of Object.entries(options.groups ?? {})) {
+    if (group.maxPerBurst !== undefined && !options.deferredStart) throw new Error(`voice group ${name} has maxPerBurst, which needs the engine's deferredStart (a held burst is settled by its start queue)`)
+  }
   const registry = createSoundRegistry(options.banks)
   const voices = createVoiceManager({ ...(options.groups ? { groups: options.groups } : {}), ...(options.maxVoices === undefined ? {} : { maxVoices: options.maxVoices }) })
   const engineRandom = createRng(seed)
@@ -364,14 +370,26 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   })
 
   const startQueue = options.deferredStart ? createStartQueue(options.deferredStart) : null
-  // the cap settles as a job of the start queue: the window is the one the host already owns, and the kept voices are built in the same drain
-  const burst = startQueue ? createBurstCap((settle, cancel) => startQueue.push({ run: () => (advance(), settle()), drop: cancel })) : null
-  const holdBurst = (group: string | undefined, playOptions: PlayOptions, score: number, launch: (boost: number) => unknown): boolean => {
-    const rule = burst && group !== undefined && !playOptions.urgent ? voices.groupRule(group) : undefined
-    if (!burst || !group || rule?.maxPerBurst === undefined) return false
-    burst.hold(group, rule.maxPerBurst, rule.burstBoost ?? 1, score, launch)
-    return true
-  }
+  // the cap settles as a job of the start queue (the window is the one the host owns). The kept voices go in front of the queue, one job each, so a
+  // later sound never builds before them and every build is charged to the queue's budget
+  const settled: Omit<StartJob, 'queuedAt'>[] = []
+  const burst = startQueue
+    ? createBurstCap(
+        () =>
+          startQueue.push({
+            run() {
+              advance()
+              ;(burst as BurstCap).settle()
+              startQueue.pushFront(settled)
+              settled.length = 0
+            },
+            drop: () => (burst as BurstCap).expire(),
+          }),
+        (run, boost) => settled.push({ run: () => run(boost), drop: () => undefined }),
+      )
+    : null
+  // the rule of a capped group for this play, or undefined when it is not held (no group, no cap, or `urgent`)
+  const burstRule = (group: string | undefined, playOptions: PlayOptions): VoiceGroup | undefined => (burst && group !== undefined && !playOptions.urgent ? voices.groupRule(group) : undefined)
 
   const build = (plan: SoundPlan, store: NoiseStore, delay: number, requestedAt: number, fallbackOf?: string, route?: OcclusionRoute): RealizedVoice => {
     const audio = context as BaseAudioContext
@@ -487,8 +505,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
         : {}),
   })
 
-  // the kept voices of a burst that dropped others: the plan at a higher level (the layers carry the level)
-  const boostedSample = (plan: SamplePlan, boost: number): SamplePlan => ({ ...plan, level: plan.level * boost, layers: plan.layers.map((layer) => ({ ...layer, gain: layer.gain * boost })) })
+  const distanceOf = (playOptions: PlayOptions): number => playOptions.distance ?? (playOptions.position ? listenerDistance(listener, playOptions.position, options.distance) : 0)
 
   // undefined: the files are not ready and there is no fallback, so the recipe of the same id (if any) plays
   const playSample = (sample: SampleSound, playOptions: PlayOptions, random: () => number, store: NoiseStore): VoiceHandle | null | undefined => {
@@ -498,36 +515,39 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       if (sample.fallback && sample.fallback !== sample.id) return playWith(sample.fallback, playOptions, random, store, sample.id)
       return registry.sound(sample.id) ? undefined : null
     }
-    const plan = planSample(sample, sampleInput(playOptions, playOptions.seed === undefined ? random : createRng(playOptions.seed), true))
-    if (!plan) return null
-    const audio = ready()
-    if (!audio) return null
-    unlockContext(audio)
-    advance()
-    const group = plan.group ?? playOptions.group
+    const group = sample.group ?? playOptions.group
+    const rule = burstRule(group, playOptions)
+    const score = rule ? falloffGain(sample.falloff ?? DEFAULT_SAMPLE_FALLOFF, (playOptions.volume ?? 1) * (sample.gain ?? 1), distanceOf(playOptions)) : 0
+    if (rule?.maxPerBurst !== undefined && !(burst as BurstCap).offer(group as string, rule.maxPerBurst, rule.burstBoost ?? 1, score)) return null
     const launch = (boost: number): VoiceHandle | null => {
-      const planned = boost === 1 ? plan : boostedSample(plan, boost)
-      const voiceId = admit(planned, planned.level, planned.distance, group)
+      const louder = boost === 1 ? playOptions : { ...playOptions, volume: (playOptions.volume ?? 1) * boost }
+      const plan = planSample(sample, sampleInput(louder, playOptions.seed === undefined ? random : createRng(playOptions.seed), true))
+      if (!plan) return null
+      const audio = ready()
+      if (!audio) return null
+      unlockContext(audio)
+      advance()
+      const voiceId = admit(plan, plan.level, plan.distance, group)
       if (voiceId === null) return null
       const requestedAt = audio.currentTime
       const time = requestedAt + (playOptions.delay ?? 0)
       const chokeList = sample.choke ? choked(sample.id) : undefined
-      const realized = realizeSample(planned, { context: audio, output: sampleRoute(voiceId, sample, playOptions, planned.level, planned.bus), buffer: (url) => sampleStore.buffer(url), time })
-      const sampleBank = registry.bankOf(planned.id)
+      const realized = realizeSample(plan, { context: audio, output: sampleRoute(voiceId, sample, playOptions, plan.level, plan.bus), buffer: (url) => sampleStore.buffer(url), time })
+      const sampleBank = registry.bankOf(plan.id)
       announce({
-        id: planned.id,
+        id: plan.id,
         kind: 'sample',
         ...(sampleBank ? { bank: sampleBank } : {}),
         requestedAt,
         startAt: time,
         outputLatency: latencyOf(audio),
-        level: planned.level,
-        distance: planned.distance,
-        ...(planned.pan === undefined ? {} : { pan: planned.pan }),
-        layers: planned.layers.map((layer) => ({ role: layer.role, url: layer.url, take: layer.take, rate: layer.rate })),
-        ...(planned.tier ? { tier: planned.tier } : {}),
+        level: plan.level,
+        distance: plan.distance,
+        ...(plan.pan === undefined ? {} : { pan: plan.pan }),
+        layers: plan.layers.map((layer) => ({ role: layer.role, url: layer.url, take: layer.take, rate: layer.rate })),
+        ...(plan.tier ? { tier: plan.tier } : {}),
       })
-      voices.setLength(voiceId, sampleLength(planned, (url) => sampleStore.seconds(url)) + (playOptions.delay ?? 0))
+      voices.setLength(voiceId, sampleLength(plan, (url) => sampleStore.seconds(url)) + (playOptions.delay ?? 0))
       active.set(voiceId, realized)
       if (chokeList && sample.choke) {
         chokeList.push({ id: voiceId, voice: realized })
@@ -542,7 +562,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       return {
         id: voiceId,
         kind: 'sample',
-        plan: planned,
+        plan,
         stop() {
           realized.stop()
           voices.release(voiceId)
@@ -550,7 +570,9 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
         },
       }
     }
-    return holdBurst(group, playOptions, plan.level, launch) ? null : launch(1)
+    if (rule?.maxPerBurst === undefined) return launch(1)
+    ;(burst as BurstCap).place(group as string, score, (boost) => void launch(boost))
+    return null
   }
 
   const playWith = (asked: string, playOptions: PlayOptions, streamRandom: () => number, store: NoiseStore, fallbackOf?: string): VoiceHandle | null => {
@@ -564,7 +586,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     const random = seeded ?? streamRandom
     const recipe = registry.sound(id)
     if (!recipe || busSettings.get(recipe.bus)?.muted) return null
-    const distance = playOptions.distance ?? (playOptions.position ? listenerDistance(listener, playOptions.position, options.distance) : 0)
+    const distance = distanceOf(playOptions)
     const level = falloffGain(recipe.falloff, playOptions.volume ?? 1, distance)
     const silent = isSilent(recipe.falloff, level)
     // a sound too quiet to play does not even start the context (the team routines return before touching it)
@@ -574,15 +596,19 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
     unlockContext(audio)
     advance()
     const group = recipe.group ?? playOptions.group
-    const launch = (boost: number): VoiceHandle | null => {
+    const rule = silent ? undefined : burstRule(group, playOptions)
+    if (rule?.maxPerBurst !== undefined && !(burst as BurstCap).offer(group as string, rule.maxPerBurst, rule.burstBoost ?? 1, level)) return null
+    const launch = (boost: number, direct: boolean): VoiceHandle | null => {
       const voiceId = silent ? undefined : admit(recipe, level * boost, distance, group)
       if (voiceId === null) return null
       if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
       const louder = boost === 1 ? playOptions : { ...playOptions, volume: (playOptions.volume ?? 1) * boost }
       const plan = planSound(recipe, inputFor(recipe, louder, random))
-      return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, playOptions.urgent, recipe.falloff?.model === 'none' ? undefined : playOptions.position) : null
+      return plan ? start(retunePlan(plan, rate), store, voiceId, playOptions.delay, fallbackOf, direct || playOptions.urgent, recipe.falloff?.model === 'none' ? undefined : playOptions.position) : null
     }
-    return !silent && holdBurst(group, playOptions, level, launch) ? null : launch(1)
+    if (rule?.maxPerBurst === undefined) return launch(1, false)
+    ;(burst as BurstCap).place(group as string, level, (boost) => void launch(boost, true))
+    return null
   }
 
   const randomFor = (playOptions: PlayOptions): (() => number) => {
@@ -769,16 +795,16 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
         context: context ? context.state : 'none',
         voices: voiceStats.active,
         peak: voiceStats.peak,
-        dropped: voiceStats.dropped,
+        dropped: voiceStats.dropped + (burst?.late ?? 0),
         maxVoices: voiceStats.maxVoices,
-        capped: burst?.dropped ?? 0,
+        capped: burst?.capped ?? 0,
         loops: [...loops].filter((loop) => loop.created).length,
       }
     },
     dispose() {
       // closing the context ends every voice; they only leave the limiter
+      burst?.clear()
       startQueue?.clear()
-      burst?.cancel()
       for (const id of active.keys()) voices.release(id)
       for (const loop of [...loops]) loop.stop()
       occluders?.clear()

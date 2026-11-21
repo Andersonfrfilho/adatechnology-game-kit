@@ -6,7 +6,7 @@ import type { AudioEngine } from '@adatechnology/game-audio'
 import { DEFAULT_FRAME_TARGET_MS, frameTargetOf, registerFrameQueues, workBudgetOf } from './frame-queues'
 import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { DESTRUCTION_SOUND_KEYS, MIN_PIECE_MASS_KG, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { DESTRUCTION_SOUND_KEYS, DESTRUCTION_VOICE_GROUPS, MIN_PIECE_MASS_KG, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, Hit, SurfaceId } from '@adatechnology/game-contracts'
@@ -427,7 +427,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
   const ownAudio = options.audio === undefined
-  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {}, occlusion: { query: createWorldOcclusion(world) } }))
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createWorldOcclusion(world) } }))
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
   if (audio && options.samplesBaseUrl !== null) {

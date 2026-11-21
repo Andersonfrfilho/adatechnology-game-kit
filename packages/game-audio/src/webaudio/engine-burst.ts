@@ -1,82 +1,130 @@
-/** A request held until its burst settles: `run` builds it (with the burst's gain boost) and is never called for a request that is dropped. */
-type Held = { readonly score: number; readonly order: number; readonly run: (boost: number) => void }
+/** A slot of a group's top list; slots are reused, so a request that cannot win allocates nothing. */
+type Slot = { score: number; order: number; run: ((boost: number) => void) | undefined }
 
-type Bucket = { limit: number; boost: number; readonly held: Held[] }
+type Bucket = { limit: number; boost: number; asked: number; weakest: number; readonly slots: Slot[]; readonly spare: Slot[] }
 
 export type BurstCap = {
-  /** Holds a request of a group; the engine's next `settle` decides it. */
-  hold(group: string, limit: number, boost: number, score: number, run: (boost: number) => void): void
-  /** Builds the `limit` loudest requests of every group (ties by request order) and forgets the rest. Nothing held is a no-op. */
+  /** Whether a request of this loudness can still be among the `limit` loudest of its group's burst; a request that cannot is counted as capped and costs nothing more. */
+  offer(group: string, limit: number, boost: number, score: number): boolean
+  /** Keeps the request `offer` accepted, replacing the group's weakest when the list is full. */
+  place(group: string, score: number, run: (boost: number) => void): void
+  /** Hands the loudest of every group to `deliver`, loudest first (ties by request order), and empties the lists. Nothing held is a no-op. */
   settle(): void
-  /** Forgets everything held (the queue gave up or the engine closed). */
-  cancel(): void
-  readonly pending: number
-  /** Requests dropped without building a node, since the engine began. */
-  readonly dropped: number
+  /** The settle job waited too long: what is held is dropped as late, counted apart from `capped`. */
+  expire(): void
+  /** The engine closed: forgets what is held without counting it. */
+  clear(): void
+  /** Requests that lost to louder ones, before any node. */
+  readonly capped: number
+  /** Requests dropped because the queue did not reach their settle in time. */
+  readonly late: number
 }
 
-// loudest first; the same level keeps the order the sounds were asked in (and a level that is not a number counts as silent)
-const loudestFirst = (a: Held, b: Held): number => b.score - a.score || a.order - b.order
+const loudestFirst = (a: Slot, b: Slot): number => b.score - a.score || a.order - b.order
 
 /**
- * One frame of impacts can ask for hundreds of voices of one group, and each costs its nodes. The cap holds the requests (no node is created for
- * them), and when `schedule`'s settle job runs, builds only the loudest. `schedule` puts that job in the engine's start queue, so the window is the
- * one the host already owns: from the first held request until the queue next drains, with no clock and no extra frame.
+ * One frame of impacts can ask for hundreds of voices of one group, and each costs its nodes. The cap keeps the `limit` loudest per group as they
+ * come (a bounded list, no growth with the burst), and `schedule`'s settle job builds them when the engine's start queue reaches it: the window is
+ * the one the host already owns, with no clock and no extra frame.
  */
-export function createBurstCap(schedule: (settle: () => void, cancel: () => void) => void): BurstCap {
+export function createBurstCap(schedule: () => void, deliver: (run: (boost: number) => void, boost: number) => void): BurstCap {
   const buckets = new Map<string, Bucket>()
   let order = 0
   let scheduled = false
-  let pending = 0
-  let dropped = 0
+  let capped = 0
+  let late = 0
 
-  const settle = (): void => {
-    scheduled = false
-    for (const bucket of buckets.values()) {
-      const { held } = bucket
-      if (held.length === 0) continue
-      held.sort(loudestFirst)
-      const kept = Math.min(bucket.limit, held.length)
-      const boost = 1 + (bucket.boost - 1) * ((held.length - kept) / held.length)
-      dropped += held.length - kept
-      // a kept request builds a voice (it never asks the cap for another), so the list is safe to walk before it is emptied
-      for (let index = 0; index < kept; index++) (held[index] as Held).run(boost)
-      held.length = 0
+  const release = (bucket: Bucket): void => {
+    for (const slot of bucket.slots) {
+      slot.run = undefined
+      bucket.spare.push(slot)
     }
-    pending = 0
+    bucket.slots.length = 0
+    bucket.asked = 0
   }
 
-  const cancel = (): void => {
-    scheduled = false
+  const forget = (): number => {
+    let held = 0
     for (const bucket of buckets.values()) {
-      dropped += bucket.held.length
-      bucket.held.length = 0
+      held += bucket.slots.length
+      release(bucket)
     }
-    pending = 0
+    scheduled = false
+    return held
+  }
+
+  const bucketOf = (group: string, limit: number, boost: number): Bucket => {
+    let bucket = buckets.get(group)
+    if (!bucket) {
+      bucket = { limit, boost, asked: 0, weakest: 0, slots: [], spare: [] }
+      buckets.set(group, bucket)
+    }
+    bucket.limit = limit
+    bucket.boost = boost
+    return bucket
+  }
+
+  // the lowest score; among equals the latest request, so a later one never evicts an earlier one of the same loudness
+  const findWeakest = (bucket: Bucket): number => {
+    let weakest = 0
+    for (let index = 1; index < bucket.slots.length; index++) {
+      const slot = bucket.slots[index] as Slot
+      const current = bucket.slots[weakest] as Slot
+      if (slot.score < current.score || (slot.score === current.score && slot.order > current.order)) weakest = index
+    }
+    return weakest
   }
 
   return {
-    hold(group, limit, boost, score, run) {
-      let bucket = buckets.get(group)
-      if (!bucket) {
-        bucket = { limit, boost, held: [] }
-        buckets.set(group, bucket)
+    offer(group, limit, boost, score) {
+      const bucket = bucketOf(group, limit, boost)
+      bucket.asked++
+      if (bucket.slots.length < bucket.limit) return true
+      bucket.weakest = findWeakest(bucket)
+      if (score > (bucket.slots[bucket.weakest] as Slot).score) return true
+      capped++
+      return false
+    },
+    place(group, score, run) {
+      const bucket = buckets.get(group) as Bucket
+      const level = score > 0 ? score : 0
+      let slot: Slot
+      if (bucket.slots.length < bucket.limit) {
+        slot = bucket.spare.pop() ?? { score: 0, order: 0, run: undefined }
+        bucket.slots.push(slot)
+      } else {
+        slot = bucket.slots[bucket.weakest] as Slot
+        capped++
       }
-      bucket.limit = limit
-      bucket.boost = boost
-      bucket.held.push({ score: score > 0 ? score : 0, order: order++, run })
-      pending++
+      slot.score = level
+      slot.order = order++
+      slot.run = run
       if (scheduled) return
       scheduled = true
-      schedule(settle, cancel)
+      schedule()
     },
-    settle,
-    cancel,
-    get pending() {
-      return pending
+    settle() {
+      scheduled = false
+      for (const bucket of buckets.values()) {
+        const { slots } = bucket
+        if (slots.length === 0) continue
+        slots.sort(loudestFirst)
+        const boost = 1 + (bucket.boost - 1) * ((bucket.asked - slots.length) / bucket.asked)
+        for (const slot of slots) deliver(slot.run as (boost: number) => void, boost)
+        release(bucket)
+      }
     },
-    get dropped() {
-      return dropped
+    expire() {
+      late += forget()
+    },
+    clear() {
+      forget()
+    },
+    get capped() {
+      return capped
+    },
+    get late() {
+      return late
     },
   }
 }

@@ -9,7 +9,8 @@ import type { BusId } from './recipe'
  *
  * `maxPerBurst` is different: it is not checked per request but when a burst settles (see `engine-burst.ts`). Of the sounds of the group asked
  * before the engine's start queue next runs (a frame's events), only the `maxPerBurst` loudest are built; the rest never touch a node. It needs
- * `deferredStart`; without it the engine has nowhere to hold the requests and the option is ignored.
+ * `deferredStart`: an engine given such a group without it throws. A held play returns no handle, so a loop or a sound the caller stops must not use a
+ * capped group.
  */
 export type VoiceGroup = {
   readonly maxConcurrent?: number
@@ -28,9 +29,6 @@ export const VOICE_GROUPS: Readonly<Record<string, VoiceGroup>> = voiceGroupsJso
 /** Q7: weapons > voices > world > ambience; the interface above all, weather with the ambience. */
 export const BUS_PRIORITY: Readonly<Record<BusId, number>> = { ui: 5, weapons: 4, voices: 3, world: 2, weather: 1, ambience: 1 }
 export const DEFAULT_MAX_VOICES = 32
-
-/** The shipped `VOICE_GROUPS` entry that caps a burst of impacts (a blast with fragments); a host passes it as `PlayOptions.group`. */
-export const IMPACT_BURST_GROUP = 'impact_burst'
 
 export function busPriority(bus: BusId): number {
   return BUS_PRIORITY[bus]

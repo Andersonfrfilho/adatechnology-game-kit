@@ -35,12 +35,5 @@
     "sources": [
       "sdk: every melting part of a burning bin is one sizzle at a time (room log: hiss x34 in 1.6 s on a plastic bin)"
     ]
-  },
-  "impact_burst": {
-    "maxPerBurst": 16,
-    "burstBoost": 1.4,
-    "sources": [
-      "sdk: one blast with fragments makes hundreds of impacts in one frame (room log: 276 voices in one frame, about 12 ms); the sixteen loudest play, a little louder"
-    ]
   }
 }
