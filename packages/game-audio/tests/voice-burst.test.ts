@@ -323,6 +323,25 @@ describe('the voice cap and the queue clock', () => {
     expect(survivors).toBeCloseTo(plain * (1 + 0.5 * (100 / 102)), 6)
   })
 
+  it('starts the next burst from zero after a whole burst came late: the old count does not raise its boost', () => {
+    freezeTime()
+    const { engine, started, flush } = setup({ deferredStart: { maxLatencyMs: 100 } })
+    for (let index = 0; index < 100; index++) engine.play('sfx_pistol', { distance: 20 + (index % 10), group: 'boosted' })
+    clock = 150
+    flush()
+    expect(started).toHaveLength(0)
+    for (let index = 0; index < LIMIT; index++) engine.play('sfx_pistol', { distance: 5, group: 'boosted' })
+    flush()
+    clock = 0
+    const { engine: plainEngine, started: plainStarted, flush: plainFlush } = setup({ deferredStart: { maxLatencyMs: 100 } })
+    plainEngine.play('sfx_pistol', { distance: 5, group: 'boosted' })
+    plainFlush()
+    expect(started).toHaveLength(LIMIT)
+    expect((started[0] as VoiceStartEvent).level).toBeCloseTo((plainStarted[0] as VoiceStartEvent).level, 9)
+    engine.dispose()
+    plainEngine.dispose()
+  })
+
   it('does not count a closed engine as late', () => {
     freezeTime()
     const { engine, flush } = setup()
