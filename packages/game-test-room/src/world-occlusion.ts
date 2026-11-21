@@ -27,50 +27,41 @@ export const OCCLUDER_MIN_RADIUS = 0.25
 
 const along = (origin: Vec3, direction: Vec3, distance: number): Vec3 => [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance]
 
-/** Most parts buried inside one solid that are looked past in a row: each costs a ray, and a path never has this many stacked in the same ground. */
-const MAX_BURIED_PARTS = 64
-
-type PartRef = { readonly object: string; readonly part: string }
-
-const isPart = (hit: RayHit, ref: PartRef): boolean => hit.object === ref.object && hit.part === ref.part
-
 function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length: number, maxHits: number, step: number, skip: RaycastOptions): RayHit[] {
   const found: RayHit[] = []
-  const rayFrom = (travelled: number, ignoreParts?: readonly PartRef[]): RayHit | null =>
+  const rayFrom = (travelled: number, ignoreParts?: readonly { readonly object: string; readonly part: string }[]): RayHit | null =>
     world.raycast(along(origin, direction, travelled), direction, length - travelled, ignoreParts ? { ...skip, ignoreParts } : skip)
-  /**
-   * Standing inside `inside` (a part that answers a hit at distance 0 from any point in it): the next thing past it that the walk of one millimetre would
-   * have seen, found by casting with the parts looked past ignored. What starts inside a part never answers while the ray is in it, so it is looked past too.
-   * Null when nothing is left on the path.
-   */
-  const pastSolid = (travelled: number, inside: PartRef): { readonly hit: RayHit; readonly distance: number } | null => {
-    const ignored: PartRef[] = [inside]
-    while (ignored.length <= MAX_BURIED_PARTS) {
-      const hit = rayFrom(travelled, ignored)
-      if (!hit) return null
-      const probe = rayFrom(travelled + Math.max(0, hit.distance - step))
-      const isBuried = probe !== null && isPart(probe, inside) && probe.distance <= step
-      if (!isBuried) return { hit, distance: travelled + hit.distance }
-      ignored.push({ object: hit.object, part: hit.part })
-    }
-    return null
-  }
   let travelled = 0
   while (found.length < maxHits && travelled < length) {
     const hit = rayFrom(travelled)
     if (!hit) break
     const last = found.at(-1)
     // standing just inside a part that answers with a hit of its own (an impl's surface), not a second layer
-    const isSameLayer = last !== undefined && isPart(hit, last)
-    if (isSameLayer && hit.distance <= step) {
-      const past = pastSolid(travelled, last)
-      if (!past) break
-      found.push({ ...past.hit, distance: past.distance })
-      travelled = past.distance + step
+    const isSameLayer = last !== undefined && last.object === hit.object && last.part === hit.part
+    if (!isSameLayer) {
+      found.push({ ...hit, distance: travelled + hit.distance })
+      travelled += hit.distance + step
       continue
     }
-    if (!isSameLayer) found.push({ ...hit, distance: travelled + hit.distance })
-    travelled += hit.distance + step
+    if (hit.distance > step) {
+      travelled += hit.distance + step
+      continue
+    }
+    // Inside the last counted part: the next thing past it, found with that part ignored. Only that one part is ever ignored, so a part that overlaps it
+    // is never lost for good.
+    const past = rayFrom(travelled, [last])
+    if (!past) break
+    const entry = travelled + past.distance
+    // Past answers at its entry from a point inside the part we are in: the walk of one millimetre never saw it, since that part answered first.
+    const probe = past.distance <= step ? hit : rayFrom(entry - step)
+    const isBuried = probe !== null && probe.object === last.object && probe.part === last.part && probe.distance <= step
+    if (!isBuried) {
+      found.push({ ...past, distance: entry })
+      travelled = entry + step
+    } else if (past.distance > step) travelled = entry
+    // The millimetre walk still happens here, and only here: through an overlap of two parts that both answer from inside (an impl on an impl), where
+    // the part we are in can end while the buried one goes on and must then be counted. An ordinary part answers only at its entry, so it is jumped to.
+    else travelled += step
   }
   return found
 }

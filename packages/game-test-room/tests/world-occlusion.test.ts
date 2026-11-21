@@ -175,7 +175,8 @@ describe('createWorldOcclusion over a destruction world after a blast', () => {
 
 describe('createWorldOcclusion walking out of a solid matches the walk of one millimetre at a time', () => {
   type Vec = [number, number, number]
-  type Layer = { part: string; near: number; far: number }
+  /** `ordinary`: answers only at its entry face, never from inside (a plain object, unlike an impl's surface). */
+  type Layer = { part: string; near: number; far: number; ordinary?: true }
   const worldOf = (layers: readonly Layer[]) => {
     const counter = { rays: 0 }
     const world = {
@@ -185,7 +186,7 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
         let best: { part: string; distance: number } | null = null
         for (const layer of layers) {
           if (options?.ignoreParts?.some((ignored) => ignored.object === 'scene' && ignored.part === layer.part)) continue
-          const isInside = z >= layer.near && z <= layer.far
+          const isInside = !layer.ordinary && z >= layer.near && z <= layer.far
           const distance = isInside ? 0 : ((direction[2] > 0 ? layer.near : layer.far) - z) / direction[2]
           if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
           best = { part: layer.part, distance }
@@ -210,13 +211,17 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
     }
     return found
   }
-  const CASES: readonly { name: string; layers: readonly Layer[]; from: number; to: number }[] = [
+  const CASES: readonly { name: string; layers: readonly Layer[]; from: number; to: number; maxRays?: number }[] = [
     { name: 'a wall in the valley between two rises of the same ground', layers: [{ part: 'ground', near: -10, far: -2 }, { part: 'wall', near: -1.8, far: -1.65 }, { part: 'ground', near: -1.4, far: 6 }], from: -9, to: 8 },
     { name: 'a valley half a metre wide with nothing in it', layers: [{ part: 'ground', near: -10, far: 0 }, { part: 'ground', near: 0.5, far: 6 }, { part: 'glass', near: 6.002, far: 6.006 }], from: -9, to: 8 },
     { name: 'source and listener both inside the ground', layers: [{ part: 'ground', near: -10, far: 10 }], from: -9, to: 8 },
     { name: 'an air gap of 5 cm between two stretches of the same ground, with a wall in it', layers: [{ part: 'ground', near: -10, far: 0 }, { part: 'wall', near: 0.02, far: 0.03 }, { part: 'ground', near: 0.05, far: 6 }], from: -9, to: 8 },
     { name: 'an air gap of 20 cm between two stretches of the same ground, with a wall in it', layers: [{ part: 'ground', near: -10, far: 0 }, { part: 'wall', near: 0.1, far: 0.12 }, { part: 'ground', near: 0.2, far: 6 }], from: -9, to: 8 },
-    { name: 'a wall buried inside the ground', layers: [{ part: 'ground', near: -10, far: 6 }, { part: 'wall', near: 1, far: 1.2 }, { part: 'glass', near: 6.002, far: 6.006 }], from: -9, to: 8 },
+    { name: 'an ordinary wall buried inside the ground', layers: [{ part: 'ground', near: -10, far: 6 }, { part: 'wall', near: 1, far: 1.2, ordinary: true }, { part: 'glass', near: 6.002, far: 6.006 }], from: -9, to: 8 },
+    { name: 'an impl-like wall buried inside the ground', layers: [{ part: 'ground', near: -10, far: 6 }, { part: 'wall', near: 1, far: 1.2 }, { part: 'glass', near: 6.002, far: 6.006 }], from: -9, to: 8, maxRays: 1500 },
+    { name: 'a wall that starts inside the ground and ends in the air past it', layers: [{ part: 'ground', near: -10, far: 2 }, { part: 'wall', near: 1, far: 2.5 }], from: -9, to: 8, maxRays: 12000 },
+    { name: 'a wall that starts inside the ground and ends inside it (the mirror)', layers: [{ part: 'ground', near: -10, far: 6 }, { part: 'wall', near: -2, far: 2.5 }, { part: 'glass', near: 6.002, far: 6.006 }], from: -9, to: 8, maxRays: 40000 },
+    { name: 'a wall that starts before the ground and ends inside it', layers: [{ part: 'wall', near: -9.5, far: -8 }, { part: 'ground', near: -9.9, far: 4 }], from: -9.8, to: 8, maxRays: 15000 },
     { name: 'a layer thinner than the step right at the source', layers: [{ part: 'film', near: -9, far: -8.9995 }, { part: 'wall', near: -5, far: -4.8 }], from: -9, to: 8 },
   ]
   for (const scene of CASES) {
@@ -225,7 +230,7 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
       const { world, counter } = worldOf(scene.layers)
       const hits = createWorldOcclusion(world)([0, 0, scene.from], [0, 0, scene.to])
       expect(hits.map((hit) => hit.material)).toEqual(millimetreWalk(scene.layers, scene.from, scene.to))
-      expect(counter.rays).toBeLessThan(400)
+      expect(counter.rays).toBeLessThan(scene.maxRays ?? 400)
     })
   }
 })
@@ -325,6 +330,38 @@ describe('createWorldOcclusion over a destruction world with the real terrain', 
       expect(counted, JSON.stringify(reference)).toBe(reference.length)
     })
   }
+})
+
+describe('createWorldOcclusion cost over overlapping solids', () => {
+  const countRays = async (layers: readonly { part: string; near: number; far: number; ordinary?: true }[]): Promise<number> => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    let rays = 0
+    const world = {
+      raycast(origin: [number, number, number], direction: [number, number, number], maxDistance = Infinity, options?: RaycastOptions) {
+        rays++
+        const z = origin[2]
+        let best: { part: string; distance: number } | null = null
+        for (const layer of layers) {
+          if (options?.ignoreParts?.some((ignored) => ignored.part === layer.part)) continue
+          const distance = !layer.ordinary && z >= layer.near && z <= layer.far ? 0 : ((direction[2] > 0 ? layer.near : layer.far) - z) / direction[2]
+          if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
+          best = { part: layer.part, distance }
+        }
+        return best && { object: 'scene', part: best.part, point: [origin[0], origin[1], z + direction[2] * best.distance] as [number, number, number], normal: [0, 0, 1] as [number, number, number], distance: best.distance }
+      },
+      part: (_object: string, part: string) => ({ material: part }),
+    }
+    createWorldOcclusion(world)([0, 0, -99], [0, 0, 8])
+    return rays
+  }
+
+  it('costs tens of rays with nothing overlapping and a few thousand for 0.5 m of overlap between two parts that answer from inside, however long the ground', async () => {
+    const clear = await countRays([{ part: 'ground', near: -100, far: 3 }, { part: 'wall', near: 1, far: 1.2, ordinary: true }])
+    expect(clear).toBeLessThan(40)
+    const overlap = await countRays([{ part: 'ground', near: -100, far: 2 }, { part: 'wall', near: 1.5, far: 2.5 }])
+    expect(overlap).toBeGreaterThan(clear)
+    expect(overlap).toBeLessThan(4000)
+  })
 })
 
 describe('createWorldOcclusion step', () => {
