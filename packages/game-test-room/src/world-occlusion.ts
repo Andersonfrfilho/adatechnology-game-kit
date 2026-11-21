@@ -58,7 +58,9 @@ function hitsAlong(world: OcclusionWorld, origin: Vec3, direction: Vec3, length:
     if (!isBuried) {
       found.push({ ...past, distance: entry })
       travelled = entry + step
-    } else if (past.distance > step) travelled = entry
+    }
+    // half a step past the entry face: on the face itself the buried part and the one we are in both answer 0, and which one wins is a tie
+    else if (past.distance > step) travelled = entry + step / 2
     // The millimetre walk still happens here, and only here: through an overlap of two parts that both answer from inside (an impl on an impl), where
     // the part we are in can end while the buried one goes on and must then be counted. An ordinary part answers only at its entry, so it is jumped to.
     else travelled += step
