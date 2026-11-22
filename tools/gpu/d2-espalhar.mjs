@@ -90,6 +90,16 @@ export async function d2Run(job) {
       eventHash = Math.imul(eventHash, 16777619) >>> 0
     }
   }
+  const hashText = (text) => {
+    let hash = 2166136261
+    for (let i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i)
+      hash = Math.imul(hash, 16777619) >>> 0
+    }
+    return hash
+  }
+  let snap
+  const takeSnap = () => { snap = { events: eventCount, eventHash, stateHash: hashText(JSON.stringify(world.serialize())) } }
   if (job.isHashing) world.on('*', (event) => { eventCount++; fold(JSON.stringify(event)) })
   // the renderer's apply, by the kind of blow that made the event (fragments carry `blow: 'ballistic'`)
   const applied = { frag: { n: 0, ms: 0 }, other: { n: 0, ms: 0 }, structMs: 0, structCalls: 0, rebuildMs: 0, byType: {} }
@@ -130,6 +140,7 @@ export async function d2Run(job) {
     const started = performance.now()
     if (options.fire) options.fire()
     const afterFire = performance.now()
+    if (job.isHashing && options.fire && !(d2 && d2.raysPerSlice)) takeSnap()
     let advanceMs = 0
     let finished = true
     if (options.fire) finished = !(d2?.pending)
@@ -138,7 +149,10 @@ export async function d2Run(job) {
       finished = d2.advance(options.advance)
       advanceMs = performance.now() - advanceStart
     }
-    if (finished && doneFrame === null && d2 && d2.raysPerSlice) doneFrame = rows.length
+    if (finished && doneFrame === null && d2 && d2.raysPerSlice) {
+      doneFrame = rows.length
+      if (job.isHashing) takeSnap()
+    }
     const isFrozen = options.freeze === 'simulate' || (options.freezeWhenPending && !finished)
     const mode = options.freeze === 'simulate' ? 'simulate' : options.freezeWhenPending && !finished ? options.freezeWhenPending : 'normal'
     const roomOptions = { frameStartMs: started }
@@ -180,10 +194,10 @@ export async function d2Run(job) {
   const limit = job.isHashing ? 400 : job.frames
   for (let index = 1; index < limit; index++) {
     if (!job.isHashing && index >= job.frames && !(d2?.pending)) break
-    if (job.isHashing && simulatedTicks >= 60 && !(d2?.pending)) break
+    if (job.isHashing && simulatedTicks >= (job.isSnapOnly ? 2 : 60) && !(d2?.pending)) break
     await frame(opts(index))
   }
-  const result = { rows, doneFrame, simulatedTicks, eventCount, eventHash }
+  const result = { snap, rows, doneFrame, simulatedTicks, eventCount, eventHash }
   if (d2) result.probe = { eventsByPhase: d2.eventsByPhase, rayMs: d2.rayMs, rayEvents: d2.rayEvents, setupMs: d2.setupMs, fragMs: d2.fragMs, waveMs: d2.waveMs, raysCast: d2.raysCast }
   if (job.isApplyTimed) result.applied = applied
   if (job.isHashing) {
@@ -211,6 +225,7 @@ const variantsOf = () => {
     ]),
   ]
   if (series === 'm4') return [{ name: 'unsliced', job: { plan: 'plain', isTiming: true } }, ...sliced(false)]
+  if (series === 'snap') return [{ name: 'unsliced-a', job: { plan: 'plain', isHashing: true, isSnapOnly: true } }, { name: 'unsliced-b', job: { plan: 'plain', isHashing: true, isSnapOnly: true } }, ...ks.map((k) => ({ name: `pause-simulate-k${k}`, job: { plan: 'sliced', k, freezeKind: 'simulate', isHashing: true, isSnapOnly: true } })), ...ks.map((k) => ({ name: `nopause-k${k}`, job: { plan: 'sliced', k, isHashing: true, isSnapOnly: true } }))]
   if (series === 'hash') return [{ name: 'unsliced-a', job: { plan: 'plain', isHashing: true } }, { name: 'unsliced-b', job: { plan: 'plain', isHashing: true } }, ...sliced(true)]
   throw new Error(`unknown D2_SERIES ${series}`)
 }
