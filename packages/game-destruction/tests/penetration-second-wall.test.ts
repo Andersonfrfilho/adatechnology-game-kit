@@ -16,7 +16,8 @@ describe('penetration past a world part', () => {
     const hits = shootTwoPlates(7, 8)
     expect(hits).toHaveLength(2)
     expect(hits[0]!.penetrated).toBe(true)
-    expect(hits[0]!.exitEnergy).toBeLessThan(3000)
+    // below 7/8 of the muzzle energy the 8 mm of steel scale under the 7 mm plate
+    expect(hits[0]!.exitEnergy).toBeLessThan((3000 * 7) / 8)
     expect(hits[1]!.penetrated).toBe(false)
   })
 
