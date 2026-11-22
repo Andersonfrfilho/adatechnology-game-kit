@@ -81,6 +81,28 @@ const DMG_PER_J = 0.02
 /** Most fragment rays cast by one blast when the charge does not say. */
 const FRAGMENT_RAYS = 256
 /**
+ * SPIKE D2 (spec 018, throwaway): a probe and a slicing switch read from `globalThis.__d2`. Absent, the world behaves as on main (the blast runs whole). `raysPerSlice` set: `explode`
+ * starts a resumable blast and returns [] (the result is in `results` when `done`); the host advances it with `advance(rays)`.
+ */
+export interface D2Probe {
+  raysPerSlice?: number
+  /** Time every ray and the phases (cheap: one clock read per ray). */
+  isTiming?: boolean
+  phase?: 'frag' | 'wave' | 'other'
+  eventsByPhase: Record<string, number>
+  rayMs: number[]
+  rayEvents: number[]
+  setupMs: number
+  fragMs: number
+  waveMs: number
+  raysCast: number
+  done: boolean
+  pending: boolean
+  results?: unknown
+  advance?: (rays: number) => boolean
+}
+const d2Probe = (): D2Probe | undefined => (globalThis as { __d2?: D2Probe }).__d2
+/**
  * The most pieces of a case one ray may stand for past the cap (`throwCasing`; `DestructionOptions.fragmentMaxWeight`). With half the default cap kept for the pieces not at a
  * registered body, the largest case in the data (the M67's 1000 pieces) stands at most 1000 / 128 = 7.8 a ray; past the bound the excess is dropped, not piled on a few rays
  * whose weighted damage would go into one part each.
@@ -681,6 +703,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const emit = (e: DestructionEvent) => {
     cur.push(e)
+    const spike = d2Probe()
+    if (spike?.phase && spike.phase !== 'other') spike.eventsByPhase[spike.phase] = (spike.eventsByPhase[spike.phase] ?? 0) + 1
     options.onEvent?.(e)
     const all = listeners.get('*')
     if (all) for (const fn of all) fn(e)
@@ -5238,7 +5262,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * pieces left out are not cast and their energy is not delivered. The masses drawn are scaled down when they add up to more than the case, so what the pieces deliver never
    * exceeds half the case's mass times the square of its first speed. Each piece is a ballistic round through the same path as a shot (`shootRay`): penetration by material, ricochet, holes.
    */
-  const throwCasing = (point: Vec3, charge: BlastCharge, src: string | undefined): HitResult[] => {
+  function* throwCasing(point: Vec3, charge: BlastCharge, src: string | undefined): Generator<'ray', HitResult[]> {
+    const spikeStart = performance.now()
     const casing = charge.casing
     if (!casing || !(casing.mass > 0) || !(casing.fragments > 0)) return []
     const { mottScale, speed } = casingFlight(casing)
@@ -5382,13 +5407,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const room = budget - plain - bodyEnergy - restEnergy
     const shrink = excess > 0 && excess > room ? Math.max(0, room) / excess : 1
     const nose = casing.noseFactor
+    const spike = d2Probe()
+    if (spike?.isTiming) spike.setupMs = performance.now() - spikeStart
     for (const j of picked) {
       const i = cast[j]!
       const mass = masses[i]! * massScale
       const dir: Vec3 = [directions[i * 3]!, directions[i * 3 + 1]!, directions[i * 3 + 2]!]
       const weight = 1 + ((atBody[j]! ? bodyWeight : restWeight) - 1) * shrink
       const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED, mass, nose, weight }
+      const rayStart = spike?.isTiming ? performance.now() : 0
+      const eventsBefore = cur.length
       out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
+      if (spike?.isTiming) {
+        spike.rayMs.push(performance.now() - rayStart)
+        spike.rayEvents.push(cur.length - eventsBefore)
+        spike.raysCast++
+      }
+      yield 'ray'
     }
     return out
   }
@@ -5412,7 +5447,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return base
   }
 
-  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
+  /** The blast as steps: one per ray of the case, then the wave. Whole (`blastWorld`) it is what the blast always was; the spike drives it a few rays at a time. */
+  function* blastSteps(point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): Generator<'ray' | 'wave', HitResult[]> {
+    const spike = d2Probe()
     const cfg = blastCfg(call)
     const charge = call?.charge ?? options.blast?.charge
     // a charge under soil spends most of its energy in it: the structures feel only what comes out, and the soil stops the casing fragments
@@ -5423,21 +5460,118 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       radius *= Math.cbrt(transmitted)
       if (lethal !== undefined) lethal *= Math.cbrt(transmitted)
     }
-    const outer = blastTntPerJoule
-    const outerFireball = blastFireball
-    blastTntPerJoule = charge?.tnt !== undefined && energy > 0 ? (charge.tnt * transmitted) / energy : TNT_PER_JOULE
-    blastFireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * blastTntPerJoule)
-    try {
-      // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
-      const fragments = charge?.casing && !(cover > 0) ? withBlow('ballistic', () => throwCasing(point, charge, src))() : []
+    const tntPerJoule = charge?.tnt !== undefined && energy > 0 ? (charge.tnt * transmitted) / energy : TNT_PER_JOULE
+    const fireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * tntPerJoule)
+    /** `fn` with this blast's globals set, the outer ones back after it (a step may be run between other work). */
+    const inBlast = <T>(fn: () => T): T => {
+      const outer = blastTntPerJoule
+      const outerFireball = blastFireball
+      blastTntPerJoule = tntPerJoule
+      blastFireball = fireball
+      try {
+        return fn()
+      } finally {
+        blastTntPerJoule = outer
+        blastFireball = outerFireball
+      }
+    }
+    // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
+    let fragments: HitResult[] = []
+    if (charge?.casing && !(cover > 0)) {
+      const flight = throwCasing(point, charge, src)
+      for (;;) {
+        const started = spike?.isTiming ? performance.now() : 0
+        if (spike) spike.phase = 'frag'
+        const step = inBlast(withBlow('ballistic', () => flight.next()))
+        if (spike?.isTiming) spike.fragMs += performance.now() - started
+        if (spike) spike.phase = 'other'
+        if (step.done) {
+          fragments = step.value
+          break
+        }
+        yield 'ray'
+      }
+    }
+    yield 'wave'
+    const started = spike?.isTiming ? performance.now() : 0
+    if (spike) spike.phase = 'wave'
+    const result = inBlast(() => {
       const wave = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
       const res = fragments.length > 0 ? mergeResults(wave, fragments) : wave
       // a blast is a flame: a container that leaks flammable fluid inside its fireball catches
       lightLeaksNear(point, blastFireball.radius)
       return res
+    })
+    if (spike) {
+      if (spike.isTiming) spike.waveMs += performance.now() - started
+      spike.phase = 'other'
+    }
+    return result
+  }
+
+  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
+    const steps = blastSteps(point, energy, radius, src, call, only, lethal)
+    for (;;) {
+      const step = steps.next()
+      if (step.done) return step.value
+    }
+  }
+
+  /** The blast being run in slices (the spike): its events, and whether the operation it counts as is open. */
+  let sliced: { steps: Generator<'ray' | 'wave', HitResult[]>; mine: DestructionEvent[]; isOpen: boolean } | undefined
+
+  /** Runs up to `rays` rays of the sliced blast (the wave is a slice of its own); at the end the operation closes as `run` closes it. true when it finished. */
+  const advanceBlast = (rays: number): boolean => {
+    const job = sliced
+    if (!job) return true
+    const spike = d2Probe()
+    const outer = cur
+    cur = job.mine
+    if (!job.isOpen) {
+      job.isOpen = true
+      runDepth++
+    }
+    try {
+      let count = 0
+      for (;;) {
+        const step = job.steps.next()
+        if (step.done) {
+          drainBlasts()
+          if (runDepth === 1) {
+            settleAllStructure()
+            flushCollapse()
+            settleAllStructure()
+            if (revealHostedIn(objects.values())) {
+              settleAllStructure()
+              flushCollapse()
+              settleAllStructure()
+            }
+            emitDetaches()
+          }
+          runDepth--
+          if (runDepth === 0) {
+            pendingStructure.clear()
+            pendingDetaches.length = 0
+          }
+          sliced = undefined
+          if (spike) {
+            spike.results = withCollapses({ value: step.value, events: job.mine })
+            spike.done = true
+            spike.pending = false
+          }
+          return true
+        }
+        if (step.value === 'wave' || ++count >= rays) return false
+      }
+    } catch (error) {
+      runDepth--
+      sliced = undefined
+      pendingStructure.clear()
+      pendingDetaches.length = 0
+      if (spike) spike.pending = false
+      throw error
     } finally {
-      blastTntPerJoule = outer
-      blastFireball = outerFireball
+      cur = outer
     }
   }
 
@@ -6032,6 +6166,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     explode(point, energy, radius, source, blast) {
       blastProbe.partsTested = 0
       blastProbe.partsNear = 0
+      const spike = d2Probe()
+      if (spike?.raysPerSlice && !sliced) {
+        sliced = { steps: blastSteps(point, energy, radius, source, blast), mine: [], isOpen: false }
+        spike.done = false
+        spike.pending = true
+        spike.advance = advanceBlast
+        advanceBlast(spike.raysPerSlice)
+        return []
+      }
       return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
     },
     groundLoss(loss) {

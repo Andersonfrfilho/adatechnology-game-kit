@@ -62,6 +62,8 @@ export interface FrameRunOptions {
   readonly render?: boolean
   /** false skips input, fixedSimulate and lateSimulate (a scenario is stepping the world synchronously). Default true. */
   readonly simulate?: boolean
+  /** SPIKE D2: true skips the fixed steps (the accumulator does not advance) but runs input and lateSimulate: the world is frozen, the effects play. */
+  readonly freezeFixed?: boolean
   /**
    * true: `realSeconds` is used as given. No clamp, no snap, no `maxSubsteps` cap (every whole fixed step runs, the remainder stays in the
    * accumulator, nothing goes to `droppedSeconds`), one `input` with `dt = realSeconds` and one `lateSimulate` with `dt = realSeconds * scale`.

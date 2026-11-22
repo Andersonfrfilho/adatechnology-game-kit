@@ -58,9 +58,14 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
   }
 
   /** The input phase and, unless paused, the fixed steps and the late phase; `micros` is the real time to feed the accumulator. */
-  const simulate = (seconds: number, micros: number, exact: boolean): void => {
+  const simulate = (seconds: number, micros: number, exact: boolean, freezeFixed = false): void => {
     runPhase('input', seconds)
     if (paused) return
+    if (freezeFixed) {
+      ctx.alpha = accumulator / fixedMicros
+      runPhase('lateSimulate', seconds * timeScale)
+      return
+    }
     accumulator += Math.round(micros * timeScale)
     let steps = Math.floor(accumulator / fixedMicros)
     if (!exact && steps > maxSubsteps) {
@@ -88,7 +93,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
       ctx.realDt = seconds
       ctx.alpha = accumulator / fixedMicros
       substepsLastFrame = 0
-      if (ctx.simulated) simulate(seconds, time.micros, run.exact === true)
+      if (ctx.simulated) simulate(seconds, time.micros, run.exact === true, run.freezeFixed === true)
       ctx.alpha = accumulator / fixedMicros
       runPhase('present', paused ? 0 : seconds * timeScale)
       budget.drain('present')
