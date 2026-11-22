@@ -116,6 +116,12 @@ export interface Baseline {
    */
   readonly groupBudget: number
   readonly minGroupSize: number
+  /**
+   * An entry also has to be slower than the median of the other entries of its group, by the same budget, to fail: a slow stretch of the runner moves a whole group
+   * together (the 62 CI runs of 2026-11 put `houses/apartment_modern` at ×2.35 of its baseline while the group median in that run was ×1.4), a regression
+   * in one builder does not. Applies to groups of at least this many entries with a baseline (default 5); a group-wide slowdown is the group's check.
+   */
+  readonly peerMin?: number
   /** Entries under this median (ms) are reported, never failed. */
   readonly noiseFloorMs: number
   /** Fail budget per entry, for the noisy ones. */
@@ -132,6 +138,8 @@ export interface Comparison {
   readonly baseline: number | null
   /** ratio / baseline ratio. */
   readonly change: number | null
+  /** `change` over the median `change` of the other entries of its group in the same run (null when the group is too small, see `peerMin`). */
+  readonly peerChange: number | null
   readonly verdict: Verdict
 }
 
@@ -143,26 +151,50 @@ export interface Comparison {
 export function compare(timings: readonly Timing[], calibrationMs: number, baseline: Baseline | null): Comparison[] {
   const out: Comparison[] = []
   const seen = new Set<string>()
+  const peerMedians = baseline ? peerMedianChanges(timings, calibrationMs, baseline) : new Map<string, number>()
   for (const t of timings) {
     seen.add(t.id)
     const ratio = t.ms / calibrationMs
     const base = baseline?.entries[t.id]
     if (!baseline || !base) {
-      out.push({ id: t.id, ms: t.ms, ratio, baseline: null, change: null, verdict: 'new' })
+      out.push({ id: t.id, ms: t.ms, ratio, baseline: null, change: null, peerChange: null, verdict: 'new' })
       continue
     }
     const budget = baseline.overrides[t.id] ?? baseline.budget
     const warn = Math.min(baseline.warn, budget)
     const change = ratio / base.ratio
+    const peerMedian = peerMedians.get(t.id)
+    const peerChange = peerMedian === undefined ? null : change / peerMedian
     let verdict: Verdict = 'ok'
     if (change > 1 + warn && t.ms < baseline.noiseFloorMs) verdict = 'noise'
+    else if (change > 1 + budget && peerChange !== null && peerChange <= 1 + budget) verdict = 'warn'
     else if (change > 1 + budget) verdict = 'slower'
     else if (change > 1 + warn) verdict = 'warn'
     else if (change < 1 / (1 + warn)) verdict = 'faster'
-    out.push({ id: t.id, ms: t.ms, ratio, baseline: base.ratio, change, verdict })
+    out.push({ id: t.id, ms: t.ms, ratio, baseline: base.ratio, change, peerChange, verdict })
   }
-  if (baseline) for (const id of Object.keys(baseline.entries)) if (!seen.has(id)) out.push({ id, ms: null, ratio: null, baseline: baseline.entries[id]!.ratio, change: null, verdict: 'gone' })
+  if (baseline) for (const id of Object.keys(baseline.entries)) if (!seen.has(id)) out.push({ id, ms: null, ratio: null, baseline: baseline.entries[id]!.ratio, change: null, peerChange: null, verdict: 'gone' })
   return out
+}
+
+const groupOf = (id: string): string => id.split('/')[0] as string
+
+/** Per entry of a group with at least `peerMin` entries in the baseline, the median `change` of the other entries of its group. */
+function peerMedianChanges(timings: readonly Timing[], calibrationMs: number, baseline: Baseline): Map<string, number> {
+  const byGroup = new Map<string, Array<{ id: string; change: number }>>()
+  for (const t of timings) {
+    const base = baseline.entries[t.id]
+    if (!base) continue
+    const list = byGroup.get(groupOf(t.id)) ?? []
+    list.push({ id: t.id, change: t.ms / calibrationMs / base.ratio })
+    byGroup.set(groupOf(t.id), list)
+  }
+  const medians = new Map<string, number>()
+  for (const list of byGroup.values()) {
+    if (list.length < (baseline.peerMin ?? 5)) continue
+    for (const entry of list) medians.set(entry.id, median(list.filter((other) => other !== entry).map((other) => other.change)))
+  }
+  return medians
 }
 
 /** A new baseline from a run (keeps the budget, floor and overrides of the old one). */
@@ -176,6 +208,7 @@ export function toBaseline(timings: readonly Timing[], calibrationMs: number, pr
     warn: previous?.warn ?? 0.5,
     groupBudget: previous?.groupBudget ?? 0.5,
     minGroupSize: previous?.minGroupSize ?? 8,
+    ...(previous?.peerMin === undefined ? {} : { peerMin: previous.peerMin }),
     noiseFloorMs: previous?.noiseFloorMs ?? 0.05,
     overrides: previous?.overrides ?? {},
     entries,
@@ -197,7 +230,7 @@ export function compareGroups(comparisons: readonly Comparison[], baseline: Base
   const by = new Map<string, { ratio: number; baseline: number; count: number }>()
   for (const c of comparisons) {
     if (c.ratio === null || c.baseline === null) continue
-    const group = c.id.split('/')[0] as string
+    const group = groupOf(c.id)
     const row = by.get(group) ?? { ratio: 0, baseline: 0, count: 0 }
     row.ratio += c.ratio
     row.baseline += c.baseline

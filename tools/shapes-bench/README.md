@@ -35,7 +35,10 @@ node tools/shapes-bench/dist/cli.js --baseline-from run.json  # baseline from an
   the same on a laptop and on a CI runner.
 - `baseline.json` holds the ratios. A builder fails past `baseline × (1 + budget)` (budget 1, twice as slow; `overrides` per builder), is
   reported past `× 1.5` (`warn`), and is never failed under the noise floor (0.05 ms). A group of 8 or more builders fails when the sum of its
-  ratios passes `× (1 + groupBudget)` (0.5). Builders over the warning, and every builder of a failing group, are timed 5 more rounds before
+  ratios passes `× (1 + groupBudget)` (0.5). A builder in a group of 5 or more (`peerMin`) fails only if it is also past the budget against the
+  median change of the *other* builders of its group in the same run; otherwise it is a `warn`: a slow stretch of the runner moves a whole group
+  (62 CI runs: 5 failed on one builder alone, 0 fail with this rule; a single builder made 2.5x slower is still caught in 90% to 100% of them,
+  2.2x in 71% to 100%, the houses at the low end). Builders over the warning, and every builder of a failing group, are timed 5 more rounds before
   the verdict.
 - The CI job `shapes-bench` runs `--check`, writes the table to the job summary and uploads the run (`shapes-bench-run.json`).
 
