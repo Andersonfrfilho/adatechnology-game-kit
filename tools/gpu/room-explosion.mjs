@@ -69,6 +69,7 @@ import { cpus, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+import { assertGpuIsHardware, driverVerdictOf, gpuMismatchReasons, readDriverHealth, readGpuIdentity } from './gpu-info.mjs'
 import { savedPagesOf } from './room-explosion-base.mjs'
 import { assertStampIsHead, pageHashOf, parsePageStamp } from './page-stamp.mjs'
 import { assertDistsAreFresh } from './stale-dist.mjs'
@@ -144,12 +145,15 @@ export const isBlastingExplosive = (def) => def.energy > 0 && !def.smoke && !def
 
 /**
  * What the run does with its saved base: whether it is comparable (same mode and explosive, a c4 run) and the explosion-frame verdict; the explosive must reach both.
- * @param {{ measure: ReturnType<typeof frameMetricsOf>, savedBase: import('./room-explosion-frame.mjs').SavedReport | undefined, mode: string, explosive: string, gated: Set<number> }} params
+ * @param {{ measure: ReturnType<typeof frameMetricsOf>, savedBase: import('./room-explosion-frame.mjs').SavedReport | undefined, mode: string, explosive: string, gated: Set<number>, gpu?: { renderer?: string, driver?: { module?: string | null } } }} params
  */
-export const explosionGateOf = ({ measure, savedBase, mode, explosive, gated }) => ({
-  isBaseInMode: isBaseComparable(savedBase, mode, explosive),
-  frameVerdict: frameGate({ measure, base: savedBase, mode, variant: DEFAULT_VARIANT, gated, explosive }),
-})
+export const explosionGateOf = ({ measure, savedBase, mode, explosive, gated, gpu }) => {
+  const isBaseInMode = isBaseComparable(savedBase, mode, explosive)
+  const gpuReason = (isBaseInMode ? gpuMismatchReasons(savedBase?.machine?.gpu, gpu) : []).join('; ') || undefined
+  const frameVerdict = frameGate({ measure, base: gpuReason ? undefined : savedBase, mode, variant: DEFAULT_VARIANT, gated, explosive })
+  const verdict = gpuReason && frameVerdict.status === 'no-base' ? { ...frameVerdict, status: /** @type {const} */ ('other-gpu'), reason: gpuReason } : frameVerdict
+  return { isBaseInMode: isBaseInMode && !gpuReason, gpuReason, frameVerdict: verdict }
+}
 /** The render columns appended to every frame row: render call CPU ms, GPU wait ms, GPU ms (-1: no timer), draw calls, triangles, live particles, fragments, pieces. */
 export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles', 'particles', 'frags', 'pieces']
 // the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
@@ -684,11 +688,18 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const pageSha256 = pagePairOf({ page: pageFile, otherPage }).pageSha256
   const pageBuild = pageBuildOf(pageFile)
   if (shouldBuild) assertStampIsHead({ stamp: pageBuild, head: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() })
-  console.log(`room-explosion: page ${pageFile} (sha256 ${pageSha256.slice(0, 12)}${pageBuild ? `, built ${pageBuild.builtAt} at ${pageBuild.commit.slice(0, 12)}${pageBuild.dirty ? ' DIRTY' : ''}` : ''})`)
   if (pageBuild === null) console.warn('room-explosion: WARNING the page has no build stamp: its commit is unknown')
   const pageUrl = pathToFileURL(pageFile).href
   const browser = await playwright.chromium.launch({ args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'], ...(chrome ? { executablePath: chrome } : {}) })
-  const machine = { cpu: cpus()[0]?.model ?? 'unknown', cores: cpus().length, node: process.version, chrome: browser.version(), platform: process.platform }
+  const probePage = await browser.newPage()
+  const identity = await readGpuIdentity(probePage)
+  await probePage.close()
+  assertGpuIsHardware(identity)
+  const gpu = { ...identity, driver: readDriverHealth({ renderer: `${identity.renderer} ${identity.vendor}` }) }
+  const driverWarning = driverVerdictOf(gpu)
+  const machine = { cpu: cpus()[0]?.model ?? 'unknown', cores: cpus().length, node: process.version, chrome: browser.version(), platform: process.platform, gpu }
+  console.log(`room-explosion: page ${pageFile} (sha256 ${pageSha256.slice(0, 12)}${pageBuild ? `, built ${pageBuild.builtAt} at ${pageBuild.commit.slice(0, 12)}${pageBuild.dirty ? ' DIRTY' : ''}` : ''}); GPU ${gpu.renderer} (${gpu.vendor}, ${gpu.tier}), driver module ${gpu.driver.module ?? 'unknown'} userspace ${gpu.driver.userspace ?? 'unknown'} mismatch ${gpu.driver.mismatch}`)
+  if (driverWarning) console.warn(driverWarning)
   console.log(`room-explosion: ${machine.cpu} (${machine.cores} threads), node ${machine.node}, chrome ${machine.chrome}`)
   console.log(`room-explosion: ${PROXY_NOTE}`)
   if (isRendered) console.log('room-explosion: render timed per frame (weather or ROOM_EXPLOSION_RENDER=1); the physics columns and the gate stay physics only')
@@ -789,9 +800,10 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const mode = budgetModeOf(process.env.ROOM_EXPLOSION_BUDGET)
   const savedBase = baseReportOf(process.env.ROOM_EXPLOSION_BASE)
   const frameMeasure = frameMetricsOf(stageFrames)
-  const { isBaseInMode, frameVerdict } = explosionGateOf({ measure: frameMeasure, savedBase, mode, explosive, gated })
+  const { isBaseInMode, gpuReason, frameVerdict } = explosionGateOf({ measure: frameMeasure, savedBase, mode, explosive, gated, gpu })
   if (explosive !== DEFAULT_EXPLOSIVE) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosivo ${explosive} (a referência é c4): nada é comparado, não bloqueia nem vira a referência`)
   else if (savedBase && (savedBase.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) console.log(`room-explosion: base com outro explosivo (${savedBase.explosive}, esta rodada ${explosive}): nada é comparado nem bloqueia`)
+  else if (gpuReason) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: ${gpuReason}: nada é comparado nem bloqueia, e a referência fica como está (trocar a referência é procedimento manual, ver docs/desempenho-explosoes.md)`)
   else if (savedBase && !isBaseInMode) console.log(`room-explosion: base em outro modo (${savedBase.budgetMode ?? 'sem modo'}, esta rodada ${mode}): regravando a referência; nada é comparado nem bloqueia`)
   const baseCells = isBaseInMode ? baseCellsOf(process.env.ROOM_EXPLOSION_BASE) : undefined
   console.log(baseCells ? `room-explosion: blocks only on a regression over ${Math.round(REGRESSION.tolerance * 100)}% against ${process.env.ROOM_EXPLOSION_BASE}; the absolute budget is a warning` : 'room-explosion: no base report (ROOM_EXPLOSION_BASE): nothing blocks, the absolute budget is a warning')

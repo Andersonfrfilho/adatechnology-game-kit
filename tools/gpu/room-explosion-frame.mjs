@@ -16,7 +16,7 @@ export const FRAME_REGRESSION = { tolerance: 0.15, floorMs: 3 }
 /**
  * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, extras?: Record<string, number> }} FrameRow
  * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} FrameMetric
- * @typedef {{ budgetMode?: string, explosive?: string, frameMetrics?: FrameMetric[] }} SavedReport
+ * @typedef {{ budgetMode?: string, explosive?: string, frameMetrics?: FrameMetric[], machine?: { gpu?: { renderer?: string, driver?: { module?: string | null } } } }} SavedReport
  */
 
 const round2 = (/** @type {number} */ value) => Math.round(value * 100) / 100
@@ -90,7 +90,7 @@ export const isFrameWorse = (now, was, rule = FRAME_REGRESSION) => now > was * (
 export const isBaseComparable = (base, mode, explosive = DEFAULT_EXPLOSIVE) =>
   base !== undefined && base.budgetMode === mode && explosive === DEFAULT_EXPLOSIVE && (base.explosive ?? DEFAULT_EXPLOSIVE) === explosive
 
-/** @typedef {'compared' | 'no-frame-parts' | 'unmeasurable' | 'no-blocking-level' | 'no-base' | 'other-mode' | 'other-explosive' | 'base-without-metrics'} GateStatus */
+/** @typedef {'compared' | 'no-frame-parts' | 'unmeasurable' | 'no-blocking-level' | 'no-base' | 'other-mode' | 'other-explosive' | 'other-gpu' | 'base-without-metrics'} GateStatus */
 
 /**
  * The gate of the explosion frame: the metrics that got worse than the base, or why nothing was compared. Only the metrics of the blocking level (default variant, a gated throttle) count;

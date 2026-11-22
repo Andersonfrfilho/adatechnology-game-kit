@@ -75,19 +75,21 @@ test('a report with another explosive than c4 never becomes the base nor enters 
 })
 
 const HEAD = 'a'.repeat(40)
+const MACHINE = { gpu: { renderer: 'NVIDIA GeForce RTX 5070 Laptop GPU', vendor: 'NVIDIA Corporation', tier: 'discrete', driver: { module: '620.73.04', userspace: '620.73.04', mismatch: false } } }
 const CLEAN_BUILD = { commit: HEAD, dirty: false, builtAt: '2026-11-21T00:00:00.000Z' }
 
 test('saveBase: a non-c4 night leaves the base file as it was, and writes nothing when there is none', () => {
   const dir = mkdtempSync(join(tmpdir(), 'room-explosion-base-'))
   const report = join(dir, 'report.json')
   const baseFile = join(dir, 'base.json')
-  writeFileSync(report, JSON.stringify({ ...night(10), explosive: 'dynamite', pageBuild: CLEAN_BUILD }))
+  writeFileSync(report, JSON.stringify({ ...night(10), explosive: 'dynamite', machine: MACHINE, pageBuild: CLEAN_BUILD }))
   saveBase(report, baseFile, HEAD)
   assert.equal(existsSync(baseFile), false)
-  writeFileSync(baseFile, JSON.stringify(night(65)))
+  const savedNight = { ...night(65), machine: MACHINE }
+  writeFileSync(baseFile, JSON.stringify(savedNight))
   saveBase(report, baseFile, HEAD)
-  assert.deepEqual(JSON.parse(readFileSync(baseFile, 'utf8')), night(65))
-  writeFileSync(report, JSON.stringify({ ...night(60), pageBuild: CLEAN_BUILD }))
+  assert.deepEqual(JSON.parse(readFileSync(baseFile, 'utf8')), savedNight)
+  writeFileSync(report, JSON.stringify({ ...night(60), machine: MACHINE, pageBuild: CLEAN_BUILD }))
   saveBase(report, baseFile, HEAD)
   assert.equal(JSON.parse(readFileSync(baseFile, 'utf8')).frameMetrics[0].f0Ms, 60)
 })
@@ -98,6 +100,6 @@ test('the merged base does not carry the last night\'s pageSha256', () => {
 })
 
 test('the merged base does not carry the last night\'s pageBuild', () => {
-  const merged = mergeBase(night(65), { ...night(60), pageBuild: CLEAN_BUILD })
+  const merged = mergeBase(night(65), { ...night(60), machine: MACHINE, pageBuild: CLEAN_BUILD })
   assert.equal('pageBuild' in merged, false)
 })

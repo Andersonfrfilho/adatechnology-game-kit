@@ -18,10 +18,10 @@ import { fileURLToPath } from 'node:url'
 
 import { batterySkipReason } from './power.mjs'
 import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
-import { assertNightlyBuildsItsOwnPage, trySaveBase } from './room-explosion-base.mjs'
+import { assertNightlyBuildsItsOwnPage, baseSkipReportOf, trySaveBase } from './room-explosion-base.mjs'
 import { parseSummaryLines } from './suite-runner.mjs'
 
-/** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string }} NightlyState */
+/** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string, baseSkipNotified?: string[] }} NightlyState */
 /** @typedef {{ name: string, ok: boolean, log: string, seconds: number }} StepResult */
 
 assertNightlyBuildsItsOwnPage(process.env)
@@ -127,6 +127,7 @@ async function main() {
   git(['fetch', '-q', 'origin', 'main'])
   const sha = git(['rev-parse', ref])
   const state = readState()
+  let baseSkipNotified = state.baseSkipNotified ?? []
   note(`commit: ${sha} (${ref}); compared with the last main that passed here: ${state.lastPassed ?? 'none yet'}`)
   checkout(sha)
   const quiet = { PRE_PUSH_ON_BATTERY: '1' }
@@ -159,6 +160,12 @@ async function main() {
       if (!saved.ok) {
         note(`- room-explosion-base: FAILED, the base was not saved: ${saved.reason}`)
         results.push({ name: 'room-explosion-base', ok: false, log: explosionOut, seconds: 0 })
+      } else if (saved.skipped && saved.pair) {
+        // the night itself was valid, so it does not fail; the line is written every night, the notification once per (base GPU/driver, current GPU/driver) pair
+        const said = baseSkipReportOf({ skipped: saved.skipped, pair: saved.pair, notified: state.baseSkipNotified ?? [] })
+        note(said.line)
+        if (said.notification) notify(said.notification.title, said.notification.body)
+        baseSkipNotified = said.notified
       }
     }
   }
@@ -166,7 +173,7 @@ async function main() {
   const status = failed.length ? `FAILED ${failed.map((result) => result.name).join(', ')}` : 'PASSED'
   writeFileSync(join(reportDir, 'STATUS'), `${status} ${sha}\n`)
   note(`\n**${status}**`)
-  writeFileSync(stateFile, JSON.stringify({ ...state, lastRun: sha, lastStatus: status, ...(failed.length ? {} : { lastPassed: sha }) }, null, 2))
+  writeFileSync(stateFile, JSON.stringify({ ...state, baseSkipNotified, lastRun: sha, lastStatus: status, ...(failed.length ? {} : { lastPassed: sha }) }, null, 2))
   if (failed.length) notify('game-kit: GPU daily run FAILED', `${status} on ${sha.slice(0, 9)}; see ${summary}`)
   return failed.length ? 1 : 0
 }

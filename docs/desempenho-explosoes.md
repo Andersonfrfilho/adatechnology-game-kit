@@ -309,15 +309,46 @@ ROOM_EXPLOSION_PAGE=/tmp/depois.html ROOM_EXPLOSION_OTHER_PAGE=/tmp/antes.html n
 O que sobra é o laço por peça do `explode` (~17,6 ms, 521 peças) e a aplicação dos eventos estruturais (~17 ms, a maior parte malha, marcas, efeitos e som
 espalhados em itens pequenos): trabalho que muda a simulação, a fronteira da decisão D5. Não repita as tentativas marcadas "não entrou" sem uma razão nova.
 
-### Depois de mergear as travas: gravar a base no modo de prazo (uma vez, à mão)
+### Gravar a base à mão (modo de prazo, outra placa ou outro driver)
 
-A base guardada pela rodada diária (`~/.cache/adatechnology-game-kit/room-explosion-base.json`, ver `cacheDir` em `tools/gpu/nightly-gpu.mjs`) foi medida em modo
-de cota e não é comparável: a primeira rodada depois da mudança não compara nada (`SEM COMPARAÇÃO NESTA RODADA`). Para a base nascer de uma rodada conferida e não da
-primeira noite que acontecer, rode uma vez, com a máquina quieta (carga < 1,5), a página refeita e o relatório lido antes de gravar:
+Este é o único lugar com os passos. Use quando: a base foi medida em outro modo (cota) e a primeira rodada não compara nada; **ou a rodada diária avisa que a base é de outra
+placa/driver ou não registra a placa** (`SEM COMPARAÇÃO NESTA RODADA`, linha `room-explosion-base` no resumo e notificação). A base guardada pela rodada diária é
+`~/.cache/adatechnology-game-kit/room-explosion-base.json` (ver `cacheDir` em `tools/gpu/nightly-gpu.mjs`). Nada a troca sozinho.
+
+1. Máquina quieta: carga de 1 minuto abaixo de 1,5 (`uptime`).
+2. Versões do driver iguais: módulo do kernel e biblioteca (a régua confere e para sozinha com `NVRM: API mismatch`; se atualizou o sistema, reinicie antes).
+3. `pnpm build` e a rodada, uma vez:
 
 ```bash
 pnpm build && flock ~/.cache/adatechnology-game-kit/perf-measure.lock env ROOM_EXPLOSION_FRAME_PARTS=1 \
-  ROOM_EXPLOSION_OUT=/tmp/room-explosion-prazo.json node tools/gpu/perf-gate.mjs room-explosion
-# confira /tmp/room-explosion-prazo.json (budgetMode "deadline", frameMetrics sem problemas, gate.compared) e então:
-cp /tmp/room-explosion-prazo.json ~/.cache/adatechnology-game-kit/room-explosion-base.json
+  ROOM_EXPLOSION_OUT=/tmp/room-explosion-novo.json node tools/gpu/perf-gate.mjs room-explosion
 ```
+
+4. Confira em `/tmp/room-explosion-novo.json`: `budgetMode: "deadline"`; `frameMetrics` sem problemas e nenhum erro de página; `machine.gpu` presente, com `driver.mismatch: false`;
+   `pageBuild` limpo (`dirty: false`) e no commit do HEAD.
+5. Só então grave a base:
+
+```bash
+cp /tmp/room-explosion-novo.json ~/.cache/adatechnology-game-kit/room-explosion-base.json
+```
+
+A linha do resumo e a notificação da rodada diária trazem este comando numa linha só.
+
+### Qual placa desenhou (2026-11-21)
+
+O relatório da régua da explosão grava `machine.gpu` = `{ renderer, vendor, tier, driver: { module, userspace, mismatch } }`, e a primeira linha do log mostra a placa ao lado
+da página. `module` é a versão do módulo do kernel (`/proc/driver/nvidia/version`), `userspace` a da biblioteca que o carregador usa (o alvo do link `libnvidia-ml.so.1` no primeiro de
+`/usr/lib`, `/usr/lib64`, `/usr/lib/x86_64-linux-gnu`; arquivo velho ao lado do link não conta) e `mismatch` é `true`, `false` ou `'unknown'` (com `reason`). **A comparação das duas
+versões manda**: iguais e legíveis dão `false` mesmo que o `journalctl` tenha linhas `NVRM: API mismatch` (uma VM do Docker, um flatpak, ou um desencontro que já foi curado com
+`modprobe`); elas só aparecem em `journalLines`, de informação. Sem a versão da biblioteca decide o `nvidia-smi` ("Driver/library version mismatch" é `true`, resposta normal é
+`false`); só com tudo ilegível vale o journal (últimos 10 min, só linhas cujo cliente é o navegador). Cada comando filho tem 1 s. Um navegador isolado (flatpak, snap) pode usar um
+runtime de GL que a checagem do host não enxerga.
+
+- **Atualizou o sistema sem reiniciar? Reinicie antes de medir.** Em 2026-11-21 o driver foi atualizado sem reiniciar (biblioteca 620.73.04, módulo 615.78.08): seis horas de
+  rodadas leram o quadro depois da explosão em ~105 ms em vez de ~26 ms. Com `mismatch: true` numa NVIDIA a régua falha antes de abrir a página medida; com `'unknown'` avisa e segue.
+- **GL por software não mede tempo.** A régua da explosão recusa SwiftShader, llvmpipe e afins (antes ela passava direto pelo teste do `perf-gate`, que só pulava o gate normal).
+- **A base só aceita relatório com `machine.gpu`, em placa de verdade e sem `mismatch: true`.** Uma noite em outra placa (nome sem os sufixos de versão) ou em outro módulo do
+  driver não é comparada nem mesclada (`SEM COMPARAÇÃO NESTA RODADA`, um motivo por causa) e a base fica como está. **Base sem `machine.gpu` também não é comparada**: os números
+  dela podem ser de outro driver (a base anterior a este campo cai aqui). A rodada diária, nesses casos, escreve uma linha no resumo toda noite e notifica uma vez por par
+  (GPU/driver da base, GPU/driver atual), guardado em `nightly-state.json`, sem falhar a noite (a medição dela vale, só a base não anda). Para voltar a comparar, siga
+  "Gravar a base à mão" acima.
