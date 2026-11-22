@@ -61,49 +61,54 @@ async function holdInPage({ weaponId, mode, rise, walking, withSubject }) {
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
-const arsenal = await opened.page.evaluate(() => {
-  const room = /** @type {any} */ (window).__testRoom
-  return [...room.arsenal.weapons.values()].map((/** @type {{ id: string, category: string }} */ weapon) => ({ id: weapon.id, family: weapon.category, item: `weapon_${weapon.id}`, drawn: room.measure(`weapon_${weapon.id}`) !== null }))
-})
-const drawn = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => weapon.drawn)
-const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), area: 'weapons', seed: 'none (the models are drawn without random draws; condition and ammunition at the area defaults)', catalogue: { count: arsenal.length, source: 'packages/game-weapons/src/data (the arsenal: room.arsenal.weapons); an entry is covered when the catalogue has the item weapon_<id>' } })
-const families = [...new Set(drawn.map((/** @type {{ family: string }} */ weapon) => weapon.family))]
-let number = 0
-for (const family of families) {
-  const members = drawn.filter((/** @type {{ family: string }} */ weapon) => weapon.family === family)
-  for (const [at, run] of chunks(members, SHEET_SIZE).entries()) {
-    number += 1
-    const suffix = members.length > SHEET_SIZE ? `-${at + 1}` : ''
-    await recorder.sheet({ file: `${String(number).padStart(2, '0')}-${family}-side${suffix}`, family, entries: run.map((/** @type {{ item: string, id: string }} */ weapon) => ({ id: weapon.item, label: weapon.id })), view: { kind: 'side', fov: 22, elevationDeg: 3 }, yaw: 'long-axis-x', gap: 0.12 })
-  }
-}
-
-// rule 5: one weapon per family in the hand, in both cameras, still with the aim high, level and low, and walking; each picture is compared with the same view holding the fists
-const HAND_FAMILIES = ['pistol', 'shotgun', 'rifle', 'launcher', 'melee_blade', 'throwable']
-const POSES = [['still-high', 5, false], ['still-level', 0, false], ['still-low', -5, false], ['walk-level', 0, true]]
-for (const family of HAND_FAMILIES) {
-  const weapon = drawn.find((/** @type {{ family: string }} */ candidate) => candidate.family === family)
-  if (!weapon) continue
-  for (const mode of ['first', 'third']) {
-    for (const [pose, rise, walking] of POSES) {
+try {
+  const arsenal = await opened.page.evaluate(() => {
+    const room = /** @type {any} */ (window).__testRoom
+    return [...room.arsenal.weapons.values()].map((/** @type {{ id: string, category: string }} */ weapon) => ({ id: weapon.id, family: weapon.category, item: `weapon_${weapon.id}`, drawn: room.measure(`weapon_${weapon.id}`) !== null }))
+  })
+  const drawn = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => weapon.drawn)
+  const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), knownDefectsFile: join(here, 'known-defects.json'), area: 'weapons', seed: 'none (the models are drawn without random draws; condition and ammunition at the area defaults)', catalogue: { count: arsenal.length, source: 'packages/game-weapons/src/data (the arsenal: room.arsenal.weapons); an entry is covered when the catalogue has the item weapon_<id>' } })
+  const families = [...new Set(drawn.map((/** @type {{ family: string }} */ weapon) => weapon.family))]
+  let number = 0
+  for (const family of families) {
+    const members = drawn.filter((/** @type {{ family: string }} */ weapon) => weapon.family === family)
+    for (const [at, run] of chunks(members, SHEET_SIZE).entries()) {
       number += 1
-      const file = `${String(number).padStart(2, '0')}-hand-${family}-${mode}-${pose}`
-      await recorder.photo({
-        file,
-        family: `hand-${family}`,
-        view: `${mode}-person`,
-        subject: weapon.item,
-        prepare: async (withSubject) => {
-          const measured = await opened.page.evaluate(holdInPage, { weaponId: weapon.id, mode, rise, walking, withSubject })
-          await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${pose}  seed none`)
-          return { fixed: { pose, aimRise: rise, walking }, measured: { hand: measured } }
-        },
-      })
+      const suffix = members.length > SHEET_SIZE ? `-${at + 1}` : ''
+      await recorder.sheet({ file: `${String(number).padStart(2, '0')}-${family}-side${suffix}`, family, entries: run.map((/** @type {{ item: string, id: string }} */ weapon) => ({ id: weapon.item, label: weapon.id })), view: { kind: 'side', fov: 22, elevationDeg: 3 }, yaw: 'long-axis-x', gap: 0.12 })
     }
   }
+
+  // rule 5: one weapon per family in the hand, in both cameras, still with the aim high, level and low, and walking; each picture is compared with the same view holding the fists
+  const HAND_FAMILIES = ['pistol', 'shotgun', 'rifle', 'launcher', 'melee_blade', 'throwable']
+  const POSES = [['still-high', 5, false], ['still-level', 0, false], ['still-low', -5, false], ['walk-level', 0, true]]
+  for (const family of HAND_FAMILIES) {
+    const weapon = drawn.find((/** @type {{ family: string }} */ candidate) => candidate.family === family)
+    if (!weapon) continue
+    for (const mode of ['first', 'third']) {
+      for (const [pose, rise, walking] of POSES) {
+        number += 1
+        const file = `${String(number).padStart(2, '0')}-hand-${family}-${mode}-${pose}`
+        await recorder.photo({
+          file,
+          family: `hand-${family}`,
+          view: `${mode}-person`,
+          subject: weapon.item,
+        detail: String(pose),
+          prepare: async (withSubject) => {
+            const measured = await opened.page.evaluate(holdInPage, { weaponId: weapon.id, mode, rise, walking, withSubject })
+            await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${pose}  seed none`)
+            return { fixed: { pose, aimRise: rise, walking }, measured: { hand: measured } }
+          },
+        })
+      }
+    }
+  }
+  const missing = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => !weapon.drawn).map((/** @type {{ id: string }} */ weapon) => weapon.id)
+  for (const id of missing) recorder.observe(id, 'no-catalogue-item', `no item weapon_${id}`)
+  const summary = recorder.finish({ notInCatalogue: missing, families })
+  if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
+  process.exitCode = summary.exitCode
+} finally {
+  await opened.browser.close()
 }
-const missing = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => !weapon.drawn).map((/** @type {{ id: string }} */ weapon) => weapon.id)
-const summary = recorder.finish({ notInCatalogue: missing, families })
-await opened.browser.close()
-if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
-if (summary.sheets === 0) process.exit(1)

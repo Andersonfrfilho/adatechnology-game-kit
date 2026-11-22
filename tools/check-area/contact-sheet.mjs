@@ -3,7 +3,7 @@
 // from a fixed debug camera over the shared test room, at a fixed time of day, the animation frozen after a fixed number of frames. Writes the PNGs and shots/index.json (the entry ids of
 // every image in grid order, the camera and the seed: what a review ledger references) and shots/sanity.json (the share of pixels that differ from the same view with nothing spawned, per image and per entry).
 // Only what the room already exposes is used (spawn, clear, update, pause, setDebugCamera, leaves, useLeaf, environment): nothing here adds game logic and nothing is added to the room.
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
@@ -13,11 +13,19 @@ export const SHEET_VIEWPORT = { width: 1600, height: 900 }
 export const FREEZE_FRAMES = 30
 /** An entry whose cell has less than this share of pixels different from the empty view rendered nothing. */
 export const EMPTY_SHARE = 0.01
+/** An entry standing higher than this above the ground (m) is reported as floating. */
+export const FLOAT_LIMIT_M = 0.05
 /** A picture of a subject in the hand has less than this share of pixels different from the same view without it: nothing of it is seen. */
 export const PHOTO_EMPTY_SHARE = 0.003
 
 /** @template T @param {T[]} list @param {number} size @returns {T[][]} the list cut in runs of at most `size`, in order */
 export const chunks = (list, size) => Array.from({ length: Math.ceil(list.length / size) }, (_, at) => list.slice(at * size, at * size + size))
+
+/** Milliseconds one sheet (or one picture) may take, and the whole area run: a hung page stops the run naming the entry, not the machine. */
+export const SHEET_TIMEOUT_MS = 300000
+export const AREA_TIMEOUT_MS = 1800000
+/** What the run is rendering now, for the timeout messages. */
+let currentWork = 'opening the room page'
 
 const BROWSER_ARGS = ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox']
 
@@ -108,7 +116,10 @@ async function laySheetInPage(args) {
   }
   const totalWidth = Math.max(cursor - args.gap, rulerWidth)
   const along = (/** @type {number} */ distance) => distance - totalWidth / 2
-  const at = (/** @type {number} */ distance, /** @type {number} */ height) => [(rowAxis[0] ?? 0) * along(distance), height, (rowAxis[2] ?? 0) * along(distance)]
+  // the row stands away from the room's own furniture, which would hold an entry up (a table 78 cm high is under the middle of the room)
+  // (a leaf needs the room's ground and its physics to swing, so the sheets with open leaves stay in the middle)
+  const origin = args.openLeaves ? [0, 0] : [0, 300]
+  const at = (/** @type {number} */ distance, /** @type {number} */ height) => [(origin[0] ?? 0) + (rowAxis[0] ?? 0) * along(distance), height, (origin[1] ?? 0) + (rowAxis[2] ?? 0) * along(distance)]
 
   // pass 2: the ruler and the entries at their places
   room.clear()
@@ -141,7 +152,10 @@ async function laySheetInPage(args) {
       // the room works one leaf by hand at a time (`room.door`): each is opened and let go before the next is started
       for (const item of placed) {
         if (item.ruler) continue
+        const standsAt = item.object.root.position
         for (const part of room.leaves(item.object.objectId)) {
+          // the hand has to reach the handle: the player stands beside the vehicle whose leaf is worked
+          room.look([standsAt.x, 1.7, standsAt.z + 2.5], [standsAt.x, 1.2, standsAt.z])
           room.useLeaf(item.object.objectId, part)
           for (let frame = 0; frame < 360 && room.door; frame++) room.update(1 / 60)
         }
@@ -158,7 +172,7 @@ async function laySheetInPage(args) {
   const needWidth = (totalWidth / 2 + 0.4) / Math.tan(halfH)
   const needHeight = (tallest / 2 + 0.4) / Math.tan(halfV)
   const distance = Math.max(needWidth, needHeight) * 1.08 + depthHalf
-  const target = [0, kind === 'aerial' ? 0 : tallest / 2, 0]
+  const target = [origin[0] ?? 0, kind === 'aerial' ? 0 : tallest / 2, origin[1] ?? 0]
   const position = [target[0] + toCamera[0] * distance, target[1] + toCamera[1] * distance, target[2] + toCamera[2] * distance]
   // a big scene (a whole street grid) is further than the room camera sees: its far plane and the fog follow the sheet's distance
   if (distance * 1.6 > room.camera.far) {
@@ -296,6 +310,12 @@ function installRulerInPage() {
  */
 export async function openRoomPage({ chromium, pageFile, query = '' }) {
   const browser = await chromium.launch({ args: BROWSER_ARGS })
+  // the watchdog of the whole run: the browser goes down with it, so no Chrome is left behind
+  const watchdog = setTimeout(() => {
+    console.error(`check-area: the run took more than ${AREA_TIMEOUT_MS / 60000} min; it was rendering ${currentWork}`)
+    void browser.close().finally(() => process.exit(1))
+  }, AREA_TIMEOUT_MS)
+  watchdog.unref()
   const context = await browser.newContext({ viewport: SHEET_VIEWPORT })
   /** @type {string[]} */
   const external = []
@@ -319,9 +339,9 @@ export async function openRoomPage({ chromium, pageFile, query = '' }) {
 
 /**
  * The recorder of one area: `sheet` lays and photographs one sheet, `finish` writes shots/index.json and shots/sanity.json.
- * @param {{ page: any, context: any, outDir: string, area: string, seed: string, catalogue: { count: number, source: string } }} options
+ * @param {{ page: any, context: any, outDir: string, area: string, seed: string, catalogue: { count: number, source: string }, knownDefectsFile: string }} options
  */
-export function createSheetRecorder({ page, context, outDir, area, seed, catalogue }) {
+export function createSheetRecorder({ page, context, outDir, area, seed, catalogue, knownDefectsFile }) {
   mkdirSync(outDir, { recursive: true })
   // the sheets of an earlier run go, so a catalogue that shrank leaves no stale image behind
   for (const name of readdirSync(outDir)) if (/^\d\d-.*\.png$/.test(name)) rmSync(join(outDir, name))
@@ -331,14 +351,22 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
   const sanity = []
   /** @type {any[]} */
   const failures = []
+  /** What this run saw that a review must know about: { id, what, value } (what: spawn-failed, rendered-empty, blank-third-person, floats, does-not-open, ...). */
+  /** @type {{ id: string, what: string, value: unknown }[]} */
+  const observed = []
+  /** @param {string} id @param {string} what @param {unknown} value */
+  const observe = (id, what, value) => {
+    if (!observed.some((entry) => entry.id === id && entry.what === what)) observed.push({ id, what, value })
+  }
   /** @type {any} */
   let comparePage = null
-  return {
+  const api = {
     /**
      * @param {{ file: string, family: string, entries: {id: string, label?: string}[], view: { kind: string, fov?: number, azimuthDeg?: number, elevationDeg?: number }, yaw: number | 'long-axis-x', gap?: number, ruler?: boolean, openLeaves?: boolean }} sheet
      * @returns {Promise<any>} what the page answered (cells with their leaves, the camera)
      */
     async sheet(sheet) {
+      currentWork = `sheet ${sheet.file} (${sheet.entries.map((entry) => entry.id).join(', ')})`
       const view = { kind: sheet.view.kind, fov: sheet.view.fov ?? 22, azimuthDeg: sheet.view.azimuthDeg ?? 0, elevationDeg: sheet.view.elevationDeg ?? 4 }
       const entries = sheet.entries.map((entry) => ({ id: entry.id, label: entry.label ?? entry.id }))
       const base = { entries, view, yaw: sheet.yaw, gap: sheet.gap ?? 0.5, ruler: sheet.ruler ?? false, openLeaves: sheet.openLeaves ?? false, title: `${sheet.file}  ${sheet.family}  ${view.kind}  seed ${seed}` }
@@ -365,15 +393,22 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
       sanity.push({ file: `${sheet.file}.png`, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, openingMax: cell.openingMax })), empty: emptyCells })
       for (const failure of laid.failed) failures.push({ file: `${sheet.file}.png`, ...failure })
       for (const id of emptyCells) failures.push({ file: `${sheet.file}.png`, id, reason: 'rendered empty' })
+      for (const failure of laid.failed) observe(failure.id, 'spawn-failed', failure.reason)
+      for (const id of emptyCells) observe(id, 'rendered-empty', 'no pixel differs from the empty view')
+      for (const cell of laid.cells) {
+        if ((cell.floatsAboveGroundM ?? 0) > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${cell.floatsAboveGroundM} m`)
+        if (base.openLeaves && (cell.openingMax ?? 0) < 0.9) observe(cell.id, 'does-not-open', cell.openingMax)
+      }
       return laid
     },
     /**
      * One picture of the room as it is (not a row of catalogue entries): `prepare(true)` sets the page up with the subject and answers what is worth recording about it (numbers read from the room),
      * `prepare(false)` sets the same view up without the subject, which is what the picture is compared with. Both leave the room paused and the caption drawn. `prepare(true)` answers `{ fixed, measured }`: `fixed` goes
      * to index.json (what the picture is), `measured` to sanity.json (numbers that move with the animation clock, so they would make index.json change on every run).
-     * @param {{ file: string, family: string, view: string, subject: string, prepare: (withSubject: boolean) => Promise<{ fixed: Record<string, unknown>, measured: Record<string, unknown> }> }} shot
+     * @param {{ file: string, family: string, view: string, subject: string, detail?: string, prepare: (withSubject: boolean) => Promise<{ fixed: Record<string, unknown>, measured: Record<string, unknown> }> }} shot
      */
     async photo(shot) {
+      currentWork = `picture ${shot.file} (${shot.subject})`
       await shot.prepare(false)
       await page.waitForTimeout(600)
       const reference = await page.screenshot()
@@ -385,18 +420,46 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
       index.push({ file: `${shot.file}.png`, family: shot.family, view: shot.view, entries: [shot.subject], ...measured.fixed })
       const empty = compared.whole < PHOTO_EMPTY_SHARE
       sanity.push({ file: `${shot.file}.png`, measured: measured.measured, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: [{ id: shot.subject, share: +compared.whole.toFixed(4) }], empty: empty ? [shot.subject] : [] })
+      if (empty) observe(shot.detail ? `${shot.subject}/${shot.detail}` : shot.subject, shot.view.includes('third') ? 'blank-third-person' : 'rendered-empty', +compared.whole.toFixed(4))
       if (empty) failures.push({ file: `${shot.file}.png`, id: shot.subject, reason: 'the subject changed no pixel against the same view without it' })
     },
     /** @param {Record<string, unknown>} [extra] */
     finish(extra = {}) {
       const covered = [...new Set(index.flatMap((sheet) => sheet.entries))]
       writeFileSync(join(outDir, 'index.json'), JSON.stringify({ area, seed, viewport: SHEET_VIEWPORT, freezeFrames: FREEZE_FRAMES, timeOfDay: { nightFactor: 0 }, catalogue: { ...catalogue, covered: covered.length }, ...extra, sheets: index }, null, 2) + '\n')
-      writeFileSync(join(outDir, 'sanity.json'), JSON.stringify({ area, emptyShareThreshold: EMPTY_SHARE, images: sanity, failures }, null, 2) + '\n')
+      writeFileSync(join(outDir, 'sanity.json'), JSON.stringify({ area, emptyShareThreshold: EMPTY_SHARE, images: sanity, failures, observed }, null, 2) + '\n')
       const bytes = sanity.reduce((sum, image) => sum + image.bytes, 0)
       console.log(`${area}: ${index.length} sheets, ${covered.length}/${catalogue.count} catalogue entries, ${(bytes / 1048576).toFixed(2)} MB`)
       for (const image of sanity) console.log(`  ${image.file}  ${(image.bytes / 1024).toFixed(0)} KB  ${image.width}x${image.height}  non-background ${(image.nonBackgroundShare * 100).toFixed(1)}%${image.empty.length ? `  EMPTY: ${image.empty.join(', ')}` : ''}`)
       for (const failure of failures) console.log(`WARN  ${failure.file}  ${failure.id}: ${failure.reason}`)
-      return { sheets: index.length, covered: covered.length, bytes, failures, blank: sanity.filter((image) => image.nonBackgroundShare < 0.02).map((image) => image.file) }
+      const known = knownDefectsFile && existsSync(knownDefectsFile) ? /** @type {{ id: string, what: string, value?: unknown }[]} */ (JSON.parse(readFileSync(knownDefectsFile, 'utf8'))) : []
+      const same = (/** @type {{ id: string, what: string }} */ a, /** @type {{ id: string, what: string }} */ b) => a.id === b.id && a.what === b.what
+      const fresh = observed.filter((entry) => !known.some((item) => same(item, entry)))
+      const stillThere = known.filter((item) => observed.some((entry) => same(item, entry)))
+      const gone = known.filter((item) => !observed.some((entry) => same(item, entry)))
+      for (const entry of fresh) console.log(`NEW defect      ${entry.id}  ${entry.what}  ${JSON.stringify(entry.value)}`)
+      for (const item of gone) console.log(`GONE defect     ${item.id}  ${item.what}: no longer seen, remove it from ${knownDefectsFile}`)
+      console.log(`${area}: defects: ${fresh.length} new, ${stillThere.length} known still present, ${gone.length} known gone`)
+      // a defect nobody sees any more fails the run too: the list shrinks in the commit that fixes it, as the z-fighting debt ledger does
+      const exitCode = fresh.length > 0 || gone.length > 0 || index.length === 0 ? 1 : 0
+      return { exitCode, sheets: index.length, covered: covered.length, bytes, failures, blank: sanity.filter((image) => image.nonBackgroundShare < 0.02).map((image) => image.file) }
     },
+  }
+  /** @template T @param {() => Promise<T>} work @returns {Promise<T>} */
+  const within = async (work) => {
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
+    let timer
+    const started = currentWork
+    try {
+      return await Promise.race([work(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`timeout after ${SHEET_TIMEOUT_MS / 1000} s while rendering ${currentWork || started}`)), SHEET_TIMEOUT_MS) })])
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+  return {
+    sheet: (/** @type {Parameters<typeof api.sheet>[0]} */ sheet) => within(() => api.sheet(sheet)),
+    photo: (/** @type {Parameters<typeof api.photo>[0]} */ shot) => within(() => api.photo(shot)),
+    observe,
+    finish: api.finish,
   }
 }

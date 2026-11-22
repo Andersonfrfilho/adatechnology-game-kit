@@ -33,12 +33,15 @@ if (!chromium) {
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
-const catalogue = await opened.page.evaluate(() => /** @type {any} */ (window).VegetationArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
-const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), area: 'vegetation', seed: 'bench seed of the area (default), wind 0, condition and season at the area defaults', catalogue: { count: catalogue.length, source: 'packages/game-vegetation-species (defaultVegetationSpecies of game-kit-defaults), the items of the area' } })
-for (const [at, ids] of chunks(catalogue, 6).entries()) {
-  await recorder.sheet({ file: `${String(at + 1).padStart(2, '0')}-species-front-${at + 1}`, family: 'species', entries: ids.map((/** @type {string} */ id) => ({ id })), view: { kind: 'front', fov: 28, elevationDeg: 4 }, yaw: 0, gap: 1.2 })
+try {
+  const catalogue = await opened.page.evaluate(() => /** @type {any} */ (window).VegetationArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
+  const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), knownDefectsFile: join(here, 'known-defects.json'), area: 'vegetation', seed: 'bench seed of the area (default), wind 0, condition and season at the area defaults', catalogue: { count: catalogue.length, source: 'packages/game-vegetation-species (defaultVegetationSpecies of game-kit-defaults), the items of the area' } })
+  for (const [at, ids] of chunks(catalogue, 6).entries()) {
+    await recorder.sheet({ file: `${String(at + 1).padStart(2, '0')}-species-front-${at + 1}`, family: 'species', entries: ids.map((/** @type {string} */ id) => ({ id })), view: { kind: 'front', fov: 28, elevationDeg: 4 }, yaw: 0, gap: 1.2 })
+  }
+  const summary = recorder.finish()
+  if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
+  process.exitCode = summary.exitCode
+} finally {
+  await opened.browser.close()
 }
-const summary = recorder.finish()
-await opened.browser.close()
-if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
-if (summary.sheets === 0) process.exit(1)

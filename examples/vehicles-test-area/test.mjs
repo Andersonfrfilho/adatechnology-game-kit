@@ -33,25 +33,28 @@ if (!chromium) {
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
-const fleet = await opened.page.evaluate(() => {
-  const area = /** @type {any} */ (window).VehiclesArea
-  const report = area.loadFleetCatalogueInto(/** @type {any} */ (window).__testRoom)
-  return { itemIds: report.items, fleetIds: area.fleetVehicleIds, problems: report.problems }
-})
-const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), area: 'vehicles', seed: 'colour seed of the area bench (default), light quality, doors closed unless the sheet says open', catalogue: { count: fleet.itemIds.length, source: 'packages/game-vehicles-fleet/src/groups.ts (fleetVehicleIds), loaded as items by loadFleetCatalogueInto of examples/vehicles-test-area/src/entry.js' } })
-// the vehicles face +x at yaw 0 (the hood is at +x), so the camera stands at 45 degrees between the front (+x) and the side (+z)
-const view = { kind: '3q-front', fov: 28, azimuthDeg: 45, elevationDeg: 14 }
-/** @type {string[]} */
-const withLeaves = []
-for (const [at, ids] of chunks(fleet.itemIds, 6).entries()) {
-  const laid = await recorder.sheet({ file: `${String(at + 1).padStart(2, '0')}-fleet-closed-${at + 1}`, family: 'fleet', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 1.2 })
-  for (const cell of laid.cells) if (cell.leaves.length > 0) withLeaves.push(cell.id)
+try {
+  const fleet = await opened.page.evaluate(() => {
+    const area = /** @type {any} */ (window).VehiclesArea
+    const report = area.loadFleetCatalogueInto(/** @type {any} */ (window).__testRoom)
+    return { itemIds: report.items, fleetIds: area.fleetVehicleIds, problems: report.problems }
+  })
+  const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), knownDefectsFile: join(here, 'known-defects.json'), area: 'vehicles', seed: 'colour seed of the area bench (default), light quality, doors closed unless the sheet says open', catalogue: { count: fleet.itemIds.length, source: 'packages/game-vehicles-fleet/src/groups.ts (fleetVehicleIds), loaded as items by loadFleetCatalogueInto of examples/vehicles-test-area/src/entry.js' } })
+  // the vehicles face +x at yaw 0 (the hood is at +x), so the camera stands at 45 degrees between the front (+x) and the side (+z)
+  const view = { kind: '3q-front', fov: 28, azimuthDeg: 45, elevationDeg: 14 }
+  /** @type {string[]} */
+  const withLeaves = []
+  for (const [at, ids] of chunks(fleet.itemIds, 6).entries()) {
+    const laid = await recorder.sheet({ file: `${String(at + 1).padStart(2, '0')}-fleet-closed-${at + 1}`, family: 'fleet', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 1.2 })
+    for (const cell of laid.cells) if (cell.leaves.length > 0) withLeaves.push(cell.id)
+  }
+  const firstOpen = Math.ceil(fleet.itemIds.length / 6) + 1
+  for (const [at, ids] of chunks(withLeaves, 6).entries()) {
+    await recorder.sheet({ file: `${String(firstOpen + at).padStart(2, '0')}-fleet-open-${at + 1}`, family: 'fleet-open', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 1.2, openLeaves: true })
+  }
+  const summary = recorder.finish()
+  if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
+  process.exitCode = summary.exitCode
+} finally {
+  await opened.browser.close()
 }
-const firstOpen = Math.ceil(fleet.itemIds.length / 6) + 1
-for (const [at, ids] of chunks(withLeaves, 6).entries()) {
-  await recorder.sheet({ file: `${String(firstOpen + at).padStart(2, '0')}-fleet-open-${at + 1}`, family: 'fleet-open', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 1.2, openLeaves: true })
-}
-const summary = recorder.finish()
-await opened.browser.close()
-if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
-if (summary.sheets === 0) process.exit(1)

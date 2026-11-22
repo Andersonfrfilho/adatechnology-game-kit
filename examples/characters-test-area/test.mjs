@@ -33,22 +33,30 @@ if (!chromium) {
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
-const catalogue = await opened.page.evaluate(() => /** @type {any} */ (window).CharactersArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
-const undead = catalogue.filter((/** @type {string} */ id) => id.startsWith('zombie_'))
-const people = catalogue.filter((/** @type {string} */ id) => id.startsWith('person_'))
-const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), area: 'characters', seed: 'none (the bodies are drawn without random draws; ages and wounds at the area defaults)', catalogue: { count: catalogue.length, source: 'packages/game-characters-undead/src/data (UNDEAD_TYPES) and packages/game-characters-people/src/data (PROFESSIONS), the items of the area' } })
-// the bodies of the area face the camera at yaw PI (examples/characters-test-area placements), so a profile is a quarter turn
-const FRONT = Math.PI
-const SIDE = -Math.PI / 2
-const view = { kind: 'front', fov: 22, elevationDeg: 2 }
-let number = 0
-for (const [family, ids] of [['undead', undead], ['professions', people]]) {
-  for (const [name, yaw] of /** @type {[string, number][]} */ ([['front', FRONT], ['side', SIDE]])) {
-    number += 1
-    await recorder.sheet({ file: `${String(number).padStart(2, '0')}-${family}-${name}`, family, entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw, gap: 0.45, ruler: true })
+try {
+  const catalogue = await opened.page.evaluate(() => /** @type {any} */ (window).CharactersArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
+  const undead = catalogue.filter((/** @type {string} */ id) => id.startsWith('zombie_'))
+  const people = catalogue.filter((/** @type {string} */ id) => id.startsWith('person_'))
+  const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), knownDefectsFile: join(here, 'known-defects.json'), area: 'characters', seed: 'none (the bodies are drawn without random draws; ages and wounds at the area defaults)', catalogue: { count: catalogue.length, source: 'packages/game-characters-undead/src/data (UNDEAD_TYPES) and packages/game-characters-people/src/data (PROFESSIONS), the items of the area' } })
+  // the bodies of the area face the camera at yaw PI (examples/characters-test-area placements), so a profile is a quarter turn
+  const FRONT = Math.PI
+  const SIDE = -Math.PI / 2
+  const view = { kind: 'front', fov: 22, elevationDeg: 2 }
+  let number = 0
+  for (const [family, ids] of [['undead', undead], ['professions', people]]) {
+    for (const [name, yaw] of /** @type {[string, number][]} */ ([['front', FRONT], ['side', SIDE]])) {
+      number += 1
+      const laid = await recorder.sheet({ file: `${String(number).padStart(2, '0')}-${family}-${name}`, family, entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw, gap: 0.45, ruler: true })
+      // the professions are declared 1.80 m tall: the box of the drawn body says how tall they are
+      if (family === 'professions' && name === 'front') {
+        const heights = laid.cells.map((/** @type {{ size: { dy: number } }} */ cell) => cell.size.dy)
+        if (Math.max(...heights) > 1.9) recorder.observe('professions', 'height-over-declared', `${Math.min(...heights).toFixed(2)}-${Math.max(...heights).toFixed(2)} m against 1.80 m declared`)
+      }
+    }
   }
+  const summary = recorder.finish()
+  if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
+  process.exitCode = summary.exitCode
+} finally {
+  await opened.browser.close()
 }
-const summary = recorder.finish()
-await opened.browser.close()
-if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
-if (summary.sheets === 0) process.exit(1)

@@ -34,14 +34,17 @@ if (!chromium) {
 const SHEET_SIZE = 8
 const SEED = 'species seed 7 (the module default: drawSeed)'
 const opened = await openRoomPage({ chromium, pageFile: page })
-const species = await opened.page.evaluate(() => /** @type {any} */ (window).AnimalsArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
-const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), area: 'animals', seed: SEED, catalogue: { count: species.length, source: 'packages/game-animals-species/src (SPECIES), the items of the area' } })
-for (let first = 0; first < species.length; first += SHEET_SIZE) {
-  const entries = species.slice(first, first + SHEET_SIZE).map((/** @type {string} */ id) => ({ id }))
-  const number = String(first / SHEET_SIZE + 1).padStart(2, '0')
-  await recorder.sheet({ file: `${number}-species-side-${String(first / SHEET_SIZE + 1)}`, family: 'species', entries, view: { kind: 'side', fov: 22, elevationDeg: 4 }, yaw: 'long-axis-x', gap: 0.6 })
+try {
+  const species = await opened.page.evaluate(() => /** @type {any} */ (window).AnimalsArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
+  const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), knownDefectsFile: join(here, 'known-defects.json'), area: 'animals', seed: SEED, catalogue: { count: species.length, source: 'packages/game-animals-species/src (SPECIES), the items of the area' } })
+  for (let first = 0; first < species.length; first += SHEET_SIZE) {
+    const entries = species.slice(first, first + SHEET_SIZE).map((/** @type {string} */ id) => ({ id }))
+    const number = String(first / SHEET_SIZE + 1).padStart(2, '0')
+    await recorder.sheet({ file: `${number}-species-side-${String(first / SHEET_SIZE + 1)}`, family: 'species', entries, view: { kind: 'side', fov: 22, elevationDeg: 4 }, yaw: 'long-axis-x', gap: 0.6 })
+  }
+  const summary = recorder.finish()
+  if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
+  process.exitCode = summary.exitCode
+} finally {
+  await opened.browser.close()
 }
-const summary = recorder.finish()
-await opened.browser.close()
-if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
-if (summary.sheets === 0) process.exit(1)

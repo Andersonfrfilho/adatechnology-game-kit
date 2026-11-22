@@ -36,15 +36,18 @@ if (!chromium) {
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
-const catalogue = await opened.page.evaluate(() => /** @type {any} */ (window).UrbanArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
-const poles = catalogue.filter((/** @type {string} */ id) => id.startsWith('pole_'))
-const scenes = catalogue.filter((/** @type {string} */ id) => !id.startsWith('pole_'))
-const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), area: 'urban', seed: 'bench seed of the area (default); lamps share and light budget at the area defaults', catalogue: { count: catalogue.length, source: 'packages/game-urban-three (poles and neighbourhoods of defaultUrbanProviders of game-kit-defaults), the items of the area' } })
-await recorder.sheet({ file: '01-poles-front', family: 'poles', entries: poles.map((/** @type {string} */ id) => ({ id })), view: { kind: 'front', fov: 26, elevationDeg: 3 }, yaw: 0, gap: 1.5, ruler: true })
-for (const [at, id] of scenes.entries()) {
-  await recorder.sheet({ file: `${String(at + 2).padStart(2, '0')}-scene-${id}`, family: 'scenes', entries: [{ id }], view: { kind: 'aerial', fov: 40, elevationDeg: 38 }, yaw: 0, gap: 0 })
+try {
+  const catalogue = await opened.page.evaluate(() => /** @type {any} */ (window).UrbanArea.createModule().items('en').map((/** @type {{ id: string }} */ item) => item.id))
+  const poles = catalogue.filter((/** @type {string} */ id) => id.startsWith('pole_'))
+  const scenes = catalogue.filter((/** @type {string} */ id) => !id.startsWith('pole_'))
+  const recorder = createSheetRecorder({ page: opened.page, context: opened.context, outDir: join(here, 'shots'), knownDefectsFile: join(here, 'known-defects.json'), area: 'urban', seed: 'bench seed of the area (default); lamps share and light budget at the area defaults', catalogue: { count: catalogue.length, source: 'packages/game-urban-three (poles and neighbourhoods of defaultUrbanProviders of game-kit-defaults), the items of the area' } })
+  await recorder.sheet({ file: '01-poles-front', family: 'poles', entries: poles.map((/** @type {string} */ id) => ({ id })), view: { kind: 'front', fov: 26, elevationDeg: 3 }, yaw: 0, gap: 1.5, ruler: true })
+  for (const [at, id] of scenes.entries()) {
+    await recorder.sheet({ file: `${String(at + 2).padStart(2, '0')}-scene-${id}`, family: 'scenes', entries: [{ id }], view: { kind: 'aerial', fov: 40, elevationDeg: 38 }, yaw: 0, gap: 0 })
+  }
+  const summary = recorder.finish()
+  if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
+  process.exitCode = summary.exitCode
+} finally {
+  await opened.browser.close()
 }
-const summary = recorder.finish()
-await opened.browser.close()
-if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
-if (summary.sheets === 0) process.exit(1)
