@@ -321,3 +321,17 @@ pnpm build && flock ~/.cache/adatechnology-game-kit/perf-measure.lock env ROOM_E
 # confira /tmp/room-explosion-prazo.json (budgetMode "deadline", frameMetrics sem problemas, gate.compared) e então:
 cp /tmp/room-explosion-prazo.json ~/.cache/adatechnology-game-kit/room-explosion-base.json
 ```
+
+### Qual placa desenhou (2026-11-21)
+
+O relatório da régua da explosão grava `machine.gpu` = `{ renderer, vendor, tier, driver: { module, userspace, mismatch } }`, e a primeira linha do log mostra a placa ao lado
+da página. `module` é a versão do módulo do kernel (`/proc/driver/nvidia/version`), `userspace` a da biblioteca (`libnvidia-ml.so.*`, ou o `nvidia-smi` quando ele responde) e
+`mismatch` é `true`, `false` ou `'unknown'` (fora do Linux, sem NVIDIA ou sem poder ler). O `NVRM: API mismatch` no `journalctl -k -b` e o "Driver/library version mismatch" do
+`nvidia-smi` também valem como `true`.
+
+- **Atualizou o sistema sem reiniciar? Reinicie antes de medir.** Em 2026-11-21 o driver foi atualizado sem reiniciar (biblioteca 620.73.04, módulo 615.78.08): seis horas de
+  rodadas leram o quadro depois da explosão em ~105 ms em vez de ~26 ms. Com `mismatch: true` numa NVIDIA a régua falha antes de abrir a página medida; com `'unknown'` avisa e segue.
+- **GL por software não mede tempo.** A régua da explosão recusa SwiftShader, llvmpipe e afins (antes ela passava direto pelo teste do `perf-gate`, que só pulava o gate normal).
+- **A base só aceita relatório com `machine.gpu`, em placa de verdade e sem `mismatch: true`.** Uma noite em outra placa ou em outro módulo do driver não é comparada nem
+  mesclada à base (`SEM COMPARAÇÃO NESTA RODADA`, com o motivo), e a base fica como está. Para passar a medir numa configuração nova, troque a base à mão, como em "gravar a
+  base no modo de prazo" acima (relatório conferido, depois `cp` por cima do arquivo da base). Base antiga, sem `machine.gpu`, ainda é comparada e passa a registrar a placa na primeira noite que a mescla.

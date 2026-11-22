@@ -5,11 +5,12 @@
 /**
  * @typedef {{ variant: string, throttle: number, kind: string, p99: number, max: number }} BaseCell
  * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} BaseMetric
- * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[], pageSha256?: string, pageBuild?: { commit: string, dirty: boolean, builtAt: string } | null }} BaseReport
+ * @typedef {{ budgetMode?: string, explosive?: string, cells?: BaseCell[], frameMetrics?: BaseMetric[], pageSha256?: string, pageBuild?: { commit: string, dirty: boolean, builtAt: string } | null, machine?: { gpu?: { renderer?: string, vendor?: string, tier?: string, driver?: { module?: string | null, userspace?: string | null, mismatch?: boolean | 'unknown' } } } }} BaseReport
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
+import { assertReportHasHealthyGpu, gpuMismatchReason } from './gpu-info.mjs'
 import { DEFAULT_EXPLOSIVE } from './room-explosion-frame.mjs'
 
 const keyOf = (/** @type {{ variant: string, throttle: number, kind: string }} */ entry) => `${entry.variant}|${entry.throttle}|${entry.kind}`
@@ -33,12 +34,14 @@ const mergeEntries = (base, now, fields) => {
 
 /**
  * The base to save after a night that passed. Without a base, or with one measured in another mode or with another explosive, the night is the base; otherwise nothing rises.
- * A report with an explosive other than c4 is never the base nor merged into it: the base stays as it was (undefined when there was none).
+ * A report with an explosive other than c4 is never the base nor merged into it: the base stays as it was (undefined when there was none). The same for a report
+ * measured on another GPU or with another driver module than the base's: its numbers are not comparable, so the base stays as it was until it is replaced by hand.
  * @template {BaseReport} TReport
  * @param {BaseReport | undefined} base @param {TReport} report @returns {TReport | undefined}
  */
 export const mergeBase = (base, report) => {
   if ((report.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return /** @type {TReport | undefined} */ (base)
+  if (base && gpuMismatchReason(base.machine?.gpu, report.machine?.gpu)) return /** @type {TReport} */ (base)
   if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return report
   // the merged numbers come from several nights and commits, so no single stamp or hash describes them
   const { pageSha256: _lastNightPage, pageBuild: _lastNightBuild, ...reportWithoutPage } = report
@@ -83,6 +86,7 @@ export const assertReportIsOfHead = (report, head) => {
 export const saveBase = (reportFile, baseFile, head) => {
   const report = JSON.parse(readFileSync(reportFile, 'utf8'))
   assertReportIsOfHead(report, head)
+  assertReportHasHealthyGpu(report)
   const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
   const merged = mergeBase(base, report)
   if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))

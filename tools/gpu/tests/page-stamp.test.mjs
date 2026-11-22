@@ -16,6 +16,7 @@ import { assertDistsAreFresh, stalePackagesAt, stalePackagesOf } from '../stale-
 for (const key of Object.keys(process.env)) if (key.startsWith('GIT_')) delete process.env[key]
 
 const HEAD = 'b'.repeat(40)
+const MACHINE = { gpu: { renderer: 'NVIDIA GeForce RTX 5070 Laptop GPU', vendor: 'NVIDIA Corporation', tier: 'discrete', driver: { module: '620.73.04', userspace: '620.73.04', mismatch: false } } }
 const BUILD = { commit: HEAD, dirty: false, builtAt: '2026-11-21T10:00:00.000Z' }
 const page = (/** @type {string} */ stamp) => `<html><head><title>x</title>${stamp}</head><body>room</body></html>`
 
@@ -183,7 +184,7 @@ test('dirtyStateOf with real git: a rewritten screenshot is clean, a changed sou
   const { root, head } = gitRepo()
   const report = join(directory, 'git-report.json')
   const baseFile = join(directory, 'git-base.json')
-  const reportOf = () => JSON.stringify({ budgetMode: 'deadline', pageBuild: parsePageStamp(page(stampMarkupOf({ commit: head, dirty: dirtyStateOf(root), builtAt: 'now' }))) })
+  const reportOf = () => JSON.stringify({ budgetMode: 'deadline', machine: MACHINE, pageBuild: parsePageStamp(page(stampMarkupOf({ commit: head, dirty: dirtyStateOf(root), builtAt: 'now' }))) })
 
   writeFileSync(join(root, 'examples/x/shots/a.png'), 'two')
   assert.equal(dirtyStateOf(root), false)
@@ -207,7 +208,7 @@ test('trySaveBase: a refusal comes back as a reason and writes nothing, an accep
   assert.equal(refused.ok, false)
   assert.match(String('reason' in refused ? refused.reason : ''), /dirty tree/)
   assert.equal(existsSync(baseFile), false)
-  writeFileSync(report, JSON.stringify({ budgetMode: 'deadline', pageBuild: BUILD }))
+  writeFileSync(report, JSON.stringify({ budgetMode: 'deadline', machine: MACHINE, pageBuild: BUILD }))
   assert.deepEqual(trySaveBase(report, baseFile, HEAD), { ok: true })
   assert.equal(existsSync(baseFile), true)
 })

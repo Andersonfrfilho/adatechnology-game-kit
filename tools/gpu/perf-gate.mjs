@@ -27,13 +27,13 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
+import { isSoftwareRenderer, readGpuIdentity } from './gpu-info.mjs'
 import { buildSequence, describeRound, formatSteps, needsBuild, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const require = createRequire(import.meta.url)
-const SOFTWARE_RENDERERS = /swiftshader|llvmpipe|softpipe|software|unknown/i
 const SYSTEM_CHROME = '/usr/bin/google-chrome-stable'
 const TOLERANCE = Number(process.env.PERF_GATE_TOLERANCE ?? 0.1)
 /** @typedef {import('./compare.mjs').Report} Report @typedef {import('./compare.mjs').Phase} Phase */
@@ -90,16 +90,11 @@ const browser = await playwright.chromium.launch({
   args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'],
   ...(chrome ? { executablePath: chrome } : {}),
 })
-const renderer = await (await browser.newPage()).evaluate(() => {
-  const gl = document.createElement('canvas').getContext('webgl2')
-  const info = gl?.getExtension('WEBGL_debug_renderer_info')
-  return info ? String(gl?.getParameter(info.UNMASKED_RENDERER_WEBGL)) : 'unknown'
-})
+const { renderer, tier } = await readGpuIdentity(await browser.newPage())
 await browser.close()
 record('probe', probeStarted)
-if (SOFTWARE_RENDERERS.test(renderer)) skip(`no GPU (WebGL draws on ${renderer})`)
+if (isSoftwareRenderer(renderer)) skip(`no GPU (WebGL draws on ${renderer})`)
 
-const tier = /nvidia|radeon|amd/i.test(renderer) && !/intel/i.test(renderer) ? 'discrete' : 'integrated'
 console.log(`pre-push: perf on ${renderer} (${tier}), window ${VIEWPORT}`)
 
 /** @param {string[]} args @param {string} [cwd] */
