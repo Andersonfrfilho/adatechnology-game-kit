@@ -86,11 +86,14 @@ const run = (scenarioName: string, chargeName: keyof typeof CHARGES, seed: numbe
   return { hash: hashOf(log), events, state: world.serialize() }
 }
 
+/** V8 changed the last bit of `Math.pow` between Node 22 and 24 (the CI's `goldens-node-24`): the house, whose materials go through it, has a hash for each. */
+const NEWER_POW = Number(process.versions.node.split('.')[0]) >= 24
+
 const PINNED: Record<string, string> = {
-  'house/m67/3': 'd541fced868d294757bfbec78950e2b46b88d43b025b491610739f460f9b1948',
-  'house/m67/11': '056f0f14743795d7b77a65b77f7af1df598287737bb288bbcb25e49426d8d73d',
-  'house/pipe_bomb/3': '603465f311f16a8fec56895f2a59c01a427aae2250d8db30b3ece49278b24e2e',
-  'house/pipe_bomb/11': '3b063f504951bb0a817a9cb8db0067548843947f6b245a253f4b12be720d0933',
+  'house/m67/3': NEWER_POW ? 'd541fced868d294757bfbec78950e2b46b88d43b025b491610739f460f9b1948' : 'f5fd9a06972921f02aecbf1870ab8b5b4807648b0a3fe93af47592069edb6cec',
+  'house/m67/11': NEWER_POW ? '056f0f14743795d7b77a65b77f7af1df598287737bb288bbcb25e49426d8d73d' : 'a939258816d8415d3212e4002d19eebc9fcc83fdc2d4d92d36ed453d38aaa2a4',
+  'house/pipe_bomb/3': NEWER_POW ? '603465f311f16a8fec56895f2a59c01a427aae2250d8db30b3ece49278b24e2e' : 'b09032664124d2ea069a02cde5d84bbe586c9917ab133648aedbe0847e839a47',
+  'house/pipe_bomb/11': NEWER_POW ? '3b063f504951bb0a817a9cb8db0067548843947f6b245a253f4b12be720d0933' : '3cccf8599e448e5501ce3142ea348987d630fb30a45eb337b34329bcb599d4d3',
   'longWall/m67/3': 'a202522342bd836b1370c692451ea5a0b52903700528940e190611905c41b5f0',
   'longWall/m67/11': '3df0b91045f7e256df3ef4a910436135acab3beda7970d90b0e618c702fbac19',
   'longWall/pipe_bomb/3': 'f6ac36c395a93663ca760f6546b6ba805ff6f24c666f84cdfb929ef694564929',
