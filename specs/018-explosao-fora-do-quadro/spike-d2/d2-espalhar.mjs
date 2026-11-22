@@ -1,5 +1,5 @@
 // SPIKE D2 (spec 018, throwaway): measures "spread the M67 explosion over frames" in the room. Not a gate; nothing here goes to main.
-//   flock ~/.cache/adatechnology-game-kit/perf-measure.lock env D2_SERIES=<name> D2_PAGE=<page.html> D2_OUT=<json> node tools/gpu/d2-espalhar.mjs
+//   flock ~/.cache/adatechnology-game-kit/perf-measure.lock env D2_SERIES=<name> D2_PAGE=<page.html> D2_OUT=<json> node specs/018-explosao-fora-do-quadro/spike-d2/d2-espalhar.mjs
 // Series (D2_SERIES), each a list of variants run in alternating pairs over D2_ROUNDS rounds, one fresh page per variant per round:
 //   m1        the ruler's own code path (`inPage`, FRAME_PARTS) on the page D2_PAGE: f0 and the 7 frames after, split by module
 //   m2        the probe page, unsliced, timing on: rays, wave, events by phase, the renderer's apply by phase
@@ -13,10 +13,10 @@ import { cpus, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import { assertGpuIsHardware, readGpuIdentity } from './gpu-info.mjs'
-import { FRAME_EXTRAS, FRAME_LABELS, LABELLED_QUEUES, STAGE_LABELS, SYSTEM_LABELS, VARIANTS, DEFAULT_VARIANT, inPage } from './room-explosion.mjs'
+import { assertGpuIsHardware, readGpuIdentity } from '../../../tools/gpu/gpu-info.mjs'
+import { FRAME_EXTRAS, FRAME_LABELS, LABELLED_QUEUES, STAGE_LABELS, SYSTEM_LABELS, VARIANTS, DEFAULT_VARIANT, inPage } from '../../../tools/gpu/room-explosion.mjs'
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
 const require = createRequire(import.meta.url)
 const store = join(root, 'node_modules/.pnpm')
 const playwrightPath = (() => {

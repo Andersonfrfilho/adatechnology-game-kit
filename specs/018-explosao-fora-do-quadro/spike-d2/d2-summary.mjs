@@ -1,6 +1,6 @@
-// SPIKE D2: tables from the JSON of tools/gpu/d2-espalhar.mjs.  node tools/gpu/d2-summary.mjs <json>
+// SPIKE D2: tables from the JSON of specs/018-explosao-fora-do-quadro/spike-d2/d2-espalhar.mjs.  node tools/gpu/d2-summary.mjs <json>
 import { readFileSync } from 'node:fs'
-import { FRAME_LABELS, STAGE_LABELS } from './room-explosion.mjs'
+import { FRAME_LABELS, STAGE_LABELS } from '../../../tools/gpu/room-explosion.mjs'
 
 const data = JSON.parse(readFileSync(process.argv[2], 'utf8'))
 const f = (v, n = 1) => (v === undefined || v === null ? '-' : Number(v).toFixed(n))
